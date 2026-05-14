@@ -1,0 +1,29 @@
+# Autonomy policy — what agents may/may not do without user confirmation.
+# Read by orchestrator at session start. Logic changes require user present.
+
+mode:
+  default: interactive       # interactive | autonomous
+  switch_via: AUTONOMY_MODE  # env var override
+
+interactive:
+  # User is present. Pause for confirmation on:
+  pause_for:
+    - logic_change           # editing agents/*.md or .claude/agents/*.md
+    - destructive_fs         # rm -rf, git reset --hard, etc.
+    - external_publish       # push, deploy, send messages
+    - credential_use         # writing/reading secrets beyond declared scope
+
+autonomous:
+  # User is asleep. Agents proceed unattended within these bounds:
+  budget_usd_ceiling: 5.00   # AUTONOMY_BUDGET_USD override
+  allowed:
+    - read_any
+    - write_to: records/
+    - run_tools: [ffmpeg, ollama, curl_get, git_local]
+  forbidden:
+    - logic_change           # never edit agent definitions overnight
+    - destructive_fs
+    - external_publish
+    - new_dependency_install
+  on_blocker:
+    action: log_and_halt     # write to records/blockers/, exit cleanly

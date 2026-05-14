@@ -1,0 +1,32 @@
+# Records (Data layer — never committed)
+records/**
+!records/.gitkeep
+
+# Environment
+.env
+.env.local
+*.local
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Python / node leftovers
+__pycache__/
+*.pyc
+node_modules/
+
+# Claude Code session state (not the agent definitions)
+.claude/sessions/
+.claude/cache/
+.claude/logs/
+.claude/settings.local.json
