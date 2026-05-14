@@ -63,7 +63,8 @@ TRANSCRIPT:
 $(cat "$FULLTEXT")"
 
 SUMMARY_RAW=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$PROMPT" false)
-echo "$SUMMARY_RAW" > "$MDIR/outputs/summary.md"
+# Strip stray code fences the small model loves to add
+echo "$SUMMARY_RAW" | sed -E '/^[[:space:]]*```/d' | sed -E '/^[[:space:]]*$/{N;/^[[:space:]]*\n[[:space:]]*$/d}' > "$MDIR/outputs/summary.md"
 log_ok "summary written"
 
 # 4. QA
@@ -96,6 +97,7 @@ cat > "$MDIR/qa-report.md" <<MDQA
 - summary bytes: $SIZE_B
 MDQA
 
+jq -n --arg v "$VERDICT" --argjson w "$WC" --argjson b "$SIZE_B" '{verdict: $v, transcript_words: $w, summary_bytes: $b, mission_type: "summarize"}' > "$MDIR/metrics.json"
 cat > "$MDIR/summary.md" <<MDS
 # Summary — $MISSION_ID
 
