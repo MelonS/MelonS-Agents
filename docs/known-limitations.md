@@ -1,24 +1,27 @@
-# Known limitations
+# Known limitations (resolved)
 
-## Captions not burned into video (PoC)
+## ~~Captions not burned into video~~ → resolved
 
-The Homebrew `ffmpeg` 8.1.1 bottle (default formula) is built without
-`libass` (subtitles filter) and without `libfreetype/fontconfig`
-(drawtext filter). Burning SRT into the MP4 therefore fails with
-"No such filter" or "No option name near 'captions.srt'".
+Now using a static ffmpeg build from evermeet.cx with libass enabled.
+The brew bottle is intentionally minimal; the static binary lives at
+`~/.local/opt/ffmpeg-static/ffmpeg` and is referenced via `FFMPEG_BIN`
+in `.env`.
 
-**Current behavior**: the pipeline ships a separate `captions.srt`
-file alongside the MP4. Players that support SRT can load it
-externally.
+Fresh-machine install:
 
-**Resolution paths** (any one is enough):
+```bash
+mkdir -p ~/.local/opt/ffmpeg-static
+curl -fsSL -o /tmp/ff.zip  https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip
+curl -fsSL -o /tmp/fp.zip  https://evermeet.cx/ffmpeg/getrelease/ffprobe/zip
+unzip -o /tmp/ff.zip -d ~/.local/opt/ffmpeg-static
+unzip -o /tmp/fp.zip -d ~/.local/opt/ffmpeg-static
+chmod +x ~/.local/opt/ffmpeg-static/{ffmpeg,ffprobe}
+xattr -d com.apple.quarantine ~/.local/opt/ffmpeg-static/{ffmpeg,ffprobe} || true
+```
 
-1. `brew tap homebrew-ffmpeg/ffmpeg && brew install homebrew-ffmpeg/ffmpeg/ffmpeg`
-   — a community tap that builds ffmpeg with libass etc.
-2. Install a static ffmpeg build (e.g. from https://www.osxexperts.net/)
-   and point `FFMPEG_BIN` at it.
-3. Build ffmpeg from source with `--enable-libass --enable-libfreetype
-   --enable-libfontconfig`.
+Then point `.env`:
 
-After picking one, swap `ffmpeg_burn_srt` in `agents/lib/ffmpeg.sh`
-back to the subtitles filter.
+```
+FFMPEG_BIN=$HOME/.local/opt/ffmpeg-static/ffmpeg
+FFPROBE_BIN=$HOME/.local/opt/ffmpeg-static/ffprobe
+```

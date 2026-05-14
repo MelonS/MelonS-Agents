@@ -35,15 +35,23 @@ ffmpeg_crop_9_16() {
     "$output"
 }
 
-# NOTE: This bottle of ffmpeg (homebrew, 8.1.1) was built without libass
-# and without drawtext (no libfreetype/fontconfig). Burning captions
-# requires a richer build; see docs/known-limitations.md.
-# For now we just stream-copy the video unchanged so the pipeline still
-# produces a deliverable. The SRT file is shipped alongside.
+# Burn SRT subtitles into video using the subtitles filter (requires libass).
+# chdir + relative basename avoids the absolute-path-with-colon parser issue.
 # Usage: ffmpeg_burn_srt <input> <srt> <output>
 ffmpeg_burn_srt() {
   local input="$1" srt="$2" output="$3"
-  "$FFMPEG_BIN" -y -loglevel error -i "$input" -c copy -movflags +faststart "$output"
+  local srt_dir srt_base abs_input abs_output
+  srt_dir="$(cd "$(dirname "$srt")" && pwd)"
+  srt_base="$(basename "$srt")"
+  abs_input="$(cd "$(dirname "$input")" && pwd)/$(basename "$input")"
+  abs_output="$(cd "$(dirname "$output")" && pwd)/$(basename "$output")"
+  (
+    cd "$srt_dir"
+    "$FFMPEG_BIN" -y -loglevel error -i "$abs_input" \
+      -vf "subtitles=${srt_base}:force_style=Fontname=Helvetica\,Fontsize=22\,PrimaryColour=&H00FFFFFF\,OutlineColour=&H80000000\,BorderStyle=3\,Outline=2\,MarginV=80" \
+      -c:v libx264 -preset veryfast -crf 20 -c:a copy -movflags +faststart \
+      "$abs_output"
+  )
 }
 
 
