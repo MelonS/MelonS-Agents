@@ -38,19 +38,20 @@ ffmpeg_crop_9_16() {
 # Burn SRT subtitles into video.
 # The `subtitles` filter uses colons as option separators, so absolute paths
 # break the parser. We chdir to the SRT's directory and reference by basename.
+# force_style is omitted because its comma-separated values collide with the
+# outer -vf filter chain parser; default subtitle styling is fine for now.
 # Usage: ffmpeg_burn_srt <input> <srt> <output>
 ffmpeg_burn_srt() {
   local input="$1" srt="$2" output="$3"
   local srt_dir srt_base abs_input abs_output
   srt_dir="$(cd "$(dirname "$srt")" && pwd)"
   srt_base="$(basename "$srt")"
-  # Make input/output absolute so the chdir below doesn't affect them.
   abs_input="$(cd "$(dirname "$input")" && pwd)/$(basename "$input")"
   abs_output="$(cd "$(dirname "$output")" && pwd)/$(basename "$output")"
   (
     cd "$srt_dir"
     "$FFMPEG_BIN" -y -loglevel error -i "$abs_input" \
-      -vf "subtitles=${srt_base}:force_style='Fontname=Arial,Fontsize=18,PrimaryColour=&H00FFFFFF,OutlineColour=&H80000000,BorderStyle=3,Outline=2,MarginV=80'" \
+      -vf "subtitles=${srt_base}" \
       -c:a copy -movflags +faststart \
       "$abs_output"
   )

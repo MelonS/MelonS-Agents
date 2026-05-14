@@ -56,3 +56,20 @@ records/
 │   └── qa-report.md      # qa output
 └── blockers/<ISO-date>/  # autonomous-mode halt logs
 ```
+
+## Permanent autonomy contract (session-stable)
+
+This project's autonomy rules are persisted at three levels:
+
+1. **Per-project**: `.claude/settings.json` (committed, applies in this repo).
+2. **Per-user**: `~/.claude/settings.json` (mirrors the same allow/deny list, applies anywhere on this machine).
+3. **Per-memory**: agent memory in `~/.claude/projects/-Users-melons-ai/memory/` records the *why* and *how* of each rule.
+
+When a new session starts on this repo, Claude Code reads all three. The default operating mode is:
+
+- Auto-approve every local-resource action (brew, git, gh, ffmpeg, yt-dlp, whisper, ollama, jq, python, file ops).
+- Pause only for the **money firewall** (paid APIs/SaaS/cloud) and **OS-destructive** ops (sudo, rm at system roots, disk erase, force-push to main).
+- Treat multi-step shell work as a single batch — write a script, run it once, never one-off prompts.
+
+Re-establishing this contract should never require re-asking the user. If a prompt fires for something this contract already covers, that's a configuration drift; the fix is to update the allow list, not to ask.
+
