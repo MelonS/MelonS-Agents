@@ -19,7 +19,7 @@ ffmpeg_cut() {
   local duration
   duration=$(awk -v s="$start" -v e="$end" 'BEGIN { printf "%.3f", e - s }')
   "$FFMPEG_BIN" -y -loglevel error -ss "$start" -i "$input" -t "$duration" \
-    -c:v libx264 -preset veryfast -crf 20 -c:a aac -b:a 128k -movflags +faststart \
+    -c:v h264_videotoolbox -b:v 4M -realtime 0 -allow_sw 1 -c:a aac -b:a 128k -movflags +faststart \
     "$output"
 }
 
@@ -31,7 +31,7 @@ ffmpeg_crop_9_16() {
 [0:v]scale=1080:1920:force_original_aspect_ratio=increase,boxblur=20:5,crop=1080:1920[bg]; \
 [0:v]scale=1080:1920:force_original_aspect_ratio=decrease[fg]; \
 [bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1" \
-    -c:v libx264 -preset veryfast -crf 20 -c:a copy -movflags +faststart \
+    -c:v h264_videotoolbox -b:v 4M -realtime 0 -allow_sw 1 -c:a copy -movflags +faststart \
     "$output"
 }
 
@@ -49,7 +49,7 @@ ffmpeg_burn_srt() {
     cd "$srt_dir"
     "$FFMPEG_BIN" -y -loglevel error -i "$abs_input" \
       -vf "subtitles=${srt_base}:force_style=Fontname=Helvetica\,Fontsize=22\,PrimaryColour=&H00FFFFFF\,OutlineColour=&H80000000\,BorderStyle=3\,Outline=2\,MarginV=80" \
-      -c:v libx264 -preset veryfast -crf 20 -c:a copy -movflags +faststart \
+      -c:v h264_videotoolbox -b:v 4M -realtime 0 -allow_sw 1 -c:a copy -movflags +faststart \
       "$abs_output"
   )
 }
