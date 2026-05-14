@@ -83,6 +83,19 @@ Multi-source batch:
 ./scripts/batch-mission.sh -f sources.txt
 ```
 
+Queue-based autonomous drain (used by the launchd scheduler):
+
+```bash
+echo 'https://example.com/long.mp4' >> records/queue/pending.txt
+./scripts/mission-queue.sh
+```
+
+Install the nightly scheduler:
+
+```bash
+./scripts/install-scheduler.sh install
+```
+
 ## Status
 
 <!-- status:start -->
@@ -95,9 +108,11 @@ Multi-source batch:
 - [x] Batch runner (scripts/batch-mission.sh)
 - [x] Auto-commit + auto-push of every logic change to origin/main
 - [ ] Real user-supplied URL fixture
-- [ ] Nightly launchd scheduler for autonomous mode
+- [x] Nightly launchd scheduler for autonomous mode
 - [ ] Iterative QA-feedback loop in editor
 - [ ] Other mission types beyond highlight extraction
+- [ ] Cost / runtime metrics per mission
+- [ ] QA feedback retry loop (failed runs auto-retried with QA notes)
 <!-- status:end -->
 
 ## License
@@ -148,6 +163,21 @@ MIT. See [`LICENSE`](LICENSE).
 
 ```bash
 ./scripts/batch-mission.sh -f sources.txt
+```
+
+큐 기반 야간 실행 (launchd 스케줄러가 30분마다 자동 호출):
+
+```bash
+echo 'https://example.com/long.mp4' >> records/queue/pending.txt
+./scripts/mission-queue.sh
+```
+
+스케줄러 설치/해제:
+
+```bash
+./scripts/install-scheduler.sh install    # 설치
+./scripts/install-scheduler.sh status     # 상태
+./scripts/install-scheduler.sh uninstall  # 해제
 ```
 
 ## 자동 갱신되는 상태표
