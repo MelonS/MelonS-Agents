@@ -149,12 +149,8 @@ CROP="$MDIR/outputs/_cut_9x16.mp4"
 SRT="$MDIR/outputs/captions.srt"
 FINAL="$MDIR/outputs/short.mp4"
 
-ffmpeg_cut "$SRC" "$START" "$END" "$CUT"
-ffmpeg_crop_9_16 "$CUT" "$CROP"
 ffmpeg_segments_to_srt "$SEGS" "$START" "$END" "$SRT"
-ffmpeg_burn_srt "$CROP" "$SRT" "$FINAL"
-
-rm -f "$CUT" "$CROP"
+ffmpeg_render_short "$SRC" "$START" "$END" "$SRT" "$FINAL"
 log_ok "rendered → $FINAL"
 stage_mark "render"
 

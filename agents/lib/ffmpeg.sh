@@ -80,3 +80,23 @@ ffmpeg_segments_to_srt() {
     ) + "\n" + .value.text + "\n"
   ' "$segments" > "$out"
 }
+# Single-pass render: cut [start,end), 9:16 letterbox-with-blur, burn SRT.
+# Avoids the 3x re-encode of the cut→crop→burn chain.
+# Usage: ffmpeg_render_short <input> <start> <end> <srt> <output>
+ffmpeg_render_short() {
+  local input="$1" start="$2" end="$3" srt="$4" output="$5"
+  local duration; duration=$(awk -v s="$start" -v e="$end" 'BEGIN { printf "%.3f", e - s }')
+  local srt_dir srt_base abs_input abs_output
+  srt_dir="$(cd "$(dirname "$srt")" && pwd)"
+  srt_base="$(basename "$srt")"
+  abs_input="$(cd "$(dirname "$input")" && pwd)/$(basename "$input")"
+  abs_output="$(cd "$(dirname "$output")" && pwd)/$(basename "$output")"
+  (
+    cd "$srt_dir"
+    "$FFMPEG_BIN" -y -loglevel error -ss "$start" -i "$abs_input" -t "$duration" \
+      -filter_complex "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,gblur=sigma=15,crop=1080:1920[bg]; [0:v]scale=1080:1920:force_original_aspect_ratio=decrease[fg]; [bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1,subtitles=${srt_base}" \
+      -c:v h264_videotoolbox -b:v 4M -realtime 0 -allow_sw 1 \
+      -c:a aac -b:a 128k -movflags +faststart \
+      "$abs_output"
+  )
+}
