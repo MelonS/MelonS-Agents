@@ -11,7 +11,7 @@ import json, pathlib, statistics
 
 root = pathlib.Path("records/missions")
 rows = []
-for m in sorted(root.glob("*/highlight-*")):
+for m in sorted(root.glob("*/*-*")):
     f = m / "metrics.json"
     if not f.exists():
         continue

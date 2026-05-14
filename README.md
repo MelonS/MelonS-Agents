@@ -110,10 +110,12 @@ Install the nightly scheduler:
 - [ ] Real user-supplied URL fixture
 - [x] Nightly launchd scheduler for autonomous mode
 - [ ] Iterative QA-feedback loop in editor
-- [ ] Other mission types beyond highlight extraction
+- [x] Other mission types beyond highlight extraction
 - [x] Cost / runtime metrics per mission
 - [ ] QA feedback retry loop (failed runs auto-retried with QA notes)
 - [x] Cost / runtime metrics per mission
+- [x] Bilingual summarize mission (transcribe → structured EN+KO summary)
+- [x] Single-pass ffmpeg render (~3× render speedup)
 <!-- status:end -->
 
 ## License

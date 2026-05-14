@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# Summarize mission: long-form video → bilingual structured summary.
+set -euo pipefail
+
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/env.sh"
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/log.sh"
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/ollama.sh"
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/whisper.sh"
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/ffmpeg.sh"
+
+SOURCE="${1:-}"
+[[ -z "$SOURCE" ]] && { log_err "usage: $0 <url_or_path>"; exit 64; }
+
+require_bin "$FFMPEG_BIN" "$WHISPER_CLI_BIN" "$YT_DLP_BIN" jq
+require_env OLLAMA_HOST OLLAMA_MODEL_HIGHLIGHT WHISPER_MODEL RECORDS_DIR
+
+MISSION_ID="summarize-$(date +%H%M%S)"
+MDIR="$RECORDS_DIR/missions/$(date +%Y-%m-%d)/$MISSION_ID"
+mkdir -p "$MDIR/resources" "$MDIR/outputs"
+log_step "mission: $MDIR"
+
+cat > "$MDIR/plan.md" <<MDPLAN
+# Plan: summarize $SOURCE
+
+## Goal
+Produce a structured bilingual summary (TL;DR + key points + original-language and mirror-language summaries).
+
+## Acceptance criteria
+- [ ] outputs/summary.md exists with required sections
+MDPLAN
+
+# 1. Source
+SRC="$MDIR/resources/source.mp4"
+if [[ -f "$SOURCE" ]]; then
+  cp "$SOURCE" "$SRC"
+else
+  "$YT_DLP_BIN" -f "best[ext=mp4]/best" -o "$SRC" "$SOURCE" >&2
+fi
+log_ok "source ready: $SRC"
+
+# 2. Transcribe
+TRANSCRIPT=$(whisper_transcribe "$SRC" "$MDIR/resources/transcript")
+log_ok "transcript: $TRANSCRIPT"
+
+# Build a plain-text transcript for the LLM
+FULLTEXT="$MDIR/resources/transcript.txt"
+jq -r '[.transcription[].text] | join(" ")' "$TRANSCRIPT" \
+  | sed -E 's/  +/ /g' > "$FULLTEXT"
+WC=$(wc -w < "$FULLTEXT" | tr -d ' ')
+log_info "transcript words: $WC"
+
+# 3. Summarize
+ollama_ensure_model "$OLLAMA_MODEL_HIGHLIGHT"
+PROMPT_FILE="$(dirname "${BASH_SOURCE[0]}")/summarize.prompt.md"
+PROMPT="$(cat "$PROMPT_FILE")
+
+TRANSCRIPT:
+$(cat "$FULLTEXT")"
+
+SUMMARY_RAW=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$PROMPT" false)
+echo "$SUMMARY_RAW" > "$MDIR/outputs/summary.md"
+log_ok "summary written"
+
+# 4. QA
+SUMMARY_MD="$MDIR/outputs/summary.md"
+TL_OK=$(grep -q "^# TL;DR" "$SUMMARY_MD" && echo PASS || echo FAIL)
+KP_OK=$(grep -q "^# Key points" "$SUMMARY_MD" && echo PASS || echo FAIL)
+BUL_COUNT=$(awk '/^# Key points/{f=1; next} /^# /{f=0} f && /^- /{n++} END{print n+0}' "$SUMMARY_MD")
+KP_N_OK=$(( BUL_COUNT >= 3 )) && KP_N_VERDICT=PASS || KP_N_VERDICT=FAIL
+SIZE_B=$(stat -f%z "$SUMMARY_MD" 2>/dev/null || stat -c%s "$SUMMARY_MD")
+SIZE_OK=$(awk -v s="$SIZE_B" 'BEGIN{print (s < 51200) ? "PASS" : "FAIL"}')
+
+VERDICT=PASS
+for v in "$TL_OK" "$KP_OK" "$KP_N_VERDICT" "$SIZE_OK"; do
+  [[ "$v" == "FAIL" ]] && VERDICT=FAIL
+done
+
+cat > "$MDIR/qa-report.md" <<MDQA
+# QA report — $MISSION_ID
+
+**Verdict**: $VERDICT
+
+## Acceptance criteria
+- [$([ "$TL_OK" = PASS ] && echo x || echo ' ')] TL;DR section present
+- [$([ "$KP_OK" = PASS ] && echo x || echo ' ')] Key points section present
+- [$([ "$KP_N_VERDICT" = PASS ] && echo x || echo ' ')] At least 3 bullets ($BUL_COUNT found)
+- [$([ "$SIZE_OK" = PASS ] && echo x || echo ' ')] Size under 50 KB ($SIZE_B bytes)
+
+## Stats
+- source words: $WC
+- summary bytes: $SIZE_B
+MDQA
+
+cat > "$MDIR/summary.md" <<MDS
+# Summary — $MISSION_ID
+
+- source: $SOURCE
+- transcript words: $WC
+- summary: $SUMMARY_MD
+- verdict: $VERDICT
+MDS
+
+if [[ "$VERDICT" == "PASS" ]]; then
+  log_ok "mission $MISSION_ID PASS"
+else
+  log_err "mission $MISSION_ID FAIL — see $MDIR/qa-report.md"
+  exit 1
+fi
