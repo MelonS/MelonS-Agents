@@ -11,7 +11,8 @@ for m in sorted(root.glob("*/*-*")):
     except Exception:
         continue
     mtype = ("highlight" if m.name.startswith("highlight-") else
-             "summarize" if m.name.startswith("summarize-") else "other")
+             "summarize" if m.name.startswith("summarize-") else
+             "shorts-batch" if m.name.startswith("shorts-batch-") else "other")
     rows.append({"mission": f"{m.parent.name}/{m.name}", "type": mtype, **data})
 
 summary = {"count": len(rows), "missions": rows}
@@ -59,6 +60,19 @@ if rows:
             )
         md.append("")
 
+
+    sb = [r for r in rows if r["type"] == "shorts-batch"]
+    if sb:
+        md.append(f"## Shorts-batch missions ({len(sb)})\n")
+        md.append("| Mission | Verdict | Picks requested | Picks rendered | Total (s) |")
+        md.append("|---------|---------|-----------------|----------------|-----------|")
+        for r in sb:
+            md.append(
+                f"| {r['mission']} | {r.get('verdict','?')} | "
+                f"{r.get('picks_requested','?')} | {r.get('picks_rendered','?')} | "
+                f"{r.get('total_s',0):.1f} |"
+            )
+        md.append("")
 docs = pathlib.Path("docs/metrics-dashboard.md")
 docs.write_text("\n".join(md) + "\n")
 print(f"  wrote {out} and {docs} ({len(rows)} missions)")

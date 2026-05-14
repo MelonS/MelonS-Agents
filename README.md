@@ -116,6 +116,7 @@ Install the nightly scheduler:
 - [x] Cost / runtime metrics per mission
 - [x] Bilingual summarize mission (transcribe → structured EN+KO summary)
 - [x] Single-pass ffmpeg render (~3× render speedup)
+- [x] Third mission type: shorts-batch (one long video → N captioned shorts)
 <!-- status:end -->
 
 ## License

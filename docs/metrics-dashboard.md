@@ -1,6 +1,6 @@
 # Metrics dashboard
 
-_5 mission(s) tracked._
+_7 mission(s) tracked._
 
 - Pass rate: 100%
 
@@ -20,4 +20,11 @@ _5 mission(s) tracked._
 |---------|---------|------------------|---------------|
 | 2026-05-14/summarize-221345 | PASS | 360 | 1293 |
 | 2026-05-14/summarize-221403 | PASS | 126 | 504 |
+
+## Shorts-batch missions (2)
+
+| Mission | Verdict | Picks requested | Picks rendered | Total (s) |
+|---------|---------|-----------------|----------------|-----------|
+| 2026-05-14/shorts-batch-221546 | PASS | 1 | 1 | 41.6 |
+| 2026-05-14/shorts-batch-221628 | PASS | 1 | 1 | 45.2 |
 
