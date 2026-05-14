@@ -27,7 +27,18 @@ require_env OLLAMA_HOST OLLAMA_MODEL_HIGHLIGHT WHISPER_MODEL RECORDS_DIR
 # --- Mission workspace ---------------------------------------------------
 MISSION_ID="highlight-$(date +%H%M%S)"
 MDIR="$RECORDS_DIR/missions/$(date +%Y-%m-%d)/$MISSION_ID"
+
 mkdir -p "$MDIR/resources" "$MDIR/outputs"
+METRICS_PATH="$MDIR/metrics.json"
+MISSION_T0=$(python3 -c "import time; print(time.time())")
+STAGE_TIMES=()
+stage_mark() {
+  local name="$1" t1=$(python3 -c "import time; print(time.time())")
+  STAGE_TIMES+=("$name=$(awk -v a="${STAGE_T0:-$MISSION_T0}" -v b="$t1" 'BEGIN{printf "%.3f", b-a}')")
+  STAGE_T0="$t1"
+}
+STAGE_T0="$MISSION_T0"
+
 log_step "mission workspace: $MDIR"
 
 PLAN_PATH="$MDIR/plan.md"
@@ -74,6 +85,7 @@ fi
 log_step "2/5 resourcer: transcribe"
 TRANSCRIPT=$(whisper_transcribe "$SRC" "$MDIR/resources/transcript")
 log_ok "transcript: $TRANSCRIPT"
+stage_mark "transcribe"
 
 SEGS="$MDIR/resources/segments.json"
 whisper_segments "$TRANSCRIPT" > "$SEGS"
@@ -122,7 +134,8 @@ WINDOW=$(jq -cn \
 START=$(echo "$WINDOW" | jq -r '.start')
 END=$(echo "$WINDOW" | jq -r '.end')
 DUR_W=$(awk -v s="$START" -v e="$END" 'BEGIN{ printf "%.2f", e - s }')
-log_ok "clamped window: ${START}s → ${END}s (${DUR_W}s)"
+log_ok "clamped window:
+stage_mark "select" ${START}s → ${END}s (${DUR_W}s)"
 # Persist the clamped window for QA
 jq -n --arg s "$START" --arg e "$END" --arg r "$REASON" \
       --argjson rs "$RAW_START" --argjson re "$RAW_END" \
@@ -142,7 +155,8 @@ ffmpeg_segments_to_srt "$SEGS" "$START" "$END" "$SRT"
 ffmpeg_burn_srt "$CROP" "$SRT" "$FINAL"
 
 rm -f "$CUT" "$CROP"
-log_ok "rendered → $FINAL"
+log_ok "rendered →
+stage_mark "render" $FINAL"
 
 # --- Step 5: QA ------------------------------------------------------------
 log_step "5/5 qa: validate"
@@ -164,7 +178,8 @@ for v in "$EXIST_OK" "$DUR_OK" "$RES_OK" "$AUDIO_OK" "$SIZE_OK" "$SRT_OK"; do
   [[ "$v" == "FAIL" ]] && VERDICT=FAIL
 done
 
-cat > "$MDIR/qa-report.md" <<MDEOF
+cat > "$MDIR/qa-report.md"
+stage_mark "qa" <<MDEOF
 # QA report — $MISSION_ID
 
 **Verdict**: $VERDICT
@@ -188,6 +203,22 @@ $SELECTION
 - segments: $SEG_COUNT
 MDEOF
 
+MISSION_T1=$(python3 -c "import time; print(time.time())")
+TOTAL_S=$(awk -v a="$MISSION_T0" -v b="$MISSION_T1" 'BEGIN{printf "%.3f", b-a}')
+python3 - "$METRICS_PATH" "$TOTAL_S" "$VERDICT" "$SIZE_MB" "$DUR" "${STAGE_TIMES[@]}" <<PYME
+import json, sys, pathlib
+path = sys.argv[1]
+total = float(sys.argv[2])
+verdict = sys.argv[3]
+size_mb = float(sys.argv[4])
+duration_s = float(sys.argv[5])
+stages = {}
+for kv in sys.argv[6:]:
+    k, v = kv.split("=", 1)
+    stages[k] = float(v)
+data = {"total_s": total, "verdict": verdict, "size_mb": size_mb, "output_duration_s": duration_s, "stages_s": stages}
+pathlib.Path(path).write_text(json.dumps(data, indent=2))
+PYME
 cat > "$MDIR/summary.md" <<MDEOF
 # Summary — $MISSION_ID
 

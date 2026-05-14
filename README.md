@@ -111,8 +111,9 @@ Install the nightly scheduler:
 - [x] Nightly launchd scheduler for autonomous mode
 - [ ] Iterative QA-feedback loop in editor
 - [ ] Other mission types beyond highlight extraction
-- [ ] Cost / runtime metrics per mission
+- [x] Cost / runtime metrics per mission
 - [ ] QA feedback retry loop (failed runs auto-retried with QA notes)
+- [x] Cost / runtime metrics per mission
 <!-- status:end -->
 
 ## License
