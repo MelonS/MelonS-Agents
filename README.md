@@ -73,7 +73,7 @@ multilingual) · `ollama` (`llama3.2:3b`) · Claude API for orchestration.
 git clone git@github.com:MelonS/MelonS-Agents.git
 cd MelonS-Agents
 cp .env.example .env
-./scripts/bootstrap.sh
+./scripts/bootstrap.sh   # also creates EN+KO synthetic fixtures under /tmp/smoke/
 ./agents/missions/highlight/run.sh <url_or_local_path>
 ```
 
@@ -159,7 +159,7 @@ MIT. See [`LICENSE`](LICENSE).
 ## 빠른 실행
 
 ```bash
-./scripts/bootstrap.sh              # 환경 점검
+./scripts/bootstrap.sh              # 환경 점검 + EN/KO 합성 fixture 생성
 ./agents/missions/highlight/run.sh <영상 URL 또는 로컬 경로>
 ```
 
