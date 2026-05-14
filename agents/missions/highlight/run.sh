@@ -134,8 +134,8 @@ WINDOW=$(jq -cn \
 START=$(echo "$WINDOW" | jq -r '.start')
 END=$(echo "$WINDOW" | jq -r '.end')
 DUR_W=$(awk -v s="$START" -v e="$END" 'BEGIN{ printf "%.2f", e - s }')
-log_ok "clamped window:
-stage_mark "select" ${START}s → ${END}s (${DUR_W}s)"
+log_ok "clamped window: ${START}s → ${END}s (${DUR_W}s)"
+stage_mark "select"
 # Persist the clamped window for QA
 jq -n --arg s "$START" --arg e "$END" --arg r "$REASON" \
       --argjson rs "$RAW_START" --argjson re "$RAW_END" \
@@ -155,8 +155,8 @@ ffmpeg_segments_to_srt "$SEGS" "$START" "$END" "$SRT"
 ffmpeg_burn_srt "$CROP" "$SRT" "$FINAL"
 
 rm -f "$CUT" "$CROP"
-log_ok "rendered →
-stage_mark "render" $FINAL"
+log_ok "rendered → $FINAL"
+stage_mark "render"
 
 # --- Step 5: QA ------------------------------------------------------------
 log_step "5/5 qa: validate"
@@ -178,8 +178,8 @@ for v in "$EXIST_OK" "$DUR_OK" "$RES_OK" "$AUDIO_OK" "$SIZE_OK" "$SRT_OK"; do
   [[ "$v" == "FAIL" ]] && VERDICT=FAIL
 done
 
-cat > "$MDIR/qa-report.md"
-stage_mark "qa" <<MDEOF
+cat > "$MDIR/qa-report.md" <<MDEOF
+stage_mark "qa"
 # QA report — $MISSION_ID
 
 **Verdict**: $VERDICT
