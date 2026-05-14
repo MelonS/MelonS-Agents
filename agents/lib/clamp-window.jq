@@ -1,21 +1,44 @@
-def clamp($S; $rs; $re; $src_dur):
-  ($S | map(select(.start <= ($rs + 0.5))) | last // $S[0] | .start) as $start0
-  | ($S | map(select(.end >= ($re - 0.5))) | first // $S[-1] | .end) as $end0
-  | ($end0 - $start0) as $d0
-  | ([45, $src_dur - 0.1] | min) as $target
-  | if $d0 >= 30 and $d0 <= 60 then
-      {start: $start0, end: $end0}
-    elif $d0 < 30 then
-      ($S | sort_by(.start)) as $sorted
-      | (($start0 + $end0) / 2) as $mid
-      | ($mid - $target / 2) as $want_s
-      | ($mid + $target / 2) as $want_e
-      | ([$want_s, 0] | max) as $clip_s
-      | ([$want_e, $src_dur] | min) as $clip_e
-      | { start: ($sorted | map(.start) | map(select(. <= $clip_s)) | last // 0),
-          end:   ($sorted | map(.end)   | map(select(. >= $clip_e)) | first // $src_dur) }
-    else
-      {start: $start0, end: ($start0 + 60)}
-    end;
+# Inputs:
+#   $segs[0] : array of {start,end,text} segments
+#   $rs, $re : model's chosen window (raw)
+#   $src_dur : source media duration in seconds
+# Output:
+#   {start, end} clamped to [30, 60] seconds, snapped to segment edges,
+#   never overshooting the source duration.
 
-clamp($segs[0]; $rs; $re; $src_dur)
+def snap_start_at($p):
+  $segs[0] | map(.start) | map(select(. <= $p)) | last // 0;
+
+def snap_end_at($p):
+  $segs[0] | map(.end) | map(select(. >= $p)) | first // $src_dur;
+
+# 1. Initial snap to model's window
+( snap_start_at($rs + 0.5) ) as $s0
+| ( snap_end_at($re - 0.5)  ) as $e0
+| ($e0 - $s0) as $d0
+# 2. Target midpoint and centered 45s window
+| (($s0 + $e0) / 2) as $mid
+| 45 as $target
+| (
+    if $d0 >= 30 and $d0 <= 60 then
+      {start: $s0, end: $e0}
+    elif $d0 < 30 then
+      # expand: snap around mid, target 45s
+      ( snap_start_at($mid - $target/2) ) as $ws
+      | ( snap_end_at($mid + $target/2) ) as $we
+      | {start: $ws, end: $we}
+    else
+      # shrink: keep $s0, cap at 60s
+      {start: $s0, end: ($s0 + 60)}
+    end
+  ) as $w
+# 3. Hard-cap: result must be ≤ 60s and ≤ source duration
+| ($w.start) as $start
+| ([$w.end, $start + 60, $src_dur] | min) as $end
+# 4. Hard-floor: result must be ≥ 30s when source allows
+| (if ($end - $start) < 30 and $src_dur >= 30 then
+     ([$start + 30, $src_dur] | min) as $stretched
+     | {start: $start, end: $stretched}
+   else
+     {start: $start, end: $end}
+   end)
