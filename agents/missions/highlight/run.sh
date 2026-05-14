@@ -114,7 +114,7 @@ log_info "model picked: ${RAW_START}s → ${RAW_END}s (${REASON})"
 # Clamp window to [30, 60]s by expanding around the chosen midpoint using
 # available segments. Logic lives in agents/lib/clamp-window.jq.
 CLAMP_JQ="$REPO_ROOT/agents/lib/clamp-window.jq"
-WINDOW=$(jq -c \
+WINDOW=$(jq -cn \
   --argjson rs "$RAW_START" --argjson re "$RAW_END" \
   --argjson src_dur "$SRC_DURATION" \
   --slurpfile segs "$SEGS" \
