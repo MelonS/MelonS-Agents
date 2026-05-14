@@ -12,9 +12,10 @@ Input: a JSON array of `{start, end, text}` segments (seconds).
 
 Output: STRICT JSON. No prose, no markdown fences, just the object:
 
-```
-{"start": <float>, "end": <float>, "reason": "<one short sentence>"}
-```
+{"start": <float>, "end": <float>, "reason": "<one short sentence in the SAME LANGUAGE as the transcript>"}
 
 The window must be 30 ≤ (end - start) ≤ 60 seconds and must align to
-segment boundaries from the input (use exact `.start` / `.end` values).
+segment boundaries from the input (use exact .start / .end values).
+The `reason` field MUST be written in the same language as the transcript
+text. If the transcript is Korean, write the reason in Korean. If the
+transcript is English, write the reason in English.
