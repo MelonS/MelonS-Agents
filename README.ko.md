@@ -1,18 +1,35 @@
-**한국어** | [English](./README.md)
+<div align="center">
 
 # MelonS-Agents
 
-숏폼 영상 제작을 위한 효율적인 macOS 기반 멀티 에이전트 시스템.
-환경 변수로 도구 경로를 추상화해 두어 리눅스로도 그대로 이식 가능.
-저장소에 커밋이 쌓이며 시스템 자체의 로직이 점진적으로 진화하도록
-설계되었습니다.
+**한국어** | [English](./README.md)
+
+![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
+![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
+![Autonomous](https://img.shields.io/badge/Autonomous-10B981?style=for-the-badge&logo=robotframework&logoColor=white)
+
+![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)
+![Shell](https://img.shields.io/badge/Shell-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)
+![FFmpeg](https://img.shields.io/badge/FFmpeg-007808?style=for-the-badge&logo=ffmpeg&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-D97757?style=for-the-badge&logo=anthropic&logoColor=white)
+
+</div>
+
+## 개요
+
+> 숏폼 영상 제작을 위한 효율적인 macOS 기반 멀티 에이전트 시스템.
+> 단 하나의 원칙 위에 만들어졌습니다 — **제작 파이프라인을 자동화하고,
+> 시스템이 자신의 로직을 스스로 진화시키게 한다.** 이 저장소의 모든
+> 커밋은 그 진화의 한 단계입니다. 히스토리는 산출물의 기록이 아니라,
+> 에이전트 시스템 자체가 성장해 온 궤적입니다.
 
 ## 아키텍처
 
 ```
                        ┌───────────────────┐
                        │   Orchestrator    │
-                       │     (opus)        │
+                       │      (opus)       │
                        └────────┬──────────┘
                                 │ 위임
             ┌──────────┬────────┼────────┬──────────┐
@@ -20,13 +37,17 @@
        ┌─────────┐┌─────────┐┌─────────┐┌──────────┐
        │ Planner ││Resourcer││ Editor  ││    QA    │
        └─────────┘└─────────┘└─────────┘└──────────┘
-            │          │        │           │
-            ▼          ▼        ▼           ▼
-       plan.md   resources/  outputs/   qa-report.md
 ```
 
-서브 에이전트 정의는 [`.claude/agents/`](.claude/agents/)에 있습니다.
-미션 템플릿과 공용 셸 라이브러리는 [`agents/`](agents/) 아래에 위치합니다.
+| 에이전트 | 책임 | 산출물 |
+|----------|------|--------|
+| 🤖 **Orchestrator** (opus) | 미션 분해, 위임, 최종 통합 | 태스크 리스트 · `summary.md` |
+| 🧠 **Planner** | 전략 수립, 작업 분해, 수락 기준 정의 | `plan.md` |
+| 📦 **Resourcer** | 자산 수집, 외부 도구 실행 (ffmpeg / yt-dlp / whisper) | `resources/MANIFEST.md` |
+| 🎞️ **Editor** | 출력 렌더링, 산출물 조립 | `outputs/CHANGELOG.md` |
+| ✅ **QA** | 계획 기준 대비 검증, 회귀 감지 | `qa-report.md` |
+
+서브 에이전트 정의: [`.claude/agents/`](.claude/agents/) · 미션 템플릿과 공용 셸 라이브러리: [`agents/`](agents/)
 
 ## 코드 / 데이터 분리
 
@@ -38,7 +59,7 @@
 
 저장소는 에이전트 시스템 자체만 보관합니다. 미션 산출물 — 영상,
 전사, 생성된 자산 — 은 모두 로컬 `records/`에만 남습니다. GitHub에
-보이는 것은 산출물이 아니라 시스템의 진화 과정입니다.
+드러나는 것은 산출물이 아니라 시스템의 진화 과정입니다.
 
 ## 이식성
 
@@ -49,11 +70,10 @@
 
 [`config/policies.yaml`](config/policies.yaml)에 정의됩니다.
 
-- **Interactive** (`AUTONOMY_MODE=false`, 기본값) — 로직 변경,
-  파괴적 작업, 외부 게시 전에 사용자 확인을 받습니다.
-- **Autonomous** (`AUTONOMY_MODE=true`) — `AUTONOMY_BUDGET_USD`
-  범위 안에서 무인 실행. 이 모드에서는 로직 파일(`agents/`,
-  `.claude/agents/`)이 불변입니다.
+| 모드 | 플래그 | 동작 |
+|------|--------|------|
+| ⚙️ **Interactive** (기본값) | `AUTONOMY_MODE=false` | 로직 변경·파괴적 작업·외부 게시 전에 사용자 확인을 받습니다. |
+| 🌙 **Autonomous** | `AUTONOMY_MODE=true` | `AUTONOMY_BUDGET_USD` 범위 안에서 무인 실행. 로직 파일(`agents/`, `.claude/agents/`)은 불변입니다. |
 
 ## 미션 흐름
 
@@ -76,7 +96,7 @@
 git clone git@github.com:MelonS/MelonS-Agents.git
 cd MelonS-Agents
 cp .env.example .env
-./scripts/bootstrap.sh   # /tmp/smoke/ 아래에 EN+KO 합성 fixture도 함께 생성
+./scripts/bootstrap.sh
 ./agents/missions/highlight/run.sh <URL 또는 로컬 경로>
 ```
 

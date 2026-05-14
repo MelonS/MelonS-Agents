@@ -1,17 +1,35 @@
-[한국어](./README.ko.md) | **English**
+<div align="center">
 
 # MelonS-Agents
 
-An efficient macOS-based multi-agent system for short-form video production.
-Linux-portable via env-managed tool paths. Designed to evolve its own
-logic over time via commits to this repository.
+[한국어](./README.ko.md) | **English**
+
+![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
+![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
+![Autonomous](https://img.shields.io/badge/Autonomous-10B981?style=for-the-badge&logo=robotframework&logoColor=white)
+
+![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)
+![Shell](https://img.shields.io/badge/Shell-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)
+![FFmpeg](https://img.shields.io/badge/FFmpeg-007808?style=for-the-badge&logo=ffmpeg&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-D97757?style=for-the-badge&logo=anthropic&logoColor=white)
+
+</div>
+
+## Overview
+
+> An efficient macOS-based multi-agent system for short-form video
+> production. Built on a single premise: **automate the production
+> pipeline, then let the system evolve its own logic.** Every commit
+> in this repository is a step in that evolution — the history is not
+> a record of outputs, but of how the agent system itself grows over time.
 
 ## Architecture
 
 ```
                        ┌───────────────────┐
                        │   Orchestrator    │
-                       │     (opus)        │
+                       │      (opus)       │
                        └────────┬──────────┘
                                 │ delegates
             ┌──────────┬────────┼────────┬──────────┐
@@ -19,13 +37,17 @@ logic over time via commits to this repository.
        ┌─────────┐┌─────────┐┌─────────┐┌──────────┐
        │ Planner ││Resourcer││ Editor  ││    QA    │
        └─────────┘└─────────┘└─────────┘└──────────┘
-            │          │        │           │
-            ▼          ▼        ▼           ▼
-       plan.md   resources/  outputs/   qa-report.md
 ```
 
-Subagent definitions live in [`.claude/agents/`](.claude/agents/).
-Mission templates and shared shell libs are under [`agents/`](agents/).
+| Agent | Responsibility | Output |
+|-------|----------------|--------|
+| 🤖 **Orchestrator** (opus) | Mission decomposition, delegation, final synthesis | task list · `summary.md` |
+| 🧠 **Planner** | Strategy, work breakdown, acceptance criteria | `plan.md` |
+| 📦 **Resourcer** | Asset fetching, external tool execution (ffmpeg / yt-dlp / whisper) | `resources/MANIFEST.md` |
+| 🎞️ **Editor** | Output rendering, deliverable assembly | `outputs/CHANGELOG.md` |
+| ✅ **QA** | Validation against plan criteria, regression detection | `qa-report.md` |
+
+Subagent definitions: [`.claude/agents/`](.claude/agents/) · Mission templates and shared shell libs: [`agents/`](agents/)
 
 ## Code / Data separation
 
@@ -37,7 +59,7 @@ Mission templates and shared shell libs are under [`agents/`](agents/).
 
 The repository contains only the agent system itself. Mission outputs —
 videos, transcripts, generated assets — stay local under `records/`.
-What you see on GitHub is the system's own evolution, not its products.
+What appears on GitHub is the system's own evolution, not its products.
 
 ## Portability
 
@@ -48,11 +70,10 @@ between macOS and Linux; no code changes required.
 
 Defined in [`config/policies.yaml`](config/policies.yaml).
 
-- **Interactive** (`AUTONOMY_MODE=false`, default) — pauses for user
-  confirmation on logic changes, destructive ops, external publishes.
-- **Autonomous** (`AUTONOMY_MODE=true`) — runs unattended within
-  `AUTONOMY_BUDGET_USD`. Logic files (`agents/`, `.claude/agents/`) are
-  immutable in this mode.
+| Mode | Flag | Behavior |
+|------|------|----------|
+| ⚙️ **Interactive** (default) | `AUTONOMY_MODE=false` | Pauses for user confirmation on logic changes, destructive ops, and external publishes. |
+| 🌙 **Autonomous** | `AUTONOMY_MODE=true` | Runs unattended within `AUTONOMY_BUDGET_USD`. Logic files (`agents/`, `.claude/agents/`) are immutable. |
 
 ## Mission flow
 
@@ -75,7 +96,7 @@ multilingual) · `ollama` (`llama3.2:3b`) · Claude API for orchestration.
 git clone git@github.com:MelonS/MelonS-Agents.git
 cd MelonS-Agents
 cp .env.example .env
-./scripts/bootstrap.sh   # also creates EN+KO synthetic fixtures under /tmp/smoke/
+./scripts/bootstrap.sh
 ./agents/missions/highlight/run.sh <url_or_local_path>
 ```
 
