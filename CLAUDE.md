@@ -8,6 +8,16 @@ Hierarchical agent system. See `README.md` for layout, `config/policies.yaml` fo
 - Only pause for **truly catastrophic** risks: hardware damage, irreversible data loss outside the repo (e.g., `rm -rf ~`, disk format, force-push to shared remotes, sending external messages).
 - Report results, not approvals.
 
+### Money firewall (explicit confirmation required)
+
+Auto-approve does **not** cover actions that spend money or commit future money. Always pause and request explicit user confirmation for:
+
+1. **Paid API usage / SaaS subscription / paid library purchase** — any action that triggers an actual payment.
+2. **Paid API calls** — including the transition point where free credits end and metered billing begins.
+3. **Cloud resource creation** — AWS, GCP, Azure, or any provider where standing infrastructure incurs ongoing cost.
+
+Local-only resources (Ollama, FFmpeg, whisper.cpp, macOS `say`, brew packages) stay fully auto-approved.
+
 ## Git workflow — auto-commit, auto-push
 
 - **Every Code change** (anything under `agents/`, `.claude/agents/`, `config/`, `scripts/`, `CLAUDE.md`, `README.md`, `.env.example`, `.gitignore`) is committed and pushed to `origin/main` on completion.

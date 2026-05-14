@@ -132,4 +132,4 @@ Initial target platforms: TikTok and YouTube Shorts.
 
 ## License
 
-Not yet declared. Treat as all rights reserved until a license file is added.
+This project is licensed under the MIT License. See [`LICENSE`](LICENSE).
