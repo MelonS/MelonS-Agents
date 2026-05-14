@@ -1,6 +1,6 @@
 # Metrics dashboard
 
-_3 mission(s) tracked._
+_5 mission(s) tracked._
 
 - Pass rate: 100%
 
@@ -13,4 +13,11 @@ _3 mission(s) tracked._
 | 2026-05-14/highlight-220628 | PASS | 43.6 | 28.7 | 44.2 | 21.44 |
 | 2026-05-14/highlight-220712 | PASS | 36.6 | 30.5 | 50.0 | 24.52 |
 | 2026-05-14/highlight-220748 | PASS | 31.5 | 22.5 | 31.9 | 15.76 |
+
+## Summarize missions (2)
+
+| Mission | Verdict | Transcript words | Summary bytes |
+|---------|---------|------------------|---------------|
+| 2026-05-14/summarize-221345 | PASS | 360 | 1293 |
+| 2026-05-14/summarize-221403 | PASS | 126 | 504 |
 
