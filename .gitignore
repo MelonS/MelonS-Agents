@@ -17,6 +17,8 @@ records/
 # Image outputs (allow doc images via explicit !docs/*.png if needed later)
 *.png
 *.jpg
+# Caption-verify proof frames are committed evidence
+!docs/caption-verify/*.jpg
 *.jpeg
 *.gif
 *.webp
