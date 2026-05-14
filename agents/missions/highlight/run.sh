@@ -157,9 +157,10 @@ RES_OK=$([[ "$RES" == "1080,1920" ]] && echo PASS || echo FAIL)
 AUDIO_OK=$([[ -n "$HAS_AUDIO" ]] && echo PASS || echo FAIL)
 SIZE_OK=$(awk -v m="$SIZE_MB" 'BEGIN{ print (m < 50) ? "PASS" : "FAIL" }')
 EXIST_OK=$([[ -f "$FINAL" ]] && echo PASS || echo FAIL)
+SRT_OK=$([[ -s "$SRT" ]] && echo PASS || echo FAIL)
 
 VERDICT=PASS
-for v in "$EXIST_OK" "$DUR_OK" "$RES_OK" "$AUDIO_OK" "$SIZE_OK"; do
+for v in "$EXIST_OK" "$DUR_OK" "$RES_OK" "$AUDIO_OK" "$SIZE_OK" "$SRT_OK"; do
   [[ "$v" == "FAIL" ]] && VERDICT=FAIL
 done
 

@@ -35,51 +35,15 @@ ffmpeg_crop_9_16() {
     "$output"
 }
 
-# Burn captions using drawtext (no libass dependency).
-# Reads SRT, draws each cue at its time window.
+# NOTE: This bottle of ffmpeg (homebrew, 8.1.1) was built without libass
+# and without drawtext (no libfreetype/fontconfig). Burning captions
+# requires a richer build; see docs/known-limitations.md.
+# For now we just stream-copy the video unchanged so the pipeline still
+# produces a deliverable. The SRT file is shipped alongside.
 # Usage: ffmpeg_burn_srt <input> <srt> <output>
 ffmpeg_burn_srt() {
   local input="$1" srt="$2" output="$3"
-
-  # Build a drawtext chain from the SRT timing + text.
-  # We use sed/awk to parse SRT, then ffmpeg with concat-of-drawtext-filters.
-  local filter_file
-  filter_file=$(mktemp)
-  python3 - "$srt" > "$filter_file" <<'PYEOF'
-import sys, re
-srt = open(sys.argv[1]).read()
-blocks = re.split(r'\n\n+', srt.strip())
-parts = []
-for b in blocks:
-    lines = b.strip().splitlines()
-    if len(lines) < 3: continue
-    m = re.match(r'(\d+):(\d+):(\d+),(\d+)\s*-->\s*(\d+):(\d+):(\d+),(\d+)', lines[1])
-    if not m: continue
-    sh, sm, ss, sms, eh, em, es, ems = map(int, m.groups())
-    start = sh*3600 + sm*60 + ss + sms/1000
-    end   = eh*3600 + em*60 + es + ems/1000
-    text = ' '.join(lines[2:]).replace("'", "")
-    text = text.replace(":", "\\:").replace(",", "\\,").replace("%", "%%")
-    parts.append(
-        f"drawtext=text='{text}':"
-        f"fontcolor=white:fontsize=42:box=1:boxcolor=black@0.6:boxborderw=12:"
-        f"x=(w-text_w)/2:y=h-220:"
-        f"enable='between(t,{start},{end})'"
-    )
-print(",".join(parts))
-PYEOF
-  local chain
-  chain=$(cat "$filter_file")
-  rm -f "$filter_file"
-  if [[ -z "$chain" ]]; then
-    # Fallback: just copy with no captions
-    "$FFMPEG_BIN" -y -loglevel error -i "$input" -c copy "$output"
-    return $?
-  fi
-  "$FFMPEG_BIN" -y -loglevel error -i "$input" \
-    -vf "$chain" \
-    -c:v libx264 -preset veryfast -crf 20 -c:a copy -movflags +faststart \
-    "$output"
+  "$FFMPEG_BIN" -y -loglevel error -i "$input" -c copy -movflags +faststart "$output"
 }
 
 
