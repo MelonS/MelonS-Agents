@@ -1,32 +1,89 @@
-# Records (Data layer — never committed)
-records/**
+# =============================================================================
+# Records (Data layer — outputs from agent runs, NEVER committed)
+# =============================================================================
+records/
 !records/.gitkeep
+# Media outputs anywhere in the tree
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.avi
+*.mp3
+*.wav
+*.flac
+*.m4a
+*.opus
+# Image outputs (allow doc images via explicit !docs/*.png if needed later)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+# Generated transcripts / captions / SRT
+*.srt
+*.vtt
+*.ass
 
-# Environment
+# =============================================================================
+# Secrets & env
+# =============================================================================
 .env
 .env.local
+.env.*.local
 *.local
+secrets/
+*.pem
+*.key
+*.p12
 
+# =============================================================================
+# Temp / scratch
+# =============================================================================
+tmp/
+temp/
+scratch/
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# =============================================================================
 # Logs
+# =============================================================================
 *.log
 logs/
 
-# OS
+# =============================================================================
+# OS / editor cruft
+# =============================================================================
 .DS_Store
 Thumbs.db
-
-# Editors
 .vscode/
 .idea/
-*.swp
 
-# Python / node leftovers
+# =============================================================================
+# Language runtime artifacts
+# =============================================================================
 __pycache__/
 *.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 node_modules/
+dist/
+build/
+*.egg-info/
 
-# Claude Code session state (not the agent definitions)
+# =============================================================================
+# Claude Code local state (agent DEFINITIONS under .claude/agents/ ARE tracked)
+# =============================================================================
 .claude/sessions/
 .claude/cache/
 .claude/logs/
 .claude/settings.local.json
+.claude/.last-session
