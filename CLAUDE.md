@@ -8,6 +8,13 @@ Hierarchical agent system. See `README.md` for layout, `config/policies.yaml` fo
 - Only pause for **truly catastrophic** risks: hardware damage, irreversible data loss outside the repo (e.g., `rm -rf ~`, disk format, force-push to shared remotes, sending external messages).
 - Report results, not approvals.
 
+## Git workflow — auto-commit, auto-push
+
+- **Every Code change** (anything under `agents/`, `.claude/agents/`, `config/`, `scripts/`, `CLAUDE.md`, `README.md`, `.env.example`, `.gitignore`) is committed and pushed to `origin/main` on completion.
+- Remote: `git@github.com:MelonS/MelonS-Agents.git` (private).
+- `records/` is **never** committed (gitignored). The history on GitHub reflects only how the agent system itself evolves, not its outputs.
+- Commit message style: imperative subject ≤72 chars, optional body with bullets explaining *why*. Group changes by concern; don't bundle unrelated edits.
+
 ## Core rules
 
 - **Code vs Data separation**: agent logic lives under `agents/` and `.claude/agents/` (git-tracked). All outputs go to `$RECORDS_DIR` (default `./records/`, gitignored).
