@@ -175,6 +175,7 @@ cat > "$MDIR/qa-report.md" <<MDEOF
 - [$([ "$RES_OK" = PASS ] && echo x || echo ' ')] resolution = 1080x1920 — observed \`${RES}\`
 - [$([ "$AUDIO_OK" = PASS ] && echo x || echo ' ')] audio stream present — index \`${HAS_AUDIO:-none}\`
 - [$([ "$SIZE_OK" = PASS ] && echo x || echo ' ')] file size < 50 MB — observed \`${SIZE_MB} MB\`
+- [$([ "$SRT_OK" = PASS ] && echo x || echo ' ')] SRT captions sidecar shipped — \`$SRT\`
 
 ## Selection
 \`\`\`json
