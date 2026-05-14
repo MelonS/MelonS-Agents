@@ -19,6 +19,8 @@ records/
 *.jpg
 # Caption-verify proof frames are committed evidence
 !docs/caption-verify/*.jpg
+# Shorts-batch demo evidence committed
+!docs/shorts-batch-demo/*.jpg
 *.jpeg
 *.gif
 *.webp

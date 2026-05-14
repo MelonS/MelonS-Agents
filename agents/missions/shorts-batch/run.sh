@@ -33,25 +33,39 @@ whisper_segments "$TRANSCRIPT" > "$SEGS"
 SEG_COUNT=$(jq 'length' "$SEGS")
 log_ok "segments: $SEG_COUNT"
 
-# 3. Pick N highlights
+# 3. Pick N highlights — sequential loop with exclude list (more reliable
+# than asking the 3B model for a JSON array in one shot)
 ollama_ensure_model "$OLLAMA_MODEL_HIGHLIGHT"
-PROMPT_FILE="$(dirname "${BASH_SOURCE[0]}")/select-shorts.prompt.md"
-PROMPT="$(sed "s/\$N/$N/g" "$PROMPT_FILE")
+SINGLE_PROMPT_FILE="$(dirname "${BASH_SOURCE[0]}")/select-shorts-single.prompt.md"
+EXCLUDE='[]'
+PICKS_ARR='[]'
+for i in $(seq 1 "$N"); do
+  PROMPT="$(sed "s|\\\$EXCLUDE|$EXCLUDE|g" "$SINGLE_PROMPT_FILE")
 
 INPUT SEGMENTS:
 $(cat "$SEGS")"
-RAW=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$PROMPT" true)
-echo "$RAW" > "$MDIR/resources/picks.raw.json"
-
-# Extract the array even if model wrapped it in prose
-PICKS=$(echo "$RAW" | jq -c 'if type == "array" then . else (.. | arrays | select(.[0]? | type == "object" and has("start") and has("end"))) end' 2>/dev/null | head -1)
-if [[ -z "$PICKS" || "$PICKS" == "null" ]]; then
-  # Fallback: try to parse as object with array field, or wrap a single object
-  PICKS=$(echo "$RAW" | jq -c 'if type == "array" then . else [.] end' 2>/dev/null || echo "[]")
-fi
+  RAW=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$PROMPT" true)
+  PICK=$(echo "$RAW" | jq -c 'if type == "object" then . else (.. | objects | select(has("start") and has("end"))) end' 2>/dev/null | head -1)
+  if [[ -z "$PICK" || "$PICK" == "null" ]]; then
+    log_warn "pick $i: model returned no valid object — stopping"
+    break
+  fi
+  PS=$(echo "$PICK" | jq -r '.start')
+  PE=$(echo "$PICK" | jq -r '.end')
+  # Check overlap with already-picked
+  OVERLAP=$(echo "$PICKS_ARR" | jq --argjson s "$PS" --argjson e "$PE" \
+    '[ .[] | select(.start < $e and .end > $s) ] | length')
+  if [[ "$OVERLAP" != "0" ]]; then
+    log_warn "pick $i overlaps existing — accepting anyway (best-effort)"
+  fi
+  PICKS_ARR=$(echo "$PICKS_ARR" | jq -c --argjson p "$PICK" '. + [$p]')
+  EXCLUDE=$(echo "$EXCLUDE" | jq -c --argjson s "$PS" --argjson e "$PE" '. + [{start: $s, end: $e}]')
+  log_ok "pick $i: ${PS}s → ${PE}s"
+done
+PICKS="$PICKS_ARR"
 echo "$PICKS" > "$MDIR/resources/picks.json"
 PICK_COUNT=$(echo "$PICKS" | jq 'length')
-log_ok "picks: $PICK_COUNT"
+log_ok "picks: $PICK_COUNT (requested $N)"
 
 # 4. Render each pick
 VERDICT=PASS

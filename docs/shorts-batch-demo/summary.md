@@ -1,6 +1,6 @@
-# Summary — shorts-batch-222033
+# Summary — shorts-batch-222222
 
 - source: /tmp/smoke/lecture.mp4 (109.872993s)
-- picks: 1, rendered: 1
+- picks: 3, rendered: 3
 - verdict: PASS
-- total: 43.820s
+- total: 115.165s
