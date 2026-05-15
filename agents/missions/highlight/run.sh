@@ -18,6 +18,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../lib/ffmpeg.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/attribution.sh"
 # shellcheck disable=SC1091
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/retry.sh"
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/copyright.sh"
 
 SOURCE="${1:-}"
 if [[ -z "$SOURCE" ]]; then
@@ -27,6 +29,15 @@ fi
 
 require_bin "$FFMPEG_BIN" "$FFPROBE_BIN" "$WHISPER_CLI_BIN" "$YT_DLP_BIN" jq curl
 require_env OLLAMA_HOST OLLAMA_MODEL_HIGHLIGHT WHISPER_MODEL RECORDS_DIR
+
+# Copyright gate — refuse remote URLs that aren't on the permissive-domain
+# allowlist.  Local file paths are skipped here; their licensing is handled
+# by the fixture catalog instead.
+if ! ALLOWED_LICENSE=$(check_source_allowed "$SOURCE"); then
+  log_err "copyright gate refused source — see config/copyright-allowlist.yaml"
+  exit 67
+fi
+log_info "copyright gate: $ALLOWED_LICENSE"
 
 # --- Mission workspace ---------------------------------------------------
 MISSION_ID="highlight-$(date +%H%M%S)"

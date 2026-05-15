@@ -16,12 +16,20 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../lib/ffmpeg.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/attribution.sh"
 # shellcheck disable=SC1091
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/retry.sh"
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/copyright.sh"
 
 SOURCE="${1:-}"
 [[ -z "$SOURCE" ]] && { log_err "usage: $0 <url_or_path>"; exit 64; }
 
 require_bin "$FFMPEG_BIN" "$WHISPER_CLI_BIN" "$YT_DLP_BIN" jq
 require_env OLLAMA_HOST OLLAMA_MODEL_HIGHLIGHT WHISPER_MODEL RECORDS_DIR
+
+if ! ALLOWED_LICENSE=$(check_source_allowed "$SOURCE"); then
+  log_err "copyright gate refused source — see config/copyright-allowlist.yaml"
+  exit 67
+fi
+log_info "copyright gate: $ALLOWED_LICENSE"
 
 MISSION_ID="summarize-$(date +%H%M%S)"
 MDIR="$RECORDS_DIR/missions/$(date +%Y-%m-%d)/$MISSION_ID"

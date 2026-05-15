@@ -1,0 +1,79 @@
+# =============================================================================
+# Copyright allowlist — first-line defense for source URLs
+# =============================================================================
+# Why this exists:
+#   docs/copyright-policy.md commits the system to "burn credit or do not
+#   render."  The fixture catalog is the curated path; this file is the
+#   *gate* — if a mission is invoked with a URL that does not match a
+#   permissive domain here, agents/lib/copyright.sh refuses the run.
+#
+#   The allowlist is deliberately small and conservative.  Adding a new
+#   domain is a deliberate action (commit + push) that creates an audit
+#   trail.
+#
+# Match rules:
+#   - `domain` is matched as a suffix of the URL's hostname (case-insensitive).
+#     "blender.org" matches both "download.blender.org" and "blender.org".
+#   - URLs are blocked if the host doesn't suffix-match any entry.
+#   - Local file paths (no http(s):// prefix) bypass this check entirely —
+#     the fixture catalog handles licensing for those.
+# =============================================================================
+
+domains:
+  # Blender Foundation open movies — every Durian / Peach / Mango / Spring
+  # project release is CC-BY 3.0 or CC-BY 2.5 (see https://www.blender.org/
+  # about/foundation/open-projects/).
+  - domain: blender.org
+    license_default: CC-BY-3.0
+    note: Blender Foundation open movies (BBB, Sintel, Tears of Steel, etc.)
+
+  # Xiph.org hosts test media for codec work, CC-licensed.
+  - domain: media.xiph.org
+    license_default: CC-BY-3.0
+    note: Xiph test media (Tears of Steel, Big Buck Bunny mirrors)
+
+  # Internet Archive — extremely broad collection, most items are PD or CC
+  # but per-item licensing varies; the license-string probe (TODO) should
+  # cross-check, not this allowlist alone.
+  - domain: archive.org
+    license_default: requires-per-item-probe
+    note: Internet Archive — license must be probed per-item before publish
+
+  # Wikimedia Commons — all media is freely licensed (CC, PD, or compatible).
+  - domain: wikimedia.org
+    license_default: CC-BY-SA-4.0
+    note: Wikimedia Commons — varies per file; safe as a domain default
+
+  # The user's own uploads — drop their personal CDN / S3 / etc. here when
+  # they have one.
+  # - domain: cdn.melons.example
+  #   license_default: owner-self
+  #   note: User's own content; no third-party rights
+
+# -----------------------------------------------------------------------------
+# Per-license publish rules — consulted by scripts/publish-gate.sh before any
+# external upload is attempted.  Today only "internal demo" is used.
+# -----------------------------------------------------------------------------
+publish_rules:
+  - license: CC-BY-3.0
+    require_attribution: true
+    commercial_repost: allowed_with_credit
+  - license: CC-BY-2.5
+    require_attribution: true
+    commercial_repost: allowed_with_credit
+  - license: CC-BY-SA-4.0
+    require_attribution: true
+    share_alike: true
+    commercial_repost: allowed_with_credit
+  - license: CC-BY-NC-4.0
+    require_attribution: true
+    commercial_repost: forbidden
+  - license: requires-per-item-probe
+    publish_blocked: true
+    reason: needs license-string probe before publish
+  - license: owner-self
+    require_attribution: false
+    commercial_repost: allowed
+  - license: unknown
+    publish_blocked: true
+    reason: no license recorded — refuse external publish

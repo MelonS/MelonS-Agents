@@ -15,17 +15,21 @@ Every short produced by this system either (a) credits its source on the rendere
 - `config/fixtures.yaml` rejects any entry without a `license` field.
 - The downloader (`scripts/fetch-fixtures.sh`) only follows links the catalog already vetted; ad-hoc URLs require adding them to the catalog first.
 
-## TODO — automated copyright filter (not yet implemented)
+## Automated copyright filter — status
 
-When we start fetching from broader sources (user-supplied URLs, social platforms), the following gates need to land before publishing is wired up:
+### Shipped (2026-05-15)
 
-- [ ] **Domain allowlist** — reject sources outside a known-permissive set (Blender open movies, CC-licensed archives, user's own uploads) until reviewed.
-- [ ] **License-string probe** — for sources that expose machine-readable license metadata (Wikimedia, Internet Archive, Vimeo CC channel), pull it and store under `resources/license.json`.
-- [ ] **Audio-fingerprint check** — run a local fingerprinter (e.g., chromaprint/`fpcalc`) and refuse to render if the soundtrack matches a known commercial dataset. Avoids re-uploading a copyrighted song over neutral footage.
-- [ ] **Logo / watermark detection** — refuse renders where the source frame already carries another creator's logo/handle in the area we'd overlay; surfaces a warning so the user can pick a different source.
-- [ ] **Per-platform reuse rules** — separate "okay for archival re-edit" from "okay to repost commercially"; today everything is treated as "internal demo only".
-- [ ] **Publish-gate hook** — block any future `publish.sh` from running on a mission whose `outputs/SOURCES.txt` is missing a `license:` line.
-- [ ] **Strike-record log** — if a published short ever gets a takedown notice, append the mission id + URL + reason to `records/strikes.log` so the same source is auto-rejected next time.
+- [x] **Domain allowlist** — `config/copyright-allowlist.yaml` lists permissive domains (Blender, Xiph, Internet Archive, Wikimedia). `check_source_allowed` in `agents/lib/copyright.sh` is called at the top of every mission's `run.sh`; non-allowlisted URLs are refused with exit code 67. Local file paths bypass (fixture catalog handles them).
+- [x] **Publish-gate hook** — `scripts/publish-gate.sh <mission-dir>` reads `outputs/SOURCES.txt` and refuses to greenlight publishing if the license is empty, `unknown`, `requires-per-item-probe`, or listed `publish_blocked: true` in the allowlist. Stub today; the moment a real `publish.sh` lands, it should call this as its first action.
+- [x] **Strike-record log** — `append_strike(mission_id, url, reason)` in `agents/lib/copyright.sh` writes tab-separated rows to `records/strikes.log`. The data exists; the auto-rejection lookup is in the next slice.
+
+### Still TODO
+
+- [ ] **Strike-aware source rejection** — read `records/strikes.log` from `check_source_allowed`; refuse any source whose URL has been struck before. (Data is being written; just need the read path.)
+- [ ] **License-string probe** — for `archive.org` / `wikimedia.org` / Vimeo CC channel items, hit the per-item license endpoint and capture the result to `resources/license.json`. Today the allowlist marks these `requires-per-item-probe` and the publish gate refuses them, but the probe itself isn't implemented yet.
+- [ ] **Audio-fingerprint check** — `chromaprint`/`fpcalc`-based detection of copyrighted soundtracks. Skipped for v1 because it needs a fingerprint database to compare against; without one the check is just CPU burn. Add this when we have a real takedown to learn from.
+- [ ] **Logo / watermark detection** — frame-level check for other creators' logos in the area we'd overlay our own watermark. Heavy (needs OCR or a trained model); deferred until we hit the failure mode it would catch.
+- [ ] **Per-platform reuse rules** — `config/copyright-allowlist.yaml` has a `publish_rules` section with per-license rules (`commercial_repost`, `require_attribution`, `share_alike`) but no code reads it yet beyond the binary publish-blocked check.
 
 ## Until those are in place
 

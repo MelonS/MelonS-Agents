@@ -18,22 +18,25 @@ README's Status section is a flat checklist — do not use it for picking work.
 _Promoted by Claude per "Never pause" rule: previous "Now" finished, top of
 "Next" queue takes over automatically._
 
-- [ ] **Automated copyright filter** — implement the punch list in
-  `docs/copyright-policy.md`: domain allowlist for source URLs,
-  license-string probe for sources exposing machine-readable metadata
-  (Wikimedia, Internet Archive, Vimeo CC channel), audio-fingerprint
-  check (chromaprint / `fpcalc`), publish-gate hook in any future
-  `publish.sh`, strike-record log. Required before any external publish
-  step is wired.
+- [ ] **Iterative QA-feedback loop inside editor** — finer-grained than the
+  mission-level retry shipped today. Have the editor re-cut a single
+  failing window without rerunning transcribe/select. Only worth doing
+  if the coarse retry loop is observed to waste compute on a per-output
+  basis. Touches `agents/lib/ffmpeg.sh` (re-cut helper) + an opt-in
+  flag in each mission's retry loop. Probably defer until we have
+  takedown data or compute pressure.
 
 ## Next — queued, in priority order
 
-1. **Iterative QA-feedback loop inside editor** — finer-grained than the
-   mission-level retry: have the editor re-cut a single failing window
-   without rerunning transcribe/select. Lower priority — only worth it
-   if the coarse retry loop in `agents/lib/retry.sh` is observed to
-   waste compute on a per-output basis (today retries the whole
-   model+render block).
+1. **Strike-aware source rejection** — read `records/strikes.log` from
+   `check_source_allowed` in `agents/lib/copyright.sh`; refuse any
+   source whose URL has been struck before. Data is being written;
+   just need the read path.
+2. **License-string probe for archive.org / wikimedia / Vimeo** —
+   today the allowlist marks these `requires-per-item-probe` and the
+   publish gate refuses them. Implement the per-item HTTP probe that
+   reads the actual license and writes it to
+   `resources/license.json`, so these sources become publishable.
 
 ## Blocked / parked
 
@@ -42,6 +45,19 @@ _Promoted by Claude per "Never pause" rule: previous "Now" finished, top of
 
 ## Done — most recent first
 
+- **2026-05-15** Automated copyright filter v1. New
+  `config/copyright-allowlist.yaml` (Blender + Xiph + archive.org +
+  wikimedia.org permissive domains, per-license publish rules), new
+  `agents/lib/copyright.sh` (`check_source_allowed`, `guard_publish`,
+  `append_strike`), new `scripts/publish-gate.sh` stub for the future
+  `publish.sh`. All three missions abort with exit 67 when invoked
+  against a non-allowlisted URL; local file paths bypass (fixture
+  catalog handles them). Verified: blender.org → CC-BY-3.0;
+  example.com → refused with helpful stderr; locally-generated →
+  publish gate refuses (correct); CC-BY-3.0 → publish gate accepts.
+  Deferred items (strike-aware rejection, license probe, audio
+  fingerprint, logo detection) listed in `docs/copyright-policy.md`
+  with rationale for each.
 - **2026-05-15** QA feedback retry loop across all three missions.
   New `agents/lib/retry.sh` (qa_extract_feedback / qa_feedback_block /
   qa_write_blocker), wrapped highlight + summarize + shorts-batch in
