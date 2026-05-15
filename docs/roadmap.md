@@ -68,6 +68,34 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-16** (overnight) Audit parser regression test +
+  `docs/audit/` directory README.  `scripts/test-audit-parser.sh`
+  exercises the verdict-parsing block in `audit-run.sh` against
+  synthetic CLEAN / DRIFT_DETECTED / CRITICAL reports in a `/tmp`
+  sandbox; 6 cases, 6/6 PASS on first run (after a `set -e` shadowing
+  fix in the test harness itself).  `docs/audit/README.md` orients
+  any human picking up the repo: report file convention,
+  `CURRENT-ALERT.md` lifecycle, manual trigger commands, retention,
+  playbook for resolving an alert (commit `bc2381b`).
+- **2026-05-16** (overnight) README Status reconciliation.  Status
+  had 1 stale unchecked item (per-platform reuse rules, shipped in
+  `ef0f825`) — checked off + added an entry for the auditor active
+  surface.  Every remaining unchecked item now carries an italicized
+  inline reason (`_blocked_` / `_deferred_` / `_parked_`).  Trailing
+  note pins the policy: Status is inventory, the day-level priority
+  queue lives in `docs/roadmap.md`.  Mirrored in `README.ko.md`
+  (commit `d547a32`).
+- **2026-05-16** (overnight) Per-platform reuse rules in
+  `guard_publish`.  Pulled from `docs/copyright-policy.md` "Still
+  TODO" — the third of three deferred copyright items.  `guard_publish`
+  now takes an optional platform arg (`internal-demo` default; `public`
+  / `youtube` / `instagram` / `tiktok` aliases) and consumes all four
+  `publish_rules` fields (`publish_blocked`, `require_attribution`,
+  `share_alike`, `commercial_repost`).  v1 binary check was leaving
+  75% of the rule schema unread.  Exit codes 0/3/4/5 unchanged
+  (stable contract); new codes 7 (commercial repost forbidden) and 8
+  (missing attribution on public target).  16/16 PASS across all
+  license × platform combinations (commit `ef0f825`).
 - **2026-05-15** (overnight) Auditor active surface via wrapper.
   `scripts/audit-run.sh` now extracts the audit verdict and maintains
   `docs/audit/CURRENT-ALERT.md` — a stable, committed alert file that

@@ -2,9 +2,11 @@
 
 ## TL;DR (한 문장)
 
-3개 항목 들어왔는데 그 중 docs-level + script-level 부분(2개)은 야간에
-처리해서 푸시 완료, agent 정의 수정이 필요한 부분(2개)은 proposal로
-정리해 아침 user OK 대기 중.
+사용자 요청 3건은 docs/script-level까지 다 처리해서 푸시 완료
+(agent 정의 수정이 필요한 2건만 proposal로 morning OK 대기 중),
+그 다음 사용자가 "할 게 없냐"고 물어서 copyright-policy.md "Still TODO"
+에서 1건 끌어와 출하 + README Status 정합화 + auditor surface
+회귀 테스트 + audit 디렉토리 README까지 추가로 출하.
 
 ---
 
@@ -15,6 +17,10 @@
 | `71d785f` | `docs/ideas.md` 생성 | docs-only, agent 로직 무관 |
 | `a37d37f` | `scripts/audit-run.sh` 능동화 + proposal 문서 | script-level + docs/, agent 정의 무변경 |
 | `4579c16` | `docs/roadmap.md` Done 갱신 + Now 제안 블록 | Done은 Claude 권한, Now는 HTML 주석으로만 제안 (rewrite 아님) |
+| `8340470` | 이 브리핑 초안 작성 | docs/daily — 운영 권한 |
+| `ef0f825` | **per-platform 재이용 규칙** — `guard_publish`가 `publish_rules` 4개 필드 모두 소비 (`internal-demo` / `public` / `youtube` / `instagram` / `tiktok`); 16/16 PASS | lib + script level, agent 정의 무관 |
+| `d547a32` | **README Status 정합화** — stale 미체크 1건(per-platform) 체크 + 미체크 5건 인라인 사유 + "Status는 인벤토리, 우선순위는 roadmap.md" 명시 | docs-only |
+| `bc2381b` | **`scripts/test-audit-parser.sh`** (6 케이스 회귀 테스트, 6/6 PASS) + **`docs/audit/README.md`** (감사 트레일 오리엔테이션 + 알림 라이프사이클 + playbook) | test/docs only |
 
 푸시 완료: `origin/main` 동기 상태.  워킹트리 clean (`.claude/worktrees/`만 gitignore 미포함 잔여).
 
@@ -117,12 +123,16 @@ proposal 전문은 [`docs/proposals/2026-05-15-auditor-active.md`](../proposals/
 
 ## 메트릭
 
-- 야간 커밋: 3건 (`71d785f`, `a37d37f`, `4579c16`)
+- 야간 커밋: 7건 (`71d785f` → `bc2381b`)
 - 새 파일: `docs/ideas.md`, `docs/proposals/2026-05-15-auditor-active.md`,
-  `docs/daily/2026-05-16-overnight.md` (이 파일)
-- 수정 파일: `scripts/audit-run.sh`, `docs/roadmap.md`
+  `docs/daily/2026-05-16-overnight.md`, `scripts/test-audit-parser.sh`,
+  `docs/audit/README.md`
+- 수정 파일: `scripts/audit-run.sh`, `scripts/publish-gate.sh`,
+  `agents/lib/copyright.sh`, `docs/roadmap.md`, `docs/copyright-policy.md`,
+  `README.md`, `README.ko.md`
 - agent 정의 수정: **0건** (logic-changes-need-OK 룰 준수)
-- 토큰 비용: 야간 작업은 본 세션 비용만 (auditor 미실행)
+- 테스트 통과: publish-gate 16/16, audit-parser 6/6
+- 토큰 비용: 야간 작업은 본 세션 비용만 (auditor 미실행, 03:00 launchd 발화 대기)
 
 ---
 
