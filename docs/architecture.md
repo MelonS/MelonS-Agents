@@ -16,16 +16,34 @@
                               ▼
                   ┌───────────────────────┐
                   │      Orchestrator     │     model: opus
-                  │   .claude/agents/      │     (file-based handoff:
-                  │   orchestrator.md      │      plan.md, MANIFEST.md)
-                  └───────────┬───────────┘
+                  │   .claude/agents/     │     (file-based handoff
+                  │   orchestrator.md     │      across plan.md and
+                  └───────────┬───────────┘      MANIFEST.md)
                               │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-   planner (sonnet)     resourcer (sonnet)    editor (sonnet)
-                                                    │
-                                                    ▼
-                                              qa (sonnet)
+                              │ sequential delegation
+                              ▼
+                  ┌───────────────────────┐
+                  │   planner (sonnet)    │ → plan.md
+                  └───────────┬───────────┘
+                              ▼
+                  ┌───────────────────────┐
+                  │  resourcer (sonnet)   │ → resources/ + MANIFEST.md
+                  └───────────┬───────────┘
+                              ▼
+                  ┌───────────────────────┐
+                  │   editor (sonnet)     │ → outputs/ + CHANGELOG.md
+                  └───────────┬───────────┘
+                              ▼
+                  ┌───────────────────────┐
+                  │     qa (sonnet)       │ → qa-report.md
+                  └───────────────────────┘
+
+      Out-of-band track (not in the mission pipeline):
+                  ┌───────────────────────┐
+                  │   auditor (sonnet)    │ → docs/audit/<date>-<focus>.md
+                  │   read-only, daily    │   + CURRENT-ALERT.md when
+                  │   03:00 via launchd   │     verdict is non-CLEAN
+                  └───────────────────────┘
 
                               │ shell-out via Bash tool
                               │ (no API tokens cross this line)
@@ -128,13 +146,20 @@ previously triple-encoded pipeline (cut → crop → burn) into one pass,
 4. Each mission writes its plan/resources/outputs/qa-report/metrics
    under records/missions/<date>/<mission-id>/
 5. scripts/aggregate-metrics.sh regenerates docs/metrics-dashboard.md
-6. (optional) human triggers commit + push for any logic change
+6. launchd `com.melons.agents.auditor` fires once daily at 03:00,
+   runs scripts/audit-run.sh all, writes the dated report to
+   docs/audit/ and maintains docs/audit/CURRENT-ALERT.md when the
+   verdict is non-CLEAN
 ```
 
-The launchd job has `AUTONOMY_MODE=true` baked in. Logic-layer files
-(`agents/`, `.claude/agents/`) are NOT touched in this mode; only the
-records/ tree changes. Money firewall remains active: paid API / cloud
-calls still require explicit human confirmation per `config/policies.yaml`.
+The two launchd jobs (`queue` every 30 min + `auditor` once daily at
+03:00) run with `AUTONOMY_MODE=true` baked in.  Logic-layer files
+(`agents/`, `.claude/agents/`) are NOT modified in this mode; only the
+records/ tree and `docs/audit/` change.  Logic changes that *do* happen
+during interactive sessions are auto-committed and auto-pushed per the
+operator contract (`docs/operator-contract.md` §6).  Money firewall
+remains active: paid API / cloud calls still require explicit human
+confirmation per `config/policies.yaml`.
 
 ## Why "Code/Data separation"
 

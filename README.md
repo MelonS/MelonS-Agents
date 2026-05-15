@@ -27,25 +27,41 @@
 ## Architecture
 
 ```
-                       ┌───────────────────┐
-                       │   Orchestrator    │
-                       │      (opus)       │
-                       └────────┬──────────┘
-                                │ delegates
-            ┌──────────┬────────┼────────┬──────────┐
-            ▼          ▼        ▼        ▼          ▼
-       ┌─────────┐┌─────────┐┌─────────┐┌──────────┐
-       │ Planner ││Resourcer││ Editor  ││    QA    │
-       └─────────┘└─────────┘└─────────┘└──────────┘
+              ┌───────────────────┐
+              │   Orchestrator    │   model: opus
+              └─────────┬─────────┘
+                        │ delegates the mission, in order
+                        ▼
+              ┌───────────────────┐
+              │      Planner      │   model: sonnet
+              └─────────┬─────────┘
+                        ▼
+              ┌───────────────────┐
+              │     Resourcer     │   model: sonnet
+              └─────────┬─────────┘
+                        ▼
+              ┌───────────────────┐
+              │       Editor      │   model: sonnet
+              └─────────┬─────────┘
+                        ▼
+              ┌───────────────────┐
+              │         QA        │   model: sonnet
+              └───────────────────┘
+
+              ┌───────────────────┐
+              │      Auditor      │   model: sonnet  (out-of-band)
+              └───────────────────┘   read-only; scheduled daily
+                                       at 03:00 via launchd
 ```
 
 | Agent | Responsibility | Output |
 |-------|----------------|--------|
 | 🤖 **Orchestrator** (opus) | Mission decomposition, delegation, final synthesis | task list · `summary.md` |
-| 🧠 **Planner** | Strategy, work breakdown, acceptance criteria | `plan.md` |
-| 📦 **Resourcer** | Asset fetching, external tool execution (ffmpeg / yt-dlp / whisper) | `resources/MANIFEST.md` |
-| 🎞️ **Editor** | Output rendering, deliverable assembly | `outputs/CHANGELOG.md` |
-| ✅ **QA** | Validation against plan criteria, regression detection | `qa-report.md` |
+| 🧠 **Planner** (sonnet) | Strategy, work breakdown, acceptance criteria | `plan.md` |
+| 📦 **Resourcer** (sonnet) | Asset fetching, external tool execution (ffmpeg / yt-dlp / whisper) | `resources/MANIFEST.md` |
+| 🎞️ **Editor** (sonnet) | Output rendering, deliverable assembly | `outputs/CHANGELOG.md` |
+| ✅ **QA** (sonnet) | Validation against plan criteria, regression detection | `qa-report.md` |
+| 🔍 **Auditor** (sonnet) | Repository-wide drift / contract / cost / security audit (out-of-band, daily 03:00) | `docs/audit/<date>-<focus>.md` + `docs/audit/CURRENT-ALERT.md` when non-CLEAN |
 
 Subagent definitions: [`.claude/agents/`](.claude/agents/) · Mission templates and shared shell libs: [`agents/`](agents/)
 
@@ -142,7 +158,7 @@ Full contract: see [`CLAUDE.md`](CLAUDE.md) and the [`config/policies.yaml`](con
 ## Status
 
 <!-- status:start -->
-- [x] Hierarchical agent scaffold (orchestrator + 4 subagents)
+- [x] Hierarchical agent scaffold (orchestrator + 4 mission subagents + 1 read-only auditor subagent)
 - [x] Code/Data separation enforced (records/ gitignored)
 - [x] Env-driven tool paths (.env / .env.example)
 - [x] PoC end-to-end: highlight extraction (EN + KO)

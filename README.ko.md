@@ -27,25 +27,41 @@
 ## 아키텍처
 
 ```
-                       ┌───────────────────┐
-                       │   Orchestrator    │
-                       │      (opus)       │
-                       └────────┬──────────┘
-                                │ 위임
-            ┌──────────┬────────┼────────┬──────────┐
-            ▼          ▼        ▼        ▼          ▼
-       ┌─────────┐┌─────────┐┌─────────┐┌──────────┐
-       │ Planner ││Resourcer││ Editor  ││    QA    │
-       └─────────┘└─────────┘└─────────┘└──────────┘
+              ┌───────────────────┐
+              │   Orchestrator    │   model: opus
+              └─────────┬─────────┘
+                        │ 미션을 순서대로 위임
+                        ▼
+              ┌───────────────────┐
+              │      Planner      │   model: sonnet
+              └─────────┬─────────┘
+                        ▼
+              ┌───────────────────┐
+              │     Resourcer     │   model: sonnet
+              └─────────┬─────────┘
+                        ▼
+              ┌───────────────────┐
+              │       Editor      │   model: sonnet
+              └─────────┬─────────┘
+                        ▼
+              ┌───────────────────┐
+              │         QA        │   model: sonnet
+              └───────────────────┘
+
+              ┌───────────────────┐
+              │      Auditor      │   model: sonnet  (별도 트랙)
+              └───────────────────┘   read-only, 매일 03:00
+                                       launchd 발화
 ```
 
 | 에이전트 | 책임 | 산출물 |
 |----------|------|--------|
 | 🤖 **Orchestrator** (opus) | 미션 분해, 위임, 최종 통합 | 태스크 리스트 · `summary.md` |
-| 🧠 **Planner** | 전략 수립, 작업 분해, 수락 기준 정의 | `plan.md` |
-| 📦 **Resourcer** | 자산 수집, 외부 도구 실행 (ffmpeg / yt-dlp / whisper) | `resources/MANIFEST.md` |
-| 🎞️ **Editor** | 출력 렌더링, 산출물 조립 | `outputs/CHANGELOG.md` |
-| ✅ **QA** | 계획 기준 대비 검증, 회귀 감지 | `qa-report.md` |
+| 🧠 **Planner** (sonnet) | 전략 수립, 작업 분해, 수락 기준 정의 | `plan.md` |
+| 📦 **Resourcer** (sonnet) | 자산 수집, 외부 도구 실행 (ffmpeg / yt-dlp / whisper) | `resources/MANIFEST.md` |
+| 🎞️ **Editor** (sonnet) | 출력 렌더링, 산출물 조립 | `outputs/CHANGELOG.md` |
+| ✅ **QA** (sonnet) | 계획 기준 대비 검증, 회귀 감지 | `qa-report.md` |
+| 🔍 **Auditor** (sonnet) | 저장소 전체 drift / contract / cost / security 감사 (별도 트랙, 매일 03:00) | `docs/audit/<date>-<focus>.md` + 비-CLEAN 시 `docs/audit/CURRENT-ALERT.md` |
 
 서브 에이전트 정의: [`.claude/agents/`](.claude/agents/) · 미션 템플릿과 공용 셸 라이브러리: [`agents/`](agents/)
 
@@ -141,7 +157,7 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 ## 상태
 
 <!-- status:start -->
-- [x] 계층형 에이전트 구조 (오케스트레이터 + 서브 에이전트 4종)
+- [x] 계층형 에이전트 구조 (오케스트레이터 + 미션 서브 에이전트 4종 + 읽기 전용 auditor 1종)
 - [x] 코드 / 데이터 분리 강제 (records/ gitignore)
 - [x] 환경 변수 기반 도구 경로 (.env / .env.example)
 - [x] PoC 엔드투엔드: 하이라이트 추출 (EN + KO)
