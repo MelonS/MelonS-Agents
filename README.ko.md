@@ -161,13 +161,16 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 - [x] 저작권 필터 v1 — 도메인 허용목록, 게시 게이트, 스트라이크 로그, 스트라이크 인지 거부
 - [x] License-string probe — archive.org + commons.wikimedia.org
 - [x] 일별 로드맵 [`docs/roadmap.md`](docs/roadmap.md) ("다음에 무엇을" 단일 출처)
-- [ ] 실제 사용자 URL fixture (URL 대기 중)
-- [ ] 다른 호스트용 License probe 추가 (Vimeo CC 채널 등)
-- [ ] Audio fingerprint 체크 (chromaprint / `fpcalc`) — fingerprint 데이터셋 확보 시까지 보류
-- [ ] 소스 프레임 로고 / 워터마크 검출 — OCR 또는 학습 모델 필요해 보류
-- [ ] 플랫폼별 재이용 규칙을 `scripts/publish-gate.sh`가 소비
-- [ ] editor 내부 반복 QA-피드백 루프 (transcribe/select 재실행 없이 단일 출력 재컷)
+- [x] 플랫폼별 재이용 규칙 — `scripts/publish-gate.sh` (`internal-demo` / `public` / `youtube` / `instagram` / `tiktok`, 4개 `publish_rules` 필드 모두 소비)
+- [x] 저장소 auditor 서브에이전트 + 능동 surface (`docs/audit/CURRENT-ALERT.md` 자동 유지, `scripts/audit-run.sh`)
+- [ ] 실제 사용자 URL fixture — _차단, 사용자 URL 대기 중_
+- [ ] 다른 호스트용 License probe 추가 (Vimeo CC 채널 등) — _보류, Vimeo는 item별 license endpoint 없음; 필요 시 재검토_
+- [ ] Audio fingerprint 체크 (chromaprint / `fpcalc`) — _보류, 비교용 fingerprint dataset 없음; 첫 takedown 이후 재검토_
+- [ ] 소스 프레임 로고 / 워터마크 검출 — _보류, OCR 또는 학습 모델 필요; 실패 모드 관측 시 재검토_
+- [ ] editor 내부 반복 QA-피드백 루프 (transcribe/select 재실행 없이 단일 출력 재컷) — _파킹, coarse retry가 compute 낭비할 때만 유용; 아직 미관측_
 <!-- status:end -->
+
+> 위 미체크 항목은 **모두 의도된 보류**입니다 — 각 항목에 사유가 인라인으로 적혀 있습니다. 일별 우선순위 큐는 여기가 아니라 [`docs/roadmap.md`](docs/roadmap.md)에 있습니다.
 
 ## 라이선스
 

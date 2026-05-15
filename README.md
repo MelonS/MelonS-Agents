@@ -162,13 +162,16 @@ Full contract: see [`CLAUDE.md`](CLAUDE.md) and the [`config/policies.yaml`](con
 - [x] Copyright filter v1 — domain allowlist, publish-gate, strike-record log, strike-aware source rejection
 - [x] License-string probe for archive.org + commons.wikimedia.org
 - [x] Day-level roadmap at [`docs/roadmap.md`](docs/roadmap.md) (source of truth for "what to work on next")
-- [ ] Real user-supplied URL fixture (waiting on URL)
-- [ ] License-string probe for additional hosts (Vimeo CC channel, etc.)
-- [ ] Audio-fingerprint check (chromaprint / `fpcalc`) — deferred until we have a fingerprint dataset
-- [ ] Logo / watermark detection on source frames — deferred (needs OCR or trained model)
-- [ ] Per-platform reuse rules consulted by `scripts/publish-gate.sh`
-- [ ] Iterative QA-feedback loop *inside* editor (per-output re-cut without rerunning transcribe/select)
+- [x] Per-platform reuse rules in `scripts/publish-gate.sh` (`internal-demo` / `public` / `youtube` / `instagram` / `tiktok` — honors all four `publish_rules` fields)
+- [x] Repository auditor subagent + active surface (`docs/audit/CURRENT-ALERT.md` auto-maintained by `scripts/audit-run.sh`)
+- [ ] Real user-supplied URL fixture — _blocked, waiting on URL from user_
+- [ ] License-string probe for additional hosts (Vimeo CC channel, etc.) — _deferred, Vimeo lacks a per-item license endpoint; revisit on demand_
+- [ ] Audio-fingerprint check (chromaprint / `fpcalc`) — _deferred, needs a fingerprint dataset to compare against; revisit after first takedown_
+- [ ] Logo / watermark detection on source frames — _deferred, needs OCR or a trained model; revisit when the failure mode is observed_
+- [ ] Iterative QA-feedback loop *inside* editor (per-output re-cut without rerunning transcribe/select) — _parked, only useful when coarse retry wastes compute; not yet observed_
 <!-- status:end -->
+
+> Unchecked items above are **all intentionally deferred** — each carries an inline reason. The day-level priority queue lives in [`docs/roadmap.md`](docs/roadmap.md), not here.
 
 ## License
 
