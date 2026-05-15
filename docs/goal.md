@@ -42,10 +42,15 @@ the operator flagged ("[MUSIC] lines are noise") applied along the way.
       committed).  Note: visual content is synthetic SMPTE bars
       (the fixture's nature, not a pipeline issue) — the Korean audio
       + Korean caption pipeline is what was validated.
-- [ ] **Deliverable**: Real-CC shorts-batch — Sintel trailer 720p
-      → ≥ 2 9:16 shorts in one mission run, all QA PASS, Blender
-      attribution on each.  Caption-verify frame for at least one
-      short committed.
+- [x] **Deliverable**: Real-CC shorts-batch — `shorts-batch-024840`
+      (Sintel trailer 720p → 2 shorts: short-01 44s/8.4MB +
+      short-02 36s/7.2MB, both 1080×1920, QA PASS attempt 1; Blender
+      attribution on both via shared SOURCES.txt + `source-attribution.txt`
+      burned into every short.  Note: with a 52s source and N=2, the
+      two windows overlap — not a bug, a constraint of the trailer's
+      length.  Caption-verify frames committed for both shorts:
+      `docs/caption-verify/shorts-batch-024840-short-01-cap.jpg` (the
+      gatekeeper, bright caption) and `short-02-cap.jpg`).
 - [ ] **Deliverable**: Real-CC summarize — Sintel trailer → EN+KO
       structured `summary.md` with Blender attribution in the
       Source & license footer.  QA PASS.
