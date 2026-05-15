@@ -2,9 +2,14 @@
 # whisper.cpp helpers. Source after env.sh + log.sh.
 
 # Transcribe a media file. Produces <out_prefix>.json with segments.
-# Usage: whisper_transcribe <input_media> <out_prefix> [language=auto]
+# Usage: whisper_transcribe <input_media> <out_prefix> [language=$WHISPER_LANG or "auto"]
+#
+# Language precedence: explicit 3rd arg > WHISPER_LANG env var > "auto".
+# Set WHISPER_LANG=ko when running on content the model mis-identifies on
+# auto (e.g., accented or casual Korean speech sometimes comes back as
+# [FOREIGN] under auto-detect).
 whisper_transcribe() {
-  local input="$1" out_prefix="$2" lang="${3:-auto}"
+  local input="$1" out_prefix="$2" lang="${3:-${WHISPER_LANG:-auto}}"
 
   require_bin "$WHISPER_CLI_BIN" "$FFMPEG_BIN" || return 1
   [[ -f "$WHISPER_MODEL" ]] || { log_err "WHISPER_MODEL not found: $WHISPER_MODEL"; return 1; }
