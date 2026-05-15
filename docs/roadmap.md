@@ -38,6 +38,30 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-15** Pexels Videos integration. New
+  `scripts/pexels-fetch.sh` queries the Pexels Videos API by search
+  string, picks the smallest file ≥ `min_height` (default 720), and
+  drops `<id>.mp4` + `<id>.meta.json` into `/tmp/smoke/pexels/`.
+  `agents/lib/attribution.sh` learned to read a `<source>.meta.json`
+  sidecar at the *first* resolution step, so Pexels fetches don't
+  need fixture-catalog edits — the photographer + Pexels-license is
+  pulled automatically and lands in `SOURCES.txt` / the burned
+  watermark. `config/copyright-allowlist.yaml` adds
+  `videos.pexels.com` (license `pexels-license`, commercial reuse
+  OK, attribution appreciated but not required).  Verified: fetch
+  "ocean waves" → 1280×720 / 34s clip + sidecar; summarize on the
+  clip recorded "Video by Wave Stock Footage Free on Pexels" /
+  `pexels-license` in `outputs/SOURCES.txt` before the transcribe
+  step (silent nature footage; transcribe step would fail on any
+  source without speech, separate from the attribution flow).
+- **2026-05-15** Operator contract committed at
+  `docs/operator-contract.md` (47c7a18). Twelve operating rules
+  that had lived only in `~/.claude/projects/-Users-melons-ai/memory/`
+  (machine-local, vulnerable to a MacBook swap) now have a single
+  canonical source-of-truth file in the repo. CLAUDE.md shrinks to
+  a four-bullet summary + pointer; memory becomes a fast-access
+  cache that links each entry back to the matching contract
+  section. "If memory disagrees, this file wins."
 - **2026-05-15** License-string probe for archive.org + wikimedia
   commons. `probe_license(url, out_json)` reads the per-item license
   metadata (archive.org's `/metadata/<id>` JSON and the wikimedia

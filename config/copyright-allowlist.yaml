@@ -44,6 +44,14 @@ domains:
     license_default: CC-BY-SA-4.0
     note: Wikimedia Commons — varies per file; safe as a domain default
 
+  # Pexels stock video — fetched by scripts/pexels-fetch.sh.  All Pexels
+  # content is released under the Pexels License (commercial use OK,
+  # attribution appreciated but not required).  See
+  # https://www.pexels.com/license/.
+  - domain: videos.pexels.com
+    license_default: pexels-license
+    note: Pexels stock B-roll; free for commercial use under Pexels License
+
   # The user's own uploads — drop their personal CDN / S3 / etc. here when
   # they have one.
   # - domain: cdn.melons.example
@@ -71,6 +79,10 @@ publish_rules:
   - license: requires-per-item-probe
     publish_blocked: true
     reason: needs license-string probe before publish
+  - license: pexels-license
+    require_attribution: false
+    commercial_repost: allowed
+    note: Attribution appreciated but not required; we still burn it in.
   - license: owner-self
     require_attribution: false
     commercial_repost: allowed

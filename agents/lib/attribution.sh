@@ -22,6 +22,28 @@ resolve_source_attribution() {
   local source="$1"
   FIXTURE_LICENSE="${FIXTURE_LICENSE:-}"
 
+  # First: sidecar metadata, if any. The Pexels fetcher writes
+  # /tmp/smoke/pexels/<id>.meta.json next to every download; the catalog
+  # is bypassed in that case so a fresh Pexels pull never needs a
+  # fixtures.yaml edit.
+  if [[ -z "${SOURCE_ATTRIBUTION:-}" && -f "${source%.*}.meta.json" ]]; then
+    local meta_file="${source%.*}.meta.json"
+    local pair
+    pair=$(python3 - "$meta_file" <<'PY'
+import sys, json
+meta = json.load(open(sys.argv[1]))
+attr = meta.get("attribution_string") or meta.get("photographer", "")
+lic = meta.get("license", "")
+print(f"{attr}\t{lic}")
+PY
+)
+    if [[ -n "$pair" ]]; then
+      SOURCE_ATTRIBUTION="${pair%%$'\t'*}"
+      FIXTURE_LICENSE="${pair#*$'\t'}"
+      log_info "sidecar match ($(basename "$meta_file")): $SOURCE_ATTRIBUTION ($FIXTURE_LICENSE)"
+    fi
+  fi
+
   if [[ -z "${SOURCE_ATTRIBUTION:-}" ]]; then
     local catalog="$REPO_ROOT/config/fixtures.yaml"
     if [[ -f "$catalog" ]]; then
