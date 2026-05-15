@@ -31,13 +31,17 @@ each against a real CC source, with the caption-quality improvement
 the operator flagged ("[MUSIC] lines are noise") applied along the way.
 
 **Subgoals (acceptance signals)**:
-- [ ] `STRIP_NONSPEECH` env var implemented in `agents/lib/ffmpeg.sh`,
+- [x] `STRIP_NONSPEECH` env var implemented in `agents/lib/ffmpeg.sh`,
       default ON — caption lines matching `^\[.*\]$` filtered before
       SRT/ASS render.  Old behavior available via
-      `STRIP_NONSPEECH=false`.
-- [ ] **Deliverable**: Korean highlight short — `/tmp/smoke/ko_lecture.mp4`
-      → 9:16 short.mp4 with Korean burned captions + Korean audio +
-      QA PASS.  Caption-verify frame committed.
+      `STRIP_NONSPEECH=false`.  Shipped `df71bd6`.
+- [x] **Deliverable**: Korean highlight short — `highlight-024629`
+      (`/tmp/smoke/ko_lecture.mp4` → 9:16 49s short.mp4 PASS attempt 1,
+      whisper.cpp multilingual auto-detected Korean, captions burned in
+      Hangul, top-left attribution overlay rendered, `docs/caption-verify/highlight-024629-ko-lecture-cap.jpg`
+      committed).  Note: visual content is synthetic SMPTE bars
+      (the fixture's nature, not a pipeline issue) — the Korean audio
+      + Korean caption pipeline is what was validated.
 - [ ] **Deliverable**: Real-CC shorts-batch — Sintel trailer 720p
       → ≥ 2 9:16 shorts in one mission run, all QA PASS, Blender
       attribution on each.  Caption-verify frame for at least one
