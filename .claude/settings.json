@@ -81,6 +81,7 @@
       "Bash(cd /Users/melons/ai && *)",
       "Bash(cd /Users/melons/ai/* && *)"
     ],
+    "defaultMode": "bypassPermissions",
     "deny": [
       "Bash(rm -rf /)",
       "Bash(rm -rf /*)",
