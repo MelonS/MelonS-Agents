@@ -119,6 +119,17 @@ Install the nightly scheduler:
 ./scripts/install-scheduler.sh install
 ```
 
+## Operator contract
+
+This repository is fully agent-operated. The day-to-day rules:
+
+- The **agent does all the work** — installs, edits, configs, commits, pushes, scheduling. The user does not run commands in the terminal.
+- The user steps in **only** when a hard guardrail blocks the agent (e.g., self-modifying its own permissions, force-pushing to `main`) — and even then only as a single click of approval, never a multi-step recipe.
+- **Active focus** lives in [`docs/roadmap.md`](docs/roadmap.md). The list below ("Status") is a flat capability ledger; do not read it as a TODO list. The roadmap's *Now* section is the source of truth for "what to work on next."
+- **Money firewall**: paid APIs, SaaS subscriptions, and cloud-resource creation require explicit user confirmation. Local resources (Ollama, FFmpeg, whisper.cpp, brew) stay fully autonomous.
+
+Full contract: see [`CLAUDE.md`](CLAUDE.md) and the [`config/policies.yaml`](config/policies.yaml) autonomy rules.
+
 ## Status
 
 <!-- status:start -->

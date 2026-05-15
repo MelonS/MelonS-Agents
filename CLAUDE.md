@@ -14,6 +14,7 @@ Hierarchical agent system. See `README.md` for layout, `config/policies.yaml` fo
 
 ## Operator preferences
 
+- **Agent does all the work** (user directive, 2026-05-15): the user does not run commands, does not install packages, does not edit config files, does not touch the terminal. Claude does all of it. The user only steps in for the *exact* things Claude cannot do — meaning a hard guardrail blocks it (self-modifying permissions, force-push to main, etc.). When that happens, surface the blocker in one line with the minimal action needed (a single click in the permissions UI, not a step-by-step bash recipe). Never push setup/install/config work onto the user "to save time" or "because it's easier" — those reasons are the user's to invoke, not yours.
 - **Auto-approve mode** (user directive, 2026-05-14): non-catastrophic system actions — `brew install/uninstall`, `pip install`, `npm install`, file deletion, settings changes, MCP/config edits — proceed without asking. User accepts macOS-environment-level mess (browser data loss, broken brew state, etc.) as acceptable risk.
 - Only pause for **truly catastrophic** risks: hardware damage, irreversible data loss outside the repo (e.g., `rm -rf ~`, disk format, force-push to shared remotes, sending external messages).
 - Report results, not approvals.
