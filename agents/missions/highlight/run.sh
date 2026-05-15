@@ -202,7 +202,10 @@ STUB
   SIZE_BYTES=$(stat -f%z "$FINAL" 2>/dev/null || stat -c%s "$FINAL")
   SIZE_MB=$(awk -v b="$SIZE_BYTES" 'BEGIN{ printf "%.2f", b/1048576 }')
 
-  DUR_OK=$(awk -v d="$DUR" -v dmin="${QA_DUR_MIN:-30}" -v dmax="${QA_DUR_MAX:-60}" 'BEGIN{ print (d >= dmin && d <= dmax) ? "PASS" : "FAIL" }')
+  # Tolerance accommodates h264_videotoolbox GOP-aligned overshoot:
+  # asking ffmpeg for exactly 60.000s of output often produces 60.005s →
+  # without tolerance the QA flags a render that satisfied the contract.
+  DUR_OK=$(awk -v d="$DUR" -v dmin="${QA_DUR_MIN:-30}" -v dmax="${QA_DUR_MAX:-60}" -v tol="${QA_DUR_TOLERANCE_S:-0.5}" 'BEGIN{ print (d >= dmin - tol && d <= dmax + tol) ? "PASS" : "FAIL" }')
   RES_OK=$([[ "$RES" == "1080,1920" ]] && echo PASS || echo FAIL)
   AUDIO_OK=$([[ -n "$HAS_AUDIO" ]] && echo PASS || echo FAIL)
   SIZE_OK=$(awk -v m="$SIZE_MB" 'BEGIN{ print (m < 50) ? "PASS" : "FAIL" }')

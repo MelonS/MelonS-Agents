@@ -71,18 +71,25 @@ ffmpeg_burn_srt() {
 # Convert whisper segments JSON → SRT in the given time window.
 # Usage: ffmpeg_segments_to_srt <segments_json> <window_start> <window_end> <out.srt>
 #
-# Non-speech filter:
-#   STRIP_NONSPEECH=true (default) skips any segment whose text is just a
-#   bracketed marker like [MUSIC], [APPLAUSE], [Laughter] — whisper emits
-#   these for accessibility, but in a 30-60s short the caption box gets
-#   filled with [MUSIC] when no dialogue runs, which adds noise without
-#   information.  STRIP_NONSPEECH=false preserves whisper's behavior.
+# Non-speech filter (whitelist-based):
+#   STRIP_NONSPEECH=true (default) skips segments whose text is a bracketed
+#   marker matching a *known* non-speech tag like [MUSIC], [APPLAUSE],
+#   [Laughter] — accessibility annotations that whisper emits during
+#   non-speech audio.  These crowd the caption box in a 30-60s short.
+#
+#   Tags NOT stripped (real speech that whisper failed to transcribe):
+#     [FOREIGN]      — speech exists, model couldn't identify language
+#     [INAUDIBLE]    — speech exists, model couldn't hear well
+#     [UNCLEAR]      — same family as INAUDIBLE
+#   Stripping these would silently drop information the viewer needs.
+#
+#   STRIP_NONSPEECH=false preserves whisper's full output.
 ffmpeg_segments_to_srt() {
   local segments="$1" win_start="$2" win_end="$3" out="$4"
   local strip="${STRIP_NONSPEECH:-true}"
   jq -r --argjson ws "$win_start" --argjson we "$win_end" --arg strip "$strip" '
     [ .[] | select(.start >= $ws and .end <= $we)
-          | select($strip != "true" or (.text | test("^\\s*\\[[^\\]]*\\]\\s*$") | not)) ] |
+          | select($strip != "true" or (.text | test("^\\s*\\[\\s*(music|applause|laughter|blank_audio|silence|sound|sound_effects|noise|background_noise|sigh|cough|whistle)\\s*\\]\\s*$"; "i") | not)) ] |
     to_entries[] |
     "\(.key + 1)\n" +
     ( (.value.start - $ws) as $s | (.value.end - $ws) as $e |
