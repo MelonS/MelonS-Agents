@@ -141,16 +141,24 @@ Full contract: see [`CLAUDE.md`](CLAUDE.md) and the [`config/policies.yaml`](con
 - [x] Multilingual whisper.cpp (small) + language-aware highlight prompt
 - [x] Batch runner (scripts/batch-mission.sh)
 - [x] Auto-commit + auto-push of every logic change to origin/main
-- [ ] Real user-supplied URL fixture
 - [x] Nightly launchd scheduler for autonomous mode
-- [ ] Iterative QA-feedback loop in editor
-- [x] Other mission types beyond highlight extraction
-- [x] Cost / runtime metrics per mission
-- [ ] QA feedback retry loop (failed runs auto-retried with QA notes)
-- [x] Cost / runtime metrics per mission
-- [x] Bilingual summarize mission (transcribe → structured EN+KO summary)
+- [x] Three mission types operational: highlight, summarize, shorts-batch
 - [x] Single-pass ffmpeg render (~3× render speedup)
-- [x] Third mission type: shorts-batch (one long video → N captioned shorts)
+- [x] Bilingual summarize mission (transcribe → structured EN+KO summary)
+- [x] Cost / runtime metrics per mission
+- [x] Real CC-licensed source fixtures (Blender open movies) + downloader
+- [x] Standard 9:16 layout engine — safe-zone margins, semi-transparent caption box, top-left source-attribution overlay
+- [x] Source-attribution wiring across all three missions (`outputs/SOURCES.txt` + burned watermark + `summary.md` footer)
+- [x] QA feedback retry loop (failed missions auto-retried up to `QA_RETRY_MAX`, then dropped to `records/blockers/`)
+- [x] Copyright filter v1 — domain allowlist, publish-gate, strike-record log, strike-aware source rejection
+- [x] License-string probe for archive.org + commons.wikimedia.org
+- [x] Day-level roadmap at [`docs/roadmap.md`](docs/roadmap.md) (source of truth for "what to work on next")
+- [ ] Real user-supplied URL fixture (waiting on URL)
+- [ ] License-string probe for additional hosts (Vimeo CC channel, etc.)
+- [ ] Audio-fingerprint check (chromaprint / `fpcalc`) — deferred until we have a fingerprint dataset
+- [ ] Logo / watermark detection on source frames — deferred (needs OCR or trained model)
+- [ ] Per-platform reuse rules consulted by `scripts/publish-gate.sh`
+- [ ] Iterative QA-feedback loop *inside* editor (per-output re-cut without rerunning transcribe/select)
 <!-- status:end -->
 
 ## License

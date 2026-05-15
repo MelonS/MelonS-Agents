@@ -141,16 +141,24 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 - [x] 다국어 whisper.cpp (small) + 언어 인식 하이라이트 프롬프트
 - [x] 배치 실행기 (scripts/batch-mission.sh)
 - [x] 로직 변경 시 origin/main 자동 커밋 + 자동 푸시
-- [ ] 실제 사용자 URL fixture
 - [x] 자율 모드용 야간 launchd 스케줄러
-- [ ] editor 내부의 반복 QA 피드백 루프
-- [x] 하이라이트 외 다른 미션 타입
-- [x] 미션별 비용 / 실행 시간 메트릭
-- [ ] QA 피드백 재시도 루프 (실패 실행을 QA 메모로 자동 재시도)
-- [x] 미션별 비용 / 실행 시간 메트릭
-- [x] 이중 언어 요약 미션 (전사 → 구조화된 EN+KO 요약)
+- [x] 3종 미션 운영 가능: highlight, summarize, shorts-batch
 - [x] 단일 패스 ffmpeg 렌더링 (~3× 렌더 속도 향상)
-- [x] 세 번째 미션 타입: shorts-batch (긴 영상 1편 → 자막 포함 숏폼 N편)
+- [x] 이중 언어 요약 미션 (전사 → 구조화된 EN+KO 요약)
+- [x] 미션별 비용 / 실행 시간 메트릭
+- [x] 실 CC 라이선스 fixture (Blender 오픈 무비) + 다운로더
+- [x] 표준 9:16 레이아웃 엔진 — safe zone 마진, 반투명 자막 박스, 상단 좌측 출처 오버레이
+- [x] 3종 미션 전반에 source-attribution 와이어링 (`outputs/SOURCES.txt` + 번인 워터마크 + `summary.md` 푸터)
+- [x] QA 피드백 재시도 루프 (실패 미션 `QA_RETRY_MAX`까지 자동 재시도, 이후 `records/blockers/`로)
+- [x] 저작권 필터 v1 — 도메인 허용목록, 게시 게이트, 스트라이크 로그, 스트라이크 인지 거부
+- [x] License-string probe — archive.org + commons.wikimedia.org
+- [x] 일별 로드맵 [`docs/roadmap.md`](docs/roadmap.md) ("다음에 무엇을" 단일 출처)
+- [ ] 실제 사용자 URL fixture (URL 대기 중)
+- [ ] 다른 호스트용 License probe 추가 (Vimeo CC 채널 등)
+- [ ] Audio fingerprint 체크 (chromaprint / `fpcalc`) — fingerprint 데이터셋 확보 시까지 보류
+- [ ] 소스 프레임 로고 / 워터마크 검출 — OCR 또는 학습 모델 필요해 보류
+- [ ] 플랫폼별 재이용 규칙을 `scripts/publish-gate.sh`가 소비
+- [ ] editor 내부 반복 QA-피드백 루프 (transcribe/select 재실행 없이 단일 출력 재컷)
 <!-- status:end -->
 
 ## 라이선스
