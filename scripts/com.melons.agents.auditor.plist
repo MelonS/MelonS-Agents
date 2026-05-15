@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.melons.agents.auditor</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/melons/ai/scripts/audit-run.sh</string>
+    <string>all</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/melons/ai</string>
+
+  <key>StandardOutPath</key>
+  <string>/Users/melons/ai/records/audit/launchd.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/melons/ai/records/audit/launchd.err.log</string>
+
+  <!-- Run once a day at 03:00 local time (system idle, no work conflicts) -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>3</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <!-- Do NOT fire on install — the first run consumes Anthropic API tokens
+       (the auditor subagent is sonnet) and we don't want install-time
+       surprises.  First scheduled fire is 03:00 the next day.  For an
+       immediate check, run scripts/audit-run.sh manually. -->
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/Users/melons/.local/opt/ffmpeg-static:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+</dict>
+</plist>

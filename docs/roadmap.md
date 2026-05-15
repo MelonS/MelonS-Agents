@@ -38,6 +38,19 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-15** Auditor goes autonomous + statusline live.
+  `scripts/com.melons.agents.auditor.plist` schedules
+  `audit-run.sh all` daily at 03:00 local via launchd.
+  `scripts/install-scheduler.sh` now manages both the queue and
+  auditor jobs (`install [queue|auditor|all]`); rewritten without
+  bash-4 associative arrays since macOS ships bash 3.2. Auditor
+  loaded and waiting for its 03:00 fire (`RunAtLoad=false` to avoid
+  surprise token spend at install). cc-statusline (chongdashu, 598⭐)
+  installed via `npx @chongdashu/cc-statusline@latest init`; wired
+  into `~/.claude/settings.json` so the terminal now shows
+  `dir · git · model · context-remaining` at the bottom on every
+  refresh. The auto-generated `.claude/statusline.sh` is gitignored
+  (per-user, regenerable).
 - **2026-05-15** Repository auditor agent. New
   [`.claude/agents/auditor.md`](../.claude/agents/auditor.md) — a
   read-only subagent (model: sonnet) that walks the whole repo and

@@ -7,14 +7,12 @@
       "Edit(//Users/melons/ai/**)",
       "Write(//Users/melons/.local/share/whisper-models/**)",
       "Write(//Users/melons/.claude/projects/-Users-melons-ai/memory/**)",
-
       "Bash(claude *)",
       "Bash(python3 *)",
       "Bash(pip3 *)",
       "Bash(npm *)",
       "Bash(npx *)",
       "Bash(node *)",
-
       "Bash(brew *)",
       "Bash(ollama *)",
       "Bash(ffmpeg *)",
@@ -22,11 +20,9 @@
       "Bash(yt-dlp *)",
       "Bash(whisper-cli *)",
       "Bash(whisper *)",
-
       "Bash(git *)",
       "Bash(gh *)",
       "Bash(ssh *)",
-
       "Bash(mkdir *)",
       "Bash(mv *)",
       "Bash(cp *)",
@@ -45,7 +41,6 @@
       "Bash(tail *)",
       "Bash(head *)",
       "Bash(wc *)",
-
       "Bash(echo *)",
       "Bash(printf *)",
       "Bash(which *)",
@@ -57,7 +52,6 @@
       "Bash(kill *)",
       "Bash(ps *)",
       "Bash(lsof *)",
-
       "Bash(grep *)",
       "Bash(rg *)",
       "Bash(sed *)",
@@ -70,14 +64,11 @@
       "Bash(cut *)",
       "Bash(tr *)",
       "Bash(xargs *)",
-
       "Bash(curl *)",
       "Bash(wget *)",
       "Bash(http *)",
-
       "Bash(security find-*)",
       "Bash(launchctl list *)",
-
       "Bash(cd /Users/melons/ai && *)",
       "Bash(cd /Users/melons/ai/* && *)"
     ],
@@ -111,5 +102,10 @@
   "_notes": {
     "rationale": "Auto-approve mode per user directive 2026-05-14. Wide allow for tactical commands needed by the agent system. Deny list guards against catastrophic operations (rm -rf at system roots, sudo, force-push to main, disk erase, piped-curl-to-shell).",
     "scope": "Project-shared (committed). Each contributor inherits these defaults."
+  },
+  "statusLine": {
+    "type": "command",
+    "command": ".claude/statusline.sh",
+    "padding": 0
   }
 }
