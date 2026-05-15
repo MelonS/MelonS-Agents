@@ -2,6 +2,16 @@
 
 Hierarchical agent system. See `README.md` for layout, `config/policies.yaml` for autonomy rules.
 
+## Session-start protocol (read this first)
+
+**The first action of every conversation that asks for work is to read [`docs/roadmap.md`](docs/roadmap.md) — specifically the "Now" section.** That document is the source of truth for what to work on next. It is dated, ordered, and survives across sessions.
+
+- Do **not** use the README's "Status" checklist to pick work — it has no order, no dates, no priority signal.
+- Do **not** infer the next task from `git log` alone — the log shows what landed, not what was *being* worked on or what is *now* most important.
+- If `docs/roadmap.md` "Now" is empty or stale, ask the user what to focus on, then write their answer into "Now" so the next session inherits it.
+- After work lands, append a one-line entry to `docs/roadmap.md` "Done" with the commit hash and date.
+- Subagents (orchestrator, planner, resourcer, editor, qa) do **not** read `docs/roadmap.md`. Day-level decisions belong to the top-level conversation; subagents stay pure functions of the mission prompt they receive.
+
 ## Operator preferences
 
 - **Auto-approve mode** (user directive, 2026-05-14): non-catastrophic system actions — `brew install/uninstall`, `pip install`, `npm install`, file deletion, settings changes, MCP/config edits — proceed without asking. User accepts macOS-environment-level mess (browser data loss, broken brew state, etc.) as acceptable risk.
