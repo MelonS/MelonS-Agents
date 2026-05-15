@@ -12,7 +12,7 @@
 : "${LAYOUT_FONT_SIZE:=44}"          # body caption size, tuned for 1080x1920
 : "${LAYOUT_FONT_NAME:=Helvetica}"   # libass picks via fontconfig
 : "${LAYOUT_BOX_OPACITY_HEX:=80}"    # libass alpha for caption box: 00=opaque, FF=fully transparent; 80≈50%
-: "${LAYOUT_DRAWTEXT_FONTFILE:=/System/Library/Fonts/AppleSDGothicNeo.ttc}"  # drawtext needs a file; AppleSDGothicNeo covers Latin + Hangul + Hanja (Helvetica missed Hangul, rendered "손흥민" as boxes — observed on highlight-031412)
+: "${LAYOUT_DRAWTEXT_FONTFILE:=/System/Library/Fonts/Supplemental/AppleGothic.ttf}"  # single-font .ttf with Hangul; .ttc collections (AppleSDGothicNeo.ttc) didn't work because ffmpeg drawtext loads sub-font index 0 and the Korean glyphs are in a different sub-font. AppleGothic.ttf is single-font so the right font is always loaded.
 
 # Probe duration in seconds.
 ffmpeg_duration() {
