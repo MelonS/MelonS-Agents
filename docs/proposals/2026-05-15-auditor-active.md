@@ -1,8 +1,11 @@
 # Proposal: make the auditor actively surface findings
 
 **Date**: 2026-05-15 (written overnight)
-**Status**: partially implemented + awaiting user approval on remainder
-**Owner**: Claude (proposing) → user (approving the gated parts)
+**Status**: Part B SHIPPED 2026-05-16 (commit `4135ffd` — CLAUDE.md
+session-start protocol now reads `docs/audit/CURRENT-ALERT.md` before
+roadmap). Part A still pending — single paragraph in
+`.claude/agents/auditor.md` "Principles" awaiting user OK.
+**Owner**: Claude (proposing) → user (approving the gated part A).
 
 ## Why this proposal exists
 
