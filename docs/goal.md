@@ -22,6 +22,41 @@ Below is the first goal recorded under this layer.  Future goals
 replace this section; achieved goals move to "Past goals", abandoned
 goals to "Abandoned" with a one-line reason.
 
+### 2026-05-16 (later) | Real Korean celebrity video + visual bug pass | **ACHIEVED**
+
+_(2026-05-16 03:25 KST — operator direction at 02:54: "걸그룹이나
+여자연예인으로 정없으면 축구선수로" → "긴거 ... 연예인 나오는건
+없어?".  Resolved to Son Heung-min interview after iterating through
+Wikimedia Commons candidates (NK political video rejected; Buddhist
+22min too large; Kim Sang-gyun Produce 101 + Han So-eun had no audio
+track on Commons-hosted version).  Run sequence revealed three real
+defects, all fixed within this same goal:_
+
+**Deliverable**: `highlight-032405` (Son Heung-min GOAL TV interview,
+real CC-BY-3.0 from Wikimedia Commons → 9:16 60s short, QA PASS,
+top-left Korean attribution rendering correctly, captions clean of
+`\,` escape leak, real Korean speech burned in).
+Caption-verify frame: [`docs/caption-verify/highlight-032405-son-heungmin-cap.jpg`](caption-verify/highlight-032405-son-heungmin-cap.jpg).
+
+**Defects fixed inside this goal**:
+1. STRIP_NONSPEECH was over-aggressive — stripped `[FOREIGN]` /
+   `[INAUDIBLE]` markers that signal real-but-untranscribed speech.
+   Switched to whitelist (music / applause / laughter / silence / etc.).
+2. QA duration check was zero-tolerance — `60.0029s` from h264_videotoolbox
+   GOP alignment failed `<= 60`. Added `QA_DUR_TOLERANCE_S=0.5` default.
+3. Visual bugs in attribution overlay: comma escape leaked as `\,` in
+   captions (escape_ass wrongly escaped the text field); Korean glyphs
+   rendered as boxes (Helvetica.ttc → AppleSDGothicNeo.ttc → finally
+   AppleGothic.ttf single-font .ttf; also caught that `.env` had a
+   shadowing Helvetica path that defeated code-level defaults).
+4. Whisper auto-detect mis-classified Korean as `[FOREIGN]`. Added
+   `WHISPER_LANG` env override.
+
+**Lesson preserved**: env-var defaults via `:=` in code are silently
+shadowed by `.env` values; when changing a default, update both code
+AND `.env.example`. The Helvetica → AppleGothic fix took three runs
+because the local `.env` had the old path baked in.
+
 ### 2026-05-16 | Mixed validation pass | **ACHIEVED**
 
 _(2026-05-16 02:51 KST — all four deliverable subgoals cleared in
