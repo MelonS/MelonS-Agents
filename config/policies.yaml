@@ -1,29 +1,71 @@
 # Autonomy policy — what agents may/may not do without user confirmation.
-# Read by orchestrator at session start. Logic changes require user present.
+# Read by orchestrator at session start.  Logic changes always require
+# user present, regardless of mode.
+#
+# This file is documentation-as-code: no script parses the YAML directly.
+# The canonical rules live in docs/operator-contract.md; this file is the
+# machine-readable summary that agent definitions reference.  When the
+# two disagree, operator-contract.md wins.
 
 mode:
   default: interactive       # interactive | autonomous
   switch_via: AUTONOMY_MODE  # env var override
 
+# -----------------------------------------------------------------------------
+# Interactive mode — user is present, can answer prompts.
+# Maps to operator-contract.md hard rules 1, 3, 4, 5.
+# -----------------------------------------------------------------------------
 interactive:
   # User is present. Pause for confirmation on:
   pause_for:
     - logic_change           # editing agents/*.md or .claude/agents/*.md
-    - destructive_fs         # rm -rf, git reset --hard, etc.
-    - external_publish       # push, deploy, send messages
+                             #   (operator-contract §5)
+    - destructive_fs         # rm -rf at system roots, disk format,
+                             #   force-push to shared remote, git reset --hard
+                             #   on a published branch (op-contract §4)
+    - paid_external          # paid APIs, SaaS subscriptions, cloud-resource
+                             #   creation, transition from free to metered
+                             #   billing (op-contract §3 — money firewall)
+    - external_message       # Slack, email, public-facing posts/PRs/issues
+                             #   on third-party services.  NOTE: git push to
+                             #   origin/main is auto-approved (op-contract §6
+                             #   "auto-commit + auto-push" — that's the
+                             #   workflow, not an external publish).
     - credential_use         # writing/reading secrets beyond declared scope
 
+# -----------------------------------------------------------------------------
+# Autonomous mode — user is asleep.  Stricter envelope.
+# Maps to operator-contract.md hard rules 2 (never-pause), 5 (logic
+# immutability), and the budget cap.
+# -----------------------------------------------------------------------------
 autonomous:
-  # User is asleep. Agents proceed unattended within these bounds:
   budget_usd_ceiling: 5.00   # AUTONOMY_BUDGET_USD override
   allowed:
     - read_any
     - write_to: records/
-    - run_tools: [ffmpeg, ollama, curl_get, git_local]
+    - write_to: docs/audit/  # auditor maintains CURRENT-ALERT.md here
+    - write_to: docs/daily/  # shutdown/overnight reports
+    - run_tools:             # local-only tools that overnight missions need
+        - ffmpeg
+        - ffprobe
+        - ollama
+        - whisper            # whisper.cpp / whisper-cli
+        - yt-dlp
+        - curl_get           # HTTP GET only (no POST without paid_external gate)
+        - jq
+        - python3            # for parsing / probe scripts in agents/lib/
+        - git_local          # local commits; push allowed per op-contract §6
   forbidden:
     - logic_change           # never edit agent definitions overnight
-    - destructive_fs
-    - external_publish
-    - new_dependency_install
+                             #   (op-contract §5)
+    - destructive_fs         # same as interactive
+    - paid_external          # money firewall still applies overnight
+                             #   (op-contract §3)
+    - new_dependency_install # no brew/pip/npm install while user is asleep;
+                             #   defer to morning even though these are
+                             #   auto-approved in interactive mode
+                             #   (op-contract §4 auto-approve is for
+                             #    interactive only)
   on_blocker:
-    action: log_and_halt     # write to records/blockers/, exit cleanly
+    action: log_and_halt     # write to records/blockers/<ISO-date>/<id>.md,
+                             #   exit cleanly; do not retry

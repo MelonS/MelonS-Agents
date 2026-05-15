@@ -33,8 +33,9 @@ domains:
     note: Xiph test media (Tears of Steel, Big Buck Bunny mirrors)
 
   # Internet Archive — extremely broad collection, most items are PD or CC
-  # but per-item licensing varies; the license-string probe (TODO) should
-  # cross-check, not this allowlist alone.
+  # but per-item licensing varies; the license-string probe (implemented in
+  # agents/lib/copyright.sh probe_license/resolve_final_license) cross-checks
+  # the archive.org metadata endpoint, not just this allowlist alone.
   - domain: archive.org
     license_default: requires-per-item-probe
     note: Internet Archive — license must be probed per-item before publish
