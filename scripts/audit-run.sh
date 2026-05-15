@@ -71,3 +71,85 @@ fi
 
 log_ok "audit report ready: $OUT_FILE"
 log_info "review then 'git add docs/audit/ && git commit' to preserve"
+
+# -----------------------------------------------------------------------------
+# Active surface: extract verdict and maintain docs/audit/CURRENT-ALERT.md
+#
+# The auditor itself stays read-only and writes its full report to OUT_FILE.
+# This wrapper post-processes that report: if the verdict is non-CLEAN, it
+# writes a short alert file at a stable, prominent path so the next session
+# notices the drift without having to scan dated audit files.  When the
+# verdict returns to CLEAN, the alert file is auto-removed.
+#
+# All failure modes are non-fatal — the audit itself must never fail because
+# of this parsing.  CURRENT-ALERT.md is committed (lives in docs/) so it
+# survives a machine swap, same as the rest of the audit trail.
+# -----------------------------------------------------------------------------
+ALERT_FILE="$OUT_DIR/CURRENT-ALERT.md"
+
+parse_verdict_and_alert() {
+  local verdict
+  # Verdict line format (from auditor.md): "**Verdict**: CLEAN | DRIFT_DETECTED | CRITICAL"
+  verdict="$(grep -m1 -E '^\*\*Verdict\*\*:' "$OUT_FILE" \
+              | sed -E 's/^\*\*Verdict\*\*:[[:space:]]*//' \
+              | awk '{print $1}')"
+
+  if [[ -z "$verdict" ]]; then
+    log_warn "could not parse verdict from $OUT_FILE — leaving alert state as-is"
+    return 0
+  fi
+
+  log_info "audit verdict: $verdict"
+
+  case "$verdict" in
+    CLEAN)
+      if [[ -f "$ALERT_FILE" ]]; then
+        rm -f "$ALERT_FILE"
+        log_ok "cleared $ALERT_FILE (verdict returned to CLEAN)"
+      fi
+      ;;
+    DRIFT_DETECTED|CRITICAL)
+      write_alert_file "$verdict"
+      log_warn "wrote $ALERT_FILE (verdict=$verdict)"
+      ;;
+    *)
+      log_warn "unknown verdict '$verdict' — leaving alert state as-is"
+      ;;
+  esac
+}
+
+write_alert_file() {
+  local verdict="$1"
+  local summary findings_block
+  # Pull the Summary section (between '## Summary' and next '## ').
+  summary="$(awk '/^## Summary[[:space:]]*$/{flag=1; next} /^## /{flag=0} flag' "$OUT_FILE")"
+  # Pull critical+high findings.  The auditor formats each finding as
+  # "- **[severity]** ..." so we filter by severity prefix.
+  findings_block="$(awk '/^## Findings[[:space:]]*$/{flag=1; next} /^## /{flag=0} flag' "$OUT_FILE" \
+                    | grep -E '^\- \*\*\[(critical|high)\]\*\*' || true)"
+
+  {
+    printf '# Current audit alert\n\n'
+    printf '> This file is written by `scripts/audit-run.sh` whenever the most\n'
+    printf '> recent audit has a non-CLEAN verdict.  It is auto-removed on the\n'
+    printf '> next CLEAN run.  Do not edit by hand — fix the underlying findings\n'
+    printf '> and re-run the auditor.\n\n'
+    printf '**Verdict**: %s\n' "$verdict"
+    printf '**Full report**: [`docs/audit/%s-%s.md`](%s-%s.md)\n' "$DATE" "$FOCUS" "$DATE" "$FOCUS"
+    printf '**Generated**: %s\n\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')"
+    printf '## Summary (from audit)\n\n%s\n\n' "${summary:-_(no summary block found in report)_}"
+    printf '## Critical / High findings\n\n'
+    if [[ -n "$findings_block" ]]; then
+      printf '%s\n' "$findings_block"
+    else
+      printf '_(no critical/high findings — verdict is %s but only medium-or-lower findings)_\n' "$verdict"
+    fi
+    printf '\n## How to clear this alert\n\n'
+    printf '1. Read the full report linked above.\n'
+    printf '2. Resolve each critical / high finding (suggested fixes are in the report).\n'
+    printf '3. Re-run `./scripts/audit-run.sh` — verdict returning to CLEAN auto-removes this file.\n'
+  } > "$ALERT_FILE"
+}
+
+# Non-fatal: parsing failures must never break the audit run itself.
+parse_verdict_and_alert || log_warn "verdict parser failed — alert file may be stale"
