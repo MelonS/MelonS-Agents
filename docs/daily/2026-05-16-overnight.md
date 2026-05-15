@@ -7,8 +7,12 @@
 야간 자율로 copyright-policy "Still TODO" 1건 출하 + README Status
 정합화 + auditor surface 회귀 테스트 + audit 디렉토리 README + README
 아키텍처 다이어그램 깨짐 수정 + docs/architecture.md drift 수정 + stale
-TODO 정리 + policies.yaml vs operator-contract 정합화까지, 총 **10
-커밋**.  agent 정의 수정 0건, working tree clean, origin/main synced.
+TODO 정리 + policies.yaml vs operator-contract 정합화 — **여기서 사용자가
+"결과물 나왔냐"고 짚어줘서** 실제로 한 번도 안 뽑힌 진짜 결과물(실 CC
+Sintel → 9:16 short)을 01:52 KST에 출하(`highlight-015213` PASS),
+근본 원인 ("큐 비었다=완료"로 잘못 판단)에 대한 구조적 픽스로
+`docs/goal.md` outcome 레이어 신설 + CLAUDE.md 세션-시작 protocol에
+박음.  agent 정의 수정은 user OK 받은 CLAUDE.md만, working tree clean.
 
 ---
 

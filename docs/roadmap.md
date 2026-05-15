@@ -68,6 +68,24 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-16** (overnight, 01:52 KST) **First real-CC end-to-end short
+  produced.**  This is the actual delivery of yesterday's "alien
+  aesthetic 탈출" goal — every piece of infrastructure shipped over
+  2026-05-14 → 2026-05-15 (fixture downloader / 9:16 layout engine /
+  source-attribution / libass burned captions / copyright filter /
+  QA retry loop) exercised end-to-end against a real CC source for the
+  first time.  Mission `highlight-015213`: input
+  `https://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4`
+  → 39-second 9:16 short.mp4 (1080×1920, 7.78MB), QA PASS on attempt 1,
+  SOURCES.txt records `Sintel © Blender Foundation — durian.blender.org`
+  / `CC-BY-3.0`, burned-in top-left source watermark + bottom-center
+  caption box ("I'm searching for someone.") verified visually in
+  [`docs/caption-verify/highlight-015213-sintel-cap.jpg`](caption-verify/highlight-015213-sintel-cap.jpg).
+  **Root-cause lesson surfaced by this run**: yesterday's "Done" entries
+  recorded the infrastructure landing but no entry recorded the *outcome*
+  (a real short emerging from that infrastructure).  Without an outcome
+  layer, a roadmap with all checkboxes ticked can still mean the goal
+  isn't met — drove the creation of `docs/goal.md` in the next commit.
 - **2026-05-16** (overnight) Audit parser regression test +
   `docs/audit/` directory README.  `scripts/test-audit-parser.sh`
   exercises the verdict-parsing block in `audit-run.sh` against
