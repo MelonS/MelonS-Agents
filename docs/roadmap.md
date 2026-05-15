@@ -28,11 +28,7 @@ _Promoted by Claude per "Never pause" rule: previous "Now" finished, top of
 
 ## Next — queued, in priority order
 
-1. **Strike-aware source rejection** — read `records/strikes.log` from
-   `check_source_allowed` in `agents/lib/copyright.sh`; refuse any
-   source whose URL has been struck before. Data is being written;
-   just need the read path.
-2. **License-string probe for archive.org / wikimedia / Vimeo** —
+1. **License-string probe for archive.org / wikimedia / Vimeo** —
    today the allowlist marks these `requires-per-item-probe` and the
    publish gate refuses them. Implement the per-item HTTP probe that
    reads the actual license and writes it to
@@ -45,6 +41,14 @@ _Promoted by Claude per "Never pause" rule: previous "Now" finished, top of
 
 ## Done — most recent first
 
+- **2026-05-15** Strike-aware source rejection — the strike log is no
+  longer write-only. `check_source_allowed` consults
+  `records/strikes.log` *before* the allowlist; a URL with any prior
+  strike is refused (exit 6) even if its domain is otherwise
+  permitted. Refusal surfaces the original strike row to stderr.
+  Verified: baseline blender.org URL passes; after `append_strike`,
+  same URL refused with strike provenance; after cleanup, baseline
+  restored.
 - **2026-05-15** Automated copyright filter v1. New
   `config/copyright-allowlist.yaml` (Blender + Xiph + archive.org +
   wikimedia.org permissive domains, per-license publish rules), new

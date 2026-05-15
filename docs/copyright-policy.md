@@ -21,11 +21,11 @@ Every short produced by this system either (a) credits its source on the rendere
 
 - [x] **Domain allowlist** — `config/copyright-allowlist.yaml` lists permissive domains (Blender, Xiph, Internet Archive, Wikimedia). `check_source_allowed` in `agents/lib/copyright.sh` is called at the top of every mission's `run.sh`; non-allowlisted URLs are refused with exit code 67. Local file paths bypass (fixture catalog handles them).
 - [x] **Publish-gate hook** — `scripts/publish-gate.sh <mission-dir>` reads `outputs/SOURCES.txt` and refuses to greenlight publishing if the license is empty, `unknown`, `requires-per-item-probe`, or listed `publish_blocked: true` in the allowlist. Stub today; the moment a real `publish.sh` lands, it should call this as its first action.
-- [x] **Strike-record log** — `append_strike(mission_id, url, reason)` in `agents/lib/copyright.sh` writes tab-separated rows to `records/strikes.log`. The data exists; the auto-rejection lookup is in the next slice.
+- [x] **Strike-record log** — `append_strike(mission_id, url, reason)` in `agents/lib/copyright.sh` writes tab-separated rows to `records/strikes.log`.
+- [x] **Strike-aware source rejection** — `check_source_allowed` consults the strike log *before* the allowlist. A URL with any row in `records/strikes.log` is refused (exit code 6), even if its domain is on the allowlist. The refusal message includes the original strike row so the operator can see when and why it was logged.
 
 ### Still TODO
 
-- [ ] **Strike-aware source rejection** — read `records/strikes.log` from `check_source_allowed`; refuse any source whose URL has been struck before. (Data is being written; just need the read path.)
 - [ ] **License-string probe** — for `archive.org` / `wikimedia.org` / Vimeo CC channel items, hit the per-item license endpoint and capture the result to `resources/license.json`. Today the allowlist marks these `requires-per-item-probe` and the publish gate refuses them, but the probe itself isn't implemented yet.
 - [ ] **Audio-fingerprint check** — `chromaprint`/`fpcalc`-based detection of copyrighted soundtracks. Skipped for v1 because it needs a fingerprint database to compare against; without one the check is just CPU burn. Add this when we have a real takedown to learn from.
 - [ ] **Logo / watermark detection** — frame-level check for other creators' logos in the area we'd overlay our own watermark. Heavy (needs OCR or a trained model); deferred until we hit the failure mode it would catch.

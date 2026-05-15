@@ -19,9 +19,27 @@
 : "${COPYRIGHT_ALLOWLIST:=$REPO_ROOT/config/copyright-allowlist.yaml}"
 : "${STRIKE_LOG:=$RECORDS_DIR/strikes.log}"
 
+# Has this URL been struck before? Returns 0 if struck (third column of
+# any row in $STRIKE_LOG matches), non-zero otherwise.  Echoes the
+# offending strike row to stderr on a hit so the caller's error message
+# can surface it.
+check_url_struck() {
+  local url="$1"
+  [[ -f "$STRIKE_LOG" ]] || return 1
+  # Strike log rows: <timestamp>\t<mission_id>\t<source_url>\t<reason>
+  local hit
+  hit=$(awk -F'\t' -v want="$url" '$3 == want { print; exit }' "$STRIKE_LOG")
+  if [[ -n "$hit" ]]; then
+    echo "$hit" >&2
+    return 0
+  fi
+  return 1
+}
+
 # Returns 0 if SOURCE is allowed, non-zero with stderr explanation if not.
 # Local paths (no http(s):// prefix) always pass — fixture catalog handles
 # their licensing instead.  Echoes the matched license_default on success.
+# Rejects URLs that have been recorded in $STRIKE_LOG.
 check_source_allowed() {
   local source="$1"
 
@@ -30,6 +48,18 @@ check_source_allowed() {
     echo "local-path"
     return 0
   fi
+
+  # Strike check runs BEFORE the allowlist: a previously-struck URL is
+  # never publishable even if its domain is on the allowlist.
+  if check_url_struck "$source" 2>/tmp/.copyright-strike-row; then
+    {
+      echo "url '$source' has a prior strike — refusing"
+      echo "  $(cat /tmp/.copyright-strike-row)"
+    } >&2
+    rm -f /tmp/.copyright-strike-row
+    return 6
+  fi
+  rm -f /tmp/.copyright-strike-row
 
   if [[ ! -f "$COPYRIGHT_ALLOWLIST" ]]; then
     echo "❌ COPYRIGHT_ALLOWLIST not found: $COPYRIGHT_ALLOWLIST" >&2
