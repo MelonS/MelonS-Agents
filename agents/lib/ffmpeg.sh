@@ -12,7 +12,7 @@
 : "${LAYOUT_FONT_SIZE:=44}"          # body caption size, tuned for 1080x1920
 : "${LAYOUT_FONT_NAME:=Helvetica}"   # libass picks via fontconfig
 : "${LAYOUT_BOX_OPACITY_HEX:=80}"    # libass alpha for caption box: 00=opaque, FF=fully transparent; 80≈50%
-: "${LAYOUT_DRAWTEXT_FONTFILE:=/System/Library/Fonts/Helvetica.ttc}"  # ffmpeg drawtext needs a real font file
+: "${LAYOUT_DRAWTEXT_FONTFILE:=/System/Library/Fonts/AppleSDGothicNeo.ttc}"  # drawtext needs a file; AppleSDGothicNeo covers Latin + Hangul + Hanja (Helvetica missed Hangul, rendered "손흥민" as boxes — observed on highlight-031412)
 
 # Probe duration in seconds.
 ffmpeg_duration() {
@@ -83,10 +83,12 @@ def srt_to_ass_ts(t):
     return f"{int(h)}:{int(m):02d}:{int(s):02d}.{cs:02d}"
 
 def escape_ass(text):
-    # ASS dialogue: braces are override blocks, comma is field separator.
+    # ASS dialogue: braces are override blocks (must be neutralized).
+    # Comma is a field separator for the leading fields (Start, End, Style,
+    # ...) but the text field is last, so commas in the text are literal —
+    # do NOT escape them or libass renders the backslash verbatim.
     return (text.replace("\\", "\\\\")
                 .replace("{", "(").replace("}", ")")
-                .replace(",", "\\,")
                 .replace("\n", "\\N"))
 
 events = []
