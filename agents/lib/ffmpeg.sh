@@ -70,10 +70,19 @@ ffmpeg_burn_srt() {
 
 # Convert whisper segments JSON → SRT in the given time window.
 # Usage: ffmpeg_segments_to_srt <segments_json> <window_start> <window_end> <out.srt>
+#
+# Non-speech filter:
+#   STRIP_NONSPEECH=true (default) skips any segment whose text is just a
+#   bracketed marker like [MUSIC], [APPLAUSE], [Laughter] — whisper emits
+#   these for accessibility, but in a 30-60s short the caption box gets
+#   filled with [MUSIC] when no dialogue runs, which adds noise without
+#   information.  STRIP_NONSPEECH=false preserves whisper's behavior.
 ffmpeg_segments_to_srt() {
   local segments="$1" win_start="$2" win_end="$3" out="$4"
-  jq -r --argjson ws "$win_start" --argjson we "$win_end" '
-    [ .[] | select(.start >= $ws and .end <= $we) ] |
+  local strip="${STRIP_NONSPEECH:-true}"
+  jq -r --argjson ws "$win_start" --argjson we "$win_end" --arg strip "$strip" '
+    [ .[] | select(.start >= $ws and .end <= $we)
+          | select($strip != "true" or (.text | test("^\\s*\\[[^\\]]*\\]\\s*$") | not)) ] |
     to_entries[] |
     "\(.key + 1)\n" +
     ( (.value.start - $ws) as $s | (.value.end - $ws) as $e |

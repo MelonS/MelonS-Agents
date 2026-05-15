@@ -22,7 +22,44 @@ Below is the first goal recorded under this layer.  Future goals
 replace this section; achieved goals move to "Past goals", abandoned
 goals to "Abandoned" with a one-line reason.
 
+### 2026-05-16 | Mixed validation pass | **IN PROGRESS**
+
+_One sentence_: after the first real-CC short (highlight-015213)
+satisfied the operator, exercise the remaining surface of the v1
+pipeline — Korean input, multi-output shorts-batch, summarize text —
+each against a real CC source, with the caption-quality improvement
+the operator flagged ("[MUSIC] lines are noise") applied along the way.
+
+**Subgoals (acceptance signals)**:
+- [ ] `STRIP_NONSPEECH` env var implemented in `agents/lib/ffmpeg.sh`,
+      default ON — caption lines matching `^\[.*\]$` filtered before
+      SRT/ASS render.  Old behavior available via
+      `STRIP_NONSPEECH=false`.
+- [ ] **Deliverable**: Korean highlight short — `/tmp/smoke/ko_lecture.mp4`
+      → 9:16 short.mp4 with Korean burned captions + Korean audio +
+      QA PASS.  Caption-verify frame committed.
+- [ ] **Deliverable**: Real-CC shorts-batch — Sintel trailer 720p
+      → ≥ 2 9:16 shorts in one mission run, all QA PASS, Blender
+      attribution on each.  Caption-verify frame for at least one
+      short committed.
+- [ ] **Deliverable**: Real-CC summarize — Sintel trailer → EN+KO
+      structured `summary.md` with Blender attribution in the
+      Source & license footer.  QA PASS.
+
+**Done when**: all three deliverable subgoals checked AND each has a
+committed artifact path recorded here.
+
 ### 2026-05-15 → 2026-05-16 | Alien aesthetic 탈출 | **ACHIEVED**
+
+_(2026-05-16 02:00 KST — operator confirmed satisfaction after
+viewing `highlight-015213` short.mp4.  Migrated below intact.)_
+
+_See "Past goals" — entry preserved in full at first migration
+because the lesson it produced is load-bearing for this file's
+maintenance contract.  Future achievements get a one-line entry
+unless they also produced a generalizable lesson.)_
+
+#### Past-goal reference (read-only)
 
 _One sentence_: produce a 9:16 short from a real Creative-Commons
 source video, end-to-end, with burned-in source attribution + libass
@@ -63,11 +100,9 @@ a frame that has to be committed.  Subgoals describing infrastructure
 
 ## Next goal (candidate — for user to confirm or replace)
 
-_(empty — awaiting user direction.  Candidates that surfaced
-overnight: see `docs/proposals/2026-05-15-auditor-active.md` for the
-auditor self-documenting edits awaiting user OK; see
-`docs/copyright-policy.md` "Still TODO" for the audio-fingerprint /
-logo-detection items which need external resources.)_
+_(promoted to Active goal below by user direction "일단 다하고 있어봐"
+ at 2026-05-16 02:40 KST, after operator confirmed satisfaction with
+ the first deliverable.)_
 
 ---
 
