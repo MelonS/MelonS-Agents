@@ -19,8 +19,8 @@ _Set by shutdown protocol on 2026-05-15: session closed cleanly with
 all queued items shipped.  Pick the resume point on the next session
 in this order:_
 
-1. Read **`docs/daily/2026-05-15.md`** for full context of what landed
-   yesterday and why.
+1. Read **`docs/daily/2026-05-16-overnight.md`** for what landed
+   overnight and the user-action queue.
 2. If the user has a new directive, set it as "Now" and start.
 3. Otherwise, promote a candidate from `docs/copyright-policy.md`
    "Still TODO" block — those are scoped, real, and load-bearing
@@ -31,6 +31,23 @@ in this order:_
 
 - [ ] _(intentionally empty — the session ended on a complete state.
   See above for resume order.)_
+
+<!-- suggest (Claude, 2026-05-15 overnight, awaiting user OK)
+  Two items shipped tonight script-level:
+  1. docs/ideas.md (parking log, v1-promise device)
+  2. scripts/audit-run.sh active surface → docs/audit/CURRENT-ALERT.md
+
+  Two items still gated on user approval (proposal at
+  docs/proposals/2026-05-15-auditor-active.md):
+  - Apply Part A: paragraph in .claude/agents/auditor.md "Principles"
+    declaring the alert surface (so the agent knows its report is
+    post-processed).
+  - Apply Part B: line in CLAUDE.md session-start protocol pointing
+    to CURRENT-ALERT.md.
+
+  Both are 1-paragraph edits. Promote whichever the user OKs into Now.
+-->
+
 
 ## Next — queued, in priority order
 
@@ -51,6 +68,22 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-15** (overnight) Auditor active surface via wrapper.
+  `scripts/audit-run.sh` now extracts the audit verdict and maintains
+  `docs/audit/CURRENT-ALERT.md` — a stable, committed alert file that
+  exists iff the latest audit verdict is non-CLEAN (DRIFT_DETECTED or
+  CRITICAL).  Self-clears on the next CLEAN run.  Auditor agent itself
+  is unchanged (logic-changes-need-OK rule); the wrapper does all the
+  active surface work.  Verified with three synthetic verdicts.  Two
+  follow-up edits gated for user approval — paragraph in `auditor.md`
+  Principles + line in `CLAUDE.md` session protocol — described in
+  `docs/proposals/2026-05-15-auditor-active.md` (commit `a37d37f`).
+- **2026-05-15** (overnight) `docs/ideas.md` parking log created with
+  3 starting categories (Agents / Pipeline+Infra / Intelligence+Misc).
+  First entry: Scout agent (external information gathering), parked
+  for v2+, language toned down per `writing_tone` rule.  Holds the
+  v1-only promise — new ideas land here instead of derailing the
+  main pipeline (commit `71d785f`).
 - **2026-05-15** Auditor goes autonomous + statusline live.
   `scripts/com.melons.agents.auditor.plist` schedules
   `audit-run.sh all` daily at 03:00 local via launchd.
