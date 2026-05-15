@@ -38,6 +38,8 @@ log_ok "source: ${SRC_DURATION}s"
 # Resolve source attribution + license once; every short rendered below
 # gets the same burned-in watermark and shares a single SOURCES.txt record.
 resolve_source_attribution "$SOURCE"
+resolve_final_license "$SOURCE" "$ALLOWED_LICENSE" "$MDIR"
+log_info "final license: ${FIXTURE_LICENSE:-unknown}"
 write_sources_record "$MISSION_ID" "$SOURCE" "$MDIR/outputs/SOURCES.txt"
 
 # 2. Transcribe

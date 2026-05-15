@@ -59,6 +59,8 @@ log_ok "source ready: $SRC"
 # Summarize doesn't render video, so there's no burned-in watermark — only
 # the SOURCES.txt machine record + a footer in summary.md.
 resolve_source_attribution "$SOURCE"
+resolve_final_license "$SOURCE" "$ALLOWED_LICENSE" "$MDIR"
+log_info "final license: ${FIXTURE_LICENSE:-unknown}"
 write_sources_record "$MISSION_ID" "$SOURCE" "$MDIR/outputs/SOURCES.txt"
 
 # 2. Transcribe

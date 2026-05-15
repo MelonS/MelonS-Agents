@@ -94,6 +94,8 @@ fi
 # Burned into the rendered output and recorded in outputs/SOURCES.txt so the
 # short can never be reposted without crediting where it came from.
 resolve_source_attribution "$SOURCE"
+resolve_final_license "$SOURCE" "$ALLOWED_LICENSE" "$MDIR"
+log_info "final license: ${FIXTURE_LICENSE:-unknown}"
 
 SRC_DURATION=$(ffmpeg_duration "$SRC")
 log_info "source duration: ${SRC_DURATION}s"

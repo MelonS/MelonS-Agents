@@ -28,11 +28,8 @@ _Promoted by Claude per "Never pause" rule: previous "Now" finished, top of
 
 ## Next — queued, in priority order
 
-1. **License-string probe for archive.org / wikimedia / Vimeo** —
-   today the allowlist marks these `requires-per-item-probe` and the
-   publish gate refuses them. Implement the per-item HTTP probe that
-   reads the actual license and writes it to
-   `resources/license.json`, so these sources become publishable.
+_(no items queued — promote a deferred item from `docs/copyright-policy.md`
+("Still TODO" block) when one becomes load-bearing, or set a new focus.)_
 
 ## Blocked / parked
 
@@ -41,6 +38,15 @@ _Promoted by Claude per "Never pause" rule: previous "Now" finished, top of
 
 ## Done — most recent first
 
+- **2026-05-15** License-string probe for archive.org + wikimedia
+  commons. `probe_license(url, out_json)` reads the per-item license
+  metadata (archive.org's `/metadata/<id>` JSON and the wikimedia
+  `extmetadata` API), maps CC license URLs / short codes onto canonical
+  tags (`CC-BY-3.0`, etc.). `resolve_final_license` glues it into each
+  mission: when the allowlist says `requires-per-item-probe`, the probe
+  runs, `FIXTURE_LICENSE` gets populated, and `resources/license.json`
+  records the provenance. End-to-end verified: archive.org BBB URL →
+  probed → CC-BY-3.0 → publish gate accepts.
 - **2026-05-15** Strike-aware source rejection — the strike log is no
   longer write-only. `check_source_allowed` consults
   `records/strikes.log` *before* the allowlist; a URL with any prior

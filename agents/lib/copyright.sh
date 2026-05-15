@@ -165,9 +165,7 @@ PY
 }
 
 # Append-only strike log — call when a published short receives a takedown.
-# The next render that names the same source URL can then be auto-rejected.
-# (Auto-rejection lookup is TODO; the log is here so the data exists when
-# we add it.)
+# `check_url_struck` reads this log to refuse future renders of the same URL.
 append_strike() {
   local mission_id="$1" source_url="$2" reason="$3"
   mkdir -p "$(dirname "$STRIKE_LOG")"
@@ -178,4 +176,140 @@ append_strike() {
     "$reason" \
     >> "$STRIKE_LOG"
   echo "$STRIKE_LOG"
+}
+
+# Probe a remote source's machine-readable license metadata and write it
+# to <out_json>.  Returns the canonical license tag (e.g. "CC-BY-3.0") on
+# stdout, or empty + non-zero exit if the probe can't determine a license.
+#
+# Today this knows two hosts:
+#   - archive.org: /metadata/<identifier> endpoint, reads `licenseurl`
+#   - commons.wikimedia.org: extmetadata API, reads License.value
+#
+# Both return CC URLs / CC tags that map cleanly onto the publish_rules
+# entries in config/copyright-allowlist.yaml.  Other hosts return non-zero
+# so the caller can fall back to the "requires-per-item-probe" rule.
+probe_license() {
+  local url="$1" out_json="$2"
+  local host
+  host=$(echo "$url" | awk -F/ '{print tolower($3)}')
+
+  python3 - "$url" "$host" "$out_json" <<'PY'
+import sys, json, re, urllib.request, urllib.parse
+
+url, host, out = sys.argv[1], sys.argv[2], sys.argv[3]
+
+def cc_url_to_tag(u):
+    # http://creativecommons.org/licenses/by/3.0/ → CC-BY-3.0
+    m = re.match(r"https?://creativecommons\.org/licenses/([a-z\-]+)/([0-9.]+)/?", u or "")
+    if not m: return ""
+    return "CC-" + m.group(1).upper() + "-" + m.group(2)
+
+def cc_tag_normalize(t):
+    # "cc-by-3.0" → "CC-BY-3.0"
+    if not t: return ""
+    parts = t.split("-")
+    return "-".join(p.upper() if p == "cc" or all(c.isalpha() for c in p) else p for p in parts)
+
+def fetch_json(u, timeout=8):
+    req = urllib.request.Request(u, headers={"User-Agent": "MelonS-Agents/1 (license-probe)"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read())
+
+result = {"url": url, "host": host, "license": "", "license_url": "", "source": "probe"}
+
+try:
+    if host.endswith("archive.org"):
+        # URL like https://archive.org/download/<id>/.../file.mp4
+        m = re.search(r"archive\.org/(?:download|details)/([^/]+)", url)
+        if not m:
+            raise ValueError("could not extract archive.org item identifier")
+        ident = m.group(1)
+        meta = fetch_json(f"https://archive.org/metadata/{urllib.parse.quote(ident)}")
+        license_url = meta.get("metadata", {}).get("licenseurl", "")
+        result["license_url"] = license_url
+        result["license"] = cc_url_to_tag(license_url)
+        result["identifier"] = ident
+    elif host.endswith("commons.wikimedia.org") or host.endswith("upload.wikimedia.org"):
+        # commons.wikimedia.org/wiki/File:Foo.webm  OR
+        # upload.wikimedia.org/wikipedia/commons/.../File.webm
+        title = ""
+        m = re.search(r"/wiki/(File:[^?#]+)", url)
+        if m:
+            title = urllib.parse.unquote(m.group(1))
+        else:
+            m = re.search(r"/wikipedia/commons/.+/([^/?#]+\.[A-Za-z0-9]+)$", url)
+            if m: title = "File:" + urllib.parse.unquote(m.group(1))
+        if not title:
+            raise ValueError("could not extract wikimedia file title from URL")
+        api = ("https://commons.wikimedia.org/w/api.php?"
+               + urllib.parse.urlencode({
+                   "action": "query",
+                   "prop": "imageinfo",
+                   "iiprop": "extmetadata",
+                   "format": "json",
+                   "titles": title,
+               }))
+        meta = fetch_json(api)
+        pages = meta.get("query", {}).get("pages", {})
+        for _, page in pages.items():
+            info = page.get("imageinfo", [{}])[0]
+            em = info.get("extmetadata", {})
+            result["license"] = cc_tag_normalize(em.get("License", {}).get("value", ""))
+            result["license_url"] = em.get("LicenseUrl", {}).get("value", "")
+            result["title"] = page.get("title", title)
+            result["artist"] = em.get("Artist", {}).get("value", "")
+            break
+    else:
+        result["error"] = f"no probe implemented for host '{host}'"
+except Exception as e:
+    result["error"] = str(e)
+
+with open(out, "w") as f:
+    json.dump(result, f, indent=2)
+
+if result["license"]:
+    print(result["license"])
+    sys.exit(0)
+sys.exit(1)
+PY
+}
+
+# Resolve the final license string for a source.  Precedence (most-specific
+# first):
+#   1. FIXTURE_LICENSE (set earlier by resolve_source_attribution if the
+#      source matched config/fixtures.yaml)
+#   2. probe_license result, IF the allowlist verdict was
+#      "requires-per-item-probe"
+#   3. The allowlist's license_default for the domain
+#
+# Side effect: sets FIXTURE_LICENSE to the resolved value so
+# write_sources_record picks it up.  Writes resources/license.json under
+# $mdir when a probe runs.
+resolve_final_license() {
+  local source="$1" allowlist_license="$2" mdir="$3"
+
+  if [[ -n "${FIXTURE_LICENSE:-}" ]]; then
+    return 0  # catalog already won
+  fi
+
+  if [[ "$allowlist_license" == "requires-per-item-probe" ]]; then
+    mkdir -p "$mdir/resources"
+    if probed=$(probe_license "$source" "$mdir/resources/license.json"); then
+      FIXTURE_LICENSE="$probed"
+      export FIXTURE_LICENSE
+      return 0
+    else
+      echo "⚠ license probe failed for $source — leaving as 'requires-per-item-probe' (publish gate will refuse)" >&2
+      FIXTURE_LICENSE="requires-per-item-probe"
+      export FIXTURE_LICENSE
+      return 0
+    fi
+  fi
+
+  # Fall back to the allowlist default ("local-path", "CC-BY-3.0", etc.)
+  if [[ -n "$allowlist_license" && "$allowlist_license" != "local-path" ]]; then
+    FIXTURE_LICENSE="$allowlist_license"
+    export FIXTURE_LICENSE
+  fi
 }
