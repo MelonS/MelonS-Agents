@@ -15,16 +15,22 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 ## Now — active focus
 
-_Promoted by Claude per "Never pause" rule: previous "Now" finished, top of
-"Next" queue takes over automatically._
+_Set by shutdown protocol on 2026-05-15: session closed cleanly with
+all queued items shipped.  Pick the resume point on the next session
+in this order:_
 
-- [ ] **Iterative QA-feedback loop inside editor** — finer-grained than the
-  mission-level retry shipped today. Have the editor re-cut a single
-  failing window without rerunning transcribe/select. Only worth doing
-  if the coarse retry loop is observed to waste compute on a per-output
-  basis. Touches `agents/lib/ffmpeg.sh` (re-cut helper) + an opt-in
-  flag in each mission's retry loop. Probably defer until we have
-  takedown data or compute pressure.
+1. Read **`docs/daily/2026-05-15.md`** for full context of what landed
+   yesterday and why.
+2. If the user has a new directive, set it as "Now" and start.
+3. Otherwise, promote a candidate from `docs/copyright-policy.md`
+   "Still TODO" block — those are scoped, real, and load-bearing
+   ahead of any external publish.
+4. The pre-existing **Iterative QA-feedback loop inside editor**
+   stays parked below (in "Blocked / parked") — its own description
+   defers it until we see compute pressure, which hasn't happened.
+
+- [ ] _(intentionally empty — the session ended on a complete state.
+  See above for resume order.)_
 
 ## Next — queued, in priority order
 
@@ -34,7 +40,14 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 ## Blocked / parked
 
 - **Real user-supplied URL fixture** — needs a URL from the user. Catalog
-  currently lists only Blender open-movie samples (CC-BY).
+  currently lists only Blender open-movie samples (CC-BY) + Pexels API
+  via `scripts/pexels-fetch.sh`.
+- **Iterative QA-feedback loop inside editor** — finer-grained than the
+  mission-level retry shipped on 2026-05-15.  Have the editor re-cut a
+  single failing window without rerunning transcribe/select.  Worth
+  picking up when the coarse retry is observed to waste compute on a
+  per-output basis.  Touches `agents/lib/ffmpeg.sh` (re-cut helper) +
+  an opt-in flag in each mission's retry loop.
 
 ## Done — most recent first
 

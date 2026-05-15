@@ -155,6 +155,58 @@ When the user opens with one of these patterns —
 Pull context from `records/missions/`, `git log`, `git status`, and
 the roadmap.  Do not start the new task before the briefing lands.
 
+### 11. Shutdown protocol
+
+When the user closes the day with one of these patterns —
+
+- "오늘 퇴근하자" / "퇴근" / "오늘 마무리" / "끝"
+- "wrap up" / "end of day"
+- Any phrase that clearly means the session is over
+
+— execute the shutdown sequence in order, then deliver one final
+[관리자 브리핑]:
+
+1. **`git status` must be clean.**  Commit any in-flight changes
+   with a clear message.  No "WIP" commits — finish the thought
+   or revert.
+2. **`git push origin main`** — confirm `origin/main` is fully
+   synced.  Re-push if the prior auto-push failed silently.
+3. **Write the daily report** to
+   `docs/daily/<ISO-date>.md`.  Use the structure of the most
+   recent report in `docs/daily/` as the template.  Required
+   sections:
+   - 요약 (commit count, hash range, working-tree state)
+   - 푸시된 커밋 (one-line each)
+   - 새로 만들어진 인프라
+   - 운영 규칙 변경 (if any)
+   - 핵심 기술 발견 (bugs, gotchas, learnings)
+   - 내일 시작점 — what `docs/roadmap.md` Now will be on resume
+   - English mirror (one short paragraph)
+4. **Archive the previous day's report** if a `docs/today-summary.md`
+   pointer-style file is being used.  Each daily report lives at
+   `docs/daily/<ISO-date>.md` once written — never overwrite, only
+   append history.
+5. **Verify `docs/roadmap.md` "Now"** is either:
+   - non-empty and actionable (so resume is one-step), or
+   - explicitly empty with a one-line note for the next session.
+   Do not leave a stale "Now" that refers to something already
+   shipped.
+6. **Verify autonomous schedulers are still loaded**:
+   `./scripts/install-scheduler.sh status`.  If queue or auditor
+   dropped, re-install before logging off.
+7. **Final commit + push of the report** so the trail is durable
+   across machine swaps.
+8. **Deliver the Korean shutdown briefing** to the user:
+   - `[퇴근 보고]` one-liner with commit count + theme.
+   - 오늘 새로 영구화된 규칙 (if any) — bullet list.
+   - 내일 첫 작업 한 줄.
+   - "푹 쉬세요" — short closer, no homework for the user.
+
+The protocol mirrors the session-resume protocol (§10) so that the
+*next* session's briefing has everything it needs to start cold.
+A clean shutdown is the cheapest way to make tomorrow's first turn
+cheap.
+
 ---
 
 ## Conventions
