@@ -38,6 +38,17 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-15** Analyst-facing docs.  New
+  [`docs/for-analysts.md`](for-analysts.md) is the single-file entry
+  point for read-only review of the repo — orientation, subagent
+  table, retry semantics, common-mistakes pre-empt list.  New
+  [`docs/cost-model.md`](cost-model.md) makes the Tier-1 (Anthropic)
+  vs Tier-2 (local Ollama / whisper.cpp / ffmpeg) split explicit
+  with a per-call cost table.  [`docs/architecture.md`](architecture.md)
+  one-glance map updated to mark the same Tier 1 / Tier 2 boundary
+  on the diagram.  Motivation: an external analyzer mis-tiered the
+  architecture and recommended optimizations to the wrong layer;
+  these docs short-circuit that for future analysts.
 - **2026-05-15** Pexels Videos integration. New
   `scripts/pexels-fetch.sh` queries the Pexels Videos API by search
   string, picks the smallest file ≥ `min_height` (default 720), and

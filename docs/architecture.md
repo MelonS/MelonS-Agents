@@ -1,19 +1,39 @@
 # Architecture
 
+> Doing a read-only analysis? Start with [`for-analysts.md`](for-analysts.md) +
+> [`cost-model.md`](cost-model.md).  Those two cover the API-cost vs
+> local-execution tier split that's easy to miss from this diagram.
+
 ## One-glance map
 
 ```
+═══════════════════════════════════════════════════════════════
+  TIER 1 — Conversational orchestration       (Anthropic API)
+═══════════════════════════════════════════════════════════════
+
                        User mission brief
                               │
                               ▼
                   ┌───────────────────────┐
-                  │      Orchestrator     │     (opus, native Claude
-                  │   .claude/agents/      │      Code subagent)
-                  │   orchestrator.md      │
+                  │      Orchestrator     │     model: opus
+                  │   .claude/agents/      │     (file-based handoff:
+                  │   orchestrator.md      │      plan.md, MANIFEST.md)
                   └───────────┬───────────┘
-                              │ delegates by mission type
+                              │
         ┌─────────────────────┼─────────────────────┐
         ▼                     ▼                     ▼
+   planner (sonnet)     resourcer (sonnet)    editor (sonnet)
+                                                    │
+                                                    ▼
+                                              qa (sonnet)
+
+                              │ shell-out via Bash tool
+                              │ (no API tokens cross this line)
+                              ▼
+═══════════════════════════════════════════════════════════════
+  TIER 2 — Mission execution                  (Local, free)
+═══════════════════════════════════════════════════════════════
+
  ┌─────────────┐      ┌──────────────┐      ┌──────────────┐
  │ highlight   │      │  summarize   │      │ shorts-batch │
  │ run.sh      │      │  run.sh      │      │ run.sh       │
@@ -24,6 +44,12 @@
               agents/lib/*.sh       config/*.yaml
               (shared helpers)      (autonomy policy)
                       │
+                      ▼  Local tools — NOT Anthropic:
+                      │    • yt-dlp        download
+                      │    • whisper.cpp   transcribe (Metal GPU)
+                      │    • ollama        select / summarize
+                      │                    (llama3.2:3b, etc.)
+                      │    • ffmpeg        render
                       ▼
             $RECORDS_DIR/missions/<date>/<mission-id>/
               ├── plan.md
@@ -40,6 +66,12 @@
               ├── summary.md
               └── metrics.json
 ```
+
+The dashed boundary between Tier 1 and Tier 2 is a `Bash` tool
+invocation.  Anthropic tokens do not cross it — once the mission
+`run.sh` starts, all model calls go to local Ollama, all transcripts
+go to local whisper.cpp, all renders go to local ffmpeg.  See
+[`cost-model.md`](cost-model.md) for the per-call cost table.
 
 ## Layers
 

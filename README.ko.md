@@ -119,6 +119,14 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 ./scripts/install-scheduler.sh install
 ```
 
+## 분석가/리뷰어를 위한 안내
+
+이 저장소에 대한 읽기 전용 분석을 시작한다면
+[`docs/for-analysts.md`](docs/for-analysts.md) 부터 보세요 — 1차
+진단 정확도를 위한 단일 진입점입니다.  [`docs/cost-model.md`](docs/cost-model.md)
+(Anthropic 대 로컬 비용 구분)과 [`docs/architecture.md`](docs/architecture.md)
+(전체 데이터 흐름)과 함께 보면 됩니다.
+
 ## 운영 계약
 
 이 저장소는 전적으로 에이전트가 운영합니다. 일상 규칙:

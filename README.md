@@ -119,6 +119,15 @@ Install the nightly scheduler:
 ./scripts/install-scheduler.sh install
 ```
 
+## For analysts / reviewers
+
+Doing a read-only analysis of this repository?  Start at
+[`docs/for-analysts.md`](docs/for-analysts.md) — single-file entry
+point optimized for first-pass diagnosis.  Pairs with
+[`docs/cost-model.md`](docs/cost-model.md) (where Anthropic vs
+local cost lives) and [`docs/architecture.md`](docs/architecture.md)
+(full data-flow map).
+
 ## Operator contract
 
 This repository is fully agent-operated. The day-to-day rules:
