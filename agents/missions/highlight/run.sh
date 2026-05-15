@@ -16,6 +16,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../lib/whisper.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/ffmpeg.sh"
 # shellcheck disable=SC1091
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/attribution.sh"
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/retry.sh"
 
 SOURCE="${1:-}"
 if [[ -z "$SOURCE" ]]; then
@@ -103,96 +105,110 @@ if (( SEG_COUNT == 0 )); then
   exit 65
 fi
 
-# --- Step 3: highlight selection -------------------------------------------
-log_step "3/5 editor: select highlight via ollama"
+# --- Steps 3-5 wrapped in a QA-feedback retry loop -------------------------
+# On QA FAIL, the next iteration re-prompts the model with the previous
+# qa-report inlined (see qa_feedback_block in agents/lib/retry.sh).  Cap is
+# QA_RETRY_MAX (default 2 retries → up to 3 total attempts).
+PROMPT_FILE="$(dirname "${BASH_SOURCE[0]}")/select-highlight.prompt.md"
+CLAMP_JQ="$REPO_ROOT/agents/lib/clamp-window.jq"
+SRT="$MDIR/outputs/captions.srt"
+FINAL="$MDIR/outputs/short.mp4"
+
+VERDICT=""
+QA_FEEDBACK=""
+ATTEMPT=0
+MAX_ATTEMPTS=$((QA_RETRY_MAX + 1))
 ollama_ensure_model "$OLLAMA_MODEL_HIGHLIGHT"
 
-PROMPT_FILE="$(dirname "${BASH_SOURCE[0]}")/select-highlight.prompt.md"
-PROMPT="$(cat "$PROMPT_FILE")
+while (( ATTEMPT < MAX_ATTEMPTS )); do
+  ATTEMPT=$((ATTEMPT + 1))
+  if (( ATTEMPT > 1 )); then
+    log_warn "attempt $ATTEMPT/$MAX_ATTEMPTS — previous QA FAILED, retrying with feedback"
+    QA_FEEDBACK=$(qa_extract_feedback "$MDIR/qa-report.md")
+  fi
+
+  # Step 3: highlight selection ---------------------------------------------
+  log_step "3/5 editor: select highlight via ollama (attempt $ATTEMPT)"
+  PROMPT="$(cat "$PROMPT_FILE")$(qa_feedback_block)
 
 INPUT SEGMENTS:
 $(cat "$SEGS")"
 
-SELECTION_RAW=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$PROMPT" true)
-echo "$SELECTION_RAW" > "$MDIR/resources/selection.raw.json"
+  SELECTION_RAW=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$PROMPT" true)
+  echo "$SELECTION_RAW" > "$MDIR/resources/selection.attempt-${ATTEMPT}.raw.json"
 
-# Pull the JSON object even if the model wrapped it in prose
-SELECTION=$(echo "$SELECTION_RAW" | jq -c 'if type == "object" then . else (.. | objects | select(has("start") and has("end"))) end' 2>/dev/null | head -1)
-if [[ -z "$SELECTION" ]]; then
-  log_err "couldn't parse selection from ollama output:"
-  echo "$SELECTION_RAW" >&2
-  exit 66
-fi
-echo "$SELECTION" > "$MDIR/resources/selection.json"
+  SELECTION=$(echo "$SELECTION_RAW" | jq -c 'if type == "object" then . else (.. | objects | select(has("start") and has("end"))) end' 2>/dev/null | head -1)
+  if [[ -z "$SELECTION" ]]; then
+    log_err "couldn't parse selection from ollama output (attempt $ATTEMPT)"
+    VERDICT=FAIL
+    # Write a stub qa-report so the retry has feedback to send next time.
+    cat > "$MDIR/qa-report.md" <<STUB
+# QA report — $MISSION_ID (attempt $ATTEMPT)
 
-RAW_START=$(echo "$SELECTION" | jq -r '.start')
-RAW_END=$(echo "$SELECTION" | jq -r '.end')
-REASON=$(echo "$SELECTION" | jq -r '.reason // ""')
-log_info "model picked: ${RAW_START}s → ${RAW_END}s (${REASON})"
+**Verdict**: FAIL
 
-# Clamp window to [30, 60]s by expanding around the chosen midpoint using
-# available segments. Logic lives in agents/lib/clamp-window.jq.
-CLAMP_JQ="$REPO_ROOT/agents/lib/clamp-window.jq"
-WINDOW=$(jq -cn \
-  --argjson rs "$RAW_START" --argjson re "$RAW_END" \
-  --argjson src_dur "$SRC_DURATION" \
-  --slurpfile segs "$SEGS" \
-  -f "$CLAMP_JQ")
-START=$(echo "$WINDOW" | jq -r '.start')
-END=$(echo "$WINDOW" | jq -r '.end')
-DUR_W=$(awk -v s="$START" -v e="$END" 'BEGIN{ printf "%.2f", e - s }')
-log_ok "clamped window: ${START}s → ${END}s (${DUR_W}s)"
-stage_mark "select"
-# Persist the clamped window for QA
-jq -n --arg s "$START" --arg e "$END" --arg r "$REASON" \
-      --argjson rs "$RAW_START" --argjson re "$RAW_END" \
-   '{start: ($s|tonumber), end: ($e|tonumber), reason: $r, model_start: $rs, model_end: $re}' \
-   > "$MDIR/resources/selection.json"
+## Acceptance criteria
+- [ ] model output parseable — model returned non-JSON or missing start/end
+STUB
+    continue
+  fi
+  echo "$SELECTION" > "$MDIR/resources/selection.json"
 
-# --- Step 4: render --------------------------------------------------------
-log_step "4/5 editor: cut + crop 9:16 + burn captions"
-CUT="$MDIR/outputs/_cut.mp4"
-CROP="$MDIR/outputs/_cut_9x16.mp4"
-SRT="$MDIR/outputs/captions.srt"
-FINAL="$MDIR/outputs/short.mp4"
+  RAW_START=$(echo "$SELECTION" | jq -r '.start')
+  RAW_END=$(echo "$SELECTION" | jq -r '.end')
+  REASON=$(echo "$SELECTION" | jq -r '.reason // ""')
+  log_info "model picked: ${RAW_START}s → ${RAW_END}s (${REASON})"
 
-ffmpeg_segments_to_srt "$SEGS" "$START" "$END" "$SRT"
-ffmpeg_render_short "$SRC" "$START" "$END" "$SRT" "$FINAL" "$SOURCE_ATTRIBUTION"
-log_ok "rendered → $FINAL"
-stage_mark "render"
+  WINDOW=$(jq -cn \
+    --argjson rs "$RAW_START" --argjson re "$RAW_END" \
+    --argjson src_dur "$SRC_DURATION" \
+    --slurpfile segs "$SEGS" \
+    -f "$CLAMP_JQ")
+  START=$(echo "$WINDOW" | jq -r '.start')
+  END=$(echo "$WINDOW" | jq -r '.end')
+  DUR_W=$(awk -v s="$START" -v e="$END" 'BEGIN{ printf "%.2f", e - s }')
+  log_ok "clamped window: ${START}s → ${END}s (${DUR_W}s)"
+  stage_mark "select"
+  jq -n --arg s "$START" --arg e "$END" --arg r "$REASON" \
+        --argjson rs "$RAW_START" --argjson re "$RAW_END" --argjson att "$ATTEMPT" \
+     '{start: ($s|tonumber), end: ($e|tonumber), reason: $r, model_start: $rs, model_end: $re, attempt: $att}' \
+     > "$MDIR/resources/selection.json"
 
-# Machine-readable attribution record — companion to the burned-in watermark.
-write_sources_record "$MISSION_ID" "$SOURCE" "$MDIR/outputs/SOURCES.txt"
+  # Step 4: render ----------------------------------------------------------
+  log_step "4/5 editor: cut + crop 9:16 + burn captions (attempt $ATTEMPT)"
+  ffmpeg_segments_to_srt "$SEGS" "$START" "$END" "$SRT"
+  ffmpeg_render_short "$SRC" "$START" "$END" "$SRT" "$FINAL" "$SOURCE_ATTRIBUTION"
+  log_ok "rendered → $FINAL"
+  stage_mark "render"
 
-# --- Step 5: QA ------------------------------------------------------------
-log_step "5/5 qa: validate"
-DUR=$(ffmpeg_duration "$FINAL")
-RES=$("$FFPROBE_BIN" -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$FINAL")
-HAS_AUDIO=$("$FFPROBE_BIN" -v error -select_streams a:0 -show_entries stream=index -of csv=p=0 "$FINAL" | head -1)
-SIZE_BYTES=$(stat -f%z "$FINAL" 2>/dev/null || stat -c%s "$FINAL")
-SIZE_MB=$(awk -v b="$SIZE_BYTES" 'BEGIN{ printf "%.2f", b/1048576 }')
+  # Step 5: QA --------------------------------------------------------------
+  log_step "5/5 qa: validate (attempt $ATTEMPT)"
+  DUR=$(ffmpeg_duration "$FINAL")
+  RES=$("$FFPROBE_BIN" -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$FINAL")
+  HAS_AUDIO=$("$FFPROBE_BIN" -v error -select_streams a:0 -show_entries stream=index -of csv=p=0 "$FINAL" | head -1)
+  SIZE_BYTES=$(stat -f%z "$FINAL" 2>/dev/null || stat -c%s "$FINAL")
+  SIZE_MB=$(awk -v b="$SIZE_BYTES" 'BEGIN{ printf "%.2f", b/1048576 }')
 
-DUR_OK=$(awk -v d="$DUR" 'BEGIN{ print (d >= 30 && d <= 60) ? "PASS" : "FAIL" }')
-RES_OK=$([[ "$RES" == "1080,1920" ]] && echo PASS || echo FAIL)
-AUDIO_OK=$([[ -n "$HAS_AUDIO" ]] && echo PASS || echo FAIL)
-SIZE_OK=$(awk -v m="$SIZE_MB" 'BEGIN{ print (m < 50) ? "PASS" : "FAIL" }')
-EXIST_OK=$([[ -f "$FINAL" ]] && echo PASS || echo FAIL)
-SRT_OK=$([[ -s "$SRT" ]] && echo PASS || echo FAIL)
+  DUR_OK=$(awk -v d="$DUR" -v dmin="${QA_DUR_MIN:-30}" -v dmax="${QA_DUR_MAX:-60}" 'BEGIN{ print (d >= dmin && d <= dmax) ? "PASS" : "FAIL" }')
+  RES_OK=$([[ "$RES" == "1080,1920" ]] && echo PASS || echo FAIL)
+  AUDIO_OK=$([[ -n "$HAS_AUDIO" ]] && echo PASS || echo FAIL)
+  SIZE_OK=$(awk -v m="$SIZE_MB" 'BEGIN{ print (m < 50) ? "PASS" : "FAIL" }')
+  EXIST_OK=$([[ -f "$FINAL" ]] && echo PASS || echo FAIL)
+  SRT_OK=$([[ -s "$SRT" ]] && echo PASS || echo FAIL)
 
-VERDICT=PASS
-for v in "$EXIST_OK" "$DUR_OK" "$RES_OK" "$AUDIO_OK" "$SIZE_OK" "$SRT_OK"; do
-  [[ "$v" == "FAIL" ]] && VERDICT=FAIL
-done
+  VERDICT=PASS
+  for v in "$EXIST_OK" "$DUR_OK" "$RES_OK" "$AUDIO_OK" "$SIZE_OK" "$SRT_OK"; do
+    [[ "$v" == "FAIL" ]] && VERDICT=FAIL
+  done
 
-cat > "$MDIR/qa-report.md" <<MDEOF
-stage_mark "qa"
-# QA report — $MISSION_ID
+  cat > "$MDIR/qa-report.md" <<MDEOF
+# QA report — $MISSION_ID (attempt $ATTEMPT of $MAX_ATTEMPTS)
 
 **Verdict**: $VERDICT
 
 ## Acceptance criteria
 - [$([ "$EXIST_OK" = PASS ] && echo x || echo ' ')] outputs/short.mp4 exists — \`$FINAL\`
-- [$([ "$DUR_OK" = PASS ] && echo x || echo ' ')] duration in [30, 60]s — observed \`${DUR}s\`
+- [$([ "$DUR_OK" = PASS ] && echo x || echo ' ')] duration in [${QA_DUR_MIN:-30}, ${QA_DUR_MAX:-60}]s — observed \`${DUR}s\`
 - [$([ "$RES_OK" = PASS ] && echo x || echo ' ')] resolution = 1080x1920 — observed \`${RES}\`
 - [$([ "$AUDIO_OK" = PASS ] && echo x || echo ' ')] audio stream present — index \`${HAS_AUDIO:-none}\`
 - [$([ "$SIZE_OK" = PASS ] && echo x || echo ' ')] file size < 50 MB — observed \`${SIZE_MB} MB\`
@@ -208,6 +224,13 @@ $SELECTION
 - duration: ${SRC_DURATION}s
 - segments: $SEG_COUNT
 MDEOF
+  stage_mark "qa"
+
+  [[ "$VERDICT" == PASS ]] && break
+done
+
+# Machine-readable attribution record — written once on PASS (or final FAIL).
+write_sources_record "$MISSION_ID" "$SOURCE" "$MDIR/outputs/SOURCES.txt"
 
 MISSION_T1=$(python3 -c "import time; print(time.time())")
 TOTAL_S=$(awk -v a="$MISSION_T0" -v b="$MISSION_T1" 'BEGIN{printf "%.3f", b-a}')
@@ -240,8 +263,9 @@ cat > "$MDIR/summary.md" <<MDEOF
 MDEOF
 
 if [[ "$VERDICT" == PASS ]]; then
-  log_ok "mission $MISSION_ID complete — $FINAL"
+  log_ok "mission $MISSION_ID complete on attempt $ATTEMPT — $FINAL"
 else
-  log_err "mission $MISSION_ID FAILED — see $MDIR/qa-report.md"
+  BLOCKER=$(qa_write_blocker "$MISSION_ID" "$MDIR" "$ATTEMPT")
+  log_err "mission $MISSION_ID FAILED after $ATTEMPT attempts — blocker: $BLOCKER"
   exit 1
 fi

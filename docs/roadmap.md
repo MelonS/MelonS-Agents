@@ -18,23 +18,22 @@ README's Status section is a flat checklist — do not use it for picking work.
 _Promoted by Claude per "Never pause" rule: previous "Now" finished, top of
 "Next" queue takes over automatically._
 
-- [ ] **QA feedback retry loop** — when a mission's QA verdict is FAIL,
-  re-invoke the model-driven stage with the qa-report reasons inlined into
-  the prompt; cap at N=2 retries, then drop a halt log under
-  `records/blockers/<ISO-date>/<mission-id>.md`. Scope: a shared
-  `agents/lib/retry.sh` + per-mission `run.sh` wrappers. Do NOT edit
-  `.claude/agents/*.md` — that's a logic change that needs user OK.
+- [ ] **Automated copyright filter** — implement the punch list in
+  `docs/copyright-policy.md`: domain allowlist for source URLs,
+  license-string probe for sources exposing machine-readable metadata
+  (Wikimedia, Internet Archive, Vimeo CC channel), audio-fingerprint
+  check (chromaprint / `fpcalc`), publish-gate hook in any future
+  `publish.sh`, strike-record log. Required before any external publish
+  step is wired.
 
 ## Next — queued, in priority order
 
-1. **Automated copyright filter** — implement the punch list in
-   `docs/copyright-policy.md` (domain allowlist, license probe,
-   audio-fingerprint check, publish gate, strike log). Required before
-   any `publish.sh` is wired.
-2. **Iterative QA-feedback loop inside editor** — finer-grained than the
-   retry loop above: editor re-cuts a single failing window without
-   rerunning transcribe/select. Lower priority — only worth it if the
-   coarse retry loop turns out to waste too much compute.
+1. **Iterative QA-feedback loop inside editor** — finer-grained than the
+   mission-level retry: have the editor re-cut a single failing window
+   without rerunning transcribe/select. Lower priority — only worth it
+   if the coarse retry loop in `agents/lib/retry.sh` is observed to
+   waste compute on a per-output basis (today retries the whole
+   model+render block).
 
 ## Blocked / parked
 
@@ -43,6 +42,16 @@ _Promoted by Claude per "Never pause" rule: previous "Now" finished, top of
 
 ## Done — most recent first
 
+- **2026-05-15** QA feedback retry loop across all three missions.
+  New `agents/lib/retry.sh` (qa_extract_feedback / qa_feedback_block /
+  qa_write_blocker), wrapped highlight + summarize + shorts-batch in
+  a retry loop capped by `QA_RETRY_MAX` (default 2 retries → up to 3
+  attempts). On exhaustion writes a halt log under
+  `records/blockers/<ISO-date>/<mission-id>.md`. Verified end-to-end:
+  regression on summarize/synthetic_lecture PASS-on-attempt-1; forced
+  failure on highlight (impossible `QA_DUR_MIN=999`) → 2 attempts
+  both FAIL, model picked a different window on attempt 2 (feedback
+  injection works), blocker file written.
 - **2026-05-15** Source-attribution wiring propagated to summarize +
   shorts-batch. Extracted the 45-line resolver block from
   `highlight/run.sh` into a shared `agents/lib/attribution.sh` with
