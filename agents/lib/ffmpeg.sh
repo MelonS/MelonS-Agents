@@ -93,10 +93,97 @@ ffmpeg_segments_to_srt() {
     ) + "\n" + .value.text + "\n"
   ' "$segments" > "$out"
 }
-# Single-pass render: cut [start,end), 9:16 letterbox-with-blur, burn SRT
-# with the project's standard layout (safe zone + semi-transparent bounding
-# box + optional source-attribution watermark). Avoids the 3x re-encode of
-# the cut→crop→burn chain.
+# Convert SRT to ASS with an explicit PlayResX/Y matching the 1080x1920 short
+# output. Without this, libass interprets Fontsize against its default 384x288
+# script canvas and scales fonts up ~6.67× when rendered at 1920 height — the
+# captions become enormous and overflow the frame. Setting PlayRes here makes
+# Fontsize map 1:1 to output pixels, so the layout-engine constants behave
+# the way they read.
+ffmpeg_srt_to_ass() {
+  local srt="$1" ass="$2"
+  python3 - "$srt" "$ass" \
+    "$LAYOUT_FONT_NAME" "$LAYOUT_FONT_SIZE" \
+    "$LAYOUT_SAFE_MARGIN_V" "$LAYOUT_SAFE_MARGIN_H" \
+    "$LAYOUT_BOX_OPACITY_HEX" <<'PY'
+import sys, re
+srt_path, ass_path, font, size, mv, mh, box_alpha = sys.argv[1:8]
+
+def srt_to_ass_ts(t):
+    # SRT: HH:MM:SS,mmm  →  ASS: H:MM:SS.cc
+    h, m, rest = t.split(":")
+    s, ms = rest.split(",")
+    cs = int(ms) // 10
+    return f"{int(h)}:{int(m):02d}:{int(s):02d}.{cs:02d}"
+
+def escape_ass(text):
+    # ASS dialogue: braces are override blocks, comma is field separator.
+    return (text.replace("\\", "\\\\")
+                .replace("{", "(").replace("}", ")")
+                .replace(",", "\\,")
+                .replace("\n", "\\N"))
+
+events = []
+with open(srt_path) as f:
+    block = []
+    for line in f:
+        line = line.rstrip("\n")
+        if line.strip() == "":
+            if block:
+                events.append(block)
+                block = []
+        else:
+            block.append(line)
+    if block:
+        events.append(block)
+
+dialogues = []
+for blk in events:
+    # Block layout: [index, "start --> end", text...].  Skip malformed.
+    if len(blk) < 2:
+        continue
+    time_line = blk[1] if "-->" in blk[1] else (blk[0] if "-->" in blk[0] else None)
+    if time_line is None:
+        continue
+    m = re.match(r"^([\d:,]+)\s*-->\s*([\d:,]+)", time_line)
+    if not m:
+        continue
+    start, end = srt_to_ass_ts(m.group(1)), srt_to_ass_ts(m.group(2))
+    text_lines = blk[2:] if "-->" in blk[1] else blk[1:]
+    text = escape_ass("\n".join(t for t in text_lines if t))
+    dialogues.append(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{text}")
+
+# Style fields (V4+): Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,
+# OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,
+# Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,
+# MarginV,Encoding.  BorderStyle=3 = opaque box behind text using OutlineColour
+# as the box fill.  OutlineColour with non-zero alpha = semi-transparent box.
+header = f"""[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,{font},{size},&H00FFFFFF,&H00FFFFFF,&H{box_alpha}000000,&H{box_alpha}000000,1,0,0,0,100,100,0,0,3,10,0,2,{mh},{mh},{mv},1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+"""
+
+with open(ass_path, "w") as f:
+    f.write(header + "\n".join(dialogues) + "\n")
+PY
+}
+
+# Single-pass render: cut [start,end), 9:16 letterbox-with-blur, burn captions
+# from an inline-generated ASS file with the project's standard layout (safe
+# zone + semi-transparent bounding box + optional source-attribution
+# watermark).  Avoids the 3x re-encode of the cut→crop→burn chain, and uses
+# the ass= filter (with an explicit PlayResX/Y) instead of subtitles=+
+# force_style — the latter's font sizing is unstable across reference
+# resolutions.
 #
 # Usage: ffmpeg_render_short <input> <start> <end> <srt> <output> [source_attribution]
 #
@@ -113,18 +200,19 @@ ffmpeg_render_short() {
   local source_attribution="${6:-}"
 
   local duration; duration=$(awk -v s="$start" -v e="$end" 'BEGIN { printf "%.3f", e - s }')
-  local srt_dir srt_base abs_input abs_output
+  local srt_dir srt_base ass_path ass_base abs_input abs_output
   srt_dir="$(cd "$(dirname "$srt")" && pwd)"
   srt_base="$(basename "$srt")"
+  ass_path="${srt%.srt}.ass"
+  ass_base="$(basename "$ass_path")"
   abs_input="$(cd "$(dirname "$input")" && pwd)/$(basename "$input")"
   abs_output="$(cd "$(dirname "$output")" && pwd)/$(basename "$output")"
 
-  # libass force_style — commas inside the value are escaped so the filter
-  # parser keeps them as part of one argument.
-  local style="Fontname=${LAYOUT_FONT_NAME}\,Fontsize=${LAYOUT_FONT_SIZE}\,Alignment=2\,MarginV=${LAYOUT_SAFE_MARGIN_V}\,MarginL=${LAYOUT_SAFE_MARGIN_H}\,MarginR=${LAYOUT_SAFE_MARGIN_H}\,PrimaryColour=&H00FFFFFF\,OutlineColour=&H${LAYOUT_BOX_OPACITY_HEX}000000\,BorderStyle=3\,Outline=10\,Shadow=0\,Bold=1"
+  # Generate styled ASS sidecar with the layout-engine constants baked in.
+  ffmpeg_srt_to_ass "$srt" "$ass_path"
 
-  # Stack: blurred-fill bg + centered fg + burned captions with standard style.
-  local filter_chain="[0:v]scale=1080:1920:force_original_aspect_ratio=increase,gblur=sigma=15,crop=1080:1920[bg];[0:v]scale=1080:1920:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1,subtitles=${srt_base}:force_style=${style}"
+  # Stack: blurred-fill bg + centered fg + burned captions via ass= filter.
+  local filter_chain="[0:v]scale=1080:1920:force_original_aspect_ratio=increase,gblur=sigma=15,crop=1080:1920[bg];[0:v]scale=1080:1920:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1,ass=${ass_base}"
 
   # Source attribution overlay — only if caller supplied a string AND a usable
   # font file exists. Drawtext can't render without a fontfile, so we degrade

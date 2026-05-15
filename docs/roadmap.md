@@ -17,11 +17,6 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 _Last set by user: 2026-05-15 (today's "외계인 감성 탈출" thread)._
 
-- [ ] **Visual layout verification on real footage** — render Sintel (1080p
-  trailer, already cached at `/tmp/smoke/sintel_1080.mp4`) through the
-  highlight or summarize pipeline and confirm: caption box position,
-  safe-zone margins, source-attribution overlay all land where the
-  layout-engine contract says they should.
 - [ ] **Propagate source-attribution wiring to summarize + shorts-batch** —
   currently only `agents/missions/highlight/run.sh` resolves
   `SOURCE_ATTRIBUTION` from the fixture catalog and writes
@@ -50,6 +45,23 @@ _Last set by user: 2026-05-15 (today's "외계인 감성 탈출" thread)._
 
 ## Done — most recent first
 
+- **2026-05-15** Visual layout verification on real footage. Found a libass
+  scaling bug (Fontsize interpreted against default 384×288 PlayRes →
+  fonts rendered 6.67× too large at 1920px output). Fixed by generating
+  an explicit `.ass` sidecar with `PlayResY=1920` and switching the
+  renderer from `subtitles=…:force_style=` to `ass=`. All four layout
+  elements verified on Sintel: source-attribution top-left, blurred-fill
+  9:16 background, centered foreground, bottom-center caption box inside
+  the safe zone.
+- **2026-05-15** "Agent does everything, user never touches terminal"
+  operator contract pinned across CLAUDE.md, README EN/KO, and memory
+  (`d171d29`). Split-commit-push pattern documented as the canonical
+  workflow (`&&`-compound blocked by the auto-mode classifier; not worth
+  fighting).
+- **2026-05-15** `docs/roadmap.md` as source of truth for "what to work
+  on next" + session-start protocol pinned to CLAUDE.md (`dae3d58`).
+  Root cause: README's flat Status checklist was being read as a TODO
+  list, leading to wrong-task selection earlier in the day.
 - **2026-05-15** Real CC fixtures + standard layout + source-attribution
   (`8ae9449`). Replaced dead Google `gtv-videos-bucket` URLs with Blender
   CDN; fixed nested-heredoc-in-process-substitution bug in
