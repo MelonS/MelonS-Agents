@@ -15,23 +15,23 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 ## Now — active focus
 
-_Last set by user: 2026-05-15. The "외계인 감성 탈출" thread is done — three
-missions all credit their sources now. Pick the next priority from "Next"
-below, or set a new focus._
+_Promoted by Claude per "Never pause" rule: previous "Now" finished, top of
+"Next" queue takes over automatically._
 
-- [ ] _(empty — promote from "Next" or set a new goal)_
+- [ ] **QA feedback retry loop** — when a mission's QA verdict is FAIL,
+  re-invoke the model-driven stage with the qa-report reasons inlined into
+  the prompt; cap at N=2 retries, then drop a halt log under
+  `records/blockers/<ISO-date>/<mission-id>.md`. Scope: a shared
+  `agents/lib/retry.sh` + per-mission `run.sh` wrappers. Do NOT edit
+  `.claude/agents/*.md` — that's a logic change that needs user OK.
 
 ## Next — queued, in priority order
 
-1. **QA feedback retry loop** — when QA verdict is FAIL, re-invoke editor
-   with the qa-report.md reasons inlined into the prompt; cap at N=2 retries
-   then drop to `records/blockers/`. Scope: `scripts/mission-queue.sh` +
-   per-mission `run.sh`; do NOT edit `.claude/agents/*.md`.
-2. **Automated copyright filter** — implement the punch list in
+1. **Automated copyright filter** — implement the punch list in
    `docs/copyright-policy.md` (domain allowlist, license probe,
    audio-fingerprint check, publish gate, strike log). Required before
    any `publish.sh` is wired.
-3. **Iterative QA-feedback loop inside editor** — finer-grained than the
+2. **Iterative QA-feedback loop inside editor** — finer-grained than the
    retry loop above: editor re-cuts a single failing window without
    rerunning transcribe/select. Lower priority — only worth it if the
    coarse retry loop turns out to waste too much compute.
