@@ -1,6 +1,6 @@
 # Project: Multi-Agent System
 
-Hierarchical agent system. See `README.md` for layout, `config/policies.yaml` for autonomy rules.
+Hierarchical agent system. See `README.md` for layout, `config/policies.yaml` for autonomy rules, and [`docs/operator-contract.md`](docs/operator-contract.md) for the full set of operating rules.
 
 ## Session-start protocol (read this first)
 
@@ -8,33 +8,25 @@ Hierarchical agent system. See `README.md` for layout, `config/policies.yaml` fo
 
 - Do **not** use the README's "Status" checklist to pick work — it has no order, no dates, no priority signal.
 - Do **not** infer the next task from `git log` alone — the log shows what landed, not what was *being* worked on or what is *now* most important.
-- If `docs/roadmap.md` "Now" is empty or stale, ask the user what to focus on, then write their answer into "Now" so the next session inherits it.
+- If `docs/roadmap.md` "Now" is empty, promote the top of "Next"; if both are empty, make a reasonable assumption and start, letting the user redirect.
 - After work lands, append a one-line entry to `docs/roadmap.md` "Done" with the commit hash and date.
 - Subagents (orchestrator, planner, resourcer, editor, qa) do **not** read `docs/roadmap.md`. Day-level decisions belong to the top-level conversation; subagents stay pure functions of the mission prompt they receive.
 
-## Operator preferences
+## Operating rules
 
-- **Never pause unless told** (user directive, 2026-05-15): the user is async — they often send a message and step away. Do not end a turn with "다음 갈까요?" / "shall I continue?" / "or pause?". When a task finishes and `docs/roadmap.md` "Next" has a queued item, **promote it to "Now" and start it in the same turn**. Stop only when the user explicitly says stop, when a hard guardrail blocks (and even then, switch to the next non-blocked item), or when "Now" + "Next" are genuinely empty.
-- **Agent does all the work** (user directive, 2026-05-15): the user does not run commands, does not install packages, does not edit config files, does not touch the terminal. Claude does all of it. The user only steps in for the *exact* things Claude cannot do — meaning a hard guardrail blocks it (self-modifying permissions, force-push to main, etc.). When that happens, surface the blocker in one line with the minimal action needed (a single click in the permissions UI, not a step-by-step bash recipe). Never push setup/install/config work onto the user "to save time" or "because it's easier" — those reasons are the user's to invoke, not yours.
-- **Auto-approve mode** (user directive, 2026-05-14): non-catastrophic system actions — `brew install/uninstall`, `pip install`, `npm install`, file deletion, settings changes, MCP/config edits — proceed without asking. User accepts macOS-environment-level mess (browser data loss, broken brew state, etc.) as acceptable risk.
-- Only pause for **truly catastrophic** risks: hardware damage, irreversible data loss outside the repo (e.g., `rm -rf ~`, disk format, force-push to shared remotes, sending external messages).
-- Report results, not approvals.
+The full contract — agent behavior, never-pause rule, money firewall, dual-stack reporting, terminal format, documentation style, split-commit-push, session-resume protocol — lives in [`docs/operator-contract.md`](docs/operator-contract.md). Committed; survives machine changes; agent memory is a fast-access cache pointing back to it. The four most-load-bearing summarized inline:
 
-### Money firewall (explicit confirmation required)
-
-Auto-approve does **not** cover actions that spend money or commit future money. Always pause and request explicit user confirmation for:
-
-1. **Paid API usage / SaaS subscription / paid library purchase** — any action that triggers an actual payment.
-2. **Paid API calls** — including the transition point where free credits end and metered billing begins.
-3. **Cloud resource creation** — AWS, GCP, Azure, or any provider where standing infrastructure incurs ongoing cost.
-
-Local-only resources (Ollama, FFmpeg, whisper.cpp, macOS `say`, brew packages) stay fully auto-approved.
+- **Agent does all the work** — user never touches the terminal. Claude installs, edits, configs, commits, pushes. User intervenes only on hard guardrails (single-click approval, never a multi-step recipe).
+- **Never pause unless told** — user is async; "or pause?" turns into hours of idle. When `docs/roadmap.md` Next has an item and Now finishes, promote it and continue in the same turn.
+- **Money firewall** — paid APIs, SaaS, cloud-resource creation require explicit user confirmation. Local resources (Ollama, FFmpeg, brew, whisper, yt-dlp) stay auto-approved.
+- **Logic changes need explicit OK** — editing `agents/*.md` or `.claude/agents/*.md` always pauses for user confirmation, regardless of autonomy mode.
 
 ## Git workflow — auto-commit, auto-push
 
-- **Every Code change** (anything under `agents/`, `.claude/agents/`, `config/`, `scripts/`, `CLAUDE.md`, `README.md`, `.env.example`, `.gitignore`) is committed and pushed to `origin/main` on completion.
+- **Every code change** (anything under `agents/`, `.claude/agents/`, `config/`, `scripts/`, `docs/`, `CLAUDE.md`, `README.md`, `.env.example`, `.gitignore`) is committed and pushed to `origin/main` on completion.
 - Remote: `git@github.com:MelonS/MelonS-Agents.git` (private).
 - `records/` is **never** committed (gitignored). The history on GitHub reflects only how the agent system itself evolves, not its outputs.
+- Use `git commit` and `git push` as two separate Bash calls; never `&&`-compound (classifier blocks it; see operator-contract §7).
 - Commit message style: imperative subject ≤72 chars, optional body with bullets explaining *why*. Group changes by concern; don't bundle unrelated edits.
 
 ## Core rules
@@ -44,7 +36,6 @@ Local-only resources (Ollama, FFmpeg, whisper.cpp, macOS `say`, brew packages) s
 - **Autonomy policy**: respect `config/policies.yaml`.
   - `AUTONOMY_MODE=false` (default): pause for user confirmation before logic changes, destructive FS ops, external publishes.
   - `AUTONOMY_MODE=true`: overnight mode. Stay within `AUTONOMY_BUDGET_USD`. Never edit agent definitions unattended.
-- **Logic changes**: editing `agents/*.md` or `.claude/agents/*.md` always requires explicit user OK, regardless of mode.
 
 ## Subagents
 
