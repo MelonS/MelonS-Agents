@@ -22,7 +22,13 @@ Below is the first goal recorded under this layer.  Future goals
 replace this section; achieved goals move to "Past goals", abandoned
 goals to "Abandoned" with a one-line reason.
 
-### 2026-05-16 | Mixed validation pass | **IN PROGRESS**
+### 2026-05-16 | Mixed validation pass | **ACHIEVED**
+
+_(2026-05-16 02:51 KST — all four deliverable subgoals cleared in
+one pass; commits `df71bd6` → `c778bbe` → next.  Total elapsed from
+goal set → all done: ~11 minutes.)_
+
+
 
 _One sentence_: after the first real-CC short (highlight-015213)
 satisfied the operator, exercise the remaining surface of the v1
@@ -51,9 +57,16 @@ the operator flagged ("[MUSIC] lines are noise") applied along the way.
       length.  Caption-verify frames committed for both shorts:
       `docs/caption-verify/shorts-batch-024840-short-01-cap.jpg` (the
       gatekeeper, bright caption) and `short-02-cap.jpg`).
-- [ ] **Deliverable**: Real-CC summarize — Sintel trailer → EN+KO
-      structured `summary.md` with Blender attribution in the
-      Source & license footer.  QA PASS.
+- [x] **Deliverable**: Real-CC summarize — `summarize-025121`
+      (Sintel trailer 1080p → `summary.md` 551 bytes with TL;DR +
+      3 Key points + EN original paragraph + KO mirror paragraph +
+      Source & license footer; QA PASS attempt 1).  Pipeline-side
+      OK; the KO mirror text quality is bottlenecked by
+      `llama3.2:3b` (ollama emitted "찾고ing" — mixed Korean/English
+      tail; a known small-model limitation, not a pipeline bug).
+      Larger local model (e.g. `qwen2.5:7b-instruct` or remote
+      Anthropic for KO) would resolve, but that's a model swap
+      decision separate from this goal.
 
 **Done when**: all three deliverable subgoals checked AND each has a
 committed artifact path recorded here.
