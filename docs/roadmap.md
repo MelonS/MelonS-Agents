@@ -15,13 +15,11 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 ## Now — active focus
 
-_Last set by user: 2026-05-15 (today's "외계인 감성 탈출" thread)._
+_Last set by user: 2026-05-15. The "외계인 감성 탈출" thread is done — three
+missions all credit their sources now. Pick the next priority from "Next"
+below, or set a new focus._
 
-- [ ] **Propagate source-attribution wiring to summarize + shorts-batch** —
-  currently only `agents/missions/highlight/run.sh` resolves
-  `SOURCE_ATTRIBUTION` from the fixture catalog and writes
-  `outputs/SOURCES.txt`. The other two missions render without crediting
-  the source. Mirror the same block from highlight's run.sh.
+- [ ] _(empty — promote from "Next" or set a new goal)_
 
 ## Next — queued, in priority order
 
@@ -45,6 +43,14 @@ _Last set by user: 2026-05-15 (today's "외계인 감성 탈출" thread)._
 
 ## Done — most recent first
 
+- **2026-05-15** Source-attribution wiring propagated to summarize +
+  shorts-batch. Extracted the 45-line resolver block from
+  `highlight/run.sh` into a shared `agents/lib/attribution.sh` with
+  `resolve_source_attribution()` + `write_sources_record()`. All three
+  missions now emit `outputs/SOURCES.txt`; summarize also appends a
+  "Source & license" footer to `summary.md`; shorts-batch passes the
+  attribution string through to `ffmpeg_render_short` so every short
+  in the batch gets the burned-in watermark.
 - **2026-05-15** Visual layout verification on real footage. Found a libass
   scaling bug (Fontsize interpreted against default 384×288 PlayRes →
   fonts rendered 6.67× too large at 1920px output). Fixed by generating

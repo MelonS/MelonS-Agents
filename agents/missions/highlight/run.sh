@@ -14,6 +14,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../lib/ollama.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/whisper.sh"
 # shellcheck disable=SC1091
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/ffmpeg.sh"
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/attribution.sh"
 
 SOURCE="${1:-}"
 if [[ -z "$SOURCE" ]]; then
@@ -75,51 +77,10 @@ else
   log_ok "downloaded → $SRC"
 fi
 
-# Resolve source attribution: explicit override > fixture-catalog match > URL/path-derived.
+# Resolve source attribution + license (see agents/lib/attribution.sh).
 # Burned into the rendered output and recorded in outputs/SOURCES.txt so the
 # short can never be reposted without crediting where it came from.
-FIXTURE_LICENSE=""
-if [[ -z "${SOURCE_ATTRIBUTION:-}" ]]; then
-  CATALOG="$REPO_ROOT/config/fixtures.yaml"
-  if [[ -f "$CATALOG" ]]; then
-    MATCH=$(python3 - "$CATALOG" "$SOURCE" <<'PY'
-import sys, re
-cat, src = sys.argv[1], sys.argv[2]
-text = open(cat).read()
-items, cur = [], None
-for line in text.splitlines():
-    m = re.match(r"^  - id: (.+)$", line)
-    if m:
-        if cur: items.append(cur)
-        cur = {"id": m.group(1).strip()}
-        continue
-    if cur is None: continue
-    for key in ("url", "path", "source_attribution", "license"):
-        m = re.match(rf"^    {key}: \"?(.+?)\"?$", line)
-        if m: cur[key] = m.group(1).strip()
-if cur: items.append(cur)
-for it in items:
-    if it.get("url") == src or it.get("path") == src:
-        print((it.get("source_attribution","") + "\t" + it.get("license","")).rstrip())
-        break
-PY
-)
-    if [[ -n "$MATCH" ]]; then
-      SOURCE_ATTRIBUTION="${MATCH%%$'\t'*}"
-      FIXTURE_LICENSE="${MATCH#*$'\t'}"
-      log_info "catalog match: $SOURCE_ATTRIBUTION ($FIXTURE_LICENSE)"
-    fi
-  fi
-fi
-if [[ -z "${SOURCE_ATTRIBUTION:-}" ]]; then
-  if [[ "$SOURCE" =~ ^https?:// ]]; then
-    DOMAIN=$(echo "$SOURCE" | awk -F/ '{print $3}')
-    SOURCE_ATTRIBUTION="Source: $DOMAIN"
-  else
-    SOURCE_ATTRIBUTION="Source: $(basename "$SOURCE")"
-  fi
-fi
-log_info "source attribution: $SOURCE_ATTRIBUTION"
+resolve_source_attribution "$SOURCE"
 
 SRC_DURATION=$(ffmpeg_duration "$SRC")
 log_info "source duration: ${SRC_DURATION}s"
@@ -201,14 +162,7 @@ log_ok "rendered → $FINAL"
 stage_mark "render"
 
 # Machine-readable attribution record — companion to the burned-in watermark.
-# Required by docs/copyright-policy.md before any publish step is wired up.
-cat > "$MDIR/outputs/SOURCES.txt" <<TXTEOF
-mission_id: $MISSION_ID
-source: $SOURCE
-attribution: $SOURCE_ATTRIBUTION
-license: ${FIXTURE_LICENSE:-unknown}
-recorded_at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
-TXTEOF
+write_sources_record "$MISSION_ID" "$SOURCE" "$MDIR/outputs/SOURCES.txt"
 
 # --- Step 5: QA ------------------------------------------------------------
 log_step "5/5 qa: validate"

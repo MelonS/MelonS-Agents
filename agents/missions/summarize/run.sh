@@ -12,6 +12,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../lib/ollama.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/whisper.sh"
 # shellcheck disable=SC1091
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/ffmpeg.sh"
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/attribution.sh"
 
 SOURCE="${1:-}"
 [[ -z "$SOURCE" ]] && { log_err "usage: $0 <url_or_path>"; exit 64; }
@@ -43,6 +45,12 @@ else
 fi
 log_ok "source ready: $SRC"
 
+# Resolve source attribution + license, then record alongside the summary.
+# Summarize doesn't render video, so there's no burned-in watermark — only
+# the SOURCES.txt machine record + a footer in summary.md.
+resolve_source_attribution "$SOURCE"
+write_sources_record "$MISSION_ID" "$SOURCE" "$MDIR/outputs/SOURCES.txt"
+
 # 2. Transcribe
 TRANSCRIPT=$(whisper_transcribe "$SRC" "$MDIR/resources/transcript")
 log_ok "transcript: $TRANSCRIPT"
@@ -65,6 +73,20 @@ $(cat "$FULLTEXT")"
 SUMMARY_RAW=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$PROMPT" false)
 # Strip stray code fences the small model loves to add
 echo "$SUMMARY_RAW" | awk '!/^[[:space:]]*```/' | awk 'BEGIN{blank=0} /^[[:space:]]*$/ { if (!blank) print; blank=1; next } { print; blank=0 }' > "$MDIR/outputs/summary.md"
+
+# Append source-attribution footer so a summary read in isolation still
+# credits the original — mirrors the burned-in watermark on rendered shorts.
+cat >> "$MDIR/outputs/summary.md" <<MDFOOT
+
+---
+
+## Source & license
+
+- source: \`$SOURCE\`
+- attribution: $SOURCE_ATTRIBUTION
+- license: ${FIXTURE_LICENSE:-unknown}
+- record: \`outputs/SOURCES.txt\`
+MDFOOT
 log_ok "summary written"
 
 # 4. QA

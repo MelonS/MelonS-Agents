@@ -7,6 +7,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../lib/log.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/ollama.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/whisper.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/../../lib/ffmpeg.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../../lib/attribution.sh"
 
 SOURCE="${1:-}"
 N="${2:-3}"
@@ -25,6 +26,11 @@ SRC="$MDIR/resources/source.mp4"
 if [[ -f "$SOURCE" ]]; then cp "$SOURCE" "$SRC"; else "$YT_DLP_BIN" -f "best[ext=mp4][height<=720]/best[height<=720]/best" -o "$SRC" "$SOURCE" >&2; fi
 SRC_DURATION=$(ffmpeg_duration "$SRC")
 log_ok "source: ${SRC_DURATION}s"
+
+# Resolve source attribution + license once; every short rendered below
+# gets the same burned-in watermark and shares a single SOURCES.txt record.
+resolve_source_attribution "$SOURCE"
+write_sources_record "$MISSION_ID" "$SOURCE" "$MDIR/outputs/SOURCES.txt"
 
 # 2. Transcribe
 TRANSCRIPT=$(whisper_transcribe "$SRC" "$MDIR/resources/transcript")
@@ -86,7 +92,7 @@ for i in $(seq 0 $((PICK_COUNT - 1))); do
   SRT="$MDIR/outputs/short-${NN}.srt"
   FINAL="$MDIR/outputs/short-${NN}.mp4"
   ffmpeg_segments_to_srt "$SEGS" "$START" "$END" "$SRT"
-  ffmpeg_render_short "$SRC" "$START" "$END" "$SRT" "$FINAL" || { log_err "render $NN failed"; VERDICT=FAIL; continue; }
+  ffmpeg_render_short "$SRC" "$START" "$END" "$SRT" "$FINAL" "$SOURCE_ATTRIBUTION" || { log_err "render $NN failed"; VERDICT=FAIL; continue; }
 
   DUR=$(ffmpeg_duration "$FINAL")
   RES=$("$FFPROBE_BIN" -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "$FINAL")
