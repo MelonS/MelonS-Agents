@@ -1,0 +1,3 @@
+# Auditor reports land here. See .claude/agents/auditor.md and
+# scripts/audit-run.sh. One report per (date, focus) pair.
+# These files are committed so the audit trail survives a machine swap.

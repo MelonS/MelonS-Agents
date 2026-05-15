@@ -38,6 +38,27 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-15** Repository auditor agent. New
+  [`.claude/agents/auditor.md`](../.claude/agents/auditor.md) — a
+  read-only subagent (model: sonnet) that walks the whole repo and
+  writes a structured report to
+  `docs/audit/<ISO-date>-<focus>.md`. Six audit dimensions:
+  architecture-vs-docs drift, roadmap freshness, operator-contract
+  compliance, cost-model accuracy, stale TODOs / dead code,
+  security / secrets. Invocation wrapper at
+  [`scripts/audit-run.sh`](../scripts/audit-run.sh): supports a
+  focus arg (`roadmap` / `contract` / `security` / `all`).
+  Distinct from `qa` (mission-scoped); the auditor is project-wide.
+  Reports go to `docs/audit/` (committed) so the trail survives a
+  machine swap.
+- **2026-05-15** Minimal Claude Code statusline at
+  [`scripts/statusline.sh`](../scripts/statusline.sh) — zero-dep
+  bash script that reads the JSON Claude Code feeds it on stdin
+  and prints `dir · git · model · cost · session-id` on a single
+  line. To enable, the user adds 4 lines to `~/.claude/settings.json`
+  (or runs `/config` interactively). Heavier alternatives noted in
+  the script header (chongdashu/cc-statusline, 598⭐, adds context
+  bars + burn rate but pulls npm dependencies).
 - **2026-05-15** Analyst-facing docs.  New
   [`docs/for-analysts.md`](for-analysts.md) is the single-file entry
   point for read-only review of the repo — orientation, subagent
