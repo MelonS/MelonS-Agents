@@ -14,6 +14,21 @@ Sintel → 9:16 short)을 01:52 KST에 출하(`highlight-015213` PASS),
 `docs/goal.md` outcome 레이어 신설 + CLAUDE.md 세션-시작 protocol에
 박음.  agent 정의 수정은 user OK 받은 CLAUDE.md만, working tree clean.
 
+**(이어서 02:40~03:30)** 사용자 "다 하고있어봐" 지시 → Mixed validation
+goal 박고 4개 deliverable 다 통과 (`STRIP_NONSPEECH` whitelist 도입 +
+KO highlight + Sintel shorts-batch N=2 + Sintel summarize).  사용자
+"안쓰는거 정리" 지시 → 죽은 ffmpeg 함수 4개 제거 + stale worktree
+제거 + `.env` Hangul 폰트 갱신 + metrics dashboard 재생성.  중간에
+사용자 "연예인 영상 있나" → Wikimedia Commons 검색 거쳐 손흥민 인터뷰
+(CC-BY-3.0)로 `highlight-032405` PASS.  이 미션이 실제 콘텐츠로
+돌면서 **4개 진짜 버그** surfacing → 모두 픽스:
+(1) `STRIP_NONSPEECH`가 `[FOREIGN]`까지 지워서 자막 0개 됐던 것
+(2) QA duration 60.0029s가 `<=60` 엄격 비교로 FAIL나던 것
+(3) ASS `escape_ass`에서 comma `\,` 잉여 백슬래시 leak
+(4) drawtext가 Hangul 못 렌더 → AppleGothic.ttf로 + `.env` shadow 픽스.
+누적 **26 커밋** (`71d785f` → `687d1e2`), working tree clean,
+agent 정의 수정 0건, 3 회귀 테스트 그린.
+
 ---
 
 ## 야간에 처리된 것 (자율 권한 안)
