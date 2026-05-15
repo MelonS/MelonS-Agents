@@ -117,26 +117,51 @@ Env-driven tool paths only: never hardcode `/opt/homebrew/...` or
 `~/...` — read `$FFMPEG_BIN`, `$OLLAMA_HOST`, `$RECORDS_DIR`, etc.
 from `.env`.
 
-### 9. Roadmap is the source of truth for work selection
+### 9. Goal and roadmap are the source of truth for work selection
 
-First action of every conversation that asks for work: read
-[`docs/roadmap.md`](roadmap.md)'s **Now** section.
+Every conversation that asks for work reads two files in order:
+
+1. **`docs/goal.md`** — the outcome layer.  Read **first**.  The
+   active goal describes success as a concrete deliverable.  An
+   empty work queue does **not** mean the goal is achieved — only
+   the goal's "Done when" criteria do.  If a deliverable subgoal is
+   unchecked, that is the next work even when the roadmap reads
+   clean.
+2. **`docs/roadmap.md`** — the work queue.  Read second.  The
+   **Now** section is the day-level priority advancing the current
+   goal.
+
+The split exists because of a real failure mode: 2026-05-15 → 2026-05-16
+produced 11 commits of infrastructure with the roadmap reading 0 open
+items, while the actual outcome (a real CC short emerging from that
+infrastructure) was 0 produced.  Without a separate outcome layer, an
+empty queue reads as "done" when the goal is unmet.
 
 - Do **not** use the README's `Status` checklist to pick work — it's
   a flat capability ledger, not an ordered backlog.
 - Do **not** infer the next task from `git log` alone — the log
   shows what landed, not what's *being* worked on or what's *now*
   most important.
+- If `docs/goal.md` active goal is empty, ask the user before
+  assuming a goal.  Do not invent goals.
+- If `docs/roadmap.md` "Now" is empty but goal subgoals are unmet,
+  the next task is whatever advances the most-blocked subgoal.
+- If `docs/audit/CURRENT-ALERT.md` exists, read it before picking
+  up the goal — it means the last audit run flagged drift or a
+  critical issue, which may bump priority above the goal queue.
 - After work lands, append a one-line entry to roadmap's **Done**
-  section with the commit hash and date.
-- "Now" / "Next" / "Blocked" sections are user-edited; Claude only
-  appends to "Done" and promotes from "Next" to "Now" when "Now"
-  empties.
+  section with the commit hash and date; tick any goal subgoals the
+  work cleared.
+- Goal "Active goal" + roadmap "Now" / "Next" / "Blocked" are
+  user-edited; Claude only appends to roadmap "Done", ticks goal
+  subgoals when the relevant commit lands, and proposes new goals
+  via `<!-- suggest -->` HTML comment when the active goal is
+  achieved or absent.
 
-Subagents (orchestrator, planner, resourcer, editor, qa) do **not**
-read roadmap.md — day-level decisions stay at the top-level
-conversation layer so subagents remain pure functions of the prompt
-they receive.
+Subagents (orchestrator, planner, resourcer, editor, qa, auditor)
+do **not** read `docs/goal.md` or `docs/roadmap.md` — day-level
+decisions stay at the top-level conversation layer so subagents
+remain pure functions of the prompt they receive.
 
 ### 10. Session resume protocol
 

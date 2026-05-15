@@ -4,13 +4,21 @@ Hierarchical agent system. See `README.md` for layout, `config/policies.yaml` fo
 
 ## Session-start protocol (read this first)
 
-**The first action of every conversation that asks for work is to read [`docs/roadmap.md`](docs/roadmap.md) — specifically the "Now" section.** That document is the source of truth for what to work on next. It is dated, ordered, and survives across sessions.
+Every conversation that asks for work reads two files in order:
+
+1. **`docs/goal.md` — the outcome layer.**  This is the **first** read.  The active goal here describes what success looks like as a concrete deliverable.  An empty work queue does **not** mean the goal is achieved; only the goal's "Done when" criteria do.  If the active goal is unmet, the agent's job this session is to advance it, not to drain the roadmap.  If a deliverable subgoal is unchecked, that is the work — even when `docs/roadmap.md` is empty.
+2. **`docs/roadmap.md` — the work queue.**  Read second.  The "Now" section is the day-level priority for the current goal.
+
+Why the split: 2026-05-15 → 2026-05-16 produced 11 commits of infrastructure with the roadmap reading 0 open items, while the actual outcome (a real CC short emerging from that infrastructure) was 0 produced.  `docs/roadmap.md` Done all ticked, goal not met.  The two layers exist so that mistake can't repeat — when goal.md says a deliverable subgoal is unchecked, "queue is empty" is never the right signal.
 
 - Do **not** use the README's "Status" checklist to pick work — it has no order, no dates, no priority signal.
 - Do **not** infer the next task from `git log` alone — the log shows what landed, not what was *being* worked on or what is *now* most important.
-- If `docs/roadmap.md` "Now" is empty, promote the top of "Next"; if both are empty, make a reasonable assumption and start, letting the user redirect.
-- After work lands, append a one-line entry to `docs/roadmap.md` "Done" with the commit hash and date.
-- Subagents (orchestrator, planner, resourcer, editor, qa) do **not** read `docs/roadmap.md`. Day-level decisions belong to the top-level conversation; subagents stay pure functions of the mission prompt they receive.
+- If `docs/goal.md` active goal is empty, ask the user before assuming a goal.  Do not invent goals.
+- If `docs/roadmap.md` "Now" is empty but goal subgoals are unmet, the next task is whatever advances the most-blocked subgoal.
+- If both goal subgoals and roadmap queues are clean, promote "Next" → "Now"; if both are empty, surface that state to the user rather than making up work.
+- After work lands, append a one-line entry to `docs/roadmap.md` "Done" with the commit hash and date; tick any goal subgoals the work cleared.
+- If `docs/audit/CURRENT-ALERT.md` exists, read it before picking up the goal — it means the last audit run flagged drift or a critical issue, which may bump priority above the goal queue.
+- Subagents (orchestrator, planner, resourcer, editor, qa) do **not** read `docs/goal.md` or `docs/roadmap.md`. Day-level decisions belong to the top-level conversation; subagents stay pure functions of the mission prompt they receive.
 
 ## Operating rules
 
