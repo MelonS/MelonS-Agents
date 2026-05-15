@@ -28,7 +28,9 @@ Every short produced by this system either (a) credits its source on the rendere
 ### Still TODO
 - [ ] **Audio-fingerprint check** — `chromaprint`/`fpcalc`-based detection of copyrighted soundtracks. Skipped for v1 because it needs a fingerprint database to compare against; without one the check is just CPU burn. Add this when we have a real takedown to learn from.
 - [ ] **Logo / watermark detection** — frame-level check for other creators' logos in the area we'd overlay our own watermark. Heavy (needs OCR or a trained model); deferred until we hit the failure mode it would catch.
-- [ ] **Per-platform reuse rules** — `config/copyright-allowlist.yaml` has a `publish_rules` section with per-license rules (`commercial_repost`, `require_attribution`, `share_alike`) but no code reads it yet beyond the binary publish-blocked check.
+
+### Recently shipped (was Still TODO)
+- [x] **Per-platform reuse rules** — `guard_publish` now takes an optional second arg (`internal-demo` default; `public` / `youtube` / `instagram` / `tiktok` aliases) and honors all four `publish_rules` fields. `internal-demo` keeps the v1 baseline (block only `publish_blocked` + unknown licenses); `public` additionally refuses `commercial_repost: forbidden` (exit 7) and refuses when `require_attribution: true` but SOURCES.txt has no attribution (exit 8). `share_alike: true` logs a warning rather than refusing — it's an output-licensing concern for `publish.sh`, not the gate. Verified 16/16 across all license × platform combinations in the allowlist.
 
 ## Until those are in place
 

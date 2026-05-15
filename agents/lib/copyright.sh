@@ -8,13 +8,13 @@
 #   3. Strike-record log ─ append_strike()
 #
 # Still TODO (see docs/copyright-policy.md):
-#   - License-string probe for archive.org / wikimedia / vimeo CC channel
-#     items (today the allowlist marks these "requires-per-item-probe"
-#     and guard_publish refuses to publish them; the actual probe code
-#     is not yet implemented).
 #   - Audio fingerprint check (would need chromaprint/`fpcalc`).
 #   - Logo / watermark detection.
-#   - Per-platform reuse rules.
+# Implemented:
+#   - License-string probe (probe_license + resolve_final_license, below).
+#   - Per-platform reuse rules (guard_publish honors publish_rules fields
+#     commercial_repost / require_attribution / share_alike, dispatched
+#     by an optional platform arg).
 
 : "${COPYRIGHT_ALLOWLIST:=$REPO_ROOT/config/copyright-allowlist.yaml}"
 : "${STRIKE_LOG:=$RECORDS_DIR/strikes.log}"
@@ -107,25 +107,65 @@ PY
 }
 
 # Publish gate — read a mission's SOURCES.txt + the allowlist's publish_rules,
-# refuse the publish if license is unknown / blocked / missing.  Stub for
-# now; the actual publish.sh that would call this isn't wired yet, but
-# this lets any future publish script gate behind one line.
+# refuse the publish if the recorded license is incompatible with the target
+# platform.  Two-arg form:
+#
+#   guard_publish <sources.txt> [platform]
+#
+# Platform is one of:
+#   - internal-demo  (default; most permissive — only blocks `publish_blocked`
+#                    licenses and the empty/unknown case.  Matches the
+#                    "internal demo / personal review only" baseline in
+#                    docs/copyright-policy.md.)
+#   - public         (any external publish target.  Additionally refuses
+#                    `commercial_repost: forbidden` and `require_attribution:
+#                    true` when SOURCES.txt has no attribution line.)
+#   - youtube / instagram / tiktok  (aliases for `public`; reserved so that
+#                    per-platform overrides can land here later without
+#                    changing callers.)
+#
+# Exit codes:
+#   0  ok
+#   3  SOURCES.txt missing
+#   4  license empty / unknown
+#   5  license publish_blocked
+#   7  commercial_repost forbidden for target platform
+#   8  require_attribution but SOURCES.txt has no attribution line
+#
+# Stable contract: codes 0/3/4/5 are unchanged from the v1 binary gate, so
+# existing callers (scripts/publish-gate.sh, future publish.sh) keep working
+# even if they don't pass a platform.
 guard_publish() {
   local sources_txt="$1"
+  local platform="${2:-internal-demo}"
 
   if [[ ! -f "$sources_txt" ]]; then
     echo "❌ guard_publish: SOURCES.txt missing — refusing publish" >&2
     return 3
   fi
 
-  local license
+  local license attribution
   license=$(awk -F': ' '/^license:/ {print $2; exit}' "$sources_txt")
+  attribution=$(awk -F': ' '/^attribution:/ {print $2; exit}' "$sources_txt")
   if [[ -z "$license" || "$license" == "unknown" ]]; then
     echo "❌ guard_publish: license is '${license:-empty}' — refusing publish (record license in fixture catalog)" >&2
     return 4
   fi
 
-  python3 - "$COPYRIGHT_ALLOWLIST" "$license" <<'PY' || return 5
+  # Normalize platform aliases.  `public` covers everything not explicitly
+  # marked internal; per-platform overrides land here in the future.
+  case "$platform" in
+    internal-demo|personal) platform="internal-demo" ;;
+    public|youtube|instagram|tiktok|generic-public) platform="public" ;;
+    *)
+      echo "⚠ guard_publish: unknown platform '$platform' — treating as 'public' (conservative)" >&2
+      platform="public"
+      ;;
+  esac
+
+  # Parse the publish_rules entry for this license into env vars.
+  local rule_out
+  if ! rule_out=$(python3 - "$COPYRIGHT_ALLOWLIST" "$license" <<'PY'
 import sys, re
 path, want = sys.argv[1], sys.argv[2]
 text = open(path).read()
@@ -145,22 +185,86 @@ for line in text.splitlines():
         continue
     if cur is None:
         continue
-    m = re.match(r"^    publish_blocked: (true|false)$", line)
-    if m: cur["publish_blocked"] = (m.group(1) == "true")
-    m = re.match(r"^    reason: (.+)$", line)
-    if m: cur["reason"] = m.group(1).strip()
+    # Bool fields.
+    for key in ("publish_blocked", "require_attribution", "share_alike"):
+        m = re.match(rf"^    {key}: (true|false)$", line)
+        if m: cur[key] = (m.group(1) == "true")
+    # String fields.
+    for key in ("commercial_repost", "reason", "note"):
+        m = re.match(rf"^    {key}: (.+)$", line)
+        if m: cur[key] = m.group(1).strip()
 if cur: items.append(cur)
 
 for it in items:
     if it["license"] == want:
-        if it.get("publish_blocked"):
-            print(f"license '{want}' is publish-blocked: {it.get('reason','no reason recorded')}", file=sys.stderr)
-            sys.exit(1)
+        # Emit key=value lines for the shell to source.  No license value
+        # contains an = sign, so naive splitting is safe.
+        for k in ("publish_blocked", "require_attribution", "share_alike",
+                  "commercial_repost", "reason", "note"):
+            if k in it:
+                v = it[k]
+                if isinstance(v, bool):
+                    v = "true" if v else "false"
+                print(f"{k}={v}")
         sys.exit(0)
-# License not listed — be conservative and refuse.
-print(f"license '{want}' has no publish rule in allowlist — refusing", file=sys.stderr)
+
+print(f"license '{want}' has no publish rule in allowlist", file=sys.stderr)
 sys.exit(1)
 PY
+  ); then
+    echo "❌ guard_publish: $rule_out — refusing" >&2
+    return 5
+  fi
+
+  # Shell-parse the key=value output.  Reset all fields first so a missing
+  # field from the YAML reads as empty, not stale from a previous call.
+  local publish_blocked="" require_attribution="" share_alike=""
+  local commercial_repost="" reason="" note=""
+  while IFS='=' read -r k v; do
+    case "$k" in
+      publish_blocked)     publish_blocked="$v" ;;
+      require_attribution) require_attribution="$v" ;;
+      share_alike)         share_alike="$v" ;;
+      commercial_repost)   commercial_repost="$v" ;;
+      reason)              reason="$v" ;;
+      note)                note="$v" ;;
+    esac
+  done <<<"$rule_out"
+
+  # Rule 1 — `publish_blocked: true` refuses on ANY platform.
+  if [[ "$publish_blocked" == "true" ]]; then
+    echo "❌ guard_publish: license '$license' is publish-blocked: ${reason:-no reason recorded}" >&2
+    return 5
+  fi
+
+  # internal-demo skips the remaining platform-aware rules.
+  if [[ "$platform" == "internal-demo" ]]; then
+    [[ "$share_alike" == "true" ]] && \
+      echo "ℹ guard_publish: '$license' is share-alike — internal-demo target, no enforcement" >&2
+    return 0
+  fi
+
+  # Rule 2 — commercial_repost forbidden for public targets.
+  if [[ "$commercial_repost" == "forbidden" ]]; then
+    echo "❌ guard_publish: license '$license' forbids commercial repost; platform '$platform' is a public target — refusing" >&2
+    return 7
+  fi
+
+  # Rule 3 — require_attribution true and SOURCES.txt has no attribution.
+  if [[ "$require_attribution" == "true" ]]; then
+    if [[ -z "$attribution" || "$attribution" == "unknown" ]]; then
+      echo "❌ guard_publish: license '$license' requires attribution but SOURCES.txt has '${attribution:-empty}' — refusing" >&2
+      return 8
+    fi
+  fi
+
+  # Rule 4 — share_alike: WARN, do not refuse.  Share-alike is an
+  # output-licensing concern (the rendered short must be released under a
+  # compatible license).  That's a publish.sh responsibility, not the gate's.
+  if [[ "$share_alike" == "true" ]]; then
+    echo "⚠ guard_publish: license '$license' is share-alike — published output must be released under a compatible license" >&2
+  fi
+
   return 0
 }
 

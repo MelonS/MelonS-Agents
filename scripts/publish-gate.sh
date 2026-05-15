@@ -4,15 +4,23 @@
 #   - SOURCES.txt is missing
 #   - license is empty / unknown / "requires-per-item-probe"
 #   - license is listed publish_blocked in the allowlist
+#   - target platform is public and license forbids commercial repost
+#   - target platform is public and license requires attribution but
+#     SOURCES.txt has no attribution line
 #
-# Usage: ./scripts/publish-gate.sh <mission-dir>
+# Usage:
+#   ./scripts/publish-gate.sh <mission-dir>            # platform=internal-demo
+#   ./scripts/publish-gate.sh <mission-dir> public     # public target
+#   ./scripts/publish-gate.sh <mission-dir> youtube    # alias of public
 #
 # Exit status:
-#   0  — safe to publish (license verified, attribution recorded)
+#   0  — safe to publish
 #   3  — SOURCES.txt missing
 #   4  — license empty / unknown
 #   5  — license publish_blocked
 #   6  — bad usage
+#   7  — commercial_repost forbidden for target platform
+#   8  — require_attribution true but SOURCES.txt missing attribution
 #
 # This script is the stub that any future publish.sh would call as its
 # first action.  No publish.sh exists yet; ship the gate so the moment
@@ -28,20 +36,27 @@ source "$REPO_ROOT/agents/lib/log.sh"
 source "$REPO_ROOT/agents/lib/copyright.sh"
 
 MDIR="${1:-}"
+PLATFORM="${2:-internal-demo}"
 if [[ -z "$MDIR" || ! -d "$MDIR" ]]; then
-  echo "usage: $0 <mission-dir>" >&2
+  echo "usage: $0 <mission-dir> [platform]" >&2
+  echo "  platform: internal-demo (default) | public | youtube | instagram | tiktok" >&2
   exit 6
 fi
 
 SOURCES="$MDIR/outputs/SOURCES.txt"
-log_info "publish gate: checking $SOURCES"
+log_info "publish gate: checking $SOURCES (platform=$PLATFORM)"
 
-if guard_publish "$SOURCES"; then
+set +e
+guard_publish "$SOURCES" "$PLATFORM"
+rc=$?
+set -e
+
+if [[ $rc -eq 0 ]]; then
   log_ok "publish gate PASSED — license verified, attribution recorded"
   awk -F': ' '/^license:/ {print "license: " $2; exit}' "$SOURCES"
   exit 0
 fi
 
 # guard_publish already printed the reason to stderr; surface non-zero.
-log_err "publish gate REFUSED — see SOURCES.txt + config/copyright-allowlist.yaml"
-exit "${?:-5}"
+log_err "publish gate REFUSED (rc=$rc) — see SOURCES.txt + config/copyright-allowlist.yaml"
+exit "$rc"
