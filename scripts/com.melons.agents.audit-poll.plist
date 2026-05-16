@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.melons.agents.audit-poll</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/melons/ai/scripts/audit-poll.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/melons/ai</string>
+
+  <key>StandardOutPath</key>
+  <string>/Users/melons/ai/records/audit/poll.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/melons/ai/records/audit/poll.err.log</string>
+
+  <!-- Run every 15 minutes.  Most polls are no-op file reads (cheap);
+       only a real anomaly pattern triggers audit-run.sh (which uses
+       the Anthropic API). -->
+  <key>StartInterval</key>
+  <integer>900</integer>
+
+  <!-- Do NOT fire on install — would burn an unexpected audit if any
+       blocker happens to be in the state at install time.  First
+       scheduled fire is 15 min after launchd loads the job. -->
+  <key>RunAtLoad</key>
+  <false/>
+
+  <!-- Same minimal-PATH problem as the auditor job (claude CLI lives
+       under nvm).  The auditor wrapper handles fallback discovery,
+       but we widen PATH up front for any other tools the poll script
+       might invoke. -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/Users/melons/.local/bin:/Users/melons/.local/opt/ffmpeg-static:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+</dict>
+</plist>

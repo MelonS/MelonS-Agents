@@ -2,17 +2,21 @@
 # Install or uninstall the launchd jobs that keep MelonS-Agents running
 # unattended.
 #
-# Two jobs:
-#   • com.melons.agents.queue    — every 30 min, drains records/queue/
-#                                  pending.txt and runs the highlight
-#                                  mission on each entry.
-#   • com.melons.agents.auditor  — once a day at 03:00 local, runs
-#                                  scripts/audit-run.sh all and writes
-#                                  a fresh report to docs/audit/.
+# Three jobs:
+#   • com.melons.agents.queue       — every 30 min, drains records/queue/
+#                                     pending.txt and runs the highlight
+#                                     mission on each entry.
+#   • com.melons.agents.auditor     — once a day at 03:00 local, runs
+#                                     scripts/audit-run.sh all (L3 baseline).
+#   • com.melons.agents.audit-poll  — every 15 min, runs scripts/audit-poll.sh
+#                                     which fires a focused audit only on
+#                                     mission-anomaly patterns (L2 reactive
+#                                     trigger; cheap no-op when nothing's
+#                                     wrong).
 #
 # Usage:
-#   scripts/install-scheduler.sh install [queue|auditor|all]
-#   scripts/install-scheduler.sh uninstall [queue|auditor|all]
+#   scripts/install-scheduler.sh install [queue|auditor|audit-poll|all]
+#   scripts/install-scheduler.sh uninstall [queue|auditor|audit-poll|all]
 #   scripts/install-scheduler.sh status
 #
 # Default target is `all`.
@@ -26,9 +30,10 @@ LA_DIR="$HOME/Library/LaunchAgents"
 
 plist_for() {
   case "$1" in
-    queue)   echo "com.melons.agents.queue.plist" ;;
-    auditor) echo "com.melons.agents.auditor.plist" ;;
-    *)       echo "" ;;
+    queue)      echo "com.melons.agents.queue.plist" ;;
+    auditor)    echo "com.melons.agents.auditor.plist" ;;
+    audit-poll) echo "com.melons.agents.audit-poll.plist" ;;
+    *)          echo "" ;;
   esac
 }
 
@@ -77,7 +82,7 @@ status_one() {
 
 expand_targets() {
   if [[ "$1" == "all" ]]; then
-    echo "queue auditor"
+    echo "queue auditor audit-poll"
   else
     echo "$1"
   fi
@@ -98,11 +103,11 @@ case "$op" in
     done
     ;;
   status)
-    for j in queue auditor; do
+    for j in queue auditor audit-poll; do
       status_one "$j"
     done
     ;;
   *)
-    echo "usage: $0 {install|uninstall|status} [queue|auditor|all]"
+    echo "usage: $0 {install|uninstall|status} [queue|auditor|audit-poll|all]"
     exit 64 ;;
 esac
