@@ -2,11 +2,11 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Read(//Users/melons/**)",
-      "Write(//Users/melons/ai/**)",
-      "Edit(//Users/melons/ai/**)",
-      "Write(//Users/melons/.local/share/whisper-models/**)",
-      "Write(//Users/melons/.claude/projects/-Users-melons-ai/memory/**)",
+      "Read(/Users/melons/**)",
+      "Write(/Users/melons/ai/**)",
+      "Edit(/Users/melons/ai/**)",
+      "Write(/Users/melons/.local/share/whisper-models/**)",
+      "Write(/Users/melons/.claude/projects/-Users-melons-ai/memory/**)",
       "Bash(claude *)",
       "Bash(python3 *)",
       "Bash(pip3 *)",

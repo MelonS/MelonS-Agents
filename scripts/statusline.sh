@@ -14,8 +14,10 @@
 # Wire-up: ~/.claude/settings.json
 #   "statusLine": {
 #     "type": "command",
-#     "command": "/Users/melons/ai/scripts/statusline.sh"
+#     "command": "<absolute-path-to-repo>/scripts/statusline.sh"
 #   }
+# (settings.json doesn't expand shell vars; substitute the literal path
+# from `git rev-parse --show-toplevel` or whatever location you cloned to.)
 #
 # Swap for chongdashu's cc-statusline (598⭐ on GitHub) if you want
 # token-usage bars and burn-rate:

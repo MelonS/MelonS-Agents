@@ -33,6 +33,13 @@ mkdir -p "$OUT_DIR"
 # fall back to a glob of the standard nvm install location and a couple of
 # other common bin dirs.  Once found, we put it on PATH for any child
 # processes the auditor subagent might spawn.
+#
+# §8 exception: `/opt/homebrew/bin/claude` and `/usr/local/bin/claude` are
+# absolute paths but appear ONLY as fallback candidates inside a probe loop,
+# never as the resolved binary.  Same documented-exception pattern as
+# `agents/lib/env.sh`'s ffmpeg-full keg discovery — listed for completeness
+# under launchd's minimal PATH.  When `command -v claude` succeeds (PATH is
+# correct), the loop is skipped entirely.
 if ! command -v claude >/dev/null 2>&1; then
   for candidate in \
       "$HOME"/.nvm/versions/node/*/bin/claude \
