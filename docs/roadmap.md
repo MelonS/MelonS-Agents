@@ -52,6 +52,39 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-17** (overnight, ~00:09 KST) **Operator review pass —
+  screen-fill 9:16 + Korean A/B variants.**  Operator looked at the v2
+  pilots and flagged two issues for accurate evaluation:
+  (1) the foreground occupied a small strip in the middle of a mostly-
+  blurred frame — Pexels stock is landscape, `force_original_aspect_ratio=decrease`
+  was producing 1080×607 fg over 1080×1920 letterbox-blur background;
+  (2) need Korean voice + Korean captions on the **same content** to
+  judge the format independent of language.  Both fixes landed in this
+  pass:
+  - **Screen-fill 9:16**: per-clip trim now uses `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920`
+    directly so concat clips are already vertical.  Final filter graph
+    drops the bg/fg/overlay stack; only ass-burn + drawtext attribution
+    remain.  Result fills the frame the way TikTok/Reels actually do.
+  - **Korean A/B variants**: `agents/lib/tts.sh` now routes by voice-hint
+    pattern — Kokoro-shape hints (`^[abjzefhip][fm]_`) go to Kokoro,
+    anything else (Yuna, Daniel, etc.) goes to `say`.  Kokoro v1.0 has
+    no Korean voice; macOS `say` has nine ko_KR voices including Yuna.
+    Two new run.sh env vars: `FACELESS_SCRIPT_OVERRIDE` bypasses ollama
+    script generation with a pre-written file, and `FACELESS_REUSE_BROLL`
+    copies a previous mission's stitched B-roll so the localized variant
+    shares identical visuals with its English counterpart.
+  - **Korean translation**: llama3.2:3b's Korean output was unusable
+    (Hindi/Thai/Russian script leak, topic confusion across prompts).
+    Manually translated the two scripts directly.  Noted in the
+    decision log; a 7B+ instruct model is the path forward for
+    automated localization.
+  - 4 pilots committed: `faceless-hittites-000112` (EN, 55.2s/42MB),
+    `faceless-hittites-ko-000654` (KO, 52.9s/40MB, same B-roll),
+    `faceless-hydrogen-000112` (EN, 38.5s/12MB),
+    `faceless-hydrogen-ko-000755` (KO, 38.9s/12MB, same B-roll).
+    Thumbnails + scripts + caption-correction logs all renamed to
+    `<topic>-<lang>-*` shape under `docs/pilots/screens/`.
+    Decision-log restructured with side-by-side EN/KO columns per pilot.
 - **2026-05-16** (late evening, ~23:38 KST) **Upload-metadata generator —
   ready-to-paste platform copy for each pilot.**  The pilot deliverables
   produce `short.mp4` but the next bottleneck is the operator drafting

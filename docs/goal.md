@@ -44,19 +44,24 @@ niche from real watchable output rather than abstract preference.
       letterbox-blurs to 9:16, burns captions and attribution.  No
       paid APIs used.  Shipped `1663301` (and pilot-time fixes for
       mapfile + Kokoro wiring, see next commit).
-- [x] **Pilot 1 deliverable — Hittites short** — 9:16 55.8 s mp4
-      (`records/missions/2026-05-16/faceless-hittites-233021/outputs/short.mp4`,
-      v2 after script-aware caption correction pass) + caption-verify
-      frame at
-      [`docs/pilots/screens/hittites-caption-verify.jpg`](pilots/screens/hittites-caption-verify.jpg).
+- [x] **Pilot 1 deliverable — Hittites short** — 9:16 mp4 in two
+      language variants (v3 after screen-fill + caption correction
+      fixes per operator review 2026-05-17):
+      - EN: 55.2 s — `records/missions/2026-05-17/faceless-hittites-000112/outputs/short.mp4`
+            ([thumbnail](pilots/screens/hittites-en-caption-verify.jpg)).
+      - KO: 52.9 s — `records/missions/2026-05-17/faceless-hittites-ko-000654/outputs/short.mp4`
+            ([thumbnail](pilots/screens/hittites-ko-caption-verify.jpg)) —
+            macOS Yuna voice, AppleGothic captions, same B-roll as EN
+            via `FACELESS_REUSE_BROLL` for clean A/B.
       Neutral documentary tone; hook = "biblical kingdom dismissed
-      as legend until 1906".  Production notes in
+      as legend until 1906".  Production notes + A/B table in
       [`docs/pilots/decision-log.md`](pilots/decision-log.md#pilot-1--hittites-history--bible).
-- [x] **Pilot 2 deliverable — Hydrogen short** — 9:16 51.0 s mp4
-      (`records/missions/2026-05-16/faceless-hydrogen-233219/outputs/short.mp4`,
-      v2 after script-aware caption correction pass) + caption-verify
-      frame at
-      [`docs/pilots/screens/hydrogen-caption-verify.jpg`](pilots/screens/hydrogen-caption-verify.jpg).
+- [x] **Pilot 2 deliverable — Hydrogen short** — 9:16 mp4 in two
+      language variants:
+      - EN: 38.5 s — `records/missions/2026-05-17/faceless-hydrogen-000112/outputs/short.mp4`
+            ([thumbnail](pilots/screens/hydrogen-en-caption-verify.jpg)).
+      - KO: 38.9 s — `records/missions/2026-05-17/faceless-hydrogen-ko-000755/outputs/short.mp4`
+            ([thumbnail](pilots/screens/hydrogen-ko-caption-verify.jpg)).
       Curiosity tone; hook = "75 percent of the universe and 10
       percent of your body".  Production notes in
       [`docs/pilots/decision-log.md`](pilots/decision-log.md#pilot-2--hydrogen-science).
