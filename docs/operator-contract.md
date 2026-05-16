@@ -329,6 +329,44 @@ Same as documentation style above, applied to:
 
 Keep it tight, technical, and neutral.
 
+### README maintenance cadence
+
+`README.md` / `README.ko.md` is the system's public face — an
+outside reader should be able to scan it and reach an accurate
+read of the current state within 30 seconds.  But it does **not**
+get rewritten on every commit; per-commit edits create churn (a
+five-section diff for a one-line capability) without improving
+the reader's experience.
+
+Update on these four natural triggers, batching multiple commits'
+worth of changes into one README pass:
+
+1. **Active goal lands** — when `docs/goal.md` migrates a goal to
+   Past goals, review the README's Status section, Sample output
+   section, and any related sections for items that should land
+   now.  Most goal-landings produce at least one new Status entry.
+2. **Audit detects README drift** — when `scripts/audit-run.sh`
+   flags a stale section (Status entry missing a hash, capability
+   description out of sync with a script, etc.), fix it
+   immediately as part of clearing the alert.  Do not defer.
+3. **Mission outputs visibly change the gallery / charts** — a new
+   caption-verify frame worth showing, a new chart variant, a
+   GIF refresh.  Decide per-output whether it changes what a
+   reader sees; if yes, update.
+4. **Operator contract / architecture changes** — immediate.  The
+   contract and the architecture diagram are canonical claims;
+   stale text here is a worse failure than stale Status.
+
+Anti-rule: do **not** open the README to add a single Status line
+for every routine commit.  Status entries accumulate until a
+trigger above fires.  If unsure whether an edit is worth the
+diff, defer — the next audit run will surface it if it actually
+matters.
+
+KO mirror (`README.ko.md`) updates in the same commit as EN.
+A drift between the two files counts as audit-relevant
+documentation drift.
+
 ### Idle-state signaling
 
 When a turn finishes and there is no further work in progress, end
