@@ -289,7 +289,7 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 - [x] 코드 / 데이터 분리 강제 (records/ gitignore)
 - [x] 환경 변수 기반 도구 경로 (.env / .env.example)
 - [x] PoC 엔드투엔드: 하이라이트 추출 (EN + KO)
-- [x] libass 자막 번인 (ffmpeg 정적 빌드)
+- [x] libass 자막 번인 (`agents/lib/env.sh`가 libass 포함 ffmpeg 자동 감지; macOS에서는 `ffmpeg-full` keg로 폴백)
 - [x] 다국어 whisper.cpp (small) + 언어 인식 하이라이트 프롬프트
 - [x] 배치 실행기 (scripts/batch-mission.sh)
 - [x] 로직 변경 시 origin/main 자동 커밋 + 자동 푸시
@@ -307,6 +307,8 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 - [x] 일별 로드맵 [`docs/roadmap.md`](docs/roadmap.md) ("다음에 무엇을" 단일 출처)
 - [x] 플랫폼별 재이용 규칙 — `scripts/publish-gate.sh` (`internal-demo` / `public` / `youtube` / `instagram` / `tiktok`, 4개 `publish_rules` 필드 모두 소비)
 - [x] 저장소 auditor 서브에이전트 + 능동 surface (`docs/audit/CURRENT-ALERT.md` 자동 유지, `scripts/audit-run.sh`)
+- [x] Clone-and-go 재현성 — 호스트 비종속 `.env.example`, OS 인식 `scripts/bootstrap.sh` (설치 명령 안내), `scripts/fetch-whisper-model.sh` 모델 자동 다운로드, `scripts/test-fresh-clone.sh` 시뮬레이터 + PASS 증거 [`docs/onboarding/fresh-clone-log.txt`](docs/onboarding/fresh-clone-log.txt)
+- [x] 미션별 메트릭 차트 — [`docs/metrics/per-mission-time.png`](docs/metrics/per-mission-time.png) + [`docs/metrics/throughput-realtime.png`](docs/metrics/throughput-realtime.png), `.venv/bin/python scripts/generate-charts.py`로 재생성 (venv는 `scripts/setup-venv.sh`)
 - [ ] 실제 사용자 URL fixture — _차단, 사용자 URL 대기 중_
 - [ ] 다른 호스트용 License probe 추가 (Vimeo CC 채널 등) — _보류, Vimeo는 item별 license endpoint 없음; 필요 시 재검토_
 - [ ] Audio fingerprint 체크 (chromaprint / `fpcalc`) — _보류, 비교용 fingerprint dataset 없음; 첫 takedown 이후 재검토_

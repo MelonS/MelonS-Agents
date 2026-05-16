@@ -42,6 +42,31 @@ Code* — orchestration, planning, code review, debugging.
 
 ---
 
+## Reproducibility evidence (not just a claim)
+
+The clone-to-output path is exercised by
+[`scripts/test-fresh-clone.sh`](../scripts/test-fresh-clone.sh):
+clone the public repo into a temp dir → run `scripts/bootstrap.sh`
+(auto-fetches whisper model + ollama model, prints OS-specific
+install hints for missing CLIs) → run one highlight mission against
+the Sintel CC-BY-3.0 trailer → assert `short.mp4` ≥ 1 MB.  Each
+run appends a PASS / FAIL line to
+[`onboarding/fresh-clone-log.txt`](onboarding/fresh-clone-log.txt).
+
+If that log's most recent line is PASS against
+`https://github.com/MelonS/MelonS-Agents.git`, the README's
+"Quick start" has been **exercised** on a clean tree, not just
+asserted.  First-run FAIL with diagnostic detail is also a
+common state — see the first entry in the log for the
+ffmpeg / ffmpeg-full Homebrew packaging gotcha that the test
+uncovered and the env.sh fix that resolved it.
+
+The simulator is one of the project's [deliverable subgoals](goal.md):
+infrastructure subgoals alone don't complete a goal until a
+concrete artifact exists that proves the path works.
+
+---
+
 ## Subagent layout (already verified, do not re-recommend)
 
 `.claude/agents/*.md` frontmatter sets the model.  As of 2026-05-15:
@@ -156,7 +181,13 @@ Total mission-execution API cost: **0**.
 - No CI / no automated tests on push.  The repo treats every push
   to `main` as a logical unit; pre-commit gating is intentionally
   absent so the auto-commit / auto-push contract stays simple.  See
-  [`operator-contract.md`](operator-contract.md) §6.
+  [`operator-contract.md`](operator-contract.md) §6.  One regression
+  check that does exist:
+  [`scripts/test-fresh-clone.sh`](../scripts/test-fresh-clone.sh)
+  runs a full clone → bootstrap → mission cycle against `origin/main`
+  on demand, with PASS / FAIL evidence in
+  [`onboarding/fresh-clone-log.txt`](onboarding/fresh-clone-log.txt).
+  Not yet wired to a hook; run manually after substantive changes.
 - No publish path yet — `scripts/publish-gate.sh` exists as a stub
   that any future `publish.sh` will call; no current `publish.sh`.
 - No multi-user, no auth, no secrets management beyond `.env`
