@@ -16,73 +16,14 @@ exists and matches the "Done when" criteria below.
 
 ## Active goal
 
-### 2026-05-16 | Clone-and-go reproducibility | _in progress_
+**Goal**: _(empty — previous goal "Clone-and-go reproducibility"
+achieved on 2026-05-16 14:00 KST and migrated to Past goals.
+Set by user when the next focus is chosen.)_
 
-_(2026-05-16 — operator direction: "다른 사람이 저장소를 클론해서
-나와 같은 방식으로 사용이 가능해야 한다.  결과물까지 뽑을 수 있게.")_
-
-_One sentence_: a stranger pulling the public repo from GitHub
-should reach a passing mission output (a real 9:16 short under
-their own machine's `records/`) using only the README, with no
-follow-up questions to the maintainer.
-
-**Subgoals (acceptance signals)**:
-
-- [ ] **`.env.example` is host-agnostic** — no `/Users/<name>/...`
-      absolute paths, no Apple-Silicon-only Homebrew paths baked
-      as defaults.  Values resolve via `command -v` /
-      `${HOME}/...` or are clearly marked "set this to your local
-      binary".  Each var has a one-line comment explaining purpose
-      and where to obtain the underlying tool.
-- [ ] **Prerequisite installer / checker** — a single script
-      (extend `bootstrap.sh` or add `scripts/check-prereqs.sh`)
-      that on first run: detects missing tools (ffmpeg, ollama,
-      whisper.cpp, yt-dlp), prints the *exact* brew / apt / port
-      command needed on the host OS, and either auto-installs
-      via brew (with user confirmation) or exits with a clear
-      pointer.  No silent failure on a missing binary.
-- [ ] **Whisper.cpp model auto-fetch** — first mission run sees
-      that `$WHISPER_MODEL` is missing and downloads
-      `ggml-small.bin` (≈ 150 MB) into the configured path, or
-      fails with a single clear "run `scripts/fetch-whisper-model.sh`"
-      pointer.  Stranger never has to know the upstream URL
-      themselves.
-- [ ] **README "Prerequisites" section** — short, factual block
-      before "Quick start".  Lists: macOS 14+ (primary) or
-      Linux (best-effort), Homebrew, Apple Silicon for
-      `h264_videotoolbox` (`-allow_sw 1` falls back to libx264
-      otherwise), ~2 GB free disk for models + fixtures.  HTTPS
-      clone URL alongside the SSH one.  No "13년차" / personal
-      claims (§12).
-- [ ] **Fresh-clone simulation evidence** — a script
-      (`scripts/test-fresh-clone.sh` or similar) clones the repo
-      into a temp dir, runs `cp .env.example .env` + bootstrap +
-      one highlight mission against a Blender CC-BY-3.0 fixture,
-      asserts a `short.mp4` exists under the temp records dir,
-      and writes a one-line PASS/FAIL log to
-      `docs/onboarding/fresh-clone-log.txt`.  The log is the
-      deliverable artifact — durable evidence the clone-to-output
-      path works on a clean tree, not just on the maintainer's
-      machine.
-- [ ] **Honest cross-platform note** — a "Platform support"
-      paragraph in README that says exactly what works where.
-      macOS primary; Linux works for missions but launchd-based
-      schedulers are macOS-only (cron equivalent listed).  The
-      `say`-based fixture-generation in `bootstrap.sh` is
-      macOS-only; document the espeak fallback or mark it
-      explicitly as "skip on Linux, use real CC fixtures
-      instead".  No promises that aren't tested.
-
-**Done when**: subgoals 1–6 all checked AND
-`docs/onboarding/fresh-clone-log.txt` exists with a PASS verdict
-from a temp-dir clone-and-run.
-
-**Why the deliverable matters**: this file's lesson contract
-(infrastructure-vs-outcome) says infra subgoals alone don't
-complete a goal.  "Clone-and-go" reproducibility is exactly the
-kind of claim that the existing portability paragraph in README
-makes without evidence; the deliverable forces that claim to be
-verified against a real fresh tree on disk.
+> Empty active goal is a **signal for the user**, not a license for
+> the agent to invent goals.  When you (the user) set the next goal,
+> replace this block with a one-sentence description + a deliverable
+> subgoal that names a concrete artifact (file path / verdict / frame).
 
 #### Past-goal reference (read-only)
 
@@ -134,6 +75,89 @@ _(promoted to Active goal below by user direction "일단 다하고 있어봐"
 ## Past goals
 
 _Migrated from "Active goal" on housekeeping pass; most recent first._
+
+### 2026-05-16 | Clone-and-go reproducibility | **ACHIEVED**
+
+_(2026-05-16 14:00 KST — fresh-clone test ran from
+`https://github.com/MelonS/MelonS-Agents.git` HTTPS into a temp dir
+and produced `short.mp4` (7 MB) on attempt 1.  Total elapsed
+clone → PASS: ~30 s.)_
+
+_One sentence_: a stranger pulling the public repo from GitHub
+reaches a passing mission output (a real 9:16 short under their
+own machine's `records/`) using only the README, with no follow-up
+questions to the maintainer.
+
+**Subgoals (all ticked)**:
+
+- [x] **`.env.example` is host-agnostic** — every `*_BIN` var blank
+      by default with install hint comments; `agents/lib/env.sh`
+      resolves blanks via `command -v` (and, for ffmpeg, prefers a
+      libass-enabled binary by checking the ffmpeg-full keg too).
+      Shipped `692c755`.
+- [x] **Prerequisite checker** — `scripts/bootstrap.sh` rewritten:
+      checks all five required CLIs (ffmpeg, ffprobe, whisper-cli,
+      ollama, yt-dlp), prints OS-specific install hints for missing
+      ones (`brew install ffmpeg-full` on macOS, `apt install
+      ffmpeg` on Linux, etc.), verifies ffmpeg has libass,
+      auto-fetches the whisper model + ollama highlight model,
+      exits non-zero on missing pieces.  Shipped `692c755`.
+- [x] **Whisper.cpp model auto-fetch** —
+      `scripts/fetch-whisper-model.sh` downloads
+      `ggml-<variant>.bin` from huggingface.co/ggerganov/whisper.cpp
+      idempotently.  Bootstrap calls it when `$WHISPER_MODEL` is
+      missing.  Shipped `692c755`.
+- [x] **README "Prerequisites" + HTTPS clone** — new block before
+      Quick start lists macOS / Linux options, Homebrew, Apple
+      Silicon vs libx264 fallback, ~3 GB disk.  Quick start shows
+      both HTTPS and SSH clone URLs.  Mirrored in `README.ko.md`.
+      Shipped `692c755`.
+- [x] **Honest Platform support note** — replaced the thin
+      "Portability" paragraph with a 4-row table showing exactly
+      what works on macOS vs Linux: mission execution (both),
+      `h264_videotoolbox` (macOS only, falls back), `bootstrap.sh`
+      `say`-fixtures (macOS only), `launchd` schedulers (macOS only;
+      systemd / cron suggested for Linux).  Mirrored in
+      `README.ko.md`.  Shipped `692c755`.
+- [x] **Deliverable — fresh-clone simulator + PASS evidence** —
+      `scripts/test-fresh-clone.sh` clones the public repo into
+      a temp dir, runs bootstrap + one highlight mission against
+      the Sintel CC-BY-3.0 trailer, asserts a `short.mp4` ≥ 1 MB,
+      appends a PASS / FAIL line to
+      [`docs/onboarding/fresh-clone-log.txt`](onboarding/fresh-clone-log.txt).
+      First run logged FAIL (uncovered the libass packaging gotcha
+      below); second run after the env.sh fix logged PASS with a
+      7 MB short.mp4 produced in ~30 s.  Shipped `6349039`.
+
+**Real defect uncovered + fixed inside this goal**:
+
+Homebrew silently split `ffmpeg` into a regular formula (no longer
+includes libass) and `ffmpeg-full` (keg-only, includes libass plus
+many others).  `brew install ffmpeg` on a stranger's machine now
+produces a build that can't burn captions — the project's caption
+pipeline would silently fail without diagnosis.
+
+Two fixes shipped:
+1. `agents/lib/env.sh` walks a candidate list and prefers any
+   ffmpeg whose `-version` mentions libass; falls back to the
+   ffmpeg-full keg path (`/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg`
+   on macOS) when PATH ffmpeg lacks libass.  No `.env` edit needed
+   after `brew install ffmpeg-full`.
+2. `scripts/bootstrap.sh` libass-missing hint upgraded to point at
+   `brew install ffmpeg-full` specifically, and `.env.example`
+   install comment updated to match.
+
+**Done when**: subgoals 1–6 all checked AND
+`docs/onboarding/fresh-clone-log.txt` exists with a PASS verdict
+from a temp-dir clone-and-run.  Both met on 2026-05-16 14:00 KST.
+
+**Lesson preserved**: deliverable subgoals catch real defects.  This
+goal's six subgoals would have passed pure-infra inspection
+(.env.example clean, scripts present, README updated) without
+revealing the Homebrew libass split.  Only running the *actual*
+clone-to-output sequence on a clean tree surfaced the gap.  Every
+future goal in this file gets a deliverable subgoal that exercises
+the full path, not just the boundary.
 
 ### 2026-05-16 (later) | Real Korean celebrity video + visual bug pass | **ACHIEVED**
 

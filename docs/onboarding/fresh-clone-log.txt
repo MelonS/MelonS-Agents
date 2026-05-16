@@ -1,0 +1,2 @@
+2026-05-16 13:54:48 +0900  FAIL  remote=https://github.com/MelonS/MelonS-Agents.git  reason="bootstrap.sh exited non-zero"
+2026-05-16 14:00:59 +0900  PASS  remote=https://github.com/MelonS/MelonS-Agents.git  short=records/missions/2026-05-16/highlight-140030/outputs/short.mp4  size=7MB

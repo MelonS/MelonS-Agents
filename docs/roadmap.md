@@ -68,6 +68,27 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-16** (afternoon, 14:00 KST) **Clone-and-go reproducibility
+  goal achieved.**  A stranger cloning the public repo from GitHub
+  HTTPS reaches a passing `short.mp4` on their own machine via
+  `bootstrap.sh` + one mission run.  Six subgoals landed across
+  `692c755` (host-agnostic `.env.example`, prereq-aware bootstrap
+  with OS-specific install hints, whisper-model auto-fetch,
+  Prerequisites + Platform-support sections in README EN/KO, goal
+  decomposition) and `6349039` (env.sh smart ffmpeg discovery —
+  prefers libass-enabled build, falls back to the ffmpeg-full keg
+  on macOS).  Deliverable artifact:
+  [`docs/onboarding/fresh-clone-log.txt`](onboarding/fresh-clone-log.txt) —
+  two-line append log showing the diagnostic narrative (first run
+  FAIL caught the Homebrew libass packaging change; second run PASS
+  after env.sh fix).  Verified against
+  `https://github.com/MelonS/MelonS-Agents.git`: 7 MB `short.mp4`
+  produced in ~30 s.  Goal migrated to `docs/goal.md` Past goals.
+  **Real defect uncovered**: Homebrew split `ffmpeg` (regular, no
+  libass) and `ffmpeg-full` (keg-only, includes libass).  Plain
+  `brew install ffmpeg` no longer suffices for the caption pipeline;
+  `env.sh` now auto-detects the ffmpeg-full keg path and the
+  bootstrap hint points there explicitly.
 - **2026-05-16** (overnight, 01:52 KST) **First real-CC end-to-end short
   produced.**  This is the actual delivery of yesterday's "alien
   aesthetic 탈출" goal — every piece of infrastructure shipped over
