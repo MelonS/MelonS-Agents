@@ -52,6 +52,27 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-16** (afternoon, 16:51 KST) **Post-goal cleanup + manual
+  audit pass.**  Five follow-up commits after the clone-and-go goal
+  landed, plus one manual-audit-driven fix commit:
+  - `8aa850c`  scripts/setup-venv.sh + chart-regen pointer
+    so a stranger who wants to refresh `docs/metrics/*.png` after
+    new missions has a one-line bootstrap path.
+  - `394be57`  for-analysts.md "Reproducibility evidence" section;
+    README EN/KO Status entries refreshed.
+  - `5560348`  Second PASS line in fresh-clone-log.txt — re-verified
+    the clone-and-go path after the polish commits, still
+    passes in ~30 s.
+  - `ae8eba9`  docs/known-limitations.md restructured for the
+    ffmpeg-full default; README Toolchain line replaced its
+    "static libass build" phrasing with the actual install
+    command per OS.
+  - `ce9e158`  manual audit (DRIFT_DETECTED) cleared: for-analysts
+    auditor row added, 11 missing 2026-05-15 commit hashes
+    backfilled, roadmap Now resume notes rewritten to current
+    post-goal state, generative-AI exploration parked in
+    docs/ideas.md.  Re-audit at 16:51 returned CLEAN;
+    `docs/audit/CURRENT-ALERT.md` self-cleared.
 - **2026-05-16** (afternoon, 14:00 KST) **Clone-and-go reproducibility
   goal achieved.**  A stranger cloning the public repo from GitHub
   HTTPS reaches a passing `short.mp4` on their own machine via

@@ -12,7 +12,11 @@ Read order:
 3. [`architecture.md`](architecture.md) — full data-flow map.
 4. [`operator-contract.md`](operator-contract.md) — the *behavioral*
    rules the agent operates under.
-5. [`roadmap.md`](roadmap.md) — current focus + queued + done.
+5. [`goal.md`](goal.md) + [`roadmap.md`](roadmap.md) — outcome layer
+   + work queue.  Goal is read first by sessions that ask for work.
+6. [`ideas.md`](ideas.md) — v2+ parking log.  Useful for "what was
+   considered and deferred, and why" — anything *not* in the active
+   roadmap that's been thought about lives here.
 
 Each downstream file is self-contained.  You should not need to read
 agent source to give a useful first-pass review.
