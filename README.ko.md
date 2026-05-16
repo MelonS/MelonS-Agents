@@ -82,6 +82,21 @@
 어트리뷰션 오버레이, 9:16 letterbox-blur 배경, 하단 safe-zone
 박스 안의 libass 번인 자막.
 
+### Faceless 파일럿 (영어 + 한국어 A/B)
+
+`faceless-short` 미션은 토픽 프롬프트만으로 60초 완성본을 산출합니다 — 입력 영상 없음.  파이프라인: ollama가 내레이션 스크립트 초안 → Kokoro-ONNX (한국어는 macOS Yuna) 음성 합성 → whisper.cpp 타이밍 전사 → 스크립트 정합 캡션 교정 → ollama가 6개 시각 검색어 추출 → Pexels Videos API에서 B-roll 수집 → ffmpeg가 트림·9:16 크롭·libass 자막 번인·출처 오버레이까지 완성.
+
+같은 토픽을 두 가지 언어로 렌더해 동일 B-roll 위에서 음성+자막 차이만 비교할 수 있게 만들어 두었습니다:
+
+| | 히타이트 (역사 × 성경) | 수소 (과학) |
+|---|---|---|
+| EN | ![히타이트 EN — 9:16 풀화면, 이집트 양식 벽 부조 B-roll 위 영어 자막](docs/pilots/screens/hittites-en-caption-verify.jpg) | ![수소 EN — 9:16 풀화면, 물방울 매크로 B-roll 위 영어 자막](docs/pilots/screens/hydrogen-en-caption-verify.jpg) |
+| KO | ![히타이트 KO — EN과 동일한 B-roll, AppleGothic 한국어 자막, macOS Yuna 음성](docs/pilots/screens/hittites-ko-caption-verify.jpg) | ![수소 KO — EN과 동일한 B-roll, 한국어 자막, Yuna 음성](docs/pilots/screens/hydrogen-ko-caption-verify.jpg) |
+
+한국어 버전은 `FACELESS_REUSE_BROLL=<en_mission_dir>` 환경 변수로 영어 파일럿의 이어붙인 B-roll을 그대로 복사 — 영상은 동일, 음성+자막만 교체되어 비교가 순수한 언어 차원에서만 이뤄집니다.
+
+A/B 제작 노트, 플랫폼별 업로드 메타데이터, 다음 10개 토픽 큐는 모두 [`docs/pilots/`](docs/pilots/) 아래에 있습니다.  파일럿당 한계 비용: **$0** (Pexels 무료 티어, 그 외 단계는 모두 로컬).
+
 ### 최근 미션
 
 | 미션 | 타입 | 소스 | 출력 | 총 소요 | QA |
@@ -90,6 +105,8 @@
 | `highlight-024629` | highlight | 한국어 강의 fixture | 49 초 9:16 숏 (13.0 MB) | 53.8 초 | 첫 시도 PASS |
 | `shorts-batch-024840` | shorts-batch | Sintel 720p · Blender CC-BY-3.0 | 2 숏 (44 초 + 36 초) | 59.6 초 | 첫 시도 PASS |
 | `summarize-025121` | summarize | Sintel 1080p · Blender CC-BY-3.0 | EN + KO `summary.md` (551 B) | — | 첫 시도 PASS |
+| `faceless-hittites-000112` | faceless-short | 토픽 프롬프트 (역사 × 성경) + Pexels B-roll | 55.2 초 9:16 숏 (42 MB) | ~2 분 | 첫 시도 PASS |
+| `faceless-hittites-ko-000654` | faceless-short | 한국어 스크립트 + Yuna 음성 + EN B-roll 재사용 | 52.9 초 9:16 숏 (40 MB) | ~50 초 | 첫 시도 PASS |
 | `highlight-203219` | highlight | 초기 개발 fixture | 30 초 숏 | 73.2 초 | **FAIL** — QA 게이트, 재시도 소진 |
 
 마지막 행은 의도된 것입니다 — QA 게이트는 형식적 검사가 아닙니다.
@@ -215,7 +232,10 @@ PATH에 도구가 설치되어 있으면 충분. 필요할 때만 `.env`에서 o
 
 `ffmpeg` (libass 포함 빌드 — macOS는 `brew install ffmpeg-full`,
 Linux는 `apt install ffmpeg`) · `yt-dlp` · `whisper.cpp` (`small`,
-다국어) · `ollama` (`llama3.2:3b`) · 오케스트레이션용 Claude API.
+다국어) · `ollama` (`llama3.2:3b`) · `Kokoro-ONNX` (TTS, Apache 2.0 —
+faceless-short 내레이션) · macOS `say` (한국어 + fallback 음성) ·
+Pexels Videos API (무료 티어 — faceless-short B-roll) · 오케스트레이션용
+Claude API.
 
 ## 사전 요구사항
 
@@ -295,7 +315,8 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 - [x] 배치 실행기 (scripts/batch-mission.sh)
 - [x] 로직 변경 시 origin/main 자동 커밋 + 자동 푸시
 - [x] 자율 모드용 야간 launchd 스케줄러
-- [x] 3종 미션 운영 가능: highlight, summarize, shorts-batch
+- [x] 4종 미션 운영 가능: highlight, summarize, shorts-batch, faceless-short
+- [x] Faceless-short 파이프라인 — 토픽 프롬프트 → ollama 스크립트 → Kokoro-ONNX TTS (Apache 2.0) → whisper.cpp 타이밍 + 스크립트 정합 캡션 교정 → Pexels B-roll → 9:16 풀화면 렌더; 한국어는 macOS Yuna + AppleGothic.  파일럿 증거: [`docs/pilots/`](docs/pilots/)
 - [x] 단일 패스 ffmpeg 렌더링 (~3× 렌더 속도 향상)
 - [x] 이중 언어 요약 미션 (전사 → 구조화된 EN+KO 요약)
 - [x] 미션별 비용 / 실행 시간 메트릭

@@ -84,6 +84,21 @@ Foundation — `durian.blender.org`). Top-left source-attribution
 overlay, 9:16 letterbox-blur background, libass-burned caption
 inside the bottom safe-zone box.
 
+### Faceless pilots (English + Korean A/B)
+
+The `faceless-short` mission produces a complete 60-second short from a topic prompt alone — no input video.  Pipeline: ollama drafts the narration script → Kokoro-ONNX (or macOS Yuna for Korean) synthesizes voice → whisper.cpp transcribes for timing → script-aware caption correction → ollama extracts 6 visual search terms → Pexels Videos API fetches B-roll → ffmpeg trims, crops to 9:16, burns libass captions and an attribution overlay.
+
+Each topic is rendered in two language variants so the operator can A/B voice + caption rendering on identical B-roll:
+
+| | Hittites (history × Bible) | Hydrogen (science) |
+|---|---|---|
+| EN | ![Hittites EN — 9:16 screen-fill, English captions over Egyptian-style wall carving B-roll](docs/pilots/screens/hittites-en-caption-verify.jpg) | ![Hydrogen EN — 9:16 screen-fill, English captions over water-droplet macro B-roll](docs/pilots/screens/hydrogen-en-caption-verify.jpg) |
+| KO | ![Hittites KO — same B-roll as EN, Korean captions rendered with AppleGothic, macOS Yuna voice](docs/pilots/screens/hittites-ko-caption-verify.jpg) | ![Hydrogen KO — same B-roll as EN, Korean captions and Yuna voice](docs/pilots/screens/hydrogen-ko-caption-verify.jpg) |
+
+The Korean variant reuses the English pilot's exact stitched B-roll via `FACELESS_REUSE_BROLL=<en_mission_dir>` — same visuals, swapped audio + captions, so the comparison is purely a function of voice + language.
+
+A/B production notes, per-platform upload metadata, and the next-10 topic queue all live under [`docs/pilots/`](docs/pilots/).  Per-pilot cost: **$0** (Pexels free tier, all other stages local).
+
 ### Recent missions
 
 | Mission | Type | Source | Output | Wall time | QA |
@@ -92,6 +107,8 @@ inside the bottom safe-zone box.
 | `highlight-024629` | highlight | Korean lecture fixture | 49 s 9:16 short (13.0 MB) | 53.8 s | PASS attempt 1 |
 | `shorts-batch-024840` | shorts-batch | Sintel 720p · Blender CC-BY-3.0 | 2 shorts (44 s + 36 s) | 59.6 s | PASS attempt 1 |
 | `summarize-025121` | summarize | Sintel 1080p · Blender CC-BY-3.0 | EN + KO `summary.md` (551 B) | — | PASS attempt 1 |
+| `faceless-hittites-000112` | faceless-short | topic prompt (history × Bible) + Pexels B-roll | 55.2 s 9:16 short (42 MB) | ~2 min | PASS attempt 1 |
+| `faceless-hittites-ko-000654` | faceless-short | Korean script + Yuna voice + reused EN B-roll | 52.9 s 9:16 short (40 MB) | ~50 s | PASS attempt 1 |
 | `highlight-203219` | highlight | earlier dev fixture | 30 s short | 73.2 s | **FAIL** — QA gate, retry exhausted |
 
 The final row is intentional: the QA gate isn't theatre. On
@@ -219,8 +236,10 @@ Defined in [`config/policies.yaml`](config/policies.yaml).
 
 `ffmpeg` (libass-enabled — `brew install ffmpeg-full` on macOS,
 `apt install ffmpeg` on Linux) · `yt-dlp` · `whisper.cpp`
-(`small`, multilingual) · `ollama` (`llama3.2:3b`) · Claude API for
-orchestration.
+(`small`, multilingual) · `ollama` (`llama3.2:3b`) · `Kokoro-ONNX` (TTS,
+Apache 2.0 — faceless-short narration) · macOS `say` (Korean +
+fallback voice) · Pexels Videos API (free tier — faceless-short B-roll) ·
+Claude API for orchestration.
 
 ## Prerequisites
 
@@ -301,7 +320,8 @@ Full contract: see [`CLAUDE.md`](CLAUDE.md) and the [`config/policies.yaml`](con
 - [x] Batch runner (scripts/batch-mission.sh)
 - [x] Auto-commit + auto-push of every logic change to origin/main
 - [x] Nightly launchd scheduler for autonomous mode
-- [x] Three mission types operational: highlight, summarize, shorts-batch
+- [x] Four mission types operational: highlight, summarize, shorts-batch, faceless-short
+- [x] Faceless-short pipeline — topic prompt → ollama script → Kokoro-ONNX TTS (Apache 2.0) → whisper.cpp timing + script-aware caption correction → Pexels B-roll → 9:16 screen-fill render; Korean variant via macOS Yuna + AppleGothic.  Pilot evidence: [`docs/pilots/`](docs/pilots/)
 - [x] Single-pass ffmpeg render (~3× render speedup)
 - [x] Bilingual summarize mission (transcribe → structured EN+KO summary)
 - [x] Cost / runtime metrics per mission
