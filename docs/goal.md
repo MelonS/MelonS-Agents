@@ -16,14 +16,62 @@ exists and matches the "Done when" criteria below.
 
 ## Active goal
 
-**Goal**: _(empty — previous goal "Clone-and-go reproducibility"
-achieved on 2026-05-16 14:00 KST and migrated to Past goals.
-Set by user when the next focus is chosen.)_
+### 2026-05-16 | Faceless pilot A/B — science vs Bible-history | _in progress_
 
-> Empty active goal is a **signal for the user**, not a license for
-> the agent to invent goals.  When you (the user) set the next goal,
-> replace this block with a one-sentence description + a deliverable
-> subgoal that names a concrete artifact (file path / verdict / frame).
+_(2026-05-16 evening — operator picked "make one of each and decide
+on the actual output" after long-form discussion about niche
+selection.  Project frame was clarified: not a portfolio demo, but
+a real shorts-account growth attempt — final output and platform
+performance are the deliverable.  Pilot phase precedes the real
+account work to validate niche fit on observable artifacts.)_
+
+_One sentence_: produce one 60-second faceless short for each of
+two candidate niches — science (Hydrogen, English) and Bible-history
+(The Hittites, English, neutral-documentary tone) — using a new
+`faceless-short` mission template, so the operator can pick the
+niche from real watchable output rather than abstract preference.
+
+**Subgoals (acceptance signals)**:
+
+- [ ] **`faceless-short` mission template shipped** —
+      `agents/missions/faceless-short/run.sh` + supporting lib.
+      Script-driven pipeline (input = topic + tone): ollama
+      generates 60 s script with beats → macOS `say` TTS narrates
+      → script beats map to Pexels search terms → `pexels-fetch.sh`
+      pulls B-roll per beat → ffmpeg multi-clip stitcher syncs cuts
+      to TTS timing → whisper.cpp transcribes the TTS audio for
+      SRT → ffmpeg burns captions over the stitched footage.  No
+      paid APIs (KlingAI / ElevenLabs / etc.) used in pilot phase.
+- [ ] **Pilot 1 deliverable — Hittites short** —
+      9:16 60 s mp4 + caption-verify frame committed to
+      `docs/pilots/`.  Neutral documentary tone.  Hook = "biblical
+      kingdom dismissed as legend until 1906".
+- [ ] **Pilot 2 deliverable — Hydrogen short** — 9:16 60 s mp4 +
+      caption-verify frame committed to `docs/pilots/`.  Curiosity
+      tone.  Hook = "75 % of the universe and 10 % of your body".
+- [ ] **Operator decision logged** — `docs/pilots/decision-log.md`
+      records which pilot the operator picks + a one-line reason
+      (preference, perceived viewer fit, perceived production
+      energy).  This is the goal's terminal artifact.
+
+**Done when**: both pilots committed AND `decision-log.md` shows
+the operator's pick.
+
+**Why pilot before commit**: niche selection on paper kept stalling
+between "science (background expertise) vs history (consumer pattern)".
+Real artifact in hand resolves the deadlock.  Pilot output also
+de-risks the larger faceless infrastructure investment — if the
+output quality at $0 cost path is unwatchable, the whole faceless
+approach gets reconsidered before the 80-episode series commitment.
+
+**Tier 1 / Tier 2 stance for pilot**: $0 Tier 2 only — ollama,
+say, whisper, ffmpeg, Pexels API (free tier).  KlingAI / ElevenLabs
+intentionally deferred to post-pilot to keep the niche-test cheap.
+
+**Not in scope for this goal**: character generation (the
+periodic-elements 정령 캐릭터 idea from earlier in the day), real
+account creation, real upload + performance tracking.  Those land
+after a niche is chosen.
 
 #### Past-goal reference (read-only)
 
