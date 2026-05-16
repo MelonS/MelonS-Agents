@@ -57,6 +57,56 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-17** (overnight, ~04:00 KST) **Reactive auditor L1 + L2
+  + README full-file review pass + operator-contract HOW rule.**
+  Operator flagged two systemic problems in one session:
+  (1) auditor only runs daily 03:00 + manual — drift can exist for
+  up to 24h before catch; (2) README updates are append-only,
+  existing sections silently rot (mission count "15" while reality
+  is 32, animated preview showcasing last week's highlight while
+  faceless is the current focus, recent-runs table missing the v4/v5
+  pilots, charts unchanged, KO B-roll description directly contradicting
+  v4 per-language-keyword behaviour).
+  - **L1** (`scripts/hooks/post-commit.sh` via
+    `scripts/install-hooks.sh`): git post-commit hook fires
+    `audit-run.sh contract` in background when a commit touches
+    drift-risk paths (`agents/`, `.claude/agents/`, `config/`,
+    `CLAUDE.md`, `docs/operator-contract.md`, `scripts/audit-run.sh`,
+    `.claude/settings.json`).  End-to-end validated: commit `7c6ff4f`
+    touched `docs/operator-contract.md` and the hook fired
+    `[audit-hook] firing audit-run.sh contract in background after
+    7c6ff4f` on stdout.  Trigger logged at
+    `records/audit/hook-trigger.log`.
+  - **L2** (`scripts/audit-poll.sh` via
+    `com.melons.agents.audit-poll.plist`, loaded by
+    `install-scheduler.sh install audit-poll`): 15-min poll
+    detects NEW BLOCKER (any new file in `records/blockers/<date>/`)
+    + QA-FAIL BURST (≥2 mission qa-report.md with `Verdict: FAIL`
+    within 60 min).  Fires audit-run.sh with the appropriate focus.
+    First-run mode seeds the seen-blockers list with existing files
+    and does NOT fire — stops false-positive on pre-install state.
+  - **Observer pattern rejected** — subagents in this repo aren't
+    long-running observables; communication is via files.  Reactor
+    + Hook patterns are the actual fit.  Pushed back honestly on
+    Gemini's pattern recommendation before implementing.
+  - **README full review** EN + KO: mission count rederived, lead
+    showcase swapped to faceless v5, pipeline prose synced with
+    shipped code (8 windows not 6, caption-split step documented),
+    KO B-roll description rewritten to match v4 reality, Recent
+    missions table rotated to current week, chart scope explicitly
+    labelled "v1 highlight only".
+  - **operator-contract.md HOW rule**: Conventions / README
+    maintenance now defines a 9-item full-file checklist that runs
+    every time a cadence trigger fires — stops the append-only
+    failure mode.  Also §5 — defined `Requested-by: user` commit
+    footer as the audit-trail marker.
+  - **Audit-cleanup commit** (`fbf3d70`) before the L1/L2 build:
+    cleared stale `docs/audit/CURRENT-ALERT.md` lifecycle bug,
+    fixed §8 hardcoded-path comment in `scripts/statusline.sh`,
+    normalized `.claude/settings.json` double-slash permission
+    patterns (`//Users/...` → `/Users/...`), added §8 exception
+    comment to `scripts/audit-run.sh` launchd-fallback loop.
+    Audit re-run after this verified CLEAN.
 - **2026-05-17** (overnight, ~03:30 KST) **v5 pilots — single-line
   caption enforcement, 2-line opaque-box overlap eliminated.**
   Operator feedback after watching the v4 pilots: caption boxes from
