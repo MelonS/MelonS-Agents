@@ -232,6 +232,42 @@ The protocol mirrors the session-resume protocol (§10) so that the
 A clean shutdown is the cheapest way to make tomorrow's first turn
 cheap.
 
+### 12. No PII or secrets in repo-bound data
+
+This repo is public and actively promoted.  Any byte that may end
+up under `origin/main` must be free of personal information and
+credentials — of the operator, of third parties, of anyone.
+
+- **Personal identifiers**: real names, employer names, private
+  project names, contact info (email / phone / messenger handles)
+  of the operator or of anyone the operator talks to — stripped
+  before write.
+- **Credentials**: API keys, tokens, passwords, OAuth secrets,
+  webhook URLs containing tokens — never committed, even
+  temporarily.  `.env` stays gitignored; `.env.example` is
+  schema-only.
+- **Source material**: chat exports, screenshots, scraped pages,
+  field-note transcripts go under `$RECORDS_DIR` (gitignored) or
+  outside the repo path entirely (e.g., `~/Downloads/`).  Never
+  drop raw source files into `docs/` or `agents/`.
+- **Agent memory is at risk too.**
+  `~/.claude/projects/-Users-melons-ai/memory/` is local today,
+  but entries may be migrated to repo-tracked storage in the
+  future (machine-swap durability).  Apply the same scrubbing
+  rules to memory files as to committed docs.  If a name or
+  credential would be wrong to commit, it is wrong to write into
+  memory.
+- **Synthesis is preferred over excerpts.**  When recording
+  external conversations, distill the *pattern* (anonymized) into
+  `docs/research/` and discard the raw source.  An anonymized
+  synthesis survives review; a raw quote with names does not.
+- **Embarrassment test**: before writing, ask "would I want this
+  on the public GitHub project page?"  If no, scrub or move it
+  out of repo scope.
+
+The rule applies regardless of file location.  Local-only storage
+is a weak guarantee, not a license to write whatever.
+
 ---
 
 ## Conventions
