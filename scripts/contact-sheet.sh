@@ -6,7 +6,10 @@ set -u
 MDIR="${1:-}"
 [[ -z "$MDIR" || ! -d "$MDIR/outputs" ]] && { echo "usage: $0 <records/missions/.../shorts-batch-*>"; exit 64; }
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
-: "${FFMPEG_BIN:=/Users/melons/.local/opt/ffmpeg-static/ffmpeg}"
+# Resolve FFMPEG_BIN via the project's env loader (auto-discovers a
+# libass-enabled ffmpeg via command -v / ffmpeg-full keg).
+# shellcheck disable=SC1091
+source agents/lib/env.sh
 
 # Extract one frame per short
 TMP="$(mktemp -d)"

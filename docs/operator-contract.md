@@ -90,9 +90,10 @@ the subagent contracts; changing them changes the system's logic.
 
 ### 6. Git workflow — auto-commit, auto-push
 
-Every code change (anything under `agents/`, `.claude/agents/`,
-`config/`, `scripts/`, `CLAUDE.md`, `README.md`, `.env.example`,
-`.gitignore`) is committed and pushed to `origin/main` on completion.
+Every code or doc change (anything under `agents/`, `.claude/agents/`,
+`config/`, `scripts/`, `docs/`, `CLAUDE.md`, `README.md`,
+`README.ko.md`, `.env.example`, `.gitignore`) is committed and
+pushed to `origin/main` on completion.
 
 - Remote: `git@github.com:MelonS/MelonS-Agents.git` (private).
 - Records (`records/`) are never committed.

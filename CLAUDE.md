@@ -18,7 +18,7 @@ Why the split: 2026-05-15 → 2026-05-16 produced 11 commits of infrastructure w
 - If both goal subgoals and roadmap queues are clean, promote "Next" → "Now"; if both are empty, surface that state to the user rather than making up work.
 - After work lands, append a one-line entry to `docs/roadmap.md` "Done" with the commit hash and date; tick any goal subgoals the work cleared.
 - If `docs/audit/CURRENT-ALERT.md` exists, read it before picking up the goal — it means the last audit run flagged drift or a critical issue, which may bump priority above the goal queue.
-- Subagents (orchestrator, planner, resourcer, editor, qa) do **not** read `docs/goal.md` or `docs/roadmap.md`. Day-level decisions belong to the top-level conversation; subagents stay pure functions of the mission prompt they receive.
+- Subagents (orchestrator, planner, resourcer, editor, qa, auditor) do **not** read `docs/goal.md` or `docs/roadmap.md`. Day-level decisions belong to the top-level conversation; subagents stay pure functions of the mission prompt (or, for `auditor`, the focus arg) they receive.
 
 ## Operating rules
 
@@ -55,6 +55,7 @@ Defined in `.claude/agents/`. Orchestrator delegates via the Agent tool.
 | `resourcer` | Fetch assets, run external tools |
 | `editor` | Apply changes, write outputs |
 | `qa` | Validate outputs, regressions |
+| `auditor` | Out-of-band read-only audit (daily 03:00 via launchd) — `docs/audit/<date>-<focus>.md` + `CURRENT-ALERT.md` when non-CLEAN |
 
 ## Records layout
 
