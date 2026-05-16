@@ -41,6 +41,77 @@ _(none yet)_
 
 ## Pipeline + Infrastructure
 
+### 2026-05-16 | Domain-pivot portability — framework vs vertical split | L
+
+**Motivation**: this repo is currently optimized for short-form video
+production, but the operator may pivot to other domains later (job-
+application automation, game development, etc.).  Pre-decision note
+on how the current design holds up under domain change — recorded
+now so future-us doesn't have to re-derive the analysis when a
+pivot becomes concrete.
+
+**Domain-neutral surface (~60% of the repo, survives any pivot)**:
+- Mission directory layout (`records/missions/<date>/<id>/{plan.md,
+  resources/, outputs/, qa-report.md, summary.md}`)
+- Subagent pattern (orchestrator/planner/resourcer/editor/qa/auditor)
+  + file-based handoff
+- Tier 1 / Tier 2 cost firewall concept
+- Operator contract (12 hard rules — money firewall, never-pause,
+  PII, auto-commit, dual-stack reporting are all domain-agnostic)
+- `goal.md` / `roadmap.md` / `ideas.md` three-layer planning
+- Audit subagent + drift detection
+- Shared libs: `env.sh`, `log.sh`, `retry.sh`, `ollama.sh`
+
+**Domain-bound surface (~40%, rewritten per pivot)**:
+- `agents/lib/{ffmpeg,whisper,attribution,copyright}.sh`
+- Mission templates (`highlight`, `summarize`, `shorts-batch`)
+- `scripts/publish-gate.sh` + `config/copyright-allowlist.yaml`
+- `LAYOUT_*` env vars, caption-verify frames, chart code
+- README / architecture vocab tied to video
+
+**Real gaps the current design will hit on pivot** (not bugs today;
+become bugs in a new domain):
+1. **No cross-mission persistent state store** — `records/` holds
+   single-run outputs.  "Have I applied to this company already?" or
+   "Which characters has this game generated?" has nowhere to live
+   except git log.  Likely needs SQLite or a flat JSON registry.
+2. **Outbound-only I/O** — yt-dlp / curl / ffmpeg are all outbound
+   shell-outs.  No inbound webhook / API path.  Job-app reply
+   tracking would need a small FastAPI listener.
+3. **No interactive browser automation in mission libs** —
+   Playwright MCP exists at the agent level, but isn't usable from
+   inside a mission's `run.sh`.  Job sites + SPA forms need it.
+4. **Weak human-in-the-loop gate at publish** — video QA PASS auto-
+   approves publish.  Job-app submission probably wants explicit
+   confirmation per action (parallel to money firewall, but for
+   irreversible non-money actions).
+5. **Game dev domain distance is large** — Unity/Godot toolchains,
+   binary asset LFS, build pipelines have ≈ 0% overlap with current
+   video stack.
+
+**Same-repo-vs-new-repo decision rule** (drafted; revisit per pivot):
+- **Same repo** when tool overlap > 50% AND assets are text/JSON/
+  small media AND portfolio narrative survives the merge.
+- **New repo** when tool overlap < 25% OR assets need git-lfs OR
+  domain story gets muddled in one README.
+- Current tentative reads: **job-app automation → same repo**
+  (ollama + curl + playwright reuse, all-text assets);
+  **game development → new repo** (Unity/Godot zero overlap, binary
+  assets force LFS, story muddle).
+
+**Dependencies**: a concrete pivot direction from the operator.
+None pending right now; this is documentation, not work.
+
+**Estimated cost**: 0 for this note.  Per-pivot integration cost
+estimated separately when a pivot lands.
+
+**Status**: parked.  No domain pivot is confirmed.  When one does
+become concrete, re-read this entry first, pick the gaps that
+apply to the target domain, and address them before the migration
+rather than during it.
+
+---
+
 ### 2026-05-16 | 4-tier autonomy model (replace Layer 1 / Layer 2 binary) | M
 
 **Motivation**: the current "Layer 1 (main conversation) decides
