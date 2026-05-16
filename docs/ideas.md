@@ -41,7 +41,66 @@ _(none yet)_
 
 ## Pipeline + Infrastructure
 
-_(none yet)_
+### 2026-05-16 | 4-tier autonomy model (replace Layer 1 / Layer 2 binary) | M
+
+**Motivation**: the current "Layer 1 (main conversation) decides
+everything, Layer 2 (subagents) are pure functions of their prompt"
+model is too coarse, and operator caught it.  The auditor already
+runs **partially independent**: launchd wakes it without Layer 1,
+it makes real autonomous judgments (severity classification, verdict
+synthesis), and writes to a stable channel
+(`docs/audit/CURRENT-ALERT.md`) that the next Layer 1 session is
+contractually obliged to read.  Calling that "Layer 2" undersells
+its actual separation.
+
+The single-Layer-1 model also creates real problems:
+- Layer 1 = single point of decision-making.  When no session is
+  active, priority-judgment stops.  A CRITICAL audit alert can sit
+  unread for days if sessions are sparse.
+- Three operationally-different kinds of work (real-time
+  decisions / mission decomposition / periodic monitoring) all
+  forced through the same orchestration path.
+- The setup assumes one machine + one operator + frequent sessions.
+  Multi-machine deployment (e.g., Mac orchestrator + Linux GPU
+  worker) doesn't fit.
+
+**Sketch — four explicit autonomy tiers**:
+
+| Tier | Pattern | Examples | Autonomy scope |
+|------|---------|----------|----------------|
+| **Interactive** | user conversation | main conversation Claude | day-level decisions, goal selection |
+| **Mission** | invoked per task | orchestrator + planner / resourcer / editor / qa | mission decomposition, task-scoped autonomy |
+| **Monitor** | scheduled / event-triggered | auditor (today); future cost-watcher / backup-watcher | observe state, classify, alert; reversible auto-fix within own domain (e.g., regenerate metrics, clear empty dirs) |
+| **Action** | external side-effects | publish.sh / deploy / push to Slack (not built yet) | always behind explicit user OK; money firewall reinforced here |
+
+Auditor would migrate Layer 2 → Monitor tier with slightly expanded
+autonomy: can do reversible self-clearing fixes (metric refresh,
+caption-verify regeneration) but never edits agent definitions or
+external systems.  Mission subagents stay Mission tier.
+
+**Multi-machine readiness (further-future deliverables)**:
+- Replace file-based handoff (`records/`, `docs/audit/`) with a
+  message-queue or RPC layer when more than one host is involved.
+- Decide records sync mechanism (S3 / syncthing / git-lfs — each has
+  trade-offs).
+- Add a push-notification channel for Monitor-tier CRITICAL findings
+  so they don't wait for the next interactive session.
+- Per-tier credentials / scope so a single compromised host doesn't
+  give full system access.
+
+**Dependencies**: v1 fully stabilized; at least two cooperating
+agents running on different schedules in production (Monitor tier
+gets meaningful only when there's enough monitoring volume to
+matter); user-driven push of needing multi-machine.
+
+**Estimated cost**: design-only at first (1 day to write the
+contract); per-component delivery later (~1–2 days each — Monitor
+auto-fix scope, alert escalation channel, multi-host sync).
+
+**Status**: parked (v2+).  Direct operator quote that surfaced this:
+"Layer1이 모든걸 다 판단하는게 맞나 싶기도 하고 ... 감시자 같은건
+사실 어느정도 별개로 돌아야 하는거 아닌가 싶기도 하고".  Captures
+a real architectural ceiling in the v1 design; don't lose it.
 
 ---
 
