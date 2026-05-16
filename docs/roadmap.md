@@ -52,6 +52,36 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-16** (evening, 19:47 KST) **Clone-and-go reproducibility
+  reinforcement — three new variant tests, all PASS.**  Operator
+  asked: "is the clone-and-go path *actually* covered for a stranger,
+  or only on your already-set-up machine?"  Honest answer was "three
+  corners untested".  All three corners now exercised:
+  - `scripts/test-fresh-clone.sh --force-model-download` flag —
+    overrides `WHISPER_MODEL` to a fresh temp path inside the clone
+    so bootstrap calls `fetch-whisper-model.sh` and actually
+    downloads `ggml-small.bin`.  Logged
+    `variant=force-model-download model_download=465MB` PASS.
+    The basic variant had skipped this because the host already
+    had a cached model.
+  - `scripts/test-bootstrap-hints.sh` — runs bootstrap under `env -i`
+    with `PATH=/usr/bin:/bin` so the env.sh `command -v` discovery
+    fails for whisper-cli / ollama / yt-dlp.  Asserts each is
+    flagged missing AND each gets the matching macOS install hint.
+    8 / 8 asserts PASS.  Validates the "stranger with no prereqs"
+    path that fresh-clone test skips on the maintainer's machine.
+  - `scripts/test-fresh-clone-linux.sh` — runs bootstrap inside an
+    `ubuntu:24.04` Docker container with apt-installed
+    ffmpeg / yt-dlp / git / curl.  Asserts apt-supplied ffmpeg's
+    libass check passes, whisper-cli + ollama flagged missing with
+    Linux install hints (`build from source`, `curl ... | sh`),
+    macOS hint phrases (`brew install`) absent.  9 / 9 asserts PASS.
+    Validates the Platform-support claim's Linux side — first
+    actual Linux execution of the bootstrap.
+  Suite log lives at
+  [`docs/onboarding/fresh-clone-log.txt`](onboarding/fresh-clone-log.txt);
+  variants documented in
+  [`docs/onboarding/README.md`](onboarding/README.md).
 - **2026-05-16** (afternoon, 16:51 KST) **Post-goal cleanup + manual
   audit pass.**  Five follow-up commits after the clone-and-go goal
   landed, plus one manual-audit-driven fix commit:

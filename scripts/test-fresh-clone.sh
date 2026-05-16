@@ -27,10 +27,15 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REMOTE="${FRESH_CLONE_REMOTE:-https://github.com/MelonS/MelonS-Agents.git}"
 KEEP="${FRESH_CLONE_KEEP:-0}"
+FORCE_MODEL_DOWNLOAD="${FRESH_CLONE_FORCE_MODEL_DOWNLOAD:-0}"
 STAMP="$(date '+%Y%m%d-%H%M%S')"
 WORK="${TMPDIR:-/tmp}/fresh-clone-${STAMP}"
 LOG_DIR="${REPO_ROOT}/docs/onboarding"
 LOG="${LOG_DIR}/fresh-clone-log.txt"
+VARIANT="basic"
+if [[ "$FORCE_MODEL_DOWNLOAD" == "1" ]]; then
+  VARIANT="force-model-download"
+fi
 
 mkdir -p "$LOG_DIR"
 
@@ -38,16 +43,22 @@ VERDICT="FAIL"
 SHORT_PATH=""
 SHORT_SIZE_MB=""
 FAIL_REASON=""
+MODEL_DOWNLOADED_MB=""
 
 write_log_entry() {
   local ts; ts="$(date '+%Y-%m-%d %H:%M:%S %z')"
   {
     if [[ "$VERDICT" == "PASS" ]]; then
-      printf '%s  PASS  remote=%s  short=%s  size=%sMB\n' \
-        "$ts" "$REMOTE" "${SHORT_PATH#$WORK/}" "$SHORT_SIZE_MB"
+      if [[ "$VARIANT" == "force-model-download" ]]; then
+        printf '%s  PASS  variant=%s  remote=%s  short=%s  size=%sMB  model_download=%sMB\n' \
+          "$ts" "$VARIANT" "$REMOTE" "${SHORT_PATH#$WORK/}" "$SHORT_SIZE_MB" "$MODEL_DOWNLOADED_MB"
+      else
+        printf '%s  PASS  variant=%s  remote=%s  short=%s  size=%sMB\n' \
+          "$ts" "$VARIANT" "$REMOTE" "${SHORT_PATH#$WORK/}" "$SHORT_SIZE_MB"
+      fi
     else
-      printf '%s  FAIL  remote=%s  reason="%s"\n' \
-        "$ts" "$REMOTE" "$FAIL_REASON"
+      printf '%s  FAIL  variant=%s  remote=%s  reason="%s"\n' \
+        "$ts" "$VARIANT" "$REMOTE" "$FAIL_REASON"
     fi
   } >> "$LOG"
 }
@@ -88,11 +99,38 @@ fi
 cd "$WORK"
 echo
 
+# Optional: force the bootstrap to download the whisper model rather
+# than reuse whatever lives in the host's $WHISPER_MODEL.  Exercises
+# the actual fetch path (≈ 466 MB for ggml-small.bin).
+if [[ "$FORCE_MODEL_DOWNLOAD" == "1" ]]; then
+  cp .env.example .env
+  FRESH_MODEL_PATH="${WORK}/whisper-models/ggml-small.bin"
+  sed -i.bak "s|^WHISPER_MODEL=.*|WHISPER_MODEL=${FRESH_MODEL_PATH}|" .env
+  rm -f .env.bak
+  echo "  → forced WHISPER_MODEL=${FRESH_MODEL_PATH} (not present; download will run)"
+  echo
+fi
+
 # --- step 2: bootstrap -------------------------------------------------
 echo "[STEP 2/4] bootstrap"
 if ! ./scripts/bootstrap.sh; then
   FAIL_REASON="bootstrap.sh exited non-zero"
   exit 1
+fi
+
+# Validate the forced download actually produced a model file.
+if [[ "$FORCE_MODEL_DOWNLOAD" == "1" ]]; then
+  if [[ ! -f "$FRESH_MODEL_PATH" ]]; then
+    FAIL_REASON="forced WHISPER_MODEL path missing after bootstrap"
+    exit 1
+  fi
+  local_bytes="$(wc -c < "$FRESH_MODEL_PATH" | tr -d ' ')"
+  MODEL_DOWNLOADED_MB=$(( local_bytes / 1024 / 1024 ))
+  if (( local_bytes < 100000000 )); then
+    FAIL_REASON="forced model download too small: ${local_bytes} bytes"
+    exit 1
+  fi
+  echo "  ✅ model downloaded: ${MODEL_DOWNLOADED_MB} MB at ${FRESH_MODEL_PATH}"
 fi
 echo
 

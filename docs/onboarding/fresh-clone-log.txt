@@ -1,3 +1,6 @@
 2026-05-16 13:54:48 +0900  FAIL  remote=https://github.com/MelonS/MelonS-Agents.git  reason="bootstrap.sh exited non-zero"
 2026-05-16 14:00:59 +0900  PASS  remote=https://github.com/MelonS/MelonS-Agents.git  short=records/missions/2026-05-16/highlight-140030/outputs/short.mp4  size=7MB
 2026-05-16 14:09:20 +0900  PASS  remote=https://github.com/MelonS/MelonS-Agents.git  short=records/missions/2026-05-16/highlight-140852/outputs/short.mp4  size=7MB
+2026-05-16 18:42:23 +0900  PASS  variant=bootstrap-hints  asserts=8/8
+2026-05-16 18:43:16 +0900  PASS  variant=force-model-download  remote=https://github.com/MelonS/MelonS-Agents.git  short=records/missions/2026-05-16/highlight-184247/outputs/short.mp4  size=7MB  model_download=465MB
+2026-05-16 19:47:23 +0900  PASS  variant=linux-docker  asserts=9/9  base=ubuntu:24.04
