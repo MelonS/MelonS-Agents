@@ -124,57 +124,80 @@ else
   log_ok "captions: $(grep -c '^[0-9]' "$SRT_PATH") segments (uncorrected)"
 fi
 
-# --- Stage 4: visual keyword extraction --------------------------------
-log_step "4/6  ollama → B-roll search terms"
+# --- Stages 4–5: B-roll source -----------------------------------------
+# Two paths:
+#   (a) Default: ollama extracts search terms from the script, then
+#       pexels-fetch.sh pulls fresh stock B-roll.
+#   (b) Reuse path (FACELESS_REUSE_BROLL=<source_mdir>): copy the stitched
+#       1080×1920 concat from a previous mission.  Used for localized
+#       variants (same content, different language) so the A/B is purely
+#       audio + captions, not also B-roll selection.
+if [[ -n "${FACELESS_REUSE_BROLL:-}" && -d "$FACELESS_REUSE_BROLL/resources" ]]; then
+  log_step "4-5/6  reuse B-roll from $FACELESS_REUSE_BROLL"
+  cp -R "$FACELESS_REUSE_BROLL/resources/broll" "$MDIR/resources/broll" 2>/dev/null || true
+  for f in "$FACELESS_REUSE_BROLL/resources/"trimmed-*.mp4 \
+           "$FACELESS_REUSE_BROLL/resources/concat-noaudio.mp4" \
+           "$FACELESS_REUSE_BROLL/resources/keywords.json"; do
+    [[ -f "$f" ]] && cp "$f" "$MDIR/resources/"
+  done
+  BROLL_FILES=()
+  while IFS= read -r __f; do
+    [[ -n "$__f" ]] && BROLL_FILES+=("$__f")
+  done < <(find "$MDIR/resources/broll" -name "*.mp4" -type f 2>/dev/null | sort)
+  log_ok "reused ${#BROLL_FILES[@]} B-roll clips + concat-noaudio.mp4"
+else
+  log_step "4/6  ollama → B-roll search terms"
 
-KW_PROMPT="Read this 60-second narration script:
+  KW_PROMPT="Read this 60-second narration script:
 
 $(cat "$SCRIPT_PATH")
 
 Extract exactly ${NUM_BROLL} concrete visual search terms.  Each term:
 - 2 to 4 words
 - Concrete imagery (not abstract concepts)
+- IN ENGLISH (Pexels search is English-only — even if the script is in
+  another language, return English keywords)
 - Searchable on a stock-footage site like Pexels
 
 Output JSON in this exact shape:
 {\"terms\": [\"term1\", \"term2\", \"term3\", \"term4\", \"term5\", \"term6\"]}"
 
-KEYWORDS_JSON=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$KW_PROMPT" true)
-echo "$KEYWORDS_JSON" > "$MDIR/resources/keywords.json"
+  KEYWORDS_JSON=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$KW_PROMPT" true)
+  echo "$KEYWORDS_JSON" > "$MDIR/resources/keywords.json"
 
-TERMS=()
-while IFS= read -r __term; do
-  [[ -n "$__term" ]] && TERMS+=("$__term")
-done < <(echo "$KEYWORDS_JSON" | jq -r '.terms[]')
-if (( ${#TERMS[@]} == 0 )); then
-  log_err "ollama returned no terms — falling back to topic itself"
-  TERMS=("$TOPIC")
-fi
-log_ok "search terms (${#TERMS[@]}): ${TERMS[*]}"
-
-# --- Stage 5: B-roll fetching ------------------------------------------
-log_step "5/6  pexels → ${#TERMS[@]} B-roll clips"
-
-BROLL_DIR="$MDIR/resources/broll"
-for i in "${!TERMS[@]}"; do
-  TERM="${TERMS[$i]}"
-  TERM_DIR="$BROLL_DIR/term-$i"
-  mkdir -p "$TERM_DIR"
-  log_info "  [$((i+1))/${#TERMS[@]}] fetching: $TERM"
-  if ! FIXTURE_DIR="$TERM_DIR" "$REPO_ROOT/scripts/pexels-fetch.sh" "$TERM" 1 720 > /dev/null 2>&1; then
-    log_warn "    no result for: $TERM"
+  TERMS=()
+  while IFS= read -r __term; do
+    [[ -n "$__term" ]] && TERMS+=("$__term")
+  done < <(echo "$KEYWORDS_JSON" | jq -r '.terms[]')
+  if (( ${#TERMS[@]} == 0 )); then
+    log_err "ollama returned no terms — falling back to topic itself"
+    TERMS=("$TOPIC")
   fi
-done
+  log_ok "search terms (${#TERMS[@]}): ${TERMS[*]}"
 
-BROLL_FILES=()
-while IFS= read -r __f; do
-  [[ -n "$__f" ]] && BROLL_FILES+=("$__f")
-done < <(find "$BROLL_DIR" -name "*.mp4" -type f | sort)
-if (( ${#BROLL_FILES[@]} < 3 )); then
-  log_err "got only ${#BROLL_FILES[@]} B-roll clips (need at least 3)"
-  exit 70
+  log_step "5/6  pexels → ${#TERMS[@]} B-roll clips"
+
+  BROLL_DIR="$MDIR/resources/broll"
+  for i in "${!TERMS[@]}"; do
+    TERM="${TERMS[$i]}"
+    TERM_DIR="$BROLL_DIR/term-$i"
+    mkdir -p "$TERM_DIR"
+    log_info "  [$((i+1))/${#TERMS[@]}] fetching: $TERM"
+    if ! FIXTURE_DIR="$TERM_DIR" "$REPO_ROOT/scripts/pexels-fetch.sh" "$TERM" 1 720 > /dev/null 2>&1; then
+      log_warn "    no result for: $TERM"
+    fi
+  done
+
+  BROLL_FILES=()
+  while IFS= read -r __f; do
+    [[ -n "$__f" ]] && BROLL_FILES+=("$__f")
+  done < <(find "$BROLL_DIR" -name "*.mp4" -type f | sort)
+  if (( ${#BROLL_FILES[@]} < 3 )); then
+    log_err "got only ${#BROLL_FILES[@]} B-roll clips (need at least 3)"
+    exit 70
+  fi
+  log_ok "B-roll: ${#BROLL_FILES[@]} clips"
 fi
-log_ok "B-roll: ${#BROLL_FILES[@]} clips"
 
 # --- Stage 6: stitch + render ------------------------------------------
 log_step "6/6  ffmpeg → stitch + 9:16 fill + audio + captions"
