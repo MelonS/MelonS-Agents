@@ -328,6 +328,27 @@ Same as documentation style above, applied to:
 
 Keep it tight, technical, and neutral.
 
+### Idle-state signaling
+
+When a turn finishes and there is no further work in progress, end
+the message with an explicit **`대기중`** marker.  The user is async
+and otherwise has to ask "are you working or done?" to find out —
+the marker eliminates that question.
+
+- True idle (no background tasks, no scheduled follow-up): close
+  with a plain `대기중.` line, possibly preceded by one sentence
+  naming the next decision point if there is one.
+- Background task running (e.g., a long ffmpeg job started with
+  `run_in_background`): close with
+  `대기중 (background: <one-line description>)` so the user knows
+  the agent is idle for input but compute is still happening.
+- Active work continuing into the next turn: do **not** write
+  `대기중` — the marker is only for genuine idle.
+
+This pairs with `never-pause` (§2): keep going through the
+roadmap *Next* queue without asking, and only signal idle when
+there is genuinely nothing queued and no in-flight work.
+
 ---
 
 ## Memory and this file
