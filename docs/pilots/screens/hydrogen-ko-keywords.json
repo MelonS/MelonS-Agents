@@ -1,0 +1,58 @@
+[
+  {
+    "index": 0,
+    "start": 0.0,
+    "end": 5.5,
+    "text": "우주에서 가장 가볍고 가장 풍부한 원소인 수소가, 우리 몸의 단 10퍼센트를",
+    "term": "human body hydrogen"
+  },
+  {
+    "index": 1,
+    "start": 5.5,
+    "end": 8.539,
+    "text": "10퍼센트를 차지한다면 어떤 이야기가 펼쳐질까요?",
+    "term": "human cells"
+  },
+  {
+    "index": 2,
+    "start": 8.539,
+    "end": 14.38,
+    "text": "수소는 물을 이루는 핵심 원소로, 물 분자의 약 3분의 2가 수소로 구성되어 구성되어 있습니다.",
+    "term": "water molecule structure"
+  },
+  {
+    "index": 3,
+    "start": 14.38,
+    "end": 19.66,
+    "text": "또한 탄수화물과 지방, 단백질에도 들어 있으며, 평균적으로 사람 몸무게의",
+    "term": "human body parts"
+  },
+  {
+    "index": 4,
+    "start": 19.66,
+    "end": 23.339,
+    "text": "몸무게의 약 60퍼센트가 수소 원자로 이루어져 있습니다.",
+    "term": "atomic structure"
+  },
+  {
+    "index": 5,
+    "start": 23.339,
+    "end": 31.0,
+    "text": "만약 한 사람의 몸에서 수소를 모두 추출한다면 그 무게는 약 1킬로그램, 큰 설탕 한 봉지 정도가 됩니다.",
+    "term": "sugar bottle"
+  },
+  {
+    "index": 6,
+    "start": 31.0,
+    "end": 36.24,
+    "text": "이렇게 우리 몸에 풍부하게 존재하면서도, 수소는 종종 간과되고 그 가치가",
+    "term": "hydrogen molecules"
+  },
+  {
+    "index": 7,
+    "start": 36.24,
+    "end": 38.94,
+    "text": "제대로 평가받지 못하는 원소입니다.",
+    "term": "hydrogen molecule"
+  }
+]

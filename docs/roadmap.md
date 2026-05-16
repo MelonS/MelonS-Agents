@@ -57,6 +57,39 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-17** (overnight, ~01:50 KST) **Per-window B-roll keyword
+  extraction — visuals track the caption being spoken.**  Operator
+  feedback after watching the Korean v3 pilots: "the more the video
+  and captions match the context, the more interesting it would be"
+  — v3's 6-equal-slot B-roll didn't track narration beats, so a
+  caption about Hugo Winckler's 1906 discovery might play over a
+  generic ruins clip from a different beat.
+  Fix structure: the caption-corrected SRT already carries whisper
+  timing.  New `scripts/plan-broll-windows.py` groups cues into N
+  (default 8) temporal windows of variable duration matching the
+  natural narration beats.  Stage 4 in `run.sh` now sends each
+  window's text individually to ollama with the topic as global
+  context → one search term per window; Stage 5 fetches one Pexels
+  clip per window; Stage 6 trims each clip to its window's exact
+  duration (not `NARRATION_DUR/N`).
+  Results validate the architecture:
+  - EN Hittites window 6 (caption: Treaty of Kadesh): keyword
+    `Treaty of Kadesh map`, exact contextual match.
+  - KO Hittites window 4 (이집트 양식이 어우러진): `Mesopotamian architecture`.
+  - KO Hittites window 5 (무와탈리 2세): `Muwatalli II portrait`.
+  - KO Hydrogen window 5 (약 1킬로그램, 큰 설탕 한 봉지): `sugar bottle` —
+    exact metaphor match, the visual literally matches the
+    narration's literal-bag-of-sugar image.
+  Side effect: EN and KO variants no longer share B-roll (each
+  language extracts its own keywords from its own captions, so
+  visual-equality A/B is gone).  `FACELESS_REUSE_BROLL` env still
+  works if the shared-visuals comparison is wanted again.
+  Four v4 pilots produced: `faceless-hittites-014312` (EN, 62.8s/49MB),
+  `faceless-hittites-ko-014703` (KO, 57.8s/32MB),
+  `faceless-hydrogen-014508` (EN, 63.7s/22MB),
+  `faceless-hydrogen-ko-014816` (KO, 38.9s/13MB).  Thumbnails +
+  scripts + caption-correction logs + window-keyword JSONs all
+  committed under `docs/pilots/screens/`.
 - **2026-05-17** (overnight, ~00:09 KST) **Operator review pass —
   screen-fill 9:16 + Korean A/B variants.**  Operator looked at the v2
   pilots and flagged two issues for accurate evaluation:

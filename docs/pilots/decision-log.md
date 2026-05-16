@@ -14,7 +14,7 @@ Each topic is rendered in two language variants so the operator can compare voic
 | Length target | ~60 s (130–160 EN words / ~300 KO chars) |
 | Framing | **Screen-fill 9:16** — center-crop, no letterbox-blur (TikTok/Reels style) |
 | Captions | whisper.cpp small → script-aware token alignment → libass burn-in, bottom-center safe zone |
-| B-roll | 6 clips × ~6–11 s each, Pexels License (commercial-OK) |
+| B-roll | 8 clips with **per-window keyword extraction** — caption SRT is grouped into 8 temporal windows, each window's text generates its own search term so the clip on screen matches what's being said.  Variable per-clip durations matching the natural narration beats.  Pexels License (commercial-OK) |
 | Attribution | Always-on top-left drawtext overlay |
 
 The pipeline is deterministic given the same topic prompt + script. Repro any pilot with:
@@ -41,24 +41,26 @@ Ready-to-paste upload copy is in [`upload-metadata/`](upload-metadata/) — one 
 
 |  | EN | KO |
 |---|---|---|
-| Mission id | `faceless-hittites-000112` | `faceless-hittites-ko-000654` |
+| Mission id | `faceless-hittites-014312` (v4 windowed) | `faceless-hittites-ko-014703` (v4 windowed) |
 | Voice | Kokoro `am_michael` | macOS `Yuna` |
-| Duration | 55.2 s | 52.9 s |
-| Size | 42 MB | 40 MB |
-| Caption segments | 26 (6 auto-corrected) | 15 (12 auto-corrected) |
+| Duration | 62.8 s | 57.8 s |
+| Size | 49 MB | 32 MB |
+| Caption segments | 44 (5 auto-corrected) | 31 (12 auto-corrected) |
 | Thumbnail | [`screens/hittites-en-caption-verify.jpg`](screens/hittites-en-caption-verify.jpg) | [`screens/hittites-ko-caption-verify.jpg`](screens/hittites-ko-caption-verify.jpg) |
 | Script | [`screens/hittites-en-script.txt`](screens/hittites-en-script.txt) | [`screens/hittites-ko-script.txt`](screens/hittites-ko-script.txt) |
 | Caption corrections | [`hittites-en-caption-corrections.log`](screens/hittites-en-caption-corrections.log) | [`hittites-ko-caption-corrections.log`](screens/hittites-ko-caption-corrections.log) |
+| Per-window keywords | [`hittites-en-keywords.json`](screens/hittites-en-keywords.json) | [`hittites-ko-keywords.json`](screens/hittites-ko-keywords.json) |
 | Upload metadata | [`upload-metadata/hittites.md`](upload-metadata/hittites.md) | _(EN only — KO would need its own draft pass)_ |
-| Output path | `records/missions/2026-05-17/faceless-hittites-000112/outputs/short.mp4` | `records/missions/2026-05-17/faceless-hittites-ko-000654/outputs/short.mp4` |
+| Output path | `records/missions/2026-05-17/faceless-hittites-014312/outputs/short.mp4` | `records/missions/2026-05-17/faceless-hittites-ko-014703/outputs/short.mp4` |
 
 **Topic**: _The Hittites — a biblical kingdom dismissed by historians as legend until 1906._
 
 **Production notes**
 
 - The Korean script is a manual translation of the English script (llama3.2:3b's translation output was unusable — mixed Hindi/Thai/Russian script and topic-confusion across prompts). A 7B+ instruct model is the right path for automated Korean translation later.
-- B-roll matches across EN/KO since the Korean variant uses `FACELESS_REUSE_BROLL` to copy the English pilot's stitched footage. The A/B is purely audio + captions.
-- whisper.cpp small drifts more on Korean (12 corrections out of 15 cues — proper nouns like `하투샤`, `빙클러`, `무와탈리`, `수수께끼` all needed fixing) than on English (6/26). Without `scripts/correct-captions.py` the Korean captions would be heavily wrong.
+- v4 swaps the previous "6 equal slots driven by global keyword extraction" for "8 temporal windows, one keyword per window."  Each window's keyword is generated from the local caption text only, so the clip on screen matches what's being said.  EN window 3 ("ancient Anatolia, military") → `chariots in battle`; window 6 ("Treaty of Kadesh") → `Treaty of Kadesh map`; KO window 4 ("이집트 양식이 어우러진") → `Mesopotamian architecture`; KO window 5 ("무와탈리 2세") → `Muwatalli II portrait`.  Topical fit is dramatically tighter than v3.
+- EN and KO no longer share visuals — each language extracts its own keywords from its own captions, so context-fit takes precedence over visual-equality A/B.  (Visual-equality variant still available via `FACELESS_REUSE_BROLL=<en_mission_dir>` env if the previous "same visuals, swapped audio" comparison is wanted again.)
+- whisper.cpp small drifts more on Korean (12 corrections out of 31 cues — proper nouns like `하투샤`, `빙클러`, `무와탈리`, `수수께끼` all needed fixing) than on English (5/44). Without `scripts/correct-captions.py` the Korean captions would be heavily wrong.
 
 ---
 
@@ -66,24 +68,26 @@ Ready-to-paste upload copy is in [`upload-metadata/`](upload-metadata/) — one 
 
 |  | EN | KO |
 |---|---|---|
-| Mission id | `faceless-hydrogen-000112` | `faceless-hydrogen-ko-000755` |
+| Mission id | `faceless-hydrogen-014508` (v4 windowed) | `faceless-hydrogen-ko-014816` (v4 windowed) |
 | Voice | Kokoro `am_michael` | macOS `Yuna` |
-| Duration | 38.5 s | 38.9 s |
-| Size | 12 MB | 12 MB |
-| Caption segments | 24 (3 auto-corrected) | 10 (8 auto-corrected) |
+| Duration | 63.7 s | 38.9 s |
+| Size | 22 MB | 13 MB |
+| Caption segments | 47 (2 auto-corrected) | 26 (8 auto-corrected) |
 | Thumbnail | [`screens/hydrogen-en-caption-verify.jpg`](screens/hydrogen-en-caption-verify.jpg) | [`screens/hydrogen-ko-caption-verify.jpg`](screens/hydrogen-ko-caption-verify.jpg) |
 | Script | [`screens/hydrogen-en-script.txt`](screens/hydrogen-en-script.txt) | [`screens/hydrogen-ko-script.txt`](screens/hydrogen-ko-script.txt) |
 | Caption corrections | [`hydrogen-en-caption-corrections.log`](screens/hydrogen-en-caption-corrections.log) | [`hydrogen-ko-caption-corrections.log`](screens/hydrogen-ko-caption-corrections.log) |
+| Per-window keywords | [`hydrogen-en-keywords.json`](screens/hydrogen-en-keywords.json) | [`hydrogen-ko-keywords.json`](screens/hydrogen-ko-keywords.json) |
 | Upload metadata | [`upload-metadata/hydrogen.md`](upload-metadata/hydrogen.md) | _(EN only — KO would need its own draft pass)_ |
-| Output path | `records/missions/2026-05-17/faceless-hydrogen-000112/outputs/short.mp4` | `records/missions/2026-05-17/faceless-hydrogen-ko-000755/outputs/short.mp4` |
+| Output path | `records/missions/2026-05-17/faceless-hydrogen-014508/outputs/short.mp4` | `records/missions/2026-05-17/faceless-hydrogen-ko-014816/outputs/short.mp4` |
 
 **Topic**: _Hydrogen — 75 percent of the universe and 10 percent of your body._
 
 **Production notes**
 
-- This pilot's narration drifted on the body-percentage figure: the v3 EN narration says "60 percent hydrogen by weight" while v2 said "10 percent." Both are scientifically valid (hydrogen is ~10 % by mass, ~60 % by atom count, ~63 % by atom count if you include all body water); the inconsistency is a model temperature effect, not a pipeline bug.
-- Korean B-roll matches EN exactly (water droplet macros) via `FACELESS_REUSE_BROLL`.
+- This pilot's narration drifts across runs on the body-percentage figure (10 % by mass vs 60 % by atom count — both are scientifically valid).  Model temperature effect, not a pipeline bug.
+- v4 window 5 in KO landed `sugar bottle` for the caption "약 1킬로그램, 큰 설탕 한 봉지 정도" — the exact metaphor in the narration.  Window 2 → `water molecule structure` for "물 분자의 약 3분의 2".  Per-window keyword extraction picks up these literal phrasings reliably.
 - Yuna voice handles 외래어 transliteration cleanly (탄수화물, 단백질, 킬로그램); the small-model whisper drift was mostly punctuation + number-format restoration (`10%` → `10퍼센트`, `1kg` → `1킬로그램,`).
+- EN and KO no longer share visuals in v4 — see Hittites notes above for the rationale.
 
 ---
 

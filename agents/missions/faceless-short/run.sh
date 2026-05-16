@@ -47,7 +47,7 @@ require_bin "$FFMPEG_BIN" "$FFPROBE_BIN" "$WHISPER_CLI_BIN" jq curl
 require_env OLLAMA_HOST OLLAMA_MODEL_HIGHLIGHT WHISPER_MODEL RECORDS_DIR PEXELS_API_KEY
 
 VOICE="${FACELESS_VOICE:-am_michael}"
-NUM_BROLL="${FACELESS_NUM_BROLL:-6}"
+NUM_BROLL="${FACELESS_NUM_BROLL:-8}"
 
 MISSION_ID="faceless-${SHORT_ID}-$(date +%H%M%S)"
 MDIR="$RECORDS_DIR/missions/$(date +%Y-%m-%d)/$MISSION_ID"
@@ -126,61 +126,86 @@ fi
 
 # --- Stages 4–5: B-roll source -----------------------------------------
 # Two paths:
-#   (a) Default: ollama extracts search terms from the script, then
-#       pexels-fetch.sh pulls fresh stock B-roll.
-#   (b) Reuse path (FACELESS_REUSE_BROLL=<source_mdir>): copy the stitched
-#       1080×1920 concat from a previous mission.  Used for localized
+#   (a) Default: group caption SRT cues into NUM_BROLL temporal windows,
+#       extract one search term per window via ollama, fetch one Pexels
+#       clip per window.  Windows have variable duration (not equal slots)
+#       so visuals track the narration's natural beat structure — the
+#       clip showing while a caption is on screen actually matches that
+#       caption's text.
+#   (b) Reuse path (FACELESS_REUSE_BROLL=<source_mdir>): copy the per-
+#       window source clips from a previous mission.  Used for localized
 #       variants (same content, different language) so the A/B is purely
 #       audio + captions, not also B-roll selection.
+WINDOWS_JSON_PATH="$MDIR/resources/broll-windows.json"
+
 if [[ -n "${FACELESS_REUSE_BROLL:-}" && -d "$FACELESS_REUSE_BROLL/resources" ]]; then
-  log_step "4-5/6  reuse B-roll from $FACELESS_REUSE_BROLL"
+  log_step "4-5/6  reuse B-roll source clips from $FACELESS_REUSE_BROLL"
   cp -R "$FACELESS_REUSE_BROLL/resources/broll" "$MDIR/resources/broll" 2>/dev/null || true
-  for f in "$FACELESS_REUSE_BROLL/resources/"trimmed-*.mp4 \
-           "$FACELESS_REUSE_BROLL/resources/concat-noaudio.mp4" \
-           "$FACELESS_REUSE_BROLL/resources/keywords.json"; do
+  for f in "$FACELESS_REUSE_BROLL/resources/keywords.json" \
+           "$FACELESS_REUSE_BROLL/resources/broll-windows.json"; do
     [[ -f "$f" ]] && cp "$f" "$MDIR/resources/"
   done
+  # Re-plan windows from THIS mission's captions (Korean cues land at
+  # different times than English even with identical script structure).
+  python3 "$REPO_ROOT/scripts/plan-broll-windows.py" \
+    --srt "$SRT_PATH" \
+    --total-duration "$NARRATION_DUR" \
+    --num-windows "$NUM_BROLL" \
+    --out "$WINDOWS_JSON_PATH"
   BROLL_FILES=()
   while IFS= read -r __f; do
     [[ -n "$__f" ]] && BROLL_FILES+=("$__f")
   done < <(find "$MDIR/resources/broll" -name "*.mp4" -type f 2>/dev/null | sort)
-  log_ok "reused ${#BROLL_FILES[@]} B-roll clips + concat-noaudio.mp4"
+  log_ok "reused ${#BROLL_FILES[@]} B-roll source clips, re-planned windows for this language"
 else
-  log_step "4/6  ollama → B-roll search terms"
+  log_step "4/6  windowed → per-segment search terms"
 
-  KW_PROMPT="Read this 60-second narration script:
+  python3 "$REPO_ROOT/scripts/plan-broll-windows.py" \
+    --srt "$SRT_PATH" \
+    --total-duration "$NARRATION_DUR" \
+    --num-windows "$NUM_BROLL" \
+    --out "$WINDOWS_JSON_PATH"
 
-$(cat "$SCRIPT_PATH")
-
-Extract exactly ${NUM_BROLL} concrete visual search terms.  Each term:
-- 2 to 4 words
-- Concrete imagery (not abstract concepts)
-- IN ENGLISH (Pexels search is English-only — even if the script is in
-  another language, return English keywords)
-- Searchable on a stock-footage site like Pexels
-
-Output JSON in this exact shape:
-{\"terms\": [\"term1\", \"term2\", \"term3\", \"term4\", \"term5\", \"term6\"]}"
-
-  KEYWORDS_JSON=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$KW_PROMPT" true)
-  echo "$KEYWORDS_JSON" > "$MDIR/resources/keywords.json"
-
+  # Per-window keyword extraction.  Sends each window's text to ollama
+  # one at a time with the topic as global context — small-model
+  # context window stays well under limit and each search term is tied
+  # to the local content.
   TERMS=()
-  while IFS= read -r __term; do
-    [[ -n "$__term" ]] && TERMS+=("$__term")
-  done < <(echo "$KEYWORDS_JSON" | jq -r '.terms[]')
-  if (( ${#TERMS[@]} == 0 )); then
-    log_err "ollama returned no terms — falling back to topic itself"
-    TERMS=("$TOPIC")
-  fi
-  log_ok "search terms (${#TERMS[@]}): ${TERMS[*]}"
+  N_WINDOWS=$(jq 'length' "$WINDOWS_JSON_PATH")
+  for w in $(seq 0 $((N_WINDOWS - 1))); do
+    WIN_TEXT=$(jq -r ".[$w].text" "$WINDOWS_JSON_PATH")
+    KW_PROMPT="Topic: $TOPIC
 
-  log_step "5/6  pexels → ${#TERMS[@]} B-roll clips"
+Segment of narration:
+$WIN_TEXT
+
+Extract ONE concrete visual search term for this segment only.  Rules:
+- 2 to 4 English words (Pexels search is English-only)
+- Concrete imagery (not abstract concepts like 'history' or 'change')
+- Match this segment's content specifically, not the whole topic
+- Searchable on a stock-footage site
+
+Output JSON: {\"term\": \"two to four words\"}"
+
+    TERM=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$KW_PROMPT" true | jq -r '.term // empty')
+    if [[ -z "$TERM" ]]; then
+      log_warn "  window $w: no term, using topic fallback"
+      TERM="$TOPIC"
+    fi
+    TERMS+=("$TERM")
+    log_info "  window $w: $TERM"
+  done
+
+  jq -n --argjson w "$(cat "$WINDOWS_JSON_PATH")" --argjson t "$(printf '%s\n' "${TERMS[@]}" | jq -R . | jq -s .)" \
+    '[range(0; $w | length) | { index: $w[.].index, start: $w[.].start, end: $w[.].end, text: $w[.].text, term: $t[.] }]' \
+    > "$MDIR/resources/keywords.json"
+
+  log_step "5/6  pexels → ${#TERMS[@]} B-roll clips (one per window)"
 
   BROLL_DIR="$MDIR/resources/broll"
   for i in "${!TERMS[@]}"; do
     TERM="${TERMS[$i]}"
-    TERM_DIR="$BROLL_DIR/term-$i"
+    TERM_DIR="$BROLL_DIR/win-$i"
     mkdir -p "$TERM_DIR"
     log_info "  [$((i+1))/${#TERMS[@]}] fetching: $TERM"
     if ! FIXTURE_DIR="$TERM_DIR" "$REPO_ROOT/scripts/pexels-fetch.sh" "$TERM" 1 720 > /dev/null 2>&1; then
@@ -188,37 +213,63 @@ Output JSON in this exact shape:
     fi
   done
 
+  # Walk windows in order; for each, take the first .mp4 found under
+  # its win-<i> subdir.  This preserves window→clip alignment even when
+  # some Pexels searches returned nothing.
   BROLL_FILES=()
-  while IFS= read -r __f; do
-    [[ -n "$__f" ]] && BROLL_FILES+=("$__f")
-  done < <(find "$BROLL_DIR" -name "*.mp4" -type f | sort)
-  if (( ${#BROLL_FILES[@]} < 3 )); then
-    log_err "got only ${#BROLL_FILES[@]} B-roll clips (need at least 3)"
+  MISSING_WINDOWS=()
+  for i in "${!TERMS[@]}"; do
+    CLIP=$(find "$BROLL_DIR/win-$i" -name "*.mp4" -type f 2>/dev/null | head -1)
+    if [[ -n "$CLIP" ]]; then
+      BROLL_FILES+=("$CLIP")
+    else
+      MISSING_WINDOWS+=("$i")
+      BROLL_FILES+=("")  # placeholder so indices stay aligned
+    fi
+  done
+
+  # Backfill empty windows from neighbours so the timeline stays full.
+  for i in "${!BROLL_FILES[@]}"; do
+    if [[ -z "${BROLL_FILES[$i]}" ]]; then
+      # Look right then left for the nearest filled window.
+      for j in "${!BROLL_FILES[@]}"; do
+        if [[ -n "${BROLL_FILES[$j]}" ]]; then
+          BROLL_FILES[$i]="${BROLL_FILES[$j]}"
+          log_warn "  window $i: backfilled from window $j"
+          break
+        fi
+      done
+    fi
+  done
+
+  FILLED=$(printf '%s\n' "${BROLL_FILES[@]}" | grep -c .)
+  if (( FILLED < 3 )); then
+    log_err "only $FILLED windows had any B-roll (need ≥ 3)"
     exit 70
   fi
-  log_ok "B-roll: ${#BROLL_FILES[@]} clips"
+  log_ok "B-roll: ${#BROLL_FILES[@]} windows filled ($FILLED unique)"
 fi
 
 # --- Stage 6: stitch + render ------------------------------------------
-log_step "6/6  ffmpeg → stitch + 9:16 fill + audio + captions"
+log_step "6/6  ffmpeg → stitch (variable-duration windows) + 9:16 fill + audio + captions"
 
-PER_CLIP_DUR=$(awk -v n="${#BROLL_FILES[@]}" -v d="$NARRATION_DUR" 'BEGIN{printf "%.3f", d/n}')
-log_info "  per-clip duration: ${PER_CLIP_DUR}s × ${#BROLL_FILES[@]} clips"
-
-# Trim each clip + crop directly to 1080×1920 (9:16 fill).  Earlier
-# versions kept clips at 1920×1080 landscape and then letterbox-blurred
-# them into 9:16, but the result was a tiny strip of content in the
-# middle of a mostly-blurred frame — Pexels stock is almost always
-# landscape, so the letterbox dominates.  Crop-to-fill is what TikTok
-# and Reels actually do; for abstract B-roll the subject is centered
-# anyway so center-crop reads cleanly.
+# Per-window durations come from broll-windows.json (start/end carry
+# whisper-derived narration timing).  Each clip trim length = its
+# window's end - start, so the visual on screen tracks the caption
+# being spoken.  Previous versions used a single PER_CLIP_DUR =
+# NARRATION_DUR / N, which gave fixed 8–10s slots regardless of which
+# beat of narration was playing — visuals drifted out of context.
 CONCAT_LIST="$MDIR/resources/concat-list.txt"
 : > "$CONCAT_LIST"
 for i in "${!BROLL_FILES[@]}"; do
   CLIP="${BROLL_FILES[$i]}"
+  WIN_DUR=$(jq -r ".[$i] | (.end - .start)" "$WINDOWS_JSON_PATH")
+  # Floor at 1.0s — Pexels clips can be very short, and ffmpeg -t with
+  # a sub-second value sometimes drops the clip entirely.
+  WIN_DUR=$(awk -v d="$WIN_DUR" 'BEGIN{printf "%.3f", (d < 1.0 ? 1.0 : d)}')
   TRIMMED="$MDIR/resources/trimmed-$i.mp4"
   "$FFMPEG_BIN" -y -loglevel error -i "$CLIP" \
-    -t "$PER_CLIP_DUR" \
+    -t "$WIN_DUR" \
     -r 30 \
     -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1" \
     -an \

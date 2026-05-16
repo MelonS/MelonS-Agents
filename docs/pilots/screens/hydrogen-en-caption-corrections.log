@@ -1,4 +1,6 @@
-  cue 2: 'in the universe, makes up a mere 10% of our bodies?' → 'in the universe, makes up a mere 10 percent of our bodies?'
-  cue 4: 'making up about 2/3 of its molecular structure.' → 'making up about two-thirds of its molecular structure.'
-  cue 10: 'it would weigh around one kilogram roughly the same' → 'it would weigh around 1 kilogram – roughly the same'
-corrected 3/12 cues
+  cue 3: "Hydrogen makes up about 75% of the universe's elemental mass, yet it's only present in" → "Hydrogen makes up about 75 percent of the universe's elemental mass, yet it's only present in"
+  cue 5: 'In fact, humans are composed of roughly 10% hydrogen by weight, with the majority of that' → 'In fact, humans are composed of roughly 10 percent hydrogen by weight, with the majority of that'
+  cue 6: "coming from water approximately 60% of an adult's body weight is made up of hydrogen" → "coming from water – approximately 60 percent of an adult's body weight is made up of hydrogen"
+  cue 10: 'energy, releasing carbon dioxide and water as by-products.' → 'energy, releasing carbon dioxide and water as byproducts.'
+  cue 11: 'This process relies heavily on the presence of hydrogen, which is then converted into ATP,' → 'This process relies heavily on the presence of hydrogen, which is then converted into ATP'
+corrected 5/14 cues
