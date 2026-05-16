@@ -4,7 +4,10 @@ Reads gitignored `records/missions/*/metrics.json` and writes committed
 evidence PNGs to `docs/metrics/`. The README embeds them directly so a
 read-only reviewer sees pipeline behaviour without cloning the repo.
 
-Run inside the project's `.venv` so matplotlib is importable:
+First-time setup:
+    scripts/setup-venv.sh                    # one-off: creates .venv/, installs matplotlib
+
+Regenerate the charts (after a new mission lands):
     .venv/bin/python scripts/generate-charts.py
 """
 

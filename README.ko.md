@@ -105,10 +105,13 @@
 
 차트는 각 미션의 `metrics.json`으로부터
 [`scripts/generate-charts.py`](scripts/generate-charts.py)가
-생성합니다. 위 그래프의 모든 초는 로컬 CPU / GPU 시간 — 전사는
-`whisper.cpp`, 선택은 `ollama` (`llama3.2:3b`), 렌더는 `ffmpeg`.
-**위 단계 동안 소비된 Anthropic API 토큰: 0.** Tier 1 / Tier 2
-비용 방화벽은 [`docs/cost-model.md`](docs/cost-model.md) 참조.
+생성합니다.  새 미션이 추가된 후 재생성하려면:
+[`scripts/setup-venv.sh`](scripts/setup-venv.sh)을 한 번 실행
+(`.venv/` 생성 + matplotlib 설치) → `.venv/bin/python scripts/generate-charts.py`.
+위 그래프의 모든 초는 로컬 CPU / GPU 시간 — 전사는 `whisper.cpp`,
+선택은 `ollama` (`llama3.2:3b`), 렌더는 `ffmpeg`. **위 단계 동안
+소비된 Anthropic API 토큰: 0.** Tier 1 / Tier 2 비용 방화벽은
+[`docs/cost-model.md`](docs/cost-model.md) 참조.
 
 ## 분석가/리뷰어를 위한 안내
 
