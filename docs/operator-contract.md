@@ -88,6 +88,21 @@ Editing `agents/*.md` or `.claude/agents/*.md` always requires
 explicit user OK, regardless of autonomy mode.  These files define
 the subagent contracts; changing them changes the system's logic.
 
+**Audit-trail marker.**  When the user OK has been obtained
+in-session and the commit lands a §5-scope change, include a
+footer line on the commit body to make the approval mechanically
+verifiable in `git log`:
+
+```
+Requested-by: user
+```
+
+Place above the `Co-Authored-By` line if present.  Cite the in-
+session evidence (a paraphrase or short quote) in the commit body
+above the footer.  This is a convention, not a hard gate — a
+missing marker on a §5-scope commit is not a build failure, but
+it is a [low] finding the next contract audit will surface.
+
 ### 6. Git workflow — auto-commit, auto-push
 
 Every code or doc change (anything under `agents/`, `.claude/agents/`,
@@ -366,6 +381,66 @@ matters.
 KO mirror (`README.ko.md`) updates in the same commit as EN.
 A drift between the two files counts as audit-relevant
 documentation drift.
+
+#### How (not just when) — full-file review on every trigger
+
+Each time a trigger above fires, do **NOT** treat the README pass
+as an append-only operation.  The historical failure mode (operator
+flagged on 2026-05-17) was: a trigger lands, a new section gets
+added at the bottom, the *existing* sections silently rot — old
+"15 missions produced" sentinel left in place, animated preview
+pointing at last week's showcase, recent-runs table not refreshed,
+charts unchanged, capability descriptions out of sync with the
+shipped code.  Append-without-review accumulates exactly the kind
+of stale that the cadence rule was supposed to prevent.
+
+On every README pass, walk the **full file once** and check each
+of these against the current state:
+
+1. **Mission count + tense** — any phrase like "N mission outputs
+   have been produced" must match `find records/missions -name
+   metrics.json | wc -l`.  Re-derive, don't trust the existing
+   number.
+2. **Lead showcase relevance** — the first visual artifact below
+   the Overview must represent the project's *current* focus, not
+   the historical showcase.  If a newer mission type has become
+   the active work, it leads; older showcases move down.
+3. **Pipeline / capability prose** — every numbered or imperative
+   description of how a mission works ("ollama extracts 6 visual
+   search terms", "letterbox-blur background") must match the
+   shipped script.  Grep the relevant script before claiming a
+   specific number or step still exists.
+4. **Recent missions table** — drop missions older than the most
+   recent week unless they carry instructive value (e.g., the
+   preserved FAIL row).  Add the most recent N missions.  Don't
+   append; rotate.
+5. **Charts** — regenerate (`scripts/generate-charts.py`).  If the
+   chart's scope no longer represents current activity (e.g.,
+   highlight-only chart while recent work has been faceless),
+   add an explicit scope note rather than implying the chart
+   covers all missions.
+6. **Status checklist** — every checked entry must point at code
+   that still ships.  Every unchecked entry must carry an inline
+   reason (`_blocked_` / `_deferred_` / `_parked_`).  Drop entries
+   that are no longer applicable; don't keep dead ones for history.
+7. **Embedded image / GIF paths** — verify each referenced asset
+   still exists at its path.  If an asset's caption claims a
+   specific visual feature ("KO captions reuse EN B-roll"), verify
+   that's still true of the file at that path.
+8. **EN ↔ KO parity** — every change to the EN file gets a mirror
+   change in the KO file in the same commit.  Drift between the two
+   is audit-relevant.
+9. **Status section count** — README and Status are inventory, not
+   priority; `docs/roadmap.md` is the priority queue.  If a
+   Status entry has migrated to roadmap "Done", check it off here
+   rather than re-claiming it as pending work.
+
+This is a checklist, not a prescription — finishing the 9 items in
+one sitting is the goal, not just running through them
+mechanically.  The point is: read the *whole file* as if you were a
+new reviewer landing on the README for the first time, and ask
+"would I get an accurate read of the system in 30 seconds?"  Where
+the answer is no, edit.
 
 ### Idle-state signaling
 

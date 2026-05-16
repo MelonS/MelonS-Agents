@@ -57,11 +57,50 @@ alone.
 
 ## Triggering audits
 
-### Scheduled (default)
+Three layers of triggers, each with its own latency/scope trade-off.
+
+### L1 — Reactive: post-commit hook
+
+`scripts/hooks/post-commit.sh` (installed via
+`scripts/install-hooks.sh install`) fires `audit-run.sh contract` in
+the background whenever a commit touches drift-risk paths:
+`.claude/agents/`, `agents/`, `config/`, `CLAUDE.md`,
+`docs/operator-contract.md`, `scripts/audit-run.sh`,
+`.claude/settings.json`.
+
+- Latency: ~30 s from commit landing to audit-report write.
+- Cost: ~1 Sonnet call per drift-risk commit (no fire on pure
+  docs/roadmap commits).
+- Skip with `AUDIT_HOOK_DISABLED=1 git commit ...`.
+- Override focus with `AUDIT_HOOK_FOCUS=all git commit ...`.
+
+Not auto-installed by `bootstrap.sh` — opt-in to avoid surprise
+Anthropic spend on a fresh cloner's first commit.
+
+### L2 — Reactive: 15-min mission-anomaly poll
+
+`scripts/audit-poll.sh` (via `com.melons.agents.audit-poll.plist`,
+loaded by `scripts/install-scheduler.sh install audit-poll`) runs
+every 15 minutes.  Fires `audit-run.sh` only when an anomaly
+pattern matches:
+
+- New blocker file in `records/blockers/<date>/` → fires
+  `audit-run.sh all`.
+- ≥2 mission `qa-report.md` files with `Verdict: FAIL` whose mtime
+  falls within the same 60-minute window → fires `audit-run.sh
+  contract`.
+
+State at `records/audit/poll-state.json`; trigger log at
+`records/audit/poll-trigger.log`.  First-run mode seeds the
+seen-blockers list with whatever's already on disk and does NOT
+fire — stops false-positive on existing pre-install blockers.
+
+### L3 — Scheduled baseline
 
 `scripts/com.melons.agents.auditor.plist` is loaded into launchd via
-`scripts/install-scheduler.sh install auditor`.  It fires
-`audit-run.sh all` daily at **03:00 local time**.
+`scripts/install-scheduler.sh install auditor`.  Fires
+`audit-run.sh all` daily at **03:00 local time** — the always-on
+baseline that catches anything L1 + L2 missed.
 
 `RunAtLoad=false` — installing the scheduler does NOT trigger an
 immediate audit (avoid surprise token spend at install time).
@@ -77,8 +116,9 @@ immediate audit (avoid surprise token spend at install time).
 ./scripts/audit-run.sh architecture
 ```
 
-Each invocation costs ~$0.05 in Sonnet tokens.  The launchd schedule
-gives one daily full audit (~$1.50/month).
+Each invocation costs ~$0.05 in Sonnet tokens.  L3 (daily) gives
+~$1.50/month baseline; L1 + L2 add ~$1–3/month depending on commit
+cadence + mission anomaly rate.
 
 ### Regression test for the alert wrapper
 

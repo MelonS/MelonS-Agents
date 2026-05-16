@@ -41,9 +41,17 @@
       Out-of-band track (not in the mission pipeline):
                   ┌───────────────────────┐
                   │   auditor (sonnet)    │ → docs/audit/<date>-<focus>.md
-                  │   read-only, daily    │   + CURRENT-ALERT.md when
-                  │   03:00 via launchd   │     verdict is non-CLEAN
-                  └───────────────────────┘
+                  │   read-only           │   + CURRENT-ALERT.md when
+                  │                       │     verdict is non-CLEAN
+                  └───────────▲───────────┘
+                              │
+                  Three trigger layers:
+                    L1 (reactive)   — git post-commit hook fires on
+                                      drift-risk commits  (~30s latency)
+                    L2 (reactive)   — 15-min poll fires on mission
+                                      anomaly patterns    (new blocker,
+                                      QA-FAIL burst)
+                    L3 (scheduled)  — daily 03:00 baseline via launchd
 
                               │ shell-out via Bash tool
                               │ (no API tokens cross this line)

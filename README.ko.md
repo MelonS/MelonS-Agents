@@ -56,79 +56,64 @@
 
 ## 샘플 출력
 
-지금까지 15건의 미션 출력이 생성되었습니다. 아래는 대표 프레임
-몇 장, 최근 실행 테이블, 그리고 각 미션의 `metrics.json`에서
-추출한 미션별 타이밍 차트입니다.
+지금까지 4가지 미션 타입에 걸쳐 32건의 출력이 생성되었습니다.
+프로젝트의 최근 포커스는 `faceless-short` 미션이며 (아래 쇼케이스),
+v1 파이프라인 출력 (단일-클립 highlight + shorts-batch)은 기준점
+참고용으로 그 아래에 유지됩니다.
 
-### 애니메이션 프리뷰
+### Faceless 파일럿 (영어 + 한국어 A/B)
+
+`faceless-short` 미션은 토픽 프롬프트만으로 60초 완성본을 산출합니다 — 입력 영상 없음.  파이프라인: ollama가 내레이션 스크립트 초안 → Kokoro-ONNX (`am_michael`, 한국어는 macOS `Yuna`) 음성 합성 → whisper.cpp 타이밍 전사 → 스크립트 정합 캡션 교정 (고유명사를 원본 스크립트 텍스트로 복원) → SRT 큐를 자연 구두점에서 단일 라인으로 분할 (모바일 2줄 박스 오버랩 차단) → ollama가 내레이션 시간 윈도우(8개) 마다 Pexels 검색어 1개씩 추출 → Pexels Videos API에서 윈도우당 B-roll 1개 수집 → ffmpeg가 각 클립을 윈도우 길이로 트림·9:16 풀화면 크롭·libass 자막 번인·출처 오버레이까지 완성.
+
+같은 토픽을 두 가지 언어 버전으로 렌더해 음성+자막 차이를 나란히 비교:
+
+| | 히타이트 (역사 × 성경) | 수소 (과학) |
+|---|---|---|
+| EN | ![히타이트 EN — 9:16 풀화면, 'and siege warfare.' 단일 라인 영어 자막이 하투샤 고고학 항공 샷 위에 올라간 상태](docs/pilots/screens/hittites-en-caption-verify.jpg) | ![수소 EN — 9:16 풀화면, 'The human body's reliance' 단일 라인 영어 자막이 파스타 매크로 B-roll 위에](docs/pilots/screens/hydrogen-en-caption-verify.jpg) |
+| KO | ![히타이트 KO — '도시의 모습이 드러났습니다.' 단일 라인 한국어 자막이 하투샤 고고학 항공 샷 위에, AppleGothic, macOS Yuna 음성](docs/pilots/screens/hittites-ko-caption-verify.jpg) | ![수소 KO — '평균적으로 사람 몸무게의' 단일 라인 한국어 자막이 올리브 오일 방울 매크로 위에, Yuna 음성](docs/pilots/screens/hydrogen-ko-caption-verify.jpg) |
+
+각 언어 버전은 자기 캡션에서 윈도우당 Pexels 검색어를 *자체적으로* 추출 — 그래서 EN과 KO는 스크립트 구조는 공유하지만 동일한 클립을 항상 쓰지는 않습니다 (v3/v4 설계: 윈도우별 키워드로 내레이션 비트와 정렬 우선).  "동일 영상, 음성만 교체" 비교가 필요하면 `FACELESS_REUSE_BROLL=<en_mission_dir>`로 KO 렌더가 EN의 이어붙인 B-roll을 강제 재사용하게 할 수 있습니다.
+
+A/B 제작 노트, 플랫폼별 업로드 메타데이터, 다음 10개 토픽 큐는 모두 [`docs/pilots/`](docs/pilots/) 아래에 있습니다.  파일럿당 한계 비용: **$0** (Pexels 무료 티어, 그 외 단계는 모두 로컬).
+
+### v1 파이프라인 (단일 클립 highlight / shorts-batch)
+
+원조 v1 미션 — `highlight`, `summarize`, `shorts-batch` — 은 실제 소스 URL (예: Creative Commons 영상)을 받아 9:16 출력을 만들면서 출처 워터마크 + 자막을 번인합니다.  `faceless-short` 이전의 설계이며, 토픽이 아니라 영상에서 *부분 발췌*가 필요할 때 여전히 활용됩니다.
 
 ![highlight-015213의 6초 애니메이션 프리뷰 — 9:16 letterbox-blur 레이아웃, 좌측 상단 출처 오버레이, 하단 libass 자막 번인이 보임](docs/demo/highlight-015213-preview.gif)
 
-`highlight-015213/outputs/short.mp4`의 6초 발췌. 전체 39초 mp4는
-`records/` 아래에 로컬 전용(gitignore); 위 GIF는 크기 최적화된
-발췌 (가로 360 px, 12 fps, ≈ 2.8 MB) — ffmpeg + palette dither로
-생성하여 `docs/demo/` 아래에 커밋. 파이프라인이 정지 프레임이
-아니라 실제 동영상을 생성한다는 영구 증거.
-
-### 샘플 프레임
+`highlight-015213/outputs/short.mp4`의 6초 발췌 — Sintel 트레일러 (CC-BY-3.0, © Blender Foundation), 39초 9:16 워터마크 + 자막.  전체 mp4는 `records/` 아래에 (gitignored); 위 GIF는 크기 최적화 발췌 (가로 360 px, 12 fps, ≈ 2.8 MB) — ffmpeg + palette dither로 생성하여 `docs/demo/`에 v1 파이프라인의 영구 증거로 유지.
 
 | 단일 하이라이트 | 숏츠 배치 |
 |----------------|----------|
 | ![Sintel 단일 하이라이트, 자막 번인과 좌측 상단 출처 오버레이가 적용된 9:16 숏](docs/caption-verify/highlight-015213-sintel-cap.jpg) | ![Sintel 숏츠 배치 첫 번째 컷, 자막 번인 9:16 숏](docs/caption-verify/shorts-batch-024840-short-01-cap.jpg) |
 | `highlight-015213` · 39 초 · 첫 시도 PASS | `shorts-batch-024840 / short-01` · 44 초 · 첫 시도 PASS |
 
-둘 다 *Sintel* 트레일러 (CC-BY-3.0, © Blender Foundation —
-`durian.blender.org`)에서 추출. 공통 요소: 좌측 상단 출처
-어트리뷰션 오버레이, 9:16 letterbox-blur 배경, 하단 safe-zone
-박스 안의 libass 번인 자막.
-
-### Faceless 파일럿 (영어 + 한국어 A/B)
-
-`faceless-short` 미션은 토픽 프롬프트만으로 60초 완성본을 산출합니다 — 입력 영상 없음.  파이프라인: ollama가 내레이션 스크립트 초안 → Kokoro-ONNX (한국어는 macOS Yuna) 음성 합성 → whisper.cpp 타이밍 전사 → 스크립트 정합 캡션 교정 → ollama가 6개 시각 검색어 추출 → Pexels Videos API에서 B-roll 수집 → ffmpeg가 트림·9:16 크롭·libass 자막 번인·출처 오버레이까지 완성.
-
-같은 토픽을 두 가지 언어로 렌더해 동일 B-roll 위에서 음성+자막 차이만 비교할 수 있게 만들어 두었습니다:
-
-| | 히타이트 (역사 × 성경) | 수소 (과학) |
-|---|---|---|
-| EN | ![히타이트 EN — 9:16 풀화면, 이집트 양식 벽 부조 B-roll 위 영어 자막](docs/pilots/screens/hittites-en-caption-verify.jpg) | ![수소 EN — 9:16 풀화면, 물방울 매크로 B-roll 위 영어 자막](docs/pilots/screens/hydrogen-en-caption-verify.jpg) |
-| KO | ![히타이트 KO — EN과 동일한 B-roll, AppleGothic 한국어 자막, macOS Yuna 음성](docs/pilots/screens/hittites-ko-caption-verify.jpg) | ![수소 KO — EN과 동일한 B-roll, 한국어 자막, Yuna 음성](docs/pilots/screens/hydrogen-ko-caption-verify.jpg) |
-
-한국어 버전은 `FACELESS_REUSE_BROLL=<en_mission_dir>` 환경 변수로 영어 파일럿의 이어붙인 B-roll을 그대로 복사 — 영상은 동일, 음성+자막만 교체되어 비교가 순수한 언어 차원에서만 이뤄집니다.
-
-A/B 제작 노트, 플랫폼별 업로드 메타데이터, 다음 10개 토픽 큐는 모두 [`docs/pilots/`](docs/pilots/) 아래에 있습니다.  파일럿당 한계 비용: **$0** (Pexels 무료 티어, 그 외 단계는 모두 로컬).
+둘 다 *Sintel* 트레일러 (CC-BY-3.0, © Blender Foundation — `durian.blender.org`)에서 추출.  공통 요소: 좌측 상단 출처 어트리뷰션 오버레이, 9:16 letterbox-blur 배경, 하단 safe-zone 박스 안의 libass 번인 자막.
 
 ### 최근 미션
 
 | 미션 | 타입 | 소스 | 출력 | 총 소요 | QA |
 |------|------|------|------|---------|----|
-| `highlight-015213` | highlight | Sintel 1080p · Blender CC-BY-3.0 | 39 초 9:16 숏 (7.8 MB) | 34.2 초 | 첫 시도 PASS |
-| `highlight-024629` | highlight | 한국어 강의 fixture | 49 초 9:16 숏 (13.0 MB) | 53.8 초 | 첫 시도 PASS |
-| `shorts-batch-024840` | shorts-batch | Sintel 720p · Blender CC-BY-3.0 | 2 숏 (44 초 + 36 초) | 59.6 초 | 첫 시도 PASS |
+| `faceless-hittites-032538` | faceless-short | 토픽 프롬프트 + Pexels B-roll (8 windows) | 62.7 초 9:16 숏 (49 MB) | ~75 초 | 첫 시도 PASS |
+| `faceless-hittites-ko-032653` | faceless-short | 한국어 스크립트 + Yuna 음성 | 60.3 초 9:16 숏 (35 MB) | ~49 초 | 첫 시도 PASS |
+| `faceless-hydrogen-032742` | faceless-short | 토픽 프롬프트 + Pexels B-roll | 59.7 초 9:16 숏 (21 MB) | ~64 초 | 첫 시도 PASS |
+| `faceless-hydrogen-ko-032846` | faceless-short | 한국어 스크립트 + Yuna 음성 | 38.9 초 9:16 숏 (14 MB) | ~33 초 | 첫 시도 PASS |
+| `highlight-032405` | highlight | 한국어 CC-BY-3.0 인터뷰 클립 | 60 초 9:16 숏 | — | 첫 시도 PASS |
 | `summarize-025121` | summarize | Sintel 1080p · Blender CC-BY-3.0 | EN + KO `summary.md` (551 B) | — | 첫 시도 PASS |
-| `faceless-hittites-000112` | faceless-short | 토픽 프롬프트 (역사 × 성경) + Pexels B-roll | 55.2 초 9:16 숏 (42 MB) | ~2 분 | 첫 시도 PASS |
-| `faceless-hittites-ko-000654` | faceless-short | 한국어 스크립트 + Yuna 음성 + EN B-roll 재사용 | 52.9 초 9:16 숏 (40 MB) | ~50 초 | 첫 시도 PASS |
-| `highlight-203219` | highlight | 초기 개발 fixture | 30 초 숏 | 73.2 초 | **FAIL** — QA 게이트, 재시도 소진 |
+| `highlight-203219` | highlight | 초기 개발 fixture (2026-05-15) | 30 초 숏 | 73.2 초 | **FAIL** — QA 게이트, 재시도 소진 (블로커 파일 생성됨) |
 
-마지막 행은 의도된 것입니다 — QA 게이트는 형식적 검사가 아닙니다.
-`QA_RETRY_MAX` 소진 시 `records/blockers/<date>/<mission-id>.md`에
-블로커 파일이 기록되고 미션이 정지합니다. 전체 미션 원장:
-[`docs/metrics-dashboard.md`](docs/metrics-dashboard.md).
+FAIL 행은 보존: QA 게이트는 형식 검사가 아닙니다.  `QA_RETRY_MAX` 소진 시 `records/blockers/<date>/<mission-id>.md`에 블로커 파일이 기록되고 미션이 정지합니다.  전체 미션 원장: [`docs/metrics-dashboard.md`](docs/metrics-dashboard.md).
 
-### 미션별 타이밍
+### 미션별 타이밍 (v1 highlight 미션 한정)
 
-![미션별 시간 분해 — 하이라이트 미션, 단계(전사 + 선택 + 렌더 + 기타)별 스택 막대](docs/metrics/per-mission-time.png)
+![미션별 시간 분해 — v1 highlight 미션, 단계(전사 + 선택 + 렌더 + 기타)별 스택 막대](docs/metrics/per-mission-time.png)
 
-![처리량 — 총 컴퓨트 시간 1초당 생성된 출력 초, 하이라이트 미션별 막대](docs/metrics/throughput-realtime.png)
+![처리량 — 총 컴퓨트 시간 1초당 생성된 출력 초, v1 highlight 미션별 막대](docs/metrics/throughput-realtime.png)
 
-차트는 각 미션의 `metrics.json`으로부터
-[`scripts/generate-charts.py`](scripts/generate-charts.py)가
-생성합니다.  새 미션이 추가된 후 재생성하려면:
-[`scripts/setup-venv.sh`](scripts/setup-venv.sh)을 한 번 실행
-(`.venv/` 생성 + matplotlib 설치) → `.venv/bin/python scripts/generate-charts.py`.
-위 그래프의 모든 초는 로컬 CPU / GPU 시간 — 전사는 `whisper.cpp`,
-선택은 `ollama` (`llama3.2:3b`), 렌더는 `ffmpeg`. **위 단계 동안
-소비된 Anthropic API 토큰: 0.** Tier 1 / Tier 2 비용 방화벽은
-[`docs/cost-model.md`](docs/cost-model.md) 참조.
+> **범위 안내**: 위 차트는 **`highlight-*` 미션만** 포함합니다 — `metrics.json`이 단계별 `stages_s` 분해를 포함하는 유일한 미션 타입이기 때문.  `faceless-short` 미션 타이밍은 미션별 `metrics.json`에 단일 `total_s`로 기록되며 (파이프라인이 단일 bash 스크립트 → 단계 분해 없음) 위 차트에 표시되지 않습니다.  차트 생성기 v2가 두 종류를 통합할 예정입니다.  새 미션이 추가된 후 차트 재생성: [`scripts/setup-venv.sh`](scripts/setup-venv.sh)을 한 번 실행 (`.venv/` 생성 + matplotlib 설치) → `.venv/bin/python scripts/generate-charts.py`.
+
+위 그래프의 모든 초는 로컬 CPU / GPU 시간 — 전사는 `whisper.cpp`, 선택은 `ollama` (`llama3.2:3b`), 렌더는 `ffmpeg`. **위 단계 동안 소비된 Anthropic API 토큰: 0.** Tier 1 / Tier 2 비용 방화벽은 [`docs/cost-model.md`](docs/cost-model.md) 참조.
 
 ## 분석가/리뷰어를 위한 안내
 
@@ -329,8 +314,11 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 - [x] 일별 로드맵 [`docs/roadmap.md`](docs/roadmap.md) ("다음에 무엇을" 단일 출처)
 - [x] 플랫폼별 재이용 규칙 — `scripts/publish-gate.sh` (`internal-demo` / `public` / `youtube` / `instagram` / `tiktok`, 4개 `publish_rules` 필드 모두 소비)
 - [x] 저장소 auditor 서브에이전트 + 능동 surface (`docs/audit/CURRENT-ALERT.md` 자동 유지, `scripts/audit-run.sh`)
+- [x] **반응형 auditor — L1**: git post-commit 훅 (`scripts/hooks/post-commit.sh`)이 드리프트 위험 경로(`.claude/agents/`, `agents/`, `config/`, `CLAUDE.md`, `docs/operator-contract.md`, `scripts/audit-run.sh`, `.claude/settings.json`)를 건드린 커밋 직후 `audit-run.sh contract`을 백그라운드 실행. `scripts/install-hooks.sh install`로 설치.
+- [x] **반응형 auditor — L2**: 15분 간격 미션 이상 폴 (`scripts/audit-poll.sh` via `com.melons.agents.audit-poll.plist`)이 새 블로커 + QA-FAIL 클러스터를 감지하면 포커스된 audit 발화; 정상 시 no-op로 저렴. `scripts/install-scheduler.sh install audit-poll`로 설치.
 - [x] Clone-and-go 재현성 — 호스트 비종속 `.env.example`, OS 인식 `scripts/bootstrap.sh` (설치 명령 안내), `scripts/fetch-whisper-model.sh` 모델 자동 다운로드, `scripts/test-fresh-clone.sh` 시뮬레이터 + PASS 증거 [`docs/onboarding/fresh-clone-log.txt`](docs/onboarding/fresh-clone-log.txt)
-- [x] 미션별 메트릭 차트 — [`docs/metrics/per-mission-time.png`](docs/metrics/per-mission-time.png) + [`docs/metrics/throughput-realtime.png`](docs/metrics/throughput-realtime.png), `.venv/bin/python scripts/generate-charts.py`로 재생성 (venv는 `scripts/setup-venv.sh`)
+- [x] 미션별 메트릭 차트 (v1 highlight 미션 한정) — [`docs/metrics/per-mission-time.png`](docs/metrics/per-mission-time.png) + [`docs/metrics/throughput-realtime.png`](docs/metrics/throughput-realtime.png), `.venv/bin/python scripts/generate-charts.py`로 재생성 (venv는 `scripts/setup-venv.sh`)
+- [x] **단일 라인 자막 강제** — `scripts/split-long-captions.py`가 캡션 교정과 ASS 렌더 사이에 실행, 28자 초과 큐를 자연 구두점에서 분할. 모바일 2줄 박스 오버랩 차단.
 - [ ] 실제 사용자 URL fixture — _차단, 사용자 URL 대기 중_
 - [ ] 다른 호스트용 License probe 추가 (Vimeo CC 채널 등) — _보류, Vimeo는 item별 license endpoint 없음; 필요 시 재검토_
 - [ ] Audio fingerprint 체크 (chromaprint / `fpcalc`) — _보류, 비교용 fingerprint dataset 없음; 첫 takedown 이후 재검토_
