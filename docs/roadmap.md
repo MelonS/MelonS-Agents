@@ -15,22 +15,27 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 ## Now — active focus
 
-_Last updated 2026-05-16 afternoon.  Active goal in `docs/goal.md`
-is currently **empty** — the "Clone-and-go reproducibility" goal
-shipped at `d8f29e9` and migrated to Past goals.  Pick the resume
-point on the next session in this order:_
+_Last updated 2026-05-17 ~00:30 KST.  Active goal in `docs/goal.md`
+is **Faceless pilot A/B (science vs Bible-history)** with 3/4
+deliverable subgoals checked.  The four pilots (EN+KO × Hittites+Hydrogen)
+landed across 11 commits.  Terminal subgoal — operator's pick + reason
+in `docs/pilots/decision-log.md` — is the gate to goal completion._
 
-1. Check `docs/goal.md` — if user has set a new active goal, work it.
-2. Check `docs/audit/CURRENT-ALERT.md` — if present, address the
-   audit finding before picking up the goal.
-3. If neither, look at this section's open items (currently none)
-   or promote a deferred item from `docs/ideas.md`.
-4. The pre-existing **Iterative QA-feedback loop inside editor**
-   stays parked below (in "Blocked / parked") — its own description
-   defers it until we see compute pressure, which hasn't happened.
+1. **Operator** watches the four mp4s under
+   `records/missions/2026-05-17/faceless-*/outputs/short.mp4` and
+   records their pick in the "Decision to be made" section of
+   [`docs/pilots/decision-log.md`](pilots/decision-log.md).  Two axes:
+   niche (history × Bible / science / both) and language (EN first /
+   EN+KO parallel / KO first).  This ticks the final goal subgoal.
+2. After the pick lands, promote a queued topic from
+   [`docs/pilots/topic-backlog.md`](pilots/topic-backlog.md) (10
+   candidates ready, mix of CURATED + AI-DRAFT-verified) and render
+   the next short via `agents/missions/faceless-short/run.sh`.
+3. Check `docs/audit/CURRENT-ALERT.md` — if present, address the
+   audit finding before picking up the next pilot.
 
-- [ ] _(intentionally empty — last goal landed cleanly.  Waiting
-  on the user to set the next active goal in `docs/goal.md`.)_
+- [ ] **Operator decision in `decision-log.md`** — blocks goal completion;
+  awaiting human review of the four pilots produced this session.
 
 
 ## Next — queued, in priority order
