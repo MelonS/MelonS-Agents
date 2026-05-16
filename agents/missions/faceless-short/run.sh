@@ -100,8 +100,24 @@ SRT_PATH="$MDIR/resources/captions.srt"
 
 TRANSCRIPT_JSON=$(WHISPER_LANG="${WHISPER_LANG:-en}" whisper_transcribe "$NARRATION_WAV" "$TRANSCRIPT_PREFIX")
 whisper_segments "$TRANSCRIPT_JSON" > "$SEGMENTS_JSON"
-ffmpeg_segments_to_srt "$SEGMENTS_JSON" 0 "$NARRATION_DUR" "$SRT_PATH"
-log_ok "captions: $(grep -c '^[0-9]' "$SRT_PATH") segments"
+
+# Whisper gives us TIMING; the script is the ground truth for TEXT.
+# Run script-aware caption correction so proper nouns like "Hattusa"
+# don't leak through as "Hadusa" (small-model whisper drift on names).
+SRT_RAW="${SRT_PATH%.srt}.raw.srt"
+ffmpeg_segments_to_srt "$SEGMENTS_JSON" 0 "$NARRATION_DUR" "$SRT_RAW"
+if python3 "$REPO_ROOT/scripts/correct-captions.py" \
+      --script "$SCRIPT_PATH" \
+      --srt-in "$SRT_RAW" \
+      --srt-out "$SRT_PATH" \
+      --verbose 2> "$MDIR/resources/caption-corrections.log"; then
+  CORR_COUNT=$(grep -c "→" "$MDIR/resources/caption-corrections.log" || true)
+  log_ok "captions: $(grep -c '^[0-9]' "$SRT_PATH") segments (corrected $CORR_COUNT)"
+else
+  log_warn "caption correction failed — using raw whisper output"
+  cp "$SRT_RAW" "$SRT_PATH"
+  log_ok "captions: $(grep -c '^[0-9]' "$SRT_PATH") segments (uncorrected)"
+fi
 
 # --- Stage 4: visual keyword extraction --------------------------------
 log_step "4/6  ollama → B-roll search terms"

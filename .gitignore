@@ -64,6 +64,9 @@ scratch/
 # =============================================================================
 *.log
 logs/
+# Faceless-pilot correction logs are committed evidence (short, append-only,
+# read by docs/pilots/decision-log.md as part of the deliverable trail).
+!docs/pilots/screens/*-corrections.log
 
 # =============================================================================
 # OS / editor cruft

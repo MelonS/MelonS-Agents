@@ -52,6 +52,30 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-16** (late evening, ~23:34 KST) **Script-aware caption
+  correction — v2 pilots re-rendered with clean proper nouns.**  The v1
+  Hittites pilot exposed a real defect: whisper-cpp small mis-transcribed
+  `Hattusa` → `Hadusa` (and `Winckler` → `Winkler`, etc.) on proper
+  nouns the small model has no training mass for.  Key insight: when
+  the audio is synthesized from a script we wrote, the SCRIPT is ground
+  truth for TEXT and whisper is only needed for TIMING.
+  New [`scripts/correct-captions.py`](../scripts/correct-captions.py)
+  tokenizes both, runs `difflib.SequenceMatcher` (case-folded,
+  punct-stripped) to align whisper tokens against script tokens, and
+  emits a corrected SRT that uses the script's wording at whisper's
+  timestamps.  Wired into `agents/missions/faceless-short/run.sh` between
+  the whisper step and the ASS sidecar generation.  Re-ran both pilots:
+  Hittites (`faceless-hittites-233021`) corrected 5/21 cues including
+  `Hadusa` → `Hattusa`, `Sipululiumii` → `Suppiluliuma I`,
+  `archeological` → `archaeological` ×2;  Hydrogen
+  (`faceless-hydrogen-233219`) corrected 4/18 including `75%` → `75 percent`
+  and dash punctuation around `H2O`.  V2 thumbnails, scripts, and full
+  correction logs committed under
+  [`docs/pilots/screens/`](pilots/screens/);
+  [`docs/pilots/decision-log.md`](pilots/decision-log.md) updated to
+  point at the v2 mission IDs and note the defect closure.  V1
+  intermediate artifacts can be garbage-collected from `records/`
+  whenever (gitignored either way).
 - **2026-05-16** (late evening, ~23:25 KST) **Faceless pilot A/B
   produced — Hittites + Hydrogen shorts rendered end-to-end at $0
   marginal cost.**  New mission type `faceless-short` shipped:

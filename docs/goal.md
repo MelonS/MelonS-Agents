@@ -44,16 +44,18 @@ niche from real watchable output rather than abstract preference.
       letterbox-blurs to 9:16, burns captions and attribution.  No
       paid APIs used.  Shipped `1663301` (and pilot-time fixes for
       mapfile + Kokoro wiring, see next commit).
-- [x] **Pilot 1 deliverable — Hittites short** — 9:16 57.2 s mp4
-      (`records/missions/2026-05-16/faceless-hittites-232141/outputs/short.mp4`)
-      + caption-verify frame at
+- [x] **Pilot 1 deliverable — Hittites short** — 9:16 55.8 s mp4
+      (`records/missions/2026-05-16/faceless-hittites-233021/outputs/short.mp4`,
+      v2 after script-aware caption correction pass) + caption-verify
+      frame at
       [`docs/pilots/screens/hittites-caption-verify.jpg`](pilots/screens/hittites-caption-verify.jpg).
       Neutral documentary tone; hook = "biblical kingdom dismissed
       as legend until 1906".  Production notes in
       [`docs/pilots/decision-log.md`](pilots/decision-log.md#pilot-1--hittites-history--bible).
-- [x] **Pilot 2 deliverable — Hydrogen short** — 9:16 56.7 s mp4
-      (`records/missions/2026-05-16/faceless-hydrogen-232334/outputs/short.mp4`)
-      + caption-verify frame at
+- [x] **Pilot 2 deliverable — Hydrogen short** — 9:16 51.0 s mp4
+      (`records/missions/2026-05-16/faceless-hydrogen-233219/outputs/short.mp4`,
+      v2 after script-aware caption correction pass) + caption-verify
+      frame at
       [`docs/pilots/screens/hydrogen-caption-verify.jpg`](pilots/screens/hydrogen-caption-verify.jpg).
       Curiosity tone; hook = "75 percent of the universe and 10
       percent of your body".  Production notes in
