@@ -15,38 +15,22 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 ## Now — active focus
 
-_Set by shutdown protocol on 2026-05-15: session closed cleanly with
-all queued items shipped.  Pick the resume point on the next session
-in this order:_
+_Last updated 2026-05-16 afternoon.  Active goal in `docs/goal.md`
+is currently **empty** — the "Clone-and-go reproducibility" goal
+shipped at `d8f29e9` and migrated to Past goals.  Pick the resume
+point on the next session in this order:_
 
-1. Read **`docs/daily/2026-05-16-overnight.md`** for what landed
-   overnight and the user-action queue.
-2. If the user has a new directive, set it as "Now" and start.
-3. Otherwise, promote a candidate from `docs/copyright-policy.md`
-   "Still TODO" block — those are scoped, real, and load-bearing
-   ahead of any external publish.
+1. Check `docs/goal.md` — if user has set a new active goal, work it.
+2. Check `docs/audit/CURRENT-ALERT.md` — if present, address the
+   audit finding before picking up the goal.
+3. If neither, look at this section's open items (currently none)
+   or promote a deferred item from `docs/ideas.md`.
 4. The pre-existing **Iterative QA-feedback loop inside editor**
    stays parked below (in "Blocked / parked") — its own description
    defers it until we see compute pressure, which hasn't happened.
 
-- [ ] _(intentionally empty — the session ended on a complete state.
-  See above for resume order.)_
-
-<!-- suggest (Claude, 2026-05-15 overnight, awaiting user OK)
-  Two items shipped tonight script-level:
-  1. docs/ideas.md (parking log, v1-promise device)
-  2. scripts/audit-run.sh active surface → docs/audit/CURRENT-ALERT.md
-
-  Two items still gated on user approval (proposal at
-  docs/proposals/2026-05-15-auditor-active.md):
-  - Apply Part A: paragraph in .claude/agents/auditor.md "Principles"
-    declaring the alert surface (so the agent knows its report is
-    post-processed).
-  - Apply Part B: line in CLAUDE.md session-start protocol pointing
-    to CURRENT-ALERT.md.
-
-  Both are 1-paragraph edits. Promote whichever the user OKs into Now.
--->
+- [ ] _(intentionally empty — last goal landed cleanly.  Waiting
+  on the user to set the next active goal in `docs/goal.md`.)_
 
 
 ## Next — queued, in priority order
@@ -151,8 +135,8 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
   for v2+, language toned down per `writing_tone` rule.  Holds the
   v1-only promise — new ideas land here instead of derailing the
   main pipeline (commit `71d785f`).
-- **2026-05-15** Auditor goes autonomous + statusline live.
-  `scripts/com.melons.agents.auditor.plist` schedules
+- **2026-05-15** Auditor goes autonomous + statusline live (commit
+  `123f895`).  `scripts/com.melons.agents.auditor.plist` schedules
   `audit-run.sh all` daily at 03:00 local via launchd.
   `scripts/install-scheduler.sh` now manages both the queue and
   auditor jobs (`install [queue|auditor|all]`); rewritten without
@@ -164,7 +148,7 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
   `dir · git · model · context-remaining` at the bottom on every
   refresh. The auto-generated `.claude/statusline.sh` is gitignored
   (per-user, regenerable).
-- **2026-05-15** Repository auditor agent. New
+- **2026-05-15** Repository auditor agent (commit `af9857f`).  New
   [`.claude/agents/auditor.md`](../.claude/agents/auditor.md) — a
   read-only subagent (model: sonnet) that walks the whole repo and
   writes a structured report to
@@ -177,15 +161,15 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
   Distinct from `qa` (mission-scoped); the auditor is project-wide.
   Reports go to `docs/audit/` (committed) so the trail survives a
   machine swap.
-- **2026-05-15** Minimal Claude Code statusline at
-  [`scripts/statusline.sh`](../scripts/statusline.sh) — zero-dep
+- **2026-05-15** Minimal Claude Code statusline (commit `af9857f`)
+  at [`scripts/statusline.sh`](../scripts/statusline.sh) — zero-dep
   bash script that reads the JSON Claude Code feeds it on stdin
   and prints `dir · git · model · cost · session-id` on a single
   line. To enable, the user adds 4 lines to `~/.claude/settings.json`
   (or runs `/config` interactively). Heavier alternatives noted in
   the script header (chongdashu/cc-statusline, 598⭐, adds context
   bars + burn rate but pulls npm dependencies).
-- **2026-05-15** Analyst-facing docs.  New
+- **2026-05-15** Analyst-facing docs (commit `7a355a3`).  New
   [`docs/for-analysts.md`](for-analysts.md) is the single-file entry
   point for read-only review of the repo — orientation, subagent
   table, retry semantics, common-mistakes pre-empt list.  New
@@ -196,7 +180,7 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
   on the diagram.  Motivation: an external analyzer mis-tiered the
   architecture and recommended optimizations to the wrong layer;
   these docs short-circuit that for future analysts.
-- **2026-05-15** Pexels Videos integration. New
+- **2026-05-15** Pexels Videos integration (commit `3b9175d`).  New
   `scripts/pexels-fetch.sh` queries the Pexels Videos API by search
   string, picks the smallest file ≥ `min_height` (default 720), and
   drops `<id>.mp4` + `<id>.meta.json` into `/tmp/smoke/pexels/`.
@@ -221,7 +205,7 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
   cache that links each entry back to the matching contract
   section. "If memory disagrees, this file wins."
 - **2026-05-15** License-string probe for archive.org + wikimedia
-  commons. `probe_license(url, out_json)` reads the per-item license
+  commons (commit `e530302`).  `probe_license(url, out_json)` reads the per-item license
   metadata (archive.org's `/metadata/<id>` JSON and the wikimedia
   `extmetadata` API), maps CC license URLs / short codes onto canonical
   tags (`CC-BY-3.0`, etc.). `resolve_final_license` glues it into each
@@ -229,16 +213,16 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
   runs, `FIXTURE_LICENSE` gets populated, and `resources/license.json`
   records the provenance. End-to-end verified: archive.org BBB URL →
   probed → CC-BY-3.0 → publish gate accepts.
-- **2026-05-15** Strike-aware source rejection — the strike log is no
-  longer write-only. `check_source_allowed` consults
+- **2026-05-15** Strike-aware source rejection (commit `7ca547b`) —
+  the strike log is no longer write-only.  `check_source_allowed` consults
   `records/strikes.log` *before* the allowlist; a URL with any prior
   strike is refused (exit 6) even if its domain is otherwise
   permitted. Refusal surfaces the original strike row to stderr.
   Verified: baseline blender.org URL passes; after `append_strike`,
   same URL refused with strike provenance; after cleanup, baseline
   restored.
-- **2026-05-15** Automated copyright filter v1. New
-  `config/copyright-allowlist.yaml` (Blender + Xiph + archive.org +
+- **2026-05-15** Automated copyright filter v1 (commit `28dda8f`).
+  New `config/copyright-allowlist.yaml` (Blender + Xiph + archive.org +
   wikimedia.org permissive domains, per-license publish rules), new
   `agents/lib/copyright.sh` (`check_source_allowed`, `guard_publish`,
   `append_strike`), new `scripts/publish-gate.sh` stub for the future
@@ -250,8 +234,8 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
   Deferred items (strike-aware rejection, license probe, audio
   fingerprint, logo detection) listed in `docs/copyright-policy.md`
   with rationale for each.
-- **2026-05-15** QA feedback retry loop across all three missions.
-  New `agents/lib/retry.sh` (qa_extract_feedback / qa_feedback_block /
+- **2026-05-15** QA feedback retry loop across all three missions
+  (commit `8e71c9b`).  New `agents/lib/retry.sh` (qa_extract_feedback / qa_feedback_block /
   qa_write_blocker), wrapped highlight + summarize + shorts-batch in
   a retry loop capped by `QA_RETRY_MAX` (default 2 retries → up to 3
   attempts). On exhaustion writes a halt log under
@@ -261,15 +245,15 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
   both FAIL, model picked a different window on attempt 2 (feedback
   injection works), blocker file written.
 - **2026-05-15** Source-attribution wiring propagated to summarize +
-  shorts-batch. Extracted the 45-line resolver block from
+  shorts-batch (commit `0eaaee2`).  Extracted the 45-line resolver block from
   `highlight/run.sh` into a shared `agents/lib/attribution.sh` with
   `resolve_source_attribution()` + `write_sources_record()`. All three
   missions now emit `outputs/SOURCES.txt`; summarize also appends a
   "Source & license" footer to `summary.md`; shorts-batch passes the
   attribution string through to `ffmpeg_render_short` so every short
   in the batch gets the burned-in watermark.
-- **2026-05-15** Visual layout verification on real footage. Found a libass
-  scaling bug (Fontsize interpreted against default 384×288 PlayRes →
+- **2026-05-15** Visual layout verification on real footage (commit
+  `3decfa7`).  Found a libass scaling bug (Fontsize interpreted against default 384×288 PlayRes →
   fonts rendered 6.67× too large at 1920px output). Fixed by generating
   an explicit `.ass` sidecar with `PlayResY=1920` and switching the
   renderer from `subtitles=…:force_style=` to `ass=`. All four layout

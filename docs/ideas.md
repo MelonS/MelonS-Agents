@@ -106,6 +106,52 @@ a real architectural ceiling in the v1 design; don't lose it.
 
 ## Intelligence + Misc
 
+### 2026-05-16 | Generative-AI for visual / audio assets | M
+
+**Motivation**: operator direction "할거 없으면 생성형ai 사용해서
+하는것도 해보고 있어".  The current pipeline produces 9:16 shorts
+from existing CC video sources.  Generative AI could fill two
+gaps that don't have a content source: thumbnails / cover frames
+(currently a frame-extract from the rendered short) and
+audio-fillers (silence between dialogue lines, intro / outro
+beds).  Worth a small probe before committing — many directions
+overlap with what's already in the pipeline and could be
+redundant.
+
+**Sketch — three sub-directions to evaluate**:
+1. **Local image generation for thumbnails** — Stable Diffusion
+   via ComfyUI or `diffusers` running on the same Apple Silicon
+   that drives whisper / ollama.  Tier 2 (local, no API cost) by
+   design.  Output: one 1080×1920 PNG per short as a "cover" —
+   currently we just extract a frame.  Concrete value if the
+   source video has long static frames where a frame-extract is
+   ugly.
+2. **TTS for filler narration** — Coqui / Piper / Bark.  Useful
+   only for missions where there's a logical gap in source audio
+   that captions can't bridge.  Probably narrow value; the macOS
+   `say` we already use for fixtures is good enough for that
+   case.
+3. **Tier-1 image generation (paid APIs)** — DALL-E 3, Imagen 4,
+   Midjourney via Discord — **money firewall** applies.  Reject
+   by default; only consider if a specific mission needs a
+   non-local-renderable asset and operator opts in.
+
+**Dependencies**: v1 fully stabilized (done — clone-and-go goal
+shipped); a target mission that *needs* a generated asset
+(speculative — no current mission does).  Risk: turning on
+generative-AI tools "because we can" violates the
+v1-안정화-전까지-메인-외-구현-금지 promise.  Hold direction (1)
+behind a concrete mission-side use case.
+
+**Estimated cost**: probe phase 1 day (install one local image
+generator, render 3 test thumbnails, compare against
+frame-extract on the same short).  No paid-API spend in the
+probe.
+
+**Status**: parked (v2+).
+
+---
+
 ### 2026-05-15 | Scout agent (external information gathering) | M
 
 **Motivation**: Multi-agent harness construction precedent is thin in

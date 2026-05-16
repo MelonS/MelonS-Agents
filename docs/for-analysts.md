@@ -69,7 +69,7 @@ concrete artifact exists that proves the path works.
 
 ## Subagent layout (already verified, do not re-recommend)
 
-`.claude/agents/*.md` frontmatter sets the model.  As of 2026-05-15:
+`.claude/agents/*.md` frontmatter sets the model.  As of 2026-05-16:
 
 | Agent          | Model     | Role                                              |
 | -------------- | --------- | ------------------------------------------------- |
@@ -78,6 +78,7 @@ concrete artifact exists that proves the path works.
 | `resourcer`    | sonnet    | Fetch / probe / prepare assets → `resources/`     |
 | `editor`       | sonnet    | Apply changes → `outputs/`                        |
 | `qa`           | sonnet    | Validate outputs against plan.md → `qa-report.md` |
+| `auditor`      | sonnet    | Out-of-band read-only audit (daily 03:00 via launchd) → `docs/audit/<date>-<focus>.md` + `CURRENT-ALERT.md` when non-CLEAN |
 
 A common analyst suggestion is "downgrade subagents from opus to
 sonnet."  This is already done.
