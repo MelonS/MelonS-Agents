@@ -91,6 +91,52 @@ Ready-to-paste upload copy is in [`upload-metadata/`](upload-metadata/) — one 
 
 ---
 
+## Sonnet trial (v6) — script-quality benchmark
+
+After watching the v5 pilots the operator flagged a script-quality
+ceiling: weak hooks, encyclopedia-style flat prose, factual mixing
+(hydrogen "10% of body" stated then atom-count figures later
+without disambiguation — viewer confusion).  The pipeline's
+**script-generation stage** was rerouted from `llama3.2:3b` (Tier 2)
+to Claude Sonnet (Tier 1, Max-plan subscription quota) via
+`scripts/gen-script-claude.sh`.  All other pipeline stages remain
+Tier-2 unchanged.
+
+Four v6 mp4s rendered with identical pipeline downstream of the
+script swap.  Side-by-side hooks, full scripts, per-window keywords,
+and caption-verify thumbnails live in
+[`docs/pilots/sonnet-trial/`](sonnet-trial/) — see that page's
+README for the full trial writeup.
+
+Key observable differences vs v5:
+- **Hooks**: Sonnet rejects "What if…" / "Did you know…" openings
+  and lands on specific-number bare statements ("Scholars called
+  the Hittites fiction", "63 of every 100 atoms in your body is
+  hydrogen") that earn the next 5 seconds.
+- **Factual coherence**: hydrogen script picks one frame (atom
+  count) and stays in it — the "10% vs 60% 헷갈리네" failure mode
+  is eliminated.
+- **B-roll keyword quality**: Sonnet's specific-detail prose feeds
+  cleaner per-window keyword extraction (Hittites EN windows landed
+  `Turkish village excavation`, `cuneiform tablets`, `chariots at
+  battle`, `Ramesses II treaty`, `Hittite capital ruins`).
+
+Cost: ~2,800 tokens total across the 4 scripts (Sonnet) — under
+1% of weekly Max-plan quota.  Money-firewall not triggered;
+subscription quota usage, not new paid resource.
+
+Architectural lesson captured in
+[`docs/cost-model.md`](../cost-model.md#when-tier-2-is-the-wrong-default--creative-stages):
+Tier-2-as-default applies to mechanical / high-volume stages.
+One-shot creative stages (script hook) route to Tier-1 because
+quality compounds and per-call cost is bounded.
+
+**Operator pick still needed** — Sonnet routing is orthogonal to
+niche choice.  The trial supports decision-making but does not
+substitute for the niche pick.
+
+---
+
 ## Comparison frame — what we're learning from A/B
 
 | Dimension | Hittites (history × Bible) | Hydrogen (science) |

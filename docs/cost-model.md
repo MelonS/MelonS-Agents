@@ -99,6 +99,48 @@ The QA retry loop ([`agents/lib/retry.sh`](../agents/lib/retry.sh))
 catches the worst noise; bad picks get the previous `qa-report.md`
 prepended to the prompt on retry.
 
+### When Tier 2 is the wrong default — creative stages
+
+Tier-2 was originally applied to **every** Tier-2 stage in a mission.
+On 2026-05-17 the operator surfaced a real failure of that blanket
+rule: the `faceless-short` script-generation stage was running on
+`llama3.2:3b` and producing scripts that didn't hold a viewer's
+attention.  Specific failures observed across 4 pilots:
+
+- Abstract "What if…" openings the model couldn't be prompted out of.
+- Encyclopedia-style flat prose, no narrative shape.
+- Fact-mixing (hydrogen = "10 % of body" stated as a hook, but the
+  same script later cited body composition figures that only hold
+  by atom count — different frame, same paragraph).
+
+Routing the same step to Claude Sonnet via `scripts/gen-script-claude.sh`
+produced scripts with strong specific-number hooks ("63 of every 100
+atoms in your body is hydrogen"), proper narrative beats, and
+factually coherent number framing.
+
+The lesson: **Tier-2 makes sense for high-volume, deterministic,
+mechanically-correct stages.  It does not make sense for one-shot
+creative stages where quality compounds downstream.**
+
+Heuristic for choosing the tier per pipeline stage:
+
+| Stage type | Right tier | Why |
+|---|---|---|
+| Repeated, deterministic (transcribe, render, fetch) | Tier 2 | Volume × API cost would be ruinous; output is mechanically correct |
+| Repeated, semi-deterministic (clip selection, keyword extraction) | Tier 2 | Volume still high; QA retry compensates for model noise |
+| One-shot, creative (script hook, opening line) | **Tier 1** | Volume is 1× per mission; quality compounds (a weak hook makes the next 55 seconds invisible to the viewer); price is ~$0.01 per call ≈ negligible against Max plan quota |
+| One-shot, precision-sensitive (script with mass-vs-atom-count traps) | **Tier 1** | Small model conflates close-but-distinct facts in one breath; the precision price is the entire output |
+
+**Money firewall does NOT trigger for Tier-1 routing within a
+Max-plan subscription** — the subscription is pre-paid; per-call
+quota is the cost frame, not new dollar spend.  See
+[`docs/operator-contract.md`](operator-contract.md) §3.
+
+The `faceless-short` mission's script stage routes through Sonnet
+when `FACELESS_SCRIPT_OVERRIDE` points at a pre-generated script
+file (typically produced by `scripts/gen-script-claude.sh`).  Other
+stages stay Tier-2 unchanged.
+
 ## Tier 1 cost optimizations already in place
 
 - **File-based subagent handoff.**  Subagents do not share the
