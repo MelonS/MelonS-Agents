@@ -56,15 +56,49 @@
 
 ## 샘플 출력
 
-![샘플 프레임 — 자막 번인 + 출처 오버레이가 적용된 9:16 숏](docs/caption-verify/highlight-015213-sintel-cap.jpg)
+지금까지 15건의 미션 출력이 생성되었습니다. 아래는 대표 프레임
+몇 장, 최근 실행 테이블, 그리고 각 미션의 `metrics.json`에서
+추출한 미션별 타이밍 차트입니다.
 
-*Sintel* 트레일러 (CC-BY-3.0, © Blender Foundation —
-`durian.blender.org`)로부터 엔드투엔드로 생성된 39초 9:16 숏,
-미션 `highlight-015213`. 프레임에 보이는 요소: 좌측 상단 출처
+### 샘플 프레임
+
+| 단일 하이라이트 | 숏츠 배치 |
+|----------------|----------|
+| ![Sintel 단일 하이라이트, 자막 번인과 좌측 상단 출처 오버레이가 적용된 9:16 숏](docs/caption-verify/highlight-015213-sintel-cap.jpg) | ![Sintel 숏츠 배치 첫 번째 컷, 자막 번인 9:16 숏](docs/caption-verify/shorts-batch-024840-short-01-cap.jpg) |
+| `highlight-015213` · 39 초 · 첫 시도 PASS | `shorts-batch-024840 / short-01` · 44 초 · 첫 시도 PASS |
+
+둘 다 *Sintel* 트레일러 (CC-BY-3.0, © Blender Foundation —
+`durian.blender.org`)에서 추출. 공통 요소: 좌측 상단 출처
 어트리뷰션 오버레이, 9:16 letterbox-blur 배경, 하단 safe-zone
-박스 안의 libass 번인 자막. QA: 첫 시도 PASS. 전체 미션 기록은
-`records/` 아래 로컬 전용(gitignore); 프레임 자체만 파이프라인
-출력의 시각적 증거로 커밋되어 있음.
+박스 안의 libass 번인 자막.
+
+### 최근 미션
+
+| 미션 | 타입 | 소스 | 출력 | 총 소요 | QA |
+|------|------|------|------|---------|----|
+| `highlight-015213` | highlight | Sintel 1080p · Blender CC-BY-3.0 | 39 초 9:16 숏 (7.8 MB) | 34.2 초 | 첫 시도 PASS |
+| `highlight-024629` | highlight | 한국어 강의 fixture | 49 초 9:16 숏 (13.0 MB) | 53.8 초 | 첫 시도 PASS |
+| `shorts-batch-024840` | shorts-batch | Sintel 720p · Blender CC-BY-3.0 | 2 숏 (44 초 + 36 초) | 59.6 초 | 첫 시도 PASS |
+| `summarize-025121` | summarize | Sintel 1080p · Blender CC-BY-3.0 | EN + KO `summary.md` (551 B) | — | 첫 시도 PASS |
+| `highlight-203219` | highlight | 초기 개발 fixture | 30 초 숏 | 73.2 초 | **FAIL** — QA 게이트, 재시도 소진 |
+
+마지막 행은 의도된 것입니다 — QA 게이트는 형식적 검사가 아닙니다.
+`QA_RETRY_MAX` 소진 시 `records/blockers/<date>/<mission-id>.md`에
+블로커 파일이 기록되고 미션이 정지합니다. 전체 미션 원장:
+[`docs/metrics-dashboard.md`](docs/metrics-dashboard.md).
+
+### 미션별 타이밍
+
+![미션별 시간 분해 — 하이라이트 미션, 단계(전사 + 선택 + 렌더 + 기타)별 스택 막대](docs/metrics/per-mission-time.png)
+
+![처리량 — 총 컴퓨트 시간 1초당 생성된 출력 초, 하이라이트 미션별 막대](docs/metrics/throughput-realtime.png)
+
+차트는 각 미션의 `metrics.json`으로부터
+[`scripts/generate-charts.py`](scripts/generate-charts.py)가
+생성합니다. 위 그래프의 모든 초는 로컬 CPU / GPU 시간 — 전사는
+`whisper.cpp`, 선택은 `ollama` (`llama3.2:3b`), 렌더는 `ffmpeg`.
+**위 단계 동안 소비된 Anthropic API 토큰: 0.** Tier 1 / Tier 2
+비용 방화벽은 [`docs/cost-model.md`](docs/cost-model.md) 참조.
 
 ## 분석가/리뷰어를 위한 안내
 
