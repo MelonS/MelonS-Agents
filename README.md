@@ -24,6 +24,59 @@
 > in this repository is a step in that evolution — the history is not
 > a record of outputs, but of how the agent system itself grows over time.
 
+## Design notes
+
+A few choices that distinguish this from a typical agent demo:
+
+- **Outcome layer vs. work queue, kept separate.** [`docs/goal.md`](docs/goal.md)
+  holds the active goal as a concrete deliverable; [`docs/roadmap.md`](docs/roadmap.md)
+  holds the day-level work queue. An empty queue does **not** mean the
+  goal is achieved — only the goal's "Done when" criteria do. The split
+  exists because an earlier 24-hour stretch produced 11 infra commits
+  with the queue reading 0 open items and 0 actual outputs.
+- **Operator contract as canonical, committed source of truth.**
+  [`docs/operator-contract.md`](docs/operator-contract.md) — 12 hard
+  rules + conventions. The agent's local memory is a fast-access cache
+  that links back to this file; if the two disagree, the file wins and
+  the memory entry is corrected.
+- **Cost firewall between orchestration and execution.** Anthropic API
+  tokens are spent only during orchestration (Tier 1). Mission execution
+  (transcribe → select → render → QA) runs entirely on local tools —
+  `whisper.cpp` + `ollama` + `ffmpeg` — and costs zero tokens. See
+  [`docs/cost-model.md`](docs/cost-model.md).
+- **Out-of-band auditor with an active alert surface.** The
+  [`auditor`](.claude/agents/auditor.md) subagent runs daily at 03:00
+  via `launchd`, walks the whole repo read-only, and writes to a stable
+  channel: [`docs/audit/CURRENT-ALERT.md`](docs/audit/) exists iff the
+  latest verdict is non-CLEAN; the next interactive session is
+  contractually obligated to read it before picking up the goal.
+- **File-based subagent handoff.** Subagents do not share conversation
+  history. They communicate through committed files (`plan.md` /
+  `MANIFEST.md` / `qa-report.md`). Each subagent's context is bounded
+  by its prompt + the manifest it reads — predictable token cost,
+  predictable failure modes.
+
+## Sample output
+
+![Sample frame — 9:16 short with burned-in captions and source attribution](docs/caption-verify/highlight-032405-son-heungmin-cap.jpg)
+
+60-second 9:16 short produced from a CC-BY-3.0 interview clip on
+Wikimedia Commons (mission `highlight-032405`). The frame shows the
+top-left source-attribution overlay, the blurred-letterbox 9:16
+background, and a libass-burned caption rendering the speaker's
+transcribed Korean line. QA: PASS on attempt 1. The full mission
+record lives under `records/` (gitignored); the caption-verify frame
+is the only committed artifact, kept as durable visual evidence.
+
+## For analysts / reviewers
+
+Doing a read-only analysis of this repository? Start at
+[`docs/for-analysts.md`](docs/for-analysts.md) — a single-file entry
+point optimized for first-pass diagnosis. Pairs with
+[`docs/cost-model.md`](docs/cost-model.md) (where Anthropic vs. local
+cost lives) and [`docs/architecture.md`](docs/architecture.md) (full
+data-flow map).
+
 ## Architecture
 
 ```
@@ -134,15 +187,6 @@ Install the nightly scheduler:
 ```bash
 ./scripts/install-scheduler.sh install
 ```
-
-## For analysts / reviewers
-
-Doing a read-only analysis of this repository?  Start at
-[`docs/for-analysts.md`](docs/for-analysts.md) — single-file entry
-point optimized for first-pass diagnosis.  Pairs with
-[`docs/cost-model.md`](docs/cost-model.md) (where Anthropic vs
-local cost lives) and [`docs/architecture.md`](docs/architecture.md)
-(full data-flow map).
 
 ## Operator contract
 

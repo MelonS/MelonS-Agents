@@ -24,6 +24,54 @@
 > 커밋은 그 진화의 한 단계입니다. 히스토리는 산출물의 기록이 아니라,
 > 에이전트 시스템 자체가 성장해 온 궤적입니다.
 
+## 설계 노트
+
+일반적인 에이전트 데모와 차별화되는 설계 선택들:
+
+- **목표 계층과 작업 큐의 분리.** [`docs/goal.md`](docs/goal.md)는
+  활성 목표를 구체적 산출물로 정의; [`docs/roadmap.md`](docs/roadmap.md)는
+  일별 작업 큐. 큐가 비었다고 목표가 달성된 것은 **아님** — 목표의
+  "Done when" 조건만이 달성을 정의함. 분리 이유: 이전 24시간 구간이
+  인프라 커밋 11개를 쌓는 동안 큐는 0건이었고 실제 산출물도 0건이었던
+  사고를 다시 막기 위함.
+- **운영 계약은 커밋된 단일 출처.**
+  [`docs/operator-contract.md`](docs/operator-contract.md) — 12개
+  하드 룰 + 컨벤션. 에이전트의 로컬 메모리는 이 파일을 가리키는
+  빠른 캐시; 두 곳이 어긋나면 이 파일이 이김.
+- **오케스트레이션과 실행 사이의 비용 방화벽.** Anthropic API 토큰은
+  Tier 1 오케스트레이션에서만 소비. 미션 실행(전사 → 선택 → 렌더
+  → QA)은 `whisper.cpp` + `ollama` + `ffmpeg` 로컬 실행이며
+  토큰 비용 0. [`docs/cost-model.md`](docs/cost-model.md) 참조.
+- **별도 트랙 auditor + 능동 알림 surface.**
+  [`auditor`](.claude/agents/auditor.md) 서브에이전트는 launchd로
+  매일 03:00 발화, 저장소 전체를 읽기 전용 순회, 안정 채널에 기록:
+  [`docs/audit/CURRENT-ALERT.md`](docs/audit/)는 최근 verdict이
+  비-CLEAN일 때만 존재 — 다음 인터랙티브 세션은 목표를 잡기 전
+  이 파일을 의무적으로 읽음.
+- **파일 기반 서브에이전트 핸드오프.** 서브에이전트들은 대화
+  히스토리를 공유하지 않음. 커밋되는 파일(`plan.md` / `MANIFEST.md`
+  / `qa-report.md`)을 통해 통신. 각 서브에이전트의 컨텍스트는 자신의
+  프롬프트 + 자신이 읽는 매니페스트로 한정됨 — 예측 가능한 토큰
+  비용, 예측 가능한 실패 모드.
+
+## 샘플 출력
+
+![샘플 프레임 — 자막 번인 + 출처 오버레이가 적용된 9:16 숏](docs/caption-verify/highlight-032405-son-heungmin-cap.jpg)
+
+Wikimedia Commons의 CC-BY-3.0 인터뷰 클립으로 생성된 60초 9:16 숏
+(미션 `highlight-032405`). 프레임에 보이는 요소: 좌측 상단 출처
+어트리뷰션 오버레이, 9:16 letterbox-blur 배경, libass로 번인된
+한국어 자막. QA: 첫 시도 PASS. 전체 미션 기록은 `records/` 아래
+로컬 전용(gitignore); 프레임 자체만 시각적 증거로 커밋되어 있음.
+
+## 분석가/리뷰어를 위한 안내
+
+이 저장소에 대한 읽기 전용 분석을 시작한다면
+[`docs/for-analysts.md`](docs/for-analysts.md)부터 보세요 — 1차
+진단 정확도를 위한 단일 진입점입니다. [`docs/cost-model.md`](docs/cost-model.md)
+(Anthropic 대 로컬 비용 구분)과 [`docs/architecture.md`](docs/architecture.md)
+(전체 데이터 흐름)과 함께 보면 됩니다.
+
 ## 아키텍처
 
 ```
@@ -134,14 +182,6 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 ```bash
 ./scripts/install-scheduler.sh install
 ```
-
-## 분석가/리뷰어를 위한 안내
-
-이 저장소에 대한 읽기 전용 분석을 시작한다면
-[`docs/for-analysts.md`](docs/for-analysts.md) 부터 보세요 — 1차
-진단 정확도를 위한 단일 진입점입니다.  [`docs/cost-model.md`](docs/cost-model.md)
-(Anthropic 대 로컬 비용 구분)과 [`docs/architecture.md`](docs/architecture.md)
-(전체 데이터 흐름)과 함께 보면 됩니다.
 
 ## 운영 계약
 
