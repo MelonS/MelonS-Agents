@@ -21,7 +21,7 @@ fi
 : "${RECORDS_DIR:=$REPO_ROOT/records}"
 : "${OLLAMA_HOST:=http://127.0.0.1:11434}"
 : "${OLLAMA_MODEL_HIGHLIGHT:=llama3.2:3b}"
-: "${WHISPER_MODEL:=$HOME/.local/share/whisper-models/ggml-base.bin}"
+: "${WHISPER_MODEL:=$HOME/.local/share/whisper-models/ggml-small.bin}"
 : "${FFMPEG_BIN:=$(command -v ffmpeg || true)}"
 : "${FFPROBE_BIN:=$(command -v ffprobe || true)}"
 : "${WHISPER_CLI_BIN:=$(command -v whisper-cli || true)}"

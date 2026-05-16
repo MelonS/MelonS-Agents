@@ -175,10 +175,23 @@ The repository contains only the agent system itself. Mission outputs —
 videos, transcripts, generated assets — stay local under `records/`.
 What appears on GitHub is the system's own evolution, not its products.
 
-## Portability
+## Platform support
 
-All tool paths and endpoints are env-managed. Swap `.env` to move
-between macOS and Linux; no code changes required.
+| Surface | macOS 14+ | Linux |
+|---------|-----------|-------|
+| Mission execution (transcribe → select → render → QA) | ✓ | ✓ (`ffmpeg` / `whisper.cpp` / `ollama` all available) |
+| Hardware-accelerated render (`h264_videotoolbox`) | ✓ Apple Silicon | n/a — falls back to libx264 via `-allow_sw 1` |
+| `bootstrap.sh` synthetic fixtures (macOS `say`-based TTS) | ✓ | skipped — point at real CC fixtures via `scripts/fetch-fixtures.sh` |
+| `launchd` schedulers (nightly auto-run, daily audit) | ✓ | replace with systemd timers or cron — see `scripts/com.melons.agents.*.plist` for the schedule to mirror |
+
+macOS is the **primary, end-to-end tested** platform.  Linux works for
+mission execution but the schedulers and synthetic-fixture generation
+need OS-specific adaptation.  Cross-platform CI is not yet in place;
+the clone-and-go flow is verified on Darwin only.
+
+All tool paths and endpoints are env-managed — `agents/lib/env.sh`
+resolves any blank `*_BIN` var via `command -v`, so a working PATH
+install is enough.  Override in `.env` only when needed.
 
 ## Autonomy modes
 
@@ -204,15 +217,42 @@ Defined in [`config/policies.yaml`](config/policies.yaml).
 `ffmpeg` (static libass build) · `yt-dlp` · `whisper.cpp` (small,
 multilingual) · `ollama` (`llama3.2:3b`) · Claude API for orchestration.
 
+## Prerequisites
+
+- **macOS 14+** (primary, fully tested) or **Linux** (best-effort —
+  see [Platform support](#platform-support) above)
+- **Homebrew** on macOS, or `apt` / `pacman` / equivalent on Linux
+- **Apple Silicon recommended** — `h264_videotoolbox` is used for
+  hardware-accelerated render; `-allow_sw 1` is set so the pipeline
+  falls back to libx264 on Intel / Linux
+- **~3 GB free disk** — whisper.cpp `small` model (~150 MB), Sintel
+  CC-BY-3.0 trailer fixture, two synthetic `bootstrap.sh` fixtures
+- **Tools**: `ffmpeg` (built with libass), `ffprobe`, `whisper.cpp`,
+  `ollama`, `yt-dlp`.  `scripts/bootstrap.sh` checks all of them and
+  prints an exact `brew install …` / `apt install …` command for
+  anything that's missing, so a missing tool isn't a silent failure.
+
 ## Quick start
 
 ```bash
-git clone git@github.com:MelonS/MelonS-Agents.git
+# Clone — either URL form works
+git clone https://github.com/MelonS/MelonS-Agents.git    # HTTPS
+# git clone git@github.com:MelonS/MelonS-Agents.git      # SSH
 cd MelonS-Agents
-cp .env.example .env
+
+# Boot: copies .env from .env.example, verifies tools, auto-fetches
+# the whisper model (~150 MB) and the ollama highlight model
+# (llama3.2:3b), generates two macOS-only synthetic fixtures.
 ./scripts/bootstrap.sh
-./agents/missions/highlight/run.sh <url_or_local_path>
+
+# Produce a 9:16 short from the Sintel trailer (CC-BY-3.0)
+./agents/missions/highlight/run.sh https://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4
 ```
+
+The mission writes its output to
+`records/missions/<date>/highlight-<HHMMSS>/outputs/short.mp4`
+(gitignored — products stay on your machine; only the agent system
+itself is on GitHub).
 
 Multi-source batch:
 

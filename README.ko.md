@@ -171,10 +171,23 @@
 전사, 생성된 자산 — 은 모두 로컬 `records/`에만 남습니다. GitHub에
 드러나는 것은 산출물이 아니라 시스템의 진화 과정입니다.
 
-## 이식성
+## 플랫폼 지원
 
-모든 도구 경로와 엔드포인트는 환경 변수로 관리됩니다. macOS ↔ Linux
-이전은 `.env` 교체만으로 충분하며, 코드 수정은 필요하지 않습니다.
+| 영역 | macOS 14+ | Linux |
+|------|-----------|-------|
+| 미션 실행 (전사 → 선택 → 렌더 → QA) | ✓ | ✓ (`ffmpeg` / `whisper.cpp` / `ollama` 모두 사용 가능) |
+| 하드웨어 가속 렌더 (`h264_videotoolbox`) | ✓ Apple Silicon | n/a — `-allow_sw 1`로 libx264 폴백 |
+| `bootstrap.sh` 합성 fixture (macOS `say`-기반 TTS) | ✓ | 스킵 — `scripts/fetch-fixtures.sh`로 실제 CC fixture 사용 |
+| `launchd` 스케줄러 (야간 자동 실행, 일일 감사) | ✓ | systemd timers 또는 cron으로 대체 — `scripts/com.melons.agents.*.plist` 일정을 참고 |
+
+macOS가 **주 검증 플랫폼** (엔드투엔드 테스트 완료). Linux는 미션
+실행에는 동작하지만 스케줄러와 합성 fixture 생성은 OS별 적응이
+필요합니다. 크로스 플랫폼 CI는 아직 없고, clone-and-go 흐름은
+Darwin에서만 검증되어 있음.
+
+모든 도구 경로와 엔드포인트는 환경 변수로 관리됩니다 —
+`agents/lib/env.sh`가 빈 `*_BIN` 변수를 `command -v`로 자동 해석하므로
+PATH에 도구가 설치되어 있으면 충분. 필요할 때만 `.env`에서 override.
 
 ## 자율 모드
 
@@ -200,15 +213,41 @@
 `ffmpeg` (libass 정적 빌드) · `yt-dlp` · `whisper.cpp` (small, 다국어)
 · `ollama` (`llama3.2:3b`) · 오케스트레이션용 Claude API.
 
+## 사전 요구사항
+
+- **macOS 14+** (주 검증 플랫폼) 또는 **Linux** (best-effort —
+  위 [플랫폼 지원](#플랫폼-지원) 참조)
+- macOS는 **Homebrew**, Linux는 `apt` / `pacman` / 동등 패키지 매니저
+- **Apple Silicon 권장** — 렌더 가속에 `h264_videotoolbox` 사용,
+  `-allow_sw 1`로 Intel / Linux에서 libx264 자동 폴백
+- **여유 디스크 ~3 GB** — whisper.cpp `small` 모델 (~150 MB),
+  Sintel CC-BY-3.0 트레일러 fixture, `bootstrap.sh`의 합성 fixture 2개
+- **도구**: `ffmpeg` (libass 포함 빌드), `ffprobe`, `whisper.cpp`,
+  `ollama`, `yt-dlp`. `scripts/bootstrap.sh`가 모두 점검하고 누락된
+  도구별로 OS에 맞는 `brew install …` / `apt install …` 명령을 정확히
+  출력 — 도구 누락이 침묵 실패로 끝나지 않음.
+
 ## 빠른 시작
 
 ```bash
-git clone git@github.com:MelonS/MelonS-Agents.git
+# 클론 — 두 방식 모두 가능
+git clone https://github.com/MelonS/MelonS-Agents.git    # HTTPS
+# git clone git@github.com:MelonS/MelonS-Agents.git      # SSH
 cd MelonS-Agents
-cp .env.example .env
+
+# 부트스트랩: .env.example을 .env로 복사, 도구 점검, whisper 모델
+# (~150 MB) + ollama 하이라이트 모델 (llama3.2:3b) 자동 다운로드,
+# macOS 전용 합성 fixture 2개 생성.
 ./scripts/bootstrap.sh
-./agents/missions/highlight/run.sh <URL 또는 로컬 경로>
+
+# Sintel 트레일러 (CC-BY-3.0)로 9:16 숏 생성
+./agents/missions/highlight/run.sh https://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4
 ```
+
+미션은 산출물을
+`records/missions/<date>/highlight-<HHMMSS>/outputs/short.mp4`에
+저장 (gitignore — 산출물은 본인 머신에만 남고 GitHub에는 에이전트
+시스템 자체만 올라감).
 
 여러 소스를 한 번에 처리:
 
