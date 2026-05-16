@@ -38,7 +38,8 @@ print_install_hint() {
   local tool="$1"
   case "$OS:$tool" in
     Darwin:ffmpeg|Darwin:ffprobe)
-      echo "  → brew install ffmpeg  (must include libass; the bottle does)" ;;
+      echo "  → brew install ffmpeg-full  (the regular 'ffmpeg' formula no longer ships with libass)"
+      echo "    env.sh auto-discovers /opt/homebrew/opt/ffmpeg-full/bin/ffmpeg — no .env edit needed" ;;
     Darwin:whisper-cli)
       echo "  → brew install whisper-cpp  (installs the whisper-cli binary)" ;;
     Darwin:ollama)
@@ -83,7 +84,11 @@ for entry in "FFMPEG_BIN:ffmpeg" "FFPROBE_BIN:ffprobe" "WHISPER_CLI_BIN:whisper-
       "$bin" -version | head -1
       if ! "$bin" -version 2>&1 | grep -q -- "libass"; then
         echo "  ⚠ this ffmpeg lacks libass — caption burn-in will fail."
-        echo "  Reinstall a build that includes libass (the Homebrew bottle does)."
+        echo "  macOS fix:  brew install ffmpeg-full"
+        echo "              (env.sh auto-discovers /opt/homebrew/opt/ffmpeg-full/bin/ffmpeg"
+        echo "               on next run — no .env edit needed)"
+        echo "  Linux fix:  install a build with libass; on most distros 'apt install ffmpeg'"
+        echo "              includes it.  Or build from source --enable-libass."
         missing+=("ffmpeg-libass")
       fi
       ;;

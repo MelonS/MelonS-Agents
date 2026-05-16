@@ -22,8 +22,53 @@ fi
 : "${OLLAMA_HOST:=http://127.0.0.1:11434}"
 : "${OLLAMA_MODEL_HIGHLIGHT:=llama3.2:3b}"
 : "${WHISPER_MODEL:=$HOME/.local/share/whisper-models/ggml-small.bin}"
-: "${FFMPEG_BIN:=$(command -v ffmpeg || true)}"
-: "${FFPROBE_BIN:=$(command -v ffprobe || true)}"
+# ffmpeg / ffprobe discovery — prefer a libass-enabled build, since
+# the caption burn-in step requires it.  On macOS, Homebrew split the
+# formula into `ffmpeg` (light, no libass) and `ffmpeg-full` (keg-only,
+# includes libass).  We try PATH first, then the ffmpeg-full keg paths.
+__resolve_ffmpeg() {
+  local cand
+  # Honour an explicit FFMPEG_BIN if it points somewhere usable.
+  if [[ -n "${FFMPEG_BIN:-}" && -x "${FFMPEG_BIN:-}" ]]; then
+    return
+  fi
+  # First pass: pick the first candidate that has libass.
+  for cand in \
+      "$(command -v ffmpeg 2>/dev/null || true)" \
+      "/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg" \
+      "/usr/local/opt/ffmpeg-full/bin/ffmpeg"
+  do
+    if [[ -n "$cand" && -x "$cand" ]] && "$cand" -version 2>/dev/null | grep -q -- "libass"; then
+      FFMPEG_BIN="$cand"
+      return
+    fi
+  done
+  # Fallback: first existing ffmpeg even without libass (will be
+  # diagnosed by the bootstrap check, with an actionable hint).
+  for cand in \
+      "$(command -v ffmpeg 2>/dev/null || true)" \
+      "/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg" \
+      "/usr/local/opt/ffmpeg-full/bin/ffmpeg"
+  do
+    if [[ -n "$cand" && -x "$cand" ]]; then
+      FFMPEG_BIN="$cand"
+      return
+    fi
+  done
+}
+__resolve_ffmpeg
+unset -f __resolve_ffmpeg
+
+# ffprobe sits next to ffmpeg in every supported install.
+if [[ -z "${FFPROBE_BIN:-}" && -n "${FFMPEG_BIN:-}" ]]; then
+  __ffprobe_guess="${FFMPEG_BIN%/ffmpeg}/ffprobe"
+  if [[ -x "$__ffprobe_guess" ]]; then
+    FFPROBE_BIN="$__ffprobe_guess"
+  else
+    FFPROBE_BIN="$(command -v ffprobe || true)"
+  fi
+  unset __ffprobe_guess
+fi
 : "${WHISPER_CLI_BIN:=$(command -v whisper-cli || true)}"
 : "${YT_DLP_BIN:=$(command -v yt-dlp || true)}"
 : "${OLLAMA_BIN:=$(command -v ollama || true)}"
