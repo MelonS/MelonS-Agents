@@ -13,7 +13,7 @@ Each topic is rendered in two language variants so the operator can compare voic
 | Aspect / size | 1080×1920, 30 fps, H.264 + AAC |
 | Length target | ~60 s (130–160 EN words / ~300 KO chars) |
 | Framing | **Screen-fill 9:16** — center-crop, no letterbox-blur (TikTok/Reels style) |
-| Captions | whisper.cpp small → script-aware token alignment → libass burn-in, bottom-center safe zone |
+| Captions | whisper.cpp small → script-aware token alignment → **single-line enforcement** (cues > 28 chars split at natural punctuation, `scripts/split-long-captions.py`) → libass burn-in, bottom-center safe zone |
 | B-roll | 8 clips with **per-window keyword extraction** — caption SRT is grouped into 8 temporal windows, each window's text generates its own search term so the clip on screen matches what's being said.  Variable per-clip durations matching the natural narration beats.  Pexels License (commercial-OK) |
 | Attribution | Always-on top-left drawtext overlay |
 
@@ -41,17 +41,17 @@ Ready-to-paste upload copy is in [`upload-metadata/`](upload-metadata/) — one 
 
 |  | EN | KO |
 |---|---|---|
-| Mission id | `faceless-hittites-014312` (v4 windowed) | `faceless-hittites-ko-014703` (v4 windowed) |
+| Mission id | `faceless-hittites-032538` (v5: single-line captions) | `faceless-hittites-ko-032653` (v5) |
 | Voice | Kokoro `am_michael` | macOS `Yuna` |
-| Duration | 62.8 s | 57.8 s |
-| Size | 49 MB | 32 MB |
-| Caption segments | 44 (5 auto-corrected) | 31 (12 auto-corrected) |
+| Duration | 62.7 s | 60.3 s |
+| Size | 49 MB | 35 MB |
+| Caption cues (post-split) | 32 (from 18 split) | 23 (from 10 split) |
 | Thumbnail | [`screens/hittites-en-caption-verify.jpg`](screens/hittites-en-caption-verify.jpg) | [`screens/hittites-ko-caption-verify.jpg`](screens/hittites-ko-caption-verify.jpg) |
 | Script | [`screens/hittites-en-script.txt`](screens/hittites-en-script.txt) | [`screens/hittites-ko-script.txt`](screens/hittites-ko-script.txt) |
 | Caption corrections | [`hittites-en-caption-corrections.log`](screens/hittites-en-caption-corrections.log) | [`hittites-ko-caption-corrections.log`](screens/hittites-ko-caption-corrections.log) |
 | Per-window keywords | [`hittites-en-keywords.json`](screens/hittites-en-keywords.json) | [`hittites-ko-keywords.json`](screens/hittites-ko-keywords.json) |
 | Upload metadata | [`upload-metadata/hittites.md`](upload-metadata/hittites.md) | _(EN only — KO would need its own draft pass)_ |
-| Output path | `records/missions/2026-05-17/faceless-hittites-014312/outputs/short.mp4` | `records/missions/2026-05-17/faceless-hittites-ko-014703/outputs/short.mp4` |
+| Output path | `records/missions/2026-05-17/faceless-hittites-032538/outputs/short.mp4` | `records/missions/2026-05-17/faceless-hittites-ko-032653/outputs/short.mp4` |
 
 **Topic**: _The Hittites — a biblical kingdom dismissed by historians as legend until 1906._
 
@@ -68,17 +68,17 @@ Ready-to-paste upload copy is in [`upload-metadata/`](upload-metadata/) — one 
 
 |  | EN | KO |
 |---|---|---|
-| Mission id | `faceless-hydrogen-014508` (v4 windowed) | `faceless-hydrogen-ko-014816` (v4 windowed) |
+| Mission id | `faceless-hydrogen-032742` (v5: single-line captions) | `faceless-hydrogen-ko-032846` (v5) |
 | Voice | Kokoro `am_michael` | macOS `Yuna` |
-| Duration | 63.7 s | 38.9 s |
-| Size | 22 MB | 13 MB |
-| Caption segments | 47 (2 auto-corrected) | 26 (8 auto-corrected) |
+| Duration | 59.7 s | 38.9 s |
+| Size | 21 MB | 14 MB |
+| Caption cues (post-split) | 34 (from 11 split) | 16 (from 6 split) |
 | Thumbnail | [`screens/hydrogen-en-caption-verify.jpg`](screens/hydrogen-en-caption-verify.jpg) | [`screens/hydrogen-ko-caption-verify.jpg`](screens/hydrogen-ko-caption-verify.jpg) |
 | Script | [`screens/hydrogen-en-script.txt`](screens/hydrogen-en-script.txt) | [`screens/hydrogen-ko-script.txt`](screens/hydrogen-ko-script.txt) |
 | Caption corrections | [`hydrogen-en-caption-corrections.log`](screens/hydrogen-en-caption-corrections.log) | [`hydrogen-ko-caption-corrections.log`](screens/hydrogen-ko-caption-corrections.log) |
 | Per-window keywords | [`hydrogen-en-keywords.json`](screens/hydrogen-en-keywords.json) | [`hydrogen-ko-keywords.json`](screens/hydrogen-ko-keywords.json) |
 | Upload metadata | [`upload-metadata/hydrogen.md`](upload-metadata/hydrogen.md) | _(EN only — KO would need its own draft pass)_ |
-| Output path | `records/missions/2026-05-17/faceless-hydrogen-014508/outputs/short.mp4` | `records/missions/2026-05-17/faceless-hydrogen-ko-014816/outputs/short.mp4` |
+| Output path | `records/missions/2026-05-17/faceless-hydrogen-032742/outputs/short.mp4` | `records/missions/2026-05-17/faceless-hydrogen-ko-032846/outputs/short.mp4` |
 
 **Topic**: _Hydrogen — 75 percent of the universe and 10 percent of your body._
 

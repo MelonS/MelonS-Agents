@@ -4,3 +4,4 @@
   cue 17: 'including the famous Treaty of Kadesh,' → 'including the famous "Treaty of Kadesh,"'
   cue 20: 'Today, we can only glimpse the grand door' → 'Today, we can only glimpse the grandeur'
 corrected 5/22 cues
+split-long-captions: 18 cues split, 32 cues out (char_max=28, min_duration=1.0s)

@@ -45,12 +45,13 @@ niche from real watchable output rather than abstract preference.
       paid APIs used.  Shipped `1663301` (and pilot-time fixes for
       mapfile + Kokoro wiring, see next commit).
 - [x] **Pilot 1 deliverable — Hittites short** — 9:16 mp4 in two
-      language variants (v4 after operator feedback that v3's
-      flat-slot B-roll didn't track captions; v4 introduces per-window
-      keyword extraction so visuals align with what's being said):
-      - EN: 62.8 s — `records/missions/2026-05-17/faceless-hittites-014312/outputs/short.mp4`
+      language variants (v5 after operator feedback on caption
+      overlap; v5 adds single-line caption enforcement via
+      `scripts/split-long-captions.py`.  Script + B-roll reused from
+      v4 so the only delta is caption rendering):
+      - EN: 62.7 s — `records/missions/2026-05-17/faceless-hittites-032538/outputs/short.mp4`
             ([thumbnail](pilots/screens/hittites-en-caption-verify.jpg)).
-      - KO: 57.8 s — `records/missions/2026-05-17/faceless-hittites-ko-014703/outputs/short.mp4`
+      - KO: 60.3 s — `records/missions/2026-05-17/faceless-hittites-ko-032653/outputs/short.mp4`
             ([thumbnail](pilots/screens/hittites-ko-caption-verify.jpg)) —
             macOS Yuna voice, AppleGothic captions, per-language window
             keywords (each language picks its own visuals).
@@ -59,9 +60,9 @@ niche from real watchable output rather than abstract preference.
       [`docs/pilots/decision-log.md`](pilots/decision-log.md#pilot-1--hittites-history--bible).
 - [x] **Pilot 2 deliverable — Hydrogen short** — 9:16 mp4 in two
       language variants:
-      - EN: 63.7 s — `records/missions/2026-05-17/faceless-hydrogen-014508/outputs/short.mp4`
+      - EN: 59.7 s — `records/missions/2026-05-17/faceless-hydrogen-032742/outputs/short.mp4`
             ([thumbnail](pilots/screens/hydrogen-en-caption-verify.jpg)).
-      - KO: 38.9 s — `records/missions/2026-05-17/faceless-hydrogen-ko-014816/outputs/short.mp4`
+      - KO: 38.9 s — `records/missions/2026-05-17/faceless-hydrogen-ko-032846/outputs/short.mp4`
             ([thumbnail](pilots/screens/hydrogen-ko-caption-verify.jpg)).
       Curiosity tone; hook = "75 percent of the universe and 10
       percent of your body".  v4 window 5 in KO landed `sugar bottle`

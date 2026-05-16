@@ -57,6 +57,36 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-17** (overnight, ~03:30 KST) **v5 pilots — single-line
+  caption enforcement, 2-line opaque-box overlap eliminated.**
+  Operator feedback after watching the v4 pilots: caption boxes from
+  consecutive cues grazed each other when libass wrapped a cue onto
+  2 lines (BorderStyle=3 opaque box per line), the visual artifact
+  was distracting enough to block a clean niche A/B decision.  New
+  `scripts/split-long-captions.py` runs between caption-correction
+  and ASS rendering — splits any cue whose text exceeds CHAR_MAX
+  (default 28) at natural punctuation breaks (commas, em-dashes,
+  periods — they match speech pauses so the cut doesn't read as
+  awkward), falls back to greedy word-split for remaining long
+  chunks.  Sub-1s cues merge into their previous sibling so we
+  don't emit blips.  Wired into `agents/missions/faceless-short/run.sh`
+  (commit `61fac70`).  A v5 attempt that also rewrote the script +
+  B-roll prompts regressed quality (qwen2.5:7b copied prompt
+  examples verbatim, all 8 windows pulled the same Pexels clip;
+  script ran ~230 words past the 60s target) — reverted to v4
+  baseline prompts; only the caption splitter landed.  Re-rendered
+  all 4 pilots with `FACELESS_SCRIPT_OVERRIDE` + `FACELESS_REUSE_BROLL`
+  so the only delta from v4 is caption rendering.  Total compute:
+  ~3m 21s for all four (B-roll reuse skips Pexels API + per-window
+  keyword extraction).  v5 mission IDs:
+  - `faceless-hittites-032538` (EN, 62.7 s, 49 MB, 32 cues from 18 split).
+  - `faceless-hittites-ko-032653` (KO, 60.3 s, 35 MB, 23 cues from 10 split).
+  - `faceless-hydrogen-032742` (EN, 59.7 s, 21 MB, 34 cues from 11 split).
+  - `faceless-hydrogen-ko-032846` (KO, 38.9 s, 14 MB, 16 cues from 6 split).
+  v4 thumbnails in `docs/pilots/screens/` overwritten with v5 captures.
+  Goal subgoals 2 + 3 still ticked (Hittites + Hydrogen deliverables),
+  v5 mission paths updated in `docs/goal.md` + `decision-log.md`.
+  Operator pick (subgoal 4) still the only gate to goal completion.
 - **2026-05-17** (overnight, ~01:50 KST) **Per-window B-roll keyword
   extraction — visuals track the caption being spoken.**  Operator
   feedback after watching the Korean v3 pilots: "the more the video

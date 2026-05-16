@@ -4,3 +4,4 @@
   cue 10: 'energy, releasing carbon dioxide and water as by-products.' → 'energy, releasing carbon dioxide and water as byproducts.'
   cue 11: 'This process relies heavily on the presence of hydrogen, which is then converted into ATP,' → 'This process relies heavily on the presence of hydrogen, which is then converted into ATP'
 corrected 5/14 cues
+split-long-captions: 11 cues split, 34 cues out (char_max=28, min_duration=1.0s)

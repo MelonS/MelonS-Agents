@@ -7,3 +7,4 @@
   cue 7: '만약 한 사람의 몸에서 수소를 모두 추출한다면 그 무게는 약 1kg 큰' → '만약 한 사람의 몸에서 수소를 모두 추출한다면 그 무게는 약 1킬로그램, 큰'
   cue 9: '이렇게 우리 몸에 풍부하게 존재하면서도 수소는 종종 간과되고 그 가치가' → '이렇게 우리 몸에 풍부하게 존재하면서도, 수소는 종종 간과되고 그 가치가'
 corrected 8/10 cues
+split-long-captions: 6 cues split, 16 cues out (char_max=28, min_duration=1.0s)
