@@ -33,26 +33,36 @@ niche from real watchable output rather than abstract preference.
 
 **Subgoals (acceptance signals)**:
 
-- [ ] **`faceless-short` mission template shipped** —
-      `agents/missions/faceless-short/run.sh` + supporting lib.
-      Script-driven pipeline (input = topic + tone): ollama
-      generates 60 s script with beats → macOS `say` TTS narrates
-      → script beats map to Pexels search terms → `pexels-fetch.sh`
-      pulls B-roll per beat → ffmpeg multi-clip stitcher syncs cuts
-      to TTS timing → whisper.cpp transcribes the TTS audio for
-      SRT → ffmpeg burns captions over the stitched footage.  No
-      paid APIs (KlingAI / ElevenLabs / etc.) used in pilot phase.
-- [ ] **Pilot 1 deliverable — Hittites short** —
-      9:16 60 s mp4 + caption-verify frame committed to
-      `docs/pilots/`.  Neutral documentary tone.  Hook = "biblical
-      kingdom dismissed as legend until 1906".
-- [ ] **Pilot 2 deliverable — Hydrogen short** — 9:16 60 s mp4 +
-      caption-verify frame committed to `docs/pilots/`.  Curiosity
-      tone.  Hook = "75 % of the universe and 10 % of your body".
+- [x] **`faceless-short` mission template shipped** —
+      `agents/missions/faceless-short/run.sh` + `agents/lib/tts.sh`
+      with Kokoro-ONNX (Apache 2.0, commercial-safe) as primary
+      backend and macOS `say` fallback.  Script-driven pipeline
+      (input = topic + tone): ollama generates 60 s script → Kokoro
+      TTS narrates (am_michael voice) → whisper.cpp transcribes the
+      TTS audio for SRT → ollama extracts visual search terms →
+      `pexels-fetch.sh` pulls 6 B-roll clips → ffmpeg trims, concats,
+      letterbox-blurs to 9:16, burns captions and attribution.  No
+      paid APIs used.  Shipped `1663301` (and pilot-time fixes for
+      mapfile + Kokoro wiring, see next commit).
+- [x] **Pilot 1 deliverable — Hittites short** — 9:16 57.2 s mp4
+      (`records/missions/2026-05-16/faceless-hittites-232141/outputs/short.mp4`)
+      + caption-verify frame at
+      [`docs/pilots/screens/hittites-caption-verify.jpg`](pilots/screens/hittites-caption-verify.jpg).
+      Neutral documentary tone; hook = "biblical kingdom dismissed
+      as legend until 1906".  Production notes in
+      [`docs/pilots/decision-log.md`](pilots/decision-log.md#pilot-1--hittites-history--bible).
+- [x] **Pilot 2 deliverable — Hydrogen short** — 9:16 56.7 s mp4
+      (`records/missions/2026-05-16/faceless-hydrogen-232334/outputs/short.mp4`)
+      + caption-verify frame at
+      [`docs/pilots/screens/hydrogen-caption-verify.jpg`](pilots/screens/hydrogen-caption-verify.jpg).
+      Curiosity tone; hook = "75 percent of the universe and 10
+      percent of your body".  Production notes in
+      [`docs/pilots/decision-log.md`](pilots/decision-log.md#pilot-2--hydrogen-science).
 - [ ] **Operator decision logged** — `docs/pilots/decision-log.md`
       records which pilot the operator picks + a one-line reason
       (preference, perceived viewer fit, perceived production
-      energy).  This is the goal's terminal artifact.
+      energy).  Scaffolded with both pilots populated; awaiting
+      operator review + pick.  _This is the goal's terminal artifact._
 
 **Done when**: both pilots committed AND `decision-log.md` shows
 the operator's pick.

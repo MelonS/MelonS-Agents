@@ -52,6 +52,34 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-16** (late evening, ~23:25 KST) **Faceless pilot A/B
+  produced — Hittites + Hydrogen shorts rendered end-to-end at $0
+  marginal cost.**  New mission type `faceless-short` shipped:
+  `agents/missions/faceless-short/run.sh` + `agents/lib/tts.sh` with
+  Kokoro-ONNX as primary TTS backend (Apache 2.0, commercial-safe —
+  picked after discovering Coqui XTTS v2's Coqui Public Model License
+  is non-commercial).  Pipeline: ollama → 130–160 word script →
+  Kokoro `am_michael` voice → whisper.cpp captions → ollama extracts
+  6 visual search terms → `pexels-fetch.sh` pulls 6 B-roll clips →
+  ffmpeg 9:16 letterbox-blur stitch + libass burn-in + attribution
+  overlay.  Two pilots produced:
+  - Hittites (history+Bible): 57.2 s, 13 MB, mission
+    `faceless-hittites-232141`.  Caption-verify
+    [`docs/pilots/screens/hittites-caption-verify.jpg`](pilots/screens/hittites-caption-verify.jpg).
+  - Hydrogen (science): 56.7 s, 19 MB, mission `faceless-hydrogen-232334`.
+    Caption-verify
+    [`docs/pilots/screens/hydrogen-caption-verify.jpg`](pilots/screens/hydrogen-caption-verify.jpg).
+  Production notes + A/B comparison in
+  [`docs/pilots/decision-log.md`](pilots/decision-log.md).  Pilot
+  artifacts stay in gitignored `records/missions/...` (32 MB combined
+  too heavy for the repo); only thumbnails + scripts in `docs/pilots/`.
+  **Defects fixed during pilot run**: (1) `tts.sh` referenced the
+  removed `scripts/tts-xtts.py` from the abandoned XTTS path — now
+  tries Kokoro first via `from kokoro_onnx import Kokoro` probe.
+  (2) `run.sh` used the bash 4.0+ `mapfile` builtin (macOS ships
+  bash 3.2) — rewrote both call sites as portable `while IFS= read`
+  loops.  Two subgoals from `docs/goal.md` ticked; final subgoal
+  (operator decision in `decision-log.md`) awaits review.
 - **2026-05-16** (evening, 19:47 KST) **Clone-and-go reproducibility
   reinforcement — three new variant tests, all PASS.**  Operator
   asked: "is the clone-and-go path *actually* covered for a stranger,

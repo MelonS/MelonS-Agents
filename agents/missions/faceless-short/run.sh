@@ -94,13 +94,13 @@ log_ok "narration: ${NARRATION_DUR}s"
 # --- Stage 3: whisper → caption SRT ------------------------------------
 log_step "3/6  whisper → captions"
 
-WAV_16K="$MDIR/resources/narration.16k.wav"
-"$FFMPEG_BIN" -y -loglevel error -i "$NARRATION_WAV" -ar 16000 -ac 1 "$WAV_16K"
-
-TRANSCRIPT_JSON="$MDIR/resources/transcript.json"
+TRANSCRIPT_PREFIX="$MDIR/resources/transcript"
+SEGMENTS_JSON="$MDIR/resources/segments.json"
 SRT_PATH="$MDIR/resources/captions.srt"
-WHISPER_LANG="${WHISPER_LANG:-en}" whisper_transcribe "$WAV_16K" "$TRANSCRIPT_JSON"
-ffmpeg_segments_to_srt "$TRANSCRIPT_JSON" "$SRT_PATH"
+
+TRANSCRIPT_JSON=$(WHISPER_LANG="${WHISPER_LANG:-en}" whisper_transcribe "$NARRATION_WAV" "$TRANSCRIPT_PREFIX")
+whisper_segments "$TRANSCRIPT_JSON" > "$SEGMENTS_JSON"
+ffmpeg_segments_to_srt "$SEGMENTS_JSON" 0 "$NARRATION_DUR" "$SRT_PATH"
 log_ok "captions: $(grep -c '^[0-9]' "$SRT_PATH") segments"
 
 # --- Stage 4: visual keyword extraction --------------------------------
@@ -121,7 +121,10 @@ Output JSON in this exact shape:
 KEYWORDS_JSON=$(ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$KW_PROMPT" true)
 echo "$KEYWORDS_JSON" > "$MDIR/resources/keywords.json"
 
-mapfile -t TERMS < <(echo "$KEYWORDS_JSON" | jq -r '.terms[]')
+TERMS=()
+while IFS= read -r __term; do
+  [[ -n "$__term" ]] && TERMS+=("$__term")
+done < <(echo "$KEYWORDS_JSON" | jq -r '.terms[]')
 if (( ${#TERMS[@]} == 0 )); then
   log_err "ollama returned no terms — falling back to topic itself"
   TERMS=("$TOPIC")
@@ -142,7 +145,10 @@ for i in "${!TERMS[@]}"; do
   fi
 done
 
-mapfile -t BROLL_FILES < <(find "$BROLL_DIR" -name "*.mp4" -type f | sort)
+BROLL_FILES=()
+while IFS= read -r __f; do
+  [[ -n "$__f" ]] && BROLL_FILES+=("$__f")
+done < <(find "$BROLL_DIR" -name "*.mp4" -type f | sort)
 if (( ${#BROLL_FILES[@]} < 3 )); then
   log_err "got only ${#BROLL_FILES[@]} B-roll clips (need at least 3)"
   exit 70
