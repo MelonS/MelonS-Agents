@@ -74,7 +74,12 @@ Requirements:
 Output ONLY the narration text, nothing else."
 
 SCRIPT_PATH="$MDIR/resources/script.txt"
-ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$SCRIPT_PROMPT" false > "$SCRIPT_PATH"
+if [[ -n "${FACELESS_SCRIPT_OVERRIDE:-}" && -f "$FACELESS_SCRIPT_OVERRIDE" ]]; then
+  log_info "  script override: $FACELESS_SCRIPT_OVERRIDE"
+  cp "$FACELESS_SCRIPT_OVERRIDE" "$SCRIPT_PATH"
+else
+  ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$SCRIPT_PROMPT" false > "$SCRIPT_PATH"
+fi
 # Strip leading blank lines + any trailing whitespace
 awk 'NF || found{found=1; print}' "$SCRIPT_PATH" | sed 's/[[:space:]]*$//' > "$SCRIPT_PATH.tmp"
 mv "$SCRIPT_PATH.tmp" "$SCRIPT_PATH"
@@ -172,12 +177,18 @@ fi
 log_ok "B-roll: ${#BROLL_FILES[@]} clips"
 
 # --- Stage 6: stitch + render ------------------------------------------
-log_step "6/6  ffmpeg → stitch + letterbox-blur + audio + captions"
+log_step "6/6  ffmpeg → stitch + 9:16 fill + audio + captions"
 
 PER_CLIP_DUR=$(awk -v n="${#BROLL_FILES[@]}" -v d="$NARRATION_DUR" 'BEGIN{printf "%.3f", d/n}')
 log_info "  per-clip duration: ${PER_CLIP_DUR}s × ${#BROLL_FILES[@]} clips"
 
-# Trim each clip to PER_CLIP_DUR + normalize to 1920×1080 30fps so concat works.
+# Trim each clip + crop directly to 1080×1920 (9:16 fill).  Earlier
+# versions kept clips at 1920×1080 landscape and then letterbox-blurred
+# them into 9:16, but the result was a tiny strip of content in the
+# middle of a mostly-blurred frame — Pexels stock is almost always
+# landscape, so the letterbox dominates.  Crop-to-fill is what TikTok
+# and Reels actually do; for abstract B-roll the subject is centered
+# anyway so center-crop reads cleanly.
 CONCAT_LIST="$MDIR/resources/concat-list.txt"
 : > "$CONCAT_LIST"
 for i in "${!BROLL_FILES[@]}"; do
@@ -186,7 +197,7 @@ for i in "${!BROLL_FILES[@]}"; do
   "$FFMPEG_BIN" -y -loglevel error -i "$CLIP" \
     -t "$PER_CLIP_DUR" \
     -r 30 \
-    -vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1" \
+    -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1" \
     -an \
     -c:v libx264 -preset ultrafast -crf 28 \
     "$TRIMMED"
@@ -206,7 +217,7 @@ ASS_DIR="$(cd "$(dirname "$ASS_PATH")" && pwd)"
 ATTRIBUTION_TEXT="$MDIR/resources/source-attribution.txt"
 {
   echo "B-roll: Pexels License — pexels.com"
-  echo "Narration: Kokoro TTS (synthetic)"
+  echo "Narration: ${TTS_LABEL:-Kokoro TTS} (synthetic)"
 } > "$ATTRIBUTION_TEXT"
 ATTR_BASE="$(basename "$ATTRIBUTION_TEXT")"
 
@@ -215,9 +226,10 @@ ABS_OUT="$(cd "$(dirname "$OUT")" && pwd)/$(basename "$OUT")"
 ABS_CONCAT="$(cd "$(dirname "$CONCAT_NOAUDIO")" && pwd)/$(basename "$CONCAT_NOAUDIO")"
 ABS_NARRATION="$(cd "$(dirname "$NARRATION_WAV")" && pwd)/$(basename "$NARRATION_WAV")"
 
-# Build the filter graph.  Same shape as ffmpeg_render_short but adapted
-# for two inputs (concat video, narration audio) instead of cut-from-source.
-FILTER="[0:v]scale=1080:1920:force_original_aspect_ratio=increase,gblur=sigma=15,crop=1080:1920[bg];[0:v]scale=1080:1920:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1,ass=${ASS_BASE}"
+# Filter graph: concat clips are already 1080×1920 from the trim step,
+# so the final filter only needs to burn captions (and optionally the
+# top-left attribution overlay).  No blurred-background letterbox.
+FILTER="[0:v]ass=${ASS_BASE}"
 if [[ -f "${LAYOUT_DRAWTEXT_FONTFILE:-}" ]]; then
   FILTER="${FILTER},drawtext=fontfile=${LAYOUT_DRAWTEXT_FONTFILE}:textfile=${ATTR_BASE}:fontsize=22:fontcolor=white@0.75:box=1:boxcolor=black@0.45:boxborderw=10:x=40:y=40"
 else
