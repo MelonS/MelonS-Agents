@@ -88,7 +88,7 @@ concrete artifact exists that proves the path works.
 | `resourcer`    | sonnet    | Fetch / probe / prepare assets → `resources/`     |
 | `editor`       | sonnet    | Apply changes → `outputs/`                        |
 | `qa`           | sonnet    | Validate outputs against plan.md → `qa-report.md` |
-| `auditor`      | sonnet    | Out-of-band read-only audit (daily 03:00 via launchd) → `docs/audit/<date>-<focus>.md` + `CURRENT-ALERT.md` when non-CLEAN |
+| `auditor`      | sonnet    | Out-of-band read-only audit (three trigger layers: L1 post-commit hook on drift-risk paths, L2 15-min mission-anomaly poll, L3 daily 03:00 baseline via launchd) → `docs/audit/<date>-<focus>.md` + `CURRENT-ALERT.md` when non-CLEAN |
 
 A common analyst suggestion is "downgrade subagents from opus to
 sonnet."  This is already done.

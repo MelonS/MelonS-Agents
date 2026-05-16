@@ -103,6 +103,14 @@ above the footer.  This is a convention, not a hard gate — a
 missing marker on a §5-scope commit is not a build failure, but
 it is a [low] finding the next contract audit will surface.
 
+**Pre-marker carry-forward.**  Commits to `.claude/agents/*.md` or
+`agents/*.md` that landed BEFORE the marker convention was defined
+(prior to 2026-05-17, commit `7c6ff4f`) are exempt as
+carry-forward.  Audits should classify them as `[low]
+carry-forward — predates marker convention` rather than fresh
+[low] findings.  Only §5-scope commits dated 2026-05-17 or later
+need the marker.
+
 ### 6. Git workflow — auto-commit, auto-push
 
 Every code or doc change (anything under `agents/`, `.claude/agents/`,

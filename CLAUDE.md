@@ -55,7 +55,7 @@ Defined in `.claude/agents/`. Orchestrator delegates via the Agent tool.
 | `resourcer` | Fetch assets, run external tools |
 | `editor` | Apply changes, write outputs |
 | `qa` | Validate outputs, regressions |
-| `auditor` | Out-of-band read-only audit (daily 03:00 via launchd) — `docs/audit/<date>-<focus>.md` + `CURRENT-ALERT.md` when non-CLEAN |
+| `auditor` | Out-of-band read-only audit, three trigger layers (L1 post-commit hook + L2 15-min poll + L3 daily 03:00 baseline via launchd) — `docs/audit/<date>-<focus>.md` + `CURRENT-ALERT.md` when non-CLEAN |
 
 ## Records layout
 

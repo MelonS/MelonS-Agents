@@ -6,6 +6,10 @@
   <key>Label</key>
   <string>com.melons.agents.auditor</string>
 
+  <!-- §8 exception: launchd plist values do not expand shell variables
+       like $HOME, so absolute paths are required.  When the repo is
+       relocated, re-run scripts/install-scheduler.sh on the new machine
+       to regenerate the LaunchAgents copy. -->
   <key>ProgramArguments</key>
   <array>
     <string>/Users/melons/ai/scripts/audit-run.sh</string>
