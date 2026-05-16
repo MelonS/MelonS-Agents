@@ -25,6 +25,8 @@ records/
 !docs/metrics/*.png
 *.jpeg
 *.gif
+# Animated demo previews — short ffmpeg-generated GIFs, committed evidence
+!docs/demo/*.gif
 *.webp
 # Generated transcripts / captions / SRT
 *.srt

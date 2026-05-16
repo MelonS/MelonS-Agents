@@ -60,6 +60,16 @@
 몇 장, 최근 실행 테이블, 그리고 각 미션의 `metrics.json`에서
 추출한 미션별 타이밍 차트입니다.
 
+### 애니메이션 프리뷰
+
+![highlight-015213의 6초 애니메이션 프리뷰 — 9:16 letterbox-blur 레이아웃, 좌측 상단 출처 오버레이, 하단 libass 자막 번인이 보임](docs/demo/highlight-015213-preview.gif)
+
+`highlight-015213/outputs/short.mp4`의 6초 발췌. 전체 39초 mp4는
+`records/` 아래에 로컬 전용(gitignore); 위 GIF는 크기 최적화된
+발췌 (가로 360 px, 12 fps, ≈ 2.8 MB) — ffmpeg + palette dither로
+생성하여 `docs/demo/` 아래에 커밋. 파이프라인이 정지 프레임이
+아니라 실제 동영상을 생성한다는 영구 증거.
+
 ### 샘플 프레임
 
 | 단일 하이라이트 | 숏츠 배치 |
