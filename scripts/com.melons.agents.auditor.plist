@@ -37,10 +37,16 @@
   <key>RunAtLoad</key>
   <false/>
 
+  <!-- launchd inherits a minimal PATH; nvm-managed node bins (where the
+       claude CLI lives) are NOT included by default.  The audit-run.sh
+       script has a fallback glob for ~/.nvm/versions/node/*/bin so it
+       still works without us hardcoding a specific node version here,
+       but we also add ~/.local/bin and /opt/homebrew/bin up front so
+       most user-installed tools are reachable directly. -->
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
-    <string>/Users/melons/.local/opt/ffmpeg-static:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <string>/Users/melons/.local/bin:/Users/melons/.local/opt/ffmpeg-static:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
   </dict>
 </dict>
 </plist>

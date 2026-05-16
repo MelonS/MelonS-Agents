@@ -28,8 +28,27 @@ OUT_DIR="$REPO_ROOT/docs/audit"
 OUT_FILE="$OUT_DIR/${DATE}-${FOCUS}.md"
 mkdir -p "$OUT_DIR"
 
+# Locate the claude CLI.  Under launchd the PATH is minimal and does not
+# include nvm-managed node bins where Claude Code typically lives, so we
+# fall back to a glob of the standard nvm install location and a couple of
+# other common bin dirs.  Once found, we put it on PATH for any child
+# processes the auditor subagent might spawn.
 if ! command -v claude >/dev/null 2>&1; then
-  echo "❌ claude CLI not found on PATH — install Claude Code first" >&2
+  for candidate in \
+      "$HOME"/.nvm/versions/node/*/bin/claude \
+      "$HOME"/.local/bin/claude \
+      /opt/homebrew/bin/claude \
+      /usr/local/bin/claude; do
+    if [[ -x "$candidate" ]]; then
+      export PATH="$(dirname "$candidate"):$PATH"
+      break
+    fi
+  done
+fi
+if ! command -v claude >/dev/null 2>&1; then
+  echo "❌ claude CLI not found on PATH or in known locations" >&2
+  echo "   searched: ~/.nvm/versions/node/*/bin, ~/.local/bin, /opt/homebrew/bin, /usr/local/bin" >&2
+  echo "   add the install dir to LAYOUT PATH in scripts/com.melons.agents.auditor.plist" >&2
   exit 65
 fi
 
