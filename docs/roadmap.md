@@ -52,6 +52,26 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-16** (late evening, ~23:38 KST) **Upload-metadata generator —
+  ready-to-paste platform copy for each pilot.**  The pilot deliverables
+  produce `short.mp4` but the next bottleneck is the operator drafting
+  4 platform's worth of copy by hand (YouTube Shorts title +
+  description, TikTok caption, Reels caption, hashtag set, attribution
+  credits).  New [`scripts/gen-upload-metadata.sh`](../scripts/gen-upload-metadata.sh)
+  reads a mission directory, aggregates per-clip Pexels attribution from
+  the sidecar JSONs (dedup by photographer, page URLs preserved), asks
+  ollama to draft per-platform copy in strict-JSON shape with tone
+  guardrails (no clickbait, no all-caps, no emoji, no "mind-blowing"),
+  and writes `outputs/upload-metadata.md` next to the rendered short.
+  Run against both v2 pilots; copies committed to
+  [`docs/pilots/upload-metadata/hittites.md`](pilots/upload-metadata/hittites.md)
+  and [`docs/pilots/upload-metadata/hydrogen.md`](pilots/upload-metadata/hydrogen.md)
+  so the operator can review on phone/desktop without diving into
+  `records/`.  Quality observation: small-model copy is decent
+  starter material — title and reels caption land well, hashtags
+  occasionally drift on the lowercase rule (one camelCase leak in
+  Hittites set).  Acceptable as a draft pass; operator reviews before
+  uploading.
 - **2026-05-16** (late evening, ~23:34 KST) **Script-aware caption
   correction — v2 pilots re-rendered with clean proper nouns.**  The v1
   Hittites pilot exposed a real defect: whisper-cpp small mis-transcribed

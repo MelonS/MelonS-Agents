@@ -19,6 +19,8 @@ The pipeline is deterministic given the same topic prompt — repro any pilot wi
 ./agents/missions/faceless-short/run.sh <id> "<topic_prompt>"
 ```
 
+Ready-to-paste upload copy (per-platform title / description / hashtags / B-roll credits) is in [`upload-metadata/`](upload-metadata/) — one markdown file per pilot.  Run `./scripts/gen-upload-metadata.sh <mission_dir>` to regenerate against a mission.
+
 ## Pilots
 
 ### Pilot 1 — Hittites (history × Bible)
@@ -35,6 +37,7 @@ The pipeline is deterministic given the same topic prompt — repro any pilot wi
 | Thumbnail | [`screens/hittites-caption-verify.jpg`](screens/hittites-caption-verify.jpg) |
 | Script | [`screens/hittites-script.txt`](screens/hittites-script.txt) |
 | Caption corrections | [`screens/hittites-caption-corrections.log`](screens/hittites-caption-corrections.log) |
+| Upload metadata | [`upload-metadata/hittites.md`](upload-metadata/hittites.md) |
 
 **Production notes**
 
@@ -65,6 +68,7 @@ The pipeline is deterministic given the same topic prompt — repro any pilot wi
 | Thumbnail | [`screens/hydrogen-caption-verify.jpg`](screens/hydrogen-caption-verify.jpg) |
 | Script | [`screens/hydrogen-script.txt`](screens/hydrogen-script.txt) |
 | Caption corrections | [`screens/hydrogen-caption-corrections.log`](screens/hydrogen-caption-corrections.log) |
+| Upload metadata | [`upload-metadata/hydrogen.md`](upload-metadata/hydrogen.md) |
 
 **Production notes**
 
