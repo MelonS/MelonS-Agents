@@ -58,15 +58,16 @@ A few choices that distinguish this from a typical agent demo:
 
 ## Sample output
 
-![Sample frame — 9:16 short with burned-in captions and source attribution](docs/caption-verify/highlight-032405-son-heungmin-cap.jpg)
+![Sample frame — 9:16 short with burned-in captions and source attribution](docs/caption-verify/highlight-015213-sintel-cap.jpg)
 
-60-second 9:16 short produced from a CC-BY-3.0 interview clip on
-Wikimedia Commons (mission `highlight-032405`). The frame shows the
-top-left source-attribution overlay, the blurred-letterbox 9:16
-background, and a libass-burned caption rendering the speaker's
-transcribed Korean line. QA: PASS on attempt 1. The full mission
-record lives under `records/` (gitignored); the caption-verify frame
-is the only committed artifact, kept as durable visual evidence.
+39-second 9:16 short produced end-to-end from the *Sintel* trailer
+(CC-BY-3.0, © Blender Foundation — `durian.blender.org`),
+mission `highlight-015213`. The frame shows the top-left
+source-attribution overlay, the blurred-letterbox 9:16 background,
+and a libass-burned caption inside the bottom safe-zone box. QA:
+PASS on attempt 1. The full mission record lives under `records/`
+(gitignored); the caption-verify frame is the only committed
+artifact, kept as durable visual evidence of the pipeline output.
 
 ## For analysts / reviewers
 

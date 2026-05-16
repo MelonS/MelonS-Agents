@@ -56,13 +56,15 @@
 
 ## 샘플 출력
 
-![샘플 프레임 — 자막 번인 + 출처 오버레이가 적용된 9:16 숏](docs/caption-verify/highlight-032405-son-heungmin-cap.jpg)
+![샘플 프레임 — 자막 번인 + 출처 오버레이가 적용된 9:16 숏](docs/caption-verify/highlight-015213-sintel-cap.jpg)
 
-Wikimedia Commons의 CC-BY-3.0 인터뷰 클립으로 생성된 60초 9:16 숏
-(미션 `highlight-032405`). 프레임에 보이는 요소: 좌측 상단 출처
-어트리뷰션 오버레이, 9:16 letterbox-blur 배경, libass로 번인된
-한국어 자막. QA: 첫 시도 PASS. 전체 미션 기록은 `records/` 아래
-로컬 전용(gitignore); 프레임 자체만 시각적 증거로 커밋되어 있음.
+*Sintel* 트레일러 (CC-BY-3.0, © Blender Foundation —
+`durian.blender.org`)로부터 엔드투엔드로 생성된 39초 9:16 숏,
+미션 `highlight-015213`. 프레임에 보이는 요소: 좌측 상단 출처
+어트리뷰션 오버레이, 9:16 letterbox-blur 배경, 하단 safe-zone
+박스 안의 libass 번인 자막. QA: 첫 시도 PASS. 전체 미션 기록은
+`records/` 아래 로컬 전용(gitignore); 프레임 자체만 파이프라인
+출력의 시각적 증거로 커밋되어 있음.
 
 ## 분석가/리뷰어를 위한 안내
 
