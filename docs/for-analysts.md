@@ -65,6 +65,12 @@ common state — see the first entry in the log for the
 ffmpeg / ffmpeg-full Homebrew packaging gotcha that the test
 uncovered and the env.sh fix that resolved it.
 
+The faceless-short pilots (the current active goal's deliverables)
+live under [`pilots/`](pilots/) — caption-verify thumbnails, source
+scripts, caption-correction logs, and ready-to-paste platform upload
+copy.  Full MP4s stay in gitignored `records/` since their long-term
+value is the platform URL + view metrics, not the local file.
+
 The simulator is one of the project's [deliverable subgoals](goal.md):
 infrastructure subgoals alone don't complete a goal until a
 concrete artifact exists that proves the path works.
@@ -95,9 +101,13 @@ delta is small and risk of misfetched assets is non-trivial.
 
 ## Mission execution: where the money *isn't*
 
-The three missions (`agents/missions/{highlight,summarize,shorts-batch}/run.sh`)
+The four missions (`agents/missions/{highlight,summarize,shorts-batch,faceless-short}/run.sh`)
 do **not** call Anthropic.  They call `agents/lib/ollama.sh` which
-posts to `http://127.0.0.1:11434/api/generate`.  See:
+posts to `http://127.0.0.1:11434/api/generate`.  `faceless-short` adds
+two more local services in the same Tier 2 budget — Kokoro-ONNX (TTS,
+Apache 2.0, runs on CPU) and the Pexels Videos free-tier HTTP API
+(200 req/hr, 20k req/month — no card, commercial reuse via the Pexels
+License).  None of these involve Anthropic billing.  See:
 
 - [`agents/lib/ollama.sh`](../agents/lib/ollama.sh) — HTTP client to local Ollama.
 - [`.env.example`](../.env.example) — `OLLAMA_MODEL_HIGHLIGHT=llama3.2:3b`.

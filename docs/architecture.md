@@ -52,15 +52,20 @@
   TIER 2 — Mission execution                  (Local, free)
 ═══════════════════════════════════════════════════════════════
 
- ┌─────────────┐      ┌──────────────┐      ┌──────────────┐
- │ highlight   │      │  summarize   │      │ shorts-batch │
- │ run.sh      │      │  run.sh      │      │ run.sh       │
- └──────┬──────┘      └──────┬───────┘      └──────┬───────┘
-        │                    │                     │
-        └─────────────┬──────┴──────────┬──────────┘
-                      ▼                 ▼
-              agents/lib/*.sh       config/*.yaml
-              (shared helpers)      (autonomy policy)
+ ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐
+ │ highlight  │  │ summarize  │  │shorts-batch│  │  faceless  │
+ │ run.sh     │  │ run.sh     │  │ run.sh     │  │  -short    │
+ │            │  │            │  │            │  │  run.sh    │
+ └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘
+       │               │               │               │
+       │ input: URL    │ input: URL    │ input: URL+N  │ input: topic+
+       │ → 1 short     │ → summary.md  │ → N shorts    │   prompt
+       │               │               │               │ → 1 short
+       │               │               │               │   (synthesized)
+       └──────────┬────┴─────────────┬─┴───────────────┘
+                  ▼                  ▼
+          agents/lib/*.sh       config/*.yaml
+          (shared helpers)      (autonomy policy)
                       │
                       ▼  Local tools — NOT Anthropic:
                       │    • yt-dlp        download
@@ -107,8 +112,15 @@ go to local whisper.cpp, all renders go to local ffmpeg.  See
 | `highlight` | long video | one 30–60s 9:16 captioned short | render |
 | `summarize` | long video | structured EN+KO summary markdown | model |
 | `shorts-batch` | long video + N | up to N 9:16 captioned shorts | render×N |
+| `faceless-short` | topic prompt + tone | one 60 s 9:16 captioned short (TTS-narrated, B-roll stitched) | TTS + render |
 
-All three reuse the same shell library set:
+The first three are *transformation* missions — they start from a long
+source video and reshape it.  `faceless-short` is a *generation* mission
+— there is no source video; the entire short is synthesized from a topic
+prompt via local LLM + TTS + a stock-footage API (Pexels, free tier).
+Output shape is identical so the renderer and layout engine are shared.
+
+All four reuse the same shell library set:
 
 - `agents/lib/env.sh` — env loader + `require_bin` / `require_env`
 - `agents/lib/log.sh` — colored `log_info` / `log_ok` / `log_err` etc.
@@ -118,6 +130,65 @@ All three reuse the same shell library set:
   generation / single-pass `ffmpeg_render_short`
 - `agents/lib/clamp-window.jq` — model picks → 30–60s clamped to
   segment boundaries and source duration
+- `agents/lib/tts.sh` — Kokoro-ONNX (Apache 2.0) with macOS `say`
+  fallback (used by `faceless-short`)
+
+## Faceless-short pipeline
+
+The `faceless-short` mission has no input video — it generates the
+short end-to-end from a topic prompt, $0 marginal cost:
+
+```
+  topic prompt
+       │
+       ▼
+  ┌──────────────────────────────┐
+  │ ollama (llama3.2:3b)         │  60s narration script
+  │ 130–160 word target          │  (130–160 words)
+  └────────────┬─────────────────┘
+               ▼
+  ┌──────────────────────────────┐
+  │ Kokoro-ONNX TTS              │  narration.wav
+  │ (Apache 2.0, am_michael)     │  (~50–60 s)
+  └────────────┬─────────────────┘
+               ▼
+  ┌──────────────────────────────┐
+  │ whisper.cpp small            │  raw SRT (timing)
+  │ (TIMING only — text drifts   │  + script-aware correction
+  │  on proper nouns)            │  → captions.srt (text from script)
+  └────────────┬─────────────────┘
+               ▼
+  ┌──────────────────────────────┐
+  │ ollama → 6 visual search     │  keyword JSON
+  │ terms (concrete imagery)     │  ["hittite ruins", "cuneiform", …]
+  └────────────┬─────────────────┘
+               ▼
+  ┌──────────────────────────────┐
+  │ scripts/pexels-fetch.sh      │  6 × B-roll.mp4 + .meta.json
+  │ (Pexels API, free tier)      │  (photographer attribution)
+  └────────────┬─────────────────┘
+               ▼
+  ┌──────────────────────────────┐
+  │ ffmpeg trim+concat → 9:16    │  outputs/short.mp4
+  │ letterbox-blur, audio mux,   │  + caption-verify.jpg
+  │ libass burn-in, attribution  │
+  └──────────────────────────────┘
+```
+
+Key design choice: **whisper provides timing, the script provides text.**
+The source script is ground truth (we wrote it; the audio is synthesized
+from it).  `scripts/correct-captions.py` aligns whisper tokens against
+script tokens via `difflib.SequenceMatcher` and emits a corrected SRT
+that uses the script's wording at whisper's timestamps — eliminating
+small-model proper-noun drift (`Hattusa` → `Hadusa`, etc.).
+
+Companion script: `scripts/gen-upload-metadata.sh` reads a finished
+mission and drafts per-platform upload copy (YouTube Shorts title +
+description, TikTok caption, Reels caption, hashtag set, B-roll
+attribution credits aggregated from `.meta.json` sidecars).
+
+Pilot artifacts and the A/B decision log live under
+[`docs/pilots/`](pilots/).
 
 ## Single-pass render path
 

@@ -30,14 +30,17 @@ and where they are not.  Read this before recommending any
 │ TIER 2 — Mission execution                  Local machine      │
 │                                                                │
 │  • agents/missions/{highlight,summarize,                       │
-│      shorts-batch}/run.sh                                      │
+│      shorts-batch,faceless-short}/run.sh                       │
 │  • yt-dlp     (download)                    free, local        │
 │  • whisper.cpp (transcribe, Metal GPU)      free, local        │
 │  • ollama     (selection + summarization)   free, local        │
 │        llama3.2:3b                                             │
 │        llama3.1:8b                                             │
 │        qwen2.5-coder:7b                                        │
+│  • Kokoro-ONNX (faceless TTS, Apache 2.0)   free, local        │
 │  • ffmpeg    (cut + render + caption burn)  free, local        │
+│  • Pexels Videos API (faceless B-roll)      free tier, no card │
+│        200 req/hr, 20k req/month                               │
 │  • All artifacts → records/missions/<…>/                       │
 └────────────────────────────────────────────────────────────────┘
 ```
