@@ -217,8 +217,10 @@ Defined in [`config/policies.yaml`](config/policies.yaml).
 
 ## Toolchain
 
-`ffmpeg` (static libass build) · `yt-dlp` · `whisper.cpp` (small,
-multilingual) · `ollama` (`llama3.2:3b`) · Claude API for orchestration.
+`ffmpeg` (libass-enabled — `brew install ffmpeg-full` on macOS,
+`apt install ffmpeg` on Linux) · `yt-dlp` · `whisper.cpp`
+(`small`, multilingual) · `ollama` (`llama3.2:3b`) · Claude API for
+orchestration.
 
 ## Prerequisites
 

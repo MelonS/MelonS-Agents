@@ -213,8 +213,9 @@ PATH에 도구가 설치되어 있으면 충분. 필요할 때만 `.env`에서 o
 
 ## 툴체인
 
-`ffmpeg` (libass 정적 빌드) · `yt-dlp` · `whisper.cpp` (small, 다국어)
-· `ollama` (`llama3.2:3b`) · 오케스트레이션용 Claude API.
+`ffmpeg` (libass 포함 빌드 — macOS는 `brew install ffmpeg-full`,
+Linux는 `apt install ffmpeg`) · `yt-dlp` · `whisper.cpp` (`small`,
+다국어) · `ollama` (`llama3.2:3b`) · 오케스트레이션용 Claude API.
 
 ## 사전 요구사항
 
