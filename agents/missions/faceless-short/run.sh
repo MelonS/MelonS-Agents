@@ -110,19 +110,32 @@ whisper_segments "$TRANSCRIPT_JSON" > "$SEGMENTS_JSON"
 # Run script-aware caption correction so proper nouns like "Hattusa"
 # don't leak through as "Hadusa" (small-model whisper drift on names).
 SRT_RAW="${SRT_PATH%.srt}.raw.srt"
+SRT_CORRECTED="${SRT_PATH%.srt}.corrected.srt"
 ffmpeg_segments_to_srt "$SEGMENTS_JSON" 0 "$NARRATION_DUR" "$SRT_RAW"
 if python3 "$REPO_ROOT/scripts/correct-captions.py" \
       --script "$SCRIPT_PATH" \
       --srt-in "$SRT_RAW" \
-      --srt-out "$SRT_PATH" \
+      --srt-out "$SRT_CORRECTED" \
       --verbose 2> "$MDIR/resources/caption-corrections.log"; then
   CORR_COUNT=$(grep -c "→" "$MDIR/resources/caption-corrections.log" || true)
-  log_ok "captions: $(grep -c '^[0-9]' "$SRT_PATH") segments (corrected $CORR_COUNT)"
+  log_info "  corrected $CORR_COUNT cues against source script"
 else
-  log_warn "caption correction failed — using raw whisper output"
-  cp "$SRT_RAW" "$SRT_PATH"
-  log_ok "captions: $(grep -c '^[0-9]' "$SRT_PATH") segments (uncorrected)"
+  log_warn "  caption correction failed — using raw whisper output"
+  cp "$SRT_RAW" "$SRT_CORRECTED"
 fi
+
+# Enforce single-line caption rendering — split any cue whose text
+# exceeds CHAR_MAX into multiple cues at natural punctuation breaks.
+# Stops 2-line wrap overlap on mobile (BorderStyle=3 opaque boxes graze
+# each other when stacked).
+CAPTION_CHAR_MAX="${FACELESS_CAPTION_CHAR_MAX:-28}"
+python3 "$REPO_ROOT/scripts/split-long-captions.py" \
+  --srt-in "$SRT_CORRECTED" \
+  --srt-out "$SRT_PATH" \
+  --char-max "$CAPTION_CHAR_MAX" \
+  --min-duration 1.0 2>> "$MDIR/resources/caption-corrections.log"
+
+log_ok "captions: $(grep -c '^[0-9]' "$SRT_PATH") cues (single-line enforced)"
 
 # --- Stages 4–5: B-roll source -----------------------------------------
 # Two paths:
