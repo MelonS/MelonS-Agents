@@ -47,6 +47,13 @@
 > repository is a step in that evolution — the history is not a record
 > of outputs, but of how the agent system itself grows over time.
 
+> **Engineering decisions, one page.**
+> [`docs/engineering-case-studies.md`](docs/engineering-case-studies.md)
+> — four production incidents and the minimum mechanism each one
+> produced (Tier-1 routing, semaphore-bounded batch, content-quality
+> feedback loop, three-layer reactive audit). Each entry follows
+> *problem → constraint → decision → artifact*.
+
 ## Design notes
 
 A few choices that distinguish this from a typical agent demo:
