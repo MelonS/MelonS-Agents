@@ -52,8 +52,9 @@ remaining; user sets the next._
    `main-backup-pre-filter-20260517-173615` from both local and origin.
    Command: `git branch -D main-backup-pre-filter-20260517-173615 && git push origin --delete main-backup-pre-filter-20260517-173615`.
    This was the rollback safety net created before the 2026-05-17 email
-   history rewrite (replacing `todd@lightweight.kr` with the GitHub
-   noreply email).  Once confirmed stable, the branch is dead weight.
+   history rewrite (replacing the old personal commit email with the
+   GitHub noreply form).  Once confirmed stable, the branch is dead
+   weight.
 
 _(beyond #1: promote a deferred item from `docs/copyright-policy.md`
 ("Still TODO" block) when one becomes load-bearing, or set a new focus.)_
