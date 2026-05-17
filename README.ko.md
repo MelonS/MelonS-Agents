@@ -105,6 +105,29 @@ A/B 제작 노트, 플랫폼별 업로드 메타데이터, 다음 10개 토픽 �
 
 FAIL 행은 보존: QA 게이트는 형식 검사가 아닙니다.  `QA_RETRY_MAX` 소진 시 `records/blockers/<date>/<mission-id>.md`에 블로커 파일이 기록되고 미션이 정지합니다.  전체 미션 원장: [`docs/metrics-dashboard.md`](docs/metrics-dashboard.md).
 
+### 파일럿 점수표 — 어느 버전에서 무엇이 좋아졌나
+
+운영자 질문: *"썸네일만으로는 뭐가 좋아지는지 안 보인다."*
+정직한 답은 쇼트폼 시청 유지율에 매핑되는 다섯 가지 차원에 걸친
+구조화된 자체 평가입니다.
+
+![누적 가로 막대 차트, 파일럿 점수표 — Hittites EN v4 26/50, v5 32/50, v6 44/50, Hydrogen EN v5 28/50, v6 43/50; 막대당 다섯 색 세그먼트 (후크, 영상-자막 매칭, 가독성, 사실 일관성, 마감)](docs/metrics/scorecard.png)
+
+v5 → v6 상승폭 (단일 라인 자막은 v5에서 이미 적용 완료, v6는
+스크립트 생성 단계만 로컬 `llama3.2:3b`에서 Claude Sonnet으로
+교체)은 Hittites EN에서 +12점, Hydrogen EN에서 +15점.  v5→v6
+델타 대부분이 **후크**와 **사실 일관성** 차원 — 운영자가 v5에서
+지적한 바로 그 차원입니다 ("초반 5초에 시선 끌만한 게 없음",
+"10%인지 60%인지 헷갈리네").
+
+투명성 고지: 점수는 시청자 패널이 아니라 Claude가 매긴 자체
+평가입니다.  실제 플랫폼 시청 시간 데이터가 들어오기 전까지의
+구조화된 진행 신호로만 사용합니다.  버전별 상세 + 추론 + 차원
+정의: [`docs/pilots/scorecard.md`](docs/pilots/scorecard.md).
+원본 데이터: [`docs/pilots/scorecard.json`](docs/pilots/scorecard.json).
+JSON 수정 후 차트 재생성:
+`.venv/bin/python scripts/generate-scorecard-chart.py`.
+
 ### 미션별 타이밍 (v1 highlight 미션 한정)
 
 ![미션별 시간 분해 — v1 highlight 미션, 단계(전사 + 선택 + 렌더 + 기타)별 스택 막대](docs/metrics/per-mission-time.png)

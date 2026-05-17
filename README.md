@@ -107,6 +107,30 @@ Both sourced from the *Sintel* trailer (CC-BY-3.0, © Blender Foundation — `du
 
 The FAIL row is preserved: the QA gate isn't theatre.  On exhaustion of `QA_RETRY_MAX`, a blocker file is written to `records/blockers/<date>/<mission-id>.md` and the mission halts.  Full ledger of all tracked runs: [`docs/metrics-dashboard.md`](docs/metrics-dashboard.md).
 
+### Pilot scorecard — how each version actually improved
+
+Operator-asked question: *"thumbnails alone don't tell me what's
+getting better."*  Honest answer is a structured self-evaluation
+across five dimensions that map to short-form viewer retention.
+
+![Stacked horizontal bar chart, Pilot scorecard — Hittites EN v4 26/50, Hittites EN v5 32/50, Hittites EN v6 44/50, Hydrogen EN v5 28/50, Hydrogen EN v6 43/50; five-color segments per bar showing Hook, Visual sync, Readability, Factual, Polish dimensions](docs/metrics/scorecard.png)
+
+The lift from v5 → v6 (single-line caption was already in place at
+v5; v6 swapped the script-generation stage from local `llama3.2:3b`
+to Claude Sonnet) is +12 points on Hittites EN and +15 on Hydrogen
+EN.  Most of the v5→v6 delta is **Hook** and **Factual coherence**
+— exactly the dimensions the operator surfaced as broken in v5
+("초반 5초에 시선 끌만한게 없음", "10%인지 60%인지 헷갈리네").
+
+Honest disclosure: scores are assigned by Claude, not a viewer
+panel.  They are a structured progress signal until real platform
+watch-time data replaces them.  Full per-version breakdown +
+reasoning + dimension definitions in
+[`docs/pilots/scorecard.md`](docs/pilots/scorecard.md).  Source
+data: [`docs/pilots/scorecard.json`](docs/pilots/scorecard.json).
+Regenerate the chart after editing the JSON:
+`.venv/bin/python scripts/generate-scorecard-chart.py`.
+
 ### Per-mission timing (v1 highlight missions only)
 
 ![Per-mission time breakdown — v1 highlight missions, stacked by stage (transcribe + select + render + other)](docs/metrics/per-mission-time.png)

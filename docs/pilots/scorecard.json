@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "score_dimensions": [
+    "hook_strength",
+    "visual_caption_sync",
+    "caption_readability",
+    "factual_coherence",
+    "production_polish"
+  ],
+  "max_per_dimension": 10,
+  "rationale": "Five-axis self-evaluation by Claude. Scores are not a viewer-retention measurement; they are a structured progress signal until real upload + platform data replaces them. See scorecard.md for axis definitions and per-version reasoning.",
+  "scores": [
+    {
+      "topic": "Hittites EN",
+      "version": "v4",
+      "mission_id": "faceless-hittites-014312",
+      "hook_strength": 3,
+      "visual_caption_sync": 6,
+      "caption_readability": 4,
+      "factual_coherence": 6,
+      "production_polish": 7,
+      "total": 26
+    },
+    {
+      "topic": "Hittites EN",
+      "version": "v5",
+      "mission_id": "faceless-hittites-032538",
+      "hook_strength": 3,
+      "visual_caption_sync": 6,
+      "caption_readability": 9,
+      "factual_coherence": 6,
+      "production_polish": 8,
+      "total": 32
+    },
+    {
+      "topic": "Hittites EN",
+      "version": "v6",
+      "mission_id": "faceless-hittites-v6-071919",
+      "hook_strength": 9,
+      "visual_caption_sync": 9,
+      "caption_readability": 9,
+      "factual_coherence": 9,
+      "production_polish": 8,
+      "total": 44
+    },
+    {
+      "topic": "Hydrogen EN",
+      "version": "v5",
+      "mission_id": "faceless-hydrogen-032742",
+      "hook_strength": 3,
+      "visual_caption_sync": 5,
+      "caption_readability": 9,
+      "factual_coherence": 3,
+      "production_polish": 8,
+      "total": 28
+    },
+    {
+      "topic": "Hydrogen EN",
+      "version": "v6",
+      "mission_id": "faceless-hydrogen-v6-072159",
+      "hook_strength": 9,
+      "visual_caption_sync": 8,
+      "caption_readability": 9,
+      "factual_coherence": 9,
+      "production_polish": 8,
+      "total": 43
+    }
+  ]
+}
