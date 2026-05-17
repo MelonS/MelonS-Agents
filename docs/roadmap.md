@@ -15,34 +15,37 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 ## Now — active focus
 
-_Last updated 2026-05-17 ~15:30 KST.  Active goal in `docs/goal.md`
-**ACHIEVED** — operator pick logged 2026-05-17, niche pivot to a new
-`music-video` mission shipped (commit `828070f`).  No active goal
-remaining; user sets the next._
+_Last updated 2026-05-17 ~20:10 KST.  Active goal is
+**[Production-ready music-video short](goal.md#active-goal)** — operator
+direction at ~20:00: "실제로 올릴수있는 정도의 쇼츠를 만들어 내야함.
+계속 테스트만 하는건 의미없음."  Cost-pressure context: SSD purchase
+deferred, Suno paid deferred, disk pressure ongoing._
 
-1. **User** sets the next active goal in `docs/goal.md`.  Likely
-   candidates (user-confirm or replace):
-   - **Production batch on music-video mode** — produce 5–10
-     music-video shorts with curated Suno (or YT Audio Library)
-     music + the validated lo-fi/cafe keyword pool, then ship to
-     YouTube Shorts and capture first real platform watch-time data.
-   - **Music-video scorecard** — build new per-axis scoring
-     (mood-fit, beat-sync quality, motif memorability) since the
-     existing scorecard ([`docs/pilots/scorecard.md`](pilots/scorecard.md))
-     measures narration dimensions that don't apply.
-   - **Format polish** — promote v6 effects (film grain, vignette,
-     zoom-pulse on glitch) into the mission script if the operator
-     confirms them; explore the sticker overlay path the operator
-     floated.
-   - **External SSD purchase** — 1 TB USB-C NVMe to make
-     `RECORDS_DIR` external, freeing internal disk indefinitely.
-     Operator decision pending.
+1. **Music source resolution** — settle one license-clean track in
+   `assets/music/` (gitignored) + tracked `assets/music/SOURCES.md`
+   with source + license URL.  Path order: YouTube Audio Library
+   (commercial-safe on YT Shorts) → Pixabay Music → operator-supplied.
+   Do **not** spend on Suno paid or any other paid music service in
+   this turn.
 
-2. Check `docs/audit/CURRENT-ALERT.md` — if present, address the
-   audit finding before picking up the next focus.
+2. **One real render pass on the chosen track** — `music-video` mission
+   end-to-end with the resolved track, v6 effects integrated, mood
+   keywords matching the track's vibe.  Output lands at a publish-ready
+   path (e.g. `outputs/publish/<slug>.mp4`), not buried under
+   `records/missions/<date>/<id>/outputs/`.
 
-- [x] **Operator decision in `decision-log.md`** — completed 2026-05-17,
-  see [`pilots/decision-log.md`](pilots/decision-log.md#operator-pick--2026-05-17).
+3. **Operator review** — operator watches the mp4 and either says
+   "이거 올려" (close the goal) or names the specific delta needed
+   (taste signal — adjust one knob, re-render once).
+
+4. **(If approved)** stage the mp4 + a one-line `assets/music/SOURCES.md`
+   citation for the upload step.  Optional follow-on: capture first 24h
+   watch-time once operator uploads.
+
+> Side-track (continues alongside #1): after `ab6555e` cleared the §8
+> plist carry-forward, the next audit-poll firing (≤15 min) or 03:00
+> baseline should auto-clear `docs/audit/CURRENT-ALERT.md`.  No action
+> needed unless the alert persists past 03:00.
 
 
 ## Next — queued, in priority order
@@ -72,6 +75,17 @@ _(beyond #1: promote a deferred item from `docs/copyright-policy.md`
   an opt-in flag in each mission's retry loop.
 
 ## Done — most recent first
+
+- **2026-05-17** (~20:00 KST) **§8 plist templating + new active goal.**
+  Closed the [low, carry-forward] §8 audit finding ("Four launchd plists
+  hardcode /Users/melons/...") that persisted across 14+ audits.  Plists
+  now render from committed `*.plist.template` sources via `sed`
+  substitution of `@@REPO_ROOT@@` / `@@HOME@@` at install time, so a
+  machine swap doesn't leave hardcoded `/Users/melons/...` paths in
+  place.  Verified byte-identical render against committed pre-refactor
+  plists.  Commit `ab6555e`.  Same session: 15th contract audit
+  persisted (`b268ca2`), new active goal set in `docs/goal.md`
+  (production-ready upload candidate, cost-minimal mode).
 
 - **2026-05-17** (15:30 KST) **Music-video mission shipped + niche pivot
   to format option 3.**  Original goal A/B (Hittites topic vs Hydrogen

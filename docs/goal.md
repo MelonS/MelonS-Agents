@@ -16,6 +16,75 @@ exists and matches the "Done when" criteria below.
 
 ## Active goal
 
+### 2026-05-17 | Production-ready music-video short — 업로드 가능한 1편
+
+_(2026-05-17 ~20:00 KST — operator direction after the pilot A/B
+goal closed.  Operator literal: "실제로 올릴수있는 정도의 쇼츠를
+만들어 내야함. 계속 테스트만 하는건 의미없음."  Cost-pressure
+context stated in the same turn: SSD purchase deferred, paid Suno
+deferred, disk pressure remains.)_
+
+_One sentence_: produce **at least one** music-video short that the
+operator approves as "이대로 올려도 됨" (would upload as-is) — not
+"pilot-quality", not "close enough", an actual upload candidate for
+YouTube Shorts.
+
+**Constraints derived from operator turn**:
+
+- **Cost-minimal mode**: no SSD purchase, no Suno paid tier, no new
+  paid services.  Music sources limited to:
+  - YouTube Audio Library (free, license-clean for YT Shorts uploads)
+  - Pixabay Music (free, attribution-recommended)
+  - Operator-supplied files (already validated path)
+- **Disk-pressure mode**: 34 GB free as of 20:00 KST after manual
+  cleanup pass.  Every mission must release its `resources/` intermediates
+  immediately on completion until SSD lands.
+- **No more test-iteration shorts**: each render is either upload-candidate
+  or it gets deleted.  Decision-log entries replace mp4 archives.
+
+**Subgoals (acceptance signals)**:
+
+- [ ] **Music source resolved** — at least one license-clean track
+      sitting in `assets/music/` (gitignored), with source + license URL
+      noted in a tracked `assets/music/SOURCES.md`.  Acceptance: a
+      track exists locally that the operator confirms is OK to publish
+      a video under.
+- [ ] **Pre-flight format polish** — v6 effects already integrated into
+      `agents/missions/music-video/run.sh`; remaining knob-tuning (if any)
+      driven by operator review of the next render, not pre-emptive
+      iteration.  Acceptance: no open "needs format change" item in
+      `docs/pilots/decision-log.md` between render and operator review.
+- [ ] **Deliverable** — one mp4 in a known publish-ready path
+      (`outputs/publish/` or equivalent — not buried under
+      `records/missions/<date>/<id>/outputs/`) that the operator
+      explicitly approves with "이거 올려" or equivalent.  The mp4
+      must remain on disk after the next cleanup pass.
+- [ ] **(Optional, but the real goal)** — that mp4 lands on a
+      YouTube Shorts channel, 24h watch-time + impression counts captured
+      in `docs/pilots/first-upload-metrics.md`.  Not strictly required
+      to close the goal (the operator may want to hand-upload), but the
+      goal only fully "matters" when this happens.
+
+**Done when**: the deliverable subgoal is checked — operator approves
+a specific mp4 and it sits in the publish-ready path.
+
+**Why this goal now**: 73 commits of infrastructure + 5 music-video
+prototype iterations landed in one day and the operator's reaction is
+"테스트만 하는건 의미없음" — the gap between "system can produce this"
+and "operator would publish this" is the unmet outcome.  Closing it
+also unlocks the next decision (양산 batch vs single-launch) on real
+performance data instead of taste.
+
+**Not in scope for this goal**:
+- Music-video scorecard (deferred — operator approval is the only score
+  that matters until first upload).
+- 양산 batch (5–10 shorts) — only meaningful after one shipped piece
+  validates the format/music/license stack.
+- External SSD purchase (operator decision; not a blocker).
+- Channel creation / YT account setup automation (operator action).
+
+#### Prior goal (achieved earlier today, read-only)
+
 ### 2026-05-16 | Faceless pilot A/B — science vs Bible-history | **ACHIEVED 2026-05-17**
 
 > _Resolution note_: the operator's pick (logged 2026-05-17, see
