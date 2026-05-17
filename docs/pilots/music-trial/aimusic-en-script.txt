@@ -1,0 +1,9 @@
+An 8-word text prompt now produces a chart-quality, 3-minute vocal track in under 90 seconds.
+
+Suno launched its v3 model in March 2024. Udio followed in April. Both tools work the same way: type a phrase — "upbeat funk with male vocals" — hit generate, and receive a finished song with drums, bass, guitar, and lead vocal, fully mixed and mastered. The file is immediately distributable to Spotify, Apple Music, and TikTok without opening a DAW.
+
+But in June 2024, Universal, Sony, and Warner filed suit against both companies, alleging unlicensed training on copyrighted recordings. The suits are still active. The tools kept shipping.
+
+By 2025, Suno's free mobile tier gives any user 10 songs a day. A union studio session in Los Angeles runs a 3-hour minimum at AFM scale — over $450 in musician fees before a single note is tracked.
+
+A Nashville guitarist is now bidding for jingle work against a text prompt.

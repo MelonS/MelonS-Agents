@@ -1,0 +1,58 @@
+[
+  {
+    "index": 0,
+    "start": 0.0,
+    "end": 8.543,
+    "text": "AutoTune was invented to find oil. In 1996, geophysicist Andy Hildebrand left Exxon after spending years",
+    "term": "geophysicist Andy Hildebrand"
+  },
+  {
+    "index": 1,
+    "start": 8.543,
+    "end": 13.32,
+    "text": "building autocorrelation algorithms math designed to detect underground petroleum",
+    "term": "groundwater detection"
+  },
+  {
+    "index": 2,
+    "start": 13.32,
+    "end": 23.199,
+    "text": "by analyzing reflected sound waves. He applied that same math to audio pitch and called it AutoTune. It corrected off-key singing so cleanly",
+    "term": "reflected sound waves"
+  },
+  {
+    "index": 3,
+    "start": 23.199,
+    "end": 30.264,
+    "text": "that listeners had no idea. Studios adopted it quietly, like a secret safety net. But in 1998,",
+    "term": "1998 music software"
+  },
+  {
+    "index": 4,
+    "start": 30.264,
+    "end": 37.079,
+    "text": "producer Mark Taylor was recording Cher's \"Believe\" and cranked the retune speed down to zero.",
+    "term": "Cher recording studio"
+  },
+  {
+    "index": 5,
+    "start": 37.079,
+    "end": 43.039,
+    "text": "That setting makes the algorithm snap pitch instantly, with no smoothing— and something strange emerged:",
+    "term": "instant pitch snap"
+  },
+  {
+    "index": 6,
+    "start": 43.039,
+    "end": 48.617,
+    "text": "a robotic warble no one had intended. They kept it. The track sold 10 million",
+    "term": "robotic warble image"
+  },
+  {
+    "index": 7,
+    "start": 48.617,
+    "end": 58.92,
+    "text": "copies worldwide. T-Pain built a career on that accident. Drake, Kanye, The Weeknd— all of them followed.",
+    "term": "T-Pain vocals"
+  }
+]

@@ -42,11 +42,41 @@ replace these.
 | Production polish | 8 | 8 |
 | **Total** | **28 / 50** | **43 / 50** |
 
+## Music-trial pilots (2026-05-17, post-v6)
+
+After v6, the operator surfaced "the Hittites vs Hydrogen pair are
+both deep-documentary tone — can't tell which niche fits me by
+comparing them" and pivoted to a music-themed trial (their domain
+expertise: audio + generative vocal models).  Same Sonnet pipeline,
+four new topics, each rendered EN + KO.  Full writeup in
+[`music-trial/README.md`](music-trial/README.md).
+
+| Pilot | Hook | Visual | Readability | Factual | Polish | **Total** |
+|---|---|---|---|---|---|---|
+| AutoTune EN | 10 | 8 | 9 | 10 | 8 | **45 / 50** |
+| AutoTune KO | 10 | 8 | 9 | 10 | 7 | **44 / 50** |
+| Earworms EN | 9 | 8 | 9 | 9 | 8 | **43 / 50** |
+| Earworms KO | 9 | 8 | 9 | 9 | 7 | **42 / 50** |
+| AI Music EN | 9 | 7 | 9 | 9 | 8 | **42 / 50** |
+| AI Music KO | 9 | 7 | 9 | 9 | 7 | **41 / 50** |
+| Miku EN | 9 | 6 | 9 | 9 | 8 | **41 / 50** |
+| Miku KO | 9 | 6 | 9 | 9 | 7 | **40 / 50** |
+
+**AutoTune EN at 45/50 is the highest-scoring pilot** in the entire
+scorecard, above Hittites EN v6's 44/50.  The hook ("AutoTune was
+invented to find oil") + the 1996→1998 cause-and-effect arc + clean
+factual citations all land cleanly.
+
+Music-niche average **41.75 / 50**, comparable to v6 on history/
+science (~43.5).  The Sonnet pipeline is topic-independent —
+quality is bottlenecked on the script, not the domain.
+
 ## What changed at each version boundary
 
 - **v4 → v5**: caption split landed.  Lifted readability +5 but didn't touch script.  Best-case use of free-only quality.
 - **v5 → v6**: script-generation stage routed from `llama3.2:3b` (Tier 2) to Claude Sonnet (Tier 1, Max-plan quota).  Lifted Hook +6, Coherence +3 (Hydrogen +6), Visual sync +3.  See [`sonnet-trial/README.md`](sonnet-trial/README.md) and the
   [`cost-model.md` routing rule](../cost-model.md#when-tier-2-is-the-wrong-default--creative-stages).
+- **v6 → music-trial**: no pipeline change, only different topics.  Confirms Sonnet pipeline generalizes across topic categories.  KO consistently ~1 point below EN (Production polish penalty for macOS Yuna vs Kokoro `am_michael`).
 
 ## Honest gaps
 

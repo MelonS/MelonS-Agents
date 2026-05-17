@@ -1,0 +1,11 @@
+She fills stadiums. She has no vocal cords.
+
+Hatsune Miku launched in 2007 as a software package from Crypton Future Media, a Sapporo company. Her voice was sampled from actress Saki Fujita and mapped to Yamaha's VOCALOID synthesizer.
+
+Crypton expected producers to use her as a studio tool. Within a year, users had written tens of thousands of original songs for her on Nico Nico Douga.
+
+But in 2009, she stepped onto a physical stage — a holographic projection on a thin transparent screen — and people paid real ticket prices to watch her perform. Some of them cried.
+
+She has been doing this ever since. And every commercial AI vocal model that arrived after her — from text-to-song generators to open-source voice cloners — is built on the synthesis approach her developers road-tested across those same 16 years.
+
+She is still 16 years old.

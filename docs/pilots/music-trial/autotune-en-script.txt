@@ -1,0 +1,9 @@
+AutoTune was invented to find oil.
+
+In 1996, geophysicist Andy Hildebrand left Exxon after spending years building autocorrelation algorithms — math designed to detect underground petroleum by analyzing reflected sound waves. He applied that same math to audio pitch and called it AutoTune. It corrected off-key singing so cleanly that listeners had no idea. Studios adopted it quietly, like a secret safety net.
+
+But in 1998, producer Mark Taylor was recording Cher's "Believe" and cranked the retune speed down to zero. That setting makes the algorithm snap pitch instantly, with no smoothing — and something strange emerged: a robotic warble no one had intended. They kept it. The track sold 10 million copies worldwide.
+
+T-Pain built a career on that accident. Drake, Kanye, The Weeknd — all of them followed.
+
+The oil never got found — but that sound never left.

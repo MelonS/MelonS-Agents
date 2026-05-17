@@ -137,6 +137,48 @@ substitute for the niche pick.
 
 ---
 
+## Music trial — niche-fit explored via operator-domain topics
+
+After v6, the operator's read on Hittites + Hydrogen was honest:
+"도저히 판단이 안됨, 둘 다 다큐멘터리 톤이라 비교 안 됨."  The pair
+was too tonally similar to test niche fit.  They pivoted to music
+(their professional domain — audio + generative vocal models —
+which means they can fact-check the output directly).
+
+Four music topics, two languages each = 8 new pilots through the
+same Sonnet-script + local-everything-else v6 pipeline.  Full
+writeup: [`music-trial/README.md`](music-trial/README.md).
+
+**Highest score in the entire scorecard so far**: AutoTune EN at
+**45 / 50** ("AutoTune was invented to find oil." → 1996 Andy
+Hildebrand → 1998 Cher's Believe → T-Pain).  Clean cause-and-effect
+arc, exceptional hook, factually clean.  Suggests if the operator
+picks music, the strongest entry-point format is the **surprising
+origin story** structure — applies equally to Moog synthesizer
+history, 808 drum machine, MIDI invention, etc.
+
+Other observations:
+- **Earworms** at 43/50 — strong universal-experience anchor ("98%
+  of people get a song stuck involuntarily once a week") but B-roll
+  is necessarily abstract (Pexels has no "song-stuck-in-head"
+  imagery; falls back to brain visuals + headphones).
+- **AI Music** at 42/50 — operator's domain.  Strong recency
+  (Suno/Udio launched 2024, lawsuits June 2024) but Pexels has no
+  Suno-specific or lawsuit-specific imagery; falls back to generic
+  studio shots.
+- **Hatsune Miku** at 41/50 — exceptional hook ("She fills stadiums.
+  She has no vocal cords.") but lowest visual specificity in the
+  trial (no licensed Miku imagery on Pexels → dark concert
+  silhouettes + abstract holographic projections).
+
+**Operator pick still gates goal completion**, but the trial gives
+two new data points: (1) music niche is fully feasible at the
+current quality level; (2) within music, "surprising origin story"
+beats "broad explainer" — AutoTune-style topics will outperform
+abstract phenomenon explainers like Earworms in the same pipeline.
+
+---
+
 ## Comparison frame — what we're learning from A/B
 
 | Dimension | Hittites (history × Bible) | Hydrogen (science) |

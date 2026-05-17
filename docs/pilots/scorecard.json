@@ -64,6 +64,94 @@
       "factual_coherence": 9,
       "production_polish": 8,
       "total": 43
+    },
+    {
+      "topic": "AI Music EN",
+      "version": "music-trial",
+      "mission_id": "faceless-aimusic-100014",
+      "hook_strength": 9,
+      "visual_caption_sync": 7,
+      "caption_readability": 9,
+      "factual_coherence": 9,
+      "production_polish": 8,
+      "total": 42
+    },
+    {
+      "topic": "AI Music KO",
+      "version": "music-trial",
+      "mission_id": "faceless-aimusic-ko-100743",
+      "hook_strength": 9,
+      "visual_caption_sync": 7,
+      "caption_readability": 9,
+      "factual_coherence": 9,
+      "production_polish": 7,
+      "total": 41
+    },
+    {
+      "topic": "Earworms EN",
+      "version": "music-trial",
+      "mission_id": "faceless-earworms-101030",
+      "hook_strength": 9,
+      "visual_caption_sync": 8,
+      "caption_readability": 9,
+      "factual_coherence": 9,
+      "production_polish": 8,
+      "total": 43
+    },
+    {
+      "topic": "Earworms KO",
+      "version": "music-trial",
+      "mission_id": "faceless-earworms-ko-101202",
+      "hook_strength": 9,
+      "visual_caption_sync": 8,
+      "caption_readability": 9,
+      "factual_coherence": 9,
+      "production_polish": 7,
+      "total": 42
+    },
+    {
+      "topic": "Miku EN",
+      "version": "music-trial",
+      "mission_id": "faceless-miku-101305",
+      "hook_strength": 9,
+      "visual_caption_sync": 6,
+      "caption_readability": 9,
+      "factual_coherence": 9,
+      "production_polish": 8,
+      "total": 41
+    },
+    {
+      "topic": "Miku KO",
+      "version": "music-trial",
+      "mission_id": "faceless-miku-ko-101512",
+      "hook_strength": 9,
+      "visual_caption_sync": 6,
+      "caption_readability": 9,
+      "factual_coherence": 9,
+      "production_polish": 7,
+      "total": 40
+    },
+    {
+      "topic": "AutoTune EN",
+      "version": "music-trial",
+      "mission_id": "faceless-autotune-101615",
+      "hook_strength": 10,
+      "visual_caption_sync": 8,
+      "caption_readability": 9,
+      "factual_coherence": 10,
+      "production_polish": 8,
+      "total": 45
+    },
+    {
+      "topic": "AutoTune KO",
+      "version": "music-trial",
+      "mission_id": "faceless-autotune-ko-101807",
+      "hook_strength": 10,
+      "visual_caption_sync": 8,
+      "caption_readability": 9,
+      "factual_coherence": 10,
+      "production_polish": 7,
+      "total": 44
     }
   ]
 }

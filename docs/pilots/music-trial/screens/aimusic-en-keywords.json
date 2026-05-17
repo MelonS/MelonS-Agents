@@ -1,0 +1,58 @@
+[
+  {
+    "index": 0,
+    "start": 0.0,
+    "end": 6.0,
+    "text": "An 8-word text prompt now produces a chart-quality, 3-minute vocal track in under 90 seconds.",
+    "term": "chart quality track"
+  },
+  {
+    "index": 1,
+    "start": 6.0,
+    "end": 12.0,
+    "text": "Suno launched its v3 model in March 2024. Udio followed in April.",
+    "term": "music production tools"
+  },
+  {
+    "index": 2,
+    "start": 12.0,
+    "end": 24.0,
+    "text": "Both tools work the same way: type a phrase— \"upbeat funk with male vocals\"— hit generate, and receive a finished song with drums, bass, guitar, and lead vocal, fully mixed and mastered.",
+    "term": "chart quality music"
+  },
+  {
+    "index": 3,
+    "start": 24.0,
+    "end": 31.0,
+    "text": "The file is immediately distributable to Spotify, Apple Music, and TikTok without opening a DAW.",
+    "term": "music track generation"
+  },
+  {
+    "index": 4,
+    "start": 31.0,
+    "end": 40.074,
+    "text": "But in June 2024, Universal, Sony, and Warner filed suit against both companies, alleging unlicensed training",
+    "term": "music lawsuit photos"
+  },
+  {
+    "index": 5,
+    "start": 40.074,
+    "end": 49.1,
+    "text": "on copyrighted recordings. The suits are still active. The tools kept shipping. By 2025, Suno's free mobile tier",
+    "term": "copyrighted recordings suits"
+  },
+  {
+    "index": 6,
+    "start": 49.1,
+    "end": 56.286,
+    "text": "gives any user 10 songs a day. A union studio session in Los Angeles runs a 3-hour",
+    "term": "studio session"
+  },
+  {
+    "index": 7,
+    "start": 56.286,
+    "end": 68.57,
+    "text": "minimum at AFM scale over $450 in musician fees before a single note is tracked.",
+    "term": "musician fees chart"
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "index": 0,
+    "start": 0.0,
+    "end": 6.58,
+    "text": "오토튠은 석유 탐사 도구였다. 앤디 힐데브란트는 엑손모빌에서 지진파 알고리즘을 개발한 석유",
+    "term": "oil rig"
+  },
+  {
+    "index": 1,
+    "start": 6.58,
+    "end": 12.476,
+    "text": "탐사 엔지니어였다. 음파로 지층을 분석하는 기술이 본업이었다. 1996년,",
+    "term": "audio engineer"
+  },
+  {
+    "index": 2,
+    "start": 12.476,
+    "end": 17.1,
+    "text": "그는 그 수학 구조가 사람 목소리에도 적용된다는 것을 깨달았다.",
+    "term": "math equation graphic"
+  },
+  {
+    "index": 3,
+    "start": 17.1,
+    "end": 21.12,
+    "text": "깨달았다. 1997년, 오토튠이 출시됐다.",
+    "term": "auto tune machine"
+  },
+  {
+    "index": 4,
+    "start": 21.12,
+    "end": 27.024,
+    "text": "설계 목표는 단 하나, 보정을 들리지 않게 숨기는 것이었다. 그런데 1998년,",
+    "term": "auto tune effect"
+  },
+  {
+    "index": 5,
+    "start": 27.024,
+    "end": 33.14,
+    "text": "마크 테일러는 셰어의 Believe를 작업하면서 보정 속도를 속도를 0으로 낮췄다.",
+    "term": "Mark Taylor slows down AutoTune"
+  },
+  {
+    "index": 6,
+    "start": 33.14,
+    "end": 39.34,
+    "text": "음정이 계단처럼 뚝 끊기는 소리가 났다. 그 노래는 4주 동안 빌보드 1위를 지켰다.",
+    "term": "concert crowd cheering"
+  },
+  {
+    "index": 7,
+    "start": 39.34,
+    "end": 46.21,
+    "text": "그 사운드가 이끈 팝 시장 규모는 100억 달러를 넘겼다. 석유 한 방울 없는 곳에서 캐낸 소리였다.",
+    "term": "oil droplets falling"
+  }
+]
