@@ -1,55 +1,57 @@
-# Royalty-free music pool
+# Music pool — LOCAL ONLY, never committed
 
-Tracks here are layered under faceless-short narration as background music.
-The pipeline reads `FACELESS_BGM_FILE` env var; set it to one of the file
-paths below (relative to repo root) to enable BGM on a given render.
+Music tracks dropped here are read by the faceless-short pipeline as
+background music under the narration.  **No audio file in this
+directory is committed to the repo.**  `.gitignore` blocks every audio
+file under `assets/music/` regardless of format.
 
-## License requirement
+## Why local-only
 
-**Every track in this directory must be commercial-use OK with no
-attribution required.** That narrows the acceptable sources to:
+The repo is public + promoted.  "Free to use in your video" (e.g.
+YouTube Audio Library) and "free to redistribute the file" are
+different licenses.  Most free-music sources grant the first but not
+the second.  Rather than verify redistribution rights per track,
+we keep the audio off the repo entirely.
 
-- **Pixabay License** (most Pixabay Music tracks) — no attribution, commercial OK
-- **CC0** (Public Domain dedication)
+This means:
 
-Tracks under CC-BY, CC-BY-SA, or any non-commercial license must NOT be
-committed here. If a track requires attribution, the entire faceless-short
-output inherits that requirement, which conflicts with the
-single-attribution-line constraint of the render (Pexels source is the
-only attribution slot).
+- Each operator drops their own tracks into their **local** clone.
+- Tracks do not transfer when someone forks or clones the repo.
+- The pipeline configuration (`FACELESS_BGM_FILE` env var) is the
+  only thing that crosses repo / operator boundaries.
 
-## Tracks
+## Where to get tracks
 
-The license matrix below is filled in as tracks are added. If you see a
-row marked `???`, the license has not been verified yet — do not use
-that track in production rendering until the row is completed.
+In order of recommendation for a local operator:
 
-| File | Source | License | Mood / use |
-|---|---|---|---|
-| _none yet_ | — | — | — |
-
-## Re-verification
-
-When adding a track from a new source, double-check:
-
-1. Source page explicitly states the license.
-2. The license name appears in the "license requirement" list above.
-3. The download URL is the official source CDN, not a third-party mirror.
-
-When in doubt, do not add the track.
+1. **YouTube Audio Library** — `studio.youtube.com → Audio Library`.
+   Filter by "Attribution not required."  Free, commercial use OK
+   inside YouTube videos.  Highest-quality free-music selection.
+2. **Pixabay Music** — `pixabay.com/music`.  Free, Pixabay License,
+   no attribution required for use.
+3. **Suno (paid)** — `suno.com`, Pro $8/mo.  AI-generated, commercial
+   use OK on paid tiers.  Useful when curated free libraries don't
+   have what you want.
+4. **Operator's own purchased / created music** — anything you have
+   personal rights to use.
 
 ## Usage from the pipeline
 
 ```bash
-# Specific track
+# Specific track (relative to repo root)
 FACELESS_BGM_FILE=assets/music/<filename>.mp3 \
   ./agents/missions/faceless-short/run.sh <id> "<topic>"
 
-# Override volume (default 0.15 ≈ -16 dB; range 0.0-1.0)
+# Override volume (default 0.15 ≈ -16 dB; range 0.0–1.0)
 FACELESS_BGM_FILE=assets/music/<filename>.mp3 \
 FACELESS_BGM_VOLUME=0.10 \
   ./agents/missions/faceless-short/run.sh <id> "<topic>"
 
-# No BGM (default)
+# No BGM (default — current behavior with no BGM file set)
 ./agents/missions/faceless-short/run.sh <id> "<topic>"
 ```
+
+The pipeline accepts mp3, wav, ogg, flac, m4a — whatever ffmpeg can
+read.  If the track is shorter than the narration, it loops via
+`ffmpeg -stream_loop -1`.  If longer, it's truncated to narration
+length via `amix duration=first`.

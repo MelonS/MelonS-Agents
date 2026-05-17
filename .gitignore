@@ -3,6 +3,20 @@
 # =============================================================================
 records/
 !records/.gitkeep
+
+# =============================================================================
+# Music pool (local-only — NEVER committed, regardless of source license).
+# A "free to use in your video" license (YouTube Audio Library, Pixabay,
+# etc.) is NOT the same as a "free to redistribute the file" license.
+# The repo is public + promoted; committing audio files would mean
+# redistribution, which is a separate license question we don't want to
+# resolve per track.  Operators source their own tracks locally and
+# point FACELESS_BGM_FILE at the local path.  Only README.md + .gitkeep
+# in assets/music/ are tracked.
+# =============================================================================
+assets/music/*
+!assets/music/.gitkeep
+!assets/music/README.md
 # Media outputs anywhere in the tree
 *.mp4
 *.mov
@@ -32,9 +46,6 @@ records/
 # GitHub Pages assets (site/ is the Pages source — bundle of evidence frames)
 !site/assets/*.jpg
 !site/assets/*.png
-# Royalty-free music tracks for faceless-short BGM layer (committed evidence
-# of the curated free-music pool; license info in assets/music/README.md)
-!assets/music/*.mp3
 *.jpeg
 *.gif
 # Demo GIFs (highlight + v6 preview)
