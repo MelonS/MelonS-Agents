@@ -341,16 +341,49 @@ else
 fi
 FILTER="${FILTER}[outv]"
 
+# Background-music mix.  Set FACELESS_BGM_FILE to a path (absolute or
+# relative to repo root) to layer a music track under the narration.
+# Volume is 0.15 ≈ -16 dB by default — quiet enough to not compete with
+# the TTS narration.  Looped if shorter than narration; truncated to
+# narration length if longer (amix duration=first).
+BGM_FILE_IN="${FACELESS_BGM_FILE:-}"
+BGM_VOLUME="${FACELESS_BGM_VOLUME:-0.15}"
+ABS_BGM=""
+if [[ -n "$BGM_FILE_IN" ]]; then
+  if [[ "$BGM_FILE_IN" = /* ]]; then
+    ABS_BGM="$BGM_FILE_IN"
+  else
+    ABS_BGM="$REPO_ROOT/$BGM_FILE_IN"
+  fi
+  if [[ ! -f "$ABS_BGM" ]]; then
+    log_warn "  FACELESS_BGM_FILE not found: $ABS_BGM — proceeding without BGM"
+    ABS_BGM=""
+  fi
+fi
+
 (
   cd "$ASS_DIR"
-  "$FFMPEG_BIN" -y -loglevel error \
-    -i "$ABS_CONCAT" \
-    -i "$ABS_NARRATION" \
-    -filter_complex "$FILTER" \
-    -map "[outv]" -map 1:a \
-    -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k \
-    -shortest -movflags +faststart \
-    "$ABS_OUT"
+  if [[ -n "$ABS_BGM" ]]; then
+    log_info "  BGM mix: $(basename "$ABS_BGM") (volume=$BGM_VOLUME, ~$(awk -v v="$BGM_VOLUME" 'BEGIN{printf "%.0f", 20*log(v)/log(10)}') dB)"
+    "$FFMPEG_BIN" -y -loglevel error \
+      -i "$ABS_CONCAT" \
+      -i "$ABS_NARRATION" \
+      -stream_loop -1 -i "$ABS_BGM" \
+      -filter_complex "${FILTER};[2:a]volume=${BGM_VOLUME}[bgm];[1:a][bgm]amix=inputs=2:duration=first:dropout_transition=0[outa]" \
+      -map "[outv]" -map "[outa]" \
+      -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k \
+      -shortest -movflags +faststart \
+      "$ABS_OUT"
+  else
+    "$FFMPEG_BIN" -y -loglevel error \
+      -i "$ABS_CONCAT" \
+      -i "$ABS_NARRATION" \
+      -filter_complex "$FILTER" \
+      -map "[outv]" -map 1:a \
+      -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k \
+      -shortest -movflags +faststart \
+      "$ABS_OUT"
+  fi
 )
 
 # Caption-verify still frame (single representative frame at ~mid-mission).

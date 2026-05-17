@@ -32,6 +32,9 @@ records/
 # GitHub Pages assets (site/ is the Pages source — bundle of evidence frames)
 !site/assets/*.jpg
 !site/assets/*.png
+# Royalty-free music tracks for faceless-short BGM layer (committed evidence
+# of the curated free-music pool; license info in assets/music/README.md)
+!assets/music/*.mp3
 *.jpeg
 *.gif
 # Demo GIFs (highlight + v6 preview)
