@@ -16,7 +16,20 @@ exists and matches the "Done when" criteria below.
 
 ## Active goal
 
-### 2026-05-16 | Faceless pilot A/B — science vs Bible-history | _in progress_
+### 2026-05-16 | Faceless pilot A/B — science vs Bible-history | **ACHIEVED 2026-05-17**
+
+> _Resolution note_: the operator's pick (logged 2026-05-17, see
+> [`decision-log.md`](pilots/decision-log.md#operator-pick--2026-05-17))
+> was format option 3 from the decision-log's list — **iterate the
+> format itself**, not commit to one of the two original topics.  The
+> chosen format is the new `music-video` mission (music-as-primary-audio,
+> phrase-aligned cuts, onset-aligned glitches, no narration / no
+> captions) shipped as `agents/missions/music-video/run.sh` in commit
+> `828070f`.  The Hittites/Hydrogen pilots remain as historical
+> artifacts of the format A/B; their topics are not the production
+> niche.
+
+
 
 _(2026-05-16 evening — operator picked "make one of each and decide
 on the actual output" after long-form discussion about niche
@@ -69,11 +82,13 @@ niche from real watchable output rather than abstract preference.
       for the caption "약 1킬로그램, 큰 설탕 한 봉지" — exact metaphor
       match.  Production notes in
       [`docs/pilots/decision-log.md`](pilots/decision-log.md#pilot-2--hydrogen-science).
-- [ ] **Operator decision logged** — `docs/pilots/decision-log.md`
-      records which pilot the operator picks + a one-line reason
-      (preference, perceived viewer fit, perceived production
-      energy).  Scaffolded with both pilots populated; awaiting
-      operator review + pick.  _This is the goal's terminal artifact._
+- [x] **Operator decision logged** — `docs/pilots/decision-log.md`
+      "Operator pick — 2026-05-17" section.  Pick = format option 3
+      (iterate the format).  New mission `agents/missions/music-video/run.sh`
+      shipped 2026-05-17 (commit `828070f`).  Validated against five
+      prototype renders (v1 → v5 on Velvet Turntable lo-fi), with v5
+      explicitly confirmed by the operator ("대만족").  Reasoning
+      documented in decision-log.
 
 **Done when**: both pilots committed AND `decision-log.md` shows
 the operator's pick.

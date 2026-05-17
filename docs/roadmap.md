@@ -15,27 +15,34 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 ## Now — active focus
 
-_Last updated 2026-05-17 ~00:30 KST.  Active goal in `docs/goal.md`
-is **Faceless pilot A/B (science vs Bible-history)** with 3/4
-deliverable subgoals checked.  The four pilots (EN+KO × Hittites+Hydrogen)
-landed across 11 commits.  Terminal subgoal — operator's pick + reason
-in `docs/pilots/decision-log.md` — is the gate to goal completion._
+_Last updated 2026-05-17 ~15:30 KST.  Active goal in `docs/goal.md`
+**ACHIEVED** — operator pick logged 2026-05-17, niche pivot to a new
+`music-video` mission shipped (commit `828070f`).  No active goal
+remaining; user sets the next._
 
-1. **Operator** watches the four mp4s under
-   `records/missions/2026-05-17/faceless-*/outputs/short.mp4` and
-   records their pick in the "Decision to be made" section of
-   [`docs/pilots/decision-log.md`](pilots/decision-log.md).  Two axes:
-   niche (history × Bible / science / both) and language (EN first /
-   EN+KO parallel / KO first).  This ticks the final goal subgoal.
-2. After the pick lands, promote a queued topic from
-   [`docs/pilots/topic-backlog.md`](pilots/topic-backlog.md) (10
-   candidates ready, mix of CURATED + AI-DRAFT-verified) and render
-   the next short via `agents/missions/faceless-short/run.sh`.
-3. Check `docs/audit/CURRENT-ALERT.md` — if present, address the
-   audit finding before picking up the next pilot.
+1. **User** sets the next active goal in `docs/goal.md`.  Likely
+   candidates (user-confirm or replace):
+   - **Production batch on music-video mode** — produce 5–10
+     music-video shorts with curated Suno (or YT Audio Library)
+     music + the validated lo-fi/cafe keyword pool, then ship to
+     YouTube Shorts and capture first real platform watch-time data.
+   - **Music-video scorecard** — build new per-axis scoring
+     (mood-fit, beat-sync quality, motif memorability) since the
+     existing scorecard ([`docs/pilots/scorecard.md`](pilots/scorecard.md))
+     measures narration dimensions that don't apply.
+   - **Format polish** — promote v6 effects (film grain, vignette,
+     zoom-pulse on glitch) into the mission script if the operator
+     confirms them; explore the sticker overlay path the operator
+     floated.
+   - **External SSD purchase** — 1 TB USB-C NVMe to make
+     `RECORDS_DIR` external, freeing internal disk indefinitely.
+     Operator decision pending.
 
-- [ ] **Operator decision in `decision-log.md`** — blocks goal completion;
-  awaiting human review of the four pilots produced this session.
+2. Check `docs/audit/CURRENT-ALERT.md` — if present, address the
+   audit finding before picking up the next focus.
+
+- [x] **Operator decision in `decision-log.md`** — completed 2026-05-17,
+  see [`pilots/decision-log.md`](pilots/decision-log.md#operator-pick--2026-05-17).
 
 
 ## Next — queued, in priority order
@@ -56,6 +63,39 @@ _(no items queued — promote a deferred item from `docs/copyright-policy.md`
   an opt-in flag in each mission's retry loop.
 
 ## Done — most recent first
+
+- **2026-05-17** (15:30 KST) **Music-video mission shipped + niche pivot
+  to format option 3.**  Original goal A/B (Hittites topic vs Hydrogen
+  topic) resolved as a format pivot rather than a topic pick: operator
+  confirmed satisfaction with `music-video-velvet1` v5 prototype
+  (music-as-sole-audio + phrase-aligned cuts + onset-aligned glitches
+  on static-camera clips only).  Promoted prototype to
+  [`agents/missions/music-video/run.sh`](../agents/missions/music-video/run.sh)
+  with aubiotrack beat detection + aubioonset drum-hit detection +
+  per-keyword motion/speed classification + Pexels caching for motif
+  reuse, all bash 3.2 compatible.  Decision-log entry at
+  [`pilots/decision-log.md`](pilots/decision-log.md#operator-pick--2026-05-17).
+  Commit `828070f`.
+
+- **2026-05-17** (~13:00 KST) **Disk-watch infrastructure** (periodic
+  monitor every 30 min + pre-render guard inside faceless-short) and
+  **selective records cleanup script**.  Internal SSD recovered from
+  8.6 GB free → 34 GB free (Unity 17 GB + Ollama models 6.7 GB +
+  intermediate records 3.4 GB).  Commits `eb93015` (cleanup script),
+  `1537ca6` (disk-watch + plist + pre-render guard).
+
+- **2026-05-17** (~13:30 KST) **Scrum-master footer convention** in
+  operator-contract: every work-bearing reply ends with
+  `[Next Action]` / `[Git Commit]` / `[Pace]`.  Plus the `[EPM Nudge]`
+  → `[Pace]` rename to keep imported jargon out of the repo.
+  Commits `6f45fa6`, `50168f4`.
+
+- **2026-05-17** (~14:00 KST) **GitHub Pages site + engineering case
+  studies + LinkedIn footer.**  Pages live at
+  https://melons.github.io/MelonS-Agents/.  `docs/engineering-case-studies.md`
+  + KO mirror frame four production-incident decisions (Tier-1
+  routing, semaphore-throttler, content-quality feedback loop,
+  three-layer reactive audit).  Commits `e07411d`, `fb6fdd2`, `75b10a8`.
 
 - **2026-05-17** (overnight, ~04:00 KST) **Reactive auditor L1 + L2
   + README full-file review pass + operator-contract HOW rule.**
