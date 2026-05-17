@@ -4,6 +4,9 @@
 
 [한국어](./README.ko.md) | **English**
 
+**Topic prompt → 60-second 9:16 vertical short.**
+Multi-agent pipeline running local-first ($0 runtime API cost), with one creative stage routed to Claude.  English + Korean dual track.  Three-layer reactive audit so the system can correct its own drift.
+
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
 ![Autonomous](https://img.shields.io/badge/Autonomous-10B981?style=for-the-badge&logo=robotframework&logoColor=white)
@@ -13,6 +16,13 @@
 ![FFmpeg](https://img.shields.io/badge/FFmpeg-007808?style=for-the-badge&logo=ffmpeg&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude-D97757?style=for-the-badge&logo=anthropic&logoColor=white)
+
+![GitHub stars](https://img.shields.io/github/stars/MelonS/MelonS-Agents?style=for-the-badge)
+![GitHub forks](https://img.shields.io/github/forks/MelonS/MelonS-Agents?style=for-the-badge)
+![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=for-the-badge)
+![License](https://img.shields.io/github/license/MelonS/MelonS-Agents?style=for-the-badge)
+
+![5-second animated preview of the faceless-short v6 pipeline output — Hittites topic, 9:16 vertical short, screen-fill B-roll of historical battle reenactment, English caption "Scholars called the Hittites fiction" burned in, Pexels-licensed attribution top-left](docs/demo/v6-hittites-preview.gif)
 
 </div>
 

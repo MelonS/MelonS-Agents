@@ -4,6 +4,9 @@
 
 **한국어** | [English](./README.md)
 
+**토픽 프롬프트 → 60초 9:16 세로 쇼츠.**
+로컬 우선으로 동작하는 멀티에이전트 파이프라인 (런타임 API 비용 $0), 창작 단계 하나만 Claude로 라우팅.  영어 + 한국어 듀얼 트랙.  3 레이어 반응형 감사 — 시스템이 자신의 드리프트를 스스로 잡습니다.
+
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
 ![Autonomous](https://img.shields.io/badge/Autonomous-10B981?style=for-the-badge&logo=robotframework&logoColor=white)
@@ -13,6 +16,13 @@
 ![FFmpeg](https://img.shields.io/badge/FFmpeg-007808?style=for-the-badge&logo=ffmpeg&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude-D97757?style=for-the-badge&logo=anthropic&logoColor=white)
+
+![GitHub stars](https://img.shields.io/github/stars/MelonS/MelonS-Agents?style=for-the-badge)
+![GitHub forks](https://img.shields.io/github/forks/MelonS/MelonS-Agents?style=for-the-badge)
+![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=for-the-badge)
+![License](https://img.shields.io/github/license/MelonS/MelonS-Agents?style=for-the-badge)
+
+![faceless-short v6 파이프라인 출력의 5초 애니메이션 프리뷰 — 히타이트 토픽, 9:16 세로 쇼츠, 역사 전투 재연 B-roll 위에 영어 자막 "Scholars called the Hittites fiction" 번인, 좌측 상단 Pexels 라이선스 표기](docs/demo/v6-hittites-preview.gif)
 
 </div>
 
