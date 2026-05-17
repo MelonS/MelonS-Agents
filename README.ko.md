@@ -131,6 +131,52 @@ v5 = 운영자 검증 완료 → 정식
 agents/missions/music-video/run.sh <id> <path/to/music.mp3>
 ```
 
+#### 포스트프로세싱 쉐이더 (2026-05-17 저녁)
+
+운영자가 v6 빈티지 lo-fi 처리 위에 쉐이더 스타일 효과 요청.  세 가지
+효과는 순수 ffmpeg 필터 그래프로 작동하고 (GLSL · 외부 도구 없음),
+한 가지는 의도적으로 보류:
+
+- **`pond`** — 화면 전체에 적용되는 움직이는 물 표면 변위.  `geq` 가
+  3중 sin 파동 필드로 X/Y 변위 맵 두 장을 540×960 에서 생성 (1080×1920
+  직접 생성보다 4× 빠름) → bicubic scale 후 `displace` 에 투입.  최대
+  ±13 px (~1.2 % 폭) — 전체 화면에 명확히 보이지만 거슬리지 않음.
+  "화면 자체가 연못 표면이고 잔잔히 sway 함" 으로 읽힘.
+- **`breathing`** — 연속적인 부드러운 스케일 파동, 5 초 주기, +0~5 %.
+  항상 upscale → `crop` 후 프레임이 1080 밑으로 안 떨어짐 (첫 시도
+  `sin(t)` 범위 −1~+1 로 했더니 1080 미만 폭에서 libx264 가 중간에
+  크래시.  `(0.5 + 0.5*sin)` 으로 재구성, 곱셈 인자 ≥ 1.0 보장).
+- **`halation`** — 밝은 영역 주변의 따뜻한 빛 번짐.  소스 split → 사본을
+  brightness 임계값 + 22 px gblur → 원본 위에 screen blend 0.30
+  opacity.  앰버 / 네온 영역이 80s 필름의 light leak 처럼 보임 — 운영자가
+  첫 시도에서 "확실히 티남" 확인.
+- **`combo`** — `pond` + `halation` 의 **phrase-aware 강도 envelope**.
+  두 효과 강도가 모두 `T` (시간) 함수: 인트로 (0~15 s) 에 off / 약,
+  빌드 (15~22.5 s) 에 ramp-up, 클라이맥스 (22.5~45 s) 에 풀, 윈드다운
+  (45~52.5 s) 에 taper, 아웃트로 (52.5~60 s) 에 settle.  phrase 경계는
+  Velvet Turntable 레퍼런스 트랙 95.8 BPM × 12 비트 phrase = 7.5 s
+  cadence 와 일치 — 다른 트랙은 스크립트에서 envelope 파라미터 수정.
+
+시도했으나 **포기**: **카툰 (cel-shading)** 렌더링.  ffmpeg 가 luma 와
+chroma 를 독립 양자화 (`lutyuv` 의 `round(val/N)*N`) 하면 hue 가
+망가짐 — 운영자가 "완전 그냥 초록색만 나옴" 으로 reject.  진짜 cel-
+shading 은 GLSL 쉐이더 (mpv + libplacebo, 200~500 줄), EbSynth (1
+키프레임 페인팅 후 모션 따라 전파), 또는 AI 스타일라이즈 (Stable
+Diffusion + AnimateDiff, ComfyUI, RunwayML / Kaiber) 중 하나가
+필요.  ffmpeg 파이프라인 안에선 자연스러운 구현 불가 → 별도 R&D
+분기로 보류, 어설프게 production 에 박지 않음.
+
+재현:
+
+```bash
+# 단일 효과
+scripts/music-video-shaders.sh pond     <input.mp4> <output.mp4>
+scripts/music-video-shaders.sh halation <input.mp4> <output.mp4>
+
+# phrase-aware combo (검증된 최종 결과)
+scripts/music-video-shaders.sh combo    <input.mp4> <output.mp4>
+```
+
 ### Faceless 파일럿 (영어 + 한국어 A/B)
 
 `faceless-short` 미션은 토픽 프롬프트만으로 60초 완성본을 산출합니다 — 입력 영상 없음.  파이프라인: ollama가 내레이션 스크립트 초안 → Kokoro-ONNX (`am_michael`, 한국어는 macOS `Yuna`) 음성 합성 → whisper.cpp 타이밍 전사 → 스크립트 정합 캡션 교정 (고유명사를 원본 스크립트 텍스트로 복원) → SRT 큐를 자연 구두점에서 단일 라인으로 분할 (모바일 2줄 박스 오버랩 차단) → ollama가 내레이션 시간 윈도우(8개) 마다 Pexels 검색어 1개씩 추출 → Pexels Videos API에서 윈도우당 B-roll 1개 수집 → ffmpeg가 각 클립을 윈도우 길이로 트림·9:16 풀화면 크롭·libass 자막 번인·출처 오버레이까지 완성.
