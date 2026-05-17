@@ -108,7 +108,7 @@ delta is small and risk of misfetched assets is non-trivial.
 
 ## Mission execution: where the money *isn't*
 
-Three of the four missions (`agents/missions/{highlight,summarize,shorts-batch}/run.sh`)
+Three of the five missions (`agents/missions/{highlight,summarize,shorts-batch}/run.sh`)
 do **not** call Anthropic.  They call `agents/lib/ollama.sh` which
 posts to `http://127.0.0.1:11434/api/generate`.
 
@@ -124,9 +124,21 @@ License).  Reasoning for the split routing rule is in
 (score impact: hook + factual axes 3→9) is
 [`docs/engineering-case-studies.md`](engineering-case-studies.md) §1.
 
+`music-video` is fully Tier-2 (no Anthropic at runtime).  Audio is
+operator-supplied (Suno-generated, YT Audio Library, or any music
+the operator has rights to use, kept local-only via
+[`assets/music/`](../assets/music/README.md) — never committed).
+Beat + onset detection runs locally via `aubio`.  B-roll matches mood
+keywords through the same Pexels API as faceless-short.  No
+narration / no captions — music is the message.  See
+[`agents/missions/music-video/run.sh`](../agents/missions/music-video/run.sh)
+and the niche-pivot decision in
+[`docs/pilots/decision-log.md`](pilots/decision-log.md#operator-pick--2026-05-17).
+
 - [`agents/lib/ollama.sh`](../agents/lib/ollama.sh) — HTTP client to local Ollama (highlight / summarize / shorts-batch).
 - [`scripts/gen-script-claude.sh`](../scripts/gen-script-claude.sh) — Sonnet-routed narration script generator (faceless-short).
 - [`scripts/score-content.sh`](../scripts/score-content.sh) — Sonnet-routed content-quality scorer (feedback loop).
+- [`agents/missions/music-video/run.sh`](../agents/missions/music-video/run.sh) — aubiotrack + aubioonset + Pexels (no Anthropic).
 - [`.env.example`](../.env.example) — `OLLAMA_MODEL_HIGHLIGHT=llama3.2:3b` still required by the three local-only missions.
 - [`agents/missions/highlight/run.sh`](../agents/missions/highlight/run.sh) — `ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$PROMPT" true`.
 

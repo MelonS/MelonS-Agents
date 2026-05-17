@@ -60,17 +60,20 @@
   TIER 2 — Mission execution                  (Local, free)
 ═══════════════════════════════════════════════════════════════
 
- ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐
- │ highlight  │  │ summarize  │  │shorts-batch│  │  faceless  │
- │ run.sh     │  │ run.sh     │  │ run.sh     │  │  -short    │
- │            │  │            │  │            │  │  run.sh    │
- └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘
-       │               │               │               │
-       │ input: URL    │ input: URL    │ input: URL+N  │ input: topic+
-       │ → 1 short     │ → summary.md  │ → N shorts    │   prompt
-       │               │               │               │ → 1 short
-       │               │               │               │   (synthesized)
-       └──────────┬────┴─────────────┬─┴───────────────┘
+ ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐
+ │ highlight  │  │ summarize  │  │shorts-batch│  │  faceless  │  │music-video │
+ │ run.sh     │  │ run.sh     │  │ run.sh     │  │  -short    │  │ run.sh     │
+ │            │  │            │  │            │  │  run.sh    │  │            │
+ └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘
+       │               │               │               │               │
+       │ input: URL    │ input: URL    │ input: URL+N  │ input: topic+ │ input:
+       │ → 1 short     │ → summary.md  │ → N shorts    │   prompt      │  music
+       │               │               │               │ → 1 short     │  +kws
+       │               │               │               │   (synth,     │ → 1 short
+       │               │               │               │    narrated)  │   (music
+       │               │               │               │               │    primary,
+       │               │               │               │               │   no narr.)
+       └──────────┬────┴─────────────┬─┴───────────────┴───────────────┘
                   ▼                  ▼
           agents/lib/*.sh       config/*.yaml
           (shared helpers)      (autonomy policy)
@@ -85,6 +88,10 @@
                       │    • claude CLI    narration script + scorer
                       │                    (faceless-short only;
                       │                     Sonnet via Max quota)
+                      │    • aubio         beat + onset detection
+                      │                    (music-video only)
+                      │    • Pexels API    portrait B-roll
+                      │                    (faceless-short + music-video)
                       │    • ffmpeg        render
                       ▼
             $RECORDS_DIR/missions/<date>/<mission-id>/
