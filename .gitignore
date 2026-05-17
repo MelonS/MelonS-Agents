@@ -17,6 +17,7 @@ records/
 assets/music/*
 !assets/music/.gitkeep
 !assets/music/README.md
+!assets/music/SOURCES.md
 # Media outputs anywhere in the tree
 *.mp4
 *.mov

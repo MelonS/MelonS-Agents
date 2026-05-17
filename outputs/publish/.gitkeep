@@ -1,0 +1,16 @@
+# Publish-ready mp4s land here
+
+Output files (`*.mp4`, `*-thumb.jpg`) in this directory are gitignored
+per the repo-wide patterns in `/.gitignore`.  This `.gitkeep` exists so
+the directory itself is committed and survives a clean clone.
+
+Workflow:
+1. `agents/missions/music-video/run.sh <id> <music> [keywords]`
+   produces `records/missions/<date>/<id>/outputs/short.mp4`.
+2. Operator-approved candidates get copied here as
+   `<NN>-<music-slug>-<keyword-tag>.mp4` for the upload step.
+3. The companion `*-thumb.jpg` is the mid-frame preview from the
+   same mission.
+
+License + provenance for any track used in a published mp4 should
+already be in [`assets/music/SOURCES.md`](../../assets/music/SOURCES.md).
