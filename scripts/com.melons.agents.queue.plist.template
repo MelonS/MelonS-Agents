@@ -12,17 +12,17 @@
        to regenerate the LaunchAgents copy. -->
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/melons/ai/scripts/mission-queue.sh</string>
+    <string>@@REPO_ROOT@@/scripts/mission-queue.sh</string>
   </array>
 
   <key>WorkingDirectory</key>
-  <string>/Users/melons/ai</string>
+  <string>@@REPO_ROOT@@</string>
 
   <key>StandardOutPath</key>
-  <string>/Users/melons/ai/records/queue/launchd.out.log</string>
+  <string>@@REPO_ROOT@@/records/queue/launchd.out.log</string>
 
   <key>StandardErrorPath</key>
-  <string>/Users/melons/ai/records/queue/launchd.err.log</string>
+  <string>@@REPO_ROOT@@/records/queue/launchd.err.log</string>
 
   <!-- Run every 30 minutes -->
   <key>StartInterval</key>
@@ -35,7 +35,7 @@
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
-    <string>/Users/melons/.local/opt/ffmpeg-static:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <string>@@HOME@@/.local/opt/ffmpeg-static:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     <key>AUTONOMY_MODE</key>
     <string>true</string>
   </dict>

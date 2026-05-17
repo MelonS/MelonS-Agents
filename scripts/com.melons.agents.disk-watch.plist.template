@@ -12,17 +12,17 @@
        to regenerate the LaunchAgents copy. -->
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/melons/ai/scripts/disk-watch.sh</string>
+    <string>@@REPO_ROOT@@/scripts/disk-watch.sh</string>
   </array>
 
   <key>WorkingDirectory</key>
-  <string>/Users/melons/ai</string>
+  <string>@@REPO_ROOT@@</string>
 
   <key>StandardOutPath</key>
-  <string>/Users/melons/ai/records/disk-watch/launchd.out.log</string>
+  <string>@@REPO_ROOT@@/records/disk-watch/launchd.out.log</string>
 
   <key>StandardErrorPath</key>
-  <string>/Users/melons/ai/records/disk-watch/launchd.err.log</string>
+  <string>@@REPO_ROOT@@/records/disk-watch/launchd.err.log</string>
 
   <!-- Every 30 min.  Cheap (one df call + a few KB of writes); cadence
        picked to match audit-poll's 15-min cadence at half-frequency,

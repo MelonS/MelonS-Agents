@@ -30,6 +30,7 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 LA_DIR="$HOME/Library/LaunchAgents"
 
 plist_for() {
@@ -42,6 +43,24 @@ plist_for() {
   esac
 }
 
+# Render the .plist.template (committed, with @@REPO_ROOT@@ and @@HOME@@
+# placeholders) into a concrete .plist file under SCRIPT_DIR.  The
+# rendered .plist is gitignored — every machine has its own copy with
+# its own absolute paths.  This closes the §8 launchd-plist exception:
+# committed source no longer hardcodes /Users/melons/...
+render_plist() {
+  local plist="$1"
+  local tpl="$SCRIPT_DIR/${plist}.template"
+  local out="$SCRIPT_DIR/$plist"
+  if [[ ! -f "$tpl" ]]; then
+    echo "❌ template missing: $tpl" >&2
+    return 1
+  fi
+  sed -e "s|@@REPO_ROOT@@|$REPO_ROOT|g" \
+      -e "s|@@HOME@@|$HOME|g" \
+      "$tpl" > "$out"
+}
+
 install_one() {
   local job="$1"
   local plist; plist=$(plist_for "$job")
@@ -49,17 +68,14 @@ install_one() {
     echo "❌ unknown job: $job" >&2
     return 1
   fi
+  render_plist "$plist" || return 1
   local src="$SCRIPT_DIR/$plist"
   local dst="$LA_DIR/$plist"
-  if [[ ! -f "$src" ]]; then
-    echo "❌ plist source missing: $src" >&2
-    return 1
-  fi
   mkdir -p "$LA_DIR"
   cp "$src" "$dst"
   launchctl unload "$dst" 2>/dev/null || true
   launchctl load "$dst"
-  echo "installed: $dst"
+  echo "installed: $dst (rendered from ${plist}.template)"
 }
 
 uninstall_one() {

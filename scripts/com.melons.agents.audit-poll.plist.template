@@ -12,17 +12,17 @@
        to regenerate the LaunchAgents copy. -->
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/melons/ai/scripts/audit-poll.sh</string>
+    <string>@@REPO_ROOT@@/scripts/audit-poll.sh</string>
   </array>
 
   <key>WorkingDirectory</key>
-  <string>/Users/melons/ai</string>
+  <string>@@REPO_ROOT@@</string>
 
   <key>StandardOutPath</key>
-  <string>/Users/melons/ai/records/audit/poll.out.log</string>
+  <string>@@REPO_ROOT@@/records/audit/poll.out.log</string>
 
   <key>StandardErrorPath</key>
-  <string>/Users/melons/ai/records/audit/poll.err.log</string>
+  <string>@@REPO_ROOT@@/records/audit/poll.err.log</string>
 
   <!-- Run every 15 minutes.  Most polls are no-op file reads (cheap);
        only a real anomaly pattern triggers audit-run.sh (which uses
@@ -43,7 +43,7 @@
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
-    <string>/Users/melons/.local/bin:/Users/melons/.local/opt/ffmpeg-static:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <string>@@HOME@@/.local/bin:@@HOME@@/.local/opt/ffmpeg-static:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
   </dict>
 </dict>
 </plist>
