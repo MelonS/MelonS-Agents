@@ -67,12 +67,88 @@ Hard rules:
 
 Think for a moment about which of the 3 hook patterns fits THIS topic best, then write the script.  Output ONLY the narration text — no preamble, no explanation, no 'here is the script:' line."
 
-claude --print --model claude-sonnet-4-6 "$PROMPT" > "$OUT"
+# Content-quality feedback loop:
+# - Generate script
+# - Score it (scripts/score-content.sh, 2-axis hook + factual coherence)
+# - If both axes >= threshold (default 7), accept
+# - Else regenerate with axis-specific feedback prepended, up to MAX_RETRIES retries
+# - Emit a JSONL trail to <out>.scoring.log for reproducibility
+MAX_RETRIES="${SCRIPT_SCORE_MAX_RETRIES:-2}"
+THRESHOLD="${SCORE_THRESHOLD:-7}"
+SCORING_LOG="${OUT}.scoring.log"
+: > "$SCORING_LOG"
 
-# Strip leading/trailing blank lines + normalize trailing whitespace.
-awk 'NF || found{found=1; print}' "$OUT" | sed 's/[[:space:]]*$//' > "$OUT.tmp"
-mv "$OUT.tmp" "$OUT"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-WORDS=$(wc -w < "$OUT" | tr -d ' ')
-CHARS=$(wc -c < "$OUT" | tr -d ' ')
-echo "✓ $OUT  ($WORDS words / $CHARS chars)"
+normalize() {
+  awk 'NF || found{found=1; print}' "$1" | sed 's/[[:space:]]*$//' > "$1.tmp"
+  mv "$1.tmp" "$1"
+}
+
+attempt=0
+feedback_block=""
+while :; do
+  current_prompt="$PROMPT"
+  if [[ -n "$feedback_block" ]]; then
+    current_prompt="$PROMPT
+
+PREVIOUS ATTEMPT (do not repeat its failure mode):
+$feedback_block"
+  fi
+
+  claude --print --model claude-sonnet-4-6 "$current_prompt" > "$OUT"
+  normalize "$OUT"
+
+  # Score the candidate.
+  if SCORE=$(SCORE_THRESHOLD="$THRESHOLD" "$REPO_ROOT/scripts/score-content.sh" "$TOPIC" "$OUT" 2>/dev/null); then
+    echo "$SCORE" | jq -c --arg attempt "$attempt" '. + {attempt:($attempt|tonumber)}' >> "$SCORING_LOG"
+    if [[ "$(echo "$SCORE" | jq -r .ok)" == "true" ]]; then
+      MIN=$(echo "$SCORE" | jq -r .min_score)
+      HOOK=$(echo "$SCORE" | jq -r .hook_strength)
+      FACT=$(echo "$SCORE" | jq -r .factual_coherence)
+      WORDS=$(wc -w < "$OUT" | tr -d ' ')
+      CHARS=$(wc -c < "$OUT" | tr -d ' ')
+      echo "✓ $OUT  ($WORDS words / $CHARS chars) — hook=$HOOK factual=$FACT (attempt $((attempt + 1))/$((MAX_RETRIES + 1)))"
+      break
+    fi
+  else
+    # Scoring failed (claude unavailable, parse error, etc).  Accept the
+    # current draft rather than block — log the failure for visibility.
+    echo "{\"attempt\":$attempt,\"error\":\"score-content.sh non-zero\"}" >> "$SCORING_LOG"
+    WORDS=$(wc -w < "$OUT" | tr -d ' ')
+    CHARS=$(wc -c < "$OUT" | tr -d ' ')
+    echo "✓ $OUT  ($WORDS words / $CHARS chars) — scoring unavailable, accepted as-is"
+    break
+  fi
+
+  attempt=$((attempt + 1))
+  if (( attempt > MAX_RETRIES )); then
+    # Exhausted retries; ship the last attempt anyway with a warning.
+    HOOK=$(echo "$SCORE" | jq -r .hook_strength)
+    FACT=$(echo "$SCORE" | jq -r .factual_coherence)
+    WORDS=$(wc -w < "$OUT" | tr -d ' ')
+    CHARS=$(wc -c < "$OUT" | tr -d ' ')
+    echo "⚠ $OUT  ($WORDS words / $CHARS chars) — hook=$HOOK factual=$FACT (below threshold $THRESHOLD, exhausted retries — kept anyway)" >&2
+    break
+  fi
+
+  # Build axis-specific feedback for the next attempt.
+  HOOK_REASON=$(echo "$SCORE" | jq -r .hook_reasoning)
+  FACT_REASON=$(echo "$SCORE" | jq -r .factual_reasoning)
+  HOOK_SCORE=$(echo "$SCORE" | jq -r .hook_strength)
+  FACT_SCORE=$(echo "$SCORE" | jq -r .factual_coherence)
+  PREV_SCRIPT=$(cat "$OUT")
+
+  feedback_block="The previous draft scored hook=$HOOK_SCORE/10, factual=$FACT_SCORE/10.  Both must be >= $THRESHOLD.
+
+Hook critique: $HOOK_REASON
+Factual critique: $FACT_REASON
+
+Previous draft (DO NOT reuse this opening; rewrite with a different hook pattern):
+
+$PREV_SCRIPT
+
+Now produce a new draft that fixes the dimensions below threshold.  Do not repeat the previous draft's exact opening line.  Output ONLY the new narration text."
+
+  echo "  (attempt $attempt scored hook=$HOOK_SCORE factual=$FACT_SCORE — retrying with feedback)" >&2
+done
