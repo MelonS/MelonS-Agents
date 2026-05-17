@@ -47,7 +47,15 @@ remaining; user sets the next._
 
 ## Next — queued, in priority order
 
-_(no items queued — promote a deferred item from `docs/copyright-policy.md`
+1. **Delete filter-repo backup branch** — on or after 2026-05-18, if no
+   issues observed with the rewritten history, delete the safety branch
+   `main-backup-pre-filter-20260517-173615` from both local and origin.
+   Command: `git branch -D main-backup-pre-filter-20260517-173615 && git push origin --delete main-backup-pre-filter-20260517-173615`.
+   This was the rollback safety net created before the 2026-05-17 email
+   history rewrite (replacing `todd@lightweight.kr` with the GitHub
+   noreply email).  Once confirmed stable, the branch is dead weight.
+
+_(beyond #1: promote a deferred item from `docs/copyright-policy.md`
 ("Still TODO" block) when one becomes load-bearing, or set a new focus.)_
 
 ## Blocked / parked
