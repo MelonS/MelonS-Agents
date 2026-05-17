@@ -76,6 +76,21 @@ _(beyond #1: promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-17** (~22:00 KST) **Post-processing shader layer for music-video.**
+  Four ffmpeg-only shader effects landed in `scripts/music-video-shaders.sh`
+  (committed; ~190 lines including the docstring): `pond` (animated water-
+  surface displacement via geq + displace), `breathing` (5 s-period upscale-
+  only zoom), `halation` (warm bloom around bright pixels), and `combo`
+  (pond + halation with phrase-aware strength envelope tied to a 95.8 BPM
+  reference cadence — off at intro / full at climax / taper at outro).
+  Operator validation: `pond` "완전 잘되고", `halation` "확실히 티남",
+  `breathing` "괜찮네", `combo` rendered as `03e-velvet1-jazz-combo.mp4`
+  for review.  Cartoon (cel-shading) attempted via lutyuv posterise but
+  rejected ("완전 그냥 초록색만 나옴" — chroma quantisation broke hue);
+  parked as a separate R&D branch (would need GLSL / EbSynth / AI
+  stylisation rather than ffmpeg).  README EN + KO mirror both updated
+  with effect descriptions and reproduction commands.  Commit `23832fa`.
+
 - **2026-05-17** (~20:00 KST) **§8 plist templating + new active goal.**
   Closed the [low, carry-forward] §8 audit finding ("Four launchd plists
   hardcode /Users/melons/...") that persisted across 14+ audits.  Plists
