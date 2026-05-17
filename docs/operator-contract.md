@@ -292,6 +292,28 @@ credentials — of the operator, of third parties, of anyone.
 The rule applies regardless of file location.  Local-only storage
 is a weak guarantee, not a license to write whatever.
 
+**Operator override for intentionally public identity surfaces.**
+Identity information that the operator has *deliberately chosen to
+expose* on a specific public-facing surface is allowed, narrowly
+scoped, and only when all three of the following hold:
+
+1. The operator authorized the specific exposure in a recorded
+   conversation (the `Requested-by: user` commit marker on the
+   originating commit is sufficient written record).
+2. The exposure surface is intentionally public-facing
+   (Pages site footer, README maintainer credit line, GitHub
+   profile sidebar) — not buried in agent logic, scripts, or
+   data files.
+3. The committed reference carries an inline
+   `<!-- §12 operator-authorized deviation -->` marker so a
+   future review pass can distinguish authorized exposure from
+   accidental leakage.
+
+This clause does not weaken the general rule; it formalizes that
+audits should treat marked, authorized exposures as known
+exceptions rather than as new findings.  Unmarked PII remains a
+violation regardless of intent.
+
 ---
 
 ## Conventions
