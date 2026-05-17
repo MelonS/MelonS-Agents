@@ -86,14 +86,19 @@
 
 ## 샘플 출력
 
-지금까지 **5가지** 미션 타입에 걸쳐 40+건의 출력이 생성되었습니다.
+지금까지 **5가지** 미션 타입에 걸쳐 60+건의 출력이 생성되었습니다.
 가장 최근 (2026-05-17) 포커스는 신규 `music-video` 미션 — 음악-주
-오디오 쇼츠 (내레이션 없음, 자막 없음, 비트 정렬 컷, 드럼 onset 정렬
-글리치 마이크로 에디트) — 운영자의 파일럿 픽으로 채택됨, 자세한 내용은
-[`docs/pilots/decision-log.md`](docs/pilots/decision-log.md#operator-pick--2026-05-17)
-참고. `faceless-short` 미션 (내레이션 기반 쇼츠) 은 여전히 아래
-쇼케이스로 유지되며, v1 파이프라인 출력 (단일-클립 highlight +
-shorts-batch) 은 기준점 참고용으로 그 아래에 유지됩니다.
+음성 오디오 쇼츠 (내레이션 없음, 캡션 없음, 비트 정렬 컷 + 드럼 onset
+정렬 글리치 마이크로 에디트) — 운영자의 파일럿 픽으로 채택됨, 자세한
+내용은 [`docs/pilots/decision-log.md`](docs/pilots/decision-log.md#operator-pick--2026-05-17)
+참고.  같은 날 저녁에 4-효과 포스트프로세싱 쉐이더 레이어 landing
+(pond surface, breathing zoom, halation, phrase-aware combo; 카툰은
+deferred — [case study 5](docs/engineering-case-studies.ko.md#5-ffmpeg-안의-쉐이더-효과--벽이-어디인지-아는-것)
+참조) + `scripts/daily-music-video.sh` 가 mission + shader 를 cron /
+launchd 일일 업로드 cadence 에 맞춘 queue runner 로 래핑.  `faceless-
+short` 미션 (내레이션 기반 쇼츠) 은 여전히 아래 쇼케이스로 유지되며,
+v1 파이프라인 출력 (단일-클립 highlight + shorts-batch) 은 기준점
+참고용으로 그 아래에 유지됩니다.
 
 ### Music-video 파일럿 (니치 피벗 후, 2026-05-17)
 

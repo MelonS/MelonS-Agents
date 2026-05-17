@@ -88,12 +88,17 @@ A few choices that distinguish this from a typical agent demo:
 
 ## Sample output
 
-40+ mission outputs have been produced to date across **five** mission
+60+ mission outputs have been produced to date across **five** mission
 types.  Most recent focus (2026-05-17) is the new `music-video`
 mission — music-as-primary-audio shorts (no narration, no captions,
 beat-aligned cuts, onset-aligned glitch micro-edits) — chosen via
 operator pilot pick documented in
 [`docs/pilots/decision-log.md`](docs/pilots/decision-log.md#operator-pick--2026-05-17).
+A four-effect post-processing shader layer landed the same evening
+(pond surface, breathing zoom, halation, phrase-aware combo;
+cartoon deferred — see [case study 5](docs/engineering-case-studies.md#5-shader-effects-in-ffmpeg--knowing-where-the-wall-is)),
+and `scripts/daily-music-video.sh` wraps the mission + shader as a
+queue runner suitable for cron / launchd daily-upload cadence.
 The `faceless-short` mission (narration-driven shorts) remains the
 showcase below; the v1 pipeline outputs (single-clip highlight +
 shorts-batch) remain as the baseline reference further down.
