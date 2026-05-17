@@ -133,14 +133,20 @@ go to local whisper.cpp, all renders go to local ffmpeg.  See
 | `summarize` | long video | structured EN+KO summary markdown | model |
 | `shorts-batch` | long video + N | up to N 9:16 captioned shorts | render×N |
 | `faceless-short` | topic prompt + tone | one 60 s 9:16 captioned short (TTS-narrated, B-roll stitched) | TTS + render |
+| `music-video` | operator-supplied music file + mood keywords | one 60 s 9:16 short, music-as-sole-audio, no narration, no captions, beat-aligned cuts + onset-aligned glitches | beat detection + render |
 
 The first three are *transformation* missions — they start from a long
-source video and reshape it.  `faceless-short` is a *generation* mission
-— there is no source video; the entire short is synthesized from a topic
-prompt via local LLM + TTS + a stock-footage API (Pexels, free tier).
+source video and reshape it.  `faceless-short` and `music-video` are
+*generation* missions — there is no source video; the entire short is
+synthesized from a prompt (faceless-short) or assembled around an
+operator-supplied music track (music-video) via local LLM/TTS or
+local beat-detection + a stock-footage API (Pexels, free tier).
 Output shape is identical so the renderer and layout engine are shared.
 
-All four reuse the same shell library set:
+The first four missions reuse the same shell library set; `music-video`
+uses a distinct subset (`env.sh`, `log.sh`, `ffmpeg.sh`) plus the
+`aubio` CLI tools for beat/onset detection — no `ollama.sh`,
+`whisper.sh`, or `tts.sh` because there is no narration path.
 
 - `agents/lib/env.sh` — env loader + `require_bin` / `require_env`
 - `agents/lib/log.sh` — colored `log_info` / `log_ok` / `log_err` etc.

@@ -141,6 +141,32 @@ when `FACELESS_SCRIPT_OVERRIDE` points at a pre-generated script
 file (typically produced by `scripts/gen-script-claude.sh`).  Other
 stages stay Tier-2 unchanged.
 
+### The opposite case — `music-video` is fully Tier-2
+
+Not every mission needs the Tier-1 escape hatch.  `music-video`
+(shipped 2026-05-17, see [`agents/missions/music-video/run.sh`](../agents/missions/music-video/run.sh)) is entirely
+Tier-2 at runtime — operator-supplied music + `aubio` beat/onset
+detection + Pexels mood-keyword B-roll + ffmpeg.  No `claude` CLI
+call, no `ollama` either.
+
+Why this fits the rule rather than violating it: the creative-decision
+load was moved **outside the mission script**.  Music selection
+(taste-driven, one shot per render) is done by the operator before
+calling the mission — typically via Suno's web UI or a curated free-
+music source.  By the time `run.sh` runs, there is no remaining
+creative judgement to make; every downstream step is mechanical
+(detect beats, fetch B-roll, stitch, glitch on onsets).  The
+Tier-1 routing rule says "creative one-shot stages route to Tier 1"
+— if the operator pre-handles the creative input, the in-pipeline
+creative load drops to zero and Tier 2 covers everything.
+
+The takeaway: routing is per **stage**, not per mission.  A mission
+can be all-Tier-2 (`music-video`, `highlight`, `summarize`,
+`shorts-batch`) or hybrid (`faceless-short` — script Tier-1, the
+rest Tier-2).  Pure-Tier-1 missions are not present in the system
+and would only make sense if a future mission's value were entirely
+in a long-form Claude generation.
+
 ## Tier 1 cost optimizations already in place
 
 - **File-based subagent handoff.**  Subagents do not share the

@@ -86,10 +86,50 @@
 
 ## 샘플 출력
 
-지금까지 4가지 미션 타입에 걸쳐 32건의 출력이 생성되었습니다.
-프로젝트의 최근 포커스는 `faceless-short` 미션이며 (아래 쇼케이스),
-v1 파이프라인 출력 (단일-클립 highlight + shorts-batch)은 기준점
-참고용으로 그 아래에 유지됩니다.
+지금까지 **5가지** 미션 타입에 걸쳐 40+건의 출력이 생성되었습니다.
+가장 최근 (2026-05-17) 포커스는 신규 `music-video` 미션 — 음악-주
+오디오 쇼츠 (내레이션 없음, 자막 없음, 비트 정렬 컷, 드럼 onset 정렬
+글리치 마이크로 에디트) — 운영자의 파일럿 픽으로 채택됨, 자세한 내용은
+[`docs/pilots/decision-log.md`](docs/pilots/decision-log.md#operator-pick--2026-05-17)
+참고. `faceless-short` 미션 (내레이션 기반 쇼츠) 은 여전히 아래
+쇼케이스로 유지되며, v1 파이프라인 출력 (단일-클립 highlight +
+shorts-batch) 은 기준점 참고용으로 그 아래에 유지됩니다.
+
+### Music-video 파일럿 (니치 피벗 후, 2026-05-17)
+
+`music-video` 미션은 60초 9:16 쇼츠를 만드는데, **음악이 메시지**입니다 —
+운영자가 공급한 음악 파일이 유일한 오디오 트랙, 컷은 `aubiotrack` 으로
+추출한 phrase 경계에 정렬, 클립별 재생 속도가 분위기에 따라 가변
+(정적 톤 0.55×, 앰비언트 0.70×, 액티브 0.80×, 자연 톤 1.00×),
+마이크로 "스크래치" 글리치 (0.2초 역재생 + 0.2초 forward jump-cut) 는
+`aubioonset` 으로 검출한 드럼 hit에 정렬되되 **정적-카메라로 분류된
+클립에만** 적용됨 (글리치 중 프레임 흔들림 방지). 미세 필름 그레인 +
+소프트 비네팅 + 글리치 onset마다의 가우시안 줌-펄스로 빈티지 lo-fi
+처리.
+
+다섯 개의 프로토타입 (v1→v5) 으로 운영자 피드백을 반영하며 점진 개발:
+
+- v1: 균등 7.5초 컷 (비트 동기 없음)
+- v2: `aubiotrack` phrase 경계로 컷 이동
+- v3: 클립별 가변 재생 속도 추가 (정적 톤 슬로우)
+- v4: 슬로우 클립 중간 지점에 글리치 마이크로 에디트
+- v5: 글리치 위치를 `aubioonset` 드럼 hit + 정적-카메라 클립으로 제한
+
+v5 = 운영자 검증 완료 → 정식
+[`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh)
+으로 승격. v6 빈티지 lofi 처리 (그레인 + 비네팅 + 줌-펄스) 는 v5 위에
+같은 미션에 통합 — 렌더별로 `MUSIC_VIDEO_FILM_GRAIN_INTENSITY`,
+`MUSIC_VIDEO_VIGNETTE_ANGLE`, `MUSIC_VIDEO_ZOOM_PULSE_AMP` env var로
+조절. 출력 mp4는 여전히 gitignored (records/). 음악 파일 자체는
+정책상 로컬-only ([`assets/music/README.md`](assets/music/README.md))
+— "비디오에서 사용 가능 라이선스" 와 "파일 재배포 가능 라이선스" 가
+다른 문제라 레포는 절대 오디오 자산을 들고 다니지 않음.
+
+재현:
+
+```bash
+agents/missions/music-video/run.sh <id> <path/to/music.mp3>
+```
 
 ### Faceless 파일럿 (영어 + 한국어 A/B)
 

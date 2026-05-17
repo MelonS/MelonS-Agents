@@ -88,10 +88,55 @@ A few choices that distinguish this from a typical agent demo:
 
 ## Sample output
 
-32 mission outputs have been produced to date across four mission
-types.  Recent project focus is the `faceless-short` mission (showcase
-below); the v1 pipeline outputs (single-clip highlight + shorts-batch)
-remain as the baseline reference further down.
+40+ mission outputs have been produced to date across **five** mission
+types.  Most recent focus (2026-05-17) is the new `music-video`
+mission — music-as-primary-audio shorts (no narration, no captions,
+beat-aligned cuts, onset-aligned glitch micro-edits) — chosen via
+operator pilot pick documented in
+[`docs/pilots/decision-log.md`](docs/pilots/decision-log.md#operator-pick--2026-05-17).
+The `faceless-short` mission (narration-driven shorts) remains the
+showcase below; the v1 pipeline outputs (single-clip highlight +
+shorts-batch) remain as the baseline reference further down.
+
+### Music-video pilots (post-pivot, 2026-05-17)
+
+The `music-video` mission produces a 60-second 9:16 short where the
+music IS the message: operator-supplied music track is the sole
+audio; cuts land on aubiotrack-derived phrase boundaries; per-clip
+playback speed is varied by mood (slow contemplative scenes at
+0.55×, ambient at 0.70×, active at 0.80×, natural at 1.00×); micro
+"scratch" glitches (0.2 s reverse + 0.2 s forward jump-cut) fire on
+detected drum onsets but **only on clips classified as static-camera**
+so the frame doesn't shake during the glitch; subtle film grain +
+soft vignette + Gaussian zoom-pulse on each glitch onset add a
+vintage lo-fi treatment.
+
+Five prototype renders (v1 → v5) iterated through this design with
+operator feedback at each step:
+
+- v1: even 7.5 s cuts (no beat-sync)
+- v2: cuts moved to phrase boundaries from `aubiotrack`
+- v3: + per-clip variable playback speed (calm scenes slowed)
+- v4: + glitch micro-edits at every slow clip's mid-point
+- v5: + glitch placement restricted to `aubioonset` drum hits on
+       static-camera clips only (no glitch on handheld pans)
+
+v5 was operator-validated and promoted into
+[`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh).
+The v6 vintage-lofi visual treatment (grain + vignette + zoom-pulse)
+landed on top of v5 in the same mission, tunable per render via
+`MUSIC_VIDEO_FILM_GRAIN_INTENSITY`, `MUSIC_VIDEO_VIGNETTE_ANGLE`, and
+`MUSIC_VIDEO_ZOOM_PULSE_AMP` env vars.  Output mp4s remain gitignored
+(records/ directory); music files themselves are local-only by policy
+([`assets/music/README.md`](assets/music/README.md)) — a "free to use
+in your video" license is not the same as a "free to redistribute
+the file" license, so the repo never carries audio assets.
+
+Reproduction:
+
+```bash
+agents/missions/music-video/run.sh <id> <path/to/music.mp3>
+```
 
 ### Faceless pilots (English + Korean A/B)
 

@@ -57,7 +57,7 @@
 
 <section id="how" class="block">
   <h2>How it works</h2>
-  <p>The scaffold is general-purpose.  Short-form video is the v1 mission type — chosen because the deliverable is visually verifiable and the failure modes are quick to catch.</p>
+  <p>The scaffold is general-purpose.  Short-form video is the v1 mission type — chosen because the deliverable is visually verifiable and the failure modes are quick to catch.  Two short-form modes are now live: <strong>faceless-short</strong> (narration-driven, Sonnet script + Kokoro TTS) and <strong>music-video</strong> (music-as-sole-audio, beat-aligned cuts + glitch micro-edits on detected drum onsets).</p>
 
   <div class="cards">
     <article class="card">
@@ -90,6 +90,18 @@
         <li><b>One-shot creative stages</b> (script hook, factual framing) — Claude.  ~500 tokens per call, operationally negligible against the existing subscription quota, and quality compounds over the next 60 seconds of viewing.</li>
       </ul>
       <p class="muted">Full reasoning in <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/cost-model.md" target="_blank" rel="noopener">docs/cost-model.md</a>.</p>
+    </article>
+
+    <article class="card">
+      <h3>music-video mission (post-pivot, 2026-05-17)</h3>
+      <p>Distinct from <code>faceless-short</code>.  Music is the sole audio; no narration; no captions.  Selected by the operator after viewing eight narration-driven music-trial pilots and pivoting to a format that lets the music carry the short.</p>
+      <ul>
+        <li><b>Beat extraction.</b> <code>aubiotrack</code> finds real beats; sub-beat noise rejected.  Cuts land every Nth beat (default 12 — about one cut per 7.5 s at 95 BPM).</li>
+        <li><b>Variable speed.</b> Per-clip <code>setpts</code> by mood — slow scenes 0.55×, ambient 0.70×, active 0.80×, natural 1.00×.  The music drives the visual pace.</li>
+        <li><b>Glitch micro-edits.</b> 0.2 s reverse + 0.2 s forward jump-cut at detected <code>aubioonset</code> drum hits — but only on clips classified as static-camera, so the frame doesn't shake during the glitch.</li>
+        <li><b>Vintage lo-fi treatment.</b> Subtle film grain + soft vignette + Gaussian zoom-pulse on each glitch onset.  Tunable per render via env vars.</li>
+      </ul>
+      <p class="muted">Pick reasoning + format spec: <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/pilots/decision-log.md#operator-pick--2026-05-17" target="_blank" rel="noopener">decision-log.md</a>.  Music files are local-only by policy (a "use in video" license ≠ "redistribute the file" license — see <a href="https://github.com/MelonS/MelonS-Agents/blob/main/assets/music/README.md" target="_blank" rel="noopener">assets/music/README.md</a>).</p>
     </article>
   </div>
 </section>

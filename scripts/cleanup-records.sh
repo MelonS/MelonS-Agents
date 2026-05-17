@@ -22,7 +22,7 @@
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-PRESERVE_RE='(-v6-|autotune|earworms|aimusic|miku)'
+PRESERVE_RE='(-v6-|autotune|earworms|aimusic|miku|^music-video-)'
 DRY_RUN="${DRY_RUN:-0}"
 
 KEEP_COUNT=0

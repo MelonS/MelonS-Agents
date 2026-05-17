@@ -1,6 +1,15 @@
 # Topic backlog — post-pick scale-up
 
-Once the operator picks a niche from [`decision-log.md`](decision-log.md), this file is the next-5 queue.  Each entry is a ready-to-run `topic_prompt` argument for `agents/missions/faceless-short/run.sh`.
+> **Note — partially stale after 2026-05-17 niche pivot.**  This file was
+> drafted when the candidate niches were `faceless-short` topic shorts
+> (Hittites/Hydrogen).  The operator pick on 2026-05-17 was a **format
+> pivot** to `music-video` mode (see [`decision-log.md` § Operator pick](decision-log.md#operator-pick--2026-05-17)),
+> which does not consume topic prompts.  These entries remain as a
+> backlog for any future narration-driven channel revival; they are
+> NOT the production queue for the active niche.  See
+> [`docs/roadmap.md`](../roadmap.md) "Next" for the actual queue.
+
+Original intent: once the operator picks a niche from [`decision-log.md`](decision-log.md), this file was the next-5 queue.  Each entry is a ready-to-run `topic_prompt` argument for `agents/missions/faceless-short/run.sh`.
 
 > **Fact-check before render.**  Many entries below were drafted by `llama3.2:3b` and the small-model drift is real — it invented "Hymenaei kingdom" (not biblical), confused the Cyrus Cylinder (Cyrus's, not Darius's) and a Silk-Road merchant with a biblical figure.  Entries marked **[CURATED]** are operator-or-Claude verified; entries marked **[AI-DRAFT]** are starter ideas that need a 30-second Wikipedia / Britannica check before running.  When in doubt, drop the entry and pick another.
 
