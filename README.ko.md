@@ -2,7 +2,7 @@
 
 # MelonS-Agents
 
-**한국어** | [English](./README.md)
+**한국어** | [English](./README.md) · [**라이브 사이트 →**](https://melons.github.io/MelonS-Agents/)
 
 **토픽 프롬프트 → 60초 9:16 세로 쇼츠.**
 

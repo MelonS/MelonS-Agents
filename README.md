@@ -2,7 +2,7 @@
 
 # MelonS-Agents
 
-[한국어](./README.ko.md) | **English**
+[한국어](./README.ko.md) | **English** · [**Live site →**](https://melons.github.io/MelonS-Agents/)
 
 **Topic prompt → 60-second 9:16 vertical short.**
 
