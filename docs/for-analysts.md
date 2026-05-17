@@ -31,18 +31,25 @@ This is a **two-tier** system on **one machine** (macOS).
 Tier 1 — Conversational      ┃ Anthropic API. Opus + Sonnet.
                              ┃ Claude Code CLI is the runtime.
                              ┃ Cost lives here.
-Tier 2 — Mission execution   ┃ Local. bash + ffmpeg + whisper.cpp +
-                             ┃ ollama (llama3.2:3b / qwen2.5-coder:7b).
+Tier 2 — Mission execution   ┃ Local. bash + ffmpeg + whisper.cpp.
                              ┃ Zero API cost. Free.
+Tier 1 (selectively)         ┃ One creative stage — narration-script
+within Tier 2                ┃ generation for faceless-short — routes
+                             ┃ to Sonnet via the existing Max-plan
+                             ┃ subscription quota (no incremental $).
+                             ┃ See docs/cost-model.md for the routing
+                             ┃ rule and case-study #1.
 ```
 
 The split is the central design choice.  An analyst who misses it
 will diagnose phantom problems.
 
-**A single mission run (transcribe → highlight pick → render → QA) is
-free.** No Anthropic tokens are spent during mission execution.
-Anthropic tokens are spent only when the user is *talking to Claude
-Code* — orchestration, planning, code review, debugging.
+**A mission run is effectively free.**  The mechanical stages
+(transcribe, render, B-roll fetch) burn zero Anthropic tokens.  The
+one Tier-1 hop — script generation — costs ~500 tokens per call,
+operationally negligible against the existing Max-plan quota.  Local
+ollama models are no longer required for the faceless-short
+pipeline; whisper.cpp and ffmpeg remain the local-only stages.
 
 ---
 
@@ -101,16 +108,26 @@ delta is small and risk of misfetched assets is non-trivial.
 
 ## Mission execution: where the money *isn't*
 
-The four missions (`agents/missions/{highlight,summarize,shorts-batch,faceless-short}/run.sh`)
+Three of the four missions (`agents/missions/{highlight,summarize,shorts-batch}/run.sh`)
 do **not** call Anthropic.  They call `agents/lib/ollama.sh` which
-posts to `http://127.0.0.1:11434/api/generate`.  `faceless-short` adds
-two more local services in the same Tier 2 budget — Kokoro-ONNX (TTS,
-Apache 2.0, runs on CPU) and the Pexels Videos free-tier HTTP API
-(200 req/hr, 20k req/month — no card, commercial reuse via the Pexels
-License).  None of these involve Anthropic billing.  See:
+posts to `http://127.0.0.1:11434/api/generate`.
 
-- [`agents/lib/ollama.sh`](../agents/lib/ollama.sh) — HTTP client to local Ollama.
-- [`.env.example`](../.env.example) — `OLLAMA_MODEL_HIGHLIGHT=llama3.2:3b`.
+`faceless-short` is partially Tier-1 by design: narration-script
+generation routes to Sonnet via `scripts/gen-script-claude.sh`, which
+calls `claude --print --model claude-sonnet-4-6` against the existing
+Max-plan subscription quota (no incremental dollar spend).  The
+remaining stages stay Tier-2: Kokoro-ONNX (TTS, Apache 2.0, CPU),
+whisper.cpp (transcribe), and the Pexels Videos free-tier HTTP API
+(200 req/hr, 20k req/month — no card, commercial reuse via the Pexels
+License).  Reasoning for the split routing rule is in
+[`docs/cost-model.md`](cost-model.md); the engineering case study
+(score impact: hook + factual axes 3→9) is
+[`docs/engineering-case-studies.md`](engineering-case-studies.md) §1.
+
+- [`agents/lib/ollama.sh`](../agents/lib/ollama.sh) — HTTP client to local Ollama (highlight / summarize / shorts-batch).
+- [`scripts/gen-script-claude.sh`](../scripts/gen-script-claude.sh) — Sonnet-routed narration script generator (faceless-short).
+- [`scripts/score-content.sh`](../scripts/score-content.sh) — Sonnet-routed content-quality scorer (feedback loop).
+- [`.env.example`](../.env.example) — `OLLAMA_MODEL_HIGHLIGHT=llama3.2:3b` still required by the three local-only missions.
 - [`agents/missions/highlight/run.sh`](../agents/missions/highlight/run.sh) — `ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$PROMPT" true`.
 
 The transcript flow specifically:

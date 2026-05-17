@@ -75,11 +75,16 @@
           agents/lib/*.sh       config/*.yaml
           (shared helpers)      (autonomy policy)
                       │
-                      ▼  Local tools — NOT Anthropic:
+                      ▼  Local tools — NOT Anthropic (except where noted):
                       │    • yt-dlp        download
                       │    • whisper.cpp   transcribe (Metal GPU)
                       │    • ollama        select / summarize
-                      │                    (llama3.2:3b, etc.)
+                      │                    (llama3.2:3b — highlight,
+                      │                     summarize, shorts-batch)
+                      │    • Kokoro-ONNX   TTS for faceless-short (CPU)
+                      │    • claude CLI    narration script + scorer
+                      │                    (faceless-short only;
+                      │                     Sonnet via Max quota)
                       │    • ffmpeg        render
                       ▼
             $RECORDS_DIR/missions/<date>/<mission-id>/
@@ -144,15 +149,21 @@ All four reuse the same shell library set:
 ## Faceless-short pipeline
 
 The `faceless-short` mission has no input video — it generates the
-short end-to-end from a topic prompt, $0 marginal cost:
+short end-to-end from a topic prompt.  Marginal cost: ~500 tokens
+against the existing Max-plan quota for the one Tier-1 hop (script
++ scorer); everything else is local.  See
+[`docs/engineering-case-studies.md`](engineering-case-studies.md) §1
+for the routing rationale.
 
 ```
   topic prompt
        │
        ▼
   ┌──────────────────────────────┐
-  │ ollama (llama3.2:3b)         │  60s narration script
-  │ 130–160 word target          │  (130–160 words)
+  │ claude --print               │  60s narration script
+  │ --model claude-sonnet-4-6    │  (130–160 words EN /
+  │ via scripts/gen-script-claude│   ~300–360 chars KO)
+  │ retry loop with score gate   │
   └────────────┬─────────────────┘
                ▼
   ┌──────────────────────────────┐
