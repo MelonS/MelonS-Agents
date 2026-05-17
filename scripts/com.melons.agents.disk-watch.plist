@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.melons.agents.disk-watch</string>
+
+  <!-- §8 exception: launchd plist values do not expand shell variables
+       like $HOME, so absolute paths are required.  When the repo is
+       relocated, re-run scripts/install-scheduler.sh on the new machine
+       to regenerate the LaunchAgents copy. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/melons/ai/scripts/disk-watch.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/melons/ai</string>
+
+  <key>StandardOutPath</key>
+  <string>/Users/melons/ai/records/disk-watch/launchd.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/melons/ai/records/disk-watch/launchd.err.log</string>
+
+  <!-- Every 30 min.  Cheap (one df call + a few KB of writes); cadence
+       picked to match audit-poll's 15-min cadence at half-frequency,
+       since disk fills more slowly than mission anomalies emerge. -->
+  <key>StartInterval</key>
+  <integer>1800</integer>
+
+  <!-- Run once at LaunchAgent load so the first reading lands fast
+       (audit-poll uses RunAtLoad=false to avoid duplicate-fire on
+       login; disk-watch is cheap enough that we want the immediate
+       baseline). -->
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>

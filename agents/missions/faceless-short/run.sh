@@ -46,6 +46,23 @@ fi
 require_bin "$FFMPEG_BIN" "$FFPROBE_BIN" "$WHISPER_CLI_BIN" jq curl
 require_env OLLAMA_HOST OLLAMA_MODEL_HIGHLIGHT WHISPER_MODEL RECORDS_DIR PEXELS_API_KEY
 
+# Pre-render disk-space guard.  A single faceless-short render writes
+# ~300-500 MB of intermediates (B-roll downloads, narration WAV,
+# concat-noaudio.mp4) before scripts/cleanup-records.sh prunes them.
+# Aborting BEFORE the pipeline starts beats discovering "device full"
+# four minutes into ffmpeg.  Override with FACELESS_MIN_FREE_GB=<n> in
+# .env for an explicit threshold; default 3 GB.
+FACELESS_MIN_FREE_GB="${FACELESS_MIN_FREE_GB:-3}"
+_free_kb=$(df -k . | awk '$NF=="/" || NR==2 {print $4; exit}')
+_free_gb=$(( _free_kb / 1024 / 1024 ))
+if (( _free_gb < FACELESS_MIN_FREE_GB )); then
+  log_err "ABORT: only ${_free_gb} GB free; need >= ${FACELESS_MIN_FREE_GB} GB for a render."
+  log_err "  scripts/cleanup-records.sh    # records/ intermediates (~3 GB typical)"
+  log_err "  scripts/disk-watch.sh         # current state + alert files"
+  exit 65
+fi
+unset _free_kb _free_gb
+
 VOICE="${FACELESS_VOICE:-am_michael}"
 NUM_BROLL="${FACELESS_NUM_BROLL:-8}"
 
