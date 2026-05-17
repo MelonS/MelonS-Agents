@@ -199,6 +199,73 @@ abstract phenomenon explainers like Earworms in the same pipeline.
 
 Default plan if no platform data yet: ship 3 more of each niche to amortize the "first upload always underperforms" effect before deciding. The next-5 queue lives at [`topic-backlog.md`](topic-backlog.md).
 
+## Operator pick — 2026-05-17
+
+After viewing the four `faceless-short` pilots and the eight music-trial
+pilots, the operator pivoted away from all narration-driven formats above.
+
+**Pick**: format option 3 from the list — **iterate the format itself**.
+Specifically, ship a **music-video mode** that is qualitatively different from
+faceless-short: music as sole audio, no narration, no captions, B-roll
+selected by music mood + cut-aligned to phrase boundaries + micro-glitch
+edits on detected drum onsets.
+
+**Why this beat the other options:**
+
+The original Hittites-vs-Hydrogen frame asked "which topic survives" given a
+fixed format.  The music-trial extension ("음악 들어간 쇼츠") clarified that
+the operator's interest was not _topics about music_ but _shorts that
+contain music_ — a format question, not a topic question.  After producing
+five music-video prototypes (v1 → v5, all on Velvet Turntable lo-fi
+instrumental), the operator confirmed v5 was a validated baseline.
+
+**What the music-video mode is, concretely:**
+
+| Stage | Implementation |
+|---|---|
+| Audio | Operator-curated music file (free / Suno / own).  Sole audio track. |
+| Beat extraction | `aubiotrack` filtered to real beats (sub-beat intervals < 0.4 s rejected) |
+| Cut placement | Every Nth real beat (default N=12 — about one cut every 7.5 s at 95 BPM) → "phrase boundary" cuts |
+| Visual sourcing | Pexels portrait (9:16) per mood keyword |
+| Per-clip speed | `setpts` filter — slow scenes (reading, coffee) 0.55×; ambient (rain, lights) 0.70×; active (city) 0.80×; static-natural (turntable, table) 1.00× |
+| Motif | First keyword reused at every 3rd segment; same Pexels clip cached + re-entered at varied in-points |
+| Glitch | At one detected `aubioonset -O complex -t 2.0` drum hit inside each static-camera, non-motif, non-tail segment.  Reverse 0.20 s + forward jump-cut 0.20 s.  Audio untouched. |
+| Caption / overlay | None.  Music is the message. |
+
+**Mission script**: [`agents/missions/music-video/run.sh`](../../agents/missions/music-video/run.sh).
+Usage:
+
+```bash
+agents/missions/music-video/run.sh <short_id> <music_file> [keywords_csv]
+```
+
+The Velvet Turntable1 + lo-fi/cafe keyword set is the validated default.
+Other moods will need their own keyword pools — the script auto-classifies
+each keyword's expected motion + speed via a heuristic in `classify_kw()`.
+
+**What did NOT carry forward** from the faceless-short pilots:
+
+- The Sonnet narration script generator (`scripts/gen-script-claude.sh`)
+  and content-quality scorer (`scripts/score-content.sh`) are not used in
+  music-video mode.  They remain alive for any future narration-driven
+  mission types.
+- The scorecard ([`scorecard.md`](scorecard.md)) measures dimensions tied
+  to narration (hook + factual coherence).  Music-video output needs a
+  new scorecard with different axes (mood-fit, beat-sync quality,
+  motif memorability) — not yet implemented.
+- The eight music-trial mp4s (autotune / earworms / aimusic / miku × EN/KO)
+  remain in records as historical baseline.  They are not the production
+  format; the niche-pivot replaces them.
+
+**Next decisions explicitly deferred:**
+
+- Sticker / effect overlays (film grain, vignette pulses, emoji icons) —
+  exploratory, will iterate after a first production batch lands.
+- Real platform watch-time data — production batch must ship to YouTube
+  Shorts first; the music-video mode hasn't been platform-tested yet.
+- Whether to keep faceless-short alive as a parallel narration channel or
+  retire it.  Default: keep, low maintenance burden.
+
 ## Cost accounting
 
 Per-pilot marginal cost: **$0** (Pexels free tier within quota, all other stages local). Time per pilot: ~2 minutes wall-clock on Apple M2; Korean variants ~50 seconds since B-roll is reused. The Pexels free quota (200 req/hr, 20k req/month) limits this pipeline to ~3300 pilots per month before any cost — well past any realistic upload cadence.
