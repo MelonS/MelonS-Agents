@@ -493,7 +493,7 @@ operator picks the thread back up at zero cognitive cost.
                 on origin/main.  This is the commit Claude already
                 ran (per §1 + §6) — NOT a paste-ready future command.
                 If no commit landed this turn, write "none this turn".
-[EPM Nudge]   — remaining estimated time on the current micro-task
+[Pace]        — remaining estimated time on the current micro-task
                 + one short focus line.  Dry tone, not cheerleader.
 ```
 
@@ -503,7 +503,7 @@ Companion rules:
   work, decompose into 15-min chunks before starting.  Name the
   first chunk in `[Next Action]`.
 - **Scope-creep nudge.**  If the user veers into an abstract or
-  large-design question mid-mission, the `[EPM Nudge]` line names
+  large-design question mid-mission, the `[Pace]` line names
   the deviation and pulls back to the current Now-queue item.
   Answer the question briefly; do not refuse it.
 - **Skip the footer for** pure clarification Q&A (e.g.,
