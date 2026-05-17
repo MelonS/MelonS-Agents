@@ -4,7 +4,8 @@
 # Fires every 30 min via launchd (com.melons.agents.disk-watch.plist).
 # Three signals when free disk drops below thresholds:
 #   1. STDERR log line (visible in records/disk-watch/*.log)
-#   2. macOS Notification Center via osascript (Todd actually sees this)
+#   2. macOS Notification Center via osascript (operator sees the toast
+#      even when the terminal is closed)
 #   3. Marker file at records/disk-alerts/<level>-<ts>.txt (auditor + manual scan)
 #
 # Thresholds (env-overridable):

@@ -178,12 +178,13 @@ for the routing rationale.
   └────────────┬─────────────────┘
                ▼
   ┌──────────────────────────────┐
-  │ ollama → 6 visual search     │  keyword JSON
-  │ terms (concrete imagery)     │  ["hittite ruins", "cuneiform", …]
+  │ per-window keyword extraction│  keyword JSON, one term per
+  │ (8 narration windows by      │  narration window
+  │  default, FACELESS_NUM_BROLL)│  ["hittite ruins", "cuneiform", …]
   └────────────┬─────────────────┘
                ▼
   ┌──────────────────────────────┐
-  │ scripts/pexels-fetch.sh      │  6 × B-roll.mp4 + .meta.json
+  │ scripts/pexels-fetch.sh      │  8 × B-roll.mp4 + .meta.json
   │ (Pexels API, free tier)      │  (photographer attribution)
   └────────────┬─────────────────┘
                ▼
