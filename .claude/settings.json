@@ -22,13 +22,13 @@
       "Bash(whisper *)",
       "Bash(git *)",
       "Bash(gh *)",
-      "Bash(ssh *)",
       "Bash(mkdir *)",
       "Bash(mv *)",
       "Bash(cp *)",
-      "Bash(rm *)",
+      "Bash(rm /Users/melons/ai/**)",
+      "Bash(rm /tmp/**)",
+      "Bash(rm ~/.Trash/**)",
       "Bash(chmod *)",
-      "Bash(chown *)",
       "Bash(touch *)",
       "Bash(ln *)",
       "Bash(ls *)",
@@ -100,7 +100,7 @@
     ]
   },
   "_notes": {
-    "rationale": "Auto-approve mode per user directive 2026-05-14. Wide allow for tactical commands needed by the agent system. Deny list guards against catastrophic operations (rm -rf at system roots, sudo, force-push to main, disk erase, piped-curl-to-shell).",
+    "rationale": "Auto-approve mode per user directive 2026-05-14. Wide allow for tactical commands needed by the agent system. Deny list guards against catastrophic operations (rm -rf at system roots, sudo, force-push to main, disk erase, piped-curl-to-shell). Tightened 2026-05-17 in response to a security review: rm scoped to repo / /tmp / Trash (was wildcard); ssh and chown removed (not used in this project's workflow).",
     "scope": "Project-shared (committed). Each contributor inherits these defaults."
   },
   "statusLine": {
