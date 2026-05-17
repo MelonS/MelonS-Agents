@@ -6,37 +6,25 @@
 > and re-run the auditor.
 
 **Verdict**: DRIFT_DETECTED
-**Full report**: [`docs/audit/2026-05-17-contract.md`](2026-05-17-contract.md)
-**Generated**: 2026-05-17 18:09:21 KST
+**Full report**: [`docs/audit/2026-05-18-all.md`](2026-05-18-all.md)
+**Generated**: 2026-05-18 03:08:32 KST
 
 ## Summary (from audit)
 
 
-Fifteenth contract-focused audit of the session; HEAD = `e793662`
-(2026-05-17 ~19:00 KST).  Supersedes the fourteenth audit at HEAD `579ef3a`.
-Scope: all twelve hard rules in `docs/operator-contract.md`, §5
-commit-marker compliance for commits to `.claude/agents/*.md` and root-level
-`agents/*.md` after the marker-convention date (`7c6ff4f`, 2026-05-17), model-
-assignment parity between `.claude/agents/*.md` frontmatter and
-`docs/for-analysts.md`, `.gitignore` coverage, secrets scan, and
-output-artifact placement.
-
-One new commit since the fourteenth audit:
-
-- `e793662` — `docs(contract): §12 override clause for intentionally public
-  identity surfaces`.  Added "Operator override for intentionally public
-  identity surfaces" subsection to `docs/operator-contract.md §12` (three
-  conjunctive conditions for a formal exception); added inline
-  `<!-- §12 operator-authorized deviation -->` marker at `site/index.html:169`
-  (the LinkedIn anchor).  Resolves the prior [low, carry-forward] §12 LinkedIn
-  finding.  Commit carries `Requested-by: user`; no §5-scope agent-definition
-  files touched.
-
-The §12 LinkedIn carry-forward is now fully resolved.  Remaining open items:
-one [low, carry-forward] §8 structural finding (launchd plists) and two
-[info, carry-forward] items (daily-report naming, operator first name in
-immutable commit body).  Verdict stays DRIFT_DETECTED until the §8 structural
-gap is addressed.
+Sixteenth audit of the session; HEAD = `f86c2f0` (2026-05-18, latest commit as of audit time).
+Supersedes the fifteenth audit at HEAD `e793662` (2026-05-17-contract.md).
+Full-scope audit covering all six dimensions: architecture vs documentation drift,
+roadmap freshness, operator-contract compliance, cost-model accuracy, stale TODOs /
+dead code, and security / secrets.  Seven commits landed since the prior audit:
+`ab6555e` (plist templating — closes prior §8 plist finding), `a8291f5`, `6a460b0`,
+`23832fa`, `36323eb`, `65c35a6`, `f86c2f0`.  Key new surfaces: `scripts/music-video-shaders.sh`,
+`scripts/daily-music-video.sh`, `assets/music/SOURCES.md`, and `outputs/publish/`.
+Three medium findings identified: architecture docs describe the faceless-short script
+stage as Tier-1-Claude-primary, but the code defaults to Tier-2 ollama (opt-in override
+required); roadmap "Now" is stale after goal completion; CURRENT-ALERT.md was not
+auto-cleared after the §8 plist fix landed.  The prior §8 plist finding is fully
+resolved by `ab6555e`; all other prior high/critical findings remain clean.
 
 ## Critical / High findings
 

@@ -16,7 +16,27 @@ exists and matches the "Done when" criteria below.
 
 ## Active goal
 
-### 2026-05-17 | Production-ready music-video short — 업로드 가능한 1편
+### 2026-05-17 | Production-ready music-video short — 업로드 가능한 1편 | **ACHIEVED 2026-05-17 ~23:30 KST**
+
+> _Resolution note_: operator approved
+> `outputs/publish/03e-velvet1-jazz-combo.mp4` ("좋아 너무 좋음" +
+> "올려도 될정도긴 하네"), then uploaded to their existing YouTube
+> channel (4 subscribers, <2k total views — well under the 1k subs +
+> 4k watch-hour monetization threshold, so the Suno free-tier
+> personal-use license fits cleanly).  Upload confirmed published
+> at 2026-05-17 ~23:30 KST.  Channel-level performance stats
+> (impressions, watch-time, retention) to be captured 24h+ later in
+> [`docs/pilots/first-upload-metrics.md`](pilots/first-upload-metrics.md).
+> 
+> _Production trail_:
+> 1. Mission render: `music-video-upload1-203521` (60 s, 71 MB).
+> 2. Shader combo: pond + halation with phrase-aware envelope
+>    (95.8 BPM × 7.5 s phrase cadence; 22.5–45 s climax window) —
+>    `scripts/music-video-shaders.sh combo`, commit `23832fa`.
+> 3. Music: `Velvet Turntable1.mp3` (Suno free tier, generated
+>    2026-05-17 afternoon, license trail in
+>    [`assets/music/SOURCES.md`](../assets/music/SOURCES.md)).
+> 4. Upload metadata template + delivered to operator at ~23:00 KST.
 
 _(2026-05-17 ~20:00 KST — operator direction after the pilot A/B
 goal closed.  Operator literal: "실제로 올릴수있는 정도의 쇼츠를
@@ -44,17 +64,17 @@ YouTube Shorts.
 
 **Subgoals (acceptance signals)**:
 
-- [ ] **Music source resolved** — at least one license-clean track
+- [x] **Music source resolved** — at least one license-clean track
       sitting in `assets/music/` (gitignored), with source + license URL
       noted in a tracked `assets/music/SOURCES.md`.  Acceptance: a
       track exists locally that the operator confirms is OK to publish
       a video under.
-- [ ] **Pre-flight format polish** — v6 effects already integrated into
+- [x] **Pre-flight format polish** — v6 effects already integrated into
       `agents/missions/music-video/run.sh`; remaining knob-tuning (if any)
       driven by operator review of the next render, not pre-emptive
       iteration.  Acceptance: no open "needs format change" item in
       `docs/pilots/decision-log.md` between render and operator review.
-- [ ] **Deliverable** — one mp4 in a known publish-ready path
+- [x] **Deliverable** — one mp4 in a known publish-ready path
       (`outputs/publish/` or equivalent — not buried under
       `records/missions/<date>/<id>/outputs/`) that the operator
       explicitly approves with "이거 올려" or equivalent.  The mp4

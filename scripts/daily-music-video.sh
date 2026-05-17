@@ -66,19 +66,36 @@ process_one() {
     return 1
   fi
 
-  local mission_id="dq-$slug"
-  say "▶ START: $slug  (music=$music)"
+  # Mission ID prefix gets a timestamp + slug to make it collision-free
+  # across days and re-runs ("dq-2026-05-18-piano-latenight" instead of
+  # generic "dq-piano-latenight").  Without this, two runs of the same
+  # slug on different days would both match "dq-${slug}-*" and the
+  # ls -td ordering decides which mp4 gets picked up — which is exactly
+  # how the 2026-05-17 → 2026-05-18 overnight batch corrupted 06/07.
+  local mission_id="dq-$(date +%Y%m%d)-$slug"
+
+  # Marker file lets us find ONLY the mission dir created by THIS
+  # run (find -newer), which is robust to:
+  #   (a) midnight crossings (the mission's date directory may differ
+  #       from `date +%Y-%m-%d` evaluated at search time);
+  #   (b) collision with older missions that share a TID prefix.
+  local marker
+  marker=$(mktemp -t dq-marker-XXXXXX)
+  say "▶ START: $slug  (music=$music, mission_id=$mission_id)"
 
   if ! ./agents/missions/music-video/run.sh "$mission_id" "$music" "$keywords" >>"$RUN_LOG" 2>&1; then
     say "✗ mission FAILED: $slug"
     echo "$(ts) FAIL $slug mission-error" >>"$DONE_LOG"
+    rm -f "$marker"
     return 1
   fi
 
+  # Find newest mission dir created since the marker — regardless of date dir.
   local latest
-  latest=$(ls -td records/missions/$(date +%Y-%m-%d)/music-video-${mission_id}-* 2>/dev/null | head -1)
+  latest=$(find records/missions -type d -name "music-video-${mission_id}-*" -newer "$marker" 2>/dev/null | sort | tail -1)
+  rm -f "$marker"
   if [[ -z "$latest" || ! -f "$latest/outputs/short.mp4" ]]; then
-    say "✗ short.mp4 missing for $slug"
+    say "✗ short.mp4 missing for $slug (searched all date dirs)"
     echo "$(ts) FAIL $slug short-not-found" >>"$DONE_LOG"
     return 1
   fi
