@@ -31,11 +31,21 @@
 
 ## Overview
 
-> An efficient macOS-based multi-agent system for short-form video
-> production. Built on a single premise: **automate the production
-> pipeline, then let the system evolve its own logic.** Every commit
-> in this repository is a step in that evolution — the history is not
-> a record of outputs, but of how the agent system itself grows over time.
+> A macOS-based multi-agent system.  **The current focus** — and what
+> you see in the demo above — is faceless short-form video generation.
+> **The system itself is not shorts-specific.**  The scaffold —
+> orchestrator + 4 mission subagents + file-based handoff + 3-layer
+> reactive audit + Tier-1/Tier-2 cost routing — is general-purpose by
+> design; short-form video is the v1 mission type chosen to exercise
+> the architecture against a concrete, visually verifiable deliverable.
+> Additional mission types (research workflows, multi-stage data
+> pipelines, automation jobs the operator picks up next) will land on
+> the same scaffold as the project matures.
+>
+> Built on a single premise: **automate the production pipeline, then
+> let the system evolve its own logic.**  Every commit in this
+> repository is a step in that evolution — the history is not a record
+> of outputs, but of how the agent system itself grows over time.
 
 ## Design notes
 
