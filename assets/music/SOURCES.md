@@ -37,6 +37,51 @@ incidents later.
 - **Source**: Suno AI (operator-generated, 2026-05-17)
 - Same license terms as `Velvet Turntable1.mp3`.
 
+### `Late Night Piano.mp3`
+
+- **Source**: Suno AI (operator-generated, 2026-05-17 evening)
+- **Suno tier at generation**: free tier (Custom Mode)
+- **Style prompt**: "late night jazz lofi, soft piano, vinyl crackle, slow tempo, 60 BPM, mellow, intimate"
+- **License**: Suno free-tier (personal / non-commercial; see Velvet Turntable1.mp3 entry).
+- **Duration**: 118 s
+- **Intended visual mood**: late-night cafe, dim warm lamps, piano-keys close-ups, raindrops on glass.
+
+### `Rainy Bossa.mp3`
+
+- **Source**: Suno AI (operator-generated, 2026-05-17 evening)
+- **Suno tier at generation**: free tier (Custom Mode)
+- **Style prompt**: "rainy day bossa nova lofi, brushed drums, warm tenor sax, smooth, 75 BPM, melancholic"
+- **License**: Suno free-tier.
+- **Duration**: 152 s
+- **Intended visual mood**: rainy neon street, raindrops on window, jazz-cafe rainy day, wet pavement reflections.
+
+### `Fireplace Acoustic.mp3`
+
+- **Source**: Suno AI (operator-generated, 2026-05-17 evening)
+- **Suno tier at generation**: free tier (Custom Mode)
+- **Style prompt**: "cozy fireplace acoustic jazz, fingerpicked nylon guitar, soft upright bass, 70 BPM, warm, contemplative"
+- **License**: Suno free-tier.
+- **Duration**: 166 s
+- **Intended visual mood**: fireplace warm glow, cozy cabin interior, candle warm light, snowy forest evening.
+
+### `Urban Midnight.mp3`
+
+- **Source**: Suno AI (operator-generated, 2026-05-17 evening)
+- **Suno tier at generation**: free tier (Custom Mode)
+- **Style prompt**: "urban midnight lofi hip-hop jazz, deep sub bass, muted trumpet, jazz drums, 85 BPM, noir, cinematic"
+- **License**: Suno free-tier.
+- **Duration**: 480 s
+- **Intended visual mood**: tokyo neon night, urban rooftop, neon alleyway, midnight subway, traffic light streaks.
+
+### `Tokyo Neon.mp3`
+
+- **Source**: Suno AI (operator-generated, 2026-05-17 evening)
+- **Suno tier at generation**: free tier (Custom Mode)
+- **Style prompt**: "tokyo neon vibraphone bossa, soft vibes, dreamy, 65 BPM, nostalgic, japanese city pop influence"
+- **License**: Suno free-tier.
+- **Duration**: 233 s
+- **Intended visual mood**: tokyo shibuya night, japanese neon signs, vibraphone close-ups, akihabara, japanese vending machine glow.
+
 ---
 
 ## How to add a track
