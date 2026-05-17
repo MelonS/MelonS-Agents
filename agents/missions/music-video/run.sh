@@ -259,19 +259,84 @@ for ((i=0; i<SEG_TOTAL; i++)); do
   echo "file '$(realpath "$OUT")'" >> "$TRIM_LIST"
 done
 
-# ───── 5. concat + final mix ─────
+# ───── 5. concat + final mix (with v6 vintage-lofi treatment) ─────
 log_step "5/5  concat + final mix"
 CONCAT="$MDIR/resources/concat-noaudio.mp4"
 "$FFMPEG_BIN" -y -loglevel error -f concat -safe 0 -i "$TRIM_LIST" -c copy "$CONCAT"
 
+# v6 visual treatment.  All three effects default ON; tune or disable
+# per render via env vars.  When all three are disabled, the final stage
+# falls back to a fast c:v-copy mux.
+#
+#   MUSIC_VIDEO_FILM_GRAIN_INTENSITY  default 8    (0 = disabled)
+#   MUSIC_VIDEO_VIGNETTE_ANGLE        default PI/5 ('' = disabled)
+#   MUSIC_VIDEO_ZOOM_PULSE_AMP        default 0.08 (0 = disabled)
+#   MUSIC_VIDEO_ZOOM_PULSE_SIGMA      default 0.18 (bell width in seconds)
+#
+# The zoom-pulse rings the visual on each glitch onset — a subtle 0.6-s
+# bell that visually re-asserts the music's "scratch" moment.  If a music
+# track is melodic-only (no onsets detected), this falls through to no zoom.
+GRAIN_INTENSITY="${MUSIC_VIDEO_FILM_GRAIN_INTENSITY:-8}"
+VIGNETTE_ANGLE="${MUSIC_VIDEO_VIGNETTE_ANGLE:-PI/5}"
+ZOOM_AMP="${MUSIC_VIDEO_ZOOM_PULSE_AMP:-0.08}"
+ZOOM_SIGMA="${MUSIC_VIDEO_ZOOM_PULSE_SIGMA:-0.18}"
+
+# Build the zoom-pulse expression by summing a Gaussian bell at every
+# non-empty glitch onset.  In the no-glitch case, ZOOM_EXPR = "1".
+ZOOM_EXPR="1"
+if [[ "$ZOOM_AMP" != "0" && "$ZOOM_AMP" != "0.0" ]]; then
+  zoom_bells=""
+  for ((i=0; i<SEG_TOTAL; i++)); do
+    g="${SEG_GLITCH[$i]}"
+    if [[ -n "$g" ]]; then
+      zoom_bells="${zoom_bells}+${ZOOM_AMP}*exp(-((t-${g})/${ZOOM_SIGMA})*((t-${g})/${ZOOM_SIGMA}))"
+    fi
+  done
+  if [[ -n "$zoom_bells" ]]; then
+    ZOOM_EXPR="1${zoom_bells}"
+  fi
+fi
+
 OUT="$MDIR/outputs/short.mp4"
-"$FFMPEG_BIN" -y -loglevel error \
-  -i "$CONCAT" \
-  -stream_loop -1 -i "$MUSIC_FILE" \
-  -map "0:v" -map "1:a" \
-  -c:v copy -c:a aac -b:a 192k \
-  -t "$TARGET_DUR" \
-  "$OUT"
+
+# Decide whether to apply any filters.  If everything is off, fast-path
+# the original c:v copy.
+ANY_FILTER=0
+[[ "$GRAIN_INTENSITY" != "0" ]] && ANY_FILTER=1
+[[ -n "$VIGNETTE_ANGLE" ]] && ANY_FILTER=1
+[[ "$ZOOM_EXPR" != "1" ]] && ANY_FILTER=1
+
+if (( ANY_FILTER == 0 )); then
+  log_info "  (no v6 filters — fast-path c:v copy mux)"
+  "$FFMPEG_BIN" -y -loglevel error \
+    -i "$CONCAT" \
+    -stream_loop -1 -i "$MUSIC_FILE" \
+    -map "0:v" -map "1:a" \
+    -c:v copy -c:a aac -b:a 192k \
+    -t "$TARGET_DUR" \
+    "$OUT"
+else
+  filter_parts=()
+  [[ "$GRAIN_INTENSITY" != "0" ]] && filter_parts+=("noise=alls=${GRAIN_INTENSITY}:allf=t")
+  [[ -n "$VIGNETTE_ANGLE" ]] && filter_parts+=("vignette=${VIGNETTE_ANGLE}")
+  if [[ "$ZOOM_EXPR" != "1" ]]; then
+    filter_parts+=("scale=w='1080*(${ZOOM_EXPR})':h='1920*(${ZOOM_EXPR})':eval=frame")
+    filter_parts+=("crop=1080:1920")
+  fi
+
+  # Comma-join filter parts into a single chain
+  IFS=','; FILTER_CHAIN="${filter_parts[*]}"; IFS=' '
+
+  log_info "  v6 filters: grain=${GRAIN_INTENSITY} vignette=${VIGNETTE_ANGLE} zoom_pulses=$(( ${#filter_parts[@]} >= 3 ? 1 : 0 ))"
+  "$FFMPEG_BIN" -y -loglevel error \
+    -i "$CONCAT" \
+    -stream_loop -1 -i "$MUSIC_FILE" \
+    -filter_complex "[0:v]${FILTER_CHAIN}[outv]" \
+    -map "[outv]" -map "1:a" \
+    -c:v libx264 -preset medium -crf 22 -c:a aac -b:a 192k \
+    -t "$TARGET_DUR" -r 30 \
+    "$OUT"
+fi
 
 dur=$("$FFPROBE_BIN" -v error -show_entries format=duration -of default=nw=1:nk=1 "$OUT" | awk '{printf "%.1f", $1}')
 size=$(du -h "$OUT" | awk '{print $1}')
