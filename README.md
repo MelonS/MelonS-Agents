@@ -144,6 +144,33 @@ data: [`docs/pilots/scorecard.json`](docs/pilots/scorecard.json).
 Regenerate the chart after editing the JSON:
 `.venv/bin/python scripts/generate-scorecard-chart.py`.
 
+### Operator-intervention trend — is the system getting more autonomous?
+
+A multi-agent system that needs constant human steering hasn't
+escaped the same effort it was meant to replace.  This chart tracks
+the ratio of commits with explicit user direction vs commits the
+agent picked up on its own.
+
+![Stacked-bar chart of commits per day from 2026-05-14 to 2026-05-17, split by initiator (blue = agent-autonomous, red = user-initiated), with a black line tracking user-initiated percentage on the right axis](docs/metrics/intervention.png)
+
+Honest read: the line is **not** trending the right direction yet.
+05-14 (0 % user) was setup automation.  05-15 and 05-16 were
+overnight infra work where the agent ran the roadmap.  05-17 (42 %
+user) was a niche-decision day — the operator was deliberately in
+the loop choosing topics, picking models, and surfacing quality
+gaps.  This high-intervention pattern is expected during decision
+phases; the target is for the line to drop back under 15 % once
+the system enters production mode (chosen niche, recurring topic
+queue, scheduled uploads).
+
+The `Requested-by: user` commit-message marker (introduced in
+`7c6ff4f` on 2026-05-17 — dashed line in the chart) gives the
+classifier a strict signal going forward.  Older commits are
+classified by heuristic match on the body text, so the historical
+recall for "user-initiated" is lower than reality.
+
+Source data + per-commit classification: [`docs/metrics/intervention.json`](docs/metrics/intervention.json).  Regenerate the chart any time with `.venv/bin/python scripts/generate-intervention-chart.py`.
+
 ### Per-mission timing (v1 highlight missions only)
 
 ![Per-mission time breakdown — v1 highlight missions, stacked by stage (transcribe + select + render + other)](docs/metrics/per-mission-time.png)
