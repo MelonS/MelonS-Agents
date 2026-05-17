@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>MelonS-Agents — multi-agent scaffold for short-form video</title>
+  <meta name="description" content="Topic prompt → 9:16 60s short. Multi-agent pipeline running local-first ($0 runtime), Claude where quality matters, EN+KO, three-layer reactive audit.">
+  <meta property="og:title" content="MelonS-Agents — multi-agent scaffold">
+  <meta property="og:description" content="Topic prompt → 9:16 60s short. Local-first runtime, Claude for creative stages, EN+KO. AutoTune EN scorecard 45/50.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/MelonS/MelonS-Agents/main/docs/demo/v6-hittites-preview.gif">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://melons.github.io/MelonS-Agents/">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hero">
+  <nav class="topnav">
+    <a class="brand" href="#top">MelonS-Agents</a>
+    <div class="links">
+      <a href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/MelonS/MelonS-Agents/blob/main/README.ko.md" target="_blank" rel="noopener">한국어</a>
+      <a href="https://github.com/MelonS/MelonS-Agents/stargazers" target="_blank" rel="noopener">⭐ Star</a>
+    </div>
+  </nav>
+
+  <h1 id="top">Multi-agent scaffold for short-form video.<br><span class="muted">$0 runtime. Claude where quality matters. EN + KO.</span></h1>
+
+  <p class="lede">
+    A topic prompt becomes a 60-second 9:16 vertical short — script, voice, captions, B-roll, render, all the way to a verifiable mp4.
+    Mechanical stages stay local (whisper.cpp, Kokoro TTS, ffmpeg).  One creative stage routes to Claude.  The system audits itself on every commit.
+  </p>
+
+  <div class="cta-row">
+    <a class="cta primary" href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">View on GitHub</a>
+    <a class="cta" href="#evidence">See the output</a>
+    <a class="cta" href="#how">How it works</a>
+  </div>
+
+  <figure class="demo">
+    <img src="assets/demo.gif" alt="5-second animated preview of a faceless-short v6 render: 9:16 vertical, historical-battle B-roll, single-line burned caption 'Scholars called the Hittites fiction', Pexels License attribution top-left." loading="lazy">
+    <figcaption>5-second slice of <code>faceless-hittites-v6-071919</code> — script by Claude Sonnet, B-roll from Pexels, render by local ffmpeg.</figcaption>
+  </figure>
+</header>
+
+<section class="stats" aria-label="Project numbers at a glance">
+  <ul>
+    <li><strong>40+</strong><span>missions rendered</span></li>
+    <li><strong>0</strong><span>runtime API tokens</span></li>
+    <li><strong>3</strong><span>audit layers (L1+L2+L3)</span></li>
+    <li><strong>45/50</strong><span>top scorecard (AutoTune EN)</span></li>
+    <li><strong>EN+KO</strong><span>dual track from day 1</span></li>
+    <li><strong>MIT</strong><span>license</span></li>
+  </ul>
+</section>
+
+<section id="how" class="block">
+  <h2>How it works</h2>
+  <p>The scaffold is general-purpose.  Short-form video is the v1 mission type — chosen because the deliverable is visually verifiable and the failure modes are quick to catch.</p>
+
+  <div class="cards">
+    <article class="card">
+      <h3>Pipeline (faceless-short mission)</h3>
+      <ol>
+        <li><b>Script.</b> <code>scripts/gen-script-claude.sh</code> calls Sonnet with a tight hook + factual-coherence prompt, auto-scores the result, retries with feedback if below threshold.</li>
+        <li><b>TTS.</b> Kokoro-ONNX (English) or macOS Yuna (Korean).  Apache 2.0 licensed, runs offline.</li>
+        <li><b>Captions.</b> whisper.cpp transcribes for timing, then script-aware token alignment fixes proper nouns, then a single-line splitter enforces ≤ 28 chars per cue.</li>
+        <li><b>B-roll.</b> Per-window keyword extraction (8 windows) → Pexels Videos API.  Each window's clip matches what's being said at that moment.</li>
+        <li><b>Render.</b> ffmpeg 9:16 screen-fill, libass burned captions, top-left source attribution overlay.</li>
+        <li><b>QA.</b> Mission-level retry on failure, with the previous qa-report prepended on retry attempts.</li>
+      </ol>
+    </article>
+
+    <article class="card">
+      <h3>Three-layer reactive audit</h3>
+      <ul>
+        <li><b>L1 — post-commit hook.</b>  Drift-risk commits (anything under <code>agents/</code>, <code>.claude/agents/</code>, <code>config/</code>, <code>CLAUDE.md</code>, the operator contract) fire <code>audit-run.sh contract</code> within ~30 s.</li>
+        <li><b>L2 — 15-min mission-anomaly poll.</b>  New blocker files or QA-FAIL bursts trigger a focused audit.  No-op (zero tokens) when nothing's wrong.</li>
+        <li><b>L3 — daily 03:00 baseline.</b>  launchd fires the full sweep.  Catches anything L1 + L2 missed.</li>
+      </ul>
+      <p class="muted">The pattern is Reactor + Hook (files as events), not Observer — subagents in this repo aren't long-running observables.</p>
+    </article>
+
+    <article class="card">
+      <h3>Cost-routing rule</h3>
+      <p>The architectural lesson from a real failure: applying "Tier 2 (local) = default" to <em>every</em> pipeline stage produces a quality ceiling.</p>
+      <ul>
+        <li><b>Mechanical, high-volume stages</b> (transcribe, render, fetch) — local.  Token cost would be ruinous at scale.</li>
+        <li><b>One-shot creative stages</b> (script hook, factual framing) — Claude.  ~500 tokens per call, operationally negligible against the existing subscription quota, and quality compounds over the next 60 seconds of viewing.</li>
+      </ul>
+      <p class="muted">Full reasoning in <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/cost-model.md" target="_blank" rel="noopener">docs/cost-model.md</a>.</p>
+    </article>
+  </div>
+</section>
+
+<section id="evidence" class="block">
+  <h2>Evidence — what the pipeline actually produces</h2>
+
+  <p>Caption-verify frames captured from the rendered mp4s.  Single-line burned captions, Pexels attribution top-left, B-roll selected per narration window.  Full mp4s live under <code>records/missions/</code> (gitignored — each ~ 25–50 MB).</p>
+
+  <div class="gallery">
+    <figure>
+      <img src="assets/gallery-1.jpg" alt="Frame from faceless-hittites-v6: 9:16, historical battle reenactment B-roll, caption 'Turkey and Syria for five centuries,' single-line." loading="lazy">
+      <figcaption><b>Hittites EN</b> · score 44/50</figcaption>
+    </figure>
+    <figure>
+      <img src="assets/gallery-2.jpg" alt="Frame from faceless-hydrogen-v6: pasta macro shot, caption 'The human body's reliance' single-line." loading="lazy">
+      <figcaption><b>Hydrogen EN</b> · 43/50</figcaption>
+    </figure>
+    <figure>
+      <img src="assets/gallery-3.jpg" alt="Frame from faceless-autotune music-trial: studio audio waveform display, caption 'like a secret safety net. But in 1998,' single-line." loading="lazy">
+      <figcaption><b>AutoTune EN</b> · 45/50</figcaption>
+    </figure>
+    <figure>
+      <img src="assets/gallery-4.jpg" alt="Frame from faceless-hittites-ko-v6: aerial Hattusa archaeological site, Korean caption '황무지에서 1만 개가 넘는 설형문자 점토판을 꺼냈다.' single-line." loading="lazy">
+      <figcaption><b>Hittites KO</b> · 44/50</figcaption>
+    </figure>
+  </div>
+
+  <h3 id="scorecard">Self-evaluated scorecard</h3>
+  <p>Each pilot rated on five retention-mapping axes (Hook, Visual sync, Readability, Factual coherence, Production polish).  Scores by Claude, not a viewer panel — they're a structured progress signal until real platform watch-time data replaces them.</p>
+  <p><a href="assets/scorecard.png" target="_blank" rel="noopener"><img class="full" src="assets/scorecard.png" alt="Stacked bar chart: 13 pilot rows from Hittites EN v4 26/50 (lowest) up to AutoTune EN 45/50 (highest), split across the 5 dimensions with colors. Music-trial topics cluster around 40-45." loading="lazy"></a></p>
+
+  <h3>Operator-intervention trend</h3>
+  <p>A multi-agent system that needs constant human steering hasn't actually replaced the work it was meant to.  Honest tracking of how much the operator stays in the loop per day:</p>
+  <p><a href="assets/intervention.png" target="_blank" rel="noopener"><img class="full" src="assets/intervention.png" alt="Daily commit count from 2026-05-14 through 2026-05-17, stacked by initiator (agent-autonomous blue vs user-initiated red), with a black line showing user-initiated percentage. The line trends UP from 0% to 42% over the four days, annotated as decision-phase activity." loading="lazy"></a></p>
+</section>
+
+<section class="block">
+  <h2>Try it</h2>
+  <pre><code>git clone https://github.com/MelonS/MelonS-Agents.git
+cd MelonS-Agents
+./scripts/bootstrap.sh                # verifies tools, fetches models
+./agents/missions/highlight/run.sh \
+  https://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4</code></pre>
+  <p>Or render a faceless short from a topic prompt — see <a href="https://github.com/MelonS/MelonS-Agents#quick-start" target="_blank" rel="noopener">README Quick start</a>.</p>
+  <p>macOS first.  Linux compatible for the core pipeline (whisper.cpp + ollama + ffmpeg); macOS-only for launchd schedulers, Yuna TTS, and the bootstrap synthetic fixtures.</p>
+</section>
+
+<footer>
+  <p>
+    Released under the <a href="https://github.com/MelonS/MelonS-Agents/blob/main/LICENSE" target="_blank" rel="noopener">MIT license</a>.
+    Source on <a href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">GitHub</a>.
+    Built with Claude Code.
+  </p>
+  <p class="muted">Daily LinkedIn updates draw from <code>docs/social/linkedin-{ko,en}.md</code> in the repo — open them if you want to follow the build log on LinkedIn.</p>
+</footer>
+
+</body>
+</html>
