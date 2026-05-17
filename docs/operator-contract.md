@@ -480,6 +480,46 @@ This pairs with `never-pause` (§2): keep going through the
 roadmap *Next* queue without asking, and only signal idle when
 there is genuinely nothing queued and no in-flight work.
 
+### Scrum-master footer
+
+Every reply that involves work closes with a fixed 3-line footer
+block.  The purpose is mechanical re-anchoring at end of turn so the
+operator picks the thread back up at zero cognitive cost.
+
+```
+[Next Action] — one sentence, the single most concrete next step.
+                No alternatives, no "or".
+[Git Commit]  — short hash + subject of the commit that just landed
+                on origin/main.  This is the commit Claude already
+                ran (per §1 + §6) — NOT a paste-ready future command.
+                If no commit landed this turn, write "none this turn".
+[EPM Nudge]   — remaining estimated time on the current micro-task
+                + one short focus line.  Dry tone, not cheerleader.
+```
+
+Companion rules:
+
+- **15-min micro-tasks.**  When a request expands past ~20 min of
+  work, decompose into 15-min chunks before starting.  Name the
+  first chunk in `[Next Action]`.
+- **Scope-creep nudge.**  If the user veers into an abstract or
+  large-design question mid-mission, the `[EPM Nudge]` line names
+  the deviation and pulls back to the current Now-queue item.
+  Answer the question briefly; do not refuse it.
+- **Skip the footer for** pure clarification Q&A (e.g.,
+  "what file does X live in?" — single-fact answer, no footer).
+- **Layer order** in a typical reply:
+  1. `[관리자 브리핑]` opener (Dual-stack reporting)
+  2. Body (work updates)
+  3. Idle marker (🟢/🟡) when applicable
+  4. 3-line scrum-master footer
+
+This is a literal deviation from the persona spec ("paste-ready
+git command") — see [[scrum-master-mode]] memory for the reasoning.
+The deviation is principled: §1 forbids pasting commands at the
+user, so `[Git Commit]` becomes a record of what Claude already did
+instead of an instruction for the user to execute.
+
 ---
 
 ## Memory and this file
