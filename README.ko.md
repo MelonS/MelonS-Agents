@@ -5,7 +5,10 @@
 **한국어** | [English](./README.md)
 
 **토픽 프롬프트 → 60초 9:16 세로 쇼츠.**
-로컬 우선으로 동작하는 멀티에이전트 파이프라인 (런타임 API 비용 $0), 창작 단계 하나만 Claude로 라우팅.  영어 + 한국어 듀얼 트랙.  3 레이어 반응형 감사 — 시스템이 자신의 드리프트를 스스로 잡습니다.
+
+**기계적인 단계는 로컬, 창작 단계는 Claude.**  세 가지 감사 트리거 — 커밋·이상·스케줄 — 으로 시스템이 자신의 드리프트를 스스로 잡습니다.  영어 + 한국어 듀얼 트랙.
+
+`미션 32회 · 런타임 API 토큰 0개 · 감사 레이어 3개 · v6 scorecard 44 / 50 · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)

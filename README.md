@@ -5,7 +5,10 @@
 [한국어](./README.ko.md) | **English**
 
 **Topic prompt → 60-second 9:16 vertical short.**
-Multi-agent pipeline running local-first ($0 runtime API cost), with one creative stage routed to Claude.  English + Korean dual track.  Three-layer reactive audit so the system can correct its own drift.
+
+**Local for the mechanical, Claude for the creative.**  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
+
+`32 missions · 0 runtime API tokens · 3 audit layers · v6 scorecard 44 / 50 · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
