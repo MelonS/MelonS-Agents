@@ -101,7 +101,9 @@ echo "[gate 3/4] §5 marker compliance (Requested-by: user)..."
 COMMITS_NEEDING_MARKER=()
 while IFS= read -r commit; do
   files=$(git show --pretty="" --name-only "$commit" 2>/dev/null)
-  if echo "$files" | grep -qE '^(\.claude/agents/.+\.md|agents/)'; then
+  # §5 scope per operator-contract.md:87-88 is `agents/*.md` and
+  # `.claude/agents/*.md` — markdown only, not the whole subtree.
+  if echo "$files" | grep -qE '^(\.claude/agents/.+\.md|agents/.+\.md)'; then
     COMMITS_NEEDING_MARKER+=("$commit")
   fi
 done <<< "$COMMITS"
@@ -139,7 +141,7 @@ CHANGED=$(git diff "$BASE_BRANCH...$BRANCH" --name-only 2>/dev/null)
 SCOPE=""
 echo "$CHANGED" | grep -qE '^agents/missions/music-video/' && SCOPE="$SCOPE music-video"
 echo "$CHANGED" | grep -qE '^agents/missions/faceless-short/' && SCOPE="$SCOPE faceless-short"
-echo "$CHANGED" | grep -qE '^\.claude/skills/' && SCOPE="$SCOPE skills"
+echo "$CHANGED" | grep -qE '^skills/' && SCOPE="$SCOPE skills"
 echo "$CHANGED" | grep -qE '^scripts/.+\.(sh|py)$' && SCOPE="$SCOPE scripts"
 echo "$CHANGED" | grep -qE '^docs/' && [[ -z "$SCOPE" ]] && SCOPE="docs-only"
 
