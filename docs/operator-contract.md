@@ -161,13 +161,40 @@ broken `main` damages reputation.  Therefore:
 
 **Workflow on a `feat/<name>` branch**:
 
-1. `git checkout -b feat/<name>` from latest `main`.
+1. `git checkout -b feat/<name>` from latest `main` (or a tag).
 2. Iterate; commit + push to `origin/feat/<name>` (not main).
-3. When work is validated locally, fast-forward merge to `main`:
+3. When work is ready, run the **pre-merge gate** (below).  All
+   four gates must pass before merge.
+4. Fast-forward merge to `main`:
    `git checkout main && git merge --ff-only feat/<name> && git push origin main`.
-4. Delete the branch: `git branch -d feat/<name> && git push origin --delete feat/<name>`.
-5. If the merge represents a user-visible milestone, also tag
-   (e.g., `git tag -a v0.2.0 -m "..."`).
+5. Delete the branch:
+   `git branch -d feat/<name> && git push origin --delete feat/<name>`.
+6. If the merge represents a user-visible milestone, also tag
+   (e.g., `git tag -a v0.2.0 -m "..."` + `git push origin v0.2.0`).
+
+**Pre-merge gate** (mandatory; operator concern 2026-05-18 ~21:50
+KST — "main 브랜치가 깨지는건 정말 부담스러움"):
+
+Four gates.  Automated gates (1, 3) run via
+[`scripts/pre-merge-check.sh`](../scripts/pre-merge-check.sh);
+manual gates (2, 4) require operator action.
+
+| # | Gate | Source | Mode |
+|---|------|--------|------|
+| 1 | **Audit CLEAN** — drift / contract / cost-model / secrets / TODOs | `scripts/audit-run.sh all` returns CLEAN verdict on the feat branch HEAD | automated |
+| 2 | **Functional integration test** — run the affected mission / skill end-to-end and verify output | manual (varies per change); skipped for doc-only changes with operator OK | manual |
+| 3 | **§5 marker compliance** — every commit touching `agents/` or `.claude/agents/*.md` carries `Requested-by: user` in body | `git log <base>..<feat> --grep="Requested-by:"` matches every §5-scope commit | automated |
+| 4 | **Operator merge OK** — merge itself is a public-surface change, so the final gate is human | explicit operator approval ("merge OK") in conversation | manual |
+
+If any gate fails, the work stays on the feat branch.  Fixes
+land as new commits on the feat branch (not retroactively rewriting
+history; preserves audit trail).  Then re-run gates.
+
+**Bootstrap exception**: the commit that *introduces* the
+branch-strategy rules and pre-merge gate (commits `a2a3807` and
+the one introducing `scripts/pre-merge-check.sh` itself) lands
+directly on `main` since the gate doesn't exist yet to validate
+them.  All subsequent structural changes go through the gate.
 
 **Tag convention**:
 
