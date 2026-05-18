@@ -156,13 +156,23 @@ For the operator's "helping people" vision this is leverage:
   Skill is valid spec; we can add the evolution loop later if
   it makes sense for our specific skills.
 
-**Trade-off**:
-- Claude Code Skill (simpler, our existing harness) = ~1 day,
-  works for our users only.
-- agentskills.io-compliant Skill = +0.5 day extra spec
-  conformance, works in Hermes too, listable on Skills Hub.
-- Recommended: go agentskills.io-compliant from day one.  Extra
-  effort is minimal and unlocks a real distribution channel.
+**Decision locked 2026-05-18 ~20:50 KST**: write to the
+agentskills.io open spec from day one.  Operator: "이왕이면 표준이
+있으면 표준으로 만드는게 좋지 않을까?".  
+
+Important correction to earlier framing: the "+0.5 day extra for
+spec conformance" estimate was based on a misread.  In reality,
+**Claude Code's Skills feature IS the agentskills.io spec**
+(Anthropic originated the spec, then open-sourced it).  So in
+our existing Claude Code harness, "spec-compliant" is the
+default — no extra work.  The ~38 other runtimes (Cursor,
+Goose, Gemini CLI, OpenAI Codex, GitHub Copilot, etc.) implement
+the same spec, so our skill drops in for them too without
+modification.
+
+**Concrete implication**: Step 1.2 "Wrap existing bash in SKILL.md"
+gets written to the spec directly.  No conversion phase later.
+No "v1 internal, v2 external" split.
 
 #### Bash pipeline → Skill conversion (unchanged from prior pass)
 
