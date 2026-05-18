@@ -212,20 +212,6 @@ A/B 제작 노트, 플랫폼별 업로드 메타데이터, 다음 10개 토픽 �
 
 둘 다 *Sintel* 트레일러 (CC-BY-3.0, © Blender Foundation — `durian.blender.org`)에서 추출.  공통 요소: 좌측 상단 출처 어트리뷰션 오버레이, 9:16 letterbox-blur 배경, 하단 safe-zone 박스 안의 libass 번인 자막.
 
-### 최근 미션
-
-| 미션 | 타입 | 소스 | 출력 | 총 소요 | QA |
-|------|------|------|------|---------|----|
-| `faceless-hittites-032538` | faceless-short | 토픽 프롬프트 + Pexels B-roll (8 windows) | 62.7 초 9:16 숏 (49 MB) | ~75 초 | 첫 시도 PASS |
-| `faceless-hittites-ko-032653` | faceless-short | 한국어 스크립트 + Yuna 음성 | 60.3 초 9:16 숏 (35 MB) | ~49 초 | 첫 시도 PASS |
-| `faceless-hydrogen-032742` | faceless-short | 토픽 프롬프트 + Pexels B-roll | 59.7 초 9:16 숏 (21 MB) | ~64 초 | 첫 시도 PASS |
-| `faceless-hydrogen-ko-032846` | faceless-short | 한국어 스크립트 + Yuna 음성 | 38.9 초 9:16 숏 (14 MB) | ~33 초 | 첫 시도 PASS |
-| `highlight-032405` | highlight | 한국어 CC-BY-3.0 인터뷰 클립 | 60 초 9:16 숏 | — | 첫 시도 PASS |
-| `summarize-025121` | summarize | Sintel 1080p · Blender CC-BY-3.0 | EN + KO `summary.md` (551 B) | — | 첫 시도 PASS |
-| `highlight-203219` | highlight | 초기 개발 fixture (2026-05-15) | 30 초 숏 | 73.2 초 | **FAIL** — QA 게이트, 재시도 소진 (블로커 파일 생성됨) |
-
-FAIL 행은 보존: QA 게이트는 형식 검사가 아닙니다.  `QA_RETRY_MAX` 소진 시 `records/blockers/<date>/<mission-id>.md`에 블로커 파일이 기록되고 미션이 정지합니다.  전체 미션 원장: [`docs/metrics-dashboard.md`](docs/metrics-dashboard.md).
-
 ### 파일럿 점수표 — 어느 버전에서 무엇이 좋아졌나
 
 운영자 질문: *"썸네일만으로는 뭐가 좋아지는지 안 보인다."*
@@ -249,39 +235,6 @@ v5 → v6 상승폭 (단일 라인 자막은 v5에서 이미 적용 완료, v6�
 JSON 수정 후 차트 재생성:
 `.venv/bin/python scripts/generate-scorecard-chart.py`.
 
-### 운영자 개입 추이 — 시스템이 점점 자율적이 되고 있는가?
-
-사람이 계속 키 결정을 해줘야 하는 멀티에이전트 시스템은 사실
-대체하려던 노동을 그대로 옮긴 것뿐입니다.  이 차트는 운영자가
-명시적으로 지시한 커밋 비율과 에이전트가 로드맵에서 스스로 집어
-온 커밋 비율을 매일 추적합니다.
-
-![2026-05-14부터 2026-05-17까지의 일별 커밋 수 누적 막대 차트, 시작 주체별 분할 (파랑 = 에이전트 자율, 빨강 = 사용자 시작), 오른쪽 축에 사용자 시작 비율 검은 라인](docs/metrics/intervention.png)
-
-솔직한 읽기: 라인이 아직 **원하는 방향**으로 가지 않고 있습니다.
-05-14 (사용자 0%)는 셋업 자동화.  05-15~16은 에이전트가 로드맵을
-스스로 굴린 야간 인프라 작업.  05-17 (42%)은 niche 결정 날이라
-운영자가 의도적으로 루프 안에 있었던 — 토픽 고르기, 모델 고르기,
-품질 갭 지적.  이런 *결정 페이즈*의 높은 개입은 정상.  목표는
-*생산 페이즈* 진입 후 (니치 확정, 정기 토픽 큐, 스케줄 업로드)
-라인을 15% 아래로 내리는 것.
-
-`Requested-by: user` 커밋 푸터 컨벤션은 2026-05-17 `7c6ff4f`에서
-도입됨 (차트의 점선) — 분류기에게 strict한 시그널을 향후로 줍니다.
-이전 커밋은 본문 텍스트 휴리스틱 매칭에 의존 → 과거 데이터의
-"사용자 시작" 리콜은 실제보다 낮을 가능성.
-
-원본 데이터 + 커밋별 분류: [`docs/metrics/intervention.json`](docs/metrics/intervention.json).  차트 재생성: `.venv/bin/python scripts/generate-intervention-chart.py`.
-
-### 미션별 타이밍 (v1 highlight 미션 한정)
-
-![미션별 시간 분해 — v1 highlight 미션, 단계(전사 + 선택 + 렌더 + 기타)별 스택 막대](docs/metrics/per-mission-time.png)
-
-![처리량 — 총 컴퓨트 시간 1초당 생성된 출력 초, v1 highlight 미션별 막대](docs/metrics/throughput-realtime.png)
-
-> **범위 안내**: 위 차트는 **`highlight-*` 미션만** 포함합니다 — `metrics.json`이 단계별 `stages_s` 분해를 포함하는 유일한 미션 타입이기 때문.  `faceless-short` 미션 타이밍은 미션별 `metrics.json`에 단일 `total_s`로 기록되며 (파이프라인이 단일 bash 스크립트 → 단계 분해 없음) 위 차트에 표시되지 않습니다.  차트 생성기 v2가 두 종류를 통합할 예정입니다.  새 미션이 추가된 후 차트 재생성: [`scripts/setup-venv.sh`](scripts/setup-venv.sh)을 한 번 실행 (`.venv/` 생성 + matplotlib 설치) → `.venv/bin/python scripts/generate-charts.py`.
-
-위 그래프의 모든 초는 로컬 CPU / GPU 시간 — 전사는 `whisper.cpp`, 선택은 `ollama` (`llama3.2:3b`), 렌더는 `ffmpeg`. **위 단계 동안 소비된 Anthropic API 토큰: 0.** Tier 1 / Tier 2 비용 방화벽은 [`docs/cost-model.md`](docs/cost-model.md) 참조.
 
 ## 분석가/리뷰어를 위한 안내
 
@@ -398,51 +351,69 @@ Claude API.
 - **Apple Silicon 권장** — 렌더 가속에 `h264_videotoolbox` 사용,
   `-allow_sw 1`로 Intel / Linux에서 libx264 자동 폴백
 - **여유 디스크 ~3 GB** — whisper.cpp `small` 모델 (~150 MB),
-  Sintel CC-BY-3.0 트레일러 fixture, `bootstrap.sh`의 합성 fixture 2개
+  Pexels B-roll 다운로드 (미션당 ~50 MB, 자동 정리), 출력 mp4
 - **도구**: `ffmpeg` (libass 포함 빌드), `ffprobe`, `whisper.cpp`,
-  `ollama`, `yt-dlp`. `scripts/bootstrap.sh`가 모두 점검하고 누락된
+  `ollama`, `yt-dlp`, `aubio` (music-video 미션의 비트 / 온셋 감지에
+  필요), `jq`. `scripts/bootstrap.sh`가 모두 점검하고 누락된
   도구별로 OS에 맞는 `brew install …` / `apt install …` 명령을 정확히
   출력 — 도구 누락이 침묵 실패로 끝나지 않음.
+- **API 키**: 무료 [Pexels API 키](https://www.pexels.com/api/)
+  (시간당 200 req — 개인 사용에 충분) — B-roll fetch 에 필요.
+  `bootstrap.sh` 가 `.env` 에 `PEXELS_API_KEY` 안 잡혀 있으면 경고.
 
-## 빠른 시작
+## 빠른 시작 — music-video 플로우 (메인 쇼케이스)
 
 ```bash
-# 클론 — 두 방식 모두 가능
-git clone https://github.com/MelonS/MelonS-Agents.git    # HTTPS
-# git clone git@github.com:MelonS/MelonS-Agents.git      # SSH
+# 1) 클론 + cd
+git clone https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 
-# 부트스트랩: .env.example을 .env로 복사, 도구 점검, whisper 모델
-# (~150 MB) + ollama 하이라이트 모델 (llama3.2:3b) 자동 다운로드,
-# macOS 전용 합성 fixture 2개 생성.
+# 2) 부트스트랩 (도구 점검, whisper / ollama 모델 자동 다운로드,
+#    누락된 거에 대해 정확한 brew/apt 명령 출력, Pexels 키 미설정 경고)
 ./scripts/bootstrap.sh
 
-# Sintel 트레일러 (CC-BY-3.0)로 9:16 숏 생성
+# 3) .env 편집 — PEXELS_API_KEY 설정 (무료, 위 가입 링크)
+# (bootstrap 단계가 .env 를 .env.example 에서 자동 생성함)
+
+# 4) Suno (무료 티어, suno.com) 에서 음악 트랙 생성.  예 프롬프트:
+#    "late night jazz lofi, soft piano, 60 BPM, [Instrumental]"
+#    → mp3 다운 후 assets/music/ 에 드롭
+#    (gitignore 됨 — license 추적은 assets/music/SOURCES.md 에)
+
+# 5) 트랙으로 music-video 미션 실행
+./agents/missions/music-video/run.sh upload1 "assets/music/<your_track>.mp3"
+
+# 6) (옵션이지만 핵심) phrase-aware 쉐이더 combo 적용
+#    — pond surface ripple + warm halation, 95.8 BPM phrase cadence
+#       (다른 템포는 스크립트 안에서 envelope 조정)
+./scripts/music-video-shaders.sh combo \
+    records/missions/$(date +%Y-%m-%d)/music-video-upload1-*/outputs/short.mp4 \
+    outputs/publish/my-first-short.mp4
+```
+
+미션 베이스 출력은
+`records/missions/<date>/music-video-<id>-<HHMMSS>/outputs/short.mp4`
+에 저장 (gitignore — 산출물은 본인 머신에만 남고 GitHub 에는
+에이전트 시스템 자체만 올라감).  쉐이더 단계가 최종 mp4 를
+`outputs/publish/` 로 복사 → 업로드 시 거기서 픽업.
+
+자동화된 일일 cadence: `records/queue/music-video-pending.txt` 에
+트랙 큐잉 후 `scripts/daily-music-video.sh --all` 실행 (또는
+launchd / cron 으로 스케줄).
+
+### v1 플로우 — 단일 클립 highlight (기준점)
+
+```bash
 ./agents/missions/highlight/run.sh https://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4
 ```
 
-미션은 산출물을
-`records/missions/<date>/highlight-<HHMMSS>/outputs/short.mp4`에
-저장 (gitignore — 산출물은 본인 머신에만 남고 GitHub에는 에이전트
-시스템 자체만 올라감).
-
-여러 소스를 한 번에 처리:
+다중 소스 배치 + 자율 큐 드레이너 (v1 용):
 
 ```bash
 ./scripts/batch-mission.sh -f sources.txt
-```
-
-큐 기반 자율 실행 (launchd 스케줄러가 사용):
-
-```bash
 echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 ./scripts/mission-queue.sh
-```
-
-야간 스케줄러 설치:
-
-```bash
-./scripts/install-scheduler.sh install
+./scripts/install-scheduler.sh install      # 야간 launchd
 ```
 
 ## 운영 계약
@@ -455,46 +426,6 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 - **결제 방화벽**: 유료 API, SaaS 구독, 클라우드 리소스 생성은 사용자의 명시적 확인이 필요. 로컬 자원(Ollama, FFmpeg, whisper.cpp, brew)은 완전 자율.
 
 전체 계약: [`CLAUDE.md`](CLAUDE.md) 및 [`config/policies.yaml`](config/policies.yaml) 자율 모드 규칙 참조.
-
-## 상태
-
-<!-- status:start -->
-- [x] 계층형 에이전트 구조 (오케스트레이터 + 미션 서브 에이전트 4종 + 읽기 전용 auditor 1종)
-- [x] 코드 / 데이터 분리 강제 (records/ gitignore)
-- [x] 환경 변수 기반 도구 경로 (.env / .env.example)
-- [x] PoC 엔드투엔드: 하이라이트 추출 (EN + KO)
-- [x] libass 자막 번인 (`agents/lib/env.sh`가 libass 포함 ffmpeg 자동 감지; macOS에서는 `ffmpeg-full` keg로 폴백)
-- [x] 다국어 whisper.cpp (small) + 언어 인식 하이라이트 프롬프트
-- [x] 배치 실행기 (scripts/batch-mission.sh)
-- [x] 로직 변경 시 origin/main 자동 커밋 + 자동 푸시
-- [x] 자율 모드용 야간 launchd 스케줄러
-- [x] 4종 미션 운영 가능: highlight, summarize, shorts-batch, faceless-short
-- [x] Faceless-short 파이프라인 — 토픽 프롬프트 → ollama 스크립트 → Kokoro-ONNX TTS (Apache 2.0) → whisper.cpp 타이밍 + 스크립트 정합 캡션 교정 → Pexels B-roll → 9:16 풀화면 렌더; 한국어는 macOS Yuna + AppleGothic.  파일럿 증거: [`docs/pilots/`](docs/pilots/)
-- [x] 단일 패스 ffmpeg 렌더링 (~3× 렌더 속도 향상)
-- [x] 이중 언어 요약 미션 (전사 → 구조화된 EN+KO 요약)
-- [x] 미션별 비용 / 실행 시간 메트릭
-- [x] 실 CC 라이선스 fixture (Blender 오픈 무비) + 다운로더
-- [x] 표준 9:16 레이아웃 엔진 — safe zone 마진, 반투명 자막 박스, 상단 좌측 출처 오버레이
-- [x] 3종 미션 전반에 source-attribution 와이어링 (`outputs/SOURCES.txt` + 번인 워터마크 + `summary.md` 푸터)
-- [x] QA 피드백 재시도 루프 (실패 미션 `QA_RETRY_MAX`까지 자동 재시도, 이후 `records/blockers/`로)
-- [x] 저작권 필터 v1 — 도메인 허용목록, 게시 게이트, 스트라이크 로그, 스트라이크 인지 거부
-- [x] License-string probe — archive.org + commons.wikimedia.org
-- [x] 일별 로드맵 [`docs/roadmap.md`](docs/roadmap.md) ("다음에 무엇을" 단일 출처)
-- [x] 플랫폼별 재이용 규칙 — `scripts/publish-gate.sh` (`internal-demo` / `public` / `youtube` / `instagram` / `tiktok`, 4개 `publish_rules` 필드 모두 소비)
-- [x] 저장소 auditor 서브에이전트 + 능동 surface (`docs/audit/CURRENT-ALERT.md` 자동 유지, `scripts/audit-run.sh`)
-- [x] **반응형 auditor — L1**: git post-commit 훅 (`scripts/hooks/post-commit.sh`)이 드리프트 위험 경로(`.claude/agents/`, `agents/`, `config/`, `CLAUDE.md`, `docs/operator-contract.md`, `scripts/audit-run.sh`, `.claude/settings.json`)를 건드린 커밋 직후 `audit-run.sh contract`을 백그라운드 실행. `scripts/install-hooks.sh install`로 설치.
-- [x] **반응형 auditor — L2**: 15분 간격 미션 이상 폴 (`scripts/audit-poll.sh` via `com.melons.agents.audit-poll.plist`)이 새 블로커 + QA-FAIL 클러스터를 감지하면 포커스된 audit 발화; 정상 시 no-op로 저렴. `scripts/install-scheduler.sh install audit-poll`로 설치.
-- [x] Clone-and-go 재현성 — 호스트 비종속 `.env.example`, OS 인식 `scripts/bootstrap.sh` (설치 명령 안내), `scripts/fetch-whisper-model.sh` 모델 자동 다운로드, `scripts/test-fresh-clone.sh` 시뮬레이터 + PASS 증거 [`docs/onboarding/fresh-clone-log.txt`](docs/onboarding/fresh-clone-log.txt)
-- [x] 미션별 메트릭 차트 (v1 highlight 미션 한정) — [`docs/metrics/per-mission-time.png`](docs/metrics/per-mission-time.png) + [`docs/metrics/throughput-realtime.png`](docs/metrics/throughput-realtime.png), `.venv/bin/python scripts/generate-charts.py`로 재생성 (venv는 `scripts/setup-venv.sh`)
-- [x] **단일 라인 자막 강제** — `scripts/split-long-captions.py`가 캡션 교정과 ASS 렌더 사이에 실행, 28자 초과 큐를 자연 구두점에서 분할. 모바일 2줄 박스 오버랩 차단.
-- [ ] 실제 사용자 URL fixture — _차단, 사용자 URL 대기 중_
-- [ ] 다른 호스트용 License probe 추가 (Vimeo CC 채널 등) — _보류, Vimeo는 item별 license endpoint 없음; 필요 시 재검토_
-- [ ] Audio fingerprint 체크 (chromaprint / `fpcalc`) — _보류, 비교용 fingerprint dataset 없음; 첫 takedown 이후 재검토_
-- [ ] 소스 프레임 로고 / 워터마크 검출 — _보류, OCR 또는 학습 모델 필요; 실패 모드 관측 시 재검토_
-- [ ] editor 내부 반복 QA-피드백 루프 (transcribe/select 재실행 없이 단일 출력 재컷) — _파킹, coarse retry가 compute 낭비할 때만 유용; 아직 미관측_
-<!-- status:end -->
-
-> 위 미체크 항목은 **모두 의도된 보류**입니다 — 각 항목에 사유가 인라인으로 적혀 있습니다. 일별 우선순위 큐는 여기가 아니라 [`docs/roadmap.md`](docs/roadmap.md)에 있습니다.
 
 ## 라이선스
 

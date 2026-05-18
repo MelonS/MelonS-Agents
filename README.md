@@ -227,20 +227,6 @@ Six-second slice of `highlight-015213/outputs/short.mp4` — Sintel trailer (CC-
 
 Both sourced from the *Sintel* trailer (CC-BY-3.0, © Blender Foundation — `durian.blender.org`).  Top-left source-attribution overlay, 9:16 letterbox-blur background, libass-burned caption inside the bottom safe-zone box.
 
-### Recent missions
-
-| Mission | Type | Source | Output | Wall time | QA |
-|---------|------|--------|--------|-----------|----|
-| `faceless-hittites-032538` | faceless-short | topic prompt + Pexels B-roll (8 windows) | 62.7 s 9:16 short (49 MB) | ~75 s | PASS attempt 1 |
-| `faceless-hittites-ko-032653` | faceless-short | Korean script + Yuna voice | 60.3 s 9:16 short (35 MB) | ~49 s | PASS attempt 1 |
-| `faceless-hydrogen-032742` | faceless-short | topic prompt + Pexels B-roll | 59.7 s 9:16 short (21 MB) | ~64 s | PASS attempt 1 |
-| `faceless-hydrogen-ko-032846` | faceless-short | Korean script + Yuna voice | 38.9 s 9:16 short (14 MB) | ~33 s | PASS attempt 1 |
-| `highlight-032405` | highlight | Korean CC-BY-3.0 interview clip | 60 s 9:16 short | — | PASS attempt 1 |
-| `summarize-025121` | summarize | Sintel 1080p · Blender CC-BY-3.0 | EN + KO `summary.md` (551 B) | — | PASS attempt 1 |
-| `highlight-203219` | highlight | earlier dev fixture (2026-05-15) | 30 s short | 73.2 s | **FAIL** — QA gate, retry exhausted (blocker file written) |
-
-The FAIL row is preserved: the QA gate isn't theatre.  On exhaustion of `QA_RETRY_MAX`, a blocker file is written to `records/blockers/<date>/<mission-id>.md` and the mission halts.  Full ledger of all tracked runs: [`docs/metrics-dashboard.md`](docs/metrics-dashboard.md).
-
 ### Pilot scorecard — how each version actually improved
 
 Operator-asked question: *"thumbnails alone don't tell me what's
@@ -264,44 +250,6 @@ reasoning + dimension definitions in
 data: [`docs/pilots/scorecard.json`](docs/pilots/scorecard.json).
 Regenerate the chart after editing the JSON:
 `.venv/bin/python scripts/generate-scorecard-chart.py`.
-
-### Operator-intervention trend — is the system getting more autonomous?
-
-A multi-agent system that needs constant human steering hasn't
-escaped the same effort it was meant to replace.  This chart tracks
-the ratio of commits with explicit user direction vs commits the
-agent picked up on its own.
-
-![Stacked-bar chart of commits per day from 2026-05-14 to 2026-05-17, split by initiator (blue = agent-autonomous, red = user-initiated), with a black line tracking user-initiated percentage on the right axis](docs/metrics/intervention.png)
-
-Honest read: the line is **not** trending the right direction yet.
-05-14 (0 % user) was setup automation.  05-15 and 05-16 were
-overnight infra work where the agent ran the roadmap.  05-17 (42 %
-user) was a niche-decision day — the operator was deliberately in
-the loop choosing topics, picking models, and surfacing quality
-gaps.  This high-intervention pattern is expected during decision
-phases; the target is for the line to drop back under 15 % once
-the system enters production mode (chosen niche, recurring topic
-queue, scheduled uploads).
-
-The `Requested-by: user` commit-message marker (introduced in
-`7c6ff4f` on 2026-05-17 — dashed line in the chart) gives the
-classifier a strict signal going forward.  Older commits are
-classified by heuristic match on the body text, so the historical
-recall for "user-initiated" is lower than reality.
-
-Source data + per-commit classification: [`docs/metrics/intervention.json`](docs/metrics/intervention.json).  Regenerate the chart any time with `.venv/bin/python scripts/generate-intervention-chart.py`.
-
-### Per-mission timing (v1 highlight missions only)
-
-![Per-mission time breakdown — v1 highlight missions, stacked by stage (transcribe + select + render + other)](docs/metrics/per-mission-time.png)
-
-![Throughput — output seconds produced per second of total compute time, one bar per v1 highlight mission](docs/metrics/throughput-realtime.png)
-
-> **Scope note**: the charts cover **only `highlight-*` missions** because their `metrics.json` carries a per-stage `stages_s` breakdown.  `faceless-short` mission timing is captured per-run in the mission's own `metrics.json` (no stage split — pipeline is a single bash script), so it doesn't show up here.  v2 of the chart generator would unify the two.  Charts regenerate from current `records/missions/*/metrics.json` via `scripts/setup-venv.sh` once + `.venv/bin/python scripts/generate-charts.py`.
-
-Every second plotted above is local CPU / GPU time: `whisper.cpp` for transcribe, `ollama` (`llama3.2:3b`) for select, `ffmpeg` for render.  **Anthropic API tokens spent during these stages: 0.**  The Tier-1 / Tier-2 cost
-firewall is explained in [`docs/cost-model.md`](docs/cost-model.md).
 
 ## For analysts / reviewers
 
@@ -419,52 +367,72 @@ Claude API for orchestration.
 - **Apple Silicon recommended** — `h264_videotoolbox` is used for
   hardware-accelerated render; `-allow_sw 1` is set so the pipeline
   falls back to libx264 on Intel / Linux
-- **~3 GB free disk** — whisper.cpp `small` model (~150 MB), Sintel
-  CC-BY-3.0 trailer fixture, two synthetic `bootstrap.sh` fixtures
+- **~3 GB free disk** — whisper.cpp `small` model (~150 MB), Pexels
+  B-roll downloads (~50 MB / mission, auto-cleaned), output mp4s
 - **Tools**: `ffmpeg` (built with libass), `ffprobe`, `whisper.cpp`,
-  `ollama`, `yt-dlp`.  `scripts/bootstrap.sh` checks all of them and
-  prints an exact `brew install …` / `apt install …` command for
-  anything that's missing, so a missing tool isn't a silent failure.
+  `ollama`, `yt-dlp`, `aubio` (for the music-video mission's beat /
+  onset detection), `jq`.  `scripts/bootstrap.sh` checks all of them
+  and prints an exact `brew install …` / `apt install …` command for
+  anything missing, so a missing tool isn't a silent failure.
+- **API key**: free [Pexels API key](https://www.pexels.com/api/)
+  (200 req/hour — plenty for personal use) for B-roll fetch.
+  `bootstrap.sh` warns if `PEXELS_API_KEY` isn't set in `.env`.
 
-## Quick start
+## Quick start — music-video flow (the showcase)
 
 ```bash
-# Clone — either URL form works
-git clone https://github.com/MelonS/MelonS-Agents.git    # HTTPS
-# git clone git@github.com:MelonS/MelonS-Agents.git      # SSH
+# 1) clone + cd
+git clone https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 
-# Boot: copies .env from .env.example, verifies tools, auto-fetches
-# the whisper model (~150 MB) and the ollama highlight model
-# (llama3.2:3b), generates two macOS-only synthetic fixtures.
+# 2) bootstrap (verifies tools, auto-fetches whisper model + ollama model,
+#    prints exact brew/apt commands for anything missing, warns if the
+#    Pexels API key isn't set)
 ./scripts/bootstrap.sh
 
-# Produce a 9:16 short from the Sintel trailer (CC-BY-3.0)
+# 3) edit .env — set PEXELS_API_KEY (free; signup link above)
+# (the bootstrap step auto-created .env from .env.example)
+
+# 4) generate one or more music tracks on Suno (free tier, suno.com)
+#    with prompts like "late night jazz lofi, soft piano, 60 BPM,
+#    [Instrumental]" — download the mp3 and drop into assets/music/
+#    (gitignored — license trail noted in assets/music/SOURCES.md)
+
+# 5) run the music-video mission against your music file
+./agents/missions/music-video/run.sh upload1 "assets/music/<your_track>.mp3"
+
+# 6) (optional, but the whole point) apply the phrase-aware shader combo
+#    — pond surface ripple + warm halation with envelope tied to a 95.8
+#    BPM phrase cadence (tunable inside the script for other tempos):
+./scripts/music-video-shaders.sh combo \
+    records/missions/$(date +%Y-%m-%d)/music-video-upload1-*/outputs/short.mp4 \
+    outputs/publish/my-first-short.mp4
+```
+
+The mission writes its base output to
+`records/missions/<date>/music-video-<id>-<HHMMSS>/outputs/short.mp4`
+(gitignored — products stay on your machine; only the agent system
+itself is on GitHub).  The shader step copies a final mp4 into
+`outputs/publish/`, where you can pick it up for upload.
+
+For a hands-off daily cadence, queue tracks in
+`records/queue/music-video-pending.txt` and run
+`scripts/daily-music-video.sh --all` (or schedule it via launchd / cron).
+
+### v1 flow — single-clip highlight (kept as a baseline)
+
+```bash
 ./agents/missions/highlight/run.sh https://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4
 ```
 
-The mission writes its output to
-`records/missions/<date>/highlight-<HHMMSS>/outputs/short.mp4`
-(gitignored — products stay on your machine; only the agent system
-itself is on GitHub).
-
-Multi-source batch:
+Multi-source batch and the autonomous queue drainer also exist for the
+v1 flow:
 
 ```bash
 ./scripts/batch-mission.sh -f sources.txt
-```
-
-Queue-based autonomous drain (used by the launchd scheduler):
-
-```bash
 echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 ./scripts/mission-queue.sh
-```
-
-Install the nightly scheduler:
-
-```bash
-./scripts/install-scheduler.sh install
+./scripts/install-scheduler.sh install      # nightly launchd
 ```
 
 ## Operator contract
@@ -477,46 +445,6 @@ This repository is fully agent-operated. The day-to-day rules:
 - **Money firewall**: paid APIs, SaaS subscriptions, and cloud-resource creation require explicit user confirmation. Local resources (Ollama, FFmpeg, whisper.cpp, brew) stay fully autonomous.
 
 Full contract: see [`CLAUDE.md`](CLAUDE.md) and the [`config/policies.yaml`](config/policies.yaml) autonomy rules.
-
-## Status
-
-<!-- status:start -->
-- [x] Hierarchical agent scaffold (orchestrator + 4 mission subagents + 1 read-only auditor subagent)
-- [x] Code/Data separation enforced (records/ gitignored)
-- [x] Env-driven tool paths (.env / .env.example)
-- [x] PoC end-to-end: highlight extraction (EN + KO)
-- [x] libass burned captions (`agents/lib/env.sh` auto-detects a libass-enabled ffmpeg; falls back to the `ffmpeg-full` keg on macOS)
-- [x] Multilingual whisper.cpp (small) + language-aware highlight prompt
-- [x] Batch runner (scripts/batch-mission.sh)
-- [x] Auto-commit + auto-push of every logic change to origin/main
-- [x] Nightly launchd scheduler for autonomous mode
-- [x] Four mission types operational: highlight, summarize, shorts-batch, faceless-short
-- [x] Faceless-short pipeline — topic prompt → ollama script → Kokoro-ONNX TTS (Apache 2.0) → whisper.cpp timing + script-aware caption correction → Pexels B-roll → 9:16 screen-fill render; Korean variant via macOS Yuna + AppleGothic.  Pilot evidence: [`docs/pilots/`](docs/pilots/)
-- [x] Single-pass ffmpeg render (~3× render speedup)
-- [x] Bilingual summarize mission (transcribe → structured EN+KO summary)
-- [x] Cost / runtime metrics per mission
-- [x] Real CC-licensed source fixtures (Blender open movies) + downloader
-- [x] Standard 9:16 layout engine — safe-zone margins, semi-transparent caption box, top-left source-attribution overlay
-- [x] Source-attribution wiring across all three missions (`outputs/SOURCES.txt` + burned watermark + `summary.md` footer)
-- [x] QA feedback retry loop (failed missions auto-retried up to `QA_RETRY_MAX`, then dropped to `records/blockers/`)
-- [x] Copyright filter v1 — domain allowlist, publish-gate, strike-record log, strike-aware source rejection
-- [x] License-string probe for archive.org + commons.wikimedia.org
-- [x] Day-level roadmap at [`docs/roadmap.md`](docs/roadmap.md) (source of truth for "what to work on next")
-- [x] Per-platform reuse rules in `scripts/publish-gate.sh` (`internal-demo` / `public` / `youtube` / `instagram` / `tiktok` — honors all four `publish_rules` fields)
-- [x] Repository auditor subagent + active surface (`docs/audit/CURRENT-ALERT.md` auto-maintained by `scripts/audit-run.sh`)
-- [x] **Reactive auditor — L1**: git post-commit hook (`scripts/hooks/post-commit.sh`) fires `audit-run.sh contract` automatically when a commit touches drift-risk paths (`.claude/agents/`, `agents/`, `config/`, `CLAUDE.md`, `docs/operator-contract.md`, `scripts/audit-run.sh`, `.claude/settings.json`). Install with `scripts/install-hooks.sh install`.
-- [x] **Reactive auditor — L2**: 15-min mission-anomaly poll (`scripts/audit-poll.sh` via `com.melons.agents.audit-poll.plist`) detects new blockers + QA-FAIL bursts and fires a focused audit; cheap no-op when nothing's wrong. Install with `scripts/install-scheduler.sh install audit-poll`.
-- [x] Clone-and-go reproducibility — host-agnostic `.env.example`, OS-aware `scripts/bootstrap.sh` with install hints, `scripts/fetch-whisper-model.sh` model auto-fetch, `scripts/test-fresh-clone.sh` simulator with PASS evidence at [`docs/onboarding/fresh-clone-log.txt`](docs/onboarding/fresh-clone-log.txt)
-- [x] Per-mission metric charts (v1 highlight missions only) — [`docs/metrics/per-mission-time.png`](docs/metrics/per-mission-time.png) + [`docs/metrics/throughput-realtime.png`](docs/metrics/throughput-realtime.png), regenerated by `.venv/bin/python scripts/generate-charts.py` (venv via `scripts/setup-venv.sh`)
-- [x] **Single-line caption enforcement** — `scripts/split-long-captions.py` runs between caption-correction and ASS rendering, splits any cue > 28 chars at natural punctuation breaks. Stops 2-line opaque-box overlap on mobile.
-- [ ] Real user-supplied URL fixture — _blocked, waiting on URL from user_
-- [ ] License-string probe for additional hosts (Vimeo CC channel, etc.) — _deferred, Vimeo lacks a per-item license endpoint; revisit on demand_
-- [ ] Audio-fingerprint check (chromaprint / `fpcalc`) — _deferred, needs a fingerprint dataset to compare against; revisit after first takedown_
-- [ ] Logo / watermark detection on source frames — _deferred, needs OCR or a trained model; revisit when the failure mode is observed_
-- [ ] Iterative QA-feedback loop *inside* editor (per-output re-cut without rerunning transcribe/select) — _parked, only useful when coarse retry wastes compute; not yet observed_
-<!-- status:end -->
-
-> Unchecked items above are **all intentionally deferred** — each carries an inline reason. The day-level priority queue lives in [`docs/roadmap.md`](docs/roadmap.md), not here.
 
 ## License
 

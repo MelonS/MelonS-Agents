@@ -46,6 +46,10 @@ print_install_hint() {
       echo "  → brew install ollama  or  https://ollama.com/download" ;;
     Darwin:yt-dlp)
       echo "  → brew install yt-dlp" ;;
+    Darwin:aubiotrack|Darwin:aubioonset)
+      echo "  → brew install aubio  (installs both aubiotrack and aubioonset — required by music-video mission for beat + drum-onset detection)" ;;
+    Darwin:jq)
+      echo "  → brew install jq  (required by metrics + Pexels JSON parsing)" ;;
     Linux:ffmpeg|Linux:ffprobe)
       echo "  → sudo apt install ffmpeg   (Debian/Ubuntu; the package includes libass)" ;;
     Linux:whisper-cli)
@@ -54,6 +58,10 @@ print_install_hint() {
       echo "  → curl -fsSL https://ollama.com/install.sh | sh" ;;
     Linux:yt-dlp)
       echo "  → sudo apt install yt-dlp   or   pipx install yt-dlp" ;;
+    Linux:aubiotrack|Linux:aubioonset)
+      echo "  → sudo apt install aubio-tools  (Debian/Ubuntu)" ;;
+    Linux:jq)
+      echo "  → sudo apt install jq" ;;
     *)
       echo "  → install $tool from its upstream docs" ;;
   esac
@@ -62,7 +70,11 @@ print_install_hint() {
 # --- 2 + 3. tool versions + libass --------------------------------------
 echo "=== tool versions ==="
 missing=()
-for entry in "FFMPEG_BIN:ffmpeg" "FFPROBE_BIN:ffprobe" "WHISPER_CLI_BIN:whisper-cli" "OLLAMA_BIN:ollama" "YT_DLP_BIN:yt-dlp"; do
+# AUBIO_TRACK_BIN / AUBIO_ONSET_BIN are looked up via PATH if not set in .env
+: "${AUBIO_TRACK_BIN:=$(command -v aubiotrack || true)}"
+: "${AUBIO_ONSET_BIN:=$(command -v aubioonset || true)}"
+: "${JQ_BIN:=$(command -v jq || true)}"
+for entry in "FFMPEG_BIN:ffmpeg" "FFPROBE_BIN:ffprobe" "WHISPER_CLI_BIN:whisper-cli" "OLLAMA_BIN:ollama" "YT_DLP_BIN:yt-dlp" "AUBIO_TRACK_BIN:aubiotrack" "AUBIO_ONSET_BIN:aubioonset" "JQ_BIN:jq"; do
   var="${entry%%:*}"
   tool="${entry##*:}"
   bin="${!var:-}"
@@ -107,6 +119,14 @@ for entry in "FFMPEG_BIN:ffmpeg" "FFPROBE_BIN:ffprobe" "WHISPER_CLI_BIN:whisper-
     yt-dlp)
       printf "✅ %-12s " "$tool"
       "$bin" --version 2>&1 | head -1
+      ;;
+    aubiotrack|aubioonset)
+      # aubio CLIs don't support --version; print "installed at $bin" instead
+      printf "✅ %-12s installed at %s\n" "$tool" "$bin"
+      ;;
+    jq)
+      printf "✅ %-12s " "$tool"
+      ("$bin" --version 2>&1 | head -1) || true
       ;;
   esac
 done
@@ -156,6 +176,28 @@ echo
 echo "=== records dir ==="
 mkdir -p "$RECORDS_DIR"
 echo "✅ $RECORDS_DIR (writable: $([[ -w "$RECORDS_DIR" ]] && echo yes || echo no))"
+
+# --- music-video specific checks ---------------------------------------
+echo
+echo "=== music-video mission readiness ==="
+if [[ -z "${PEXELS_API_KEY:-}" ]]; then
+  echo "⚠ PEXELS_API_KEY is not set in .env"
+  echo "  → free tier: sign up at https://www.pexels.com/api/  (200 req/hour, plenty for personal use)"
+  echo "  → then set: PEXELS_API_KEY=<your_key>  in .env"
+else
+  echo "✅ PEXELS_API_KEY is set (length=${#PEXELS_API_KEY})"
+fi
+
+music_count=$(find assets/music -maxdepth 1 -type f \( -name '*.mp3' -o -name '*.wav' -o -name '*.m4a' -o -name '*.flac' -o -name '*.ogg' \) 2>/dev/null | wc -l | tr -d ' ')
+if [[ "$music_count" -eq 0 ]]; then
+  echo "⚠ assets/music/ has no audio files yet"
+  echo "  → the music-video mission needs an mp3/wav/m4a/flac/ogg input"
+  echo "  → operator generates tracks on Suno (free tier), Pixabay Music, YT Audio Library, etc."
+  echo "  → drop the file in assets/music/ (gitignored — never committed)"
+  echo "  → see assets/music/README.md for the source shortlist and assets/music/SOURCES.md for the per-track license trail"
+else
+  echo "✅ assets/music/ has $music_count audio file(s) ready"
+fi
 
 echo
 echo "=== autonomy mode ==="
@@ -214,9 +256,19 @@ if (( ${#missing[@]} > 0 )); then
 fi
 echo "✅ bootstrap ok"
 echo
-echo "Try a mission against the Sintel trailer (CC-BY-3.0):"
+echo "Next steps:"
+echo ""
+echo "  [music-video, the current showcase]"
+echo "  1) drop a music file into assets/music/"
+echo "     (free options: Suno, Pixabay Music, YouTube Audio Library, FMA"
+echo "      — see assets/music/README.md)"
+echo "  2) ./agents/missions/music-video/run.sh upload1 \"assets/music/<your_track>.mp3\""
+echo "  3) ./scripts/music-video-shaders.sh combo \\"
+echo "       records/missions/\$(date +%Y-%m-%d)/music-video-upload1-*/outputs/short.mp4 \\"
+echo "       outputs/publish/my-first-short.mp4"
+echo ""
+echo "  [v1 highlight baseline — works without a music file]"
 echo "  ./agents/missions/highlight/run.sh https://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4"
 if [[ "$OS" == "Darwin" && -f "$FIXTURE_DIR/lecture.mp4" ]]; then
-  echo "or against the local synthetic fixture:"
   echo "  ./agents/missions/highlight/run.sh $FIXTURE_DIR/lecture.mp4"
 fi
