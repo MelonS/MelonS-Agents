@@ -54,6 +54,13 @@ if [[ -z "$SRC" || -z "$DST" ]]; then
   exit 64
 fi
 [[ -f "$SRC" ]] || { echo "❌ input not found: $SRC" >&2; exit 64; }
+# §8 exception: `/opt/homebrew/bin/ffmpeg` (and `ffprobe` at the bottom of
+# this script) appear ONLY as fallback values inside `${FFMPEG_BIN:-...}` /
+# `${FFPROBE_BIN:-...}` parameter expansion — never as the resolved path.
+# When `agents/lib/env.sh` sources cleanly above, $FFMPEG_BIN is set via
+# its libass-aware discovery loop and the literal here is unreachable.
+# Same documented-exception pattern as `agents/lib/env.sh` itself and
+# `scripts/audit-run.sh`'s claude-CLI fallback.
 [[ -x "${FFMPEG_BIN:-/opt/homebrew/bin/ffmpeg}" ]] || { echo "❌ FFMPEG_BIN not executable" >&2; exit 1; }
 
 case "$EFFECT" in

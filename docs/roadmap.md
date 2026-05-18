@@ -15,37 +15,21 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 ## Now — active focus
 
-_Last updated 2026-05-17 ~20:10 KST.  Active goal is
-**[Production-ready music-video short](goal.md#active-goal)** — operator
-direction at ~20:00: "실제로 올릴수있는 정도의 쇼츠를 만들어 내야함.
-계속 테스트만 하는건 의미없음."  Cost-pressure context: SSD purchase
-deferred, Suno paid deferred, disk pressure ongoing._
+_Last updated 2026-05-18 ~14:10 KST.  Previous active goal
+"Production-ready music-video short" closed 2026-05-17 ~23:30 KST
+(operator uploaded `03e-velvet1-jazz-combo.mp4` to YouTube; goal
+migrated to `docs/goal.md` Past goals).  No active goal — operator
+sets the next one._
 
-1. **Music source resolution** — settle one license-clean track in
-   `assets/music/` (gitignored) + tracked `assets/music/SOURCES.md`
-   with source + license URL.  Path order: YouTube Audio Library
-   (commercial-safe on YT Shorts) → Pixabay Music → operator-supplied.
-   Do **not** spend on Suno paid or any other paid music service in
-   this turn.
+_Operator-actioned, not a new goal_: 24h post-publish metrics
+capture in
+[`docs/pilots/first-upload-metrics.md`](pilots/first-upload-metrics.md)
+once the upload crosses the 24h mark (~23:30 KST 2026-05-18).
 
-2. **One real render pass on the chosen track** — `music-video` mission
-   end-to-end with the resolved track, v6 effects integrated, mood
-   keywords matching the track's vibe.  Output lands at a publish-ready
-   path (e.g. `outputs/publish/<slug>.mp4`), not buried under
-   `records/missions/<date>/<id>/outputs/`.
-
-3. **Operator review** — operator watches the mp4 and either says
-   "이거 올려" (close the goal) or names the specific delta needed
-   (taste signal — adjust one knob, re-render once).
-
-4. **(If approved)** stage the mp4 + a one-line `assets/music/SOURCES.md`
-   citation for the upload step.  Optional follow-on: capture first 24h
-   watch-time once operator uploads.
-
-> Side-track (continues alongside #1): after `ab6555e` cleared the §8
-> plist carry-forward, the next audit-poll firing (≤15 min) or 03:00
-> baseline should auto-clear `docs/audit/CURRENT-ALERT.md`.  No action
-> needed unless the alert persists past 03:00.
+> Open queue items below in "Next" are eligible today — see #1
+> (filter-repo backup-branch deletion, eligible 2026-05-18+).  None
+> blocks operator's next-goal decision; advance only with explicit
+> direction since branch deletion is a destructive remote op.
 
 
 ## Next — queued, in priority order

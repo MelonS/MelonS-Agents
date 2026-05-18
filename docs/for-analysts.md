@@ -33,10 +33,11 @@ Tier 1 — Conversational      ┃ Anthropic API. Opus + Sonnet.
                              ┃ Cost lives here.
 Tier 2 — Mission execution   ┃ Local. bash + ffmpeg + whisper.cpp.
                              ┃ Zero API cost. Free.
-Tier 1 (selectively)         ┃ One creative stage — narration-script
-within Tier 2                ┃ generation for faceless-short — routes
-                             ┃ to Sonnet via the existing Max-plan
-                             ┃ subscription quota (no incremental $).
+Tier 1 (opt-in)              ┃ One creative stage — faceless-short
+within Tier 2                ┃ narration-script generation — can route
+                             ┃ to Sonnet via FACELESS_SCRIPT_OVERRIDE
+                             ┃ (Max-plan quota, no incremental $).
+                             ┃ Default is ollama (Tier 2).
                              ┃ See docs/cost-model.md for the routing
                              ┃ rule and case-study #1.
 ```
@@ -45,11 +46,13 @@ The split is the central design choice.  An analyst who misses it
 will diagnose phantom problems.
 
 **A mission run is effectively free.**  The mechanical stages
-(transcribe, render, B-roll fetch) burn zero Anthropic tokens.  The
-one Tier-1 hop — script generation — costs ~500 tokens per call,
-operationally negligible against the existing Max-plan quota.  Local
-ollama models are no longer required for the faceless-short
-pipeline; whisper.cpp and ffmpeg remain the local-only stages.
+(transcribe, render, B-roll fetch) burn zero Anthropic tokens.  By
+default the faceless-short script stage routes to local ollama
+(zero tokens too); operators who want the quality lift documented in
+case-study #1 can opt into a Sonnet hop via `FACELESS_SCRIPT_OVERRIDE`
+— that path is ~500 tokens per call, operationally negligible
+against the existing Max-plan quota.  whisper.cpp and ffmpeg are
+the always-local stages regardless of routing.
 
 ---
 
@@ -112,14 +115,18 @@ Three of the five missions (`agents/missions/{highlight,summarize,shorts-batch}/
 do **not** call Anthropic.  They call `agents/lib/ollama.sh` which
 posts to `http://127.0.0.1:11434/api/generate`.
 
-`faceless-short` is partially Tier-1 by design: narration-script
-generation routes to Sonnet via `scripts/gen-script-claude.sh`, which
-calls `claude --print --model claude-sonnet-4-6` against the existing
-Max-plan subscription quota (no incremental dollar spend).  The
-remaining stages stay Tier-2: Kokoro-ONNX (TTS, Apache 2.0, CPU),
-whisper.cpp (transcribe), and the Pexels Videos free-tier HTTP API
-(200 req/hr, 20k req/month — no card, commercial reuse via the Pexels
-License).  Reasoning for the split routing rule is in
+`faceless-short` is **opt-in Tier-1 by design**: by default the
+narration-script stage calls local ollama (`agents/missions/faceless-short/run.sh:98`
+runs `ollama_generate "$OLLAMA_MODEL_HIGHLIGHT"`).  Operators who
+want the quality lift documented in case-study #1 run
+`scripts/gen-script-claude.sh` out-of-band (Sonnet via Max quota,
+no incremental dollar spend) and point `FACELESS_SCRIPT_OVERRIDE` at
+the generated script file — `run.sh` then copies it in place of
+the ollama-generated draft.  The remaining stages stay Tier-2 in
+both routings: Kokoro-ONNX (TTS, Apache 2.0, CPU), whisper.cpp
+(transcribe), and the Pexels Videos free-tier HTTP API (200 req/hr,
+20k req/month — no card, commercial reuse via the Pexels License).
+Reasoning for the split routing rule is in
 [`docs/cost-model.md`](cost-model.md); the engineering case study
 (score impact: hook + factual axes 3→9) is
 [`docs/engineering-case-studies.md`](engineering-case-studies.md) §1.
@@ -136,7 +143,7 @@ and the niche-pivot decision in
 [`docs/pilots/decision-log.md`](pilots/decision-log.md#operator-pick--2026-05-17).
 
 - [`agents/lib/ollama.sh`](../agents/lib/ollama.sh) — HTTP client to local Ollama (highlight / summarize / shorts-batch).
-- [`scripts/gen-script-claude.sh`](../scripts/gen-script-claude.sh) — Sonnet-routed narration script generator (faceless-short).
+- [`scripts/gen-script-claude.sh`](../scripts/gen-script-claude.sh) — Sonnet-routed narration script generator (faceless-short; opt-in via `FACELESS_SCRIPT_OVERRIDE`, default is ollama).
 - [`scripts/score-content.sh`](../scripts/score-content.sh) — Sonnet-routed content-quality scorer (feedback loop).
 - [`agents/missions/music-video/run.sh`](../agents/missions/music-video/run.sh) — aubiotrack + aubioonset + Pexels (no Anthropic).
 - [`.env.example`](../.env.example) — `OLLAMA_MODEL_HIGHLIGHT=llama3.2:3b` still required by the three local-only missions.

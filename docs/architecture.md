@@ -86,8 +86,10 @@
                       │                     summarize, shorts-batch)
                       │    • Kokoro-ONNX   TTS for faceless-short (CPU)
                       │    • claude CLI    narration script + scorer
-                      │                    (faceless-short only;
-                      │                     Sonnet via Max quota)
+                      │                    (faceless-short, opt-in via
+                      │                     FACELESS_SCRIPT_OVERRIDE;
+                      │                     Sonnet via Max quota.
+                      │                     Default is local ollama.)
                       │    • aubio         beat + onset detection
                       │                    (music-video only)
                       │    • Pexels API    portrait B-roll
@@ -162,9 +164,14 @@ uses a distinct subset (`env.sh`, `log.sh`, `ffmpeg.sh`) plus the
 ## Faceless-short pipeline
 
 The `faceless-short` mission has no input video — it generates the
-short end-to-end from a topic prompt.  Marginal cost: ~500 tokens
-against the existing Max-plan quota for the one Tier-1 hop (script
-+ scorer); everything else is local.  See
+short end-to-end from a topic prompt.  Default is fully local
+(ollama writes the script); operators can opt into a Tier-1 hop via
+`FACELESS_SCRIPT_OVERRIDE` pointing at a pre-generated script file
+(typically produced out-of-band by
+[`scripts/gen-script-claude.sh`](../scripts/gen-script-claude.sh) —
+Sonnet via Max quota, ~500 tokens per call).  See
+[`docs/cost-model.md`](cost-model.md#when-tier-2-is-the-wrong-default--creative-stages)
+and
 [`docs/engineering-case-studies.md`](engineering-case-studies.md) §1
 for the routing rationale.
 
@@ -173,10 +180,12 @@ for the routing rationale.
        │
        ▼
   ┌──────────────────────────────┐
-  │ claude --print               │  60s narration script
-  │ --model claude-sonnet-4-6    │  (130–160 words EN /
-  │ via scripts/gen-script-claude│   ~300–360 chars KO)
-  │ retry loop with score gate   │
+  │ ollama (default)             │  60s narration script
+  │ llama3.2:3b via ollama.sh    │  (130–160 words EN /
+  │  — or —                      │   ~300–360 chars KO)
+  │ FACELESS_SCRIPT_OVERRIDE     │
+  │ → cp pre-gen file (opt-in,   │
+  │   typically claude sonnet)   │
   └────────────┬─────────────────┘
                ▼
   ┌──────────────────────────────┐

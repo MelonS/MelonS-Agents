@@ -16,6 +16,27 @@ exists and matches the "Done when" criteria below.
 
 ## Active goal
 
+_(no active goal — operator sets the next one.  Previous goal
+"Production-ready music-video short" achieved 2026-05-17 ~23:30
+KST and migrated to Past goals below.  Optional 24h post-publish
+metrics capture in
+[`docs/pilots/first-upload-metrics.md`](pilots/first-upload-metrics.md)
+remains open and is operator-actioned, not a new goal.)_
+
+---
+
+## Next goal (candidate — for user to confirm or replace)
+
+_(promoted to Active goal below by user direction "일단 다하고 있어봐"
+ at 2026-05-16 02:40 KST, after operator confirmed satisfaction with
+ the first deliverable.)_
+
+---
+
+## Past goals
+
+_Migrated from "Active goal" on housekeeping pass; most recent first._
+
 ### 2026-05-17 | Production-ready music-video short — 업로드 가능한 1편 | **ACHIEVED 2026-05-17 ~23:30 KST**
 
 > _Resolution note_: operator approved
@@ -103,8 +124,6 @@ performance data instead of taste.
 - External SSD purchase (operator decision; not a blocker).
 - Channel creation / YT account setup automation (operator action).
 
-#### Prior goal (achieved earlier today, read-only)
-
 ### 2026-05-16 | Faceless pilot A/B — science vs Bible-history | **ACHIEVED 2026-05-17**
 
 > _Resolution note_: the operator's pick (logged 2026-05-17, see
@@ -117,7 +136,6 @@ performance data instead of taste.
 > `828070f`.  The Hittites/Hydrogen pilots remain as historical
 > artifacts of the format A/B; their topics are not the production
 > niche.
-
 
 
 _(2026-05-16 evening — operator picked "make one of each and decide
@@ -198,56 +216,6 @@ periodic-elements 정령 캐릭터 idea from earlier in the day), real
 account creation, real upload + performance tracking.  Those land
 after a niche is chosen.
 
-#### Past-goal reference (read-only)
-
-_One sentence_: produce a 9:16 short from a real Creative-Commons
-source video, end-to-end, with burned-in source attribution + libass
-captions and a passing QA verdict — proving the v1 pipeline can
-output something that doesn't look like placeholder content.
-
-**Subgoals (acceptance signals)**:
-- [x] Fixture catalog with real CC sources (Blender / Xiph / Pexels /
-      archive.org / wikimedia) — shipped over `8ae9449`, `3b9175d`.
-- [x] Standard 9:16 layout engine with safe-zone margins and
-      semi-transparent caption box — shipped `8ae9449`.
-- [x] Source-attribution wired across all three mission types
-      (highlight / summarize / shorts-batch) — shipped `0eaaee2`.
-- [x] libass burned captions with correct font scale (fixed the 6.67×
-      PlayRes bug) — shipped `3decfa7`.
-- [x] Copyright filter v1 (domain allowlist + publish gate + strike
-      log + license-string probe) — shipped `28dda8f` → `e530302`.
-- [x] **Deliverable**: at least one real-CC mission output reaches
-      QA PASS end-to-end → `highlight-015213` on 2026-05-16 01:52 KST
-      (commit `6ae9da0`).  Sintel trailer 1080p → 39s 9:16 short.mp4,
-      PASS attempt 1, watermark + captions visible in
-      `docs/caption-verify/highlight-015213-sintel-cap.jpg`.
-
-**Done when**: a single real-CC mission output emerges with QA PASS
-*and* visual verification (caption-verify frame committed).  Reached
-on 2026-05-16 01:52 KST.
-
-**Lesson written from this goal**: the infrastructure-vs-outcome gap.
-Subgoals 1–5 were all marked done before the deliverable (subgoal 6)
-ever existed.  Without an outcome subgoal that says "a real artifact
-must exist," a goal can read 5/5 done and still have produced nothing.
-Every future goal in this file must include at least one **deliverable
-subgoal** — a file that has to exist, a verdict that has to be PASS,
-a frame that has to be committed.  Subgoals describing infrastructure
-("X is implemented") never on their own complete a goal.
-
----
-
-## Next goal (candidate — for user to confirm or replace)
-
-_(promoted to Active goal below by user direction "일단 다하고 있어봐"
- at 2026-05-16 02:40 KST, after operator confirmed satisfaction with
- the first deliverable.)_
-
----
-
-## Past goals
-
-_Migrated from "Active goal" on housekeeping pass; most recent first._
 
 ### 2026-05-16 | Clone-and-go reproducibility | **ACHIEVED**
 
