@@ -32,6 +32,20 @@ fi
 # shellcheck disable=SC1091
 source "$REPO_ROOT/agents/lib/env.sh"
 
+# --- 1b. .claude/ machine-local render (settings + skill symlinks) ----
+# Per operator-contract §8 principle 4 (multi-machine portable), the
+# .claude/settings.json file and .claude/skills/ symlink are rendered
+# per-machine from tracked templates / top-level dirs.  Running this
+# is idempotent — safe on every bootstrap.
+if [[ -x "$REPO_ROOT/scripts/install-claude-local.sh" ]]; then
+  echo
+  echo "=== .claude/ machine-local render ==="
+  if ! "$REPO_ROOT/scripts/install-claude-local.sh"; then
+    echo "❌ install-claude-local.sh failed — Claude Code permission rules + skill discovery may be broken on this machine"
+    exit 1
+  fi
+fi
+
 OS="$(uname -s)"
 
 print_install_hint() {
