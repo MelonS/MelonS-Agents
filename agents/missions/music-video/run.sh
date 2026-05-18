@@ -42,13 +42,51 @@ SHORT_ID="${1:-}"
 MUSIC_FILE="${2:-}"
 KEYWORDS_CSV="${3:-lofi cafe,vintage turntable,rainy neon window,coffee shop interior,vinyl record spinning,rooftop city night,cozy reading room,warm soft lights}"
 
+# ───── demo mode — zero-friction first-touch path ─────
+# Set MUSIC_VIDEO_DEMO_MODE=1 to bypass the Pexels API + the
+# operator-supplied music file requirement.  Sources come from
+# scripts/fetch-demo-broll.sh (CC-BY-3.0 Blender Foundation clips)
+# and scripts/fetch-demo-music.sh (CC-BY 4.0 Kevin MacLeod tracks).
+# Both fetchers are idempotent; first run populates the cache.
+#
+# Why this exists: a brand-new clone with no PEXELS_API_KEY and no
+# Suno-generated music should still produce a real music-video as
+# its first interaction, so the "see a demo" promise in the README
+# is satisfied with zero accounts.  See docs/roadmap.md Next #1.
+DEMO_MODE="${MUSIC_VIDEO_DEMO_MODE:-0}"
+FIXTURE_DIR="${FIXTURE_DIR:-/tmp/smoke}"
+
+if [[ "$DEMO_MODE" == "1" ]]; then
+  [[ -z "$SHORT_ID" ]] && SHORT_ID="demo"
+  log_info "[demo-mode] populating CC-BY caches"
+  "$REPO_ROOT/scripts/fetch-demo-broll.sh" >/dev/null || {
+    log_err "demo B-roll fetch failed — check network"
+    exit 65
+  }
+  if [[ -z "$MUSIC_FILE" ]]; then
+    "$REPO_ROOT/scripts/fetch-demo-music.sh" >/dev/null || {
+      log_err "demo music fetch failed — check network"
+      exit 65
+    }
+    # First track in the cache is the deterministic default.
+    MUSIC_FILE="$(ls -1 "$FIXTURE_DIR/demo-music"/*.mp3 2>/dev/null | head -1)"
+    [[ -z "$MUSIC_FILE" ]] && { log_err "no demo music tracks available"; exit 65; }
+    log_info "[demo-mode] using $MUSIC_FILE"
+  fi
+fi
+
 if [[ -z "$SHORT_ID" || -z "$MUSIC_FILE" ]]; then
   log_err "usage: $0 <short_id> <music_file> [keywords_csv]"
+  log_err "       (or set MUSIC_VIDEO_DEMO_MODE=1 to use the bundled demo cache)"
   exit 64
 fi
 [[ -f "$MUSIC_FILE" ]] || { log_err "music file not found: $MUSIC_FILE"; exit 64; }
 require_bin "$FFMPEG_BIN" "$FFPROBE_BIN" aubiotrack aubioonset jq curl
-require_env PEXELS_API_KEY RECORDS_DIR
+if [[ "$DEMO_MODE" != "1" ]]; then
+  require_env PEXELS_API_KEY RECORDS_DIR
+else
+  require_env RECORDS_DIR
+fi
 
 # Pre-render disk-space guard (mirrors faceless-short).
 MIN_FREE_GB="${MUSIC_VIDEO_MIN_FREE_GB:-3}"
@@ -188,6 +226,45 @@ log_step "4/5  Pexels fetch + per-segment trim/glitch"
 # Pexels download = intentional motif.
 TRIM_LIST="$MDIR/concat.txt"
 : > "$TRIM_LIST"
+
+# Demo-mode prepopulate: cycle through the demo-broll cache so each
+# unique keyword maps deterministically to one cached clip.  The
+# downstream code's `if [[ ! -f "$RAW" ]]` check then short-circuits
+# the Pexels API entirely (no PEXELS_API_KEY needed).  Motif keyword
+# (KEYWORDS[0]) still reuses the same clip across all its segments
+# because cache_key is keyword-derived.
+if [[ "$DEMO_MODE" == "1" ]]; then
+  # Build a stable unique-keyword list (preserves first-appearance order).
+  # bash 3.2 + `set -u` errors on "${arr[@]}" when arr is empty; the
+  # `${arr[@]+...}` guard sidesteps the expansion entirely in that case.
+  UNIQ_KW=()
+  for ((j=0; j<SEG_TOTAL; j++)); do
+    seen=0
+    for u in ${UNIQ_KW[@]+"${UNIQ_KW[@]}"}; do
+      [[ "$u" == "${SEG_KW[$j]}" ]] && { seen=1; break; }
+    done
+    [[ "$seen" == "0" ]] && UNIQ_KW+=("${SEG_KW[$j]}")
+  done
+
+  # Demo clips available, ordered.
+  DEMO_CLIPS=()
+  while IFS= read -r c; do
+    DEMO_CLIPS+=("$c")
+  done < <(ls -1 "$FIXTURE_DIR/demo-broll"/*.mp4 2>/dev/null)
+  [[ "${#DEMO_CLIPS[@]}" -eq 0 ]] && { log_err "no demo-broll clips at $FIXTURE_DIR/demo-broll/"; exit 65; }
+
+  log_info "  [demo-mode] mapping ${#UNIQ_KW[@]} keyword(s) → ${#DEMO_CLIPS[@]} demo clip(s)"
+  for ((j=0; j<${#UNIQ_KW[@]}; j++)); do
+    kw="${UNIQ_KW[$j]}"
+    cache_key=$(echo "$kw" | tr ' ' '_')
+    RAW="$CLIPS_DIR/raw-${cache_key}.mp4"
+    SRC="${DEMO_CLIPS[$((j % ${#DEMO_CLIPS[@]}))]}"
+    cp "$SRC" "$RAW"
+    # Carry the sidecar too so attribution can be rolled up later.
+    src_meta="${SRC%.mp4}.meta.json"
+    [[ -f "$src_meta" ]] && cp "$src_meta" "${RAW%.mp4}.meta.json"
+  done
+fi
 
 REV_DUR="0.20"
 SKIP_FWD="0.20"
@@ -346,6 +423,43 @@ log_ok "rendered: $OUT (${dur}s, $size)"
 MID_T=$(awk -v d="$dur" 'BEGIN{printf "%.2f", d/2}')
 "$FFMPEG_BIN" -y -loglevel error -ss "$MID_T" -i "$OUT" -frames:v 1 \
   "$MDIR/outputs/preview-frame.jpg" 2>/dev/null || true
+
+# ───── attribution rollup ─────
+# Collect every clip / track that contributed to this render with its
+# CC license and credit string.  Demo mode is where this matters most
+# (CC-BY attribution is required for publish) but it's harmless in
+# Pexels mode too.
+SOURCES_OUT="$MDIR/outputs/SOURCES.txt"
+{
+  echo "# Sources for $MISSION_ID"
+  echo
+  echo "## Music"
+  if [[ "$DEMO_MODE" == "1" ]]; then
+    music_meta="${MUSIC_FILE%.mp3}.meta.json"
+    if [[ -f "$music_meta" ]]; then
+      attr=$(jq -r '.attribution_string' "$music_meta" 2>/dev/null)
+      lic=$(jq -r '.license' "$music_meta" 2>/dev/null)
+      page=$(jq -r '.page_url' "$music_meta" 2>/dev/null)
+      echo "- $attr — $lic — $page"
+    else
+      echo "- $(basename "$MUSIC_FILE") (operator-supplied; no sidecar)"
+    fi
+  else
+    echo "- $(basename "$MUSIC_FILE") (operator-supplied)"
+  fi
+  echo
+  echo "## B-roll"
+  # One line per *unique* attribution+license pair.  Multiple
+  # keywords often map to the same demo clip; SOURCES.txt should
+  # carry one credit line per source, not per slot.
+  for meta in "$CLIPS_DIR"/raw-*.meta.json; do
+    [[ -f "$meta" ]] || continue
+    attr=$(jq -r '.attribution_string' "$meta" 2>/dev/null)
+    lic=$(jq -r '.license' "$meta" 2>/dev/null)
+    [[ -n "$attr" && "$attr" != "null" ]] && echo "- $attr — $lic"
+  done | sort -u
+} > "$SOURCES_OUT"
+log_info "  attribution rollup: $SOURCES_OUT"
 
 # Write mission-level metrics for the auditor + downstream tooling
 cat > "$MDIR/metrics.json" <<EOF
