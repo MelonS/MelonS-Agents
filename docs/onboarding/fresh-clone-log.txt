@@ -4,3 +4,19 @@
 2026-05-16 18:42:23 +0900  PASS  variant=bootstrap-hints  asserts=8/8
 2026-05-16 18:43:16 +0900  PASS  variant=force-model-download  remote=https://github.com/MelonS/MelonS-Agents.git  short=records/missions/2026-05-16/highlight-184247/outputs/short.mp4  size=7MB  model_download=465MB
 2026-05-16 19:47:23 +0900  PASS  variant=linux-docker  asserts=9/9  base=ubuntu:24.04
+
+[2026-05-18 13:32 KST] PASS variant=music-video-flow
+   clone:        https://github.com/MelonS/MelonS-Agents.git (depth=1) → /tmp/fresh-clone-mv-132358
+   bootstrap:    all tools present (ffmpeg/ffprobe/whisper-cli/ollama/yt-dlp/aubiotrack/aubioonset/jq)
+                 PEXELS_API_KEY check: clean warning when missing, no false failure
+                 assets/music/ check: clean warning when empty, no false failure
+                 footer leads with music-video next steps, v1 baseline as fallback
+   mission:      music-video against Velvet Turntable1.mp3 (Suno free-tier, 209s, symlinked into clone)
+                 mission_id=testupload-132414, 68M base mp4, metrics.json present
+   shader:       scripts/music-video-shaders.sh combo applied (pond + halation, phrase-aware envelope)
+                 43M final mp4 at outputs/publish/fresh-clone-test.mp4
+   spec:         1080×1920 (9:16), 30 fps, H.264 + AAC 48 kHz, 60.0 s — YT-Shorts-compatible
+   verify:       ffprobe shows duration/codec/dimensions correct; mid-frame thumbnail extracts cleanly
+   purpose:      validate the stranger-clone path now that the project is public-shared in a 2k-member group
+                 — confirms aubio + jq deps in bootstrap, Pexels API key guidance, and shader script
+                 all land in a brand-new clone
