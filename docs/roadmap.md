@@ -60,6 +60,20 @@ _(beyond #1: promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-18** (~14:34 KST) **Resolve two remaining audit lows —
+  §8 outputs deviation marker + stale goal reference** (commit
+  `d40abd3`).  Seventeenth audit cleared the three mediums + §8
+  shaders fallback from `39c5db3`, leaving two [low] findings:
+  `docs/for-analysts.md:78` still said "the current active goal's
+  deliverables" after the goal was cleared, and `outputs/publish/.gitkeep`
+  lacked a §8 deviation marker.  Rephrased the for-analysts line to
+  point at the 2026-05-16 niche-selection Past goal, added
+  `<!-- §8 operator-directed deviation -->` to the .gitkeep with a
+  matching row in `docs/architecture.md` Layers table.  Plus
+  `.gitignore` now covers `.claude/*.lock` after the eighteenth
+  audit flagged `.claude/scheduled_tasks.lock` as a persistently
+  untracked runtime artifact.
+
 - **2026-05-18** (~14:15 KST) **Clear audit DRIFT_DETECTED — sync
   faceless-short Tier-routing docs + migrate achieved goal**
   (commit `39c5db3`).  Sixteenth audit (`docs/audit/2026-05-18-all.md`)

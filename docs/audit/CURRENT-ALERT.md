@@ -7,23 +7,27 @@
 
 **Verdict**: DRIFT_DETECTED
 **Full report**: [`docs/audit/2026-05-18-all.md`](2026-05-18-all.md)
-**Generated**: 2026-05-18 14:32:34 KST
+**Generated**: 2026-05-18 14:42:36 KST
 
 ## Summary (from audit)
 
 
-Seventeenth audit of the session; HEAD = `39c5db3` (2026-05-18, ~14:23 KST).
-Supersedes the sixteenth audit at HEAD `f86c2f0` (also 2026-05-18, 03:08 KST).
+Eighteenth audit of the session; HEAD = `d40abd3` (2026-05-18, ~14:34 KST).
+Supersedes the seventeenth audit at HEAD `39c5db3` (2026-05-18, ~14:23 KST).
 Full-scope audit covering all six dimensions: architecture vs documentation drift,
 roadmap freshness, operator-contract compliance, cost-model accuracy, stale TODOs /
-dead code, and security / secrets.  Six commits landed since the prior audit:
-`a1846f6` (daily-queue fix), `aa10ba0` (onboarding bootstrap), `5e831fe` (fresh-clone
-PASS log), `303949a` (readme polish), `9d7f954` (readme pricing/path update),
-`39c5db3` (audit fix — resolved all three medium findings from the prior run).
-All prior medium findings are now resolved.  Two low findings remain open:
-`outputs/publish/.gitkeep` (§8 carry-forward) and a stale "current active goal"
-reference in `docs/for-analysts.md:78` (new).  Security, secrets, model assignments,
-roadmap commit-hash validity, and §5 marker compliance all pass clean.
+dead code, and security / secrets.  Two commits landed since the prior audit run
+that generated `CURRENT-ALERT.md` (14:32:34 KST): `39c5db3` (already captured) and
+`d40abd3` (audit-fix — resolved both [low] findings from the seventeenth audit).
+Both previously-flagged [low] findings are now fully resolved: `docs/for-analysts.md:78`
+rephrased correctly and `outputs/publish/.gitkeep` carries the `<!-- §8 operator-directed
+deviation -->` marker with a matching row in the `docs/architecture.md` Layers table.
+Three new [low] findings: (1) `docs/audit/CURRENT-ALERT.md` still shows DRIFT_DETECTED
+for findings resolved ~40 seconds after the alert was written; (2) `docs/roadmap.md`
+Done section missing the `d40abd3` entry per §9 contract; (3) `.claude/scheduled_tasks.lock`
+is an untracked Claude Code runtime file not covered by `.gitignore`, creating persistent
+noise in `git status`.  Security, secrets, model assignments, roadmap commit-hash
+validity, and §5 marker compliance all pass clean.
 
 ## Critical / High findings
 
