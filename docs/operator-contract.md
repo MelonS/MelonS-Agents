@@ -214,13 +214,88 @@ workaround (editing `.claude/settings.json` to allow it) hits the
 self-modification guardrail.  Splitting is one second per cycle and
 always passes.
 
-### 8. Code / data separation
+### 8. Code / data separation + portability — five principles
 
-Agent logic lives under `agents/` and `.claude/agents/` (git-tracked).
-All outputs go to `$RECORDS_DIR` (default `./records/`, gitignored).
-Env-driven tool paths only: never hardcode `/opt/homebrew/...` or
-`~/...` — read `$FFMPEG_BIN`, `$OLLAMA_HOST`, `$RECORDS_DIR`, etc.
-from `.env`.
+**Codified 2026-05-19 ~01:30 KST** after operator articulated the
+principle set in successive messages:
+
+> "표준 무조건 준수. 로컬은 정말 필요시에만 사용. 대부분의 정보를
+> 이루는건 반드시 git에 올라가야함. 대신에 올라가면 안되는게 git에
+> 올라가는것도 문제. 그리고 내일이라도 지금 당장이라도 이 맥북은
+> 파괴되거나 고장날수있음. 맥북이 고장나서 프로젝트가 망할수도
+> 있어야겠음? ... 난 머신 다른곳에서도 할수가 있는데... 하나의
+> 머신만 고집하면 안됨."
+
+The repo's portability contract:
+
+1. **Standards-compliant by default** — adopt established specs
+   (agentskills.io for skills, agent-skills format for SKILL.md,
+   etc.) rather than inventing local conventions.  Skills written
+   to spec drop in across ~38 compatible runtimes.
+2. **Tracked-by-default** — git is the single source of truth.
+   Anything required to reconstruct the project on a fresh
+   machine is tracked.  Local-only is the exception, not the
+   default, and must be justified per file/directory.
+3. **Machine-resilient** — the MacBook can be destroyed today.
+   `git clone <repo> && ./scripts/bootstrap.sh` on a fresh
+   qualified machine must produce a working setup.  Project
+   continuity does not depend on this specific machine's disk.
+4. **Multi-machine portable** — the same repo must run
+   identically on any qualified machine.  No hardcoded
+   machine-specific values in committed files.  All paths
+   env-resolved or rendered from templates at install time.
+5. **No PII or secrets in tracked files** (see §12).  The
+   inverse exception to principle 2: a small allow list of
+   secrets and identity surfaces stays *out* of git.
+
+**Concrete enforcement paths**:
+
+- `.env` (gitignored) for secrets; `.env.example` (tracked)
+  for the schema.
+- `launchd` plists rendered from `*.plist.template` via
+  `@@HOME@@` / `@@REPO_ROOT@@` substitution at install time
+  (shipped 2026-05-17, commit `ab6555e`).
+- `.claude/settings.json` rendered from
+  `config/claude-settings.template.json` at install time
+  (shipped on the multi-skill-framework feat branch).
+- All committed scripts and configs use `$HOME`, `$REPO_ROOT`,
+  `$FFMPEG_BIN`, `$OLLAMA_HOST`, `$RECORDS_DIR` etc. — never
+  literal `/Users/...` or `/opt/homebrew/...`.  Exceptions
+  (e.g., env.sh's libass-discovery fallback list) are
+  documented inline with `§8 exception:` comments.
+- **`.claude/` becomes truly local** over time: only files
+  Claude Code requires to be at that path live there, and
+  those that *must* be tracked are rendered/symlinked from
+  top-level tracked sources by `scripts/install-claude-local.sh`.
+  Final state: `.claude/` is fully gitignored.
+
+**Default placement rules for new project assets**:
+
+| Asset type | Tracked at | Discovered by Claude Code at |
+|---|---|---|
+| Skills (agentskills.io spec) | `skills/<name>/` (top-level) | `.claude/skills/<name>/` (symlink) |
+| Subagent definitions | `subagents/<name>.md` (top-level, future migration) | `.claude/agents/<name>.md` (symlink, future migration) |
+| Mission scripts | `agents/missions/<type>/run.sh` | direct path |
+| Shared libs | `agents/lib/<name>.sh` | direct path |
+| Tool wrappers | `scripts/<name>.sh` | direct path |
+| Permission config | `config/claude-settings.template.json` (template) | `.claude/settings.json` (rendered, gitignored) |
+
+The migration of existing `.claude/agents/*.md` to top-level
+`subagents/` is tracked separately (logic-changes-need-OK
+applies; not autonomous).
+
+**Hardcoded path exception registry** (the documented
+deviations):
+
+- `agents/lib/env.sh:38,50` — ffmpeg-full keg discovery
+  fallback (libass-enabled ffmpeg).  Falls back only when
+  PATH ffmpeg lacks libass.
+- `scripts/audit-run.sh:37–42` — claude CLI candidate list
+  for launchd's minimal PATH.  Only consulted when
+  `command -v claude` fails.
+- `scripts/music-video-shaders.sh:57,64` — ffmpeg/ffprobe
+  parameter-expansion defaults.  Inline §8 exception
+  comment present (commit `39c5db3`).
 
 ### 9. Goal and roadmap are the source of truth for work selection
 
