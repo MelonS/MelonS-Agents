@@ -194,23 +194,41 @@ echo "✅ $RECORDS_DIR (writable: $([[ -w "$RECORDS_DIR" ]] && echo yes || echo 
 # --- music-video specific checks ---------------------------------------
 echo
 echo "=== music-video mission readiness ==="
+
+# Demo-mode detection: a fresh clone with no Pexels API key AND no
+# music in assets/music/ is the canonical zero-account first-touch
+# state.  Instead of warning twice and leaving the user with two
+# signup gauntlets, we surface the demo path as the recommended
+# next-command.  Full Pexels + Suno path stays documented for users
+# who want the unlocked catalog.
 if [[ -z "${PEXELS_API_KEY:-}" ]]; then
-  echo "⚠ PEXELS_API_KEY is not set in .env"
-  echo "  → free tier: sign up at https://www.pexels.com/api/  (200 req/hour, plenty for personal use)"
-  echo "  → then set: PEXELS_API_KEY=<your_key>  in .env"
+  PEXELS_STATE="missing"
+  echo "ℹ  PEXELS_API_KEY not set — that's OK, the demo path works without it"
+  echo "  → for the full mood-keyword catalog later, sign up at"
+  echo "    https://www.pexels.com/api/ (free, 200 req/hour) and set"
+  echo "    PEXELS_API_KEY=<your_key> in .env"
 else
+  PEXELS_STATE="set"
   echo "✅ PEXELS_API_KEY is set (length=${#PEXELS_API_KEY})"
 fi
 
 music_count=$(find assets/music -maxdepth 1 -type f \( -name '*.mp3' -o -name '*.wav' -o -name '*.m4a' -o -name '*.flac' -o -name '*.ogg' \) 2>/dev/null | wc -l | tr -d ' ')
 if [[ "$music_count" -eq 0 ]]; then
-  echo "⚠ assets/music/ has no audio files yet"
-  echo "  → the music-video mission needs an mp3/wav/m4a/flac/ogg input"
-  echo "  → operator generates tracks on Suno (free tier), Pixabay Music, YT Audio Library, etc."
-  echo "  → drop the file in assets/music/ (gitignored — never committed)"
-  echo "  → see assets/music/README.md for the source shortlist and assets/music/SOURCES.md for the per-track license trail"
+  MUSIC_STATE="empty"
+  echo "ℹ  assets/music/ is empty — that's OK, the demo path bundles CC-BY tracks"
+  echo "  → for your own tracks later: drop mp3/wav/m4a/flac/ogg into"
+  echo "    assets/music/ (gitignored, never committed); see"
+  echo "    assets/music/README.md for source shortlist + license guide"
 else
+  MUSIC_STATE="ready"
   echo "✅ assets/music/ has $music_count audio file(s) ready"
+fi
+
+# Set a single derived flag the "Next steps" block consults below.
+if [[ "$PEXELS_STATE" == "missing" || "$MUSIC_STATE" == "empty" ]]; then
+  DEMO_PATH_RECOMMENDED=1
+else
+  DEMO_PATH_RECOMMENDED=0
 fi
 
 echo
@@ -272,14 +290,29 @@ echo "✅ bootstrap ok"
 echo
 echo "Next steps:"
 echo ""
-echo "  [music-video, the current showcase]"
-echo "  1) drop a music file into assets/music/"
-echo "     (free options: Suno, Pixabay Music, YouTube Audio Library, FMA"
-echo "      — see assets/music/README.md)"
-echo "  2) ./agents/missions/music-video/run.sh upload1 \"assets/music/<your_track>.mp3\""
-echo "  3) ./scripts/music-video-shaders.sh combo \\"
-echo "       records/missions/\$(date +%Y-%m-%d)/music-video-upload1-*/outputs/short.mp4 \\"
-echo "       outputs/publish/my-first-short.mp4"
+if (( DEMO_PATH_RECOMMENDED == 1 )); then
+  echo "  [zero-account demo — recommended for first-touch]"
+  echo "  Bundled CC-BY Blender clips + Kevin MacLeod tracks fetch on first run."
+  echo "  No Pexels signup, no Suno round-trip, no .env edit needed."
+  echo ""
+  echo "  1) MUSIC_VIDEO_DEMO_MODE=1 ./agents/missions/music-video/run.sh demo"
+  echo "  2) open records/missions/\$(date +%Y-%m-%d)/music-video-demo-*/outputs/short.mp4"
+  echo ""
+  echo "  [music-video, full path with operator audio + Pexels catalog]"
+  echo "  When you want better mood-matching B-roll and your own tracks:"
+  echo "  1) drop an mp3/wav/m4a into assets/music/"
+  echo "  2) set PEXELS_API_KEY in .env"
+  echo "  3) ./agents/missions/music-video/run.sh upload1 \"assets/music/<your_track>.mp3\""
+else
+  echo "  [music-video, the current showcase]"
+  echo "  1) ./agents/missions/music-video/run.sh upload1 \"assets/music/<your_track>.mp3\""
+  echo "  2) ./scripts/music-video-shaders.sh combo \\"
+  echo "       records/missions/\$(date +%Y-%m-%d)/music-video-upload1-*/outputs/short.mp4 \\"
+  echo "       outputs/publish/my-first-short.mp4"
+  echo ""
+  echo "  [try the demo path anytime — no .env edit needed]"
+  echo "  MUSIC_VIDEO_DEMO_MODE=1 ./agents/missions/music-video/run.sh demo"
+fi
 echo ""
 echo "  [v1 highlight baseline — works without a music file]"
 echo "  ./agents/missions/highlight/run.sh https://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4"
