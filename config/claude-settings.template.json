@@ -2,11 +2,11 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Read(/Users/melons/**)",
-      "Write(/Users/melons/ai/**)",
-      "Edit(/Users/melons/ai/**)",
-      "Write(/Users/melons/.local/share/whisper-models/**)",
-      "Write(/Users/melons/.claude/projects/-Users-melons-ai/memory/**)",
+      "Read(@@HOME@@/**)",
+      "Write(@@REPO_ROOT@@/**)",
+      "Edit(@@REPO_ROOT@@/**)",
+      "Write(@@HOME@@/.local/share/whisper-models/**)",
+      "Write(@@HOME@@/.claude/projects/@@MEMORY_NAMESPACE@@/memory/**)",
       "Bash(claude *)",
       "Bash(python3 *)",
       "Bash(pip3 *)",
@@ -25,7 +25,7 @@
       "Bash(mkdir *)",
       "Bash(mv *)",
       "Bash(cp *)",
-      "Bash(rm /Users/melons/ai/**)",
+      "Bash(rm @@REPO_ROOT@@/**)",
       "Bash(rm /tmp/**)",
       "Bash(rm ~/.Trash/**)",
       "Bash(chmod *)",
@@ -69,8 +69,8 @@
       "Bash(http *)",
       "Bash(security find-*)",
       "Bash(launchctl list *)",
-      "Bash(cd /Users/melons/ai && *)",
-      "Bash(cd /Users/melons/ai/* && *)"
+      "Bash(cd @@REPO_ROOT@@ && *)",
+      "Bash(cd @@REPO_ROOT@@/* && *)"
     ],
     "defaultMode": "bypassPermissions",
     "deny": [
@@ -78,8 +78,8 @@
       "Bash(rm -rf /*)",
       "Bash(rm -rf ~)",
       "Bash(rm -rf $HOME)",
-      "Bash(rm -rf /Users)",
-      "Bash(rm -rf /Users/melons)",
+      "Bash(rm -rf @@HOME_PARENT@@)",
+      "Bash(rm -rf @@HOME@@)",
       "Bash(rm -rf /System*)",
       "Bash(rm -rf /Library*)",
       "Bash(rm -rf /Applications*)",
@@ -100,8 +100,9 @@
     ]
   },
   "_notes": {
-    "rationale": "Auto-approve mode per user directive 2026-05-14. Wide allow for tactical commands needed by the agent system. Deny list guards against catastrophic operations (rm -rf at system roots, sudo, force-push to main, disk erase, piped-curl-to-shell). Tightened 2026-05-17 in response to a security review: rm scoped to repo / /tmp / Trash (was wildcard); ssh and chown removed (not used in this project's workflow).",
-    "scope": "Project-shared (committed). Each contributor inherits these defaults."
+    "rationale": "Auto-approve mode. Wide allow for tactical commands needed by the agent system. Deny list guards catastrophic operations (rm -rf at system roots, sudo, force-push to main, disk erase, piped-curl-to-shell).",
+    "scope": "Rendered from config/claude-settings.template.json by scripts/install-claude-local.sh at install time. Placeholders @@HOME@@ / @@REPO_ROOT@@ / @@HOME_PARENT@@ / @@MEMORY_NAMESPACE@@ are substituted with values from the operator's environment so the file works on any qualified machine. See operator-contract.md §8 principle 4 (multi-machine portable).",
+    "regenerate": "./scripts/install-claude-local.sh"
   },
   "statusLine": {
     "type": "command",
