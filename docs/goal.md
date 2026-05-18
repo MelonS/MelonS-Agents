@@ -16,21 +16,20 @@ exists and matches the "Done when" criteria below.
 
 ## Active goal
 
-_(no active goal — operator sets the next one.  Previous goal
-"Production-ready music-video short" achieved 2026-05-17 ~23:30
-KST and migrated to Past goals below.  Optional 24h post-publish
-metrics capture in
-[`docs/pilots/first-upload-metrics.md`](pilots/first-upload-metrics.md)
-remains open and is operator-actioned, not a new goal.)_
+### 2026-05-19 | Multi-skill AI assistant framework — Skill #1 (music-video) refactor first
 
-### Candidate active goal — pending operator confirmation (2026-05-18 ~19:50 KST)
+**Promoted from candidate → active 2026-05-19 ~00:55 KST** after
+operator direction: "오늘은 일단은 skill구조를 만드는게 가장
+중요하다고 생각함. 그래야 다음 스킬을 만들면서 기존 스킬도
+개선이 가능함."  The candidate's "pending operator confirmation"
+qualifier no longer applies; goal is active.
 
 **Generalize this repo as a multi-skill AI assistant framework**,
 with music-video production refactored into "Skill #1" and a
 job-hunt support tool built as "Skill #2".  Operator stated the
-vision verbatim at ~19:50 KST: 사람들을 돕기 위해, 나의 취직을
-위해, 다른 사람들의 취직을 위해, 모두의 먹고 사는 문제를
-해결하기 위해.  Connects to:
+vision verbatim at 2026-05-18 ~19:50 KST: 사람들을 돕기 위해,
+나의 취직을 위해, 다른 사람들의 취직을 위해, 모두의 먹고 사는
+문제를 해결하기 위해.  Connects to:
 
 - Existing parked `domain-pivot portability` analysis in
   [`docs/ideas.md`](ideas.md) (2026-05-16) which had already noted
@@ -339,17 +338,49 @@ trivial enough that it can land any time.
 - Hermes Agent + Claude Skills research landed at 2026-05-18
   ~20:10 KST (see synthesis above).  Technical feasibility is
   established (Skill #1 ~1 day, Skill #2 ~3-5 days, total
-  5.5-7.5 days for 4 phases).  Promotion now blocked only on
-  operator explicit OK ("활성 goal로 박아").
+  5.5-7.5 days for 4 phases).  Promoted to active goal
+  2026-05-19 ~00:55 KST.
 
-**Open questions for the home (~23:00 KST) session**:
-- Same repo (skill folder structure) vs new repo for Skill #2?
-- Skill #2 = "AI-era job aggregator" or different shape?
+**Deliverable subgoals** (per goal.md maintenance contract —
+every active goal must have at least one *concrete file/PASS/
+frame deliverable*, not just infrastructure):
+
+- [ ] **Skill #1 — music-video lives at `.claude/skills/music-video/SKILL.md`**
+  + scripts/run.sh (the existing bash, preserved).  Invocable
+  via `/music-video` in Claude Code.  Output produces a 60-second
+  9:16 mp4 equivalent to the existing pipeline.  agentskills.io
+  spec compliant.
+- [ ] **Skill #2 — job-hunt support delivers a daily digest**.
+  Markdown file in `records/jobs/<date>/digest.md` with at least
+  one job posting matched against operator's "AI integration /
+  problem solver" filter pattern.  Skill-ified at
+  `.claude/skills/job-hunt-digest/`.
+- [ ] **Both skills tagged as v0.2.0+** in the milestone tag
+  series (per branch-strategy §6).  Released to GitHub Releases
+  with a brief framework-narrative changelog.
+- [ ] **(Bonus, optional)** README EN+KO reframed from
+  "music-video agent" to "multi-skill framework with music-video
+  + job-hunt shipped" — visible to first-time GitHub visitors
+  as the new identity.
+
+**Done when**: subgoals 1, 2, and 3 all checked.  Skill #1 +
+Skill #2 + v0.2.0 (or higher) tag landed.
+
+**Open questions** (operator decides during execution):
+- Skill #2 specifics — "AI-era job aggregator" or different
+  shape (e.g., resume tailoring tool, application tracker)?
 - Music-shorts work continuation parallel to Skill #1 conversion,
-  or pause shorts until conversion done?
+  or pause shorts queue until conversion done?
 - Naming: is this repo's identity changing from `MelonS-Agents`
   to something framework-shaped?  (Probably no rename — additive
   evolution.)
+
+**Connection to main-protection layered defense**: this goal's
+Skill #1 conversion is the *first artifact* that Layer 3
+(functional pre-merge test) and Layer 4 (periodic skill smoke)
+will protect — see [`docs/ideas.md`](ideas.md#2026-05-19--main-protection-v2--functional--periodic-skill-smoke--h).
+The Skills work and the protection v2 work compose: Skill #1
+lands first, then protection v2 builds on it.
 
 ---
 

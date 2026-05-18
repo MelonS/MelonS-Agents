@@ -41,6 +41,85 @@ _(none yet)_
 
 ## Pipeline + Infrastructure
 
+### 2026-05-19 | Main-protection v2 — functional + periodic skill smoke | H
+
+**Motivation**: operator post-midnight 2026-05-18 → 2026-05-19
+exposed multiple dimensions of "main 깨짐" beyond what the current
+static-check + audit layers cover.  Key insights:
+
+1. **Our project's "main is broken" ≠ typical build-fail.**
+   We're not a build-the-binary project; the real value is *the
+   skill's actual functional output*.  "쇼츠가 제대로 생성되지
+   않는다면" = main is broken, even if all static checks pass.
+2. **Solo dev + multi-skill = silent decay risk.**  Once Skills
+   are separated, working on Skill #2 (job-hunt) without
+   invoking Skill #1 (music-video) means Skill #1 could break
+   for weeks before operator notices.
+
+The layered defense needed:
+
+| Layer | Catches | Cost | Status |
+|---|---|---|---|
+| 1. Static check (GH Actions) | syntax / secrets / missing files | ~30s/push | ✅ shipped 2026-05-19 |
+| 2. Audit (launchd 03:00 + 15min + commit hook) | drift / docs ↔ code | ~3min | ✅ existing |
+| 3. **Pre-merge functional test** | "이 스킬 진짜 작동?" | ~2min/skill | ⏳ to build |
+| 4. **Periodic skill smoke** | "어제 작동했던 스킬 오늘도?" | ~5min/day total | ⏳ to build |
+
+**Sketch — Layer 3 (pre-merge functional)**:
+- Per-skill `tests/functional.sh` — runs the actual pipeline
+  against a fixed test fixture (small CC0 music / known input),
+  asserts output validity (duration, dimensions, codec, file
+  size, audio integrity).
+- `scripts/pre-merge-check.sh` gate 1.5 added: detect what
+  skills changed in the feat branch, run their functional tests
+  before allowing merge.
+- ~2 min per skill (running real ffmpeg + ollama).  Local only
+  (operator's machine), not CI (ollama / Pexels API).
+
+**Sketch — Layer 4 (periodic skill smoke)**:
+- Per-skill `tests/smoke.sh` — lightweight (30s-1min) verifier
+  that doesn't run full render but checks key invariants
+  (B-roll fetcher returns clips, aubio detects beats, ffmpeg
+  filter graph parses).
+- New launchd plist `com.melons.agents.skill-smoke.plist` —
+  fires daily (e.g., 04:00 — after auditor at 03:00), iterates
+  all `.claude/skills/*/tests/smoke.sh`, writes status to
+  `records/skill-smoke/<date>/status.json`.
+- If any skill fails: writes `docs/skill-alerts/CURRENT.md`
+  (same pattern as `docs/audit/CURRENT-ALERT.md`).
+- Session-start protocol expanded: read skill-alerts file
+  before goal selection.
+
+**Sketch — Layer 5 (orthogonal but related: settings.json portability)**:
+- 2026-05-19 audit flagged `.claude/settings.json` hardcoded
+  `/Users/melons/` paths at 9 locations as [medium] — promoted
+  from prior [info, carry-forward].
+- Same template-render pattern as `scripts/com.melons.agents.*.plist`
+  (`ab6555e`): `.claude/settings.template.json` + `scripts/install-settings.sh`
+  using `@@HOME@@` substitution.
+- Real fix for "main breaks on other people's machines" —
+  external user clones repo, settings.json paths don't match
+  their `$HOME`, Claude Code permission model becomes
+  non-functional.
+
+**Dependencies**: Layer 3 + 4 benefit from Skill #1 landing
+first — without a Skill to test, the functional/smoke tests
+have nothing to point at.  So sequence:
+  Skill #1 conversion → Layer 5 (settings portability) →
+  Layer 3 (functional gate) → Layer 4 (periodic smoke).
+
+**Estimated cost**:
+- Layer 5: ~1-2h (template + install script + docs update).
+- Layer 3: ~3-4h (framework + first skill's functional test).
+- Layer 4: ~2-3h (launchd timer + dispatcher + status reporting +
+  session-start protocol extension).
+
+**Status**: parked for "남는 시간에 하나씩" execution per
+operator direction 2026-05-19 ~00:50 KST.  Today's priority is
+Skill #1 conversion (so Layer 3 + 4 have something to protect).
+
+---
+
 ### 2026-05-18 | Music-video format variations + per-video quality upgrade — brainstorm | H
 
 **Motivation**: operator at ~18:20 KST surfaced three direction

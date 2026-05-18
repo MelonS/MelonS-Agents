@@ -7,26 +7,30 @@
 
 **Verdict**: DRIFT_DETECTED
 **Full report**: [`docs/audit/2026-05-18-all.md`](2026-05-18-all.md)
-**Generated**: 2026-05-18 14:56:20 KST
+**Generated**: 2026-05-19 00:06:50 KST
 
 ## Summary (from audit)
 
 
-Nineteenth audit of the session; HEAD = `e1fda78` (2026-05-18).
-Supersedes the eighteenth audit at HEAD `d40abd3` (2026-05-18, ~14:34 KST).
-Full-scope audit covering all six dimensions: architecture vs documentation drift,
-roadmap freshness, operator-contract compliance, cost-model accuracy, stale TODOs /
-dead code, and security / secrets.  One commit landed since the eighteenth audit:
-`e1fda78` ("docs(audit): close last 2 lows — gitignore .claude/*.lock + roadmap Done
-entry for d40abd3") resolved two of the three 18th-audit [low] findings — `d40abd3`
-Done entry is now present in `docs/roadmap.md` (line 63) and `.claude/*.lock` is now
-covered by `.gitignore` (line 130).  Three new [low] findings: (1) `CURRENT-ALERT.md`
-still shows DRIFT_DETECTED — two of its three listed findings are resolved but the
-alert has not auto-cleared (requires a CLEAN `audit-run.sh` run); (2) `e1fda78` itself
-has no Done entry in `docs/roadmap.md` per §9; (3) `docs/roadmap.md:72–75` attributes
-the `.gitignore` fix to `d40abd3` when `git show d40abd3 --name-only` confirms `.gitignore`
-was not in `d40abd3`'s changed-files list — it was changed by `e1fda78`.  Architecture,
-model assignments, cost model, secrets scan, and §5 marker compliance all pass clean.
+Twentieth audit; HEAD = `65a5045` on branch `feat/post-merge-detection`
+(one commit ahead of `main` at `22a45ea`).  Full-scope audit covering all
+six dimensions: architecture vs documentation drift, roadmap freshness,
+operator-contract compliance, cost-model accuracy, stale TODOs / dead
+code, and security / secrets.  Since the nineteenth audit (HEAD `e1fda78`),
+twelve commits landed on `main` (primarily docs micro-commits) plus one
+structural commit on the new `feat/post-merge-detection` branch.  The most
+significant new work: branch strategy codified in `operator-contract.md` §6
+(`a2a3807`), pre-merge gate script added (`22a45ea`), and GitHub Actions
+CI workflow created (`65a5045`, still on feat branch awaiting merge).  A
+same-day contract-focused audit (`docs/audit/2026-05-18-contract.md`) ran
+at HEAD `22a45ea` and surfaced a [medium] finding: `.claude/settings.json`
+hardcodes `/Users/melons` at nine locations, violating §8 env-driven-paths;
+this remains unresolved at `65a5045`.  Additional [low] findings: `CLAUDE.md`
+and `operator-contract.md` disagree on repo visibility (private vs public);
+four work-bearing commits lack roadmap Done entries; roadmap "Now" contains
+two expired "revisit at home ~23:00 KST 2026-05-18" reminders; and
+`CURRENT-ALERT.md` is stale.  Architecture, model assignments, cost model,
+secrets scan, §5 marker compliance, and `.gitignore` coverage all pass clean.
 
 ## Critical / High findings
 
