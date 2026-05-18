@@ -60,6 +60,17 @@ _(beyond #1: promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-18** (~14:55 KST) **Close two eighteenth-audit lows —
+  `.claude/*.lock` gitignore + d40abd3 Done entry** (commit
+  `e1fda78`).  Eighteenth audit (`docs/audit/2026-05-18-all.md`)
+  confirmed the three mediums + earlier lows resolved by `d40abd3`,
+  and flagged three new [low] findings: stale `CURRENT-ALERT.md`
+  (will auto-clear on next CLEAN run), missing roadmap Done entry
+  for `d40abd3`, and `.claude/scheduled_tasks.lock` (a Claude Code
+  scheduled-wakeup runtime artifact) not covered by `.gitignore`.
+  Added `.claude/*.lock` to gitignore and appended the d40abd3 Done
+  entry.
+
 - **2026-05-18** (~14:34 KST) **Resolve two remaining audit lows —
   §8 outputs deviation marker + stale goal reference** (commit
   `d40abd3`).  Seventeenth audit cleared the three mediums + §8
@@ -69,10 +80,7 @@ _(beyond #1: promote a deferred item from `docs/copyright-policy.md`
   lacked a §8 deviation marker.  Rephrased the for-analysts line to
   point at the 2026-05-16 niche-selection Past goal, added
   `<!-- §8 operator-directed deviation -->` to the .gitkeep with a
-  matching row in `docs/architecture.md` Layers table.  Plus
-  `.gitignore` now covers `.claude/*.lock` after the eighteenth
-  audit flagged `.claude/scheduled_tasks.lock` as a persistently
-  untracked runtime artifact.
+  matching row in `docs/architecture.md` Layers table.
 
 - **2026-05-18** (~14:15 KST) **Clear audit DRIFT_DETECTED — sync
   faceless-short Tier-routing docs + migrate achieved goal**

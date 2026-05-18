@@ -7,27 +7,26 @@
 
 **Verdict**: DRIFT_DETECTED
 **Full report**: [`docs/audit/2026-05-18-all.md`](2026-05-18-all.md)
-**Generated**: 2026-05-18 14:42:36 KST
+**Generated**: 2026-05-18 14:56:20 KST
 
 ## Summary (from audit)
 
 
-Eighteenth audit of the session; HEAD = `d40abd3` (2026-05-18, ~14:34 KST).
-Supersedes the seventeenth audit at HEAD `39c5db3` (2026-05-18, ~14:23 KST).
+Nineteenth audit of the session; HEAD = `e1fda78` (2026-05-18).
+Supersedes the eighteenth audit at HEAD `d40abd3` (2026-05-18, ~14:34 KST).
 Full-scope audit covering all six dimensions: architecture vs documentation drift,
 roadmap freshness, operator-contract compliance, cost-model accuracy, stale TODOs /
-dead code, and security / secrets.  Two commits landed since the prior audit run
-that generated `CURRENT-ALERT.md` (14:32:34 KST): `39c5db3` (already captured) and
-`d40abd3` (audit-fix — resolved both [low] findings from the seventeenth audit).
-Both previously-flagged [low] findings are now fully resolved: `docs/for-analysts.md:78`
-rephrased correctly and `outputs/publish/.gitkeep` carries the `<!-- §8 operator-directed
-deviation -->` marker with a matching row in the `docs/architecture.md` Layers table.
-Three new [low] findings: (1) `docs/audit/CURRENT-ALERT.md` still shows DRIFT_DETECTED
-for findings resolved ~40 seconds after the alert was written; (2) `docs/roadmap.md`
-Done section missing the `d40abd3` entry per §9 contract; (3) `.claude/scheduled_tasks.lock`
-is an untracked Claude Code runtime file not covered by `.gitignore`, creating persistent
-noise in `git status`.  Security, secrets, model assignments, roadmap commit-hash
-validity, and §5 marker compliance all pass clean.
+dead code, and security / secrets.  One commit landed since the eighteenth audit:
+`e1fda78` ("docs(audit): close last 2 lows — gitignore .claude/*.lock + roadmap Done
+entry for d40abd3") resolved two of the three 18th-audit [low] findings — `d40abd3`
+Done entry is now present in `docs/roadmap.md` (line 63) and `.claude/*.lock` is now
+covered by `.gitignore` (line 130).  Three new [low] findings: (1) `CURRENT-ALERT.md`
+still shows DRIFT_DETECTED — two of its three listed findings are resolved but the
+alert has not auto-cleared (requires a CLEAN `audit-run.sh` run); (2) `e1fda78` itself
+has no Done entry in `docs/roadmap.md` per §9; (3) `docs/roadmap.md:72–75` attributes
+the `.gitignore` fix to `d40abd3` when `git show d40abd3 --name-only` confirms `.gitignore`
+was not in `d40abd3`'s changed-files list — it was changed by `e1fda78`.  Architecture,
+model assignments, cost model, secrets scan, and §5 marker compliance all pass clean.
 
 ## Critical / High findings
 
