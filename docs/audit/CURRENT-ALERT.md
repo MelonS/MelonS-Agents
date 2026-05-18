@@ -6,31 +6,40 @@
 > and re-run the auditor.
 
 **Verdict**: DRIFT_DETECTED
-**Full report**: [`docs/audit/2026-05-18-all.md`](2026-05-18-all.md)
-**Generated**: 2026-05-19 00:06:50 KST
+**Full report**: [`docs/audit/2026-05-19-contract.md`](2026-05-19-contract.md)
+**Generated**: 2026-05-19 00:49:55 KST
 
 ## Summary (from audit)
 
 
-Twentieth audit; HEAD = `65a5045` on branch `feat/post-merge-detection`
-(one commit ahead of `main` at `22a45ea`).  Full-scope audit covering all
-six dimensions: architecture vs documentation drift, roadmap freshness,
-operator-contract compliance, cost-model accuracy, stale TODOs / dead
-code, and security / secrets.  Since the nineteenth audit (HEAD `e1fda78`),
-twelve commits landed on `main` (primarily docs micro-commits) plus one
-structural commit on the new `feat/post-merge-detection` branch.  The most
-significant new work: branch strategy codified in `operator-contract.md` §6
-(`a2a3807`), pre-merge gate script added (`22a45ea`), and GitHub Actions
-CI workflow created (`65a5045`, still on feat branch awaiting merge).  A
-same-day contract-focused audit (`docs/audit/2026-05-18-contract.md`) ran
-at HEAD `22a45ea` and surfaced a [medium] finding: `.claude/settings.json`
-hardcodes `/Users/melons` at nine locations, violating §8 env-driven-paths;
-this remains unresolved at `65a5045`.  Additional [low] findings: `CLAUDE.md`
-and `operator-contract.md` disagree on repo visibility (private vs public);
-four work-bearing commits lack roadmap Done entries; roadmap "Now" contains
-two expired "revisit at home ~23:00 KST 2026-05-18" reminders; and
-`CURRENT-ALERT.md` is stale.  Architecture, model assignments, cost model,
-secrets scan, §5 marker compliance, and `.gitignore` coverage all pass clean.
+Contract-focused audit at HEAD `c9ecb15` on branch `feat/skill-music-video`
+(2026-05-19 ~00:41 KST, "docs(ideas): park A/B test — planner + resourcer
+at Opus vs Sonnet").  This is the twenty-first audit overall; the most recent
+prior audit was the all-scope run that wrote `docs/audit/2026-05-18-all.md`
+at HEAD `65a5045` on `feat/post-merge-detection`.  Current `origin/main` =
+`a537018` (GitHub Actions main-protection); local `feat/skill-music-video`
+is five commits ahead with structural work: §8 portability principles
+codified, Skill #1 shipped, `config/claude-settings.template.json` +
+`scripts/install-claude-local.sh` created, `scripts/bootstrap.sh` wired.
+All five structural commits are correctly isolated on the feat branch and
+have NOT been merged to `origin/main` — confirming §6 is being followed for
+current work.
+
+**Note on the previous contract audit file at this same path**: an earlier
+run today (~00:41 KST) wrote an incorrect [medium] finding asserting that
+commits `a993753`, `912d61c`, and `40aeab1` "are on `main`."  `git log
+feat/skill-music-video ^main` disproves this: those three commits appear
+exclusively on the feat branch.  The earlier auditor appears to have read
+`git log` output from the feat branch and mistaken "visible in history"
+for "on main."  This report supersedes that erroneous run.
+
+Key positives: §8 `.claude/settings.json` hardcode finding (carried since
+2026-05-17) resolved in `912d61c`; all six agent frontmatter models match
+`docs/for-analysts.md` table; no secrets in any committed file; no §5
+marker violations (all `.claude/agents/*.md` edits predate the convention).
+Remaining concerns: one [medium] contract-process violation (pre-merge gate
+bypassed for `feat/post-merge-detection` → `origin/main`), and four [low]
+items.
 
 ## Critical / High findings
 

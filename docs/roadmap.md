@@ -54,6 +54,16 @@ not code).
 > blocks operator's next-goal decision; advance only with explicit
 > direction since branch deletion is a destructive remote op.
 
+<!-- suggest 2026-05-19 ~02:30 KST (overnight autonomous):
+The three "revisit at home ~23:00 KST 2026-05-18" reminders above
+have aged out — the home session happened (skill-framework pivot,
+multi-skill direction set, Skill #1 shipped overnight on
+feat/skill-music-video).  Format-variation cluster and
+problem-solver framing both got conversation time.  Recommend
+operator review + remove or move to docs/ideas.md.
+Flagged as a [low] in 2026-05-19-contract.md audit. -->
+
+
 
 ## Next — queued, in priority order
 
@@ -190,6 +200,37 @@ _(beyond #2: promote a deferred item from `docs/copyright-policy.md`
     A/B test idea for planner + resourcer = Opus vs Sonnet
     captured in [`docs/ideas.md`](ideas.md) Agents section,
     priority M, suggested test design + cost.  Commit `c9ecb15`.
+
+- **2026-05-18** (~22:30 KST) **GitHub Actions main-protection
+  workflow** (commit `a537018`).  Solo-dev safety net for the §6
+  branch strategy: 6 static checks (bash syntax, secret scan,
+  required files present, `.env.example` sanity, README link
+  hygiene, gitignore pattern coverage) triggered on push to `main`
+  and `feat/**`.  First green run verified on `main` HEAD.  Pairs
+  with `22a45ea` (pre-merge-check) as the automated half of the
+  4-gate process.
+
+- **2026-05-18** (~22:00 KST) **Pre-merge gate + automated check
+  script** (commit `22a45ea`).  `scripts/pre-merge-check.sh`
+  exercises gates 1 (audit CLEAN) + 3 (§5 marker compliance)
+  automatically; gates 2 (functional test) + 4 (operator OK)
+  remain manual.  Per §6, every structural feat branch runs the
+  gate before FF merge to main.
+
+- **2026-05-18** (~21:00 KST) **Branch strategy codified in
+  operator-contract §6** (commit `a2a3807`).  Option B locked
+  in: `main` always-runnable trunk + `feat/<name>` for structural
+  changes + `v0.x.0` tags for stability checkpoints.  Strategy
+  is now automatic — operator does not need to invoke it
+  per-task; structural-change triggers list defines when feat
+  branching applies.
+
+- **2026-05-18** (~20:00 KST) **Music-video-first bootstrap +
+  README rewrite** (commit `aa10ba0`).  `bootstrap.sh` rewritten
+  to lead with the music-video mission as the first-touch
+  experience (replacing the highlight mission in that slot).
+  README EN + KO refreshed to match.  375 lines changed across
+  both languages.
 
 - **2026-05-18** (~14:55 KST) **Close two eighteenth-audit lows —
   `.claude/*.lock` gitignore + d40abd3 Done entry** (commit

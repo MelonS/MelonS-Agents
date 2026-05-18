@@ -32,7 +32,7 @@ The full contract — agent behavior, never-pause rule, money firewall, dual-sta
 ## Git workflow — auto-commit, auto-push
 
 - **Every code change** (anything under `agents/`, `.claude/agents/`, `config/`, `scripts/`, `docs/`, `CLAUDE.md`, `README.md`, `.env.example`, `.gitignore`) is committed and pushed to `origin/main` on completion.
-- Remote: `git@github.com:MelonS/MelonS-Agents.git` (private).
+- Remote: `git@github.com:MelonS/MelonS-Agents.git` (public).
 - `records/` is **never** committed (gitignored). The history on GitHub reflects only how the agent system itself evolves, not its outputs.
 - Use `git commit` and `git push` as two separate Bash calls; never `&&`-compound (classifier blocks it; see operator-contract §7).
 - Commit message style: imperative subject ≤72 chars, optional body with bullets explaining *why*. Group changes by concern; don't bundle unrelated edits.
