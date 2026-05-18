@@ -1,0 +1,1 @@
+../../../agents/missions/music-video/run.sh
