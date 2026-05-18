@@ -45,115 +45,132 @@ vision verbatim at ~19:50 KST: 사람들을 돕기 위해, 나의 취직을
   the repo is meant to serve *other people in similar straits*,
   not just the operator.
 
-**Architectural direction (operator-stated)**: convert pipelines
-into **Claude Code Skills** (the Anthropic feature the operator
-heard about via the KakaoTalk group's 5월 20일 Claude Style →
-Skills migration discussion).  Research agent launched 2026-05-18
-~19:55 KST returned at ~20:00 KST.  Synthesis below.
+**Architectural direction (operator-stated, corrected
+2026-05-18 ~20:10 KST)**: convert pipelines into **Skills following
+the open [agentskills.io](https://agentskills.io) standard**.
+Operator's reference point is the
+[Nous Research Hermes Agent](https://github.com/NousResearch/hermes-agent)
+project's skill model, not Anthropic's Claude Code Skills feature
+(the two are related — both implement the same agentskills.io
+open standard — but Hermes is the project the operator wanted me
+to study).  An initial research pass at ~19:55 KST mistakenly
+focused on Claude Code Skills; a follow-on fetch on Hermes
+landed at ~20:10 KST.  Synthesis below combines both, since the
+shared standard means a Skill written once can target multiple
+runtimes.
 
-#### Claude Skills — research synthesis (2026-05-18 ~20:00 KST)
+#### Hermes Agent — research synthesis (2026-05-18 ~20:10 KST)
 
-**What a Skill actually is**: a folder at one of
-`.claude/skills/<name>/` (project) / `~/.claude/skills/<name>/`
-(personal) / `<plugin>/skills/<name>/` (distributable).  Contains
-`SKILL.md` (markdown + YAML frontmatter) plus optional supporting
-files (`scripts/`, reference docs).  Implements the open
-[Agent Skills standard](https://agentskills.io) (works across
-multiple AI tools) but Claude Code extends with extra features
-(forked context, dynamic injection, plugin namespacing).
+**Project**: `github.com/NousResearch/hermes-agent` —
+"The agent that grows with you", Python primary (88%) +
+TypeScript (8.8%), v0.14.0 released 2026-05-16 (very recent),
+extremely active (4k+ open issues, 5k+ PRs).
 
-**Two invocation modes**:
-- **User-initiated**: `/skill-name` autocomplete (controlled by
-  `user-invocable: true` default).
-- **Auto-invoked**: Claude reads all skill descriptions and loads
-  the matching one when relevant (controlled by `description` +
-  `when_to_use` frontmatter; disable with
-  `disable-model-invocation: true`).
+**Core philosophy** — distinct from Claude Code:
+- **Tools** = 40+ built-in capabilities (terminal, file I/O, API)
+- **Skills** = *procedural memory* — autonomous reusable
+  workflows that **the agent itself creates from experience**
+  and refines over time.  Self-improving.
+- **Agents** = subagents spawned for parallel workstreams.
 
-**Context cost**: Skills are *prompt-based* — when loaded, content
-stays in context for the rest of the session.  Long skills =
-recurring token cost on every turn.  Mitigation: `context: fork`
-runs the skill in an isolated subagent and returns only a summary
-(important for our heavy ffmpeg pipelines — keeps the main
-conversation context clean).
+The key Hermes innovation: skills are **agent-curated and
+self-improving during use**, vs Claude Code's
+operator-curated-static model.  A Hermes skill watches the
+operator do something repeatedly, then proposes formalizing
+that pattern into a callable skill; subsequent runs let the
+agent refine the skill.
 
-**KakaoTalk "Claude Style → Skills 이관" interpretation**: the
-research did **not** find an official Anthropic announcement of a
-user-facing migration deadline.  `.claude/commands/` files still
-work and behave identically to skills.  The 5월 20일 reference is
-likely about Anthropic's internal tooling or a community-project
-migration — **NOT a forced user-facing deadline**.  We can pace
-the Skill conversion at our own speed.
-
-**Existing bash pipeline → Skill conversion** (the question the
-operator actually cares about):
-
-The existing `agents/missions/music-video/run.sh` becomes:
+**Repo structure**:
 ```
-.claude/skills/music-video-pipeline/
-├── SKILL.md     ← new file (YAML frontmatter + invocation prompt)
-└── scripts/
-    └── run.sh   ← unchanged — symlink or copy from agents/missions/
+hermes-agent/
+├── skills/                     ← shipped/core skills
+├── optional-skills/            ← non-core add-ons
+├── agent/                      ← agent runtime
+├── acp_registry/, acp_adapter/ ← ACP (Agent Comm Protocol) bits
+└── ~/.hermes/skills/openclaw-imports/  (per-user runtime, migrated skills)
 ```
 
-The bash script itself stays untouched.  SKILL.md is a thin
-wrapper that:
-- Names + describes the skill so Claude knows when to use it
-- Declares `allowed-tools` (Bash patterns: `Bash(bash *)`,
-  `Bash(ffmpeg *)`, etc.) — explicit permission grant
-- Uses `context: fork` so the heavy render doesn't pollute the
-  main conversation
-- Points Claude at `${CLAUDE_SKILL_DIR}/scripts/run.sh` with
-  the right arguments
+Per-user / per-config files in markdown:
+- `SOUL.md` — agent persona
+- `MEMORY.md` — durable agent memory
+- `USER.md` — user profile
 
-**Feasibility verdict**: **HIGH** for Skill #1 (music-shorts).
-The current code shape (`agents/missions/<type>/run.sh`) is
-*already* skill-shaped — converting is mostly adding a SKILL.md
-metadata layer; ~1 day of work including testing.  Existing
-permissions (`.claude/settings.json` allow/deny list) compose
-cleanly with the per-skill `allowed-tools` grant.
+**Invocation**: slash commands (`/<skill-name>`) work in both CLI
+and messaging platforms; auto-detection via `/skills` browser.
+Hermes-specific: skills can also be **triggered by agent
+introspection** ("I've seen this pattern before, should I make
+a skill?").
 
-**Feasibility verdict for Skill #2 (job-hunt support)**: the
-*Skill packaging* is straightforward.  The *underlying pipeline*
-needs design work (job-board scrapers + LLM filter + dedupe +
-digest format) — that's the real cost.  Estimate: ~3-5 days for
-v1, separate from the Skills wrapper.
+**Distribution — this is the big one**:
+[Skills Hub at agentskills.io](https://agentskills.io) is a
+**vendor-neutral marketplace** for skills following the open
+standard.  Skills written to this spec are portable between
+Hermes / Claude Code / any other compliant runtime.  This is a
+material upgrade over Claude Code's repo-based-only distribution.
 
-**Distribution path**:
-- v1 = project-level (`.claude/skills/`) for our use.
-- v2 (if Skill #2 lands and works) = bundle both as a **plugin**
-  so other people can install with one command.  No public
-  marketplace exists yet, so distribution is repo-based.
+#### Cross-compatibility insight (the strategic angle)
 
-**Risks / caveats**:
-- Skills duplicate logic if we keep both `agents/missions/*/run.sh`
-  AND `.claude/skills/*/scripts/run.sh`.  Either symlink (clean)
-  or deprecate `agents/missions/` post-conversion (cleaner but
-  invalidates existing roadmap references).  Decide at impl time.
-- `context: fork` is the right pattern for music-video (heavy)
-  but auto-mode skill description tuning is non-trivial — getting
-  Claude to *correctly* auto-invoke without false positives takes
-  iteration.
-- Plugin distribution requires defining a "plugin" structure;
-  Anthropic's plugin docs are sparser than skill docs — research
-  agent flagged this as v2 territory.
+Both Hermes and Claude Code implement `agentskills.io` — meaning
+**a Skill written to the open standard works in both runtimes**.
+For the operator's "helping people" vision this is leverage:
+- Build Skill #1 (music-shorts) once → runs in Claude Code
+  (existing harness) AND Hermes (Python-heavier alt) AND any
+  future agentskills.io-compliant agent.
+- Publish to the agentskills.io marketplace → discoverable by
+  users who use *neither* of our specific harnesses but want
+  the music-shorts capability.
+- Hermes-specific "self-improvement" is **optional**: a static
+  Skill is valid spec; we can add the evolution loop later if
+  it makes sense for our specific skills.
 
-#### Action items (when operator confirms this goal)
+**Trade-off**:
+- Claude Code Skill (simpler, our existing harness) = ~1 day,
+  works for our users only.
+- agentskills.io-compliant Skill = +0.5 day extra spec
+  conformance, works in Hermes too, listable on Skills Hub.
+- Recommended: go agentskills.io-compliant from day one.  Extra
+  effort is minimal and unlocks a real distribution channel.
 
-1. **Phase 1 (~1 day)** — Skill-ify music-video as `.claude/skills/music-video-pipeline/`.
-   Keep `agents/missions/music-video/run.sh` running in parallel
-   for now (deprecate later).  Tune `description` + `when_to_use`
-   for auto-invocation, OR set `disable-model-invocation: true`
-   for explicit-only.
-2. **Phase 2 (~3-5 days)** — Design + build job-hunt support pipeline
-   (`scripts/`-level bash + python).  Iterate on operator's actual
-   job search → patterns emerge → bake into Skill #2.
-3. **Phase 3 (~1 day)** — Skill-ify job-hunt pipeline + bundle both
-   skills as a plugin for distribution.
-4. **Phase 4 (open)** — Decide on public release (separate repo
-   for the plugin, README rewrite for framework framing, etc.).
+#### Bash pipeline → Skill conversion (unchanged from prior pass)
 
-Total Phase 1+2+3 estimate: ~5-7 days of work.
+Concrete file structure (target):
+```
+.claude/skills/music-video-pipeline/      ← Claude Code location
+└── SKILL.md
+└── scripts/run.sh                         ← existing bash, unchanged
+```
+OR Hermes location at `~/.hermes/skills/music-video-pipeline/`,
+same files.  Operator picks distribution path.
+
+SKILL.md is the metadata wrapper:
+- `description` + `when_to_use` (controls auto-invocation)
+- `allowed-tools` (per-skill permission grant)
+- `context: fork` for heavy pipelines (keeps main convo clean)
+- body = invocation prompt that calls `scripts/run.sh`
+
+The bash itself stays untouched in either case.
+
+#### Updated action items (when operator confirms this goal)
+
+1. **Phase 0 (~half-day)** — Study agentskills.io spec; verify
+   exact SKILL.md schema; pick the lowest-common-denominator
+   feature set that works in both Hermes and Claude Code.
+2. **Phase 1 (~1 day)** — Skill-ify music-video to the open
+   spec.  Test in Claude Code (our harness); validate in Hermes
+   (clone repo, drop skill in, run).
+3. **Phase 2 (~3-5 days)** — Design + build job-hunt support
+   pipeline.  Iterate on operator's actual job search → patterns
+   emerge → bake into Skill #2.  Hermes "self-improvement" loop
+   considered here (job-hunt patterns are exactly the kind of
+   thing that benefits from learning user-specific tells).
+4. **Phase 3 (~1 day)** — Skill-ify job-hunt + publish both
+   skills to agentskills.io Skills Hub for distribution.
+5. **Phase 4 (open)** — Public release narrative: README
+   reframing, plugin bundling for Claude Code, separate readme
+   for Hermes users, etc.
+
+Total Phase 0+1+2+3 estimate: ~5.5-7.5 days.
+
 
 **Skill roadmap (operator-stated order)**:
 
@@ -169,16 +186,20 @@ Total Phase 1+2+3 estimate: ~5-7 days of work.
 
 **Not in scope yet** (operator may add):
 - Additional skills beyond #1 and #2.
-- Marketplace / publishing of skills externally.
 - Multi-machine / cloud deployment of the framework.
+- (Publication to agentskills.io Skills Hub IS in scope — see
+  Phase 3 above.  Removed from this exclusion list after
+  2026-05-18 ~20:10 KST research revealed Hermes uses the open
+  standard with an actual marketplace.)
 
 **Why this isn't promoted to Active goal yet**:
 - Per goal.md maintenance contract, agent does not silently
   promote.  Operator confirms.
-- Research agent on Claude Skills is mid-flight; the technical
-  feasibility of "convert existing bash pipeline → Skill" is
-  not yet established.  Promotion happens after research lands
-  AND operator explicitly says "활성 goal로 박아."
+- Hermes Agent + Claude Skills research landed at 2026-05-18
+  ~20:10 KST (see synthesis above).  Technical feasibility is
+  established (Skill #1 ~1 day, Skill #2 ~3-5 days, total
+  5.5-7.5 days for 4 phases).  Promotion now blocked only on
+  operator explicit OK ("활성 goal로 박아").
 
 **Open questions for the home (~23:00 KST) session**:
 - Same repo (skill folder structure) vs new repo for Skill #2?
