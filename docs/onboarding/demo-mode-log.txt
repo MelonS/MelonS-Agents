@@ -1,0 +1,1 @@
+2026-05-19 01:25:59 +0900  PASS  remote=/Users/melons/ai  short=repo/records/missions/2026-05-19/music-video-demo-012441/outputs/short.mp4  size=81MB  duration=60s  sources_lines=3
