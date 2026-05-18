@@ -22,6 +22,7 @@
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=for-the-badge)
 ![License](https://img.shields.io/github/license/MelonS/MelonS-Agents?style=for-the-badge)
+[![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 
 ![music-video 파이프라인 출력의 5초 애니메이션 프리뷰 — Velvet Turntable Suno 트랙 + jazz/vintage Pexels B-roll 키워드 + phrase-aware pond ripple + halation 쉐이더 combo, 9:16 세로 쇼츠, 클라이맥스 중간 구간 (25-30초) 의 pond surface 변위 + 스모키 라운지 인테리어 위의 warm halation bloom](docs/demo/music-video-velvet1-jazz-combo-preview.gif)
 

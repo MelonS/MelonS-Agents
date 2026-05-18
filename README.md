@@ -22,6 +22,7 @@
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=for-the-badge)
 ![License](https://img.shields.io/github/license/MelonS/MelonS-Agents?style=for-the-badge)
+[![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 
 ![5-second animated preview of the music-video pipeline output — Velvet Turntable Suno track + jazz/vintage Pexels B-roll keywords + phrase-aware pond ripple + halation shader combo, 9:16 vertical short, mid-climax window (25-30 s) showing the pond surface displacement and warm halation bloom over smoky lounge interior](docs/demo/music-video-velvet1-jazz-combo-preview.gif)
 

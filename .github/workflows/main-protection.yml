@@ -1,0 +1,159 @@
+name: main-protection
+
+# Runs static checks on every push to `main` and `feat/**` branches.
+# Purpose: catch broken state on `main` even when the operator's
+# MacBook is closed and the local launchd auditor isn't firing.
+# Solo-dev safety net — `main` going red is visible immediately
+# via the README status badge + GitHub auto-email to the operator.
+#
+# All checks are static (no Claude CLI auth required) so the
+# workflow runs cleanly on Ubuntu without any secrets.
+
+on:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: main-protection-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bash syntax check on all *.sh
+        run: |
+          set -uo pipefail
+          fail=0
+          while IFS= read -r f; do
+            if ! bash -n "$f" 2>&1; then
+              echo "❌ syntax error in $f"
+              fail=1
+            fi
+          done < <(find . -name '*.sh' \
+                     -not -path './records/*' \
+                     -not -path './.git/*' \
+                     -not -path './.claude/cache/*')
+          if [[ "$fail" -eq 0 ]]; then
+            echo "✓ all *.sh pass bash -n"
+          fi
+          exit $fail
+
+      - name: Secret pattern scan
+        run: |
+          set -uo pipefail
+          # Look for high-confidence secret patterns in committed files.
+          # Excludes docs/, config/, and .env.example which legitimately
+          # contain placeholder strings or pattern text.
+          patterns='(sk-[a-zA-Z0-9]{40,}|AKIA[0-9A-Z]{16}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]{20,}|AIza[0-9A-Za-z_-]{35})'
+          # Use git grep for tracked files only
+          if git grep -nE "$patterns" -- ':(exclude)docs' ':(exclude).env.example' ':(exclude)config' ':(exclude).github' 2>/dev/null; then
+            echo "❌ potential secret detected (above)"
+            exit 1
+          fi
+          echo "✓ no high-confidence secret patterns detected in tracked files"
+
+      - name: Required files present
+        run: |
+          set -uo pipefail
+          required=(
+            scripts/audit-run.sh
+            scripts/bootstrap.sh
+            scripts/install-scheduler.sh
+            scripts/pre-merge-check.sh
+            agents/lib/env.sh
+            agents/lib/log.sh
+            agents/lib/ffmpeg.sh
+            .claude/agents/orchestrator.md
+            .claude/agents/auditor.md
+            docs/operator-contract.md
+            docs/goal.md
+            docs/roadmap.md
+            CLAUDE.md
+            README.md
+            README.ko.md
+            .env.example
+            .gitignore
+          )
+          fail=0
+          for f in "${required[@]}"; do
+            if [[ ! -f "$f" ]]; then
+              echo "❌ required file missing: $f"
+              fail=1
+            fi
+          done
+          if [[ "$fail" -eq 0 ]]; then
+            echo "✓ all ${#required[@]} required files present"
+          fi
+          exit $fail
+
+      - name: .env.example sanity
+        run: |
+          set -uo pipefail
+          if [[ ! -s .env.example ]]; then
+            echo "❌ .env.example missing or empty"
+            exit 1
+          fi
+          # Required keys that bootstrap.sh expects to template
+          required_keys=(FFMPEG_BIN OLLAMA_HOST WHISPER_MODEL RECORDS_DIR)
+          fail=0
+          for k in "${required_keys[@]}"; do
+            if ! grep -qE "^${k}=" .env.example; then
+              echo "❌ .env.example missing required key: $k="
+              fail=1
+            fi
+          done
+          if [[ "$fail" -eq 0 ]]; then
+            echo "✓ .env.example contains all ${#required_keys[@]} required keys"
+          fi
+          exit $fail
+
+      - name: README internal links resolve
+        run: |
+          set -uo pipefail
+          fail=0
+          for md in README.md README.ko.md; do
+            while IFS= read -r link; do
+              # link captured as docs/foo.md or pilots/bar.md etc.
+              # strip optional anchor
+              file="${link%%#*}"
+              # readmes link from repo root
+              if [[ ! -f "$file" && ! -d "$file" ]]; then
+                echo "❌ broken link in $md: $link"
+                fail=1
+              fi
+            done < <(grep -oE '\]\((docs|scripts|agents|assets|site|config)/[^)]+\)' "$md" \
+                       | sed 's/^](\(.*\))$/\1/')
+          done
+          if [[ "$fail" -eq 0 ]]; then
+            echo "✓ README internal links resolve"
+          fi
+          exit $fail
+
+      - name: gitignore covers sensitive paths
+        run: |
+          set -uo pipefail
+          required_patterns=('^records/' '^\.env$' '^\.claude/sessions/' '^\.claude/.*\.lock')
+          fail=0
+          for pat in "${required_patterns[@]}"; do
+            if ! grep -qE "$pat" .gitignore; then
+              echo "❌ .gitignore missing pattern matching: $pat"
+              fail=1
+            fi
+          done
+          if [[ "$fail" -eq 0 ]]; then
+            echo "✓ .gitignore covers all critical sensitive paths"
+          fi
+          exit $fail
