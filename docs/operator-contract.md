@@ -111,18 +111,72 @@ carry-forward — predates marker convention` rather than fresh
 [low] findings.  Only §5-scope commits dated 2026-05-17 or later
 need the marker.
 
-### 6. Git workflow — auto-commit, auto-push
+### 6. Git workflow — auto-commit, auto-push, branch strategy
 
 Every code or doc change (anything under `agents/`, `.claude/agents/`,
 `config/`, `scripts/`, `docs/`, `CLAUDE.md`, `README.md`,
-`README.ko.md`, `.env.example`, `.gitignore`) is committed and
-pushed to `origin/main` on completion.
+`README.ko.md`, `.env.example`, `.gitignore`) is committed and pushed
+to the appropriate branch on completion.
 
-- Remote: `git@github.com:MelonS/MelonS-Agents.git` (private).
+- Remote: `git@github.com:MelonS/MelonS-Agents.git` (public).
 - Records (`records/`) are never committed.
 - Commit message style: imperative subject ≤72 chars, optional body
   with bullets explaining *why*.  Group changes by concern; don't
   bundle unrelated edits.
+
+**Branch strategy (codified 2026-05-18 ~21:30 KST after operator
+direction "브랜치 전략 너의 추천대로 갈게")**:
+
+The repo is now publicly clone-able by external users (KakaoTalk +
+LinkedIn sharing; first external clone verified 2026-05-18).  A
+broken `main` damages reputation.  Therefore:
+
+- **`main` = always-runnable trunk** — micro-commits go here directly.
+- **`feat/<name>` = structural-change branches** — big changes live
+  here until validated, then merge to `main`.
+- **`v<MAJOR>.<MINOR>.<PATCH>` tags** — stable checkpoints.  README
+  recommends external users clone the latest tag, not `main`.  Tag
+  on milestone events (first shipped batch, new skill, etc.).
+
+**What counts as `micro-commit` (direct to `main` OK)**:
+
+- `docs/` updates (daily reports, audit reports, roadmap entries,
+  pilot tracking).
+- Audit-fix commits (any commit driven by an audit report).
+- `README.md` / `README.ko.md` typo / small wording fixes.
+- One-line bug fixes that don't change semantics.
+- `assets/music/SOURCES.md` track additions.
+- Daily report files in `docs/daily/`.
+
+**What counts as `structural-change` (feat branch required)**:
+
+- `.claude/agents/*.md` edits (already gated by §5; now also branch).
+- `.claude/skills/*` create / edit (new layer — Skills work).
+- `agents/missions/<type>/run.sh` — new mission type or major
+  semantics change.
+- New `scripts/` tooling that other components will call.
+- `.env.example` schema additions (new env vars).
+- Dependency changes (new external API, replaced library).
+- Multi-file refactors crossing 3+ concerns.
+
+**Workflow on a `feat/<name>` branch**:
+
+1. `git checkout -b feat/<name>` from latest `main`.
+2. Iterate; commit + push to `origin/feat/<name>` (not main).
+3. When work is validated locally, fast-forward merge to `main`:
+   `git checkout main && git merge --ff-only feat/<name> && git push origin main`.
+4. Delete the branch: `git branch -d feat/<name> && git push origin --delete feat/<name>`.
+5. If the merge represents a user-visible milestone, also tag
+   (e.g., `git tag -a v0.2.0 -m "..."`).
+
+**Tag convention**:
+
+- `v0.1.0` = 2026-05-18 — first batch of music-shorts shipped to YT.
+- `v0.x.0` bumps for skill milestones (Skill #1 shipped, Skill #2
+  shipped, etc.).
+- Patch bumps `v0.x.y` for stability-only fixes within a minor.
+- No `v1.0.0` until the multi-skill framework vision (see
+  `docs/goal.md`) is shipped.
 
 ### 7. Split commit and push
 

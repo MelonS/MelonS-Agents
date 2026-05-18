@@ -457,10 +457,21 @@ in [`docs/cost-model.md`](docs/cost-model.md).
 
 ## Quick start — music-video flow (the showcase)
 
+> **First-time clone — use the latest release tag for a stable
+> snapshot.**  The `main` branch may contain in-flight structural
+> work (e.g., the Skills refactor on `feat/skill-music-video`);
+> tagged releases are guaranteed-tested checkpoints.  The latest
+> tag is listed on the
+> [Releases page](https://github.com/MelonS/MelonS-Agents/releases).
+
 ```bash
-# 1) clone + cd
-git clone https://github.com/MelonS/MelonS-Agents.git
+# 1) clone the latest stable release tag (recommended for first-time users)
+git clone --branch v0.1.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
+
+# OR — if you want the bleeding-edge main (may include in-flight work):
+# git clone https://github.com/MelonS/MelonS-Agents.git
+# cd MelonS-Agents
 
 # 2) bootstrap (verifies tools, auto-fetches whisper model + ollama model,
 #    prints exact brew/apt commands for anything missing, warns if the

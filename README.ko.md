@@ -431,10 +431,21 @@ agent-driven 경로에서만 소비됩니다.
 
 ## 빠른 시작 — music-video 플로우 (메인 쇼케이스)
 
+> **첫 클론은 최신 릴리즈 태그를 추천.**  `main` 브랜치는
+> 진행 중인 큰 변경 (예: Skills 리팩터, `feat/skill-music-video`
+> 브랜치) 이 들어있을 수 있음.  태그된 릴리즈는 검증된 스냅샷.
+> 최신 태그는
+> [Releases 페이지](https://github.com/MelonS/MelonS-Agents/releases)
+> 에서 확인.
+
 ```bash
-# 1) 클론 + cd
-git clone https://github.com/MelonS/MelonS-Agents.git
+# 1) 최신 안정 릴리즈 태그 클론 (첫 사용자 권장)
+git clone --branch v0.1.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
+
+# 또는 — 진행중인 main이 필요하면:
+# git clone https://github.com/MelonS/MelonS-Agents.git
+# cd MelonS-Agents
 
 # 2) 부트스트랩 (도구 점검, whisper / ollama 모델 자동 다운로드,
 #    누락된 거에 대해 정확한 brew/apt 명령 출력, Pexels 키 미설정 경고)
