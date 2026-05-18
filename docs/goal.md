@@ -150,26 +150,118 @@ SKILL.md is the metadata wrapper:
 
 The bash itself stays untouched in either case.
 
-#### Updated action items (when operator confirms this goal)
+#### Step-by-step action plan (when operator confirms this goal)
 
-1. **Phase 0 (~half-day)** — Study agentskills.io spec; verify
-   exact SKILL.md schema; pick the lowest-common-denominator
-   feature set that works in both Hermes and Claude Code.
-2. **Phase 1 (~1 day)** — Skill-ify music-video to the open
-   spec.  Test in Claude Code (our harness); validate in Hermes
-   (clone repo, drop skill in, run).
-3. **Phase 2 (~3-5 days)** — Design + build job-hunt support
-   pipeline.  Iterate on operator's actual job search → patterns
-   emerge → bake into Skill #2.  Hermes "self-improvement" loop
-   considered here (job-hunt patterns are exactly the kind of
-   thing that benefits from learning user-specific tells).
-4. **Phase 3 (~1 day)** — Skill-ify job-hunt + publish both
-   skills to agentskills.io Skills Hub for distribution.
-5. **Phase 4 (open)** — Public release narrative: README
-   reframing, plugin bundling for Claude Code, separate readme
-   for Hermes users, etc.
+**Operator feedback 2026-05-18 ~20:20 KST**: "몇일은 너무 오래
+걸리는거 같은데... 단계별로 해야 할듯".  Re-decomposed into
+shippable ~1-3 hour units.  Each step is "stop-able" — operator
+can pause after any step and still have something working.
 
-Total Phase 0+1+2+3 estimate: ~5.5-7.5 days.
+##### Skill #1 — Music-shorts (rough total ~6-8h split into 4 steps)
+
+- **Step 1.1** (~1h) **Spec study + SKILL.md draft**.  Read
+  agentskills.io spec, identify required vs optional fields,
+  write an empty SKILL.md template at
+  `.claude/skills/music-video-pipeline/SKILL.md` with TODO
+  placeholders.  **Stop-here payoff**: we know exactly what
+  fields are needed; placeholder file committed.
+- **Step 1.2** (~2h) **Wrap existing bash in SKILL.md**.  Fill
+  the placeholder fields: `description`, `when_to_use`,
+  `allowed-tools`, `context: fork`, body invokes
+  `${CLAUDE_SKILL_DIR}/scripts/run.sh` (symlink or copy of
+  existing `agents/missions/music-video/run.sh`).  **Stop-here
+  payoff**: Skill #1 exists, invocable via `/music-video-pipeline`.
+- **Step 1.3** (~1h) **Test in Claude Code** (our existing
+  harness).  Invoke the skill, verify it produces a 60s 9:16
+  mp4, compare against existing mission output.  **Stop-here
+  payoff**: confirmed our existing music-shorts pipeline runs
+  through the Skill interface.
+- **Step 1.4** (~2h) **Validate cross-compat in Hermes**.
+  Clone hermes-agent, drop the skill in
+  `~/.hermes/skills/music-video-pipeline/`, run.  Document any
+  spec-conformance fixes needed.  **Stop-here payoff**: skill
+  works in both runtimes → confirms open-standard claim →
+  ready for Skills Hub.
+
+##### Skill Hub publication (~2-3h, optional after Skill #1)
+
+- **Step P.1** (~1-2h) **Marketplace listing prep**.  Write
+  description, attribution (Suno music license, Pexels API
+  license), example invocation, screenshots / demo gif.  Use
+  existing `docs/demo/music-video-velvet1-jazz-combo-preview.gif`.
+- **Step P.2** (~1h) **Publish to agentskills.io**.  Submit
+  Skill #1.  **Stop-here payoff**: first public Skills Hub
+  artifact under operator's identity.
+
+##### Skill #2 — Job-hunt support (rough total 1-2 days split into 6 small steps)
+
+Decomposed so each step delivers a useful artifact on its own.
+Operator can stop after any step and have a working tool.
+
+- **Step 2.1** (~2-3h) **ONE-site scraper — Wanted only**.
+  `scripts/scrape-jobs-wanted.sh` fetches today's posts under
+  one keyword (e.g., "AI engineer").  Saves to
+  `records/jobs/<date>/wanted.json`.  Cron-able.  **Stop-here
+  payoff**: daily Wanted snapshot, even without LLM filter.
+- **Step 2.2** (~2h) **LLM filter**.  Take yesterday's snapshot,
+  pass each posting through local ollama (`llama3.2:3b`) with a
+  prompt that classifies it as "fits problem-solver profile /
+  doesn't fit".  Output: filtered subset.  **Stop-here payoff**:
+  noise reduction, even if from one site.
+- **Step 2.3** (~1-2h) **Dedupe + persistence**.  Cross-day
+  dedupe by job-id; persist seen-IDs in `records/jobs/seen.json`.
+  **Stop-here payoff**: new postings only, no daily repeat.
+- **Step 2.4** (~1-2h) **Daily digest markdown**.  Format
+  filtered new postings as a daily markdown digest with title /
+  company / fit-rationale / apply-link.  Write to
+  `records/jobs/<date>/digest.md`.  **Stop-here payoff**:
+  operator gets a useful daily morning digest.
+- **Step 2.5** (~2-3h) **Second site (LinkedIn or JobPlanet)**.
+  Same scraper shape, different selector.  Merge into digest.
+  **Stop-here payoff**: multi-source coverage.
+- **Step 2.6** (~2h) **Skill-ify**.  Wrap the whole pipeline in
+  `~/.claude/skills/job-hunt-digest/` with SKILL.md.  Now
+  invocable as `/job-hunt-digest` in any Claude Code session.
+  **Stop-here payoff**: Skill #2 callable + shareable.
+
+##### Public-release narrative (~2-3h, after both skills)
+
+- **Step F.1** (~1h) README EN+KO reframing — repo identity from
+  "music-shorts agent" → "multi-skill framework, music + job-hunt
+  shipped".
+- **Step F.2** (~1-2h) Publish Skill #2 to Skills Hub + write
+  short blog-post-style narrative explaining the framework for
+  external users.
+
+##### Cumulative estimates
+
+| Block | Steps | Total time |
+|---|---|---|
+| Skill #1 (music) | 1.1 → 1.4 | ~6-8h (1 session day) |
+| Skills Hub | P.1 → P.2 | ~2-3h |
+| Skill #2 (job-hunt) | 2.1 → 2.6 | ~10-14h (2 session days split) |
+| Public release | F.1 → F.2 | ~2-3h |
+| **Total** | 14 steps | **~20-28h** (vs prior 5.5-7.5 days)|
+
+The TOTAL hour count is similar to before, but each step is
+**stop-able**.  After Step 1.3 operator can pause days/weeks if
+needed and the music-shorts skill is already useful.  After Step
+2.1 the job scraper is daily-useful even without LLM filter.
+
+##### Order flexibility
+
+Operator can also reorder:
+- **Music-first** (1.1→1.4 → P.1→P.2 → 2.1→2.6 → F.1→F.2) =
+  ship Skill #1 fully before starting job-hunt
+- **Job-hunt-first** (2.1→2.6 → 1.1→1.4 → P.1→P.2 → F.1→F.2) =
+  ship the personal job-hunt tool first (operator's most
+  immediate need)
+- **Parallel** = interleave depending on motivation/blockers
+
+Recommendation: **Job-hunt-first** — operator's immediate need
+is more acute (active job search), and Skill #2 is the harder
+one so derisking earlier is wise.  Skill #1 conversion is
+trivial enough that it can land any time.
 
 
 **Skill roadmap (operator-stated order)**:
