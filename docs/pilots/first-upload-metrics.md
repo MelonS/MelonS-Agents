@@ -7,6 +7,21 @@ with the one that closed the 2026-05-17 active goal.  This is the
 platform feeds back with real watch-time / impressions.  Subsequent
 batch uploads (2026-05-18 onward) appended below the first.
 
+> **Public URL policy** (operator threat-model decision, 2026-05-18):
+> Public YouTube URLs are **intentionally not committed** to this
+> repo.  The repo's audience (global GitHub visitors) includes
+> adversarial actors; linking the repo identity to a specific YT
+> channel would permanently expose channel-level info (display
+> name, channel art, voice/face if uploaded, other content).
+> Credibility for hiring managers is provided by committed evidence
+> (preview GIFs, frame thumbnails, mission trails) and the
+> `<!-- §12 operator-authorized deviation -->` LinkedIn anchor in
+> `site/index.html` — the inverse asymmetry is deliberate: LinkedIn
+> is *wanted* exposure (job-hunt signal), YT is *managed* exposure
+> (operator memory + closed-community shares only).  Numeric
+> metrics (Views, CTR, watch-time, etc.) can be filled in here
+> without the URL — they don't expose the channel.
+
 ---
 
 ## Upload #1 — 03e-velvet1-jazz-combo (2026-05-17)
@@ -100,7 +115,7 @@ Append a row per check-in.  First row captured ~24 h after publish.
 | Visibility | Public |
 | Publish time | 2026-05-18 ~15:00 KST (immediate) |
 | Production mission | `records/missions/2026-05-18/music-video-upload3-000333/` |
-| Public URL | _to be filled — operator paste after upload_ |
+| Public URL | _intentionally not committed — see "Public URL policy" above_ |
 
 ## Upload #3 — 09-vibraphone-tokyo (2026-05-18 19:00 KST, scheduled)
 
@@ -116,7 +131,7 @@ Append a row per check-in.  First row captured ~24 h after publish.
 | Visibility | Scheduled → Public at 2026-05-18 19:00 KST |
 | Publish time | 2026-05-18 19:00 KST (scheduled via YouTube Studio) |
 | Production mission | `records/missions/2026-05-18/music-video-upload6-003009/` |
-| Public URL | _to be filled — operator paste after the 19:00 auto-publish_ |
+| Public URL | _intentionally not committed — see "Public URL policy" above_ |
 
 ## Upload #4 — 08-hiphop-urban (2026-05-19 08:00 KST, scheduled)
 
@@ -134,7 +149,7 @@ Append a row per check-in.  First row captured ~24 h after publish.
 | Production mission | `records/missions/2026-05-18/music-video-upload5-002812/` |
 | Taste signal | operator's sister (piano major) picked this as the favorite of the batch — first non-operator quality vote on this format |
 | Content note | `smoke_neon_glow` B-roll uses a Pexels clip whose page title mentions smoking; operator reviewed and elected to keep as-is — if YT auto-flags for age restriction, that's the platform's call |
-| Public URL | _to be filled — operator paste after the 08:00 auto-publish_ |
+| Public URL | _intentionally not committed — see "Public URL policy" above_ |
 
 ## Cross-upload comparison (when data lands)
 
