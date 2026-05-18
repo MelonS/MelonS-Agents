@@ -26,6 +26,14 @@ capture in
 [`docs/pilots/first-upload-metrics.md`](pilots/first-upload-metrics.md)
 once the upload crosses the 24h mark (~23:30 KST 2026-05-18).
 
+_Pending operator review (revisit at home ~23:00 KST 2026-05-18)_:
+format-variation brainstorm parked in
+[`docs/ideas.md`](ideas.md#2026-05-18--music-video-format-variations--per-video-quality-upgrade--brainstorm--h)
+— three direction clusters (A: music-format variations, B: content
+category expansion, C: per-video quality upgrades).  Operator
+explicitly asked to be shown this list on the home session; do
+not promote any cluster to active goal without operator pick.
+
 > Open queue items below in "Next" are eligible today — see #1
 > (filter-repo backup-branch deletion, eligible 2026-05-18+).  None
 > blocks operator's next-goal decision; advance only with explicit

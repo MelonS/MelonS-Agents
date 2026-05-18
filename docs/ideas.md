@@ -41,6 +41,86 @@ _(none yet)_
 
 ## Pipeline + Infrastructure
 
+### 2026-05-18 | Music-video format variations + per-video quality upgrade — brainstorm | H
+
+**Motivation**: operator at ~18:20 KST surfaced three direction
+clusters for the next stretch of work, distinct from "just queue
+more identical music-videos."  Captured here so they aren't lost
+between meeting + late-evening sessions; operator asked to revisit
+this list when home (~23:00 KST).  No decision made yet.
+
+**Cluster A — music-format variations (existing pipeline, light twist)**:
+
+- **A1. Music + minimal captions** — 3–5 emotion / track-title words
+  burned at beat-stress times.  Reuses existing libass burn-in path;
+  ~half-day work.
+- **A2. Mini-narrative B-roll** — replace mood-keyword extraction with
+  a *sequential* arc ("morning → cafe → window → street → night") so
+  the 8 windows tell a micro-story.  Touches the keyword generator in
+  `music-video/run.sh`.
+- **A3. Single-subject multi-angle** — 8 angles of the same subject
+  (e.g., 8 rainy-Tokyo shots) instead of distinct mood keywords.
+  Pexels query change only.
+- **A4. Slow-cinema mode** — cuts at 3–4 s instead of beat-quick
+  0.5–1 s, no glitches, vibe-first.  aubio settings flip.
+- **A5. Channel branding cards** — 0–1 s logo intro + 58–60 s
+  subscribe outro.  ffmpeg overlay only.
+
+**Cluster B — content category expansion (beyond music)**:
+
+- **B1. Music + ASMR layering** — rain / coffee / vinyl crackle noise
+  bed mixed under the Suno track.  Audio-only change.
+- **B2. Short-film cinematic trailer** — 1–2 min trailer (script + AI
+  VO + B-roll).  New mission type, large scope, new active goal.
+- **B3. Poem / quote + music** — text-led, music supports.  Hybrid of
+  faceless and music-video.
+- **B4. Game demo / speedrun** — operator's prior-domain expertise.
+  Zero-overlap with current stack; already parked under "domain-pivot
+  portability" below.  Keep as long-tail.
+
+**Cluster C — per-video quality upgrades (revisit existing outputs)**:
+
+- **C1. Shader pass for the rest** — pond / halation / combo applied
+  to 01–02 / 04–09.  Per-video 3–5 min ffmpeg.
+- **C2. Unified color LUT** — current 8 clips per video are from 8
+  different photographers; tone is inconsistent.  Apply one LUT in
+  the render stage.
+- **C3. Beat-stress transitions** — hard-cuts → crossfade / whip-pan
+  on beat-stress points.  Reuses existing aubio data.
+- **C4. Designed thumbnails** — currently auto-extracted mid-frame.
+  Replace with hook-text designed 1080×1920 PNG per video.
+- **C5. Audio mastering** — Suno raw → ffmpeg `loudnorm` + light EQ /
+  compression so the track sits at YT Shorts loudness target.
+
+**Estimated visual-delta-per-time leaders** (operator can pick highest
+leverage when home):
+
+- **A1** (~half day, visible delta on every future render)
+- **C1** (~5 min/video, applies to 8 existing videos retroactively)
+- **C4** (design decision + automation, CTR-direct impact)
+
+**New-active-goal candidates** (would re-set `docs/goal.md`):
+
+- **B2** (short-film trailer mission) — new mission type, ~3–5 day
+  scope.
+- **A2** (mini-narrative B-roll) — keyword-gen rewrite + 1 day for
+  pipeline + 1 day for prompt iteration.
+
+**Dependencies**: none blocking — these are all pure pipeline / ffmpeg
+/ prompt work.  Cluster B2 is the only one that needs operator design
+input (the script-writing prompt + tone).
+
+**Estimated cost**: per-cluster as listed.  No Anthropic spend at
+runtime; cluster A/C all stay Tier-2.  B2's script generation could
+use the existing `FACELESS_SCRIPT_OVERRIDE` Sonnet opt-in for quality
+(operationally negligible against Max quota).
+
+**Status**: brainstorm parked.  Operator scheduled to revisit when
+home (~23:00 KST 2026-05-18).  Roadmap "Now" carries a pointer to
+this entry until then.
+
+---
+
 ### 2026-05-16 | Domain-pivot portability — framework vs vertical split | L
 
 **Motivation**: this repo is currently optimized for short-form video
