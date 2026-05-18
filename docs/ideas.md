@@ -35,7 +35,79 @@ live entries — empty subcategories are noise.
 
 ## Agents
 
-_(none yet)_
+### 2026-05-19 | A/B test — planner + resourcer at Opus vs Sonnet | M
+
+**Motivation**: external review (community member, anonymized per
+`no-pii-in-repo`) noted on 2026-05-19 ~01:30 KST:
+
+> "Planner 와 Resourcer 가 Sonnet 이 아니라 Opus 로 셋팅했을 때
+> 전체 퀄리티 차이가 어느 정도나 날지 문득 궁금하네요."
+
+The question is well-posed.  We've never measured this dimension.
+Current model assignments (in `.claude/agents/*.md`):
+
+| Subagent | Current model | Rationale at the time |
+|---|---|---|
+| orchestrator | **opus** | top-level mission decomposition + cross-stage coordination |
+| planner | sonnet | mission brief → plan.md (fixed format, low-creativity output) |
+| resourcer | sonnet | fetch / probe / prepare assets |
+| editor | sonnet | apply changes → outputs/ |
+| qa | sonnet | validate against plan.md acceptance criteria |
+| auditor | sonnet | repo-wide read-only audit |
+
+**Where the question bites**: planner's `plan.md` and resourcer's
+manifest are *upstream* artifacts that everything downstream
+(editor, qa) consumes.  A weak plan compounds — editor renders
+the wrong window, qa validates against a flawed acceptance line.
+Opus's reasoning depth might catch ambiguous briefs that Sonnet
+flat-tones.  But in practice — most of our current mission flow
+is bash-scripted, not subagent-delegated, so the upgrade might
+not bite where the subagents are most active (which is the
+*orchestration* tier, where we already use Opus).
+
+**Suggested A/B test design** (when this becomes priority):
+
+1. Pick a moderately ambiguous mission brief — e.g., a faceless-
+   short topic that needs interpretive framing ("explain the
+   significance of the Hittites" without a script override).
+2. Run twice:
+   - Variant A: planner=opus, resourcer=opus (rest unchanged).
+   - Variant B: current (planner=sonnet, resourcer=sonnet).
+3. Hold input fixed.  Capture:
+   - `plan.md` quality (subjective score 1-10 from operator,
+     plus token count + section completeness).
+   - `MANIFEST.md` quality (asset count, mood-keyword matching
+     against the script's beats).
+   - Final output quality (operator approval: yes / "이대로 올려도
+     됨" / fix needed).
+   - Token cost delta (Max plan quota burn).
+   - Wall-clock delta.
+4. If Opus yields ≥ 1 point on the subjective scale + measurable
+   downstream win, promote planner + resourcer to Opus for at
+   least the script-generation missions.  If not, keep Sonnet
+   and document the null result.
+
+**Where to do it**: this A/B *changes* `.claude/agents/*.md`,
+which is logic-changes-need-OK per §5.  So the A/B itself runs
+on a feat branch (`feat/abtest-planner-opus`) with explicit
+operator OK to flip + revert after.  The two runs are commits on
+that branch; the result + verdict commits to main as docs/.
+
+**Dependencies**: faceless-short or another subagent-heavy mission
+type is the better testbed than music-video (which is fully
+scripted).  May also benefit from running after Skill #1 lands —
+Skills may shift where the subagents are most active.
+
+**Estimated cost**: ~2-3h hands-on (set up branch, swap models,
+run two missions, score outputs, doc the verdict).  Token burn
+depends on which missions we test — bounded by the Max plan
+quota.
+
+**Status**: parked.  External insight, not yet operator-decided.
+Surface in the next "what's parked vs active" review with
+operator.
+
+---
 
 ---
 
