@@ -4,11 +4,11 @@
 
 **한국어** | [English](./README.md) · [**라이브 사이트 →**](https://melons.github.io/MelonS-Agents/)
 
-**토픽 프롬프트 → 60초 9:16 세로 쇼츠.**
+**음악 파일 → 60초 9:16 세로 쇼츠.**  (또는 토픽 프롬프트 → 내레이션 쇼츠, 이전 미션 타입.)
 
-**기계적인 단계는 로컬, 창작 단계는 Claude.**  세 가지 감사 트리거 — 커밋·이상·스케줄 — 으로 시스템이 자신의 드리프트를 스스로 잡습니다.  영어 + 한국어 듀얼 트랙.
+**기계적인 단계는 로컬, 창작 단계는 Claude.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조와 동기화.  세 가지 감사 트리거 — 커밋·이상·스케줄 — 으로 시스템이 자신의 드리프트를 스스로 잡습니다.  영어 + 한국어 듀얼 트랙.
 
-`미션 32회 · 런타임 API 토큰 0개 · 감사 레이어 3개 · v6 scorecard 44 / 50 · MIT`
+`미션 출력 60+ · 미션 타입 5종 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -20,27 +20,32 @@
 ![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude-D97757?style=for-the-badge&logo=anthropic&logoColor=white)
 
-![GitHub stars](https://img.shields.io/github/stars/MelonS/MelonS-Agents?style=for-the-badge)
-![GitHub forks](https://img.shields.io/github/forks/MelonS/MelonS-Agents?style=for-the-badge)
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=for-the-badge)
 ![License](https://img.shields.io/github/license/MelonS/MelonS-Agents?style=for-the-badge)
 
-![faceless-short v6 파이프라인 출력의 5초 애니메이션 프리뷰 — 히타이트 토픽, 9:16 세로 쇼츠, 역사 전투 재연 B-roll 위에 영어 자막 "Scholars called the Hittites fiction" 번인, 좌측 상단 Pexels 라이선스 표기](docs/demo/v6-hittites-preview.gif)
+![music-video 파이프라인 출력의 5초 애니메이션 프리뷰 — Velvet Turntable Suno 트랙 + jazz/vintage Pexels B-roll 키워드 + phrase-aware pond ripple + halation 쉐이더 combo, 9:16 세로 쇼츠, 클라이맥스 중간 구간 (25-30초) 의 pond surface 변위 + 스모키 라운지 인테리어 위의 warm halation bloom](docs/demo/music-video-velvet1-jazz-combo-preview.gif)
 
 </div>
 
 ## 개요
 
 > macOS 기반 멀티 에이전트 시스템입니다.  **현재 초점** — 위 데모에
-> 보이는 — 은 faceless 숏폼 영상 생성.  **하지만 시스템 자체는
-> 숏폼 전용이 아닙니다.**  스캐폴드 — orchestrator + 4개 미션
-> 서브에이전트 + 파일 기반 핸드오프 + 3-layer 반응형 감사 +
-> Tier-1/Tier-2 비용 라우팅 — 은 범용으로 설계되었으며, 숏폼
-> 영상은 *시각적으로 검증 가능한 구체적 산출물*에 대해 아키텍처를
-> 시험해 본 v1 미션 타입일 뿐입니다.  추가 미션 타입 (리서치
-> 워크플로우, 다단계 데이터 파이프라인, 운영자가 다음으로 집어 올
-> 자동화 작업 등) 은 프로젝트가 성숙하면서 같은 스캐폴드 위에
-> 얹힐 예정입니다.
+> 보이는 — 은 `music-video` 미션: 음악 트랙 in, 9:16 세로 쇼츠 out,
+> phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조와 동기화
+> (운영자 파일럿 픽, 2026-05-17 —
+> [`docs/pilots/decision-log.md`](docs/pilots/decision-log.md) 참조).
+> 이전의 `faceless-short` 미션 (내레이션 기반 쇼츠) 과 v1 미션
+> (`highlight` / `summarize` / `shorts-batch`) 도 트리에 대안 경로로
+> 유지됩니다.
+>
+> **하지만 시스템 자체는 숏폼 전용이 아닙니다.**  스캐폴드 —
+> orchestrator + 4개 미션 서브에이전트 + 파일 기반 핸드오프 +
+> 3-layer 반응형 감사 + Tier-1/Tier-2 비용 라우팅 — 은 범용으로
+> 설계되었으며, 숏폼 영상은 *시각적으로 검증 가능한 구체적
+> 산출물*에 대해 아키텍처를 시험해 본 v1 미션 타입일 뿐입니다.
+> 추가 미션 타입 (리서치 워크플로우, 다단계 데이터 파이프라인,
+> 운영자가 다음으로 집어 올 자동화 작업 등) 은 프로젝트가
+> 성숙하면서 같은 스캐폴드 위에 얹힐 예정입니다.
 >
 > 단 하나의 원칙 위에 만들어졌습니다 — **제작 파이프라인을
 > 자동화하고, 시스템이 자신의 로직을 스스로 진화시키게 한다.**
@@ -50,9 +55,10 @@
 
 > **엔지니어링 결정, 한 페이지로.**
 > [`docs/engineering-case-studies.ko.md`](docs/engineering-case-studies.ko.md)
-> — 프로덕션에서 드러난 4건의 문제와 각각이 만들어낸 최소 메커니즘
+> — 프로덕션에서 드러난 5건의 문제와 각각이 만들어낸 최소 메커니즘
 > (Tier-1 라우팅, 세마포어 배치, 콘텐츠 품질 피드백 루프, 3-레이어
-> 리액티브 감사). 각 항목은 *문제 → 제약 → 결정 → 산출물* 포맷.
+> 리액티브 감사, ffmpeg 쉐이더의 한계). 각 항목은 *문제 → 제약 →
+> 결정 → 산출물* 포맷.
 
 ## 설계 노트
 
@@ -130,10 +136,14 @@ v5 = 운영자 검증 완료 → 정식
 — "비디오에서 사용 가능 라이선스" 와 "파일 재배포 가능 라이선스" 가
 다른 문제라 레포는 절대 오디오 자산을 들고 다니지 않음.
 
+아래는 첫 업로드된 쇼츠의 중반 (t = 30초) 정지 프레임 — 운영자가 승인하여 2026-05-17 목표를 마감한 deliverable, 운영자의 YouTube Shorts 채널에 라이브:
+
+![outputs/publish/03e-velvet1-jazz-combo.mp4 의 중반 정지 프레임 — 9:16 세로, amber 램프의 빈티지 재즈 인테리어, 바이닐 레코드 모티프, 밝은 광원 주변의 warm halation bloom + 화면 전체의 미세한 pond 표면 변위, Suno 생성 lo-fi jazz 트랙 아래 Pexels 라이선스 B-roll](docs/pilots/screens/music-video-velvet1-jazz-combo.jpg)
+
 재현:
 
 ```bash
-agents/missions/music-video/run.sh <id> <path/to/music.mp3>
+./agents/missions/music-video/run.sh <id> <path/to/music.mp3>
 ```
 
 #### 포스트프로세싱 쉐이더 (2026-05-17 저녁)
@@ -175,11 +185,11 @@ Diffusion + AnimateDiff, ComfyUI, RunwayML / Kaiber) 중 하나가
 
 ```bash
 # 단일 효과
-scripts/music-video-shaders.sh pond     <input.mp4> <output.mp4>
-scripts/music-video-shaders.sh halation <input.mp4> <output.mp4>
+./scripts/music-video-shaders.sh pond     <input.mp4> <output.mp4>
+./scripts/music-video-shaders.sh halation <input.mp4> <output.mp4>
 
 # phrase-aware combo (검증된 최종 결과)
-scripts/music-video-shaders.sh combo    <input.mp4> <output.mp4>
+./scripts/music-video-shaders.sh combo    <input.mp4> <output.mp4>
 ```
 
 ### Faceless 파일럿 (영어 + 한국어 A/B)
@@ -212,13 +222,15 @@ A/B 제작 노트, 플랫폼별 업로드 메타데이터, 다음 10개 토픽 �
 
 둘 다 *Sintel* 트레일러 (CC-BY-3.0, © Blender Foundation — `durian.blender.org`)에서 추출.  공통 요소: 좌측 상단 출처 어트리뷰션 오버레이, 9:16 letterbox-blur 배경, 하단 safe-zone 박스 안의 libass 번인 자막.
 
-### 파일럿 점수표 — 어느 버전에서 무엇이 좋아졌나
+### Faceless-파일럿 점수표 (historical — 내레이션 시대)
 
-운영자 질문: *"썸네일만으로는 뭐가 좋아지는지 안 보인다."*
-정직한 답은 쇼트폼 시청 유지율에 매핑되는 다섯 가지 차원에 걸친
-구조화된 자체 평가입니다.
+아래 점수표는 **이전** `faceless-short` 미션 (내레이션 기반 쇼츠) 의
+점수표입니다.  music-video 피벗 이전의 v4 → v5 → v6 반복에서 나온
+구조화된 진행 신호로 보존됩니다.  music-video 미션에는 아직 동등한
+점수표가 없습니다 — 운영자 승인 + 플랫폼 시청 시간 데이터 (첫
+업로드 후) 가 현재 초점에 대한 per-차원 점수를 대체할 예정.
 
-![누적 가로 막대 차트, 파일럿 점수표 — Hittites EN v4 26/50, v5 32/50, v6 44/50, Hydrogen EN v5 28/50, v6 43/50; 막대당 다섯 색 세그먼트 (후크, 영상-자막 매칭, 가독성, 사실 일관성, 마감)](docs/metrics/scorecard.png)
+![누적 가로 막대 차트, faceless-파일럿 점수표 — Hittites EN v4 26/50, v5 32/50, v6 44/50, Hydrogen EN v5 28/50, v6 43/50; 막대당 다섯 색 세그먼트 (후크, 영상-자막 매칭, 가독성, 사실 일관성, 마감)](docs/metrics/scorecard.png)
 
 v5 → v6 상승폭 (단일 라인 자막은 v5에서 이미 적용 완료, v6는
 스크립트 생성 단계만 로컬 `llama3.2:3b`에서 Claude Sonnet으로
@@ -228,12 +240,8 @@ v5 → v6 상승폭 (단일 라인 자막은 v5에서 이미 적용 완료, v6�
 "10%인지 60%인지 헷갈리네").
 
 투명성 고지: 점수는 시청자 패널이 아니라 Claude가 매긴 자체
-평가입니다.  실제 플랫폼 시청 시간 데이터가 들어오기 전까지의
-구조화된 진행 신호로만 사용합니다.  버전별 상세 + 추론 + 차원
-정의: [`docs/pilots/scorecard.md`](docs/pilots/scorecard.md).
-원본 데이터: [`docs/pilots/scorecard.json`](docs/pilots/scorecard.json).
-JSON 수정 후 차트 재생성:
-`.venv/bin/python scripts/generate-scorecard-chart.py`.
+평가입니다.  버전별 상세 + 추론은
+[`docs/pilots/scorecard.md`](docs/pilots/scorecard.md).
 
 
 ## 분석가/리뷰어를 위한 안내
@@ -422,7 +430,7 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 
 - **에이전트가 모든 작업을 수행** — 설치, 편집, 설정, 커밋, 푸시, 스케줄링. 사용자는 터미널에서 명령을 실행하지 않습니다.
 - 사용자는 **에이전트가 하드 가드레일에 막힐 때만** 개입 (예: 본인 권한 자체 수정, `main`에 강제 푸시) — 그 경우에도 클릭 한 번의 승인만, 절대 다단계 레시피 따라하기 아님.
-- **현재 활성 목표**는 [`docs/roadmap.md`](docs/roadmap.md)에 있습니다. 아래의 "상태" 목록은 평면적 기능 원장 — TODO 리스트로 읽지 마세요. 로드맵의 *Now* 섹션이 "다음에 무엇을 할지"의 단일 출처입니다.
+- **결과 vs 작업 큐, 분리.** [`docs/goal.md`](docs/goal.md) 에 구체 deliverable 로서의 active goal, [`docs/roadmap.md`](docs/roadmap.md) 에 일별 작업 큐 (그 *Now* 섹션이 "다음에 무엇을 할지"의 단일 출처).
 - **결제 방화벽**: 유료 API, SaaS 구독, 클라우드 리소스 생성은 사용자의 명시적 확인이 필요. 로컬 자원(Ollama, FFmpeg, whisper.cpp, brew)은 완전 자율.
 
 전체 계약: [`CLAUDE.md`](CLAUDE.md) 및 [`config/policies.yaml`](config/policies.yaml) 자율 모드 규칙 참조.

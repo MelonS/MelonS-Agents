@@ -4,11 +4,11 @@
 
 [한국어](./README.ko.md) | **English** · [**Live site →**](https://melons.github.io/MelonS-Agents/)
 
-**Topic prompt → 60-second 9:16 vertical short.**
+**Music file → 60-second 9:16 vertical short.**  (Or topic prompt → narrated short, the earlier mission type.)
 
-**Local for the mechanical, Claude for the creative.**  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
+**Local for the mechanical, Claude for the creative.**  Phrase-aware ffmpeg shaders sync vintage visuals to music structure.  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
 
-`32 missions · 0 runtime API tokens · 3 audit layers · v6 scorecard 44 / 50 · MIT`
+`60+ mission outputs · 5 mission types · 0 runtime API tokens · 3 audit layers · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -20,19 +20,25 @@
 ![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude-D97757?style=for-the-badge&logo=anthropic&logoColor=white)
 
-![GitHub stars](https://img.shields.io/github/stars/MelonS/MelonS-Agents?style=for-the-badge)
-![GitHub forks](https://img.shields.io/github/forks/MelonS/MelonS-Agents?style=for-the-badge)
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=for-the-badge)
 ![License](https://img.shields.io/github/license/MelonS/MelonS-Agents?style=for-the-badge)
 
-![5-second animated preview of the faceless-short v6 pipeline output — Hittites topic, 9:16 vertical short, screen-fill B-roll of historical battle reenactment, English caption "Scholars called the Hittites fiction" burned in, Pexels-licensed attribution top-left](docs/demo/v6-hittites-preview.gif)
+![5-second animated preview of the music-video pipeline output — Velvet Turntable Suno track + jazz/vintage Pexels B-roll keywords + phrase-aware pond ripple + halation shader combo, 9:16 vertical short, mid-climax window (25-30 s) showing the pond surface displacement and warm halation bloom over smoky lounge interior](docs/demo/music-video-velvet1-jazz-combo-preview.gif)
 
 </div>
 
 ## Overview
 
 > A macOS-based multi-agent system.  **The current focus** — and what
-> you see in the demo above — is faceless short-form video generation.
+> you see in the demo above — is the `music-video` mission: a music
+> track in, a 9:16 vertical short out, with phrase-aware ffmpeg
+> shaders syncing vintage visuals to the music's structure (operator
+> pilot pick, 2026-05-17 — see
+> [`docs/pilots/decision-log.md`](docs/pilots/decision-log.md)).
+> The earlier `faceless-short` mission (narration-driven shorts) and
+> the v1 missions (`highlight` / `summarize` / `shorts-batch`) remain
+> in the tree as alternate paths.
+>
 > **The system itself is not shorts-specific.**  The scaffold —
 > orchestrator + 4 mission subagents + file-based handoff + 3-layer
 > reactive audit + Tier-1/Tier-2 cost routing — is general-purpose by
@@ -49,9 +55,10 @@
 
 > **Engineering decisions, one page.**
 > [`docs/engineering-case-studies.md`](docs/engineering-case-studies.md)
-> — four production incidents and the minimum mechanism each one
+> — five production incidents and the minimum mechanism each one
 > produced (Tier-1 routing, semaphore-bounded batch, content-quality
-> feedback loop, three-layer reactive audit). Each entry follows
+> feedback loop, three-layer reactive audit, and shader-effects-in-
+> ffmpeg / knowing-where-the-wall-is).  Each entry follows
 > *problem → constraint → decision → artifact*.
 
 ## Design notes
@@ -137,10 +144,14 @@ landed on top of v5 in the same mission, tunable per render via
 in your video" license is not the same as a "free to redistribute
 the file" license, so the repo never carries audio assets.
 
+Mid-climax frame (t = 30 s) from the first uploaded short — operator-approved deliverable that closed the 2026-05-17 goal, currently live on the operator's YouTube Shorts channel:
+
+![Mid-climax frame from outputs/publish/03e-velvet1-jazz-combo.mp4 — 9:16 vertical, vintage jazz interior with amber lamp, vinyl record motif, warm halation bloom around bright sources and subtle pond-surface ripple displacement across the whole frame, Pexels-licensed B-roll under a Suno-generated lo-fi jazz track](docs/pilots/screens/music-video-velvet1-jazz-combo.jpg)
+
 Reproduction:
 
 ```bash
-agents/missions/music-video/run.sh <id> <path/to/music.mp3>
+./agents/missions/music-video/run.sh <id> <path/to/music.mp3>
 ```
 
 #### Post-processing shaders (2026-05-17 evening)
@@ -190,11 +201,11 @@ Reproduction:
 
 ```bash
 # Apply a single effect
-scripts/music-video-shaders.sh pond     <input.mp4> <output.mp4>
-scripts/music-video-shaders.sh halation <input.mp4> <output.mp4>
+./scripts/music-video-shaders.sh pond     <input.mp4> <output.mp4>
+./scripts/music-video-shaders.sh halation <input.mp4> <output.mp4>
 
 # Phrase-aware combo (the validated end product)
-scripts/music-video-shaders.sh combo    <input.mp4> <output.mp4>
+./scripts/music-video-shaders.sh combo    <input.mp4> <output.mp4>
 ```
 
 ### Faceless pilots (English + Korean A/B)
@@ -227,13 +238,16 @@ Six-second slice of `highlight-015213/outputs/short.mp4` — Sintel trailer (CC-
 
 Both sourced from the *Sintel* trailer (CC-BY-3.0, © Blender Foundation — `durian.blender.org`).  Top-left source-attribution overlay, 9:16 letterbox-blur background, libass-burned caption inside the bottom safe-zone box.
 
-### Pilot scorecard — how each version actually improved
+### Faceless-pilot scorecard (historical — narration era)
 
-Operator-asked question: *"thumbnails alone don't tell me what's
-getting better."*  Honest answer is a structured self-evaluation
-across five dimensions that map to short-form viewer retention.
+Below is the scorecard for the **earlier** `faceless-short` mission
+(narration-driven shorts).  It is preserved as the structured progress
+signal from the v4 → v5 → v6 iterations that preceded the music-video
+pivot.  The music-video mission has no equivalent scorecard yet —
+operator approval + platform watch-time data (post first upload) will
+replace per-dimension scoring for the current focus.
 
-![Stacked horizontal bar chart, Pilot scorecard — Hittites EN v4 26/50, Hittites EN v5 32/50, Hittites EN v6 44/50, Hydrogen EN v5 28/50, Hydrogen EN v6 43/50; five-color segments per bar showing Hook, Visual sync, Readability, Factual, Polish dimensions](docs/metrics/scorecard.png)
+![Stacked horizontal bar chart, faceless-pilot scorecard — Hittites EN v4 26/50, Hittites EN v5 32/50, Hittites EN v6 44/50, Hydrogen EN v5 28/50, Hydrogen EN v6 43/50; five-color segments per bar showing Hook, Visual sync, Readability, Factual, Polish dimensions](docs/metrics/scorecard.png)
 
 The lift from v5 → v6 (single-line caption was already in place at
 v5; v6 swapped the script-generation stage from local `llama3.2:3b`
@@ -242,14 +256,9 @@ EN.  Most of the v5→v6 delta is **Hook** and **Factual coherence**
 — exactly the dimensions the operator surfaced as broken in v5
 ("초반 5초에 시선 끌만한게 없음", "10%인지 60%인지 헷갈리네").
 
-Honest disclosure: scores are assigned by Claude, not a viewer
-panel.  They are a structured progress signal until real platform
-watch-time data replaces them.  Full per-version breakdown +
-reasoning + dimension definitions in
-[`docs/pilots/scorecard.md`](docs/pilots/scorecard.md).  Source
-data: [`docs/pilots/scorecard.json`](docs/pilots/scorecard.json).
-Regenerate the chart after editing the JSON:
-`.venv/bin/python scripts/generate-scorecard-chart.py`.
+Honest disclosure: scores were assigned by Claude, not a viewer
+panel.  Full per-version breakdown + reasoning in
+[`docs/pilots/scorecard.md`](docs/pilots/scorecard.md).
 
 ## For analysts / reviewers
 
@@ -441,7 +450,7 @@ This repository is fully agent-operated. The day-to-day rules:
 
 - The **agent does all the work** — installs, edits, configs, commits, pushes, scheduling. The user does not run commands in the terminal.
 - The user steps in **only** when a hard guardrail blocks the agent (e.g., self-modifying its own permissions, force-pushing to `main`) — and even then only as a single click of approval, never a multi-step recipe.
-- **Active focus** lives in [`docs/roadmap.md`](docs/roadmap.md). The list below ("Status") is a flat capability ledger; do not read it as a TODO list. The roadmap's *Now* section is the source of truth for "what to work on next."
+- **Outcome vs work queue, kept separate.** [`docs/goal.md`](docs/goal.md) holds the active goal as a concrete deliverable; [`docs/roadmap.md`](docs/roadmap.md) holds the day-level work queue (its *Now* section is the source of truth for "what to work on next").
 - **Money firewall**: paid APIs, SaaS subscriptions, and cloud-resource creation require explicit user confirmation. Local resources (Ollama, FFmpeg, whisper.cpp, brew) stay fully autonomous.
 
 Full contract: see [`CLAUDE.md`](CLAUDE.md) and the [`config/policies.yaml`](config/policies.yaml) autonomy rules.
