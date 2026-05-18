@@ -75,11 +75,12 @@ common state — see the first entry in the log for the
 ffmpeg / ffmpeg-full Homebrew packaging gotcha that the test
 uncovered and the env.sh fix that resolved it.
 
-The faceless-short pilots (the current active goal's deliverables)
-live under [`pilots/`](pilots/) — caption-verify thumbnails, source
-scripts, caption-correction logs, and ready-to-paste platform upload
-copy.  Full MP4s stay in gitignored `records/` since their long-term
-value is the platform URL + view metrics, not the local file.
+The faceless-short pilots (2026-05-16 niche-selection deliverables,
+now in Past goals) live under [`pilots/`](pilots/) — caption-verify
+thumbnails, source scripts, caption-correction logs, and ready-to-paste
+platform upload copy.  Full MP4s stay in gitignored `records/` since
+their long-term value is the platform URL + view metrics, not the
+local file.
 
 The simulator is one of the project's [deliverable subgoals](goal.md):
 infrastructure subgoals alone don't complete a goal until a

@@ -7,24 +7,23 @@
 
 **Verdict**: DRIFT_DETECTED
 **Full report**: [`docs/audit/2026-05-18-all.md`](2026-05-18-all.md)
-**Generated**: 2026-05-18 03:08:32 KST
+**Generated**: 2026-05-18 14:32:34 KST
 
 ## Summary (from audit)
 
 
-Sixteenth audit of the session; HEAD = `f86c2f0` (2026-05-18, latest commit as of audit time).
-Supersedes the fifteenth audit at HEAD `e793662` (2026-05-17-contract.md).
+Seventeenth audit of the session; HEAD = `39c5db3` (2026-05-18, ~14:23 KST).
+Supersedes the sixteenth audit at HEAD `f86c2f0` (also 2026-05-18, 03:08 KST).
 Full-scope audit covering all six dimensions: architecture vs documentation drift,
 roadmap freshness, operator-contract compliance, cost-model accuracy, stale TODOs /
-dead code, and security / secrets.  Seven commits landed since the prior audit:
-`ab6555e` (plist templating — closes prior §8 plist finding), `a8291f5`, `6a460b0`,
-`23832fa`, `36323eb`, `65c35a6`, `f86c2f0`.  Key new surfaces: `scripts/music-video-shaders.sh`,
-`scripts/daily-music-video.sh`, `assets/music/SOURCES.md`, and `outputs/publish/`.
-Three medium findings identified: architecture docs describe the faceless-short script
-stage as Tier-1-Claude-primary, but the code defaults to Tier-2 ollama (opt-in override
-required); roadmap "Now" is stale after goal completion; CURRENT-ALERT.md was not
-auto-cleared after the §8 plist fix landed.  The prior §8 plist finding is fully
-resolved by `ab6555e`; all other prior high/critical findings remain clean.
+dead code, and security / secrets.  Six commits landed since the prior audit:
+`a1846f6` (daily-queue fix), `aa10ba0` (onboarding bootstrap), `5e831fe` (fresh-clone
+PASS log), `303949a` (readme polish), `9d7f954` (readme pricing/path update),
+`39c5db3` (audit fix — resolved all three medium findings from the prior run).
+All prior medium findings are now resolved.  Two low findings remain open:
+`outputs/publish/.gitkeep` (§8 carry-forward) and a stale "current active goal"
+reference in `docs/for-analysts.md:78` (new).  Security, secrets, model assignments,
+roadmap commit-hash validity, and §5 marker compliance all pass clean.
 
 ## Critical / High findings
 

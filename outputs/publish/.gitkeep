@@ -1,5 +1,15 @@
 # Publish-ready mp4s land here
 
+<!-- §8 operator-directed deviation: the operator-contract §8 rule says
+     "outputs go to $RECORDS_DIR (default ./records/, gitignored)."  This
+     directory sits at the repo root because the operator (docs/goal.md
+     2026-05-17 active-goal entry) explicitly directed a publish-ready
+     path "not buried under records/missions/<date>/<id>/outputs/."  Only
+     the .gitkeep scaffolding (this file) is tracked; mp4/wav/jpg outputs
+     remain globally gitignored.  No output artifact has ever been
+     committed under outputs/.  Documented in docs/architecture.md
+     Layers table. -->
+
 Output files (`*.mp4`, `*-thumb.jpg`) in this directory are gitignored
 per the repo-wide patterns in `/.gitignore`.  This `.gitkeep` exists so
 the directory itself is committed and survives a clean clone.

@@ -60,6 +60,27 @@ _(beyond #1: promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-18** (~14:15 KST) **Clear audit DRIFT_DETECTED — sync
+  faceless-short Tier-routing docs + migrate achieved goal**
+  (commit `39c5db3`).  Sixteenth audit (`docs/audit/2026-05-18-all.md`)
+  flagged three medium findings: (1) `docs/architecture.md` +
+  `docs/for-analysts.md` presented Sonnet as the primary script-
+  generation path for `faceless-short`, but the code defaults to
+  ollama and the Sonnet route is opt-in via `FACELESS_SCRIPT_OVERRIDE`
+  pointing at a `gen-script-claude.sh`-pre-generated file (cost-model.md
+  already had this right); (2) roadmap "Now" still referenced the
+  completed music-video goal's steps; (3) `CURRENT-ALERT.md`
+  hadn't auto-cleared after `ab6555e`'s §8 plist fix landed.  Plus
+  two low: 2026-05-17 ACHIEVED goal hadn't migrated to Past goals,
+  and `scripts/music-video-shaders.sh` had an undocumented §8
+  ffmpeg-fallback pattern.  All resolved in this commit: docs
+  rewritten to match code, roadmap "Now" cleared with operator-action
+  note for 24h metrics capture, goal migrated to Past goals (plus
+  cleaned the orphaned 2026-05-16 entry that had been sitting under
+  Active as a "Prior goal" subsection), §8 exception comment added
+  to `music-video-shaders.sh`.  Re-running `audit-run.sh all` to
+  confirm CLEAN.
+
 - **2026-05-17** (~22:00 KST) **Post-processing shader layer for music-video.**
   Four ffmpeg-only shader effects landed in `scripts/music-video-shaders.sh`
   (committed; ~190 lines including the docstring): `pond` (animated water-
