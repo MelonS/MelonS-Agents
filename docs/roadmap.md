@@ -34,6 +34,21 @@ category expansion, C: per-video quality upgrades).  Operator
 explicitly asked to be shown this list on the home session; do
 not promote any cluster to active goal without operator pick.
 
+_Pending operator review (revisit at home ~23:00 KST 2026-05-18,
+second pointer)_: at the coffee-shop session 2026-05-18 ~19:30 KST
+the conversation turned to the "problem solver" role concept —
+the emerging job category that frames problems for AI to execute,
+distinct from prompt-engineer (faded) and traditional developer.
+The take given to the operator was that this repo *is* a
+problem-solver portfolio artifact (decomposition, Tier-1/Tier-2
+routing, money firewall, audit feedback loop, onboarding redesign
+in response to external review).  Operator said "꼭 다시 알려줘"
+— bring this up again in the home session.  Connects to
+`project_repo_as_credibility_signal` (agent memory) and operator's
+ongoing job-hunt context; potential reframing of how the repo is
+presented to hiring managers (decision-pattern docs as the lead,
+not code).
+
 > Open queue items below in "Next" are eligible today — see #1
 > (filter-repo backup-branch deletion, eligible 2026-05-18+).  None
 > blocks operator's next-goal decision; advance only with explicit
