@@ -242,6 +242,83 @@ everything 가정은 안 그럴 때까지 괜찮음 — 정직한 move 는 벽�
 
 ---
 
+## 6. 온보딩 마찰이 첫 접점을 죽임 — 제로-계정 데모 경로
+
+**문제.** 보안 분야 종사자가 커피숍 세션에서 레포 README "Quick start"를
+처음부터 따라가다 음악 영상 미션이 한 번도 돌기 전에 세 군데 막힘:
+
+1. `PEXELS_API_KEY` 필수.  Pexels 가입은 Google / Apple / Facebook OAuth
+   강제 — 이메일 경로 없음.  Naver / Kakao 가 주된 KR 유저는 쓸 만한
+   OAuth 제공자가 없음; Google 계정이 있는 유저도 신원 상관 surface 가
+   가볍지 않음.
+2. "Get API key" UI 가 Pexels 대시보드 메뉴 두 단계 안에 묻혀 있어
+   외부 가이드 없이는 대부분의 유저가 찾지 못함.
+3. music-video 미션은 운영자 공급 음악 파일을 필요로 함.  표준 소스는
+   Suno — 수동 6단계 왕복 (가입 → 커스텀 모드 프롬프트 → 대기 →
+   N개 중 베스트 선택 → mp3 다운로드 → `assets/music/`에 드롭).
+   Suno API 없음; 매 트랙이 별도 UI 세션.
+
+첫 출력 전 이탈률 누적 ≈ 높음.  추가로:
+처음 `.env`에 API 키를 편집하는 행위 자체가 전형적 자격증명 유출
+벡터 (GitHub 의 자동 revoke 로그가 매일 수천 건의 키-인-커밋 사건
+기록).  `.env` 를 한 번도 안 여는 데모 경로는 그 공격 표면을 통째로
+제거.
+
+**제약.** 기존 풀 패스를 깰 수 없음 — Suno 트랙 + Pexels 키를
+*가진* 운영자는 여전히 키워드별 무드 매칭 B-roll 을 원함.  저작권
+정책 위반 불가 — 모든 소스가 실제 allowlist 엔트리 + `outputs/SOURCES.txt`
+의 중복 제거된 attribution 크레딧을 요구함.  Anthropic 비용 추가 불가
+— 이건 제로-계정 *데모*, 큐레이션된 경로가 아님.
+
+**결정.** 미션이 이미 체크하는 `$CLIPS_DIR/raw-<keyword>.mp4`
+경로를 per-segment Pexels fetch 루프가 돌기 전에 사전 채우는 병렬
+데모 경로 추가.  기존의 `if [[ ! -f "$RAW" ]]` 체크가 API 호출을
+짧게 끊어버림 — 핫패스에 새 코드 없음.
+
+메커니즘:
+
+- `scripts/fetch-demo-broll.sh` — Blender Foundation CDN 의
+  큐레이션된 CC-BY-3.0 클립.  HEAD-체크된 URL, Pexels 용으로 이미
+  `agents/lib/attribution.sh` 가 읽는 모양의 사이드카 JSON.
+- `scripts/fetch-demo-music.sh` — Kevin MacLeod 의 Incompetech
+  카탈로그에서 큐레이션된 CC-BY-4.0 트랙.  미션이 이해하는
+  키워드 카테고리에 걸쳐 다섯 가지 무드.  `incompetech.com` 을
+  `config/copyright-allowlist.yaml` 에 추가 + 누락되어 있던
+  CC-BY-4.0 publish_rule 추가 필요했음.
+- `MUSIC_VIDEO_DEMO_MODE=1` env 스위치 in
+  `agents/missions/music-video/run.sh` —
+  `require_env PEXELS_API_KEY` 스킵, 인자 없을 때 `MUSIC_FILE` 을
+  캐시된 첫 데모 트랙으로 디폴트, 데모 캐시에서 `$CLIPS_DIR` 사전
+  채움.  핫패스에 새 라인 20개; 기존 비-데모 흐름은 바이트
+  단위로 동일.
+- `scripts/bootstrap.sh` UX —
+  no-key-AND-no-music 상태 감지, 두 개의 경고 블록 대신 정확히
+  `MUSIC_VIDEO_DEMO_MODE=1 …` 커맨드를 추천된 Next Step 으로 출력.
+
+**검증.** `scripts/test-demo-mode.sh` 가 새로 클론된 트리에 대해
+전체 경로 실행: `git clone` → `bootstrap.sh` →
+`MUSIC_VIDEO_DEMO_MODE=1 ./run.sh demo` → `short.mp4` ≥ 1 MB +
+지속 시간 ≥ 50 s + `SOURCES.txt` 에 CC-BY 크레딧 ≥ 2 라인을
+assert.  첫 PASS 2026-05-19 01:25 KST 에 로컬 feat 브랜치 대상으로
+기록: 81 MB, 60 s, 3개 중복 제거된 크레딧 라인.  콜드 스타트
+clone → 재생 가능한 mp4 까지 wall-time ≈ 2 분 30 초 (테스트 머신).
+
+**교훈 보존:** "마찰이 큰 경로는 고급 케이스용 opt-in 으로
+만들고, 디폴트로는 두지 마라."  풀 Pexels + Suno 흐름은 여전히
+존재 — 시스템에 commit 한 유저용 업그레이드 경로로 문서화됨.
+다만 게이트키퍼는 아님.  기존 인프라 (allowlist + 사이드카
+attribution + 파일시스템 캐시 short-circuit) 가 *거의* 이걸 위해
+설계되어 있었음; 데모 모드 변경은 대부분 이미 작동하던 조각의
+컴포지션이지 새 메커니즘이 아니었음.
+
+**결정 산출물:** [`scripts/fetch-demo-broll.sh`](../scripts/fetch-demo-broll.sh)
++ [`scripts/fetch-demo-music.sh`](../scripts/fetch-demo-music.sh)
++ [`scripts/test-demo-mode.sh`](../scripts/test-demo-mode.sh)
++ [`docs/onboarding/demo-mode.md`](onboarding/demo-mode.md).  모두
+`feat/demo-mode` 에 있음, v0.2.0 마일스톤에 main 머지 대기.
+
+---
+
 ## 공통점
 
 - 각각 **구체적 관측된 실패**에서 출발했지, 이론적 우려에서 출발한 게 아님.
