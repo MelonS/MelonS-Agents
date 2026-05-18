@@ -23,6 +23,18 @@ phrase-aligned cuts, same v6 vintage visual treatment (film grain +
 vignette + glitch-onset zoom pulse).  The only differences from a
 full-path run are the source assets:
 
+![Mid-mission preview frame from a demo render — Big Buck Bunny
+sky composited 9:16 with film grain + vignette applied. The visual
+is straight from the demo render proving the pipeline produced a
+real frame, not from a polished output.](demo-mode-preview.jpg)
+
+*Mid-mission frame from the 2026-05-19 PASS render — segment 5
+("cozy reading room" keyword) drew from the cached Big Buck Bunny
+clip at 0.55× speed; v6 grain + vignette + 9:16 crop applied. This
+is exactly what the demo path emits, not a hand-picked aesthetic
+shot.*
+
+
 | Asset | Demo path | Full path |
 |---|---|---|
 | Music track | Auto-picked Kevin MacLeod CC-BY 4.0 (default: *Carefree*) | `assets/music/<your_track>.mp3` |
