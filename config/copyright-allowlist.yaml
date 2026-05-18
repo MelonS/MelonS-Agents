@@ -53,6 +53,16 @@ domains:
     license_default: pexels-license
     note: Pexels stock B-roll; free for commercial use under Pexels License
 
+  # Incompetech (Kevin MacLeod) — all tracks released under CC-BY 4.0.
+  # Fetched by scripts/fetch-demo-music.sh to populate the zero-friction
+  # demo path so first-time clones produce music-video output without
+  # a Suno account or any other audio signup.  Attribution must be
+  # surfaced in outputs/SOURCES.txt; the music-video mission already
+  # honours that via resolve_source_attribution.
+  - domain: incompetech.com
+    license_default: CC-BY-4.0
+    note: Kevin MacLeod's royalty-free catalog — CC-BY 4.0, attribution required
+
   # The user's own uploads — drop their personal CDN / S3 / etc. here when
   # they have one.
   # - domain: cdn.melons.example
@@ -68,6 +78,9 @@ publish_rules:
     require_attribution: true
     commercial_repost: allowed_with_credit
   - license: CC-BY-2.5
+    require_attribution: true
+    commercial_repost: allowed_with_credit
+  - license: CC-BY-4.0
     require_attribution: true
     commercial_repost: allowed_with_credit
   - license: CC-BY-SA-4.0
