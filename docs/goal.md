@@ -49,8 +49,111 @@ vision verbatim at ~19:50 KST: 사람들을 돕기 위해, 나의 취직을
 into **Claude Code Skills** (the Anthropic feature the operator
 heard about via the KakaoTalk group's 5월 20일 Claude Style →
 Skills migration discussion).  Research agent launched 2026-05-18
-~19:55 KST to produce a thorough Skills writeup before
-goal-confirmation; results will land here once back.
+~19:55 KST returned at ~20:00 KST.  Synthesis below.
+
+#### Claude Skills — research synthesis (2026-05-18 ~20:00 KST)
+
+**What a Skill actually is**: a folder at one of
+`.claude/skills/<name>/` (project) / `~/.claude/skills/<name>/`
+(personal) / `<plugin>/skills/<name>/` (distributable).  Contains
+`SKILL.md` (markdown + YAML frontmatter) plus optional supporting
+files (`scripts/`, reference docs).  Implements the open
+[Agent Skills standard](https://agentskills.io) (works across
+multiple AI tools) but Claude Code extends with extra features
+(forked context, dynamic injection, plugin namespacing).
+
+**Two invocation modes**:
+- **User-initiated**: `/skill-name` autocomplete (controlled by
+  `user-invocable: true` default).
+- **Auto-invoked**: Claude reads all skill descriptions and loads
+  the matching one when relevant (controlled by `description` +
+  `when_to_use` frontmatter; disable with
+  `disable-model-invocation: true`).
+
+**Context cost**: Skills are *prompt-based* — when loaded, content
+stays in context for the rest of the session.  Long skills =
+recurring token cost on every turn.  Mitigation: `context: fork`
+runs the skill in an isolated subagent and returns only a summary
+(important for our heavy ffmpeg pipelines — keeps the main
+conversation context clean).
+
+**KakaoTalk "Claude Style → Skills 이관" interpretation**: the
+research did **not** find an official Anthropic announcement of a
+user-facing migration deadline.  `.claude/commands/` files still
+work and behave identically to skills.  The 5월 20일 reference is
+likely about Anthropic's internal tooling or a community-project
+migration — **NOT a forced user-facing deadline**.  We can pace
+the Skill conversion at our own speed.
+
+**Existing bash pipeline → Skill conversion** (the question the
+operator actually cares about):
+
+The existing `agents/missions/music-video/run.sh` becomes:
+```
+.claude/skills/music-video-pipeline/
+├── SKILL.md     ← new file (YAML frontmatter + invocation prompt)
+└── scripts/
+    └── run.sh   ← unchanged — symlink or copy from agents/missions/
+```
+
+The bash script itself stays untouched.  SKILL.md is a thin
+wrapper that:
+- Names + describes the skill so Claude knows when to use it
+- Declares `allowed-tools` (Bash patterns: `Bash(bash *)`,
+  `Bash(ffmpeg *)`, etc.) — explicit permission grant
+- Uses `context: fork` so the heavy render doesn't pollute the
+  main conversation
+- Points Claude at `${CLAUDE_SKILL_DIR}/scripts/run.sh` with
+  the right arguments
+
+**Feasibility verdict**: **HIGH** for Skill #1 (music-shorts).
+The current code shape (`agents/missions/<type>/run.sh`) is
+*already* skill-shaped — converting is mostly adding a SKILL.md
+metadata layer; ~1 day of work including testing.  Existing
+permissions (`.claude/settings.json` allow/deny list) compose
+cleanly with the per-skill `allowed-tools` grant.
+
+**Feasibility verdict for Skill #2 (job-hunt support)**: the
+*Skill packaging* is straightforward.  The *underlying pipeline*
+needs design work (job-board scrapers + LLM filter + dedupe +
+digest format) — that's the real cost.  Estimate: ~3-5 days for
+v1, separate from the Skills wrapper.
+
+**Distribution path**:
+- v1 = project-level (`.claude/skills/`) for our use.
+- v2 (if Skill #2 lands and works) = bundle both as a **plugin**
+  so other people can install with one command.  No public
+  marketplace exists yet, so distribution is repo-based.
+
+**Risks / caveats**:
+- Skills duplicate logic if we keep both `agents/missions/*/run.sh`
+  AND `.claude/skills/*/scripts/run.sh`.  Either symlink (clean)
+  or deprecate `agents/missions/` post-conversion (cleaner but
+  invalidates existing roadmap references).  Decide at impl time.
+- `context: fork` is the right pattern for music-video (heavy)
+  but auto-mode skill description tuning is non-trivial — getting
+  Claude to *correctly* auto-invoke without false positives takes
+  iteration.
+- Plugin distribution requires defining a "plugin" structure;
+  Anthropic's plugin docs are sparser than skill docs — research
+  agent flagged this as v2 territory.
+
+#### Action items (when operator confirms this goal)
+
+1. **Phase 1 (~1 day)** — Skill-ify music-video as `.claude/skills/music-video-pipeline/`.
+   Keep `agents/missions/music-video/run.sh` running in parallel
+   for now (deprecate later).  Tune `description` + `when_to_use`
+   for auto-invocation, OR set `disable-model-invocation: true`
+   for explicit-only.
+2. **Phase 2 (~3-5 days)** — Design + build job-hunt support pipeline
+   (`scripts/`-level bash + python).  Iterate on operator's actual
+   job search → patterns emerge → bake into Skill #2.
+3. **Phase 3 (~1 day)** — Skill-ify job-hunt pipeline + bundle both
+   skills as a plugin for distribution.
+4. **Phase 4 (open)** — Decide on public release (separate repo
+   for the plugin, README rewrite for framework framing, etc.).
+
+Total Phase 1+2+3 estimate: ~5-7 days of work.
 
 **Skill roadmap (operator-stated order)**:
 
