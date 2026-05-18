@@ -29,15 +29,30 @@
 
 ## Overview
 
-> A macOS-based multi-agent system.  **The current focus** — and what
-> you see in the demo above — is the `music-video` mission: a music
-> track in, a 9:16 vertical short out, with phrase-aware ffmpeg
-> shaders syncing vintage visuals to the music's structure (operator
-> pilot pick, 2026-05-17 — see
+> A macOS-based multi-agent system **driven by [Claude Code](https://docs.anthropic.com/claude-code)**
+> (the Anthropic CLI).  **The current focus** — and what you see in
+> the demo above — is the `music-video` mission: a music track in, a
+> 9:16 vertical short out, with phrase-aware ffmpeg shaders syncing
+> vintage visuals to the music's structure (operator pilot pick,
+> 2026-05-17 — see
 > [`docs/pilots/decision-log.md`](docs/pilots/decision-log.md)).
 > The earlier `faceless-short` mission (narration-driven shorts) and
 > the v1 missions (`highlight` / `summarize` / `shorts-batch`) remain
 > in the tree as alternate paths.
+>
+> Two ways to use this repo:
+> - **Agent-driven (the primary path)** — install Claude Code on a Mac,
+>   point it at the cloned repo, and the orchestrator + 4 mission
+>   subagents (defined under [`.claude/agents/`](.claude/agents/)) take
+>   over.  The operator types a mission; Claude Code runs the planner →
+>   resourcer → editor → QA pipeline, edits files, commits, and pushes.
+>   Cost: a Claude Code subscription (Anthropic Max recommended);
+>   external paid APIs gated by the money firewall (see contract below).
+> - **Script-only (fallback)** — the bash mission scripts and the
+>   shader recipes run standalone via `./scripts/bootstrap.sh` + the
+>   reproduction commands further down.  No Claude Code, no
+>   orchestration, no auto-commit — but the music-video output is
+>   identical.  Cost: $0 beyond the optional free Pexels API key.
 >
 > **The system itself is not shorts-specific.**  The scaffold —
 > orchestrator + 4 mission subagents + file-based handoff + 3-layer
@@ -361,17 +376,28 @@ Defined in [`config/policies.yaml`](config/policies.yaml).
 
 ## Toolchain
 
-`ffmpeg` (libass-enabled — `brew install ffmpeg-full` on macOS,
-`apt install ffmpeg` on Linux) · `yt-dlp` · `whisper.cpp`
-(`small`, multilingual) · `ollama` (`llama3.2:3b`) · `Kokoro-ONNX` (TTS,
-Apache 2.0 — faceless-short narration) · macOS `say` (Korean +
-fallback voice) · Pexels Videos API (free tier — faceless-short B-roll) ·
-Claude API for orchestration.
+**Agent layer**: [Claude Code](https://docs.anthropic.com/claude-code)
+(Anthropic CLI — drives the multi-agent orchestration; subagent
+definitions in [`.claude/agents/`](.claude/agents/), per-project
+configuration in [`CLAUDE.md`](CLAUDE.md) +
+[`.claude/settings.json`](.claude/settings.json)).
+
+**Mission tools**: `ffmpeg` (libass-enabled — `brew install ffmpeg-full`
+on macOS, `apt install ffmpeg` on Linux) · `aubio` (beat / onset
+detection — `brew install aubio`) · `jq` · `yt-dlp` · `whisper.cpp`
+(`small`, multilingual) · `ollama` (`llama3.2:3b`) · `Kokoro-ONNX`
+(TTS, Apache 2.0 — faceless-short narration) · macOS `say` (Korean +
+fallback voice) · Pexels Videos API (free tier — B-roll for
+music-video + faceless-short).
 
 ## Prerequisites
 
 - **macOS 14+** (primary, fully tested) or **Linux** (best-effort —
   see [Platform support](#platform-support) above)
+- **[Claude Code](https://docs.anthropic.com/claude-code)** — only
+  required for the **agent-driven path** (orchestrator + subagents
+  taking over the whole pipeline).  The script-only path runs without
+  it.  See the [Claude Code pricing + usage guidance](#claude-code-pricing--usage-guidance) section below for plan selection.
 - **Homebrew** on macOS, or `apt` / `pacman` / equivalent on Linux
 - **Apple Silicon recommended** — `h264_videotoolbox` is used for
   hardware-accelerated render; `-allow_sw 1` is set so the pipeline
@@ -386,6 +412,48 @@ Claude API for orchestration.
 - **API key**: free [Pexels API key](https://www.pexels.com/api/)
   (200 req/hour — plenty for personal use) for B-roll fetch.
   `bootstrap.sh` warns if `PEXELS_API_KEY` isn't set in `.env`.
+
+## Claude Code pricing + usage guidance
+
+Claude Code is what drives the multi-agent layer (orchestrator → planner
+→ resourcer → editor → QA + the daily auditor).  The mission scripts
+themselves run standalone and burn **zero** Anthropic tokens; only the
+agent-driven path consumes tokens.
+
+**Current Anthropic plans** (always verify on the
+[official pricing page](https://www.anthropic.com/pricing) — these
+change):
+
+| Plan | Monthly | Typical fit for this repo |
+|------|---------|---------------------------|
+| **Free** | $0 | Read-only browsing / quick experiments.  Hits limits fast once a real mission runs. |
+| **Pro** | $20 | One or two music-video missions per day.  Single-operator, casual cadence. |
+| **Max — entry tier** | $100 | A few missions per day plus overnight batches.  Daily upload cadence becomes realistic. |
+| **Max — top tier** | $200 | Production cadence (10+ missions / day, multi-track overnight batches, ongoing R&D in parallel).  This is what this repo's operator runs. |
+
+**Rough token usage per mission** (orchestration only — the local
+ffmpeg / ollama / whisper.cpp stages are free):
+
+| Mission | Anthropic tokens (estimate) | Notes |
+|---------|----------------------------|-------|
+| `music-video` (one render + shader) | ~50–150 k | Orchestrator opus + 4 sonnet subagents.  Token spend dominated by planner + editor (filter-graph reasoning). |
+| `faceless-short` (one render) | ~100–250 k | Higher because the planner also drafts the narration script.  v6 with Sonnet for script generation runs closer to the top of the range. |
+| `audit-run.sh contract` (out-of-band) | ~20–50 k | One audit pass over the repo. |
+| Daily `mission-queue.sh` drain | ~50–150 k × N entries | Same as a single music-video mission per queue entry. |
+
+These are **rough**.  Real numbers vary with caption complexity, retry
+counts (the QA feedback loop re-runs a failing stage), and how much
+operator dialogue happens in the orchestrator turn.  The Tier-1 / Tier-2
+firewall — what stays local vs what goes to Anthropic — is documented
+in [`docs/cost-model.md`](docs/cost-model.md).
+
+**Cost-stability tips**:
+- Operator-facing chat with Claude Code can dominate token spend more
+  than the missions themselves; keep planning conversations focused.
+- The `autonomous` mode (`AUTONOMY_MODE=true`) enforces
+  `AUTONOMY_BUDGET_USD` — useful for overnight batches.
+- Token receipts land in your Anthropic console; check after the first
+  few mission runs to calibrate your plan choice.
 
 ## Quick start — music-video flow (the showcase)
 

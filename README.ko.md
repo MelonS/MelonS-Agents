@@ -29,14 +29,28 @@
 
 ## 개요
 
-> macOS 기반 멀티 에이전트 시스템입니다.  **현재 초점** — 위 데모에
-> 보이는 — 은 `music-video` 미션: 음악 트랙 in, 9:16 세로 쇼츠 out,
-> phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조와 동기화
-> (운영자 파일럿 픽, 2026-05-17 —
+> **[Claude Code](https://docs.anthropic.com/claude-code)** (Anthropic
+> CLI) 로 구동되는 macOS 기반 멀티 에이전트 시스템입니다.  **현재
+> 초점** — 위 데모에 보이는 — 은 `music-video` 미션: 음악 트랙 in,
+> 9:16 세로 쇼츠 out, phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을
+> 음악 구조와 동기화 (운영자 파일럿 픽, 2026-05-17 —
 > [`docs/pilots/decision-log.md`](docs/pilots/decision-log.md) 참조).
 > 이전의 `faceless-short` 미션 (내레이션 기반 쇼츠) 과 v1 미션
 > (`highlight` / `summarize` / `shorts-batch`) 도 트리에 대안 경로로
 > 유지됩니다.
+>
+> 이 레포를 쓰는 두 가지 방식:
+> - **Agent-driven (메인 경로)** — Mac 에 Claude Code 설치, 클론된
+>   레포를 가리키면 orchestrator + 4개 미션 서브에이전트
+>   ([`.claude/agents/`](.claude/agents/) 에 정의) 가 인계받음.
+>   운영자가 미션만 타이핑 → Claude Code 가 planner → resourcer →
+>   editor → QA 파이프라인 실행, 파일 편집, 커밋, 푸시.
+>   비용: Claude Code 구독 (Anthropic Max 추천) + 외부 유료 API 는
+>   money firewall 게이트 (아래 contract 참조).
+> - **Script-only (대체)** — bash 미션 스크립트 + 쉐이더 레시피가
+>   standalone 으로 작동: `./scripts/bootstrap.sh` + 아래 재현 명령들.
+>   Claude Code 불필요, orchestration 없음, auto-commit 없음 — 그래도
+>   music-video 출력은 동일.  비용: 옵션 무료 Pexels API 키 외 $0.
 >
 > **하지만 시스템 자체는 숏폼 전용이 아닙니다.**  스캐폴드 —
 > orchestrator + 4개 미션 서브에이전트 + 파일 기반 핸드오프 +
@@ -344,17 +358,23 @@ PATH에 도구가 설치되어 있으면 충분. 필요할 때만 `.env`에서 o
 
 ## 툴체인
 
-`ffmpeg` (libass 포함 빌드 — macOS는 `brew install ffmpeg-full`,
-Linux는 `apt install ffmpeg`) · `yt-dlp` · `whisper.cpp` (`small`,
+**Agent layer**: [Claude Code](https://docs.anthropic.com/claude-code)
+(Anthropic CLI — 멀티 에이전트 orchestration 구동; 서브에이전트 정의는
+[`.claude/agents/`](.claude/agents/), per-project 설정은
+[`CLAUDE.md`](CLAUDE.md) + [`.claude/settings.json`](.claude/settings.json)).
+
+**Mission tools**: `ffmpeg` (libass 포함 빌드 — macOS: `brew install
+ffmpeg-full`, Linux: `apt install ffmpeg`) · `aubio` (비트 / 온셋 감지
+— `brew install aubio`) · `jq` · `yt-dlp` · `whisper.cpp` (`small`,
 다국어) · `ollama` (`llama3.2:3b`) · `Kokoro-ONNX` (TTS, Apache 2.0 —
 faceless-short 내레이션) · macOS `say` (한국어 + fallback 음성) ·
-Pexels Videos API (무료 티어 — faceless-short B-roll) · 오케스트레이션용
-Claude API.
+Pexels Videos API (무료 티어 — music-video + faceless-short B-roll).
 
 ## 사전 요구사항
 
 - **macOS 14+** (주 검증 플랫폼) 또는 **Linux** (best-effort —
   위 [플랫폼 지원](#플랫폼-지원) 참조)
+- **[Claude Code](https://docs.anthropic.com/claude-code)** — **agent-driven 경로** (orchestrator + 서브에이전트가 파이프라인 인계받음) 에만 필요.  script-only 경로는 없이도 작동.  플랜 선택은 아래 [Claude Code 요금제 + 사용량 안내](#claude-code-요금제--사용량-안내) 섹션 참조.
 - macOS는 **Homebrew**, Linux는 `apt` / `pacman` / 동등 패키지 매니저
 - **Apple Silicon 권장** — 렌더 가속에 `h264_videotoolbox` 사용,
   `-allow_sw 1`로 Intel / Linux에서 libx264 자동 폴백
@@ -368,6 +388,46 @@ Claude API.
 - **API 키**: 무료 [Pexels API 키](https://www.pexels.com/api/)
   (시간당 200 req — 개인 사용에 충분) — B-roll fetch 에 필요.
   `bootstrap.sh` 가 `.env` 에 `PEXELS_API_KEY` 안 잡혀 있으면 경고.
+
+## Claude Code 요금제 + 사용량 안내
+
+Claude Code 가 멀티 에이전트 레이어 (orchestrator → planner → resourcer
+→ editor → QA + 일일 auditor) 를 구동합니다.  미션 스크립트 자체는
+standalone 으로 돌아가고 Anthropic 토큰을 **0** 사용합니다 — 토큰은
+agent-driven 경로에서만 소비됩니다.
+
+**현재 Anthropic 플랜** (변경되니 항상
+[공식 가격 페이지](https://www.anthropic.com/pricing) 에서 확인):
+
+| 플랜 | 월 가격 | 이 레포에서의 적합도 |
+|------|---------|--------------------|
+| **Free** | $0 | 읽기 / 가벼운 실험.  실제 미션 돌리면 빠르게 한도 도달. |
+| **Pro** | $20 | 하루 1-2 music-video 미션.  단일 운영자 캐주얼 cadence. |
+| **Max — 입문 티어** | $100 | 하루 몇 미션 + 야간 배치.  일일 업로드 cadence 현실적. |
+| **Max — 상위 티어** | $200 | 프로덕션 cadence (하루 10+ 미션, 멀티-트랙 야간 배치, 병렬 R&D).  이 레포의 운영자가 사용 중. |
+
+**미션 당 대략 토큰 사용량** (orchestration 만 — 로컬 ffmpeg / ollama
+/ whisper.cpp 단계는 무료):
+
+| 미션 | Anthropic 토큰 (추정) | 비고 |
+|------|---------------------|------|
+| `music-video` (1편 렌더 + 쉐이더) | ~50–150 k | Orchestrator opus + 4 sonnet 서브에이전트.  토큰 지출 대부분이 planner + editor (필터 그래프 추론). |
+| `faceless-short` (1편 렌더) | ~100–250 k | planner 가 내레이션 스크립트도 작성하기 때문에 더 높음.  스크립트 생성에 Sonnet 쓰는 v6 는 범위 상단에 가까움. |
+| `audit-run.sh contract` (out-of-band) | ~20–50 k | 레포 1회 audit 패스. |
+| 일일 `mission-queue.sh` drain | ~50–150 k × N 항목 | 큐 항목당 single music-video 미션과 동일. |
+
+위는 **rough estimate**.  실 수치는 자막 복잡도, 재시도 횟수 (QA
+피드백 루프가 실패 stage 재실행), orchestrator 턴 안의 운영자 대화량에
+따라 변동.  Tier-1 / Tier-2 firewall — 로컬 vs Anthropic 분기 — 은
+[`docs/cost-model.md`](docs/cost-model.md) 에 문서화됨.
+
+**비용 안정성 팁**:
+- 운영자-Claude Code 대화 자체가 미션보다 토큰을 더 많이 쓸 수도
+  있음; 기획 대화는 집중해서.
+- `autonomous` 모드 (`AUTONOMY_MODE=true`) 는 `AUTONOMY_BUDGET_USD`
+  강제 — 야간 배치에 유용.
+- 토큰 영수증은 Anthropic 콘솔 → 첫 몇 번 미션 후 본인 사용량 확인 후
+  플랜 조정 권장.
 
 ## 빠른 시작 — music-video 플로우 (메인 쇼케이스)
 
