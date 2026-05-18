@@ -110,6 +110,30 @@ delta is small and risk of misfetched assets is non-trivial.
 
 ---
 
+## Skills (agentskills.io-spec packages)
+
+Added 2026-05-19 (on `feat/skill-music-video`, awaiting merge):
+top-level `skills/<name>/` is a new tracked layer holding
+agentskills.io-spec-compliant skill packages.  Each skill is a
+runtime-portable description of a pipeline that other compatible
+runtimes (Cursor, Goose, Gemini CLI, OpenAI Codex, Claude Code,
+GitHub Copilot, etc.) can also invoke.  First skill:
+[`skills/music-video/SKILL.md`](../skills/music-video/SKILL.md);
+its `scripts/run.sh` symlinks to
+`agents/missions/music-video/run.sh` so the skill inherits the
+mature mission pipeline without logic duplication.
+
+Layer distinction:
+
+- **agents/missions/** = the canonical bash pipeline.  Tracked.
+- **skills/\<name\>/SKILL.md** = the agentskills.io-spec wrapper
+  pointing at the pipeline.  Tracked.  Discoverable cross-runtime.
+- **.claude/skills** = per-machine symlink to `skills/` so Claude
+  Code's path resolver finds them.  Gitignored, rendered by
+  `scripts/install-claude-local.sh`.
+
+---
+
 ## Mission execution: where the money *isn't*
 
 Three of the five missions (`agents/missions/{highlight,summarize,shorts-batch}/run.sh`)

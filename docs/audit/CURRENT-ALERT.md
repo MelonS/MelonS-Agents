@@ -6,40 +6,37 @@
 > and re-run the auditor.
 
 **Verdict**: DRIFT_DETECTED
-**Full report**: [`docs/audit/2026-05-19-contract.md`](2026-05-19-contract.md)
-**Generated**: 2026-05-19 00:49:55 KST
+**Full report**: [`docs/audit/2026-05-19-all.md`](2026-05-19-all.md)
+**Generated**: 2026-05-19 00:51:43 KST
 
 ## Summary (from audit)
 
 
-Contract-focused audit at HEAD `c9ecb15` on branch `feat/skill-music-video`
-(2026-05-19 ~00:41 KST, "docs(ideas): park A/B test — planner + resourcer
-at Opus vs Sonnet").  This is the twenty-first audit overall; the most recent
-prior audit was the all-scope run that wrote `docs/audit/2026-05-18-all.md`
-at HEAD `65a5045` on `feat/post-merge-detection`.  Current `origin/main` =
-`a537018` (GitHub Actions main-protection); local `feat/skill-music-video`
-is five commits ahead with structural work: §8 portability principles
-codified, Skill #1 shipped, `config/claude-settings.template.json` +
-`scripts/install-claude-local.sh` created, `scripts/bootstrap.sh` wired.
-All five structural commits are correctly isolated on the feat branch and
-have NOT been merged to `origin/main` — confirming §6 is being followed for
-current work.
+Twenty-second audit (first full-scope "all" run on 2026-05-19); HEAD = `401f9ff` on
+branch `feat/skill-music-video` (6 commits ahead of `main` at `a537018`).  All six
+dimensions audited: architecture vs documentation drift, roadmap freshness,
+operator-contract compliance, cost-model accuracy, stale TODOs / dead code, and
+security / secrets.  A contract-focused audit also ran today at HEAD `c9ecb15`
+(`docs/audit/2026-05-19-contract.md`); findings from that report are incorporated
+and updated for the current HEAD.
 
-**Note on the previous contract audit file at this same path**: an earlier
-run today (~00:41 KST) wrote an incorrect [medium] finding asserting that
-commits `a993753`, `912d61c`, and `40aeab1` "are on `main`."  `git log
-feat/skill-music-video ^main` disproves this: those three commits appear
-exclusively on the feat branch.  The earlier auditor appears to have read
-`git log` output from the feat branch and mistaken "visible in history"
-for "on main."  This report supersedes that erroneous run.
+Since the prior "all" audit (`2026-05-18-all.md`, HEAD `65a5045`), substantial work
+landed: branch strategy codified in `operator-contract.md` §6 (`a2a3807`), pre-merge
+gate added (`22a45ea`), GitHub Actions CI added on `main` (`a537018`), and the
+`feat/skill-music-video` branch started with 6 structural commits — most notably
+Skill #1 music-video (`a993753`), `.claude/settings.json` portability fix
+(`912d61c`), `scripts/install-claude-local.sh` (`912d61c`/`40aeab1`), and five
+portability principles codified in `operator-contract.md` §8 (`5b1aafb`).  The
+[medium] §8 finding from the prior audit (hardcoded `/Users/melons` in tracked
+`.claude/settings.json`) is **resolved** by `912d61c` — `.claude/settings.json`
+is now rendered from `config/claude-settings.template.json` using `@@HOME@@` /
+`@@REPO_ROOT@@` placeholders and is properly gitignored.
 
-Key positives: §8 `.claude/settings.json` hardcode finding (carried since
-2026-05-17) resolved in `912d61c`; all six agent frontmatter models match
-`docs/for-analysts.md` table; no secrets in any committed file; no §5
-marker violations (all `.claude/agents/*.md` edits predate the convention).
-Remaining concerns: one [medium] contract-process violation (pre-merge gate
-bypassed for `feat/post-merge-detection` → `origin/main`), and four [low]
-items.
+Two new mediums: (1) the new `skills/` top-level directory is absent from all three
+architecture reference documents; (2) `docs/roadmap.md` "Now" still reads "No active
+goal" while `docs/goal.md` has had an active goal since 2026-05-19 ~00:55 KST.
+No critical or high findings.  Security, cost model, model assignments, §5 marker
+compliance, and `.gitignore` coverage all pass clean.
 
 ## Critical / High findings
 

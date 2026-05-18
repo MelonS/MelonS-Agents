@@ -123,6 +123,7 @@ go to local whisper.cpp, all renders go to local ffmpeg.  See
 | Layer | Lives in | Tracked | Mutable in autonomous mode |
 |-------|----------|---------|-----------------------------|
 | Logic (agent defs + missions + libs + scripts) | `.claude/agents/`, `agents/`, `scripts/`, `config/` | ✓ git | ✗ (firewall) |
+| Skills (agentskills.io-spec packages) | `skills/<name>/` (top-level) | ✓ git | ✗ (firewall) |
 | Outputs / data | `$RECORDS_DIR/` | ✗ (gitignored) | ✓ |
 | Publish-ready outputs (§8 operator-directed deviation) | `outputs/publish/` | only `.gitkeep` tracked; mp4/wav/jpg gitignored | ✓ |
 | Secrets / tool paths | `.env` | ✗ (gitignored) | ✓ |

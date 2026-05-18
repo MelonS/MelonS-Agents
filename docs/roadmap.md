@@ -21,6 +21,17 @@ _Last updated 2026-05-18 ~14:10 KST.  Previous active goal
 migrated to `docs/goal.md` Past goals).  No active goal — operator
 sets the next one._
 
+<!-- suggest 2026-05-19 ~02:30 KST (overnight autonomous):
+Above paragraph is STALE.  `docs/goal.md` has had an active goal
+"Multi-skill AI assistant framework — Skill #1 (music-video)
+refactor first" since 2026-05-19 ~00:55 KST (operator promoted at
+8b39cac).  Subgoal 1 (Skill #1 created) was completed overnight
+(a993753, on feat/skill-music-video).  Recommend operator
+rewrite this "Now" preamble to point at the active goal +
+operative subgoal (Step 1.3 manual functional test next).
+Flagged as [medium] in 2026-05-19-all.md audit. -->
+
+
 _Operator-actioned, not a new goal_: 24h post-publish metrics
 capture in
 [`docs/pilots/first-upload-metrics.md`](pilots/first-upload-metrics.md)
