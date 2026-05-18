@@ -42,16 +42,68 @@ not promote any cluster to active goal without operator pick.
 
 ## Next — queued, in priority order
 
-1. **Delete filter-repo backup branch** — on or after 2026-05-18, if no
+1. **Zero-API onboarding path — first-touch demo without Pexels key** —
+   surfaced 2026-05-18 ~19:00 KST during a real-time discussion with
+   an external security professional (3 yr exp, n=1 reviewing the
+   repo).  Three-layer friction observed for first-time clones:
+   (a) Pexels API key required to run the headline `music-video` /
+   `faceless-short` missions; (b) Pexels signup forces Google / Apple /
+   Facebook OAuth (no email path) — friction for KR users on
+   Naver/Kakao primary, plus identity-correlation risk; (c) the
+   "Get API key" UI is buried in Pexels' dashboard.  Three layers
+   compound; cumulative bail rate before first output ≈ high.
+
+   **Security framing** (not just UX): the pattern is intentional on
+   Pexels' side — OAuth signup is their bot-defense + identity-proxy.
+   Building first-touch on it is fighting the vendor's design.  Worse,
+   first-time users editing `.env` with API keys → typical leak vector
+   (real-world: GitHub auto-revoke logs show thousands of API-key
+   commits per day).  A demo path that never touches `.env` removes
+   that attack surface entirely.
+
+   **Design principles**:
+   - Zero-API first touch: clone → bootstrap → produce a music-video
+     output → see result, all with no external account.
+   - Gradual permission escalation: full Pexels integration stays
+     available, but as an *advanced* opt-in for users who chose to
+     commit.
+   - Vendor lock-in mitigation: Pexels alternatives (Pixabay,
+     Internet Archive, Blender CDN, Wikimedia Commons) supported as
+     equivalents.
+
+   **Recommended implementation** (1–2 days):
+   - `scripts/fetch-demo-broll.sh` — pull 6–8 CC-BY clips from a
+     curated set (Blender CDN open movies, Wikimedia Commons,
+     archive.org).  No API keys, only domains already in
+     `config/copyright-allowlist.yaml`.
+   - `agents/missions/music-video/run.sh` `MUSIC_VIDEO_DEMO_MODE=1`
+     branch — uses local demo cache instead of Pexels API.
+   - `bootstrap.sh` — if `PEXELS_API_KEY` empty, default to demo
+     mode + print actionable next-command instead of just a warning.
+   - README first-run section rewritten: zero-API demo as the
+     headline, Pexels integration documented as "advanced —
+     unlock full mood-keyword catalog" path.
+   - Optional follow-on: bundle demo clips via git LFS (~40 MB
+     for 8 clips at low-res) so even bootstrap doesn't need to
+     hit the network.  Trade-off: clone gets heavier.  Decide
+     based on whether offline-first is a goal.
+
+   **Open question**: whether to deprecate Pexels as default
+   entirely after demo mode lands, or keep both with demo as
+   the "first-touch" and Pexels as the "scale-up" path.  Operator
+   decides at implementation time.
+
+2. **Delete filter-repo backup branch** — on or after 2026-05-18, if no
    issues observed with the rewritten history, delete the safety branch
    `main-backup-pre-filter-20260517-173615` from both local and origin.
-   Command: `git branch -D main-backup-pre-filter-20260517-173615 && git push origin --delete main-backup-pre-filter-20260517-173615`.
+   Command: `git branch -D main-backup-pre-filter-20260517-173615` then
+   `git push origin --delete main-backup-pre-filter-20260517-173615`.
    This was the rollback safety net created before the 2026-05-17 email
    history rewrite (replacing the old personal commit email with the
    GitHub noreply form).  Once confirmed stable, the branch is dead
    weight.
 
-_(beyond #1: promote a deferred item from `docs/copyright-policy.md`
+_(beyond #2: promote a deferred item from `docs/copyright-policy.md`
 ("Still TODO" block) when one becomes load-bearing, or set a new focus.)_
 
 ## Blocked / parked
