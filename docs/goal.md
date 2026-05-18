@@ -345,11 +345,18 @@ trivial enough that it can land any time.
 every active goal must have at least one *concrete file/PASS/
 frame deliverable*, not just infrastructure):
 
-- [ ] **Skill #1 — music-video lives at `.claude/skills/music-video/SKILL.md`**
-  + scripts/run.sh (the existing bash, preserved).  Invocable
-  via `/music-video` in Claude Code.  Output produces a 60-second
-  9:16 mp4 equivalent to the existing pipeline.  agentskills.io
-  spec compliant.
+- [x] **Skill #1 — music-video lives at `skills/music-video/SKILL.md`**
+  (top-level per portability principle 2, not under `.claude/`).
+  `scripts/run.sh` symlinked to `agents/missions/music-video/run.sh`
+  (no logic duplication, all v5+v6 tuning inherited).  Invocable
+  via `/music-video` in Claude Code (`.claude/skills` is a symlink
+  to `../skills` rendered by `scripts/install-claude-local.sh`).
+  agentskills.io spec compliant (validated structure: required
+  `name` + `description` frontmatter, optional `license` +
+  `compatibility` + `metadata` + `allowed-tools`).  Shipped 2026-05-19
+  ~00:35 KST in commit `a993753` on `feat/skill-music-video` branch.
+  **Not yet merged to main** (still pending Step 1.4 cross-runtime
+  Hermes drop-in test + pre-merge gate manual review).
 - [ ] **Skill #2 — job-hunt support delivers a daily digest**.
   Markdown file in `records/jobs/<date>/digest.md` with at least
   one job posting matched against operator's "AI integration /

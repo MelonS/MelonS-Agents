@@ -162,33 +162,41 @@ The layered defense needed:
 - Session-start protocol expanded: read skill-alerts file
   before goal selection.
 
-**Sketch — Layer 5 (orthogonal but related: settings.json portability)**:
-- 2026-05-19 audit flagged `.claude/settings.json` hardcoded
-  `/Users/melons/` paths at 9 locations as [medium] — promoted
-  from prior [info, carry-forward].
-- Same template-render pattern as `scripts/com.melons.agents.*.plist`
-  (`ab6555e`): `.claude/settings.template.json` + `scripts/install-settings.sh`
-  using `@@HOME@@` substitution.
-- Real fix for "main breaks on other people's machines" —
-  external user clones repo, settings.json paths don't match
-  their `$HOME`, Claude Code permission model becomes
-  non-functional.
+**Sketch — Layer 5 (settings.json portability) — ✅ SHIPPED 2026-05-19 ~00:50 KST**:
+- 2026-05-18 + 2026-05-19 audits flagged `.claude/settings.json`
+  hardcoded `/Users/melons/` paths at 9 locations as [medium].
+- Resolution: same template-render pattern as
+  `scripts/com.melons.agents.*.plist` (`ab6555e`).  Shipped on
+  `feat/skill-music-video` branch:
+  - `config/claude-settings.template.json` (tracked) with
+    `@@HOME@@` / `@@REPO_ROOT@@` / `@@HOME_PARENT@@` /
+    `@@MEMORY_NAMESPACE@@` placeholders.
+  - `scripts/install-claude-local.sh` renders to
+    `.claude/settings.json` (now gitignored).
+  - `bootstrap.sh` calls install-claude-local on every fresh
+    run — idempotent.
+  - Verified by fresh-clone simulation in /var/folders/... temp
+    dir: `.claude/settings.json` rendered with the NEW machine's
+    paths, not the operator's.  External user can clone-and-go.
+- Commits: `912d61c` (template + install script), `40aeab1`
+  (bootstrap integration).  Pending merge to main.
 
 **Dependencies**: Layer 3 + 4 benefit from Skill #1 landing
 first — without a Skill to test, the functional/smoke tests
-have nothing to point at.  So sequence:
-  Skill #1 conversion → Layer 5 (settings portability) →
-  Layer 3 (functional gate) → Layer 4 (periodic smoke).
+have nothing to point at.  Sequence now:
+  Skill #1 conversion ✅ → Layer 5 ✅ → Layer 3 (functional gate) →
+  Layer 4 (periodic smoke) → Layer 6 (subagent migration).
 
-**Estimated cost**:
-- Layer 5: ~1-2h (template + install script + docs update).
+**Estimated cost** (remaining):
+- ✅ Layer 5: ~1-2h (template + install script + docs update) — SHIPPED.
 - Layer 3: ~3-4h (framework + first skill's functional test).
 - Layer 4: ~2-3h (launchd timer + dispatcher + status reporting +
   session-start protocol extension).
+- Layer 6 (subagent migration `.claude/agents/` → `subagents/`):
+  ~30 min (logic-changes-need-OK applies; not autonomous).
 
-**Status**: parked for "남는 시간에 하나씩" execution per
-operator direction 2026-05-19 ~00:50 KST.  Today's priority is
-Skill #1 conversion (so Layer 3 + 4 have something to protect).
+**Status**: Layer 5 complete; Layer 3, 4, 6 parked for "남는 시간에
+하나씩" execution per operator direction 2026-05-19 ~00:50 KST.
 
 ---
 

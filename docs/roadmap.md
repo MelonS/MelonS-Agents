@@ -163,6 +163,34 @@ _(beyond #2: promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-19** (~01:30 KST, overnight autonomous) **Skill #1
+  shipped + portability foundation laid** (branch
+  `feat/skill-music-video`, 7 commits, not yet merged to main).
+  Five sub-deliverables:
+  - **5 portability principles codified** in
+    [`docs/operator-contract.md`](operator-contract.md) §8
+    (Standards-compliant / Tracked-by-default / Machine-resilient
+    / Multi-machine portable / No-PII).  Commit `5b1aafb`.
+  - **Skill #1 — music-video** at `skills/music-video/SKILL.md`
+    (top-level, tracked, agentskills.io-spec-compliant).
+    `scripts/run.sh` symlinks to `agents/missions/music-video/run.sh`
+    so v5+v6 tuning is inherited.  Commit `a993753`.
+  - **Settings.json portability (Layer 5)** — `config/claude-settings.template.json`
+    + `scripts/install-claude-local.sh` + bootstrap.sh integration.
+    `.claude/settings.json` now rendered per-machine; gitignored.
+    Resolves the [medium] audit finding present since 2026-05-18.
+    Commits `912d61c`, `40aeab1`.
+  - **Fresh-clone portability test PASS**: cloned to
+    `/var/folders/.../portability-test/MelonS-Agents`, ran
+    install-claude-local, verified `.claude/settings.json`
+    rendered with the temp dir's paths (not operator's machine),
+    `.claude/skills` symlink resolved to the music-video skill.
+    Validates the multi-machine principle empirically.
+  - **External insight parked** (anonymized community feedback):
+    A/B test idea for planner + resourcer = Opus vs Sonnet
+    captured in [`docs/ideas.md`](ideas.md) Agents section,
+    priority M, suggested test design + cost.  Commit `c9ecb15`.
+
 - **2026-05-18** (~14:55 KST) **Close two eighteenth-audit lows —
   `.claude/*.lock` gitignore + d40abd3 Done entry** (commit
   `e1fda78`).  Eighteenth audit (`docs/audit/2026-05-18-all.md`)
