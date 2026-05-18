@@ -23,6 +23,69 @@ metrics capture in
 [`docs/pilots/first-upload-metrics.md`](pilots/first-upload-metrics.md)
 remains open and is operator-actioned, not a new goal.)_
 
+### Candidate active goal — pending operator confirmation (2026-05-18 ~19:50 KST)
+
+**Generalize this repo as a multi-skill AI assistant framework**,
+with music-video production refactored into "Skill #1" and a
+job-hunt support tool built as "Skill #2".  Operator stated the
+vision verbatim at ~19:50 KST: 사람들을 돕기 위해, 나의 취직을
+위해, 다른 사람들의 취직을 위해, 모두의 먹고 사는 문제를
+해결하기 위해.  Connects to:
+
+- Existing parked `domain-pivot portability` analysis in
+  [`docs/ideas.md`](ideas.md) (2026-05-16) which had already noted
+  *"job-app automation → same repo (ollama + curl + playwright
+  reuse, all-text assets)"* — that idea is what's now being
+  promoted from parking.
+- The "problem solver" job-category framing surfaced at the
+  ~19:30 KST coffee-shop session — both personal need + observed
+  market need (peers losing jobs in 2026 economy).
+- External-security-review insight (~19:00 KST): zero-friction
+  onboarding (current roadmap Next #1) is even more important if
+  the repo is meant to serve *other people in similar straits*,
+  not just the operator.
+
+**Architectural direction (operator-stated)**: convert pipelines
+into **Claude Code Skills** (the Anthropic feature the operator
+heard about via the KakaoTalk group's 5월 20일 Claude Style →
+Skills migration discussion).  Research agent launched 2026-05-18
+~19:55 KST to produce a thorough Skills writeup before
+goal-confirmation; results will land here once back.
+
+**Skill roadmap (operator-stated order)**:
+
+1. **Skill #1 — Music-shorts production** (refactor of current
+   pipeline).  Current state: working bash pipeline producing
+   uploadable 60-second 9:16 shorts.  Skill conversion preserves
+   the bash but adds a SKILL.md / canonical invocation surface.
+2. **Skill #2 — Job-hunt support tool**.  New build.  Scope TBD
+   pending operator design pass.  Probable shape: AI-era job-
+   posting aggregator (Wanted / JobPlanet / LinkedIn / Lever /
+   Greenhouse) + LLM filter for "AI integration / forward
+   deployed / problem solver" pattern + daily digest.
+
+**Not in scope yet** (operator may add):
+- Additional skills beyond #1 and #2.
+- Marketplace / publishing of skills externally.
+- Multi-machine / cloud deployment of the framework.
+
+**Why this isn't promoted to Active goal yet**:
+- Per goal.md maintenance contract, agent does not silently
+  promote.  Operator confirms.
+- Research agent on Claude Skills is mid-flight; the technical
+  feasibility of "convert existing bash pipeline → Skill" is
+  not yet established.  Promotion happens after research lands
+  AND operator explicitly says "활성 goal로 박아."
+
+**Open questions for the home (~23:00 KST) session**:
+- Same repo (skill folder structure) vs new repo for Skill #2?
+- Skill #2 = "AI-era job aggregator" or different shape?
+- Music-shorts work continuation parallel to Skill #1 conversion,
+  or pause shorts until conversion done?
+- Naming: is this repo's identity changing from `MelonS-Agents`
+  to something framework-shaped?  (Probably no rename — additive
+  evolution.)
+
 ---
 
 ## Next goal (candidate — for user to confirm or replace)
