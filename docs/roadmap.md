@@ -42,56 +42,84 @@ not promote any cluster to active goal without operator pick.
 
 ## Next — queued, in priority order
 
-1. **Zero-API onboarding path — first-touch demo without Pexels key** —
-   surfaced 2026-05-18 ~19:00 KST during a real-time discussion with
-   an external security professional (3 yr exp, n=1 reviewing the
-   repo).  Three-layer friction observed for first-time clones:
-   (a) Pexels API key required to run the headline `music-video` /
-   `faceless-short` missions; (b) Pexels signup forces Google / Apple /
-   Facebook OAuth (no email path) — friction for KR users on
-   Naver/Kakao primary, plus identity-correlation risk; (c) the
-   "Get API key" UI is buried in Pexels' dashboard.  Three layers
-   compound; cumulative bail rate before first output ≈ high.
+1. **Zero-friction onboarding path — first-touch demo without
+   Pexels key AND without Suno generation** — surfaced 2026-05-18
+   ~19:00 KST during a real-time discussion with an external
+   security professional (3 yr exp, n=1, anonymized).  Two assets
+   currently gate the headline `music-video` mission, both with
+   compounding friction:
 
-   **Security framing** (not just UX): the pattern is intentional on
-   Pexels' side — OAuth signup is their bot-defense + identity-proxy.
-   Building first-touch on it is fighting the vendor's design.  Worse,
-   first-time users editing `.env` with API keys → typical leak vector
-   (real-world: GitHub auto-revoke logs show thousands of API-key
-   commits per day).  A demo path that never touches `.env` removes
-   that attack surface entirely.
+   **B-roll friction (Pexels API)** — three layers:
+   (a) Pexels API key required for `music-video` / `faceless-short`;
+   (b) Pexels signup forces Google / Apple / Facebook OAuth (no
+   email path) — friction for KR users on Naver/Kakao primary, plus
+   identity-correlation risk; (c) the "Get API key" UI is buried in
+   Pexels' dashboard.  Cumulative bail rate before first output ≈
+   high.
+
+   **Music friction (Suno web UI)** — current flow is fully manual:
+   (a) Suno signup + OAuth; (b) write custom-mode prompt in web UI;
+   (c) wait for generation, pick best of N; (d) download mp3;
+   (e) drop in `assets/music/`; (f) update `SOURCES.md`.  Worse
+   than Pexels — there's no API at all, every track is a manual
+   round-trip.  First-time user expecting "see a demo" gets blocked
+   *before* even reaching the B-roll step.
+
+   **Security framing** (not just UX): the Pexels OAuth + buried
+   API-key pattern is intentional bot defense — fighting the vendor's
+   design.  First-time users editing `.env` with API keys is the
+   typical credential-leak vector (GitHub auto-revoke logs show
+   thousands of API-key commits per day).  A demo path that never
+   touches `.env` and never opens an external signup removes the
+   attack surface entirely.
 
    **Design principles**:
-   - Zero-API first touch: clone → bootstrap → produce a music-video
-     output → see result, all with no external account.
-   - Gradual permission escalation: full Pexels integration stays
-     available, but as an *advanced* opt-in for users who chose to
-     commit.
-   - Vendor lock-in mitigation: Pexels alternatives (Pixabay,
-     Internet Archive, Blender CDN, Wikimedia Commons) supported as
-     equivalents.
+   - Zero-account first touch: clone → bootstrap → produce a
+     music-video output → see result, all with no external signup
+     (no Pexels, no Suno, no .env edit).
+   - Gradual permission escalation: full Pexels + Suno integration
+     stays available, but as an *advanced* path for users who chose
+     to commit.
+   - Vendor lock-in mitigation: at least one CC-licensed alternative
+     supported per asset class (B-roll: Blender CDN / Wikimedia /
+     archive.org; audio: Internet Archive Open Music / Free Music
+     Archive / Incompetech / Bensound — CC-BY or CC0).
+   - Show, don't promise: if the demo output is high enough quality,
+     users self-onboard to the advanced path; if it isn't, no
+     external accounts have been spent fighting through the friction.
 
-   **Recommended implementation** (1–2 days):
-   - `scripts/fetch-demo-broll.sh` — pull 6–8 CC-BY clips from a
-     curated set (Blender CDN open movies, Wikimedia Commons,
-     archive.org).  No API keys, only domains already in
+   **Recommended implementation** (~2 days):
+   - `scripts/fetch-demo-broll.sh` — pull 6–8 CC-BY video clips
+     from a curated set (Blender CDN open movies, Wikimedia
+     Commons, archive.org).  Domains already in
      `config/copyright-allowlist.yaml`.
+   - `scripts/fetch-demo-music.sh` — pull 3–5 CC-BY / CC0 audio
+     tracks (lo-fi, ambient, jazz, hip-hop categories) from
+     archive.org / Incompetech / FMA.  No API key.  Persist
+     attribution metadata in `assets/music/demo-SOURCES.md`.
    - `agents/missions/music-video/run.sh` `MUSIC_VIDEO_DEMO_MODE=1`
-     branch — uses local demo cache instead of Pexels API.
-   - `bootstrap.sh` — if `PEXELS_API_KEY` empty, default to demo
-     mode + print actionable next-command instead of just a warning.
-   - README first-run section rewritten: zero-API demo as the
-     headline, Pexels integration documented as "advanced —
-     unlock full mood-keyword catalog" path.
-   - Optional follow-on: bundle demo clips via git LFS (~40 MB
-     for 8 clips at low-res) so even bootstrap doesn't need to
-     hit the network.  Trade-off: clone gets heavier.  Decide
-     based on whether offline-first is a goal.
+     branch — uses local demo B-roll cache + accepts a bundled
+     demo track when no operator music is provided.
+   - `bootstrap.sh` — if `PEXELS_API_KEY` empty AND
+     `assets/music/` is empty, default to demo mode + print
+     actionable next-command instead of warnings.
+   - README first-run section rewritten: zero-account demo as the
+     headline, Pexels + Suno integration documented as "advanced —
+     unlock the full mood-keyword catalog + custom music" path.
+     "Try this first, then if you want better music we'll show you
+     how to upgrade."
+   - Optional follow-on: bundle demo assets via git LFS (~40 MB
+     B-roll + ~10 MB music = ~50 MB) so even bootstrap doesn't need
+     to hit the network.  Trade-off: clone heavier.  Decide based
+     on whether offline-first is a goal.
 
-   **Open question**: whether to deprecate Pexels as default
-   entirely after demo mode lands, or keep both with demo as
-   the "first-touch" and Pexels as the "scale-up" path.  Operator
-   decides at implementation time.
+   **Open questions** (operator decides at implementation time):
+   - Whether to deprecate Pexels + Suno as defaults entirely after
+     demo lands, or keep both with demo as "first-touch" and
+     Pexels/Suno as the "scale-up" path.
+   - Whether to bundle assets (LFS) or fetch on bootstrap
+     (network).  Bundled = offline-first + heavier clone; fetched
+     = lighter repo + first-bootstrap hits the network.
 
 2. **Delete filter-repo backup branch** — on or after 2026-05-18, if no
    issues observed with the rewritten history, delete the safety branch
