@@ -101,12 +101,45 @@ Hermes-specific: skills can also be **triggered by agent
 introspection** ("I've seen this pattern before, should I make
 a skill?").
 
-**Distribution — this is the big one**:
-[Skills Hub at agentskills.io](https://agentskills.io) is a
-**vendor-neutral marketplace** for skills following the open
-standard.  Skills written to this spec are portable between
-Hermes / Claude Code / any other compliant runtime.  This is a
-material upgrade over Claude Code's repo-based-only distribution.
+**Distribution — corrected 2026-05-18 ~20:35 KST**:
+[agentskills.io](https://agentskills.io) is **NOT a marketplace**
+(earlier commits oversold this — apology to operator).  Verified
+directly: the site is a *spec definition site* with a "Client
+Showcase" listing ~38 compatible AI agent tools (Cursor, GitHub
+Copilot, Gemini CLI, OpenAI Codex, Goose, OpenHands, Letta, etc.),
+NOT a marketplace for individual skills.  There is no submission
+form, no public listing flow, no "Skills Hub".  Skills are
+**distributed per-tool** (each runtime has its own
+`<runtime>/skills/` folder convention).  Public promotion still
+requires manual paths (GitHub stars, Reddit/HN posts, Discord
+community at agentskills.io).
+
+**Hermes-specific status correction**: Hermes Agent's README
+claims agentskills.io compatibility, but Hermes does **not**
+appear in the official Client Showcase carousel.  Either it's a
+recent addition not yet listed, or it's a self-claim outside
+official recognition.  Cross-compat with Hermes is *unverified*
+and would need clean-clone + drop-in test (Step 1.4 below) to
+confirm.
+
+**What writing to the open spec actually gives us**:
+1. **Native compat with Claude Code** — Claude Code's Skills *is*
+   the agentskills.io spec.  Zero conversion overhead.
+2. **Drop-in usable by ~38 other runtimes** — anyone using
+   Cursor, GitHub Copilot, Goose, etc. can git-clone our skill.
+3. **Standards-compliance credibility signal** — repo carries
+   weight for hiring/external review (the
+   [problem-solver framing](#problem-solver-pivot-pending)).
+4. **Vendor lock-in avoidance** — if Anthropic changes Claude
+   Code's skill UX tomorrow, our skill still works in 37 other
+   tools.
+
+**What it does NOT give us**:
+- Automatic user acquisition.  No marketplace push.
+- "Featured listing" or discovery surface.  Discovery still
+  flows through GitHub stars, Reddit/HN/Discord shares, etc.
+- Bundled installation across runtimes (each runtime has its
+  own install path).
 
 #### Cross-compatibility insight (the strategic angle)
 
@@ -185,13 +218,17 @@ can pause after any step and still have something working.
 
 ##### Skill Hub publication (~2-3h, optional after Skill #1)
 
-- **Step P.1** (~1-2h) **Marketplace listing prep**.  Write
+- **Step P.1** (~1-2h) **Public-readable Skill packaging**.  Write
   description, attribution (Suno music license, Pexels API
   license), example invocation, screenshots / demo gif.  Use
   existing `docs/demo/music-video-velvet1-jazz-combo-preview.gif`.
-- **Step P.2** (~1h) **Publish to agentskills.io**.  Submit
-  Skill #1.  **Stop-here payoff**: first public Skills Hub
-  artifact under operator's identity.
+  **Stop-here payoff**: skill folder is portfolio-grade.
+- **Step P.2** (~1h) **Promote via repo + community**.  Since no
+  central marketplace exists: pin the skill folder in the repo
+  README, write a 1-paragraph announcement post for the
+  agentskills.io Discord, link from the KakaoTalk repo share
+  (operator decides if/where).  **Stop-here payoff**: first
+  external skill ship under operator's identity.
 
 ##### Skill #2 — Job-hunt support (rough total 1-2 days split into 6 small steps)
 
@@ -229,9 +266,11 @@ Operator can stop after any step and have a working tool.
 - **Step F.1** (~1h) README EN+KO reframing — repo identity from
   "music-shorts agent" → "multi-skill framework, music + job-hunt
   shipped".
-- **Step F.2** (~1-2h) Publish Skill #2 to Skills Hub + write
-  short blog-post-style narrative explaining the framework for
-  external users.
+- **Step F.2** (~1-2h) Promote Skill #2 + write short blog-post-
+  style narrative explaining the framework for external users.
+  Post locations: agentskills.io Discord, Reddit (r/ClaudeAI,
+  r/LocalLLaMA), HackerNews, KakaoTalk community.  (No central
+  marketplace to "submit to" — manual reach.)
 
 ##### Cumulative estimates
 
