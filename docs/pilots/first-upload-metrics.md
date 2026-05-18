@@ -1,14 +1,15 @@
-# First upload — platform performance trail
+# Music-video uploads — platform performance trail
 
-Tracks the channel-level performance of the first music-video upload
-that closed the 2026-05-17 active goal.  This is the **post-goal**
-data — the goal itself is closed by operator approval + publish, but
-the *meaning* of the data only emerges after the platform feeds back
-with real watch-time / impressions.
+Tracks the channel-level performance of music-video uploads starting
+with the one that closed the 2026-05-17 active goal.  This is the
+**post-goal** data — the goal itself was closed by operator approval
++ publish, but the *meaning* of the data only emerges after the
+platform feeds back with real watch-time / impressions.  Subsequent
+batch uploads (2026-05-18 onward) appended below the first.
 
 ---
 
-## Upload metadata
+## Upload #1 — 03e-velvet1-jazz-combo (2026-05-17)
 
 | Field | Value |
 |---|---|
@@ -75,10 +76,56 @@ Append a row per check-in.  First row captured ~24 h after publish.
 
 ## Companion data
 
-- Goal closure entry: [`../goal.md`](../goal.md#active-goal) (this
-  upload's mp4 is the deliverable that ticked the
-  *Deliverable* subgoal).
+- Goal closure entry: [`../goal.md`](../goal.md#past-goals) (this
+  upload's mp4 was the deliverable that ticked the *Deliverable*
+  subgoal of the 2026-05-17 goal, now in Past goals).
 - Production mission: `records/missions/2026-05-17/music-video-upload1-203521/`
   (intermediates cleaned in cleanup-records pass; metrics.json kept).
 - Engineering case study covering the shader work that produced this
   output: [`../engineering-case-studies.md` §5](../engineering-case-studies.md#5-shader-effects-in-ffmpeg--knowing-where-the-wall-is).
+
+---
+
+## Upload #2 — 06-bossa-rainy (2026-05-18 ~15:00 KST, immediate)
+
+| Field | Value |
+|---|---|
+| Title | `Rainy Day Bossa Nova · 60s lofi jazz loop #shorts` |
+| Source mp4 | `outputs/publish/06-bossa-rainy.mp4` |
+| Duration | 60.0 s |
+| Resolution | 1080 × 1920 (9:16) |
+| Music | `assets/music/Rainy Bossa.mp3` (Suno free tier, 75 BPM bossa nova lofi) |
+| Visual mood | rainy neon street, raindrops on glass, jazz cafe, vinyl, wet pavement |
+| Shader stack | base mission render (no post-shader applied) |
+| Visibility | Public |
+| Publish time | 2026-05-18 ~15:00 KST (immediate) |
+| Production mission | `records/missions/2026-05-18/music-video-upload3-000333/` |
+| Public URL | _to be filled — operator paste after upload_ |
+
+## Upload #3 — 09-vibraphone-tokyo (2026-05-18 19:00 KST, scheduled)
+
+| Field | Value |
+|---|---|
+| Title | `Tokyo Neon Vibraphone · 60s dreamy city pop loop #shorts` |
+| Source mp4 | `outputs/publish/09-vibraphone-tokyo.mp4` |
+| Duration | 60.0 s |
+| Resolution | 1080 × 1920 (9:16) |
+| Music | `assets/music/Tokyo Neon.mp3` (Suno free tier, 65 BPM city-pop vibraphone) |
+| Visual mood | Shibuya night, Akihabara neon, ramen shop, vending machine alley, subway, Shinjuku rain |
+| Shader stack | base mission render (no post-shader applied) |
+| Visibility | Scheduled → Public at 2026-05-18 19:00 KST |
+| Publish time | 2026-05-18 19:00 KST (scheduled via YouTube Studio) |
+| Production mission | `records/missions/2026-05-18/music-video-upload6-003009/` |
+| Public URL | _to be filled — operator paste after the 19:00 auto-publish_ |
+
+## Cross-upload comparison (when data lands)
+
+| Upload | Vibe | Hours since pub | Views | CTR | Avg duration | Subs gained |
+|---|---|---|---|---|---|---|
+| #1 03e-velvet1-jazz-combo | lo-fi jazz vinyl | _to fill_ | — | — | — | — |
+| #2 06-bossa-rainy | rainy bossa | _to fill_ | — | — | — | — |
+| #3 09-vibraphone-tokyo | tokyo vibraphone | _to fill_ | — | — | — | — |
+
+Once two or more rows are filled, the comparison decides which mood
+gets queued next.  If one upload outperforms the others by 3×+ on
+view-through, that's the format taste signal — copy it.
