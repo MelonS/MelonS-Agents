@@ -266,6 +266,94 @@ if that tool isn't in the project yet.
 
 ---
 
+## 6. Onboarding friction kills first-touch — zero-account demo path
+
+**Problem.** A security professional reviewing the repo at a
+coffee-shop session walked through the README "Quick start" cold.
+Three hard stops before the music-video mission ever ran:
+
+1. `PEXELS_API_KEY` required.  Pexels signup forces Google /
+   Apple / Facebook OAuth — no email path.  KR users on
+   Naver / Kakao primary have no usable OAuth provider; the
+   identity-correlation surface is non-trivial even for users
+   who do have a Google account.
+2. "Get API key" UI is buried in the Pexels dashboard behind two
+   menu hops most users will not find without external
+   instructions.
+3. The music-video mission needs an operator-supplied music file.
+   The canonical source is Suno — manual six-step round-trip
+   (signup → custom-mode prompt → wait → pick best of N →
+   download mp3 → drop in `assets/music/`).  No Suno API exists;
+   every track is a separate UI session.
+
+Cumulative bail rate before first output ≈ high.  And:
+first-time users editing `.env` with API keys IS the typical
+credential-leak vector (GitHub's auto-revoke logs thousands of
+key-in-commit incidents per day).  A demo path that never opens
+the `.env` removes that attack surface entirely.
+
+**Constraint.** Can't break the existing full path — operators
+who *have* a Suno track and Pexels key still want per-keyword
+mood-matched B-roll.  Can't violate copyright policy — every
+source needs a real allowlist entry and a deduplicated
+attribution credit in `outputs/SOURCES.txt`.  Can't add Anthropic
+spend — this is the zero-account *demo*, not the curated path.
+
+**Decision.** Add a parallel demo path that pre-populates the
+same `$CLIPS_DIR/raw-<keyword>.mp4` paths the mission already
+checks for, before the per-segment Pexels fetch loop runs.  The
+existing `if [[ ! -f "$RAW" ]]` check short-circuits the API call
+without any new code in the hot path.
+
+The mechanism:
+
+- `scripts/fetch-demo-broll.sh` — curated CC-BY-3.0 clips from
+  Blender Foundation's CDN.  HEAD-checked URLs, sidecar JSONs
+  matching the shape `agents/lib/attribution.sh` already reads
+  for Pexels.
+- `scripts/fetch-demo-music.sh` — curated CC-BY-4.0 tracks from
+  Kevin MacLeod's Incompetech catalog.  Five moods across the
+  keyword categories the mission understands.  Required adding
+  `incompetech.com` to `config/copyright-allowlist.yaml` plus a
+  CC-BY-4.0 publish_rule that was missing.
+- `MUSIC_VIDEO_DEMO_MODE=1` env switch in
+  `agents/missions/music-video/run.sh` — skips
+  `require_env PEXELS_API_KEY`, defaults `MUSIC_FILE` to the
+  first cached demo track when no argument given, pre-populates
+  `$CLIPS_DIR` from the demo cache.  Twenty new lines in the
+  hot path; the existing non-demo flow is byte-identical.
+- `scripts/bootstrap.sh` UX — detects the
+  no-key-AND-no-music state and prints the exact
+  `MUSIC_VIDEO_DEMO_MODE=1 …` command as the recommended Next
+  Step instead of two warning blocks.
+
+**Verification.** `scripts/test-demo-mode.sh` exercises the
+whole path against a freshly-cloned tree: `git clone` →
+`bootstrap.sh` → `MUSIC_VIDEO_DEMO_MODE=1 ./run.sh demo` →
+assert `short.mp4` ≥ 1 MB, duration ≥ 50 s, `SOURCES.txt`
+contains ≥ 2 CC-BY credit lines.  First PASS recorded
+2026-05-19 01:25 KST against the local feat branch: 81 MB,
+60 s, 3 deduplicated credit lines.  Cold-start wall time clone
+→ playable mp4 ≈ 2 min 30 s on the test machine.
+
+**Lesson preserved:** "Make the friction-heavy path opt-in for
+the advanced case, not the default."  The full Pexels + Suno
+flow is still there — documented as the upgrade path for users
+who commit to the system.  But it's no longer the gatekeeper.
+The existing infrastructure (allowlist + sidecar attribution +
+filesystem-cache short-circuit) was *almost* designed for this
+already; the demo-mode change was mostly composition of pieces
+that already worked, not new mechanism.
+
+**Decision artifact:** [`scripts/fetch-demo-broll.sh`](../scripts/fetch-demo-broll.sh)
++ [`scripts/fetch-demo-music.sh`](../scripts/fetch-demo-music.sh)
++ [`scripts/test-demo-mode.sh`](../scripts/test-demo-mode.sh)
++ [`docs/onboarding/demo-mode.md`](onboarding/demo-mode.md).  All
+on `feat/demo-mode`, pending merge to main at the v0.2.0
+milestone.
+
+---
+
 ## What these have in common
 
 - Each started from a **specific observed failure**, not a theoretical
