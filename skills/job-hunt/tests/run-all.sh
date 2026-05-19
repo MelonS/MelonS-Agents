@@ -38,8 +38,9 @@ run_suite() {
   fi
 }
 
-run_suite "smoke"      "$SKILL_DIR/tests/smoke.sh"
-run_suite "edge-cases" "$SKILL_DIR/tests/edge-cases.sh"
+run_suite "smoke"             "$SKILL_DIR/tests/smoke.sh"
+run_suite "edge-cases"        "$SKILL_DIR/tests/edge-cases.sh"
+run_suite "schema-validation" "$SKILL_DIR/tests/schema-validation.sh"
 
 echo ""
 echo "==================== summary ===================="
