@@ -71,10 +71,11 @@
 
 > **Engineering decisions, one page.**
 > [`docs/engineering-case-studies.md`](docs/engineering-case-studies.md)
-> — five production incidents and the minimum mechanism each one
+> — six production incidents and the minimum mechanism each one
 > produced (Tier-1 routing, semaphore-bounded batch, content-quality
-> feedback loop, three-layer reactive audit, and shader-effects-in-
-> ffmpeg / knowing-where-the-wall-is).  Each entry follows
+> feedback loop, three-layer reactive audit, shader-effects-in-ffmpeg
+> / knowing-where-the-wall-is, and onboarding-friction-kills-first-touch
+> / zero-account demo path).  Each entry follows
 > *problem → constraint → decision → artifact*.
 
 ## Design notes
@@ -331,6 +332,7 @@ Subagent definitions: [`.claude/agents/`](.claude/agents/) · Mission templates 
 | Layer | Path | Tracked |
 |-------|------|---------|
 | Code (logic) | `.claude/agents/`, `agents/`, `config/`, `scripts/` | ✓ |
+| Skills (agentskills.io-spec packages) | `skills/<name>/` | ✓ |
 | Data (outputs) | `records/missions/<date>/<id>/` | ✗ (gitignored) |
 | Secrets | `.env` | ✗ (gitignored) |
 
@@ -458,39 +460,59 @@ in [`docs/cost-model.md`](docs/cost-model.md).
 
 ## Quick start — music-video flow (the showcase)
 
-> **First-time clone — use the latest release tag for a stable
-> snapshot.**  The `main` branch may contain in-flight structural
-> work (e.g., the Skills refactor on `feat/skill-music-video`);
-> tagged releases are guaranteed-tested checkpoints.  The latest
-> tag is listed on the
-> [Releases page](https://github.com/MelonS/MelonS-Agents/releases).
+> **Latest stable tag**: `v0.2.0` — Skills framework + zero-account
+> demo path.  Cloning the tag is the recommended first-touch
+> entry point; `main` may contain in-flight work past the tag.
+
+### Zero-account demo (~2 minutes from clone to playable mp4)
+
+No Pexels signup, no Suno round-trip, no `.env` edit.  Uses
+bundled CC-BY Blender Foundation clips + Kevin MacLeod tracks
+(both CC-BY 4.0 / 3.0 with attribution baked into
+`outputs/SOURCES.txt`).  Designed for "see what it produces
+before committing accounts".
 
 ```bash
-# 1) clone the latest stable release tag (recommended for first-time users)
-git clone --branch v0.1.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
+# 1) clone (any host with Mac/Linux + ffmpeg + ollama + aubio works)
+git clone --branch v0.2.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 
-# OR — if you want the bleeding-edge main (may include in-flight work):
-# git clone https://github.com/MelonS/MelonS-Agents.git
-# cd MelonS-Agents
-
-# 2) bootstrap (verifies tools, auto-fetches whisper model + ollama model,
-#    prints exact brew/apt commands for anything missing, warns if the
-#    Pexels API key isn't set)
+# 2) bootstrap (verifies tools, prints brew/apt hints for anything missing;
+#    detects no-key/no-music state and recommends the demo path automatically)
 ./scripts/bootstrap.sh
 
-# 3) edit .env — set PEXELS_API_KEY (free; signup link above)
-# (the bootstrap step auto-created .env from .env.example)
+# 3) zero-account demo — first run fetches the demo cache (~30s) then
+#    renders (~100s).  Output at:
+#    records/missions/<YYYY-MM-DD>/music-video-demo-<HHMMSS>/outputs/short.mp4
+MUSIC_VIDEO_DEMO_MODE=1 ./agents/missions/music-video/run.sh demo
+```
 
-# 4) generate one or more music tracks on Suno (free tier, suno.com)
+Reproducibility gate: `scripts/test-demo-mode.sh` exercises the
+whole path against a freshly-cloned tree (asserts `short.mp4`
+≥ 1 MB, ≥ 50 s, `SOURCES.txt` with ≥ 2 CC-BY credit lines).  PASS
+log persists at
+[`docs/onboarding/demo-mode-log.txt`](docs/onboarding/demo-mode-log.txt).
+
+See [`docs/onboarding/demo-mode.md`](docs/onboarding/demo-mode.md)
+for source customization, attribution requirements, and the
+graduation path to the full Pexels + operator-music flow below.
+
+### Full path — operator music + per-keyword Pexels B-roll
+
+For the unlocked mood-keyword catalog and operator-supplied tracks:
+
+```bash
+# 1) edit .env — set PEXELS_API_KEY (free; sign up at https://www.pexels.com/api/)
+
+# 2) generate one or more music tracks on Suno (free tier, suno.com)
 #    with prompts like "late night jazz lofi, soft piano, 60 BPM,
 #    [Instrumental]" — download the mp3 and drop into assets/music/
 #    (gitignored — license trail noted in assets/music/SOURCES.md)
 
-# 5) run the music-video mission against your music file
+# 3) run the music-video mission against your music file
 ./agents/missions/music-video/run.sh upload1 "assets/music/<your_track>.mp3"
 
-# 6) (optional, but the whole point) apply the phrase-aware shader combo
+# 4) (optional, but the whole point) apply the phrase-aware shader combo
 #    — pond surface ripple + warm halation with envelope tied to a 95.8
 #    BPM phrase cadence (tunable inside the script for other tempos):
 ./scripts/music-video-shaders.sh combo \

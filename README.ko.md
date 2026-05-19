@@ -70,10 +70,10 @@
 
 > **엔지니어링 결정, 한 페이지로.**
 > [`docs/engineering-case-studies.ko.md`](docs/engineering-case-studies.ko.md)
-> — 프로덕션에서 드러난 5건의 문제와 각각이 만들어낸 최소 메커니즘
+> — 프로덕션에서 드러난 6건의 문제와 각각이 만들어낸 최소 메커니즘
 > (Tier-1 라우팅, 세마포어 배치, 콘텐츠 품질 피드백 루프, 3-레이어
-> 리액티브 감사, ffmpeg 쉐이더의 한계). 각 항목은 *문제 → 제약 →
-> 결정 → 산출물* 포맷.
+> 리액티브 감사, ffmpeg 쉐이더의 한계, 온보딩 마찰 → 제로-계정 데모
+> 경로). 각 항목은 *문제 → 제약 → 결정 → 산출물* 포맷.
 
 ## 설계 노트
 
@@ -313,6 +313,7 @@ v5 → v6 상승폭 (단일 라인 자막은 v5에서 이미 적용 완료, v6�
 | 계층 | 경로 | 추적 여부 |
 |------|------|-----------|
 | 코드 (로직) | `.claude/agents/`, `agents/`, `config/`, `scripts/` | ✓ |
+| Skills (agentskills.io-spec 패키지) | `skills/<name>/` | ✓ |
 | 데이터 (산출물) | `records/missions/<date>/<id>/` | ✗ (gitignore) |
 | 시크릿 | `.env` | ✗ (gitignore) |
 
@@ -432,38 +433,59 @@ agent-driven 경로에서만 소비됩니다.
 
 ## 빠른 시작 — music-video 플로우 (메인 쇼케이스)
 
-> **첫 클론은 최신 릴리즈 태그를 추천.**  `main` 브랜치는
-> 진행 중인 큰 변경 (예: Skills 리팩터, `feat/skill-music-video`
-> 브랜치) 이 들어있을 수 있음.  태그된 릴리즈는 검증된 스냅샷.
-> 최신 태그는
-> [Releases 페이지](https://github.com/MelonS/MelonS-Agents/releases)
-> 에서 확인.
+> **최신 안정 태그**: `v0.2.0` — Skills 프레임워크 + 제로-계정
+> 데모 경로.  첫 클론은 태그 클론이 권장 진입점; `main` 은
+> 태그 이후 진행중 작업이 있을 수 있음.
+
+### 제로-계정 데모 (클론에서 재생 가능한 mp4까지 ~2분)
+
+Pexels 가입 없음, Suno 왕복 없음, `.env` 편집 없음.  번들된
+CC-BY Blender Foundation 클립 + Kevin MacLeod 트랙 사용
+(둘 다 CC-BY 4.0 / 3.0, attribution 은 `outputs/SOURCES.txt`
+에 자동 기록).  "계정 만들기 전에 일단 결과물 보고 결정" 시나리오용.
 
 ```bash
-# 1) 최신 안정 릴리즈 태그 클론 (첫 사용자 권장)
-git clone --branch v0.1.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
+# 1) clone (Mac/Linux + ffmpeg + ollama + aubio 있으면 OK)
+git clone --branch v0.2.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 
-# 또는 — 진행중인 main이 필요하면:
-# git clone https://github.com/MelonS/MelonS-Agents.git
-# cd MelonS-Agents
-
-# 2) 부트스트랩 (도구 점검, whisper / ollama 모델 자동 다운로드,
-#    누락된 거에 대해 정확한 brew/apt 명령 출력, Pexels 키 미설정 경고)
+# 2) 부트스트랩 (도구 점검, brew/apt 힌트 출력;
+#    no-key/no-music 상태 감지해서 데모 경로를 자동 추천)
 ./scripts/bootstrap.sh
 
-# 3) .env 편집 — PEXELS_API_KEY 설정 (무료, 위 가입 링크)
-# (bootstrap 단계가 .env 를 .env.example 에서 자동 생성함)
+# 3) 제로-계정 데모 — 첫 실행에서 데모 캐시 다운로드 (~30초) → 렌더 (~100초)
+#    결과:
+#    records/missions/<YYYY-MM-DD>/music-video-demo-<HHMMSS>/outputs/short.mp4
+MUSIC_VIDEO_DEMO_MODE=1 ./agents/missions/music-video/run.sh demo
+```
 
-# 4) Suno (무료 티어, suno.com) 에서 음악 트랙 생성.  예 프롬프트:
+재현성 게이트: `scripts/test-demo-mode.sh` 가 새로 클론된 트리에
+대해 전체 경로 실행 (assertion: `short.mp4` ≥ 1 MB, ≥ 50 s,
+`SOURCES.txt` 에 CC-BY 크레딧 ≥ 2 라인).  PASS 로그는
+[`docs/onboarding/demo-mode-log.txt`](docs/onboarding/demo-mode-log.txt)
+에 누적.
+
+소스 커스터마이즈, attribution 의무, 풀 Pexels + 운영자 음악
+플로우 (아래) 로의 graduation 경로는
+[`docs/onboarding/demo-mode.md`](docs/onboarding/demo-mode.md)
+참고.
+
+### 풀 경로 — 운영자 음악 + 키워드별 Pexels B-roll
+
+언락된 mood-keyword 카탈로그와 운영자 공급 트랙용:
+
+```bash
+# 1) .env 편집 — PEXELS_API_KEY 설정 (무료, https://www.pexels.com/api/)
+
+# 2) Suno (무료 티어, suno.com) 에서 음악 트랙 생성.  예 프롬프트:
 #    "late night jazz lofi, soft piano, 60 BPM, [Instrumental]"
 #    → mp3 다운 후 assets/music/ 에 드롭
 #    (gitignore 됨 — license 추적은 assets/music/SOURCES.md 에)
 
-# 5) 트랙으로 music-video 미션 실행
+# 3) 트랙으로 music-video 미션 실행
 ./agents/missions/music-video/run.sh upload1 "assets/music/<your_track>.mp3"
 
-# 6) (옵션이지만 핵심) phrase-aware 쉐이더 combo 적용
+# 4) (옵션이지만 핵심) phrase-aware 쉐이더 combo 적용
 #    — pond surface ripple + warm halation, 95.8 BPM phrase cadence
 #       (다른 템포는 스크립트 안에서 envelope 조정)
 ./scripts/music-video-shaders.sh combo \
