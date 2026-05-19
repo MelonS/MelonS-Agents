@@ -1,20 +1,6 @@
-<!--
-Sample output from `skills/job-hunt/scripts/run.sh` against the
-default sources in `config/filters.example.yaml` (kr-wanted +
-kr-programmers + kr-jobkorea + kr-saramin — all in mock-fallback
-mode, no live HTTP, no API keys consumed).  Captured 2026-05-20
-~00:51 KST.
-
-This file is a committed reference — useful when reviewing the
-job-hunt skill without having to clone + run yourself.  Real
-digests land under `records/jobs/<date>/digest.md` (gitignored).
-
-Reproduce: `skills/job-hunt/scripts/run.sh --dry-run`
--->
-
 # Job-hunt digest — 2026-05-20
 
-> **Generated**: 2026-05-20T00:51:33+09:00
+> **Generated**: 2026-05-20T01:14:42+09:00
 > **Locale**: `kr`
 > **Sources**: kr-wanted, kr-programmers, kr-jobkorea, kr-saramin
 > **Filter**: 직군: 백엔드 개발자,AI 엔지니어,풀스택 개발자 · 지역: 서울,경기 성남,원격 · include=[Python,AI,LLM,agent] exclude=[SI,파견,단순 운영]
@@ -51,12 +37,12 @@ Reproduce: `skills/job-hunt/scripts/run.sh --dry-run`
 - **[Saramin OpenAPI mock] AI 엔지니어** · Saramin Mock A
   - 지역: 서울 강남구 · 게시: 2026-05-19
   - 요약: Python/PyTorch.  LLM serving + agent infra.  (mock — needs SARAMIN_KEY + JH_SARAMIN_LIVE=1 for live OpenAPI.)
-  - [posting](https://www.saramin.co.kr/job/MOCK_SR_500) · [apply](https://www.saramin.co.kr/job/MOCK_SR_500)
+  - [posting](https://www.saramin.co.kr/job/MOCK_SR_500)
 
 - **백엔드 개발자 (Python)** · Saramin Mock B
   - 지역: 서울 강남구 · 게시: 2026-05-20
   - 요약: FastAPI / PostgreSQL.  AI 데이터 파이프라인 운영. (mock)
-  - [posting](https://www.saramin.co.kr/job/MOCK_SR_501) · [apply](https://www.saramin.co.kr/job/MOCK_SR_501)
+  - [posting](https://www.saramin.co.kr/job/MOCK_SR_501)
 
 ### kr-wanted (3)
 
