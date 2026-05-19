@@ -112,7 +112,7 @@ delta is small and risk of misfetched assets is non-trivial.
 
 ## Skills (agentskills.io-spec packages)
 
-Added 2026-05-19 (on `feat/skill-music-video`, awaiting merge):
+Added 2026-05-19 (merged to main in v0.2.0):
 top-level `skills/<name>/` is a new tracked layer holding
 agentskills.io-spec-compliant skill packages.  Each skill is a
 runtime-portable description of a pipeline that other compatible

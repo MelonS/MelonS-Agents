@@ -196,6 +196,27 @@ _(beyond #2: promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-19** (~17:51 KST) **v0.3.0 milestone shipped — Permission
+  bootstrap + pluggable B-roll merged to main, tag pushed**
+  (commits `c496a0a` user-level Claude Code permission bootstrap;
+  `7897e96` jq string-interpolation + non-empty validation fix;
+  `2bd0828` broaden allow list with common shell utilities;
+  `7ee3670` edge-case smoke for install-claude-permissions.sh;
+  `fdcedbc` MUSIC_VIDEO_BROLL_DIR + AI-anime B-roll generator).
+  Two feat branches in this milestone: `feat/permission-bootstrap`
+  (6 commits) + `feat/custom-broll-dir` (1 commit).  Driven by the
+  2026-05-19 in-person friend-test that surfaced ~30 permission prompts
+  in one session.  Companion docs landed alongside: `3bcfd6d`
+  claude-permissions onboarding; `24392e7` case-studies #6 field-obs
+  addendum; `3bec8e9` CRITICAL candidate goal filed in `docs/goal.md`;
+  `9b827b0` friend-meeting friction capture; `9f19708` v0.2.0 Done tick.
+
+- **2026-05-19** (~00:16 KST) **Multi-skill AI assistant framework
+  promoted to active goal** (`8b39cac`).  Operator direction at
+  2026-05-18 ~19:50 KST: skill structure first so subsequent skills
+  can iteratively improve the prior ones.  Parks main-protection v2
+  parallel work as gated on the framework goal.
+
 - **2026-05-19** (~12:35 KST) **v0.2.0 milestone shipped — Skills
   framework + zero-friction demo path merged to main, tag pushed**
   (commits `ae07233` Skill #1 12-commit train merged FF to main;

@@ -354,14 +354,11 @@ frame deliverable*, not just infrastructure):
   agentskills.io spec compliant (validated structure: required
   `name` + `description` frontmatter, optional `license` +
   `compatibility` + `metadata` + `allowed-tools`).  Shipped 2026-05-19
-  ~00:35 KST in commit `a993753` on `feat/skill-music-video` branch.
-  **Not yet merged to main** (still pending Step 1.4 cross-runtime
-  Hermes drop-in test + pre-merge gate manual review).
-<!-- suggest 2026-05-19 ~12:40 KST: caveat above is now outdated.
-Step 1.4 PASSED 12/12 (docs/skills/hermes-interop-test.md), feat/skill-music-video
-merged FF to main, v0.2.0 tag pushed, feat/demo-mode also merged.  Friend's
-fresh-clone test at 2pm KST is the substantive Gate 2 validation.  Operator may
-strike the "Not yet merged" paragraph at next housekeeping pass. -->
+  ~00:35 KST in commit `a993753` on `feat/skill-music-video` branch;
+  merged FF to `main` and tagged `v0.2.0` at ~12:35 KST.  Step 1.4
+  cross-runtime Hermes drop-in test PASSED 12/12
+  (`docs/skills/hermes-interop-test.md`); friend's 14:00 KST fresh-clone
+  test served as substantive Gate 2 validation.
 
 - [ ] **Skill #2 — job-hunt support delivers a daily digest**.
   Markdown file in `records/jobs/<date>/digest.md` with at least

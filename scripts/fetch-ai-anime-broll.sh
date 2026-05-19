@@ -22,7 +22,7 @@
 set -euo pipefail
 FIXTURE_DIR="${FIXTURE_DIR:-/tmp/anime-gen}"
 DEST="$FIXTURE_DIR/clips"
-FFMPEG="${FFMPEG_BIN:-/Users/melons/.local/opt/ffmpeg-static/ffmpeg}"
+FFMPEG="${FFMPEG_BIN:-ffmpeg}"
 mkdir -p "$DEST"
 
 PROMPTS=(

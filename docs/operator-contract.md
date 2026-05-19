@@ -151,7 +151,7 @@ broken `main` damages reputation.  Therefore:
 **What counts as `structural-change` (feat branch required)**:
 
 - `.claude/agents/*.md` edits (already gated by §5; now also branch).
-- `.claude/skills/*` create / edit (new layer — Skills work).
+- `skills/<name>/` create / edit (new layer — Skills work).
 - `agents/missions/<type>/run.sh` — new mission type or major
   semantics change.
 - New `scripts/` tooling that other components will call.
