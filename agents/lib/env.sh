@@ -33,6 +33,12 @@ __resolve_ffmpeg() {
     return
   fi
   # First pass: pick the first candidate that has libass.
+  # §8 exception: hardcoded ffmpeg-full keg paths (Homebrew Apple
+  # Silicon + Intel default install dirs) are registered in
+  # operator-contract.md §8 exception registry.  PATH-first lookup
+  # comes before the hardcoded fallbacks; the hardcoded paths are
+  # only reached when ffmpeg isn't on PATH but ffmpeg-full was
+  # installed via Homebrew.
   for cand in \
       "$(command -v ffmpeg 2>/dev/null || true)" \
       "/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg" \
@@ -45,6 +51,8 @@ __resolve_ffmpeg() {
   done
   # Fallback: first existing ffmpeg even without libass (will be
   # diagnosed by the bootstrap check, with an actionable hint).
+  # §8 exception: same Homebrew ffmpeg-full keg paths as above;
+  # registered in operator-contract.md §8 exception registry.
   for cand in \
       "$(command -v ffmpeg 2>/dev/null || true)" \
       "/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg" \
