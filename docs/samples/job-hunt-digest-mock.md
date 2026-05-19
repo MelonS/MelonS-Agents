@@ -1,3 +1,18 @@
+<!--
+Sample output from `skills/job-hunt/scripts/run.sh` against the
+default sources in `config/filters.example.yaml` (kr-wanted +
+kr-programmers + kr-jobkorea + kr-saramin — all in mock-fallback
+mode, no live HTTP, no API keys consumed).  Captured 2026-05-20
+~01:14 KST, post digest-UX-tweak (apply links suppressed when
+they equal the posting URL — visible on kr-saramin entries).
+
+This file is a committed reference — useful when reviewing the
+job-hunt skill without having to clone + run yourself.  Real
+digests land under `records/jobs/<date>/digest.md` (gitignored).
+
+Reproduce: `skills/job-hunt/scripts/run.sh --dry-run`
+-->
+
 # Job-hunt digest — 2026-05-20
 
 > **Generated**: 2026-05-20T01:14:42+09:00
