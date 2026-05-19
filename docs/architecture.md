@@ -171,6 +171,45 @@ uses a distinct subset (`env.sh`, `log.sh`, `ffmpeg.sh`) plus the
 - `agents/lib/tts.sh` — Kokoro-ONNX (Apache 2.0) with macOS `say`
   fallback (used by `faceless-short`)
 
+## Skills layer — two shapes
+
+The `skills/<name>/` directory holds
+[agentskills.io](https://agentskills.io)-spec packages.  A Skill is
+a portable description of a pipeline: any compatible runtime
+(Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub
+Copilot, etc.) that implements the spec can git-clone the skill
+and invoke it.  The Skill is the canonical user-facing unit; the
+mission-vs-skill distinction below is an *implementation* concern,
+not a user-visible one.
+
+Skills come in two shapes depending on whether the work fits the
+5-agent (orchestrator + planner + resourcer + editor + qa)
+mission pipeline:
+
+| Shape | When to pick | `scripts/run.sh` body | Examples |
+|---|---|---|---|
+| **Missions-routed** | The work decomposes naturally into discrete planner / resourcer / editor / qa stages with non-trivial work in each | Symlink to `agents/missions/<type>/run.sh` (re-uses mission tuning, lib functions, retry loops) | Skill #1 `music-video` — beat extraction (resourcer) + B-roll fetch (resourcer) + multi-stage ffmpeg render (editor) + codec/duration verification (qa) all non-trivial |
+| **Standalone** | The work is mechanical (HTTP + parse + format) — planner / qa would be near-empty stages | Direct implementation in the skill itself; no `agents/missions/` counterpart | Skill #2 `job-hunt` (scaffold on `feat/skill-job-hunt`) — fetch from N job boards → filter → dedupe → render markdown; planner and qa stages would be trivial |
+
+The decision is recorded per-skill in `SKILL.md` `metadata.pipeline-source`:
+
+```yaml
+# missions-routed example (skills/music-video/SKILL.md):
+pipeline-source: agents/missions/music-video/run.sh
+
+# standalone example (skills/job-hunt/SKILL.md):
+pipeline-source: scripts/run.sh (this skill is self-contained — no agents/missions/ counterpart)
+```
+
+Why distinguish: forcing every skill through the 5-agent
+orchestrator adds four file-based handoffs per invocation
+(plan.md → resources/ → outputs/ → qa-report.md).  Worth it when
+each handoff carries real work; pure overhead when the stages
+are empty.  Both shapes share the same external interface (the
+agentskills.io frontmatter + invocation contract), so adding a
+new skill doesn't force a structural choice at the spec layer —
+only at the implementation layer.
+
 ## Faceless-short pipeline
 
 The `faceless-short` mission has no input video — it generates the
