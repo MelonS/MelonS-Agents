@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-17T10:20:58",
+  "generated_at": "2026-05-20T00:31:45",
   "marker_convention_started": "2026-05-17",
   "rationale": "Per-day count of commits classified as user-initiated vs agent-autonomous. See scripts/generate-intervention-chart.py for the classification heuristics. Aim is for user-initiated to trend down over time as agent autonomy grows.",
   "days": [
@@ -23,752 +23,1394 @@
     },
     {
       "date": "2026-05-17",
-      "user_initiated": 8,
-      "agent_autonomous": 11,
-      "user_ratio_pct": 42.1
+      "user_initiated": 40,
+      "agent_autonomous": 18,
+      "user_ratio_pct": 69.0
+    },
+    {
+      "date": "2026-05-18",
+      "user_initiated": 13,
+      "agent_autonomous": 13,
+      "user_ratio_pct": 50.0
+    },
+    {
+      "date": "2026-05-19",
+      "user_initiated": 7,
+      "agent_autonomous": 27,
+      "user_ratio_pct": 20.6
+    },
+    {
+      "date": "2026-05-20",
+      "user_initiated": 0,
+      "agent_autonomous": 5,
+      "user_ratio_pct": 0.0
     }
   ],
   "commits": [
     {
-      "sha": "cb46110",
+      "sha": "a90bc9d",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "chore: filter-repo backup branch deleted (Roadmap Next #2)"
+    },
+    {
+      "sha": "aa56f5f",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(contract): close audit L4/L5/L6 — scope sync + tag exception + bootstrap extend"
+    },
+    {
+      "sha": "95308f6",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs: scrub employment-angle phrasing per [[repo-as-credibility-signal]]"
+    },
+    {
+      "sha": "f752d72",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(readme+site): music-video framing + v0.3.0 tag refresh"
+    },
+    {
+      "sha": "6c7d398",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "chore(audit): refresh 26th contract audit report (post-81320a3 hook)"
+    },
+    {
+      "sha": "81320a3",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "chore(audit): clear 3 mediums + 3 lows from 2026-05-19 contract audit"
+    },
+    {
+      "sha": "fdcedbc",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "feat(music-video): MUSIC_VIDEO_BROLL_DIR + AI-anime B-roll generator"
+    },
+    {
+      "sha": "7ee3670",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "test(permissions): edge-case smoke for install-claude-permissions.sh"
+    },
+    {
+      "sha": "2bd0828",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "feat(permissions): broaden allow list with common shell utilities"
+    },
+    {
+      "sha": "7897e96",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "fix(permissions): jq string interpolation + non-empty validation"
+    },
+    {
+      "sha": "24392e7",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs(case-studies): #6 field-observation addendum — Claude Code prompts"
+    },
+    {
+      "sha": "3bcfd6d",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs(onboarding): claude-permissions.md — user-facing fix doc"
+    },
+    {
+      "sha": "c496a0a",
+      "date": "2026-05-19",
+      "class": "user",
+      "subject": "feat(permissions): user-level Claude Code permission bootstrap"
+    },
+    {
+      "sha": "3bec8e9",
+      "date": "2026-05-19",
+      "class": "user",
+      "subject": "docs(goal): file 2026-05-19 friend-test friction as CRITICAL candidate goal"
+    },
+    {
+      "sha": "9b827b0",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs: capture 2026-05-19 friend-meeting friction + open branches"
+    },
+    {
+      "sha": "9f19708",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs: tick v0.2.0 milestone Done entries + suggest Skill #1 caveat strike"
+    },
+    {
+      "sha": "8c3e045",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs(readme): v0.2.0 cadence batch — demo-mode quick start + skills/ layer"
+    },
+    {
+      "sha": "febb1f3",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs(demo-mode): preview thumbnail + inline reference + gitignore exception"
+    },
+    {
+      "sha": "ddd28f8",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs(case-studies-ko): mirror #6 — onboarding friction kills first-touch"
+    },
+    {
+      "sha": "7c0eb19",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs(case-studies): add #6 — onboarding friction kills first-touch"
+    },
+    {
+      "sha": "d573270",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs(daily): feat/demo-mode session report — Roadmap Next #1 complete"
+    },
+    {
+      "sha": "5c877af",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "feat(demo-mode): scripts/test-demo-mode.sh + onboarding docs + first PASS log"
+    },
+    {
+      "sha": "cf85d4d",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "feat(demo-mode): bootstrap recommends demo path when no keys/music present"
+    },
+    {
+      "sha": "871da9b",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "feat(demo-mode): wire MUSIC_VIDEO_DEMO_MODE into music-video mission"
+    },
+    {
+      "sha": "7ffd5c6",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "feat(demo-mode): fetch-demo-music.sh + CC-BY-4.0 publish rule + incompetech allowlist"
+    },
+    {
+      "sha": "8fd1393",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "feat(demo-mode): fetch-demo-broll.sh — zero-friction CC-BY B-roll cache"
+    },
+    {
+      "sha": "ae07233",
+      "date": "2026-05-19",
+      "class": "user",
+      "subject": "feat(skills): music-video smoke test — Layer 4 first instance"
+    },
+    {
+      "sha": "f624d13",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs(skills): Step 1.4 — Hermes drop-in test PASS (12/12 checks)"
+    },
+    {
+      "sha": "0652092",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "fix(pre-merge-check): align §5 regex to *.md scope + skills/ at top-level"
+    },
+    {
+      "sha": "8940ea6",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs(audit): twenty-third audit (post-commit hook re-run at 4c0698b)"
+    },
+    {
+      "sha": "cebd42f",
+      "date": "2026-05-19",
+      "class": "user",
+      "subject": "docs: address 2026-05-19-all audit findings — skills/ in arch refs + Now suggest"
+    },
+    {
+      "sha": "4c0698b",
+      "date": "2026-05-19",
+      "class": "user",
+      "subject": "docs(daily): morning brief + audit ack + low-severity bookkeeping"
+    },
+    {
+      "sha": "401f9ff",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs: record overnight Skill #1 + portability progress"
+    },
+    {
+      "sha": "c9ecb15",
+      "date": "2026-05-19",
+      "class": "user",
+      "subject": "docs(ideas): park A/B test — planner + resourcer at Opus vs Sonnet"
+    },
+    {
+      "sha": "40aeab1",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "feat(bootstrap): call install-claude-local.sh on every bootstrap"
+    },
+    {
+      "sha": "912d61c",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "feat(portability): template-render .claude/settings.json (Layer 5)"
+    },
+    {
+      "sha": "a993753",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "feat(skills): Skill #1 — music-video (agentskills.io spec)"
+    },
+    {
+      "sha": "5b1aafb",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs(contract): codify 5 portability principles in §8"
+    },
+    {
+      "sha": "a537018",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "feat(ci): GitHub Actions main-protection — solo-dev safety net"
+    },
+    {
+      "sha": "8b39cac",
+      "date": "2026-05-19",
+      "class": "user",
+      "subject": "docs: promote multi-skill framework to active goal + park main-protection v2"
+    },
+    {
+      "sha": "22a45ea",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "feat(branch-strategy): pre-merge gate + automated check script"
+    },
+    {
+      "sha": "a2a3807",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "docs(contract): codify branch strategy — main/feat/tag (Option B)"
+    },
+    {
+      "sha": "3302b3a",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "docs(goal): lock in agentskills.io spec-compliance as default path"
+    },
+    {
+      "sha": "1d76cc4",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "docs(goal): correct overstatement — agentskills.io is a spec, not a marketplace"
+    },
+    {
+      "sha": "4751cd4",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "docs(goal): re-decompose Skills pivot into ~1-3h stop-able steps"
+    },
+    {
+      "sha": "5bfa949",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "docs(goal): correct skills reference — Hermes Agent, not Claude Code Skills"
+    },
+    {
+      "sha": "7294c1d",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "docs(goal): append Claude Skills research synthesis to candidate goal"
+    },
+    {
+      "sha": "37900b6",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "docs(goal): park multi-skill framework pivot as candidate active goal"
+    },
+    {
+      "sha": "b81d074",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "docs(roadmap): second revisit-at-home pointer — problem solver framing"
+    },
+    {
+      "sha": "b81c67b",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "docs(roadmap): extend Next #1 — zero-friction onboarding now covers music too"
+    },
+    {
+      "sha": "f8adc02",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "docs(roadmap): promote zero-API onboarding to Next #1 (high priority)"
+    },
+    {
+      "sha": "dc662f4",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "docs(daily): amend 2026-05-18 with afternoon-resume section"
+    },
+    {
+      "sha": "82009d0",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "docs(ideas): park format-variation + quality-upgrade brainstorm"
+    },
+    {
+      "sha": "fae389f",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "docs(pilots): codify YT URL non-commit policy — operator threat-model"
+    },
+    {
+      "sha": "bead686",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "docs(shutdown): 2026-05-18 daily report + add 08-hiphop-urban upload row"
+    },
+    {
+      "sha": "27e0642",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "docs(pilots): log 2026-05-18 batch uploads — bossa-rainy + vibraphone-tokyo"
+    },
+    {
+      "sha": "03fdda9",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "docs(audit): correct misattribution + add e1fda78 Done entry"
+    },
+    {
+      "sha": "e1fda78",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "docs(audit): close last 2 lows — gitignore .claude/*.lock + roadmap Done entry for d40abd3"
+    },
+    {
+      "sha": "d40abd3",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "docs(audit): resolve remaining 2 low findings — stale goal ref + §8 outputs deviation"
+    },
+    {
+      "sha": "39c5db3",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "docs(audit): clear DRIFT_DETECTED — sync faceless-short routing + migrate achieved goal"
+    },
+    {
+      "sha": "9d7f954",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "docs(readme): Claude Code path + pricing / token usage guidance"
+    },
+    {
+      "sha": "303949a",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "docs(readme): deep polish — music-video first impression + factual fixes"
+    },
+    {
+      "sha": "5e831fe",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "docs(onboarding): log fresh-clone music-video PASS"
+    },
+    {
+      "sha": "aa10ba0",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "feat(onboarding): music-video-first quick start + bootstrap covers aubio/jq/Pexels"
+    },
+    {
+      "sha": "a1846f6",
+      "date": "2026-05-18",
+      "class": "user",
+      "subject": "fix(daily-queue): marker-based search + timestamped mission_id"
+    },
+    {
+      "sha": "f86c2f0",
+      "date": "2026-05-17",
+      "class": "agent",
+      "subject": "docs(readme): refresh sample-output blurb for shader layer + queue runner"
+    },
+    {
+      "sha": "65c35a6",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "feat(daily): music-video daily queue runner + 5 new tracks tracked"
+    },
+    {
+      "sha": "36323eb",
+      "date": "2026-05-17",
+      "class": "agent",
+      "subject": "docs(roadmap): log shader layer work (commit 23832fa)"
+    },
+    {
+      "sha": "23832fa",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "feat(shaders): post-processing shader layer for music-video output"
+    },
+    {
+      "sha": "6a460b0",
+      "date": "2026-05-17",
+      "class": "agent",
+      "subject": "feat(publish): outputs/publish/ + assets/music/SOURCES.md scaffolding"
+    },
+    {
+      "sha": "a8291f5",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(goal): new active goal — production-ready music-video upload"
+    },
+    {
+      "sha": "ab6555e",
+      "date": "2026-05-17",
+      "class": "agent",
+      "subject": "refactor(scheduler): templatize launchd plists — close §8 carry-forward"
+    },
+    {
+      "sha": "b268ca2",
+      "date": "2026-05-17",
+      "class": "agent",
+      "subject": "docs(audit): persist 15th contract audit + alert"
+    },
+    {
+      "sha": "e793662",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(contract): §12 override clause for intentionally public identity surfaces"
+    },
+    {
+      "sha": "579ef3a",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "fix(privacy): scrub two literal email-address references from session docs"
+    },
+    {
+      "sha": "bc0d8af",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs: refresh stale 2026-05-16 date label + persist 13th audit"
+    },
+    {
+      "sha": "6b5450e",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "fix(security): tighten .claude/settings.json — scope rm, drop unused permissions"
+    },
+    {
+      "sha": "b46a2ba",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(roadmap): queue filter-repo backup branch deletion for tomorrow"
+    },
+    {
+      "sha": "44a0acf",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(daily): 2026-05-17 — active goal ACHIEVED, niche pivot to music-video mode"
+    },
+    {
+      "sha": "222684c",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs+site: surface music-video mission across all reader surfaces"
+    },
+    {
+      "sha": "2dbf15e",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "feat(music-video): integrate v6 vintage-lofi treatment into mission"
+    },
+    {
+      "sha": "332f4d3",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(architecture): include music-video mission in inventory + Tier-2 tool list"
+    },
+    {
+      "sha": "9781c2d",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(goal+roadmap): close active goal — Faceless pilot A/B → music-video pivot"
+    },
+    {
+      "sha": "c5fd261",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "feat(music-video): new mission + decision-log pick — niche pivot to music-video mode"
+    },
+    {
+      "sha": "1dba625",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "fix(faceless): music pool is local-only — never committed"
+    },
+    {
+      "sha": "6d3fa51",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "feat(faceless): BGM layer — optional ffmpeg amix under narration"
+    },
+    {
+      "sha": "0cf43ec",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(site): add maintainer credit line + LinkedIn link to footer"
+    },
+    {
+      "sha": "6126691",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(audit): preserve 6th + 7th contract-focused audit reports of the session"
+    },
+    {
+      "sha": "e1aee23",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "fix(audit): clear two findings introduced this session"
+    },
+    {
+      "sha": "b726084",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(architecture): bring for-analysts + architecture in sync with Sonnet routing"
+    },
+    {
+      "sha": "3015f14",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "feat(infra): disk-space watchdog — periodic monitor + pre-render guard"
+    },
+    {
+      "sha": "985647d",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "feat(infra): scripts/cleanup-records.sh — selective records intermediates purge"
+    },
+    {
+      "sha": "135e04d",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(contract): rename [EPM Nudge] → [Pace] in scrum-master footer"
+    },
+    {
+      "sha": "fc9f3af",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(contract): scrum-master footer convention — [Next Action] / [Git Commit] / [EPM Nudge]"
+    },
+    {
+      "sha": "c61b597",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(case-studies): four production-incident decisions in scannable form"
+    },
+    {
+      "sha": "4063a1d",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(readme): link the new GitHub Pages site from EN + KO headers"
+    },
+    {
+      "sha": "626d67b",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "ci(pages): GitHub Actions workflow to deploy site/ to Pages"
+    },
+    {
+      "sha": "d529158",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "feat(site): GitHub Pages landing page — single-file, evidence-first"
+    },
+    {
+      "sha": "76995fc",
+      "date": "2026-05-17",
+      "class": "agent",
+      "subject": "feat(infra): scripts/batch-faceless.sh — throttled batch runner with semaphore"
+    },
+    {
+      "sha": "d07120a",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "feat(quality): content-quality feedback loop — script auto-rescores + retries"
+    },
+    {
+      "sha": "97ac511",
+      "date": "2026-05-17",
+      "class": "agent",
+      "subject": "fix(gitignore): allowlist sonnet-trial + music-trial caption-verify JPGs"
+    },
+    {
+      "sha": "b3b2596",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "feat(pilots): music trial — 4 topics × EN/KO, AutoTune EN tops scorecard at 45/50"
+    },
+    {
+      "sha": "37d98f2",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(readme): clarify project scope — shorts is v1, scaffold is general-purpose"
+    },
+    {
+      "sha": "64c16ae",
+      "date": "2026-05-17",
+      "class": "user",
+      "subject": "docs(metrics): operator-intervention trend chart — honest autonomy signal"
+    },
+    {
+      "sha": "fa74739",
       "date": "2026-05-17",
       "class": "user",
       "subject": "docs(readme): coined phrase + stat line above the fold"
     },
     {
-      "sha": "55e23dd",
+      "sha": "60b4855",
       "date": "2026-05-17",
       "class": "user",
       "subject": "docs(promo): README first-impression polish + LinkedIn snippets"
     },
     {
-      "sha": "ac8c02a",
+      "sha": "441d402",
       "date": "2026-05-17",
       "class": "user",
       "subject": "docs(scorecard): self-evaluation chart — visible evolution signal"
     },
     {
-      "sha": "d205b15",
+      "sha": "5ea0270",
       "date": "2026-05-17",
       "class": "user",
       "subject": "feat(faceless): route script-gen to Sonnet — v6 trial + Tier-1 routing lesson"
     },
     {
-      "sha": "764f3f0",
+      "sha": "5769394",
       "date": "2026-05-17",
       "class": "user",
       "subject": "fix(contract): clear 3 LOW findings surfaced by L1-triggered audit"
     },
     {
-      "sha": "d498c6a",
+      "sha": "c3483ba",
       "date": "2026-05-17",
       "class": "agent",
       "subject": "docs(roadmap): log L1/L2 reactive auditor + README review pass + audit cleanup"
     },
     {
-      "sha": "7c6ff4f",
+      "sha": "2b1217e",
       "date": "2026-05-17",
       "class": "user",
       "subject": "docs(readme): full-file review pass + HOW-to-review rule + L1/L2 docs"
     },
     {
-      "sha": "de71875",
+      "sha": "eb7f7c2",
       "date": "2026-05-17",
       "class": "agent",
       "subject": "feat(audit): L2 — 15-min mission-anomaly poll fires audit on patterns"
     },
     {
-      "sha": "785dafd",
+      "sha": "8ac1f97",
       "date": "2026-05-17",
       "class": "agent",
       "subject": "feat(audit): L1 — git post-commit hook fires audit on drift-risk commits"
     },
     {
-      "sha": "fbf3d70",
+      "sha": "0bda40b",
       "date": "2026-05-17",
       "class": "agent",
       "subject": "fix(contract): clear residual contract-audit findings + restore alert lifecycle"
     },
     {
-      "sha": "cf1ee86",
+      "sha": "7079564",
       "date": "2026-05-17",
       "class": "agent",
       "subject": "docs(pilots): refresh to v5 mission IDs + thumbnails (caption-split applied)"
     },
     {
-      "sha": "61fac70",
+      "sha": "e3f11ca",
       "date": "2026-05-17",
       "class": "user",
       "subject": "feat(faceless): single-line caption enforcement — stops 2-line opaque-box overlap"
     },
     {
-      "sha": "d4aa417",
+      "sha": "2fbb6d9",
       "date": "2026-05-17",
       "class": "agent",
       "subject": "feat(faceless): per-window B-roll — visuals track captions, not slots"
     },
     {
-      "sha": "03d7eb1",
+      "sha": "e460d33",
       "date": "2026-05-17",
       "class": "agent",
       "subject": "docs(roadmap): refresh Now section — operator pick is the open subgoal"
     },
     {
-      "sha": "12acdfc",
+      "sha": "2f04b72",
       "date": "2026-05-17",
       "class": "agent",
       "subject": "docs(daily): session report — faceless pilot A/B (10 commits)"
     },
     {
-      "sha": "ddc6a9b",
+      "sha": "b571daa",
       "date": "2026-05-17",
       "class": "agent",
       "subject": "docs(readme): faceless-short showcase + EN/KO mirror"
     },
     {
-      "sha": "ac09e2c",
+      "sha": "0def9e8",
       "date": "2026-05-17",
       "class": "agent",
       "subject": "docs(pilots): refresh decision-log + goal + roadmap for 4-variant A/B"
     },
     {
-      "sha": "f820deb",
+      "sha": "e25f325",
       "date": "2026-05-17",
       "class": "agent",
       "subject": "feat(faceless): FACELESS_REUSE_BROLL for same-content localized variants"
     },
     {
-      "sha": "3118678",
+      "sha": "422c3f5",
       "date": "2026-05-17",
       "class": "user",
       "subject": "fix(faceless): screen-fill 9:16 (drop letterbox-blur) + Korean voice routing"
     },
     {
-      "sha": "b4c9183",
+      "sha": "d785694",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(pilots): topic backlog for post-pick scale-up — 5+5 candidates"
     },
     {
-      "sha": "402ca62",
+      "sha": "65a537b",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(faceless): add to architecture, cost-model, for-analysts docs"
     },
     {
-      "sha": "151c9d2",
+      "sha": "4887239",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(faceless): upload-metadata generator — pre-drafted platform copy"
     },
     {
-      "sha": "de0087e",
+      "sha": "d16dca9",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(faceless): script-aware caption correction — v2 pilots, clean proper nouns"
     },
     {
-      "sha": "a997211",
+      "sha": "a69c6e7",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(faceless): pilots A/B produced — Hittites + Hydrogen shorts at $0 cost"
     },
     {
-      "sha": "1663301",
+      "sha": "690f267",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(faceless): new mission type + Kokoro TTS lib + active goal"
     },
     {
-      "sha": "0f75ac9",
+      "sha": "aaf1faa",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "test(clone-and-go): three reinforcement variants — force-download, hints, linux"
     },
     {
-      "sha": "9e11f0a",
+      "sha": "53f6e99",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(contract): README maintenance cadence — batch on 4 triggers, not per-commit"
     },
     {
-      "sha": "893b454",
+      "sha": "43b092a",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(ideas): park domain-pivot portability analysis"
     },
     {
-      "sha": "05a14a9",
+      "sha": "21c18f8",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "fix(contract): clear contract-focused audit findings"
     },
     {
-      "sha": "28f1c2a",
+      "sha": "ad762b9",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(audit re-run): verdict CLEAN, alert self-cleared, follow-ups in Done"
     },
     {
-      "sha": "ce9e158",
+      "sha": "d6f086f",
       "date": "2026-05-16",
       "class": "user",
       "subject": "docs(audit-driven): clear DRIFT_DETECTED + park generative-AI idea"
     },
     {
-      "sha": "ae8eba9",
+      "sha": "c2d00b4",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs: rewrite known-limitations + Toolchain for the new ffmpeg-full path"
     },
     {
-      "sha": "5560348",
+      "sha": "3cbd0b4",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(onboarding): second PASS line — re-verify clone-and-go after Status update"
     },
     {
-      "sha": "394be57",
+      "sha": "e2ae489",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs: surface clone-and-go evidence in for-analysts + README Status"
     },
     {
-      "sha": "8aa850c",
+      "sha": "22e5634",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(clone-and-go): scripts/setup-venv.sh + chart-regen docs"
     },
     {
-      "sha": "d8f29e9",
+      "sha": "8618840",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs: clone-and-go goal ACHIEVED — migrate, append roadmap Done, log evidence"
     },
     {
-      "sha": "6349039",
+      "sha": "0611561",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(env.sh): auto-discover ffmpeg-full keg when PATH ffmpeg lacks libass"
     },
     {
-      "sha": "692c755",
+      "sha": "359c8b6",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(clone-and-go): host-agnostic .env, prereq-aware bootstrap, model auto-fetch"
     },
     {
-      "sha": "5d04ad9",
+      "sha": "043b2e9",
       "date": "2026-05-16",
       "class": "user",
       "subject": "docs(contract): color the idle marker — 🟢 / 🟡 traffic-light convention"
     },
     {
-      "sha": "69a07bb",
+      "sha": "4cd4db5",
       "date": "2026-05-16",
       "class": "user",
       "subject": "docs(contract): idle-state signaling — close idle turns with `대기중`"
     },
     {
-      "sha": "1ac5038",
+      "sha": "d471e32",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(README): animated GIF preview of highlight-015213 output"
     },
     {
-      "sha": "8a799a5",
+      "sha": "54186a9",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(README): mission metric charts + outputs gallery + recent runs table"
     },
     {
-      "sha": "a511796",
+      "sha": "53c8618",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(goal): migrate three ACHIEVED goals to Past goals"
     },
     {
-      "sha": "a6e5bf0",
+      "sha": "74980d7",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(README): swap sample-output frame to Sintel (no real-person face)"
     },
     {
-      "sha": "0a71963",
+      "sha": "0a45613",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(README): design notes + visual proof for first-pass evaluators"
     },
     {
-      "sha": "6853510",
+      "sha": "639e9f0",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs: PII firewall (§12) + external orchestration pattern field notes"
     },
     {
-      "sha": "5323482",
+      "sha": "8f68a92",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(ideas): 4-tier autonomy model — Layer 1 / Layer 2 binary too coarse"
     },
     {
-      "sha": "4c4fb8d",
+      "sha": "fc1289b",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "fix(auditor): launchd PATH — find claude CLI in nvm-managed location"
     },
     {
-      "sha": "a2be634",
+      "sha": "a5515d8",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs: late-night briefing — Mixed validation + Son Heung-min + 4 fixes"
     },
     {
-      "sha": "687d1e2",
+      "sha": "9616e4b",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "chore(metrics): regenerate dashboard — 15 missions, 93% pass"
     },
     {
-      "sha": "f4ab816",
+      "sha": "acf1d5b",
       "date": "2026-05-16",
       "class": "user",
       "subject": "feat(milestone): real Korean celebrity short + 4 defects fixed"
     },
     {
-      "sha": "00e6dd0",
+      "sha": "585e416",
       "date": "2026-05-16",
       "class": "user",
       "subject": "fix(env): default LAYOUT_DRAWTEXT_FONTFILE to AppleGothic.ttf"
     },
     {
-      "sha": "2f2a4d9",
+      "sha": "4b5800d",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "fix(captions): switch attribution font from .ttc to single .ttf"
     },
     {
-      "sha": "7189d49",
+      "sha": "bed0849",
       "date": "2026-05-16",
       "class": "user",
       "subject": "fix(captions): comma escape leak + Hangul attribution overlay"
     },
     {
-      "sha": "200e8cd",
+      "sha": "e5395ba",
       "date": "2026-05-16",
       "class": "user",
       "subject": "feat(mission): real Korean celebrity video — Son Heung-min PASS"
     },
     {
-      "sha": "f496936",
+      "sha": "8740e2b",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "chore(ffmpeg): remove dead multi-pass functions"
     },
     {
-      "sha": "c3673d0",
+      "sha": "295d5a2",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(whisper): WHISPER_LANG env var override for language hint"
     },
     {
-      "sha": "800642e",
+      "sha": "27a2fa7",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "fix(captions+qa): whitelist STRIP_NONSPEECH + QA duration tolerance"
     },
     {
-      "sha": "a5c8af9",
+      "sha": "9828884",
       "date": "2026-05-16",
       "class": "user",
       "subject": "feat(mission): summarize on real CC — Sintel EN+KO summary PASS"
     },
     {
-      "sha": "c778bbe",
+      "sha": "05666fd",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(mission): shorts-batch on real CC — 2 Sintel shorts PASS"
     },
     {
-      "sha": "7128362",
+      "sha": "622f900",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(mission): Korean highlight PASS — whisper KO + Hangul caption burn"
     },
     {
-      "sha": "df71bd6",
+      "sha": "ded3281",
       "date": "2026-05-16",
       "class": "user",
       "subject": "feat(captions): STRIP_NONSPEECH filter on bracket-only caption lines"
     },
     {
-      "sha": "4135ffd",
+      "sha": "9040560",
       "date": "2026-05-16",
       "class": "user",
       "subject": "feat: outcome layer (docs/goal.md) — split goal from work queue"
     },
     {
-      "sha": "6ae9da0",
+      "sha": "b0738b2",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(milestone): first real-CC end-to-end short — alien aesthetic 탈출"
     },
     {
-      "sha": "d80572d",
+      "sha": "ed7bff4",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs: final overnight briefing — 10 commits, agent defs untouched"
     },
     {
-      "sha": "b706bc7",
+      "sha": "10cf868",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "chore(config): clear stale TODO + reconcile policies.yaml with op-contract"
     },
     {
-      "sha": "bb89a26",
+      "sha": "ac01f51",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs: fix README architecture diagram + reconcile content with reality"
     },
     {
-      "sha": "cc1c4ca",
+      "sha": "7877d86",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs: bring overnight briefing + roadmap Done up to date"
     },
     {
-      "sha": "bc2381b",
+      "sha": "937a7a0",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "test+docs: audit parser regression test + docs/audit/ README"
     },
     {
-      "sha": "d547a32",
+      "sha": "57b348d",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "docs(README): reconcile Status with shipped work + annotate deferrals"
     },
     {
-      "sha": "ef0f825",
+      "sha": "dc0becf",
       "date": "2026-05-16",
       "class": "agent",
       "subject": "feat(copyright): per-platform publish rules"
     },
     {
-      "sha": "8340470",
+      "sha": "535b99c",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "docs: overnight briefing 2026-05-15 → 2026-05-16"
     },
     {
-      "sha": "4579c16",
+      "sha": "e18ceb9",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "docs(roadmap): record overnight Done + suggest morning approvals"
     },
     {
-      "sha": "a37d37f",
+      "sha": "74440ce",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "feat(auditor): active surface via CURRENT-ALERT.md (script-level)"
     },
     {
-      "sha": "71d785f",
+      "sha": "8c9588a",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "docs: add ideas.md as parking log for v2+ concepts"
     },
     {
-      "sha": "7003a53",
+      "sha": "dc909c5",
       "date": "2026-05-15",
       "class": "user",
       "subject": "docs: shutdown — 2026-05-15 daily report + Shutdown protocol §11"
     },
     {
-      "sha": "123f895",
+      "sha": "866c1d3",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "feat: auditor → autonomous (launchd) + cc-statusline live"
     },
     {
-      "sha": "af9857f",
+      "sha": "8570a9c",
       "date": "2026-05-15",
       "class": "user",
       "subject": "feat: auditor subagent + minimal Claude Code statusline"
     },
     {
-      "sha": "7a355a3",
+      "sha": "9a12d49",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "docs: analyst-facing entry point — Tier 1 / Tier 2 cost split made explicit"
     },
     {
-      "sha": "3b9175d",
+      "sha": "99d90d1",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "feat: Pexels Videos fetcher + sidecar attribution"
     },
     {
-      "sha": "47c7a18",
+      "sha": "599e5c3",
       "date": "2026-05-15",
       "class": "user",
       "subject": "docs: canonical operator-contract.md (machine-independent rules)"
     },
     {
-      "sha": "2316e31",
+      "sha": "c2bd75d",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "docs: bring README EN/KO Status in sync with today's shipped work"
     },
     {
-      "sha": "e530302",
+      "sha": "eabf542",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "feat(copyright): license-string probe for archive.org + wikimedia"
     },
     {
-      "sha": "7ca547b",
+      "sha": "8fea06b",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "feat(copyright): strike-aware source rejection — close the loop"
     },
     {
-      "sha": "28dda8f",
+      "sha": "54fcf8e",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "feat: automated copyright filter v1 (allowlist + publish gate + strike log)"
     },
     {
-      "sha": "8e71c9b",
+      "sha": "7a9e8e8",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "feat: QA-feedback retry loop across all three missions"
     },
     {
-      "sha": "a9e796e",
+      "sha": "2de3309",
       "date": "2026-05-15",
       "class": "user",
       "subject": "docs: pin \"never pause until told\" rule + auto-promote next focus"
     },
     {
-      "sha": "0eaaee2",
+      "sha": "1b694f1",
       "date": "2026-05-15",
       "class": "user",
       "subject": "feat: source-attribution in summarize + shorts-batch (shared lib)"
     },
     {
-      "sha": "3decfa7",
+      "sha": "07ee34e",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "fix(ffmpeg): caption fonts scaled 6.67× too large at 1920px output"
     },
     {
-      "sha": "d171d29",
+      "sha": "cd82450",
       "date": "2026-05-15",
       "class": "user",
       "subject": "docs: pin \"agent does everything, user never touches terminal\" rule"
     },
     {
-      "sha": "dae3d58",
+      "sha": "bf60d14",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "docs: roadmap.md as the source of truth for \"what to work on next\""
     },
     {
-      "sha": "8ae9449",
+      "sha": "836b6f5",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "feat: real CC fixtures + standard layout + source-attribution"
     },
     {
-      "sha": "a2d0949",
+      "sha": "f968629",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "docs: apply documentation style guide to README EN/KO"
     },
     {
-      "sha": "e947dc0",
+      "sha": "0a92a25",
       "date": "2026-05-15",
       "class": "agent",
       "subject": "docs: split README into EN/KO with language switcher"
     },
     {
-      "sha": "ee833a0",
+      "sha": "6098eab",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "docs: shutdown report — today_summary"
     },
     {
-      "sha": "b485f29",
+      "sha": "3f08b0c",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "test: longer bootstrap fixtures + full E2E across 3 mission types"
     },
     {
-      "sha": "e91f29b",
+      "sha": "784364c",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat(bootstrap): generate EN+KO synthetic fixtures via macOS `say`"
     },
     {
-      "sha": "df18aa9",
+      "sha": "077959e",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat(shorts-batch): sequential single-pick loop replaces N-array request"
     },
     {
-      "sha": "8b54cbc",
+      "sha": "51eb0de",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat: live queue drain demo + shorts-batch contact sheet"
     },
     {
-      "sha": "a5b91a5",
+      "sha": "0ff068b",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "docs: comprehensive architecture map"
     },
     {
-      "sha": "b0341d5",
+      "sha": "03c99b2",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat: third mission type — shorts-batch (one source → N shorts)"
     },
     {
-      "sha": "c61825a",
+      "sha": "d208eb3",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "fix(summarize): BSD-sed → awk for fence stripping"
     },
     {
-      "sha": "b50b069",
+      "sha": "9fb5764",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat(metrics): split aggregator into shell wrapper + python helper"
     },
     {
-      "sha": "eb283a6",
+      "sha": "b5deeba",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat: second mission type (summarize) + lower bitrate"
     },
     {
-      "sha": "e02849e",
+      "sha": "da0b738",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "perf(ffmpeg): collapse cut+crop+burn into a single render pass"
     },
     {
-      "sha": "5de63f6",
+      "sha": "8b32145",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "perf(ffmpeg): switch encode pipeline to h264_videotoolbox"
     },
     {
-      "sha": "407357a",
+      "sha": "d9e68e8",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "fix(metrics): place stage_mark on its own line, not inside log_ok string"
     },
     {
-      "sha": "92e14e8",
+      "sha": "95e1e03",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat: per-mission metrics + aggregated dashboard"
     },
     {
-      "sha": "0cd34f0",
+      "sha": "60b8475",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat: queue-based mission processor + launchd nightly scheduler"
     },
     {
-      "sha": "ed5c2ae",
+      "sha": "0d0d499",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "docs: bilingual README + auto-updatable Status + caption-verify whitelist"
     },
     {
-      "sha": "5969faf",
+      "sha": "a216486",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat: language-aware prompt + batch runner + caption verify frames"
     },
     {
-      "sha": "d25b462",
+      "sha": "9e84c34",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat(ffmpeg): enable burned captions via static libass build"
     },
     {
-      "sha": "4f1d95b",
+      "sha": "7c2326d",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat: upgrade default whisper model to small (multilingual)"
     },
     {
-      "sha": "614287e",
+      "sha": "d896ce4",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat: korean smoke + SRT QA criterion + runs index"
     },
     {
-      "sha": "3db71f1",
+      "sha": "13af7ba",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "fix(clamp): enforce hard 60s cap and 30s floor after snap"
     },
     {
-      "sha": "3cc84d5",
+      "sha": "486cd66",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat: ship PoC with SRT-as-sidecar captions (libass unavailable)"
     },
     {
-      "sha": "cd711a2",
+      "sha": "b62b01b",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "fix(ffmpeg): replace subtitles filter with drawtext (no libass dep)"
     },
     {
-      "sha": "f9e7319",
+      "sha": "68b6abc",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "fix(ffmpeg): drop force_style from subtitles filter; persist global autonomy"
     },
     {
-      "sha": "d2c4e37",
+      "sha": "f06677d",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "fix: jq --slurpfile invocation in run.sh requires -n (no stdin)"
     },
     {
-      "sha": "e30bbb1",
+      "sha": "8cb1e14",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "feat: highlight-extraction PoC pipeline + E2E test"
     },
     {
-      "sha": "39fc95f",
+      "sha": "01588a4",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "docs: rewrite README for public release"
     },
     {
-      "sha": "84b8c0f",
+      "sha": "fd61ac5",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "chore: auto-approve permissions + add yt-dlp/whisper env paths"
     },
     {
-      "sha": "330780d",
+      "sha": "5690f96",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "chore: harden .gitignore for records, media, secrets, temp files"
     },
     {
-      "sha": "27a8c86",
+      "sha": "d857391",
       "date": "2026-05-14",
       "class": "agent",
       "subject": "init: bootstrap multi-agent system scaffold"
