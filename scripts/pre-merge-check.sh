@@ -102,8 +102,10 @@ COMMITS_NEEDING_MARKER=()
 while IFS= read -r commit; do
   files=$(git show --pretty="" --name-only "$commit" 2>/dev/null)
   # §5 scope per operator-contract.md:87-88 is `agents/*.md` and
-  # `.claude/agents/*.md` — markdown only, not the whole subtree.
-  if echo "$files" | grep -qE '^(\.claude/agents/.+\.md|agents/.+\.md)'; then
+  # `.claude/agents/*.md` — markdown at the direct-children level
+  # only, not the whole subtree.  `[^/]+\.md` enforces no slash
+  # between the agents/ prefix and the .md suffix.
+  if echo "$files" | grep -qE '^(\.claude/agents/[^/]+\.md|agents/[^/]+\.md)'; then
     COMMITS_NEEDING_MARKER+=("$commit")
   fi
 done <<< "$COMMITS"

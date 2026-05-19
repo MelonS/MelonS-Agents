@@ -190,17 +190,26 @@ If any gate fails, the work stays on the feat branch.  Fixes
 land as new commits on the feat branch (not retroactively rewriting
 history; preserves audit trail).  Then re-run gates.
 
-**Bootstrap exception**: the commit that *introduces* the
-branch-strategy rules and pre-merge gate (commits `a2a3807` and
-the one introducing `scripts/pre-merge-check.sh` itself) lands
-directly on `main` since the gate doesn't exist yet to validate
-them.  All subsequent structural changes go through the gate.
+**Bootstrap exception**: structural commits that introduce the
+gate itself (or its required infrastructure) land directly on
+`main` since the gate doesn't exist yet to validate them.  Covered
+commits: `a2a3807` (branch-strategy rules), `22a45ea`
+(`scripts/pre-merge-check.sh` itself), and `a537018`
+(`.github/workflows/main-protection.yml` — Actions CI that the
+gate depends on for the main-protection layer).  All subsequent
+structural changes go through the gate.
 
 **Tag convention**:
 
 - `v0.1.0` = 2026-05-18 — first batch of music-shorts shipped to YT.
 - `v0.x.0` bumps for skill milestones (Skill #1 shipped, Skill #2
-  shipped, etc.).
+  shipped, etc.) **or** named major infra/UX milestones that
+  meaningfully change first-touch behavior.  Named exceptions:
+  - `v0.3.0` (2026-05-19) — "Permission bootstrap + pluggable
+    B-roll"; not a new Skill delivery but did materially change
+    onboarding behavior (per-tool permission prompts collapsed
+    + custom B-roll directory + AI-anime generator), so promoted
+    to a minor bump rather than `v0.2.1`.
 - Patch bumps `v0.x.y` for stability-only fixes within a minor.
 - No `v1.0.0` until the multi-skill framework vision (see
   `docs/goal.md`) is shipped.
