@@ -168,18 +168,9 @@ Flagged as a [low] in 2026-05-19-contract.md audit. -->
      (network).  Bundled = offline-first + heavier clone; fetched
      = lighter repo + first-bootstrap hits the network.
 
-2. **Delete filter-repo backup branch** — on or after 2026-05-18, if no
-   issues observed with the rewritten history, delete the safety branch
-   `main-backup-pre-filter-20260517-173615` from both local and origin.
-   Command: `git branch -D main-backup-pre-filter-20260517-173615` then
-   `git push origin --delete main-backup-pre-filter-20260517-173615`.
-   This was the rollback safety net created before the 2026-05-17 email
-   history rewrite (replacing the old personal commit email with the
-   GitHub noreply form).  Once confirmed stable, the branch is dead
-   weight.
-
-_(beyond #2: promote a deferred item from `docs/copyright-policy.md`
-("Still TODO" block) when one becomes load-bearing, or set a new focus.)_
+_(Next queue is currently empty.  Promote a deferred item from
+`docs/copyright-policy.md` ("Still TODO" block) when one becomes
+load-bearing, or set a new focus.)_
 
 ## Blocked / parked
 
@@ -194,6 +185,14 @@ _(beyond #2: promote a deferred item from `docs/copyright-policy.md`
   an opt-in flag in each mission's retry loop.
 
 ## Done — most recent first
+
+- **2026-05-20** (~00:30 KST) **filter-repo backup branch deleted**
+  (Roadmap Next #2).  `main-backup-pre-filter-20260517-173615`
+  removed from both local and `origin` — 3 days since the
+  2026-05-17 email-history rewrite with no issues observed,
+  eligibility threshold (2026-05-18+) cleared.  Tip commit was
+  `222684c`.  No corresponding repo commit; the action is the
+  delete itself.
 
 - **2026-05-19** (~17:51 KST) **v0.3.0 milestone shipped — Permission
   bootstrap + pluggable B-roll merged to main, tag pushed**
