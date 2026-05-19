@@ -1,14 +1,15 @@
 # 2026-05-20 — Daily report (overnight autonomous run)
 
-**[관리자 브리핑]** main 13 commits + feat/skill-job-hunt 9 commits push 완료.
-Audit 잔여 1건 (M1, 본인-only). README+site music-video primary 정렬.
-Skill #2 `job-hunt` — orchestrator + 5 mock-fallback 소스 + 57/57 test
-(smoke 32 + edge 20 + schema 5) + EN+KO 워크스루 + 샘플 digest + JSON
-Schema 계약까지 feat 브랜치에 대기 (라이브 HTTP 미접촉, 본인 리뷰 후
-플래그 flip으로 라이브 전환).  Music-video v0.3.0 회귀 PASS (fresh-clone
-+ bootstrap + 60s mp4 렌더, 2026-05-20 01:00 KST). Intervention 차트
-2026-05-20까지 재생성. Architecture doc에 "missions-routed vs standalone
-skill" 구분 영구 문서화.
+**[관리자 브리핑]** main 14 commits + feat/skill-job-hunt 12 commits push 완료.
+Audit 잔여 1건 (M1, 본인-only).  Feat 브랜치가 main에 rebase되어 FF
+merge 가능한 strict descendant 상태.  Skill #2 `job-hunt` — orchestrator
++ 5 mock-fallback 소스 + 57/57 test (smoke 32 + edge 20 + schema 5)
++ EN+KO 워크스루 + 샘플 digest + JSON Schema 계약 + 디지스트 UX 개선
+(중복 apply 링크 제거)까지 feat 브랜치에 대기 (라이브 HTTP 미접촉,
+본인 리뷰 후 플래그 flip으로 라이브 전환).  Music-video v0.3.0 회귀
+PASS (fresh-clone + bootstrap + 60s mp4 렌더, 2026-05-20 01:00 KST).
+Intervention 차트 2026-05-20까지 재생성.  Architecture doc에
+"missions-routed vs standalone skill" 구분 영구 문서화.
 
 **Session window**: 2026-05-19 ~22:00 KST conversation
 → ~23:30 KST autonomous-mode authorization
