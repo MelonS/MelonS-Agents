@@ -86,7 +86,15 @@ echo "$data" | jq -r '
     "- **\(.title)** · \(.company)",
     "  - 지역: \(.region) · 게시: \(.posted_at)",
     "  - 요약: \(.summary // "-")",
-    "  - [posting](\(.url))" + (if .apply_url then " · [apply](\(.apply_url))" else "" end),
+    # Suppress the apply link when it equals the posting URL —
+    # several KR sources route both to the same authenticated
+    # apply flow.  Showing two identical links is noise.
+    "  - [posting](\(.url))" + (
+      if .apply_url and .apply_url != .url
+      then " · [apply](\(.apply_url))"
+      else ""
+      end
+    ),
     ""
   )
 '
