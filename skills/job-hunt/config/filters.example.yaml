@@ -1,0 +1,48 @@
+# Example job-hunt filter — copy to filters.yaml and edit.
+#
+# This file ships in-repo as a documented starting point.  The real
+# filters.yaml is operator-local and may or may not be committed
+# depending on whether it contains personally identifying context.
+
+# Required.  Currently only "kr" is implemented.  Other locales need
+# a matching sources/<locale>-*.sh plugin to be added via PR.
+locale: kr
+
+# 직군 (job category).  String-match against posting category fields.
+# Keep small — fewer categories = higher signal-to-noise.
+job_categories:
+  - 백엔드 개발자
+  - AI 엔지니어
+  - 풀스택 개발자
+
+# 지역 (region).  Korean sido or sido + sigungu.  "원격" is a special
+# value meaning "remote-friendly opt-in" — each source maps it to
+# its own remote/재택 filter.
+regions:
+  - 서울
+  - 경기 성남
+  - 원격
+
+# Keyword filter.  Applied to title + summary post-fetch.
+keywords:
+  include:           # at least one of these must appear in title or summary
+    - Python
+    - AI
+    - LLM
+    - agent
+  exclude:           # any of these in title/summary drops the posting
+    - SI
+    - 파견
+    - 단순 운영
+
+# Source plugins to enable.  Each must have a matching file at
+# skills/job-hunt/sources/<name>.sh implementing fetch_postings().
+sources:
+  - kr-wanted        # cleanest API; recommended first source
+  - kr-programmers   # dev-focused; smaller corpus but high signal
+  - kr-saramin       # largest corpus; anti-bot is the most aggressive
+
+# Output settings.
+output:
+  records_root: ./records/jobs
+  format: markdown   # md | json
