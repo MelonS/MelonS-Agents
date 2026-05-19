@@ -32,9 +32,9 @@ HTTP integration is gated on operator validation per source.
 | `sources/_mock.sh` | ✅ deterministic 8-posting fixture |
 | `sources/kr-wanted.sh` | ⚠️ mock-fallback default; live path documented + commented; flip via `JH_WANTED_LIVE=1` + `WANTED_API_KEY` |
 | `sources/kr-programmers.sh` | ⚠️ mock-fallback default; live path documented + commented; flip via `JH_PROGRAMMERS_LIVE=1` |
-| `sources/kr-jobkorea.sh` | ✗ not yet drafted |
-| `sources/kr-saramin.sh` | ✗ not yet drafted (anti-bot tuning planned last) |
-| `tests/smoke.sh` | ✅ structural + end-to-end mock test |
+| `sources/kr-jobkorea.sh` | ⚠️ mock-fallback default; live HTML-scrape path documented; flip via `JH_JOBKOREA_LIVE=1` |
+| `sources/kr-saramin.sh` | ⚠️ mock-fallback default; live OpenAPI path documented; flip via `JH_SARAMIN_LIVE=1` + `SARAMIN_KEY` |
+| `tests/smoke.sh` | ✅ structural + end-to-end mock test (5 sources) |
 
 The live HTTP path for each `kr-*` plugin is intentionally
 disabled by default because:

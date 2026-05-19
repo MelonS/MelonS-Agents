@@ -44,6 +44,8 @@ check "sources/README.md exists"                 test -f "$SKILL_DIR/sources/REA
 check "sources/_mock.sh exists"                  test -f "$SKILL_DIR/sources/_mock.sh"
 check "sources/kr-wanted.sh exists"              test -f "$SKILL_DIR/sources/kr-wanted.sh"
 check "sources/kr-programmers.sh exists"         test -f "$SKILL_DIR/sources/kr-programmers.sh"
+check "sources/kr-jobkorea.sh exists"            test -f "$SKILL_DIR/sources/kr-jobkorea.sh"
+check "sources/kr-saramin.sh exists"             test -f "$SKILL_DIR/sources/kr-saramin.sh"
 
 # ----- 2. SKILL.md frontmatter sanity -----
 check "SKILL.md has 'name:' frontmatter"         grep -qE '^name: job-hunt$' "$SKILL_DIR/SKILL.md"
@@ -57,7 +59,9 @@ for f in \
   "$SKILL_DIR/scripts/apply-assist.sh" \
   "$SKILL_DIR/sources/_mock.sh" \
   "$SKILL_DIR/sources/kr-wanted.sh" \
-  "$SKILL_DIR/sources/kr-programmers.sh"
+  "$SKILL_DIR/sources/kr-programmers.sh" \
+  "$SKILL_DIR/sources/kr-jobkorea.sh" \
+  "$SKILL_DIR/sources/kr-saramin.sh"
 do
   check "$(basename "$f") bash syntax OK" bash -n "$f"
 done
@@ -93,19 +97,19 @@ else
   FAIL=$((FAIL+1))
 fi
 
-# ----- 6. Three-source aggregation -----
-#    All three default sources (mock-fallback for kr-* + _mock)
-#    should aggregate cleanly and dedupe URLs across them.
-if THREE_PATH=$("$SKILL_DIR/scripts/run.sh" --sources=_mock,kr-wanted,kr-programmers --dry-run --quiet 2>/dev/null); then
-  T_INDEX="$(dirname "$THREE_PATH")/index.json"
-  check "three-source run produced index.json" test -f "$T_INDEX"
-  THREE_TOTAL=$(jq -r '.postings_total' "$T_INDEX" 2>/dev/null || echo 0)
-  # _mock filters to 5 + kr-wanted 3 + kr-programmers 2 = 10
-  check "three-source aggregated count = 10 (got $THREE_TOTAL)" test "$THREE_TOTAL" = "10"
-  SRC_COUNT=$(jq -r '.sources | length' "$T_INDEX" 2>/dev/null || echo 0)
-  check "three-source sources list len = 3 (got $SRC_COUNT)" test "$SRC_COUNT" = "3"
+# ----- 6. Five-source aggregation -----
+#    All five sources (mock-fallback for kr-* + _mock) should
+#    aggregate cleanly and dedupe URLs across them.
+if FIVE_PATH=$("$SKILL_DIR/scripts/run.sh" --sources=_mock,kr-wanted,kr-programmers,kr-jobkorea,kr-saramin --dry-run --quiet 2>/dev/null); then
+  F_INDEX="$(dirname "$FIVE_PATH")/index.json"
+  check "five-source run produced index.json" test -f "$F_INDEX"
+  FIVE_TOTAL=$(jq -r '.postings_total' "$F_INDEX" 2>/dev/null || echo 0)
+  # _mock filters to 5 + kr-wanted 3 + kr-programmers 2 + kr-jobkorea 2 + kr-saramin 2 = 14
+  check "five-source aggregated count = 14 (got $FIVE_TOTAL)" test "$FIVE_TOTAL" = "14"
+  SRC_COUNT=$(jq -r '.sources | length' "$F_INDEX" 2>/dev/null || echo 0)
+  check "five-source sources list len = 5 (got $SRC_COUNT)" test "$SRC_COUNT" = "5"
 else
-  note "✗ three-source aggregation failed"
+  note "✗ five-source aggregation failed"
   FAIL=$((FAIL+1))
 fi
 

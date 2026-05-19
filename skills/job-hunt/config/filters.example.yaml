@@ -47,9 +47,8 @@ keywords:
 sources:
   - kr-wanted        # cleanest API; recommended first source
   - kr-programmers   # dev-focused; smaller corpus but high signal
-  # - kr-saramin     # not implemented yet — largest KR corpus,
-  #                  # but anti-bot is the most aggressive; planned
-  #                  # to ship last with operator-supervised tuning.
+  - kr-jobkorea      # HTML scrape; medium anti-bot
+  - kr-saramin       # OpenAPI partner key; requires SARAMIN_KEY for live
   # - _mock          # synthetic source; enable temporarily when
   #                  # validating pipeline changes without burning
   #                  # real fetches.
