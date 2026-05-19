@@ -266,6 +266,49 @@ if [[ "$DEMO_MODE" == "1" ]]; then
   done
 fi
 
+# Custom B-roll override: when MUSIC_VIDEO_BROLL_DIR is set, cycle its
+# *.mp4 files across unique keywords the same way demo-mode does.
+# Bypasses Pexels API + the demo-mode fetchers entirely.  Useful when
+# the operator has a specific aesthetic (e.g., anime footage) that no
+# stock library covers.  Sidecar JSONs (.meta.json next to each mp4)
+# are honoured if present.
+if [[ -z "${MUSIC_VIDEO_BROLL_DIR:-}" ]]; then
+  CUSTOM_BROLL_DIR=""
+else
+  CUSTOM_BROLL_DIR="$MUSIC_VIDEO_BROLL_DIR"
+fi
+if [[ -n "$CUSTOM_BROLL_DIR" && "$DEMO_MODE" != "1" ]]; then
+  if [[ ! -d "$CUSTOM_BROLL_DIR" ]]; then
+    log_err "MUSIC_VIDEO_BROLL_DIR not found: $CUSTOM_BROLL_DIR"
+    exit 65
+  fi
+  UNIQ_KW=()
+  for ((j=0; j<SEG_TOTAL; j++)); do
+    seen=0
+    for u in ${UNIQ_KW[@]+"${UNIQ_KW[@]}"}; do
+      [[ "$u" == "${SEG_KW[$j]}" ]] && { seen=1; break; }
+    done
+    [[ "$seen" == "0" ]] && UNIQ_KW+=("${SEG_KW[$j]}")
+  done
+
+  CUSTOM_CLIPS=()
+  while IFS= read -r c; do
+    CUSTOM_CLIPS+=("$c")
+  done < <(ls -1 "$CUSTOM_BROLL_DIR"/*.mp4 2>/dev/null)
+  [[ "${#CUSTOM_CLIPS[@]}" -eq 0 ]] && { log_err "no *.mp4 in $CUSTOM_BROLL_DIR"; exit 65; }
+
+  log_info "  [custom-broll] mapping ${#UNIQ_KW[@]} keyword(s) → ${#CUSTOM_CLIPS[@]} custom clip(s) from $CUSTOM_BROLL_DIR"
+  for ((j=0; j<${#UNIQ_KW[@]}; j++)); do
+    kw="${UNIQ_KW[$j]}"
+    cache_key=$(echo "$kw" | tr ' ' '_')
+    RAW="$CLIPS_DIR/raw-${cache_key}.mp4"
+    SRC="${CUSTOM_CLIPS[$((j % ${#CUSTOM_CLIPS[@]}))]}"
+    cp "$SRC" "$RAW"
+    src_meta="${SRC%.mp4}.meta.json"
+    [[ -f "$src_meta" ]] && cp "$src_meta" "${RAW%.mp4}.meta.json"
+  done
+fi
+
 REV_DUR="0.20"
 SKIP_FWD="0.20"
 
