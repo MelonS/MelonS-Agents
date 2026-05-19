@@ -460,9 +460,11 @@ in [`docs/cost-model.md`](docs/cost-model.md).
 
 ## Quick start — music-video flow (the showcase)
 
-> **Latest stable tag**: `v0.2.0` — Skills framework + zero-account
-> demo path.  Cloning the tag is the recommended first-touch
-> entry point; `main` may contain in-flight work past the tag.
+> **Latest stable tag**: `v0.3.0` — Permission bootstrap + pluggable
+> B-roll (custom `MUSIC_VIDEO_BROLL_DIR` + AI-anime generator) on top
+> of `v0.2.0`'s Skills framework + zero-account demo path.  Cloning
+> the tag is the recommended first-touch entry point; `main` may
+> contain in-flight work past the tag.
 
 ### Zero-account demo (~2 minutes from clone to playable mp4)
 
@@ -474,7 +476,7 @@ before committing accounts".
 
 ```bash
 # 1) clone (any host with Mac/Linux + ffmpeg + ollama + aubio works)
-git clone --branch v0.2.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
+git clone --branch v0.3.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 
 # 2) bootstrap (verifies tools, prints brew/apt hints for anything missing;

@@ -433,9 +433,11 @@ agent-driven 경로에서만 소비됩니다.
 
 ## 빠른 시작 — music-video 플로우 (메인 쇼케이스)
 
-> **최신 안정 태그**: `v0.2.0` — Skills 프레임워크 + 제로-계정
-> 데모 경로.  첫 클론은 태그 클론이 권장 진입점; `main` 은
-> 태그 이후 진행중 작업이 있을 수 있음.
+> **최신 안정 태그**: `v0.3.0` — Permission bootstrap + 플러그형
+> B-roll (커스텀 `MUSIC_VIDEO_BROLL_DIR` + AI-anime 생성기), `v0.2.0`
+> 의 Skills 프레임워크 + 제로-계정 데모 경로 위에 빌드.  첫 클론은
+> 태그 클론이 권장 진입점; `main` 은 태그 이후 진행중 작업이
+> 있을 수 있음.
 
 ### 제로-계정 데모 (클론에서 재생 가능한 mp4까지 ~2분)
 
@@ -446,7 +448,7 @@ CC-BY Blender Foundation 클립 + Kevin MacLeod 트랙 사용
 
 ```bash
 # 1) clone (Mac/Linux + ffmpeg + ollama + aubio 있으면 OK)
-git clone --branch v0.2.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
+git clone --branch v0.3.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 
 # 2) 부트스트랩 (도구 점검, brew/apt 힌트 출력;

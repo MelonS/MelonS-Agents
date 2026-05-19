@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>MelonS-Agents — multi-agent scaffold for short-form video</title>
-  <meta name="description" content="Topic prompt → 9:16 60s short. Multi-agent pipeline running local-first ($0 runtime), Claude where quality matters, EN+KO, three-layer reactive audit.">
-  <meta property="og:title" content="MelonS-Agents — multi-agent scaffold">
-  <meta property="og:description" content="Topic prompt → 9:16 60s short. Local-first runtime, Claude for creative stages, EN+KO. AutoTune EN scorecard 45/50.">
-  <meta property="og:image" content="https://raw.githubusercontent.com/MelonS/MelonS-Agents/main/docs/demo/v6-hittites-preview.gif">
+  <title>MelonS-Agents — multi-agent system for music-video shorts</title>
+  <meta name="description" content="Music file → 60-second 9:16 vertical short. Local-first pipeline ($0 runtime), Claude where quality matters, EN+KO, three-layer reactive audit, agentskills.io-compliant skills layer.">
+  <meta property="og:title" content="MelonS-Agents — music-video shorts, multi-agent">
+  <meta property="og:description" content="Music in. 60-second 9:16 vertical short out. Phrase-aware ffmpeg shaders sync vintage visuals to music structure. Local-first, $0 runtime, EN+KO.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/MelonS/MelonS-Agents/main/site/assets/music-video-hero.jpg">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://melons.github.io/MelonS-Agents/">
   <link rel="stylesheet" href="style.css">
@@ -21,15 +21,15 @@
     <div class="links">
       <a href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">GitHub</a>
       <a href="https://github.com/MelonS/MelonS-Agents/blob/main/README.ko.md" target="_blank" rel="noopener">한국어</a>
-      <a href="https://github.com/MelonS/MelonS-Agents/stargazers" target="_blank" rel="noopener">⭐ Star</a>
+      <a href="https://github.com/MelonS/MelonS-Agents/stargazers" target="_blank" rel="noopener">Star</a>
     </div>
   </nav>
 
-  <h1 id="top">Multi-agent scaffold for short-form video.<br><span class="muted">$0 runtime. Claude where quality matters. EN + KO.</span></h1>
+  <h1 id="top">Music file in. 60-second vertical short out.<br><span class="muted">Multi-agent pipeline. $0 runtime. Claude where quality matters. EN + KO.</span></h1>
 
   <p class="lede">
-    A topic prompt becomes a 60-second 9:16 vertical short — script, voice, captions, B-roll, render, all the way to a verifiable mp4.
-    Mechanical stages stay local (whisper.cpp, Kokoro TTS, ffmpeg).  One creative stage routes to Claude.  The system audits itself on every commit.
+    A music track becomes a 9:16 vertical short — phrase-aware cuts, variable-speed mood pacing, onset-aligned glitch micro-edits, vintage lo-fi shaders, all driven by the music's own structure.
+    Mechanical stages stay local (aubio, whisper.cpp, ffmpeg).  One creative stage routes to Claude.  The system audits itself on every commit.
   </p>
 
   <div class="cta-row">
@@ -39,17 +39,18 @@
   </div>
 
   <figure class="demo">
-    <img src="assets/demo.gif" alt="5-second animated preview of a faceless-short v6 render: 9:16 vertical, historical-battle B-roll, single-line burned caption 'Scholars called the Hittites fiction', Pexels License attribution top-left." loading="lazy">
-    <figcaption>5-second slice of <code>faceless-hittites-v6-071919</code> — script by Claude Sonnet, B-roll from Pexels, render by local ffmpeg.</figcaption>
+    <img src="assets/music-video-demo.gif" alt="5-second animated preview of the music-video pipeline output — Velvet Turntable lo-fi jazz track, jazz/vintage Pexels B-roll, phrase-aware pond ripple + halation shader combo, 9:16 vertical short, mid-climax window (25-30 s) showing pond surface displacement and warm halation bloom over smoky lounge interior." loading="lazy">
+    <figcaption>5-second slice of the first uploaded music-video short — Suno-generated lo-fi jazz track, B-roll from Pexels, render + shader pass by local ffmpeg.</figcaption>
   </figure>
 </header>
 
 <section class="stats" aria-label="Project numbers at a glance">
   <ul>
-    <li><strong>40+</strong><span>missions rendered</span></li>
+    <li><strong>60+</strong><span>mission outputs</span></li>
     <li><strong>0</strong><span>runtime API tokens</span></li>
     <li><strong>3</strong><span>audit layers (L1+L2+L3)</span></li>
-    <li><strong>45/50</strong><span>top scorecard (AutoTune EN)</span></li>
+    <li><strong>5</strong><span>mission types</span></li>
+    <li><strong>1</strong><span>portable skill (agentskills.io)</span></li>
     <li><strong>EN+KO</strong><span>dual track from day 1</span></li>
     <li><strong>MIT</strong><span>license</span></li>
   </ul>
@@ -57,18 +58,18 @@
 
 <section id="how" class="block">
   <h2>How it works</h2>
-  <p>The scaffold is general-purpose.  Short-form video is the v1 mission type — chosen because the deliverable is visually verifiable and the failure modes are quick to catch.  Two short-form modes are now live: <strong>faceless-short</strong> (narration-driven, Sonnet script + Kokoro TTS) and <strong>music-video</strong> (music-as-sole-audio, beat-aligned cuts + glitch micro-edits on detected drum onsets).</p>
+  <p>The scaffold is general-purpose.  Short-form video is the v1 mission domain — chosen because the deliverable is visually verifiable and the failure modes are quick to catch.  Current focus is the <strong>music-video</strong> mission (music-as-sole-audio, beat-aligned cuts, onset-aligned glitch micro-edits, vintage lo-fi shaders) — operator-validated as the production format after eight narration-driven trials.  The earlier <strong>faceless-short</strong> mission (narration-driven) and the v1 <strong>highlight / shorts-batch</strong> missions remain in the tree as alternate paths.</p>
 
   <div class="cards">
     <article class="card">
-      <h3>Pipeline (faceless-short mission)</h3>
+      <h3>Pipeline (music-video mission)</h3>
       <ol>
-        <li><b>Script.</b> <code>scripts/gen-script-claude.sh</code> calls Sonnet with a tight hook + factual-coherence prompt, auto-scores the result, retries with feedback if below threshold.</li>
-        <li><b>TTS.</b> Kokoro-ONNX (English) or macOS Yuna (Korean).  Apache 2.0 licensed, runs offline.</li>
-        <li><b>Captions.</b> whisper.cpp transcribes for timing, then script-aware token alignment fixes proper nouns, then a single-line splitter enforces ≤ 28 chars per cue.</li>
-        <li><b>B-roll.</b> Per-window keyword extraction (8 windows) → Pexels Videos API.  Each window's clip matches what's being said at that moment.</li>
-        <li><b>Render.</b> ffmpeg 9:16 screen-fill, libass burned captions, top-left source attribution overlay.</li>
-        <li><b>QA.</b> Mission-level retry on failure, with the previous qa-report prepended on retry attempts.</li>
+        <li><b>Beat extraction.</b> <code>aubiotrack</code> finds real beats; sub-beat noise rejected.  Cuts land every Nth beat (default 12 — about one cut per 7.5 s at 95 BPM).</li>
+        <li><b>Phrase alignment.</b> <code>aubioonset</code> detects drum hits.  Variable per-clip <code>setpts</code> by mood: slow scenes 0.55×, ambient 0.70×, active 0.80×, natural 1.00× — the music drives the visual pace.</li>
+        <li><b>B-roll.</b> Mood-keyword Pexels Videos API fetch; per-window selection.  Demo mode bundles CC-BY Blender open-movie clips for zero-key first-touch.</li>
+        <li><b>Glitch micro-edits.</b> 0.2 s reverse + 0.2 s forward jump-cut on detected drum onsets, but only on clips classified as static-camera so the frame doesn't shake during the glitch.</li>
+        <li><b>Vintage lo-fi shaders.</b> Film grain + vignette + Gaussian zoom-pulse + phrase-aware pond ripple + halation bloom.  All pure ffmpeg filter graphs — no GLSL, no external renderer.</li>
+        <li><b>Render + QA.</b> ffmpeg 9:16 screen-fill, mission-level retry on failure.</li>
       </ol>
     </article>
 
@@ -86,22 +87,22 @@
       <h3>Cost-routing rule</h3>
       <p>The architectural lesson from a real failure: applying "Tier 2 (local) = default" to <em>every</em> pipeline stage produces a quality ceiling.</p>
       <ul>
-        <li><b>Mechanical, high-volume stages</b> (transcribe, render, fetch) — local.  Token cost would be ruinous at scale.</li>
-        <li><b>One-shot creative stages</b> (script hook, factual framing) — Claude.  ~500 tokens per call, operationally negligible against the existing subscription quota, and quality compounds over the next 60 seconds of viewing.</li>
+        <li><b>Mechanical, high-volume stages</b> (transcribe, render, fetch, beat-detect) — local.  Token cost would be ruinous at scale.</li>
+        <li><b>One-shot creative stages</b> (script hook, factual framing, mood-keyword extraction) — Claude.  ~500 tokens per call, operationally negligible against the existing subscription quota, and quality compounds over the next 60 seconds of viewing.</li>
       </ul>
       <p class="muted">Full reasoning in <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/cost-model.md" target="_blank" rel="noopener">docs/cost-model.md</a>.</p>
     </article>
 
     <article class="card">
-      <h3>music-video mission (post-pivot, 2026-05-17)</h3>
-      <p>Distinct from <code>faceless-short</code>.  Music is the sole audio; no narration; no captions.  Selected by the operator after viewing eight narration-driven music-trial pilots and pivoting to a format that lets the music carry the short.</p>
-      <ul>
-        <li><b>Beat extraction.</b> <code>aubiotrack</code> finds real beats; sub-beat noise rejected.  Cuts land every Nth beat (default 12 — about one cut per 7.5 s at 95 BPM).</li>
-        <li><b>Variable speed.</b> Per-clip <code>setpts</code> by mood — slow scenes 0.55×, ambient 0.70×, active 0.80×, natural 1.00×.  The music drives the visual pace.</li>
-        <li><b>Glitch micro-edits.</b> 0.2 s reverse + 0.2 s forward jump-cut at detected <code>aubioonset</code> drum hits — but only on clips classified as static-camera, so the frame doesn't shake during the glitch.</li>
-        <li><b>Vintage lo-fi treatment.</b> Subtle film grain + soft vignette + Gaussian zoom-pulse on each glitch onset.  Tunable per render via env vars.</li>
-      </ul>
-      <p class="muted">Pick reasoning + format spec: <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/pilots/decision-log.md#operator-pick--2026-05-17" target="_blank" rel="noopener">decision-log.md</a>.  Music files are local-only by policy (a "use in video" license ≠ "redistribute the file" license — see <a href="https://github.com/MelonS/MelonS-Agents/blob/main/assets/music/README.md" target="_blank" rel="noopener">assets/music/README.md</a>).</p>
+      <h3>Skills layer (agentskills.io-compliant)</h3>
+      <p>Pipelines are packaged as portable <strong>Skills</strong> following the open <a href="https://agentskills.io" target="_blank" rel="noopener">agentskills.io</a> standard.  Skill #1 — <code>music-video</code> — is the current production skill.  A skill written once can target multiple compatible runtimes (Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, etc.) — verified via a 12/12 Hermes drop-in interop test.</p>
+      <p class="muted">Spec + interop notes: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/music-video" target="_blank" rel="noopener">skills/music-video/</a></p>
+    </article>
+
+    <article class="card">
+      <h3>Alternate path — faceless-short (narration era)</h3>
+      <p>The earlier <code>faceless-short</code> mission still lives in the tree.  Topic prompt in, narrated 60-second short out: Sonnet drafts the hook + factual framing, Kokoro-ONNX (English) or macOS Yuna (Korean) synthesizes voice, whisper.cpp transcribes for caption timing, Pexels B-roll selected per-window from caption keywords, ffmpeg burns single-line captions.  Preserved for topic-driven content; not the current production format.</p>
+      <p class="muted">Pipeline detail in the <a href="https://github.com/MelonS/MelonS-Agents#sample-output" target="_blank" rel="noopener">README Sample output section</a>.</p>
     </article>
   </div>
 </section>
@@ -109,51 +110,60 @@
 <section id="evidence" class="block">
   <h2>Evidence — what the pipeline actually produces</h2>
 
-  <p>Caption-verify frames captured from the rendered mp4s.  Single-line burned captions, Pexels attribution top-left, B-roll selected per narration window.  Full mp4s live under <code>records/missions/</code> (gitignored — each ~ 25–50 MB).</p>
+  <p>Frames captured from rendered mp4s.  Full mp4s live under <code>records/missions/</code> (gitignored — each ~ 25–50 MB).</p>
 
   <aside class="callout">
     <strong>Engineering decisions, one page.</strong>
-    Four production incidents and the minimum mechanism each one produced — Tier-1 routing, semaphore-bounded batch, content-quality feedback loop, three-layer reactive audit.  Each entry follows <em>problem → constraint → decision → artifact</em>.
+    Six production incidents and the minimum mechanism each one produced — Tier-1 routing, semaphore-bounded batch, content-quality feedback loop, three-layer reactive audit, shader-effects-in-ffmpeg / knowing-where-the-wall-is, and onboarding-friction-kills-first-touch / zero-account demo path.  Each entry follows <em>problem → constraint → decision → artifact</em>.
     <br>→ <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md" target="_blank" rel="noopener">docs/engineering-case-studies.md</a> · <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.ko.md" target="_blank" rel="noopener">한국어 미러</a>
   </aside>
+
+  <figure class="hero-shot">
+    <img src="assets/music-video-hero.jpg" alt="Mid-climax frame from the first uploaded music-video short — 9:16 vertical, vintage jazz interior with amber lamp, vinyl record motif, warm halation bloom around bright sources and subtle pond-surface ripple displacement across the whole frame, Pexels-licensed B-roll under a Suno-generated lo-fi jazz track." loading="lazy">
+    <figcaption><b>music-video Velvet1 · jazz combo</b> — first uploaded short, t = 30 s. Phrase-aware pond ripple + halation shader combo on Suno lo-fi jazz track.</figcaption>
+  </figure>
+
+  <h3>Faceless-short gallery (historical — narration era)</h3>
+  <p>Frames from the earlier <code>faceless-short</code> trials, retained as visual evidence of the narration-era pipeline.</p>
 
   <div class="gallery">
     <figure>
       <img src="assets/gallery-1.jpg" alt="Frame from faceless-hittites-v6: 9:16, historical battle reenactment B-roll, caption 'Turkey and Syria for five centuries,' single-line." loading="lazy">
-      <figcaption><b>Hittites EN</b> · score 44/50</figcaption>
+      <figcaption><b>Hittites EN</b></figcaption>
     </figure>
     <figure>
       <img src="assets/gallery-2.jpg" alt="Frame from faceless-hydrogen-v6: pasta macro shot, caption 'The human body's reliance' single-line." loading="lazy">
-      <figcaption><b>Hydrogen EN</b> · 43/50</figcaption>
+      <figcaption><b>Hydrogen EN</b></figcaption>
     </figure>
     <figure>
       <img src="assets/gallery-3.jpg" alt="Frame from faceless-autotune music-trial: studio audio waveform display, caption 'like a secret safety net. But in 1998,' single-line." loading="lazy">
-      <figcaption><b>AutoTune EN</b> · 45/50</figcaption>
+      <figcaption><b>AutoTune EN</b></figcaption>
     </figure>
     <figure>
       <img src="assets/gallery-4.jpg" alt="Frame from faceless-hittites-ko-v6: aerial Hattusa archaeological site, Korean caption '황무지에서 1만 개가 넘는 설형문자 점토판을 꺼냈다.' single-line." loading="lazy">
-      <figcaption><b>Hittites KO</b> · 44/50</figcaption>
+      <figcaption><b>Hittites KO</b></figcaption>
     </figure>
   </div>
 
-  <h3 id="scorecard">Self-evaluated scorecard</h3>
-  <p>Each pilot rated on five retention-mapping axes (Hook, Visual sync, Readability, Factual coherence, Production polish).  Scores by Claude, not a viewer panel — they're a structured progress signal until real platform watch-time data replaces them.</p>
+  <h3 id="scorecard">Faceless-era scorecard (historical)</h3>
+  <p>Self-evaluation across five retention-mapping axes (Hook, Visual sync, Readability, Factual coherence, Production polish), assigned by Claude during the faceless-short iteration — preserved as the structured progress signal from the v4 → v5 → v6 sequence that preceded the music-video pivot.  The music-video mission uses platform watch-time data instead of per-dimension scoring; per-video metrics live under <code>docs/pilots/</code>.</p>
   <p><a href="assets/scorecard.png" target="_blank" rel="noopener"><img class="full" src="assets/scorecard.png" alt="Stacked bar chart: 13 pilot rows from Hittites EN v4 26/50 (lowest) up to AutoTune EN 45/50 (highest), split across the 5 dimensions with colors. Music-trial topics cluster around 40-45." loading="lazy"></a></p>
 
   <h3>Operator-intervention trend</h3>
   <p>A multi-agent system that needs constant human steering hasn't actually replaced the work it was meant to.  Honest tracking of how much the operator stays in the loop per day:</p>
-  <p><a href="assets/intervention.png" target="_blank" rel="noopener"><img class="full" src="assets/intervention.png" alt="Daily commit count from 2026-05-14 through 2026-05-17, stacked by initiator (agent-autonomous blue vs user-initiated red), with a black line showing user-initiated percentage. The line trends UP from 0% to 42% over the four days, annotated as decision-phase activity." loading="lazy"></a></p>
+  <p><a href="assets/intervention.png" target="_blank" rel="noopener"><img class="full" src="assets/intervention.png" alt="Daily commit count from 2026-05-14 through 2026-05-17, stacked by initiator (agent-autonomous blue vs user-initiated red), with a black line showing user-initiated percentage." loading="lazy"></a></p>
 </section>
 
 <section class="block">
   <h2>Try it</h2>
-  <pre><code>git clone https://github.com/MelonS/MelonS-Agents.git
+  <p>Zero-account demo path — no Pexels key, no Suno account, no <code>.env</code> edits:</p>
+  <pre><code>git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 ./scripts/bootstrap.sh                # verifies tools, fetches models
-./agents/missions/highlight/run.sh \
-  https://download.blender.org/durian/trailer/sintel_trailer-1080p.mp4</code></pre>
-  <p>Or render a faceless short from a topic prompt — see <a href="https://github.com/MelonS/MelonS-Agents#quick-start" target="_blank" rel="noopener">README Quick start</a>.</p>
-  <p>macOS first.  Linux compatible for the core pipeline (whisper.cpp + ollama + ffmpeg); macOS-only for launchd schedulers, Yuna TTS, and the bootstrap synthetic fixtures.</p>
+MUSIC_VIDEO_DEMO_MODE=1 \
+  ./agents/missions/music-video/run.sh demo</code></pre>
+  <p>The demo path uses bundled CC-BY Blender open-movie B-roll plus a CC-BY-4.0 demo track — a working music-video short with no external signups.  Full setup (mood-keyword Pexels catalog + custom Suno tracks) is documented as the advanced path in the <a href="https://github.com/MelonS/MelonS-Agents#quick-start" target="_blank" rel="noopener">README Quick start</a>.</p>
+  <p>macOS first.  Linux compatible for the core pipeline (whisper.cpp + ollama + ffmpeg + aubio); macOS-only for launchd schedulers and Yuna TTS.</p>
 </section>
 
 <footer>
@@ -169,7 +179,7 @@ cd MelonS-Agents
     <!-- §12 operator-authorized deviation: intentionally public identity surface, per docs/operator-contract.md §12 override clause -->
     <a href="https://www.linkedin.com/in/eun-hyung-choi" target="_blank" rel="noopener">LinkedIn</a>
   </p>
-  <p class="muted">Daily LinkedIn updates draw from <code>docs/social/linkedin-{ko,en}.md</code> in the repo — open them if you want to follow the build log on LinkedIn.</p>
+  <p class="muted">Build log updates draw from <code>docs/social/linkedin-{ko,en}.md</code> in the repo.</p>
 </footer>
 
 </body>
