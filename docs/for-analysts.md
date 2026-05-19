@@ -254,14 +254,21 @@ Total mission-execution API cost: **0**.
   itself.
 - No cloud resources, no databases, no message queues.  Everything
   on disk under `records/` (gitignored).
-- No CI / no automated tests on push.  The repo treats every push
-  to `main` as a logical unit; pre-commit gating is intentionally
-  absent so the auto-commit / auto-push contract stays simple.  See
-  [`operator-contract.md`](operator-contract.md) §6.  One regression
-  check that does exist:
+- **CI scope is intentionally narrow.** GitHub Actions runs on
+  every push to `main` via
+  [`.github/workflows/main-protection.yml`](../.github/workflows/main-protection.yml)
+  (added `a537018`, 2026-05-18): six static checks — bash syntax
+  on tracked scripts, secret scan, required-files presence,
+  `.env.example` schema sanity, README link hygiene, gitignore
+  coverage.  No test runner, no build step, no deploy gating
+  beyond the Pages deploy workflow (`pages.yml`).  Pre-commit
+  gating is intentionally absent so the auto-commit / auto-push
+  contract stays simple — see
+  [`operator-contract.md`](operator-contract.md) §6.  One
+  functional regression check exists outside CI:
   [`scripts/test-fresh-clone.sh`](../scripts/test-fresh-clone.sh)
-  runs a full clone → bootstrap → mission cycle against `origin/main`
-  on demand, with PASS / FAIL evidence in
+  runs a full clone → bootstrap → mission cycle against
+  `origin/main` on demand, with PASS / FAIL evidence in
   [`onboarding/fresh-clone-log.txt`](onboarding/fresh-clone-log.txt).
   Not yet wired to a hook; run manually after substantive changes.
 - No publish path yet — `scripts/publish-gate.sh` exists as a stub
