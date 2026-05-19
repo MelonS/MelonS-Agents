@@ -348,9 +348,51 @@ that already worked, not new mechanism.
 **Decision artifact:** [`scripts/fetch-demo-broll.sh`](../scripts/fetch-demo-broll.sh)
 + [`scripts/fetch-demo-music.sh`](../scripts/fetch-demo-music.sh)
 + [`scripts/test-demo-mode.sh`](../scripts/test-demo-mode.sh)
-+ [`docs/onboarding/demo-mode.md`](onboarding/demo-mode.md).  All
-on `feat/demo-mode`, pending merge to main at the v0.2.0
-milestone.
++ [`docs/onboarding/demo-mode.md`](onboarding/demo-mode.md).
+Merged to main in `v0.2.0`.
+
+**Field observation addendum (2026-05-19 ~14:00 KST)** — the
+same security professional ran the demo on a fresh clone in
+person at a follow-up meeting.  The clone-and-render path
+worked.  But a second wall emerged that the test gate didn't
+catch: **per-tool Claude Code permission prompts**.  The
+project's tracked `.claude/settings.json` has a 70-entry allow
+list and renders correctly via `install-claude-local.sh` — but
+Claude Code also consults the **user-level**
+`~/.claude/settings.json` at session start and on first
+directory trust, and the project file alone wasn't sufficient
+to suppress all prompts.  Friend's experience: ~30 individual
+"Allow this command?" dialogs during a single demo run.
+Operator's framing: "다 하나씩 승인하기에는 너무 장벽이커.. 첨에
+권한관련해서도 승인하면 어느정도 넘어가게 되어야 할듯"
+(approving each individually is too much friction; one consent
+at the start should cover the rest).
+
+The follow-on fix is one script:
+[`scripts/install-claude-permissions.sh`](../scripts/install-claude-permissions.sh).
+It reads the rendered project allow list, asks operator once
+("merge these into your user-level settings? Y/n"), and on
+consent merges them into `~/.claude/settings.json` — append +
+dedupe only, never mutating the user's existing deny list,
+validating the JSON before overwrite, writing a
+`_notes.melons_agents` provenance block.  bootstrap.sh invokes
+it in interactive mode with a TTY check so CI runs don't hang.
+
+The lesson is one the test gate missed:
+**reproducibility tests verify "the script ran".  They don't
+verify "a human's onboarding experience was tolerable".**
+test-demo-mode.sh ran fine because it skipped Claude Code
+entirely — it executed bash directly.  A real first-time user
+running the same flow through Claude Code hit ~30 prompts
+that the test scenario never saw.  The fix and the test gate
+are now both shipped, but the field observation came from a
+human, not the gate.
+
+Field-observation artifact:
+[`scripts/install-claude-permissions.sh`](../scripts/install-claude-permissions.sh)
++ [`docs/onboarding/claude-permissions.md`](onboarding/claude-permissions.md).
+On `feat/permission-bootstrap`, pending merge after the next
+round of testing.
 
 ---
 

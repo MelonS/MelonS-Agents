@@ -314,8 +314,45 @@ attribution + 파일시스템 캐시 short-circuit) 가 *거의* 이걸 위해
 **결정 산출물:** [`scripts/fetch-demo-broll.sh`](../scripts/fetch-demo-broll.sh)
 + [`scripts/fetch-demo-music.sh`](../scripts/fetch-demo-music.sh)
 + [`scripts/test-demo-mode.sh`](../scripts/test-demo-mode.sh)
-+ [`docs/onboarding/demo-mode.md`](onboarding/demo-mode.md).  모두
-`feat/demo-mode` 에 있음, v0.2.0 마일스톤에 main 머지 대기.
++ [`docs/onboarding/demo-mode.md`](onboarding/demo-mode.md).
+`v0.2.0` 에서 main 머지 완료.
+
+**필드 관측 보충 (2026-05-19 ~14:00 KST)** — 동일한 보안
+전문가가 후속 미팅에서 fresh-clone 으로 데모를 직접 돌림.
+클론 → 렌더 경로는 작동.  그러나 테스트 게이트가 못 잡은
+두번째 벽이 드러남: **Claude Code 도구별 권한 프롬프트**.
+프로젝트 트래킹된 `.claude/settings.json` 은 70개 항목 allow
+리스트가 있고 `install-claude-local.sh` 가 올바르게 렌더
+하지만 — Claude Code 가 세션 시작 + 첫 디렉토리 신뢰 시점에
+**유저 레벨** `~/.claude/settings.json` 도 함께 참조함, 프로젝트
+파일만으로는 모든 프롬프트를 억제하지 못했음.  친구 경험:
+데모 1회 실행 동안 ~30개의 "이 명령 허용할까요?" 다이얼로그.
+운영자 프레이밍: "다 하나씩 승인하기에는 너무 장벽이커.. 첨에
+권한관련해서도 승인하면 어느정도 넘어가게 되어야 할듯".
+
+후속 픽스는 스크립트 하나:
+[`scripts/install-claude-permissions.sh`](../scripts/install-claude-permissions.sh).
+렌더된 프로젝트 allow 리스트를 읽고, 운영자에게 한 번 확인
+("이걸 유저 레벨 설정에 머지할까요? Y/n"), 동의하면
+`~/.claude/settings.json` 에 머지 — append + dedupe 만,
+유저 기존 deny 리스트 절대 mutating 안 함, 덮어쓰기 전 JSON
+검증, `_notes.melons_agents` 프로비넌스 블록 기록.
+bootstrap.sh 가 interactive 모드 + TTY 체크와 함께 호출하므로
+CI 실행에서 hang 안 함.
+
+이 교훈은 테스트 게이트가 놓친 것:
+**재현성 테스트는 "스크립트가 돌았다"를 검증함.
+"한 인간의 온보딩 경험이 견딜만 했다"를 검증하지는 않음.**
+test-demo-mode.sh 는 잘 돌았는데 Claude Code 를 통째로 건너뛰고
+bash 를 직접 실행했기 때문임.  같은 흐름을 Claude Code 를
+통해 돌리는 실제 첫 사용자는 테스트 시나리오가 본 적 없는 ~30개
+프롬프트를 마주함.  픽스와 테스트 게이트 둘 다 이제 ship 되었지만,
+필드 관측은 게이트가 아니라 사람한테서 왔음.
+
+필드 관측 산출물:
+[`scripts/install-claude-permissions.sh`](../scripts/install-claude-permissions.sh)
++ [`docs/onboarding/claude-permissions.md`](onboarding/claude-permissions.md).
+`feat/permission-bootstrap` 에 있음, 다음 라운드 테스트 후 머지 대기.
 
 ---
 
