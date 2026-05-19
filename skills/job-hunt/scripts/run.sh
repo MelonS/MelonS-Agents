@@ -45,6 +45,7 @@ job-hunt — Korean job-posting digest
 Usage:
   scripts/run.sh [--filters=<path>] [--sources=<csv>] [--output-root=<dir>]
                  [--dry-run] [--quiet]
+  scripts/run.sh --list-sources
 
 Options:
   --filters=<path>       Path to filters.yaml (default: skills/job-hunt/config/filters.yaml,
@@ -55,10 +56,38 @@ Options:
   --dry-run              Run the full pipeline but write outputs under a /tmp scratch
                          directory instead of the operator's records/.
   --quiet                Suppress progress logging on stderr.
+  --list-sources         Print available source plugins + their live-mode flag status.
   --help                 Show this message.
 
 Exit codes: 0 success, 2 config, 3 all-sources-failed, 4 partial.
 EOF
+}
+
+list_sources() {
+  # Enumerate every sources/*.sh plugin and report whether its live
+  # flag is currently set (env-detected, not file-parsed).
+  local sources_dir="$SKILL_DIR/sources"
+  if [[ ! -d "$sources_dir" ]]; then
+    echo "[list-sources] no sources directory at $sources_dir" >&2
+    return 2
+  fi
+  printf '%-22s %-12s %s\n' "PLUGIN" "MODE" "LIVE-FLAG VAR"
+  printf '%-22s %-12s %s\n' "----------------------" "------------" "---------------------------"
+  for f in "$sources_dir"/*.sh; do
+    [[ -f "$f" ]] || continue
+    local name; name=$(basename "$f" .sh)
+    local flag_var=""
+    local mode=""
+    case "$name" in
+      _mock)           flag_var="(none — always mock)";   mode="mock" ;;
+      kr-wanted)       flag_var="JH_WANTED_LIVE";         [[ "${JH_WANTED_LIVE:-0}"      == "1" ]] && mode="LIVE" || mode="mock" ;;
+      kr-programmers)  flag_var="JH_PROGRAMMERS_LIVE";    [[ "${JH_PROGRAMMERS_LIVE:-0}" == "1" ]] && mode="LIVE" || mode="mock" ;;
+      kr-jobkorea)     flag_var="JH_JOBKOREA_LIVE";       [[ "${JH_JOBKOREA_LIVE:-0}"    == "1" ]] && mode="LIVE" || mode="mock" ;;
+      kr-saramin)      flag_var="JH_SARAMIN_LIVE";        [[ "${JH_SARAMIN_LIVE:-0}"     == "1" ]] && mode="LIVE" || mode="mock" ;;
+      *)               flag_var="(unknown — check plugin)"; mode="?" ;;
+    esac
+    printf '%-22s %-12s %s\n' "$name" "$mode" "$flag_var"
+  done
 }
 
 log() {
@@ -80,6 +109,13 @@ for arg in "$@"; do
     --output-root=*)  OUTPUT_ROOT="${arg#--output-root=}" ;;
     --dry-run)        DRY_RUN=1 ;;
     --quiet)          QUIET=1 ;;
+    --list-sources)
+      # Defer execution until after SCRIPT_DIR / SKILL_DIR are set
+      # at the top of the file (they already are).  list_sources()
+      # is defined just above and works from here.
+      list_sources
+      exit 0
+      ;;
     --help|-h)        usage; exit 0 ;;
     *)
       die "unknown arg: $arg" 2
@@ -316,10 +352,13 @@ log "wrote: $out_dir/digest.md"
 log "      $out_dir/index.json"
 log "      $out_dir/raw/*.json"
 log "sources succeeded: ${sources_succeeded[*]}"
+
+# Final summary on stdout (parseable).  Print BEFORE the
+# partial-failure exit so callers capture the digest path even
+# when exit code is 4.
+echo "$out_dir/digest.md"
+
 if (( ${#sources_failed[@]} > 0 )); then
   log "sources failed: ${sources_failed[*]}"
   exit 4
 fi
-
-# Final summary on stdout (parseable).
-echo "$out_dir/digest.md"
