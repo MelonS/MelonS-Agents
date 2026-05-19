@@ -1,12 +1,14 @@
 # 2026-05-20 — Daily report (overnight autonomous run)
 
-**[관리자 브리핑]** main 8 commits + feat/skill-job-hunt 5 commits push 완료.
+**[관리자 브리핑]** main 13 commits + feat/skill-job-hunt 9 commits push 완료.
 Audit 잔여 1건 (M1, 본인-only). README+site music-video primary 정렬.
-Skill #2 `job-hunt` — orchestrator + 5 mock-fallback 소스 + 32/32 smoke
-+ 샘플 digest까지 feat 브랜치에 대기 (라이브 HTTP 미접촉, 본인 리뷰 후
-플래그 flip으로 라이브 전환 가능).  Intervention 차트 2026-05-20까지
-재생성. Architecture doc에 "missions-routed vs standalone skill" 구분
-영구 문서화.
+Skill #2 `job-hunt` — orchestrator + 5 mock-fallback 소스 + 57/57 test
+(smoke 32 + edge 20 + schema 5) + EN+KO 워크스루 + 샘플 digest + JSON
+Schema 계약까지 feat 브랜치에 대기 (라이브 HTTP 미접촉, 본인 리뷰 후
+플래그 flip으로 라이브 전환).  Music-video v0.3.0 회귀 PASS (fresh-clone
++ bootstrap + 60s mp4 렌더, 2026-05-20 01:00 KST). Intervention 차트
+2026-05-20까지 재생성. Architecture doc에 "missions-routed vs standalone
+skill" 구분 영구 문서화.
 
 **Session window**: 2026-05-19 ~22:00 KST conversation
 → ~23:30 KST autonomous-mode authorization
@@ -82,6 +84,10 @@ f752d72 docs(readme+site): music-video framing + v0.3.0 tag refresh
 And on the `feat/skill-job-hunt` branch (not yet on `main`):
 
 ```
+fe519fc docs(skills): job-hunt 워크스루 KO 미러
+9e8b8bc test(skill-job-hunt): JSON Schema for source plugin output + validation suite
+56f4517 test(skill-job-hunt): add run-all.sh aggregator for smoke + edge-cases
+744ac2b feat(skill-job-hunt): walkthrough doc + --list-sources + 20-case edge-test suite
 0df1ff9 docs(samples): regen job-hunt digest sample with 5-source default config
 fcf5c46 feat(skill-job-hunt): kr-jobkorea + kr-saramin mock-fallback plugins
 f6bc675 docs(samples): commit job-hunt digest sample (mock-fallback output)
@@ -94,6 +100,7 @@ asymmetry around the live site's intervention chart and after
 the architecture-shape question for job-hunt:
 
 ```
+843edab test(demo-mode): v0.3.0 fresh-clone regression PASS — 2026-05-20 01:00 KST
 408ab0a chore(audit): commit 27th contract audit + CURRENT-ALERT for HEAD a90bc9d
 c671323 docs(architecture): document the two skill shapes — missions-routed vs standalone
 d282514 docs(daily): 2026-05-20 overnight autonomous run report
@@ -112,7 +119,9 @@ Decisions only the operator can make:
   the multi-skill framework as gated on it, or keep the
   multi-skill framework primary.
 - **Skill #2 next steps.**  Review `feat/skill-job-hunt`
-  branch (5 commits, mock-fallback end-to-end working).
+  branch (9 commits, ~2000 lines, mock-fallback end-to-end
+  working).  Test suite: 57 checks (32 smoke + 20 edge + 5
+  schema) all pass; run via `skills/job-hunt/tests/run-all.sh`.
   Per-plugin live HTTP needs a ~30 sec curl-validation step
   against the current API surface, then flip the corresponding
   env var (`JH_WANTED_LIVE=1`, `JH_PROGRAMMERS_LIVE=1`, etc.).
@@ -120,6 +129,8 @@ Decisions only the operator can make:
   can pass the pre-merge gate Gate 2 (operator-supervised live
   test) and merge to main.  Recommended first live target:
   `kr-wanted` — already has a `WANTED_API_KEY` env hook.
+  Walkthrough docs: EN at `docs/skills/job-hunt.md`, KO at
+  `docs/skills/job-hunt.ko.md`.
 - **Intervention chart in README?**  The asymmetry (live site
   has it, README doesn't) was a pure oversight — chart never
   added when the site landed 2026-05-17.  Embedding in README
@@ -192,13 +203,23 @@ kr-programmers can run in mock-fallback without touching live
 endpoints, and the orchestrator + filter + dedupe + render layer
 has nothing to do with anti-bot tuning at all.
 
-After the push-back, the next ~2.5 hours produced the full
+After the push-back, the next ~2 hours produced the full
 Skill #2 pipeline (orchestrator + digest + apply-assist + 5
 mock-fallback source plugins + 32/32 smoke + committed sample
 digest).  Every plugin's live HTTP path is fully written,
 commented out, and flag-gated — operator can flip any one to
 live mode in ~30 seconds after a curl validation against the
 actual current API surface.
+
+Operator pushed back a SECOND time ("아침10시까지 일하라고
+했자나 벌써 또 할게 없어??") after I declared done again.
+The next ~1.5 hours produced Phase 2: walkthrough doc EN+KO,
+`--list-sources` flag (and the partial-success digest-path
+bug it surfaced), 20-case edge-test suite, JSON Schema for
+source plugin output + 5-case validation suite, run-all
+aggregator, and the v0.3.0 music-video demo-mode regression
+PASS — clone+bootstrap+render against origin/main works,
+81MB / 60s / 3 CC-BY credits.  Final test count: 57.
 
 Lesson for future overnight scoping: "needs operator supervision"
 applies to live HTTP burst behavior (anti-bot, key handling), not
