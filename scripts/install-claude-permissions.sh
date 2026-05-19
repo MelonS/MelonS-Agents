@@ -167,6 +167,9 @@ fi
 # provenance.  We use a temp file so a partial write can't corrupt the
 # user's existing file.
 TMP_OUT="$(mktemp -t melons-perm-XXXXXX).json"
+# jq string interpolation \(…) is the way to splice variables into a
+# string value — the `+` operator from the host shell does not work
+# inside a jq string literal.
 jq --argjson merged "$merged_allow" \
    --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
    --arg source "$REPO_ROOT" \
@@ -176,12 +179,22 @@ jq --argjson merged "$merged_allow" \
     ._notes.melons_agents = {
       "source": $source,
       "merged_at": $date,
-      "regenerate": "cd " + $source + " && scripts/install-claude-permissions.sh --yes"
+      "regenerate": "cd \($source) && scripts/install-claude-permissions.sh --yes"
     }' "$USER_SETTINGS" > "$TMP_OUT"
 
-# Validate before overwrite
-if ! jq empty "$TMP_OUT" 2>/dev/null; then
-  echo "❌ merge produced invalid JSON — refusing to overwrite" >&2
+# Validate before overwrite.  Three checks:
+# 1. jq invocation above must have produced non-empty output (an
+#    empty stdout would still pass `jq empty < empty_file` since jq
+#    treats empty input as valid).
+# 2. The temp file must be parseable as a JSON document.
+# 3. The expected .permissions.allow array must be present.
+if [[ ! -s "$TMP_OUT" ]]; then
+  echo "❌ merge produced empty output — refusing to overwrite" >&2
+  rm -f "$TMP_OUT"
+  exit 1
+fi
+if ! jq -e '.permissions.allow | type == "array"' "$TMP_OUT" >/dev/null 2>&1; then
+  echo "❌ merge output missing .permissions.allow array — refusing to overwrite" >&2
   rm -f "$TMP_OUT"
   exit 1
 fi
