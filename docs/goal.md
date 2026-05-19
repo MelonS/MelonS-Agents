@@ -126,9 +126,9 @@ confirm.
    the agentskills.io spec.  Zero conversion overhead.
 2. **Drop-in usable by ~38 other runtimes** — anyone using
    Cursor, GitHub Copilot, Goose, etc. can git-clone our skill.
-3. **Standards-compliance credibility signal** — repo carries
-   weight for hiring/external review (the
-   [problem-solver framing](#problem-solver-pivot-pending)).
+3. **Standards-compliance credibility signal** — open-spec
+   adherence is independently verifiable; raises the bar above
+   "one-off bash scripts" for any technical reader of the repo.
 4. **Vendor lock-in avoidance** — if Anthropic changes Claude
    Code's skill UX tomorrow, our skill still works in 37 other
    tools.
@@ -425,9 +425,9 @@ now makes ("zero-account demo in ~2 minutes").
    돕기 위해, 나의 취직을 위해, 다른 사람들의 취직을 위해, 모두의
    먹고 사는 문제를 해결하기 위해".  Skills are inert at 10–20%
    activation rate.
-2. The repo is a public engineering-credibility signal in operator's
-   active job hunt.  A hiring manager who clones and bounces off
-   the bootstrap doesn't see Skill #1 or Skill #2 — they see "the
+2. The repo is a public engineering-credibility signal for any
+   technical reader.  A stranger who clones and bounces off the
+   bootstrap doesn't see Skill #1 or Skill #2 — they see "the
    demo didn't work".  Conversion ceiling is set by the first 5
    minutes.
 3. Most existing infrastructure investments (case studies, audit,
