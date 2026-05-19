@@ -46,6 +46,35 @@ if [[ -x "$REPO_ROOT/scripts/install-claude-local.sh" ]]; then
   fi
 fi
 
+# --- 1c. Claude Code user-level permission grants ---------------------
+# Project settings cover prompts INSIDE the project, but Claude Code
+# also consults ~/.claude/settings.json at session start.  Bulk-merging
+# the project's allow list into the user file once eliminates ~70
+# per-tool prompts on first run.  Operator OR friend-at-meeting
+# observation 2026-05-19: per-command prompts were the dominant
+# onboarding friction even with project settings in place.
+#
+# CLAUDE_PERMISSION_BOOTSTRAP env var controls behaviour:
+#   unset / "prompt"  → ask Y/n once (default, interactive bootstrap)
+#   "yes"             → install without prompt (CI / autonomous mode)
+#   "skip"            → don't touch ~/.claude/settings.json at all
+if [[ -x "$REPO_ROOT/scripts/install-claude-permissions.sh" ]]; then
+  case "${CLAUDE_PERMISSION_BOOTSTRAP:-prompt}" in
+    skip)
+      : ;;
+    yes)
+      echo
+      echo "=== Claude Code user-level permission grants ==="
+      "$REPO_ROOT/scripts/install-claude-permissions.sh" --yes || true ;;
+    prompt|*)
+      # Only prompt if we have a real TTY — non-interactive runs skip
+      # silently so CI doesn't hang.
+      if [[ -t 0 ]]; then
+        "$REPO_ROOT/scripts/install-claude-permissions.sh" --prompt || true
+      fi ;;
+  esac
+fi
+
 OS="$(uname -s)"
 
 print_install_hint() {
