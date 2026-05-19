@@ -222,6 +222,30 @@ aggregator, and the v0.3.0 music-video demo-mode regression
 PASS — clone+bootstrap+render against origin/main works,
 81MB / 60s / 3 CC-BY credits.  Final test count: 57.
 
+Phase 3 came when the pre-merge gate ran on feat and flagged
+two carry-from-main fixes that weren't yet visible on the feat
+branch: the architecture.md "Skills layer — two shapes" section
+(c671323) and the for-analysts.md "No CI" correction (6c64f09).
+Resolution: `git rebase main` on feat — feat is now a strict
+descendant of main (FF-mergeable), all 57 tests still pass
+post-rebase, force-pushed with `--force-with-lease`.
+
+Phase 4 came from the post-rebase pre-merge gate, which audited
+the union state and surfaced one [low]: `scripts/update-status.sh`
+targets `<!-- status:start/end -->` markers removed from
+README.md in an earlier restructure — the script has been dead
+since then and no active code references it.  Per
+[[infra-maintenance]] the script was deleted on main (43519a1)
+and feat was rebased once more to pick up the deletion (12 feat
+commits stayed intact through both rebases; tests still
+57/57 pass).
+
+The only remaining audit finding is [medium] M1 (roadmap
+"Now"), operator-only per the maintenance contract.  The
+pre-merge gate will continue to FAIL on that single line until
+the operator rewrites it — that's expected and is not a
+feat-branch concern.
+
 Lesson for future overnight scoping: "needs operator supervision"
 applies to live HTTP burst behavior (anti-bot, key handling), not
 to all source-plugin development.  Mock-fallback shape is the
