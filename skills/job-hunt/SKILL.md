@@ -21,19 +21,33 @@ links per posting.
 
 ## Status (2026-05-20)
 
-This SKILL.md and its surrounding directory are a **scaffold only**
-landed on `feat/skill-job-hunt`.  No live source is implemented
-yet — each `sources/<name>.sh` is a placeholder.  The structure
-exists so that:
+End-to-end pipeline **functional in mock-fallback mode**.  Live
+HTTP integration is gated on operator validation per source.
 
-1. The agentskills.io spec contract is fixed (frontmatter, file
-   layout) before live scraping work begins.
-2. Operator and reviewers can sanity-check the design before any
-   anti-bot tuning starts (the riskiest part of the build).
-3. Each source can be added as an isolated PR without touching
-   the orchestrator.
+| Component | Status |
+|---|---|
+| Orchestrator (`scripts/run.sh`) | ✅ wired; filter + dedupe + diff + render |
+| Markdown digest renderer (`scripts/digest.sh`) | ✅ working |
+| Apply-assist link derivation (`scripts/apply-assist.sh`) | ✅ working |
+| `sources/_mock.sh` | ✅ deterministic 8-posting fixture |
+| `sources/kr-wanted.sh` | ⚠️ mock-fallback default; live path documented + commented; flip via `JH_WANTED_LIVE=1` + `WANTED_API_KEY` |
+| `sources/kr-programmers.sh` | ⚠️ mock-fallback default; live path documented + commented; flip via `JH_PROGRAMMERS_LIVE=1` |
+| `sources/kr-jobkorea.sh` | ✗ not yet drafted |
+| `sources/kr-saramin.sh` | ✗ not yet drafted (anti-bot tuning planned last) |
+| `tests/smoke.sh` | ✅ structural + end-to-end mock test |
 
-Live implementation begins after operator review of this scaffold.
+The live HTTP path for each `kr-*` plugin is intentionally
+disabled by default because:
+1. Endpoint shapes need operator confirmation against the
+   current API surface (these change without notice).
+2. API keys (where required) are operator-supplied secrets.
+3. Anti-bot patterns (for scraped sources) need supervised
+   tuning, not unattended bursts.
+
+Mock-fallback mode keeps the orchestrator + filter + dedupe +
+digest path continuously testable.  Live integration is a
+flip-the-flag operation once each plugin's curl/jq translation is
+operator-validated.
 
 ## What this produces
 

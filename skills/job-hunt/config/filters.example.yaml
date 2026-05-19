@@ -37,10 +37,22 @@ keywords:
 
 # Source plugins to enable.  Each must have a matching file at
 # skills/job-hunt/sources/<name>.sh implementing fetch_postings().
+#
+# Live-mode gating (as of 2026-05-20): each kr-* plugin runs in
+# MOCK-FALLBACK mode by default — set the corresponding env var
+# (e.g. JH_WANTED_LIVE=1 + WANTED_API_KEY=<token>) to switch a
+# plugin to live HTTP.  See sources/<name>.sh comments for the
+# anticipated request/response shape and the operator-validation
+# step required before flipping live.
 sources:
   - kr-wanted        # cleanest API; recommended first source
   - kr-programmers   # dev-focused; smaller corpus but high signal
-  - kr-saramin       # largest corpus; anti-bot is the most aggressive
+  # - kr-saramin     # not implemented yet — largest KR corpus,
+  #                  # but anti-bot is the most aggressive; planned
+  #                  # to ship last with operator-supervised tuning.
+  # - _mock          # synthetic source; enable temporarily when
+  #                  # validating pipeline changes without burning
+  #                  # real fetches.
 
 # Output settings.
 output:

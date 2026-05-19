@@ -1,24 +1,19 @@
 #!/usr/bin/env bash
-# Lightweight smoke test for the job-hunt skill — scaffold version.
+# Smoke test for the job-hunt skill.
 #
-# Mirrors skills/music-video/tests/smoke.sh in shape.  At scaffold
-# stage, this test verifies only the structural invariants —
-# nothing live is checked because nothing live is implemented.
-#
-# When sources are added, this smoke test grows to verify:
-#   - Each source plugin loads (bash -n syntax check).
-#   - Each source's fetch_postings() exists and is callable.
-#   - The orchestrator parses the example filter file without
-#     erroring.
-#   - At least one source's mock-mode (offline) returns valid JSON.
+# Mirrors skills/music-video/tests/smoke.sh in shape.  Validates
+# structural invariants (frontmatter, file presence, bash syntax)
+# plus end-to-end pipeline behavior using the deterministic mock
+# source.
 #
 # Usage: skills/job-hunt/tests/smoke.sh
 #
 # Exit codes:
-#   0   — all structural checks pass
-#   1   — a required file is missing or invalid
-#   10  — scaffold marker matches and no live source is expected
-#         (current state — this is the normal exit pre-implementation)
+#   0   — all checks pass (skill is functionally testable;
+#         live sources are mock-fallback by default but the
+#         pipeline produces a real digest from mock data)
+#   1   — a required file is missing or invalid; or end-to-end
+#         pipeline failed to produce a digest
 
 set -euo pipefail
 
@@ -39,24 +34,35 @@ check() {
   fi
 }
 
-# 1. Required scaffold files present.
-check "SKILL.md exists" test -f "$SKILL_DIR/SKILL.md"
-check "scripts/run.sh exists" test -x "$SKILL_DIR/scripts/run.sh"
-check "config/filters.example.yaml exists" test -f "$SKILL_DIR/config/filters.example.yaml"
-check "sources/README.md exists" test -f "$SKILL_DIR/sources/README.md"
+# ----- 1. Required files present -----
+check "SKILL.md exists"                          test -f "$SKILL_DIR/SKILL.md"
+check "scripts/run.sh exists + executable"       test -x "$SKILL_DIR/scripts/run.sh"
+check "scripts/digest.sh exists + executable"    test -x "$SKILL_DIR/scripts/digest.sh"
+check "scripts/apply-assist.sh exists"           test -f "$SKILL_DIR/scripts/apply-assist.sh"
+check "config/filters.example.yaml exists"       test -f "$SKILL_DIR/config/filters.example.yaml"
+check "sources/README.md exists"                 test -f "$SKILL_DIR/sources/README.md"
+check "sources/_mock.sh exists"                  test -f "$SKILL_DIR/sources/_mock.sh"
+check "sources/kr-wanted.sh exists"              test -f "$SKILL_DIR/sources/kr-wanted.sh"
+check "sources/kr-programmers.sh exists"         test -f "$SKILL_DIR/sources/kr-programmers.sh"
 
-# 2. SKILL.md has required agentskills.io frontmatter keys.
-check "SKILL.md has 'name:' frontmatter" grep -qE '^name: job-hunt$' "$SKILL_DIR/SKILL.md"
-check "SKILL.md has 'description:' frontmatter" grep -qE '^description:' "$SKILL_DIR/SKILL.md"
-check "SKILL.md has 'license:' frontmatter" grep -qE '^license:' "$SKILL_DIR/SKILL.md"
+# ----- 2. SKILL.md frontmatter sanity -----
+check "SKILL.md has 'name:' frontmatter"         grep -qE '^name: job-hunt$' "$SKILL_DIR/SKILL.md"
+check "SKILL.md has 'description:' frontmatter"  grep -qE '^description:' "$SKILL_DIR/SKILL.md"
+check "SKILL.md has 'license:' frontmatter"      grep -qE '^license:' "$SKILL_DIR/SKILL.md"
 
-# 3. run.sh bash syntax valid.
-check "scripts/run.sh bash syntax OK" bash -n "$SKILL_DIR/scripts/run.sh"
+# ----- 3. Bash syntax (every shipped .sh) -----
+for f in \
+  "$SKILL_DIR/scripts/run.sh" \
+  "$SKILL_DIR/scripts/digest.sh" \
+  "$SKILL_DIR/scripts/apply-assist.sh" \
+  "$SKILL_DIR/sources/_mock.sh" \
+  "$SKILL_DIR/sources/kr-wanted.sh" \
+  "$SKILL_DIR/sources/kr-programmers.sh"
+do
+  check "$(basename "$f") bash syntax OK" bash -n "$f"
+done
 
-# 4. Filter schema YAML parses (if a parser is available; skip otherwise).
-#    Prefer yq → python3+pyyaml → ruby+yaml.  If none, this check is
-#    skipped, not failed — yaml-module availability is a host setup
-#    concern, not a skill defect.
+# ----- 4. YAML parser available (yq / python3+pyyaml / ruby) -----
 if command -v yq >/dev/null 2>&1; then
   check "filters.example.yaml parses with yq" yq -e '.' "$SKILL_DIR/config/filters.example.yaml"
 elif command -v python3 >/dev/null 2>&1 && python3 -c "import yaml" >/dev/null 2>&1; then
@@ -67,14 +73,39 @@ else
   note "(skip) yaml parser check — no yq / python3+pyyaml / ruby on host"
 fi
 
-# 5. Scaffold marker — run.sh should exit 10 (not-yet-implemented).
-EXIT_CODE=0
-"$SKILL_DIR/scripts/run.sh" >/dev/null 2>&1 || EXIT_CODE=$?
-if [[ "$EXIT_CODE" == "10" ]]; then
-  note "✓ run.sh returns scaffold marker exit 10 (expected pre-impl)"
-  PASS=$((PASS+1))
+# ----- 5. End-to-end pipeline (mock source) -----
+#    Run the orchestrator in dry-run mode with the deterministic
+#    mock source; verify it writes a digest.md file containing
+#    the expected sections.
+DIGEST_PATH=""
+if DIGEST_PATH=$("$SKILL_DIR/scripts/run.sh" --sources=_mock --dry-run --quiet 2>/dev/null); then
+  check "orchestrator produced digest file"  test -f "$DIGEST_PATH"
+  check "digest.md has '# Job-hunt digest' header" grep -qE '^# Job-hunt digest' "$DIGEST_PATH"
+  check "digest.md has 'All postings' section"     grep -qE '^## All postings' "$DIGEST_PATH"
+  check "index.json sibling exists"          test -f "$(dirname "$DIGEST_PATH")/index.json"
+  check "raw/_mock.json sibling exists"      test -f "$(dirname "$DIGEST_PATH")/raw/_mock.json"
+  # 5 of 8 mock postings survive include/exclude filter + 1 dedupe.
+  EXPECTED=5
+  ACTUAL=$(jq -r '.postings_total' "$(dirname "$DIGEST_PATH")/index.json" 2>/dev/null || echo 0)
+  check "filtered+deduped count = $EXPECTED (got $ACTUAL)" test "$ACTUAL" = "$EXPECTED"
 else
-  note "✗ run.sh returned $EXIT_CODE; expected 10 at scaffold stage"
+  note "✗ orchestrator failed end-to-end"
+  FAIL=$((FAIL+1))
+fi
+
+# ----- 6. Three-source aggregation -----
+#    All three default sources (mock-fallback for kr-* + _mock)
+#    should aggregate cleanly and dedupe URLs across them.
+if THREE_PATH=$("$SKILL_DIR/scripts/run.sh" --sources=_mock,kr-wanted,kr-programmers --dry-run --quiet 2>/dev/null); then
+  T_INDEX="$(dirname "$THREE_PATH")/index.json"
+  check "three-source run produced index.json" test -f "$T_INDEX"
+  THREE_TOTAL=$(jq -r '.postings_total' "$T_INDEX" 2>/dev/null || echo 0)
+  # _mock filters to 5 + kr-wanted 3 + kr-programmers 2 = 10
+  check "three-source aggregated count = 10 (got $THREE_TOTAL)" test "$THREE_TOTAL" = "10"
+  SRC_COUNT=$(jq -r '.sources | length' "$T_INDEX" 2>/dev/null || echo 0)
+  check "three-source sources list len = 3 (got $SRC_COUNT)" test "$SRC_COUNT" = "3"
+else
+  note "✗ three-source aggregation failed"
   FAIL=$((FAIL+1))
 fi
 
@@ -85,7 +116,6 @@ if [[ "$FAIL" -gt 0 ]]; then
   exit 1
 fi
 
-# At scaffold stage, exit 10 to clearly signal "tests pass but
-# no live implementation yet" — distinct from exit 0 which would
-# imply the skill is functionally complete.
-exit 10
+# All checks pass: the skill is functionally testable end-to-end
+# against mock data.  Live HTTP integration is per-plugin gated.
+exit 0
