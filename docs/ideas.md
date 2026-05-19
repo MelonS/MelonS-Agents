@@ -35,6 +35,88 @@ live entries — empty subcategories are noise.
 
 ## Agents
 
+### 2026-05-19 ~17:30 KST | Friend-meeting friction items — full bootstrap-as-installer parity | H
+
+**Origin**: 2026-05-19 ~14:00–17:30 KST in-person friend session at
+the meeting venue.  Security-pro friend ran fresh clone alongside
+operator's tuned machine; multiple gaps surfaced beyond what the
+existing onboarding paths address.
+
+**Captured friction items** (from real-time observation):
+
+1. **Per-tool Claude Code permission prompts** — already partially
+   solved on `feat/permission-bootstrap` (5 commits, not yet merged
+   to main).  Friend hit ~30 prompts during demo run despite project
+   `.claude/settings.json` rendered.  Root cause: user-level
+   `~/.claude/settings.json` was untouched.  Fix shipped, pending
+   merge + re-test on friend's machine.
+
+2. **Experience parity gap — operator's 6mo of accumulated config
+   isn't in repo** (operator framing: "내 컴퓨터에만 있는 규칙들도
+   크게 문제가 없다면 repo로 가야하지 않을까?").  Direct restatement
+   of operator-contract §8 principle 2 (tracked-by-default).
+   Inventory of what's local but should be auto-installable:
+
+   | Item | Repo state | Bootstrap auto-installs? |
+   |---|---|---|
+   | Project allow list | ✓ template | ✓ |
+   | User allow list | ✓ permission-bootstrap | ⏳ after merge |
+   | Post-commit audit hook | ✓ `scripts/install-hooks.sh` | ✗ |
+   | Launchd jobs (audit/queue/disk) | ✓ `scripts/install-scheduler.sh` | ✗ |
+   | Statusline wiring | ✓ `scripts/statusline.sh` | ✗ (manual edit) |
+   | Memory cache content | local (§5 PII) | ✗ (intentional) |
+   | Personal info (billing, job hunt) | local (§5 PII) | ✗ (intentional) |
+
+   **Action**: extend `bootstrap.sh` to call install-hooks +
+   install-scheduler with Y/n prompts (default Y).  Belongs on the
+   same `feat/permission-bootstrap` branch since theme is identical
+   ("close the bootstrap-vs-installed gap").  Estimated +1–2 h.
+
+3. **Demo aesthetic-vs-source matrix is harder than the test gate
+   suggests** — friend-test surfaced a 4-way constraint cluster that
+   no existing path satisfies at once: anime style + 2020s aesthetic
+   + no embedded text + no copyrighted source.  Trailers carry title
+   cards; Pexels has no anime; hand-drawn has no time; AI generation
+   is the only path that hits all four inside a meeting timeframe.
+   The work landed as
+   [`scripts/fetch-ai-anime-broll.sh`](../scripts/fetch-ai-anime-broll.sh)
+   + new `MUSIC_VIDEO_BROLL_DIR` override on
+   `feat/custom-broll-dir`.
+
+   Underlying lesson — the project's existing engineering case
+   study #5 ("knowing where the wall is" in ffmpeg shaders) was the
+   conceptual relative of this finding.  A new case study #7 may
+   be worth writing: "Reproducibility tests verify scripts ran,
+   not first-user experience" — addendum already exists in #6,
+   could be promoted to its own case.
+
+4. **AI image generation as a permanent option** — pollinations.ai
+   serial-mode Flux requests work free with no signup.  Could be a
+   first-class B-roll path alongside Pexels + demo cache.  Worth
+   exposing as a Skill, especially for users who don't have Pexels
+   keys AND want anime/illustration aesthetic.
+
+5. **Memory bootstrapping question** — operator's local
+   `~/.claude/projects/.../memory/MEMORY.md` is mostly a cache of
+   rules already in `docs/operator-contract.md`.  An "onboarding
+   memory seed" file in the repo (sanitized of PII: no
+   billing_plan, no repo_as_credibility_signal job-hunt note)
+   could let new users get the contract automatically referenced
+   in their first session without manual copy.  ~30 min to draft
+   + sanity audit.
+
+**Status**: parked H — operator left meeting ~17:30 KST without
+making decisions.  Next session picks up from this list.
+
+**Estimated cost**:
+- Item 1 (merge permission-bootstrap): instant.
+- Item 2 (bootstrap auto-install of hooks + scheduler): 1–2 h.
+- Item 4 (AI gen as first-class option): 2–3 h to integrate with
+  music-video mission + docs.
+- Item 5 (memory seed): 30 min.
+
+---
+
 ### 2026-05-19 | A/B test — planner + resourcer at Opus vs Sonnet | M
 
 **Motivation**: external review (community member, anonymized per
