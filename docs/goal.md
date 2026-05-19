@@ -403,6 +403,101 @@ _(promoted to Active goal below by user direction "일단 다하고 있어봐"
  at 2026-05-16 02:40 KST, after operator confirmed satisfaction with
  the first deliverable.)_
 
+### 2026-05-19 ~17:40 KST | First-touch success rate — raise 10-20% → 60%+ | **CRITICAL**
+
+**Severity classification — operator-flagged 2026-05-19 ~17:40 KST**:
+not parked ideation; a working drawback of the current state that
+blocks the broader pivot value (project-as-portable-tool-for-others,
+not just operator's own machine).  Empirical data point:
+2026-05-19 ~14:00–17:30 KST in-person session with an experienced
+Claude-Code developer revealed multiple compounding friction walls
+that prevented a result *for a target user who fits the project's
+ideal profile*.  Operator estimate: 10 strangers cloning = 1–2
+producing a real output.
+
+**Goal**: lift the first-touch success rate from ~10–20% to **≥60%
+of fresh-clone users producing a real `short.mp4` within 5 minutes
+of `git clone`** — measured against the explicit promise the README
+now makes ("zero-account demo in ~2 minutes").
+
+**Why this is critical, not parking material**:
+
+1. The multi-skill framework pivot (current active goal) is
+   conditioned on the project being usable by *other people*, not
+   only the operator.  Operator's stated motive 2026-05-18: "사람들을
+   돕기 위해, 나의 취직을 위해, 다른 사람들의 취직을 위해, 모두의
+   먹고 사는 문제를 해결하기 위해".  Skills are inert at 10–20%
+   activation rate.
+2. The repo is a public engineering-credibility signal in operator's
+   active job hunt.  A hiring manager who clones and bounces off
+   the bootstrap doesn't see Skill #1 or Skill #2 — they see "the
+   demo didn't work".  Conversion ceiling is set by the first 5
+   minutes.
+3. Most existing infrastructure investments (case studies, audit,
+   skills) compound only if the user gets past the onboarding wall.
+   Without that, the marginal value of each additional system layer
+   approaches zero.
+
+**Observed friction walls (from 2026-05-19 friend session)**:
+
+| Wall | Nature | Status |
+|---|---|---|
+| Per-tool Claude Code permission prompts | mechanical (auth) | partial fix in `feat/permission-bootstrap` |
+| Per-tool install prompts during prereqs | mechanical (setup) | unresolved — bootstrap prints hints, doesn't batch-install |
+| "I don't know where to start" | cognitive (UX) | unresolved — README frames as framework, not deliverable |
+| "I picked too big a goal" | scope (UX) | unresolved — no guardrails / suggested-first-task |
+| Operator's local config not in repo | parity (infra) | partial fix in flight — see ideas.md 2026-05-19 ~17:30 |
+
+The walls compound: even if one is fixed, the next blocks.
+
+**Done when** (suggested subgoals — operator confirms / edits before
+promotion to Active):
+
+- [ ] `feat/permission-bootstrap` merged → user-level permission
+      friction resolved.
+- [ ] `bootstrap.sh` runs `brew install` (and Linux equivalent)
+      in a single batch instead of printing hints, with one Y/n
+      consent — settings-install + hooks-install + scheduler-install
+      all consented at the same prompt.
+- [ ] **`scripts/first-touch.sh`** (new) — single-command guided
+      wizard: detects environment, walks user through one specific
+      goal (zero-account music-video), executes everything, opens
+      the result file.  ≤ 5 minutes from clone to playing mp4
+      with no decision branches.
+- [ ] README rewrite — single "press button get result" promise at
+      top of file with the exact wizard command, framework
+      description moved to a lower section.  EN + KO mirror in same
+      commit per cadence rule.
+- [ ] Reproducibility test extension — `test-demo-mode.sh` measures
+      WALL TIME to first mp4 from a fully fresh `~/.claude/` state
+      (currently it bypasses Claude Code entirely; needs to invoke
+      through Claude Code session to catch the prompt-wall class).
+- [ ] **Empirical re-test** — operator or a stand-in fresh-clones
+      on a clean machine + records the exact friction count.
+      Target: ≤ 3 prompts total, ≤ 5 minutes total, mp4 plays.
+- [ ] First-touch success rate measurable on the repo: small
+      survey doc operator can hand to 3–5 testers, results
+      committed at `docs/onboarding/first-touch-survey-results.md`.
+
+**Estimated cost**: 1–2 sessions of focused work.  The wizard +
+batch-install pieces are 2–4 hours each; the README rewrite is a
+README-cadence batch (skills/demo-mode/wizard all in one).  The
+empirical re-test requires either a second machine or a clean test
+VM image.
+
+**Connection to currently-active goal (multi-skill framework)**:
+This goal **gates** the framework goal's value.  Without it,
+Skill #2 (job-hunt) and any future skills land on the same
+broken onboarding.  Recommend operator promote this candidate
+to Active and treat the multi-skill framework as paused until
+the success rate is measurably improved.  Skill #1 (already
+shipped in v0.2.0) provides enough framework demonstration that
+Skill #2 can wait for the activation rate to be fixed first.
+
+**Status**: candidate — awaiting operator promotion to Active goal
+on next session.  Operator flagged as severity-critical
+2026-05-19 ~17:40 KST: "아이디어가 아냐 심각한 문제야".
+
 ---
 
 ## Past goals

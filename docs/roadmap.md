@@ -31,6 +31,18 @@ rewrite this "Now" preamble to point at the active goal +
 operative subgoal (Step 1.3 manual functional test next).
 Flagged as [medium] in 2026-05-19-all.md audit. -->
 
+<!-- suggest 2026-05-19 ~17:40 KST (post-friend-meeting): NEW
+CRITICAL candidate goal landed in docs/goal.md: "First-touch
+success rate — raise 10-20% → 60%+".  Operator-flagged as severity
+critical ("아이디어가 아냐 심각한 문제야") after empirical
+observation that an experienced Claude-Code developer (friend at
+meeting) hit four compounding friction walls — permission prompts,
+install prompts, "don't know where to start", "picked too big a
+goal".  Recommend operator promote this candidate to Active goal
+on next session and pause the multi-skill framework goal as gated
+on this one.  Both feat branches (permission-bootstrap +
+custom-broll-dir) feed into the first subgoal of this new goal. -->
+
 
 _Operator-actioned, not a new goal_: 24h post-publish metrics
 capture in

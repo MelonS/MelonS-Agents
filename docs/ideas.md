@@ -35,7 +35,16 @@ live entries — empty subcategories are noise.
 
 ## Agents
 
-### 2026-05-19 ~17:30 KST | Friend-meeting friction items — full bootstrap-as-installer parity | H
+### 2026-05-19 ~17:30 KST | Friend-meeting friction items — full bootstrap-as-installer parity | **PROMOTED to docs/goal.md candidate (CRITICAL)**
+
+_Operator flagged this cluster as severity-critical at 2026-05-19
+~17:40 KST: "아이디어가 아냐 심각한 문제야".  Detailed entry moved
+to [`docs/goal.md`](goal.md) "Next goal (candidate)" section as
+"First-touch success rate — raise 10-20% → 60%+".  Kept here as
+audit trail only; do not act on the items below in isolation —
+they're subordinate subgoals of the promoted critical goal._
+
+
 
 **Origin**: 2026-05-19 ~14:00–17:30 KST in-person friend session at
 the meeting venue.  Security-pro friend ran fresh clone alongside
