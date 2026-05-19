@@ -184,9 +184,38 @@ _(beyond #2: promote a deferred item from `docs/copyright-policy.md`
 
 ## Done — most recent first
 
+- **2026-05-19** (~12:35 KST) **v0.2.0 milestone shipped — Skills
+  framework + zero-friction demo path merged to main, tag pushed**
+  (commits `ae07233` Skill #1 12-commit train merged FF to main;
+  `febb1f3` feat/demo-mode rebased + merged FF; tag `v0.2.0`
+  pushed; `8c3e045` README EN+KO cadence batch with demo
+  Quick Start + skills/ layer + 6 case studies).
+  Fresh-clone test against PUBLIC GitHub URL PASS at 12:35:46 KST
+  (81MB / 60s / 3 CC-BY credit lines) — the "friend with a
+  laptop at 2pm KST clones the repo and gets a working demo"
+  scenario is empirically validated.  Both merged feat branches
+  deleted from origin per §6 step 5.
+
+- **2026-05-19** (~02:00 KST, overnight autonomous) **Roadmap Next
+  #1 (Zero-friction onboarding path) shipped on feat/demo-mode**
+  (9 commits, since merged in v0.2.0).  Five pieces:
+  - `scripts/fetch-demo-broll.sh` — CC-BY-3.0 Blender CDN clip
+    cache (`e3dd657`).
+  - `scripts/fetch-demo-music.sh` + CC-BY-4.0 publish_rule +
+    incompetech.com allowlist (`4aace92`).
+  - `MUSIC_VIDEO_DEMO_MODE=1` wiring in the music-video mission
+    (`15a897b`).
+  - `scripts/bootstrap.sh` UX rewrite — demo path recommended
+    when no keys/music present (`a77af98`).
+  - `scripts/test-demo-mode.sh` fresh-clone reproducibility
+    gate + `docs/onboarding/demo-mode.md` + first PASS log
+    (`d2e145a`).
+  Plus docs polish: session report + EN/KO case study #6 +
+  preview thumbnail.  9 commits total.
+
 - **2026-05-19** (~01:30 KST, overnight autonomous) **Skill #1
   shipped + portability foundation laid** (branch
-  `feat/skill-music-video`, 7 commits, not yet merged to main).
+  `feat/skill-music-video`, since merged in v0.2.0).
   Five sub-deliverables:
   - **5 portability principles codified** in
     [`docs/operator-contract.md`](operator-contract.md) §8
