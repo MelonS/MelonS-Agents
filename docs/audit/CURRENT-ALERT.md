@@ -6,25 +6,26 @@
 > and re-run the auditor.
 
 **Verdict**: DRIFT_DETECTED
-**Full report**: [`docs/audit/2026-05-19-contract.md`](2026-05-19-contract.md)
-**Generated**: 2026-05-19 23:54:29 KST
+**Full report**: [`docs/audit/2026-05-20-contract.md`](2026-05-20-contract.md)
+**Generated**: 2026-05-20 00:30:20 KST
 
 ## Summary (from audit)
 
 
-Twenty-sixth contract audit (this run supersedes all same-day prior reports at this path).
-HEAD = `81320a3` ("chore(audit): clear 3 mediums + 3 lows from 2026-05-19 contract audit")
-on `origin/main`, fully synced. All twelve hard rules in `docs/operator-contract.md` were
-walked against committed code, configuration, git history, and the `.claude/agents/*.md`
-frontmatter table. The previous audit cleanup commit (`81320a3`) resolved five of nine
-findings from the ~22:41 KST prior run (§8 hardcoded path in `fetch-ai-anime-broll.sh`,
-roadmap Done gap for v0.3.0/8b39cac, stale "awaiting merge" in for-analysts.md,
-stale "Not yet merged" in goal.md, and wrong `skills/` path in operator-contract §6
-trigger list). Four findings carry forward: one [medium] §9 roadmap-vs-goal drift
-(operator-edit-only section), and three [low] items explicitly deferred for operator
-direction. No critical, no high, no new findings beyond these carry-forwards.
-All six subagent model assignments match `docs/for-analysts.md`. No secrets detected.
-§5 marker compliance is clean (no `.claude/agents/*.md` edits since 2026-05-17).
+Twenty-seventh contract audit. HEAD = `a90bc9d`
+("chore: filter-repo backup branch deleted (Roadmap Next #2)") on `origin/main`,
+fully synced. All twelve hard rules in `docs/operator-contract.md` were walked
+against committed code, configuration, git history, and the `.claude/agents/*.md`
+frontmatter table. Since the prior contract audit (`2026-05-19-contract.md`,
+HEAD `81320a3`), four commits landed: `f752d72` (README/site framing), `95308f6`
+(PII-scrub per §12), `aa56f5f` (audit-fix: closes L4 §5-regex, L5 v0.3.0-tag,
+and L6 bootstrap-exception extension), and `a90bc9d` (branch deletion). The
+`aa56f5f` fix commit resolved three of the four prior carry-forward findings.
+Two findings remain: one [medium] roadmap-vs-goal drift (operator-edit-only)
+and one [low] stale docs claim about CI (missed by `aa56f5f`). No new findings
+introduced. All six subagent model assignments match `docs/for-analysts.md`.
+No secrets detected. No §5-scope agent-file changes since 2026-05-15 (all
+pre-marker-convention, exempt).
 
 ## Critical / High findings
 
