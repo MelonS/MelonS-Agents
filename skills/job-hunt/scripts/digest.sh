@@ -110,7 +110,13 @@ echo "$data" | jq -r '
     (if .fit == null then empty
      elif .fit.scaffold_mode then "  - Fit: _scaffold mode — set `JH_FIT_SCORE_LIVE=1` for live scoring_"
      elif .fit.score then
-       "  - **Fit: \(.fit.score)/100** — \(.fit.rationale // "")"
+       # If role_fit + hire_prob present (post-2026-05-21 schema), surface both;
+       # fall back to bare score for backward compat.
+       (if .fit.role_fit and .fit.hire_prob then
+          "  - **Fit: \(.fit.score)/100** (role \(.fit.role_fit)/100 · hire-prob \(.fit.hire_prob)/100) — \(.fit.rationale // "")"
+        else
+          "  - **Fit: \(.fit.score)/100** — \(.fit.rationale // "")"
+        end)
      else empty end),
     (if (.fit // {}) | (.score and (.strengths or .gaps)) then
        "    - strengths: \((.fit.strengths // []) | join(", "))" + "  ·  gaps: \((.fit.gaps // []) | join(", "))"
