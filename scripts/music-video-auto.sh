@@ -39,6 +39,7 @@ WITH_CANVAS=0
 WITH_TYPO_FLAG=0     # --with-typography given (use genre pool)
 WITH_TYPO=""         # explicit phrases CSV (overrides pool)
 WITH_AREACTIVE=0     # --with-audio-reactive
+USE_AI_STILL=0       # --ai-still: Pollinations.ai instead of Pexels for stillzoom
 STILL_IMG=""
 SHORT_ID=""
 ARGS=()
@@ -46,6 +47,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --with-canvas) WITH_CANVAS=1; shift ;;
     --with-audio-reactive) WITH_AREACTIVE=1; shift ;;
+    --ai-still) USE_AI_STILL=1; shift ;;
     --with-typography)
       WITH_TYPO_FLAG=1
       # Peek at next arg — if non-flag, treat as phrases CSV; else use pool
@@ -98,12 +100,24 @@ if [[ "$CUT_MODE" == "stillzoom" && -z "$STILL_IMG" ]]; then
   FIRST_KW=$(yq -r ".genres.${GENRE}.keyword_pool[0]" "$PRESETS_YAML" 2>/dev/null)
   if [[ -n "$FIRST_KW" && "$FIRST_KW" != "null" ]]; then
     STILL_IMG="${TMPDIR:-/tmp}/auto-still-${SHORT_ID}.jpg"
-    echo "→ stillzoom genre + no --image — auto-fetching Pexels still"
-    if bash "$REPO_ROOT/scripts/music-video-fetch-still.sh" "$FIRST_KW" "$STILL_IMG"; then
-      echo "  using $STILL_IMG (query: '$FIRST_KW')"
+    if [[ "$USE_AI_STILL" == 1 ]]; then
+      # Pollinations.ai — richer prompt combining genre aesthetic + keyword
+      AI_PROMPT="${FIRST_KW}, ${GENRE} aesthetic, cinematic, atmospheric, no text, no people"
+      echo "→ stillzoom genre + --ai-still — generating via Pollinations.ai"
+      if bash "$REPO_ROOT/scripts/music-video-fetch-ai-still.sh" "$AI_PROMPT" "$STILL_IMG"; then
+        echo "  using $STILL_IMG (AI-generated)"
+      else
+        echo "⚠️  AI still fetch failed — falling back to Pexels" >&2
+        bash "$REPO_ROOT/scripts/music-video-fetch-still.sh" "$FIRST_KW" "$STILL_IMG"
+      fi
     else
-      echo "⚠️  still fetch failed — operator must pass --image=PATH" >&2
-      exit 1
+      echo "→ stillzoom genre + no --image — auto-fetching Pexels still"
+      if bash "$REPO_ROOT/scripts/music-video-fetch-still.sh" "$FIRST_KW" "$STILL_IMG"; then
+        echo "  using $STILL_IMG (query: '$FIRST_KW')"
+      else
+        echo "⚠️  still fetch failed — operator must pass --image=PATH" >&2
+        exit 1
+      fi
     fi
   fi
 fi
