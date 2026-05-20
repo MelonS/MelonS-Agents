@@ -38,6 +38,7 @@ OUTPUT_ROOT=""           # falls back to filter file's output.records_root
 SEED=""                  # primary UX entry — short keyword expanded via role-synonyms.yaml
 DRY_RUN=0
 QUIET=0
+FIT_SCORE=0              # --fit-score flag (Phase 2.3) — invokes fit-score.sh per posting
 
 usage() {
   cat <<EOF
@@ -67,6 +68,10 @@ Options:
   --dry-run              Run the full pipeline but write outputs under a /tmp scratch
                          directory instead of the operator's records/.
   --quiet                Suppress progress logging on stderr.
+  --fit-score            Invoke scripts/fit-score.sh per matched posting (Phase 2.3).
+                         Adds a `fit` object to each posting in index.json + a fit
+                         line to the rendered digest.  Defaults to scaffold mode
+                         (no Claude call); set JH_FIT_SCORE_LIVE=1 for live scoring.
   --list-sources         Print available source plugins + their live-mode flag status.
   --help                 Show this message.
 
@@ -126,6 +131,7 @@ while [[ $# -gt 0 ]]; do
     --output-root)    OUTPUT_ROOT="${2:-}"; shift 2 ;;
     --dry-run)        DRY_RUN=1; shift ;;
     --quiet)          QUIET=1; shift ;;
+    --fit-score)      FIT_SCORE=1; shift ;;
     --list-sources)
       list_sources
       exit 0
@@ -350,6 +356,46 @@ deduped=$(echo "$filtered_postings" | jq '
     else .seen[$p.url] = true | .out += [$p] end
   ) | .out
 ')
+
+# ----- fit-score per posting (Phase 2.3, opt-in via --fit-score) -----
+if [[ "$FIT_SCORE" == "1" ]]; then
+  fit_live="${JH_FIT_SCORE_LIVE:-0}"
+  if [[ "$fit_live" == "1" ]]; then
+    log "fit-score: live mode (per-posting Claude call)"
+  else
+    log "fit-score: scaffold mode (no Claude call; preview only)"
+  fi
+
+  posting_count=$(echo "$deduped" | jq 'length')
+  scored=$(echo "$deduped" | jq -c '.[]' | (
+    new_array='[]'
+    while IFS= read -r posting; do
+      # Capture stdout + rc separately.  Don't use `|| true` here —
+      # that would mask the non-zero exit from scaffold mode (10) or
+      # error (2/3), and we need to dispatch on rc.
+      fit_out=$(echo "$posting" | "$SCRIPT_DIR/fit-score.sh" 2>/dev/null) && fit_rc=0 || fit_rc=$?
+      if [[ "$fit_live" == "1" && "$fit_rc" == "0" ]]; then
+        new_array=$(jq -n --argjson acc "$new_array" --argjson p "$posting" --argjson f "$fit_out" \
+          '$acc + [($p + {fit: $f})]')
+      elif [[ "$fit_live" != "1" && "$fit_rc" == "10" ]]; then
+        # Scaffold mode: attach a minimal fit stub indicating
+        # scaffold-mode-was-on so the digest can render a
+        # "scoring scaffolded, flip JH_FIT_SCORE_LIVE=1" hint.
+        new_array=$(jq -n --argjson acc "$new_array" --argjson p "$posting" \
+          '$acc + [($p + {fit: {scaffold_mode: true}})]')
+      else
+        # Either live call failed (rc=3) or unexpected; carry posting
+        # through without fit data and log.
+        echo "[job-hunt] fit-score returned $fit_rc for posting $(echo "$posting" | jq -r '.url')" >&2
+        new_array=$(jq -n --argjson acc "$new_array" --argjson p "$posting" \
+          '$acc + [$p]')
+      fi
+    done
+    echo "$new_array"
+  ))
+  deduped="$scored"
+  log "fit-score: completed for $posting_count posting(s)"
+fi
 
 # ----- diff against most recent prior digest -----
 prior_index=""

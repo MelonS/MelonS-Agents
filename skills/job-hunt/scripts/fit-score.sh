@@ -87,10 +87,21 @@ if ! echo "$posting_json" | jq -e '.title and .company and .url' >/dev/null 2>&1
 fi
 
 # ----- load operator profile -----
+# In scaffold mode (no live Claude call) the example file is an
+# acceptable fallback so the preview is meaningful out of the box.
+# In live mode the real operator-profile.md is required — scoring
+# against the example template's placeholder strengths is misleading.
 if [[ ! -f "$PROFILE_PATH" ]]; then
-  echo "[fit-score] operator profile not found: $PROFILE_PATH" >&2
-  echo "[fit-score] copy skills/job-hunt/config/operator-profile.example.md → operator-profile.md and edit." >&2
-  exit 2
+  example_path="$SKILL_DIR/config/operator-profile.example.md"
+  if [[ "${JH_FIT_SCORE_LIVE:-0}" != "1" && -f "$example_path" ]]; then
+    echo "[fit-score] operator profile not found at $PROFILE_PATH" >&2
+    echo "[fit-score] scaffold mode — falling back to $example_path" >&2
+    PROFILE_PATH="$example_path"
+  else
+    echo "[fit-score] operator profile not found: $PROFILE_PATH" >&2
+    echo "[fit-score] copy skills/job-hunt/config/operator-profile.example.md → operator-profile.md and edit." >&2
+    exit 2
+  fi
 fi
 profile_text=$(cat "$PROFILE_PATH")
 

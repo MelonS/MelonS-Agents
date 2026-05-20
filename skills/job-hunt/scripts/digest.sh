@@ -101,6 +101,20 @@ echo "$data" | jq -r '
     "- **\(.title)** · \(.company)",
     "  - 지역: \(.region) · 게시: \(.posted_at)",
     "  - 요약: \(.summary // "-")",
+    # Fit-score line — present iff --fit-score was set.
+    # - Live mode: shows score + rationale on one line, with
+    #   strengths/gaps on a follow-up line.
+    # - Scaffold mode: shows a one-line "scaffold" hint so the
+    #   operator sees that --fit-score was acknowledged but no
+    #   Claude call was issued.
+    (if .fit == null then empty
+     elif .fit.scaffold_mode then "  - Fit: _scaffold mode — set `JH_FIT_SCORE_LIVE=1` for live scoring_"
+     elif .fit.score then
+       "  - **Fit: \(.fit.score)/100** — \(.fit.rationale // "")"
+     else empty end),
+    (if (.fit // {}) | (.score and (.strengths or .gaps)) then
+       "    - strengths: \((.fit.strengths // []) | join(", "))" + "  ·  gaps: \((.fit.gaps // []) | join(", "))"
+     else empty end),
     # Suppress the apply link when it equals the posting URL —
     # several KR sources route both to the same authenticated
     # apply flow.  Showing two identical links is noise.
