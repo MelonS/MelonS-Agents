@@ -105,6 +105,13 @@ if [[ ! -f "$PROFILE_PATH" ]]; then
 fi
 profile_text=$(cat "$PROFILE_PATH")
 
+# ----- load company-tier table (optional input to hire_prob) -----
+TIERS_PATH="$SKILL_DIR/data/company-tiers.yaml"
+tier_text=""
+if [[ -f "$TIERS_PATH" ]]; then
+  tier_text=$(cat "$TIERS_PATH")
+fi
+
 # ----- compose prompt -----
 posting_title=$(echo "$posting_json" | jq -r '.title')
 posting_company=$(echo "$posting_json" | jq -r '.company')
@@ -159,6 +166,9 @@ summary: __POSTING_SUMMARY__
 OPERATOR PROFILE
 __PROFILE_TEXT__
 
+COMPANY-TIER TABLE (optional anchor for hire_prob — empty if not present)
+__TIER_TEXT__
+
 Score role_fit based on:
 - does the posting actual work match the profile role target?
 - do the operator listed strengths cover the posting required +
@@ -189,6 +199,7 @@ user_prompt=${user_prompt//__POSTING_REGION__/$posting_region}
 user_prompt=${user_prompt//__POSTING_URL__/$posting_url}
 user_prompt=${user_prompt//__POSTING_SUMMARY__/$posting_summary}
 user_prompt=${user_prompt//__PROFILE_TEXT__/$profile_text}
+user_prompt=${user_prompt//__TIER_TEXT__/$tier_text}
 
 # ----- scaffold vs live -----
 if [[ "${JH_FIT_SCORE_LIVE:-0}" != "1" ]]; then

@@ -165,3 +165,8 @@ skills/job-hunt/config/operator-profile.md
 # so guard the publish/ subdir explicitly.
 outputs/publish/*.md
 outputs/publish/upload-meta/
+# Future batches: v2 / v3 / etc.  v2 was committed intentionally by
+# the parallel music-video session on 2026-05-21 (commit a182380);
+# any further-version metadata-batch directories should NOT be
+# committed by default.
+outputs/publish/upload-meta-v[3-9]*/

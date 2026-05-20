@@ -1,0 +1,87 @@
+# Company-tier table — input to fit-score's hire_prob dimension.
+#
+# Maps each known company (lowercased slug as it appears in ATS
+# board tokens) to a tier label that the fit-score Claude call
+# uses as one anchor for "applicant funnel + hire-bar" estimation.
+#
+# The operator's `operator-profile.md` records personal hire-bar
+# comfort across these tiers (high / medium / low / very-low) —
+# the Claude call combines this table with the operator's
+# self-assessment to produce a posting-level hire_prob (0-100).
+#
+# Why this lives in-repo (vs operator-local):
+#   - The classification is generic + observable (publicly-known
+#     funding stage, headcount, applicant traffic) — no operator
+#     specifics.
+#   - Sharing the calibration table benefits other operators using
+#     the skill; operator-profile.md remains the personal layer.
+#
+# Maintenance: snapshot 2026-05-21.  Move companies between tiers
+# when funding round / acquisition / WARN notice shifts them.
+#
+# Tiers (descending hire-bar = ascending hire_prob):
+#   foundation_lab     — frontier-AI labs, applicant funnel ~100k/yr/role
+#   unicorn_global     — late-stage / public, >$10B valuation, global hiring
+#   growth_global      — series C-D, $1B-$10B, global hiring
+#   kr_domestic_large  — KR-domestic, recognizable name, 1000+ headcount
+#   kr_domestic_mid    — KR-domestic, growth-stage, 100-1000 headcount
+#   early_global       — series A-B or pre-IPO, <$1B
+#   other              — unclassified; fit-score treats as "growth" tier
+
+foundation_lab:
+  - anthropic
+  - openai
+  - cohere
+  - perplexity
+  - cursor
+  - elevenlabs
+  - suno
+  - pika
+  - poolside
+  - harvey
+  - sierra
+  - lambda
+  - writer
+  - langchain
+  - xai
+
+unicorn_global:
+  - stripe
+  - airbnb
+  - figma
+  - databricks
+  - notion
+  - linear
+  - ramp
+  - mongodb
+  - datadog
+  - cloudflare
+  - elastic
+  - gitlab
+  - reddit
+  - discord
+  - pinterest
+  - dropbox
+  - lyft
+  - robinhood
+  - instacart
+  - spotify
+  - palantir
+
+growth_global:
+  - scaleai
+  - block
+  - twilio
+  - asana
+  - squarespace
+  - airtable
+  - assemblyai
+  - angellist
+
+kr_domestic_large:
+  - coupang
+  - krafton
+
+kr_domestic_mid:
+  - daangn
+  - sendbird
