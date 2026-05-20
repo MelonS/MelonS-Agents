@@ -299,14 +299,20 @@ the plugin to map current field names.
 
 ## Privacy / data handling
 
-- `config/filters.yaml` carrying personally-revealing context
-  (specific company exclusion lists, name-based filters, etc.) is
-  fine to keep local-only: add it to `.gitignore` or use
-  `config/filters.local.yaml` and `--filters=<path>`.
-- `config/filters.example.yaml` is committed in-repo as a documented
-  starting point; it must not contain operator-specific information.
+- `config/filters.yaml` is **gitignored by default** (see the
+  repo `.gitignore`).  Specific 직군 / 지역 / exclusion lists
+  reveal an operator's personal job target and don't belong in
+  committed files (per `[[repo-as-credibility-signal]]` memory).
+  Operators who *want* to commit a generic, non-personal filter
+  (e.g. a domain starter-template to share) can `git add -f` it
+  explicitly.
+- `config/filters.example.yaml` is committed in-repo as the
+  documented generic starting point — categories like "백엔드
+  개발자" / "AI 엔지니어" are deliberately broad and contain no
+  operator specifics.
 - Output digests under `records/jobs/<date>/` are gitignored (the
-  repo's `records/` convention).
+  repo's `records/` convention).  All raw fetched JSON + rendered
+  markdown stays local.
 - No source credentials are stored in the skill.  Each plugin reads
   its key from environment, which the operator sets via `.env`
   (gitignored) or shell-export.

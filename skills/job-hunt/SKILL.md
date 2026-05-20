@@ -154,10 +154,19 @@ change needed.  PRs welcome.
 
 ## Privacy / data handling
 
-- Operator filter file (`config/filters.yaml`) **is** committed
-  unless it contains personally identifying job-seeker context.
-  An example file ships; the real one is per-machine.
+- Operator filter file (`config/filters.yaml`) is **gitignored
+  by default** (see `.gitignore`).  Per [[repo-as-credibility-
+  signal]] memory rule, specific 직군 / 지역 / exclusion lists
+  reveal a job-seeker's personal target and don't belong in
+  committed files.  Operators who *want* to commit a generic,
+  non-personally-identifying filter (e.g. to share a domain
+  starter-template) can `git add -f` it explicitly.
+- `config/filters.example.yaml` is committed as the documented
+  generic starting point — categories like "백엔드 개발자" /
+  "AI 엔지니어" are deliberately broad and contain no operator
+  specifics.
 - Output digests under `records/jobs/` are gitignored (the repo's
-  `records/` convention).
+  `records/` convention).  All raw fetched JSON + rendered
+  markdown stays local.
 - No source credentials are stored in this skill — each source
-  plugin reads its key from `.env` if needed.
+  plugin reads its key from `.env` (gitignored) if needed.

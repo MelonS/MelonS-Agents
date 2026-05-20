@@ -140,3 +140,11 @@ build/
 scripts/com.melons.agents.*.plist
 .claude/settings.json
 .claude/skills
+
+# Per-operator job-hunt filter — contains personal job-seeker context
+# (specific 직군, 지역, exclusion lists, etc.).  Per
+# [[repo-as-credibility-signal]] memory rule, employment-angle
+# specifics do not belong in committed files.  filters.example.yaml
+# ships as the generic template; operators copy to filters.yaml and
+# edit locally.
+skills/job-hunt/config/filters.yaml

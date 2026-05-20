@@ -277,14 +277,18 @@ upstream API surface가 바뀐 것.  해당 소스의 운영자 검증 curl 단�
 
 ## 프라이버시 / 데이터 처리
 
-- 운영자 개인 컨텍스트 (구체 제외 회사 리스트, 이름 기반 필터 등) 담은
-  `config/filters.yaml`은 로컬 전용으로 두어도 OK: `.gitignore`에 추가 또는
-  `config/filters.local.yaml` + `--filters=<path>` 사용.
-- `config/filters.example.yaml`은 in-repo로 커밋되는 문서화 시작점; 운영자
-  특화 정보 포함 금지.
-- `records/jobs/<date>/` 아래 출력 digest는 gitignored (레포의 `records/` 규약).
-- 스킬에 소스 자격증명 저장 안 함.  각 플러그인은 운영자가 `.env` (gitignored)
-  또는 shell export로 세팅한 환경에서 키를 읽음.
+- `config/filters.yaml`은 **기본 gitignored** (레포의 `.gitignore` 참고).
+  구체 직군 / 지역 / 제외 리스트는 운영자의 개인 구직 타겟을
+  드러내므로 committed 파일에 두지 않음 (`[[repo-as-credibility-signal]]`
+  메모리 규칙).  일반화된 비개인 필터 (예: 도메인 starter-template
+  공유용)는 `git add -f`로 명시적으로 추가 가능.
+- `config/filters.example.yaml`은 in-repo로 커밋되는 일반 시작점 —
+  "백엔드 개발자" / "AI 엔지니어" 같은 의도적으로 광범위한 카테고리만
+  포함, 운영자 특화 정보 없음.
+- `records/jobs/<date>/` 아래 출력 digest는 gitignored (레포의
+  `records/` 규약).  모든 raw fetch JSON + 렌더된 마크다운은 로컬에 남음.
+- 스킬에 소스 자격증명 저장 안 함.  각 플러그인은 운영자가 `.env`
+  (gitignored) 또는 shell export로 세팅한 환경에서 키를 읽음.
 
 ---
 
