@@ -5,11 +5,11 @@ license: MIT
 compatibility: Requires `bash`, `curl`, `jq`, optional `pup` or `python3` for HTML parsing depending on source.  Per-source authentication varies — see `sources/<name>.sh` headers.  macOS or Linux.  Live scraping not yet implemented in this scaffold — see "Status" section below.
 metadata:
   authors: MelonS-Agents
-  version: "0.0.1-scaffold"
+  version: "0.1.0"
   pipeline-source: scripts/run.sh (this skill is self-contained — no agents/missions/ counterpart)
   spec: agentskills.io
   added: "2026-05-20"
-  status: scaffold-only — no live source implementation yet
+  status: end-to-end functional in mock-fallback mode; live HTTP per-plugin flag-gated
 allowed-tools: Bash(bash:*) Bash(curl:*) Bash(jq:*) Bash(python3:*) Read Write
 ---
 

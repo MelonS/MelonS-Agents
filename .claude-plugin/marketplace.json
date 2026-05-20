@@ -1,0 +1,55 @@
+{
+  "name": "melons-agents-skills",
+  "id": "melons-agents-skills",
+  "owner": {
+    "name": "MelonS"
+  },
+  "metadata": {
+    "description": "Multi-agent system shipping agentskills.io-spec runtime pipelines: music-video shorts production and Korean job-board digest aggregation.  Local-first ($0 runtime), Claude for one creative stage where quality matters, three-layer reactive audit.",
+    "version": "0.3.0",
+    "license": "MIT",
+    "homepage": "https://github.com/MelonS/MelonS-Agents",
+    "site": "https://melons.github.io/MelonS-Agents/"
+  },
+  "plugins": [
+    {
+      "name": "music-video",
+      "source": "skills/music-video",
+      "description": "Generate a 60-second 9:16 vertical music video from an operator-supplied music file plus mood keywords.  Phrase-aware ffmpeg shaders sync vintage visuals to music structure; beat-aligned cuts via aubiotrack, onset-aligned glitch micro-edits via aubioonset, pond-ripple + halation post-shaders.  Music is the sole audio — no narration, no captions.",
+      "version": "1.0.0",
+      "author": {
+        "name": "MelonS-Agents"
+      },
+      "keywords": [
+        "music-video",
+        "shorts",
+        "ffmpeg",
+        "aubio",
+        "video-production",
+        "9-16-vertical",
+        "agentskills"
+      ],
+      "category": "media-production"
+    },
+    {
+      "name": "job-hunt",
+      "source": "skills/job-hunt",
+      "description": "Aggregate job postings from Korean job boards (사람인 / 잡코리아 / 원티드 / 프로그래머스) matched against operator filters (직군 + 지역 + 키워드).  Produces a dated markdown digest plus apply-assist links.  Locale-extensible by design — currently kr only, PRs welcome for other locales.  All four kr-* source plugins ship in mock-fallback mode; live HTTP per-plugin flag-gated.",
+      "version": "0.1.0",
+      "author": {
+        "name": "MelonS-Agents"
+      },
+      "keywords": [
+        "jobs",
+        "korean",
+        "job-board",
+        "digest",
+        "aggregator",
+        "saramin",
+        "wanted",
+        "agentskills"
+      ],
+      "category": "data-aggregation"
+    }
+  ]
+}
