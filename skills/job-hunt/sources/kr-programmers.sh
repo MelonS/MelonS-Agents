@@ -100,6 +100,15 @@ fetch_postings() {
       "url": "https://career.programmers.co.kr/job_positions/MOCK_P_301",
       "summary": "Python FastAPI, PostgreSQL, AI 통합 백엔드. 재택 가능. (mock)",
       "apply_url": "https://career.programmers.co.kr/job_positions/MOCK_P_301/apply"
+    },
+    {
+      "title": "Founding Engineer",
+      "company": "Programmers Mock C",
+      "region": "서울 강남구",
+      "posted_at": "2026-05-19",
+      "url": "https://career.programmers.co.kr/job_positions/MOCK_P_302",
+      "summary": "Early-stage AI 스타트업 첫 엔지니어.  Ship MVPs, iterate to PMF, agent 시스템 빌드 + 운영 전부 owns. (mock)",
+      "apply_url": "https://career.programmers.co.kr/job_positions/MOCK_P_302/apply"
     }
   ]
 }

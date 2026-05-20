@@ -125,6 +125,15 @@ fetch_postings() {
       "url": "https://www.wanted.co.kr/wd/MOCK_W_202",
       "summary": "Unity 클라이언트 + AI 통합. C#/Lua/Python. (mock)",
       "apply_url": "https://www.wanted.co.kr/wd/MOCK_W_202/apply"
+    },
+    {
+      "title": "AI Solutions Engineer",
+      "company": "Wanted Mock D",
+      "region": "서울 강남구",
+      "posted_at": "2026-05-19",
+      "url": "https://www.wanted.co.kr/wd/MOCK_W_203",
+      "summary": "Enterprise customers를 위한 LLM agent 솔루션 빌드 + 통합 + 배포. Forward Deployed engineering 성격. (mock)",
+      "apply_url": "https://www.wanted.co.kr/wd/MOCK_W_203/apply"
     }
   ]
 }

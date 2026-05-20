@@ -107,8 +107,10 @@ if FIVE_PATH=$("$SKILL_DIR/scripts/run.sh" --sources=_mock,kr-wanted,kr-programm
   F_INDEX="$(dirname "$FIVE_PATH")/index.json"
   check "five-source run produced index.json" test -f "$F_INDEX"
   FIVE_TOTAL=$(jq -r '.postings_total' "$F_INDEX" 2>/dev/null || echo 0)
-  # _mock filters to 8 + kr-wanted 3 + kr-programmers 2 + kr-jobkorea 2 + kr-saramin 2 = 17
-  check "five-source aggregated count = 17 (got $FIVE_TOTAL)" test "$FIVE_TOTAL" = "17"
+  # _mock 8 + kr-wanted 4 + kr-programmers 3 + kr-jobkorea 3 + kr-saramin 3 = 21
+  # (each kr-* source gained one Problem Solver-family mock entry in v2.1
+  # follow-up commit to make `--seed "Problem Solver"` show cross-source results.)
+  check "five-source aggregated count = 21 (got $FIVE_TOTAL)" test "$FIVE_TOTAL" = "21"
   SRC_COUNT=$(jq -r '.sources | length' "$F_INDEX" 2>/dev/null || echo 0)
   check "five-source sources list len = 5 (got $SRC_COUNT)" test "$SRC_COUNT" = "5"
 else

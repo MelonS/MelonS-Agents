@@ -66,6 +66,15 @@ fetch_postings() {
       "url": "https://www.jobkorea.co.kr/Recruit/MOCK_JK_401",
       "summary": "Node.js + Python LLM agent layer. (mock)",
       "apply_url": "https://www.jobkorea.co.kr/Recruit/MOCK_JK_401?action=apply"
+    },
+    {
+      "title": "AI Product Manager",
+      "company": "JobKorea Mock C",
+      "region": "서울 강남구",
+      "posted_at": "2026-05-19",
+      "url": "https://www.jobkorea.co.kr/Recruit/MOCK_JK_402",
+      "summary": "AI 제품 기획 + 빌드 hybrid. LLM 통합 제품 발견 → MVP 출시 → PMF iteration. (mock)",
+      "apply_url": "https://www.jobkorea.co.kr/Recruit/MOCK_JK_402?action=apply"
     }
   ]
 }

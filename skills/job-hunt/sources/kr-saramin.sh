@@ -95,6 +95,15 @@ fetch_postings() {
       "url": "https://www.saramin.co.kr/job/MOCK_SR_501",
       "summary": "FastAPI / PostgreSQL.  AI 데이터 파이프라인 운영. (mock)",
       "apply_url": "https://www.saramin.co.kr/job/MOCK_SR_501"
+    },
+    {
+      "title": "문제 해결사 (AI Agent)",
+      "company": "Saramin Mock C",
+      "region": "서울 강남구",
+      "posted_at": "2026-05-20",
+      "url": "https://www.saramin.co.kr/job/MOCK_SR_502",
+      "summary": "쇼핑/이커머스 AI 에이전트 기획+개발+배포까지 직접 담당. PMF 탐색 cycle 주도. (mock)",
+      "apply_url": "https://www.saramin.co.kr/job/MOCK_SR_502"
     }
   ]
 }
