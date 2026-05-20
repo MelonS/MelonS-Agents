@@ -164,3 +164,4 @@ skills/job-hunt/config/operator-profile.md
 # fails the [[no-pii-in-repo]] bar.  outputs/ is loosely structured
 # so guard the publish/ subdir explicitly.
 outputs/publish/*.md
+outputs/publish/upload-meta/
