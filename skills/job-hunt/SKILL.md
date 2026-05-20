@@ -28,15 +28,20 @@ HTTP integration is gated on operator validation per source.
 
 | Component | Status |
 |---|---|
-| Orchestrator (`scripts/run.sh`) | ✅ wired; filter + dedupe + diff + render |
-| Markdown digest renderer (`scripts/digest.sh`) | ✅ working |
+| Orchestrator (`scripts/run.sh`) | ✅ wired; filter + dedupe + diff + render + `--fit-score` integration |
+| Markdown digest renderer (`scripts/digest.sh`) | ✅ working; fit-score line per posting |
 | Apply-assist link derivation (`scripts/apply-assist.sh`) | ✅ working |
-| `sources/_mock.sh` | ✅ deterministic 8-posting fixture |
-| `sources/kr-wanted.sh` | ⚠️ mock-fallback default; live path documented + commented; flip via `JH_WANTED_LIVE=1` + `WANTED_API_KEY` |
-| `sources/kr-programmers.sh` | ⚠️ mock-fallback default; live path documented + commented; flip via `JH_PROGRAMMERS_LIVE=1` |
-| `sources/kr-jobkorea.sh` | ⚠️ mock-fallback default; live HTML-scrape path documented; flip via `JH_JOBKOREA_LIVE=1` |
-| `sources/kr-saramin.sh` | ⚠️ mock-fallback default; live OpenAPI path documented; flip via `JH_SARAMIN_LIVE=1` + `SARAMIN_KEY` |
-| `tests/smoke.sh` | ✅ structural + end-to-end mock test (5 sources) |
+| `config/role-synonyms.yaml` | ✅ Phase 2.1 — 5 families, 50+ synonyms (problem-solver, ai-engineer-ml, agent-engineer, ai-product-manager, backend-engineer) |
+| `config/operator-profile.example.md` | ✅ Phase 2.2 — generic template (operator copies → operator-profile.md, gitignored) |
+| `sources/_mock.sh` | ✅ deterministic 11-posting fixture incl. Problem Solver family |
+| `sources/kr-wanted.sh` | ⚠️ mock-fallback default + 1 Problem Solver entry; live HTTP flip via `JH_WANTED_LIVE=1` + `WANTED_API_KEY` |
+| `sources/kr-programmers.sh` | ⚠️ mock-fallback default + 1 Founding Engineer entry; live flip via `JH_PROGRAMMERS_LIVE=1` |
+| `sources/kr-jobkorea.sh` | ⚠️ mock-fallback default + 1 AI Product Manager entry; live HTML-scrape flip via `JH_JOBKOREA_LIVE=1` |
+| `sources/kr-saramin.sh` | ⚠️ mock-fallback default + 1 문제 해결사 entry; live OpenAPI flip via `JH_SARAMIN_LIVE=1` + `SARAMIN_KEY` |
+| `scripts/fit-score.sh` | ⚠️ Phase 2.3 — scaffold mode default; per-posting Claude call gated on `JH_FIT_SCORE_LIVE=1` |
+| `scripts/cover-letter-draft.sh` | ⚠️ Phase 2.5 — scaffold mode default; gated on `JH_COVER_LETTER_LIVE=1` |
+| `scripts/company-research.sh` | ⚠️ Phase 2.5 — scaffold mode default; gated on `JH_COMPANY_RESEARCH_LIVE=1` |
+| `tests/smoke.sh` + `edge-cases.sh` + `schema-validation.sh` | ✅ 63/63 PASS (32 + 26 + 5) |
 
 The live HTTP path for each `kr-*` plugin is intentionally
 disabled by default because:
