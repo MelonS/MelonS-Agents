@@ -9,44 +9,69 @@
 # JH_ATS_GREENHOUSE_BOARDS / JH_ATS_ASHBY_BOARDS / JH_ATS_LEVER_BOARDS
 # override (comma-separated).
 #
-# Verified 2026-05-21 ~00:30 KST against live endpoints; see
+# Verified 2026-05-21 ~02:30 KST against live endpoints; see
 # docs/research/job-sources-survey-2026-05-21.md Tier-2 table.
+# Job counts noted in parentheses for orientation (snapshot — will
+# drift over time).
 
 greenhouse:
   # Endpoint: https://boards-api.greenhouse.io/v1/boards/<token>/jobs
   # AI / foundation-model labs
-  - anthropic
-  - scaleAI
-  # Big-tech AI/SaaS
-  - stripe
-  - airbnb
-  - cloudflare
-  - datadog
-  - mongodb
-  - elastic
-  - gitlab
-  - figma
-  - dropbox
-  - pinterest
-  - reddit
-  - discord
-  - robinhood
-  - lyft
-  - instacart
+  - anthropic       # 386
+  - xai             # 221
+  - scaleAI         # ~140
+  - assemblyai      # 6
+  # Data / infra
+  - databricks      # 796
+  - datadog         # ~500
+  - mongodb         # ~860
+  - elastic         # ~180
+  - cloudflare      # ~130
+  - block           # 162 — Block Inc (Square parent)
+  - twilio          # 162
+  - gitlab          # ~120
+  # SaaS / collab
+  - stripe          # ~25
+  - asana           # 132
+  - figma           # ~100
+  - airtable        # 22
+  - squarespace     # 29
+  - dropbox         # ~90
+  # Marketplace / consumer
+  - airbnb          # ~180
+  - lyft            # ~95
+  - pinterest       # ~144
+  - reddit          # ~283
+  - discord         # ~62
+  - robinhood       # ~94
+  - instacart       # ~106
 
 ashby:
   # Endpoint: https://api.ashbyhq.com/posting-api/job-board/<slug>
   # AI-native startup ATS — high concentration of frontier AI orgs.
-  - openai
-  - cursor
-  - perplexity
-  - notion
-  - linear
-  - ramp
-  - elevenlabs
-  - pika
+  # Foundation models / closed-source
+  - openai          # 4MB payload (~big)
+  - cohere          # 130
+  - perplexity      # ~470KB
+  # Open-source / OSS-friendly AI
+  - elevenlabs      # 142
+  - suno            # 42
+  - poolside        # 18
+  - pika            # ~51
+  # AI tooling
+  - cursor          # 667KB
+  - notion          # 1.9MB
+  - linear          # 293KB
+  - ramp            # 1.8MB
+  # AI specialist verticals
+  - harvey          # 255 — legal AI
+  - sierra          # 125 — voice/conversational
+  - lambda          # 34 — Lambda Labs (compute)
+  - writer          # 52
+  - langchain       # 97
 
 lever:
   # Endpoint: https://api.lever.co/v0/postings/<slug>?mode=json
-  - spotify
-  - angellist
+  - spotify         # 1.9MB
+  - palantir        # 226
+  - angellist       # 203KB
