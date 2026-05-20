@@ -15,6 +15,9 @@ side-by-side to decide which presets to ship as defaults.
 | `05-arcade-saturation_pulse.mp4` | Arcade | saturation_pulse (sin wave 2 Hz) | house / techno |
 | `06-arcade-kaleidoscope.mp4` | Arcade | kaleidoscope (4-fold mirror) | psychedelic / electronic |
 | `07-linen-ambient-preset.mp4` | Linen (minimal ambient) | stillzoom + halation | **ambient** (proposed default) |
+| `08-linen-canvas-8s.mp4` | Linen (from 07) | Canvas 8s seamless loop @720×1280 | Spotify Canvas variant |
+| `09-arcade-canvas-8s.mp4` | Arcade (from 01) | Canvas 8s seamless loop | Spotify Canvas variant |
+| `10-rain-kinetic-typography.mp4` | Rain lo-fi (uploaded) | 4 phrase overlays (mood text on phrase boundaries) | Mute-autoplay hook |
 
 ## Decision point
 
