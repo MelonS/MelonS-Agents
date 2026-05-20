@@ -1,0 +1,52 @@
+# ATS board curated list — used by sources/global-ats.sh
+#
+# Each ATS exposes a public JSON endpoint per "board" (one per
+# hiring company).  No API key needed; the company's own careers
+# page consumes the same endpoint.
+#
+# Operator copies to ats-boards.yaml (gitignored) and edits to match
+# personal target companies; or env vars
+# JH_ATS_GREENHOUSE_BOARDS / JH_ATS_ASHBY_BOARDS / JH_ATS_LEVER_BOARDS
+# override (comma-separated).
+#
+# Verified 2026-05-21 ~00:30 KST against live endpoints; see
+# docs/research/job-sources-survey-2026-05-21.md Tier-2 table.
+
+greenhouse:
+  # Endpoint: https://boards-api.greenhouse.io/v1/boards/<token>/jobs
+  # AI / foundation-model labs
+  - anthropic
+  - scaleAI
+  # Big-tech AI/SaaS
+  - stripe
+  - airbnb
+  - cloudflare
+  - datadog
+  - mongodb
+  - elastic
+  - gitlab
+  - figma
+  - dropbox
+  - pinterest
+  - reddit
+  - discord
+  - robinhood
+  - lyft
+  - instacart
+
+ashby:
+  # Endpoint: https://api.ashbyhq.com/posting-api/job-board/<slug>
+  # AI-native startup ATS — high concentration of frontier AI orgs.
+  - openai
+  - cursor
+  - perplexity
+  - notion
+  - linear
+  - ramp
+  - elevenlabs
+  - pika
+
+lever:
+  # Endpoint: https://api.lever.co/v0/postings/<slug>?mode=json
+  - spotify
+  - angellist

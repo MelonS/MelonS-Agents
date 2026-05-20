@@ -6,12 +6,13 @@ on stdout.
 
 ## File naming
 
-`<locale>-<board>.sh` — e.g. `kr-wanted.sh`, `kr-saramin.sh`,
-`us-linkedin.sh`.
+`<locale>-<board>.sh` — e.g. `kr-wanted.sh`, `kr-saramin.sh`.
 
-The `<locale>` prefix is mandatory.  Today only `kr-*` plugins
-will ship; future PRs may add other locales without touching the
-orchestrator.
+For aggregator / locale-agnostic plugins use the reserved
+`global-` prefix instead: `global-ats.sh`, `global-remoteok.sh`,
+`global-remotive.sh`, etc.  These do not honor the operator's
+`locale:` field — they ship as part of the kr stack but their
+data is locale-independent (often remote / global).
 
 ## Plugin contract
 
@@ -30,19 +31,30 @@ Each plugin sources a single function `fetch_postings()` that:
 5. Returns exit 0 on success, exit 1 on auth failure (orchestrator
    may continue with other sources), exit 2 on network failure.
 
-## Planned sources (Korean)
+## Live-flag convention
 
-Order is "easiest to implement first":
+Per [[scaffold-pattern]] every plugin defaults to a mock fixture
+and gates the live HTTP path on a `JH_<NAME>_LIVE=1` env flag.
+The orchestrator's `--list-sources` enumerates each plugin's
+flag.  Mock fallback never goes to the network; live mode hits
+the documented endpoint and may incur per-source quota.
 
-| Source | Auth | Anti-bot | API quality |
+## Source roster (2026-05-21)
+
+| Plugin | Status | Live flag | Path |
 |---|---|---|---|
-| `kr-wanted.sh` | API key (`WANTED_API_KEY`) | low | clean JSON API |
-| `kr-programmers.sh` | none / login optional | low | GraphQL; dev-only |
-| `kr-jobkorea.sh` | scrape | medium | HTML parse |
-| `kr-saramin.sh` | scrape | high | HTML + anti-bot |
+| `_mock` | mock-only (test fixture) | none | — |
+| **`global-ats`** | live-ready (Greenhouse / Ashby / Lever ⭐) | `JH_GLOBAL_ATS_LIVE` | Public ATS board APIs, no auth |
+| **`global-remoteok`** | live-ready (RemoteOK ⭐) | `JH_GLOBAL_REMOTEOK_LIVE` | `https://remoteok.com/api` |
+| **`global-remotive`** | live-ready (Remotive ⭐) | `JH_GLOBAL_REMOTIVE_LIVE` | `https://remotive.com/api/remote-jobs` |
+| `kr-wanted` | live-path scaffolded; needs operator validation | `JH_WANTED_LIVE` + `WANTED_API_KEY` | Wanted partner API |
+| `kr-saramin` | live-path scaffolded; needs operator validation | `JH_SARAMIN_LIVE` + `SARAMIN_KEY` | Saramin OpenAPI (`oapi.saramin.co.kr`) |
+| `kr-jobkorea` | **mock-only (permanent)** — robots.txt + 2017 precedent | n/a | See file header |
+| `kr-programmers` | **deprecated stub** — service closed 2025-05-19 | n/a | See file header |
 
-`kr-wanted` ships first when implementation begins.  Saramin lands
-last because anti-bot tuning needs operator-supervised live testing.
+⭐ = added 2026-05-21 from the job-sources survey
+(`docs/research/job-sources-survey-2026-05-21.md`).  Each is fully
+working in live mode with zero auth required.
 
 ## Anti-bot guidance
 
@@ -58,12 +70,16 @@ For sources that require HTML scraping:
 - Cache responses under `records/jobs/<date>/raw/<source>.json`
   so debug runs don't re-hit live endpoints.
 
-## Status
+The recommended posture for *new* sources is to look for an
+official API or RSS feed first — see the survey doc above for
+the legal frame and per-site verdicts.
 
-All entries below are placeholders.  Live implementation begins
-after operator review of the scaffold.
+## Adding a new locale or source plugin
 
-- [ ] `kr-wanted.sh`
-- [ ] `kr-programmers.sh`
-- [ ] `kr-jobkorea.sh`
-- [ ] `kr-saramin.sh`
+1. Create `sources/<locale>-<board>.sh` (or `global-<board>.sh`).
+2. Implement `fetch_postings()` per the contract.
+3. Add a `case` arm in `scripts/run.sh` `list_sources()` for the
+   new plugin's live-flag env var.
+4. Reference the plugin in `config/filters.example.yaml` under
+   `sources:` if it should be enabled by default.
+5. PRs welcome.

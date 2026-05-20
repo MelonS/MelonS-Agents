@@ -100,6 +100,9 @@ list_sources() {
       kr-programmers)  flag_var="JH_PROGRAMMERS_LIVE";    [[ "${JH_PROGRAMMERS_LIVE:-0}" == "1" ]] && mode="LIVE" || mode="mock" ;;
       kr-jobkorea)     flag_var="JH_JOBKOREA_LIVE";       [[ "${JH_JOBKOREA_LIVE:-0}"    == "1" ]] && mode="LIVE" || mode="mock" ;;
       kr-saramin)      flag_var="JH_SARAMIN_LIVE";        [[ "${JH_SARAMIN_LIVE:-0}"     == "1" ]] && mode="LIVE" || mode="mock" ;;
+      global-ats)      flag_var="JH_GLOBAL_ATS_LIVE";       [[ "${JH_GLOBAL_ATS_LIVE:-0}"      == "1" ]] && mode="LIVE" || mode="mock" ;;
+      global-remoteok) flag_var="JH_GLOBAL_REMOTEOK_LIVE";  [[ "${JH_GLOBAL_REMOTEOK_LIVE:-0}" == "1" ]] && mode="LIVE" || mode="mock" ;;
+      global-remotive) flag_var="JH_GLOBAL_REMOTIVE_LIVE";  [[ "${JH_GLOBAL_REMOTIVE_LIVE:-0}" == "1" ]] && mode="LIVE" || mode="mock" ;;
       *)               flag_var="(unknown — check plugin)"; mode="?" ;;
     esac
     printf '%-22s %-12s %s\n' "$name" "$mode" "$flag_var"
@@ -179,6 +182,11 @@ fi
 
 # ----- read filter config -----
 locale=$(yaml_get "$FILTERS_PATH" '.locale')
+# `kr-*` source plugins are the only fully-implemented locale today.
+# `global-*` plugins (ATS aggregators, remote-job APIs, HN Who's Hiring)
+# are locale-agnostic and ship alongside the kr stack — they work
+# regardless of the `locale:` field, which still describes the
+# operator's primary geography.
 [[ "$locale" == "kr" ]] || die "locale '$locale' not implemented — see SKILL.md 'Adding a locale'" 2
 
 # bash 3.2 portable array fill (no `readarray` / `mapfile`).  Must
@@ -318,11 +326,16 @@ for src in "${enabled_sources[@]}"; do
   echo "$raw_json" | jq '.' >"$raw_dir/${src}.json"
   sources_succeeded+=("$src")
 
-  # Accumulate.
-  all_postings_jq_input=$(jq -n \
-    --argjson acc "$all_postings_jq_input" \
-    --argjson raw "$raw_json" \
-    '$acc + ($raw.postings | map(. + {source: $raw.source}))')
+  # Accumulate.  Large source payloads (ATS aggregators can return
+  # 5k+ postings = several MB) exceed the OS argv limit when passed
+  # via --argjson; use --slurpfile to stream from disk instead.
+  acc_tmp=$(mktemp -t jh-acc.XXXXXX) || die "mktemp failed" 2
+  printf '%s' "$all_postings_jq_input" > "$acc_tmp"
+  all_postings_jq_input=$(jq \
+    --slurpfile acc "$acc_tmp" \
+    '. as $f | ($acc[0]) + ($f.postings | map(. + {source: $f.source}))' \
+    "$raw_dir/${src}.json")
+  rm -f "$acc_tmp"
 done
 
 # ----- failure modes -----

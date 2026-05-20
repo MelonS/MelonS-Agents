@@ -107,10 +107,10 @@ if FIVE_PATH=$("$SKILL_DIR/scripts/run.sh" --sources=_mock,kr-wanted,kr-programm
   F_INDEX="$(dirname "$FIVE_PATH")/index.json"
   check "five-source run produced index.json" test -f "$F_INDEX"
   FIVE_TOTAL=$(jq -r '.postings_total' "$F_INDEX" 2>/dev/null || echo 0)
-  # _mock 8 + kr-wanted 4 + kr-programmers 3 + kr-jobkorea 3 + kr-saramin 3 = 21
-  # (each kr-* source gained one Problem Solver-family mock entry in v2.1
-  # follow-up commit to make `--seed "Problem Solver"` show cross-source results.)
-  check "five-source aggregated count = 21 (got $FIVE_TOTAL)" test "$FIVE_TOTAL" = "21"
+  # _mock 8 + kr-wanted 4 + kr-programmers 1 (deprecated stub since 2026-05-21) +
+  # kr-jobkorea 1 (permanent-mock stub since 2026-05-21) + kr-saramin 3 = 17
+  # then dedupe by url within _mock + 1 cross-source url collision = 15.
+  check "five-source aggregated count = 15 (got $FIVE_TOTAL)" test "$FIVE_TOTAL" = "15"
   SRC_COUNT=$(jq -r '.sources | length' "$F_INDEX" 2>/dev/null || echo 0)
   check "five-source sources list len = 5 (got $SRC_COUNT)" test "$SRC_COUNT" = "5"
 else

@@ -34,16 +34,19 @@ HTTP integration is gated on operator validation per source.
 | `config/role-synonyms.yaml` | ✅ Phase 2.1 — 5 families, 50+ synonyms (problem-solver, ai-engineer-ml, agent-engineer, ai-product-manager, backend-engineer) |
 | `config/operator-profile.example.md` | ✅ Phase 2.2 — generic template (operator copies → operator-profile.md, gitignored) |
 | `sources/_mock.sh` | ✅ deterministic 11-posting fixture incl. Problem Solver family |
-| `sources/kr-wanted.sh` | ⚠️ mock-fallback default + 1 Problem Solver entry; live HTTP flip via `JH_WANTED_LIVE=1` + `WANTED_API_KEY` |
-| `sources/kr-programmers.sh` | ⚠️ mock-fallback default + 1 Founding Engineer entry; live flip via `JH_PROGRAMMERS_LIVE=1` |
-| `sources/kr-jobkorea.sh` | ⚠️ mock-fallback default + 1 AI Product Manager entry; live HTML-scrape flip via `JH_JOBKOREA_LIVE=1` |
-| `sources/kr-saramin.sh` | ⚠️ mock-fallback default + 1 문제 해결사 entry; live OpenAPI flip via `JH_SARAMIN_LIVE=1` + `SARAMIN_KEY` |
+| **`sources/global-ats.sh`** | ⭐ **live-ready** — Greenhouse + Ashby + Lever public boards, no auth; 2026-05-21 e2e test pulled 5,015 raw / 169 Problem-Solver-matched postings; flip `JH_GLOBAL_ATS_LIVE=1` |
+| **`sources/global-remoteok.sh`** | ⭐ **live-ready** — `remoteok.com/api`, no auth; flip `JH_GLOBAL_REMOTEOK_LIVE=1` |
+| **`sources/global-remotive.sh`** | ⭐ **live-ready** — `remotive.com/api/remote-jobs`, no auth; flip `JH_GLOBAL_REMOTIVE_LIVE=1` |
+| `sources/kr-wanted.sh` | ⚠️ mock-fallback default + 1 Problem Solver entry; live HTTP flip via `JH_WANTED_LIVE=1` + `WANTED_API_KEY` (operator-validated) |
+| `sources/kr-saramin.sh` | ⚠️ mock-fallback default + 1 문제 해결사 entry; live OpenAPI flip via `JH_SARAMIN_LIVE=1` + `SARAMIN_KEY` (free signup at oapi.saramin.co.kr) |
+| `sources/kr-jobkorea.sh` | ⛔ **permanent mock-only** — robots.txt forbids `/Search/?stext=` (only SSR path); 2017 잡코리아 vs 사람인 precedent applies. See `docs/research/job-sources-survey-2026-05-21.md`. |
+| `sources/kr-programmers.sh` | ⛔ **deprecated stub** — Programmers 채용 service permanently closed 2025-05-19, domain NXDOMAIN |
 | `scripts/fit-score.sh` | ⚠️ Phase 2.3 — scaffold mode default; per-posting Claude call gated on `JH_FIT_SCORE_LIVE=1` |
 | `scripts/cover-letter-draft.sh` | ⚠️ Phase 2.5 — scaffold mode default; gated on `JH_COVER_LETTER_LIVE=1` |
 | `scripts/company-research.sh` | ⚠️ Phase 2.5 — scaffold mode default; gated on `JH_COMPANY_RESEARCH_LIVE=1` |
 | `scripts/interview-prep.sh` | ⚠️ Phase 2.5 — scaffold mode default; gated on `JH_INTERVIEW_PREP_LIVE=1` |
 | `scripts/derive-profile.sh` | ⚠️ Phase 2.4 — scaffold mode default; reads repo and drafts `operator-profile.md`; gated on `JH_DERIVE_PROFILE_LIVE=1` |
-| `tests/smoke.sh` + `edge-cases.sh` + `schema-validation.sh` | ✅ 63/63 PASS (32 + 26 + 5) |
+| `tests/smoke.sh` + `edge-cases.sh` + `schema-validation.sh` | ✅ 66/66 PASS (32 + 26 + 8) |
 
 The live HTTP path for each `kr-*` plugin is intentionally
 disabled by default because:

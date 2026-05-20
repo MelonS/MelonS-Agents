@@ -9,8 +9,8 @@
   "properties": {
     "source": {
       "type": "string",
-      "description": "Plugin name; must match the filename stem (e.g. 'kr-wanted' for sources/kr-wanted.sh).",
-      "pattern": "^(_mock|[a-z]{2}-[a-z][a-z0-9-]*)$"
+      "description": "Plugin name; must match the filename stem (e.g. 'kr-wanted' for sources/kr-wanted.sh).  Accepts '_mock', '<locale>-<board>' (e.g. 'kr-wanted'), or 'global-<board>' (e.g. 'global-ats') for locale-agnostic aggregator plugins.",
+      "pattern": "^(_mock|[a-z]{2}-[a-z][a-z0-9-]*|global-[a-z][a-z0-9-]*)$"
     },
     "fetched_at": {
       "type": "string",

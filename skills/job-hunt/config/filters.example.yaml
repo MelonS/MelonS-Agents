@@ -6,6 +6,9 @@
 
 # Required.  Currently only "kr" is implemented.  Other locales need
 # a matching sources/<locale>-*.sh plugin to be added via PR.
+# Note: `global-*` plugins (ATS / RemoteOK / Remotive / HN) are
+# locale-agnostic and ship enabled alongside the kr stack — their
+# data is global / remote / English-language regardless of this field.
 locale: kr
 
 # 직군 (job category).  String-match against posting category fields.
@@ -38,20 +41,27 @@ keywords:
 # Source plugins to enable.  Each must have a matching file at
 # skills/job-hunt/sources/<name>.sh implementing fetch_postings().
 #
-# Live-mode gating (as of 2026-05-20): each kr-* plugin runs in
-# MOCK-FALLBACK mode by default — set the corresponding env var
-# (e.g. JH_WANTED_LIVE=1 + WANTED_API_KEY=<token>) to switch a
-# plugin to live HTTP.  See sources/<name>.sh comments for the
-# anticipated request/response shape and the operator-validation
-# step required before flipping live.
+# Live-mode gating: every plugin defaults to MOCK-FALLBACK.  Set the
+# corresponding env var (`JH_<NAME>_LIVE=1`) to switch to live HTTP.
+# See `sources/<name>.sh` headers for per-plugin auth / quota
+# expectations.
+#
+# Status legend:
+#   ⭐ live-ready  — flip the env flag and it just works (no key)
+#   🔑 needs key   — operator obtains API key first, then flips flag
+#   ⚠️  scaffolded — live path coded but not operator-validated
+#   ⛔ permanent mock — see plugin header for why
 sources:
-  - kr-wanted        # cleanest API; recommended first source
-  - kr-programmers   # dev-focused; smaller corpus but high signal
-  - kr-jobkorea      # HTML scrape; medium anti-bot
-  - kr-saramin       # OpenAPI partner key; requires SARAMIN_KEY for live
-  # - _mock          # synthetic source; enable temporarily when
-  #                  # validating pipeline changes without burning
-  #                  # real fetches.
+  - global-ats        # ⭐ Greenhouse + Ashby + Lever public boards
+  - global-remoteok   # ⭐ remoteok.com/api
+  - global-remotive   # ⭐ remotive.com/api/remote-jobs
+  - kr-wanted         # 🔑 Wanted partner API (WANTED_API_KEY)
+  - kr-saramin        # 🔑 Saramin OpenAPI (SARAMIN_KEY)
+  - kr-jobkorea       # ⛔ permanent mock — robots.txt + 2017 precedent
+  - kr-programmers    # ⛔ service closed 2025-05-19 — deprecated stub
+  # - _mock           # synthetic test fixture; uncomment when
+  #                   # validating pipeline changes without burning
+  #                   # real fetches.
 
 # Output settings.
 output:
