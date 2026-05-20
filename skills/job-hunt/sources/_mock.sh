@@ -96,6 +96,33 @@ fetch_postings() {
       "url": "https://mock.example.com/jobs/100",
       "summary": "DUPLICATE — same URL as posting 100, should be deduped.",
       "apply_url": "https://mock.example.com/apply/100"
+    },
+    {
+      "title": "Problem Solver (AI Agent)",
+      "company": "MockRebeatLike",
+      "region": "서울 강남구",
+      "posted_at": "2026-05-20",
+      "url": "https://mock.example.com/jobs/107",
+      "summary": "쇼핑 AI Agent 기획+개발+배포까지 직접 담당. PMF 탐색 사이클 주도. Python/FastAPI MVP 빌드.",
+      "apply_url": "https://mock.example.com/apply/107"
+    },
+    {
+      "title": "Forward Deployed Engineer",
+      "company": "MockFrontierAI",
+      "region": "원격",
+      "posted_at": "2026-05-20",
+      "url": "https://mock.example.com/jobs/108",
+      "summary": "Build AI agent solutions for enterprise customers; framing problems → shipping working LLM prototypes within weeks.",
+      "apply_url": "https://mock.example.com/apply/108"
+    },
+    {
+      "title": "Generalist",
+      "company": "MockKRStartup",
+      "region": "서울 마포구",
+      "posted_at": "2026-05-19",
+      "url": "https://mock.example.com/jobs/109",
+      "summary": "PM+Engineer+Data Analyst 하이브리드. Ship MVPs, iterate to PMF. AI 도메인 깊이 우대.",
+      "apply_url": "https://mock.example.com/apply/109"
     }
   ]
 }

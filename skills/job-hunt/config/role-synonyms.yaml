@@ -1,0 +1,158 @@
+# Role family synonym map.
+#
+# Each top-level key is a role family.  Value carries:
+#   canonical:    canonical English name (one phrase)
+#   synonyms:     list of equivalent titles used by different
+#                 companies across regions; matched
+#                 case-insensitively against posting title +
+#                 summary
+#   description:  short one-paragraph explanation of what
+#                 the family is, what distinguishes it from
+#                 adjacent families, and where the canonical
+#                 term comes from when known
+#
+# Maintenance:
+#   - When a new posting is found at a company using a novel
+#     title for the same role, append the title to the matching
+#     family's `synonyms`.
+#   - When two families partially overlap (e.g., a posting
+#     could plausibly fit either), keep both lists tight rather
+#     than blending — the synonym map is for high-precision
+#     expansion, not fuzzy matching.
+#   - Distinct families exist when the role's actual work or
+#     candidate profile differs meaningfully (e.g., Problem
+#     Solver vs ML Engineer share keywords but draw different
+#     candidates).
+#
+# Used by:
+#   - skills/job-hunt/scripts/run.sh --seed <phrase>
+#     The orchestrator matches the seed (case-insensitive
+#     substring) against any synonym in any family; if hit,
+#     it expands the include-keyword set to ALL synonyms of
+#     that family before applying the filter step.
+
+problem-solver:
+  canonical: "Problem Solver"
+  synonyms:
+    # Korean — explicit
+    - "Problem Solver"
+    - "Problem-Solver"
+    - "문제 해결사"
+    # Korean — adjacent role names
+    - "AI Product Manager"
+    - "AI Product Engineer"
+    - "AI 솔루션 엔지니어"
+    - "AI Solutions Engineer"
+    - "AI Solution Engineer"
+    - "AI Solutions Architect"
+    - "AI 통합 엔지니어"
+    - "AI Integration Engineer"
+    - "LLM Application Engineer"
+    - "LLM 애플리케이션 개발자"
+    # Global — startup / B2B builder roles
+    - "Forward Deployed Engineer"
+    - "Forward-Deployed Engineer"
+    - "FDE"
+    - "Applied AI Engineer"
+    - "Solutions Engineer"
+    - "Founding Engineer"
+    - "Product Engineer"
+    - "Growth PM"
+    - "Generalist"
+    - "AI Builder"
+    - "Customer Problem Solver"
+  description: |
+    Cross-functional builder who frames problems, designs solutions,
+    ships MVPs, and iterates to PMF.  Spans PM + Engineer + Data
+    Analyst — the actual work is "discover problem → design solution
+    → build (web/app MVP) → ship → measure → iterate."  Defined as
+    a job title by 레브잇 (Rebeat, the company behind 올웨이즈) in
+    2024-2025; equivalent titles vary by company.  Often AI-native
+    in the agent/LLM-application sense (vs ML research).
+    See also: https://brunch.co.kr/@changsikcho33ug/181
+
+ai-engineer-ml:
+  canonical: "AI/ML Engineer"
+  synonyms:
+    # Korean
+    - "AI 엔지니어"
+    - "머신러닝 엔지니어"
+    - "ML 엔지니어"
+    - "딥러닝 엔지니어"
+    - "데이터 과학자"
+    # Global
+    - "AI Engineer"
+    - "Machine Learning Engineer"
+    - "ML Engineer"
+    - "Deep Learning Engineer"
+    - "Research Scientist"
+    - "Data Scientist"
+    - "MLOps Engineer"
+    - "Computer Vision Engineer"
+    - "NLP Engineer"
+  description: |
+    Traditional ML / data science / research role.  Model training,
+    fine-tuning, evaluation, MLOps.  PhD or strong research
+    background often expected.  Distinct from Problem Solver /
+    Agent Builder families — different candidate profile.  Listed
+    here primarily as an exclusion reference: a Problem Solver
+    candidate filtering job postings would typically EXCLUDE this
+    family.
+
+agent-engineer:
+  canonical: "Agent Engineer"
+  synonyms:
+    # Korean
+    - "에이전트 개발자"
+    - "AI 에이전트 엔지니어"
+    - "에이전트 엔지니어"
+    # Global
+    - "Agent Engineer"
+    - "Agent Builder"
+    - "Agentic AI Engineer"
+    - "Multi-Agent Systems Engineer"
+    - "Agent Developer"
+    - "AI Agent Developer"
+    - "AI Agent Engineer"
+  description: |
+    Builds LLM-driven agent systems (multi-step, tool-using,
+    autonomous).  Closer to Problem Solver than ML Engineer —
+    work is system design + product-shipping, not model training.
+    Overlaps heavily with Problem Solver family; kept distinct
+    because some companies use "Agent Engineer" specifically for
+    a more engineering-focused (less product) variant.
+
+ai-product-manager:
+  canonical: "AI Product Manager"
+  synonyms:
+    # Korean
+    - "AI 프로덕트 매니저"
+    - "생성형 AI 기획자"
+    - "AI 기획자"
+    - "AI Product Lead"
+    # Global
+    - "AI Product Manager"
+    - "AI PM"
+    - "Senior AI Product Manager"
+    - "AI Product Strategist"
+    - "Lead AI Product Manager"
+  description: |
+    PM-leaning role focused on AI products.  Less hands-on building
+    than Problem Solver (which is full-stack PM + Engineer).
+    Distinct enough to be its own family because the candidate
+    profile (PM-first vs builder-first) differs meaningfully.
+
+backend-engineer:
+  canonical: "Backend Engineer"
+  synonyms:
+    - "백엔드 개발자"
+    - "Backend Engineer"
+    - "Server Engineer"
+    - "서버 개발자"
+    - "Backend Developer"
+  description: |
+    Standard backend engineering role.  Listed for completeness;
+    seed expansion is rarely useful here since the term is
+    already broad.  Included so that operators searching this
+    family explicitly land on a known synonym list rather than
+    an empty expansion.

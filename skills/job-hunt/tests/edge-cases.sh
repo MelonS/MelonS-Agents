@@ -127,10 +127,47 @@ rc=$?
 record "empty include/exclude → exit 0" 0 "$rc"
 if [[ -n "$DIGEST" ]]; then
   TOTAL=$(jq -r '.postings_total' "$(dirname "$DIGEST")/index.json" 2>/dev/null || echo 0)
-  # _mock has 8 raw postings, 1 dedupe → 7 should pass when no keyword filter applied.
-  record "empty filter passes 7 postings (8 raw - 1 dedupe)" 7 "$TOTAL"
+  # _mock has 11 raw postings, 1 dedupe → 10 should pass when no
+  # keyword filter applied.  (11 raw = 8 original + 3 new Problem
+  # Solver family entries added in v2 seed-expansion work.)
+  record "empty filter passes 10 postings (11 raw - 1 dedupe)" 10 "$TOTAL"
 fi
 rm -f "$tmp_filters"
+
+# ----- 6b. Seed expansion (v2 primary UX) -----
+# `--seed "Problem Solver"` should match the problem-solver family
+# in config/role-synonyms.yaml and expand to ~24 include keywords.
+# Against the _mock fixture, 3 of the 11 entries should match
+# (the Problem Solver, Forward Deployed Engineer, and Generalist
+# additions seeded specifically for this path).
+DIGEST=$("$RUN" --seed "Problem Solver" --sources=_mock --dry-run --quiet 2>/dev/null)
+rc=$?
+record "--seed 'Problem Solver' → exit 0" 0 "$rc"
+if [[ -n "$DIGEST" ]]; then
+  TOTAL=$(jq -r '.postings_total' "$(dirname "$DIGEST")/index.json" 2>/dev/null || echo 0)
+  record "--seed matches 3 mock Problem-Solver family entries" 3 "$TOTAL"
+fi
+
+# Alias inside the same family — `FDE` should match identically.
+DIGEST=$("$RUN" --seed "FDE" --sources=_mock --dry-run --quiet 2>/dev/null)
+rc=$?
+record "--seed 'FDE' (alias) → exit 0" 0 "$rc"
+if [[ -n "$DIGEST" ]]; then
+  TOTAL=$(jq -r '.postings_total' "$(dirname "$DIGEST")/index.json" 2>/dev/null || echo 0)
+  record "--seed 'FDE' yields same 3 matches" 3 "$TOTAL"
+fi
+
+# Unknown seed → exit 2 with clear error.
+output=$("$RUN" --seed "definitely-not-a-real-role" --sources=_mock --dry-run --quiet 2>&1 >/dev/null)
+rc=$?
+record "--seed unknown → exit 2" 2 "$rc"
+if echo "$output" | grep -q "did not match any role family"; then
+  note "✓ unknown-seed stderr is actionable"
+  PASS=$((PASS+1))
+else
+  note "✗ unknown-seed stderr missing actionable text"
+  FAIL=$((FAIL+1))
+fi
 
 # ----- 7. Missing keywords section entirely -----
 tmp_filters=$(mktemp)

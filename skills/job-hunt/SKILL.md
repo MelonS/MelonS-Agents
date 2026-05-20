@@ -1,6 +1,6 @@
 ---
 name: job-hunt
-description: Aggregate job postings from Korean job boards (사람인 / 잡코리아 / 원티드 / 프로그래머스 etc.) matched against operator filters (직군 + 지역 + 키워드), produce a dated markdown digest under `records/jobs/<date>/digest.md`, and surface apply-assist links per posting.  Use when the user wants a daily/on-demand summary of new openings matching their criteria.  Currently `locale: kr` only; the `sources/` directory is plugin-shaped so other locales can be added via PR (`sources/us-linkedin.sh`, etc.) without changing the orchestrator.
+description: Find Korean job postings for a target role with minimal user input — pass a short `--seed` keyword like "Problem Solver" or "Forward Deployed Engineer" and the skill expands it to the full family of equivalent titles used at different companies (FDE / Applied AI Engineer / Generalist / Solutions Engineer / etc.), fetches matching postings from Korean job boards (사람인 / 잡코리아 / 원티드 / 프로그래머스), and produces a dated markdown digest under `records/jobs/<date>/digest.md` with per-posting apply-assist links.  Use when the user knows roughly what role they want but doesn't want to enumerate every alternative title themselves.  Advanced mode (`--filters=<path>`) accepts a hand-edited filters.yaml for full control.  Currently `locale: kr` only; `sources/` directory is plugin-shaped so other locales can be added via PR.
 license: MIT
 compatibility: Requires `bash`, `curl`, `jq`, optional `pup` or `python3` for HTML parsing depending on source.  Per-source authentication varies — see `sources/<name>.sh` headers.  macOS or Linux.  Live scraping not yet implemented in this scaffold — see "Status" section below.
 metadata:
@@ -21,7 +21,9 @@ links per posting.
 
 ## Status (2026-05-20)
 
-End-to-end pipeline **functional in mock-fallback mode**.  Live
+End-to-end pipeline **functional in mock-fallback mode**, with the
+v2 short-keyword UX (`--seed "Problem Solver"` → automatic role
+family expansion via `config/role-synonyms.yaml`) wired in.  Live
 HTTP integration is gated on operator validation per source.
 
 | Component | Status |

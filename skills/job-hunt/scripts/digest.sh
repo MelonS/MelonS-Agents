@@ -47,6 +47,12 @@ postings_total=$(echo "$data" | jq -r '.postings_total')
 postings_new=$(echo "$data" | jq -r '.postings_new // 0')
 sources_list=$(echo "$data" | jq -r '.sources | join(", ")')
 
+# Seed metadata (present iff --seed was used).
+seed_input=$(echo "$data" | jq -r '.seed.input // empty')
+seed_family=$(echo "$data" | jq -r '.seed.family // empty')
+seed_canonical=$(echo "$data" | jq -r '.seed.canonical // empty')
+seed_synonym_count=$(echo "$data" | jq -r '.seed.synonym_count // empty')
+
 # Header.
 cat <<EOF
 # Job-hunt digest — ${generated_at%T*}
@@ -54,6 +60,15 @@ cat <<EOF
 > **Generated**: ${generated_at}
 > **Locale**: \`${locale}\`
 > **Sources**: ${sources_list}
+EOF
+
+if [[ -n "$seed_input" ]]; then
+  cat <<EOF
+> **Seed**: \`${seed_input}\` → role family \`${seed_family}\` ("${seed_canonical}"), ${seed_synonym_count} synonym keywords expanded.
+EOF
+fi
+
+cat <<EOF
 > **Filter**: ${filter_summary}
 > **Total postings**: ${postings_total}${postings_new:+ — **${postings_new} new since last digest**}
 

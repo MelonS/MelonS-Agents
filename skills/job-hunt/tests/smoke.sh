@@ -88,8 +88,11 @@ if DIGEST_PATH=$("$SKILL_DIR/scripts/run.sh" --sources=_mock --dry-run --quiet 2
   check "digest.md has 'All postings' section"     grep -qE '^## All postings' "$DIGEST_PATH"
   check "index.json sibling exists"          test -f "$(dirname "$DIGEST_PATH")/index.json"
   check "raw/_mock.json sibling exists"      test -f "$(dirname "$DIGEST_PATH")/raw/_mock.json"
-  # 5 of 8 mock postings survive include/exclude filter + 1 dedupe.
-  EXPECTED=5
+  # _mock fixture has 11 raw postings (post v2 expansion).  Default
+  # filter (include=Python|AI|LLM|agent, exclude=SI|파견|단순 운영)
+  # drops 3: the Korean-front entry (no include match), the SI/파견
+  # one, and the duplicate URL.  Net: 8 surviving postings.
+  EXPECTED=8
   ACTUAL=$(jq -r '.postings_total' "$(dirname "$DIGEST_PATH")/index.json" 2>/dev/null || echo 0)
   check "filtered+deduped count = $EXPECTED (got $ACTUAL)" test "$ACTUAL" = "$EXPECTED"
 else
@@ -104,8 +107,8 @@ if FIVE_PATH=$("$SKILL_DIR/scripts/run.sh" --sources=_mock,kr-wanted,kr-programm
   F_INDEX="$(dirname "$FIVE_PATH")/index.json"
   check "five-source run produced index.json" test -f "$F_INDEX"
   FIVE_TOTAL=$(jq -r '.postings_total' "$F_INDEX" 2>/dev/null || echo 0)
-  # _mock filters to 5 + kr-wanted 3 + kr-programmers 2 + kr-jobkorea 2 + kr-saramin 2 = 14
-  check "five-source aggregated count = 14 (got $FIVE_TOTAL)" test "$FIVE_TOTAL" = "14"
+  # _mock filters to 8 + kr-wanted 3 + kr-programmers 2 + kr-jobkorea 2 + kr-saramin 2 = 17
+  check "five-source aggregated count = 17 (got $FIVE_TOTAL)" test "$FIVE_TOTAL" = "17"
   SRC_COUNT=$(jq -r '.sources | length' "$F_INDEX" 2>/dev/null || echo 0)
   check "five-source sources list len = 5 (got $SRC_COUNT)" test "$SRC_COUNT" = "5"
 else

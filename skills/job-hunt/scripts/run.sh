@@ -35,6 +35,7 @@ SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 FILTERS_PATH=""
 SOURCES_OVERRIDE=""
 OUTPUT_ROOT=""           # falls back to filter file's output.records_root
+SEED=""                  # primary UX entry — short keyword expanded via role-synonyms.yaml
 DRY_RUN=0
 QUIET=0
 
@@ -42,12 +43,22 @@ usage() {
   cat <<EOF
 job-hunt — Korean job-posting digest
 
-Usage:
+Usage (primary — short keyword, skill expands the rest):
+  scripts/run.sh --seed "Problem Solver"
+  scripts/run.sh --seed "Forward Deployed"
+  scripts/run.sh --seed "AI agent builder"
+
+Usage (advanced — full filters.yaml control):
   scripts/run.sh [--filters=<path>] [--sources=<csv>] [--output-root=<dir>]
                  [--dry-run] [--quiet]
   scripts/run.sh --list-sources
 
 Options:
+  --seed=<phrase>        Short keyword — matched against config/role-synonyms.yaml
+                         to expand into the full set of equivalent titles used by
+                         different companies (e.g. Problem Solver → also FDE,
+                         Applied AI Engineer, AI Product Manager, Generalist, etc.).
+                         When set, OVERRIDES filters.yaml include keywords.
   --filters=<path>       Path to filters.yaml (default: skills/job-hunt/config/filters.yaml,
                          fallback to filters.example.yaml).
   --sources=<csv>        Override the enabled sources list, e.g. --sources=_mock,kr-wanted.
@@ -102,23 +113,26 @@ die() {
 }
 
 # ----- arg parsing -----
-for arg in "$@"; do
-  case "$arg" in
-    --filters=*)      FILTERS_PATH="${arg#--filters=}" ;;
-    --sources=*)      SOURCES_OVERRIDE="${arg#--sources=}" ;;
-    --output-root=*)  OUTPUT_ROOT="${arg#--output-root=}" ;;
-    --dry-run)        DRY_RUN=1 ;;
-    --quiet)          QUIET=1 ;;
+# Arg parsing accepts both `--key=value` and `--key value` forms.
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --seed=*)         SEED="${1#--seed=}"; shift ;;
+    --seed)           SEED="${2:-}"; shift 2 ;;
+    --filters=*)      FILTERS_PATH="${1#--filters=}"; shift ;;
+    --filters)        FILTERS_PATH="${2:-}"; shift 2 ;;
+    --sources=*)      SOURCES_OVERRIDE="${1#--sources=}"; shift ;;
+    --sources)        SOURCES_OVERRIDE="${2:-}"; shift 2 ;;
+    --output-root=*)  OUTPUT_ROOT="${1#--output-root=}"; shift ;;
+    --output-root)    OUTPUT_ROOT="${2:-}"; shift 2 ;;
+    --dry-run)        DRY_RUN=1; shift ;;
+    --quiet)          QUIET=1; shift ;;
     --list-sources)
-      # Defer execution until after SCRIPT_DIR / SKILL_DIR are set
-      # at the top of the file (they already are).  list_sources()
-      # is defined just above and works from here.
       list_sources
       exit 0
       ;;
     --help|-h)        usage; exit 0 ;;
     *)
-      die "unknown arg: $arg" 2
+      die "unknown arg: $1" 2
       ;;
   esac
 done
@@ -186,6 +200,51 @@ regions=();    slurp_into regions    < <(yaml_get "$FILTERS_PATH" '.regions[]')
 categories=(); slurp_into categories < <(yaml_get "$FILTERS_PATH" '.job_categories[]')
 kw_include=(); slurp_into kw_include < <(yaml_get "$FILTERS_PATH" '.keywords.include[]' 2>/dev/null || true)
 kw_exclude=(); slurp_into kw_exclude < <(yaml_get "$FILTERS_PATH" '.keywords.exclude[]' 2>/dev/null || true)
+
+# ----- seed expansion (Phase 2.1) -----
+# If --seed was given, look up the seed in role-synonyms.yaml.
+# When a family contains the seed (case-insensitive substring on
+# any synonym), expand the include keywords to that family's
+# full synonym list, REPLACING any kw_include from filters.yaml.
+# Rationale: --seed is the primary v2 UX (short keyword in,
+# skill expands the rest); falling back to a hand-edited filter
+# is the advanced path.
+SYNONYMS_PATH="$SKILL_DIR/config/role-synonyms.yaml"
+SEED_FAMILY=""
+SEED_FAMILY_CANONICAL=""
+
+if [[ -n "$SEED" ]]; then
+  if [[ ! -f "$SYNONYMS_PATH" ]]; then
+    die "--seed used but role-synonyms.yaml not found at $SYNONYMS_PATH" 2
+  fi
+  # Build a lowercase-needle.
+  seed_lc=$(echo "$SEED" | tr '[:upper:]' '[:lower:]')
+  # Enumerate family keys.
+  family_keys=()
+  slurp_into family_keys < <(yaml_get "$SYNONYMS_PATH" 'keys | .[]' 2>/dev/null)
+  matched_family=""
+  for fam in "${family_keys[@]:-}"; do
+    fam_synonyms=()
+    slurp_into fam_synonyms < <(yaml_get "$SYNONYMS_PATH" ".\"$fam\".synonyms[]" 2>/dev/null || true)
+    for syn in "${fam_synonyms[@]:-}"; do
+      syn_lc=$(echo "$syn" | tr '[:upper:]' '[:lower:]')
+      if [[ "$syn_lc" == *"$seed_lc"* || "$seed_lc" == *"$syn_lc"* ]]; then
+        matched_family="$fam"
+        break 2
+      fi
+    done
+  done
+  if [[ -z "$matched_family" ]]; then
+    die "seed '$SEED' did not match any role family in $SYNONYMS_PATH" 2
+  fi
+  SEED_FAMILY="$matched_family"
+  SEED_FAMILY_CANONICAL=$(yaml_get "$SYNONYMS_PATH" ".\"$matched_family\".canonical" 2>/dev/null)
+  # Override kw_include with the family's full synonym set.
+  kw_include=()
+  slurp_into kw_include < <(yaml_get "$SYNONYMS_PATH" ".\"$matched_family\".synonyms[]" 2>/dev/null)
+  log "seed '$SEED' → family '$matched_family' (canonical: $SEED_FAMILY_CANONICAL)"
+  log "expanded to ${#kw_include[@]} include keywords"
+fi
 
 records_root=$(yaml_get "$FILTERS_PATH" '.output.records_root // "./records/jobs"')
 if [[ -n "$OUTPUT_ROOT" ]]; then
@@ -329,7 +388,11 @@ index_json=$(jq -n \
   --argjson new "$postings_new" \
   --argjson bysrc "$by_source_json" \
   --argjson newurls "$new_urls_json" \
-  --argjson postings "$deduped" '
+  --argjson postings "$deduped" \
+  --arg seed_input "$SEED" \
+  --arg seed_family "$SEED_FAMILY" \
+  --arg seed_canonical "$SEED_FAMILY_CANONICAL" \
+  --argjson seed_synonym_count "${#kw_include[@]}" '
   {
     generated_at: $gen,
     locale: $loc,
@@ -339,7 +402,13 @@ index_json=$(jq -n \
     postings_new: $new,
     by_source: $bysrc,
     new_urls: $newurls,
-    postings: $postings
+    postings: $postings,
+    seed: (if $seed_input != "" then {
+      input: $seed_input,
+      family: $seed_family,
+      canonical: $seed_canonical,
+      synonym_count: $seed_synonym_count
+    } else null end)
   }')
 
 # Persist index for next-run diffing.
