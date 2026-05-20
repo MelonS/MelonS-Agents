@@ -149,8 +149,44 @@ Stillzoom alternate path (ambient/classical/dreamcore):
 music + image  →  music-video-stillzoom.sh  →  short.mp4  →  shader  →  final
 ```
 
-## Open work (continuing autonomously)
+## ✅ v2 regen of 5/20 batch — complete
 
-Phase 8+: live regen of Linen ambient case as before/after demo,
-optional structure-aware cuts via librosa (if time permits), README
-update. Will commit incrementally.
+All 5 ToddStudio tracks re-rendered with correct genre presets, now
+sitting at `outputs/publish/2026-05-21-regen-v2/` (gitignored mp4s):
+
+| File | Genre | Preset shader | Size |
+|---|---|---|---|
+| `01-rain-lofi-v2.mp4`        | lofi_hiphop | halation        | 46 MB |
+| `02-linen-minimal-v2.mp4`    | ambient     | stillzoom + halation | 10 MB |
+| `03-arcade-synthwave-v2.mp4` | synthwave   | scanline        | 22 MB |
+| `04-coastline-summer-v2.mp4` | house       | saturation_pulse | 31 MB |
+| `05-noir-detective-v2.mp4`   | jazz        | halation        | 34 MB |
+
+All 1080×1920, 60.0s, metadata verified.
+
+To replace the 5/20 originals on ToddStudio (decision is yours):
+- Watch each v2 side-by-side against the original (the YT URLs from
+  yesterday's batch).
+- If acceptable: I can run `yt-batch-upload.sh` against a new v2
+  upload-meta directory (need to mirror the metadata first — say the
+  word).
+
+## Two bugs caught & fixed during the run
+
+Both were latent defects that previous (manual) usage never exercised.
+
+1. **`MUSIC_VIDEO_VIGNETTE_ANGLE=off` wasn't disabling vignette** —
+   run.sh used `${VAR:-PI/5}` which falls back on empty.  Patched
+   `none`/`off`/empty all → disabled.  Without this, synthwave preset
+   still had a vignette baked in.  (commit `de08a1b`)
+
+2. **`yq v4 contains()` does substring matching** — "jazz" falsely
+   matched drone's aliases `[doom_jazz]`, so Noir got resolved to
+   drone preset (stillzoom + no image → fail).  Patched to explicit
+   `map(. == $g) | any`.  (commit `7425689`)
+
+## Open work (continuing autonomously toward 10 AM)
+
+Phase 9+: mood-image auto-fetcher (Pexels photo for stillzoom genres
+zero-config), audio-reactive grading scaffold, README update if
+warranted, chain auto.sh → yt-batch-upload.sh.
