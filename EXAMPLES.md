@@ -194,8 +194,55 @@ curl step.
 ### Full test suite
 
 ```bash
-skills/job-hunt/tests/run-all.sh        # 57 checks total
-# smoke: 32 / edge-cases: 20 / schema-validation: 5
+skills/job-hunt/tests/run-all.sh        # 63 checks total
+# smoke: 32 / edge-cases: 26 / schema-validation: 5
+```
+
+### v2 intelligent enrichment (scaffold mode by default)
+
+Each utility module reads a posting + operator profile and emits
+a tailored output.  All four ship in scaffold mode (no Claude
+call) so the prompt + context can be reviewed before activating.
+Set the matching `JH_*_LIVE=1` env var to issue the live call.
+
+```bash
+# Per-posting fit scoring, integrated into the orchestrator:
+skills/job-hunt/scripts/run.sh --seed "Problem Solver" --fit-score
+#   scaffold: each posting in digest shows "Fit: _scaffold mode_"
+#   live (with JH_FIT_SCORE_LIVE=1 + operator-profile.md):
+#     each posting shows "Fit: 73/100 — rationale" + strengths · gaps
+
+# Standalone per-posting cover-letter draft:
+echo '<posting-json>' | skills/job-hunt/scripts/cover-letter-draft.sh
+#   live: JH_COVER_LETTER_LIVE=1, optional JH_COVER_TONE=formal|neutral|casual
+#   output: 200-300 word markdown letter, evidence-first, no stock phrases
+
+# Company brief:
+skills/job-hunt/scripts/company-research.sh "레브잇"
+skills/job-hunt/scripts/company-research.sh --posting=path/to/posting.json "Hackle"
+#   live: JH_COMPANY_RESEARCH_LIVE=1
+#   output: One-liner / Product / Team / Recent signals / Eng-culture /
+#           Risk factors / Verification-recommended sections
+
+# Interview prep:
+echo '<posting-json>' | skills/job-hunt/scripts/interview-prep.sh
+#   live: JH_INTERVIEW_PREP_LIVE=1, optional JH_PREP_STAGE=phone-screen|tech|onsite
+#   output: Likely questions / Talking points / Gap mitigation /
+#           Questions to ask / Day-of checklist
+
+# Pipe a digest's postings through fit-score → enrich entire digest:
+jq -c '.postings[]' records/jobs/<date>/index.json | while read posting; do
+  echo "$posting" | JH_FIT_SCORE_LIVE=1 skills/job-hunt/scripts/fit-score.sh
+done > scored.jsonl
+```
+
+Setup for v2 utilities (one-time):
+
+```bash
+cp skills/job-hunt/config/operator-profile.example.md \
+   skills/job-hunt/config/operator-profile.md
+$EDITOR skills/job-hunt/config/operator-profile.md
+# operator-profile.md is gitignored (per-machine, personal context)
 ```
 
 ---
