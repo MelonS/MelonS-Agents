@@ -124,80 +124,109 @@ to the appropriate branch on completion.
   with bullets explaining *why*.  Group changes by concern; don't
   bundle unrelated edits.
 
-**Branch strategy (codified 2026-05-18 ~21:30 KST after operator
-direction "브랜치 전략 너의 추천대로 갈게")**:
+**Branch strategy (flexible — revised 2026-05-21 ~14:00 KST after
+operator direction "유연한 전략이 필요하다 지금 먼가 타이트하게 박아
+버리면 계속 못지킬 가능성 생김")**:
 
-The repo is now publicly clone-able by external users (KakaoTalk +
-LinkedIn sharing; first external clone verified 2026-05-18).  A
-broken `main` damages reputation.  Therefore:
+Prior versions of this section codified a hard "structural change
+→ `feat/<name>` branch + 4-gate pre-merge" rule.  In practice the
+rule was *not consistently followed*: on 2026-05-21 the thirtieth
+audit caught nine structural commits landing directly on `main`
+across two parallel sessions (autonomous overnight job-hunt work +
+operator-driven music-video genre-shaders work).  The lesson:
+*a rule that can't be kept under realistic working conditions is
+worse than a softer guideline that holds.*
 
-- **`main` = always-runnable trunk** — micro-commits go here directly.
-- **`feat/<name>` = structural-change branches** — big changes live
-  here until validated, then merge to `main`.
-- **`v<MAJOR>.<MINOR>.<PATCH>` tags** — stable checkpoints.  README
-  recommends external users clone the latest tag, not `main`.  Tag
-  on milestone events (first shipped batch, new skill, etc.).
+This revision keeps the underlying intent (always-runnable `main`,
+trail of stable checkpoints, public-clone-safe) but relaxes the
+mechanism.
 
-**What counts as `micro-commit` (direct to `main` OK)**:
+- **`main` = always-runnable trunk** — still the public contract.
+  Cloning a `v<x>.<y>.<z>` tag remains the recommended first-touch
+  entry point for external users; `main` may carry in-flight work
+  past the tag.
+- **`v<MAJOR>.<MINOR>.<PATCH>` tags** — stable checkpoints.  Tag on
+  milestone events (skill shipped, major UX shift, etc.).
+- **Branches and worktrees are a *tool*, not a rule.**  Use them
+  when they help; skip them when they add friction without value.
 
-- `docs/` updates (daily reports, audit reports, roadmap entries,
-  pilot tracking).
-- Audit-fix commits (any commit driven by an audit report).
-- `README.md` / `README.ko.md` typo / small wording fixes.
-- One-line bug fixes that don't change semantics.
-- `assets/music/SOURCES.md` track additions.
-- Daily report files in `docs/daily/`.
+#### When to branch / worktree (guideline, not hard rule)
 
-**What counts as `structural-change` (feat branch required)**:
+| Scale | Suggested path | Why |
+|---|---|---|
+| Single small change (typo, one-line fix, doc edit, audit-fix) | direct to `main` | one commit; the cost of a feat branch exceeds the benefit |
+| Single coherent session of focused work that lands as 1-3 commits | direct to `main` *or* short-lived feat branch | judgment call; lean toward `main` if the work is incremental and self-contained |
+| Multi-session work spanning days, or work that genuinely shouldn't be live on `main` until validated | `feat/<name>` branch or a dedicated `worktree` (see below) | avoids public-surface flicker, allows roll-back without rewrites |
+| Two or more parallel sessions on the same machine | **worktree per session** (recommended; see below) | isolation between concurrent work without context-switching between branches in a single checkout |
 
-- `.claude/agents/*.md` edits (already gated by §5; now also branch).
-- `skills/<name>/` create / edit (new layer — Skills work).
-- `agents/missions/<type>/run.sh` — new mission type or major
-  semantics change.
-- New `scripts/` tooling that other components will call.
-- `.env.example` schema additions (new env vars).
-- Dependency changes (new external API, replaced library).
-- Multi-file refactors crossing 3+ concerns.
+The right answer for "should this be a branch?" is the one that
+*the operator actually keeps* — if branching consistently feels
+like overhead and the result is commits-on-`main`-anyway, the
+guideline is wrong, not the operator.
 
-**Workflow on a `feat/<name>` branch**:
+#### Worktree mode (recommended for parallel sessions)
 
-1. `git checkout -b feat/<name>` from latest `main` (or a tag).
-2. Iterate; commit + push to `origin/feat/<name>` (not main).
-3. When work is ready, run the **pre-merge gate** (below).  All
-   four gates must pass before merge.
-4. Fast-forward merge to `main`:
-   `git checkout main && git merge --ff-only feat/<name> && git push origin main`.
-5. Delete the branch:
-   `git branch -d feat/<name> && git push origin --delete feat/<name>`.
-6. If the merge represents a user-visible milestone, also tag
-   (e.g., `git tag -a v0.2.0 -m "..."` + `git push origin v0.2.0`).
+When two or more Claude Code sessions run concurrently on this
+machine, each long-running session should live in its own git
+worktree.  Sibling layout:
 
-**Pre-merge gate** (mandatory; operator concern 2026-05-18 ~21:50
-KST — "main 브랜치가 깨지는건 정말 부담스러움"):
+```
+/Users/melons/ai                   ← main worktree (primary)
+/Users/melons/ai-job-hunt          ← worktree on feat/job-hunt-*
+/Users/melons/ai-music-video       ← worktree on feat/music-video-*
+```
 
-Four gates.  Automated gates (1, 3) run via
-[`scripts/pre-merge-check.sh`](../scripts/pre-merge-check.sh);
-manual gates (2, 4) require operator action.
+Two helper scripts wrap the standard git incantations so the
+operator never has to memorize them:
 
-| # | Gate | Source | Mode |
-|---|------|--------|------|
-| 1 | **Audit CLEAN** — drift / contract / cost-model / secrets / TODOs | `scripts/audit-run.sh all` returns CLEAN verdict on the feat branch HEAD | automated |
-| 2 | **Functional integration test** — run the affected mission / skill end-to-end and verify output | manual (varies per change); skipped for doc-only changes with operator OK | manual |
-| 3 | **§5 marker compliance** — every commit touching direct-child `.md` files in `agents/` or `.claude/agents/` carries `Requested-by: user` in body (subdirectories like `agents/missions/` are out of §5 scope) | `pre-merge-check.sh` regex `agents/[^/]+\.md` enumerates §5-scope commits, each must `--grep="Requested-by:"` | automated |
-| 4 | **Operator merge OK** — merge itself is a public-surface change, so the final gate is human | explicit operator approval ("merge OK") in conversation | manual |
+- `scripts/worktree-new.sh <topic>` — creates `../ai-<topic>` as a
+  sibling worktree on a fresh `feat/<topic>` branch from latest
+  `main`, copies `.env` over, prints the cd command.
+- `scripts/worktree-done.sh` — runs from inside the worktree;
+  fetches + rebases on `origin/main`, runs the test suite for that
+  scope, fast-forwards `main`, deletes the worktree, deletes the
+  branch.  If the rebase has conflicts, it stops and surfaces them.
 
-If any gate fails, the work stays on the feat branch.  Fixes
-land as new commits on the feat branch (not retroactively rewriting
-history; preserves audit trail).  Then re-run gates.
+Anything the operator (or a session) edits *inside* a worktree
+becomes part of that worktree's branch by default.  Two exceptions
+where the change should be split out and committed on `main`
+directly instead of within the worktree's branch:
 
-**Bootstrap exception**: structural commits that introduce the
-gate itself (or its required infrastructure) land directly on
-`main` since the gate doesn't exist yet to validate them.  Covered
-commits: `a2a3807` (branch-strategy rules), `22a45ea`
-(`scripts/pre-merge-check.sh` itself), and `a537018`
-(`.github/workflows/main-protection.yml` — Actions CI that the
-gate depends on for the main-protection layer).  All subsequent
-structural changes go through the gate.
+1. **Cross-session hot-fix** — e.g. an audit alert resolution that
+   the other concurrent session also needs *right now*.
+2. **Contract / README / `.gitignore` meta-change** — touches the
+   shared operating layer; doesn't belong inside a topic-scoped
+   feat branch.
+
+The judgment heuristic is one sentence:
+
+> "Does the *other* concurrent worktree need this change right
+> now?  Yes → commit to `main` directly.  No → keep it on the
+> worktree's branch."
+
+#### What's been retired
+
+- "Every structural commit MUST go through a feat branch + 4-gate
+  pre-merge" — too strict in practice.
+- The 4-gate pre-merge process (`scripts/pre-merge-check.sh`) is
+  *available* and still useful before milestone tags, but is no
+  longer mandatory on every feat merge.  Use it when the work
+  benefits from the discipline (e.g. v-tag milestones); skip it
+  when the work is small enough that running it adds more delay
+  than it catches.
+- The earlier "what counts as micro-commit vs structural-change"
+  enumeration — useful as intuition but treated as a hard rule it
+  produced drift.  The new model is *judgment + the table above*.
+
+#### What's preserved
+
+- `main` always-runnable, public-clone-safe.
+- Tag milestone events.
+- §5 marker (`Requested-by: user` on `agents/*.md` /
+  `.claude/agents/*.md` edits) — unchanged.
+- Auto-commit + auto-push of every change (§1 [[agent-does-everything]]).
+- Two separate Bash calls for `git commit` and `git push`
+  ([[split-commit-push]]).
 
 **Tag convention**:
 
