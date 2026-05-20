@@ -205,12 +205,13 @@ genres:
   # ───── Hi-fi clean family (denser cuts, sharper) ─────
 
   house:
-    aliases: [tropical_house, deep_house, future_house]
+    aliases: [tropical_house, deep_house, future_house, disco_house, french_house, nu_disco, disco]
     phrase_beats: 8             # 2-beat cuts
     grain_intensity: 2          # MUCH less grain than lo-fi
     vignette_angle: PI/3        # softer
     zoom_pulse_amp: 0.06       # mild zoom-pulse OK on kick
-    shader: saturation_pulse
+    shader: color_burst        # was: saturation_pulse — color_burst lands disco drops
+    # saturation_pulse / beat_burst also valid alternatives
     lut_direction: high_saturation
     cut_mode: cuts
     forbidden_effects: [vhs, datamosh, kaleidoscope]
@@ -237,7 +238,7 @@ genres:
     grain_intensity: 0
     vignette_angle: PI/2        # very subtle / nearly off
     zoom_pulse_amp: 0.12       # stronger pulse, kick-driven
-    shader: saturation_pulse
+    shader: strobe              # was: saturation_pulse — strobe is the techno code
     lut_direction: high_saturation
     cut_mode: cuts
     forbidden_effects: [vhs, halation]
@@ -265,7 +266,8 @@ genres:
     grain_intensity: 0          # FORBIDDEN
     vignette_angle: off         # no vignette
     zoom_pulse_amp: 0.05       # slight, controlled
-    shader: scanline           # signature shader
+    shader: beat_burst         # was: scanline — beat_burst lands the drops
+    # scanline / light_rays / neon_edge also valid alternatives for synthwave
     lut_direction: hot_pink_cyan
     cut_mode: cuts
     forbidden_effects: [halation, vhs, grain]
@@ -321,7 +323,8 @@ genres:
     grain_intensity: 4
     vignette_angle: PI/6
     zoom_pulse_amp: 0.15
-    shader: chromatic_split
+    shader: shake               # was: chromatic_split — shake = drift energy
+    # chromatic_split / beat_burst also valid alternatives for phonk
     lut_direction: high_contrast_warm
     cut_mode: cuts
     forbidden_effects: [soft_focus, halation]
@@ -347,7 +350,8 @@ genres:
     grain_intensity: 0
     vignette_angle: off
     zoom_pulse_amp: 0.20       # strongest
-    shader: datamosh
+    shader: strobe             # was: datamosh (unimpl) — strobe is the available chaos
+    # beat_burst / shake also valid alternatives
     lut_direction: hyper_saturated
     cut_mode: cuts
     forbidden_effects: [restraint, halation, soft_focus]
