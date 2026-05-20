@@ -90,9 +90,10 @@ if [[ -z "$GENRE" || -z "$SHORT_ID" || -z "$MUSIC" ]]; then
 fi
 
 # Resolve aliases — search both top-level keys and aliases array
-RESOLVED=$(yq -r --arg g "$GENRE" '
+# (mikefarah/yq v4 uses env() instead of --arg)
+RESOLVED=$(GENRE_NAME="$GENRE" yq -r '
   .genres | to_entries | .[] |
-  select(.key == $g or ((.value.aliases // []) | index($g))) |
+  select(.key == env(GENRE_NAME) or ((.value.aliases // []) | contains([env(GENRE_NAME)]))) |
   .key
 ' "$PRESETS" | head -1)
 

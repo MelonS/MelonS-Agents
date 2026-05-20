@@ -18,6 +18,7 @@ side-by-side to decide which presets to ship as defaults.
 | `08-linen-canvas-8s.mp4` | Linen (from 07) | Canvas 8s seamless loop @720×1280 | Spotify Canvas variant |
 | `09-arcade-canvas-8s.mp4` | Arcade (from 01) | Canvas 8s seamless loop | Spotify Canvas variant |
 | `10-rain-kinetic-typography.mp4` | Rain lo-fi (uploaded) | 4 phrase overlays (mood text on phrase boundaries) | Mute-autoplay hook |
+| `11-arcade-FULL-genre-pipeline.mp4` | Arcade source music + synthwave keyword pool | **Full pipeline end-to-end** (genre preset → run.sh → scanline shader) | **Proof: complete genre-aware path works** |
 
 ## Decision point
 
