@@ -67,6 +67,21 @@ __resolve_ffmpeg() {
 __resolve_ffmpeg
 unset -f __resolve_ffmpeg
 
+# Optional CPU throttle (operator request 2026-05-21): when
+# FFMPEG_THROTTLE=1 is set, route ffmpeg through scripts/ffmpeg-
+# throttled.sh which wraps it with cpulimit (-l = NCPU * CPU_LIMIT_PCT)
+# + nice -n 19 + bounded -threads.  Real ffmpeg stays at FFMPEG_REAL_BIN
+# for the wrapper to call.  No behavior change when FFMPEG_THROTTLE
+# unset.
+if [[ "${FFMPEG_THROTTLE:-0}" == "1" && -n "${FFMPEG_BIN:-}" ]]; then
+  __throttle_wrapper="$(dirname "$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")")/scripts/ffmpeg-throttled.sh"
+  if [[ -x "$__throttle_wrapper" ]]; then
+    export FFMPEG_REAL_BIN="$FFMPEG_BIN"
+    FFMPEG_BIN="$__throttle_wrapper"
+  fi
+  unset __throttle_wrapper
+fi
+
 # ffprobe sits next to ffmpeg in every supported install.
 if [[ -z "${FFPROBE_BIN:-}" && -n "${FFMPEG_BIN:-}" ]]; then
   __ffprobe_guess="${FFMPEG_BIN%/ffmpeg}/ffprobe"
