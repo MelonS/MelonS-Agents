@@ -91,7 +91,8 @@ echo
 EXTRA_FLAGS=()
 [[ -n "$STILL_IMG" ]] && EXTRA_FLAGS+=(--image="$STILL_IMG")
 
-bash "$GENRE_SH" "${EXTRA_FLAGS[@]}" "$GENRE" "$SHORT_ID" "$MUSIC"
+# bash 3.2 + set -u: empty-array expansion errors without the +"..." guard
+bash "$GENRE_SH" ${EXTRA_FLAGS[@]+"${EXTRA_FLAGS[@]}"} "$GENRE" "$SHORT_ID" "$MUSIC"
 RC=$?
 [[ $RC -ne 0 ]] && { echo "❌ genre wrapper exit $RC" >&2; exit $RC; }
 
