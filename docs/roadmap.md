@@ -15,76 +15,30 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 ## Now — active focus
 
-_Last updated 2026-05-18 ~14:10 KST.  Previous active goal
-"Production-ready music-video short" closed 2026-05-17 ~23:30 KST
-(operator uploaded `03e-velvet1-jazz-combo.mp4` to YouTube; goal
-migrated to `docs/goal.md` Past goals).  No active goal — operator
-sets the next one._
+_Last updated 2026-05-20 ~03:00 KST under operator broad-approval
+of overnight autonomous Phase 2 work._
 
-<!-- suggest 2026-05-19 ~02:30 KST (overnight autonomous):
-Above paragraph is STALE.  `docs/goal.md` has had an active goal
-"Multi-skill AI assistant framework — Skill #1 (music-video)
-refactor first" since 2026-05-19 ~00:55 KST (operator promoted at
-8b39cac).  Subgoal 1 (Skill #1 created) was completed overnight
-(a993753, on feat/skill-music-video).  Recommend operator
-rewrite this "Now" preamble to point at the active goal +
-operative subgoal (Step 1.3 manual functional test next).
-Flagged as [medium] in 2026-05-19-all.md audit. -->
+**Active goal**: Multi-skill AI assistant framework (`docs/goal.md`
+2026-05-19 entry).  Skill #1 (music-video) shipped v0.2.0 + v0.3.0.
+Skill #2 (`job-hunt`) v2 short-keyword UX + 5 mock-fallback sources
++ 4 utility scaffolds (fit-score / cover-letter / company-research /
+interview-prep) + 1 profile-derivation scaffold (Phase 2.4) all
+shipped on `feat/skill-job-hunt`, awaiting FF-merge → `v0.4.0` tag.
 
-<!-- suggest 2026-05-19 ~17:40 KST (post-friend-meeting): NEW
-CRITICAL candidate goal landed in docs/goal.md: "First-touch
-success rate — raise 10-20% → 60%+".  Operator-flagged as severity
-critical ("아이디어가 아냐 심각한 문제야") after empirical
-observation that an experienced Claude-Code developer (friend at
-meeting) hit four compounding friction walls — permission prompts,
-install prompts, "don't know where to start", "picked too big a
-goal".  Recommend operator promote this candidate to Active goal
-on next session and pause the multi-skill framework goal as gated
-on this one.  Both feat branches (permission-bootstrap +
-custom-broll-dir) feed into the first subgoal of this new goal. -->
+**Active subgoal**: Land v0.4.0 — merge feat → main, tag, README
+cadence batch.  Operator-activation steps (one-time):
+- `cp config/operator-profile.example.md → operator-profile.md` and
+  edit (gitignored, per-machine).
+- Flip `JH_*_LIVE=1` per utility module to activate live Claude calls.
+- For live KR job-board HTTP, run the per-source operator-validation
+  curl + flip `JH_<source>_LIVE=1` + supply API key where required.
 
-
-_Operator-actioned, not a new goal_: 24h post-publish metrics
-capture in
-[`docs/pilots/first-upload-metrics.md`](pilots/first-upload-metrics.md)
-once the upload crosses the 24h mark (~23:30 KST 2026-05-18).
-
-_Pending operator review (revisit at home ~23:00 KST 2026-05-18)_:
-format-variation brainstorm parked in
-[`docs/ideas.md`](ideas.md#2026-05-18--music-video-format-variations--per-video-quality-upgrade--brainstorm--h)
-— three direction clusters (A: music-format variations, B: content
-category expansion, C: per-video quality upgrades).  Operator
-explicitly asked to be shown this list on the home session; do
-not promote any cluster to active goal without operator pick.
-
-_Pending operator review (revisit at home ~23:00 KST 2026-05-18,
-second pointer)_: at the coffee-shop session 2026-05-18 ~19:30 KST
-the conversation turned to the "problem solver" role concept —
-the emerging job category that frames problems for AI to execute,
-distinct from prompt-engineer (faded) and traditional developer.
-The take given to the operator was that this repo *is* a
-problem-solver decomposition exhibit (Tier-1/Tier-2 routing,
-money firewall, audit feedback loop, onboarding redesign in
-response to external review).  Operator said "꼭 다시 알려줘"
-— bring this up again in the home session.  Connects to
-`project_repo_as_credibility_signal` (agent memory); potential
-reframing of how the repo is presented to external technical
-readers (decision-pattern docs as the lead, not code).
-
-> Open queue items below in "Next" are eligible today — see #1
-> (filter-repo backup-branch deletion, eligible 2026-05-18+).  None
-> blocks operator's next-goal decision; advance only with explicit
-> direction since branch deletion is a destructive remote op.
-
-<!-- suggest 2026-05-19 ~02:30 KST (overnight autonomous):
-The three "revisit at home ~23:00 KST 2026-05-18" reminders above
-have aged out — the home session happened (skill-framework pivot,
-multi-skill direction set, Skill #1 shipped overnight on
-feat/skill-music-video).  Format-variation cluster and
-problem-solver framing both got conversation time.  Recommend
-operator review + remove or move to docs/ideas.md.
-Flagged as a [low] in 2026-05-19-contract.md audit. -->
-
+**Parallel context**: CRITICAL candidate goal "First-touch success
+rate 10-20% → 60%+" remains filed in `docs/goal.md`.  Build Day
+Seoul (2026-06-16) application landed 2026-05-19 mapping to this
+candidate; if accepted, pre-build of the wizard prototype becomes
+the next active goal.  Until then, multi-skill framework remains
+primary.
 
 
 ## Next — queued, in priority order
