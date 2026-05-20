@@ -69,7 +69,7 @@ SRC=$(ls outputs/publish/2026-05-1*/?*.mp4 2>/dev/null | head -1)
 if [[ -z "$SRC" ]]; then
   echo "  ⚠️  no source mp4 found — skipping shader tests"
 else
-  for fx in pond breathing halation scanline chromatic_split neon_edge vhs saturation_pulse kaleidoscope; do
+  for fx in pond breathing halation combo scanline chromatic_split neon_edge vhs saturation_pulse kaleidoscope; do
     OUT="$TMPDIR/sh-${fx}.mp4"
     if bash scripts/music-video-shaders.sh "$fx" "$SRC" "$OUT" >/dev/null 2>&1 && [[ -s "$OUT" ]]; then
       ok "$fx"
