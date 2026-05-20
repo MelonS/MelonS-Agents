@@ -149,3 +149,62 @@ and defaults.
   `docs/pilots/decision-log.md`
 - Daily upload queue (cron / launchd cadence):
   `scripts/daily-music-video.sh`
+
+## Genre-aware mode (added 2026-05-21)
+
+The v6 default treatment (drum-onset zoom-pulse + grain + vignette +
+12-beat cuts) is applied regardless of song genre.  Operator 2026-05-20
+flagged that this reads as "띠용" / out-of-place on songs whose genre
+forbids glitch (lo-fi) or forbids cuts (ambient).  See
+`docs/research/2026-05-21-shader-song-mismatch-diagnosis.md`.
+
+The fix is additive — existing pipeline unchanged, new behavior opt-in
+via one of three entry points:
+
+### Recommended: all-in-one wrapper (zero-config)
+
+```bash
+bash scripts/music-video-auto.sh <music_file>
+```
+
+Detects genre from filename + ID3 tag, resolves preset from
+`skills/music-video/data/genre-presets.yaml`, fills keyword pool from
+preset, runs pipeline with genre-appropriate env overrides, applies
+matching post-shader.  Add `--with-canvas` for an 8s Spotify Canvas
+variant or `--with-typography "phrase1,phrase2,..."` for a kinetic
+typography overlay.
+
+For ambient / classical / dreamcore genres (stillzoom presets), pass
+`--image=PATH`.
+
+### Manual genre selection
+
+```bash
+bash scripts/music-video-genre.sh <genre> <short_id> <music_file> [keywords_csv]
+```
+
+Bypass auto-detection.  `--list` shows available genres.
+
+### Standalone shader pass
+
+```bash
+bash scripts/music-video-shaders.sh <effect> <input.mp4> <output.mp4>
+```
+
+Effects available:
+- Classic: `pond` `breathing` `halation` `combo`
+- Genre-coded: `scanline` `chromatic_split` `neon_edge` `vhs`
+  `saturation_pulse` `kaleidoscope`
+
+## Adjacent output modes
+
+- `scripts/music-video-stillzoom.sh <image> <music> <output>` — image
+  + music → 60s slow Ken-Burns 9:16 mp4.  Required for ambient /
+  classical / dreamcore presets where any cut violates the genre
+  contract.
+- `scripts/music-video-canvas.sh <input.mp4> <output.mp4>` —
+  Spotify Canvas 8s seamless loop @720×1280, <8MB.  Distribution
+  multiplier: every track ships a Canvas alongside the Short.
+- `scripts/music-video-typography.sh <input.mp4> <output.mp4> "phrase1,phrase2,..."`
+  — kinetic phrase overlay.  Solves the muted-autoplay problem; 4-8
+  mood phrases fade in/out on evenly-spaced boundaries.
