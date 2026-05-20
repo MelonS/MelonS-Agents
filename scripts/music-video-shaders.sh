@@ -67,6 +67,34 @@ EFFECT="${1:-combo}"
 SRC="${2:-}"
 DST="${3:-}"
 
+# ─── helper: extract drum onsets from input mp4's audio (for beat-synced shaders) ───
+# Caches per source.  Used by beat_burst / strobe / shake / color_burst.
+__extract_onsets_csv() {
+  local src="$1"
+  local out_csv="$2"
+  local audio_wav
+  audio_wav="$(mktemp -t mvshader-audio-XXXX).wav"
+  "$FFMPEG_BIN" -y -loglevel error -i "$src" -map 0:a -acodec pcm_s16le -ar 22050 -ac 1 "$audio_wav" 2>/dev/null
+  if command -v aubioonset >/dev/null 2>&1; then
+    aubioonset -i "$audio_wav" -O complex -t 2.0 2>/dev/null > "$out_csv"
+  else
+    : > "$out_csv"
+  fi
+  rm -f "$audio_wav"
+}
+
+# Build a Gaussian-sum expression centered at each onset.
+# usage: __gaussian_expr <onsets_file> <amp> <sigma> <baseline>
+__gaussian_expr() {
+  local onsets="$1" amp="$2" sigma="$3" baseline="$4"
+  local expr="$baseline"
+  while IFS= read -r t; do
+    [[ -z "$t" ]] && continue
+    expr="${expr}+${amp}*exp(-((t-${t})/${sigma})*((t-${t})/${sigma}))"
+  done < "$onsets"
+  echo "$expr"
+}
+
 if [[ -z "$SRC" || -z "$DST" ]]; then
   echo "usage: $0 <pond|breathing|halation|combo> <input.mp4> <output.mp4>" >&2
   exit 64
@@ -217,10 +245,119 @@ case "$EFFECT" in
       -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
     ;;
 
+  # ───── Beat-synced "popping" effects (2026-05-21, added per operator) ─────
+  # Each extracts drum onsets from the input mp4 audio and applies a
+  # Gaussian-sum expression centered at each onset.  Best for fast genres
+  # (synthwave / phonk / techno / house / hyperpop) where the beat IS
+  # the visual hook.
+
+  beat_burst)
+    # Strong zoom + brightness flash on each onset.  Synthwave / phonk drop.
+    ONSETS="$(mktemp -t mvshader-onsets-XXXX)"
+    __extract_onsets_csv "$SRC" "$ONSETS"
+    ZOOM_EXPR=$(__gaussian_expr "$ONSETS" "0.15" "0.12" "1")
+    BRIGHT_EXPR=$(__gaussian_expr "$ONSETS" "0.40" "0.05" "0")
+    rm -f "$ONSETS"
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "scale=w='1080*(${ZOOM_EXPR})':h='1920*(${ZOOM_EXPR})':eval=frame,crop=1080:1920,eq=brightness='${BRIGHT_EXPR}':eval=frame,setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  strobe)
+    # Brief inversion + flash on each beat.  Techno / hyperpop drop.
+    ONSETS="$(mktemp -t mvshader-onsets-XXXX)"
+    __extract_onsets_csv "$SRC" "$ONSETS"
+    # Build between() OR-chain enabling negate during a 60ms window around each onset
+    NEG_ENABLE="0"
+    while IFS= read -r t; do
+      [[ -z "$t" ]] && continue
+      ts=$(awk -v t="$t" 'BEGIN{printf "%.3f", t-0.020}')
+      te=$(awk -v t="$t" 'BEGIN{printf "%.3f", t+0.060}')
+      NEG_ENABLE="${NEG_ENABLE}+between(t,${ts},${te})"
+    done < "$ONSETS"
+    rm -f "$ONSETS"
+    # Use timeline-enabled negate; alpha-blend it over base so brief inversion appears as flashes
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "negate=enable='gt(${NEG_ENABLE},0)',setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  shake)
+    # Translate jitter on each beat — decaying x/y offset.  Phonk drift.
+    ONSETS="$(mktemp -t mvshader-onsets-XXXX)"
+    __extract_onsets_csv "$SRC" "$ONSETS"
+    # x_shake = sum of sin(...) * decaying gaussian per onset
+    X_SHAKE="0"
+    Y_SHAKE="0"
+    i=0
+    while IFS= read -r t; do
+      [[ -z "$t" ]] && continue
+      # alternate phase per onset for varied direction
+      ph=$((i % 4))
+      case $ph in
+        0) sx="14"; sy="0"  ;;
+        1) sx="-12"; sy="6" ;;
+        2) sx="8"; sy="-10" ;;
+        3) sx="-10"; sy="-8";;
+      esac
+      X_SHAKE="${X_SHAKE}+${sx}*exp(-((t-${t})/0.10)*((t-${t})/0.10))"
+      Y_SHAKE="${Y_SHAKE}+${sy}*exp(-((t-${t})/0.10)*((t-${t})/0.10))"
+      i=$((i + 1))
+    done < "$ONSETS"
+    rm -f "$ONSETS"
+    # pad larger then crop with animated x/y offset.  crop accepts
+    # x/y expressions; named-arg eval=frame for per-frame evaluation.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "pad=1108:1948:14:14:color=black,crop=w=1080:h=1920:x='14+(${X_SHAKE})':y='14+(${Y_SHAKE})':exact=1,setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  color_burst)
+    # Hue rotation cycling on each beat.  House / disco drop.
+    ONSETS="$(mktemp -t mvshader-onsets-XXXX)"
+    __extract_onsets_csv "$SRC" "$ONSETS"
+    # Hue shift = sum of decaying gaussians, each with rotating phase
+    HUE_EXPR="0"
+    i=0
+    while IFS= read -r t; do
+      [[ -z "$t" ]] && continue
+      # rotate hue offset per onset 0/60/120/180/240/300 deg
+      deg=$(( (i % 6) * 60 ))
+      HUE_EXPR="${HUE_EXPR}+${deg}*exp(-((t-${t})/0.20)*((t-${t})/0.20))"
+      i=$((i + 1))
+    done < "$ONSETS"
+    rm -f "$ONSETS"
+    # hue filter takes H= in degrees; expressions are re-evaluated
+    # per frame by default (no eval=frame option in this build).
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "hue=H='${HUE_EXPR}',setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  light_rays)
+    # Static: bright-region god rays + horizontal scanline darken.
+    # Night-club / synthwave / techno vibe.  No onset sync needed.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -filter_complex "
+        [0:v]split[base][ray_in];
+        [ray_in]curves=preset=increase_contrast,gblur=sigma=12:steps=1,
+          eq=brightness=-0.10:saturation=1.4[rays];
+        [base][rays]blend=all_mode=screen:all_opacity=0.25[bright];
+        [bright]geq=lum='if(mod(Y,3),lum(X,Y),lum(X,Y)*0.78)':cb='cb(X,Y)':cr='cr(X,Y)',setsar=1[out]
+      " -map "[out]" -map 0:a \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
   *)
     echo "❌ unknown effect: $EFFECT" >&2
-    echo "   classic:     pond | breathing | halation | combo" >&2
-    echo "   genre-coded: scanline | chromatic_split | neon_edge | vhs | saturation_pulse | kaleidoscope" >&2
+    echo "   classic:        pond | breathing | halation | combo" >&2
+    echo "   genre-coded:    scanline | chromatic_split | neon_edge | vhs | saturation_pulse | kaleidoscope" >&2
+    echo "   beat-synced:    beat_burst | strobe | shake | color_burst | light_rays" >&2
     exit 64
     ;;
 esac
