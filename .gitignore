@@ -148,3 +148,11 @@ scripts/com.melons.agents.*.plist
 # ships as the generic template; operators copy to filters.yaml and
 # edit locally.
 skills/job-hunt/config/filters.yaml
+
+# Per-operator profile — narrative description of strengths, gaps,
+# role-target, etc.  Used by Phase 2.3+ Claude-call fit-scoring as
+# the operator-side context.  Like filters.yaml, contains
+# personally-revealing content and is gitignored by default.
+# operator-profile.example.md is the generic template that stays
+# committed.
+skills/job-hunt/config/operator-profile.md
