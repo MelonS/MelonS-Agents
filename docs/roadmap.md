@@ -140,6 +140,29 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-21** (~01:15 KST, autonomous overnight) **Skill #1
+  `music-video` — genre-aware shader presets land (additive
+  scaffold)** (commit `93cc5e8`).  Operator flagged 2026-05-20 ~23:30
+  KST that the pipeline's drum-onset zoom-pulse + 12-beat cuts read
+  as "띠용" / out-of-place on songs whose genre forbids glitch or
+  forbids cuts (the 5/20 ToddStudio batch's Linen/ambient and Rain/
+  lo-fi were the worst cases).  Root-cause traced + fixed.  Ships:
+  (a) `skills/music-video/data/genre-presets.yaml` — 14-genre
+  declarative preset table; (b) 6 new shader effects added to
+  `scripts/music-video-shaders.sh` (scanline, chromatic_split,
+  neon_edge, vhs, saturation_pulse, kaleidoscope — all smoke-tested);
+  (c) `scripts/music-video-stillzoom.sh` — image+music→60s slow
+  Ken-Burns for ambient/classical/dreamcore genres where ANY cut
+  violates the contract; (d) `scripts/music-video-genre.sh` — wrapper
+  that resolves genre → preset → env overrides + post-shader chain
+  + stillzoom routing; (e) 3.4K-word formats-landscape research +
+  per-short mismatch diagnosis under `docs/research/`; (f) 8 demo
+  mp4s staged at `outputs/demos/2026-05-21-genre-shader-experiments/`
+  for morning side-by-side review.  Back-compat: existing v6
+  pipeline + run.sh entry points unchanged.  Operator decisions
+  still open: which preset(s) to default, retroactive regen for
+  5/20 batch, genre-detect helper.
+
 - **2026-05-21** (~02:00 KST, autonomous overnight) **Skill #2
   `job-hunt` — 5 live-ready plugins land (no API key required)**
   (commits `b3789ba` survey, `58a2b58` first 3 plugins + deprecate
