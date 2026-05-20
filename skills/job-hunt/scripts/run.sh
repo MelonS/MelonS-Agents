@@ -380,7 +380,7 @@ filtered_postings=$(echo "$all_postings_jq_input" | jq \
   ($regions | map(
     . as $rt |
     if   ($rt | test("원격|remote|재택"; "i")) then ["원격", "재택", "Remote", "remote"]
-    elif ($rt | contains("서울"))            then ["서울", "Seoul"]
+    elif ($rt | contains("서울"))            then ["서울", "Seoul", "South Korea", "Korea"]
     elif ($rt | contains("부산"))            then ["부산", "Busan"]
     elif ($rt | contains("인천"))            then ["인천", "Incheon"]
     elif ($rt | contains("대구"))            then ["대구", "Daegu"]

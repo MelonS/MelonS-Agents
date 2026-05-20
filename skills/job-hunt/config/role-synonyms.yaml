@@ -52,6 +52,8 @@ problem-solver:
     # Global — startup / B2B builder roles
     - "Forward Deployed Engineer"
     - "Forward-Deployed Engineer"
+    - "Forward Deployment Engineer"
+    - "Forward Deployment"
     - "FDE"
     - "Applied AI Engineer"
     - "Solutions Engineer"
