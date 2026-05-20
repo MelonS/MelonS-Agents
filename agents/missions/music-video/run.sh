@@ -389,7 +389,7 @@ CONCAT="$MDIR/resources/concat-noaudio.mp4"
 # falls back to a fast c:v-copy mux.
 #
 #   MUSIC_VIDEO_FILM_GRAIN_INTENSITY  default 8    (0 = disabled)
-#   MUSIC_VIDEO_VIGNETTE_ANGLE        default PI/5 ('' = disabled)
+#   MUSIC_VIDEO_VIGNETTE_ANGLE        default PI/5 ('none'/'off'/empty = disabled)
 #   MUSIC_VIDEO_ZOOM_PULSE_AMP        default 0.08 (0 = disabled)
 #   MUSIC_VIDEO_ZOOM_PULSE_SIGMA      default 0.18 (bell width in seconds)
 #
@@ -397,7 +397,16 @@ CONCAT="$MDIR/resources/concat-noaudio.mp4"
 # bell that visually re-asserts the music's "scratch" moment.  If a music
 # track is melodic-only (no onsets detected), this falls through to no zoom.
 GRAIN_INTENSITY="${MUSIC_VIDEO_FILM_GRAIN_INTENSITY:-8}"
-VIGNETTE_ANGLE="${MUSIC_VIDEO_VIGNETTE_ANGLE:-PI/5}"
+# Vignette default PI/5; recognize 'none'/'off' explicit disable so the
+# genre-aware wrapper (scripts/music-video-genre.sh) can suppress vignette
+# for genres that forbid it (synthwave, techno).  Empty also disables,
+# but uses the - operator (not :-) elsewhere to distinguish.
+_vraw="${MUSIC_VIDEO_VIGNETTE_ANGLE-PI/5}"
+case "$_vraw" in
+  none|off|OFF|NONE) VIGNETTE_ANGLE="" ;;
+  "")                VIGNETTE_ANGLE="" ;;
+  *)                 VIGNETTE_ANGLE="$_vraw" ;;
+esac
 ZOOM_AMP="${MUSIC_VIDEO_ZOOM_PULSE_AMP:-0.08}"
 ZOOM_SIGMA="${MUSIC_VIDEO_ZOOM_PULSE_SIGMA:-0.18}"
 

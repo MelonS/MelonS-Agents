@@ -117,8 +117,8 @@ SHADER=$(yq -r ".genres.${RESOLVED}.shader" "$PRESETS")
 CUT_MODE=$(yq -r ".genres.${RESOLVED}.cut_mode" "$PRESETS")
 LUT_DIR=$(yq -r ".genres.${RESOLVED}.lut_direction" "$PRESETS")
 
-# Map "off" vignette → empty (the pipeline treats empty as disabled)
-[[ "$VIGNETTE" == "off" ]] && VIGNETTE=""
+# Vignette "off" is passed through to run.sh which now recognizes
+# 'none'/'off' as explicit disable (2026-05-21 run.sh patch).
 
 echo "╔══════════════════════════════════════════════════════"
 echo "║ Genre preset: $RESOLVED"
