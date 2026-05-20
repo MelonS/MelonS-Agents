@@ -108,6 +108,35 @@ The fit-score module uses these to validate your strengths claims._
 > - LinkedIn: <linkedin URL>
 > - Engineering case studies: <docs/engineering-case-studies.md URL>
 
+### Hire-bar comfort (for the fit-score `hire_prob` dimension)
+
+_Honest self-assessment of which company tiers you can plausibly
+clear the interview process for, given your current background.
+The fit-score utility uses this to compute "best company you can
+plausibly get into" rather than just "company you'd want most"._
+
+> - **High (70-90%)**: Korean-domestic mid-tier / non-FAANG /
+>   stage-B–D startups where the role matches my background
+>   directly (game-client + AI-tooling builder).  Hiring funnels
+>   smaller, my profile is concrete + unusual enough to differentiate.
+> - **Medium (40-60%)**: Korean unicorns (Toss / Naver / Kakao /
+>   Coupang / 우아한형제) for AI-product or solutions-engineer roles.
+>   Strong candidate pool, but my multi-agent system repo + shipped
+>   shorts production are concrete differentiators.
+> - **Low (15-30%)**: Global AI labs (Anthropic / OpenAI / Cohere /
+>   Notion / etc.) at the Forward-Deployed / Applied-AI level —
+>   thousands of applicants per posting, English-fluent CS-degree
+>   norm.  Worth applying selectively where the role is *unusually*
+>   matched, not as a default.
+> - **Very low (<10%)**: pure ML-research / Research Scientist /
+>   PhD-required postings — gap is honest, profile shouldn't
+>   pretend otherwise.
+
+(Adapt for your situation.  The fit-score model uses these tiers
+*and* what the posting itself signals — a junior posting at a
+FAANG will score higher hire_prob than a senior posting at the
+same FAANG.)
+
 ### Application style preference
 
 _How you want utility-module outputs (cover letters, interview prep)

@@ -68,15 +68,25 @@ for m in re.finditer(r'<tr id="list\d+"[^>]*>(.*?)</tr>', h, re.S):
     # Region / hire-level chips appear as <em>X</em><em>Y</em><em>Z</em>.
     em_chunks = re.findall(r"<em>([^<]+)</em>", tr)
     em_chunks = [htmllib.unescape(c).strip() for c in em_chunks if c.strip()]
-    # First <em> is usually hire-level (신입/경력/무관), second is
-    # education, third is region; pick the longest as region heuristic.
+    # Order is variable; pick whichever chunk matches a Korean
+    # administrative-region pattern.  Don't fall back to "last
+    # chunk" because that often leaves work-pattern chips
+    # ("주5일", "교대근무") in the region field.
+    region_re = re.compile(
+        r"특별시|광역시|특별자치(시|도)|특별자치도|"
+        r"경기도|강원도|강원특별자치도|충청북도|충청남도|"
+        r"전라북도|전북특별자치도|전라남도|경상북도|경상남도|"
+        r"제주도|제주특별자치도|"
+        r"서울|부산|대구|인천|광주|대전|울산|세종|"
+        r"\b\w+시\b|\b\w+구\b|\b\w+군\b|"
+        r"원격|재택|Remote",
+        re.IGNORECASE,
+    )
     region = ""
     for c in em_chunks:
-        if any(k in c for k in ("도 ", "시 ", "구 ", "특별", "광역", "원격", "재택")):
+        if region_re.search(c):
             region = c
             break
-    if not region and em_chunks:
-        region = em_chunks[-1]
     detail_url = f"https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo={wanted_no}&infoTypeCd={info_type}&infoTypeGroup=tb_workinfoworknet"
     postings.append({
         "title": title,

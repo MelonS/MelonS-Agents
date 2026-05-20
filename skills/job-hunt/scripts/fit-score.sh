@@ -117,37 +117,78 @@ posting_url=$(echo "$posting_json" | jq -r '.url')
 # parse without LLM ambiguity.
 system_prompt="You score job postings against an operator's profile and emit a strict JSON block."
 
-user_prompt=$(cat <<EOF
+user_prompt=$(cat <<'INNER_EOF'
 Score how well this job posting fits the operator profile below.
+
+You must produce TWO scores that together rank "best company the
+operator can plausibly get into":
+
+  - role_fit    (0-100) -- does the posting actual work + required
+                          skills match what the operator does well?
+                          ignore prestige here; this is a pure
+                          match-the-work-to-the-person score.
+  - hire_prob   (0-100) -- how likely is the operator to actually
+                          PASS this company hiring bar?  high
+                          prestige + huge applicant funnel + senior-
+                          only specs -> low.  domestic + matching
+                          tier + standard process -> high.  reflect
+                          the gap between the operator level and
+                          the company hire-bar honestly.
+
+Final composite = round(role_fit * 0.6 + hire_prob * 0.4).
+
 Return ONLY a JSON object on a single line.  No prose outside the JSON.
 
 Schema:
 {
-  "score": <integer 0-100>,
+  "score": <composite integer 0-100>,
+  "role_fit": <integer 0-100>,
+  "hire_prob": <integer 0-100>,
   "strengths": ["<concrete strength match>", ...up to 3 items],
   "gaps": ["<concrete gap or risk>", ...up to 3 items],
-  "rationale": "<one short sentence summarising the score>"
+  "rationale": "<one short sentence summarising the composite score>"
 }
 
 POSTING
-title: $posting_title
-company: $posting_company
-region: $posting_region
-url: $posting_url
-summary: $posting_summary
+title: __POSTING_TITLE__
+company: __POSTING_COMPANY__
+region: __POSTING_REGION__
+url: __POSTING_URL__
+summary: __POSTING_SUMMARY__
 
 OPERATOR PROFILE
-$profile_text
+__PROFILE_TEXT__
 
-Score based on:
-- role-fit (does the posting's actual work match the profile's role target?)
-- strengths alignment (does the operator's listed strengths cover the
-  posting's required + preferred items?)
-- gap-honesty (don't inflate the score if the operator's profile
-  explicitly flags a gap that the posting requires)
-- region/constraint compatibility
-EOF
+Score role_fit based on:
+- does the posting actual work match the profile role target?
+- do the operator listed strengths cover the posting required +
+  preferred items?
+- gap honesty: do not inflate if the profile explicitly flags a gap
+  the posting requires.
+- region / constraint compatibility (location, visa, employment type).
+
+Score hire_prob based on:
+- company tier vs operator stated hire-bar comfort (foundation
+  labs / FAANG / unicorn / KR-domestic large / growth-stage / early-
+  stage -- increasing hire probability roughly in that order).
+- seniority gap: senior-only spec on a posting where the operator
+  is mid-level -> low hire_prob.  Reverse -> high.
+- applicant funnel: globally famous AI labs have orders of magnitude
+  more applicants than equally interesting but less-famous companies.
+- domain match: a domestic mid-tier player matching the operator
+  background often beats a frontier-lab role the operator is
+  underqualified for on the "best company they can plausibly get
+  into" axis.
+INNER_EOF
 )
+# Interpolate variables into the template (the heredoc above was quoted to
+# avoid having to worry about shell-meta in the prompt body).
+user_prompt=${user_prompt//__POSTING_TITLE__/$posting_title}
+user_prompt=${user_prompt//__POSTING_COMPANY__/$posting_company}
+user_prompt=${user_prompt//__POSTING_REGION__/$posting_region}
+user_prompt=${user_prompt//__POSTING_URL__/$posting_url}
+user_prompt=${user_prompt//__POSTING_SUMMARY__/$posting_summary}
+user_prompt=${user_prompt//__PROFILE_TEXT__/$profile_text}
 
 # ----- scaffold vs live -----
 if [[ "${JH_FIT_SCORE_LIVE:-0}" != "1" ]]; then

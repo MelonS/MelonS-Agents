@@ -44,8 +44,11 @@ fetch_postings() {
     #                          ...
     #                        } ] } }
     #
-    # Rate-limit: 1000 calls/day per Saramin OpenAPI docs; no
-    # per-second cap.  This plugin issues one call per run.
+    # Rate-limit: 500 calls/day per Saramin's developer-agreement
+    # at registration time (2026-05-21 confirmed by operator on the
+    # signup form); no per-second cap.  This plugin issues one call
+    # per run, so daily usage is well under the cap even when
+    # combined with manual debugging runs.
 
     # Build keyword query from orchestrator's expanded include
     # list.  Cap at first 10 to stay within URL length and keep
