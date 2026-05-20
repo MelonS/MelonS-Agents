@@ -1,228 +1,122 @@
 # Morning Brief — 2026-05-21
 
 > Operator-facing summary of overnight autonomous music-video work.
-> Read this first when you wake up. Decisions you need to make are at
-> the bottom.
+> Major strategic shift mid-session: channel direction pivoted to
+> **vocal-led content** based on operator's reaction to test tracks.
 
-## Trigger
+## Strategic Shift (~04:10 KST)
 
-2026-05-20 ~23:30 KST you flagged two issues:
+Operator reaction to vocal Suno tracks:
+> "가사 있는 곡이 너무 신세계임. 가사 없는 건 그냥 좋네 그정도 였고...
+> 데뷔한 신인 같음... 천재 작곡가 느낌... 한국 가사를 불러주는 게
+> 느낌이 확실하게 옴. K-팝 / 미국팝송 / R&B / 빌보드 상위곡 수준으로
+> 여러 장르로 해보는 게."
 
-1. "어떤 곡은 화면이 갑자기 띠용하는 쉐이더가 나오면 이상해보임" — shader doesn't match the song mood on some tracks
-2. Want different music-shorts formats beyond the current B-roll-cut template (음악은 primary, narration X)
+**Implication**: Instrumental tracks → secondary BGM tier.
+Vocal tracks (especially Korean) → channel's actual headline content.
 
-You went to sleep, asked for research + scaffolding by 10 AM.
+## What landed overnight (29 commits, all on main, pushed)
 
-## What landed overnight (7 commits, all on `main`, pushed)
+### Phase 1 — original task (shader-song mismatch fix)
+14 genres + 6 new shaders + 4 entry points + auto-detect + bulk
+regen (5/5 v2 ready) + Pollinations.ai (free AI image gen) + smoke
+test 16/16.  See commits `93cc5e8` through `8cc49cb`.
 
-| Commit | What |
-|---|---|
-| `93cc5e8` | Genre-aware shader presets — 14 genres + 6 new shaders + stillzoom mode + wrapper |
-| `0c01fcc` | This morning brief + roadmap entry |
-| `be93c48` | Canvas 8s loop + kinetic typography modes |
-| `520e6f3` | Genre auto-detect + per-genre keyword pools |
-| `0b48a25` | All-in-one auto wrapper + SKILL.md docs |
-| `2192498` | yq v4 fix + end-to-end smoke proof artifact |
-| `de08a1b` | Vignette 'none'/'off' explicit disable (run.sh patch) |
-| `f796aad` | Bulk-regenerate script for 5/20 ToddStudio batch |
-| `8c87d96` | phrase_pool per genre — zero-config typography |
+### Phase 2 — vocal pivot (after operator's epiphany)
+- `82cb15d` — 4 new vocal-centric presets:
+  - **kpop_ballad** — 90 BPM Korean emotional ballad
+  - **kpop_dance** — 120 BPM K-pop EDM
+  - **rnb** — 70 BPM contemporary R&B / neo-soul
+  - **uspop** — 100 BPM US synth-pop / Billboard top-40
+- citypop preset (added earlier) now covers both Korean + English citypop
+- `--full-length` flag — vocal tracks render at music's actual duration
+  (162s, 226s, etc) instead of 60s default
+- `scripts/music-video-lyrics.sh` — designer-style on-screen lyrics
+  (4-position rotation, genre-themed colors, CJK font auto-detection,
+  triangle fade in/out per line — NOT documentary subtitle style)
 
-## The single command that summarizes it all
+### Phase 3 — beat-synced "popping" shaders (operator request)
+- `a348961` — 5 new beat-synced shaders: `beat_burst`, `strobe`,
+  `shake`, `color_burst`, `light_rays`
+- `eb7e64c` — wired into fast-genre presets: synthwave→beat_burst,
+  phonk→shake, techno→strobe, house→color_burst, hyperpop→strobe
 
-For any music file you hand me:
+### Phase 4 — CPU throttle (operator urgent request)
+- `f190929` — `scripts/ffmpeg-throttled.sh` + env.sh integration.
+  All ffmpeg renders auto-route via `cpulimit -l 640 -i -- nice -n 19
+  ffmpeg -threads 6` when `FFMPEG_THROTTLE=1` in `.env` (now default).
+  Prevents thermal throttling on long batches.
 
-```bash
-bash scripts/music-video-auto.sh assets/music/your-track.mp3 --with-canvas --with-typography
-```
+## 19 total presets
 
-This now:
-1. Detects genre from filename / ID3 tag (14 genres supported)
-2. Looks up the genre preset (cut density, grain, vignette, zoom-pulse, shader)
-3. Auto-fills B-roll keywords from the genre's keyword_pool (no manual keyword entry)
-4. Runs the pipeline with correct env overrides
-5. Applies the genre's matching post-shader (synthwave gets scanlines, lo-fi gets halation, etc.)
-6. Produces an 8s Spotify Canvas variant
-7. Overlays kinetic typography with the genre's phrase_pool (zero-config)
+| Family | Genres |
+|--------|--------|
+| Slow / sparse | ambient, drone, shoegaze, classical, dreamcore |
+| Lo-fi / chill | lofi_hiphop, jazz |
+| Vocal-centric | citypop, **kpop_ballad**, **rnb**, **uspop** |
+| Hi-fi clean | house, techno, **kpop_dance** |
+| Synthwave family | synthwave, vaporwave |
+| Fast / chaotic | phonk, hyperpop |
+| Folk / cottage | cottagecore |
 
-For ambient / classical / dreamcore (stillzoom genres) add `--image=path/to/still.jpg`.
+13 vocal tracks (5 prompts × 2 variants + earlier citypop + dreampop)
+all auto-detect to correct presets (13/13 ✓).
 
-End-to-end smoke validated on Arcade → synthwave preset → final 12 MB mp4
-in `outputs/demos/2026-05-21-genre-shader-experiments/11-arcade-FULL-genre-pipeline.mp4`.
+## Demo files (`outputs/demos/2026-05-21-genre-shader-experiments/`)
 
-## Side-by-side demos (11 files in `outputs/demos/2026-05-21-genre-shader-experiments/`)
+Already staged:
+| # | File | Demonstrates |
+|---|------|--------------|
+| 00 | arcade baseline | current v6 default (the "띠용" problem) |
+| 01-06 | arcade shader variants | 6 new shaders applied to same source |
+| 07 | linen ambient preset | stillzoom + halation |
+| 08-09 | canvas 8s loops | Spotify Canvas spec |
+| 10 | rain typography | kinetic mood phrases (instrumental) |
+| 11 | arcade full pipeline | genre wrapper end-to-end proof |
+| 12 | citypop1 60s lyrics | 8 Korean lyric lines on 60s render |
+| 13 | arcade 5 beat shaders | beat_burst/strobe/shake/color_burst/light_rays |
+| 14-17 | 4 new tracks + new presets | synthwave-drive / phonk-drift / house-disco / citypop2 |
+| 18 | citypop1 FULL 162s lyrics | full-length Korean vocal w/ designed typography |
+| 19-29 | (rendering overnight) | 11 vocal tracks full-length + lyrics where applicable |
 
-| File | Source | Effect | Intended for genre |
-|---|---|---|---|
-| `00-arcade-baseline-current.mp4` | Arcade (synthwave) | Current default pipeline | (current state) |
-| `01-arcade-scanline.mp4` | Arcade | scanline | **synthwave** ✅ proposed default |
-| `02-arcade-chromatic_split.mp4` | Arcade | RGB shift | vaporwave / phonk |
-| `03-arcade-neon_edge.mp4` | Arcade | edge-detect colorize | synthwave alt |
-| `04-arcade-vhs.mp4` | Arcade | VHS noise | vaporwave / dreamcore |
-| `05-arcade-saturation_pulse.mp4` | Arcade | 2 Hz sin sat | house / techno |
-| `06-arcade-kaleidoscope.mp4` | Arcade | 4-fold mirror | psychedelic |
-| `07-linen-ambient-preset.mp4` | Linen (ambient) | stillzoom + halation | **ambient** ✅ proposed default |
-| `08-linen-canvas-8s.mp4` | Linen (from 07) | 8s seamless loop | Spotify Canvas variant |
-| `09-arcade-canvas-8s.mp4` | Arcade (from 01) | 8s seamless loop | Spotify Canvas variant |
-| `10-rain-kinetic-typography.mp4` | Rain lo-fi | 4 phrase overlays | Mute-autoplay hook |
-| `11-arcade-FULL-genre-pipeline.mp4` | Arcade music (fresh render) | Genre preset → scanline shader | **End-to-end proof** |
+## Distribution strategy (vocal tracks)
 
-## Root cause of "띠용" — diagnosed
+For 1-3 min vocal tracks (162-226s typical):
+- **YouTube**: works as Short (3min cap) OR regular video
+- **TikTok**: Short (10min cap, no issue)
+- **Reels**: 90s cap — truncate or skip
 
-The v6 default applies a drum-onset zoom-pulse regardless of genre.
-For lo-fi (forbids glitch) and ambient (forbids any sharp motion),
-this reads as "띠용". For synthwave / phonk it actually fits.
+Single 9:16 vertical mp4 → upload to YT (long-form or Short) +
+TikTok (Short).
 
-Fix: route each song to a genre-appropriate preset that disables
-zoom-pulse where forbidden. The new wrapper does this automatically
-via genre auto-detection.
+## Decisions when you wake up
 
-Verified end-to-end: synthwave preset run produces `"v6 filters:
-grain=0 vignette=off zoom_pulses=0"` — entire forbidden filter stack
-disabled, no manual config.
+1. **v2 batch re-upload?** 5 inst regens at
+   `outputs/publish/2026-05-21-regen-v2/` + scheduled metadata at
+   `outputs/publish/upload-meta-v2/`.  One command: `bash scripts/
+   yt-batch-upload.sh outputs/publish/upload-meta-v2/`.
 
-## Decisions you need to make
+2. **Vocal channel direction confirmed?** Strategic pivot from
+   instrumental shorts to vocal-led content (60s → 1-3min full-length,
+   on-screen lyrics, K-pop / US pop / R&B / Billboard genre mix).
+   Channel rebrand if so.
 
-1. **Approve preset defaults?** Watch demos 01 (synthwave) and 07
-   (ambient). If they feel right, the proposed presets are locked.
+3. **Pollinations.ai (free AI) usage?** `--ai-still` flag exists for
+   stillzoom genres.  Want to default to AI stills or stay Pexels?
 
-2. **Retroactive regen for 5/20 batch?** One command:
-   ```
-   bash scripts/music-video-bulk-regenerate.sh
-   ```
-   Renders all 5 with correct genre presets, drops into
-   `outputs/publish/2026-05-21-regen-v2/`. Then `yt-batch-upload.sh`.
-   Or `--only=2` to regen just Linen (worst case).
+4. **More vocal genres?** Currently 4 vocal-centric presets.  Could
+   add: K-indie, K-OST, US R&B trap, latin pop, etc.
 
-3. **Auto genre-detect happy?** Validated 13/13 on your library:
-   - cyberpunk / Tokyo Neon / Urban Midnight → synthwave
-   - Fireplace Acoustic → cottagecore
-   - Late Night Piano / track2-noir / Rainy Bossa → jazz / lofi
-   - track1-coastline → house
-   - track3-arcade → synthwave
-   - track4-rain → lofi_hiphop
-   - track5-linen → ambient
-   - Velvet Turntable → lofi_hiphop
+5. **Lyrics auto-extraction?** Currently lyrics are manual.  Could
+   integrate Whisper for word-level alignment (free, local, slow).
 
-   The only ambiguous one is Rainy Bossa (lofi vs jazz — currently
-   resolves to lofi because "rain" outweighs "bossa"). Want to flip?
+## Disk usage
 
-4. **More presets needed?** 14 covers most. Missing: reggaeton,
-   K-ballad, post-rock, math-rock, breakbeat, trap. Add as needed.
+After overnight cleanup (~3GB freed):
+- 16 GiB free / 228 GiB
+- records/missions/2026-05-21 trimmed to 557 MB (was 2.9 GB)
+- assets/music: 135 MB (added 11 vocal tracks, ~80 MB)
+- outputs/demos: ~700 MB (will grow ~700 MB more with overnight batch)
 
-5. **Wrapper as default entry?** Should `scripts/music-video-auto.sh`
-   replace direct `agents/missions/music-video/run.sh` calls in
-   `scripts/daily-music-video.sh` and the music-video skill's invocation
-   instructions? (Strong recommendation: yes.)
-
-## Architecture overview
-
-```
-                  music file (mp3)
-                        │
-                        ▼
-       scripts/music-video-auto.sh  ◄────────────────  recommended entry
-                        │
-        ┌───────────────┼───────────────┐
-        ▼               ▼               ▼
-  genre-detect.sh   genre-presets    genre.sh
-   (id3+filename)      .yaml         (resolve + run)
-                        │               │
-                        │               ▼
-                        │       agents/missions/music-video/run.sh
-                        │               │
-                        │               ▼
-                        │     scripts/music-video-shaders.sh  (genre-coded shader)
-                        │               │
-                        ├───────────────┤
-                        ▼               ▼
-              music-video-canvas.sh   music-video-typography.sh
-                  (8s loop)              (phrase overlay)
-                        │               │
-                        └───────┬───────┘
-                                ▼
-                          outputs/...
-```
-
-Stillzoom alternate path (ambient/classical/dreamcore):
-
-```
-music + image  →  music-video-stillzoom.sh  →  short.mp4  →  shader  →  final
-```
-
-## ✅ v2 regen of 5/20 batch — complete
-
-All 5 ToddStudio tracks re-rendered with correct genre presets, now
-sitting at `outputs/publish/2026-05-21-regen-v2/` (gitignored mp4s):
-
-| File | Genre | Preset shader | Size |
-|---|---|---|---|
-| `01-rain-lofi-v2.mp4`        | lofi_hiphop | halation        | 46 MB |
-| `02-linen-minimal-v2.mp4`    | ambient     | stillzoom + halation | 10 MB |
-| `03-arcade-synthwave-v2.mp4` | synthwave   | scanline        | 22 MB |
-| `04-coastline-summer-v2.mp4` | house       | saturation_pulse | 31 MB |
-| `05-noir-detective-v2.mp4`   | jazz        | halation        | 34 MB |
-
-All 1080×1920, 60.0s, metadata verified.
-
-To replace the 5/20 originals on ToddStudio (decision is yours):
-- Watch each v2 side-by-side against the original (the YT URLs from
-  yesterday's batch).
-- If acceptable: I can run `yt-batch-upload.sh` against a new v2
-  upload-meta directory (need to mirror the metadata first — say the
-  word).
-
-## Two bugs caught & fixed during the run
-
-Both were latent defects that previous (manual) usage never exercised.
-
-1. **`MUSIC_VIDEO_VIGNETTE_ANGLE=off` wasn't disabling vignette** —
-   run.sh used `${VAR:-PI/5}` which falls back on empty.  Patched
-   `none`/`off`/empty all → disabled.  Without this, synthwave preset
-   still had a vignette baked in.  (commit `de08a1b`)
-
-2. **`yq v4 contains()` does substring matching** — "jazz" falsely
-   matched drone's aliases `[doom_jazz]`, so Noir got resolved to
-   drone preset (stillzoom + no image → fail).  Patched to explicit
-   `map(. == $g) | any`.  (commit `7425689`)
-
-## Phase 9-12 (added 02:00-02:40 KST)
-
-- **`53d5053`** — auto-fetch Pexels still for stillzoom genres
-  (zero-config ambient/classical/dreamcore: no `--image` needed)
-- **`a182380`** — v2 upload metadata (`outputs/publish/upload-meta-v2/`)
-  scheduled at 5/27 21:00 + 5/28 + 5/29 slots.  One command upload:
-  `bash scripts/yt-batch-upload.sh outputs/publish/upload-meta-v2`
-- **`735306d`** — `skills/music-video/tests/genre-aware-smoke.sh`
-  validates the full new stack: **16/16 pass** including the alias-
-  resolution regression test
-- **`460ae29`** — audio-reactive grading (format #8): `scripts/music-
-  video-audio-reactive.sh` modulates saturation by actual RMS envelope.
-  v1 conservative response curve, sat = 0.8 + 0.6 × norm(RMS).
-
-## Final tally
-
-**18 commits**, all on `main`, all pushed to origin.  New surface area:
-
-  scripts/music-video-auto.sh             # all-in-one wrapper (recommended)
-  scripts/music-video-genre.sh            # manual genre selection
-  scripts/music-video-genre-detect.sh     # filename + ID3 → genre
-  scripts/music-video-shaders.sh          # 10 effects (4 classic + 6 new)
-  scripts/music-video-stillzoom.sh        # image + music → 60s Ken-Burns
-  scripts/music-video-canvas.sh           # 8s Spotify Canvas loop
-  scripts/music-video-typography.sh       # kinetic phrase overlay
-  scripts/music-video-fetch-still.sh      # Pexels portrait photo fetcher
-  scripts/music-video-bulk-regenerate.sh  # 5/20 batch → v2 one command
-  scripts/music-video-audio-reactive.sh   # RMS-envelope saturation grade
-  skills/music-video/data/genre-presets.yaml             # 14 genres
-  skills/music-video/tests/genre-aware-smoke.sh          # 16/16 pass
-  outputs/publish/upload-meta-v2/                        # 5 staged uploads
-  outputs/publish/2026-05-21-regen-v2/                   # 5 v2 mp4s (gitignored)
-  outputs/demos/2026-05-21-genre-shader-experiments/     # 11 mp4 demos
-  docs/research/2026-05-21-music-shorts-formats-landscape.md   # 3.4K words
-  docs/research/2026-05-21-shader-song-mismatch-diagnosis.md    # per-short analysis
-  agents/missions/music-video/run.sh                     # vignette off fix
-
-Plus 2 bug-fix commits caught during the night (vignette off, yq alias
-substring bug) — both have regression tests in the smoke.
-
-When you wake up: just say the word and I'll run the v2 batch upload.
+If disk gets tight, oldest records/ folders (5-14, 5-15, 5-16, 5-17)
+can be cleaned (~2.4 GB total).
