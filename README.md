@@ -40,12 +40,21 @@
 > resourcer + editor + qa) pipeline via
 > [`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh).
 >
-> **Skill #2 — `job-hunt`** (0.1.0): Korean job-board digest with
+> **Skill #2 — `job-hunt`** (0.1.0): job-board digest with
 > short-keyword UX.  Pass a single seed like `--seed "Problem Solver"`
-> and the skill expands to the full family of equivalent titles used at
-> different companies (FDE / Applied AI Engineer / Generalist / etc.),
-> fetches matching postings, deduplicates across sources, and produces
-> a dated markdown digest.  Standalone shape — no missions-routed
+> and the skill expands to the full family of equivalent titles used
+> at different companies (FDE / Applied AI Engineer / Generalist /
+> etc.), fetches matching postings, deduplicates across sources, and
+> produces a dated markdown digest.  Five live-ready source plugins
+> (no API key required): **`global-ats`** (Greenhouse + Ashby + Lever
+> public boards spanning ~27 AI / SaaS companies including Anthropic /
+> OpenAI / Cursor / Stripe / Notion / Datadog), **`global-remoteok`**,
+> **`global-remotive`**, **`global-hn-whoshiring`** (monthly "Who is
+> hiring?" thread via Algolia HN Search), and **`kr-worknet`**
+> (정부 공공고용서비스).  End-to-end live test pulled 5,000+ raw
+> postings → 200 matching the "problem-solver" 24-synonym filter.
+> Two key-gated KR plugins (`kr-wanted`, `kr-saramin`) ship scaffolded
+> for operator validation.  Standalone shape — no missions-routed
 > pipeline, the skill is the canonical implementation.
 >
 > Earlier mission types (`faceless-short` narration-driven shorts +
@@ -510,13 +519,28 @@ operator-profile.md required).
 # After the clone + bootstrap above:
 skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
 # Output: digest.md path printed on stdout; open it to see the
-# 7 mock postings spanning 5 sources, all matched against the
+# mock postings spanning multiple sources, all matched against the
 # 24 synonym keywords in the "problem-solver" family.
 
 # Try other seeds in the same family — all produce identical results:
 skills/job-hunt/scripts/run.sh --seed "FDE" --dry-run
 skills/job-hunt/scripts/run.sh --seed "Forward Deployed" --dry-run
 skills/job-hunt/scripts/run.sh --seed "Generalist" --dry-run
+```
+
+For real postings without operator setup, flip the global-*
+plugins to live mode — no key required:
+
+```bash
+JH_GLOBAL_ATS_LIVE=1 JH_GLOBAL_REMOTEOK_LIVE=1 \
+JH_GLOBAL_REMOTIVE_LIVE=1 JH_GLOBAL_HN_LIVE=1 \
+JH_WORKNET_LIVE=1 \
+skills/job-hunt/scripts/run.sh --seed "Problem Solver"
+# Pulls Greenhouse + Ashby + Lever ATS boards (27 companies),
+# RemoteOK / Remotive / HN monthly thread / 워크넷; ~5k raw
+# postings filtered to the 24-keyword Problem Solver family.
+# See docs/research/job-sources-survey-2026-05-21.md for the
+# legal-and-technical audit behind which sources are live-ready.
 ```
 
 See [`docs/samples/job-hunt-digest-mock.md`](docs/samples/job-hunt-digest-mock.md)

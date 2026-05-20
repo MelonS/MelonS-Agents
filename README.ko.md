@@ -41,12 +41,20 @@
 > 의 5-agent (orchestrator + planner + resourcer + editor + qa)
 > 파이프라인 호출.
 >
-> **Skill #2 — `job-hunt`** (0.1.0): 한국 잡보드 digest, 짧은
-> 키워드 UX.  `--seed "Problem Solver"` 한 줄이면 회사마다 다른
-> 동의어 호칭 (FDE / Applied AI Engineer / Generalist 등) 으로
-> 자동 확장 → 다중 소스에서 매칭 fetch → URL dedupe → 날짜별
-> 마크다운 digest.  Standalone shape — missions-routed 파이프라인
-> 없이 skill 자체가 canonical 구현.
+> **Skill #2 — `job-hunt`** (0.1.0): 잡보드 digest, 짧은 키워드 UX.
+> `--seed "Problem Solver"` 한 줄이면 회사마다 다른 동의어 호칭
+> (FDE / Applied AI Engineer / Generalist 등) 으로 자동 확장 →
+> 다중 소스에서 매칭 fetch → URL dedupe → 날짜별 마크다운 digest.
+> 키 없이 즉시 작동하는 live-ready plugin 5개:
+> **`global-ats`** (Greenhouse + Ashby + Lever 공식 board API ~27개
+> 회사 — Anthropic / OpenAI / Cursor / Stripe / Notion / Datadog
+> 등 AI/SaaS 풀스택), **`global-remoteok`**, **`global-remotive`**,
+> **`global-hn-whoshiring`** (HN 월간 "Who is hiring?" 쓰레드를
+> Algolia HN Search 로 fetch), **`kr-worknet`** (정부 공공고용서비스).
+> 종합 라이브 테스트: 5,000+ raw → "problem-solver" 24-동의어 필터
+> 통과 200건.  키 필요 KR 플러그인 2개 (`kr-wanted`, `kr-saramin`)
+> 는 운영자 검증용 scaffolded.  Standalone shape — missions-routed
+> 파이프라인 없이 skill 자체가 canonical 구현.
 >
 > 이전 미션 타입 (`faceless-short` 내레이션 기반 쇼츠 + v1
 > `highlight` / `summarize` / `shorts-batch`) 도 트리에 대안 경로로
@@ -493,14 +501,28 @@ operator-profile.md 필요 없음).
 ```bash
 # 위 clone + bootstrap 다음에:
 skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
-# 출력: stdout 에 digest.md 경로 — 열어 보면 5개 소스에 걸친
-# 7개 mock 채용공고가 problem-solver family 의 24개 동의어
-# 키워드에 매칭됨.
+# 출력: stdout 에 digest.md 경로 — 열어 보면 여러 소스에 걸친
+# mock 채용공고가 problem-solver family 의 24개 동의어 키워드에 매칭됨.
 
 # 같은 family 의 다른 seed — 동일 결과:
 skills/job-hunt/scripts/run.sh --seed "FDE" --dry-run
 skills/job-hunt/scripts/run.sh --seed "Forward Deployed" --dry-run
 skills/job-hunt/scripts/run.sh --seed "Generalist" --dry-run
+```
+
+운영자 셋업 없이 진짜 채용공고를 받으려면 global-* plugin 을
+라이브로 켜면 됨 — 키 불필요:
+
+```bash
+JH_GLOBAL_ATS_LIVE=1 JH_GLOBAL_REMOTEOK_LIVE=1 \
+JH_GLOBAL_REMOTIVE_LIVE=1 JH_GLOBAL_HN_LIVE=1 \
+JH_WORKNET_LIVE=1 \
+skills/job-hunt/scripts/run.sh --seed "Problem Solver"
+# Greenhouse + Ashby + Lever ATS board (27개 회사), RemoteOK /
+# Remotive / HN 월간 thread / 워크넷 에서 ~5천건 raw → Problem
+# Solver 24-동의어 필터로 200건 매칭.  각 소스의 합법성/기술
+# 가능성 감사는 docs/research/job-sources-survey-2026-05-21.md
+# 참고.
 ```
 
 digest 가 어떻게 생겼는지는

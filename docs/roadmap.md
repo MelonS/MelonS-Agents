@@ -140,6 +140,31 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-21** (~02:00 KST, autonomous overnight) **Skill #2
+  `job-hunt` — 5 live-ready plugins land (no API key required)**
+  (commits `b3789ba` survey, `58a2b58` first 3 plugins + deprecate
+  jobkorea/programmers, `a6c39c4` HN + worknet).  Operator request
+  2026-05-20 ~23:50 KST: "공고올라는오는 모든곳을 다찾아보고
+  가져올수있는지 없는지 확인해봐 낼 아침10시까지 쉬지않고 해".
+  Audit at `docs/research/job-sources-survey-2026-05-21.md` walked
+  30+ candidate boards through robots.txt + ToS + endpoint probe;
+  ranked Tier 1-5 by legal posture.  Five live-ready plugins
+  shipped: `global-ats` (Greenhouse + Ashby + Lever public boards —
+  27 boards spanning Anthropic / OpenAI / Cursor / Stripe / Notion
+  / Datadog / etc), `global-remoteok` (`remoteok.com/api`),
+  `global-remotive` (`remotive.com/api/remote-jobs`),
+  `global-hn-whoshiring` (HN monthly "Who is hiring?" thread via
+  Algolia HN Search), and `kr-worknet` (정부 공공고용서비스).
+  End-to-end live test pulled 5,474 raw postings → 200 matched
+  the Problem-Solver 24-synonym filter.  Permanent-mock conversion
+  for `kr-jobkorea` (robots.txt forbids /Search/?stext= + 2017
+  잡코리아 vs 사람인 precedent) and `kr-programmers` (service
+  permanently closed 2025-05-19).  Orchestrator argv-limit fix
+  (--slurpfile pattern) lets 5MB ATS payloads flow through; schema
+  pattern broadens to accept `global-*` source identifiers.
+  Tests 68/68 PASS.  README EN+KO cadence batch with the live
+  invocation example.
+
 - **2026-05-20** (v0.4.0 tag at `96d1270`, ~15:00 KST) **Skill #2
   `job-hunt` v0.4.0 shipped** — v2 short-keyword UX (`--seed
   "Problem Solver"` → role-synonyms.yaml family expansion, 5
