@@ -165,6 +165,17 @@ export MUSIC_VIDEO_FILM_GRAIN_INTENSITY="$GRAIN"
 export MUSIC_VIDEO_VIGNETTE_ANGLE="$VIGNETTE"
 export MUSIC_VIDEO_ZOOM_PULSE_AMP="$ZOOM_AMP"
 
+# Use operator-supplied keywords or fall back to genre's keyword_pool
+if [[ -z "$KEYWORDS" ]]; then
+  KEYWORDS=$(yq -r ".genres.${RESOLVED}.keyword_pool | join(\",\")" "$PRESETS" 2>/dev/null)
+  if [[ -n "$KEYWORDS" && "$KEYWORDS" != "null" ]]; then
+    echo "→ no keywords supplied — using $RESOLVED preset pool"
+    echo "  ($KEYWORDS)"
+  else
+    KEYWORDS=""
+  fi
+fi
+
 echo "→ running pipeline with preset env vars"
 if [[ -n "$KEYWORDS" ]]; then
   bash "$RUN_SH" "$SHORT_ID" "$MUSIC" "$KEYWORDS"

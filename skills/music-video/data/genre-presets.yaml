@@ -40,6 +40,13 @@ genres:
     lut_direction: cool_desat
     cut_mode: stillzoom
     forbidden_effects: [pond, scanline, neon_edge, datamosh, chromatic_split]
+    keyword_pool:              # default Pexels queries when operator doesn't supply
+      - soft window light
+      - foggy mountain
+      - candle flame slow
+      - empty room sunset
+      - rain on glass slow
+      - drifting clouds
     notes: |
       Ambient music expects perpetual stillness with slow color/zoom drifts.
       The drum-onset zoom-pulse and 12-beat cuts both violate the genre
@@ -55,6 +62,13 @@ genres:
     lut_direction: cool_desat_dark
     cut_mode: stillzoom
     forbidden_effects: [pond, scanline, neon_edge, datamosh]
+    keyword_pool:
+      - dark cloud time-lapse
+      - mountain mist
+      - subway tunnel slow
+      - industrial smoke
+      - abandoned highway
+      - cathedral interior
     notes: |
       Drone / doom jazz tolerates and benefits from heavier grain.  Vignette
       deeper.  Always low-key (underexposed look).
@@ -69,6 +83,13 @@ genres:
     lut_direction: desat_warm
     cut_mode: cuts
     forbidden_effects: [scanline, neon_edge, datamosh]
+    keyword_pool:
+      - blurred neon street
+      - rain on lens
+      - tape grain texture
+      - soft sunset wash
+      - fairy lights bokeh
+      - wet pavement reflection
     notes: |
       Shoegaze visual code: "close-ups losing definition" + chromatic.
       Slight blur welcome.  Crisp clean grading reads as wrong genre.
@@ -85,6 +106,13 @@ genres:
     lut_direction: warm_amber
     cut_mode: cuts
     forbidden_effects: [scanline, neon_edge, datamosh, chromatic_split]
+    keyword_pool:
+      - rainy window
+      - vinyl record spinning
+      - coffee shop interior
+      - warm desk lamp
+      - tokyo alley night
+      - vintage turntable
     notes: |
       Lo-fi production aesthetic is structurally anti-glitch.  Lofi Girl
       and Chillhop have years of consistent practice on this.  The drum-
@@ -101,6 +129,13 @@ genres:
     lut_direction: warm_low_key
     cut_mode: cuts
     forbidden_effects: [scanline, neon_edge, datamosh, kaleidoscope]
+    keyword_pool:
+      - smoky jazz bar
+      - wet street lamp
+      - rain on glass close
+      - muted trumpet hand
+      - cigarette smoke close
+      - noir hat detective
     notes: |
       Warm halation + grain + low-key vignette = jazz-noir visual code.
       Add halation to current default; kill the zoom-pulse.
@@ -117,6 +152,13 @@ genres:
     lut_direction: high_saturation
     cut_mode: cuts
     forbidden_effects: [vhs, datamosh, kaleidoscope]
+    keyword_pool:
+      - palm tree golden hour
+      - ocean wave slow-mo
+      - rooftop pool sunset
+      - tropical leaves backlit
+      - beach sunset silhouette
+      - warm shoreline
     notes: |
       House is hi-fi clean — heavy grain fights the production.  Saturation
       pulse on kick gives it the right energy.
@@ -131,6 +173,13 @@ genres:
     lut_direction: high_saturation
     cut_mode: cuts
     forbidden_effects: [vhs, halation]
+    keyword_pool:
+      - club strobe lights
+      - warehouse silhouette
+      - neon escalator descend
+      - industrial corridor
+      - subway platform empty
+      - metal grate macro
     notes: |
       Industrial / cold / metallic. No warmth, no grain. Edge glow welcome.
 
@@ -146,6 +195,13 @@ genres:
     lut_direction: hot_pink_cyan
     cut_mode: cuts
     forbidden_effects: [halation, vhs, grain]
+    keyword_pool:
+      - neon sunset grid
+      - retro arcade controls
+      - tokyo neon street
+      - vaporwave pastel
+      - chrome reflection
+      - palm tree pink sunset
     notes: |
       Synthwave visual code: neon grid + sunset gradient + scanlines.
       Soft grain reads as lo-fi (wrong genre).  Current 5/21 Arcade short
@@ -161,6 +217,13 @@ genres:
     lut_direction: pastel_purple_pink_teal
     cut_mode: stillzoom         # vaporwave is more about looping aesthetic than cuts
     forbidden_effects: [scanline, datamosh, saturation_pulse]
+    keyword_pool:
+      - mall fountain low-fi
+      - roman bust pastel
+      - windows 95 chrome
+      - pastel sky vhs
+      - mannequin store
+      - empty atrium
     notes: |
       Vaporwave: VHS + chromatic + pastel.  Sharp hi-contrast reads as wrong.
 
@@ -176,6 +239,13 @@ genres:
     lut_direction: high_contrast_warm
     cut_mode: cuts
     forbidden_effects: [soft_focus, halation]
+    keyword_pool:
+      - drift car night
+      - anime style cityscape
+      - japanese street tilted
+      - headlight glare drift
+      - speed motion blur
+      - wheel smoke close
     notes: |
       Drift-phonk: RGB-split + speed-ramp + saturation pulse on the drop.
 
@@ -189,6 +259,13 @@ genres:
     lut_direction: hyper_saturated
     cut_mode: cuts
     forbidden_effects: [restraint, halation, soft_focus]
+    keyword_pool:
+      - glitch screen close
+      - rgb shift abstract
+      - neon strobe rapid
+      - pixel art motion
+      - ai abstract face
+      - cyber distortion
     notes: |
       Hyperpop / glitch: datamosh + pixel-sort + RGB-split.  The visual IS
       the chaos. Restraint reads as wrong.
@@ -205,6 +282,13 @@ genres:
     lut_direction: warm_green_gold
     cut_mode: cuts
     forbidden_effects: [scanline, neon_edge, datamosh, vhs]
+    keyword_pool:
+      - wildflower meadow
+      - wooden cottage window
+      - warm kitchen morning
+      - knitted texture
+      - forest dappled light
+      - stream pebbles
     notes: |
       Warm grain + soft sun-flare + green/gold LUT.  No neon, no urban, no glitch.
 
@@ -220,6 +304,13 @@ genres:
     lut_direction: warm_classical
     cut_mode: stillzoom
     forbidden_effects: [scanline, neon_edge, datamosh, vhs, kaleidoscope]
+    keyword_pool:
+      - old painting close
+      - leather book pages
+      - marble statue detail
+      - cathedral light beam
+      - library candle close
+      - violin scroll macro
     notes: |
       Ken-Burns on still painting / album art.  Slow, contemplative.
       Any modern UI / digital effect reads as wrong.
@@ -236,6 +327,13 @@ genres:
     lut_direction: pastel_sky
     cut_mode: stillzoom
     forbidden_effects: [scanline, datamosh, sharp_cuts]
+    keyword_pool:
+      - empty pool pastel
+      - liminal hallway pink
+      - abandoned playground
+      - drained mall
+      - endless staircase
+      - soft fog corridor
     notes: |
       Pastel + soft VHS grain + slight blur.  Sharp hi-contrast breaks the mood.
 
