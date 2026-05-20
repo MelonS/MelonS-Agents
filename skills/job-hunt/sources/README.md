@@ -47,6 +47,8 @@ the documented endpoint and may incur per-source quota.
 | **`global-ats`** | live-ready (Greenhouse / Ashby / Lever ⭐) | `JH_GLOBAL_ATS_LIVE` | Public ATS board APIs, no auth |
 | **`global-remoteok`** | live-ready (RemoteOK ⭐) | `JH_GLOBAL_REMOTEOK_LIVE` | `https://remoteok.com/api` |
 | **`global-remotive`** | live-ready (Remotive ⭐) | `JH_GLOBAL_REMOTIVE_LIVE` | `https://remotive.com/api/remote-jobs` |
+| **`global-hn-whoshiring`** | live-ready (HN monthly "Who is hiring?" ⭐) | `JH_GLOBAL_HN_LIVE` | `hn.algolia.com/api/v1` |
+| **`kr-worknet`** | live-ready (정부 공공고용서비스 ⭐) | `JH_WORKNET_LIVE` | `work.go.kr/empInfo/empInfoSrch/list/dtlEmpSrchList.do` |
 | `kr-wanted` | live-path scaffolded; needs operator validation | `JH_WANTED_LIVE` + `WANTED_API_KEY` | Wanted partner API |
 | `kr-saramin` | live-path scaffolded; needs operator validation | `JH_SARAMIN_LIVE` + `SARAMIN_KEY` | Saramin OpenAPI (`oapi.saramin.co.kr`) |
 | `kr-jobkorea` | **mock-only (permanent)** — robots.txt + 2017 precedent | n/a | See file header |

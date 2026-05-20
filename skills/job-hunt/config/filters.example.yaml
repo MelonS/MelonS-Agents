@@ -52,13 +52,15 @@ keywords:
 #   ⚠️  scaffolded — live path coded but not operator-validated
 #   ⛔ permanent mock — see plugin header for why
 sources:
-  - global-ats        # ⭐ Greenhouse + Ashby + Lever public boards
-  - global-remoteok   # ⭐ remoteok.com/api
-  - global-remotive   # ⭐ remotive.com/api/remote-jobs
-  - kr-wanted         # 🔑 Wanted partner API (WANTED_API_KEY)
-  - kr-saramin        # 🔑 Saramin OpenAPI (SARAMIN_KEY)
-  - kr-jobkorea       # ⛔ permanent mock — robots.txt + 2017 precedent
-  - kr-programmers    # ⛔ service closed 2025-05-19 — deprecated stub
+  - global-ats           # ⭐ Greenhouse + Ashby + Lever public boards
+  - global-remoteok      # ⭐ remoteok.com/api
+  - global-remotive      # ⭐ remotive.com/api/remote-jobs
+  - global-hn-whoshiring # ⭐ HN monthly "Who is hiring?" thread
+  - kr-worknet           # ⭐ 워크넷 (정부 공공고용서비스 SSR)
+  - kr-wanted            # 🔑 Wanted partner API (WANTED_API_KEY)
+  - kr-saramin           # 🔑 Saramin OpenAPI (SARAMIN_KEY)
+  - kr-jobkorea          # ⛔ permanent mock — robots.txt + 2017 precedent
+  - kr-programmers       # ⛔ service closed 2025-05-19 — deprecated stub
   # - _mock           # synthetic test fixture; uncomment when
   #                   # validating pipeline changes without burning
   #                   # real fetches.

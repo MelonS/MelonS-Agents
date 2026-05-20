@@ -100,9 +100,11 @@ list_sources() {
       kr-programmers)  flag_var="JH_PROGRAMMERS_LIVE";    [[ "${JH_PROGRAMMERS_LIVE:-0}" == "1" ]] && mode="LIVE" || mode="mock" ;;
       kr-jobkorea)     flag_var="JH_JOBKOREA_LIVE";       [[ "${JH_JOBKOREA_LIVE:-0}"    == "1" ]] && mode="LIVE" || mode="mock" ;;
       kr-saramin)      flag_var="JH_SARAMIN_LIVE";        [[ "${JH_SARAMIN_LIVE:-0}"     == "1" ]] && mode="LIVE" || mode="mock" ;;
+      kr-worknet)      flag_var="JH_WORKNET_LIVE";        [[ "${JH_WORKNET_LIVE:-0}"     == "1" ]] && mode="LIVE" || mode="mock" ;;
       global-ats)      flag_var="JH_GLOBAL_ATS_LIVE";       [[ "${JH_GLOBAL_ATS_LIVE:-0}"      == "1" ]] && mode="LIVE" || mode="mock" ;;
       global-remoteok) flag_var="JH_GLOBAL_REMOTEOK_LIVE";  [[ "${JH_GLOBAL_REMOTEOK_LIVE:-0}" == "1" ]] && mode="LIVE" || mode="mock" ;;
       global-remotive) flag_var="JH_GLOBAL_REMOTIVE_LIVE";  [[ "${JH_GLOBAL_REMOTIVE_LIVE:-0}" == "1" ]] && mode="LIVE" || mode="mock" ;;
+      global-hn-whoshiring) flag_var="JH_GLOBAL_HN_LIVE";   [[ "${JH_GLOBAL_HN_LIVE:-0}"      == "1" ]] && mode="LIVE" || mode="mock" ;;
       *)               flag_var="(unknown — check plugin)"; mode="?" ;;
     esac
     printf '%-22s %-12s %s\n' "$name" "$mode" "$flag_var"
