@@ -85,6 +85,7 @@ declare_genre_keywords() {
 ambient: ambient linen minimal drone soft pad meditation chill_relax wind ocean still
 drone: drone doom ambient dark bass_drone funeral
 shoegaze: shoegaze dreampop slowdive fuzz reverb
+citypop: citypop city_pop kr_citypop late_train ballad korean_pop kpop_ballad
 lofi_hiphop: lofi lo-fi chillhop turntable vinyl velvet rain bossa cozy cafe study chill
 jazz: jazz bossa noir vibraphone trumpet sax piano latenight late_night night
 house: house tropical coastline summer beach palm sunshine

@@ -170,6 +170,38 @@ genres:
       Warm halation + grain + low-key vignette = jazz-noir visual code.
       Add halation to current default; kill the zoom-pulse.
 
+  # ───── City pop / vocal-centric (vocals are the foreground) ─────
+
+  citypop:
+    aliases: [city_pop, kr_citypop, jp_citypop, vocal_citypop, ballad]
+    phrase_beats: 16            # 8-beat soft cuts, vocal-respecting
+    grain_intensity: 6
+    vignette_angle: PI/4        # deeper, warmer
+    zoom_pulse_amp: 0          # FORBIDDEN — vocals carry the energy
+    shader: halation           # warm bloom for nostalgia
+    lut_direction: warm_amber_purple
+    cut_mode: cuts
+    forbidden_effects: [scanline, neon_edge, datamosh, kaleidoscope, chromatic_split]
+    keyword_pool:
+      - tokyo night neon street
+      - shibuya crossing rain
+      - city skyline 80s
+      - subway window night
+      - taxi headlights rain
+      - elevated train tracks dusk
+    phrase_pool:
+      - the last train
+      - rooftop nights
+      - city as it sleeps
+      - someone is waiting
+      - across the river
+    notes: |
+      City pop / K-citypop / J-citypop are vocal-centric (vocals are the
+      foreground, not the backdrop).  No zoom-pulse, no glitch, no neon
+      — vocals carry all the energy and visual must NOT compete.  Warm
+      halation + amber LUT + slow soft cuts.  Designed for both Korean
+      city pop (vocal-citypop-kr-*) and Japanese city pop references.
+
   # ───── Hi-fi clean family (denser cuts, sharper) ─────
 
   house:
