@@ -32,17 +32,20 @@ DETECT_SH="$REPO_ROOT/scripts/music-video-genre-detect.sh"
 GENRE_SH="$REPO_ROOT/scripts/music-video-genre.sh"
 CANVAS_SH="$REPO_ROOT/scripts/music-video-canvas.sh"
 TYPO_SH="$REPO_ROOT/scripts/music-video-typography.sh"
+AREACTIVE_SH="$REPO_ROOT/scripts/music-video-audio-reactive.sh"
 
 # Parse flags
 WITH_CANVAS=0
 WITH_TYPO_FLAG=0     # --with-typography given (use genre pool)
 WITH_TYPO=""         # explicit phrases CSV (overrides pool)
+WITH_AREACTIVE=0     # --with-audio-reactive
 STILL_IMG=""
 SHORT_ID=""
 ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --with-canvas) WITH_CANVAS=1; shift ;;
+    --with-audio-reactive) WITH_AREACTIVE=1; shift ;;
     --with-typography)
       WITH_TYPO_FLAG=1
       # Peek at next arg — if non-flag, treat as phrases CSV; else use pool
@@ -125,7 +128,17 @@ echo "═══ base mp4: $LATEST"
 
 OUTPUT_DIR="$(dirname "$LATEST")"
 
-# 4. Canvas variant (optional)
+# 4. Audio-reactive grading variant (optional, applied to base BEFORE canvas/typo
+#    so downstream variants inherit the reactive grading)
+if [[ "$WITH_AREACTIVE" == 1 ]]; then
+  AREACTIVE_OUT="${LATEST%.mp4}-audio-reactive.mp4"
+  echo "→ audio-reactive grading"
+  bash "$AREACTIVE_SH" "$LATEST" "$MUSIC" "$AREACTIVE_OUT"
+  LATEST="$AREACTIVE_OUT"   # downstream uses the graded version
+  echo "✓ audio-reactive: $AREACTIVE_OUT"
+fi
+
+# 5. Canvas variant (optional)
 if [[ "$WITH_CANVAS" == 1 ]]; then
   CANVAS_OUT="$OUTPUT_DIR/canvas.mp4"
   echo "→ canvas 8s variant"
