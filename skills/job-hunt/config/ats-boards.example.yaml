@@ -45,6 +45,13 @@ greenhouse:
   - discord         # ~62
   - robinhood       # ~94
   - instacart       # ~106
+  # Korean companies on Greenhouse — most KR-domestic companies
+  # use self-hosted careers pages; these 4 are the ATS-on-Greenhouse
+  # exceptions found 2026-05-21 ~14:30 KST.
+  - coupang         # 486 — large; mix of Seoul + Mountain View
+  - daangn          # 44 — Karrot, Seoul-only
+  - sendbird        # 18 — chat infra, Seoul + global
+  - krafton         # 54 — PUBG / game
 
 ashby:
   # Endpoint: https://api.ashbyhq.com/posting-api/job-board/<slug>

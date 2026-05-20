@@ -22,56 +22,92 @@ fetch_postings() {
       return 1
     fi
 
-    # Saramin OpenAPI surface (as of latest public docs at
-    # https://oapi.saramin.co.kr/guide):
+    # Saramin OpenAPI spec (verified 2026-05-21 against
+    # https://oapi.saramin.co.kr/guide/job-search):
     #
-    #   GET https://oapi.saramin.co.kr/job-search
-    #     ?access-key=<key>
-    #     &keywords=<comma-joined>
-    #     &loc_mcd=<region code, see Saramin location table>
-    #     &job_type=1                 # 1 = 정규직
-    #     &count=50
-    #     &fields=keyword-code,industry-code
-    #     &sort=pd                    # pd = posted-date desc
+    # GET https://oapi.saramin.co.kr/job-search
+    #   ?access-key=<key>                         (required)
+    #   &keywords=<term1,term2,...>               (OR-search across company / title / industry)
+    #   &count=100                                (max 110, default 10)
+    #   &sort=pd                                  (pd = posting-date desc, default)
+    #   &fields=posting-date,expiration-date      (adds ISO 8601 date fields)
     #
-    # Response:
-    #   .jobs.job[] | {
-    #     id, position{title, ind_cd, ...},
-    #     company{detail{name}}, salary{...},
-    #     opening-timestamp, expiration-date,
-    #     url, ...
-    #   }
+    # Response shape:
+    #   { "jobs": { "count": N, "start": 0, "total": "N",
+    #               "job": [ { id, url, active,
+    #                          company.detail.name,
+    #                          position.title,
+    #                          position.location.name,
+    #                          position.job-type.name,
+    #                          position.experience-level.name,
+    #                          posting-date / opening-timestamp,
+    #                          ...
+    #                        } ] } }
     #
-    # Operator validation step:
-    #   curl -sS "https://oapi.saramin.co.kr/job-search?access-key=$SARAMIN_KEY&count=3&sort=pd" \
-    #     | jq '.jobs.job[0]'
-    # Compare field names to the assumed shape below and adjust.
-    #
-    # Rate-limit (per Saramin OpenAPI docs): 1000 calls/day, no
-    # specific per-second cap.  Run once daily — no in-skill
-    # parallelism needed.
+    # Rate-limit: 1000 calls/day per Saramin OpenAPI docs; no
+    # per-second cap.  This plugin issues one call per run.
 
-    # Placeholder live call (commented; flip on after operator validates):
-    # raw=$(curl -sS \
-    #   "https://oapi.saramin.co.kr/job-search?access-key=$SARAMIN_KEY&count=50&sort=pd") || return 2
-    # echo "$raw" | jq --arg fa "$(date -Iseconds)" '
-    #   { source: "kr-saramin",
-    #     fetched_at: $fa,
-    #     postings: (.jobs.job // [] | map({
-    #       title: .position.title,
-    #       company: .company.detail.name,
-    #       region: (.position.location.name // ""),
-    #       posted_at: .["opening-timestamp"],
-    #       url: .url,
-    #       summary: (.position.["job-type"].name // ""),
-    #       apply_url: .url
-    #     })) }'
+    # Build keyword query from orchestrator's expanded include
+    # list.  Cap at first 10 to stay within URL length and keep
+    # search broad enough.
+    local kw_query
+    if [[ -n "${JH_KEYWORDS_INCLUDE:-}" ]]; then
+      kw_query=$(printf '%s' "$JH_KEYWORDS_INCLUDE" | awk -F',' '{
+        n = (NF > 10 ? 10 : NF)
+        for (i = 1; i <= n; i++) {
+          gsub(/^[ \t]+|[ \t]+$/, "", $i)
+          if (length($i)) printf "%s%s", (i>1?",":""), $i
+        }
+      }')
+    else
+      kw_query="AI,LLM,agent"
+    fi
 
-    echo "[kr-saramin] live path not yet operator-validated — see kr-saramin.sh comments" >&2
-    return 1
+    # URL-encode minimally (commas + Korean stay; encode spaces).
+    kw_query=${kw_query// /%20}
+
+    local raw
+    raw=$(/usr/bin/curl -sS --max-time 12 \
+      -A "MelonS-Agents/0.4 (+github.com/MelonS/MelonS-Agents)" \
+      "https://oapi.saramin.co.kr/job-search?access-key=${SARAMIN_KEY}&keywords=${kw_query}&count=100&sort=pd&fields=posting-date,expiration-date") || {
+        echo "[kr-saramin] curl failed — falling back to mock" >&2
+        _saramin_mock "${JH_MOCK_FETCH_AT:-$(date -Iseconds 2>/dev/null)}"
+        return 0
+      }
+
+    if ! echo "$raw" | jq -e '.jobs' >/dev/null 2>&1; then
+      echo "[kr-saramin] malformed response (no .jobs key) — first 200 chars:" >&2
+      printf '%s' "$raw" | head -c 200 >&2
+      echo "" >&2
+      echo "[kr-saramin] falling back to mock" >&2
+      _saramin_mock "${JH_MOCK_FETCH_AT:-$(date -Iseconds 2>/dev/null)}"
+      return 0
+    fi
+
+    echo "$raw" | jq --arg fa "$(date -Iseconds 2>/dev/null || date +%Y-%m-%dT%H:%M:%S%z)" '
+      { source: "kr-saramin",
+        fetched_at: $fa,
+        postings: (.jobs.job // [] | map({
+          title: (.position.title // ""),
+          company: (.company.detail.name // ""),
+          region: ((.position.location.name // "") | tostring),
+          posted_at: ((.["posting-date"] // .["opening-timestamp"] // "") | tostring | .[0:10]),
+          url: (.url // ""),
+          summary: ("사람인 — " + (.company.detail.name // "") + " — " + (.position.title // "")
+                  + (if .position["experience-level"].name then " · 경력: " + (.position["experience-level"].name | tostring) else "" end)
+                  + (if .position["job-type"].name then " · " + (.position["job-type"].name | tostring) else "" end)
+                  + (if .position["required-education-level"].name then " · " + (.position["required-education-level"].name | tostring) else "" end)
+                  ),
+          apply_url: (.url // "")
+        })) }'
+    return 0
   fi
 
-  local fetched_at="${JH_MOCK_FETCH_AT:-$(date -Iseconds 2>/dev/null || date +%Y-%m-%dT%H:%M:%S%z)}"
+  _saramin_mock "${JH_MOCK_FETCH_AT:-$(date -Iseconds 2>/dev/null || date +%Y-%m-%dT%H:%M:%S%z)}"
+}
+
+_saramin_mock() {
+  local fetched_at="$1"
 
   cat <<EOF
 {
