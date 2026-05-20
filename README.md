@@ -4,11 +4,11 @@
 
 [한국어](./README.ko.md) | **English** · [**Live site →**](https://melons.github.io/MelonS-Agents/)
 
-**Music file → 60-second 9:16 vertical short.**  (Or topic prompt → narrated short, the earlier mission type.)
+**Two production skills:** music-video shorts + Korean job-board digest.  Both [agentskills.io](https://agentskills.io)-spec compliant — portable across Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot.
 
-**Local for the mechanical, Claude for the creative.**  Phrase-aware ffmpeg shaders sync vintage visuals to music structure.  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
+**Local for the mechanical, Claude for the creative.**  Phrase-aware ffmpeg shaders sync vintage visuals to music structure.  Short-keyword job-hunt expansion via role-synonym map.  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
 
-`60+ mission outputs · 5 mission types · 0 runtime API tokens · 3 audit layers · MIT`
+`60+ mission outputs · 5 mission types · 2 portable skills · 0 runtime API tokens · 3 audit layers · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -31,15 +31,26 @@
 ## Overview
 
 > A macOS-based multi-agent system **driven by [Claude Code](https://docs.anthropic.com/claude-code)**
-> (the Anthropic CLI).  **The current focus** — and what you see in
-> the demo above — is the `music-video` mission: a music track in, a
-> 9:16 vertical short out, with phrase-aware ffmpeg shaders syncing
-> vintage visuals to the music's structure (operator pilot pick,
-> 2026-05-17 — see
-> [`docs/pilots/decision-log.md`](docs/pilots/decision-log.md)).
-> The earlier `faceless-short` mission (narration-driven shorts) and
-> the v1 missions (`highlight` / `summarize` / `shorts-batch`) remain
-> in the tree as alternate paths.
+> (the Anthropic CLI), shipping two production skills as of v0.4.0:
+>
+> **Skill #1 — `music-video`** (1.0.0): music track in, 9:16 vertical
+> short out, with phrase-aware ffmpeg shaders syncing vintage visuals
+> to the music's structure.  Demo above is from this skill.  Missions-
+> routed shape — invokes the 5-agent (orchestrator + planner +
+> resourcer + editor + qa) pipeline via
+> [`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh).
+>
+> **Skill #2 — `job-hunt`** (0.1.0): Korean job-board digest with
+> short-keyword UX.  Pass a single seed like `--seed "Problem Solver"`
+> and the skill expands to the full family of equivalent titles used at
+> different companies (FDE / Applied AI Engineer / Generalist / etc.),
+> fetches matching postings, deduplicates across sources, and produces
+> a dated markdown digest.  Standalone shape — no missions-routed
+> pipeline, the skill is the canonical implementation.
+>
+> Earlier mission types (`faceless-short` narration-driven shorts +
+> v1 `highlight` / `summarize` / `shorts-batch`) remain in the tree
+> as alternate paths.
 >
 > Two ways to use this repo:
 > - **Agent-driven (the primary path)** — install Claude Code on a Mac,
@@ -458,15 +469,15 @@ in [`docs/cost-model.md`](docs/cost-model.md).
 - Token receipts land in your Anthropic console; check after the first
   few mission runs to calibrate your plan choice.
 
-## Quick start — music-video flow (the showcase)
+## Quick start
 
-> **Latest stable tag**: `v0.3.0` — Permission bootstrap + pluggable
-> B-roll (custom `MUSIC_VIDEO_BROLL_DIR` + AI-anime generator) on top
-> of `v0.2.0`'s Skills framework + zero-account demo path.  Cloning
-> the tag is the recommended first-touch entry point; `main` may
-> contain in-flight work past the tag.
+> **Latest stable tag**: `v0.4.0` — Skill #2 (`job-hunt`) shipped
+> on top of `v0.3.0`'s permission bootstrap + pluggable B-roll
+> and `v0.2.0`'s Skills framework + zero-account demo path.
+> Cloning the tag is the recommended first-touch entry point;
+> `main` may contain in-flight work past the tag.
 
-### Zero-account demo (~2 minutes from clone to playable mp4)
+### Skill #1 — music-video zero-account demo (~2 minutes from clone to playable mp4)
 
 No Pexels signup, no Suno round-trip, no `.env` edit.  Uses
 bundled CC-BY Blender Foundation clips + Kevin MacLeod tracks
@@ -476,7 +487,7 @@ before committing accounts".
 
 ```bash
 # 1) clone (any host with Mac/Linux + ffmpeg + ollama + aubio works)
-git clone --branch v0.3.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
+git clone --branch v0.4.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 
 # 2) bootstrap (verifies tools, prints brew/apt hints for anything missing;
@@ -488,6 +499,36 @@ cd MelonS-Agents
 #    records/missions/<YYYY-MM-DD>/music-video-demo-<HHMMSS>/outputs/short.mp4
 MUSIC_VIDEO_DEMO_MODE=1 ./agents/missions/music-video/run.sh demo
 ```
+
+### Skill #2 — job-hunt short-keyword demo (~5 seconds, no network)
+
+Single keyword expands to a full role family + emits a markdown
+digest from mock-fallback sources (no live HTTP, no API keys, no
+operator-profile.md required).
+
+```bash
+# After the clone + bootstrap above:
+skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
+# Output: digest.md path printed on stdout; open it to see the
+# 7 mock postings spanning 5 sources, all matched against the
+# 24 synonym keywords in the "problem-solver" family.
+
+# Try other seeds in the same family — all produce identical results:
+skills/job-hunt/scripts/run.sh --seed "FDE" --dry-run
+skills/job-hunt/scripts/run.sh --seed "Forward Deployed" --dry-run
+skills/job-hunt/scripts/run.sh --seed "Generalist" --dry-run
+```
+
+See [`docs/samples/job-hunt-digest-mock.md`](docs/samples/job-hunt-digest-mock.md)
+for what a digest looks like, and [`EXAMPLES.md`](EXAMPLES.md) for
+the full recipe collection covering both skills.
+
+To activate live HTTP per source (Wanted API key, Saramin
+OpenAPI key, etc.) or live Claude calls for the 4 enrichment
+utilities (fit-score / cover-letter / company-research /
+interview-prep), see the walkthrough
+[`docs/skills/job-hunt.md`](docs/skills/job-hunt.md) (English) or
+[`docs/skills/job-hunt.ko.md`](docs/skills/job-hunt.ko.md) (한국어).
 
 Reproducibility gate: `scripts/test-demo-mode.sh` exercises the
 whole path against a freshly-cloned tree (asserts `short.mp4`

@@ -4,11 +4,11 @@
 
 **한국어** | [English](./README.md) · [**라이브 사이트 →**](https://melons.github.io/MelonS-Agents/)
 
-**음악 파일 → 60초 9:16 세로 쇼츠.**  (또는 토픽 프롬프트 → 내레이션 쇼츠, 이전 미션 타입.)
+**두 개의 production skill:** music-video 쇼츠 + 한국 잡보드 digest. 둘 다 [agentskills.io](https://agentskills.io) spec 준수 — Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot 호환 cross-runtime.
 
-**기계적인 단계는 로컬, 창작 단계는 Claude.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조와 동기화.  세 가지 감사 트리거 — 커밋·이상·스케줄 — 으로 시스템이 자신의 드리프트를 스스로 잡습니다.  영어 + 한국어 듀얼 트랙.
+**기계적인 단계는 로컬, 창작 단계는 Claude.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조와 동기화.  job-hunt 는 짧은 키워드를 role-synonym map 통해 자동 확장.  세 가지 감사 트리거 — 커밋·이상·스케줄 — 으로 시스템이 자신의 드리프트를 스스로 잡습니다.  영어 + 한국어 듀얼 트랙.
 
-`미션 출력 60+ · 미션 타입 5종 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
+`미션 출력 60+ · 미션 타입 5종 · 포터블 스킬 2개 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -31,13 +31,25 @@
 ## 개요
 
 > **[Claude Code](https://docs.anthropic.com/claude-code)** (Anthropic
-> CLI) 로 구동되는 macOS 기반 멀티 에이전트 시스템입니다.  **현재
-> 초점** — 위 데모에 보이는 — 은 `music-video` 미션: 음악 트랙 in,
-> 9:16 세로 쇼츠 out, phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을
-> 음악 구조와 동기화 (운영자 파일럿 픽, 2026-05-17 —
-> [`docs/pilots/decision-log.md`](docs/pilots/decision-log.md) 참조).
-> 이전의 `faceless-short` 미션 (내레이션 기반 쇼츠) 과 v1 미션
-> (`highlight` / `summarize` / `shorts-batch`) 도 트리에 대안 경로로
+> CLI) 로 구동되는 macOS 기반 멀티 에이전트 시스템입니다.  v0.4.0
+> 시점 기준 두 개의 production skill 출시:
+>
+> **Skill #1 — `music-video`** (1.0.0): 음악 트랙 in, 9:16 세로
+> 쇼츠 out, phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악
+> 구조와 동기화.  위 데모가 이 skill 출력.  Missions-routed shape —
+> [`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh)
+> 의 5-agent (orchestrator + planner + resourcer + editor + qa)
+> 파이프라인 호출.
+>
+> **Skill #2 — `job-hunt`** (0.1.0): 한국 잡보드 digest, 짧은
+> 키워드 UX.  `--seed "Problem Solver"` 한 줄이면 회사마다 다른
+> 동의어 호칭 (FDE / Applied AI Engineer / Generalist 등) 으로
+> 자동 확장 → 다중 소스에서 매칭 fetch → URL dedupe → 날짜별
+> 마크다운 digest.  Standalone shape — missions-routed 파이프라인
+> 없이 skill 자체가 canonical 구현.
+>
+> 이전 미션 타입 (`faceless-short` 내레이션 기반 쇼츠 + v1
+> `highlight` / `summarize` / `shorts-batch`) 도 트리에 대안 경로로
 > 유지됩니다.
 >
 > 이 레포를 쓰는 두 가지 방식:
@@ -431,15 +443,15 @@ agent-driven 경로에서만 소비됩니다.
 - 토큰 영수증은 Anthropic 콘솔 → 첫 몇 번 미션 후 본인 사용량 확인 후
   플랜 조정 권장.
 
-## 빠른 시작 — music-video 플로우 (메인 쇼케이스)
+## 빠른 시작
 
-> **최신 안정 태그**: `v0.3.0` — Permission bootstrap + 플러그형
-> B-roll (커스텀 `MUSIC_VIDEO_BROLL_DIR` + AI-anime 생성기), `v0.2.0`
-> 의 Skills 프레임워크 + 제로-계정 데모 경로 위에 빌드.  첫 클론은
-> 태그 클론이 권장 진입점; `main` 은 태그 이후 진행중 작업이
-> 있을 수 있음.
+> **최신 안정 태그**: `v0.4.0` — Skill #2 (`job-hunt`) 출시,
+> `v0.3.0` 의 permission bootstrap + 플러그형 B-roll 과 `v0.2.0`
+> 의 Skills 프레임워크 + 제로-계정 데모 경로 위에 빌드.  첫
+> 클론은 태그 클론이 권장 진입점; `main` 은 태그 이후 진행중
+> 작업이 있을 수 있음.
 
-### 제로-계정 데모 (클론에서 재생 가능한 mp4까지 ~2분)
+### Skill #1 — music-video 제로-계정 데모 (~2분, 클론에서 mp4 재생까지)
 
 Pexels 가입 없음, Suno 왕복 없음, `.env` 편집 없음.  번들된
 CC-BY Blender Foundation 클립 + Kevin MacLeod 트랙 사용
@@ -448,7 +460,7 @@ CC-BY Blender Foundation 클립 + Kevin MacLeod 트랙 사용
 
 ```bash
 # 1) clone (Mac/Linux + ffmpeg + ollama + aubio 있으면 OK)
-git clone --branch v0.3.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
+git clone --branch v0.4.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 
 # 2) 부트스트랩 (도구 점검, brew/apt 힌트 출력;
@@ -471,6 +483,37 @@ MUSIC_VIDEO_DEMO_MODE=1 ./agents/missions/music-video/run.sh demo
 플로우 (아래) 로의 graduation 경로는
 [`docs/onboarding/demo-mode.md`](docs/onboarding/demo-mode.md)
 참고.
+
+### Skill #2 — job-hunt 짧은-키워드 데모 (~5초, 네트워크 없음)
+
+키워드 한 개가 role family 전체로 자동 확장 + mock-fallback
+소스에서 마크다운 digest 생성 (라이브 HTTP 없음, API 키 없음,
+operator-profile.md 필요 없음).
+
+```bash
+# 위 clone + bootstrap 다음에:
+skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
+# 출력: stdout 에 digest.md 경로 — 열어 보면 5개 소스에 걸친
+# 7개 mock 채용공고가 problem-solver family 의 24개 동의어
+# 키워드에 매칭됨.
+
+# 같은 family 의 다른 seed — 동일 결과:
+skills/job-hunt/scripts/run.sh --seed "FDE" --dry-run
+skills/job-hunt/scripts/run.sh --seed "Forward Deployed" --dry-run
+skills/job-hunt/scripts/run.sh --seed "Generalist" --dry-run
+```
+
+digest 가 어떻게 생겼는지는
+[`docs/samples/job-hunt-digest-mock.md`](docs/samples/job-hunt-digest-mock.md)
+참고. 양쪽 skill 의 레시피 모음은
+[`EXAMPLES.md`](EXAMPLES.md).
+
+소스별 라이브 HTTP 활성화 (Wanted API key, Saramin OpenAPI key
+등) 또는 4개 enrichment utility (fit-score / cover-letter /
+company-research / interview-prep) 의 라이브 Claude 호출 활성화는
+워크스루 참고:
+[`docs/skills/job-hunt.md`](docs/skills/job-hunt.md) (English) /
+[`docs/skills/job-hunt.ko.md`](docs/skills/job-hunt.ko.md) (한국어).
 
 ### 풀 경로 — 운영자 음악 + 키워드별 Pexels B-roll
 
