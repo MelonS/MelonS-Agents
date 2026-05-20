@@ -89,11 +89,16 @@ if [[ -z "$GENRE" || -z "$SHORT_ID" || -z "$MUSIC" ]]; then
   exit 64
 fi
 
-# Resolve aliases — search both top-level keys and aliases array
-# (mikefarah/yq v4 uses env() instead of --arg)
+# Resolve aliases — search both top-level keys and aliases array.
+# mikefarah/yq v4: contains() does *substring* matching on strings which
+# falsely matches "jazz" against ["doom_jazz"].  Use explicit equality
+# via map+any.
 RESOLVED=$(GENRE_NAME="$GENRE" yq -r '
   .genres | to_entries | .[] |
-  select(.key == env(GENRE_NAME) or ((.value.aliases // []) | contains([env(GENRE_NAME)]))) |
+  select(
+    .key == env(GENRE_NAME) or
+    ((.value.aliases // []) | map(. == env(GENRE_NAME)) | any)
+  ) |
   .key
 ' "$PRESETS" | head -1)
 
