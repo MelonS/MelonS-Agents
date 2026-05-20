@@ -25,11 +25,12 @@
     </div>
   </nav>
 
-  <h1 id="top">Music file in. 60-second vertical short out.<br><span class="muted">Multi-agent pipeline. $0 runtime. Claude where quality matters. EN + KO.</span></h1>
+  <h1 id="top">Two portable skills.  One repo.<br><span class="muted">music-video shorts &middot; Korean job-board digest &middot; $0 runtime &middot; EN + KO</span></h1>
 
   <p class="lede">
-    A music track becomes a 9:16 vertical short — phrase-aware cuts, variable-speed mood pacing, onset-aligned glitch micro-edits, vintage lo-fi shaders, all driven by the music's own structure.
-    Mechanical stages stay local (aubio, whisper.cpp, ffmpeg).  One creative stage routes to Claude.  The system audits itself on every commit.
+    <strong>Skill #1 (music-video)</strong>: a music track becomes a 9:16 vertical short — phrase-aware cuts, variable-speed mood pacing, onset-aligned glitch micro-edits, vintage lo-fi shaders.
+    <strong>Skill #2 (job-hunt)</strong>: a single seed keyword like <code>"Problem Solver"</code> expands to the full family of equivalent titles (FDE / Applied AI Engineer / Generalist / …) and produces a deduplicated digest of matching Korean job postings.
+    Mechanical stages stay local (aubio, whisper.cpp, ffmpeg, jq).  Creative stages opt into Claude (Tier-1) — covered by the operator's existing subscription, no incremental USD.  The system audits itself on every commit.
   </p>
 
   <div class="cta-row">
@@ -50,7 +51,7 @@
     <li><strong>0</strong><span>runtime API tokens</span></li>
     <li><strong>3</strong><span>audit layers (L1+L2+L3)</span></li>
     <li><strong>5</strong><span>mission types</span></li>
-    <li><strong>1</strong><span>portable skill (agentskills.io)</span></li>
+    <li><strong>2</strong><span>portable skills (agentskills.io)</span></li>
     <li><strong>EN+KO</strong><span>dual track from day 1</span></li>
     <li><strong>MIT</strong><span>license</span></li>
   </ul>
@@ -95,8 +96,22 @@
 
     <article class="card">
       <h3>Skills layer (agentskills.io-compliant)</h3>
-      <p>Pipelines are packaged as portable <strong>Skills</strong> following the open <a href="https://agentskills.io" target="_blank" rel="noopener">agentskills.io</a> standard.  Skill #1 — <code>music-video</code> — is the current production skill.  A skill written once can target multiple compatible runtimes (Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, etc.) — verified via a 12/12 Hermes drop-in interop test.</p>
-      <p class="muted">Spec + interop notes: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/music-video" target="_blank" rel="noopener">skills/music-video/</a></p>
+      <p>Pipelines are packaged as portable <strong>Skills</strong> following the open <a href="https://agentskills.io" target="_blank" rel="noopener">agentskills.io</a> standard.  Two skills ship as of v0.4.0:
+        Skill #1 (<code>music-video</code>, missions-routed) and
+        Skill #2 (<code>job-hunt</code>, standalone).
+        A skill written once can target multiple compatible runtimes (Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, etc.) — Skill #1 verified via a 12/12 Hermes drop-in interop test.</p>
+      <p class="muted">Spec: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/music-video" target="_blank" rel="noopener">skills/music-video/</a> &middot; <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/job-hunt" target="_blank" rel="noopener">skills/job-hunt/</a></p>
+    </article>
+
+    <article class="card">
+      <h3>Skill #2 — job-hunt (short-keyword KR job-board digest)</h3>
+      <p>A separate-shape skill: standalone (no missions-routed pipeline), v2 short-keyword UX, agentskills.io-compliant.  Pass <code>--seed "Problem Solver"</code> and the orchestrator expands to a 24-synonym role family (Forward Deployed Engineer / Applied AI Engineer / Generalist / Founding Engineer / …) before fetching from KR job boards (사람인 / 잡코리아 / 원티드 / 프로그래머스).  4 enrichment utilities (fit-score / cover-letter / company-research / interview-prep) ship as scaffolds, each gated behind a single env-flag flip.</p>
+      <ul>
+        <li><b>5 source plugins</b> — all mock-fallback by default; live HTTP per-plugin behind <code>JH_<i>SOURCE</i>_LIVE=1</code>.</li>
+        <li><b>4 enrichment utilities</b> — per-posting Claude calls behind <code>JH_<i>TOOL</i>_LIVE=1</code>.</li>
+        <li><b>63 tests</b> — smoke + edge-case + JSON-schema validation.  EN + KO walkthroughs.</li>
+      </ul>
+      <p class="muted">Quickstart: <code>skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run</code>.  Reference digest at <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/samples/job-hunt-digest-mock.md" target="_blank" rel="noopener">docs/samples/job-hunt-digest-mock.md</a>.</p>
     </article>
 
     <article class="card">

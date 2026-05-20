@@ -42,6 +42,7 @@ HTTP integration is gated on operator validation per source.
 | `scripts/cover-letter-draft.sh` | ⚠️ Phase 2.5 — scaffold mode default; gated on `JH_COVER_LETTER_LIVE=1` |
 | `scripts/company-research.sh` | ⚠️ Phase 2.5 — scaffold mode default; gated on `JH_COMPANY_RESEARCH_LIVE=1` |
 | `scripts/interview-prep.sh` | ⚠️ Phase 2.5 — scaffold mode default; gated on `JH_INTERVIEW_PREP_LIVE=1` |
+| `scripts/derive-profile.sh` | ⚠️ Phase 2.4 — scaffold mode default; reads repo and drafts `operator-profile.md`; gated on `JH_DERIVE_PROFILE_LIVE=1` |
 | `tests/smoke.sh` + `edge-cases.sh` + `schema-validation.sh` | ✅ 63/63 PASS (32 + 26 + 5) |
 
 The live HTTP path for each `kr-*` plugin is intentionally
