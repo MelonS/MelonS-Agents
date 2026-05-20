@@ -142,3 +142,81 @@ filters.example.yaml + smoke.sh + schema + README EN/KO + roadmap.
   (58a2b58) landed on main correctly after a mid-work correction;
   the wrong-branch slip is in the session transcript for the
   archive.
+
+---
+
+## Afternoon-continued work (operator awake briefly, then asleep again ~16:30 KST)
+
+Operator asked Problem-Solver search to surface Korean postings;
+audit caught that the prior §6 + roadmap maintenance was breaking
+under multi-session load.  Resulting commits:
+
+| Commit | What |
+|---|---|
+| `6ddba86` | §6 branch strategy revised to flexible / worktree-based; helper scripts `scripts/worktree-new.sh` + `scripts/worktree-done.sh` smoke-tested end-to-end |
+| `2b6e7f1` | Revert worktree-done smoke marker |
+| `cc6a104` | kr-saramin live HTTP path activated against verified OpenAPI spec; 4 KR companies added to ats-boards.example.yaml (coupang / daangn / sendbird / krafton) |
+| `6b61f84` | fit-score gains hire_prob dimension; new operator-profile.example.md "Hire-bar comfort" section; kr-worknet region parser burr fix |
+| `a05c12b` | roadmap Done batch update — 23 commits since 0c01fcc (§9 audit drift fix) |
+| `6eaf9be` | skills/job-hunt/data/company-tiers.yaml — generic company-tier classification (43 ATS boards classified); fit-score injects this into Claude prompt; .gitignore guards future upload-meta-v[3-9]* batches |
+| `eaafcdc` | docs/worktree-workflow.md — single-page reference for operator |
+| `6225afa` | digest.md renders role_fit + hire_prob breakdown when fit-score returns the new schema |
+
+### Saramin OpenAPI key — still pending
+
+Operator submitted the application form (~14:30 KST).  Saramin
+approval is manual; likely review-and-issue during business hours.
+Plugin code is ready to flip the moment the key arrives:
+
+```bash
+# Once SARAMIN_KEY=<key> lands in .env:
+JH_SARAMIN_LIVE=1 bash skills/job-hunt/scripts/run.sh --seed "Problem Solver"
+```
+
+### Audit ALERT note (read me)
+
+`docs/audit/CURRENT-ALERT.md` is currently in DRIFT_DETECTED state,
+but the verdict is stale — it was written at 03:08 KST against
+HEAD `c721f41`, and the two findings it cites:
+
+1. `[high]` §6 branch-strategy violation (9 structural commits on main) —
+   **RESOLVED** by `6ddba86` which made the §6 rule itself flexible,
+   retroactively reclassifying those commits as legitimate.
+2. `[medium]` Roadmap Done 20 commits stale — **RESOLVED** by `a05c12b`
+   batch-update.
+
+The alert will auto-clear on the next audit cycle.  Manual trigger:
+`bash scripts/audit-run.sh contract`.  Or wait for the next
+drift-risk commit to fire the post-commit hook.
+
+### "Korean companies" gap analysis (operator's afternoon insight)
+
+Operator framing 2026-05-21 ~15:30 KST: "본인이 갈수있는 회사중에
+가장 좋은 회사를 찾는게 베스트이지 않을지?"
+
+Diagnosis of current state:
+
+- **Global ATS coverage**: strong (Anthropic / OpenAI / Cursor /
+  Stripe / Notion / Databricks etc. — 43 boards × thousands of
+  postings).
+- **KR-domestic ATS coverage**: 4 companies only (Coupang / Daangn /
+  Sendbird / Krafton) — most KR companies run self-hosted careers
+  pages.
+- **KR-domestic non-ATS sink**: Saramin OpenAPI (key pending) +
+  Wanted partner API (deferred).
+- **Hire-probability ranking**: NOT yet applied in digest output —
+  composite score available but orchestrator doesn't sort by it.
+
+Recommended next operator actions (when awake):
+
+1. Pick up the Saramin key once Saramin approves the application.
+   Flip `JH_SARAMIN_LIVE=1 + SARAMIN_KEY=...` and re-run.
+2. Decide whether to invest in KR-domestic self-hosted-careers
+   scrapers (Naver / Kakao / Toss / 우아한 / Line / Yanolja / etc.).
+   Each is ~30-60 min of plugin work + per-site ToS check.
+3. Wire up the fit-score pipeline once `operator-profile.md` is
+   filled in.  Flip `JH_FIT_SCORE_LIVE=1` + `--fit-score` flag.
+   200 postings × ~2s Claude call ≈ 7 min; absorbed by Max plan.
+
+Worktree workflow is documented at `docs/worktree-workflow.md` for
+the next time a parallel session is needed.
