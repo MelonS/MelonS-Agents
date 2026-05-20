@@ -396,6 +396,129 @@ round of testing.
 
 ---
 
+## 7. Default treatment mis-fits the genre — declarative preset routing as additive scaffold
+
+**Problem.** The v6 music-video pipeline applies a single default
+treatment to every output: drum-onset zoom-pulse (a 0.6 s Gaussian
+scale bell at every detected drum hit) + film grain intensity 8 +
+vignette PI/5 + cuts every 12 beats.  Operator-reported failure mode
+on 2026-05-20: "어떤 곡은 화면이 갑자기 띠용하는 쉐이더가 나오면
+이상해보임" — the zoom-pulse reads as out-of-place on a 5-short
+batch where two of the songs (lo-fi rain, minimal ambient) belong to
+genres whose visual contract *forbids* glitch.
+
+Per-short diagnosis (`docs/research/2026-05-21-shader-song-mismatch-
+diagnosis.md`):
+
+| # | Genre | Violation |
+|---|---|---|
+| 1 Rain | lo-fi hip-hop | zoom-pulse forbidden (lo-fi is anti-glitch) |
+| 2 Linen | minimal ambient | cuts forbidden + zoom-pulse forbidden |
+| 3 Arcade | synthwave | wrong filter family (grain instead of scanlines) |
+| 4 Coastline | tropical house | heavy grain forbidden |
+| 5 Noir | jazz | missing halation, borderline zoom-pulse |
+
+Two of five (#1, #2) were severe — the "띠용" the operator flagged.
+None of the per-short failures was a bug in the pipeline; the bug
+was applying *any* one default across all genres.  A genre's
+forbidden-effect set is a real visual contract — Lofi Girl, Chillhop,
+and Ambient Worlds have spent years training their audiences on a
+specific visual code, and a render that violates that code reads as
+"wrong genre" even when every other detail is correct.
+
+**Constraint.** Existing pipeline is in production (`scripts/daily-
+music-video.sh` runs via cron / launchd cadence; 8 prior shorts on
+YouTube; not to be broken).  No new dependency that requires `pip
+install` or `brew install` of anything operator hasn't already
+accepted.  Logic changes to `agents/*.md` need explicit operator OK;
+script-level changes don't (see `operator-contract.md` §5, §
+infra-maintenance).
+
+**Decision.** Land the fix as a fully **additive scaffold**: a new
+declarative YAML preset table + a wrapper script that exports env
+vars to the existing `run.sh`, leaving the original entry point
+untouched.  Backwards-compatible by construction — the default code
+path is identical until the operator opts in via either a wrapper
+flag or `MUSIC_VIDEO_GENRE=<name>`.
+
+The mechanism:
+
+- `skills/music-video/data/genre-presets.yaml` — 14-genre table.
+  Each preset declares `phrase_beats`, `grain_intensity`,
+  `vignette_angle`, `zoom_pulse_amp`, `shader`, `cut_mode`,
+  `lut_direction`, `forbidden_effects`, plus a `keyword_pool` (default
+  Pexels queries) and a `phrase_pool` (default kinetic typography
+  phrases).  Sourced from a cross-references rule table that
+  synthesizes industry-practice + synesthesia research (`docs/
+  research/2026-05-21-music-shorts-formats-landscape.md`).
+
+- `scripts/music-video-shaders.sh` — 6 new genre-coded effects
+  (`scanline`, `chromatic_split`, `neon_edge`, `vhs`,
+  `saturation_pulse`, `kaleidoscope`) alongside the existing 4
+  classic effects (`pond`, `breathing`, `halation`, `combo`).
+  Smoke-tested 10/10.
+
+- `scripts/music-video-stillzoom.sh` — image + music → 60s slow
+  Ken-Burns 9:16 mp4.  Required for genres whose contract forbids
+  *any* cut (ambient, classical, dreamcore).
+
+- `scripts/music-video-genre.sh` — wrapper that resolves a genre
+  name (or alias) to preset, exports the env overrides, runs the
+  unchanged `agents/missions/music-video/run.sh`, chains the matching
+  post-shader; auto-routes stillzoom-mode genres to the stillzoom
+  entry point.
+
+- `scripts/music-video-auto.sh` — top-level all-in-one: detect genre
+  from filename (+ID3) via `genre-detect.sh`, auto-fetch a Pexels
+  still for stillzoom genres without `--image`, run genre wrapper,
+  optionally chain Canvas 8s loop + kinetic typography + audio-
+  reactive grading variants.  Operator's intended entry point.
+
+- `scripts/music-video-bulk-regenerate.sh` — one-command re-render
+  of the diagnosed-mismatched 5/20 batch with correct presets.
+
+- `skills/music-video/tests/genre-aware-smoke.sh` — 16-assertion
+  smoke test covering genre detection, alias resolution (regression
+  for the yq v4 substring bug below), all 10 shaders, Canvas spec
+  compliance, typography overlay, and full pipeline end-to-end.
+
+**Outcome.** Twenty commits over ~3 hours autonomous overnight,
+all on `main`, all pushed, smoke 16/16 passing.  Operator's "띠용"
+complaint maps to a documented diagnosis + a fix that took a fresh
+re-render of the worst-case Linen ambient short from "12 cuts + drum-
+onset zoom-pulses on a 90 BPM ambient track" to "single still image
++ slow zoom + warm halation + zero cuts" — visually it is a different
+short, structurally it is the same channel + same music + same UC
+channel ID.  Five v2 mp4s staged at `outputs/publish/2026-05-21-
+regen-v2/` ready for operator-approved re-upload via the existing
+`scripts/yt-batch-upload.sh outputs/publish/upload-meta-v2/`.
+
+**Two latent bugs caught during the run** (regression-tested in the
+smoke):
+
+1. `MUSIC_VIDEO_VIGNETTE_ANGLE=off` didn't disable vignette — run.sh
+   used `${VAR:-PI/5}` which falls back on empty.  Patched to
+   case-match `none`/`off`/empty → disabled.  Without this, synthwave
+   preset still baked in a vignette, violating the genre contract.
+2. `yq v4 contains()` does *substring* matching on strings — "jazz"
+   falsely matched drone's aliases `[doom_jazz]`, causing the
+   wrapper to resolve jazz to drone preset (stillzoom + no image →
+   fail).  Patched to explicit `map(. == $g) | any`.  Caught only
+   because the Noir track is the one of the 5 that *has* a genre
+   name that's a substring of another genre's alias.
+
+**Why this fits the pattern of the other case studies.** Like the
+demo-mode path (case study #6), the fix was structurally additive —
+a parallel mechanism that pre-populates the same checkpoints the
+existing code already inspects.  Like the audit layers (#4), it
+landed as scripts in version control with no DB or external state.
+Like the cost-routing rule (#1), it answered a specific observed
+failure ("이 곡은 안 맞아 보임") with the minimum mechanism that
+solves it (a YAML preset table + a wrapper) rather than rewriting
+the pipeline.
+
+---
+
 ## What these have in common
 
 - Each started from a **specific observed failure**, not a theoretical
