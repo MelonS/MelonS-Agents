@@ -183,7 +183,7 @@ manual gates (2, 4) require operator action.
 |---|------|--------|------|
 | 1 | **Audit CLEAN** — drift / contract / cost-model / secrets / TODOs | `scripts/audit-run.sh all` returns CLEAN verdict on the feat branch HEAD | automated |
 | 2 | **Functional integration test** — run the affected mission / skill end-to-end and verify output | manual (varies per change); skipped for doc-only changes with operator OK | manual |
-| 3 | **§5 marker compliance** — every commit touching `agents/` or `.claude/agents/*.md` carries `Requested-by: user` in body | `git log <base>..<feat> --grep="Requested-by:"` matches every §5-scope commit | automated |
+| 3 | **§5 marker compliance** — every commit touching direct-child `.md` files in `agents/` or `.claude/agents/` carries `Requested-by: user` in body (subdirectories like `agents/missions/` are out of §5 scope) | `pre-merge-check.sh` regex `agents/[^/]+\.md` enumerates §5-scope commits, each must `--grep="Requested-by:"` | automated |
 | 4 | **Operator merge OK** — merge itself is a public-surface change, so the final gate is human | explicit operator approval ("merge OK") in conversation | manual |
 
 If any gate fails, the work stays on the feat branch.  Fixes

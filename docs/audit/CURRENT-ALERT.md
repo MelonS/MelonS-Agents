@@ -7,25 +7,29 @@
 
 **Verdict**: DRIFT_DETECTED
 **Full report**: [`docs/audit/2026-05-20-contract.md`](2026-05-20-contract.md)
-**Generated**: 2026-05-20 00:30:20 KST
+**Generated**: 2026-05-20 19:53:49 KST
 
 ## Summary (from audit)
 
 
-Twenty-seventh contract audit. HEAD = `a90bc9d`
-("chore: filter-repo backup branch deleted (Roadmap Next #2)") on `origin/main`,
-fully synced. All twelve hard rules in `docs/operator-contract.md` were walked
-against committed code, configuration, git history, and the `.claude/agents/*.md`
-frontmatter table. Since the prior contract audit (`2026-05-19-contract.md`,
-HEAD `81320a3`), four commits landed: `f752d72` (README/site framing), `95308f6`
-(PII-scrub per §12), `aa56f5f` (audit-fix: closes L4 §5-regex, L5 v0.3.0-tag,
-and L6 bootstrap-exception extension), and `a90bc9d` (branch deletion). The
-`aa56f5f` fix commit resolved three of the four prior carry-forward findings.
-Two findings remain: one [medium] roadmap-vs-goal drift (operator-edit-only)
-and one [low] stale docs claim about CI (missed by `aa56f5f`). No new findings
-introduced. All six subagent model assignments match `docs/for-analysts.md`.
-No secrets detected. No §5-scope agent-file changes since 2026-05-15 (all
-pre-marker-convention, exempt).
+Twenty-eighth contract audit. HEAD = `b3fc7f3`
+("chore(gitignore): ignore .claude/statusline.sh.* backup variants") on `main`,
+fully synced with `origin/main`. All twelve hard rules in
+`docs/operator-contract.md` were walked against committed code, configuration,
+git history, and `.claude/agents/*.md` frontmatter. This audit supersedes the
+prior same-day report (`2026-05-20-contract.md`, HEAD `a90bc9d`, generated at
+00:30 KST) — seventeen commits landed between the two audits, including
+feat/skill-job-hunt merge, v0.4.0 tag, README cadence batch, fresh-clone
+regression test, and a gitignore fix. Both open findings from the 00:30
+report are now resolved (`d1c279d` rewrote roadmap "Now"; `for-analysts.md`
+CI claim was already fixed before that audit). Two new findings are introduced:
+one [medium] §9 issue (roadmap "Now" still lists "Land v0.4.0" as the active
+subgoal even though v0.4.0 tag was pushed and Done entry is absent) and one
+[low] §6 description drift (gate 3 table row in the contract says "`agents/`"
+broadly but the implementation in `pre-merge-check.sh` uses `agents/[^/]+\.md`
+— the script was fixed in `0652092`/`aa56f5f` but the contract table was not
+updated). No secrets detected. All six subagent model assignments match the
+`docs/for-analysts.md` table.
 
 ## Critical / High findings
 

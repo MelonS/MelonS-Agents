@@ -157,3 +157,10 @@ skills/job-hunt/config/filters.yaml
 # operator-profile.example.md is the generic template that stays
 # committed.
 skills/job-hunt/config/operator-profile.md
+
+# Per-operator publish artifacts — YouTube/social upload packs,
+# scheduling notes, draft copy.  Routinely contain channel-handle,
+# unposted titles/descriptions, and operator-personal context that
+# fails the [[no-pii-in-repo]] bar.  outputs/ is loosely structured
+# so guard the publish/ subdir explicitly.
+outputs/publish/*.md

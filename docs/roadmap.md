@@ -15,23 +15,23 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 ## Now — active focus
 
-_Last updated 2026-05-20 ~03:00 KST under operator broad-approval
-of overnight autonomous Phase 2 work._
+_Last updated 2026-05-20 ~19:55 KST after audit
+`2026-05-20-contract.md` flagged the prior "Now" as stale
+(v0.4.0 was complete but the block still said "awaiting FF-merge")._
 
 **Active goal**: Multi-skill AI assistant framework (`docs/goal.md`
 2026-05-19 entry).  Skill #1 (music-video) shipped v0.2.0 + v0.3.0.
-Skill #2 (`job-hunt`) v2 short-keyword UX + 5 mock-fallback sources
-+ 4 utility scaffolds (fit-score / cover-letter / company-research /
-interview-prep) + 1 profile-derivation scaffold (Phase 2.4) all
-shipped on `feat/skill-job-hunt`, awaiting FF-merge → `v0.4.0` tag.
+Skill #2 (`job-hunt`) v0.4.0 **SHIPPED** — see Done entry below.
 
-**Active subgoal**: Land v0.4.0 — merge feat → main, tag, README
-cadence batch.  Operator-activation steps (one-time):
-- `cp config/operator-profile.example.md → operator-profile.md` and
-  edit (gitignored, per-machine).
-- Flip `JH_*_LIVE=1` per utility module to activate live Claude calls.
+**Active subgoal — operator-activation of `job-hunt` v0.4.0**
+(operator-only, no further scaffolding needed):
+- `cp skills/job-hunt/config/operator-profile.example.md → operator-profile.md`
+  and edit (gitignored, per-machine).
+- Flip `JH_FIT_SCORE_LIVE=1` etc. per utility module to activate live
+  Claude calls (Max plan absorbs; no incremental USD).
 - For live KR job-board HTTP, run the per-source operator-validation
-  curl + flip `JH_<source>_LIVE=1` + supply API key where required.
+  curl + flip `JH_<source>_LIVE=1` + supply API key where required
+  (`WANTED_API_KEY`, `SARAMIN_KEY`).
 
 **Parallel context**: CRITICAL candidate goal "First-touch success
 rate 10-20% → 60%+" remains filed in `docs/goal.md`.  Build Day
@@ -139,6 +139,21 @@ load-bearing, or set a new focus.)_
   an opt-in flag in each mission's retry loop.
 
 ## Done — most recent first
+
+- **2026-05-20** (v0.4.0 tag at `96d1270`, ~15:00 KST) **Skill #2
+  `job-hunt` v0.4.0 shipped** — v2 short-keyword UX (`--seed
+  "Problem Solver"` → role-synonyms.yaml family expansion, 5
+  families / 50+ synonyms); 5 source plugins (`_mock` + `kr-wanted`
+  + `kr-programmers` + `kr-jobkorea` + `kr-saramin`) with
+  mock-fallback default + `JH_<SOURCE>_LIVE=1` live-HTTP gate;
+  5 utility scaffolds (`fit-score`, `cover-letter-draft`,
+  `company-research`, `interview-prep`, `derive-profile`) all gated
+  on `JH_*_LIVE=1` per [[scaffold-pattern]] — preview JSON emitted
+  on stdout under scaffold mode, exit 10.  63/63 + 11/11 tests PASS;
+  fresh-clone regression PASS (`docs/onboarding/demo-mode-log.txt`
+  row 4).  README cadence batch + site refresh shipped under the
+  same tag (`4f43e63`, `96d1270`).  Operator activation tracked in
+  "Now" above.
 
 - **2026-05-20** (~00:30 KST) **filter-repo backup branch deleted**
   (Roadmap Next #2).  `main-backup-pre-filter-20260517-173615`
