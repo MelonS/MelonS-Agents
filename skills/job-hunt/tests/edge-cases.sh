@@ -113,7 +113,11 @@ tmp_filters=$(mktemp)
 cat <<EOF >"$tmp_filters"
 locale: kr
 job_categories: [백엔드 개발자]
-regions: [서울]
+# Region list intentionally broad: this test isolates the keyword
+# filter (empty include/exclude → all postings pass).  The region
+# filter (added 2026-05-21) would otherwise narrow _mock's mix of
+# 서울 / 경기 성남 / 원격 postings.
+regions: [서울, 경기 성남, 원격]
 keywords:
   include: []
   exclude: []
@@ -128,8 +132,9 @@ record "empty include/exclude → exit 0" 0 "$rc"
 if [[ -n "$DIGEST" ]]; then
   TOTAL=$(jq -r '.postings_total' "$(dirname "$DIGEST")/index.json" 2>/dev/null || echo 0)
   # _mock has 11 raw postings, 1 dedupe → 10 should pass when no
-  # keyword filter applied.  (11 raw = 8 original + 3 new Problem
-  # Solver family entries added in v2 seed-expansion work.)
+  # keyword filter applied AND region filter is broad enough.
+  # (11 raw = 8 original + 3 new Problem Solver family entries
+  # added in v2 seed-expansion work.)
   record "empty filter passes 10 postings (11 raw - 1 dedupe)" 10 "$TOTAL"
 fi
 rm -f "$tmp_filters"

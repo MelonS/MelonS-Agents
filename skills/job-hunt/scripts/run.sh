@@ -345,21 +345,54 @@ if (( ${#sources_succeeded[@]} == 0 )); then
   die "all enabled sources failed: ${sources_failed[*]:-none}" 3
 fi
 
-# ----- apply keyword filter -----
-# include: at least one of kw_include must appear in title or summary
-# exclude: any of kw_exclude in title or summary drops the posting
+# ----- apply keyword + region filter -----
+# include keywords: at least one must appear in title or summary
+# exclude keywords: any in title or summary drops the posting
+# regions (optional): at least one region token must substring-match
+#   the posting region; "원격" / "remote" / "재택" all map to a regex
+#   group so an English-region posting passes a Korean "원격" filter.
+#   When the regions list is empty, no region filter is applied.
 kw_include_json=$(printf '%s\n' "${kw_include[@]:-}" | jq -R . | jq -s 'map(select(length>0))')
 kw_exclude_json=$(printf '%s\n' "${kw_exclude[@]:-}" | jq -R . | jq -s 'map(select(length>0))')
+regions_json=$(printf '%s\n' "${regions[@]:-}" | jq -R . | jq -s 'map(select(length>0))')
 
 filtered_postings=$(echo "$all_postings_jq_input" | jq \
   --argjson include "$kw_include_json" \
-  --argjson exclude "$kw_exclude_json" '
+  --argjson exclude "$kw_exclude_json" \
+  --argjson regions "$regions_json" '
+  # Region tokens are expanded to include common synonym translations
+  # so "원격" matches "Remote" / "remote" / "재택" and vice versa,
+  # and the major KR cities map to their English names so an
+  # English-region posting ("Seoul, South Korea") passes a Korean
+  # "서울" filter.
+  ($regions | map(
+    . as $rt |
+    if   ($rt | test("원격|remote|재택"; "i")) then ["원격", "재택", "Remote", "remote"]
+    elif ($rt | contains("서울"))            then ["서울", "Seoul"]
+    elif ($rt | contains("부산"))            then ["부산", "Busan"]
+    elif ($rt | contains("인천"))            then ["인천", "Incheon"]
+    elif ($rt | contains("대구"))            then ["대구", "Daegu"]
+    elif ($rt | contains("대전"))            then ["대전", "Daejeon"]
+    elif ($rt | contains("광주"))            then ["광주", "Gwangju"]
+    elif ($rt | contains("울산"))            then ["울산", "Ulsan"]
+    elif ($rt | contains("세종"))            then ["세종", "Sejong"]
+    elif ($rt | contains("경기"))            then ["경기", "Gyeonggi"]
+    elif ($rt | contains("성남"))            then ["성남", "Seongnam"]
+    elif ($rt | contains("판교"))            then ["판교", "Pangyo"]
+    elif ($rt | contains("강남"))            then ["강남", "Gangnam"]
+    elif ($rt | contains("한국") or ($rt | contains("Korea")))
+                                              then ["한국", "Korea"]
+    else [$rt]
+    end
+  ) | flatten | unique) as $region_pool |
   map(
     . as $p |
     (($p.title // "") + " " + ($p.summary // "")) as $blob |
+    ($p.region // "") as $region_field |
     select(
       ($include | length == 0 or any(.[]; . as $w | $blob | contains($w))) and
-      ($exclude | length == 0 or all(.[]; . as $w | ($blob | contains($w) | not)))
+      ($exclude | length == 0 or all(.[]; . as $w | ($blob | contains($w) | not))) and
+      ($region_pool | length == 0 or any(.[]; . as $rt | $region_field | contains($rt)))
     )
   )
 ')

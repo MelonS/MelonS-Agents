@@ -40,6 +40,8 @@ WITH_TYPO_FLAG=0     # --with-typography given (use genre pool)
 WITH_TYPO=""         # explicit phrases CSV (overrides pool)
 WITH_AREACTIVE=0     # --with-audio-reactive
 USE_AI_STILL=0       # --ai-still: Pollinations.ai instead of Pexels for stillzoom
+FULL_LENGTH=0        # --full-length: use music's actual duration (default 60s)
+DURATION=""          # --duration=N: explicit duration override in seconds
 STILL_IMG=""
 SHORT_ID=""
 ARGS=()
@@ -48,6 +50,8 @@ while [[ $# -gt 0 ]]; do
     --with-canvas) WITH_CANVAS=1; shift ;;
     --with-audio-reactive) WITH_AREACTIVE=1; shift ;;
     --ai-still) USE_AI_STILL=1; shift ;;
+    --full-length) FULL_LENGTH=1; shift ;;
+    --duration=*) DURATION="${1#*=}"; shift ;;
     --with-typography)
       WITH_TYPO_FLAG=1
       # Peek at next arg — if non-flag, treat as phrases CSV; else use pool
@@ -122,7 +126,20 @@ if [[ "$CUT_MODE" == "stillzoom" && -z "$STILL_IMG" ]]; then
   fi
 fi
 
-# 3. Run genre wrapper
+# 3. Resolve duration — --duration=N takes precedence over --full-length,
+#    --full-length uses music file's actual length, otherwise default 60s.
+if [[ -n "$DURATION" ]]; then
+  export MUSIC_VIDEO_DURATION="$DURATION"
+  echo "→ explicit duration: ${DURATION}s"
+elif [[ "$FULL_LENGTH" == 1 ]]; then
+  MUSIC_DUR=$(${FFPROBE_BIN:-ffprobe} -v error -show_entries format=duration -of csv=p=0 "$MUSIC" | awk '{printf "%d", $1}')
+  if [[ -n "$MUSIC_DUR" && "$MUSIC_DUR" -gt 30 ]]; then
+    export MUSIC_VIDEO_DURATION="$MUSIC_DUR"
+    echo "→ full-length: ${MUSIC_DUR}s (music's actual duration)"
+  fi
+fi
+
+# 4. Run genre wrapper
 EXTRA_FLAGS=()
 [[ -n "$STILL_IMG" ]] && EXTRA_FLAGS+=(--image="$STILL_IMG")
 
