@@ -140,6 +140,79 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-21** (~03:00 KST, autonomous continued) **Skill #2
+  `job-hunt` — fit-score hire_prob dimension + worknet region
+  parser fix** (commit `6b61f84`).  Operator insight 2026-05-21
+  ~15:00 KST: "본인이 갈수있는 회사중에 가장 좋은회사를 찾는게
+  베스트이지 않을지?".  fit-score now emits role_fit + hire_prob
+  + composite score (0.6 × role_fit + 0.4 × hire_prob).  New
+  operator-profile.example.md section "Hire-bar comfort"
+  documents the four tier calibration (high / medium / low /
+  very-low) the operator records.  Side burr: worknet region
+  parser no longer falls back to work-pattern chips ("주5일",
+  "교대근무") when no admin-region keyword matches.  Tests
+  68/68 PASS.
+
+- **2026-05-21** (~02:30 KST, autonomous continued) **Skill #2
+  `job-hunt` — kr-saramin live path activated + 4 KR ATS boards
+  added** (commit `cc6a104`).  kr-saramin.sh live HTTP path
+  fully wired against the verified Saramin OpenAPI spec
+  (https://oapi.saramin.co.kr/guide/job-search); flips on with
+  JH_SARAMIN_LIVE=1 + SARAMIN_KEY.  Operator-issued key pending
+  Saramin's approval queue (likely morning business hours).
+  ats-boards.example.yaml gains 4 KR companies on Greenhouse
+  (coupang 486 / daangn 44 / sendbird 18 / krafton 54) — most
+  KR-domestic companies run self-hosted careers pages but these
+  4 use Greenhouse.
+
+- **2026-05-21** (~02:00 KST, autonomous continued) **§6 branch
+  strategy revised to flexible / worktree-based** (commit
+  `6ddba86`).  Operator direction "유연한 전략이 필요하다 지금 먼가
+  타이트하게 박아 버리면 계속 못지킬 가능성 생김" after the
+  thirtieth contract audit caught 9 structural commits landing
+  directly on main across two parallel sessions.  Hard "feat
+  branch + 4-gate" rule replaced with judgment-based guideline
+  (table in §6).  Worktree mode recommended for parallel
+  sessions on one machine.  Two helper scripts ship:
+  `scripts/worktree-new.sh <topic>` (sibling worktree creation)
+  and `scripts/worktree-done.sh` (rebase + FF main + cleanup).
+  Both smoke-tested end-to-end.  Memory updated
+  (`branch-strategy-strict` → `branch-strategy-flexible`).
+
+- **2026-05-21** (~00:30 → 03:00 KST, autonomous overnight)
+  **Skill #2 `job-hunt` — 5 live-ready plugins + survey + 43
+  curated ATS boards** (commits `b3789ba` survey + `58a2b58`
+  first 3 plugins + `a6c39c4` HN + worknet + `91c0a40` README
+  EN/KO cadence + `8667da7` daily report + `62730cb` ATS list
+  expand).  Operator request 2026-05-20 ~23:50 KST: enumerate
+  every place job postings appear, test fetch viability.  Survey
+  at `docs/research/job-sources-survey-2026-05-21.md` (30+ sites
+  classified Tier 1-5 by legal posture).  Five new live-ready
+  plugins ship zero-key live HTTP: `global-ats` (Greenhouse +
+  Ashby + Lever, 43 boards), `global-remoteok`, `global-remotive`,
+  `global-hn-whoshiring` (HN monthly thread via Algolia HN
+  Search), `kr-worknet` (정부 공공고용서비스).  Permanent-mock
+  conversion for `kr-jobkorea` (robots + 2017 precedent) and
+  `kr-programmers` (service closed 2025-05-19).  End-to-end live
+  pull on Problem-Solver seed: 5,000+ raw → 278 matched
+  (Anthropic / Scale AI / Notion FDE Korea / Databricks Forward
+  Deployment Engineer Seoul / Cohere Applied AI Korea / etc.).
+
+- **2026-05-21** (between ~03:00 → 16:00, parallel session) **Skill
+  #1 `music-video` — 18 commits of fast-loop work landed on main**
+  (range `0c01fcc` → `8cc49cb`, summarized in
+  `docs/daily/2026-05-21-morning-brief.md`).  Genre-aware shader
+  presets (declarative preset table for 14 genres), 6 new shader
+  effects, stillzoom mode for ambient/classical, audio-reactive
+  saturation grading, 5 beat-synced "popping" shaders, citypop
+  preset + designer lyrics overlay, Pollinations.ai free AI image
+  generator (--ai-still flag), CPU-throttled ffmpeg wrapper (80%
+  cap), and the v2 batch publish-metadata for 5/27-29.  Engineering
+  case study #7 (declarative preset routing as additive scaffold)
+  + genre-aware smoke test (16/16 PASS).  This block is operator's
+  music-video work, not the job-hunt thread — captured here for
+  audit-trail continuity.
+
 - **2026-05-21** (~01:15 KST, autonomous overnight) **Skill #1
   `music-video` — genre-aware shader presets land (additive
   scaffold)** (commit `93cc5e8`).  Operator flagged 2026-05-20 ~23:30
