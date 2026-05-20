@@ -185,8 +185,44 @@ Both were latent defects that previous (manual) usage never exercised.
    drone preset (stillzoom + no image → fail).  Patched to explicit
    `map(. == $g) | any`.  (commit `7425689`)
 
-## Open work (continuing autonomously toward 10 AM)
+## Phase 9-12 (added 02:00-02:40 KST)
 
-Phase 9+: mood-image auto-fetcher (Pexels photo for stillzoom genres
-zero-config), audio-reactive grading scaffold, README update if
-warranted, chain auto.sh → yt-batch-upload.sh.
+- **`53d5053`** — auto-fetch Pexels still for stillzoom genres
+  (zero-config ambient/classical/dreamcore: no `--image` needed)
+- **`a182380`** — v2 upload metadata (`outputs/publish/upload-meta-v2/`)
+  scheduled at 5/27 21:00 + 5/28 + 5/29 slots.  One command upload:
+  `bash scripts/yt-batch-upload.sh outputs/publish/upload-meta-v2`
+- **`735306d`** — `skills/music-video/tests/genre-aware-smoke.sh`
+  validates the full new stack: **16/16 pass** including the alias-
+  resolution regression test
+- **`460ae29`** — audio-reactive grading (format #8): `scripts/music-
+  video-audio-reactive.sh` modulates saturation by actual RMS envelope.
+  v1 conservative response curve, sat = 0.8 + 0.6 × norm(RMS).
+
+## Final tally
+
+**18 commits**, all on `main`, all pushed to origin.  New surface area:
+
+  scripts/music-video-auto.sh             # all-in-one wrapper (recommended)
+  scripts/music-video-genre.sh            # manual genre selection
+  scripts/music-video-genre-detect.sh     # filename + ID3 → genre
+  scripts/music-video-shaders.sh          # 10 effects (4 classic + 6 new)
+  scripts/music-video-stillzoom.sh        # image + music → 60s Ken-Burns
+  scripts/music-video-canvas.sh           # 8s Spotify Canvas loop
+  scripts/music-video-typography.sh       # kinetic phrase overlay
+  scripts/music-video-fetch-still.sh      # Pexels portrait photo fetcher
+  scripts/music-video-bulk-regenerate.sh  # 5/20 batch → v2 one command
+  scripts/music-video-audio-reactive.sh   # RMS-envelope saturation grade
+  skills/music-video/data/genre-presets.yaml             # 14 genres
+  skills/music-video/tests/genre-aware-smoke.sh          # 16/16 pass
+  outputs/publish/upload-meta-v2/                        # 5 staged uploads
+  outputs/publish/2026-05-21-regen-v2/                   # 5 v2 mp4s (gitignored)
+  outputs/demos/2026-05-21-genre-shader-experiments/     # 11 mp4 demos
+  docs/research/2026-05-21-music-shorts-formats-landscape.md   # 3.4K words
+  docs/research/2026-05-21-shader-song-mismatch-diagnosis.md    # per-short analysis
+  agents/missions/music-video/run.sh                     # vignette off fix
+
+Plus 2 bug-fix commits caught during the night (vignette off, yq alias
+substring bug) — both have regression tests in the smoke.
+
+When you wake up: just say the word and I'll run the v2 batch upload.
