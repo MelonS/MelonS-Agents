@@ -152,17 +152,31 @@ fi
 LINE_COUNT=$(wc -l < "$PARSED" | tr -d ' ')
 echo "→ $LINE_COUNT lyric lines, font=$(basename "$FONT"), size=$SIZE, genre=${GENRE:-default}"
 
-# Escape text for drawtext
+# Escape text for ffmpeg drawtext: when wrapped in single quotes,
+# embedded apostrophes need '\'' (close, escape, reopen) form,
+# colons need \:.  Backslashes need doubling first to not interfere.
 escape_text() {
-  echo "$1" | sed "s/\\\\/\\\\\\\\/g; s/'/\\\\'/g; s/:/\\\\:/g; s/%/\\\\%/g"
+  python3 - <<PY
+import sys
+s = """$1"""
+# Backslashes first
+s = s.replace('\\\\', '\\\\\\\\')
+# Single quote: 'close, \\' literal, reopen' (the ffmpeg-standard escape)
+s = s.replace("'", "'\\\\''")
+# Colons need escape inside drawtext args
+s = s.replace(':', '\\\\:')
+# Percent signs (used by some sequences)
+s = s.replace('%', '\\\\%')
+sys.stdout.write(s)
+PY
 }
 
-# Build drawtext filter chain — 4-position rotation per line
+# Build drawtext filter chain — 4-position rotation per line.
+# Use bracket-based chain ([v_n] → [v_n+1]) instead of comma-chain so
+# commas inside between()/if() expressions don't get treated as
+# filter-graph separators by newer ffmpeg (≥8.x is stricter).
 # Positions (x, y) for 1080×1920:
-#   0: top-center,        y = h*0.18
-#   1: bottom-center,     y = h*0.78
-#   2: center-left aligned, y = h*0.35, x left-aligned with margin
-#   3: center-right aligned, y = h*0.62, x right-aligned with margin
+#   0: top-center, 1: bottom-center, 2: left-aligned, 3: right-aligned
 POSITIONS=(
   "(w-text_w)/2:h*0.18"
   "(w-text_w)/2:h*0.78"
@@ -170,7 +184,7 @@ POSITIONS=(
   "w-text_w-w*0.08:h*0.62"
 )
 
-FILTER=""
+FILTER_CHAIN=""
 i=0
 while IFS=$'\t' read -r T0 T1 TXT; do
   TXT_E=$(escape_text "$TXT")
@@ -181,22 +195,37 @@ while IFS=$'\t' read -r T0 T1 TXT; do
   PEAK_START=$(awk -v s="$T0" -v f="$FADE" 'BEGIN{printf "%.3f", s+f}')
   PEAK_END=$(awk   -v e="$T1" -v f="$FADE" 'BEGIN{printf "%.3f", e-f}')
 
-  # Triangle fade: 0 → 1 → 1 → 0 within [T0, T1]
+  # Use single quotes (NOT backslash escapes) for comma-containing
+  # expressions — ffmpeg parser strips the outer quotes and treats
+  # everything between as literal value, so commas don't conflict
+  # with filter-chain separators.  Bracket-chain output tag needs
+  # a space separator after the closing quote so it's not consumed
+  # as part of the enable value.
   ALPHA="if(between(t,${T0},${PEAK_START}),(t-${T0})/${FADE},if(between(t,${PEAK_START},${PEAK_END}),1,if(between(t,${PEAK_END},${T1}),(${T1}-t)/${FADE},0)))"
+  ENABLE="between(t,${T0},${T1})"
 
-  DT="drawtext=fontfile='${FONT}':text='${TXT_E}':fontsize=${SIZE}:fontcolor=${PRIMARY%@*}:alpha='${ALPHA}':x=${X}:y=${Y}:shadowcolor=${SHADOW%@*}:shadowx=4:shadowy=4:borderw=2:bordercolor=${BORDER%@*}:enable='between(t,${T0},${T1})'"
+  IN_TAG=$([[ $i -eq 0 ]] && echo "[in]" || echo "[v${i}]")
+  OUT_TAG="[v$((i+1))]"
 
-  if [[ -z "$FILTER" ]]; then
-    FILTER="$DT"
+  DT="${IN_TAG}drawtext=fontfile='${FONT}':text='${TXT_E}':fontsize=${SIZE}:fontcolor=${PRIMARY%@*}:alpha='${ALPHA}':x=${X}:y=${Y}:shadowcolor=${SHADOW%@*}:shadowx=4:shadowy=4:borderw=2:bordercolor=${BORDER%@*}:enable='${ENABLE}' ${OUT_TAG}"
+
+  if [[ -z "$FILTER_CHAIN" ]]; then
+    FILTER_CHAIN="$DT"
   else
-    FILTER="${FILTER},${DT}"
+    FILTER_CHAIN="${FILTER_CHAIN};${DT}"
   fi
   i=$((i + 1))
 done < "$PARSED"
 
+# Final output tag is whichever the last drawtext wrote to
+FINAL_TAG="[v${i}]"
+# Rewrite first input label from [in] to [0:v] (ffmpeg's stream label)
+FILTER_CHAIN="${FILTER_CHAIN/\[in\]/[0:v]}"
+
 "$FFMPEG" -y -loglevel warning -stats \
   -i "$SRC" \
-  -vf "${FILTER}" \
+  -filter_complex "${FILTER_CHAIN}" \
+  -map "$FINAL_TAG" -map "0:a" \
   -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
 
 dur=$("$FFPROBE" -v error -show_entries format=duration -of csv=p=0 "$DST" 2>/dev/null | awk '{printf "%.1f", $1}')
