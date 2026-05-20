@@ -202,6 +202,135 @@ genres:
       halation + amber LUT + slow soft cuts.  Designed for both Korean
       city pop (vocal-citypop-kr-*) and Japanese city pop references.
 
+  # ───── K-pop ballad (vocal-centric, slow-mid) ─────
+
+  kpop_ballad:
+    aliases: [korean_ballad, kballad, k-ballad]
+    phrase_beats: 16            # 8-beat soft cuts, vocal-respecting
+    grain_intensity: 6
+    vignette_angle: PI/4
+    zoom_pulse_amp: 0          # FORBIDDEN — vocals carry energy
+    shader: halation           # warm bloom, emotional
+    lut_direction: warm_amber_violet
+    cut_mode: cuts
+    forbidden_effects: [scanline, neon_edge, datamosh, kaleidoscope, chromatic_split, strobe]
+    keyword_pool:
+      - rainy seoul window night
+      - empty street lamp post
+      - subway window blurred
+      - cafe alone evening
+      - city skyline rain
+      - winter coat alone street
+    phrase_pool:
+      - 어디쯤이야
+      - 한 마디만
+      - 오늘 밤이 끝나기 전에
+      - 나는 여기 그대로인데
+      - 시간만 흐르고
+    notes: |
+      K-pop synth ballad — emotional female vocals, atmospheric pads.
+      Visual contract: NO glitch, NO neon, NO strobe.  Warm halation
+      + low-key vignette + slow 8-beat cuts to match vocal phrasing.
+      Distinct from citypop (citypop = nostalgic neon Tokyo, kpop_ballad
+      = melancholic Korean evening + rain).
+
+  # ───── K-pop dance (vocal-centric, energetic) ─────
+
+  kpop_dance:
+    aliases: [kdance, kpop_edm, kpop_dance_pop]
+    phrase_beats: 8             # 2-beat cuts (dense but not sub-beat)
+    grain_intensity: 0          # hi-fi clean
+    vignette_angle: PI/3        # subtle
+    zoom_pulse_amp: 0.08       # mild — vocals still primary
+    shader: color_burst        # disco-style hue cycling matches K-pop visuals
+    # beat_burst / saturation_pulse also valid alternatives
+    lut_direction: high_saturation_pop
+    cut_mode: cuts
+    forbidden_effects: [vhs, halation, datamosh, kaleidoscope]
+    keyword_pool:
+      - neon stage lighting close
+      - dance floor strobe
+      - fashion model city street
+      - mirror reflection studio
+      - tokyo crossing fast
+      - colorful lights blur
+    phrase_pool:
+      - 사이렌
+      - 지금부터 시작이야
+      - 손을 들어
+      - 멈출 수 없어
+      - 오늘은 내 거야
+    notes: |
+      K-pop dance pop / EDM-influenced.  Vocals are foreground but
+      track has energy drops — color_burst on kick matches without
+      overpowering vocals.  Bright, glossy production = clean grain-
+      free LUT.  Distinct from house (house = dance-floor full-body,
+      kpop_dance = vocal-led pop with dance energy).
+
+  # ───── R&B slow jam (vocal-centric, smoky) ─────
+
+  rnb:
+    aliases: [contemporary_rnb, neo_soul, slow_jam, soul]
+    phrase_beats: 16            # 8-beat soft cuts
+    grain_intensity: 8           # warm grain for smoky feel
+    vignette_angle: PI/4
+    zoom_pulse_amp: 0          # vocals carry — no glitch
+    shader: halation           # warm bloom on candle/skin lighting
+    lut_direction: warm_low_key_red
+    cut_mode: cuts
+    forbidden_effects: [scanline, neon_edge, datamosh, kaleidoscope, strobe, beat_burst]
+    keyword_pool:
+      - candle flame close warm
+      - wine glass low light
+      - red velvet curtain
+      - silk fabric close
+      - rooftop terrace dim
+      - jazz bar interior warm
+    phrase_pool:
+      - in the late light
+      - my favorite mistake
+      - two AM, the city's humming
+      - one more time
+      - baby, you know
+    notes: |
+      Contemporary R&B / neo-soul / slow jam — breathy vocals, smooth
+      production, intimate.  Visual: warm low-key (candle/jazz-bar
+      lighting), heavy halation for skin/glass, deep vignette.  NEVER
+      glitch / strobe / neon — kills the intimacy.
+
+  # ───── US pop / Billboard top-40 (vocal-centric, glossy) ─────
+
+  uspop:
+    aliases: [us_pop, billboard_pop, contemporary_pop, top_40, synth_pop]
+    phrase_beats: 8             # 2-beat cuts
+    grain_intensity: 2           # very clean
+    vignette_angle: PI/3
+    zoom_pulse_amp: 0.06       # mild on the kick
+    shader: saturation_pulse   # bright, alive
+    # color_burst / beat_burst also valid alternatives
+    lut_direction: bright_clean_modern
+    cut_mode: cuts
+    forbidden_effects: [vhs, datamosh, kaleidoscope, scanline]
+    keyword_pool:
+      - urban skyline daylight
+      - fashion magazine spread
+      - LA pool sunset
+      - convertible drive sunset
+      - polaroid camera close
+      - mirror studio reflection
+    phrase_pool:
+      - tomorrow is a question
+      - tonight is mine
+      - right here, right now
+      - singing all my hopes out loud
+      - the song is mine
+    notes: |
+      US contemporary synth-pop / Billboard top-40 vocal pop.  Female
+      mid-range vocals + hook-driven chorus.  Visual contract: bright,
+      clean, glossy production aesthetic.  NO grain heaviness, NO VHS
+      retro look, NO scanlines.  Saturation pulse on kick gives energy
+      without competing with vocals.
+
   # ───── Hi-fi clean family (denser cuts, sharper) ─────
 
   house:

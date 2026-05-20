@@ -85,7 +85,11 @@ declare_genre_keywords() {
 ambient: ambient linen minimal drone soft pad meditation chill_relax wind ocean still
 drone: drone doom ambient dark bass_drone funeral
 shoegaze: shoegaze dreampop slowdive fuzz reverb
-citypop: citypop city_pop kr_citypop late_train ballad korean_pop kpop_ballad
+kpop_ballad: kpop_ballad korean_ballad jjeumiya eodi
+kpop_dance: kpop_dance kdance siren kpop_edm
+rnb: rnb r_n_b late_light slow_jam soul neo_soul groove
+uspop: uspop us_pop billboard top_40 tomorrow_question
+citypop: citypop city_pop kr_citypop late_train ballad korean_pop rambler midnight_rambler
 lofi_hiphop: lofi lo-fi chillhop turntable vinyl velvet rain bossa cozy cafe study chill
 jazz: jazz bossa noir vibraphone trumpet sax piano latenight late_night night
 house: house tropical coastline summer beach palm sunshine
