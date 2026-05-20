@@ -39,23 +39,57 @@ canonical implementation.
 
 ## First-time setup
 
+### v2 primary UX — short keyword (`--seed`)
+
+```bash
+# Minimal first invocation — the skill expands one keyword into a
+# full role family via config/role-synonyms.yaml.
+skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
+```
+
+That single command:
+1. Matches `Problem Solver` against `role-synonyms.yaml` → finds
+   the `problem-solver` family.
+2. Expands to ~24 include keywords (FDE, Applied AI Engineer,
+   Generalist, AI Product Manager, Founding Engineer, …).
+3. Fetches from default sources (all kr-* in mock-fallback).
+4. Filters + dedupes + renders.
+5. Writes the digest to a tmp path (drop `--dry-run` to land
+   under `./records/jobs/<YYYY-MM-DD>/digest.md`).
+
+Try different seeds in the same family:
+```bash
+skills/job-hunt/scripts/run.sh --seed "FDE"
+skills/job-hunt/scripts/run.sh --seed "Forward Deployed"
+skills/job-hunt/scripts/run.sh --seed "Generalist"
+# All three route to the problem-solver family and produce
+# identical filtered results.
+```
+
+Unknown seed exits 2 with an actionable error.  Extend
+`config/role-synonyms.yaml` to add a new family or synonym.
+
+### Advanced UX — hand-edited filter
+
 ```bash
 # 1. Copy the example filter and edit your 직군/지역/keywords/sources.
 cp skills/job-hunt/config/filters.example.yaml \
    skills/job-hunt/config/filters.yaml
 
-# 2. Sanity-check the pipeline runs end-to-end without touching any
-#    network (all plugins are mock-fallback by default).
-skills/job-hunt/scripts/run.sh --dry-run
-
-# 3. Inspect the produced digest.  --dry-run writes under /tmp.
-#    Without --dry-run, the digest lands at the path printed on stdout
-#    (typically ./records/jobs/<YYYY-MM-DD>/digest.md per filters.yaml).
+# 2. Run without --seed; filters.yaml provides the include/exclude
+#    keyword set directly.
+skills/job-hunt/scripts/run.sh
 ```
 
-Expected output without any env vars set: a digest with 9 postings
-across 4 sources (the same shape as the committed sample at
-[`docs/samples/job-hunt-digest-mock.md`](../samples/job-hunt-digest-mock.md)).
+`config/filters.yaml` is gitignored by default (operator-specific
+context — see Privacy section).  Both v2 and advanced UX can
+coexist; if `--seed` is given, it overrides the filter's include
+keywords for that run.
+
+Expected output of the v2 default (`--seed "Problem Solver"`):
+3 mock postings from the `_mock` fixture's Problem Solver-family
+entries.  See the committed sample at
+[`docs/samples/job-hunt-digest-mock.md`](../samples/job-hunt-digest-mock.md).
 
 ---
 

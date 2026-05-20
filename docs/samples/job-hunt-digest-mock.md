@@ -1,80 +1,52 @@
 <!--
-Sample output from `skills/job-hunt/scripts/run.sh` against the
-default sources in `config/filters.example.yaml` (kr-wanted +
-kr-programmers + kr-jobkorea + kr-saramin — all in mock-fallback
-mode, no live HTTP, no API keys consumed).  Captured 2026-05-20
-~01:14 KST, post digest-UX-tweak (apply links suppressed when
-they equal the posting URL — visible on kr-saramin entries).
+Sample output from `skills/job-hunt/scripts/run.sh` exercising the
+v2 short-keyword UX:
 
-This file is a committed reference — useful when reviewing the
-job-hunt skill without having to clone + run yourself.  Real
-digests land under `records/jobs/<date>/digest.md` (gitignored).
+  skills/job-hunt/scripts/run.sh \
+    --seed "Problem Solver" \
+    --sources=_mock,kr-wanted,kr-programmers,kr-jobkorea,kr-saramin \
+    --dry-run
 
-Reproduce: `skills/job-hunt/scripts/run.sh --dry-run`
+The `--seed "Problem Solver"` matched the `problem-solver` family
+in config/role-synonyms.yaml and expanded to 24 include keywords
+(Forward Deployed Engineer, Applied AI Engineer, Generalist,
+Solutions Engineer, etc.).  Three of the 14 raw mock postings
+across five sources match the family — all from `_mock` because
+the kr-* mock-fallback fixtures don't yet simulate Problem
+Solver postings.  When operators flip the kr-* plugins to live
+mode, the same `--seed "Problem Solver"` call would catch real
+matches across all sources.
+
+Real digests land under records/jobs/<date>/digest.md (gitignored).
 -->
 
 # Job-hunt digest — 2026-05-20
 
-> **Generated**: 2026-05-20T01:14:42+09:00
+> **Generated**: 2026-05-20T13:26:22+09:00
 > **Locale**: `kr`
-> **Sources**: kr-wanted, kr-programmers, kr-jobkorea, kr-saramin
-> **Filter**: 직군: 백엔드 개발자,AI 엔지니어,풀스택 개발자 · 지역: 서울,경기 성남,원격 · include=[Python,AI,LLM,agent] exclude=[SI,파견,단순 운영]
-> **Total postings**: 9 — **0 new since last digest**
+> **Sources**: _mock, kr-wanted, kr-programmers, kr-jobkorea, kr-saramin
+> **Seed**: `Problem Solver` → role family `problem-solver` ("Problem Solver"), 24 synonym keywords expanded.
+> **Filter**: 직군: 백엔드 개발자,AI 엔지니어,풀스택 개발자 · 지역: 서울,경기 성남,원격 · include=[Problem Solver,Problem-Solver,문제 해결사,AI Product Manager,AI Product Engineer,AI 솔루션 엔지니어,AI Solutions Engineer,AI Solution Engineer,AI Solutions Architect,AI 통합 엔지니어,AI Integration Engineer,LLM Application Engineer,LLM 애플리케이션 개발자,Forward Deployed Engineer,Forward-Deployed Engineer,FDE,Applied AI Engineer,Solutions Engineer,Founding Engineer,Product Engineer,Growth PM,Generalist,AI Builder,Customer Problem Solver] exclude=[SI,파견,단순 운영]
+> **Total postings**: 3 — **0 new since last digest**
 
 ## All postings (this run)
 
-### kr-jobkorea (2)
+### _mock (3)
 
-- **AI 백엔드 엔지니어** · JobKorea Mock A
-  - 지역: 서울 영등포구 · 게시: 2026-05-19
-  - 요약: Python/Django 또는 FastAPI 기반 AI 백엔드. (mock — JH_JOBKOREA_LIVE=1 for live HTML scrape.)
-  - [posting](https://www.jobkorea.co.kr/Recruit/MOCK_JK_400) · [apply](https://www.jobkorea.co.kr/Recruit/MOCK_JK_400?action=apply)
-
-- **풀스택 (LLM 통합)** · JobKorea Mock B
-  - 지역: 서울 송파구 · 게시: 2026-05-18
-  - 요약: Node.js + Python LLM agent layer. (mock)
-  - [posting](https://www.jobkorea.co.kr/Recruit/MOCK_JK_401) · [apply](https://www.jobkorea.co.kr/Recruit/MOCK_JK_401?action=apply)
-
-### kr-programmers (2)
-
-- **AI Engineer — LLM Agent Systems** · Programmers Mock A
-  - 지역: 서울 마포구 · 게시: 2026-05-19
-  - 요약: LLM agent orchestration, RAG pipelines, Python. 시니어. (mock)
-  - [posting](https://career.programmers.co.kr/job_positions/MOCK_P_300) · [apply](https://career.programmers.co.kr/job_positions/MOCK_P_300/apply)
-
-- **Backend Developer (Python/FastAPI)** · Programmers Mock B
-  - 지역: 원격 · 게시: 2026-05-20
-  - 요약: Python FastAPI, PostgreSQL, AI 통합 백엔드. 재택 가능. (mock)
-  - [posting](https://career.programmers.co.kr/job_positions/MOCK_P_301) · [apply](https://career.programmers.co.kr/job_positions/MOCK_P_301/apply)
-
-### kr-saramin (2)
-
-- **[Saramin OpenAPI mock] AI 엔지니어** · Saramin Mock A
-  - 지역: 서울 강남구 · 게시: 2026-05-19
-  - 요약: Python/PyTorch.  LLM serving + agent infra.  (mock — needs SARAMIN_KEY + JH_SARAMIN_LIVE=1 for live OpenAPI.)
-  - [posting](https://www.saramin.co.kr/job/MOCK_SR_500)
-
-- **백엔드 개발자 (Python)** · Saramin Mock B
+- **Problem Solver (AI Agent)** · MockRebeatLike
   - 지역: 서울 강남구 · 게시: 2026-05-20
-  - 요약: FastAPI / PostgreSQL.  AI 데이터 파이프라인 운영. (mock)
-  - [posting](https://www.saramin.co.kr/job/MOCK_SR_501)
+  - 요약: 쇼핑 AI Agent 기획+개발+배포까지 직접 담당. PMF 탐색 사이클 주도. Python/FastAPI MVP 빌드.
+  - [posting](https://mock.example.com/jobs/107) · [apply](https://mock.example.com/apply/107)
 
-### kr-wanted (3)
+- **Forward Deployed Engineer** · MockFrontierAI
+  - 지역: 원격 · 게시: 2026-05-20
+  - 요약: Build AI agent solutions for enterprise customers; framing problems → shipping working LLM prototypes within weeks.
+  - [posting](https://mock.example.com/jobs/108) · [apply](https://mock.example.com/apply/108)
 
-- **Backend Engineer (AI Platform)** · Wanted Mock A
-  - 지역: 서울 강남구 · 게시: 2026-05-19
-  - 요약: AI 플랫폼 백엔드 — Python/FastAPI, LLM 통합, multi-agent orchestration. (mock data — JH_WANTED_LIVE=1 with WANTED_API_KEY needed for live)
-  - [posting](https://www.wanted.co.kr/wd/MOCK_W_200) · [apply](https://www.wanted.co.kr/wd/MOCK_W_200/apply)
-
-- **AI 엔지니어 (Agent 시스템)** · Wanted Mock B
-  - 지역: 서울 강남구 · 게시: 2026-05-18
-  - 요약: LangGraph/agent 시스템, RAG, 벡터 DB 운영 경험 우대. (mock)
-  - [posting](https://www.wanted.co.kr/wd/MOCK_W_201) · [apply](https://www.wanted.co.kr/wd/MOCK_W_201/apply)
-
-- **Senior Software Engineer (Game Client + AI)** · Wanted Mock C
-  - 지역: 경기 성남 · 게시: 2026-05-17
-  - 요약: Unity 클라이언트 + AI 통합. C#/Lua/Python. (mock)
-  - [posting](https://www.wanted.co.kr/wd/MOCK_W_202) · [apply](https://www.wanted.co.kr/wd/MOCK_W_202/apply)
+- **Generalist** · MockKRStartup
+  - 지역: 서울 마포구 · 게시: 2026-05-19
+  - 요약: PM+Engineer+Data Analyst 하이브리드. Ship MVPs, iterate to PMF. AI 도메인 깊이 우대.
+  - [posting](https://mock.example.com/jobs/109) · [apply](https://mock.example.com/apply/109)
 
 
 ---

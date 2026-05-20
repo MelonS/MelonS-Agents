@@ -41,23 +41,52 @@ shapes" 참고): `agents/missions/job-hunt/` 대응본 없음, 5-에이전트 �
 
 ## 첫 사용 셋업
 
+### v2 기본 UX — 짧은 키워드 (`--seed`)
+
+```bash
+# 최소 명령 — 키워드 1개를 role family로 자동 확장.
+skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
+```
+
+한 줄로:
+1. `Problem Solver`를 `role-synonyms.yaml`에서 매칭 →
+   `problem-solver` family 찾음.
+2. ~24개 include 키워드로 확장 (FDE, Applied AI Engineer,
+   Generalist, AI Product Manager, Founding Engineer 등).
+3. 기본 소스 (kr-* 전부 mock-fallback) 에서 fetch.
+4. 필터 + dedupe + render.
+5. tmp 경로에 digest 작성 (`--dry-run` 떼면
+   `./records/jobs/<YYYY-MM-DD>/digest.md`).
+
+같은 family 내 다른 seed로 시도:
+```bash
+skills/job-hunt/scripts/run.sh --seed "FDE"
+skills/job-hunt/scripts/run.sh --seed "Forward Deployed"
+skills/job-hunt/scripts/run.sh --seed "Generalist"
+# 세 개 모두 problem-solver family로 라우팅 → 동일 결과.
+```
+
+알 수 없는 seed는 exit 2 + 안내 메시지.
+`config/role-synonyms.yaml`에 family 또는 synonym 추가해서 확장.
+
+### Advanced UX — 수동 편집 필터
+
 ```bash
 # 1. 예제 필터를 복사해서 직군/지역/keywords/sources를 편집.
 cp skills/job-hunt/config/filters.example.yaml \
    skills/job-hunt/config/filters.yaml
 
-# 2. 네트워크 없이 파이프라인이 끝까지 도는지 확인 (모든 플러그인이
-#    기본 mock-fallback).
-skills/job-hunt/scripts/run.sh --dry-run
-
-# 3. 생성된 digest 확인. --dry-run은 /tmp 아래에 씀.
-#    --dry-run 없이는 filters.yaml의 output.records_root
-#    (기본 ./records/jobs) 아래로 떨어짐.
+# 2. --seed 없이 실행; filters.yaml이 include/exclude 직접 제공.
+skills/job-hunt/scripts/run.sh
 ```
 
-환경 변수 없이 실행 시 기대 출력: 4개 소스에 걸쳐 9개 포스팅이 담긴 digest
-(샘플 [`docs/samples/job-hunt-digest-mock.md`](../samples/job-hunt-digest-mock.md)과
-동일 형태).
+`config/filters.yaml`은 기본 gitignored (운영자별 컨텍스트 — 프라이버시
+섹션 참고).  v2와 advanced 공존 가능; `--seed` 주면 그 run의 include
+키워드는 그것이 덮어씌움.
+
+v2 기본 출력 (`--seed "Problem Solver"`) 기대값: `_mock` fixture의
+Problem Solver family 항목 3개. 커밋된 샘플:
+[`docs/samples/job-hunt-digest-mock.md`](../samples/job-hunt-digest-mock.md).
 
 ---
 

@@ -94,24 +94,48 @@ Available shaders: `pond` · `breathing` · `halation` · `combo`
 The skill: filters (직군 + 지역 + 키워드) in → markdown digest of
 Korean job postings out.
 
-### First-time setup
+### v2 short-keyword UX (recommended)
+
+Just pass a `--seed` — the skill expands it to the full role family
+via `config/role-synonyms.yaml`:
 
 ```bash
-cp skills/job-hunt/config/filters.example.yaml \
-   skills/job-hunt/config/filters.yaml
-$EDITOR skills/job-hunt/config/filters.yaml      # edit categories, regions, keywords
+skills/job-hunt/scripts/run.sh --seed "Problem Solver"
+skills/job-hunt/scripts/run.sh --seed "Forward Deployed"
+skills/job-hunt/scripts/run.sh --seed "Applied AI Engineer"
+skills/job-hunt/scripts/run.sh --seed "Generalist"
+# All four above route to the same problem-solver family and expand
+# to ~24 equivalent titles used across companies (FDE, FDE,
+# Applied AI Engineer, Solutions Engineer, Founding Engineer,
+# Growth PM, AI Product Manager, Generalist, 문제 해결사, …).
 ```
+
+Unknown seed → exit 2 with an actionable error pointing at
+`config/role-synonyms.yaml`.  Add a family or a synonym entry to
+extend coverage.
 
 ### Mock-fallback test (no network, no API keys)
 
 ```bash
-skills/job-hunt/scripts/run.sh --dry-run
+skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
 ```
 
 Output: `/tmp/.../jobs/<YYYY-MM-DD>/digest.md`
 
-Expected: ~9 postings filtered + deduped across 4 mock-fallback
-KR sources.
+Expected: 3 postings (the Problem Solver family entries in the
+`_mock` fixture).  Drop the `--seed` to get the default 8 postings
+across all categories.
+
+### Advanced — hand-edited filter (no seed)
+
+```bash
+cp skills/job-hunt/config/filters.example.yaml \
+   skills/job-hunt/config/filters.yaml
+$EDITOR skills/job-hunt/config/filters.yaml      # categories, regions, keywords
+skills/job-hunt/scripts/run.sh                   # no --seed
+```
+
+`filters.yaml` is gitignored by default (operator-specific).
 
 ### Production run (still mock-fallback by default)
 
