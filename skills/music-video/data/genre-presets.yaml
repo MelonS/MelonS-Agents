@@ -47,6 +47,12 @@ genres:
       - empty room sunset
       - rain on glass slow
       - drifting clouds
+    phrase_pool:
+      - soft window
+      - the hours that pass
+      - no one is awake
+      - stillness
+      - between dreams
     notes: |
       Ambient music expects perpetual stillness with slow color/zoom drifts.
       The drum-onset zoom-pulse and 12-beat cuts both violate the genre
@@ -69,6 +75,12 @@ genres:
       - industrial smoke
       - abandoned highway
       - cathedral interior
+    phrase_pool:
+      - the long descent
+      - no horizon
+      - what remains
+      - after the last train
+      - hollow space
     notes: |
       Drone / doom jazz tolerates and benefits from heavier grain.  Vignette
       deeper.  Always low-key (underexposed look).
@@ -90,6 +102,12 @@ genres:
       - soft sunset wash
       - fairy lights bokeh
       - wet pavement reflection
+    phrase_pool:
+      - you are not here
+      - the room is loud
+      - I think I saw you
+      - summer ending
+      - blurred
     notes: |
       Shoegaze visual code: "close-ups losing definition" + chromatic.
       Slight blur welcome.  Crisp clean grading reads as wrong genre.
@@ -113,6 +131,12 @@ genres:
       - warm desk lamp
       - tokyo alley night
       - vintage turntable
+    phrase_pool:
+      - rainy window
+      - 3 AM in seoul
+      - the last train
+      - warm rhodes
+      - vinyl crackle
     notes: |
       Lo-fi production aesthetic is structurally anti-glitch.  Lofi Girl
       and Chillhop have years of consistent practice on this.  The drum-
@@ -136,6 +160,12 @@ genres:
       - muted trumpet hand
       - cigarette smoke close
       - noir hat detective
+    phrase_pool:
+      - last call
+      - wet street lamp
+      - smoke and brass
+      - the corner booth
+      - a slow exit
     notes: |
       Warm halation + grain + low-key vignette = jazz-noir visual code.
       Add halation to current default; kill the zoom-pulse.
@@ -159,6 +189,12 @@ genres:
       - tropical leaves backlit
       - beach sunset silhouette
       - warm shoreline
+    phrase_pool:
+      - golden hour
+      - endless summer
+      - the ocean knows
+      - barefoot at dawn
+      - salt on skin
     notes: |
       House is hi-fi clean — heavy grain fights the production.  Saturation
       pulse on kick gives it the right energy.
@@ -180,6 +216,12 @@ genres:
       - industrial corridor
       - subway platform empty
       - metal grate macro
+    phrase_pool:
+      - pulse
+      - machine prayer
+      - underground
+      - hold the line
+      - the kick is law
     notes: |
       Industrial / cold / metallic. No warmth, no grain. Edge glow welcome.
 
@@ -202,6 +244,12 @@ genres:
       - vaporwave pastel
       - chrome reflection
       - palm tree pink sunset
+    phrase_pool:
+      - 1986 forever
+      - neon sunset
+      - highway to nowhere
+      - the arcade glows
+      - tokyo by night
     notes: |
       Synthwave visual code: neon grid + sunset gradient + scanlines.
       Soft grain reads as lo-fi (wrong genre).  Current 5/21 Arcade short
@@ -224,6 +272,12 @@ genres:
       - pastel sky vhs
       - mannequin store
       - empty atrium
+    phrase_pool:
+      - empty mall
+      - pastel forever
+      - the gym is closed
+      - elevator music
+      - windows 95
     notes: |
       Vaporwave: VHS + chromatic + pastel.  Sharp hi-contrast reads as wrong.
 
@@ -246,6 +300,12 @@ genres:
       - headlight glare drift
       - speed motion blur
       - wheel smoke close
+    phrase_pool:
+      - the drift never ends
+      - midnight runner
+      - no rear view
+      - tokyo expressway
+      - speed limit zero
     notes: |
       Drift-phonk: RGB-split + speed-ramp + saturation pulse on the drop.
 
@@ -266,6 +326,12 @@ genres:
       - pixel art motion
       - ai abstract face
       - cyber distortion
+    phrase_pool:
+      - scream into the cloud
+      - everything everywhere
+      - perfect glitch
+      - future already
+      - pure noise
     notes: |
       Hyperpop / glitch: datamosh + pixel-sort + RGB-split.  The visual IS
       the chaos. Restraint reads as wrong.
@@ -289,6 +355,12 @@ genres:
       - knitted texture
       - forest dappled light
       - stream pebbles
+    phrase_pool:
+      - the meadow at noon
+      - warm bread cooling
+      - the fireplace still
+      - afternoon rain
+      - old books
     notes: |
       Warm grain + soft sun-flare + green/gold LUT.  No neon, no urban, no glitch.
 
@@ -311,6 +383,12 @@ genres:
       - cathedral light beam
       - library candle close
       - violin scroll macro
+    phrase_pool:
+      - the cathedral light
+      - her last letter
+      - a slow goodbye
+      - memory of summer
+      - the violin alone
     notes: |
       Ken-Burns on still painting / album art.  Slow, contemplative.
       Any modern UI / digital effect reads as wrong.
@@ -334,6 +412,12 @@ genres:
       - drained mall
       - endless staircase
       - soft fog corridor
+    phrase_pool:
+      - the empty pool
+      - this hallway repeats
+      - you have been here before
+      - no one is following
+      - soft static
     notes: |
       Pastel + soft VHS grain + slight blur.  Sharp hi-contrast breaks the mood.
 

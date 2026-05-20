@@ -35,15 +35,24 @@ TYPO_SH="$REPO_ROOT/scripts/music-video-typography.sh"
 
 # Parse flags
 WITH_CANVAS=0
-WITH_TYPO=""
+WITH_TYPO_FLAG=0     # --with-typography given (use genre pool)
+WITH_TYPO=""         # explicit phrases CSV (overrides pool)
 STILL_IMG=""
 SHORT_ID=""
 ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --with-canvas) WITH_CANVAS=1; shift ;;
-    --with-typography) WITH_TYPO="$2"; shift 2 ;;
-    --with-typography=*) WITH_TYPO="${1#*=}"; shift ;;
+    --with-typography)
+      WITH_TYPO_FLAG=1
+      # Peek at next arg — if non-flag, treat as phrases CSV; else use pool
+      if [[ "${2:-}" != "" && "${2:-}" != --* ]]; then
+        WITH_TYPO="$2"; shift 2
+      else
+        shift
+      fi
+      ;;
+    --with-typography=*) WITH_TYPO_FLAG=1; WITH_TYPO="${1#*=}"; shift ;;
     --image=*) STILL_IMG="${1#*=}"; shift ;;
     --short-id=*) SHORT_ID="${1#*=}"; shift ;;
     --help)
@@ -106,11 +115,25 @@ if [[ "$WITH_CANVAS" == 1 ]]; then
 fi
 
 # 5. Typography overlay (optional)
-if [[ -n "$WITH_TYPO" ]]; then
-  TYPO_OUT="${LATEST%.mp4}-typography.mp4"
-  echo "→ typography overlay"
-  bash "$TYPO_SH" "$LATEST" "$TYPO_OUT" "$WITH_TYPO"
-  echo "✓ typography: $TYPO_OUT"
+if [[ "$WITH_TYPO_FLAG" == 1 ]]; then
+  # If no explicit phrases, pull from genre phrase_pool
+  if [[ -z "$WITH_TYPO" ]]; then
+    PHRASES_YAML="$REPO_ROOT/skills/music-video/data/genre-presets.yaml"
+    WITH_TYPO=$(yq -r ".genres.${GENRE}.phrase_pool | join(\",\")" "$PHRASES_YAML" 2>/dev/null)
+    if [[ -z "$WITH_TYPO" || "$WITH_TYPO" == "null" ]]; then
+      echo "⚠️  no phrase_pool for $GENRE — skipping typography" >&2
+      WITH_TYPO=""
+    else
+      echo "→ no phrases supplied — using $GENRE preset pool"
+      echo "  ($WITH_TYPO)"
+    fi
+  fi
+  if [[ -n "$WITH_TYPO" ]]; then
+    TYPO_OUT="${LATEST%.mp4}-typography.mp4"
+    echo "→ typography overlay"
+    bash "$TYPO_SH" "$LATEST" "$TYPO_OUT" "$WITH_TYPO"
+    echo "✓ typography: $TYPO_OUT"
+  fi
 fi
 
 echo
