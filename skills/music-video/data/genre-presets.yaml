@@ -1,0 +1,253 @@
+# Genre presets for music-video skill.
+#
+# Each preset is a bundle of pipeline parameters that override the v6
+# default treatment to match the target genre's visual contract (see
+# docs/research/2026-05-21-music-shorts-formats-landscape.md "Shader /
+# effect ↔ music-genre matching principles").
+#
+# CONSUMED BY:
+#   - agents/missions/music-video/run.sh (when MUSIC_VIDEO_GENRE=<name>)
+#   - scripts/music-video-shaders.sh (when --genre <name>)
+#   - scripts/genre-detect.sh (mapping helper)
+#
+# PARAMETERS:
+#   phrase_beats          int       cut every N beats (overrides MUSIC_VIDEO_PHRASE_BEATS)
+#   grain_intensity       int       0=off; default 8
+#   vignette_angle        string    ffmpeg vignette expression or "off"
+#   zoom_pulse_amp        float     0=off; default 0.08
+#   shader                string    post-shader: none|pond|breathing|halation|combo|
+#                                   scanline|neon_edge|vhs|saturation_pulse|chromatic_split|
+#                                   kaleidoscope|datamosh|stillzoom
+#   lut_direction         string    descriptive — used by shader/operator decisions
+#   cut_mode              string    cuts|stillzoom — stillzoom = no cuts, Ken Burns only
+#   forbidden_effects     [string]  effects the operator should never apply to this genre
+#   notes                 string    rationale for the operator
+#
+# DEFAULTS (when MUSIC_VIDEO_GENRE is unset): unchanged from v6 baseline —
+# this file is purely additive, no behavior change without opt-in.
+
+genres:
+
+  # ───── Slow / sparse family (no cuts, no glitch) ─────
+
+  ambient:
+    aliases: [drone, minimal_ambient, dark_ambient]
+    phrase_beats: 999          # effectively no cuts
+    grain_intensity: 6
+    vignette_angle: PI/4
+    zoom_pulse_amp: 0          # ABSOLUTELY no zoom-pulse
+    shader: halation           # warm bloom as primary effect
+    lut_direction: cool_desat
+    cut_mode: stillzoom
+    forbidden_effects: [pond, scanline, neon_edge, datamosh, chromatic_split]
+    notes: |
+      Ambient music expects perpetual stillness with slow color/zoom drifts.
+      The drum-onset zoom-pulse and 12-beat cuts both violate the genre
+      contract.  Use stillzoom mode (Ken-Burns on one image) + warm halation.
+
+  drone:
+    aliases: [doom_jazz, doom_ambient]
+    phrase_beats: 999
+    grain_intensity: 10        # heavier grain — adds movement to static frames
+    vignette_angle: PI/3
+    zoom_pulse_amp: 0
+    shader: halation
+    lut_direction: cool_desat_dark
+    cut_mode: stillzoom
+    forbidden_effects: [pond, scanline, neon_edge, datamosh]
+    notes: |
+      Drone / doom jazz tolerates and benefits from heavier grain.  Vignette
+      deeper.  Always low-key (underexposed look).
+
+  shoegaze:
+    aliases: [dream_pop, slowdive]
+    phrase_beats: 16            # 4-beat soft cuts at most
+    grain_intensity: 6
+    vignette_angle: PI/5
+    zoom_pulse_amp: 0
+    shader: chromatic_split    # mild chromatic aberration (shoegaze code: visual distortion)
+    lut_direction: desat_warm
+    cut_mode: cuts
+    forbidden_effects: [scanline, neon_edge, datamosh]
+    notes: |
+      Shoegaze visual code: "close-ups losing definition" + chromatic.
+      Slight blur welcome.  Crisp clean grading reads as wrong genre.
+
+  # ───── Lo-fi / chill family (8-beat cuts, halation, NO glitch) ─────
+
+  lofi_hiphop:
+    aliases: [chillhop, lofi, downtempo]
+    phrase_beats: 16            # 8-beat soft cuts
+    grain_intensity: 8
+    vignette_angle: PI/5
+    zoom_pulse_amp: 0          # **CRITICAL — lo-fi is anti-glitch**
+    shader: halation
+    lut_direction: warm_amber
+    cut_mode: cuts
+    forbidden_effects: [scanline, neon_edge, datamosh, chromatic_split]
+    notes: |
+      Lo-fi production aesthetic is structurally anti-glitch.  Lofi Girl
+      and Chillhop have years of consistent practice on this.  The drum-
+      onset zoom-pulse is the primary "띠용" source flagged by the operator
+      on the 5/20 batch.  Strongest single mapping in the catalog.
+
+  jazz:
+    aliases: [acoustic_jazz, smooth_jazz]
+    phrase_beats: 12            # 4-8 beat soft cuts
+    grain_intensity: 8
+    vignette_angle: PI/4        # deeper, low-key noir
+    zoom_pulse_amp: 0          # glitch FORBIDDEN
+    shader: halation
+    lut_direction: warm_low_key
+    cut_mode: cuts
+    forbidden_effects: [scanline, neon_edge, datamosh, kaleidoscope]
+    notes: |
+      Warm halation + grain + low-key vignette = jazz-noir visual code.
+      Add halation to current default; kill the zoom-pulse.
+
+  # ───── Hi-fi clean family (denser cuts, sharper) ─────
+
+  house:
+    aliases: [tropical_house, deep_house, future_house]
+    phrase_beats: 8             # 2-beat cuts
+    grain_intensity: 2          # MUCH less grain than lo-fi
+    vignette_angle: PI/3        # softer
+    zoom_pulse_amp: 0.06       # mild zoom-pulse OK on kick
+    shader: saturation_pulse
+    lut_direction: high_saturation
+    cut_mode: cuts
+    forbidden_effects: [vhs, datamosh, kaleidoscope]
+    notes: |
+      House is hi-fi clean — heavy grain fights the production.  Saturation
+      pulse on kick gives it the right energy.
+
+  techno:
+    aliases: [tech_house, minimal_techno]
+    phrase_beats: 4             # 1-beat cuts (very dense)
+    grain_intensity: 0
+    vignette_angle: PI/2        # very subtle / nearly off
+    zoom_pulse_amp: 0.12       # stronger pulse, kick-driven
+    shader: saturation_pulse
+    lut_direction: high_saturation
+    cut_mode: cuts
+    forbidden_effects: [vhs, halation]
+    notes: |
+      Industrial / cold / metallic. No warmth, no grain. Edge glow welcome.
+
+  # ───── Synthwave / retrowave family (scanlines, neon, NO grain/halation) ─────
+
+  synthwave:
+    aliases: [retrowave, outrun, vaporwave_neon]
+    phrase_beats: 8             # 2-beat cuts
+    grain_intensity: 0          # FORBIDDEN
+    vignette_angle: off         # no vignette
+    zoom_pulse_amp: 0.05       # slight, controlled
+    shader: scanline           # signature shader
+    lut_direction: hot_pink_cyan
+    cut_mode: cuts
+    forbidden_effects: [halation, vhs, grain]
+    notes: |
+      Synthwave visual code: neon grid + sunset gradient + scanlines.
+      Soft grain reads as lo-fi (wrong genre).  Current 5/21 Arcade short
+      has this mismatch.
+
+  vaporwave:
+    aliases: [vaporwave_aesthetic, mallsoft]
+    phrase_beats: 999           # very slow / loopy
+    grain_intensity: 4
+    vignette_angle: PI/4
+    zoom_pulse_amp: 0
+    shader: vhs
+    lut_direction: pastel_purple_pink_teal
+    cut_mode: stillzoom         # vaporwave is more about looping aesthetic than cuts
+    forbidden_effects: [scanline, datamosh, saturation_pulse]
+    notes: |
+      Vaporwave: VHS + chromatic + pastel.  Sharp hi-contrast reads as wrong.
+
+  # ───── Fast / chaotic family (datamosh, frame stutter) ─────
+
+  phonk:
+    aliases: [drift_phonk, anime_edit]
+    phrase_beats: 4
+    grain_intensity: 4
+    vignette_angle: PI/6
+    zoom_pulse_amp: 0.15
+    shader: chromatic_split
+    lut_direction: high_contrast_warm
+    cut_mode: cuts
+    forbidden_effects: [soft_focus, halation]
+    notes: |
+      Drift-phonk: RGB-split + speed-ramp + saturation pulse on the drop.
+
+  hyperpop:
+    aliases: [glitch, breakcore, gabber]
+    phrase_beats: 2             # sub-beat
+    grain_intensity: 0
+    vignette_angle: off
+    zoom_pulse_amp: 0.20       # strongest
+    shader: datamosh
+    lut_direction: hyper_saturated
+    cut_mode: cuts
+    forbidden_effects: [restraint, halation, soft_focus]
+    notes: |
+      Hyperpop / glitch: datamosh + pixel-sort + RGB-split.  The visual IS
+      the chaos. Restraint reads as wrong.
+
+  # ───── Folk / acoustic family ─────
+
+  cottagecore:
+    aliases: [folk, acoustic_folk, indie_folk]
+    phrase_beats: 16
+    grain_intensity: 6
+    vignette_angle: PI/5
+    zoom_pulse_amp: 0
+    shader: halation           # soft sun-flare alternative
+    lut_direction: warm_green_gold
+    cut_mode: cuts
+    forbidden_effects: [scanline, neon_edge, datamosh, vhs]
+    notes: |
+      Warm grain + soft sun-flare + green/gold LUT.  No neon, no urban, no glitch.
+
+  # ───── Classical family ─────
+
+  classical:
+    aliases: [orchestral, chamber, baroque]
+    phrase_beats: 999           # no rhythmic cuts
+    grain_intensity: 6
+    vignette_angle: PI/5
+    zoom_pulse_amp: 0
+    shader: halation
+    lut_direction: warm_classical
+    cut_mode: stillzoom
+    forbidden_effects: [scanline, neon_edge, datamosh, vhs, kaleidoscope]
+    notes: |
+      Ken-Burns on still painting / album art.  Slow, contemplative.
+      Any modern UI / digital effect reads as wrong.
+
+  # ───── Liminal / dreamcore (slow, otherworldly) ─────
+
+  dreamcore:
+    aliases: [liminal, weirdcore]
+    phrase_beats: 999
+    grain_intensity: 4          # soft VHS-style grain
+    vignette_angle: PI/4
+    zoom_pulse_amp: 0
+    shader: vhs
+    lut_direction: pastel_sky
+    cut_mode: stillzoom
+    forbidden_effects: [scanline, datamosh, sharp_cuts]
+    notes: |
+      Pastel + soft VHS grain + slight blur.  Sharp hi-contrast breaks the mood.
+
+
+# ───── Operator-facing genre selection guide ─────
+#
+# When in doubt, the "energy × texture" 2x2:
+#
+#               soft texture                hard texture
+#               ─────────────────           ─────────────────
+#   slow energy   ambient, classical,        (rare — try jazz)
+#                 cottagecore, dreamcore
+#
+#   fast energy   lofi_hiphop, jazz          synthwave, house, techno,
+#                                            phonk, hyperpop

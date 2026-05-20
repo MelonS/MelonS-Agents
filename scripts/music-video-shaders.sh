@@ -25,6 +25,24 @@
 #               halation modulates 0.10 → 0.35 → 0.20 across the same
 #               structure.  This is the validated end product.
 #
+# Genre-coded effects (added 2026-05-21, additive; see
+# skills/music-video/data/genre-presets.yaml for the matching matrix):
+#   scanline           Horizontal CRT-style line darkening (every 2nd row
+#                      at 0.85 luma).  Synthwave / retrowave signature.
+#   chromatic_split    RGB channel horizontal shift (R+4, G-2, B-4 px) —
+#                      VHS / vaporwave / phonk chromatic aberration look.
+#   neon_edge          Edge-detect + soft neon-pink/cyan colorize blend.
+#                      Synthwave alternative.
+#   vhs                Chromatic shift + slight noise + chroma blur.
+#                      Vaporwave / dreamcore mallsoft.
+#   saturation_pulse   Sin-wave saturation modulation (default 2.0 Hz);
+#                      house / techno reactive look without RMS envelope.
+#   kaleidoscope       4-fold mirror (hflip + vflip composite) — psychedelic
+#                      / electronic / ambient-trippy.
+#
+# All new effects use the same `<effect> <input.mp4> <output.mp4>` CLI;
+# original effects unchanged.
+#
 # Caveats:
 #   - Phrase-aware combo assumes a 95.8 BPM source (the Velvet Turntable
 #     reference track).  For other tracks, edit the GATE_POND / OPACITY
@@ -129,8 +147,80 @@ case "$EFFECT" in
       -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
     ;;
 
+  # ───── Genre-coded effects (additive, 2026-05-21) ─────
+
+  scanline)
+    # CRT-style horizontal lines.  Every 2nd row → 0.85× luma.  Synthwave / retrowave.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "geq=lum='if(mod(Y,2),lum(X,Y)*0.85,lum(X,Y))':cb='cb(X,Y)':cr='cr(X,Y)',setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  chromatic_split)
+    # RGB channel horizontal shift.  R +4 px, G -2 px, B -4 px.  VHS / vaporwave look.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "rgbashift=rh=4:gh=-2:bh=-4,setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  neon_edge)
+    # Edge-detect + neon-pink/cyan colorize, screen-blended over base.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -filter_complex "
+        [0:v]split[base][e_in];
+        [e_in]edgedetect=low=0.1:high=0.4,
+          format=yuv420p,
+          curves=preset=increase_contrast,
+          colorbalance=rs=0.4:gs=-0.2:bs=0.5[edges];
+        [base][edges]blend=all_mode=screen:all_opacity=0.45,setsar=1[out]
+      " -map "[out]" -map "0:a" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  vhs)
+    # Chromatic shift + slight noise + chroma blur — vaporwave / dreamcore mallsoft.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "rgbashift=rh=3:gh=-1:bh=-3,noise=c0s=4:allf=t,setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  saturation_pulse)
+    # Sin-wave saturation modulation @ 2 Hz (≈ 120 BPM kick).  House / techno reactive.
+    # Default freq = 2 Hz; override via SATPULSE_HZ env var.
+    SAT_HZ="${SATPULSE_HZ:-2.0}"
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "eq=saturation='1.0 + 0.35*sin(2*PI*${SAT_HZ}*t)':eval=frame,setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  kaleidoscope)
+    # 4-fold mirror (top-left → mirror to all 4 quadrants).  Psychedelic / electronic.
+    # Crop 540x960 from top-left, then mirror horiz + vert to fill 1080x1920.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -filter_complex "
+        [0:v]crop=540:960:0:0[tl];
+        [tl]split=4[tl1][tl2][tl3][tl4];
+        [tl1]copy[a];
+        [tl2]hflip[b];
+        [tl3]vflip[c];
+        [tl4]hflip,vflip[d];
+        [a][b]hstack=inputs=2[top];
+        [c][d]hstack=inputs=2[bot];
+        [top][bot]vstack=inputs=2,setsar=1[out]
+      " -map "[out]" -map "0:a" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
   *)
-    echo "❌ unknown effect: $EFFECT (use pond | breathing | halation | combo)" >&2
+    echo "❌ unknown effect: $EFFECT" >&2
+    echo "   classic:     pond | breathing | halation | combo" >&2
+    echo "   genre-coded: scanline | chromatic_split | neon_edge | vhs | saturation_pulse | kaleidoscope" >&2
     exit 64
     ;;
 esac
