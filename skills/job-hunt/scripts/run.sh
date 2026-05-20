@@ -39,6 +39,8 @@ SEED=""                  # primary UX entry — short keyword expanded via role-
 DRY_RUN=0
 QUIET=0
 FIT_SCORE=0              # --fit-score flag (Phase 2.3) — invokes fit-score.sh per posting
+SORT_MODE=""             # --sort=fit|source — default empty = source-grouping
+TOP_N=""                 # --top=N — slice to top N postings (post-sort)
 
 usage() {
   cat <<EOF
@@ -72,6 +74,11 @@ Options:
                          Adds a `fit` object to each posting in index.json + a fit
                          line to the rendered digest.  Defaults to scaffold mode
                          (no Claude call); set JH_FIT_SCORE_LIVE=1 for live scoring.
+  --sort=fit             Sort postings by fit composite score (highest first).
+                         Implies --fit-score.  Postings without a fit score sort
+                         to the end.  Default sort: source-based grouping.
+  --top=N                After sort, keep only the top N postings (default: keep all).
+                         Useful with --sort=fit for "best 10 matches" digests.
   --list-sources         Print available source plugins + their live-mode flag status.
   --help                 Show this message.
 
@@ -138,6 +145,10 @@ while [[ $# -gt 0 ]]; do
     --dry-run)        DRY_RUN=1; shift ;;
     --quiet)          QUIET=1; shift ;;
     --fit-score)      FIT_SCORE=1; shift ;;
+    --sort=*)         SORT_MODE="${1#--sort=}"; shift ;;
+    --sort)           SORT_MODE="${2:-}"; shift 2 ;;
+    --top=*)          TOP_N="${1#--top=}"; shift ;;
+    --top)            TOP_N="${2:-}"; shift 2 ;;
     --list-sources)
       list_sources
       exit 0
@@ -444,6 +455,33 @@ if [[ "$FIT_SCORE" == "1" ]]; then
   ))
   deduped="$scored"
   log "fit-score: completed for $posting_count posting(s)"
+fi
+
+# ----- sort by fit composite (optional, --sort=fit) -----
+if [[ "$SORT_MODE" == "fit" ]]; then
+  if [[ "$FIT_SCORE" != "1" ]]; then
+    log "--sort=fit implies --fit-score; enabling fit-score scaffold pass"
+    # Bail rather than silently skip — sort=fit without fit-score is
+    # a config error; operator can re-invoke with --fit-score.
+    die "--sort=fit requires --fit-score" 2
+  fi
+  deduped=$(echo "$deduped" | jq '
+    sort_by(
+      if .fit and (.fit.score | type == "number") then (- .fit.score)
+      else 1
+      end
+    )
+  ')
+  log "sort: by fit composite score (desc); postings without fit sort last"
+fi
+
+# ----- slice to top N (optional, --top=N) -----
+if [[ -n "$TOP_N" ]]; then
+  if ! [[ "$TOP_N" =~ ^[0-9]+$ ]]; then
+    die "--top must be a positive integer; got '$TOP_N'" 2
+  fi
+  deduped=$(echo "$deduped" | jq --argjson n "$TOP_N" '.[:$n]')
+  log "slice: kept top $TOP_N posting(s)"
 fi
 
 # ----- diff against most recent prior digest -----
