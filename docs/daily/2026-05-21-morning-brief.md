@@ -77,7 +77,18 @@ Already staged:
 | 13 | arcade 5 beat shaders | beat_burst/strobe/shake/color_burst/light_rays |
 | 14-17 | 4 new tracks + new presets | synthwave-drive / phonk-drift / house-disco / citypop2 |
 | 18 | citypop1 FULL 162s lyrics | full-length Korean vocal w/ designed typography |
-| 19-29 | (rendering overnight) | 11 vocal tracks full-length + lyrics where applicable |
+| 19-29 | **all 11 vocal tracks DONE (07:04 KST)** | full-length + designer lyrics overlay per genre |
+
+Demo 19-29 details:
+- 19, 20: citypop English (Midnight Rambler) 226s, 86MB each
+- 21: dreampop (Blue Hours) 181s base only, 56MB
+- 22, 23: kpop_ballad (어디쯤이야) 205s/217s, 47/64MB w/ KR lyrics
+- 24, 25: kpop_dance (사이렌) 177s/185s, 37/41MB w/ KR lyrics
+- 26, 27: rnb (Late Light) 224s/220s, 80MB each w/ EN lyrics
+- 28, 29: uspop (Tomorrow Is A Question) 206s/213s, 55/61MB w/ EN lyrics
+
+Each Suno-generated track has 2 variants (operator couldn't pick).
+Watch each pair side-by-side and choose the better take per genre.
 
 ## Distribution strategy (vocal tracks)
 
