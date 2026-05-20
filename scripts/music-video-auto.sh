@@ -87,7 +87,25 @@ echo "→ detected genre: $GENRE"
 echo "→ short_id: $SHORT_ID"
 echo
 
-# 2. Run genre wrapper
+# 2. For stillzoom genres without operator-supplied image, auto-fetch
+#    a Pexels portrait photo from the genre's first keyword_pool entry.
+PRESETS_YAML="$REPO_ROOT/skills/music-video/data/genre-presets.yaml"
+CUT_MODE=$(yq -r ".genres.${GENRE}.cut_mode" "$PRESETS_YAML" 2>/dev/null)
+if [[ "$CUT_MODE" == "stillzoom" && -z "$STILL_IMG" ]]; then
+  FIRST_KW=$(yq -r ".genres.${GENRE}.keyword_pool[0]" "$PRESETS_YAML" 2>/dev/null)
+  if [[ -n "$FIRST_KW" && "$FIRST_KW" != "null" ]]; then
+    STILL_IMG="${TMPDIR:-/tmp}/auto-still-${SHORT_ID}.jpg"
+    echo "→ stillzoom genre + no --image — auto-fetching Pexels still"
+    if bash "$REPO_ROOT/scripts/music-video-fetch-still.sh" "$FIRST_KW" "$STILL_IMG"; then
+      echo "  using $STILL_IMG (query: '$FIRST_KW')"
+    else
+      echo "⚠️  still fetch failed — operator must pass --image=PATH" >&2
+      exit 1
+    fi
+  fi
+fi
+
+# 3. Run genre wrapper
 EXTRA_FLAGS=()
 [[ -n "$STILL_IMG" ]] && EXTRA_FLAGS+=(--image="$STILL_IMG")
 
