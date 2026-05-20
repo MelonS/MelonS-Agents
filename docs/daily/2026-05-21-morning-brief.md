@@ -13,109 +13,144 @@
 
 You went to sleep, asked for research + scaffolding by 10 AM.
 
-## What landed (all on `main`, pushed)
+## What landed overnight (7 commits, all on `main`, pushed)
 
-**Commit `93cc5e8` — genre-aware shader presets**
-
-| File | What it does |
+| Commit | What |
 |---|---|
-| `skills/music-video/data/genre-presets.yaml` | 14-genre preset table (ambient, drone, shoegaze, lofi_hiphop, jazz, house, techno, synthwave, vaporwave, phonk, hyperpop, cottagecore, classical, dreamcore) |
-| `scripts/music-video-shaders.sh` | +6 new shader effects: `scanline`, `chromatic_split`, `neon_edge`, `vhs`, `saturation_pulse`, `kaleidoscope` (existing pond/breathing/halation/combo unchanged) |
-| `scripts/music-video-stillzoom.sh` | NEW entry point: image + music → 60s slow Ken-Burns 9:16 mp4 (no cuts) — required for ambient/classical/dreamcore |
-| `scripts/music-video-genre.sh` | NEW wrapper: `<genre> <id> <music>` → resolves preset → exports env overrides → runs pipeline → chains matching post-shader |
-| `docs/research/2026-05-21-music-shorts-formats-landscape.md` | 3.4K words: 2025-2026 viral patterns, 12 audio-primary format catalog, top-5 candidates, shader↔genre principles |
-| `docs/research/2026-05-21-shader-song-mismatch-diagnosis.md` | Per-short analysis of 5/20 batch: Linen (ambient) and Rain (lo-fi) are worst mismatches, Noir (jazz) is best-matched |
-| `outputs/demos/2026-05-21-genre-shader-experiments/` | **8 mp4s for side-by-side review** ↓ |
+| `93cc5e8` | Genre-aware shader presets — 14 genres + 6 new shaders + stillzoom mode + wrapper |
+| `0c01fcc` | This morning brief + roadmap entry |
+| `be93c48` | Canvas 8s loop + kinetic typography modes |
+| `520e6f3` | Genre auto-detect + per-genre keyword pools |
+| `0b48a25` | All-in-one auto wrapper + SKILL.md docs |
+| `2192498` | yq v4 fix + end-to-end smoke proof artifact |
+| `de08a1b` | Vignette 'none'/'off' explicit disable (run.sh patch) |
+| `f796aad` | Bulk-regenerate script for 5/20 ToddStudio batch |
+| `8c87d96` | phrase_pool per genre — zero-config typography |
 
-## Side-by-side demos to watch
+## The single command that summarizes it all
 
-Open `outputs/demos/2026-05-21-genre-shader-experiments/`:
+For any music file you hand me:
 
-| File | Compare against |
-|---|---|
-| `00-arcade-baseline-current.mp4` | (this is what synthwave looks like with current default treatment) |
-| `01-arcade-scanline.mp4` | **proposed synthwave preset** — is this closer to actual synthwave visual? |
-| `02-arcade-chromatic_split.mp4` | RGB-shift alternative |
-| `03-arcade-neon_edge.mp4` | edge-detect neon alternative |
-| `04-arcade-vhs.mp4` | VHS / vaporwave alternative |
-| `05-arcade-saturation_pulse.mp4` | house / techno alternative |
-| `06-arcade-kaleidoscope.mp4` | psychedelic alternative |
-| `07-linen-ambient-preset.mp4` | **proposed ambient preset** — single image + slow zoom + halation, NO cuts, NO zoom-pulse. Compare to the 5/20 Linen short (cut-heavy, with zoom-pulse) which you flagged as the worst mismatch. |
+```bash
+bash scripts/music-video-auto.sh assets/music/your-track.mp3 --with-canvas --with-typography
+```
 
-## Root-cause of "띠용" — diagnosed
+This now:
+1. Detects genre from filename / ID3 tag (14 genres supported)
+2. Looks up the genre preset (cut density, grain, vignette, zoom-pulse, shader)
+3. Auto-fills B-roll keywords from the genre's keyword_pool (no manual keyword entry)
+4. Runs the pipeline with correct env overrides
+5. Applies the genre's matching post-shader (synthwave gets scanlines, lo-fi gets halation, etc.)
+6. Produces an 8s Spotify Canvas variant
+7. Overlays kinetic typography with the genre's phrase_pool (zero-config)
 
-The pipeline default applies a **drum-onset zoom-pulse** (0.6s scale
-bell at every detected drum hit) regardless of genre. For lo-fi
-(forbids glitch) and ambient (forbids any sharp motion), this reads
-as the "띠용". For synthwave and phonk it's actually appropriate
-energy.
+For ambient / classical / dreamcore (stillzoom genres) add `--image=path/to/still.jpg`.
+
+End-to-end smoke validated on Arcade → synthwave preset → final 12 MB mp4
+in `outputs/demos/2026-05-21-genre-shader-experiments/11-arcade-FULL-genre-pipeline.mp4`.
+
+## Side-by-side demos (11 files in `outputs/demos/2026-05-21-genre-shader-experiments/`)
+
+| File | Source | Effect | Intended for genre |
+|---|---|---|---|
+| `00-arcade-baseline-current.mp4` | Arcade (synthwave) | Current default pipeline | (current state) |
+| `01-arcade-scanline.mp4` | Arcade | scanline | **synthwave** ✅ proposed default |
+| `02-arcade-chromatic_split.mp4` | Arcade | RGB shift | vaporwave / phonk |
+| `03-arcade-neon_edge.mp4` | Arcade | edge-detect colorize | synthwave alt |
+| `04-arcade-vhs.mp4` | Arcade | VHS noise | vaporwave / dreamcore |
+| `05-arcade-saturation_pulse.mp4` | Arcade | 2 Hz sin sat | house / techno |
+| `06-arcade-kaleidoscope.mp4` | Arcade | 4-fold mirror | psychedelic |
+| `07-linen-ambient-preset.mp4` | Linen (ambient) | stillzoom + halation | **ambient** ✅ proposed default |
+| `08-linen-canvas-8s.mp4` | Linen (from 07) | 8s seamless loop | Spotify Canvas variant |
+| `09-arcade-canvas-8s.mp4` | Arcade (from 01) | 8s seamless loop | Spotify Canvas variant |
+| `10-rain-kinetic-typography.mp4` | Rain lo-fi | 4 phrase overlays | Mute-autoplay hook |
+| `11-arcade-FULL-genre-pipeline.mp4` | Arcade music (fresh render) | Genre preset → scanline shader | **End-to-end proof** |
+
+## Root cause of "띠용" — diagnosed
+
+The v6 default applies a drum-onset zoom-pulse regardless of genre.
+For lo-fi (forbids glitch) and ambient (forbids any sharp motion),
+this reads as "띠용". For synthwave / phonk it actually fits.
 
 Fix: route each song to a genre-appropriate preset that disables
-zoom-pulse where forbidden, swaps shader for genre-coded one
-(scanline for synthwave, halation+stillzoom for ambient, etc.).
+zoom-pulse where forbidden. The new wrapper does this automatically
+via genre auto-detection.
+
+Verified end-to-end: synthwave preset run produces `"v6 filters:
+grain=0 vignette=off zoom_pulses=0"` — entire forbidden filter stack
+disabled, no manual config.
 
 ## Decisions you need to make
 
-1. **Which preset(s) ship as defaults?** Demo files 01 + 07 are the
-   two strongest candidates. Watch them and approve / reject /
-   request tweaks.
+1. **Approve preset defaults?** Watch demos 01 (synthwave) and 07
+   (ambient). If they feel right, the proposed presets are locked.
 
-2. **Retroactive regen for 5/20 batch?** The 5 uploaded shorts have
-   the documented mismatches. Three options:
-   - (a) Leave them — already public, mismatches are subtle, 4 subs
-     don't notice
-   - (b) Regenerate Linen + Rain (worst 2) and re-upload as v2 with
-     correct presets, replace old privately
-   - (c) Regenerate all 5
+2. **Retroactive regen for 5/20 batch?** One command:
+   ```
+   bash scripts/music-video-bulk-regenerate.sh
+   ```
+   Renders all 5 with correct genre presets, drops into
+   `outputs/publish/2026-05-21-regen-v2/`. Then `yt-batch-upload.sh`.
+   Or `--only=2` to regen just Linen (worst case).
 
-3. **Auto genre-detect?** Right now each render needs a `<genre>` arg.
-   We could:
-   - Filename sniff (`track1-coastline.mp3` → coastline → house)
-   - Suno metadata read (if Suno embeds genre in mp3 tags)
-   - Manual tag in a sidecar JSON
-   - Stay manual (operator passes genre per render)
+3. **Auto genre-detect happy?** Validated 13/13 on your library:
+   - cyberpunk / Tokyo Neon / Urban Midnight → synthwave
+   - Fireplace Acoustic → cottagecore
+   - Late Night Piano / track2-noir / Rainy Bossa → jazz / lofi
+   - track1-coastline → house
+   - track3-arcade → synthwave
+   - track4-rain → lofi_hiphop
+   - track5-linen → ambient
+   - Velvet Turntable → lofi_hiphop
 
-4. **More presets needed?** 14 covers most cases but missing:
-   reggaeton, K-ballad, post-rock, math-rock, breakbeat, trap.
-   Add as needed?
+   The only ambiguous one is Rainy Bossa (lofi vs jazz — currently
+   resolves to lofi because "rain" outweighs "bossa"). Want to flip?
 
-5. **Wrapper entry point**: should `scripts/music-video-genre.sh`
-   become the default entry, replacing direct `run.sh` calls in
-   `daily-music-video.sh` and the music-video skill?
+4. **More presets needed?** 14 covers most. Missing: reggaeton,
+   K-ballad, post-rock, math-rock, breakbeat, trap. Add as needed.
 
-## How to use right now
+5. **Wrapper as default entry?** Should `scripts/music-video-auto.sh`
+   replace direct `agents/missions/music-video/run.sh` calls in
+   `scripts/daily-music-video.sh` and the music-video skill's invocation
+   instructions? (Strong recommendation: yes.)
 
-For any new track, instead of:
+## Architecture overview
 
-```bash
-bash agents/missions/music-video/run.sh <id> <music.mp3> [keywords]
+```
+                  music file (mp3)
+                        │
+                        ▼
+       scripts/music-video-auto.sh  ◄────────────────  recommended entry
+                        │
+        ┌───────────────┼───────────────┐
+        ▼               ▼               ▼
+  genre-detect.sh   genre-presets    genre.sh
+   (id3+filename)      .yaml         (resolve + run)
+                        │               │
+                        │               ▼
+                        │       agents/missions/music-video/run.sh
+                        │               │
+                        │               ▼
+                        │     scripts/music-video-shaders.sh  (genre-coded shader)
+                        │               │
+                        ├───────────────┤
+                        ▼               ▼
+              music-video-canvas.sh   music-video-typography.sh
+                  (8s loop)              (phrase overlay)
+                        │               │
+                        └───────┬───────┘
+                                ▼
+                          outputs/...
 ```
 
-You'd do:
+Stillzoom alternate path (ambient/classical/dreamcore):
 
-```bash
-bash scripts/music-video-genre.sh <genre> <id> <music.mp3> [keywords]
-# e.g.
-bash scripts/music-video-genre.sh synthwave arcade02 assets/music/track3-arcade.mp3 \
-  "neon city, retro arcade, sunset grid, palm trees"
+```
+music + image  →  music-video-stillzoom.sh  →  short.mp4  →  shader  →  final
 ```
 
-For ambient/stillzoom genres add `--image=path/to/still.jpg`:
+## Open work (continuing autonomously)
 
-```bash
-bash scripts/music-video-genre.sh --image=assets/stills/ambient-window.jpg \
-  ambient linen02 assets/music/track5-linen.mp3
-```
-
-List available genres:
-
-```bash
-bash scripts/music-video-genre.sh --list
-```
-
-## Open work (continuing autonomously toward 10 AM)
-
-Phase 2 (next): Spotify Canvas 8s loop mode (`--canvas` flag), kinetic
-typography (`--phrases=phrases.txt`), structure-aware cuts (librosa
-section detection). These are the remaining top-5 research candidates
-beyond genre presets. Will commit incrementally as they land.
+Phase 8+: live regen of Linen ambient case as before/after demo,
+optional structure-aware cuts via librosa (if time permits), README
+update. Will commit incrementally.
