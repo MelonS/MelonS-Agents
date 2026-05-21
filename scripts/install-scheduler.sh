@@ -22,10 +22,18 @@
 #                                     snapshots view/like/comment counts
 #                                     for every video on the operator's
 #                                     YT uploads playlist.
+#   • com.melons.agents.intervention-chart — daily 02:00 local, runs
+#                                     scripts/intervention-chart-collect.sh
+#                                     which regenerates
+#                                     docs/metrics/intervention.{png,json}
+#                                     from git log + local Claude Code
+#                                     session JSONLs.  Two-panel chart:
+#                                     commit attribution + operator
+#                                     engagement (prompts + minutes).
 #
 # Usage:
-#   scripts/install-scheduler.sh install [queue|auditor|audit-poll|disk-watch|yt-stats|all]
-#   scripts/install-scheduler.sh uninstall [queue|auditor|audit-poll|disk-watch|yt-stats|all]
+#   scripts/install-scheduler.sh install [queue|auditor|audit-poll|disk-watch|yt-stats|intervention-chart|all]
+#   scripts/install-scheduler.sh uninstall [queue|auditor|audit-poll|disk-watch|yt-stats|intervention-chart|all]
 #   scripts/install-scheduler.sh status
 #
 # Default target is `all`.
@@ -45,6 +53,7 @@ plist_for() {
     audit-poll) echo "com.melons.agents.audit-poll.plist" ;;
     disk-watch) echo "com.melons.agents.disk-watch.plist" ;;
     yt-stats)   echo "com.melons.agents.yt-stats.plist" ;;
+    intervention-chart) echo "com.melons.agents.intervention-chart.plist" ;;
     *)          echo "" ;;
   esac
 }
@@ -109,7 +118,7 @@ status_one() {
 
 expand_targets() {
   if [[ "$1" == "all" ]]; then
-    echo "queue auditor audit-poll disk-watch yt-stats"
+    echo "queue auditor audit-poll disk-watch yt-stats intervention-chart"
   else
     echo "$1"
   fi
@@ -130,11 +139,11 @@ case "$op" in
     done
     ;;
   status)
-    for j in queue auditor audit-poll disk-watch yt-stats; do
+    for j in queue auditor audit-poll disk-watch yt-stats intervention-chart; do
       status_one "$j"
     done
     ;;
   *)
-    echo "usage: $0 {install|uninstall|status} [queue|auditor|audit-poll|disk-watch|yt-stats|all]"
+    echo "usage: $0 {install|uninstall|status} [queue|auditor|audit-poll|disk-watch|yt-stats|intervention-chart|all]"
     exit 64 ;;
 esac

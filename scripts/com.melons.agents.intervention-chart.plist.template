@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.melons.agents.intervention-chart</string>
+
+  <!-- §8 exception: launchd plist values do not expand shell variables
+       like $HOME, so absolute paths are required.  The rendered .plist
+       is gitignored; install-scheduler.sh re-renders from this template
+       per machine. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>@@REPO_ROOT@@/scripts/intervention-chart-collect.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>@@REPO_ROOT@@</string>
+
+  <key>StandardOutPath</key>
+  <string>@@REPO_ROOT@@/records/intervention-chart.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>@@REPO_ROOT@@/records/intervention-chart.err.log</string>
+
+  <!-- Daily at 02:00 local (KST).  Picked to land after the operator's
+       end-of-day commits but well before the morning session, so the
+       README chart and intervention.json reflect yesterday's full
+       picture when the laptop opens. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>2</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <!-- Don't run on launch; the calendar trigger covers the daily
+       cadence and a re-run within minutes of a manual call would just
+       overwrite the same data. -->
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>

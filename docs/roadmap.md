@@ -168,6 +168,28 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-22** (~02:00 KST) **Operator-intervention monitoring
+  restored + extended to time/count signal**.  Operator framed the
+  ask: "유저 개입 시간 횟수 등 계속해서 데이터를 쌓아야함 ...
+  스스로 작업하는 시간을 늘려야함".  The chart added 2026-05-17 was
+  silently dropped from README in `aa10ba0` (music-video-first
+  rewrite, 2026-05-18) and data was 2 days stale.  This pass:
+  (a) extends `scripts/generate-intervention-chart.py` to a 2-panel
+  signal — Panel A keeps commit attribution + adds leverage ratio +
+  longest autonomous gap, Panel B mines local Claude Code session
+  JSONLs at `~/.claude/projects/-Users-melons-ai/*.jsonl` for
+  operator-prompt count + active session minutes (capped 60/sess);
+  (b) ships `scripts/intervention-chart-collect.sh` +
+  `com.melons.agents.intervention-chart.plist.template` + wiring
+  into `scripts/install-scheduler.sh` for a daily 02:00 KST
+  regeneration job (installed and loaded);  (c) writes
+  `docs/research/2026-05-22-intervention-reduction.md` with the
+  current 9-day data table + 5 prioritized reduction levers
+  (classifier false-positive on Korean direct-quotes; default to
+  recommended option; batch taste reviews; statusline absorbs status
+  checks; shipped permission bootstrap); (d) restores the chart
+  reference to README EN + KO under a new "Autonomy signal" section.
+
 - **2026-05-22** (~01:35 KST) **Music-video quality bar — Phase A.1
   B-roll dedup registry** (commit `05e6c2a`).  Operator-stated six
   quality directives 2026-05-22 ~01:30 KST; full decomposition at

@@ -141,6 +141,29 @@
   선언된 LIVE 플래그 매니페스트가 실제 스크립트의 게이팅과 일치하는지
   검증. 둘 다 운영자가 직접 실행하거나 일일 감사 패스에 내장.
 
+## 자율성 신호 — 운영자 개입 추세
+
+사람이 계속 조타해야 하는 멀티 에이전트 시스템은 사실 자기가
+대체하려던 그 노력을 그대로 다시 들이고 있을 뿐입니다.  이 차트는
+그것을 정직하게 측정합니다 — `main` 의 모든 커밋을 **user-initiated**
+(운영자가 필요를 surface, 옵션을 선택, deliverable 을 승인) 와
+**agent-autonomous** (감사가 drift 포착, 로드맵 pull, 인프라
+유지보수) 로 분류하고, 운영자의 로컬 Claude Code 세션 로그에서
+프롬프트 횟수와 활성 세션 분을 함께 추출합니다.
+
+![투-패널 개입 추세 — Panel A 는 일별 커밋 수를 initiator 별로 스택 + user-initiated 비율선; Panel B 는 로컬 Claude Code 세션 JSONL 에서 추출한 일별 운영자 프롬프트 수와 활성 세션 분](docs/metrics/intervention.png)
+
+목표: 에이전트 시스템이 더 많은 결정을 흡수할수록 두 패널 모두
+하향 추세.  `com.melons.agents.intervention-chart` launchd 잡
+([`scripts/intervention-chart-collect.sh`](scripts/intervention-chart-collect.sh))
+이 매일 02:00 KST 에 갱신.  이 잡은
+[`scripts/generate-intervention-chart.py`](scripts/generate-intervention-chart.py)
+를 호출하여 `git log` + `~/.claude/projects/-Users-melons-ai/*.jsonl`
+에서 두 패널을 재구성합니다.  분류 휴리스틱 + 감소 분석은
+[`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md)
+에 정리; 일별 raw 데이터는
+[`docs/metrics/intervention.json`](docs/metrics/intervention.json).
+
 ## 샘플 출력
 
 지금까지 **5가지** 미션 타입에 걸쳐 69+건의 출력이 생성되었습니다.

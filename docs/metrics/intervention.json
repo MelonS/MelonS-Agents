@@ -1,52 +1,824 @@
 {
-  "generated_at": "2026-05-20T00:31:45",
+  "generated_at": "2026-05-22T01:45:17",
   "marker_convention_started": "2026-05-17",
-  "rationale": "Per-day count of commits classified as user-initiated vs agent-autonomous. See scripts/generate-intervention-chart.py for the classification heuristics. Aim is for user-initiated to trend down over time as agent autonomy grows.",
+  "session_cap_minutes": 60,
+  "rationale": "Two-source intervention tracker. Panel A: per-day commit count classified by initiator (user vs agent). Panel B: per-day operator prompts and active session minutes mined from local Claude Code session JSONLs. Goal: both signals trend down as the agent system absorbs more decisions.",
   "days": [
     {
       "date": "2026-05-14",
       "user_initiated": 0,
       "agent_autonomous": 30,
-      "user_ratio_pct": 0.0
+      "user_ratio_pct": 0.0,
+      "longest_autonomous_gap_h": 0,
+      "leverage_ratio": 30.0,
+      "operator_prompts": 52,
+      "active_session_minutes": 120.2,
+      "session_count": 4
     },
     {
       "date": "2026-05-15",
       "user_initiated": 6,
       "agent_autonomous": 17,
-      "user_ratio_pct": 26.1
+      "user_ratio_pct": 26.1,
+      "longest_autonomous_gap_h": 0.9,
+      "leverage_ratio": 2.8,
+      "operator_prompts": 110,
+      "active_session_minutes": 180.0,
+      "session_count": 3
     },
     {
       "date": "2026-05-16",
       "user_initiated": 10,
       "agent_autonomous": 42,
-      "user_ratio_pct": 19.2
+      "user_ratio_pct": 19.2,
+      "longest_autonomous_gap_h": 10.2,
+      "leverage_ratio": 4.2,
+      "operator_prompts": 4,
+      "active_session_minutes": 30.1,
+      "session_count": 4
     },
     {
       "date": "2026-05-17",
       "user_initiated": 40,
       "agent_autonomous": 18,
-      "user_ratio_pct": 69.0
+      "user_ratio_pct": 69.0,
+      "longest_autonomous_gap_h": 3.3,
+      "leverage_ratio": 0.5,
+      "operator_prompts": 317,
+      "active_session_minutes": 236.2,
+      "session_count": 36
     },
     {
       "date": "2026-05-18",
       "user_initiated": 13,
       "agent_autonomous": 13,
-      "user_ratio_pct": 50.0
+      "user_ratio_pct": 50.0,
+      "longest_autonomous_gap_h": 4.8,
+      "leverage_ratio": 1.0,
+      "operator_prompts": 7,
+      "active_session_minutes": 57.2,
+      "session_count": 7
     },
     {
       "date": "2026-05-19",
       "user_initiated": 7,
       "agent_autonomous": 27,
-      "user_ratio_pct": 20.6
+      "user_ratio_pct": 20.6,
+      "longest_autonomous_gap_h": 14.6,
+      "leverage_ratio": 3.9,
+      "operator_prompts": 86,
+      "active_session_minutes": 280.3,
+      "session_count": 19
     },
     {
       "date": "2026-05-20",
+      "user_initiated": 6,
+      "agent_autonomous": 46,
+      "user_ratio_pct": 11.5,
+      "longest_autonomous_gap_h": 12.2,
+      "leverage_ratio": 7.7,
+      "operator_prompts": 279,
+      "active_session_minutes": 339.3,
+      "session_count": 14
+    },
+    {
+      "date": "2026-05-21",
+      "user_initiated": 20,
+      "agent_autonomous": 36,
+      "user_ratio_pct": 35.7,
+      "longest_autonomous_gap_h": 14.5,
+      "leverage_ratio": 1.8,
+      "operator_prompts": 70,
+      "active_session_minutes": 168.4,
+      "session_count": 8
+    },
+    {
+      "date": "2026-05-22",
       "user_initiated": 0,
-      "agent_autonomous": 5,
-      "user_ratio_pct": 0.0
+      "agent_autonomous": 16,
+      "user_ratio_pct": 0.0,
+      "longest_autonomous_gap_h": 0,
+      "leverage_ratio": 16.0,
+      "operator_prompts": 5,
+      "active_session_minutes": 28.5,
+      "session_count": 5
     }
   ],
   "commits": [
+    {
+      "sha": "55b025f",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(roadmap): YT stats + music-video quality-bar Phase A.1 Done"
+    },
+    {
+      "sha": "05e6c2a",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(broll): Phase A.1 — B-roll dedup registry across published shorts"
+    },
+    {
+      "sha": "ec5a5bb",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(scheduler): yt-stats daily launchd job + dreampop drafted"
+    },
+    {
+      "sha": "a43057f",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(yt-stats): Phase 1 daily stats collector + delta diff"
+    },
+    {
+      "sha": "ad36ff7",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(site): refresh stats + skill counts + add operator tooling card"
+    },
+    {
+      "sha": "0bb1470",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(readme): refresh for B1 contract split + new operator tooling"
+    },
+    {
+      "sha": "400746d",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(portability): repo-tracked template for ~/.claude/CLAUDE.md operator-style block"
+    },
+    {
+      "sha": "1863c48",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(scripts): doctor.sh — repo-wide runtime health check"
+    },
+    {
+      "sha": "96b3e00",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(daily): 2026-05-22 context snapshot before compression"
+    },
+    {
+      "sha": "c04d371",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(audit): skill-activation drift check + wire into audit-run.sh"
+    },
+    {
+      "sha": "a122f99",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(skill-goal-lock): list unchecked deliverable subgoals at a glance"
+    },
+    {
+      "sha": "9c10dc7",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "refactor(contract): split operator-style conventions to ~/.claude/CLAUDE.md"
+    },
+    {
+      "sha": "93a042b",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(research): external skill libraries — ecosystem survey"
+    },
+    {
+      "sha": "7b58656",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(pilots): log TikTok automation deferral decision (2026-05-22)"
+    },
+    {
+      "sha": "0655866",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): activation manifest + status dashboard"
+    },
+    {
+      "sha": "40240aa",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "revert: remove docs/legal/PRIVACY.md + TERMS.md (TikTok automation abandoned)"
+    },
+    {
+      "sha": "c5a3619",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs(legal): privacy + ToS for TikTok app review"
+    },
+    {
+      "sha": "5200df6",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(feedback): user feedback infrastructure (Discussions + templates + CONTRIBUTING) (#1)"
+    },
+    {
+      "sha": "29e4363",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(skill-job-hunt): kr-rallit — Rallit (랄릿) KR IT-specialist plugin"
+    },
+    {
+      "sha": "8370c4b",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs(daily): morning brief — 29 demos finalized (11 vocal renders complete)"
+    },
+    {
+      "sha": "d9c7c06",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "fix(music-video): lyrics overlay — escape apostrophes via '\\\\'' standard"
+    },
+    {
+      "sha": "904e3bb",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "fix(skill-job-hunt): Forward Deployment synonym + Korea region mapping + theteams in default sources"
+    },
+    {
+      "sha": "6ddf4a8",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "assets(lyrics): persist 5 per-genre lyrics .txt files (used by overnight batch overlay)"
+    },
+    {
+      "sha": "4cddc09",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "tool(music-video): library audit script — list mp3s with genre/shader/render-status"
+    },
+    {
+      "sha": "a35ac4a",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs(daily): morning brief refresh — vocal pivot + 29 commits total + disk cleanup"
+    },
+    {
+      "sha": "82cb15d",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(music-video): 4 new vocal-centric presets + --full-length flag"
+    },
+    {
+      "sha": "e289c8a",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "docs(research): KR self-hosted careers probe — direct-scrape not viable"
+    },
+    {
+      "sha": "7b68a83",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): orchestrator --sort=fit + --top=N for ranked digests"
+    },
+    {
+      "sha": "f9426ed",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(skill-job-hunt): kr-theteams — Korean startup / 강소기업 plugin via sitemap"
+    },
+    {
+      "sha": "5ea09dd",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs(audit): preserve 31st + 32nd audit trail + current alert"
+    },
+    {
+      "sha": "f4881cf",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(skill-job-hunt): region filter in orchestrator (KR↔EN city mapping)"
+    },
+    {
+      "sha": "14bf885",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs(daily): append afternoon-continued work + audit-stale note"
+    },
+    {
+      "sha": "6225afa",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): digest renders role_fit + hire_prob breakdown when present"
+    },
+    {
+      "sha": "eaafcdc",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs: worktree-workflow.md — quick reference for §6 flexible mode"
+    },
+    {
+      "sha": "6eaf9be",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): company-tier table + gitignore guard for future upload-meta batches"
+    },
+    {
+      "sha": "a05c12b",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs(roadmap): batch-append Done entries — 23 commits since 2026-05-21 01:15"
+    },
+    {
+      "sha": "6b61f84",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(skill-job-hunt): fit-score hire_prob dimension + worknet region fix"
+    },
+    {
+      "sha": "2b6e7f1",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "test: revert worktree-done smoke marker (helper script PASS proven, marker no longer needed)"
+    },
+    {
+      "sha": "c739306",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "test: worktree smoke marker"
+    },
+    {
+      "sha": "8cc49cb",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(music-video): Pollinations.ai free AI image gen — --ai-still flag"
+    },
+    {
+      "sha": "eb7e64c",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(music-video): wire beat-synced shaders into fast-genre presets"
+    },
+    {
+      "sha": "a348961",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(music-video): 5 beat-synced \"popping\" shaders for fast genres"
+    },
+    {
+      "sha": "cc6a104",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(skill-job-hunt): activate kr-saramin OpenAPI live path + 4 Korean ATS boards"
+    },
+    {
+      "sha": "a6a4fd2",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(music-video): citypop preset + designer lyrics overlay"
+    },
+    {
+      "sha": "f190929",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(env): CPU-throttled ffmpeg wrapper — 80% cap to prevent thermal throttle"
+    },
+    {
+      "sha": "6ddba86",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "contract+feat: §6 branch strategy revised to flexible/worktree-based"
+    },
+    {
+      "sha": "2c3289a",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs(engineering): case study #7 — declarative preset routing as additive scaffold"
+    },
+    {
+      "sha": "e5d4a2e",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(music-video): wire --with-audio-reactive flag into auto wrapper"
+    },
+    {
+      "sha": "c505289",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs(daily): morning brief final tally — 18 commits, complete surface inventory"
+    },
+    {
+      "sha": "460ae29",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(music-video): audio-reactive saturation grading (format #8)"
+    },
+    {
+      "sha": "735306d",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "test(music-video): genre-aware-smoke.sh — 16/16 pass"
+    },
+    {
+      "sha": "a182380",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "chore(publish): v2 upload metadata — 5/27-29 schedule for regen batch"
+    },
+    {
+      "sha": "53d5053",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(music-video): auto-fetch Pexels still for stillzoom genres"
+    },
+    {
+      "sha": "57f1e2e",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs(daily): morning brief — v2 regen complete (5/5) + 2 bug-fix story"
+    },
+    {
+      "sha": "7425689",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "fix(music-video): yq v4 alias resolution — explicit equality not contains()"
+    },
+    {
+      "sha": "55cb901",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "fix(music-video): bash 3.2 empty-array guard in auto.sh"
+    },
+    {
+      "sha": "c721f41",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs(daily): refresh 2026-05-21 morning brief — 9 commits, 11 demos, complete architecture diagram"
+    },
+    {
+      "sha": "8c87d96",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(music-video): phrase_pool per genre — zero-config kinetic typography"
+    },
+    {
+      "sha": "f796aad",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(music-video): bulk-regenerate script for 5/20 ToddStudio batch"
+    },
+    {
+      "sha": "de08a1b",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "fix(music-video): vignette 'none'/'off' explicit disable"
+    },
+    {
+      "sha": "2192498",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "fix(music-video): yq v4 alias resolution + end-to-end smoke proof"
+    },
+    {
+      "sha": "0b48a25",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(music-video): all-in-one auto wrapper + SKILL.md docs update"
+    },
+    {
+      "sha": "520e6f3",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(music-video): genre auto-detect + per-genre keyword pools"
+    },
+    {
+      "sha": "be93c48",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "feat(music-video): add Canvas 8s loop + kinetic typography modes"
+    },
+    {
+      "sha": "0c01fcc",
+      "date": "2026-05-21",
+      "class": "agent",
+      "subject": "docs: morning brief + roadmap entry for 2026-05-21 music-video work"
+    },
+    {
+      "sha": "93cc5e8",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(music-video): genre-aware shader presets — fixes shader-song mismatch"
+    },
+    {
+      "sha": "62730cb",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(skill-job-hunt): expand ats-boards.example.yaml — 27 → 43 boards"
+    },
+    {
+      "sha": "8667da7",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "docs(daily): 2026-05-21 overnight — 5 live-ready job-hunt plugins land"
+    },
+    {
+      "sha": "91c0a40",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "docs(readme+roadmap): cadence batch — 5 live-ready job-hunt plugins land"
+    },
+    {
+      "sha": "a6c39c4",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(skill-job-hunt): two more live-ready plugins — HN Who's Hiring + 워크넷"
+    },
+    {
+      "sha": "58a2b58",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "feat(skill-job-hunt): live-ready global plugins — ATS / RemoteOK / Remotive (+deprecate kr-jobkorea/programmers)"
+    },
+    {
+      "sha": "b3789ba",
+      "date": "2026-05-21",
+      "class": "user",
+      "subject": "docs(research): job-sources survey — robots+legality+endpoint audit of 30+ boards"
+    },
+    {
+      "sha": "a989eb2",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(scripts): add yt-batch-upload.sh — YT Data API batch uploader"
+    },
+    {
+      "sha": "70f6a20",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "chore: 29th audit CLEAN + gitignore upload-meta/ JSON artifacts"
+    },
+    {
+      "sha": "82b102d",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs: resolve 2026-05-20-contract.md audit findings (3 items)"
+    },
+    {
+      "sha": "b3fc7f3",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "chore(gitignore): ignore .claude/statusline.sh.* backup variants"
+    },
+    {
+      "sha": "587ad01",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "test(demo-mode): v0.4.0 fresh-clone regression PASS — 2026-05-20 15:01 KST"
+    },
+    {
+      "sha": "a8dac78",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(daily): afternoon continuation — v0.4.0 shipped, Phase 2 full v2 vision"
+    },
+    {
+      "sha": "96d1270",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs+feat: v0.4.0 site refresh + commit overlooked derive-profile.sh (Phase 2.4)"
+    },
+    {
+      "sha": "4f43e63",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(readme): v0.4.0 cadence batch — Skill #2 (job-hunt) visibility for new readers"
+    },
+    {
+      "sha": "d1c279d",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(roadmap): rewrite 'Now' to reflect 2026-05-20 active state — M1 audit fix"
+    },
+    {
+      "sha": "a7b80ad",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(examples): add v2 utility recipes (fit-score, cover-letter, company-research, interview-prep)"
+    },
+    {
+      "sha": "3d6f9e0",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): Phase 2.5 scaffold #3 — interview-prep.sh"
+    },
+    {
+      "sha": "cd24bb4",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): Phase 2.5 scaffolds — cover-letter-draft + company-research"
+    },
+    {
+      "sha": "0cb319b",
+      "date": "2026-05-20",
+      "class": "user",
+      "subject": "feat(skill-job-hunt): orchestrator + digest integration of --fit-score scaffold"
+    },
+    {
+      "sha": "d9193ce",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): Phase 2.3 scaffold — fit-score.sh per-posting Claude call"
+    },
+    {
+      "sha": "a7a6e28",
+      "date": "2026-05-20",
+      "class": "user",
+      "subject": "feat(skill-job-hunt): seed one Problem Solver-family entry per kr-* mock plugin"
+    },
+    {
+      "sha": "70b4cdb",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(research): market survey of the AI-native product builder role family"
+    },
+    {
+      "sha": "89d24bc",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): operator-profile.example.md scaffold + .gitignore"
+    },
+    {
+      "sha": "05696fd",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(skill-job-hunt): regen sample digest + EXAMPLES + walkthroughs for v2 seed UX"
+    },
+    {
+      "sha": "b05f34a",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): v2 short-keyword UX — --seed expansion via role-synonyms.yaml"
+    },
+    {
+      "sha": "2aa6e42",
+      "date": "2026-05-20",
+      "class": "user",
+      "subject": "chore(privacy): default-gitignore skills/job-hunt/config/filters.yaml"
+    },
+    {
+      "sha": "a27f6f8",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs: EXAMPLES.md top-level cookbook for both skills"
+    },
+    {
+      "sha": "5fabdbf",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(plugin): .claude-plugin/marketplace.json — register both skills for /plugin install"
+    },
+    {
+      "sha": "266928a",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(env.sh): add inline §8 exception comments for ffmpeg-full keg paths"
+    },
+    {
+      "sha": "e63e741",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(daily): add Phase 3 + Phase 4 narrative paragraphs"
+    },
+    {
+      "sha": "28f83c1",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(daily): Phase 4 — update-status.sh deletion + 2nd rebase"
+    },
+    {
+      "sha": "43519a1",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "chore: remove broken scripts/update-status.sh (dead since README restructure)"
+    },
+    {
+      "sha": "de7ef1a",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(daily): Phase 3 — feat rebased onto main, FF-mergeable"
+    },
+    {
+      "sha": "9969887",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(samples): restore wrapper header in regenerated digest sample"
+    },
+    {
+      "sha": "23d0386",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(samples): regen job-hunt digest with apply-link dedup (kr-saramin entries)"
+    },
+    {
+      "sha": "73def67",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): digest renderer drops apply link when it equals posting URL"
+    },
+    {
+      "sha": "cee9d62",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(daily): final 2026-05-20 overnight report after Phase 2 work"
+    },
+    {
+      "sha": "f44aaf6",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(skills): job-hunt 워크스루 KO 미러"
+    },
+    {
+      "sha": "843edab",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "test(demo-mode): v0.3.0 fresh-clone regression PASS — 2026-05-20 01:00 KST"
+    },
+    {
+      "sha": "f3e401b",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "test(skill-job-hunt): JSON Schema for source plugin output + validation suite"
+    },
+    {
+      "sha": "351a8d0",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "test(skill-job-hunt): add run-all.sh aggregator for smoke + edge-cases"
+    },
+    {
+      "sha": "58cc506",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): walkthrough doc + --list-sources + 20-case edge-test suite"
+    },
+    {
+      "sha": "88568b1",
+      "date": "2026-05-20",
+      "class": "user",
+      "subject": "docs(daily): revise 2026-05-20 overnight report after deeper Skill #2 run"
+    },
+    {
+      "sha": "a5142b3",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(samples): regen job-hunt digest sample with 5-source default config"
+    },
+    {
+      "sha": "f1dae6c",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): kr-jobkorea + kr-saramin mock-fallback plugins"
+    },
+    {
+      "sha": "a4277ea",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(samples): commit job-hunt digest sample (mock-fallback output)"
+    },
+    {
+      "sha": "29c639d",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): orchestrator + digest + 3 sources (mock-fallback, end-to-end testable)"
+    },
+    {
+      "sha": "408ab0a",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "chore(audit): commit 27th contract audit + CURRENT-ALERT for HEAD a90bc9d"
+    },
+    {
+      "sha": "c671323",
+      "date": "2026-05-20",
+      "class": "user",
+      "subject": "docs(architecture): document the two skill shapes — missions-routed vs standalone"
+    },
+    {
+      "sha": "d282514",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(daily): 2026-05-20 overnight autonomous run report"
+    },
+    {
+      "sha": "6c64f09",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "docs(for-analysts): replace stale \"No CI\" claim with accurate Actions summary"
+    },
+    {
+      "sha": "2aa8033",
+      "date": "2026-05-20",
+      "class": "user",
+      "subject": "chore(metrics): regenerate intervention chart through 2026-05-20"
+    },
+    {
+      "sha": "6d690f3",
+      "date": "2026-05-20",
+      "class": "agent",
+      "subject": "feat(skill-job-hunt): scaffold — SKILL.md + config schema + plugin layout (no live source)"
+    },
     {
       "sha": "a90bc9d",
       "date": "2026-05-20",
@@ -82,6 +854,18 @@
       "date": "2026-05-19",
       "class": "agent",
       "subject": "chore(audit): clear 3 mediums + 3 lows from 2026-05-19 contract audit"
+    },
+    {
+      "sha": "3bec8e9",
+      "date": "2026-05-19",
+      "class": "user",
+      "subject": "docs(goal): file 2026-05-19 friend-test friction as CRITICAL candidate goal"
+    },
+    {
+      "sha": "9b827b0",
+      "date": "2026-05-19",
+      "class": "agent",
+      "subject": "docs: capture 2026-05-19 friend-meeting friction + open branches"
     },
     {
       "sha": "fdcedbc",
@@ -126,18 +910,6 @@
       "subject": "feat(permissions): user-level Claude Code permission bootstrap"
     },
     {
-      "sha": "3bec8e9",
-      "date": "2026-05-19",
-      "class": "user",
-      "subject": "docs(goal): file 2026-05-19 friend-test friction as CRITICAL candidate goal"
-    },
-    {
-      "sha": "9b827b0",
-      "date": "2026-05-19",
-      "class": "agent",
-      "subject": "docs: capture 2026-05-19 friend-meeting friction + open branches"
-    },
-    {
       "sha": "9f19708",
       "date": "2026-05-19",
       "class": "agent",
@@ -148,6 +920,12 @@
       "date": "2026-05-19",
       "class": "agent",
       "subject": "docs(readme): v0.2.0 cadence batch — demo-mode quick start + skills/ layer"
+    },
+    {
+      "sha": "ae07233",
+      "date": "2026-05-19",
+      "class": "user",
+      "subject": "feat(skills): music-video smoke test — Layer 4 first instance"
     },
     {
       "sha": "febb1f3",
@@ -202,12 +980,6 @@
       "date": "2026-05-19",
       "class": "agent",
       "subject": "feat(demo-mode): fetch-demo-broll.sh — zero-friction CC-BY B-roll cache"
-    },
-    {
-      "sha": "ae07233",
-      "date": "2026-05-19",
-      "class": "user",
-      "subject": "feat(skills): music-video smoke test — Layer 4 first instance"
     },
     {
       "sha": "f624d13",
@@ -276,16 +1048,16 @@
       "subject": "docs(contract): codify 5 portability principles in §8"
     },
     {
-      "sha": "a537018",
-      "date": "2026-05-18",
-      "class": "agent",
-      "subject": "feat(ci): GitHub Actions main-protection — solo-dev safety net"
-    },
-    {
       "sha": "8b39cac",
       "date": "2026-05-19",
       "class": "user",
       "subject": "docs: promote multi-skill framework to active goal + park main-protection v2"
+    },
+    {
+      "sha": "a537018",
+      "date": "2026-05-18",
+      "class": "agent",
+      "subject": "feat(ci): GitHub Actions main-protection — solo-dev safety net"
     },
     {
       "sha": "22a45ea",

@@ -150,6 +150,30 @@ A few choices that distinguish this from a typical agent demo:
   actual gating in its scripts. Both are invoked on demand or
   embedded into the auditor's daily pass.
 
+## Autonomy signal — operator-intervention trend
+
+A multi-agent system that needs constant human steering hasn't
+actually escaped the same effort it was meant to replace.  This
+chart is the honest measurement of that — every commit on `main`
+is classified as **user-initiated** (operator surfaced the need,
+picked an option, approved a deliverable) or **agent-autonomous**
+(audit caught drift, roadmap pull, infra maintenance), and the
+operator's local Claude Code session logs are mined for prompt
+count and active session minutes.
+
+![Two-panel intervention trend — Panel A stacks daily commit counts by initiator with a user-initiated percentage line; Panel B charts daily operator prompts and active session minutes mined from local Claude Code session JSONLs](docs/metrics/intervention.png)
+
+Goal: both panels trend down as the agent system absorbs more
+decisions.  Updated daily at 02:00 KST by the
+`com.melons.agents.intervention-chart` launchd job
+([`scripts/intervention-chart-collect.sh`](scripts/intervention-chart-collect.sh)),
+which calls
+[`scripts/generate-intervention-chart.py`](scripts/generate-intervention-chart.py)
+to rebuild both panels from `git log` + `~/.claude/projects/-Users-melons-ai/*.jsonl`.
+Classification heuristics + reduction analysis at
+[`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md).
+Raw per-day data at [`docs/metrics/intervention.json`](docs/metrics/intervention.json).
+
 ## Sample output
 
 69+ mission outputs have been produced to date across **five** mission
