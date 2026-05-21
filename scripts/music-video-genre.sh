@@ -119,14 +119,19 @@ GRAIN=$(yq -r ".genres.${RESOLVED}.grain_intensity" "$PRESETS")
 VIGNETTE=$(yq -r ".genres.${RESOLVED}.vignette_angle" "$PRESETS")
 ZOOM_AMP=$(yq -r ".genres.${RESOLVED}.zoom_pulse_amp" "$PRESETS")
 SHADER_ACTIVE_RATIO=$(yq -r ".genres.${RESOLVED}.shader_active_ratio // 1.0" "$PRESETS")
-# Shader resolution: explicit `shader:` field wins; if absent, fall
-# back to picking from `shader_pool: [a, b, ...]` via either
-# MUSIC_VIDEO_SHADER_VARIANT (1-based index into the pool, useful
-# for reproducible variants) or — if env is unset — a deterministic
-# hash of the SHORT_ID so repeated renders of the same content pick
-# the same shader while different short_ids get visual variety.
-# Both ways produce a stable choice — no true randomness.
-SHADER=$(yq -r ".genres.${RESOLVED}.shader // \"\"" "$PRESETS")
+# Shader resolution priority:
+#   1. MUSIC_VIDEO_SHADER env override (operator forces any shader
+#      regardless of preset — useful for one-off tests of new shaders
+#      on existing genres without editing the YAML).
+#   2. Preset's explicit `shader:` field.
+#   3. shader_pool picker (deterministic by SHORT_ID hash, override
+#      with MUSIC_VIDEO_SHADER_VARIANT=N).
+if [[ -n "${MUSIC_VIDEO_SHADER:-}" ]]; then
+  SHADER="$MUSIC_VIDEO_SHADER"
+  echo "→ shader override (env): $SHADER" >&2
+else
+  SHADER=$(yq -r ".genres.${RESOLVED}.shader // \"\"" "$PRESETS")
+fi
 if [[ -z "$SHADER" || "$SHADER" == "null" ]]; then
   POOL_LEN=$(yq -r ".genres.${RESOLVED}.shader_pool | length // 0" "$PRESETS" 2>/dev/null)
   if [[ "$POOL_LEN" -gt 0 ]]; then
