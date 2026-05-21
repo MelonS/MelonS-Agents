@@ -159,3 +159,44 @@ render the lyrics would appear at their detected positions.
 
 Six 2026-05-22 quality-bar directives now demonstrably enforced on
 both KR (kpop_ballad) and EN (uspop) vocal renders.
+
+## Demo #4 KR — anchor-coverage validation (qb-demo-kr2-035003)
+
+Re-rendered kpop_ballad after the keyword_pool tightening (`94190c2`)
+and qa-anchor regex expansion (`63431b4`).
+
+QA verdict:
+```
+matching: 8/8 (1.00)  →  PASS
+```
+
+Every fetched clip carries an explicit Korean/Seoul anchor in its
+keyword:
+
+- `raw-asian_man_walking_seoul_night.mp4`         ← lang-injection
+- `raw-korean_cafe_alone_evening.mp4`             ← was "cafe alone evening"
+- `raw-korean_person_umbrella_rain.mp4`           ← lang-injection
+- `raw-korean_woman_cafe_window.mp4`              ← lang-injection
+- `raw-rainy_seoul_window_night.mp4`              ← unchanged (already seoul)
+- `raw-seoul_empty_street_lamp_post.mp4`          ← was "empty street lamp post"
+- `raw-seoul_skyline_rain.mp4`                    ← was "city skyline rain"
+- `raw-seoul_subway_window_blurred.mp4`           ← was "subway window blurred"
+
+Frame 30s (inside phrase_climax window): Korean crowd walking past a
+Seoul landmark tower, purple halation glow + vignette, Korean lyric
+"변한 건 너의 자리뿐" at bottom-center.  Reads exactly as "Korean
+lyric → Korean people on screen" — directives #5 and #6's intent
+realized.
+
+Anchor coverage progression on the same kpop_ballad track:
+
+| Demo | Date | Anchor match | Notes |
+|------|------|--------------|-------|
+| #1   | 02:55 KST | 38% (3/8)  | rate 25%, original pool |
+| #2   | 03:08 KST | 50% (4/8)  | rate 33%, original pool |
+| #4   | 03:50 KST | 100% (8/8) | rate 33%, tightened pool |
+
+The 100% in demo #4 is the ceiling — every keyword in the genre's
+pool now carries explicit geographic anchor.  Further improvement
+would come from operator-tuned per-track keyword overrides if a
+specific Suno track needs a more specific aesthetic.
