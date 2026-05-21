@@ -17,10 +17,15 @@
 #                                     which checks free disk and emits a
 #                                     macOS notification + alert file at
 #                                     WARN (<15 GB) or CRITICAL (<5 GB).
+#   • com.melons.agents.yt-stats    — daily 09:00 local, runs
+#                                     scripts/yt-stats-collect.sh which
+#                                     snapshots view/like/comment counts
+#                                     for every video on the operator's
+#                                     YT uploads playlist.
 #
 # Usage:
-#   scripts/install-scheduler.sh install [queue|auditor|audit-poll|disk-watch|all]
-#   scripts/install-scheduler.sh uninstall [queue|auditor|audit-poll|disk-watch|all]
+#   scripts/install-scheduler.sh install [queue|auditor|audit-poll|disk-watch|yt-stats|all]
+#   scripts/install-scheduler.sh uninstall [queue|auditor|audit-poll|disk-watch|yt-stats|all]
 #   scripts/install-scheduler.sh status
 #
 # Default target is `all`.
@@ -39,6 +44,7 @@ plist_for() {
     auditor)    echo "com.melons.agents.auditor.plist" ;;
     audit-poll) echo "com.melons.agents.audit-poll.plist" ;;
     disk-watch) echo "com.melons.agents.disk-watch.plist" ;;
+    yt-stats)   echo "com.melons.agents.yt-stats.plist" ;;
     *)          echo "" ;;
   esac
 }
@@ -103,7 +109,7 @@ status_one() {
 
 expand_targets() {
   if [[ "$1" == "all" ]]; then
-    echo "queue auditor audit-poll disk-watch"
+    echo "queue auditor audit-poll disk-watch yt-stats"
   else
     echo "$1"
   fi
@@ -124,11 +130,11 @@ case "$op" in
     done
     ;;
   status)
-    for j in queue auditor audit-poll disk-watch; do
+    for j in queue auditor audit-poll disk-watch yt-stats; do
       status_one "$j"
     done
     ;;
   *)
-    echo "usage: $0 {install|uninstall|status} [queue|auditor|audit-poll|disk-watch|all]"
+    echo "usage: $0 {install|uninstall|status} [queue|auditor|audit-poll|disk-watch|yt-stats|all]"
     exit 64 ;;
 esac

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.melons.agents.yt-stats</string>
+
+  <!-- §8 exception: launchd plist values do not expand shell variables
+       like $HOME, so absolute paths are required.  When the repo is
+       relocated, re-run scripts/install-scheduler.sh on the new machine
+       to regenerate the LaunchAgents copy. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>@@REPO_ROOT@@/scripts/yt-stats-collect.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>@@REPO_ROOT@@</string>
+
+  <key>StandardOutPath</key>
+  <string>@@REPO_ROOT@@/records/youtube/launchd.out.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>@@REPO_ROOT@@/records/youtube/launchd.err.log</string>
+
+  <!-- Daily at 09:00 local (KST on the operator's machine).  Picked to
+       land just after the typical 21:00 publish slot's first 12h
+       window has closed, so each morning's CSV captures stable
+       overnight stats for the previous day's drop. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>9</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <!-- Don't run on launch (it'll fire at 09:00 anyway, and a re-run
+       within seconds of a manual one would waste a quota unit). -->
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>
