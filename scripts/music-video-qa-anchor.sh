@@ -55,18 +55,21 @@ else
   ANCHOR=$(yq -r ".genres.${GENRE}.lang_anchor // \"neutral\"" "$PRESETS" 2>/dev/null)
 fi
 
-# Build anchor keyword regex.
+# Build anchor keyword regex.  Liberal — covers all geographic anchors
+# baked into the genre's keyword_pool plus the runtime lang-anchor
+# injection pool.  Expanded 2026-05-22 to match the tightened
+# keyword_pools shipped in `94190c2`.
 case "$ANCHOR" in
   ko)
-    POS_RE='(korean|asian|seoul|japanese|tokyo|cjk|kbeauty)'
-    NEG_RE='(american|european|western|los angeles|new york|london)'
+    POS_RE='(korean|asian|seoul|japanese|tokyo|shibuya|cjk|kbeauty|hangul|hanok|gangnam|busan|jeju|k-pop)'
+    NEG_RE='(american|european|western|los angeles|new york|london|paris|harlem|manhattan)'
     ;;
   en)
-    POS_RE='(american|western|new york|los angeles|london|european|cinematic portrait|us flag)'
-    NEG_RE='(korean|tokyo|seoul|cjk|japanese|asian street)'
+    POS_RE='(american|western|new york|los angeles|london|european|cinematic|portrait|us flag|california|miami|hollywood|chicago|manhattan|harlem|brooklyn|beach|nyc)'
+    NEG_RE='(korean|tokyo|seoul|cjk|japanese|asian street|hanok|gangnam)'
     ;;
   mixed)
-    POS_RE='(korean|asian|seoul|japanese|tokyo|citypop|street neon|asian|warm city)'
+    POS_RE='(korean|asian|seoul|japanese|tokyo|citypop|street neon|warm city|shibuya|hangul|hanok|gangnam)'
     NEG_RE=''
     ;;
   neutral|*)
