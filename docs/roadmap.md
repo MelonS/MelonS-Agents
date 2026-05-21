@@ -154,6 +154,28 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-22** (~05:15 KST, autonomous intervention-reduction
+  continued) **Phase 7+ — audit-hook coalescing + auto-decision
+  logging + morning brief + chart auto-mirror + portability fix**
+  (commits `ae73973`, `2c9d072`, `e415875`, `bd118ac`, `4cd3aaa`,
+  `1747d70`, `ff7fe5d`, `9c8b69e`).  Closes intervention-reduction
+  Phase 7 work: (a) L1 audit hook coalescing via sentinel file —
+  saves Max-plan tokens during commit bursts (was 6+ concurrent
+  claude CLI processes; now 1 with deferred re-fire log entry);
+  (b) audit verdict transitions auto-log to autonomous-decisions
+  via the post-commit trampoline (DRIFT↔CLEAN visible without alert
+  diffing); (c) `scripts/morning-brief.sh` — single-command overnight
+  digest combining doctor + audit + intervention 7-day trend +
+  commit attribution + decisions + review-queue + blockers;
+  (d) `intervention.json` gains `trend_7d` annotations (delta from
+  prior 7-day window, populates fully on 2026-05-29);
+  (e) chart regen auto-mirrors to `site/assets/intervention.png` so
+  Pages site stays in sync without manual copy; (f) README EN+KO +
+  site Operator tooling card both surface morning-brief.sh;
+  (g) `generate-intervention-chart.py` `-Users-melons-ai` literal
+  replaced with `str(ROOT).replace("/", "-")` derivation — script
+  now portable to any clone path.
+
 - **2026-05-22** (~03:15 KST, autonomous block continued) **Music-
   video quality bar — refinements + QA gate + Phase 2 follow-ons**
   (commits `9057d77` A.3 injection 25→33%, `77535c3` C.1 Phase 2

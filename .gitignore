@@ -178,3 +178,9 @@ outputs/publish/upload-meta-v[3-9]*/
 # preferences).  See outputs/review-queue/README.md.
 outputs/review-queue/pending/
 outputs/review-queue/decided/
+
+# Generated review-queue digest — re-rendered by
+# scripts/review-queue-digest.sh on demand.  Contains the same
+# per-machine artifact metadata as the pending/ entries it summarizes;
+# stays local for the same reason.
+docs/review-digest.md

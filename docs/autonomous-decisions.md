@@ -37,6 +37,7 @@ header if today's section doesn't exist.
 
 ## 2026-05-22 (overnight autonomous)
 
+- `05:20 KST` — Hardcoded '-Users-melons-ai' in generate-intervention-chart.py replaced with str(ROOT).replace('/','-') derivation. Plus docs/review-digest.md gitignored. Plus 11-commit Done backlog reconciled.
 - `05:15 KST` — intervention-chart-collect.sh now auto-mirrors PNG into site/assets/ — no more manual copy step needed. Daily 02:00 KST launchd job keeps site asset in sync
 - `05:05 KST` — L1 audit hook trampoline now auto-logs audit verdict transitions (DRIFT→CLEAN or CLEAN→DRIFT) to autonomous-decisions.md. Morning brief sees these without needing alert diffs
 - `04:55 KST` — morning-brief.sh surfaced in README EN+KO + site/index.html (Operator tooling card). Discoverability for the canonical 'what happened overnight?' command

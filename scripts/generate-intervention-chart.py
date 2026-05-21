@@ -67,9 +67,13 @@ OUT_PNG = ROOT / "docs" / "metrics" / "intervention.png"
 OUT_JSON = ROOT / "docs" / "metrics" / "intervention.json"
 OUT_PNG.parent.mkdir(parents=True, exist_ok=True)
 
-# Claude Code session JSONLs.  Path encodes the cwd:
-# "-Users-melons-ai" for cwd /Users/melons/ai.
-CC_PROJECT_DIR = pathlib.Path.home() / ".claude" / "projects" / "-Users-melons-ai"
+# Claude Code session JSONLs.  Claude Code encodes the working
+# directory into the JSONL parent dir name by replacing `/` with `-`,
+# so a repo at /Users/melons/ai becomes "-Users-melons-ai".  Derive
+# from ROOT instead of hardcoding so a fresh clone in any path picks
+# up the right folder on its own machine.
+_cc_key = str(ROOT).replace("/", "-")
+CC_PROJECT_DIR = pathlib.Path.home() / ".claude" / "projects" / _cc_key
 
 MARKER_DATE = date(2026, 5, 17)
 
