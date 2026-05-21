@@ -196,13 +196,16 @@ for ((i=0; i<${#BOUNDS[@]}-1; i++)); do
   SEG_START[seg_idx]="${BOUNDS[$i]}"
   SEG_DUR[seg_idx]=$(awk -v s="${BOUNDS[$i]}" -v e="${BOUNDS[$((i+1))]}" 'BEGIN{printf "%.3f", e-s}')
   # Pick keyword for this segment.  Three branches:
-  # - seg_idx % 4 == 2 → lang-anchored people keyword (if anchor is set)
-  # - seg_idx % 3 == 0 → recurring motif keyword (intro)
+  # - seg_idx % 3 == 1 → lang-anchored people keyword (if anchor is set)
+  # - seg_idx % 4 == 0 → recurring motif keyword (intro, slightly rarer)
   # - else            → rotate through the rest of the genre pool
-  if (( LANG_KW_COUNT > 0 )) && (( seg_idx % 4 == 2 )); then
-    lang_pick=$(( (seg_idx / 4) % LANG_KW_COUNT ))
+  # Lang-anchor rate bumped 2026-05-22 ~03:05 KST from every-4th to
+  # every-3rd seg after demo-frame sampling showed only ~25% person-
+  # anchored coverage in vocal renders (target 33-40%).
+  if (( LANG_KW_COUNT > 0 )) && (( seg_idx % 3 == 1 )); then
+    lang_pick=$(( (seg_idx / 3) % LANG_KW_COUNT ))
     SEG_KW[seg_idx]="${LANG_KEYWORDS[$lang_pick]}"
-  elif (( seg_idx % 3 == 0 )); then
+  elif (( seg_idx % 4 == 0 )); then
     SEG_KW[seg_idx]="${KEYWORDS[0]}"  # motif
   else
     pick=$(( (seg_idx % (KW_COUNT - 1)) + 1 ))
