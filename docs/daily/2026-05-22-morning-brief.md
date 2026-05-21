@@ -52,6 +52,29 @@ post fix arc).  Lyric overlay correctly silent on 60s render because
 Suno take drifted from prompt and aligned at 01:01+ (script reports
 this honestly via 12/13 autofilled lines).
 
+## Beyond the 6 directives (extra scaffolding)
+
+- **C.1 Phase 3** `88b4ac4` — per-event shader gating: `onsets` /
+  `beats` gate modes fire shader as Gaussian bells at each musical
+  event.  Density via `shader_active_ratio` (stride = 1/ratio).
+  Fallback `3b43043`: if onsets too sparse (vocal track), switches
+  to beats automatically; if both <5 events, falls back to uniform.
+  Cap `07428b1`: event count limited to 30 to dodge ffmpeg expr-
+  length budget (was breaking at 150 events).
+- **Suno-drift gate** `aedc774` — alignment confidence becomes a
+  publish gate.  Verdict OK/WARN/FAIL emitted as sidecar JSON.
+  FAIL skips lyric overlay unless `LYRIC_FORCE_OVERLAY=1`.
+- **shader_pool** `5fe3e64` — preset can declare `shader_pool: [a, b]`
+  instead of single `shader:`.  Deterministic md5(short_id) rotation.
+- **shader env override** `90e6ef8` — `MUSIC_VIDEO_SHADER=NAME` forces
+  any shader on any genre for one-off tests.
+- **Long-line auto-wrap** `26211a2` — lyric drawtext wraps at
+  language-aware thresholds (KO 14ch, EN 22ch).
+- **First-touch wizard** `5c942be` — `scripts/first-touch.sh`: single-
+  command guided first-run for fresh-clone operators.  Maps to the
+  CRITICAL candidate goal "First-touch success rate 10-20% → 60%+".
+  Build Day Seoul prep hedge.
+
 ## Refinements shipped after MVP
 
 - **C.1 Phase 2** `77535c3` — `phrase_climax` gate mode.  Shader
