@@ -269,3 +269,77 @@ each keyword's expected motion + speed via a heuristic in `classify_kw()`.
 ## Cost accounting
 
 Per-pilot marginal cost: **$0** (Pexels free tier within quota, all other stages local). Time per pilot: ~2 minutes wall-clock on Apple M2; Korean variants ~50 seconds since B-roll is reused. The Pexels free quota (200 req/hr, 20k req/month) limits this pipeline to ~3300 pilots per month before any cost — well past any realistic upload cadence.
+
+---
+
+## TikTok automation — deferred (2026-05-22)
+
+After landing YT Data API automation end-to-end (12 vocal demos
+uploaded + scheduled via `scripts/yt-batch-upload.sh`, see commits
+`a989eb2` and follow-ons), the obvious next move was the TikTok
+equivalent.  Spent ~45 minutes evaluating TikTok's Content Posting
+API path and walked it back.  What we found:
+
+**Friction TikTok API imposes that YT does not:**
+
+- Mandatory **URL verification** — Privacy Policy URL and Terms of
+  Service URL must point to a domain whose ownership can be verified
+  (meta-tag or DNS TXT record).  `github.com` is shared so the form
+  surfaced "This URL is not verified" as a hard label.
+- Mandatory **Web/Desktop URL** field assuming the app has a public
+  website.  A 1-creator CLI tool isn't an "app" in TikTok's mental
+  model — their API was designed for 3rd-party integrations (e.g.,
+  social-network connectors), not for one creator automating their
+  own channel.
+- **Human review** for production scope: 2-14 days typical, possibly
+  with rejection + resubmit cycles.  No auto-approval path for
+  personal use.
+- A **Sandbox** mode is offered for pre-approval testing but only
+  publishes to test accounts, not the real ToddStudio channel.
+
+**What we built and then removed:**
+
+- `docs/legal/PRIVACY.md` and `docs/legal/TERMS.md` — minimal
+  privacy + ToS pages drafted to populate the TikTok form's URL
+  fields.  Committed as `c5a3619` then reverted as `40240aa` when
+  the verification gate made the URL approach moot.
+- A TikTok-for-Developers app draft (`ToddStudio Upload`) — created
+  in TikTok's console up to the URL-fields step.  Operator chose to
+  abandon rather than buy a domain to clear verification.
+
+**Alternative chosen:**
+
+- **TikTok Web's native scheduler** (`tiktok.com/upload`).  10-day
+  schedule cap, ~30 s manual upload per video, no API approval, no
+  domain cost, no maintenance burden.  For a single creator running
+  ~2 videos/day this is competitive with API automation: 6 minutes
+  per batch of 12 vs the 2-week wait + ongoing rejection risk of the
+  API path.
+- A cheat sheet at `~/Desktop/tiktok-upload-cheatsheet.md` (operator-
+  local, not committed) holds the 11 captions + schedule slots so
+  the manual upload session is mechanical.
+
+**Reconsideration conditions (when TikTok automation becomes worth
+the friction):**
+
+1. YT performance data (1-2 weeks of vocal-pivot uploads, see the
+   2026-05-21 demo batch) shows the vocal channel pulls non-trivial
+   reach.  If it doesn't, TikTok automation is moot.
+2. Cadence increases past ~5 videos/day per channel where manual
+   click effort becomes meaningful (currently 2/day).
+3. The operator acquires a real domain for other reasons (portfolio
+   site, channel hub), at which point URL verification is a free
+   side-effect.
+
+Until at least one of those holds, the manual web path stays the
+default and this section stands as a record so we don't re-explore
+the same dead ends.
+
+**Reusable artifacts kept:**
+
+- The genre presets, full-length flag, lyrics overlay script, and CPU
+  throttle — these benefit any output format and aren't TikTok-
+  specific.  Stays.
+- The 12 staged vocal demos (`outputs/demos/2026-05-21-genre-shader-
+  experiments/`) — uploaded to YT, also feed the manual TikTok path.
+  Stays.
