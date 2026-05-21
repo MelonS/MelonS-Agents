@@ -565,4 +565,16 @@ EOF
 
 echo
 log_info "  metrics: $MDIR/metrics.json"
+
+# Auto-enqueue to the review queue (lever 3 from
+# docs/research/2026-05-22-intervention-reduction.md).  The operator
+# drains a batched digest later via scripts/review-queue-digest.sh
+# instead of getting pinged per-render.  Idempotent; soft-fails so the
+# mission's success isn't gated on the queue helper.
+REVIEW_ADD="$(cd "$(dirname "$0")/../../.." && pwd)/scripts/review-queue-add.sh"
+if [[ -x "$REVIEW_ADD" ]]; then
+  "$REVIEW_ADD" "$MISSION_ID" "$OUT" "music-video render auto-enqueue" \
+    || log_info "  (review-queue-add soft-failed; mp4 still ready)"
+fi
+
 open "$OUT" 2>/dev/null || true
