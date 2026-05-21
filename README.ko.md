@@ -131,15 +131,29 @@
   / `qa-report.md`)을 통해 통신. 각 서브에이전트의 컨텍스트는 자신의
   프롬프트 + 자신이 읽는 매니페스트로 한정됨 — 예측 가능한 토큰
   비용, 예측 가능한 실패 모드.
-- **운영자 도구.** 시스템의 런타임 상태를 한눈에 보여주는 스크립트 2개.
-  [`scripts/doctor.sh`](scripts/doctor.sh)는 Claude 호출 없는 헬스
-  체크(~2초) — "지금 이 머신이 일할 준비가 됐나?" 답: CLI 도구, env
-  키, 스케줄러, 감사 알림, git 상태, 디스크, 스킬별 활성화 상태,
-  스킬 매니페스트 drift.
+- **운영자 도구.** 시스템 상태를 표면에 띄우고 일상적인 상태-확인
+  프롬프트를 흡수해서 운영자가 타이핑할 필요가 없게 만드는 스크립트들.
+  [`scripts/doctor.sh`](scripts/doctor.sh)는 Claude 호출 없는 ~2초
+  헬스 체크 — CLI 도구, env 키, 스케줄러, 감사 알림, git 상태, 디스크,
+  스킬별 활성화, 스킬 매니페스트 drift; `--json` 출력은
+  `actionable_warn` 필드를 포함해서 opt-in env 키 + git-tree 같은
+  노이즈를 카운트에서 제외함.
   [`scripts/audit-skill-drift.sh`](scripts/audit-skill-drift.sh)는
-  13번째 감사 룰 — 각 스킬의 `skills/<name>/config/activation.tsv`에
-  선언된 LIVE 플래그 매니페스트가 실제 스크립트의 게이팅과 일치하는지
-  검증. 둘 다 운영자가 직접 실행하거나 일일 감사 패스에 내장.
+  13번째 감사 룰 — 각 스킬의 LIVE 플래그 매니페스트가 실제 스크립트의
+  게이팅과 일치하는지 검증.
+  [`scripts/statusline.sh`](scripts/statusline.sh)는 Claude Code
+  statusline — doctor 의 JSON 캐시 (60초 백그라운드 regen) 와
+  goal-lock 스킬을 읽어서 `doctor:⚠N · goal:N/M · audit⚠` 를
+  상시 표시; "지금 상태가 뭐임?" 이 타이핑 없이 답됨.
+  [`scripts/log-decision.sh`](scripts/log-decision.sh) 는
+  [`docs/autonomous-decisions.md`](docs/autonomous-decisions.md) 에
+  한 줄 entry 를 append — 에이전트가 오버나잇 작업 중 unilateral
+  결정을 내릴 때 기록, 운영자는 아침에 한 페이지를 스캔해서 무엇이
+  결정됐는지 확인.
+  [`outputs/review-queue/`](outputs/review-queue/) + 3 개 스크립트
+  (`review-queue-add.sh` / `-digest.sh` / `-decide.sh`) 는 batched
+  taste-decision 큐 — music-video 렌더가 per-mp4 ping 대신 여기로
+  auto-enqueue.
 
 ## 자율성 신호 — 운영자 개입 추세
 

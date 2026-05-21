@@ -138,17 +138,32 @@ A few choices that distinguish this from a typical agent demo:
   `MANIFEST.md` / `qa-report.md`). Each subagent's context is bounded
   by its prompt + the manifest it reads — predictable token cost,
   predictable failure modes.
-- **Operator tooling.** Two scripts surface the system's runtime
-  state at a glance.
-  [`scripts/doctor.sh`](scripts/doctor.sh) is a Claude-free health
-  check (~2 s) that answers "is this machine ready to work right
-  now?" — CLI tools, env keys, schedulers, audit alerts, git state,
-  disk, per-skill activation, skill manifest drift.
+- **Operator tooling.** Scripts that surface system state and
+  absorb routine status-check prompts so the operator doesn't have
+  to type them.
+  [`scripts/doctor.sh`](scripts/doctor.sh) is a Claude-free
+  ~2-second health check — CLI tools, env keys, schedulers, audit
+  alerts, git state, disk, per-skill activation, skill manifest
+  drift; `--json` output includes an `actionable_warn` field that
+  excludes opt-in env keys + git-tree so the signal isn't noisy.
   [`scripts/audit-skill-drift.sh`](scripts/audit-skill-drift.sh) is
   the 13th audit rule, verifying each skill's declared LIVE-flag
-  manifest at `skills/<name>/config/activation.tsv` matches the
-  actual gating in its scripts. Both are invoked on demand or
-  embedded into the auditor's daily pass.
+  manifest matches its scripts' gating.
+  [`scripts/statusline.sh`](scripts/statusline.sh) is the Claude
+  Code statusline — it reads doctor's JSON cache (60s background
+  regen) and the goal-lock skill to render
+  `doctor:⚠N · goal:N/M · audit⚠` continuously, so "what's the
+  state?" gets answered without typing.
+  [`scripts/log-decision.sh`](scripts/log-decision.sh) appends a
+  one-line entry to
+  [`docs/autonomous-decisions.md`](docs/autonomous-decisions.md) —
+  the agent records unilateral decisions during overnight work so
+  the operator scans one page in the morning instead of typing
+  "what happened?" prompts.
+  [`outputs/review-queue/`](outputs/review-queue/) + three scripts
+  (`review-queue-add.sh` / `-digest.sh` / `-decide.sh`) is the
+  batched taste-decision queue — music-video renders auto-enqueue
+  here instead of pinging the operator per-mp4.
 
 ## Autonomy signal — operator-intervention trend
 
