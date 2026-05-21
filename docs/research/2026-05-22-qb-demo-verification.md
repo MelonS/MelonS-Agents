@@ -69,3 +69,53 @@ pause at the same musical moment in both to feel:
 - Heavier halation in OLD (default ratio=1.0) vs subdued in NEW (0.35)
 - Auto-spaced lyric timing in OLD vs vocal-onset aligned in NEW
 - No Korean-anchor injection in OLD vs 25% in NEW
+
+## Demo #2 — refinement validation (qb-demo2-eodi-030639)
+
+Re-rendered same track with refinements: lang-anchor rate bumped to
+33%, `MUSIC_VIDEO_SHADER_GATE=phrase_climax` activating the new C.1
+Phase 2 mode.
+
+QA-anchor verdict:
+```
+matching: 4/8 (0.50)  →  PASS
+```
+Lang-anchor pool now contributes 3 clips (asian_man_walking_seoul,
+korean_woman_cafe, korean_person_umbrella) + genre pool's seoul-
+anchored "rainy_seoul_window" = 4 total anchor-matching.
+
+Frame-by-frame:
+
+| t | Position vs climax window (19.5s–40.5s) | What's visible |
+|---|----------------------------------------|----------------|
+| 5s  | far outside | Cafe portrait, no shader, source pure |
+| 18s | just before window (within 0.5s fade-in) | Korean apartment towers, no shader, source pure |
+| 30s | peak inside | Korean street (SHINING / SAVOY HOTEL / DRUG STORE OLIVE signs), halation+purple glow ON, Korean lyric overlay |
+| 35s | inside | (presumably similar — not sampled in this run) |
+| 42s | just after window (within 0.5s fade-out) | Paris metro "Couronnes" w/ French signage, light residual shader |
+| 55s | far outside | Source pure |
+
+**Phrase_climax gate verified**: shader fires only inside the
+trapezoid envelope.  At the 18s frame (just before window) there's
+no halation tint; at 30s (peak) it's clearly on; at 42s (just
+after) the fade is almost complete.  Exactly what the design said.
+
+**Anchor coverage limitation surfaced**: the 42s clip is a Paris
+metro station (from the genre's `subway window blurred` keyword pool
+entry — Pexels returned a Paris subway photo, not a Seoul one).
+The QA gate scored this as a non-anchor-matching clip, correctly.
+Follow-on tuning: tighten the kpop_ballad keyword_pool to include
+"seoul" prefix on subway/transit keywords ("seoul subway interior"
+instead of "subway window blurred").  Parked for operator.
+
+## What worked end-to-end across both demos
+
+1. A.1 dedup registry: no clip overlap with the 196 prior IDs.
+2. A.2 lyric alignment: clean text overlay, no marker leak, lines
+   land on vocal cues with 200ms lead.
+3. A.3 lang-anchor injection: 25% → 33% increase produces 3
+   anchor-pool clips instead of 2 on the same 8-seg layout.
+4. C.1 uniform AND phrase_climax both produce viewable output.
+5. B.1 catalog extended; existing presets unchanged (operator-decided
+   shifts deferred).
+6. QA gate scores both demos PASS (38% demo1, 50% demo2).
