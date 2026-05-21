@@ -1,0 +1,38 @@
+name: Bug report
+description: Something broke or behaved unexpectedly outside the first-run path.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: One paragraph. What were you doing, what broke?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: Step-by-step. Include exact commands if possible.
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS / environment
+      placeholder: "macOS 14.5 / Ubuntu 22.04"
+
+  - type: input
+    id: commit
+    attributes:
+      label: Commit hash or version
+      placeholder: "main @ abc1234 / v0.4.0"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / error output
+      render: shell

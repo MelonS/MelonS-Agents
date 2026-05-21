@@ -1,0 +1,47 @@
+name: New Skill proposal
+description: Suggest a new Skill (a third one beyond music-video and job-hunt) for the framework.
+title: "[skill] "
+labels: ["skill-request", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        MelonS-Agents is a multi-skill framework following the [agentskills.io](https://agentskills.io) open spec.
+        Each Skill is a self-contained capability (Skill #1 music-video, Skill #2 job-hunt).
+        Propose a third.
+
+  - type: input
+    id: skill-name
+    attributes:
+      label: Skill name (kebab-case)
+      placeholder: "e.g. game-prototype, blog-writer, email-digest"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-it-does
+    attributes:
+      label: What does the Skill do?
+      description: One paragraph. Input → process → output.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why does this matter?
+      description: Who would use it? What gap does it fill?
+    validations:
+      required: true
+
+  - type: input
+    id: deps
+    attributes:
+      label: External dependencies (if any)
+      placeholder: "e.g. ollama, ffmpeg, Pexels API, Spotify API"
+
+  - type: textarea
+    id: existing
+    attributes:
+      label: Existing tools that do this
+      description: Optional — links to prior art. Helps scope the gap.
