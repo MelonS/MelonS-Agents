@@ -191,21 +191,30 @@ for i, (line, s, e, conf) in enumerate(matches):
     nxt = nxt if nxt is not None else audio_end_ms
     # interpolate
     span = max(800, nxt - prev_end)
-    pos_in_run = 1  # only this line being filled at once
     s2 = prev_end + span // 3
     e2 = s2 + 1500
     matches[i] = (line, s2, e2, 0.0)
     auto_filled += 1
     prev_end = e2
 
-# Apply LEAD_MS: shift line starts earlier by LEAD_MS to give vocal-anticipation.
+# Apply LEAD_MS: shift line starts earlier by LEAD_MS to give
+# vocal-anticipation.  Clamp both endpoints to audio duration so the
+# tail line doesn't render with a start > end (downstream drawtext
+# enable= expression breaks on inverted intervals).
 final = []
 for line, s, e, conf in matches:
     start = max(0, s - LEAD_MS)
     end   = max(start + 800, e)
+    if start > audio_end_ms - 800:
+        start = max(0, audio_end_ms - 1500)
+    end = min(end, audio_end_ms)
+    if end <= start:
+        end = min(audio_end_ms, start + 800)
     final.append((line, start, end, conf))
 
-# Emit LRC: [mm:ss.xx]TEXT
+# Emit LRC: [mm:ss.xx]TEXT.  The autofill marker goes on a SEPARATE
+# comment line so downstream LRC parsers don't capture it as part of
+# the rendered text.
 def fmt_ts(ms):
     s_total = ms / 1000.0
     mm = int(s_total // 60)
@@ -216,9 +225,10 @@ with open(OUT, "w", encoding="utf-8") as f:
     f.write("# Auto-aligned by music-video-lyric-align.sh (whisper word-level + difflib).\n")
     f.write(f"# Source: {os.environ.get('LYRICS_FILE_DISPLAY', LYRICS)}\n")
     f.write(f"# Lead-ms: {LEAD_MS}\n")
-    for line, s, e, conf in final:
-        marker = "" if conf >= 0.30 else "  # autofilled (low confidence)"
-        f.write(f"{fmt_ts(s)}{line}{marker}\n")
+    for i, (line, s, e, conf) in enumerate(final, 1):
+        if conf < 0.30:
+            f.write(f"# line {i}: autofilled (low confidence — whisper didn't anchor)\n")
+        f.write(f"{fmt_ts(s)}{line}\n")
 
 print(f"[align] wrote {OUT} ({len(final)} lines, {auto_filled} autofilled)")
 
