@@ -33,7 +33,20 @@ shader research in [`docs/research/2026-05-22-shader-vocabulary.md`](../research
 |--------|---------|
 | `0703be8` | roadmap.md Done entries + Stage-2/3 + C.1 Phase-2 + A.3 QA gate suggest block |
 
-## Fix shipped after MVP
+## Refinements shipped after MVP
+
+- **C.1 Phase 2** `77535c3` — `phrase_climax` gate mode.  Shader
+  fires only in the center `RATIO × duration` window (with 0.5s
+  trapezoid fade-in/out) instead of being uniformly attenuated.
+  Reads as "shader fires at the climax" — closer to production
+  music-video editing convention.  Activate per render with
+  `MUSIC_VIDEO_SHADER_GATE=phrase_climax`.
+
+- **A.3 injection tune** `9057d77` — lang-anchor rate bumped 25% →
+  33% (every 4th → every 3rd seg).  Demo-frame sampling showed only
+  2/8 clips were KR-anchored on the kpop_ballad demo; bumping to
+  every 3rd gives 3 anchored / 2 motif / 3 scenery on a typical
+  8-seg render.
 
 - **A.2 follow-on** `a2e2d3f` — the alignment script's autofill
   marker (`# autofilled (low confidence)`) was being appended to
