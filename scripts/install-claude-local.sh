@@ -132,7 +132,59 @@ fi
 echo
 
 # ----------------------------------------------------------------------
-# Step 3: (placeholder) .claude/agents → ../subagents symlink
+# Step 3: render operator-style block into ~/.claude/CLAUDE.md
+# ----------------------------------------------------------------------
+# The operator-style preferences (Dual-stack reporting, Terminal/shell
+# format, Batch execution, Writing tone, Idle-state signaling,
+# Scrum-master footer) were split out of docs/operator-contract.md on
+# 2026-05-22 and now live in ~/.claude/CLAUDE.md under "Operator
+# style".  That file is per-user / local; a fresh clone on a new
+# machine has no copy.  The canonical content stays in this repo at
+# config/claude-global.template.md and is rendered into
+# ~/.claude/CLAUDE.md between BEGIN/END markers, idempotently.
+
+GLOBAL_TEMPLATE="config/claude-global.template.md"
+GLOBAL_TARGET="$OPERATOR_HOME/.claude/CLAUDE.md"
+
+if [[ -f "$GLOBAL_TEMPLATE" ]]; then
+  mkdir -p "$(dirname "$GLOBAL_TARGET")"
+  echo "[install-claude-local] rendering $GLOBAL_TEMPLATE → $GLOBAL_TARGET"
+
+  if [[ ! -f "$GLOBAL_TARGET" ]]; then
+    # Fresh install — create with a small header + the template block.
+    {
+      printf '# Global Claude Code Instructions\n\n'
+      printf 'Project: `%s` — see that repo'\''s `CLAUDE.md` for project-specific behavior.\n\n' "$REPO_ROOT"
+      printf -- '---\n\n'
+      cat "$GLOBAL_TEMPLATE"
+    } > "$GLOBAL_TARGET"
+    echo "  ✓ created $GLOBAL_TARGET with operator-style block"
+  elif grep -q 'BEGIN repo-managed operator-style block' "$GLOBAL_TARGET"; then
+    # Existing install with markers — replace between markers in-place.
+    # Use awk for portable in-place replacement (BSD/GNU sed -i differ).
+    tmp="$(mktemp)"
+    awk -v tmpl="$GLOBAL_TEMPLATE" '
+      /BEGIN repo-managed operator-style block/ { in_block=1; while ((getline line < tmpl) > 0) print line; close(tmpl); next }
+      /END repo-managed operator-style block/  { in_block=0; next }
+      !in_block { print }
+    ' "$GLOBAL_TARGET" > "$tmp"
+    mv "$tmp" "$GLOBAL_TARGET"
+    echo "  ✓ refreshed operator-style block in $GLOBAL_TARGET (in place)"
+  else
+    # Existing install without markers — append template, leaving the
+    # operator's prior content above untouched.
+    {
+      printf '\n\n'
+      printf -- '---\n\n'
+      cat "$GLOBAL_TEMPLATE"
+    } >> "$GLOBAL_TARGET"
+    echo "  ✓ appended operator-style block to $GLOBAL_TARGET (prior content preserved above)"
+  fi
+  echo
+fi
+
+# ----------------------------------------------------------------------
+# Step 4: (placeholder) .claude/agents → ../subagents symlink
 # ----------------------------------------------------------------------
 
 # Will activate when subagent migration lands (see docs/ideas.md
