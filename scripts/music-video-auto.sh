@@ -105,14 +105,21 @@ echo
 #    a Pexels portrait photo from the genre's first keyword_pool entry.
 PRESETS_YAML="$REPO_ROOT/skills/music-video/data/genre-presets.yaml"
 CUT_MODE=$(yq -r ".genres.${GENRE}.cut_mode" "$PRESETS_YAML" 2>/dev/null)
+LANG_ANCHOR=$(yq -r ".genres.${GENRE}.lang_anchor // \"neutral\"" "$PRESETS_YAML" 2>/dev/null)
 if [[ "$CUT_MODE" == "stillzoom" && -z "$STILL_IMG" ]]; then
   FIRST_KW=$(yq -r ".genres.${GENRE}.keyword_pool[0]" "$PRESETS_YAML" 2>/dev/null)
   if [[ -n "$FIRST_KW" && "$FIRST_KW" != "null" ]]; then
     STILL_IMG="${TMPDIR:-/tmp}/auto-still-${SHORT_ID}.jpg"
     if [[ "$USE_AI_STILL" == 1 ]]; then
-      # Pollinations.ai — richer prompt combining genre aesthetic + keyword
+      # Pollinations.ai — richer prompt combining genre aesthetic + keyword.
+      # Ethnicity anchor (quality-bar #5/#6) added for vocal-anchored genres.
       AI_PROMPT="${FIRST_KW}, ${GENRE} aesthetic, cinematic, atmospheric, no text, no people"
-      echo "→ stillzoom genre + --ai-still — generating via Pollinations.ai"
+      case "$LANG_ANCHOR" in
+        ko)    AI_PROMPT="${FIRST_KW}, Korean aesthetic, Seoul context, ${GENRE} mood, cinematic, atmospheric, no text" ;;
+        en)    AI_PROMPT="${FIRST_KW}, Western context, ${GENRE} aesthetic, cinematic, atmospheric, no text" ;;
+        mixed) AI_PROMPT="${FIRST_KW}, East Asian city aesthetic, ${GENRE} mood, cinematic, atmospheric, no text" ;;
+      esac
+      echo "→ stillzoom genre + --ai-still — generating via Pollinations.ai (lang_anchor=$LANG_ANCHOR)"
       if bash "$REPO_ROOT/scripts/music-video-fetch-ai-still.sh" "$AI_PROMPT" "$STILL_IMG"; then
         echo "  using $STILL_IMG (AI-generated)"
       else

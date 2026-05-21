@@ -171,6 +171,16 @@ export MUSIC_VIDEO_FILM_GRAIN_INTENSITY="$GRAIN"
 export MUSIC_VIDEO_VIGNETTE_ANGLE="$VIGNETTE"
 export MUSIC_VIDEO_ZOOM_PULSE_AMP="$ZOOM_AMP"
 
+# Resolve lang_anchor — controls ethnicity/language match in B-roll +
+# AI-still fetches (quality-bar #5/#6, 2026-05-22).  Values:
+#   ko       Korean vocal — KR people, Seoul/KR contexts preferred
+#   en       English vocal — Western contexts, no CJK signage
+#   mixed    citypop family — both ko/jp/en contexts acceptable
+#   neutral  instrumental — no language constraint
+LANG_ANCHOR=$(yq -r ".genres.${RESOLVED}.lang_anchor // \"neutral\"" "$PRESETS")
+export MUSIC_VIDEO_LANG_ANCHOR="$LANG_ANCHOR"
+[[ "$LANG_ANCHOR" != "neutral" ]] && echo "→ lang_anchor: $LANG_ANCHOR"
+
 # Use operator-supplied keywords or fall back to genre's keyword_pool
 if [[ -z "$KEYWORDS" ]]; then
   KEYWORDS=$(yq -r ".genres.${RESOLVED}.keyword_pool | join(\",\")" "$PRESETS" 2>/dev/null)

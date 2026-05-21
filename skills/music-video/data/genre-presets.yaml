@@ -32,6 +32,7 @@ genres:
 
   ambient:
     aliases: [drone, minimal_ambient, dark_ambient]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999          # effectively no cuts
     grain_intensity: 6
     vignette_angle: PI/4
@@ -60,6 +61,7 @@ genres:
 
   drone:
     aliases: [doom_jazz, doom_ambient]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999
     grain_intensity: 10        # heavier grain — adds movement to static frames
     vignette_angle: PI/3
@@ -87,6 +89,7 @@ genres:
 
   shoegaze:
     aliases: [dream_pop, slowdive]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 4-beat soft cuts at most
     grain_intensity: 6
     vignette_angle: PI/5
@@ -116,6 +119,7 @@ genres:
 
   lofi_hiphop:
     aliases: [chillhop, lofi, downtempo]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts
     grain_intensity: 8
     vignette_angle: PI/5
@@ -145,6 +149,7 @@ genres:
 
   jazz:
     aliases: [acoustic_jazz, smooth_jazz]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 12            # 4-8 beat soft cuts
     grain_intensity: 8
     vignette_angle: PI/4        # deeper, low-key noir
@@ -174,6 +179,7 @@ genres:
 
   citypop:
     aliases: [city_pop, kr_citypop, jp_citypop, vocal_citypop, ballad]
+    lang_anchor: mixed    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts, vocal-respecting
     grain_intensity: 6
     vignette_angle: PI/4        # deeper, warmer
@@ -206,6 +212,7 @@ genres:
 
   kpop_ballad:
     aliases: [korean_ballad, kballad, k-ballad]
+    lang_anchor: ko    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts, vocal-respecting
     grain_intensity: 6
     vignette_angle: PI/4
@@ -238,6 +245,7 @@ genres:
 
   kpop_dance:
     aliases: [kdance, kpop_edm, kpop_dance_pop]
+    lang_anchor: ko    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts (dense but not sub-beat)
     grain_intensity: 0          # hi-fi clean
     vignette_angle: PI/3        # subtle
@@ -271,6 +279,7 @@ genres:
 
   rnb:
     aliases: [contemporary_rnb, neo_soul, slow_jam, soul]
+    lang_anchor: en    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts
     grain_intensity: 8           # warm grain for smoky feel
     vignette_angle: PI/4
@@ -302,6 +311,7 @@ genres:
 
   uspop:
     aliases: [us_pop, billboard_pop, contemporary_pop, top_40, synth_pop]
+    lang_anchor: en    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts
     grain_intensity: 2           # very clean
     vignette_angle: PI/3
@@ -335,6 +345,7 @@ genres:
 
   house:
     aliases: [tropical_house, deep_house, future_house, disco_house, french_house, nu_disco, disco]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts
     grain_intensity: 2          # MUCH less grain than lo-fi
     vignette_angle: PI/3        # softer
@@ -363,6 +374,7 @@ genres:
 
   techno:
     aliases: [tech_house, minimal_techno]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 4             # 1-beat cuts (very dense)
     grain_intensity: 0
     vignette_angle: PI/2        # very subtle / nearly off
@@ -391,6 +403,7 @@ genres:
 
   synthwave:
     aliases: [retrowave, outrun, vaporwave_neon]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts
     grain_intensity: 0          # FORBIDDEN
     vignette_angle: off         # no vignette
@@ -420,6 +433,7 @@ genres:
 
   vaporwave:
     aliases: [vaporwave_aesthetic, mallsoft]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999           # very slow / loopy
     grain_intensity: 4
     vignette_angle: PI/4
@@ -448,6 +462,7 @@ genres:
 
   phonk:
     aliases: [drift_phonk, anime_edit]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 4
     grain_intensity: 4
     vignette_angle: PI/6
@@ -475,6 +490,7 @@ genres:
 
   hyperpop:
     aliases: [glitch, breakcore, gabber]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 2             # sub-beat
     grain_intensity: 0
     vignette_angle: off
@@ -505,6 +521,7 @@ genres:
 
   cottagecore:
     aliases: [folk, acoustic_folk, indie_folk]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16
     grain_intensity: 6
     vignette_angle: PI/5
@@ -533,6 +550,7 @@ genres:
 
   classical:
     aliases: [orchestral, chamber, baroque]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999           # no rhythmic cuts
     grain_intensity: 6
     vignette_angle: PI/5
@@ -562,6 +580,7 @@ genres:
 
   dreamcore:
     aliases: [liminal, weirdcore]
+    lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999
     grain_intensity: 4          # soft VHS-style grain
     vignette_angle: PI/4

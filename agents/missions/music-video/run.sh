@@ -134,6 +134,48 @@ log_step "3/5  segment plan"
 IFS=',' read -r -a KEYWORDS <<< "$KEYWORDS_CSV"
 KW_COUNT="${#KEYWORDS[@]}"
 
+# Quality-bar #5/#6 (2026-05-22): inject ethnicity-anchored keywords
+# for vocal-anchored genres so the B-roll's people-on-camera match
+# the lyric language.  MUSIC_VIDEO_LANG_ANCHOR is exported by
+# scripts/music-video-genre.sh from each preset's `lang_anchor` field.
+#
+#   ko       Korean vocal — every 3rd segment uses a KR-person keyword
+#   en       English vocal — every 3rd segment uses a global/Western keyword
+#   mixed    citypop family — sprinkle KR + JP people both
+#   neutral  instrumental — no injection (default behavior)
+LANG_ANCHOR="${MUSIC_VIDEO_LANG_ANCHOR:-neutral}"
+LANG_KEYWORDS=()
+case "$LANG_ANCHOR" in
+  ko)
+    LANG_KEYWORDS=(
+      "korean woman cafe window"
+      "asian man walking seoul night"
+      "korean person umbrella rain"
+      "young asian woman portrait street"
+      "asian couple cafe candid"
+    )
+    ;;
+  en)
+    LANG_KEYWORDS=(
+      "young woman walking new york"
+      "man portrait sunlight cinematic"
+      "couple los angeles street"
+      "woman driving golden hour"
+      "city pedestrian daylight american"
+    )
+    ;;
+  mixed)
+    LANG_KEYWORDS=(
+      "asian woman tokyo neon"
+      "korean cafe candid evening"
+      "japanese street night candid"
+      "young woman city pop aesthetic"
+    )
+    ;;
+esac
+LANG_KW_COUNT="${#LANG_KEYWORDS[@]}"
+[[ "$LANG_KW_COUNT" -gt 0 ]] && log_info "  lang_anchor=$LANG_ANCHOR — injecting $LANG_KW_COUNT person-anchored keywords"
+
 # Read boundaries into array (bash 3.2 compatible — no mapfile).
 BOUNDS=()
 while IFS= read -r line; do
@@ -153,8 +195,14 @@ seg_idx=1
 for ((i=0; i<${#BOUNDS[@]}-1; i++)); do
   SEG_START[seg_idx]="${BOUNDS[$i]}"
   SEG_DUR[seg_idx]=$(awk -v s="${BOUNDS[$i]}" -v e="${BOUNDS[$((i+1))]}" 'BEGIN{printf "%.3f", e-s}')
-  # Pick keyword for this segment, with the intro keyword acting as a recurring motif at every 3rd slot
-  if (( seg_idx % 3 == 0 )); then
+  # Pick keyword for this segment.  Three branches:
+  # - seg_idx % 4 == 2 → lang-anchored people keyword (if anchor is set)
+  # - seg_idx % 3 == 0 → recurring motif keyword (intro)
+  # - else            → rotate through the rest of the genre pool
+  if (( LANG_KW_COUNT > 0 )) && (( seg_idx % 4 == 2 )); then
+    lang_pick=$(( (seg_idx / 4) % LANG_KW_COUNT ))
+    SEG_KW[seg_idx]="${LANG_KEYWORDS[$lang_pick]}"
+  elif (( seg_idx % 3 == 0 )); then
     SEG_KW[seg_idx]="${KEYWORDS[0]}"  # motif
   else
     pick=$(( (seg_idx % (KW_COUNT - 1)) + 1 ))
