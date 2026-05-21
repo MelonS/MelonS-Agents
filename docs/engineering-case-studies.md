@@ -638,6 +638,97 @@ breaking the others).
 
 ---
 
+## 9. The quality-bar wasn't a bug — it was 6 contracts the system didn't enforce
+
+**Problem.** After uploading 12 vocal-track shorts in the 2026-05-21
+overnight batch, the operator reviewed them and stated six quality
+directives 2026-05-22 ~01:30 KST.  None of them were bugs.  All were
+*contracts the renders were silently violating*:
+
+| # | Contract | Failure mode |
+|---|----------|--------------|
+| 1 | Don't reuse B-roll across shorts | Repeat viewers recognize footage |
+| 2 | Shaders should be restrained, not blanket | "도배되는 느낌" (slathered feel) |
+| 3 | Lyric overlay should sync to vocal cue (±200 ms) | Lines arrive 1-3s late |
+| 4 | Shader vocabulary is too narrow at 15 effects | Every short looks the same |
+| 5 | Korean lyric → Korean person on screen | Mixed-ethnicity B-roll |
+| 6 | English lyric → global subjects, no CJK signage | Tokyo neon on US pop |
+
+Each is observable by a single viewer, but only emerges at the
+*channel* layer — a sequence of shorts read collectively, not in
+isolation.  No individual render was broken.
+
+**Constraint.** Five contracts, ≤3 hours of session budget per the
+session-as-a-cost-budget pattern from case #1.  The operator's bias
+(per [[minimize-intervention]] memory) is that every directive should
+ship as code, not as a future TODO list.
+
+**Decision.** Decompose into five small phases — A.1 (dedup
+registry), A.2 (whisper alignment), A.3 (lang anchor), C.1 (shader
+restraint), B.1 (vocab expand) — each ≤1 hour, each shippable to
+`origin/main` independently.  Each is an MVP with deferred refinement
+queued in `docs/roadmap.md` "suggest" comments so the operator can
+review and shape the next iteration.
+
+Per directive:
+
+- **A.1 — B-roll dedup**: shared registry at `records/youtube/broll-
+  used.txt` (gitignored).  Both Pexels caller paths (the dedicated
+  `scripts/pexels-fetch.sh` and the inline curl in
+  `agents/missions/music-video/run.sh`) consult the registry before
+  picking and append after download.  196 prior-Pexels-IDs seeded by
+  walking `records/missions/*/resources/clips/*.json`.
+
+- **A.2 — Lyric onset alignment**: derived LRC via whisper.cpp.
+  For Korean, word-level (`-sow -ml 1 -ojf`) + character-by-character
+  SequenceMatcher (handles whisper.cpp's occasional split of multi-
+  byte CJK into invalid UTF-8 segments via `errors='replace'`).  For
+  English, segment-level for better aggregation against lyric lines.
+  Confidence scored per line; sub-floor lines explicitly marked as
+  autofilled rather than producing fake-precise timing.
+
+- **A.3 — Lang anchor**: new `lang_anchor: ko|en|mixed|neutral`
+  field on every preset.  At runtime, every 4th segment of a vocal-
+  anchored render uses a person-anchored keyword from the appropriate
+  pool (Seoul cafe / NYC daylight / Tokyo aesthetic); scenery
+  keywords still come from the genre's pool.  Pollinations.ai prompt
+  template augmented for stillzoom-mode renders.
+
+- **C.1 — Shader restraint**: new `shader_active_ratio: 0.0..1.0`
+  field, default per-genre (1.0 ambient, 0.35 kpop_ballad).  When
+  ratio < 1.0, the shaded output is blended back toward the un-
+  shaded original via a final ffmpeg blend pass.  MVP uses uniform
+  attenuation; time-windowed gating (shader fires only on beats)
+  queued.
+
+- **B.1 — Shader vocab**: catalog expanded from 15 → 23 effects.
+  Stage-1 (`light_leak`, `duotone`, `vignette_pulse`) for broad
+  applicability.  Stage-2 (`paper_grain`, `dust_speck`, `posterize`)
+  for texture.  Stage-3 (`trail_echo`, `soft_bloom`) for temporal /
+  quieter atmosphere.
+
+**Cost.** ~2.5 hours of active work for all five phases + research
+docs + roadmap updates + a morning brief.  Render of one demo
+end-to-end through the integrated pipeline confirmed all five MVPs
+compose without conflict.
+
+**Lesson.** When the operator hands you a list of quality complaints
+that don't map to bugs, the right read is that those are *contracts
+the system isn't currently enforcing*.  The shape of the fix is then
+mechanical — a contract per phase, expressed as a single field added
+to the data layer + a single mechanism added to the runtime.  No
+abstraction layer, no plugin architecture, no "extensibility for
+future contracts" — just the literal six contracts, one at a time.
+The minimum-mechanism rule from #1, applied at the quality layer.
+
+The two ffmpeg traps documented in passing (`pow(x,2)` not `x^2`;
+uppercase `T` not `t` for time inside `geq`) cost ~15 min of debug
+total, mostly because the error messages from `geq` are unhelpful
+("Undefined constant" rather than "use uppercase T").  Future shader
+authors can read the research doc and skip the trap.
+
+---
+
 ## What these have in common
 
 - Each started from a **specific observed failure**, not a theoretical
