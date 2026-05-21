@@ -366,11 +366,66 @@ case "$EFFECT" in
       -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
     ;;
 
+  # ───── Stage-1 catalog expansion (2026-05-22 quality-bar #4) ─────
+
+  light_leak)
+    # Animated colored light bleed — Super-8 / cinematic accent.
+    # Position drifts over time so each render's leak signature is
+    # different.  Mood: cottagecore / jazz / citypop / lofi / shoegaze.
+    # geq filter uses uppercase T for the timestamp (lowercase t is not
+    # in the variable namespace inside geq expressions); pow() not ^.
+    # The leak generator is matched to base dimensions via scale2ref.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -filter_complex "
+        [0:v]format=yuv420p,setsar=1[base];
+        color=c=0xFF99BB:size=540x960:rate=30:duration=240,
+          geq=
+            lum='180*exp(-(pow((X-(270+100*sin(T*0.3)))/120,2) + pow((Y-(480+150*cos(T*0.2)))/180,2)))':
+            cb='128 + 80*exp(-(pow((X-(270+100*sin(T*0.3)))/120,2)))':
+            cr='200 - 60*sin(T*0.15)',
+          setsar=1[leak_small];
+        [leak_small][base]scale2ref=w=iw:h=ih[leak_scaled][base2];
+        [base2][leak_scaled]blend=all_mode=screen:all_opacity=0.40[out]
+      " -map "[out]" -map 0:a \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  duotone)
+    # Spotify-Wrapped-style two-color quantize.  Source desaturated,
+    # then mapped to a magenta→cyan gradient by luminance.  Distinct
+    # signature look for citypop / synthwave / vaporwave / pop-art kpop.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -filter_complex "
+        [0:v]eq=saturation=0,format=yuv420p,
+          geq=
+            lum='lum(X,Y)':
+            cb='90 + lum(X,Y)*0.40':
+            cr='200 - lum(X,Y)*0.45',
+          setsar=1[out]
+      " -map "[out]" -map 0:a \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  vignette_pulse)
+    # Vignette whose radius breathes on a slow sinusoid (≈ 0.25 Hz =
+    # 15 bpm visual breathing, half the typical BPM so it doesn't
+    # compete with cuts).  Subtle but cinematic.  Mood: kpop_ballad /
+    # rnb / citypop / shoegaze.  vignette filter supports the angle
+    # field as an expression in t directly, no eval=frame needed.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "vignette=angle='PI/4 + 0.18*sin(2*PI*0.25*t)':mode=forward,setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
   *)
     echo "❌ unknown effect: $EFFECT" >&2
     echo "   classic:        pond | breathing | halation | combo" >&2
     echo "   genre-coded:    scanline | chromatic_split | neon_edge | vhs | saturation_pulse | kaleidoscope" >&2
     echo "   beat-synced:    beat_burst | strobe | shake | color_burst | light_rays" >&2
+    echo "   stage-1 expand: light_leak | duotone | vignette_pulse" >&2
     exit 64
     ;;
 esac
