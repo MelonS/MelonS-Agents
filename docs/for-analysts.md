@@ -175,6 +175,9 @@ and the niche-pivot decision in
 - [`scripts/music-video-library-audit.sh`](../scripts/music-video-library-audit.sh) — operator utility that lists every `assets/music/*.mp3` with detected genre / shader preset / render status; quick "what's left to render?" view (no Anthropic).
 - [`scripts/music-video-fetch-ai-still.sh`](../scripts/music-video-fetch-ai-still.sh) — wraps the free Pollinations.ai image API to generate stillzoom backgrounds when no operator-supplied still is available (`--ai-still` flag in `music-video-auto.sh`; no Anthropic).
 - [`scripts/music-video-lyric-align.sh`](../scripts/music-video-lyric-align.sh) — whisper.cpp-based vocal-onset alignment that converts a plain-text lyric file into an LRC-timed file consumed by `music-video-lyrics.sh` (quality-bar directive #3, no Anthropic).
+- [`scripts/music-video-genre-detect.sh`](../scripts/music-video-genre-detect.sh) — heuristic genre auto-detect from filename + filename-keywords; resolves an mp3 to one of the 19 declared presets in `skills/music-video/data/genre-presets.yaml` (no Anthropic).
+- [`scripts/music-video-fetch-still.sh`](../scripts/music-video-fetch-still.sh) — fetches a Pexels still image for stillzoom genres (ambient / classical / dreampop / kpop_ballad) when no operator-supplied still is available; companion to the AI-still fetcher (no Anthropic; free Pexels API).
+- [`scripts/log-decision.sh`](../scripts/log-decision.sh) — operator tooling.  Appends one bullet to `docs/autonomous-decisions.md` under today's date section; used by autonomous runs to record unilateral decisions for the operator's morning scan (no Anthropic).
 - [`.env.example`](../.env.example) — `OLLAMA_MODEL_HIGHLIGHT=llama3.2:3b` still required by the three local-only missions.
 - [`agents/missions/highlight/run.sh`](../agents/missions/highlight/run.sh) — `ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$PROMPT" true`.
 

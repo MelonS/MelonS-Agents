@@ -37,6 +37,7 @@ header if today's section doesn't exist.
 
 ## 2026-05-22 (overnight autonomous)
 
+- `04:00 KST` — §8 registry restructured to drop line numbers — anchors by filename + pattern instead, audited via grep. Prevents coordinate-staleness from recurring (39th audit's structural-fix suggestion)
 - `03:55 KST` — Site refresh: case-studies count 6→8, operator-tooling card expanded (statusline + log-decision + review-queue), intervention chart copy refreshed to 2-panel, alt text updated
 - `03:45 KST` — Daily report written — docs/daily/2026-05-22-overnight-intervention.md — operator can scan this + autonomous-decisions.md in <2min on return
 - `03:40 KST` — 38th audit cleared 10 prior findings + flagged 5 new (4 low + 1 medium); all 5 addressed in this batch

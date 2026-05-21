@@ -332,34 +332,35 @@ The migration of existing `.claude/agents/*.md` to top-level
 applies; not autonomous).
 
 **Hardcoded path exception registry** (the documented
-deviations):
+deviations).  Each entry names the *file* and the *pattern* —
+**no line numbers**, because routine code insertions before a §8
+comment used to make the registry coordinates stale within one
+overnight session.  The auditor verifies that every listed file
+contains at least one `# §8 exception:` comment via `grep -n
+"§8 exception" <file>`; the file passes the registry check as
+long as that grep returns ≥ 1 hit.
 
-- `agents/lib/env.sh:36,54` — ffmpeg-full keg discovery
-  fallback (libass-enabled ffmpeg).  Falls back only when
-  PATH ffmpeg lacks libass.
-- `scripts/audit-run.sh:37–42` — claude CLI candidate list
-  for launchd's minimal PATH.  Only consulted when
+- `agents/lib/env.sh` — ffmpeg-full keg discovery fallback
+  (libass-enabled ffmpeg).  Falls back only when PATH ffmpeg
+  lacks libass.
+- `scripts/audit-run.sh` — claude CLI candidate list for
+  launchd's minimal PATH.  Only consulted when
   `command -v claude` fails.
-- `scripts/music-video-shaders.sh:103` — ffmpeg/ffprobe
-  parameter-expansion defaults.  Inline §8 exception
-  comment present (commit `39c5db3`).
-- `scripts/ffmpeg-throttled.sh:33` — same probe-loop
-  fallback pattern as `agents/lib/env.sh`; only consulted
-  when `FFMPEG_REAL_BIN` env is unset.
-- `scripts/music-video-lyrics.sh:65`,
-  `scripts/music-video-stillzoom.sh:39`,
-  `scripts/music-video-canvas.sh:44`,
-  `scripts/music-video-audio-reactive.sh:48`,
-  `scripts/music-video-typography.sh:53` —
-  ffmpeg/ffprobe parameter-expansion defaults; same
-  documented pattern as `music-video-shaders.sh:103`.
-- `scripts/doctor.sh:86,109` — PATH-agnostic probe loops
-  for the claude CLI and the ffmpeg-full keg; same
-  documented pattern as `agents/lib/env.sh` /
-  `scripts/audit-run.sh`.
-- `scripts/music-video-lyric-align.sh:43,45` —
-  whisper-cli / ffmpeg parameter-expansion defaults;
-  same documented pattern as `music-video-shaders.sh:103`.
+- `scripts/music-video-shaders.sh` — ffmpeg / ffprobe
+  parameter-expansion defaults.
+- `scripts/ffmpeg-throttled.sh` — probe-loop fallback for
+  the underlying ffmpeg binary; only consulted when
+  `FFMPEG_REAL_BIN` env is unset.
+- `scripts/music-video-lyrics.sh`,
+  `scripts/music-video-stillzoom.sh`,
+  `scripts/music-video-canvas.sh`,
+  `scripts/music-video-audio-reactive.sh`,
+  `scripts/music-video-typography.sh` —
+  ffmpeg / ffprobe parameter-expansion defaults.
+- `scripts/doctor.sh` — PATH-agnostic probe loops for the
+  claude CLI and the ffmpeg-full keg.
+- `scripts/music-video-lyric-align.sh` — whisper-cli /
+  ffmpeg parameter-expansion defaults.
 
 ### 9. Goal and roadmap are the source of truth for work selection
 
