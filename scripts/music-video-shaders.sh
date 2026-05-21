@@ -519,12 +519,42 @@ esac
 # shaded output back toward the un-shaded original so the effect reads
 # as a soft accent rather than a constant overlay.  Final size still
 # matches one render (the blend stage replaces the intermediate file).
+#
+# Two gate modes (MUSIC_VIDEO_SHADER_GATE):
+#   uniform        (C.1 Phase 1)  uniformly attenuate effect across full
+#                                 duration via blend opacity = ratio.
+#   phrase_climax  (C.1 Phase 2)  shader active only in the middle
+#                                 (RATIO × duration) window centered at
+#                                 50% of runtime; outside the window
+#                                 the original passes through unmodified.
+#                                 Reads as "shader fires at the climax".
+# Default: uniform (back-compat).
+SHADER_GATE="${MUSIC_VIDEO_SHADER_GATE:-uniform}"
 if [[ "$RATIO_CMP" == "1" ]]; then
-  "$FFMPEG_BIN" -y -loglevel warning -stats \
-    -i "$SRC" -i "$DST" \
-    -filter_complex "[0:v][1:v]blend=all_mode=normal:all_opacity=${SHADER_RATIO}[v]" \
-    -map "[v]" -map 0:a \
-    -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
+  if [[ "$SHADER_GATE" == "phrase_climax" ]]; then
+    GATE_DUR=$("${FFPROBE_BIN:-/opt/homebrew/bin/ffprobe}" -v error \
+      -show_entries format=duration -of csv=p=0 "$DST" 2>/dev/null \
+      | awk '{printf "%.3f", $1}')
+    GATE_T0=$(awk -v d="$GATE_DUR" -v r="$SHADER_RATIO" 'BEGIN{printf "%.3f", d*((1-r)/2)}')
+    GATE_T1=$(awk -v d="$GATE_DUR" -v r="$SHADER_RATIO" 'BEGIN{printf "%.3f", d*((1+r)/2)}')
+    GATE_FADE="0.5"
+    # all_expr: A = unshaded, B = shaded.  W = trapezoid envelope rising
+    # over GATE_FADE, full inside [GATE_T0..GATE_T1], falling over
+    # GATE_FADE.  Outside: W=0 (pure unshaded).
+    OPACITY_EXPR="if(lt(T,${GATE_T0}-${GATE_FADE}),0,if(lt(T,${GATE_T0}),(T-(${GATE_T0}-${GATE_FADE}))/${GATE_FADE},if(lt(T,${GATE_T1}),1,if(lt(T,${GATE_T1}+${GATE_FADE}),(${GATE_T1}+${GATE_FADE}-T)/${GATE_FADE},0))))"
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" -i "$DST" \
+      -filter_complex "[0:v][1:v]blend=all_expr='A*(1-(${OPACITY_EXPR}))+B*(${OPACITY_EXPR})'[v]" \
+      -map "[v]" -map 0:a \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
+    echo "  [phrase_climax] active window ${GATE_T0}s–${GATE_T1}s (of ${GATE_DUR}s)" >&2
+  else
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" -i "$DST" \
+      -filter_complex "[0:v][1:v]blend=all_mode=normal:all_opacity=${SHADER_RATIO}[v]" \
+      -map "[v]" -map 0:a \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
+  fi
   rm -f "$DST"
   DST="$SHADER_FINAL_DST"
 fi
