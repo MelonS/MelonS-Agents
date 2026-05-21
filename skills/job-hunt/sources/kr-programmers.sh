@@ -11,7 +11,9 @@
 #
 # This plugin is retained only so legacy filter configs that name it
 # don't break the orchestrator outright.  It returns a single empty
-# fixture noting the closure and the live-flag is ignored.
+# fixture noting the closure and the live-flag (JH_PROGRAMMERS_LIVE)
+# is ignored — declared in config/activation.tsv for dashboard
+# symmetry but never enables a real fetch.
 #
 # Removal candidates: when filters.example.yaml no longer references
 # kr-programmers, this file can be deleted entirely.

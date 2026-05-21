@@ -27,6 +27,13 @@ JH_GLOBAL_HN_LIVE	sources/global-hn-whoshiring.sh	-
 JH_WORKNET_LIVE	sources/kr-worknet.sh	-
 JH_WANTED_LIVE	sources/kr-wanted.sh	WANTED_API_KEY
 JH_SARAMIN_LIVE	sources/kr-saramin.sh	SARAMIN_KEY
+JH_RALLIT_LIVE	sources/kr-rallit.sh	-
+JH_THETEAMS_LIVE	sources/kr-theteams.sh	-
+# Below two sources are permanent-mock by design (see SKILL.md status table);
+# flags still exist as orchestration hooks but enabling them does NOT
+# unlock live mode.  Declared here so the dashboard is complete.
+JH_JOBKOREA_LIVE	sources/kr-jobkorea.sh	-
+JH_PROGRAMMERS_LIVE	sources/kr-programmers.sh	-
 
 # --- Claude-call helpers (Tier-1 scaffolds) ---
 JH_FIT_SCORE_LIVE	scripts/fit-score.sh	-

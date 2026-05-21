@@ -62,6 +62,15 @@ fi
 log_step "audit: focus=$FOCUS"
 log_info "writing to: $OUT_FILE"
 
+# Pre-flight: run the skill-activation drift check.  Findings (if any)
+# are passed to the auditor as a pre-computed observation so the agent
+# can incorporate them in its findings list under §13 (skill manifest
+# drift).  The script itself never fails the audit — it is read-only.
+SKILL_DRIFT_REPORT=""
+if [[ -x "$REPO_ROOT/scripts/audit-skill-drift.sh" ]]; then
+  SKILL_DRIFT_REPORT="$("$REPO_ROOT/scripts/audit-skill-drift.sh" 2>&1 || true)"
+fi
+
 # Compose the prompt.  The auditor agent definition has the full
 # contract; we just point it at the right focus and remind it to write
 # to the expected path.
@@ -72,6 +81,18 @@ Focus for this run: ${FOCUS}
 Read \`docs/operator-contract.md\`, \`docs/for-analysts.md\`,
 \`docs/architecture.md\`, \`docs/roadmap.md\`, and any files under
 \`.claude/agents/\` and \`agents/\` you need to make findings.
+
+Pre-computed skill-activation drift report (from
+\`scripts/audit-skill-drift.sh\`):
+
+\`\`\`
+${SKILL_DRIFT_REPORT:-(skill-drift script not run — no manifests yet, or script missing)}
+\`\`\`
+
+Treat any \`medium\` or \`low\` row above as a finding to include in
+your report's Findings section with severity \`[low]\` (or \`[medium]\`
+when the drift indicates a missing script or a hidden undeclared flag).
+A clean drift report does not need to be cited as a finding.
 
 Write your full audit report to:
 
