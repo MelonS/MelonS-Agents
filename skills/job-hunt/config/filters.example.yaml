@@ -58,6 +58,7 @@ sources:
   - global-hn-whoshiring # ⭐ HN monthly "Who is hiring?" thread
   - kr-worknet           # ⭐ 워크넷 (정부 공공고용서비스 SSR)
   - kr-theteams          # ⭐ 더팀스 (KR 스타트업 / 강소기업; sitemap)
+  - kr-rallit            # ⭐ 랄릿 (KR IT 특화; URL slug parsing)
   - kr-wanted            # 🔑 Wanted partner API (WANTED_API_KEY)
   - kr-saramin           # 🔑 Saramin OpenAPI (SARAMIN_KEY)
   - kr-jobkorea          # ⛔ permanent mock — robots.txt + 2017 precedent

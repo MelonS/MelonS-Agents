@@ -109,6 +109,7 @@ list_sources() {
       kr-saramin)      flag_var="JH_SARAMIN_LIVE";        [[ "${JH_SARAMIN_LIVE:-0}"     == "1" ]] && mode="LIVE" || mode="mock" ;;
       kr-worknet)      flag_var="JH_WORKNET_LIVE";        [[ "${JH_WORKNET_LIVE:-0}"     == "1" ]] && mode="LIVE" || mode="mock" ;;
       kr-theteams)     flag_var="JH_THETEAMS_LIVE";       [[ "${JH_THETEAMS_LIVE:-0}"    == "1" ]] && mode="LIVE" || mode="mock" ;;
+      kr-rallit)       flag_var="JH_RALLIT_LIVE";         [[ "${JH_RALLIT_LIVE:-0}"      == "1" ]] && mode="LIVE" || mode="mock" ;;
       global-ats)      flag_var="JH_GLOBAL_ATS_LIVE";       [[ "${JH_GLOBAL_ATS_LIVE:-0}"      == "1" ]] && mode="LIVE" || mode="mock" ;;
       global-remoteok) flag_var="JH_GLOBAL_REMOTEOK_LIVE";  [[ "${JH_GLOBAL_REMOTEOK_LIVE:-0}" == "1" ]] && mode="LIVE" || mode="mock" ;;
       global-remotive) flag_var="JH_GLOBAL_REMOTIVE_LIVE";  [[ "${JH_GLOBAL_REMOTIVE_LIVE:-0}" == "1" ]] && mode="LIVE" || mode="mock" ;;
