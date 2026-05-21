@@ -312,6 +312,12 @@ fi
 REV_DUR="0.20"
 SKIP_FWD="0.20"
 
+# B-roll history exclusion (quality-bar directive #1 — no clip reuse
+# across published shorts).  See docs/research/2026-05-22-music-video-
+# quality-bar.md.  Disable per-render with BROLL_HISTORY=off.
+BROLL_HISTORY="${BROLL_HISTORY:-on}"
+BROLL_HISTORY_FILE="${BROLL_HISTORY_FILE:-$REPO_ROOT/records/youtube/broll-used.txt}"
+
 for ((i=0; i<SEG_TOTAL; i++)); do
   kw="${SEG_KW[$i]}"
   cache_key=$(echo "$kw" | tr ' ' '_')
@@ -323,17 +329,44 @@ for ((i=0; i<SEG_TOTAL; i++)); do
     json="$CLIPS_DIR/win-${cache_key}.json"
     curl -sS "https://api.pexels.com/videos/search?query=${enc}&orientation=portrait&per_page=10&size=medium" \
       -H "Authorization: $PEXELS_API_KEY" > "$json"
-    url=$(jq -r '.videos | sort_by(-.duration) | .[]? | .video_files[]? | select((.quality=="hd" or .quality=="sd") and .width<=1280) | .link' "$json" 2>/dev/null | head -1)
-    if [[ -z "$url" || "$url" == "null" ]]; then
-      url=$(jq -r '.videos[0].video_files[0].link // empty' "$json")
+    # Build exclusion arg (--argjson) for jq from BROLL_HISTORY_FILE.
+    excl_json='[]'
+    if [[ "$BROLL_HISTORY" == "on" && -s "$BROLL_HISTORY_FILE" ]]; then
+      excl_json=$(jq -Rs 'split("\n") | map(select(length > 0) | tonumber? // .)' "$BROLL_HISTORY_FILE" 2>/dev/null || echo '[]')
     fi
-    if [[ -z "$url" ]]; then
-      log_warn "  WARN no Pexels result for '$kw' — substituting first cached raw"
+    # Pick (id, url) pair from the first not-previously-used video that has
+    # an hd/sd file ≤ 1280 wide.  Falls back to the first untouched video
+    # regardless of size if none match.
+    pair=$(jq -r --argjson excl "$excl_json" '
+      .videos
+      | map(select((.id | IN($excl[])) | not))
+      | sort_by(-.duration)
+      | .[]?
+      | { id, link: (.video_files[]? | select((.quality=="hd" or .quality=="sd") and .width<=1280) | .link) }
+      | [.id, .link] | @tsv' "$json" 2>/dev/null | head -1)
+    if [[ -z "$pair" ]]; then
+      pair=$(jq -r --argjson excl "$excl_json" '
+        .videos
+        | map(select((.id | IN($excl[])) | not))
+        | (.[0] // null)
+        | if . == null then empty else [.id, (.video_files[0].link // "")] | @tsv end' "$json" 2>/dev/null | head -1)
+    fi
+    chosen_id="${pair%%	*}"
+    url="${pair#*	}"
+    if [[ -z "$url" || "$url" == "null" || "$url" == "$chosen_id" ]]; then
+      log_warn "  WARN no fresh Pexels result for '$kw' — substituting first cached raw"
       first_raw="$(ls "$CLIPS_DIR"/raw-*.mp4 2>/dev/null | head -1)"
       [[ -z "$first_raw" ]] && { log_err "no raw fallback available"; exit 1; }
       RAW="$first_raw"
     else
       curl -sSL "$url" -o "$RAW"
+      # Append chosen id to channel history (idempotent).
+      if [[ "$BROLL_HISTORY" == "on" && -n "$chosen_id" ]]; then
+        mkdir -p "$(dirname "$BROLL_HISTORY_FILE")"
+        if ! grep -qxF "$chosen_id" "$BROLL_HISTORY_FILE" 2>/dev/null; then
+          echo "$chosen_id" >> "$BROLL_HISTORY_FILE"
+        fi
+      fi
     fi
   else
     log_info "  cache hit [$i] '$kw' → reusing $(basename "$RAW")"

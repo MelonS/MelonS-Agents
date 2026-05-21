@@ -45,9 +45,16 @@ FIXTURE_DIR="${FIXTURE_DIR:-/tmp/smoke}"
 DEST="$FIXTURE_DIR/pexels"
 mkdir -p "$DEST"
 
-# Pexels caps per_page at 80; we ask for 3× COUNT so we can skip videos
-# whose best file is below MIN_HEIGHT.
-PER_PAGE=$(( COUNT * 3 ))
+# B-roll history (per quality-bar directive #1 — no clip reuse across
+# published shorts).  Override BROLL_HISTORY_FILE to point at a different
+# registry, or set BROLL_HISTORY=off to disable the exclusion entirely.
+BROLL_HISTORY_FILE="${BROLL_HISTORY_FILE:-$REPO_ROOT/records/youtube/broll-used.txt}"
+BROLL_HISTORY="${BROLL_HISTORY:-on}"
+
+# Pexels caps per_page at 80; we ask for 4× COUNT (was 3×) so we can
+# skip videos that are below MIN_HEIGHT AND skip ones already used on
+# the channel, and still satisfy COUNT picks.
+PER_PAGE=$(( COUNT * 4 ))
 if (( PER_PAGE > 80 )); then PER_PAGE=80; fi
 
 API_URL="https://api.pexels.com/videos/search"
@@ -59,16 +66,29 @@ RESPONSE=$(curl -fsSL --connect-timeout 15 \
   --data-urlencode "per_page=$PER_PAGE" \
   "$API_URL")
 
-# Pull out up to COUNT video entries that have a video_file ≥ MIN_HEIGHT.
-# Emit tab-separated rows: id<TAB>page_url<TAB>photographer<TAB>file_url<TAB>width<TAB>height<TAB>duration.
-# Pass the API response through an env var rather than stdin so we don't
-# clash with python's `-` (read script from stdin) when nested in $(...).
-PICKS=$(PEXELS_RESPONSE="$RESPONSE" python3 - "$COUNT" "$MIN_HEIGHT" <<'PY'
+# Load exclusion set (channel B-roll history).  One Pexels ID per line.
+EXCLUDED_IDS=""
+if [[ "$BROLL_HISTORY" == "on" && -s "$BROLL_HISTORY_FILE" ]]; then
+  EXCLUDED_IDS=$(cat "$BROLL_HISTORY_FILE")
+  excl_count=$(wc -l < "$BROLL_HISTORY_FILE" | tr -d ' ')
+  echo "[pexels] excluding $excl_count ids from prior shorts" >&2
+fi
+
+# Pull out up to COUNT video entries that have a video_file ≥ MIN_HEIGHT
+# AND whose id is not in the channel history.  Emit tab-separated rows.
+# Pass the API response + exclusion list through env vars rather than stdin
+# so we don't clash with python's `-` (read script from stdin) when nested
+# in $(...).
+PICKS=$(PEXELS_RESPONSE="$RESPONSE" EXCLUDED_IDS="$EXCLUDED_IDS" python3 - "$COUNT" "$MIN_HEIGHT" <<'PY'
 import sys, json, os
 want, min_h = int(sys.argv[1]), int(sys.argv[2])
 data = json.loads(os.environ["PEXELS_RESPONSE"])
+excluded = {line.strip() for line in os.environ.get("EXCLUDED_IDS", "").splitlines() if line.strip()}
 out = []
 for v in data.get("videos", []):
+    vid = str(v.get("id", ""))
+    if vid in excluded:
+        continue
     # Prefer the smallest file at or above MIN_HEIGHT — keeps download
     # sizes manageable while honouring the resolution floor.
     candidates = sorted(
@@ -79,7 +99,7 @@ for v in data.get("videos", []):
         continue
     f = candidates[0]
     out.append("\t".join([
-        str(v.get("id", "")),
+        vid,
         v.get("url", ""),
         (v.get("user") or {}).get("name", "") or "Pexels user",
         f["link"],
@@ -137,6 +157,16 @@ while IFS=$'\t' read -r vid page user link w h dur; do
   "fetched_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 JSONEOF
+
+  # Append the id to the channel history registry so future fetches in
+  # this and later sessions skip it.  Idempotent — duplicate lines are
+  # harmless (the python loader uses a set), but cheaper not to write.
+  if [[ "$BROLL_HISTORY" == "on" ]]; then
+    mkdir -p "$(dirname "$BROLL_HISTORY_FILE")"
+    if ! grep -qxF "$vid" "$BROLL_HISTORY_FILE" 2>/dev/null; then
+      echo "$vid" >> "$BROLL_HISTORY_FILE"
+    fi
+  fi
 
   # Emit the LOCAL path so callers can pipe directly into mission scripts.
   echo "$out_mp4"
