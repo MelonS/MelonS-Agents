@@ -10,6 +10,8 @@ metadata:
   spec: agentskills.io
   added: "2026-05-20"
   status: end-to-end functional in mock-fallback mode; live HTTP per-plugin flag-gated
+  activation-manifest: config/activation.tsv
+  activation-status-script: scripts/status.sh
 allowed-tools: Bash(bash:*) Bash(curl:*) Bash(jq:*) Bash(python3:*) Read Write
 ---
 
@@ -62,6 +64,20 @@ Mock-fallback mode keeps the orchestrator + filter + dedupe +
 digest path continuously testable.  Live integration is a
 flip-the-flag operation once each plugin's curl/jq translation is
 operator-validated.
+
+### Activation dashboard
+
+To see which flags are currently set, which are still off, and
+which need an API key first:
+
+```bash
+bash skills/job-hunt/scripts/status.sh
+```
+
+The flag→script→required-env mapping is declared in
+[`config/activation.tsv`](config/activation.tsv) (single source of
+truth for the dashboard).  When a new gated script is added, append
+a row there.
 
 ## What this produces
 

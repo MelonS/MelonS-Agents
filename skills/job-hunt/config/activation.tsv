@@ -1,0 +1,36 @@
+# Activation manifest — declarative source of truth for which feature
+# flags gate which scripts in this skill, and what env keys (if any)
+# each one needs.  `scripts/status.sh` parses this file to print a
+# one-screen dashboard.  The auditor verifies (B3) that every flag
+# named here is actually checked inside the referenced script.
+#
+# Format: tab-separated, 3 columns
+#   1. flag name (env var, e.g. JH_GLOBAL_ATS_LIVE)
+#   2. relative path of the gated script
+#   3. comma-separated list of env vars the script additionally needs
+#      when the flag is ON; empty (use `-`) means no extra env needed
+#
+# Lines starting with `#` and blank lines are ignored.
+#
+# Categories are derived from the path prefix:
+#   sources/  → HTTP source plugins
+#   scripts/  → Claude-call helpers
+#
+# When a new flag is added to a script, append a row here so the
+# dashboard stays accurate.
+
+# --- HTTP source plugins ---
+JH_GLOBAL_ATS_LIVE	sources/global-ats.sh	-
+JH_GLOBAL_REMOTEOK_LIVE	sources/global-remoteok.sh	-
+JH_GLOBAL_REMOTIVE_LIVE	sources/global-remotive.sh	-
+JH_GLOBAL_HN_LIVE	sources/global-hn-whoshiring.sh	-
+JH_WORKNET_LIVE	sources/kr-worknet.sh	-
+JH_WANTED_LIVE	sources/kr-wanted.sh	WANTED_API_KEY
+JH_SARAMIN_LIVE	sources/kr-saramin.sh	SARAMIN_KEY
+
+# --- Claude-call helpers (Tier-1 scaffolds) ---
+JH_FIT_SCORE_LIVE	scripts/fit-score.sh	-
+JH_COVER_LETTER_LIVE	scripts/cover-letter-draft.sh	-
+JH_COMPANY_RESEARCH_LIVE	scripts/company-research.sh	-
+JH_INTERVIEW_PREP_LIVE	scripts/interview-prep.sh	-
+JH_DERIVE_PROFILE_LIVE	scripts/derive-profile.sh	-
