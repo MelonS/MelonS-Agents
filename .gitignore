@@ -170,3 +170,11 @@ outputs/publish/upload-meta/
 # any further-version metadata-batch directories should NOT be
 # committed by default.
 outputs/publish/upload-meta-v[3-9]*/
+
+# Review-queue — local-only batch taste-decision cache.  Only the
+# README.md + .gitkeep are tracked; the pending/ and decided/ subdirs
+# carry per-machine artifact metadata that fails [[no-pii-in-repo]]
+# (file paths, music titles, mood keywords, sometimes operator
+# preferences).  See outputs/review-queue/README.md.
+outputs/review-queue/pending/
+outputs/review-queue/decided/

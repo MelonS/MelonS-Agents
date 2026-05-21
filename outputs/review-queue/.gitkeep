@@ -1,0 +1,14 @@
+# §8 operator-directed deviation
+#
+# This directory holds the local review-queue cache for the music-video
+# and faceless-short missions.  Per [[outputs-publish-deviation]] the
+# outputs/ tree carries §8 markers wherever it deviates from the strict
+# "all mission output under records/" rule.  Here the deviation is
+# intentional: review-queue/ is the post-render staging area where the
+# operator drains a batched taste-decision queue instead of getting
+# pinged per-render (reduces operator-intervention events ~10x without
+# changing the total decision count — see lever 3 in
+# docs/research/2026-05-22-intervention-reduction.md).
+#
+# Only README.md and this .gitkeep are tracked.  pending/ and decided/
+# subdirs are gitignored.
