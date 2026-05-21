@@ -1,26 +1,26 @@
 {
-  "generated_at": "2026-05-22T02:54:14",
+  "generated_at": "2026-05-22T03:38:17",
   "marker_convention_started": "2026-05-17",
   "session_cap_minutes": 60,
   "rationale": "Two-source intervention tracker. Panel A: per-day commit count classified by initiator (user vs agent). Panel B: per-day operator prompts and active session minutes mined from local Claude Code session JSONLs. Goal: both signals trend down as the agent system absorbs more decisions.",
   "trend_7d": {
     "user_ratio_pct": {
-      "last7_avg": 30.11,
+      "last7_avg": 29.91,
       "prev7_avg": null,
       "delta": null
     },
     "leverage_ratio": {
-      "last7_avg": 5.59,
+      "last7_avg": 6.8,
       "prev7_avg": null,
       "delta": null
     },
     "operator_prompts": {
-      "last7_avg": 112.29,
+      "last7_avg": 114.86,
       "prev7_avg": null,
       "delta": null
     },
     "active_session_minutes": {
-      "last7_avg": 179.24,
+      "last7_avg": 185.43,
       "prev7_avg": null,
       "delta": null
     },
@@ -100,7 +100,7 @@
       "user_ratio_pct": 11.5,
       "longest_autonomous_gap_h": 12.2,
       "leverage_ratio": 7.7,
-      "operator_prompts": 285,
+      "operator_prompts": 288,
       "active_session_minutes": 339.3,
       "session_count": 14
     },
@@ -111,23 +111,125 @@
       "user_ratio_pct": 35.7,
       "longest_autonomous_gap_h": 14.5,
       "leverage_ratio": 1.8,
-      "operator_prompts": 75,
+      "operator_prompts": 87,
       "active_session_minutes": 168.4,
       "session_count": 8
     },
     {
       "date": "2026-05-22",
       "user_initiated": 2,
-      "agent_autonomous": 40,
-      "user_ratio_pct": 4.8,
+      "agent_autonomous": 57,
+      "user_ratio_pct": 3.4,
       "longest_autonomous_gap_h": 0.0,
-      "leverage_ratio": 20.0,
-      "operator_prompts": 12,
-      "active_session_minutes": 143.2,
-      "session_count": 11
+      "leverage_ratio": 28.5,
+      "operator_prompts": 15,
+      "active_session_minutes": 186.5,
+      "session_count": 13
     }
   ],
   "commits": [
+    {
+      "sha": "b5e61de",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(lyrics): substitute apostrophe with U+2019 to dodge filter parser"
+    },
+    {
+      "sha": "ae73973",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(audit-hook): auto-log audit verdict transitions"
+    },
+    {
+      "sha": "e415875",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(readme+site): surface morning-brief.sh in operator tooling — discoverability"
+    },
+    {
+      "sha": "bd118ac",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(audit-hook): coalesce overlapping audits via sentinel — save Max tokens during bursts"
+    },
+    {
+      "sha": "bc46a7f",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(lyrics): escape commas + equals signs in drawtext text field"
+    },
+    {
+      "sha": "94190c2",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "tune(broll): tighten vocal-genre keyword_pools with geographic anchors"
+    },
+    {
+      "sha": "b523c00",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(research): qb demo #2 verification — phrase_climax + anchor 33% confirmed"
+    },
+    {
+      "sha": "9ac5d22",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(roadmap): Done entries for quality-bar refinements + QA gate"
+    },
+    {
+      "sha": "7e52ab8",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(qa): A.3 QA gate — score B-roll vs lang_anchor"
+    },
+    {
+      "sha": "bde9453",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(daily): note C.1 Phase 2 + A.3 tune in morning brief"
+    },
+    {
+      "sha": "77535c3",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(shaders): C.1 Phase 2 — phrase_climax shader gate mode"
+    },
+    {
+      "sha": "9057d77",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "tune(broll): A.3 lang-anchor rate 25% → 33% (every 4th → every 3rd seg)"
+    },
+    {
+      "sha": "ea6d5d0",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(research): end-to-end qb demo verification — all 5 phases active"
+    },
+    {
+      "sha": "4cd3aaa",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(operator): scripts/morning-brief.sh — single-command overnight digest"
+    },
+    {
+      "sha": "a701e41",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(daily): note A.2 marker-leak fix in morning brief"
+    },
+    {
+      "sha": "a2e2d3f",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(lyric-align): autofill marker leaked into rendered text + tail clamp"
+    },
+    {
+      "sha": "1747d70",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(metrics): intervention chart gains trend_7d annotations"
+    },
     {
       "sha": "5c7c9a0",
       "date": "2026-05-22",

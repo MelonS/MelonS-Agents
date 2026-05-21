@@ -44,4 +44,14 @@ fi
 
 echo "[intervention-chart] regenerating with $PY"
 "$PY" "$SCRIPT_DIR/generate-intervention-chart.py"
+
+# Mirror the fresh PNG into site/assets/ so the GitHub Pages site
+# stays in sync without a manual copy.  The site references
+# site/assets/intervention.png (separate copy, not a symlink, so the
+# GitHub Pages workflow picks it up via the deploy step).
+if [[ -f "$REPO_ROOT/docs/metrics/intervention.png" && -d "$REPO_ROOT/site/assets" ]]; then
+  cp "$REPO_ROOT/docs/metrics/intervention.png" "$REPO_ROOT/site/assets/intervention.png"
+  echo "[intervention-chart] mirrored to site/assets/"
+fi
+
 echo "[intervention-chart] done at $(date -u +%FT%TZ)"
