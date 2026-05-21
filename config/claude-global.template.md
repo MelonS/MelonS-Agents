@@ -16,8 +16,8 @@ specific hard rules and conventions live in each repo's own
 `CLAUDE.md` and contract files.
 
 The canonical source is
-`/Users/melons/ai/config/claude-global.template.md` (committed in
-MelonS-Agents).  `scripts/install-claude-local.sh` renders the block
+`@@REPO_ROOT@@/config/claude-global.template.md` (committed in this
+repository).  `scripts/install-claude-local.sh` renders the block
 between BEGIN/END markers into `~/.claude/CLAUDE.md` on every run, so
 a fresh clone on a new machine restores these preferences without
 manual copy.

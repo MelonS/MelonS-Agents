@@ -38,6 +38,9 @@ fi
 [[ -f "$AUDIO" ]]  || { echo "❌ audio not found: $AUDIO"  >&2; exit 64; }
 [[ -f "$LYRICS" ]] || { echo "❌ lyrics not found: $LYRICS" >&2; exit 64; }
 
+# §8 exception: whisper-cli / ffmpeg parameter-expansion defaults — same
+# pattern as scripts/music-video-shaders.sh:103.  Registered in
+# operator-contract.md §8.
 WHISPER_CLI="${WHISPER_CLI_BIN:-/opt/homebrew/bin/whisper-cli}"
 MODEL="${WHISPER_MODEL:-}"
 FFMPEG="${FFMPEG_BIN:-/opt/homebrew/bin/ffmpeg}"
