@@ -126,6 +126,34 @@ _(Next queue is currently empty.  Promote a deferred item from
 `docs/copyright-policy.md` ("Still TODO" block) when one becomes
 load-bearing, or set a new focus.)_
 
+<!-- suggest 2026-05-22 — music-video quality bar phases (A.1 shipped,
+     A.2/A.3/B.1/C.1 queued).  See docs/research/2026-05-22-music-
+     video-quality-bar.md for the full decomposition.
+
+  - A.2  Lyric overlay vocal-onset alignment.  Use whisper.cpp on the
+         vocal stem to detect word timings; align lyric file lines via
+         fuzzy match (`scripts/correct-captions.py` pattern).  Operator
+         tolerance: ±200ms.  ~2-3h.
+  - A.3  Ethnicity-language match.  KR lyric → Pexels keyword anchored
+         on "korean"/"seoul"; EN lyric → global / Western contexts.
+         Pollinations.ai prompt template updated to specify ethnicity.
+         QA gate: render fails if ≥30% of B-roll contradicts the anchor.
+         ~2h.
+  - B.1  Shader vocabulary survey (research + catalog expand).  Current
+         15 shaders is too narrow.  Catalog ShaderToy + AE + music-video
+         editor breakdowns; map per-mood-family with situational notes.
+         Target ~30 shaders.  ~3-4h.
+  - C.1  Shader restraint gating.  Replace blanket `shader:` preset
+         field with `shader_events:` list (at musical beat/onset/bar/ts,
+         duration_ms, intensity).  Default: shader-active ≤25% of total
+         runtime.  Preserves an explicit `shader_always_on: true`
+         opt-in.  ~3-4h.
+
+     Operator decides ordering — A.2 (lyric sync) is the most
+     viewer-visible from yesterday's batch and would be the natural
+     next pick.  -->
+
+
 ## Blocked / parked
 
 - **Real user-supplied URL fixture** — needs a URL from the user. Catalog
@@ -139,6 +167,35 @@ load-bearing, or set a new focus.)_
   an opt-in flag in each mission's retry loop.
 
 ## Done — most recent first
+
+- **2026-05-22** (~01:35 KST) **Music-video quality bar — Phase A.1
+  B-roll dedup registry** (commit `05e6c2a`).  Operator-stated six
+  quality directives 2026-05-22 ~01:30 KST; full decomposition at
+  `docs/research/2026-05-22-music-video-quality-bar.md`.  Phase A.1
+  ships the first: both Pexels caller paths (`scripts/pexels-fetch.sh`
+  + the inline curl in `agents/missions/music-video/run.sh`) now
+  consult a shared registry at `records/youtube/broll-used.txt`
+  (gitignored, 196 ids seeded by `scripts/broll-history-backfill.sh`
+  from prior renders) and append the chosen id after download.
+  `BROLL_HISTORY=off` disables per-render.  Phases A.2 (lyric
+  sync), A.3 (ethnicity-language match), B.1 (shader vocabulary
+  research), C.1 (shader restraint gating) queued.
+
+- **2026-05-22** (~01:25 KST) **YT stats Phase 1 + daily scheduler +
+  dreampop drafted** (commits `a43057f`, `ec5a5bb`).  Resolves
+  snapshot open item (C).  `scripts/yt-stats-collect.sh` snapshots
+  view/like/comment counts for every video on the operator's uploads
+  playlist via Data API videos.list (existing youtubeuploader OAuth
+  scope already covers it — no new consent).  Auto-discovers
+  channel via `channels.list?mine=true` (no channel id hardcoded,
+  PII-clean).  Writes `records/youtube/stats/<date>.csv` +
+  `<date>-raw.json`; quota cost ≈ 2 units/run.  `yt-stats-diff.sh`
+  compares two snapshots, sorted by view delta.  Daily 09:00 KST
+  launchd job installed (`com.melons.agents.yt-stats`).  Side
+  action: dreampop `KirKdDUWOpc` (the broken 5/22 render) moved to
+  privacyStatus=private with publishAt cleared via videos.update —
+  the 5/24 21:00 publish is defused; re-render or delete decision
+  deferred.
 
 - **2026-05-21** (~03:00 KST, autonomous continued) **Skill #2
   `job-hunt` — fit-score hire_prob dimension + worknet region
