@@ -37,6 +37,7 @@ header if today's section doesn't exist.
 
 ## 2026-05-22 (overnight autonomous)
 
+- `04:20 KST` — Phase 16 — intervention.json gains trend_7d field (last7 avg + prev7 avg + delta + direction hints). 7-day comparison populates from 2026-05-29; currently null prev7 since only 9 days of data
 - `04:10 KST` — README EN+KO Design notes section refreshed — operator tooling bullet now describes all 5 reduction scripts (doctor, audit-skill-drift, statusline, log-decision, review-queue)
 - `04:00 KST` — §8 registry restructured to drop line numbers — anchors by filename + pattern instead, audited via grep. Prevents coordinate-staleness from recurring (39th audit's structural-fix suggestion)
 - `03:55 KST` — Site refresh: case-studies count 6→8, operator-tooling card expanded (statusline + log-decision + review-queue), intervention chart copy refreshed to 2-panel, alt text updated

@@ -1,8 +1,31 @@
 {
-  "generated_at": "2026-05-22T02:38:34",
+  "generated_at": "2026-05-22T02:54:14",
   "marker_convention_started": "2026-05-17",
   "session_cap_minutes": 60,
   "rationale": "Two-source intervention tracker. Panel A: per-day commit count classified by initiator (user vs agent). Panel B: per-day operator prompts and active session minutes mined from local Claude Code session JSONLs. Goal: both signals trend down as the agent system absorbs more decisions.",
+  "trend_7d": {
+    "user_ratio_pct": {
+      "last7_avg": 30.11,
+      "prev7_avg": null,
+      "delta": null
+    },
+    "leverage_ratio": {
+      "last7_avg": 5.59,
+      "prev7_avg": null,
+      "delta": null
+    },
+    "operator_prompts": {
+      "last7_avg": 112.29,
+      "prev7_avg": null,
+      "delta": null
+    },
+    "active_session_minutes": {
+      "last7_avg": 179.24,
+      "prev7_avg": null,
+      "delta": null
+    },
+    "direction": []
+  },
   "days": [
     {
       "date": "2026-05-14",
@@ -88,23 +111,125 @@
       "user_ratio_pct": 35.7,
       "longest_autonomous_gap_h": 14.5,
       "leverage_ratio": 1.8,
-      "operator_prompts": 73,
+      "operator_prompts": 75,
       "active_session_minutes": 168.4,
       "session_count": 8
     },
     {
       "date": "2026-05-22",
       "user_initiated": 2,
-      "agent_autonomous": 23,
-      "user_ratio_pct": 8.0,
+      "agent_autonomous": 40,
+      "user_ratio_pct": 4.8,
       "longest_autonomous_gap_h": 0.0,
-      "leverage_ratio": 11.5,
-      "operator_prompts": 9,
-      "active_session_minutes": 98.8,
-      "session_count": 8
+      "leverage_ratio": 20.0,
+      "operator_prompts": 12,
+      "active_session_minutes": 143.2,
+      "session_count": 11
     }
   ],
   "commits": [
+    {
+      "sha": "5c7c9a0",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(case-studies): add #9 — quality-bar as 6 unenforced contracts"
+    },
+    {
+      "sha": "ff7fe5d",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(readme): expand operator tooling bullet — EN+KO cadence batch"
+    },
+    {
+      "sha": "1a513a6",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(daily): morning brief — quality-bar 5 phases + YT stats Phase 1"
+    },
+    {
+      "sha": "87920d6",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(roadmap): apply missed Done entry for 39th-cycle audit arc"
+    },
+    {
+      "sha": "b7f2209",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "chore(audit): clear 39th cycle — §8 registry restructured + 3 scripts documented + Done batch"
+    },
+    {
+      "sha": "7d8e9b1",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(shaders): B.1 Stage-2 + Stage-3 — 5 additional shaders"
+    },
+    {
+      "sha": "f49d4b0",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(site): apply 3 missed Edits — operator tooling + case-studies + intervention narrative"
+    },
+    {
+      "sha": "0703be8",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(roadmap): Done entries for music-video quality bar 5 phases + YT stats"
+    },
+    {
+      "sha": "be3ca98",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(site): surface new operator tooling + 2-panel intervention chart"
+    },
+    {
+      "sha": "bf3cb36",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(daily): 2026-05-22 overnight intervention-reduction run report"
+    },
+    {
+      "sha": "fef5752",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(audit): apply 2 missed Edits from 38th-cycle cleanup"
+    },
+    {
+      "sha": "3b8ac7d",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "chore(audit): clear 5 new findings from 38th cycle"
+    },
+    {
+      "sha": "1c87377",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(shaders): Phase B.1 — Stage-1 catalog expansion (3 new effects)"
+    },
+    {
+      "sha": "a9bbd31",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(case-studies): #8 intervention as the unmeasured axis (EN + KO)"
+    },
+    {
+      "sha": "65a917b",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(doctor+statusline): actionable_warn classification — denoise the signal"
+    },
+    {
+      "sha": "52b6eb4",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(shaders): Phase C.1 — shader_active_ratio restraint knob (MVP)"
+    },
+    {
+      "sha": "e8cb7bf",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "chore(metrics): regenerate intervention chart — overnight delta captured"
+    },
     {
       "sha": "b2bb0f6",
       "date": "2026-05-22",

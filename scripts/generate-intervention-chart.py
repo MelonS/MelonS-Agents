@@ -270,6 +270,47 @@ def main() -> int:
             "session_count": sm["sessions"],
         })
 
+    # Trend annotations — quick at-a-glance signal of direction.
+    # 7-day rolling: latest 7 vs prior 7 (window ending today).
+    def avg(lst):
+        return sum(lst) / len(lst) if lst else 0
+    last7 = out_days[-7:] if len(out_days) >= 7 else out_days
+    prev7 = out_days[-14:-7] if len(out_days) >= 14 else []
+    def delta(field):
+        a = avg([r[field] for r in last7])
+        b = avg([r[field] for r in prev7]) if prev7 else None
+        return {
+            "last7_avg": round(a, 2),
+            "prev7_avg": round(b, 2) if b is not None else None,
+            "delta": round(a - b, 2) if b is not None else None,
+        }
+    trend_summary = {
+        "user_ratio_pct":          delta("user_ratio_pct"),
+        "leverage_ratio":          delta("leverage_ratio"),
+        "operator_prompts":        delta("operator_prompts"),
+        "active_session_minutes":  delta("active_session_minutes"),
+    }
+    # Direction hints — negative delta on user_ratio + prompts = good.
+    direction = []
+    ur = trend_summary["user_ratio_pct"]["delta"]
+    lr = trend_summary["leverage_ratio"]["delta"]
+    op = trend_summary["operator_prompts"]["delta"]
+    if ur is not None:
+        if ur < -1:
+            direction.append("user-ratio↓")
+        elif ur > 1:
+            direction.append("user-ratio↑")
+    if lr is not None:
+        if lr > 0.5:
+            direction.append("leverage↑")
+        elif lr < -0.5:
+            direction.append("leverage↓")
+    if op is not None:
+        if op < -5:
+            direction.append("prompts↓")
+        elif op > 5:
+            direction.append("prompts↑")
+    trend_summary["direction"] = direction
     OUT_JSON.write_text(json.dumps({
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "marker_convention_started": MARKER_DATE.isoformat(),
@@ -281,6 +322,7 @@ def main() -> int:
             "session JSONLs. Goal: both signals trend down as the agent system "
             "absorbs more decisions."
         ),
+        "trend_7d": trend_summary,
         "days": out_days,
         "commits": [
             {"sha": c["sha"], "date": c["date"].isoformat(),
