@@ -122,12 +122,15 @@
 
     <article class="card">
       <h3>Operator tooling</h3>
-      <p>Two scripts surface system state at a glance, complementing the slow Claude-driven auditor with fast Claude-free checks.</p>
+      <p>Scripts that surface system state and absorb routine status-check prompts, complementing the slow Claude-driven auditor with fast Claude-free checks.</p>
       <ul>
-        <li><b><code>scripts/doctor.sh</code></b> — ~2 s repo health check.  CLI tools, env keys, schedulers, audit alerts, git state, disk, per-skill activation, manifest drift.  Three output modes (full / <code>--quiet</code> / <code>--json</code>).  Run after a fresh clone, machine reboot, or several-day gap.</li>
+        <li><b><code>scripts/doctor.sh</code></b> — ~2 s repo health check.  CLI tools, env keys, schedulers, audit alerts, git state, disk, per-skill activation, manifest drift.  Output modes <code>--quiet</code> / <code>--json</code>; the JSON includes an <code>actionable_warn</code> field that excludes opt-in env keys + git-tree from the count so the signal isn't noisy.</li>
         <li><b><code>scripts/audit-skill-drift.sh</code></b> — the 13th audit rule.  Verifies each skill's declared LIVE-flag manifest at <code>skills/&lt;name&gt;/config/activation.tsv</code> matches the actual gating in its scripts.  Wired into the auditor's daily contract pass.</li>
+        <li><b><code>scripts/statusline.sh</code></b> — Claude Code statusline.  Reads doctor's JSON cache (60 s background regen) and the goal-lock skill to render <code>doctor:⚠N · goal:N/M · audit⚠</code> alongside dir / branch / model / cost.  Operator no longer has to type "what's the state?" prompts.</li>
+        <li><b><code>scripts/log-decision.sh</code></b> — appends a one-line entry to <code>docs/autonomous-decisions.md</code>.  When the agent makes a unilateral decision during overnight work, it logs it; operator scans one page in the morning instead of typing "what happened?" prompts.</li>
+        <li><b><code>outputs/review-queue/</code></b> + 3 scripts (<code>review-queue-add.sh</code> / <code>-digest.sh</code> / <code>-decide.sh</code>) — batched taste-decision queue.  Music-video mission post-render auto-enqueues; operator drains a contact-sheet markdown on their cadence instead of being pinged per-render.  ~10× fewer intervention events, same total decision count.</li>
       </ul>
-      <p>A third skill, <strong><code>goal-lock</code></strong>, is a meta-skill — parses <code>docs/goal.md</code> and reports unchecked deliverable subgoals from the active goal so long autonomous sessions can re-anchor.  Discipline helper, not a production pipeline.</p>
+      <p>A meta-skill, <strong><code>goal-lock</code></strong>, parses <code>docs/goal.md</code> and reports unchecked deliverable subgoals from the active goal so long autonomous sessions can re-anchor.  Discipline helper, not a production pipeline.</p>
     </article>
   </div>
 </section>
@@ -139,7 +142,7 @@
 
   <aside class="callout">
     <strong>Engineering decisions, one page.</strong>
-    Six production incidents and the minimum mechanism each one produced — Tier-1 routing, semaphore-bounded batch, content-quality feedback loop, three-layer reactive audit, shader-effects-in-ffmpeg / knowing-where-the-wall-is, and onboarding-friction-kills-first-touch / zero-account demo path.  Each entry follows <em>problem → constraint → decision → artifact</em>.
+    Eight production incidents and the minimum mechanism each one produced — Tier-1 routing, semaphore-bounded batch, content-quality feedback loop, three-layer reactive audit, shader-effects-in-ffmpeg / knowing-where-the-wall-is, onboarding-friction-kills-first-touch / zero-account demo path, declarative preset routing (genre-aware shaders), and intervention-as-the-unmeasured-axis (two-panel autonomy signal + reduction levers).  Each entry follows <em>problem → constraint → decision → artifact</em>.
     <br>→ <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md" target="_blank" rel="noopener">docs/engineering-case-studies.md</a> · <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.ko.md" target="_blank" rel="noopener">한국어 미러</a>
   </aside>
 
@@ -175,8 +178,8 @@
   <p><a href="assets/scorecard.png" target="_blank" rel="noopener"><img class="full" src="assets/scorecard.png" alt="Stacked bar chart: 13 pilot rows from Hittites EN v4 26/50 (lowest) up to AutoTune EN 45/50 (highest), split across the 5 dimensions with colors. Music-trial topics cluster around 40-45." loading="lazy"></a></p>
 
   <h3>Operator-intervention trend</h3>
-  <p>A multi-agent system that needs constant human steering hasn't actually replaced the work it was meant to.  Honest tracking of how much the operator stays in the loop per day:</p>
-  <p><a href="assets/intervention.png" target="_blank" rel="noopener"><img class="full" src="assets/intervention.png" alt="Daily commit count from 2026-05-14 through 2026-05-20, stacked by initiator (agent-autonomous blue vs user-initiated red), with a black line showing user-initiated percentage. The user-initiated share peaks on 2026-05-17 at 69% (manual pivot day) and trends back down as overnight autonomy work resumes." loading="lazy"></a></p>
+  <p>A multi-agent system that needs constant human steering hasn't actually replaced the work it was meant to.  Two-panel honest signal updated daily 02:00 KST — Panel A from <code>git log</code> (commit attribution + leverage ratio), Panel B from local Claude Code session JSONLs (operator prompt count + active session minutes).  See <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#8-intervention-as-the-unmeasured-axis--autonomy-signal--reduction-levers" target="_blank" rel="noopener">case study #8</a> for the 5 prioritized reduction levers acting on the trend.</p>
+  <p><a href="assets/intervention.png" target="_blank" rel="noopener"><img class="full" src="assets/intervention.png" alt="Two-panel intervention trend: Panel A shows daily commit counts stacked by initiator (agent-autonomous blue vs user-initiated red) with a user-initiated percentage line; Panel B shows daily operator prompt count and active session minutes mined from local Claude Code session JSONLs. Both panels share the same date axis from 2026-05-14 to 2026-05-22." loading="lazy"></a></p>
 </section>
 
 <section class="block">
