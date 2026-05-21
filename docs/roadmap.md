@@ -168,6 +168,21 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-22** (~03:35 KST) **Phase 3-6 + case study #8 of overnight
+  autonomous run** (commits `8377ac9`, `b2bb0f6`, `e8cb7bf`, `65a917b`,
+  `a9bbd31`).  Phase 3: `docs/autonomous-decisions.md` +
+  `scripts/log-decision.sh` (lever 9 — one-page wake-up summary).
+  Phase 4: statusline gains `goal:N/M` subgoal progress flag from
+  `skills/goal-lock/scripts/check-done.sh --json` (lever 10).
+  Phase 5: intervention chart manually regenerated mid-session
+  (overnight delta captured before next phase).  Phase 6: doctor.sh
+  + statusline gain `actionable_warn` classification (excludes opt-in
+  env keys + git-tree informational signal); statusline shows
+  `doctor:⚠3` instead of `doctor:⚠7` on current operator's machine.
+  Case study #8: intervention-as-unmeasured-axis written EN+KO for
+  `docs/engineering-case-studies.md` (problem → constraint → decision
+  → artifact → result format consistent with #1-7).
+
 - **2026-05-22** (~02:50 KST) **Phase 1+2 of overnight autonomous
   run — review queue + audit drift cleanup**.  Operator directive
   "유저 개입 관련 개선해야 할것들 자율로 내일 오전 11시까지 진행해".

@@ -346,7 +346,7 @@ deviations):
 - `scripts/ffmpeg-throttled.sh:33` — same probe-loop
   fallback pattern as `agents/lib/env.sh`; only consulted
   when `FFMPEG_REAL_BIN` env is unset.
-- `scripts/music-video-lyrics.sh:64`,
+- `scripts/music-video-lyrics.sh:65`,
   `scripts/music-video-stillzoom.sh:39`,
   `scripts/music-video-canvas.sh:44`,
   `scripts/music-video-audio-reactive.sh:48`,
@@ -357,6 +357,9 @@ deviations):
   for the claude CLI and the ffmpeg-full keg; same
   documented pattern as `agents/lib/env.sh` /
   `scripts/audit-run.sh`.
+- `scripts/music-video-lyric-align.sh:43,45` —
+  whisper-cli / ffmpeg parameter-expansion defaults;
+  same documented pattern as `music-video-shaders.sh:103`.
 
 ### 9. Goal and roadmap are the source of truth for work selection
 
