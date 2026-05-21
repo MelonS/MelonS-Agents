@@ -119,7 +119,37 @@ GRAIN=$(yq -r ".genres.${RESOLVED}.grain_intensity" "$PRESETS")
 VIGNETTE=$(yq -r ".genres.${RESOLVED}.vignette_angle" "$PRESETS")
 ZOOM_AMP=$(yq -r ".genres.${RESOLVED}.zoom_pulse_amp" "$PRESETS")
 SHADER_ACTIVE_RATIO=$(yq -r ".genres.${RESOLVED}.shader_active_ratio // 1.0" "$PRESETS")
-SHADER=$(yq -r ".genres.${RESOLVED}.shader" "$PRESETS")
+# Shader resolution: explicit `shader:` field wins; if absent, fall
+# back to picking from `shader_pool: [a, b, ...]` via either
+# MUSIC_VIDEO_SHADER_VARIANT (1-based index into the pool, useful
+# for reproducible variants) or — if env is unset — a deterministic
+# hash of the SHORT_ID so repeated renders of the same content pick
+# the same shader while different short_ids get visual variety.
+# Both ways produce a stable choice — no true randomness.
+SHADER=$(yq -r ".genres.${RESOLVED}.shader // \"\"" "$PRESETS")
+if [[ -z "$SHADER" || "$SHADER" == "null" ]]; then
+  POOL_LEN=$(yq -r ".genres.${RESOLVED}.shader_pool | length // 0" "$PRESETS" 2>/dev/null)
+  if [[ "$POOL_LEN" -gt 0 ]]; then
+    if [[ -n "${MUSIC_VIDEO_SHADER_VARIANT:-}" ]]; then
+      VARIANT_IDX=$(( (MUSIC_VIDEO_SHADER_VARIANT - 1) % POOL_LEN ))
+    else
+      # Deterministic per-SHORT_ID rotation via md5 mod len.
+      # md5sum on GNU coreutils, md5 -q on BSD/macOS — branch by which
+      # binary is present so the bash arithmetic gets a clean 8-hex.
+      if command -v md5sum >/dev/null 2>&1; then
+        HASH_NUM=$(printf '%s' "$SHORT_ID" | md5sum | head -c 8)
+      elif command -v md5 >/dev/null 2>&1; then
+        HASH_NUM=$(printf '%s' "$SHORT_ID" | md5 -q | head -c 8)
+      else
+        HASH_NUM="0"
+      fi
+      HASH_DEC=$((16#${HASH_NUM:-0}))
+      VARIANT_IDX=$(( HASH_DEC % POOL_LEN ))
+    fi
+    SHADER=$(yq -r ".genres.${RESOLVED}.shader_pool[$VARIANT_IDX]" "$PRESETS")
+    echo "→ shader_pool[$VARIANT_IDX] of $POOL_LEN → $SHADER" >&2
+  fi
+fi
 CUT_MODE=$(yq -r ".genres.${RESOLVED}.cut_mode" "$PRESETS")
 LUT_DIR=$(yq -r ".genres.${RESOLVED}.lut_direction" "$PRESETS")
 
