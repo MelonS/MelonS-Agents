@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-22T01:45:17",
+  "generated_at": "2026-05-22T02:38:34",
   "marker_convention_started": "2026-05-17",
   "session_cap_minutes": 60,
   "rationale": "Two-source intervention tracker. Panel A: per-day commit count classified by initiator (user vs agent). Panel B: per-day operator prompts and active session minutes mined from local Claude Code session JSONLs. Goal: both signals trend down as the agent system absorbs more decisions.",
@@ -77,7 +77,7 @@
       "user_ratio_pct": 11.5,
       "longest_autonomous_gap_h": 12.2,
       "leverage_ratio": 7.7,
-      "operator_prompts": 279,
+      "operator_prompts": 285,
       "active_session_minutes": 339.3,
       "session_count": 14
     },
@@ -88,23 +88,77 @@
       "user_ratio_pct": 35.7,
       "longest_autonomous_gap_h": 14.5,
       "leverage_ratio": 1.8,
-      "operator_prompts": 70,
+      "operator_prompts": 73,
       "active_session_minutes": 168.4,
       "session_count": 8
     },
     {
       "date": "2026-05-22",
-      "user_initiated": 0,
-      "agent_autonomous": 16,
-      "user_ratio_pct": 0.0,
-      "longest_autonomous_gap_h": 0,
-      "leverage_ratio": 16.0,
-      "operator_prompts": 5,
-      "active_session_minutes": 28.5,
-      "session_count": 5
+      "user_initiated": 2,
+      "agent_autonomous": 23,
+      "user_ratio_pct": 8.0,
+      "longest_autonomous_gap_h": 0.0,
+      "leverage_ratio": 11.5,
+      "operator_prompts": 9,
+      "active_session_minutes": 98.8,
+      "session_count": 8
     }
   ],
   "commits": [
+    {
+      "sha": "b2bb0f6",
+      "date": "2026-05-22",
+      "class": "user",
+      "subject": "feat(statusline): surface goal subgoal progress — lever 10"
+    },
+    {
+      "sha": "8377ac9",
+      "date": "2026-05-22",
+      "class": "user",
+      "subject": "feat(decisions): autonomous-decisions log + log-decision.sh helper — lever 9"
+    },
+    {
+      "sha": "cce3f40",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(broll): Phase A.3 — lang_anchor for ethnicity-language match"
+    },
+    {
+      "sha": "e8c5e47",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "chore(audit): clear 7-cycle §8 drift + architecture sync + Done backlog"
+    },
+    {
+      "sha": "fa1ec72",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(lyrics): Phase A.2 — whisper-based vocal-onset alignment"
+    },
+    {
+      "sha": "f3d7781",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(music-video): auto-enqueue renders to review queue"
+    },
+    {
+      "sha": "9462552",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(review-queue): batch taste-decision queue — lever 3 of intervention reduction"
+    },
+    {
+      "sha": "7594684",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(statusline): surface doctor health + audit alert — lever 4 of intervention reduction"
+    },
+    {
+      "sha": "d0afd03",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(metrics): two-panel intervention tracker + daily launchd regen + README restore"
+    },
     {
       "sha": "55b025f",
       "date": "2026-05-22",
