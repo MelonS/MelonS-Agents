@@ -100,6 +100,19 @@ if [[ -z "$SRC" || -z "$DST" ]]; then
   exit 64
 fi
 [[ -f "$SRC" ]] || { echo "❌ input not found: $SRC" >&2; exit 64; }
+
+# Quality-bar #2 (2026-05-22): per-genre shader restraint via blend
+# with the un-shaded original.  MUSIC_VIDEO_SHADER_RATIO is set by
+# scripts/music-video-genre.sh from the preset's shader_active_ratio
+# field (default 1.0 = full strength, 0.0 = invisible, 0.5 = half-mixed).
+# When ratio < 1.0, the final write is intercepted to a temp file and
+# blended back toward the original at the end of this script.
+SHADER_RATIO="${MUSIC_VIDEO_SHADER_RATIO:-1.0}"
+RATIO_CMP=$(awk -v r="$SHADER_RATIO" 'BEGIN{print (r < 0.99)}')
+SHADER_FINAL_DST="$DST"
+if [[ "$RATIO_CMP" == "1" ]]; then
+  DST="$(mktemp -t mvshader-blend-XXXX).mp4"
+fi
 # §8 exception: `/opt/homebrew/bin/ffmpeg` (and `ffprobe` at the bottom of
 # this script) appear ONLY as fallback values inside `${FFMPEG_BIN:-...}` /
 # `${FFPROBE_BIN:-...}` parameter expansion — never as the resolved path.
@@ -362,6 +375,20 @@ case "$EFFECT" in
     ;;
 esac
 
+# Quality-bar #2 (2026-05-22): when SHADER_RATIO < 1.0, blend the
+# shaded output back toward the un-shaded original so the effect reads
+# as a soft accent rather than a constant overlay.  Final size still
+# matches one render (the blend stage replaces the intermediate file).
+if [[ "$RATIO_CMP" == "1" ]]; then
+  "$FFMPEG_BIN" -y -loglevel warning -stats \
+    -i "$SRC" -i "$DST" \
+    -filter_complex "[0:v][1:v]blend=all_mode=normal:all_opacity=${SHADER_RATIO}[v]" \
+    -map "[v]" -map 0:a \
+    -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
+  rm -f "$DST"
+  DST="$SHADER_FINAL_DST"
+fi
+
 dur=$("${FFPROBE_BIN:-/opt/homebrew/bin/ffprobe}" -v error -show_entries format=duration -of csv=p=0 "$DST" 2>/dev/null | awk '{printf "%.1f", $1}')
 size=$(du -h "$DST" 2>/dev/null | awk '{print $1}')
-echo "✓ ${EFFECT}: $DST (${dur}s, ${size})"
+echo "✓ ${EFFECT}: $DST (${dur}s, ${size}, ratio=${SHADER_RATIO})"

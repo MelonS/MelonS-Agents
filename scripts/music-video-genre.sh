@@ -118,6 +118,7 @@ PHRASE_BEATS=$(yq -r ".genres.${RESOLVED}.phrase_beats" "$PRESETS")
 GRAIN=$(yq -r ".genres.${RESOLVED}.grain_intensity" "$PRESETS")
 VIGNETTE=$(yq -r ".genres.${RESOLVED}.vignette_angle" "$PRESETS")
 ZOOM_AMP=$(yq -r ".genres.${RESOLVED}.zoom_pulse_amp" "$PRESETS")
+SHADER_ACTIVE_RATIO=$(yq -r ".genres.${RESOLVED}.shader_active_ratio // 1.0" "$PRESETS")
 SHADER=$(yq -r ".genres.${RESOLVED}.shader" "$PRESETS")
 CUT_MODE=$(yq -r ".genres.${RESOLVED}.cut_mode" "$PRESETS")
 LUT_DIR=$(yq -r ".genres.${RESOLVED}.lut_direction" "$PRESETS")
@@ -214,8 +215,11 @@ fi
 # Apply post-shader if not "none"
 if [[ "$SHADER" != "none" && "$SHADER" != "null" ]]; then
   SHADED="${LATEST%.mp4}-${SHADER}.mp4"
-  echo "→ post-shader: $SHADER"
-  bash "$SHADERS_SH" "$SHADER" "$LATEST" "$SHADED"
+  echo "→ post-shader: $SHADER (active_ratio=$SHADER_ACTIVE_RATIO)"
+  # Quality-bar #2 (2026-05-22): pass the active-ratio to the shaders
+  # script so non-pulse effects can self-gate their visibility window
+  # via ffmpeg enable= expressions.
+  MUSIC_VIDEO_SHADER_RATIO="$SHADER_ACTIVE_RATIO" bash "$SHADERS_SH" "$SHADER" "$LATEST" "$SHADED"
   echo "✓ final: $SHADED"
 else
   echo "✓ final: $LATEST  (no post-shader for this preset)"

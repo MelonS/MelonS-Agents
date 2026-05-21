@@ -38,6 +38,7 @@ genres:
     vignette_angle: PI/4
     zoom_pulse_amp: 0          # ABSOLUTELY no zoom-pulse
     shader: halation           # warm bloom as primary effect
+    shader_active_ratio: 1.0    # 2026-05-22 quality-bar #2
     lut_direction: cool_desat
     cut_mode: stillzoom
     forbidden_effects: [pond, scanline, neon_edge, datamosh, chromatic_split]
@@ -67,6 +68,7 @@ genres:
     vignette_angle: PI/3
     zoom_pulse_amp: 0
     shader: halation
+    shader_active_ratio: 1.0    # 2026-05-22 quality-bar #2
     lut_direction: cool_desat_dark
     cut_mode: stillzoom
     forbidden_effects: [pond, scanline, neon_edge, datamosh]
@@ -95,6 +97,7 @@ genres:
     vignette_angle: PI/5
     zoom_pulse_amp: 0
     shader: chromatic_split    # mild chromatic aberration (shoegaze code: visual distortion)
+    shader_active_ratio: 0.7    # 2026-05-22 quality-bar #2
     lut_direction: desat_warm
     cut_mode: cuts
     forbidden_effects: [scanline, neon_edge, datamosh]
@@ -125,6 +128,7 @@ genres:
     vignette_angle: PI/5
     zoom_pulse_amp: 0          # **CRITICAL — lo-fi is anti-glitch**
     shader: halation
+    shader_active_ratio: 0.55    # 2026-05-22 quality-bar #2
     lut_direction: warm_amber
     cut_mode: cuts
     forbidden_effects: [scanline, neon_edge, datamosh, chromatic_split]
@@ -155,6 +159,7 @@ genres:
     vignette_angle: PI/4        # deeper, low-key noir
     zoom_pulse_amp: 0          # glitch FORBIDDEN
     shader: halation
+    shader_active_ratio: 0.5    # 2026-05-22 quality-bar #2
     lut_direction: warm_low_key
     cut_mode: cuts
     forbidden_effects: [scanline, neon_edge, datamosh, kaleidoscope]
@@ -185,6 +190,7 @@ genres:
     vignette_angle: PI/4        # deeper, warmer
     zoom_pulse_amp: 0          # FORBIDDEN — vocals carry the energy
     shader: halation           # warm bloom for nostalgia
+    shader_active_ratio: 0.45    # 2026-05-22 quality-bar #2
     lut_direction: warm_amber_purple
     cut_mode: cuts
     forbidden_effects: [scanline, neon_edge, datamosh, kaleidoscope, chromatic_split]
@@ -218,6 +224,7 @@ genres:
     vignette_angle: PI/4
     zoom_pulse_amp: 0          # FORBIDDEN — vocals carry energy
     shader: halation           # warm bloom, emotional
+    shader_active_ratio: 0.35    # 2026-05-22 quality-bar #2
     lut_direction: warm_amber_violet
     cut_mode: cuts
     forbidden_effects: [scanline, neon_edge, datamosh, kaleidoscope, chromatic_split, strobe]
@@ -251,6 +258,7 @@ genres:
     vignette_angle: PI/3        # subtle
     zoom_pulse_amp: 0.08       # mild — vocals still primary
     shader: color_burst        # disco-style hue cycling matches K-pop visuals
+    shader_active_ratio: 0.65    # 2026-05-22 quality-bar #2
     # beat_burst / saturation_pulse also valid alternatives
     lut_direction: high_saturation_pop
     cut_mode: cuts
@@ -285,6 +293,7 @@ genres:
     vignette_angle: PI/4
     zoom_pulse_amp: 0          # vocals carry — no glitch
     shader: halation           # warm bloom on candle/skin lighting
+    shader_active_ratio: 0.4    # 2026-05-22 quality-bar #2
     lut_direction: warm_low_key_red
     cut_mode: cuts
     forbidden_effects: [scanline, neon_edge, datamosh, kaleidoscope, strobe, beat_burst]
@@ -317,6 +326,7 @@ genres:
     vignette_angle: PI/3
     zoom_pulse_amp: 0.06       # mild on the kick
     shader: saturation_pulse   # bright, alive
+    shader_active_ratio: 0.55    # 2026-05-22 quality-bar #2
     # color_burst / beat_burst also valid alternatives
     lut_direction: bright_clean_modern
     cut_mode: cuts
@@ -351,6 +361,7 @@ genres:
     vignette_angle: PI/3        # softer
     zoom_pulse_amp: 0.06       # mild zoom-pulse OK on kick
     shader: color_burst        # was: saturation_pulse — color_burst lands disco drops
+    shader_active_ratio: 0.7    # 2026-05-22 quality-bar #2
     # saturation_pulse / beat_burst also valid alternatives
     lut_direction: high_saturation
     cut_mode: cuts
@@ -380,6 +391,7 @@ genres:
     vignette_angle: PI/2        # very subtle / nearly off
     zoom_pulse_amp: 0.12       # stronger pulse, kick-driven
     shader: strobe              # was: saturation_pulse — strobe is the techno code
+    shader_active_ratio: 0.75    # 2026-05-22 quality-bar #2
     lut_direction: high_saturation
     cut_mode: cuts
     forbidden_effects: [vhs, halation]
@@ -409,6 +421,7 @@ genres:
     vignette_angle: off         # no vignette
     zoom_pulse_amp: 0.05       # slight, controlled
     shader: beat_burst         # was: scanline — beat_burst lands the drops
+    shader_active_ratio: 0.65    # 2026-05-22 quality-bar #2
     # scanline / light_rays / neon_edge also valid alternatives for synthwave
     lut_direction: hot_pink_cyan
     cut_mode: cuts
@@ -439,6 +452,7 @@ genres:
     vignette_angle: PI/4
     zoom_pulse_amp: 0
     shader: vhs
+    shader_active_ratio: 0.55    # 2026-05-22 quality-bar #2
     lut_direction: pastel_purple_pink_teal
     cut_mode: stillzoom         # vaporwave is more about looping aesthetic than cuts
     forbidden_effects: [scanline, datamosh, saturation_pulse]
@@ -468,6 +482,7 @@ genres:
     vignette_angle: PI/6
     zoom_pulse_amp: 0.15
     shader: shake               # was: chromatic_split — shake = drift energy
+    shader_active_ratio: 0.7    # 2026-05-22 quality-bar #2
     # chromatic_split / beat_burst also valid alternatives for phonk
     lut_direction: high_contrast_warm
     cut_mode: cuts
@@ -496,6 +511,7 @@ genres:
     vignette_angle: off
     zoom_pulse_amp: 0.20       # strongest
     shader: strobe             # was: datamosh (unimpl) — strobe is the available chaos
+    shader_active_ratio: 0.8    # 2026-05-22 quality-bar #2
     # beat_burst / shake also valid alternatives
     lut_direction: hyper_saturated
     cut_mode: cuts
@@ -527,6 +543,7 @@ genres:
     vignette_angle: PI/5
     zoom_pulse_amp: 0
     shader: halation           # soft sun-flare alternative
+    shader_active_ratio: 0.55    # 2026-05-22 quality-bar #2
     lut_direction: warm_green_gold
     cut_mode: cuts
     forbidden_effects: [scanline, neon_edge, datamosh, vhs]
@@ -556,6 +573,7 @@ genres:
     vignette_angle: PI/5
     zoom_pulse_amp: 0
     shader: halation
+    shader_active_ratio: 1.0    # 2026-05-22 quality-bar #2
     lut_direction: warm_classical
     cut_mode: stillzoom
     forbidden_effects: [scanline, neon_edge, datamosh, vhs, kaleidoscope]
@@ -586,6 +604,7 @@ genres:
     vignette_angle: PI/4
     zoom_pulse_amp: 0
     shader: vhs
+    shader_active_ratio: 0.7    # 2026-05-22 quality-bar #2
     lut_direction: pastel_sky
     cut_mode: stillzoom
     forbidden_effects: [scanline, datamosh, sharp_cuts]
