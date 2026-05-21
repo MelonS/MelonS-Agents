@@ -564,8 +564,25 @@ if [[ "$RATIO_CMP" == "1" ]]; then
     else
       EVENT_FILE="${MUSIC_VIDEO_SHADER_BEATS:-${MUSIC_VIDEO_SHADER_ONSETS:-}}"
     fi
-    if [[ -z "$EVENT_FILE" || ! -f "$EVENT_FILE" ]]; then
-      echo "  [${SHADER_GATE}] event file missing — falling back to uniform" >&2
+    # Some tracks have sparse onsets (vocal-heavy / ballad / ambient).
+    # If the chosen event source has too few events to make a useful
+    # gating curve, transparently fall through to the BEATS file if it
+    # has more — and if that's also sparse, degenerate gracefully back
+    # to phrase_climax instead of leaving the video shaderless.
+    if [[ -n "$EVENT_FILE" && -f "$EVENT_FILE" ]]; then
+      _EVT_TOTAL_CHECK=$(grep -c . "$EVENT_FILE" 2>/dev/null || echo 0)
+      if [[ "$_EVT_TOTAL_CHECK" -lt 5 && "$SHADER_GATE" == "onsets" \
+            && -n "${MUSIC_VIDEO_SHADER_BEATS:-}" && -f "${MUSIC_VIDEO_SHADER_BEATS}" ]]; then
+        _BEATS_TOTAL=$(grep -c . "$MUSIC_VIDEO_SHADER_BEATS" 2>/dev/null || echo 0)
+        if [[ "$_BEATS_TOTAL" -ge 5 ]]; then
+          echo "  [onsets] only $_EVT_TOTAL_CHECK onsets (likely vocal track) — switching to BEATS ($_BEATS_TOTAL events)" >&2
+          EVENT_FILE="$MUSIC_VIDEO_SHADER_BEATS"
+        fi
+      fi
+    fi
+    if [[ -z "$EVENT_FILE" || ! -f "$EVENT_FILE" ]] || \
+       [[ "$(grep -c . "$EVENT_FILE" 2>/dev/null || echo 0)" -lt 5 ]]; then
+      echo "  [${SHADER_GATE}] event source has <5 entries — falling back to uniform" >&2
       "$FFMPEG_BIN" -y -loglevel warning -stats \
         -i "$SRC" -i "$DST" \
         -filter_complex "[0:v][1:v]blend=all_mode=normal:all_opacity=${SHADER_RATIO}[v]" \
