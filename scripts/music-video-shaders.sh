@@ -374,12 +374,18 @@ case "$EFFECT" in
     # different.  Mood: cottagecore / jazz / citypop / lofi / shoegaze.
     # geq filter uses uppercase T for the timestamp (lowercase t is not
     # in the variable namespace inside geq expressions); pow() not ^.
-    # The leak generator is matched to base dimensions via scale2ref.
+    # The leak generator's duration is driven from the source's
+    # ffprobe'd duration so it doesn't run past the source (otherwise
+    # the blend node sees the longer leak stream and the encode
+    # never terminates).
+    LEAK_DUR=$("${FFPROBE_BIN:-/opt/homebrew/bin/ffprobe}" -v error \
+      -show_entries format=duration -of csv=p=0 "$SRC" 2>/dev/null | \
+      awk '{printf "%.2f", $1 + 0.5}')
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -filter_complex "
         [0:v]format=yuv420p,setsar=1[base];
-        color=c=0xFF99BB:size=540x960:rate=30:duration=240,
+        color=c=0xFF99BB:size=540x960:rate=30:duration=${LEAK_DUR},
           geq=
             lum='180*exp(-(pow((X-(270+100*sin(T*0.3)))/120,2) + pow((Y-(480+150*cos(T*0.2)))/180,2)))':
             cb='128 + 80*exp(-(pow((X-(270+100*sin(T*0.3)))/120,2)))':
@@ -387,7 +393,7 @@ case "$EFFECT" in
           setsar=1[leak_small];
         [leak_small][base]scale2ref=w=iw:h=ih[leak_scaled][base2];
         [base2][leak_scaled]blend=all_mode=screen:all_opacity=0.40[out]
-      " -map "[out]" -map 0:a \
+      " -map "[out]" -map 0:a -shortest \
       -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
     ;;
 
@@ -420,12 +426,91 @@ case "$EFFECT" in
       -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
     ;;
 
+  # ───── Stage-2 catalog expansion (2026-05-22 quality-bar #4) ─────
+
+  paper_grain)
+    # Static paper / canvas texture overlay (distinct from flicker
+    # film grain).  Time-invariant noise field, overlay-blended at low
+    # opacity to add organic texture without movement.
+    # Mood: cottagecore, jazz, classical, indie acoustic, lofi_hiphop.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "noise=alls=4:allf=u,format=yuv420p,setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  dust_speck)
+    # Sparse floating dust particles — 8mm celluloid drift.  Built
+    # from temporal noise (allf=t) thresholded high so most pixels are
+    # zero; screen-blended over source so specks only appear in dark
+    # regions.  Distinct from paper_grain's static texture.
+    # Mood: jazz, lofi_hiphop, cottagecore, classical, citypop.
+    SPECK_DUR=$("${FFPROBE_BIN:-/opt/homebrew/bin/ffprobe}" -v error \
+      -show_entries format=duration -of csv=p=0 "$SRC" 2>/dev/null | \
+      awk '{printf "%.2f", $1 + 0.5}')
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -filter_complex "
+        [0:v]format=yuv420p,setsar=1[base];
+        color=c=black:size=540x960:rate=30:duration=${SPECK_DUR},
+          noise=alls=80:allf=t,
+          lutyuv=y='if(gt(val,235),val,0)',
+          format=yuv420p,
+          setsar=1[specks_small];
+        [specks_small][base]scale2ref=w=iw:h=ih[specks][base2];
+        [base2][specks]blend=all_mode=screen:all_opacity=0.5[out]
+      " -map "[out]" -map 0:a -shortest \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  posterize)
+    # Discrete tone steps — comic / pop-art look.  Uses lutyuv to
+    # quantize luminance to 4 bands (0 / 64 / 128 / 192 / 255), with
+    # chroma slightly boosted to compensate for the flat tone bands.
+    # Mood: hyperpop, phonk, vaporwave, kpop_dance pop-art moments.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "lutyuv=y='if(gt(val,200),255,if(gt(val,128),192,if(gt(val,64),128,0)))',eq=saturation=1.6,setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  # ───── Stage-3 catalog expansion (2026-05-22 quality-bar #4) ─────
+
+  trail_echo)
+    # Motion ghosting via weighted temporal mix — previous frames
+    # bleed into the current.  tmix weights bias the current frame at
+    # 2x and the trailing 3 frames at 1x each.  Free temporal trails
+    # without per-frame post-processing.
+    # Mood: techno, house, hyperpop, drone, vaporwave.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -vf "tmix=frames=4:weights='2 1 1 1',setsar=1" \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
+  soft_bloom)
+    # Quieter halation — same bloom mechanic but sigma halved and
+    # screen opacity reduced.  For ballads where the warm-light glow
+    # is wanted but full halation is too loud.
+    # Mood: kpop_ballad, rnb, ambient slow, dreamcore.
+    "$FFMPEG_BIN" -y -loglevel warning -stats \
+      -i "$SRC" \
+      -filter_complex "
+        [0:v]split[base][bright_in];
+        [bright_in]eq=brightness=-0.20:contrast=1.3:saturation=1.05,gblur=sigma=10:steps=2[glow];
+        [base][glow]blend=all_mode=screen:all_opacity=0.25,setsar=1[out]
+      " -map "[out]" -map 0:a \
+      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+    ;;
+
   *)
     echo "❌ unknown effect: $EFFECT" >&2
     echo "   classic:        pond | breathing | halation | combo" >&2
     echo "   genre-coded:    scanline | chromatic_split | neon_edge | vhs | saturation_pulse | kaleidoscope" >&2
     echo "   beat-synced:    beat_burst | strobe | shake | color_burst | light_rays" >&2
     echo "   stage-1 expand: light_leak | duotone | vignette_pulse" >&2
+    echo "   stage-2 expand: paper_grain | dust_speck | posterize" >&2
+    echo "   stage-3 expand: trail_echo | soft_bloom" >&2
     exit 64
     ;;
 esac

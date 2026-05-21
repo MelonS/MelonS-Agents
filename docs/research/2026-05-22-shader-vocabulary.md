@@ -134,15 +134,21 @@ Sequence ships in stages so each shader can be tested in isolation:
 - `vignette_pulse` — gentle and broadly useful; fills the
   "kpop_ballad needs MORE atmosphere but LESS effect" gap.
 
-### Stage 2 — texture (later)
+### Stage 2 — texture (shipped 2026-05-22)
 
-- `paper_grain`, `dust_speck`, `posterize` — each is a small render-
-  cost addition; ship together when implementing the texture suite.
+- `paper_grain` — static yuv noise (allf=u, no temporal flicker) at
+  low intensity.  Adds organic texture without movement.
+- `dust_speck` — sparse noise field thresholded high so most pixels
+  are zero; screen-blended over base.  8mm celluloid drift feel.
+- `posterize` — lutyuv quantizes luminance to 4 bands; saturation
+  boosted to compensate for tone-band flatness.  Comic / pop-art.
 
-### Stage 3 — temporal (later)
+### Stage 3 — temporal (shipped 2026-05-22)
 
-- `trail_echo`, `soft_bloom` — more complex compute; ship together
-  when the operator wants to expand the dance/techno energy lane.
+- `trail_echo` — `tmix=frames=4:weights='2 1 1 1'` produces motion
+  trails from recent frames.  Cheap temporal ghosting.
+- `soft_bloom` — halation mechanic with sigma halved (10 vs 22) and
+  screen opacity dropped (0.25 vs 0.55).  Quiet glow for ballads.
 
 ## Per-genre re-mapping
 
