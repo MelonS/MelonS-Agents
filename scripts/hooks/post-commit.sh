@@ -91,12 +91,30 @@ echo "[audit-hook] firing audit-run.sh $FOCUS in background after $SHA" >&2
 # trampoline writes its own pid to SENTINEL on entry, removes SENTINEL
 # on exit, and re-fires post-commit if a deferred SHA is queued.
 RUN_LOG="$LOG_DIR/hook-run-$(date +%Y%m%d-%H%M%S)-$SHA.log"
+# Snapshot pre-audit alert state for transition detection.
+PRE_ALERT=0
+[[ -f "$REPO_ROOT/docs/audit/CURRENT-ALERT.md" ]] && PRE_ALERT=1
+
 nohup bash -c "
   cd '$REPO_ROOT'
   echo \"\$\$\" > '$SENTINEL'
   ./scripts/audit-run.sh '$FOCUS' > '$RUN_LOG' 2>&1
   rc=\$?
   echo \"[\$(date '+%Y-%m-%d %H:%M:%S')] $SHA audit \$rc done (log: $RUN_LOG)\" >> '$TRIGGER_LOG'
+
+  # Audit transition logging — if the alert state changed in our
+  # audit's window, append a one-line entry to autonomous-decisions
+  # so the operator sees the transition in morning-brief.sh without
+  # having to diff alerts.  Best-effort; soft-fails.
+  post_alert=0
+  [[ -f '$REPO_ROOT/docs/audit/CURRENT-ALERT.md' ]] && post_alert=1
+  if [[ -x '$REPO_ROOT/scripts/log-decision.sh' ]]; then
+    if [[ $PRE_ALERT -eq 1 && \$post_alert -eq 0 ]]; then
+      '$REPO_ROOT/scripts/log-decision.sh' \"audit transitioned DRIFT_DETECTED → CLEAN after $SHA\" >/dev/null 2>&1 || true
+    elif [[ $PRE_ALERT -eq 0 && \$post_alert -eq 1 ]]; then
+      '$REPO_ROOT/scripts/log-decision.sh' \"audit transitioned CLEAN → DRIFT_DETECTED after $SHA — see docs/audit/CURRENT-ALERT.md\" >/dev/null 2>&1 || true
+    fi
+  fi
 
   # Check for a deferred re-fire.  If a SHA is on line 2 of the
   # sentinel AND it differs from the SHA we just audited, log that a

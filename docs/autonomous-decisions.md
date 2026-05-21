@@ -37,6 +37,7 @@ header if today's section doesn't exist.
 
 ## 2026-05-22 (overnight autonomous)
 
+- `05:05 KST` — L1 audit hook trampoline now auto-logs audit verdict transitions (DRIFT→CLEAN or CLEAN→DRIFT) to autonomous-decisions.md. Morning brief sees these without needing alert diffs
 - `04:55 KST` — morning-brief.sh surfaced in README EN+KO + site/index.html (Operator tooling card). Discoverability for the canonical 'what happened overnight?' command
 - `04:45 KST` — L1 post-commit audit hook gains coalescing lock — sentinel file at records/audit/.hook.inflight tracks in-flight pid; subsequent drift-risk commits within an audit's runtime defer rather than spawn new claude CLI processes. Saves Max-plan tokens during commit bursts
 - `04:35 KST` — scripts/morning-brief.sh shipped — single-command digest combining doctor + audit + intervention trend + commit attribution + decisions + review queue + blockers. Operator types one command, reads ~30 lines, knows overnight state
