@@ -37,6 +37,7 @@ header if today's section doesn't exist.
 
 ## 2026-05-22 (overnight autonomous)
 
+- `04:35 KST` — scripts/morning-brief.sh shipped — single-command digest combining doctor + audit + intervention trend + commit attribution + decisions + review queue + blockers. Operator types one command, reads ~30 lines, knows overnight state
 - `04:20 KST` — Phase 16 — intervention.json gains trend_7d field (last7 avg + prev7 avg + delta + direction hints). 7-day comparison populates from 2026-05-29; currently null prev7 since only 9 days of data
 - `04:10 KST` — README EN+KO Design notes section refreshed — operator tooling bullet now describes all 5 reduction scripts (doctor, audit-skill-drift, statusline, log-decision, review-queue)
 - `04:00 KST` — §8 registry restructured to drop line numbers — anchors by filename + pattern instead, audited via grep. Prevents coordinate-staleness from recurring (39th audit's structural-fix suggestion)
