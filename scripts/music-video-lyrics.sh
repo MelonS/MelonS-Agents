@@ -45,20 +45,47 @@ SRC="${1:-}"
 DST="${2:-}"
 LYRICS_FILE="${3:-}"
 GENRE=""
+ALIGN_AUDIO=""    # --align-to-audio=AUDIO  → derive LRC from plain text via whisper alignment
 
-# Parse trailing --genre flag if present
+# Parse trailing flags if present
 for arg in "$@"; do
   case "$arg" in
-    --genre=*) GENRE="${arg#*=}" ;;
+    --genre=*)         GENRE="${arg#*=}" ;;
+    --align-to-audio=*) ALIGN_AUDIO="${arg#*=}" ;;
   esac
 done
 
 if [[ -z "$SRC" || -z "$DST" || -z "$LYRICS_FILE" ]]; then
-  echo "usage: $0 <input.mp4> <output.mp4> <lyrics_file> [--genre=NAME]" >&2
+  echo "usage: $0 <input.mp4> <output.mp4> <lyrics_file> [--genre=NAME] [--align-to-audio=AUDIO]" >&2
   exit 64
 fi
 [[ -f "$SRC" ]]   || { echo "❌ input not found: $SRC" >&2; exit 64; }
 [[ -f "$LYRICS_FILE" ]] || { echo "❌ lyrics file not found: $LYRICS_FILE" >&2; exit 64; }
+
+# Optional alignment: derive an LRC file from plain text + vocal audio
+# via whisper-based vocal-onset alignment.  Operator-set LYRIC_LEAD_MS
+# (default 200) gives a small early lead so the line is visible by the
+# time the vocal hits.  See docs/research/2026-05-22-music-video-quality-bar.md
+# §A.2.
+if [[ -n "$ALIGN_AUDIO" ]]; then
+  if [[ ! -f "$ALIGN_AUDIO" ]]; then
+    echo "❌ --align-to-audio target not found: $ALIGN_AUDIO" >&2
+    exit 64
+  fi
+  if grep -qE '^\[[0-9]+:[0-9]+(\.[0-9]+)?\]' "$LYRICS_FILE"; then
+    echo "→ lyrics file already has LRC timing; skipping --align-to-audio" >&2
+  else
+    REPO_ROOT_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    ALIGNED_LRC="${TMPDIR:-/tmp}/lyric-aligned-$$.$(basename "$LYRICS_FILE" .txt).lrc"
+    echo "→ aligning lyrics to vocal onsets in $(basename "$ALIGN_AUDIO")"
+    if bash "$REPO_ROOT_SCRIPT/scripts/music-video-lyric-align.sh" \
+         "$ALIGN_AUDIO" "$LYRICS_FILE" "$ALIGNED_LRC"; then
+      LYRICS_FILE="$ALIGNED_LRC"
+    else
+      echo "⚠️  alignment failed — falling back to auto-spaced timing" >&2
+    fi
+  fi
+fi
 
 FFMPEG="${FFMPEG_BIN:-/opt/homebrew/bin/ffmpeg}"
 FFPROBE="${FFPROBE_BIN:-/opt/homebrew/bin/ffprobe}"

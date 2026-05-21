@@ -33,6 +33,7 @@ GENRE_SH="$REPO_ROOT/scripts/music-video-genre.sh"
 CANVAS_SH="$REPO_ROOT/scripts/music-video-canvas.sh"
 TYPO_SH="$REPO_ROOT/scripts/music-video-typography.sh"
 AREACTIVE_SH="$REPO_ROOT/scripts/music-video-audio-reactive.sh"
+LYRICS_SH="$REPO_ROOT/scripts/music-video-lyrics.sh"
 
 # Parse flags
 WITH_CANVAS=0
@@ -42,6 +43,8 @@ WITH_AREACTIVE=0     # --with-audio-reactive
 USE_AI_STILL=0       # --ai-still: Pollinations.ai instead of Pexels for stillzoom
 FULL_LENGTH=0        # --full-length: use music's actual duration (default 60s)
 DURATION=""          # --duration=N: explicit duration override in seconds
+LYRICS_FILE=""       # --with-lyrics=PATH plain-text or LRC lyric file
+LYRICS_ALIGN=1       # 1 → run whisper-based alignment; 0 → auto-space
 STILL_IMG=""
 SHORT_ID=""
 ARGS=()
@@ -62,6 +65,8 @@ while [[ $# -gt 0 ]]; do
       fi
       ;;
     --with-typography=*) WITH_TYPO_FLAG=1; WITH_TYPO="${1#*=}"; shift ;;
+    --with-lyrics=*) LYRICS_FILE="${1#*=}"; shift ;;
+    --lyrics-no-align) LYRICS_ALIGN=0; shift ;;
     --image=*) STILL_IMG="${1#*=}"; shift ;;
     --short-id=*) SHORT_ID="${1#*=}"; shift ;;
     --help)
@@ -175,6 +180,26 @@ if [[ "$WITH_CANVAS" == 1 ]]; then
   echo "→ canvas 8s variant"
   bash "$CANVAS_SH" "$LATEST" "$CANVAS_OUT"
   echo "✓ canvas: $CANVAS_OUT"
+fi
+
+# 5a. Lyrics overlay (optional, applied before typography so typography
+#     can paint on top if both are requested).
+if [[ -n "$LYRICS_FILE" ]]; then
+  if [[ ! -f "$LYRICS_FILE" ]]; then
+    echo "⚠️  --with-lyrics file not found: $LYRICS_FILE — skipping" >&2
+  else
+    LYRICS_OUT="${LATEST%.mp4}-lyrics.mp4"
+    LYRICS_ARGS=("$LATEST" "$LYRICS_OUT" "$LYRICS_FILE" "--genre=$GENRE")
+    if [[ "$LYRICS_ALIGN" == 1 ]]; then
+      LYRICS_ARGS+=("--align-to-audio=$MUSIC")
+      echo "→ lyrics overlay (whisper-aligned)"
+    else
+      echo "→ lyrics overlay (auto-spaced; --lyrics-no-align)"
+    fi
+    bash "$LYRICS_SH" "${LYRICS_ARGS[@]}"
+    LATEST="$LYRICS_OUT"
+    echo "✓ lyrics: $LYRICS_OUT"
+  fi
 fi
 
 # 5. Typography overlay (optional)
