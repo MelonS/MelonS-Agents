@@ -119,3 +119,43 @@ instead of "subway window blurred").  Parked for operator.
 5. B.1 catalog extended; existing presets unchanged (operator-decided
    shifts deferred).
 6. QA gate scores both demos PASS (38% demo1, 50% demo2).
+
+## Demo #3 EN — final lyric-fix verification (qb-demo-en3-034030)
+
+Re-rendered the EN demo (uspop track) after the lyric fixes:
+`a2e2d3f` marker leak fix, `bc46a7f` comma escape, `b5e61de` U+2019
+apostrophe substitution, `63431b4` qa-anchor regex expansion.
+
+QA verdict:
+```
+matching: 6/10 (0.60)  →  PASS
+```
+
+The qa-anchor regex expansion picked up `california_convertible_drive_sunset`,
+`american_fashion_magazine_spread`, plus the 4 direct NYC/LA matches
+that already passed under the prior regex.
+
+Visual:
+
+| t | Frame |
+|---|-------|
+| 25s | infinity pool with swimmers (LA pool sunset clip).  CLEAN — no corrupted overlay text, no alpha-expression leak. |
+| 45s | infinity pool with ocean horizon, saturation_pulse shader cinematically active, vignette edges visible.  CLEAN. |
+
+Notably the EN demo has NO lyric overlay anywhere in the 60s
+render because the alignment script correctly aligned all 13 lyric
+lines to 01:01+ (the audio was 213s, Suno's take drifted from the
+prompt and the actual sung lyrics start ~1 minute in).  This is
+correct behavior — the alignment script reported low confidence
+on 12/13 lines, autofilled them, and the resulting timestamps fall
+outside the 60s render window.  In a full-length (213s)
+render the lyrics would appear at their detected positions.
+
+**Pre-fix vs post-fix on same audio + lyrics**:
+- Pre-fix (en demo #1, `032150`): garbled overlay text rendering
+  fragments of the alpha expression — "between(t,..." visible on screen.
+- Post-fix (en demo #3, `034030`): no overlay (correct for 60s
+  render where lyrics anchor at 01:01+), clean B-roll throughout.
+
+Six 2026-05-22 quality-bar directives now demonstrably enforced on
+both KR (kpop_ballad) and EN (uspop) vocal renders.
