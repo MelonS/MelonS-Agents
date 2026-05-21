@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions / Show & Tell / Ideas
+    url: https://github.com/MelonS/MelonS-Agents/discussions
+    about: Use Discussions for casual Q&A, sharing what you made, or proposing rough ideas before opening a formal issue.

@@ -1,0 +1,62 @@
+name: First-touch friction report
+description: Tell us where you got stuck while trying the demo for the first time. Helps improve onboarding from clone to working output.
+title: "[first-touch] "
+labels: ["first-touch", "friction"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying. Your friction is the most valuable signal we get.
+
+        The goal: `git clone` → working `short.mp4` in 5 minutes.
+        Tell us where that broke for you. Even one-line answers help.
+
+  - type: dropdown
+    id: stopped-at
+    attributes:
+      label: At which step did you stop?
+      options:
+        - "Before cloning (README discouraged me)"
+        - "During bootstrap.sh (missing tool / prompt overload)"
+        - "After bootstrap, before first mission"
+        - "First mission ran, output failed"
+        - "Output rendered but quality was poor"
+        - "Reached the end but unclear what to do next"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: One paragraph. What did you click/run, what did you see, what did you expect?
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS / environment
+      placeholder: "macOS 14.5 / Ubuntu 22.04 / etc."
+
+  - type: input
+    id: elapsed
+    attributes:
+      label: How long did you spend before stopping?
+      placeholder: "~5 min / ~30 min / gave up after 2 min"
+
+  - type: dropdown
+    id: retry
+    attributes:
+      label: Would you try again after this is fixed?
+      options:
+        - "Yes"
+        - "Maybe"
+        - "Probably not"
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else?
+      description: Optional — screenshots, console output, what you wish the README had said, etc.
