@@ -191,8 +191,14 @@ import sys
 s = """$1"""
 # Backslashes first
 s = s.replace('\\\\', '\\\\\\\\')
-# Single quote: 'close, \\' literal, reopen' (the ffmpeg-standard escape)
-s = s.replace("'", "'\\\\''")
+# Apostrophes are a chronic source of breakage in ffmpeg drawtext's
+# single-quoted text= field.  The 'close-escape-reopen' pattern
+# (\\'…\\') leaks the alpha/enable expressions into the rendered text
+# in practice (verified 2026-05-22 EN demo).  Workaround: substitute
+# the Unicode right single quotation mark (U+2019, ') which renders
+# identically in most fonts (SF-Pro / SF-Mono / SD-Gothic) and has
+# no special meaning in the filter parser.
+s = s.replace("'", "’")
 # Colons need escape inside drawtext args
 s = s.replace(':', '\\\\:')
 # Commas need escape — drawtext value parser otherwise reads the comma
