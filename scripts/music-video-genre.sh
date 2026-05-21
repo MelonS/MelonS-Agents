@@ -219,6 +219,18 @@ if [[ "$SHADER" != "none" && "$SHADER" != "null" ]]; then
   # Quality-bar #2 (2026-05-22): pass the active-ratio to the shaders
   # script so non-pulse effects can self-gate their visibility window
   # via ffmpeg enable= expressions.
+  #
+  # C.1 Phase 3 (2026-05-22): also pass the beats file location so
+  # `onsets` and `beats` gate modes can construct per-event gaussian
+  # opacity envelopes.  Beats file is at <mission>/resources/beats-real.txt
+  # alongside <mission>/resources/onsets.txt — both pre-computed by run.sh.
+  MISSION_DIR="$(dirname "$(dirname "$LATEST")")"
+  if [[ -f "$MISSION_DIR/resources/beats-real.txt" ]]; then
+    export MUSIC_VIDEO_SHADER_BEATS="$MISSION_DIR/resources/beats-real.txt"
+  fi
+  if [[ -f "$MISSION_DIR/resources/onsets.txt" ]]; then
+    export MUSIC_VIDEO_SHADER_ONSETS="$MISSION_DIR/resources/onsets.txt"
+  fi
   MUSIC_VIDEO_SHADER_RATIO="$SHADER_ACTIVE_RATIO" bash "$SHADERS_SH" "$SHADER" "$LATEST" "$SHADED"
   echo "✓ final: $SHADED"
 else

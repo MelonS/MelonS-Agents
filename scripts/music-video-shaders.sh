@@ -528,6 +528,15 @@ esac
 #                                 50% of runtime; outside the window
 #                                 the original passes through unmodified.
 #                                 Reads as "shader fires at the climax".
+#   onsets         (C.1 Phase 3)  shader fires at each drum onset as a
+#                                 short gaussian bell.  Density-controlled
+#                                 by selecting every-Nth onset based on
+#                                 ratio.  Requires MUSIC_VIDEO_SHADER_ONSETS
+#                                 (or _BEATS as fallback) — a file of
+#                                 timestamps in seconds, one per line.
+#   beats          (C.1 Phase 3 alt)  same mechanism as onsets but reads
+#                                 the beat track instead of drum-hit
+#                                 onsets.  Reads more "regular".
 # Default: uniform (back-compat).
 SHADER_GATE="${MUSIC_VIDEO_SHADER_GATE:-uniform}"
 if [[ "$RATIO_CMP" == "1" ]]; then
@@ -548,6 +557,48 @@ if [[ "$RATIO_CMP" == "1" ]]; then
       -map "[v]" -map 0:a \
       -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
     echo "  [phrase_climax] active window ${GATE_T0}s–${GATE_T1}s (of ${GATE_DUR}s)" >&2
+  elif [[ "$SHADER_GATE" == "onsets" || "$SHADER_GATE" == "beats" ]]; then
+    # C.1 Phase 3: per-event gaussian-sum gating.
+    if [[ "$SHADER_GATE" == "onsets" ]]; then
+      EVENT_FILE="${MUSIC_VIDEO_SHADER_ONSETS:-${MUSIC_VIDEO_SHADER_BEATS:-}}"
+    else
+      EVENT_FILE="${MUSIC_VIDEO_SHADER_BEATS:-${MUSIC_VIDEO_SHADER_ONSETS:-}}"
+    fi
+    if [[ -z "$EVENT_FILE" || ! -f "$EVENT_FILE" ]]; then
+      echo "  [${SHADER_GATE}] event file missing — falling back to uniform" >&2
+      "$FFMPEG_BIN" -y -loglevel warning -stats \
+        -i "$SRC" -i "$DST" \
+        -filter_complex "[0:v][1:v]blend=all_mode=normal:all_opacity=${SHADER_RATIO}[v]" \
+        -map "[v]" -map 0:a \
+        -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
+    else
+      # Select every-Nth event based on ratio.  Lower ratio → sparser
+      # event firing (fewer, more isolated bells).
+      EVT_TOTAL=$(grep -c . "$EVENT_FILE" 2>/dev/null || echo 0)
+      STRIDE=$(awk -v r="$SHADER_RATIO" 'BEGIN{n = int(1/r + 0.5); print (n < 1 ? 1 : n)}')
+      EVT_CSV=$(awk -v s="$STRIDE" 'NR % s == 1 {print $1}' "$EVENT_FILE" | tr '\n' ' ')
+      EVT_USED=$(echo "$EVT_CSV" | wc -w | tr -d ' ')
+      # Gaussian sigma — wider bells for lower ratio (each event covers more).
+      SIGMA=$(awk -v r="$SHADER_RATIO" 'BEGIN{printf "%.3f", 0.20 + r*0.30}')
+      # Build sum: each gaussian = exp(-((T-t_i)/sigma)^2).  Cap at 1.0
+      # via min() so opacity stays in [0,1].
+      SUM_EXPR=""
+      for t in $EVT_CSV; do
+        term="exp(-((T-${t})/${SIGMA})*((T-${t})/${SIGMA}))"
+        if [[ -z "$SUM_EXPR" ]]; then
+          SUM_EXPR="$term"
+        else
+          SUM_EXPR="${SUM_EXPR}+${term}"
+        fi
+      done
+      OPACITY_EXPR="min(1,${SUM_EXPR})"
+      "$FFMPEG_BIN" -y -loglevel warning -stats \
+        -i "$SRC" -i "$DST" \
+        -filter_complex "[0:v][1:v]blend=all_expr='A*(1-(${OPACITY_EXPR}))+B*(${OPACITY_EXPR})'[v]" \
+        -map "[v]" -map 0:a \
+        -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
+      echo "  [${SHADER_GATE}] $EVT_USED events fired (every ${STRIDE} of ${EVT_TOTAL}), σ=${SIGMA}s" >&2
+    fi
   else
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" -i "$DST" \
