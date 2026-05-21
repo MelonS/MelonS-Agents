@@ -33,6 +33,19 @@ shader research in [`docs/research/2026-05-22-shader-vocabulary.md`](../research
 |--------|---------|
 | `0703be8` | roadmap.md Done entries + Stage-2/3 + C.1 Phase-2 + A.3 QA gate suggest block |
 
+## Fix shipped after MVP
+
+- **A.2 follow-on** `a2e2d3f` — the alignment script's autofill
+  marker (`# autofilled (low confidence)`) was being appended to
+  the LRC line's TEXT field, so the lyric overlay rendered that
+  suffix on-screen.  Moved the marker to a separate `# line N`
+  comment line above the timed entry (LRC parser already skips
+  lines without a `[mm:ss]` prefix).  Plus a tail-line audio-end
+  clamp: LEAD_MS could shove the final line's start past the
+  audio's last word, producing an inverted enable= interval that
+  silently broke the last cue.  Both fixed before the second demo
+  render run.
+
 ## What didn't land
 
 - **Time-windowed shader gating** (C.1 Phase 2).  Current MVP uses
