@@ -103,9 +103,21 @@ if [[ -x "$DIR/scripts/doctor.sh" ]]; then
     p=$(jq -r '.pass // 0' "$DOCTOR_CACHE" 2>/dev/null || echo 0)
     w=$(jq -r '.warn // 0' "$DOCTOR_CACHE" 2>/dev/null || echo 0)
     f=$(jq -r '.fail // 0' "$DOCTOR_CACHE" 2>/dev/null || echo 0)
+    # Prefer actionable_warn (excludes opt-in env keys + git-tree
+    # informational signal) over raw warn count.  Falls back to warn
+    # for older cached output that predates the actionable_warn field.
+    aw=$(jq -r '.actionable_warn // .warn // 0' "$DOCTOR_CACHE" 2>/dev/null || echo 0)
     case "$overall" in
       PASS) DOCTOR_FLAG="doctor:✓" ;;
-      WARN) DOCTOR_FLAG="doctor:⚠${w}" ;;
+      WARN)
+        # If no actionable WARNs, show green checkmark with a small
+        # subtext (informational drift only).
+        if (( aw == 0 )); then
+          DOCTOR_FLAG="doctor:✓ᵢ"
+        else
+          DOCTOR_FLAG="doctor:⚠${aw}"
+        fi
+        ;;
       FAIL) DOCTOR_FLAG="doctor:✗${f}" ;;
       *)    DOCTOR_FLAG="doctor:${overall}" ;;
     esac

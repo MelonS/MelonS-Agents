@@ -277,13 +277,36 @@ elif (( warn > 0 )); then
   exit_code=1
 fi
 
+# Classify each WARN as actionable (operator should look) vs
+# informational (opt-in feature is unset; not a real problem).  The
+# statusline uses `actionable_warn` instead of raw `warn` so the
+# count reflects items the operator actually wants to see.
+#
+# Informational WARN names — these are expected to be unset on a
+# vanilla machine and do not block any default workflow:
+#   env:WANTED_API_KEY     (job-hunt opt-in live HTTP)
+#   env:SARAMIN_KEY        (job-hunt opt-in live HTTP)
+#   env:ANTHROPIC_API_KEY  (Max-plan operators don't need it)
+#   env:PEXELS_API_KEY     (only needed when MUSIC_VIDEO_DEMO_MODE=0)
+#   git-tree               (uncommitted changes are normal during work)
+INFO_WARN_RE='^(env:(WANTED_API_KEY|SARAMIN_KEY|ANTHROPIC_API_KEY|PEXELS_API_KEY)|git-tree)$'
+actionable_warn=0
+for r in "${results[@]}"; do
+  IFS=$'\t' read -r status name detail <<<"$r"
+  [[ "$status" != "WARN" ]] && continue
+  if [[ ! "$name" =~ $INFO_WARN_RE ]]; then
+    actionable_warn=$((actionable_warn + 1))
+  fi
+done
+
 case "$mode" in
   quiet)
-    printf 'doctor: %s (%d pass / %d warn / %d fail)\n' "$overall" "$pass" "$warn" "$fail"
+    printf 'doctor: %s (%d pass / %d warn / %d fail / %d actionable)\n' \
+      "$overall" "$pass" "$warn" "$fail" "$actionable_warn"
     ;;
   json)
-    printf '{"overall":"%s","pass":%d,"warn":%d,"fail":%d,"checks":[' \
-      "$overall" "$pass" "$warn" "$fail"
+    printf '{"overall":"%s","pass":%d,"warn":%d,"fail":%d,"actionable_warn":%d,"checks":[' \
+      "$overall" "$pass" "$warn" "$fail" "$actionable_warn"
     sep=''
     for r in "${results[@]}"; do
       IFS=$'\t' read -r status name detail <<<"$r"
