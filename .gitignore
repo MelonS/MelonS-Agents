@@ -184,3 +184,6 @@ outputs/review-queue/decided/
 # per-machine artifact metadata as the pending/ entries it summarizes;
 # stays local for the same reason.
 docs/review-digest.md
+
+# Playwright MCP runtime logs (per-session artifacts)
+.playwright-mcp/
