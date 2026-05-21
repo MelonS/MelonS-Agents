@@ -18,6 +18,7 @@ Why the split: 2026-05-15 → 2026-05-16 produced 11 commits of infrastructure w
 - If both goal subgoals and roadmap queues are clean, promote "Next" → "Now"; if both are empty, surface that state to the user rather than making up work.
 - After work lands, append a one-line entry to `docs/roadmap.md` "Done" with the commit hash and date; tick any goal subgoals the work cleared.
 - If `docs/audit/CURRENT-ALERT.md` exists, read it before picking up the goal — it means the last audit run flagged drift or a critical issue, which may bump priority above the goal queue.
+- If `docs/autonomous-decisions.md` has entries dated today or yesterday that the operator hasn't seen yet (session-resume pattern), scan them — they capture decisions the agent made unilaterally during overnight autonomous runs and inform what state the repo is in.  `scripts/morning-brief.sh` collapses this + audit + intervention trend + commit attribution into a single read.
 - Subagents (orchestrator, planner, resourcer, editor, qa, auditor) do **not** read `docs/goal.md` or `docs/roadmap.md`. Day-level decisions belong to the top-level conversation; subagents stay pure functions of the mission prompt (or, for `auditor`, the focus arg) they receive.
 
 ## Operating rules
