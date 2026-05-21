@@ -8,7 +8,7 @@
 
 **기계적인 단계는 로컬, 창작 단계는 Claude.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조와 동기화.  job-hunt 는 짧은 키워드를 role-synonym map 통해 자동 확장.  세 가지 감사 트리거 — 커밋·이상·스케줄 — 으로 시스템이 자신의 드리프트를 스스로 잡습니다.  영어 + 한국어 듀얼 트랙.
 
-`미션 출력 60+ · 미션 타입 5종 · 포터블 스킬 2개 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
+`미션 출력 69+ · 미션 타입 5종 · 포터블 스킬 2개 + 메타 스킬 1개 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -105,10 +105,17 @@
   "Done when" 조건만이 달성을 정의함. 분리 이유: 이전 24시간 구간이
   인프라 커밋 11개를 쌓는 동안 큐는 0건이었고 실제 산출물도 0건이었던
   사고를 다시 막기 위함.
-- **운영 계약은 커밋된 단일 출처.**
-  [`docs/operator-contract.md`](docs/operator-contract.md) — 12개
-  하드 룰 + 컨벤션. 에이전트의 로컬 메모리는 이 파일을 가리키는
-  빠른 캐시; 두 곳이 어긋나면 이 파일이 이김.
+- **운영 계약은 커밋된 단일 출처.** 2026-05-22에 portability 이유로
+  두 파일로 분리:
+  [`docs/operator-contract.md`](docs/operator-contract.md)는 이 프로젝트의
+  12개 하드 룰 + 프로젝트 한정 컨벤션(이 레포의 README 구조, README
+  유지보수 cadence).
+  [`config/claude-global.template.md`](config/claude-global.template.md)은
+  프로젝트 간 이동하는 운영자 스타일 선호(이중 스택 리포팅, 터미널
+  포맷, 배치 실행, 글쓰기 톤, idle 시그널, 스크럼-마스터 footer); install
+  스크립트가 BEGIN/END 마커 사이에 idempotent하게 `~/.claude/CLAUDE.md`로
+  렌더링. 에이전트의 로컬 메모리는 각 룰의 canonical 파일을 가리키는
+  빠른 캐시; 두 곳이 어긋나면 canonical이 이기고 메모리가 수정됨.
 - **오케스트레이션과 실행 사이의 비용 방화벽.** Anthropic API 토큰은
   Tier 1 오케스트레이션에서만 소비. 미션 실행(전사 → 선택 → 렌더
   → QA)은 `whisper.cpp` + `ollama` + `ffmpeg` 로컬 실행이며
@@ -124,10 +131,19 @@
   / `qa-report.md`)을 통해 통신. 각 서브에이전트의 컨텍스트는 자신의
   프롬프트 + 자신이 읽는 매니페스트로 한정됨 — 예측 가능한 토큰
   비용, 예측 가능한 실패 모드.
+- **운영자 도구.** 시스템의 런타임 상태를 한눈에 보여주는 스크립트 2개.
+  [`scripts/doctor.sh`](scripts/doctor.sh)는 Claude 호출 없는 헬스
+  체크(~2초) — "지금 이 머신이 일할 준비가 됐나?" 답: CLI 도구, env
+  키, 스케줄러, 감사 알림, git 상태, 디스크, 스킬별 활성화 상태,
+  스킬 매니페스트 drift.
+  [`scripts/audit-skill-drift.sh`](scripts/audit-skill-drift.sh)는
+  13번째 감사 룰 — 각 스킬의 `skills/<name>/config/activation.tsv`에
+  선언된 LIVE 플래그 매니페스트가 실제 스크립트의 게이팅과 일치하는지
+  검증. 둘 다 운영자가 직접 실행하거나 일일 감사 패스에 내장.
 
 ## 샘플 출력
 
-지금까지 **5가지** 미션 타입에 걸쳐 60+건의 출력이 생성되었습니다.
+지금까지 **5가지** 미션 타입에 걸쳐 69+건의 출력이 생성되었습니다.
 가장 최근 (2026-05-17) 포커스는 신규 `music-video` 미션 — 음악-주
 음성 오디오 쇼츠 (내레이션 없음, 캡션 없음, 비트 정렬 컷 + 드럼 onset
 정렬 글리치 마이크로 에디트) — 운영자의 파일럿 픽으로 채택됨, 자세한

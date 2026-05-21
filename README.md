@@ -8,7 +8,7 @@
 
 **Local for the mechanical, Claude for the creative.**  Phrase-aware ffmpeg shaders sync vintage visuals to music structure.  Short-keyword job-hunt expansion via role-synonym map.  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
 
-`60+ mission outputs · 5 mission types · 2 portable skills · 0 runtime API tokens · 3 audit layers · MIT`
+`69+ mission outputs · 5 mission types · 2 portable skills + 1 meta-skill · 0 runtime API tokens · 3 audit layers · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -109,10 +109,19 @@ A few choices that distinguish this from a typical agent demo:
   exists because an earlier 24-hour stretch produced 11 infra commits
   with the queue reading 0 open items and 0 actual outputs.
 - **Operator contract as canonical, committed source of truth.**
-  [`docs/operator-contract.md`](docs/operator-contract.md) — 12 hard
-  rules + conventions. The agent's local memory is a fast-access cache
-  that links back to this file; if the two disagree, the file wins and
-  the memory entry is corrected.
+  Split across two files on 2026-05-22 for portability:
+  [`docs/operator-contract.md`](docs/operator-contract.md) holds this
+  project's 12 hard rules + project-specific conventions (this repo's
+  README structure, README maintenance cadence).
+  [`config/claude-global.template.md`](config/claude-global.template.md)
+  holds the operator-style preferences that travel across projects
+  (dual-stack reporting, terminal format, batch execution, writing
+  tone, idle-state signaling, scrum-master footer); the install
+  script renders it idempotently into `~/.claude/CLAUDE.md` between
+  BEGIN/END markers. The agent's local memory is a fast-access
+  cache that links back to whichever file holds each rule's canonical
+  text; if the two disagree, the file wins and the memory entry is
+  corrected.
 - **Cost firewall between orchestration and execution.** Anthropic API
   tokens are spent only during orchestration (Tier 1). Mission execution
   (transcribe → select → render → QA) runs entirely on local tools —
@@ -129,10 +138,21 @@ A few choices that distinguish this from a typical agent demo:
   `MANIFEST.md` / `qa-report.md`). Each subagent's context is bounded
   by its prompt + the manifest it reads — predictable token cost,
   predictable failure modes.
+- **Operator tooling.** Two scripts surface the system's runtime
+  state at a glance.
+  [`scripts/doctor.sh`](scripts/doctor.sh) is a Claude-free health
+  check (~2 s) that answers "is this machine ready to work right
+  now?" — CLI tools, env keys, schedulers, audit alerts, git state,
+  disk, per-skill activation, skill manifest drift.
+  [`scripts/audit-skill-drift.sh`](scripts/audit-skill-drift.sh) is
+  the 13th audit rule, verifying each skill's declared LIVE-flag
+  manifest at `skills/<name>/config/activation.tsv` matches the
+  actual gating in its scripts. Both are invoked on demand or
+  embedded into the auditor's daily pass.
 
 ## Sample output
 
-60+ mission outputs have been produced to date across **five** mission
+69+ mission outputs have been produced to date across **five** mission
 types.  Most recent focus (2026-05-17) is the new `music-video`
 mission — music-as-primary-audio shorts (no narration, no captions,
 beat-aligned cuts, onset-aligned glitch micro-edits) — chosen via
