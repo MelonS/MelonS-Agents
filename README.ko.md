@@ -526,18 +526,25 @@ CC-BY Blender Foundation 클립 + Kevin MacLeod 트랙 사용
 
 ```bash
 # 1) clone (Mac/Linux + ffmpeg + ollama + aubio 있으면 OK)
-git clone --branch v0.4.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
+git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 
-# 2) 부트스트랩 (도구 점검, brew/apt 힌트 출력;
-#    no-key/no-music 상태 감지해서 데모 경로를 자동 추천)
-./scripts/bootstrap.sh
+# 2) 원커맨드 가이드 마법사 — 사전 체크 → 데모 렌더 → 결과 열기.
+#    단일 Y/n 결정; 나머지는 자동.
+./scripts/first-touch.sh
 
-# 3) 제로-계정 데모 — 첫 실행에서 데모 캐시 다운로드 (~30초) → 렌더 (~100초)
-#    결과:
-#    records/missions/<YYYY-MM-DD>/music-video-demo-<HHMMSS>/outputs/short.mp4
+# 또는 수동 경로:
+# 2a) 부트스트랩 (도구 점검, brew/apt 힌트 출력;
+#     no-key/no-music 상태 감지해서 데모 경로를 자동 추천)
+./scripts/bootstrap.sh
+# 2b) 제로-계정 데모 — 첫 실행에서 데모 캐시 다운로드 (~30초) → 렌더 (~100초)
+#     결과:
+#     records/missions/<YYYY-MM-DD>/music-video-demo-<HHMMSS>/outputs/short.mp4
 MUSIC_VIDEO_DEMO_MODE=1 ./agents/missions/music-video/run.sh demo
 ```
+
+music-video 환경변수 + 플래그 + 쉐이더 카탈로그 전체 레퍼런스:
+[`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
 
 재현성 게이트: `scripts/test-demo-mode.sh` 가 새로 클론된 트리에
 대해 전체 경로 실행 (assertion: `short.mp4` ≥ 1 MB, ≥ 50 s,

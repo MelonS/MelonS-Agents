@@ -561,18 +561,25 @@ before committing accounts".
 
 ```bash
 # 1) clone (any host with Mac/Linux + ffmpeg + ollama + aubio works)
-git clone --branch v0.4.0 --depth 1 https://github.com/MelonS/MelonS-Agents.git
+git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 
-# 2) bootstrap (verifies tools, prints brew/apt hints for anything missing;
-#    detects no-key/no-music state and recommends the demo path automatically)
-./scripts/bootstrap.sh
+# 2) one-command guided wizard — checks prerequisites, runs the
+#    demo, opens the result.  Single Y/n decision; rest is automatic.
+./scripts/first-touch.sh
 
-# 3) zero-account demo — first run fetches the demo cache (~30s) then
-#    renders (~100s).  Output at:
-#    records/missions/<YYYY-MM-DD>/music-video-demo-<HHMMSS>/outputs/short.mp4
+# OR — manual path:
+# 2a) bootstrap (verifies tools, prints brew/apt hints for anything missing;
+#     detects no-key/no-music state and recommends the demo path automatically)
+./scripts/bootstrap.sh
+# 2b) zero-account demo — first run fetches the demo cache (~30s) then
+#     renders (~100s).  Output at:
+#     records/missions/<YYYY-MM-DD>/music-video-demo-<HHMMSS>/outputs/short.mp4
 MUSIC_VIDEO_DEMO_MODE=1 ./agents/missions/music-video/run.sh demo
 ```
+
+Reference for all music-video env vars + flags + shader catalog:
+[`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
 
 ### Skill #2 — job-hunt short-keyword demo (~5 seconds, no network)
 
