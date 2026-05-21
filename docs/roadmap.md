@@ -126,32 +126,18 @@ _(Next queue is currently empty.  Promote a deferred item from
 `docs/copyright-policy.md` ("Still TODO" block) when one becomes
 load-bearing, or set a new focus.)_
 
-<!-- suggest 2026-05-22 — music-video quality bar phases (A.1 shipped,
-     A.2/A.3/B.1/C.1 queued).  See docs/research/2026-05-22-music-
-     video-quality-bar.md for the full decomposition.
+<!-- suggest 2026-05-22 — all 5 quality-bar phases shipped in the
+     2026-05-22 01:30-02:50 KST autonomous block.  Follow-on work:
 
-  - A.2  Lyric overlay vocal-onset alignment.  Use whisper.cpp on the
-         vocal stem to detect word timings; align lyric file lines via
-         fuzzy match (`scripts/correct-captions.py` pattern).  Operator
-         tolerance: ±200ms.  ~2-3h.
-  - A.3  Ethnicity-language match.  KR lyric → Pexels keyword anchored
-         on "korean"/"seoul"; EN lyric → global / Western contexts.
-         Pollinations.ai prompt template updated to specify ethnicity.
-         QA gate: render fails if ≥30% of B-roll contradicts the anchor.
-         ~2h.
-  - B.1  Shader vocabulary survey (research + catalog expand).  Current
-         15 shaders is too narrow.  Catalog ShaderToy + AE + music-video
-         editor breakdowns; map per-mood-family with situational notes.
-         Target ~30 shaders.  ~3-4h.
-  - C.1  Shader restraint gating.  Replace blanket `shader:` preset
-         field with `shader_events:` list (at musical beat/onset/bar/ts,
-         duration_ms, intensity).  Default: shader-active ≤25% of total
-         runtime.  Preserves an explicit `shader_always_on: true`
-         opt-in.  ~3-4h.
-
-     Operator decides ordering — A.2 (lyric sync) is the most
-     viewer-visible from yesterday's batch and would be the natural
-     next pick.  -->
+  - B.1 Stage-2  paper_grain / dust_speck / posterize.  ~2h.
+  - B.1 Stage-3  trail_echo / soft_bloom.  ~2-3h.
+  - C.1 Phase 2  time-windowed shader gating (per-beat enable= rather
+                 than uniform attenuation).  ~3h.
+  - A.3 QA gate  enumerate B-roll vs lang_anchor on a render; fail
+                 if ≥30% contradict.  Needs concrete render to score.
+  - Preset re-map  shift per-genre `shader:` toward Stage-1 shaders
+                 per the table in docs/research/2026-05-22-shader-
+                 vocabulary.md.  Operator decides per-genre.  ~30min.  -->
 
 
 ## Blocked / parked
@@ -167,6 +153,42 @@ load-bearing, or set a new focus.)_
   an opt-in flag in each mission's retry loop.
 
 ## Done — most recent first
+
+- **2026-05-22** (~02:50 KST, autonomous music-video block)
+  **Music-video quality bar — 5 phases shipped** (commits `05e6c2a`
+  A.1 B-roll dedup, `fa1ec72` A.2 lyric sync, `cce3f40` A.3 lang
+  anchor, `52b6eb4` C.1 shader ratio, `1c87377` B.1 Stage-1 shader
+  expand).  Operator-stated six 2026-05-22 quality directives
+  decomposed in `docs/research/2026-05-22-music-video-quality-bar.md`;
+  shader research in `docs/research/2026-05-22-shader-vocabulary.md`.
+  - **A.1**: `records/youtube/broll-used.txt` (gitignored), 196 ids
+    seeded by `scripts/broll-history-backfill.sh`.  Both Pexels
+    callers consult + append.  `BROLL_HISTORY=off` per-render escape.
+  - **A.2**: `scripts/music-video-lyric-align.sh` derives LRC from
+    plain text + audio via whisper (word-level for KR, segment-level
+    for EN).  Confidence reported; sub-floor lines marked autofilled.
+    Integrated via `--align-to-audio` + `--with-lyrics` flags.
+  - **A.3**: `lang_anchor: ko|en|mixed|neutral` on every preset.
+    Person-anchored keywords injected at every 4th segment for vocal
+    genres.  Pollinations.ai prompt template updated.
+  - **C.1**: `shader_active_ratio` per preset (1.0 ambient, 0.35
+    kpop_ballad).  Blend-back-to-original via final ffmpeg pass when
+    ratio < 1.0.  Time-windowed gating deferred.
+  - **B.1**: three new shaders (`light_leak`, `duotone`,
+    `vignette_pulse`).  geq trap documented (uppercase T for time,
+    pow() not `^`).  Stage-2/3 queued in suggest block above.
+  Followups in suggest comment above.
+
+- **2026-05-22** (~01:25 KST) **YT stats Phase 1 + daily scheduler
+  + dreampop drafted** (commits `a43057f`, `ec5a5bb`).
+  `scripts/yt-stats-collect.sh` (videos.list per uploads playlist,
+  channels.list?mine=true auto-discovery, no channel id hardcoded) +
+  `yt-stats-diff.sh` (per-video view/like/comment deltas).  Outputs
+  to `records/youtube/stats/<date>.{csv,raw.json}`.  Daily 09:00
+  launchd job (`com.melons.agents.yt-stats`) installed.  Side
+  action: dreampop `KirKdDUWOpc` moved to privacyStatus=private via
+  videos.update — the 5/24 21:00 publish that would have shipped a
+  known-broken render is now defused; re-render decision deferred.
 
 - **2026-05-22** (~03:35 KST) **Phase 3-6 + case study #8 of overnight
   autonomous run** (commits `8377ac9`, `b2bb0f6`, `e8cb7bf`, `65a917b`,
