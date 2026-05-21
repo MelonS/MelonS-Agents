@@ -117,6 +117,52 @@ if [[ -x "$DIR/scripts/doctor.sh" ]]; then
   fi
 fi
 
+# Goal signal — reduction lever 10 from
+# docs/research/2026-05-22-intervention-reduction.md.  Reads the active
+# goal's deliverable-subgoal progress via the goal-lock skill and
+# surfaces a compact "goal:CHECKED/TOTAL" tag.  Goal file changes are
+# infrequent so a 5-minute cache is fine.
+GOAL_FLAG=""
+GOAL_CACHE="/tmp/cc-goal-cache.json"
+GOAL_LOCK="/tmp/cc-goal-cache.lock"
+GOAL_SCRIPT="$DIR/skills/goal-lock/scripts/check-done.sh"
+if [[ -x "$GOAL_SCRIPT" ]]; then
+  needs_regen=0
+  if [[ ! -f "$GOAL_CACHE" ]]; then
+    needs_regen=1
+  else
+    mtime=$(stat -f %m "$GOAL_CACHE" 2>/dev/null \
+            || stat -c %Y "$GOAL_CACHE" 2>/dev/null || echo 0)
+    now=$(date +%s)
+    if (( now - mtime > 300 )); then needs_regen=1; fi
+  fi
+  if (( needs_regen )) && [[ ! -f "$GOAL_LOCK" ]]; then
+    (
+      touch "$GOAL_LOCK"
+      set +e
+      bash "$GOAL_SCRIPT" --json > "$GOAL_CACHE.tmp" 2>/dev/null
+      rc=$?
+      if (( rc <= 1 )) && [[ -s "$GOAL_CACHE.tmp" ]]; then
+        mv "$GOAL_CACHE.tmp" "$GOAL_CACHE"
+      else
+        rm -f "$GOAL_CACHE.tmp"
+      fi
+      rm -f "$GOAL_LOCK"
+    ) &
+    disown 2>/dev/null || true
+  fi
+  if [[ -f "$GOAL_CACHE" ]]; then
+    g_checked=$(jq -r '.checked // "?"' "$GOAL_CACHE" 2>/dev/null || echo "?")
+    g_total=$(jq -r '.total // "?"' "$GOAL_CACHE" 2>/dev/null || echo "?")
+    g_done=$(jq -r '.all_done // false' "$GOAL_CACHE" 2>/dev/null || echo "false")
+    if [[ "$g_done" == "true" ]]; then
+      GOAL_FLAG="goal:✓${g_checked}/${g_total}"
+    else
+      GOAL_FLAG="goal:${g_checked}/${g_total}"
+    fi
+  fi
+fi
+
 # Assemble.  Single line, separators are bullet middots.
 LINE="dir:$SHORT_DIR"
 [[ -n "$BRANCH" ]]       && LINE="$LINE · git:$BRANCH"
@@ -124,5 +170,6 @@ LINE="dir:$SHORT_DIR"
 [[ -n "$COST_DISPLAY" ]] && LINE="$LINE · cost:$COST_DISPLAY"
 [[ "$SESSION" != "?" ]]  && LINE="$LINE · sid:$SESSION"
 [[ -n "$DOCTOR_FLAG" ]]  && LINE="$LINE · $DOCTOR_FLAG"
+[[ -n "$GOAL_FLAG" ]]    && LINE="$LINE · $GOAL_FLAG"
 
 echo "$LINE"
