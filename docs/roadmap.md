@@ -154,6 +154,26 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-22** (~04:00 KST) **38th + 39th cycle audit clearing arc
+  + site refresh + daily report + §8 registry structural fix**
+  (commits `cce3f40`, `e8c5e47`, `3b8ac7d`, `fef5752`, `bf3cb36`,
+  `be3ca98`, `f49d4b0`, `b7f2209`).  Closes the audit arc:
+  36-37th cycle's 10 findings cleared by `e8c5e47`; 38th cycle's
+  5 new findings cleared by `3b8ac7d` + `fef5752`; 39th cycle's
+  cosmetic §8 coordinate staleness fixed structurally — registry
+  rewritten to drop line numbers entirely.  Entries now name file
+  + pattern, auditor verifies via `grep -n "§8 exception" <file>`.
+  This prevents the coordinate-staleness from recurring whenever
+  parallel sessions insert lines before a §8 comment.  Also: 3
+  undocumented scripts (`music-video-genre-detect.sh`,
+  `music-video-fetch-still.sh`, `log-decision.sh`) added to
+  `docs/for-analysts.md` inventory.  Site refresh per
+  [[readme-cadence]] "contract/architecture change" trigger —
+  case studies 6→8, operator tooling card expanded with
+  statusline + log-decision + review-queue, intervention chart
+  refreshed to 2-panel.  Daily report at
+  `docs/daily/2026-05-22-overnight-intervention.md`.
+
 - **2026-05-22** (~02:50 KST, autonomous music-video block)
   **Music-video quality bar — 5 phases shipped** (commits `05e6c2a`
   A.1 B-roll dedup, `fa1ec72` A.2 lyric sync, `cce3f40` A.3 lang
