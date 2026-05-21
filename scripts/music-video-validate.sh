@@ -113,6 +113,7 @@ if [[ -n "$GENRE" ]]; then
   esac
 else
   GATES_WARN+=("qa-anchor: skipped (no --genre supplied)")
+  [[ "$VERDICT_LEVEL" -lt 1 ]] && VERDICT_LEVEL=1
 fi
 
 # Gate 3: lyric drift — only checked when operator explicitly passes
@@ -132,6 +133,10 @@ if [[ -n "$DRIFT_SIDECAR" && -f "$DRIFT_SIDECAR" ]]; then
           VERDICT_LEVEL=2 ;;
   esac
 else
+  # lyric-drift is commonly skipped (non-vocal renders, no
+  # --with-lyrics on this mission).  Treat skipped as an informational
+  # warning that doesn't bump the verdict — operator typically knows
+  # whether their render used lyrics.
   GATES_WARN+=("lyric-drift: not exercised (no MUSIC_VIDEO_LYRIC_SIDECAR env)")
 fi
 
