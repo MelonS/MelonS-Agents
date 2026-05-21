@@ -30,6 +30,8 @@ set -uo pipefail
 # Discover real ffmpeg
 REAL=${FFMPEG_REAL_BIN:-}
 if [[ -z "$REAL" ]]; then
+  # §8 exception: probe-loop fallback — same documented pattern as
+  # agents/lib/env.sh.  Registered in operator-contract.md §8.
   for c in /opt/homebrew/bin/ffmpeg /usr/local/bin/ffmpeg /usr/bin/ffmpeg; do
     [[ -x "$c" ]] && { REAL="$c"; break; }
   done

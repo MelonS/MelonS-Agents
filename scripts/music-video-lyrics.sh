@@ -62,6 +62,9 @@ fi
 [[ -f "$SRC" ]]   || { echo "❌ input not found: $SRC" >&2; exit 64; }
 [[ -f "$LYRICS_FILE" ]] || { echo "❌ lyrics file not found: $LYRICS_FILE" >&2; exit 64; }
 
+# §8 exception: ffmpeg parameter-expansion default — same pattern as
+# scripts/music-video-shaders.sh:103.  Registered in operator-contract.md §8.
+
 # Optional alignment: derive an LRC file from plain text + vocal audio
 # via whisper-based vocal-onset alignment.  Operator-set LYRIC_LEAD_MS
 # (default 200) gives a small early lead so the line is visible by the

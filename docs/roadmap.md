@@ -168,6 +168,83 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-22** (~02:50 KST) **Phase 1+2 of overnight autonomous
+  run — review queue + audit drift cleanup**.  Operator directive
+  "유저 개입 관련 개선해야 할것들 자율로 내일 오전 11시까지 진행해".
+  (a) Lever 3 shipped: `outputs/review-queue/` + 3 scripts
+  (`review-queue-add.sh` / `-digest.sh` / `-decide.sh`) + wired
+  into `agents/missions/music-video/run.sh` post-render so new
+  renders auto-enqueue (soft-fail, idempotent).  Renders no longer
+  ping the operator per-mp4 — batched contact-sheet drain on
+  operator's own cadence.  Commits `9462552`, `f3d7781`.  (b)
+  Audit drift cleanup: 7 §8 comment gaps closed across
+  `ffmpeg-throttled.sh`, `music-video-lyrics.sh`,
+  `music-video-stillzoom.sh`, `music-video-canvas.sh`,
+  `music-video-audio-reactive.sh`, `music-video-typography.sh`,
+  `doctor.sh`; §8 exception registry in
+  `docs/operator-contract.md` rewritten with correct line numbers
+  + 7 new entries; `docs/architecture.md` Layers table updated to
+  document `outputs/publish/upload-meta-v2/*.json` v2 exception
+  and the new review-queue row; `docs/for-analysts.md:93` date
+  refreshed to 2026-05-22; library-audit + fetch-ai-still scripts
+  added to for-analysts inventory.  Expected: 37th audit DRIFT_DETECTED
+  → CLEAN, statusline `audit⚠` flag clears, doctor:⚠ count drops
+  by 4-5.
+
+- **2026-05-22** (~02:00 → 03:00 KST, parallel music-video session)
+  **Phase A.2 lyric vocal-onset alignment** (commit `fa1ec72`,
+  parallel work).  Companion phase A.1 in `05e6c2a` already in Done.
+
+- **2026-05-22 (bulk reconciliation)** Backlog of ~40 commits between
+  `a05c12b` (2026-05-21 ~05:30 KST) and `f3d7781` (2026-05-22 ~02:45
+  KST) appended below in compressed form, grouped by theme.  Per
+  operator-contract §9, every commit deserves a Done entry; the
+  bulk-reconciliation format trades narrative detail for completeness.
+
+  **Skill #2 `job-hunt` cluster (10 commits, 5/21 afternoon → evening)**:
+  `5ea09dd` 31st+32nd audit trail; `f4881cf` orchestrator region
+  filter (KR↔EN city mapping); `6225afa` digest role_fit + hire_prob
+  breakdown; `eaafcdc` worktree-workflow doc; `6eaf9be` company-tier
+  table + gitignore guard; `f9426ed` kr-theteams 강소기업 plugin;
+  `7b68a83` orchestrator --sort=fit + --top=N; `e289c8a` KR self-
+  hosted careers probe research (no scrape); `904e3bb` Forward
+  Deployment synonym + Korea region mapping; `29e4363` kr-rallit
+  랄릿 KR IT-specialist plugin.
+
+  **Music-video cluster (8 commits, 5/21 evening → 5/22 dawn)**:
+  `a35ac4a` morning brief vocal pivot; `82cb15d` 4 vocal-centric
+  presets (kpop_ballad / kpop_dance / rnb / uspop) + --full-length;
+  `6ddf4a8` 5 per-genre lyrics .txt assets; `d9c7c06` lyrics overlay
+  apostrophe escape fix; `4cddc09` library-audit utility; `8370c4b`
+  morning brief 29 demos finalized.
+
+  **Repo ops / project meta (10 commits, 5/21 evening → 5/22)**:
+  `14bf885` audit-stale note + afternoon-continued; `5200df6` user-
+  feedback infra (Discussions templates + CONTRIBUTING) PR #1;
+  `c5a3619` legal privacy + ToS for TikTok app review; `40240aa`
+  revert privacy/terms after TikTok automation abandoned;
+  `7b58656` log TikTok automation deferral decision; `0655866`
+  skill-activation manifest + status dashboard; `93a042b` external
+  skill libraries ecosystem survey; `9c10dc7` contract split —
+  operator-style → ~/.claude/CLAUDE.md; `a122f99` skill-goal-lock
+  list unchecked deliverable subgoals; `c04d371` audit skill-
+  activation drift check wired into audit-run.sh.
+
+  **Operator tooling + portability (6 commits, 5/22 morning)**:
+  `96b3e00` 2026-05-22 context snapshot pre-compression;
+  `1863c48` doctor.sh repo-wide runtime health check;
+  `400746d` repo-tracked template for ~/.claude/CLAUDE.md operator-
+  style block; `0bb1470` README B1 contract split + operator
+  tooling; `ad36ff7` site refresh stats + skill counts + operator
+  tooling card; `c04d371` 13th audit rule (skill-activation drift).
+
+  **Intervention monitoring (4 commits, 5/22 ~01:30 → ~02:50 KST,
+  this autonomous session)**: `d0afd03` two-panel intervention
+  tracker + daily launchd regen + README restore; `7594684`
+  statusline surfaces doctor health + audit alert (lever 4);
+  `9462552` review-queue batch taste-decision infra (lever 3);
+  `f3d7781` music-video auto-enqueue renders to review queue.
+
 - **2026-05-22** (~02:30 KST) **Intervention reduction — Lever 1
   invalidated, Lever 4 shipped**.  Operator follow-up "그럼 어떻게
   해야함?" after intervention-monitoring restore landed.  Acted on

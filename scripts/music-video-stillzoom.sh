@@ -34,6 +34,8 @@ if [[ -z "$IMG" || -z "$MUSIC" || -z "$DST" ]]; then
 fi
 [[ -f "$IMG" ]]   || { echo "❌ image not found: $IMG" >&2; exit 64; }
 [[ -f "$MUSIC" ]] || { echo "❌ music not found: $MUSIC" >&2; exit 64; }
+# §8 exception: ffmpeg parameter-expansion default — same pattern as
+# scripts/music-video-shaders.sh:103.  Registered in operator-contract.md §8.
 FFMPEG="${FFMPEG_BIN:-/opt/homebrew/bin/ffmpeg}"
 [[ -x "$FFMPEG" ]] || { echo "❌ FFMPEG_BIN not executable" >&2; exit 1; }
 

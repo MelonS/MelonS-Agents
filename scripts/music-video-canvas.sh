@@ -39,6 +39,8 @@ if [[ -z "$SRC" || -z "$DST" ]]; then
   exit 64
 fi
 [[ -f "$SRC" ]] || { echo "❌ input not found: $SRC" >&2; exit 64; }
+# §8 exception: ffmpeg parameter-expansion default — same pattern as
+# scripts/music-video-shaders.sh:103.  Registered in operator-contract.md §8.
 FFMPEG="${FFMPEG_BIN:-/opt/homebrew/bin/ffmpeg}"
 [[ -x "$FFMPEG" ]] || { echo "❌ FFMPEG_BIN not executable" >&2; exit 1; }
 

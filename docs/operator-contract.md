@@ -334,15 +334,29 @@ applies; not autonomous).
 **Hardcoded path exception registry** (the documented
 deviations):
 
-- `agents/lib/env.sh:38,50` — ffmpeg-full keg discovery
+- `agents/lib/env.sh:36,54` — ffmpeg-full keg discovery
   fallback (libass-enabled ffmpeg).  Falls back only when
   PATH ffmpeg lacks libass.
 - `scripts/audit-run.sh:37–42` — claude CLI candidate list
   for launchd's minimal PATH.  Only consulted when
   `command -v claude` fails.
-- `scripts/music-video-shaders.sh:57,64` — ffmpeg/ffprobe
+- `scripts/music-video-shaders.sh:103` — ffmpeg/ffprobe
   parameter-expansion defaults.  Inline §8 exception
   comment present (commit `39c5db3`).
+- `scripts/ffmpeg-throttled.sh:33` — same probe-loop
+  fallback pattern as `agents/lib/env.sh`; only consulted
+  when `FFMPEG_REAL_BIN` env is unset.
+- `scripts/music-video-lyrics.sh:64`,
+  `scripts/music-video-stillzoom.sh:39`,
+  `scripts/music-video-canvas.sh:44`,
+  `scripts/music-video-audio-reactive.sh:48`,
+  `scripts/music-video-typography.sh:53` —
+  ffmpeg/ffprobe parameter-expansion defaults; same
+  documented pattern as `music-video-shaders.sh:103`.
+- `scripts/doctor.sh:86,109` — PATH-agnostic probe loops
+  for the claude CLI and the ffmpeg-full keg; same
+  documented pattern as `agents/lib/env.sh` /
+  `scripts/audit-run.sh`.
 
 ### 9. Goal and roadmap are the source of truth for work selection
 

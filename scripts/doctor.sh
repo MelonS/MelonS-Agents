@@ -81,6 +81,8 @@ if command -v claude >/dev/null 2>&1; then
 else
   # try the canonical fallback locations the auditor uses
   found=""
+  # §8 exception: PATH-agnostic probe loop — same documented pattern as
+  # scripts/audit-run.sh.  Registered in operator-contract.md §8.
   for candidate in "$HOME"/.nvm/versions/node/*/bin/claude "$HOME"/.local/bin/claude /opt/homebrew/bin/claude /usr/local/bin/claude; do
     [[ -x "$candidate" ]] && { found="$candidate"; break; }
   done
@@ -102,6 +104,8 @@ done
 # keg as a fallback (see agents/lib/env.sh).  Check both.
 
 ffmpeg_libass_bin=""
+# §8 exception: ffmpeg-full keg discovery fallback — same documented pattern
+# as agents/lib/env.sh.  Registered in operator-contract.md §8.
 for cand in "${FFMPEG_BIN:-}" /opt/homebrew/opt/ffmpeg-full/bin/ffmpeg /usr/local/opt/ffmpeg-full/bin/ffmpeg "$(command -v ffmpeg 2>/dev/null || true)"; do
   [[ -z "$cand" ]] && continue
   [[ -x "$cand" ]] || continue

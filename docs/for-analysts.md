@@ -90,7 +90,8 @@ concrete artifact exists that proves the path works.
 
 ## Subagent layout (already verified, do not re-recommend)
 
-`.claude/agents/*.md` frontmatter sets the model.  As of 2026-05-17:
+`.claude/agents/*.md` frontmatter sets the model.  As of 2026-05-22
+(unchanged since 2026-05-17):
 
 | Agent          | Model     | Role                                              |
 | -------------- | --------- | ------------------------------------------------- |
@@ -171,6 +172,8 @@ and the niche-pivot decision in
 - [`scripts/gen-script-claude.sh`](../scripts/gen-script-claude.sh) — Sonnet-routed narration script generator (faceless-short; opt-in via `FACELESS_SCRIPT_OVERRIDE`, default is ollama).
 - [`scripts/score-content.sh`](../scripts/score-content.sh) — Sonnet-routed content-quality scorer (feedback loop).
 - [`agents/missions/music-video/run.sh`](../agents/missions/music-video/run.sh) — aubiotrack + aubioonset + Pexels (no Anthropic).
+- [`scripts/music-video-library-audit.sh`](../scripts/music-video-library-audit.sh) — operator utility that lists every `assets/music/*.mp3` with detected genre / shader preset / render status; quick "what's left to render?" view (no Anthropic).
+- [`scripts/music-video-fetch-ai-still.sh`](../scripts/music-video-fetch-ai-still.sh) — wraps the free Pollinations.ai image API to generate stillzoom backgrounds when no operator-supplied still is available (`--ai-still` flag in `music-video-auto.sh`; no Anthropic).
 - [`.env.example`](../.env.example) — `OLLAMA_MODEL_HIGHLIGHT=llama3.2:3b` still required by the three local-only missions.
 - [`agents/missions/highlight/run.sh`](../agents/missions/highlight/run.sh) — `ollama_generate "$OLLAMA_MODEL_HIGHLIGHT" "$PROMPT" true`.
 

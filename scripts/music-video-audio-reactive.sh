@@ -44,6 +44,8 @@ if [[ -z "$SRC" || -z "$MUSIC" || -z "$DST" ]]; then
 fi
 [[ -f "$SRC" ]]   || { echo "❌ input not found: $SRC" >&2; exit 64; }
 [[ -f "$MUSIC" ]] || { echo "❌ music not found: $MUSIC" >&2; exit 64; }
+# §8 exception: ffmpeg parameter-expansion default — same pattern as
+# scripts/music-video-shaders.sh:103.  Registered in operator-contract.md §8.
 FFMPEG="${FFMPEG_BIN:-/opt/homebrew/bin/ffmpeg}"
 
 TMPDIR_LOCAL=$(mktemp -d -t mv-areactive-XXXX)
