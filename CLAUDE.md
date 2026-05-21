@@ -22,7 +22,14 @@ Why the split: 2026-05-15 → 2026-05-16 produced 11 commits of infrastructure w
 
 ## Operating rules
 
-The full contract — agent behavior, never-pause rule, money firewall, dual-stack reporting, terminal format, documentation style, split-commit-push, session-resume protocol — lives in [`docs/operator-contract.md`](docs/operator-contract.md). Committed; survives machine changes; agent memory is a fast-access cache pointing back to it. The four most-load-bearing summarized inline:
+The operating rules live in two files (both auto-loaded by Claude Code):
+
+- [`docs/operator-contract.md`](docs/operator-contract.md) — this project's hard rules (§1-12: agent does all the work, never-pause, money firewall, logic-changes-need-OK, git workflow, code/data separation, goal-and-roadmap, session-resume, shutdown, no-PII) plus project-specific conventions (this repo's README structure, README maintenance cadence).
+- `~/.claude/CLAUDE.md` — operator-style preferences that travel across projects: dual-stack reporting (Korean briefing + English internals), terminal/shell format, batch execution, writing tone, idle-state signaling, scrum-master footer. Split out from the contract on 2026-05-22 so the same preferences apply unchanged in any future repo.
+
+Both files together replace what used to be a single 750-line contract. Agent memory in `~/.claude/projects/-Users-melons-ai/memory/` is the fast-access cache pointing back to either file.
+
+The four most-load-bearing project rules summarized inline:
 
 - **Agent does all the work** — user never touches the terminal. Claude installs, edits, configs, commits, pushes. User intervenes only on hard guardrails (single-click approval, never a multi-step recipe).
 - **Never pause unless told** — user is async; "or pause?" turns into hours of idle. When `docs/roadmap.md` Next has an item and Now finishes, promote it and continue in the same turn.

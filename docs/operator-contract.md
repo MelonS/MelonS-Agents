@@ -11,8 +11,17 @@ The contract is split into two sections:
 
 1. **Hard rules** — non-negotiable; describe how the agent must
    behave.  Violating these is a bug.
-2. **Conventions** — formatting, tone, and presentation defaults.
-   Deviating requires explicit user instruction.
+2. **Conventions** — project-specific formatting and process
+   defaults (this repo's README structure, README maintenance
+   cadence).  Deviating requires explicit user instruction.
+
+Operator-style preferences that travel across projects
+(dual-stack reporting, terminal/shell format, batch execution,
+writing tone, idle-state signaling, scrum-master footer) are
+not in this file — they live in `~/.claude/CLAUDE.md` under
+"Operator style — applies to all projects".  Two-file split
+performed 2026-05-22 so the same preferences apply unchanged
+when the operator works in another repository.
 
 Cross-cutting principle: the user is async.  They send a message and
 walk away.  Asymmetric latency makes "let me ask first" a cost; act
@@ -512,34 +521,26 @@ violation regardless of intent.
 
 ## Conventions
 
-### Dual-stack reporting
+The Conventions section was split on 2026-05-22:
 
-- Korean **[관리자 브리핑]** one-liner at the top of every user-facing
-  message.
-- English internals — commits, code, logs, file paths.
-- No raw code dumps in chat.  Reference paths + line numbers; the
-  user reads the file directly.
-- Periodic Korean status dashboard (`[완료]/[진행]/[다음]`) at natural
-  10-minute breakpoints during long autonomous work.
+- **Operator-style conventions that travel across projects** —
+  Dual-stack reporting, Terminal/shell format, Batch execution,
+  Writing tone, Idle-state signaling, Scrum-master footer — moved
+  to `~/.claude/CLAUDE.md` under "Operator style — applies to all
+  projects".  Those are now the canonical home; this file no
+  longer duplicates them.
+- **Project-specific conventions** (this repo's README structure,
+  README maintenance cadence) remain below.  They describe how
+  documentation for *this* repo is shaped and refreshed and do
+  not transfer cleanly to other projects.
 
-### Terminal / shell format
+If a memory file's `Canonical:` line still says
+`docs/operator-contract.md Conventions §<X>` for one of the moved
+sections, the pointer is stale — update it to
+`~/.claude/CLAUDE.md "Operator style" §<X>`.
 
-When a single user message requires multiple shell operations:
+### Documentation style (this repo)
 
-- Write the entire sequence into `/tmp/agent_worker.sh` (fixed path).
-- Run it once.  One approval per script, not per command.
-- Log format inside the script:
-  - `[STEP] N/M description` — entering a step.
-  - `[DONE] description` — exiting a step successfully.
-  - `[PROGRESS] N% description` — long-running progress markers.
-  - `[CRITICAL] message` — only at completion or hard failure.
-
-### Documentation style
-
-For all repository documentation (README, docs/, etc.):
-
-- Neutral, technical tone.  No personal credentials, "X years of
-  experience", or marketing superlatives.  Clean open-source feel.
 - README split into `README.md` (English) and `README.ko.md`
   (Korean) with a language switcher at the top.
 - Center-aligned title + badges via `<div align="center">`.
@@ -550,23 +551,10 @@ For all repository documentation (README, docs/, etc.):
   responsibility + output.
 - No fruit / casual emojis in committed content.
 
-### Batch execution
-
-Multi-step shell work goes into a single `.sh` script — one approval
-per script, not per command.  Internal flags (`jq -f`, `--slurpfile`,
-`2>&1`, pipes, etc.) are implicitly approved by virtue of being
-inside the script.  Avoid `bash -c '...'` chains in the chat;
-they're noisy and re-prompt for each invocation.
-
-### Writing tone
-
-Same as documentation style above, applied to:
-
-- Commit messages — explain *why*, not what.
-- PR descriptions, when those happen.
-- Any public-facing writing.
-
-Keep it tight, technical, and neutral.
+Underlying tone — neutral, technical, no marketing superlatives,
+no personal-credentials framing — is the general Writing tone
+default in `~/.claude/CLAUDE.md`.  This section only adds the
+shape elements specific to this repo's README.
 
 ### README maintenance cadence
 
@@ -666,85 +654,16 @@ new reviewer landing on the README for the first time, and ask
 "would I get an accurate read of the system in 30 seconds?"  Where
 the answer is no, edit.
 
-### Idle-state signaling
-
-When a turn finishes and there is no further work in progress, end
-the message with an explicit, **colored** marker so the operator
-can scan the bottom of the message and instantly tell idle from
-in-progress.  The user is async and otherwise has to ask "are you
-working or done?" to find out — the marker eliminates that
-question.
-
-Format:
-
-- **True idle** (no background tasks, no scheduled follow-up):
-  close with `🟢 **대기중.**` on its own line.  May precede with
-  one sentence naming the next decision point if there is one.
-- **Background task running** (e.g., a long ffmpeg job started
-  with `run_in_background`): close with
-  `🟡 **대기중** (background: <one-line description>)` — the agent
-  is idle for input but compute is still happening.
-- **Active work continuing into the next turn**: do **not** write
-  the marker — it is only for genuine idle.  An interim turn
-  inside a multi-turn task closes without any marker.
-
-Choice of colors mirrors a traffic-light convention: 🟢 = clear,
-nothing running; 🟡 = clear for input but compute in flight; (no
-marker) = still working, expect more output.
-
-This pairs with `never-pause` (§2): keep going through the
-roadmap *Next* queue without asking, and only signal idle when
-there is genuinely nothing queued and no in-flight work.
-
-### Scrum-master footer
-
-Every reply that involves work closes with a fixed 3-line footer
-block.  The purpose is mechanical re-anchoring at end of turn so the
-operator picks the thread back up at zero cognitive cost.
-
-```
-[Next Action] — one sentence, the single most concrete next step.
-                No alternatives, no "or".
-[Git Commit]  — short hash + subject of the commit that just landed
-                on origin/main.  This is the commit Claude already
-                ran (per §1 + §6) — NOT a paste-ready future command.
-                If no commit landed this turn, write "none this turn".
-[Pace]        — remaining estimated time on the current micro-task
-                + one short focus line.  Dry tone, not cheerleader.
-```
-
-Companion rules:
-
-- **15-min micro-tasks.**  When a request expands past ~20 min of
-  work, decompose into 15-min chunks before starting.  Name the
-  first chunk in `[Next Action]`.
-- **Scope-creep nudge.**  If the user veers into an abstract or
-  large-design question mid-mission, the `[Pace]` line names
-  the deviation and pulls back to the current Now-queue item.
-  Answer the question briefly; do not refuse it.
-- **Skip the footer for** pure clarification Q&A (e.g.,
-  "what file does X live in?" — single-fact answer, no footer).
-- **Layer order** in a typical reply:
-  1. `[관리자 브리핑]` opener (Dual-stack reporting)
-  2. Body (work updates)
-  3. Idle marker (🟢/🟡) when applicable
-  4. 3-line scrum-master footer
-
-This is a literal deviation from the persona spec ("paste-ready
-git command") — see [[scrum-master-mode]] memory for the reasoning.
-The deviation is principled: §1 forbids pasting commands at the
-user, so `[Git Commit]` becomes a record of what Claude already did
-instead of an instruction for the user to execute.
-
 ---
 
 ## Memory and this file
 
 `~/.claude/projects/-Users-melons-ai/memory/` mirrors these rules
 into one feedback file per rule for fast lookup at conversation
-start.  Each memory file's description should match the
-corresponding section heading here.  The MEMORY.md index links each
-entry back to a section in this file.
+start.  Each memory entry's `Canonical:` line points back to either
+this file (for hard rules §1-12 and the project-specific Conventions
+above) or `~/.claude/CLAUDE.md` "Operator style" (for the
+travel-with-operator conventions split out on 2026-05-22).
 
-If a memory file disagrees with this file, **this file wins**.  Fix
-the memory file in that case, not the contract.
+If a memory file disagrees with its canonical file, **the canonical
+file wins**.  Fix the memory file in that case, not the contract.
