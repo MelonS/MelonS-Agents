@@ -356,6 +356,119 @@ bash 를 직접 실행했기 때문임.  같은 흐름을 Claude Code 를
 
 ---
 
+## 8. 측정 안 되던 축 — 자율성 신호 + 개입 감소 lever
+
+**문제.** 사람이 *계속* 조타해야 하는 멀티 에이전트 시스템은
+사실 자기가 대체하려던 그 노력을 그대로 다시 들이고 있을 뿐입니다.
+하지만 "이 시스템에 사람 손이 얼마나 필요한가?" 는 한번도 측정된
+적이 없었습니다.  2026-05-17 에 `docs/metrics/intervention.png`
+차트가 추가됐고, README 리라이트 한 번 (`aa10ba0`, 2026-05-18
+music-video-first 갱신) 만에 README 에서 조용히 빠져버렸습니다.
+2026-05-22 시점에 그 데이터는 2일 stale 상태였고 아무도 눈치
+못 챘습니다.  측정하지 않는 축은 drift 합니다.
+
+**제약.** 신호는 정직하고, 다차원이고, 사적이어야 했습니다:
+
+- **정직** — 에이전트가 점수를 조작할 수 없어야 함 (예: 10개 커밋을
+  squash 해서 "user-initiated" 카운트를 낮추는 식).  해결: 커밋
+  본문에서 명시적 사용자 방향 마커 (`Requested-by: user`,
+  "Operator surfaced", 한국어 직접인용) 를 읽는 라인별 분류기.
+- **다차원** — 커밋 카운트만으로는 운영자의 *시간* 참여도가 빠집니다.
+  레버리지 높은 날 (자율 오버나잇) 과 손-많이-가는 날 (라이브
+  코딩 세션) 둘 다 10 커밋이 나올 수 있음.  세션 분 (minutes)
+  도 같이 잡아야 함.
+- **사적** — `~/.claude/projects/-Users-melons-ai/` 의 세션 JSONL
+  은 운영자의 verbatim 프롬프트를 담고 있고 종종 personal 컨텍스트
+  를 포함합니다.  마이닝 스크립트는 이를 로컬에 묶어 두고 절대
+  업로드 안 함 — 집계 카운트만 커밋된 JSON 에 들어감.
+
+**결정.** 운영자 액션 없이 매일 갱신되는 **2-source 2-panel 신호**:
+
+- **Panel A** — `git log` 커밋 attribution.  user-initiated vs
+  agent-autonomous 일별 카운트 + ratio + leverage
+  (`agent / max(1,user)`) + longest autonomous gap (h).
+- **Panel B** — 로컬 Claude Code 세션 JSONL 마이닝.  일별
+  operator-prompt 카운트 (텍스트 콘텐트 user 메시지만; `tool_result`
+  자동 응답은 제외) + 활성 세션 분 (세션당 60분 cap — idle 노트북이
+  신호를 부풀리지 않게).
+- 차트는 매일 02:00 KST `com.melons.agents.intervention-chart`
+  launchd 잡으로 자동 재생성.
+
+신호가 정직해진 다음, 동반 reduction memo
+(`docs/research/2026-05-22-intervention-reduction.md`) 가 5 개의
+우선순위 매겨진 **lever** 를 추세에 *작용하기 위해* 정리:
+
+1. 분류기 false-positive scrub — 5 개의 플래그된 commit 을 스팟체크
+   한 결과 모두 정당하게 user-initiated 인 것으로 확인되어 **무효화**.
+   교훈: 그럴듯해 보이는 가설이 한 라운드 검증으로 무너질 수 있음.
+2. 추천 옵션을 기본으로 (`[[minimize-intervention]]`) — 이미 메모리에
+   저장된 룰, 지속 강화.
+3. **테이스트 리뷰 batch** — `outputs/review-queue/` + 3 개 스크립트
+   (`review-queue-add.sh` / `-digest.sh` / `-decide.sh`).  새 렌더는
+   `agents/missions/music-video/run.sh` 에서 자동 enqueue; 운영자는
+   per-render 핑 대신 자신의 cadence 로 contact-sheet markdown 을
+   drain.  10× fewer intervention events, 같은 total decision count.
+4. **statusline 이 status ping 흡수** — `scripts/statusline.sh` 가
+   `scripts/doctor.sh --json` (60s background-regen 캐시) 과
+   goal-lock skill 의 진행도 카운트를 읽음.  운영자는
+   `doctor:✓/⚠N/✗N · goal:N/M · audit⚠` 를 상시 봄 → "지금
+   상태가 뭐임?" 프롬프트 부류 제거.  Companion: `actionable_warn`
+   분류로 opt-in env-key gap 이 카운트를 부풀리지 않게.
+5. permission bootstrap — 이미 v0.3.0 에 ship
+   (`feat/permission-bootstrap`, fresh-clone 첫 세션에서
+   ~30 prompt/session 감소).
+
+추가로 **autonomous-decisions log** (`docs/autonomous-decisions.md`
++ `scripts/log-decision.sh`) — 오버나잇 작업 중 에이전트가
+unilateral 결정을 내리면 한 줄 append.  운영자는 아침에 한 페이지를
+60초 이내로 읽고 무엇이 결정됐고 *무엇을 하지 않기로 결정됐는지*
+(lever dismissal 도 기록되니까 다음 세션에 같은 가설이 재탐색되지
+않음) 를 파악.
+
+**산출물.**
+
+- `docs/metrics/intervention.png` — 2-panel 차트.
+- `docs/metrics/intervention.json` — 일별 raw 데이터 (`user_initiated`,
+  `agent_autonomous`, `user_ratio_pct`, `leverage_ratio`,
+  `longest_autonomous_gap_h`, `operator_prompts`,
+  `active_session_minutes`, `session_count`).
+- `scripts/generate-intervention-chart.py` — 분류기 + 마이너.
+- `scripts/intervention-chart-collect.sh` — matplotlib venv bootstrap
+  포함 runner.
+- `scripts/com.melons.agents.intervention-chart.plist.template` —
+  매일 02:00 KST launchd.
+- `docs/research/2026-05-22-intervention-reduction.md` — 우선순위 +
+  lever 별 상태가 정리된 메모.
+- `docs/autonomous-decisions.md` + `scripts/log-decision.sh` — 한
+  페이지짜리 wake-up 요약.
+- `outputs/review-queue/` + 3 개 스크립트 — batched taste-decision
+  큐.
+- `scripts/statusline.sh` + `scripts/doctor.sh` actionable_warn —
+  status 가 상시 보이는 UI 에 흡수됨.
+
+**결과 (9일 window, 2026-05-14 → 2026-05-22 partial):**
+median user-ratio ≈ 19%, range 0%–69% (5/17 스파이크는 chart + site
++ scorecard 가 처음 landing 한 날 — 무거운 taste-call density).
+최고 leverage 날은 2026-05-20 (7.7×, 11% ratio) — Skill #2 v0.4.0
+를 출고한 자율 오버나잇.  2026-05-22 partial (03:00 KST 까지) 은
+그것을 넘을 추세: 8% ratio, 11.5× leverage, 9 operator prompts
+across 8 sessions for ~99 active minutes — 이 케이스 스터디 자체
+의 작업 대부분이 그 신호 안에서 돌았습니다.
+
+정직한 disclosure: 이건 운영자 한 명의 일일 신호이지 통계적 연구가
+아닙니다.  하지만 *그게* 정직한 신호입니다 — 신호 없는 것보다
+노이즈가 있는 신호가 낫습니다.
+
+이 케이스 스터디가 #4 (감사) 와 별도로 의미 있는 이유: 감사는
+**시스템이 계약을 지키는가?** 를 측정합니다.  이건 **운영자가
+loop 안에 있어야 시스템이 작동하는가?** 를 측정합니다.  다른
+질문, 다른 메커니즘, 둘 다 필요.  코스트 라우팅 룰 (#1) 처럼
+답은 minimum mechanism — 차트와 메모, 프레임워크가 아니라 —
+이고 각 lever 는 독립적 (다른 것 깨지 않고 어느 하나 drop 또는
+swap 가능).
+
+---
+
 ## 공통점
 
 - 각각 **구체적 관측된 실패**에서 출발했지, 이론적 우려에서 출발한 게 아님.

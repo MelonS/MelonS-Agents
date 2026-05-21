@@ -519,6 +519,125 @@ the pipeline.
 
 ---
 
+## 8. Intervention as the unmeasured axis — autonomy signal + reduction levers
+
+**Problem.** A multi-agent system that *needs* constant human steering
+hasn't actually escaped the effort it was meant to replace.  But "how
+much human steering does this system need?" was never measured: the
+project had a `docs/metrics/intervention.png` chart added on
+2026-05-17, and one README rewrite later (`aa10ba0`, 2026-05-18
+music-video-first refresh) it had been silently dropped from the
+README.  By 2026-05-22 the underlying data was 2 days stale and
+nobody had noticed.  An axis you don't measure is one that drifts.
+
+**Constraint.** The signal had to be honest, multi-dimensional, and
+private:
+
+- **Honest** — agent must not be able to game the score by, e.g.,
+  squashing 10 commits into one to lower the "user-initiated count".
+  Solution: tie each commit to a per-line classifier that reads commit
+  body for explicit user-direction markers (`Requested-by: user`,
+  "Operator surfaced", verbatim Korean quotes).
+- **Multi-dimensional** — a commit count alone misses the operator's
+  *time* engaged.  A high-leverage day (autonomous overnight) and a
+  high-touch day (live coding session) can both produce 10 commits.
+  Need to capture session minutes too.
+- **Private** — session JSONLs at `~/.claude/projects/-Users-melons-ai/`
+  contain the operator's verbatim prompts, often with personal
+  context.  The mining script must keep these local and never
+  upload — only aggregate counts land in the committed JSON.
+
+**Decision.** Two-source two-panel signal updated daily without
+operator action:
+
+- **Panel A** — `git log` commit attribution.  Per-day count of
+  user-initiated vs agent-autonomous + ratio + leverage
+  (`agent/max(1,user)`) + longest autonomous gap (h).
+- **Panel B** — Local Claude Code session JSONL mining.  Per-day
+  operator-prompt count (text-content user messages only; excludes
+  `tool_result` auto-replies) + active session minutes (capped at
+  60min per session to prevent idle laptops from inflating the
+  signal).
+- Chart regenerates daily 02:00 KST via
+  `com.melons.agents.intervention-chart` launchd job.
+
+Once the signal was honest, a companion reduction memo
+(`docs/research/2026-05-22-intervention-reduction.md`) enumerated
+5 prioritized **levers** to *act on* the trend:
+
+1. Classifier false-positive scrub — **invalidated** after spot-check
+   of 5 flagged commits showed all were legitimately user-initiated.
+   Discipline lesson: a hypothesis that looks correct can collapse
+   under one round of verification.
+2. Default to recommended option (`[[minimize-intervention]]`) —
+   memorized rule, ongoing enforcement.
+3. **Batch taste reviews** — `outputs/review-queue/` + three scripts
+   (`review-queue-add.sh` / `-digest.sh` / `-decide.sh`).  New renders
+   auto-enqueue from `agents/missions/music-video/run.sh`; operator
+   drains a contact-sheet markdown on their cadence instead of being
+   pinged per-render.  10× fewer intervention events, same total
+   decision count.
+4. **Statusline absorbs status pings** — `scripts/statusline.sh`
+   reads `scripts/doctor.sh --json` (60s background-regen cache) and
+   the goal-lock skill's progress count.  Operator sees
+   `doctor:✓/⚠N/✗N · goal:N/M · audit⚠` continuously, removing the
+   "what's the state?" prompt class.  Companion: `actionable_warn`
+   classification so opt-in env-key gaps don't inflate the count.
+5. Permission bootstrap — already shipped in v0.3.0
+   (`feat/permission-bootstrap`, ~30 prompt-per-session reduction
+   for fresh-clone first sessions).
+
+Plus an **autonomous-decisions log** (`docs/autonomous-decisions.md`
++ `scripts/log-decision.sh`) — when the agent makes a unilateral
+decision during overnight work, it appends a one-liner.  Operator
+wakes up, reads one page in <60s, understands what was decided and
+*what was decided not to do* (lever dismissals recorded, so the same
+hypothesis doesn't get re-explored next session).
+
+**Artifact.**
+
+- `docs/metrics/intervention.png` — the two-panel chart.
+- `docs/metrics/intervention.json` — per-day raw data (`user_initiated`,
+  `agent_autonomous`, `user_ratio_pct`, `leverage_ratio`,
+  `longest_autonomous_gap_h`, `operator_prompts`,
+  `active_session_minutes`, `session_count`).
+- `scripts/generate-intervention-chart.py` — classifier + miner.
+- `scripts/intervention-chart-collect.sh` — runner with venv
+  bootstrap for matplotlib.
+- `scripts/com.melons.agents.intervention-chart.plist.template` —
+  launchd daily 02:00 KST.
+- `docs/research/2026-05-22-intervention-reduction.md` — the lever
+  memo with priority + status per lever.
+- `docs/autonomous-decisions.md` + `scripts/log-decision.sh` — the
+  one-page wake-up summary.
+- `outputs/review-queue/` + 3 scripts — batched taste-decision queue.
+- `scripts/statusline.sh` + `scripts/doctor.sh` actionable_warn —
+  status absorbed into the always-visible UI.
+
+**Result (9-day window, 2026-05-14 → 2026-05-22 partial):** median
+user-ratio ≈ 19%, range 0%–69% (5/17 spike was the day chart + site +
+scorecard first landed — heavy taste-call density).  Best-leverage
+day was 2026-05-20 (7.7×, 11% ratio) — an autonomous overnight
+shipping Skill #2 v0.4.0.  2026-05-22 partial (through 03:00 KST) is
+on track to beat that: 8% ratio, 11.5× leverage, 9 operator prompts
+across 8 sessions for ~99 active minutes — the bulk of the work in
+this case study itself ran inside that signal.
+
+Honest disclosure: this is one operator's daily signal, not a
+statistical study.  But it's *the* honest signal — better noise than
+no signal.
+
+Why this case study matters separately from #4 (the audit): the
+audit measures **does the system match the contract?**.  This
+measures **does the operator have to be in the loop to make the
+system work?**.  Different question, different mechanism.  Both
+needed.  Like the cost-routing rule (#1), the answer was the
+minimum mechanism — a chart and a memo, not a framework — and
+each lever is independent (drop or swap any of them without
+breaking the others).
+
+---
+
 ## What these have in common
 
 - Each started from a **specific observed failure**, not a theoretical

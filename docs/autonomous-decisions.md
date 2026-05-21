@@ -37,6 +37,7 @@ header if today's section doesn't exist.
 
 ## 2026-05-22 (overnight autonomous)
 
+- `03:35 KST` — Engineering case study #8 written EN+KO — intervention measurement as the unmeasured axis. Portfolio signal per [[repo-as-credibility-signal]]
 - `03:20 KST` — Phase 6 shipped — doctor.sh now reports actionable_warn (excludes opt-in env keys + git-tree). Statusline doctor:⚠N count dropped from 7 to 3 (real items only)
 - `03:05 KST` — Lever 10 shipped — statusline now surfaces goal:N/M subgoal progress alongside doctor health
 - `03:00 KST` — Autonomous-decision log infrastructure shipped (lever 9)
