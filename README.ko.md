@@ -154,6 +154,11 @@
   (`review-queue-add.sh` / `-digest.sh` / `-decide.sh`) 는 batched
   taste-decision 큐 — music-video 렌더가 per-mp4 ping 대신 여기로
   auto-enqueue.
+  [`scripts/morning-brief.sh`](scripts/morning-brief.sh) — 위 모든
+  것을 한 페이지 overnight digest 로 결합하는 단일 명령: doctor
+  verdict, audit 상태, intervention trend (7-day Δ), 12h 전부터의
+  커밋 + attribution, 오늘 자율 결정, review-queue pending 카운트,
+  blockers.  Read-only.  "밤사이 뭐 됐어?" 의 canonical 답.
 
 ## 자율성 신호 — 운영자 개입 추세
 

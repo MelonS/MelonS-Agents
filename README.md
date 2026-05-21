@@ -164,6 +164,12 @@ A few choices that distinguish this from a typical agent demo:
   (`review-queue-add.sh` / `-digest.sh` / `-decide.sh`) is the
   batched taste-decision queue — music-video renders auto-enqueue
   here instead of pinging the operator per-mp4.
+  [`scripts/morning-brief.sh`](scripts/morning-brief.sh) — single
+  command that combines all the above into a one-page overnight
+  digest: doctor verdict, audit status, intervention trend (7-day
+  Δ), commits since 12h ago + attribution, today's autonomous
+  decisions, review-queue pending count, blockers.  Read-only;
+  the canonical answer to "what happened overnight?".
 
 ## Autonomy signal — operator-intervention trend
 
