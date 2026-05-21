@@ -230,11 +230,11 @@ genres:
     forbidden_effects: [scanline, neon_edge, datamosh, kaleidoscope, chromatic_split, strobe]
     keyword_pool:
       - rainy seoul window night
-      - empty street lamp post
-      - subway window blurred
-      - cafe alone evening
-      - city skyline rain
-      - winter coat alone street
+      - seoul empty street lamp post
+      - seoul subway window blurred
+      - korean cafe alone evening
+      - seoul skyline rain
+      - korean winter coat alone street
     phrase_pool:
       - 어디쯤이야
       - 한 마디만
@@ -266,9 +266,9 @@ genres:
     keyword_pool:
       - neon stage lighting close
       - dance floor strobe
-      - fashion model city street
+      - korean fashion model seoul street
       - mirror reflection studio
-      - tokyo crossing fast
+      - seoul crossing fast
       - colorful lights blur
     phrase_pool:
       - 사이렌
@@ -302,8 +302,8 @@ genres:
       - wine glass low light
       - red velvet curtain
       - silk fabric close
-      - rooftop terrace dim
-      - jazz bar interior warm
+      - manhattan rooftop terrace dim
+      - harlem jazz bar interior warm
     phrase_pool:
       - in the late light
       - my favorite mistake
@@ -332,10 +332,10 @@ genres:
     cut_mode: cuts
     forbidden_effects: [vhs, datamosh, kaleidoscope, scanline]
     keyword_pool:
-      - urban skyline daylight
-      - fashion magazine spread
+      - new york skyline daylight
+      - american fashion magazine spread
       - LA pool sunset
-      - convertible drive sunset
+      - california convertible drive sunset
       - polaroid camera close
       - mirror studio reflection
     phrase_pool:
