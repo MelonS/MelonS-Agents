@@ -154,6 +154,27 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-22** (~03:15 KST, autonomous block continued) **Music-
+  video quality bar — refinements + QA gate + Phase 2 follow-ons**
+  (commits `9057d77` A.3 injection 25→33%, `77535c3` C.1 Phase 2
+  phrase_climax gate mode, `7e52ab8` A.3 QA gate scoring, `a2e2d3f`
+  A.2 LRC marker leak fix, `ea6d5d0` qb-demo verification doc,
+  `7d8e9b1` shader Stage-2 + Stage-3 = catalog now 23).
+  - A.3 anchor injection rate bumped to 33% (every 3rd seg) after
+    demo-frame sampling showed only 25% coverage.
+  - C.1 Phase 2 `phrase_climax` gate mode: shader fires only in the
+    center `RATIO × duration` window with trapezoid fade.  Activate
+    via `MUSIC_VIDEO_SHADER_GATE=phrase_climax`.
+  - A.3 QA gate `scripts/music-video-qa-anchor.sh`: scores B-roll
+    keywords against the genre's lang_anchor, emits JSON verdict +
+    exit code (0 PASS / 1 WARN / 2 FAIL).  First test on demo:
+    3/8 = 0.38 → PASS.
+  - A.2 LRC marker leak fix `a2e2d3f`: autofill comment moved from
+    inline text suffix to a separate `# line N` comment line.
+  - 8 additional shaders shipped across Stage-2 (paper_grain,
+    dust_speck, posterize) and Stage-3 (trail_echo, soft_bloom);
+    catalog now 23.
+
 - **2026-05-22** (~04:00 KST) **38th + 39th cycle audit clearing arc
   + site refresh + daily report + §8 registry structural fix**
   (commits `cce3f40`, `e8c5e47`, `3b8ac7d`, `fef5752`, `bf3cb36`,
