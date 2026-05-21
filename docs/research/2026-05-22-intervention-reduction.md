@@ -56,23 +56,18 @@ artifacts the README now showcases.  2026-05-20 hit the best leverage
 
 ## Reduction levers (highest-impact first)
 
-### 1. Classifier false-positive: Korean direct quotes
+### 1. Classifier false-positive: Korean direct quotes — INVALIDATED 2026-05-22 ~02:10 KST
 
-Cause: `USER_PATTERNS` regex `[\"“]\s*[가-힣]` (opening quote followed
-by Hangul) was added so the classifier catches operator-quoted
-direction in commit bodies.  Side effect: any commit body that *cites*
-a prior operator quote as historical context gets tagged "user", even
-when the commit work itself was autonomous.
+Spot-checked five 5/21 commits classified as user (`cc6a104`,
+`6b61f84`, `82cb15d`, `e289c8a`, `f4881cf`, `a6a4fd2`, `f796aad`).
+**All five are legitimately user-initiated** — `cc6a104` has the
+`Requested-by: user` footer, the others have explicit
+"Operator strategic shift" / "Per operator '다해봐'" / "Operator
+decision item" prefixes with verbatim KR quotes.  The 36% ratio on
+5/21 is honest signal: operator was heavily engaged that day.
 
-Evidence: 2026-05-21 `cc6a104` (`activate kr-saramin OpenAPI live
-path`) is tagged user because the body says
-`operator-issued key pending Saramin's approval queue`.  The work
-itself was autonomous overnight.
-
-Fix: tighten the regex to require the quote to be in the **first
-line of body** OR follow a phrase like `Operator direction:`, not
-just any Hangul-after-quote anywhere in the body.  Estimated effect:
-drop user-ratio 5-10pp on multi-quote commits.
+Lever dropped.  The classifier is tuned correctly.  Reduction has to
+come from levers 2-5 (actual behavior change), not from regex tweaks.
 
 ### 2. Default to recommended option ([[minimize-intervention]])
 
@@ -97,15 +92,23 @@ single-page contact sheet.  Operator pulls up the page, ticks/crosses,
 commits the verdict.  Token count for ten artifacts ≈ same as today,
 but session count drops from 10 to 1.
 
-### 4. Statusline / dashboard absorbs "status check" prompts
+### 4. Statusline / dashboard absorbs "status check" prompts — SHIPPED 2026-05-22 ~02:30 KST
 
 Many Panel B prompts on quiet days are "where are we?" or "what's
 running?" / "did the audit fire?" — the new `scripts/doctor.sh`
-already answers this in 2s without a Claude session.  Promote
-`doctor.sh` output into the Claude Code statusline so the operator
-sees it without typing anything.  Optional follow-on: render a
-HTML version into `docs/site/` so the public page also shows current
-state.
+already answers this in 2s without a Claude session.
+
+Shipped: `scripts/statusline.sh` now reads
+`/tmp/cc-doctor-cache.json` and renders the doctor verdict +
+audit-alert flag inline.  Cache regen happens in the background
+when stale (>60s old); per-refresh cost stays at the original
+sub-1ms.  Format: `doctor:✓` / `doctor:⚠7` / `doctor:✗N` plus
+`·audit⚠` suffix when `docs/audit/CURRENT-ALERT.md` exists.
+Graceful degrade if `scripts/doctor.sh` isn't present (fresh
+clones get the original output unchanged).
+
+Expected effect: drop "status-check" prompts/day median by ~30%.
+Re-measure on 2026-05-29 against the 9-day baseline.
 
 ### 5. Permission-prompt bootstrap (shipped)
 

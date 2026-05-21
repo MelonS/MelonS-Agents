@@ -168,6 +168,25 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-22** (~02:30 KST) **Intervention reduction — Lever 1
+  invalidated, Lever 4 shipped**.  Operator follow-up "그럼 어떻게
+  해야함?" after intervention-monitoring restore landed.  Acted on
+  the 5 levers from `docs/research/2026-05-22-intervention-reduction.md`.
+  (a) Spot-checked 5 commits the memo flagged as Lever 1 false-
+  positive candidates (`cc6a104`, `6b61f84`, `82cb15d`, `f4881cf`,
+  `f796aad`); all five are *legitimately* user-initiated (explicit
+  "Operator strategic shift" / "Per operator '다해봐'" prefixes +
+  `Requested-by: user` footer on cc6a104).  Lever 1 dropped — the
+  classifier was tuned correctly, the 36% 5/21 ratio is honest signal.
+  (b) Lever 4 shipped: `scripts/statusline.sh` extended to surface
+  `scripts/doctor.sh --json` verdict (`doctor:✓` / `doctor:⚠N` /
+  `doctor:✗N`) + `·audit⚠` flag when `docs/audit/CURRENT-ALERT.md`
+  exists.  Cache pattern (`/tmp/cc-doctor-cache.json`, 60s TTL,
+  background regen) keeps per-refresh cost <1ms while doctor's 2s
+  run happens out-of-band.  Smoke validated end-to-end.  Expected
+  effect: ~30% reduction in "status-check" Panel B prompts on
+  routine days.  Re-measure 2026-05-29 against the 9-day baseline.
+
 - **2026-05-22** (~02:00 KST) **Operator-intervention monitoring
   restored + extended to time/count signal**.  Operator framed the
   ask: "유저 개입 시간 횟수 등 계속해서 데이터를 쌓아야함 ...

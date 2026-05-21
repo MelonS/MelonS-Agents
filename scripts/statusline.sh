@@ -55,11 +55,74 @@ if [[ "$COST" != "?" && "$COST" != "0" && "$COST" != "0.0" && "$COST" != "null" 
   COST_DISPLAY=$(printf '$%.2f' "$COST" 2>/dev/null || echo "")
 fi
 
+# Doctor signal — answers "what's the machine's health right now?" so
+# the operator doesn't have to type a status-check prompt to find out.
+# scripts/doctor.sh --json takes ~2s, far too slow for a 300ms refresh,
+# so we cache and refresh in the background when stale (>60s old).
+#
+# Reduction lever 4 from
+# docs/research/2026-05-22-intervention-reduction.md — absorbs
+# "where are we?" / "any alerts?" prompts into the always-visible
+# statusline.
+DOCTOR_FLAG=""
+DOCTOR_CACHE="/tmp/cc-doctor-cache.json"
+DOCTOR_LOCK="/tmp/cc-doctor-cache.lock"
+if [[ -x "$DIR/scripts/doctor.sh" ]]; then
+  # Check cache age; regen in background if missing or older than 60s.
+  needs_regen=0
+  if [[ ! -f "$DOCTOR_CACHE" ]]; then
+    needs_regen=1
+  else
+    # mtime in epoch seconds — `stat -f %m` (BSD) or `stat -c %Y` (GNU)
+    mtime=$(stat -f %m "$DOCTOR_CACHE" 2>/dev/null \
+            || stat -c %Y "$DOCTOR_CACHE" 2>/dev/null || echo 0)
+    now=$(date +%s)
+    if (( now - mtime > 60 )); then needs_regen=1; fi
+  fi
+  if (( needs_regen )) && [[ ! -f "$DOCTOR_LOCK" ]]; then
+    # Lock file prevents concurrent regens.  Auto-removed when the
+    # background job exits.  doctor.sh exits 0 on PASS, 1 on WARN, 2
+    # on FAIL — all are valid signal we want to surface, so we accept
+    # exit codes 0-2 and only treat 3+ as a real failure.
+    (
+      touch "$DOCTOR_LOCK"
+      set +e
+      "$DIR/scripts/doctor.sh" --json > "$DOCTOR_CACHE.tmp" 2>/dev/null
+      rc=$?
+      if (( rc <= 2 )) && [[ -s "$DOCTOR_CACHE.tmp" ]]; then
+        mv "$DOCTOR_CACHE.tmp" "$DOCTOR_CACHE"
+      else
+        rm -f "$DOCTOR_CACHE.tmp"
+      fi
+      rm -f "$DOCTOR_LOCK"
+    ) &
+    disown 2>/dev/null || true
+  fi
+  if [[ -f "$DOCTOR_CACHE" ]]; then
+    overall=$(jq -r '.overall // "?"' "$DOCTOR_CACHE" 2>/dev/null || echo "?")
+    p=$(jq -r '.pass // 0' "$DOCTOR_CACHE" 2>/dev/null || echo 0)
+    w=$(jq -r '.warn // 0' "$DOCTOR_CACHE" 2>/dev/null || echo 0)
+    f=$(jq -r '.fail // 0' "$DOCTOR_CACHE" 2>/dev/null || echo 0)
+    case "$overall" in
+      PASS) DOCTOR_FLAG="doctor:✓" ;;
+      WARN) DOCTOR_FLAG="doctor:⚠${w}" ;;
+      FAIL) DOCTOR_FLAG="doctor:✗${f}" ;;
+      *)    DOCTOR_FLAG="doctor:${overall}" ;;
+    esac
+    # If the audit dropped a CURRENT-ALERT, surface it explicitly —
+    # this is the highest-signal flag the operator wants to see.
+    if [[ -f "$DIR/docs/audit/CURRENT-ALERT.md" ]]; then
+      DOCTOR_FLAG="${DOCTOR_FLAG}·audit⚠"
+    fi
+  fi
+fi
+
 # Assemble.  Single line, separators are bullet middots.
 LINE="dir:$SHORT_DIR"
 [[ -n "$BRANCH" ]]       && LINE="$LINE · git:$BRANCH"
 [[ "$MODEL" != "?" ]]    && LINE="$LINE · model:$MODEL"
 [[ -n "$COST_DISPLAY" ]] && LINE="$LINE · cost:$COST_DISPLAY"
 [[ "$SESSION" != "?" ]]  && LINE="$LINE · sid:$SESSION"
+[[ -n "$DOCTOR_FLAG" ]]  && LINE="$LINE · $DOCTOR_FLAG"
 
 echo "$LINE"
