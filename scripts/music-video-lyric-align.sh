@@ -236,7 +236,31 @@ print(f"[align] wrote {OUT} ({len(final)} lines, {auto_filled} autofilled)")
 hi = sum(1 for _,_,_,c in final if c >= 0.50)
 med = sum(1 for _,_,_,c in final if 0.30 <= c < 0.50)
 lo  = sum(1 for _,_,_,c in final if c < 0.30)
+total = len(final)
 print(f"[align] confidence: hi(≥0.50)={hi}  med(0.30-0.49)={med}  lo(<0.30)={lo}")
+
+# Suno-drift detection (2026-05-22 quality-bar follow-on): if more than
+# 60% of lines couldn't anchor to whisper's transcription, the audio
+# almost certainly drifted from the prompt lyrics (typical Suno
+# behavior).  Emit a sidecar JSON next to the LRC so downstream callers
+# can decide to skip the overlay entirely vs render with low-confidence
+# autofill.
+drift_pct = (lo / total) if total else 0.0
+verdict = "OK" if drift_pct <= 0.40 else ("WARN" if drift_pct <= 0.70 else "FAIL")
+import json
+sidecar = OUT + ".json"
+with open(sidecar, "w", encoding="utf-8") as f:
+    json.dump({
+        "lrc": OUT,
+        "total_lines": total,
+        "high_confidence": hi,
+        "medium_confidence": med,
+        "low_confidence": lo,
+        "drift_ratio": round(drift_pct, 2),
+        "verdict": verdict,
+        "reason": f"{lo}/{total} lines below confidence floor — Suno take likely drifted from prompt" if verdict != "OK" else "alignment locked acceptably",
+    }, f, indent=2, ensure_ascii=False)
+print(f"[align] verdict: {verdict} (drift_ratio={drift_pct:.2f})  →  {sidecar}")
 PY
 
 echo "[align] LRC ready: $OUT_LRC"

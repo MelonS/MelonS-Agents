@@ -84,6 +84,31 @@ if [[ -n "$ALIGN_AUDIO" ]]; then
     if bash "$REPO_ROOT_SCRIPT/scripts/music-video-lyric-align.sh" \
          "$ALIGN_AUDIO" "$LYRICS_FILE" "$ALIGNED_LRC"; then
       LYRICS_FILE="$ALIGNED_LRC"
+      # Suno-drift gate: if the alignment sidecar reports FAIL (>70%
+      # of lines couldn't anchor) AND operator hasn't overridden via
+      # LYRIC_FORCE_OVERLAY=1, skip the overlay entirely.  Renders
+      # without lyrics rather than with garbled-autofill-with-loud-
+      # mismatch.  WARN mode renders but logs loudly.
+      SIDECAR="${ALIGNED_LRC}.json"
+      if [[ -f "$SIDECAR" ]]; then
+        VERDICT=$(grep -o '"verdict": *"[^"]*"' "$SIDECAR" | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
+        DRIFT=$(grep -o '"drift_ratio": *[0-9.]*' "$SIDECAR" | head -1 | awk '{print $2}')
+        case "$VERDICT" in
+          FAIL)
+            if [[ "${LYRIC_FORCE_OVERLAY:-0}" != "1" ]]; then
+              echo "⚠️  alignment FAIL (drift_ratio=$DRIFT) — Suno take drifted from prompt; skipping lyric overlay.  Set LYRIC_FORCE_OVERLAY=1 to render anyway." >&2
+              # Copy input to output and exit cleanly.
+              "$FFMPEG_BIN" -y -loglevel error -i "$SRC" -c copy "$DST"
+              echo "✓ lyrics: $DST (skipped — drift gate)" >&2
+              exit 0
+            fi
+            echo "⚠️  alignment FAIL but LYRIC_FORCE_OVERLAY=1 — rendering autofilled timing" >&2
+            ;;
+          WARN)
+            echo "⚠️  alignment WARN (drift_ratio=$DRIFT) — some lines autofilled; visual lyric-vocal sync may be off" >&2
+            ;;
+        esac
+      fi
     else
       echo "⚠️  alignment failed — falling back to auto-spaced timing" >&2
     fi
