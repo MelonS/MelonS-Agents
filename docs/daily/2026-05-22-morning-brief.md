@@ -33,6 +33,25 @@ shader research in [`docs/research/2026-05-22-shader-vocabulary.md`](../research
 |--------|---------|
 | `0703be8` | roadmap.md Done entries + Stage-2/3 + C.1 Phase-2 + A.3 QA gate suggest block |
 
+## Anchor-coverage progression (same kpop_ballad track, 3 renders)
+
+| Demo | Commit | Anchor match | Notes |
+|------|--------|--------------|-------|
+| #1   | shipped 02:55 KST | 3/8 = 38% | rate 25%, original pool |
+| #2   | shipped 03:08 KST | 4/8 = 50% | rate 33%, original pool |
+| #4   | shipped 03:50 KST | 8/8 = **100%** | rate 33%, tightened pool |
+
+100% is the ceiling — every keyword in the genre's pool now carries
+an explicit Seoul/Korean anchor.  Frame 30s of demo #4 shows Korean
+crowd walking past a Seoul landmark, Korean lyric "변한 건 너의
+자리뿐" centered, halation+vignette in the phrase_climax window —
+the literal realization of directive #5.
+
+EN demo #3 (uspop): 6/10 = 60% PASS (regex expanded + clean visuals
+post fix arc).  Lyric overlay correctly silent on 60s render because
+Suno take drifted from prompt and aligned at 01:01+ (script reports
+this honestly via 12/13 autofilled lines).
+
 ## Refinements shipped after MVP
 
 - **C.1 Phase 2** `77535c3` — `phrase_climax` gate mode.  Shader
