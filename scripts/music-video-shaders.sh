@@ -590,9 +590,20 @@ if [[ "$RATIO_CMP" == "1" ]]; then
         -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
     else
       # Select every-Nth event based on ratio.  Lower ratio → sparser
-      # event firing (fewer, more isolated bells).
+      # event firing (fewer, more isolated bells).  Hard cap at
+      # SHADER_EVENT_CAP because ffmpeg's blend `all_expr` has a string
+      # length budget and 150+ gaussian terms break it ("Could not open
+      # encoder before EOF").  Cap defaults to 30, which is plenty for
+      # a 60s render at ~0.3s sigma.
       EVT_TOTAL=$(grep -c . "$EVENT_FILE" 2>/dev/null || echo 0)
+      EVT_CAP="${SHADER_EVENT_CAP:-30}"
+      # First derive stride from ratio; then widen stride further if
+      # post-stride count would exceed EVT_CAP.
       STRIDE=$(awk -v r="$SHADER_RATIO" 'BEGIN{n = int(1/r + 0.5); print (n < 1 ? 1 : n)}')
+      _PROJECTED=$(( EVT_TOTAL / STRIDE ))
+      if [[ "$_PROJECTED" -gt "$EVT_CAP" ]]; then
+        STRIDE=$(( EVT_TOTAL / EVT_CAP + 1 ))
+      fi
       EVT_CSV=$(awk -v s="$STRIDE" 'NR % s == 1 {print $1}' "$EVENT_FILE" | tr '\n' ' ')
       EVT_USED=$(echo "$EVT_CSV" | wc -w | tr -d ' ')
       # Gaussian sigma — wider bells for lower ratio (each event covers more).
