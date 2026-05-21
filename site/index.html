@@ -47,7 +47,7 @@
 
 <section class="stats" aria-label="Project numbers at a glance">
   <ul>
-    <li><strong>60+</strong><span>mission outputs</span></li>
+    <li><strong>69+</strong><span>mission outputs</span></li>
     <li><strong>0</strong><span>runtime API tokens</span></li>
     <li><strong>3</strong><span>audit layers (L1+L2+L3)</span></li>
     <li><strong>5</strong><span>mission types</span></li>
@@ -107,9 +107,9 @@
       <h3>Skill #2 — job-hunt (short-keyword KR job-board digest)</h3>
       <p>A separate-shape skill: standalone (no missions-routed pipeline), v2 short-keyword UX, agentskills.io-compliant.  Pass <code>--seed "Problem Solver"</code> and the orchestrator expands to a 24-synonym role family (Forward Deployed Engineer / Applied AI Engineer / Generalist / Founding Engineer / …) before fetching from KR job boards (사람인 / 잡코리아 / 원티드 / 프로그래머스).  4 enrichment utilities (fit-score / cover-letter / company-research / interview-prep) ship as scaffolds, each gated behind a single env-flag flip.</p>
       <ul>
-        <li><b>5 source plugins</b> — all mock-fallback by default; live HTTP per-plugin behind <code>JH_<i>SOURCE</i>_LIVE=1</code>.</li>
-        <li><b>4 enrichment utilities</b> — per-posting Claude calls behind <code>JH_<i>TOOL</i>_LIVE=1</code>.</li>
-        <li><b>63 tests</b> — smoke + edge-case + JSON-schema validation.  EN + KO walkthroughs.</li>
+        <li><b>11 source plugins</b> (7 live-ready, 2 key-gated, 2 permanent-mock) — all mock-fallback by default; live HTTP per-plugin behind <code>JH_<i>SOURCE</i>_LIVE=1</code>.  Catalogued in <code>skills/job-hunt/config/activation.tsv</code> and surfaced via <code>scripts/status.sh</code>.</li>
+        <li><b>5 enrichment utilities</b> — per-posting Claude calls behind <code>JH_<i>TOOL</i>_LIVE=1</code>.</li>
+        <li><b>70 tests</b> — smoke + edge-case + JSON-schema validation.  EN + KO walkthroughs.</li>
       </ul>
       <p class="muted">Quickstart: <code>skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run</code>.  Reference digest at <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/samples/job-hunt-digest-mock.md" target="_blank" rel="noopener">docs/samples/job-hunt-digest-mock.md</a>.</p>
     </article>
@@ -118,6 +118,16 @@
       <h3>Alternate path — faceless-short (narration era)</h3>
       <p>The earlier <code>faceless-short</code> mission still lives in the tree.  Topic prompt in, narrated 60-second short out: Sonnet drafts the hook + factual framing, Kokoro-ONNX (English) or macOS Yuna (Korean) synthesizes voice, whisper.cpp transcribes for caption timing, Pexels B-roll selected per-window from caption keywords, ffmpeg burns single-line captions.  Preserved for topic-driven content; not the current production format.</p>
       <p class="muted">Pipeline detail in the <a href="https://github.com/MelonS/MelonS-Agents#sample-output" target="_blank" rel="noopener">README Sample output section</a>.</p>
+    </article>
+
+    <article class="card">
+      <h3>Operator tooling</h3>
+      <p>Two scripts surface system state at a glance, complementing the slow Claude-driven auditor with fast Claude-free checks.</p>
+      <ul>
+        <li><b><code>scripts/doctor.sh</code></b> — ~2 s repo health check.  CLI tools, env keys, schedulers, audit alerts, git state, disk, per-skill activation, manifest drift.  Three output modes (full / <code>--quiet</code> / <code>--json</code>).  Run after a fresh clone, machine reboot, or several-day gap.</li>
+        <li><b><code>scripts/audit-skill-drift.sh</code></b> — the 13th audit rule.  Verifies each skill's declared LIVE-flag manifest at <code>skills/&lt;name&gt;/config/activation.tsv</code> matches the actual gating in its scripts.  Wired into the auditor's daily contract pass.</li>
+      </ul>
+      <p>A third skill, <strong><code>goal-lock</code></strong>, is a meta-skill — parses <code>docs/goal.md</code> and reports unchecked deliverable subgoals from the active goal so long autonomous sessions can re-anchor.  Discipline helper, not a production pipeline.</p>
     </article>
   </div>
 </section>
