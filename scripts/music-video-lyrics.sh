@@ -255,8 +255,57 @@ POSITIONS=(
 
 FILTER_CHAIN=""
 i=0
+
+# Auto-wrap long lines.  At SIZE=88 in a 1080px-wide frame with safe-
+# zone margins of w*0.08 each side, usable width ~= 900 px.  Char
+# widths roughly: Latin ~22 px, Korean ~50 px.  Trigger wrap at the
+# language-aware threshold and insert a drawtext newline (literal `\n`,
+# which the filter parser converts to a line break).
+wrap_text() {
+  local s="$1"
+  local maxchars
+  if [[ "$s" =~ [가-힣] ]]; then
+    # Korean glyph width ≈ 50 px at SIZE=88; usable width ~880 px →
+    # ~17 chars/line.  Use 14 for comfortable margins.
+    maxchars="${LYRICS_KO_MAX_CHARS:-14}"
+  else
+    # Latin char width ≈ 40-48 px at SIZE=88 SF-Pro-Display-Black /
+    # SF-Mono-Regular; usable width ~900 px → ~20-22 chars/line.
+    # Empirically (2026-05-22 test): "Maybe tonight, maybe never, who"
+    # at 31 chars still over-rendered.  22 fits with margin.
+    maxchars="${LYRICS_EN_MAX_CHARS:-22}"
+  fi
+  # Already short enough: no-op.
+  if [[ ${#s} -le $maxchars ]]; then
+    printf '%s' "$s"
+    return
+  fi
+  python3 - "$maxchars" <<PY
+import sys
+mx = int(sys.argv[1])
+s = """$s"""
+words = s.split()
+lines = []
+cur = ""
+for w in words:
+    if not cur:
+        cur = w
+        continue
+    candidate = cur + " " + w
+    if len(candidate) <= mx:
+        cur = candidate
+    else:
+        lines.append(cur)
+        cur = w
+if cur:
+    lines.append(cur)
+sys.stdout.write("\\n".join(lines))
+PY
+}
+
 while IFS=$'\t' read -r T0 T1 TXT; do
-  TXT_E=$(escape_text "$TXT")
+  TXT_WRAPPED=$(wrap_text "$TXT")
+  TXT_E=$(escape_text "$TXT_WRAPPED")
   POS="${POSITIONS[$((i % 4))]}"
   X="${POS%%:*}"
   Y="${POS##*:}"
