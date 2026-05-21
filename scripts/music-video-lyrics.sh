@@ -195,8 +195,16 @@ s = s.replace('\\\\', '\\\\\\\\')
 s = s.replace("'", "'\\\\''")
 # Colons need escape inside drawtext args
 s = s.replace(':', '\\\\:')
+# Commas need escape — drawtext value parser otherwise reads the comma
+# as an argument separator, which truncates the text field and leaks
+# subsequent option values (alpha/enable expressions) into the
+# rendered glyph stream.  2026-05-22 fix after EN demo showed garbled
+# overlay text containing "between(t,..." from the alpha field.
+s = s.replace(',', '\\\\,')
 # Percent signs (used by some sequences)
 s = s.replace('%', '\\\\%')
+# Equal signs: rare but can break "key=value" filter args if present
+s = s.replace('=', '\\\\=')
 sys.stdout.write(s)
 PY
 }
