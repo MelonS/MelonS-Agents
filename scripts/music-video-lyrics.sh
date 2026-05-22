@@ -274,6 +274,31 @@ fi
 FILTER_CHAIN=""
 i=0
 
+# Bilingual KR mode (per docs/research/2026-05-22-music-video-pro-
+# practices.md §8): when LYRICS_BILINGUAL=1 AND lyric file has
+# Hangul, also render a Revised-Romanization line stacked below
+# each Hangul line.  KR canonical (InkiStyle convention).
+BILINGUAL=0
+if [[ "${LYRICS_BILINGUAL:-0}" == "1" && "$HAS_KOREAN" == 1 ]]; then
+  SCR_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  ROMANIZE_BIN="$SCR_DIR/scripts/romanize-hangul.sh"
+  if [[ -x "$ROMANIZE_BIN" ]]; then
+    BILINGUAL=1
+    ROM_OUT="${TMPDIR:-/tmp}/lyrics-rom-$$.txt"
+    echo "→ bilingual mode: generating Romanization sidecar" >&2
+    # Romanize the LYRICS_FILE (LRC- or plain-format).  Strip LRC
+    # timestamps before romanization, then preserve them after.
+    if grep -qE '^\[[0-9]+:[0-9]+(\.[0-9]+)?\]' "$LYRICS_FILE"; then
+      grep -E '^\[[0-9]+:[0-9]+' "$LYRICS_FILE" | \
+        sed -E 's/^(\[[0-9]+:[0-9]+(\.[0-9]+)?\])(.+)$/\3/' \
+        > "${ROM_OUT}.hangul"
+    else
+      grep -vE '^(#|\[)' "$LYRICS_FILE" | grep -v '^[[:space:]]*$' > "${ROM_OUT}.hangul"
+    fi
+    bash "$ROMANIZE_BIN" "${ROM_OUT}.hangul" "$ROM_OUT" >/dev/null 2>&1
+  fi
+fi
+
 # Auto-wrap long lines.  At SIZE=88 in a 1080px-wide frame with safe-
 # zone margins of w*0.08 each side, usable width ~= 900 px.  Char
 # widths roughly: Latin ~22 px, Korean ~50 px.  Trigger wrap at the
@@ -341,9 +366,35 @@ while IFS=$'\t' read -r T0 T1 TXT; do
   ENABLE="between(t,${T0},${T1})"
 
   IN_TAG=$([[ $i -eq 0 ]] && echo "[in]" || echo "[v${i}]")
-  OUT_TAG="[v$((i+1))]"
 
-  DT="${IN_TAG}drawtext=fontfile='${FONT}':text='${TXT_E}':fontsize=${SIZE}:fontcolor=${PRIMARY%@*}:alpha='${ALPHA}':x=${X}:y=${Y}:shadowcolor=${SHADOW%@*}:shadowx=4:shadowy=4:borderw=2:bordercolor=${BORDER%@*}:enable='${ENABLE}' ${OUT_TAG}"
+  # Bilingual stack: Hangul on the chosen line, Romanization 0.7×size
+  # below.  Each stacked line is a separate drawtext in the chain so
+  # the alpha/enable expressions stay coherent across the pair.
+  if [[ "$BILINGUAL" == "1" ]]; then
+    MID_TAG="[v${i}_mid]"
+    OUT_TAG="[v$((i+1))]"
+    # ROM_OUT has a single header comment on line 1; lyric lines
+    # start at line 2.  Match line by stripping leading comments and
+    # then indexing by i.
+    ROM_LINE=$(grep -v '^#' "$ROM_OUT" 2>/dev/null | sed -n "$((i+1))p")
+    ROM_E=""
+    if [[ -n "$ROM_LINE" ]]; then
+      ROM_WRAPPED=$(wrap_text "$ROM_LINE")
+      ROM_E=$(escape_text "$ROM_WRAPPED")
+    fi
+    ROM_SIZE=$(( SIZE * 7 / 10 ))   # 70% of primary
+    ROM_Y_OFFSET=$(( SIZE + 8 ))    # below Hangul baseline
+    DT="${IN_TAG}drawtext=fontfile='${FONT}':text='${TXT_E}':fontsize=${SIZE}:fontcolor=${PRIMARY%@*}:alpha='${ALPHA}':x=${X}:y=${Y}:shadowcolor=${SHADOW%@*}:shadowx=4:shadowy=4:borderw=2:bordercolor=${BORDER%@*}:enable='${ENABLE}' ${MID_TAG}"
+    if [[ -n "$ROM_E" ]]; then
+      DT="${DT};${MID_TAG}drawtext=fontfile='${FONT}':text='${ROM_E}':fontsize=${ROM_SIZE}:fontcolor=${PRIMARY%@*}:alpha='${ALPHA}':x=${X}:y=(${Y})+${ROM_Y_OFFSET}:shadowcolor=${SHADOW%@*}:shadowx=2:shadowy=2:borderw=1:bordercolor=${BORDER%@*}:enable='${ENABLE}' ${OUT_TAG}"
+    else
+      # No romanization for this line — copy filter passes through unchanged.
+      DT="${DT};${MID_TAG}copy ${OUT_TAG}"
+    fi
+  else
+    OUT_TAG="[v$((i+1))]"
+    DT="${IN_TAG}drawtext=fontfile='${FONT}':text='${TXT_E}':fontsize=${SIZE}:fontcolor=${PRIMARY%@*}:alpha='${ALPHA}':x=${X}:y=${Y}:shadowcolor=${SHADOW%@*}:shadowx=4:shadowy=4:borderw=2:bordercolor=${BORDER%@*}:enable='${ENABLE}' ${OUT_TAG}"
+  fi
 
   if [[ -z "$FILTER_CHAIN" ]]; then
     FILTER_CHAIN="$DT"
