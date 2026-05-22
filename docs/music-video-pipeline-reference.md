@@ -53,6 +53,7 @@ Genre-fit recommendations in `docs/research/2026-05-22-shader-vocabulary.md`.
 | `phrase_climax` | Shader active only in the center window of width `RATIO × duration`, with 0.5s trapezoid fade |
 | `onsets` | Shader fires as Gaussian bell at every Nth drum onset (N derived from ratio).  Auto-fallback to `beats` if onsets too sparse; or to `uniform` if both <5 events |
 | `beats` | Same as onsets but reads `beats-real.txt` instead.  More "regular" pulse |
+| `drops` | Shader fires as wide Gaussian (σ=1.5s) at each detected drop (RMS top-10% sustained ≥2s).  1-3 events per track, all fire.  Climax-accent mode |
 
 ## Music-video CLI flags (`music-video-auto.sh`)
 
@@ -111,6 +112,10 @@ Genre-fit recommendations in `docs/research/2026-05-22-shader-vocabulary.md`.
 | Var | Effect |
 |-----|--------|
 | `LYRIC_LEAD_MS` | Pre-roll for vocal anticipation (default 200ms) |
+| `LYRIC_TRAIL_MS` | L-cut hold past vocal end (default 0; 200 mirrors LEAD symmetrically) |
+| `LYRICS_BILINGUAL=1` | KR Hangul + Revised Romanization stack (KR-canonical) |
+| `LYRICS_POSITIONS` | Override 4-position rotation (`x:y,x:y,x:y,x:y`) |
+| `LYRICS_KO_MAX_CHARS` / `LYRICS_EN_MAX_CHARS` | Wrap thresholds (default 14 / 22) |
 | `WHISPER_LANG` | Force whisper language (else auto from lyric chars) |
 | `LYRIC_FORCE_OVERLAY=1` | Render overlay even when Suno-drift gate would skip |
 | `LYRICS_FONT` | Override font path |
@@ -139,6 +144,8 @@ Genre-fit recommendations in `docs/research/2026-05-22-shader-vocabulary.md`.
 | `scripts/music-video-doctor.sh` | Skill-specific health check (tools + scripts + presets + tests) |
 | `scripts/shot-plan.sh --keywords ... --genre ...` | Generate per-segment intent JSON (director-discipline scaffold) |
 | `scripts/lyric-extract.sh <audio> <out.txt> [--lang=ko\|en]` | Whisper-transcribe lyrics from an audio file (when no prompt file exists or Suno take drifted) |
+| `scripts/romanize-hangul.sh <input> [output]` | Revised Romanization of Hangul text via stdlib `unicodedata` (no external lib).  Output drops in alongside lyric file as `.romanized.txt` sidecar |
+| `scripts/audio-analyze.sh <audio> <prefix>` | Per-second RMS curve + drops detection (auto-runs in run.sh step 2b) |
 | `scripts/broll-history-backfill.sh [dir]` | Seed `broll-used.txt` registry from existing mission records |
 | `scripts/yt-stats-collect.sh` | Daily snapshot of YT channel stats via Data API (auto-scheduled at 09:00 KST via launchd) |
 | `scripts/yt-stats-diff.sh [d1] [d2]` | Per-video view/like/comment delta between two snapshots |
