@@ -1,0 +1,203 @@
+# Mood vocabulary for music-video B-roll search expansion.
+#
+# Per docs/research/2026-05-22-music-video-pro-practices.md §7:
+# each mood word resolves to 5-8 visual primitives.  Pexels searches
+# rotate through the primitives across requests rather than searching
+# the literal mood word once.  Effects:
+#   (a) Raises B-roll diversity (the existing dedup registry forces
+#       per-clip uniqueness; rotating primitives ensures each request
+#       lands a different concept too)
+#   (b) Anchors search in concrete visual concepts instead of
+#       abstract feelings
+#
+# CONSUMED BY:
+#   - scripts/pexels-fetch.sh (when MUSIC_VIDEO_MOOD env is set)
+#   - scripts/shot-plan.sh (future: per-segment mood resolution)
+#
+# Each genre preset can opt-in by setting `mood: <key>` in
+# skills/music-video/data/genre-presets.yaml.  Default behavior
+# (no `mood:` field) is unchanged from current behavior.
+
+moods:
+
+  # ───── Atmospheric ─────
+
+  nostalgic:
+    primitives:
+      - polaroid camera
+      - warm window light
+      - handwritten note paper
+      - super 8 film grain
+      - faded sunlight curtain
+      - vintage diary close
+      - old photo album
+      - retro typewriter
+    sources:
+      - StudioBinder mood-board guide
+      - Aesthetics Wiki (analog-era references)
+
+  dreamy:
+    primitives:
+      - fog forest morning
+      - soft focus pastel
+      - golden hour beach silhouette
+      - slow motion fabric breeze
+      - water reflection ripple
+      - lens flare warm
+      - bokeh fairy lights
+      - misty mountain horizon
+    sources:
+      - Pexels emotional footage / dreamy category
+
+  cozy:
+    primitives:
+      - indoor desk lamp evening
+      - rain streaks on window
+      - hands holding coffee mug
+      - knit blanket fold
+      - candle flame close
+      - book shelf warm light
+      - wool sweater texture
+      - kitchen tea steam
+    sources:
+      - StudioBinder cozy-mood references
+
+  cinematic:
+    primitives:
+      - anamorphic flare blue
+      - depth of field portrait
+      - doorway framed person
+      - low key chiaroscuro
+      - long lens compression
+      - empty corridor wide
+      - rain alley neon
+      - establishing wide skyline
+    sources:
+      - Filmmaker IQ cinematography conventions
+
+  # ───── Energetic / dance ─────
+
+  energetic:
+    primitives:
+      - neon street motion blur
+      - crowd jumping concert
+      - city traffic timelapse
+      - dance studio mirror lights
+      - club strobe close
+      - urban skyline daylight
+      - subway pedestrian rush
+      - colorful smoke explosion
+    sources:
+      - Pexels energy/dance category
+
+  aggressive:
+    primitives:
+      - drift car smoke night
+      - cyberpunk alley neon
+      - low angle skyline reflection
+      - smoke cracked concrete
+      - industrial chain link
+      - graffiti wall close
+      - sparks dark forge
+      - skull motif abstract
+    sources:
+      - Aesthetics Wiki Drift Phonk / Phonk entries
+
+  # ───── Stylized ─────
+
+  vaporwave:
+    primitives:
+      - greco roman statue close
+      - japanese signage night
+      - palm tree silhouette pink
+      - retro computer monitor glow
+      - vapor grid horizon
+      - 80s shopping mall interior
+      - cassette tape spinning
+      - liminal pool space
+    sources:
+      - Aesthetics Wiki Vaporwave
+      - Creative Market vaporwave mood board
+
+  synthwave:
+    primitives:
+      - neon grid sunset
+      - chrome car retro
+      - vhs scanline glow
+      - 80s arcade interior
+      - palm trees outrun
+      - magenta sky highway
+      - retro keyboard close
+      - laser beam haze
+    sources:
+      - Aesthetics Wiki Synthwave references
+
+  # ───── Emotional ─────
+
+  melancholic:
+    primitives:
+      - empty bench autumn
+      - rain on car window
+      - solo person silhouette dusk
+      - foggy pier alone
+      - dim hallway closed door
+      - winter coat empty street
+      - blurred lights through tears
+      - cold breath visible
+    sources:
+      - Pexels melancholy / loneliness footage
+
+  romantic:
+    primitives:
+      - candle dinner two glasses
+      - hands touching close
+      - sunset couple silhouette
+      - rose petals close
+      - intimate window light
+      - warm linen bed morning
+      - dancing slow blurred
+      - love letter handwritten
+    sources:
+      - StudioBinder romance mood
+
+  # ───── Cultural anchors ─────
+
+  k_pastel:
+    primitives:
+      - seoul cafe afternoon pastel
+      - korean street tree bloom
+      - hanok wood window
+      - pink korean dessert close
+      - subway window seoul afternoon
+      - korean fashion model casual
+      - jeju coast pastel
+      - busan bridge sunset
+    sources:
+      - K-drama color palette (Dramabeans)
+      - InkiStyle K-pop lyric-video references
+
+  american_pop:
+    primitives:
+      - los angeles convertible sunset
+      - new york skyline daylight
+      - california beach sunrise
+      - american diner interior
+      - rooftop pool city
+      - times square crowd night
+      - texas highway truck
+      - malibu coast wide
+    sources:
+      - Pexels American urban / lifestyle category
+
+  rnb_smoky:
+    primitives:
+      - candle low light table
+      - wine glass red velvet
+      - silk fabric close warm
+      - jazz bar interior amber
+      - manhattan rooftop night
+      - rain on city street red light
+      - vinyl record warm spin
+      - smoky lounge wide
+    sources:
+      - StudioBinder R&B / neo-soul mood references
