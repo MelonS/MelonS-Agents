@@ -35,9 +35,14 @@ for arg in "$@"; do
   esac
 done
 
-# Discover tests.
+# Discover tests.  Exclude self (scripts/test-all.sh) — otherwise the
+# aggregator recursively spawns itself ad infinitum until something
+# kills the chain.
 ALL_TESTS=()
 while IFS= read -r f; do
+  case "$(basename "$f")" in
+    test-all.sh) continue ;;
+  esac
   ALL_TESTS+=("$f")
 done < <(ls scripts/test-*.sh 2>/dev/null | sort)
 
