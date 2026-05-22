@@ -238,14 +238,20 @@ What's shipped on top of the v5 prototype since:
   `scripts/music-video-stillzoom.sh` (image + music → 60-second slow
   Ken-Burns) for genres where ANY cut violates the contract.
 - **Music-video quality bar — five contracts the system now enforces**
-  ([case study 9](docs/engineering-case-studies.md#9-the-quality-bar-wasnt-a-bug--it-was-6-contracts-the-system-didnt-enforce)):
+  ([case study 9](docs/engineering-case-studies.md#9-the-quality-bar-wasnt-a-bug--it-was-6-contracts-the-system-didnt-enforce)
+  · full changelog at
+  [`skills/music-video/CHANGELOG.md`](skills/music-video/CHANGELOG.md)):
   A.1 B-roll dedup registry (`records/youtube/broll-used.txt`,
-  196 seeded ids), A.2 lyric vocal-onset alignment via whisper
-  (`scripts/music-video-lyric-align.sh`), A.3 lang_anchor +
-  person-anchored keyword injection at every 3rd segment with a
-  QA gate (`scripts/music-video-qa-anchor.sh`), B.1 shader-vocabulary
-  expansion to 23 effects across three stages, C.1 `shader_active_ratio`
-  per preset + `phrase_climax` gating mode.
+  271 seeded ids), A.2 lyric vocal-onset alignment via whisper
+  (`scripts/music-video-lyric-align.sh`, word-level KR /
+  segment-level EN, LRC + JSON sidecar with drift verdict), A.3
+  lang_anchor + person-anchored keyword injection at every 3rd
+  segment with a QA gate (`scripts/music-video-qa-anchor.sh`,
+  exit 0 PASS / 1 WARN / 2 FAIL), B.1 shader-vocabulary expansion
+  to 23 effects across three stages, C.1 four shader-gate modes
+  via `MUSIC_VIDEO_SHADER_GATE` (uniform / phrase_climax / onsets
+  / beats) with event-count cap at 30 to dodge ffmpeg's expr-length
+  budget.
 - **Operator-facing utilities** — `scripts/first-touch.sh` wizard
   (single-command guided zero-account demo), `scripts/music-video-batch.sh`
   (multi-track render wrapper), `scripts/music-video-validate.sh`

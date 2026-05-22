@@ -226,14 +226,19 @@ v5 프로토타입 이후 추가로 ship 된 것들:
   위반인 장르라서 별도 `scripts/music-video-stillzoom.sh` (이미지 + 음악 →
   60초 Ken-Burns) 로 라우팅.
 - **Music-video quality bar — 시스템이 enforce 하는 5개 계약**
-  ([case study 9](docs/engineering-case-studies.ko.md#9-quality-bar-는-버그가-아니라-시스템이-enforce-못한-6개-계약이었다)):
+  ([case study 9](docs/engineering-case-studies.ko.md#9-quality-bar-는-버그가-아니라-시스템이-enforce-못한-6개-계약이었다)
+  · 전체 changelog 는
+  [`skills/music-video/CHANGELOG.md`](skills/music-video/CHANGELOG.md)):
   A.1 B-roll dedup 레지스트리 (`records/youtube/broll-used.txt`,
-  196개 id seeded), A.2 whisper 기반 lyric vocal-onset alignment
-  (`scripts/music-video-lyric-align.sh`), A.3 lang_anchor + 매 3 segment
+  271개 id seeded), A.2 whisper 기반 lyric vocal-onset alignment
+  (`scripts/music-video-lyric-align.sh`, KR 워드-레벨 / EN 세그먼트-레벨,
+  LRC + JSON 사이드카 + drift verdict), A.3 lang_anchor + 매 3 segment
   마다 person-anchored 키워드 주입 + QA 게이트
-  (`scripts/music-video-qa-anchor.sh`), B.1 쉐이더 vocabulary 를
-  23개 3-스테이지로 확장, C.1 preset 별 `shader_active_ratio` +
-  `phrase_climax` 게이팅 모드.
+  (`scripts/music-video-qa-anchor.sh`, exit 0 PASS / 1 WARN / 2 FAIL),
+  B.1 쉐이더 vocabulary 를 23개 3-스테이지로 확장, C.1
+  `MUSIC_VIDEO_SHADER_GATE` 의 4가지 쉐이더 게이트 모드 (uniform /
+  phrase_climax / onsets / beats) + ffmpeg expr-length 한도 회피용
+  이벤트 카운트 30 캡.
 - **운영자 대상 유틸리티** — `scripts/first-touch.sh` 마법사
   (단일 명령 가이드 제로-계정 데모), `scripts/music-video-batch.sh`
   (멀티 트랙 렌더 래퍼), `scripts/music-video-validate.sh`
