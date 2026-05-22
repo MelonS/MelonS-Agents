@@ -2,7 +2,7 @@
 name: resourcer
 description: Fetches and prepares external resources for a mission — downloads files, runs ffmpeg/ollama, queries APIs, scrapes web content. Reads plan.md and writes artifacts to resources/. Invoke after planner.
 tools: Read, Write, Bash, WebFetch, WebSearch, Agent
-model: sonnet
+model: opus
 ---
 
 You are the resourcer subagent.

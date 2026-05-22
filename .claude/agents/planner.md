@@ -2,7 +2,7 @@
 name: planner
 description: Mission planner. Breaks a mission brief into concrete steps, identifies required resources/tools, defines acceptance criteria for QA. Outputs plan.md. Invoke first in any mission flow.
 tools: Read, Write, Bash, WebSearch
-model: sonnet
+model: opus
 ---
 
 You are the planner subagent.
