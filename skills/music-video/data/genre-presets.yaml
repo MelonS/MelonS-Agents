@@ -35,6 +35,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999          # effectively no cuts
     cut_density: continuous   # derived from phrase_beats=999
+    grade_profile: neutral                # 2026-05-22 research §2
     grain_intensity: 6
     vignette_angle: PI/4
     zoom_pulse_amp: 0          # ABSOLUTELY no zoom-pulse
@@ -66,6 +67,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999
     cut_density: continuous   # derived from phrase_beats=999
+    grade_profile: neutral                # 2026-05-22 research §2
     grain_intensity: 10        # heavier grain — adds movement to static frames
     vignette_angle: PI/3
     zoom_pulse_amp: 0
@@ -96,6 +98,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 4-beat soft cuts at most
     cut_density: sparse       # derived from phrase_beats=16
+    grade_profile: lofi_warm_grain        # 2026-05-22 research §2
     grain_intensity: 6
     vignette_angle: PI/5
     zoom_pulse_amp: 0
@@ -128,6 +131,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts
     cut_density: sparse       # derived from phrase_beats=16
+    grade_profile: lofi_warm_grain        # 2026-05-22 research §2
     grain_intensity: 8
     vignette_angle: PI/5
     zoom_pulse_amp: 0          # **CRITICAL — lo-fi is anti-glitch**
@@ -160,6 +164,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 12            # 4-8 beat soft cuts
     cut_density: sparse       # derived from phrase_beats=12
+    grade_profile: rnb_low_key            # 2026-05-22 research §2
     grain_intensity: 8
     vignette_angle: PI/4        # deeper, low-key noir
     zoom_pulse_amp: 0          # glitch FORBIDDEN
@@ -192,6 +197,7 @@ genres:
     lang_anchor: mixed    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts, vocal-respecting
     cut_density: sparse       # derived from phrase_beats=16
+    grade_profile: city_pop_neon          # 2026-05-22 research §2
     grain_intensity: 6
     vignette_angle: PI/4        # deeper, warmer
     zoom_pulse_amp: 0          # FORBIDDEN — vocals carry the energy
@@ -227,6 +233,7 @@ genres:
     lang_anchor: ko    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts, vocal-respecting
     cut_density: sparse       # derived from phrase_beats=16
+    grade_profile: kr_warm_pastel         # 2026-05-22 research §2
     grain_intensity: 6
     vignette_angle: PI/4
     zoom_pulse_amp: 0          # FORBIDDEN — vocals carry energy
@@ -262,6 +269,7 @@ genres:
     lang_anchor: ko    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts (dense but not sub-beat)
     cut_density: moderate     # derived from phrase_beats=8
+    grade_profile: kr_warm_pastel         # 2026-05-22 research §2
     grain_intensity: 0          # hi-fi clean
     vignette_angle: PI/3        # subtle
     zoom_pulse_amp: 0.08       # mild — vocals still primary
@@ -298,6 +306,7 @@ genres:
     lang_anchor: en    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts
     cut_density: sparse       # derived from phrase_beats=16
+    grade_profile: rnb_low_key            # 2026-05-22 research §2
     grain_intensity: 8           # warm grain for smoky feel
     vignette_angle: PI/4
     zoom_pulse_amp: 0          # vocals carry — no glitch
@@ -332,6 +341,7 @@ genres:
     lang_anchor: en    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts
     cut_density: moderate     # derived from phrase_beats=8
+    grade_profile: hollywood_teal_orange  # 2026-05-22 research §2
     grain_intensity: 2           # very clean
     vignette_angle: PI/3
     zoom_pulse_amp: 0.06       # mild on the kick
@@ -368,6 +378,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts
     cut_density: moderate     # derived from phrase_beats=8
+    grade_profile: hollywood_teal_orange  # 2026-05-22 research §2
     grain_intensity: 2          # MUCH less grain than lo-fi
     vignette_angle: PI/3        # softer
     zoom_pulse_amp: 0.06       # mild zoom-pulse OK on kick
@@ -399,6 +410,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 4             # 1-beat cuts (very dense)
     cut_density: dense        # derived from phrase_beats=4
+    grade_profile: synthwave_neon         # 2026-05-22 research §2
     grain_intensity: 0
     vignette_angle: PI/2        # very subtle / nearly off
     zoom_pulse_amp: 0.12       # stronger pulse, kick-driven
@@ -430,6 +442,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts
     cut_density: moderate     # derived from phrase_beats=8
+    grade_profile: synthwave_neon         # 2026-05-22 research §2
     grain_intensity: 0          # FORBIDDEN
     vignette_angle: off         # no vignette
     zoom_pulse_amp: 0.05       # slight, controlled
@@ -462,6 +475,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999           # very slow / loopy
     cut_density: continuous   # derived from phrase_beats=999
+    grade_profile: synthwave_neon         # 2026-05-22 research §2
     grain_intensity: 4
     vignette_angle: PI/4
     zoom_pulse_amp: 0
@@ -493,6 +507,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 4
     cut_density: dense        # derived from phrase_beats=4
+    grade_profile: hollywood_teal_orange  # 2026-05-22 research §2
     grain_intensity: 4
     vignette_angle: PI/6
     zoom_pulse_amp: 0.15
@@ -523,6 +538,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 2             # sub-beat
     cut_density: dense        # derived from phrase_beats=2
+    grade_profile: synthwave_neon         # 2026-05-22 research §2
     grain_intensity: 0
     vignette_angle: off
     zoom_pulse_amp: 0.20       # strongest
@@ -556,6 +572,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16
     cut_density: sparse       # derived from phrase_beats=16
+    grade_profile: lofi_warm_grain        # 2026-05-22 research §2
     grain_intensity: 6
     vignette_angle: PI/5
     zoom_pulse_amp: 0
@@ -587,6 +604,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999           # no rhythmic cuts
     cut_density: continuous   # derived from phrase_beats=999
+    grade_profile: neutral                # 2026-05-22 research §2
     grain_intensity: 6
     vignette_angle: PI/5
     zoom_pulse_amp: 0
@@ -619,6 +637,7 @@ genres:
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999
     cut_density: continuous   # derived from phrase_beats=999
+    grade_profile: lofi_warm_grain        # 2026-05-22 research §2
     grain_intensity: 4          # soft VHS-style grain
     vignette_angle: PI/4
     zoom_pulse_amp: 0

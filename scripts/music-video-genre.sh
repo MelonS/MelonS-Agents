@@ -247,6 +247,21 @@ if [[ -z "$LATEST" ]]; then
   exit 0
 fi
 
+# Apply per-genre base color grade BEFORE the shader (so shader
+# operates on already-graded content).  Per docs/research/
+# 2026-05-22-music-video-pro-practices.md §2.  Skip if profile is
+# neutral or unset.
+GRADE_PROFILE=$(yq -r ".genres.${RESOLVED}.grade_profile // \"neutral\"" "$PRESETS" 2>/dev/null)
+if [[ -n "$GRADE_PROFILE" && "$GRADE_PROFILE" != "neutral" && "$GRADE_PROFILE" != "null" ]]; then
+  GRADED="${LATEST%.mp4}-grade.mp4"
+  echo "→ base grade: $GRADE_PROFILE"
+  if bash "$REPO_ROOT/scripts/music-video-grade.sh" "$LATEST" "$GRADED" "$GRADE_PROFILE"; then
+    LATEST="$GRADED"
+  else
+    echo "⚠️  grade failed — continuing with un-graded base" >&2
+  fi
+fi
+
 # Apply post-shader if not "none"
 if [[ "$SHADER" != "none" && "$SHADER" != "null" ]]; then
   SHADED="${LATEST%.mp4}-${SHADER}.mp4"
