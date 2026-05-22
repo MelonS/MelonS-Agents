@@ -91,7 +91,8 @@ concrete artifact exists that proves the path works.
 ## Subagent layout (already verified, do not re-recommend)
 
 `.claude/agents/*.md` frontmatter sets the model.  As of 2026-05-22
-(unchanged since 2026-05-17):
+(unchanged since 2026-05-15 — last commit touching `.claude/agents/*.md`
+was `8570a9c`):
 
 | Agent          | Model     | Role                                              |
 | -------------- | --------- | ------------------------------------------------- |

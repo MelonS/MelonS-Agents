@@ -17,7 +17,16 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 _Last updated 2026-05-20 ~19:55 KST after audit
 `2026-05-20-contract.md` flagged the prior "Now" as stale
-(v0.4.0 was complete but the block still said "awaiting FF-merge")._
+(v0.4.0 was complete but the block still said "awaiting FF-merge").
+**As of 2026-05-22 ~15:00 KST**: this "Now" subgoal remains the active
+operator-side step (no agent work queued); 40+ commits since the
+update have all been music-video quality-bar, lyrics, audit, and
+README/site refresh work that does not change the active subgoal.
+The auditor flagged this as "4th consecutive stale cycle" — the
+stale is structural (the subgoal is operator-only, agent can't tick
+it) rather than neglect.  Music-video follow-on options surfaced in
+the `<!-- suggest -->` block below remain available for the agent
+to pick up between operator-driven priorities._
 
 **Active goal**: Multi-skill AI assistant framework (`docs/goal.md`
 2026-05-19 entry).  Skill #1 (music-video) shipped v0.2.0 + v0.3.0.
@@ -151,6 +160,12 @@ load-bearing, or set a new focus.)_
   picking up when the coarse retry is observed to waste compute on a
   per-output basis.  Touches `agents/lib/ffmpeg.sh` (re-cut helper) +
   an opt-in flag in each mission's retry loop.
+  **To unblock**: operator confirms a retry has been observed wasting
+  compute on a per-output basis (e.g., a 5+ minute re-transcribe when
+  only one window failed), then approves agent change to
+  `agents/lib/ffmpeg.sh` (single-window re-cut helper + opt-in flag
+  `QA_RETRY_GRANULARITY=window` in mission retry loops).  Per §5,
+  agent change to `agents/lib/*` requires explicit operator OK.
 
 ## Done — most recent first
 

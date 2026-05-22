@@ -151,12 +151,17 @@ if [[ -f "$GLOBAL_TEMPLATE" ]]; then
   echo "[install-claude-local] rendering $GLOBAL_TEMPLATE → $GLOBAL_TARGET"
 
   if [[ ! -f "$GLOBAL_TARGET" ]]; then
-    # Fresh install — create with a small header + the template block.
+    # Fresh install — create with a small header + the substituted template block.
     {
       printf '# Global Claude Code Instructions\n\n'
       printf 'Project: `%s` — see that repo'\''s `CLAUDE.md` for project-specific behavior.\n\n' "$REPO_ROOT"
       printf -- '---\n\n'
-      cat "$GLOBAL_TEMPLATE"
+      sed \
+        -e "s|@@HOME_PARENT@@|$HOME_PARENT|g" \
+        -e "s|@@HOME@@|$OPERATOR_HOME|g" \
+        -e "s|@@REPO_ROOT@@|$REPO_ROOT|g" \
+        -e "s|@@MEMORY_NAMESPACE@@|$MEMORY_NAMESPACE|g" \
+        "$GLOBAL_TEMPLATE"
     } > "$GLOBAL_TARGET"
     echo "  ✓ created $GLOBAL_TARGET with operator-style block"
   elif grep -qE 'BEGIN repo-managed operator-style block|<!-- ┌─' "$GLOBAL_TARGET"; then
@@ -202,29 +207,38 @@ if [[ -f "$GLOBAL_TEMPLATE" ]]; then
         }
         next
       }
-      # Block-end: either the single-line END comment or the legacy
-      # decorative closer line.  Both leave in_block=0.
-      /^<!-- END repo-managed operator-style block/ ||
-      /└─.*-->[[:space:]]*$/ {
+      # Block-end: ONLY the single-line END comment.  The legacy
+      # decorative closer `└─...┘ -->` is the END of the BEGIN
+      # multi-line *comment*, NOT the end of the operator-style
+      # block — treating it as block-end let the legacy body leak
+      # through to output (regression caught by
+      # test-install-claude-local.sh assertion #5).
+      /^<!-- END repo-managed operator-style block/ {
         in_block = 0
         next
       }
-      # Stacked legacy opener lines (the actual bug evidence) — strip
-      # them if they appear before BEGIN was matched.  Harmless on new
-      # format since the BEGIN comment is single-line.
-      /^<!-- ┌─/ { next }
+      # Legacy decorative box-closer — consume silently while
+      # in_block so it does not bleed through.
+      /└─.*-->[[:space:]]*$/ {
+        if (in_block) next
+      }
       !in_block { print }
     ' "$GLOBAL_TARGET" > "$tmp"
     mv "$tmp" "$GLOBAL_TARGET"
     rm -f "$rendered_tmpl"
     echo "  ✓ refreshed operator-style block in $GLOBAL_TARGET (in place)"
   else
-    # Existing install without markers — append template, leaving the
-    # operator's prior content above untouched.
+    # Existing install without markers — append substituted template,
+    # leaving the operator's prior content above untouched.
     {
       printf '\n\n'
       printf -- '---\n\n'
-      cat "$GLOBAL_TEMPLATE"
+      sed \
+        -e "s|@@HOME_PARENT@@|$HOME_PARENT|g" \
+        -e "s|@@HOME@@|$OPERATOR_HOME|g" \
+        -e "s|@@REPO_ROOT@@|$REPO_ROOT|g" \
+        -e "s|@@MEMORY_NAMESPACE@@|$MEMORY_NAMESPACE|g" \
+        "$GLOBAL_TEMPLATE"
     } >> "$GLOBAL_TARGET"
     echo "  ✓ appended operator-style block to $GLOBAL_TARGET (prior content preserved above)"
   fi
