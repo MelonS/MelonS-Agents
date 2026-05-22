@@ -169,6 +169,49 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+
+- **2026-05-22** (~16:00 KST, bulk auto-sync via `scripts/roadmap-done-sync.sh`)
+  **36 commits backfilled** from base `f3d7781` to HEAD.
+  Per §9 every commit needs a Done entry — this is the catch-up batch
+  the auditor would otherwise repeatedly flag.  Entries grouped by
+  scope; operator may rewrite into narrative form if a specific
+  cluster warrants it.
+  - `0703be8` — docs(roadmap): Done entries for music-video quality bar 5 phases + YT stats
+  - `87920d6` — docs(roadmap): apply missed Done entry for 39th-cycle audit arc
+  - `1a513a6` — docs(daily): morning brief — quality-bar 5 phases + YT stats Phase 1
+  - `5c7c9a0` — docs(case-studies): add #9 — quality-bar as 6 unenforced contracts
+  - `a701e41` — docs(daily): note A.2 marker-leak fix in morning brief
+  - `bde9453` — docs(daily): note C.1 Phase 2 + A.3 tune in morning brief
+  - `9ac5d22` — docs(roadmap): Done entries for quality-bar refinements + QA gate
+  - `b523c00` — docs(research): qb demo #2 verification — phrase_climax + anchor 33% confirmed
+  - `94190c2` — tune(broll): tighten vocal-genre keyword_pools with geographic anchors
+  - `bc46a7f` — fix(lyrics): escape commas + equals signs in drawtext text field
+  - `b5e61de` — fix(lyrics): substitute apostrophe with U+2019 to dodge filter parser
+  - `63431b4` — tune(qa): expand qa-anchor regex to match tightened keyword_pools
+  - `2ca305c` — docs(contract): session-start protocol — add autonomous-decisions + morning-brief
+  - `01d9d83` — docs(research): demo #3 EN — final fix verification PASS
+  - `2c38938` — docs(research): demo #4 KR — 100% anchor coverage after pool tightening
+  - `90ddeb1` — docs(daily): morning brief — anchor-coverage progression table
+  - `88b4ac4` — feat(shaders): C.1 Phase 3 — per-event shader gating (onsets + beats)
+  - `5fe3e64` — feat(presets): shader_pool field — deterministic rotation per short_id
+  - `aedc774` — feat(lyrics): Suno-drift detection gate — skip overlay when alignment fails
+  - `fd22a4e` — test(qa-anchor): regression test for A.3 QA gate (6/6 pass)
+  - `8cd5b8e` — docs(roadmap): bulk-reconciliation #2 — backfill 28 Done entries
+  - `482500f` — test(install-claude-local): idempotency regression test + leak fix
+  - `33e7f81` — docs(decisions): log idempotency-test-first memory entry
+  - `ce7dd4d` — docs(readme): link music-video CHANGELOG + correct 271 seeded ids
+  - `e33c488` — test(log-decision): idempotency + correctness regression test
+  - `dec4557` — test(log-decision): idempotency + correctness regression test
+  - `dbe2a01` — fix(lyrics): move overlay into cross-platform safe band
+  - `16332d1` — feat(presets): cut_density semantic field on every preset
+  - `e8b4162` — chore(audit): clear 43rd-cycle new findings — bad hash + 8 undocumented scripts
+  - `90f9abb` — feat(lyrics): LYRICS_POSITIONS env override implementation
+  - `9c4a081` — feat(plan): scripts/shot-plan.sh — director-discipline intent layer
+  - `bec0f3b` — chore(audit): clear 44th-cycle new finding — lyric-extract §8 exception
+  - `1fef3f0` — feat(grade): per-genre base color grade — research §2 implementation
+  - `b2476b4` — feat(morning-brief): bilingual (EN+KO) — --lang ko|en flag + LANG autodetect
+  - `f96549b` — feat(doctor): intervention-trend check — chart becomes a doctor signal
+  - `26db705` — feat(metrics): quality-trend chart — mission-outcome companion to autonomy signal
 - **2026-05-22 (bulk reconciliation #2)** Backlog of ~28 commits between
   `f3d7781` (2026-05-22 ~02:45 KST, already covered above) and `abb45d0`
   (2026-05-22 ~15:30 KST) appended below in compressed form, grouped by
