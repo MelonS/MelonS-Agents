@@ -87,3 +87,31 @@ Visual:
 Confirms the chain composes correctly (no muddy stacking, no clipped
 colors) AND that the grade is the differentiator that moves Pexels
 stock from "generic" to "genre-coded".
+
+## kpop_ballad end-to-end (qb-grade-ballad-160553)
+
+Full chain: source → `kr_warm_pastel` grade → `halation` shader (ratio
+0.35, phrase_climax gate) → lyric overlay (safe-band positions) →
+thumbnail → upload metadata.
+
+QA verdict: 8/8 anchor-matching (100%), file integrity PASS, validator
+verdict **PASS**.
+
+Frame 30s composition:
+- **B-roll**: Korean street, Namdaemun gate landmark, KR signage,
+  Korean pedestrians.
+- **Grade**: kr_warm_pastel pulls the whole frame into a pink/violet
+  pastel — the sky reads as romantic sunset rather than overcast.
+- **Shader**: halation bloom on the bright sky region.
+- **Lyric**: "변한 건 너의 자리뿐" upper-third per the safe-band fix,
+  clean readable AppleSDGothicNeo.
+- **Composition**: lyric in the upper safe zone (no platform UI
+  conflict), scene below — entire frame reads as a deliberate kpop
+  ballad music-video aesthetic.
+
+This is the most complete validation of the 2026-05-22 quality-bar
+work end-to-end:
+  6 directives + research-driven follow-ons composing to produce a
+  render that, taken at a single frame, looks like a deliberate
+  K-pop ballad music video rather than a "Pexels stock + filter"
+  output.
