@@ -134,6 +134,23 @@ log_step "3/5  segment plan"
 IFS=',' read -r -a KEYWORDS <<< "$KEYWORDS_CSV"
 KW_COUNT="${#KEYWORDS[@]}"
 
+# Emit a shot plan JSON to resources/ for operator inspection (per
+# director-methodology research §1: "shot list / storyboard
+# discipline").  Pure artifact emission — does NOT change runtime
+# behavior in this commit; the keyword/segment derivation below stays
+# as-is.  Operator can read the plan to understand intent BEFORE the
+# pipeline commits to clips.  When MUSIC_VIDEO_SHOT_PLAN_CONSUME=1
+# lands in a future commit, the keyword array below will be sourced
+# from the plan instead of derived from KEYWORDS_CSV + indexing.
+if [[ -x "$REPO_ROOT/scripts/shot-plan.sh" ]] && [[ -n "${MUSIC_VIDEO_GENRE:-}" ]]; then
+  bash "$REPO_ROOT/scripts/shot-plan.sh" \
+    --keywords "$KEYWORDS_CSV" \
+    --genre "$MUSIC_VIDEO_GENRE" \
+    --duration "$TARGET_DUR" \
+    --out "$MDIR/resources/shot-plan.json" 2>/dev/null \
+    && log_info "  shot-plan: $MDIR/resources/shot-plan.json"
+fi
+
 # Quality-bar #5/#6 (2026-05-22): inject ethnicity-anchored keywords
 # for vocal-anchored genres so the B-roll's people-on-camera match
 # the lyric language.  MUSIC_VIDEO_LANG_ANCHOR is exported by
