@@ -7,27 +7,28 @@
 
 **Verdict**: DRIFT_DETECTED
 **Full report**: [`docs/audit/2026-05-22-contract.md`](2026-05-22-contract.md)
-**Generated**: 2026-05-22 01:08:02 KST
+**Generated**: 2026-05-22 03:48:33 KST
 
 ## Summary (from audit)
 
 
-Thirty-fifth contract audit (second pass today; prior run at 01:01 KST had HEAD
-`a122f99` — this run is HEAD `c04d371`, one commit later).  Checked all twelve hard
-rules and the Conventions block in `docs/operator-contract.md` against code,
-configuration, and recent git history.  Seven findings: three medium (carry-forward
-— `outputs/publish/upload-meta-v2/` committed while architecture table claims
-otherwise; portability gap from `~/.claude/CLAUDE.md` split having no bootstrap path;
-roadmap Done now 26 commits behind HEAD) and four low (carry-forward — §8 exception
-comment absent in `scripts/ffmpeg-throttled.sh:33`, same comment absent in three
-2026-05-21 music-video scripts, `docs/for-analysts.md:93` date label 5 days stale,
-§8 exception registry line numbers for `agents/lib/env.sh` off by 2 lines).  §5
-CLEAN — no commits to `.claude/agents/*.md` or `agents/*.md` since 2026-05-17.  §7
-CLEAN — no `&&`-compound git calls in tracked scripts.  §12 CLEAN — secret scan
-returned only comments and tokenization code.  New commit `c04d371`
-(`feat(audit): skill-activation drift check`) adds `scripts/audit-skill-drift.sh`
-with no hardcoded paths; the pre-flight skill-drift report passed with zero findings.
-Subagent model assignments: all six agents match the `docs/for-analysts.md` table.
+Forty-second contract audit (HEAD `2ca305c`, 2026-05-22).  All twelve hard rules and the
+Conventions block in `docs/operator-contract.md` were checked against code, configuration,
+git history, and the pre-computed skill-activation drift report (0 findings — clean).
+Three findings from the 41st-cycle report are confirmed RESOLVED: `scripts/generate-intervention-chart.py`
+hardcoded project-dir key (fixed via dynamic derivation from `ROOT` in commits `ae73973`/`f5d909a`,
+verified at line 75), `docs/review-digest.md` untracked (added to `.gitignore` in `f5d909a`),
+and `scripts/music-video-qa-anchor.sh` untracked (committed in `7e52ab8`, tuned in `63431b4`).
+Seven findings persist: roadmap "Now" has reached 4th consecutive stale cycle (20+ commits
+since its 2026-05-20 update, none referencing job-hunt activation); Done gap stands at ~10
+commits; three low-severity portability/housekeeping items carry into their 3rd cycle
+(`@@REPO_ROOT@@` unsubstituted, `.playwright-mcp/` ungitignored, `demo-mode-log.txt:1` machine
+path); roadmap "Blocked" vague (3rd cycle).  One new low finding: `docs/audit/2026-05-22-all.md`
+is untracked (§6 violation).  §5 CLEAN — no commits to `.claude/agents/*.md` or `agents/*.md`
+since `8570a9c` (2026-05-15).  §7 CLEAN — no `&&`-compound git calls.  §12 CLEAN — secret scan
+returned only tokenization code and comment lines.  §3 money firewall intact.  All six subagent
+model assignments match the `docs/for-analysts.md` table.  §8 exception registry: all registered
+files confirmed ≥1 `# §8 exception:` comment.  Skill-activation drift: 0 findings.
 
 ## Critical / High findings
 

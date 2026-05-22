@@ -20,3 +20,10 @@
    purpose:      validate the stranger-clone path now that the project is public-shared in a 2k-member group
                  — confirms aubio + jq deps in bootstrap, Pexels API key guidance, and shader script
                  all land in a brand-new clone
+2026-05-22 11:53:08 +0900  FAIL  variant=bootstrap-hints  asserts=0/0  reason="git clone failed"
+2026-05-22 11:54:53 +0900  PASS  variant=bootstrap-hints  asserts=8/8
+2026-05-22 11:56:13 +0900  PASS  variant=bootstrap-hints  asserts=8/8
+2026-05-22 11:57:37 +0900  PASS  variant=bootstrap-hints  asserts=8/8
+2026-05-22 11:59:11 +0900  PASS  variant=bootstrap-hints  asserts=8/8
+2026-05-22 12:01:04 +0900  PASS  variant=bootstrap-hints  asserts=8/8
+2026-05-22 12:01:35 +0900  PASS  variant=bootstrap-hints  asserts=8/8
