@@ -169,6 +169,58 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-22 (bulk reconciliation #2)** Backlog of ~28 commits between
+  `f3d7781` (2026-05-22 ~02:45 KST, already covered above) and `abb45d0`
+  (2026-05-22 ~15:30 KST) appended below in compressed form, grouped by
+  theme.  Per operator-contract §9, every commit deserves a Done entry;
+  bulk-reconciliation trades narrative detail for completeness so the
+  Done section catches up.
+
+  **Music-video operator-utility cluster (15 commits, 5/22 morning →
+  afternoon)**: `5c942be` first-touch zero-account demo wizard;
+  `682b9cc` first-touch smoke test 3/3; `72e865c` music-video-batch
+  multi-track render wrapper; `64e71c7` music-video-batch smoke 4/4;
+  `54629c8` music-video-validate combined pre-publish gate; `a940d4d`
+  validate regression 4/4; `f9f8f24` optional MUSIC_VIDEO_VALIDATE=1
+  post-render gate; `e032cf5` music-video-thumbnail upload-ready still
+  extract; `3fa5b8a` thumbnail 5/5 cases; `a2bdf0c` auto-extract
+  thumbnail in pipeline; `c5fceaf` lyric-extract whisper-based pull;
+  `2c950e0` lyric-extract ♪ marker strip; `28ef914` lyric-extract
+  smoke 4/4; `a0ea9b9` music-video-trim utility + test-all aggregator;
+  `0adb09c` test-all self-exclusion fix; `af1201c` music-video-upload-meta
+  per-mission template; `652c7a8` auto chain upload-meta 4/4 PASS.
+
+  **Music-video pipeline / shader refinement (5 commits)**: `26211a2`
+  lyrics auto-wrap long lines; `90e6ef8` MUSIC_VIDEO_SHADER env override
+  for one-off tests; `07428b1` shaders C.1 Phase 3 cap event count at 30
+  (ffmpeg expr-length limit); `3b43043` shaders C.1 Phase 3 fallback for
+  sparse onsets; `e1837b8` shaders C.1 gate-mode regression 6/6.
+
+  **Documentation / metrics (5 commits)**: `5d7fbb3` operator-utilities
+  table in pipeline-reference doc; `5fd83c7` consolidated music-video-
+  pipeline-reference.md (env vars, flags, gates); `d899cfc` README EN+KO
+  cadence — surface first-touch wizard + pipeline reference link;
+  `0a4d622` daily brief — C.1 Phase 3 + drift gate + wrap + first-touch;
+  `46a8fe7` bilingual intervention chart (EN+KO) + visual polish;
+  `5b797e9` skills/music-video CHANGELOG capturing the 2026-05-22
+  quality-bar batch.
+
+  **Operator tooling / health (2 commits)**: `75f5dd7` music-video-doctor.sh
+  skill-specific health check; `7f44c59` install-claude-local idempotency
+  (single-line BEGIN/END + substitute-before-awk).
+
+  **Audit clearing (3 commits)**: `ee3853b` clear stale machine-path
+  in demo-mode-log line 1 (40th-cycle finding #5); `10ec7c0` clear
+  .playwright-mcp gitignore + commit 2026-05-22-all report (40th-cycle
+  findings #4 + #7); `e09a4ac` fresh-clone regression PASS row appended.
+
+  Today's micro-batches (commits added to roadmap in dedicated entries
+  rather than this reconciliation): `3ab852d` (README+site refresh),
+  `b6c8b6c` / `bbb6faf` (Done entries for own commits), `3352d3e`
+  (site polish v2 + job-hunt digest preview + faceless collapse),
+  `92113ee` (commit pre-existing audit+onboarding files), `abb45d0`
+  (clear 42nd-cycle persistent audit findings).
+
 - **2026-05-22** (~14:50 KST, site polish v2 + disk cleanup pass)
   **Site/Skill #2 surface + faceless gallery collapse + 2 GB of
   records/ intermediates freed** (commit `3352d3e` + non-committed
