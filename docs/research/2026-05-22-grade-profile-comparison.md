@@ -62,3 +62,28 @@ The grade stage runs BEFORE the shader (per
 This ordering means the shader operates on already-graded content,
 which matches pro post-production sequence (color correction first,
 then look development, then visual effects).
+
+## End-to-end validation (synthwave demo)
+
+Full pipeline render of `synthwave-neon-drive.mp3` through the new
+chain — mission `qb-grade-synthwave-155730`:
+
+1. base render (`short.mp4`, 24 MB)
+2. grade pass — `synthwave_neon` (`short-grade.mp4`, 29 MB)
+3. shader pass — `beat_burst` with shader_active_ratio=0.65
+   (`short-grade-beat_burst.mp4`, 27 MB)
+4. auto-thumbnail (`short-grade-beat_burst-thumb.jpg`)
+5. auto upload-metadata template (`upload-metadata.md`)
+
+Visual:
+- Frame 25s: night-Shibuya Tokyo neon street, sky cyan tinted +
+  magenta highlights on the saturated neon — unmistakable synthwave
+  signature.  Pre-grade was good Pexels stock; post-grade is
+  genre-coded.
+- Frame 35s: warm-lit interior with two figures, magenta-shifted
+  highlights + pink-lifted fleshtones — reads as retro arcade
+  lounge aesthetic.
+
+Confirms the chain composes correctly (no muddy stacking, no clipped
+colors) AND that the grade is the differentiator that moves Pexels
+stock from "generic" to "genre-coded".
