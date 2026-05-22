@@ -197,6 +197,8 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
   verdict, audit 상태, intervention trend (7-day Δ), 12h 전부터의
   커밋 + attribution, 오늘 자율 결정, review-queue pending 카운트,
   blockers.  Read-only.  "밤사이 뭐 됐어?" 의 canonical 답.
+  도구별 what/when/output 표 전체 카탈로그:
+  [`docs/operator-tooling.md`](docs/operator-tooling.md).
 
 ## 자율성 신호 — 운영자 개입 추세
 
