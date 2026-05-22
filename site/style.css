@@ -264,6 +264,28 @@ p code, li code {
 .callout strong { color: var(--accent); }
 .callout em { font-style: italic; }
 
+details {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin: 1.5rem 0;
+  background: var(--bg-soft);
+}
+details > summary {
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--fg-muted);
+  padding: 0.25rem 0;
+  list-style: revert;
+}
+details > summary:hover { color: var(--accent); }
+details[open] > summary {
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+details .gallery { margin-top: 0.75rem; }
+
 footer {
   border-top: 1px solid var(--border);
   padding: 2rem 1.25rem 3rem;
