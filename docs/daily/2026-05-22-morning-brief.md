@@ -33,6 +33,45 @@ shader research in [`docs/research/2026-05-22-shader-vocabulary.md`](../research
 |--------|---------|
 | `0703be8` | roadmap.md Done entries + Stage-2/3 + C.1 Phase-2 + A.3 QA gate suggest block |
 
+## Post-research wave (2026-05-22 14:00–16:25 KST)
+
+After the morning quality-bar batch, two research agents ran in
+parallel and ~10 follow-on commits landed implementing the highest-
+ROI findings:
+
+- **Pro practices research** `docs/research/2026-05-22-music-video-
+  pro-practices.md` (4071 words, 30 sources, 8 question areas).
+- **Director methodology research** `docs/research/2026-05-22-music-
+  video-director-methodology.md` (4400 words, 50+ sources, 10
+  directors profiled).
+
+Direct implementations from research findings:
+
+| Finding | Implementation | Commit |
+|---------|----------------|--------|
+| Lyric overlay bottom 22% in UI zone | Moved 4-position rotation into safe band y∈[0.22h, 0.62h] + `LYRICS_POSITIONS` env override | `dbe2a01`, `90f9abb` |
+| `cut_density` semantic label per genre | Added to all 19 presets, derived from `phrase_beats` | `16332d1` |
+| Shot-plan as inspectable intent layer | `scripts/shot-plan.sh` — JSON plan with per-segment emotion / cut_behaviour / motif_slot / hook_position | `9c4a081` |
+| `grade_profile` per genre (highest impact) | `scripts/music-video-grade.sh` with 7 profiles, wired into music-video-genre.sh before shader stage | `1fef3f0` |
+| Mood vocabulary primitives | `skills/music-video/data/mood-vocabulary.yaml` — 13 moods × 8 primitives each (consumer wiring deferred) | `6c8b8c7` |
+
+Visual validation:
+
+- **synthwave grade test** (qb-grade-synthwave-155730):
+  Shibuya night neon B-roll + `synthwave_neon` grade + `beat_burst`
+  shader → unmistakable retro/synthwave aesthetic.  Grade transforms
+  generic Pexels stock into genre-coded look.
+- **kpop_ballad grade test** (qb-grade-ballad-160553):
+  Korean daylight street + `kr_warm_pastel` grade → subtle warmth +
+  raised gamma + soft pastel feel.  Matches design intent (ballad
+  asks for soft warmth, not dramatic transform).
+- Comparison doc: `docs/research/2026-05-22-grade-profile-comparison.md`.
+
+The grade chain ordering matches pro post-production sequence:
+
+  source → base grade → shader → lyric overlay → thumbnail
+                                              → upload metadata
+
 ## Anchor-coverage progression (same kpop_ballad track, 3 renders)
 
 | Demo | Commit | Anchor match | Notes |
