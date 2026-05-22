@@ -265,6 +265,34 @@ if [[ -x "$REPO_ROOT/scripts/audit-skill-drift.sh" ]]; then
   fi
 fi
 
+# --- 12. Intervention-trend signal ----------------------------------------
+# Turns the chart into a doctor signal.  Reads docs/metrics/intervention.json's
+# trend_7d block; flags WARN when sustained operator-intervention is high or
+# the trend is rising vs prior 7-day window.  This is the only check that
+# intervention reduction can affect — it makes the morning-brief table visibly
+# react to the lever work.
+TREND_JSON="$REPO_ROOT/docs/metrics/intervention.json"
+if [[ -f "$TREND_JSON" ]] && command -v jq >/dev/null 2>&1; then
+  ur_last7=$(jq -r '.trend_7d.user_ratio_pct.last7_avg // empty' "$TREND_JSON" 2>/dev/null)
+  ur_delta=$(jq -r '.trend_7d.user_ratio_pct.delta // empty' "$TREND_JSON" 2>/dev/null)
+  prompts_delta=$(jq -r '.trend_7d.operator_prompts.delta // empty' "$TREND_JSON" 2>/dev/null)
+  direction=$(jq -r '.trend_7d.direction // [] | join(",")' "$TREND_JSON" 2>/dev/null)
+  if [[ -z "$ur_last7" ]]; then
+    record WARN "intervention-trend" "trend_7d missing — re-run scripts/intervention-chart-collect.sh"
+  else
+    # Sustained-high test: last7 average > 50% intervention.
+    ur_int=$(printf '%.0f' "$ur_last7" 2>/dev/null || echo 0)
+    if (( ur_int > 50 )); then
+      record WARN "intervention-trend" "user-ratio 7d avg ${ur_last7}% > 50% — operator deeply in loop; see docs/research/2026-05-22-intervention-reduction.md"
+    elif [[ "$direction" == *"user-ratio↑"* ]] || [[ "$direction" == *"prompts↑"* ]]; then
+      record WARN "intervention-trend" "rising signal: $direction — re-run morning-brief.sh to check"
+    else
+      # Compose a short success line with the headline number.
+      record PASS "intervention-trend" "${ur_last7}% user-ratio 7d (direction: ${direction:-stable})"
+    fi
+  fi
+fi
+
 # --- Output ----------------------------------------------------------------
 
 overall="PASS"

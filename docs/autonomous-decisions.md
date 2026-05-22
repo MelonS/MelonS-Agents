@@ -37,6 +37,7 @@ header if today's section doesn't exist.
 
 ## 2026-05-22 (overnight autonomous)
 
+- `15:55 KST` — Doctor gains intervention-trend check — turns the chart into an alert signal. WARN if user-ratio 7d avg > 50%, OR if direction contains 'user-ratio↑'/'prompts↑'. PASS shows headline number ('30.3% user-ratio 7d (direction: stable)'). Operator's morning-brief now reacts to intervention regression.
 - `14:35 KST` — scripts/test-log-decision.sh shipped (5/5 PASS) — applies the [[idempotency-test-first]] rule to log-decision.sh: validates same-day calls nest under one date header, newest-first ordering, boilerplate preservation, and documents current no-dedup behavior
 - `14:30 KST` — Memory entry [[idempotency-test-first]] added — generalizable lesson from today's install-claude-local stacking bug. Future scripts that modify persistent state should ship idempotency test in same commit
 - `14:20 KST` — scripts/test-install-claude-local.sh shipped — 7 asserts validate idempotency + legacy migration + path substitution. test-all.sh auto-discovers via ls scripts/test-*.sh glob. Caught a regression: legacy '└─...┘ -->' was wrongly treated as block-end, leaking body content; fixed.
