@@ -42,6 +42,28 @@ Kevin MacLeod music (~100 s), and opens the result.  No Pexels signup,
 no Suno round-trip, no `.env` edit.  See
 [Quick start](#quick-start) for the manual + advanced paths.
 
+## Who this is for
+
+- **You want short-form vertical video output without writing pipeline code.**
+  Give the wizard a music file, get back a 9:16 short with beat-aligned
+  cuts and vintage shaders.  No Premiere, no After Effects, no GUI.
+- **You want to study a working multi-agent system that doesn't pretend
+  to be magic.**  Every commit on this repo is one observable step in
+  how the system evolves; `docs/audit/` records every drift the auditor
+  catches; `docs/metrics/quality-trend.png` + `intervention.png` chart
+  whether the autonomy and quality claims are honest over time.
+- **You want a Korean job-board digest that respects how you actually
+  search.**  Pass `--seed "Problem Solver"`; the skill expands to the
+  24 equivalent titles companies use (FDE / Applied AI Engineer /
+  Generalist / Founding Engineer / …) before fetching from 11 sources.
+- **You want an agentskills.io-compliant Skill you can drop into other
+  runtimes.**  Both skills work in Claude Code, Cursor, Goose, Gemini
+  CLI, OpenAI Codex, and the other ~38 listed compatible runtimes.
+
+If you want a SaaS that hides the pipeline, this isn't it.  If you
+want every step of the pipeline as inspectable bash + open-source
+local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
+
 ## Overview
 
 > A macOS-based multi-agent system **driven by [Claude Code](https://docs.anthropic.com/claude-code)**
@@ -462,31 +484,45 @@ data-flow map).
 ## Architecture
 
 ```
-              ┌───────────────────┐
-              │   Orchestrator    │   model: opus
-              └─────────┬─────────┘
-                        │ delegates the mission, in order
+   ┌─ Tier 1 — Anthropic API (Claude Code CLI runtime) ───────────────┐
+   │                                                                   │
+   │          ┌───────────────────┐                                    │
+   │          │   Orchestrator    │   opus                             │
+   │          └─────────┬─────────┘                                    │
+   │                    │ delegates the mission, in order               │
+   │       ┌────────────┼────────────┬─────────────┐                   │
+   │       ▼            ▼            ▼             ▼                   │
+   │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐               │
+   │  │ Planner │  │Resourcer│  │  Editor │  │   QA    │   all sonnet  │
+   │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘               │
+   │       └────────────┴───── files ┴────────────┘                    │
+   │                    │ plan.md / MANIFEST.md / qa-report.md          │
+   └────────────────────┼───────────────────────────────────────────────┘
+                        │ skill invocation (agentskills.io spec)
                         ▼
-              ┌───────────────────┐
-              │      Planner      │   model: sonnet
-              └─────────┬─────────┘
-                        ▼
-              ┌───────────────────┐
-              │     Resourcer     │   model: sonnet
-              └─────────┬─────────┘
-                        ▼
-              ┌───────────────────┐
-              │       Editor      │   model: sonnet
-              └─────────┬─────────┘
-                        ▼
-              ┌───────────────────┐
-              │         QA        │   model: sonnet
-              └───────────────────┘
+   ┌─ Tier 2 — Local mission execution ($0 runtime) ──────────────────┐
+   │                                                                   │
+   │   skills/music-video/   → ffmpeg + aubio + whisper + Pexels API   │
+   │   skills/job-hunt/      → curl + jq + ollama (filter only)        │
+   │   skills/goal-lock/     → bash (discipline helper)                │
+   │                                                                   │
+   │   ─── Each skill writes to records/missions/<date>/<id>/ ────     │
+   └─────────────────────────┬─────────────────────────────────────────┘
+                             │ post-render auto-enqueue
+                             ▼
+   ┌─ Operator surface (Claude-free, ~2s) ────────────────────────────┐
+   │                                                                   │
+   │   review-queue   doctor.sh   statusline   morning-brief.sh        │
+   │   ─── absorbs status-check prompts so the operator can scan ────  │
+   │       state without typing                                         │
+   └───────────────────────────────────────────────────────────────────┘
 
-              ┌───────────────────┐
-              │      Auditor      │   model: sonnet  (out-of-band)
-              └───────────────────┘   read-only; scheduled daily
-                                       at 03:00 via launchd
+   ┌─ Auditor (out-of-band, read-only, three trigger layers) ─────────┐
+   │   L1 post-commit hook (drift-risk paths) → audit-run.sh contract │
+   │   L2 15-min mission-anomaly poll        → focused audit          │
+   │   L3 daily 03:00 baseline via launchd   → audit-run.sh all       │
+   │   writes docs/audit/<date>-<focus>.md + CURRENT-ALERT.md          │
+   └───────────────────────────────────────────────────────────────────┘
 ```
 
 | Agent | Responsibility | Output |

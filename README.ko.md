@@ -41,6 +41,28 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 후 결과물을 엽니다. Pexels 가입, Suno 라운드트립, `.env` 편집 모두
 필요 없음. 수동 + 고급 경로는 [Quick start](#quick-start) 참조.
 
+## 이 프로젝트는 누구를 위한 것인가
+
+- **파이프라인 코드를 짜지 않고도 숏폼 세로 영상을 만들고 싶은 분.**
+  마법사에 음악 파일 하나 넘기면 비트 정렬 컷 + 빈티지 쉐이더 적용된
+  9:16 쇼츠가 돌아옴.  프리미어, 애프터이펙트, GUI 다 불필요.
+- **마법처럼 포장하지 않고 정직하게 보여주는 멀티에이전트 시스템을
+  관찰하고 싶은 분.**  레포의 모든 커밋이 시스템 진화의 1단계 관찰
+  포인트; `docs/audit/` 는 감사가 잡은 모든 drift 기록; `docs/metrics/quality-trend.png`
+  + `intervention.png` 는 자율성 + 품질 주장이 시간 흐름에 따라
+  정직한지 차트화.
+- **실제 검색 방식에 맞춰진 한국 잡보드 다이제스트가 필요한 분.**
+  `--seed "Problem Solver"` 한 줄이면, 회사마다 다르게 부르는 24개
+  동의어 타이틀 (FDE / Applied AI Engineer / Generalist / Founding
+  Engineer / …) 로 자동 확장 후 11개 소스에서 fetch.
+- **다른 런타임에 drop-in 가능한 agentskills.io 호환 Skill 이 필요한 분.**
+  두 스킬 모두 Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex
+  외 ~38 개 호환 런타임에서 작동.
+
+파이프라인을 가려놓은 SaaS 가 필요하다면 이 레포는 아닙니다.  파이프라인의
+모든 단계를 검사 가능한 bash + 오픈소스 로컬 도구 (ffmpeg / whisper.cpp
+/ ollama / aubio) 로 보고 싶다면, 맞습니다.
+
 ## 개요
 
 > **[Claude Code](https://docs.anthropic.com/claude-code)** (Anthropic
@@ -436,31 +458,44 @@ v5 → v6 상승폭 (단일 라인 자막은 v5에서 이미 적용 완료, v6�
 ## 아키텍처
 
 ```
-              ┌───────────────────┐
-              │   Orchestrator    │   model: opus
-              └─────────┬─────────┘
-                        │ 미션을 순서대로 위임
+   ┌─ Tier 1 — Anthropic API (Claude Code CLI 런타임) ──────────────────┐
+   │                                                                    │
+   │          ┌───────────────────┐                                     │
+   │          │   Orchestrator    │   opus                              │
+   │          └─────────┬─────────┘                                     │
+   │                    │ 미션을 순서대로 위임                            │
+   │       ┌────────────┼────────────┬─────────────┐                    │
+   │       ▼            ▼            ▼             ▼                    │
+   │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐                │
+   │  │ Planner │  │Resourcer│  │  Editor │  │   QA    │   all sonnet   │
+   │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘                │
+   │       └────────────┴── 파일 핸드오프 ┴────────┘                     │
+   │                    │ plan.md / MANIFEST.md / qa-report.md           │
+   └────────────────────┼────────────────────────────────────────────────┘
+                        │ skill invocation (agentskills.io spec)
                         ▼
-              ┌───────────────────┐
-              │      Planner      │   model: sonnet
-              └─────────┬─────────┘
-                        ▼
-              ┌───────────────────┐
-              │     Resourcer     │   model: sonnet
-              └─────────┬─────────┘
-                        ▼
-              ┌───────────────────┐
-              │       Editor      │   model: sonnet
-              └─────────┬─────────┘
-                        ▼
-              ┌───────────────────┐
-              │         QA        │   model: sonnet
-              └───────────────────┘
+   ┌─ Tier 2 — 로컬 미션 실행 (런타임 $0) ─────────────────────────────┐
+   │                                                                    │
+   │   skills/music-video/   → ffmpeg + aubio + whisper + Pexels API    │
+   │   skills/job-hunt/      → curl + jq + ollama (필터만)              │
+   │   skills/goal-lock/     → bash (규율 헬퍼)                         │
+   │                                                                    │
+   │   ─── 각 skill 은 records/missions/<date>/<id>/ 에 기록 ────       │
+   └─────────────────────────┬──────────────────────────────────────────┘
+                             │ 렌더 직후 auto-enqueue
+                             ▼
+   ┌─ Operator 표면 (Claude-free, ~2초) ───────────────────────────────┐
+   │                                                                    │
+   │   review-queue   doctor.sh   statusline   morning-brief.sh         │
+   │   ─── 상태-확인 프롬프트 흡수, 운영자가 타이핑 없이 스캔 ────       │
+   └────────────────────────────────────────────────────────────────────┘
 
-              ┌───────────────────┐
-              │      Auditor      │   model: sonnet  (별도 트랙)
-              └───────────────────┘   read-only, 매일 03:00
-                                       launchd 발화
+   ┌─ Auditor (별도 트랙, read-only, 3-layer 트리거) ──────────────────┐
+   │   L1 post-commit 훅 (drift-risk 경로) → audit-run.sh contract     │
+   │   L2 15-분 미션 이상 폴 → 포커스된 audit                          │
+   │   L3 매일 03:00 baseline launchd → audit-run.sh all               │
+   │   결과: docs/audit/<date>-<focus>.md + CURRENT-ALERT.md            │
+   └────────────────────────────────────────────────────────────────────┘
 ```
 
 | 에이전트 | 책임 | 산출물 |
