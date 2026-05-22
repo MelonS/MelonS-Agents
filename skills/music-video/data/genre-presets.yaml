@@ -103,6 +103,7 @@ genres:
     vignette_angle: PI/5
     zoom_pulse_amp: 0
     shader: chromatic_split    # mild chromatic aberration (shoegaze code: visual distortion)
+    shader_pool: [chromatic_split, trail_echo, halation]  # 2026-05-23 research re-mapping (opt-in)
     shader_active_ratio: 0.7    # 2026-05-22 quality-bar #2
     lut_direction: desat_warm
     cut_mode: cuts
@@ -136,6 +137,7 @@ genres:
     vignette_angle: PI/5
     zoom_pulse_amp: 0          # **CRITICAL — lo-fi is anti-glitch**
     shader: halation
+    shader_pool: [halation, paper_grain, soft_bloom]  # 2026-05-23 research re-mapping (opt-in)
     shader_active_ratio: 0.55    # 2026-05-22 quality-bar #2
     lut_direction: warm_amber
     cut_mode: cuts
@@ -169,6 +171,7 @@ genres:
     vignette_angle: PI/4        # deeper, low-key noir
     zoom_pulse_amp: 0          # glitch FORBIDDEN
     shader: halation
+    shader_pool: [halation, paper_grain, dust_speck]  # 2026-05-23 research re-mapping (opt-in)
     shader_active_ratio: 0.5    # 2026-05-22 quality-bar #2
     lut_direction: warm_low_key
     cut_mode: cuts
@@ -202,6 +205,7 @@ genres:
     vignette_angle: PI/4        # deeper, warmer
     zoom_pulse_amp: 0          # FORBIDDEN — vocals carry the energy
     shader: halation           # warm bloom for nostalgia
+    shader_pool: [halation, light_leak, duotone]  # 2026-05-23 research re-mapping (opt-in)
     shader_active_ratio: 0.45    # 2026-05-22 quality-bar #2
     lut_direction: warm_amber_purple
     cut_mode: cuts
@@ -238,6 +242,7 @@ genres:
     vignette_angle: PI/4
     zoom_pulse_amp: 0          # FORBIDDEN — vocals carry energy
     shader: halation           # warm bloom, emotional
+    shader_pool: [halation, vignette_pulse, soft_bloom]  # 2026-05-23 research re-mapping (opt-in)
     shader_active_ratio: 0.35    # 2026-05-22 quality-bar #2
     lut_direction: warm_amber_violet
     cut_mode: cuts
@@ -311,6 +316,7 @@ genres:
     vignette_angle: PI/4
     zoom_pulse_amp: 0          # vocals carry — no glitch
     shader: halation           # warm bloom on candle/skin lighting
+    shader_pool: [halation, vignette_pulse, soft_bloom]  # 2026-05-23 research re-mapping (opt-in)
     shader_active_ratio: 0.4    # 2026-05-22 quality-bar #2
     lut_direction: warm_low_key_red
     cut_mode: cuts
@@ -447,6 +453,7 @@ genres:
     vignette_angle: off         # no vignette
     zoom_pulse_amp: 0.05       # slight, controlled
     shader: beat_burst         # was: scanline — beat_burst lands the drops
+    shader_pool: [beat_burst, duotone, neon_edge]  # 2026-05-23 research re-mapping (opt-in)
     shader_active_ratio: 0.65    # 2026-05-22 quality-bar #2
     # scanline / light_rays / neon_edge also valid alternatives for synthwave
     lut_direction: hot_pink_cyan
@@ -480,6 +487,7 @@ genres:
     vignette_angle: PI/4
     zoom_pulse_amp: 0
     shader: vhs
+    shader_pool: [chromatic_split, duotone, vhs]  # 2026-05-23 research re-mapping (opt-in)
     shader_active_ratio: 0.55    # 2026-05-22 quality-bar #2
     lut_direction: pastel_purple_pink_teal
     cut_mode: stillzoom         # vaporwave is more about looping aesthetic than cuts
@@ -577,6 +585,7 @@ genres:
     vignette_angle: PI/5
     zoom_pulse_amp: 0
     shader: halation           # soft sun-flare alternative
+    shader_pool: [halation, light_leak, paper_grain]  # 2026-05-23 research re-mapping (opt-in)
     shader_active_ratio: 0.55    # 2026-05-22 quality-bar #2
     lut_direction: warm_green_gold
     cut_mode: cuts
@@ -642,6 +651,7 @@ genres:
     vignette_angle: PI/4
     zoom_pulse_amp: 0
     shader: vhs
+    shader_pool: [vhs, chromatic_split, trail_echo]  # 2026-05-23 research re-mapping (opt-in)
     shader_active_ratio: 0.7    # 2026-05-22 quality-bar #2
     lut_direction: pastel_sky
     cut_mode: stillzoom
