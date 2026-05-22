@@ -22,16 +22,37 @@ skills/job-hunt/
 │   ├── README.md                  # 플러그인 계약 (새 소스 추가 시 가장 먼저 읽을 것)
 │   ├── source-plugin.schema.json  # JSON Schema (Draft 2020-12) — 플러그인 출력 형식 강제
 │   ├── _mock.sh                   # 테스트용 결정적 fixture
-│   ├── kr-wanted.sh               # 원티드 — 기본 mock-fallback, 라이브는 JH_WANTED_LIVE=1
-│   ├── kr-programmers.sh          # 프로그래머스 — 기본 mock-fallback, JH_PROGRAMMERS_LIVE=1
-│   ├── kr-jobkorea.sh             # 잡코리아 — 기본 mock-fallback, JH_JOBKOREA_LIVE=1
-│   └── kr-saramin.sh              # 사람인 — 기본 mock-fallback, JH_SARAMIN_LIVE=1 + SARAMIN_KEY
+│   │
+│   │   # Live-ready (API 키 불필요, 운영자 검증 없이 즉시 작동):
+│   ├── global-ats.sh              # Greenhouse + Ashby + Lever 공식 보드 (~27 AI/SaaS 회사); JH_GLOBAL_ATS_LIVE=1
+│   ├── global-hn-whoshiring.sh    # HN 월간 "Who is hiring?" 쓰레드 (Algolia HN Search 경유); JH_GLOBAL_HN_LIVE=1
+│   ├── global-remoteok.sh         # remoteok.com/api; JH_GLOBAL_REMOTEOK_LIVE=1
+│   ├── global-remotive.sh         # remotive.com/api/remote-jobs; JH_GLOBAL_REMOTIVE_LIVE=1
+│   ├── kr-worknet.sh              # 정부 공공고용서비스 워크넷; JH_WORKNET_LIVE=1
+│   │
+│   │   # Live-ready (API 키 + 운영자 검증 필요):
+│   ├── kr-wanted.sh               # 원티드 — JH_WANTED_LIVE=1 + WANTED_API_KEY
+│   ├── kr-saramin.sh              # 사람인 — JH_SARAMIN_LIVE=1 + SARAMIN_KEY
+│   │
+│   │   # KR mini-board live-ready (키 불필요):
+│   ├── kr-rallit.sh               # 랄릿 KR IT 전문; JH_RALLIT_LIVE=1
+│   ├── kr-theteams.sh             # 강소기업 보드; JH_THETEAMS_LIVE=1
+│   │
+│   │   # 영구 mock (robots.txt 금지 / 서비스 종료):
+│   ├── kr-jobkorea.sh             # 잡코리아 — robots /Search/?stext= 금지 + 2017 잡코리아 vs 사람인 판례
+│   └── kr-programmers.sh          # 프로그래머스 — 2025-05-19 서비스 종료
 └── tests/
-    ├── smoke.sh                   # 구조 + 해피 패스 e2e (32개 체크)
-    ├── edge-cases.sh              # 실패 모드 + 엣지 입력 (20개 체크)
-    ├── schema-validation.sh       # 각 플러그인 출력의 JSON Schema 검증 (5개 체크)
-    └── run-all.sh                 # 세 suite 일괄 실행 (57개 체크)
+    ├── smoke.sh                   # 구조 + 해피 패스 e2e (32+ 체크)
+    ├── edge-cases.sh              # 실패 모드 + 엣지 입력 (20+ 체크)
+    ├── schema-validation.sh       # 각 플러그인 출력의 JSON Schema 검증
+    └── run-all.sh                 # 세 suite 일괄 실행
 ```
+
+**플러그인 카운트**: 총 12개 (소스 11개 + `_mock` fallback).
+2026-05-21 종합 라이브 테스트: 5,474개 raw → 24-동의어 "Problem
+Solver" 패밀리 필터 통과 200건.  legal posture + 기술 검증은
+[`docs/research/job-sources-survey-2026-05-21.md`](../research/job-sources-survey-2026-05-21.md)
+참조.
 
 스킬은 **standalone 모양** (`docs/architecture.md`의 "Skills layer — two
 shapes" 참고): `agents/missions/job-hunt/` 대응본 없음, 5-에이전트 오케스트레이터

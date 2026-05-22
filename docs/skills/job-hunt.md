@@ -20,15 +20,37 @@ skills/job-hunt/
 ├── config/
 │   └── filters.example.yaml       # documented starting filter; operator copies to filters.yaml
 ├── sources/
-│   ├── README.md                  # plugin contract (this is what you read first if adding a source)
+│   ├── README.md                  # plugin contract (read this first if adding a source)
+│   ├── source-plugin.schema.json  # JSON schema each source's output must validate against
 │   ├── _mock.sh                   # deterministic fixture for testing
-│   ├── kr-wanted.sh               # 원티드 — mock-fallback default, live behind JH_WANTED_LIVE=1
-│   ├── kr-programmers.sh          # 프로그래머스 — mock-fallback default, live behind JH_PROGRAMMERS_LIVE=1
-│   ├── kr-jobkorea.sh             # 잡코리아 — mock-fallback default, live behind JH_JOBKOREA_LIVE=1
-│   └── kr-saramin.sh              # 사람인 — mock-fallback default, live behind JH_SARAMIN_LIVE=1 + SARAMIN_KEY
+│   │
+│   │   # Live-ready (no API key required, no operator validation):
+│   ├── global-ats.sh              # Greenhouse + Ashby + Lever public boards (~27 AI/SaaS companies); JH_GLOBAL_ATS_LIVE=1
+│   ├── global-hn-whoshiring.sh    # HN monthly "Who is hiring?" thread via Algolia HN Search; JH_GLOBAL_HN_LIVE=1
+│   ├── global-remoteok.sh         # remoteok.com/api; JH_GLOBAL_REMOTEOK_LIVE=1
+│   ├── global-remotive.sh         # remotive.com/api/remote-jobs; JH_GLOBAL_REMOTIVE_LIVE=1
+│   ├── kr-worknet.sh              # 정부 공공고용서비스 워크넷; JH_WORKNET_LIVE=1
+│   │
+│   │   # Live-ready (API key required, operator-validation flow):
+│   ├── kr-wanted.sh               # 원티드 — live behind JH_WANTED_LIVE=1 + WANTED_API_KEY
+│   ├── kr-saramin.sh              # 사람인 — live behind JH_SARAMIN_LIVE=1 + SARAMIN_KEY
+│   │
+│   │   # KR mini-board live-ready (no key):
+│   ├── kr-rallit.sh               # 랄릿 KR IT-specialist; JH_RALLIT_LIVE=1
+│   ├── kr-theteams.sh             # 강소기업 board; JH_THETEAMS_LIVE=1
+│   │
+│   │   # Permanent-mock (robots.txt forbids / service closed):
+│   ├── kr-jobkorea.sh             # 잡코리아 — robots forbids /Search/?stext= + 2017 precedent
+│   └── kr-programmers.sh          # 프로그래머스 — service closed 2025-05-19
 └── tests/
-    └── smoke.sh                   # structural + end-to-end mock test (32 checks)
+    └── smoke.sh                   # structural + end-to-end mock test (32+ checks)
 ```
+
+**Plugin count**: 12 total (11 source plugins + `_mock` fallback).
+End-to-end live test 2026-05-21 pulled 5,474 raw postings → 200
+matched against the 24-synonym "Problem Solver" filter family.
+Survey + legal posture audit at
+[`docs/research/job-sources-survey-2026-05-21.md`](../research/job-sources-survey-2026-05-21.md).
 
 The skill is **standalone-shaped** (per `docs/architecture.md` "Skills
 layer — two shapes"): no `agents/missions/job-hunt/` counterpart, no

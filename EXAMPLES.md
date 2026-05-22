@@ -17,6 +17,22 @@ cd MelonS-Agents
 Optional: `scripts/install-claude-permissions.sh` if you want the
 v0.3.0 batch-permission UX in Claude Code (no per-tool prompts).
 
+### Or — one-command first-touch wizard (recommended for fresh clones)
+
+Skip the manual bootstrap + first-render and let the wizard walk
+the whole path with a single Y/n consent:
+
+```bash
+./scripts/first-touch.sh
+```
+
+The wizard: detects environment → runs bootstrap → fetches CC-BY
+demo cache (~30 s) → renders a 60-second 9:16 short from bundled
+Blender clips + Kevin MacLeod music (~100 s) → opens the result.
+Aligned with the CRITICAL `first-touch success ≥ 60%` candidate
+goal — converts a stranger's fresh clone into a working
+`short.mp4` in ~2 minutes without any external account.
+
 ---
 
 ## `music-video` — recipes
@@ -76,7 +92,8 @@ MUSIC_VIDEO_BROLL_DIR=/tmp/anime-gen/clips \
 
 ### Post-shader pass
 
-After a render, apply the v6 vintage post-shaders:
+After a render, apply one of the 23 catalog shaders or the
+phrase-aware combo:
 
 ```bash
 ./scripts/music-video-shaders.sh combo \
@@ -84,8 +101,67 @@ After a render, apply the v6 vintage post-shaders:
     outputs/publish/short-combo.mp4
 ```
 
-Available shaders: `pond` · `breathing` · `halation` · `combo`
-(phrase-aware pond + halation envelope).
+Available shaders (23, three stages):
+- **Stage 1 — cinematic accent**: `pond` · `breathing` · `halation` · `combo` (phrase-aware pond + halation envelope) · `light_leak` · `duotone` · `vignette_pulse`
+- **Stage 2 — texture / glitch**: `scanline` · `chromatic_split` · `neon_edge` · `vhs` · `saturation_pulse` · `kaleidoscope` · `beat_burst` · `strobe` · `shake` · `color_burst` · `light_rays` · `paper_grain` · `dust_speck` · `posterize`
+- **Stage 3 — bloom / trail**: `trail_echo` · `soft_bloom`
+
+Genre-aware preset routing (in
+`skills/music-video/data/genre-presets.yaml`) picks per-genre
+shaders + `shader_active_ratio` automatically.  Override per-render
+with `MUSIC_VIDEO_SHADER=<name>`.
+
+### Multi-track batch render
+
+Render every `.mp3` in a directory through `music-video-auto.sh`
+(idempotent — skips already-rendered tracks):
+
+```bash
+./scripts/music-video-batch.sh assets/music/*.mp3
+```
+
+### Pre-publish validation gate
+
+Run combined checks before any upload (duration / resolution /
+loudness LUFS / shader-anchor coverage / lyric-sync drift):
+
+```bash
+./scripts/music-video-validate.sh outputs/publish/my-short.mp4
+# exit 0 PASS / 1 WARN / 2 FAIL  + per-check actionable hint
+```
+
+Or opt in automatically post-render:
+
+```bash
+MUSIC_VIDEO_VALIDATE=1 ./agents/missions/music-video/run.sh ...
+```
+
+### Upload-ready thumbnail extract
+
+```bash
+./scripts/music-video-thumbnail.sh \
+    records/missions/<date>/<id>/outputs/short.mp4 \
+    --at 30   # default: mid-climax
+# → outputs/publish/<id>-thumbnail.jpg (9:16, 1080×1920)
+```
+
+Auto-chained by `music-video-auto.sh` post-render.
+
+### Whisper-based lyric pull (no operator-supplied .txt)
+
+```bash
+./scripts/lyric-extract.sh assets/music/track.mp3 assets/lyrics/track.txt --lang=ko
+# Strips ♪ markers + parenthetical notes.  Feeds music-video-lyric-align.sh
+# upstream of the overlay step.
+```
+
+### Skill-specific health check
+
+```bash
+./scripts/music-video-doctor.sh
+# Verifies aubio / whisper / Pexels key / shader catalog / genre presets.
+# Add --json to feed scripts/doctor.sh aggregator.
+```
 
 ---
 
@@ -263,6 +339,27 @@ launchctl bootstrap gui/$(id -u) scripts/com.melons.agents.music-video.plist
 `scripts/install-claude-local.sh`.  See
 [`docs/skills/job-hunt.md`](docs/skills/job-hunt.md)
 "Scheduling recurring runs" section.)
+
+### Operator tooling — morning brief
+
+The canonical answer to "what happened overnight?":
+
+```bash
+./scripts/morning-brief.sh
+# One-page digest combining doctor + audit status +
+# intervention 7-day trend Δ + commits-since-12h-ago attribution
+# + today's autonomous decisions + review-queue + blockers.
+# Read-only.  ~30 readable lines.
+```
+
+Companion utilities:
+
+```bash
+./scripts/doctor.sh --json         # ~2 s repo health check
+./scripts/audit-run.sh contract    # manual audit pass
+./scripts/log-decision.sh "deferred X because Y"   # autonomous-decisions log
+./scripts/review-queue-digest.sh   # batched taste-decision contact sheet
+```
 
 ### Claude Code slash-command invocation
 
