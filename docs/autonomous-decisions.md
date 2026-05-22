@@ -37,6 +37,7 @@ header if today's section doesn't exist.
 
 ## 2026-05-22 (overnight autonomous)
 
+- `16:30 KST` — docs/operator-tooling.md shipped — single-page catalog of 12 operator-tooling commands with what/when/output table + per-tool reference + composition diagram. Discoverability for the stack shipped this autonomous window
 - `16:20 KST` — for-analysts inventory adds morning-brief.sh + roadmap-done-sync.sh entries — discoverability for the two operator-tooling commands shipped this autonomous window
 - `16:15 KST` — Cleared 45th-cycle [info]: shot-plan.sh, roadmap-done-sync.sh, morning-brief.sh added to for-analysts inventory. Plus 2nd run of roadmap-done-sync backfilled latest commits.
 - `16:05 KST` — scripts/roadmap-done-sync.sh shipped — eliminates manual Done-backlog reconciliation work that audit cycles 39+ kept flagging. Preview mode + --apply mode, idempotent re-run. Test (5/5 PASS) pins the regression where the v1 awk -v with multi-line var nuked the roadmap on first --apply. 36-commit backfill applied to docs/roadmap.md.
