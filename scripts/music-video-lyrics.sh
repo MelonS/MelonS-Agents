@@ -250,14 +250,26 @@ PY
 # on a 1080×1920 canvas (per docs/research/2026-05-22-music-video-
 # pro-practices.md §5).  Bottom 22% is reserved by TikTok / Reels /
 # Shorts for auto-captions + comment stack + engagement UI; top 8%
-# is the safe-stays-on-camera-cut margin.  Override via
-# LYRICS_POSITIONS env (4-element ":" separated x:y pairs).
-POSITIONS=(
-  "(w-text_w)/2:h*0.22"
-  "(w-text_w)/2:h*0.42"
-  "w*0.08:h*0.62"
-  "w-text_w-w*0.08:h*0.32"
-)
+# is the safe-stays-on-camera-cut margin.
+#
+# Override via LYRICS_POSITIONS env — comma-separated 4 entries, each
+# entry = "x_expr:y_expr".  Example:
+#   LYRICS_POSITIONS="(w-text_w)/2:h*0.50,(w-text_w)/2:h*0.50,..."
+# all 4 positions identical → all lyrics centered.
+if [[ -n "${LYRICS_POSITIONS:-}" ]]; then
+  IFS=',' read -r -a POSITIONS <<< "$LYRICS_POSITIONS"
+  if [[ ${#POSITIONS[@]} -ne 4 ]]; then
+    echo "ERROR: LYRICS_POSITIONS must have exactly 4 comma-separated entries" >&2
+    exit 64
+  fi
+else
+  POSITIONS=(
+    "(w-text_w)/2:h*0.22"
+    "(w-text_w)/2:h*0.42"
+    "w*0.08:h*0.62"
+    "w-text_w-w*0.08:h*0.32"
+  )
+fi
 
 FILTER_CHAIN=""
 i=0
