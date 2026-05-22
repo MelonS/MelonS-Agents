@@ -159,16 +159,64 @@ if [[ -f "$GLOBAL_TEMPLATE" ]]; then
       cat "$GLOBAL_TEMPLATE"
     } > "$GLOBAL_TARGET"
     echo "  ✓ created $GLOBAL_TARGET with operator-style block"
-  elif grep -q 'BEGIN repo-managed operator-style block' "$GLOBAL_TARGET"; then
+  elif grep -qE 'BEGIN repo-managed operator-style block|<!-- ┌─' "$GLOBAL_TARGET"; then
+    # Pre-render the template with @@…@@ substitutions so the inserted
+    # block has the operator's actual paths (the awk feed below reads
+    # the substituted version, not the raw template).
+    rendered_tmpl="$(mktemp)"
+    sed \
+      -e "s|@@HOME_PARENT@@|$HOME_PARENT|g" \
+      -e "s|@@HOME@@|$OPERATOR_HOME|g" \
+      -e "s|@@REPO_ROOT@@|$REPO_ROOT|g" \
+      -e "s|@@MEMORY_NAMESPACE@@|$MEMORY_NAMESPACE|g" \
+      "$GLOBAL_TEMPLATE" > "$rendered_tmpl"
     # Existing install with markers — replace between markers in-place.
     # Use awk for portable in-place replacement (BSD/GNU sed -i differ).
+    #
+    # Idempotency note: the prior template used a multi-line decorative
+    # box (`<!-- ┌───┐ │ BEGIN repo-managed ... │ └───┘ -->`).  The old
+    # awk pattern only matched the BEGIN line — so the decorative opener
+    # `<!-- ┌─` line was passed through unchanged, and each install run
+    # stacked one more opener on top of the prior one.  Operator saw 9
+    # stacked openers after 9 installs.
+    #
+    # Fix: match the opener line `<!-- ┌─` OR the BEGIN line as the
+    # block start; match the closer line `└─...-->` OR the END comment
+    # as the block end.  Either marker family triggers a single
+    # replacement.  Migration: when the old (decorative) format is
+    # detected, the first `<!-- ┌─` triggers in_block, and all stacked
+    # `<!-- ┌─` lines fall inside the block and get stripped together.
     tmp="$(mktemp)"
-    awk -v tmpl="$GLOBAL_TEMPLATE" '
-      /BEGIN repo-managed operator-style block/ { in_block=1; while ((getline line < tmpl) > 0) print line; close(tmpl); next }
-      /END repo-managed operator-style block/  { in_block=0; next }
+    awk -v tmpl="$rendered_tmpl" '
+      # Block-start: either the new single-line BEGIN comment or any
+      # legacy decorative opener.  Insert template exactly once via the
+      # `inserted` guard so multiple stacked openers collapse into one.
+      /^<!-- BEGIN repo-managed operator-style block/ ||
+      /^<!-- ┌─/ ||
+      /BEGIN repo-managed operator-style block/ {
+        in_block = 1
+        if (!inserted) {
+          while ((getline line < tmpl) > 0) print line
+          close(tmpl)
+          inserted = 1
+        }
+        next
+      }
+      # Block-end: either the single-line END comment or the legacy
+      # decorative closer line.  Both leave in_block=0.
+      /^<!-- END repo-managed operator-style block/ ||
+      /└─.*-->[[:space:]]*$/ {
+        in_block = 0
+        next
+      }
+      # Stacked legacy opener lines (the actual bug evidence) — strip
+      # them if they appear before BEGIN was matched.  Harmless on new
+      # format since the BEGIN comment is single-line.
+      /^<!-- ┌─/ { next }
       !in_block { print }
     ' "$GLOBAL_TARGET" > "$tmp"
     mv "$tmp" "$GLOBAL_TARGET"
+    rm -f "$rendered_tmpl"
     echo "  ✓ refreshed operator-style block in $GLOBAL_TARGET (in place)"
   else
     # Existing install without markers — append template, leaving the

@@ -1,11 +1,4 @@
-<!-- ┌──────────────────────────────────────────────────────────────┐
-     │ BEGIN repo-managed operator-style block                       │
-     │ Rendered into ~/.claude/CLAUDE.md by                          │
-     │   scripts/install-claude-local.sh                             │
-     │ Do not edit between the BEGIN/END markers — edit the          │
-     │ tracked template at config/claude-global.template.md and      │
-     │ re-run the install script (idempotent).                       │
-     └──────────────────────────────────────────────────────────────┘ -->
+<!-- BEGIN repo-managed operator-style block — rendered into ~/.claude/CLAUDE.md by scripts/install-claude-local.sh; edit @@REPO_ROOT@@/config/claude-global.template.md and re-run the script (idempotent). -->
 
 ## Operator style — applies to all projects
 
