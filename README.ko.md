@@ -266,6 +266,22 @@ v5 프로토타입 이후 추가로 ship 된 것들:
   해소 (case study 7).  앰비언트 / 클래시컬 / 드림코어는 ANY 컷이 계약
   위반인 장르라서 별도 `scripts/music-video-stillzoom.sh` (이미지 + 음악 →
   60초 Ken-Burns) 로 라우팅.
+- **장르별 베이스 컬러 그레이드** — 모든 preset 의 `grade_profile` 필드
+  (kr_warm_pastel / hollywood_teal_orange / lofi_warm_grain /
+  rnb_low_key / city_pop_neon / neutral) 가
+  [`scripts/music-video-grade.sh`](scripts/music-video-grade.sh) 의
+  ffmpeg `curves` + `eq` + `colorbalance` 스테이지를 쉐이더 전에 적용.
+  일반 Pexels 스톡 footage 를 장르-코드된 룩으로 *쉐이더 적용 전*에
+  변환.  연구 원문:
+  [`docs/research/2026-05-22-music-video-pro-practices.md`](docs/research/2026-05-22-music-video-pro-practices.md)
+  §2; 시각적 A/B 결과:
+  [`docs/research/2026-05-22-grade-profile-comparison.md`](docs/research/2026-05-22-grade-profile-comparison.md).
+- **디렉터-규율 shot plan** (opt-in scaffold) —
+  [`scripts/shot-plan.sh`](scripts/shot-plan.sh) 가 가사 LRC + phrase
+  경계에서 per-segment intent layer 를 B-roll fetch 전에 생성, 실제
+  music-video 디렉터가 촬영 전에 shot list 를 쓰는 관행을 흉내.
+  `MUSIC_VIDEO_USE_SHOT_PLAN=1` 로 활성화.  방법론 연구:
+  [`docs/research/2026-05-22-music-video-director-methodology.md`](docs/research/2026-05-22-music-video-director-methodology.md).
 - **Music-video quality bar — 시스템이 enforce 하는 5개 계약**
   ([case study 9](docs/engineering-case-studies.ko.md#9-quality-bar-는-버그가-아니라-시스템이-enforce-못한-6개-계약이었다)
   · 전체 changelog 는

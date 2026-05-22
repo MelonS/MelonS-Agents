@@ -209,6 +209,8 @@ A few choices that distinguish this from a typical agent demo:
   Δ), commits since 12h ago + attribution, today's autonomous
   decisions, review-queue pending count, blockers.  Read-only;
   the canonical answer to "what happened overnight?".
+  Full catalog with what/when/output table:
+  [`docs/operator-tooling.md`](docs/operator-tooling.md).
 
 ## Autonomy signal — operator-intervention trend
 
@@ -278,6 +280,23 @@ What's shipped on top of the v5 prototype since:
   study 7).  Ambient / classical / dreamcore route to a separate
   `scripts/music-video-stillzoom.sh` (image + music → 60-second slow
   Ken-Burns) for genres where ANY cut violates the contract.
+- **Per-genre base color grade** — `grade_profile` field on every
+  preset (kr_warm_pastel / hollywood_teal_orange / lofi_warm_grain /
+  rnb_low_key / city_pop_neon / neutral) drives an ffmpeg `curves` +
+  `eq` + `colorbalance` stage in
+  [`scripts/music-video-grade.sh`](scripts/music-video-grade.sh) before
+  shaders.  Transforms generic Pexels B-roll into a genre-coded look
+  *before* the effect layer.  Research origin:
+  [`docs/research/2026-05-22-music-video-pro-practices.md`](docs/research/2026-05-22-music-video-pro-practices.md)
+  §2; visual A/B verdict in
+  [`docs/research/2026-05-22-grade-profile-comparison.md`](docs/research/2026-05-22-grade-profile-comparison.md).
+- **Director-discipline shot plan** (opt-in scaffold) —
+  [`scripts/shot-plan.sh`](scripts/shot-plan.sh) generates a
+  per-segment intent layer from the lyric LRC + phrase boundaries
+  before B-roll fetch, paralleling working music-video director
+  practice (write the shot list before the shoot).  Activated via
+  `MUSIC_VIDEO_USE_SHOT_PLAN=1`.  Methodology research in
+  [`docs/research/2026-05-22-music-video-director-methodology.md`](docs/research/2026-05-22-music-video-director-methodology.md).
 - **Music-video quality bar — five contracts the system now enforces**
   ([case study 9](docs/engineering-case-studies.md#9-the-quality-bar-wasnt-a-bug--it-was-6-contracts-the-system-didnt-enforce)
   · full changelog at
