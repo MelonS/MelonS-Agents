@@ -122,7 +122,20 @@ Genre-fit recommendations in `docs/research/2026-05-22-shader-vocabulary.md`.
 | Tool | What it checks |
 |------|----------------|
 | `scripts/music-video-qa-anchor.sh <mission_dir> --genre=NAME` | Score B-roll vs lang_anchor.  Emits JSON + exit 0/1/2 (PASS/WARN/FAIL) |
+| `scripts/music-video-validate.sh <mission_dir> --genre=NAME` | Combined gate aggregating all of: file-integrity, qa-anchor, lyric-drift, broll-dedup.  Exit 0/1/2.  `--batch` mode runs the gate over all of today's missions. |
 | `<lrc>.json` sidecar | Per-render alignment confidence verdict (auto-emitted by `music-video-lyric-align.sh`) |
+
+## Operator utilities
+
+| Tool | Purpose |
+|------|---------|
+| `scripts/first-touch.sh` | Single-command guided wizard for fresh-clone operators (~3 min from clone to demo mp4) |
+| `scripts/music-video-batch.sh [pattern]` | Multi-track render wrapper.  Auto-pairs vocal tracks with their lyric files; `--dry-run` to preview |
+| `scripts/music-video-thumbnail.sh <video> [out] [--at=N|N%]` | Extract upload-ready 1080×1920 thumbnail; default midpoint |
+| `scripts/lyric-extract.sh <audio> <out.txt> [--lang=ko\|en]` | Whisper-transcribe lyrics from an audio file (when no prompt file exists or Suno take drifted) |
+| `scripts/broll-history-backfill.sh [dir]` | Seed `broll-used.txt` registry from existing mission records |
+| `scripts/yt-stats-collect.sh` | Daily snapshot of YT channel stats via Data API (auto-scheduled at 09:00 KST via launchd) |
+| `scripts/yt-stats-diff.sh [d1] [d2]` | Per-video view/like/comment delta between two snapshots |
 
 ## Quality-bar gate summary (from 2026-05-22 directives)
 
