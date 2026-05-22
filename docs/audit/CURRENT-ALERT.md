@@ -7,28 +7,33 @@
 
 **Verdict**: DRIFT_DETECTED
 **Full report**: [`docs/audit/2026-05-22-contract.md`](2026-05-22-contract.md)
-**Generated**: 2026-05-22 03:48:33 KST
+**Generated**: 2026-05-22 15:18:32 KST
 
 ## Summary (from audit)
 
 
-Forty-second contract audit (HEAD `2ca305c`, 2026-05-22).  All twelve hard rules and the
+Forty-fifth contract audit (HEAD `bec0f3b`, 2026-05-22).  All twelve hard rules and the
 Conventions block in `docs/operator-contract.md` were checked against code, configuration,
 git history, and the pre-computed skill-activation drift report (0 findings — clean).
-Three findings from the 41st-cycle report are confirmed RESOLVED: `scripts/generate-intervention-chart.py`
-hardcoded project-dir key (fixed via dynamic derivation from `ROOT` in commits `ae73973`/`f5d909a`,
-verified at line 75), `docs/review-digest.md` untracked (added to `.gitignore` in `f5d909a`),
-and `scripts/music-video-qa-anchor.sh` untracked (committed in `7e52ab8`, tuned in `63431b4`).
-Seven findings persist: roadmap "Now" has reached 4th consecutive stale cycle (20+ commits
-since its 2026-05-20 update, none referencing job-hunt activation); Done gap stands at ~10
-commits; three low-severity portability/housekeeping items carry into their 3rd cycle
-(`@@REPO_ROOT@@` unsubstituted, `.playwright-mcp/` ungitignored, `demo-mode-log.txt:1` machine
-path); roadmap "Blocked" vague (3rd cycle).  One new low finding: `docs/audit/2026-05-22-all.md`
-is untracked (§6 violation).  §5 CLEAN — no commits to `.claude/agents/*.md` or `agents/*.md`
-since `8570a9c` (2026-05-15).  §7 CLEAN — no `&&`-compound git calls.  §12 CLEAN — secret scan
-returned only tokenization code and comment lines.  §3 money firewall intact.  All six subagent
-model assignments match the `docs/for-analysts.md` table.  §8 exception registry: all registered
-files confirmed ≥1 `# §8 exception:` comment.  Skill-activation drift: 0 findings.
+Four findings from the 44th-cycle report (HEAD `33e7f81`) are RESOLVED in the current HEAD:
+(1) `scripts/lyric-extract.sh` §8 medium finding — inline `# §8 exception:` comment and
+registry entry added by `bec0f3b`; (2) unreachable commit hash `9c8b69e` in roadmap Done
+— replaced with `f5d909a` (verified reachable) by `e8b4162`; (3) three production scripts
+undocumented (`music-video-doctor.sh`, `music-video-trim.sh`, `music-video-upload-meta.sh`)
+— added to `docs/for-analysts.md` inventory by `e8b4162`; (4) `docs/for-analysts.md:94`
+date claim "unchanged since 2026-05-17" — file now correctly reads "unchanged since
+2026-05-15".  Twelve new commits have landed since `abb45d0` (the last covered Done entry),
+growing the Done gap from 6 to 12.  §5 CLEAN — zero commits to `.claude/agents/*.md` or
+`agents/*.md` since `8570a9c` (2026-05-15, pre-marker-convention carry-forward exempt).
+§7 CLEAN.  §8 CLEAN — all 12 registered files confirmed ≥1 `# §8 exception:` comment;
+no output artifacts under `agents/` or `scripts/`.  §12 CLEAN — secret scan returned only
+NLP tokenization code, CI annotation strings, and audit-drift token variables.  §3 money
+firewall intact.  All six subagent model assignments match the `docs/for-analysts.md` table.
+Skill-activation drift: 0 findings (pre-computed).  One [info] new finding: `scripts/shot-plan.sh`
+(added `9c4a081`, 2026-05-22) is present in a research doc but absent from the operational
+inventory in `docs/for-analysts.md`; it is an opt-in scaffold (MUSIC_VIDEO_USE_SHOT_PLAN=1
+not yet wired) so the absence is low-urgency.  Verdict DRIFT_DETECTED is driven solely by the
+structural medium: §9 roadmap "Now" stale, 7th consecutive cycle, operator-gated.
 
 ## Critical / High findings
 
