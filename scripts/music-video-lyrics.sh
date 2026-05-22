@@ -171,9 +171,16 @@ HAS_TIMESTAMPS=0
 if grep -qE '^\[[0-9]+:[0-9]+(\.[0-9]+)?\]' "$LYRICS_FILE"; then HAS_TIMESTAMPS=1; fi
 
 if [[ "$HAS_TIMESTAMPS" == 1 ]]; then
-  # LRC parse — emit "T_START T_END TEXT" per line
-  python3 - <<PY > "$PARSED"
-import re
+  # LRC parse — emit "T_START T_END TEXT" per line.  T_END extends
+  # to the NEXT line's start (no gap), or to source end if last.
+  # L-cut trail (research §6): LYRIC_TRAIL_MS extends T_END past
+  # the next-line boundary by that many ms, so the line lingers
+  # briefly past the vocal cue — pro convention for smoother
+  # transition.  Default 0 (no trail); 200 matches the LYRIC_LEAD_MS
+  # symmetry on the entrance side.
+  TRAIL_S=$(awk -v ms="${LYRIC_TRAIL_MS:-0}" 'BEGIN{printf "%.3f", ms/1000}')
+  TRAIL_S="$TRAIL_S" python3 - <<PY > "$PARSED"
+import os, re
 lines = []
 with open("$LYRICS_FILE", encoding="utf-8") as f:
     for ln in f:
@@ -182,11 +189,17 @@ with open("$LYRICS_FILE", encoding="utf-8") as f:
         mm, ss, txt = m.groups()
         t = int(mm)*60 + float(ss)
         lines.append((t, txt.strip()))
-# Add T_END as next line's T or duration
 lines.sort()
 DUR = float("$DUR")
+TRAIL = float(os.environ.get("TRAIL_S", "0"))
 for i, (t, txt) in enumerate(lines):
-    end = lines[i+1][0] if i+1 < len(lines) else min(t + 5.0, DUR)
+    base_end = lines[i+1][0] if i+1 < len(lines) else min(t + 5.0, DUR)
+    # L-cut trail: extend end by TRAIL, clamped to DUR and to next-1
+    # so consecutive overlays only briefly overlap (not stack).
+    if i+1 < len(lines):
+        end = min(base_end + TRAIL, lines[i+1][0] + min(TRAIL, 0.4))
+    else:
+        end = min(base_end + TRAIL, DUR)
     print(f"{t:.3f}\t{end:.3f}\t{txt}")
 PY
 else
