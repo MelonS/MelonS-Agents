@@ -8,7 +8,7 @@
 
 **Local for the mechanical, Claude for the creative.**  Phrase-aware ffmpeg shaders sync vintage visuals to music structure.  Short-keyword job-hunt expansion via role-synonym map.  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
 
-`69+ mission outputs · 5 mission types · 2 portable skills + 1 meta-skill · 0 runtime API tokens · 3 audit layers · MIT`
+`91+ mission outputs · 5 mission types · 2 portable skills + 1 meta-skill · 23 ffmpeg shaders · 0 runtime API tokens · 3 audit layers · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -27,6 +27,20 @@
 ![5-second animated preview of the music-video pipeline output — Velvet Turntable Suno track + jazz/vintage Pexels B-roll keywords + phrase-aware pond ripple + halation shader combo, 9:16 vertical short, mid-climax window (25-30 s) showing the pond surface displacement and warm halation bloom over smoky lounge interior](docs/demo/music-video-velvet1-jazz-combo-preview.gif)
 
 </div>
+
+## Try it in ~60 seconds (zero accounts, zero `.env`)
+
+```bash
+git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
+cd MelonS-Agents
+./scripts/first-touch.sh        # single-command guided demo wizard
+```
+
+The wizard checks prerequisites, fetches the demo cache (~30 s),
+renders a 60-second 9:16 short from bundled CC-BY Blender clips +
+Kevin MacLeod music (~100 s), and opens the result.  No Pexels signup,
+no Suno round-trip, no `.env` edit.  See
+[Quick start](#quick-start) for the manual + advanced paths.
 
 ## Overview
 
@@ -91,11 +105,14 @@
 
 > **Engineering decisions, one page.**
 > [`docs/engineering-case-studies.md`](docs/engineering-case-studies.md)
-> — six production incidents and the minimum mechanism each one
+> — nine production incidents and the minimum mechanism each one
 > produced (Tier-1 routing, semaphore-bounded batch, content-quality
 > feedback loop, three-layer reactive audit, shader-effects-in-ffmpeg
-> / knowing-where-the-wall-is, and onboarding-friction-kills-first-touch
-> / zero-account demo path).  Each entry follows
+> / knowing-where-the-wall-is, onboarding-friction-kills-first-touch
+> / zero-account demo path, declarative preset routing for genre-aware
+> shaders, intervention-as-the-unmeasured-axis / autonomy signal +
+> reduction levers, and the quality-bar-as-6-unenforced-contracts
+> after the 2026-05-22 music-video QA pass).  Each entry follows
 > *problem → constraint → decision → artifact*.
 
 ## Design notes
@@ -197,17 +214,52 @@ Raw per-day data at [`docs/metrics/intervention.json`](docs/metrics/intervention
 
 ## Sample output
 
-69+ mission outputs have been produced to date across **five** mission
-types.  Most recent focus (2026-05-17) is the new `music-video`
-mission — music-as-primary-audio shorts (no narration, no captions,
-beat-aligned cuts, onset-aligned glitch micro-edits) — chosen via
-operator pilot pick documented in
+91+ mission outputs across **five** mission types as of 2026-05-22.
+The current production format is the `music-video` mission —
+music-as-primary-audio shorts (no narration, no captions, beat-aligned
+cuts, onset-aligned glitch micro-edits), chosen via operator pilot
+pick documented in
 [`docs/pilots/decision-log.md`](docs/pilots/decision-log.md#operator-pick--2026-05-17).
-A four-effect post-processing shader layer landed the same evening
-(pond surface, breathing zoom, halation, phrase-aware combo;
-cartoon deferred — see [case study 5](docs/engineering-case-studies.md#5-shader-effects-in-ffmpeg--knowing-where-the-wall-is)),
-and `scripts/daily-music-video.sh` wraps the mission + shader as a
-queue runner suitable for cron / launchd daily-upload cadence.
+
+What's shipped on top of the v5 prototype since:
+
+- **23 ffmpeg shaders** in [`scripts/music-video-shaders.sh`](scripts/music-video-shaders.sh)
+  across three stages — pond / halation / breathing / combo (first
+  pass) + light_leak / duotone / vignette_pulse / scanline /
+  chromatic_split / neon_edge / vhs / saturation_pulse / kaleidoscope
+  / beat_burst / strobe / shake / color_burst / light_rays (genre-aware
+  pass) + paper_grain / dust_speck / posterize / trail_echo /
+  soft_bloom (Stage-2 + Stage-3).  Cartoon / cel-shading deliberately
+  deferred — see [case study 5](docs/engineering-case-studies.md#5-shader-effects-in-ffmpeg--knowing-where-the-wall-is).
+- **Genre-aware preset routing** — 14-genre table in
+  [`skills/music-video/data/genre-presets.yaml`](skills/music-video/data/genre-presets.yaml)
+  resolves a genre → preset → env overrides → post-shader chain (case
+  study 7).  Ambient / classical / dreamcore route to a separate
+  `scripts/music-video-stillzoom.sh` (image + music → 60-second slow
+  Ken-Burns) for genres where ANY cut violates the contract.
+- **Music-video quality bar — five contracts the system now enforces**
+  ([case study 9](docs/engineering-case-studies.md#9-the-quality-bar-wasnt-a-bug--it-was-6-contracts-the-system-didnt-enforce)):
+  A.1 B-roll dedup registry (`records/youtube/broll-used.txt`,
+  196 seeded ids), A.2 lyric vocal-onset alignment via whisper
+  (`scripts/music-video-lyric-align.sh`), A.3 lang_anchor +
+  person-anchored keyword injection at every 3rd segment with a
+  QA gate (`scripts/music-video-qa-anchor.sh`), B.1 shader-vocabulary
+  expansion to 23 effects across three stages, C.1 `shader_active_ratio`
+  per preset + `phrase_climax` gating mode.
+- **Operator-facing utilities** — `scripts/first-touch.sh` wizard
+  (single-command guided zero-account demo), `scripts/music-video-batch.sh`
+  (multi-track render wrapper), `scripts/music-video-validate.sh`
+  (combined pre-publish gate), `scripts/music-video-thumbnail.sh`
+  (auto-extract upload-ready still), `scripts/lyric-extract.sh`
+  (whisper-based lyric pull), `scripts/morning-brief.sh` (one-page
+  overnight digest).  Full table in
+  [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
+- **Skill #2 — `job-hunt`** v0.4.0 (separate from the music-video
+  thread above) — short-keyword UX + 11 source plugins (5 live-ready
+  no-key, 2 key-gated, 4 mock-fallback / permanent-mock) + 5
+  enrichment scaffolds.  Walkthrough at
+  [`docs/skills/job-hunt.md`](docs/skills/job-hunt.md).
+
 The `faceless-short` mission (narration-driven shorts) remains the
 showcase below; the v1 pipeline outputs (single-clip highlight +
 shorts-batch) remain as the baseline reference further down.
@@ -256,7 +308,18 @@ Reproduction:
 ./agents/missions/music-video/run.sh <id> <path/to/music.mp3>
 ```
 
-#### Post-processing shaders (2026-05-17 evening)
+#### Post-processing shaders — first pass (2026-05-17 evening)
+
+The narrative below covers the first four shaders shipped on
+2026-05-17.  Nineteen more landed across 2026-05-21 (genre-aware
+expansion: scanline / chromatic_split / neon_edge / vhs /
+saturation_pulse / kaleidoscope / beat_burst / strobe / shake /
+color_burst / light_rays) and 2026-05-22 (Stage-2 + Stage-3:
+light_leak / duotone / vignette_pulse / paper_grain / dust_speck /
+posterize / trail_echo / soft_bloom) — full catalog of 23 lives in
+[`scripts/music-video-shaders.sh`](scripts/music-video-shaders.sh)
+and routes per-genre via
+[`skills/music-video/data/genre-presets.yaml`](skills/music-video/data/genre-presets.yaml).
 
 Operator asked for shader-style effects on top of the v6 vintage-lofi
 treatment.  Three effects landed via pure ffmpeg filter graphs (no GLSL,

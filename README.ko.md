@@ -8,7 +8,7 @@
 
 **기계적인 단계는 로컬, 창작 단계는 Claude.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조와 동기화.  job-hunt 는 짧은 키워드를 role-synonym map 통해 자동 확장.  세 가지 감사 트리거 — 커밋·이상·스케줄 — 으로 시스템이 자신의 드리프트를 스스로 잡습니다.  영어 + 한국어 듀얼 트랙.
 
-`미션 출력 69+ · 미션 타입 5종 · 포터블 스킬 2개 + 메타 스킬 1개 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
+`미션 출력 91+ · 미션 타입 5종 · 포터블 스킬 2개 + 메타 스킬 1개 · ffmpeg 쉐이더 23개 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -27,6 +27,19 @@
 ![music-video 파이프라인 출력의 5초 애니메이션 프리뷰 — Velvet Turntable Suno 트랙 + jazz/vintage Pexels B-roll 키워드 + phrase-aware pond ripple + halation 쉐이더 combo, 9:16 세로 쇼츠, 클라이맥스 중간 구간 (25-30초) 의 pond surface 변위 + 스모키 라운지 인테리어 위의 warm halation bloom](docs/demo/music-video-velvet1-jazz-combo-preview.gif)
 
 </div>
+
+## 60초 안에 시작 (계정 0개, `.env` 편집 0번)
+
+```bash
+git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
+cd MelonS-Agents
+./scripts/first-touch.sh        # 단일 명령 가이드 데모 마법사
+```
+
+마법사가 사전 도구 체크, 데모 캐시 fetch (~30초), 번들된 CC-BY
+Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
+후 결과물을 엽니다. Pexels 가입, Suno 라운드트립, `.env` 편집 모두
+필요 없음. 수동 + 고급 경로는 [Quick start](#quick-start) 참조.
 
 ## 개요
 
@@ -90,10 +103,13 @@
 
 > **엔지니어링 결정, 한 페이지로.**
 > [`docs/engineering-case-studies.ko.md`](docs/engineering-case-studies.ko.md)
-> — 프로덕션에서 드러난 6건의 문제와 각각이 만들어낸 최소 메커니즘
+> — 프로덕션에서 드러난 9건의 문제와 각각이 만들어낸 최소 메커니즘
 > (Tier-1 라우팅, 세마포어 배치, 콘텐츠 품질 피드백 루프, 3-레이어
 > 리액티브 감사, ffmpeg 쉐이더의 한계, 온보딩 마찰 → 제로-계정 데모
-> 경로). 각 항목은 *문제 → 제약 → 결정 → 산출물* 포맷.
+> 경로, 장르 인식 declarative preset 라우팅, 자율성 신호 +
+> 개입-감소 레버, 2026-05-22 music-video QA 패스 후 "quality bar 는
+> 버그가 아니라 시스템이 enforce 못한 6개 계약"). 각 항목은
+> *문제 → 제약 → 결정 → 산출물* 포맷.
 
 ## 설계 노트
 
@@ -185,19 +201,55 @@
 
 ## 샘플 출력
 
-지금까지 **5가지** 미션 타입에 걸쳐 69+건의 출력이 생성되었습니다.
-가장 최근 (2026-05-17) 포커스는 신규 `music-video` 미션 — 음악-주
-음성 오디오 쇼츠 (내레이션 없음, 캡션 없음, 비트 정렬 컷 + 드럼 onset
-정렬 글리치 마이크로 에디트) — 운영자의 파일럿 픽으로 채택됨, 자세한
-내용은 [`docs/pilots/decision-log.md`](docs/pilots/decision-log.md#operator-pick--2026-05-17)
-참고.  같은 날 저녁에 4-효과 포스트프로세싱 쉐이더 레이어 landing
-(pond surface, breathing zoom, halation, phrase-aware combo; 카툰은
-deferred — [case study 5](docs/engineering-case-studies.ko.md#5-ffmpeg-안의-쉐이더-효과--벽이-어디인지-아는-것)
-참조) + `scripts/daily-music-video.sh` 가 mission + shader 를 cron /
-launchd 일일 업로드 cadence 에 맞춘 queue runner 로 래핑.  `faceless-
-short` 미션 (내레이션 기반 쇼츠) 은 여전히 아래 쇼케이스로 유지되며,
-v1 파이프라인 출력 (단일-클립 highlight + shorts-batch) 은 기준점
-참고용으로 그 아래에 유지됩니다.
+2026-05-22 기준 **5가지** 미션 타입에 걸쳐 91+건의 출력이 생성되었습니다.
+현재 production 포맷은 `music-video` 미션 — 음악-주 음성 오디오 쇼츠
+(내레이션 없음, 캡션 없음, 비트 정렬 컷 + 드럼 onset 정렬 글리치
+마이크로 에디트) — 운영자의 파일럿 픽으로 채택됨, 자세한 내용은
+[`docs/pilots/decision-log.md`](docs/pilots/decision-log.md#operator-pick--2026-05-17)
+참고.
+
+v5 프로토타입 이후 추가로 ship 된 것들:
+
+- **ffmpeg 쉐이더 23개** —
+  [`scripts/music-video-shaders.sh`](scripts/music-video-shaders.sh) 에
+  3-스테이지로 정리: 1차 (pond / halation / breathing / combo) +
+  장르-인식 확장 (light_leak / duotone / vignette_pulse / scanline /
+  chromatic_split / neon_edge / vhs / saturation_pulse / kaleidoscope
+  / beat_burst / strobe / shake / color_burst / light_rays) +
+  Stage-2/Stage-3 (paper_grain / dust_speck / posterize / trail_echo /
+  soft_bloom). 카툰 / cel-shading 은 의도적으로 deferred —
+  [case study 5](docs/engineering-case-studies.ko.md#5-ffmpeg-안의-쉐이더-효과--벽이-어디인지-아는-것).
+- **장르-인식 preset 라우팅** —
+  [`skills/music-video/data/genre-presets.yaml`](skills/music-video/data/genre-presets.yaml)
+  의 14-장르 테이블이 장르 → preset → env override → post-shader 체인을
+  해소 (case study 7).  앰비언트 / 클래시컬 / 드림코어는 ANY 컷이 계약
+  위반인 장르라서 별도 `scripts/music-video-stillzoom.sh` (이미지 + 음악 →
+  60초 Ken-Burns) 로 라우팅.
+- **Music-video quality bar — 시스템이 enforce 하는 5개 계약**
+  ([case study 9](docs/engineering-case-studies.ko.md#9-quality-bar-는-버그가-아니라-시스템이-enforce-못한-6개-계약이었다)):
+  A.1 B-roll dedup 레지스트리 (`records/youtube/broll-used.txt`,
+  196개 id seeded), A.2 whisper 기반 lyric vocal-onset alignment
+  (`scripts/music-video-lyric-align.sh`), A.3 lang_anchor + 매 3 segment
+  마다 person-anchored 키워드 주입 + QA 게이트
+  (`scripts/music-video-qa-anchor.sh`), B.1 쉐이더 vocabulary 를
+  23개 3-스테이지로 확장, C.1 preset 별 `shader_active_ratio` +
+  `phrase_climax` 게이팅 모드.
+- **운영자 대상 유틸리티** — `scripts/first-touch.sh` 마법사
+  (단일 명령 가이드 제로-계정 데모), `scripts/music-video-batch.sh`
+  (멀티 트랙 렌더 래퍼), `scripts/music-video-validate.sh`
+  (통합 publish-전 게이트), `scripts/music-video-thumbnail.sh`
+  (업로드용 still 자동 추출), `scripts/lyric-extract.sh`
+  (whisper 기반 가사 추출), `scripts/morning-brief.sh` (1 페이지
+  overnight 다이제스트).  전체 테이블은
+  [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
+- **Skill #2 — `job-hunt`** v0.4.0 (위 music-video 트랙과 별도) —
+  짧은 키워드 UX + 소스 플러그인 11개 (live-ready 키 없음 5개,
+  키 게이팅 2개, mock-fallback / 영구-mock 4개) + enrichment scaffold
+  5개. 워크스루는 [`docs/skills/job-hunt.ko.md`](docs/skills/job-hunt.ko.md).
+
+`faceless-short` 미션 (내레이션 기반 쇼츠) 은 여전히 아래 쇼케이스로
+유지되며, v1 파이프라인 출력 (단일-클립 highlight + shorts-batch) 은
+기준점 참고용으로 그 아래에 유지됩니다.
 
 ### Music-video 파일럿 (니치 피벗 후, 2026-05-17)
 
@@ -239,7 +291,19 @@ v5 = 운영자 검증 완료 → 정식
 ./agents/missions/music-video/run.sh <id> <path/to/music.mp3>
 ```
 
-#### 포스트프로세싱 쉐이더 (2026-05-17 저녁)
+#### 포스트프로세싱 쉐이더 — 1차 패스 (2026-05-17 저녁)
+
+아래는 2026-05-17 에 ship 된 첫 4개 쉐이더의 narrative 입니다.  이후
+19개가 추가 ship 됨 — 2026-05-21 (장르-인식 확장: scanline /
+chromatic_split / neon_edge / vhs / saturation_pulse / kaleidoscope /
+beat_burst / strobe / shake / color_burst / light_rays) 와 2026-05-22
+(Stage-2 + Stage-3: light_leak / duotone / vignette_pulse /
+paper_grain / dust_speck / posterize / trail_echo / soft_bloom) —
+총 23개 카탈로그는
+[`scripts/music-video-shaders.sh`](scripts/music-video-shaders.sh) 에
+정리되어 있고
+[`skills/music-video/data/genre-presets.yaml`](skills/music-video/data/genre-presets.yaml)
+로 장르별 라우팅됩니다.
 
 운영자가 v6 빈티지 lo-fi 처리 위에 쉐이더 스타일 효과 요청.  세 가지
 효과는 순수 ffmpeg 필터 그래프로 작동하고 (GLSL · 외부 도구 없음),

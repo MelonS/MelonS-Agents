@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>MelonS-Agents — multi-agent system for music-video shorts</title>
-  <meta name="description" content="Music file → 60-second 9:16 vertical short. Local-first pipeline ($0 runtime), Claude where quality matters, EN+KO, three-layer reactive audit, agentskills.io-compliant skills layer.">
-  <meta property="og:title" content="MelonS-Agents — music-video shorts, multi-agent">
-  <meta property="og:description" content="Music in. 60-second 9:16 vertical short out. Phrase-aware ffmpeg shaders sync vintage visuals to music structure. Local-first, $0 runtime, EN+KO.">
+  <title>MelonS-Agents — two portable skills (music-video shorts + KR job-board digest)</title>
+  <meta name="description" content="Two production skills, agentskills.io-compliant. Skill #1 turns a music track into a 60-second 9:16 short with 23 ffmpeg shaders. Skill #2 expands a single seed keyword into a Korean job-board digest. Local-first ($0 runtime), three-layer reactive audit, EN+KO.">
+  <meta property="og:title" content="MelonS-Agents — two portable skills, music-video + job-hunt">
+  <meta property="og:description" content="Skill #1: music in, 60-second 9:16 short out with 23 phrase-aware ffmpeg shaders. Skill #2: short-keyword Korean job-board digest. Local-first, $0 runtime, EN+KO.">
   <meta property="og:image" content="https://raw.githubusercontent.com/MelonS/MelonS-Agents/main/site/assets/music-video-hero.jpg">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://melons.github.io/MelonS-Agents/">
@@ -34,7 +34,8 @@
   </p>
 
   <div class="cta-row">
-    <a class="cta primary" href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">View on GitHub</a>
+    <a class="cta primary" href="#try">Try it in 60 seconds</a>
+    <a class="cta" href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">View on GitHub</a>
     <a class="cta" href="#evidence">See the output</a>
     <a class="cta" href="#how">How it works</a>
   </div>
@@ -47,7 +48,8 @@
 
 <section class="stats" aria-label="Project numbers at a glance">
   <ul>
-    <li><strong>69+</strong><span>mission outputs</span></li>
+    <li><strong>91+</strong><span>mission outputs</span></li>
+    <li><strong>23</strong><span>ffmpeg shaders</span></li>
     <li><strong>0</strong><span>runtime API tokens</span></li>
     <li><strong>3</strong><span>audit layers (L1+L2+L3)</span></li>
     <li><strong>5</strong><span>mission types</span></li>
@@ -124,6 +126,7 @@
       <h3>Operator tooling</h3>
       <p>Scripts that surface system state and absorb routine status-check prompts, complementing the slow Claude-driven auditor with fast Claude-free checks.</p>
       <ul>
+        <li><b><code>scripts/first-touch.sh</code></b> — zero-account demo wizard.  Single Y/n consent; rest is automatic.  Checks prereqs, fetches demo cache, renders, opens the result.  The conversion path for a stranger cloning the repo cold.</li>
         <li><b><code>scripts/doctor.sh</code></b> — ~2 s repo health check.  CLI tools, env keys, schedulers, audit alerts, git state, disk, per-skill activation, manifest drift.  Output modes <code>--quiet</code> / <code>--json</code>; the JSON includes an <code>actionable_warn</code> field that excludes opt-in env keys + git-tree from the count so the signal isn't noisy.</li>
         <li><b><code>scripts/audit-skill-drift.sh</code></b> — the 13th audit rule.  Verifies each skill's declared LIVE-flag manifest at <code>skills/&lt;name&gt;/config/activation.tsv</code> matches the actual gating in its scripts.  Wired into the auditor's daily contract pass.</li>
         <li><b><code>scripts/statusline.sh</code></b> — Claude Code statusline.  Reads doctor's JSON cache (60 s background regen) and the goal-lock skill to render <code>doctor:⚠N · goal:N/M · audit⚠</code> alongside dir / branch / model / cost.  Operator no longer has to type "what's the state?" prompts.</li>
@@ -132,6 +135,18 @@
         <li><b><code>scripts/morning-brief.sh</code></b> — single-command overnight digest.  Combines doctor + audit + intervention 7-day trend + commit attribution + today's autonomous decisions + review-queue + blockers into ~30 readable lines.  The canonical answer to "what happened overnight?" — operator types one command, knows the state in 30 seconds.</li>
       </ul>
       <p>A meta-skill, <strong><code>goal-lock</code></strong>, parses <code>docs/goal.md</code> and reports unchecked deliverable subgoals from the active goal so long autonomous sessions can re-anchor.  Discipline helper, not a production pipeline.</p>
+    </article>
+
+    <article class="card">
+      <h3>Quality bar — 5 contracts the system now enforces</h3>
+      <p>The 2026-05-22 music-video QA pass surfaced six taste directives that the prior pipeline produced quietly broken output against.  Five landed as enforced contracts; the sixth is open as a research direction.  <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#9-the-quality-bar-wasnt-a-bug--it-was-6-contracts-the-system-didnt-enforce" target="_blank" rel="noopener">Case study #9</a> writes the framing: the bug wasn't the renders, it was that the contracts weren't expressible in code.</p>
+      <ul>
+        <li><b>A.1 — B-roll dedup registry.</b>  <code>records/youtube/broll-used.txt</code> (196 ids seeded).  Both Pexels callers consult + append; <code>BROLL_HISTORY=off</code> per-render escape.</li>
+        <li><b>A.2 — Lyric vocal-onset alignment.</b>  <code>scripts/music-video-lyric-align.sh</code> derives LRC from plain text + audio via whisper (word-level for KR, segment-level for EN).  Sub-floor lines marked autofilled.</li>
+        <li><b>A.3 — Language anchor + QA gate.</b>  <code>lang_anchor: ko|en|mixed|neutral</code> on every preset, person-anchored keyword injection every 3rd segment.  <code>scripts/music-video-qa-anchor.sh</code> scores B-roll keywords against the anchor — exit 0 PASS / 1 WARN / 2 FAIL.</li>
+        <li><b>B.1 — Shader vocabulary.</b>  Expanded from 4 to 23 effects across three stages.  Genre-aware preset routing picks per-preset.</li>
+        <li><b>C.1 — Shader restraint gating.</b>  <code>shader_active_ratio</code> per preset (1.0 ambient, 0.35 kpop_ballad).  <code>MUSIC_VIDEO_SHADER_GATE=phrase_climax</code> mode fires shaders only inside the center <code>RATIO × duration</code> window.</li>
+      </ul>
     </article>
   </div>
 </section>
@@ -143,7 +158,7 @@
 
   <aside class="callout">
     <strong>Engineering decisions, one page.</strong>
-    Eight production incidents and the minimum mechanism each one produced — Tier-1 routing, semaphore-bounded batch, content-quality feedback loop, three-layer reactive audit, shader-effects-in-ffmpeg / knowing-where-the-wall-is, onboarding-friction-kills-first-touch / zero-account demo path, declarative preset routing (genre-aware shaders), and intervention-as-the-unmeasured-axis (two-panel autonomy signal + reduction levers).  Each entry follows <em>problem → constraint → decision → artifact</em>.
+    Nine production incidents and the minimum mechanism each one produced — Tier-1 routing, semaphore-bounded batch, content-quality feedback loop, three-layer reactive audit, shader-effects-in-ffmpeg / knowing-where-the-wall-is, onboarding-friction-kills-first-touch / zero-account demo path, declarative preset routing (genre-aware shaders), intervention-as-the-unmeasured-axis (two-panel autonomy signal + reduction levers), and the quality-bar-as-6-unenforced-contracts (the 2026-05-22 music-video QA pass).  Each entry follows <em>problem → constraint → decision → artifact</em>.
     <br>→ <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md" target="_blank" rel="noopener">docs/engineering-case-studies.md</a> · <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.ko.md" target="_blank" rel="noopener">한국어 미러</a>
   </aside>
 
@@ -183,16 +198,26 @@
   <p><a href="assets/intervention.png" target="_blank" rel="noopener"><img class="full" src="assets/intervention.png" alt="Two-panel intervention trend: Panel A shows daily commit counts stacked by initiator (agent-autonomous blue vs user-initiated red) with a user-initiated percentage line; Panel B shows daily operator prompt count and active session minutes mined from local Claude Code session JSONLs. Both panels share the same date axis from 2026-05-14 to 2026-05-22." loading="lazy"></a></p>
 </section>
 
-<section class="block">
-  <h2>Try it</h2>
-  <p>Zero-account demo path — no Pexels key, no Suno account, no <code>.env</code> edits:</p>
+<section class="block" id="try">
+  <h2>Try it in ~60 seconds</h2>
+  <p>Single-command guided wizard.  No Pexels signup, no Suno round-trip, no <code>.env</code> edit:</p>
   <pre><code>git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
-./scripts/bootstrap.sh                # verifies tools, fetches models
+./scripts/first-touch.sh        # checks prereqs, fetches cache, renders, opens result</code></pre>
+  <p>The wizard checks prerequisites, fetches the demo cache (~30 s), renders a 60-second 9:16 short from bundled CC-BY Blender clips + Kevin MacLeod tracks (~100 s), and opens the result.  Single Y/n; rest is automatic.</p>
+
+  <h3>Manual demo path (same end state)</h3>
+  <pre><code>./scripts/bootstrap.sh                # verifies tools, fetches models
 MUSIC_VIDEO_DEMO_MODE=1 \
   ./agents/missions/music-video/run.sh demo</code></pre>
-  <p>The demo path uses bundled CC-BY Blender open-movie B-roll plus a CC-BY-4.0 demo track — a working music-video short with no external signups.  Full setup (mood-keyword Pexels catalog + custom Suno tracks) is documented as the advanced path in the <a href="https://github.com/MelonS/MelonS-Agents#quick-start" target="_blank" rel="noopener">README Quick start</a>.</p>
-  <p>macOS first.  Linux compatible for the core pipeline (whisper.cpp + ollama + ffmpeg + aubio); macOS-only for launchd schedulers and Yuna TTS.</p>
+
+  <h3>Skill #2 — job-hunt short-keyword demo (~5 s, no network)</h3>
+  <pre><code>skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
+# digest.md printed on stdout; mock-fallback postings spanning multiple
+# sources, all matched against the 24-synonym "problem-solver" family.</code></pre>
+  <p>Live HTTP per source (5 plugins require no API key): <code>JH_GLOBAL_ATS_LIVE=1 JH_GLOBAL_REMOTEOK_LIVE=1 JH_GLOBAL_REMOTIVE_LIVE=1 JH_GLOBAL_HN_LIVE=1 JH_WORKNET_LIVE=1</code>.</p>
+
+  <p class="muted">Full Pexels + Suno path (mood-keyword catalog, custom tracks) documented as the advanced path in the <a href="https://github.com/MelonS/MelonS-Agents#quick-start" target="_blank" rel="noopener">README Quick start</a>.  macOS first; Linux compatible for the core pipeline (whisper.cpp + ollama + ffmpeg + aubio), macOS-only for launchd schedulers and Yuna TTS.</p>
 </section>
 
 <footer>
