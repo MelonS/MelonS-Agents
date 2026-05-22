@@ -37,6 +37,7 @@ header if today's section doesn't exist.
 
 ## 2026-05-22 (overnight autonomous)
 
+- `14:30 KST` — Memory entry [[idempotency-test-first]] added — generalizable lesson from today's install-claude-local stacking bug. Future scripts that modify persistent state should ship idempotency test in same commit
 - `14:20 KST` — scripts/test-install-claude-local.sh shipped — 7 asserts validate idempotency + legacy migration + path substitution. test-all.sh auto-discovers via ls scripts/test-*.sh glob. Caught a regression: legacy '└─...┘ -->' was wrongly treated as block-end, leaking body content; fixed.
 - `14:00 KST` — install-claude-local.sh idempotency bug fixed — single-line BEGIN/END markers + improved awk pattern + pre-substitution of @@REPO_ROOT@@ before awk feed. Operator's ~/.claude/CLAUDE.md cleaned 271→142 lines, 9 stacked openers→1 single comment, md5 stable across 3 reruns
 - `13:45 KST` — Intervention chart split EN/KO + visual polish — bigger figure, legends below panels (no bar overlap), per-bar % labels only (removed totals clutter), CJK font for KO. README EN→intervention-en.png, README.ko→intervention-ko.png
