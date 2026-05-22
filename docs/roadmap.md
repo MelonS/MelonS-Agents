@@ -154,6 +154,22 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-22** (~11:10 KST, README + live site refresh batch)
+  **README EN + KO + site/index.html refreshed — stats / case-study
+  count / "What's shipped on top of v5" / first-touch-leads-the-fold**
+  (commit `3ab852d`).  readme-cadence triggers: goal-aligned UX
+  overhaul (lead with first-touch wizard per CRITICAL candidate goal
+  in goal.md) + content drift on four undocumented ships
+  (`first-touch.sh`, `music-video-batch.sh`, `music-video-validate.sh`,
+  `music-video-thumbnail.sh`, `lyric-extract.sh`,
+  `music-video-pipeline-reference.md`).  Stats updated 69+→91+
+  mission outputs + new "23 ffmpeg shaders" stat; case-study count
+  6/8→9 across both READMEs + site; OG meta regenerated to advertise
+  both skills not just music-video; new "Try it in ~60 seconds"
+  callout above-the-fold in README EN+KO; new "Quality bar — 5
+  contracts" card on the site listing A.1/A.2/A.3/B.1/C.1.  EN+KO+site
+  single commit per readme-cadence rule.
+
 - **2026-05-22** (~05:15 KST, autonomous intervention-reduction
   continued) **Phase 7+ — audit-hook coalescing + auto-decision
   logging + morning brief + chart auto-mirror + portability fix**
