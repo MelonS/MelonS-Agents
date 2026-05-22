@@ -170,7 +170,7 @@
 유지보수) 로 분류하고, 운영자의 로컬 Claude Code 세션 로그에서
 프롬프트 횟수와 활성 세션 분을 함께 추출합니다.
 
-![투-패널 개입 추세 — Panel A 는 일별 커밋 수를 initiator 별로 스택 + user-initiated 비율선; Panel B 는 로컬 Claude Code 세션 JSONL 에서 추출한 일별 운영자 프롬프트 수와 활성 세션 분](docs/metrics/intervention.png)
+![투-패널 개입 추세 — Panel A (일별 커밋 분류) 는 일별 커밋 수를 initiator 별로 스택 (에이전트 자율 파랑 / 운영자 주도 빨강) + 운영자 주도 비율선 + 일별 % 라벨; Panel B (운영자 참여도) 는 로컬 Claude Code 세션 JSONL 에서 추출한 일별 운영자 프롬프트 수와 활성 세션 분.  영문 mirror: docs/metrics/intervention-en.png](docs/metrics/intervention-ko.png)
 
 목표: 에이전트 시스템이 더 많은 결정을 흡수할수록 두 패널 모두
 하향 추세.  `com.melons.agents.intervention-chart` launchd 잡

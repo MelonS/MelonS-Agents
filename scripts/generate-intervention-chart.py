@@ -48,9 +48,11 @@ Historical caveats:
   with only the commit panel in that case.
 """
 
+import argparse
 import json
 import pathlib
 import re
+import shutil
 import statistics
 import subprocess
 import sys
@@ -61,11 +63,72 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib import font_manager as _fm  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT_PNG = ROOT / "docs" / "metrics" / "intervention.png"
-OUT_JSON = ROOT / "docs" / "metrics" / "intervention.json"
-OUT_PNG.parent.mkdir(parents=True, exist_ok=True)
+OUT_DIR = ROOT / "docs" / "metrics"
+OUT_JSON = OUT_DIR / "intervention.json"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+# Bilingual label dictionary.  Plot rendering picks one variant; both
+# variants are emitted as separate PNG files so README.md uses the EN
+# variant and README.ko.md uses the KO variant.
+LABELS = {
+    "en": {
+        "title":        "Operator-intervention trend",
+        "panel_a":      "Daily commit attribution",
+        "panel_b":      "Operator engagement (Claude Code sessions)",
+        "panel_b_none": "Operator engagement (no session data here)",
+        "y_commits":    "commits / day",
+        "y_ratio":      "user-initiated %",
+        "y_prompts":    "operator prompts / day",
+        "y_minutes":    "active session minutes",
+        "legend_agent": "Agent-autonomous",
+        "legend_user":  "User-initiated",
+        "legend_pct":   "User-initiated %",
+        "legend_prompts": "Operator prompts",
+        "legend_minutes": "Active session min (60-cap/session)",
+        "x_axis":       "date (2026-)",
+    },
+    "ko": {
+        "title":        "운영자 개입 추세",
+        "panel_a":      "일별 커밋 분류",
+        "panel_b":      "운영자 참여도 (Claude Code 세션)",
+        "panel_b_none": "운영자 참여도 (이 머신엔 세션 데이터 없음)",
+        "y_commits":    "커밋 / 일",
+        "y_ratio":      "운영자 주도 %",
+        "y_prompts":    "운영자 프롬프트 / 일",
+        "y_minutes":    "활성 세션 분",
+        "legend_agent": "에이전트 자율",
+        "legend_user":  "운영자 주도",
+        "legend_pct":   "운영자 주도 %",
+        "legend_prompts": "운영자 프롬프트",
+        "legend_minutes": "활성 세션 분 (세션당 60분 cap)",
+        "x_axis":       "날짜 (2026-)",
+    },
+}
+
+
+def select_font(lang: str):
+    """Pick a font that can render the target language and configure
+    matplotlib to use it.  Korean needs a CJK font; English falls back
+    to matplotlib's default sans-serif."""
+    if lang != "ko":
+        return  # default sans-serif handles Latin + numerics fine
+    candidates = [
+        "Apple SD Gothic Neo",
+        "AppleGothic",
+        "Nanum Gothic",
+        "Noto Sans CJK KR",
+    ]
+    available = {f.name for f in _fm.fontManager.ttflist}
+    for name in candidates:
+        if name in available:
+            plt.rcParams["font.family"] = name
+            plt.rcParams["axes.unicode_minus"] = False
+            return
+    # No CJK font — KO labels will render as tofu boxes.  Warn but proceed.
+    print(f"[warn] no CJK font found for lang=ko; trying default", file=sys.stderr)
 
 # Claude Code session JSONLs.  Claude Code encodes the working
 # directory into the JSONL parent dir name by replacing `/` with `-`,
@@ -230,7 +293,119 @@ def collect_sessions():
     return dict(by_day), sorted(seen_days)
 
 
+def render_chart(days, commit_metrics, session_metrics, lang: str, out_png: pathlib.Path):
+    """Render the 2-panel chart in the given language to out_png."""
+    L = LABELS[lang]
+    select_font(lang)
+
+    x = list(range(len(days)))
+    user_counts = [commit_metrics.get(d, {}).get("user", 0) for d in days]
+    agent_counts = [commit_metrics.get(d, {}).get("agent", 0) for d in days]
+    totals = [u + a for u, a in zip(user_counts, agent_counts)]
+    user_ratio = [(u / t * 100) if t else 0 for u, t in zip(user_counts, totals)]
+
+    prompts = [session_metrics.get(d, {}).get("prompts", 0) for d in days]
+    minutes = [round(session_metrics.get(d, {}).get("active_minutes", 0), 1)
+               for d in days]
+    has_session_data = any(prompts) or any(minutes)
+
+    # Larger figure + extra hspace to fit legends below each panel
+    # without overlapping bars.  height_ratios slightly favors panel A
+    # since it's the headline signal.
+    fig, (ax_a, ax_b) = plt.subplots(
+        2, 1, figsize=(14, 9), sharex=False,
+        gridspec_kw={"height_ratios": [3, 2], "hspace": 0.45},
+    )
+
+    width = 0.7
+    # ───── Panel A — commit stack + ratio line ────────────────────────
+    ax_a2 = ax_a.twinx()
+    ax_a.bar(x, agent_counts, width=width, label=L["legend_agent"],
+             color="#3a90d6", edgecolor="white", linewidth=0.5)
+    ax_a.bar(x, user_counts, width=width, bottom=agent_counts,
+             label=L["legend_user"], color="#d94a4a",
+             edgecolor="white", linewidth=0.5)
+    ax_a2.plot(x, user_ratio, color="#222", linewidth=2.0, marker="o",
+               markersize=7, label=L["legend_pct"], zorder=10)
+    # Ratio % labels only — one signal per bar, not two.  Position below
+    # the line marker when ratio is high (>50) so it doesn't escape the
+    # plot area; above otherwise.
+    for xi, r, t in zip(x, user_ratio, totals):
+        if t > 0:
+            offset = -6 if r > 80 else 4
+            va = "top" if r > 80 else "bottom"
+            ax_a2.text(xi, r + offset, f"{r:.0f}%", ha="center", va=va,
+                       fontsize=10, color="#222", fontweight="bold")
+
+    ax_a.set_ylabel(L["y_commits"], fontsize=11)
+    ax_a2.set_ylabel(L["y_ratio"], color="#222", fontsize=11)
+    ax_a2.set_ylim(0, 110)
+    # Headroom on Panel A so the % labels above peaks don't clip the title.
+    ax_a.set_ylim(0, max(totals + [10]) * 1.18)
+    ax_a.set_axisbelow(True)
+    ax_a.grid(axis="y", linestyle=":", color="#bbb", alpha=0.5)
+    ax_a.spines["top"].set_visible(False)
+    ax_a2.spines["top"].set_visible(False)
+    ax_a.set_title(L["panel_a"], fontsize=13, pad=8, loc="left", fontweight="bold")
+    ax_a.set_xticks(x)
+    ax_a.set_xticklabels([d.isoformat()[-5:] for d in days], fontsize=10)
+
+    # Single combined legend below Panel A, centered, frameless.
+    h1, l1 = ax_a.get_legend_handles_labels()
+    h2, l2 = ax_a2.get_legend_handles_labels()
+    ax_a.legend(h1 + h2, l1 + l2, loc="upper center",
+                bbox_to_anchor=(0.5, -0.13), ncol=3, frameon=False, fontsize=10)
+
+    # ───── Panel B — operator prompts + active session minutes ────────
+    ax_b2 = ax_b.twinx()
+    ax_b.bar(x, prompts, width=width, label=L["legend_prompts"],
+             color="#e08e3e", edgecolor="white", linewidth=0.5)
+    ax_b2.plot(x, minutes, color="#0f9d58", linewidth=2.0, marker="s",
+               markersize=6, label=L["legend_minutes"], zorder=10)
+
+    # Prompt count labels inside or above bars depending on height.
+    max_p = max(prompts + [1])
+    for xi, p in zip(x, prompts):
+        if p > 0:
+            if p > max_p * 0.15:  # tall bar — label inside
+                ax_b.text(xi, p - max_p * 0.05, str(p), ha="center",
+                          va="top", fontsize=9, color="white", fontweight="bold")
+            else:  # short bar — label above
+                ax_b.text(xi, p + max_p * 0.02, str(p), ha="center",
+                          va="bottom", fontsize=9, color="#444")
+
+    ax_b.set_ylabel(L["y_prompts"], fontsize=11)
+    ax_b2.set_ylabel(L["y_minutes"], color="#0f9d58", fontsize=11)
+    ax_b.set_ylim(0, max_p * 1.15)
+    ax_b.set_axisbelow(True)
+    ax_b.grid(axis="y", linestyle=":", color="#bbb", alpha=0.5)
+    ax_b.spines["top"].set_visible(False)
+    ax_b2.spines["top"].set_visible(False)
+    panel_b_title = L["panel_b"] if has_session_data else L["panel_b_none"]
+    ax_b.set_title(panel_b_title, fontsize=13, pad=8, loc="left", fontweight="bold")
+    ax_b.set_xticks(x)
+    ax_b.set_xticklabels([d.isoformat()[-5:] for d in days], fontsize=10)
+    ax_b.set_xlabel(L["x_axis"], fontsize=11)
+
+    h3, l3 = ax_b.get_legend_handles_labels()
+    h4, l4 = ax_b2.get_legend_handles_labels()
+    ax_b.legend(h3 + h4, l3 + l4, loc="upper center",
+                bbox_to_anchor=(0.5, -0.18), ncol=2, frameon=False, fontsize=10)
+
+    fig.suptitle(L["title"], fontsize=16, fontweight="bold", y=0.995)
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig(out_png, dpi=140, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    print(f"wrote {out_png.relative_to(ROOT)}")
+
+
 def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--lang", choices=["en", "ko", "both"], default="both",
+                    help="render chart in this language; default 'both' emits "
+                         "intervention-en.png + intervention-ko.png + intervention.png alias")
+    args = ap.parse_args()
+
     commits = collect_commits()
     if not commits:
         print("no commits", file=sys.stderr)
@@ -335,103 +510,27 @@ def main() -> int:
         ],
     }, ensure_ascii=False, indent=2))
 
-    # Plot — 2 stacked panels sharing X.
-    fig, (ax_a, ax_b) = plt.subplots(
-        2, 1, figsize=(12, 8), sharex=True,
-        gridspec_kw={"height_ratios": [3, 2], "hspace": 0.15},
-    )
-
-    x = list(range(len(days)))
-    user_counts = [commit_metrics.get(d, {}).get("user", 0) for d in days]
-    agent_counts = [commit_metrics.get(d, {}).get("agent", 0) for d in days]
-    totals = [u + a for u, a in zip(user_counts, agent_counts)]
-    user_ratio = [
-        (u / t * 100) if t else 0 for u, t in zip(user_counts, totals)
-    ]
-
-    # Panel A — commit stack + ratio line.
-    ax_a2 = ax_a.twinx()
-    width = 0.7
-    ax_a.bar(x, agent_counts, width=width, label="Agent-autonomous",
-             color="#3a90d6", edgecolor="white", linewidth=0.5)
-    ax_a.bar(x, user_counts, width=width, bottom=agent_counts,
-             label="User-initiated", color="#d94a4a",
-             edgecolor="white", linewidth=0.5)
-    ax_a2.plot(x, user_ratio, color="#333", linewidth=1.5, marker="o",
-               markersize=6, label="User-initiated %")
-    for xi, t in zip(x, totals):
-        if t > 0:
-            ax_a.text(xi, t + 0.4, str(t), ha="center", va="bottom",
-                      fontsize=9, color="#444")
-    for xi, r, t in zip(x, user_ratio, totals):
-        if t > 0:
-            ax_a2.text(xi, r + 3, f"{r:.0f}%", ha="center", va="bottom",
-                       fontsize=8, color="#333", fontweight="bold")
-    ax_a.set_ylabel("commits / day")
-    ax_a2.set_ylabel("user-initiated %", color="#333")
-    ax_a2.set_ylim(0, 110)
-    ax_a.set_axisbelow(True)
-    ax_a.grid(axis="y", linestyle=":", color="#bbb", alpha=0.6)
-    ax_a.spines["top"].set_visible(False)
-    ax_a2.spines["top"].set_visible(False)
-    ax_a.set_title(
-        "Panel A — commit attribution (user vs autonomous, by day)",
-        fontsize=11, pad=10,
-    )
-    h1, l1 = ax_a.get_legend_handles_labels()
-    h2, l2 = ax_a2.get_legend_handles_labels()
-    ax_a.legend(h1 + h2, l1 + l2, loc="upper right", frameon=False, fontsize=9)
-    if MARKER_DATE in days:
-        i = days.index(MARKER_DATE)
-        ax_a.axvline(i - 0.5, color="#999", linestyle="--",
-                     linewidth=1, alpha=0.7)
-        ax_a.text(i - 0.45, ax_a.get_ylim()[1] * 0.92,
-                  "Requested-by marker\nconvention starts",
-                  fontsize=7, color="#666", va="top", ha="left")
-
-    # Panel B — operator prompts + active session minutes.
-    prompts = [session_metrics.get(d, {}).get("prompts", 0) for d in days]
-    minutes = [round(session_metrics.get(d, {}).get("active_minutes", 0), 1)
-               for d in days]
-    has_session_data = any(prompts) or any(minutes)
-    ax_b2 = ax_b.twinx()
-    ax_b.bar(x, prompts, width=width, label="Operator prompts",
-             color="#e08e3e", edgecolor="white", linewidth=0.5)
-    ax_b2.plot(x, minutes, color="#0f9d58", linewidth=1.5, marker="s",
-               markersize=5, label="Active session min (capped 60/sess)")
-    for xi, p in zip(x, prompts):
-        if p > 0:
-            ax_b.text(xi, p + 0.5, str(p), ha="center", va="bottom",
-                      fontsize=8, color="#444")
-    ax_b.set_ylabel("operator prompts / day")
-    ax_b2.set_ylabel("active session minutes", color="#0f9d58")
-    ax_b.set_axisbelow(True)
-    ax_b.grid(axis="y", linestyle=":", color="#bbb", alpha=0.6)
-    ax_b.spines["top"].set_visible(False)
-    ax_b2.spines["top"].set_visible(False)
-    panel_b_title = (
-        "Panel B — operator engagement (Claude Code session JSONLs)"
-        if has_session_data else
-        "Panel B — operator engagement (no session data on this machine)"
-    )
-    ax_b.set_title(panel_b_title, fontsize=11, pad=10)
-    h3, l3 = ax_b.get_legend_handles_labels()
-    h4, l4 = ax_b2.get_legend_handles_labels()
-    ax_b.legend(h3 + h4, l3 + l4, loc="upper right", frameon=False, fontsize=9)
-    ax_b.set_xticks(x)
-    ax_b.set_xticklabels([d.isoformat()[-5:] for d in days], rotation=0, fontsize=9)
-    ax_b.set_xlabel("date (2026-)")
-
-    fig.suptitle(
-        "Operator-intervention trend — commits + Claude Code prompts",
-        fontsize=13, y=0.995,
-    )
-    plt.tight_layout(rect=[0, 0, 1, 0.97])
-    plt.savefig(OUT_PNG, dpi=140, bbox_inches="tight", facecolor="white")
-    rel = OUT_PNG.relative_to(ROOT)
-    print(f"wrote {rel}")
+    # Render chart per requested language.  Default `both` emits two
+    # PNGs (intervention-en.png, intervention-ko.png) plus a copy at
+    # intervention.png (= EN) for backward compat with prior references.
+    langs = ["en", "ko"] if args.lang == "both" else [args.lang]
+    for lang in langs:
+        out_png = OUT_DIR / f"intervention-{lang}.png"
+        render_chart(days, commit_metrics, session_metrics, lang, out_png)
+    # Backward-compat alias.
+    en_path = OUT_DIR / "intervention-en.png"
+    if en_path.exists():
+        shutil.copy(en_path, OUT_DIR / "intervention.png")
+        print(f"wrote docs/metrics/intervention.png (alias of en)")
     return 0
 
+
+# ─────────────────────────────────────────────────────────────────────
+# DEAD CODE BELOW — kept as a sentinel to ensure no other path falls
+# through into the legacy plotting routine.  Stripped on next refactor.
+# ─────────────────────────────────────────────────────────────────────
+def _legacy_unused():
+    x = []  # noqa: F841
 
 if __name__ == "__main__":
     raise SystemExit(main())

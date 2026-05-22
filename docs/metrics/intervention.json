@@ -1,26 +1,26 @@
 {
-  "generated_at": "2026-05-22T03:38:17",
+  "generated_at": "2026-05-22T13:39:18",
   "marker_convention_started": "2026-05-17",
   "session_cap_minutes": 60,
   "rationale": "Two-source intervention tracker. Panel A: per-day commit count classified by initiator (user vs agent). Panel B: per-day operator prompts and active session minutes mined from local Claude Code session JSONLs. Goal: both signals trend down as the agent system absorbs more decisions.",
   "trend_7d": {
     "user_ratio_pct": {
-      "last7_avg": 29.91,
+      "last7_avg": 30.3,
       "prev7_avg": null,
       "delta": null
     },
     "leverage_ratio": {
-      "last7_avg": 6.8,
+      "last7_avg": 4.94,
       "prev7_avg": null,
       "delta": null
     },
     "operator_prompts": {
-      "last7_avg": 114.86,
+      "last7_avg": 118.57,
       "prev7_avg": null,
       "delta": null
     },
     "active_session_minutes": {
-      "last7_avg": 185.43,
+      "last7_avg": 187.6,
       "prev7_avg": null,
       "delta": null
     },
@@ -100,7 +100,7 @@
       "user_ratio_pct": 11.5,
       "longest_autonomous_gap_h": 12.2,
       "leverage_ratio": 7.7,
-      "operator_prompts": 288,
+      "operator_prompts": 302,
       "active_session_minutes": 339.3,
       "session_count": 14
     },
@@ -111,23 +111,263 @@
       "user_ratio_pct": 35.7,
       "longest_autonomous_gap_h": 14.5,
       "leverage_ratio": 1.8,
-      "operator_prompts": 87,
+      "operator_prompts": 94,
       "active_session_minutes": 168.4,
       "session_count": 8
     },
     {
       "date": "2026-05-22",
-      "user_initiated": 2,
-      "agent_autonomous": 57,
-      "user_ratio_pct": 3.4,
-      "longest_autonomous_gap_h": 0.0,
-      "leverage_ratio": 28.5,
-      "operator_prompts": 15,
-      "active_session_minutes": 186.5,
-      "session_count": 13
+      "user_initiated": 6,
+      "agent_autonomous": 93,
+      "user_ratio_pct": 6.1,
+      "longest_autonomous_gap_h": 3.4,
+      "leverage_ratio": 15.5,
+      "operator_prompts": 20,
+      "active_session_minutes": 201.7,
+      "session_count": 15
     }
   ],
   "commits": [
+    {
+      "sha": "652c7a8",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(auto): chain upload-meta + add test (4/4 pass)"
+    },
+    {
+      "sha": "af1201c",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(upload-meta): music-video-upload-meta.sh — per-mission upload template"
+    },
+    {
+      "sha": "0adb09c",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(test-all): exclude self from discovery to avoid recursive fork"
+    },
+    {
+      "sha": "ee3853b",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "chore(audit): clear stale machine-path in demo-mode-log line 1"
+    },
+    {
+      "sha": "a0ea9b9",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(trim): music-video-trim.sh + test-all aggregator"
+    },
+    {
+      "sha": "e09a4ac",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(demo-mode): fresh-clone regression PASS — 2026-05-22 10:50 KST"
+    },
+    {
+      "sha": "f9f8f24",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(auto): optional MUSIC_VIDEO_VALIDATE=1 post-render gate"
+    },
+    {
+      "sha": "3fa5b8a",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(thumbnail): 5/5 cases for music-video-thumbnail.sh"
+    },
+    {
+      "sha": "28ef914",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(lyric-extract): smoke test for whisper lyric pull (4/4 pass)"
+    },
+    {
+      "sha": "5d7fbb3",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(reference): add operator-utilities table + validate gate row"
+    },
+    {
+      "sha": "a2bdf0c",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(auto): auto-extract thumbnail at end of music-video-auto pipeline"
+    },
+    {
+      "sha": "e032cf5",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(thumbnail): music-video-thumbnail.sh — extract upload-ready still"
+    },
+    {
+      "sha": "2c950e0",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "tune(lyric-extract): strip whisper's ♪ markers and parenthetical notes"
+    },
+    {
+      "sha": "c5fceaf",
+      "date": "2026-05-22",
+      "class": "user",
+      "subject": "feat(lyrics): scripts/lyric-extract.sh — whisper-based lyric pull"
+    },
+    {
+      "sha": "a940d4d",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(validate): regression test + verdict-level fix (4/4 pass)"
+    },
+    {
+      "sha": "54629c8",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(qa): music-video-validate.sh — combined pre-publish gate"
+    },
+    {
+      "sha": "fd22a4e",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(qa-anchor): regression test for A.3 QA gate (6/6 pass)"
+    },
+    {
+      "sha": "64e71c7",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(batch): smoke test for music-video-batch dry-run + lyric pairing (4/4 pass)"
+    },
+    {
+      "sha": "682b9cc",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(first-touch): smoke test for --help, --check, error paths (3/3 pass)"
+    },
+    {
+      "sha": "10ec7c0",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "chore(audit): clear carry-forward — .playwright-mcp gitignore + commit 2026-05-22-all report"
+    },
+    {
+      "sha": "d899cfc",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(readme): surface first-touch wizard + pipeline reference (EN+KO)"
+    },
+    {
+      "sha": "e1837b8",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(shaders): regression test for C.1 gate modes (6/6 pass)"
+    },
+    {
+      "sha": "72e865c",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(batch): music-video-batch.sh — multi-track render wrapper"
+    },
+    {
+      "sha": "0a4d622",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(daily): brief — extra scaffolding (C.1P3, drift gate, wrap, first-touch)"
+    },
+    {
+      "sha": "5c942be",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(first-touch): zero-account demo wizard — single-command first-run"
+    },
+    {
+      "sha": "90e6ef8",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(presets): MUSIC_VIDEO_SHADER env override for one-off shader tests"
+    },
+    {
+      "sha": "26211a2",
+      "date": "2026-05-22",
+      "class": "user",
+      "subject": "feat(lyrics): auto-wrap long lines into multi-line drawtext"
+    },
+    {
+      "sha": "07428b1",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(shaders): C.1 Phase 3 — cap event count at 30 to avoid ffmpeg expr-length limit"
+    },
+    {
+      "sha": "5fd83c7",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs: consolidated music-video pipeline reference (env vars, flags, gates)"
+    },
+    {
+      "sha": "3b43043",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(shaders): C.1 Phase 3 fallback when onsets are too sparse"
+    },
+    {
+      "sha": "aedc774",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(lyrics): Suno-drift detection gate — skip overlay when alignment fails"
+    },
+    {
+      "sha": "5fe3e64",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(presets): shader_pool field — deterministic rotation per short_id"
+    },
+    {
+      "sha": "88b4ac4",
+      "date": "2026-05-22",
+      "class": "user",
+      "subject": "feat(shaders): C.1 Phase 3 — per-event shader gating (onsets + beats)"
+    },
+    {
+      "sha": "90ddeb1",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(daily): morning brief — anchor-coverage progression table"
+    },
+    {
+      "sha": "2c38938",
+      "date": "2026-05-22",
+      "class": "user",
+      "subject": "docs(research): demo #4 KR — 100% anchor coverage after pool tightening"
+    },
+    {
+      "sha": "01d9d83",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(research): demo #3 EN — final fix verification PASS"
+    },
+    {
+      "sha": "2ca305c",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(contract): session-start protocol — add autonomous-decisions + morning-brief"
+    },
+    {
+      "sha": "63431b4",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "tune(qa): expand qa-anchor regex to match tightened keyword_pools"
+    },
+    {
+      "sha": "f5d909a",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(audit): clear 41st cycle — portability + gitignore + Done batch"
+    },
+    {
+      "sha": "2c9d072",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(metrics): chart regen auto-mirrors to site/assets/ — keeps Pages in sync"
+    },
     {
       "sha": "b5e61de",
       "date": "2026-05-22",

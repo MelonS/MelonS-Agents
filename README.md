@@ -182,7 +182,7 @@ picked an option, approved a deliverable) or **agent-autonomous**
 operator's local Claude Code session logs are mined for prompt
 count and active session minutes.
 
-![Two-panel intervention trend — Panel A stacks daily commit counts by initiator with a user-initiated percentage line; Panel B charts daily operator prompts and active session minutes mined from local Claude Code session JSONLs](docs/metrics/intervention.png)
+![Two-panel intervention trend — Panel A (Daily commit attribution) stacks daily commit counts by initiator (agent-autonomous blue vs user-initiated red) with a user-initiated percentage line and per-day percentage labels; Panel B (Operator engagement) charts daily operator prompts and active session minutes mined from local Claude Code session JSONLs.  Korean mirror at docs/metrics/intervention-ko.png.](docs/metrics/intervention-en.png)
 
 Goal: both panels trend down as the agent system absorbs more
 decisions.  Updated daily at 02:00 KST by the
