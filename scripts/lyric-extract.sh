@@ -44,6 +44,13 @@ if [[ -z "$AUDIO" || -z "$OUT" ]]; then
 fi
 [[ -f "$AUDIO" ]] || { echo "audio not found: $AUDIO" >&2; exit 64; }
 
+# §8 exception: whisper-cli / ffmpeg parameter-expansion defaults — same
+# pattern as scripts/music-video-lyric-align.sh.  Env-var override
+# ($WHISPER_CLI_BIN / $FFMPEG_BIN) wins; the /opt/homebrew/bin/* fallback
+# only fires on the operator's macOS box for offline use and is gated by
+# the [[ -x ]] / [[ -f ]] checks below — Linux clones with their own
+# whisper.cpp + ffmpeg locations are expected to set the env vars (see
+# agents/lib/env.sh).
 WHISPER_CLI="${WHISPER_CLI_BIN:-/opt/homebrew/bin/whisper-cli}"
 MODEL="${WHISPER_MODEL:-}"
 FFMPEG="${FFMPEG_BIN:-/opt/homebrew/bin/ffmpeg}"

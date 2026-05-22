@@ -361,6 +361,9 @@ long as that grep returns ≥ 1 hit.
   claude CLI and the ffmpeg-full keg.
 - `scripts/music-video-lyric-align.sh` — whisper-cli /
   ffmpeg parameter-expansion defaults.
+- `scripts/lyric-extract.sh` — whisper-cli / ffmpeg
+  parameter-expansion defaults (same pattern as
+  `music-video-lyric-align.sh` above).
 
 ### 9. Goal and roadmap are the source of truth for work selection
 
