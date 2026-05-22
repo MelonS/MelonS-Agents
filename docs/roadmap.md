@@ -170,6 +170,17 @@ load-bearing, or set a new focus.)_
 ## Done — most recent first
 
 
+
+- **2026-05-22** (~16:03 KST, bulk auto-sync via `scripts/roadmap-done-sync.sh`)
+  **4 commits backfilled** from base `f3d7781` to HEAD.
+  Per §9 every commit needs a Done entry — this is the catch-up batch
+  the auditor would otherwise repeatedly flag.  Entries grouped by
+  scope; operator may rewrite into narrative form if a specific
+  cluster warrants it.
+  - `6a2c8db` — feat(roadmap): auto-bulk-reconciliation script + test + backfill 36 commits
+  - `43cfc44` — docs(examples+skills): surface recent ships in EXAMPLES + job-hunt walkthrough
+  - `8730cf0` — docs(research): grade_profile visual comparison — 3 of 5 strong, 2 subtle
+  - `54ffc0b` — chore(audit+docs): clear 45th-cycle pending + register shot-plan + commit pre-existing artifacts
 - **2026-05-22** (~16:00 KST, bulk auto-sync via `scripts/roadmap-done-sync.sh`)
   **36 commits backfilled** from base `f3d7781` to HEAD.
   Per §9 every commit needs a Done entry — this is the catch-up batch
