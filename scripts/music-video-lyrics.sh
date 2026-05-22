@@ -244,13 +244,19 @@ PY
 # Use bracket-based chain ([v_n] → [v_n+1]) instead of comma-chain so
 # commas inside between()/if() expressions don't get treated as
 # filter-graph separators by newer ffmpeg (≥8.x is stricter).
-# Positions (x, y) for 1080×1920:
-#   0: top-center, 1: bottom-center, 2: left-aligned, 3: right-aligned
+#
+# Positions (x, y) for 1080×1920 — 4-position rotation kept WITHIN
+# the cross-platform safe band [y=0.21h, y=0.78h] = [400px, 1500px]
+# on a 1080×1920 canvas (per docs/research/2026-05-22-music-video-
+# pro-practices.md §5).  Bottom 22% is reserved by TikTok / Reels /
+# Shorts for auto-captions + comment stack + engagement UI; top 8%
+# is the safe-stays-on-camera-cut margin.  Override via
+# LYRICS_POSITIONS env (4-element ":" separated x:y pairs).
 POSITIONS=(
-  "(w-text_w)/2:h*0.18"
-  "(w-text_w)/2:h*0.78"
-  "w*0.08:h*0.35"
-  "w-text_w-w*0.08:h*0.62"
+  "(w-text_w)/2:h*0.22"
+  "(w-text_w)/2:h*0.42"
+  "w*0.08:h*0.62"
+  "w-text_w-w*0.08:h*0.32"
 )
 
 FILTER_CHAIN=""
