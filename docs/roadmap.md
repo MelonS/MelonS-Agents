@@ -258,7 +258,7 @@ load-bearing, or set a new focus.)_
   continued) **Phase 7+ — audit-hook coalescing + auto-decision
   logging + morning brief + chart auto-mirror + portability fix**
   (commits `ae73973`, `2c9d072`, `e415875`, `bd118ac`, `4cd3aaa`,
-  `1747d70`, `ff7fe5d`, `9c8b69e`).  Closes intervention-reduction
+  `1747d70`, `ff7fe5d`, `f5d909a`).  Closes intervention-reduction
   Phase 7 work: (a) L1 audit hook coalescing via sentinel file —
   saves Max-plan tokens during commit bursts (was 6+ concurrent
   claude CLI processes; now 1 with deferred re-fire log entry);
