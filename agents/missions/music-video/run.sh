@@ -202,31 +202,50 @@ done < "$BOUNDARIES"
 
 # Build segment array.  Segments 0..N-1 are phrase blocks, segment N is the tail to TARGET_DUR.
 declare -a SEG_START SEG_DUR SEG_KW SEG_SPEED SEG_GLITCH
+
+# Shot-plan consumer (per director-methodology research §1).  When
+# MUSIC_VIDEO_USE_SHOT_PLAN=1 AND the shot-plan.json exists, source
+# the keyword sequence from the plan instead of computing it via
+# array indexing.  Lets the operator inspect-and-edit the plan
+# between phrase detection and B-roll fetch.  Default (env unset)
+# = current rotation logic, fully back-compat.
+USE_SHOT_PLAN="${MUSIC_VIDEO_USE_SHOT_PLAN:-0}"
+SHOT_PLAN_FILE="$MDIR/resources/shot-plan.json"
+if [[ "$USE_SHOT_PLAN" == "1" && -f "$SHOT_PLAN_FILE" ]]; then
+  log_info "  shot-plan consumer ACTIVE — sourcing keywords from $SHOT_PLAN_FILE"
+  PLAN_KW=()
+  while IFS= read -r k; do PLAN_KW+=("$k"); done < <(jq -r '.segments[].keyword' "$SHOT_PLAN_FILE" 2>/dev/null)
+fi
+
 # Segment 0: intro hold 0 → BOUNDS[0]
 SEG_START[0]="0"
 SEG_DUR[0]=$(awk -v e="${BOUNDS[0]}" 'BEGIN{printf "%.3f", e}')
-SEG_KW[0]="${KEYWORDS[0]}"  # first keyword used as the intro motif
+if [[ "$USE_SHOT_PLAN" == "1" && ${#PLAN_KW[@]+set} == "set" && ${#PLAN_KW[@]} -gt 0 ]]; then
+  SEG_KW[0]="${PLAN_KW[0]}"
+else
+  SEG_KW[0]="${KEYWORDS[0]}"  # first keyword used as the intro motif
+fi
 
 # Inner segments
 seg_idx=1
 for ((i=0; i<${#BOUNDS[@]}-1; i++)); do
   SEG_START[seg_idx]="${BOUNDS[$i]}"
   SEG_DUR[seg_idx]=$(awk -v s="${BOUNDS[$i]}" -v e="${BOUNDS[$((i+1))]}" 'BEGIN{printf "%.3f", e-s}')
-  # Pick keyword for this segment.  Three branches:
-  # - seg_idx % 3 == 1 → lang-anchored people keyword (if anchor is set)
-  # - seg_idx % 4 == 0 → recurring motif keyword (intro, slightly rarer)
-  # - else            → rotate through the rest of the genre pool
-  # Lang-anchor rate bumped 2026-05-22 ~03:05 KST from every-4th to
-  # every-3rd seg after demo-frame sampling showed only ~25% person-
-  # anchored coverage in vocal renders (target 33-40%).
-  if (( LANG_KW_COUNT > 0 )) && (( seg_idx % 3 == 1 )); then
-    lang_pick=$(( (seg_idx / 3) % LANG_KW_COUNT ))
-    SEG_KW[seg_idx]="${LANG_KEYWORDS[$lang_pick]}"
-  elif (( seg_idx % 4 == 0 )); then
-    SEG_KW[seg_idx]="${KEYWORDS[0]}"  # motif
+  if [[ "$USE_SHOT_PLAN" == "1" && ${#PLAN_KW[@]+set} == "set" && "$seg_idx" -lt "${#PLAN_KW[@]}" ]]; then
+    # Plan-driven path: take keyword directly from the plan's segment_idx.
+    SEG_KW[seg_idx]="${PLAN_KW[$seg_idx]}"
   else
-    pick=$(( (seg_idx % (KW_COUNT - 1)) + 1 ))
-    SEG_KW[seg_idx]="${KEYWORDS[$pick]}"
+    # Default rotation: lang-anchor / motif / genre pool, per quality
+    # bar #5/#6 directives.
+    if (( LANG_KW_COUNT > 0 )) && (( seg_idx % 3 == 1 )); then
+      lang_pick=$(( (seg_idx / 3) % LANG_KW_COUNT ))
+      SEG_KW[seg_idx]="${LANG_KEYWORDS[$lang_pick]}"
+    elif (( seg_idx % 4 == 0 )); then
+      SEG_KW[seg_idx]="${KEYWORDS[0]}"  # motif
+    else
+      pick=$(( (seg_idx % (KW_COUNT - 1)) + 1 ))
+      SEG_KW[seg_idx]="${KEYWORDS[$pick]}"
+    fi
   fi
   seg_idx=$((seg_idx + 1))
 done
