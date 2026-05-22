@@ -29,6 +29,7 @@ the daily-operations layer without reading every script.
 | `scripts/audit-skill-drift.sh` | Manually never — embedded into the daily auditor pass | One-line summary or per-skill drift table |
 | `scripts/statusline.sh` | Never directly — Claude Code calls it ~300 ms per refresh | One-line statusline (dir · git · model · cost · doctor · goal · audit) |
 | `scripts/log-decision.sh` | When the agent makes a unilateral decision during autonomous work | Append to `docs/autonomous-decisions.md` under today's date section |
+| `scripts/intervention-log-add.sh` | When the operator surfaces a shaping decision (direction / taste / correction / etc.) | Append synthesized entry to `docs/intervention-log.md` under today's date section |
 | `scripts/roadmap-done-sync.sh` | Whenever the audit flags Done-gap, or before a session end | Preview (default) or `--apply` bulk entry to `docs/roadmap.md` |
 | `scripts/review-queue-add.sh` | Auto-called by mission post-render — manual rarely | Pending entry under `outputs/review-queue/pending/` |
 | `scripts/review-queue-digest.sh` | When you want to drain pending taste decisions in one sitting | Render to `docs/review-digest.md` as a contact sheet |
