@@ -34,6 +34,7 @@ genres:
     aliases: [drone, minimal_ambient, dark_ambient]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999          # effectively no cuts
+    cut_density: continuous   # derived from phrase_beats=999
     grain_intensity: 6
     vignette_angle: PI/4
     zoom_pulse_amp: 0          # ABSOLUTELY no zoom-pulse
@@ -64,6 +65,7 @@ genres:
     aliases: [doom_jazz, doom_ambient]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999
+    cut_density: continuous   # derived from phrase_beats=999
     grain_intensity: 10        # heavier grain — adds movement to static frames
     vignette_angle: PI/3
     zoom_pulse_amp: 0
@@ -93,6 +95,7 @@ genres:
     aliases: [dream_pop, slowdive]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 4-beat soft cuts at most
+    cut_density: sparse       # derived from phrase_beats=16
     grain_intensity: 6
     vignette_angle: PI/5
     zoom_pulse_amp: 0
@@ -124,6 +127,7 @@ genres:
     aliases: [chillhop, lofi, downtempo]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts
+    cut_density: sparse       # derived from phrase_beats=16
     grain_intensity: 8
     vignette_angle: PI/5
     zoom_pulse_amp: 0          # **CRITICAL — lo-fi is anti-glitch**
@@ -155,6 +159,7 @@ genres:
     aliases: [acoustic_jazz, smooth_jazz]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 12            # 4-8 beat soft cuts
+    cut_density: sparse       # derived from phrase_beats=12
     grain_intensity: 8
     vignette_angle: PI/4        # deeper, low-key noir
     zoom_pulse_amp: 0          # glitch FORBIDDEN
@@ -186,6 +191,7 @@ genres:
     aliases: [city_pop, kr_citypop, jp_citypop, vocal_citypop, ballad]
     lang_anchor: mixed    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts, vocal-respecting
+    cut_density: sparse       # derived from phrase_beats=16
     grain_intensity: 6
     vignette_angle: PI/4        # deeper, warmer
     zoom_pulse_amp: 0          # FORBIDDEN — vocals carry the energy
@@ -220,6 +226,7 @@ genres:
     aliases: [korean_ballad, kballad, k-ballad]
     lang_anchor: ko    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts, vocal-respecting
+    cut_density: sparse       # derived from phrase_beats=16
     grain_intensity: 6
     vignette_angle: PI/4
     zoom_pulse_amp: 0          # FORBIDDEN — vocals carry energy
@@ -254,6 +261,7 @@ genres:
     aliases: [kdance, kpop_edm, kpop_dance_pop]
     lang_anchor: ko    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts (dense but not sub-beat)
+    cut_density: moderate     # derived from phrase_beats=8
     grain_intensity: 0          # hi-fi clean
     vignette_angle: PI/3        # subtle
     zoom_pulse_amp: 0.08       # mild — vocals still primary
@@ -289,6 +297,7 @@ genres:
     aliases: [contemporary_rnb, neo_soul, slow_jam, soul]
     lang_anchor: en    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16            # 8-beat soft cuts
+    cut_density: sparse       # derived from phrase_beats=16
     grain_intensity: 8           # warm grain for smoky feel
     vignette_angle: PI/4
     zoom_pulse_amp: 0          # vocals carry — no glitch
@@ -322,6 +331,7 @@ genres:
     aliases: [us_pop, billboard_pop, contemporary_pop, top_40, synth_pop]
     lang_anchor: en    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts
+    cut_density: moderate     # derived from phrase_beats=8
     grain_intensity: 2           # very clean
     vignette_angle: PI/3
     zoom_pulse_amp: 0.06       # mild on the kick
@@ -357,6 +367,7 @@ genres:
     aliases: [tropical_house, deep_house, future_house, disco_house, french_house, nu_disco, disco]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts
+    cut_density: moderate     # derived from phrase_beats=8
     grain_intensity: 2          # MUCH less grain than lo-fi
     vignette_angle: PI/3        # softer
     zoom_pulse_amp: 0.06       # mild zoom-pulse OK on kick
@@ -387,6 +398,7 @@ genres:
     aliases: [tech_house, minimal_techno]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 4             # 1-beat cuts (very dense)
+    cut_density: dense        # derived from phrase_beats=4
     grain_intensity: 0
     vignette_angle: PI/2        # very subtle / nearly off
     zoom_pulse_amp: 0.12       # stronger pulse, kick-driven
@@ -417,6 +429,7 @@ genres:
     aliases: [retrowave, outrun, vaporwave_neon]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 8             # 2-beat cuts
+    cut_density: moderate     # derived from phrase_beats=8
     grain_intensity: 0          # FORBIDDEN
     vignette_angle: off         # no vignette
     zoom_pulse_amp: 0.05       # slight, controlled
@@ -448,6 +461,7 @@ genres:
     aliases: [vaporwave_aesthetic, mallsoft]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999           # very slow / loopy
+    cut_density: continuous   # derived from phrase_beats=999
     grain_intensity: 4
     vignette_angle: PI/4
     zoom_pulse_amp: 0
@@ -478,6 +492,7 @@ genres:
     aliases: [drift_phonk, anime_edit]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 4
+    cut_density: dense        # derived from phrase_beats=4
     grain_intensity: 4
     vignette_angle: PI/6
     zoom_pulse_amp: 0.15
@@ -507,6 +522,7 @@ genres:
     aliases: [glitch, breakcore, gabber]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 2             # sub-beat
+    cut_density: dense        # derived from phrase_beats=2
     grain_intensity: 0
     vignette_angle: off
     zoom_pulse_amp: 0.20       # strongest
@@ -539,6 +555,7 @@ genres:
     aliases: [folk, acoustic_folk, indie_folk]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 16
+    cut_density: sparse       # derived from phrase_beats=16
     grain_intensity: 6
     vignette_angle: PI/5
     zoom_pulse_amp: 0
@@ -569,6 +586,7 @@ genres:
     aliases: [orchestral, chamber, baroque]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999           # no rhythmic cuts
+    cut_density: continuous   # derived from phrase_beats=999
     grain_intensity: 6
     vignette_angle: PI/5
     zoom_pulse_amp: 0
@@ -600,6 +618,7 @@ genres:
     aliases: [liminal, weirdcore]
     lang_anchor: neutral    # 2026-05-22 quality-bar #5/#6
     phrase_beats: 999
+    cut_density: continuous   # derived from phrase_beats=999
     grain_intensity: 4          # soft VHS-style grain
     vignette_angle: PI/4
     zoom_pulse_amp: 0
