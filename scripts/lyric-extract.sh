@@ -90,7 +90,13 @@ for seg in data.get("transcription", []):
     txt = re.sub(r"\s+", " ", txt)
     # Replace U+FFFD (replacement char from multi-byte split) with nothing.
     txt = txt.replace("�", "")
-    if not txt or not txt.strip():
+    # Strip whisper's lyrical-content markers: leading / trailing ♪
+    # (often paired) and parenthetical scene notes like "(upbeat music)".
+    txt = re.sub(r"^♪\s*", "", txt)
+    txt = re.sub(r"\s*♪$", "", txt)
+    txt = re.sub(r"^\(.+\)$", "", txt)
+    txt = txt.strip()
+    if not txt:
         continue
     lines.append(txt)
 
