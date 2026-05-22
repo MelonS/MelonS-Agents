@@ -9,6 +9,57 @@ file — operator decides when to formally bump.
 
 ---
 
+## Unreleased — 2026-05-23 research follow-on wave
+
+Continuation of the 2026-05-22 work, picking up items 5-8 from the
+research action lists.
+
+### Pipeline features
+
+- **KR Hangul + Romanization bilingual stack** (commit `e1e3838`)
+  — `LYRICS_BILINGUAL=1` env activates two-line drawtext stack:
+  Hangul above (88pt), Revised Romanization below (61pt, 70% size).
+  Romanization derived from `scripts/romanize-hangul.sh` (Python
+  stdlib unicodedata, no external lib).  KR-canonical convention
+  per research §8.
+- **J/L-cut trail for lyric overlay** (commit `9015d10`) —
+  `LYRIC_TRAIL_MS` extends each lyric line's end past the next-line
+  boundary.  Pairs symmetrically with `LYRIC_LEAD_MS` to form the
+  J/L envelope pro music-video editors use.  Default 0 (back-compat).
+- **Drop detection + drops gate** (commits `c242e4e`, `e9af4b7`) —
+  `scripts/audio-analyze.sh` emits per-second RMS curve + drops
+  timestamps (top-10% sustained ≥ 2s) via pure ffmpeg `astats`
+  filter.  Auto-runs in run.sh step 2b.  New
+  `MUSIC_VIDEO_SHADER_GATE=drops` mode fires shader as wide
+  gaussian (σ=1.5s) at each detected drop — pro convention for
+  climax accents.
+
+### New utility scripts
+
+- `scripts/romanize-hangul.sh` — Revised Romanization of Hangul
+  text using only Python stdlib `unicodedata`.
+- `scripts/audio-analyze.sh` — per-second RMS + drops detection.
+
+### Bug fixes
+
+- Stride math in shader-events branch was `NR % s == 1` which is
+  never true for s=1; corrected to `(NR-1) % s == 0` — classical
+  every-Nth starting from first.
+- `set -u` unbound-variable trap on $REPO_ROOT_SCRIPT in lyrics.sh
+  bilingual block — replaced with direct BASH_SOURCE derivation.
+
+### Validated
+
+- Drop detection on 3 genre track types (kpop_dance / kpop_ballad
+  / synthwave) returns track-structure-meaningful drops (mid-song
+  peak for dance, late climax for ballad, both chorus drops for
+  synthwave).
+- Bilingual stack renders cleanly on KR ballad source —
+  "변한 건 너의 자리뿐" + "byeon han geon neo yi ja ri bbun" both
+  visible in safe-band y=0.22h.
+
+---
+
 ## Unreleased (2026-05-22 quality-bar batch)
 
 Substantial work landed in the 2026-05-22 autonomous block addressing
