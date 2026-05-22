@@ -240,6 +240,15 @@ if [[ "${MUSIC_VIDEO_NO_THUMB:-0}" != "1" ]]; then
     && echo "✓ thumbnail: $THUMB_OUT"
 fi
 
+# 7. Optional validation pass — set MUSIC_VIDEO_VALIDATE=1 to run the
+#    combined gate (file-integrity + qa-anchor + lyric-drift +
+#    broll-dedup) at the end of the render.  Exit code is ignored
+#    here (operator inspects verdict in the printed report).
+if [[ "${MUSIC_VIDEO_VALIDATE:-0}" == "1" ]]; then
+  echo "→ post-render validation gate"
+  bash "$REPO_ROOT/scripts/music-video-validate.sh" "$OUTPUT_DIR/.." --genre="$GENRE" || true
+fi
+
 echo
 echo "═══════════════════════════════════════════════════════════════"
 echo " Done.  Outputs in: $OUTPUT_DIR"
