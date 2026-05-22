@@ -37,6 +37,7 @@ header if today's section doesn't exist.
 
 ## 2026-05-22 (overnight autonomous)
 
+- `16:35 KST` — README EN+KO Design notes Operator tooling 블릿에 docs/operator-tooling.md 카탈로그 링크 추가
 - `16:30 KST` — docs/operator-tooling.md shipped — single-page catalog of 12 operator-tooling commands with what/when/output table + per-tool reference + composition diagram. Discoverability for the stack shipped this autonomous window
 - `16:20 KST` — for-analysts inventory adds morning-brief.sh + roadmap-done-sync.sh entries — discoverability for the two operator-tooling commands shipped this autonomous window
 - `16:15 KST` — Cleared 45th-cycle [info]: shot-plan.sh, roadmap-done-sync.sh, morning-brief.sh added to for-analysts inventory. Plus 2nd run of roadmap-done-sync backfilled latest commits.
