@@ -231,6 +231,15 @@ if [[ "$WITH_TYPO_FLAG" == 1 ]]; then
   fi
 fi
 
+# 6. Thumbnail extraction — auto-generated for upload metadata.
+#    Skip via MUSIC_VIDEO_NO_THUMB=1 if operator handles it externally.
+if [[ "${MUSIC_VIDEO_NO_THUMB:-0}" != "1" ]]; then
+  THUMB_OUT="${LATEST%.mp4}-thumb.jpg"
+  echo "→ thumbnail extraction"
+  bash "$REPO_ROOT/scripts/music-video-thumbnail.sh" "$LATEST" "$THUMB_OUT" >/dev/null 2>&1 \
+    && echo "✓ thumbnail: $THUMB_OUT"
+fi
+
 echo
 echo "═══════════════════════════════════════════════════════════════"
 echo " Done.  Outputs in: $OUTPUT_DIR"
