@@ -35,6 +35,31 @@ if [[ -z "$QUERY" ]]; then
   echo "usage: $0 <query> [count=1] [min_height=720]" >&2
   exit 64
 fi
+
+# Mood-vocabulary expansion (per docs/research/2026-05-22-music-video-
+# pro-practices.md §7).  When MUSIC_VIDEO_MOOD is set AND the value
+# matches a key in skills/music-video/data/mood-vocabulary.yaml, the
+# QUERY is replaced by one of the mood's 8 visual primitives rotated
+# by a query-deterministic index (so repeated calls with the same
+# operator-supplied query land different primitives).  Falls back to
+# the literal QUERY if mood unset, yaml missing, or key not found.
+if [[ -n "${MUSIC_VIDEO_MOOD:-}" ]]; then
+  MOOD_YAML="$REPO_ROOT/skills/music-video/data/mood-vocabulary.yaml"
+  if [[ -r "$MOOD_YAML" ]] && command -v yq >/dev/null 2>&1; then
+    PRIMS=$(yq -r ".moods.${MUSIC_VIDEO_MOOD}.primitives // []|.[]" "$MOOD_YAML" 2>/dev/null)
+    if [[ -n "$PRIMS" ]]; then
+      # Hash query → pick which primitive.  Stable per-query rotation.
+      IDX=$(printf '%s' "$QUERY" | cksum | awk '{print $1}')
+      LEN=$(echo "$PRIMS" | grep -c .)
+      PICK=$(( IDX % LEN + 1 ))
+      EXPANDED=$(echo "$PRIMS" | sed -n "${PICK}p")
+      if [[ -n "$EXPANDED" ]]; then
+        echo "[pexels] mood=$MUSIC_VIDEO_MOOD: '$QUERY' → '$EXPANDED' (pick $PICK/$LEN)" >&2
+        QUERY="$EXPANDED"
+      fi
+    fi
+  fi
+fi
 if [[ -z "${PEXELS_API_KEY:-}" ]]; then
   echo "❌ PEXELS_API_KEY not set in .env" >&2
   echo "   Get a free key at https://www.pexels.com/api/" >&2
