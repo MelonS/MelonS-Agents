@@ -281,6 +281,9 @@ if [[ "$SHADER" != "none" && "$SHADER" != "null" ]]; then
   if [[ -f "$MISSION_DIR/resources/onsets.txt" ]]; then
     export MUSIC_VIDEO_SHADER_ONSETS="$MISSION_DIR/resources/onsets.txt"
   fi
+  if [[ -f "$MISSION_DIR/resources/audio.drops.txt" ]]; then
+    export MUSIC_VIDEO_SHADER_DROPS="$MISSION_DIR/resources/audio.drops.txt"
+  fi
   MUSIC_VIDEO_SHADER_RATIO="$SHADER_ACTIVE_RATIO" bash "$SHADERS_SH" "$SHADER" "$LATEST" "$SHADED"
   echo "✓ final: $SHADED"
 else
