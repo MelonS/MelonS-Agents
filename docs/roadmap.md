@@ -154,6 +154,23 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-05-22** (~14:50 KST, site polish v2 + disk cleanup pass)
+  **Site/Skill #2 surface + faceless gallery collapse + 2 GB of
+  records/ intermediates freed** (commit `3352d3e` + non-committed
+  cleanup sweep).  Operator note "머신 용량이 별로 없는거 같아"
+  triggered a parallel cleanup: 28 `records/missions/*/*/resources/`
+  dirs (B-roll downloads / concat-noaudio / narration.wav — all
+  regeneratable) swept; 103 deliverable mp4s untouched; disk free
+  went 13Gi → 15Gi.  Site changes: Skill #2 gained a concrete code-
+  block preview rendering of `docs/samples/job-hunt-digest-mock.md`
+  (seed → role family → matched postings) since the prior site had
+  no Skill #2 artifact; faceless-short 4-frame gallery moved into a
+  `<details>` collapsed block so it stops dominating the visual
+  real estate the music-video mission now owns; `site/style.css`
+  gained `<details>` styling consistent with `.card` / `.callout`.
+  Faceless-era scorecard kept inline (still the structured
+  retention-mapping signal the format pivot was decided against).
+
 - **2026-05-22** (~11:10 KST, README + live site refresh batch)
   **README EN + KO + site/index.html refreshed — stats / case-study
   count / "What's shipped on top of v5" / first-touch-leads-the-fold**
