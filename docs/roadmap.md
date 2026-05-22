@@ -171,6 +171,14 @@ load-bearing, or set a new focus.)_
 
 
 
+
+- **2026-05-22** (~16:04 KST, bulk auto-sync via `scripts/roadmap-done-sync.sh`)
+  **1 commits backfilled** from base `f3d7781` to HEAD.
+  Per §9 every commit needs a Done entry — this is the catch-up batch
+  the auditor would otherwise repeatedly flag.  Entries grouped by
+  scope; operator may rewrite into narrative form if a specific
+  cluster warrants it.
+  - `4f3e717` — docs(roadmap): auto-bulk-reconciliation — 4 commits backfilled (16:03 KST)
 - **2026-05-22** (~16:03 KST, bulk auto-sync via `scripts/roadmap-done-sync.sh`)
   **4 commits backfilled** from base `f3d7781` to HEAD.
   Per §9 every commit needs a Done entry — this is the catch-up batch
