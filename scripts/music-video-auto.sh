@@ -249,6 +249,14 @@ if [[ "${MUSIC_VIDEO_VALIDATE:-0}" == "1" ]]; then
   bash "$REPO_ROOT/scripts/music-video-validate.sh" "$OUTPUT_DIR/.." --genre="$GENRE" || true
 fi
 
+# 8. Auto-generate upload metadata template for YT/TikTok/Reels.
+#    Skip via MUSIC_VIDEO_NO_UPLOAD_META=1.
+if [[ "${MUSIC_VIDEO_NO_UPLOAD_META:-0}" != "1" ]]; then
+  echo "→ upload metadata template"
+  bash "$REPO_ROOT/scripts/music-video-upload-meta.sh" "$OUTPUT_DIR/.." --genre="$GENRE" >/dev/null 2>&1 \
+    && echo "✓ upload-meta: $OUTPUT_DIR/upload-metadata.md"
+fi
+
 echo
 echo "═══════════════════════════════════════════════════════════════"
 echo " Done.  Outputs in: $OUTPUT_DIR"
