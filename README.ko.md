@@ -490,7 +490,8 @@ v5 → v6 상승폭 (단일 라인 자막은 v5에서 이미 적용 완료, v6�
    │     └──────┬──────┘             (Claude Code CLI 런타임)           │
    │       ┌───┴───┬────────┬────────┐                                  │
    │       ▼       ▼        ▼        ▼                                  │
-   │   Planner Resourcer Editor    QA           all sonnet              │
+   │   Planner Resourcer  Editor    QA                                  │
+   │    opus     opus    sonnet  sonnet                                 │
    │       │       │        │        │                                  │
    │       └───── 파일 (plan.md / MANIFEST.md / qa-report.md) ──────   │
    │                              │                                     │
@@ -544,20 +545,23 @@ v5 → v6 상승폭 (단일 라인 자막은 v5에서 이미 적용 완료, v6�
 ```
 
 Shape A 의 서브에이전트 (planner / resourcer / editor / qa) 는
-현재 모두 `sonnet`.  2026-05-19 에 planner + resourcer 를 `opus`
-로 올리는 A/B 가 외부 피드백 ("opus 면 sonnet 이 놓치는 모호함을
-잡지 않을까") 으로 제안됐지만 **아직 미실행** — 완전한 테스트
-설계와 함께 [`docs/ideas.md`](docs/ideas.md) 에 parking 만 됨.
-지연 이유: 가장 좋은 testbed (faceless-short) 가 production
-포맷에서 빠졌고, music-video 는 fully bash-scripted 라서 subagent
-가 가장 active 한 곳에서 A/B 시그널이 약함.  Shape A 의 subagent-heavy
-미래 skill (예: 영화 / 게임) 이 자연스러운 재실행 기회.
+Shape A 의 서브에이전트는 현재: **planner=opus**, **resourcer=opus**,
+**editor=sonnet**, **qa=sonnet**.  Planner + resourcer 는 2026-05-22
+~17:40 KST 에 `opus` 로 업그레이드 — Hittites faceless-short brief
+로 1회 A/B 돌린 결과 ([`docs/research/2026-05-22-abtest-planner-opus.md`](docs/research/2026-05-22-abtest-planner-opus.md))
+토큰 + wall-clock 델타는 미미 (+5.9% 토큰, 동일 wall-clock) 였지만
+opus 가 cross-stage 추론 우위 1개를 보여줘서 1회 revert 보다는
+multi-week production trial 이 합리적이라고 판단.  운영 미션 ~10-20개
+누적 후 재평가; opus 신호가 실제 워크로드에서 compound 안 하면
+sonnet 으로 revert.  Editor + qa 는 sonnet 유지 — 이 두 stage 는
+실무에서 가장 bash-scripted 되어 있어서 opus 의 추론 깊이가 bite 할
+여지가 작음.
 
 | 에이전트 | 책임 | 산출물 |
 |----------|------|--------|
 | 🤖 **Orchestrator** (opus) | 미션 분해, 위임, 최종 통합 | 태스크 리스트 · `summary.md` |
-| 🧠 **Planner** (sonnet) | 전략 수립, 작업 분해, 수락 기준 정의 | `plan.md` |
-| 📦 **Resourcer** (sonnet) | 자산 수집, 외부 도구 실행 (ffmpeg / yt-dlp / whisper) | `resources/MANIFEST.md` |
+| 🧠 **Planner** (opus, 2026-05-22~) | 전략 수립, 작업 분해, 수락 기준 정의 | `plan.md` |
+| 📦 **Resourcer** (opus, 2026-05-22~) | 자산 수집, 외부 도구 실행 (ffmpeg / yt-dlp / whisper) | `resources/MANIFEST.md` |
 | 🎞️ **Editor** (sonnet) | 출력 렌더링, 산출물 조립 | `outputs/CHANGELOG.md` |
 | ✅ **QA** (sonnet) | 계획 기준 대비 검증, 회귀 감지 | `qa-report.md` |
 | 🔍 **Auditor** (sonnet) | 저장소 전체 drift / contract / cost / security 감사 (별도 트랙, 매일 03:00) | `docs/audit/<date>-<focus>.md` + 비-CLEAN 시 `docs/audit/CURRENT-ALERT.md` |
@@ -669,7 +673,7 @@ agent-driven 경로에서만 소비됩니다.
 
 | 미션 | Anthropic 토큰 (추정) | 비고 |
 |------|---------------------|------|
-| `music-video` (1편 렌더 + 쉐이더) | ~50–150 k | Orchestrator opus + 4 sonnet 서브에이전트.  토큰 지출 대부분이 planner + editor (필터 그래프 추론). |
+| `music-video` (1편 렌더 + 쉐이더) | ~50–150 k | Orchestrator + planner + resourcer = opus, editor + qa = sonnet (2026-05-22~).  토큰 지출 대부분이 planner + editor (필터 그래프 추론).  music-video 는 fully bash-scripted 라서 서브에이전트 거의 안 fire — 추정치 대부분은 운영자 채팅. |
 | `faceless-short` (1편 렌더) | ~100–250 k | planner 가 내레이션 스크립트도 작성하기 때문에 더 높음.  스크립트 생성에 Sonnet 쓰는 v6 는 범위 상단에 가까움. |
 | `audit-run.sh contract` (out-of-band) | ~20–50 k | 레포 1회 audit 패스. |
 | 일일 `mission-queue.sh` drain | ~50–150 k × N 항목 | 큐 항목당 single music-video 미션과 동일. |

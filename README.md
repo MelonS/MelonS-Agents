@@ -517,7 +517,8 @@ pick whichever fits the work:
    │     └──────┬──────┘             (Claude Code CLI runtime)          │
    │       ┌───┴───┬────────┬────────┐                                  │
    │       ▼       ▼        ▼        ▼                                  │
-   │   Planner Resourcer Editor    QA           all sonnet              │
+   │   Planner Resourcer  Editor    QA                                  │
+   │    opus     opus    sonnet  sonnet                                 │
    │       │       │        │        │                                  │
    │       └───── files (plan.md / MANIFEST.md / qa-report.md) ─────    │
    │                              │                                     │
@@ -573,22 +574,25 @@ pick whichever fits the work:
        Writes docs/audit/<date>-<focus>.md + CURRENT-ALERT.md.
 ```
 
-The Shape A subagents (planner / resourcer / editor / qa) run at
-`sonnet` today.  An A/B against `opus` for planner + resourcer was
-proposed 2026-05-19 (community feedback that opus might catch
-ambiguity sonnet flat-tones) and remains **not yet run** — parked
-in [`docs/ideas.md`](docs/ideas.md) with full test design.  Reason
-for the delay: the best testbed (faceless-short) is no longer the
-production format, and music-video is fully bash-scripted, so the
-A/B may not bite where the subagents are most active.  A
-subagent-heavy future skill (Shape A movie/game) would be the
-natural opportunity to rerun the question.
+The Shape A subagents currently run at: **planner=opus**,
+**resourcer=opus**, **editor=sonnet**, **qa=sonnet**.  Planner +
+resourcer were upgraded to `opus` 2026-05-22 ~17:40 KST after a
+single A/B run on the Hittites faceless-short brief (verdict in
+[`docs/research/2026-05-22-abtest-planner-opus.md`](docs/research/2026-05-22-abtest-planner-opus.md)):
+the measurable token / wall-clock delta was negligible (+5.9% tokens,
+identical wall-clock), but opus showed one observable cross-stage
+reasoning advantage that warranted a multi-week production trial
+rather than a one-shot revert.  Re-evaluate after ~10-20 production
+missions have accumulated under the new setting; if the opus signal
+doesn't compound across a real workload, revert to sonnet.  Editor +
+qa stay on sonnet — those stages are the most bash-scripted in
+practice, with little room for opus's reasoning depth to bite.
 
 | Agent | Responsibility | Output |
 |-------|----------------|--------|
 | 🤖 **Orchestrator** (opus) | Mission decomposition, delegation, final synthesis | task list · `summary.md` |
-| 🧠 **Planner** (sonnet) | Strategy, work breakdown, acceptance criteria | `plan.md` |
-| 📦 **Resourcer** (sonnet) | Asset fetching, external tool execution (ffmpeg / yt-dlp / whisper) | `resources/MANIFEST.md` |
+| 🧠 **Planner** (opus, since 2026-05-22) | Strategy, work breakdown, acceptance criteria | `plan.md` |
+| 📦 **Resourcer** (opus, since 2026-05-22) | Asset fetching, external tool execution (ffmpeg / yt-dlp / whisper) | `resources/MANIFEST.md` |
 | 🎞️ **Editor** (sonnet) | Output rendering, deliverable assembly | `outputs/CHANGELOG.md` |
 | ✅ **QA** (sonnet) | Validation against plan criteria, regression detection | `qa-report.md` |
 | 🔍 **Auditor** (sonnet) | Repository-wide drift / contract / cost / security audit (out-of-band, daily 03:00) | `docs/audit/<date>-<focus>.md` + `docs/audit/CURRENT-ALERT.md` when non-CLEAN |
@@ -707,7 +711,7 @@ ffmpeg / ollama / whisper.cpp stages are free):
 
 | Mission | Anthropic tokens (estimate) | Notes |
 |---------|----------------------------|-------|
-| `music-video` (one render + shader) | ~50–150 k | Orchestrator opus + 4 sonnet subagents.  Token spend dominated by planner + editor (filter-graph reasoning). |
+| `music-video` (one render + shader) | ~50–150 k | Orchestrator + planner + resourcer = opus; editor + qa = sonnet (since 2026-05-22).  Token spend dominated by planner + editor (filter-graph reasoning).  Music-video is fully bash-scripted so subagents barely trigger — most of this estimate is operator chat, not subagent inference. |
 | `faceless-short` (one render) | ~100–250 k | Higher because the planner also drafts the narration script.  v6 with Sonnet for script generation runs closer to the top of the range. |
 | `audit-run.sh contract` (out-of-band) | ~20–50 k | One audit pass over the repo. |
 | Daily `mission-queue.sh` drain | ~50–150 k × N entries | Same as a single music-video mission per queue entry. |
