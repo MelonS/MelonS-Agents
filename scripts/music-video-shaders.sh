@@ -557,9 +557,15 @@ if [[ "$RATIO_CMP" == "1" ]]; then
       -map "[v]" -map 0:a \
       -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
     echo "  [phrase_climax] active window ${GATE_T0}s–${GATE_T1}s (of ${GATE_DUR}s)" >&2
-  elif [[ "$SHADER_GATE" == "onsets" || "$SHADER_GATE" == "beats" ]]; then
+  elif [[ "$SHADER_GATE" == "onsets" || "$SHADER_GATE" == "beats" || "$SHADER_GATE" == "drops" ]]; then
     # C.1 Phase 3: per-event gaussian-sum gating.
-    if [[ "$SHADER_GATE" == "onsets" ]]; then
+    # `drops` mode (research §6): use the audio-analyze drops file
+    # (1-3 sustained-peak windows per track) instead of every onset.
+    # Wider sigma (1.0s) per drop to make the shader fire as a
+    # sustained climax accent rather than a brief bell.
+    if [[ "$SHADER_GATE" == "drops" ]]; then
+      EVENT_FILE="${MUSIC_VIDEO_SHADER_DROPS:-}"
+    elif [[ "$SHADER_GATE" == "onsets" ]]; then
       EVENT_FILE="${MUSIC_VIDEO_SHADER_ONSETS:-${MUSIC_VIDEO_SHADER_BEATS:-}}"
     else
       EVENT_FILE="${MUSIC_VIDEO_SHADER_BEATS:-${MUSIC_VIDEO_SHADER_ONSETS:-}}"
@@ -580,9 +586,13 @@ if [[ "$RATIO_CMP" == "1" ]]; then
         fi
       fi
     fi
+    # Drops mode tolerates as few as 1 event (a track may have just one
+    # climax drop).  Onsets/beats need ≥5 to make a useful gating
+    # curve (otherwise the gaussian sum is too sparse).
+    if [[ "$SHADER_GATE" == "drops" ]]; then _MIN_EVENTS=1; else _MIN_EVENTS=5; fi
     if [[ -z "$EVENT_FILE" || ! -f "$EVENT_FILE" ]] || \
-       [[ "$(grep -c . "$EVENT_FILE" 2>/dev/null || echo 0)" -lt 5 ]]; then
-      echo "  [${SHADER_GATE}] event source has <5 entries — falling back to uniform" >&2
+       [[ "$(grep -c . "$EVENT_FILE" 2>/dev/null || echo 0)" -lt "$_MIN_EVENTS" ]]; then
+      echo "  [${SHADER_GATE}] event source has <${_MIN_EVENTS} entries — falling back to uniform" >&2
       "$FFMPEG_BIN" -y -loglevel warning -stats \
         -i "$SRC" -i "$DST" \
         -filter_complex "[0:v][1:v]blend=all_mode=normal:all_opacity=${SHADER_RATIO}[v]" \
@@ -597,17 +607,28 @@ if [[ "$RATIO_CMP" == "1" ]]; then
       # a 60s render at ~0.3s sigma.
       EVT_TOTAL=$(grep -c . "$EVENT_FILE" 2>/dev/null || echo 0)
       EVT_CAP="${SHADER_EVENT_CAP:-30}"
-      # First derive stride from ratio; then widen stride further if
-      # post-stride count would exceed EVT_CAP.
-      STRIDE=$(awk -v r="$SHADER_RATIO" 'BEGIN{n = int(1/r + 0.5); print (n < 1 ? 1 : n)}')
-      _PROJECTED=$(( EVT_TOTAL / STRIDE ))
-      if [[ "$_PROJECTED" -gt "$EVT_CAP" ]]; then
-        STRIDE=$(( EVT_TOTAL / EVT_CAP + 1 ))
+      # drops mode: every drop is significant by definition (1-3 per
+      # track), so stride=1 — fire on ALL drops regardless of ratio.
+      # onsets/beats: stride from ratio, then widen to stay under cap.
+      if [[ "$SHADER_GATE" == "drops" ]]; then
+        STRIDE=1
+      else
+        STRIDE=$(awk -v r="$SHADER_RATIO" 'BEGIN{n = int(1/r + 0.5); print (n < 1 ? 1 : n)}')
+        _PROJECTED=$(( EVT_TOTAL / STRIDE ))
+        if [[ "$_PROJECTED" -gt "$EVT_CAP" ]]; then
+          STRIDE=$(( EVT_TOTAL / EVT_CAP + 1 ))
+        fi
       fi
-      EVT_CSV=$(awk -v s="$STRIDE" 'NR % s == 1 {print $1}' "$EVENT_FILE" | tr '\n' ' ')
+      EVT_CSV=$(awk -v s="$STRIDE" '(NR-1) % s == 0 {print $1}' "$EVENT_FILE" | tr '\n' ' ')
       EVT_USED=$(echo "$EVT_CSV" | wc -w | tr -d ' ')
       # Gaussian sigma — wider bells for lower ratio (each event covers more).
-      SIGMA=$(awk -v r="$SHADER_RATIO" 'BEGIN{printf "%.3f", 0.20 + r*0.30}')
+      # `drops` mode uses a much wider sigma (~1.5s) so each drop reads as
+      # a sustained climax accent rather than a brief bell.
+      if [[ "$SHADER_GATE" == "drops" ]]; then
+        SIGMA="1.5"
+      else
+        SIGMA=$(awk -v r="$SHADER_RATIO" 'BEGIN{printf "%.3f", 0.20 + r*0.30}')
+      fi
       # Build sum: each gaussian = exp(-((T-t_i)/sigma)^2).  Cap at 1.0
       # via min() so opacity stays in [0,1].
       SUM_EXPR=""

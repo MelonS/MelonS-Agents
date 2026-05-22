@@ -129,6 +129,15 @@ aubioonset -i "$MUSIC_FILE" -O complex -t 2.0 2>/dev/null | awk -v lim="$TARGET_
 ONSET_COUNT=$(wc -l < "$ONSETS_FILE" | tr -d ' ')
 log_info "  $ONSET_COUNT strong onsets in first ${TARGET_DUR}s"
 
+# 2b. audio-analyze: per-second RMS + drops detection.  Pure ffmpeg-
+# based (no librosa).  Drops file feeds MUSIC_VIDEO_SHADER_GATE=drops
+# in scripts/music-video-shaders.sh per research §6.  Best-effort —
+# pipeline continues if analyzer fails or yields no drops.
+if [[ -x "$REPO_ROOT/scripts/audio-analyze.sh" ]]; then
+  bash "$REPO_ROOT/scripts/audio-analyze.sh" "$MUSIC_FILE" "$MDIR/resources/audio" 2>/dev/null \
+    && log_info "  audio-analyze: $(wc -l < "$MDIR/resources/audio.drops.txt" 2>/dev/null | tr -d ' ') drops"
+fi
+
 # ───── 3. compute segment plan ─────
 log_step "3/5  segment plan"
 IFS=',' read -r -a KEYWORDS <<< "$KEYWORDS_CSV"
