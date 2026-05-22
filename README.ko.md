@@ -199,6 +199,25 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 에 정리; 일별 raw 데이터는
 [`docs/metrics/intervention.json`](docs/metrics/intervention.json).
 
+## 품질 신호 — 미션 결과 추세
+
+자율성 신호의 짝.  *자율성* 은 "운영자 개입이 줄고 있나?" 를 묻고,
+*품질* 은 "파이프라인이 시간이 지날수록 더 안정적인 결과물을
+내고 있나?" 를 묻습니다.  모든
+`records/missions/<date>/<id>/qa-report.md` 의
+`Verdict: PASS|FAIL` + `attempt N of M` 를 파싱하고, qa-report 가
+없는 미션 (music-video 계열 — 미션별 retry 하네스 없음) 은
+"metrics.json only" 로 카운트합니다.
+
+![투-패널 미션 결과 추세 — Panel A (일별 결과 구성) 는 일별 미션 수를 outcome 별로 스택 (1회 시도 PASS 초록 / 재시도 후 PASS 호박색 / FAIL 빨강 / metrics.json 만 있음 옅은 초록) + 1회 시도 PASS 비율선; Panel B (일별 미션 타입 구성) 는 일별 미션 수를 mission_type 별로 스택 (music-video / faceless-short / highlight / summarize / shorts-batch) — highlight 시대 → faceless 파일럿 → 현재 music-video 포커스로의 production pivot 가 한눈에 보임.  영문 mirror: docs/metrics/quality-trend-en.png](docs/metrics/quality-trend-ko.png)
+
+Panel B 가 시스템의 진화를 한눈에 보여줍니다 — 2026-05-17 의 spike
+는 faceless 파일럿 배치 (8 → 33 missions/day); 그 이후 평탄 구간은
+현재 music-video 포맷이 일일 3-8 렌더의 sustainable cadence 에
+정착한 모습.  재생성:
+`.venv/bin/python scripts/generate-quality-trend-chart.py`; 일별
+raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.json).
+
 ## 샘플 출력
 
 2026-05-22 기준 **5가지** 미션 타입에 걸쳐 91+건의 출력이 생성되었습니다.

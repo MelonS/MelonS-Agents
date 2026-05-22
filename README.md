@@ -212,6 +212,25 @@ Classification heuristics + reduction analysis at
 [`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md).
 Raw per-day data at [`docs/metrics/intervention.json`](docs/metrics/intervention.json).
 
+## Quality signal — mission-outcome trend
+
+The companion signal to autonomy.  *Autonomy* asks "is operator
+involvement going down?"; *quality* asks "is the pipeline producing
+more reliable output over time?".  Every
+`records/missions/<date>/<id>/qa-report.md` is parsed for
+`Verdict: PASS|FAIL` and `attempt N of M`; missions without a
+qa-report (the music-video class — no per-mission retry harness) are
+counted under "metrics.json only".
+
+![Two-panel mission-outcome trend — Panel A stacks daily mission counts by outcome (PASS attempt 1 green / PASS after retry amber / FAIL red / metrics.json only pale green) with a PASS-on-first-try percentage line; Panel B stacks daily mission counts by mission type (music-video / faceless-short / highlight / summarize / shorts-batch) showing the production pivot from highlight-era to faceless-pilot to current music-video focus.  Korean mirror at docs/metrics/quality-trend-ko.png.](docs/metrics/quality-trend-en.png)
+
+Panel B reads the system's evolution at a glance — the 2026-05-17
+peak is the faceless-pilot batch (8 → 33 missions/day); the
+post-pivot flat band is the current music-video format running at a
+sustainable 3–8 renders/day cadence.  Regenerate via
+`.venv/bin/python scripts/generate-quality-trend-chart.py`; raw
+per-day data at [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.json).
+
 ## Sample output
 
 91+ mission outputs across **five** mission types as of 2026-05-22.

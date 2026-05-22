@@ -141,12 +141,24 @@
       <h3>Quality bar — 5 contracts the system now enforces</h3>
       <p>The 2026-05-22 music-video QA pass surfaced six taste directives that the prior pipeline produced quietly broken output against.  Five landed as enforced contracts; the sixth is open as a research direction.  <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#9-the-quality-bar-wasnt-a-bug--it-was-6-contracts-the-system-didnt-enforce" target="_blank" rel="noopener">Case study #9</a> writes the framing: the bug wasn't the renders, it was that the contracts weren't expressible in code.</p>
       <ul>
-        <li><b>A.1 — B-roll dedup registry.</b>  <code>records/youtube/broll-used.txt</code> (196 ids seeded).  Both Pexels callers consult + append; <code>BROLL_HISTORY=off</code> per-render escape.</li>
+        <li><b>A.1 — B-roll dedup registry.</b>  <code>records/youtube/broll-used.txt</code> (271 ids seeded).  Both Pexels callers consult + append; <code>BROLL_HISTORY=off</code> per-render escape.</li>
         <li><b>A.2 — Lyric vocal-onset alignment.</b>  <code>scripts/music-video-lyric-align.sh</code> derives LRC from plain text + audio via whisper (word-level for KR, segment-level for EN).  Sub-floor lines marked autofilled.</li>
         <li><b>A.3 — Language anchor + QA gate.</b>  <code>lang_anchor: ko|en|mixed|neutral</code> on every preset, person-anchored keyword injection every 3rd segment.  <code>scripts/music-video-qa-anchor.sh</code> scores B-roll keywords against the anchor — exit 0 PASS / 1 WARN / 2 FAIL.</li>
         <li><b>B.1 — Shader vocabulary.</b>  Expanded from 4 to 23 effects across three stages.  Genre-aware preset routing picks per-preset.</li>
-        <li><b>C.1 — Shader restraint gating.</b>  <code>shader_active_ratio</code> per preset (1.0 ambient, 0.35 kpop_ballad).  <code>MUSIC_VIDEO_SHADER_GATE=phrase_climax</code> mode fires shaders only inside the center <code>RATIO × duration</code> window.</li>
+        <li><b>C.1 — Shader restraint gating.</b>  <code>shader_active_ratio</code> per preset (1.0 ambient, 0.35 kpop_ballad).  Four gate modes via <code>MUSIC_VIDEO_SHADER_GATE</code>: uniform / phrase_climax / onsets / beats.  Event-count cap at 30 to dodge ffmpeg's expr-length budget.</li>
       </ul>
+      <p class="muted">Full changelog: <a href="https://github.com/MelonS/MelonS-Agents/blob/main/skills/music-video/CHANGELOG.md" target="_blank" rel="noopener">skills/music-video/CHANGELOG.md</a>.</p>
+    </article>
+
+    <article class="card">
+      <h3>23 ffmpeg shaders — at a glance</h3>
+      <p>All pure ffmpeg filter graphs.  No GLSL, no external renderer.  Catalog in <code>scripts/music-video-shaders.sh</code>; per-genre routing in <code>skills/music-video/data/genre-presets.yaml</code>.</p>
+      <ul style="list-style:none;padding-left:0;font-size:0.92em">
+        <li><b>Stage 1 — first pass (2026-05-17).</b>  <code>pond</code>, <code>halation</code>, <code>breathing</code>, <code>combo</code>.</li>
+        <li><b>Stage 2 — genre-aware expansion (2026-05-21).</b>  <code>scanline</code>, <code>chromatic_split</code>, <code>neon_edge</code>, <code>vhs</code>, <code>saturation_pulse</code>, <code>kaleidoscope</code>, <code>beat_burst</code>, <code>strobe</code>, <code>shake</code>, <code>color_burst</code>, <code>light_rays</code>.</li>
+        <li><b>Stage 3 — quality-bar batch (2026-05-22).</b>  <code>light_leak</code>, <code>duotone</code>, <code>vignette_pulse</code>, <code>paper_grain</code>, <code>dust_speck</code>, <code>posterize</code>, <code>trail_echo</code>, <code>soft_bloom</code>.</li>
+      </ul>
+      <p class="muted">Deliberately deferred — cel-shading / cartoon (chroma posterization breaks hue; real cel-shading needs GLSL / EbSynth / AI stylization).  See <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#5-shader-effects-in-ffmpeg--knowing-where-the-wall-is" target="_blank" rel="noopener">case study #5</a>.</p>
     </article>
   </div>
 </section>
@@ -218,9 +230,13 @@
   <p>Self-evaluation across five retention-mapping axes (Hook, Visual sync, Readability, Factual coherence, Production polish), assigned by Claude during the faceless-short iteration — preserved as the structured progress signal from the v4 → v5 → v6 sequence that preceded the music-video pivot.  The music-video mission uses platform watch-time data instead of per-dimension scoring; per-video metrics live under <code>docs/pilots/</code>.</p>
   <p><a href="assets/scorecard.png" target="_blank" rel="noopener"><img class="full" src="assets/scorecard.png" alt="Stacked bar chart: 13 pilot rows from Hittites EN v4 26/50 (lowest) up to AutoTune EN 45/50 (highest), split across the 5 dimensions with colors. Music-trial topics cluster around 40-45." loading="lazy"></a></p>
 
-  <h3>Operator-intervention trend</h3>
+  <h3>Operator-intervention trend (autonomy signal)</h3>
   <p>A multi-agent system that needs constant human steering hasn't actually replaced the work it was meant to.  Two-panel honest signal updated daily 02:00 KST — Panel A from <code>git log</code> (commit attribution + leverage ratio), Panel B from local Claude Code session JSONLs (operator prompt count + active session minutes).  See <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#8-intervention-as-the-unmeasured-axis--autonomy-signal--reduction-levers" target="_blank" rel="noopener">case study #8</a> for the 5 prioritized reduction levers acting on the trend.</p>
   <p><a href="assets/intervention.png" target="_blank" rel="noopener"><img class="full" src="assets/intervention.png" alt="Two-panel intervention trend: Panel A shows daily commit counts stacked by initiator (agent-autonomous blue vs user-initiated red) with a user-initiated percentage line; Panel B shows daily operator prompt count and active session minutes mined from local Claude Code session JSONLs. Both panels share the same date axis from 2026-05-14 to 2026-05-22." loading="lazy"></a></p>
+
+  <h3>Mission-outcome trend (quality signal)</h3>
+  <p>The companion signal to autonomy.  <em>Autonomy</em> asks "is operator involvement going down?"; <em>quality</em> asks "is the pipeline producing more reliable output over time?".  Every <code>records/missions/&lt;date&gt;/&lt;id&gt;/qa-report.md</code> is parsed for <code>Verdict: PASS|FAIL</code> and <code>attempt N of M</code>; music-video missions (no per-mission retry harness) are counted under "metrics.json only".  Panel B reads the system's evolution at a glance — the 2026-05-17 spike (8 → 33 missions/day) is the faceless-pilot batch; the post-pivot flat band is the current music-video format at a sustainable 3–8 renders/day cadence.</p>
+  <p><a href="assets/quality-trend.png" target="_blank" rel="noopener"><img class="full" src="assets/quality-trend.png" alt="Two-panel mission-outcome trend: Panel A stacks daily mission counts by outcome (PASS attempt 1 green, PASS after retry amber, FAIL red, metrics.json only pale green) with a PASS-on-first-try percentage line on the right axis; Panel B stacks daily mission counts by mission type (music-video / faceless-short / highlight / summarize / shorts-batch) showing the production pivot from highlight-era through faceless pilot to current music-video focus." loading="lazy"></a></p>
 </section>
 
 <section class="block" id="try">

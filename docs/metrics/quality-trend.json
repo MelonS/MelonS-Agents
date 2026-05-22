@@ -1,0 +1,168 @@
+{
+  "generated_at": "2026-05-22T15:57:21.501504+09:00",
+  "total_missions": 77,
+  "per_day": {
+    "2026-05-14": {
+      "outcomes": {
+        "pass-1": 6,
+        "pass-retry": 0,
+        "fail": 0,
+        "no-qa": 0
+      },
+      "types": {
+        "music-video": 0,
+        "faceless-short": 0,
+        "highlight": 3,
+        "summarize": 2,
+        "shorts-batch": 1,
+        "unknown": 0
+      },
+      "total": 6,
+      "pass1_rate_pct": 100.0
+    },
+    "2026-05-15": {
+      "outcomes": {
+        "pass-1": 3,
+        "pass-retry": 0,
+        "fail": 1,
+        "no-qa": 0
+      },
+      "types": {
+        "music-video": 0,
+        "faceless-short": 0,
+        "highlight": 2,
+        "summarize": 2,
+        "shorts-batch": 0,
+        "unknown": 0
+      },
+      "total": 4,
+      "pass1_rate_pct": 75.0
+    },
+    "2026-05-16": {
+      "outcomes": {
+        "pass-1": 5,
+        "pass-retry": 0,
+        "fail": 0,
+        "no-qa": 4
+      },
+      "types": {
+        "music-video": 0,
+        "faceless-short": 4,
+        "highlight": 3,
+        "summarize": 1,
+        "shorts-batch": 1,
+        "unknown": 0
+      },
+      "total": 9,
+      "pass1_rate_pct": 100.0
+    },
+    "2026-05-17": {
+      "outcomes": {
+        "pass-1": 0,
+        "pass-retry": 0,
+        "fail": 0,
+        "no-qa": 33
+      },
+      "types": {
+        "music-video": 8,
+        "faceless-short": 25,
+        "highlight": 0,
+        "summarize": 0,
+        "shorts-batch": 0,
+        "unknown": 0
+      },
+      "total": 33,
+      "pass1_rate_pct": 100.0
+    },
+    "2026-05-18": {
+      "outcomes": {
+        "pass-1": 0,
+        "pass-retry": 0,
+        "fail": 0,
+        "no-qa": 4
+      },
+      "types": {
+        "music-video": 4,
+        "faceless-short": 0,
+        "highlight": 0,
+        "summarize": 0,
+        "shorts-batch": 0,
+        "unknown": 0
+      },
+      "total": 4,
+      "pass1_rate_pct": 100.0
+    },
+    "2026-05-19": {
+      "outcomes": {
+        "pass-1": 0,
+        "pass-retry": 0,
+        "fail": 0,
+        "no-qa": 5
+      },
+      "types": {
+        "music-video": 5,
+        "faceless-short": 0,
+        "highlight": 0,
+        "summarize": 0,
+        "shorts-batch": 0,
+        "unknown": 0
+      },
+      "total": 5,
+      "pass1_rate_pct": 100.0
+    },
+    "2026-05-20": {
+      "outcomes": {
+        "pass-1": 0,
+        "pass-retry": 0,
+        "fail": 0,
+        "no-qa": 5
+      },
+      "types": {
+        "music-video": 5,
+        "faceless-short": 0,
+        "highlight": 0,
+        "summarize": 0,
+        "shorts-batch": 0,
+        "unknown": 0
+      },
+      "total": 5,
+      "pass1_rate_pct": 100.0
+    },
+    "2026-05-21": {
+      "outcomes": {
+        "pass-1": 0,
+        "pass-retry": 0,
+        "fail": 0,
+        "no-qa": 3
+      },
+      "types": {
+        "music-video": 3,
+        "faceless-short": 0,
+        "highlight": 0,
+        "summarize": 0,
+        "shorts-batch": 0,
+        "unknown": 0
+      },
+      "total": 3,
+      "pass1_rate_pct": 100.0
+    },
+    "2026-05-22": {
+      "outcomes": {
+        "pass-1": 0,
+        "pass-retry": 0,
+        "fail": 0,
+        "no-qa": 8
+      },
+      "types": {
+        "music-video": 8,
+        "faceless-short": 0,
+        "highlight": 0,
+        "summarize": 0,
+        "shorts-batch": 0,
+        "unknown": 0
+      },
+      "total": 8,
+      "pass1_rate_pct": 100.0
+    }
+  }
+}
