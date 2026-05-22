@@ -198,3 +198,43 @@ v5→v6 상승폭 대부분이 후크 + 사실 일관성 — 운영자가 지적
 
 새 큰 작업이 끝날 때마다 이 파일 맨 위 ("## #N — ...") 에 새 스니펫 추가.
 운영자가 LinkedIn 포스트 작성 시 이 파일을 열어서 가장 위 스니펫을 복붙 → 게시 → 그 스니펫은 사용 표시 (`<!-- 사용 2026-MM-DD -->` 주석 추가) 하면 중복 방지됨.
+
+---
+
+## 재사용 가능 footer (모든 포스트 끝에 붙이기)
+
+LinkedIn 포스트 어느 것에나 붙일 수 있는 표준 footer.  3가지 variant —
+포스트 길이 / 상황에 맞춰 골라 사용.  톤은 [[humility-first]] 를 따름:
+"아직 만드는 중 / 다듬는 중", "출시 / 런칭" 같은 표현 피함.
+
+### Compact (1줄 — 짧은 일일 포스트용)
+
+```
+프로젝트 바로가기 → github.com/MelonS/MelonS-Agents · 라이브 사이트 melons.github.io/MelonS-Agents
+```
+
+### Medium (권장 default — 4줄)
+
+```
+─────
+프로젝트: github.com/MelonS/MelonS-Agents (90+ 미션 / 2 portable skill / 23 ffmpeg shader / MIT)
+라이브 데모: melons.github.io/MelonS-Agents — 60초 안에 결제 없이 한 편 렌더
+한국어 README: github.com/MelonS/MelonS-Agents/blob/main/README.ko.md
+계속 만들어 가는 중입니다.  피드백 환영.
+```
+
+### Full (마일스톤 포스트 / 처음 들어오는 독자용)
+
+```
+─────
+프로젝트 바로가기
+- 메인 레포: github.com/MelonS/MelonS-Agents
+- 라이브 데모 (60초 first-touch): melons.github.io/MelonS-Agents
+- 엔지니어링 케이스 스터디 9개: github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.ko.md
+- 자율성 + 품질 신호 차트: docs/metrics/ (매일 02:00 KST 자동 갱신)
+
+아직 다듬는 중인 프로젝트입니다.  의견 / 비판 환영합니다.
+```
+
+스탯 갱신 필요 시 (미션 수, skill 수, shader 수), 이 파일의 Medium
+footer parenthetical 만 수정하면 됨 — 매 포스트마다 고칠 필요 없음.

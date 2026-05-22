@@ -222,3 +222,45 @@ When a new major milestone lands, append a new `## #N — <title>` block
 near the top of this file.  Once the operator uses one, add a
 `<!-- used YYYY-MM-DD -->` comment beneath the heading so we don't
 recycle it.
+
+---
+
+## Reusable footer block (paste at the end of any post)
+
+Standard footer the operator can append to any LinkedIn post.  Three
+variants — pick by post length / occasion.  Tone follows
+[[humility-first]]: "still building / still iterating", never
+"shipped / launched".
+
+### Compact (one line — for short daily updates)
+
+```
+Project → github.com/MelonS/MelonS-Agents · Live site melons.github.io/MelonS-Agents
+```
+
+### Medium (recommended default — 4 lines)
+
+```
+─────
+Project: github.com/MelonS/MelonS-Agents (90+ missions / 2 portable skills / 23 ffmpeg shaders / MIT)
+Live demo: melons.github.io/MelonS-Agents — render a 60-second short with zero accounts
+Korean mirror: github.com/MelonS/MelonS-Agents/blob/main/README.ko.md
+Still building.  Feedback welcome.
+```
+
+### Full (milestone posts / first-time-readers-arriving posts)
+
+```
+─────
+Project shortcuts
+- Repo: github.com/MelonS/MelonS-Agents
+- Live demo (60-second first-touch): melons.github.io/MelonS-Agents
+- Engineering case studies (9): github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md
+- Autonomy + quality signal charts: docs/metrics/ (refreshed daily 02:00 KST)
+
+Still iterating.  Open to feedback / critique.
+```
+
+When stats need refreshing (mission count, skill count, shader count),
+update the Medium footer's parenthetical line in this file rather than
+in every post.
