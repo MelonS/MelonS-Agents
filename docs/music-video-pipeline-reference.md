@@ -131,11 +131,36 @@ Genre-fit recommendations in `docs/research/2026-05-22-shader-vocabulary.md`.
 |------|---------|
 | `scripts/first-touch.sh` | Single-command guided wizard for fresh-clone operators (~3 min from clone to demo mp4) |
 | `scripts/music-video-batch.sh [pattern]` | Multi-track render wrapper.  Auto-pairs vocal tracks with their lyric files; `--dry-run` to preview |
+| `scripts/music-video-grade.sh <src> <dst> <profile>` | Apply per-genre base color grade (7 profiles).  Chained automatically by music-video-genre.sh before shader stage |
+| `scripts/music-video-trim.sh <src> [--short\|--shorts-max\|--duration=N]` | Trim render to platform length (60s / 180s / arbitrary) |
 | `scripts/music-video-thumbnail.sh <video> [out] [--at=N|N%]` | Extract upload-ready 1080×1920 thumbnail; default midpoint |
+| `scripts/music-video-upload-meta.sh <mission_dir>` | Generate per-platform upload metadata template (auto-chained by music-video-auto.sh) |
+| `scripts/music-video-validate.sh <mission_dir>` | Combined pre-publish gate (file-integrity + qa-anchor + lyric-drift + broll-dedup) |
+| `scripts/music-video-doctor.sh` | Skill-specific health check (tools + scripts + presets + tests) |
+| `scripts/shot-plan.sh --keywords ... --genre ...` | Generate per-segment intent JSON (director-discipline scaffold) |
 | `scripts/lyric-extract.sh <audio> <out.txt> [--lang=ko\|en]` | Whisper-transcribe lyrics from an audio file (when no prompt file exists or Suno take drifted) |
 | `scripts/broll-history-backfill.sh [dir]` | Seed `broll-used.txt` registry from existing mission records |
 | `scripts/yt-stats-collect.sh` | Daily snapshot of YT channel stats via Data API (auto-scheduled at 09:00 KST via launchd) |
 | `scripts/yt-stats-diff.sh [d1] [d2]` | Per-video view/like/comment delta between two snapshots |
+
+## Data files (operator-editable)
+
+| File | Purpose |
+|------|---------|
+| `skills/music-video/data/genre-presets.yaml` | 19 genre presets with phrase_beats, cut_density, grade_profile, lang_anchor, shader, shader_active_ratio, keyword_pool, phrase_pool, lut_direction, forbidden_effects, notes |
+| `skills/music-video/data/mood-vocabulary.yaml` | 13 moods × 8 visual primitives each.  Activated per-render via `MUSIC_VIDEO_MOOD=<key>` env (rotates queries through primitives by cksum hash) |
+
+## Color grading profiles (scripts/music-video-grade.sh)
+
+| Profile | Look | Genre fits |
+|---------|------|------------|
+| `kr_warm_pastel` | Warm pastel, raised gamma, gentle highlight roll | kpop_ballad, kpop_dance |
+| `hollywood_teal_orange` | Western cinematic — teal shadows, warm highlights | uspop, house, phonk |
+| `synthwave_neon` | High saturation, red+blue boost, vintage curve | synthwave, vaporwave, techno, hyperpop |
+| `lofi_warm_grain` | Desaturated, flat contrast, warm mids, noise overlay | lofi_hiphop, jazz, shoegaze, cottagecore, dreamcore |
+| `city_pop_neon` | Saturated, blue shadows, pink mids | citypop alt |
+| `rnb_low_key` | Red lift, crushed shadows, low saturation | rnb, jazz noir |
+| `neutral` | No grade (back-compat default) | ambient, drone, classical |
 
 ## Quality-bar gate summary (from 2026-05-22 directives)
 
