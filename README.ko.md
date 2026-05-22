@@ -475,46 +475,83 @@ v5 → v6 상승폭 (단일 라인 자막은 v5에서 이미 적용 완료, v6�
 
 ## 아키텍처
 
+시스템은 모든 skill 을 **단일 shape** 으로 강요하지 않습니다.
+오늘 ship 된 shape 2가지 모두 agentskills.io 호환; 새 skill 은
+작업 성격에 맞는 shape 를 고름:
+
 ```
-   ┌─ Tier 1 — Anthropic API (Claude Code CLI 런타임) ──────────────────┐
+   Skill 호출 (agentskills.io spec)
+                │
+                ▼
+   ┌─ Shape A — Missions-routed (5-agent 파이프라인) ──────────────────┐
    │                                                                    │
-   │          ┌───────────────────┐                                     │
-   │          │   Orchestrator    │   opus                              │
-   │          └─────────┬─────────┘                                     │
-   │                    │ 미션을 순서대로 위임                            │
-   │       ┌────────────┼────────────┬─────────────┐                    │
-   │       ▼            ▼            ▼             ▼                    │
-   │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐                │
-   │  │ Planner │  │Resourcer│  │  Editor │  │   QA    │   all sonnet   │
-   │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘                │
-   │       └────────────┴── 파일 핸드오프 ┴────────┘                     │
-   │                    │ plan.md / MANIFEST.md / qa-report.md           │
-   └────────────────────┼────────────────────────────────────────────────┘
-                        │ skill invocation (agentskills.io spec)
-                        ▼
-   ┌─ Tier 2 — 로컬 미션 실행 (런타임 $0) ─────────────────────────────┐
-   │                                                                    │
-   │   skills/music-video/   → ffmpeg + aubio + whisper + Pexels API    │
-   │   skills/job-hunt/      → curl + jq + ollama (필터만)              │
-   │   skills/goal-lock/     → bash (규율 헬퍼)                         │
-   │                                                                    │
-   │   ─── 각 skill 은 records/missions/<date>/<id>/ 에 기록 ────       │
-   └─────────────────────────┬──────────────────────────────────────────┘
-                             │ 렌더 직후 auto-enqueue
-                             ▼
-   ┌─ Operator 표면 (Claude-free, ~2초) ───────────────────────────────┐
-   │                                                                    │
-   │   review-queue   doctor.sh   statusline   morning-brief.sh         │
-   │   ─── 상태-확인 프롬프트 흡수, 운영자가 타이핑 없이 스캔 ────       │
+   │     ┌─────────────┐                                                │
+   │     │Orchestrator │  opus       Tier 1 — Anthropic API             │
+   │     └──────┬──────┘             (Claude Code CLI 런타임)           │
+   │       ┌───┴───┬────────┬────────┐                                  │
+   │       ▼       ▼        ▼        ▼                                  │
+   │   Planner Resourcer Editor    QA           all sonnet              │
+   │       │       │        │        │                                  │
+   │       └───── 파일 (plan.md / MANIFEST.md / qa-report.md) ──────   │
+   │                              │                                     │
+   │   언제 고름: 각 단계가 실질 작업을 캐리할 때 (planner 추론,         │
+   │   resourcer fetch, editor 멀티-스테이지 렌더, qa 코덱/길이 검증).  │
+   │   예: skills/music-video/ — scripts/run.sh 가                      │
+   │   agents/missions/music-video/run.sh 로 symlink 되어 미션의        │
+   │   튜닝 + retry loop 를 상속.                                       │
    └────────────────────────────────────────────────────────────────────┘
 
-   ┌─ Auditor (별도 트랙, read-only, 3-layer 트리거) ──────────────────┐
-   │   L1 post-commit 훅 (drift-risk 경로) → audit-run.sh contract     │
-   │   L2 15-분 미션 이상 폴 → 포커스된 audit                          │
-   │   L3 매일 03:00 baseline launchd → audit-run.sh all               │
-   │   결과: docs/audit/<date>-<focus>.md + CURRENT-ALERT.md            │
+   ┌─ Shape B — Standalone (skill 자체가 구현) ────────────────────────┐
+   │                                                                    │
+   │     skills/<name>/scripts/run.sh    (오케스트레이터 / plan.md /    │
+   │              │                       qa-report.md 없음, skill 자체 │
+   │              ▼                       파이프라인만)                  │
+   │     mechanical 파이프라인 (HTTP + parse + format + render)         │
+   │                                                                    │
+   │   언제 고름: planner / qa 단계가 거의 비어있을 mechanical 작업.    │
+   │   생략하면 호출당 4번의 file 기반 핸드오프 제거.  예:               │
+   │   skills/job-hunt/ — filter→fetch→dedupe→render 전부 curl+jq,      │
+   │   planner / qa 는 no-op 가 됨.                                     │
    └────────────────────────────────────────────────────────────────────┘
+
+   ┌─ Shape ? — 미래 skill (예: 영화 / 게임 / 롱폼 분석) ──────────────┐
+   │                                                                    │
+   │   미해결 질문.  작업 성격별 가능 매핑:                              │
+   │     - 멀티-에셋 분석 + per-asset Claude 비평 →                      │
+   │       missions-routed (planner=장면 분할, editor=비평 컴포지션,    │
+   │       qa=사실관계 / 스포일러 체크).                                 │
+   │     - URL → 메타데이터 → LLM 요약 → 마크다운 digest →               │
+   │       standalone (job-hunt 와 같은 shape).                         │
+   │     - 롱-러닝 stateful (예: 영구 플레이스루) →                      │
+   │       checkpoint/resume 가 필요한 새 Shape C.                      │
+   │   결정은 skill 별 SKILL.md `metadata.pipeline-source` 에 기록.      │
+   │   선택 표는 docs/architecture.md "Skills layer — two shapes" 참조. │
+   └────────────────────────────────────────────────────────────────────┘
+
+   ── 로컬 실행 레이어 (두 shape 공유) ───────────────────────────────
+       Tier 2: ffmpeg / whisper.cpp / ollama / aubio / curl + jq
+       records/missions/<date>/<id>/ 또는 records/<skill>/<date>/ 에 기록
+
+   ── Operator 표면 (Claude-free, ~2초) ──────────────────────────────
+       review-queue   doctor.sh   statusline   morning-brief.sh
+       상태-확인 프롬프트 흡수, 운영자가 타이핑 없이 상태 스캔.
+
+   ── Auditor (별도 트랙, read-only, 3-layer 트리거) ─────────────────
+       L1 post-commit 훅 (drift-risk 경로) → audit-run.sh contract
+       L2 15-분 미션 이상 폴                → 포커스된 audit
+       L3 매일 03:00 baseline launchd       → audit-run.sh all
+       결과: docs/audit/<date>-<focus>.md + CURRENT-ALERT.md
 ```
+
+Shape A 의 서브에이전트 (planner / resourcer / editor / qa) 는
+현재 모두 `sonnet`.  2026-05-19 에 planner + resourcer 를 `opus`
+로 올리는 A/B 가 외부 피드백 ("opus 면 sonnet 이 놓치는 모호함을
+잡지 않을까") 으로 제안됐지만 **아직 미실행** — 완전한 테스트
+설계와 함께 [`docs/ideas.md`](docs/ideas.md) 에 parking 만 됨.
+지연 이유: 가장 좋은 testbed (faceless-short) 가 production
+포맷에서 빠졌고, music-video 는 fully bash-scripted 라서 subagent
+가 가장 active 한 곳에서 A/B 시그널이 약함.  Shape A 의 subagent-heavy
+미래 skill (예: 영화 / 게임) 이 자연스러운 재실행 기회.
 
 | 에이전트 | 책임 | 산출물 |
 |----------|------|--------|

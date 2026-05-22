@@ -502,47 +502,87 @@ data-flow map).
 
 ## Architecture
 
-```
-   ┌─ Tier 1 — Anthropic API (Claude Code CLI runtime) ───────────────┐
-   │                                                                   │
-   │          ┌───────────────────┐                                    │
-   │          │   Orchestrator    │   opus                             │
-   │          └─────────┬─────────┘                                    │
-   │                    │ delegates the mission, in order               │
-   │       ┌────────────┼────────────┬─────────────┐                   │
-   │       ▼            ▼            ▼             ▼                   │
-   │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐               │
-   │  │ Planner │  │Resourcer│  │  Editor │  │   QA    │   all sonnet  │
-   │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘               │
-   │       └────────────┴───── files ┴────────────┘                    │
-   │                    │ plan.md / MANIFEST.md / qa-report.md          │
-   └────────────────────┼───────────────────────────────────────────────┘
-                        │ skill invocation (agentskills.io spec)
-                        ▼
-   ┌─ Tier 2 — Local mission execution ($0 runtime) ──────────────────┐
-   │                                                                   │
-   │   skills/music-video/   → ffmpeg + aubio + whisper + Pexels API   │
-   │   skills/job-hunt/      → curl + jq + ollama (filter only)        │
-   │   skills/goal-lock/     → bash (discipline helper)                │
-   │                                                                   │
-   │   ─── Each skill writes to records/missions/<date>/<id>/ ────     │
-   └─────────────────────────┬─────────────────────────────────────────┘
-                             │ post-render auto-enqueue
-                             ▼
-   ┌─ Operator surface (Claude-free, ~2s) ────────────────────────────┐
-   │                                                                   │
-   │   review-queue   doctor.sh   statusline   morning-brief.sh        │
-   │   ─── absorbs status-check prompts so the operator can scan ────  │
-   │       state without typing                                         │
-   └───────────────────────────────────────────────────────────────────┘
+The system does **not** force every skill through a single shape.
+Two shapes ship today, both agentskills.io-compliant; new skills
+pick whichever fits the work:
 
-   ┌─ Auditor (out-of-band, read-only, three trigger layers) ─────────┐
-   │   L1 post-commit hook (drift-risk paths) → audit-run.sh contract │
-   │   L2 15-min mission-anomaly poll        → focused audit          │
-   │   L3 daily 03:00 baseline via launchd   → audit-run.sh all       │
-   │   writes docs/audit/<date>-<focus>.md + CURRENT-ALERT.md          │
-   └───────────────────────────────────────────────────────────────────┘
 ```
+   Skill invocation (agentskills.io spec)
+                │
+                ▼
+   ┌─ Shape A — Missions-routed (5-agent pipeline) ────────────────────┐
+   │                                                                    │
+   │     ┌─────────────┐                                                │
+   │     │Orchestrator │  opus       Tier 1 — Anthropic API             │
+   │     └──────┬──────┘             (Claude Code CLI runtime)          │
+   │       ┌───┴───┬────────┬────────┐                                  │
+   │       ▼       ▼        ▼        ▼                                  │
+   │   Planner Resourcer Editor    QA           all sonnet              │
+   │       │       │        │        │                                  │
+   │       └───── files (plan.md / MANIFEST.md / qa-report.md) ─────    │
+   │                              │                                     │
+   │   Pick when: each stage carries real work (planner reasoning,      │
+   │   resourcer fetching, editor multi-stage render, qa codec/dur     │
+   │   verification).  Example: skills/music-video/ — its scripts/      │
+   │   run.sh is a symlink to agents/missions/music-video/run.sh so     │
+   │   the skill inherits the mission's tuning + retry loops.           │
+   └────────────────────────────────────────────────────────────────────┘
+
+   ┌─ Shape B — Standalone (skill IS the implementation) ──────────────┐
+   │                                                                    │
+   │     skills/<name>/scripts/run.sh    (no orchestrator / no plan.md  │
+   │              │                       / no qa-report.md, just the   │
+   │              ▼                       skill's own pipeline)         │
+   │     mechanical pipeline (HTTP + parse + format + render)           │
+   │                                                                    │
+   │   Pick when: planner / qa stages would be near-empty (mechanical   │
+   │   work, low creativity).  Skipping them removes 4 file-based       │
+   │   handoffs per invocation.  Example: skills/job-hunt/ —            │
+   │   filter→fetch→dedupe→render is all curl+jq, planner/qa would     │
+   │   be no-ops.                                                       │
+   └────────────────────────────────────────────────────────────────────┘
+
+   ┌─ Shape ? — Future skills (e.g., movie / game / longform analysis)─┐
+   │                                                                    │
+   │   Open question.  Likely candidates by work shape:                 │
+   │     - Multi-asset analysis with per-asset Claude critique →        │
+   │       missions-routed (planner = scene split, editor = critique    │
+   │       composition, qa = factual / spoiler check).                  │
+   │     - URL → metadata → LLM summary → markdown digest →             │
+   │       standalone (same shape as job-hunt).                         │
+   │     - Long-running stateful (e.g., persistent playthrough) →       │
+   │       may need a new Shape C with checkpoint/resume.               │
+   │   Decision lands per-skill in SKILL.md `metadata.pipeline-source`. │
+   │   See docs/architecture.md "Skills layer — two shapes" for the     │
+   │   selection table.                                                 │
+   └────────────────────────────────────────────────────────────────────┘
+
+   ── Local execution layer (both shapes share) ──────────────────────
+       Tier 2: ffmpeg / whisper.cpp / ollama / aubio / curl + jq
+       Writes to records/missions/<date>/<id>/ or records/<skill>/<date>/
+
+   ── Operator surface (Claude-free, ~2s) ────────────────────────────
+       review-queue   doctor.sh   statusline   morning-brief.sh
+       Absorbs status-check prompts so the operator can scan state
+       without typing.
+
+   ── Auditor (out-of-band, read-only, three trigger layers) ─────────
+       L1 post-commit hook (drift-risk paths) → audit-run.sh contract
+       L2 15-min mission-anomaly poll         → focused audit
+       L3 daily 03:00 baseline via launchd    → audit-run.sh all
+       Writes docs/audit/<date>-<focus>.md + CURRENT-ALERT.md.
+```
+
+The Shape A subagents (planner / resourcer / editor / qa) run at
+`sonnet` today.  An A/B against `opus` for planner + resourcer was
+proposed 2026-05-19 (community feedback that opus might catch
+ambiguity sonnet flat-tones) and remains **not yet run** — parked
+in [`docs/ideas.md`](docs/ideas.md) with full test design.  Reason
+for the delay: the best testbed (faceless-short) is no longer the
+production format, and music-video is fully bash-scripted, so the
+A/B may not bite where the subagents are most active.  A
+subagent-heavy future skill (Shape A movie/game) would be the
+natural opportunity to rerun the question.
 
 | Agent | Responsibility | Output |
 |-------|----------------|--------|
