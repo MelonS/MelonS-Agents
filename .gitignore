@@ -49,6 +49,10 @@ assets/music/*
 # GitHub Pages assets (site/ is the Pages source — bundle of evidence frames)
 !site/assets/*.jpg
 !site/assets/*.png
+# Genre / topic grid subdirectories — committed evidence frames
+!site/assets/genre-grid/*.jpg
+!docs/demo/*.jpg
+!docs/demo/2026-05-24-genre-grid/*.jpg
 *.jpeg
 *.gif
 # Demo GIFs (highlight + v6 preview)
