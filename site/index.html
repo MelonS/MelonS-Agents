@@ -42,8 +42,8 @@
   </div>
 
   <figure class="demo">
-    <img src="assets/music-video-demo.gif" alt="5-second animated preview of the music-video pipeline output — Velvet Turntable lo-fi jazz track, jazz/vintage Pexels B-roll, phrase-aware pond ripple + halation shader combo, 9:16 vertical short, mid-climax window (25-30 s) showing pond surface displacement and warm halation bloom over smoky lounge interior." loading="lazy">
-    <figcaption>5-second slice of the first uploaded music-video short — Suno-generated lo-fi jazz track, B-roll from Pexels, render + shader pass by local ffmpeg.</figcaption>
+    <img src="assets/music-video-demo.gif" alt="5-second animated preview from the 2026-05-22 noir-detective render — 9:16 vertical short, smoky bar interior, bearded man with pipe in pink-magenta rnb_low_key grade profile, demonstrating the per-genre grade_profile feature that transforms generic Pexels B-roll into a genre-coded look before the shader layer." loading="lazy">
+    <figcaption>5-second slice of the <code>noir-detective</code> render (2026-05-22 batch).  Per-genre <code>grade_profile</code> (<code>rnb_low_key</code> → pink-magenta low-key) applies before the shader layer; what you see is the grade + shader stack, not cherry-picked B-roll.</figcaption>
   </figure>
 </header>
 
@@ -188,9 +188,38 @@
   </aside>
 
   <figure class="hero-shot">
-    <img src="assets/music-video-hero.jpg" alt="Mid-climax frame from the first uploaded music-video short — 9:16 vertical, vintage jazz interior with amber lamp, vinyl record motif, warm halation bloom around bright sources and subtle pond-surface ripple displacement across the whole frame, Pexels-licensed B-roll under a Suno-generated lo-fi jazz track." loading="lazy">
-    <figcaption><b>music-video Velvet1 · jazz combo</b> — first uploaded short, t = 30 s. Phrase-aware pond ripple + halation shader combo on Suno lo-fi jazz track.</figcaption>
+    <img src="assets/music-video-hero.jpg" alt="Mid-climax frame from the 2026-05-22 noir-detective render — 9:16 vertical, smoky bar interior, bearded man with pipe in pink-magenta rnb_low_key grade profile, demonstrating the per-genre grade_profile stage that runs before the shader layer." loading="lazy">
+    <figcaption><b>music-video <code>noir-detective</code></b> — 2026-05-22 batch, t = 30 s.  Per-genre <code>grade_profile</code> (<code>rnb_low_key</code>) shapes the pink-magenta low-key look; phrase-aware shader stack on top.</figcaption>
   </figure>
+
+  <h3>Genre catalog at a glance — six grade profiles in production</h3>
+  <p>Mid-climax frames from the 2026-05-20 → 2026-05-23 production batch.  No cherry-picked B-roll — every clip came from the same unattended Pexels mood-keyword fetch the pipeline always runs.  The visual identity is the <code>grade_profile</code> + shader stack, not the source footage.  Six grade profiles compiled to ffmpeg filter graphs via <a href="https://github.com/MelonS/MelonS-Agents/blob/main/scripts/music-video-grade.sh" target="_blank" rel="noopener"><code>scripts/music-video-grade.sh</code></a>; 14 genre presets in <a href="https://github.com/MelonS/MelonS-Agents/blob/main/skills/music-video/data/genre-presets.yaml" target="_blank" rel="noopener"><code>skills/music-video/data/genre-presets.yaml</code></a>.</p>
+  <div class="gallery">
+    <figure>
+      <img src="assets/genre-grid/noir-detective.jpg" alt="noir-detective: smoky bar interior, bearded man with pipe, pink-magenta low-key grade" loading="lazy">
+      <figcaption><b>noir-detective</b><br><span class="muted">rnb_low_key</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/genre-grid/rain-lofi.jpg" alt="rain-lofi: barista pouring espresso, soft pink warm grade" loading="lazy">
+      <figcaption><b>rain-lofi</b><br><span class="muted">lofi_warm_grain</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/genre-grid/arcade-synthwave.jpg" alt="arcade-synthwave: VHS cassette + retro VCR in purple city-pop neon grade" loading="lazy">
+      <figcaption><b>arcade-synthwave</b><br><span class="muted">city_pop_neon</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/genre-grid/coastline-summer.jpg" alt="coastline-summer: golden-hour beach water reflections, hollywood teal-orange grade" loading="lazy">
+      <figcaption><b>coastline-summer</b><br><span class="muted">hollywood_teal_orange</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/genre-grid/linen-minimal.jpg" alt="linen-minimal: bedroom bookstack and coffee mug, kr warm pastel grade" loading="lazy">
+      <figcaption><b>linen-minimal</b><br><span class="muted">kr_warm_pastel</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/genre-grid/smallhand-folk.jpg" alt="smallhand-folk: cafe through window with Korean lyric overlay visible — 가난이 너를 만든 게 / 아니라" loading="lazy">
+      <figcaption><b>smallhand-folk</b><br><span class="muted">+ kinetic lyric overlay</span></figcaption>
+    </figure>
+  </div>
 
   <h3>Skill #2 — what a job-hunt digest looks like</h3>
   <p>Single seed keyword in, deduplicated markdown digest out.  The mock-fallback rendering below comes from <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/samples/job-hunt-digest-mock.md" target="_blank" rel="noopener">docs/samples/job-hunt-digest-mock.md</a> — exercised against all five default sources, 24-synonym <code>problem-solver</code> family expansion, 7/21 raw postings matched.  Real digests land under <code>records/jobs/&lt;date&gt;/digest.md</code> (gitignored).</p>

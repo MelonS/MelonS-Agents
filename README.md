@@ -24,7 +24,7 @@
 ![License](https://img.shields.io/github/license/MelonS/MelonS-Agents?style=for-the-badge)
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 
-![5-second animated preview of the music-video pipeline output — Velvet Turntable Suno track + jazz/vintage Pexels B-roll keywords + phrase-aware pond ripple + halation shader combo, 9:16 vertical short, mid-climax window (25-30 s) showing the pond surface displacement and warm halation bloom over smoky lounge interior](docs/demo/music-video-velvet1-jazz-combo-preview.gif)
+![5-second animated preview from the 2026-05-22 noir-detective render — 9:16 vertical short, smoky bar interior, bearded man with pipe in pink-magenta rnb_low_key grade profile, phrase-aware shaders + per-genre color grade (the grade_profile feature shipped 2026-05-22) transforming generic Pexels B-roll into a genre-coded look before the effect layer](docs/demo/music-video-noir-detective-2026-05-24-preview.gif)
 
 </div>
 
@@ -364,14 +364,35 @@ landed on top of v5 in the same mission, tunable per render via
 in your video" license is not the same as a "free to redistribute
 the file" license, so the repo never carries audio assets.
 
-Mid-climax frame (t = 30 s) from the first uploaded short — operator-approved deliverable that closed the 2026-05-17 goal, currently live on the operator's YouTube Shorts channel:
+#### Genre catalog at a glance (mid-climax frames from the 2026-05-20 → 2026-05-23 production batch)
 
-![Mid-climax frame from outputs/publish/03e-velvet1-jazz-combo.mp4 — 9:16 vertical, vintage jazz interior with amber lamp, vinyl record motif, warm halation bloom around bright sources and subtle pond-surface ripple displacement across the whole frame, Pexels-licensed B-roll under a Suno-generated lo-fi jazz track](docs/pilots/screens/music-video-velvet1-jazz-combo.jpg)
+Six mid-climax frames pulled from recent renders.  Each row shows
+how the per-genre `grade_profile` (rolled out 2026-05-22) transforms
+the same generic Pexels stock into a genre-coded look *before* the
+shader layer applies.  Captions identify the genre preset + grade
+profile in effect.
 
-Reproduction:
+| | | |
+|---|---|---|
+| ![noir-detective: smoky bar interior, bearded man with pipe, pink-magenta low-key grade](docs/demo/2026-05-24-genre-grid/noir-detective.jpg) | ![rain-lofi: barista pouring espresso, soft pink warm grade](docs/demo/2026-05-24-genre-grid/rain-lofi.jpg) | ![arcade-synthwave: VHS cassette + retro VCR in purple city-pop neon grade](docs/demo/2026-05-24-genre-grid/arcade-synthwave.jpg) |
+| **`noir-detective`** · rnb_low_key | **`rain-lofi`** · lofi_warm_grain | **`arcade-synthwave`** · city_pop_neon |
+| ![coastline-summer: golden-hour beach water reflections, hollywood teal-orange grade](docs/demo/2026-05-24-genre-grid/coastline-summer.jpg) | ![linen-minimal: bedroom bookstack + coffee mug, kr warm pastel grade](docs/demo/2026-05-24-genre-grid/linen-minimal.jpg) | ![smallhand-folk: cafe through window with Korean lyric overlay '가난이 너를 만든 게 / 아니라' visible](docs/demo/2026-05-24-genre-grid/smallhand-folk.jpg) |
+| **`coastline-summer`** · hollywood_teal_orange | **`linen-minimal`** · kr_warm_pastel | **`smallhand-folk`** · with kinetic lyric overlay |
+
+The 14 genre presets resolved per-render via
+[`skills/music-video/data/genre-presets.yaml`](skills/music-video/data/genre-presets.yaml);
+6 grade profiles compiled into ffmpeg filter graphs via
+[`scripts/music-video-grade.sh`](scripts/music-video-grade.sh).  None
+of these frames received any cherry-picked B-roll — every clip came
+from the same generic Pexels mood-keyword fetch the pipeline runs
+unattended.  The visual identity is the grade + shader stack.
+
+Reproduction (any track → 9:16 short):
 
 ```bash
 ./agents/missions/music-video/run.sh <id> <path/to/music.mp3>
+# or batch a directory:
+./scripts/music-video-batch.sh assets/music/*.mp3
 ```
 
 #### Post-processing shaders — first pass (2026-05-17 evening)

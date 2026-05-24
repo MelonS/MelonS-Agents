@@ -24,7 +24,7 @@
 ![License](https://img.shields.io/github/license/MelonS/MelonS-Agents?style=for-the-badge)
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 
-![music-video 파이프라인 출력의 5초 애니메이션 프리뷰 — Velvet Turntable Suno 트랙 + jazz/vintage Pexels B-roll 키워드 + phrase-aware pond ripple + halation 쉐이더 combo, 9:16 세로 쇼츠, 클라이맥스 중간 구간 (25-30초) 의 pond surface 변위 + 스모키 라운지 인테리어 위의 warm halation bloom](docs/demo/music-video-velvet1-jazz-combo-preview.gif)
+![2026-05-22 noir-detective 렌더의 5초 애니메이션 프리뷰 — 9:16 세로 쇼츠, 스모키 바 인테리어, 파이프를 문 수염 남자, rnb_low_key grade profile 의 pink-magenta 그레이드. phrase-aware 쉐이더 + 장르별 컬러 그레이드 (2026-05-22 출시 grade_profile 기능) 가 일반 Pexels B-roll 을 효과 레이어 *전에* 장르-코드된 룩으로 변환](docs/demo/music-video-noir-detective-2026-05-24-preview.gif)
 
 </div>
 
@@ -345,14 +345,35 @@ v5 = 운영자 검증 완료 → 정식
 — "비디오에서 사용 가능 라이선스" 와 "파일 재배포 가능 라이선스" 가
 다른 문제라 레포는 절대 오디오 자산을 들고 다니지 않음.
 
-아래는 첫 업로드된 쇼츠의 중반 (t = 30초) 정지 프레임 — 운영자가 승인하여 2026-05-17 목표를 마감한 deliverable, 운영자의 YouTube Shorts 채널에 라이브:
+#### 장르 카탈로그 한눈에 보기 (2026-05-20 → 2026-05-23 production batch 의 중반 정지 프레임)
 
-![outputs/publish/03e-velvet1-jazz-combo.mp4 의 중반 정지 프레임 — 9:16 세로, amber 램프의 빈티지 재즈 인테리어, 바이닐 레코드 모티프, 밝은 광원 주변의 warm halation bloom + 화면 전체의 미세한 pond 표면 변위, Suno 생성 lo-fi jazz 트랙 아래 Pexels 라이선스 B-roll](docs/pilots/screens/music-video-velvet1-jazz-combo.jpg)
+최근 렌더에서 뽑은 6개 중반 정지 프레임.  각 row 는 동일한 generic
+Pexels 스톡 footage 가 장르별 `grade_profile` (2026-05-22 출시) 을
+거치면서 쉐이더 레이어 *전*에 장르-코딩 된 룩으로 변환되는지를
+보여줍니다.  캡션은 적용된 장르 preset + grade profile.
 
-재현:
+| | | |
+|---|---|---|
+| ![noir-detective: 스모키 바 인테리어, 파이프를 문 수염 남자, pink-magenta low-key 그레이드](docs/demo/2026-05-24-genre-grid/noir-detective.jpg) | ![rain-lofi: 에스프레소 추출하는 바리스타, soft pink warm 그레이드](docs/demo/2026-05-24-genre-grid/rain-lofi.jpg) | ![arcade-synthwave: VHS 카세트 + 레트로 VCR, purple city-pop neon 그레이드](docs/demo/2026-05-24-genre-grid/arcade-synthwave.jpg) |
+| **`noir-detective`** · rnb_low_key | **`rain-lofi`** · lofi_warm_grain | **`arcade-synthwave`** · city_pop_neon |
+| ![coastline-summer: golden-hour 해변 수면 반사, hollywood teal-orange 그레이드](docs/demo/2026-05-24-genre-grid/coastline-summer.jpg) | ![linen-minimal: 침실 책더미 + 커피잔, kr warm pastel 그레이드](docs/demo/2026-05-24-genre-grid/linen-minimal.jpg) | ![smallhand-folk: 창문 너머 카페, 한국어 가사 오버레이 '가난이 너를 만든 게 / 아니라' 가 보임](docs/demo/2026-05-24-genre-grid/smallhand-folk.jpg) |
+| **`coastline-summer`** · hollywood_teal_orange | **`linen-minimal`** · kr_warm_pastel | **`smallhand-folk`** · 키네틱 가사 오버레이 |
+
+14개 장르 preset 은 렌더마다
+[`skills/music-video/data/genre-presets.yaml`](skills/music-video/data/genre-presets.yaml)
+로 resolve; 6개 grade profile 은
+[`scripts/music-video-grade.sh`](scripts/music-video-grade.sh) 에서
+ffmpeg 필터 그래프로 컴파일됨.  이 프레임들 중 어떤 것도 cherry-pick
+B-roll 을 받지 않음 — 모든 클립이 파이프라인 unattended 가 돌리는
+같은 generic Pexels mood-keyword fetch 에서 나옴.  비주얼 정체성은
+grade + shader 스택 자체임.
+
+재현 (어떤 트랙이든 → 9:16 쇼츠):
 
 ```bash
 ./agents/missions/music-video/run.sh <id> <path/to/music.mp3>
+# 또는 디렉토리 일괄:
+./scripts/music-video-batch.sh assets/music/*.mp3
 ```
 
 #### 포스트프로세싱 쉐이더 — 1차 패스 (2026-05-17 저녁)
