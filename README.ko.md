@@ -8,7 +8,7 @@
 
 **기계적인 단계는 로컬, 창작 단계는 Claude.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조와 동기화.  job-hunt 는 짧은 키워드를 role-synonym map 통해 자동 확장.  세 가지 감사 트리거 — 커밋·이상·스케줄 — 으로 시스템이 자신의 드리프트를 스스로 잡습니다.  영어 + 한국어 듀얼 트랙.
 
-`미션 출력 91+ · 미션 타입 5종 · 포터블 스킬 2개 + 메타 스킬 1개 · ffmpeg 쉐이더 23개 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
+`미션 출력 100+ · 미션 타입 5종 · 포터블 스킬 2개 + 메타 스킬 1개 · ffmpeg 쉐이더 23개 · 컬러 그레이드 6종 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -65,63 +65,62 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 
 ## 개요
 
-> **[Claude Code](https://docs.anthropic.com/claude-code)** (Anthropic
-> CLI) 로 구동되는 macOS 기반 멀티 에이전트 시스템입니다.  v0.4.0
-> 시점 기준 두 개의 production skill 출시:
+> [Claude Code](https://docs.anthropic.com/claude-code) 로 돌리는
+> macOS 멀티에이전트 시스템.  최신 태그는 [**v0.4.0**](https://github.com/MelonS/MelonS-Agents/releases/tag/v0.4.0).
+> 지금까지 두 개의 production 스킬이 올라가 있고, 둘 다
+> [agentskills.io](https://agentskills.io) 스펙을 따라서 Claude Code,
+> Cursor, Goose, Gemini CLI 등 호환 런타임에 그대로 떨어집니다.
 >
-> **Skill #1 — `music-video`** (1.0.0): 음악 트랙 in, 9:16 세로
-> 쇼츠 out, phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악
-> 구조와 동기화.  위 데모가 이 skill 출력.  Missions-routed shape —
-> [`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh)
-> 의 5-agent (orchestrator + planner + resourcer + editor + qa)
-> 파이프라인 호출.
+> **스킬 1 — `music-video`.**  음악 파일을 넣으면 60초짜리 9:16
+> 세로 쇼츠가 나옵니다.  장르별 컬러 그레이드 6종이 평범한 Pexels
+> 스톡 footage 를 장르 톤으로 먼저 깔고, 그 위에 ffmpeg 쉐이더
+> 23개와 phrase-aware 구조(`aubiotrack` 비트로 컷, `aubioonset`
+> 드럼 hit 으로 글리치 마이크로 에디트, preset 별 게이팅 적용)가
+> 얹힙니다.  맨 위 데모는 noir-detective 렌더, 아래쪽 그리드에서
+> 6개 장르를 옆으로 비교할 수 있습니다.  구현은
+> [`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh) —
+> 스킬이 5-에이전트 미션 파이프라인(orchestrator + planner /
+> resourcer / editor / qa)을 그대로 타기 때문에 미션 튜닝이 곧
+> 스킬 튜닝이 됩니다.
 >
-> **Skill #2 — `job-hunt`** (0.1.0): 잡보드 digest, 짧은 키워드 UX.
-> `--seed "Problem Solver"` 한 줄이면 회사마다 다른 동의어 호칭
-> (FDE / Applied AI Engineer / Generalist 등) 으로 자동 확장 →
-> 다중 소스에서 매칭 fetch → URL dedupe → 날짜별 마크다운 digest.
-> 키 없이 즉시 작동하는 live-ready plugin 5개:
-> **`global-ats`** (Greenhouse + Ashby + Lever 공식 board API ~27개
-> 회사 — Anthropic / OpenAI / Cursor / Stripe / Notion / Datadog
-> 등 AI/SaaS 풀스택), **`global-remoteok`**, **`global-remotive`**,
-> **`global-hn-whoshiring`** (HN 월간 "Who is hiring?" 쓰레드를
-> Algolia HN Search 로 fetch), **`kr-worknet`** (정부 공공고용서비스).
-> 종합 라이브 테스트: 5,000+ raw → "problem-solver" 24-동의어 필터
-> 통과 200건.  키 필요 KR 플러그인 2개 (`kr-wanted`, `kr-saramin`)
-> 는 운영자 검증용 scaffolded.  Standalone shape — missions-routed
-> 파이프라인 없이 skill 자체가 canonical 구현.
+> **스킬 2 — `job-hunt`.**  키워드 하나로 한국·글로벌 잡보드를
+> 훑고 중복 제거된 마크다운 다이제스트를 만듭니다.
+> `--seed "Problem Solver"` 한 줄이 실제로 회사들이 쓰는 24개
+> 동의어 (FDE / Applied AI Engineer / Generalist / Founding Engineer
+> / Forward Deployed / …) 로 펼쳐진 다음 11개 소스 플러그인을
+> 돕니다.  그 중 5개(`global-ats` — Anthropic / OpenAI / Cursor /
+> Stripe / Notion / Datadog 등 27개 AI/SaaS 회사의 Greenhouse +
+> Ashby + Lever 보드 / `global-remoteok` / `global-remotive` /
+> `global-hn-whoshiring` Algolia 경유 HN 월간 / `kr-worknet`
+> 정부 공공고용서비스)는 API 키 없이 즉시 작동합니다.  나머지
+> 2개(`kr-wanted`, `kr-saramin`)는 소스별 API 키가 필요합니다.
+> end-to-end 라이브 테스트: 5,000+ raw → ~200 매칭.  스킬은
+> standalone 형태 — 오케스트레이터를 안 거치고
+> `skills/job-hunt/scripts/run.sh` 가 직접 구현입니다.  fetch /
+> filter / dedupe 파이프라인에선 planner / qa 단계가 거의 비기
+> 때문에 5-에이전트 핸드오프를 굳이 둘 이유가 없습니다.
 >
-> 이전 미션 타입 (`faceless-short` 내레이션 기반 쇼츠 + v1
-> `highlight` / `summarize` / `shorts-batch`) 도 트리에 대안 경로로
-> 유지됩니다.
+> **이 레포를 돌리는 두 가지 방법.**
+> - *에이전트 주도* (메인) — Claude Code 깔고, 클론된 레포를
+>   가리키고, 미션을 타이핑하면 Claude Code 가 파일 편집·커밋·푸시까지
+>   합니다.  비용: Max 구독이 오케스트레이션을 흡수하고, 그 외
+>   유료 항목은 money firewall 이 잡습니다.
+> - *스크립트만* (대체) — `./scripts/bootstrap.sh` 후 bash 스크립트
+>   단독 실행.  Claude Code 불필요, 자동 커밋·푸시도 없지만 렌더
+>   결과물 자체는 동일합니다.  비용: 무료 Pexels API 키 외 $0.
 >
-> 이 레포를 쓰는 두 가지 방식:
-> - **Agent-driven (메인 경로)** — Mac 에 Claude Code 설치, 클론된
->   레포를 가리키면 orchestrator + 4개 미션 서브에이전트
->   ([`.claude/agents/`](.claude/agents/) 에 정의) 가 인계받음.
->   운영자가 미션만 타이핑 → Claude Code 가 planner → resourcer →
->   editor → QA 파이프라인 실행, 파일 편집, 커밋, 푸시.
->   비용: Claude Code 구독 (Anthropic Max 추천) + 외부 유료 API 는
->   money firewall 게이트 (아래 contract 참조).
-> - **Script-only (대체)** — bash 미션 스크립트 + 쉐이더 레시피가
->   standalone 으로 작동: `./scripts/bootstrap.sh` + 아래 재현 명령들.
->   Claude Code 불필요, orchestration 없음, auto-commit 없음 — 그래도
->   music-video 출력은 동일.  비용: 옵션 무료 Pexels API 키 외 $0.
+> **스캐폴드 자체는 범용입니다.**  쇼트폼 영상이 v1 도메인인 건
+> 결과물이 눈에 보이고 실패 모드가 빨리 잡혀서 그렇지, 아키텍처가
+> 쇼트폼 전용으로 설계된 건 아닙니다.  새 스킬은 작업 성격에 맞는
+> shape 를 고르면 됩니다 — 아래 아키텍처 섹션에서 3-shape 모델과
+> 미래 스킬(영화 / 게임 / 롱폼 분석) 이 어떤 shape 로 갈 만한지
+> 정리해 두었습니다.
 >
-> **하지만 시스템 자체는 숏폼 전용이 아닙니다.**  스캐폴드 —
-> orchestrator + 4개 미션 서브에이전트 + 파일 기반 핸드오프 +
-> 3-layer 반응형 감사 + Tier-1/Tier-2 비용 라우팅 — 은 범용으로
-> 설계되었으며, 숏폼 영상은 *시각적으로 검증 가능한 구체적
-> 산출물*에 대해 아키텍처를 시험해 본 v1 미션 타입일 뿐입니다.
-> 추가 미션 타입 (리서치 워크플로우, 다단계 데이터 파이프라인,
-> 운영자가 다음으로 집어 올 자동화 작업 등) 은 프로젝트가
-> 성숙하면서 같은 스캐폴드 위에 얹힐 예정입니다.
->
-> 단 하나의 원칙 위에 만들어졌습니다 — **제작 파이프라인을
-> 자동화하고, 시스템이 자신의 로직을 스스로 진화시키게 한다.**
-> 이 저장소의 모든 커밋은 그 진화의 한 단계입니다.  히스토리는
-> 산출물의 기록이 아니라, 에이전트 시스템 자체가 성장해 온
-> 궤적입니다.
+> 깔린 원칙은 하나입니다 — **제작 파이프라인을 자동화하고,
+> 시스템이 자기 로직을 스스로 진화시키게 한다.**  모든 커밋이
+> 그 진화의 한 걸음입니다.  히스토리는 산출물 기록이 아니라
+> 에이전트 시스템 자체가 자라온 흔적입니다 (산출물은 gitignored
+> `records/` 로컬에 남습니다).
 
 > **엔지니어링 결정, 한 페이지로.**
 > [`docs/engineering-case-studies.ko.md`](docs/engineering-case-studies.ko.md)
@@ -244,14 +243,35 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
 
 ## 샘플 출력
 
-2026-05-22 기준 **5가지** 미션 타입에 걸쳐 91+건의 출력이 생성되었습니다.
-현재 production 포맷은 `music-video` 미션 — 음악-주 음성 오디오 쇼츠
-(내레이션 없음, 캡션 없음, 비트 정렬 컷 + 드럼 onset 정렬 글리치
-마이크로 에디트) — 운영자의 파일럿 픽으로 채택됨, 자세한 내용은
-[`docs/pilots/decision-log.md`](docs/pilots/decision-log.md#operator-pick--2026-05-17)
-참고.
+지금까지 **5가지** 미션 타입에 걸쳐 100+건의 출력이 나왔습니다.
+현재 production 포맷은 `music-video` 미션 — 음악이 메인 오디오인
+쇼츠 (내레이션·캡션 없음, 비트에 맞춘 컷, 드럼 onset 에 맞춘 글리치
+마이크로 에디트).  2026-05-17 에 이전의 내레이션 기반 포맷을 밀어내고
+운영자 파일럿 픽으로 채택됐습니다
+([결정 로그](docs/pilots/decision-log.md#operator-pick--2026-05-17)).
 
-v5 프로토타입 이후 추가로 ship 된 것들:
+### 최근 ship (롤링)
+
+- **2026-05-23 production batch** — 6개 mp4 (`monday-v1/v2`,
+  `convenience-v1/v2`, `smallhand-folk-v1/v2`) 가
+  [`outputs/publish/shorts-2026-05-23-batch/`](outputs/publish/) 에
+  생성됨.  [`scripts/music-video-batch.sh`](scripts/music-video-batch.sh)
+  로 처음 돌린 멀티 트랙 배치.
+- **키네틱 가사 오버레이** — `scripts/music-video-lyrics.sh` +
+  whisper 기반 LRC 추출 (`scripts/music-video-lyric-align.sh`).
+  아래 장르 그리드의 `smallhand-folk` 프레임에서 실제로 보입니다
+  ("가난이 너를 만든 게 / 아니라").  alignment confidence 가 낮은
+  라인은 자동으로 보정 표시, 위치는 크로스 플랫폼 safe-band 안.
+- **publish 전 게이트 + 썸네일 자동 추출** —
+  `scripts/music-video-validate.sh` (길이 / 해상도 / 라우드니스 /
+  쉐이더-앵커 커버리지 / 가사 sync drift 통합 검증, exit 0/1/2)
+  + `scripts/music-video-thumbnail.sh` (중반 클라이맥스 JPG).
+  `MUSIC_VIDEO_VALIDATE=1` 로 두면 렌더 직후 자동 chain.
+- **planner + resourcer 를 opus 로** (2026-05-22 결정) — 1회 A/B 후
+  ~10-20 미션 누적까지 production trial.  근거 + revert 기준은
+  [`docs/research/2026-05-22-abtest-planner-opus.md`](docs/research/2026-05-22-abtest-planner-opus.md).
+
+### v5 프로토타입 이후 누적된 것들
 
 - **ffmpeg 쉐이더 23개** —
   [`scripts/music-video-shaders.sh`](scripts/music-video-shaders.sh) 에
@@ -411,7 +431,7 @@ paper_grain / dust_speck / posterize / trail_echo / soft_bloom) —
   두 효과 강도가 모두 `T` (시간) 함수: 인트로 (0~15 s) 에 off / 약,
   빌드 (15~22.5 s) 에 ramp-up, 클라이맥스 (22.5~45 s) 에 풀, 윈드다운
   (45~52.5 s) 에 taper, 아웃트로 (52.5~60 s) 에 settle.  phrase 경계는
-  Velvet Turntable 레퍼런스 트랙 95.8 BPM × 12 비트 phrase = 7.5 s
+  원본 reference 트랙의 phrase 경계는 95.8 BPM × 12 비트 = 7.5 s
   cadence 와 일치 — 다른 트랙은 스크립트에서 envelope 파라미터 수정.
 
 시도했으나 **포기**: **카툰 (cel-shading)** 렌더링.  ffmpeg 가 luma 와
@@ -434,57 +454,46 @@ Diffusion + AnimateDiff, ComfyUI, RunwayML / Kaiber) 중 하나가
 ./scripts/music-video-shaders.sh combo    <input.mp4> <output.mp4>
 ```
 
-### Faceless 파일럿 (영어 + 한국어 A/B)
+<details>
+<summary><b>이전 미션 (historical)</b> — <code>faceless-short</code> 내레이션 시대 + v1 <code>highlight</code> / <code>shorts-batch</code> + faceless 점수표</summary>
 
-`faceless-short` 미션은 토픽 프롬프트만으로 60초 완성본을 산출합니다 — 입력 영상 없음.  파이프라인: ollama가 내레이션 스크립트 초안 → Kokoro-ONNX (`am_michael`, 한국어는 macOS `Yuna`) 음성 합성 → whisper.cpp 타이밍 전사 → 스크립트 정합 캡션 교정 (고유명사를 원본 스크립트 텍스트로 복원) → SRT 큐를 자연 구두점에서 단일 라인으로 분할 (모바일 2줄 박스 오버랩 차단) → ollama가 내레이션 시간 윈도우(8개) 마다 Pexels 검색어 1개씩 추출 → Pexels Videos API에서 윈도우당 B-roll 1개 수집 → ffmpeg가 각 클립을 윈도우 길이로 트림·9:16 풀화면 크롭·libass 자막 번인·출처 오버레이까지 완성.
+music-video 피벗 이전에 만들어진 미션들이라 현재 production 포맷은 아니지만, 시스템이 어떻게 진화했는지 보여주는 증거로 트리에 남겨둡니다.  지금 라이브로 굴러가는 작업과 시각적으로 경쟁하지 않도록 접어둡니다.
 
-같은 토픽을 두 가지 언어 버전으로 렌더해 음성+자막 차이를 나란히 비교:
+#### `faceless-short` 미션 (내레이션 기반)
+
+토픽 프롬프트 → ollama 가 스크립트 초안 → Kokoro-ONNX (`am_michael`, 한국어는 macOS `Yuna`) 가 음성 합성 → whisper.cpp 가 타이밍 전사 → 스크립트 기반 캡션 교정으로 고유명사를 원본대로 복원 → SRT 큐를 구두점에서 단일 라인 분할 → ollama 가 내레이션 윈도우(8개) 마다 Pexels 검색어 추출 → 윈도우당 B-roll 1개 fetch → ffmpeg 가 9:16 크롭, libass 자막 번인, 출처 오버레이까지 마무리.
+
+파일럿 deliverable (히타이트 + 수소, 각 EN/KO), 파일럿당 비용 **$0**:
 
 | | 히타이트 (역사 × 성경) | 수소 (과학) |
 |---|---|---|
 | EN | ![히타이트 EN — 9:16 풀화면, 'and siege warfare.' 단일 라인 영어 자막이 하투샤 고고학 항공 샷 위에 올라간 상태](docs/pilots/screens/hittites-en-caption-verify.jpg) | ![수소 EN — 9:16 풀화면, 'The human body's reliance' 단일 라인 영어 자막이 파스타 매크로 B-roll 위에](docs/pilots/screens/hydrogen-en-caption-verify.jpg) |
 | KO | ![히타이트 KO — '도시의 모습이 드러났습니다.' 단일 라인 한국어 자막이 하투샤 고고학 항공 샷 위에, AppleGothic, macOS Yuna 음성](docs/pilots/screens/hittites-ko-caption-verify.jpg) | ![수소 KO — '평균적으로 사람 몸무게의' 단일 라인 한국어 자막이 올리브 오일 방울 매크로 위에, Yuna 음성](docs/pilots/screens/hydrogen-ko-caption-verify.jpg) |
 
-각 언어 버전은 자기 캡션에서 윈도우당 Pexels 검색어를 *자체적으로* 추출 — 그래서 EN과 KO는 스크립트 구조는 공유하지만 동일한 클립을 항상 쓰지는 않습니다 (v3/v4 설계: 윈도우별 키워드로 내레이션 비트와 정렬 우선).  "동일 영상, 음성만 교체" 비교가 필요하면 `FACELESS_REUSE_BROLL=<en_mission_dir>`로 KO 렌더가 EN의 이어붙인 B-roll을 강제 재사용하게 할 수 있습니다.
+언어별로 자기 캡션에서 검색어를 따로 뽑아 B-roll 도 따로 가져옵니다.  같은 영상에 음성만 갈아끼우고 싶으면 `FACELESS_REUSE_BROLL=<en_mission_dir>` 로 EN 의 이어붙인 B-roll 을 KO 가 강제로 재사용하게 됩니다.  A/B 노트 + 업로드 메타데이터 + 토픽 큐는 [`docs/pilots/`](docs/pilots/) 아래.
 
-A/B 제작 노트, 플랫폼별 업로드 메타데이터, 다음 10개 토픽 큐는 모두 [`docs/pilots/`](docs/pilots/) 아래에 있습니다.  파일럿당 한계 비용: **$0** (Pexels 무료 티어, 그 외 단계는 모두 로컬).
+#### v1 파이프라인 — `highlight` / `summarize` / `shorts-batch`
 
-### v1 파이프라인 (단일 클립 highlight / shorts-batch)
-
-원조 v1 미션 — `highlight`, `summarize`, `shorts-batch` — 은 실제 소스 URL (예: Creative Commons 영상)을 받아 9:16 출력을 만들면서 출처 워터마크 + 자막을 번인합니다.  `faceless-short` 이전의 설계이며, 토픽이 아니라 영상에서 *부분 발췌*가 필요할 때 여전히 활용됩니다.
+실제 소스 URL (예: Creative Commons 영상) 을 받아서 9:16 출력을 만들고 출처 워터마크 + 자막을 번인합니다.  토픽 *기반* 생성이 아니라 영상 *에서* 부분 발췌가 필요할 때 여전히 씁니다.
 
 ![highlight-015213의 6초 애니메이션 프리뷰 — 9:16 letterbox-blur 레이아웃, 좌측 상단 출처 오버레이, 하단 libass 자막 번인이 보임](docs/demo/highlight-015213-preview.gif)
-
-`highlight-015213/outputs/short.mp4`의 6초 발췌 — Sintel 트레일러 (CC-BY-3.0, © Blender Foundation), 39초 9:16 워터마크 + 자막.  전체 mp4는 `records/` 아래에 (gitignored); 위 GIF는 크기 최적화 발췌 (가로 360 px, 12 fps, ≈ 2.8 MB) — ffmpeg + palette dither로 생성하여 `docs/demo/`에 v1 파이프라인의 영구 증거로 유지.
 
 | 단일 하이라이트 | 숏츠 배치 |
 |----------------|----------|
 | ![Sintel 단일 하이라이트, 자막 번인과 좌측 상단 출처 오버레이가 적용된 9:16 숏](docs/caption-verify/highlight-015213-sintel-cap.jpg) | ![Sintel 숏츠 배치 첫 번째 컷, 자막 번인 9:16 숏](docs/caption-verify/shorts-batch-024840-short-01-cap.jpg) |
 | `highlight-015213` · 39 초 · 첫 시도 PASS | `shorts-batch-024840 / short-01` · 44 초 · 첫 시도 PASS |
 
-둘 다 *Sintel* 트레일러 (CC-BY-3.0, © Blender Foundation — `durian.blender.org`)에서 추출.  공통 요소: 좌측 상단 출처 어트리뷰션 오버레이, 9:16 letterbox-blur 배경, 하단 safe-zone 박스 안의 libass 번인 자막.
+둘 다 *Sintel* 트레일러 (CC-BY-3.0, © Blender Foundation).
 
-### Faceless-파일럿 점수표 (historical — 내레이션 시대)
+#### Faceless 파일럿 점수표
 
-아래 점수표는 **이전** `faceless-short` 미션 (내레이션 기반 쇼츠) 의
-점수표입니다.  music-video 피벗 이전의 v4 → v5 → v6 반복에서 나온
-구조화된 진행 신호로 보존됩니다.  music-video 미션에는 아직 동등한
-점수표가 없습니다 — 운영자 승인 + 플랫폼 시청 시간 데이터 (첫
-업로드 후) 가 현재 초점에 대한 per-차원 점수를 대체할 예정.
+music-video 피벗 전에 v4 → v5 → v6 반복에서 매겼던 구조화된 진행 신호.  현재 music-video 미션은 자체 점수표 대신 플랫폼 시청 시간 데이터로 평가합니다 — per-video metrics 는 [`docs/pilots/`](docs/pilots/) 아래.
 
 ![누적 가로 막대 차트, faceless-파일럿 점수표 — Hittites EN v4 26/50, v5 32/50, v6 44/50, Hydrogen EN v5 28/50, v6 43/50; 막대당 다섯 색 세그먼트 (후크, 영상-자막 매칭, 가독성, 사실 일관성, 마감)](docs/metrics/scorecard.png)
 
-v5 → v6 상승폭 (단일 라인 자막은 v5에서 이미 적용 완료, v6는
-스크립트 생성 단계만 로컬 `llama3.2:3b`에서 Claude Sonnet으로
-교체)은 Hittites EN에서 +12점, Hydrogen EN에서 +15점.  v5→v6
-델타 대부분이 **후크**와 **사실 일관성** 차원 — 운영자가 v5에서
-지적한 바로 그 차원입니다 ("초반 5초에 시선 끌만한 게 없음",
-"10%인지 60%인지 헷갈리네").
+v5 → v6 상승폭 (Hittites EN +12점, Hydrogen EN +15점) 은 스크립트 생성 단계를 로컬 `llama3.2:3b` 에서 Claude Sonnet 으로 교체한 결과 — 후크와 사실 일관성 두 차원에 집중됐고, 운영자가 v5 에서 지적한 부분과 정확히 일치합니다.  점수는 시청자 패널이 아니라 Claude 의 self-assessment 입니다.  버전별 상세는 [`docs/pilots/scorecard.md`](docs/pilots/scorecard.md).
 
-투명성 고지: 점수는 시청자 패널이 아니라 Claude가 매긴 자체
-평가입니다.  버전별 상세 + 추론은
-[`docs/pilots/scorecard.md`](docs/pilots/scorecard.md).
-
+</details>
 
 ## 분석가/리뷰어를 위한 안내
 

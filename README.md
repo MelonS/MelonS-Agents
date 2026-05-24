@@ -8,7 +8,7 @@
 
 **Local for the mechanical, Claude for the creative.**  Phrase-aware ffmpeg shaders sync vintage visuals to music structure.  Short-keyword job-hunt expansion via role-synonym map.  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
 
-`91+ mission outputs · 5 mission types · 2 portable skills + 1 meta-skill · 23 ffmpeg shaders · 0 runtime API tokens · 3 audit layers · MIT`
+`100+ mission outputs · 5 mission types · 2 portable skills + 1 meta-skill · 23 ffmpeg shaders · 6 grade profiles · 0 runtime API tokens · 3 audit layers · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -66,64 +66,65 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 
 ## Overview
 
-> A macOS-based multi-agent system **driven by [Claude Code](https://docs.anthropic.com/claude-code)**
-> (the Anthropic CLI), shipping two production skills as of v0.4.0:
+> A macOS multi-agent system driven by
+> [Claude Code](https://docs.anthropic.com/claude-code).  Latest tag
+> is [**v0.4.0**](https://github.com/MelonS/MelonS-Agents/releases/tag/v0.4.0).
+> Two production skills ship today; both are
+> [agentskills.io](https://agentskills.io)-spec compliant so they
+> drop into Claude Code, Cursor, Goose, Gemini CLI, and the rest of
+> the compatible-runtime set unmodified.
 >
-> **Skill #1 — `music-video`** (1.0.0): music track in, 9:16 vertical
-> short out, with phrase-aware ffmpeg shaders syncing vintage visuals
-> to the music's structure.  Demo above is from this skill.  Missions-
-> routed shape — invokes the 5-agent (orchestrator + planner +
-> resourcer + editor + qa) pipeline via
-> [`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh).
+> **Skill #1 — `music-video`.**  Music file in, 60-second 9:16
+> vertical short out.  Per-genre color grade (six profiles) shapes
+> generic Pexels B-roll into a genre-coded look; 23 ffmpeg shaders
+> + phrase-aware structure (cuts on `aubiotrack` beats, glitch
+> micro-edits on `aubioonset` drum hits, restraint gated per
+> preset) compose on top.  The demo above is a noir-detective
+> render; the grid further down shows six genre profiles side by
+> side.  Implementation under
+> [`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh) —
+> the skill routes through the 5-agent mission pipeline (orchestrator
+> + planner / resourcer / editor / qa) so re-rendering tuning flows
+> into both surfaces.
 >
-> **Skill #2 — `job-hunt`** (0.1.0): job-board digest with
-> short-keyword UX.  Pass a single seed like `--seed "Problem Solver"`
-> and the skill expands to the full family of equivalent titles used
-> at different companies (FDE / Applied AI Engineer / Generalist /
-> etc.), fetches matching postings, deduplicates across sources, and
-> produces a dated markdown digest.  Five live-ready source plugins
-> (no API key required): **`global-ats`** (Greenhouse + Ashby + Lever
-> public boards spanning ~27 AI / SaaS companies including Anthropic /
-> OpenAI / Cursor / Stripe / Notion / Datadog), **`global-remoteok`**,
-> **`global-remotive`**, **`global-hn-whoshiring`** (monthly "Who is
-> hiring?" thread via Algolia HN Search), and **`kr-worknet`**
-> (정부 공공고용서비스).  End-to-end live test pulled 5,000+ raw
-> postings → 200 matching the "problem-solver" 24-synonym filter.
-> Two key-gated KR plugins (`kr-wanted`, `kr-saramin`) ship scaffolded
-> for operator validation.  Standalone shape — no missions-routed
-> pipeline, the skill is the canonical implementation.
+> **Skill #2 — `job-hunt`.**  Single seed keyword in, deduplicated
+> markdown digest out.  `--seed "Problem Solver"` expands to the
+> 24-synonym role family companies actually use (FDE / Applied AI
+> Engineer / Generalist / Founding Engineer / Forward Deployed / …)
+> before fetching from 11 source plugins.  Five are live-ready
+> without an API key — `global-ats` (Greenhouse + Ashby + Lever
+> boards across ~27 AI / SaaS companies including Anthropic /
+> OpenAI / Cursor / Stripe / Notion / Datadog), `global-remoteok`,
+> `global-remotive`, `global-hn-whoshiring` (HN monthly via Algolia),
+> `kr-worknet` (정부 공공고용서비스).  Two more (`kr-wanted`,
+> `kr-saramin`) need an API key per source.  End-to-end live test:
+> 5,000+ raw postings filtered to ~200 matches.  The skill is
+> standalone (no orchestrator routing) — `skills/job-hunt/scripts/run.sh`
+> is the canonical implementation because every planner / qa stage
+> would be near-empty for a mechanical filter / fetch / dedupe pipeline.
 >
-> Earlier mission types (`faceless-short` narration-driven shorts +
-> v1 `highlight` / `summarize` / `shorts-batch`) remain in the tree
-> as alternate paths.
+> **Two ways to drive this repo.**
+> - *Agent-driven* (primary) — install Claude Code, point it at the
+>   cloned repo, type a mission.  Claude Code edits files, commits,
+>   pushes.  Cost: a Max subscription absorbs orchestration; the
+>   money firewall gates anything paid beyond that.
+> - *Script-only* (fallback) — `./scripts/bootstrap.sh` then the bash
+>   scripts run standalone.  No Claude Code needed; no commits or
+>   pushes happen automatically, but the rendered output is identical.
+>   Cost: $0 beyond the optional free Pexels API key.
 >
-> Two ways to use this repo:
-> - **Agent-driven (the primary path)** — install Claude Code on a Mac,
->   point it at the cloned repo, and the orchestrator + 4 mission
->   subagents (defined under [`.claude/agents/`](.claude/agents/)) take
->   over.  The operator types a mission; Claude Code runs the planner →
->   resourcer → editor → QA pipeline, edits files, commits, and pushes.
->   Cost: a Claude Code subscription (Anthropic Max recommended);
->   external paid APIs gated by the money firewall (see contract below).
-> - **Script-only (fallback)** — the bash mission scripts and the
->   shader recipes run standalone via `./scripts/bootstrap.sh` + the
->   reproduction commands further down.  No Claude Code, no
->   orchestration, no auto-commit — but the music-video output is
->   identical.  Cost: $0 beyond the optional free Pexels API key.
->
-> **The system itself is not shorts-specific.**  The scaffold —
-> orchestrator + 4 mission subagents + file-based handoff + 3-layer
-> reactive audit + Tier-1/Tier-2 cost routing — is general-purpose by
-> design; short-form video is the v1 mission type chosen to exercise
-> the architecture against a concrete, visually verifiable deliverable.
-> Additional mission types (research workflows, multi-stage data
-> pipelines, automation jobs the operator picks up next) will land on
-> the same scaffold as the project matures.
+> **The scaffold is general-purpose.**  Short-form video is the v1
+> domain because the deliverable is visually verifiable and failure
+> modes are fast to catch; the architecture itself doesn't assume
+> short-form anything.  New skills pick the shape that fits — see
+> the Architecture section below for the three-shape model and what
+> a future skill (movie / game / longform) would likely route through.
 >
 > Built on a single premise: **automate the production pipeline, then
-> let the system evolve its own logic.**  Every commit in this
-> repository is a step in that evolution — the history is not a record
-> of outputs, but of how the agent system itself grows over time.
+> let the system evolve its own logic.**  Every commit is one
+> observable step of that evolution.  The history is the agent
+> system's own growth, not a record of its outputs (those stay local
+> in gitignored `records/`).
 
 > **Engineering decisions, one page.**
 > [`docs/engineering-case-studies.md`](docs/engineering-case-studies.md)
@@ -257,14 +258,36 @@ per-day data at [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.j
 
 ## Sample output
 
-91+ mission outputs across **five** mission types as of 2026-05-22.
-The current production format is the `music-video` mission —
-music-as-primary-audio shorts (no narration, no captions, beat-aligned
-cuts, onset-aligned glitch micro-edits), chosen via operator pilot
-pick documented in
-[`docs/pilots/decision-log.md`](docs/pilots/decision-log.md#operator-pick--2026-05-17).
+100+ mission outputs across **five** mission types.  The current
+production format is the `music-video` mission — music-as-primary-audio
+shorts (no narration, no captions, beat-aligned cuts, onset-aligned
+glitch micro-edits), picked over the earlier narration-driven format
+on 2026-05-17
+([decision log](docs/pilots/decision-log.md#operator-pick--2026-05-17)).
 
-What's shipped on top of the v5 prototype since:
+### Recently shipped (rolling)
+
+- **2026-05-23 production batch** — 6 mp4s (`monday-v1/v2`,
+  `convenience-v1/v2`, `smallhand-folk-v1/v2`) under
+  [`outputs/publish/shorts-2026-05-23-batch/`](outputs/publish/) —
+  the first multi-track batch produced through
+  [`scripts/music-video-batch.sh`](scripts/music-video-batch.sh).
+- **Kinetic lyric overlay** — `scripts/music-video-lyrics.sh` +
+  whisper-derived LRC via `scripts/music-video-lyric-align.sh`.
+  Visible on the `smallhand-folk` frame in the genre grid below
+  ("가난이 너를 만든 게 / 아니라").  Sub-floor confidence lines mark
+  autofilled; cross-platform safe-band positioning.
+- **Pre-publish gate + thumbnail auto-extract** —
+  `scripts/music-video-validate.sh` (combined duration / resolution /
+  loudness / shader-anchor coverage / lyric-sync drift, exit 0/1/2)
+  + `scripts/music-video-thumbnail.sh` (mid-climax JPG).  Both auto-chain
+  post-render when `MUSIC_VIDEO_VALIDATE=1`.
+- **Planner + resourcer at opus** (2026-05-22 decision) — single
+  A/B + multi-week production trial per
+  [`docs/research/2026-05-22-abtest-planner-opus.md`](docs/research/2026-05-22-abtest-planner-opus.md).
+  Revert criteria documented; re-evaluate after ~10-20 missions.
+
+### What's shipped on top of the v5 prototype
 
 - **23 ffmpeg shaders** in [`scripts/music-video-shaders.sh`](scripts/music-video-shaders.sh)
   across three stages — pond / halation / breathing / combo (first
@@ -434,7 +457,7 @@ no external tool) and one was deliberately deferred:
   off / quiet during intro (0–15 s), ramping up across the build
   (15–22.5 s), full during the climax (22.5–45 s), tapering through
   the wind-down (45–52.5 s), settling for the outro (52.5–60 s).
-  The phrase boundaries match the Velvet Turntable reference track's
+  The phrase boundaries on the original reference track match the
   95.8 BPM × 12-beat phrase = 7.5 s cadence; for other tracks the
   envelope is parameterised in the script.
 
@@ -460,57 +483,46 @@ Reproduction:
 ./scripts/music-video-shaders.sh combo    <input.mp4> <output.mp4>
 ```
 
-### Faceless pilots (English + Korean A/B)
+<details>
+<summary><b>Historical missions</b> — <code>faceless-short</code> (narration era) + v1 <code>highlight</code> / <code>shorts-batch</code> + faceless scorecard</summary>
 
-The `faceless-short` mission produces a complete 60-second short from a topic prompt alone — no input video.  Pipeline: ollama drafts the narration script → Kokoro-ONNX (`am_michael`, or macOS `Yuna` for Korean) synthesizes voice → whisper.cpp transcribes for timing → script-aware caption correction maps proper nouns back to the original script → SRT cues split to single-line at natural punctuation breaks (stops 2-line opaque-box overlap on mobile) → ollama extracts one Pexels search term per temporal narration window (8 windows) → Pexels Videos API fetches one B-roll clip per window → ffmpeg trims each clip to its window's duration, crops to 9:16 screen-fill, burns libass captions and an attribution overlay.
+These predate the music-video pivot and stay in the tree as alternate paths (not the current production format).  Collapsed because they no longer reflect what the pipeline actively ships, but preserved as evidence of how the system evolved.
 
-Each topic is rendered in two language variants so the operator can A/B voice + caption rendering side by side:
+#### `faceless-short` mission (narration-driven)
+
+Topic prompt in → ollama drafts the script → Kokoro-ONNX (`am_michael`, or macOS `Yuna` for Korean) synthesizes voice → whisper.cpp transcribes for timing → script-aware caption correction maps proper nouns back to the original script → SRT cues split to single-line at punctuation breaks → ollama extracts one Pexels search term per narration window (8 windows) → Pexels fetches B-roll per window → ffmpeg crops 9:16, burns libass captions + attribution overlay.
+
+Pilot deliverables (Hittites + Hydrogen, EN + KO each), per-pilot cost **$0**:
 
 | | Hittites (history × Bible) | Hydrogen (science) |
 |---|---|---|
 | EN | ![Hittites EN — 9:16 screen-fill, English caption 'and siege warfare.' on a single line over an aerial Hattusa archaeological dig](docs/pilots/screens/hittites-en-caption-verify.jpg) | ![Hydrogen EN — 9:16 screen-fill, English caption 'The human body's reliance' on a single line over a pasta-macro B-roll](docs/pilots/screens/hydrogen-en-caption-verify.jpg) |
 | KO | ![Hittites KO — Korean caption '도시의 모습이 드러났습니다.' single-line over aerial Hattusa archaeology, AppleGothic font, macOS Yuna voice](docs/pilots/screens/hittites-ko-caption-verify.jpg) | ![Hydrogen KO — Korean caption '평균적으로 사람 몸무게의' single-line over olive-oil-drop macro, Yuna voice](docs/pilots/screens/hydrogen-ko-caption-verify.jpg) |
 
-Each language variant picks its OWN B-roll by extracting Pexels search terms from its own captions per window — so the EN and KO shorts share script structure but not always identical clips (the v3/v4 design picked per-window keywords for narration-beat alignment).  Pass `FACELESS_REUSE_BROLL=<en_mission_dir>` to force the KO render to reuse the EN stitched B-roll when an apples-to-apples "same visuals, swapped audio" test is wanted.
+Each language variant picks its own B-roll from its own captions; `FACELESS_REUSE_BROLL=<en_mission_dir>` forces visual parity when an apples-to-apples "same visuals, swapped audio" test is wanted.  A/B notes + upload metadata + topic queue under [`docs/pilots/`](docs/pilots/).
 
-A/B production notes, per-platform upload metadata, and the next-10 topic queue all live under [`docs/pilots/`](docs/pilots/).  Per-pilot cost: **$0** (Pexels free tier, all other stages local).
+#### v1 pipeline — `highlight` / `summarize` / `shorts-batch`
 
-### v1 pipeline (single-clip highlight / shorts-batch)
-
-The original v1 missions — `highlight`, `summarize`, `shorts-batch` — take a real source URL (e.g., a Creative-Commons video) and produce 9:16 outputs with burned-in source attribution + captions.  These predate `faceless-short`; they're still in active use when you want a clip *from* a video rather than a clip *of* a topic.
+Takes a real source URL (e.g., a Creative-Commons video) and produces 9:16 outputs with burned-in source attribution + captions.  Still in active use when you want a clip *from* a video rather than a clip *of* a topic.
 
 ![6-second animated preview of highlight-015213, showing the 9:16 letterbox-blur layout, top-left source attribution, and bottom libass-burned caption](docs/demo/highlight-015213-preview.gif)
-
-Six-second slice of `highlight-015213/outputs/short.mp4` — Sintel trailer (CC-BY-3.0, © Blender Foundation), 39 s 9:16 with watermark + captions.  Full mp4 lives under `records/` (gitignored); this GIF is a size-optimized excerpt (360 px wide, 12 fps, ≈ 2.8 MB) generated by ffmpeg with palette dithering, kept in `docs/demo/` as durable evidence of the v1 pipeline.
 
 | Single highlight | Shorts batch |
 |------------------|--------------|
 | ![Sintel single highlight, 9:16 short with burned-in captions and top-left source attribution](docs/caption-verify/highlight-015213-sintel-cap.jpg) | ![Sintel shorts-batch first cut, 9:16 short with burned-in caption](docs/caption-verify/shorts-batch-024840-short-01-cap.jpg) |
 | `highlight-015213` · 39 s · PASS attempt 1 | `shorts-batch-024840 / short-01` · 44 s · PASS attempt 1 |
 
-Both sourced from the *Sintel* trailer (CC-BY-3.0, © Blender Foundation — `durian.blender.org`).  Top-left source-attribution overlay, 9:16 letterbox-blur background, libass-burned caption inside the bottom safe-zone box.
+Both from the *Sintel* trailer (CC-BY-3.0, © Blender Foundation).
 
-### Faceless-pilot scorecard (historical — narration era)
+#### Faceless-pilot scorecard
 
-Below is the scorecard for the **earlier** `faceless-short` mission
-(narration-driven shorts).  It is preserved as the structured progress
-signal from the v4 → v5 → v6 iterations that preceded the music-video
-pivot.  The music-video mission has no equivalent scorecard yet —
-operator approval + platform watch-time data (post first upload) will
-replace per-dimension scoring for the current focus.
+Structured progress signal from the v4 → v5 → v6 iterations that preceded the music-video pivot.  The music-video mission uses platform watch-time data instead of per-dimension scoring; per-video metrics live under [`docs/pilots/`](docs/pilots/).
 
 ![Stacked horizontal bar chart, faceless-pilot scorecard — Hittites EN v4 26/50, Hittites EN v5 32/50, Hittites EN v6 44/50, Hydrogen EN v5 28/50, Hydrogen EN v6 43/50; five-color segments per bar showing Hook, Visual sync, Readability, Factual, Polish dimensions](docs/metrics/scorecard.png)
 
-The lift from v5 → v6 (single-line caption was already in place at
-v5; v6 swapped the script-generation stage from local `llama3.2:3b`
-to Claude Sonnet) is +12 points on Hittites EN and +15 on Hydrogen
-EN.  Most of the v5→v6 delta is **Hook** and **Factual coherence**
-— exactly the dimensions the operator surfaced as broken in v5
-("초반 5초에 시선 끌만한게 없음", "10%인지 60%인지 헷갈리네").
+The v5 → v6 lift (+12 Hittites EN, +15 Hydrogen EN) came from swapping the script-generation stage from local `llama3.2:3b` to Claude Sonnet; gains concentrated in Hook and Factual coherence — exactly what the operator flagged as broken in v5.  Scores were Claude self-assessed, not a viewer panel.  Full breakdown in [`docs/pilots/scorecard.md`](docs/pilots/scorecard.md).
 
-Honest disclosure: scores were assigned by Claude, not a viewer
-panel.  Full per-version breakdown + reasoning in
-[`docs/pilots/scorecard.md`](docs/pilots/scorecard.md).
+</details>
 
 ## For analysts / reviewers
 
