@@ -1,0 +1,38 @@
+{
+  "_comment": "youtubeuploader-compatible upload metadata for Mix #2. Bakes in all 8 YT tips from 2026-05-24 reference video. Copy to per-mission upload-meta.json + edit _filename / publishAt before invoking yt-batch-upload.sh.",
+
+  "_filename": "outputs/publish/mix-2/yt-mix-2-korean-lofi-rainy-seoul-2026-05-26.mp4",
+
+  "title": "Korean Lofi Rainy Seoul Mix #2 [44 min] | Study, Relax & Chill",
+
+  "description": "44 minutes of Korean lofi instrumental beats — perfect for studying, relaxing, or unwinding on a rainy Seoul evening.\n\nThis mix continues the rainy-seoul series with all-new visuals: real motion generated locally with Stable Video Diffusion / LTX-Video (not Ken Burns stills).\n\n#koreanlofi #lofibeats #studymusic #rainyseoul #lofihiphop #chillmusic\n\n--- TRACKLIST ---\n[TODO: paste track names + timestamps after final render]\n\n--- AI DISCLOSURE ---\nMusic: AI-generated (Suno, used under personal-use license).\nVisuals: AI-generated with local Stable Video Diffusion (LTX-Video 2B) on RTX hardware.\nAudio is properly disclosed via the 'Altered content' setting per YouTube AI policy.\n\n--- CHANNEL ---\nToddStudio: Long-form lofi music for study + relaxation.\n\nThanks for listening. ☕🌧️",
+
+  "tags": [
+    "korean lofi", "lofi beats", "lofi hip hop", "lofi hiphop",
+    "study music", "chill music", "ambient", "rainy day", "rainy lofi",
+    "seoul lofi", "korean chill", "korean ambient", "korea lofi mix",
+    "study and relax", "music for studying", "music for relaxation",
+    "music for focus", "music for sleeping", "chill beats", "chillhop",
+    "calm music", "lofi 44 min", "lofi mix long", "long form lofi",
+    "rainy seoul", "seoul night", "neon city", "night lofi",
+    "한국 로파이", "공부할 때 듣는 음악", "잔잔한 음악", "비오는 날 음악",
+    "서울 로파이", "롱폼 음악", "수면 음악", "휴식 음악", "집중 음악",
+    "비 오는 서울", "서울 야경", "네온 거리", "심야 로파이"
+  ],
+
+  "privacyStatus": "private",
+
+  "publishAt": "2026-05-27T07:13:00+09:00",
+  "_publishAt_note": "Per YT tip #5 — off-hour publish (07:13 KST). Mandatory: 24h+ from upload time for tip #1 (private→public delay). Adjust based on actual upload moment.",
+
+  "madeForKids": false,
+
+  "categoryId": "10",
+  "_categoryId_note": "10 = Music. Per YT tip #3 — set explicitly, do not rely on auto-detect.",
+
+  "language": "ko",
+
+  "_ai_content_disclosure_note": "YT tip #4 — when uploading via web UI, check 'Altered content' box and answer the 3 questions. youtubeuploader CLI does NOT support this flag yet; flip it via Studio UI after upload, before public.",
+
+  "_auto_chapter_note": "YT tip #7 — disable auto-chapter for this video. Currently must be set via YT Studio: 영상 details → 자세히 → 자동 챕터 및 주요 순간 허용 → OFF. No Data API equivalent at time of writing."
+}
