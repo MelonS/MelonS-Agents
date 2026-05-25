@@ -210,6 +210,29 @@ These are autonomous defaults; operator can override any without re-design:
 5. **AI image backend** = local Flux-schnell via ComfyUI (fastest, no rate limit) OR keep Pollinations as fallback option.
 6. **First upload target** = Private + publishAt T+24h (per 8 YT tips #1) at 07:13 KST or similar off-hour.
 
+## Lesson learned (2026-05-26 운영자 검토 후)
+
+Mix #2 가 ship 된 직후 (2026-05-26 ~05:00 KST 업로드, 19:13 publish 예정) 운영자 피드백:
+
+> *"영상이 바뀌는건 오히려 별로인게 오래걸려서 만들었는데 글자나오는게 별로임 글자는 안나와야 할듯 최대한. 글자는 직접쓰던지 생성형ai가 만들어내는 글자들 괴상하고 흉측해 보임. 그래서 그냥 고퀄영상 하나를 무한반복하면서 사운드만 바뀌는게 더 나은듯."*
+
+핵심 문제:
+1. **AI 가 생성한 글자 (signs / posters / 로고)** = 그로테스크. 손과 동급 회피 카테고리.
+2. **598개 컷 = 시청자 산만**. lofi 컨텐츠는 집중 유도가 목적인데 잦은 컷이 역효과.
+3. 4-5시간 렌더 노력 vs 효용 mismatch — 산출물이 *오히려 단순 loop 보다 못함*.
+
+→ **다음 longform mix (Mix #3+) 의 default 아키텍처 = single hero clip × infinite loop** (cf. [`docs/mix-3-design.md`](mix-3-design.md)):
+
+- 1-3 hero clip (각 8-15 sec, LTX-Video 최고 quality, 1080p, 40+ steps)
+- ffmpeg `-stream_loop -1` 로 음원 길이만큼 반복
+- 비주얼 변화 0 또는 minimal (페이즈별 hero 교체만)
+- 사운드 (audio) 만 자연스럽게 변주
+- AI artifact 노출 표면 최소화
+
+Mix #2 자체는 publish 진행 (5/26 19:13) — 실험 데이터로 활용 (단조로움 fix 시도가 *visual diversity* 방향이었는데 운영자에겐 오히려 마이너스. 다음 시도는 *visual stability* 방향).
+
+이 lesson 은 [`project_melons_operator_context.md`](operator-private memory) 에 "AI text avoid" + "Hero-loop preference" 두 절로 영구 저장됨.
+
 ## Success criteria (Mix #2 "good" definition)
 
 Mix #2 ships successfully when:
