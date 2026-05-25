@@ -59,6 +59,144 @@ def validate_prompt(prompt: str) -> tuple[bool, str | None]:
     return True, None
 
 
+SDXL_NEGATIVE = (
+    "low quality, blurry, watermark, text, signature, frame border, "
+    "people, person, face, faces, hand, hands, fingers, "
+    "deformed, distorted, ugly, oversaturated"
+)
+
+SDXL_TURBO_CHECKPOINT = "sd_xl_turbo_1.0_fp16.safetensors"
+
+
+def fetch_comfyui_sdxl_still(
+    prompt: str,
+    output_path: Path,
+    width: int,
+    height: int,
+    seed: int,
+    server: str = "http://127.0.0.1:8188",
+    steps: int = 4,
+    cfg: float = 1.0,
+    timeout_seconds: int = 90,
+) -> bool:
+    """Generate a still via local SDXL-Turbo on ComfyUI.  Much faster than
+    Pollinations (~5-10s vs ~60s) at the cost of one-time model download.
+    """
+    import json
+    import urllib.request
+    import urllib.error
+    if output_path.exists() and output_path.stat().st_size > 1024:
+        return True
+    # Round to nearest multiple of 32 for SDXL latent compatibility
+    w = (width // 32) * 32
+    h = (height // 32) * 32
+    if w < width: w += 32
+    if h < height: h += 32
+
+    workflow = {
+        "1": {
+            "class_type": "CheckpointLoaderSimple",
+            "inputs": {"ckpt_name": SDXL_TURBO_CHECKPOINT},
+        },
+        "2": {
+            "class_type": "CLIPTextEncode",
+            "inputs": {"clip": ["1", 1], "text": prompt},
+        },
+        "3": {
+            "class_type": "CLIPTextEncode",
+            "inputs": {"clip": ["1", 1], "text": SDXL_NEGATIVE},
+        },
+        "4": {
+            "class_type": "EmptyLatentImage",
+            "inputs": {"width": w, "height": h, "batch_size": 1},
+        },
+        "5": {
+            "class_type": "KSampler",
+            "inputs": {
+                "model": ["1", 0],
+                "seed": seed,
+                "steps": steps,
+                "cfg": cfg,
+                "sampler_name": "euler_ancestral",
+                "scheduler": "normal",
+                "denoise": 1.0,
+                "positive": ["2", 0],
+                "negative": ["3", 0],
+                "latent_image": ["4", 0],
+            },
+        },
+        "6": {
+            "class_type": "VAEDecode",
+            "inputs": {"samples": ["5", 0], "vae": ["1", 2]},
+        },
+        "7": {
+            "class_type": "SaveImage",
+            "inputs": {"images": ["6", 0], "filename_prefix": output_path.stem},
+        },
+    }
+    data = json.dumps({"prompt": workflow, "client_id": f"sdxl_{seed}"}).encode("utf-8")
+    try:
+        req = urllib.request.Request(
+            f"{server}/prompt", data=data,
+            headers={"Content-Type": "application/json"}, method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="ignore")[:500]
+        print(f"[sdxl] ERROR {e.code}: {body}", file=sys.stderr)
+        return False
+    except Exception as e:
+        print(f"[sdxl] ERROR: {e}", file=sys.stderr)
+        return False
+
+    prompt_id = result.get("prompt_id")
+    if not prompt_id:
+        return False
+
+    t0 = time.time()
+    while True:
+        time.sleep(2)
+        if time.time() - t0 > timeout_seconds:
+            print(f"[sdxl] TIMEOUT for seed={seed}", file=sys.stderr)
+            return False
+        try:
+            with urllib.request.urlopen(f"{server}/history/{prompt_id}", timeout=10) as resp:
+                hist = json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                continue
+            raise
+        if prompt_id in hist:
+            entry = hist[prompt_id]
+            if entry.get("status", {}).get("completed"):
+                if entry["status"].get("status_str") != "success":
+                    return False
+                # Find produced image
+                comfy_out = Path(os.environ.get("COMFYUI_OUTPUT_DIR", "")) if os.environ.get("COMFYUI_OUTPUT_DIR") else None
+                if comfy_out is None:
+                    # Best-effort: use the same lookup as ltx-img2vid.py
+                    for candidate in [
+                        Path("G:/ai/ComfyUI_windows_portable/ComfyUI/output"),
+                        Path.home() / "ComfyUI" / "output",
+                    ]:
+                        if candidate.exists():
+                            comfy_out = candidate
+                            break
+                if comfy_out is None:
+                    print("[sdxl] cannot locate ComfyUI output dir", file=sys.stderr)
+                    return False
+                for _, node_out in entry.get("outputs", {}).items():
+                    for img in node_out.get("images", []):
+                        if img.get("filename", "").lower().endswith((".png", ".jpg", ".jpeg")):
+                            comfy_file = comfy_out / img.get("subfolder", "") / img["filename"]
+                            if comfy_file.exists():
+                                output_path.parent.mkdir(parents=True, exist_ok=True)
+                                shutil.move(str(comfy_file), str(output_path))
+                                return True
+                return False
+
+
 def fetch_pollinations_still(
     prompt: str,
     output_path: Path,
@@ -115,9 +253,17 @@ def stage_stills(segments: list[dict], stills_dir: Path, backend: str, batch_sle
                 fail += 1
             else:
                 time.sleep(batch_sleep)
-        elif backend == "comfyui":
-            print(f"[stage:stills] backend=comfyui not yet implemented; use --image-backend pollinations", file=sys.stderr)
-            return -1
+        elif backend == "comfyui-sdxl":
+            ok = fetch_comfyui_sdxl_still(
+                prompt=seg["prompt"],
+                output_path=out_path,
+                width=DEFAULT_WIDTH,
+                height=DEFAULT_HEIGHT,
+                seed=seg["seed"],
+                server=COMFYUI_URL,
+            )
+            if not ok:
+                fail += 1
         else:
             print(f"[stage:stills] unknown backend: {backend}", file=sys.stderr)
             return -1
@@ -232,7 +378,8 @@ def main():
     p.add_argument("--audio", required=True, type=Path)
     p.add_argument("--output-dir", required=True, type=Path)
     p.add_argument("--stage", choices=["stills", "clips", "compose", "all"], default="all")
-    p.add_argument("--image-backend", choices=["pollinations", "comfyui"], default="pollinations")
+    p.add_argument("--image-backend", choices=["pollinations", "comfyui-sdxl"], default="pollinations",
+                   help="pollinations = free Pollinations.ai flux (slow, no setup); comfyui-sdxl = local SDXL-Turbo via ComfyUI (fast, requires sd_xl_turbo_1.0_fp16.safetensors in models/checkpoints/)")
     p.add_argument("--still-batch-sleep", type=float, default=1.5, help="rate-limit Pollinations requests (sec)")
     p.add_argument("--per-clip-timeout", type=int, default=300)
     args = p.parse_args()
