@@ -263,18 +263,28 @@ def main():
         rc = ffmpeg_concat_with_xfade(clips_dir, segments, args.audio, final_mp4)
         if rc == 0:
             print(f"[mix2-build] FINAL: {final_mp4}")
-            # Probe + report
+            # Probe + report.  Resolve ffprobe next to ffmpeg if FFMPEG_BIN is
+            # a path; fall back to PATH if it's a bare name.
+            ffprobe = os.environ.get("FFPROBE_BIN", "")
+            if not ffprobe:
+                if "/" in FFMPEG or "\\" in FFMPEG:
+                    ffprobe = str(Path(FFMPEG).parent / ("ffprobe.exe" if FFMPEG.endswith(".exe") else "ffprobe"))
+                else:
+                    ffprobe = FFMPEG.replace("ffmpeg", "ffprobe")
             probe_cmd = [
-                FFMPEG.replace("ffmpeg", "ffprobe"),
+                ffprobe,
                 "-v", "error",
                 "-show_entries", "stream=codec_name,width,height,pix_fmt",
                 "-show_entries", "format=duration,bit_rate",
                 "-of", "default=nw=1",
                 str(final_mp4),
             ]
-            probe = subprocess.run(probe_cmd, capture_output=True, text=True)
-            if probe.returncode == 0:
-                print(probe.stdout)
+            try:
+                probe = subprocess.run(probe_cmd, capture_output=True, text=True)
+                if probe.returncode == 0:
+                    print(probe.stdout)
+            except FileNotFoundError:
+                print(f"[mix2-build] (ffprobe at {ffprobe!r} not found; skipping post-encode probe)")
 
     sys.exit(rc)
 

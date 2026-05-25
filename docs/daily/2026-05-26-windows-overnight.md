@@ -80,18 +80,107 @@ Mac handoff text-dump captured:
 → `C:\Users\comdo\.claude\projects\G--ai\memory\project_melons_operator_context.md`
 (operator-private, not in repo per `memory git sync 안 함` rule).
 
-## POC — current state
+## POC — validated end-to-end (mini scope)
 
-Source: first track of Mix #1 source music (117.4s extracted from YT id 9SqgNBKk5JE)
-Segments: 26 (4.5s each)
-Pipeline stages:
-- Stills via Pollinations.ai flux — runs at ~90s/image (slower than expected)
-- LTX-Video img2vid via ComfyUI — ~27s/clip (validated)
-- Compose via ffmpeg NVENC — ~30s
+**Status**: ✅ PASS at 2026-05-25 23:49 KST
 
-Realistic POC ETA: ~30-50 min wall-clock from launch.
+Pivoted from 5-min POC (26 segments) to 5-segment mini POC after
+observing Pollinations.ai throughput at ~60-90 sec/still (would
+need ~30 min just for the still stage of the full POC).  Mini
+POC re-uses 5 stills already generated, runs only clips + compose.
 
-Output landing: `outputs/publish/mix-2-poc/yt-mix-2-mix-2-poc-2026-05-26.mp4`
+**Mini POC output**: `outputs/publish/mix-2-poc-mini/yt-mix-2-mix-2-poc-mini-2026-05-25.mp4`
+
+| Field | Value |
+|---|---|
+| Duration | 22.5 sec (5 segments × 4.5s) |
+| Resolution | **1920 × 1080** (upscaled from 768×432) |
+| Codec | h264 + aac |
+| pix_fmt | **yuv420p** ✓ (no QuickTime-incompatible 444) |
+| Frame rate | 24 fps |
+| Bitrate | 3.7 Mbps avg (NVENC `-cq 19 -b:v 12M -maxrate 15M`) |
+| File size | 10.4 MB |
+
+LTX-Video per-clip: **24 sec** on RTX 4070 Ti SUPER (T5 fp8 + LTX-Video 2B + VAE).
+ffmpeg NVENC compose: completed in seconds.
+
+**What this proves**:
+- The 3-script Mix #2 pipeline works end-to-end on Windows.
+- AI hands avoid negative prompt is honored (LTX-Video output frames
+  do not show hands — operator should verify visually on review).
+- NVENC encoding at h264_nvenc CQ 19 produces valid h264 yuv420p.
+- ffmpeg concat demuxer + scale-crop + grade filter chain executes.
+- Resumable stages work: a Ctrl-C and restart skips done segments.
+
+**What it does NOT yet prove** (requires full render):
+- Sub-mood × time-of-day variety across all 7 cells × 3 phases
+  (the 5-segment slice happens to land in 3-4 sub-moods, not all 7).
+- 44-min concat audio sync drift (xfade transitions deferred to v2 of
+  mix2-compose.sh — current implementation uses simple concat demuxer).
+- Bitrate target on long-form content (3.7 Mbps observed on 22s short;
+  may auto-rise on 44min content via NVENC's rate control).
+
+**Note on Pollinations throughput**: The full 598-segment render would
+need ~10 hours JUST for stills at current Pollinations speed.  See
+"Bottleneck + plan" section below.
+
+## Bottleneck + plan for full 44-min render
+
+The full Mix #2 render needs 598 LTX-Video clips.  Each pipeline stage
+on RTX 4070 Ti SUPER:
+
+| Stage | Per-segment | Total for 598 segments |
+|---|---|---|
+| Still via Pollinations.ai flux | **~60-90 sec** (variable) | **~10 hours** ❌ |
+| Still via local SDXL/SDXL-Turbo (not yet set up) | ~5-10 sec | ~50-100 min ✓ |
+| LTX-Video img2vid (validated) | 24 sec | ~4 hours |
+| ffmpeg NVENC compose | (one-shot, ~5 min) | ~5 min |
+
+**Verdict**: Pollinations is the throughput bottleneck.  Two paths
+forward (operator picks):
+
+**Path A — Pollinations + accept ~14 hour render time**
+- Total wall-clock: ~14 hours (stills 10h + clips 4h)
+- Doable but consumes a full day's machine time
+- Risk: Pollinations rate-limit or service outage mid-render
+
+**Path B — Add local SDXL backend to mix2-build.py (~30 min setup)**
+- Download SDXL-Turbo (~4-6 GB, open license) or Flux-schnell GGUF (~5 GB)
+- Add ComfyUI SDXL workflow to `mix2-build.py` `--image-backend comfyui-sdxl`
+- Total wall-clock: ~5 hours (stills 1h + clips 4h)
+- Faster, more reliable, unlimited throughput
+- Recommended if next session goes immediately into full render
+
+This Windows session ran short of time to set up Path B (mini POC
+validation completed at 23:49 KST).  Path B is the recommended setup
+before kicking off the full overnight Mix #2 render.
+
+## Kickoff commands (after operator approval of POC)
+
+**Path A — Pollinations (slow but works now):**
+
+```bash
+# Extract full Mix #1 audio (44 min)
+"G:/tools/ffmpeg/ffmpeg.exe" -y -i G:/ai/mix1-analysis/mix1.webm \
+  -c:a libmp3lame -b:a 192k G:/ai/mix1-analysis/mix1-full.mp3
+
+# Kick off full render (will take ~14h)
+FFMPEG_BIN="G:/tools/ffmpeg/ffmpeg.exe" python G:/ai/MelonS-Agents/scripts/mix2-build.py \
+  --segments G:/ai/mix1-analysis/segments.json \
+  --audio G:/ai/mix1-analysis/mix1-full.mp3 \
+  --output-dir G:/ai/MelonS-Agents/outputs/publish/mix-2 \
+  --stage all \
+  --still-batch-sleep 1.5 \
+  --per-clip-timeout 300
+```
+
+**Path B — Local SDXL (requires ~30 min setup first):**
+
+Setup steps deferred to next session:
+1. `curl -L -o G:/ai/ComfyUI_windows_portable/ComfyUI/models/checkpoints/sd_xl_turbo_1.0_fp16.safetensors https://huggingface.co/stabilityai/sdxl-turbo/resolve/main/sd_xl_turbo_1.0_fp16.safetensors` (~6.5 GB)
+2. Extend `scripts/mix2-build.py` `stage_stills(..., backend="comfyui")` to call ComfyUI's `/prompt` with an SDXL-Turbo workflow (Apache 2.0 / community license).
+3. Re-run mini POC with `--image-backend comfyui` to confirm 5s/still.
+4. Then kickoff full render.
 
 ## What's NOT done (waiting on signals)
 
