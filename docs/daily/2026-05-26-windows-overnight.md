@@ -124,6 +124,34 @@ ffmpeg NVENC compose: completed in seconds.
 need ~10 hours JUST for stills at current Pollinations speed.  See
 "Bottleneck + plan" section below.
 
+## **UPDATE 2026-05-25 23:58 KST — Path B validated + FULL RENDER STARTED**
+
+After mini POC PASS at 23:49, downloaded SDXL-Turbo (6.94GB, Stability AI Community License, no gating) and wired it into `mix2-build.py` as `--image-backend comfyui-sdxl`.
+
+**SDXL-Turbo standalone benchmark**: 1 still in **8.2 sec** on RTX 4070 Ti SUPER (vs Pollinations 60-90s — ~10x faster).
+
+**SDXL → LTX → NVENC end-to-end** validated with 1 segment (4.7s, 1920×1080 h264 yuv420p, all stages green).
+
+**FULL Mix #2 render kicked off 2026-05-25 23:58 KST** (background task `bplht0xsm`):
+
+```
+input:  G:/ai/mix1-analysis/segments.json     (598 segments)
+audio:  G:/ai/mix1-analysis/mix1-full.mp3     (2685s, 44min 45s)
+output: G:/ai/MelonS-Agents/outputs/publish/mix-2/yt-mix-2-mix-2-2026-05-26.mp4
+log:    G:/ai/_mix2_full.log
+backend: comfyui-sdxl + LTX-Video + h264_nvenc
+```
+
+**Expected wall-clock**:
+- Stills (598 × 8s SDXL-Turbo): ~80 min
+- Clips (598 × 24s LTX-Video): ~240 min
+- Compose (ffmpeg NVENC concat + grade): ~5 min
+- **Total: ~5h 25m** → completion target **~05:23 KST 2026-05-26**
+
+If operator returns before completion: check `G:/ai/MelonS-Agents/outputs/publish/mix-2/stills/` and `clips/` for progress; the pipeline is **resumable** via `--skip-existing` semantics (re-run same command).
+
+If operator returns after completion: review `outputs/publish/mix-2/yt-mix-2-mix-2-2026-05-26.mp4` directly.
+
 ## Bottleneck + plan for full 44-min render
 
 The full Mix #2 render needs 598 LTX-Video clips.  Each pipeline stage
@@ -254,19 +282,43 @@ All 5 pushed to `origin/main`.  Audit not re-run (no agents/*.md change to valid
 
 ## On return — recommended first move
 
-1. **POC review** (if file exists):
+**Check render status first**:
+
+```bash
+ls -la "G:/ai/MelonS-Agents/outputs/publish/mix-2/yt-mix-2-mix-2-2026-05-26.mp4" 2>/dev/null && echo "FULL RENDER DONE" || echo "still rendering — check stills/ and clips/ counts"
+
+ls -la "G:/ai/MelonS-Agents/outputs/publish/mix-2/stills/" | wc -l
+ls -la "G:/ai/MelonS-Agents/outputs/publish/mix-2/clips/" | wc -l
+# 598 each = both stages done; if clips < 598, render still in progress
+```
+
+**If full render complete**: review the final mp4 directly.
 
    ```bash
-   ls -la outputs/publish/mix-2-poc/yt-mix-2-mix-2-poc-2026-05-26.mp4
-   # If exists + reasonable size:
-   ffprobe outputs/publish/mix-2-poc/yt-mix-2-mix-2-poc-2026-05-26.mp4
-   # Open with default player for visual taste check
+   "G:/tools/ffmpeg/ffprobe.exe" -v error -show_entries stream=codec_name,width,height,pix_fmt -show_entries format=duration,bit_rate -of default=nw=1 "G:/ai/MelonS-Agents/outputs/publish/mix-2/yt-mix-2-mix-2-2026-05-26.mp4"
    ```
 
-2. **POC verdict** — operator decides:
+   Then open with default player for visual taste check.
 
-   - "확실히 나아졌네" → kick off full 44min Mix #2 render
-   - "더 손봐야겠다" → identify specific issue (motion / grade / shader / prompt diversity), iterate
+**If render still in progress**: let it finish (or check log `G:/ai/_mix2_full.log` for errors).
+
+**If render FAILED** (background task notification reported error):
+   - Read tail of `G:/ai/_mix2_full.log` for diagnosis
+   - Re-run the same command to resume from where it stopped (skip-if-exists semantics)
+
+**Also** review the smaller validation artifacts:
+
+   ```bash
+   # mini POC (Pollinations + LTX, 22.5s)
+   ls -la outputs/publish/mix-2-poc-mini/yt-mix-2-mix-2-poc-mini-2026-05-25.mp4
+   # SDXL-LTX single-segment test (4.7s)
+   ls -la outputs/publish/mix-2-sdxl-test/yt-mix-2-mix-2-sdxl-test-2026-05-25.mp4
+   ```
+
+**Verdict + next steps**:
+
+   - "확실히 나아졌네" → use config/mix-2-upload-meta.template.json + scripts/yt-batch-upload.sh to ship to YouTube (set publishAt T+24h at off-hour)
+   - "더 손봐야겠다" → identify specific issue (motion / grade / shader / prompt diversity), iterate per-segment via mix2-build.py --stage (resumable)
    - "다른 방향" → re-discuss Mix #2 direction (theme / music source / length)
 
 3. **OAuth** — if channel automation is wanted on Windows, copy `client_secrets.json` from Mac to `G:\\config\\youtubeuploader\\client_secrets.json`, then re-run `youtubeuploader -filename <dummy.mp4>` once to mint `request.token` on this machine.
