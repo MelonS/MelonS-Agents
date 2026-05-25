@@ -613,12 +613,14 @@ sonnet 으로 revert.  Editor + qa 는 sonnet 유지 — 이 두 stage 는
 
 ## 플랫폼 지원
 
-| 영역 | macOS 14+ | Linux |
-|------|-----------|-------|
-| 미션 실행 (전사 → 선택 → 렌더 → QA) | ✓ | ✓ (`ffmpeg` / `whisper.cpp` / `ollama` 모두 사용 가능) |
-| 하드웨어 가속 렌더 (`h264_videotoolbox`) | ✓ Apple Silicon | n/a — `-allow_sw 1`로 libx264 폴백 |
-| `bootstrap.sh` 합성 fixture (macOS `say`-기반 TTS) | ✓ | 스킵 — `scripts/fetch-fixtures.sh`로 실제 CC fixture 사용 |
-| `launchd` 스케줄러 (야간 자동 실행, 일일 감사) | ✓ | systemd timers 또는 cron으로 대체 — `scripts/com.melons.agents.*.plist` 일정을 참고 |
+| 영역 | macOS 14+ | Linux | Windows 11 |
+|------|-----------|-------|------------|
+| 미션 실행 (전사 → 선택 → 렌더 → QA) | ✓ 1차 검증 | ✓ best-effort | ✓ best-effort (git-bash 로 bash 스크립트 실행) |
+| 하드웨어 가속 렌더 | ✓ `h264_videotoolbox` (Apple Silicon) | `h264_nvenc` (NVIDIA) 또는 `libx264` 폴백 | ✓ `h264_nvenc` (NVIDIA — primary), 또는 `h264_qsv` (Intel) / `libx264` 폴백 |
+| 로컬 AI 비디오 생성 (LTX-Video / SVD / AnimateDiff) | 가능하나 NVENC 없음 → 느림 | NVIDIA Linux 가능 | ✓ **주 검증** (Mix #2 longform = Windows + 4070 Ti SUPER) |
+| `bootstrap.sh` 합성 fixture (macOS `say`-기반 TTS) | ✓ | 스킵 — `scripts/fetch-fixtures.sh` 로 실제 CC fixture 사용 | 스킵 — `scripts/windows/setup-env.ps1` 로 env 셋업 후 실제 CC fixture 사용 |
+| 스케줄러 (야간 자동 실행, 일일 감사) | ✓ `launchd` | systemd timers / cron 으로 대체 | Task Scheduler 로 대체 (수동 셋업, TODO `scripts/windows/install-scheduler.ps1`) |
+| Windows 셋업 가이드 | n/a | n/a | [`docs/platform-windows.md`](docs/platform-windows.md) |
 
 macOS가 **주 검증 플랫폼** (엔드투엔드 테스트 완료). Linux는 미션
 실행에는 동작하지만 스케줄러와 합성 fixture 생성은 OS별 적응이
@@ -664,8 +666,8 @@ Pexels Videos API (무료 티어 — music-video + faceless-short B-roll).
 
 ## 사전 요구사항
 
-- **macOS 14+** (주 검증 플랫폼) 또는 **Linux** (best-effort —
-  위 [플랫폼 지원](#플랫폼-지원) 참조)
+- **macOS 14+** (주 검증) 또는 **Linux** (best-effort) 또는 **Windows 11** (best-effort, NVIDIA + git-bash 경로 — 로컬 AI 비디오 작업에는 주 플랫폼) —
+  위 [플랫폼 지원](#플랫폼-지원) 참조.  윈도우 셋업은 [`docs/platform-windows.md`](docs/platform-windows.md) 참조.
 - **[Claude Code](https://docs.anthropic.com/claude-code)** — **agent-driven 경로** (orchestrator + 서브에이전트가 파이프라인 인계받음) 에만 필요.  script-only 경로는 없이도 작동.  플랜 선택은 아래 [Claude Code 요금제 + 사용량 안내](#claude-code-요금제--사용량-안내) 섹션 참조.
 - macOS는 **Homebrew**, Linux는 `apt` / `pacman` / 동등 패키지 매니저
 - **Apple Silicon 권장** — 렌더 가속에 `h264_videotoolbox` 사용,

@@ -647,12 +647,14 @@ What appears on GitHub is the system's own evolution, not its products.
 
 ## Platform support
 
-| Surface | macOS 14+ | Linux |
-|---------|-----------|-------|
-| Mission execution (transcribe → select → render → QA) | ✓ | ✓ (`ffmpeg` / `whisper.cpp` / `ollama` all available) |
-| Hardware-accelerated render (`h264_videotoolbox`) | ✓ Apple Silicon | n/a — falls back to libx264 via `-allow_sw 1` |
-| `bootstrap.sh` synthetic fixtures (macOS `say`-based TTS) | ✓ | skipped — point at real CC fixtures via `scripts/fetch-fixtures.sh` |
-| `launchd` schedulers (nightly auto-run, daily audit) | ✓ | replace with systemd timers or cron — see `scripts/com.melons.agents.*.plist` for the schedule to mirror |
+| Surface | macOS 14+ | Linux | Windows 11 |
+|---------|-----------|-------|------------|
+| Mission execution (transcribe → select → render → QA) | ✓ primary | ✓ best-effort | ✓ best-effort (bash via git-bash) |
+| Hardware-accelerated render | ✓ `h264_videotoolbox` (Apple Silicon) | `h264_nvenc` (NVIDIA) or fallback `libx264` via `-allow_sw 1` | ✓ `h264_nvenc` (NVIDIA — primary) or `h264_qsv` (Intel) / `libx264` fallback |
+| Local AI video gen (LTX-Video / SVD / AnimateDiff) | possible but no NVENC → slower | NVIDIA Linux works | ✓ **primary** (Mix #2 longform = Windows + RTX 4070 Ti SUPER) |
+| `bootstrap.sh` synthetic fixtures (macOS `say`-based TTS) | ✓ | skipped — point at real CC fixtures via `scripts/fetch-fixtures.sh` | skipped — run `scripts/windows/setup-env.ps1` then point at real CC fixtures |
+| Schedulers (nightly auto-run, daily audit) | ✓ `launchd` | replace with systemd timers or cron | replace with Task Scheduler (manual; TODO `scripts/windows/install-scheduler.ps1`) |
+| Windows setup guide | n/a | n/a | [`docs/platform-windows.md`](docs/platform-windows.md) |
 
 macOS is the **primary, end-to-end tested** platform.  Linux works for
 mission execution but the schedulers and synthetic-fixture generation
@@ -700,8 +702,8 @@ music-video + faceless-short).
 
 ## Prerequisites
 
-- **macOS 14+** (primary, fully tested) or **Linux** (best-effort —
-  see [Platform support](#platform-support) above)
+- **macOS 14+** (primary, fully tested) or **Linux** (best-effort) or **Windows 11** (best-effort, NVIDIA + git-bash path — primary for local AI video work) —
+  see [Platform support](#platform-support) above; Windows setup at [`docs/platform-windows.md`](docs/platform-windows.md).
 - **[Claude Code](https://docs.anthropic.com/claude-code)** — only
   required for the **agent-driven path** (orchestrator + subagents
   taking over the whole pipeline).  The script-only path runs without
