@@ -124,6 +124,71 @@ ffmpeg NVENC compose: completed in seconds.
 need ~10 hours JUST for stills at current Pollinations speed.  See
 "Bottleneck + plan" section below.
 
+## **UPDATE 2026-05-26 05:30 KST — Mix #2 UPLOADED + Mix #3 (hero-loop) PIVOT**
+
+### Mix #2 upload
+- Video ID: **`7f7PeuNuIfI`**
+- Status: **private**, scheduled public at **2026-05-26 19:13 KST**
+- URL (operator): https://studio.youtube.com/video/7f7PeuNuIfI/edit
+- All 8 YT tips applied via meta (private→24h→public, off-hour, category=Music, 27 tags within 500-byte limit, 6 hashtags in description)
+- 2 manual steps remaining (Data API doesn't expose): auto-chapter OFF + AI content disclosure checkbox
+
+### Channel-level — automated this session
+- Channel keywords applied: 351/500 chars (EN + KR mix, 27 keywords)
+- OAuth fully set up at `G:\config\youtubeuploader\` — all future automation runs free
+
+### Mix #3 pivot — operator feedback at 05:15 KST
+
+Operator review verdict on Mix #2:
+> *"영상이 바뀌는건 오히려 별로인게 오래걸려서 만들었는데 글자나오는게 별로임 글자는 안나와야 할듯 최대한. 글자는 직접쓰던지 생성형ai가 만들어내는 글자들 괴상하고 흉측해 보임. 그래서 그냥 고퀄영상 하나를 무한반복하면서 사운드만 바뀌는게 더 나은듯."*
+
+Two new permanent rules added to operator-private memory:
+1. **AI text avoid** — Pollinations/Flux/SDXL의 글자 (signs/posters/shop fronts/logos/text) 회피.  손과 동급 카테고리.
+2. **Hero-loop preference** — longform mix default = single hero clip × infinite loop (not 598-clip diversity).
+
+### Mix #3 shipped — hero-loop architecture
+
+**Design**: `docs/mix-3-design.md`
+**Orchestrator**: `scripts/mix3-hero-loop.py` (generate / build / auto subcommands)
+
+**5 hero candidates** generated at `outputs/publish/mix-3-hero-candidates/`:
+- `hero-00-rooftop-rainy-night.mp4` (8s, 1024x576, 335 KB)
+- `hero-01-abstract-neon-void.mp4` (8s, 1024x576, 389 KB)
+- `hero-02-rain-on-glass-macro.mp4` (8s, 1024x576, 229 KB)
+- `hero-03-endless-mist-mountains.mp4` (8s, 1024x576, 175 KB)
+- `hero-04-aurora-dark-sky.mp4` (8s, 1024x576, 575 KB)
+
+All generated with LTX-Video at 40 steps (vs 30 in Mix #2), 193 frames (vs 97), text-explicit negative prompt.  Total generation time: ~12 min.
+
+**Mix #3 test mp4**: `outputs/publish/mix-3-test/yt-mix-3-rooftop-rainy-night-2026-05-26.mp4`
+- 44min 44.9s · 1024×576 · h264 + aac · yuv420p · **169 MB** (vs Mix #2's 745 MB)
+- Built by `ffmpeg -stream_loop -1 -c:v copy` (no re-encode, instant)
+- Uses first hero (rooftop-rainy-night) as default; operator can pick different on return
+
+### Operator next-step menu on return
+
+1. **Mix #2 (5/26 19:13 publish)**:
+   - YT Studio: flip 자동챕터 OFF + check AI 콘텐츠 disclosure
+   - Or delete from schedule if Mix #3 direction is preferred
+
+2. **Mix #3 hero selection** — review 5 candidates at `outputs/publish/mix-3-hero-candidates/`, pick favorite:
+   ```bash
+   FFMPEG_BIN="G:/tools/ffmpeg/ffmpeg.exe" python scripts/mix3-hero-loop.py build \
+     --hero outputs/publish/mix-3-hero-candidates/hero-0X-NAME.mp4 \
+     --audio G:/ai/mix1-analysis/mix1-full.mp3 \
+     --output outputs/publish/mix-3/yt-mix-3-NAME-2026-05-XX.mp4
+   ```
+   Then upload via same `youtubeuploader` command pattern.
+
+3. **1080p upscale** (if 1024×576 hero too soft for YT):
+   ```bash
+   "G:/tools/ffmpeg/ffmpeg.exe" -y -i <hero.mp4> -vf "scale=1920:1080:flags=lanczos" \
+     -c:v h264_nvenc -cq 19 -preset p4 -c:a copy <hero-1080p.mp4>
+   ```
+   Re-run build with upscaled hero.
+
+4. **Audio swap** — same hero, different audio (Mix #4, #5...) trivially fast.
+
 ## **UPDATE 2026-05-26 04:30 KST — FULL RENDER COMPLETED ✅**
 
 `G:/ai/MelonS-Agents/outputs/publish/mix-2/yt-mix-2-mix-2-2026-05-25.mp4`

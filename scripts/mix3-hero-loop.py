@@ -111,9 +111,20 @@ NEGATIVE = (
 
 
 def fetch_audio_duration(audio_path: Path, ffmpeg_bin: str) -> float:
-    """Get audio duration in seconds via ffprobe."""
-    ffprobe = ffmpeg_bin.replace("ffmpeg.exe", "ffprobe.exe").replace("ffmpeg", "ffprobe")
-    if ffprobe == ffmpeg_bin:  # no replacement happened
+    """Get audio duration in seconds via ffprobe.
+
+    Resolves ffprobe sibling of ffmpeg when FFMPEG_BIN is a path; else
+    falls back to "ffprobe" on PATH.
+    """
+    env_probe = os.environ.get("FFPROBE_BIN", "")
+    if env_probe:
+        ffprobe = env_probe
+    elif "/" in ffmpeg_bin or "\\" in ffmpeg_bin:
+        # path-style: probe sibling
+        ffmpeg_p = Path(ffmpeg_bin)
+        ext = ffmpeg_p.suffix  # .exe or empty
+        ffprobe = str(ffmpeg_p.parent / f"ffprobe{ext}")
+    else:
         ffprobe = "ffprobe"
     out = subprocess.run(
         [ffprobe, "-v", "error", "-show_entries", "format=duration",
