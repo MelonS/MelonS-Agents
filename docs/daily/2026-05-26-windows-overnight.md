@@ -124,6 +124,29 @@ ffmpeg NVENC compose: completed in seconds.
 need ~10 hours JUST for stills at current Pollinations speed.  See
 "Bottleneck + plan" section below.
 
+## **UPDATE 2026-05-26 04:30 KST — FULL RENDER COMPLETED ✅**
+
+`G:/ai/MelonS-Agents/outputs/publish/mix-2/yt-mix-2-mix-2-2026-05-25.mp4`
+
+| Field | Value |
+|---|---|
+| Duration | **2677.25 sec ≈ 44분 37초** (matches Mix #1 audio length) |
+| Resolution | **1920 × 1080** |
+| Codec | h264 (libx264 via h264_nvenc) + aac stereo |
+| pix_fmt | **yuv420p** ✓ |
+| Frame rate | 24 fps · 64,254 total frames |
+| Audio | aac, 48 kHz, 194 kbps |
+| File size | **745 MB** |
+| Bitrate | **2.33 Mbps avg** (video 2.13 + audio 0.19) |
+| Wall-clock | ~4h 32m (23:58 → 04:30 KST) |
+| Failures | 0/598 stills, 0/598 clips, 0/1 compose |
+
+⚠ **Bitrate caveat**: target was 12 Mbps via `-cq 19 -b:v 12M -maxrate 15M`, but NVENC's CQ-based rate control picked low bitrate because the lofi atmospheric content is highly compressible.  Result is below YouTube's recommended 1080p 24fps SDR spec of 8 Mbps.
+
+Operator decision on review:
+- **If visual quality acceptable** → upload as-is (smaller file = faster YouTube upload)
+- **If looks degraded** → re-encode with `-rc constqp -qp 17 -b:v 12M` or `-rc cbr -b:v 12M` to force higher bitrate.  No need to regenerate clips — just re-mux the existing one, ~1-2 min wall-clock.
+
 ## **UPDATE 2026-05-25 23:58 KST — Path B validated + FULL RENDER STARTED**
 
 After mini POC PASS at 23:49, downloaded SDXL-Turbo (6.94GB, Stability AI Community License, no gating) and wired it into `mix2-build.py` as `--image-backend comfyui-sdxl`.
