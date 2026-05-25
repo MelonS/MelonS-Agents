@@ -1,5 +1,0 @@
-file 'G:/ai/MelonS-Agents/outputs/publish/mix-2-poc-mini/clips/0000.mp4'
-file 'G:/ai/MelonS-Agents/outputs/publish/mix-2-poc-mini/clips/0001.mp4'
-file 'G:/ai/MelonS-Agents/outputs/publish/mix-2-poc-mini/clips/0002.mp4'
-file 'G:/ai/MelonS-Agents/outputs/publish/mix-2-poc-mini/clips/0003.mp4'
-file 'G:/ai/MelonS-Agents/outputs/publish/mix-2-poc-mini/clips/0004.mp4'

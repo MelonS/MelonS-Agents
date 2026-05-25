@@ -175,6 +175,11 @@ outputs/publish/upload-meta/
 # committed by default.
 outputs/publish/upload-meta-v[3-9]*/
 
+# ffmpeg transient concat list files — emitted by mix2-build.py during
+# compose stage, regenerated on every run, no source of truth.
+outputs/publish/*/_concat.txt
+outputs/publish/**/_concat.txt
+
 # Review-queue — local-only batch taste-decision cache.  Only the
 # README.md + .gitkeep are tracked; the pending/ and decided/ subdirs
 # carry per-machine artifact metadata that fails [[no-pii-in-repo]]
