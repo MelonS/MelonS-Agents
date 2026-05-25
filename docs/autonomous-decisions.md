@@ -35,6 +35,12 @@ header if today's section doesn't exist.
 
 ---
 
+## 2026-05-25 (autonomous)
+
+- `22:58 KST` — Pipeline fixes (pix_fmt yuv420p + tpad clone) being committed to mainline. These are bug fixes (Mac yuv444p broke iOS playback + audio-longer-than-video duration mismatch). Applied during batch-3 production, rescued 5 of 10 renders. Not feature work; not requiring agents/*.md edit; OK to land per infra-maintenance rule.
+- `22:58 KST` — Mix #1 (yt-mix-1, id 9SqgNBKk5JE) kept public despite quality complaint + Reused Content yellow icon. Material impact $0 pre-YPP. Kept for 48h data collection. Mix #2 paused on Mac (same pipeline would yield same quality). Wait for Windows + NVENC + better source design.
+- `22:58 KST` — TT boost decision timeline locked to 5/26 evening (not 5/27-28) after operator correction. My initial draft pushed timeline back based on 그 작은 손 strong organic signal (341 view + 4 comments in 21h on 15-follower channel). Operator overrode: '하루만 더 보자'. Decision tree: 1000+ no-boost, 500-1000 hold, <500 boost 어디쯤이야 v1 $20.
+- `22:58 KST` — Windows + RTX 4070 Ti Super pivot decided — Mac slowness on 44min mix render (50min wall) + Pollinations rate-limit + AI hand quality + NVENC absence all converge. Operator opted to install Claude Code on Windows directly via WSL2. Mac becomes secondary. Bootstrap docs to be written ON Windows against actual machine, not generated on Mac.
 ## 2026-05-22 (overnight autonomous)
 
 - `16:55 KST` — docs/intervention-log.md + scripts/intervention-log-add.sh shipped — qualitative companion to intervention.json (count) + autonomous-decisions.md (agent). Captures SUBSTANCE of operator-shaping decisions: summary + why + shipped + tag (direction/taste/correction/hypothesis-rejection/preference/guard/constraint). Privacy contract: synthesize, no verbatim. Backfilled today + 5/21 + 5/19 + 5/18 from commit history

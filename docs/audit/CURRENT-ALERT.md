@@ -6,38 +6,32 @@
 > and re-run the auditor.
 
 **Verdict**: DRIFT_DETECTED
-**Full report**: [`docs/audit/2026-05-22-contract.md`](2026-05-22-contract.md)
-**Generated**: 2026-05-22 15:18:32 KST
+**Full report**: [`docs/audit/2026-05-25-all.md`](2026-05-25-all.md)
+**Generated**: 2026-05-25 03:08:28 KST
 
 ## Summary (from audit)
 
 
-Forty-fifth contract audit (HEAD `bec0f3b`, 2026-05-22).  All twelve hard rules and the
-Conventions block in `docs/operator-contract.md` were checked against code, configuration,
-git history, and the pre-computed skill-activation drift report (0 findings — clean).
-Four findings from the 44th-cycle report (HEAD `33e7f81`) are RESOLVED in the current HEAD:
-(1) `scripts/lyric-extract.sh` §8 medium finding — inline `# §8 exception:` comment and
-registry entry added by `bec0f3b`; (2) unreachable commit hash `9c8b69e` in roadmap Done
-— replaced with `f5d909a` (verified reachable) by `e8b4162`; (3) three production scripts
-undocumented (`music-video-doctor.sh`, `music-video-trim.sh`, `music-video-upload-meta.sh`)
-— added to `docs/for-analysts.md` inventory by `e8b4162`; (4) `docs/for-analysts.md:94`
-date claim "unchanged since 2026-05-17" — file now correctly reads "unchanged since
-2026-05-15".  Twelve new commits have landed since `abb45d0` (the last covered Done entry),
-growing the Done gap from 6 to 12.  §5 CLEAN — zero commits to `.claude/agents/*.md` or
-`agents/*.md` since `8570a9c` (2026-05-15, pre-marker-convention carry-forward exempt).
-§7 CLEAN.  §8 CLEAN — all 12 registered files confirmed ≥1 `# §8 exception:` comment;
-no output artifacts under `agents/` or `scripts/`.  §12 CLEAN — secret scan returned only
-NLP tokenization code, CI annotation strings, and audit-drift token variables.  §3 money
-firewall intact.  All six subagent model assignments match the `docs/for-analysts.md` table.
-Skill-activation drift: 0 findings (pre-computed).  One [info] new finding: `scripts/shot-plan.sh`
-(added `9c4a081`, 2026-05-22) is present in a research doc but absent from the operational
-inventory in `docs/for-analysts.md`; it is an opt-in scaffold (MUSIC_VIDEO_USE_SHOT_PLAN=1
-not yet wired) so the absence is low-urgency.  Verdict DRIFT_DETECTED is driven solely by the
-structural medium: §9 roadmap "Now" stale, 7th consecutive cycle, operator-gated.
+All-focus audit against HEAD `f78e283` (2026-05-25).  All six dimensions
+checked: (1) architecture vs documentation drift, (2) roadmap freshness,
+(3) operator-contract compliance, (4) cost-model accuracy, (5) stale TODOs
+/ dead code, (6) security / secrets.  The primary finding is a **persistent
+model-assignment drift now entering its 5th consecutive unresolved audit
+cycle**: `.claude/agents/planner.md:5` and `.claude/agents/resourcer.md:5`
+both carry `model: opus` (set by commit `2778316`, 2026-05-22 ~17:50 KST),
+but `docs/for-analysts.md`, `docs/architecture.md`, and `docs/cost-model.md`
+still describe them as `sonnet`.  Four commits have landed since the
+previous all-audit (`2026-05-24-all.md`, HEAD `7edba96`) — all are
+README/site refresh and gitignore work; none resolve the open findings
+and none introduce new contract violations.  Security scan is clean: no
+secrets, no PII, `.env` not tracked in git, all §8 exception-registry
+files retain their `# §8 exception:` markers.  Skill-activation drift
+report returns 0 findings.  Roadmap Done gap has grown from 31 to 35
+commits since the last Done entry.
 
 ## Critical / High findings
 
-_(no critical/high findings — verdict is DRIFT_DETECTED but only medium-or-lower findings)_
+- **[high]** Model-assignment drift (5th consecutive unresolved cycle) —
 
 ## How to clear this alert
 

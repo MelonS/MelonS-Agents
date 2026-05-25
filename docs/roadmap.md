@@ -49,6 +49,35 @@ candidate; if accepted, pre-build of the wizard prototype becomes
 the next active goal.  Until then, multi-skill framework remains
 primary.
 
+<!-- suggest 2026-05-25 22:58 KST
+Production line (music-video skill) parallel work this session:
+
+- Batch-3 (10 vocal shorts) shipped to outputs/publish/shorts-2026-05-23-batch/.
+  7 of 10 uploaded to YT (scheduled through 2026-06-01). 6 of 13
+  posted to TikTok with mid-tier organic reach (top: 어디쯤이야 v1
+  721 view + 48 like + 6.7% engagement at 72h+).
+- One longform mix experiment shipped (yt-mix-1, id 9SqgNBKk5JE,
+  44min instrumental). Visual quality flagged poor → root cause
+  triple (bitrate 3.8 Mbps under YT's 8-12 Mbps; static stills +
+  zoompan fake motion; no transitions between 12 tracks). Only
+  bitrate fixed by GPU; sources + composition need design redo.
+- Decision: Migrate active production to Windows + RTX 4070 Ti
+  Super. NVENC (7-10x render speed), local SDXL/Flux (Pollinations
+  rate-limit bypass), Stable Video Diffusion (real motion vs
+  zoompan). Mac becomes secondary monitor / backup.
+- Windows session picks up via git pull + memory rsync. Full
+  handoff in docs/daily/2026-05-25-windows-pivot.md.
+- Pending decisions: (1) TT $20 boost on 어디쯤이야 v1 evaluate
+  5/26 ~21:00 KST per thresholds in handoff doc; (2) Windows
+  bootstrap docs to be written on Windows directly.
+
+This does NOT change the Active subgoal above (operator-side
+job-hunt activation remains primary). The music-video production
+line is the agent-side parallel work that has been continuing
+between operator-driven priorities, per "follow-on options"
+clause in the stale-cycle context above.
+-->
+
 
 ## Next — queued, in priority order
 
