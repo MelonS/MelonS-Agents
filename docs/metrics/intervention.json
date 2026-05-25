@@ -1,26 +1,26 @@
 {
-  "generated_at": "2026-05-22T13:39:18",
+  "generated_at": "2026-05-25T02:00:46",
   "marker_convention_started": "2026-05-17",
   "session_cap_minutes": 60,
   "rationale": "Two-source intervention tracker. Panel A: per-day commit count classified by initiator (user vs agent). Panel B: per-day operator prompts and active session minutes mined from local Claude Code session JSONLs. Goal: both signals trend down as the agent system absorbs more decisions.",
   "trend_7d": {
     "user_ratio_pct": {
-      "last7_avg": 30.3,
+      "last7_avg": 32.14,
       "prev7_avg": null,
       "delta": null
     },
     "leverage_ratio": {
-      "last7_avg": 4.94,
+      "last7_avg": 4.37,
       "prev7_avg": null,
       "delta": null
     },
     "operator_prompts": {
-      "last7_avg": 118.57,
+      "last7_avg": 115.57,
       "prev7_avg": null,
       "delta": null
     },
     "active_session_minutes": {
-      "last7_avg": 187.6,
+      "last7_avg": 180.89,
       "prev7_avg": null,
       "delta": null
     },
@@ -100,7 +100,7 @@
       "user_ratio_pct": 11.5,
       "longest_autonomous_gap_h": 12.2,
       "leverage_ratio": 7.7,
-      "operator_prompts": 302,
+      "operator_prompts": 488,
       "active_session_minutes": 339.3,
       "session_count": 14
     },
@@ -111,23 +111,441 @@
       "user_ratio_pct": 35.7,
       "longest_autonomous_gap_h": 14.5,
       "leverage_ratio": 1.8,
-      "operator_prompts": 94,
+      "operator_prompts": 148,
       "active_session_minutes": 168.4,
       "session_count": 8
     },
     {
       "date": "2026-05-22",
-      "user_initiated": 6,
-      "agent_autonomous": 93,
-      "user_ratio_pct": 6.1,
-      "longest_autonomous_gap_h": 3.4,
-      "leverage_ratio": 15.5,
-      "operator_prompts": 20,
-      "active_session_minutes": 201.7,
-      "session_count": 15
+      "user_initiated": 11,
+      "agent_autonomous": 142,
+      "user_ratio_pct": 7.2,
+      "longest_autonomous_gap_h": 3.9,
+      "leverage_ratio": 12.9,
+      "operator_prompts": 73,
+      "active_session_minutes": 390.8,
+      "session_count": 25
+    },
+    {
+      "date": "2026-05-23",
+      "user_initiated": 2,
+      "agent_autonomous": 6,
+      "user_ratio_pct": 25.0,
+      "longest_autonomous_gap_h": 4.6,
+      "leverage_ratio": 3.0,
+      "operator_prompts": 2,
+      "active_session_minutes": 17.9,
+      "session_count": 2
+    },
+    {
+      "date": "2026-05-24",
+      "user_initiated": 3,
+      "agent_autonomous": 1,
+      "user_ratio_pct": 75.0,
+      "longest_autonomous_gap_h": 0.7,
+      "leverage_ratio": 0.3,
+      "operator_prompts": 5,
+      "active_session_minutes": 12.3,
+      "session_count": 2
     }
   ],
   "commits": [
+    {
+      "sha": "f78e283",
+      "date": "2026-05-24",
+      "class": "user",
+      "subject": "docs(readme.ko): drop \"출시\" framing in Quick start tag note"
+    },
+    {
+      "sha": "dc0b94a",
+      "date": "2026-05-24",
+      "class": "user",
+      "subject": "docs(readme+site): EN/KO Overview rewrite + collapse historical + stat refresh"
+    },
+    {
+      "sha": "0298f9d",
+      "date": "2026-05-24",
+      "class": "agent",
+      "subject": "fix(gitignore): exception for site/assets/genre-grid + docs/demo *.jpg"
+    },
+    {
+      "sha": "198075b",
+      "date": "2026-05-24",
+      "class": "user",
+      "subject": "docs(visuals): refresh hero + add genre-catalog grid (6 grade profiles in production)"
+    },
+    {
+      "sha": "7edba96",
+      "date": "2026-05-23",
+      "class": "agent",
+      "subject": "feat(presets): shader_pool populated for 10 genres (opt-in re-mapping)"
+    },
+    {
+      "sha": "a4f2400",
+      "date": "2026-05-23",
+      "class": "agent",
+      "subject": "docs(reference): add bilingual + L-cut + drops + audio-analyze entries"
+    },
+    {
+      "sha": "7160a18",
+      "date": "2026-05-23",
+      "class": "agent",
+      "subject": "docs(skill): CHANGELOG entry for 2026-05-23 research follow-on wave"
+    },
+    {
+      "sha": "e9af4b7",
+      "date": "2026-05-23",
+      "class": "agent",
+      "subject": "feat(plan): auto-export MUSIC_VIDEO_SHADER_DROPS from mission resources"
+    },
+    {
+      "sha": "c242e4e",
+      "date": "2026-05-23",
+      "class": "agent",
+      "subject": "feat(audio): drop detection — research §6 implementation"
+    },
+    {
+      "sha": "9015d10",
+      "date": "2026-05-23",
+      "class": "agent",
+      "subject": "feat(lyrics): LYRIC_TRAIL_MS — L-cut style trail past vocal end"
+    },
+    {
+      "sha": "e1e3838",
+      "date": "2026-05-23",
+      "class": "user",
+      "subject": "feat(lyrics): KR Hangul + Romanization bilingual stack (research §8)"
+    },
+    {
+      "sha": "d6dcfb8",
+      "date": "2026-05-23",
+      "class": "user",
+      "subject": "docs(social): reusable LinkedIn footer block (EN+KO) — 3 variants"
+    },
+    {
+      "sha": "2778316",
+      "date": "2026-05-22",
+      "class": "user",
+      "subject": "config(agents): planner + resourcer → opus (multi-week production trial)"
+    },
+    {
+      "sha": "2d5a775",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(plan): 7/7 cases for scripts/shot-plan.sh"
+    },
+    {
+      "sha": "11abbe9",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(plan): MUSIC_VIDEO_USE_SHOT_PLAN=1 — consume the plan's keyword sequence"
+    },
+    {
+      "sha": "1457b75",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(reference): add post-research wave tools + grade profiles + data files"
+    },
+    {
+      "sha": "38662a8",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(broll): wire mood-vocabulary consumer in pexels-fetch.sh"
+    },
+    {
+      "sha": "3b0e039",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(plan): wire shot-plan emission into run.sh — inspectable artifact"
+    },
+    {
+      "sha": "f714a58",
+      "date": "2026-05-22",
+      "class": "user",
+      "subject": "abtest(planner+resourcer): revert to sonnet — verdict in docs/research/"
+    },
+    {
+      "sha": "fcc5fee",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "abtest(planner+resourcer): flip to opus for A/B"
+    },
+    {
+      "sha": "3643770",
+      "date": "2026-05-22",
+      "class": "user",
+      "subject": "feat(intervention-log): qualitative record of operator-shaping decisions"
+    },
+    {
+      "sha": "4de6719",
+      "date": "2026-05-22",
+      "class": "user",
+      "subject": "docs(readme): fix architecture diagram — show both shipped shapes + future-shape slot"
+    },
+    {
+      "sha": "c5c84e5",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(research): kpop_ballad end-to-end — full chain composes to deliberate MV aesthetic"
+    },
+    {
+      "sha": "65c9b61",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(daily): brief updated with post-research wave (10 follow-on commits)"
+    },
+    {
+      "sha": "6c8b8c7",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(mood): mood-vocabulary.yaml — primitive expansion for B-roll search"
+    },
+    {
+      "sha": "87719e8",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "site: link operator-tooling.md catalog from Operator tooling card"
+    },
+    {
+      "sha": "3ee3eaf",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "site: mirror \"Who this is for\" from README — audience callout before mechanism"
+    },
+    {
+      "sha": "1a10235",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(readme.ko): mirror operator-tooling catalog link"
+    },
+    {
+      "sha": "4236814",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(readme): link operator-tooling catalog from Design notes"
+    },
+    {
+      "sha": "99eaf8c",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(readme): surface grade_profile + shot-plan + research docs (EN+KO)"
+    },
+    {
+      "sha": "617fb42",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(operator-tooling): single-page catalog of the daily-ops stack"
+    },
+    {
+      "sha": "f6a8e68",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(readme): \"Who this is for\" section + arch diagram refreshed (EN+KO)"
+    },
+    {
+      "sha": "be9ad92",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(research): end-to-end synthwave validation — grade transforms Pexels stock to genre-coded"
+    },
+    {
+      "sha": "f4c5ff6",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(for-analysts): inventory entries for morning-brief.sh + roadmap-done-sync.sh"
+    },
+    {
+      "sha": "2dd8797",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs: clear 45th-cycle info + auto-backfill latest commits in Done"
+    },
+    {
+      "sha": "4f3e717",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(roadmap): auto-bulk-reconciliation — 4 commits backfilled (16:03 KST)"
+    },
+    {
+      "sha": "54ffc0b",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "chore(audit+docs): clear 45th-cycle pending + register shot-plan + commit pre-existing artifacts"
+    },
+    {
+      "sha": "8730cf0",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(research): grade_profile visual comparison — 3 of 5 strong, 2 subtle"
+    },
+    {
+      "sha": "43cfc44",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(examples+skills): surface recent ships in EXAMPLES + job-hunt walkthrough"
+    },
+    {
+      "sha": "6a2c8db",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(roadmap): auto-bulk-reconciliation script + test + backfill 36 commits"
+    },
+    {
+      "sha": "26db705",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(metrics): quality-trend chart — mission-outcome companion to autonomy signal"
+    },
+    {
+      "sha": "f96549b",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(doctor): intervention-trend check — chart becomes a doctor signal"
+    },
+    {
+      "sha": "b2476b4",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(morning-brief): bilingual (EN+KO) — --lang ko|en flag + LANG autodetect"
+    },
+    {
+      "sha": "1fef3f0",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(grade): per-genre base color grade — research §2 implementation"
+    },
+    {
+      "sha": "bec0f3b",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "chore(audit): clear 44th-cycle new finding — lyric-extract §8 exception"
+    },
+    {
+      "sha": "9c4a081",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(plan): scripts/shot-plan.sh — director-discipline intent layer"
+    },
+    {
+      "sha": "90f9abb",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(lyrics): LYRICS_POSITIONS env override implementation"
+    },
+    {
+      "sha": "e8b4162",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "chore(audit): clear 43rd-cycle new findings — bad hash + 8 undocumented scripts"
+    },
+    {
+      "sha": "16332d1",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(presets): cut_density semantic field on every preset"
+    },
+    {
+      "sha": "dbe2a01",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(lyrics): move overlay into cross-platform safe band"
+    },
+    {
+      "sha": "dec4557",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(log-decision): idempotency + correctness regression test"
+    },
+    {
+      "sha": "e33c488",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(log-decision): idempotency + correctness regression test"
+    },
+    {
+      "sha": "ce7dd4d",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(readme): link music-video CHANGELOG + correct 271 seeded ids"
+    },
+    {
+      "sha": "33e7f81",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(decisions): log idempotency-test-first memory entry"
+    },
+    {
+      "sha": "8cd5b8e",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(roadmap): bulk-reconciliation #2 — backfill 28 Done entries"
+    },
+    {
+      "sha": "482500f",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "test(install-claude-local): idempotency regression test + leak fix"
+    },
+    {
+      "sha": "abb45d0",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "chore(audit): clear 42nd-cycle persistent findings"
+    },
+    {
+      "sha": "92113ee",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "chore(audit+onboarding): commit pre-existing modified files"
+    },
+    {
+      "sha": "bbb6faf",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(roadmap): Done entries for site v2 (3352d3e) + disk cleanup sweep"
+    },
+    {
+      "sha": "3352d3e",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "site: surface job-hunt digest preview + collapse faceless gallery"
+    },
+    {
+      "sha": "7f44c59",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "fix(install-claude-local): idempotency — single-line BEGIN/END + substitute before awk"
+    },
+    {
+      "sha": "75f5dd7",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "feat(doctor): scripts/music-video-doctor.sh — skill-specific health check"
+    },
+    {
+      "sha": "5b797e9",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(skill): music-video CHANGELOG — captures 2026-05-22 quality-bar batch"
+    },
+    {
+      "sha": "b6c8b6c",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(roadmap): Done entry for README+site refresh (3ab852d)"
+    },
+    {
+      "sha": "3ab852d",
+      "date": "2026-05-22",
+      "class": "agent",
+      "subject": "docs(readme+site): refresh stats, surface recent ships, lead with first-touch"
+    },
+    {
+      "sha": "46a8fe7",
+      "date": "2026-05-22",
+      "class": "user",
+      "subject": "feat(metrics): bilingual intervention chart (EN+KO) + visual polish"
+    },
     {
       "sha": "652c7a8",
       "date": "2026-05-22",
