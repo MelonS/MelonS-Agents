@@ -82,7 +82,7 @@ echo "[grade] profile=$PROFILE"
 "${FFMPEG_BIN:-/opt/homebrew/bin/ffmpeg}" -y -loglevel warning -stats \
   -i "$SRC" \
   -vf "$FILTER,setsar=1" \
-  -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+  -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
 
 if [[ ! -s "$DST" ]]; then
   echo "[grade] failed" >&2

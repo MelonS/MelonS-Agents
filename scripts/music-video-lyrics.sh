@@ -426,7 +426,7 @@ FILTER_CHAIN="${FILTER_CHAIN/\[in\]/[0:v]}"
   -i "$SRC" \
   -filter_complex "${FILTER_CHAIN}" \
   -map "$FINAL_TAG" -map "0:a" \
-  -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+  -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
 
 dur=$("$FFPROBE" -v error -show_entries format=duration -of csv=p=0 "$DST" 2>/dev/null | awk '{printf "%.1f", $1}')
 size=$(du -h "$DST" 2>/dev/null | awk '{print $1}')

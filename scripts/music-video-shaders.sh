@@ -139,7 +139,7 @@ case "$EFFECT" in
           scale=1080:1920:flags=bicubic,setsar=1[ym];
         [v][xm][ym]displace=edge=smear[out]
       " -map "[out]" -map "0:a" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   breathing)
@@ -148,7 +148,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "scale=w='trunc(1080*${EXPR}/2)*2':h='trunc(1920*${EXPR}/2)*2':eval=frame,crop=1080:1920,setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   halation)
@@ -160,7 +160,7 @@ case "$EFFECT" in
         [glow_in]eq=brightness=-0.25:contrast=1.6:saturation=1.2,gblur=sigma=22:steps=2[glow];
         [base][glow]blend=all_mode=screen:all_opacity=0.30,setsar=1[out]
       " -map "[out]" -map "0:a" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   combo)
@@ -185,7 +185,7 @@ case "$EFFECT" in
         [hg]eq=brightness=-0.25:contrast=1.6:saturation=1.2,gblur=sigma=22:steps=2[glow];
         [hb][glow]blend=all_expr='A + (255-A)*B/255 * ${OPACITY}',setsar=1[out]
       " -map "[out]" -map "0:a" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   # ───── Genre-coded effects (additive, 2026-05-21) ─────
@@ -195,7 +195,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "geq=lum='if(mod(Y,2),lum(X,Y)*0.85,lum(X,Y))':cb='cb(X,Y)':cr='cr(X,Y)',setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   chromatic_split)
@@ -203,7 +203,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "rgbashift=rh=4:gh=-2:bh=-4,setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   neon_edge)
@@ -218,7 +218,7 @@ case "$EFFECT" in
           colorbalance=rs=0.4:gs=-0.2:bs=0.5[edges];
         [base][edges]blend=all_mode=screen:all_opacity=0.45,setsar=1[out]
       " -map "[out]" -map "0:a" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   vhs)
@@ -226,7 +226,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "rgbashift=rh=3:gh=-1:bh=-3,noise=c0s=4:allf=t,setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   saturation_pulse)
@@ -236,7 +236,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "eq=saturation='1.0 + 0.35*sin(2*PI*${SAT_HZ}*t)':eval=frame,setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   kaleidoscope)
@@ -255,7 +255,7 @@ case "$EFFECT" in
         [c][d]hstack=inputs=2[bot];
         [top][bot]vstack=inputs=2,setsar=1[out]
       " -map "[out]" -map "0:a" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   # ───── Beat-synced "popping" effects (2026-05-21, added per operator) ─────
@@ -274,7 +274,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "scale=w='1080*(${ZOOM_EXPR})':h='1920*(${ZOOM_EXPR})':eval=frame,crop=1080:1920,eq=brightness='${BRIGHT_EXPR}':eval=frame,setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   strobe)
@@ -294,7 +294,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "negate=enable='gt(${NEG_ENABLE},0)',setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   shake)
@@ -325,7 +325,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "pad=1108:1948:14:14:color=black,crop=w=1080:h=1920:x='14+(${X_SHAKE})':y='14+(${Y_SHAKE})':exact=1,setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   color_burst)
@@ -348,7 +348,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "hue=H='${HUE_EXPR}',setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   light_rays)
@@ -363,7 +363,7 @@ case "$EFFECT" in
         [base][rays]blend=all_mode=screen:all_opacity=0.25[bright];
         [bright]geq=lum='if(mod(Y,3),lum(X,Y),lum(X,Y)*0.78)':cb='cb(X,Y)':cr='cr(X,Y)',setsar=1[out]
       " -map "[out]" -map 0:a \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   # ───── Stage-1 catalog expansion (2026-05-22 quality-bar #4) ─────
@@ -394,7 +394,7 @@ case "$EFFECT" in
         [leak_small][base]scale2ref=w=iw:h=ih[leak_scaled][base2];
         [base2][leak_scaled]blend=all_mode=screen:all_opacity=0.40[out]
       " -map "[out]" -map 0:a -shortest \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   duotone)
@@ -411,7 +411,7 @@ case "$EFFECT" in
             cr='200 - lum(X,Y)*0.45',
           setsar=1[out]
       " -map "[out]" -map 0:a \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   vignette_pulse)
@@ -423,7 +423,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "vignette=angle='PI/4 + 0.18*sin(2*PI*0.25*t)':mode=forward,setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   # ───── Stage-2 catalog expansion (2026-05-22 quality-bar #4) ─────
@@ -436,7 +436,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "noise=alls=4:allf=u,format=yuv420p,setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   dust_speck)
@@ -460,7 +460,7 @@ case "$EFFECT" in
         [specks_small][base]scale2ref=w=iw:h=ih[specks][base2];
         [base2][specks]blend=all_mode=screen:all_opacity=0.5[out]
       " -map "[out]" -map 0:a -shortest \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   posterize)
@@ -471,7 +471,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "lutyuv=y='if(gt(val,200),255,if(gt(val,128),192,if(gt(val,64),128,0)))',eq=saturation=1.6,setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   # ───── Stage-3 catalog expansion (2026-05-22 quality-bar #4) ─────
@@ -485,7 +485,7 @@ case "$EFFECT" in
     "$FFMPEG_BIN" -y -loglevel warning -stats \
       -i "$SRC" \
       -vf "tmix=frames=4:weights='2 1 1 1',setsar=1" \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   soft_bloom)
@@ -500,7 +500,7 @@ case "$EFFECT" in
         [bright_in]eq=brightness=-0.20:contrast=1.3:saturation=1.05,gblur=sigma=10:steps=2[glow];
         [base][glow]blend=all_mode=screen:all_opacity=0.25,setsar=1[out]
       " -map "[out]" -map 0:a \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$DST"
     ;;
 
   *)
@@ -555,7 +555,7 @@ if [[ "$RATIO_CMP" == "1" ]]; then
       -i "$SRC" -i "$DST" \
       -filter_complex "[0:v][1:v]blend=all_expr='A*(1-(${OPACITY_EXPR}))+B*(${OPACITY_EXPR})'[v]" \
       -map "[v]" -map 0:a \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$SHADER_FINAL_DST"
     echo "  [phrase_climax] active window ${GATE_T0}s–${GATE_T1}s (of ${GATE_DUR}s)" >&2
   elif [[ "$SHADER_GATE" == "onsets" || "$SHADER_GATE" == "beats" || "$SHADER_GATE" == "drops" ]]; then
     # C.1 Phase 3: per-event gaussian-sum gating.
@@ -597,7 +597,7 @@ if [[ "$RATIO_CMP" == "1" ]]; then
         -i "$SRC" -i "$DST" \
         -filter_complex "[0:v][1:v]blend=all_mode=normal:all_opacity=${SHADER_RATIO}[v]" \
         -map "[v]" -map 0:a \
-        -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
+        -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$SHADER_FINAL_DST"
     else
       # Select every-Nth event based on ratio.  Lower ratio → sparser
       # event firing (fewer, more isolated bells).  Hard cap at
@@ -645,7 +645,7 @@ if [[ "$RATIO_CMP" == "1" ]]; then
         -i "$SRC" -i "$DST" \
         -filter_complex "[0:v][1:v]blend=all_expr='A*(1-(${OPACITY_EXPR}))+B*(${OPACITY_EXPR})'[v]" \
         -map "[v]" -map 0:a \
-        -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
+        -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$SHADER_FINAL_DST"
       echo "  [${SHADER_GATE}] $EVT_USED events fired (every ${STRIDE} of ${EVT_TOTAL}), σ=${SIGMA}s" >&2
     fi
   else
@@ -653,7 +653,7 @@ if [[ "$RATIO_CMP" == "1" ]]; then
       -i "$SRC" -i "$DST" \
       -filter_complex "[0:v][1:v]blend=all_mode=normal:all_opacity=${SHADER_RATIO}[v]" \
       -map "[v]" -map 0:a \
-      -c:v libx264 -preset medium -crf 22 -c:a copy "$SHADER_FINAL_DST"
+      -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a copy "$SHADER_FINAL_DST"
   fi
   rm -f "$DST"
   DST="$SHADER_FINAL_DST"

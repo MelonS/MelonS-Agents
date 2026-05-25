@@ -484,7 +484,7 @@ for ((i=0; i<SEG_TOTAL; i++)); do
     "$FFMPEG_BIN" -y -loglevel error \
       -ss "$START" -t "$SRC_DUR" -i "$RAW" \
       -vf "setpts=PTS/${SPEED},scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920" \
-      -an -c:v libx264 -preset medium -crf 23 -r 30 \
+      -an -c:v libx264 -preset medium -crf 23 -pix_fmt yuv420p -r 30 \
       "$OUT"
   else
     OUT_OFF=$(awk -v o="$GLITCH" -v s="${SEG_START[$i]}" 'BEGIN{printf "%.3f", o-s}')
@@ -501,7 +501,7 @@ for ((i=0; i<SEG_TOTAL; i++)); do
         [0:v]trim=${POST_START}:${SRC_DUR},setpts=PTS-STARTPTS[c];
         [a][b][c]concat=n=3:v=1,setpts=PTS/${SPEED},scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920[outv]
       " \
-      -map "[outv]" -an -c:v libx264 -preset medium -crf 23 -r 30 \
+      -map "[outv]" -an -c:v libx264 -preset medium -crf 23 -pix_fmt yuv420p -r 30 \
       "$OUT"
   fi
 
@@ -565,12 +565,16 @@ ANY_FILTER=0
 [[ "$ZOOM_EXPR" != "1" ]] && ANY_FILTER=1
 
 if (( ANY_FILTER == 0 )); then
-  log_info "  (no v6 filters — fast-path c:v copy mux)"
+  log_info "  (no v6 filters — fast-path with tpad to match audio)"
+  # tpad ensures video extends to cover full audio duration.
+  # Without this, segments shorter than audio leave a video-stream-shorter-than-audio
+  # mismatch that breaks players (operator caught 2026-05-24).
   "$FFMPEG_BIN" -y -loglevel error \
     -i "$CONCAT" \
     -stream_loop -1 -i "$MUSIC_FILE" \
-    -map "0:v" -map "1:a" \
-    -c:v copy -c:a aac -b:a 192k \
+    -filter_complex "[0:v]tpad=stop_mode=clone:stop_duration=999[outv]" \
+    -map "[outv]" -map "1:a" \
+    -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a aac -b:a 192k \
     -t "$TARGET_DUR" \
     "$OUT"
 else
@@ -581,6 +585,9 @@ else
     filter_parts+=("scale=w='1080*(${ZOOM_EXPR})':h='1920*(${ZOOM_EXPR})':eval=frame")
     filter_parts+=("crop=1080:1920")
   fi
+  # Always pad video to outlast audio — -t below caps to target duration.
+  # Without tpad the video can be shorter than audio when segment-sum < target_dur.
+  filter_parts+=("tpad=stop_mode=clone:stop_duration=999")
 
   # Comma-join filter parts into a single chain
   IFS=','; FILTER_CHAIN="${filter_parts[*]}"; IFS=' '
@@ -591,7 +598,7 @@ else
     -stream_loop -1 -i "$MUSIC_FILE" \
     -filter_complex "[0:v]${FILTER_CHAIN}[outv]" \
     -map "[outv]" -map "1:a" \
-    -c:v libx264 -preset medium -crf 22 -c:a aac -b:a 192k \
+    -c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p -c:a aac -b:a 192k \
     -t "$TARGET_DUR" -r 30 \
     "$OUT"
 fi
