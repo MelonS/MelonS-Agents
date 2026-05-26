@@ -249,6 +249,16 @@ namespace MelonS.GameProto.EditorTools
             GameObject rmGo = new GameObject("ResourceManager");
             rmGo.AddComponent<ResourceManager>();
 
+            // AudioBank (Day 6 - wired Day 7)
+            GameObject audioGo = new GameObject("AudioBank");
+            AudioBank audioBank = audioGo.AddComponent<AudioBank>();
+            AudioClip chopClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/chop.wav");
+            AudioClip selClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/select.wav");
+            SerializedObject abSo = new SerializedObject(audioBank);
+            if (chopClip != null) abSo.FindProperty("sfxChop").objectReferenceValue = chopClip;
+            if (selClip != null) abSo.FindProperty("sfxSelect").objectReferenceValue = selClip;
+            abSo.ApplyModifiedProperties();
+
             // AI Director (Day 5)
             GameObject dirGo = new GameObject("AIDirector");
             AIDirector director = dirGo.AddComponent<AIDirector>();
