@@ -1,19 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// Day 4 utility AI — when the pawn is idle (no movement target,
-    /// no chop task) for at least <see cref="decisionInterval"/> seconds,
-    /// auto-pick the highest-utility action.
-    ///
-    /// Current decision tree (very simple):
-    ///   1. If any TreeEntity exists -> assign chop on nearest tree.
-    ///   2. Else wander a random short distance.
-    ///
-    /// Day 5+ will expand with needs-based prioritization (eat when
-    /// hungry, sleep when tired, etc.) and the AI Director's event
-    /// preferences.
+    /// Day 4 utility AI + Day 11 food + Day 20 mood break + Day 24 hunt.
     /// </summary>
     [RequireComponent(typeof(PawnMovement))]
     [RequireComponent(typeof(PawnChopper))]
@@ -23,10 +13,13 @@ namespace MelonS.GameProto
         [SerializeField] private float idleWanderRadius = 3f;
         [Header("Day 11: food gather priority")]
         [SerializeField] private float foodHungryThreshold = 40f;
+        [Header("Day 24: hunt when stockpile food low")]
+        [SerializeField] private float globalFoodLowThreshold = 10f;
 
         private PawnMovement movement;
         private PawnChopper chopper;
         private PawnGatherer gatherer;
+        private PawnHunter hunter;
         private PawnNeeds needs;
         private float lastDecision = -999f;
 
@@ -34,7 +27,8 @@ namespace MelonS.GameProto
         {
             movement = GetComponent<PawnMovement>();
             chopper = GetComponent<PawnChopper>();
-            gatherer = GetComponent<PawnGatherer>(); // may be null on pawns w/o gatherer; gracefully skipped below
+            gatherer = GetComponent<PawnGatherer>();
+            hunter = GetComponent<PawnHunter>();
             needs = GetComponent<PawnNeeds>();
         }
 
@@ -42,19 +36,20 @@ namespace MelonS.GameProto
         {
             if (Time.timeSinceLevelLoad - lastDecision < decisionInterval) return;
 
-            // Day 10: while sleeping, freeze — don't pick new tasks.
             if (needs != null && needs.IsSleeping)
             {
                 movement.ClearTarget();
                 chopper.ClearTask();
+                if (gatherer != null) gatherer.ClearTask();
+                if (hunter != null) hunter.ClearTask();
                 lastDecision = Time.timeSinceLevelLoad;
                 return;
             }
-            // Day 20: mood break — drop current work, wander aimlessly.
             if (needs != null && needs.IsBreaking)
             {
                 chopper.ClearTask();
                 if (gatherer != null) gatherer.ClearTask();
+                if (hunter != null) hunter.ClearTask();
                 if (!movement.IsMoving)
                 {
                     Vector2 cur = transform.position;
@@ -64,9 +59,9 @@ namespace MelonS.GameProto
                 return;
             }
 
-            // Don't override active task
             if (movement.IsMoving || chopper.HasTask) return;
             if (gatherer != null && gatherer.HasTask) return;
+            if (hunter != null && hunter.HasTask) return;
 
             lastDecision = Time.timeSinceLevelLoad;
             Decide();
@@ -74,63 +69,69 @@ namespace MelonS.GameProto
 
         private void Decide()
         {
-            // Day 11: food priority — when hungry AND a bush exists, gather first.
+            // Day 11: food priority — pawn 자기 식량 부족 + 베리부시 있음
             if (needs != null && gatherer != null && needs.food < foodHungryThreshold)
             {
                 BerryBushEntity bush = FindNearestBush();
-                if (bush != null)
-                {
-                    gatherer.SetBushTarget(bush);
-                    return;
-                }
+                if (bush != null) { gatherer.SetBushTarget(bush); return; }
+            }
+
+            // Day 24: hunt — global 식량 비축 부족 + 동물 있음
+            if (hunter != null && ResourceManager.Instance != null
+                && ResourceManager.Instance.food < globalFoodLowThreshold)
+            {
+                AnimalEntity deer = FindNearestAnimal();
+                if (deer != null) { hunter.SetAnimalTarget(deer); return; }
             }
 
             TreeEntity tree = FindNearestTree();
-            if (tree != null)
+            if (tree != null) { chopper.SetTreeTarget(tree); return; }
+
+            Vector2 cur2 = transform.position;
+            movement.SetTarget(cur2 + Random.insideUnitCircle * idleWanderRadius);
+        }
+
+        private AnimalEntity FindNearestAnimal()
+        {
+            var arr = FindObjectsByType<AnimalEntity>(FindObjectsSortMode.None);
+            AnimalEntity best = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = transform.position;
+            foreach (var a in arr)
             {
-                chopper.SetTreeTarget(tree);
-                return;
+                if (a == null || a.IsDead) continue;
+                float sq = ((Vector2)a.transform.position - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = a; }
             }
-            // No trees -> wander
-            Vector2 cur = transform.position;
-            Vector2 offset = Random.insideUnitCircle * idleWanderRadius;
-            movement.SetTarget(cur + offset);
+            return best;
         }
 
         private BerryBushEntity FindNearestBush()
         {
-            BerryBushEntity[] bushes = FindObjectsByType<BerryBushEntity>(FindObjectsSortMode.None);
+            var arr = FindObjectsByType<BerryBushEntity>(FindObjectsSortMode.None);
             BerryBushEntity best = null;
-            float bestDist = float.MaxValue;
+            float bestSq = float.MaxValue;
             Vector2 me = transform.position;
-            foreach (var b in bushes)
+            foreach (var b in arr)
             {
                 if (b == null || b.IsDepleted) continue;
-                float d = Vector2.Distance(me, b.transform.position);
-                if (d < bestDist)
-                {
-                    bestDist = d;
-                    best = b;
-                }
+                float sq = ((Vector2)b.transform.position - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = b; }
             }
             return best;
         }
 
         private TreeEntity FindNearestTree()
         {
-            TreeEntity[] trees = FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
+            var arr = FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
             TreeEntity best = null;
-            float bestDist = float.MaxValue;
+            float bestSq = float.MaxValue;
             Vector2 me = transform.position;
-            foreach (var t in trees)
+            foreach (var t in arr)
             {
                 if (t == null || t.IsDestroyed) continue;
-                float d = Vector2.Distance(me, t.transform.position);
-                if (d < bestDist)
-                {
-                    bestDist = d;
-                    best = t;
-                }
+                float sq = ((Vector2)t.transform.position - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = t; }
             }
             return best;
         }
