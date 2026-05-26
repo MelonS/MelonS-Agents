@@ -541,7 +541,8 @@ namespace MelonS.GameProto.EditorTools
             topRt.anchorMax = new Vector2(1f, 1f);
             topRt.pivot = new Vector2(0.5f, 1f);
             // Day 39: 1920 ref 기준 topbar 48px (이전 32은 800 ref 기준이라 너무 작음)
-            topRt.sizeDelta = new Vector2(0, 48);
+            // 운영자 피드백 polish: font 22→28 키움 → topbar 도 48→60 확보
+            topRt.sizeDelta = new Vector2(0, 60);
             topRt.anchoredPosition = new Vector2(0, 0);
 
             // TopBar LEFT — ClockUI "Day 1 - 06:00"
@@ -550,7 +551,7 @@ namespace MelonS.GameProto.EditorTools
             Text clockText = clockGo.AddComponent<Text>();
             clockText.text = "Day 1 - 06:00";
             clockText.font = uiFont;
-            clockText.fontSize = 22;
+            clockText.fontSize = 28;
             clockText.color = colTextPrimary;
             clockText.alignment = TextAnchor.MiddleLeft;
             RectTransform clockRt = clockGo.GetComponent<RectTransform>();
@@ -567,7 +568,7 @@ namespace MelonS.GameProto.EditorTools
             Text timeText = timeGo.AddComponent<Text>();
             timeText.text = "▶ 1x";
             timeText.font = uiFont;
-            timeText.fontSize = 22;
+            timeText.fontSize = 28;
             timeText.color = colTextPrimary;
             timeText.alignment = TextAnchor.MiddleCenter;
             RectTransform timeRt = timeGo.GetComponent<RectTransform>();
@@ -592,7 +593,7 @@ namespace MelonS.GameProto.EditorTools
             Text foodText = foodTextGo.AddComponent<Text>();
             foodText.text = "식량: 0";
             foodText.font = uiFont;
-            foodText.fontSize = 22;
+            foodText.fontSize = 28;
             foodText.color = colAccentFood;
             foodText.alignment = TextAnchor.MiddleRight;
             RectTransform foodTextRt = foodTextGo.GetComponent<RectTransform>();
@@ -608,7 +609,7 @@ namespace MelonS.GameProto.EditorTools
             Text sep2Text = sep2Go.AddComponent<Text>();
             sep2Text.text = "·";
             sep2Text.font = uiFont;
-            sep2Text.fontSize = 22;
+            sep2Text.fontSize = 28;
             sep2Text.color = colTextMuted;
             sep2Text.alignment = TextAnchor.MiddleCenter;
             RectTransform sep2Rt = sep2Go.GetComponent<RectTransform>();
@@ -624,7 +625,7 @@ namespace MelonS.GameProto.EditorTools
             Text mealsText = mealsTextGo.AddComponent<Text>();
             mealsText.text = "식사: 0";
             mealsText.font = uiFont;
-            mealsText.fontSize = 22;
+            mealsText.fontSize = 28;
             mealsText.color = new Color(0.93f, 0.81f, 0.45f, 1f);  // amber/wheat
             mealsText.alignment = TextAnchor.MiddleRight;
             RectTransform mealsRt = mealsTextGo.GetComponent<RectTransform>();
@@ -640,7 +641,7 @@ namespace MelonS.GameProto.EditorTools
             Text sepText = sepGo.AddComponent<Text>();
             sepText.text = "·";
             sepText.font = uiFont;
-            sepText.fontSize = 22;
+            sepText.fontSize = 28;
             sepText.color = colTextMuted;
             sepText.alignment = TextAnchor.MiddleCenter;
             RectTransform sepRt = sepGo.GetComponent<RectTransform>();
@@ -656,7 +657,7 @@ namespace MelonS.GameProto.EditorTools
             Text woodText = woodGo.AddComponent<Text>();
             woodText.text = "목재: 0";
             woodText.font = uiFont;
-            woodText.fontSize = 22;
+            woodText.fontSize = 28;
             woodText.color = colAccentWood;
             woodText.alignment = TextAnchor.MiddleRight;
             RectTransform woodRt = woodGo.GetComponent<RectTransform>();
@@ -694,7 +695,7 @@ namespace MelonS.GameProto.EditorTools
             Text logText = logTextGo.AddComponent<Text>();
             logText.text = "";
             logText.font = uiFont;
-            logText.fontSize = 16;
+            logText.fontSize = 20;
             logText.color = colTextPrimary;
             logText.alignment = TextAnchor.UpperLeft;
             logText.supportRichText = true;
@@ -733,7 +734,7 @@ namespace MelonS.GameProto.EditorTools
             Text resStatus = resStatusGo.AddComponent<Text>();
             resStatus.text = "연구: 없음 (N=선택)";
             resStatus.font = uiFont;
-            resStatus.fontSize = 18;
+            resStatus.fontSize = 22;
             resStatus.color = colTextPrimary;
             resStatus.alignment = TextAnchor.MiddleCenter;
             RectTransform resStatusRt = resStatusGo.GetComponent<RectTransform>();
@@ -792,7 +793,7 @@ namespace MelonS.GameProto.EditorTools
             Text pickerText = pickerTextGo.AddComponent<Text>();
             pickerText.text = "";
             pickerText.font = uiFont;
-            pickerText.fontSize = 18;
+            pickerText.fontSize = 22;
             pickerText.color = colTextPrimary;
             pickerText.alignment = TextAnchor.UpperLeft;
             pickerText.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -828,7 +829,7 @@ namespace MelonS.GameProto.EditorTools
             Text tutText = tutTextGo.AddComponent<Text>();
             tutText.text = "";
             tutText.font = uiFont;
-            tutText.fontSize = 22;
+            tutText.fontSize = 28;
             tutText.alignment = TextAnchor.MiddleCenter;
             tutText.color = new Color(0.98f, 0.95f, 0.85f, 0f);
             tutText.supportRichText = true;
@@ -865,7 +866,7 @@ namespace MelonS.GameProto.EditorTools
             title.text = "Colonist";
             title.alignment = TextAnchor.UpperLeft;
             title.font = uiFont;
-            title.fontSize = 18;
+            title.fontSize = 22;
             title.color = colTextPrimary;
             RectTransform titleRt = titleGo.GetComponent<RectTransform>();
             titleRt.anchorMin = new Vector2(0f, 1f);
@@ -924,7 +925,7 @@ namespace MelonS.GameProto.EditorTools
             Text hintText = hintGo.AddComponent<Text>();
             hintText.text = "WASD/휠/123/Space · B:벽5 · F:바닥1 · G:문3 · T:화덕10 · 1일=4분(1x)";
             hintText.font = uiFont;
-            hintText.fontSize = 14;
+            hintText.fontSize = 18;
             Color hintCol = colTextMuted; hintCol.a = 0.75f;
             hintText.color = hintCol;
             hintText.alignment = TextAnchor.MiddleCenter;
@@ -987,7 +988,7 @@ namespace MelonS.GameProto.EditorTools
                 Text t = g.AddComponent<Text>();
                 t.text = $"{label}: Lv 0";
                 t.font = uiFont;
-                t.fontSize = 16;
+                t.fontSize = 20;
                 t.color = colTextPrimary;
                 t.alignment = TextAnchor.MiddleLeft;
                 RectTransform rt = g.GetComponent<RectTransform>();
