@@ -67,26 +67,31 @@
 
 ---
 
-## OPQ-003 · second prototype target after RimWorld-lite
+## OPQ-003 · second prototype target after RimWorld-lite — Suika lite (default in flight, Day 1 SHIPPED)
 
-- **when**: 2026-05-26 ~21:40 KST
+- **when**: 2026-05-26 ~21:40 KST · Day 1 status update 2026-05-26 ~22:02 KST
 - **context**: Operator's strategic priority = multi-agent framework
   validated by *multiple* prototypes (not just RimWorld-lite).
   Need to pick next target after framework refactor.
-- **default**: **Suika Game clone** (simple physics merge puzzle) —
-  smallest scope, fastest validation that the framework actually
-  accelerates new-prototype creation.
-- **decision needed**: which 2nd prototype?
+- **default executed**: **Suika Game clone** — Day 1 shipped end-to-end
+  in **~8 min wall-clock** using the new game-dev-agent pipeline
+  (`gen_fruits.py` → `agent.py code` × 9 → `agent.py integrate` ×2 →
+  `agent.py qa`).  Build at
+  `skills/game-prototype-suika/builds/day-1-2026-05-26/SuikaLite.exe`
+  (84 MB).  Screenshot in same folder: 3 fruits resting on floor with
+  walls + drop-line + score UI.  Framework speedup ≈ **15×** vs PawnSim
+  Day 1 baseline (~2 h).  Hypothesis "next prototype = faster" =
+  EMPIRICALLY CONFIRMED.
+- **decision needed**: which prototype after Suika Day 2?
 - **options**:
-  - (a) **Suika Game clone** — 1-2 days target, physics-driven, very
-        different from RimWorld-lite (good framework stress-test)
+  - (a) **Suika Game clone** — IN FLIGHT (Day 1 shipped, Day 2 queued)
   - (b) **Vampire Survivors lite** — 3-4 days, action-driven
   - (c) **Brotato lite** — 3-4 days, similar genre to (b)
   - (d) **대항해시대 라이트 prototype** — operator's passion project,
         2-4 weeks (too big for framework-validation purposes)
   - (e) **Skip** — focus on improving RimWorld-lite instead
-- **impact**: After framework refactor, agent will start whichever
-  is picked.
+- **impact**: After Suika Day 2, agent will start whichever option
+  the operator picks (or default = (b) for next genre stress-test).
 
 ---
 
