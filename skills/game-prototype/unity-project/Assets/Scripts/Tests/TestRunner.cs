@@ -81,6 +81,10 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V32-trader-trade", TestV32_TraderTrade);
             yield return RunOne("V33-animal-tame", TestV33_AnimalTame);
             yield return RunOne("V34-saveload-roundtrip", TestV34_SaveLoadRoundtrip);
+            yield return RunOne("V35-night-overlay-color", TestV35_NightOverlayColor);
+            yield return RunOne("V36-pawnstats-so", TestV36_PawnStatsSO);
+            yield return RunOne("V37-healthparts-so", TestV37_HealthPartsSO);
+            yield return RunOne("V38-pawn-name-label", TestV38_PawnNameLabel);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -271,6 +275,70 @@ namespace MelonS.GameProto.Tests
             string summary = traits.SummaryKr();
             Assert(n >= 1 && n <= 2 && !string.IsNullOrEmpty(summary),
                 $"traits 수={n} summary='{summary}'");
+        }
+
+        private IEnumerator TestV35_NightOverlayColor()
+        {
+            // NightOverlay 가 alpha 변하는지 (component 생성 후 22시 forced GameClock)
+            if (Services.Get<GameClock>() == null)
+            {
+                var cGo = new GameObject("TestGameClockV35");
+                cGo.AddComponent<GameClock>();
+                yield return null;
+            }
+            var clock = Services.Get<GameClock>();
+            var f = typeof(GameClock).GetField("<GameSeconds>k__BackingField",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (f != null) f.SetValue(clock, 22f * 3600f);  // 22시
+            var go = new GameObject("TestNightOverlay");
+            var overlay = go.AddComponent<NightOverlay>();
+            yield return new WaitForSeconds(0.1f);
+            var sr = go.GetComponent<SpriteRenderer>();
+            float alpha = sr != null ? sr.color.a : -1f;
+            Assert(alpha > 0.4f, $"22시 alpha={alpha:F2} (>0.4 expected for 야간)");
+        }
+
+        private IEnumerator TestV36_PawnStatsSO()
+        {
+            // PawnStats SO default 값 검증
+            var stats = MelonS.GameProto.Data.PawnStats.CreateDefault();
+            Assert(stats.maxHp == 30 && stats.attackDamage == 1
+                && Mathf.Approximately(stats.moveSpeed, 3f)
+                && Mathf.Approximately(stats.attackRange, 1f),
+                $"default stats: HP={stats.maxHp} dmg={stats.attackDamage} speed={stats.moveSpeed} range={stats.attackRange}");
+            yield break;
+        }
+
+        private IEnumerator TestV37_HealthPartsSO()
+        {
+            var cfg = MelonS.GameProto.Data.HealthPartsConfig.CreateDefault();
+            int n = cfg.parts.Length;
+            int vitalCount = 0;
+            foreach (var p in cfg.parts) if (p.isVital) vitalCount++;
+            int weightSum = cfg.weightHead + cfg.weightTorso + cfg.weightLeftArm
+                          + cfg.weightRightArm + cfg.weightLeftLeg + cfg.weightRightLeg;
+            Assert(n == 6 && vitalCount == 2 && weightSum == 100,
+                $"parts={n} vital={vitalCount} weights sum={weightSum}");
+            yield break;
+        }
+
+        private IEnumerator TestV38_PawnNameLabel()
+        {
+            // PawnNameLabel Awake + Start 후 TextMesh 생성 확인
+            var go = SpawnTestPawn(new Vector3(42, 0, 0), includeAI: false);
+            var entity = go.GetComponent<PawnEntity>();
+            var nameField = typeof(PawnEntity).GetField("pawnName",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (nameField != null) nameField.SetValue(entity, "테스트인");
+            // PawnNameLabel component 추가
+            go.AddComponent<PawnNameLabel>();
+            yield return new WaitForSeconds(0.1f);  // Start 실행 대기
+            var labelChild = go.transform.Find("NameLabel");
+            TextMesh tm = labelChild != null ? labelChild.GetComponent<TextMesh>() : null;
+            bool exists = tm != null;
+            bool hasName = tm != null && (tm.text == "테스트인" || tm.text == "Colonist");
+            Assert(exists && hasName,
+                $"NameLabel exists={exists}, text='{tm?.text}'");
         }
 
         private IEnumerator TestV34_SaveLoadRoundtrip()
