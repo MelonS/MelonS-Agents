@@ -100,6 +100,9 @@ namespace MelonS.GameProto.EditorTools
             }
 
             GameObject pawnGo = new GameObject("Pawn");
+            // Day 37 영구 fix: pawn 16x16 sprite는 deer 20x20보다 작아 ortho 8
+            //  카메라에서 잘 안 보였음.  prefab transform에 2x scale 박음.
+            pawnGo.transform.localScale = new Vector3(2f, 2f, 1f);
             SpriteRenderer sr = pawnGo.AddComponent<SpriteRenderer>();
             sr.sprite = pawnSprite;
             sr.sortingOrder = 10;
@@ -248,7 +251,9 @@ namespace MelonS.GameProto.EditorTools
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.15f, 0.18f, 0.13f, 1f);
             cam.orthographic = true;
-            cam.orthographicSize = 8f;
+            // Day 37: 8 -> 7 살짝 줌인 (pawn 가시성 ↑).  여전히 20x20 grass
+            //  대부분이 화면 안에 들어옴 (vertical ±7, horizontal ±12.4 at 16:9).
+            cam.orthographicSize = 7f;
             camGo.tag = "MainCamera";
             camGo.transform.position = new Vector3(0, 0, -10);
             camGo.AddComponent<AudioListener>();

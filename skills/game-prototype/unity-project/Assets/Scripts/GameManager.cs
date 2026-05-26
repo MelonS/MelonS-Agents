@@ -34,20 +34,19 @@ namespace MelonS.GameProto
             foreach (var pos in spawnPositions)
             {
                 GameObject p = Instantiate(pawnPrefab, pos, Quaternion.identity);
-                // Day 36: pawn 안 보이는 문제 진단 — Instantiate 후 sprite 상태 로깅 + visible fallback
+                // Day 37 영구 fix: pawn 16x16 sprite가 ortho 8 카메라에서 너무 작아
+                //  보였던 문제 — scale 2x를 prefab 외부에서도 한 번 더 강제.
+                //  (prefab 자체에도 GeneratePawnPrefab에서 2x scale 박혀있음)
+                p.transform.localScale = new Vector3(2f, 2f, 1f);
                 var sr = p.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
                     if (sr.sprite == null)
                     {
-                        Debug.LogError($"[GameManager] pawn[{i}] SpriteRenderer.sprite NULL at runtime — applying flat-color fallback");
+                        Debug.LogError($"[GameManager] pawn[{i}] SpriteRenderer.sprite NULL — flat-color fallback");
                         sr.color = new Color(0.95f, 0.65f, 0.35f, 1f);
                     }
-                    else
-                    {
-                        Debug.Log($"[GameManager] pawn[{i}] sprite={sr.sprite.name} enabled={sr.enabled} color={sr.color}");
-                    }
-                    sr.enabled = true;   // 명시적으로 enable
+                    sr.enabled = true;
                 }
                 PawnEntity entity = p.GetComponent<PawnEntity>();
                 if (entity != null)
