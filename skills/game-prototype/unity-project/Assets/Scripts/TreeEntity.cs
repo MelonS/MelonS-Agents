@@ -22,6 +22,11 @@ namespace MelonS.GameProto
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
+        // Throttle chop SFX — without this it fires every frame (60x/sec
+        // = white-noise buzz instead of rhythmic chop).
+        private float lastChopSoundTime = -10f;
+        private const float ChopSoundInterval = 0.45f;
+
         /// <summary>Apply chop damage. Returns true if tree was destroyed this hit.</summary>
         public bool TakeChopDamage(float dmg)
         {
@@ -33,8 +38,12 @@ namespace MelonS.GameProto
                 float t = Mathf.Clamp01(hp / maxHp);
                 spriteRenderer.color = new Color(t, t, t, 1f);
             }
-            // Day 6 — play chop SFX
-            AudioBank.Instance?.PlayChop();
+            // Chop SFX — throttled so it sounds rhythmic, not buzzy
+            if (Time.time - lastChopSoundTime >= ChopSoundInterval)
+            {
+                AudioBank.Instance?.PlayChop();
+                lastChopSoundTime = Time.time;
+            }
             if (hp <= 0f)
             {
                 ResourceManager.Instance?.AddWood(woodDrop);

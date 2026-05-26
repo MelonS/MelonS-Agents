@@ -15,25 +15,34 @@ namespace MelonS.GameProto
     /// </summary>
     public class AutoScreenshotter : MonoBehaviour
     {
-        public float delaySeconds = 2.5f;
-        public string outputPath = "G:/ai/_screenshots/test.png";
+        public float delaySeconds = 0f;
+        public string outputPath = "";
 
         private void Start()
         {
-            // Allow override via command-line:
-            //   PawnSim.exe -screenshot G:\path\out.png -delay 3.0
+            // Only fire when CLI args explicitly request a screenshot.
+            // Without args (double-click play), do NOTHING — game runs normally.
+            // Args:  PawnSim.exe -screenshot G:\path\out.png -delay 3.0
+            bool requested = false;
             string[] args = System.Environment.GetCommandLineArgs();
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "-screenshot" && i + 1 < args.Length)
                 {
                     outputPath = args[i + 1];
+                    requested = true;
                 }
                 if (args[i] == "-delay" && i + 1 < args.Length
                     && float.TryParse(args[i + 1], out float d))
                 {
                     delaySeconds = d;
+                    requested = true;
                 }
+            }
+            if (!requested || delaySeconds <= 0f || string.IsNullOrEmpty(outputPath))
+            {
+                Debug.Log("[AutoScreenshotter] no CLI args -> play mode (no auto-quit)");
+                return;
             }
             Debug.Log($"[AutoScreenshotter] will capture in {delaySeconds}s -> {outputPath}");
             StartCoroutine(CaptureAndQuit());
