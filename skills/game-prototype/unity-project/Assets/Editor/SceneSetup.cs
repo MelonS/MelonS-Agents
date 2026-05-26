@@ -249,6 +249,10 @@ namespace MelonS.GameProto.EditorTools
             GameObject rmGo = new GameObject("ResourceManager");
             rmGo.AddComponent<ResourceManager>();
 
+            // AI Director (Day 5)
+            GameObject dirGo = new GameObject("AIDirector");
+            AIDirector director = dirGo.AddComponent<AIDirector>();
+
             // Trees — sprinkle 8 around the map (Day 3)
             Sprite treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree.png");
             if (treeSprite == null)
@@ -390,6 +394,40 @@ namespace MelonS.GameProto.EditorTools
             rcSo.FindProperty("woodText").objectReferenceValue = woodText;
             rcSo.FindProperty("foodText").objectReferenceValue = foodText;
             rcSo.ApplyModifiedProperties();
+
+            // Event Log UI (Day 5) — bottom-center
+            GameObject logPanelGo = new GameObject("EventLogPanel");
+            logPanelGo.transform.SetParent(canvasGo.transform, false);
+            Image logBg = logPanelGo.AddComponent<Image>();
+            logBg.color = new Color(0f, 0f, 0f, 0.45f);
+            RectTransform logRt = logPanelGo.GetComponent<RectTransform>();
+            logRt.anchorMin = new Vector2(0.5f, 0f);
+            logRt.anchorMax = new Vector2(0.5f, 0f);
+            logRt.pivot = new Vector2(0.5f, 0f);
+            logRt.sizeDelta = new Vector2(640, 180);
+            logRt.anchoredPosition = new Vector2(0, 20);
+
+            GameObject logTextGo = new GameObject("LogText");
+            logTextGo.transform.SetParent(logPanelGo.transform, false);
+            Text logText = logTextGo.AddComponent<Text>();
+            logText.text = "";
+            logText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            logText.fontSize = 14;
+            logText.color = new Color(0.93f, 0.93f, 0.88f, 1f);
+            logText.alignment = TextAnchor.UpperLeft;
+            logText.supportRichText = true;
+            logText.verticalOverflow = VerticalWrapMode.Overflow;
+            RectTransform logTextRt = logTextGo.GetComponent<RectTransform>();
+            logTextRt.anchorMin = Vector2.zero;
+            logTextRt.anchorMax = Vector2.one;
+            logTextRt.sizeDelta = new Vector2(-20, -10);
+            logTextRt.anchoredPosition = new Vector2(0, -5);
+
+            EventLogUI logUI = logPanelGo.AddComponent<EventLogUI>();
+            SerializedObject logSo = new SerializedObject(logUI);
+            logSo.FindProperty("director").objectReferenceValue = director;
+            logSo.FindProperty("logText").objectReferenceValue = logText;
+            logSo.ApplyModifiedProperties();
 
             // Controller
             PawnInfoPanel panel = panelGo.AddComponent<PawnInfoPanel>();
