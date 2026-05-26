@@ -77,6 +77,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V28-pawn-movement-tick", TestV28_PawnMovementTick);
             yield return RunOne("V29-wolf-attacks-pawn", TestV29_WolfAttacksPawn);
             yield return RunOne("V30-multi-pawn-health-aggregate", TestV30_MultiPawnHealth);
+            yield return RunOne("V31-trader-spawn-and-wander", TestV31_TraderSpawn);
+            yield return RunOne("V32-trader-trade", TestV32_TraderTrade);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -267,6 +269,39 @@ namespace MelonS.GameProto.Tests
             string summary = traits.SummaryKr();
             Assert(n >= 1 && n <= 2 && !string.IsNullOrEmpty(summary),
                 $"traits 수={n} summary='{summary}'");
+        }
+
+        private IEnumerator TestV31_TraderSpawn()
+        {
+            var go = new GameObject("TestTrader");
+            go.transform.position = new Vector3(15, -10, 0);
+            go.AddComponent<SpriteRenderer>();
+            var trader = go.AddComponent<TraderEntity>();
+            yield return new WaitForSeconds(0.05f);
+            Vector3 startPos = go.transform.position;
+            yield return new WaitForSeconds(2.0f);
+            Vector3 endPos = go.transform.position;
+            bool wandered = (endPos - startPos).magnitude > 0.1f;
+            bool stillHere = trader.IsHere;
+            Assert(wandered && stillHere,
+                $"trader 이동 {(endPos-startPos).magnitude:F2}, 살아있음={stillHere}");
+        }
+
+        private IEnumerator TestV32_TraderTrade()
+        {
+            var rm = Services.Get<ResourceManager>();
+            if (rm.wood < 5) rm.AddWood(5 - rm.wood);
+            int startWood = rm.wood, startFood = rm.food;
+            var go = new GameObject("TestTraderTrade");
+            go.transform.position = new Vector3(20, -10, 0);
+            go.AddComponent<SpriteRenderer>();
+            var trader = go.AddComponent<TraderEntity>();
+            yield return new WaitForSeconds(0.05f);
+            bool ok = trader.TryTrade();
+            yield return null;
+            int endWood = rm.wood, endFood = rm.food;
+            Assert(ok && endWood == startWood - 5 && endFood == startFood + 8,
+                $"trade: wood {startWood}→{endWood} (-5), food {startFood}→{endFood} (+8)");
         }
 
         private IEnumerator TestV26_NeedsDecay()
