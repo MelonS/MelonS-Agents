@@ -101,12 +101,23 @@ namespace MelonS.GameProto
             if (food >= eatThreshold) return;
             if (Time.time - lastEatTime < eatTickInterval) return;
             var rm = ResourceManager.Instance;
-            if (rm == null || rm.food <= 0) return;
+            if (rm == null) return;
 
-            // Spend 1 food unit from stockpile, restore eatRestore on this pawn (clamped to 100).
-            rm.AddFood(-1);
-            food = Mathf.Min(100f, food + eatRestore);
-            lastEatTime = Time.time;
+            // Day 27: prefer cooked meal — +eatRestore food AND +10 mood bonus.
+            if (rm.meals > 0)
+            {
+                rm.AddMeals(-1);
+                food = Mathf.Min(100f, food + eatRestore);
+                mood = Mathf.Min(100f, mood + 10f);
+                lastEatTime = Time.time;
+                return;
+            }
+            if (rm.food > 0)
+            {
+                rm.AddFood(-1);
+                food = Mathf.Min(100f, food + eatRestore);
+                lastEatTime = Time.time;
+            }
         }
 
         private bool IsOnFloor()
