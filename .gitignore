@@ -180,6 +180,34 @@ outputs/publish/upload-meta-v[3-9]*/
 outputs/publish/*/_concat.txt
 outputs/publish/**/_concat.txt
 
+# =============================================================================
+# Unity project — only Assets/ + ProjectSettings/ + Packages/ source tracked.
+# Library/ / Temp/ / Logs/ / UserSettings/ / Build outputs are machine-local.
+# Game asset PNGs ARE tracked (override the global *.png ignore) since they
+# ARE source content for the game prototype Skill #3.
+# =============================================================================
+skills/game-prototype/unity-project/Library/
+skills/game-prototype/unity-project/Temp/
+skills/game-prototype/unity-project/Logs/
+skills/game-prototype/unity-project/UserSettings/
+skills/game-prototype/unity-project/obj/
+skills/game-prototype/unity-project/Build/
+skills/game-prototype/unity-project/Builds/
+skills/game-prototype/unity-project/*.csproj
+skills/game-prototype/unity-project/*.sln
+skills/game-prototype/unity-project/.vs/
+
+# Re-allow game art PNGs (override global *.png ignore)
+!skills/game-prototype/unity-project/Assets/**/*.png
+!skills/game-prototype/unity-project/Assets/**/*.jpg
+!skills/game-prototype/unity-project/Assets/**/*.tga
+!skills/game-prototype/unity-project/Assets/**/*.wav
+!skills/game-prototype/unity-project/Assets/**/*.mp3
+!skills/game-prototype/unity-project/Assets/**/*.ogg
+
+# Daily build snapshots — too big for repo, machine-local
+skills/game-prototype/builds/
+
 # Review-queue — local-only batch taste-decision cache.  Only the
 # README.md + .gitkeep are tracked; the pending/ and decided/ subdirs
 # carry per-machine artifact metadata that fails [[no-pii-in-repo]]
