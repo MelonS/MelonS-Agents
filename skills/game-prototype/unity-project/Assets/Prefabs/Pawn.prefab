@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 3384598379736067457}
   - component: {fileID: 903203183321620003}
   - component: {fileID: 3583107881296190084}
+  - component: {fileID: 4870207347937742543}
   - component: {fileID: 9170602978316243212}
   - component: {fileID: 1499688719991667539}
   m_Layer: 0
@@ -196,6 +197,9 @@ MonoBehaviour:
   eatThreshold: 40
   eatRestore: 30
   eatTickInterval: 0.5
+  moodBreakThreshold: 20
+  moodBreakRecoverAt: 35
+  moodBreakDuration: 30
 --- !u!114 &903203183321620003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -224,6 +228,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gatherRange: 1.2
   gatherInterval: 0.8
+--- !u!114 &4870207347937742543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6165637930717161905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b56b600c5dc3a2429e790badaea9ad3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attackRange: 1
+  attackInterval: 0.5
+  attackDamage: 2
 --- !u!114 &9170602978316243212
 MonoBehaviour:
   m_ObjectHideFlags: 0
