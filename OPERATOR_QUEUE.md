@@ -143,6 +143,42 @@
 - **decision needed**: none (resolved autonomously).  Operator may
   want to comment on visual polish (tree size, UI panel sizing).
 
+## OPQ-007 · 게임 개발 직군 8개 agent 정의 (`.claude/agents/game-*.md`)
+
+- **when**: 2026-05-27 ~00:30 KST · queued during Phase 1 refactor
+- **context**: Operator's "게임회사 직군 구조" + "디렉터도 필요할 수도"
+  통찰 (2026-05-27 ~00:15-00:25 KST).  현재 `.claude/agents/` 6개
+  (auditor / editor / orchestrator / planner / qa / resourcer) 는
+  Skill #1 (music-video) / #2 (job-hunt) 용 일반론.  게임 개발 도메인
+  특화 agent 정의 부재.  장르 YAML의 `team:` 필드에 직군 이름은 적혀
+  있지만, 그 직군의 SOP / 결정 권한 / 자주 빠지는 함정은 어디에도 없음.
+- **default (in flight)**: `skills/game-dev-agent/genres/*.yaml` `team:`
+  필드에 직군 이름 문자열만 enumerate.  실제 subagent definition 파일은
+  미작성 (운영자 OK 필요).
+- **decision needed**: `.claude/agents/` 게임 도메인 agent 8개 (+α)
+  추가해도 되는가? 어느 방식?
+- **options**:
+  - (a) **새 파일 8개** at `.claude/agents/game-director.md`,
+    `game-pm.md`, `game-designer.md`, `game-programmer.md`,
+    `game-artist.md`, `game-sound-designer.md`, `game-qa.md`,
+    `game-build-engineer.md`.  기존 6개는 유지 (Skill #1/#2 용).
+  - (b) **기존 6개를 게임 도메인까지 확장** — planner.md에 "게임 도메인
+    시 다음 추가 규칙..." 섹션을 덧붙이는 식.  파일 수 증가 없음.
+  - (c) **장르마다 동적 team 구성** (장르 YAML team 필드에 따라
+    어떤 agent 활성화) 우선 + agent 정의는 점진적 추가.
+  - (d) **운영자 더 큰 단위 재구성 의견**.
+- **추가 직군 (장르마다 동적 활성화)**:
+  - `combat-designer` (VS / Brotato), `level-designer` (액션 / TD),
+    `systems-designer` (시뮬 / RPG), `ai-designer` (콜로니 / RTS),
+    `narrative-designer` (RPG / 어드벤처), `localization` (다국어).
+- **impact**: 운영자 OK 받기 전까지는 장르 YAML에 직군 이름만 있고
+  실제 SOP는 없음.  자율 작업 중 "기획자 관점에서 이 결정이 맞나?"
+  같은 self-check는 못 함.
+- **memory rule**: `.claude/agents/*.md` 수정 시 운영자 OK 필요 (영구
+  규칙).  이 큐 entry가 그 OK 요청.
+
+---
+
 ## OPQ-005 · machine 24/7 power + agent uptime expectations
 
 - **when**: 2026-05-26 ~21:45 KST
