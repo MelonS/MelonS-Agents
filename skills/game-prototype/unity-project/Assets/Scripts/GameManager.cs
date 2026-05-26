@@ -26,6 +26,18 @@ namespace MelonS.GameProto
 
         private void Start()
         {
+            // R7: CLI -testmode → 자동검증 시나리오 5개 실행 후 Quit.  normal pawn spawn skip.
+            foreach (var arg in System.Environment.GetCommandLineArgs())
+            {
+                if (arg == "-testmode")
+                {
+                    var trGo = new GameObject("__TestRunner__");
+                    trGo.AddComponent<MelonS.GameProto.Tests.TestRunner>();
+                    Debug.Log("[GameManager] -testmode → TestRunner activated");
+                    return;
+                }
+            }
+
             if (pawnPrefab == null)
             {
                 Debug.LogWarning("[GameManager] pawnPrefab not assigned");

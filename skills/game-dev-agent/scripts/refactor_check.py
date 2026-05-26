@@ -111,6 +111,35 @@ def step_log_check() -> int:
     return 0
 
 
+def step_playmode_tests() -> int:
+    """R7 - PawnSim -testmode 자동 검증 5 시나리오"""
+    print("[refactor] (6/6) PlayMode tests ...")
+    report_path = Path("G:/ai/_pawnsim_test_report.json")
+    if report_path.exists():
+        report_path.unlink()
+    proc = subprocess.run(
+        [str(BUILD_EXE), "-testmode", "-batchmode", "-nographics"],
+        capture_output=True, text=True, timeout=30,
+    )
+    if not report_path.exists():
+        print("  WARN: no test report produced - skip")
+        return 0  # not a hard fail (legacy build 호환)
+    import json
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"  FAIL: parse {e}")
+        return 9
+    p, f = report.get("totalPassed", 0), report.get("totalFailed", 0)
+    print(f"  PlayMode: {p} PASS / {f} FAIL")
+    for r in report.get("results", []):
+        sym = "OK" if r.get("passed") else "X"
+        print(f"    [{sym}] {r['id']}: {r['message']}")
+    if f > 0:
+        return 10
+    return 0
+
+
 def step_visual_diff(threshold_pct: float = 5.0) -> int:
     print(f"[refactor] (5/5) visual diff vs baseline (threshold {threshold_pct}%) ...")
     if not BASELINE.exists():
@@ -176,6 +205,10 @@ def main():
     rc = step_visual_diff(threshold_pct=args.threshold)
     if rc != 0:
         print(f"\n[refactor] FAIL @ visual (rc={rc})")
+        return rc
+    rc = step_playmode_tests()
+    if rc != 0:
+        print(f"\n[refactor] FAIL @ playmode (rc={rc})")
         return rc
 
     if args.accept_visual:
