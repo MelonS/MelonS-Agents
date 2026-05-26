@@ -32,5 +32,16 @@ namespace MelonS.GameProto
             var mr = go.GetComponent<MeshRenderer>();
             if (mr != null) mr.sortingOrder = 30;
         }
+
+        private void Start()
+        {
+            // GameManager 가 spawn 후 reflection 으로 pawnName 박는다 → Awake 시점엔 default.
+            //  Start 에서 한 번 더 가져와서 라벨 텍스트 갱신.
+            var entity = GetComponent<PawnEntity>();
+            if (entity != null && tm != null && !string.IsNullOrEmpty(entity.PawnName))
+            {
+                tm.text = entity.PawnName;
+            }
+        }
     }
 }
