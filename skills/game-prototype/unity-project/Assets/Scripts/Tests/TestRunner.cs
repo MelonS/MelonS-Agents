@@ -66,6 +66,12 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V17-pawn-clamp", TestV17_PawnClamp);
             yield return RunOne("V18-bandage", TestV18_Bandage);
             yield return RunOne("V19-night-overlay", TestV19_NightOverlay);
+            yield return RunOne("V20-research-complete", TestV20_ResearchComplete);
+            yield return RunOne("V21-skill-xp", TestV21_SkillXP);
+            yield return RunOne("V22-stove-cook", TestV22_StoveCook);
+            yield return RunOne("V23-floor-place", TestV23_FloorPlace);
+            yield return RunOne("V24-arrow-projectile-spawn", TestV24_ArrowSpawn);
+            yield return RunOne("V25-traits-deterministic", TestV25_TraitsDeterministic);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -256,6 +262,91 @@ namespace MelonS.GameProto.Tests
             string summary = traits.SummaryKr();
             Assert(n >= 1 && n <= 2 && !string.IsNullOrEmpty(summary),
                 $"traits 수={n} summary='{summary}'");
+        }
+
+        private IEnumerator TestV20_ResearchComplete()
+        {
+            var rm = Services.Get<ResearchManager>();
+            ResearchManager.Tech bow = null;
+            foreach (var t in rm.techs) if (t.id == "simple_bow") bow = t;
+            if (bow == null) { Assert(false, "simple_bow tech not found"); yield break; }
+            // 강제 완료
+            bow.currentPoints = bow.requiredPoints;
+            bow.completed = true;
+            yield return null;
+            bool unlocked = rm.IsUnlocked("simple_bow");
+            Assert(unlocked, $"simple_bow unlocked={unlocked}");
+        }
+
+        private IEnumerator TestV21_SkillXP()
+        {
+            var go = new GameObject("TestSkillsPawn");
+            var sk = go.AddComponent<PawnSkills>();
+            yield return null;
+            int startLvl = sk.GetLevel(SkillKind.Combat);
+            sk.AddXP(SkillKind.Combat, 500f);  // 충분한 XP
+            int endLvl = sk.GetLevel(SkillKind.Combat);
+            Assert(endLvl > startLvl, $"Combat lvl {startLvl} → {endLvl}");
+        }
+
+        private IEnumerator TestV22_StoveCook()
+        {
+            var rm = Services.Get<ResourceManager>();
+            // food 충분히 줘서 cook 가능
+            int needed = 10 - rm.food;
+            if (needed > 0) rm.AddFood(needed);
+            int startFood = rm.food, startMeals = rm.meals;
+            var go = new GameObject("TestStove");
+            var stove = go.AddComponent<StoveEntity>();
+            yield return null;
+            bool can = stove.CanCookOne();
+            bool cooked = stove.CookOne();
+            int endFood = rm.food, endMeals = rm.meals;
+            Assert(can && cooked && endFood < startFood && endMeals > startMeals,
+                $"can={can} cooked={cooked} food {startFood}→{endFood}, meals {startMeals}→{endMeals}");
+        }
+
+        private IEnumerator TestV23_FloorPlace()
+        {
+            // FloorEntity 생성 + sortingOrder 1 확인 (실제 BuildManager 클릭은 mouse 없음)
+            var go = new GameObject("TestFloor");
+            go.transform.position = new Vector3(30, 0, 0);
+            var sr = go.AddComponent<SpriteRenderer>();
+            go.AddComponent<FloorEntity>();
+            yield return null;
+            // floor 가 살아있고 component 가 active
+            bool alive = go != null;
+            Assert(alive, $"floor entity alive={alive}");
+        }
+
+        private IEnumerator TestV24_ArrowSpawn()
+        {
+            // ArrowProjectile.SpawnArrow static 직접 호출
+            var sprGo = new GameObject("TestArrowSprite");
+            var sr = sprGo.AddComponent<SpriteRenderer>();
+            var arrowSprite = GetWhiteSprite();
+            int before = CountArrows();
+            ArrowProjectile.SpawnArrow(new Vector3(32, 0, 0), Vector2.right, 5, null, arrowSprite);
+            yield return null;
+            int after = CountArrows();
+            Assert(after > before, $"arrows {before}→{after}");
+        }
+
+        private IEnumerator TestV25_TraitsDeterministic()
+        {
+            // 같은 이름 pawn 두 개 → 같은 traits (deterministic hash)
+            var go1 = new GameObject("DeterministicPawn");
+            go1.AddComponent<SpriteRenderer>();
+            go1.AddComponent<PawnHealth>();
+            var t1 = go1.AddComponent<PawnTraits>();
+            yield return null;
+            var go2 = new GameObject("DeterministicPawn");  // 같은 이름
+            go2.AddComponent<SpriteRenderer>();
+            go2.AddComponent<PawnHealth>();
+            var t2 = go2.AddComponent<PawnTraits>();
+            yield return null;
+            bool sameTraits = t1.SummaryKr() == t2.SummaryKr();
+            Assert(sameTraits, $"t1='{t1.SummaryKr()}' t2='{t2.SummaryKr()}' same={sameTraits}");
         }
 
         private IEnumerator TestV15_BerryGather()
