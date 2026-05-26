@@ -318,9 +318,14 @@ namespace MelonS.GameProto.EditorTools
             AudioBank audioBank = audioGo.AddComponent<AudioBank>();
             AudioClip chopClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/chop.wav");
             AudioClip selClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/select.wav");
+            // Day 33: ambient BGM (30s loop)
+            if (File.Exists("Assets/Audio/bgm_ambient.wav"))
+                AssetDatabase.ImportAsset("Assets/Audio/bgm_ambient.wav", ImportAssetOptions.ForceUpdate);
+            AudioClip bgmClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/bgm_ambient.wav");
             SerializedObject abSo = new SerializedObject(audioBank);
             if (chopClip != null) abSo.FindProperty("sfxChop").objectReferenceValue = chopClip;
             if (selClip != null) abSo.FindProperty("sfxSelect").objectReferenceValue = selClip;
+            if (bgmClip != null) abSo.FindProperty("bgm").objectReferenceValue = bgmClip;
             abSo.ApplyModifiedProperties();
 
             // AI Director (Day 5)

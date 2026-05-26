@@ -38,6 +38,8 @@ namespace MelonS.GameProto
             if (bgm != null)
             {
                 bgmSource.clip = bgm;
+                bgmSource.loop = true;
+                bgmSource.volume = 0.25f;
                 bgmSource.Play();
             }
         }

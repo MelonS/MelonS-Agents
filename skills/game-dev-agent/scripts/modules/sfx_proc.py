@@ -140,14 +140,38 @@ def gen_pickup():
     return out
 
 
+def gen_ambient_pad():
+    """30s sustained pad — slow harmonic chord, very low volume.
+    Loops seamlessly (ends where it began on a single sine pass).
+    Use as game BGM."""
+    n = int(SR * 30.0)  # 30 seconds
+    out = []
+    # Three layered sine voices forming a minor chord (A2, C3, E3).
+    voices = [(110.0, 0.18), (130.81, 0.13), (164.81, 0.10)]
+    # Slow LFO 0.05 Hz for breathiness
+    for i in range(n):
+        t = i / SR
+        s = 0.0
+        for f, amp in voices:
+            lfo = 1.0 + 0.05 * math.sin(2 * math.pi * 0.05 * t + f * 0.001)
+            s += math.sin(2 * math.pi * f * t * lfo) * amp
+        # Long fade-in over first 2s, fade-out last 2s — loop-safe.
+        env = 1.0
+        if t < 2.0: env = t / 2.0
+        elif t > 28.0: env = (30.0 - t) / 2.0
+        out.append(s * env * 0.5)
+    return out
+
+
 KIND_REGISTRY = {
-    "drop":     gen_drop,
-    "click":    gen_click,
-    "merge":    gen_merge,
-    "win":      gen_win,
-    "gameover": gen_gameover,
-    "hit":      gen_hit,
-    "pickup":   gen_pickup,
+    "drop":         gen_drop,
+    "click":        gen_click,
+    "merge":        gen_merge,
+    "win":          gen_win,
+    "gameover":     gen_gameover,
+    "hit":          gen_hit,
+    "pickup":       gen_pickup,
+    "ambient_pad":  gen_ambient_pad,
 }
 
 
