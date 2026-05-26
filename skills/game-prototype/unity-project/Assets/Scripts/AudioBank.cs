@@ -18,9 +18,14 @@ namespace MelonS.GameProto
         public AudioClip bgm;
         public AudioClip sfxChop;
         public AudioClip sfxSelect;
+        public AudioClip sfxHit;       // Day 80 — arrow/melee impact
+        public AudioClip sfxHarvest;   // Day 80 — crop harvest
+        public AudioClip sfxWolfHowl;  // Day 80 — wolf appear
 
         [SerializeField] private AudioSource bgmSource;
         [SerializeField] private AudioSource sfxSource;
+        private float lastHitTime = -10f;
+        private float lastHarvestTime = -10f;
 
         private void Awake()
         {
@@ -52,6 +57,29 @@ namespace MelonS.GameProto
         public void PlaySelect()
         {
             if (sfxSelect != null && sfxSource != null) sfxSource.PlayOneShot(sfxSelect);
+        }
+
+        // Day 80: 0.25s throttle so multiple simultaneous hits don't buzz.
+        public void PlayHit()
+        {
+            if (sfxHit == null || sfxSource == null) return;
+            if (Time.time - lastHitTime < 0.25f) return;
+            lastHitTime = Time.time;
+            sfxSource.PlayOneShot(sfxHit, 0.7f);
+        }
+
+        public void PlayHarvest()
+        {
+            if (sfxHarvest == null || sfxSource == null) return;
+            if (Time.time - lastHarvestTime < 0.15f) return;
+            lastHarvestTime = Time.time;
+            sfxSource.PlayOneShot(sfxHarvest, 0.9f);
+        }
+
+        public void PlayWolfHowl()
+        {
+            if (sfxWolfHowl != null && sfxSource != null)
+                sfxSource.PlayOneShot(sfxWolfHowl, 0.6f);
         }
     }
 }

@@ -64,7 +64,11 @@ namespace MelonS.GameProto
             if (wolf != null) { wolf.TakeDamage(damage, shooter); hit = true; }
             else if (bandit != null) { bandit.TakeDamage(damage, shooter); hit = true; }
             else if (animal != null) { animal.TakeDamage(damage); hit = true; }
-            if (hit) Destroy(gameObject);
+            if (hit)
+            {
+                AudioBank.Instance?.PlayHit();  // Day 80
+                Destroy(gameObject);
+            }
         }
     }
 }

@@ -67,6 +67,7 @@ namespace MelonS.GameProto
             RefreshVisual();
             if (ResourceManager.Instance != null)
                 ResourceManager.Instance.AddFood(harvestFood);
+            AudioBank.Instance?.PlayHarvest();  // Day 80
             return harvestFood;
         }
 
