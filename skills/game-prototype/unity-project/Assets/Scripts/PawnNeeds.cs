@@ -61,9 +61,18 @@ namespace MelonS.GameProto
                 return;
             }
 
+            // Day 22: weather mood penalty when outdoor + storm
+            float weatherPenalty = 0f;
+            if (WeatherController.Instance != null
+                && WeatherController.Instance.Current == WeatherKind.Storm
+                && !IsOnFloor())
+            {
+                weatherPenalty = 3f * dt;
+            }
+
             food = Mathf.Max(0f, food - foodDecay * dt);
             sleep = Mathf.Max(0f, sleep - sleepDecay * dt);
-            mood = Mathf.Max(0f, mood - moodDecay * dt);
+            mood = Mathf.Max(0f, mood - moodDecay * dt - weatherPenalty);
 
             // Day 20: mood break — when mood drops below threshold, pawn
             // enters a "break" for moodBreakDuration.  Recovery only when
@@ -98,6 +107,14 @@ namespace MelonS.GameProto
             rm.AddFood(-1);
             food = Mathf.Min(100f, food + eatRestore);
             lastEatTime = Time.time;
+        }
+
+        private bool IsOnFloor()
+        {
+            var hits = Physics2D.OverlapBoxAll(transform.position, Vector2.one * 0.3f, 0f);
+            foreach (var h in hits)
+                if (h != null && h.GetComponent<FloorEntity>() != null) return true;
+            return false;
         }
 
         private bool IsNightTime()

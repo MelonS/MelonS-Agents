@@ -51,7 +51,14 @@ namespace MelonS.GameProto
             if (cam == null) return;
             if (GameClock.Instance == null) return;
             float t = GameClock.Instance.DayProgress;
-            cam.backgroundColor = SampleStops(t);
+            Color c = SampleStops(t);
+            // Day 22: weather multiplier (storm darkens scene)
+            if (WeatherController.Instance != null)
+            {
+                float m = WeatherController.Instance.ColorMultiplier();
+                c = new Color(c.r * m, c.g * m, c.b * m, c.a);
+            }
+            cam.backgroundColor = c;
         }
 
         private static Color SampleStops(float t)
