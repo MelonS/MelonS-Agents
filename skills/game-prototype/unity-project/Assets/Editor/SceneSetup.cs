@@ -101,123 +101,19 @@ namespace MelonS.GameProto.EditorTools
             // R8: 작은 helper 함수로 추출
             Camera cam = SetupCamera();
             SetupCoreSingletons();
-
-            // Tilemap parent (Grid)
-            GameObject gridGo = new GameObject("Grid");
-            Grid grid = gridGo.AddComponent<Grid>();
-            grid.cellSize = new Vector3(1, 1, 0);
-
-            GameObject tmGo = new GameObject("Ground");
-            tmGo.transform.SetParent(gridGo.transform);
-            Tilemap tm = tmGo.AddComponent<Tilemap>();
-            TilemapRenderer tmr = tmGo.AddComponent<TilemapRenderer>();
-            tmr.sortingOrder = 0;
-
-            // Day 39+40: 다중 타일 (grass + dirt + water + rock) + noise 기반 패치 배치.
-            //  Day 40: 맵 20x20 → 40x40 — 림월드 vibe 살리려면 큰 맵 필수.
-            Directory.CreateDirectory("Assets/Tiles");
-            Tile grassTile = LoadOrCreateTile("Assets/Sprites/tile_grass.png", "Assets/Tiles/Grass.asset");
-            Tile dirtTile  = LoadOrCreateTile("Assets/Sprites/tile_dirt.png",  "Assets/Tiles/Dirt.asset");
-            Tile waterTile = LoadOrCreateTile("Assets/Sprites/tile_water.png", "Assets/Tiles/Water.asset");
-            Tile rockTile  = LoadOrCreateTile("Assets/Sprites/tile_rock.png",  "Assets/Tiles/Rock.asset");
-
-            // Procedural 40x40 map.  결정론적 (seed=12345).
-            const int MAP_HALF = 20;  // 맵 범위 ±20 → 40x40
-            System.Random rng = new System.Random(12345);
-
-            // 큰 호수 (중심 (10, 12) 반경 4) + 작은 호수 (-12, -8) 반경 2.5
-            Vector2[] lakeCenters = new[] { new Vector2(10f, 12f), new Vector2(-12f, -8f) };
-            float[]   lakeRadii   = new[] { 4.0f, 2.5f };
-
-            // 바위 cluster 3개 (산맥 분위기)
-            Vector2[] rockClusterCenters = new[]
-            {
-                new Vector2(-15f, 13f),  // 좌상단 산맥
-                new Vector2( 16f, -14f), // 우하단 산맥
-                new Vector2(-3f, -16f),  // 남쪽 산맥
-            };
-            float rockRadius = 3.2f;
-
-            // dirt 패치 6개 (길 느낌)
-            Vector2[] dirtCenters = new[]
-            {
-                new Vector2(-3f, 2f), new Vector2(4f, -6f), new Vector2(-10f, 5f),
-                new Vector2(8f, 4f), new Vector2(-7f, -12f), new Vector2(14f, 8f),
-            };
-            float dirtRadius = 2.0f;
-
-            // Step 81: PawnMovement obstacle 체크용 정적 ref 셋업
-            //  (Editor batchmode 에서도 static field 가 빌드 후 런타임에 안 남음 — runtime
-            //   초기화 컴포넌트 별도 필요).  Game scene 안에 TilemapStaticRefInit
-            //   컴포넌트를 추가해서 런타임 Start() 에서 정적 ref 채움.
-            for (int x = -MAP_HALF; x < MAP_HALF; x++)
-            {
-                for (int y = -MAP_HALF; y < MAP_HALF; y++)
-                {
-                    Tile chosen = grassTile;
-                    Vector2 p = new Vector2(x, y);
-                    // 우선순위: rock > 호수 > dirt > grass.  Edge noise 약간.
-                    bool isRock = false;
-                    foreach (var rc in rockClusterCenters)
-                    {
-                        if ((p - rc).magnitude < rockRadius + (float)(rng.NextDouble()-0.5)*1.2f)
-                        { isRock = true; break; }
-                    }
-                    if (isRock) { chosen = rockTile; tm.SetTile(new Vector3Int(x, y, 0), chosen); continue; }
-                    bool isLake = false;
-                    for (int li = 0; li < lakeCenters.Length; li++)
-                    {
-                        if ((p - lakeCenters[li]).magnitude < lakeRadii[li] + (float)(rng.NextDouble()-0.5)*0.7f)
-                        { isLake = true; break; }
-                    }
-                    if (isLake) { chosen = waterTile; tm.SetTile(new Vector3Int(x, y, 0), chosen); continue; }
-                    foreach (var dc in dirtCenters)
-                    {
-                        if ((p - dc).magnitude < dirtRadius + (float)(rng.NextDouble()-0.5)*0.5f)
-                        { chosen = dirtTile; break; }
-                    }
-                    tm.SetTile(new Vector3Int(x, y, 0), chosen);
-                }
-            }
-
-            // Step 81: runtime obstacle ref wire — Ground Tilemap + Water/Rock TileBase
-            GameObject staticRefGo = new GameObject("TilemapStaticRefInit");
-            TilemapStaticRefInit staticRef = staticRefGo.AddComponent<TilemapStaticRefInit>();
-            staticRef.SetRefs(tm, waterTile, rockTile);
-
-            // Day 39+41: 야생 꽃 데코 24개 (40x40 맵 비례) — grass 위에 산발.
-            Sprite flowerSpr = LoadOrSetupSprite("Assets/Sprites/decor_flower.png");
-            if (flowerSpr != null)
-            {
-                System.Random fr = new System.Random(98765);
-                int placed = 0; int attempts = 0;
-                while (placed < 24 && attempts < 600)
-                {
-                    attempts++;
-                    int fx = fr.Next(-(MAP_HALF-1), MAP_HALF);
-                    int fy = fr.Next(-(MAP_HALF-1), MAP_HALF);
-                    Vector2 fp = new Vector2(fx, fy);
-                    // skip lake/rock cluster/dirt/spawn-zone
-                    bool skip = false;
-                    for (int li = 0; li < lakeCenters.Length; li++)
-                        if ((fp - lakeCenters[li]).magnitude < lakeRadii[li] + 1.5f) { skip = true; break; }
-                    if (skip) continue;
-                    foreach (var rc in rockClusterCenters)
-                        if ((fp - rc).magnitude < rockRadius + 0.5f) { skip = true; break; }
-                    if (skip) continue;
-                    foreach (var dc in dirtCenters)
-                        if ((fp - dc).magnitude < dirtRadius) { skip = true; break; }
-                    if (skip) continue;
-                    if (Mathf.Abs(fx) < 4 && Mathf.Abs(fy) < 2) continue;  // pawn spawn 회피
-                    GameObject fgo = new GameObject($"Flower_{placed}");
-                    fgo.transform.position = new Vector3(fx + 0.5f, fy + 0.5f, 0);
-                    SpriteRenderer flowerSr = fgo.AddComponent<SpriteRenderer>();
-                    flowerSr.sprite = flowerSpr;
-                    flowerSr.sortingOrder = 2;
-                    placed++;
-                }
-                Debug.Log($"[SceneSetup] 꽃 {placed}개 배치");
-            }
+            var layout = SetupTilemap();
+            // legacy 변수명 호환 (후속 코드 변경 X)
+            Tilemap tm = layout.tilemap;
+            Tile grassTile = layout.grassTile, dirtTile = layout.dirtTile,
+                 waterTile = layout.waterTile, rockTile = layout.rockTile;
+            Vector2[] lakeCenters = layout.lakeCenters;
+            float[] lakeRadii = layout.lakeRadii;
+            Vector2[] rockClusterCenters = layout.rockClusterCenters;
+            float rockRadius = layout.rockRadius;
+            Vector2[] dirtCenters = layout.dirtCenters;
+            float dirtRadius = layout.dirtRadius;
+            const int MAP_HALF = 20;
+            SetupFlowerDecor(layout);
 
             // GameManager + spawn pawn via prefab
             GameObject gmGo = new GameObject("GameManager");
