@@ -100,6 +100,20 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 > filter / dedupe 파이프라인에선 planner / qa 단계가 거의 비기
 > 때문에 5-에이전트 핸드오프를 굳이 둘 이유가 없습니다.
 >
+> **스킬 3 — `game-dev-agent` (개발 중, 위 "프로덕션 스킬 두 개"
+> 카운트에 포함되지 않음).**  Unity 기반 게임 개발용 AI 에이전트
+> — 스프라이트 생성, C# 스캐폴딩, 밸런스 튜닝, 오디오 생성,
+> 인게임 AI 디렉터를 오케스트레이션하는 메타 스킬입니다.  이
+> 프레임워크로 만들어지는 두 개의 프로토타입 스킬이 함께 붙어
+> 있어 경험적 검증 표면 역할을 합니다 — 탑다운 콜로니-심 vertical
+> slice ([`skills/game-prototype/`](skills/game-prototype/)) 와 2D
+> physics-merge 퍼즐
+> ([`skills/game-prototype-suika/`](skills/game-prototype-suika/),
+> Day 2 까지 출하 · 프레임워크 미사용 베이스라인 대비 wall-clock
+> 약 15× 가속).  두 프로토타입이 각자 end-of-day 산출물 일정을
+> 모두 만족하는 시점에 프로덕션 카운트로 졸업합니다.  스킬 정의:
+> [`skills/game-dev-agent/`](skills/game-dev-agent/).
+>
 > **이 레포를 돌리는 두 가지 방법.**
 > - *에이전트 주도* (메인) — Claude Code 깔고, 클론된 레포를
 >   가리키고, 미션을 타이핑하면 Claude Code 가 파일 편집·커밋·푸시까지
