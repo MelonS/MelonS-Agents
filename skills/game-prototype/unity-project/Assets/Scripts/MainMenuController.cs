@@ -17,25 +17,41 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
+            Debug.Log("[MainMenu] Awake — wiring runtime listeners");
+            WireListeners();
+        }
+
+        private void Start()
+        {
+            // Defensive — re-wire in case Awake order issues lost the listener
+            WireListeners();
+        }
+
+        private void WireListeners()
+        {
             if (startButton != null)
             {
-                startButton.onClick.RemoveAllListeners();
+                startButton.onClick.RemoveListener(OnStartClicked);
                 startButton.onClick.AddListener(OnStartClicked);
             }
+            else Debug.LogWarning("[MainMenu] startButton not assigned");
             if (quitButton != null)
             {
-                quitButton.onClick.RemoveAllListeners();
+                quitButton.onClick.RemoveListener(OnQuitClicked);
                 quitButton.onClick.AddListener(OnQuitClicked);
             }
         }
 
-        private void OnStartClicked()
+        // public so UnityEventTools can target it as a persistent listener
+        public void OnStartClicked()
         {
+            Debug.Log("[MainMenu] OnStartClicked — loading scene: " + gameSceneName);
             SceneManager.LoadScene(gameSceneName);
         }
 
-        private void OnQuitClicked()
+        public void OnQuitClicked()
         {
+            Debug.Log("[MainMenu] OnQuitClicked");
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else

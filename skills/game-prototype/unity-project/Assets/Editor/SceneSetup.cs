@@ -2,6 +2,8 @@ using System.IO;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using UnityEditor.Events;
+using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Tilemaps;
@@ -134,6 +136,14 @@ namespace MelonS.GameProto.EditorTools
             so.FindProperty("quitButton").objectReferenceValue = quitBtn;
             so.FindProperty("gameSceneName").stringValue = "Game";
             so.ApplyModifiedProperties();
+
+            // Persistent button listeners (baked into scene file — fires even
+            // if Awake-time runtime wiring fails for any reason)
+            UnityAction startAction = new UnityAction(ctrl.OnStartClicked);
+            UnityEventTools.AddPersistentListener(startBtn.onClick, startAction);
+            UnityAction quitAction = new UnityAction(ctrl.OnQuitClicked);
+            UnityEventTools.AddPersistentListener(quitBtn.onClick, quitAction);
+            Debug.Log("[SceneSetup] MainMenu — persistent onClick listeners baked");
 
             EditorSceneManager.SaveScene(scene, MainMenuPath);
             Debug.Log($"[SceneSetup] MainMenu -> {MainMenuPath}");
