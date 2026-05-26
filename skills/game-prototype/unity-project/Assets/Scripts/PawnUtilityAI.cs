@@ -21,9 +21,12 @@ namespace MelonS.GameProto
     {
         [SerializeField] private float decisionInterval = 1.5f;
         [SerializeField] private float idleWanderRadius = 3f;
+        [Header("Day 11: food gather priority")]
+        [SerializeField] private float foodHungryThreshold = 40f;
 
         private PawnMovement movement;
         private PawnChopper chopper;
+        private PawnGatherer gatherer;
         private PawnNeeds needs;
         private float lastDecision = -999f;
 
@@ -31,6 +34,7 @@ namespace MelonS.GameProto
         {
             movement = GetComponent<PawnMovement>();
             chopper = GetComponent<PawnChopper>();
+            gatherer = GetComponent<PawnGatherer>(); // may be null on pawns w/o gatherer; gracefully skipped below
             needs = GetComponent<PawnNeeds>();
         }
 
@@ -49,6 +53,7 @@ namespace MelonS.GameProto
 
             // Don't override active task
             if (movement.IsMoving || chopper.HasTask) return;
+            if (gatherer != null && gatherer.HasTask) return;
 
             lastDecision = Time.timeSinceLevelLoad;
             Decide();
@@ -56,6 +61,17 @@ namespace MelonS.GameProto
 
         private void Decide()
         {
+            // Day 11: food priority — when hungry AND a bush exists, gather first.
+            if (needs != null && gatherer != null && needs.food < foodHungryThreshold)
+            {
+                BerryBushEntity bush = FindNearestBush();
+                if (bush != null)
+                {
+                    gatherer.SetBushTarget(bush);
+                    return;
+                }
+            }
+
             TreeEntity tree = FindNearestTree();
             if (tree != null)
             {
@@ -66,6 +82,25 @@ namespace MelonS.GameProto
             Vector2 cur = transform.position;
             Vector2 offset = Random.insideUnitCircle * idleWanderRadius;
             movement.SetTarget(cur + offset);
+        }
+
+        private BerryBushEntity FindNearestBush()
+        {
+            BerryBushEntity[] bushes = FindObjectsByType<BerryBushEntity>(FindObjectsSortMode.None);
+            BerryBushEntity best = null;
+            float bestDist = float.MaxValue;
+            Vector2 me = transform.position;
+            foreach (var b in bushes)
+            {
+                if (b == null || b.IsDepleted) continue;
+                float d = Vector2.Distance(me, b.transform.position);
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    best = b;
+                }
+            }
+            return best;
         }
 
         private TreeEntity FindNearestTree()

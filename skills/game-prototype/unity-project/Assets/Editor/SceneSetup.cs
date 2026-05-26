@@ -103,6 +103,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnMovement>();
             pawnGo.AddComponent<PawnNeeds>();
             pawnGo.AddComponent<PawnChopper>();
+            pawnGo.AddComponent<PawnGatherer>();  // Day 11 — berry gather
             pawnGo.AddComponent<PawnUtilityAI>();
 
             PrefabUtility.SaveAsPrefabAsset(pawnGo, PawnPrefabPath);
@@ -351,6 +352,36 @@ namespace MelonS.GameProto.EditorTools
                 BoxCollider2D tcol = t.AddComponent<BoxCollider2D>();
                 tcol.size = new Vector2(1.5f, 1.5f);
                 t.AddComponent<TreeEntity>();
+            }
+
+            // Day 11: BerryBushes — 4 placed offset from trees so AI sees
+            // both gather + chop choices.  Re-use tree sprite tinted greenish
+            // until an operator-authored berry sprite exists (already imported
+            // by ForceImportAllSprites, so no extra import call needed).
+            // NOTE: BerryBushEntity.Awake() repaints SpriteRenderer.color
+            // based on stock level (white -> grey), so any green tint we set
+            // here is overwritten at runtime — that's intentional in the
+            // component design and acceptable: white vs brown still reads
+            // distinct from trees.  The scene-file color is still set per
+            // handoff spec.
+            Vector2[] bushPositions = new[]
+            {
+                new Vector2(-5f, -2f),
+                new Vector2( 2f,  4f),
+                new Vector2( 5f, -3f),
+                new Vector2(-3f,  5f),
+            };
+            foreach (var pos in bushPositions)
+            {
+                GameObject b = new GameObject($"BerryBush_{pos.x}_{pos.y}");
+                b.transform.position = new Vector3(pos.x, pos.y, 0);
+                SpriteRenderer bsr = b.AddComponent<SpriteRenderer>();
+                bsr.sprite = treeSprite;
+                bsr.sortingOrder = 5;
+                bsr.color = new Color(0.6f, 0.9f, 0.4f, 1f);
+                BoxCollider2D bcol = b.AddComponent<BoxCollider2D>();
+                bcol.size = Vector2.one;
+                b.AddComponent<BerryBushEntity>();
             }
 
             // ClickSelector

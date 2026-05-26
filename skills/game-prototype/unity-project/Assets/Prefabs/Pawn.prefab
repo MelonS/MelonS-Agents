@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 209550779354629814}
   - component: {fileID: 3384598379736067457}
   - component: {fileID: 903203183321620003}
+  - component: {fileID: 3583107881296190084}
   - component: {fileID: 1499688719991667539}
   m_Layer: 0
   m_Name: Pawn
@@ -186,6 +187,10 @@ MonoBehaviour:
   foodDecay: 0.5
   sleepDecay: 0.3
   moodDecay: 0.2
+  sleepRegenAtNight: 8
+  eatThreshold: 40
+  eatRestore: 30
+  eatTickInterval: 0.5
 --- !u!114 &903203183321620003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,6 +205,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chopRange: 1.2
   chopDamagePerSec: 25
+--- !u!114 &3583107881296190084
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6165637930717161905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30d5cbc636b739d44a5aac405f46296e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gatherRange: 1.2
+  gatherInterval: 0.8
 --- !u!114 &1499688719991667539
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -214,3 +233,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   decisionInterval: 1.5
   idleWanderRadius: 3
+  foodHungryThreshold: 40

@@ -22,6 +22,12 @@ namespace MelonS.GameProto
         [Header("Day 9+: sleep regen when sleeping at night")]
         [SerializeField] private float sleepRegenAtNight = 8f;
 
+        [Header("Day 11: eat-from-stockpile")]
+        [SerializeField] private float eatThreshold = 40f;
+        [SerializeField] private float eatRestore = 30f;
+        [SerializeField] private float eatTickInterval = 0.5f;
+        private float lastEatTime = -999f;
+
         public bool IsSleeping { get; private set; }
 
         private void Update()
@@ -50,6 +56,26 @@ namespace MelonS.GameProto
             food = Mathf.Max(0f, food - foodDecay * dt);
             sleep = Mathf.Max(0f, sleep - sleepDecay * dt);
             mood = Mathf.Max(0f, mood - moodDecay * dt);
+
+            // Day 11: eat from food stockpile when hungry (only while awake).
+            // We poll ResourceManager.Instance every frame instead of subscribing —
+            // lesson #7 singleton-subscription-race avoidance: PawnNeeds.Awake
+            // could fire before ResourceManager.Awake, and OnEnable subscription
+            // would miss the eventual instance.  Poll-via-Update is the safe shape.
+            TryEatTick();
+        }
+
+        private void TryEatTick()
+        {
+            if (food >= eatThreshold) return;
+            if (Time.time - lastEatTime < eatTickInterval) return;
+            var rm = ResourceManager.Instance;
+            if (rm == null || rm.food <= 0) return;
+
+            // Spend 1 food unit from stockpile, restore eatRestore on this pawn (clamped to 100).
+            rm.AddFood(-1);
+            food = Mathf.Min(100f, food + eatRestore);
+            lastEatTime = Time.time;
         }
 
         private bool IsNightTime()
