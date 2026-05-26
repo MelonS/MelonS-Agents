@@ -114,8 +114,15 @@ namespace MelonS.GameProto
                 }
                 else
                 {
+                    // 모든 task ClearTask (chopper/gatherer/hunter/cook) - 잔여 task override 방지
                     PawnChopper chopper = currentSelection.GetComponent<PawnChopper>();
                     if (chopper != null) chopper.ClearTask();
+                    var gather = currentSelection.GetComponent<PawnGatherer>();
+                    if (gather != null) gather.ClearTask();
+                    var hunter = currentSelection.GetComponent<PawnHunter>();
+                    if (hunter != null) hunter.ClearTask();
+                    var cook = currentSelection.GetComponent<PawnCook>();
+                    if (cook != null) cook.ClearTask();
                     PawnMovement mv = currentSelection.GetComponent<PawnMovement>();
                     if (mv != null) mv.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
                     // 수동 이동 명령 → AI 5초 skip (즉시 override 방지)
@@ -163,8 +170,16 @@ namespace MelonS.GameProto
                 if (chopper != null) chopper.SetTreeTarget(tree);
                 return;
             }
+            // 통합 검증 I2 결과 — chopper 만 ClearTask 했더니 잔여 gatherer/hunter/cook task 가
+            //  movement.SetTarget(자기 target) 호출해서 사용자 target 무시됨.  전부 ClearTask.
             var chopperE = currentSelection.GetComponent<PawnChopper>();
             if (chopperE != null) chopperE.ClearTask();
+            var gatherE = currentSelection.GetComponent<PawnGatherer>();
+            if (gatherE != null) gatherE.ClearTask();
+            var hunterE = currentSelection.GetComponent<PawnHunter>();
+            if (hunterE != null) hunterE.ClearTask();
+            var cookE = currentSelection.GetComponent<PawnCook>();
+            if (cookE != null) cookE.ClearTask();
             var mv = currentSelection.GetComponent<PawnMovement>();
             if (mv != null) mv.SetTarget(worldPos);
             currentSelection.ManualMoveUntil = Time.time + 5f;
