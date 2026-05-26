@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 209550779354629814}
   - component: {fileID: 3384598379736067457}
   - component: {fileID: 903203183321620003}
+  - component: {fileID: 1499688719991667539}
   m_Layer: 0
   m_Name: Pawn
   m_TagString: Untagged
@@ -199,3 +200,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chopRange: 1.2
   chopDamagePerSec: 25
+--- !u!114 &1499688719991667539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6165637930717161905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7cc27eda6372904ba75ee195d282fe1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  decisionInterval: 1.5
+  idleWanderRadius: 3

@@ -9,21 +9,38 @@ namespace MelonS.GameProto
     /// </summary>
     public class GameManager : MonoBehaviour
     {
-        [Header("Day 1 spawn")]
+        [Header("Spawn settings")]
         [SerializeField] private GameObject pawnPrefab;
-        [SerializeField] private Vector2 initialSpawnPos = Vector2.zero;
+        [SerializeField] private Vector2[] spawnPositions = new Vector2[]
+        {
+            new Vector2(-2f, 0f),
+            new Vector2( 0f, 0f),
+            new Vector2( 2f, 0f),
+        };
 
         private void Start()
         {
-            if (pawnPrefab != null)
-            {
-                Instantiate(pawnPrefab, initialSpawnPos, Quaternion.identity);
-                Debug.Log("[GameManager] Day 1: spawned colonist at " + initialSpawnPos);
-            }
-            else
+            if (pawnPrefab == null)
             {
                 Debug.LogWarning("[GameManager] pawnPrefab not assigned");
+                return;
             }
+            int i = 0;
+            foreach (var pos in spawnPositions)
+            {
+                GameObject p = Instantiate(pawnPrefab, pos, Quaternion.identity);
+                PawnEntity entity = p.GetComponent<PawnEntity>();
+                if (entity != null)
+                {
+                    // Day 4 — give each pawn a distinct name via reflection-free path
+                    var nameField = typeof(PawnEntity).GetField("pawnName",
+                        System.Reflection.BindingFlags.NonPublic |
+                        System.Reflection.BindingFlags.Instance);
+                    if (nameField != null) nameField.SetValue(entity, $"Colonist {i + 1}");
+                }
+                i++;
+            }
+            Debug.Log($"[GameManager] Day 4: spawned {spawnPositions.Length} colonists");
         }
     }
 }

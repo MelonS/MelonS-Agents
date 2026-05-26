@@ -70,6 +70,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnMovement>();
             pawnGo.AddComponent<PawnNeeds>();
             pawnGo.AddComponent<PawnChopper>();
+            pawnGo.AddComponent<PawnUtilityAI>();
 
             PrefabUtility.SaveAsPrefabAsset(pawnGo, PawnPrefabPath);
             Object.DestroyImmediate(pawnGo);
