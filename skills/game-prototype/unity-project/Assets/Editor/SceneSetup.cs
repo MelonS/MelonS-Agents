@@ -648,6 +648,8 @@ namespace MelonS.GameProto.EditorTools
                     var csr = cGo.AddComponent<SpriteRenderer>();
                     csr.sprite = cropSprite;
                     csr.sortingOrder = 3;
+                    // Day 67-68: CropEntity component → 자라서 익으면 우클릭 수확
+                    cGo.AddComponent<CropEntity>();
                     // 농경지 dirt 타일 강제 부착 (배경)
                     tm.SetTile(new Vector3Int(cx, cy, 0), dirtTile);
                 }

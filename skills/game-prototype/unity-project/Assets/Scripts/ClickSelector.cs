@@ -72,8 +72,15 @@ namespace MelonS.GameProto
                     return;
                 }
 
-                // Non-drafted: existing chop/move logic
+                // Non-drafted: existing chop/move + Day 68 crop harvest
                 TreeEntity tree = (rhit != null) ? rhit.GetComponent<TreeEntity>() : null;
+                CropEntity crop = (rhit != null) ? rhit.GetComponent<CropEntity>() : null;
+                if (crop != null && crop.IsRipe)
+                {
+                    int food = crop.Harvest();
+                    Debug.Log($"[Harvest] +{food} 식량");
+                    return;
+                }
                 if (tree != null)
                 {
                     PawnChopper chopper = currentSelection.GetComponent<PawnChopper>();
