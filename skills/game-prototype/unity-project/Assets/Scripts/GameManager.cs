@@ -34,6 +34,21 @@ namespace MelonS.GameProto
             foreach (var pos in spawnPositions)
             {
                 GameObject p = Instantiate(pawnPrefab, pos, Quaternion.identity);
+                // Day 36: pawn 안 보이는 문제 진단 — Instantiate 후 sprite 상태 로깅 + visible fallback
+                var sr = p.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    if (sr.sprite == null)
+                    {
+                        Debug.LogError($"[GameManager] pawn[{i}] SpriteRenderer.sprite NULL at runtime — applying flat-color fallback");
+                        sr.color = new Color(0.95f, 0.65f, 0.35f, 1f);
+                    }
+                    else
+                    {
+                        Debug.Log($"[GameManager] pawn[{i}] sprite={sr.sprite.name} enabled={sr.enabled} color={sr.color}");
+                    }
+                    sr.enabled = true;   // 명시적으로 enable
+                }
                 PawnEntity entity = p.GetComponent<PawnEntity>();
                 if (entity != null)
                 {
