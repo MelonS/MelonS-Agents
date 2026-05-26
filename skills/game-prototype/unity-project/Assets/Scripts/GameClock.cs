@@ -33,8 +33,15 @@ namespace MelonS.GameProto
             if (Services.Has<GameClock>() && Services.Get<GameClock>() != this)
             { Destroy(gameObject); return; }
             Services.Register<GameClock>(this);
-            // Start at 06:00 (sunrise) so first thing the player sees is dawn.
-            GameSeconds = 6f * 3600f;
+            // P6: CLI -starthour N 으로 시작 시간 강제 (없으면 default 06:00 새벽)
+            int startHour = 6;
+            var args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+            {
+                if (args[i] == "-starthour" && int.TryParse(args[i+1], out int h))
+                { startHour = Mathf.Clamp(h, 0, 23); break; }
+            }
+            GameSeconds = startHour * 3600f;
         }
 
         private void Update()
