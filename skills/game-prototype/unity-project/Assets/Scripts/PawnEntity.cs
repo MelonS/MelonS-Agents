@@ -30,6 +30,28 @@ namespace MelonS.GameProto
         public int Hp { get; private set; }
         public bool IsDead => Hp <= 0;
 
+        // Day 48: drafted (manual control) state.  When drafted:
+        //  - PawnUtilityAI suspended
+        //  - Right-click on enemy = attack target
+        //  - Right-click on ground = manual move
+        //  - Visual: cyan outline tint
+        public bool IsDrafted { get; private set; }
+        public BanditEnemy DraftedAttackTarget { get; set; }
+        public AnimalEntity DraftedHuntTarget   { get; set; }
+
+        public void SetDrafted(bool value)
+        {
+            if (IsDrafted == value) return;
+            IsDrafted = value;
+            if (!IsDrafted)
+            {
+                DraftedAttackTarget = null;
+                DraftedHuntTarget = null;
+            }
+            ApplyVisual();
+            Debug.Log($"[Pawn:{pawnName}] draft={IsDrafted}");
+        }
+
         private float nextAttackTime = -1f;
 
         // Bandit-target cache — refresh at most every 0.25s rather than every
@@ -141,7 +163,11 @@ namespace MelonS.GameProto
         {
             if (spriteRenderer == null) return;
             // Day 1: tint to indicate selection. Real outline shader = later.
-            spriteRenderer.color = selected ? selectedOutlineColor : unselectedColor;
+            // Day 48: drafted pawn tinted cyan (manual-control mode).
+            if (IsDrafted)
+                spriteRenderer.color = new Color(0.55f, 0.85f, 1.0f, 1f);  // cyan
+            else
+                spriteRenderer.color = selected ? selectedOutlineColor : unselectedColor;
         }
     }
 }

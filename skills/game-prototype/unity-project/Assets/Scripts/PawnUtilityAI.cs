@@ -22,7 +22,10 @@ namespace MelonS.GameProto
         private PawnHunter hunter;
         private PawnCook cook;
         private PawnNeeds needs;
+        private PawnEntity entity;  // Day 48 — drafted state check
         private float lastDecision = -999f;
+        private float lastDraftAttackTime = -999f;
+        private const float DraftAttackInterval = 0.8f;
 
         private void Awake()
         {
@@ -32,10 +35,20 @@ namespace MelonS.GameProto
             hunter = GetComponent<PawnHunter>();
             cook = GetComponent<PawnCook>();
             needs = GetComponent<PawnNeeds>();
+            entity = GetComponent<PawnEntity>();
         }
 
         private void Update()
         {
+            // Day 48: drafted pawn skip utility AI — manual control only.
+            //  But it still needs combat tick: if it has DraftedAttackTarget,
+            //  chase + attack.  If DraftedHuntTarget, chase + attack.
+            if (entity != null && entity.IsDrafted)
+            {
+                HandleDraftedCombat();
+                return;
+            }
+
             if (Time.timeSinceLevelLoad - lastDecision < decisionInterval) return;
 
             if (needs != null && needs.IsSleeping)
@@ -160,6 +173,59 @@ namespace MelonS.GameProto
                 if (sq < bestSq) { bestSq = sq; best = t; }
             }
             return best;
+        }
+
+        // Day 48: drafted pawn 전투 처리.  manual move target는 이미
+        //  ClickSelector 가 PawnMovement에 박았음.  여기선 attack/hunt
+        //  target 가 있으면 추격 + 공격.
+        private void HandleDraftedCombat()
+        {
+            if (entity == null) return;
+            BanditEnemy bandit = entity.DraftedAttackTarget;
+            AnimalEntity animal = entity.DraftedHuntTarget;
+            // Clean up dead/null targets
+            if (bandit != null && bandit.IsDead) { entity.DraftedAttackTarget = null; bandit = null; }
+            if (animal != null && (animal == null || animal.gameObject == null))
+            { entity.DraftedHuntTarget = null; animal = null; }
+            if (bandit == null && animal == null) return;
+            Vector2 me = transform.position;
+            const float attackRange = 1.2f;
+            Vector2 targetPos;
+            bool inRange;
+            if (bandit != null)
+            {
+                targetPos = bandit.transform.position;
+                inRange = Vector2.Distance(me, targetPos) <= attackRange;
+                if (!inRange) movement.SetTarget(targetPos);
+                else
+                {
+                    movement.ClearTarget();
+                    if (Time.time - lastDraftAttackTime > DraftAttackInterval)
+                    {
+                        lastDraftAttackTime = Time.time;
+                        bandit.TakeDamage(2, gameObject);
+                        var skills = GetComponent<PawnSkills>();
+                        if (skills != null) skills.AddXP(SkillKind.Combat, 8f);
+                    }
+                }
+            }
+            else if (animal != null)
+            {
+                targetPos = animal.transform.position;
+                inRange = Vector2.Distance(me, targetPos) <= attackRange;
+                if (!inRange) movement.SetTarget(targetPos);
+                else
+                {
+                    movement.ClearTarget();
+                    if (Time.time - lastDraftAttackTime > DraftAttackInterval)
+                    {
+                        lastDraftAttackTime = Time.time;
+                        animal.TakeDamage(2);
+                        var skills = GetComponent<PawnSkills>();
+                        if (skills != null) skills.AddXP(SkillKind.Combat, 5f);
+                    }
+                }
+            }
         }
     }
 }

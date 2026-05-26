@@ -31,23 +31,56 @@ namespace MelonS.GameProto
                 if (pawn != null) Select(pawn); else ClearSelection();
             }
 
-            // Right click = move OR chop (Day 3) for selected pawn
+            // Day 48: R key toggles drafted on selected pawn
+            if (Input.GetKeyDown(KeyCode.R) && currentSelection != null)
+            {
+                currentSelection.SetDrafted(!currentSelection.IsDrafted);
+            }
+
+            // Right click = move OR chop OR attack (drafted) for selected pawn
             if (Input.GetMouseButtonDown(1) && currentSelection != null)
             {
                 Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mouseWorld.z = 0f;
                 Collider2D rhit = Physics2D.OverlapPoint(mouseWorld);
-                TreeEntity tree = (rhit != null) ? rhit.GetComponent<TreeEntity>() : null;
 
+                // Day 48: drafted pawn — right-click on enemy/animal = attack/hunt
+                if (currentSelection.IsDrafted)
+                {
+                    if (rhit != null)
+                    {
+                        BanditEnemy bandit = rhit.GetComponent<BanditEnemy>();
+                        AnimalEntity animal = rhit.GetComponent<AnimalEntity>();
+                        if (bandit != null)
+                        {
+                            currentSelection.DraftedAttackTarget = bandit;
+                            currentSelection.DraftedHuntTarget   = null;
+                            Debug.Log($"[Draft] {currentSelection.PawnName} → 적 공격");
+                            return;
+                        }
+                        if (animal != null)
+                        {
+                            currentSelection.DraftedHuntTarget   = animal;
+                            currentSelection.DraftedAttackTarget = null;
+                            Debug.Log($"[Draft] {currentSelection.PawnName} → 동물 사냥");
+                            return;
+                        }
+                    }
+                    // Otherwise: manual movement (no chop while drafted)
+                    PawnMovement mvD = currentSelection.GetComponent<PawnMovement>();
+                    if (mvD != null) mvD.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
+                    return;
+                }
+
+                // Non-drafted: existing chop/move logic
+                TreeEntity tree = (rhit != null) ? rhit.GetComponent<TreeEntity>() : null;
                 if (tree != null)
                 {
-                    // Chop command
                     PawnChopper chopper = currentSelection.GetComponent<PawnChopper>();
                     if (chopper != null) chopper.SetTreeTarget(tree);
                 }
                 else
                 {
-                    // Movement command (also clears any active chop)
                     PawnChopper chopper = currentSelection.GetComponent<PawnChopper>();
                     if (chopper != null) chopper.ClearTask();
                     PawnMovement mv = currentSelection.GetComponent<PawnMovement>();
