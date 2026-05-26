@@ -103,6 +103,22 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > is the canonical implementation because every planner / qa stage
 > would be near-empty for a mechanical filter / fetch / dedupe pipeline.
 >
+> **Skill #3 — `game-dev-agent` (in development, not in the
+> production count above).**  Unity-focused AI agent that
+> orchestrates sprite generation, C# scaffolding, balance tuning,
+> audio generation, and an in-game AI director — the meta-skill
+> that drives the game prototypes built alongside it.  Two
+> prototype skills serve as its empirical validation surface: a
+> top-down colony-sim vertical slice
+> ([`skills/game-prototype/`](skills/game-prototype/)) and a 2D
+> physics-merge puzzle
+> ([`skills/game-prototype-suika/`](skills/game-prototype-suika/),
+> Day 2 shipped at ~15× wall-clock speedup vs the no-framework
+> baseline).  Graduates into the production-skill count once both
+> prototypes hit their end-of-day deliverable schedules.  Skill
+> definitions live in
+> [`skills/game-dev-agent/`](skills/game-dev-agent/).
+>
 > **Two ways to drive this repo.**
 > - *Agent-driven* (primary) — install Claude Code, point it at the
 >   cloned repo, type a mission.  Claude Code edits files, commits,
