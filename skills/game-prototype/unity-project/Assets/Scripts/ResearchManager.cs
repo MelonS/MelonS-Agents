@@ -40,6 +40,7 @@ namespace MelonS.GameProto
         public List<Tech> techs = new List<Tech>();
         public Tech activeTech;
         public float pointsPerSecondPerBench = 2f;
+        private float pointsFraction = 0f;  // Day 75 fractional accumulator
 
         public delegate void TechCompletedHandler(Tech t);
         public event TechCompletedHandler OnTechCompleted;
@@ -49,6 +50,8 @@ namespace MelonS.GameProto
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
             BuildTree();
+            // Day 75: 첫 tech 자동 활성화 — 플레이어가 N키 누르기 전에도 진행이 보임.
+            if (techs.Count > 0) activeTech = techs[0];
         }
 
         private void BuildTree()
@@ -77,7 +80,13 @@ namespace MelonS.GameProto
             }
             if (activeBenches == 0) return;
             float gain = pointsPerSecondPerBench * activeBenches * Time.deltaTime;
-            activeTech.currentPoints += Mathf.CeilToInt(gain * 10f) / 10;  // cheap fractional accumulator
+            pointsFraction += gain;
+            int whole = Mathf.FloorToInt(pointsFraction);
+            if (whole > 0)
+            {
+                activeTech.currentPoints += whole;
+                pointsFraction -= whole;
+            }
             if (activeTech.currentPoints >= activeTech.requiredPoints)
             {
                 activeTech.currentPoints = activeTech.requiredPoints;
