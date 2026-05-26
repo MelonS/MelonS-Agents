@@ -13,6 +13,8 @@ namespace MelonS.GameProto
 
         public int wood = 0;
         public int food = 0;
+        // Day 27: cooked meals (better than raw food)
+        public int meals = 0;
 
         public event Action OnChanged;
 
@@ -35,6 +37,12 @@ namespace MelonS.GameProto
         public void AddFood(int amount)
         {
             food = Mathf.Max(0, food + amount);
+            OnChanged?.Invoke();
+        }
+
+        public void AddMeals(int amount)
+        {
+            meals = Mathf.Max(0, meals + amount);
             OnChanged?.Invoke();
         }
     }

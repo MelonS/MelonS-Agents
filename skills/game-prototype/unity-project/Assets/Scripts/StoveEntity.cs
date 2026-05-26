@@ -20,6 +20,7 @@ namespace MelonS.GameProto
         {
             if (!CanCookOne()) return false;
             ResourceManager.Instance.AddFood(-3);
+            ResourceManager.Instance.AddMeals(+1);   // Day 27: global meal counter
             MealsAvailable++;
             return true;
         }
