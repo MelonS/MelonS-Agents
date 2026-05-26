@@ -4,12 +4,22 @@
 
 ## 한 줄
 
-**32 자동검증 시나리오 PASS + R 시리즈 8 architecture refactor 완료
-+ 32x32 detailed pawn + 야간 시연 + Trader stretch + 매 commit
-refactor_check 6단계 강제**
+**34 자동검증 시나리오 PASS + R 시리즈 8 architecture refactor 완료
++ 32x32 detailed pawn + 야간 시연 + 3 stretch (Trader / Animal taming / Lamp)
++ 매 commit refactor_check 6단계 강제**
 
 운영자 audit "코드 있음 != 실제 작동" gap 거의 해소.  매 commit 자동으로
-빌드/런타임/시각 회귀 + 32 game scenario PASS 강제됨.
+빌드/런타임/시각 회귀 + 34 game scenario PASS 강제됨.
+
+## 운영자가 깨어났을 때 바로 보면 좋은 것
+
+1. **`G:/ai/_refactor_baseline.png`** — 새벽 (06:18) 32x32 pawn 3명 다른 색 + lamp 2 + 정착지
+2. **`G:/ai/_pawnsim_FINAL_night.png`** — 야간 (22:18) NightOverlay alpha 0.62 어두움
+3. **`G:/ai/_pawnsim_test_report.json`** — 34/34 시나리오 PASS 결과
+4. 빠른 검증:
+   ```
+   python skills/game-dev-agent/scripts/refactor_check.py --tag check
+   ```
 
 ---
 
