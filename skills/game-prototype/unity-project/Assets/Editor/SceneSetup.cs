@@ -235,6 +235,8 @@ namespace MelonS.GameProto.EditorTools
             camGo.AddComponent<AudioListener>();
             // Day 8: WASD pan + mouse-wheel zoom + Shift fast-pan
             camGo.AddComponent<CameraController>();
+            // Day 9: tint camera background by time of day
+            camGo.AddComponent<DayNightCycle>();
 
             // EventSystem
             GameObject esGo = new GameObject("EventSystem");
@@ -244,6 +246,10 @@ namespace MelonS.GameProto.EditorTools
             // Day 8: TimeController singleton (1x/2x/4x + Space pause)
             GameObject tcGo = new GameObject("TimeController");
             tcGo.AddComponent<TimeController>();
+
+            // Day 9: GameClock singleton (in-game day/hour/minute)
+            GameObject gcGo = new GameObject("GameClock");
+            gcGo.AddComponent<GameClock>();
 
             // Tilemap parent (Grid)
             GameObject gridGo = new GameObject("Grid");
@@ -473,6 +479,23 @@ namespace MelonS.GameProto.EditorTools
             timeRt.sizeDelta = new Vector2(220, 50);
             timeGo.AddComponent<TimeUI>();
 
+            // Day 9: in-game clock under speed indicator
+            GameObject clockGo = new GameObject("ClockUI");
+            clockGo.transform.SetParent(canvasGo.transform, false);
+            Text clockText = clockGo.AddComponent<Text>();
+            clockText.text = "Day 1 - 06:00";
+            clockText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            clockText.fontSize = 18;
+            clockText.color = new Color(1f, 1f, 1f, 0.8f);
+            clockText.alignment = TextAnchor.MiddleCenter;
+            RectTransform clockRt = clockGo.GetComponent<RectTransform>();
+            clockRt.anchorMin = new Vector2(0.5f, 1f);
+            clockRt.anchorMax = new Vector2(0.5f, 1f);
+            clockRt.pivot = new Vector2(0.5f, 1f);
+            clockRt.anchoredPosition = new Vector2(0, -50);
+            clockRt.sizeDelta = new Vector2(220, 22);
+            clockGo.AddComponent<ClockUI>();
+
             // Day 8: control-hint text (top-center, below speed)
             GameObject hintGo = new GameObject("ControlHint");
             hintGo.transform.SetParent(canvasGo.transform, false);
@@ -486,7 +509,7 @@ namespace MelonS.GameProto.EditorTools
             hintRt.anchorMin = new Vector2(0.5f, 1f);
             hintRt.anchorMax = new Vector2(0.5f, 1f);
             hintRt.pivot = new Vector2(0.5f, 1f);
-            hintRt.anchoredPosition = new Vector2(0, -68);
+            hintRt.anchoredPosition = new Vector2(0, -78);
             hintRt.sizeDelta = new Vector2(640, 24);
 
             // Save/Load buttons (Day 6) — top-left
