@@ -958,7 +958,7 @@ namespace MelonS.GameProto.EditorTools
             ResearchUI rUI = rUIHost.AddComponent<ResearchUI>();
             rUI.SetRefs(resStatus, resProg, pickerRt, pickerText);
 
-            // ---------- PawnInfoPanel (bottom-left, 240x180) ----------
+            // ---------- PawnInfoPanel (bottom-left, Day 55: 380x200 — health text 영역) ----------
             GameObject panelGo = new GameObject("PawnInfoPanel");
             panelGo.transform.SetParent(canvasGo.transform, false);
             Image panelBg = panelGo.AddComponent<Image>();
@@ -967,7 +967,7 @@ namespace MelonS.GameProto.EditorTools
             panelRt.anchorMin = new Vector2(0f, 0f);
             panelRt.anchorMax = new Vector2(0f, 0f);
             panelRt.pivot = new Vector2(0f, 0f);
-            panelRt.sizeDelta = new Vector2(240, 180);
+            panelRt.sizeDelta = new Vector2(380, 200);
             panelRt.anchoredPosition = new Vector2(12, 64); // leave room for save/load row below
 
             // Title text (visible when pawn selected)
@@ -1047,6 +1047,26 @@ namespace MelonS.GameProto.EditorTools
             hintRt.sizeDelta = new Vector2(640, 20);
             hintRt.anchoredPosition = new Vector2(0, 14);
 
+            // Day 55: 부위별 health text (panel 안쪽 좌측 영역)
+            GameObject healthGo = new GameObject("HealthText");
+            healthGo.transform.SetParent(panelGo.transform, false);
+            Text healthText = healthGo.AddComponent<Text>();
+            healthText.text = "";
+            healthText.font = uiFont;
+            healthText.fontSize = 13;
+            healthText.color = colTextPrimary;
+            healthText.alignment = TextAnchor.UpperLeft;
+            healthText.supportRichText = true;
+            healthText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            healthText.verticalOverflow = VerticalWrapMode.Overflow;
+            RectTransform healthRt = healthGo.GetComponent<RectTransform>();
+            // 패널 width 240, 아래쪽 정보 영역 위에 가로 정렬 → use right half top
+            healthRt.anchorMin = new Vector2(0.55f, 0f);
+            healthRt.anchorMax = new Vector2(1f, 1f);
+            healthRt.pivot = new Vector2(0.5f, 0.5f);
+            healthRt.sizeDelta = new Vector2(-8, -38);
+            healthRt.anchoredPosition = new Vector2(0, -8);
+
             // Controller wiring
             PawnInfoPanel panel = panelGo.AddComponent<PawnInfoPanel>();
             SerializedObject pso = new SerializedObject(panel);
@@ -1057,6 +1077,7 @@ namespace MelonS.GameProto.EditorTools
             pso.FindProperty("moodBar").objectReferenceValue = moodBar;
             pso.FindProperty("emptyText").objectReferenceValue = empty;
             pso.FindProperty("panelBg").objectReferenceValue = panelBg;
+            pso.FindProperty("healthText").objectReferenceValue = healthText;
             pso.ApplyModifiedProperties();
 
             // Day 21: SkillUI panel — to the RIGHT of PawnInfoPanel.

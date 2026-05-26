@@ -17,6 +17,8 @@ namespace MelonS.GameProto
         [SerializeField] private Image moodBar;
         [SerializeField] private Text emptyText;
         [SerializeField] private Image panelBg;
+        // Day 55: 부위별 health 표시 — 클릭 시 RimWorld vanilla 처럼.
+        [SerializeField] private Text healthText;
 
         private void Update()
         {
@@ -52,6 +54,32 @@ namespace MelonS.GameProto
             if (foodBar  != null) foodBar.fillAmount  = needs.GetNormalized(NeedType.Food);
             if (sleepBar != null) sleepBar.fillAmount = needs.GetNormalized(NeedType.Sleep);
             if (moodBar  != null) moodBar.fillAmount  = needs.GetNormalized(NeedType.Mood);
+
+            // Day 55: 부위별 health 표시 (한글)
+            if (healthText != null)
+            {
+                PawnHealth health = pawn.GetComponent<PawnHealth>();
+                if (health != null && health.parts != null)
+                {
+                    var sb = new System.Text.StringBuilder();
+                    sb.AppendLine("<color=#ddc28a>상태:</color>");
+                    foreach (var part in health.parts)
+                    {
+                        float r = (float)part.hp / part.maxHp;
+                        string color = r > 0.7f ? "#9adb86" : (r > 0.3f ? "#e8b454" : "#e85454");
+                        string bleed = part.bleedRate > 0.1f ? " <color=#ff6464>출혈</color>" : "";
+                        string bandage = part.bandaged ? " <color=#a0c8ff>붕대</color>" : "";
+                        sb.AppendLine($"<color={color}>{part.nameKr}: {part.hp}/{part.maxHp}</color>{bleed}{bandage}");
+                    }
+                    if (health.IsDowned) sb.AppendLine("<color=#ff6464>의식불명</color>");
+                    if (health.IsDead)   sb.AppendLine("<color=#ff0000>사망</color>");
+                    healthText.text = sb.ToString();
+                }
+                else
+                {
+                    healthText.text = "";
+                }
+            }
         }
     }
 }
