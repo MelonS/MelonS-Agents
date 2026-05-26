@@ -111,6 +111,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnChopper>();
             pawnGo.AddComponent<PawnGatherer>();  // Day 11 — berry gather
             pawnGo.AddComponent<PawnHunter>();    // Day 24 — auto-hunt animals
+            pawnGo.AddComponent<PawnCook>();      // Day 26 — auto-cook at stove
             pawnGo.AddComponent<PawnSkills>();    // Day 19 — XP/level per skill
             pawnGo.AddComponent<PawnUtilityAI>();
 
