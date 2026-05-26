@@ -233,11 +233,17 @@ namespace MelonS.GameProto.EditorTools
             camGo.tag = "MainCamera";
             camGo.transform.position = new Vector3(0, 0, -10);
             camGo.AddComponent<AudioListener>();
+            // Day 8: WASD pan + mouse-wheel zoom + Shift fast-pan
+            camGo.AddComponent<CameraController>();
 
             // EventSystem
             GameObject esGo = new GameObject("EventSystem");
             esGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
             esGo.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+
+            // Day 8: TimeController singleton (1x/2x/4x + Space pause)
+            GameObject tcGo = new GameObject("TimeController");
+            tcGo.AddComponent<TimeController>();
 
             // Tilemap parent (Grid)
             GameObject gridGo = new GameObject("Grid");
@@ -449,6 +455,39 @@ namespace MelonS.GameProto.EditorTools
             rcSo.FindProperty("woodText").objectReferenceValue = woodText;
             rcSo.FindProperty("foodText").objectReferenceValue = foodText;
             rcSo.ApplyModifiedProperties();
+
+            // Day 8: Time speed indicator (top-center under resource panel)
+            GameObject timeGo = new GameObject("TimeUI");
+            timeGo.transform.SetParent(canvasGo.transform, false);
+            Text timeText = timeGo.AddComponent<Text>();
+            timeText.text = "▶ 1x";
+            timeText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            timeText.fontSize = 28;
+            timeText.color = new Color(1f, 1f, 1f, 0.9f);
+            timeText.alignment = TextAnchor.MiddleCenter;
+            RectTransform timeRt = timeGo.GetComponent<RectTransform>();
+            timeRt.anchorMin = new Vector2(0.5f, 1f);
+            timeRt.anchorMax = new Vector2(0.5f, 1f);
+            timeRt.pivot = new Vector2(0.5f, 1f);
+            timeRt.anchoredPosition = new Vector2(0, -20);
+            timeRt.sizeDelta = new Vector2(220, 50);
+            timeGo.AddComponent<TimeUI>();
+
+            // Day 8: control-hint text (top-center, below speed)
+            GameObject hintGo = new GameObject("ControlHint");
+            hintGo.transform.SetParent(canvasGo.transform, false);
+            Text hintText = hintGo.AddComponent<Text>();
+            hintText.text = "WASD: pan  |  Wheel: zoom  |  1/2/3: speed  |  Space: pause";
+            hintText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            hintText.fontSize = 14;
+            hintText.color = new Color(1f, 1f, 1f, 0.5f);
+            hintText.alignment = TextAnchor.MiddleCenter;
+            RectTransform hintRt = hintGo.GetComponent<RectTransform>();
+            hintRt.anchorMin = new Vector2(0.5f, 1f);
+            hintRt.anchorMax = new Vector2(0.5f, 1f);
+            hintRt.pivot = new Vector2(0.5f, 1f);
+            hintRt.anchoredPosition = new Vector2(0, -68);
+            hintRt.sizeDelta = new Vector2(640, 24);
 
             // Save/Load buttons (Day 6) — top-left
             GameObject saveBtnPanel = new GameObject("SaveLoadButtons");
