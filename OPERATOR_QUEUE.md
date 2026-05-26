@@ -110,6 +110,34 @@
 
 ---
 
+## OPQ-006 · Day 7 build was broken on operator's machine (RESOLVED)
+
+- **when**: 2026-05-26 ~22:00 KST (operator-on-return)
+- **context**: Operator launched `day-7-fixed-2026-05-26\PawnSim.exe`,
+  reported "pawn 안 보임", "이상한 사운드만 나옴", "쓰레기임".
+  Screenshot shared: UI rendered but world (pawn/tile/tree) entirely missing.
+- **diagnosis**: SceneSetup loaded sprite via `AssetDatabase.LoadAssetAtPath<Sprite>`
+  before any TextureImporter existed.  When .meta files were missing or
+  stale, sprite references resolved to null in the saved scene.
+- **fix** (auto-applied):
+  1. Added `ForceImportAllSprites()` to SceneSetup, called BEFORE
+     prefab+scene generation.  Calls `AssetDatabase.ImportAsset(path,
+     ForceUpdate)` to ensure importer exists, then sets `textureType =
+     Sprite`, `PPU = 16`, `filterMode = Point`, `SaveAndReimport()`,
+     `AssetDatabase.Refresh + SaveAssets`.
+  2. SDXL sprites replaced with Kenney CC0 (Tiny Town grass+tree,
+     Tiny Dungeon peasant) — operator's earlier ask "어디 에셋사이트에서
+     좀 괜찮은거 라이센스 문제 없는걸".
+  3. Built self-verification pipeline: `AutoScreenshotter.cs`
+     (in-game), `BuildScript.BuildGameOnlyVerify` (skips MainMenu so
+     screenshot captures Game scene directly).  Agent can now launch
+     .exe, wait for auto-screenshot, read PNG, verify content without
+     operator help.
+- **verified**: screenshots at `G:/ai/_screenshots/day7_v3.png` show
+  7 trees + 2-3 pawns + grass + auto-chop (Wood: 5) + UI all working.
+- **decision needed**: none (resolved autonomously).  Operator may
+  want to comment on visual polish (tree size, UI panel sizing).
+
 ## OPQ-005 · machine 24/7 power + agent uptime expectations
 
 - **when**: 2026-05-26 ~21:45 KST

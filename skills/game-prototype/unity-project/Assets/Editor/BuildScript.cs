@@ -12,6 +12,26 @@ namespace MelonS.GameProto.EditorTools
     /// </summary>
     public static class BuildScript
     {
+        /// <summary>Verification-only build — skips MainMenu, starts at Game scene directly so AutoScreenshotter can capture in-game state.</summary>
+        public static void BuildGameOnlyVerify()
+        {
+            string buildDir = "../builds";
+            Directory.CreateDirectory(buildDir);
+            string outDir = System.IO.Path.Combine(buildDir, "verify-game-only");
+            Directory.CreateDirectory(outDir);
+            string outExe = System.IO.Path.Combine(outDir, "PawnSim.exe");
+            var options = new BuildPlayerOptions
+            {
+                scenes = new[] { "Assets/Scenes/Game.unity" },
+                locationPathName = outExe,
+                target = BuildTarget.StandaloneWindows64,
+                options = BuildOptions.None,
+            };
+            Debug.Log($"[BuildScript] verify -> {outExe}");
+            var report = BuildPipeline.BuildPlayer(options);
+            EditorApplication.Exit(report.summary.result == BuildResult.Succeeded ? 0 : 1);
+        }
+
         [MenuItem("MelonS/Build Windows (current day)")]
         public static void BuildWindows()
         {

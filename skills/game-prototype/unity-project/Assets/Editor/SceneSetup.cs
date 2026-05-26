@@ -33,6 +33,11 @@ namespace MelonS.GameProto.EditorTools
             Directory.CreateDirectory(ScenesDir);
             Directory.CreateDirectory("Assets/Prefabs");
 
+            // CRITICAL: force-import all PNG sprites BEFORE anything tries
+            // to load them via AssetDatabase.LoadAssetAtPath<Sprite>().
+            // Without this, missing .meta files cause null sprite references.
+            ForceImportAllSprites();
+
             GeneratePawnPrefab();
             GenerateMainMenu();
             GenerateGame();
@@ -41,6 +46,32 @@ namespace MelonS.GameProto.EditorTools
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("[SceneSetup] Done.");
+        }
+
+        private static void ForceImportAllSprites()
+        {
+            string[] paths = new[]
+            {
+                "Assets/Sprites/pawn_colonist.png",
+                "Assets/Sprites/tile_grass.png",
+                "Assets/Sprites/tree.png",
+            };
+            foreach (var p in paths)
+            {
+                if (!File.Exists(p)) { Debug.LogWarning($"[SceneSetup] missing: {p}"); continue; }
+                // Force re-import to ensure .meta exists + Sprite type
+                AssetDatabase.ImportAsset(p, ImportAssetOptions.ForceUpdate);
+                TextureImporter ti = AssetImporter.GetAtPath(p) as TextureImporter;
+                if (ti == null) { Debug.LogWarning($"[SceneSetup] no TextureImporter for {p}"); continue; }
+                ti.textureType = TextureImporterType.Sprite;
+                ti.spriteImportMode = SpriteImportMode.Single;
+                ti.spritePixelsPerUnit = 16;
+                ti.filterMode = FilterMode.Point;
+                ti.SaveAndReimport();
+                Debug.Log($"[SceneSetup] forced sprite import: {p}");
+            }
+            AssetDatabase.Refresh();
+            AssetDatabase.SaveAssets();
         }
 
         private static void GeneratePawnPrefab()
@@ -56,7 +87,7 @@ namespace MelonS.GameProto.EditorTools
                 if (ti != null)
                 {
                     ti.textureType = TextureImporterType.Sprite;
-                    ti.spritePixelsPerUnit = 64;
+                    ti.spritePixelsPerUnit = 16;
                     ti.SaveAndReimport();
                     pawnSprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
                 }
@@ -229,7 +260,7 @@ namespace MelonS.GameProto.EditorTools
                 if (ti != null)
                 {
                     ti.textureType = TextureImporterType.Sprite;
-                    ti.spritePixelsPerUnit = 128;
+                    ti.spritePixelsPerUnit = 16;
                     ti.SaveAndReimport();
                     grassSprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
                 }
@@ -282,7 +313,7 @@ namespace MelonS.GameProto.EditorTools
                 if (ti != null)
                 {
                     ti.textureType = TextureImporterType.Sprite;
-                    ti.spritePixelsPerUnit = 64;
+                    ti.spritePixelsPerUnit = 16;
                     ti.SaveAndReimport();
                     treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>(p);
                 }
@@ -313,6 +344,10 @@ namespace MelonS.GameProto.EditorTools
             // ClickSelector
             GameObject csGo = new GameObject("ClickSelector");
             ClickSelector cs = csGo.AddComponent<ClickSelector>();
+
+            // AutoScreenshotter (self-validation harness)
+            GameObject ssGo = new GameObject("AutoScreenshotter");
+            ssGo.AddComponent<AutoScreenshotter>();
 
             // Canvas + PawnInfoPanel (Day 2) — EventSystem already created earlier
             GameObject canvasGo = new GameObject("Canvas");
