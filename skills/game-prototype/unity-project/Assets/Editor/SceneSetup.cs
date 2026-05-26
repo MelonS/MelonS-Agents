@@ -589,10 +589,10 @@ namespace MelonS.GameProto.EditorTools
             woodRt.anchorMin = new Vector2(1f, 0f);
             woodRt.anchorMax = new Vector2(1f, 1f);
             woodRt.pivot = new Vector2(1f, 0.5f);
-            woodRt.sizeDelta = new Vector2(160, 0);
-            woodRt.anchoredPosition = new Vector2(-180, 0);
+            woodRt.sizeDelta = new Vector2(140, 0);
+            woodRt.anchoredPosition = new Vector2(-320, 0);
 
-            GameObject sepGo = new GameObject("ResSep");
+            GameObject sepGo = new GameObject("ResSep1");
             sepGo.transform.SetParent(topBarGo.transform, false);
             Text sepText = sepGo.AddComponent<Text>();
             sepText.text = "·";
@@ -605,7 +605,22 @@ namespace MelonS.GameProto.EditorTools
             sepRt.anchorMax = new Vector2(1f, 1f);
             sepRt.pivot = new Vector2(0.5f, 0.5f);
             sepRt.sizeDelta = new Vector2(12, 0);
-            sepRt.anchoredPosition = new Vector2(-170, 0);
+            sepRt.anchoredPosition = new Vector2(-310, 0);
+
+            GameObject sep2Go = new GameObject("ResSep2");
+            sep2Go.transform.SetParent(topBarGo.transform, false);
+            Text sep2Text = sep2Go.AddComponent<Text>();
+            sep2Text.text = "·";
+            sep2Text.font = uiFont;
+            sep2Text.fontSize = 22;
+            sep2Text.color = colTextMuted;
+            sep2Text.alignment = TextAnchor.MiddleCenter;
+            RectTransform sep2Rt = sep2Go.GetComponent<RectTransform>();
+            sep2Rt.anchorMin = new Vector2(1f, 0f);
+            sep2Rt.anchorMax = new Vector2(1f, 1f);
+            sep2Rt.pivot = new Vector2(0.5f, 0.5f);
+            sep2Rt.sizeDelta = new Vector2(12, 0);
+            sep2Rt.anchoredPosition = new Vector2(-170, 0);
 
             GameObject foodTextGo = new GameObject("FoodText");
             foodTextGo.transform.SetParent(topBarGo.transform, false);
@@ -621,8 +636,8 @@ namespace MelonS.GameProto.EditorTools
             foodTextRt.anchorMin = new Vector2(1f, 0f);
             foodTextRt.anchorMax = new Vector2(1f, 1f);
             foodTextRt.pivot = new Vector2(1f, 0.5f);
-            foodTextRt.sizeDelta = new Vector2(160, 0);
-            foodTextRt.anchoredPosition = new Vector2(-16, 0);
+            foodTextRt.sizeDelta = new Vector2(140, 0);
+            foodTextRt.anchoredPosition = new Vector2(-20, 0);
 
             // Day 29: meals counter (식사)
             GameObject mealsTextGo = new GameObject("MealsText");
@@ -637,8 +652,8 @@ namespace MelonS.GameProto.EditorTools
             mealsRt.anchorMin = new Vector2(1f, 0f);
             mealsRt.anchorMax = new Vector2(1f, 1f);
             mealsRt.pivot = new Vector2(1f, 0.5f);
-            mealsRt.sizeDelta = new Vector2(120, 0);
-            mealsRt.anchoredPosition = new Vector2(-176, 0);
+            mealsRt.sizeDelta = new Vector2(140, 0);
+            mealsRt.anchoredPosition = new Vector2(-160, 0);
 
             // ResourceCounterUI host (no longer has its own panel image; just script)
             GameObject resHostGo = new GameObject("ResourceCounter");
