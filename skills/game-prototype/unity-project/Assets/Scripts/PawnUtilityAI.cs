@@ -70,13 +70,15 @@ namespace MelonS.GameProto
         private void Update()
         {
             // Day 48: drafted pawn skip utility AI — manual control only.
-            //  But it still needs combat tick: if it has DraftedAttackTarget,
-            //  chase + attack.  If DraftedHuntTarget, chase + attack.
             if (entity != null && entity.IsDrafted)
             {
                 HandleDraftedCombat();
                 return;
             }
+            // 운영자 피드백: 우클릭 이동이 AI 에 즉시 override 됐던 문제 fix.
+            //  ClickSelector 가 ManualMoveUntil 을 Time.time+5 로 설정하면
+            //  그 동안 AI Decide skip (사용자 이동 명령 존중).
+            if (entity != null && entity.IsUnderManualControl) return;
 
             if (Time.timeSinceLevelLoad - lastDecision < decisionInterval) return;
 

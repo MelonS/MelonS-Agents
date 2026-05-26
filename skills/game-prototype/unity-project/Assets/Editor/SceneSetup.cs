@@ -177,7 +177,7 @@ namespace MelonS.GameProto.EditorTools
             foreach (var wpos in wolfPositions)
             {
                 GameObject wGo = new GameObject($"Wolf_{wpos.x}_{wpos.y}");
-                wGo.transform.position = new Vector3(wpos.x, wpos.y, 0);
+                wGo.transform.position = new Vector3(wpos.x + 0.5f, wpos.y + 0.5f, 0);  // tile center 정렬
                 wGo.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
                 var wsr2 = wGo.AddComponent<SpriteRenderer>();
                 wsr2.sprite = wolfSpr;
@@ -203,7 +203,7 @@ namespace MelonS.GameProto.EditorTools
             foreach (var dpos in deerPositions)
             {
                 GameObject dGo = new GameObject($"Deer_{dpos.x}_{dpos.y}");
-                dGo.transform.position = new Vector3(dpos.x, dpos.y, 0);
+                dGo.transform.position = new Vector3(dpos.x + 0.5f, dpos.y + 0.5f, 0);  // tile center 정렬
                 var dsr2 = dGo.AddComponent<SpriteRenderer>();
                 dsr2.sprite = deerSpr;
                 dsr2.sortingOrder = 8;
@@ -275,7 +275,7 @@ namespace MelonS.GameProto.EditorTools
             {
                 GameObject t = (GameObject)PrefabUtility.InstantiatePrefab(treePrefab);
                 t.name = $"Tree_{pos.x}_{pos.y}";
-                t.transform.position = new Vector3(pos.x, pos.y, 0);
+                t.transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, 0);  // tile center 정렬
             }
 
             // Day 12: RegrowthScheduler — drives bush regen + tree-to-sapling
@@ -354,6 +354,7 @@ namespace MelonS.GameProto.EditorTools
             Sprite stockSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stockpile_marker.png");
 
             // 벽 5개 — 북쪽 벽 라인 (y=1, x=-7..-3) + 좌우 벽 (x=-7, x=-3, y=0)
+            //  운영자 피드백: tile 시각 center 가 (x+0.5, y+0.5) 라서 entity 도 +0.5 정렬.
             Vector2Int[] wallSpots = new[]
             {
                 new Vector2Int(-7, 1), new Vector2Int(-6, 1), new Vector2Int(-5, 1),
@@ -363,7 +364,7 @@ namespace MelonS.GameProto.EditorTools
             {
                 GameObject wGo = (GameObject)PrefabUtility.InstantiatePrefab(wallPrefab);
                 wGo.name = $"StarterWall_{w.x}_{w.y}";
-                wGo.transform.position = new Vector3(w.x, w.y, 0f);
+                wGo.transform.position = new Vector3(w.x + 0.5f, w.y + 0.5f, 0f);
             }
             // 바닥 6타일 (인테리어)
             Vector2Int[] floorSpots = new[]
@@ -375,15 +376,15 @@ namespace MelonS.GameProto.EditorTools
             {
                 GameObject fGo = (GameObject)PrefabUtility.InstantiatePrefab(floorPrefab);
                 fGo.name = $"StarterFloor_{f.x}_{f.y}";
-                fGo.transform.position = new Vector3(f.x, f.y, 0f);
+                fGo.transform.position = new Vector3(f.x + 0.5f, f.y + 0.5f, 0f);
             }
-            // 시작 화덕 + 시작 연구대
+            // 시작 화덕 + 시작 연구대 (tile center 정렬)
             GameObject starterStove = (GameObject)PrefabUtility.InstantiatePrefab(stovePrefab);
             starterStove.name = "StarterStove";
-            starterStove.transform.position = new Vector3(-4f, 0f, 0f);
+            starterStove.transform.position = new Vector3(-4f + 0.5f, 0f + 0.5f, 0f);
             GameObject starterBench = (GameObject)PrefabUtility.InstantiatePrefab(benchPrefab);
             starterBench.name = "StarterResearchBench";
-            starterBench.transform.position = new Vector3(-6f, 0f, 0f);
+            starterBench.transform.position = new Vector3(-6f + 0.5f, 0f + 0.5f, 0f);
 
             // Day 57: 농장 — 4x3 (12 타일) 작은 농장 (우측에 배치).  단순 데코로
             //  생장 시각 (lvl 1 sprout). Day 67-68에서 실제 농경 로직 추가 예정.
@@ -413,13 +414,14 @@ namespace MelonS.GameProto.EditorTools
                 }
             }
 
-            // Stretch: 가로등 2개 - 시작 정착지 입구 양옆 (visible 콘텐츠 다양화)
+            // Stretch: 가로등 2개 - 시작 정착지 북쪽 벽 위 (tile center 정렬)
             Sprite lampSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/lamp.png");
-            Vector2[] lampSpots = { new Vector2(-3.5f, 2.5f), new Vector2(-6.5f, 2.5f) };
+            //  tile (x, y) 시각 center = (x+0.5, y+0.5).  벽 위쪽 (y=2) 행에 배치.
+            Vector2Int[] lampSpots = { new Vector2Int(-7, 2), new Vector2Int(-3, 2) };
             foreach (var lp in lampSpots)
             {
                 GameObject lampGo = new GameObject($"Lamp_{lp.x}_{lp.y}");
-                lampGo.transform.position = new Vector3(lp.x, lp.y, 0f);
+                lampGo.transform.position = new Vector3(lp.x + 0.5f, lp.y + 0.5f, 0f);
                 var lsr = lampGo.AddComponent<SpriteRenderer>();
                 lsr.sprite = lampSprite;
                 lsr.sortingOrder = 6;
@@ -474,7 +476,7 @@ namespace MelonS.GameProto.EditorTools
             foreach (var pos in bushPositions)
             {
                 GameObject b = new GameObject($"BerryBush_{pos.x}_{pos.y}");
-                b.transform.position = new Vector3(pos.x, pos.y, 0);
+                b.transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, 0);  // tile center 정렬
                 SpriteRenderer bsr = b.AddComponent<SpriteRenderer>();
                 bsr.sprite = treeSprite;
                 bsr.sortingOrder = 5;

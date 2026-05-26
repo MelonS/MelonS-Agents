@@ -80,6 +80,7 @@ namespace MelonS.GameProto
                     // Otherwise: manual movement (no chop while drafted)
                     PawnMovement mvD = currentSelection.GetComponent<PawnMovement>();
                     if (mvD != null) mvD.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
+                    currentSelection.ManualMoveUntil = Time.time + 5f;
                     return;
                 }
 
@@ -117,6 +118,8 @@ namespace MelonS.GameProto
                     if (chopper != null) chopper.ClearTask();
                     PawnMovement mv = currentSelection.GetComponent<PawnMovement>();
                     if (mv != null) mv.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
+                    // 수동 이동 명령 → AI 5초 skip (즉시 override 방지)
+                    currentSelection.ManualMoveUntil = Time.time + 5f;
                 }
             }
         }

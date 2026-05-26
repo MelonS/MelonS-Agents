@@ -37,6 +37,12 @@ namespace MelonS.GameProto
         public int Hp { get; private set; }
         public bool IsDead => Hp <= 0;
 
+        // 운영자 피드백: 우클릭 이동이 AI 에 즉시 override 됐던 문제.
+        //  ClickSelector 가 우클릭 시 이 값을 Time.time + 5 로 set.
+        //  PawnUtilityAI.Update 가 Time.time < ManualMoveUntil 이면 AI Decide skip.
+        public float ManualMoveUntil { get; set; } = -10f;
+        public bool IsUnderManualControl => Time.time < ManualMoveUntil;
+
         // Day 48: drafted (manual control) state.  When drafted:
         //  - PawnUtilityAI suspended
         //  - Right-click on enemy = attack target
