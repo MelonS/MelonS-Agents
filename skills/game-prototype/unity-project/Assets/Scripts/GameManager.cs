@@ -47,10 +47,8 @@ namespace MelonS.GameProto
             foreach (var pos in spawnPositions)
             {
                 GameObject p = Instantiate(pawnPrefab, pos, Quaternion.identity);
-                // Day 37 영구 fix: pawn 16x16 sprite가 ortho 8 카메라에서 너무 작아
-                //  보였던 문제 — scale 2x를 prefab 외부에서도 한 번 더 강제.
-                //  (prefab 자체에도 GeneratePawnPrefab에서 2x scale 박혀있음)
-                p.transform.localScale = new Vector3(2f, 2f, 1f);
+                // P5: 32x32 detailed sprite 도입 후 — prefab scale 1.0 (이전 2x scale 불필요)
+                p.transform.localScale = new Vector3(1f, 1f, 1f);
                 var sr = p.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {

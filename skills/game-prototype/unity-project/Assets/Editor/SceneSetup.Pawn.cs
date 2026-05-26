@@ -28,9 +28,9 @@ namespace MelonS.GameProto.EditorTools
             }
 
             GameObject pawnGo = new GameObject("Pawn");
-            // Day 37 영구 fix: pawn 16x16 sprite는 deer 20x20보다 작아 ortho 8
-            //  카메라에서 잘 안 보였음.  prefab transform에 2x scale 박음.
-            pawnGo.transform.localScale = new Vector3(2f, 2f, 1f);
+            // P5: pawn sprite 32x32 detailed (Day 37 의 2x scale 대신 sprite 자체 큼).
+            //  PPU 16 + 32px sprite = 2 world unit.  scale 1.0 → 2x2 unit (이전 2x2 동일).
+            pawnGo.transform.localScale = new Vector3(1f, 1f, 1f);
             SpriteRenderer sr = pawnGo.AddComponent<SpriteRenderer>();
             sr.sprite = pawnSprite;
             sr.sortingOrder = 10;
