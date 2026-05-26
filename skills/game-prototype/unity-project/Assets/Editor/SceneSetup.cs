@@ -411,169 +411,230 @@ namespace MelonS.GameProto.EditorTools
             GameObject ssGo = new GameObject("AutoScreenshotter");
             ssGo.AddComponent<AutoScreenshotter>();
 
-            // Canvas + PawnInfoPanel (Day 2) — EventSystem already created earlier
+            // ================================================================
+            // Day 14 UI polish — palette + layout refactor.
+            // Palette (mirror in TimeUI.cs):
+            //   panel        = rgba(0.10, 0.094, 0.078, 0.85)
+            //   accent_wood  = #a87543  (0.659, 0.459, 0.263)
+            //   accent_food  = #7a9a4d  (0.478, 0.604, 0.302)
+            //   accent_warn  = #c45a3a  (0.769, 0.353, 0.227)
+            //   text_primary = #e8dfd0  (0.910, 0.875, 0.816)
+            //   text_muted   = #8a8170  (0.541, 0.506, 0.439)
+            // ================================================================
+            Color colPanel       = new Color(0.10f, 0.094f, 0.078f, 0.85f);
+            Color colAccentWood  = new Color(0.659f, 0.459f, 0.263f, 1f);
+            Color colAccentFood  = new Color(0.478f, 0.604f, 0.302f, 1f);
+            Color colAccentWarn  = new Color(0.769f, 0.353f, 0.227f, 1f);
+            Color colTextPrimary = new Color(0.910f, 0.875f, 0.816f, 1f);
+            Color colTextMuted   = new Color(0.541f, 0.506f, 0.439f, 1f);
+            Font  uiFont         = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+            // Canvas (EventSystem already created earlier)
             GameObject canvasGo = new GameObject("Canvas");
             Canvas canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             canvasGo.AddComponent<GraphicRaycaster>();
 
-            // Panel (bottom-left)
+            // ---------- TopBar (full-width strip, 32px, panel color) ----------
+            GameObject topBarGo = new GameObject("TopBar");
+            topBarGo.transform.SetParent(canvasGo.transform, false);
+            Image topBarBg = topBarGo.AddComponent<Image>();
+            topBarBg.color = colPanel;
+            RectTransform topRt = topBarGo.GetComponent<RectTransform>();
+            topRt.anchorMin = new Vector2(0f, 1f);
+            topRt.anchorMax = new Vector2(1f, 1f);
+            topRt.pivot = new Vector2(0.5f, 1f);
+            topRt.sizeDelta = new Vector2(0, 32);
+            topRt.anchoredPosition = new Vector2(0, 0);
+
+            // TopBar LEFT — ClockUI "Day 1 - 06:00"
+            GameObject clockGo = new GameObject("ClockUI");
+            clockGo.transform.SetParent(topBarGo.transform, false);
+            Text clockText = clockGo.AddComponent<Text>();
+            clockText.text = "Day 1 - 06:00";
+            clockText.font = uiFont;
+            clockText.fontSize = 22;
+            clockText.color = colTextPrimary;
+            clockText.alignment = TextAnchor.MiddleLeft;
+            RectTransform clockRt = clockGo.GetComponent<RectTransform>();
+            clockRt.anchorMin = new Vector2(0f, 0f);
+            clockRt.anchorMax = new Vector2(0f, 1f);
+            clockRt.pivot = new Vector2(0f, 0.5f);
+            clockRt.sizeDelta = new Vector2(220, 0);
+            clockRt.anchoredPosition = new Vector2(16, 0);
+            clockGo.AddComponent<ClockUI>();
+
+            // TopBar CENTER — TimeUI "▶ 1x"
+            GameObject timeGo = new GameObject("TimeUI");
+            timeGo.transform.SetParent(topBarGo.transform, false);
+            Text timeText = timeGo.AddComponent<Text>();
+            timeText.text = "▶ 1x";
+            timeText.font = uiFont;
+            timeText.fontSize = 22;
+            timeText.color = colTextPrimary;
+            timeText.alignment = TextAnchor.MiddleCenter;
+            RectTransform timeRt = timeGo.GetComponent<RectTransform>();
+            timeRt.anchorMin = new Vector2(0.5f, 0f);
+            timeRt.anchorMax = new Vector2(0.5f, 1f);
+            timeRt.pivot = new Vector2(0.5f, 0.5f);
+            timeRt.sizeDelta = new Vector2(220, 0);
+            timeRt.anchoredPosition = new Vector2(0, 0);
+            timeGo.AddComponent<TimeUI>();
+
+            // TopBar RIGHT — Wood / Food counter (no separate panel — inline in topbar)
+            GameObject woodGo = new GameObject("WoodText");
+            woodGo.transform.SetParent(topBarGo.transform, false);
+            Text woodText = woodGo.AddComponent<Text>();
+            woodText.text = "Wood: 0";
+            woodText.font = uiFont;
+            woodText.fontSize = 22;
+            woodText.color = colAccentWood;
+            woodText.alignment = TextAnchor.MiddleRight;
+            RectTransform woodRt = woodGo.GetComponent<RectTransform>();
+            woodRt.anchorMin = new Vector2(1f, 0f);
+            woodRt.anchorMax = new Vector2(1f, 1f);
+            woodRt.pivot = new Vector2(1f, 0.5f);
+            woodRt.sizeDelta = new Vector2(160, 0);
+            woodRt.anchoredPosition = new Vector2(-180, 0);
+
+            GameObject sepGo = new GameObject("ResSep");
+            sepGo.transform.SetParent(topBarGo.transform, false);
+            Text sepText = sepGo.AddComponent<Text>();
+            sepText.text = "·";
+            sepText.font = uiFont;
+            sepText.fontSize = 22;
+            sepText.color = colTextMuted;
+            sepText.alignment = TextAnchor.MiddleCenter;
+            RectTransform sepRt = sepGo.GetComponent<RectTransform>();
+            sepRt.anchorMin = new Vector2(1f, 0f);
+            sepRt.anchorMax = new Vector2(1f, 1f);
+            sepRt.pivot = new Vector2(0.5f, 0.5f);
+            sepRt.sizeDelta = new Vector2(12, 0);
+            sepRt.anchoredPosition = new Vector2(-170, 0);
+
+            GameObject foodTextGo = new GameObject("FoodText");
+            foodTextGo.transform.SetParent(topBarGo.transform, false);
+            Text foodText = foodTextGo.AddComponent<Text>();
+            foodText.text = "Food: 0";
+            foodText.font = uiFont;
+            foodText.fontSize = 22;
+            foodText.color = colAccentFood;
+            foodText.alignment = TextAnchor.MiddleLeft;
+            RectTransform foodTextRt = foodTextGo.GetComponent<RectTransform>();
+            foodTextRt.anchorMin = new Vector2(1f, 0f);
+            foodTextRt.anchorMax = new Vector2(1f, 1f);
+            foodTextRt.pivot = new Vector2(1f, 0.5f);
+            foodTextRt.sizeDelta = new Vector2(160, 0);
+            foodTextRt.anchoredPosition = new Vector2(-16, 0);
+
+            // ResourceCounterUI host (no longer has its own panel image; just script)
+            GameObject resHostGo = new GameObject("ResourceCounter");
+            resHostGo.transform.SetParent(canvasGo.transform, false);
+            resHostGo.AddComponent<RectTransform>();
+            ResourceCounterUI resCounter = resHostGo.AddComponent<ResourceCounterUI>();
+            SerializedObject rcSo = new SerializedObject(resCounter);
+            rcSo.FindProperty("woodText").objectReferenceValue = woodText;
+            rcSo.FindProperty("foodText").objectReferenceValue = foodText;
+            rcSo.ApplyModifiedProperties();
+
+            // ---------- EventLog (right side, 240x160, below topbar) ----------
+            GameObject logPanelGo = new GameObject("EventLogPanel");
+            logPanelGo.transform.SetParent(canvasGo.transform, false);
+            Image logBg = logPanelGo.AddComponent<Image>();
+            logBg.color = colPanel;
+            RectTransform logRt = logPanelGo.GetComponent<RectTransform>();
+            logRt.anchorMin = new Vector2(1f, 1f);
+            logRt.anchorMax = new Vector2(1f, 1f);
+            logRt.pivot = new Vector2(1f, 1f);
+            logRt.sizeDelta = new Vector2(240, 160);
+            logRt.anchoredPosition = new Vector2(-12, -44); // 32 topbar + 12 gap
+
+            GameObject logTextGo = new GameObject("LogText");
+            logTextGo.transform.SetParent(logPanelGo.transform, false);
+            Text logText = logTextGo.AddComponent<Text>();
+            logText.text = "";
+            logText.font = uiFont;
+            logText.fontSize = 16;
+            logText.color = colTextPrimary;
+            logText.alignment = TextAnchor.UpperLeft;
+            logText.supportRichText = true;
+            logText.verticalOverflow = VerticalWrapMode.Truncate;
+            logText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            RectTransform logTextRt = logTextGo.GetComponent<RectTransform>();
+            logTextRt.anchorMin = Vector2.zero;
+            logTextRt.anchorMax = Vector2.one;
+            logTextRt.sizeDelta = new Vector2(-16, -12);
+            logTextRt.anchoredPosition = new Vector2(0, -2);
+
+            EventLogUI logUI = logPanelGo.AddComponent<EventLogUI>();
+            SerializedObject logSo = new SerializedObject(logUI);
+            logSo.FindProperty("director").objectReferenceValue = director;
+            logSo.FindProperty("logText").objectReferenceValue = logText;
+            logSo.FindProperty("maxEntries").intValue = 3;
+            logSo.ApplyModifiedProperties();
+
+            // ---------- PawnInfoPanel (bottom-left, 240x180) ----------
             GameObject panelGo = new GameObject("PawnInfoPanel");
             panelGo.transform.SetParent(canvasGo.transform, false);
             Image panelBg = panelGo.AddComponent<Image>();
-            panelBg.color = new Color(0f, 0f, 0f, 0.55f);
+            panelBg.color = colPanel;
             RectTransform panelRt = panelGo.GetComponent<RectTransform>();
             panelRt.anchorMin = new Vector2(0f, 0f);
             panelRt.anchorMax = new Vector2(0f, 0f);
             panelRt.pivot = new Vector2(0f, 0f);
-            panelRt.sizeDelta = new Vector2(280, 200);
-            panelRt.anchoredPosition = new Vector2(20, 20);
+            panelRt.sizeDelta = new Vector2(240, 180);
+            panelRt.anchoredPosition = new Vector2(12, 64); // leave room for save/load row below
 
-            // Title text
+            // Title text (visible when pawn selected)
             GameObject titleGo = new GameObject("Title");
             titleGo.transform.SetParent(panelGo.transform, false);
             Text title = titleGo.AddComponent<Text>();
             title.text = "Colonist";
             title.alignment = TextAnchor.UpperLeft;
-            title.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            title.fontSize = 20;
-            title.color = new Color(0.95f, 0.95f, 0.9f, 1f);
+            title.font = uiFont;
+            title.fontSize = 18;
+            title.color = colTextPrimary;
             RectTransform titleRt = titleGo.GetComponent<RectTransform>();
             titleRt.anchorMin = new Vector2(0f, 1f);
             titleRt.anchorMax = new Vector2(1f, 1f);
             titleRt.pivot = new Vector2(0f, 1f);
-            titleRt.sizeDelta = new Vector2(-20, 30);
-            titleRt.anchoredPosition = new Vector2(10, -10);
+            titleRt.sizeDelta = new Vector2(-20, 26);
+            titleRt.anchoredPosition = new Vector2(10, -8);
 
-            // Empty-state text (when no selection)
+            // 3 need bars — accent palette
+            Image foodBar  = CreateNeedBar(panelGo.transform, "Food",  new Vector2(10, 105), colAccentFood, uiFont, colTextPrimary);
+            Image sleepBar = CreateNeedBar(panelGo.transform, "Sleep", new Vector2(10, 65),  new Color(0.4f, 0.6f, 0.9f, 1f), uiFont, colTextPrimary);
+            Image moodBar  = CreateNeedBar(panelGo.transform, "Mood",  new Vector2(10, 25),  colAccentWood, uiFont, colTextPrimary);
+
+            // Empty-state hint — replaces the panel content when no pawn is selected.
+            // PawnInfoPanel toggles emptyText visibility based on selection.
             GameObject emptyGo = new GameObject("EmptyText");
             emptyGo.transform.SetParent(panelGo.transform, false);
             Text empty = emptyGo.AddComponent<Text>();
-            empty.text = "(click pawn to select)";
+            empty.text = "Click a pawn";
             empty.alignment = TextAnchor.MiddleCenter;
-            empty.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            empty.fontSize = 14;
-            empty.color = new Color(0.7f, 0.7f, 0.7f, 1f);
+            empty.font = uiFont;
+            empty.fontSize = 12;
+            empty.color = colTextMuted;
             RectTransform emptyRt = emptyGo.GetComponent<RectTransform>();
             emptyRt.anchorMin = Vector2.zero;
             emptyRt.anchorMax = Vector2.one;
             emptyRt.sizeDelta = Vector2.zero;
             emptyRt.anchoredPosition = Vector2.zero;
 
-            // 3 need bars
-            Image foodBar  = CreateNeedBar(panelGo.transform, "Food",  new Vector2(10, 130), new Color(0.4f, 0.8f, 0.4f));
-            Image sleepBar = CreateNeedBar(panelGo.transform, "Sleep", new Vector2(10, 90),  new Color(0.4f, 0.6f, 0.9f));
-            Image moodBar  = CreateNeedBar(panelGo.transform, "Mood",  new Vector2(10, 50),  new Color(0.9f, 0.7f, 0.4f));
-
-            // Resource counter UI (top-right)
-            GameObject resPanelGo = new GameObject("ResourceCounter");
-            resPanelGo.transform.SetParent(canvasGo.transform, false);
-            Image resBg = resPanelGo.AddComponent<Image>();
-            resBg.color = new Color(0f, 0f, 0f, 0.55f);
-            RectTransform resRt = resPanelGo.GetComponent<RectTransform>();
-            resRt.anchorMin = new Vector2(1f, 1f);
-            resRt.anchorMax = new Vector2(1f, 1f);
-            resRt.pivot = new Vector2(1f, 1f);
-            resRt.sizeDelta = new Vector2(200, 80);
-            resRt.anchoredPosition = new Vector2(-20, -20);
-
-            GameObject woodGo = new GameObject("WoodText");
-            woodGo.transform.SetParent(resPanelGo.transform, false);
-            Text woodText = woodGo.AddComponent<Text>();
-            woodText.text = "Wood: 0";
-            woodText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            woodText.fontSize = 18;
-            woodText.color = new Color(0.95f, 0.95f, 0.9f, 1f);
-            woodText.alignment = TextAnchor.MiddleLeft;
-            RectTransform woodRt = woodGo.GetComponent<RectTransform>();
-            woodRt.anchorMin = new Vector2(0f, 0.5f);
-            woodRt.anchorMax = new Vector2(1f, 1f);
-            woodRt.sizeDelta = new Vector2(-20, 0);
-            woodRt.anchoredPosition = new Vector2(10, 0);
-
-            GameObject foodTextGo = new GameObject("FoodText");
-            foodTextGo.transform.SetParent(resPanelGo.transform, false);
-            Text foodText = foodTextGo.AddComponent<Text>();
-            foodText.text = "Food: 0";
-            foodText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            foodText.fontSize = 18;
-            foodText.color = new Color(0.95f, 0.95f, 0.9f, 1f);
-            foodText.alignment = TextAnchor.MiddleLeft;
-            RectTransform foodTextRt = foodTextGo.GetComponent<RectTransform>();
-            foodTextRt.anchorMin = new Vector2(0f, 0f);
-            foodTextRt.anchorMax = new Vector2(1f, 0.5f);
-            foodTextRt.sizeDelta = new Vector2(-20, 0);
-            foodTextRt.anchoredPosition = new Vector2(10, 0);
-
-            ResourceCounterUI resCounter = resPanelGo.AddComponent<ResourceCounterUI>();
-            SerializedObject rcSo = new SerializedObject(resCounter);
-            rcSo.FindProperty("woodText").objectReferenceValue = woodText;
-            rcSo.FindProperty("foodText").objectReferenceValue = foodText;
-            rcSo.ApplyModifiedProperties();
-
-            // Day 8: Time speed indicator (top-center under resource panel)
-            GameObject timeGo = new GameObject("TimeUI");
-            timeGo.transform.SetParent(canvasGo.transform, false);
-            Text timeText = timeGo.AddComponent<Text>();
-            timeText.text = "▶ 1x";
-            timeText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            timeText.fontSize = 28;
-            timeText.color = new Color(1f, 1f, 1f, 0.9f);
-            timeText.alignment = TextAnchor.MiddleCenter;
-            RectTransform timeRt = timeGo.GetComponent<RectTransform>();
-            timeRt.anchorMin = new Vector2(0.5f, 1f);
-            timeRt.anchorMax = new Vector2(0.5f, 1f);
-            timeRt.pivot = new Vector2(0.5f, 1f);
-            timeRt.anchoredPosition = new Vector2(0, -20);
-            timeRt.sizeDelta = new Vector2(220, 50);
-            timeGo.AddComponent<TimeUI>();
-
-            // Day 9: in-game clock under speed indicator
-            GameObject clockGo = new GameObject("ClockUI");
-            clockGo.transform.SetParent(canvasGo.transform, false);
-            Text clockText = clockGo.AddComponent<Text>();
-            clockText.text = "Day 1 - 06:00";
-            clockText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            clockText.fontSize = 18;
-            clockText.color = new Color(1f, 1f, 1f, 0.8f);
-            clockText.alignment = TextAnchor.MiddleCenter;
-            RectTransform clockRt = clockGo.GetComponent<RectTransform>();
-            clockRt.anchorMin = new Vector2(0.5f, 1f);
-            clockRt.anchorMax = new Vector2(0.5f, 1f);
-            clockRt.pivot = new Vector2(0.5f, 1f);
-            clockRt.anchoredPosition = new Vector2(0, -50);
-            clockRt.sizeDelta = new Vector2(220, 22);
-            clockGo.AddComponent<ClockUI>();
-
-            // Day 8: control-hint text (top-center, below speed)
-            GameObject hintGo = new GameObject("ControlHint");
-            hintGo.transform.SetParent(canvasGo.transform, false);
-            Text hintText = hintGo.AddComponent<Text>();
-            hintText.text = "WASD: pan  |  Wheel: zoom  |  1/2/3: speed  |  Space: pause";
-            hintText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            hintText.fontSize = 14;
-            hintText.color = new Color(1f, 1f, 1f, 0.5f);
-            hintText.alignment = TextAnchor.MiddleCenter;
-            RectTransform hintRt = hintGo.GetComponent<RectTransform>();
-            hintRt.anchorMin = new Vector2(0.5f, 1f);
-            hintRt.anchorMax = new Vector2(0.5f, 1f);
-            hintRt.pivot = new Vector2(0.5f, 1f);
-            hintRt.anchoredPosition = new Vector2(0, -78);
-            hintRt.sizeDelta = new Vector2(640, 24);
-
-            // Save/Load buttons (Day 6) — top-left
+            // ---------- SaveLoad buttons (bottom-left corner, 40x40 each) ----------
             GameObject saveBtnPanel = new GameObject("SaveLoadButtons");
             saveBtnPanel.transform.SetParent(canvasGo.transform, false);
             RectTransform sbpRt = saveBtnPanel.AddComponent<RectTransform>();
-            sbpRt.anchorMin = new Vector2(0f, 1f);
-            sbpRt.anchorMax = new Vector2(0f, 1f);
-            sbpRt.pivot = new Vector2(0f, 1f);
-            sbpRt.sizeDelta = new Vector2(220, 50);
-            sbpRt.anchoredPosition = new Vector2(20, -20);
+            sbpRt.anchorMin = new Vector2(0f, 0f);
+            sbpRt.anchorMax = new Vector2(0f, 0f);
+            sbpRt.pivot = new Vector2(0f, 0f);
+            sbpRt.sizeDelta = new Vector2(92, 40);
+            sbpRt.anchoredPosition = new Vector2(12, 12);
 
-            GameObject saveBtnGo = CreateSmallButton(saveBtnPanel.transform, "SaveBtn", "Save (F5)", new Vector2(0, 0));
-            GameObject loadBtnGo = CreateSmallButton(saveBtnPanel.transform, "LoadBtn", "Load (F9)", new Vector2(110, 0));
+            GameObject saveBtnGo = CreateIconButton(saveBtnPanel.transform, "SaveBtn", "S", new Vector2(0, 0), colPanel, colTextPrimary, uiFont);
+            GameObject loadBtnGo = CreateIconButton(saveBtnPanel.transform, "LoadBtn", "L", new Vector2(48, 0), colPanel, colTextPrimary, uiFont);
 
             GameSaveButtons gsb = saveBtnPanel.AddComponent<GameSaveButtons>();
             SerializedObject gsbSo = new SerializedObject(gsb);
@@ -585,41 +646,24 @@ namespace MelonS.GameProto.EditorTools
                 AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree.png");
             gsbSo.ApplyModifiedProperties();
 
-            // Event Log UI (Day 5) — bottom-center
-            GameObject logPanelGo = new GameObject("EventLogPanel");
-            logPanelGo.transform.SetParent(canvasGo.transform, false);
-            Image logBg = logPanelGo.AddComponent<Image>();
-            logBg.color = new Color(0f, 0f, 0f, 0.45f);
-            RectTransform logRt = logPanelGo.GetComponent<RectTransform>();
-            logRt.anchorMin = new Vector2(0.5f, 0f);
-            logRt.anchorMax = new Vector2(0.5f, 0f);
-            logRt.pivot = new Vector2(0.5f, 0f);
-            logRt.sizeDelta = new Vector2(640, 180);
-            logRt.anchoredPosition = new Vector2(0, 20);
+            // ---------- Control hint (bottom-center, muted) ----------
+            GameObject hintGo = new GameObject("ControlHint");
+            hintGo.transform.SetParent(canvasGo.transform, false);
+            Text hintText = hintGo.AddComponent<Text>();
+            hintText.text = "WASD: pan  |  Wheel: zoom  |  1/2/3: speed  |  Space: pause";
+            hintText.font = uiFont;
+            hintText.fontSize = 14;
+            Color hintCol = colTextMuted; hintCol.a = 0.75f;
+            hintText.color = hintCol;
+            hintText.alignment = TextAnchor.MiddleCenter;
+            RectTransform hintRt = hintGo.GetComponent<RectTransform>();
+            hintRt.anchorMin = new Vector2(0.5f, 0f);
+            hintRt.anchorMax = new Vector2(0.5f, 0f);
+            hintRt.pivot = new Vector2(0.5f, 0f);
+            hintRt.sizeDelta = new Vector2(640, 20);
+            hintRt.anchoredPosition = new Vector2(0, 14);
 
-            GameObject logTextGo = new GameObject("LogText");
-            logTextGo.transform.SetParent(logPanelGo.transform, false);
-            Text logText = logTextGo.AddComponent<Text>();
-            logText.text = "";
-            logText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            logText.fontSize = 14;
-            logText.color = new Color(0.93f, 0.93f, 0.88f, 1f);
-            logText.alignment = TextAnchor.UpperLeft;
-            logText.supportRichText = true;
-            logText.verticalOverflow = VerticalWrapMode.Overflow;
-            RectTransform logTextRt = logTextGo.GetComponent<RectTransform>();
-            logTextRt.anchorMin = Vector2.zero;
-            logTextRt.anchorMax = Vector2.one;
-            logTextRt.sizeDelta = new Vector2(-20, -10);
-            logTextRt.anchoredPosition = new Vector2(0, -5);
-
-            EventLogUI logUI = logPanelGo.AddComponent<EventLogUI>();
-            SerializedObject logSo = new SerializedObject(logUI);
-            logSo.FindProperty("director").objectReferenceValue = director;
-            logSo.FindProperty("logText").objectReferenceValue = logText;
-            logSo.ApplyModifiedProperties();
-
-            // Controller
+            // Controller wiring
             PawnInfoPanel panel = panelGo.AddComponent<PawnInfoPanel>();
             SerializedObject pso = new SerializedObject(panel);
             pso.FindProperty("selector").objectReferenceValue = cs;
@@ -634,38 +678,11 @@ namespace MelonS.GameProto.EditorTools
             Debug.Log($"[SceneSetup] Game -> {GamePath}");
         }
 
-        private static GameObject CreateSmallButton(Transform parent, string name, string label, Vector2 pos)
+        private static Image CreateNeedBar(Transform parent, string label, Vector2 pos, Color fillColor, Font font = null, Color? labelColor = null)
         {
-            GameObject go = new GameObject(name);
-            go.transform.SetParent(parent, false);
-            Image img = go.AddComponent<Image>();
-            img.color = new Color(0.2f, 0.4f, 0.6f, 0.9f);
-            Button btn = go.AddComponent<Button>();
-            RectTransform rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0f, 0f);
-            rt.anchorMax = new Vector2(0f, 0f);
-            rt.pivot = new Vector2(0f, 0f);
-            rt.sizeDelta = new Vector2(100, 40);
-            rt.anchoredPosition = pos;
+            if (font == null) font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            Color lblCol = labelColor ?? Color.white;
 
-            GameObject txtGo = new GameObject("Text");
-            txtGo.transform.SetParent(go.transform, false);
-            Text txt = txtGo.AddComponent<Text>();
-            txt.text = label;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            txt.fontSize = 13;
-            txt.color = Color.white;
-            txt.alignment = TextAnchor.MiddleCenter;
-            RectTransform txtRt = txtGo.GetComponent<RectTransform>();
-            txtRt.anchorMin = Vector2.zero;
-            txtRt.anchorMax = Vector2.one;
-            txtRt.sizeDelta = Vector2.zero;
-            txtRt.anchoredPosition = Vector2.zero;
-            return go;
-        }
-
-        private static Image CreateNeedBar(Transform parent, string label, Vector2 pos, Color fillColor)
-        {
             // Row container
             GameObject row = new GameObject(label + "Row");
             row.transform.SetParent(parent, false);
@@ -673,7 +690,7 @@ namespace MelonS.GameProto.EditorTools
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(0f, 0f);
             rt.pivot = new Vector2(0f, 0f);
-            rt.sizeDelta = new Vector2(260, 30);
+            rt.sizeDelta = new Vector2(220, 28);
             rt.anchoredPosition = pos;
 
             // Label
@@ -681,27 +698,28 @@ namespace MelonS.GameProto.EditorTools
             lblGo.transform.SetParent(row.transform, false);
             Text lbl = lblGo.AddComponent<Text>();
             lbl.text = label;
-            lbl.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            lbl.font = font;
             lbl.fontSize = 14;
-            lbl.color = Color.white;
+            lbl.color = lblCol;
+            lbl.alignment = TextAnchor.MiddleLeft;
             RectTransform lblRt = lblGo.GetComponent<RectTransform>();
             lblRt.anchorMin = new Vector2(0f, 0f);
             lblRt.anchorMax = new Vector2(0f, 1f);
             lblRt.pivot = new Vector2(0f, 0.5f);
-            lblRt.sizeDelta = new Vector2(60, 0);
+            lblRt.sizeDelta = new Vector2(50, 0);
             lblRt.anchoredPosition = new Vector2(0, 0);
 
             // Bar bg
             GameObject bgGo = new GameObject("Bg");
             bgGo.transform.SetParent(row.transform, false);
             Image bg = bgGo.AddComponent<Image>();
-            bg.color = new Color(0.1f, 0.1f, 0.1f, 0.7f);
+            bg.color = new Color(0.05f, 0.05f, 0.05f, 0.7f);
             RectTransform bgRt = bgGo.GetComponent<RectTransform>();
             bgRt.anchorMin = new Vector2(0f, 0f);
             bgRt.anchorMax = new Vector2(1f, 1f);
             bgRt.pivot = new Vector2(0f, 0.5f);
-            bgRt.sizeDelta = new Vector2(-65, -5);
-            bgRt.anchoredPosition = new Vector2(65, 0);
+            bgRt.sizeDelta = new Vector2(-55, -6);
+            bgRt.anchoredPosition = new Vector2(55, 0);
 
             // Fill
             GameObject fillGo = new GameObject("Fill");
@@ -720,6 +738,43 @@ namespace MelonS.GameProto.EditorTools
             fillRt.anchoredPosition = Vector2.zero;
 
             return fill;
+        }
+
+        private static GameObject CreateIconButton(Transform parent, string name, string label, Vector2 pos, Color bgColor, Color textColor, Font font)
+        {
+            GameObject go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            Image img = go.AddComponent<Image>();
+            img.color = bgColor;
+            Button btn = go.AddComponent<Button>();
+            ColorBlock cb = btn.colors;
+            cb.normalColor = Color.white;
+            cb.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
+            cb.pressedColor = new Color(0.7f, 0.7f, 0.7f, 1f);
+            btn.colors = cb;
+
+            RectTransform rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot = new Vector2(0f, 0f);
+            rt.sizeDelta = new Vector2(40, 40);
+            rt.anchoredPosition = pos;
+
+            GameObject txtGo = new GameObject("Text");
+            txtGo.transform.SetParent(go.transform, false);
+            Text txt = txtGo.AddComponent<Text>();
+            txt.text = label;
+            txt.font = font;
+            txt.fontSize = 18;
+            txt.fontStyle = FontStyle.Bold;
+            txt.color = textColor;
+            txt.alignment = TextAnchor.MiddleCenter;
+            RectTransform txtRt = txtGo.GetComponent<RectTransform>();
+            txtRt.anchorMin = Vector2.zero;
+            txtRt.anchorMax = Vector2.one;
+            txtRt.sizeDelta = Vector2.zero;
+            txtRt.anchoredPosition = Vector2.zero;
+            return go;
         }
 
         private static void RegisterBuildScenes()
