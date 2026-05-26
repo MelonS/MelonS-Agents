@@ -20,6 +20,7 @@ namespace MelonS.GameProto
         private PawnChopper chopper;
         private PawnGatherer gatherer;
         private PawnHunter hunter;
+        private PawnCook cook;
         private PawnNeeds needs;
         private float lastDecision = -999f;
 
@@ -29,6 +30,7 @@ namespace MelonS.GameProto
             chopper = GetComponent<PawnChopper>();
             gatherer = GetComponent<PawnGatherer>();
             hunter = GetComponent<PawnHunter>();
+            cook = GetComponent<PawnCook>();
             needs = GetComponent<PawnNeeds>();
         }
 
@@ -62,6 +64,7 @@ namespace MelonS.GameProto
             if (movement.IsMoving || chopper.HasTask) return;
             if (gatherer != null && gatherer.HasTask) return;
             if (hunter != null && hunter.HasTask) return;
+            if (cook != null && cook.HasTask) return;
 
             lastDecision = Time.timeSinceLevelLoad;
             Decide();
@@ -84,11 +87,34 @@ namespace MelonS.GameProto
                 if (deer != null) { hunter.SetAnimalTarget(deer); return; }
             }
 
+            // Day 26: cook when stockpile food has surplus (>5) AND stove exists.
+            if (cook != null && ResourceManager.Instance != null
+                && ResourceManager.Instance.food > 5)
+            {
+                StoveEntity stove = FindNearestStove();
+                if (stove != null) { cook.SetStoveTarget(stove); return; }
+            }
+
             TreeEntity tree = FindNearestTree();
             if (tree != null) { chopper.SetTreeTarget(tree); return; }
 
             Vector2 cur2 = transform.position;
             movement.SetTarget(cur2 + Random.insideUnitCircle * idleWanderRadius);
+        }
+
+        private StoveEntity FindNearestStove()
+        {
+            var arr = FindObjectsByType<StoveEntity>(FindObjectsSortMode.None);
+            StoveEntity best = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = transform.position;
+            foreach (var s in arr)
+            {
+                if (s == null) continue;
+                float sq = ((Vector2)s.transform.position - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = s; }
+            }
+            return best;
         }
 
         private AnimalEntity FindNearestAnimal()

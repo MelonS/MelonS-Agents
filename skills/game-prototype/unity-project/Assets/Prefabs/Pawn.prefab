@@ -283,3 +283,4 @@ MonoBehaviour:
   decisionInterval: 1.5
   idleWanderRadius: 3
   foodHungryThreshold: 40
+  globalFoodLowThreshold: 10
