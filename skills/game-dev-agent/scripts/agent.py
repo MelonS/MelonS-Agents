@@ -37,6 +37,7 @@ from modules import integrator  # noqa: E402
 from modules import qa as qa_module  # noqa: E402
 from modules import planner  # noqa: E402
 from modules import coder  # noqa: E402
+from modules import scaffold  # noqa: E402
 
 
 def cmd_gen_sprite(args):
@@ -65,6 +66,18 @@ def cmd_fetch_assets(args):
 def cmd_plan(args):
     p = planner.plan(args.spec)
     planner.print_plan(p)
+    return 0
+
+
+def cmd_scaffold_editor(args):
+    written = scaffold.generate_editor_scaffold(
+        Path(args.assets_dir),
+        project_name=args.project_name,
+        namespace=args.namespace,
+        exe_name=args.exe_name,
+        overwrite=args.overwrite,
+    )
+    print(f"[scaffold] {len(written)} file(s) materialized")
     return 0
 
 
@@ -128,6 +141,21 @@ def main():
                    help="prompt style preset")
     g.add_argument("--server", default="http://127.0.0.1:8188")
     g.set_defaults(func=cmd_gen_sprite)
+
+    # gen-editor-scaffold (Build Engineer / TA agent)
+    ges = sub.add_parser("gen-editor-scaffold",
+                         help="materialize SceneSetup + BuildScript + AutoScreenshotter "
+                              "in a Unity project (one-shot, idempotent)")
+    ges.add_argument("assets_dir", help="path to <unity-project>/Assets/")
+    ges.add_argument("--project-name", required=True,
+                     help="MenuItem label + namespace prefix (e.g. 'SuikaLite')")
+    ges.add_argument("--namespace", default="MelonS.GameProto",
+                     help="C# namespace (default MelonS.GameProto for legacy compat)")
+    ges.add_argument("--exe-name",
+                     help="Windows .exe stem (default = project-name minus spaces)")
+    ges.add_argument("--overwrite", action="store_true",
+                     help="replace existing files (default: skip)")
+    ges.set_defaults(func=cmd_scaffold_editor)
 
     # code
     c = sub.add_parser("code", help="scaffold Unity C# script from a template")
