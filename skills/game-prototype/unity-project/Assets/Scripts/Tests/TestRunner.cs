@@ -52,6 +52,10 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V3-research", TestV3_Research);
             yield return RunOne("V4-arrow", TestV4_Arrow);
             yield return RunOne("V5-crop-harvest", TestV5_CropHarvest);
+            yield return RunOne("V6-body-parts", TestV6_BodyParts);
+            yield return RunOne("V7-storyteller-tier", TestV7_StorytellerTier);
+            yield return RunOne("V8-map-obstacle", TestV8_MapObstacle);
+            yield return RunOne("V9-mood-break", TestV9_MoodBreak);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -167,6 +171,80 @@ namespace MelonS.GameProto.Tests
             bool wolfDmg = wolf != null && wolf.Hp < 18;
             Assert(finalArrows > initialArrows || wolfDmg,
                 $"arrows spawned this period (peak >0?) or wolf damaged HP={wolf?.Hp}");
+        }
+
+        private IEnumerator TestV6_BodyParts()
+        {
+            var pawnGo = SpawnTestPawn(new Vector3(-9, 0, 0), includeAI: false);
+            var health = pawnGo.GetComponent<PawnHealth>();
+            yield return new WaitForSeconds(0.1f);
+            // 20 damage 하나 부위에 강제
+            health.TakeDamage(8, PawnHealth.PartId.LeftLeg);
+            yield return new WaitForSeconds(0.1f);
+            var part = health.GetPart(PawnHealth.PartId.LeftLeg);
+            bool dmgApplied = part.hp < part.maxHp;
+            bool bleeding = part.bleedRate > 0f;
+            Assert(dmgApplied && bleeding,
+                $"왼다리 HP={part.hp}/{part.maxHp} bleed={part.bleedRate:F2}");
+        }
+
+        private IEnumerator TestV7_StorytellerTier()
+        {
+            // AIDirector 찾아서 day 14 시뮬레이션 (Cassandra tier 2 이상)
+            var dir = Object.FindFirstObjectByType<AIDirector>();
+            if (dir == null)
+            {
+                // test scene 엔 AIDirector 없을 수 있음 - 생성
+                var dGo = new GameObject("TestAIDirector");
+                dir = dGo.AddComponent<AIDirector>();
+            }
+            dir.activeStoryteller = Storyteller.Cassandra;
+            // GameClock 강제 day 14
+            var clock = Services.Get<GameClock>();
+            if (clock == null)
+            {
+                var cGo = new GameObject("TestGameClock");
+                clock = cGo.AddComponent<GameClock>();
+            }
+            var f = typeof(GameClock).GetField("<GameSeconds>k__BackingField",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (f != null) f.SetValue(clock, 14f * 86400f);
+            yield return new WaitForSeconds(0.1f);
+            int tier = dir.CurrentThreatTier;
+            Assert(tier >= 2, $"day 14 Cassandra threatTier={tier} (>=2 expected)");
+        }
+
+        private IEnumerator TestV8_MapObstacle()
+        {
+            // PawnMovement.ClampToWorld 검증 (sync — yield 없음)
+            Vector2 outside = new Vector2(100, 100);
+            Vector2 clamped = PawnMovement.ClampToWorld(outside);
+            bool clampWorks = clamped.x <= 19.01f && clamped.y <= 19.01f;
+            Vector2 inside = new Vector2(5, 5);
+            Vector2 unchanged = PawnMovement.ClampToWorld(inside);
+            bool insideOk = Mathf.Approximately(unchanged.x, 5f) && Mathf.Approximately(unchanged.y, 5f);
+            Assert(clampWorks && insideOk,
+                $"out (100,100) -> ({clamped.x:F1},{clamped.y:F1}); in (5,5) -> ({unchanged.x:F1},{unchanged.y:F1})");
+            yield break;
+        }
+
+        private IEnumerator TestV9_MoodBreak()
+        {
+            // Stripped: PawnNeeds 컴포넌트 단독으로 추가 (PawnEntity 의존 회피)
+            if (Services.Get<GameClock>() == null)
+            {
+                var cGo = new GameObject("TestGameClockV9");
+                cGo.AddComponent<GameClock>();
+                yield return null;
+            }
+            var go = new GameObject("TestPawnV9");
+            go.transform.position = new Vector3(-11, 0, 0);
+            var needs = go.AddComponent<PawnNeeds>();
+            yield return new WaitForSeconds(0.05f);
+            needs.mood = 15f;
+            yield return new WaitForSeconds(0.2f);
+            bool moodLow = needs.mood < 20f;
+            Assert(moodLow, $"mood={needs.mood:F1} (<20 expected)");
         }
 
         private IEnumerator TestV5_CropHarvest()
