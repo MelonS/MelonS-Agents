@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MelonS.GameProto
 {
@@ -51,6 +51,9 @@ namespace MelonS.GameProto
                 // In range — stop walking, chop
                 movement.ClearTarget();
                 bool destroyed = targetTree.TakeChopDamage(chopDamagePerSec * Time.deltaTime);
+                // Day 19: Chop XP — granted each frame proportional to dmg
+                var skills = GetComponent<PawnSkills>();
+                if (skills != null) skills.AddXP(SkillKind.Chop, chopDamagePerSec * Time.deltaTime * 0.5f);
                 if (destroyed) ClearTask();
             }
             else

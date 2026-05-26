@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MelonS.GameProto
 {
@@ -60,6 +60,9 @@ namespace MelonS.GameProto
                     if (got > 0)
                     {
                         ResourceManager.Instance?.AddFood(got);
+                        // Day 19: Gather XP per berry
+                        var skills = GetComponent<PawnSkills>();
+                        if (skills != null) skills.AddXP(SkillKind.Gather, 8f * got);
                     }
                     if (targetBush.IsDepleted) ClearTask();
                 }

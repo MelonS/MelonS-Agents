@@ -108,6 +108,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnNeeds>();
             pawnGo.AddComponent<PawnChopper>();
             pawnGo.AddComponent<PawnGatherer>();  // Day 11 — berry gather
+            pawnGo.AddComponent<PawnSkills>();    // Day 19 — XP/level per skill
             pawnGo.AddComponent<PawnUtilityAI>();
 
             PrefabUtility.SaveAsPrefabAsset(pawnGo, PawnPrefabPath);
