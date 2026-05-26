@@ -1,101 +1,113 @@
-"""planner — natural-language game spec → task list.
+"""planner — natural-language game spec → genre spec (loaded from YAML).
 
-Day 1 implementation: hard-coded templates per known genre.  Future
-[OPQ-002]: invoke Claude API for arbitrary specs.
+Genre templates live in `skills/game-dev-agent/genres/*.yaml`.  Adding a
+new genre = adding a new YAML file.  NO code change.  This is what
+makes the agent capable of building **any** game, not just the 3
+hard-coded ones from earlier iterations.
+
+Schema documented at the top of each YAML file (see
+`genres/rimworld-lite.yaml`).
+
+Future [OPQ-002]: when `ANTHROPIC_API_KEY` is set, planner falls back
+to Claude API for arbitrary specs that don't keyword-match any
+existing YAML — Claude proposes a new YAML, operator approves, saved
+to disk, becomes a permanent genre.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List
+from pathlib import Path
+from typing import List, Optional, Dict, Any
+
+try:
+    import yaml
+except ImportError as e:
+    raise SystemExit(
+        "planner requires PyYAML.  Install via: pip install PyYAML"
+    ) from e
+
+
+GENRES_DIR = Path(__file__).resolve().parent.parent.parent / "genres"
 
 
 @dataclass
 class GenreSpec:
-    genre: str
+    name: str
+    description: str = ""
+    match_keywords: List[str] = field(default_factory=list)
+    vision: Dict[str, str] = field(default_factory=dict)
+    team: List[str] = field(default_factory=list)
     sprites: List[str] = field(default_factory=list)
     scripts: List[str] = field(default_factory=list)
     scenes: List[str] = field(default_factory=list)
     systems: List[str] = field(default_factory=list)
     audio: List[str] = field(default_factory=list)
     days_estimate: int = 7
+    # backward-compat alias for old code that read .genre
+    @property
+    def genre(self) -> str:
+        return self.name
 
 
-GENRE_TEMPLATES = {
-    "rimworld-lite": GenreSpec(
-        genre="rimworld-lite",
-        sprites=["pawn_colonist", "tile_grass", "tree"],
-        scripts=[
-            "MainMenuController", "GameManager", "PawnEntity",
-            "ClickSelector", "PawnMovement", "PawnNeeds",
-            "PawnInfoPanel", "TreeEntity", "PawnChopper",
-            "ResourceManager", "ResourceCounterUI", "PawnUtilityAI",
-            "AIDirector", "EventLogUI", "SaveLoadManager",
-            "GameSaveButtons", "AudioBank",
-        ],
-        scenes=["MainMenu", "Game"],
-        systems=[
-            "tilemap rendering", "pawn movement (no pathfind)",
-            "needs decay", "tree chop action", "wood economy",
-            "utility AI auto-task", "random events",
-            "save/load JSON",
-        ],
-        audio=["chop SFX", "select SFX"],
-        days_estimate=7,
-    ),
-    "vampire-survivors-lite": GenreSpec(
-        genre="vampire-survivors-lite",
-        sprites=["player", "enemy_small", "enemy_med", "projectile", "xp_gem"],
-        scripts=[
-            "PlayerMovement", "PlayerHealth", "AutoShooter",
-            "Projectile", "EnemyEntity", "EnemyAI", "EnemySpawner",
-            "WaveManager", "XPGem", "LevelUpUI", "WeaponUpgrade",
-        ],
-        scenes=["MainMenu", "Game"],
-        systems=[
-            "WASD movement", "auto-aim nearest enemy",
-            "wave spawn timer", "XP pickup", "level-up choices",
-            "HP + iframes",
-        ],
-        audio=["shoot SFX", "hit SFX", "level-up SFX", "BGM"],
-        days_estimate=5,
-    ),
-    "suika-game-lite": GenreSpec(
-        genre="suika-game-lite",
-        sprites=["fruit_tier1", "fruit_tier2", "fruit_tier3", "fruit_tier4", "fruit_tier5"],
-        scripts=[
-            "DropController", "Fruit", "FruitMerger", "GameOver",
-            "ScoreManager", "ScoreUI",
-        ],
-        scenes=["MainMenu", "Game"],
-        systems=[
-            "physics 2D", "click-to-drop", "collision-merge same-tier",
-            "score on merge", "game-over on top-line overflow",
-        ],
-        audio=["drop SFX", "merge SFX", "BGM"],
-        days_estimate=2,
-    ),
-}
+def load_all_genres(genres_dir: Optional[Path] = None) -> Dict[str, GenreSpec]:
+    """Discover + parse every *.yaml in genres/.  Returns {slug: GenreSpec}."""
+    gdir = genres_dir or GENRES_DIR
+    if not gdir.exists():
+        raise FileNotFoundError(f"genres dir not found: {gdir}")
+    out: Dict[str, GenreSpec] = {}
+    for path in sorted(gdir.glob("*.yaml")):
+        with open(path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+        slug = data.get("name") or path.stem
+        out[slug] = GenreSpec(
+            name=slug,
+            description=data.get("description", ""),
+            match_keywords=[str(k) for k in data.get("match_keywords", [])],
+            vision=dict(data.get("vision", {})),
+            team=list(data.get("team", [])),
+            sprites=list(data.get("sprites", [])),
+            scripts=list(data.get("scripts", [])),
+            scenes=list(data.get("scenes", [])),
+            systems=list(data.get("systems", [])),
+            audio=list(data.get("audio", [])),
+            days_estimate=int(data.get("days_estimate", 7)),
+        )
+    return out
 
 
-def plan(spec_nl: str) -> GenreSpec:
-    """Pick template by keyword match.  Day 1 stub."""
+def plan(spec_nl: str, genres_dir: Optional[Path] = None) -> GenreSpec:
+    """Pick a genre by keyword match against the natural-language spec.
+
+    Day-1 implementation: substring match.  Future [OPQ-002]: when no
+    keyword matches, fall back to Claude API for novel genre creation.
+    """
+    catalog = load_all_genres(genres_dir)
     nl = spec_nl.lower()
-    if "rimworld" in nl or "colony" in nl or "pawn" in nl:
-        return GENRE_TEMPLATES["rimworld-lite"]
-    if "vampire survivors" in nl or "auto-shoot" in nl or "horde survivor" in nl:
-        return GENRE_TEMPLATES["vampire-survivors-lite"]
-    if "suika" in nl or "merge fruit" in nl or "watermelon game" in nl:
-        return GENRE_TEMPLATES["suika-game-lite"]
+    for slug, gs in catalog.items():
+        for kw in gs.match_keywords:
+            # YAML can auto-cast bare keywords like "2048" to int;
+            # str() defensively before .lower().
+            if str(kw).lower() in nl:
+                return gs
     raise ValueError(
-        f"No template matches '{spec_nl}'.  Day 1 planner knows: "
-        f"{list(GENRE_TEMPLATES.keys())}.  Future iterations will use "
-        f"Claude API for arbitrary specs (see [OPQ-002] in OPERATOR_QUEUE.md)."
+        f"No genre YAML matches '{spec_nl}'.  Known genres: "
+        f"{sorted(catalog.keys())}.  Add a new genre by dropping a "
+        f"YAML into {GENRES_DIR} (no code change).  Or wait for "
+        f"Claude-API fallback (OPQ-002)."
     )
 
 
 def print_plan(p: GenreSpec):
-    print(f"=== Plan: {p.genre} ===")
+    print(f"=== Plan: {p.name} ===")
+    if p.description:
+        print(f"  {p.description}")
+    if p.vision:
+        print(f"  Vision:")
+        for k, v in p.vision.items():
+            print(f"    {k}: {v}")
     print(f"  Days estimate: {p.days_estimate}")
+    if p.team:
+        print(f"  Team ({len(p.team)}): {', '.join(p.team)}")
     print(f"  Sprites ({len(p.sprites)}): {', '.join(p.sprites)}")
     print(f"  Scripts ({len(p.scripts)}): {', '.join(p.scripts)}")
     print(f"  Scenes ({len(p.scenes)}): {', '.join(p.scenes)}")

@@ -1,0 +1,91 @@
+# Genre template — RimWorld-style colony simulation (lite).
+#
+# Loaded by skills/game-dev-agent/scripts/modules/planner.py.
+# Adding a new genre = adding a new file in this dir.  NO planner code change.
+#
+# Schema:
+#   name             : slug (matches filename without .yaml)
+#   description      : one-line human description
+#   match_keywords   : list of lowercase substrings; planner picks this genre
+#                      when the operator's natural-language spec contains any
+#                      of them
+#   vision           : game-director-level direction (tone, core loop, feel)
+#   team             : which game-dev agents are activated for this genre.
+#                      core 8 + extras for genre-specific complexity
+#   sprites          : list of sprite asset slugs (resourcer/artist will
+#                      either fetch CC0 or procedurally generate)
+#   scripts          : list of C# class names the programmer must produce
+#   scenes           : Unity scene names
+#   systems          : natural-language gameplay system list
+#   audio            : SFX + BGM slugs
+#   days_estimate    : rough day count to a playable Day-1 build
+
+name: rimworld-lite
+description: "Top-down colony simulation.  Pawns auto-chop trees, manage 3 needs, random events fire periodically."
+
+match_keywords:
+  - rimworld
+  - colony
+  - pawn
+  - colonist
+
+vision:
+  tone: "차분한 시뮬 — 정적인 관전 + 가끔의 결정"
+  core_loop: "관찰 → 지시 → 자원 축적 → 위기 대응"
+  feel: "느린 흐름, 작은 결정이 누적되어 큰 결과로"
+
+team:
+  - game-director
+  - pm
+  - game-designer
+  - systems-designer   # economy + needs + resource balance
+  - ai-designer        # utility AI for pawn auto-tasks
+  - programmer
+  - artist
+  - sound-designer
+  - qa
+  - build-engineer
+
+sprites:
+  - pawn_colonist
+  - tile_grass
+  - tree
+
+scripts:
+  - MainMenuController
+  - GameManager
+  - PawnEntity
+  - ClickSelector
+  - PawnMovement
+  - PawnNeeds
+  - PawnInfoPanel
+  - TreeEntity
+  - PawnChopper
+  - ResourceManager
+  - ResourceCounterUI
+  - PawnUtilityAI
+  - AIDirector
+  - EventLogUI
+  - SaveLoadManager
+  - GameSaveButtons
+  - AudioBank
+
+scenes:
+  - MainMenu
+  - Game
+
+systems:
+  - tilemap rendering
+  - pawn movement (no pathfind)
+  - needs decay
+  - tree chop action
+  - wood economy
+  - utility AI auto-task
+  - random events
+  - save/load JSON
+
+audio:
+  - chop SFX
+  - select SFX
+
+days_estimate: 7

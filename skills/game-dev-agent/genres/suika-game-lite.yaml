@@ -1,0 +1,56 @@
+# Genre template — Suika-Game-style physics merge puzzle (lite).
+
+name: suika-game-lite
+description: "Click to drop fruit, same-tier collision merges into next tier, top-line overflow = game over."
+
+match_keywords:
+  - suika
+  - merge fruit
+  - watermelon game
+
+vision:
+  tone: "손맛 위주의 캐주얼 — 짧은 한 판 반복"
+  core_loop: "다음 과일 보기 → 위치 고민 → 드롭 → 머지 → 점수"
+  feel: "물리의 우연성 + 짧은 즉발 만족"
+
+team:
+  - game-director
+  - pm
+  - game-designer
+  - programmer
+  - artist
+  - sound-designer
+  - qa
+  - build-engineer
+
+sprites:
+  - tier1_cherry
+  - tier2_orange
+  - tier3_lemon
+  - tier4_melon
+  - tier5_watermelon
+
+scripts:
+  - DropController
+  - Fruit
+  - FruitMerger
+  - GameOverDetector
+  - ScoreManager
+  - ScoreUI
+
+scenes:
+  - Game
+
+systems:
+  - physics 2D
+  - click-to-drop
+  - collision-merge same-tier
+  - score on merge
+  - game-over on top-line overflow
+
+audio:
+  - drop SFX
+  - merge SFX
+  - BGM
+
+days_estimate: 2

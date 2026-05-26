@@ -1,0 +1,68 @@
+# Genre template — 2048-style grid merge puzzle (lite).
+#
+# Demonstration that adding a new genre = adding ONE YAML file.
+# No planner.py code change required.
+
+name: 2048-lite
+description: "4x4 grid.  WASD slides tiles.  Same-number tiles merge into 2x.  Game over when no moves remain."
+
+match_keywords:
+  - 2048
+  - tile merge
+  - grid merge
+
+vision:
+  tone: "차분한 머리쓰기 퍼즐 — 한 수 한 수 의도적인 선택"
+  core_loop: "방향 선택 → 슬라이드 → 머지 → 점수 → 다음 타일 등장"
+  feel: "조용한 사고 + 한 번의 실수가 누적되는 긴장"
+
+team:
+  - game-director
+  - pm
+  - game-designer
+  - programmer
+  - artist
+  - sound-designer
+  - qa
+  - build-engineer
+
+sprites:
+  - tile_2
+  - tile_4
+  - tile_8
+  - tile_16
+  - tile_32
+  - tile_64
+  - tile_128
+  - tile_256
+  - tile_512
+  - tile_1024
+  - tile_2048
+
+scripts:
+  - GridManager
+  - TileEntity
+  - SlideController
+  - MergeResolver
+  - SpawnDispatcher
+  - GameOverDetector
+  - ScoreManager
+  - ScoreUI
+
+scenes:
+  - Game
+
+systems:
+  - 4x4 grid state
+  - WASD/Arrow input -> slide direction
+  - slide collapse algorithm
+  - same-number merge -> 2x tile + score
+  - random 2/4 spawn after each move
+  - no-moves-remaining game over
+
+audio:
+  - slide SFX
+  - merge SFX
+  - spawn SFX
+
+days_estimate: 1

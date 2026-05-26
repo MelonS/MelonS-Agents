@@ -1,0 +1,67 @@
+# Genre template — Vampire-Survivors-style horde survivor (lite).
+
+name: vampire-survivors-lite
+description: "WASD survivor.  Auto-aim, waves of enemies, XP gems, level-up choices."
+
+match_keywords:
+  - vampire survivors
+  - auto-shoot
+  - horde survivor
+  - bullet heaven
+
+vision:
+  tone: "긴장감 있는 액션, 점진적 강화의 쾌감"
+  core_loop: "이동 회피 → 자동 사격 → 경험치 → 강화 선택 → 더 강한 적"
+  feel: "처음에는 약하다가 점점 화면을 휩쓸 수 있게"
+
+team:
+  - game-director
+  - pm
+  - game-designer
+  - combat-designer    # weapon balance + wave difficulty curve
+  - level-designer     # enemy wave patterns
+  - programmer
+  - artist
+  - sound-designer
+  - qa
+  - build-engineer
+
+sprites:
+  - player
+  - enemy_small
+  - enemy_med
+  - projectile
+  - xp_gem
+
+scripts:
+  - PlayerMovement
+  - PlayerHealth
+  - AutoShooter
+  - Projectile
+  - EnemyEntity
+  - EnemyAI
+  - EnemySpawner
+  - WaveManager
+  - XPGem
+  - LevelUpUI
+  - WeaponUpgrade
+
+scenes:
+  - MainMenu
+  - Game
+
+systems:
+  - WASD movement
+  - auto-aim nearest enemy
+  - wave spawn timer
+  - XP pickup
+  - level-up choices
+  - HP + iframes
+
+audio:
+  - shoot SFX
+  - hit SFX
+  - level-up SFX
+  - BGM
+
+days_estimate: 5
