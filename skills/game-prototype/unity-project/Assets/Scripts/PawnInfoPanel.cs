@@ -16,6 +16,7 @@ namespace MelonS.GameProto
         [SerializeField] private Image sleepBar;
         [SerializeField] private Image moodBar;
         [SerializeField] private Text emptyText;
+        [SerializeField] private Image panelBg;
 
         private void Update()
         {
@@ -33,6 +34,9 @@ namespace MelonS.GameProto
             if (sleepBar != null) sleepBar.transform.parent.gameObject.SetActive(any);
             if (moodBar  != null) moodBar.transform.parent.gameObject.SetActive(any);
             if (emptyText != null) emptyText.gameObject.SetActive(!any);
+            // Day 15: collapse panel background when no pawn — show only
+            // the empty-text hint, no dark rectangle.
+            if (panelBg != null) panelBg.enabled = any;
 
             if (!any) return;
 

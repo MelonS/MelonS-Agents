@@ -515,6 +515,22 @@ namespace MelonS.GameProto.EditorTools
 
             GameObject foodTextGo = new GameObject("FoodText");
             foodTextGo.transform.SetParent(topBarGo.transform, false);
+            // " · " separator between Wood and Food in the topbar
+            GameObject sepGo = new GameObject("WoodFoodSep");
+            sepGo.transform.SetParent(topBarGo.transform, false);
+            Text sepText = sepGo.AddComponent<Text>();
+            sepText.text = "·";
+            sepText.font = uiFont;
+            sepText.fontSize = 22;
+            sepText.color = colTextMuted;
+            sepText.alignment = TextAnchor.MiddleCenter;
+            RectTransform sepRt = sepGo.GetComponent<RectTransform>();
+            sepRt.anchorMin = new Vector2(1f, 0f);
+            sepRt.anchorMax = new Vector2(1f, 1f);
+            sepRt.pivot = new Vector2(1f, 0.5f);
+            sepRt.sizeDelta = new Vector2(16, 0);
+            sepRt.anchoredPosition = new Vector2(-176, 0);
+
             Text foodText = foodTextGo.AddComponent<Text>();
             foodText.text = "Food: 0";
             foodText.font = uiFont;
@@ -571,8 +587,11 @@ namespace MelonS.GameProto.EditorTools
             SerializedObject logSo = new SerializedObject(logUI);
             logSo.FindProperty("director").objectReferenceValue = director;
             logSo.FindProperty("logText").objectReferenceValue = logText;
+            logSo.FindProperty("panelBg").objectReferenceValue = logBg;
             logSo.FindProperty("maxEntries").intValue = 3;
             logSo.ApplyModifiedProperties();
+            // Day 15: start hidden until first event
+            logBg.enabled = false;
 
             // ---------- PawnInfoPanel (bottom-left, 240x180) ----------
             GameObject panelGo = new GameObject("PawnInfoPanel");
@@ -672,6 +691,7 @@ namespace MelonS.GameProto.EditorTools
             pso.FindProperty("sleepBar").objectReferenceValue = sleepBar;
             pso.FindProperty("moodBar").objectReferenceValue = moodBar;
             pso.FindProperty("emptyText").objectReferenceValue = empty;
+            pso.FindProperty("panelBg").objectReferenceValue = panelBg;
             pso.ApplyModifiedProperties();
 
             EditorSceneManager.SaveScene(scene, GamePath);

@@ -12,7 +12,8 @@ namespace MelonS.GameProto
     {
         [SerializeField] private AIDirector director;
         [SerializeField] private Text logText;
-        [SerializeField] private int maxEntries = 4;
+        [SerializeField] private Image panelBg;
+        [SerializeField] private int maxEntries = 3;
 
         private readonly Queue<string> entries = new Queue<string>();
 
@@ -38,6 +39,9 @@ namespace MelonS.GameProto
         {
             if (logText == null) return;
             logText.text = string.Join("\n\n", entries);
+            // Day 15: hide panel background when no events (don't leave a
+            // dead black rectangle in the corner).
+            if (panelBg != null) panelBg.enabled = entries.Count > 0;
         }
     }
 }
