@@ -68,7 +68,9 @@ namespace MelonS.GameProto
 
         private void PickNewTarget()
         {
-            target = (Vector2)transform.position + Random.insideUnitCircle * wanderRadius;
+            // Step 81: 맵 안쪽으로 clamp — 외곽으로 wander 못 나감
+            target = PawnMovement.ClampToWorld(
+                (Vector2)transform.position + Random.insideUnitCircle * wanderRadius);
             walking = true;
         }
 

@@ -340,6 +340,10 @@ namespace MelonS.GameProto.EditorTools
             };
             float dirtRadius = 2.0f;
 
+            // Step 81: PawnMovement obstacle 체크용 정적 ref 셋업
+            //  (Editor batchmode 에서도 static field 가 빌드 후 런타임에 안 남음 — runtime
+            //   초기화 컴포넌트 별도 필요).  Game scene 안에 TilemapStaticRefInit
+            //   컴포넌트를 추가해서 런타임 Start() 에서 정적 ref 채움.
             for (int x = -MAP_HALF; x < MAP_HALF; x++)
             {
                 for (int y = -MAP_HALF; y < MAP_HALF; y++)
@@ -369,6 +373,11 @@ namespace MelonS.GameProto.EditorTools
                     tm.SetTile(new Vector3Int(x, y, 0), chosen);
                 }
             }
+
+            // Step 81: runtime obstacle ref wire — Ground Tilemap + Water/Rock TileBase
+            GameObject staticRefGo = new GameObject("TilemapStaticRefInit");
+            TilemapStaticRefInit staticRef = staticRefGo.AddComponent<TilemapStaticRefInit>();
+            staticRef.SetRefs(tm, waterTile, rockTile);
 
             // Day 39+41: 야생 꽃 데코 24개 (40x40 맵 비례) — grass 위에 산발.
             Sprite flowerSpr = LoadOrSetupSprite("Assets/Sprites/decor_flower.png");

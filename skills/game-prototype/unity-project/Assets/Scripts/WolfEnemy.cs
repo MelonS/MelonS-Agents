@@ -58,14 +58,19 @@ namespace MelonS.GameProto
                 }
                 // Chase
                 Vector3 step = dir.normalized * chaseSpeed * Time.deltaTime;
-                transform.position += step;
+                Vector3 newPos = transform.position + step;
+                Vector2 clamped = PawnMovement.ClampToWorld(newPos);  // Step 81
+                transform.position = new Vector3(clamped.x, clamped.y, newPos.z);
                 return;
             }
             // Wander
             if (Time.time > nextWanderPick) PickNewWanderTarget();
             Vector3 d = wanderTarget - transform.position;
             if (d.magnitude < 0.1f) { PickNewWanderTarget(); return; }
-            transform.position += d.normalized * wanderSpeed * Time.deltaTime;
+            Vector3 wstep = d.normalized * wanderSpeed * Time.deltaTime;
+            Vector3 wnew = transform.position + wstep;
+            Vector2 wc = PawnMovement.ClampToWorld(wnew);  // Step 81
+            transform.position = new Vector3(wc.x, wc.y, wnew.z);
         }
 
         private PawnEntity FindNearestPawn()
@@ -88,7 +93,9 @@ namespace MelonS.GameProto
         {
             float r = Random.Range(2f, 4f);
             float a = Random.Range(0f, Mathf.PI * 2f);
-            wanderTarget = transform.position + new Vector3(Mathf.Cos(a) * r, Mathf.Sin(a) * r, 0f);
+            Vector2 raw = (Vector2)transform.position + new Vector2(Mathf.Cos(a) * r, Mathf.Sin(a) * r);
+            Vector2 clamped = PawnMovement.ClampToWorld(raw);  // Step 81
+            wanderTarget = new Vector3(clamped.x, clamped.y, 0f);
             nextWanderPick = Time.time + Random.Range(3f, 6f);
         }
 
