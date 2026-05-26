@@ -285,6 +285,10 @@ namespace MelonS.GameProto.EditorTools
             GameObject gcGo = new GameObject("GameClock");
             gcGo.AddComponent<GameClock>();
 
+            // Day 43: NightOverlay — 야간 시 화면 어두워짐 (전체 화면 dark sprite, alpha curve)
+            GameObject noGo = new GameObject("NightOverlay");
+            noGo.AddComponent<NightOverlay>();
+
             // Tilemap parent (Grid)
             GameObject gridGo = new GameObject("Grid");
             Grid grid = gridGo.AddComponent<Grid>();
