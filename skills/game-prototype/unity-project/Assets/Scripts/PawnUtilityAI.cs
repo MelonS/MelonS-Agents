@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
+using MelonS.GameProto.AI;
 
 namespace MelonS.GameProto
 {
@@ -33,6 +35,10 @@ namespace MelonS.GameProto
         private float lastRangedAttackTime = -999f;
         public void SetArrowSprite(Sprite s) { arrowSprite = s; }
 
+        // R5: Strategy pattern — Decide() priority list + reusable context
+        private PawnContext ctx;
+        private List<IPawnAction> actions;
+
         private void Awake()
         {
             movement = GetComponent<PawnMovement>();
@@ -42,6 +48,23 @@ namespace MelonS.GameProto
             cook = GetComponent<PawnCook>();
             needs = GetComponent<PawnNeeds>();
             entity = GetComponent<PawnEntity>();
+            // R5: ctx + action priority list
+            ctx = new PawnContext
+            {
+                entity = entity, movement = movement, chopper = chopper,
+                gatherer = gatherer, hunter = hunter, cook = cook,
+                needs = needs, skills = GetComponent<PawnSkills>(),
+                transform = transform,
+                idleWanderRadius = idleWanderRadius,
+            };
+            actions = new List<IPawnAction>
+            {
+                new EatBerryAction   { foodThreshold = foodHungryThreshold },
+                new HuntAnimalAction { globalFoodThreshold = globalFoodLowThreshold },
+                new CookMealAction   { foodSurplus = 5f },
+                new ChopTreeAction(),
+                new WanderAction(),
+            };
         }
 
         private void Update()
@@ -91,95 +114,16 @@ namespace MelonS.GameProto
 
         private void Decide()
         {
-            // Day 11: food priority — pawn 자기 식량 부족 + 베리부시 있음
-            if (needs != null && gatherer != null && needs.food < foodHungryThreshold)
+            // R5: Strategy pattern — priority list 순회.  첫 TryStart 가 true 반환 시 종료.
+            //  순서: 베리채집 → 사냥 → 요리 → 벌목 → 어슬렁
+            //  새 action 추가 = AI/PawnActions.cs 에 class + Awake actions 리스트에 등록
+            foreach (var action in actions)
             {
-                BerryBushEntity bush = FindNearestBush();
-                if (bush != null) { gatherer.SetBushTarget(bush); return; }
+                if (action.TryStart(ctx)) return;
             }
-
-            // Day 24: hunt — global 식량 비축 부족 + 동물 있음
-            if (hunter != null && ResourceManager.Instance != null
-                && ResourceManager.Instance.food < globalFoodLowThreshold)
-            {
-                AnimalEntity deer = FindNearestAnimal();
-                if (deer != null) { hunter.SetAnimalTarget(deer); return; }
-            }
-
-            // Day 26: cook when stockpile food has surplus (>5) AND stove exists.
-            if (cook != null && ResourceManager.Instance != null
-                && ResourceManager.Instance.food > 5)
-            {
-                StoveEntity stove = FindNearestStove();
-                if (stove != null) { cook.SetStoveTarget(stove); return; }
-            }
-
-            TreeEntity tree = FindNearestTree();
-            if (tree != null) { chopper.SetTreeTarget(tree); return; }
-
-            Vector2 cur2 = transform.position;
-            movement.SetTarget(cur2 + Random.insideUnitCircle * idleWanderRadius);
         }
 
-        private StoveEntity FindNearestStove()
-        {
-            var arr = FindObjectsByType<StoveEntity>(FindObjectsSortMode.None);
-            StoveEntity best = null;
-            float bestSq = float.MaxValue;
-            Vector2 me = transform.position;
-            foreach (var s in arr)
-            {
-                if (s == null) continue;
-                float sq = ((Vector2)s.transform.position - me).sqrMagnitude;
-                if (sq < bestSq) { bestSq = sq; best = s; }
-            }
-            return best;
-        }
-
-        private AnimalEntity FindNearestAnimal()
-        {
-            var arr = FindObjectsByType<AnimalEntity>(FindObjectsSortMode.None);
-            AnimalEntity best = null;
-            float bestSq = float.MaxValue;
-            Vector2 me = transform.position;
-            foreach (var a in arr)
-            {
-                if (a == null || a.IsDead) continue;
-                float sq = ((Vector2)a.transform.position - me).sqrMagnitude;
-                if (sq < bestSq) { bestSq = sq; best = a; }
-            }
-            return best;
-        }
-
-        private BerryBushEntity FindNearestBush()
-        {
-            var arr = FindObjectsByType<BerryBushEntity>(FindObjectsSortMode.None);
-            BerryBushEntity best = null;
-            float bestSq = float.MaxValue;
-            Vector2 me = transform.position;
-            foreach (var b in arr)
-            {
-                if (b == null || b.IsDepleted) continue;
-                float sq = ((Vector2)b.transform.position - me).sqrMagnitude;
-                if (sq < bestSq) { bestSq = sq; best = b; }
-            }
-            return best;
-        }
-
-        private TreeEntity FindNearestTree()
-        {
-            var arr = FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
-            TreeEntity best = null;
-            float bestSq = float.MaxValue;
-            Vector2 me = transform.position;
-            foreach (var t in arr)
-            {
-                if (t == null || t.IsDestroyed) continue;
-                float sq = ((Vector2)t.transform.position - me).sqrMagnitude;
-                if (sq < bestSq) { bestSq = sq; best = t; }
-            }
-            return best;
-        }
+        // R5: FindNearestStove/Animal/Bush/Tree moved to AI/PawnActions.cs (각 action 내부)
 
         // Day 48: drafted pawn 전투 처리.  manual move target는 이미
         //  ClickSelector 가 PawnMovement에 박았음.  여기선 attack/hunt
