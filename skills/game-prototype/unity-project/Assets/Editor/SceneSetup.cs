@@ -65,6 +65,7 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/door_wood.png",
                 "Assets/Sprites/deer.png",
                 "Assets/Sprites/stove.png",
+                "Assets/Sprites/research_bench.png",  // Day 52
             };
             foreach (var p in paths)
             {
@@ -571,6 +572,23 @@ namespace MelonS.GameProto.EditorTools
             GameObject stovePrefab = PrefabUtility.SaveAsPrefabAsset(stoveTemplate, "Assets/Prefabs/Stove.prefab");
             Object.DestroyImmediate(stoveTemplate);
 
+            // Day 52: Research bench prefab + 1 default 배치 + ResearchManager singleton
+            Sprite benchSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/research_bench.png");
+            GameObject benchTemplate = new GameObject("ResearchBench");
+            var rbsr = benchTemplate.AddComponent<SpriteRenderer>();
+            rbsr.sprite = benchSprite; rbsr.sortingOrder = 5;
+            var rbcol = benchTemplate.AddComponent<BoxCollider2D>(); rbcol.size = Vector2.one;
+            benchTemplate.AddComponent<ResearchBench>();
+            GameObject benchPrefab = PrefabUtility.SaveAsPrefabAsset(benchTemplate, "Assets/Prefabs/ResearchBench.prefab");
+            Object.DestroyImmediate(benchTemplate);
+            // Place 1 default bench near spawn
+            GameObject defaultBench = (GameObject)PrefabUtility.InstantiatePrefab(benchPrefab);
+            defaultBench.name = "DefaultResearchBench";
+            defaultBench.transform.position = new Vector3(-4f, 2f, 0f);
+            // Manager singleton
+            GameObject rmGo2 = new GameObject("ResearchManager");
+            rmGo2.AddComponent<ResearchManager>();
+
             GameObject ghostGo = new GameObject("BuildGhost");
             var ghostSr = ghostGo.AddComponent<SpriteRenderer>();
             ghostSr.sprite = wallSprite;
@@ -845,6 +863,100 @@ namespace MelonS.GameProto.EditorTools
             logSo.ApplyModifiedProperties();
             // Day 15: start hidden until first event
             logBg.enabled = false;
+
+            // ---------- Day 54: Research strip (bottom-center) + popup picker ----------
+            GameObject resStripGo = new GameObject("ResearchStrip");
+            resStripGo.transform.SetParent(canvasGo.transform, false);
+            Image resStripBg = resStripGo.AddComponent<Image>();
+            resStripBg.color = colPanel;
+            RectTransform resStripRt = resStripGo.GetComponent<RectTransform>();
+            resStripRt.anchorMin = new Vector2(0.5f, 0f);
+            resStripRt.anchorMax = new Vector2(0.5f, 0f);
+            resStripRt.pivot = new Vector2(0.5f, 0f);
+            resStripRt.sizeDelta = new Vector2(420, 36);
+            resStripRt.anchoredPosition = new Vector2(0, 40);
+
+            GameObject resStatusGo = new GameObject("ResearchStatusText");
+            resStatusGo.transform.SetParent(resStripGo.transform, false);
+            Text resStatus = resStatusGo.AddComponent<Text>();
+            resStatus.text = "연구: 없음 (N=선택)";
+            resStatus.font = uiFont;
+            resStatus.fontSize = 18;
+            resStatus.color = colTextPrimary;
+            resStatus.alignment = TextAnchor.MiddleCenter;
+            RectTransform resStatusRt = resStatusGo.GetComponent<RectTransform>();
+            resStatusRt.anchorMin = Vector2.zero;
+            resStatusRt.anchorMax = Vector2.one;
+            resStatusRt.sizeDelta = new Vector2(-12, -8);
+            resStatusRt.anchoredPosition = new Vector2(0, 2);
+
+            // Progress bar background under strip
+            GameObject resProgBgGo = new GameObject("ResearchProgressBg");
+            resProgBgGo.transform.SetParent(resStripGo.transform, false);
+            Image resProgBg = resProgBgGo.AddComponent<Image>();
+            resProgBg.color = new Color(0.10f, 0.10f, 0.10f, 0.7f);
+            RectTransform resProgBgRt = resProgBgGo.GetComponent<RectTransform>();
+            resProgBgRt.anchorMin = new Vector2(0f, 0f);
+            resProgBgRt.anchorMax = new Vector2(1f, 0f);
+            resProgBgRt.pivot = new Vector2(0.5f, 0f);
+            resProgBgRt.sizeDelta = new Vector2(-12, 4);
+            resProgBgRt.anchoredPosition = new Vector2(0, 2);
+
+            GameObject resProgGo = new GameObject("ResearchProgressFill");
+            resProgGo.transform.SetParent(resProgBgGo.transform, false);
+            Image resProg = resProgGo.AddComponent<Image>();
+            resProg.color = new Color(0.45f, 0.85f, 0.50f, 1f);
+            resProg.type = Image.Type.Filled;
+            resProg.fillMethod = Image.FillMethod.Horizontal;
+            resProg.fillOrigin = (int)Image.OriginHorizontal.Left;
+            resProg.fillAmount = 0f;
+            // Use a 2x2 white sprite (procedurally — Image needs Sprite even for solid fill)
+            var rpTex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            rpTex.SetPixels(new[] { Color.white, Color.white, Color.white, Color.white });
+            rpTex.Apply();
+            resProg.sprite = Sprite.Create(rpTex, new Rect(0,0,2,2), new Vector2(0.5f,0.5f), 2f);
+            RectTransform resProgRt = resProgGo.GetComponent<RectTransform>();
+            resProgRt.anchorMin = Vector2.zero;
+            resProgRt.anchorMax = Vector2.one;
+            resProgRt.sizeDelta = Vector2.zero;
+            // Also assign sprite to resProgBg so Unity Image renders fill
+            resProgBg.sprite = resProg.sprite;
+
+            // Popup picker — wide center panel, hidden by default
+            GameObject pickerGo = new GameObject("ResearchPicker");
+            pickerGo.transform.SetParent(canvasGo.transform, false);
+            Image pickerBg = pickerGo.AddComponent<Image>();
+            pickerBg.color = new Color(0.08f, 0.10f, 0.13f, 0.95f);
+            pickerBg.sprite = resProg.sprite;
+            RectTransform pickerRt = pickerGo.GetComponent<RectTransform>();
+            pickerRt.anchorMin = new Vector2(0.5f, 0.5f);
+            pickerRt.anchorMax = new Vector2(0.5f, 0.5f);
+            pickerRt.pivot = new Vector2(0.5f, 0.5f);
+            pickerRt.sizeDelta = new Vector2(680, 280);
+            pickerRt.anchoredPosition = Vector2.zero;
+
+            GameObject pickerTextGo = new GameObject("PickerText");
+            pickerTextGo.transform.SetParent(pickerGo.transform, false);
+            Text pickerText = pickerTextGo.AddComponent<Text>();
+            pickerText.text = "";
+            pickerText.font = uiFont;
+            pickerText.fontSize = 18;
+            pickerText.color = colTextPrimary;
+            pickerText.alignment = TextAnchor.UpperLeft;
+            pickerText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            pickerText.verticalOverflow = VerticalWrapMode.Overflow;
+            RectTransform pickerTextRt = pickerTextGo.GetComponent<RectTransform>();
+            pickerTextRt.anchorMin = Vector2.zero;
+            pickerTextRt.anchorMax = Vector2.one;
+            pickerTextRt.sizeDelta = new Vector2(-24, -16);
+            pickerTextRt.anchoredPosition = Vector2.zero;
+            pickerGo.SetActive(false);
+
+            GameObject rUIHost = new GameObject("ResearchUIHost");
+            rUIHost.transform.SetParent(canvasGo.transform, false);
+            rUIHost.AddComponent<RectTransform>();
+            ResearchUI rUI = rUIHost.AddComponent<ResearchUI>();
+            rUI.SetRefs(resStatus, resProg, pickerRt, pickerText);
 
             // ---------- PawnInfoPanel (bottom-left, 240x180) ----------
             GameObject panelGo = new GameObject("PawnInfoPanel");
