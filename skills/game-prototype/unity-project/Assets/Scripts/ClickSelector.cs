@@ -83,9 +83,16 @@ namespace MelonS.GameProto
                     return;
                 }
 
-                // Non-drafted: existing chop/move + Day 68 crop harvest
+                // Non-drafted: existing chop/move + Day 68 crop harvest + Stretch Trade
                 TreeEntity tree = (rhit != null) ? rhit.GetComponent<TreeEntity>() : null;
                 CropEntity crop = (rhit != null) ? rhit.GetComponent<CropEntity>() : null;
+                TraderEntity trader = (rhit != null) ? rhit.GetComponent<TraderEntity>() : null;
+                if (trader != null)
+                {
+                    bool ok = trader.TryTrade();
+                    Debug.Log($"[Trade] success={ok}");
+                    return;
+                }
                 if (crop != null && crop.IsRipe)
                 {
                     int food = crop.Harvest();

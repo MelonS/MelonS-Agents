@@ -80,6 +80,10 @@ namespace MelonS.GameProto
         private int lastRaidDay = -1;
         [SerializeField] private float raidSpawnRadius = 12f;
 
+        // Stretch: trader sprite 주입 (SceneSetup 에서 wire)
+        [SerializeField] private Sprite traderSprite;
+        public void SetTraderSprite(Sprite s) { traderSprite = s; }
+
         private void Awake()
         {
             BuildDefaultPool();
@@ -217,6 +221,39 @@ namespace MelonS.GameProto
             nextFireTime = Time.timeSinceLevelLoad + wait;
         }
 
+        /// <summary>Trader spawn helper - trader_caravan event 발화 시 호출.</summary>
+        private void SpawnTrader()
+        {
+            try
+            {
+                var traderSpr = traderSprite;  // SetTraderSprite 로 주입된 ref
+                int side = UnityEngine.Random.Range(0, 4);
+                float along = UnityEngine.Random.Range(-12f, 12f);
+                Vector3 pos = side switch
+                {
+                    0 => new Vector3( 18f, along, 0),
+                    1 => new Vector3(-18f, along, 0),
+                    2 => new Vector3(along,  18f, 0),
+                    _ => new Vector3(along, -18f, 0),
+                };
+                GameObject go = new GameObject("Trader_Caravan");
+                go.transform.position = pos;
+                go.transform.localScale = new Vector3(1.2f, 1.2f, 1f);
+                var sr = go.AddComponent<SpriteRenderer>();
+                if (traderSpr != null) sr.sprite = traderSpr;
+                else sr.color = new Color(0.85f, 0.65f, 0.30f, 1f);  // 황금색 fallback
+                sr.sortingOrder = 9;
+                var col = go.AddComponent<BoxCollider2D>();
+                col.size = new Vector2(0.8f, 1.2f);
+                go.AddComponent<TraderEntity>();
+                Debug.Log($"[AIDirector] Trader spawn @ {pos}");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[AIDirector] SpawnTrader FAIL: {e.Message}");
+            }
+        }
+
         private void FireRandomEvent()
         {
             if (pool.Count == 0) return;
@@ -241,6 +278,8 @@ namespace MelonS.GameProto
             lastEvent = next;
             OnEventFired?.Invoke(next);
             Debug.Log($"[AIDirector:{activeStoryteller} T{curTier}] {next.title}: {next.description}");
+            // Stretch: trader_caravan event → actual Trader entity spawn
+            if (next.id == "trader_caravan") SpawnTrader();
         }
 
         private void BuildDefaultPool()

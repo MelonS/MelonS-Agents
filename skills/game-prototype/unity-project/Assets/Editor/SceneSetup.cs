@@ -71,6 +71,7 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/stockpile_marker.png",// Day 57
                 "Assets/Sprites/wolf.png",            // Day 64
                 "Assets/Sprites/arrow.png",           // Day 50
+                "Assets/Sprites/trader.png",          // Stretch — Trader
             };
             foreach (var p in paths)
             {
@@ -160,6 +161,9 @@ namespace MelonS.GameProto.EditorTools
             // AI Director (Day 5)
             GameObject dirGo = new GameObject("AIDirector");
             AIDirector director = dirGo.AddComponent<AIDirector>();
+            // Stretch: trader sprite 주입
+            Sprite traderSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/trader.png");
+            director.SetTraderSprite(traderSpr);
 
             // Day 22: WeatherController — subscribes to AIDirector storm event
             GameObject wcGo = new GameObject("WeatherController");
