@@ -12,6 +12,8 @@ namespace MelonS.GameProto
         [SerializeField] private float arriveDistance = 0.05f;
 
         private Vector2? target;
+        private PawnHealth health;  // Day 45 — leg damage 영향
+        private void Awake() { health = GetComponent<PawnHealth>(); }
 
         public bool HasTarget => target.HasValue;
         public bool IsMoving => target.HasValue;
@@ -31,7 +33,9 @@ namespace MelonS.GameProto
             if (!target.HasValue) return;
 
             Vector2 cur = transform.position;
-            Vector2 next = Vector2.MoveTowards(cur, target.Value, moveSpeed * Time.deltaTime);
+            // Day 45: 다리 다친 만큼 속도 감소
+            float speedMul = health != null ? health.MovementSpeedMultiplier() : 1f;
+            Vector2 next = Vector2.MoveTowards(cur, target.Value, moveSpeed * speedMul * Time.deltaTime);
             transform.position = new Vector3(next.x, next.y, transform.position.z);
 
             if (Vector2.Distance(next, target.Value) <= arriveDistance)

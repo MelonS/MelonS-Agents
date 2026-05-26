@@ -24,6 +24,7 @@ namespace MelonS.GameProto
         private SpriteRenderer hpBg, hpFill, moodBg, moodFill;
         private PawnEntity entity;
         private PawnNeeds  needs;
+        private PawnHealth health;  // Day 45 — body part total ratio
 
         // 1x1 white sprite reused across all bars (created once)
         private static Sprite _whiteSprite;
@@ -49,6 +50,7 @@ namespace MelonS.GameProto
         {
             entity = GetComponent<PawnEntity>();
             needs  = GetComponent<PawnNeeds>();
+            health = GetComponent<PawnHealth>();
             BuildBars();
             // diagnostic log dropped post Day 42 verify — bars confirmed visible.
         }
@@ -100,9 +102,13 @@ namespace MelonS.GameProto
 
         private void Update()
         {
-            if (entity == null && needs == null) return;
-            float hpRatio   = entity != null ? Mathf.Clamp01(entity.Hp / 30f) : 1f;
-            float moodRatio = needs  != null ? Mathf.Clamp01(needs.mood / 100f) : 1f;
+            if (entity == null && needs == null && health == null) return;
+            float hpRatio;
+            // Day 45 우선순위: health.TotalHpRatio (body part 합산) > entity.Hp
+            if (health != null) hpRatio = Mathf.Clamp01(health.TotalHpRatio);
+            else if (entity != null) hpRatio = Mathf.Clamp01(entity.Hp / 30f);
+            else hpRatio = 1f;
+            float moodRatio = needs != null ? Mathf.Clamp01(needs.mood / 100f) : 1f;
             UpdateFill(hpFill,   hpRatio,   ColorForHp(hpRatio));
             UpdateFill(moodFill, moodRatio, ColorForMood(moodRatio));
         }

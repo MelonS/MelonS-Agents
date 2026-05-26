@@ -100,12 +100,30 @@ namespace MelonS.GameProto
         public void TakeDamage(int dmg, GameObject source = null)
         {
             if (IsDead) return;
+            // Day 45: route damage to PawnHealth body parts if present.
+            var health = GetComponent<PawnHealth>();
+            if (health != null)
+            {
+                var part = health.TakeDamage(dmg);
+                if (part != null)
+                    Debug.Log($"[Pawn:{pawnName}] {part.nameKr}({part.hp}/{part.maxHp}) -{dmg} dmg");
+                if (health.IsDead)
+                {
+                    Hp = 0;
+                    Debug.Log($"[Pawn:{pawnName}] DOWN (body-part death)");
+                    enabled = false;
+                    return;
+                }
+                // Sync legacy Hp from total ratio for UI compat
+                Hp = Mathf.Max(1, Mathf.RoundToInt(health.TotalHpRatio * maxHp));
+                return;
+            }
+            // Fallback: legacy single-pool HP
             Hp = Mathf.Max(0, Hp - dmg);
             Debug.Log($"[Pawn:{pawnName}] took {dmg} dmg (HP={Hp})");
             if (Hp <= 0)
             {
                 Debug.Log($"[Pawn:{pawnName}] DOWN");
-                // Visual only — leave the corpse, disable interaction.
                 enabled = false;
             }
         }

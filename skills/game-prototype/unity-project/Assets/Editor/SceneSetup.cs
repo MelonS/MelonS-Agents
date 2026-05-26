@@ -129,6 +129,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnCook>();      // Day 26 — auto-cook at stove
             pawnGo.AddComponent<PawnSkills>();    // Day 19 — XP/level per skill
             // Day 30 PawnNameLabel temporarily removed — suspected of hiding sprite (Day 34 debug)
+            pawnGo.AddComponent<PawnHealth>();    // Day 45 — body part 6개 health
             pawnGo.AddComponent<PawnUtilityAI>();
             pawnGo.AddComponent<PawnFloatingBars>(); // Day 42 — HP/mood floating bars 머리 위
 
