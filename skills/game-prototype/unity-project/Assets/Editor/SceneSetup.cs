@@ -69,6 +69,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnEntity>();
             pawnGo.AddComponent<PawnMovement>();
             pawnGo.AddComponent<PawnNeeds>();
+            pawnGo.AddComponent<PawnChopper>();
 
             PrefabUtility.SaveAsPrefabAsset(pawnGo, PawnPrefabPath);
             Object.DestroyImmediate(pawnGo);
@@ -243,6 +244,47 @@ namespace MelonS.GameProto.EditorTools
             gmSo.FindProperty("pawnPrefab").objectReferenceValue = pawnPrefab;
             gmSo.ApplyModifiedProperties();
 
+            // ResourceManager (singleton)
+            GameObject rmGo = new GameObject("ResourceManager");
+            rmGo.AddComponent<ResourceManager>();
+
+            // Trees — sprinkle 8 around the map (Day 3)
+            Sprite treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree.png");
+            if (treeSprite == null)
+            {
+                string p = "Assets/Sprites/tree.png";
+                TextureImporter ti = AssetImporter.GetAtPath(p) as TextureImporter;
+                if (ti != null)
+                {
+                    ti.textureType = TextureImporterType.Sprite;
+                    ti.spritePixelsPerUnit = 64;
+                    ti.SaveAndReimport();
+                    treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>(p);
+                }
+            }
+            Vector2[] treePositions = new[]
+            {
+                new Vector2(-5,  4),
+                new Vector2( 6,  3),
+                new Vector2(-3, -4),
+                new Vector2( 4, -5),
+                new Vector2(-7,  0),
+                new Vector2( 7,  0),
+                new Vector2( 0,  6),
+                new Vector2( 0, -7),
+            };
+            foreach (var pos in treePositions)
+            {
+                GameObject t = new GameObject($"Tree_{pos.x}_{pos.y}");
+                t.transform.position = new Vector3(pos.x, pos.y, 0);
+                SpriteRenderer tsr = t.AddComponent<SpriteRenderer>();
+                tsr.sprite = treeSprite;
+                tsr.sortingOrder = 5;
+                BoxCollider2D tcol = t.AddComponent<BoxCollider2D>();
+                tcol.size = new Vector2(1.5f, 1.5f);
+                t.AddComponent<TreeEntity>();
+            }
+
             // ClickSelector
             GameObject csGo = new GameObject("ClickSelector");
             ClickSelector cs = csGo.AddComponent<ClickSelector>();
@@ -301,6 +343,52 @@ namespace MelonS.GameProto.EditorTools
             Image foodBar  = CreateNeedBar(panelGo.transform, "Food",  new Vector2(10, 130), new Color(0.4f, 0.8f, 0.4f));
             Image sleepBar = CreateNeedBar(panelGo.transform, "Sleep", new Vector2(10, 90),  new Color(0.4f, 0.6f, 0.9f));
             Image moodBar  = CreateNeedBar(panelGo.transform, "Mood",  new Vector2(10, 50),  new Color(0.9f, 0.7f, 0.4f));
+
+            // Resource counter UI (top-right)
+            GameObject resPanelGo = new GameObject("ResourceCounter");
+            resPanelGo.transform.SetParent(canvasGo.transform, false);
+            Image resBg = resPanelGo.AddComponent<Image>();
+            resBg.color = new Color(0f, 0f, 0f, 0.55f);
+            RectTransform resRt = resPanelGo.GetComponent<RectTransform>();
+            resRt.anchorMin = new Vector2(1f, 1f);
+            resRt.anchorMax = new Vector2(1f, 1f);
+            resRt.pivot = new Vector2(1f, 1f);
+            resRt.sizeDelta = new Vector2(200, 80);
+            resRt.anchoredPosition = new Vector2(-20, -20);
+
+            GameObject woodGo = new GameObject("WoodText");
+            woodGo.transform.SetParent(resPanelGo.transform, false);
+            Text woodText = woodGo.AddComponent<Text>();
+            woodText.text = "Wood: 0";
+            woodText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            woodText.fontSize = 18;
+            woodText.color = new Color(0.95f, 0.95f, 0.9f, 1f);
+            woodText.alignment = TextAnchor.MiddleLeft;
+            RectTransform woodRt = woodGo.GetComponent<RectTransform>();
+            woodRt.anchorMin = new Vector2(0f, 0.5f);
+            woodRt.anchorMax = new Vector2(1f, 1f);
+            woodRt.sizeDelta = new Vector2(-20, 0);
+            woodRt.anchoredPosition = new Vector2(10, 0);
+
+            GameObject foodTextGo = new GameObject("FoodText");
+            foodTextGo.transform.SetParent(resPanelGo.transform, false);
+            Text foodText = foodTextGo.AddComponent<Text>();
+            foodText.text = "Food: 0";
+            foodText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            foodText.fontSize = 18;
+            foodText.color = new Color(0.95f, 0.95f, 0.9f, 1f);
+            foodText.alignment = TextAnchor.MiddleLeft;
+            RectTransform foodTextRt = foodTextGo.GetComponent<RectTransform>();
+            foodTextRt.anchorMin = new Vector2(0f, 0f);
+            foodTextRt.anchorMax = new Vector2(1f, 0.5f);
+            foodTextRt.sizeDelta = new Vector2(-20, 0);
+            foodTextRt.anchoredPosition = new Vector2(10, 0);
+
+            ResourceCounterUI resCounter = resPanelGo.AddComponent<ResourceCounterUI>();
+            SerializedObject rcSo = new SerializedObject(resCounter);
+            rcSo.FindProperty("woodText").objectReferenceValue = woodText;
+            rcSo.FindProperty("foodText").objectReferenceValue = foodText;
+            rcSo.ApplyModifiedProperties();
 
             // Controller
             PawnInfoPanel panel = panelGo.AddComponent<PawnInfoPanel>();

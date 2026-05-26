@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 8515993015214911372}
   - component: {fileID: 209550779354629814}
   - component: {fileID: 3384598379736067457}
+  - component: {fileID: 903203183321620003}
   m_Layer: 0
   m_Name: Pawn
   m_TagString: Untagged
@@ -184,3 +185,17 @@ MonoBehaviour:
   foodDecay: 0.5
   sleepDecay: 0.3
   moodDecay: 0.2
+--- !u!114 &903203183321620003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6165637930717161905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70074e4219089c44a97398a585b13f5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chopRange: 1.2
+  chopDamagePerSec: 25

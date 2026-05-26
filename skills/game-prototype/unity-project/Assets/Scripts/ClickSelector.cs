@@ -31,12 +31,28 @@ namespace MelonS.GameProto
                 if (pawn != null) Select(pawn); else ClearSelection();
             }
 
-            // Right click = move command for selected pawn (Day 2)
+            // Right click = move OR chop (Day 3) for selected pawn
             if (Input.GetMouseButtonDown(1) && currentSelection != null)
             {
                 Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-                PawnMovement mv = currentSelection.GetComponent<PawnMovement>();
-                if (mv != null) mv.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
+                mouseWorld.z = 0f;
+                Collider2D rhit = Physics2D.OverlapPoint(mouseWorld);
+                TreeEntity tree = (rhit != null) ? rhit.GetComponent<TreeEntity>() : null;
+
+                if (tree != null)
+                {
+                    // Chop command
+                    PawnChopper chopper = currentSelection.GetComponent<PawnChopper>();
+                    if (chopper != null) chopper.SetTreeTarget(tree);
+                }
+                else
+                {
+                    // Movement command (also clears any active chop)
+                    PawnChopper chopper = currentSelection.GetComponent<PawnChopper>();
+                    if (chopper != null) chopper.ClearTask();
+                    PawnMovement mv = currentSelection.GetComponent<PawnMovement>();
+                    if (mv != null) mv.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
+                }
             }
         }
 
