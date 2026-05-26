@@ -45,7 +45,17 @@ namespace {{NAMESPACE}}
                 Debug.Log("[AutoScreenshotter] no CLI args -> play mode (no auto-quit)");
                 return;
             }
-            Debug.Log($"[AutoScreenshotter] will capture in {delaySeconds}s -> {outputPath}");
+            // Lesson #9 (Day 13, 2026-05-27): when qa.py launches the .exe
+            // as a background process, the OS gives focus to the python
+            // console.  Unity's default ProjectSettings.runInBackground=0
+            // pauses Update entirely -> WaitForSeconds coroutine freezes
+            // forever -> no screenshot produced -> qa.py FAIL with no
+            // capture.  Forcing runInBackground=true here un-freezes the
+            // timer for CLI-driven QA sessions.  Operator's interactive
+            // play (no CLI args) hits the early return above and never
+            // reaches this line, so default behavior is preserved.
+            Application.runInBackground = true;
+            Debug.Log($"[AutoScreenshotter] will capture in {delaySeconds}s -> {outputPath} (runInBackground=ON)");
             StartCoroutine(CaptureAndQuit());
         }
 

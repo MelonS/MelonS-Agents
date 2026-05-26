@@ -44,7 +44,14 @@ namespace MelonS.GameProto
                 Debug.Log("[AutoScreenshotter] no CLI args -> play mode (no auto-quit)");
                 return;
             }
-            Debug.Log($"[AutoScreenshotter] will capture in {delaySeconds}s -> {outputPath}");
+            // CRITICAL: when QA runs in headless/background mode (window loses
+            // focus to the python launcher's console), Unity by default pauses
+            // Update entirely (ProjectSettings runInBackground=0).  This caused
+            // qa.py --delay 30s+ runs to silently never produce a screenshot
+            // because the WaitForSeconds coroutine froze.  Force runInBackground
+            // ON for any CLI-driven QA session so the timer always elapses.
+            Application.runInBackground = true;
+            Debug.Log($"[AutoScreenshotter] will capture in {delaySeconds}s -> {outputPath} (runInBackground=ON)");
             StartCoroutine(CaptureAndQuit());
         }
 

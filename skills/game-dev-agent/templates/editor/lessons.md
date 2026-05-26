@@ -80,6 +80,33 @@ period → guard returns), then Stay would re-fire but only
 **Fix in template**: physics-merger template uses BOTH
 `OnCollisionEnter2D` AND `OnCollisionStay2D` for the same TryMerge.
 
+## 9. runInBackground freezes long QA waits (PawnSim Day 13, 2026-05-27)
+
+**Symptom**: `agent.py qa --delay 5s` PASS but `--delay 250s` FAIL with
+"no screenshot".  Sanity-check build works at short delays; long
+delays silently never produce the PNG.
+
+**Root cause**: Unity's `ProjectSettings.runInBackground` defaults to
+false.  When `qa.py` Popen's the .exe, the python launcher's console
+holds OS focus, so the Unity window starts unfocused.  Unfocused +
+runInBackground=false → Unity pauses Update entirely.  The
+AutoScreenshotter's `WaitForSeconds(delaySeconds)` coroutine freezes
+mid-wait and never reaches the capture call.
+
+**Why it didn't bite earlier**: 5s waits typically completed within
+the brief OS-focus window during launch handover.  Once delays grew
+past ~30s, the bug surfaced reliably.
+
+**Fix in template**: AutoScreenshotter.Start() sets
+`Application.runInBackground = true` **only when CLI args were
+explicitly supplied** (the QA path).  Interactive play (operator
+double-click, no CLI) hits the early-return above this line and
+preserves the default behavior.
+
+**Symptom signature to watch for**: "short-delay qa PASS, long-delay
+qa FAIL with no PNG, .exe process appears alive but produces no
+output".
+
 ## 7. Singleton subscription race (Suika Day 2)
 
 **Symptom**: UI text never updates from Singleton events.

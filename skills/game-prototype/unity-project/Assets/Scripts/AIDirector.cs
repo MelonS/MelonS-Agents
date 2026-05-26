@@ -36,6 +36,10 @@ namespace MelonS.GameProto
         private GameEvent lastEvent;
         private readonly List<GameEvent> pool = new List<GameEvent>();
 
+        // Day 13 raid scheduling
+        private int lastRaidDay = -1;
+        [SerializeField] private float raidSpawnRadius = 12f;
+
         private void Awake()
         {
             BuildDefaultPool();
@@ -53,6 +57,108 @@ namespace MelonS.GameProto
                 FireRandomEvent();
                 ScheduleNext();
             }
+
+            // Day 13: raid check.  Poll GameClock from Update (lesson #7 firewall:
+            // never subscribe singleton in OnEnable — bind order isn't guaranteed).
+            TryScheduleRaid();
+        }
+
+        private void TryScheduleRaid()
+        {
+            var clock = GameClock.Instance;
+            if (clock == null) return;
+            int day = clock.Day;
+            int hour = clock.Hour;
+            if (day < 3) return;
+            if (day % 3 != 0) return;
+            if (hour != 6) return;
+            if (lastRaidDay == day) return; // throttle: one raid per day
+            lastRaidDay = day;
+            SpawnRaid();
+        }
+
+        private void SpawnRaid()
+        {
+            // Lesson #8 firewall: wrap raid spawn in try/catch so a single
+            // raid failure (missing sprite asset, scene-rebuild race, etc.)
+            // never tears down the whole simulation.  qa.py crash at Day 3
+            // 06:00 (2026-05-27) traced back to silent NRE in this path
+            // when Resources/pawn_colonist was absent AND no PawnEntity
+            // existed to fall back to.
+            try
+            {
+                // Pick a random side of the square map edge (radius raidSpawnRadius)
+                // and a random point along that side.
+                int side = UnityEngine.Random.Range(0, 4);
+                float along = UnityEngine.Random.Range(-raidSpawnRadius, raidSpawnRadius);
+                Vector3 pos;
+                switch (side)
+                {
+                    case 0: pos = new Vector3( raidSpawnRadius, along, 0); break;
+                    case 1: pos = new Vector3(-raidSpawnRadius, along, 0); break;
+                    case 2: pos = new Vector3(along,  raidSpawnRadius, 0); break;
+                    default: pos = new Vector3(along, -raidSpawnRadius, 0); break;
+                }
+
+                GameObject go = new GameObject("Bandit_Raid");
+                go.transform.position = pos;
+                SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+                // Reuse pawn sprite tinted red — sprite is already imported by
+                // ForceImportAllSprites in SceneSetup; a dedicated bandit sprite
+                // is a future polish item.
+                Sprite s = Resources.Load<Sprite>("pawn_colonist");
+                if (s == null)
+                {
+                    // Fallback: any PawnEntity in scene shares a sprite asset we
+                    // can mirror at runtime.  Spawn-time copy from an existing
+                    // pawn's renderer keeps this build self-contained.
+                    var anyPawn = GameObject.FindObjectOfType<PawnEntity>();
+                    if (anyPawn != null)
+                    {
+                        var pawnSr = anyPawn.GetComponent<SpriteRenderer>();
+                        if (pawnSr != null) s = pawnSr.sprite;
+                    }
+                }
+                // sr.sprite = null is allowed by Unity (renders nothing) — no
+                // need to abort the raid just because we lack a sprite asset.
+                sr.sprite = s;
+                sr.color = new Color(0.9f, 0.3f, 0.3f, 1f);
+                sr.sortingOrder = 11;
+                // IMPORTANT: BoxCollider2D MUST be added BEFORE BanditEnemy
+                // because BanditEnemy declares [RequireComponent(typeof(Collider2D))]
+                // and Unity will auto-add a default Collider2D if missing, which
+                // can race with our intended BoxCollider2D sizing.
+                BoxCollider2D col = go.AddComponent<BoxCollider2D>();
+                col.size = new Vector2(2f, 2f);
+                go.AddComponent<BanditEnemy>();
+
+                // Surface the raid in the existing event log (reuses EventLogUI
+                // subscribed to OnEventFired — same hook used by storm/wanderer
+                // events above).
+                var ev = new GameEvent
+                {
+                    id = "bandit_raid",
+                    title = "Bandit approaches!",
+                    description = "An armed bandit has appeared at the edge of the map.",
+                    flavor = "Their blade catches the dawn light.",
+                };
+                lastEvent = ev;
+                OnEventFired?.Invoke(ev);
+                Debug.Log($"[AIDirector] RAID day={clockDayForLog()} pos={pos}");
+            }
+            catch (Exception e)
+            {
+                // Raid spawn failed — log loudly and keep the simulation
+                // running.  Next raid scheduling tick will try again on the
+                // next day-3-multiple morning.
+                Debug.LogError($"[AIDirector] SpawnRaid failed: {e.GetType().Name}: {e.Message}\n{e.StackTrace}");
+            }
+        }
+
+        private int clockDayForLog()
+        {
+            var c = GameClock.Instance;
+            return c != null ? c.Day : -1;
         }
 
         private void ScheduleNext()
