@@ -11,11 +11,20 @@ namespace MelonS.GameProto
         public string title;
         public string description;
         public string flavor;  // optional LLM-generated 1-line atmosphere
+        public int threatTier = 0;  // Day 73: 0=safe, 1=mild, 2=severe, 3=critical
 
         public string Formatted =>
             string.IsNullOrEmpty(flavor)
                 ? $"<b>{title}</b>: {description}"
                 : $"<b>{title}</b>: {description}\n<i>\"{flavor}\"</i>";
+    }
+
+    /// <summary>Day 73 — Storyteller personality affects event frequency + threat curve.</summary>
+    public enum Storyteller
+    {
+        Cassandra,  // 꾸준한 사건 — 일정 간격, 위협도 단계적 상승
+        Phoebe,     // 평온한 시간 — 사건 드물게, 위협도 천천히
+        Randy,      // 무작위 — 사건 자주 + 위협도 변동 큼
     }
 
     /// <summary>
@@ -29,12 +38,43 @@ namespace MelonS.GameProto
     {
         public event Action<GameEvent> OnEventFired;
 
+        [Header("Day 73: Storyteller (3 종류)")]
+        [SerializeField] public Storyteller activeStoryteller = Storyteller.Cassandra;
+
         [SerializeField] private float minIntervalSec = 15f;
         [SerializeField] private float maxIntervalSec = 30f;
 
         private float nextFireTime;
         private GameEvent lastEvent;
         private readonly List<GameEvent> pool = new List<GameEvent>();
+
+        // Day 73: 현재 threat tier — day 진행에 따라 자동 상승
+        public int CurrentThreatTier
+        {
+            get
+            {
+                int day = (GameClock.Instance != null) ? GameClock.Instance.Day : 1;
+                if (day < 1) day = 1;
+                // Cassandra: 일정 (3/7/14일 임계점)
+                if (activeStoryteller == Storyteller.Cassandra)
+                {
+                    if (day >= 14) return 3;
+                    if (day >= 7) return 2;
+                    if (day >= 3) return 1;
+                    return 0;
+                }
+                // Phoebe: 느림 (6/14/25일)
+                if (activeStoryteller == Storyteller.Phoebe)
+                {
+                    if (day >= 25) return 3;
+                    if (day >= 14) return 2;
+                    if (day >= 6) return 1;
+                    return 0;
+                }
+                // Randy: 랜덤 — day 와 무관, 0..3 random
+                return UnityEngine.Random.Range(0, 4);
+            }
+        }
 
         // Day 13 raid scheduling
         private int lastRaidDay = -1;
@@ -163,23 +203,44 @@ namespace MelonS.GameProto
 
         private void ScheduleNext()
         {
-            float wait = UnityEngine.Random.Range(minIntervalSec, maxIntervalSec);
+            // Day 73: storyteller마다 간격 다름
+            float min = minIntervalSec, max = maxIntervalSec;
+            if (activeStoryteller == Storyteller.Phoebe)
+            {
+                min *= 2f; max *= 2f;  // 평온한 시간 — 사건 드물게
+            }
+            else if (activeStoryteller == Storyteller.Randy)
+            {
+                min *= 0.6f; max *= 0.6f;  // 무작위 — 사건 자주
+            }
+            float wait = UnityEngine.Random.Range(min, max);
             nextFireTime = Time.timeSinceLevelLoad + wait;
         }
 
         private void FireRandomEvent()
         {
             if (pool.Count == 0) return;
+            // Day 73: 현재 tier 이하 이벤트만 선택 (Cassandra/Phoebe) 또는
+            //  완전 무작위 (Randy)
+            int curTier = CurrentThreatTier;
+            List<GameEvent> candidates = new List<GameEvent>();
+            foreach (var ev in pool)
+            {
+                if (activeStoryteller == Storyteller.Randy || ev.threatTier <= curTier)
+                    candidates.Add(ev);
+            }
+            if (candidates.Count == 0) candidates.AddRange(pool);
+
             GameEvent next;
             int tries = 0;
             do
             {
-                next = pool[UnityEngine.Random.Range(0, pool.Count)];
+                next = candidates[UnityEngine.Random.Range(0, candidates.Count)];
                 tries++;
             } while (next == lastEvent && tries < 5);
             lastEvent = next;
             OnEventFired?.Invoke(next);
-            Debug.Log($"[AIDirector] {next.title}: {next.description}");
+            Debug.Log($"[AIDirector:{activeStoryteller} T{curTier}] {next.title}: {next.description}");
         }
 
         private void BuildDefaultPool()
@@ -188,53 +249,102 @@ namespace MelonS.GameProto
             // Pre-seeded events.  Operator can later regenerate via
             // game-dev-agent's runtime_director module (LLM-generated
             // variants stored in Resources/events.json).
+            // Day 73: tier 0 (safe events)
             pool.Add(new GameEvent {
-                id = "wanderer_arrival",
+                id = "wanderer_arrival", threatTier = 0,
                 title = "방랑자 도착",
                 description = "한 여행자가 야영지 외곽에 나타나 머물 곳을 찾고 있다.",
                 flavor = "장화에 묻은 진흙이 그가 걸어온 길의 길이를 말해준다.",
             });
             pool.Add(new GameEvent {
-                id = "storm_warning",
-                title = "폭풍 경보",
-                description = "북쪽에서 짙은 먹구름이 몰려온다. 한 시간 안에 폭풍이 닥칠 것이다.",
-                flavor = "바람에서 벌써 빗냄새가 난다.",
-            });
-            pool.Add(new GameEvent {
-                id = "lucky_find",
+                id = "lucky_find", threatTier = 0,
                 title = "행운의 발견",
                 description = "콜로니스트 한 명이 숲에서 작은 보급품 더미를 발견했다.",
                 flavor = "기름천에 잘 싸인 도구들.",
             });
             pool.Add(new GameEvent {
-                id = "morale_dip",
-                title = "사기 저하",
-                description = "오늘 콜로니스트들이 어딘가 무기력해 보인다.",
-                flavor = "저녁 식탁의 대화가 짧고 띄엄띄엄했다.",
-            });
-            pool.Add(new GameEvent {
-                id = "bird_omen",
+                id = "bird_omen", threatTier = 0,
                 title = "새들의 징조",
                 description = "새벽부터 까마귀들이 죽은 참나무 위로 모여들고 있다.",
                 flavor = "노인들 말로는 무언가 변화의 조짐이라고 한다.",
             });
             pool.Add(new GameEvent {
-                id = "good_harvest",
+                id = "good_harvest", threatTier = 0,
                 title = "좋은 수확",
                 description = "오늘 아침 베어낸 나무가 평소보다 깔끔하게 쪼개졌다.",
                 flavor = "건조하고 단단한, 정직한 나뭇결.",
             });
             pool.Add(new GameEvent {
-                id = "fox_sighting",
+                id = "quiet_evening", threatTier = 0,
+                title = "조용한 저녁",
+                description = "별일 없이 하루가 저문다. 모닥불 타는 소리만 들린다.",
+                flavor = "역사에 남지 않을, 그저 흘러가는 날들.",
+            });
+
+            // Day 73: tier 1 (mild) — storms, morale, predators
+            pool.Add(new GameEvent {
+                id = "storm_warning", threatTier = 1,
+                title = "폭풍 경보",
+                description = "북쪽에서 짙은 먹구름이 몰려온다. 한 시간 안에 폭풍이 닥칠 것이다.",
+                flavor = "바람에서 벌써 빗냄새가 난다.",
+            });
+            pool.Add(new GameEvent {
+                id = "morale_dip", threatTier = 1,
+                title = "사기 저하",
+                description = "오늘 콜로니스트들이 어딘가 무기력해 보인다.",
+                flavor = "저녁 식탁의 대화가 짧고 띄엄띄엄했다.",
+            });
+            pool.Add(new GameEvent {
+                id = "fox_sighting", threatTier = 1,
                 title = "여우 출현",
                 description = "붉은 여우가 숲 가장자리에서 야영지를 지켜본다. 두려워하지 않는다.",
                 flavor = "발견되어도 도망가지 않는다.",
             });
             pool.Add(new GameEvent {
-                id = "quiet_evening",
-                title = "조용한 저녁",
-                description = "별일 없이 하루가 저문다. 모닥불 타는 소리만 들린다.",
-                flavor = "역사에 남지 않을, 그저 흘러가는 날들.",
+                id = "minor_disease", threatTier = 1,
+                title = "감기 유행",
+                description = "콜로니스트 한 명이 기침을 시작했다. 며칠 안에 다른 사람들에게도 옮길 수 있다.",
+                flavor = "감기인지 더 나쁜 것인지 아직 모른다.",
+            });
+
+            // Day 73: tier 2 (severe)
+            pool.Add(new GameEvent {
+                id = "trader_caravan", threatTier = 2,
+                title = "상인 도착",
+                description = "상인 일행이 방문하여 거래를 제안한다. (실제 거래 시스템: 향후 Day)",
+                flavor = "그들의 마차에서 새로운 냄새가 난다.",
+            });
+            pool.Add(new GameEvent {
+                id = "wolf_pack", threatTier = 2,
+                title = "늑대 무리",
+                description = "굶주린 늑대 무리가 야영지 외곽을 어슬렁거린다.",
+                flavor = "송곳니가 달빛에 번뜩였다.",
+            });
+            pool.Add(new GameEvent {
+                id = "food_blight", threatTier = 2,
+                title = "역병",
+                description = "농작물 일부가 시들어가고 있다. 수확량 감소.",
+                flavor = "잎이 검게 변해간다.",
+            });
+
+            // Day 73: tier 3 (critical) — large raids, sieges
+            pool.Add(new GameEvent {
+                id = "large_raid", threatTier = 3,
+                title = "대규모 약탈단",
+                description = "5명 이상의 무장 약탈자가 야영지를 향한다. 즉시 방어 준비.",
+                flavor = "북소리가 점점 가까워진다.",
+            });
+            pool.Add(new GameEvent {
+                id = "siege_camp", threatTier = 3,
+                title = "포위 작전",
+                description = "적이 외곽에 진을 치고 야영지를 포위했다. 장기전이 될 것이다.",
+                flavor = "그들의 모닥불이 밤마다 더 가까워진다.",
+            });
+            pool.Add(new GameEvent {
+                id = "infestation", threatTier = 3,
+                title = "벌레떼 출몰",
+                description = "거대한 곤충떼가 동굴에서 기어 나왔다. 격렬한 전투가 예상된다.",
+                flavor = "땅이 흔들렸고 — 그게 시작이었다.",
             });
         }
     }
