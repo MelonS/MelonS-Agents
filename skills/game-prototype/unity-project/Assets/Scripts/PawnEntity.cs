@@ -33,6 +33,7 @@ namespace MelonS.GameProto
             if (selected == value) return;
             selected = value;
             ApplyVisual();
+            if (selected) AudioBank.Instance?.PlaySelect();
             Debug.Log($"[Pawn:{pawnName}] selected={selected}");
         }
 

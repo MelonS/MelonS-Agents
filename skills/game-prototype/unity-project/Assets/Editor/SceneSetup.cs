@@ -395,6 +395,29 @@ namespace MelonS.GameProto.EditorTools
             rcSo.FindProperty("foodText").objectReferenceValue = foodText;
             rcSo.ApplyModifiedProperties();
 
+            // Save/Load buttons (Day 6) — top-left
+            GameObject saveBtnPanel = new GameObject("SaveLoadButtons");
+            saveBtnPanel.transform.SetParent(canvasGo.transform, false);
+            RectTransform sbpRt = saveBtnPanel.AddComponent<RectTransform>();
+            sbpRt.anchorMin = new Vector2(0f, 1f);
+            sbpRt.anchorMax = new Vector2(0f, 1f);
+            sbpRt.pivot = new Vector2(0f, 1f);
+            sbpRt.sizeDelta = new Vector2(220, 50);
+            sbpRt.anchoredPosition = new Vector2(20, -20);
+
+            GameObject saveBtnGo = CreateSmallButton(saveBtnPanel.transform, "SaveBtn", "Save (F5)", new Vector2(0, 0));
+            GameObject loadBtnGo = CreateSmallButton(saveBtnPanel.transform, "LoadBtn", "Load (F9)", new Vector2(110, 0));
+
+            GameSaveButtons gsb = saveBtnPanel.AddComponent<GameSaveButtons>();
+            SerializedObject gsbSo = new SerializedObject(gsb);
+            gsbSo.FindProperty("saveButton").objectReferenceValue = saveBtnGo.GetComponent<Button>();
+            gsbSo.FindProperty("loadButton").objectReferenceValue = loadBtnGo.GetComponent<Button>();
+            gsbSo.FindProperty("pawnPrefab").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<GameObject>(PawnPrefabPath);
+            gsbSo.FindProperty("treeSprite").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree.png");
+            gsbSo.ApplyModifiedProperties();
+
             // Event Log UI (Day 5) — bottom-center
             GameObject logPanelGo = new GameObject("EventLogPanel");
             logPanelGo.transform.SetParent(canvasGo.transform, false);
@@ -442,6 +465,36 @@ namespace MelonS.GameProto.EditorTools
 
             EditorSceneManager.SaveScene(scene, GamePath);
             Debug.Log($"[SceneSetup] Game -> {GamePath}");
+        }
+
+        private static GameObject CreateSmallButton(Transform parent, string name, string label, Vector2 pos)
+        {
+            GameObject go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            Image img = go.AddComponent<Image>();
+            img.color = new Color(0.2f, 0.4f, 0.6f, 0.9f);
+            Button btn = go.AddComponent<Button>();
+            RectTransform rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot = new Vector2(0f, 0f);
+            rt.sizeDelta = new Vector2(100, 40);
+            rt.anchoredPosition = pos;
+
+            GameObject txtGo = new GameObject("Text");
+            txtGo.transform.SetParent(go.transform, false);
+            Text txt = txtGo.AddComponent<Text>();
+            txt.text = label;
+            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            txt.fontSize = 13;
+            txt.color = Color.white;
+            txt.alignment = TextAnchor.MiddleCenter;
+            RectTransform txtRt = txtGo.GetComponent<RectTransform>();
+            txtRt.anchorMin = Vector2.zero;
+            txtRt.anchorMax = Vector2.one;
+            txtRt.sizeDelta = Vector2.zero;
+            txtRt.anchoredPosition = Vector2.zero;
+            return go;
         }
 
         private static Image CreateNeedBar(Transform parent, string label, Vector2 pos, Color fillColor)

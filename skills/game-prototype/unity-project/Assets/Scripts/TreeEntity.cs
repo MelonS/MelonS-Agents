@@ -33,6 +33,8 @@ namespace MelonS.GameProto
                 float t = Mathf.Clamp01(hp / maxHp);
                 spriteRenderer.color = new Color(t, t, t, 1f);
             }
+            // Day 6 — play chop SFX
+            AudioBank.Instance?.PlayChop();
             if (hp <= 0f)
             {
                 ResourceManager.Instance?.AddWood(woodDrop);
