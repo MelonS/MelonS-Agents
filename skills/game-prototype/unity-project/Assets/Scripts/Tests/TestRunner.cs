@@ -80,6 +80,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V31-trader-spawn-and-wander", TestV31_TraderSpawn);
             yield return RunOne("V32-trader-trade", TestV32_TraderTrade);
             yield return RunOne("V33-animal-tame", TestV33_AnimalTame);
+            yield return RunOne("V34-saveload-roundtrip", TestV34_SaveLoadRoundtrip);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -270,6 +271,29 @@ namespace MelonS.GameProto.Tests
             string summary = traits.SummaryKr();
             Assert(n >= 1 && n <= 2 && !string.IsNullOrEmpty(summary),
                 $"traits 수={n} summary='{summary}'");
+        }
+
+        private IEnumerator TestV34_SaveLoadRoundtrip()
+        {
+            // SaveLoadManager.Save() → 디스크 → Load() → 동일 wood 값 확인
+            var rm = Services.Get<ResourceManager>();
+            int testWood = 777;
+            int origWood = rm.wood;
+            rm.AddWood(testWood - rm.wood);
+            yield return null;
+            SaveLoadManager.Save();
+            yield return new WaitForSeconds(0.1f);
+            bool exists = SaveLoadManager.SaveExists;
+            // wood 변경
+            rm.AddWood(-rm.wood);
+            yield return null;
+            // Load
+            var data = SaveLoadManager.Load();
+            bool loadedOk = data != null && data.wood == testWood;
+            // restore
+            rm.AddWood(origWood - rm.wood);
+            Assert(exists && loadedOk,
+                $"saved={exists}, loaded.wood={(data?.wood ?? -1)} expected {testWood}");
         }
 
         private IEnumerator TestV33_AnimalTame()
