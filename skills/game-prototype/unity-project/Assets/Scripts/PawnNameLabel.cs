@@ -7,9 +7,9 @@ namespace MelonS.GameProto
     /// camera + position to stay above pawn head.</summary>
     public class PawnNameLabel : MonoBehaviour
     {
-        [SerializeField] private Vector3 offset = new Vector3(0, 1.0f, 0);
-        [SerializeField] private float fontSize = 36;
-        [SerializeField] private float characterSize = 0.06f;
+        [SerializeField] private Vector3 offset = new Vector3(0, 0.7f, 0);
+        [SerializeField] private float fontSize = 48;
+        [SerializeField] private float characterSize = 0.04f;
 
         private TextMesh tm;
 
