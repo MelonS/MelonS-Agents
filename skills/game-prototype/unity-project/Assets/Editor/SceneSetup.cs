@@ -594,7 +594,79 @@ namespace MelonS.GameProto.EditorTools
             timeRt.anchoredPosition = new Vector2(0, 0);
             timeGo.AddComponent<TimeUI>();
 
-            // TopBar RIGHT — Wood / Food counter (no separate panel — inline in topbar)
+            // Day 38: 우측 리소스 영역 레이아웃 재설계 — overlap fix.
+            //  기존 wood(-320)/meals(-160)/food(-20) + 140 width → mutual overlap.
+            //  새 레이아웃: 우측 정렬, 안전한 spacing.
+            //    [목재: N]  ·  [식사: N]  ·  [식량: N]                 16px padding from right
+            //  각 텍스트 width 120, 점 width 16, 텍스트간 8px 간격.
+            //  총 너비: 120*3 + 16*2 + 8*4 = 392 + 32 = 424 + padding 16 = 440.
+            //  TimeUI 중앙(960±110)과의 ovrlap 방지 — 우측 클러스터 시작 x=1920-440=1480.
+
+            // 식량 — 가장 오른쪽
+            GameObject foodTextGo = new GameObject("FoodText");
+            foodTextGo.transform.SetParent(topBarGo.transform, false);
+            Text foodText = foodTextGo.AddComponent<Text>();
+            foodText.text = "식량: 0";
+            foodText.font = uiFont;
+            foodText.fontSize = 22;
+            foodText.color = colAccentFood;
+            foodText.alignment = TextAnchor.MiddleRight;
+            RectTransform foodTextRt = foodTextGo.GetComponent<RectTransform>();
+            foodTextRt.anchorMin = new Vector2(1f, 0f);
+            foodTextRt.anchorMax = new Vector2(1f, 1f);
+            foodTextRt.pivot = new Vector2(1f, 0.5f);
+            foodTextRt.sizeDelta = new Vector2(120, 0);
+            foodTextRt.anchoredPosition = new Vector2(-16, 0);
+
+            // 식량 — 식사 사이 점
+            GameObject sep2Go = new GameObject("ResSep2");
+            sep2Go.transform.SetParent(topBarGo.transform, false);
+            Text sep2Text = sep2Go.AddComponent<Text>();
+            sep2Text.text = "·";
+            sep2Text.font = uiFont;
+            sep2Text.fontSize = 22;
+            sep2Text.color = colTextMuted;
+            sep2Text.alignment = TextAnchor.MiddleCenter;
+            RectTransform sep2Rt = sep2Go.GetComponent<RectTransform>();
+            sep2Rt.anchorMin = new Vector2(1f, 0f);
+            sep2Rt.anchorMax = new Vector2(1f, 1f);
+            sep2Rt.pivot = new Vector2(1f, 0.5f);
+            sep2Rt.sizeDelta = new Vector2(16, 0);
+            sep2Rt.anchoredPosition = new Vector2(-144, 0);  // 16 + 120 + 8
+
+            // 식사 — Day 29 meals counter
+            GameObject mealsTextGo = new GameObject("MealsText");
+            mealsTextGo.transform.SetParent(topBarGo.transform, false);
+            Text mealsText = mealsTextGo.AddComponent<Text>();
+            mealsText.text = "식사: 0";
+            mealsText.font = uiFont;
+            mealsText.fontSize = 22;
+            mealsText.color = new Color(0.93f, 0.81f, 0.45f, 1f);  // amber/wheat
+            mealsText.alignment = TextAnchor.MiddleRight;
+            RectTransform mealsRt = mealsTextGo.GetComponent<RectTransform>();
+            mealsRt.anchorMin = new Vector2(1f, 0f);
+            mealsRt.anchorMax = new Vector2(1f, 1f);
+            mealsRt.pivot = new Vector2(1f, 0.5f);
+            mealsRt.sizeDelta = new Vector2(120, 0);
+            mealsRt.anchoredPosition = new Vector2(-168, 0);  // 144 + 16 + 8
+
+            // 식사 — 목재 사이 점
+            GameObject sepGo = new GameObject("ResSep1");
+            sepGo.transform.SetParent(topBarGo.transform, false);
+            Text sepText = sepGo.AddComponent<Text>();
+            sepText.text = "·";
+            sepText.font = uiFont;
+            sepText.fontSize = 22;
+            sepText.color = colTextMuted;
+            sepText.alignment = TextAnchor.MiddleCenter;
+            RectTransform sepRt = sepGo.GetComponent<RectTransform>();
+            sepRt.anchorMin = new Vector2(1f, 0f);
+            sepRt.anchorMax = new Vector2(1f, 1f);
+            sepRt.pivot = new Vector2(1f, 0.5f);
+            sepRt.sizeDelta = new Vector2(16, 0);
+            sepRt.anchoredPosition = new Vector2(-296, 0);  // 168 + 120 + 8
+
+            // 목재 — 가장 왼쪽 (우측 클러스터 내)
             GameObject woodGo = new GameObject("WoodText");
             woodGo.transform.SetParent(topBarGo.transform, false);
             Text woodText = woodGo.AddComponent<Text>();
@@ -607,71 +679,8 @@ namespace MelonS.GameProto.EditorTools
             woodRt.anchorMin = new Vector2(1f, 0f);
             woodRt.anchorMax = new Vector2(1f, 1f);
             woodRt.pivot = new Vector2(1f, 0.5f);
-            woodRt.sizeDelta = new Vector2(140, 0);
-            woodRt.anchoredPosition = new Vector2(-320, 0);
-
-            GameObject sepGo = new GameObject("ResSep1");
-            sepGo.transform.SetParent(topBarGo.transform, false);
-            Text sepText = sepGo.AddComponent<Text>();
-            sepText.text = "·";
-            sepText.font = uiFont;
-            sepText.fontSize = 22;
-            sepText.color = colTextMuted;
-            sepText.alignment = TextAnchor.MiddleCenter;
-            RectTransform sepRt = sepGo.GetComponent<RectTransform>();
-            sepRt.anchorMin = new Vector2(1f, 0f);
-            sepRt.anchorMax = new Vector2(1f, 1f);
-            sepRt.pivot = new Vector2(0.5f, 0.5f);
-            sepRt.sizeDelta = new Vector2(12, 0);
-            sepRt.anchoredPosition = new Vector2(-310, 0);
-
-            GameObject sep2Go = new GameObject("ResSep2");
-            sep2Go.transform.SetParent(topBarGo.transform, false);
-            Text sep2Text = sep2Go.AddComponent<Text>();
-            sep2Text.text = "·";
-            sep2Text.font = uiFont;
-            sep2Text.fontSize = 22;
-            sep2Text.color = colTextMuted;
-            sep2Text.alignment = TextAnchor.MiddleCenter;
-            RectTransform sep2Rt = sep2Go.GetComponent<RectTransform>();
-            sep2Rt.anchorMin = new Vector2(1f, 0f);
-            sep2Rt.anchorMax = new Vector2(1f, 1f);
-            sep2Rt.pivot = new Vector2(0.5f, 0.5f);
-            sep2Rt.sizeDelta = new Vector2(12, 0);
-            sep2Rt.anchoredPosition = new Vector2(-170, 0);
-
-            GameObject foodTextGo = new GameObject("FoodText");
-            foodTextGo.transform.SetParent(topBarGo.transform, false);
-            // (separator above already created by build-engineer Day 14 pass)
-
-            Text foodText = foodTextGo.AddComponent<Text>();
-            foodText.text = "식량: 0";
-            foodText.font = uiFont;
-            foodText.fontSize = 22;
-            foodText.color = colAccentFood;
-            foodText.alignment = TextAnchor.MiddleLeft;
-            RectTransform foodTextRt = foodTextGo.GetComponent<RectTransform>();
-            foodTextRt.anchorMin = new Vector2(1f, 0f);
-            foodTextRt.anchorMax = new Vector2(1f, 1f);
-            foodTextRt.pivot = new Vector2(1f, 0.5f);
-            foodTextRt.sizeDelta = new Vector2(140, 0);
-            foodTextRt.anchoredPosition = new Vector2(-20, 0);
-
-            // Day 29: meals counter (식사)
-            GameObject mealsTextGo = new GameObject("MealsText");
-            mealsTextGo.transform.SetParent(topBarGo.transform, false);
-            Text mealsText = mealsTextGo.AddComponent<Text>();
-            mealsText.text = "식사: 0";
-            mealsText.font = uiFont;
-            mealsText.fontSize = 22;
-            mealsText.color = new Color(0.93f, 0.81f, 0.45f, 1f);  // amber/wheat
-            mealsText.alignment = TextAnchor.MiddleLeft;
-            RectTransform mealsRt = mealsTextGo.GetComponent<RectTransform>();
-            mealsRt.anchorMin = new Vector2(1f, 0f);
-            mealsRt.anchorMax = new Vector2(1f, 1f);
-            mealsRt.pivot = new Vector2(1f, 0.5f);
-            mealsRt.sizeDelta = new Vector2(140, 0);
-            mealsRt.anchoredPosition = new Vector2(-160, 0);
+            woodRt.sizeDelta = new Vector2(120, 0);
+            woodRt.anchoredPosition = new Vector2(-320, 0);  // 296 + 16 + 8
 
             // ResourceCounterUI host (no longer has its own panel image; just script)
             GameObject resHostGo = new GameObject("ResourceCounter");
