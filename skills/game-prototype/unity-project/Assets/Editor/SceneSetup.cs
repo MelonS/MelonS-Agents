@@ -260,9 +260,9 @@ namespace MelonS.GameProto.EditorTools
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.15f, 0.18f, 0.13f, 1f);
             cam.orthographic = true;
-            // Day 37: 8 -> 7 살짝 줌인 (pawn 가시성 ↑).  여전히 20x20 grass
-            //  대부분이 화면 안에 들어옴 (vertical ±7, horizontal ±12.4 at 16:9).
-            cam.orthographicSize = 7f;
+            // Day 40: 40x40 맵에 맞춰 ortho 10 (vertical ±10, horizontal ±17.8).
+            //  맵 전체는 ±20이라 WASD pan 으로 봐야 — 림월드 vibe.
+            cam.orthographicSize = 10f;
             camGo.tag = "MainCamera";
             camGo.transform.position = new Vector3(0, 0, -10);
             camGo.AddComponent<AudioListener>();
@@ -295,78 +295,93 @@ namespace MelonS.GameProto.EditorTools
             TilemapRenderer tmr = tmGo.AddComponent<TilemapRenderer>();
             tmr.sortingOrder = 0;
 
-            // Day 39: 다중 타일 (grass + dirt + water + rock) + noise 기반 패치 배치.
-            //  기존 단조로운 20x20 grass → 림월드 같은 지형 다양성.
+            // Day 39+40: 다중 타일 (grass + dirt + water + rock) + noise 기반 패치 배치.
+            //  Day 40: 맵 20x20 → 40x40 — 림월드 vibe 살리려면 큰 맵 필수.
             Directory.CreateDirectory("Assets/Tiles");
             Tile grassTile = LoadOrCreateTile("Assets/Sprites/tile_grass.png", "Assets/Tiles/Grass.asset");
             Tile dirtTile  = LoadOrCreateTile("Assets/Sprites/tile_dirt.png",  "Assets/Tiles/Dirt.asset");
             Tile waterTile = LoadOrCreateTile("Assets/Sprites/tile_water.png", "Assets/Tiles/Water.asset");
             Tile rockTile  = LoadOrCreateTile("Assets/Sprites/tile_rock.png",  "Assets/Tiles/Rock.asset");
 
-            // Procedural map: 20x20 grass base, 호수 + dirt 패치 + 바위 cluster.
-            //  결정론적 (seed=12345) — Day-day 사이 같은 맵 보장.
+            // Procedural 40x40 map.  결정론적 (seed=12345).
+            const int MAP_HALF = 20;  // 맵 범위 ±20 → 40x40
             System.Random rng = new System.Random(12345);
-            // 호수: 중심 (5, 5) 반경 2.5 — 잔잔한 원형 + 약간 노이즈
-            Vector2 lakeCenter = new Vector2(5.5f, 5.5f);
-            float lakeRadius = 2.6f;
-            // 바위 cluster: 좌하단 모서리쪽, 5~7개 바위
-            Vector2Int[] rockCluster = new Vector2Int[]
+
+            // 큰 호수 (중심 (10, 12) 반경 4) + 작은 호수 (-12, -8) 반경 2.5
+            Vector2[] lakeCenters = new[] { new Vector2(10f, 12f), new Vector2(-12f, -8f) };
+            float[]   lakeRadii   = new[] { 4.0f, 2.5f };
+
+            // 바위 cluster 3개 (산맥 분위기)
+            Vector2[] rockClusterCenters = new[]
             {
-                new Vector2Int(-7, -6), new Vector2Int(-6, -6), new Vector2Int(-7, -7),
-                new Vector2Int(-5, -7), new Vector2Int(-6, -8), new Vector2Int(-8, -5),
-                new Vector2Int(-4, -8),
+                new Vector2(-15f, 13f),  // 좌상단 산맥
+                new Vector2( 16f, -14f), // 우하단 산맥
+                new Vector2(-3f, -16f),  // 남쪽 산맥
             };
-            // dirt 큰 패치 3개 (지나다닌 길 느낌)
+            float rockRadius = 3.2f;
+
+            // dirt 패치 6개 (길 느낌)
             Vector2[] dirtCenters = new[]
             {
-                new Vector2(-3f, 2f), new Vector2(1f, -4f), new Vector2(6f, -7f),
+                new Vector2(-3f, 2f), new Vector2(4f, -6f), new Vector2(-10f, 5f),
+                new Vector2(8f, 4f), new Vector2(-7f, -12f), new Vector2(14f, 8f),
             };
-            float dirtRadius = 1.7f;
+            float dirtRadius = 2.0f;
 
-            for (int x = -10; x < 10; x++)
+            for (int x = -MAP_HALF; x < MAP_HALF; x++)
             {
-                for (int y = -10; y < 10; y++)
+                for (int y = -MAP_HALF; y < MAP_HALF; y++)
                 {
                     Tile chosen = grassTile;
                     Vector2 p = new Vector2(x, y);
-                    // 우선순위: rock cluster > 호수 > dirt > grass
+                    // 우선순위: rock > 호수 > dirt > grass.  Edge noise 약간.
                     bool isRock = false;
-                    foreach (var rp in rockCluster) if (rp.x == x && rp.y == y) { isRock = true; break; }
-                    if (isRock) chosen = rockTile;
-                    else if ((p - lakeCenter).magnitude < lakeRadius + (float)(rng.NextDouble()-0.5) * 0.6f)
-                        chosen = waterTile;
-                    else
+                    foreach (var rc in rockClusterCenters)
                     {
-                        foreach (var dc in dirtCenters)
-                        {
-                            if ((p - dc).magnitude < dirtRadius + (float)(rng.NextDouble()-0.5) * 0.5f)
-                            { chosen = dirtTile; break; }
-                        }
+                        if ((p - rc).magnitude < rockRadius + (float)(rng.NextDouble()-0.5)*1.2f)
+                        { isRock = true; break; }
+                    }
+                    if (isRock) { chosen = rockTile; tm.SetTile(new Vector3Int(x, y, 0), chosen); continue; }
+                    bool isLake = false;
+                    for (int li = 0; li < lakeCenters.Length; li++)
+                    {
+                        if ((p - lakeCenters[li]).magnitude < lakeRadii[li] + (float)(rng.NextDouble()-0.5)*0.7f)
+                        { isLake = true; break; }
+                    }
+                    if (isLake) { chosen = waterTile; tm.SetTile(new Vector3Int(x, y, 0), chosen); continue; }
+                    foreach (var dc in dirtCenters)
+                    {
+                        if ((p - dc).magnitude < dirtRadius + (float)(rng.NextDouble()-0.5)*0.5f)
+                        { chosen = dirtTile; break; }
                     }
                     tm.SetTile(new Vector3Int(x, y, 0), chosen);
                 }
             }
 
-            // Day 39: 야생 꽃 데코 12개 — grass 위에 산발 배치 (interaction 없음, 시각만)
+            // Day 39+41: 야생 꽃 데코 24개 (40x40 맵 비례) — grass 위에 산발.
             Sprite flowerSpr = LoadOrSetupSprite("Assets/Sprites/decor_flower.png");
             if (flowerSpr != null)
             {
                 System.Random fr = new System.Random(98765);
                 int placed = 0; int attempts = 0;
-                while (placed < 12 && attempts < 200)
+                while (placed < 24 && attempts < 600)
                 {
                     attempts++;
-                    int fx = fr.Next(-9, 10);
-                    int fy = fr.Next(-9, 10);
+                    int fx = fr.Next(-(MAP_HALF-1), MAP_HALF);
+                    int fy = fr.Next(-(MAP_HALF-1), MAP_HALF);
                     Vector2 fp = new Vector2(fx, fy);
-                    // skip lake/rock/dirt/spawn-zone
-                    if ((fp - lakeCenter).magnitude < lakeRadius + 1f) continue;
+                    // skip lake/rock cluster/dirt/spawn-zone
                     bool skip = false;
-                    foreach (var rp in rockCluster) if (rp.x == fx && rp.y == fy) { skip = true; break; }
+                    for (int li = 0; li < lakeCenters.Length; li++)
+                        if ((fp - lakeCenters[li]).magnitude < lakeRadii[li] + 1.5f) { skip = true; break; }
                     if (skip) continue;
-                    foreach (var dc in dirtCenters) if ((fp - dc).magnitude < dirtRadius) { skip = true; break; }
+                    foreach (var rc in rockClusterCenters)
+                        if ((fp - rc).magnitude < rockRadius + 0.5f) { skip = true; break; }
                     if (skip) continue;
-                    if (Mathf.Abs(fx) < 3 && Mathf.Abs(fy) < 1) continue;  // pawn spawn 근처 회피
+                    foreach (var dc in dirtCenters)
+                        if ((fp - dc).magnitude < dirtRadius) { skip = true; break; }
+                    if (skip) continue;
+                    if (Mathf.Abs(fx) < 4 && Mathf.Abs(fy) < 2) continue;  // pawn spawn 회피
                     GameObject fgo = new GameObject($"Flower_{placed}");
                     fgo.transform.position = new Vector3(fx + 0.5f, fy + 0.5f, 0);
                     SpriteRenderer flowerSr = fgo.AddComponent<SpriteRenderer>();
@@ -413,15 +428,18 @@ namespace MelonS.GameProto.EditorTools
             WeatherController wc = wcGo.AddComponent<WeatherController>();
             wc.SetRefs(director);
 
-            // Day 23: 5 wandering deer (peaceful food source)
+            // Day 23+41: 8 wandering deer — 40x40 맵 비례로 증가
             Sprite deerSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/deer.png");
             Vector2[] deerPositions = new[]
             {
-                new Vector2(-8f,  3f),
-                new Vector2( 8f,  5f),
-                new Vector2( 9f, -4f),
-                new Vector2(-9f, -5f),
-                new Vector2( 0f,  8f),
+                new Vector2(-14f,  8f),
+                new Vector2( 13f,  9f),
+                new Vector2( 16f, -3f),
+                new Vector2(-15f, -4f),
+                new Vector2( -2f, 15f),
+                new Vector2(  6f,-12f),
+                new Vector2(-10f, -2f),
+                new Vector2( 11f,  4f),
             };
             foreach (var dpos in deerPositions)
             {
@@ -465,17 +483,35 @@ namespace MelonS.GameProto.EditorTools
             Object.DestroyImmediate(treeTemplate);
             Debug.Log($"[SceneSetup] Tree prefab -> {TreePrefabPath}");
 
-            Vector2[] treePositions = new[]
+            // Day 41: tree 위치 — 40x40 맵에 20그루 (분포 균등 + 호수·바위 회피).
+            //  결정론적 (seed=24680).
+            var treePositionsList = new System.Collections.Generic.List<Vector2>();
             {
-                new Vector2(-5,  4),
-                new Vector2( 6,  3),
-                new Vector2(-3, -4),
-                new Vector2( 4, -5),
-                new Vector2(-7,  0),
-                new Vector2( 7,  0),
-                new Vector2( 0,  6),
-                new Vector2( 0, -7),
-            };
+                System.Random tr = new System.Random(24680);
+                int tries = 0;
+                while (treePositionsList.Count < 20 && tries < 400)
+                {
+                    tries++;
+                    int tx = tr.Next(-(MAP_HALF-2), MAP_HALF-1);
+                    int ty = tr.Next(-(MAP_HALF-2), MAP_HALF-1);
+                    Vector2 tp = new Vector2(tx, ty);
+                    bool skip = false;
+                    // pawn spawn (-2,0)(0,0)(2,0) 근처 회피
+                    if (Mathf.Abs(tx) < 4 && Mathf.Abs(ty) < 2) continue;
+                    for (int li = 0; li < lakeCenters.Length; li++)
+                        if ((tp - lakeCenters[li]).magnitude < lakeRadii[li] + 1.5f) { skip = true; break; }
+                    if (skip) continue;
+                    foreach (var rc in rockClusterCenters)
+                        if ((tp - rc).magnitude < rockRadius + 0.8f) { skip = true; break; }
+                    if (skip) continue;
+                    // 다른 tree 와 최소 거리 2.0
+                    foreach (var ex in treePositionsList)
+                        if (Vector2.Distance(ex, tp) < 2.0f) { skip = true; break; }
+                    if (skip) continue;
+                    treePositionsList.Add(tp);
+                }
+            }
+            Vector2[] treePositions = treePositionsList.ToArray();
             foreach (var pos in treePositions)
             {
                 GameObject t = (GameObject)PrefabUtility.InstantiatePrefab(treePrefab);
@@ -551,12 +587,15 @@ namespace MelonS.GameProto.EditorTools
             // component design and acceptable: white vs brown still reads
             // distinct from trees.  The scene-file color is still set per
             // handoff spec.
+            // Day 41: berry bush 6개 (40x40 맵).
             Vector2[] bushPositions = new[]
             {
-                new Vector2(-5f, -2f),
-                new Vector2( 2f,  4f),
-                new Vector2( 5f, -3f),
-                new Vector2(-3f,  5f),
+                new Vector2(-9f,  -2f),
+                new Vector2(  6f,  -8f),
+                new Vector2( 11f,   3f),
+                new Vector2(-13f,  10f),
+                new Vector2(  3f,  13f),
+                new Vector2( -6f, -14f),
             };
             foreach (var pos in bushPositions)
             {
