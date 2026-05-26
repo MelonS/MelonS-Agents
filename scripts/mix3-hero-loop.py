@@ -47,54 +47,71 @@ LTX_IMG2VID = SCRIPT_DIR / "ltx-img2vid.py"
 # explicitly text-avoid + composition that minimizes AI-artifact risk.
 HERO_PROMPTS = [
     {
-        "name": "rooftop-rainy-night",
+        "name": "rooftop-heavy-rain",
         "prompt": (
-            "Aerial wide shot of an empty Seoul rooftop on a deep rainy night. "
-            "Light drizzle falls steadily.  Distant city glow forms soft warm "
-            "bokeh against the dark sky.  Subtle slow camera drift forward. "
-            "Cinematic lofi color grade with 35mm film grain. "
-            "Empty composition without any people, animals, signs, posters, "
-            "shop fronts, neon text, billboards, letters, logos, or readable text."
+            "Static fixed camera view of an empty Seoul rooftop at deep night. "
+            "Heavy continuous rain falls vertically with thousands of visible "
+            "raindrops streaming across the entire frame from top to bottom. "
+            "Wet rooftop surface reflects warm distant city glow. "
+            "Rain splashes are visible on the puddles. "
+            "Lofi cinematic color grade, 35mm film grain. "
+            "Camera does not move - only the rain moves. "
+            "No people, no animals, no signs, no posters, no shop fronts, "
+            "no neon text, no billboards, no letters, no logos, no readable text anywhere."
         ),
     },
     {
-        "name": "abstract-neon-void",
+        "name": "rain-on-window-warm",
         "prompt": (
-            "Abstract dark space filled with magenta and cyan smoke wisps "
-            "drifting slowly.  Soft volumetric lighting.  Dreamy lofi mood. "
-            "Very slow horizontal drift motion.  Pure color and motion, "
-            "no objects, no faces, no characters, no signs, no text, no "
-            "letters, no logos, no architecture with readable surfaces."
+            "Static fixed camera close-up shot looking at a dark window glass. "
+            "Heavy continuous rain runs down the glass in many flowing rivulets. "
+            "Visible raindrops constantly impact the glass and trickle downward. "
+            "Behind the glass, warm orange and pink window bokeh is heavily blurred. "
+            "Camera is completely still - only the rain water moves. "
+            "Intimate cinematic lofi atmosphere. "
+            "No people, no objects behind glass, no signs, no text, no letters, "
+            "no logos, no readable surfaces."
         ),
     },
     {
-        "name": "rain-on-glass-macro",
+        "name": "steaming-coffee-static",
         "prompt": (
-            "Extreme close-up of rain droplets running down a dark glass "
-            "surface.  Blurred warm orange and pink bokeh in the background. "
-            "Intimate cinematic lofi atmosphere.  Subtle natural motion. "
-            "No objects behind the glass, no signs, no text, no letters, "
-            "no people, no readable surfaces."
+            "Static fixed camera close-up of a dark ceramic coffee cup on a wooden table. "
+            "Continuous wisps of warm white steam rise gently from the coffee surface "
+            "and curl upward through the warm lamp light beam. "
+            "Steam motion is constant and natural. "
+            "Background is warm blurred bokeh of cafe lights. "
+            "Camera does not move - only the steam moves. "
+            "No hands, no people, no faces, no text, no logos on the cup, "
+            "no signs, no menu boards, no readable surfaces."
         ),
     },
     {
-        "name": "endless-mist-mountains",
+        "name": "snow-falling-window",
         "prompt": (
-            "Distant mountain silhouettes layered through soft drifting mist. "
-            "Pale blue dawn light blending into warm orange horizon. "
-            "Wide panoramic composition with slow gentle camera pan. "
-            "Atmospheric haze, no buildings, no people, no animals, no signs, "
-            "no text, no letters visible anywhere."
+            "Static fixed camera view looking out a dark window at heavy snow falling. "
+            "Thousands of snowflakes drift downward across the entire frame. "
+            "Snowflakes vary in size and speed for parallax depth. "
+            "Soft warm interior light reflects faintly on the window. "
+            "Outside, distant blurred warm street lamps form bokeh. "
+            "Camera is completely still - only the snow moves. "
+            "Cinematic lofi mood, 35mm grain. "
+            "No people, no buildings with visible signs, no text, no letters, "
+            "no readable surfaces."
         ),
     },
     {
-        "name": "aurora-dark-sky",
+        "name": "fireplace-flames-static",
         "prompt": (
-            "Dark night sky with subtle aurora-like color ribbons drifting "
-            "slowly (magenta, green, cyan).  Soft cinematic atmosphere. "
-            "No city silhouette, no stars rendered as text-like bright dots, "
-            "no faces or characters, no signs, no text, no readable surfaces. "
-            "Just abstract atmospheric color and slow motion."
+            "Static fixed camera close-up of a small fireplace with continuously "
+            "flickering warm orange flames dancing over dark logs. "
+            "Flames move naturally and constantly with realistic motion. "
+            "Glowing embers occasionally pop. "
+            "Background is dim warm cabin interior with soft bokeh. "
+            "Camera does not move - only the flames and embers move. "
+            "Cozy lofi cinematic mood. "
+            "No people, no animals, no text, no signs, no books with readable covers, "
+            "no logos, no readable surfaces anywhere."
         ),
     },
 ]

@@ -97,6 +97,30 @@ OUTPUT: outputs/publish/mix-3/yt-mix-3-<theme>-<date>.mp4
 - **B-roll dedup**: each Mix #3 picks new hero clips (registered in `records/youtube/broll-used.txt`)
 - **Public repo**: hero clip output mp4 stays gitignored under `outputs/publish/`
 
+## Motion design — continuous frame-wide motion (v2 revision)
+
+**Lesson (2026-05-26 operator-shared reference)**:
+[The Japanese Town - 90's Chill Lofi](https://www.youtube.com/watch?v=sF80I-TQiW0)
+(12-hour lofi rain playlist, 24M views).  Operator note: *"계속 같은
+화면이지만 비가 계속 오는식의 움직임이 크거든"*.
+
+Initial v1 hero prompts used "subtle slow camera drift" which produced
+visually static-looking clips.  Successful lofi loop channels use
+**continuous frame-wide motion** (heavy rain, snow, steam, flames,
+particles) where the *entire frame is alive* — not just camera movement.
+
+v2 prompt design principles:
+- **Camera = locked / static** ("Static fixed camera view")
+- **Subject motion = continuous + frame-wide** (rain streaming, steam
+  rising, flames flickering, snow falling)
+- **Particle density = visible** (thousands of raindrops / snowflakes,
+  not subtle drizzle)
+- **Motion variety per-frame** (different speeds, sizes, directions for
+  parallax depth — defeats loop-seam perception)
+
+This pairs naturally with `ffmpeg -stream_loop -1`: heavy motion makes
+the seam between loop iterations imperceptible.
+
 ## Hero prompt design — text-free atmospheric pool
 
 Each prompt:
