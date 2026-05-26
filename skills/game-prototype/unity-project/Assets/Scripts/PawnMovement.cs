@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using MelonS.GameProto.Data;
 
 namespace MelonS.GameProto
 {
@@ -9,8 +10,9 @@ namespace MelonS.GameProto
     /// </summary>
     public class PawnMovement : MonoBehaviour
     {
-        [SerializeField] private float moveSpeed = 3f;
-        [SerializeField] private float arriveDistance = 0.05f;
+        // R2: moveSpeed/arriveDistance 외부화 - PawnStats SO 참조
+        [SerializeField] private PawnStats stats;
+        // legacy fallback - SO 없으면 default 30/1/1.0/1.0/3.0 채워줌
 
         // Step 81: 맵 경계 — 40x40 tile 맵의 안쪽 (±19) 으로 강제 clamp.
         //  타일이 그려진 영역 밖으로는 절대 못 나감.
@@ -33,7 +35,11 @@ namespace MelonS.GameProto
 
         private Vector2? target;
         private PawnHealth health;  // Step45 — leg damage 영향
-        private void Awake() { health = GetComponent<PawnHealth>(); }
+        private void Awake()
+        {
+            health = GetComponent<PawnHealth>();
+            if (stats == null) stats = PawnStats.CreateDefault();
+        }
 
         public static Vector2 ClampToWorld(Vector2 p)
         {
@@ -69,7 +75,7 @@ namespace MelonS.GameProto
                 target = null;
                 return;
             }
-            Vector2 next = Vector2.MoveTowards(cur, clampedTarget, moveSpeed * speedMul * Time.deltaTime);
+            Vector2 next = Vector2.MoveTowards(cur, clampedTarget, stats.moveSpeed * speedMul * Time.deltaTime);
             next = ClampToWorld(next);
             // 다음 step 이 호수/바위면 가지 말것 — target 취소
             if (IsBlockedAt(next))
@@ -79,7 +85,7 @@ namespace MelonS.GameProto
             }
             transform.position = new Vector3(next.x, next.y, transform.position.z);
 
-            if (Vector2.Distance(next, target.Value) <= arriveDistance)
+            if (Vector2.Distance(next, target.Value) <= stats.arriveDistance)
             {
                 target = null;
             }

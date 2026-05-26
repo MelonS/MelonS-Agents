@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto.Data;
 
 namespace MelonS.GameProto
 {
@@ -16,11 +17,17 @@ namespace MelonS.GameProto
         [SerializeField] private Color selectedOutlineColor = new Color(1f, 0.9f, 0.3f, 1f);
         [SerializeField] private Color unselectedColor = Color.white;
 
-        [Header("Combat (Day 13)")]
-        [SerializeField] private int maxHp = 30;
-        [SerializeField] private int attackDamage = 1;
-        [SerializeField] private float attackRange = 1.0f;
-        [SerializeField] private float attackInterval = 1.0f;
+        // R2: combat stats 외부화 - PawnStats ScriptableObject.
+        //  inspector 비워두면 Awake 에서 CreateDefault() 로 30/1/1.0/1.0 채움
+        //  (legacy 빌드 호환).  asset 만들고 wire 하면 그 값 사용.
+        [Header("Combat stats (R2 - PawnStats SO)")]
+        [SerializeField] private PawnStats stats;
+
+        // Read-only accessors (외부 코드 ePerty 변경 X)
+        public int MaxHp => stats != null ? stats.maxHp : 30;
+        public int AttackDamage => stats != null ? stats.attackDamage : 1;
+        public float AttackRange => stats != null ? stats.attackRange : 1.0f;
+        public float AttackInterval => stats != null ? stats.attackInterval : 1.0f;
 
         private SpriteRenderer spriteRenderer;
         private bool selected;
@@ -68,7 +75,9 @@ namespace MelonS.GameProto
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
-            Hp = maxHp;
+            // R2: SO 없으면 default 인스턴스 — game 멈추지 X
+            if (stats == null) stats = PawnStats.CreateDefault();
+            Hp = stats.maxHp;
             ApplyVisual();
         }
 
@@ -95,10 +104,10 @@ namespace MelonS.GameProto
             // Re-check post-cache: bandit could have been killed by another
             // pawn this same frame.  Without this, transform access NREs.
             if (nearest.IsDead) return;
-            if (Vector3.Distance(transform.position, nearest.transform.position) > attackRange) return;
+            if (Vector3.Distance(transform.position, nearest.transform.position) > stats.attackRange) return;
             if (Time.time < nextAttackTime) return;
-            nextAttackTime = Time.time + attackInterval;
-            nearest.TakeDamage(attackDamage, gameObject);
+            nextAttackTime = Time.time + stats.attackInterval;
+            nearest.TakeDamage(stats.attackDamage, gameObject);
             // Day 20: Combat XP per attack tick
             var skills = GetComponent<PawnSkills>();
             if (skills != null) skills.AddXP(SkillKind.Combat, 5f);
@@ -139,7 +148,7 @@ namespace MelonS.GameProto
                     return;
                 }
                 // Sync legacy Hp from total ratio for UI compat
-                Hp = Mathf.Max(1, Mathf.RoundToInt(health.TotalHpRatio * maxHp));
+                Hp = Mathf.Max(1, Mathf.RoundToInt(health.TotalHpRatio * stats.maxHp));
                 return;
             }
             // Fallback: legacy single-pool HP
