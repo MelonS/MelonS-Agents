@@ -50,6 +50,19 @@ namespace MelonS.GameProto
                 lastDecision = Time.timeSinceLevelLoad;
                 return;
             }
+            // Day 20: mood break — drop current work, wander aimlessly.
+            if (needs != null && needs.IsBreaking)
+            {
+                chopper.ClearTask();
+                if (gatherer != null) gatherer.ClearTask();
+                if (!movement.IsMoving)
+                {
+                    Vector2 cur = transform.position;
+                    movement.SetTarget(cur + Random.insideUnitCircle * idleWanderRadius);
+                }
+                lastDecision = Time.timeSinceLevelLoad;
+                return;
+            }
 
             // Don't override active task
             if (movement.IsMoving || chopper.HasTask) return;

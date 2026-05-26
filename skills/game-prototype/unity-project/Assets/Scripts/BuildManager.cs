@@ -128,6 +128,19 @@ namespace MelonS.GameProto
             if (ResourceManager.Instance == null || ResourceManager.Instance.wood < cost) return;
             ResourceManager.Instance.AddWood(-cost);
             Instantiate(prefab, new Vector3(cx, cy, 0), Quaternion.identity);
+
+            // Day 20: Build XP to the nearest pawn (the symbolic builder).
+            var pawns = Object.FindObjectsByType<PawnSkills>(FindObjectsSortMode.None);
+            PawnSkills nearest = null;
+            float bestSq = float.MaxValue;
+            Vector3 here = new Vector3(cx, cy, 0);
+            foreach (var p in pawns)
+            {
+                if (p == null) continue;
+                float sq = (p.transform.position - here).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; nearest = p; }
+            }
+            if (nearest != null) nearest.AddXP(SkillKind.Build, 25f);
         }
     }
 }

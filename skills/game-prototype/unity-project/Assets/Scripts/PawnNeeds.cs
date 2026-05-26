@@ -30,6 +30,14 @@ namespace MelonS.GameProto
 
         public bool IsSleeping { get; private set; }
 
+        [Header("Day 20: mood break")]
+        [SerializeField] private float moodBreakThreshold = 20f;
+        [SerializeField] private float moodBreakRecoverAt = 35f;
+        [SerializeField] private float moodBreakDuration = 30f;
+        private bool isBreaking = false;
+        private float breakUntil = -10f;
+        public bool IsBreaking => isBreaking;
+
         private void Update()
         {
             float dt = Time.deltaTime;
@@ -56,6 +64,20 @@ namespace MelonS.GameProto
             food = Mathf.Max(0f, food - foodDecay * dt);
             sleep = Mathf.Max(0f, sleep - sleepDecay * dt);
             mood = Mathf.Max(0f, mood - moodDecay * dt);
+
+            // Day 20: mood break — when mood drops below threshold, pawn
+            // enters a "break" for moodBreakDuration.  Recovery only when
+            // mood climbs back to recoverAt.  PawnUtilityAI checks IsBreaking
+            // and skips picking new work tasks (pawn wanders aimlessly).
+            if (!isBreaking && mood < moodBreakThreshold)
+            {
+                isBreaking = true;
+                breakUntil = Time.time + moodBreakDuration;
+            }
+            else if (isBreaking && Time.time > breakUntil && mood > moodBreakRecoverAt)
+            {
+                isBreaking = false;
+            }
 
             // Day 11: eat from food stockpile when hungry (only while awake).
             // We poll ResourceManager.Instance every frame instead of subscribing —

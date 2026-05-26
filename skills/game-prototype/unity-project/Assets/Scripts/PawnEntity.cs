@@ -75,6 +75,9 @@ namespace MelonS.GameProto
             if (Time.time < nextAttackTime) return;
             nextAttackTime = Time.time + attackInterval;
             nearest.TakeDamage(attackDamage, gameObject);
+            // Day 20: Combat XP per attack tick
+            var skills = GetComponent<PawnSkills>();
+            if (skills != null) skills.AddXP(SkillKind.Combat, 5f);
         }
 
         private BanditEnemy FindNearestBandit()
