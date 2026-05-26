@@ -85,6 +85,10 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V36-pawnstats-so", TestV36_PawnStatsSO);
             yield return RunOne("V37-healthparts-so", TestV37_HealthPartsSO);
             yield return RunOne("V38-pawn-name-label", TestV38_PawnNameLabel);
+            yield return RunOne("V39-eat-berry-action", TestV39_EatBerryAction);
+            yield return RunOne("V40-chop-tree-action", TestV40_ChopTreeAction);
+            yield return RunOne("V41-wander-action", TestV41_WanderAction);
+            yield return RunOne("V42-services-replace", TestV42_ServicesReplace);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -275,6 +279,86 @@ namespace MelonS.GameProto.Tests
             string summary = traits.SummaryKr();
             Assert(n >= 1 && n <= 2 && !string.IsNullOrEmpty(summary),
                 $"traits 수={n} summary='{summary}'");
+        }
+
+        private IEnumerator TestV39_EatBerryAction()
+        {
+            // EatBerryAction.TryStart: needs.food < 40 + bush 있음 → true
+            var bushGo = new GameObject("TestEatBerryBush");
+            bushGo.transform.position = new Vector3(50, 0, 0);
+            bushGo.AddComponent<SpriteRenderer>();
+            bushGo.AddComponent<BoxCollider2D>();
+            bushGo.AddComponent<BerryBushEntity>();
+            yield return null;
+            var pawn = new GameObject("TestEatBerryPawn");
+            pawn.transform.position = new Vector3(48, 0, 0);
+            pawn.AddComponent<SpriteRenderer>();
+            var needs = pawn.AddComponent<PawnNeeds>();
+            var gatherer = pawn.AddComponent<PawnGatherer>();
+            var mv = pawn.AddComponent<PawnMovement>();
+            yield return null;
+            needs.food = 20f;  // < 40 threshold
+            var ctx = new MelonS.GameProto.AI.PawnContext {
+                needs = needs, gatherer = gatherer, movement = mv,
+                transform = pawn.transform
+            };
+            var action = new MelonS.GameProto.AI.EatBerryAction { foodThreshold = 40f };
+            bool started = action.TryStart(ctx);
+            Assert(started && gatherer.HasTask,
+                $"food=20 + bush exists → started={started}, gatherer.HasTask={gatherer.HasTask}");
+        }
+
+        private IEnumerator TestV40_ChopTreeAction()
+        {
+            var treeGo = new GameObject("TestChopTree");
+            treeGo.transform.position = new Vector3(55, 0, 0);
+            treeGo.AddComponent<SpriteRenderer>();
+            treeGo.AddComponent<BoxCollider2D>();
+            treeGo.AddComponent<TreeEntity>();
+            yield return null;
+            var pawn = new GameObject("TestChopPawn");
+            pawn.transform.position = new Vector3(53, 0, 0);
+            pawn.AddComponent<SpriteRenderer>();
+            var chopper = pawn.AddComponent<PawnChopper>();
+            var mv = pawn.AddComponent<PawnMovement>();
+            yield return null;
+            var ctx = new MelonS.GameProto.AI.PawnContext {
+                chopper = chopper, movement = mv, transform = pawn.transform
+            };
+            var action = new MelonS.GameProto.AI.ChopTreeAction();
+            bool started = action.TryStart(ctx);
+            Assert(started && chopper.HasTask,
+                $"started={started}, chopper.HasTask={chopper.HasTask}");
+        }
+
+        private IEnumerator TestV41_WanderAction()
+        {
+            var pawn = new GameObject("TestWander");
+            pawn.transform.position = new Vector3(60, 0, 0);
+            pawn.AddComponent<SpriteRenderer>();
+            var mv = pawn.AddComponent<PawnMovement>();
+            yield return null;
+            var ctx = new MelonS.GameProto.AI.PawnContext {
+                movement = mv, transform = pawn.transform, idleWanderRadius = 3f
+            };
+            var action = new MelonS.GameProto.AI.WanderAction();
+            bool started = action.TryStart(ctx);
+            Assert(started && mv.HasTarget,
+                $"WanderAction started={started}, movement.HasTarget={mv.HasTarget}");
+        }
+
+        private IEnumerator TestV42_ServicesReplace()
+        {
+            // Services.Register 한 인스턴스를 다른 거로 교체 가능 (테스트성 핵심)
+            var go1 = new GameObject("S1"); var s1 = go1.AddComponent<PawnSkills>();
+            var go2 = new GameObject("S2"); var s2 = go2.AddComponent<PawnSkills>();
+            Services.Register<PawnSkills>(s1);
+            bool first = Services.Get<PawnSkills>() == s1;
+            Services.Register<PawnSkills>(s2);
+            bool replaced = Services.Get<PawnSkills>() == s2;
+            Services.Unregister<PawnSkills>();
+            Assert(first && replaced, $"first match={first}, replaced={replaced}");
+            yield break;
         }
 
         private IEnumerator TestV35_NightOverlayColor()
