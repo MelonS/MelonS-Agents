@@ -95,6 +95,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V46-build-prefab-saved", TestV46_BuildPrefabSaved);
             yield return RunOne("V47-bandit-death", TestV47_BanditDeath);
             yield return RunOne("V48-crop-color-stage", TestV48_CropColorStage);
+            yield return RunOne("V49-gameclock-day-advance", TestV49_GameClockDay);
+            yield return RunOne("V50-resource-onchanged", TestV50_ResourceOnChanged);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -285,6 +287,39 @@ namespace MelonS.GameProto.Tests
             string summary = traits.SummaryKr();
             Assert(n >= 1 && n <= 2 && !string.IsNullOrEmpty(summary),
                 $"traits 수={n} summary='{summary}'");
+        }
+
+        private IEnumerator TestV49_GameClockDay()
+        {
+            // GameClock 의 GameSeconds 강제 → Day property 변화
+            if (Services.Get<GameClock>() == null)
+            {
+                var cGo = new GameObject("TestGameClockV49");
+                cGo.AddComponent<GameClock>();
+                yield return null;
+            }
+            var clock = Services.Get<GameClock>();
+            var f = typeof(GameClock).GetField("<GameSeconds>k__BackingField",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            f.SetValue(clock, 86400f * 7f);  // 7일째
+            yield return null;
+            int day = clock.Day;
+            Assert(day == 8, $"GameSeconds 86400*7 → Day {day} (8 expected: 1 base + 7)");
+        }
+
+        private IEnumerator TestV50_ResourceOnChanged()
+        {
+            // ResourceManager.OnChanged event 가 AddWood/Food/Meals 시 발화
+            var rm = Services.Get<ResourceManager>();
+            int eventCount = 0;
+            System.Action handler = () => eventCount++;
+            rm.OnChanged += handler;
+            rm.AddWood(1);
+            rm.AddFood(1);
+            rm.AddMeals(1);
+            yield return null;
+            rm.OnChanged -= handler;
+            Assert(eventCount == 3, $"OnChanged 발화 3회 expected, 실제 {eventCount}");
         }
 
         private IEnumerator TestV43_PawnTraitsHpMul()
