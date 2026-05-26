@@ -55,6 +55,10 @@ namespace MelonS.GameProto.EditorTools
             {
                 "Assets/Sprites/pawn_colonist.png",
                 "Assets/Sprites/tile_grass.png",
+                "Assets/Sprites/tile_dirt.png",
+                "Assets/Sprites/tile_water.png",
+                "Assets/Sprites/tile_rock.png",
+                "Assets/Sprites/decor_flower.png",
                 "Assets/Sprites/tree.png",
                 "Assets/Sprites/wall_wood.png",
                 "Assets/Sprites/floor_wood.png",
@@ -155,7 +159,12 @@ namespace MelonS.GameProto.EditorTools
             GameObject canvasGo = new GameObject("Canvas");
             Canvas canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            // Day 39 fix: referenceResolution 명시 — 기본 (800,600)은 1920-기반
+            //  position 계산을 깨뜨림.
+            var canvasScaler_ = canvasGo.AddComponent<CanvasScaler>();
+            canvasScaler_.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            canvasScaler_.referenceResolution = new Vector2(1920, 1080);
+            canvasScaler_.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
             // Title text
@@ -286,32 +295,86 @@ namespace MelonS.GameProto.EditorTools
             TilemapRenderer tmr = tmGo.AddComponent<TilemapRenderer>();
             tmr.sortingOrder = 0;
 
-            // Create grass tile asset
-            Tile grassTile = ScriptableObject.CreateInstance<Tile>();
-            Sprite grassSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tile_grass.png");
-            if (grassSprite == null)
-            {
-                string assetPath = "Assets/Sprites/tile_grass.png";
-                TextureImporter ti = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-                if (ti != null)
-                {
-                    ti.textureType = TextureImporterType.Sprite;
-                    ti.spritePixelsPerUnit = 16;
-                    ti.SaveAndReimport();
-                    grassSprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
-                }
-            }
-            grassTile.sprite = grassSprite;
+            // Day 39: 다중 타일 (grass + dirt + water + rock) + noise 기반 패치 배치.
+            //  기존 단조로운 20x20 grass → 림월드 같은 지형 다양성.
             Directory.CreateDirectory("Assets/Tiles");
-            AssetDatabase.CreateAsset(grassTile, "Assets/Tiles/Grass.asset");
+            Tile grassTile = LoadOrCreateTile("Assets/Sprites/tile_grass.png", "Assets/Tiles/Grass.asset");
+            Tile dirtTile  = LoadOrCreateTile("Assets/Sprites/tile_dirt.png",  "Assets/Tiles/Dirt.asset");
+            Tile waterTile = LoadOrCreateTile("Assets/Sprites/tile_water.png", "Assets/Tiles/Water.asset");
+            Tile rockTile  = LoadOrCreateTile("Assets/Sprites/tile_rock.png",  "Assets/Tiles/Rock.asset");
 
-            // Fill 20x20 grass
+            // Procedural map: 20x20 grass base, 호수 + dirt 패치 + 바위 cluster.
+            //  결정론적 (seed=12345) — Day-day 사이 같은 맵 보장.
+            System.Random rng = new System.Random(12345);
+            // 호수: 중심 (5, 5) 반경 2.5 — 잔잔한 원형 + 약간 노이즈
+            Vector2 lakeCenter = new Vector2(5.5f, 5.5f);
+            float lakeRadius = 2.6f;
+            // 바위 cluster: 좌하단 모서리쪽, 5~7개 바위
+            Vector2Int[] rockCluster = new Vector2Int[]
+            {
+                new Vector2Int(-7, -6), new Vector2Int(-6, -6), new Vector2Int(-7, -7),
+                new Vector2Int(-5, -7), new Vector2Int(-6, -8), new Vector2Int(-8, -5),
+                new Vector2Int(-4, -8),
+            };
+            // dirt 큰 패치 3개 (지나다닌 길 느낌)
+            Vector2[] dirtCenters = new[]
+            {
+                new Vector2(-3f, 2f), new Vector2(1f, -4f), new Vector2(6f, -7f),
+            };
+            float dirtRadius = 1.7f;
+
             for (int x = -10; x < 10; x++)
             {
                 for (int y = -10; y < 10; y++)
                 {
-                    tm.SetTile(new Vector3Int(x, y, 0), grassTile);
+                    Tile chosen = grassTile;
+                    Vector2 p = new Vector2(x, y);
+                    // 우선순위: rock cluster > 호수 > dirt > grass
+                    bool isRock = false;
+                    foreach (var rp in rockCluster) if (rp.x == x && rp.y == y) { isRock = true; break; }
+                    if (isRock) chosen = rockTile;
+                    else if ((p - lakeCenter).magnitude < lakeRadius + (float)(rng.NextDouble()-0.5) * 0.6f)
+                        chosen = waterTile;
+                    else
+                    {
+                        foreach (var dc in dirtCenters)
+                        {
+                            if ((p - dc).magnitude < dirtRadius + (float)(rng.NextDouble()-0.5) * 0.5f)
+                            { chosen = dirtTile; break; }
+                        }
+                    }
+                    tm.SetTile(new Vector3Int(x, y, 0), chosen);
                 }
+            }
+
+            // Day 39: 야생 꽃 데코 12개 — grass 위에 산발 배치 (interaction 없음, 시각만)
+            Sprite flowerSpr = LoadOrSetupSprite("Assets/Sprites/decor_flower.png");
+            if (flowerSpr != null)
+            {
+                System.Random fr = new System.Random(98765);
+                int placed = 0; int attempts = 0;
+                while (placed < 12 && attempts < 200)
+                {
+                    attempts++;
+                    int fx = fr.Next(-9, 10);
+                    int fy = fr.Next(-9, 10);
+                    Vector2 fp = new Vector2(fx, fy);
+                    // skip lake/rock/dirt/spawn-zone
+                    if ((fp - lakeCenter).magnitude < lakeRadius + 1f) continue;
+                    bool skip = false;
+                    foreach (var rp in rockCluster) if (rp.x == fx && rp.y == fy) { skip = true; break; }
+                    if (skip) continue;
+                    foreach (var dc in dirtCenters) if ((fp - dc).magnitude < dirtRadius) { skip = true; break; }
+                    if (skip) continue;
+                    if (Mathf.Abs(fx) < 3 && Mathf.Abs(fy) < 1) continue;  // pawn spawn 근처 회피
+                    GameObject fgo = new GameObject($"Flower_{placed}");
+                    fgo.transform.position = new Vector3(fx + 0.5f, fy + 0.5f, 0);
+                    SpriteRenderer flowerSr = fgo.AddComponent<SpriteRenderer>();
+                    flowerSr.sprite = flowerSpr;
+                    flowerSr.sortingOrder = 2;
+                    placed++;
+                }
+                Debug.Log($"[SceneSetup] 꽃 {placed}개 배치");
             }
 
             // GameManager + spawn pawn via prefab
@@ -545,7 +608,12 @@ namespace MelonS.GameProto.EditorTools
             GameObject canvasGo = new GameObject("Canvas");
             Canvas canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            // Day 39 fix: referenceResolution 명시 — 기본 (800,600)은 1920-기반
+            //  position 계산을 깨뜨림.
+            var canvasScaler_ = canvasGo.AddComponent<CanvasScaler>();
+            canvasScaler_.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            canvasScaler_.referenceResolution = new Vector2(1920, 1080);
+            canvasScaler_.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
             // ---------- TopBar (full-width strip, 32px, panel color) ----------
@@ -557,7 +625,8 @@ namespace MelonS.GameProto.EditorTools
             topRt.anchorMin = new Vector2(0f, 1f);
             topRt.anchorMax = new Vector2(1f, 1f);
             topRt.pivot = new Vector2(0.5f, 1f);
-            topRt.sizeDelta = new Vector2(0, 32);
+            // Day 39: 1920 ref 기준 topbar 48px (이전 32은 800 ref 기준이라 너무 작음)
+            topRt.sizeDelta = new Vector2(0, 48);
             topRt.anchoredPosition = new Vector2(0, 0);
 
             // TopBar LEFT — ClockUI "Day 1 - 06:00"
@@ -1010,6 +1079,61 @@ namespace MelonS.GameProto.EditorTools
                 new EditorBuildSettingsScene(GamePath, true),
             };
             Debug.Log($"[SceneSetup] BuildScenes registered: MainMenu={menuGuid} Game={gameGuid}");
+        }
+
+        // Day 39 helpers — sprite import settings + Tile asset materialization
+        private static Sprite LoadOrSetupSprite(string assetPath)
+        {
+            Sprite s = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+            if (s != null) return s;
+            TextureImporter ti = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (ti == null) { Debug.LogWarning($"[LoadOrSetupSprite] no importer for {assetPath}"); return null; }
+            ti.textureType = TextureImporterType.Sprite;
+            ti.spritePixelsPerUnit = 16;
+            ti.filterMode = FilterMode.Point;  // pixel-art crisp
+            ti.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+        }
+
+        private static Tile LoadOrCreateTile(string spritePath, string tileAssetPath)
+        {
+            // Day 39 lesson: Unity 6에서 신규 PNG → Sprite import이 SaveAndReimport
+            //  호출 후에도 LoadAssetAtPath가 즉시 null 반환할 때가 있음.
+            //  순서: ImportAsset(ForceSync) → Refresh → LoadAssetAtPath.
+            //  그래도 null이면 한 번 더 ImportAsset.
+            //  Tile.asset은 매번 새로 만들어 sprite를 보장.
+            TextureImporter ti = AssetImporter.GetAtPath(spritePath) as TextureImporter;
+            if (ti != null)
+            {
+                ti.textureType = TextureImporterType.Sprite;
+                ti.spritePixelsPerUnit = 16;
+                ti.filterMode = FilterMode.Point;
+                ti.SaveAndReimport();
+            }
+            AssetDatabase.ImportAsset(spritePath, ImportAssetOptions.ForceSynchronousImport);
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            Sprite spr = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            if (spr == null)
+            {
+                // 두 번째 시도 (race fallback).
+                AssetDatabase.ImportAsset(spritePath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+                spr = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            }
+            if (spr == null)
+            {
+                Debug.LogError($"[LoadOrCreateTile] sprite STILL null for {spritePath} — Tile will be blank");
+            }
+            // 기존 Tile.asset 삭제 후 재생성 (sprite 참조가 깨졌을 가능성).
+            if (AssetDatabase.LoadAssetAtPath<Tile>(tileAssetPath) != null)
+            {
+                AssetDatabase.DeleteAsset(tileAssetPath);
+            }
+            Tile t = ScriptableObject.CreateInstance<Tile>();
+            t.sprite = spr;
+            AssetDatabase.CreateAsset(t, tileAssetPath);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[LoadOrCreateTile] {tileAssetPath} sprite={(spr==null?"NULL":spr.name)}");
+            return t;
         }
     }
 }
