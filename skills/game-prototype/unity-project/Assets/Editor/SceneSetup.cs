@@ -69,6 +69,7 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/crop_rice.png",       // Day 57
                 "Assets/Sprites/stockpile_marker.png",// Day 57
                 "Assets/Sprites/wolf.png",            // Day 64
+                "Assets/Sprites/arrow.png",           // Day 50
             };
             foreach (var p in paths)
             {
@@ -407,8 +408,10 @@ namespace MelonS.GameProto.EditorTools
             GameObject gmGo = new GameObject("GameManager");
             GameManager gm = gmGo.AddComponent<GameManager>();
             GameObject pawnPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PawnPrefabPath);
+            Sprite arrowSpriteRef = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/arrow.png");
             SerializedObject gmSo = new SerializedObject(gm);
             gmSo.FindProperty("pawnPrefab").objectReferenceValue = pawnPrefab;
+            gmSo.FindProperty("arrowSpriteRuntime").objectReferenceValue = arrowSpriteRef;
             gmSo.ApplyModifiedProperties();
 
             // ResourceManager (singleton)

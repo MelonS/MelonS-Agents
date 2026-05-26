@@ -26,6 +26,12 @@ namespace MelonS.GameProto
         private float lastDecision = -999f;
         private float lastDraftAttackTime = -999f;
         private const float DraftAttackInterval = 0.8f;
+        // Day 50: bow ranged attack
+        [SerializeField] private Sprite arrowSprite;
+        private const float RangedAttackRange = 5.0f;
+        private const float RangedAttackInterval = 1.5f;
+        private float lastRangedAttackTime = -999f;
+        public void SetArrowSprite(Sprite s) { arrowSprite = s; }
 
         private void Awake()
         {
@@ -192,8 +198,36 @@ namespace MelonS.GameProto
             if (bandit == null && animal == null && wolf == null) return;
             Vector2 me = transform.position;
             const float attackRange = 1.2f;
+            // Day 50: 활 연구 완료 + arrow sprite 존재 시 ranged 시도 (melee보다 우선)
+            bool canShoot = arrowSprite != null
+                            && ResearchManager.Instance != null
+                            && ResearchManager.Instance.IsUnlocked("simple_bow");
             Vector2 targetPos;
             bool inRange;
+            if (canShoot)
+            {
+                Vector2 rPos = Vector2.zero; bool haveTarget = false; int rDmg = 4;
+                if (bandit != null) { rPos = bandit.transform.position; haveTarget = true; rDmg = 4; }
+                else if (wolf != null) { rPos = wolf.transform.position; haveTarget = true; rDmg = 5; }
+                else if (animal != null) { rPos = animal.transform.position; haveTarget = true; rDmg = 3; }
+                if (haveTarget)
+                {
+                    float d = Vector2.Distance(me, rPos);
+                    if (d > attackRange && d <= RangedAttackRange)
+                    {
+                        movement.ClearTarget();
+                        if (Time.time - lastRangedAttackTime > RangedAttackInterval)
+                        {
+                            lastRangedAttackTime = Time.time;
+                            Vector2 dir = (rPos - me).normalized;
+                            ArrowProjectile.SpawnArrow(new Vector3(me.x, me.y, 0f), dir, rDmg, gameObject, arrowSprite);
+                            var skills = GetComponent<PawnSkills>();
+                            if (skills != null) skills.AddXP(SkillKind.Combat, 12f);
+                        }
+                        return;
+                    }
+                }
+            }
             if (bandit != null)
             {
                 targetPos = bandit.transform.position;

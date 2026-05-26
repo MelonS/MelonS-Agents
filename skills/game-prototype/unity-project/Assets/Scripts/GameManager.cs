@@ -11,6 +11,7 @@ namespace MelonS.GameProto
     {
         [Header("Spawn settings")]
         [SerializeField] private GameObject pawnPrefab;
+        [SerializeField] private Sprite arrowSpriteRuntime;  // Day 50
         [SerializeField] private Vector2[] spawnPositions = new Vector2[]
         {
             new Vector2(-2f, 0f),
@@ -57,6 +58,10 @@ namespace MelonS.GameProto
                         System.Reflection.BindingFlags.Instance);
                     if (nameField != null) nameField.SetValue(entity, name);
                 }
+                // Day 50: arrow sprite injection — PawnUtilityAI 가 ranged
+                //  attack용으로 사용 (단 research "simple_bow" 완료 후 활성).
+                var ai = p.GetComponent<PawnUtilityAI>();
+                if (ai != null && arrowSpriteRuntime != null) ai.SetArrowSprite(arrowSpriteRuntime);
                 i++;
             }
             Debug.Log($"[GameManager] Day 4: spawned {spawnPositions.Length} colonists");
