@@ -97,6 +97,11 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V48-crop-color-stage", TestV48_CropColorStage);
             yield return RunOne("V49-gameclock-day-advance", TestV49_GameClockDay);
             yield return RunOne("V50-resource-onchanged", TestV50_ResourceOnChanged);
+            yield return RunOne("V51-ai-tier-randy-randomness", TestV51_RandyRandom);
+            yield return RunOne("V52-arrow-lifetime-despawn", TestV52_ArrowLifetime);
+            yield return RunOne("V53-pawn-skills-xp-progression", TestV53_SkillsProgression);
+            yield return RunOne("V54-night-then-day-cycle", TestV54_DayNightCycle);
+            yield return RunOne("V55-multi-trader-coexist", TestV55_MultiTrader);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -287,6 +292,89 @@ namespace MelonS.GameProto.Tests
             string summary = traits.SummaryKr();
             Assert(n >= 1 && n <= 2 && !string.IsNullOrEmpty(summary),
                 $"traits 수={n} summary='{summary}'");
+        }
+
+        private IEnumerator TestV51_RandyRandom()
+        {
+            // Randy storyteller 의 CurrentThreatTier 는 매번 0..3 random
+            var dGo = new GameObject("TestRandyDir");
+            var dir = dGo.AddComponent<AIDirector>();
+            dir.activeStoryteller = Storyteller.Randy;
+            yield return null;
+            // 20번 샘플 → 적어도 2개 다른 tier 나옴 (random 검증)
+            var seen = new System.Collections.Generic.HashSet<int>();
+            for (int i = 0; i < 20; i++)
+            {
+                seen.Add(dir.CurrentThreatTier);
+            }
+            Assert(seen.Count >= 2, $"Randy 20 sample → distinct tiers = {seen.Count}");
+        }
+
+        private IEnumerator TestV52_ArrowLifetime()
+        {
+            // Arrow 가 3 sec lifetime 후 자동 despawn
+            var arrowSprite = GetWhiteSprite();
+            int before = CountArrows();
+            ArrowProjectile.SpawnArrow(new Vector3(80, 0, 0), Vector2.up, 1, null, arrowSprite);
+            yield return null;
+            int duringFlight = CountArrows();
+            yield return new WaitForSeconds(3.5f);  // lifetime 3 + buffer
+            int after = CountArrows();
+            Assert(duringFlight > before && after <= before,
+                $"arrow flight: before={before} during={duringFlight} after={after}");
+        }
+
+        private IEnumerator TestV53_SkillsProgression()
+        {
+            // PawnSkills lvl up multiple times - XP 누적 → 여러 레벨
+            var go = new GameObject("TestSkillsProg");
+            var sk = go.AddComponent<PawnSkills>();
+            yield return null;
+            for (int i = 0; i < 10; i++) sk.AddXP(SkillKind.Chop, 200f);  // 충분한 XP
+            int lvl = sk.GetLevel(SkillKind.Chop);
+            Assert(lvl >= 4, $"Chop XP 2000 누적 → lvl {lvl} (≥4 expected, log curve)");
+        }
+
+        private IEnumerator TestV54_DayNightCycle()
+        {
+            // GameClock 다른 시간 → DayProgress 다른 값
+            if (Services.Get<GameClock>() == null)
+            {
+                var cGo = new GameObject("TestGameClockV54");
+                cGo.AddComponent<GameClock>();
+                yield return null;
+            }
+            var clock = Services.Get<GameClock>();
+            var f = typeof(GameClock).GetField("<GameSeconds>k__BackingField",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            f.SetValue(clock, 6f * 3600f);  // 06:00 새벽
+            yield return null;
+            float dawn = clock.DayProgress;
+            f.SetValue(clock, 22f * 3600f);  // 22:00 밤
+            yield return null;
+            float night = clock.DayProgress;
+            Assert(dawn < 0.3f && night > 0.85f,
+                $"dawn={dawn:F2} (<0.3), night={night:F2} (>0.85)");
+        }
+
+        private IEnumerator TestV55_MultiTrader()
+        {
+            // 2 trader 동시 spawn → 둘 다 wander 작동
+            var t1 = new GameObject("TestMultiTrader1");
+            t1.transform.position = new Vector3(85, 0, 0);
+            t1.AddComponent<SpriteRenderer>();
+            var trader1 = t1.AddComponent<TraderEntity>();
+            var t2 = new GameObject("TestMultiTrader2");
+            t2.transform.position = new Vector3(87, 0, 0);
+            t2.AddComponent<SpriteRenderer>();
+            var trader2 = t2.AddComponent<TraderEntity>();
+            yield return new WaitForSeconds(0.05f);
+            Vector3 s1 = t1.transform.position, s2 = t2.transform.position;
+            yield return new WaitForSeconds(2.0f);
+            Vector3 e1 = t1.transform.position, e2 = t2.transform.position;
+            bool both = (e1 - s1).magnitude > 0.1f && (e2 - s2).magnitude > 0.1f;
+            Assert(both && trader1.IsHere && trader2.IsHere,
+                $"trader1 moved {(e1-s1).magnitude:F2}, trader2 moved {(e2-s2).magnitude:F2}");
         }
 
         private IEnumerator TestV49_GameClockDay()
