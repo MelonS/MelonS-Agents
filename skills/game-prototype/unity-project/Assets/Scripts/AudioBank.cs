@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto.Core;
 
 namespace MelonS.GameProto
 {
@@ -13,7 +14,7 @@ namespace MelonS.GameProto
     /// </summary>
     public class AudioBank : MonoBehaviour
     {
-        public static AudioBank Instance { get; private set; }
+        public static AudioBank Instance => Services.Get<AudioBank>();  // R6
 
         public AudioClip bgm;
         public AudioClip sfxChop;
@@ -29,8 +30,9 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-            Instance = this;
+            if (Services.Has<AudioBank>() && Services.Get<AudioBank>() != this)
+            { Destroy(gameObject); return; }
+            Services.Register<AudioBank>(this);
             if (bgmSource == null) bgmSource = gameObject.AddComponent<AudioSource>();
             if (sfxSource == null) sfxSource = gameObject.AddComponent<AudioSource>();
             bgmSource.loop = true;

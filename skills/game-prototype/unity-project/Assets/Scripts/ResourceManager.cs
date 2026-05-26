@@ -1,15 +1,16 @@
 using System;
 using UnityEngine;
+using MelonS.GameProto.Core;
 
 namespace MelonS.GameProto
 {
     /// <summary>
     /// Global resource state.  Day 3 = wood only.  Day 4+ adds food.
-    /// Singleton pattern via static instance, bound on Awake.
+    /// R6: Instance property routes to Services.Get (caller compat).
     /// </summary>
     public class ResourceManager : MonoBehaviour
     {
-        public static ResourceManager Instance { get; private set; }
+        public static ResourceManager Instance => Services.Get<ResourceManager>();
 
         public int wood = 0;
         public int food = 0;
@@ -20,12 +21,10 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
+            // R6: ServiceLocator register
+            if (Services.Has<ResourceManager>() && Services.Get<ResourceManager>() != this)
+            { Destroy(gameObject); return; }
+            Services.Register<ResourceManager>(this);
         }
 
         public void AddWood(int amount)

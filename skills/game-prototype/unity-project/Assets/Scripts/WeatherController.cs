@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using MelonS.GameProto.Core;
 
 namespace MelonS.GameProto
 {
@@ -10,7 +11,7 @@ namespace MelonS.GameProto
     /// WeatherController overlays a multiplier on top.</summary>
     public class WeatherController : MonoBehaviour
     {
-        public static WeatherController Instance { get; private set; }
+        public static WeatherController Instance => Services.Get<WeatherController>();  // R6
 
         public WeatherKind Current { get; private set; } = WeatherKind.Clear;
         public float StormUntil { get; private set; } = -1f;
@@ -21,8 +22,9 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-            Instance = this;
+            if (Services.Has<WeatherController>() && Services.Get<WeatherController>() != this)
+            { Destroy(gameObject); return; }
+            Services.Register<WeatherController>(this);
         }
 
         private void OnEnable()

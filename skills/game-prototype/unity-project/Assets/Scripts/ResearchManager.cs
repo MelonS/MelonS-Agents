@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using MelonS.GameProto.Core;
 
 namespace MelonS.GameProto
 {
@@ -13,7 +14,7 @@ namespace MelonS.GameProto
     /// </summary>
     public class ResearchManager : MonoBehaviour
     {
-        public static ResearchManager Instance { get; private set; }
+        public static ResearchManager Instance => Services.Get<ResearchManager>();  // R6
 
         [System.Serializable]
         public class Tech
@@ -47,8 +48,9 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-            Instance = this;
+            if (Services.Has<ResearchManager>() && Services.Get<ResearchManager>() != this)
+            { Destroy(gameObject); return; }
+            Services.Register<ResearchManager>(this);
             BuildTree();
             // Day 75: 첫 tech 자동 활성화 — 플레이어가 N키 누르기 전에도 진행이 보임.
             if (techs.Count > 0) activeTech = techs[0];

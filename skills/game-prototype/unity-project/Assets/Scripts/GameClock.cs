@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto.Core;
 
 namespace MelonS.GameProto
 {
@@ -9,7 +10,9 @@ namespace MelonS.GameProto
     /// </summary>
     public class GameClock : MonoBehaviour
     {
-        public static GameClock Instance { get; private set; }
+        // R6: Instance property routes to Services.Get (caller 호환).
+        //  Awake 가 Services.Register 호출.
+        public static GameClock Instance => Services.Get<GameClock>();
 
         [SerializeField] private float realSecondsPerInGameDay = 240f;
 
@@ -26,8 +29,10 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-            Instance = this;
+            // R6: ServiceLocator register (singleton 중복 방지)
+            if (Services.Has<GameClock>() && Services.Get<GameClock>() != this)
+            { Destroy(gameObject); return; }
+            Services.Register<GameClock>(this);
             // Start at 06:00 (sunrise) so first thing the player sees is dawn.
             GameSeconds = 6f * 3600f;
         }
