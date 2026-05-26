@@ -68,6 +68,7 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/research_bench.png",  // Day 52
                 "Assets/Sprites/crop_rice.png",       // Day 57
                 "Assets/Sprites/stockpile_marker.png",// Day 57
+                "Assets/Sprites/wolf.png",            // Day 64
             };
             foreach (var p in paths)
             {
@@ -437,6 +438,22 @@ namespace MelonS.GameProto.EditorTools
             GameObject wcGo = new GameObject("WeatherController");
             WeatherController wc = wcGo.AddComponent<WeatherController>();
             wc.SetRefs(director);
+
+            // Day 64: Wolf predator — 2 마리, 맵 외곽에서 wander
+            Sprite wolfSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/wolf.png");
+            Vector2[] wolfPositions = new[] { new Vector2(-17f, 17f), new Vector2(17f, -17f) };
+            foreach (var wpos in wolfPositions)
+            {
+                GameObject wGo = new GameObject($"Wolf_{wpos.x}_{wpos.y}");
+                wGo.transform.position = new Vector3(wpos.x, wpos.y, 0);
+                wGo.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+                var wsr2 = wGo.AddComponent<SpriteRenderer>();
+                wsr2.sprite = wolfSpr;
+                wsr2.sortingOrder = 8;
+                var wcol = wGo.AddComponent<BoxCollider2D>();
+                wcol.size = new Vector2(1.2f, 0.8f);
+                wGo.AddComponent<WolfEnemy>();
+            }
 
             // Day 23+41: 8 wandering deer — 40x40 맵 비례로 증가
             Sprite deerSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/deer.png");

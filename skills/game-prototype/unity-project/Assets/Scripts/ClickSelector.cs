@@ -51,17 +51,28 @@ namespace MelonS.GameProto
                     {
                         BanditEnemy bandit = rhit.GetComponent<BanditEnemy>();
                         AnimalEntity animal = rhit.GetComponent<AnimalEntity>();
+                        WolfEnemy wolf = rhit.GetComponent<WolfEnemy>();
                         if (bandit != null)
                         {
                             currentSelection.DraftedAttackTarget = bandit;
                             currentSelection.DraftedHuntTarget   = null;
+                            currentSelection.DraftedWolfTarget   = null;
                             Debug.Log($"[Draft] {currentSelection.PawnName} → 적 공격");
+                            return;
+                        }
+                        if (wolf != null)
+                        {
+                            currentSelection.DraftedWolfTarget   = wolf;
+                            currentSelection.DraftedAttackTarget = null;
+                            currentSelection.DraftedHuntTarget   = null;
+                            Debug.Log($"[Draft] {currentSelection.PawnName} → 늑대 공격");
                             return;
                         }
                         if (animal != null)
                         {
                             currentSelection.DraftedHuntTarget   = animal;
                             currentSelection.DraftedAttackTarget = null;
+                            currentSelection.DraftedWolfTarget   = null;
                             Debug.Log($"[Draft] {currentSelection.PawnName} → 동물 사냥");
                             return;
                         }

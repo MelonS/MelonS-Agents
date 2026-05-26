@@ -38,6 +38,7 @@ namespace MelonS.GameProto
         public bool IsDrafted { get; private set; }
         public BanditEnemy DraftedAttackTarget { get; set; }
         public AnimalEntity DraftedHuntTarget   { get; set; }
+        public WolfEnemy DraftedWolfTarget      { get; set; }  // Day 64
 
         public void SetDrafted(bool value)
         {
@@ -47,6 +48,7 @@ namespace MelonS.GameProto
             {
                 DraftedAttackTarget = null;
                 DraftedHuntTarget = null;
+                DraftedWolfTarget = null;
             }
             ApplyVisual();
             Debug.Log($"[Pawn:{pawnName}] draft={IsDrafted}");

@@ -183,11 +183,13 @@ namespace MelonS.GameProto
             if (entity == null) return;
             BanditEnemy bandit = entity.DraftedAttackTarget;
             AnimalEntity animal = entity.DraftedHuntTarget;
+            WolfEnemy wolf = entity.DraftedWolfTarget;
             // Clean up dead/null targets
             if (bandit != null && bandit.IsDead) { entity.DraftedAttackTarget = null; bandit = null; }
-            if (animal != null && (animal == null || animal.gameObject == null))
+            if (wolf != null && wolf.IsDead) { entity.DraftedWolfTarget = null; wolf = null; }
+            if (animal != null && animal.gameObject == null)
             { entity.DraftedHuntTarget = null; animal = null; }
-            if (bandit == null && animal == null) return;
+            if (bandit == null && animal == null && wolf == null) return;
             Vector2 me = transform.position;
             const float attackRange = 1.2f;
             Vector2 targetPos;
@@ -206,6 +208,23 @@ namespace MelonS.GameProto
                         bandit.TakeDamage(2, gameObject);
                         var skills = GetComponent<PawnSkills>();
                         if (skills != null) skills.AddXP(SkillKind.Combat, 8f);
+                    }
+                }
+            }
+            else if (wolf != null)
+            {
+                targetPos = wolf.transform.position;
+                inRange = Vector2.Distance(me, targetPos) <= attackRange;
+                if (!inRange) movement.SetTarget(targetPos);
+                else
+                {
+                    movement.ClearTarget();
+                    if (Time.time - lastDraftAttackTime > DraftAttackInterval)
+                    {
+                        lastDraftAttackTime = Time.time;
+                        wolf.TakeDamage(3, gameObject);
+                        var skills = GetComponent<PawnSkills>();
+                        if (skills != null) skills.AddXP(SkillKind.Combat, 10f);
                     }
                 }
             }
