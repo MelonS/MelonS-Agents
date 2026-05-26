@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using MelonS.GameProto.Data;
 
 namespace MelonS.GameProto
 {
@@ -45,19 +46,22 @@ namespace MelonS.GameProto
         public bool IsDowned { get; private set; }
         public float TotalHpRatio { get; private set; }   // 0..1 — for floating bar
 
+        // R3: 6 body parts 데이터 외부화 - HealthPartsConfig SO 참조
+        [SerializeField] private HealthPartsConfig partsConfig;
+
         private float lastBleedTick = -10f;
 
         private void Awake()
         {
-            parts = new BodyPart[]
+            if (partsConfig == null) partsConfig = HealthPartsConfig.CreateDefault();
+            // R3: SO 의 PartDef[] 에서 BodyPart 인스턴스 생성
+            int n = partsConfig.parts.Length;
+            parts = new BodyPart[n];
+            for (int i = 0; i < n; i++)
             {
-                new BodyPart(PartId.Head,     "머리",   10, true),
-                new BodyPart(PartId.Torso,    "몸통",   30, true),
-                new BodyPart(PartId.LeftArm,  "왼팔",   18, false),
-                new BodyPart(PartId.RightArm, "오른팔", 18, false),
-                new BodyPart(PartId.LeftLeg,  "왼다리", 20, false),
-                new BodyPart(PartId.RightLeg, "오른다리", 20, false),
-            };
+                var def = partsConfig.parts[i];
+                parts[i] = new BodyPart(def.id, def.nameKr, def.maxHp, def.isVital);
+            }
             RecomputeAggregates();
         }
 
@@ -125,13 +129,22 @@ namespace MelonS.GameProto
 
         private BodyPart PickRandomPart()
         {
-            // Weighted: torso 35, legs 20+20, arms 10+10, head 5 (total 100)
-            int roll = Random.Range(0, 100);
-            if (roll < 5)   return parts[(int)PartId.Head];
-            if (roll < 40)  return parts[(int)PartId.Torso];
-            if (roll < 60)  return parts[(int)PartId.LeftLeg];
-            if (roll < 80)  return parts[(int)PartId.RightLeg];
-            if (roll < 90)  return parts[(int)PartId.LeftArm];
+            // R3: SO 의 weight 사용 - default 5/35/20/20/10/10 합 100
+            int wH = partsConfig.weightHead;
+            int wT = partsConfig.weightTorso;
+            int wLL = partsConfig.weightLeftLeg;
+            int wRL = partsConfig.weightRightLeg;
+            int wLA = partsConfig.weightLeftArm;
+            int wRA = partsConfig.weightRightArm;
+            int total = wH + wT + wLL + wRL + wLA + wRA;
+            if (total <= 0) total = 1;
+            int roll = Random.Range(0, total);
+            int acc = 0;
+            acc += wH;  if (roll < acc) return parts[(int)PartId.Head];
+            acc += wT;  if (roll < acc) return parts[(int)PartId.Torso];
+            acc += wLL; if (roll < acc) return parts[(int)PartId.LeftLeg];
+            acc += wRL; if (roll < acc) return parts[(int)PartId.RightLeg];
+            acc += wLA; if (roll < acc) return parts[(int)PartId.LeftArm];
             return parts[(int)PartId.RightArm];
         }
 
