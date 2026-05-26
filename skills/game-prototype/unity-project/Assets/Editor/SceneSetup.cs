@@ -25,6 +25,7 @@ namespace MelonS.GameProto.EditorTools
         private const string MainMenuPath = "Assets/Scenes/MainMenu.unity";
         private const string GamePath = "Assets/Scenes/Game.unity";
         private const string PawnPrefabPath = "Assets/Prefabs/Pawn.prefab";
+        private const string TreePrefabPath = "Assets/Prefabs/Tree.prefab";
 
         [MenuItem("MelonS/Generate All Scenes")]
         public static void GenerateAll()
@@ -331,6 +332,21 @@ namespace MelonS.GameProto.EditorTools
                     treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>(p);
                 }
             }
+            // Day 12: build a Tree prefab asset once, then Instantiate for the
+            // initial scatter AND hand the prefab reference to RegrowthScheduler
+            // so saplings can promote to a fresh tree.  This unifies the
+            // initial-scatter and regen code paths (Option B from the handoff).
+            GameObject treeTemplate = new GameObject("Tree");
+            SpriteRenderer templateSr = treeTemplate.AddComponent<SpriteRenderer>();
+            templateSr.sprite = treeSprite;
+            templateSr.sortingOrder = 5;
+            BoxCollider2D templateCol = treeTemplate.AddComponent<BoxCollider2D>();
+            templateCol.size = new Vector2(1.5f, 1.5f);
+            treeTemplate.AddComponent<TreeEntity>();
+            GameObject treePrefab = PrefabUtility.SaveAsPrefabAsset(treeTemplate, TreePrefabPath);
+            Object.DestroyImmediate(treeTemplate);
+            Debug.Log($"[SceneSetup] Tree prefab -> {TreePrefabPath}");
+
             Vector2[] treePositions = new[]
             {
                 new Vector2(-5,  4),
@@ -344,15 +360,18 @@ namespace MelonS.GameProto.EditorTools
             };
             foreach (var pos in treePositions)
             {
-                GameObject t = new GameObject($"Tree_{pos.x}_{pos.y}");
+                GameObject t = (GameObject)PrefabUtility.InstantiatePrefab(treePrefab);
+                t.name = $"Tree_{pos.x}_{pos.y}";
                 t.transform.position = new Vector3(pos.x, pos.y, 0);
-                SpriteRenderer tsr = t.AddComponent<SpriteRenderer>();
-                tsr.sprite = treeSprite;
-                tsr.sortingOrder = 5;
-                BoxCollider2D tcol = t.AddComponent<BoxCollider2D>();
-                tcol.size = new Vector2(1.5f, 1.5f);
-                t.AddComponent<TreeEntity>();
             }
+
+            // Day 12: RegrowthScheduler — drives bush regen + tree-to-sapling
+            // chains.  Created AFTER treePrefab exists so we can wire it.
+            // Lesson #7 firewall: callers poll Instance from Update, never
+            // subscribe in OnEnable — singleton bind order isn't guaranteed.
+            GameObject rsGo = new GameObject("RegrowthScheduler");
+            RegrowthScheduler rs = rsGo.AddComponent<RegrowthScheduler>();
+            rs.SetTreePrefab(treePrefab);
 
             // Day 11: BerryBushes — 4 placed offset from trees so AI sees
             // both gather + chop choices.  Re-use tree sprite tinted greenish

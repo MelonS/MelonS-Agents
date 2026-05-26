@@ -20,14 +20,22 @@ def launch_and_capture(
     exe_path: Path,
     screenshot_path: Path,
     delay_sec: float = 4.0,
-    overall_timeout_sec: float = 30.0,
+    overall_timeout_sec: float = None,
 ) -> tuple[bool, str]:
     """Launch .exe, wait for AutoScreenshotter to write PNG + auto-quit.
 
     Returns (success, status_text).
+
+    `overall_timeout_sec` defaults to `delay_sec + 20`, so long-delay
+    QA runs (e.g. 90s for Day 12 regen) don't get killed mid-wait.
+    Day 11 lesson: default 30s timeout truncated a 90s capture run.
     """
     if not exe_path.exists():
         return False, f"exe not found: {exe_path}"
+
+    # Auto-extend timeout to delay + 20s when caller didn't override
+    if overall_timeout_sec is None:
+        overall_timeout_sec = max(30.0, delay_sec + 20.0)
 
     # Clean stale screenshot
     if screenshot_path.exists():

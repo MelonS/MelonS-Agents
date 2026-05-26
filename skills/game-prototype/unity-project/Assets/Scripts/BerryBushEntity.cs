@@ -26,6 +26,9 @@ namespace MelonS.GameProto
         // but exposed here for designer reference / future use.
         [SerializeField] private float collectInterval = 0.8f;
 
+        [Header("Regen (Day 12)")]
+        [SerializeField] private float bushRegenSec = 60f;
+
         [Header("Spawn grace (template:spawned-entity)")]
         [SerializeField] private float spawnGraceSeconds = 0.2f;
         private float spawnTime;
@@ -59,7 +62,24 @@ namespace MelonS.GameProto
             int take = Mathf.Min(berryPerCollect, berries);
             berries -= take;
             UpdateVisual();
+            // Day 12: when the bush just transitioned to depleted, schedule
+            // a regen.  Null-guard the singleton — lesson #7 says the
+            // scheduler may not yet be bound on early frames.  If it isn't,
+            // this bush will sit depleted permanently (acceptable degradation;
+            // a scene-bound scheduler will always be ready before any pawn
+            // can drain a bush, so this is only a worst-case fallback).
+            if (IsDepleted && RegrowthScheduler.Instance != null)
+            {
+                RegrowthScheduler.Instance.EnqueueBushRegen(this, bushRegenSec);
+            }
             return take;
+        }
+
+        /// <summary>Day 12: scheduler calls this to refill the bush.</summary>
+        public void Restore()
+        {
+            berries = initialBerries;
+            UpdateVisual();
         }
 
         private void UpdateVisual()

@@ -11,6 +11,9 @@ namespace MelonS.GameProto
         [SerializeField] private float maxHp = 100f;
         [SerializeField] private int woodDrop = 5;
 
+        [Header("Regen (Day 12)")]
+        [SerializeField] private float saplingDelaySec = 120f;
+
         private float hp;
         private SpriteRenderer spriteRenderer;
 
@@ -47,6 +50,12 @@ namespace MelonS.GameProto
             if (hp <= 0f)
             {
                 ResourceManager.Instance?.AddWood(woodDrop);
+                // Day 12: enqueue a future sapling at this tree's position
+                // BEFORE Destroy(gameObject) — `transform.position` is read
+                // synchronously, the scheduler stashes a Vector3, so once
+                // Destroy fires the queued entry stands alone.  Null-guard
+                // the singleton per lesson #7 (poll, never subscribe).
+                RegrowthScheduler.Instance?.EnqueueSapling(transform.position, saplingDelaySec);
                 Destroy(gameObject);
                 return true;
             }
