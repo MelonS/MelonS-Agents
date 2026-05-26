@@ -61,6 +61,11 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V12-resource-add", TestV12_ResourceAdd);
             yield return RunOne("V13-services-locator", TestV13_ServicesLocator);
             yield return RunOne("V14-pawn-traits", TestV14_PawnTraits);
+            yield return RunOne("V15-berry-gather", TestV15_BerryGather);
+            yield return RunOne("V16-pawn-death", TestV16_PawnDeath);
+            yield return RunOne("V17-pawn-clamp", TestV17_PawnClamp);
+            yield return RunOne("V18-bandage", TestV18_Bandage);
+            yield return RunOne("V19-night-overlay", TestV19_NightOverlay);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -251,6 +256,82 @@ namespace MelonS.GameProto.Tests
             string summary = traits.SummaryKr();
             Assert(n >= 1 && n <= 2 && !string.IsNullOrEmpty(summary),
                 $"traits 수={n} summary='{summary}'");
+        }
+
+        private IEnumerator TestV15_BerryGather()
+        {
+            var bushGo = new GameObject("TestBush");
+            bushGo.transform.position = new Vector3(24, 0, 0);
+            bushGo.AddComponent<SpriteRenderer>();
+            bushGo.AddComponent<BoxCollider2D>();
+            var bush = bushGo.AddComponent<BerryBushEntity>();
+            yield return new WaitForSeconds(0.05f);
+            int start = bush.BerriesRemaining;
+            int taken = bush.TakeBerry();
+            int end = bush.BerriesRemaining;
+            Assert(taken > 0 && end < start,
+                $"berries {start}→{end}, taken={taken}");
+        }
+
+        private IEnumerator TestV16_PawnDeath()
+        {
+            var go = SpawnTestPawn(new Vector3(26, 0, 0), includeAI: false);
+            var health = go.GetComponent<PawnHealth>();
+            yield return new WaitForSeconds(0.05f);
+            // 머리(vital, 10 HP) 완전 파괴 → IsDead true
+            for (int i = 0; i < 3; i++) health.TakeDamage(99, PawnHealth.PartId.Head);
+            yield return new WaitForSeconds(0.1f);
+            Assert(health.IsDead,
+                $"IsDead={health.IsDead} (head HP=0 expected, ratio={health.TotalHpRatio:F2})");
+        }
+
+        private IEnumerator TestV17_PawnClamp()
+        {
+            // PawnMovement.IsBlockedAt 확인 + ClampToWorld 한 번 더 sanity
+            // GroundTilemap == null (test scene 에서) → false 예상
+            bool blocked = PawnMovement.IsBlockedAt(new Vector2(1000, 1000));
+            // ClampToWorld test
+            Vector2 c = PawnMovement.ClampToWorld(new Vector2(-100, 50));
+            bool clampOk = c.x >= -19.01f && c.y <= 19.01f;
+            Assert(!blocked && clampOk,
+                $"blocked(1000,1000)={blocked} (false ok if no tilemap), clamp(-100,50)→({c.x:F1},{c.y:F1})");
+            yield break;
+        }
+
+        private IEnumerator TestV18_Bandage()
+        {
+            var go = SpawnTestPawn(new Vector3(28, 0, 0), includeAI: false);
+            var health = go.GetComponent<PawnHealth>();
+            yield return new WaitForSeconds(0.05f);
+            health.TakeDamage(10, PawnHealth.PartId.LeftLeg);
+            var leg = health.GetPart(PawnHealth.PartId.LeftLeg);
+            bool startedBleeding = leg.bleedRate > 0f;
+            health.Bandage(PawnHealth.PartId.LeftLeg);
+            bool bandageStopsBleed = leg.bleedRate == 0f && leg.bandaged;
+            Assert(startedBleeding && bandageStopsBleed,
+                $"started bleed={startedBleeding}, after bandage rate={leg.bleedRate:F2} bandaged={leg.bandaged}");
+        }
+
+        private IEnumerator TestV19_NightOverlay()
+        {
+            // GameClock 보장
+            if (Services.Get<GameClock>() == null)
+            {
+                var cGo = new GameObject("TestGameClockV19");
+                cGo.AddComponent<GameClock>();
+                yield return null;
+            }
+            var clock = Services.Get<GameClock>();
+            // GameClock.GameSeconds = 22:00 (밤)
+            var f = typeof(GameClock).GetField("<GameSeconds>k__BackingField",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (f != null) f.SetValue(clock, 22f * 3600f);
+            yield return null;
+            float dayProgress = clock.DayProgress;
+            // NightOverlay 의 SampleStops(0.92) ≈ 0.62 alpha
+            // 직접 검증은 NightOverlay 가 활성 안 됨 (test scene), DayProgress 만 확인
+            bool isNightTime = dayProgress > 0.85f;
+            Assert(isNightTime, $"22:00 set → dayProgress={dayProgress:F2} (>0.85 expected)");
         }
 
         private IEnumerator TestV6_BodyParts()
