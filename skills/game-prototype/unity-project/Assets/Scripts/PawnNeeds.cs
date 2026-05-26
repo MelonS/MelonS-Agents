@@ -19,12 +19,44 @@ namespace MelonS.GameProto
         [SerializeField] private float sleepDecay = 0.3f;
         [SerializeField] private float moodDecay = 0.2f;
 
+        [Header("Day 9+: sleep regen when sleeping at night")]
+        [SerializeField] private float sleepRegenAtNight = 8f;
+
+        public bool IsSleeping { get; private set; }
+
         private void Update()
         {
             float dt = Time.deltaTime;
+            bool night = IsNightTime();
+
+            // Day 10: when sleep is low AND it's night, pawn sleeps in place.
+            // Sleep regenerates fast, food + mood still decay (mildly).
+            if (sleep < 30f && night)
+            {
+                IsSleeping = true;
+                sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * dt);
+                food  = Mathf.Max(0f, food  - foodDecay * 0.5f * dt);
+                mood  = Mathf.Max(0f, mood  - moodDecay * 0.5f * dt);
+                return;
+            }
+            // Wake up when sleep refilled past 80, even if still night
+            if (IsSleeping && sleep >= 80f) IsSleeping = false;
+            if (IsSleeping)
+            {
+                sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * dt);
+                return;
+            }
+
             food = Mathf.Max(0f, food - foodDecay * dt);
             sleep = Mathf.Max(0f, sleep - sleepDecay * dt);
             mood = Mathf.Max(0f, mood - moodDecay * dt);
+        }
+
+        private bool IsNightTime()
+        {
+            if (GameClock.Instance == null) return false;
+            int h = GameClock.Instance.Hour;
+            return h >= 22 || h < 6;
         }
 
         public float GetNormalized(NeedType n) => n switch

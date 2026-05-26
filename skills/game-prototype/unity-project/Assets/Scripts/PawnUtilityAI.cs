@@ -24,17 +24,28 @@ namespace MelonS.GameProto
 
         private PawnMovement movement;
         private PawnChopper chopper;
+        private PawnNeeds needs;
         private float lastDecision = -999f;
 
         private void Awake()
         {
             movement = GetComponent<PawnMovement>();
             chopper = GetComponent<PawnChopper>();
+            needs = GetComponent<PawnNeeds>();
         }
 
         private void Update()
         {
             if (Time.timeSinceLevelLoad - lastDecision < decisionInterval) return;
+
+            // Day 10: while sleeping, freeze — don't pick new tasks.
+            if (needs != null && needs.IsSleeping)
+            {
+                movement.ClearTarget();
+                chopper.ClearTask();
+                lastDecision = Time.timeSinceLevelLoad;
+                return;
+            }
 
             // Don't override active task
             if (movement.IsMoving || chopper.HasTask) return;
