@@ -22,6 +22,11 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from modules import asset_gen  # noqa: E402
+from modules import asset_fetch  # noqa: E402
+from modules import integrator  # noqa: E402
+from modules import qa as qa_module  # noqa: E402
+from modules import planner  # noqa: E402
+from modules import coder  # noqa: E402
 
 
 def cmd_gen_sprite(args):
@@ -36,18 +41,64 @@ def cmd_gen_sprite(args):
     )
 
 
+def cmd_fetch_assets(args):
+    if args.cmd_sub == "list":
+        for name, meta in asset_fetch.KENNEY_CATALOG.items():
+            print(f"  {name:18s} {meta['license']:6s}  {meta['use_for']}")
+        return 0
+    elif args.cmd_sub == "fetch":
+        path = asset_fetch.fetch_pack(args.pack, Path(args.out_dir))
+        print(f"ready: {path}")
+        return 0
+
+
+def cmd_plan(args):
+    p = planner.plan(args.spec)
+    planner.print_plan(p)
+    return 0
+
+
 def cmd_code(args):
-    print("[code] not yet implemented (Day 2)", file=sys.stderr)
-    return 99
+    content = coder.scaffold(args.class_name, args.template, args.description or "")
+    if args.output:
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.output).write_text(content, encoding="utf-8")
+        print(f"wrote {args.output}")
+    else:
+        print(content)
+    return 0
+
+
+def cmd_integrate(args):
+    proj = Path(args.project)
+    if args.method == "scenes":
+        return integrator.gen_scenes(proj)
+    elif args.method == "build":
+        return integrator.build_windows(proj, day=args.day)
+    elif args.method == "verify-build":
+        return integrator.build_verify(proj)
+    else:
+        rc, _ = integrator.run_unity_method(proj, args.method)
+        return rc
+
+
+def cmd_qa(args):
+    ok, msg = qa_module.verify(
+        Path(args.exe),
+        Path(args.screenshot),
+        delay_sec=args.delay,
+    )
+    print(msg)
+    return 0 if ok else 1
 
 
 def cmd_balance(args):
-    print("[balance] not yet implemented (Day 3)", file=sys.stderr)
+    print("[balance] not yet implemented (planned Day 3 of next prototype)", file=sys.stderr)
     return 99
 
 
 def cmd_audio(args):
-    print("[audio] not yet implemented (Day 6)", file=sys.stderr)
+    print("[audio] not yet implemented (planned Day 6 of next prototype)", file=sys.stderr)
     return 99
 
 
@@ -69,10 +120,42 @@ def main():
     g.set_defaults(func=cmd_gen_sprite)
 
     # code
-    c = sub.add_parser("code", help="scaffold Unity C# script")
-    c.add_argument("description", help="what the script should do")
-    c.add_argument("--output", required=True, help=".cs output path")
+    c = sub.add_parser("code", help="scaffold Unity C# script from a template")
+    c.add_argument("class_name", help="C# class name (e.g. PlayerHealth)")
+    c.add_argument("--template", default="minimal-monobehaviour",
+                   choices=list(coder.CSHARP_TEMPLATES.keys()))
+    c.add_argument("--description", default="")
+    c.add_argument("--output", help=".cs output path (omit to stdout)")
     c.set_defaults(func=cmd_code)
+
+    # plan
+    pl = sub.add_parser("plan", help="produce task list from natural-language game spec")
+    pl.add_argument("spec", help='e.g. "build a vampire survivors lite"')
+    pl.set_defaults(func=cmd_plan)
+
+    # fetch-assets
+    fa = sub.add_parser("fetch-assets", help="Kenney CC0 asset pack ops")
+    fa_sub = fa.add_subparsers(dest="cmd_sub", required=True)
+    fa_sub.add_parser("list", help="list known packs")
+    fa_fetch = fa_sub.add_parser("fetch", help="download + extract a pack")
+    fa_fetch.add_argument("pack")
+    fa_fetch.add_argument("--out-dir", default="G:/ai/assets_external")
+    fa.set_defaults(func=cmd_fetch_assets)
+
+    # integrate
+    intg = sub.add_parser("integrate", help="invoke Unity batchmode method")
+    intg.add_argument("--project", required=True, help="Unity project path")
+    intg.add_argument("--method", default="scenes",
+                      help="scenes | build | verify-build | <fully-qualified static method>")
+    intg.add_argument("--day", default="X", help="day index for MELONS_BUILD_DAY env")
+    intg.set_defaults(func=cmd_integrate)
+
+    # qa
+    qa = sub.add_parser("qa", help="run built .exe + capture screenshot + verify")
+    qa.add_argument("--exe", required=True)
+    qa.add_argument("--screenshot", required=True)
+    qa.add_argument("--delay", type=float, default=4.0)
+    qa.set_defaults(func=cmd_qa)
 
     # balance
     b = sub.add_parser("balance", help="analyze + tune game balance config")
