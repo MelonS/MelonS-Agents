@@ -38,6 +38,8 @@ from modules import qa as qa_module  # noqa: E402
 from modules import planner  # noqa: E402
 from modules import coder  # noqa: E402
 from modules import scaffold  # noqa: E402
+from modules import sprite_proc  # noqa: E402
+from modules import sfx_proc  # noqa: E402
 
 
 def cmd_gen_sprite(args):
@@ -66,6 +68,27 @@ def cmd_fetch_assets(args):
 def cmd_plan(args):
     p = planner.plan(args.spec)
     planner.print_plan(p)
+    return 0
+
+
+def cmd_gen_sprite_proc(args):
+    out = Path(args.output)
+    sprite_proc.generate(
+        shape=args.shape,
+        size=args.size,
+        color_spec=args.color,
+        out=out,
+        outline_spec=args.outline,
+        highlight=not args.no_highlight,
+        aa=not args.no_aa,
+        w=args.width,
+        h=args.height,
+    )
+    return 0
+
+
+def cmd_gen_sfx(args):
+    sfx_proc.generate(kind=args.kind, out=Path(args.output))
     return 0
 
 
@@ -141,6 +164,34 @@ def main():
                    help="prompt style preset")
     g.add_argument("--server", default="http://127.0.0.1:8188")
     g.set_defaults(func=cmd_gen_sprite)
+
+    # gen-sprite-proc (Artist agent — procedural shapes)
+    gsp = sub.add_parser("gen-sprite-proc",
+                         help="procedurally generate a 2D sprite (circle/square/outline/line)")
+    gsp.add_argument("--shape", required=True,
+                     choices=["circle", "square", "outline", "line"])
+    gsp.add_argument("--size", type=int, default=32,
+                     help="output sprite size in px (default 32)")
+    gsp.add_argument("--color", required=True,
+                     help="fill color: #ff0000 / rgb(255,0,0) / rgba(255,0,0,255)")
+    gsp.add_argument("--outline",
+                     help="outline color (default = fill darkened 45%%)")
+    gsp.add_argument("--no-highlight", action="store_true",
+                     help="circle only: skip the top-left highlight dot")
+    gsp.add_argument("--no-aa", action="store_true",
+                     help="disable antialiasing (crisp pixel-art)")
+    gsp.add_argument("--width", type=int, help="line shape only: width px")
+    gsp.add_argument("--height", type=int, help="line shape only: height px")
+    gsp.add_argument("--output", required=True, help="output .png path")
+    gsp.set_defaults(func=cmd_gen_sprite_proc)
+
+    # gen-sfx (Sound Designer agent — procedural game-feel SFX)
+    gsx = sub.add_parser("gen-sfx",
+                         help="procedurally generate a game SFX .wav (drop/click/merge/...)")
+    gsx.add_argument("--kind", required=True,
+                     choices=list(sfx_proc.KIND_REGISTRY.keys()))
+    gsx.add_argument("--output", required=True, help="output .wav path")
+    gsx.set_defaults(func=cmd_gen_sfx)
 
     # gen-editor-scaffold (Build Engineer / TA agent)
     ges = sub.add_parser("gen-editor-scaffold",
