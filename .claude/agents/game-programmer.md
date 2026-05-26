@@ -60,6 +60,15 @@ You MUST NOT write code that re-introduces any baked-in lesson:
 - **#8 justSpawned default-true** — make a serialized field default
   to "still in spawn grace" so pre-spawned scene entities stay in
   grace forever.  Use spawned-entity's Time.time-based pattern.
+- **#9 runInBackground freezes QA** (added 2026-05-27 Day 13) — any
+  long `WaitForSeconds(N)` coroutine you write must run with the
+  scaffold's AutoScreenshotter pattern, which sets
+  `Application.runInBackground = true` ONLY for CLI-driven QA paths.
+  If you write a new always-on background timer / heartbeat outside
+  AutoScreenshotter, ensure runInBackground is also set there OR
+  your timer freezes when the Unity window loses OS focus during
+  qa.py launch.  Symptom signature: short-delay qa PASS, long-delay
+  qa FAIL with no PNG.
 
 If you must violate, document why in a code comment + queue an
 OPERATOR_QUEUE entry.

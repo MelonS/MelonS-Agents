@@ -64,6 +64,20 @@ to launch the .exe themselves to find out if Day N worked.
   for PawnSim).  Bake pre-staged state into SceneSetup if needed.
 - **Skipping read-back**: a 176KB PNG could still show invisible
   world.  Always Read the PNG to verify content.
+- **Confusing time-gated systems with crashes** (Day 13 lesson):
+  if a feature only triggers at game-time N (e.g. raid at Day 3
+  06:00 = 240s real-time at 1x speed), a short-delay qa.py PASS
+  doesn't validate that feature.  Either:
+  - run `agent.py qa --delay <long enough>` (timeout auto-extends),
+  - or temporarily lower the trigger threshold for verify builds,
+  - or accept "system stability at short delay" + tell operator
+    "feature trigger requires N-second play, verify at 4x speed
+    in your own session".
+- **Short-delay PASS + long-delay FAIL pattern** (Day 13 lesson #9):
+  this signature = `Application.runInBackground = false` freezing
+  the screenshot coroutine when Unity window loses focus.  Fix is
+  in AutoScreenshotter template — verify the prototype's scene has
+  the latest template's output.  Not a gameplay bug.
 
 ## When to trigger
 
