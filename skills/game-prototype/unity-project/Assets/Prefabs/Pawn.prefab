@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 1559290421963357156}
   - component: {fileID: 9170602978316243212}
   - component: {fileID: 1499688719991667539}
+  - component: {fileID: 7370846164279481321}
   m_Layer: 0
   m_Name: Pawn
   m_TagString: Untagged
@@ -299,3 +300,20 @@ MonoBehaviour:
   idleWanderRadius: 3
   foodHungryThreshold: 40
   globalFoodLowThreshold: 10
+--- !u!114 &7370846164279481321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6165637930717161905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72c191c2a308cb148a148a862e93a495, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  yOffset: 1.05
+  barWidth: 1
+  barHeight: 0.1
+  gap: 0.04
+  sortingOrder: 30

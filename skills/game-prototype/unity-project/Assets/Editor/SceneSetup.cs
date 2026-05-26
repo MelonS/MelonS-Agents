@@ -130,6 +130,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnSkills>();    // Day 19 — XP/level per skill
             // Day 30 PawnNameLabel temporarily removed — suspected of hiding sprite (Day 34 debug)
             pawnGo.AddComponent<PawnUtilityAI>();
+            pawnGo.AddComponent<PawnFloatingBars>(); // Day 42 — HP/mood floating bars 머리 위
 
             PrefabUtility.SaveAsPrefabAsset(pawnGo, PawnPrefabPath);
             Object.DestroyImmediate(pawnGo);
