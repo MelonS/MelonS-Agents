@@ -68,9 +68,35 @@ The bulk of saved time:
 ## Roadmap (planner.py estimate: 2 days)
 
 - [x] **Day 1** — click-to-drop + physics + merge + score + game-over
-- [ ] **Day 2** — visual polish: merge particle, score juicy popup,
-  preview next-tier indicator, sounds, tighter wall thickness, dropper
-  cursor indicator at top.
+  (8 min via framework)
+- [x] **Day 2** — NEXT-tier preview UI + drop cursor indicator + score
+  popup + AudioBank (drop/merge/gameover SFX) + 4 merge-related bugs
+  caught + fixed via qa.py iteration loop (9 min wall-clock total).
+- [ ] **Day 3** (optional) — score juice particles + merge VFX +
+  start screen + high-score persistence
+
+## Day 2 — additional bugs caught + framework lessons
+
+1. **OnCollisionEnter2D miss post-grace** — fruits in `justSpawned`
+   grace at first contact never get a second Enter event once they're
+   settled.  Switched to `OnCollisionEnter2D + OnCollisionStay2D`
+   double-handler.
+2. **Pre-spawned prefab `justSpawned=true` baked in** — pre-spawned
+   editor instances inherit the field's default-true.  Set to false
+   via `SerializedObject.FindProperty("justSpawned").boolValue = false`
+   on each pre-spawn so they're immediately mergeable.
+3. **GetInstanceID() tiebreaker bug** — comparing `GetInstanceID()`
+   (component ID) vs `collision.gameObject.GetInstanceID()` (GO ID)
+   is meaningless: components are created AFTER GameObjects, so the
+   component ID is always larger.  Both sides bail.  Must compare
+   `gameObject.GetInstanceID()` on both sides.
+4. **ScoreUI Awake/OnEnable race** — UI subscribing to
+   `ScoreManager.OnScoreChanged` in OnEnable hit a race where the
+   manager's Awake hadn't yet run.  Switched to poll-via-Update.
+
+Each of those 4 issues was surfaced by `agent.py qa` reading the
+screenshot back: "Score still 0 after merge" → debug.  Without the
+auto-screenshot harness the human-loop would have been 5× slower.
 
 ## Build + run
 

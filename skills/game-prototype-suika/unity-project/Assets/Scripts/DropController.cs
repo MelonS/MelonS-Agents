@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace MelonS.GameProto
@@ -10,11 +11,28 @@ namespace MelonS.GameProto
         [SerializeField] private float dropMinX = -2.5f;
         [SerializeField] private float dropMaxX = 2.5f;
         [SerializeField] private float spawnCooldown = 0.3f;
+        [SerializeField] private NextTierPreview preview;
         private float lastSpawnTime = -10f;
-        private int nextTierIdx = 0;
+        public int NextTierIdx { get; private set; } = 0;
+        public event Action<int> OnNextTierChanged;
         private Camera cam;
 
-        private void Awake() { cam = Camera.main; }
+        private void Awake()
+        {
+            cam = Camera.main;
+            NextTierIdx = UnityEngine.Random.Range(0, Mathf.Max(1, lowTierPrefabs == null ? 1 : lowTierPrefabs.Length));
+        }
+
+        private void Start()
+        {
+            NotifyPreview();
+        }
+
+        private void NotifyPreview()
+        {
+            OnNextTierChanged?.Invoke(NextTierIdx);
+            if (preview != null) preview.SetTier(NextTierIdx);
+        }
 
         private void Update()
         {
@@ -26,11 +44,13 @@ namespace MelonS.GameProto
 
             Vector3 mw = cam.ScreenToWorldPoint(Input.mousePosition);
             float x = Mathf.Clamp(mw.x, dropMinX, dropMaxX);
-            GameObject prefab = lowTierPrefabs[nextTierIdx % lowTierPrefabs.Length];
+            GameObject prefab = lowTierPrefabs[NextTierIdx % lowTierPrefabs.Length];
             Instantiate(prefab, new Vector3(x, dropY, 0), Quaternion.identity);
+            if (AudioBank.Instance != null) AudioBank.Instance.PlayDrop();
 
             lastSpawnTime = Time.time;
-            nextTierIdx = Random.Range(0, lowTierPrefabs.Length);
+            NextTierIdx = UnityEngine.Random.Range(0, lowTierPrefabs.Length);
+            NotifyPreview();
         }
     }
 }

@@ -19,6 +19,7 @@ namespace MelonS.GameProto
                 panel.SetActive(true);
                 if (finalScore != null && ScoreManager.Instance != null)
                     finalScore.text = "Final: " + ScoreManager.Instance.Score;
+                if (AudioBank.Instance != null) AudioBank.Instance.PlayGameOver();
             }
         }
     }

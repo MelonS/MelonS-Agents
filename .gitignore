@@ -204,6 +204,15 @@ skills/game-prototype/unity-project/.vs/
 !skills/game-prototype/unity-project/Assets/**/*.wav
 !skills/game-prototype/unity-project/Assets/**/*.mp3
 !skills/game-prototype/unity-project/Assets/**/*.ogg
+# Suika prototype assets — committed game art + audio
+!skills/game-prototype-suika/unity-project/Assets/**/*.png
+!skills/game-prototype-suika/unity-project/Assets/**/*.jpg
+!skills/game-prototype-suika/unity-project/Assets/**/*.tga
+!skills/game-prototype-suika/unity-project/Assets/**/*.wav
+!skills/game-prototype-suika/unity-project/Assets/**/*.mp3
+!skills/game-prototype-suika/unity-project/Assets/**/*.ogg
+# Suika day-N verify screenshots — evidence committed at skill root
+!skills/game-prototype-suika/*.png
 
 # Daily build snapshots — too big for repo, machine-local
 skills/game-prototype/builds/

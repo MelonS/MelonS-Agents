@@ -47,8 +47,21 @@ namespace MelonS.GameProto.EditorTools
             Debug.Log("[SuikaSceneSetup] Done.");
         }
 
+        private static readonly string[] AudioPaths = new[]
+        {
+            "Assets/Audio/drop.wav",
+            "Assets/Audio/merge.wav",
+            "Assets/Audio/gameover.wav",
+        };
+
         private static void ForceImportAllSprites()
         {
+            // First: ensure audio clips are imported as AudioClip type
+            foreach (var p in AudioPaths)
+            {
+                if (File.Exists(p))
+                    AssetDatabase.ImportAsset(p, ImportAssetOptions.ForceUpdate);
+            }
             string[] all = new System.Collections.Generic.List<string>(TierSpritePaths) { WallSpritePath, LineSpritePath }.ToArray();
             foreach (var p in all)
             {
@@ -152,27 +165,67 @@ namespace MelonS.GameProto.EditorTools
                 lineGO.transform.localScale = new Vector3(7.2f, 2f, 1f);
             }
 
-            // Pre-spawn a couple fruits so first-launch screenshot proves
-            // physics + sprites work without requiring a click.
-            if (fruitPrefabs.Length >= 3)
+            // Pre-spawn a small starting state for the t=4s verify screenshot:
+            // - two tier1 cherries close together (will MERGE into tier2 by t=4)
+            // - one tier3 lemon, one tier4 melon (different tiers, won't merge)
+            // This way the screenshot shows fruit stack + a merge result + score>0
+            // (proving physics, merger, score, and audio path all work).
+            if (fruitPrefabs.Length >= 4)
             {
+                // Two tier-1 cherries stacked vertically so gravity GUARANTEES
+                // collision (top falls onto bottom -> Enter fires -> merge).
+                // Force justSpawned = false on pre-spawned so Stay merges
+                // them immediately at scene start.
                 if (fruitPrefabs[0] != null)
-                    PrefabUtility.InstantiatePrefab(fruitPrefabs[0], scene);
-                if (fruitPrefabs[1] != null)
                 {
-                    var go2 = (GameObject)PrefabUtility.InstantiatePrefab(fruitPrefabs[1], scene);
-                    if (go2 != null) go2.transform.position = new Vector3(1.2f, 2f, 0);
+                    var a = (GameObject)PrefabUtility.InstantiatePrefab(fruitPrefabs[0], scene);
+                    if (a != null) { a.transform.position = new Vector3(-1.5f, -3.5f, 0); ClearJustSpawned(a); }
+                    var b = (GameObject)PrefabUtility.InstantiatePrefab(fruitPrefabs[0], scene);
+                    if (b != null) { b.transform.position = new Vector3(-1.5f, 0.5f, 0); ClearJustSpawned(b); }
                 }
+                // Larger tier-3 lemon — stays separate (no merge)
                 if (fruitPrefabs[2] != null)
                 {
-                    var go3 = (GameObject)PrefabUtility.InstantiatePrefab(fruitPrefabs[2], scene);
-                    if (go3 != null) go3.transform.position = new Vector3(-1.4f, 0f, 0);
+                    var c = (GameObject)PrefabUtility.InstantiatePrefab(fruitPrefabs[2], scene);
+                    if (c != null) { c.transform.position = new Vector3(0.4f, -2.5f, 0); ClearJustSpawned(c); }
+                }
+                // Tier-4 melon to the right
+                if (fruitPrefabs[3] != null)
+                {
+                    var d = (GameObject)PrefabUtility.InstantiatePrefab(fruitPrefabs[3], scene);
+                    if (d != null) { d.transform.position = new Vector3(2.2f, -1f, 0); ClearJustSpawned(d); }
                 }
             }
 
             // ScoreManager (singleton)
             var scoreMgr = new GameObject("ScoreManager");
             scoreMgr.AddComponent<ScoreManager>();
+
+            // AudioBank (singleton)
+            var audioGO = new GameObject("AudioBank");
+            audioGO.AddComponent<AudioSource>();
+            var ab = audioGO.AddComponent<AudioBank>();
+            AudioClip dropClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/drop.wav");
+            AudioClip mergeClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/merge.wav");
+            AudioClip goClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/gameover.wav");
+            var soAb = new SerializedObject(ab);
+            soAb.FindProperty("dropClip").objectReferenceValue = dropClip;
+            soAb.FindProperty("mergeClip").objectReferenceValue = mergeClip;
+            soAb.FindProperty("gameOverClip").objectReferenceValue = goClip;
+            soAb.ApplyModifiedPropertiesWithoutUndo();
+
+            // Drop cursor indicator
+            Sprite cursorSpr = AssetDatabase.LoadAssetAtPath<Sprite>(WallSpritePath);
+            var cursorGO = new GameObject("DropCursor");
+            var cursorSR = cursorGO.AddComponent<SpriteRenderer>();
+            cursorSR.sprite = cursorSpr;
+            cursorSR.color = new Color(1f, 1f, 1f, 0.25f);
+            cursorSR.sortingOrder = 0;
+            cursorGO.transform.localScale = new Vector3(0.06f, 8f, 1f);
+            var dci = cursorGO.AddComponent<DropCursorIndicator>();
+            var soDci = new SerializedObject(dci);
+            soDci.FindProperty("sr").objectReferenceValue = cursorSR;
+            soDci.ApplyModifiedPropertiesWithoutUndo();
 
             // DropController
             var dropGO = new GameObject("DropController");
@@ -231,6 +284,50 @@ namespace MelonS.GameProto.EditorTools
             hrt.anchoredPosition = new Vector2(20f, -20f);
             hrt.sizeDelta = new Vector2(480f, 120f);
 
+            // Next-tier preview top-center
+            var nextPanel = new GameObject("NextPanel");
+            nextPanel.transform.SetParent(canvasGO.transform, false);
+            var nextLblGO = new GameObject("NextLabel");
+            nextLblGO.transform.SetParent(nextPanel.transform, false);
+            var nextLbl = nextLblGO.AddComponent<Text>();
+            nextLbl.text = "NEXT";
+            nextLbl.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            nextLbl.fontSize = 24;
+            nextLbl.color = new Color(1f, 1f, 1f, 0.75f);
+            nextLbl.alignment = TextAnchor.MiddleCenter;
+            var nlRT = nextLblGO.GetComponent<RectTransform>();
+            nlRT.anchorMin = new Vector2(0.5f, 1f);
+            nlRT.anchorMax = new Vector2(0.5f, 1f);
+            nlRT.pivot = new Vector2(0.5f, 1f);
+            nlRT.anchoredPosition = new Vector2(0f, -20f);
+            nlRT.sizeDelta = new Vector2(120f, 30f);
+
+            var nextImgGO = new GameObject("NextImage");
+            nextImgGO.transform.SetParent(nextPanel.transform, false);
+            var nextImg = nextImgGO.AddComponent<Image>();
+            nextImg.preserveAspect = true;
+            var niRT = nextImgGO.GetComponent<RectTransform>();
+            niRT.anchorMin = new Vector2(0.5f, 1f);
+            niRT.anchorMax = new Vector2(0.5f, 1f);
+            niRT.pivot = new Vector2(0.5f, 1f);
+            niRT.anchoredPosition = new Vector2(0f, -55f);
+            niRT.sizeDelta = new Vector2(80f, 80f);
+
+            var preview = nextPanel.AddComponent<NextTierPreview>();
+            var soPrev = new SerializedObject(preview);
+            soPrev.FindProperty("previewImage").objectReferenceValue = nextImg;
+            soPrev.FindProperty("label").objectReferenceValue = nextLbl;
+            var tierSprArr = soPrev.FindProperty("tierSprites");
+            tierSprArr.arraySize = TierSpritePaths.Length;
+            for (int i = 0; i < TierSpritePaths.Length; i++)
+                tierSprArr.GetArrayElementAtIndex(i).objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(TierSpritePaths[i]);
+            soPrev.ApplyModifiedPropertiesWithoutUndo();
+
+            // Wire DropController.preview now that NextTierPreview exists
+            var soDrop2 = new SerializedObject(drop);
+            soDrop2.FindProperty("preview").objectReferenceValue = preview;
+            soDrop2.ApplyModifiedPropertiesWithoutUndo();
+
             // GameOver panel (initially hidden)
             var goPanel = new GameObject("GameOverPanel");
             goPanel.transform.SetParent(canvasGO.transform, false);
@@ -286,6 +383,15 @@ namespace MelonS.GameProto.EditorTools
 
             EditorSceneManager.SaveScene(scene, GamePath);
             Debug.Log($"[SuikaSceneSetup] saved {GamePath}");
+        }
+
+        private static void ClearJustSpawned(GameObject go)
+        {
+            var f = go.GetComponent<Fruit>();
+            if (f == null) return;
+            var so = new SerializedObject(f);
+            var jsp = so.FindProperty("justSpawned");
+            if (jsp != null) { jsp.boolValue = false; so.ApplyModifiedPropertiesWithoutUndo(); }
         }
 
         private static void CreateWall(string name, Vector3 pos, Vector3 scale, Sprite spr)
