@@ -72,6 +72,7 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/wolf.png",            // Day 64
                 "Assets/Sprites/arrow.png",           // Day 50
                 "Assets/Sprites/trader.png",          // Stretch — Trader
+                "Assets/Sprites/lamp.png",            // Stretch — Lamp
             };
             foreach (var p in paths)
             {
@@ -410,6 +411,18 @@ namespace MelonS.GameProto.EditorTools
                     // 농경지 dirt 타일 강제 부착 (배경)
                     tm.SetTile(new Vector3Int(cx, cy, 0), dirtTile);
                 }
+            }
+
+            // Stretch: 가로등 2개 - 시작 정착지 입구 양옆 (visible 콘텐츠 다양화)
+            Sprite lampSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/lamp.png");
+            Vector2[] lampSpots = { new Vector2(-3.5f, 2.5f), new Vector2(-6.5f, 2.5f) };
+            foreach (var lp in lampSpots)
+            {
+                GameObject lampGo = new GameObject($"Lamp_{lp.x}_{lp.y}");
+                lampGo.transform.position = new Vector3(lp.x, lp.y, 0f);
+                var lsr = lampGo.AddComponent<SpriteRenderer>();
+                lsr.sprite = lampSprite;
+                lsr.sortingOrder = 6;
             }
 
             // Day 57: stockpile zone marker — 정착지 옆 3x3 visible marker 영역
