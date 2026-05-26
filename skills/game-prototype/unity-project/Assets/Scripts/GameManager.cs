@@ -27,17 +27,24 @@ namespace MelonS.GameProto
 
         private void Start()
         {
-            // R7: CLI -testmode → 자동검증 시나리오 5개 실행 후 Quit.  normal pawn spawn skip.
+            // R7: -testmode → isolated unit test 55개 (normal spawn skip)
+            // 통합 검증: -integration → normal spawn + IntegrationTestRunner 둘 다 (진짜 game state 위에서)
+            bool isolatedTest = false;
+            bool integrationTest = false;
             foreach (var arg in System.Environment.GetCommandLineArgs())
             {
-                if (arg == "-testmode")
-                {
-                    var trGo = new GameObject("__TestRunner__");
-                    trGo.AddComponent<MelonS.GameProto.Tests.TestRunner>();
-                    Debug.Log("[GameManager] -testmode → TestRunner activated");
-                    return;
-                }
+                if (arg == "-testmode") isolatedTest = true;
+                if (arg == "-integration") integrationTest = true;
             }
+            if (isolatedTest)
+            {
+                var trGo = new GameObject("__TestRunner__");
+                trGo.AddComponent<MelonS.GameProto.Tests.TestRunner>();
+                Debug.Log("[GameManager] -testmode → TestRunner (isolated) activated");
+                return;
+            }
+            // integrationTest: normal spawn 진행 후 IntegrationTestRunner 추가 (아래 spawn block 후)
+
 
             if (pawnPrefab == null)
             {
@@ -87,6 +94,13 @@ namespace MelonS.GameProto
                 i++;
             }
             Debug.Log($"[GameManager] Day 4: spawned {spawnPositions.Length} colonists");
+
+            if (integrationTest)
+            {
+                var iGo = new GameObject("__IntegrationTestRunner__");
+                iGo.AddComponent<MelonS.GameProto.Tests.IntegrationTestRunner>();
+                Debug.Log("[GameManager] -integration → IntegrationTestRunner activated");
+            }
         }
     }
 }

@@ -124,6 +124,52 @@ namespace MelonS.GameProto
             }
         }
 
+        // 통합 검증용 - 실제 mouse input 시뮬레이션 (IntegrationTestRunner 호출)
+        public void SimulateSelect(PawnEntity pawn) { Select(pawn); }
+        public void SimulateRightClick(Vector2 worldPos)
+        {
+            if (currentSelection == null) return;
+            // 동일 로직 (Update 의 우클릭 분기와 동일) - 단 mouseWorld 가 인자로 주어짐.
+            Vector3 mouseWorld = new Vector3(worldPos.x, worldPos.y, 0f);
+            Collider2D rhit = Physics2D.OverlapPoint(mouseWorld);
+            if (currentSelection.IsDrafted)
+            {
+                // drafted 분기: 적/늑대/동물 우선
+                if (rhit != null)
+                {
+                    BanditEnemy bandit = rhit.GetComponent<BanditEnemy>();
+                    WolfEnemy wolf = rhit.GetComponent<WolfEnemy>();
+                    AnimalEntity animal = rhit.GetComponent<AnimalEntity>();
+                    if (bandit != null) { currentSelection.DraftedAttackTarget = bandit; return; }
+                    if (wolf != null) { currentSelection.DraftedWolfTarget = wolf; return; }
+                    if (animal != null) { currentSelection.DraftedHuntTarget = animal; return; }
+                }
+                var mvD = currentSelection.GetComponent<PawnMovement>();
+                if (mvD != null) mvD.SetTarget(worldPos);
+                currentSelection.ManualMoveUntil = Time.time + 5f;
+                return;
+            }
+            // 비-drafted: trader/animal/crop/tree/empty
+            TraderEntity trader = (rhit != null) ? rhit.GetComponent<TraderEntity>() : null;
+            AnimalEntity animalC = (rhit != null) ? rhit.GetComponent<AnimalEntity>() : null;
+            CropEntity crop = (rhit != null) ? rhit.GetComponent<CropEntity>() : null;
+            TreeEntity tree = (rhit != null) ? rhit.GetComponent<TreeEntity>() : null;
+            if (trader != null) { trader.TryTrade(); return; }
+            if (animalC != null) { animalC.TryTame(); return; }
+            if (crop != null && crop.IsRipe) { crop.Harvest(); return; }
+            if (tree != null)
+            {
+                var chopper = currentSelection.GetComponent<PawnChopper>();
+                if (chopper != null) chopper.SetTreeTarget(tree);
+                return;
+            }
+            var chopperE = currentSelection.GetComponent<PawnChopper>();
+            if (chopperE != null) chopperE.ClearTask();
+            var mv = currentSelection.GetComponent<PawnMovement>();
+            if (mv != null) mv.SetTarget(worldPos);
+            currentSelection.ManualMoveUntil = Time.time + 5f;
+        }
+
         private void Select(PawnEntity pawn)
         {
             if (currentSelection == pawn) return;
