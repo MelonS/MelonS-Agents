@@ -59,6 +59,7 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/wall_wood.png",
                 "Assets/Sprites/floor_wood.png",
                 "Assets/Sprites/door_wood.png",
+                "Assets/Sprites/deer.png",
             };
             foreach (var p in paths)
             {
@@ -321,6 +322,34 @@ namespace MelonS.GameProto.EditorTools
             // AI Director (Day 5)
             GameObject dirGo = new GameObject("AIDirector");
             AIDirector director = dirGo.AddComponent<AIDirector>();
+
+            // Day 22: WeatherController — subscribes to AIDirector storm event
+            GameObject wcGo = new GameObject("WeatherController");
+            WeatherController wc = wcGo.AddComponent<WeatherController>();
+            wc.SetRefs(director);
+
+            // Day 23: 5 wandering deer (peaceful food source)
+            Sprite deerSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/deer.png");
+            Vector2[] deerPositions = new[]
+            {
+                new Vector2(-8f,  3f),
+                new Vector2( 8f,  5f),
+                new Vector2( 9f, -4f),
+                new Vector2(-9f, -5f),
+                new Vector2( 0f,  8f),
+            };
+            foreach (var dpos in deerPositions)
+            {
+                GameObject dGo = new GameObject($"Deer_{dpos.x}_{dpos.y}");
+                dGo.transform.position = new Vector3(dpos.x, dpos.y, 0);
+                var dsr2 = dGo.AddComponent<SpriteRenderer>();
+                dsr2.sprite = deerSpr;
+                dsr2.sortingOrder = 8;
+                dGo.AddComponent<Rigidbody2D>();
+                var dcol = dGo.AddComponent<CircleCollider2D>();
+                dcol.radius = 0.4f;
+                dGo.AddComponent<AnimalEntity>();
+            }
 
             // Trees — sprinkle 8 around the map (Day 3)
             Sprite treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree.png");
