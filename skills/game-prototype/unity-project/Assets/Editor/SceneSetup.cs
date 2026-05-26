@@ -513,10 +513,13 @@ namespace MelonS.GameProto.EditorTools
             Color colAccentWarn  = new Color(0.769f, 0.353f, 0.227f, 1f);
             Color colTextPrimary = new Color(0.910f, 0.875f, 0.816f, 1f);
             Color colTextMuted   = new Color(0.541f, 0.506f, 0.439f, 1f);
-            // Korean font: dynamic OS font (Malgun Gothic on Windows).
-            // Without this, LegacyRuntime.ttf has no Hangul glyphs and
-            // Korean text renders as blank squares.
-            Font  uiFont         = Font.CreateDynamicFontFromOSFont("Malgun Gothic", 22)
+            // Korean font: try multiple OS fonts.  Malgun Gothic on Win10/11
+            // is the safe default.  NanumGothic for Win7 installs that
+            // grabbed the Nanum package separately.  Gulim is the legacy
+            // shipped Korean font.  Final fallback = LegacyRuntime.ttf
+            // (no Hangul → squares, but at least loads).
+            Font  uiFont         = Font.CreateDynamicFontFromOSFont(
+                new[] { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" }, 22)
                                   ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             // Canvas (EventSystem already created earlier)
