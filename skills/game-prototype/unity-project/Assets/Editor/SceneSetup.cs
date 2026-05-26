@@ -67,6 +67,8 @@ namespace MelonS.GameProto.EditorTools
             BoxCollider2D col = pawnGo.AddComponent<BoxCollider2D>();
             col.size = new Vector2(2f, 2f);
             pawnGo.AddComponent<PawnEntity>();
+            pawnGo.AddComponent<PawnMovement>();
+            pawnGo.AddComponent<PawnNeeds>();
 
             PrefabUtility.SaveAsPrefabAsset(pawnGo, PawnPrefabPath);
             Object.DestroyImmediate(pawnGo);
@@ -243,10 +245,134 @@ namespace MelonS.GameProto.EditorTools
 
             // ClickSelector
             GameObject csGo = new GameObject("ClickSelector");
-            csGo.AddComponent<ClickSelector>();
+            ClickSelector cs = csGo.AddComponent<ClickSelector>();
+
+            // Canvas + PawnInfoPanel (Day 2) — EventSystem already created earlier
+            GameObject canvasGo = new GameObject("Canvas");
+            Canvas canvas = canvasGo.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvasGo.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            canvasGo.AddComponent<GraphicRaycaster>();
+
+            // Panel (bottom-left)
+            GameObject panelGo = new GameObject("PawnInfoPanel");
+            panelGo.transform.SetParent(canvasGo.transform, false);
+            Image panelBg = panelGo.AddComponent<Image>();
+            panelBg.color = new Color(0f, 0f, 0f, 0.55f);
+            RectTransform panelRt = panelGo.GetComponent<RectTransform>();
+            panelRt.anchorMin = new Vector2(0f, 0f);
+            panelRt.anchorMax = new Vector2(0f, 0f);
+            panelRt.pivot = new Vector2(0f, 0f);
+            panelRt.sizeDelta = new Vector2(280, 200);
+            panelRt.anchoredPosition = new Vector2(20, 20);
+
+            // Title text
+            GameObject titleGo = new GameObject("Title");
+            titleGo.transform.SetParent(panelGo.transform, false);
+            Text title = titleGo.AddComponent<Text>();
+            title.text = "Colonist";
+            title.alignment = TextAnchor.UpperLeft;
+            title.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            title.fontSize = 20;
+            title.color = new Color(0.95f, 0.95f, 0.9f, 1f);
+            RectTransform titleRt = titleGo.GetComponent<RectTransform>();
+            titleRt.anchorMin = new Vector2(0f, 1f);
+            titleRt.anchorMax = new Vector2(1f, 1f);
+            titleRt.pivot = new Vector2(0f, 1f);
+            titleRt.sizeDelta = new Vector2(-20, 30);
+            titleRt.anchoredPosition = new Vector2(10, -10);
+
+            // Empty-state text (when no selection)
+            GameObject emptyGo = new GameObject("EmptyText");
+            emptyGo.transform.SetParent(panelGo.transform, false);
+            Text empty = emptyGo.AddComponent<Text>();
+            empty.text = "(click pawn to select)";
+            empty.alignment = TextAnchor.MiddleCenter;
+            empty.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            empty.fontSize = 14;
+            empty.color = new Color(0.7f, 0.7f, 0.7f, 1f);
+            RectTransform emptyRt = emptyGo.GetComponent<RectTransform>();
+            emptyRt.anchorMin = Vector2.zero;
+            emptyRt.anchorMax = Vector2.one;
+            emptyRt.sizeDelta = Vector2.zero;
+            emptyRt.anchoredPosition = Vector2.zero;
+
+            // 3 need bars
+            Image foodBar  = CreateNeedBar(panelGo.transform, "Food",  new Vector2(10, 130), new Color(0.4f, 0.8f, 0.4f));
+            Image sleepBar = CreateNeedBar(panelGo.transform, "Sleep", new Vector2(10, 90),  new Color(0.4f, 0.6f, 0.9f));
+            Image moodBar  = CreateNeedBar(panelGo.transform, "Mood",  new Vector2(10, 50),  new Color(0.9f, 0.7f, 0.4f));
+
+            // Controller
+            PawnInfoPanel panel = panelGo.AddComponent<PawnInfoPanel>();
+            SerializedObject pso = new SerializedObject(panel);
+            pso.FindProperty("selector").objectReferenceValue = cs;
+            pso.FindProperty("titleText").objectReferenceValue = title;
+            pso.FindProperty("foodBar").objectReferenceValue = foodBar;
+            pso.FindProperty("sleepBar").objectReferenceValue = sleepBar;
+            pso.FindProperty("moodBar").objectReferenceValue = moodBar;
+            pso.FindProperty("emptyText").objectReferenceValue = empty;
+            pso.ApplyModifiedProperties();
 
             EditorSceneManager.SaveScene(scene, GamePath);
             Debug.Log($"[SceneSetup] Game -> {GamePath}");
+        }
+
+        private static Image CreateNeedBar(Transform parent, string label, Vector2 pos, Color fillColor)
+        {
+            // Row container
+            GameObject row = new GameObject(label + "Row");
+            row.transform.SetParent(parent, false);
+            RectTransform rt = row.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot = new Vector2(0f, 0f);
+            rt.sizeDelta = new Vector2(260, 30);
+            rt.anchoredPosition = pos;
+
+            // Label
+            GameObject lblGo = new GameObject("Label");
+            lblGo.transform.SetParent(row.transform, false);
+            Text lbl = lblGo.AddComponent<Text>();
+            lbl.text = label;
+            lbl.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            lbl.fontSize = 14;
+            lbl.color = Color.white;
+            RectTransform lblRt = lblGo.GetComponent<RectTransform>();
+            lblRt.anchorMin = new Vector2(0f, 0f);
+            lblRt.anchorMax = new Vector2(0f, 1f);
+            lblRt.pivot = new Vector2(0f, 0.5f);
+            lblRt.sizeDelta = new Vector2(60, 0);
+            lblRt.anchoredPosition = new Vector2(0, 0);
+
+            // Bar bg
+            GameObject bgGo = new GameObject("Bg");
+            bgGo.transform.SetParent(row.transform, false);
+            Image bg = bgGo.AddComponent<Image>();
+            bg.color = new Color(0.1f, 0.1f, 0.1f, 0.7f);
+            RectTransform bgRt = bgGo.GetComponent<RectTransform>();
+            bgRt.anchorMin = new Vector2(0f, 0f);
+            bgRt.anchorMax = new Vector2(1f, 1f);
+            bgRt.pivot = new Vector2(0f, 0.5f);
+            bgRt.sizeDelta = new Vector2(-65, -5);
+            bgRt.anchoredPosition = new Vector2(65, 0);
+
+            // Fill
+            GameObject fillGo = new GameObject("Fill");
+            fillGo.transform.SetParent(bgGo.transform, false);
+            Image fill = fillGo.AddComponent<Image>();
+            fill.color = fillColor;
+            fill.type = Image.Type.Filled;
+            fill.fillMethod = Image.FillMethod.Horizontal;
+            fill.fillAmount = 0.8f;
+            // Use a built-in white sprite so Image actually fills
+            fill.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
+            RectTransform fillRt = fillGo.GetComponent<RectTransform>();
+            fillRt.anchorMin = Vector2.zero;
+            fillRt.anchorMax = Vector2.one;
+            fillRt.sizeDelta = Vector2.zero;
+            fillRt.anchoredPosition = Vector2.zero;
+
+            return fill;
         }
 
         private static void RegisterBuildScenes()

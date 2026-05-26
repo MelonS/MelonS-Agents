@@ -12,13 +12,15 @@ namespace MelonS.GameProto.EditorTools
     /// </summary>
     public static class BuildScript
     {
-        [MenuItem("MelonS/Build Windows (Day 1)")]
+        [MenuItem("MelonS/Build Windows (current day)")]
         public static void BuildWindows()
         {
             string buildDir = "../builds";  // sibling to unity-project
             Directory.CreateDirectory(buildDir);
             string ts = System.DateTime.Now.ToString("yyyy-MM-dd");
-            string buildName = $"day-1-{ts}";
+            // Day index derived from env var, fallback to 'X'
+            string day = System.Environment.GetEnvironmentVariable("MELONS_BUILD_DAY") ?? "X";
+            string buildName = $"day-{day}-{ts}";
             string outDir = Path.Combine(buildDir, buildName);
             Directory.CreateDirectory(outDir);
             string outExe = Path.Combine(outDir, "PawnSim.exe");

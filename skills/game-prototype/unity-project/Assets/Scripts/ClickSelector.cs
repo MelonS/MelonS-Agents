@@ -12,6 +12,7 @@ namespace MelonS.GameProto
         [SerializeField] private Camera mainCamera;
 
         private PawnEntity currentSelection;
+        public PawnEntity CurrentSelection => currentSelection;
 
         private void Awake()
         {
@@ -20,21 +21,22 @@ namespace MelonS.GameProto
 
         private void Update()
         {
-            if (!Input.GetMouseButtonDown(0)) return;
-
-            Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
-            mouseWorld.z = 0f;
-
-            Collider2D hit = Physics2D.OverlapPoint(mouseWorld);
-            PawnEntity pawn = (hit != null) ? hit.GetComponent<PawnEntity>() : null;
-
-            if (pawn != null)
+            // Left click = select
+            if (Input.GetMouseButtonDown(0))
             {
-                Select(pawn);
+                Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                mouseWorld.z = 0f;
+                Collider2D hit = Physics2D.OverlapPoint(mouseWorld);
+                PawnEntity pawn = (hit != null) ? hit.GetComponent<PawnEntity>() : null;
+                if (pawn != null) Select(pawn); else ClearSelection();
             }
-            else
+
+            // Right click = move command for selected pawn (Day 2)
+            if (Input.GetMouseButtonDown(1) && currentSelection != null)
             {
-                ClearSelection();
+                Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                PawnMovement mv = currentSelection.GetComponent<PawnMovement>();
+                if (mv != null) mv.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
             }
         }
 

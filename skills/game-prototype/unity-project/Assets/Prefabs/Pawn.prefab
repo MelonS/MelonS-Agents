@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 138713815239893335}
   - component: {fileID: 7038242788195858633}
   - component: {fileID: 8515993015214911372}
+  - component: {fileID: 209550779354629814}
+  - component: {fileID: 3384598379736067457}
   m_Layer: 0
   m_Name: Pawn
   m_TagString: Untagged
@@ -150,3 +152,35 @@ MonoBehaviour:
   pawnName: Colonist
   selectedOutlineColor: {r: 1, g: 0.9, b: 0.3, a: 1}
   unselectedColor: {r: 1, g: 1, b: 1, a: 1}
+--- !u!114 &209550779354629814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6165637930717161905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d395cebb942b7934ebd00c2c9fea4968, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 3
+  arriveDistance: 0.05
+--- !u!114 &3384598379736067457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6165637930717161905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4474e4627dff5a469bc9b3f9969477f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  food: 80
+  sleep: 80
+  mood: 80
+  foodDecay: 0.5
+  sleepDecay: 0.3
+  moodDecay: 0.2
