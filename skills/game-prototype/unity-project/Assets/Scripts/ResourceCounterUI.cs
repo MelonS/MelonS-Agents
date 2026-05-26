@@ -3,41 +3,21 @@ using UnityEngine.UI;
 
 namespace MelonS.GameProto
 {
-    /// <summary>
-    /// Top-right resource counter.  Day 3 shows wood + food.
-    /// </summary>
+    /// <summary>Top-right resource counter UI.  Day 29 adds meals.</summary>
     public class ResourceCounterUI : MonoBehaviour
     {
         [SerializeField] private Text woodText;
         [SerializeField] private Text foodText;
-
-        private void OnEnable()
-        {
-            Refresh();
-            if (ResourceManager.Instance != null)
-                ResourceManager.Instance.OnChanged += Refresh;
-        }
-
-        private void OnDisable()
-        {
-            if (ResourceManager.Instance != null)
-                ResourceManager.Instance.OnChanged -= Refresh;
-        }
+        [SerializeField] private Text mealsText;
+        private int lastWood = -1, lastFood = -1, lastMeals = -1;
 
         private void Update()
         {
-            // Defensive: subscribe late if RM was created after this
-            if (ResourceManager.Instance != null && woodText != null)
-            {
-                Refresh();
-            }
-        }
-
-        private void Refresh()
-        {
             if (ResourceManager.Instance == null) return;
-            if (woodText != null) woodText.text = $"목재: {ResourceManager.Instance.wood}";
-            if (foodText != null) foodText.text = $"식량: {ResourceManager.Instance.food}";
+            var rm = ResourceManager.Instance;
+            if (rm.wood != lastWood)   { if (woodText  != null) woodText.text  = $"목재: {rm.wood}";   lastWood = rm.wood; }
+            if (rm.food != lastFood)   { if (foodText  != null) foodText.text  = $"식량: {rm.food}";   lastFood = rm.food; }
+            if (rm.meals != lastMeals) { if (mealsText != null) mealsText.text = $"식사: {rm.meals}";  lastMeals = rm.meals; }
         }
     }
 }

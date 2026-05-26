@@ -623,6 +623,22 @@ namespace MelonS.GameProto.EditorTools
             foodTextRt.sizeDelta = new Vector2(160, 0);
             foodTextRt.anchoredPosition = new Vector2(-16, 0);
 
+            // Day 29: meals counter (식사)
+            GameObject mealsTextGo = new GameObject("MealsText");
+            mealsTextGo.transform.SetParent(topBarGo.transform, false);
+            Text mealsText = mealsTextGo.AddComponent<Text>();
+            mealsText.text = "식사: 0";
+            mealsText.font = uiFont;
+            mealsText.fontSize = 22;
+            mealsText.color = new Color(0.93f, 0.81f, 0.45f, 1f);  // amber/wheat
+            mealsText.alignment = TextAnchor.MiddleLeft;
+            RectTransform mealsRt = mealsTextGo.GetComponent<RectTransform>();
+            mealsRt.anchorMin = new Vector2(1f, 0f);
+            mealsRt.anchorMax = new Vector2(1f, 1f);
+            mealsRt.pivot = new Vector2(1f, 0.5f);
+            mealsRt.sizeDelta = new Vector2(120, 0);
+            mealsRt.anchoredPosition = new Vector2(-176, 0);
+
             // ResourceCounterUI host (no longer has its own panel image; just script)
             GameObject resHostGo = new GameObject("ResourceCounter");
             resHostGo.transform.SetParent(canvasGo.transform, false);
@@ -631,6 +647,7 @@ namespace MelonS.GameProto.EditorTools
             SerializedObject rcSo = new SerializedObject(resCounter);
             rcSo.FindProperty("woodText").objectReferenceValue = woodText;
             rcSo.FindProperty("foodText").objectReferenceValue = foodText;
+            rcSo.FindProperty("mealsText").objectReferenceValue = mealsText;
             rcSo.ApplyModifiedProperties();
 
             // ---------- EventLog (right side, 240x160, below topbar) ----------
