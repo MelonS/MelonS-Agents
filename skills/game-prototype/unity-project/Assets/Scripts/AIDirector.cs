@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -138,9 +138,9 @@ namespace MelonS.GameProto
                 var ev = new GameEvent
                 {
                     id = "bandit_raid",
-                    title = "Bandit approaches!",
-                    description = "An armed bandit has appeared at the edge of the map.",
-                    flavor = "Their blade catches the dawn light.",
+                    title = "약탈자 접근!",
+                    description = "무장한 약탈자가 지도 외곽에 나타났다.",
+                    flavor = "칼날에 새벽빛이 비친다.",
                 };
                 lastEvent = ev;
                 OnEventFired?.Invoke(ev);
@@ -190,51 +190,51 @@ namespace MelonS.GameProto
             // variants stored in Resources/events.json).
             pool.Add(new GameEvent {
                 id = "wanderer_arrival",
-                title = "A wanderer arrives",
-                description = "A traveler appears at the edge of the camp, looking for shelter.",
-                flavor = "Their boots are caked with mud from the long road.",
+                title = "방랑자 도착",
+                description = "한 여행자가 야영지 외곽에 나타나 머물 곳을 찾고 있다.",
+                flavor = "장화에 묻은 진흙이 그가 걸어온 길의 길이를 말해준다.",
             });
             pool.Add(new GameEvent {
                 id = "storm_warning",
-                title = "Storm warning",
-                description = "Heavy clouds gather to the north. A storm will hit within the hour.",
-                flavor = "The wind already smells of rain.",
+                title = "폭풍 경보",
+                description = "북쪽에서 짙은 먹구름이 몰려온다. 한 시간 안에 폭풍이 닥칠 것이다.",
+                flavor = "바람에서 벌써 빗냄새가 난다.",
             });
             pool.Add(new GameEvent {
                 id = "lucky_find",
-                title = "Lucky find",
-                description = "One of the colonists found a small cache of supplies in the woods.",
-                flavor = "Tools, neatly wrapped in oiled cloth.",
+                title = "행운의 발견",
+                description = "콜로니스트 한 명이 숲에서 작은 보급품 더미를 발견했다.",
+                flavor = "기름천에 잘 싸인 도구들.",
             });
             pool.Add(new GameEvent {
                 id = "morale_dip",
-                title = "Morale dip",
-                description = "The colonists seem listless today. Something is on their minds.",
-                flavor = "Conversation at supper was sparse and short.",
+                title = "사기 저하",
+                description = "오늘 콜로니스트들이 어딘가 무기력해 보인다.",
+                flavor = "저녁 식탁의 대화가 짧고 띄엄띄엄했다.",
             });
             pool.Add(new GameEvent {
                 id = "bird_omen",
-                title = "Birds gather",
-                description = "Crows have been gathering in the dead oak since dawn.",
-                flavor = "Old folk would say it means change is coming.",
+                title = "새들의 징조",
+                description = "새벽부터 까마귀들이 죽은 참나무 위로 모여들고 있다.",
+                flavor = "노인들 말로는 무언가 변화의 조짐이라고 한다.",
             });
             pool.Add(new GameEvent {
                 id = "good_harvest",
-                title = "Good harvest",
-                description = "The wood chopped this morning split cleaner than usual.",
-                flavor = "Dry, dense, and honest grain.",
+                title = "좋은 수확",
+                description = "오늘 아침 베어낸 나무가 평소보다 깔끔하게 쪼개졌다.",
+                flavor = "건조하고 단단한, 정직한 나뭇결.",
             });
             pool.Add(new GameEvent {
                 id = "fox_sighting",
-                title = "Fox at the treeline",
-                description = "A red fox watches the camp from the treeline, unafraid.",
-                flavor = "It does not run when noticed.",
+                title = "여우 출현",
+                description = "붉은 여우가 숲 가장자리에서 야영지를 지켜본다. 두려워하지 않는다.",
+                flavor = "발견되어도 도망가지 않는다.",
             });
             pool.Add(new GameEvent {
                 id = "quiet_evening",
-                title = "Quiet evening",
-                description = "The day winds down with no incident, only the crackle of the fire.",
-                flavor = "These are the days that pass without history.",
+                title = "조용한 저녁",
+                description = "별일 없이 하루가 저문다. 모닥불 타는 소리만 들린다.",
+                flavor = "역사에 남지 않을, 그저 흘러가는 날들.",
             });
         }
     }

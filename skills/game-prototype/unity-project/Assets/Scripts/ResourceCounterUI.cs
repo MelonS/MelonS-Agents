@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace MelonS.GameProto
@@ -36,8 +36,8 @@ namespace MelonS.GameProto
         private void Refresh()
         {
             if (ResourceManager.Instance == null) return;
-            if (woodText != null) woodText.text = $"Wood: {ResourceManager.Instance.wood}";
-            if (foodText != null) foodText.text = $"Food: {ResourceManager.Instance.food}";
+            if (woodText != null) woodText.text = $"목재: {ResourceManager.Instance.wood}";
+            if (foodText != null) foodText.text = $"식량: {ResourceManager.Instance.food}";
         }
     }
 }

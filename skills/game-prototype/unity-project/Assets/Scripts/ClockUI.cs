@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace MelonS.GameProto
@@ -15,7 +15,7 @@ namespace MelonS.GameProto
         private void Awake()
         {
             txt = GetComponent<Text>();
-            if (txt != null) txt.text = "Day 1 - 06:00";
+            if (txt != null) txt.text = "1일차 - 06:00";
         }
 
         private void Update()
@@ -26,7 +26,7 @@ namespace MelonS.GameProto
             int m = GameClock.Instance.Minute;
             if (d != lastShownDay || h != lastShownHour || m != lastShownMinute)
             {
-                txt.text = $"Day {d} - {h:00}:{m:00}";
+                txt.text = $"{d}일차 - {h:00}:{m:00}";
                 lastShownDay = d; lastShownHour = h; lastShownMinute = m;
             }
         }

@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -427,7 +427,11 @@ namespace MelonS.GameProto.EditorTools
             Color colAccentWarn  = new Color(0.769f, 0.353f, 0.227f, 1f);
             Color colTextPrimary = new Color(0.910f, 0.875f, 0.816f, 1f);
             Color colTextMuted   = new Color(0.541f, 0.506f, 0.439f, 1f);
-            Font  uiFont         = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            // Korean font: dynamic OS font (Malgun Gothic on Windows).
+            // Without this, LegacyRuntime.ttf has no Hangul glyphs and
+            // Korean text renders as blank squares.
+            Font  uiFont         = Font.CreateDynamicFontFromOSFont("Malgun Gothic", 22)
+                                  ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             // Canvas (EventSystem already created earlier)
             GameObject canvasGo = new GameObject("Canvas");
@@ -486,7 +490,7 @@ namespace MelonS.GameProto.EditorTools
             GameObject woodGo = new GameObject("WoodText");
             woodGo.transform.SetParent(topBarGo.transform, false);
             Text woodText = woodGo.AddComponent<Text>();
-            woodText.text = "Wood: 0";
+            woodText.text = "목재: 0";
             woodText.font = uiFont;
             woodText.fontSize = 22;
             woodText.color = colAccentWood;
@@ -515,24 +519,10 @@ namespace MelonS.GameProto.EditorTools
 
             GameObject foodTextGo = new GameObject("FoodText");
             foodTextGo.transform.SetParent(topBarGo.transform, false);
-            // " · " separator between Wood and Food in the topbar
-            GameObject sepGo = new GameObject("WoodFoodSep");
-            sepGo.transform.SetParent(topBarGo.transform, false);
-            Text sepText = sepGo.AddComponent<Text>();
-            sepText.text = "·";
-            sepText.font = uiFont;
-            sepText.fontSize = 22;
-            sepText.color = colTextMuted;
-            sepText.alignment = TextAnchor.MiddleCenter;
-            RectTransform sepRt = sepGo.GetComponent<RectTransform>();
-            sepRt.anchorMin = new Vector2(1f, 0f);
-            sepRt.anchorMax = new Vector2(1f, 1f);
-            sepRt.pivot = new Vector2(1f, 0.5f);
-            sepRt.sizeDelta = new Vector2(16, 0);
-            sepRt.anchoredPosition = new Vector2(-176, 0);
+            // (separator above already created by build-engineer Day 14 pass)
 
             Text foodText = foodTextGo.AddComponent<Text>();
-            foodText.text = "Food: 0";
+            foodText.text = "식량: 0";
             foodText.font = uiFont;
             foodText.fontSize = 22;
             foodText.color = colAccentFood;
@@ -622,16 +612,16 @@ namespace MelonS.GameProto.EditorTools
             titleRt.anchoredPosition = new Vector2(10, -8);
 
             // 3 need bars — accent palette
-            Image foodBar  = CreateNeedBar(panelGo.transform, "Food",  new Vector2(10, 105), colAccentFood, uiFont, colTextPrimary);
-            Image sleepBar = CreateNeedBar(panelGo.transform, "Sleep", new Vector2(10, 65),  new Color(0.4f, 0.6f, 0.9f, 1f), uiFont, colTextPrimary);
-            Image moodBar  = CreateNeedBar(panelGo.transform, "Mood",  new Vector2(10, 25),  colAccentWood, uiFont, colTextPrimary);
+            Image foodBar  = CreateNeedBar(panelGo.transform, "식량",  new Vector2(10, 105), colAccentFood, uiFont, colTextPrimary);
+            Image sleepBar = CreateNeedBar(panelGo.transform, "수면", new Vector2(10, 65),  new Color(0.4f, 0.6f, 0.9f, 1f), uiFont, colTextPrimary);
+            Image moodBar  = CreateNeedBar(panelGo.transform, "기분",  new Vector2(10, 25),  colAccentWood, uiFont, colTextPrimary);
 
             // Empty-state hint — replaces the panel content when no pawn is selected.
             // PawnInfoPanel toggles emptyText visibility based on selection.
             GameObject emptyGo = new GameObject("EmptyText");
             emptyGo.transform.SetParent(panelGo.transform, false);
             Text empty = emptyGo.AddComponent<Text>();
-            empty.text = "Click a pawn";
+            empty.text = "콜로니스트를 클릭하세요";
             empty.alignment = TextAnchor.MiddleCenter;
             empty.font = uiFont;
             empty.fontSize = 12;
@@ -669,7 +659,7 @@ namespace MelonS.GameProto.EditorTools
             GameObject hintGo = new GameObject("ControlHint");
             hintGo.transform.SetParent(canvasGo.transform, false);
             Text hintText = hintGo.AddComponent<Text>();
-            hintText.text = "WASD: pan  |  Wheel: zoom  |  1/2/3: speed  |  Space: pause";
+            hintText.text = "WASD: 이동  |  휠: 줌  |  1/2/3: 속도  |  Space: 일시정지";
             hintText.font = uiFont;
             hintText.fontSize = 14;
             Color hintCol = colTextMuted; hintCol.a = 0.75f;

@@ -30,9 +30,14 @@ namespace MelonS.GameProto
             bool any = (pawn != null);
 
             if (titleText != null) titleText.gameObject.SetActive(any);
-            if (foodBar  != null) foodBar.transform.parent.gameObject.SetActive(any);
-            if (sleepBar != null) sleepBar.transform.parent.gameObject.SetActive(any);
-            if (moodBar  != null) moodBar.transform.parent.gameObject.SetActive(any);
+            // foodBar.transform.parent = BarBg image GameObject.
+            // BarBg.parent = the Row container that ALSO holds the label.
+            // We toggle the row (grandparent) so the label vanishes too —
+            // otherwise "Food/Sleep/Mood" labels remain visible when no
+            // pawn is selected (Day 15 leftover).
+            if (foodBar  != null) foodBar.transform.parent.parent.gameObject.SetActive(any);
+            if (sleepBar != null) sleepBar.transform.parent.parent.gameObject.SetActive(any);
+            if (moodBar  != null) moodBar.transform.parent.parent.gameObject.SetActive(any);
             if (emptyText != null) emptyText.gameObject.SetActive(!any);
             // Day 15: collapse panel background when no pawn — show only
             // the empty-text hint, no dark rectangle.
