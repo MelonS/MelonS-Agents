@@ -3,31 +3,38 @@
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// Day 17: build-mode singleton.  Press B to toggle build mode.
-    /// In build mode, clicking on an empty grid cell places a wall
-    /// (costs 5 wood from ResourceManager).  Right-click to deselect.
-    ///
-    /// Generic city-builder mechanic — no game-specific naming.
+    /// Day 17-18: build-mode singleton.  Three modes:
+    ///   B: wall (목재 5)
+    ///   F: floor (목재 1, no collider, indoor marker)
+    ///   G: door (목재 3, trigger collider)
+    /// Click to place, right-click to deselect.
     /// </summary>
     public class BuildManager : MonoBehaviour
     {
         public static BuildManager Instance { get; private set; }
 
-        [SerializeField] private GameObject wallPrefab;
-        [SerializeField] private int wallCost = 5;
-        [SerializeField] private SpriteRenderer ghostRenderer;
-        [SerializeField] private Sprite wallSprite;
+        public enum Mode { Off, Wall, Floor, Door }
+        public Mode CurrentMode { get; private set; } = Mode.Off;
+        public bool BuildModeActive => CurrentMode != Mode.Off;
 
-        public bool BuildModeActive { get; private set; }
+        [SerializeField] private GameObject wallPrefab;
+        [SerializeField] private GameObject floorPrefab;
+        [SerializeField] private GameObject doorPrefab;
+        [SerializeField] private int wallCost  = 5;
+        [SerializeField] private int floorCost = 1;
+        [SerializeField] private int doorCost  = 3;
+        [SerializeField] private SpriteRenderer ghostRenderer;
+        [SerializeField] private Sprite wallSprite, floorSprite, doorSprite;
 
         private Camera cam;
 
-        public void SetRefs(GameObject prefab, Sprite sprite, SpriteRenderer ghost, int cost)
+        public void SetRefs(GameObject wall, GameObject floor, GameObject door,
+                            Sprite wallS, Sprite floorS, Sprite doorS,
+                            SpriteRenderer ghost)
         {
-            wallPrefab = prefab;
-            wallSprite = sprite;
+            wallPrefab = wall; floorPrefab = floor; doorPrefab = door;
+            wallSprite = wallS; floorSprite = floorS; doorSprite = doorS;
             ghostRenderer = ghost;
-            wallCost = cost;
         }
 
         private void Awake()
@@ -40,24 +47,41 @@ namespace MelonS.GameProto
         private void Update()
         {
             if (cam == null) cam = Camera.main;
-            if (Input.GetKeyDown(KeyCode.B)) ToggleBuildMode();
-            if (BuildModeActive && Input.GetMouseButtonDown(1))
-            {
-                ToggleBuildMode();
-                return;
-            }
+            if (Input.GetKeyDown(KeyCode.B)) SetMode(CurrentMode == Mode.Wall  ? Mode.Off : Mode.Wall);
+            if (Input.GetKeyDown(KeyCode.F)) SetMode(CurrentMode == Mode.Floor ? Mode.Off : Mode.Floor);
+            if (Input.GetKeyDown(KeyCode.G)) SetMode(CurrentMode == Mode.Door  ? Mode.Off : Mode.Door);
+            if (BuildModeActive && Input.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }
             UpdateGhost();
-            if (BuildModeActive && Input.GetMouseButtonDown(0))
-            {
-                TryPlace();
-            }
+            if (BuildModeActive && Input.GetMouseButtonDown(0)) TryPlace();
         }
 
-        private void ToggleBuildMode()
+        private void SetMode(Mode m)
         {
-            BuildModeActive = !BuildModeActive;
-            if (ghostRenderer != null) ghostRenderer.enabled = BuildModeActive;
+            CurrentMode = m;
+            if (ghostRenderer == null) return;
+            if (m == Mode.Off) { ghostRenderer.enabled = false; return; }
+            ghostRenderer.enabled = true;
+            ghostRenderer.sprite = m == Mode.Wall ? wallSprite
+                                 : m == Mode.Floor ? floorSprite
+                                 : doorSprite;
+            ghostRenderer.sortingOrder = m == Mode.Floor ? 1 : 20;
         }
+
+        private int CostFor(Mode m) => m switch
+        {
+            Mode.Wall  => wallCost,
+            Mode.Floor => floorCost,
+            Mode.Door  => doorCost,
+            _ => 0,
+        };
+
+        private GameObject PrefabFor(Mode m) => m switch
+        {
+            Mode.Wall  => wallPrefab,
+            Mode.Floor => floorPrefab,
+            Mode.Door  => doorPrefab,
+            _ => null,
+        };
 
         private void UpdateGhost()
         {
@@ -66,7 +90,8 @@ namespace MelonS.GameProto
             int cx = Mathf.RoundToInt(mw.x);
             int cy = Mathf.RoundToInt(mw.y);
             ghostRenderer.transform.position = new Vector3(cx, cy, 0);
-            bool canAfford = ResourceManager.Instance != null && ResourceManager.Instance.wood >= wallCost;
+            int cost = CostFor(CurrentMode);
+            bool canAfford = ResourceManager.Instance != null && ResourceManager.Instance.wood >= cost;
             bool cellFree  = !CellOccupied(cx, cy);
             ghostRenderer.color = (canAfford && cellFree)
                 ? new Color(1f, 1f, 1f, 0.55f)
@@ -75,11 +100,14 @@ namespace MelonS.GameProto
 
         private bool CellOccupied(int cx, int cy)
         {
+            // Floors don't count as occupied; can stack walls/doors on top
+            // of a floor (typical layout).
             var hits = Physics2D.OverlapBoxAll(new Vector2(cx, cy), Vector2.one * 0.4f, 0f);
             foreach (var h in hits)
             {
                 if (h == null) continue;
                 if (h.GetComponent<WallEntity>() != null) return true;
+                if (h.GetComponent<DoorEntity>() != null) return true;
                 if (h.GetComponent<TreeEntity>() != null) return true;
                 if (h.GetComponent<PawnEntity>() != null) return true;
                 if (h.GetComponent<BerryBushEntity>() != null) return true;
@@ -89,14 +117,17 @@ namespace MelonS.GameProto
 
         private void TryPlace()
         {
-            if (cam == null || wallPrefab == null) return;
+            if (cam == null) return;
+            var prefab = PrefabFor(CurrentMode);
+            if (prefab == null) return;
+            int cost = CostFor(CurrentMode);
             Vector3 mw = cam.ScreenToWorldPoint(Input.mousePosition);
             int cx = Mathf.RoundToInt(mw.x);
             int cy = Mathf.RoundToInt(mw.y);
             if (CellOccupied(cx, cy)) return;
-            if (ResourceManager.Instance == null || ResourceManager.Instance.wood < wallCost) return;
-            ResourceManager.Instance.AddWood(-wallCost);
-            Instantiate(wallPrefab, new Vector3(cx, cy, 0), Quaternion.identity);
+            if (ResourceManager.Instance == null || ResourceManager.Instance.wood < cost) return;
+            ResourceManager.Instance.AddWood(-cost);
+            Instantiate(prefab, new Vector3(cx, cy, 0), Quaternion.identity);
         }
     }
 }

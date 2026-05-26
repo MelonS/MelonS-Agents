@@ -57,6 +57,8 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/tile_grass.png",
                 "Assets/Sprites/tree.png",
                 "Assets/Sprites/wall_wood.png",
+                "Assets/Sprites/floor_wood.png",
+                "Assets/Sprites/door_wood.png",
             };
             foreach (var p in paths)
             {
@@ -374,19 +376,34 @@ namespace MelonS.GameProto.EditorTools
             RegrowthScheduler rs = rsGo.AddComponent<RegrowthScheduler>();
             rs.SetTreePrefab(treePrefab);
 
-            // Day 17: Build mode — wall prefab + BuildManager + ghost.
-            Sprite wallSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/wall_wood.png");
+            // Day 17-18: Build mode — Wall + Floor + Door prefabs + manager.
+            Sprite wallSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/wall_wood.png");
+            Sprite floorSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/floor_wood.png");
+            Sprite doorSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/door_wood.png");
+
             GameObject wallTemplate = new GameObject("Wall");
             var wsr = wallTemplate.AddComponent<SpriteRenderer>();
-            wsr.sprite = wallSprite;
-            wsr.sortingOrder = 7;
-            var wbox = wallTemplate.AddComponent<BoxCollider2D>();
-            wbox.size = Vector2.one;
+            wsr.sprite = wallSprite; wsr.sortingOrder = 7;
+            var wbox = wallTemplate.AddComponent<BoxCollider2D>(); wbox.size = Vector2.one;
             wallTemplate.AddComponent<WallEntity>();
             GameObject wallPrefab = PrefabUtility.SaveAsPrefabAsset(wallTemplate, "Assets/Prefabs/Wall.prefab");
             Object.DestroyImmediate(wallTemplate);
 
-            // Ghost preview (semi-transparent placeholder at cursor in build mode)
+            GameObject floorTemplate = new GameObject("Floor");
+            var fsr = floorTemplate.AddComponent<SpriteRenderer>();
+            fsr.sprite = floorSprite; fsr.sortingOrder = 1;
+            floorTemplate.AddComponent<FloorEntity>();
+            GameObject floorPrefab = PrefabUtility.SaveAsPrefabAsset(floorTemplate, "Assets/Prefabs/Floor.prefab");
+            Object.DestroyImmediate(floorTemplate);
+
+            GameObject doorTemplate = new GameObject("Door");
+            var dsr = doorTemplate.AddComponent<SpriteRenderer>();
+            dsr.sprite = doorSprite; dsr.sortingOrder = 6;
+            var dbox = doorTemplate.AddComponent<BoxCollider2D>(); dbox.size = Vector2.one; dbox.isTrigger = true;
+            doorTemplate.AddComponent<DoorEntity>();
+            GameObject doorPrefab = PrefabUtility.SaveAsPrefabAsset(doorTemplate, "Assets/Prefabs/Door.prefab");
+            Object.DestroyImmediate(doorTemplate);
+
             GameObject ghostGo = new GameObject("BuildGhost");
             var ghostSr = ghostGo.AddComponent<SpriteRenderer>();
             ghostSr.sprite = wallSprite;
@@ -396,7 +413,8 @@ namespace MelonS.GameProto.EditorTools
 
             GameObject bmGo = new GameObject("BuildManager");
             BuildManager bm = bmGo.AddComponent<BuildManager>();
-            bm.SetRefs(wallPrefab, wallSprite, ghostSr, 5);
+            bm.SetRefs(wallPrefab, floorPrefab, doorPrefab,
+                       wallSprite, floorSprite, doorSprite, ghostSr);
 
             // Day 11: BerryBushes — 4 placed offset from trees so AI sees
             // both gather + chop choices.  Re-use tree sprite tinted greenish
@@ -684,7 +702,7 @@ namespace MelonS.GameProto.EditorTools
             GameObject hintGo = new GameObject("ControlHint");
             hintGo.transform.SetParent(canvasGo.transform, false);
             Text hintText = hintGo.AddComponent<Text>();
-            hintText.text = "WASD: 이동  |  휠: 줌  |  1/2/3: 속도  |  Space: 일시정지  |  B: 건설(목재 5)";
+            hintText.text = "WASD: 이동 · 휠: 줌 · 1/2/3: 속도 · Space: 일시정지 · B: 벽(목재5) · F: 바닥(1) · G: 문(3)";
             hintText.font = uiFont;
             hintText.fontSize = 14;
             Color hintCol = colTextMuted; hintCol.a = 0.75f;
