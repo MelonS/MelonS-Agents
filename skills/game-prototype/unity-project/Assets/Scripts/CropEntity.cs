@@ -39,6 +39,12 @@ namespace MelonS.GameProto
             }
         }
 
+        // Day 79: 다른 component가 reflection 으로 growth 변경 후 visual 동기화 hook
+        private void Start()
+        {
+            RefreshVisual();
+        }
+
         private void Update()
         {
             if (IsRipe) return;

@@ -669,7 +669,16 @@ namespace MelonS.GameProto.EditorTools
                     csr.sprite = cropSprite;
                     csr.sortingOrder = 3;
                     // Day 67-68: CropEntity component → 자라서 익으면 우클릭 수확
-                    cGo.AddComponent<CropEntity>();
+                    var ce = cGo.AddComponent<CropEntity>();
+                    // Day 79: 시작 시 growth 0.4~0.85 무작위로 — 곧 수확 가능, 다양한 stage 시각.
+                    var ceField = typeof(CropEntity).GetField("growth",
+                        System.Reflection.BindingFlags.NonPublic |
+                        System.Reflection.BindingFlags.Instance);
+                    if (ceField != null)
+                    {
+                        float startGrowth = 0.4f + ((cx + cy + 100) % 5) * 0.10f;  // deterministic
+                        ceField.SetValue(ce, startGrowth);
+                    }
                     // 농경지 dirt 타일 강제 부착 (배경)
                     tm.SetTile(new Vector3Int(cx, cy, 0), dirtTile);
                 }
