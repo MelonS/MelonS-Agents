@@ -103,6 +103,14 @@ namespace MelonS.GameProto.EditorTools
             SpriteRenderer sr = pawnGo.AddComponent<SpriteRenderer>();
             sr.sprite = pawnSprite;
             sr.sortingOrder = 10;
+            Debug.Log($"[GeneratePawnPrefab] pawnSprite={(pawnSprite == null ? "NULL" : pawnSprite.name)} sortingOrder={sr.sortingOrder}");
+            // Day 35 fix: if sprite was null, force-color the renderer
+            // so the pawn is at least visible.
+            if (pawnSprite == null)
+            {
+                sr.color = new Color(1f, 0.5f, 0.3f, 1f);
+                Debug.LogError("[GeneratePawnPrefab] PAWN SPRITE NULL — using flat color fallback");
+            }
             BoxCollider2D col = pawnGo.AddComponent<BoxCollider2D>();
             col.size = new Vector2(2f, 2f);
             pawnGo.AddComponent<PawnEntity>();
@@ -113,7 +121,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnHunter>();    // Day 24 — auto-hunt animals
             pawnGo.AddComponent<PawnCook>();      // Day 26 — auto-cook at stove
             pawnGo.AddComponent<PawnSkills>();    // Day 19 — XP/level per skill
-            pawnGo.AddComponent<PawnNameLabel>(); // Day 30 — floating name above pawn
+            // Day 30 PawnNameLabel temporarily removed — suspected of hiding sprite (Day 34 debug)
             pawnGo.AddComponent<PawnUtilityAI>();
 
             PrefabUtility.SaveAsPrefabAsset(pawnGo, PawnPrefabPath);
