@@ -72,6 +72,11 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V23-floor-place", TestV23_FloorPlace);
             yield return RunOne("V24-arrow-projectile-spawn", TestV24_ArrowSpawn);
             yield return RunOne("V25-traits-deterministic", TestV25_TraitsDeterministic);
+            yield return RunOne("V26-needs-decay", TestV26_NeedsDecay);
+            yield return RunOne("V27-ai-event-fired", TestV27_AIEventFired);
+            yield return RunOne("V28-pawn-movement-tick", TestV28_PawnMovementTick);
+            yield return RunOne("V29-wolf-attacks-pawn", TestV29_WolfAttacksPawn);
+            yield return RunOne("V30-multi-pawn-health-aggregate", TestV30_MultiPawnHealth);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -262,6 +267,92 @@ namespace MelonS.GameProto.Tests
             string summary = traits.SummaryKr();
             Assert(n >= 1 && n <= 2 && !string.IsNullOrEmpty(summary),
                 $"traits 수={n} summary='{summary}'");
+        }
+
+        private IEnumerator TestV26_NeedsDecay()
+        {
+            if (Services.Get<GameClock>() == null)
+            {
+                var cGo = new GameObject("TestGameClockV26");
+                cGo.AddComponent<GameClock>();
+                yield return null;
+            }
+            var go = new GameObject("TestNeedsDecay");
+            var needs = go.AddComponent<PawnNeeds>();
+            yield return null;
+            float startFood = needs.food, startMood = needs.mood;
+            yield return new WaitForSeconds(2.0f);
+            bool foodDropped = needs.food < startFood;
+            bool moodDropped = needs.mood < startMood;
+            Assert(foodDropped && moodDropped,
+                $"food {startFood:F1}→{needs.food:F1}, mood {startMood:F1}→{needs.mood:F1}");
+        }
+
+        private IEnumerator TestV27_AIEventFired()
+        {
+            // AIDirector.OnEventFired event 가 발화하는지
+            var dir = Object.FindFirstObjectByType<AIDirector>();
+            if (dir == null)
+            {
+                var dGo = new GameObject("TestAIDirectorV27");
+                dir = dGo.AddComponent<AIDirector>();
+                yield return null;
+            }
+            int eventCount = 0;
+            System.Action<GameEvent> handler = (e) => eventCount++;
+            dir.OnEventFired += handler;
+            // 강제 발화 - reflection 으로 nextFireTime 을 0 으로
+            var f = typeof(AIDirector).GetField("nextFireTime",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (f != null) f.SetValue(dir, 0f);
+            yield return new WaitForSeconds(0.5f);
+            dir.OnEventFired -= handler;
+            Assert(eventCount >= 1, $"OnEventFired 발화 횟수={eventCount} (≥1 expected)");
+        }
+
+        private IEnumerator TestV28_PawnMovementTick()
+        {
+            var go = SpawnTestPawn(new Vector3(15, 15, 0), includeAI: false);
+            var mv = go.GetComponent<PawnMovement>();
+            yield return new WaitForSeconds(0.05f);
+            Vector3 start = go.transform.position;
+            mv.SetTarget(new Vector2(15, 18));  // 3 unit 위로
+            yield return new WaitForSeconds(0.8f);  // moveSpeed 3 → 0.8초에 ~2.4 unit
+            Vector3 end = go.transform.position;
+            bool moved = (end - start).magnitude > 1.0f;
+            Assert(moved, $"pawn 이동: ({start.x:F1},{start.y:F1})→({end.x:F1},{end.y:F1}) dist={(end-start).magnitude:F2}");
+        }
+
+        private IEnumerator TestV29_WolfAttacksPawn()
+        {
+            // wolf 가 pawn 옆에 spawn → 1.2초 후 pawn HP 감소
+            var pawnGo = SpawnTestPawn(new Vector3(-25, 0, 0), includeAI: false);
+            var wolfGo = SpawnTestWolf(new Vector3(-24.5f, 0, 0));  // 0.5 unit, attackRange 0.9 안
+            var health = pawnGo.GetComponent<PawnHealth>();
+            yield return new WaitForSeconds(0.1f);
+            float startRatio = health.TotalHpRatio;
+            yield return new WaitForSeconds(2.5f);  // attackInterval 1.2 → 최소 1번
+            float endRatio = health.TotalHpRatio;
+            Assert(endRatio < startRatio,
+                $"wolf attack pawn: ratio {startRatio:F2}→{endRatio:F2}");
+        }
+
+        private IEnumerator TestV30_MultiPawnHealth()
+        {
+            // 다중 pawn 의 health.TotalHpRatio 가 다 1.0 시작 → damage 후 차이
+            var p1 = SpawnTestPawn(new Vector3(35, 0, 0), includeAI: false);
+            var p2 = SpawnTestPawn(new Vector3(37, 0, 0), includeAI: false);
+            var p3 = SpawnTestPawn(new Vector3(39, 0, 0), includeAI: false);
+            yield return new WaitForSeconds(0.1f);
+            p1.GetComponent<PawnHealth>().TakeDamage(15, PawnHealth.PartId.LeftArm);
+            p2.GetComponent<PawnHealth>().TakeDamage(5, PawnHealth.PartId.RightLeg);
+            // p3 은 건강
+            yield return new WaitForSeconds(0.1f);
+            float r1 = p1.GetComponent<PawnHealth>().TotalHpRatio;
+            float r2 = p2.GetComponent<PawnHealth>().TotalHpRatio;
+            float r3 = p3.GetComponent<PawnHealth>().TotalHpRatio;
+            bool ordered = r1 < r2 && r2 < r3;
+            Assert(ordered, $"r1={r1:F2} < r2={r2:F2} < r3={r3:F2}");
         }
 
         private IEnumerator TestV20_ResearchComplete()
