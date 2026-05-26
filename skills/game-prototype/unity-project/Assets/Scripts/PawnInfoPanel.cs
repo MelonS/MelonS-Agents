@@ -48,7 +48,20 @@ namespace MelonS.GameProto
             if (!any) return;
 
             PawnNeeds needs = pawn.GetComponent<PawnNeeds>();
-            if (titleText != null) titleText.text = pawn.PawnName;
+            // Day 56: name + traits in title
+            PawnTraits traits = pawn.GetComponent<PawnTraits>();
+            if (titleText != null)
+            {
+                string title = pawn.PawnName;
+                if (traits != null)
+                {
+                    string ts = traits.SummaryKr();
+                    if (!string.IsNullOrEmpty(ts))
+                        title += $"  <size=12><color=#c0b090>({ts})</color></size>";
+                }
+                titleText.text = title;
+                titleText.supportRichText = true;
+            }
             if (needs == null) return;
 
             if (foodBar  != null) foodBar.fillAmount  = needs.GetNormalized(NeedType.Food);
