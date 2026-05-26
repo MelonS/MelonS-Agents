@@ -1,39 +1,35 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// Day 17-18: build-mode singleton.  Three modes:
-    ///   B: wall (목재 5)
-    ///   F: floor (목재 1, no collider, indoor marker)
-    ///   G: door (목재 3, trigger collider)
-    /// Click to place, right-click to deselect.
+    /// Day 17-25: build-mode singleton.
+    ///   B: 벽 (목재 5)
+    ///   F: 바닥 (목재 1, no collider, indoor marker)
+    ///   G: 문 (목재 3, trigger collider)
+    ///   T: 화덕 (목재 10, Day 25 cooking station)
     /// </summary>
     public class BuildManager : MonoBehaviour
     {
         public static BuildManager Instance { get; private set; }
 
-        public enum Mode { Off, Wall, Floor, Door }
+        public enum Mode { Off, Wall, Floor, Door, Stove }
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
 
-        [SerializeField] private GameObject wallPrefab;
-        [SerializeField] private GameObject floorPrefab;
-        [SerializeField] private GameObject doorPrefab;
-        [SerializeField] private int wallCost  = 5;
-        [SerializeField] private int floorCost = 1;
-        [SerializeField] private int doorCost  = 3;
+        [SerializeField] private GameObject wallPrefab, floorPrefab, doorPrefab, stovePrefab;
+        [SerializeField] private int wallCost = 5, floorCost = 1, doorCost = 3, stoveCost = 10;
         [SerializeField] private SpriteRenderer ghostRenderer;
-        [SerializeField] private Sprite wallSprite, floorSprite, doorSprite;
+        [SerializeField] private Sprite wallSprite, floorSprite, doorSprite, stoveSprite;
 
         private Camera cam;
 
-        public void SetRefs(GameObject wall, GameObject floor, GameObject door,
-                            Sprite wallS, Sprite floorS, Sprite doorS,
+        public void SetRefs(GameObject wall, GameObject floor, GameObject door, GameObject stove,
+                            Sprite wallS, Sprite floorS, Sprite doorS, Sprite stoveS,
                             SpriteRenderer ghost)
         {
-            wallPrefab = wall; floorPrefab = floor; doorPrefab = door;
-            wallSprite = wallS; floorSprite = floorS; doorSprite = doorS;
+            wallPrefab = wall; floorPrefab = floor; doorPrefab = door; stovePrefab = stove;
+            wallSprite = wallS; floorSprite = floorS; doorSprite = doorS; stoveSprite = stoveS;
             ghostRenderer = ghost;
         }
 
@@ -50,6 +46,7 @@ namespace MelonS.GameProto
             if (Input.GetKeyDown(KeyCode.B)) SetMode(CurrentMode == Mode.Wall  ? Mode.Off : Mode.Wall);
             if (Input.GetKeyDown(KeyCode.F)) SetMode(CurrentMode == Mode.Floor ? Mode.Off : Mode.Floor);
             if (Input.GetKeyDown(KeyCode.G)) SetMode(CurrentMode == Mode.Door  ? Mode.Off : Mode.Door);
+            if (Input.GetKeyDown(KeyCode.T)) SetMode(CurrentMode == Mode.Stove ? Mode.Off : Mode.Stove);
             if (BuildModeActive && Input.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }
             UpdateGhost();
             if (BuildModeActive && Input.GetMouseButtonDown(0)) TryPlace();
@@ -61,9 +58,14 @@ namespace MelonS.GameProto
             if (ghostRenderer == null) return;
             if (m == Mode.Off) { ghostRenderer.enabled = false; return; }
             ghostRenderer.enabled = true;
-            ghostRenderer.sprite = m == Mode.Wall ? wallSprite
-                                 : m == Mode.Floor ? floorSprite
-                                 : doorSprite;
+            ghostRenderer.sprite = m switch
+            {
+                Mode.Wall  => wallSprite,
+                Mode.Floor => floorSprite,
+                Mode.Door  => doorSprite,
+                Mode.Stove => stoveSprite,
+                _ => wallSprite,
+            };
             ghostRenderer.sortingOrder = m == Mode.Floor ? 1 : 20;
         }
 
@@ -72,6 +74,7 @@ namespace MelonS.GameProto
             Mode.Wall  => wallCost,
             Mode.Floor => floorCost,
             Mode.Door  => doorCost,
+            Mode.Stove => stoveCost,
             _ => 0,
         };
 
@@ -80,6 +83,7 @@ namespace MelonS.GameProto
             Mode.Wall  => wallPrefab,
             Mode.Floor => floorPrefab,
             Mode.Door  => doorPrefab,
+            Mode.Stove => stovePrefab,
             _ => null,
         };
 
@@ -100,8 +104,6 @@ namespace MelonS.GameProto
 
         private bool CellOccupied(int cx, int cy)
         {
-            // Floors don't count as occupied; can stack walls/doors on top
-            // of a floor (typical layout).
             var hits = Physics2D.OverlapBoxAll(new Vector2(cx, cy), Vector2.one * 0.4f, 0f);
             foreach (var h in hits)
             {
@@ -111,6 +113,7 @@ namespace MelonS.GameProto
                 if (h.GetComponent<TreeEntity>() != null) return true;
                 if (h.GetComponent<PawnEntity>() != null) return true;
                 if (h.GetComponent<BerryBushEntity>() != null) return true;
+                if (h.GetComponent<StoveEntity>() != null) return true;
             }
             return false;
         }
@@ -129,7 +132,6 @@ namespace MelonS.GameProto
             ResourceManager.Instance.AddWood(-cost);
             Instantiate(prefab, new Vector3(cx, cy, 0), Quaternion.identity);
 
-            // Day 20: Build XP to the nearest pawn (the symbolic builder).
             var pawns = Object.FindObjectsByType<PawnSkills>(FindObjectsSortMode.None);
             PawnSkills nearest = null;
             float bestSq = float.MaxValue;

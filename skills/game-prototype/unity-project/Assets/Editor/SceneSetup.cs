@@ -60,6 +60,7 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/floor_wood.png",
                 "Assets/Sprites/door_wood.png",
                 "Assets/Sprites/deer.png",
+                "Assets/Sprites/stove.png",
             };
             foreach (var p in paths)
             {
@@ -435,6 +436,16 @@ namespace MelonS.GameProto.EditorTools
             GameObject doorPrefab = PrefabUtility.SaveAsPrefabAsset(doorTemplate, "Assets/Prefabs/Door.prefab");
             Object.DestroyImmediate(doorTemplate);
 
+            // Day 25: Stove prefab
+            Sprite stoveSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stove.png");
+            GameObject stoveTemplate = new GameObject("Stove");
+            var ssr = stoveTemplate.AddComponent<SpriteRenderer>();
+            ssr.sprite = stoveSprite; ssr.sortingOrder = 5;
+            var sbox = stoveTemplate.AddComponent<BoxCollider2D>(); sbox.size = Vector2.one;
+            stoveTemplate.AddComponent<StoveEntity>();
+            GameObject stovePrefab = PrefabUtility.SaveAsPrefabAsset(stoveTemplate, "Assets/Prefabs/Stove.prefab");
+            Object.DestroyImmediate(stoveTemplate);
+
             GameObject ghostGo = new GameObject("BuildGhost");
             var ghostSr = ghostGo.AddComponent<SpriteRenderer>();
             ghostSr.sprite = wallSprite;
@@ -444,8 +455,8 @@ namespace MelonS.GameProto.EditorTools
 
             GameObject bmGo = new GameObject("BuildManager");
             BuildManager bm = bmGo.AddComponent<BuildManager>();
-            bm.SetRefs(wallPrefab, floorPrefab, doorPrefab,
-                       wallSprite, floorSprite, doorSprite, ghostSr);
+            bm.SetRefs(wallPrefab, floorPrefab, doorPrefab, stovePrefab,
+                       wallSprite, floorSprite, doorSprite, stoveSprite, ghostSr);
 
             // Day 11: BerryBushes — 4 placed offset from trees so AI sees
             // both gather + chop choices.  Re-use tree sprite tinted greenish
@@ -733,7 +744,7 @@ namespace MelonS.GameProto.EditorTools
             GameObject hintGo = new GameObject("ControlHint");
             hintGo.transform.SetParent(canvasGo.transform, false);
             Text hintText = hintGo.AddComponent<Text>();
-            hintText.text = "WASD: 이동 · 휠: 줌 · 1/2/3: 속도 · Space: 일시정지 · B: 벽(목재5) · F: 바닥(1) · G: 문(3)";
+            hintText.text = "WASD/휠/123/Space · B:벽5 · F:바닥1 · G:문3 · T:화덕10 · 1일=4분(1x)";
             hintText.font = uiFont;
             hintText.fontSize = 14;
             Color hintCol = colTextMuted; hintCol.a = 0.75f;
