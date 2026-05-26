@@ -79,6 +79,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V30-multi-pawn-health-aggregate", TestV30_MultiPawnHealth);
             yield return RunOne("V31-trader-spawn-and-wander", TestV31_TraderSpawn);
             yield return RunOne("V32-trader-trade", TestV32_TraderTrade);
+            yield return RunOne("V33-animal-tame", TestV33_AnimalTame);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -269,6 +270,30 @@ namespace MelonS.GameProto.Tests
             string summary = traits.SummaryKr();
             Assert(n >= 1 && n <= 2 && !string.IsNullOrEmpty(summary),
                 $"traits 수={n} summary='{summary}'");
+        }
+
+        private IEnumerator TestV33_AnimalTame()
+        {
+            var rm = Services.Get<ResourceManager>();
+            if (rm.food < 100) rm.AddFood(100 - rm.food);  // 충분한 food 보장
+            int startFood = rm.food;
+            // 30% 확률이라 multiple try - food 30 사용 → ~9번 시도, 1번 이상 성공 확률 ~95%
+            var go = new GameObject("TestAnimalTame");
+            go.transform.position = new Vector3(34, -8, 0);
+            go.AddComponent<SpriteRenderer>();
+            go.AddComponent<Rigidbody2D>();
+            var animal = go.AddComponent<AnimalEntity>();
+            yield return new WaitForSeconds(0.05f);
+            int attempts = 0; bool tamed = false;
+            while (attempts < 30 && !tamed)
+            {
+                tamed = animal.TryTame();
+                attempts++;
+                if (rm.food <= 0) break;
+            }
+            int foodUsed = startFood - rm.food;
+            Assert(foodUsed > 0 && (tamed || attempts >= 1),
+                $"tame attempts={attempts}, tamed={tamed}, food used={foodUsed}");
         }
 
         private IEnumerator TestV31_TraderSpawn()

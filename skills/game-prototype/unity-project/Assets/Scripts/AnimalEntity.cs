@@ -22,6 +22,34 @@ namespace MelonS.GameProto
         public int Hp { get; private set; }
         public bool IsDead => Hp <= 0;
 
+        // Stretch: Animal taming
+        public bool IsTamed { get; private set; }
+        [SerializeField] private float tameSuccessRate = 0.3f;
+        [SerializeField] private int tameFoodCost = 1;
+
+        /// <summary>
+        /// food 소모 + 30% 성공 확률.  성공 시 IsTamed = true,
+        /// 푸른빛 tint 로 시각 구별, AnimalEntity Update 가 owner 따라감(향후).
+        /// </summary>
+        public bool TryTame()
+        {
+            var rm = MelonS.GameProto.Core.Services.Get<ResourceManager>();
+            if (rm == null) return false;
+            if (IsTamed) { Debug.Log("[Tame] 이미 길들임"); return false; }
+            if (rm.food < tameFoodCost) { Debug.Log("[Tame] 식량 부족"); return false; }
+            rm.AddFood(-tameFoodCost);
+            float roll = Random.value;
+            if (roll < tameSuccessRate)
+            {
+                IsTamed = true;
+                if (sr != null) sr.color = new Color(0.75f, 0.85f, 1.0f, 1f);  // 푸른빛 = tamed
+                Debug.Log($"[Tame] 성공! (roll={roll:F2} < {tameSuccessRate})");
+                return true;
+            }
+            Debug.Log($"[Tame] 실패 (roll={roll:F2} ≥ {tameSuccessRate}), food -{tameFoodCost}");
+            return false;
+        }
+
         private Rigidbody2D rb;
         private Vector2 target;
         private float nextIdleEnd = 0f;

@@ -83,14 +83,21 @@ namespace MelonS.GameProto
                     return;
                 }
 
-                // Non-drafted: existing chop/move + Day 68 crop harvest + Stretch Trade
+                // Non-drafted: existing chop/move + Day 68 crop harvest + Stretch Trade/Tame
                 TreeEntity tree = (rhit != null) ? rhit.GetComponent<TreeEntity>() : null;
                 CropEntity crop = (rhit != null) ? rhit.GetComponent<CropEntity>() : null;
                 TraderEntity trader = (rhit != null) ? rhit.GetComponent<TraderEntity>() : null;
+                AnimalEntity animalC = (rhit != null) ? rhit.GetComponent<AnimalEntity>() : null;
                 if (trader != null)
                 {
                     bool ok = trader.TryTrade();
                     Debug.Log($"[Trade] success={ok}");
+                    return;
+                }
+                if (animalC != null)  // 비-drafted 시 동물 우클릭 = 길들이기 시도
+                {
+                    bool ok = animalC.TryTame();
+                    Debug.Log($"[Tame] success={ok}");
                     return;
                 }
                 if (crop != null && crop.IsRipe)
