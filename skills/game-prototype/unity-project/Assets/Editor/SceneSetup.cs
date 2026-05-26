@@ -56,6 +56,7 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/pawn_colonist.png",
                 "Assets/Sprites/tile_grass.png",
                 "Assets/Sprites/tree.png",
+                "Assets/Sprites/wall_wood.png",
             };
             foreach (var p in paths)
             {
@@ -373,6 +374,30 @@ namespace MelonS.GameProto.EditorTools
             RegrowthScheduler rs = rsGo.AddComponent<RegrowthScheduler>();
             rs.SetTreePrefab(treePrefab);
 
+            // Day 17: Build mode — wall prefab + BuildManager + ghost.
+            Sprite wallSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/wall_wood.png");
+            GameObject wallTemplate = new GameObject("Wall");
+            var wsr = wallTemplate.AddComponent<SpriteRenderer>();
+            wsr.sprite = wallSprite;
+            wsr.sortingOrder = 7;
+            var wbox = wallTemplate.AddComponent<BoxCollider2D>();
+            wbox.size = Vector2.one;
+            wallTemplate.AddComponent<WallEntity>();
+            GameObject wallPrefab = PrefabUtility.SaveAsPrefabAsset(wallTemplate, "Assets/Prefabs/Wall.prefab");
+            Object.DestroyImmediate(wallTemplate);
+
+            // Ghost preview (semi-transparent placeholder at cursor in build mode)
+            GameObject ghostGo = new GameObject("BuildGhost");
+            var ghostSr = ghostGo.AddComponent<SpriteRenderer>();
+            ghostSr.sprite = wallSprite;
+            ghostSr.sortingOrder = 20;
+            ghostSr.color = new Color(1f, 1f, 1f, 0.5f);
+            ghostSr.enabled = false;
+
+            GameObject bmGo = new GameObject("BuildManager");
+            BuildManager bm = bmGo.AddComponent<BuildManager>();
+            bm.SetRefs(wallPrefab, wallSprite, ghostSr, 5);
+
             // Day 11: BerryBushes — 4 placed offset from trees so AI sees
             // both gather + chop choices.  Re-use tree sprite tinted greenish
             // until an operator-authored berry sprite exists (already imported
@@ -659,7 +684,7 @@ namespace MelonS.GameProto.EditorTools
             GameObject hintGo = new GameObject("ControlHint");
             hintGo.transform.SetParent(canvasGo.transform, false);
             Text hintText = hintGo.AddComponent<Text>();
-            hintText.text = "WASD: 이동  |  휠: 줌  |  1/2/3: 속도  |  Space: 일시정지";
+            hintText.text = "WASD: 이동  |  휠: 줌  |  1/2/3: 속도  |  Space: 일시정지  |  B: 건설(목재 5)";
             hintText.font = uiFont;
             hintText.fontSize = 14;
             Color hintCol = colTextMuted; hintCol.a = 0.75f;
