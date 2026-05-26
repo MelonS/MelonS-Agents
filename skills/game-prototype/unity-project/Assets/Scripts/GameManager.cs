@@ -67,6 +67,17 @@ namespace MelonS.GameProto
                         System.Reflection.BindingFlags.NonPublic |
                         System.Reflection.BindingFlags.Instance);
                     if (nameField != null) nameField.SetValue(entity, name);
+                    // P7: 각 pawn 다른 셔츠 tint - 즉시 visible 다양성
+                    Color[] pawnTints = {
+                        new Color(1.00f, 0.95f, 0.90f, 1f),  // pawn 0: 거의 white (default 갈색)
+                        new Color(0.85f, 0.95f, 1.05f, 1f),  // pawn 1: 살짝 푸른빛 (파란 셔츠 느낌)
+                        new Color(0.95f, 1.05f, 0.85f, 1f),  // pawn 2: 살짝 녹색빛 (녹색 셔츠 느낌)
+                    };
+                    Color tint = pawnTints[i % pawnTints.Length];
+                    var tintField = typeof(PawnEntity).GetField("unselectedColor",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (tintField != null) tintField.SetValue(entity, tint);
+                    if (sr != null) sr.color = tint;
                 }
                 // Day 50: arrow sprite injection — PawnUtilityAI 가 ranged
                 //  attack용으로 사용 (단 research "simple_bow" 완료 후 활성).
