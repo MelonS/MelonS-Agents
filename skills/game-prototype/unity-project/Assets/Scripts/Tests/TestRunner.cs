@@ -56,6 +56,11 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V7-storyteller-tier", TestV7_StorytellerTier);
             yield return RunOne("V8-map-obstacle", TestV8_MapObstacle);
             yield return RunOne("V9-mood-break", TestV9_MoodBreak);
+            yield return RunOne("V10-bandit-auto-attack", TestV10_BanditAutoAttack);
+            yield return RunOne("V11-tree-chop", TestV11_TreeChop);
+            yield return RunOne("V12-resource-add", TestV12_ResourceAdd);
+            yield return RunOne("V13-services-locator", TestV13_ServicesLocator);
+            yield return RunOne("V14-pawn-traits", TestV14_PawnTraits);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -171,6 +176,81 @@ namespace MelonS.GameProto.Tests
             bool wolfDmg = wolf != null && wolf.Hp < 18;
             Assert(finalArrows > initialArrows || wolfDmg,
                 $"arrows spawned this period (peak >0?) or wolf damaged HP={wolf?.Hp}");
+        }
+
+        private IEnumerator TestV10_BanditAutoAttack()
+        {
+            // Bandit 이 pawn attackRange 안에 있으면 PawnEntity 가 자동 공격
+            var pawnGo = SpawnTestPawn(new Vector3(20, 0, 0), includeAI: false);
+            var banditGo = new GameObject("TestBandit");
+            banditGo.transform.position = new Vector3(20.5f, 0, 0);  // pawn attackRange 1.0 안
+            banditGo.AddComponent<SpriteRenderer>();
+            banditGo.AddComponent<BoxCollider2D>();
+            var bandit = banditGo.AddComponent<BanditEnemy>();
+            int startHp = bandit.Hp;
+            yield return new WaitForSeconds(2.0f);  // attackInterval 1.0 → 2회 공격 가능
+            bool damaged = bandit.Hp < startHp;
+            Assert(damaged, $"bandit HP {startHp} → {bandit.Hp} (자동 공격 검증)");
+        }
+
+        private IEnumerator TestV11_TreeChop()
+        {
+            // Tree.Chop 콜 → wood +1 (또는 Tree 가 IsDestroyed 되면 +N)
+            var treeGo = new GameObject("TestTree");
+            treeGo.transform.position = new Vector3(22, 0, 0);
+            treeGo.AddComponent<SpriteRenderer>();
+            treeGo.AddComponent<BoxCollider2D>();
+            var tree = treeGo.AddComponent<TreeEntity>();
+            yield return new WaitForSeconds(0.1f);
+            var rm = Services.Get<ResourceManager>();
+            int start = rm.wood;
+            // Tree.TakeChopDamage 또는 directly 까지 호출
+            tree.TakeChopDamage(999f);  // maxHp 100 → 충분히 큰 데미지
+            yield return new WaitForSeconds(0.1f);
+            int end = rm.wood;
+            Assert(end > start, $"chop wood: {start} → {end}");
+        }
+
+        private IEnumerator TestV12_ResourceAdd()
+        {
+            var rm = Services.Get<ResourceManager>();
+            int sw = rm.wood, sf = rm.food, sm = rm.meals;
+            rm.AddWood(7);
+            rm.AddFood(11);
+            rm.AddMeals(3);
+            yield return null;
+            bool ok = rm.wood == sw + 7 && rm.food == sf + 11 && rm.meals == sm + 3;
+            Assert(ok, $"wood {sw}+7={rm.wood}, food {sf}+11={rm.food}, meals {sm}+3={rm.meals}");
+        }
+
+        private IEnumerator TestV13_ServicesLocator()
+        {
+            // R6 ServiceLocator 자체 검증: Register / Get / Has / Unregister
+            var fakeGo = new GameObject("FakeService");
+            // PawnSkills 는 임의 컴포넌트 - test 용
+            var fake = fakeGo.AddComponent<PawnSkills>();
+            Services.Register<PawnSkills>(fake);
+            bool has = Services.Has<PawnSkills>();
+            bool getMatches = Services.Get<PawnSkills>() == fake;
+            Services.Unregister<PawnSkills>();
+            bool removed = !Services.Has<PawnSkills>();
+            Assert(has && getMatches && removed,
+                $"has={has} match={getMatches} removed={removed}");
+            yield break;
+        }
+
+        private IEnumerator TestV14_PawnTraits()
+        {
+            // PawnTraits 가 Awake 에서 1-2 trait 활성화
+            var go = new GameObject("TestPawnTraits");
+            go.AddComponent<SpriteRenderer>();
+            go.AddComponent<PawnHealth>();
+            var traits = go.AddComponent<PawnTraits>();
+            yield return null;
+            int n = traits.ActiveTraits.Count;
+            string summary = traits.SummaryKr();
+            Assert(n >= 1 && n <= 2 && !string.IsNullOrEmpty(summary),
+                $"traits 수={n} summary='{summary}'");
         }
 
         private IEnumerator TestV6_BodyParts()
