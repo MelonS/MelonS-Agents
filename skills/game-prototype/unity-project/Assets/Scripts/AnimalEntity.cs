@@ -49,6 +49,8 @@ namespace MelonS.GameProto
             Hp = hp;
             var sR = GetComponent<SpriteRenderer>();
             if (sR != null) sR.color = tint;
+            // #162 - baseColor 도 species tint 로 갱신 (hit-flash 후 복원에 사용)
+            baseColor = tint;
         }
 
         public int Hp { get; private set; }
@@ -89,6 +91,9 @@ namespace MelonS.GameProto
 
         private SpriteRenderer sr;
         private float flashUntil = -1f;
+        // #162 - 종 tint 보존 (#156 lesson): hit-flash 끝나면 baseColor 로 복원.
+        //  이전 sr.color = Color.white 가 species tint (멧돼지 갈회색 등) 영구 손실.
+        private Color baseColor = Color.white;
 
         private void Awake()
         {
@@ -97,6 +102,7 @@ namespace MelonS.GameProto
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
             sr = GetComponent<SpriteRenderer>();
+            if (sr != null) baseColor = sr.color;
             PickNewTarget();
         }
 
@@ -105,7 +111,8 @@ namespace MelonS.GameProto
             if (IsDead) return;
             if (sr != null && flashUntil > 0 && Time.time > flashUntil)
             {
-                sr.color = Color.white;
+                // #162 - tamed 면 푸른빛 유지, 아니면 species baseColor 로 복원.
+                sr.color = IsTamed ? new Color(0.75f, 0.85f, 1.0f, 1f) : baseColor;
                 flashUntil = -1f;
             }
             if (walking)
