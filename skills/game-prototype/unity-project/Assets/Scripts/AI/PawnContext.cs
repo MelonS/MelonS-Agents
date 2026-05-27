@@ -19,6 +19,7 @@ namespace MelonS.GameProto.AI
         public PawnHauler hauler;  // #116
         public PawnBuilder builder;  // #118 — blueprint 건설
         public PawnMiner miner;   // #119 — 채광
+        public PawnDoctor doctor; // #125 — 의료
         public PawnNeeds needs;
         public PawnSkills skills;
         public Transform transform;
@@ -34,6 +35,7 @@ namespace MelonS.GameProto.AI
             if (hauler   != null && hauler.HasTask)   return true;
             if (builder  != null && builder.HasTask)  return true;
             if (miner    != null && miner.HasTask)    return true;
+            if (doctor   != null && doctor.HasTask)   return true;
             return false;
         }
     }

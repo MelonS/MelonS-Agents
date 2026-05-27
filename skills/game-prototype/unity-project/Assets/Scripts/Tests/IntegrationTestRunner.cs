@@ -99,6 +99,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I31-mood-thoughts", TestI31_MoodThoughts);
             // #123 - 시작 시 의류 장비 + slot system
             yield return RunOne("I32-equipment-starter", TestI32_EquipmentStarter);
+            // #125 - 부상 pawn 옆에 가서 tend → bleed clear + 회복
+            yield return RunOne("I33-doctor-tends-patient", TestI33_DoctorTendsPatient);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -966,6 +968,51 @@ namespace MelonS.GameProto.Tests
             // FindNearest 동작
             var nearest = StockpileZoneEntity.FindNearest(new Vector2(0f, 0f));
             Assert(nearest != null, "FindNearest 동작");
+        }
+
+        /// <summary>I33: #125 - 부상 pawn 옆에 가서 PawnDoctor.Update 시뮬 → bleed 0 + hp 회복</summary>
+        private IEnumerator TestI33_DoctorTendsPatient()
+        {
+            yield return null;
+            // 환자 spawn (의식불명 상태)
+            var pgo = new GameObject("PatientI33");
+            pgo.transform.position = new Vector3(15f, 15f, 0);
+            pgo.AddComponent<SpriteRenderer>();
+            pgo.AddComponent<BoxCollider2D>().size = Vector2.one;
+            pgo.AddComponent<PawnEntity>();
+            var patientHealth = pgo.AddComponent<PawnHealth>();
+            yield return null;
+            // 인공 부상 - 마지막 부위(palm 같은 non-vital) hp 살짝 + 출혈
+            //  vital 부위(head/torso) HP 0 = 사망 → tend 전에 죽으면 안 됨.
+            if (patientHealth.parts == null || patientHealth.parts.Length == 0)
+            { Assert(false, "patient parts 없음"); Object.Destroy(pgo); yield break; }
+            var injuredPart = patientHealth.parts[patientHealth.parts.Length - 1];
+            injuredPart.hp = Mathf.Max(1, injuredPart.maxHp - 3);  // 거의 정상, 출혈만
+            injuredPart.bleedRate = 0.4f;  // 5초 동안 -2 만 (사망 X)
+            injuredPart.bandaged = false;
+
+            // doctor spawn 옆에
+            var dgo = new GameObject("DoctorI33");
+            dgo.transform.position = new Vector3(15.5f, 15f, 0);
+            dgo.AddComponent<SpriteRenderer>();
+            dgo.AddComponent<BoxCollider2D>().size = Vector2.one;
+            dgo.AddComponent<PawnEntity>();
+            dgo.AddComponent<PawnMovement>();
+            var doc = dgo.AddComponent<PawnDoctor>();
+            yield return null;
+
+            doc.SetPatientTarget(patientHealth);
+            // tend 5초 + buffer
+            yield return new WaitForSeconds(6.0f);
+
+            bool bleedCleared = injuredPart.bleedRate < 0.01f;
+            bool bandaged = injuredPart.bandaged;
+            int hpAfter = injuredPart.hp;
+            Assert(bleedCleared && bandaged,
+                $"tend 후: bleed {injuredPart.bleedRate:F2} bandaged={bandaged} hp={hpAfter}");
+
+            Object.Destroy(pgo);
+            Object.Destroy(dgo);
         }
 
         /// <summary>I32: #123 - 시작 pawn 이 의류 장비 + equip/unequip 동작</summary>

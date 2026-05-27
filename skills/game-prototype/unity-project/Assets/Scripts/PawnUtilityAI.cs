@@ -26,6 +26,7 @@ namespace MelonS.GameProto
         private PawnHauler hauler;  // #116 — wood pile pickup
         private PawnBuilder builder;  // #118 — blueprint 건설
         private PawnMiner miner;      // #119 — 채광
+        private PawnDoctor doctor;    // #125 — 의료
         private PawnNeeds needs;
         private PawnEntity entity;  // Day 48 — drafted state check
         private PawnWorkSettings workSettings;  // #114 — per-pawn work priority
@@ -53,6 +54,7 @@ namespace MelonS.GameProto
             hauler = GetComponent<PawnHauler>();  // #116
             builder = GetComponent<PawnBuilder>();  // #118
             miner = GetComponent<PawnMiner>();      // #119
+            doctor = GetComponent<PawnDoctor>();    // #125
             needs = GetComponent<PawnNeeds>();
             entity = GetComponent<PawnEntity>();
             workSettings = GetComponent<PawnWorkSettings>();  // #114
@@ -64,12 +66,14 @@ namespace MelonS.GameProto
                 hauler = hauler,
                 builder = builder,
                 miner = miner,
+                doctor = doctor,
                 needs = needs, skills = GetComponent<PawnSkills>(),
                 transform = transform,
                 idleWanderRadius = idleWanderRadius,
             };
             actions = new List<IPawnAction>
             {
+                new TendPatientAction(),       // #125 - 부상 동료 치료 최우선
                 new EatBerryAction   { foodThreshold = foodHungryThreshold },
                 new HuntAnimalAction { globalFoodThreshold = globalFoodLowThreshold },
                 new CookMealAction   { foodSurplus = 5f },
@@ -106,6 +110,7 @@ namespace MelonS.GameProto
                 if (hauler != null) hauler.ClearTask();
                 if (builder != null) builder.ClearTask();
                 if (miner != null) miner.ClearTask();
+                if (doctor != null) doctor.ClearTask();
                 lastDecision = Time.timeSinceLevelLoad;
                 return;
             }
@@ -117,6 +122,7 @@ namespace MelonS.GameProto
                 if (hauler != null) hauler.ClearTask();
                 if (builder != null) builder.ClearTask();
                 if (miner != null) miner.ClearTask();
+                if (doctor != null) doctor.ClearTask();
                 if (!movement.IsMoving)
                 {
                     Vector2 cur = transform.position;
@@ -133,6 +139,7 @@ namespace MelonS.GameProto
             if (hauler != null && hauler.HasTask) return;
             if (builder != null && builder.HasTask) return;
             if (miner != null && miner.HasTask) return;
+            if (doctor != null && doctor.HasTask) return;
 
             lastDecision = Time.timeSinceLevelLoad;
             Decide();

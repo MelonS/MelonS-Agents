@@ -207,6 +207,45 @@ namespace MelonS.GameProto.AI
         }
     }
 
+    public class TendPatientAction : IPawnAction
+    {
+        public string DisplayName => "치료";
+        public WorkKind Kind => WorkKind.Research;  // 1차로 Research 슬롯 재활용 (#126 에서 Medical 별도)
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.doctor == null) return false;
+            PawnHealth patient = FindNearestDowned(ctx);
+            if (patient == null) return false;
+            ctx.doctor.SetPatientTarget(patient);
+            return true;
+        }
+        private static PawnHealth FindNearestDowned(PawnContext ctx)
+        {
+            var arr = Object.FindObjectsByType<PawnHealth>(FindObjectsSortMode.None);
+            PawnHealth best = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = ctx.transform.position;
+            foreach (var h in arr)
+            {
+                if (h == null || h.IsDead) continue;
+                if (h.gameObject == ctx.transform.gameObject) continue;  // self skip
+                // 의식불명 or 출혈 중 = 환자
+                bool bleeding = false;
+                if (h.parts != null)
+                {
+                    foreach (var p in h.parts)
+                        if (p != null && p.bleedRate > 0.1f && !p.bandaged) { bleeding = true; break; }
+                }
+                if (!h.IsDowned && !bleeding) continue;
+                Vector3 hp = h.transform.position;
+                if (Mathf.Abs(hp.x) > 28.5f || Mathf.Abs(hp.y) > 28.5f) continue;
+                float sq = ((Vector2)hp - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = h; }
+            }
+            return best;
+        }
+    }
+
     public class MineStoneAction : IPawnAction
     {
         public string DisplayName => "채광";
