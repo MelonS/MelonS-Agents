@@ -10,7 +10,7 @@
 찾고 계속해서 퀄리티 업글을 시켜. 기능추가는 보수적으로 게임이 되는게 먼저임."**
 
 ### 한 줄
-**4 운영자 불만 해결 + integration 5→23 시나리오 + 진짜 movement 버그 fix + SceneSetup 1057→310L (-70.7%) + AI give-up safety + 위협 알림 + build warning 0 + 44+ commit.**
+**4 운영자 불만 해결 + integration 5→23 시나리오 + 진짜 movement 버그 fix + SceneSetup 1057→310L (-70.7%) + AI give-up safety + 위협 알림 + build warning 0 + FindObjects per-Update 캐시 5건 + 49+ commit.**
 
 ### 운영자 불만 → 대응
 
@@ -95,6 +95,8 @@
 - `bec88ce` ThreatAlertUI - wolf 5u 또는 bandit 8u 접근 시 빨강 ⚠ 알림 (auto-pause X, 시각 only)
 - `39dfde5` API 현대화 - FindObjectsOfType → FindObjectsByType 8 파일, build warning 0
 - `706350e` V55 trader flakiness fix (3s 대기, 0.05 threshold)
+- `16287dc` + `9b37bf2` ResearchManager/Bench - FindObjectsByType per-Update → 1s 캐시 (60x 호출 감소)
+- `01e1fe9` SelectionRing + GuiControlBar - FindFirstObjectByType per-Update 캐시
 
 ### 검증
 
