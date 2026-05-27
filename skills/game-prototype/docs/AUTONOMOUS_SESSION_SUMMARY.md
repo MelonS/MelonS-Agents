@@ -27,6 +27,36 @@
 | GUI 벽 버튼 검증 + 인코딩 | `53c3e41` I17 wall button + cp949 console fix |
 | pawn 화면 밖 자주 나감 | `f059417` 선택 시 카메라 부드러운 focus (0.6s) |
 | batchmode lerp 안 수렴 | `47eb2fe` MoveTowards 고정 30u/s + I18 camera focus 검증 |
+| **★ 진짜 movement 버그 발견** | `0242436` PawnMovement.SetTarget ClampToWorld + unstuck nudge + PawnChopper give-up 10s |
+
+### ★ I19 발견된 진짜 movement bug
+
+운영자 자기 전 "사람의 이동도 안됨 여전히" 의 진짜 원인:
+
+1. **Tree 가 world bound (±19) 밖에 spawn** 가능 (SceneSetup 의 randomization).
+2. PawnChopper.SetTreeTarget(tree.position) → PawnMovement.target = (-20.4, ...).
+3. **기존 SetTarget 은 clamp 안 함** → pawn (-19, ...) 에 도달, 목표 (-20.4) 못 감.
+4. PawnChopper.Update 매 프레임 SetTarget 재호출 → 영원히 stuck.
+5. corner pawn 은 한 번 stuck 되면 inner 로도 못 빠져나옴.
+
+**증거**: I19 test (chop 완성 검증) 처음 도입 → wood 40→40, 0 unit moved. 디버그 로그로 stuck 위치 + target 외부 좌표 확인.
+
+**수정 (3-layer 안전망)**:
+- `PawnMovement.SetTarget`: ClampToWorld 강제 (target 항상 reachable).
+- `PawnMovement.Update`: 1.5s 안 움직였으면 perpendicular nudge 0.6 unit (3s cooldown).
+- `PawnChopper.Update`: 10s 동안 in-range 못 가면 ClearTask (영원 stuck 방지).
+
+검증: I19 fresh pawn (5,5) spawn → tree 우클릭 → 15s 안에 pawn 6.71 이동 + tree 1개 destroyed + wood 40→45.
+
+운영자 자기 전 "이동 안됨" 불만은 이거. UI 가로채기 fix (`ef75182`) 만으로 부족했음.
+
+### 추가 통합 시나리오 I19-I21
+
+- I19 chop end-to-end (fresh pawn / 15s / wood up)
+- I20 crop 수확 (growth=1 강제 → 우클릭 → food +5)
+- I21 drafted vs wolf (옆에 wolf spawn → 5s 안에 HP 0)
+
+21/21 integration PASS.
 
 ### 검증
 
