@@ -114,6 +114,12 @@ namespace MelonS.GameProto
         private string DescribeHit(Collider2D hit)
         {
             if (hit == null) return "";
+            // 운영자 피드백 #106 - drafted pawn 으로 적 hover 시 ⚔ 공격 아이콘 prefix
+            bool draftedReady = false;
+            var cs = Object.FindFirstObjectByType<ClickSelector>();
+            if (cs != null && cs.CurrentSelection != null && cs.CurrentSelection.IsDrafted)
+                draftedReady = true;
+
             var pawn = hit.GetComponent<PawnEntity>();
             if (pawn != null)
             {
@@ -131,11 +137,23 @@ namespace MelonS.GameProto
                 return "자라는 중인 작물  (익을 때까지 대기)";
             }
             var animal = hit.GetComponent<AnimalEntity>();
-            if (animal != null) return "사슴  (드래프트 후 우클릭=사냥 / 우클릭=길들이기)";
+            if (animal != null)
+            {
+                if (draftedReady) return "⚔ 사슴  (우클릭=공격/사냥)";
+                return "사슴  (드래프트 후 우클릭=사냥 / 우클릭=길들이기)";
+            }
             var wolf = hit.GetComponent<WolfEnemy>();
-            if (wolf != null) return "늑대 (위협!)  (드래프트 후 우클릭=공격)";
+            if (wolf != null)
+            {
+                if (draftedReady) return "⚔ 늑대 (위협!)  (우클릭=공격)";
+                return "늑대 (위협!)  (드래프트 후 우클릭=공격)";
+            }
             var bandit = hit.GetComponent<BanditEnemy>();
-            if (bandit != null) return "강도 (위협!)  (드래프트 후 우클릭=공격)";
+            if (bandit != null)
+            {
+                if (draftedReady) return "⚔ 강도 (위협!)  (우클릭=공격)";
+                return "강도 (위협!)  (드래프트 후 우클릭=공격)";
+            }
             var trader = hit.GetComponent<TraderEntity>();
             if (trader != null) return "상인  (우클릭=교역)";
             var bench = hit.GetComponent<ResearchBench>();
