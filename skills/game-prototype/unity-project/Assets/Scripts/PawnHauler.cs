@@ -21,8 +21,14 @@ namespace MelonS.GameProto
         private StoneChunkEntity targetStone;  // #119
         private PawnMovement movement;
         private float taskStartTime = -10f;
+        // #121 - 줍은 후 운반 phase: pickup → drop-at-stockpile.
+        private enum Phase { GoToItem, GoToStockpile }
+        private Phase phase = Phase.GoToItem;
+        private int carryingWood = 0;
+        private int carryingStone = 0;
+        private StockpileZoneEntity dropTarget;
 
-        public bool HasTask => targetPile != null || targetStone != null;
+        public bool HasTask => targetPile != null || targetStone != null || carryingWood > 0 || carryingStone > 0;
         public WoodPileEntity Target => targetPile;
         public StoneChunkEntity TargetStone => targetStone;
 
@@ -35,6 +41,7 @@ namespace MelonS.GameProto
         {
             ClearTask();
             targetPile = pile;
+            phase = Phase.GoToItem;
             taskStartTime = Time.time;
             if (pile != null)
             {
@@ -47,6 +54,7 @@ namespace MelonS.GameProto
         {
             ClearTask();
             targetStone = stone;
+            phase = Phase.GoToItem;
             taskStartTime = Time.time;
             if (stone != null)
             {
@@ -63,11 +71,45 @@ namespace MelonS.GameProto
                 targetStone.ReservedBy = null;
             targetPile = null;
             targetStone = null;
+            // 운반 중인 자원은 inventory 로 즉시 (drop 자리에 새 pile 만들면 다시 hauler 가 줍어서 무한 loop).
+            if (carryingWood > 0)  { ResourceManager.Instance?.AddWood(carryingWood);   carryingWood = 0; }
+            if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
+            dropTarget = null;
+            phase = Phase.GoToItem;
             movement.ClearTarget();
         }
 
         private void Update()
         {
+            // #121 - 줍은 후 stockpile 으로 이동 phase 우선
+            if (phase == Phase.GoToStockpile)
+            {
+                if (dropTarget == null || dropTarget.gameObject == null)
+                {
+                    // stockpile 없으면 그냥 inventory 추가
+                    if (carryingWood > 0)  { ResourceManager.Instance?.AddWood(carryingWood);   carryingWood = 0; }
+                    if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
+                    phase = Phase.GoToItem;
+                    movement.ClearTarget();
+                    return;
+                }
+                float ddist = Vector2.Distance(transform.position, dropTarget.transform.position);
+                if (ddist <= pickupRange)
+                {
+                    // 도착 - 자원 inventory 추가 (zone 마커 시각 효과는 그대로)
+                    if (carryingWood > 0)  { ResourceManager.Instance?.AddWood(carryingWood);   carryingWood = 0; }
+                    if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
+                    Debug.Log($"[Hauler] {name} stockpile 도착, 자원 적재 완료");
+                    dropTarget = null;
+                    phase = Phase.GoToItem;
+                    movement.ClearTarget();
+                }
+                else
+                {
+                    movement.SetTarget(dropTarget.transform.position);
+                }
+                return;
+            }
             // wood pile 우선
             if (targetPile != null)
             {
@@ -82,8 +124,23 @@ namespace MelonS.GameProto
                 if (dist <= pickupRange)
                 {
                     movement.ClearTarget();
-                    targetPile.Pickup();
+                    // #121 - inventory 즉시 추가 대신 carry + stockpile 이동
+                    int amount = targetPile.Wood;
+                    UnityEngine.Object.Destroy(targetPile.gameObject);
                     targetPile = null;
+                    var sp = StockpileZoneEntity.FindNearest(transform.position);
+                    if (sp != null)
+                    {
+                        carryingWood += amount;
+                        dropTarget = sp;
+                        phase = Phase.GoToStockpile;
+                        movement.SetTarget(sp.transform.position);
+                    }
+                    else
+                    {
+                        // 없으면 즉시 inventory (legacy)
+                        ResourceManager.Instance?.AddWood(amount);
+                    }
                 }
                 else
                 {
@@ -105,8 +162,21 @@ namespace MelonS.GameProto
                 if (dist <= pickupRange)
                 {
                     movement.ClearTarget();
-                    targetStone.Pickup();
+                    int amount = targetStone.Stone;
+                    UnityEngine.Object.Destroy(targetStone.gameObject);
                     targetStone = null;
+                    var sp = StockpileZoneEntity.FindNearest(transform.position);
+                    if (sp != null)
+                    {
+                        carryingStone += amount;
+                        dropTarget = sp;
+                        phase = Phase.GoToStockpile;
+                        movement.SetTarget(sp.transform.position);
+                    }
+                    else
+                    {
+                        ResourceManager.Instance?.AddStone(amount);
+                    }
                 }
                 else
                 {

@@ -118,6 +118,9 @@ namespace MelonS.GameProto
             var chunk = go.GetComponent<StoneChunkEntity>();
             if (chunk != null) return ("돌덩이",
                 $"석재 {chunk.Stone}개\n예약: {(chunk.IsReserved ? "운반중" : "대기")}\n3분 후 사라짐");
+            var sp = go.GetComponent<StockpileZoneEntity>();
+            if (sp != null) return ("창고 영역",
+                $"hauler 가 자원을 여기로 운반\n근처 자원 자동 수집");
             var tree = go.GetComponent<TreeEntity>();
             if (tree != null) return ("나무", $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\n선택 후 우클릭 = 벌목 → 목재 +5\nHP 100, 25 dmg/sec");
             var bush = go.GetComponent<BerryBushEntity>();

@@ -93,6 +93,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I28-vein-mine-drops-chunk", TestI28_VeinMineDropsChunk);
             // #120 - PawnAbilities 컴포넌트 + 능력치 분포
             yield return RunOne("I29-pawn-abilities-vary", TestI29_PawnAbilitiesVary);
+            // #121 - stockpile zone 존재 + FindNearest 동작
+            yield return RunOne("I30-stockpile-zone-exists", TestI30_StockpileZoneExists);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -947,6 +949,19 @@ namespace MelonS.GameProto.Tests
             var first = pawns[0].GetComponent<PawnAbilities>();
             float effChop = first.EffectiveWorkMul(WorkKind.Chop);
             Assert(effChop > 0.5f && effChop < 2f, $"EffectiveWorkMul(Chop)={effChop:F2}");
+        }
+
+        /// <summary>I30: #121 - settlement 에 stockpile zone 들 존재 + FindNearest</summary>
+        private IEnumerator TestI30_StockpileZoneExists()
+        {
+            yield return null;
+            var zones = Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None);
+            Assert(zones.Length >= 9, $"stockpile zone {zones.Length} (>=9 expected: settlement 3x3)");
+            if (zones.Length == 0) yield break;
+
+            // FindNearest 동작
+            var nearest = StockpileZoneEntity.FindNearest(new Vector2(0f, 0f));
+            Assert(nearest != null, "FindNearest 동작");
         }
 
         private void FinalizeReport()

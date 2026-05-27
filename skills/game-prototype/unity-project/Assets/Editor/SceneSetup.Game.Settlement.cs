@@ -103,17 +103,13 @@ namespace MelonS.GameProto.EditorTools
                 lsr.sortingOrder = 6;
             }
 
-            // Day 57: stockpile zone marker - 정착지 옆 3x3 visible marker 영역
-            //  실제 storage 로직은 Day 69-70에서.  지금은 시각 표지만.
+            // Day 57 → #121 - stockpile zone 으로 업그레이드. 3x3 영역, 각 cell 이 zone instance.
+            //  hauler 가 가장 가까운 zone center 로 자원 운반 후 inventory 차감.
             for (int sx = -2; sx <= 0; sx++)
             {
                 for (int sy = -3; sy <= -1; sy++)
                 {
-                    GameObject mGo = new GameObject($"StockMark_{sx}_{sy}");
-                    mGo.transform.position = new Vector3(sx + 0.5f, sy + 0.5f, 0f);
-                    var msr = mGo.AddComponent<SpriteRenderer>();
-                    msr.sprite = stockSprite;
-                    msr.sortingOrder = 4;
+                    StockpileZoneEntity.Spawn(new Vector3(sx, sy, 0f), stockSprite);
                 }
             }
         }
