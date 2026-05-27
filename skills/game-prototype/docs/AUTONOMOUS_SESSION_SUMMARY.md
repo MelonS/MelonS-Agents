@@ -10,7 +10,7 @@
 찾고 계속해서 퀄리티 업글을 시켜. 기능추가는 보수적으로 게임이 되는게 먼저임."**
 
 ### 한 줄
-**4가지 운영자 불만 다 해결 + 통합 검증 10 → 16 시나리오 확대 + 6 commit.**
+**4가지 운영자 불만 다 해결 + 통합 검증 10 → 18 시나리오 확대 + 14 commit.**
 
 ### 운영자 불만 → 대응
 
@@ -23,18 +23,26 @@
 | "프로토타입 수준도 안됨" (3) | `b74a6f5` HoverTooltip - 14 종 entity hover 시 한국어 설명 |
 | 빌드 모드 우클릭 race | `e6dd403` 빌드 활성 시 ClickSelector 좌/우 클릭 차단 |
 | 이름/상태/HP 안 보임 | `ec6db96` zoom 6 기준 라벨/바 사이즈 키움 + 상태 라인 (벌목/이동/...) |
+| refactor_check 자동화 | `576e5b2` integration 도 매 commit 자동 실행 (step 7/7) |
+| GUI 벽 버튼 검증 + 인코딩 | `53c3e41` I17 wall button + cp949 console fix |
+| pawn 화면 밖 자주 나감 | `f059417` 선택 시 카메라 부드러운 focus (0.6s) |
+| batchmode lerp 안 수렴 | `47eb2fe` MoveTowards 고정 30u/s + I18 camera focus 검증 |
 
 ### 검증
 
 - **isolated**: 55/55 PASS (변동 X)
-- **integration (Game.unity 실 spawn 위)**: 13 → 16 시나리오 PASS
+- **integration (Game.unity 실 spawn 위)**: 5 → 18 시나리오 PASS
+  - I6-I10 GUI 버튼 (bar 생성/멈춤/4x/벽/징집)
   - I11 ScreenToWorld round-trip + OverlapPoint (err=0.0000, hitsPawn=True)
   - I12 SelectionRing 생성 + 선택 따라옴 (alpha>0.6)
   - I13 starter 자원 (wood=40, food+meals>=3)
   - I14 HoverTooltip MonoBehaviour 1 ea
   - I15 BuildManager mode toggle
   - I16 사용자 smoke - pawn 선택→tree 우클릭→PawnChopper.HasTask=True
-- 매 commit 마다 `refactor_check.py --skip-scenes` 통과
+  - I17 GUI 벽 버튼 → BuildManager mode
+  - I18 select pawn → 카메라 그쪽으로 pan (>0.5 unit moved)
+- 매 commit 마다 `refactor_check.py` 자동 실행 (isolated + integration 둘 다)
+- 한 사이클 ~110s (이전 80s, integration step 추가)
 
 ### 신규 컴포넌트
 
