@@ -190,7 +190,8 @@ namespace MelonS.GameProto
             var stove = go.GetComponent<StoveEntity>();
             if (stove != null) return ("화덕", $"목재 10\npawn 자동 cook (food 5 → meal 1)");
             var bed = go.GetComponent<BedEntity>();
-            if (bed != null) return ("침대", $"목재 8\n밤 수면 시 1.6x 회복 + mood +5/s");
+            if (bed != null) return ($"{bed.QualityKr}",
+                $"품질: {bed.QualityKr}\n수면 회복: {bed.RestMul:F2}x\n기분: +{bed.MoodBonus:F0}/s\n(sleeping spot 0.8x / wood 1.0x / fine 1.4x)");
             var bench = go.GetComponent<ResearchBench>();
             if (bench != null) return ("연구대", $"radius 1.5 안 pawn 시 연구 진행\n2 pt/sec/pawn");
             var wolf = go.GetComponent<WolfEnemy>();

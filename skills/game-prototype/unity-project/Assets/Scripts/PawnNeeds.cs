@@ -45,15 +45,22 @@ namespace MelonS.GameProto
 
             // Day 10: when sleep is low AND it's night, pawn sleeps in place.
             // Sleep regenerates fast, food + mood still decay (mildly).
-            //  운영자 #107 - 침대 위에서 자면 1.6x 회복 + mood +5 보너스 매 sec
+            //  운영자 #107 - 침대 위에서 자면 회복 보너스
+            //  #153 - bed quality 별 RestMul/MoodBonus 적용 (#151 wiring).
+            //    SleepingSpot 0.80x rest +0 mood/s
+            //    Wood         1.00x rest +3 mood/s
+            //    Fine         1.40x rest +8 mood/s
+            //  bed 가 없으면 ground (rest 0.6x, mood 패널티 약간).
             if (sleep < 30f && night)
             {
                 IsSleeping = true;
-                float bedBonus = IsOnBed() ? 1.6f : 1.0f;
-                sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * bedBonus * dt);
+                var bed = GetBedUnderPawn();
+                float restMul = bed != null ? bed.RestMul : 0.6f;
+                float moodPerSec = bed != null ? bed.MoodBonus : 0f;
+                sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * restMul * dt);
                 food  = Mathf.Max(0f, food  - foodDecay * 0.5f * dt);
                 mood  = Mathf.Max(0f, mood  - moodDecay * 0.5f * dt);
-                if (IsOnBed()) mood = Mathf.Min(100f, mood + 5f * dt);
+                if (moodPerSec > 0f) mood = Mathf.Min(100f, mood + moodPerSec * dt);
                 return;
             }
             // Wake up when sleep refilled past 80, even if still night
@@ -149,13 +156,20 @@ namespace MelonS.GameProto
         }
 
         // 운영자 #107 - 침대 위에서 자면 보너스
-        private bool IsOnBed()
+        //  #153 - 단순 bool 대신 BedEntity 반환 (quality 별 RestMul/MoodBonus 접근).
+        private BedEntity GetBedUnderPawn()
         {
             var hits = Physics2D.OverlapBoxAll(transform.position, Vector2.one * 0.4f, 0f);
             foreach (var h in hits)
-                if (h != null && h.GetComponent<BedEntity>() != null) return true;
-            return false;
+            {
+                if (h == null) continue;
+                var bed = h.GetComponent<BedEntity>();
+                if (bed != null) return bed;
+            }
+            return null;
         }
+        public bool IsOnBed() => GetBedUnderPawn() != null;
+        public BedEntity CurrentBed() => GetBedUnderPawn();
 
         private bool IsNightTime()
         {
