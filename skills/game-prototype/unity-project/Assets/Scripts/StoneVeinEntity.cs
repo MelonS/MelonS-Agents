@@ -66,10 +66,14 @@ namespace MelonS.GameProto
         {
             if (IsDestroyed) return false;
             hp -= dmg;
+            // #160 - #156 lesson: grayscale 덮어쓰기 → type tint × brightness 곱 유지.
+            //  화강암 (진회) → 채광 중에도 진회 hue 유지.
             if (sr != null)
             {
                 float t = Mathf.Clamp01(hp / maxHp);
-                sr.color = new Color(0.4f + 0.6f * t, 0.4f + 0.6f * t, 0.4f + 0.6f * t, 1f);
+                Color baseTint = TypeColors[(int)type];
+                float b = 0.4f + 0.6f * t;
+                sr.color = new Color(baseTint.r * b, baseTint.g * b, baseTint.b * b, baseTint.a);
             }
             if (Time.time - lastSfxTime >= SfxInterval)
             {
