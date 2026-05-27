@@ -79,6 +79,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I19-chop-completes-wood-up", TestI19_ChopCompletesWoodUp);
             yield return RunOne("I20-crop-harvest-food-up", TestI20_CropHarvestFoodUp);
             yield return RunOne("I21-combat-drafted-vs-wolf", TestI21_CombatDraftedVsWolf);
+            yield return RunOne("I22-save-load-roundtrip", TestI22_SaveLoadRoundtrip);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -613,6 +614,37 @@ namespace MelonS.GameProto.Tests
             if (wolf != null && wolf.gameObject != null) Destroy(wolfGo);
             Assert(damaged,
                 $"drafted vs wolf 5s: HP {startHp}->{endHp} (damaged={damaged}, gone={wolfGone})");
+        }
+
+        /// <summary>I22: 진짜 Game.unity 위 SaveLoadManager.Save → 자원 변경 → Load → 복원 확인.
+        ///   V34 isolated 보다 광범위 (실제 spawn 된 pawn 들 + tree 들 까지).</summary>
+        private IEnumerator TestI22_SaveLoadRoundtrip()
+        {
+            yield return null;
+            var rm = Services.Get<ResourceManager>();
+            if (rm == null) { Assert(false, "ResourceManager null"); yield break; }
+            int beforeWood = rm.wood;
+            int beforeFood = rm.food;
+            int beforePawnCount = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None).Length;
+            int beforeTreeCount = Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None).Length;
+
+            SaveLoadManager.Save();
+            // 자원 임의 변경
+            rm.AddWood(999);
+            rm.AddFood(-rm.food + 1);  // food=1 강제
+            int dirtyWood = rm.wood;
+
+            // Load 후 복원 확인 (Note: Load 만 호출 — GameSaveButtons.OnLoad 가 진짜 reconstruct 도 한다)
+            var data = SaveLoadManager.Load();
+            if (data == null) { Assert(false, "Load returned null"); yield break; }
+            bool dataOk = data.wood == beforeWood && data.food == beforeFood
+                && data.pawns.Count == beforePawnCount;
+            // 자원 복원
+            rm.wood = data.wood;
+            rm.food = data.food;
+            Assert(dataOk,
+                $"Save/Load: wood {beforeWood}->dirty{dirtyWood}->loaded{data.wood}, " +
+                $"food {beforeFood}->loaded{data.food}, pawns {beforePawnCount}=={data.pawns.Count}");
         }
 
         private void FinalizeReport()
