@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace MelonS.GameProto
 {
@@ -21,8 +22,11 @@ namespace MelonS.GameProto
 
         private void Update()
         {
+            // UI 위 클릭 무시 (운영자 피드백 - UI 가 가로채던 문제)
+            bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+
             // Left click = select
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButtonDown(0) && !overUI)
             {
                 Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mouseWorld.z = 0f;
@@ -38,10 +42,12 @@ namespace MelonS.GameProto
             }
 
             // Right click = move OR chop OR attack (drafted) for selected pawn
-            if (Input.GetMouseButtonDown(1) && currentSelection != null)
+            if (Input.GetMouseButtonDown(1) && !overUI && currentSelection != null)
             {
                 Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mouseWorld.z = 0f;
+                // 시각 피드백 - 사용자에게 클릭 위치 보여줌
+                ClickEffect.Spawn(mouseWorld, new Color(1f, 0.9f, 0.3f, 0.95f));
                 Collider2D rhit = Physics2D.OverlapPoint(mouseWorld);
 
                 // Day 48: drafted pawn — right-click on enemy/animal = attack/hunt
@@ -136,8 +142,8 @@ namespace MelonS.GameProto
         public void SimulateRightClick(Vector2 worldPos)
         {
             if (currentSelection == null) return;
-            // 동일 로직 (Update 의 우클릭 분기와 동일) - 단 mouseWorld 가 인자로 주어짐.
             Vector3 mouseWorld = new Vector3(worldPos.x, worldPos.y, 0f);
+            ClickEffect.Spawn(mouseWorld, new Color(0.3f, 0.9f, 1f, 0.95f));  // 통합 검증 - 파란 X
             Collider2D rhit = Physics2D.OverlapPoint(mouseWorld);
             if (currentSelection.IsDrafted)
             {
