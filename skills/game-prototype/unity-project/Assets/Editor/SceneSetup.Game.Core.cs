@@ -15,11 +15,13 @@ namespace MelonS.GameProto.EditorTools
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.15f, 0.18f, 0.13f, 1f);
             cam.orthographic = true;
-            // Day 40: 40x40 맵에 맞춰 ortho 10 (vertical ±10, horizontal ±17.8).
-            //  맵 전체는 ±20이라 WASD pan 으로 봐야 — 림월드 vibe.
-            cam.orthographicSize = 10f;
+            // 운영자 피드백 2026-05-27 "프로토타입 수준도 안됨":
+            //  ortho 10 일 때 pawn 1 unit / 화면 20 unit = 5% — 너무 작음.
+            //  ortho 6 → pawn 8.3% — pawn 얼굴 디테일 보임. zoomMax 22 살아있어서 wheel 로 줌아웃 가능.
+            cam.orthographicSize = 6f;
             camGo.tag = "MainCamera";
-            camGo.transform.position = new Vector3(0, 0, -10);
+            // pawn 그룹 (-1.5/0.5/2.5, 0.5) 중심 + 정착지 살짝 위 → (0.5, 1.0)
+            camGo.transform.position = new Vector3(0.5f, 1.0f, -10);
             camGo.AddComponent<AudioListener>();
             camGo.AddComponent<CameraController>();   // Day 8: WASD pan + 휠 zoom + Shift fast-pan
             camGo.AddComponent<DayNightCycle>();      // Day 9: time-of-day tint
