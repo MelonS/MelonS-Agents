@@ -14,10 +14,11 @@ namespace MelonS.GameProto
         [SerializeField] private Sprite arrowSpriteRuntime;  // Day 50
         [SerializeField] private Vector2[] spawnPositions = new Vector2[]
         {
-            // tile (x, y) 의 시각 center 는 (x+0.5, y+0.5).  pawn 도 같은 grid 위.
-            new Vector2(-1.5f, 0.5f),
-            new Vector2( 0.5f, 0.5f),
-            new Vector2( 2.5f, 0.5f),
+            // 운영자 피드백 - "림들 겹쳐서 이동" - 일렬 spawn → 같은 target pick.
+            //  spread (x, y) 둘 다 변화시켜 spawn 부터 분리.
+            new Vector2(-1.5f, 1.5f),
+            new Vector2( 1.5f, 0.5f),
+            new Vector2(-0.5f, -1.5f),
         };
         // Day 32: 한국 이름 — generic, 흔한 한국 이름 (저작권 무관).
         private static readonly string[] KoreanNames = new[]

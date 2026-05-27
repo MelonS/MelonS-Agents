@@ -34,14 +34,23 @@ namespace MelonS.GameProto.AI
         private static BerryBushEntity FindNearestBush(PawnContext ctx)
         {
             var arr = Object.FindObjectsByType<BerryBushEntity>(FindObjectsSortMode.None);
+            // 운영자: 림들 겹침 - 다른 gatherer 가 target 한 bush skip.
+            var others = Object.FindObjectsByType<PawnGatherer>(FindObjectsSortMode.None);
+            var claimed = new System.Collections.Generic.HashSet<BerryBushEntity>();
+            foreach (var g in others)
+            {
+                if (g == null || g == ctx.gatherer) continue;
+                if (g.Target != null) claimed.Add(g.Target);
+            }
             BerryBushEntity best = null;
             float bestSq = float.MaxValue;
             Vector2 me = ctx.transform.position;
             foreach (var b in arr)
             {
                 if (b == null || b.IsDepleted) continue;
+                if (claimed.Contains(b)) continue;
                 Vector3 bp = b.transform.position;
-                if (Mathf.Abs(bp.x) > 28.5f || Mathf.Abs(bp.y) > 28.5f) continue;  // I19 - bound check
+                if (Mathf.Abs(bp.x) > 28.5f || Mathf.Abs(bp.y) > 28.5f) continue;
                 float sq = ((Vector2)bp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = b; }
             }
@@ -66,14 +75,23 @@ namespace MelonS.GameProto.AI
         private static AnimalEntity FindNearestAnimal(PawnContext ctx)
         {
             var arr = Object.FindObjectsByType<AnimalEntity>(FindObjectsSortMode.None);
+            // 운영자: 림들 겹침 - 다른 hunter 가 target 한 animal skip.
+            var others = Object.FindObjectsByType<PawnHunter>(FindObjectsSortMode.None);
+            var claimed = new System.Collections.Generic.HashSet<AnimalEntity>();
+            foreach (var h in others)
+            {
+                if (h == null || h == ctx.hunter) continue;
+                if (h.Target != null) claimed.Add(h.Target);
+            }
             AnimalEntity best = null;
             float bestSq = float.MaxValue;
             Vector2 me = ctx.transform.position;
             foreach (var a in arr)
             {
                 if (a == null || a.IsDead) continue;
+                if (claimed.Contains(a)) continue;
                 Vector3 ap = a.transform.position;
-                if (Mathf.Abs(ap.x) > 28.5f || Mathf.Abs(ap.y) > 28.5f) continue;  // I19 - bound
+                if (Mathf.Abs(ap.x) > 28.5f || Mathf.Abs(ap.y) > 28.5f) continue;
                 float sq = ((Vector2)ap - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = a; }
             }
@@ -125,14 +143,23 @@ namespace MelonS.GameProto.AI
         private static TreeEntity FindNearestTree(PawnContext ctx)
         {
             var arr = Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
+            // 운영자 피드백 "림들이 왜케 겹쳐서 이동" - 다른 pawn 이 이미 target 한 tree 는 skip.
+            //  각 pawn 이 다른 tree pick 하도록 reservation 시스템.
+            var otherChoppers = Object.FindObjectsByType<PawnChopper>(FindObjectsSortMode.None);
+            System.Collections.Generic.HashSet<TreeEntity> claimed
+                = new System.Collections.Generic.HashSet<TreeEntity>();
+            foreach (var c in otherChoppers)
+            {
+                if (c == null || c == ctx.chopper) continue;
+                if (c.Target != null) claimed.Add(c.Target);
+            }
             TreeEntity best = null;
             float bestSq = float.MaxValue;
             Vector2 me = ctx.transform.position;
             foreach (var t in arr)
             {
                 if (t == null || t.IsDestroyed) continue;
-                // I19 fix - world bound (±19) 밖 tree 는 도달 불가, AI 도 skip.
-                //  운영자 자기 전 '이동 안됨' 의 부수 원인 — AI 가 도달 불가 tree pick 시 stuck.
+                if (claimed.Contains(t)) continue;  // 이미 다른 pawn 의 target
                 Vector3 tp = t.transform.position;
                 if (Mathf.Abs(tp.x) > 28.5f || Mathf.Abs(tp.y) > 28.5f) continue;
                 float sq = ((Vector2)tp - me).sqrMagnitude;
