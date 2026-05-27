@@ -104,6 +104,8 @@ namespace MelonS.GameProto
             SelectionRing.EnsureInScene();
             // → mouse hover 시 entity 종류 + 가능한 action 표시
             HoverTooltip.EnsureInScene();
+            // → wolf/bandit 접근 시 큰 빨강 "⚠ 위협" 우상단 (auto-pause X, 시각 only)
+            ThreatAlertUI.EnsureInScene();
 
             // 운영자 피드백 — 게임 시작 시 자원 0 이면 빌드 모드도 못 켜고 무엇도 못함.
             // 림월드 starter 처럼 약간의 자원: 벽 6 + 화덕 1 + 식사 며칠
