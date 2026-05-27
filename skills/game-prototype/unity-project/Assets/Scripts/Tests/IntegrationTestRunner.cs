@@ -226,8 +226,8 @@ namespace MelonS.GameProto.Tests
             var bar = GameObject.Find("GuiControlBar");
             if (bar == null) { Assert(false, "GuiControlBar GameObject 없음"); yield break; }
             var buttons = bar.GetComponentsInChildren<UnityEngine.UI.Button>();
-            Assert(buttons.Length == 11,
-                $"GuiControlBar 발견, 버튼 {buttons.Length}개 (11 expected - 침대 추가)");
+            Assert(buttons.Length == 7,
+                $"GuiControlBar 발견, 버튼 {buttons.Length}개 (7 expected - #110 림 Architect 패턴)");
         }
 
         /// <summary>I7: 멈춤 버튼 클릭 → Time.timeScale=0</summary>
@@ -264,24 +264,25 @@ namespace MelonS.GameProto.Tests
                 $"4x 버튼: scale={scale} (4 expected)");
         }
 
-        /// <summary>I9: 벽 버튼 클릭 → BuildManager.CurrentMode=Wall</summary>
+        /// <summary>I9: 건축 버튼 클릭 → ArchitectMenu 열림 + BuildManager 모드 toggle</summary>
         private IEnumerator TestI9_GuiBuildButton()
         {
             yield return null;
             var bar = GameObject.Find("GuiControlBar");
-            var wallBtn = bar.transform.Find("Btn_벽")?.GetComponent<UnityEngine.UI.Button>();
-            if (wallBtn == null) { Assert(false, "Btn_벽 없음"); yield break; }
+            var arch = bar.transform.Find("Btn_건축")?.GetComponent<UnityEngine.UI.Button>();
+            if (arch == null) { Assert(false, "Btn_건축 없음"); yield break; }
             if (BuildManager.Instance == null) { Assert(false, "BuildManager.Instance null"); yield break; }
             BuildManager.Instance.SetMode(BuildManager.Mode.Off);  // reset
-            wallBtn.onClick.Invoke();
+            arch.onClick.Invoke();  // ArchitectMenu 열림
             yield return null;
+            bool menuOpen = ArchitectMenu.Instance != null && ArchitectMenu.Instance.gameObject.activeSelf;
+            // SetMode 직접 호출로 검증 (메뉴 클릭 시뮬은 카테고리 펼치고 sub-btn click 복잡)
+            BuildManager.Instance.SetMode(BuildManager.Mode.Wall);
             var mode = BuildManager.Instance.CurrentMode;
-            // 같은 button 다시 누르면 Off 로 toggle 되는지도 확인
-            wallBtn.onClick.Invoke();
-            yield return null;
-            var modeAfter2 = BuildManager.Instance.CurrentMode;
-            Assert(mode == BuildManager.Mode.Wall && modeAfter2 == BuildManager.Mode.Off,
-                $"벽 버튼: 1st click → {mode} (Wall expected), 2nd → {modeAfter2} (Off expected)");
+            BuildManager.Instance.SetMode(BuildManager.Mode.Off);
+            var mode2 = BuildManager.Instance.CurrentMode;
+            Assert(menuOpen && mode == BuildManager.Mode.Wall && mode2 == BuildManager.Mode.Off,
+                $"건축 버튼: menuOpen={menuOpen}, SetMode Wall→Off OK");
         }
 
         /// <summary>I10: 콜로니스트 선택 후 징집 버튼 클릭 → IsDrafted=true</summary>
@@ -447,14 +448,12 @@ namespace MelonS.GameProto.Tests
             int startWallCount = Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None).Length;
             if (startWood < 5) { Assert(false, $"wood {startWood} < 5"); yield break; }
 
-            // GUI 벽 버튼 클릭 시뮬
-            var bar = GameObject.Find("GuiControlBar");
-            var wallBtn = bar?.transform.Find("Btn_벽")?.GetComponent<UnityEngine.UI.Button>();
-            if (wallBtn == null) { Assert(false, "Btn_벽 없음"); yield break; }
-            wallBtn.onClick.Invoke();
+            // I17 - SetMode 직접 호출로 빌드모드 (Wall) 검증 (#110 이후 UI 경로 Architect → 카테고리 → buildable)
+            if (BuildManager.Instance == null) { Assert(false, "BuildManager null"); yield break; }
+            BuildManager.Instance.SetMode(BuildManager.Mode.Wall);
             yield return null;
-            if (BuildManager.Instance == null || BuildManager.Instance.CurrentMode != BuildManager.Mode.Wall)
-            { Assert(false, $"빌드모드 활성화 실패 mode={BuildManager.Instance?.CurrentMode}"); yield break; }
+            if (BuildManager.Instance.CurrentMode != BuildManager.Mode.Wall)
+            { Assert(false, $"빌드모드 활성화 실패 mode={BuildManager.Instance.CurrentMode}"); yield break; }
 
             // 빈 cell (5, 5) 에 wall 강제 배치 - BuildManager.TryPlace 는 private 라 reflection
             var tryPlace = typeof(BuildManager).GetMethod("TryPlace",

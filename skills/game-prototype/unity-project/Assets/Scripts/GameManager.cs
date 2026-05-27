@@ -111,6 +111,8 @@ namespace MelonS.GameProto
             EntityInspectorPanel.EnsureInScene();
             // → #113 RimWorld 우클릭 prioritize 컨텍스트 메뉴
             ContextMenuUI.EnsureInScene();
+            // → #110 림월드 Architect 좌측 카테고리 메뉴 (F8)
+            ArchitectMenu.EnsureInScene();
 
             // 운영자 피드백 — 게임 시작 시 자원 0 이면 빌드 모드도 못 켜고 무엇도 못함.
             // 림월드 starter 처럼 약간의 자원: 벽 6 + 화덕 1 + 식사 며칠

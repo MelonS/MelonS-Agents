@@ -22,7 +22,7 @@ namespace MelonS.GameProto
 
         private Button pauseBtn, speed1Btn, speed2Btn, speed4Btn;
         private Button draftBtn;
-        private Button wallBtn, floorBtn, doorBtn, stoveBtn, bedBtn;
+        private Button architectBtn;  // #110 - 5 build btn 대체 (Architect 메뉴 열기)
         private Button researchBtn;
 
         // 상태 색 — active 면 노란, 아니면 panel 색
@@ -90,8 +90,9 @@ namespace MelonS.GameProto
             rt.anchorMin = new Vector2(0.5f, 0f);
             rt.anchorMax = new Vector2(0.5f, 0f);
             rt.pivot = new Vector2(0.5f, 0f);
-            // 11 buttons + 2 group gaps + 8 normal gaps  (#107 - bed 추가)
-            float totalW = 11 * BtnW + 8 * Gap + 2 * GroupGap;
+            // 7 buttons + 2 group gaps + 4 normal gaps  (#110 - 5 build btn → 1 Architect)
+            //  layout: [멈춤][1x][2x][4x] [징집] [건축] [연구]
+            float totalW = 7 * BtnW + 4 * Gap + 2 * GroupGap;
             rt.sizeDelta = new Vector2(totalW, BtnH);
             rt.anchoredPosition = new Vector2(0, 40);  // 화면 하단에서 40px
 
@@ -112,12 +113,8 @@ namespace MelonS.GameProto
             // Draft
             draftBtn  = MakeBtn("징집",  "(R)",      x, ToggleDraft);                                                                       x += BtnW + GroupGap;
 
-            // Build group
-            wallBtn   = MakeBtn("벽",    "(B) 5",   x, ()=>SetBuildMode(BuildManager.Mode.Wall));   x += BtnW + Gap;
-            floorBtn  = MakeBtn("바닥",  "(F) 1",   x, ()=>SetBuildMode(BuildManager.Mode.Floor)); x += BtnW + Gap;
-            doorBtn   = MakeBtn("문",    "(G) 3",   x, ()=>SetBuildMode(BuildManager.Mode.Door));  x += BtnW + Gap;
-            stoveBtn  = MakeBtn("화덕",  "(T) 10",  x, ()=>SetBuildMode(BuildManager.Mode.Stove)); x += BtnW + Gap;
-            bedBtn    = MakeBtn("침대",  "(Y) 8",   x, ()=>SetBuildMode(BuildManager.Mode.Bed));   x += BtnW + GroupGap;
+            // Architect 단일 버튼 - 림월드 패턴.  좌측 popup 카테고리 메뉴.
+            architectBtn = MakeBtn("건축", "(F8)", x, () => { if (ArchitectMenu.Instance != null) ArchitectMenu.Instance.Toggle(); }); x += BtnW + GroupGap;
 
             // Research
             researchBtn = MakeBtn("연구", "(N)",     x, OpenResearchPicker);
@@ -208,11 +205,8 @@ namespace MelonS.GameProto
             // 매 프레임 active build mode 따라 button 색 갱신 (가벼움 - 5개 비교)
             if (BuildManager.Instance != null)
             {
-                RefreshBuildHighlight(wallBtn,  BuildManager.Instance.CurrentMode == BuildManager.Mode.Wall);
-                RefreshBuildHighlight(floorBtn, BuildManager.Instance.CurrentMode == BuildManager.Mode.Floor);
-                RefreshBuildHighlight(doorBtn,  BuildManager.Instance.CurrentMode == BuildManager.Mode.Door);
-                RefreshBuildHighlight(stoveBtn, BuildManager.Instance.CurrentMode == BuildManager.Mode.Stove);
-                RefreshBuildHighlight(bedBtn,   BuildManager.Instance.CurrentMode == BuildManager.Mode.Bed);
+                // Architect 버튼 active highlight: 어떤 build mode 든 활성 시 노란.
+                RefreshBuildHighlight(architectBtn, BuildManager.Instance.BuildModeActive);
             }
             // Speed highlight
             if (TimeController.Instance != null)
