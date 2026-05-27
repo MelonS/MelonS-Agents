@@ -70,11 +70,13 @@ namespace MelonS.GameProto
         {
             if (IsDestroyed) return false;
             hp -= dmg;
-            // Visual feedback — darken as HP drops
+            // #156 - Visual feedback (darken) 가 #149 species tint 를 덮어쓰면 종 구분 사라짐.
+            //  species tint 를 base 로 두고 brightness 만 hp 비례로 곱해 유지.
             if (spriteRenderer != null)
             {
                 float t = Mathf.Clamp01(hp / maxHp);
-                spriteRenderer.color = new Color(t, t, t, 1f);
+                var (_, _, _, baseTint) = SpeciesStats[(int)species];
+                spriteRenderer.color = new Color(baseTint.r * t, baseTint.g * t, baseTint.b * t, baseTint.a);
             }
             // Chop SFX — throttled so it sounds rhythmic, not buzzy
             if (Time.time - lastChopSoundTime >= ChopSoundInterval)

@@ -104,6 +104,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V55-multi-trader-coexist", TestV55_MultiTrader);
             yield return RunOne("V56-bed-quality-rest-mul", TestV56_BedQualityRestMul);
             yield return RunOne("V57-stockpile-priority-findbest", TestV57_StockpilePriorityFindBest);
+            yield return RunOne("V58-tree-species-tint-preserved", TestV58_TreeSpeciesTintPreserved);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -368,6 +369,31 @@ namespace MelonS.GameProto.Tests
             float night = clock.DayProgress;
             Assert(dawn < 0.3f && night > 0.85f,
                 $"dawn={dawn:F2} (<0.3), night={night:F2} (>0.85)");
+        }
+
+        // #156 - TreeEntity TakeChopDamage 가 species tint 를 보존하는지 확인.
+        //   이전: new Color(t,t,t,1) 로 덮어써서 Oak 진녹이 회색 됨.
+        //   지금: base tint × brightness 로 hue 유지.
+        private IEnumerator TestV58_TreeSpeciesTintPreserved()
+        {
+            var go = new GameObject("TestTreeV58");
+            var sr = go.AddComponent<SpriteRenderer>();
+            var tree = go.AddComponent<TreeEntity>();
+            tree.SetSpecies(TreeSpecies.Oak);  // 진녹 tint (R=0.55, G=0.85, B=0.55)
+            yield return null;
+            Color before = sr.color;
+            tree.TakeChopDamage(30f);  // HP 150 → 120 (80%), brightness 0.8 곱해야
+            yield return null;
+            Color after = sr.color;
+            // R/G/B 비율 보존 확인 - G:R 비율이 그대로면 hue 유지 (회색은 G=R)
+            float ratioBefore = before.r > 0.01f ? before.g / before.r : 0f;
+            float ratioAfter  = after.r > 0.01f  ? after.g / after.r  : 0f;
+            bool hueKept = Mathf.Abs(ratioBefore - ratioAfter) < 0.02f;
+            // 그리고 darkened (after.g < before.g)
+            bool darkened = after.g < before.g - 0.05f;
+            Object.Destroy(go);
+            Assert(hueKept && darkened,
+                $"before({before.r:F2},{before.g:F2},{before.b:F2}) → after({after.r:F2},{after.g:F2},{after.b:F2}) hueKept={hueKept} darkened={darkened}");
         }
 
         // #155 - StockpileZoneEntity.FindBest 가 priority 높은 zone 을 가까운 zone 보다 우선.
