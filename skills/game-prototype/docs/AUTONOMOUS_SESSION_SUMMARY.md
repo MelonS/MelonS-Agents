@@ -10,7 +10,7 @@
 찾고 계속해서 퀄리티 업글을 시켜. 기능추가는 보수적으로 게임이 되는게 먼저임."**
 
 ### 한 줄
-**4 운영자 불만 해결 + integration 5→22 시나리오 + 진짜 movement 버그 fix + SceneSetup 1057→310L (-70.7%) + 35 commit.**
+**4 운영자 불만 해결 + integration 5→23 시나리오 + 진짜 movement 버그 fix + SceneSetup 1057→310L (-70.7%) + AI give-up safety + 위협 알림 + build warning 0 + 44+ commit.**
 
 ### 운영자 불만 → 대응
 
@@ -81,6 +81,20 @@
 
 `de85438` V34 isolated 가 SaveData.wood 만 검증.  I22 는 실제 spawn 된 3 pawn
 + ~20 tree 까지 진짜 게임 상태에서 Save → 자원 dirty → Load → 복원 확인 (PASS).
+
+### I23 60초 stress (4x speed = 4분 game) + 안전성
+
+`5505a68` Application.logMessageReceived 후킹 - 60s 시뮬 exception 0회 검증.
+이제 매 commit 검증 사이클이 실제 4분 게임플레이 포함.
+
+### 추가 안전망
+
+- `02cf1a1` AI Strategy actions (FindNearestX) world bound (±18.5) 필터 - unreachable target pick 금지
+- `de7360a` PawnHunter/Gatherer give-up 15s/10s (PawnChopper 와 같은 패턴)
+- `86cc4d9` PawnCook give-up 10s - 4 worker 모두 unreachable stuck 방어 완성
+- `bec88ce` ThreatAlertUI - wolf 5u 또는 bandit 8u 접근 시 빨강 ⚠ 알림 (auto-pause X, 시각 only)
+- `39dfde5` API 현대화 - FindObjectsOfType → FindObjectsByType 8 파일, build warning 0
+- `706350e` V55 trader flakiness fix (3s 대기, 0.05 threshold)
 
 ### 검증
 
