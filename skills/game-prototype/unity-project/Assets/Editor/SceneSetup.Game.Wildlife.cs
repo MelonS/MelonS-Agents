@@ -11,9 +11,11 @@ namespace MelonS.GameProto.EditorTools
     {
         private static void SpawnWildlife()
         {
-            // Day 64: Wolf predator - 2 마리, 맵 외곽에서 wander
+            // Day 64 + #108: Wolf predator - 3 마리 (60x60), 맵 외곽에서 wander
             Sprite wolfSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/wolf.png");
-            Vector2[] wolfPositions = new[] { new Vector2(-17f, 17f), new Vector2(17f, -17f) };
+            Vector2[] wolfPositions = new[] {
+                new Vector2(-27f, 27f), new Vector2(27f, -27f), new Vector2(-27f, -25f),
+            };
             foreach (var wpos in wolfPositions)
             {
                 GameObject wGo = new GameObject($"Wolf_{wpos.x}_{wpos.y}");
@@ -27,18 +29,15 @@ namespace MelonS.GameProto.EditorTools
                 wGo.AddComponent<WolfEnemy>();
             }
 
-            // Day 23+41: 8 wandering deer - 40x40 맵 비례로 증가
+            // Day 23+41 + #108: 14 wandering deer - 60x60 맵 비례
             Sprite deerSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/deer.png");
             Vector2[] deerPositions = new[]
             {
-                new Vector2(-14f,  8f),
-                new Vector2( 13f,  9f),
-                new Vector2( 16f, -3f),
-                new Vector2(-15f, -4f),
-                new Vector2( -2f, 15f),
-                new Vector2(  6f,-12f),
-                new Vector2(-10f, -2f),
-                new Vector2( 11f,  4f),
+                new Vector2(-21f,  12f), new Vector2( 19f,  14f), new Vector2( 24f, -5f),
+                new Vector2(-23f, -6f),  new Vector2( -3f, 23f),  new Vector2(  9f,-18f),
+                new Vector2(-15f, -3f),  new Vector2( 16f,  6f),  new Vector2(-12f, 16f),
+                new Vector2( 22f, 18f),  new Vector2(  5f, 14f),  new Vector2(-19f, 9f),
+                new Vector2( 10f, -8f),  new Vector2(-7f, -22f),
             };
             foreach (var dpos in deerPositions)
             {

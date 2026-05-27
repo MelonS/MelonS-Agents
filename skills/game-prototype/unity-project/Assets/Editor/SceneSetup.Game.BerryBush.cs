@@ -12,14 +12,13 @@ namespace MelonS.GameProto.EditorTools
             // Day 11/41: 6 berry bushes (40x40 맵).  AI gatherer 가 target.
             //   tree sprite 재사용 (green tint).  BerryBushEntity.Awake 가 stock 별
             //   sprite color 갱신 — 여기 green tint 는 placeholder.
+            // #108: 60x60 맵 - 10개로 확장 (이전 6)
             Vector2[] bushPositions = new[]
             {
-                new Vector2(-9f,  -2f),
-                new Vector2(  6f,  -8f),
-                new Vector2( 11f,   3f),
-                new Vector2(-13f,  10f),
-                new Vector2(  3f,  13f),
-                new Vector2( -6f, -14f),
+                new Vector2(-9f,  -2f),  new Vector2(  6f,  -8f), new Vector2( 11f,   3f),
+                new Vector2(-13f,  10f), new Vector2(  3f,  13f), new Vector2( -6f, -14f),
+                new Vector2(-22f,  6f),  new Vector2( 21f,  18f), new Vector2(-19f, -21f),
+                new Vector2( 17f, -16f),
             };
             foreach (var pos in bushPositions)
             {

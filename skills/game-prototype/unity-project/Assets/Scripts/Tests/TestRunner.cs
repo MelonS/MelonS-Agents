@@ -446,9 +446,9 @@ namespace MelonS.GameProto.Tests
 
         private IEnumerator TestV45_ClampStatic()
         {
-            // PawnMovement.WORLD_MIN/MAX static field 검증 (±19)
-            bool minOk = PawnMovement.WORLD_MIN.x == -19f && PawnMovement.WORLD_MIN.y == -19f;
-            bool maxOk = PawnMovement.WORLD_MAX.x == 19f && PawnMovement.WORLD_MAX.y == 19f;
+            // #108 - PawnMovement.WORLD_MIN/MAX 60x60 맵 ±29
+            bool minOk = PawnMovement.WORLD_MIN.x == -29f && PawnMovement.WORLD_MIN.y == -29f;
+            bool maxOk = PawnMovement.WORLD_MAX.x == 29f && PawnMovement.WORLD_MAX.y == 29f;
             Assert(minOk && maxOk,
                 $"WORLD_MIN={PawnMovement.WORLD_MIN}, WORLD_MAX={PawnMovement.WORLD_MAX}");
             yield break;
@@ -677,11 +677,11 @@ namespace MelonS.GameProto.Tests
         private IEnumerator TestV33_AnimalTame()
         {
             var rm = Services.Get<ResourceManager>();
-            if (rm.food < 100) rm.AddFood(100 - rm.food);  // 충분한 food 보장
+            rm.food = 100;  // 명시적 set - 이전 test 의 잔여 영향 X
             int startFood = rm.food;
             // 30% 확률이라 multiple try - food 30 사용 → ~9번 시도, 1번 이상 성공 확률 ~95%
             var go = new GameObject("TestAnimalTame");
-            go.transform.position = new Vector3(34, -8, 0);
+            go.transform.position = new Vector3(25, -10, 0);  // #108 - 새 60x60 맵 내
             go.AddComponent<SpriteRenderer>();
             go.AddComponent<Rigidbody2D>();
             var animal = go.AddComponent<AnimalEntity>();
@@ -774,11 +774,13 @@ namespace MelonS.GameProto.Tests
 
         private IEnumerator TestV28_PawnMovementTick()
         {
-            var go = SpawnTestPawn(new Vector3(15, 15, 0), includeAI: false);
+            // #108 - 60x60 맵 새 lake center 중 하나가 (15,18) 이라 이전 target 이 water!
+            //  pawn (3,3) target (3,6) - settlement 근처 safe spot 으로 변경
+            var go = SpawnTestPawn(new Vector3(3, 3, 0), includeAI: false);
             var mv = go.GetComponent<PawnMovement>();
             yield return new WaitForSeconds(0.05f);
             Vector3 start = go.transform.position;
-            mv.SetTarget(new Vector2(15, 18));  // 3 unit 위로
+            mv.SetTarget(new Vector2(3, 6));  // 3 unit 위로
             yield return new WaitForSeconds(0.8f);  // moveSpeed 3 → 0.8초에 ~2.4 unit
             Vector3 end = go.transform.position;
             bool moved = (end - start).magnitude > 1.0f;
@@ -936,7 +938,7 @@ namespace MelonS.GameProto.Tests
             bool blocked = PawnMovement.IsBlockedAt(new Vector2(1000, 1000));
             // ClampToWorld test
             Vector2 c = PawnMovement.ClampToWorld(new Vector2(-100, 50));
-            bool clampOk = c.x >= -19.01f && c.y <= 19.01f;
+            bool clampOk = c.x >= -29.01f && c.y <= 29.01f;
             Assert(!blocked && clampOk,
                 $"blocked(1000,1000)={blocked} (false ok if no tilemap), clamp(-100,50)→({c.x:F1},{c.y:F1})");
             yield break;
@@ -1024,7 +1026,7 @@ namespace MelonS.GameProto.Tests
             // PawnMovement.ClampToWorld 검증 (sync — yield 없음)
             Vector2 outside = new Vector2(100, 100);
             Vector2 clamped = PawnMovement.ClampToWorld(outside);
-            bool clampWorks = clamped.x <= 19.01f && clamped.y <= 19.01f;
+            bool clampWorks = clamped.x <= 29.01f && clamped.y <= 29.01f;
             Vector2 inside = new Vector2(5, 5);
             Vector2 unchanged = PawnMovement.ClampToWorld(inside);
             bool insideOk = Mathf.Approximately(unchanged.x, 5f) && Mathf.Approximately(unchanged.y, 5f);

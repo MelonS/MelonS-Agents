@@ -12,12 +12,12 @@ namespace MelonS.GameProto.EditorTools
                                        Vector2[] lakeCenters, float[] lakeRadii,
                                        Vector2[] rockClusterCenters, float rockRadius)
         {
-            // Day 41: tree 위치 - 40x40 맵에 20그루 (분포 균등 + 호수·바위 회피).
+            // #108: 60x60 맵 = 9x 면적.  20 → 45 그루 비례.
             //  결정론적 (seed=24680).
             var treePositionsList = new System.Collections.Generic.List<Vector2>();
             System.Random tr = new System.Random(24680);
             int tries = 0;
-            while (treePositionsList.Count < 20 && tries < 400)
+            while (treePositionsList.Count < 45 && tries < 900)
             {
                 tries++;
                 int tx = tr.Next(-(mapHalf-2), mapHalf-1);

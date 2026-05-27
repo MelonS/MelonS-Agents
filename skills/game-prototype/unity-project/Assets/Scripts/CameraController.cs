@@ -14,12 +14,12 @@ namespace MelonS.GameProto
         [SerializeField] private float zoomStep = 1.2f;
         [SerializeField] private float zoomMin = 3f;
         // Day 40: 40x40 맵 — zoomMax 14 → 22 (전체 맵 한 화면에 보기 가능)
-        [SerializeField] private float zoomMax = 22f;
+        [SerializeField] private float zoomMax = 32f;  // #108 - 60x60 맵 전체 보기
 
         // Soft world bounds so camera can't pan into infinity.
-        // Day 40: map ±20 + zoom 여유 → ±25
-        [SerializeField] private Vector2 worldMin = new Vector2(-25, -25);
-        [SerializeField] private Vector2 worldMax = new Vector2( 25,  25);
+        // #108: map ±30 + zoom 여유 → ±35
+        [SerializeField] private Vector2 worldMin = new Vector2(-35, -35);
+        [SerializeField] private Vector2 worldMax = new Vector2( 35,  35);
 
         private Camera cam;
 

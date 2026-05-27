@@ -401,35 +401,38 @@ namespace MelonS.GameProto.Tests
                 $"buildmode toggle OK (Wall → Off), startPos={startPos}");
         }
 
-        /// <summary>I16: 사용자 smoke test - pawn 선택 → tree 우클릭 → PawnChopper task set
-        ///   movement 자체는 I2 가 검증.  여기선 클릭 → 작업 등록 flow.</summary>
+        /// <summary>I16: 사용자 smoke test - pawn 선택 → tree 우클릭 → PawnChopper task set.
+        ///   #108 - 60x60 맵 에선 real pawn 중 일부는 이미 chop 중 → fresh setup.
+        ///   spawn 새 tree 한 그루 가까이 → 우클릭 → chopper.HasTask=True.</summary>
         private IEnumerator TestI16_FullChopCycle()
         {
             yield return null;
             var cs = Object.FindFirstObjectByType<ClickSelector>();
             var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
-            var trees = Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
-            if (cs == null || pawns.Length == 0 || trees.Length == 0)
-            { Assert(false, $"cs={cs!=null}, pawns={pawns.Length}, trees={trees.Length}"); yield break; }
-            // (pawn, tree) pair 중 가장 가까운 조합 선택 - reachability 보장
-            PawnEntity bestPawn = null; TreeEntity bestTree = null; float bestSq = float.MaxValue;
-            foreach (var p in pawns)
-            {
-                foreach (var t in trees)
-                {
-                    if (t == null) continue;
-                    float sq = (t.transform.position - p.transform.position).sqrMagnitude;
-                    if (sq < bestSq) { bestSq = sq; bestPawn = p; bestTree = t; }
-                }
-            }
-            if (bestPawn == null || bestTree == null) { Assert(false, "no nearest pair"); yield break; }
+            if (cs == null || pawns.Length == 0)
+            { Assert(false, $"cs={cs!=null}, pawns={pawns.Length}"); yield break; }
+            var bestPawn = pawns[0];
+            if (bestPawn.IsDrafted) bestPawn.SetDrafted(false);
+
+            // fresh tree 3 unit 떨어진 곳 (chopRange 1.2 보다 큼)
+            Vector3 freshTreePos = bestPawn.transform.position + new Vector3(3.5f, 0, 0);
+            var tGo = new GameObject("I16TestTree");
+            tGo.transform.position = freshTreePos;
+            var tsr = tGo.AddComponent<SpriteRenderer>();
+            tsr.sortingOrder = 5;
+            var tcol = tGo.AddComponent<BoxCollider2D>();
+            tcol.size = new Vector2(1.5f, 1.5f);
+            var freshTree = tGo.AddComponent<TreeEntity>();
+            yield return null;
+
             cs.SimulateSelect(bestPawn);
-            cs.SimulateRightClick(new Vector2(bestTree.transform.position.x, bestTree.transform.position.y));
-            yield return new WaitForSeconds(0.2f);
+            cs.SimulateRightClick(new Vector2(freshTreePos.x, freshTreePos.y));
+            yield return null;
             var chopper = bestPawn.GetComponent<PawnChopper>();
             bool taskSet = chopper != null && chopper.HasTask;
+            Destroy(tGo);  // cleanup
             Assert(taskSet,
-                $"chop task set={taskSet} (pawn={bestPawn.PawnName}, tree dist={Mathf.Sqrt(bestSq):F2})");
+                $"chop task set={taskSet} (fresh tree at {freshTreePos}, pawn={bestPawn.PawnName})");
         }
 
         /// <summary>I17: GUI 벽 버튼 → 빌드모드 → reflection 으로 BuildManager.TryPlace 호출
@@ -527,7 +530,7 @@ namespace MelonS.GameProto.Tests
             {
                 if (t == null) continue;
                 Vector3 tp = t.transform.position;
-                if (Mathf.Abs(tp.x) > 18.5f || Mathf.Abs(tp.y) > 18.5f) continue;
+                if (Mathf.Abs(tp.x) > 28.5f || Mathf.Abs(tp.y) > 28.5f) continue;
                 float sq = (tp - testPawnGo.transform.position).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; bestTree = t; }
             }

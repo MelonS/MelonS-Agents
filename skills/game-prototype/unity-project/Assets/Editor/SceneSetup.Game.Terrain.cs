@@ -12,18 +12,27 @@ namespace MelonS.GameProto.EditorTools
         // R8: layout 데이터 묶음 (lake/rock/dirt 위치 — 후속 entity/flower 배치 시 충돌 회피 용)
         public class TerrainLayout
         {
-            public const int MAP_HALF = 20;
+            // 운영자 피드백 #108 - 40x40 → 60x60 (림월드 small-medium 수준)
+            public const int MAP_HALF = 30;
             public Tilemap tilemap;
             public Tile grassTile, dirtTile, waterTile, rockTile;
-            public Vector2[] lakeCenters = { new Vector2(10f, 12f), new Vector2(-12f, -8f) };
-            public float[] lakeRadii     = { 4.0f, 2.5f };
+            // 호수 4개 (이전 2개) + 위치 비례 확장
+            public Vector2[] lakeCenters = {
+                new Vector2(15f, 18f), new Vector2(-18f, -12f),
+                new Vector2(-22f, 22f), new Vector2(20f, -22f),
+            };
+            public float[] lakeRadii     = { 4.0f, 2.8f, 3.5f, 3.0f };
+            // 바위 cluster 5개 (이전 3개)
             public Vector2[] rockClusterCenters = {
-                new Vector2(-15f, 13f), new Vector2(16f, -14f), new Vector2(-3f, -16f),
+                new Vector2(-22f, 19f), new Vector2(24f, -21f), new Vector2(-5f, -24f),
+                new Vector2(8f, 22f), new Vector2(22f, 6f),
             };
             public float rockRadius = 3.2f;
+            // 흙 패치 9개 (이전 6개)
             public Vector2[] dirtCenters = {
-                new Vector2(-3f, 2f), new Vector2(4f, -6f), new Vector2(-10f, 5f),
-                new Vector2(8f, 4f), new Vector2(-7f, -12f), new Vector2(14f, 8f),
+                new Vector2(-5f, 3f), new Vector2(6f, -9f), new Vector2(-15f, 7f),
+                new Vector2(12f, 6f), new Vector2(-10f, -18f), new Vector2(21f, 12f),
+                new Vector2(-18f, 1f), new Vector2(3f, -18f), new Vector2(17f, 16f),
             };
             public float dirtRadius = 2.0f;
         }
@@ -91,7 +100,7 @@ namespace MelonS.GameProto.EditorTools
             return layout;
         }
 
-        /// <summary>R8: 24 꽃 procedural 배치 - lake/rock/dirt/spawn 회피.</summary>
+        /// <summary>R8 + #108: 54 꽃 procedural 배치 (60x60 맵 비례) - lake/rock/dirt/spawn 회피.</summary>
         private static void SetupFlowerDecor(TerrainLayout layout)
         {
             Sprite flowerSpr = LoadOrSetupSprite("Assets/Sprites/decor_flower.png");
@@ -99,7 +108,7 @@ namespace MelonS.GameProto.EditorTools
             int half = TerrainLayout.MAP_HALF;
             System.Random fr = new System.Random(98765);
             int placed = 0; int attempts = 0;
-            while (placed < 24 && attempts < 600)
+            while (placed < 54 && attempts < 1200)
             {
                 attempts++;
                 int fx = fr.Next(-(half-1), half);

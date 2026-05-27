@@ -41,7 +41,7 @@ namespace MelonS.GameProto.AI
             {
                 if (b == null || b.IsDepleted) continue;
                 Vector3 bp = b.transform.position;
-                if (Mathf.Abs(bp.x) > 18.5f || Mathf.Abs(bp.y) > 18.5f) continue;  // I19 - bound check
+                if (Mathf.Abs(bp.x) > 28.5f || Mathf.Abs(bp.y) > 28.5f) continue;  // I19 - bound check
                 float sq = ((Vector2)bp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = b; }
             }
@@ -73,7 +73,7 @@ namespace MelonS.GameProto.AI
             {
                 if (a == null || a.IsDead) continue;
                 Vector3 ap = a.transform.position;
-                if (Mathf.Abs(ap.x) > 18.5f || Mathf.Abs(ap.y) > 18.5f) continue;  // I19 - bound
+                if (Mathf.Abs(ap.x) > 28.5f || Mathf.Abs(ap.y) > 28.5f) continue;  // I19 - bound
                 float sq = ((Vector2)ap - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = a; }
             }
@@ -134,7 +134,7 @@ namespace MelonS.GameProto.AI
                 // I19 fix - world bound (±19) 밖 tree 는 도달 불가, AI 도 skip.
                 //  운영자 자기 전 '이동 안됨' 의 부수 원인 — AI 가 도달 불가 tree pick 시 stuck.
                 Vector3 tp = t.transform.position;
-                if (Mathf.Abs(tp.x) > 18.5f || Mathf.Abs(tp.y) > 18.5f) continue;
+                if (Mathf.Abs(tp.x) > 28.5f || Mathf.Abs(tp.y) > 28.5f) continue;
                 float sq = ((Vector2)tp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = t; }
             }

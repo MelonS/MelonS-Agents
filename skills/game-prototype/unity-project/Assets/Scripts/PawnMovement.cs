@@ -14,10 +14,10 @@ namespace MelonS.GameProto
         [SerializeField] private PawnStats stats;
         // legacy fallback - SO 없으면 default 30/1/1.0/1.0/3.0 채워줌
 
-        // Step 81: 맵 경계 — 40x40 tile 맵의 안쪽 (±19) 으로 강제 clamp.
+        // 운영자 피드백 #108 - 60x60 tile 맵의 안쪽 (±29) 으로 강제 clamp.
         //  타일이 그려진 영역 밖으로는 절대 못 나감.
-        public static readonly Vector2 WORLD_MIN = new Vector2(-19f, -19f);
-        public static readonly Vector2 WORLD_MAX = new Vector2( 19f,  19f);
+        public static readonly Vector2 WORLD_MIN = new Vector2(-29f, -29f);
+        public static readonly Vector2 WORLD_MAX = new Vector2( 29f,  29f);
 
         // Step 81: 호수/바위 통과 방지 — SceneSetup이 GroundTilemap 과
         //  Water/Rock TileBase 참조를 정적 세팅.  null 이면 obstacle 체크 skip.
@@ -79,7 +79,8 @@ namespace MelonS.GameProto
             {
                 Vector3 curPos = transform.position;
                 if ((curPos - lastPos).sqrMagnitude > 0.001f) { lastPos = curPos; lastMoveTime = Time.time; }
-                if (Time.time - lastMoveTime > 1.5f && Time.time - lastUnstuckTime > 3f)
+                // batchmode V test 에서 false-fire 한 적 있어 3s grace 로 늘림.
+                if (Time.time - lastMoveTime > 3.0f && Time.time - lastUnstuckTime > 5f)
                 {
                     // 4 방향 시도 - 가장 가까운 (target 방향과 90도) 으로 nudge
                     Vector2 toTarget = (target.Value - (Vector2)curPos).normalized;
