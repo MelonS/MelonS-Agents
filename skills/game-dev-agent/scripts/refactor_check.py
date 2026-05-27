@@ -112,8 +112,8 @@ def step_log_check() -> int:
 
 
 def step_playmode_tests() -> int:
-    """R7 - PawnSim -testmode 자동 검증 5 시나리오"""
-    print("[refactor] (6/6) PlayMode tests ...")
+    """R7 - PawnSim -testmode 자동 검증 (55 isolated 시나리오)"""
+    print("[refactor] (6/7) PlayMode tests (isolated) ...")
     report_path = Path("G:/ai/_pawnsim_test_report.json")
     if report_path.exists():
         report_path.unlink()
@@ -131,12 +131,42 @@ def step_playmode_tests() -> int:
         print(f"  FAIL: parse {e}")
         return 9
     p, f = report.get("totalPassed", 0), report.get("totalFailed", 0)
-    print(f"  PlayMode: {p} PASS / {f} FAIL")
+    print(f"  isolated: {p} PASS / {f} FAIL")
     for r in report.get("results", []):
         sym = "OK" if r.get("passed") else "X"
         print(f"    [{sym}] {r['id']}: {r['message']}")
     if f > 0:
         return 10
+    return 0
+
+
+def step_integration_tests() -> int:
+    """진짜 Game.unity 위 통합 검증 (I1-I16) - GUI 버튼/Pawn 이동/AI 행위 등 실제 게임 flow"""
+    print("[refactor] (7/7) Integration tests (real game state) ...")
+    report_path = Path("G:/ai/_pawnsim_integration_report.json")
+    if report_path.exists():
+        report_path.unlink()
+    proc = subprocess.run(
+        [str(BUILD_EXE), "-integration", "-batchmode", "-nographics",
+         "-screen-width", "1280", "-screen-height", "720"],
+        capture_output=True, text=True, timeout=90,  # I4 가 15s + 다른 것들 → 90s
+    )
+    if not report_path.exists():
+        print("  WARN: no integration report - skip")
+        return 0
+    import json
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"  FAIL: parse {e}")
+        return 11
+    p, f = report.get("totalPassed", 0), report.get("totalFailed", 0)
+    print(f"  integration: {p} PASS / {f} FAIL")
+    for r in report.get("results", []):
+        sym = "OK" if r.get("passed") else "X"
+        print(f"    [{sym}] {r['id']}: {r['message']}")
+    if f > 0:
+        return 12
     return 0
 
 
@@ -209,6 +239,11 @@ def main():
     rc = step_playmode_tests()
     if rc != 0:
         print(f"\n[refactor] FAIL @ playmode (rc={rc})")
+        return rc
+
+    rc = step_integration_tests()
+    if rc != 0:
+        print(f"\n[refactor] FAIL @ integration (rc={rc})")
         return rc
 
     if args.accept_visual:
