@@ -167,7 +167,11 @@ namespace MelonS.GameProto
             if (sp != null) return ("창고 영역",
                 $"hauler 가 자원을 여기로 운반\n근처 자원 자동 수집");
             var tree = go.GetComponent<TreeEntity>();
-            if (tree != null) return ("나무", $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\n선택 후 우클릭 = 벌목 → 목재 +5\nHP 100, 25 dmg/sec");
+            if (tree != null) return ($"나무 ({tree.SpeciesKr})",
+                $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\n" +
+                $"종류: {tree.SpeciesKr}\n" +
+                "선택 후 우클릭 = 벌목 → 목재 떨어짐\n" +
+                "(Oak 단단 7목재, Pine 빠름 4, Birch 5)");
             var bush = go.GetComponent<BerryBushEntity>();
             if (bush != null) return ("베리덤불", $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\nfood<40 pawn 이 자동 채집\n베리 재생 ~30s");
             var crop = go.GetComponent<CropEntity>();
@@ -177,7 +181,8 @@ namespace MelonS.GameProto
                 return ("작물 (벼)", $"상태: {stage}\n익으면 우클릭 = +5 식량\n3 stage 시각 변화");
             }
             var wall = go.GetComponent<WallEntity>();
-            if (wall != null) return ("벽", $"목재 5, 충돌 collider 있음\npawn 통과 X");
+            if (wall != null) return ($"{wall.MaterialKr}",
+                $"HP: {wall.Hp:F0}/{wall.MaxHp:F0}\n자재: {wall.MaterialKr}\n충돌 collider (pawn 통과 X)\n(wood 100 / stone 280 / steel 300)");
             var door = go.GetComponent<DoorEntity>();
             if (door != null) return ("문", $"목재 3, trigger collider\npawn 통과 가능");
             var floor = go.GetComponent<FloorEntity>();

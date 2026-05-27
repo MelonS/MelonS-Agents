@@ -89,11 +89,21 @@ namespace MelonS.GameProto.EditorTools
                 if (skip) continue;
                 treePositionsList.Add(tp);
             }
-            foreach (var pos in treePositionsList)
+            // #149 - tree species 분포 (Pine 6 / Birch 5 / Oak 4 = 15 grown).
+            var sppList = new System.Collections.Generic.List<TreeSpecies>();
+            for (int i = 0; i < 6; i++) sppList.Add(TreeSpecies.Pine);
+            for (int i = 0; i < 5; i++) sppList.Add(TreeSpecies.Birch);
+            for (int i = 0; i < 4; i++) sppList.Add(TreeSpecies.Oak);
+            for (int i = 0; i < treePositionsList.Count; i++)
             {
+                var pos = treePositionsList[i];
                 GameObject t = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.treePrefab);
-                t.name = $"Tree_{pos.x}_{pos.y}";
+                var spp = sppList[i % sppList.Count];
+                string krName = spp == TreeSpecies.Pine ? "Pine" : (spp == TreeSpecies.Birch ? "Birch" : "Oak");
+                t.name = $"{krName}_{pos.x}_{pos.y}";
                 t.transform.position = new Vector3(pos.x, pos.y, 0);
+                var te = t.GetComponent<TreeEntity>();
+                if (te != null) te.SetSpecies(spp);
             }
 
             // #119 - 광맥 (stone vein) 12 개 procedural 배치 (림월드처럼 cluster).

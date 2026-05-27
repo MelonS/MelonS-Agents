@@ -15,10 +15,14 @@ namespace MelonS.GameProto
     public class WoodPileEntity : MonoBehaviour
     {
         [SerializeField] private int wood = 5;
-        [SerializeField] private float lifetimeSec = 120f;  // 2분 후 사라짐
-        // 림 vanilla - stockpile 안 pile = stack 보존, 재운반 X (loop 방지).
-        //  건축 시 청사진 자재로만 consume.
+        [SerializeField] private float lifetimeSec = 120f;  // 2분 후 사라짐 (legacy)
         public bool InStockpile = false;
+
+        // #152 - 림 vanilla deteriorate (옥외 noroof 2 HP/day, indoor/roof 0).
+        //  InStockpile=true 이면 indoor 가정 (현재 roof 시스템 없음 - stockpile 마커 위치 = indoor).
+        //  옥외 pile (deer 사냥 위치 등) 만 매 5초 1 wood 손실 (테스트 가속 = day 1=2분 game time).
+        private float lastDeteriorate = -10f;
+        private const float DeteriorateInterval = 5f;
 
         public int Wood => wood;
         public GameObject ReservedBy { get; set; }   // PawnHauler 가 set/clear
@@ -44,9 +48,20 @@ namespace MelonS.GameProto
 
         private void Update()
         {
+            // #152 - 옥외 pile 부패 (림 wiki 2 HP/day, 1 game day = 2분 = 24 sec 이므로 5초마다 ~1 wood).
+            if (!InStockpile && Time.time - lastDeteriorate > DeteriorateInterval)
+            {
+                lastDeteriorate = Time.time;
+                wood = Mathf.Max(0, wood - 1);
+                if (wood <= 0)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
+            }
+            // legacy lifetime fallback
             if (Time.time - spawnTime > lifetimeSec)
             {
-                // deteriorate (사라짐)
                 Destroy(gameObject);
             }
         }

@@ -1161,6 +1161,7 @@ namespace MelonS.GameProto.Tests
             if (TreeEntity.WoodPileSprite == null)
             { Assert(false, "WoodPileSprite null"); Object.Destroy(bpGo); yield break; }
             var pile = WoodPileEntity.Spawn(new Vector3(21f, 22f, 0), 5, TreeEntity.WoodPileSprite);
+            pile.InStockpile = true;  // #152 - 테스트 격리: deterioration 비활성
 
             // hauler pawn 가까이 spawn + builder 도 같이
             var pgo = new GameObject("Haul+BuildPawn_I35");

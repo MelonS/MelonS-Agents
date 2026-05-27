@@ -108,7 +108,16 @@ namespace MelonS.GameProto
         {
             if (finishedPrefab != null)
             {
-                Object.Instantiate(finishedPrefab, transform.position, Quaternion.identity);
+                var spawned = Object.Instantiate(finishedPrefab, transform.position, Quaternion.identity);
+                // #150 - WallStone mode = stone wall, else wood
+                if (mode == BuildManager.Mode.Wall || mode == BuildManager.Mode.WallStone)
+                {
+                    var w = spawned.GetComponent<WallEntity>();
+                    if (w != null)
+                    {
+                        w.SetMaterial(mode == BuildManager.Mode.WallStone ? WallMaterial.Stone : WallMaterial.Wood);
+                    }
+                }
             }
             Destroy(gameObject);
         }

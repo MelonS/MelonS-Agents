@@ -149,4 +149,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHp: 100
   woodDrop: 5
+  species: 0
   saplingDelaySec: 120

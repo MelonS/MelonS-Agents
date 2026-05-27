@@ -5,11 +5,42 @@ namespace MelonS.GameProto
     /// <summary>
     /// A choppable tree.  Day 3 = HP + on-chop damage + destroy + wood drop.
     /// </summary>
+    /// <summary>#149 - 림월드 wiki tree species (Oak 단단/yield 큼, Pine 빠름, Birch 중간).</summary>
+    public enum TreeSpecies { Pine, Birch, Oak }
+
     [RequireComponent(typeof(SpriteRenderer))]
     public class TreeEntity : MonoBehaviour
     {
         [SerializeField] private float maxHp = 100f;
         [SerializeField] private int woodDrop = 5;
+        [SerializeField] private TreeSpecies species = TreeSpecies.Pine;
+
+        public TreeSpecies Species => species;
+        public string SpeciesKr => species switch
+        {
+            TreeSpecies.Pine => "소나무",
+            TreeSpecies.Birch => "자작나무",
+            TreeSpecies.Oak => "참나무",
+            _ => "나무",
+        };
+
+        // 종별 spec (HP, woodDrop, scale, tint)
+        public static readonly (float hp, int yield, float scale, Color tint)[] SpeciesStats = {
+            (80f,  4, 0.95f, new Color(0.70f, 0.95f, 0.70f, 1f)),   // Pine - 빠름 작음 밝은 녹
+            (100f, 5, 1.00f, new Color(0.85f, 1.00f, 0.80f, 1f)),   // Birch - 중간 옅은
+            (150f, 7, 1.10f, new Color(0.55f, 0.85f, 0.55f, 1f)),   // Oak - 단단 큼 진한 녹
+        };
+
+        public void SetSpecies(TreeSpecies s)
+        {
+            species = s;
+            var (h, y, sc, tint) = SpeciesStats[(int)s];
+            maxHp = h;
+            woodDrop = y;
+            hp = h;
+            transform.localScale = new Vector3(sc, sc, 1);
+            if (spriteRenderer != null) spriteRenderer.color = tint;
+        }
 
         // 운영자 fb #116 - 벌목 시 즉시 inventory 추가가 아닌 WoodPile entity drop.
         //  SceneSetup 이 sprite 로딩 후 여기에 박음.
