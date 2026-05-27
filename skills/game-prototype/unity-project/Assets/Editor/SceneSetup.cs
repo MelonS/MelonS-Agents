@@ -627,45 +627,9 @@ namespace MelonS.GameProto.EditorTools
             emptyRt.sizeDelta = Vector2.zero;
             emptyRt.anchoredPosition = Vector2.zero;
 
-            // ---------- SaveLoad buttons (bottom-left corner, 40x40 each) ----------
-            GameObject saveBtnPanel = new GameObject("SaveLoadButtons");
-            saveBtnPanel.transform.SetParent(canvasGo.transform, false);
-            RectTransform sbpRt = saveBtnPanel.AddComponent<RectTransform>();
-            sbpRt.anchorMin = new Vector2(0f, 0f);
-            sbpRt.anchorMax = new Vector2(0f, 0f);
-            sbpRt.pivot = new Vector2(0f, 0f);
-            sbpRt.sizeDelta = new Vector2(92, 40);
-            sbpRt.anchoredPosition = new Vector2(12, 12);
-
-            GameObject saveBtnGo = CreateIconButton(saveBtnPanel.transform, "SaveBtn", "S", new Vector2(0, 0), colPanel, colTextPrimary, uiFont);
-            GameObject loadBtnGo = CreateIconButton(saveBtnPanel.transform, "LoadBtn", "L", new Vector2(48, 0), colPanel, colTextPrimary, uiFont);
-
-            GameSaveButtons gsb = saveBtnPanel.AddComponent<GameSaveButtons>();
-            SerializedObject gsbSo = new SerializedObject(gsb);
-            gsbSo.FindProperty("saveButton").objectReferenceValue = saveBtnGo.GetComponent<Button>();
-            gsbSo.FindProperty("loadButton").objectReferenceValue = loadBtnGo.GetComponent<Button>();
-            gsbSo.FindProperty("pawnPrefab").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<GameObject>(PawnPrefabPath);
-            gsbSo.FindProperty("treeSprite").objectReferenceValue =
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree.png");
-            gsbSo.ApplyModifiedProperties();
-
-            // ---------- Control hint (bottom-center, muted) ----------
-            GameObject hintGo = new GameObject("ControlHint");
-            hintGo.transform.SetParent(canvasGo.transform, false);
-            Text hintText = hintGo.AddComponent<Text>();
-            hintText.text = "WASD/휠/123/Space · B:벽5 · F:바닥1 · G:문3 · T:화덕10 · 1일=4분(1x)";
-            hintText.font = uiFont;
-            hintText.fontSize = 18;
-            Color hintCol = colTextMuted; hintCol.a = 0.75f;
-            hintText.color = hintCol;
-            hintText.alignment = TextAnchor.MiddleCenter;
-            RectTransform hintRt = hintGo.GetComponent<RectTransform>();
-            hintRt.anchorMin = new Vector2(0.5f, 0f);
-            hintRt.anchorMax = new Vector2(0.5f, 0f);
-            hintRt.pivot = new Vector2(0.5f, 0f);
-            hintRt.sizeDelta = new Vector2(640, 20);
-            hintRt.anchoredPosition = new Vector2(0, 14);
+            // R10f: SaveLoad buttons + ControlHint extract -> SceneSetup.Game.SaveHint.cs
+            GenerateSaveLoadButtons(canvasGo, colPanel, colTextPrimary, uiFont);
+            GenerateControlHint(canvasGo, colTextMuted, uiFont);
 
             // Day 55: 부위별 health text (panel 안쪽 좌측 영역)
             GameObject healthGo = new GameObject("HealthText");
