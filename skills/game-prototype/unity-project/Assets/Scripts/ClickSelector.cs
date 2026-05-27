@@ -24,9 +24,11 @@ namespace MelonS.GameProto
         {
             // UI 위 클릭 무시 (운영자 피드백 - UI 가 가로채던 문제)
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+            // 빌드 모드 활성이면 mouse click 은 BuildManager 가 처리 (place / cancel)
+            bool buildActive = BuildManager.Instance != null && BuildManager.Instance.BuildModeActive;
 
             // Left click = select
-            if (Input.GetMouseButtonDown(0) && !overUI)
+            if (Input.GetMouseButtonDown(0) && !overUI && !buildActive)
             {
                 Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mouseWorld.z = 0f;
@@ -42,7 +44,8 @@ namespace MelonS.GameProto
             }
 
             // Right click = move OR chop OR attack (drafted) for selected pawn
-            if (Input.GetMouseButtonDown(1) && !overUI && currentSelection != null)
+            //   buildActive 면 BuildManager 가 우클릭 = cancel 처리 (overlap 방지)
+            if (Input.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null)
             {
                 Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mouseWorld.z = 0f;
