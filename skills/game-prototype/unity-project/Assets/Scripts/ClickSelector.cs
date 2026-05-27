@@ -200,6 +200,9 @@ namespace MelonS.GameProto
             if (currentSelection != null) currentSelection.SetSelected(false);
             currentSelection = pawn;
             currentSelection.SetSelected(true);
+            // 운영자 피드백 - pawn 이 AI wander 로 화면 밖 → 선택 시 부드럽게 camera focus
+            var cc = mainCamera != null ? mainCamera.GetComponent<CameraController>() : null;
+            if (cc != null) cc.RequestFocus(pawn);
         }
 
         private void ClearSelection()

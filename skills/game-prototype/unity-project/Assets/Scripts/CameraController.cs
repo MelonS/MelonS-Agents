@@ -23,15 +23,45 @@ namespace MelonS.GameProto
 
         private Camera cam;
 
+        // 운영자 피드백 2026-05-27: pawn 이 AI 로 wander 하면서 camera 밖으로 나감.
+        //  → ClickSelector.Select 시 cs.CurrentSelection 위치로 부드럽게 pan.
+        //  다른 작업 (WASD/마우스휠) 시작하면 follow 종료.
+        private PawnEntity followingPawn;
+        private float followStartTime = -10f;
+
         private void Awake()
         {
             cam = GetComponent<Camera>();
             if (cam == null) cam = Camera.main;
         }
 
+        public void RequestFocus(PawnEntity p)
+        {
+            followingPawn = p;
+            followStartTime = Time.unscaledTime;
+        }
+
         private void Update()
         {
             if (cam == null) return;
+
+            // 자동 follow - 0.6s 동안 부드럽게 pan, 그 후 정지 (auto-follow X)
+            //  WASD 입력 들어오면 즉시 종료.
+            if (followingPawn != null)
+            {
+                float elapsed = Time.unscaledTime - followStartTime;
+                if (elapsed > 0.6f || followingPawn.IsDead)
+                {
+                    followingPawn = null;
+                }
+                else
+                {
+                    Vector3 target = followingPawn.transform.position;
+                    target.z = cam.transform.position.z;
+                    cam.transform.position = Vector3.Lerp(cam.transform.position, target,
+                        Time.unscaledDeltaTime * 6f);
+                }
+            }
 
             // Pan (WASD + Arrow)
             float h = 0f, v = 0f;
@@ -42,6 +72,9 @@ namespace MelonS.GameProto
 
             if (h != 0 || v != 0)
             {
+                // 사용자 pan 입력 - auto-follow 즉시 종료
+                followingPawn = null;
+
                 float speed = panSpeed * (cam.orthographicSize / 6f);
                 if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                     speed *= fastPanMultiplier;
