@@ -174,34 +174,10 @@ namespace MelonS.GameProto.EditorTools
             // R10: Wildlife (Day 64 wolves + Day 23/41 deer) extracted -> SceneSetup.Game.Wildlife.cs
             SpawnWildlife();
 
-            // Trees — sprinkle 8 around the map (Day 3)
-            Sprite treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree.png");
-            if (treeSprite == null)
-            {
-                string p = "Assets/Sprites/tree.png";
-                TextureImporter ti = AssetImporter.GetAtPath(p) as TextureImporter;
-                if (ti != null)
-                {
-                    ti.textureType = TextureImporterType.Sprite;
-                    ti.spritePixelsPerUnit = 16;
-                    ti.SaveAndReimport();
-                    treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>(p);
-                }
-            }
-            // Day 12: build a Tree prefab asset once, then Instantiate for the
-            // initial scatter AND hand the prefab reference to RegrowthScheduler
-            // so saplings can promote to a fresh tree.  This unifies the
-            // initial-scatter and regen code paths (Option B from the handoff).
-            GameObject treeTemplate = new GameObject("Tree");
-            SpriteRenderer templateSr = treeTemplate.AddComponent<SpriteRenderer>();
-            templateSr.sprite = treeSprite;
-            templateSr.sortingOrder = 5;
-            BoxCollider2D templateCol = treeTemplate.AddComponent<BoxCollider2D>();
-            templateCol.size = new Vector2(1.5f, 1.5f);
-            treeTemplate.AddComponent<TreeEntity>();
-            GameObject treePrefab = PrefabUtility.SaveAsPrefabAsset(treeTemplate, TreePrefabPath);
-            Object.DestroyImmediate(treeTemplate);
-            Debug.Log($"[SceneSetup] Tree prefab -> {TreePrefabPath}");
+            // R10c: prefab 생성 (Tree/Wall/Floor/Door/Stove/ResearchBench) extract -> SceneSetup.Game.Prefabs.cs
+            BuildPrefabSet prefabs = GenerateBuildPrefabs();
+            GameObject treePrefab = prefabs.treePrefab;
+            Sprite treeSprite = prefabs.treeSprite;
 
             // Day 41: tree 위치 — 40x40 맵에 20그루 (분포 균등 + 호수·바위 회피).
             //  결정론적 (seed=24680).
@@ -247,54 +223,17 @@ namespace MelonS.GameProto.EditorTools
             RegrowthScheduler rs = rsGo.AddComponent<RegrowthScheduler>();
             rs.SetTreePrefab(treePrefab);
 
-            // Day 17-18: Build mode — Wall + Floor + Door prefabs + manager.
-            Sprite wallSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/wall_wood.png");
-            Sprite floorSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/floor_wood.png");
-            Sprite doorSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/door_wood.png");
-
-            GameObject wallTemplate = new GameObject("Wall");
-            var wsr = wallTemplate.AddComponent<SpriteRenderer>();
-            wsr.sprite = wallSprite; wsr.sortingOrder = 7;
-            var wbox = wallTemplate.AddComponent<BoxCollider2D>(); wbox.size = Vector2.one;
-            wallTemplate.AddComponent<WallEntity>();
-            GameObject wallPrefab = PrefabUtility.SaveAsPrefabAsset(wallTemplate, "Assets/Prefabs/Wall.prefab");
-            Object.DestroyImmediate(wallTemplate);
-
-            GameObject floorTemplate = new GameObject("Floor");
-            var fsr = floorTemplate.AddComponent<SpriteRenderer>();
-            fsr.sprite = floorSprite; fsr.sortingOrder = 1;
-            floorTemplate.AddComponent<FloorEntity>();
-            GameObject floorPrefab = PrefabUtility.SaveAsPrefabAsset(floorTemplate, "Assets/Prefabs/Floor.prefab");
-            Object.DestroyImmediate(floorTemplate);
-
-            GameObject doorTemplate = new GameObject("Door");
-            var dsr = doorTemplate.AddComponent<SpriteRenderer>();
-            dsr.sprite = doorSprite; dsr.sortingOrder = 6;
-            var dbox = doorTemplate.AddComponent<BoxCollider2D>(); dbox.size = Vector2.one; dbox.isTrigger = true;
-            doorTemplate.AddComponent<DoorEntity>();
-            GameObject doorPrefab = PrefabUtility.SaveAsPrefabAsset(doorTemplate, "Assets/Prefabs/Door.prefab");
-            Object.DestroyImmediate(doorTemplate);
-
-            // Day 25: Stove prefab
-            Sprite stoveSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stove.png");
-            GameObject stoveTemplate = new GameObject("Stove");
-            var ssr = stoveTemplate.AddComponent<SpriteRenderer>();
-            ssr.sprite = stoveSprite; ssr.sortingOrder = 5;
-            var sbox = stoveTemplate.AddComponent<BoxCollider2D>(); sbox.size = Vector2.one;
-            stoveTemplate.AddComponent<StoveEntity>();
-            GameObject stovePrefab = PrefabUtility.SaveAsPrefabAsset(stoveTemplate, "Assets/Prefabs/Stove.prefab");
-            Object.DestroyImmediate(stoveTemplate);
-
-            // Day 52: Research bench prefab + ResearchManager singleton
-            Sprite benchSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/research_bench.png");
-            GameObject benchTemplate = new GameObject("ResearchBench");
-            var rbsr = benchTemplate.AddComponent<SpriteRenderer>();
-            rbsr.sprite = benchSprite; rbsr.sortingOrder = 5;
-            var rbcol = benchTemplate.AddComponent<BoxCollider2D>(); rbcol.size = Vector2.one;
-            benchTemplate.AddComponent<ResearchBench>();
-            GameObject benchPrefab = PrefabUtility.SaveAsPrefabAsset(benchTemplate, "Assets/Prefabs/ResearchBench.prefab");
-            Object.DestroyImmediate(benchTemplate);
-            // Manager singleton
+            // R10c: prefab refs from earlier GenerateBuildPrefabs()
+            GameObject wallPrefab = prefabs.wallPrefab;
+            GameObject floorPrefab = prefabs.floorPrefab;
+            GameObject doorPrefab = prefabs.doorPrefab;
+            GameObject stovePrefab = prefabs.stovePrefab;
+            GameObject benchPrefab = prefabs.benchPrefab;
+            Sprite wallSprite = prefabs.wallSprite;
+            Sprite floorSprite = prefabs.floorSprite;
+            Sprite doorSprite = prefabs.doorSprite;
+            Sprite stoveSprite = prefabs.stoveSprite;
+            // Day 52: ResearchManager singleton (prefab 은 GenerateBuildPrefabs 에서 처리)
             GameObject rmGo2 = new GameObject("ResearchManager");
             rmGo2.AddComponent<ResearchManager>();
 
