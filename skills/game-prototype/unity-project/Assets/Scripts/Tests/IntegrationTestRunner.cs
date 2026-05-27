@@ -103,6 +103,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I33-doctor-tends-patient", TestI33_DoctorTendsPatient);
             // #129 - 동물 죽음 시 meat pile drop
             yield return RunOne("I34-animal-drops-meat", TestI34_AnimalDropsMeat);
+            // #145 운영자 fb - 자재 부족 청사진 → hauler 운반 → 자재 완비 → 건설 완료
+            yield return RunOne("I35-blueprint-haul-build", TestI35_BlueprintHaulBuild);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1115,6 +1117,93 @@ namespace MelonS.GameProto.Tests
             Assert(Mathf.Abs(withT - baseM - 5f) < 0.01f || withT >= 95f,
                 $"thought 합산: base={baseM:F1} withT={withT:F1}");
             th.RemoveThought("일시 +5");
+        }
+
+        /// <summary>I35: #145 운영자 fb - 자재 운반 → 건설 end-to-end.
+        ///  1) 청사진 spawn (자재 부족 상태, 자원 차감 X)
+        ///  2) wood pile 가까이 spawn
+        ///  3) hauler pawn 강제 SetPileTarget
+        ///  4) ~10s 후 blueprint.HasAllMaterials 확인
+        ///  5) ~10s 더 후 wall entity 완성 확인
+        /// </summary>
+        private IEnumerator TestI35_BlueprintHaulBuild()
+        {
+            yield return null;
+            // 기존 wall prefab 가져오기 (DefaultWallPrefab 활용)
+            GameObject wallPrefab = null;
+            Sprite wallSpr = null;
+            var existingWall = Object.FindFirstObjectByType<WallEntity>();
+            if (existingWall != null)
+            {
+                wallSpr = existingWall.GetComponent<SpriteRenderer>()?.sprite;
+            }
+            var prefabAny = Resources.FindObjectsOfTypeAll<GameObject>();
+            foreach (var p in prefabAny)
+            {
+                if (p == null) continue;
+                if (p.name == "Wall" && p.GetComponent<WallEntity>() != null) { wallPrefab = p; break; }
+            }
+            if (wallPrefab == null || wallSpr == null)
+            { Assert(false, $"wall prefab/sprite 못 찾음 (prefab={wallPrefab!=null} spr={wallSpr!=null})"); yield break; }
+
+            // 청사진 spawn (자재 부족 상태)
+            Vector3 bpPos = new Vector3(22.5f, 22.5f, 0);
+            var bpGo = new GameObject("Bp_I35");
+            bpGo.transform.position = bpPos;
+            var bp = bpGo.AddComponent<BlueprintEntity>();
+            bp.Init(BuildManager.Mode.Wall, wallPrefab, wallSpr, wood: 5, stone: 0, secs: 1.0f);
+            yield return null;
+
+            // 자재 충분 X 확인
+            Assert(!bp.HasAllMaterials, $"청사진 spawn 시 자재 부족 (collected wood={bp.collectedWood}/{bp.needWood})");
+
+            // wood pile 가까이 spawn (이미 chop 된 상태)
+            if (TreeEntity.WoodPileSprite == null)
+            { Assert(false, "WoodPileSprite null"); Object.Destroy(bpGo); yield break; }
+            var pile = WoodPileEntity.Spawn(new Vector3(21f, 22f, 0), 5, TreeEntity.WoodPileSprite);
+
+            // hauler pawn 가까이 spawn + builder 도 같이
+            var pgo = new GameObject("Haul+BuildPawn_I35");
+            pgo.transform.position = new Vector3(21f, 21f, 0);
+            pgo.AddComponent<SpriteRenderer>();
+            pgo.AddComponent<BoxCollider2D>().size = Vector2.one * 0.8f;
+            pgo.AddComponent<PawnEntity>();
+            pgo.AddComponent<PawnMovement>();
+            var hauler = pgo.AddComponent<PawnHauler>();
+            var builder = pgo.AddComponent<PawnBuilder>();
+            yield return null;
+
+            // hauler 가 pile pickup → blueprint 운반
+            hauler.SetPileTarget(pile);
+            yield return new WaitForSeconds(8.0f);  // 운반 시간
+
+            bool depositedWood = bp.collectedWood >= bp.needWood;
+            Assert(depositedWood,
+                $"hauler 운반 후 자재 완비: collected {bp.collectedWood}/{bp.needWood} (HasAllMaterials={bp.HasAllMaterials})");
+
+            // builder 가 건설 작업 → wall 완성
+            if (bp != null && bp.gameObject != null)
+            {
+                builder.SetBlueprintTarget(bp);
+                yield return new WaitForSeconds(3.0f);  // 1s 작업 + buffer
+            }
+
+            // wall entity 가 bp 위치에 생겼나
+            var walls = Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None);
+            bool wallSpawned = false;
+            foreach (var w in walls)
+            {
+                if (w == null) continue;
+                if (Vector2.Distance(w.transform.position, bpPos) < 0.6f) { wallSpawned = true; break; }
+            }
+            Assert(wallSpawned, $"건설 완료 wall 생성됨 (자재완비={depositedWood}, walls 위치확인)");
+
+            // cleanup
+            Object.Destroy(pgo);
+            if (bp != null && bp.gameObject != null) Object.Destroy(bp.gameObject);
+            foreach (var w in walls)
+                if (w != null && Vector2.Distance(w.transform.position, bpPos) < 0.6f)
+                    Object.Destroy(w.gameObject);
         }
 
         private void FinalizeReport()
