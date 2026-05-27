@@ -155,7 +155,7 @@ def step_integration_tests() -> int:
     proc = subprocess.run(
         [str(BUILD_EXE), "-integration", "-batchmode", "-nographics",
          "-screen-width", "1280", "-screen-height", "720"],
-        capture_output=True, text=True, timeout=90,  # I4 가 15s + 다른 것들 → 90s
+        capture_output=True, text=True, timeout=180,  # I4 15s + I19 15s + I23 60s + 기타 → 180s
     )
     if not report_path.exists():
         print("  WARN: no integration report - skip")

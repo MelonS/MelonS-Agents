@@ -80,6 +80,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I20-crop-harvest-food-up", TestI20_CropHarvestFoodUp);
             yield return RunOne("I21-combat-drafted-vs-wolf", TestI21_CombatDraftedVsWolf);
             yield return RunOne("I22-save-load-roundtrip", TestI22_SaveLoadRoundtrip);
+            yield return RunOne("I23-60s-stress-no-nre", TestI23_60sStressNoNre);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -645,6 +646,42 @@ namespace MelonS.GameProto.Tests
             Assert(dataOk,
                 $"Save/Load: wood {beforeWood}->dirty{dirtyWood}->loaded{data.wood}, " +
                 $"food {beforeFood}->loaded{data.food}, pawns {beforePawnCount}=={data.pawns.Count}");
+        }
+
+        /// <summary>I23: 60초 시뮬 stress - AI/wolf/crop growth/event 동시 작동.
+        ///   Application.logMessageReceived 후킹해서 Exception 종류 0회 검증.
+        ///   timeScale=4 로 짧게 = 4분 game-time / 60s real.</summary>
+        private IEnumerator TestI23_60sStressNoNre()
+        {
+            yield return null;
+            // 4x speed 로 4분 game-time 시뮬 = 60s real
+            float originalScale = Time.timeScale;
+            if (TimeController.Instance != null) TimeController.Instance.SetScale(4f);
+
+            // log hook - Exception 카운트
+            int exceptionCount = 0;
+            string firstError = "";
+            Application.LogCallback hook = (string condition, string stackTrace, LogType type) =>
+            {
+                if (type == LogType.Exception || type == LogType.Error)
+                {
+                    // 우리가 알고 있는 무해한 것 제외
+                    if (condition.Contains("Direct3D")) return;
+                    if (condition.Contains("Input System polling")) return;
+                    exceptionCount++;
+                    if (string.IsNullOrEmpty(firstError)) firstError = condition;
+                }
+            };
+            Application.logMessageReceived += hook;
+
+            // 모든 pawn 의 PawnUtilityAI 가 60s 동안 다양한 결정 - 실제 게임 흐름
+            yield return new WaitForSeconds(60.0f);
+
+            Application.logMessageReceived -= hook;
+            if (TimeController.Instance != null) TimeController.Instance.SetScale(originalScale);
+
+            Assert(exceptionCount == 0,
+                $"60s stress (4x speed): exceptions={exceptionCount}, first='{firstError}'");
         }
 
         private void FinalizeReport()
