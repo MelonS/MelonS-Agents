@@ -15,6 +15,10 @@ namespace MelonS.GameProto
         private PawnEntity currentSelection;
         public PawnEntity CurrentSelection => currentSelection;
 
+        // #105 - 비-pawn 오브젝트 inspect.  EntityInspectorPanel 폴링.
+        private GameObject currentInspect;
+        public GameObject CurrentInspect => currentInspect;
+
         private void Awake()
         {
             if (mainCamera == null) mainCamera = Camera.main;
@@ -34,7 +38,13 @@ namespace MelonS.GameProto
                 mouseWorld.z = 0f;
                 Collider2D hit = Physics2D.OverlapPoint(mouseWorld);
                 PawnEntity pawn = (hit != null) ? hit.GetComponent<PawnEntity>() : null;
-                if (pawn != null) Select(pawn); else ClearSelection();
+                if (pawn != null) { Select(pawn); currentInspect = null; }
+                else if (hit != null) {
+                    // #105 - 비-pawn entity 좌클릭 = inspect (pawn 선택은 유지 or clear)
+                    currentInspect = hit.gameObject;
+                    ClearSelection();
+                }
+                else { ClearSelection(); currentInspect = null; }
             }
 
             // Day 48: R key toggles drafted on selected pawn
