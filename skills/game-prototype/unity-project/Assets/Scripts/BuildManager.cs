@@ -125,6 +125,7 @@ namespace MelonS.GameProto
                 if (h.GetComponent<BerryBushEntity>() != null) return true;
                 if (h.GetComponent<StoveEntity>() != null) return true;
                 if (h.GetComponent<BedEntity>() != null) return true;
+                if (h.GetComponent<BlueprintEntity>() != null) return true;  // #118
             }
             return false;
         }
@@ -142,19 +143,27 @@ namespace MelonS.GameProto
             if (CellOccupied(cx, cy)) return;
             if (ResourceManager.Instance == null || ResourceManager.Instance.wood < cost) return;
             ResourceManager.Instance.AddWood(-cost);
-            Instantiate(prefab, new Vector3(cx + 0.5f, cy + 0.5f, 0), Quaternion.identity);
 
-            var pawns = Object.FindObjectsByType<PawnSkills>(FindObjectsSortMode.None);
-            PawnSkills nearest = null;
-            float bestSq = float.MaxValue;
-            Vector3 here = new Vector3(cx, cy, 0);
-            foreach (var p in pawns)
-            {
-                if (p == null) continue;
-                float sq = (p.transform.position - here).sqrMagnitude;
-                if (sq < bestSq) { bestSq = sq; nearest = p; }
-            }
-            if (nearest != null) nearest.AddXP(SkillKind.Build, 25f);
+            // 운영자 fb #118 - 림월드 청사진 패턴.  즉시 완성 대신 BlueprintEntity spawn.
+            //  pawn (PawnBuilder) 가 가서 5초 작업 후 finished prefab 으로 교체.
+            //  floor (cost=1) 처럼 작은 것은 청사진 없이 즉시 (1차 단순화로 통일 - 모두 청사진).
+            Sprite ghostSpr = SpriteForCurrentMode();
+            var bpGo = new GameObject($"Blueprint_{CurrentMode}");
+            bpGo.transform.position = new Vector3(cx + 0.5f, cy + 0.5f, 0);
+            var bp = bpGo.AddComponent<BlueprintEntity>();
+            // 건설 시간 — wall/door/stove/bed 큰 거는 5s, floor 작은 거는 2s.
+            float secs = CurrentMode == Mode.Floor ? 2f : 5f;
+            bp.Init(CurrentMode, prefab, ghostSpr, secs);
         }
+
+        private Sprite SpriteForCurrentMode() => CurrentMode switch
+        {
+            Mode.Wall  => wallSprite,
+            Mode.Floor => floorSprite,
+            Mode.Door  => doorSprite,
+            Mode.Stove => stoveSprite,
+            Mode.Bed   => bedSprite,
+            _ => wallSprite,
+        };
     }
 }

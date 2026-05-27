@@ -106,6 +106,12 @@ namespace MelonS.GameProto
 
         private (string, string) Describe(GameObject go)
         {
+            var bp = go.GetComponent<BlueprintEntity>();
+            if (bp != null) return ($"청사진 ({bp.Mode})",
+                $"진행도: {bp.Progress * 100f:F0}%\n예약: {(bp.IsReserved ? "건설중" : "대기")}\npawn 이 와서 {bp.BuildSeconds:F0}초 건설");
+            var pile = go.GetComponent<WoodPileEntity>();
+            if (pile != null) return ("통나무 더미",
+                $"목재 {pile.Wood}개\n예약: {(pile.IsReserved ? "운반중" : "대기")}\n2분 후 사라짐");
             var tree = go.GetComponent<TreeEntity>();
             if (tree != null) return ("나무", $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\n선택 후 우클릭 = 벌목 → 목재 +5\nHP 100, 25 dmg/sec");
             var bush = go.GetComponent<BerryBushEntity>();

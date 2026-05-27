@@ -175,6 +175,38 @@ namespace MelonS.GameProto.AI
         }
     }
 
+    public class BuildBlueprintAction : IPawnAction
+    {
+        public string DisplayName => "건설";
+        // 림 vanilla 에선 Construction 별 work type 이지만 1차로 Chop 슬롯에 묶음.
+        public WorkKind Kind => WorkKind.Chop;
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.builder == null) return false;
+            BlueprintEntity bp = FindNearestBlueprint(ctx);
+            if (bp == null) return false;
+            ctx.builder.SetBlueprintTarget(bp);
+            return true;
+        }
+        private static BlueprintEntity FindNearestBlueprint(PawnContext ctx)
+        {
+            var arr = Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None);
+            BlueprintEntity best = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = ctx.transform.position;
+            foreach (var bp in arr)
+            {
+                if (bp == null || bp.IsComplete) continue;
+                if (bp.IsReserved && bp.ReservedBy != ctx.builder.gameObject) continue;
+                Vector3 bpp = bp.transform.position;
+                if (Mathf.Abs(bpp.x) > 28.5f || Mathf.Abs(bpp.y) > 28.5f) continue;
+                float sq = ((Vector2)bpp - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = bp; }
+            }
+            return best;
+        }
+    }
+
     public class HaulWoodAction : IPawnAction
     {
         public string DisplayName => "운반";

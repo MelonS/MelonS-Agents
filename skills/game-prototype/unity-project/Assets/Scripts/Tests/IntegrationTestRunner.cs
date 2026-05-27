@@ -87,6 +87,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I25-tree-click-shows-inspector", TestI25_TreeClickInspector);
             // #116 - 나무 chop 완료 시 wood pile entity 가 바닥에 spawn
             yield return RunOne("I26-tree-drops-wood-pile", TestI26_TreeDropsWoodPile);
+            // #118 - 건축 click → blueprint spawn, pawn 건설 후 real entity 교체
+            yield return RunOne("I27-blueprint-to-wall", TestI27_BlueprintToWall);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -812,6 +814,69 @@ namespace MelonS.GameProto.Tests
             {
                 if (p != null && Vector2.Distance(p.transform.position, new Vector2(10f, 10f)) < 1f)
                     Object.Destroy(p.gameObject);
+            }
+        }
+
+        /// <summary>I27: #118 - 청사진 entity 생성 + pawn 건설 후 real wall 교체</summary>
+        private IEnumerator TestI27_BlueprintToWall()
+        {
+            yield return null;
+            // BuildManager 가 wall sprite 들고 있어야 함
+            if (BuildManager.Instance == null) { Assert(false, "BuildManager 없음"); yield break; }
+            // wall prefab 을 reflection 으로 추출
+            var prefabFld = typeof(BuildManager).GetField("wallPrefab",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            var spriteFld = typeof(BuildManager).GetField("wallSprite",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            if (prefabFld == null || spriteFld == null)
+            { Assert(false, "BuildManager wall fields reflection 실패"); yield break; }
+            GameObject wallPrefab = prefabFld.GetValue(BuildManager.Instance) as GameObject;
+            Sprite wallSpr = spriteFld.GetValue(BuildManager.Instance) as Sprite;
+            if (wallPrefab == null || wallSpr == null)
+            { Assert(false, $"wallPrefab={wallPrefab!=null} wallSpr={wallSpr!=null}"); yield break; }
+
+            // 명확한 빈 위치 (settlement 영역 밖)
+            Vector3 bpPos = new Vector3(20.5f, 20.5f, 0);
+            // blueprint 직접 spawn (BuildManager.TryPlace 우회 - 마우스 시뮬 안 함)
+            var bpGo = new GameObject("Blueprint_TestI27");
+            bpGo.transform.position = bpPos;
+            var bp = bpGo.AddComponent<BlueprintEntity>();
+            bp.Init(BuildManager.Mode.Wall, wallPrefab, wallSpr, secs: 1.0f);
+            yield return null;
+
+            // pawn 강제 가까이 spawn + PawnBuilder 박음
+            var pgo = new GameObject("BuildTestPawn");
+            pgo.transform.position = new Vector3(20.0f, 20.5f, 0);
+            pgo.AddComponent<SpriteRenderer>();
+            pgo.AddComponent<BoxCollider2D>().size = Vector2.one * 0.8f;
+            pgo.AddComponent<PawnEntity>();
+            pgo.AddComponent<PawnMovement>();
+            var pb = pgo.AddComponent<PawnBuilder>();
+            yield return null;
+
+            // Builder 가 blueprint target 설정 → 1초 진행 후 완료
+            pb.SetBlueprintTarget(bp);
+            yield return new WaitForSeconds(1.5f);
+
+            // blueprint 사라졌고 (혹은 IsComplete) wall entity 생성됐는지 확인
+            bool bpGone = bp == null || bp.gameObject == null;
+            // 위치 근처에 wall 있나
+            var walls = Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None);
+            bool wallSpawned = false;
+            foreach (var w in walls)
+            {
+                if (w == null) continue;
+                if (Vector2.Distance(w.transform.position, bpPos) < 0.6f) { wallSpawned = true; break; }
+            }
+            Assert(bpGone && wallSpawned,
+                $"청사진 → 벽: bpGone={bpGone}, wallSpawned={wallSpawned} (둘 다 True 기대)");
+
+            // 클린업
+            Object.Destroy(pgo);
+            foreach (var w in walls)
+            {
+                if (w != null && Vector2.Distance(w.transform.position, bpPos) < 0.6f)
+                    Object.Destroy(w.gameObject);
             }
         }
 

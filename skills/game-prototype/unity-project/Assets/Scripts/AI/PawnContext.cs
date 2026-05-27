@@ -17,6 +17,7 @@ namespace MelonS.GameProto.AI
         public PawnHunter hunter;
         public PawnCook cook;
         public PawnHauler hauler;  // #116
+        public PawnBuilder builder;  // #118 — blueprint 건설
         public PawnNeeds needs;
         public PawnSkills skills;
         public Transform transform;
@@ -30,6 +31,7 @@ namespace MelonS.GameProto.AI
             if (hunter   != null && hunter.HasTask)   return true;
             if (cook     != null && cook.HasTask)     return true;
             if (hauler   != null && hauler.HasTask)   return true;
+            if (builder  != null && builder.HasTask)  return true;
             return false;
         }
     }
