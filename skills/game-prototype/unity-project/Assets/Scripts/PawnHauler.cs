@@ -17,6 +17,12 @@ namespace MelonS.GameProto
         [SerializeField] private float pickupRange = 1.0f;
         [SerializeField] private float giveUpAfterSec = 8f;
 
+        // 림 vanilla pile stack 유지 - stockpile 도착 시 새 pile spawn.
+        //  GameManager 가 박음 (TreeEntity.WoodPileSprite 와 동일 sprite).
+        public static Sprite WoodPileSpriteRef;
+        public static Sprite StoneChunkSpriteRef;
+        public static Sprite MeatPileSpriteRef;
+
         private WoodPileEntity targetPile;
         private StoneChunkEntity targetStone;  // #119
         private MeatPileEntity targetMeat;     // #129
@@ -181,11 +187,36 @@ namespace MelonS.GameProto
                 float ddist = Vector2.Distance(transform.position, dropTarget.transform.position);
                 if (ddist <= pickupRange)
                 {
-                    // 도착 - 자원 inventory 추가 (zone 마커 시각 효과는 그대로)
+                    // 림 vanilla: stockpile 도착 시 pile 을 stockpile 위에 그대로 stack.
+                    //  pile 사라지지 X.  inventory counter 는 derived (모든 pile 합).
+                    Vector3 dropPos = dropTarget.transform.position;
+                    // stockpile 안 pile 은 InStockpile=true (재운반 loop 방지).
+                    if (carryingWood > 0 && WoodPileSpriteRef != null)
+                    {
+                        var p = WoodPileEntity.Spawn(dropPos, carryingWood, WoodPileSpriteRef);
+                        if (p != null) p.InStockpile = true;
+                        ResourceManager.Instance?.AddWood(carryingWood);
+                        carryingWood = 0;
+                    }
+                    if (carryingStone > 0 && StoneChunkSpriteRef != null)
+                    {
+                        var c = StoneChunkEntity.Spawn(dropPos, carryingStone, StoneChunkSpriteRef);
+                        if (c != null) c.InStockpile = true;
+                        ResourceManager.Instance?.AddStone(carryingStone);
+                        carryingStone = 0;
+                    }
+                    if (carryingFood > 0 && MeatPileSpriteRef != null)
+                    {
+                        var m = MeatPileEntity.Spawn(dropPos, carryingFood, MeatPileSpriteRef);
+                        if (m != null) m.InStockpile = true;
+                        ResourceManager.Instance?.AddFood(carryingFood);
+                        carryingFood = 0;
+                    }
+                    // sprite null fallback 만 inventory 직접 (legacy 호환)
                     if (carryingWood > 0)  { ResourceManager.Instance?.AddWood(carryingWood);   carryingWood = 0; }
                     if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
                     if (carryingFood > 0)  { ResourceManager.Instance?.AddFood(carryingFood);   carryingFood = 0; }
-                    Debug.Log($"[Hauler] {name} stockpile 도착, 자원 적재 완료");
+                    Debug.Log($"[Hauler] {name} stockpile 도착, pile stack 보존");
                     dropTarget = null;
                     phase = Phase.GoToItem;
                     movement.ClearTarget();

@@ -129,16 +129,19 @@ namespace MelonS.GameProto
             if (woodPileSpriteRuntime != null)
             {
                 TreeEntity.WoodPileSprite = woodPileSpriteRuntime;
+                PawnHauler.WoodPileSpriteRef = woodPileSpriteRuntime;
             }
             // #119
             if (stoneChunkSpriteRuntime != null)
             {
                 StoneVeinEntity.StoneChunkSprite = stoneChunkSpriteRuntime;
+                PawnHauler.StoneChunkSpriteRef = stoneChunkSpriteRuntime;
             }
             // #129
             if (meatPileSpriteRuntime != null)
             {
                 MeatPileEntity.SharedSprite = meatPileSpriteRuntime;
+                PawnHauler.MeatPileSpriteRef = meatPileSpriteRuntime;
             }
 
             // 운영자 피드백 — 게임 시작 시 자원 0 이면 빌드 모드도 못 켜고 무엇도 못함.

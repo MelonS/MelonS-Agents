@@ -307,6 +307,7 @@ namespace MelonS.GameProto.AI
             {
                 if (m == null) continue;
                 if (m.IsReserved && m.ReservedBy != ctx.hauler.gameObject) continue;
+                if (m.InStockpile) continue;  // 림 - stockpile 안 meat 재운반 X
                 Vector3 mp = m.transform.position;
                 if (Mathf.Abs(mp.x) > 28.5f || Mathf.Abs(mp.y) > 28.5f) continue;
                 float sq = ((Vector2)mp - me).sqrMagnitude;
@@ -338,6 +339,7 @@ namespace MelonS.GameProto.AI
             {
                 if (c == null) continue;
                 if (c.IsReserved && c.ReservedBy != ctx.hauler.gameObject) continue;
+                if (c.InStockpile) continue;  // 림 - stockpile 안 chunk 재운반 X
                 Vector3 cp = c.transform.position;
                 if (Mathf.Abs(cp.x) > 28.5f || Mathf.Abs(cp.y) > 28.5f) continue;
                 float sq = ((Vector2)cp - me).sqrMagnitude;
@@ -371,6 +373,7 @@ namespace MelonS.GameProto.AI
                 if (p == null) continue;
                 // 다른 hauler 가 이미 reserve 했으면 skip
                 if (p.IsReserved && p.ReservedBy != ctx.hauler.gameObject) continue;
+                if (p.InStockpile) continue;  // 림 - stockpile 안 pile 재운반 X
                 Vector3 pp = p.transform.position;
                 if (Mathf.Abs(pp.x) > 28.5f || Mathf.Abs(pp.y) > 28.5f) continue;
                 float sq = ((Vector2)pp - me).sqrMagnitude;

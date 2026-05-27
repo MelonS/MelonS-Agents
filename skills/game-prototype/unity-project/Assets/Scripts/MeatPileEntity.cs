@@ -11,6 +11,7 @@ namespace MelonS.GameProto
     {
         [SerializeField] private int food = 5;
         [SerializeField] private float lifetimeSec = 90f;  // raw meat 빨리 상함 (1.5분)
+        public bool InStockpile = false;  // stockpile stack 보존
 
         // GameManager 가 SceneSetup 으로부터 sprite 받아 박음
         public static Sprite SharedSprite;

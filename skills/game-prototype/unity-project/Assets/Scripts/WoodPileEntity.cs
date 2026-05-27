@@ -16,6 +16,9 @@ namespace MelonS.GameProto
     {
         [SerializeField] private int wood = 5;
         [SerializeField] private float lifetimeSec = 120f;  // 2분 후 사라짐
+        // 림 vanilla - stockpile 안 pile = stack 보존, 재운반 X (loop 방지).
+        //  건축 시 청사진 자재로만 consume.
+        public bool InStockpile = false;
 
         public int Wood => wood;
         public GameObject ReservedBy { get; set; }   // PawnHauler 가 set/clear

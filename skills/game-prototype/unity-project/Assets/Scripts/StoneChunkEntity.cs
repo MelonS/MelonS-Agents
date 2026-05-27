@@ -11,6 +11,7 @@ namespace MelonS.GameProto
     {
         [SerializeField] private int stone = 1;
         [SerializeField] private float lifetimeSec = 180f;  // 3분
+        public bool InStockpile = false;  // stockpile stack 보존
 
         public int Stone => stone;
         public GameObject ReservedBy { get; set; }
