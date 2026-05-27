@@ -105,6 +105,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I34-animal-drops-meat", TestI34_AnimalDropsMeat);
             // #145 운영자 fb - 자재 부족 청사진 → hauler 운반 → 자재 완비 → 건설 완료
             yield return RunOne("I35-blueprint-haul-build", TestI35_BlueprintHaulBuild);
+            // #154/#165 - bed quality blueprint (Fine) → 완성 시 BedQuality.Fine 확인
+            yield return RunOne("I36-bed-fine-blueprint-quality", TestI36_BedFineBlueprintQuality);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1205,6 +1207,62 @@ namespace MelonS.GameProto.Tests
             foreach (var w in walls)
                 if (w != null && Vector2.Distance(w.transform.position, bpPos) < 0.6f)
                     Object.Destroy(w.gameObject);
+        }
+
+        /// <summary>#165 - bed Fine 청사진 → AddWork 강제 진행 → 완성 시 BedQuality.Fine 확인.
+        /// I35 와 달리 hauler 단계 skip (DepositWood 직접 호출) - bed quality wiring 만 검증.</summary>
+        private IEnumerator TestI36_BedFineBlueprintQuality()
+        {
+            yield return null;
+            // bed prefab + sprite 가져오기 (BuildManager refs - #165 에서 sprite 정상화)
+            var bm = BuildManager.Instance;
+            if (bm == null) { Assert(false, "BuildManager null"); yield break; }
+            GameObject bedPrefab = bm.BedPrefabRef;
+            Sprite bedSpr = bm.BedSpriteRef;
+            if (bedPrefab == null || bedSpr == null)
+            { Assert(false, $"bedPrefab/sprite null (prefab={bedPrefab!=null} spr={bedSpr!=null})"); yield break; }
+
+            // BedFine 청사진 spawn (자재 30 wood)
+            Vector3 bedPos = new Vector3(25.5f, 22.5f, 0);
+            var bpGo = new GameObject("BpBedFine_I36");
+            bpGo.transform.position = bedPos;
+            var bp = bpGo.AddComponent<BlueprintEntity>();
+            bp.Init(BuildManager.Mode.BedFine, bedPrefab, bedSpr, wood: 30, stone: 0, secs: 1.0f);
+            yield return null;
+
+            // 자재 직접 deposit (hauler 단계 skip)
+            bp.DepositWood(30);
+            yield return null;
+            Assert(bp.HasAllMaterials, $"자재 완비: collected={bp.collectedWood}/30");
+
+            // 건설 작업 진행 (~1.5s, secs=1.0f 이므로 충분)
+            for (int i = 0; i < 15; i++)
+            {
+                if (bp == null || bp.gameObject == null) break;
+                bp.AddWork(0.1f);
+                yield return null;
+            }
+            yield return new WaitForSeconds(0.2f);
+
+            // 완성된 BedEntity 찾기 + Quality.Fine 검증
+            var beds = Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None);
+            BedEntity foundBed = null;
+            foreach (var b in beds)
+            {
+                if (b == null) continue;
+                if (Vector2.Distance(b.transform.position, bedPos) < 0.6f) { foundBed = b; break; }
+            }
+            bool spawnedOk = foundBed != null;
+            bool qualityOk = foundBed != null && foundBed.Quality == BedQuality.Fine;
+            float restMul = foundBed != null ? foundBed.RestMul : 0f;
+            float moodBonus = foundBed != null ? foundBed.MoodBonus : 0f;
+            Assert(spawnedOk && qualityOk && Mathf.Approximately(restMul, 1.40f)
+                   && Mathf.Approximately(moodBonus, 8f),
+                $"bed spawned={spawnedOk} quality={(foundBed!=null?foundBed.QualityKr:"NULL")} restMul={restMul:F2} mood={moodBonus:F0}");
+
+            // cleanup
+            if (foundBed != null) Object.Destroy(foundBed.gameObject);
+            if (bp != null && bp.gameObject != null) Object.Destroy(bp.gameObject);
         }
 
         private void FinalizeReport()
