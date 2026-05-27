@@ -49,7 +49,9 @@ namespace MelonS.GameProto
             if (dist <= mineRange)
             {
                 movement.ClearTarget();
-                bool done = targetVein.TakeMineDamage(mineDamagePerSec * Time.deltaTime);
+                var abil = GetComponent<PawnAbilities>();  // #120
+                float mul = abil != null ? abil.miningMul * abil.manipulation : 1f;
+                bool done = targetVein.TakeMineDamage(mineDamagePerSec * Time.deltaTime * mul);
                 // 채광 skill - Chop 으로 재활용 (#120 에서 Mining 별도 추가 가능)
                 var skills = GetComponent<PawnSkills>();
                 if (skills != null) skills.AddXP(SkillKind.Chop, mineDamagePerSec * Time.deltaTime * 0.5f);

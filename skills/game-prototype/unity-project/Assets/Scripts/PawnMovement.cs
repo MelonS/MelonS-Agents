@@ -110,6 +110,9 @@ namespace MelonS.GameProto
             Vector2 cur = transform.position;
             // Step45: 다리 다친 만큼 속도 감소
             float speedMul = health != null ? health.MovementSpeedMultiplier() : 1f;
+            // #120 - PawnAbilities move speed multiplier
+            var _abil = GetComponent<PawnAbilities>();
+            if (_abil != null) speedMul *= _abil.moveSpeedMul;
             // Step 81: target 도 맵 안쪽으로 강제.  target 자체가 호수/바위면 stop.
             Vector2 clampedTarget = ClampToWorld(target.Value);
             if (IsBlockedAt(clampedTarget))

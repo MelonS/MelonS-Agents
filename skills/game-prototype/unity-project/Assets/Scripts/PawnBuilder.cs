@@ -60,7 +60,9 @@ namespace MelonS.GameProto
             if (dist <= buildRange)
             {
                 movement.ClearTarget();
-                bool done = targetBp.AddWork(Time.deltaTime);
+                var abil = GetComponent<PawnAbilities>();  // #120
+                float mul = abil != null ? abil.constructionMul * abil.manipulation : 1f;
+                bool done = targetBp.AddWork(Time.deltaTime * mul);
                 // build skill XP
                 var skills = GetComponent<PawnSkills>();
                 if (skills != null) skills.AddXP(SkillKind.Build, 5f * Time.deltaTime);

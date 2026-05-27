@@ -62,7 +62,10 @@ namespace MelonS.GameProto
             {
                 // In range — stop walking, chop
                 movement.ClearTarget();
-                bool destroyed = targetTree.TakeChopDamage(chopDamagePerSec * Time.deltaTime);
+                // #120 - PawnAbilities chop multiplier
+                var abil = GetComponent<PawnAbilities>();
+                float mul = abil != null ? abil.chopMul * abil.manipulation : 1f;
+                bool destroyed = targetTree.TakeChopDamage(chopDamagePerSec * Time.deltaTime * mul);
                 // Day 19: Chop XP — granted each frame proportional to dmg
                 var skills = GetComponent<PawnSkills>();
                 if (skills != null) skills.AddXP(SkillKind.Chop, chopDamagePerSec * Time.deltaTime * 0.5f);

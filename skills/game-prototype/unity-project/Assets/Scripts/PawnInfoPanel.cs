@@ -86,6 +86,22 @@ namespace MelonS.GameProto
                     }
                     if (health.IsDowned) sb.AppendLine("<color=#ff6464>의식불명</color>");
                     if (health.IsDead)   sb.AppendLine("<color=#ff0000>사망</color>");
+
+                    // #120 - 능력치 (PawnAbilities)
+                    var abil = pawn.GetComponent<PawnAbilities>();
+                    if (abil != null)
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine("<color=#ddc28a>능력치:</color>");
+                        foreach (var (key, label) in PawnAbilities.DisplayMap)
+                        {
+                            float v = abil.GetByKey(key);
+                            // 1.0 기준 색상 - 좋음 녹색, 평균 옅음, 나쁨 빨강
+                            string col = v >= 1.10f ? "#9adb86" : (v >= 0.95f ? "#dddddd" : "#e88c54");
+                            sb.AppendLine($"  <color={col}>{label}: {v:F2}</color>");
+                        }
+                    }
+
                     healthText.text = sb.ToString();
                 }
                 else

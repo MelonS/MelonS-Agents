@@ -89,6 +89,10 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I26-tree-drops-wood-pile", TestI26_TreeDropsWoodPile);
             // #118 - 건축 click → blueprint spawn, pawn 건설 후 real entity 교체
             yield return RunOne("I27-blueprint-to-wall", TestI27_BlueprintToWall);
+            // #119 - 광맥 채광 → stone chunk drop, hauler 가 stone 자원 +N
+            yield return RunOne("I28-vein-mine-drops-chunk", TestI28_VeinMineDropsChunk);
+            // #120 - PawnAbilities 컴포넌트 + 능력치 분포
+            yield return RunOne("I29-pawn-abilities-vary", TestI29_PawnAbilitiesVary);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -878,6 +882,71 @@ namespace MelonS.GameProto.Tests
                 if (w != null && Vector2.Distance(w.transform.position, bpPos) < 0.6f)
                     Object.Destroy(w.gameObject);
             }
+        }
+
+        /// <summary>I28: #119 - 광맥 채광 시 stone chunk 바닥 spawn, inventory 즉시 X</summary>
+        private IEnumerator TestI28_VeinMineDropsChunk()
+        {
+            yield return null;
+            if (StoneVeinEntity.StoneChunkSprite == null)
+            { Assert(false, "StoneChunkSprite NULL"); yield break; }
+            var vgo = new GameObject("TestVein_I28");
+            vgo.transform.position = new Vector3(22f, -10f, 0);
+            var vsr = vgo.AddComponent<SpriteRenderer>();
+            vsr.sprite = Object.FindFirstObjectByType<StoneVeinEntity>()?.GetComponent<SpriteRenderer>()?.sprite;
+            vsr.sortingOrder = 5;
+            vgo.AddComponent<BoxCollider2D>().size = Vector2.one;
+            var vein = vgo.AddComponent<StoneVeinEntity>();
+
+            int chunksBefore = Object.FindObjectsByType<StoneChunkEntity>(FindObjectsSortMode.None).Length;
+            int stoneBefore = ResourceManager.Instance != null ? ResourceManager.Instance.stone : -1;
+
+            vein.TakeMineDamage(99999f);
+            yield return null;
+
+            int chunksAfter = Object.FindObjectsByType<StoneChunkEntity>(FindObjectsSortMode.None).Length;
+            int stoneAfter = ResourceManager.Instance != null ? ResourceManager.Instance.stone : -1;
+
+            Assert(chunksAfter > chunksBefore,
+                $"stone chunk spawn: {chunksBefore}->{chunksAfter} stone {stoneBefore}->{stoneAfter}");
+            Assert(stoneAfter == stoneBefore,
+                $"inventory stone 즉시 X: {stoneBefore}->{stoneAfter} (같아야 함 - hauler 줍어야 함)");
+
+            // cleanup
+            var chunks = Object.FindObjectsByType<StoneChunkEntity>(FindObjectsSortMode.None);
+            foreach (var c in chunks)
+            {
+                if (c != null && Vector2.Distance(c.transform.position, new Vector2(22f, -10f)) < 1.5f)
+                    Object.Destroy(c.gameObject);
+            }
+        }
+
+        /// <summary>I29: #120 - 모든 pawn 에 PawnAbilities + 값 1.0 부근 분포</summary>
+        private IEnumerator TestI29_PawnAbilitiesVary()
+        {
+            yield return null;
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            if (pawns.Length < 2) { Assert(false, $"pawns {pawns.Length} (min 2 필요)"); yield break; }
+
+            int withAbil = 0;
+            float[] moves = new float[pawns.Length];
+            for (int i = 0; i < pawns.Length; i++)
+            {
+                var a = pawns[i].GetComponent<PawnAbilities>();
+                if (a != null) { withAbil++; moves[i] = a.moveSpeedMul; }
+            }
+            Assert(withAbil == pawns.Length, $"PawnAbilities attached: {withAbil}/{pawns.Length}");
+            // 적어도 한 쌍의 pawn move speed 가 달라야 함 (랜덤 분포)
+            bool vary = false;
+            for (int i = 0; i < moves.Length && !vary; i++)
+                for (int j = i + 1; j < moves.Length; j++)
+                    if (Mathf.Abs(moves[i] - moves[j]) > 0.001f) { vary = true; break; }
+            Assert(vary, $"moveSpeedMul 분포: [{string.Join(", ", System.Array.ConvertAll(moves, m => m.ToString("F2")))}]");
+
+            // EffectiveWorkMul 한 번 호출
+            var first = pawns[0].GetComponent<PawnAbilities>();
+            float effChop = first.EffectiveWorkMul(WorkKind.Chop);
+            Assert(effChop > 0.5f && effChop < 2f, $"EffectiveWorkMul(Chop)={effChop:F2}");
         }
 
         private void FinalizeReport()
