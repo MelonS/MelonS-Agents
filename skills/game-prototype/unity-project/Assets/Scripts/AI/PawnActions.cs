@@ -61,7 +61,8 @@ namespace MelonS.GameProto.AI
     public class HuntAnimalAction : IPawnAction
     {
         public string DisplayName => "사냥";
-        public float globalFoodThreshold = 10f;
+        // 운영자 fb #6 - starter food=10 이라 즉시 hunt 발동했음.  5로 낮춤 = 정말 부족할 때만.
+        public float globalFoodThreshold = 5f;
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.hunter == null) return false;

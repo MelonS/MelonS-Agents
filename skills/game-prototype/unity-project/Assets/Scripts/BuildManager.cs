@@ -98,9 +98,11 @@ namespace MelonS.GameProto
         {
             if (!BuildModeActive || ghostRenderer == null || cam == null) return;
             Vector3 mw = cam.ScreenToWorldPoint(Input.mousePosition);
-            int cx = Mathf.RoundToInt(mw.x);
-            int cy = Mathf.RoundToInt(mw.y);
-            ghostRenderer.transform.position = new Vector3(cx, cy, 0);
+            // 운영자 fb #1 - tile 시각 center 가 (x+0.5, y+0.5).  FloorToInt → +0.5 로 정렬.
+            //  이전 RoundToInt 는 tile 모서리에 wall 배치돼서 floor 와 mismatch.
+            int cx = Mathf.FloorToInt(mw.x);
+            int cy = Mathf.FloorToInt(mw.y);
+            ghostRenderer.transform.position = new Vector3(cx + 0.5f, cy + 0.5f, 0);
             int cost = CostFor(CurrentMode);
             bool canAfford = ResourceManager.Instance != null && ResourceManager.Instance.wood >= cost;
             bool cellFree  = !CellOccupied(cx, cy);
@@ -111,7 +113,8 @@ namespace MelonS.GameProto
 
         private bool CellOccupied(int cx, int cy)
         {
-            var hits = Physics2D.OverlapBoxAll(new Vector2(cx, cy), Vector2.one * 0.4f, 0f);
+            // tile center 기준 검사 (+0.5)
+            var hits = Physics2D.OverlapBoxAll(new Vector2(cx + 0.5f, cy + 0.5f), Vector2.one * 0.4f, 0f);
             foreach (var h in hits)
             {
                 if (h == null) continue;
@@ -133,12 +136,13 @@ namespace MelonS.GameProto
             if (prefab == null) return;
             int cost = CostFor(CurrentMode);
             Vector3 mw = cam.ScreenToWorldPoint(Input.mousePosition);
-            int cx = Mathf.RoundToInt(mw.x);
-            int cy = Mathf.RoundToInt(mw.y);
+            // tile 시각 center 정렬 (운영자 #1 fix)
+            int cx = Mathf.FloorToInt(mw.x);
+            int cy = Mathf.FloorToInt(mw.y);
             if (CellOccupied(cx, cy)) return;
             if (ResourceManager.Instance == null || ResourceManager.Instance.wood < cost) return;
             ResourceManager.Instance.AddWood(-cost);
-            Instantiate(prefab, new Vector3(cx, cy, 0), Quaternion.identity);
+            Instantiate(prefab, new Vector3(cx + 0.5f, cy + 0.5f, 0), Quaternion.identity);
 
             var pawns = Object.FindObjectsByType<PawnSkills>(FindObjectsSortMode.None);
             PawnSkills nearest = null;
