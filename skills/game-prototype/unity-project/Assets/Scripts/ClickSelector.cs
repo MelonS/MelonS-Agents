@@ -55,6 +55,24 @@ namespace MelonS.GameProto
 
             // Right click = move OR chop OR attack (drafted) for selected pawn
             //   buildActive 면 BuildManager 가 우클릭 = cancel 처리 (overlap 방지)
+            //   #113 - undrafted + entity hit = RimWorld 스타일 "Prioritize" 컨텍스트 메뉴
+            if (Input.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null
+                && !currentSelection.IsDrafted)
+            {
+                Vector3 mw = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                mw.z = 0f;
+                Collider2D ehit = Physics2D.OverlapPoint(mw);
+                if (ehit != null && ContextMenuUI.Instance != null)
+                {
+                    var items = BuildContextMenu(ehit, mw);
+                    if (items != null && items.Count > 0)
+                    {
+                        ContextMenuUI.Instance.Open(Input.mousePosition, items);
+                        return;  // 메뉴 떴음 - 기존 직접 action skip
+                    }
+                }
+                // entity 없거나 메뉴 없으면 기존 동작 (manual move)
+            }
             if (Input.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null)
             {
                 Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
@@ -148,6 +166,68 @@ namespace MelonS.GameProto
                     currentSelection.ManualMoveUntil = Time.time + 5f;
                 }
             }
+        }
+
+        // #113 - 림월드 우클릭 prioritize 메뉴 아이템 build (undrafted 만)
+        private System.Collections.Generic.List<(string, System.Action)> BuildContextMenu(
+            Collider2D hit, Vector3 worldPos)
+        {
+            var list = new System.Collections.Generic.List<(string, System.Action)>();
+            if (currentSelection == null) return list;
+            var pawn = currentSelection;
+            var tree = hit.GetComponent<TreeEntity>();
+            var bush = hit.GetComponent<BerryBushEntity>();
+            var crop = hit.GetComponent<CropEntity>();
+            var animal = hit.GetComponent<AnimalEntity>();
+            var trader = hit.GetComponent<TraderEntity>();
+            var stove = hit.GetComponent<StoveEntity>();
+            var bench = hit.GetComponent<ResearchBench>();
+            if (tree != null)
+            {
+                list.Add(("⛏ 벌목 우선", () => {
+                    var ch = pawn.GetComponent<PawnChopper>();
+                    if (ch != null) { ch.SetTreeTarget(tree); pawn.ManualMoveUntil = Time.time + 8f; }
+                }));
+            }
+            if (bush != null && !bush.IsDepleted)
+            {
+                list.Add(("🍇 채집 우선", () => {
+                    var g = pawn.GetComponent<PawnGatherer>();
+                    if (g != null) { g.SetBushTarget(bush); pawn.ManualMoveUntil = Time.time + 8f; }
+                }));
+            }
+            if (crop != null && crop.IsRipe)
+            {
+                list.Add(("🌾 수확", () => crop.Harvest()));
+            }
+            if (animal != null && !animal.IsDead)
+            {
+                list.Add(("🎯 길들이기 시도", () => animal.TryTame()));
+                list.Add(("🏹 사냥 (드래프트 필요)", () => {
+                    pawn.SetDrafted(true);
+                    pawn.DraftedHuntTarget = animal;
+                }));
+            }
+            if (trader != null)
+            {
+                list.Add(("🛒 거래 (목재 5 → 식량 8)", () => trader.TryTrade()));
+            }
+            if (stove != null)
+            {
+                list.Add(("🍳 요리 우선", () => {
+                    var c = pawn.GetComponent<PawnCook>();
+                    if (c != null) { c.SetStoveTarget(stove); pawn.ManualMoveUntil = Time.time + 8f; }
+                }));
+            }
+            if (bench != null)
+            {
+                list.Add(("📚 연구 (옆에 가서 대기)", () => {
+                    var m = pawn.GetComponent<PawnMovement>();
+                    if (m != null) m.SetTarget(bench.transform.position);
+                    pawn.ManualMoveUntil = Time.time + 8f;
+                }));
+            }
+            return list;
         }
 
         // 통합 검증용 - 실제 mouse input 시뮬레이션 (IntegrationTestRunner 호출)
