@@ -12,13 +12,24 @@ namespace MelonS.GameProto.EditorTools
         {
             Sprite s = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
             if (s != null) return s;
+            // #116 fb - 새로 생성된 png 는 meta 없어서 AssetImporter null 가능.
+            //  ForceSynchronousImport 한 번 더 시도해서 meta 생성 유도.
+            AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport);
             TextureImporter ti = AssetImporter.GetAtPath(assetPath) as TextureImporter;
             if (ti == null) { Debug.LogWarning($"[LoadOrSetupSprite] no importer for {assetPath}"); return null; }
             ti.textureType = TextureImporterType.Sprite;
+            ti.spriteImportMode = SpriteImportMode.Single;  // #116 - 새 png 가 multiple 모드 디폴트
             ti.spritePixelsPerUnit = 16;
             ti.filterMode = FilterMode.Point;  // pixel-art crisp
             ti.SaveAndReimport();
-            return AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+            s = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+            if (s == null)
+            {
+                // race fallback - 두 번째 import
+                AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+                s = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+            }
+            return s;
         }
 
         private static Tile LoadOrCreateTile(string spritePath, string tileAssetPath)

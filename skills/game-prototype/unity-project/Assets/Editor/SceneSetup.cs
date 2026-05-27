@@ -122,9 +122,12 @@ namespace MelonS.GameProto.EditorTools
             GameManager gm = gmGo.AddComponent<GameManager>();
             GameObject pawnPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PawnPrefabPath);
             Sprite arrowSpriteRef = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/arrow.png");
+            // #116 - wood pile sprite (벌목 후 바닥에 떨어지는 통나무 더미)
+            Sprite woodPileSpriteRef = LoadOrSetupSprite("Assets/Sprites/wood_pile.png");
             SerializedObject gmSo = new SerializedObject(gm);
             gmSo.FindProperty("pawnPrefab").objectReferenceValue = pawnPrefab;
             gmSo.FindProperty("arrowSpriteRuntime").objectReferenceValue = arrowSpriteRef;
+            gmSo.FindProperty("woodPileSpriteRuntime").objectReferenceValue = woodPileSpriteRef;
             gmSo.ApplyModifiedProperties();
 
             // ResourceManager (singleton)

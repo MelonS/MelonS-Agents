@@ -236,7 +236,8 @@ namespace MelonS.GameProto.Tests
 
         private IEnumerator TestV11_TreeChop()
         {
-            // Tree.Chop 콜 → wood +1 (또는 Tree 가 IsDestroyed 되면 +N)
+            // #116: TakeChopDamage destruction 시 wood +N 즉시 X.  WoodPileEntity spawn 검증.
+            //  WoodPileSprite null 인 isolated test 환경에선 legacy fallback 으로 wood +N 즉시 (둘 다 허용).
             var treeGo = new GameObject("TestTree");
             treeGo.transform.position = new Vector3(22, 0, 0);
             treeGo.AddComponent<SpriteRenderer>();
@@ -244,12 +245,22 @@ namespace MelonS.GameProto.Tests
             var tree = treeGo.AddComponent<TreeEntity>();
             yield return new WaitForSeconds(0.1f);
             var rm = Services.Get<ResourceManager>();
-            int start = rm.wood;
-            // Tree.TakeChopDamage 또는 directly 까지 호출
+            int startWood = rm.wood;
+            int startPiles = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None).Length;
             tree.TakeChopDamage(999f);  // maxHp 100 → 충분히 큰 데미지
             yield return new WaitForSeconds(0.1f);
-            int end = rm.wood;
-            Assert(end > start, $"chop wood: {start} → {end}");
+            int endWood = rm.wood;
+            int endPiles = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None).Length;
+            // 둘 중 하나는 증가했어야 함 (sprite 있으면 pile, 없으면 wood)
+            bool ok = (endPiles > startPiles) || (endWood > startWood);
+            Assert(ok, $"chop drop: wood {startWood}->{endWood} piles {startPiles}->{endPiles}");
+            // cleanup new piles
+            var allPiles = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None);
+            foreach (var p in allPiles)
+            {
+                if (p != null && Vector2.Distance(p.transform.position, new Vector2(22, 0)) < 1f)
+                    Object.Destroy(p.gameObject);
+            }
         }
 
         private IEnumerator TestV12_ResourceAdd()

@@ -30,28 +30,29 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
+            // 운영자 fb #117 - 패널 안 보였음. 우측 중앙으로 옮기고 키움 + 노란 outline 으로 강조.
             var rt = gameObject.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(1f, 1f);
-            rt.anchorMax = new Vector2(1f, 1f);
-            rt.pivot = new Vector2(1f, 1f);
-            rt.sizeDelta = new Vector2(280, 110);
-            rt.anchoredPosition = new Vector2(-12, -240);  // EventLog 아래 + ThreatAlert 위
+            rt.anchorMin = new Vector2(1f, 0.5f);
+            rt.anchorMax = new Vector2(1f, 0.5f);
+            rt.pivot = new Vector2(1f, 0.5f);
+            rt.sizeDelta = new Vector2(320, 160);
+            rt.anchoredPosition = new Vector2(-12, 80);  // 화면 우측 중앙 약간 위
 
             bg = gameObject.AddComponent<Image>();
-            bg.color = new Color(0.05f, 0.06f, 0.08f, 0.92f);
+            bg.color = new Color(0.05f, 0.06f, 0.08f, 0.95f);
 
-            // 제목
+            // 제목 - 노란 강조 (림 inspect 느낌)
             var titleGo = new GameObject("Title");
             titleGo.transform.SetParent(transform, false);
             titleText = titleGo.AddComponent<Text>();
             titleText.text = "";
-            titleText.font = LoadKoreanFont(20);
-            titleText.fontSize = 20;
+            titleText.font = LoadKoreanFont(24);
+            titleText.fontSize = 24;
             titleText.fontStyle = FontStyle.Bold;
-            titleText.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            titleText.color = new Color(1.0f, 0.85f, 0.30f, 1f);  // 노란
             titleText.alignment = TextAnchor.UpperLeft;
             var trt = titleGo.GetComponent<RectTransform>();
-            trt.anchorMin = new Vector2(0, 0.65f);
+            trt.anchorMin = new Vector2(0, 0.70f);
             trt.anchorMax = new Vector2(1, 1);
             trt.sizeDelta = new Vector2(-16, -4);
             trt.anchoredPosition = new Vector2(8, -4);
@@ -61,9 +62,9 @@ namespace MelonS.GameProto
             bodyGo.transform.SetParent(transform, false);
             bodyText = bodyGo.AddComponent<Text>();
             bodyText.text = "";
-            bodyText.font = LoadKoreanFont(14);
-            bodyText.fontSize = 14;
-            bodyText.color = new Color(0.75f, 0.75f, 0.7f, 1f);
+            bodyText.font = LoadKoreanFont(15);
+            bodyText.fontSize = 15;
+            bodyText.color = new Color(0.92f, 0.92f, 0.88f, 1f);
             bodyText.alignment = TextAnchor.UpperLeft;
             bodyText.horizontalOverflow = HorizontalWrapMode.Wrap;
             bodyText.verticalOverflow = VerticalWrapMode.Overflow;

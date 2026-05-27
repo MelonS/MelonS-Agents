@@ -508,6 +508,62 @@ def gen_trader(seed: int = 9):
 # 메인
 # ─────────────────────────────────────────────────────────────────────────
 
+def gen_wood_pile(seed: int = 13):
+    """16x16 stacked logs - 운영자 fb #116."""
+    random.seed(seed)
+    W = H = 16
+    im = new_canvas(W, H)
+    dr = ImageDraw.Draw(im)
+
+    log_mid  = (140, 92, 50, 255)
+    log_dark = (95, 60, 30, 255)
+    log_lit  = (185, 132, 78, 255)
+    ring     = (60, 38, 20, 255)
+    shadow   = (0, 0, 0, 100)
+
+    # 그림자 (밑)
+    for x in range(2, 14):
+        put_px(im, x, 13, shadow)
+
+    # 하단 통나무 2개 (가로 배치 - 길이 6, 높이 3)
+    # log1: x 1~7, y 9~11
+    dr.rectangle([1, 9, 7, 11], fill=log_mid)
+    put_px(im, 4, 9, log_lit)
+    put_px(im, 5, 9, log_lit)
+    for x in range(1, 8):
+        put_px(im, x, 11, log_dark)
+    # 단면 (왼쪽) - 동심원
+    put_px(im, 1, 10, ring)
+    put_px(im, 2, 10, log_lit)
+
+    # log2: x 9~15, y 9~11
+    dr.rectangle([9, 9, 15, 11], fill=log_mid)
+    put_px(im, 12, 9, log_lit)
+    for x in range(9, 16):
+        put_px(im, x, 11, log_dark)
+    put_px(im, 15, 10, ring)
+    put_px(im, 14, 10, log_lit)
+
+    # 상단 통나무 1개 (가운데 위)
+    dr.rectangle([4, 5, 12, 8], fill=log_mid)
+    put_px(im, 7, 5, log_lit)
+    put_px(im, 8, 5, log_lit)
+    for x in range(4, 13):
+        put_px(im, x, 8, log_dark)
+    # 단면
+    put_px(im, 4, 6, ring)
+    put_px(im, 5, 6, ring)
+    put_px(im, 5, 7, log_lit)
+    put_px(im, 12, 6, ring)
+    put_px(im, 11, 6, log_lit)
+
+    # 작은 highlight
+    put_px(im, 8, 6, log_lit)
+    put_px(im, 7, 7, log_lit)
+
+    return im
+
+
 def main():
     targets = [
         ("tree.png",          gen_tree),
@@ -515,6 +571,7 @@ def main():
         ("pawn_colonist.png", gen_pawn),
         ("deer.png",          gen_deer),
         ("trader.png",        gen_trader),
+        ("wood_pile.png",     gen_wood_pile),
     ]
     for name, fn in targets:
         out = HERE / name

@@ -16,6 +16,7 @@ namespace MelonS.GameProto.AI
         public PawnGatherer gatherer;
         public PawnHunter hunter;
         public PawnCook cook;
+        public PawnHauler hauler;  // #116
         public PawnNeeds needs;
         public PawnSkills skills;
         public Transform transform;
@@ -28,6 +29,7 @@ namespace MelonS.GameProto.AI
             if (gatherer != null && gatherer.HasTask) return true;
             if (hunter   != null && hunter.HasTask)   return true;
             if (cook     != null && cook.HasTask)     return true;
+            if (hauler   != null && hauler.HasTask)   return true;
             return false;
         }
     }

@@ -83,6 +83,10 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I23-60s-stress-no-nre", TestI23_60sStressNoNre);
             // #114 - work tab 직업 시스템
             yield return RunOne("I24-work-tab-priority", TestI24_WorkTabPriority);
+            // #117 - 비-pawn entity 좌클릭 정보 패널
+            yield return RunOne("I25-tree-click-shows-inspector", TestI25_TreeClickInspector);
+            // #116 - 나무 chop 완료 시 wood pile entity 가 바닥에 spawn
+            yield return RunOne("I26-tree-drops-wood-pile", TestI26_TreeDropsWoodPile);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -727,6 +731,88 @@ namespace MelonS.GameProto.Tests
             // WorkTabUI 가 scene 에 있나
             var tab = WorkTabUI.Instance;
             Assert(tab != null, "WorkTabUI.Instance 존재");
+        }
+
+        /// <summary>I25: #117 - 나무/벽/사슴 좌클릭 시 EntityInspectorPanel 작동
+        /// (Reflection 으로 Describe 호출해서 entity type 별 텍스트 검증)</summary>
+        private IEnumerator TestI25_TreeClickInspector()
+        {
+            yield return null;
+            var panel = Object.FindFirstObjectByType<EntityInspectorPanel>(FindObjectsInactive.Include);
+            if (panel == null) { Assert(false, "EntityInspectorPanel 없음"); yield break; }
+            var tree = Object.FindFirstObjectByType<TreeEntity>();
+            if (tree == null) { Assert(false, "tree 없음"); yield break; }
+
+            // Describe 메서드 직접 호출 (reflection) - "나무" title 반환 확인
+            var desc = typeof(EntityInspectorPanel).GetMethod("Describe",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            if (desc == null) { Assert(false, "Describe method reflection 실패"); yield break; }
+            var result = desc.Invoke(panel, new object[] { tree.gameObject });
+            // result 는 ValueTuple<string,string>
+            var titleField = result.GetType().GetField("Item1");
+            string title = (string)titleField.GetValue(result);
+            Assert(title == "나무", $"tree describe title='{title}' (expected '나무')");
+
+            // wall, deer 도 확인
+            var wall = Object.FindFirstObjectByType<WallEntity>();
+            if (wall != null)
+            {
+                var wr = desc.Invoke(panel, new object[] { wall.gameObject });
+                string wt = (string)wr.GetType().GetField("Item1").GetValue(wr);
+                Assert(wt == "벽", $"wall describe title='{wt}'");
+            }
+            var deer = Object.FindFirstObjectByType<AnimalEntity>();
+            if (deer != null)
+            {
+                var dr = desc.Invoke(panel, new object[] { deer.gameObject });
+                string dt = (string)dr.GetType().GetField("Item1").GetValue(dr);
+                Assert(dt == "사슴", $"deer describe title='{dt}'");
+            }
+        }
+
+        /// <summary>I26: #116 - tree HP=0 시 즉시 wood +=N 대신 WoodPileEntity spawn</summary>
+        private IEnumerator TestI26_TreeDropsWoodPile()
+        {
+            yield return null;
+            // 전제: TreeEntity.WoodPileSprite 가 GameManager 에 의해 박혀있어야 함
+            if (TreeEntity.WoodPileSprite == null)
+            {
+                Assert(false, "TreeEntity.WoodPileSprite NULL (SceneSetup 가 GameManager.woodPileSpriteRuntime 바인딩 안 함)");
+                yield break;
+            }
+            // fresh tree spawn
+            var spr = TreeEntity.WoodPileSprite;
+            var tgo = new GameObject("TestTree_I26");
+            tgo.transform.position = new Vector3(10f, 10f, 0f);
+            var tsr = tgo.AddComponent<SpriteRenderer>();
+            tsr.sprite = Object.FindFirstObjectByType<TreeEntity>()?.GetComponent<SpriteRenderer>()?.sprite;
+            tsr.sortingOrder = 5;
+            var tcol = tgo.AddComponent<BoxCollider2D>();
+            tcol.size = Vector2.one;
+            var tree = tgo.AddComponent<TreeEntity>();
+
+            int pilesBefore = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None).Length;
+            int woodBefore = ResourceManager.Instance != null ? ResourceManager.Instance.wood : -1;
+
+            // chop until destroyed (huge dmg)
+            tree.TakeChopDamage(99999f);
+            yield return null;
+
+            int pilesAfter = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None).Length;
+            int woodAfter = ResourceManager.Instance != null ? ResourceManager.Instance.wood : -1;
+
+            Assert(pilesAfter > pilesBefore,
+                $"wood pile spawn: piles {pilesBefore}->{pilesAfter} (증가 expected, woodBefore={woodBefore} woodAfter={woodAfter})");
+            Assert(woodAfter == woodBefore,
+                $"inventory wood 즉시 증가 X: wood {woodBefore}->{woodAfter} (같아야 함 - hauler 가 줍어야 +5)");
+
+            // 클린업 - 새로 spawn 한 pile 들 destroy
+            var piles = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None);
+            foreach (var p in piles)
+            {
+                if (p != null && Vector2.Distance(p.transform.position, new Vector2(10f, 10f)) < 1f)
+                    Object.Destroy(p.gameObject);
+            }
         }
 
         private void FinalizeReport()

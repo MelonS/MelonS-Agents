@@ -12,6 +12,7 @@ namespace MelonS.GameProto
         [Header("Spawn settings")]
         [SerializeField] private GameObject pawnPrefab;
         [SerializeField] private Sprite arrowSpriteRuntime;  // Day 50
+        [SerializeField] private Sprite woodPileSpriteRuntime;  // #116 - 벌목 후 wood pile drop
         [SerializeField] private Vector2[] spawnPositions = new Vector2[]
         {
             // 운영자 피드백 - "림들 겹쳐서 이동" - 일렬 spawn → 같은 target pick.
@@ -115,6 +116,13 @@ namespace MelonS.GameProto
             ArchitectMenu.EnsureInScene();
             // → #114 림월드 Work tab (F1) — per-pawn 우선순위 grid
             WorkTabUI.EnsureInScene();
+
+            // #116 - wood pile sprite 를 TreeEntity static field 에 박음.
+            //  fallback: SerializeField 못 받았으면 Resources 등 안 거치고 즉시 inventory 추가 (legacy).
+            if (woodPileSpriteRuntime != null)
+            {
+                TreeEntity.WoodPileSprite = woodPileSpriteRuntime;
+            }
 
             // 운영자 피드백 — 게임 시작 시 자원 0 이면 빌드 모드도 못 켜고 무엇도 못함.
             // 림월드 starter 처럼 약간의 자원: 벽 6 + 화덕 1 + 식사 며칠

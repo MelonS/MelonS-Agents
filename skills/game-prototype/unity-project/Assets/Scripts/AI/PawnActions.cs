@@ -175,6 +175,39 @@ namespace MelonS.GameProto.AI
         }
     }
 
+    public class HaulWoodAction : IPawnAction
+    {
+        public string DisplayName => "운반";
+        // 운반도 림 vanilla 에선 Hauling 별 work type 이지만 1차로 Chop 슬롯에 묶음.
+        public WorkKind Kind => WorkKind.Chop;
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.hauler == null) return false;
+            WoodPileEntity pile = FindNearestPile(ctx);
+            if (pile == null) return false;
+            ctx.hauler.SetPileTarget(pile);
+            return true;
+        }
+        private static WoodPileEntity FindNearestPile(PawnContext ctx)
+        {
+            var arr = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None);
+            WoodPileEntity best = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = ctx.transform.position;
+            foreach (var p in arr)
+            {
+                if (p == null) continue;
+                // 다른 hauler 가 이미 reserve 했으면 skip
+                if (p.IsReserved && p.ReservedBy != ctx.hauler.gameObject) continue;
+                Vector3 pp = p.transform.position;
+                if (Mathf.Abs(pp.x) > 28.5f || Mathf.Abs(pp.y) > 28.5f) continue;
+                float sq = ((Vector2)pp - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = p; }
+            }
+            return best;
+        }
+    }
+
     public class WanderAction : IPawnAction
     {
         public string DisplayName => "어슬렁";
