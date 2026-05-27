@@ -106,14 +106,12 @@ namespace MelonS.GameProto
             if (Hp <= 0)
             {
                 Debug.Log($"[Wolf] killed → +{dropFood} 고기");
-                // #129 - 즉시 AddFood 대신 MeatPile drop
+                // 운영자 fb: 즉시 food += N + meat pile drop (시각만)
+                if (ResourceManager.Instance != null) ResourceManager.Instance.AddFood(dropFood);
                 if (MeatPileEntity.SharedSprite != null)
                 {
-                    MeatPileEntity.Spawn(transform.position, dropFood, MeatPileEntity.SharedSprite);
-                }
-                else if (ResourceManager.Instance != null)
-                {
-                    ResourceManager.Instance.AddFood(dropFood);
+                    var m = MeatPileEntity.Spawn(transform.position, 0, MeatPileEntity.SharedSprite);
+                    if (m != null) m.SetFood(0);
                 }
                 Destroy(gameObject, 0.5f);
             }

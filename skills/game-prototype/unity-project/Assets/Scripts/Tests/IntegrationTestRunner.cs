@@ -822,9 +822,10 @@ namespace MelonS.GameProto.Tests
             int woodAfter = ResourceManager.Instance != null ? ResourceManager.Instance.wood : -1;
 
             Assert(pilesAfter > pilesBefore,
-                $"wood pile spawn: piles {pilesBefore}->{pilesAfter} (증가 expected, woodBefore={woodBefore} woodAfter={woodAfter})");
-            Assert(woodAfter == woodBefore,
-                $"inventory wood 즉시 증가 X: wood {woodBefore}->{woodAfter} (같아야 함 - hauler 가 줍어야 +5)");
+                $"wood pile spawn (시각): piles {pilesBefore}->{pilesAfter}");
+            // 운영자 fb 두 번째: chop 즉시 wood += N.
+            Assert(woodAfter > woodBefore,
+                $"inventory wood 즉시 +N: {woodBefore}->{woodAfter}");
 
             // 클린업 - 새로 spawn 한 pile 들 destroy
             var piles = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None);
@@ -922,9 +923,10 @@ namespace MelonS.GameProto.Tests
             int stoneAfter = ResourceManager.Instance != null ? ResourceManager.Instance.stone : -1;
 
             Assert(chunksAfter > chunksBefore,
-                $"stone chunk spawn: {chunksBefore}->{chunksAfter} stone {stoneBefore}->{stoneAfter}");
-            Assert(stoneAfter == stoneBefore,
-                $"inventory stone 즉시 X: {stoneBefore}->{stoneAfter} (같아야 함 - hauler 줍어야 함)");
+                $"stone chunk spawn (시각): {chunksBefore}->{chunksAfter}");
+            // 운영자 fb 두 번째: 채광 즉시 stone += N.
+            Assert(stoneAfter > stoneBefore,
+                $"inventory stone 즉시 +N: {stoneBefore}->{stoneAfter}");
 
             // cleanup
             var chunks = Object.FindObjectsByType<StoneChunkEntity>(FindObjectsSortMode.None);
@@ -999,9 +1001,10 @@ namespace MelonS.GameProto.Tests
             int foodAfter = ResourceManager.Instance != null ? ResourceManager.Instance.food : -1;
 
             Assert(meatsAfter > meatsBefore,
-                $"meat pile spawn: {meatsBefore}->{meatsAfter} food {foodBefore}->{foodAfter}");
-            Assert(foodAfter == foodBefore,
-                $"inventory food 즉시 X: {foodBefore}->{foodAfter} (hauler 줍어야 함)");
+                $"meat pile spawn: {meatsBefore}->{meatsAfter}");
+            // 운영자 fb 두 번째: 동물 죽음 시 food 즉시 추가 (시각 satisfaction).
+            Assert(foodAfter > foodBefore,
+                $"inventory food 즉시 +N: {foodBefore}->{foodAfter}");
 
             // cleanup
             var meats = Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None);
