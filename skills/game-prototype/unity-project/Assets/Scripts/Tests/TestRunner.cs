@@ -105,6 +105,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V56-bed-quality-rest-mul", TestV56_BedQualityRestMul);
             yield return RunOne("V57-stockpile-priority-findbest", TestV57_StockpilePriorityFindBest);
             yield return RunOne("V58-tree-species-tint-preserved", TestV58_TreeSpeciesTintPreserved);
+            yield return RunOne("V59-floor-move-speed-bonus", TestV59_FloorMoveSpeed);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -369,6 +370,41 @@ namespace MelonS.GameProto.Tests
             float night = clock.DayProgress;
             Assert(dawn < 0.3f && night > 0.85f,
                 $"dawn={dawn:F2} (<0.3), night={night:F2} (>0.85)");
+        }
+
+        // #157 - 바닥 위 pawn 이 평지 pawn 보다 빠르게 이동하는지 확인.
+        //   같은 거리 같은 시간에서 floor pawn 이 더 멀리 가야 함.
+        //   주의: PawnMovement.ClampToWorld 가 ±29 강제 → in-world 좌표 (-20~+20) 사용.
+        private IEnumerator TestV59_FloorMoveSpeed()
+        {
+            // pawn A: 평지 (-20, -20)
+            var goA = new GameObject("TestPawnA_V59");
+            goA.transform.position = new Vector3(-20, -20, 0);
+            goA.AddComponent<SpriteRenderer>();
+            goA.AddComponent<PawnEntity>();
+            var mvA = goA.AddComponent<PawnMovement>();
+            mvA.SetTarget(new Vector2(-10, -20));
+            // pawn B: floor 위 (0, -20)
+            var floorGo = new GameObject("TestFloorV59");
+            floorGo.transform.position = new Vector3(0, -20, 0);
+            floorGo.AddComponent<SpriteRenderer>();
+            floorGo.AddComponent<FloorEntity>();
+            var floorCol = floorGo.AddComponent<BoxCollider2D>();
+            floorCol.size = Vector2.one;
+            floorCol.isTrigger = true;
+            var goB = new GameObject("TestPawnB_V59");
+            goB.transform.position = new Vector3(0, -20, 0);
+            goB.AddComponent<SpriteRenderer>();
+            goB.AddComponent<PawnEntity>();
+            var mvB = goB.AddComponent<PawnMovement>();
+            mvB.SetTarget(new Vector2(10, -20));
+            yield return new WaitForSeconds(0.4f);  // 짧게 - target 도달 전 측정
+            float movedA = goA.transform.position.x - (-20f);
+            float movedB = goB.transform.position.x - 0f;
+            Object.Destroy(goA); Object.Destroy(goB); Object.Destroy(floorGo);
+            // B 가 1.10x 이상 빠르게 갔어야 (1.30x ideal, 약간 여유)
+            bool bonusOk = movedB > movedA * 1.10f && movedA > 0.5f;  // A 도 실제 이동했어야
+            Assert(bonusOk, $"평지 movedA={movedA:F2}, floor movedB={movedB:F2} (B/A={movedB/Mathf.Max(0.01f,movedA):F2}x, >=1.10 expected)");
         }
 
         // #156 - TreeEntity TakeChopDamage 가 species tint 를 보존하는지 확인.

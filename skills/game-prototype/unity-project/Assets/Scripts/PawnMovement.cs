@@ -33,6 +33,15 @@ namespace MelonS.GameProto
             return t != null && (t == WaterTile || t == RockTile);
         }
 
+        // #157 - 바닥 위 (FloorEntity) 면 이동 속도 보너스.
+        private static bool IsOnFloor(Vector2 pos)
+        {
+            var hits = Physics2D.OverlapBoxAll(pos, Vector2.one * 0.3f, 0f);
+            foreach (var h in hits)
+                if (h != null && h.GetComponent<FloorEntity>() != null) return true;
+            return false;
+        }
+
         private Vector2? target;
         private PawnHealth health;  // Step45 — leg damage 영향
         // I19 bug — pawn 이 obstacle 옆에서 target 계속 cancel 되며 정체.
@@ -113,6 +122,9 @@ namespace MelonS.GameProto
             // #120 - PawnAbilities move speed multiplier
             var _abil = GetComponent<PawnAbilities>();
             if (_abil != null) speedMul *= _abil.moveSpeedMul;
+            // #157 - wiki: 바닥 위 pawn 은 이동 속도 보너스 (paved tile 50% 근사).
+            //  per-frame OverlapBox 인 점은 비싸지만 (#104 audit) tiny radius 라 ok.
+            if (IsOnFloor(cur)) speedMul *= FloorEntity.MoveSpeedMul;
             // Step 81: target 도 맵 안쪽으로 강제.  target 자체가 호수/바위면 stop.
             Vector2 clampedTarget = ClampToWorld(target.Value);
             if (IsBlockedAt(clampedTarget))
