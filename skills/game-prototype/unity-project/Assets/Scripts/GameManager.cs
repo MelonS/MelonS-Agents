@@ -107,6 +107,7 @@ namespace MelonS.GameProto
             // → 선택된 콜로니스트 발밑에 명시적 노란 ring (펄스)
             SelectionRing.EnsureInScene();
             InspectHighlight.EnsureInScene();  // #138 - 선택된 entity outline
+            ResourceMonitorLogger.EnsureInScene();  // #140 - 자원 변화 log dump (QA 검증)
             // → mouse hover 시 entity 종류 + 가능한 action 표시
             HoverTooltip.EnsureInScene();
             // → wolf/bandit 접근 시 큰 빨강 "⚠ 위협" 우상단 (auto-pause X, 시각 only)

@@ -87,6 +87,52 @@ def step_qa(delay: float = 3.0) -> int:
     return 0
 
 
+def step_real_qa(delay: float = 30.0) -> int:
+    """운영자 fb (#140) - graphics 모드 30s 시뮬 + 자원 변화 자동 검증.
+    ResourceMonitorLogger 가 5s 간격으로 wood/food/stone 을 Player.log dump.
+    monotonic 증가 또는 nontrivial 변화 검증. 30s 안에 wood 변화 없으면 FAIL.
+    """
+    print(f"[refactor] (4.5/7) REAL QA - graphics 모드 {delay}s 실제 시뮬 ...")
+    REAL_QA_SHOT = Path("G:/ai/_refactor_realqa.png")
+    sys.path.insert(0, str(REPO / "skills" / "game-dev-agent" / "scripts"))
+    from modules import qa
+    ok, msg = qa.launch_and_capture(BUILD_EXE, REAL_QA_SHOT, delay_sec=delay)
+    if not ok:
+        print(f"  FAIL launch - {msg}")
+        return 13
+    if not PLAYER_LOG.exists():
+        print("  WARN: Player.log 없음 - skip")
+        return 0
+    log = PLAYER_LOG.read_text(encoding="utf-8", errors="ignore")
+    # [ResMon] t=X.Xs wood=N food=M stone=K meals=L fineMeals=F
+    import re
+    snapshots = []
+    for line in log.splitlines():
+        m = re.search(r"\[ResMon\] t=([\d.]+)s wood=(\d+) food=(\d+) stone=(\d+) meals=(\d+)", line)
+        if m:
+            snapshots.append({
+                "t": float(m.group(1)),
+                "wood": int(m.group(2)),
+                "food": int(m.group(3)),
+                "stone": int(m.group(4)),
+                "meals": int(m.group(5)),
+            })
+    if len(snapshots) < 2:
+        print(f"  FAIL: ResMon snapshots {len(snapshots)} (>=2 expected) - GameManager 가 ResourceMonitorLogger 못 박은 듯")
+        return 14
+    first, last = snapshots[0], snapshots[-1]
+    wood_d = last["wood"] - first["wood"]
+    food_d = last["food"] - first["food"]
+    stone_d = last["stone"] - first["stone"]
+    print(f"  {len(snapshots)} snapshots: t={first['t']:.0f}s wood={first['wood']} food={first['food']} stone={first['stone']}")
+    print(f"  → t={last['t']:.0f}s wood={last['wood']} (+{wood_d}) food={last['food']} (+{food_d}) stone={last['stone']} (+{stone_d})")
+    if wood_d <= 0:
+        print(f"  FAIL: wood 증가 없음 (운영자 fb '목재 안 나옴' 회귀 검출)")
+        return 15
+    print(f"  REAL QA OK - {delay}s 안에 wood +{wood_d}")
+    return 0
+
+
 def step_log_check() -> int:
     print("[refactor] (4/5) Player.log error scan ...")
     if not PLAYER_LOG.exists():
@@ -222,6 +268,10 @@ def main():
                     help="update baseline to current (post visual change)")
     ap.add_argument("--skip-scenes", action="store_true")
     ap.add_argument("--skip-build", action="store_true")
+    ap.add_argument("--skip-real-qa", action="store_true",
+                    help="skip 30s graphics 모드 자원 검증 (개발 중 빠른 iter 용)")
+    ap.add_argument("--real-qa-seconds", type=float, default=30.0,
+                    help="REAL QA graphics 시뮬 길이 (default 30s)")
     args = ap.parse_args()
 
     print(f"\n=== refactor cycle [{args.tag}] ===")
@@ -244,6 +294,12 @@ def main():
     if rc != 0:
         print(f"\n[refactor] FAIL @ runtime log (rc={rc})")
         return rc
+    # 운영자 fb #140 - 진짜 QA: 30s graphics 시뮬 + 자원 변화 자동 검증
+    if not args.skip_real_qa:
+        rc = step_real_qa(delay=args.real_qa_seconds)
+        if rc != 0:
+            print(f"\n[refactor] FAIL @ real QA (rc={rc})")
+            return rc
     rc = step_visual_diff(threshold_pct=args.threshold)
     if rc != 0:
         print(f"\n[refactor] FAIL @ visual (rc={rc})")
