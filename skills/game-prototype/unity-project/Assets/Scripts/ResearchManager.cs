@@ -43,6 +43,11 @@ namespace MelonS.GameProto
         public float pointsPerSecondPerBench = 2f;
         private float pointsFraction = 0f;  // Day 75 fractional accumulator
 
+        // Lesson #4 firewall - FindObjectsByType per-Update 비쌈.  cache + 1s 재검색.
+        private ResearchBench[] cachedBenches;
+        private float nextBenchSearchTime = -10f;
+        private const float BenchSearchInterval = 1.0f;
+
         public delegate void TechCompletedHandler(Tech t);
         public event TechCompletedHandler OnTechCompleted;
 
@@ -72,7 +77,13 @@ namespace MelonS.GameProto
         {
             if (activeTech == null || activeTech.completed) return;
             // Count benches with at least one pawn within research-radius
-            ResearchBench[] benches = GameObject.FindObjectsByType<ResearchBench>(FindObjectsSortMode.None);
+            //  Lesson #4 firewall - bench list 1s 캐시 (이전 매 frame FindObjects 호출 비쌈).
+            if (cachedBenches == null || Time.time >= nextBenchSearchTime)
+            {
+                cachedBenches = GameObject.FindObjectsByType<ResearchBench>(FindObjectsSortMode.None);
+                nextBenchSearchTime = Time.time + BenchSearchInterval;
+            }
+            ResearchBench[] benches = cachedBenches;
             if (benches == null || benches.Length == 0) return;
             int activeBenches = 0;
             foreach (var b in benches)
