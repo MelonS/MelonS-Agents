@@ -69,9 +69,14 @@ namespace MelonS.GameProto
             return _ringSpriteCache;
         }
 
+        // Lesson #4 - FindFirstObjectByType per-Update 비쌈.  cache - ClickSelector 는 singleton-ish.
+        private ClickSelector cachedCs;
+
         private void Update()
         {
-            var cs = Object.FindFirstObjectByType<ClickSelector>();
+            // 캐시 stale 검사 - Unity 의 fake null 잡음
+            if (cachedCs == null) cachedCs = Object.FindFirstObjectByType<ClickSelector>();
+            var cs = cachedCs;
             if (cs == null || cs.CurrentSelection == null || cs.CurrentSelection.IsDead)
             {
                 // 페이드 아웃

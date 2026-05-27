@@ -32,6 +32,8 @@ namespace MelonS.GameProto
         private static readonly Color TextActive = new Color(0.10f, 0.10f, 0.08f, 1f);
 
         private Font font;
+        // Lesson #4 - FindFirstObjectByType per-Update 비쌈.
+        private ClickSelector cachedCs;
 
         private static GuiControlBar _instance;
 
@@ -219,11 +221,11 @@ namespace MelonS.GameProto
                 RefreshBuildHighlight(speed2Btn, Mathf.Approximately(s, 2f));
                 RefreshBuildHighlight(speed4Btn, Mathf.Approximately(s, 4f));
             }
-            // Draft highlight (selection 의 IsDrafted)
+            // Draft highlight (selection 의 IsDrafted) - cachedCs lesson #4
             if (draftBtn != null)
             {
-                var cs = Object.FindFirstObjectByType<ClickSelector>();
-                bool drafted = cs != null && cs.CurrentSelection != null && cs.CurrentSelection.IsDrafted;
+                if (cachedCs == null) cachedCs = Object.FindFirstObjectByType<ClickSelector>();
+                bool drafted = cachedCs != null && cachedCs.CurrentSelection != null && cachedCs.CurrentSelection.IsDrafted;
                 RefreshBuildHighlight(draftBtn, drafted);
             }
         }
