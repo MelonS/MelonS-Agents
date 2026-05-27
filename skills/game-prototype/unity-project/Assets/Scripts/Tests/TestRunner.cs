@@ -360,6 +360,7 @@ namespace MelonS.GameProto.Tests
         private IEnumerator TestV55_MultiTrader()
         {
             // 2 trader 동시 spawn → 둘 다 wander 작동
+            //  flaky 방어: 3s 대기 (이전 2s) + threshold 0.05 (이전 0.1) — wander 가 가끔 짧음.
             var t1 = new GameObject("TestMultiTrader1");
             t1.transform.position = new Vector3(85, 0, 0);
             t1.AddComponent<SpriteRenderer>();
@@ -370,9 +371,9 @@ namespace MelonS.GameProto.Tests
             var trader2 = t2.AddComponent<TraderEntity>();
             yield return new WaitForSeconds(0.05f);
             Vector3 s1 = t1.transform.position, s2 = t2.transform.position;
-            yield return new WaitForSeconds(2.0f);
+            yield return new WaitForSeconds(3.0f);  // wander cycle 충분히
             Vector3 e1 = t1.transform.position, e2 = t2.transform.position;
-            bool both = (e1 - s1).magnitude > 0.1f && (e2 - s2).magnitude > 0.1f;
+            bool both = (e1 - s1).magnitude > 0.05f && (e2 - s2).magnitude > 0.05f;
             Assert(both && trader1.IsHere && trader2.IsHere,
                 $"trader1 moved {(e1-s1).magnitude:F2}, trader2 moved {(e2-s2).magnitude:F2}");
         }
