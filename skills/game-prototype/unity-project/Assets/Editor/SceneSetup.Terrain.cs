@@ -8,6 +8,21 @@ namespace MelonS.GameProto.EditorTools
     //  원본 SceneSetup.cs(1378-1430)에서 이동.
     public static partial class SceneSetup
     {
+        /// <summary>#141 - PNG IHDR width/height 직접 읽기 (TextureImporter 가 import 전엔 size 0).</summary>
+        private static void GetPngSize(string assetPath, out int w, out int h)
+        {
+            w = 0; h = 0;
+            try
+            {
+                var bytes = System.IO.File.ReadAllBytes(assetPath);
+                if (bytes.Length < 24) return;
+                // PNG header: 8B sig + IHDR(4 length + 4 'IHDR' + 4 width + 4 height + ...)
+                w = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+                h = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+            }
+            catch { /* size unknown */ }
+        }
+
         private static Sprite LoadOrSetupSprite(string assetPath)
         {
             Sprite s = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
@@ -19,7 +34,11 @@ namespace MelonS.GameProto.EditorTools
             if (ti == null) { Debug.LogWarning($"[LoadOrSetupSprite] no importer for {assetPath}"); return null; }
             ti.textureType = TextureImporterType.Sprite;
             ti.spriteImportMode = SpriteImportMode.Single;  // #116 - 새 png 가 multiple 모드 디폴트
-            ti.spritePixelsPerUnit = 16;
+            // #141 - 64x64 sprite 는 PPU 32 (world 크기 = 32x32@PPU16 와 동일).
+            //  PNG 직접 읽어 size 판정.
+            int srcW, srcH;
+            GetPngSize(assetPath, out srcW, out srcH);
+            ti.spritePixelsPerUnit = (srcW >= 64) ? 32 : 16;
             ti.filterMode = FilterMode.Point;  // pixel-art crisp
             ti.SaveAndReimport();
             s = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
