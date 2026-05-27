@@ -13,24 +13,26 @@ namespace MelonS.GameProto
     {
         public static BuildManager Instance { get; private set; }
 
-        public enum Mode { Off, Wall, Floor, Door, Stove }
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed }
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
 
-        [SerializeField] private GameObject wallPrefab, floorPrefab, doorPrefab, stovePrefab;
-        [SerializeField] private int wallCost = 5, floorCost = 1, doorCost = 3, stoveCost = 10;
+        [SerializeField] private GameObject wallPrefab, floorPrefab, doorPrefab, stovePrefab, bedPrefab;
+        [SerializeField] private int wallCost = 5, floorCost = 1, doorCost = 3, stoveCost = 10, bedCost = 8;
         [SerializeField] private SpriteRenderer ghostRenderer;
-        [SerializeField] private Sprite wallSprite, floorSprite, doorSprite, stoveSprite;
+        [SerializeField] private Sprite wallSprite, floorSprite, doorSprite, stoveSprite, bedSprite;
 
         private Camera cam;
 
         public void SetRefs(GameObject wall, GameObject floor, GameObject door, GameObject stove,
                             Sprite wallS, Sprite floorS, Sprite doorS, Sprite stoveS,
-                            SpriteRenderer ghost)
+                            SpriteRenderer ghost,
+                            GameObject bed = null, Sprite bedS = null)
         {
             wallPrefab = wall; floorPrefab = floor; doorPrefab = door; stovePrefab = stove;
             wallSprite = wallS; floorSprite = floorS; doorSprite = doorS; stoveSprite = stoveS;
             ghostRenderer = ghost;
+            bedPrefab = bed; bedSprite = bedS;
         }
 
         private void Awake()
@@ -47,6 +49,8 @@ namespace MelonS.GameProto
             if (Input.GetKeyDown(KeyCode.F)) SetMode(CurrentMode == Mode.Floor ? Mode.Off : Mode.Floor);
             if (Input.GetKeyDown(KeyCode.G)) SetMode(CurrentMode == Mode.Door  ? Mode.Off : Mode.Door);
             if (Input.GetKeyDown(KeyCode.T)) SetMode(CurrentMode == Mode.Stove ? Mode.Off : Mode.Stove);
+            // 운영자 피드백 - 침대 추가
+            if (Input.GetKeyDown(KeyCode.Y)) SetMode(CurrentMode == Mode.Bed ? Mode.Off : Mode.Bed);
             if (BuildModeActive && Input.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }
             UpdateGhost();
             if (BuildModeActive && Input.GetMouseButtonDown(0)) TryPlace();
@@ -64,6 +68,7 @@ namespace MelonS.GameProto
                 Mode.Floor => floorSprite,
                 Mode.Door  => doorSprite,
                 Mode.Stove => stoveSprite,
+                Mode.Bed   => bedSprite,
                 _ => wallSprite,
             };
             ghostRenderer.sortingOrder = m == Mode.Floor ? 1 : 20;
@@ -75,6 +80,7 @@ namespace MelonS.GameProto
             Mode.Floor => floorCost,
             Mode.Door  => doorCost,
             Mode.Stove => stoveCost,
+            Mode.Bed   => bedCost,
             _ => 0,
         };
 
@@ -84,6 +90,7 @@ namespace MelonS.GameProto
             Mode.Floor => floorPrefab,
             Mode.Door  => doorPrefab,
             Mode.Stove => stovePrefab,
+            Mode.Bed   => bedPrefab,
             _ => null,
         };
 
@@ -114,6 +121,7 @@ namespace MelonS.GameProto
                 if (h.GetComponent<PawnEntity>() != null) return true;
                 if (h.GetComponent<BerryBushEntity>() != null) return true;
                 if (h.GetComponent<StoveEntity>() != null) return true;
+                if (h.GetComponent<BedEntity>() != null) return true;
             }
             return false;
         }

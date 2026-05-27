@@ -17,7 +17,8 @@ namespace MelonS.GameProto.EditorTools
             public GameObject doorPrefab;
             public GameObject stovePrefab;
             public GameObject benchPrefab;
-            public Sprite wallSprite, floorSprite, doorSprite, stoveSprite, treeSprite;
+            public GameObject bedPrefab;
+            public Sprite wallSprite, floorSprite, doorSprite, stoveSprite, treeSprite, bedSprite;
         }
 
         private static BuildPrefabSet GenerateBuildPrefabs()
@@ -97,6 +98,18 @@ namespace MelonS.GameProto.EditorTools
             benchTemplate.AddComponent<ResearchBench>();
             ps.benchPrefab = PrefabUtility.SaveAsPrefabAsset(benchTemplate, "Assets/Prefabs/ResearchBench.prefab");
             Object.DestroyImmediate(benchTemplate);
+
+            // 운영자 피드백 #107: 침대 prefab
+            ps.bedSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/bed_wood.png");
+            GameObject bedTemplate = new GameObject("Bed");
+            var bedsr = bedTemplate.AddComponent<SpriteRenderer>();
+            bedsr.sprite = ps.bedSprite; bedsr.sortingOrder = 4;
+            var bedcol = bedTemplate.AddComponent<BoxCollider2D>();
+            bedcol.size = new Vector2(0.95f, 0.95f);
+            bedcol.isTrigger = true;  // pawn 통과 가능 (위에 눕기)
+            bedTemplate.AddComponent<BedEntity>();
+            ps.bedPrefab = PrefabUtility.SaveAsPrefabAsset(bedTemplate, "Assets/Prefabs/Bed.prefab");
+            Object.DestroyImmediate(bedTemplate);
 
             return ps;
         }

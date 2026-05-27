@@ -226,8 +226,8 @@ namespace MelonS.GameProto.Tests
             var bar = GameObject.Find("GuiControlBar");
             if (bar == null) { Assert(false, "GuiControlBar GameObject 없음"); yield break; }
             var buttons = bar.GetComponentsInChildren<UnityEngine.UI.Button>();
-            Assert(buttons.Length == 10,
-                $"GuiControlBar 발견, 버튼 {buttons.Length}개 (10 expected)");
+            Assert(buttons.Length == 11,
+                $"GuiControlBar 발견, 버튼 {buttons.Length}개 (11 expected - 침대 추가)");
         }
 
         /// <summary>I7: 멈춤 버튼 클릭 → Time.timeScale=0</summary>

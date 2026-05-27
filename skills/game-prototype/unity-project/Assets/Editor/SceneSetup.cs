@@ -193,7 +193,8 @@ namespace MelonS.GameProto.EditorTools
             GameObject bmGo = new GameObject("BuildManager");
             BuildManager bm = bmGo.AddComponent<BuildManager>();
             bm.SetRefs(wallPrefab, floorPrefab, doorPrefab, stovePrefab,
-                       wallSprite, floorSprite, doorSprite, stoveSprite, ghostSr);
+                       wallSprite, floorSprite, doorSprite, stoveSprite, ghostSr,
+                       prefabs.bedPrefab, prefabs.bedSprite);
 
             // R10m: BerryBush spawn extract -> SceneSetup.Game.BerryBush.cs
             SpawnBerryBushes(treeSprite);

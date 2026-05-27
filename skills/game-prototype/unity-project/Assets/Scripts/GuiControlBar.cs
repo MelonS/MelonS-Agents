@@ -22,7 +22,7 @@ namespace MelonS.GameProto
 
         private Button pauseBtn, speed1Btn, speed2Btn, speed4Btn;
         private Button draftBtn;
-        private Button wallBtn, floorBtn, doorBtn, stoveBtn;
+        private Button wallBtn, floorBtn, doorBtn, stoveBtn, bedBtn;
         private Button researchBtn;
 
         // 상태 색 — active 면 노란, 아니면 panel 색
@@ -90,8 +90,8 @@ namespace MelonS.GameProto
             rt.anchorMin = new Vector2(0.5f, 0f);
             rt.anchorMax = new Vector2(0.5f, 0f);
             rt.pivot = new Vector2(0.5f, 0f);
-            // 10 buttons + 2 group gaps + 7 normal gaps
-            float totalW = 10 * BtnW + 7 * Gap + 2 * GroupGap;
+            // 11 buttons + 2 group gaps + 8 normal gaps  (#107 - bed 추가)
+            float totalW = 11 * BtnW + 8 * Gap + 2 * GroupGap;
             rt.sizeDelta = new Vector2(totalW, BtnH);
             rt.anchoredPosition = new Vector2(0, 40);  // 화면 하단에서 40px
 
@@ -116,7 +116,8 @@ namespace MelonS.GameProto
             wallBtn   = MakeBtn("벽",    "(B) 5",   x, ()=>SetBuildMode(BuildManager.Mode.Wall));   x += BtnW + Gap;
             floorBtn  = MakeBtn("바닥",  "(F) 1",   x, ()=>SetBuildMode(BuildManager.Mode.Floor)); x += BtnW + Gap;
             doorBtn   = MakeBtn("문",    "(G) 3",   x, ()=>SetBuildMode(BuildManager.Mode.Door));  x += BtnW + Gap;
-            stoveBtn  = MakeBtn("화덕",  "(T) 10",  x, ()=>SetBuildMode(BuildManager.Mode.Stove)); x += BtnW + GroupGap;
+            stoveBtn  = MakeBtn("화덕",  "(T) 10",  x, ()=>SetBuildMode(BuildManager.Mode.Stove)); x += BtnW + Gap;
+            bedBtn    = MakeBtn("침대",  "(Y) 8",   x, ()=>SetBuildMode(BuildManager.Mode.Bed));   x += BtnW + GroupGap;
 
             // Research
             researchBtn = MakeBtn("연구", "(N)",     x, OpenResearchPicker);
@@ -211,6 +212,7 @@ namespace MelonS.GameProto
                 RefreshBuildHighlight(floorBtn, BuildManager.Instance.CurrentMode == BuildManager.Mode.Floor);
                 RefreshBuildHighlight(doorBtn,  BuildManager.Instance.CurrentMode == BuildManager.Mode.Door);
                 RefreshBuildHighlight(stoveBtn, BuildManager.Instance.CurrentMode == BuildManager.Mode.Stove);
+                RefreshBuildHighlight(bedBtn,   BuildManager.Instance.CurrentMode == BuildManager.Mode.Bed);
             }
             // Speed highlight
             if (TimeController.Instance != null)

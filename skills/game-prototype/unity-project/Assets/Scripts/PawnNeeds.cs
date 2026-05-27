@@ -45,12 +45,15 @@ namespace MelonS.GameProto
 
             // Day 10: when sleep is low AND it's night, pawn sleeps in place.
             // Sleep regenerates fast, food + mood still decay (mildly).
+            //  운영자 #107 - 침대 위에서 자면 1.6x 회복 + mood +5 보너스 매 sec
             if (sleep < 30f && night)
             {
                 IsSleeping = true;
-                sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * dt);
+                float bedBonus = IsOnBed() ? 1.6f : 1.0f;
+                sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * bedBonus * dt);
                 food  = Mathf.Max(0f, food  - foodDecay * 0.5f * dt);
                 mood  = Mathf.Max(0f, mood  - moodDecay * 0.5f * dt);
+                if (IsOnBed()) mood = Mathf.Min(100f, mood + 5f * dt);
                 return;
             }
             // Wake up when sleep refilled past 80, even if still night
@@ -125,6 +128,15 @@ namespace MelonS.GameProto
             var hits = Physics2D.OverlapBoxAll(transform.position, Vector2.one * 0.3f, 0f);
             foreach (var h in hits)
                 if (h != null && h.GetComponent<FloorEntity>() != null) return true;
+            return false;
+        }
+
+        // 운영자 #107 - 침대 위에서 자면 보너스
+        private bool IsOnBed()
+        {
+            var hits = Physics2D.OverlapBoxAll(transform.position, Vector2.one * 0.4f, 0f);
+            foreach (var h in hits)
+                if (h != null && h.GetComponent<BedEntity>() != null) return true;
             return false;
         }
 
