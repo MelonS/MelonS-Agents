@@ -56,68 +56,95 @@ def put_px(im, x, y, color):
 # ─────────────────────────────────────────────────────────────────────────
 
 def gen_tree(seed: int = 7):
+    """#139 - 더 디테일한 나무: 5 색조 canopy + 가지 + 그림자."""
     random.seed(seed)
     W = H = 32
     im = new_canvas(W, H)
     dr = ImageDraw.Draw(im)
 
-    # 트렁크 - 어두운 갈색 base + 밝은 highlight 줄.  y=21~30, 폭 6
-    trunk_dark = (62, 38, 18, 255)
-    trunk_mid  = (95, 60, 30, 255)
-    trunk_lit  = (130, 90, 50, 255)
-    dr.rectangle([13, 21, 18, 30], fill=trunk_mid)
-    # 왼쪽 가장자리 그림자
-    for y in range(21, 31):
-        put_px(im, 13, y, trunk_dark)
-    # 오른쪽 가장자리도 약간 그림자
-    for y in range(22, 31):
-        put_px(im, 18, y, shade(trunk_mid, 0.75))
-    # 가운데 highlight column (15)
+    # 그림자 (지면) - 트리 밑 회색 타원
+    for x in range(8, 24):
+        for y in range(29, 32):
+            dx = (x - 16) / 8.0
+            dy = (y - 30.5) / 1.5
+            if dx*dx + dy*dy < 1.0:
+                put_px(im, x, y, (0, 0, 0, 90))
+
+    # 트렁크 - 폭 5, 높이 8.  나무껍질 무늬 추가.
+    trunk_dark = (52, 30, 12, 255)
+    trunk_mid  = (88, 55, 25, 255)
+    trunk_lit  = (130, 88, 45, 255)
+    trunk_hi   = (165, 120, 70, 255)
+    dr.rectangle([13, 22, 18, 29], fill=trunk_mid)
+    # 왼 가장자리 = 그림자
     for y in range(22, 30):
-        if random.random() < 0.85:
-            put_px(im, 15, y, trunk_lit)
-    # 트렁크 무늬 (가로 줄무늬 - 3개 줄)
-    for y in [24, 27]:
+        put_px(im, 13, y, trunk_dark)
+    # 오른 가장자리 = 미드 그림자
+    for y in range(22, 30):
+        put_px(im, 18, y, shade(trunk_mid, 0.7))
+    # highlight 가운데
+    for y in range(22, 29):
+        put_px(im, 15, y, trunk_lit)
+    # 나무껍질 줄무늬 4개 (수평 어두운 라인)
+    for y in [23, 25, 27]:
         for x in range(14, 18):
-            put_px(im, x, y, trunk_dark)
+            if random.random() < 0.7:
+                put_px(im, x, y, trunk_dark)
+    # 옹이
+    put_px(im, 16, 25, trunk_dark)
+    put_px(im, 16, 26, shade(trunk_dark, 1.2))
 
-    # foliage - 3 layers (어두운 base → mid → bright highlight)
-    foliage_dark = (32, 70, 30, 255)
-    foliage_mid  = (50, 110, 45, 255)
-    foliage_lit  = (95, 165, 70, 255)
-    foliage_hi   = (160, 210, 110, 255)
+    # foliage - 5 색조
+    foliage_darkest = (22, 50, 22, 255)
+    foliage_dark    = (35, 80, 30, 255)
+    foliage_mid     = (55, 120, 48, 255)
+    foliage_lit     = (95, 170, 72, 255)
+    foliage_hi      = (170, 215, 115, 255)
 
-    # 큰 base 원 - center (16, 11), radius ~10
+    # 큰 canopy - center (16, 11), radius ~11 (전보다 큼)
     cx, cy = 16, 11
-    for y in range(0, 22):
+    for y in range(0, 23):
         for x in range(0, W):
             dx, dy = x - cx, y - cy
             d = (dx * dx + dy * dy) ** 0.5
-            # noisy boundary - rim 들쭉날쭉
-            r_max = 10.5 + random.uniform(-0.8, 0.4)
+            r_max = 11.0 + random.uniform(-1.2, 0.5)
             if d > r_max:
                 continue
-            # layer 결정
-            if d > r_max - 1.0:
+            # layer 결정 (5 등급)
+            if d > r_max - 0.8:
+                color = foliage_darkest
+            elif d > r_max - 2.0:
                 color = foliage_dark
-            elif d > r_max - 3.0:
-                color = foliage_mid if random.random() < 0.7 else foliage_dark
-            elif d > r_max - 5.5:
-                color = foliage_lit if random.random() < 0.6 else foliage_mid
+            elif d > r_max - 4.0:
+                color = foliage_mid if random.random() < 0.75 else foliage_dark
+            elif d > r_max - 6.5:
+                color = foliage_lit if random.random() < 0.65 else foliage_mid
             else:
-                # 중심부 - 가끔 highlight
-                color = foliage_lit if random.random() < 0.7 else foliage_hi
+                color = foliage_lit if random.random() < 0.6 else foliage_hi
             put_px(im, x, y, color)
 
-    # highlight cluster 한쪽 - 좌상단 sun
-    for _ in range(14):
-        hx = random.randint(11, 17)
-        hy = random.randint(4, 10)
-        put_px(im, hx, hy, foliage_hi)
+    # highlight cluster - 좌상단 sun (더 자연스럽게)
+    for _ in range(20):
+        hx = random.randint(10, 18)
+        hy = random.randint(3, 11)
+        if random.random() < 0.4:
+            put_px(im, hx, hy, foliage_hi)
+        else:
+            put_px(im, hx, hy, foliage_lit)
 
-    # 트렁크 아래 그림자 (어두운 base 한 줄)
-    for x in range(12, 20):
-        put_px(im, x, 30, (30, 22, 12, 200))
+    # 작은 어두운 그림자 점 (잎 그림자)
+    for _ in range(15):
+        hx = random.randint(8, 24)
+        hy = random.randint(10, 21)
+        cur = im.getpixel((hx, hy))
+        if cur[3] > 0 and random.random() < 0.5:
+            put_px(im, hx, hy, foliage_dark)
+
+    # 가지 (canopy 아래 트렁크 옆 살짝)
+    put_px(im, 12, 21, trunk_dark)
+    put_px(im, 11, 20, trunk_dark)
+    put_px(im, 19, 21, trunk_dark)
+    put_px(im, 20, 20, trunk_dark)
 
     return im
 
@@ -127,53 +154,56 @@ def gen_tree(seed: int = 7):
 # ─────────────────────────────────────────────────────────────────────────
 
 def gen_wall_wood(seed: int = 11):
+    """#139 - 통나무 벽: 4 plank rows + 굵은 grain + 옹이 + 그림자."""
     random.seed(seed)
     W = H = 16
     im = new_canvas(W, H)
     dr = ImageDraw.Draw(im)
 
-    # plank rows - 3 horizontal planks 약 (0-4, 5-9, 10-15)
-    plank_rows = [(0, 4), (5, 9), (10, 15)]
+    # 4 plank rows (전보다 더 많은 줄로 디테일)
+    plank_rows = [(0, 3), (4, 7), (8, 11), (12, 15)]
     plank_colors_mid = [
+        (148, 100, 55, 255),
+        (128, 85, 45, 255),
         (138, 92, 50, 255),
         (118, 78, 42, 255),
-        (148, 100, 55, 255),
     ]
 
     for idx, (y0, y1) in enumerate(plank_rows):
         base = plank_colors_mid[idx]
-        dark = shade(base, 0.6)
-        lit  = shade(base, 1.18)
-        # base fill
+        dark = shade(base, 0.55)
+        verylit = shade(base, 1.25)
+        lit  = shade(base, 1.10)
         dr.rectangle([0, y0, W - 1, y1], fill=base)
-        # 위쪽 그림자 (이전 plank 와 seam)
+        # 상단 seam (이전 plank 의 그림자)
         for x in range(W):
             put_px(im, x, y0, dark)
-        # 아래쪽 highlight (광원이 위)
+        # 하단 highlight (광원 위)
         for x in range(W):
-            put_px(im, x, y1, shade(base, 0.85))
-        # 나무 grain - 가로 줄 (밝/어두)
+            put_px(im, x, y1, shade(base, 0.80))
+        # grain (수평 줄무늬)
         for gy in range(y0 + 1, y1):
             for x in range(W):
                 r = random.random()
-                if r < 0.18:
-                    put_px(im, x, gy, dark)
-                elif r < 0.30:
-                    put_px(im, x, gy, lit)
-        # 옹이 (knot) - 가끔
-        if random.random() < 0.7:
-            kx = random.randint(2, W - 3)
+                if r < 0.22: put_px(im, x, gy, dark)
+                elif r < 0.36: put_px(im, x, gy, verylit)
+                elif r < 0.42: put_px(im, x, gy, lit)
+        # 옹이 (50% 확률)
+        if random.random() < 0.55:
+            kx = random.randint(2, W - 4)
             ky = random.randint(y0 + 1, y1 - 1)
-            put_px(im, kx, ky, dark)
-            put_px(im, kx + 1, ky, dark)
-            put_px(im, kx, ky + 1, dark)
-            put_px(im, kx + 1, ky + 1, shade(dark, 0.85))
+            # 더 큰 옹이 (3x2)
+            for ox in range(2):
+                for oy in range(2):
+                    put_px(im, kx + ox, ky + oy, dark)
+            put_px(im, kx + 1, ky, shade(dark, 1.4))  # highlight 중심
 
-    # 측면 그림자 - 왼쪽 한 줄 darken
+    # 왼/오 측면 그림자
     for y in range(H):
         cur = im.getpixel((0, y))
-        if cur[3] > 0:
-            im.putpixel((0, y), shade(cur, 0.7))
+        if cur[3] > 0: im.putpixel((0, y), shade(cur, 0.65))
+        cur = im.getpixel((W-1, y))
+        if cur[3] > 0: im.putpixel((W-1, y), shade(cur, 0.80))
 
     return im
 
