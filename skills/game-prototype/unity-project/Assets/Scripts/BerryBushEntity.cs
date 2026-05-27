@@ -35,6 +35,9 @@ namespace MelonS.GameProto
 
         private int berries;
         private SpriteRenderer spriteRenderer;
+        // #161 - sprite 의 origin tint 보존 (생성 시 색을 base 로 캐시).
+        //  이전: grayscale 덮어쓰기 → 베리 익었을 때 녹색이 회색으로.
+        private Color baseColor = Color.white;
 
         public bool IsDepleted => berries <= 0;
         public int BerriesRemaining => berries;
@@ -48,6 +51,8 @@ namespace MelonS.GameProto
             spawnTime = Time.time;
             berries = initialBerries;
             spriteRenderer = GetComponent<SpriteRenderer>();
+            // #161 - sprite color 가 setup 단계에서 이미 박혀있음 (녹색).  base 로 캐시.
+            if (spriteRenderer != null) baseColor = spriteRenderer.color;
             UpdateVisual();
         }
 
@@ -85,16 +90,12 @@ namespace MelonS.GameProto
         private void UpdateVisual()
         {
             if (spriteRenderer == null) return;
-            if (IsDepleted)
-            {
-                // Grey when stripped bare
-                spriteRenderer.color = new Color(0.4f, 0.4f, 0.4f, 1f);
-                return;
-            }
-            // Darken proportionally as stock drains: full = 1.0, empty = 0.4
-            float t = (float)berries / Mathf.Max(1, initialBerries);
-            float shade = Mathf.Lerp(0.4f, 1f, t);
-            spriteRenderer.color = new Color(shade, shade, shade, 1f);
+            // #161 - base 녹색을 brightness 곱으로 조절 (회색 덮어쓰기 X).
+            //  Depleted=0.35 (어두운 녹) / Full=1.0 (밝은 녹).
+            float t = IsDepleted
+                ? 0.35f
+                : Mathf.Lerp(0.4f, 1f, (float)berries / Mathf.Max(1, initialBerries));
+            spriteRenderer.color = new Color(baseColor.r * t, baseColor.g * t, baseColor.b * t, baseColor.a);
         }
     }
 }
