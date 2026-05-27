@@ -146,8 +146,8 @@ namespace MelonS.GameProto
             if (pile != null) return ("통나무 더미",
                 $"목재 {pile.Wood}개\n예약: {(pile.IsReserved ? "운반중" : "대기")}\n2분 후 사라짐");
             var vein = go.GetComponent<StoneVeinEntity>();
-            if (vein != null) return ("광맥 (석재)",
-                $"HP 200, 채광 시 돌 1-3개\n선택 후 우클릭 = 채광 우선");
+            if (vein != null) return ($"광맥 ({vein.TypeKr})",
+                $"종류: {vein.TypeKr}\n채광 시 돌 1-3개\n선택 후 우클릭 = 채광 우선\n(화강암 가장 단단, 사암 약함)");
             var chunk = go.GetComponent<StoneChunkEntity>();
             if (chunk != null) return ("돌덩이",
                 $"석재 {chunk.Stone}개\n예약: {(chunk.IsReserved ? "운반중" : "대기")}\n3분 후 사라짐");

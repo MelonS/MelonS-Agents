@@ -118,6 +118,8 @@ namespace MelonS.GameProto
             ArchitectMenu.EnsureInScene();
             // → #114 림월드 Work tab (F1) — per-pawn 우선순위 grid
             WorkTabUI.EnsureInScene();
+            // → #126 림월드 Schedule (F4) — 24h slot grid
+            ScheduleUI.EnsureInScene();
 
             // #116 - wood pile sprite 를 TreeEntity static field 에 박음.
             //  fallback: SerializeField 못 받았으면 Resources 등 안 거치고 즉시 inventory 추가 (legacy).

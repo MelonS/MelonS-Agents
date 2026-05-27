@@ -13,12 +13,13 @@ namespace MelonS.GameProto
     {
         public static BuildManager Instance { get; private set; }
 
-        public enum Mode { Off, Wall, Floor, Door, Stove, Bed }
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone }  // #127 - stone wall
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
 
         [SerializeField] private GameObject wallPrefab, floorPrefab, doorPrefab, stovePrefab, bedPrefab;
         [SerializeField] private int wallCost = 5, floorCost = 1, doorCost = 3, stoveCost = 10, bedCost = 8;
+        [SerializeField] private int wallStoneCost = 5;  // #127 - 석재 5
         [SerializeField] private SpriteRenderer ghostRenderer;
         [SerializeField] private Sprite wallSprite, floorSprite, doorSprite, stoveSprite, bedSprite;
 
@@ -76,21 +77,23 @@ namespace MelonS.GameProto
 
         private int CostFor(Mode m) => m switch
         {
-            Mode.Wall  => wallCost,
-            Mode.Floor => floorCost,
-            Mode.Door  => doorCost,
-            Mode.Stove => stoveCost,
-            Mode.Bed   => bedCost,
+            Mode.Wall      => wallCost,
+            Mode.WallStone => wallStoneCost,
+            Mode.Floor     => floorCost,
+            Mode.Door      => doorCost,
+            Mode.Stove     => stoveCost,
+            Mode.Bed       => bedCost,
             _ => 0,
         };
 
         private GameObject PrefabFor(Mode m) => m switch
         {
-            Mode.Wall  => wallPrefab,
-            Mode.Floor => floorPrefab,
-            Mode.Door  => doorPrefab,
-            Mode.Stove => stovePrefab,
-            Mode.Bed   => bedPrefab,
+            Mode.Wall      => wallPrefab,
+            Mode.WallStone => wallPrefab,  // 같은 prefab, 다른 자원
+            Mode.Floor     => floorPrefab,
+            Mode.Door      => doorPrefab,
+            Mode.Stove     => stovePrefab,
+            Mode.Bed       => bedPrefab,
             _ => null,
         };
 
@@ -104,7 +107,9 @@ namespace MelonS.GameProto
             int cy = Mathf.FloorToInt(mw.y);
             ghostRenderer.transform.position = new Vector3(cx + 0.5f, cy + 0.5f, 0);
             int cost = CostFor(CurrentMode);
-            bool canAfford = ResourceManager.Instance != null && ResourceManager.Instance.wood >= cost;
+            bool stoneMode = CurrentMode == Mode.WallStone;
+            bool canAfford = ResourceManager.Instance != null
+                && (stoneMode ? ResourceManager.Instance.stone : ResourceManager.Instance.wood) >= cost;
             bool cellFree  = !CellOccupied(cx, cy);
             ghostRenderer.color = (canAfford && cellFree)
                 ? new Color(1f, 1f, 1f, 0.55f)
@@ -141,8 +146,18 @@ namespace MelonS.GameProto
             int cx = Mathf.FloorToInt(mw.x);
             int cy = Mathf.FloorToInt(mw.y);
             if (CellOccupied(cx, cy)) return;
-            if (ResourceManager.Instance == null || ResourceManager.Instance.wood < cost) return;
-            ResourceManager.Instance.AddWood(-cost);
+            if (ResourceManager.Instance == null) return;
+            bool stoneMode = CurrentMode == Mode.WallStone;
+            if (stoneMode)
+            {
+                if (ResourceManager.Instance.stone < cost) return;
+                ResourceManager.Instance.AddStone(-cost);
+            }
+            else
+            {
+                if (ResourceManager.Instance.wood < cost) return;
+                ResourceManager.Instance.AddWood(-cost);
+            }
 
             // 운영자 fb #118 - 림월드 청사진 패턴.  즉시 완성 대신 BlueprintEntity spawn.
             //  pawn (PawnBuilder) 가 가서 5초 작업 후 finished prefab 으로 교체.

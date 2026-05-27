@@ -179,6 +179,11 @@ namespace MelonS.GameProto.EditorTools
                 positions.Add(sp);
                 placed++;
             }
+            // #127 - 4종 광물 type 분포 (sandstone 가장 많고, granite/marble 희귀).
+            var typeWeights = new[] { (StoneType.Sandstone, 4), (StoneType.Limestone, 3),
+                                       (StoneType.Granite, 2), (StoneType.Marble, 1) };
+            int totalW = 0; foreach (var (_, w) in typeWeights) totalW += w;
+            System.Random tr2 = new System.Random(42);
             foreach (var pos in positions)
             {
                 var vgo = new GameObject($"StoneVein_{pos.x}_{pos.y}");
@@ -188,7 +193,16 @@ namespace MelonS.GameProto.EditorTools
                 vsr.sortingOrder = 5;
                 var vcol = vgo.AddComponent<BoxCollider2D>();
                 vcol.size = new Vector2(1.4f, 1.4f);
-                vgo.AddComponent<StoneVeinEntity>();
+                var vein = vgo.AddComponent<StoneVeinEntity>();
+                // 가중 random pick
+                int pick = tr2.Next(0, totalW);
+                StoneType chosen = StoneType.Sandstone;
+                int acc = 0;
+                foreach (var (t, w) in typeWeights)
+                {
+                    acc += w; if (pick < acc) { chosen = t; break; }
+                }
+                vein.SetType(chosen);
             }
             Debug.Log($"[StoneVein] spawned {placed} veins");
         }

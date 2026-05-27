@@ -23,6 +23,7 @@ namespace MelonS.GameProto
         private Button pauseBtn, speed1Btn, speed2Btn, speed4Btn;
         private Button draftBtn;
         private Button workBtn;       // #114 - Work tab 열기 (F1)
+        private Button scheduleBtn;   // #126 - Schedule tab (F4)
         private Button architectBtn;  // #110 - 5 build btn 대체 (Architect 메뉴 열기)
         private Button researchBtn;
 
@@ -91,9 +92,9 @@ namespace MelonS.GameProto
             rt.anchorMin = new Vector2(0.5f, 0f);
             rt.anchorMax = new Vector2(0.5f, 0f);
             rt.pivot = new Vector2(0.5f, 0f);
-            // 8 buttons + 3 group gaps + 4 normal gaps  (#114 - 직업 버튼 추가)
-            //  layout: [멈춤][1x][2x][4x] [징집] [직업] [건축] [연구]
-            float totalW = 8 * BtnW + 4 * Gap + 3 * GroupGap;
+            // 9 buttons (#126 - 일정 추가)
+            //  layout: [멈춤][1x][2x][4x] [징집] [직업] [일정] [건축] [연구]
+            float totalW = 9 * BtnW + 4 * Gap + 4 * GroupGap;
             rt.sizeDelta = new Vector2(totalW, BtnH);
             rt.anchoredPosition = new Vector2(0, 40);  // 화면 하단에서 40px
 
@@ -116,6 +117,9 @@ namespace MelonS.GameProto
 
             // Work tab (#114) - 림월드 F1 패턴.  per-pawn 우선순위 grid.
             workBtn = MakeBtn("직업", "(F1)", x, () => { if (WorkTabUI.Instance != null) WorkTabUI.Instance.Toggle(); }); x += BtnW + GroupGap;
+
+            // Schedule (#126) - 림월드 F4 패턴.  24h slot grid.
+            scheduleBtn = MakeBtn("일정", "(F4)", x, () => { if (ScheduleUI.Instance != null) ScheduleUI.Instance.Toggle(); }); x += BtnW + GroupGap;
 
             // Architect 단일 버튼 - 림월드 패턴.  좌측 popup 카테고리 메뉴.
             architectBtn = MakeBtn("건축", "(F8)", x, () => { if (ArchitectMenu.Instance != null) ArchitectMenu.Instance.Toggle(); }); x += BtnW + GroupGap;

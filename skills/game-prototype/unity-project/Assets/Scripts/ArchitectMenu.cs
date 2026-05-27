@@ -28,8 +28,9 @@ namespace MelonS.GameProto
         private static readonly Dictionary<string, (BuildManager.Mode mode, string label, int cost)[]> Categories = new()
         {
             ["Structure (구조)"] = new[] {
-                (BuildManager.Mode.Wall,  "벽 (목재 5)",  5),
-                (BuildManager.Mode.Door,  "문 (목재 3)",  3),
+                (BuildManager.Mode.Wall,      "벽 (목재 5)",   5),
+                (BuildManager.Mode.WallStone, "벽 (석재 5)",   5),  // #127
+                (BuildManager.Mode.Door,      "문 (목재 3)",   3),
             },
             ["Floors (바닥)"] = new[] {
                 (BuildManager.Mode.Floor, "나무 바닥 (목재 1)", 1),

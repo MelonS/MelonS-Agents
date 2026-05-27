@@ -27,6 +27,7 @@ namespace MelonS.GameProto
         private PawnBuilder builder;  // #118 — blueprint 건설
         private PawnMiner miner;      // #119 — 채광
         private PawnDoctor doctor;    // #125 — 의료
+        private PawnSchedule schedule; // #126 — 시간대별 행동
         private PawnNeeds needs;
         private PawnEntity entity;  // Day 48 — drafted state check
         private PawnWorkSettings workSettings;  // #114 — per-pawn work priority
@@ -55,6 +56,7 @@ namespace MelonS.GameProto
             builder = GetComponent<PawnBuilder>();  // #118
             miner = GetComponent<PawnMiner>();      // #119
             doctor = GetComponent<PawnDoctor>();    // #125
+            schedule = GetComponent<PawnSchedule>();// #126
             needs = GetComponent<PawnNeeds>();
             entity = GetComponent<PawnEntity>();
             workSettings = GetComponent<PawnWorkSettings>();  // #114
@@ -141,6 +143,25 @@ namespace MelonS.GameProto
             if (builder != null && builder.HasTask) return;
             if (miner != null && miner.HasTask) return;
             if (doctor != null && doctor.HasTask) return;
+
+            // #126 - Schedule slot 따라 행동 제한.
+            //  Sleep slot: chop/build/mine 안 함, wander 만.  IsSleeping 트리거는 needs 가 처리.
+            //  Joy slot: chop/build/mine 안 함, wander.
+            //  Anytime/Work: 정상 Decide.
+            if (schedule != null)
+            {
+                var slot = schedule.GetCurrentSlot();
+                if (slot == TimeSlot.Sleep || slot == TimeSlot.Joy)
+                {
+                    if (!movement.IsMoving)
+                    {
+                        Vector2 cur = transform.position;
+                        movement.SetTarget(cur + Random.insideUnitCircle * idleWanderRadius);
+                    }
+                    lastDecision = Time.timeSinceLevelLoad;
+                    return;
+                }
+            }
 
             lastDecision = Time.timeSinceLevelLoad;
             Decide();

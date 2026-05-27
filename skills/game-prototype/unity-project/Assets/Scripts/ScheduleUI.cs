@@ -1,0 +1,205 @@
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+
+namespace MelonS.GameProto
+{
+    /// <summary>
+    /// #126 - 림월드 Schedule tab.
+    ///  표: 행 = pawn, 열 = 24 시간.  cell 클릭 = 순환 (Anytime → Sleep → Work → Joy → Anytime).
+    ///  F4 토글.  WorkTabUI 와 동일 패턴.
+    /// </summary>
+    public class ScheduleUI : MonoBehaviour
+    {
+        private static ScheduleUI _instance;
+        public static ScheduleUI Instance => _instance;
+
+        private RectTransform rt;
+        private Image bg;
+        private Font font;
+        private bool isOpen = false;
+        private GameObject grid;
+        private const float RowHeight = 26f;
+        private const float ColWidth = 22f;
+        private const float NameColWidth = 100f;
+
+        public static void EnsureInScene()
+        {
+            if (_instance != null) return;
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            if (canvas == null) return;
+            var go = new GameObject("ScheduleUI");
+            go.transform.SetParent(canvas.transform, false);
+            _instance = go.AddComponent<ScheduleUI>();
+        }
+
+        private void Awake()
+        {
+            font = LoadKoreanFont();
+            rt = gameObject.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            float w = NameColWidth + ColWidth * 24 + 24;
+            float h = 360;
+            rt.sizeDelta = new Vector2(w, h);
+            rt.anchoredPosition = Vector2.zero;
+            bg = gameObject.AddComponent<Image>();
+            bg.color = new Color(0.07f, 0.08f, 0.10f, 0.95f);
+            BuildShell();
+            gameObject.SetActive(false);
+        }
+
+        private Font LoadKoreanFont()
+        {
+            string[] candidates = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
+            foreach (var n in candidates)
+            {
+                var f = Font.CreateDynamicFontFromOSFont(n, 16);
+                if (f != null) return f;
+            }
+            return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        }
+
+        private void BuildShell()
+        {
+            var titleGo = new GameObject("Title");
+            titleGo.transform.SetParent(transform, false);
+            var t = titleGo.AddComponent<Text>();
+            t.text = "📅 일정 (F4) - 클릭하여 시간대별 행동 변경";
+            t.font = font; t.fontSize = 20; t.fontStyle = FontStyle.Bold;
+            t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            t.alignment = TextAnchor.UpperCenter;
+            var trt = titleGo.GetComponent<RectTransform>();
+            trt.anchorMin = new Vector2(0, 1); trt.anchorMax = new Vector2(1, 1);
+            trt.pivot = new Vector2(0.5f, 1); trt.sizeDelta = new Vector2(0, 32);
+            trt.anchoredPosition = new Vector2(0, -6);
+
+            // legend
+            var legendGo = new GameObject("Legend");
+            legendGo.transform.SetParent(transform, false);
+            var lt = legendGo.AddComponent<Text>();
+            lt.text = "  자유  |  <color=#4d66d9>수면</color>  |  <color=#4cc070>작업</color>  |  <color=#f29940>여가</color>";
+            lt.font = font; lt.fontSize = 14;
+            lt.color = new Color(0.85f, 0.85f, 0.78f, 1f);
+            lt.alignment = TextAnchor.LowerCenter;
+            lt.supportRichText = true;
+            var lrt = legendGo.GetComponent<RectTransform>();
+            lrt.anchorMin = new Vector2(0, 0); lrt.anchorMax = new Vector2(1, 0);
+            lrt.pivot = new Vector2(0.5f, 0); lrt.sizeDelta = new Vector2(0, 18);
+            lrt.anchoredPosition = new Vector2(0, 4);
+
+            grid = new GameObject("Grid");
+            grid.transform.SetParent(transform, false);
+            var grt = grid.AddComponent<RectTransform>();
+            grt.anchorMin = new Vector2(0, 0); grt.anchorMax = new Vector2(1, 1);
+            grt.sizeDelta = new Vector2(-16, -60); grt.anchoredPosition = new Vector2(0, -8);
+            RefreshGrid();
+        }
+
+        private void RefreshGrid()
+        {
+            for (int i = grid.transform.childCount - 1; i >= 0; i--)
+                Destroy(grid.transform.GetChild(i).gameObject);
+
+            // 헤더 - 시간 0~23
+            float xCursor = NameColWidth;
+            for (int h = 0; h < 24; h++)
+            {
+                MakeHeaderCell(grid.transform, h.ToString("00"), new Vector2(xCursor, 0));
+                xCursor += ColWidth;
+            }
+
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            System.Array.Sort(pawns, (a, b) => a.GetInstanceID().CompareTo(b.GetInstanceID()));
+            float y = -RowHeight;
+            for (int r = 0; r < pawns.Length; r++)
+            {
+                var p = pawns[r];
+                if (p == null) continue;
+                var sch = p.GetComponent<PawnSchedule>();
+                if (sch == null) continue;
+                MakeNameCell(grid.transform, p.name, new Vector2(0, y));
+                xCursor = NameColWidth;
+                for (int h = 0; h < 24; h++)
+                {
+                    var schCap = sch; int hCap = h;
+                    MakeSlotCell(grid.transform, sch.slots[h], new Vector2(xCursor, y),
+                        () => {
+                            int cur = (int)schCap.slots[hCap];
+                            schCap.SetSlot(hCap, (TimeSlot)((cur + 1) % 4));
+                            RefreshGrid();
+                        });
+                    xCursor += ColWidth;
+                }
+                y -= RowHeight;
+            }
+        }
+
+        private void MakeHeaderCell(Transform parent, string label, Vector2 pos)
+        {
+            var go = new GameObject($"H_{label}");
+            go.transform.SetParent(parent, false);
+            var brt = go.AddComponent<RectTransform>();
+            brt.anchorMin = new Vector2(0, 1); brt.anchorMax = new Vector2(0, 1);
+            brt.pivot = new Vector2(0, 1); brt.sizeDelta = new Vector2(ColWidth, RowHeight);
+            brt.anchoredPosition = pos;
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.18f, 0.20f, 0.24f, 1f);
+            var tgo = new GameObject("Lbl");
+            tgo.transform.SetParent(go.transform, false);
+            var t = tgo.AddComponent<Text>();
+            t.text = label; t.font = font; t.fontSize = 11; t.fontStyle = FontStyle.Bold;
+            t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            t.alignment = TextAnchor.MiddleCenter; t.raycastTarget = false;
+            var trt = tgo.GetComponent<RectTransform>();
+            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+            trt.sizeDelta = Vector2.zero; trt.anchoredPosition = Vector2.zero;
+        }
+
+        private void MakeNameCell(Transform parent, string label, Vector2 pos)
+        {
+            var go = new GameObject($"N_{label}");
+            go.transform.SetParent(parent, false);
+            var brt = go.AddComponent<RectTransform>();
+            brt.anchorMin = new Vector2(0, 1); brt.anchorMax = new Vector2(0, 1);
+            brt.pivot = new Vector2(0, 1); brt.sizeDelta = new Vector2(NameColWidth, RowHeight);
+            brt.anchoredPosition = pos;
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.12f, 0.14f, 0.17f, 1f);
+            var tgo = new GameObject("Lbl");
+            tgo.transform.SetParent(go.transform, false);
+            var t = tgo.AddComponent<Text>();
+            t.text = label; t.font = font; t.fontSize = 13;
+            t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            t.alignment = TextAnchor.MiddleLeft; t.raycastTarget = false;
+            var trt = tgo.GetComponent<RectTransform>();
+            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+            trt.sizeDelta = new Vector2(-12, 0); trt.anchoredPosition = new Vector2(8, 0);
+        }
+
+        private void MakeSlotCell(Transform parent, TimeSlot slot, Vector2 pos, System.Action onClick)
+        {
+            var go = new GameObject($"S_{(int)slot}");
+            go.transform.SetParent(parent, false);
+            var brt = go.AddComponent<RectTransform>();
+            brt.anchorMin = new Vector2(0, 1); brt.anchorMax = new Vector2(0, 1);
+            brt.pivot = new Vector2(0, 1); brt.sizeDelta = new Vector2(ColWidth - 1, RowHeight - 1);
+            brt.anchoredPosition = new Vector2(pos.x + 0.5f, pos.y - 0.5f);
+            var img = go.AddComponent<Image>();
+            img.color = PawnSchedule.SlotColors[(int)slot];
+            var btn = go.AddComponent<Button>();
+            btn.onClick.AddListener(() => onClick?.Invoke());
+        }
+
+        public void Toggle() { if (isOpen) Close(); else Open(); }
+        public void Open() { isOpen = true; gameObject.SetActive(true); RefreshGrid(); }
+        public void Close() { isOpen = false; gameObject.SetActive(false); }
+        public bool IsOpen => isOpen;
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.F4)) Toggle();
+        }
+    }
+}
