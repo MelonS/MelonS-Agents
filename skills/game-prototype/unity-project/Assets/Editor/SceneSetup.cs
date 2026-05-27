@@ -488,7 +488,9 @@ namespace MelonS.GameProto.EditorTools
             logRt.anchorMax = new Vector2(1f, 1f);
             logRt.pivot = new Vector2(1f, 1f);
             logRt.sizeDelta = new Vector2(240, 160);
-            logRt.anchoredPosition = new Vector2(-12, -44); // 32 topbar + 12 gap
+            // 운영자 피드백 — EventLog 가 TopBar (height 60) 와 16px 겹쳐 보임 (이전 -44 = 32 가정).
+            //  -72 = 60 topbar + 12 gap 으로 수정.
+            logRt.anchoredPosition = new Vector2(-12, -72);
 
             GameObject logTextGo = new GameObject("LogText");
             logTextGo.transform.SetParent(logPanelGo.transform, false);
