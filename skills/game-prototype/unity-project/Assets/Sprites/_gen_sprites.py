@@ -219,129 +219,185 @@ def gen_wall_wood(seed: int = 11):
 # ─────────────────────────────────────────────────────────────────────────
 
 def gen_pawn(seed: int = 3):
+    """#141 - 64x64 high-res colonist (PPU 32 → world 2 unit, 동일).
+    얼굴 표정 + 외투 디테일 + 단추 + 손/발 정밀화."""
     random.seed(seed)
-    W = H = 32
+    W = H = 64
     im = new_canvas(W, H)
-
-    # palette
-    skin       = (224, 178, 132, 255)
-    skin_shade = (180, 138, 96, 255)
-    hair       = (62, 40, 22, 255)
-    hair_lit   = (95, 62, 32, 255)
-    coat       = (110, 68, 38, 255)   # 갈색 외투
-    coat_dark  = (78, 46, 22, 255)
-    coat_lit   = (148, 100, 55, 255)
-    pants      = (60, 70, 90, 255)
-    pants_dk   = (38, 48, 64, 255)
-    boots      = (38, 26, 18, 255)
-    boots_hi   = (62, 44, 30, 255)
-    eye        = (28, 18, 12, 255)
-    mouth      = (90, 50, 38, 255)
-    outline    = (24, 16, 10, 255)
-
     dr = ImageDraw.Draw(im)
 
-    # ── 머리 (y 5~13, 8x9 정도, center x=16)
-    # hair back/sides
-    dr.ellipse([10, 4, 22, 14], fill=hair)
-    # face oval (살구색)
-    dr.ellipse([11, 6, 21, 14], fill=skin)
+    # palette
+    skin       = (228, 184, 138, 255)
+    skin_lit   = (245, 205, 162, 255)
+    skin_shade = (175, 132, 92, 255)
+    hair       = (55, 35, 18, 255)
+    hair_lit   = (90, 60, 30, 255)
+    hair_hi    = (130, 92, 50, 255)
+    coat       = (115, 70, 38, 255)
+    coat_dark  = (75, 42, 18, 255)
+    coat_lit   = (155, 105, 58, 255)
+    coat_seam  = (60, 35, 14, 255)
+    pants      = (58, 70, 92, 255)
+    pants_dk   = (35, 45, 62, 255)
+    pants_hi   = (88, 102, 128, 255)
+    boots      = (35, 24, 16, 255)
+    boots_hi   = (62, 44, 30, 255)
+    button     = (235, 220, 140, 255)
+    eye        = (22, 12, 8, 255)
+    mouth      = (95, 50, 40, 255)
+    cheek      = (200, 130, 110, 200)
+    shadow     = (0, 0, 0, 120)
+
+    # ── 지면 그림자 (y 60-62)
+    for x in range(20, 44):
+        dx = (x - 32) / 12.0
+        if dx*dx < 1.0:
+            put_px(im, x, 60, shadow)
+            put_px(im, x, 61, shade(shadow, 0.7))
+
+    # ── 머리 (y 8~26, center x=32, radius 10)
+    dr.ellipse([20, 8, 44, 28], fill=hair)            # 머리카락 뒤
+    dr.ellipse([22, 12, 42, 28], fill=skin)           # 얼굴 oval
+    # 이마 위 머리카락 sweep
+    for x in range(22, 43):
+        for y in range(12, 16):
+            if random.random() < 0.85:
+                put_px(im, x, y, hair)
+    # 머리카락 highlight (좌상)
+    for x in range(26, 36):
+        put_px(im, x, 10, hair_lit)
+        put_px(im, x, 11, hair_lit if random.random() < 0.5 else hair)
+    put_px(im, 28, 9, hair_hi)
+    put_px(im, 30, 9, hair_hi)
+    # 얼굴 살색 highlight (좌상)
+    for x in range(24, 30):
+        cur = im.getpixel((x, 17))
+        if cur[:3] == skin[:3]:
+            put_px(im, x, 17, skin_lit)
     # 턱 그림자
-    for x in range(12, 21):
-        cur = im.getpixel((x, 13))
-        if cur == skin:
-            im.putpixel((x, 13), skin_shade)
-    # hair sweep over forehead
-    for x in range(11, 21):
-        put_px(im, x, 6, hair)
-    for x in range(11, 13):
-        put_px(im, x, 7, hair)
-    for x in range(19, 21):
-        put_px(im, x, 7, hair)
-    # hair highlight
-    put_px(im, 14, 5, hair_lit)
-    put_px(im, 17, 5, hair_lit)
+    for x in range(24, 41):
+        for y in [25, 26]:
+            cur = im.getpixel((x, y))
+            if cur[:3] == skin[:3]:
+                put_px(im, x, y, skin_shade)
+    # 눈 (2 px each)
+    dr.rectangle([26, 18, 28, 19], fill=eye)
+    dr.rectangle([36, 18, 38, 19], fill=eye)
+    # 눈썹
+    for x in range(25, 30): put_px(im, x, 16, hair)
+    for x in range(35, 40): put_px(im, x, 16, hair)
+    # 코 (3 px shadow)
+    put_px(im, 31, 20, skin_shade)
+    put_px(im, 32, 20, skin_shade)
+    put_px(im, 32, 21, skin_shade)
+    # 입
+    for x in range(30, 35): put_px(im, x, 23, mouth)
+    put_px(im, 31, 24, mouth)
+    put_px(im, 33, 24, mouth)
+    # 볼 (귀여움)
+    put_px(im, 24, 22, cheek)
+    put_px(im, 25, 22, cheek)
+    put_px(im, 39, 22, cheek)
+    put_px(im, 40, 22, cheek)
+    # 귀
+    put_px(im, 21, 20, skin_shade)
+    put_px(im, 21, 21, skin_shade)
+    put_px(im, 43, 20, skin_shade)
+    put_px(im, 43, 21, skin_shade)
 
-    # eyes
-    put_px(im, 13, 9, eye)
-    put_px(im, 18, 9, eye)
-    # mouth
-    put_px(im, 15, 11, mouth)
-    put_px(im, 16, 11, mouth)
+    # ── 목 (y 28-30)
+    for x in range(30, 35):
+        put_px(im, x, 28, skin_shade)
+        put_px(im, x, 29, skin_shade)
 
-    # ── 목 (살색 짧게)
-    put_px(im, 15, 14, skin_shade)
-    put_px(im, 16, 14, skin_shade)
+    # ── 몸통 - 외투 (y 30~46, 폭 22)
+    dr.rectangle([22, 30, 42, 46], fill=coat)
+    # 어깨 정점
+    for x in range(22, 43):
+        put_px(im, x, 30, coat_dark)
+    # 측면 그림자
+    for y in range(30, 47):
+        put_px(im, 22, y, coat_dark)
+        put_px(im, 23, y, shade(coat, 0.85))
+        put_px(im, 42, y, coat_dark)
+        put_px(im, 41, y, shade(coat, 0.85))
+    # 좌상 highlight
+    for y in range(31, 36):
+        put_px(im, 24, y, coat_lit)
+        put_px(im, 25, y, coat_lit if random.random() < 0.6 else coat)
+    # 가운데 단추 라인 + seam
+    for y in range(31, 46):
+        put_px(im, 32, y, coat_seam)
+    # 단추 5개 (y 33, 36, 39, 42, 45)
+    for by in [33, 36, 39, 42, 45]:
+        put_px(im, 31, by, button)
+        put_px(im, 32, by, button)
+        put_px(im, 31, by + 1, shade(button, 0.7))
+    # 옷깃 (collar 좌우)
+    for x in range(26, 32):
+        put_px(im, x, 30, coat_lit)
+    for x in range(33, 39):
+        put_px(im, x, 30, coat_lit)
+    # 외투 밑단 디테일
+    for x in range(22, 43):
+        put_px(im, x, 46, coat_dark)
 
-    # ── 몸통 - 외투 (y 15~23, 폭 10)
-    dr.rectangle([11, 15, 20, 23], fill=coat)
-    # 외투 가장자리 어두운 outline (좌/우/아래)
-    for y in range(15, 24):
-        put_px(im, 11, y, coat_dark)
-        put_px(im, 20, y, coat_dark)
-    for x in range(11, 21):
-        put_px(im, x, 23, coat_dark)
-    # 가운데 단추 라인 (vertical seam)
-    for y in range(16, 23):
-        put_px(im, 16, y, coat_dark)
-    # 외투 highlight 좌상
-    for y in range(16, 19):
-        put_px(im, 12, y, coat_lit)
-    # 단추 3개
-    put_px(im, 16, 17, (235, 220, 140, 255))
-    put_px(im, 16, 19, (235, 220, 140, 255))
-    put_px(im, 16, 21, (235, 220, 140, 255))
+    # ── 팔 + 어깨 (좌우 폭 4)
+    for y in range(30, 42):
+        for x in range(18, 22):
+            put_px(im, x, y, coat)
+        for x in range(43, 47):
+            put_px(im, x, y, coat)
+        # 외측 어두운 outline
+        put_px(im, 18, y, coat_dark)
+        put_px(im, 46, y, coat_dark)
+    # 좌상 어깨 highlight
+    for y in range(31, 35):
+        put_px(im, 19, y, coat_lit)
+    # 손 (살색) 양 옆
+    dr.rectangle([18, 42, 22, 45], fill=skin)
+    dr.rectangle([43, 42, 47, 45], fill=skin)
+    for x in range(18, 23):
+        put_px(im, x, 42, skin_shade)  # 손목 그림자
+        put_px(im, x, 45, skin_shade)
+    for x in range(43, 48):
+        put_px(im, x, 42, skin_shade)
+        put_px(im, x, 45, skin_shade)
+    # 손가락 라인
+    put_px(im, 20, 44, skin_shade)
+    put_px(im, 45, 44, skin_shade)
 
-    # ── 팔 (옷 짧은 소매 - 양 옆 살짝)
-    for y in range(15, 21):
-        put_px(im, 10, y, coat)
-        put_px(im, 21, y, coat)
-    # 손 (살색)
-    put_px(im, 10, 21, skin)
-    put_px(im, 10, 22, skin_shade)
-    put_px(im, 21, 21, skin)
-    put_px(im, 21, 22, skin_shade)
+    # ── 다리 - 바지 (y 47~56, 폭 5 each)
+    dr.rectangle([24, 47, 30, 56], fill=pants)
+    dr.rectangle([33, 47, 39, 56], fill=pants)
+    # 가운데 갭 (다리 분리)
+    # 측면 highlight
+    for y in range(47, 56):
+        put_px(im, 24, y, pants_hi)
+        put_px(im, 33, y, pants_hi)
+    # 내측 그림자
+    for y in range(47, 56):
+        put_px(im, 30, y, pants_dk)
+        put_px(im, 39, y, pants_dk)
+    # 무릎 라인
+    for x in range(24, 31):
+        put_px(im, x, 51, pants_dk)
+    for x in range(33, 40):
+        put_px(im, x, 51, pants_dk)
 
-    # ── 다리 - 바지 (y 24~28)
-    dr.rectangle([12, 24, 15, 28], fill=pants)
-    dr.rectangle([16, 24, 19, 28], fill=pants)
-    # 바지 그림자 사이 seam
-    for y in range(24, 29):
-        put_px(im, 15, y, pants_dk)
-        put_px(im, 16, y, pants_dk)
-    # 바지 외측 highlight
-    for y in range(24, 28):
-        put_px(im, 12, y, shade(pants, 1.15))
-        put_px(im, 19, y, shade(pants, 1.15))
-
-    # ── 부츠 (y 28~30)
-    dr.rectangle([12, 28, 15, 30], fill=boots)
-    dr.rectangle([16, 28, 19, 30], fill=boots)
-    # 부츠 highlight
-    for x in range(12, 16):
-        put_px(im, x, 28, boots_hi)
-    for x in range(16, 20):
-        put_px(im, x, 28, boots_hi)
-
-    # ── 발 그림자 (캐릭터 밑에 살짝)
-    for x in range(13, 19):
-        put_px(im, x, 31, (0, 0, 0, 120))
-
-    # ── 가벼운 outline 만: 머리 좌우 가장자리 + 외투 양쪽 가장자리
-    #  (전체 outline 은 너무 무거워서 silhouette 가독성 떨어트림 - 부분만)
-    # 머리 좌우 boundary 살짝
-    for y in range(6, 13):
-        cur = im.getpixel((10, y))
-        if cur[3] == 0:
-            # 오른쪽이 비 0 픽셀인지 확인
-            r = im.getpixel((11, y))
-            if r[3] > 200:
-                put_px(im, 10, y, outline)
-        cur = im.getpixel((22, y))
-        if cur[3] == 0:
-            l = im.getpixel((21, y))
-            if l[3] > 200:
-                put_px(im, 22, y, outline)
+    # ── 부츠 (y 56~59)
+    dr.rectangle([23, 56, 31, 59], fill=boots)
+    dr.rectangle([33, 56, 41, 59], fill=boots)
+    # 부츠 highlight (상단)
+    for x in range(23, 32):
+        put_px(im, x, 56, boots_hi)
+    for x in range(33, 42):
+        put_px(im, x, 56, boots_hi)
+    # 부츠 끝 굽
+    for x in range(23, 32):
+        put_px(im, x, 59, shade(boots, 0.6))
+    for x in range(33, 42):
+        put_px(im, x, 59, shade(boots, 0.6))
 
     return im
 

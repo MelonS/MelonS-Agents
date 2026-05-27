@@ -21,7 +21,9 @@ namespace MelonS.GameProto.EditorTools
                 if (ti != null)
                 {
                     ti.textureType = TextureImporterType.Sprite;
-                    ti.spritePixelsPerUnit = 16;
+                    // #141 - 64px sprite 는 PPU 32 (world 동일).
+                    ti.spritePixelsPerUnit = 32;
+                    ti.filterMode = FilterMode.Point;
                     ti.SaveAndReimport();
                     pawnSprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
                 }
