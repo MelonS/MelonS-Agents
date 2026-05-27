@@ -102,6 +102,20 @@ namespace MelonS.GameProto
                         }
                     }
 
+                    // #122 - 기분 thoughts (림월드 breakdown 패턴)
+                    var thoughts = pawn.GetComponent<PawnThoughts>();
+                    if (thoughts != null && thoughts.active.Count > 0)
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine("<color=#ddc28a>기분:</color>");
+                        foreach (var t in thoughts.active)
+                        {
+                            string col = t.offset >= 0f ? "#9adb86" : "#e88c54";
+                            string sign = t.offset >= 0f ? "+" : "";
+                            sb.AppendLine($"  <color={col}>{t.label} {sign}{t.offset:F0}</color>");
+                        }
+                    }
+
                     healthText.text = sb.ToString();
                 }
                 else

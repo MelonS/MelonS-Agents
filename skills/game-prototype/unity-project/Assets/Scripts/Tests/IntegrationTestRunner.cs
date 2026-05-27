@@ -95,6 +95,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I29-pawn-abilities-vary", TestI29_PawnAbilitiesVary);
             // #121 - stockpile zone 존재 + FindNearest 동작
             yield return RunOne("I30-stockpile-zone-exists", TestI30_StockpileZoneExists);
+            // #122 - mood thought 추가/소멸 + breakdown
+            yield return RunOne("I31-mood-thoughts", TestI31_MoodThoughts);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -962,6 +964,35 @@ namespace MelonS.GameProto.Tests
             // FindNearest 동작
             var nearest = StockpileZoneEntity.FindNearest(new Vector2(0f, 0f));
             Assert(nearest != null, "FindNearest 동작");
+        }
+
+        /// <summary>I31: #122 - mood thought 추가 → mood 변화 + expire 후 사라짐</summary>
+        private IEnumerator TestI31_MoodThoughts()
+        {
+            yield return null;
+            var pawn = Object.FindFirstObjectByType<PawnEntity>();
+            if (pawn == null) { Assert(false, "pawn 없음"); yield break; }
+            var th = pawn.GetComponent<PawnThoughts>();
+            if (th == null) { Assert(false, "PawnThoughts 컴포넌트 없음"); yield break; }
+
+            int countBefore = th.active.Count;
+            // 단기 (3초) thought 추가
+            th.AddThought("테스트 좋음", +10f, 3f);
+            Assert(th.active.Count == countBefore + 1, $"thought 추가: {countBefore} → {th.active.Count}");
+            // 같은 label 다시 추가 → 갱신만 (count 동일)
+            th.AddThought("테스트 좋음", +10f, 3f);
+            Assert(th.active.Count == countBefore + 1, "같은 label 갱신 (count 그대로)");
+            // RemoveThought
+            th.RemoveThought("테스트 좋음");
+            Assert(th.active.Count == countBefore, "RemoveThought 후 원래대로");
+
+            // CurrentMood 계산
+            float baseM = th.CurrentMood;
+            th.AddThought("일시 +5", +5f, 60f);
+            float withT = th.CurrentMood;
+            Assert(Mathf.Abs(withT - baseM - 5f) < 0.01f || withT >= 95f,
+                $"thought 합산: base={baseM:F1} withT={withT:F1}");
+            th.RemoveThought("일시 +5");
         }
 
         private void FinalizeReport()

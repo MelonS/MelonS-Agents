@@ -113,6 +113,9 @@ namespace MelonS.GameProto
                 food = Mathf.Min(100f, food + eatRestore);
                 mood = Mathf.Min(100f, mood + 10f);
                 lastEatTime = Time.time;
+                // #122 - mood thought 추가
+                var th = GetComponent<PawnThoughts>();
+                if (th != null) th.AddThought("맛있는 식사");
                 return;
             }
             if (rm.food > 0)
@@ -120,6 +123,9 @@ namespace MelonS.GameProto
                 rm.AddFood(-1);
                 food = Mathf.Min(100f, food + eatRestore);
                 lastEatTime = Time.time;
+                // #122 - raw food = 배부름 only (생식)
+                var th = GetComponent<PawnThoughts>();
+                if (th != null) th.AddThought("배부름");
             }
         }
 
