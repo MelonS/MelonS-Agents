@@ -103,6 +103,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V54-night-then-day-cycle", TestV54_DayNightCycle);
             yield return RunOne("V55-multi-trader-coexist", TestV55_MultiTrader);
             yield return RunOne("V56-bed-quality-rest-mul", TestV56_BedQualityRestMul);
+            yield return RunOne("V57-stockpile-priority-findbest", TestV57_StockpilePriorityFindBest);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -367,6 +368,28 @@ namespace MelonS.GameProto.Tests
             float night = clock.DayProgress;
             Assert(dawn < 0.3f && night > 0.85f,
                 $"dawn={dawn:F2} (<0.3), night={night:F2} (>0.85)");
+        }
+
+        // #155 - StockpileZoneEntity.FindBest 가 priority 높은 zone 을 가까운 zone 보다 우선.
+        //   가까운 Low priority zone vs 먼 Critical zone → Critical 선택해야.
+        private IEnumerator TestV57_StockpilePriorityFindBest()
+        {
+            // 기존 stockpile 일시 disable (이전 V test 가 만든 거 등) - 새 ones 만들고 nearest 확인
+            // 가까운 (100, 0) Low, 먼 (110, 0) Critical → from (101, 0).  Critical 선택해야.
+            var nearLow = StockpileZoneEntity.Spawn(new Vector3(100, 0, 0), null, StockpilePriority.Low);
+            var farCrit = StockpileZoneEntity.Spawn(new Vector3(110, 0, 0), null, StockpilePriority.Critical);
+            yield return null;
+            // FindBest 는 거리 무시하고 Critical 선택해야 함
+            var best = StockpileZoneEntity.FindBest(new Vector2(101, 0));
+            bool prioOk = best == farCrit;  // 우선순위 높은 게 선택돼야
+            // CyclePriority 검증: Critical → Low (5 단계 wrap)
+            farCrit.CyclePriority();
+            bool cyclesOk = farCrit.Priority == StockpilePriority.Low;
+            yield return null;
+            Object.Destroy(nearLow.gameObject);
+            Object.Destroy(farCrit.gameObject);
+            Assert(prioOk && cyclesOk,
+                $"FindBest picks high priority: prio={prioOk} (best=farCrit? {best == farCrit}), cycle wrap: {cyclesOk}");
         }
 
         // #153/#154 - BedEntity.SetQuality 가 RestMul / MoodBonus / Tint 변경 확인.

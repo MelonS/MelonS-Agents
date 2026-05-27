@@ -190,6 +190,7 @@ namespace MelonS.GameProto
             var bench = hit.GetComponent<ResearchBench>();
             var vein = hit.GetComponent<StoneVeinEntity>();  // #119
             var bandit = hit.GetComponent<BanditEnemy>();    // #135
+            var stockpile = hit.GetComponent<StockpileZoneEntity>();  // #155
             if (tree != null)
             {
                 list.Add(("⛏ 벌목 우선", () => {
@@ -253,6 +254,13 @@ namespace MelonS.GameProto
                     if (m != null) m.SetTarget(bench.transform.position);
                     pawn.ManualMoveUntil = Time.time + 8f;
                 }));
+            }
+            if (stockpile != null)
+            {
+                // #155 - stockpile priority 순환 (Low → Normal → Preferred → Important → Critical → Low ...)
+                var spCap = stockpile;
+                list.Add(($"📦 우선순위: {spCap.PriorityKr} → 다음 단계",
+                    () => { if (spCap != null) spCap.CyclePriority(); }));
             }
             return list;
         }

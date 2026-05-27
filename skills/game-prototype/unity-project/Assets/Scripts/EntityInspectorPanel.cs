@@ -164,8 +164,8 @@ namespace MelonS.GameProto
             if (meat != null) return ("고기",
                 $"식량 {meat.Food}개\n예약: {(meat.IsReserved ? "운반중" : "대기")}\n1.5분 후 상함");
             var sp = go.GetComponent<StockpileZoneEntity>();
-            if (sp != null) return ("창고 영역",
-                $"hauler 가 자원을 여기로 운반\n근처 자원 자동 수집");
+            if (sp != null) return ($"창고 영역 [{sp.PriorityKr}]",
+                $"우선순위: {sp.PriorityKr}\nhauler 는 높은 우선순위 zone 우선 운반\n우클릭 → 우선순위 순환\n(긴급 > 중요 > 우선 > 보통 > 낮음)");
             var tree = go.GetComponent<TreeEntity>();
             if (tree != null) return ($"나무 ({tree.SpeciesKr})",
                 $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\n" +

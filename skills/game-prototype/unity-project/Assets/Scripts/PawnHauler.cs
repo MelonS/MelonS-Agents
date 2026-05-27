@@ -131,8 +131,8 @@ namespace MelonS.GameProto
             {
                 if (bpDropTarget == null || bpDropTarget.gameObject == null)
                 {
-                    // blueprint 사라짐 - stockpile fallback
-                    var sp = StockpileZoneEntity.FindNearest(transform.position);
+                    // blueprint 사라짐 - stockpile fallback (#155 priority 우선)
+                    var sp = StockpileZoneEntity.FindBest(transform.position);
                     if (sp != null)
                     {
                         dropTarget = sp;
@@ -255,7 +255,7 @@ namespace MelonS.GameProto
                     }
                     else
                     {
-                        var sp = StockpileZoneEntity.FindNearest(transform.position);
+                        var sp = StockpileZoneEntity.FindBest(transform.position);
                         if (sp != null)
                         {
                             dropTarget = sp;
@@ -292,7 +292,7 @@ namespace MelonS.GameProto
                     int amount = targetMeat.Food;
                     UnityEngine.Object.Destroy(targetMeat.gameObject);
                     targetMeat = null;
-                    var sp = StockpileZoneEntity.FindNearest(transform.position);
+                    var sp = StockpileZoneEntity.FindBest(transform.position);
                     if (sp != null)
                     {
                         carryingFood += amount;
@@ -339,7 +339,7 @@ namespace MelonS.GameProto
                     }
                     else
                     {
-                        var sp = StockpileZoneEntity.FindNearest(transform.position);
+                        var sp = StockpileZoneEntity.FindBest(transform.position);
                         if (sp != null)
                         {
                             dropTarget = sp;
