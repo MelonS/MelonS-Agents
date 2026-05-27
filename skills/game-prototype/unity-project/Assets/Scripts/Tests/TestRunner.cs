@@ -102,6 +102,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V53-pawn-skills-xp-progression", TestV53_SkillsProgression);
             yield return RunOne("V54-night-then-day-cycle", TestV54_DayNightCycle);
             yield return RunOne("V55-multi-trader-coexist", TestV55_MultiTrader);
+            yield return RunOne("V56-bed-quality-rest-mul", TestV56_BedQualityRestMul);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -366,6 +367,33 @@ namespace MelonS.GameProto.Tests
             float night = clock.DayProgress;
             Assert(dawn < 0.3f && night > 0.85f,
                 $"dawn={dawn:F2} (<0.3), night={night:F2} (>0.85)");
+        }
+
+        // #153/#154 - BedEntity.SetQuality 가 RestMul / MoodBonus / Tint 변경 확인.
+        //  3 quality 모두 distinct restMul 이어야 함 (0.8 / 1.0 / 1.4).
+        private IEnumerator TestV56_BedQualityRestMul()
+        {
+            var go = new GameObject("TestBedV56");
+            go.AddComponent<SpriteRenderer>();
+            var bed = go.AddComponent<BedEntity>();
+            bed.SetQuality(BedQuality.SleepingSpot);
+            float sleepingMul = bed.RestMul;
+            float sleepingMood = bed.MoodBonus;
+            bed.SetQuality(BedQuality.Wood);
+            float woodMul = bed.RestMul;
+            float woodMood = bed.MoodBonus;
+            bed.SetQuality(BedQuality.Fine);
+            float fineMul = bed.RestMul;
+            float fineMood = bed.MoodBonus;
+            yield return null;
+            bool distinct = sleepingMul < woodMul && woodMul < fineMul;
+            bool moodOk = sleepingMood < woodMood && woodMood < fineMood;
+            Assert(distinct && moodOk
+                   && Mathf.Approximately(sleepingMul, 0.80f)
+                   && Mathf.Approximately(woodMul, 1.00f)
+                   && Mathf.Approximately(fineMul, 1.40f),
+                $"rest: sp={sleepingMul:F2} wd={woodMul:F2} fn={fineMul:F2}; mood: sp={sleepingMood:F0} wd={woodMood:F0} fn={fineMood:F0}");
+            Object.Destroy(go);
         }
 
         private IEnumerator TestV55_MultiTrader()

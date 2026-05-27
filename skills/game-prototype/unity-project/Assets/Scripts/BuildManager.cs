@@ -13,13 +13,17 @@ namespace MelonS.GameProto
     {
         public static BuildManager Instance { get; private set; }
 
-        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone }  // #127 - stone wall
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine }  // #127 - stone wall, #154 - bed quality 3종
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
 
         [SerializeField] private GameObject wallPrefab, floorPrefab, doorPrefab, stovePrefab, bedPrefab;
         [SerializeField] private int wallCost = 5, floorCost = 1, doorCost = 3, stoveCost = 10, bedCost = 8;
         [SerializeField] private int wallStoneCost = 5;  // #127 - 석재 5
+        // #154 - bed quality 별 cost (wiki: sleeping spot 0 / wood bed 8 / fine 30).
+        //  Fine 은 wiki 가 비싸지만 (60+) 프로토타입에선 30 으로 낮춰 reachable.
+        [SerializeField] private int bedSleepingSpotCost = 0;
+        [SerializeField] private int bedFineCost = 30;
         [SerializeField] private SpriteRenderer ghostRenderer;
         [SerializeField] private Sprite wallSprite, floorSprite, doorSprite, stoveSprite, bedSprite;
 
@@ -70,6 +74,8 @@ namespace MelonS.GameProto
                 Mode.Door  => doorSprite,
                 Mode.Stove => stoveSprite,
                 Mode.Bed   => bedSprite,
+                Mode.BedSleepingSpot => bedSprite,  // #154
+                Mode.BedFine => bedSprite,  // #154
                 _ => wallSprite,
             };
             ghostRenderer.sortingOrder = m == Mode.Floor ? 1 : 20;
@@ -77,23 +83,27 @@ namespace MelonS.GameProto
 
         private int CostFor(Mode m) => m switch
         {
-            Mode.Wall      => wallCost,
-            Mode.WallStone => wallStoneCost,
-            Mode.Floor     => floorCost,
-            Mode.Door      => doorCost,
-            Mode.Stove     => stoveCost,
-            Mode.Bed       => bedCost,
+            Mode.Wall            => wallCost,
+            Mode.WallStone       => wallStoneCost,
+            Mode.Floor           => floorCost,
+            Mode.Door            => doorCost,
+            Mode.Stove           => stoveCost,
+            Mode.Bed             => bedCost,
+            Mode.BedSleepingSpot => bedSleepingSpotCost,  // #154 - 0
+            Mode.BedFine         => bedFineCost,          // #154 - 30
             _ => 0,
         };
 
         private GameObject PrefabFor(Mode m) => m switch
         {
-            Mode.Wall      => wallPrefab,
-            Mode.WallStone => wallPrefab,  // 같은 prefab, 다른 자원
-            Mode.Floor     => floorPrefab,
-            Mode.Door      => doorPrefab,
-            Mode.Stove     => stovePrefab,
-            Mode.Bed       => bedPrefab,
+            Mode.Wall            => wallPrefab,
+            Mode.WallStone       => wallPrefab,  // 같은 prefab, 다른 자원
+            Mode.Floor           => floorPrefab,
+            Mode.Door            => doorPrefab,
+            Mode.Stove           => stovePrefab,
+            Mode.Bed             => bedPrefab,
+            Mode.BedSleepingSpot => bedPrefab,  // #154 - 같은 prefab, quality 다름
+            Mode.BedFine         => bedPrefab,  // #154
             _ => null,
         };
 
@@ -168,6 +178,8 @@ namespace MelonS.GameProto
             Mode.Door  => doorSprite,
             Mode.Stove => stoveSprite,
             Mode.Bed   => bedSprite,
+            Mode.BedSleepingSpot => bedSprite,
+            Mode.BedFine         => bedSprite,
             _ => wallSprite,
         };
     }

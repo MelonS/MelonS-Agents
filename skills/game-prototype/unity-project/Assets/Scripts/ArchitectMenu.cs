@@ -36,7 +36,10 @@ namespace MelonS.GameProto
                 (BuildManager.Mode.Floor, "나무 바닥 (목재 1)", 1),
             },
             ["Furniture (가구)"] = new[] {
-                (BuildManager.Mode.Bed,   "침대 (목재 8)",  8),
+                // #154 - wiki: sleeping spot 0.8x / wood bed 1.0x / fine 1.4x
+                (BuildManager.Mode.BedSleepingSpot, "수면 자리 (자재 X)",     0),
+                (BuildManager.Mode.Bed,             "목재 침대 (목재 8)",     8),
+                (BuildManager.Mode.BedFine,         "고급 침대 (목재 30)",   30),
             },
             ["Production (생산)"] = new[] {
                 (BuildManager.Mode.Stove, "화덕 (목재 10)", 10),

@@ -118,6 +118,23 @@ namespace MelonS.GameProto
                         w.SetMaterial(mode == BuildManager.Mode.WallStone ? WallMaterial.Stone : WallMaterial.Wood);
                     }
                 }
+                // #154 - Bed quality 별 spawn (SleepingSpot 0.8x / Wood 1.0x / Fine 1.4x).
+                if (mode == BuildManager.Mode.Bed
+                    || mode == BuildManager.Mode.BedSleepingSpot
+                    || mode == BuildManager.Mode.BedFine)
+                {
+                    var b = spawned.GetComponent<BedEntity>();
+                    if (b != null)
+                    {
+                        var q = mode switch
+                        {
+                            BuildManager.Mode.BedSleepingSpot => BedQuality.SleepingSpot,
+                            BuildManager.Mode.BedFine         => BedQuality.Fine,
+                            _                                  => BedQuality.Wood,
+                        };
+                        b.SetQuality(q);
+                    }
+                }
             }
             Destroy(gameObject);
         }

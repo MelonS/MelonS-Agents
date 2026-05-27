@@ -161,7 +161,7 @@ namespace MelonS.GameProto
             var stove = hit.GetComponent<StoveEntity>();
             if (stove != null) return "화덕  (콜로니스트가 자동 요리)";
             var bed = hit.GetComponent<BedEntity>();
-            if (bed != null) return "침대  (밤에 누우면 수면 1.6x + 기분 회복)";
+            if (bed != null) return $"{bed.QualityKr}  (수면 {bed.RestMul:F2}x · 기분 +{bed.MoodBonus:F0}/s)";
             var wall = hit.GetComponent<WallEntity>();
             if (wall != null) return "벽";
             var door = hit.GetComponent<DoorEntity>();
