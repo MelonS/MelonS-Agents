@@ -10,7 +10,7 @@
 찾고 계속해서 퀄리티 업글을 시켜. 기능추가는 보수적으로 게임이 되는게 먼저임."**
 
 ### 한 줄
-**4가지 운영자 불만 다 해결 + 통합 검증 10 → 18 시나리오 확대 + 14 commit.**
+**4 운영자 불만 해결 + integration 5→22 시나리오 + 진짜 movement 버그 fix + SceneSetup 1057→857L + 24 commit.**
 
 ### 운영자 불만 → 대응
 
@@ -57,6 +57,20 @@
 - I21 drafted vs wolf (옆에 wolf spawn → 5s 안에 HP 0)
 
 21/21 integration PASS.
+
+### R10 SceneSetup partial 추가 분할
+
+매 sub-step 풀 cycle PASS:
+- **R10** (settlement): `76737a9` Day 57 정착지 블록 (벽/바닥/스토브/벤치/crops/lamp/stockpile) → `SceneSetup.Game.Settlement.cs` (100L extract)
+- **R10b** (wildlife): `4d9b9ec` Wolf 2 + Deer 8 spawn → `SceneSetup.Game.Wildlife.cs` (40L extract)
+- **R10c** (prefabs): `d916a00` 6 prefab (Tree/Wall/Floor/Door/Stove/Bench) 생성 → `SceneSetup.Game.Prefabs.cs` (61L extract)
+
+**SceneSetup.cs 1057L → 857L (-200L, -19%)**.  매 commit 통합 22 + isolated 55 PASS.
+
+### I22 SaveLoad 통합 검증
+
+`de85438` V34 isolated 가 SaveData.wood 만 검증.  I22 는 실제 spawn 된 3 pawn
++ ~20 tree 까지 진짜 게임 상태에서 Save → 자원 dirty → Load → 복원 확인 (PASS).
 
 ### 검증
 
