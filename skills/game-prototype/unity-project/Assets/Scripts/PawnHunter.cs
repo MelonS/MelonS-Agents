@@ -16,6 +16,9 @@ namespace MelonS.GameProto
         private AnimalEntity targetAnimal;
         private PawnMovement movement;
         private float lastAttackTime = -10f;
+        // I19 safety - 15s 동안 in-range 못 들어가면 포기 (PawnChopper 와 같은 패턴)
+        private float taskStartTime = -10f;
+        private const float GiveUpAfterSec = 15f;
 
         public bool HasTask => targetAnimal != null && !targetAnimal.IsDead;
         public AnimalEntity Target => targetAnimal;
@@ -28,6 +31,7 @@ namespace MelonS.GameProto
         public void SetAnimalTarget(AnimalEntity animal)
         {
             targetAnimal = animal;
+            taskStartTime = Time.time;
             if (animal != null) movement.SetTarget(animal.transform.position);
         }
 
@@ -49,6 +53,12 @@ namespace MelonS.GameProto
                 return;
             }
             float dist = Vector2.Distance(transform.position, targetAnimal.transform.position);
+            // I19 safety - unreachable animal 영원 추적 방지
+            if (Time.time - taskStartTime > GiveUpAfterSec && dist > attackRange)
+            {
+                ClearTask();
+                return;
+            }
             if (dist <= attackRange)
             {
                 movement.ClearTarget();

@@ -17,6 +17,9 @@ namespace MelonS.GameProto
         private BerryBushEntity targetBush;
         private PawnMovement movement;
         private float lastGatherTime = -999f;
+        // I19 safety - 10s 안에 in-range 못 가면 포기 (PawnChopper 와 같은 패턴)
+        private float taskStartTime = -10f;
+        private const float GiveUpAfterSec = 10f;
 
         public bool HasTask => targetBush != null;
         public BerryBushEntity Target => targetBush;
@@ -29,6 +32,7 @@ namespace MelonS.GameProto
         public void SetBushTarget(BerryBushEntity bush)
         {
             targetBush = bush;
+            taskStartTime = Time.time;
             if (bush != null) movement.SetTarget(bush.transform.position);
         }
 
@@ -48,6 +52,12 @@ namespace MelonS.GameProto
             }
 
             float dist = Vector2.Distance(transform.position, targetBush.transform.position);
+            // I19 safety - unreachable bush 영원 시도 방지
+            if (Time.time - taskStartTime > GiveUpAfterSec && dist > gatherRange)
+            {
+                ClearTask();
+                return;
+            }
             if (dist <= gatherRange)
             {
                 // In range — stop walking, gather on interval (NOT every frame —
