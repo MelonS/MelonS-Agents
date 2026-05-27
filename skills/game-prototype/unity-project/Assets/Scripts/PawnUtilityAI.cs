@@ -78,7 +78,10 @@ namespace MelonS.GameProto
                 new TendPatientAction(),       // #125 - 부상 동료 치료 최우선
                 new EatBerryAction   { foodThreshold = foodHungryThreshold },
                 new HuntAnimalAction { globalFoodThreshold = globalFoodLowThreshold },
-                new CookMealAction   { foodSurplus = 5f },
+                // #137 운영자 fb fix: foodSurplus 5 → 15.  starter food=10 일 때
+                //  모든 pawn 이 cook 만 → food 떨어지면 hunt → 다시 cook 무한 loop,
+                //  ChopTree 영영 안 됨 = "목재 안 캐짐" 진짜 원인.
+                new CookMealAction   { foodSurplus = 15f },
                 new BuildBlueprintAction(),  // #118 - 청사진 건설 (chop 보다 우선)
                 new HaulWoodAction(),     // #116 - 벌목 후 떨어진 wood pile 운반 (chop 보다 우선)
                 new HaulStoneAction(),    // #119 - 채광 후 떨어진 stone chunk 운반

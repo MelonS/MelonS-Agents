@@ -223,8 +223,10 @@ namespace MelonS.GameProto.Tests
                 totalPawnMove += (pawns[i].transform.position - startPos[i]).magnitude;
             bool resChange = endWood != startWood || endFood != startFood || endMeals != startMeals;
             bool pawnMoved = totalPawnMove > 2.0f;  // 3 pawn 합산 > 2 unit
-            Assert(resChange || pawnMoved,
-                $"15초 시뮬: wood {startWood}→{endWood}, food {startFood}→{endFood}, meals {startMeals}→{endMeals}, totalPawnMove={totalPawnMove:F2} (resChange={resChange}, pawnMoved={pawnMoved})");
+            // #137 운영자 fb: wood 증가 진짜 검증 (이전 PASS 도 wood 정체 허용했음).
+            bool woodUp = endWood > startWood;
+            Assert((resChange || pawnMoved) && woodUp,
+                $"15초 시뮬: wood {startWood}→{endWood} (증가 필수), food {startFood}→{endFood}, meals {startMeals}→{endMeals}, totalPawnMove={totalPawnMove:F2}");
         }
 
         /// <summary>I5: research bench 가 정착지 안에 있음 + 3 pawn 중 누군가 옆에 있으면 진행</summary>
