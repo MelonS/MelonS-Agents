@@ -30,6 +30,9 @@ namespace MelonS.GameProto
 
         public bool IsSleeping { get; private set; }
 
+        // #164 - PawnTraits 효과 캐시 (Awake 시 traits.moodBaselineBonus 적용).
+        private bool traitsApplied = false;
+
         [Header("Day 20: mood break")]
         [SerializeField] private float moodBreakThreshold = 20f;
         [SerializeField] private float moodBreakRecoverAt = 35f;
@@ -42,6 +45,18 @@ namespace MelonS.GameProto
         {
             float dt = Time.deltaTime;
             bool night = IsNightTime();
+
+            // #164 - PawnTraits.moodBaselineBonus 시작 시 mood 에 1회 가산.
+            //  Awake 가 traits 보다 먼저 fire 될 수 있어 Update 첫 frame 에서 적용.
+            if (!traitsApplied)
+            {
+                var tr = GetComponent<PawnTraits>();
+                if (tr != null)
+                {
+                    mood = Mathf.Clamp(mood + tr.moodBaselineBonus, 0f, 100f);
+                }
+                traitsApplied = true;
+            }
 
             // Day 10: when sleep is low AND it's night, pawn sleeps in place.
             // Sleep regenerates fast, food + mood still decay (mildly).
@@ -115,11 +130,14 @@ namespace MelonS.GameProto
 
             // Day 27: prefer cooked meal — +eatRestore food AND +10 mood bonus.
             // #131 - fine meal 우선 (mood +20, "최고의 식사" thought)
+            // #164 - PawnTraits.mealMoodBonus (Gourmand +15) 가산.
+            var traits = GetComponent<PawnTraits>();
+            float traitMealBonus = traits != null ? traits.mealMoodBonus : 0f;
             if (rm.fineMeals > 0)
             {
                 rm.AddFineMeals(-1);
                 food = Mathf.Min(100f, food + eatRestore);
-                mood = Mathf.Min(100f, mood + 20f);
+                mood = Mathf.Min(100f, mood + 20f + traitMealBonus);
                 lastEatTime = Time.time;
                 var th2 = GetComponent<PawnThoughts>();
                 if (th2 != null) th2.AddThought("최고의 식사", +12f, 800f);
@@ -129,7 +147,7 @@ namespace MelonS.GameProto
             {
                 rm.AddMeals(-1);
                 food = Mathf.Min(100f, food + eatRestore);
-                mood = Mathf.Min(100f, mood + 10f);
+                mood = Mathf.Min(100f, mood + 10f + traitMealBonus);
                 lastEatTime = Time.time;
                 // #122 - mood thought 추가
                 var th = GetComponent<PawnThoughts>();

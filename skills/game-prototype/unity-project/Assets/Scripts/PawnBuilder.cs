@@ -62,6 +62,9 @@ namespace MelonS.GameProto
                 movement.ClearTarget();
                 var abil = GetComponent<PawnAbilities>();  // #120
                 float mul = abil != null ? abil.constructionMul * abil.manipulation : 1f;
+                // #164 - PawnTraits workSpeedMul (Industrious 1.30x / Lazy 0.75x)
+                var traits = GetComponent<PawnTraits>();
+                if (traits != null) mul *= traits.workSpeedMul;
                 bool done = targetBp.AddWork(Time.deltaTime * mul);
                 // build skill XP
                 var skills = GetComponent<PawnSkills>();

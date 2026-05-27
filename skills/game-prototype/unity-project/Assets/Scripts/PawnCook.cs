@@ -55,7 +55,11 @@ namespace MelonS.GameProto
             if (dist <= cookRange)
             {
                 movement.ClearTarget();
-                if (Time.time - lastCookTime >= cookInterval)
+                // #164 - PawnTraits workSpeedMul 적용 (cook interval 단축).
+                var traits = GetComponent<PawnTraits>();
+                float traitMul = traits != null ? traits.workSpeedMul : 1f;
+                float effectiveInterval = cookInterval / Mathf.Max(0.1f, traitMul);
+                if (Time.time - lastCookTime >= effectiveInterval)
                 {
                     // #131 - Build skill 5+ pawn 이 만들면 fine meal (mood +20)
                     var sk = GetComponent<PawnSkills>();

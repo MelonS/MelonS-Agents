@@ -108,6 +108,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V59-floor-move-speed-bonus", TestV59_FloorMoveSpeed);
             yield return RunOne("V60-wall-damage-tint-preserved", TestV60_WallDamageTintPreserved);
             yield return RunOne("V61-stone-vein-tint-preserved", TestV61_StoneVeinTintPreserved);
+            yield return RunOne("V62-traits-work-speed-applied", TestV62_TraitsWorkSpeedApplied);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -372,6 +373,35 @@ namespace MelonS.GameProto.Tests
             float night = clock.DayProgress;
             Assert(dawn < 0.3f && night > 0.85f,
                 $"dawn={dawn:F2} (<0.3), night={night:F2} (>0.85)");
+        }
+
+        // #164 - PawnTraits.workSpeedMul 가 실제 chop/gather/build/mine/cook 에 효과.
+        //   이전: PawnTraits 가 cosmetic (값 SET 만, READ 안 됨).
+        //   직접 PawnTraits 인스턴스 만들어 workSpeedMul 값이 의도된 범위 (0.6~1.5) 인지 확인.
+        private IEnumerator TestV62_TraitsWorkSpeedApplied()
+        {
+            // 여러 random seed 로 traits 적용, workSpeedMul 평균이 1.0 근처
+            //  (Industrious 1.30x, Lazy 0.75x 가 거의 동등 확률).
+            //  + 적어도 하나 ≠ 1.0 (default) 확인.
+            float sum = 0f;
+            int nonDefault = 0;
+            int count = 20;
+            for (int i = 0; i < count; i++)
+            {
+                var go = new GameObject($"TraitV62_{i}");
+                go.name = $"PawnV62_{i}";  // hash 가 seed 로 사용
+                var pt = go.AddComponent<PawnTraits>();
+                yield return null;  // Awake fire
+                sum += pt.workSpeedMul;
+                if (Mathf.Abs(pt.workSpeedMul - 1.0f) > 0.01f) nonDefault++;
+                Object.Destroy(go);
+            }
+            float avg = sum / count;
+            // 적어도 5명 (25%) 은 non-default workSpeedMul.  평균 0.8~1.3 사이.
+            bool varied = nonDefault >= 5;
+            bool reasonable = avg >= 0.8f && avg <= 1.3f;
+            Assert(varied && reasonable,
+                $"20 pawn workSpeedMul avg={avg:F2}, non-default={nonDefault}/20 (varied=≥5, reasonable=0.8~1.3)");
         }
 
         // #160 - StoneVeinEntity.TakeMineDamage 가 type tint 보존 (#156 same lesson).

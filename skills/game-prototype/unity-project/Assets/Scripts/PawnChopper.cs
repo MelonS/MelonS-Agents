@@ -65,6 +65,10 @@ namespace MelonS.GameProto
                 // #120 - PawnAbilities chop multiplier
                 var abil = GetComponent<PawnAbilities>();
                 float mul = abil != null ? abil.chopMul * abil.manipulation : 1f;
+                // #164 - PawnTraits workSpeedMul (Lazy 0.75x, Industrious 1.30x).
+                //  이전: traits 이 wired 되어 있지만 effect 없음 - 표시만.
+                var traits = GetComponent<PawnTraits>();
+                if (traits != null) mul *= traits.workSpeedMul;
                 bool destroyed = targetTree.TakeChopDamage(chopDamagePerSec * Time.deltaTime * mul);
                 // Day 19: Chop XP — granted each frame proportional to dmg
                 var skills = GetComponent<PawnSkills>();

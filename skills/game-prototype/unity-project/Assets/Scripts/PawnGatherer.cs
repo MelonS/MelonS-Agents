@@ -63,7 +63,11 @@ namespace MelonS.GameProto
                 // In range — stop walking, gather on interval (NOT every frame —
                 // lesson #4 audio-buzz-style throttle pattern, same shape).
                 movement.ClearTarget();
-                if (Time.time - lastGatherTime >= gatherInterval)
+                // #164 - PawnTraits workSpeedMul 적용 (Industrious 1.30x = 짧은 interval).
+                var traits = GetComponent<PawnTraits>();
+                float traitMul = traits != null ? traits.workSpeedMul : 1f;
+                float effectiveInterval = gatherInterval / Mathf.Max(0.1f, traitMul);
+                if (Time.time - lastGatherTime >= effectiveInterval)
                 {
                     int got = targetBush.TakeBerry();
                     lastGatherTime = Time.time;
