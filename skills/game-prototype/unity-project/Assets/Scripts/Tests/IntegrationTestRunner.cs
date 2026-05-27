@@ -55,6 +55,14 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I4-ai-does-something-30s", TestI4_AIDoesSomething);
             yield return RunOne("I5-research-progresses-naturally", TestI5_ResearchProgresses);
 
+            // 운영자 피드백 2026-05-27: "gui 가 전혀 되질 않음, 키보드 의존도 너무 높음"
+            //  → GUI 버튼이 실제 작동하는지 검증 (I6-I10)
+            yield return RunOne("I6-gui-bar-spawned", TestI6_GuiBarSpawned);
+            yield return RunOne("I7-gui-pause-button", TestI7_GuiPauseButton);
+            yield return RunOne("I8-gui-speed-button", TestI8_GuiSpeedButton);
+            yield return RunOne("I9-gui-build-button", TestI9_GuiBuildButton);
+            yield return RunOne("I10-gui-draft-button", TestI10_GuiDraftButton);
+
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
             Application.Quit();
@@ -182,6 +190,93 @@ namespace MelonS.GameProto.Tests
             // bench 옆 pawn 없을 수도 - 그래도 자동 활성화 됐는지만 확인
             Assert(rm.activeTech != null,
                 $"activeTech={rm.activeTech?.nameKr}, {startPts}→{endPts} pts (>=0 OK, 진행 안 해도 active 면 PASS)");
+        }
+
+        /// <summary>I6: GuiControlBar 가 화면에 생성됐는가 (10 버튼)</summary>
+        private IEnumerator TestI6_GuiBarSpawned()
+        {
+            yield return null;
+            var bar = GameObject.Find("GuiControlBar");
+            if (bar == null) { Assert(false, "GuiControlBar GameObject 없음"); yield break; }
+            var buttons = bar.GetComponentsInChildren<UnityEngine.UI.Button>();
+            Assert(buttons.Length == 10,
+                $"GuiControlBar 발견, 버튼 {buttons.Length}개 (10 expected)");
+        }
+
+        /// <summary>I7: 멈춤 버튼 클릭 → Time.timeScale=0</summary>
+        private IEnumerator TestI7_GuiPauseButton()
+        {
+            yield return null;
+            float beforeScale = Time.timeScale;
+            var bar = GameObject.Find("GuiControlBar");
+            var pauseBtn = bar.transform.Find("Btn_멈춤")?.GetComponent<UnityEngine.UI.Button>();
+            if (pauseBtn == null) { Assert(false, "Btn_멈춤 없음"); yield break; }
+            pauseBtn.onClick.Invoke();
+            yield return null;
+            float afterScale = Time.timeScale;
+            // toggle back
+            pauseBtn.onClick.Invoke();
+            Assert(afterScale == 0f,
+                $"멈춤 버튼: {beforeScale}→{afterScale} (0 expected when paused)");
+        }
+
+        /// <summary>I8: 4x 버튼 클릭 → Time.timeScale=4</summary>
+        private IEnumerator TestI8_GuiSpeedButton()
+        {
+            yield return null;
+            var bar = GameObject.Find("GuiControlBar");
+            var btn4x = bar.transform.Find("Btn_4x")?.GetComponent<UnityEngine.UI.Button>();
+            if (btn4x == null) { Assert(false, "Btn_4x 없음"); yield break; }
+            btn4x.onClick.Invoke();
+            yield return null;
+            float scale = Time.timeScale;
+            // restore 1x
+            var btn1x = bar.transform.Find("Btn_1x")?.GetComponent<UnityEngine.UI.Button>();
+            if (btn1x != null) btn1x.onClick.Invoke();
+            Assert(Mathf.Approximately(scale, 4f),
+                $"4x 버튼: scale={scale} (4 expected)");
+        }
+
+        /// <summary>I9: 벽 버튼 클릭 → BuildManager.CurrentMode=Wall</summary>
+        private IEnumerator TestI9_GuiBuildButton()
+        {
+            yield return null;
+            var bar = GameObject.Find("GuiControlBar");
+            var wallBtn = bar.transform.Find("Btn_벽")?.GetComponent<UnityEngine.UI.Button>();
+            if (wallBtn == null) { Assert(false, "Btn_벽 없음"); yield break; }
+            if (BuildManager.Instance == null) { Assert(false, "BuildManager.Instance null"); yield break; }
+            BuildManager.Instance.SetMode(BuildManager.Mode.Off);  // reset
+            wallBtn.onClick.Invoke();
+            yield return null;
+            var mode = BuildManager.Instance.CurrentMode;
+            // 같은 button 다시 누르면 Off 로 toggle 되는지도 확인
+            wallBtn.onClick.Invoke();
+            yield return null;
+            var modeAfter2 = BuildManager.Instance.CurrentMode;
+            Assert(mode == BuildManager.Mode.Wall && modeAfter2 == BuildManager.Mode.Off,
+                $"벽 버튼: 1st click → {mode} (Wall expected), 2nd → {modeAfter2} (Off expected)");
+        }
+
+        /// <summary>I10: 콜로니스트 선택 후 징집 버튼 클릭 → IsDrafted=true</summary>
+        private IEnumerator TestI10_GuiDraftButton()
+        {
+            yield return null;
+            var cs = Object.FindFirstObjectByType<ClickSelector>();
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            if (cs == null || pawns.Length == 0)
+            { Assert(false, $"ClickSelector={cs!=null}, pawns={pawns.Length}"); yield break; }
+            cs.SimulateSelect(pawns[0]);
+            var bar = GameObject.Find("GuiControlBar");
+            var draftBtn = bar.transform.Find("Btn_징집")?.GetComponent<UnityEngine.UI.Button>();
+            if (draftBtn == null) { Assert(false, "Btn_징집 없음"); yield break; }
+            bool wasDrafted = pawns[0].IsDrafted;
+            draftBtn.onClick.Invoke();
+            yield return null;
+            bool nowDrafted = pawns[0].IsDrafted;
+            // toggle back
+            draftBtn.onClick.Invoke();
+            Assert(nowDrafted != wasDrafted,
+                $"징집 버튼: {wasDrafted}→{nowDrafted} (toggled)");
         }
 
         private void FinalizeReport()

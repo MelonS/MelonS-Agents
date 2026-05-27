@@ -95,6 +95,10 @@ namespace MelonS.GameProto
             }
             Debug.Log($"[GameManager] Day 4: spawned {spawnPositions.Length} colonists");
 
+            // 운영자 피드백 (2026-05-27): "키보드 의존도 너무 높음, gui 가 전혀 안됨"
+            // → GUI 버튼 바 자동 부착 (Speed/Draft/Build/Research 10 버튼)
+            GuiControlBar.EnsureInScene();
+
             if (integrationTest)
             {
                 var iGo = new GameObject("__IntegrationTestRunner__");

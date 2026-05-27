@@ -52,7 +52,7 @@ namespace MelonS.GameProto
             if (BuildModeActive && Input.GetMouseButtonDown(0)) TryPlace();
         }
 
-        private void SetMode(Mode m)
+        public void SetMode(Mode m)
         {
             CurrentMode = m;
             if (ghostRenderer == null) return;

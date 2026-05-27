@@ -85,6 +85,14 @@ namespace MelonS.GameProto
             pickerText.text = sb.ToString();
         }
 
+        /// <summary>운영자 피드백 — N 키 대신 GUI 버튼에서 picker 토글</summary>
+        public void TogglePicker()
+        {
+            pickerOpen = !pickerOpen;
+            if (pickerPanel != null) pickerPanel.gameObject.SetActive(pickerOpen);
+            if (pickerOpen) RefreshPicker();
+        }
+
         public void SetRefs(Text status, Image progress, RectTransform picker, Text pText)
         {
             statusText = status;
