@@ -14,6 +14,9 @@ namespace MelonS.GameProto
         private StoveEntity targetStove;
         private PawnMovement movement;
         private float lastCookTime = -10f;
+        // I19 safety - 10s 안에 stove 못 가면 포기 (settlement 정상이면 항상 도달, edge case 만 fire)
+        private float taskStartTime = -10f;
+        private const float GiveUpAfterSec = 10f;
 
         public bool HasTask => targetStove != null;
 
@@ -25,6 +28,7 @@ namespace MelonS.GameProto
         public void SetStoveTarget(StoveEntity s)
         {
             targetStove = s;
+            taskStartTime = Time.time;
             if (s != null) movement.SetTarget(s.transform.position);
         }
 
@@ -43,6 +47,11 @@ namespace MelonS.GameProto
                 return;
             }
             float dist = Vector2.Distance(transform.position, targetStove.transform.position);
+            if (Time.time - taskStartTime > GiveUpAfterSec && dist > cookRange)
+            {
+                ClearTask();
+                return;
+            }
             if (dist <= cookRange)
             {
                 movement.ClearTarget();
