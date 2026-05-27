@@ -195,38 +195,8 @@ namespace MelonS.GameProto.EditorTools
             bm.SetRefs(wallPrefab, floorPrefab, doorPrefab, stovePrefab,
                        wallSprite, floorSprite, doorSprite, stoveSprite, ghostSr);
 
-            // Day 11: BerryBushes — 4 placed offset from trees so AI sees
-            // both gather + chop choices.  Re-use tree sprite tinted greenish
-            // until an operator-authored berry sprite exists (already imported
-            // by ForceImportAllSprites, so no extra import call needed).
-            // NOTE: BerryBushEntity.Awake() repaints SpriteRenderer.color
-            // based on stock level (white -> grey), so any green tint we set
-            // here is overwritten at runtime — that's intentional in the
-            // component design and acceptable: white vs brown still reads
-            // distinct from trees.  The scene-file color is still set per
-            // handoff spec.
-            // Day 41: berry bush 6개 (40x40 맵).
-            Vector2[] bushPositions = new[]
-            {
-                new Vector2(-9f,  -2f),
-                new Vector2(  6f,  -8f),
-                new Vector2( 11f,   3f),
-                new Vector2(-13f,  10f),
-                new Vector2(  3f,  13f),
-                new Vector2( -6f, -14f),
-            };
-            foreach (var pos in bushPositions)
-            {
-                GameObject b = new GameObject($"BerryBush_{pos.x}_{pos.y}");
-                b.transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, 0);  // tile center 정렬
-                SpriteRenderer bsr = b.AddComponent<SpriteRenderer>();
-                bsr.sprite = treeSprite;
-                bsr.sortingOrder = 5;
-                bsr.color = new Color(0.6f, 0.9f, 0.4f, 1f);
-                BoxCollider2D bcol = b.AddComponent<BoxCollider2D>();
-                bcol.size = Vector2.one;
-                b.AddComponent<BerryBushEntity>();
-            }
+            // R10m: BerryBush spawn extract -> SceneSetup.Game.BerryBush.cs
+            SpawnBerryBushes(treeSprite);
 
             // ClickSelector
             GameObject csGo = new GameObject("ClickSelector");
