@@ -26,18 +26,29 @@ namespace MelonS.GameProto
             public bool rangedEnabled;  // true 면 활/총 = arrow shoot 가능
         }
 
-        // 카탈로그
+        // 카탈로그 - #133 확장 (10→17 items)
         public static readonly Item[] Catalog = new[] {
-            new Item { nameKr = "기본 셔츠",   slot = Slot.Shirt,  moodBonus = 2f, melArmor = 0.10f },
-            new Item { nameKr = "가죽 외투",   slot = Slot.Shirt,  moodBonus = 4f, melArmor = 0.20f },
-            new Item { nameKr = "양털 외투",   slot = Slot.Shirt,  moodBonus = 5f, melArmor = 0.15f },
-            new Item { nameKr = "기본 바지",   slot = Slot.Pants,  moodBonus = 1f, melArmor = 0.05f },
-            new Item { nameKr = "가죽 바지",   slot = Slot.Pants,  moodBonus = 2f, melArmor = 0.12f },
-            new Item { nameKr = "모자",        slot = Slot.Hat,    moodBonus = 1f, melArmor = 0.10f },
-            new Item { nameKr = "헬멧",        slot = Slot.Hat,    moodBonus = 0f, melArmor = 0.30f },
-            new Item { nameKr = "단검",        slot = Slot.Weapon, moodBonus = 0f, meleeDamageAdd = 1f },
-            new Item { nameKr = "도끼",        slot = Slot.Weapon, moodBonus = 0f, meleeDamageAdd = 2f },
-            new Item { nameKr = "활",          slot = Slot.Weapon, moodBonus = 0f, rangedEnabled = true },
+            // 셔츠 (4종)
+            new Item { nameKr = "기본 셔츠",     slot = Slot.Shirt,  moodBonus = 2f, melArmor = 0.10f },
+            new Item { nameKr = "가죽 외투",     slot = Slot.Shirt,  moodBonus = 4f, melArmor = 0.20f },
+            new Item { nameKr = "양털 외투",     slot = Slot.Shirt,  moodBonus = 5f, melArmor = 0.15f },
+            new Item { nameKr = "체인메일",      slot = Slot.Shirt,  moodBonus = 1f, melArmor = 0.45f },
+            // 바지 (3종)
+            new Item { nameKr = "기본 바지",     slot = Slot.Pants,  moodBonus = 1f, melArmor = 0.05f },
+            new Item { nameKr = "가죽 바지",     slot = Slot.Pants,  moodBonus = 2f, melArmor = 0.12f },
+            new Item { nameKr = "철판 바지",     slot = Slot.Pants,  moodBonus = 0f, melArmor = 0.25f },
+            // 모자 (3종)
+            new Item { nameKr = "천 모자",       slot = Slot.Hat,    moodBonus = 1f, melArmor = 0.10f },
+            new Item { nameKr = "철 헬멧",       slot = Slot.Hat,    moodBonus = 0f, melArmor = 0.30f },
+            new Item { nameKr = "후드",          slot = Slot.Hat,    moodBonus = 3f, melArmor = 0.08f },
+            // 무기 (7종) - 근접 5 + 원거리 2
+            new Item { nameKr = "주먹 (맨손)",   slot = Slot.Weapon, moodBonus = 0f, meleeDamageAdd = 0f },
+            new Item { nameKr = "곤봉",          slot = Slot.Weapon, moodBonus = 0f, meleeDamageAdd = 1f },
+            new Item { nameKr = "단검",          slot = Slot.Weapon, moodBonus = 0f, meleeDamageAdd = 1f },
+            new Item { nameKr = "도끼",          slot = Slot.Weapon, moodBonus = 0f, meleeDamageAdd = 2f },
+            new Item { nameKr = "롱소드",        slot = Slot.Weapon, moodBonus = 1f, meleeDamageAdd = 3f },
+            new Item { nameKr = "활",            slot = Slot.Weapon, moodBonus = 0f, rangedEnabled = true },
+            new Item { nameKr = "석궁",          slot = Slot.Weapon, moodBonus = 0f, rangedEnabled = true, meleeDamageAdd = 1f },
         };
 
         public Dictionary<Slot, Item> equipped = new Dictionary<Slot, Item>();

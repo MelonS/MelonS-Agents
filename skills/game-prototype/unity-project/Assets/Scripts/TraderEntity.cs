@@ -48,15 +48,40 @@ namespace MelonS.GameProto
             nextWanderPick = Time.time + Random.Range(2f, 5f);
         }
 
-        /// <summary>우클릭 시 호출 - 간단 거래 (wood 5 → food 8).</summary>
-        public bool TryTrade()
+        // #133 - 거래 메뉴 6 옵션 (give → receive 식).  TryTrade(idx) 로 선택.
+        public static readonly (string label, int giveWood, int giveStone, int giveFood,
+                                int rWood, int rStone, int rFood, int rMeals)[] TradeOptions = {
+            ("목재 5 → 식량 8",       5, 0, 0,  0, 0, 8, 0),
+            ("목재 10 → 식사 2",      10, 0, 0, 0, 0, 0, 2),
+            ("석재 5 → 목재 8",       0, 5, 0,  8, 0, 0, 0),
+            ("석재 10 → 식량 12",     0, 10, 0, 0, 0, 12, 0),
+            ("식량 15 → 석재 8",      0, 0, 15, 0, 8, 0, 0),
+            ("식량 20 → 목재 12",     0, 0, 20, 12, 0, 0, 0),
+        };
+
+        /// <summary>legacy 단일 거래 (목재 5 → 식량 8 = idx 0).</summary>
+        public bool TryTrade() => TryTrade(0);
+
+        /// <summary>idx 의 거래 옵션 실행. true 반환 = 성공.</summary>
+        public bool TryTrade(int idx)
         {
             var rm = Services.Get<ResourceManager>();
             if (rm == null) return false;
-            if (rm.wood < 5) { Debug.Log("[Trader] 목재 5 필요"); return false; }
-            rm.AddWood(-5);
-            rm.AddFood(8);
-            Debug.Log("[Trader] 거래 성공 - 목재 5 → 식량 8");
+            if (idx < 0 || idx >= TradeOptions.Length) return false;
+            var (label, gW, gS, gF, rW, rS, rF, rM) = TradeOptions[idx];
+            if (rm.wood < gW || rm.stone < gS || rm.food < gF)
+            {
+                Debug.Log($"[Trader] 자원 부족 - {label}");
+                return false;
+            }
+            if (gW > 0) rm.AddWood(-gW);
+            if (gS > 0) rm.AddStone(-gS);
+            if (gF > 0) rm.AddFood(-gF);
+            if (rW > 0) rm.AddWood(rW);
+            if (rS > 0) rm.AddStone(rS);
+            if (rF > 0) rm.AddFood(rF);
+            if (rM > 0) rm.AddMeals(rM);
+            Debug.Log($"[Trader] 거래 성공: {label}");
             return true;
         }
     }

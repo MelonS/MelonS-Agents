@@ -224,7 +224,14 @@ namespace MelonS.GameProto
             }
             if (trader != null)
             {
-                list.Add(("🛒 거래 (목재 5 → 식량 8)", () => trader.TryTrade()));
+                // #133 - 6 거래 옵션
+                var traderCap = trader;
+                for (int i = 0; i < TraderEntity.TradeOptions.Length; i++)
+                {
+                    int idx = i;
+                    list.Add(($"🛒 {TraderEntity.TradeOptions[i].label}",
+                        () => traderCap.TryTrade(idx)));
+                }
             }
             if (stove != null)
             {
