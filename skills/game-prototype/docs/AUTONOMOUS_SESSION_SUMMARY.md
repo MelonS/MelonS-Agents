@@ -305,6 +305,39 @@ G:/.../PawnSim.exe -starthour 22 -delay 3 -screenshot G:/ai/night.png
 
 ---
 
+## [후속 세션 2026-05-28] — Wiki 정합 batch + 시각 피드백 + Stockpile priority
+
+운영자 directive: **"기존 시스템 개선이면 머든 오케이"** (기능 추가 X, 정합성 ↑).
+
+### 한 줄
+**RimWorld wiki spec 정합 #153~#159 (7 commit), 55/55 → 60/60 V tests, REAL QA 25s wood +40 안정.**
+
+| commit | 영향 |
+|--------|------|
+| `8f8fa30` #153 BedEntity.RestMul/MoodBonus 와이어링 (PawnNeeds 1.6x hardcoded → bed.RestMul) | 수면 회복이 침대 quality 따라 0.8/1.0/1.4x 다르게 |
+| `d419272` #154 침대 quality 3종 건설 노출 (SleepingSpot/Wood/Fine) | Architect menu Furniture 3 버튼, BlueprintEntity → BedQuality 매핑 |
+| `1783e2c` #155 Stockpile priority 5-tier (Critical~Low) | 우클릭 컨텍스트 메뉴 cycle, hauler FindBest priority 우선 |
+| `66632ff` #156 나무 종 tint 보존 (chop) | TakeChopDamage grayscale 덮어쓰기 → species tint × brightness 곱 |
+| `38ad114` #157 바닥 위 이동 속도 보너스 1.30x | FloorEntity.MoveSpeedMul + PawnMovement OverlapBox 감지 |
+| `aa0e0a9` #158 벽 피해 시각 피드백 | TakeDamage 시 material tint × (0.4 + 0.6 × hpRatio) |
+| `79f3018` #159 BuildAutoQA Phase 2 - bed quality 검증 | wall phase 안정 (10s 완성), bed phase Phase2 추가 (sprite binding 추가 진단 필요) |
+
+### V 테스트 추가 (55 → 60)
+- V56 bed quality rest/mood mul (0.80/1.00/1.40)
+- V57 stockpile FindBest priority over distance
+- V58 tree species tint preserved under chop
+- V59 floor move speed bonus
+- V60 wall damage tint preserved
+
+### 검증
+60/60 V + 35/35 I PASS, REAL QA 25s wood +36~+40 (day-25~32 fresh builds).
+
+### 알려진 미해결
+- BuildAutoQA Phase 2 (bed) sprite binding: `bm.BedSpriteRef` 가 런타임에 null - 추가 진단 필요.  V56 unit test 가 BedQuality API 동작 보증.
+- SaveLoadManager 가 BedQuality/StockpilePriority/TreeSpecies/WallMaterial 직렬화 안 함 - 저장/로드 시 default 복귀.
+
+---
+
 ## Commit 목록 (자율 세션)
 
 `git log --oneline` 상위 25개:
