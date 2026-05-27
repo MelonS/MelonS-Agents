@@ -63,6 +63,13 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I9-gui-build-button", TestI9_GuiBuildButton);
             yield return RunOne("I10-gui-draft-button", TestI10_GuiDraftButton);
 
+            // 운영자 피드백 — "사람 이동도 안됨 여전히".  SimulateRightClick 은
+            //  worldPos 직접 받지만 실제 사용자는 screen pos 로 클릭함.
+            //  실제 Camera.ScreenToWorldPoint round-trip 도 검증.
+            yield return RunOne("I11-screen-to-world-roundtrip", TestI11_ScreenToWorldRoundtrip);
+            yield return RunOne("I12-selection-ring-spawned", TestI12_SelectionRingSpawned);
+            yield return RunOne("I13-starter-resources", TestI13_StarterResources);
+
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
             Application.Quit();
@@ -285,6 +292,69 @@ namespace MelonS.GameProto.Tests
             draftBtn.onClick.Invoke();
             Assert(nowDrafted != wasDrafted,
                 $"징집 버튼: {wasDrafted}→{nowDrafted} (toggled)");
+        }
+
+        /// <summary>I11: ScreenToWorldPoint round-trip 검증. 실제 사용자 우클릭이
+        /// world 좌표로 정확히 변환되는지 확인 (운영자 이동 안됨 진단).</summary>
+        private IEnumerator TestI11_ScreenToWorldRoundtrip()
+        {
+            yield return null;
+            var cam = Camera.main;
+            if (cam == null) { Assert(false, "Camera.main null"); yield break; }
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            if (pawns.Length == 0) { Assert(false, "no pawns"); yield break; }
+            var pawn = pawns[0];
+            Vector3 originalWorld = pawn.transform.position;
+            Vector3 screenPos = cam.WorldToScreenPoint(originalWorld);
+            Vector3 backToWorld = cam.ScreenToWorldPoint(screenPos);
+            backToWorld.z = 0f;
+            float err = Vector2.Distance(
+                new Vector2(originalWorld.x, originalWorld.y),
+                new Vector2(backToWorld.x, backToWorld.y));
+            // 실제 OverlapPoint 도 검증 — pawn collider 가 hit 되는지
+            var hit = Physics2D.OverlapPoint(new Vector2(backToWorld.x, backToWorld.y));
+            bool hitsPawn = hit != null && hit.GetComponent<PawnEntity>() == pawn;
+            Assert(err < 0.01f && hitsPawn,
+                $"world={originalWorld} → screen={screenPos} → back={backToWorld} err={err:F4}, hitsPawn={hitsPawn}");
+        }
+
+        /// <summary>I12: SelectionRing 이 생성됐는가 + 선택 시 위치/색 따라옴</summary>
+        private IEnumerator TestI12_SelectionRingSpawned()
+        {
+            yield return null;
+            var ring = GameObject.Find("SelectionRing");
+            if (ring == null) { Assert(false, "SelectionRing GameObject 없음"); yield break; }
+            var sr = ring.GetComponent<SpriteRenderer>();
+            if (sr == null) { Assert(false, "SelectionRing SpriteRenderer 없음"); yield break; }
+
+            // pawn 선택 → ring 이 따라오는지
+            var cs = Object.FindFirstObjectByType<ClickSelector>();
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            if (cs == null || pawns.Length == 0) { Assert(false, "no cs/pawns"); yield break; }
+            cs.SimulateSelect(pawns[0]);
+            yield return null;  // 1 frame ring Update
+            yield return null;  // 한 번 더 — 첫 frame 에 sr.color 갱신 안 될 수 있음
+            float ringX = ring.transform.position.x;
+            float pawnX = pawns[0].transform.position.x;
+            bool followsPawn = Mathf.Abs(ringX - pawnX) < 0.1f;
+            bool visible = sr.color.a > 0.1f;
+            Assert(followsPawn && visible,
+                $"ring 위치=({ringX:F2}, *), pawn=({pawnX:F2}, *) diff={Mathf.Abs(ringX-pawnX):F2}, alpha={sr.color.a:F2}");
+        }
+
+        /// <summary>I13: 시작 자원 (wood>=40, food>=10, meals>=2) 가 ResourceManager 에 있다.
+        ///   GameManager.Start 가 AddWood/Food/Meals 실행했는지 확인.
+        ///   첫 자원 소비 시간 고려해서 살짝 여유: wood>=20, food>=1.</summary>
+        private IEnumerator TestI13_StarterResources()
+        {
+            yield return null;
+            var rm = Services.Get<ResourceManager>();
+            if (rm == null) { Assert(false, "ResourceManager null"); yield break; }
+            // GameManager.Start 후 0.5s 정도 지났음 (Start 의 1s wait 후 yield)
+            // wood 는 거의 안 줄어듬, food 는 3 pawn × 0.5s 약간 줄어듬
+            bool hasResources = rm.wood >= 30 && (rm.food + rm.meals) >= 3;
+            Assert(hasResources,
+                $"starter: wood={rm.wood} (>=30 expected), food={rm.food} meals={rm.meals} (food+meals>=3 expected)");
         }
 
         private void FinalizeReport()
