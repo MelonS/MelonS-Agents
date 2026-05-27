@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto;
 
 namespace MelonS.GameProto.AI
 {
@@ -21,6 +22,7 @@ namespace MelonS.GameProto.AI
     public class EatBerryAction : IPawnAction
     {
         public string DisplayName => "베리채집";
+        public WorkKind Kind => WorkKind.Gather;
         public float foodThreshold = 40f;
         public bool TryStart(PawnContext ctx)
         {
@@ -61,6 +63,7 @@ namespace MelonS.GameProto.AI
     public class HuntAnimalAction : IPawnAction
     {
         public string DisplayName => "사냥";
+        public WorkKind Kind => WorkKind.Hunt;
         // 운영자 fb #6 - starter food=10 이라 즉시 hunt 발동했음.  5로 낮춤 = 정말 부족할 때만.
         public float globalFoodThreshold = 5f;
         public bool TryStart(PawnContext ctx)
@@ -103,6 +106,7 @@ namespace MelonS.GameProto.AI
     public class CookMealAction : IPawnAction
     {
         public string DisplayName => "요리";
+        public WorkKind Kind => WorkKind.Cook;
         public float foodSurplus = 5f;
         public bool TryStart(PawnContext ctx)
         {
@@ -133,6 +137,7 @@ namespace MelonS.GameProto.AI
     public class ChopTreeAction : IPawnAction
     {
         public string DisplayName => "벌목";
+        public WorkKind Kind => WorkKind.Chop;
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.chopper == null) return false;
@@ -173,6 +178,8 @@ namespace MelonS.GameProto.AI
     public class WanderAction : IPawnAction
     {
         public string DisplayName => "어슬렁";
+        // 운영자 fb #114 - wander 는 fallback 이므로 Chop priority 따라감 (실제 work 아님).
+        public WorkKind Kind => WorkKind.Chop;
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.movement == null) return false;

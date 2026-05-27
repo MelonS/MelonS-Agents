@@ -56,6 +56,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnNameLabel>();
             pawnGo.AddComponent<PawnHealth>();    // Day 45 — body part 6개 health
             pawnGo.AddComponent<PawnTraits>();    // Day 56 — 성격 traits
+            pawnGo.AddComponent<PawnWorkSettings>(); // #114 — work priority per pawn
             pawnGo.AddComponent<PawnUtilityAI>();
             pawnGo.AddComponent<PawnFloatingBars>(); // Day 42 — HP/mood floating bars 머리 위
 

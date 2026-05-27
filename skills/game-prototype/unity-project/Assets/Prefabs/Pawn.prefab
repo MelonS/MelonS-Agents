@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 5463088030652008279}
   - component: {fileID: 6373964312038851044}
   - component: {fileID: 1030871266928379288}
+  - component: {fileID: 8453539723699304810}
   - component: {fileID: 1499688719991667539}
   - component: {fileID: 7370846164279481321}
   m_Layer: 0
@@ -331,6 +332,18 @@ MonoBehaviour:
   moodBaselineBonus: 0
   mealMoodBonus: 0
   moodSwingMul: 1
+--- !u!114 &8453539723699304810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6165637930717161905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be5c0ba661fdfee44a7b5874c25a5f33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &1499688719991667539
 MonoBehaviour:
   m_ObjectHideFlags: 0

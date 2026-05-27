@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto;
 
 namespace MelonS.GameProto.AI
 {
@@ -21,5 +22,8 @@ namespace MelonS.GameProto.AI
 
         /// <summary>한글 디버그 라벨 — 로그/UI 표시용.</summary>
         string DisplayName { get; }
+
+        /// <summary>#114 림월드 Work tab 매핑.  WorkSettings 가 disable 했으면 skip.</summary>
+        WorkKind Kind { get; }
     }
 }

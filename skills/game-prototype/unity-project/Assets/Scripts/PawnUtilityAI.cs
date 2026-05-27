@@ -25,6 +25,7 @@ namespace MelonS.GameProto
         private PawnCook cook;
         private PawnNeeds needs;
         private PawnEntity entity;  // Day 48 — drafted state check
+        private PawnWorkSettings workSettings;  // #114 — per-pawn work priority
         private float lastDecision = -999f;
         private float lastDraftAttackTime = -999f;
         private const float DraftAttackInterval = 0.8f;
@@ -48,6 +49,7 @@ namespace MelonS.GameProto
             cook = GetComponent<PawnCook>();
             needs = GetComponent<PawnNeeds>();
             entity = GetComponent<PawnEntity>();
+            workSettings = GetComponent<PawnWorkSettings>();  // #114
             // R5: ctx + action priority list
             ctx = new PawnContext
             {
@@ -117,11 +119,23 @@ namespace MelonS.GameProto
         private void Decide()
         {
             // R5: Strategy pattern — priority list 순회.  첫 TryStart 가 true 반환 시 종료.
-            //  순서: 베리채집 → 사냥 → 요리 → 벌목 → 어슬렁
+            // #114: PawnWorkSettings 가 disable 한 work 는 skip.  priority 1(highest) 부터.
+            //  순서: 베리채집(Gather) → 사냥(Hunt) → 요리(Cook) → 벌목(Chop) → 어슬렁(fallback)
             //  새 action 추가 = AI/PawnActions.cs 에 class + Awake actions 리스트에 등록
-            foreach (var action in actions)
+            if (workSettings == null)
             {
-                if (action.TryStart(ctx)) return;
+                foreach (var action in actions)
+                    if (action.TryStart(ctx)) return;
+                return;
+            }
+            // priority 1 → 2 → 3 → 4 순서로 시도.  0 (disabled) 은 skip.
+            for (int p = 1; p <= 4; p++)
+            {
+                foreach (var action in actions)
+                {
+                    if (workSettings.GetPriority(action.Kind) != p) continue;
+                    if (action.TryStart(ctx)) return;
+                }
             }
         }
 

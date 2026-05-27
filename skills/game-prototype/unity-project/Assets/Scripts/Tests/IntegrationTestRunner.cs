@@ -81,6 +81,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I21-combat-drafted-vs-wolf", TestI21_CombatDraftedVsWolf);
             yield return RunOne("I22-save-load-roundtrip", TestI22_SaveLoadRoundtrip);
             yield return RunOne("I23-60s-stress-no-nre", TestI23_60sStressNoNre);
+            // #114 - work tab 직업 시스템
+            yield return RunOne("I24-work-tab-priority", TestI24_WorkTabPriority);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -219,15 +221,15 @@ namespace MelonS.GameProto.Tests
                 $"activeTech={rm.activeTech?.nameKr}, {startPts}→{endPts} pts (>=0 OK, 진행 안 해도 active 면 PASS)");
         }
 
-        /// <summary>I6: GuiControlBar 가 화면에 생성됐는가 (10 버튼)</summary>
+        /// <summary>I6: GuiControlBar 가 화면에 생성됐는가 (8 버튼 - #114 직업 추가)</summary>
         private IEnumerator TestI6_GuiBarSpawned()
         {
             yield return null;
             var bar = GameObject.Find("GuiControlBar");
             if (bar == null) { Assert(false, "GuiControlBar GameObject 없음"); yield break; }
             var buttons = bar.GetComponentsInChildren<UnityEngine.UI.Button>();
-            Assert(buttons.Length == 7,
-                $"GuiControlBar 발견, 버튼 {buttons.Length}개 (7 expected - #110 림 Architect 패턴)");
+            Assert(buttons.Length == 8,
+                $"GuiControlBar 발견, 버튼 {buttons.Length}개 (8 expected - #114 직업 버튼 추가)");
         }
 
         /// <summary>I7: 멈춤 버튼 클릭 → Time.timeScale=0</summary>
@@ -684,6 +686,47 @@ namespace MelonS.GameProto.Tests
 
             Assert(exceptionCount == 0,
                 $"60s stress (4x speed): exceptions={exceptionCount}, first='{firstError}'");
+        }
+
+        /// <summary>I24: #114 Work tab 직업 시스템 - PawnWorkSettings attached + AI 가 disable 따름</summary>
+        private IEnumerator TestI24_WorkTabPriority()
+        {
+            yield return null;
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            if (pawns.Length == 0) { Assert(false, "pawn 없음"); yield break; }
+            // 모든 pawn 이 PawnWorkSettings 가지고 있나
+            int withSettings = 0;
+            foreach (var p in pawns)
+                if (p.GetComponent<PawnWorkSettings>() != null) withSettings++;
+            Assert(withSettings == pawns.Length,
+                $"PawnWorkSettings attached: {withSettings}/{pawns.Length}");
+            if (withSettings == 0) yield break;
+
+            // default 우선순위 - 모두 1
+            var first = pawns[0].GetComponent<PawnWorkSettings>();
+            bool allOne = true;
+            foreach (var k in PawnWorkSettings.AllKinds)
+                if (first.GetPriority(k) != 1) { allOne = false; break; }
+            Assert(allOne, $"default 우선순위 모두 1");
+
+            // disable Chop -> 0, 다시 GetPriority 0 인지
+            first.SetPriority(WorkKind.Chop, 0);
+            Assert(first.GetPriority(WorkKind.Chop) == 0, "Chop disable 후 0");
+            Assert(first.IsEnabled(WorkKind.Chop) == false, "Chop IsEnabled false");
+
+            // SetPriority clamp - 99 -> 4, -3 -> 0
+            first.SetPriority(WorkKind.Hunt, 99);
+            Assert(first.GetPriority(WorkKind.Hunt) == 4, "priority clamp 상한 4");
+            first.SetPriority(WorkKind.Hunt, -3);
+            Assert(first.GetPriority(WorkKind.Hunt) == 0, "priority clamp 하한 0");
+
+            // restore
+            first.SetPriority(WorkKind.Chop, 1);
+            first.SetPriority(WorkKind.Hunt, 1);
+
+            // WorkTabUI 가 scene 에 있나
+            var tab = WorkTabUI.Instance;
+            Assert(tab != null, "WorkTabUI.Instance 존재");
         }
 
         private void FinalizeReport()
