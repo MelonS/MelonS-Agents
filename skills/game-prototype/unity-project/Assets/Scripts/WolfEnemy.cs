@@ -26,16 +26,30 @@ namespace MelonS.GameProto
         private float nextAttackTime = -1f;
         private float nextTargetSearch = -1f;
         private PawnEntity cachedTarget;
+        // #163 - hit-flash 시각 피드백 (BanditEnemy 와 같은 패턴).
+        //  이전: 늑대가 공격받아도 시각 변화 0 → 플레이어가 데미지 들어가는지 알 수 없음.
+        private SpriteRenderer sr;
+        private Color baseColor = Color.white;
+        private float flashUntil = -1f;
+        private const float HitFlashSeconds = 0.08f;
 
         private void Awake()
         {
             Hp = maxHp;
+            sr = GetComponent<SpriteRenderer>();
+            if (sr != null) baseColor = sr.color;
             PickNewWanderTarget();
         }
 
         private void Update()
         {
             if (IsDead) return;
+            // #163 - hit-flash 복원
+            if (sr != null && flashUntil > 0 && Time.time > flashUntil)
+            {
+                sr.color = baseColor;
+                flashUntil = -1f;
+            }
             // Find target every 0.4s
             if (Time.time > nextTargetSearch)
             {
@@ -103,6 +117,12 @@ namespace MelonS.GameProto
         {
             if (IsDead) return;
             Hp = Mathf.Max(0, Hp - dmg);
+            // #163 - 시각 피드백
+            if (sr != null)
+            {
+                sr.color = Color.white;
+                flashUntil = Time.time + HitFlashSeconds;
+            }
             if (Hp <= 0)
             {
                 Debug.Log($"[Wolf] killed → +{dropFood} 고기 (pile drop)");
