@@ -101,6 +101,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I32-equipment-starter", TestI32_EquipmentStarter);
             // #125 - 부상 pawn 옆에 가서 tend → bleed clear + 회복
             yield return RunOne("I33-doctor-tends-patient", TestI33_DoctorTendsPatient);
+            // #129 - 동물 죽음 시 meat pile drop
+            yield return RunOne("I34-animal-drops-meat", TestI34_AnimalDropsMeat);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -968,6 +970,42 @@ namespace MelonS.GameProto.Tests
             // FindNearest 동작
             var nearest = StockpileZoneEntity.FindNearest(new Vector2(0f, 0f));
             Assert(nearest != null, "FindNearest 동작");
+        }
+
+        /// <summary>I34: #129 - 동물 죽음 시 즉시 +food 대신 MeatPileEntity drop</summary>
+        private IEnumerator TestI34_AnimalDropsMeat()
+        {
+            yield return null;
+            if (MeatPileEntity.SharedSprite == null)
+            { Assert(false, "MeatPileEntity.SharedSprite NULL"); yield break; }
+            var ago = new GameObject("TestAnimal_I34");
+            ago.transform.position = new Vector3(-15f, -15f, 0);
+            ago.AddComponent<SpriteRenderer>();
+            ago.AddComponent<BoxCollider2D>().size = Vector2.one;
+            var anim = ago.AddComponent<AnimalEntity>();
+            yield return null;
+
+            int meatsBefore = Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None).Length;
+            int foodBefore = ResourceManager.Instance != null ? ResourceManager.Instance.food : -1;
+
+            anim.TakeDamage(99999);
+            yield return null;
+
+            int meatsAfter = Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None).Length;
+            int foodAfter = ResourceManager.Instance != null ? ResourceManager.Instance.food : -1;
+
+            Assert(meatsAfter > meatsBefore,
+                $"meat pile spawn: {meatsBefore}->{meatsAfter} food {foodBefore}->{foodAfter}");
+            Assert(foodAfter == foodBefore,
+                $"inventory food 즉시 X: {foodBefore}->{foodAfter} (hauler 줍어야 함)");
+
+            // cleanup
+            var meats = Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None);
+            foreach (var m in meats)
+            {
+                if (m != null && Vector2.Distance(m.transform.position, new Vector2(-15f, -15f)) < 1.5f)
+                    Object.Destroy(m.gameObject);
+            }
         }
 
         /// <summary>I33: #125 - 부상 pawn 옆에 가서 PawnDoctor.Update 시뮬 → bleed 0 + hp 회복</summary>

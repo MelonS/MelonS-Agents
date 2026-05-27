@@ -110,7 +110,16 @@ namespace MelonS.GameProto
             if (AudioBank.Instance != null) AudioBank.Instance.PlayChop();
             if (Hp <= 0)
             {
-                if (ResourceManager.Instance != null) ResourceManager.Instance.AddFood(foodDrop);
+                // #129 - 즉시 AddFood 대신 MeatPileEntity drop (hauler 가 운반).
+                //  sprite 없으면 legacy fallback.
+                if (MeatPileEntity.SharedSprite != null)
+                {
+                    MeatPileEntity.Spawn(transform.position, foodDrop, MeatPileEntity.SharedSprite);
+                }
+                else
+                {
+                    if (ResourceManager.Instance != null) ResourceManager.Instance.AddFood(foodDrop);
+                }
                 Destroy(gameObject);
             }
         }

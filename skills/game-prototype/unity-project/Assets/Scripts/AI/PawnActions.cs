@@ -285,6 +285,37 @@ namespace MelonS.GameProto.AI
         }
     }
 
+    public class HaulMeatAction : IPawnAction
+    {
+        public string DisplayName => "고기 운반";
+        public WorkKind Kind => WorkKind.Chop;
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.hauler == null) return false;
+            MeatPileEntity meat = FindNearestMeat(ctx);
+            if (meat == null) return false;
+            ctx.hauler.SetMeatTarget(meat);
+            return true;
+        }
+        private static MeatPileEntity FindNearestMeat(PawnContext ctx)
+        {
+            var arr = Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None);
+            MeatPileEntity best = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = ctx.transform.position;
+            foreach (var m in arr)
+            {
+                if (m == null) continue;
+                if (m.IsReserved && m.ReservedBy != ctx.hauler.gameObject) continue;
+                Vector3 mp = m.transform.position;
+                if (Mathf.Abs(mp.x) > 28.5f || Mathf.Abs(mp.y) > 28.5f) continue;
+                float sq = ((Vector2)mp - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = m; }
+            }
+            return best;
+        }
+    }
+
     public class HaulStoneAction : IPawnAction
     {
         public string DisplayName => "돌 운반";

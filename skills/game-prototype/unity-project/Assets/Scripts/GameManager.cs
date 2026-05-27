@@ -14,6 +14,7 @@ namespace MelonS.GameProto
         [SerializeField] private Sprite arrowSpriteRuntime;  // Day 50
         [SerializeField] private Sprite woodPileSpriteRuntime;  // #116 - 벌목 후 wood pile drop
         [SerializeField] private Sprite stoneChunkSpriteRuntime;  // #119 - 채광 후 stone chunk drop
+        [SerializeField] private Sprite meatPileSpriteRuntime;    // #129 - 동물 죽음 시 meat drop
         [SerializeField] private Vector2[] spawnPositions = new Vector2[]
         {
             // 운영자 피드백 - "림들 겹쳐서 이동" - 일렬 spawn → 같은 target pick.
@@ -128,6 +129,11 @@ namespace MelonS.GameProto
             if (stoneChunkSpriteRuntime != null)
             {
                 StoneVeinEntity.StoneChunkSprite = stoneChunkSpriteRuntime;
+            }
+            // #129
+            if (meatPileSpriteRuntime != null)
+            {
+                MeatPileEntity.SharedSprite = meatPileSpriteRuntime;
             }
 
             // 운영자 피드백 — 게임 시작 시 자원 0 이면 빌드 모드도 못 켜고 무엇도 못함.

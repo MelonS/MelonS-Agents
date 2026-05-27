@@ -38,11 +38,17 @@ namespace MelonS.GameProto
                 mouseWorld.z = 0f;
                 Collider2D hit = Physics2D.OverlapPoint(mouseWorld);
                 PawnEntity pawn = (hit != null) ? hit.GetComponent<PawnEntity>() : null;
-                if (pawn != null) { Select(pawn); currentInspect = null; }
+                if (pawn != null) {
+                    Select(pawn);
+                    currentInspect = pawn.gameObject;  // #128 - pawn 도 inspect 패널 표시
+                    ClickEffect.Spawn(mouseWorld, new Color(0.3f, 1.0f, 0.5f, 0.95f));
+                }
                 else if (hit != null) {
-                    // #105 - 비-pawn entity 좌클릭 = inspect (pawn 선택은 유지 or clear)
+                    // #105 - 비-pawn entity 좌클릭 = inspect (pawn 선택 clear)
                     currentInspect = hit.gameObject;
                     ClearSelection();
+                    // #128 - 클릭 시각 피드백 (yellow ring) - 패널 안 보였던 원인 진단 도움
+                    ClickEffect.Spawn(mouseWorld, new Color(1.0f, 0.85f, 0.30f, 0.95f));
                 }
                 else { ClearSelection(); currentInspect = null; }
             }

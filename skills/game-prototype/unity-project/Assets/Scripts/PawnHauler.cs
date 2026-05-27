@@ -19,6 +19,7 @@ namespace MelonS.GameProto
 
         private WoodPileEntity targetPile;
         private StoneChunkEntity targetStone;  // #119
+        private MeatPileEntity targetMeat;     // #129
         private PawnMovement movement;
         private float taskStartTime = -10f;
         // #121 - 줍은 후 운반 phase: pickup → drop-at-stockpile.
@@ -26,9 +27,11 @@ namespace MelonS.GameProto
         private Phase phase = Phase.GoToItem;
         private int carryingWood = 0;
         private int carryingStone = 0;
+        private int carryingFood = 0;          // #129
         private StockpileZoneEntity dropTarget;
 
-        public bool HasTask => targetPile != null || targetStone != null || carryingWood > 0 || carryingStone > 0;
+        public bool HasTask => targetPile != null || targetStone != null || targetMeat != null
+            || carryingWood > 0 || carryingStone > 0 || carryingFood > 0;
         public WoodPileEntity Target => targetPile;
         public StoneChunkEntity TargetStone => targetStone;
 
@@ -63,17 +66,34 @@ namespace MelonS.GameProto
             }
         }
 
+        public void SetMeatTarget(MeatPileEntity meat)  // #129
+        {
+            ClearTask();
+            targetMeat = meat;
+            phase = Phase.GoToItem;
+            taskStartTime = Time.time;
+            if (meat != null)
+            {
+                meat.ReservedBy = gameObject;
+                movement.SetTarget(meat.transform.position);
+            }
+        }
+
         public void ClearTask()
         {
             if (targetPile != null && targetPile.ReservedBy == gameObject)
                 targetPile.ReservedBy = null;
             if (targetStone != null && targetStone.ReservedBy == gameObject)
                 targetStone.ReservedBy = null;
+            if (targetMeat != null && targetMeat.ReservedBy == gameObject)
+                targetMeat.ReservedBy = null;
             targetPile = null;
             targetStone = null;
+            targetMeat = null;
             // 운반 중인 자원은 inventory 로 즉시 (drop 자리에 새 pile 만들면 다시 hauler 가 줍어서 무한 loop).
             if (carryingWood > 0)  { ResourceManager.Instance?.AddWood(carryingWood);   carryingWood = 0; }
             if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
+            if (carryingFood > 0)  { ResourceManager.Instance?.AddFood(carryingFood);   carryingFood = 0; }
             dropTarget = null;
             phase = Phase.GoToItem;
             movement.ClearTarget();
@@ -99,6 +119,7 @@ namespace MelonS.GameProto
                     // 도착 - 자원 inventory 추가 (zone 마커 시각 효과는 그대로)
                     if (carryingWood > 0)  { ResourceManager.Instance?.AddWood(carryingWood);   carryingWood = 0; }
                     if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
+                    if (carryingFood > 0)  { ResourceManager.Instance?.AddFood(carryingFood);   carryingFood = 0; }
                     Debug.Log($"[Hauler] {name} stockpile 도착, 자원 적재 완료");
                     dropTarget = null;
                     phase = Phase.GoToItem;
@@ -145,6 +166,42 @@ namespace MelonS.GameProto
                 else
                 {
                     movement.SetTarget(targetPile.transform.position);
+                }
+                return;
+            }
+            // meat pile - #129
+            if (targetMeat != null)
+            {
+                if (targetMeat.gameObject == null) { targetMeat = null; return; }
+                float dist = Vector2.Distance(transform.position, targetMeat.transform.position);
+                if (Time.time - taskStartTime > giveUpAfterSec && dist > pickupRange)
+                {
+                    Debug.Log($"[Hauler] {name} give up meat (dist={dist:F2})");
+                    ClearTask();
+                    return;
+                }
+                if (dist <= pickupRange)
+                {
+                    movement.ClearTarget();
+                    int amount = targetMeat.Food;
+                    UnityEngine.Object.Destroy(targetMeat.gameObject);
+                    targetMeat = null;
+                    var sp = StockpileZoneEntity.FindNearest(transform.position);
+                    if (sp != null)
+                    {
+                        carryingFood += amount;
+                        dropTarget = sp;
+                        phase = Phase.GoToStockpile;
+                        movement.SetTarget(sp.transform.position);
+                    }
+                    else
+                    {
+                        ResourceManager.Instance?.AddFood(amount);
+                    }
+                }
+                else
+                {
+                    movement.SetTarget(targetMeat.transform.position);
                 }
                 return;
             }

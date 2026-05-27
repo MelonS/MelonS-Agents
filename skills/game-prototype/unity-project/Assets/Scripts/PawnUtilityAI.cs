@@ -80,6 +80,7 @@ namespace MelonS.GameProto
                 new BuildBlueprintAction(),  // #118 - 청사진 건설 (chop 보다 우선)
                 new HaulWoodAction(),     // #116 - 벌목 후 떨어진 wood pile 운반 (chop 보다 우선)
                 new HaulStoneAction(),    // #119 - 채광 후 떨어진 stone chunk 운반
+                new HaulMeatAction(),     // #129 - 사냥 후 떨어진 meat pile 운반
                 new MineStoneAction(),    // #119 - 광맥 채광 (chop 과 동급)
                 new ChopTreeAction(),
                 new WanderAction(),

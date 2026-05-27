@@ -30,29 +30,34 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            // 운영자 fb #117 - 패널 안 보였음. 우측 중앙으로 옮기고 키움 + 노란 outline 으로 강조.
+            // 운영자 fb #128 - 운영자 패널 못 봄.
+            //  원인 진단: (a) raycastTarget=true 가 클릭 차단 → 모두 false 로.
+            //              (b) 패널 위치 작아서 못 봄 → 우측 stack 큰 패널.
+            //              (c) hidden by default → 항상 보임 (없을 때는 hint text).
             var rt = gameObject.AddComponent<RectTransform>();
             rt.anchorMin = new Vector2(1f, 0.5f);
             rt.anchorMax = new Vector2(1f, 0.5f);
             rt.pivot = new Vector2(1f, 0.5f);
-            rt.sizeDelta = new Vector2(320, 160);
-            rt.anchoredPosition = new Vector2(-12, 80);  // 화면 우측 중앙 약간 위
+            rt.sizeDelta = new Vector2(360, 380);
+            rt.anchoredPosition = new Vector2(-12, 0);  // 화면 우측 정확히 가운데
 
             bg = gameObject.AddComponent<Image>();
-            bg.color = new Color(0.05f, 0.06f, 0.08f, 0.95f);
+            bg.color = new Color(0.04f, 0.06f, 0.09f, 0.95f);
+            bg.raycastTarget = false;  // #128 - 클릭 통과 (entity 클릭 안 막음)
 
             // 제목 - 노란 강조 (림 inspect 느낌)
             var titleGo = new GameObject("Title");
             titleGo.transform.SetParent(transform, false);
             titleText = titleGo.AddComponent<Text>();
-            titleText.text = "";
-            titleText.font = LoadKoreanFont(24);
-            titleText.fontSize = 24;
+            titleText.text = "선택된 오브젝트 없음";
+            titleText.font = LoadKoreanFont(22);
+            titleText.fontSize = 22;
             titleText.fontStyle = FontStyle.Bold;
-            titleText.color = new Color(1.0f, 0.85f, 0.30f, 1f);  // 노란
+            titleText.color = new Color(1.0f, 0.85f, 0.30f, 1f);
             titleText.alignment = TextAnchor.UpperLeft;
+            titleText.raycastTarget = false;
             var trt = titleGo.GetComponent<RectTransform>();
-            trt.anchorMin = new Vector2(0, 0.70f);
+            trt.anchorMin = new Vector2(0, 0.85f);
             trt.anchorMax = new Vector2(1, 1);
             trt.sizeDelta = new Vector2(-16, -4);
             trt.anchoredPosition = new Vector2(8, -4);
@@ -61,20 +66,21 @@ namespace MelonS.GameProto
             var bodyGo = new GameObject("Body");
             bodyGo.transform.SetParent(transform, false);
             bodyText = bodyGo.AddComponent<Text>();
-            bodyText.text = "";
+            bodyText.text = "💡 나무/벽/사슴/광맥 등을\n좌클릭하면 정보가 표시됩니다.";
             bodyText.font = LoadKoreanFont(15);
             bodyText.fontSize = 15;
-            bodyText.color = new Color(0.92f, 0.92f, 0.88f, 1f);
+            bodyText.color = new Color(0.85f, 0.85f, 0.78f, 1f);
             bodyText.alignment = TextAnchor.UpperLeft;
             bodyText.horizontalOverflow = HorizontalWrapMode.Wrap;
             bodyText.verticalOverflow = VerticalWrapMode.Overflow;
+            bodyText.raycastTarget = false;
             var brt = bodyGo.GetComponent<RectTransform>();
             brt.anchorMin = new Vector2(0, 0);
-            brt.anchorMax = new Vector2(1, 0.65f);
+            brt.anchorMax = new Vector2(1, 0.85f);
             brt.sizeDelta = new Vector2(-16, -4);
             brt.anchoredPosition = new Vector2(8, 4);
 
-            gameObject.SetActive(false);
+            // 패널 항상 활성 (hint 가 보임).  SetActive(false) 제거.
         }
 
         private Font LoadKoreanFont(int sz)
@@ -93,12 +99,15 @@ namespace MelonS.GameProto
             if (cachedCs == null) cachedCs = Object.FindFirstObjectByType<ClickSelector>();
             if (cachedCs == null) return;
             GameObject inspect = cachedCs.CurrentInspect;
+            // #128 - 패널 항상 켜둠. inspect 없으면 hint 표시.
             if (inspect == null)
             {
-                if (gameObject.activeSelf) gameObject.SetActive(false);
+                string hintTitle = "선택된 오브젝트 없음";
+                string hintBody = "💡 나무/벽/사슴/광맥/콜로니스트 등을\n좌클릭하면 정보가 표시됩니다.\n\n📋 직업: F1\n🏛 건축: F8\n🔬 연구: N\n⏸ 멈춤: Space";
+                if (titleText.text != hintTitle) titleText.text = hintTitle;
+                if (bodyText.text != hintBody) bodyText.text = hintBody;
                 return;
             }
-            if (!gameObject.activeSelf) gameObject.SetActive(true);
             (string title, string body) = Describe(inspect);
             if (titleText.text != title) titleText.text = title;
             if (bodyText.text != body) bodyText.text = body;
@@ -106,6 +115,30 @@ namespace MelonS.GameProto
 
         private (string, string) Describe(GameObject go)
         {
+            // #128 - pawn 도 패널에 표시 (좌측 PawnInfoPanel 와 동시 - 일관성)
+            var pawn = go.GetComponent<PawnEntity>();
+            if (pawn != null)
+            {
+                var needs = go.GetComponent<PawnNeeds>();
+                var abil = go.GetComponent<PawnAbilities>();
+                var traits = go.GetComponent<PawnTraits>();
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine($"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})");
+                if (traits != null) sb.AppendLine($"성격: {traits.SummaryKr()}");
+                if (needs != null)
+                {
+                    sb.AppendLine($"식량: {needs.food:F0}/100");
+                    sb.AppendLine($"수면: {needs.sleep:F0}/100");
+                    sb.AppendLine($"기분: {needs.mood:F0}/100");
+                }
+                if (abil != null)
+                {
+                    sb.AppendLine($"\n능력:");
+                    sb.AppendLine($"  이동 {abil.moveSpeedMul:F2}  벌목 {abil.chopMul:F2}");
+                    sb.AppendLine($"  채광 {abil.miningMul:F2}  건설 {abil.constructionMul:F2}");
+                }
+                return ($"{pawn.PawnName}", sb.ToString());
+            }
             var bp = go.GetComponent<BlueprintEntity>();
             if (bp != null) return ($"청사진 ({bp.Mode})",
                 $"진행도: {bp.Progress * 100f:F0}%\n예약: {(bp.IsReserved ? "건설중" : "대기")}\npawn 이 와서 {bp.BuildSeconds:F0}초 건설");
@@ -118,6 +151,9 @@ namespace MelonS.GameProto
             var chunk = go.GetComponent<StoneChunkEntity>();
             if (chunk != null) return ("돌덩이",
                 $"석재 {chunk.Stone}개\n예약: {(chunk.IsReserved ? "운반중" : "대기")}\n3분 후 사라짐");
+            var meat = go.GetComponent<MeatPileEntity>();
+            if (meat != null) return ("고기",
+                $"식량 {meat.Food}개\n예약: {(meat.IsReserved ? "운반중" : "대기")}\n1.5분 후 상함");
             var sp = go.GetComponent<StockpileZoneEntity>();
             if (sp != null) return ("창고 영역",
                 $"hauler 가 자원을 여기로 운반\n근처 자원 자동 수집");

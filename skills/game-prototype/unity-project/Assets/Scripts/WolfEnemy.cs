@@ -105,8 +105,16 @@ namespace MelonS.GameProto
             Hp = Mathf.Max(0, Hp - dmg);
             if (Hp <= 0)
             {
-                Debug.Log($"[Wolf] killed → +{dropFood} 식량");
-                if (ResourceManager.Instance != null) ResourceManager.Instance.AddFood(dropFood);
+                Debug.Log($"[Wolf] killed → +{dropFood} 고기");
+                // #129 - 즉시 AddFood 대신 MeatPile drop
+                if (MeatPileEntity.SharedSprite != null)
+                {
+                    MeatPileEntity.Spawn(transform.position, dropFood, MeatPileEntity.SharedSprite);
+                }
+                else if (ResourceManager.Instance != null)
+                {
+                    ResourceManager.Instance.AddFood(dropFood);
+                }
                 Destroy(gameObject, 0.5f);
             }
         }

@@ -657,6 +657,48 @@ def gen_stone_chunk(seed: int = 19):
     return im
 
 
+def gen_meat_pile(seed: int = 23):
+    """16x16 raw meat chunk - 빨간 살덩이."""
+    random.seed(seed)
+    W = H = 16
+    im = new_canvas(W, H)
+    dr = ImageDraw.Draw(im)
+
+    meat_dark = (115, 30, 30, 255)
+    meat_mid  = (170, 55, 55, 255)
+    meat_lit  = (215, 95, 90, 255)
+    bone      = (240, 230, 200, 255)
+    shadow    = (0, 0, 0, 110)
+
+    # 그림자
+    for x in range(2, 14):
+        put_px(im, x, 13, shadow)
+
+    # 큰 살덩이 (사각 둥근)
+    dr.ellipse([2, 5, 12, 12], fill=meat_mid)
+    # highlight
+    put_px(im, 4, 6, meat_lit)
+    put_px(im, 5, 6, meat_lit)
+    put_px(im, 6, 7, meat_lit)
+    # 어두운 가장자리
+    for y in range(5, 13):
+        put_px(im, 2, y, meat_dark)
+    for x in range(2, 13):
+        put_px(im, x, 12, meat_dark)
+
+    # 작은 뼈조각 (오른쪽)
+    put_px(im, 13, 7, bone)
+    put_px(im, 13, 8, bone)
+    put_px(im, 14, 8, bone)
+    put_px(im, 14, 9, bone)
+
+    # 핏자국
+    put_px(im, 8, 4, meat_dark)
+    put_px(im, 11, 11, meat_dark)
+
+    return im
+
+
 def main():
     targets = [
         ("tree.png",          gen_tree),
@@ -667,6 +709,7 @@ def main():
         ("wood_pile.png",     gen_wood_pile),
         ("stone_vein.png",    gen_stone_vein),
         ("stone_chunk.png",   gen_stone_chunk),
+        ("meat_pile.png",     gen_meat_pile),
     ]
     for name, fn in targets:
         out = HERE / name

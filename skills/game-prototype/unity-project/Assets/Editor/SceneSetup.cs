@@ -125,11 +125,13 @@ namespace MelonS.GameProto.EditorTools
             // #116 - wood pile sprite (벌목 후 바닥에 떨어지는 통나무 더미)
             Sprite woodPileSpriteRef = LoadOrSetupSprite("Assets/Sprites/wood_pile.png");
             Sprite stoneChunkSpriteRef = LoadOrSetupSprite("Assets/Sprites/stone_chunk.png");  // #119
+            Sprite meatPileSpriteRef = LoadOrSetupSprite("Assets/Sprites/meat_pile.png");      // #129
             SerializedObject gmSo = new SerializedObject(gm);
             gmSo.FindProperty("pawnPrefab").objectReferenceValue = pawnPrefab;
             gmSo.FindProperty("arrowSpriteRuntime").objectReferenceValue = arrowSpriteRef;
             gmSo.FindProperty("woodPileSpriteRuntime").objectReferenceValue = woodPileSpriteRef;
             gmSo.FindProperty("stoneChunkSpriteRuntime").objectReferenceValue = stoneChunkSpriteRef;
+            gmSo.FindProperty("meatPileSpriteRuntime").objectReferenceValue = meatPileSpriteRef;
             gmSo.ApplyModifiedProperties();
 
             // ResourceManager (singleton)
