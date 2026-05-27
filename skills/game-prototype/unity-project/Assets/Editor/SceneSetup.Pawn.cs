@@ -56,6 +56,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnMiner>();     // #119 — 채광
             pawnGo.AddComponent<PawnAbilities>(); // #120 — 능력치 (이동/작업/전투 multiplier)
             pawnGo.AddComponent<PawnThoughts>();  // #122 — mood thoughts (림 breakdown 패턴)
+            pawnGo.AddComponent<PawnEquipment>(); // #123 — 의류/무기 equip (mood/방어/공격)
             pawnGo.AddComponent<PawnSkills>();    // Day 19 — XP/level per skill
             // Stretch 후속: PawnNameLabel 재활성 (Day 30 의심 해소 — 32x32 sprite 와도 OK)
             pawnGo.AddComponent<PawnNameLabel>();

@@ -97,6 +97,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I30-stockpile-zone-exists", TestI30_StockpileZoneExists);
             // #122 - mood thought 추가/소멸 + breakdown
             yield return RunOne("I31-mood-thoughts", TestI31_MoodThoughts);
+            // #123 - 시작 시 의류 장비 + slot system
+            yield return RunOne("I32-equipment-starter", TestI32_EquipmentStarter);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -964,6 +966,33 @@ namespace MelonS.GameProto.Tests
             // FindNearest 동작
             var nearest = StockpileZoneEntity.FindNearest(new Vector2(0f, 0f));
             Assert(nearest != null, "FindNearest 동작");
+        }
+
+        /// <summary>I32: #123 - 시작 pawn 이 의류 장비 + equip/unequip 동작</summary>
+        private IEnumerator TestI32_EquipmentStarter()
+        {
+            yield return null;
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            if (pawns.Length == 0) { Assert(false, "pawn 없음"); yield break; }
+            int hasShirt = 0, hasPants = 0;
+            foreach (var p in pawns)
+            {
+                var eq = p.GetComponent<PawnEquipment>();
+                if (eq == null) continue;
+                if (eq.GetEquipped(PawnEquipment.Slot.Shirt) != null) hasShirt++;
+                if (eq.GetEquipped(PawnEquipment.Slot.Pants) != null) hasPants++;
+            }
+            Assert(hasShirt == pawns.Length && hasPants == pawns.Length,
+                $"모든 pawn 셔츠+바지: shirt {hasShirt}/{pawns.Length}, pants {hasPants}/{pawns.Length}");
+
+            // equip/unequip 동작
+            var first = pawns[0].GetComponent<PawnEquipment>();
+            var helmet = System.Array.Find(PawnEquipment.Catalog, c => c.nameKr == "헬멧");
+            first.Equip(helmet);
+            Assert(first.GetEquipped(PawnEquipment.Slot.Hat) == helmet, "Equip 헬멧");
+            Assert(first.TotalMelArmor() >= 0.30f, $"헬멧 armor {first.TotalMelArmor():F2} (>=0.30)");
+            first.Unequip(PawnEquipment.Slot.Hat);
+            Assert(first.GetEquipped(PawnEquipment.Slot.Hat) == null, "Unequip 헬멧");
         }
 
         /// <summary>I31: #122 - mood thought 추가 → mood 변화 + expire 후 사라짐</summary>

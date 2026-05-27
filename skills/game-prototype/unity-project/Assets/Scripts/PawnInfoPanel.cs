@@ -116,6 +116,23 @@ namespace MelonS.GameProto
                         }
                     }
 
+                    // #123 - 장비 (의류/무기)
+                    var eq = pawn.GetComponent<PawnEquipment>();
+                    if (eq != null && eq.equipped.Count > 0)
+                    {
+                        sb.AppendLine();
+                        sb.AppendLine("<color=#ddc28a>장비:</color>");
+                        string[] slotLabels = { "셔츠", "바지", "모자", "무기" };
+                        var slots = (PawnEquipment.Slot[])System.Enum.GetValues(typeof(PawnEquipment.Slot));
+                        for (int i = 0; i < slots.Length; i++)
+                        {
+                            var it = eq.GetEquipped(slots[i]);
+                            string val = it != null ? it.nameKr : "(없음)";
+                            string col = it != null ? "#dddddd" : "#888888";
+                            sb.AppendLine($"  <color={col}>{slotLabels[i]}: {val}</color>");
+                        }
+                    }
+
                     healthText.text = sb.ToString();
                 }
                 else
