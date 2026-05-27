@@ -18,6 +18,11 @@ namespace MelonS.GameProto
         public bool BuildModeActive => CurrentMode != Mode.Off;
 
         [SerializeField] private GameObject wallPrefab, floorPrefab, doorPrefab, stovePrefab, bedPrefab;
+        // #159 - BuildAutoQA 가 spriteAsset 접근 필요 (외부 prefab 인스턴스는 SR.sprite 비할당).
+        public Sprite WallSpriteRef => wallSprite;
+        public Sprite BedSpriteRef => bedSprite;
+        public GameObject WallPrefabRef => wallPrefab;
+        public GameObject BedPrefabRef => bedPrefab;
         [SerializeField] private int wallCost = 5, floorCost = 1, doorCost = 3, stoveCost = 10, bedCost = 8;
         [SerializeField] private int wallStoneCost = 5;  // #127 - 석재 5
         // #154 - bed quality 별 cost (wiki: sleeping spot 0 / wood bed 8 / fine 30).

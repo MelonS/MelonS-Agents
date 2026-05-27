@@ -33,40 +33,36 @@ namespace MelonS.GameProto
             // 첫 chop 까지 기다림 → wood pile 생김 → blueprint 도 자재 받음
             Debug.Log("[BuildQA] t=3s: build mode 시작");
 
-            // wall blueprint 직접 spawn (BuildManager.TryPlace 우회 - 자원 0 차감)
             var bm = BuildManager.Instance;
             if (bm == null) { Debug.LogError("[BuildQA] BuildManager null"); yield break; }
-            // wallPrefab + sprite 가져오기
-            var wallSr = Object.FindFirstObjectByType<WallEntity>();
-            Sprite wallSpr = wallSr != null ? wallSr.GetComponent<SpriteRenderer>()?.sprite : null;
-            var prefabAll = Resources.FindObjectsOfTypeAll<GameObject>();
-            GameObject wallPrefab = null;
-            foreach (var p in prefabAll)
-            {
-                if (p != null && p.name == "Wall" && p.GetComponent<WallEntity>() != null)
-                { wallPrefab = p; break; }
-            }
+
+            // #159 - BuildManager 의 prefab/sprite ref 직접 사용 (SceneSetup 이 SetRefs 로 박음).
+            //   Resources.FindObjectsOfTypeAll 은 SR.sprite null 인 prefab 만 반환.
+            GameObject wallPrefab = bm.WallPrefabRef;
+            Sprite wallSpr = bm.WallSpriteRef;
+            GameObject bedPrefab = bm.BedPrefabRef;
+            Sprite bedSpr = bm.BedSpriteRef;
             if (wallPrefab == null || wallSpr == null)
             {
                 Debug.LogError($"[BuildQA] wallPrefab/sprite NULL (prefab={wallPrefab!=null} spr={wallSpr!=null})");
                 yield break;
             }
 
-            // 정착지 근처 빈 cell - (-2, 3)
+            // -- Phase 1: wall blueprint at (-1.5, 3.5) --
             Vector3 bpPos = new Vector3(-1.5f, 3.5f, 0);
-            var bpGo = new GameObject("BuildQA_Blueprint");
+            var bpGo = new GameObject("BuildQA_Blueprint_Wall");
             bpGo.transform.position = bpPos;
             var bp = bpGo.AddComponent<BlueprintEntity>();
             bp.Init(BuildManager.Mode.Wall, wallPrefab, wallSpr, wood: 5, stone: 0, secs: 5f);
-            Debug.Log($"[BuildQA] t=3s: 청사진 spawn at ({bpPos.x},{bpPos.y}), 자재 5목재 필요");
+            Debug.Log($"[BuildQA] t=3s: wall 청사진 spawn at ({bpPos.x},{bpPos.y}), 자재 5목재 필요");
 
-            // 5초 간격 상태 로그
-            for (int t = 5; t <= 45; t += 5)
+            // 5초 간격 상태 로그 (wall 완성까지)
+            bool wallDone = false;
+            for (int t = 5; t <= 30; t += 5)
             {
                 yield return new WaitForSeconds(5f);
                 if (bp == null || bp.gameObject == null)
                 {
-                    // 청사진 사라짐 = 완성 (wall instantiated)
                     var walls = Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None);
                     bool found = false;
                     foreach (var w in walls)
@@ -74,12 +70,51 @@ namespace MelonS.GameProto
                         if (w == null) continue;
                         if (Vector2.Distance(w.transform.position, bpPos) < 0.8f) { found = true; break; }
                     }
-                    Debug.Log($"[BuildQA] t={t}s: 완성! wall@bpPos={found} (total walls={walls.Length})");
+                    Debug.Log($"[BuildQA] t={t}s: wall 완성! wall@bpPos={found} (total walls={walls.Length})");
+                    wallDone = true;
+                    break;
+                }
+                Debug.Log($"[BuildQA] t={t}s: wall collected wood={bp.collectedWood}/{bp.needWood} progress={bp.Progress*100f:F0}% hasMat={bp.HasAllMaterials} reserved={bp.IsReserved}");
+            }
+            if (!wallDone)
+            {
+                Debug.LogWarning($"[BuildQA] wall 청사진 timeout 30s.  final collected={bp.collectedWood}/{bp.needWood} progress={bp.Progress*100f:F0}%");
+            }
+
+            // -- Phase 2: Fine bed blueprint at (-3.5, 3.5) → BedQuality.Fine 검증 --
+            if (bedPrefab == null || bedSpr == null)
+            {
+                Debug.LogWarning($"[BuildQA] bedPrefab/sprite NULL - bed QA skip.  prefab={bedPrefab!=null} spr={bedSpr!=null}");
+                yield break;
+            }
+            Vector3 bedPos = new Vector3(-3.5f, 3.5f, 0);
+            var bedBpGo = new GameObject("BuildQA_Blueprint_BedFine");
+            bedBpGo.transform.position = bedPos;
+            var bedBp = bedBpGo.AddComponent<BlueprintEntity>();
+            // BedFine - wood 30 (BuildManager.bedFineCost), 5s build
+            bedBp.Init(BuildManager.Mode.BedFine, bedPrefab, bedSpr, wood: 30, stone: 0, secs: 5f);
+            Debug.Log($"[BuildQA] Phase2: BedFine 청사진 spawn at ({bedPos.x},{bedPos.y}), 자재 30목재 필요");
+
+            for (int t = 5; t <= 60; t += 5)
+            {
+                yield return new WaitForSeconds(5f);
+                if (bedBp == null || bedBp.gameObject == null)
+                {
+                    // bed 완성 - BedEntity 의 Quality 확인
+                    var beds = Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None);
+                    BedEntity foundBed = null;
+                    foreach (var b in beds)
+                    {
+                        if (b == null) continue;
+                        if (Vector2.Distance(b.transform.position, bedPos) < 0.8f) { foundBed = b; break; }
+                    }
+                    bool qOk = foundBed != null && foundBed.Quality == BedQuality.Fine;
+                    Debug.Log($"[BuildQA] Phase2 t+{t}s: bed 완성! quality={(foundBed!=null?foundBed.QualityKr:"NULL")} expected=고급 침대 → match={qOk}");
                     yield break;
                 }
-                Debug.Log($"[BuildQA] t={t}s: collected wood={bp.collectedWood}/{bp.needWood} progress={bp.Progress*100f:F0}% hasMat={bp.HasAllMaterials} reserved={bp.IsReserved}");
+                Debug.Log($"[BuildQA] Phase2 t+{t}s: bed collected wood={bedBp.collectedWood}/{bedBp.needWood} progress={bedBp.Progress*100f:F0}%");
             }
-            Debug.LogWarning($"[BuildQA] t=45s timeout: 청사진 아직 미완성. final collected={bp.collectedWood}/{bp.needWood} progress={bp.Progress*100f:F0}%");
+            Debug.LogWarning($"[BuildQA] Phase2 bed timeout 60s.  final collected={bedBp.collectedWood}/{bedBp.needWood}");
         }
     }
 }
