@@ -8,6 +8,9 @@ namespace MelonS.GameProto
     /// animals — only attack hostile (BanditEnemy).  Operator can
     /// manually order via Day 24 drafted commands (future).
     /// </summary>
+    /// <summary>#132 - 동물 종류.</summary>
+    public enum AnimalSpecies { Deer, Boar, Chicken, Rabbit }
+
     [RequireComponent(typeof(SpriteRenderer))]
     [RequireComponent(typeof(Rigidbody2D))]
     public class AnimalEntity : MonoBehaviour
@@ -18,6 +21,35 @@ namespace MelonS.GameProto
         [SerializeField] private float wanderMin = 2f;
         [SerializeField] private float wanderMax = 5f;
         [SerializeField] private float wanderRadius = 4f;
+        [SerializeField] private AnimalSpecies species = AnimalSpecies.Deer;
+
+        public AnimalSpecies Species => species;
+        public string SpeciesKr => species switch {
+            AnimalSpecies.Deer    => "사슴",
+            AnimalSpecies.Boar    => "멧돼지",
+            AnimalSpecies.Chicken => "닭",
+            AnimalSpecies.Rabbit  => "토끼",
+            _ => "동물",
+        };
+
+        // 종류별 stats (HP, food drop, speed, tame rate, scale, color tint)
+        public static readonly (int hp, int food, float spd, float tame, float scale, Color tint)[] SpeciesStats = {
+            (12, 5, 0.6f, 0.30f, 1.0f, new Color(1f, 1f, 1f, 1f)),               // Deer
+            (25, 8, 0.5f, 0.15f, 1.1f, new Color(0.55f, 0.45f, 0.40f, 1f)),     // Boar 갈회색
+            (4,  2, 0.4f, 0.60f, 0.7f, new Color(1.0f, 0.95f, 0.85f, 1f)),      // Chicken 흰
+            (3,  1, 0.9f, 0.50f, 0.6f, new Color(0.80f, 0.75f, 0.72f, 1f)),     // Rabbit 옅은 회색
+        };
+
+        public void SetSpecies(AnimalSpecies s)
+        {
+            species = s;
+            var (hp, food, spd, tame, scale, tint) = SpeciesStats[(int)s];
+            maxHp = hp; foodDrop = food; wanderSpeed = spd; tameSuccessRate = tame;
+            transform.localScale = new Vector3(scale, scale, 1);
+            Hp = hp;
+            var sR = GetComponent<SpriteRenderer>();
+            if (sR != null) sR.color = tint;
+        }
 
         public int Hp { get; private set; }
         public bool IsDead => Hp <= 0;

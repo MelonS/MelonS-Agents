@@ -782,7 +782,9 @@ namespace MelonS.GameProto.Tests
             {
                 var dr = desc.Invoke(panel, new object[] { deer.gameObject });
                 string dt = (string)dr.GetType().GetField("Item1").GetValue(dr);
-                Assert(dt == "사슴", $"deer describe title='{dt}'");
+                // #132 - 4종 동물 중 아무거나 OK
+                bool isAnimal = dt == "사슴" || dt == "멧돼지" || dt == "닭" || dt == "토끼";
+                Assert(isAnimal, $"animal describe title='{dt}' (4종 중 하나 expected)");
             }
         }
 

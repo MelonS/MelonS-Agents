@@ -184,7 +184,8 @@ namespace MelonS.GameProto
             var bandit = go.GetComponent<BanditEnemy>();
             if (bandit != null) return ("강도 [위협]", $"HP {bandit.Hp}/20, contact dmg\n드래프트 후 우클릭 = 공격");
             var animal = go.GetComponent<AnimalEntity>();
-            if (animal != null) return ("사슴", $"길들이기 30% (food 1)\n사냥: 드래프트 후 우클릭 → food +5");
+            if (animal != null) return (animal.SpeciesKr,
+                $"HP {animal.Hp}\n사냥 시 고기 drop\n길들이기 가능 (식량 1 소모)\n{(animal.IsTamed ? "✓ 길들여짐" : "야생")}");
             var trader = go.GetComponent<TraderEntity>();
             if (trader != null) return ("상인", $"우클릭 = wood 5 → food 8 거래\n60s 머무름");
             return ("오브젝트", go.name);

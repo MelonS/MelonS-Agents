@@ -39,9 +39,22 @@ namespace MelonS.GameProto.EditorTools
                 new Vector2( 22f, 18f),  new Vector2(  5f, 14f),  new Vector2(-19f, 9f),
                 new Vector2( 10f, -8f),  new Vector2(-7f, -22f),
             };
-            foreach (var dpos in deerPositions)
+            // #132 - 4종 동물 분포 (deer 6, boar 3, chicken 3, rabbit 2 = 14)
+            var speciesPlan = new AnimalSpecies[] {
+                AnimalSpecies.Deer, AnimalSpecies.Deer, AnimalSpecies.Deer,
+                AnimalSpecies.Deer, AnimalSpecies.Deer, AnimalSpecies.Deer,
+                AnimalSpecies.Boar, AnimalSpecies.Boar, AnimalSpecies.Boar,
+                AnimalSpecies.Chicken, AnimalSpecies.Chicken, AnimalSpecies.Chicken,
+                AnimalSpecies.Rabbit, AnimalSpecies.Rabbit,
+            };
+            for (int i = 0; i < deerPositions.Length; i++)
             {
-                GameObject dGo = new GameObject($"Deer_{dpos.x}_{dpos.y}");
+                var dpos = deerPositions[i];
+                AnimalSpecies sp = speciesPlan[i % speciesPlan.Length];
+                string kr = sp switch {
+                    AnimalSpecies.Deer => "Deer", AnimalSpecies.Boar => "Boar",
+                    AnimalSpecies.Chicken => "Chicken", _ => "Rabbit" };
+                GameObject dGo = new GameObject($"{kr}_{dpos.x}_{dpos.y}");
                 dGo.transform.position = new Vector3(dpos.x + 0.5f, dpos.y + 0.5f, 0);
                 var dsr2 = dGo.AddComponent<SpriteRenderer>();
                 dsr2.sprite = deerSpr;
@@ -49,7 +62,8 @@ namespace MelonS.GameProto.EditorTools
                 dGo.AddComponent<Rigidbody2D>();
                 var dcol = dGo.AddComponent<CircleCollider2D>();
                 dcol.radius = 0.4f;
-                dGo.AddComponent<AnimalEntity>();
+                var ae = dGo.AddComponent<AnimalEntity>();
+                ae.SetSpecies(sp);
             }
         }
     }
