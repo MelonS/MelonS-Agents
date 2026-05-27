@@ -10,7 +10,7 @@
 찾고 계속해서 퀄리티 업글을 시켜. 기능추가는 보수적으로 게임이 되는게 먼저임."**
 
 ### 한 줄
-**4 운영자 불만 해결 + integration 5→22 시나리오 + 진짜 movement 버그 fix + SceneSetup 1057→541L (-48.8%) + 31 commit.**
+**4 운영자 불만 해결 + integration 5→22 시나리오 + 진짜 movement 버그 fix + SceneSetup 1057→310L (-70.7%) + 35 commit.**
 
 ### 운영자 불만 → 대응
 
@@ -70,8 +70,12 @@
 - **R10g** (research): `779e5d8` Research strip + popup picker → `SceneSetup.Game.Research.cs` (91L extract)
 - **R10h** (pawn info): `2ea7bf5` PawnInfoPanel + health text → `SceneSetup.Game.PawnInfo.cs` (78L extract)
 - **R10i** (skill panel): `60a3107` SkillPanel (채집/벌목/건축/전투) → `SceneSetup.Game.SkillPanel.cs` (42L extract)
+- **R10j** (top bar): `7c9890c` TopBar (clock+speed+resources) → `SceneSetup.Game.TopBar.cs` (143L extract, 최대)
+- **R10k** (audio): `9aeb36e` AudioBank wiring → `SceneSetup.Game.Audio.cs` (25L extract)
+- **R10l** (trees): `16014f0` Tree spawn (20 deterministic) → `SceneSetup.Game.Trees.cs` (33L extract)
+- **R10m** (berry): `cfa8546` BerryBush spawn → `SceneSetup.Game.BerryBush.cs` (30L extract)
 
-**SceneSetup.cs 1057L → 541L (-516L, -48.8%)**.  10 partial file.  매 sub-commit 통합 22 + isolated 55 풀 cycle PASS.
+**SceneSetup.cs 1057L → 310L (-747L, -70.7%)**.  14 partial file.  매 sub-commit 통합 22 + isolated 55 풀 cycle PASS.
 
 ### I22 SaveLoad 통합 검증
 
