@@ -115,10 +115,7 @@ namespace MelonS.GameProto
 
             foreach (var b in bandits)
             {
-                if (b == null) continue;
-                // BanditEnemy.IsDead 검사 - reflection 가벼움
-                bool dead = b.GetType().GetProperty("IsDead")?.GetValue(b) as bool? ?? false;
-                if (dead) continue;
+                if (b == null || b.IsDead) continue;
                 foreach (var p in pawns)
                 {
                     if (p == null || p.IsDead) continue;
