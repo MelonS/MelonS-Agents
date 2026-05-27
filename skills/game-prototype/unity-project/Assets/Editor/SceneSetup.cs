@@ -154,41 +154,8 @@ namespace MelonS.GameProto.EditorTools
             GameObject treePrefab = prefabs.treePrefab;
             Sprite treeSprite = prefabs.treeSprite;
 
-            // Day 41: tree 위치 — 40x40 맵에 20그루 (분포 균등 + 호수·바위 회피).
-            //  결정론적 (seed=24680).
-            var treePositionsList = new System.Collections.Generic.List<Vector2>();
-            {
-                System.Random tr = new System.Random(24680);
-                int tries = 0;
-                while (treePositionsList.Count < 20 && tries < 400)
-                {
-                    tries++;
-                    int tx = tr.Next(-(MAP_HALF-2), MAP_HALF-1);
-                    int ty = tr.Next(-(MAP_HALF-2), MAP_HALF-1);
-                    Vector2 tp = new Vector2(tx, ty);
-                    bool skip = false;
-                    // pawn spawn (-2,0)(0,0)(2,0) 근처 회피
-                    if (Mathf.Abs(tx) < 4 && Mathf.Abs(ty) < 2) continue;
-                    for (int li = 0; li < lakeCenters.Length; li++)
-                        if ((tp - lakeCenters[li]).magnitude < lakeRadii[li] + 1.5f) { skip = true; break; }
-                    if (skip) continue;
-                    foreach (var rc in rockClusterCenters)
-                        if ((tp - rc).magnitude < rockRadius + 0.8f) { skip = true; break; }
-                    if (skip) continue;
-                    // 다른 tree 와 최소 거리 2.0
-                    foreach (var ex in treePositionsList)
-                        if (Vector2.Distance(ex, tp) < 2.0f) { skip = true; break; }
-                    if (skip) continue;
-                    treePositionsList.Add(tp);
-                }
-            }
-            Vector2[] treePositions = treePositionsList.ToArray();
-            foreach (var pos in treePositions)
-            {
-                GameObject t = (GameObject)PrefabUtility.InstantiatePrefab(treePrefab);
-                t.name = $"Tree_{pos.x}_{pos.y}";
-                t.transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, 0);  // tile center 정렬
-            }
+            // R10l: Tree spawn (20 tree) extract -> SceneSetup.Game.Trees.cs
+            SpawnTrees(treePrefab, MAP_HALF, lakeCenters, lakeRadii, rockClusterCenters, rockRadius);
 
             // Day 12: RegrowthScheduler — drives bush regen + tree-to-sapling
             // chains.  Created AFTER treePrefab exists so we can wire it.
