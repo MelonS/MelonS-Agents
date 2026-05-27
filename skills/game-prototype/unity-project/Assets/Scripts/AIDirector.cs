@@ -123,17 +123,24 @@ namespace MelonS.GameProto
 
         private void SpawnRaid()
         {
-            // Lesson #8 firewall: wrap raid spawn in try/catch so a single
-            // raid failure (missing sprite asset, scene-rebuild race, etc.)
-            // never tears down the whole simulation.  qa.py crash at Day 3
-            // 06:00 (2026-05-27) traced back to silent NRE in this path
-            // when Resources/pawn_colonist was absent AND no PawnEntity
-            // existed to fall back to.
+            // #134 - threat tier 에 따른 raid 규모 (이전 단일 강도, 이제 wave).
+            //   tier 0: 1명 (mild)
+            //   tier 1: 2명
+            //   tier 2: 3명
+            //   tier 3: 5명 (critical)
+            int tier = CurrentThreatTier;
+            int banditCount = tier switch { 0 => 1, 1 => 2, 2 => 3, _ => 5 };
+            for (int i = 0; i < banditCount; i++) SpawnSingleBandit(i);
+        }
+
+        private void SpawnSingleBandit(int waveIndex)
+        {
             try
             {
-                // Pick a random side of the square map edge (radius raidSpawnRadius)
-                // and a random point along that side.
-                int side = UnityEngine.Random.Range(0, 4);
+                // 같은 side 에서 약간 흩어진 위치 (전체 wave 가 함께 진입)
+                int side = (waveIndex == 0)
+                    ? UnityEngine.Random.Range(0, 4)
+                    : (waveIndex % 4);
                 float along = UnityEngine.Random.Range(-raidSpawnRadius, raidSpawnRadius);
                 Vector3 pos;
                 switch (side)
@@ -143,8 +150,11 @@ namespace MelonS.GameProto
                     case 2: pos = new Vector3(along,  raidSpawnRadius, 0); break;
                     default: pos = new Vector3(along, -raidSpawnRadius, 0); break;
                 }
+                // 같은 wave 끼리 살짝 spread
+                pos.x += UnityEngine.Random.Range(-1.5f, 1.5f);
+                pos.y += UnityEngine.Random.Range(-1.5f, 1.5f);
 
-                GameObject go = new GameObject("Bandit_Raid");
+                GameObject go = new GameObject($"Bandit_Raid_{waveIndex}");
                 go.transform.position = pos;
                 SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
                 // Reuse pawn sprite tinted red — sprite is already imported by

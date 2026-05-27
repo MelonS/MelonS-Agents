@@ -189,12 +189,18 @@ namespace MelonS.GameProto
             var stove = hit.GetComponent<StoveEntity>();
             var bench = hit.GetComponent<ResearchBench>();
             var vein = hit.GetComponent<StoneVeinEntity>();  // #119
+            var bandit = hit.GetComponent<BanditEnemy>();    // #135
             if (tree != null)
             {
                 list.Add(("⛏ 벌목 우선", () => {
                     var ch = pawn.GetComponent<PawnChopper>();
                     if (ch != null) { ch.SetTreeTarget(tree); pawn.ManualMoveUntil = Time.time + 8f; }
                 }));
+            }
+            if (bandit != null && bandit.IsDowned)
+            {
+                var bcap = bandit;
+                list.Add(("🔒 포섭 시도 (50%)", () => bcap.TryCapture()));
             }
             if (vein != null && !vein.IsDestroyed)
             {

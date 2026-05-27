@@ -26,6 +26,49 @@ namespace MelonS.GameProto
 
         public int Hp { get; private set; }
         public bool IsDead => Hp <= 0;
+        // #135 - downed (hp 1/4 이하) 면 capture 시도 가능.  진짜 죽이는 대신.
+        public bool IsDowned => Hp > 0 && Hp <= maxHp / 4;
+
+        /// <summary>운영자 우클릭 capture - 50% 확률 colonist 합류.</summary>
+        public bool TryCapture()
+        {
+            if (!IsDowned) return false;  // downed 상태만 capture
+            if (Random.value < 0.5f)
+            {
+                // 성공 - 가까운 PawnEntity sprite + name 복제 (간단 spawn)
+                var existingPawn = Object.FindFirstObjectByType<PawnEntity>();
+                if (existingPawn != null)
+                {
+                    var go = new GameObject($"포로_{System.DateTime.Now.Ticks % 1000}");
+                    go.transform.position = transform.position;
+                    var sr2 = go.AddComponent<SpriteRenderer>();
+                    var srcSr = existingPawn.GetComponent<SpriteRenderer>();
+                    if (srcSr != null) { sr2.sprite = srcSr.sprite; sr2.sortingOrder = 10; }
+                    go.AddComponent<BoxCollider2D>().size = new Vector2(2f, 2f);
+                    go.AddComponent<PawnEntity>();
+                    go.AddComponent<PawnMovement>();
+                    go.AddComponent<PawnNeeds>();
+                    go.AddComponent<PawnChopper>();
+                    go.AddComponent<PawnGatherer>();
+                    go.AddComponent<PawnHunter>();
+                    go.AddComponent<PawnCook>();
+                    go.AddComponent<PawnHauler>();
+                    go.AddComponent<PawnSkills>();
+                    go.AddComponent<PawnHealth>();
+                    go.AddComponent<PawnWorkSettings>();
+                    go.AddComponent<PawnUtilityAI>();
+                    Debug.Log($"[Capture] 강도 포섭 성공!");
+                }
+                Destroy(gameObject);
+                return true;
+            }
+            else
+            {
+                Debug.Log($"[Capture] 강도 포섭 실패, 도망");
+                Destroy(gameObject);  // 실패 = 도망
+                return false;
+            }
+        }
 
         private SpriteRenderer sr;
         private Color baseColor = Color.white;
