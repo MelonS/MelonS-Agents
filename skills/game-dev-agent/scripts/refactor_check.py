@@ -89,14 +89,19 @@ def step_qa(delay: float = 3.0) -> int:
 
 def step_real_qa(delay: float = 30.0) -> int:
     """운영자 fb (#140) - graphics 모드 30s 시뮬 + 자원 변화 자동 검증.
-    ResourceMonitorLogger 가 5s 간격으로 wood/food/stone 을 Player.log dump.
-    monotonic 증가 또는 nontrivial 변화 검증. 30s 안에 wood 변화 없으면 FAIL.
+    운영자 fb 두 번째 (#137 root cause 3): verify-game-only build 만 검증하면
+    MainMenu->Game 전이 등 실제 운영자 path 누락.  최신 day-N 빌드 우선 사용.
     """
-    print(f"[refactor] (4.5/7) REAL QA - graphics 모드 {delay}s 실제 시뮬 ...")
+    # 최신 day-N build 찾기 (운영자가 실제로 받는 빌드)
+    builds = sorted((REPO / "skills" / "game-prototype" / "builds").glob("day-*-2026-*"))
+    target = builds[-1] / "PawnSim.exe" if builds else BUILD_EXE
+    if not target.exists():
+        target = BUILD_EXE
+    print(f"[refactor] (4.5/7) REAL QA - {target.parent.name} {delay}s 시뮬 ...")
     REAL_QA_SHOT = Path("G:/ai/_refactor_realqa.png")
     sys.path.insert(0, str(REPO / "skills" / "game-dev-agent" / "scripts"))
     from modules import qa
-    ok, msg = qa.launch_and_capture(BUILD_EXE, REAL_QA_SHOT, delay_sec=delay)
+    ok, msg = qa.launch_and_capture(target, REAL_QA_SHOT, delay_sec=delay)
     if not ok:
         print(f"  FAIL launch - {msg}")
         return 13
