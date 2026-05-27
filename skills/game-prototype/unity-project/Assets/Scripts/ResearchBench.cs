@@ -14,7 +14,7 @@ namespace MelonS.GameProto
         public bool HasResearcherNearby()
         {
             // Tally any PawnEntity within radius.  Cheap O(n_pawns) check.
-            PawnEntity[] pawns = GameObject.FindObjectsOfType<PawnEntity>();
+            PawnEntity[] pawns = GameObject.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
             if (pawns == null || pawns.Length == 0) return false;
             Vector2 me = transform.position;
             foreach (var p in pawns)

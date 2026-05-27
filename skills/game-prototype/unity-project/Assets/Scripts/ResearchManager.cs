@@ -72,7 +72,7 @@ namespace MelonS.GameProto
         {
             if (activeTech == null || activeTech.completed) return;
             // Count benches with at least one pawn within research-radius
-            ResearchBench[] benches = GameObject.FindObjectsOfType<ResearchBench>();
+            ResearchBench[] benches = GameObject.FindObjectsByType<ResearchBench>(FindObjectsSortMode.None);
             if (benches == null || benches.Length == 0) return;
             int activeBenches = 0;
             foreach (var b in benches)

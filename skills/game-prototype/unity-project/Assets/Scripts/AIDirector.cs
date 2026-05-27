@@ -156,7 +156,7 @@ namespace MelonS.GameProto
                     // Fallback: any PawnEntity in scene shares a sprite asset we
                     // can mirror at runtime.  Spawn-time copy from an existing
                     // pawn's renderer keeps this build self-contained.
-                    var anyPawn = GameObject.FindObjectOfType<PawnEntity>();
+                    var anyPawn = GameObject.FindFirstObjectByType<PawnEntity>();
                     if (anyPawn != null)
                     {
                         var pawnSr = anyPawn.GetComponent<SpriteRenderer>();

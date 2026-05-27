@@ -75,7 +75,7 @@ namespace MelonS.GameProto
 
         private PawnEntity FindNearestPawn()
         {
-            PawnEntity[] all = GameObject.FindObjectsOfType<PawnEntity>();
+            PawnEntity[] all = GameObject.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
             if (all == null || all.Length == 0) return null;
             PawnEntity best = null;
             float bestSq = detectionRadius * detectionRadius;

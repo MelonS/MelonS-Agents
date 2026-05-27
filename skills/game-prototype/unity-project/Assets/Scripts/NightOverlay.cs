@@ -61,7 +61,7 @@ namespace MelonS.GameProto
             cam = Camera.main;
             if (cam == null)
             {
-                var camObj = GameObject.FindObjectOfType<Camera>();
+                var camObj = GameObject.FindFirstObjectByType<Camera>();
                 if (camObj != null) cam = camObj;
             }
             sr = GetComponent<SpriteRenderer>();

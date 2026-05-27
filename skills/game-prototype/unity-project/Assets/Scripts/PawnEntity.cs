@@ -121,7 +121,7 @@ namespace MelonS.GameProto
 
         private BanditEnemy FindNearestBandit()
         {
-            BanditEnemy[] bandits = GameObject.FindObjectsOfType<BanditEnemy>();
+            BanditEnemy[] bandits = GameObject.FindObjectsByType<BanditEnemy>(FindObjectsSortMode.None);
             if (bandits == null || bandits.Length == 0) return null;
             BanditEnemy nearest = null;
             float bestSq = float.MaxValue;

@@ -199,12 +199,11 @@ namespace MelonS.GameProto
                 IsDead = true;
                 IsDowned = true;
                 Debug.Log($"[PawnHealth] {gameObject.name} 사망 — 머리={head.hp} 몸통={torso.hp}");
-                // Disable AI components on death
+                // Disable AI components on death (SpriteRenderer 는 MonoBehaviour 아니라 자동 제외됨)
                 foreach (var mb in GetComponents<MonoBehaviour>())
                 {
                     if (mb == this) continue;
                     if (mb is PawnFloatingBars) continue;
-                    if (mb is SpriteRenderer) continue;
                     mb.enabled = false;
                 }
                 return;
