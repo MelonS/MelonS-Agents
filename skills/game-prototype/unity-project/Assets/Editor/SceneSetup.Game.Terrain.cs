@@ -60,8 +60,10 @@ namespace MelonS.GameProto.EditorTools
             layout.waterTile = LoadOrCreateTile("Assets/Sprites/tile_water.png", "Assets/Tiles/Water.asset");
             layout.rockTile  = LoadOrCreateTile("Assets/Sprites/tile_rock.png",  "Assets/Tiles/Rock.asset");
 
-            // Procedural 40x40 결정론적 (seed=12345)
+            // Procedural 결정론적 (seed=12345) + #109 cell 당 random rotation/flip 으로
+            //  같은 타일이 반복돼도 시각 변화 (operator: "타일이미지가 너무 구림" + "autotile" 피드백)
             System.Random rng = new System.Random(12345);
+            System.Random rotRng = new System.Random(67890);
             int half = TerrainLayout.MAP_HALF;
             for (int x = -half; x < half; x++)
             {
@@ -75,20 +77,22 @@ namespace MelonS.GameProto.EditorTools
                         if ((p - rc).magnitude < layout.rockRadius + (float)(rng.NextDouble()-0.5)*1.2f)
                         { isRock = true; break; }
                     }
-                    if (isRock) { layout.tilemap.SetTile(new Vector3Int(x, y, 0), layout.rockTile); continue; }
+                    Vector3Int cell = new Vector3Int(x, y, 0);
+                    if (isRock) { layout.tilemap.SetTile(cell, layout.rockTile); ApplyRandomTileTransform(layout.tilemap, cell, rotRng); continue; }
                     bool isLake = false;
                     for (int li = 0; li < layout.lakeCenters.Length; li++)
                     {
                         if ((p - layout.lakeCenters[li]).magnitude < layout.lakeRadii[li] + (float)(rng.NextDouble()-0.5)*0.7f)
                         { isLake = true; break; }
                     }
-                    if (isLake) { layout.tilemap.SetTile(new Vector3Int(x, y, 0), layout.waterTile); continue; }
+                    if (isLake) { layout.tilemap.SetTile(cell, layout.waterTile); ApplyRandomTileTransform(layout.tilemap, cell, rotRng); continue; }
                     foreach (var dc in layout.dirtCenters)
                     {
                         if ((p - dc).magnitude < layout.dirtRadius + (float)(rng.NextDouble()-0.5)*0.5f)
                         { chosen = layout.dirtTile; break; }
                     }
-                    layout.tilemap.SetTile(new Vector3Int(x, y, 0), chosen);
+                    layout.tilemap.SetTile(cell, chosen);
+                    ApplyRandomTileTransform(layout.tilemap, cell, rotRng);
                 }
             }
 
@@ -98,6 +102,17 @@ namespace MelonS.GameProto.EditorTools
             staticRef.SetRefs(layout.tilemap, layout.waterTile, layout.rockTile);
 
             return layout;
+        }
+
+        // #109: 같은 타일 반복돼도 시각 변화 - 4 가지 rotation/flip 중 1 랜덤 선택.
+        //  TileFlags.LockTransform 으로 SetTransformMatrix 가 영구 유지.
+        private static void ApplyRandomTileTransform(Tilemap tm, Vector3Int cell, System.Random r)
+        {
+            tm.SetTileFlags(cell, TileFlags.None);  // LockColor 해제 같은 효과
+            int variant = r.Next(0, 4);  // 0=identity, 1=90, 2=180, 3=270 deg
+            float angle = variant * 90f;
+            Matrix4x4 m = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(0, 0, angle), Vector3.one);
+            tm.SetTransformMatrix(cell, m);
         }
 
         /// <summary>R8 + #108: 54 꽃 procedural 배치 (60x60 맵 비례) - lake/rock/dirt/spawn 회피.</summary>
