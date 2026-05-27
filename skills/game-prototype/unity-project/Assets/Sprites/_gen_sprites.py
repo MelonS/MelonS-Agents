@@ -564,6 +564,99 @@ def gen_wood_pile(seed: int = 13):
     return im
 
 
+def gen_stone_vein(seed: int = 17):
+    """24x24 광맥 - 회색 바위 덩어리 + 광물 줄무늬."""
+    random.seed(seed)
+    W = H = 24
+    im = new_canvas(W, H)
+    dr = ImageDraw.Draw(im)
+
+    rock_dark = (52, 50, 55, 255)
+    rock_mid  = (88, 84, 90, 255)
+    rock_lit  = (140, 134, 138, 255)
+    rock_hi   = (180, 175, 178, 255)
+    ore       = (165, 145, 80, 255)   # 광물 줄무늬
+
+    # 큰 둥근 바위 (24x24 거의 채움)
+    cx, cy = 12, 12
+    for y in range(W):
+        for x in range(W):
+            dx, dy = x - cx, y - cy
+            d = (dx*dx + dy*dy) ** 0.5
+            r_max = 11.0 + random.uniform(-0.6, 0.3)
+            if d > r_max:
+                continue
+            if d > r_max - 0.8:
+                color = rock_dark
+            elif d > r_max - 2.5:
+                color = rock_mid if random.random() < 0.7 else rock_dark
+            elif d > r_max - 5.0:
+                color = rock_lit if random.random() < 0.55 else rock_mid
+            else:
+                color = rock_hi if random.random() < 0.3 else rock_lit
+            put_px(im, x, y, color)
+
+    # 갈라진 균열 (선)
+    for x in range(7, 17):
+        put_px(im, x, 10, rock_dark)
+    for y in range(9, 14):
+        put_px(im, 14, y, rock_dark)
+
+    # 광물 줄무늬 (3-4개 점)
+    for _ in range(5):
+        ox = random.randint(5, 18)
+        oy = random.randint(5, 18)
+        put_px(im, ox, oy, ore)
+        if random.random() < 0.5:
+            put_px(im, ox + 1, oy, ore)
+
+    return im
+
+
+def gen_stone_chunk(seed: int = 19):
+    """16x16 돌덩이 (drop item)."""
+    random.seed(seed)
+    W = H = 16
+    im = new_canvas(W, H)
+
+    rock_dark = (50, 48, 52, 255)
+    rock_mid  = (95, 90, 98, 255)
+    rock_lit  = (150, 145, 150, 255)
+    shadow    = (0, 0, 0, 100)
+
+    # 그림자
+    for x in range(2, 14):
+        put_px(im, x, 13, shadow)
+
+    # 큰 돌 (왼쪽 위)
+    dr = ImageDraw.Draw(im)
+    dr.ellipse([1, 4, 9, 11], fill=rock_mid)
+    # highlight
+    put_px(im, 3, 5, rock_lit)
+    put_px(im, 4, 5, rock_lit)
+    put_px(im, 3, 6, rock_lit)
+    # 어두운 가장자리
+    for y in range(4, 12):
+        put_px(im, 1, y, rock_dark)
+    for x in range(1, 10):
+        put_px(im, x, 11, rock_dark)
+
+    # 작은 돌 (오른쪽 아래)
+    dr.ellipse([8, 7, 14, 12], fill=rock_mid)
+    put_px(im, 10, 8, rock_lit)
+    put_px(im, 11, 8, rock_lit)
+    for y in range(7, 13):
+        put_px(im, 14, y, rock_dark)
+    for x in range(8, 15):
+        put_px(im, x, 12, rock_dark)
+
+    # 작은 부스러기
+    put_px(im, 5, 12, rock_mid)
+    put_px(im, 12, 5, rock_mid)
+
+    return im
+
+
 def main():
     targets = [
         ("tree.png",          gen_tree),
@@ -572,6 +665,8 @@ def main():
         ("deer.png",          gen_deer),
         ("trader.png",        gen_trader),
         ("wood_pile.png",     gen_wood_pile),
+        ("stone_vein.png",    gen_stone_vein),
+        ("stone_chunk.png",   gen_stone_chunk),
     ]
     for name, fn in targets:
         out = HERE / name

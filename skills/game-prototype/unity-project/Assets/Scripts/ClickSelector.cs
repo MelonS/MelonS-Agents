@@ -182,11 +182,19 @@ namespace MelonS.GameProto
             var trader = hit.GetComponent<TraderEntity>();
             var stove = hit.GetComponent<StoveEntity>();
             var bench = hit.GetComponent<ResearchBench>();
+            var vein = hit.GetComponent<StoneVeinEntity>();  // #119
             if (tree != null)
             {
                 list.Add(("⛏ 벌목 우선", () => {
                     var ch = pawn.GetComponent<PawnChopper>();
                     if (ch != null) { ch.SetTreeTarget(tree); pawn.ManualMoveUntil = Time.time + 8f; }
+                }));
+            }
+            if (vein != null && !vein.IsDestroyed)
+            {
+                list.Add(("⛏ 채광 우선", () => {
+                    var m = pawn.GetComponent<PawnMiner>();
+                    if (m != null) { m.SetVeinTarget(vein); pawn.ManualMoveUntil = Time.time + 8f; }
                 }));
             }
             if (bush != null && !bush.IsDepleted)

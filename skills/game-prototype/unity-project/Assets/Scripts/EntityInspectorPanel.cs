@@ -112,6 +112,12 @@ namespace MelonS.GameProto
             var pile = go.GetComponent<WoodPileEntity>();
             if (pile != null) return ("통나무 더미",
                 $"목재 {pile.Wood}개\n예약: {(pile.IsReserved ? "운반중" : "대기")}\n2분 후 사라짐");
+            var vein = go.GetComponent<StoneVeinEntity>();
+            if (vein != null) return ("광맥 (석재)",
+                $"HP 200, 채광 시 돌 1-3개\n선택 후 우클릭 = 채광 우선");
+            var chunk = go.GetComponent<StoneChunkEntity>();
+            if (chunk != null) return ("돌덩이",
+                $"석재 {chunk.Stone}개\n예약: {(chunk.IsReserved ? "운반중" : "대기")}\n3분 후 사라짐");
             var tree = go.GetComponent<TreeEntity>();
             if (tree != null) return ("나무", $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\n선택 후 우클릭 = 벌목 → 목재 +5\nHP 100, 25 dmg/sec");
             var bush = go.GetComponent<BerryBushEntity>();

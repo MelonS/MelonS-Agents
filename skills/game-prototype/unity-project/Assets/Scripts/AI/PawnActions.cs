@@ -207,6 +207,76 @@ namespace MelonS.GameProto.AI
         }
     }
 
+    public class MineStoneAction : IPawnAction
+    {
+        public string DisplayName => "채광";
+        public WorkKind Kind => WorkKind.Chop;  // 1차로 Chop 슬롯 (#120 에서 Mining 별도 가능)
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.miner == null) return false;
+            StoneVeinEntity vein = FindNearestVein(ctx);
+            if (vein == null) return false;
+            ctx.miner.SetVeinTarget(vein);
+            return true;
+        }
+        private static StoneVeinEntity FindNearestVein(PawnContext ctx)
+        {
+            var arr = Object.FindObjectsByType<StoneVeinEntity>(FindObjectsSortMode.None);
+            // 다른 miner 가 이미 채광 중인 vein skip
+            var others = Object.FindObjectsByType<PawnMiner>(FindObjectsSortMode.None);
+            var claimed = new System.Collections.Generic.HashSet<StoneVeinEntity>();
+            foreach (var m in others)
+            {
+                if (m == null || m == ctx.miner) continue;
+                if (m.Target != null) claimed.Add(m.Target);
+            }
+            StoneVeinEntity best = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = ctx.transform.position;
+            foreach (var v in arr)
+            {
+                if (v == null || v.IsDestroyed) continue;
+                if (claimed.Contains(v)) continue;
+                Vector3 vp = v.transform.position;
+                if (Mathf.Abs(vp.x) > 28.5f || Mathf.Abs(vp.y) > 28.5f) continue;
+                float sq = ((Vector2)vp - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = v; }
+            }
+            return best;
+        }
+    }
+
+    public class HaulStoneAction : IPawnAction
+    {
+        public string DisplayName => "돌 운반";
+        public WorkKind Kind => WorkKind.Chop;
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.hauler == null) return false;
+            StoneChunkEntity chunk = FindNearestChunk(ctx);
+            if (chunk == null) return false;
+            ctx.hauler.SetStoneTarget(chunk);
+            return true;
+        }
+        private static StoneChunkEntity FindNearestChunk(PawnContext ctx)
+        {
+            var arr = Object.FindObjectsByType<StoneChunkEntity>(FindObjectsSortMode.None);
+            StoneChunkEntity best = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = ctx.transform.position;
+            foreach (var c in arr)
+            {
+                if (c == null) continue;
+                if (c.IsReserved && c.ReservedBy != ctx.hauler.gameObject) continue;
+                Vector3 cp = c.transform.position;
+                if (Mathf.Abs(cp.x) > 28.5f || Mathf.Abs(cp.y) > 28.5f) continue;
+                float sq = ((Vector2)cp - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = c; }
+            }
+            return best;
+        }
+    }
+
     public class HaulWoodAction : IPawnAction
     {
         public string DisplayName => "운반";

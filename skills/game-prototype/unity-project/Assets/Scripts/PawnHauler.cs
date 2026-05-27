@@ -18,11 +18,13 @@ namespace MelonS.GameProto
         [SerializeField] private float giveUpAfterSec = 8f;
 
         private WoodPileEntity targetPile;
+        private StoneChunkEntity targetStone;  // #119
         private PawnMovement movement;
         private float taskStartTime = -10f;
 
-        public bool HasTask => targetPile != null;
+        public bool HasTask => targetPile != null || targetStone != null;
         public WoodPileEntity Target => targetPile;
+        public StoneChunkEntity TargetStone => targetStone;
 
         private void Awake()
         {
@@ -31,10 +33,7 @@ namespace MelonS.GameProto
 
         public void SetPileTarget(WoodPileEntity pile)
         {
-            // 이전 target reservation 해제
-            if (targetPile != null && targetPile.ReservedBy == gameObject)
-                targetPile.ReservedBy = null;
-
+            ClearTask();
             targetPile = pile;
             taskStartTime = Time.time;
             if (pile != null)
@@ -44,45 +43,75 @@ namespace MelonS.GameProto
             }
         }
 
+        public void SetStoneTarget(StoneChunkEntity stone)  // #119
+        {
+            ClearTask();
+            targetStone = stone;
+            taskStartTime = Time.time;
+            if (stone != null)
+            {
+                stone.ReservedBy = gameObject;
+                movement.SetTarget(stone.transform.position);
+            }
+        }
+
         public void ClearTask()
         {
             if (targetPile != null && targetPile.ReservedBy == gameObject)
                 targetPile.ReservedBy = null;
+            if (targetStone != null && targetStone.ReservedBy == gameObject)
+                targetStone.ReservedBy = null;
             targetPile = null;
+            targetStone = null;
             movement.ClearTarget();
         }
 
         private void Update()
         {
-            if (targetPile == null) return;
-            // pile 사라졌으면 task 종료
-            if (targetPile.gameObject == null)
+            // wood pile 우선
+            if (targetPile != null)
             {
-                targetPile = null;
-                return;
-            }
-            float dist = Vector2.Distance(transform.position, targetPile.transform.position);
-            // 도달 불가 시 포기
-            if (Time.time - taskStartTime > giveUpAfterSec && dist > pickupRange)
-            {
-                Debug.Log($"[Hauler] {name} give up pile (dist={dist:F2})");
-                ClearTask();
-                return;
-            }
-            if (dist <= pickupRange)
-            {
-                movement.ClearTarget();
-                bool ok = targetPile.Pickup();
-                if (ok)
+                if (targetPile.gameObject == null) { targetPile = null; return; }
+                float dist = Vector2.Distance(transform.position, targetPile.transform.position);
+                if (Time.time - taskStartTime > giveUpAfterSec && dist > pickupRange)
                 {
-                    Debug.Log($"[Hauler] {name} picked up wood pile (+{targetPile.Wood})");
+                    Debug.Log($"[Hauler] {name} give up pile (dist={dist:F2})");
+                    ClearTask();
+                    return;
                 }
-                targetPile = null;  // pickup 시 destroy 됨
+                if (dist <= pickupRange)
+                {
+                    movement.ClearTarget();
+                    targetPile.Pickup();
+                    targetPile = null;
+                }
+                else
+                {
+                    movement.SetTarget(targetPile.transform.position);
+                }
+                return;
             }
-            else
+            // stone chunk
+            if (targetStone != null)
             {
-                // 매 프레임 target 재설정 (pile 이 이동하진 않지만 safe)
-                movement.SetTarget(targetPile.transform.position);
+                if (targetStone.gameObject == null) { targetStone = null; return; }
+                float dist = Vector2.Distance(transform.position, targetStone.transform.position);
+                if (Time.time - taskStartTime > giveUpAfterSec && dist > pickupRange)
+                {
+                    Debug.Log($"[Hauler] {name} give up stone (dist={dist:F2})");
+                    ClearTask();
+                    return;
+                }
+                if (dist <= pickupRange)
+                {
+                    movement.ClearTarget();
+                    targetStone.Pickup();
+                    targetStone = null;
+                }
+                else
+                {
+                    movement.SetTarget(targetStone.transform.position);
+                }
             }
         }
     }

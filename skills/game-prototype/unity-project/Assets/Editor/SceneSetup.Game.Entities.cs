@@ -96,6 +96,9 @@ namespace MelonS.GameProto.EditorTools
                 t.transform.position = new Vector3(pos.x, pos.y, 0);
             }
 
+            // #119 - 광맥 (stone vein) 12 개 procedural 배치 (림월드처럼 cluster).
+            SpawnStoneVeins(layout, treePositionsList);
+
             // RegrowthScheduler (Day 12)
             GameObject rsGo = new GameObject("RegrowthScheduler");
             RegrowthScheduler rs = rsGo.AddComponent<RegrowthScheduler>();
@@ -138,6 +141,56 @@ namespace MelonS.GameProto.EditorTools
             GameObject pf = PrefabUtility.SaveAsPrefabAsset(t, prefabPath);
             Object.DestroyImmediate(t);
             return pf;
+        }
+
+        /// <summary>#119 - 광맥 (StoneVeinEntity) cluster 배치.  rock terrain 근처 우선.</summary>
+        private static void SpawnStoneVeins(TerrainLayout layout, System.Collections.Generic.List<Vector2> treePositions)
+        {
+            Sprite veinSpr = LoadOrSetupSprite("Assets/Sprites/stone_vein.png");
+            if (veinSpr == null) { Debug.LogWarning("[StoneVein] sprite null"); return; }
+
+            int half = TerrainLayout.MAP_HALF;
+            int placed = 0;
+            int target = 12;  // 12 광맥
+            System.Random sr = new System.Random(31415);
+            var positions = new System.Collections.Generic.List<Vector2>();
+            int tries = 0;
+            while (placed < target && tries < 400)
+            {
+                tries++;
+                int sx = sr.Next(-(half-2), half-1);
+                int sy = sr.Next(-(half-2), half-1);
+                Vector2 sp = new Vector2(sx, sy);
+                // pawn spawn 회피
+                if (Mathf.Abs(sx) < 4 && Mathf.Abs(sy) < 2) continue;
+                // 호수 회피
+                bool skip = false;
+                for (int li = 0; li < layout.lakeCenters.Length; li++)
+                    if ((sp - layout.lakeCenters[li]).magnitude < layout.lakeRadii[li] + 1.5f) { skip = true; break; }
+                if (skip) continue;
+                // 나무 회피
+                foreach (var tp in treePositions)
+                    if (Vector2.Distance(tp, sp) < 1.8f) { skip = true; break; }
+                if (skip) continue;
+                // 기존 광맥 회피
+                foreach (var ex in positions)
+                    if (Vector2.Distance(ex, sp) < 2.0f) { skip = true; break; }
+                if (skip) continue;
+                positions.Add(sp);
+                placed++;
+            }
+            foreach (var pos in positions)
+            {
+                var vgo = new GameObject($"StoneVein_{pos.x}_{pos.y}");
+                vgo.transform.position = new Vector3(pos.x, pos.y, 0);
+                var vsr = vgo.AddComponent<SpriteRenderer>();
+                vsr.sprite = veinSpr;
+                vsr.sortingOrder = 5;
+                var vcol = vgo.AddComponent<BoxCollider2D>();
+                vcol.size = new Vector2(1.4f, 1.4f);
+                vgo.AddComponent<StoneVeinEntity>();
+            }
+            Debug.Log($"[StoneVein] spawned {placed} veins");
         }
 
         /// <summary>R8: 시작 정착지 (벽 5+바닥 6+화덕+연구대+12 crops+9 stockpile 마커).  (Day 57+67+79)</summary>

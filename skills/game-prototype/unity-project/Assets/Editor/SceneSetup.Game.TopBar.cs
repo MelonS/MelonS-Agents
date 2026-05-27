@@ -61,13 +61,16 @@ namespace MelonS.GameProto.EditorTools
             timeGo.AddComponent<TimeUI>();
 
             // Day 38: 우측 리소스 영역 layout - overlap fix.
-            //  [목재: N]  ·  [식사: N]  ·  [식량: N]  16px padding from right
-            //  각 텍스트 width 120, 점 width 16, 텍스트간 8px 간격. 총 너비 440.
+            //  [목재: N] · [식사: N] · [식량: N] · [석재: N]  16px padding from right
+            //  각 텍스트 width 120, 점 width 16, 텍스트간 8px 간격. 총 너비 ~580.
             Text foodText = MakeResText(topBarGo, "FoodText", "식량: 0", uiFont, colAccentFood, -16);
             MakeResSeparator(topBarGo, "ResSep2", uiFont, colTextMuted, -144);
             Text mealsText = MakeResText(topBarGo, "MealsText", "식사: 0", uiFont, new Color(0.93f, 0.81f, 0.45f, 1f), -168);
             MakeResSeparator(topBarGo, "ResSep1", uiFont, colTextMuted, -296);
             Text woodText = MakeResText(topBarGo, "WoodText", "목재: 0", uiFont, colAccentWood, -320);
+            MakeResSeparator(topBarGo, "ResSep3", uiFont, colTextMuted, -448);
+            // #119 - 석재 (회색)
+            Text stoneText = MakeResText(topBarGo, "StoneText", "석재: 0", uiFont, new Color(0.78f, 0.78f, 0.80f, 1f), -472);
 
             // ResourceCounterUI host (no longer has its own panel image; just script)
             GameObject resHostGo = new GameObject("ResourceCounter");
@@ -78,6 +81,7 @@ namespace MelonS.GameProto.EditorTools
             rcSo.FindProperty("woodText").objectReferenceValue = woodText;
             rcSo.FindProperty("foodText").objectReferenceValue = foodText;
             rcSo.FindProperty("mealsText").objectReferenceValue = mealsText;
+            rcSo.FindProperty("stoneText").objectReferenceValue = stoneText;
             rcSo.ApplyModifiedProperties();
         }
 

@@ -25,6 +25,7 @@ namespace MelonS.GameProto
         private PawnCook cook;
         private PawnHauler hauler;  // #116 — wood pile pickup
         private PawnBuilder builder;  // #118 — blueprint 건설
+        private PawnMiner miner;      // #119 — 채광
         private PawnNeeds needs;
         private PawnEntity entity;  // Day 48 — drafted state check
         private PawnWorkSettings workSettings;  // #114 — per-pawn work priority
@@ -51,6 +52,7 @@ namespace MelonS.GameProto
             cook = GetComponent<PawnCook>();
             hauler = GetComponent<PawnHauler>();  // #116
             builder = GetComponent<PawnBuilder>();  // #118
+            miner = GetComponent<PawnMiner>();      // #119
             needs = GetComponent<PawnNeeds>();
             entity = GetComponent<PawnEntity>();
             workSettings = GetComponent<PawnWorkSettings>();  // #114
@@ -61,6 +63,7 @@ namespace MelonS.GameProto
                 gatherer = gatherer, hunter = hunter, cook = cook,
                 hauler = hauler,
                 builder = builder,
+                miner = miner,
                 needs = needs, skills = GetComponent<PawnSkills>(),
                 transform = transform,
                 idleWanderRadius = idleWanderRadius,
@@ -72,6 +75,8 @@ namespace MelonS.GameProto
                 new CookMealAction   { foodSurplus = 5f },
                 new BuildBlueprintAction(),  // #118 - 청사진 건설 (chop 보다 우선)
                 new HaulWoodAction(),     // #116 - 벌목 후 떨어진 wood pile 운반 (chop 보다 우선)
+                new HaulStoneAction(),    // #119 - 채광 후 떨어진 stone chunk 운반
+                new MineStoneAction(),    // #119 - 광맥 채광 (chop 과 동급)
                 new ChopTreeAction(),
                 new WanderAction(),
             };
@@ -100,6 +105,7 @@ namespace MelonS.GameProto
                 if (hunter != null) hunter.ClearTask();
                 if (hauler != null) hauler.ClearTask();
                 if (builder != null) builder.ClearTask();
+                if (miner != null) miner.ClearTask();
                 lastDecision = Time.timeSinceLevelLoad;
                 return;
             }
@@ -110,6 +116,7 @@ namespace MelonS.GameProto
                 if (hunter != null) hunter.ClearTask();
                 if (hauler != null) hauler.ClearTask();
                 if (builder != null) builder.ClearTask();
+                if (miner != null) miner.ClearTask();
                 if (!movement.IsMoving)
                 {
                     Vector2 cur = transform.position;
@@ -125,6 +132,7 @@ namespace MelonS.GameProto
             if (cook != null && cook.HasTask) return;
             if (hauler != null && hauler.HasTask) return;
             if (builder != null && builder.HasTask) return;
+            if (miner != null && miner.HasTask) return;
 
             lastDecision = Time.timeSinceLevelLoad;
             Decide();

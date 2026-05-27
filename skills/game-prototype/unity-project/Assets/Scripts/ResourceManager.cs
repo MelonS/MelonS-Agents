@@ -16,6 +16,8 @@ namespace MelonS.GameProto
         public int food = 0;
         // Day 27: cooked meals (better than raw food)
         public int meals = 0;
+        // #119 - 석재 (벽 짓기/연구대 업그레이드 용도)
+        public int stone = 0;
 
         public event Action OnChanged;
 
@@ -42,6 +44,12 @@ namespace MelonS.GameProto
         public void AddMeals(int amount)
         {
             meals = Mathf.Max(0, meals + amount);
+            OnChanged?.Invoke();
+        }
+
+        public void AddStone(int amount)
+        {
+            stone = Mathf.Max(0, stone + amount);
             OnChanged?.Invoke();
         }
     }

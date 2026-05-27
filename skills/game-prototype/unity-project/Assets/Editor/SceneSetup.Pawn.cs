@@ -53,6 +53,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnCook>();      // Day 26 — auto-cook at stove
             pawnGo.AddComponent<PawnHauler>();    // #116 — wood pile pickup
             pawnGo.AddComponent<PawnBuilder>();   // #118 — blueprint 건설
+            pawnGo.AddComponent<PawnMiner>();     // #119 — 채광
             pawnGo.AddComponent<PawnSkills>();    // Day 19 — XP/level per skill
             // Stretch 후속: PawnNameLabel 재활성 (Day 30 의심 해소 — 32x32 sprite 와도 OK)
             pawnGo.AddComponent<PawnNameLabel>();
