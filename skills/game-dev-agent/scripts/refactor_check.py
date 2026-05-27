@@ -134,7 +134,13 @@ def step_playmode_tests() -> int:
     print(f"  isolated: {p} PASS / {f} FAIL")
     for r in report.get("results", []):
         sym = "OK" if r.get("passed") else "X"
-        print(f"    [{sym}] {r['id']}: {r['message']}")
+        # cp949 console 호환 — 유니코드 안되는 문자 제거
+        msg = r['message']
+        try:
+            print(f"    [{sym}] {r['id']}: {msg}")
+        except UnicodeEncodeError:
+            safe = msg.encode('cp949', errors='replace').decode('cp949')
+            print(f"    [{sym}] {r['id']}: {safe}")
     if f > 0:
         return 10
     return 0
@@ -164,7 +170,13 @@ def step_integration_tests() -> int:
     print(f"  integration: {p} PASS / {f} FAIL")
     for r in report.get("results", []):
         sym = "OK" if r.get("passed") else "X"
-        print(f"    [{sym}] {r['id']}: {r['message']}")
+        # cp949 console 호환 — 유니코드 안되는 문자 제거
+        msg = r['message']
+        try:
+            print(f"    [{sym}] {r['id']}: {msg}")
+        except UnicodeEncodeError:
+            safe = msg.encode('cp949', errors='replace').decode('cp949')
+            print(f"    [{sym}] {r['id']}: {safe}")
     if f > 0:
         return 12
     return 0
