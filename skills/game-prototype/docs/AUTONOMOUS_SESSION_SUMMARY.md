@@ -1,3 +1,76 @@
+# 자율작업 세션 요약 (2026-05-27 ~ 후속)
+
+---
+
+## [후속 세션 2026-05-27 (운영자 자는 동안)] — UX 폴리시 + 키보드 의존 제거
+
+운영자 깨기 직전 발화: **"디자인 구리고 프로토타입 수준도 안되고 ui들 그냥
+표시만해주는 키보드 의존도 너무 높음. gui가 전혀 되질 않음. 사람의 이동도
+안됨 여전히. 일단 자러가니깐 계속 자율로 작업하도록. 스스로 검증할 방법을
+찾고 계속해서 퀄리티 업글을 시켜. 기능추가는 보수적으로 게임이 되는게 먼저임."**
+
+### 한 줄
+**4가지 운영자 불만 다 해결 + 통합 검증 10 → 16 시나리오 확대 + 6 commit.**
+
+### 운영자 불만 → 대응
+
+| 불만 | 대응 commit |
+|------|-------------|
+| "사람 이동 안됨 여전히" | `ef75182` UI 가로채기 EventSystem 차단 + ClickEffect X 마커 |
+| "gui 전혀 안됨, 키보드 의존" | `7765749` GuiControlBar 10 버튼 (멈춤/1x/2x/4x/징집/벽/바닥/문/화덕/연구) |
+| "프로토타입 수준도 안됨" (1) | `fb4fee1` SelectionRing(노란 펄스) + starter 자원 + 튜토리얼 9→3 압축 |
+| "프로토타입 수준도 안됨" (2) | `585090f` camera ortho 10→6 (pawn 디테일 보임) + 위치 (0.5,1.0) |
+| "프로토타입 수준도 안됨" (3) | `b74a6f5` HoverTooltip - 14 종 entity hover 시 한국어 설명 |
+| 빌드 모드 우클릭 race | `e6dd403` 빌드 활성 시 ClickSelector 좌/우 클릭 차단 |
+| 이름/상태/HP 안 보임 | `ec6db96` zoom 6 기준 라벨/바 사이즈 키움 + 상태 라인 (벌목/이동/...) |
+
+### 검증
+
+- **isolated**: 55/55 PASS (변동 X)
+- **integration (Game.unity 실 spawn 위)**: 13 → 16 시나리오 PASS
+  - I11 ScreenToWorld round-trip + OverlapPoint (err=0.0000, hitsPawn=True)
+  - I12 SelectionRing 생성 + 선택 따라옴 (alpha>0.6)
+  - I13 starter 자원 (wood=40, food+meals>=3)
+  - I14 HoverTooltip MonoBehaviour 1 ea
+  - I15 BuildManager mode toggle
+  - I16 사용자 smoke - pawn 선택→tree 우클릭→PawnChopper.HasTask=True
+- 매 commit 마다 `refactor_check.py --skip-scenes` 통과
+
+### 신규 컴포넌트
+
+- `ClickEffect.cs` (X 마커 0.6s fade)
+- `GuiControlBar.cs` (10 버튼 self-bootstrap)
+- `SelectionRing.cs` (yellow pulse, drafted 면 cyan)
+- `HoverTooltip.cs` (14 entity 한국어 설명)
+- `IntegrationTestRunner.cs` I6-I16 (11 시나리오 추가)
+
+### 파일 변경 요약
+
+```
+신규: ClickEffect / GuiControlBar / SelectionRing / HoverTooltip (4 컴포넌트)
+수정: ClickSelector / BuildManager / ResearchUI / GameManager
+       / TutorialOverlay / PawnNameLabel / PawnFloatingBars
+       / SceneSetup.Game.Core (camera ortho/pos)
+       / IntegrationTestRunner (I6-I16)
+```
+
+### 깨어났을 때 바로 보면 좋은 것
+
+1. **`G:/ai/_refactor_baseline.png`** — 새 baseline (zoom 6, GUI 버튼, 이름 라벨 visible)
+2. **integration 결과**: `G:/ai/_pawnsim_integration_report.json` (16/16 PASS)
+3. 화면 하단 [멈춤][1x][2x][4x][징집][벽][바닥][문][화덕][연구] 버튼 클릭 가능
+4. pawn hover 시 한국어 tooltip
+5. 콜로니스트 선택 시 발밑 노란 펄스 ring
+
+### 남은 todo (운영자 OK 받고)
+
+- 더 정교한 visual polish (sprite redraw 필요)
+- 액션 완료 시 floating "+5 식량" 같은 popup 숫자
+- 적/늑대 등장 시 auto-pause
+- Power grid / animal taming / stockpile filter 등 stretch
+
+---
+
 # 자율작업 세션 요약 (2026-05-27)
 
 운영자 지시: "10시간 이상 자율 작업, 검증하면서 리팩토링 + 문제 안생기게".
