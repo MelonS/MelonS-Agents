@@ -47,6 +47,8 @@ namespace MelonS.GameProto
 
             // 자동 follow - 0.6s 동안 부드럽게 pan, 그 후 정지 (auto-follow X)
             //  WASD 입력 들어오면 즉시 종료.
+            //  batchmode 에서 unscaledDeltaTime 이 매우 작아 Lerp 가 안 수렴하는 문제 →
+            //  MoveTowards (고정 거리/초) 가 deterministic.  속도 ~30 unit/s.
             if (followingPawn != null)
             {
                 float elapsed = Time.unscaledTime - followStartTime;
@@ -58,8 +60,11 @@ namespace MelonS.GameProto
                 {
                     Vector3 target = followingPawn.transform.position;
                     target.z = cam.transform.position.z;
-                    cam.transform.position = Vector3.Lerp(cam.transform.position, target,
-                        Time.unscaledDeltaTime * 6f);
+                    // batchmode 에서 unscaledDeltaTime 이 매우 작아 Lerp 가 안 수렴하는 문제 →
+                    //  MoveTowards 고정 거리/초.  속도 ~30 unit/s, 최소 0.5/frame (batchmode 보호).
+                    float maxStep = 30f * Time.unscaledDeltaTime;
+                    if (maxStep < 0.5f) maxStep = 0.5f;
+                    cam.transform.position = Vector3.MoveTowards(cam.transform.position, target, maxStep);
                 }
             }
 

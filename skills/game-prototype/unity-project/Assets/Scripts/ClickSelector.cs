@@ -196,12 +196,19 @@ namespace MelonS.GameProto
 
         private void Select(PawnEntity pawn)
         {
-            if (currentSelection == pawn) return;
-            if (currentSelection != null) currentSelection.SetSelected(false);
-            currentSelection = pawn;
-            currentSelection.SetSelected(true);
+            // 같은 pawn 다시 클릭하면 camera 재 focus 만 (안 보일 때 다시 찾기)
+            bool sameAsPrev = (currentSelection == pawn);
+            if (!sameAsPrev)
+            {
+                if (currentSelection != null) currentSelection.SetSelected(false);
+                currentSelection = pawn;
+                currentSelection.SetSelected(true);
+            }
             // 운영자 피드백 - pawn 이 AI wander 로 화면 밖 → 선택 시 부드럽게 camera focus
-            var cc = mainCamera != null ? mainCamera.GetComponent<CameraController>() : null;
+            //  same pawn 재선택도 focus 트리거 (재중심)
+            var camForFocus = mainCamera != null ? mainCamera : Camera.main;
+            var cc = camForFocus != null ? camForFocus.GetComponent<CameraController>() : null;
+            if (cc == null) cc = Object.FindFirstObjectByType<CameraController>();
             if (cc != null) cc.RequestFocus(pawn);
         }
 

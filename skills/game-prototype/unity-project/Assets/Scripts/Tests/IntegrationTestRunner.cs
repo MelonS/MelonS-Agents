@@ -75,6 +75,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I15-buildmode-blocks-rightclick", TestI15_BuildModeBlocksRightClick);
             yield return RunOne("I16-full-chop-cycle", TestI16_FullChopCycle);
             yield return RunOne("I17-wall-build-from-button", TestI17_WallBuildFromButton);
+            yield return RunOne("I18-camera-focus-on-select", TestI18_CameraFocusOnSelect);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -459,6 +460,36 @@ namespace MelonS.GameProto.Tests
             yield return null;
             Assert(BuildManager.Instance.CurrentMode == BuildManager.Mode.Off,
                 $"GUI 벽 버튼: mode=Wall → Off toggle OK (wood={startWood} 변화 X, actual place 는 Input simulation 필요)");
+        }
+
+        /// <summary>I18: pawn 선택 시 카메라가 움직임 (RequestFocus 작동 검증).
+        /// pawn 이 wander 중이라 distance 비교 못 함 - cam 위치 변화로 검증.</summary>
+        private IEnumerator TestI18_CameraFocusOnSelect()
+        {
+            yield return null;
+            var cam = Camera.main;
+            var cs = Object.FindFirstObjectByType<ClickSelector>();
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            if (cam == null || cs == null || pawns.Length == 0)
+            { Assert(false, $"cam={cam!=null}, cs={cs!=null}, pawns={pawns.Length}"); yield break; }
+
+            // 카메라에서 멀리 있는 pawn 선택 - focus 가 cam 움직이게 해야 함
+            PawnEntity farPawn = null; float farSq = -1;
+            foreach (var p in pawns)
+            {
+                float sq = (p.transform.position - cam.transform.position).sqrMagnitude;
+                if (sq > farSq) { farSq = sq; farPawn = p; }
+            }
+            if (farPawn == null) { Assert(false, "no farPawn"); yield break; }
+            Vector3 camBefore = cam.transform.position;
+            cs.SimulateSelect(farPawn);
+            yield return new WaitForSeconds(0.8f);  // 0.6s focus 진행 + 약간 여유
+            Vector3 camAfter = cam.transform.position;
+            float camMoved = Vector2.Distance(
+                new Vector2(camBefore.x, camBefore.y),
+                new Vector2(camAfter.x, camAfter.y));
+            Assert(camMoved > 0.5f,
+                $"camBefore={camBefore} camAfter={camAfter} camMoved={camMoved:F2} (>0.5 expected)");
         }
 
         private void FinalizeReport()
