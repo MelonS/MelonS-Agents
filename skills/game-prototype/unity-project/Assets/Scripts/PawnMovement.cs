@@ -35,10 +35,18 @@ namespace MelonS.GameProto
 
         private Vector2? target;
         private PawnHealth health;  // Step45 — leg damage 영향
+        // I19 bug — pawn 이 obstacle 옆에서 target 계속 cancel 되며 정체.
+        //  1.5s 동안 안 움직였으면 perpendicular nudge 로 escape.
+        private Vector3 lastPos;
+        private float lastMoveTime;
+        private float lastUnstuckTime = -10f;
+
         private void Awake()
         {
             health = GetComponent<PawnHealth>();
             if (stats == null) stats = PawnStats.CreateDefault();
+            lastPos = transform.position;
+            lastMoveTime = Time.time;
         }
 
         public static Vector2 ClampToWorld(Vector2 p)
@@ -53,7 +61,9 @@ namespace MelonS.GameProto
 
         public void SetTarget(Vector2 worldPos)
         {
-            target = worldPos;
+            // I19 bug fix — chopper/AI 가 world bound 밖 entity 위치를 target 으로 줄 때
+            //  ClampToWorld 가 안 적용돼서 pawn 이 도달 못 함.  여기서 강제 clamp.
+            target = ClampToWorld(worldPos);
         }
 
         public void ClearTarget()
@@ -63,6 +73,37 @@ namespace MelonS.GameProto
 
         private void Update()
         {
+            // I19 unstuck — pawn 이 target 있는데 1.5s 동안 안 움직였으면 다른 방향 nudge.
+            //  perpendicular shift 0.5 unit (rock 한 칸 정도).  cooldown 3s.
+            if (target.HasValue)
+            {
+                Vector3 curPos = transform.position;
+                if ((curPos - lastPos).sqrMagnitude > 0.001f) { lastPos = curPos; lastMoveTime = Time.time; }
+                if (Time.time - lastMoveTime > 1.5f && Time.time - lastUnstuckTime > 3f)
+                {
+                    // 4 방향 시도 - 가장 가까운 (target 방향과 90도) 으로 nudge
+                    Vector2 toTarget = (target.Value - (Vector2)curPos).normalized;
+                    Vector2[] nudges = {
+                        new Vector2(-toTarget.y,  toTarget.x) * 0.6f,
+                        new Vector2( toTarget.y, -toTarget.x) * 0.6f,
+                        new Vector2( toTarget.x,  toTarget.y) * 0.6f,
+                        new Vector2(-toTarget.x, -toTarget.y) * 0.6f,
+                    };
+                    foreach (var n in nudges)
+                    {
+                        Vector2 candidate = ClampToWorld((Vector2)curPos + n);
+                        if (!IsBlockedAt(candidate))
+                        {
+                            transform.position = new Vector3(candidate.x, candidate.y, curPos.z);
+                            lastPos = transform.position;
+                            lastMoveTime = Time.time;
+                            lastUnstuckTime = Time.time;
+                            break;
+                        }
+                    }
+                }
+            }
+
             if (!target.HasValue) return;
 
             Vector2 cur = transform.position;
@@ -77,11 +118,21 @@ namespace MelonS.GameProto
             }
             Vector2 next = Vector2.MoveTowards(cur, clampedTarget, stats.moveSpeed * speedMul * Time.deltaTime);
             next = ClampToWorld(next);
-            // 다음 step 이 호수/바위면 가지 말것 — target 취소
+            // I19 bug fix - 다음 step 이 obstacle 이라도 alternative direction 시도.
+            //  rock 옆에서 pawn 영원히 멈춰있던 버그 (target 즉시 cancel → chop/etc. fail).
             if (IsBlockedAt(next))
             {
-                target = null;
-                return;
+                // x-axis 만 이동 시도 (y 는 유지)
+                Vector2 nextX = new Vector2(next.x, cur.y);
+                Vector2 nextY = new Vector2(cur.x, next.y);
+                if (!IsBlockedAt(nextX))      next = nextX;
+                else if (!IsBlockedAt(nextY)) next = nextY;
+                else
+                {
+                    // 양쪽 다 막힘 — target 자체를 cancel (영구 stuck 방지)
+                    target = null;
+                    return;
+                }
             }
             transform.position = new Vector3(next.x, next.y, transform.position.z);
 

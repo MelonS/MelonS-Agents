@@ -76,6 +76,9 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I16-full-chop-cycle", TestI16_FullChopCycle);
             yield return RunOne("I17-wall-build-from-button", TestI17_WallBuildFromButton);
             yield return RunOne("I18-camera-focus-on-select", TestI18_CameraFocusOnSelect);
+            yield return RunOne("I19-chop-completes-wood-up", TestI19_ChopCompletesWoodUp);
+            yield return RunOne("I20-crop-harvest-food-up", TestI20_CropHarvestFoodUp);
+            yield return RunOne("I21-combat-drafted-vs-wolf", TestI21_CombatDraftedVsWolf);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -490,6 +493,126 @@ namespace MelonS.GameProto.Tests
                 new Vector2(camAfter.x, camAfter.y));
             Assert(camMoved > 0.5f,
                 $"camBefore={camBefore} camAfter={camAfter} camMoved={camMoved:F2} (>0.5 expected)");
+        }
+
+        /// <summary>I19: chopper task set 후 20초 시뮬 → tree HP 감소 (또는 destroyed + wood +5).
+        ///   I16 은 task 설정만 봤고 actually wood 늘었는지는 보지 않음.</summary>
+        private IEnumerator TestI19_ChopCompletesWoodUp()
+        {
+            yield return null;
+            var rm = Services.Get<ResourceManager>();
+            var cs = Object.FindFirstObjectByType<ClickSelector>();
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            var trees = Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
+            if (rm == null || cs == null || pawns.Length == 0 || trees.Length == 0)
+            { Assert(false, $"rm={rm!=null} cs={cs!=null} pawns={pawns.Length} trees={trees.Length}"); yield break; }
+
+            // 새 pawn 강제 spawn - I2/I3/I12-I18 누적 영향 받지 않은 fresh pawn 으로 확실히 검증.
+            //  (기존 pawns 는 edge 에 stuck 됐을 수 있음)
+            GameObject testPawnGo = new GameObject("ChopTestPawn");
+            testPawnGo.transform.position = new Vector3(5f, 5f, 0);
+            var srt = testPawnGo.AddComponent<SpriteRenderer>();
+            srt.sortingOrder = 10;
+            testPawnGo.AddComponent<BoxCollider2D>().size = Vector2.one * 0.8f;
+            var pawnEntity = testPawnGo.AddComponent<PawnEntity>();
+            testPawnGo.AddComponent<PawnMovement>();
+            testPawnGo.AddComponent<PawnChopper>();
+            yield return null;
+
+            // 가장 가까운 tree (bound 안)
+            TreeEntity bestTree = null; float bestSq = float.MaxValue;
+            foreach (var t in trees)
+            {
+                if (t == null) continue;
+                Vector3 tp = t.transform.position;
+                if (Mathf.Abs(tp.x) > 18.5f || Mathf.Abs(tp.y) > 18.5f) continue;
+                float sq = (tp - testPawnGo.transform.position).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; bestTree = t; }
+            }
+            if (bestTree == null) { Destroy(testPawnGo); Assert(false, "no reachable tree"); yield break; }
+            var bestPawn = pawnEntity;
+            int startWood = rm.wood;
+            int startTreeCount = trees.Length;
+            float dist = Mathf.Sqrt(bestSq);
+            Vector3 pawnStartPos = bestPawn.transform.position;
+            // SimulateSelect 안 거치고 직접 chopper.SetTreeTarget - 새 pawn 은 selection 불필요
+            var chopper = bestPawn.GetComponent<PawnChopper>();
+            chopper.SetTreeTarget(bestTree);
+            yield return null;
+            bool taskSetInitial = chopper.HasTask;
+            yield return new WaitForSeconds(15.0f);
+            int endWood = rm.wood;
+            int endTreeCount = Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None).Length;
+            Vector3 pawnEndPos = bestPawn.transform.position;
+            float pawnMoved = (pawnEndPos - pawnStartPos).magnitude;
+            bool taskSetAfter = chopper.HasTask;
+            bool woodUp = endWood > startWood;
+            bool treeGone = endTreeCount < startTreeCount;
+            Destroy(testPawnGo);  // cleanup
+            Assert(woodUp || treeGone,
+                $"chop 15s: fresh pawn dist0={dist:F2}, moved={pawnMoved:F2}, " +
+                $"taskInit={taskSetInitial} taskAfter={taskSetAfter}, " +
+                $"wood {startWood}->{endWood}, trees {startTreeCount}->{endTreeCount}");
+        }
+
+        /// <summary>I20: crop 강제 ripe → 우클릭 = +5 food</summary>
+        private IEnumerator TestI20_CropHarvestFoodUp()
+        {
+            yield return null;
+            var rm = Services.Get<ResourceManager>();
+            var cs = Object.FindFirstObjectByType<ClickSelector>();
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            var crops = Object.FindObjectsByType<CropEntity>(FindObjectsSortMode.None);
+            if (rm == null || cs == null || pawns.Length == 0 || crops.Length == 0)
+            { Assert(false, $"rm={rm!=null} cs={cs!=null} pawns={pawns.Length} crops={crops.Length}"); yield break; }
+            // 첫 crop 을 ripe 로 강제 - growth field reflection
+            var crop = crops[0];
+            var growthField = typeof(CropEntity).GetField("growth",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (growthField != null) growthField.SetValue(crop, 1.0f);
+            // 다시 한 번 확인
+            if (!crop.IsRipe) { Assert(false, $"crop ripe 강제 실패 - growth field name 변경 가능성"); yield break; }
+            int startFood = rm.food;
+            cs.SimulateSelect(pawns[0]);
+            cs.SimulateRightClick(new Vector2(crop.transform.position.x, crop.transform.position.y));
+            yield return null;
+            int endFood = rm.food;
+            Assert(endFood > startFood,
+                $"crop 수확: food {startFood}->{endFood} (>0 expected, crop.IsRipe={crop.IsRipe})");
+        }
+
+        /// <summary>I21: drafted pawn → wolf 강제 spawn → 우클릭 = attack.
+        ///   5초 시뮬 wolf HP 감소 검증.</summary>
+        private IEnumerator TestI21_CombatDraftedVsWolf()
+        {
+            yield return null;
+            var cs = Object.FindFirstObjectByType<ClickSelector>();
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            if (cs == null || pawns.Length == 0) { Assert(false, "no cs/pawns"); yield break; }
+            var pawn = pawns[0];
+            // wolf 강제 spawn 가까이 (pawn 2 unit 옆)
+            Vector3 wolfPos = pawn.transform.position + new Vector3(2f, 0, 0);
+            var wolfGo = new GameObject("TestWolf");
+            wolfGo.transform.position = wolfPos;
+            var wolfSr = wolfGo.AddComponent<SpriteRenderer>();
+            wolfSr.sortingOrder = 10;
+            wolfGo.AddComponent<BoxCollider2D>().size = Vector2.one * 0.8f;
+            var wolf = wolfGo.AddComponent<WolfEnemy>();
+            yield return null;
+            // wolf.Hp public getter
+            int startHp = wolf.Hp;
+            // draft pawn + attack wolf
+            pawn.SetDrafted(true);
+            cs.SimulateSelect(pawn);
+            cs.SimulateRightClick(new Vector2(wolfPos.x, wolfPos.y));
+            yield return new WaitForSeconds(5.0f);
+            // wolf 가 죽었으면 GameObject 사라졌을 수도
+            bool wolfGone = wolf == null || wolf.gameObject == null || wolf.IsDead;
+            int endHp = wolfGone ? 0 : wolf.Hp;
+            bool damaged = endHp < startHp || wolfGone;
+            if (wolf != null && wolf.gameObject != null) Destroy(wolfGo);
+            Assert(damaged,
+                $"drafted vs wolf 5s: HP {startHp}->{endHp} (damaged={damaged}, gone={wolfGone})");
         }
 
         private void FinalizeReport()

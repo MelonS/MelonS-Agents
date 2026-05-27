@@ -15,6 +15,10 @@ namespace MelonS.GameProto
 
         private TreeEntity targetTree;
         private PawnMovement movement;
+        // I19 bug — tree unreachable (out-of-bounds 등) 일 때 영원히 시도.
+        //  10s 동안 in-range 못 들어가면 포기.
+        private float taskStartTime = -10f;
+        private const float GiveUpAfterSec = 10f;
 
         public bool HasTask => targetTree != null;
         public TreeEntity Target => targetTree;
@@ -27,6 +31,7 @@ namespace MelonS.GameProto
         public void SetTreeTarget(TreeEntity tree)
         {
             targetTree = tree;
+            taskStartTime = Time.time;
             if (tree != null) movement.SetTarget(tree.transform.position);
         }
 
@@ -46,6 +51,13 @@ namespace MelonS.GameProto
             }
 
             float dist = Vector2.Distance(transform.position, targetTree.transform.position);
+            // I19 - unreachable target 포기 (PawnMovement clamp 으로 도달 못 하는 경우)
+            if (Time.time - taskStartTime > GiveUpAfterSec && dist > chopRange)
+            {
+                Debug.Log($"[Chopper] {name} give up tree (unreachable after {GiveUpAfterSec}s, dist={dist:F2})");
+                ClearTask();
+                return;
+            }
             if (dist <= chopRange)
             {
                 // In range — stop walking, chop
