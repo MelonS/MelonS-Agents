@@ -144,24 +144,10 @@ namespace MelonS.GameProto
             if (miner != null && miner.HasTask) return;
             if (doctor != null && doctor.HasTask) return;
 
-            // #126 - Schedule slot 따라 행동 제한.
-            //  Sleep slot: chop/build/mine 안 함, wander 만.  IsSleeping 트리거는 needs 가 처리.
-            //  Joy slot: chop/build/mine 안 함, wander.
-            //  Anytime/Work: 정상 Decide.
-            if (schedule != null)
-            {
-                var slot = schedule.GetCurrentSlot();
-                if (slot == TimeSlot.Sleep || slot == TimeSlot.Joy)
-                {
-                    if (!movement.IsMoving)
-                    {
-                        Vector2 cur = transform.position;
-                        movement.SetTarget(cur + Random.insideUnitCircle * idleWanderRadius);
-                    }
-                    lastDecision = Time.timeSinceLevelLoad;
-                    return;
-                }
-            }
+            // #126 → 운영자 fb fix: Schedule slot 이 work 를 hard-block 하면
+            //  startHour=6 (Sleep) 일 때 nothing 하는 회귀 발생.
+            //  Schedule 은 UI 표시 + hint 만, work 막지 X.
+            //  실제 휴식은 needs.IsSleeping (sleep<30 && night) 가 처리.
 
             lastDecision = Time.timeSinceLevelLoad;
             Decide();
