@@ -45,16 +45,15 @@ namespace MelonS.GameProto.EditorTools
             Directory.CreateDirectory(outDir);
             string outExe = Path.Combine(outDir, "PawnSim.exe");
 
-            // 운영자 fb 진단 (목재 안 나옴 root cause 3):
-            //  MainMenu 가 첫 scene 이면 운영자 클릭 안 하면 Game scene 절대 안 들어감.
-            //  Game.unity 를 첫 scene 으로 (자동 게임 시작).
-            //  MainMenu 는 후순위 (저장/로드 기능 향후 별도 UI).
+            // 운영자 fb v3: MainMenu → Start Game → Game scene 흐름이 정상.
+            //  QA 가 그 흐름을 자동화해야 함 (MainMenu autostart flag).
+            //  scene 0 강제 변경 X.
             var options = new BuildPlayerOptions
             {
                 scenes = new[]
                 {
-                    "Assets/Scenes/Game.unity",     // 운영자 즉시 게임 시작
-                    "Assets/Scenes/MainMenu.unity", // 보조 (현재 unused)
+                    "Assets/Scenes/MainMenu.unity",
+                    "Assets/Scenes/Game.unity",
                 },
                 locationPathName = outExe,
                 target = BuildTarget.StandaloneWindows64,

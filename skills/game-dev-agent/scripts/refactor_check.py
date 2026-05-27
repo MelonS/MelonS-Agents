@@ -92,8 +92,9 @@ def step_real_qa(delay: float = 30.0) -> int:
     운영자 fb 두 번째 (#137 root cause 3): verify-game-only build 만 검증하면
     MainMenu->Game 전이 등 실제 운영자 path 누락.  최신 day-N 빌드 우선 사용.
     """
-    # 최신 day-N build 찾기 (운영자가 실제로 받는 빌드)
-    builds = sorted((REPO / "skills" / "game-prototype" / "builds").glob("day-*-2026-*"))
+    # 최신 day-N build 찾기 (운영자가 실제로 받는 빌드). mtime 으로 정렬 (lex sort 가 day-9 vs day-18 헷갈림).
+    builds = sorted((REPO / "skills" / "game-prototype" / "builds").glob("day-*-2026-*"),
+                    key=lambda p: p.stat().st_mtime)
     target = builds[-1] / "PawnSim.exe" if builds else BUILD_EXE
     if not target.exists():
         target = BUILD_EXE

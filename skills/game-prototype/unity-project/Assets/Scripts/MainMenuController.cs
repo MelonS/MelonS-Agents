@@ -25,6 +25,28 @@ namespace MelonS.GameProto
         {
             // Defensive — re-wire in case Awake order issues lost the listener
             WireListeners();
+
+            // 운영자 fb (#137 v4): QA 가 MainMenu → Game scene 흐름 자동화.
+            //  -autostart CLI arg 또는 -delay arg (AutoScreenshotter 가 쓰는) 보이면
+            //  자동으로 Start Game 클릭 시뮬.
+            string[] args = System.Environment.GetCommandLineArgs();
+            bool autostart = false;
+            foreach (var a in args)
+            {
+                if (a == "-autostart" || a == "-delay" || a == "-batchmode")
+                { autostart = true; break; }
+            }
+            if (autostart)
+            {
+                Debug.Log("[MainMenu] -autostart detected, auto-loading Game scene in 0.5s");
+                StartCoroutine(AutoStartCoroutine());
+            }
+        }
+
+        private System.Collections.IEnumerator AutoStartCoroutine()
+        {
+            yield return new WaitForSeconds(0.5f);
+            OnStartClicked();
         }
 
         private void WireListeners()
