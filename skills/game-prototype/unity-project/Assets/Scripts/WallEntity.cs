@@ -52,6 +52,16 @@ namespace MelonS.GameProto
         public void TakeDamage(float dmg)
         {
             hp -= dmg;
+            // #158 - 시각 피드백: HP 비율 × material tint (#156 lesson - hue 보존).
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr != null && maxHp > 0f)
+            {
+                float t = Mathf.Clamp01(hp / maxHp);
+                var (_, baseTint) = MaterialStats[(int)material];
+                // 0.4 minimum brightness 유지 (완전히 검정 되면 안 보임)
+                float b = 0.4f + 0.6f * t;
+                sr.color = new Color(baseTint.r * b, baseTint.g * b, baseTint.b * b, baseTint.a);
+            }
             if (hp <= 0f) Destroy(gameObject);
         }
     }

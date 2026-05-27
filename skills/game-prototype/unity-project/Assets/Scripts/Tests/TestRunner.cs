@@ -106,6 +106,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V57-stockpile-priority-findbest", TestV57_StockpilePriorityFindBest);
             yield return RunOne("V58-tree-species-tint-preserved", TestV58_TreeSpeciesTintPreserved);
             yield return RunOne("V59-floor-move-speed-bonus", TestV59_FloorMoveSpeed);
+            yield return RunOne("V60-wall-damage-tint-preserved", TestV60_WallDamageTintPreserved);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -370,6 +371,30 @@ namespace MelonS.GameProto.Tests
             float night = clock.DayProgress;
             Assert(dawn < 0.3f && night > 0.85f,
                 $"dawn={dawn:F2} (<0.3), night={night:F2} (>0.85)");
+        }
+
+        // #158 - WallEntity.TakeDamage 가 material tint 보존 + brightness 감소 확인.
+        //   Stone wall (0.78, 0.78, 0.80) → 50% damage → 0.78×0.7 정도, hue 유지.
+        private IEnumerator TestV60_WallDamageTintPreserved()
+        {
+            var go = new GameObject("TestWallV60");
+            var sr = go.AddComponent<SpriteRenderer>();
+            go.AddComponent<BoxCollider2D>();
+            var wall = go.AddComponent<WallEntity>();
+            wall.SetMaterial(WallMaterial.Stone);  // HP 280, tint (0.78, 0.78, 0.80)
+            yield return null;
+            Color before = sr.color;
+            wall.TakeDamage(140f);  // 50% damage → 0.4 + 0.6*0.5 = 0.7 brightness
+            yield return null;
+            Color after = sr.color;
+            // R/B 비율 유지 - stone 은 R=G<B 였음, after 도 같은 비율
+            float rbBefore = before.r > 0.01f ? before.b / before.r : 0f;
+            float rbAfter  = after.r > 0.01f  ? after.b / after.r  : 0f;
+            bool hueKept = Mathf.Abs(rbBefore - rbAfter) < 0.05f;
+            bool darkened = after.r < before.r - 0.05f;
+            Object.Destroy(go);
+            Assert(hueKept && darkened,
+                $"before({before.r:F2},{before.g:F2},{before.b:F2}) → after({after.r:F2},{after.g:F2},{after.b:F2}) hueKept={hueKept} darkened={darkened}");
         }
 
         // #157 - 바닥 위 pawn 이 평지 pawn 보다 빠르게 이동하는지 확인.
