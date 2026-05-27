@@ -78,17 +78,19 @@ namespace MelonS.GameProto
             }
             if (hp <= 0f)
             {
-                // 운영자 fb (석재 채광 안 됨 fix): 즉시 inventory += yieldN + chunk drop (시각만).
+                // 운영자 fb v4 - 림월드 정상 흐름: 즉시 +N 안 함. chunk 만 drop.
                 int yieldN = Random.Range(stoneYieldMin, stoneYieldMax + 1);
-                ResourceManager.Instance?.AddStone(yieldN);
                 if (StoneChunkSprite != null)
                 {
                     for (int i = 0; i < yieldN; i++)
                     {
                         Vector3 off = new Vector3(Random.Range(-0.3f, 0.3f), Random.Range(-0.3f, 0.3f), 0);
-                        var ch = StoneChunkEntity.Spawn(transform.position + off, 0, StoneChunkSprite);  // pickup 시 +0
-                        if (ch != null) ch.SetStone(0);
+                        StoneChunkEntity.Spawn(transform.position + off, 1, StoneChunkSprite);
                     }
+                }
+                else
+                {
+                    ResourceManager.Instance?.AddStone(yieldN);
                 }
                 Destroy(gameObject);
                 return true;

@@ -53,14 +53,16 @@ namespace MelonS.GameProto
             }
             if (hp <= 0f)
             {
-                // 운영자 fb 두 번째 (목재 안 나옴 fix2): chop 완료 시 즉시 inventory += N
-                //  + pile drop (시각 효과만).  pile 줍으면 +0 (이미 받음).
-                //  운영자가 wood 숫자 즉시 보게 = TopBar flash + 만족.
-                ResourceManager.Instance?.AddWood(woodDrop);
+                // 운영자 fb v4 - 림월드 정상 흐름 복원: chop 즉시 +N 안 함.
+                //  wood pile 만 바닥에 drop → hauler 가 stockpile 까지 운반 → 거기서 inventory 차감.
+                //  sprite 없으면 legacy fallback (즉시 +N).
                 if (WoodPileSprite != null)
                 {
-                    var pile = WoodPileEntity.Spawn(transform.position, 0, WoodPileSprite);
-                    if (pile != null) pile.SetWood(0);  // pickup 시 +0
+                    WoodPileEntity.Spawn(transform.position, woodDrop, WoodPileSprite);
+                }
+                else
+                {
+                    ResourceManager.Instance?.AddWood(woodDrop);
                 }
                 // Day 12: enqueue a future sapling at this tree's position
                 // BEFORE Destroy(gameObject) — `transform.position` is read

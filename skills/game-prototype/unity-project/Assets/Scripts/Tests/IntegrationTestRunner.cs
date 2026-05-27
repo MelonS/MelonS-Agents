@@ -822,10 +822,10 @@ namespace MelonS.GameProto.Tests
             int woodAfter = ResourceManager.Instance != null ? ResourceManager.Instance.wood : -1;
 
             Assert(pilesAfter > pilesBefore,
-                $"wood pile spawn (시각): piles {pilesBefore}->{pilesAfter}");
-            // 운영자 fb 두 번째: chop 즉시 wood += N.
-            Assert(woodAfter > woodBefore,
-                $"inventory wood 즉시 +N: {woodBefore}->{woodAfter}");
+                $"wood pile spawn: piles {pilesBefore}->{pilesAfter}");
+            // 운영자 fb v4 (림 vanilla 복원): chop 즉시 inventory X.  hauler 가 운반해야 +N.
+            Assert(woodAfter == woodBefore,
+                $"inventory wood 즉시 X: {woodBefore}->{woodAfter} (hauler 운반 후에만 +)");
 
             // 클린업 - 새로 spawn 한 pile 들 destroy
             var piles = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None);
@@ -860,7 +860,8 @@ namespace MelonS.GameProto.Tests
             var bpGo = new GameObject("Blueprint_TestI27");
             bpGo.transform.position = bpPos;
             var bp = bpGo.AddComponent<BlueprintEntity>();
-            bp.Init(BuildManager.Mode.Wall, wallPrefab, wallSpr, secs: 1.0f);
+            // #142 - 자재 0 needed (test 격리). 자재 채워진 상태로 시작.
+            bp.Init(BuildManager.Mode.Wall, wallPrefab, wallSpr, wood: 0, stone: 0, secs: 1.0f);
             yield return null;
 
             // pawn 강제 가까이 spawn + PawnBuilder 박음
@@ -923,10 +924,10 @@ namespace MelonS.GameProto.Tests
             int stoneAfter = ResourceManager.Instance != null ? ResourceManager.Instance.stone : -1;
 
             Assert(chunksAfter > chunksBefore,
-                $"stone chunk spawn (시각): {chunksBefore}->{chunksAfter}");
-            // 운영자 fb 두 번째: 채광 즉시 stone += N.
-            Assert(stoneAfter > stoneBefore,
-                $"inventory stone 즉시 +N: {stoneBefore}->{stoneAfter}");
+                $"stone chunk spawn: {chunksBefore}->{chunksAfter}");
+            // v4 rollback: hauler 운반해야 +N.
+            Assert(stoneAfter == stoneBefore,
+                $"inventory stone 즉시 X: {stoneBefore}->{stoneAfter}");
 
             // cleanup
             var chunks = Object.FindObjectsByType<StoneChunkEntity>(FindObjectsSortMode.None);
@@ -1002,9 +1003,9 @@ namespace MelonS.GameProto.Tests
 
             Assert(meatsAfter > meatsBefore,
                 $"meat pile spawn: {meatsBefore}->{meatsAfter}");
-            // 운영자 fb 두 번째: 동물 죽음 시 food 즉시 추가 (시각 satisfaction).
-            Assert(foodAfter > foodBefore,
-                $"inventory food 즉시 +N: {foodBefore}->{foodAfter}");
+            // v4 rollback: hauler 운반해야 +N.
+            Assert(foodAfter == foodBefore,
+                $"inventory food 즉시 X: {foodBefore}->{foodAfter}");
 
             // cleanup
             var meats = Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None);

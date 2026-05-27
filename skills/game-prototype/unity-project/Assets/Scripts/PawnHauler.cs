@@ -22,13 +22,14 @@ namespace MelonS.GameProto
         private MeatPileEntity targetMeat;     // #129
         private PawnMovement movement;
         private float taskStartTime = -10f;
-        // #121 - 줍은 후 운반 phase: pickup → drop-at-stockpile.
-        private enum Phase { GoToItem, GoToStockpile }
+        // #121/#142 - 줍은 후 운반 phase: pickup → blueprint(우선) OR stockpile.
+        private enum Phase { GoToItem, GoToStockpile, GoToBlueprint }
         private Phase phase = Phase.GoToItem;
         private int carryingWood = 0;
         private int carryingStone = 0;
         private int carryingFood = 0;          // #129
         private StockpileZoneEntity dropTarget;
+        private BlueprintEntity bpDropTarget;  // #142
 
         public bool HasTask => targetPile != null || targetStone != null || targetMeat != null
             || carryingWood > 0 || carryingStone > 0 || carryingFood > 0;
@@ -95,12 +96,76 @@ namespace MelonS.GameProto
             if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
             if (carryingFood > 0)  { ResourceManager.Instance?.AddFood(carryingFood);   carryingFood = 0; }
             dropTarget = null;
+            bpDropTarget = null;
             phase = Phase.GoToItem;
             movement.ClearTarget();
         }
 
+        // #142 - 자재 필요한 blueprint 찾기 (wood/stone 별).
+        private static BlueprintEntity FindBlueprintNeeding(Vector2 from, bool needWood)
+        {
+            var arr = Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None);
+            BlueprintEntity best = null;
+            float bestSq = float.MaxValue;
+            foreach (var bp in arr)
+            {
+                if (bp == null) continue;
+                int remaining = needWood ? bp.RemainingWood : bp.RemainingStone;
+                if (remaining <= 0) continue;
+                float sq = ((Vector2)bp.transform.position - from).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = bp; }
+            }
+            return best;
+        }
+
         private void Update()
         {
+            // #142 - blueprint 운반 phase
+            if (phase == Phase.GoToBlueprint)
+            {
+                if (bpDropTarget == null || bpDropTarget.gameObject == null)
+                {
+                    // blueprint 사라짐 - stockpile fallback
+                    var sp = StockpileZoneEntity.FindNearest(transform.position);
+                    if (sp != null)
+                    {
+                        dropTarget = sp;
+                        phase = Phase.GoToStockpile;
+                        movement.SetTarget(sp.transform.position);
+                    }
+                    else
+                    {
+                        ClearTask();
+                    }
+                    return;
+                }
+                float bdist = Vector2.Distance(transform.position, bpDropTarget.transform.position);
+                if (bdist <= pickupRange)
+                {
+                    if (carryingWood > 0)
+                    {
+                        bpDropTarget.DepositWood(carryingWood);
+                        Debug.Log($"[Hauler] {name} blueprint 자재 넣음: 목재 {carryingWood}");
+                        carryingWood = 0;
+                    }
+                    if (carryingStone > 0)
+                    {
+                        bpDropTarget.DepositStone(carryingStone);
+                        Debug.Log($"[Hauler] {name} blueprint 자재 넣음: 석재 {carryingStone}");
+                        carryingStone = 0;
+                    }
+                    if (carryingFood > 0)
+                    { ResourceManager.Instance?.AddFood(carryingFood); carryingFood = 0; }
+                    bpDropTarget = null;
+                    phase = Phase.GoToItem;
+                    movement.ClearTarget();
+                }
+                else
+                {
+                    movement.SetTarget(bpDropTarget.transform.position);
+                }
+                return;
+            }
             // #121 - 줍은 후 stockpile 으로 이동 phase 우선
             if (phase == Phase.GoToStockpile)
             {
@@ -145,22 +210,32 @@ namespace MelonS.GameProto
                 if (dist <= pickupRange)
                 {
                     movement.ClearTarget();
-                    // #121 - inventory 즉시 추가 대신 carry + stockpile 이동
                     int amount = targetPile.Wood;
                     UnityEngine.Object.Destroy(targetPile.gameObject);
                     targetPile = null;
-                    var sp = StockpileZoneEntity.FindNearest(transform.position);
-                    if (sp != null)
+                    carryingWood += amount;
+                    // #142 - 자재 필요한 blueprint 우선, 없으면 stockpile, 그것도 없으면 inventory.
+                    var bp = FindBlueprintNeeding(transform.position, needWood: true);
+                    if (bp != null)
                     {
-                        carryingWood += amount;
-                        dropTarget = sp;
-                        phase = Phase.GoToStockpile;
-                        movement.SetTarget(sp.transform.position);
+                        bpDropTarget = bp;
+                        phase = Phase.GoToBlueprint;
+                        movement.SetTarget(bp.transform.position);
                     }
                     else
                     {
-                        // 없으면 즉시 inventory (legacy)
-                        ResourceManager.Instance?.AddWood(amount);
+                        var sp = StockpileZoneEntity.FindNearest(transform.position);
+                        if (sp != null)
+                        {
+                            dropTarget = sp;
+                            phase = Phase.GoToStockpile;
+                            movement.SetTarget(sp.transform.position);
+                        }
+                        else
+                        {
+                            ResourceManager.Instance?.AddWood(carryingWood);
+                            carryingWood = 0;
+                        }
                     }
                 }
                 else
@@ -222,17 +297,29 @@ namespace MelonS.GameProto
                     int amount = targetStone.Stone;
                     UnityEngine.Object.Destroy(targetStone.gameObject);
                     targetStone = null;
-                    var sp = StockpileZoneEntity.FindNearest(transform.position);
-                    if (sp != null)
+                    carryingStone += amount;
+                    // #142 - stone blueprint 우선
+                    var bp = FindBlueprintNeeding(transform.position, needWood: false);
+                    if (bp != null)
                     {
-                        carryingStone += amount;
-                        dropTarget = sp;
-                        phase = Phase.GoToStockpile;
-                        movement.SetTarget(sp.transform.position);
+                        bpDropTarget = bp;
+                        phase = Phase.GoToBlueprint;
+                        movement.SetTarget(bp.transform.position);
                     }
                     else
                     {
-                        ResourceManager.Instance?.AddStone(amount);
+                        var sp = StockpileZoneEntity.FindNearest(transform.position);
+                        if (sp != null)
+                        {
+                            dropTarget = sp;
+                            phase = Phase.GoToStockpile;
+                            movement.SetTarget(sp.transform.position);
+                        }
+                        else
+                        {
+                            ResourceManager.Instance?.AddStone(carryingStone);
+                            carryingStone = 0;
+                        }
                     }
                 }
                 else

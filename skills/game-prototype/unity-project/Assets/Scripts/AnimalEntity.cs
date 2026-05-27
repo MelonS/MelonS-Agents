@@ -142,12 +142,14 @@ namespace MelonS.GameProto
             if (AudioBank.Instance != null) AudioBank.Instance.PlayChop();
             if (Hp <= 0)
             {
-                // 운영자 fb (즉시 inventory 패턴): kill 즉시 food += N + meat pile drop (시각만)
-                if (ResourceManager.Instance != null) ResourceManager.Instance.AddFood(foodDrop);
+                // 운영자 fb v4 - 림월드 정상 흐름: 즉시 +N 안 함. meat pile 만 drop.
                 if (MeatPileEntity.SharedSprite != null)
                 {
-                    var m = MeatPileEntity.Spawn(transform.position, 0, MeatPileEntity.SharedSprite);
-                    if (m != null) m.SetFood(0);
+                    MeatPileEntity.Spawn(transform.position, foodDrop, MeatPileEntity.SharedSprite);
+                }
+                else
+                {
+                    if (ResourceManager.Instance != null) ResourceManager.Instance.AddFood(foodDrop);
                 }
                 Destroy(gameObject);
             }

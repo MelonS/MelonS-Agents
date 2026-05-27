@@ -140,8 +140,17 @@ namespace MelonS.GameProto
                 return ($"{pawn.PawnName}", sb.ToString());
             }
             var bp = go.GetComponent<BlueprintEntity>();
-            if (bp != null) return ($"청사진 ({bp.Mode})",
-                $"진행도: {bp.Progress * 100f:F0}%\n예약: {(bp.IsReserved ? "건설중" : "대기")}\npawn 이 와서 {bp.BuildSeconds:F0}초 건설");
+            if (bp != null)
+            {
+                string materials = "";
+                if (bp.needWood > 0) materials += $"목재: {bp.collectedWood}/{bp.needWood}\n";
+                if (bp.needStone > 0) materials += $"석재: {bp.collectedStone}/{bp.needStone}\n";
+                string status = bp.HasAllMaterials
+                    ? (bp.IsReserved ? "🔨 건설중" : "✓ 자재 완비, pawn 대기")
+                    : "⏳ 자재 부족, hauler 운반 중";
+                return ($"청사진 ({bp.Mode})",
+                    $"{materials}진행도: {bp.Progress * 100f:F0}%\n{status}");
+            }
             var pile = go.GetComponent<WoodPileEntity>();
             if (pile != null) return ("통나무 더미",
                 $"목재 {pile.Wood}개\n예약: {(pile.IsReserved ? "운반중" : "대기")}\n2분 후 사라짐");

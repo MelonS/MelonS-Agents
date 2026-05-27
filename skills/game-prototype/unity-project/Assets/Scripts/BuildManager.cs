@@ -147,28 +147,18 @@ namespace MelonS.GameProto
             int cy = Mathf.FloorToInt(mw.y);
             if (CellOccupied(cx, cy)) return;
             if (ResourceManager.Instance == null) return;
+            // 운영자 fb v4 - 림월드 정상 흐름: 청사진 spawn 시 자원 차감 X.
+            //  hauler 가 자재를 청사진 위치까지 운반 후 PawnBuilder 가 건설 작업.
             bool stoneMode = CurrentMode == Mode.WallStone;
-            if (stoneMode)
-            {
-                if (ResourceManager.Instance.stone < cost) return;
-                ResourceManager.Instance.AddStone(-cost);
-            }
-            else
-            {
-                if (ResourceManager.Instance.wood < cost) return;
-                ResourceManager.Instance.AddWood(-cost);
-            }
+            int needWood = stoneMode ? 0 : cost;
+            int needStone = stoneMode ? cost : 0;
 
-            // 운영자 fb #118 - 림월드 청사진 패턴.  즉시 완성 대신 BlueprintEntity spawn.
-            //  pawn (PawnBuilder) 가 가서 5초 작업 후 finished prefab 으로 교체.
-            //  floor (cost=1) 처럼 작은 것은 청사진 없이 즉시 (1차 단순화로 통일 - 모두 청사진).
             Sprite ghostSpr = SpriteForCurrentMode();
             var bpGo = new GameObject($"Blueprint_{CurrentMode}");
             bpGo.transform.position = new Vector3(cx + 0.5f, cy + 0.5f, 0);
             var bp = bpGo.AddComponent<BlueprintEntity>();
-            // 건설 시간 — wall/door/stove/bed 큰 거는 5s, floor 작은 거는 2s.
             float secs = CurrentMode == Mode.Floor ? 2f : 5f;
-            bp.Init(CurrentMode, prefab, ghostSpr, secs);
+            bp.Init(CurrentMode, prefab, ghostSpr, needWood, needStone, secs);
         }
 
         private Sprite SpriteForCurrentMode() => CurrentMode switch
