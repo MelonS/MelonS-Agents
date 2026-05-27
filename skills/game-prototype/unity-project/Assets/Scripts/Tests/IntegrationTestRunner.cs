@@ -165,17 +165,25 @@ namespace MelonS.GameProto.Tests
                 $"호수(10,12) target → end={endPos} distToLake={distToLake:F2} (>2 expected, blocked)");
         }
 
-        /// <summary>I4: 30초 시뮬 → 자원 (wood/food/meals) 중 하나가 0보다 큼 (AI 가 뭐라도 함)</summary>
+        /// <summary>I4: 15초 시뮬 → 자원 (wood/food/meals) 중 하나가 바뀜 (AI 가 뭐라도 함).
+        /// starter resource 가 있으니 단순 비교 X — pawn 이 실제로 이동했는지+자원 변화 둘 다 본다.</summary>
         private IEnumerator TestI4_AIDoesSomething()
         {
             var rm = Services.Get<ResourceManager>();
             if (rm == null) { Assert(false, "ResourceManager null"); yield break; }
-            int startWood = rm.wood; int startFood = rm.food;
-            yield return new WaitForSeconds(15.0f);  // 15초 시뮬 (테스트 짧게 - 30이 너무 길음)
-            int endWood = rm.wood; int endFood = rm.food;
-            bool anyChange = endWood != startWood || endFood != startFood;
-            Assert(anyChange,
-                $"15초 시뮬: wood {startWood}→{endWood}, food {startFood}→{endFood} (AI activity)");
+            int startWood = rm.wood; int startFood = rm.food; int startMeals = rm.meals;
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            Vector3[] startPos = new Vector3[pawns.Length];
+            for (int i = 0; i < pawns.Length; i++) startPos[i] = pawns[i].transform.position;
+            yield return new WaitForSeconds(15.0f);
+            int endWood = rm.wood; int endFood = rm.food; int endMeals = rm.meals;
+            float totalPawnMove = 0f;
+            for (int i = 0; i < pawns.Length; i++)
+                totalPawnMove += (pawns[i].transform.position - startPos[i]).magnitude;
+            bool resChange = endWood != startWood || endFood != startFood || endMeals != startMeals;
+            bool pawnMoved = totalPawnMove > 2.0f;  // 3 pawn 합산 > 2 unit
+            Assert(resChange || pawnMoved,
+                $"15초 시뮬: wood {startWood}→{endWood}, food {startFood}→{endFood}, meals {startMeals}→{endMeals}, totalPawnMove={totalPawnMove:F2} (resChange={resChange}, pawnMoved={pawnMoved})");
         }
 
         /// <summary>I5: research bench 가 정착지 안에 있음 + 3 pawn 중 누군가 옆에 있으면 진행</summary>

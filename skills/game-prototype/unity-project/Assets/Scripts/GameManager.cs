@@ -99,6 +99,20 @@ namespace MelonS.GameProto
             // → GUI 버튼 바 자동 부착 (Speed/Draft/Build/Research 10 버튼)
             GuiControlBar.EnsureInScene();
 
+            // 운영자 피드백 (2026-05-27): "디자인 구리고 프로토타입 수준도 안되고"
+            // → 선택된 콜로니스트 발밑에 명시적 노란 ring (펄스)
+            SelectionRing.EnsureInScene();
+
+            // 운영자 피드백 — 게임 시작 시 자원 0 이면 빌드 모드도 못 켜고 무엇도 못함.
+            // 림월드 starter 처럼 약간의 자원: 벽 6 + 화덕 1 + 식사 며칠
+            if (ResourceManager.Instance != null)
+            {
+                ResourceManager.Instance.AddWood(40);   // 벽 6 + 화덕 1 (남는 거 약간)
+                ResourceManager.Instance.AddFood(10);   // 모자라면 AI 사냥/채집 발동
+                ResourceManager.Instance.AddMeals(2);   // 식사 2 (즉시 먹을 수 있음)
+                Debug.Log("[GameManager] starter resources: wood=40 food=10 meals=2");
+            }
+
             if (integrationTest)
             {
                 var iGo = new GameObject("__IntegrationTestRunner__");

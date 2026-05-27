@@ -19,26 +19,16 @@ namespace MelonS.GameProto
             public string text;
         }
 
+        // 운영자 피드백 2026-05-27: tip 9개 × 7초 = 72초 동안 화면 가림.  3개로 압축.
+        // 키보드 안내는 GuiControlBar 의 버튼 hint 가 cover.
         public Tip[] tips = new Tip[]
         {
-            new Tip { startTime = 1f,  duration = 7f,
-                      text = "환영합니다, 콜로니스트.\n좌클릭으로 콜로니스트를 선택하세요." },
-            new Tip { startTime = 9f,  duration = 7f,
-                      text = "WASD 키로 카메라를 움직이고,\n마우스 휠로 줌인/줌아웃 합니다." },
-            new Tip { startTime = 17f, duration = 7f,
-                      text = "Space 키 = 일시정지.\n1/2/3 키 = 시간 가속 (1x/2x/4x)." },
-            new Tip { startTime = 25f, duration = 7f,
-                      text = "콜로니스트 선택 후 R 키 = 강제 동원 (draft).\n드래프트 상태에서 적/늑대 우클릭 = 공격." },
-            new Tip { startTime = 33f, duration = 7f,
-                      text = "B 키 = 벽 건설 모드 (목재 5)\nF = 바닥 1, G = 문 3, T = 화덕 10" },
-            new Tip { startTime = 41f, duration = 7f,
-                      text = "익은 작물(황금색)을 우클릭하면 수확.\n농장 우측 4x3 타일에서 자라고 있습니다." },
-            new Tip { startTime = 49f, duration = 7f,
-                      text = "연구대 옆에 콜로니스트를 두면 연구 진행.\nN 키 = 연구 선택." },
-            new Tip { startTime = 57f, duration = 7f,
-                      text = "위협도는 시간에 따라 증가합니다.\n외곽의 늑대와 강도단을 조심하세요." },
-            new Tip { startTime = 65f, duration = 7f,
-                      text = "행운을 빕니다.\nSpace/Esc 로 팁 건너뛰기." },
+            new Tip { startTime = 1f,  duration = 5f,
+                      text = "콜로니스트를 좌클릭하면 선택,\n빈 곳을 우클릭하면 이동합니다." },
+            new Tip { startTime = 7f,  duration = 5f,
+                      text = "나무·작물 우클릭 = 작업.\n적/늑대는 [징집] 후 우클릭 = 공격." },
+            new Tip { startTime = 13f, duration = 5f,
+                      text = "화면 하단 버튼으로 시간/빌드/연구 제어.\nSpace 로 팁 건너뛰기." },
         };
 
         [SerializeField] private Image bg;
