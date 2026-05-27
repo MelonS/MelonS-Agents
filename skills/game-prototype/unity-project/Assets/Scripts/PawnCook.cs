@@ -57,10 +57,12 @@ namespace MelonS.GameProto
                 movement.ClearTarget();
                 if (Time.time - lastCookTime >= cookInterval)
                 {
-                    if (targetStove.CookOne())
+                    // #131 - Build skill 5+ pawn 이 만들면 fine meal (mood +20)
+                    var sk = GetComponent<PawnSkills>();
+                    bool fine = sk != null && sk.GetLevel(SkillKind.Build) >= 5;
+                    if (targetStove.CookOne(fine))
                     {
                         lastCookTime = Time.time;
-                        var sk = GetComponent<PawnSkills>();
                         if (sk != null) sk.AddXP(SkillKind.Build, 8f);
                     }
                 }

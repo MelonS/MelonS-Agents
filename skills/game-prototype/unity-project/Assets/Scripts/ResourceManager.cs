@@ -18,6 +18,8 @@ namespace MelonS.GameProto
         public int meals = 0;
         // #119 - 석재 (벽 짓기/연구대 업그레이드 용도)
         public int stone = 0;
+        // #131 - 고급 식사 (요리 skill 5+ pawn 이 만든 fine meal).  mood +20.
+        public int fineMeals = 0;
 
         public event Action OnChanged;
 
@@ -50,6 +52,12 @@ namespace MelonS.GameProto
         public void AddStone(int amount)
         {
             stone = Mathf.Max(0, stone + amount);
+            OnChanged?.Invoke();
+        }
+
+        public void AddFineMeals(int amount)
+        {
+            fineMeals = Mathf.Max(0, fineMeals + amount);
             OnChanged?.Invoke();
         }
     }

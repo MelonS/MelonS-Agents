@@ -16,11 +16,15 @@ namespace MelonS.GameProto
             return ResourceManager.Instance != null && ResourceManager.Instance.food >= 3;
         }
 
-        public bool CookOne()
+        public bool CookOne() => CookOne(fineMeal: false);
+
+        /// <summary>#131 - fineMeal=true 면 (Build skill 5+ pawn) fineMeals 카운터 증가.</summary>
+        public bool CookOne(bool fineMeal)
         {
             if (!CanCookOne()) return false;
             ResourceManager.Instance.AddFood(-3);
-            ResourceManager.Instance.AddMeals(+1);   // Day 27: global meal counter
+            if (fineMeal) ResourceManager.Instance.AddFineMeals(+1);
+            else ResourceManager.Instance.AddMeals(+1);
             MealsAvailable++;
             return true;
         }

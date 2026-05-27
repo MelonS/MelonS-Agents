@@ -107,6 +107,17 @@ namespace MelonS.GameProto
             if (rm == null) return;
 
             // Day 27: prefer cooked meal — +eatRestore food AND +10 mood bonus.
+            // #131 - fine meal 우선 (mood +20, "최고의 식사" thought)
+            if (rm.fineMeals > 0)
+            {
+                rm.AddFineMeals(-1);
+                food = Mathf.Min(100f, food + eatRestore);
+                mood = Mathf.Min(100f, mood + 20f);
+                lastEatTime = Time.time;
+                var th2 = GetComponent<PawnThoughts>();
+                if (th2 != null) th2.AddThought("최고의 식사", +12f, 800f);
+                return;
+            }
             if (rm.meals > 0)
             {
                 rm.AddMeals(-1);

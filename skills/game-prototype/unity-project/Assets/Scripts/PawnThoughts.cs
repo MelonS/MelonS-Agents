@@ -26,6 +26,7 @@ namespace MelonS.GameProto
 
         // 일반적인 thought 카탈로그 (label, offset, durationSec)
         public static readonly (string label, float offset, float dur)[] Catalog = new[] {
+            ("최고의 식사",   +12f, 800f),  // #131 - fine meal
             ("맛있는 식사",   +5f, 600f),
             ("배부름",        +3f, 300f),
             ("푹 잠",         +4f, 400f),
