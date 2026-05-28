@@ -216,10 +216,15 @@ namespace MelonS.GameProto
                 Debug.Log($"[Build] TryPlace skip: cell ({cx},{cy}) occupied for mode={CurrentMode}");
                 return false;
             }
+            // #189 - 운영자 fb "건축 여전히 안 됨" root cause:
+            //   이전: ResourceManager null 이면 return false → 운영자 click 시
+            //   silent fail.  하지만 #142 이후 blueprint spawn 시 자원 차감 X
+            //   (hauler 가 운반 후 차감), 그러니 ResourceManager 가 null 이어도
+            //   BlueprintEntity 생성은 OK.  check 제거 → 청사진 정상 spawn.
+            //   ResourceManager null 자체는 다른 시스템 문제로 별도 진단.
             if (ResourceManager.Instance == null)
             {
-                Debug.LogWarning("[Build] TryPlace skip: ResourceManager null");
-                return false;
+                Debug.LogWarning("[Build] WARNING: ResourceManager.Instance null - blueprint 는 spawn 진행 (hauler 가 자재 운반)");
             }
             Debug.Log($"[Build] TryPlace OK: mode={CurrentMode} → blueprint at ({cx+0.5f}, {cy+0.5f}), need wood={(CurrentMode == Mode.WallStone ? 0 : cost)} stone={(CurrentMode == Mode.WallStone ? cost : 0)}");
             // 운영자 fb v4 - 림월드 정상 흐름: 청사진 spawn 시 자원 차감 X.
