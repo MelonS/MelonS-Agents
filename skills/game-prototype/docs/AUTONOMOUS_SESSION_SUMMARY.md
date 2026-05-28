@@ -2,6 +2,46 @@
 
 ---
 
+## [세션 2026-05-29 야간] #199+#200 — RimWorld 풀 그리드 정합 + 충실도 감사/튜닝
+
+운영자 directive (자기 전): "최대한 림월드와 같은 방식으로 처리하도록" +
+"위키에 다른 카테고리들 알아서 찾아서 현재 구현된것들 문제 있는지 체크하면서 개선해".
+앞선 발화: 림 사이즈 1x1 맞는지 위키 확인 + 건축/이동/액션 잘 처리.
+
+### 한 줄
+**위키 확정(림=1x1, 침대=1x2) → A+B+C 풀 그리드 정합 (#199, 5 commit) =
+point-자유이동을 RimWorld 그리드 A* 경로탐색으로 전면 전환 + 충실도 감사 →
+밸런스 튜닝 5건 (#200). 전부 game-pm→programmer→qa 파이프라인 + 매 단계 harness PASS.**
+
+### #199 — RimWorld 풀 그리드 정합 (A+B+C, 9 step → 4 commit)
+위키: 림(pawn)=1x1, 침대=1x2 (침대는 이미 정합이었음). 감사로 진짜 문제 3개 발견:
+림 2x2 선택 collider / point-기반 자유 lerp (경로탐색 없음) / 칸 점유·예약 없음.
+
+| commit | 내용 |
+|--------|------|
+| `61dd2e7` #199-A | 림 1x1 (collider fix, "2x2"는 stale 주석이었음) + 카메라 ortho 6→3.5 + 플로팅 UI 재배치. V66/V67 |
+| `3b2c373` #199-B core | PathGrid+AStar (8방향, cost10/14, octile, corner-cut 금지, cap 4000) → flag ON 컷오버 → I19 nudge/axis-slide hack 삭제 → WorkGiveUp helper (LastPathFailed+무진전) 10 worker 적용. V68-72 |
+| `c8aa5ca` #199-B3 | 벽 경로 차단(ref-count registry) + 문 통과 + PathGrid.Version in-flight 무효화(걷던 림이 새 벽 안 뚫음). I38/I39 |
+| `7271079` #199-C | 인접 작업칸(TryGetAdjacentStandCell, range→1.5) + ReservationManager(중복 점유 방지) + 건축 배치 검증(물/바위/점유 reject + 토스트). V73-75/I40/I41. 부수 flaky I2/I25 fix |
+
+검증: isolated 65→75, integration 37→41. 매 phase game-qa milestone gate PASS.
+효과: 3 림이 서로 다른 나무 벌목 (totalPawnMove 6.9→26.6), 벽 우회, 대상 옆에 섬.
+
+### #200 — RimWorld 값 충실도 감사 + 튜닝 (`ad6326f`)
+감사 리포트 `docs/audit-rimworld-fidelity-2026-05-29.md` (~28 시스템 vs 위키).
+Top-5 적용: 식량감소 0.5→0.14(굶주림 0.83일→3일, prefab baked값도), 이동 3.0→4.6
++ 늑대 chase 5.0(scene baked 3마리도), head HP 10→20/torso 30→40, 활 설명 정합,
+스킬 XP base ×10. 거짓양성 테스트 2건(V59/I3) 적발·강화.
+
+### ⚠ 운영자 검토 대기 (자율로 안 건드림 — 값 추정 or 로직변경)
+1. **head HP 20** — 추정치 (위키 head≈25 미확인). SerializeField 조정 가능.
+2. **화살 데미지 vs 설명** — 설명을 "3~5 dmg"로 교정함(전투 재밸런스 회피).
+   화살을 실제로 더 세게 하려면 전 적 HP 재스케일 = 별도 작업.
+3. **mood free-fall + mental-break 3-tier** — 감사 MED. 행동 로직 변경이라
+   §5 logic-change 규칙상 운영자 OK 후 진행 (이번엔 보류).
+
+---
+
 ## [세션 2026-05-29] #198 — 멀티-에이전트 파이프라인 강제 (QA / 건축 fix / 디자인)
 
 운영자 directive: **"QA / 건축 fix / 디자인 / 파이프라인. 파이프라인 =
