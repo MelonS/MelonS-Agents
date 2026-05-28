@@ -926,10 +926,16 @@ namespace MelonS.GameProto.Tests
             go.transform.position = new Vector3(20, -10, 0);
             go.AddComponent<SpriteRenderer>();
             var trader = go.AddComponent<TraderEntity>();
+            // #168 - proximity check 추가됨: trader 옆에 pawn 필요
+            var pgo = new GameObject("TestTraderPawnV32");
+            pgo.transform.position = new Vector3(21, -10, 0);  // 1u 거리
+            pgo.AddComponent<SpriteRenderer>();
+            pgo.AddComponent<PawnEntity>();
             yield return new WaitForSeconds(0.05f);
             bool ok = trader.TryTrade();
             yield return null;
             int endWood = rm.wood, endFood = rm.food;
+            Object.Destroy(pgo);
             Assert(ok && endWood == startWood - 5 && endFood == startFood + 8,
                 $"trade: wood {startWood}→{endWood} (-5), food {startFood}→{endFood} (+8)");
         }

@@ -62,12 +62,22 @@ namespace MelonS.GameProto
         /// <summary>legacy 단일 거래 (목재 5 → 식량 8 = idx 0).</summary>
         public bool TryTrade() => TryTrade(0);
 
+        // #168 - 거래는 wiki: 콜로니스트가 trader 옆에 있을 때만 가능 (proximity check).
+        //  이전: 맵 끝에서도 거래 됐음.  지금: 5 unit 안에 살아있는 pawn 있어야 함.
+        public const float TradeRangeUnits = 5f;
+
         /// <summary>idx 의 거래 옵션 실행. true 반환 = 성공.</summary>
         public bool TryTrade(int idx)
         {
             var rm = Services.Get<ResourceManager>();
             if (rm == null) return false;
             if (idx < 0 || idx >= TradeOptions.Length) return false;
+            // #168 - proximity 검사 (살아있는 pawn 중 가장 가까운 것).
+            if (!HasPawnNearby(out PawnEntity nearestPawn, out float nearestDist))
+            {
+                Debug.Log($"[Trader] 콜로니스트가 {TradeRangeUnits:F0}u 안에 없음 (가장 가까운={(nearestPawn!=null?nearestPawn.PawnName:"?")} dist={nearestDist:F1})");
+                return false;
+            }
             var (label, gW, gS, gF, rW, rS, rF, rM) = TradeOptions[idx];
             if (rm.wood < gW || rm.stone < gS || rm.food < gF)
             {
@@ -83,6 +93,22 @@ namespace MelonS.GameProto
             if (rM > 0) rm.AddMeals(rM);
             Debug.Log($"[Trader] 거래 성공: {label}");
             return true;
+        }
+
+        // #168 - 살아있는 가장 가까운 pawn 이 TradeRangeUnits 안인가.
+        private bool HasPawnNearby(out PawnEntity nearest, out float dist)
+        {
+            nearest = null; dist = float.MaxValue;
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            Vector3 myPos = transform.position;
+            foreach (var p in pawns)
+            {
+                if (p == null) continue;
+                if (p.IsDead) continue;
+                float d = Vector3.Distance(p.transform.position, myPos);
+                if (d < dist) { dist = d; nearest = p; }
+            }
+            return nearest != null && dist <= TradeRangeUnits;
         }
     }
 }
