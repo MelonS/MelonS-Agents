@@ -67,7 +67,7 @@ namespace MelonS.GameProto
             rt.sizeDelta = new Vector2(280, 440);
             rt.anchoredPosition = new Vector2(12, 0);
             bg = gameObject.AddComponent<Image>();
-            bg.color = new Color(0.07f, 0.08f, 0.10f, 0.93f);
+            bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
 
             BuildMenu();
             gameObject.SetActive(false);
@@ -94,7 +94,7 @@ namespace MelonS.GameProto
             t.font = font;
             t.fontSize = 22;
             t.fontStyle = FontStyle.Bold;
-            t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.UpperCenter;
             var trt = titleGo.GetComponent<RectTransform>();
             trt.anchorMin = new Vector2(0, 1);
@@ -127,7 +127,7 @@ namespace MelonS.GameProto
                 var items = kv.Value;
                 // 카테고리 헤더 (toggle)
                 var headerGo = MakeBtn(contentRoot.transform, catName,
-                    new Vector2(0, -y), new Color(0.20f, 0.22f, 0.25f, 0.95f),
+                    new Vector2(0, -y), MelonS.GameProto.Core.UITheme.HeaderBg,
                     () => { activeCategory = (activeCategory == catName) ? "" : catName; RefreshContent(); });
                 var ht = headerGo.GetComponentInChildren<Text>();
                 ht.text = (activeCategory == catName ? "▼ " : "▶ ") + catName;
@@ -140,7 +140,7 @@ namespace MelonS.GameProto
                     {
                         var bcap = mode;  // closure capture
                         MakeBtn(contentRoot.transform, label,
-                            new Vector2(16, -y), new Color(0.13f, 0.15f, 0.18f, 0.95f),
+                            new Vector2(16, -y), MelonS.GameProto.Core.UITheme.BtnInactiveBg,
                             () => {
                                 if (BuildManager.Instance != null)
                                 {
@@ -181,7 +181,7 @@ namespace MelonS.GameProto
             t.text = label;
             t.font = font;
             t.fontSize = 16;
-            t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleLeft;
             t.raycastTarget = false;
             var trt = txtGo.GetComponent<RectTransform>();

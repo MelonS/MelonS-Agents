@@ -42,7 +42,7 @@ namespace MelonS.GameProto
             rt.anchoredPosition = new Vector2(-12, 0);  // 화면 우측 정확히 가운데
 
             bg = gameObject.AddComponent<Image>();
-            bg.color = new Color(0.04f, 0.06f, 0.09f, 0.95f);
+            bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
             bg.raycastTarget = false;  // #128 - 클릭 통과 (entity 클릭 안 막음)
 
             // 제목 - 노란 강조 (림 inspect 느낌)
@@ -53,7 +53,7 @@ namespace MelonS.GameProto
             titleText.font = LoadKoreanFont(22);
             titleText.fontSize = 22;
             titleText.fontStyle = FontStyle.Bold;
-            titleText.color = new Color(1.0f, 0.85f, 0.30f, 1f);
+            titleText.color = MelonS.GameProto.Core.UITheme.AccentGold;
             titleText.alignment = TextAnchor.UpperLeft;
             titleText.raycastTarget = false;
             var trt = titleGo.GetComponent<RectTransform>();
@@ -69,7 +69,7 @@ namespace MelonS.GameProto
             bodyText.text = "💡 나무/벽/사슴/광맥 등을\n좌클릭하면 정보가 표시됩니다.";
             bodyText.font = LoadKoreanFont(15);
             bodyText.fontSize = 15;
-            bodyText.color = new Color(0.85f, 0.85f, 0.78f, 1f);
+            bodyText.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             bodyText.alignment = TextAnchor.UpperLeft;
             bodyText.horizontalOverflow = HorizontalWrapMode.Wrap;
             bodyText.verticalOverflow = VerticalWrapMode.Overflow;
