@@ -222,7 +222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70074e4219089c44a97398a585b13f5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chopRange: 1.2
+  chopRange: 1.5
   chopDamagePerSec: 25
 --- !u!114 &3583107881296190084
 MonoBehaviour:
@@ -236,7 +236,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30d5cbc636b739d44a5aac405f46296e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gatherRange: 1.2
+  gatherRange: 1.5
   gatherInterval: 0.8
 --- !u!114 &4870207347937742543
 MonoBehaviour:
@@ -265,7 +265,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61c2b95bd665f8c41b89b603bed4acec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cookRange: 1
+  cookRange: 1.5
   cookInterval: 1.5
 --- !u!114 &7417103467123377494
 MonoBehaviour:
@@ -279,7 +279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a717ff5bc8407b547b3e0319b1502eee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pickupRange: 1
+  pickupRange: 1.5
   giveUpAfterSec: 8
 --- !u!114 &6757673875825368526
 MonoBehaviour:
@@ -307,7 +307,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6ef7afd80a873544aefbff0901a7180, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mineRange: 1.2
+  mineRange: 1.5
   mineDamagePerSec: 20
   giveUpAfterSec: 12
 --- !u!114 &591835251418990162

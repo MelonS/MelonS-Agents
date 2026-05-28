@@ -57,6 +57,15 @@ namespace MelonS.GameProto
         {
             if (IsDrafted == value) return;
             IsDrafted = value;
+            if (IsDrafted)
+            {
+                // #199 C2 — a drafted pawn drops all work; release its reservations
+                //  (target + stand cell) so other colonists can claim that work
+                //  while this one is under manual control.  ClearTask on each worker
+                //  releases the central reservations; ReleaseAll is the backstop.
+                ClearAllWorkTasks();
+                MelonS.GameProto.AI.ReservationManager.ReleaseAll(gameObject);
+            }
             if (!IsDrafted)
             {
                 DraftedAttackTarget = null;
@@ -65,6 +74,28 @@ namespace MelonS.GameProto
             }
             ApplyVisual();
             Debug.Log($"[Pawn:{pawnName}] draft={IsDrafted}");
+        }
+
+        // #199 C2 — clear every worker component's task (each ClearTask releases its
+        //  own reservations).  Used on draft and death/downed.
+        private void ClearAllWorkTasks()
+        {
+            GetComponent<PawnChopper>()?.ClearTask();
+            GetComponent<PawnGatherer>()?.ClearTask();
+            GetComponent<PawnHunter>()?.ClearTask();
+            GetComponent<PawnCook>()?.ClearTask();
+            GetComponent<PawnHauler>()?.ClearTask();
+            GetComponent<PawnBuilder>()?.ClearTask();
+            GetComponent<PawnMiner>()?.ClearTask();
+            GetComponent<PawnDoctor>()?.ClearTask();
+        }
+
+        // #199 C2 — release ALL reservations on destroy so a despawned/dead pawn
+        //  never leaks a target/cell lock (R-5).  Backstop to the per-worker
+        //  ClearTask releases that fire on the normal death/draft paths.
+        private void OnDestroy()
+        {
+            MelonS.GameProto.AI.ReservationManager.ReleaseAll(gameObject);
         }
 
         private float nextAttackTime = -1f;
@@ -166,6 +197,9 @@ namespace MelonS.GameProto
                 {
                     Hp = 0;
                     Debug.Log($"[Pawn:{pawnName}] DOWN (body-part death)");
+                    // #199 C2 — dead/downed pawn frees its work for others.
+                    ClearAllWorkTasks();
+                    MelonS.GameProto.AI.ReservationManager.ReleaseAll(gameObject);
                     enabled = false;
                     return;
                 }
@@ -179,6 +213,9 @@ namespace MelonS.GameProto
             if (Hp <= 0)
             {
                 Debug.Log($"[Pawn:{pawnName}] DOWN");
+                // #199 C2 — dead/downed pawn frees its work for others.
+                ClearAllWorkTasks();
+                MelonS.GameProto.AI.ReservationManager.ReleaseAll(gameObject);
                 enabled = false;
             }
         }

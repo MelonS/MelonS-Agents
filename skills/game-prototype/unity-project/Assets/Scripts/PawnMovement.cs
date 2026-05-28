@@ -55,12 +55,177 @@ namespace MelonS.GameProto
             Grid.SetStructureBlocked(PathGrid.WorldToCell(worldPos), false);
         }
 
+        // #199 C1 — shared RimWorld-style "stand adjacent to the work object"
+        //  helper for all workers (Chop/Gather/Build/Mine/Cook/Haul/...).  Returns
+        //  the world position the worker should WALK TO (an adjacent walkable cell
+        //  centre next to the target footprint) and whether such a cell exists.
+        //
+        //  Null-safe: when the live Grid hasn't been built (headless V-scenes with
+        //  no bootstrap, or pathfinding off) we fall back to the target's OWN
+        //  position and return true — i.e. old "walk onto it" behaviour, so those
+        //  contexts don't regress.  When the Grid exists but the target is fully
+        //  enclosed (no walkable neighbour) we return false → caller treats the
+        //  target as unreachable, same as LastPathFailed.
+        //
+        //  targetWorld = the work object's transform position.
+        //  footprint   = its cell size (1×1 default; 1×2 bed / 2×1 bench).
+        public static bool TryGetWorkStandPos(Vector2 targetWorld, Vector2Int footprint,
+            Vector2 fromPos, out Vector2 standWorld)
+        {
+            if (Grid == null || !UsePathfinding)
+            {
+                standWorld = targetWorld;   // no grid → legacy "walk onto target"
+                return true;
+            }
+            return Grid.TryGetAdjacentStandCell(targetWorld, footprint, fromPos, out standWorld);
+        }
+
+        // 1×1 convenience overload (the common case).
+        public static bool TryGetWorkStandPos(Vector2 targetWorld, Vector2 fromPos, out Vector2 standWorld)
+            => TryGetWorkStandPos(targetWorld, new Vector2Int(1, 1), fromPos, out standWorld);
+
+        // #199 C2 — RESERVED stand-cell helper (fixes C1's per-frame recompute
+        //  caveat AND prevents two pawns targeting the same adjacent cell).  A
+        //  worker calls this ONCE on commit and then every frame; it:
+        //    1. If a cell is already locked (lockedCell != INVALID), still walkable,
+        //       and still reserved by THIS claimant → reuse it (no recompute, no
+        //       re-reserve scan).  This is the per-frame fast path that replaces
+        //       C1's recompute-every-frame.
+        //    2. Otherwise pick the nearest walkable adjacent cell NOT reserved by
+        //       another pawn, reserve it for the claimant, store it in lockedCell,
+        //       and return its world centre.
+        //  Returns false when the target is unreachable (no walkable neighbour) OR
+        //  every free neighbour is reserved by others (caller treats as "wait/
+        //  re-pick", same as unreachable for the give-up path).
+        //
+        //  Null-safe / headless: when no Grid or pathfinding off, falls back to the
+        //  target's own position (legacy walk-onto) and does NOT reserve a cell —
+        //  isolated V-test scenes without a bootstrap keep working unchanged.
+        public static readonly Vector2Int INVALID_CELL = new Vector2Int(int.MinValue, int.MinValue);
+
+        // #199 C2 — "has the pawn ARRIVED at its reserved stand cell?"  Because the
+        //  stand cell is now LOCKED (not recomputed every frame), AdvanceAlongPath
+        //  stops the pawn within arriveDistance of the cell CENTRE — which can leave
+        //  it ~arriveDistance short, i.e. at the cell edge.  A pure dist-to-target
+        //  check then sits exactly on the work-range boundary and flaps (RimWorld:
+        //  the pawn IS in its reserved work cell, so it should work regardless of the
+        //  sub-cell offset).  Workers treat "standing in the reserved cell" as
+        //  in-range.  Returns false for an invalid lock (legacy dist path still
+        //  applies, e.g. headless V-scenes / moving targets with no stand cell).
+        public bool AtStandCell(Vector2Int standCell)
+        {
+            if (standCell.x == INVALID_CELL.x) return false;
+            return PathGrid.WorldToCell(transform.position) == standCell;
+        }
+
+        public static bool TryReserveWorkStandPos(
+            Vector2 targetWorld, Vector2Int footprint, Vector2 fromPos,
+            GameObject claimant, ref Vector2Int lockedCell, out Vector2 standWorld)
+        {
+            if (Grid == null || !UsePathfinding)
+            {
+                standWorld = targetWorld;   // legacy: no grid → walk onto target
+                return true;
+            }
+
+            // Fast path — already locked, still valid, still ours.
+            if (lockedCell.x != INVALID_CELL.x
+                && Grid.IsWalkable(lockedCell)
+                && !ReservationManager.IsCellReservedByOther(lockedCell, claimant))
+            {
+                // Re-assert ownership (idempotent) so a sweep can't drop it.
+                ReservationManager.TryReserveCell(lockedCell, claimant);
+                standWorld = PathGrid.CellToWorld(lockedCell);
+                return true;
+            }
+
+            // Pick nearest free (not reserved-by-other) walkable adjacent cell.
+            GameObject c = claimant;
+            bool found = Grid.TryGetAdjacentStandCell(
+                targetWorld, footprint, fromPos,
+                cell => ReservationManager.IsCellReservedByOther(cell, c),
+                out Vector2Int chosen);
+
+            if (!found)
+            {
+                // Release any previously-locked cell — we couldn't get a stand cell.
+                if (lockedCell.x != INVALID_CELL.x)
+                {
+                    ReservationManager.ReleaseCell(lockedCell, claimant);
+                    lockedCell = INVALID_CELL;
+                }
+                standWorld = targetWorld;
+                return false;
+            }
+
+            // Moving to a new locked cell → release the old one first.
+            if (lockedCell.x != INVALID_CELL.x && lockedCell != chosen)
+                ReservationManager.ReleaseCell(lockedCell, claimant);
+
+            ReservationManager.TryReserveCell(chosen, claimant);
+            lockedCell = chosen;
+            standWorld = PathGrid.CellToWorld(chosen);
+            return true;
+        }
+
+        // #199 C1 — "in range to work?" distance for a MULTI-CELL target.  A pawn
+        //  standing adjacent to one footprint cell can be far from the footprint's
+        //  transform CENTRE (e.g. a 1×2 bed: adjacent-to-far-cell ≈ 1.8 from
+        //  centre).  Measuring to the NEAREST footprint cell centre instead keeps
+        //  the in-range constant honest (~1.5 covers diagonal adjacency to the
+        //  nearest cell regardless of footprint size).  For a 1×1 target this is
+        //  identical to distance-to-centre.  Returns straight-line world distance
+        //  to the closest covered-cell centre.
+        // Reusable scratch set so this allocation-free per call (R-4 GC hygiene).
+        private static readonly System.Collections.Generic.HashSet<Vector2Int> _footprintScratch
+            = new System.Collections.Generic.HashSet<Vector2Int>();
+        public static float DistanceToFootprint(Vector2 targetWorld, Vector2Int footprint, Vector2 fromPos)
+        {
+            // 1×1 short-circuit: distance to the target centre directly (matches
+            //  legacy dist-to-transform for trees/bushes at sub-cell positions).
+            if (footprint.x <= 1 && footprint.y <= 1)
+                return Vector2.Distance(targetWorld, fromPos);
+            PathGrid.CoveredCells(targetWorld, footprint, _footprintScratch);
+            float best = float.MaxValue;
+            foreach (var cell in _footprintScratch)
+            {
+                Vector2 c = PathGrid.CellToWorld(cell);
+                float sq = (c - fromPos).sqrMagnitude;
+                if (sq < best) best = sq;
+            }
+            return Mathf.Sqrt(best);
+        }
+
         public static bool IsBlockedAt(Vector2 worldPos)
         {
             if (GroundTilemap == null) return false;
             Vector3Int cell = GroundTilemap.WorldToCell(new Vector3(worldPos.x, worldPos.y, 0));
             TileBase t = GroundTilemap.GetTile(cell);
             return t != null && (t == WaterTile || t == RockTile);
+        }
+
+        // #199 C3 — find the nearest walkable cell to a (possibly blocked) cell,
+        //  searching in rings of growing Chebyshev radius.  Used as the escape hatch
+        //  when a pawn is caught on a freshly-completed wall cell.  Bounded search
+        //  (radius ≤ 8) so a pawn truly sealed in returns false (give up).
+        private static bool TryNearestWalkable(Vector2Int from, out Vector2Int result)
+        {
+            result = from;
+            if (Grid == null) return false;
+            for (int r = 1; r <= 8; r++)
+            {
+                for (int dx = -r; dx <= r; dx++)
+                {
+                    for (int dy = -r; dy <= r; dy++)
+                    {
+                        // only the outer ring of this radius
+                        if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy)) != r) continue;
+                        var c = new Vector2Int(from.x + dx, from.y + dy);
+                        if (Grid.IsWalkable(c)) { result = c; return true; }
+                    }
+                }
+            }
+            return false;
         }
 
         // #157 - 바닥 위 (FloorEntity) 면 이동 속도 보너스.
@@ -154,6 +319,21 @@ namespace MelonS.GameProto
                 }
 
                 Vector2Int startCell = PathGrid.WorldToCell(transform.position);
+                // #199 C3 (item 3) — a wall blueprint may be placed on a cell a pawn
+                //  is standing on (RimWorld allows it; the pawn walks off).  If the
+                //  wall COMPLETES before the pawn moved, the pawn's start cell becomes
+                //  blocked and AStar would refuse to path (it rejects a blocked start)
+                //  → trapped.  Escape hatch: when the start cell is no longer walkable,
+                //  path from the nearest walkable neighbour instead so the pawn can
+                //  step OUT of the wall it was caught in rather than freezing.
+                if (!Grid.IsWalkable(startCell))
+                {
+                    Vector2Int escape;
+                    if (TryNearestWalkable(startCell, out escape))
+                        startCell = escape;
+                    // else: genuinely sealed in on all sides → falls through to the
+                    //  null-path give-up below (LastPathFailed), same as RimWorld.
+                }
                 var path = AStar.FindPath(Grid, startCell, goalCell);
                 if (path == null || path.Count == 0)
                 {

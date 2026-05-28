@@ -113,6 +113,10 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I38-wall-blocks-path-detour", TestI38_WallBlocksPathDetour);
             // #199 B3 - 벽 라인 사이의 문은 통과 가능 (door cell 은 walkable 유지)
             yield return RunOne("I39-door-in-wall-passable", TestI39_DoorInWallPassable);
+            // #199 C1 - 일꾼이 나무 바로 위가 아닌 인접 cell 에 서서 벌목 (RimWorld)
+            yield return RunOne("I40-chop-from-adjacent-cell", TestI40_ChopFromAdjacentCell);
+            // #199 C3 - 청사진 배치 검증: 물/바위 거부, 벽 점유 거부, 빈 잔디 허용 (RimWorld)
+            yield return RunOne("I41-build-placement-validation", TestI41_BuildPlacementValidation);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -181,8 +185,28 @@ namespace MelonS.GameProto.Tests
             { Assert(false, $"ClickSelector={cs!=null}, pawns={pawns.Length}"); yield break; }
             var pawn = pawns[0];
             Vector3 startPos = pawn.transform.position;
-            // target: pawn 으로부터 4 unit 왼쪽 - empty 일 가능성 (정착지 영역 안)
-            Vector2 target = new Vector2(startPos.x - 4f, startPos.y);
+            // #199 (C3 fix) — target must be a WALKABLE cell.  The original target
+            //  (4 units WEST) lands on cell (-4,1), which is a STARTER WALL
+            //  (SceneSetup.Game.Settlement wallSpots).  Pre-A* point-lerp slid the
+            //  pawn west until it bumped the wall (moved>1 → PASS by accident).  Now
+            //  that A* is live (#199 B2/B3) a target ON a wall cell correctly yields
+            //  NO path → pawn doesn't move → moved=0 → FALSE fail.  The test's INTENT
+            //  ("right-click moves the pawn") is unchanged; we just aim at a real
+            //  walkable cell.  Prefer EAST (starter walls are to the west); if the
+            //  live grid is available, pick the first walkable of E/N/S/W 4 cells out.
+            Vector2 target = new Vector2(startPos.x + 4f, startPos.y);   // east, open grass
+            var grid = PawnMovement.Grid;
+            if (grid != null)
+            {
+                Vector2[] cands = {
+                    new Vector2(startPos.x + 4f, startPos.y),
+                    new Vector2(startPos.x, startPos.y + 4f),
+                    new Vector2(startPos.x, startPos.y - 4f),
+                    new Vector2(startPos.x - 4f, startPos.y),
+                };
+                foreach (var c in cands)
+                    if (grid.IsWalkable(AI.PathGrid.WorldToCell(c))) { target = c; break; }
+            }
             // ClickSelector 의 mouse 시뮬레이션: 진짜 우클릭 logic 직접 호출
             //  Select → RightClickAt(target)
             cs.SimulateSelect(pawn);
@@ -787,7 +811,13 @@ namespace MelonS.GameProto.Tests
             {
                 var wr = desc.Invoke(panel, new object[] { wall.gameObject });
                 string wt = (string)wr.GetType().GetField("Item1").GetValue(wr);
-                Assert(wt == "벽", $"wall describe title='{wt}'");
+                // #199 (C3 fix) — the wall inspector title is the MATERIAL-prefixed
+                //  name ("목재 벽" / "석재 벽" / "강철 벽") since #150's stone-wall work,
+                //  NOT a bare "벽".  The old assert (wt=="벽") only avoided failing
+                //  when the LATER animal assert overwrote the result, so it failed
+                //  flakily whenever FindFirstObjectByType picked a wall AND no animal
+                //  ran after.  Product behavior is correct; accept any "... 벽" title.
+                Assert(wt != null && wt.Contains("벽"), $"wall describe title='{wt}' (expected '...벽')");
             }
             var deer = Object.FindFirstObjectByType<AnimalEntity>();
             if (deer != null)
@@ -1490,6 +1520,199 @@ namespace MelonS.GameProto.Tests
             Assert(doorWalkable && flanksBlocked && pathOk && arrived && passedDoorCell,
                 $"I39 door pass: doorWalkable={doorWalkable} flanksBlocked={flanksBlocked} pathOk={pathOk} arrived={arrived} passedDoorCell={passedDoorCell} endPos=({endPos.x:F1},{endPos.y:F1}) (문 통과)");
             Debug.Log($"[Int] I39 detail: doorWalkable={doorWalkable} flanksBlocked={flanksBlocked} arrived={arrived} passedDoor={passedDoorCell} endDist={endDist:F2}");
+        }
+
+        /// <summary>I40 (#199 C1): a chopper walks to an ADJACENT cell of the tree
+        /// (RimWorld reach-over) and chops it — proving the pawn's final cell is
+        /// adjacent to (NOT equal to) the tree's cell AND the work completed (tree
+        /// destroyed / wood pile dropped).  Runs on the live A* grid.</summary>
+        private IEnumerator TestI40_ChopFromAdjacentCell()
+        {
+            yield return null;
+            var grid = PawnMovement.Grid;
+            if (grid == null || !PawnMovement.UsePathfinding)
+            { Assert(false, $"Grid={grid!=null} UsePathfinding={PawnMovement.UsePathfinding} (live A* 필요)"); yield break; }
+
+            // Terrain-clear region (verified vs lake/rock layout — same family of
+            //  cells I38/I39 use, offset east-south).  Tree at cell (12,-8); pawn
+            //  starts ~5 cells west so it must walk and STOP on a neighbour cell.
+            int treeCX = 12, treeCY = -8;
+            bool fixtureOk = true;
+            for (int x = treeCX - 4; x <= treeCX + 2 && fixtureOk; x++)
+                for (int y = treeCY - 2; y <= treeCY + 2 && fixtureOk; y++)
+                    if (!grid.IsWalkable(new Vector2Int(x, y))) fixtureOk = false;
+            if (!fixtureOk)
+            { Assert(false, "I40 fixture cells unexpectedly blocked on real terrain — pick a clearer region"); yield break; }
+
+            var rm = Services.Get<ResourceManager>();
+            int startWood = rm != null ? rm.wood : 0;
+
+            // fresh tree at the cell centre.
+            Vector3 treePos = new Vector3(treeCX + 0.5f, treeCY + 0.5f, 0f);
+            var tgo = new GameObject("I40_Tree");
+            tgo.transform.position = treePos;
+            var tsr = tgo.AddComponent<SpriteRenderer>();
+            tsr.sprite = Object.FindFirstObjectByType<TreeEntity>()?.GetComponent<SpriteRenderer>()?.sprite;
+            tsr.sortingOrder = 5;
+            tgo.AddComponent<BoxCollider2D>().size = Vector2.one;
+            var tree = tgo.AddComponent<TreeEntity>();
+            var treeCell = AI.PathGrid.WorldToCell(treePos);
+
+            // fresh chopper pawn 5 cells west.
+            var pgo = new GameObject("I40_Chopper");
+            pgo.transform.position = new Vector3(treeCX - 5 + 0.5f, treeCY + 0.5f, 0f);
+            pgo.AddComponent<SpriteRenderer>();
+            pgo.AddComponent<BoxCollider2D>().size = Vector2.one;
+            pgo.AddComponent<PawnEntity>();
+            pgo.AddComponent<PawnMovement>();
+            var chopper = pgo.AddComponent<PawnChopper>();
+            yield return null;
+
+            chopper.SetTreeTarget(tree);
+            bool taskSet = chopper.HasTask;
+
+            // Sample the pawn's cell once it has arrived & is chopping (movement
+            //  stopped) but BEFORE the tree is destroyed — that's when "stands
+            //  adjacent" is observable.  Track the cell across the chop window.
+            bool sawAdjacentWhileChopping = false;
+            bool everStoodOnTree = false;
+            bool treeGone = false;
+            for (int i = 0; i < 240; i++)   // up to ~12s
+            {
+                yield return new WaitForSeconds(0.05f);
+                if (tree == null || tree.gameObject == null || tree.IsDestroyed) { treeGone = true; break; }
+                var pcell = AI.PathGrid.WorldToCell(pgo.transform.position);
+                bool stopped = !pgo.GetComponent<PawnMovement>().HasTarget;
+                if (pcell == treeCell) everStoodOnTree = true;
+                if (stopped && pcell != treeCell
+                    && Mathf.Abs(pcell.x - treeCell.x) <= 1 && Mathf.Abs(pcell.y - treeCell.y) <= 1)
+                    sawAdjacentWhileChopping = true;
+            }
+
+            int endWood = rm != null ? rm.wood : 0;
+            int pilesNear = 0;
+            foreach (var p in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
+                if (p != null && Vector2.Distance(p.transform.position, treePos) < 2f) pilesNear++;
+            Vector3 endPos = pgo.transform.position;
+            var endCell = AI.PathGrid.WorldToCell(endPos);
+
+            // Work completed: tree destroyed (it dropped a pile) OR wood counter up.
+            bool workDone = treeGone || endWood > startWood || pilesNear > 0;
+            // Adjacency proven: at some chopping frame the pawn was on a neighbour
+            //  cell, never stood ON the tree's cell.
+            bool adjacency = sawAdjacentWhileChopping && !everStoodOnTree;
+
+            // cleanup
+            Object.Destroy(pgo);
+            if (tree != null && tree.gameObject != null) Object.Destroy(tgo);
+            foreach (var p in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
+                if (p != null && Vector2.Distance(p.transform.position, treePos) < 2f) Object.Destroy(p.gameObject);
+            yield return null;
+
+            Assert(taskSet && adjacency && workDone,
+                $"I40 adjacency chop: taskSet={taskSet} sawAdjacent={sawAdjacentWhileChopping} stoodOnTree={everStoodOnTree} workDone={workDone}(treeGone={treeGone} wood {startWood}->{endWood} piles={pilesNear}) endCell={endCell} treeCell={treeCell}");
+            Debug.Log($"[Int] I40 detail: adjacency={adjacency} workDone={workDone} endCell={endCell} treeCell={treeCell} stoodOnTree={everStoodOnTree}");
+        }
+
+        /// <summary>I41 (#199 C3): build-placement validation, RimWorld-style.
+        ///   (a) blueprint on impassable terrain (water/rock) → REJECTED (no bp);
+        ///   (b) blueprint on a cell with an existing wall      → REJECTED (no bp);
+        ///   (c) blueprint on a valid open walkable cell        → SUCCEEDS (bp made).
+        /// Cells are DISCOVERED from the live PathGrid (scan for a non-walkable
+        /// terrain cell + a clear walkable cell) so the test doesn't hardcode lake/
+        /// rock coords that could drift if the map layout changes.</summary>
+        private IEnumerator TestI41_BuildPlacementValidation()
+        {
+            yield return null;
+            var bm = BuildManager.Instance;
+            var grid = PawnMovement.Grid;
+            if (bm == null) { Assert(false, "BuildManager.Instance null"); yield break; }
+            if (grid == null) { Assert(false, "PawnMovement.Grid null (live grid 필요)"); yield break; }
+
+            // --- locate a real water/rock cell (terrain-blocked, no structure on it).
+            //  Scan a wide region; the live map has 4 lakes + 5 rock clusters so a
+            //  non-walkable terrain cell certainly exists.  We pick one whose cell is
+            //  blocked purely by terrain (IsBlockedAt true).
+            Vector2Int terrainCell = new Vector2Int(int.MinValue, int.MinValue);
+            bool foundTerrain = false;
+            for (int x = AI.PathGrid.MIN; x <= AI.PathGrid.MAX && !foundTerrain; x++)
+                for (int y = AI.PathGrid.MIN; y <= AI.PathGrid.MAX && !foundTerrain; y++)
+                {
+                    var c = new Vector2Int(x, y);
+                    // terrain-blocked == raw water/rock tile (not a wall).
+                    if (PawnMovement.IsBlockedAt(new Vector2(x + 0.5f, y + 0.5f)))
+                    { terrainCell = c; foundTerrain = true; }
+                }
+
+            // --- locate a clear open walkable cell well away from settlement clutter
+            //  (no structure, walkable terrain).  Far map quadrant, scan for a free
+            //  one verified via the QA-style physics overlap being empty.
+            Vector2Int openCell = new Vector2Int(int.MinValue, int.MinValue);
+            bool foundOpen = false;
+            for (int x = 22; x <= 28 && !foundOpen; x++)
+                for (int y = 22; y <= 28 && !foundOpen; y++)
+                {
+                    var c = new Vector2Int(x, y);
+                    if (!grid.IsWalkable(c)) continue;
+                    // ensure physically clear (no entity/blueprint sitting there)
+                    var hits = Physics2D.OverlapBoxAll(new Vector2(x + 0.5f, y + 0.5f), Vector2.one * 0.4f, 0f);
+                    bool clear = true;
+                    foreach (var h in hits) { if (h != null && h.GetComponent<PawnEntity>() == null) { clear = false; break; } }
+                    if (clear) { openCell = c; foundOpen = true; }
+                }
+
+            if (!foundTerrain) { Assert(false, "물/바위 cell 못 찾음 (terrain scan 실패)"); yield break; }
+            if (!foundOpen)   { Assert(false, "빈 잔디 cell 못 찾음 (open scan 실패)"); yield break; }
+
+            int Bp() => Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None).Length;
+
+            bm.SetMode(BuildManager.Mode.Wall);
+            yield return null;
+
+            // (a) water/rock → reject
+            int before_a = Bp();
+            bool placed_a = bm.TryPlaceAt(terrainCell.x, terrainCell.y);
+            yield return null;
+            int after_a = Bp();
+            bool rejectTerrain = !placed_a && after_a == before_a;
+
+            // (b) cell with an existing wall → reject.  Spawn a real wall first.
+            var wallGo = SpawnWallAtCell(openCell.x, openCell.y);
+            yield return null;   // WallEntity.Start() registers cell + adds collider
+            yield return null;
+            int before_b = Bp();
+            bool placed_b = bm.TryPlaceAt(openCell.x, openCell.y);
+            yield return null;
+            int after_b = Bp();
+            bool rejectOccupied = !placed_b && after_b == before_b;
+
+            // remove the wall so (c) can use a now-clear walkable cell.
+            if (wallGo != null) Object.Destroy(wallGo);
+            yield return null;   // OnDestroy → grid reopens + collider gone
+            yield return null;
+
+            // (c) valid open grass cell → succeed
+            int before_c = Bp();
+            bool placed_c = bm.TryPlaceAt(openCell.x, openCell.y);
+            yield return null;
+            int after_c = Bp();
+            bool acceptOpen = placed_c && after_c == before_c + 1;
+
+            // cleanup: mode off + destroy the blueprint we created at openCell.
+            bm.SetMode(BuildManager.Mode.Off);
+            foreach (var bp in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
+            {
+                if (bp == null) continue;
+                if (Vector2.Distance(bp.transform.position, new Vector2(openCell.x + 0.5f, openCell.y + 0.5f)) < 0.6f)
+                    Object.Destroy(bp.gameObject);
+            }
+            yield return null;
+
+            Assert(rejectTerrain && rejectOccupied && acceptOpen,
+                $"I41 placement-validation: terrain({terrainCell})→reject={rejectTerrain}(placed={placed_a},bp {before_a}->{after_a}) "
+                + $"wall({openCell})→reject={rejectOccupied}(placed={placed_b},bp {before_b}->{after_b}) "
+                + $"open({openCell})→accept={acceptOpen}(placed={placed_c},bp {before_c}->{after_c})");
+            Debug.Log($"[Int] I41 detail: rejectTerrain={rejectTerrain} rejectOccupied={rejectOccupied} acceptOpen={acceptOpen} terrainCell={terrainCell} openCell={openCell}");
         }
 
         private void FinalizeReport()

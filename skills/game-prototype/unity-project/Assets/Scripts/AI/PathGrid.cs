@@ -191,5 +191,194 @@ namespace MelonS.GameProto.AI
         /// <summary>World-space CENTER of a cell (pawn stands at cell center).</summary>
         public static Vector2 CellToWorld(Vector2Int cell)
             => new Vector2(cell.x + 0.5f, cell.y + 0.5f);
+
+        // ---- #199 C1 — RimWorld-style adjacent work-cell selection ------------
+        //
+        //  RimWorld pawns do NOT stand ON the thing they work; they stand in a
+        //  WALKABLE cell ADJACENT (8-neighbour, diagonals included) to the target
+        //  and reach over.  These helpers return the world CENTER of the best such
+        //  adjacent cell so every worker (Chop/Gather/Build/Mine/Cook/Haul/...)
+        //  uses ONE shared rule instead of copy-pasting it 7×.
+        //
+        //  Selection rule (cheap variant per plan): among all walkable 8-neighbour
+        //  cells of the target footprint, pick the one whose CENTER is closest to
+        //  the pawn's current position.  This minimises the pawn's remaining walk
+        //  AND naturally lands it on the near side of the object (so it doesn't
+        //  walk the long way round to a far neighbour).  We avoid running a full
+        //  A* per candidate (R-4 cost) — the nearest walkable neighbour is the
+        //  RimWorld-cheap heuristic and A* from the pawn to that cell still routes
+        //  around any obstacle in between.
+        //
+        //  Corner-cut safety: a DIAGONAL stand cell is only offered if the pawn
+        //  could actually step onto it without squeezing between two blocked
+        //  corners relative to the TARGET — i.e. at least one of the two cells
+        //  orthogonally shared between the diagonal neighbour and the target cell
+        //  is walkable.  Mirrors AStar's no-corner-cut rule so the chosen stand
+        //  cell is genuinely reachable to reach-over the target.
+
+        // 8-neighbour offsets (cardinals first, then diagonals — same order/intent
+        //  as AStar.Dirs so adjacency is consistent across the codebase).
+        private static readonly Vector2Int[] Neighbours8 =
+        {
+            new Vector2Int( 1,  0), new Vector2Int(-1,  0),
+            new Vector2Int( 0,  1), new Vector2Int( 0, -1),
+            new Vector2Int( 1,  1), new Vector2Int( 1, -1),
+            new Vector2Int(-1,  1), new Vector2Int(-1, -1),
+        };
+
+        /// <summary>
+        /// #199 C1 — covered-cell set for a target whose TRANSFORM sits at
+        /// <paramref name="targetWorld"/> with the given <paramref name="footprint"/>.
+        ///
+        /// Convention MATCHES BuildManager placement: a w×h entity is placed at the
+        /// geometric centre (cx + w/2, cy + h/2) of its w×h cell block, so the
+        /// covered cells are (cx+i, cy+j) for i∈[0,w), j∈[0,h).  Recovering cx from
+        /// the centre: cx = floor(targetWorld.x − w/2 + 0.5).  For a 1×1 target this
+        /// reduces to floor(targetWorld.x) == WorldToCell — so a tree/bush/stove at
+        /// any sub-cell position maps to the cell it stands in, while a 1×2 bed at
+        /// (cx+0.5, cy+1.0) recovers exactly {(cx,cy),(cx,cy+1)}.
+        /// </summary>
+        public static void CoveredCells(Vector2 targetWorld, Vector2Int footprint, HashSet<Vector2Int> into)
+        {
+            into.Clear();
+            int fw = Mathf.Max(1, footprint.x);
+            int fh = Mathf.Max(1, footprint.y);
+            int xLo = Mathf.FloorToInt(targetWorld.x - fw * 0.5f + 0.5f);
+            int yLo = Mathf.FloorToInt(targetWorld.y - fh * 0.5f + 0.5f);
+            for (int dx = 0; dx < fw; dx++)
+                for (int dy = 0; dy < fh; dy++)
+                    into.Add(new Vector2Int(xLo + dx, yLo + dy));
+        }
+
+        /// <summary>
+        /// #199 C1 — single-cell target by CELL (test/direct use).  Finds the best
+        /// WALKABLE 8-neighbour cell of <paramref name="targetCell"/> for a pawn at
+        /// <paramref name="fromPos"/>.  Outputs the stand cell's world CENTRE.
+        /// Returns false when NO neighbour is walkable (unreachable).
+        /// </summary>
+        public bool TryGetAdjacentStandCell(Vector2Int targetCell, Vector2 fromPos, out Vector2 standWorld)
+            => TryGetAdjacentStandCell(CellToWorld(targetCell), new Vector2Int(1, 1), fromPos, out standWorld);
+
+        /// <summary>
+        /// #199 C1 — primary entry.  Find the best WALKABLE cell ADJACENT
+        /// (8-neighbour) to the target's footprint for a pawn at
+        /// <paramref name="fromPos"/> to stand in and reach over, RimWorld-style.
+        /// <paramref name="targetWorld"/> is the target transform position,
+        /// <paramref name="footprint"/> its size in cells (1×1 default; 1×2 bed,
+        /// 2×1 bench).  "Adjacent" = adjacent to ANY footprint cell.  Cells INSIDE
+        /// the footprint are never offered (stand beside, not on).  Picks the
+        /// walkable adjacent cell whose centre is closest to <paramref name="fromPos"/>.
+        /// Returns false (object unreachable) if no adjacent cell is walkable.
+        /// </summary>
+        // Reusable scratch set — avoids a per-frame allocation (R-4 GC hygiene);
+        //  Unity is single-threaded so a shared static is safe here.
+        private static readonly HashSet<Vector2Int> _coverScratch = new HashSet<Vector2Int>();
+        public bool TryGetAdjacentStandCell(
+            Vector2 targetWorld, Vector2Int footprint, Vector2 fromPos, out Vector2 standWorld)
+        {
+            var covered = _coverScratch;
+            CoveredCells(targetWorld, footprint, covered);
+
+            // Fallback output: target centre (only used when found==false, which
+            //  callers treat as unreachable anyway).
+            standWorld = targetWorld;
+
+            bool found = false;
+            float bestSq = float.MaxValue;
+            Vector2Int bestCell = default;
+
+            foreach (var cc in covered)
+            {
+                for (int d = 0; d < Neighbours8.Length; d++)
+                {
+                    Vector2Int step = Neighbours8[d];
+                    Vector2Int nc = cc + step;
+                    if (covered.Contains(nc)) continue;     // inside footprint → not a stand cell
+                    if (!IsWalkable(nc)) continue;          // out-of-bounds counts as not walkable
+
+                    // Corner-cut safety for a diagonal neighbour of THIS footprint
+                    //  cell: at least one shared orthogonal cell must be walkable
+                    //  (or be part of the footprint, which the pawn reaches over),
+                    //  else the pawn can't legally step from the gap into nc.
+                    bool diagonal = step.x != 0 && step.y != 0;
+                    if (diagonal)
+                    {
+                        Vector2Int side1 = new Vector2Int(cc.x + step.x, cc.y);
+                        Vector2Int side2 = new Vector2Int(cc.x, cc.y + step.y);
+                        bool s1 = IsWalkable(side1) || covered.Contains(side1);
+                        bool s2 = IsWalkable(side2) || covered.Contains(side2);
+                        if (!s1 && !s2) continue;
+                    }
+
+                    float sq = ((Vector2)CellToWorld(nc) - fromPos).sqrMagnitude;
+                    if (sq < bestSq)
+                    {
+                        bestSq = sq;
+                        bestCell = nc;
+                        found = true;
+                    }
+                }
+            }
+
+            if (found) standWorld = CellToWorld(bestCell);
+            return found;
+        }
+
+        // ---- #199 C2 — reservable stand-cell selection -----------------------
+        //
+        //  RimWorld reserves the cell a worker stands in so two pawns don't path to
+        //  the same adjacent cell.  TryGetAdjacentStandCell above always returns the
+        //  single nearest walkable neighbour; for C2 we need to be able to SKIP a
+        //  neighbour another pawn already reserved and fall back to the next-nearest
+        //  free one.  This overload returns the chosen stand CELL (not just world)
+        //  and lets the caller pass a predicate that rejects cells reserved by
+        //  others.  The predicate stays out of PathGrid (which is pure grid data) —
+        //  the worker supplies the ReservationManager check.
+
+        /// <summary>
+        /// #199 C2 — like TryGetAdjacentStandCell but returns the chosen stand CELL
+        /// and skips any candidate for which <paramref name="rejectCell"/> returns
+        /// true (e.g. "reserved by another pawn").  Picks the nearest ACCEPTED
+        /// walkable adjacent cell to <paramref name="fromPos"/>.  Returns false when
+        /// no accepted walkable adjacent cell exists (fully blocked OR every free
+        /// neighbour is already reserved → caller waits / re-picks).
+        /// </summary>
+        public bool TryGetAdjacentStandCell(
+            Vector2 targetWorld, Vector2Int footprint, Vector2 fromPos,
+            System.Func<Vector2Int, bool> rejectCell, out Vector2Int standCell)
+        {
+            var covered = _coverScratch;
+            CoveredCells(targetWorld, footprint, covered);
+
+            standCell = default;
+            bool found = false;
+            float bestSq = float.MaxValue;
+
+            foreach (var cc in covered)
+            {
+                for (int d = 0; d < Neighbours8.Length; d++)
+                {
+                    Vector2Int step = Neighbours8[d];
+                    Vector2Int nc = cc + step;
+                    if (covered.Contains(nc)) continue;
+                    if (!IsWalkable(nc)) continue;
+                    if (rejectCell != null && rejectCell(nc)) continue;   // C2: reserved by other
+
+                    bool diagonal = step.x != 0 && step.y != 0;
+                    if (diagonal)
+                    {
+                        Vector2Int side1 = new Vector2Int(cc.x + step.x, cc.y);
+                        Vector2Int side2 = new Vector2Int(cc.x, cc.y + step.y);
+                        bool s1 = IsWalkable(side1) || covered.Contains(side1);
+                        bool s2 = IsWalkable(side2) || covered.Contains(side2);
+                        if (!s1 && !s2) continue;
+                    }
+
+                    float sq = ((Vector2)CellToWorld(nc) - fromPos).sqrMagnitude;
+                    if (sq < bestSq) { bestSq = sq; standCell = nc; found = true; }
+                }
+            }
+            return found;
+        }
     }
 }

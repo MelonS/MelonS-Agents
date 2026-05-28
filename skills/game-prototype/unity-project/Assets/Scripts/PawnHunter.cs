@@ -33,9 +33,13 @@ namespace MelonS.GameProto
 
         public void SetAnimalTarget(AnimalEntity animal)
         {
+            // #199 C2 — release previous animal on switch (RimWorld job-switch).
+            if (targetAnimal != null && targetAnimal != animal)
+                MelonS.GameProto.AI.ReservationManager.Release(targetAnimal, gameObject);
             targetAnimal = animal;
             if (animal != null)
             {
+                MelonS.GameProto.AI.ReservationManager.TryReserve(animal, gameObject);
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, animal.transform.position));
                 movement.SetTarget(animal.transform.position);
             }
@@ -43,6 +47,8 @@ namespace MelonS.GameProto
 
         public void ClearTask()
         {
+            if (targetAnimal != null)
+                MelonS.GameProto.AI.ReservationManager.Release(targetAnimal, gameObject);
             targetAnimal = null;
             movement.ClearTarget();
         }

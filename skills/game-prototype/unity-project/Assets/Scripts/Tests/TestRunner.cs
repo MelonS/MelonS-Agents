@@ -120,6 +120,9 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V70-astar-no-path-enclosed", TestV70_AStarNoPathEnclosed);
             yield return RunOne("V71-pathfollow-reaches-target", TestV71_PathFollowReachesTarget);
             yield return RunOne("V72-pathfollow-unreachable-signal", TestV72_PathFollowUnreachableSignal);
+            yield return RunOne("V73-adjacent-stand-cell", TestV73_AdjacentStandCell);
+            yield return RunOne("V74-reservation-registry", TestV74_ReservationRegistry);
+            yield return RunOne("V75-distinct-target-and-cell", TestV75_DistinctTargetAndCell);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1747,6 +1750,243 @@ namespace MelonS.GameProto.Tests
             bool ok = failed && !hasTarget && moved < 0.01f;
             Debug.Log($"[TestRunner] V72: {(ok ? "OK" : "FAIL")} - unreachable LastPathFailed={failed} hasTarget={hasTarget} moved={moved:F3} (도달불가 신호)");
             Assert(ok, $"LastPathFailed={failed} hasTarget={hasTarget}(should be false) moved={moved:F3}(<0.01)");
+            yield break;
+        }
+
+        // V73 — #199 C1: TryGetAdjacentStandCell returns a WALKABLE cell ADJACENT
+        //  (8-neighbour) to the target (never the target's own cell), picks a
+        //  reachable one closest to the pawn, returns FALSE when all neighbours are
+        //  blocked, and handles a MULTI-CELL (1×2) footprint (stands beside it).
+        private IEnumerator TestV73_AdjacentStandCell()
+        {
+            var grid = PathGrid.FromMask(AllWalkableMask());
+
+            // --- Case A: single-cell tree at cell (5,5).  Pawn west at world (2,5).
+            //     Expect a walkable adjacent cell, NOT (5,5), and (since pawn is to
+            //     the west) the chosen cell should be the west neighbour (4,5) —
+            //     the nearest walkable neighbour to the pawn.
+            var treeCell = new Vector2Int(5, 5);
+            Vector2 treeWorld = PathGrid.CellToWorld(treeCell);
+            Vector2 pawnWest = new Vector2(2.5f, 5.5f);
+            bool okA = grid.TryGetAdjacentStandCell(treeWorld, new Vector2Int(1, 1), pawnWest, out Vector2 standA);
+            var standCellA = PathGrid.WorldToCell(standA);
+            bool adjacentA = okA
+                && standCellA != treeCell
+                && Mathf.Abs(standCellA.x - treeCell.x) <= 1
+                && Mathf.Abs(standCellA.y - treeCell.y) <= 1
+                && grid.IsWalkable(standCellA);
+            bool nearestA = standCellA == new Vector2Int(4, 5);   // west neighbour
+
+            // --- Case B: pick a REACHABLE one — block all neighbours except the
+            //     east cell (6,5); pawn anywhere → must return exactly (6,5).
+            var grid2 = PathGrid.FromMask(AllWalkableMask());
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    if (dx == 0 && dy == 0) continue;
+                    if (dx == 1 && dy == 0) continue;   // keep east open
+                    grid2.SetWalkable(new Vector2Int(treeCell.x + dx, treeCell.y + dy), false);
+                }
+            bool okB = grid2.TryGetAdjacentStandCell(treeWorld, new Vector2Int(1, 1), pawnWest, out Vector2 standB);
+            bool onlyEast = okB && PathGrid.WorldToCell(standB) == new Vector2Int(6, 5);
+
+            // --- Case C: ALL neighbours blocked → returns false (unreachable).
+            var grid3 = PathGrid.FromMask(AllWalkableMask());
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                    if (!(dx == 0 && dy == 0))
+                        grid3.SetWalkable(new Vector2Int(treeCell.x + dx, treeCell.y + dy), false);
+            bool okC = grid3.TryGetAdjacentStandCell(treeWorld, new Vector2Int(1, 1), pawnWest, out _);
+            bool blockedReturnsFalse = !okC;
+
+            // --- Case D: MULTI-CELL 1×2 bed.  BuildManager places a 1×2 at the
+            //     geometric centre (cx+0.5, cy+1.0); covered cells (cx,cy),(cx,cy+1).
+            //     Use cx=10, cy=10 → centre (10.5, 11.0), covered {(10,10),(10,11)}.
+            //     Stand cell must be adjacent to ONE of those and inside NEITHER.
+            var grid4 = PathGrid.FromMask(AllWalkableMask());
+            Vector2 bedWorld = new Vector2(10.5f, 11.0f);
+            var bedCells = new System.Collections.Generic.HashSet<Vector2Int>
+            { new Vector2Int(10, 10), new Vector2Int(10, 11) };
+            Vector2 pawnBelow = new Vector2(10.5f, 6.5f);
+            bool okD = grid4.TryGetAdjacentStandCell(bedWorld, new Vector2Int(1, 2), pawnBelow, out Vector2 standD);
+            var standCellD = PathGrid.WorldToCell(standD);
+            bool notInside = okD && !bedCells.Contains(standCellD);
+            bool adjacentToBed = false;
+            foreach (var bc in bedCells)
+                if (Mathf.Abs(standCellD.x - bc.x) <= 1 && Mathf.Abs(standCellD.y - bc.y) <= 1)
+                    adjacentToBed = true;
+            // pawn is BELOW → nearest stand cell should be the bottom cell's south
+            //  neighbour (10,9).
+            bool multiOk = okD && notInside && adjacentToBed && standCellD == new Vector2Int(10, 9);
+
+            bool ok = adjacentA && nearestA && onlyEast && blockedReturnsFalse && multiOk;
+            Debug.Log($"[TestRunner] V73: {(ok ? "OK" : "FAIL")} - standA={standCellA} onlyEast={onlyEast} blockedFalse={blockedReturnsFalse} multi={standCellD}({multiOk}) (인접 stand cell)");
+            Assert(ok, $"adjacentA={adjacentA} nearestA={nearestA}(={standCellA}) onlyEast={onlyEast} blockedReturnsFalse={blockedReturnsFalse} multiOk={multiOk}(stand={standCellD})");
+            yield break;
+        }
+
+        // V74 — #199 C2: ReservationManager contract.  A second claimant cannot
+        //  reserve an already-reserved target; after Release / ReleaseAll it can;
+        //  re-reserve by the SAME claimant is idempotent (true); a destroyed
+        //  claimant's reservation does not leak (target is reclaimable + reported
+        //  free); cell reservation behaves the same way.
+        private IEnumerator TestV74_ReservationRegistry()
+        {
+            ReservationManager.Clear();
+
+            // Two claimant GameObjects + one target object.
+            var pawnA = new GameObject("V74_PawnA");
+            var pawnB = new GameObject("V74_PawnB");
+            var target = new GameObject("V74_Target");   // stands in for a TreeEntity GO
+
+            // A reserves the target → true; B is then blocked → false.
+            bool aGot      = ReservationManager.TryReserve(target, pawnA);
+            bool bBlocked  = !ReservationManager.TryReserve(target, pawnB);
+            bool otherSeesIt = ReservationManager.IsReservedByOther(target, pawnB);
+            bool ownerNotOther = !ReservationManager.IsReservedByOther(target, pawnA);
+
+            // Idempotent re-reserve by the SAME claimant → still true, no transfer.
+            bool aReReserve = ReservationManager.TryReserve(target, pawnA);
+            bool stillA = ReservationManager.OwnerOf(target) == pawnA;
+
+            // Release by A → B can now reserve.
+            ReservationManager.Release(target, pawnA);
+            bool freedAfterRelease = !ReservationManager.IsReserved(target);
+            bool bGetsItNow = ReservationManager.TryReserve(target, pawnB);
+
+            // ReleaseAll(B) frees everything B held.
+            ReservationManager.ReleaseAll(pawnB);
+            bool freedAfterReleaseAll = !ReservationManager.IsReserved(target);
+
+            // Cell reservation mirrors target reservation.
+            var cell = new Vector2Int(7, 7);
+            bool cellAGot     = ReservationManager.TryReserveCell(cell, pawnA);
+            bool cellBBlocked = !ReservationManager.TryReserveCell(cell, pawnB);
+            bool cellOtherSees = ReservationManager.IsCellReservedByOther(cell, pawnB);
+            ReservationManager.ReleaseCell(cell, pawnA);
+            bool cellBGetsNow = ReservationManager.TryReserveCell(cell, pawnB);
+
+            // Destroyed-claimant cleanup must NOT leak.  A new claimant C reserves a
+            //  fresh target, then C is Destroyed without ReleaseAll → the target must
+            //  read free (lazy cleanup) and be reclaimable by D.
+            var pawnC = new GameObject("V74_PawnC");
+            var target2 = new GameObject("V74_Target2");
+            ReservationManager.TryReserve(target2, pawnC);
+            Object.DestroyImmediate(pawnC);              // simulate death w/o ReleaseAll
+            yield return null;
+            bool destroyedFreed = !ReservationManager.IsReserved(target2);   // lazy-cleans
+            var pawnD = new GameObject("V74_PawnD");
+            bool dReclaims = ReservationManager.TryReserve(target2, pawnD);
+
+            bool ok = aGot && bBlocked && otherSeesIt && ownerNotOther
+                      && aReReserve && stillA
+                      && freedAfterRelease && bGetsItNow && freedAfterReleaseAll
+                      && cellAGot && cellBBlocked && cellOtherSees && cellBGetsNow
+                      && destroyedFreed && dReclaims;
+
+            Debug.Log($"[TestRunner] V74: {(ok ? "OK" : "FAIL")} - aGot={aGot} bBlocked={bBlocked} reReserve={aReReserve} relAll={freedAfterReleaseAll} cell(A={cellAGot},Bblk={cellBBlocked}) destroyedFreed={destroyedFreed} dReclaims={dReclaims} (예약 레지스트리)");
+            Assert(ok, $"aGot={aGot} bBlocked={bBlocked} otherSees={otherSeesIt} ownerNotOther={ownerNotOther} reReserve={aReReserve} stillA={stillA} freedRel={freedAfterRelease} bNow={bGetsItNow} freedRelAll={freedAfterReleaseAll} cellA={cellAGot} cellBblk={cellBBlocked} cellOther={cellOtherSees} cellBnow={cellBGetsNow} destroyedFreed={destroyedFreed} dReclaims={dReclaims}");
+
+            Object.DestroyImmediate(pawnA);
+            Object.DestroyImmediate(pawnB);
+            Object.DestroyImmediate(pawnD);
+            Object.DestroyImmediate(target);
+            Object.DestroyImmediate(target2);
+            ReservationManager.Clear();
+            yield break;
+        }
+
+        // V75 — #199 C2: reservation forces DISTINCT picks.  (1) Two pawns offered
+        //  the SAME nearest tree end up on DIFFERENT trees (the first reserves it,
+        //  FindNearestTree for the second skips the reserved one).  (2) With only
+        //  ONE tree, only one pawn claims it; the second yields (no double-claim).
+        //  (3) Stand-cell reservation: two pawns reserving a stand cell next to one
+        //  target get DIFFERENT cells.
+        private IEnumerator TestV75_DistinctTargetAndCell()
+        {
+            ReservationManager.Clear();
+
+            // NOTE: the -testmode scene already contains real TreeEntity objects, so
+            //  this test does NOT rely on FindObjectsByType (which would also see
+            //  ambient trees).  Instead it exercises the EXACT selection rule each
+            //  worker's FindNearestX uses — "skip IsReservedByOther, then TryReserve
+            //  the pick" — over a CONTROLLED candidate list, plus the stand-cell
+            //  reservation path.  This is the selection-level assertion the plan
+            //  permits when a full two-pawn scene scenario is hard in isolation.
+
+            var p1 = new GameObject("V75_P1");
+            var p2 = new GameObject("V75_P2");
+
+            // --- (1) two candidate targets, two pawns.  Selecting like FindNearestX:
+            //     pawn1 picks the nearest FREE target and reserves it; pawn2 then
+            //     skips the reserved one and picks the other → DIFFERENT targets.
+            var tgtA = new GameObject("V75_TgtA");   // "nearest" for both
+            var tgtB = new GameObject("V75_TgtB");
+            var cands = new[] { tgtA, tgtB };
+
+            GameObject Pick(GameObject claimant)
+            {
+                // mirrors FindNearestTree: first non-reserved candidate (list order
+                //  stands in for nearest-first), then reserve it.
+                foreach (var c in cands)
+                {
+                    if (ReservationManager.IsReservedByOther(c, claimant)) continue;
+                    if (ReservationManager.TryReserve(c, claimant)) return c;
+                }
+                return null;
+            }
+
+            var pick1 = Pick(p1);
+            var pick2 = Pick(p2);
+            bool distinctTargets = pick1 != null && pick2 != null && pick1 != pick2;
+            bool ownersCorrect = ReservationManager.OwnerOf(pick1) == p1
+                                 && ReservationManager.OwnerOf(pick2) == p2;
+            // No target is reserved by BOTH (the core "no double-claim" guarantee).
+            bool noShared = ReservationManager.OwnerOf(tgtA) != ReservationManager.OwnerOf(tgtB);
+
+            // --- (2) ONE candidate only: first claims it, second yields (null).
+            ReservationManager.Clear();
+            var solo = new GameObject("V75_Solo");
+            var single = new[] { solo };
+            GameObject PickSingle(GameObject claimant)
+            {
+                foreach (var c in single)
+                {
+                    if (ReservationManager.IsReservedByOther(c, claimant)) continue;
+                    if (ReservationManager.TryReserve(c, claimant)) return c;
+                }
+                return null;
+            }
+            var sole1 = PickSingle(p1);
+            var sole2 = PickSingle(p2);
+            bool oneOnly = sole1 == solo && sole2 == null;
+
+            // --- (3) stand-cell distinctness: two claimants reserve a stand cell
+            //     around ONE target footprint → must get DIFFERENT cells (the
+            //     reservation makes the 2nd skip the 1st's cell).
+            ReservationManager.Clear();
+            var grid = PathGrid.FromMask(AllWalkableMask());
+            Vector2 tgt = PathGrid.CellToWorld(new Vector2Int(20, 20));
+            Vector2Int lockA, lockB;
+            bool gotA = grid.TryGetAdjacentStandCell(tgt, new Vector2Int(1, 1),
+                new Vector2(18, 20), c => ReservationManager.IsCellReservedByOther(c, p1), out lockA);
+            if (gotA) ReservationManager.TryReserveCell(lockA, p1);
+            bool gotB = grid.TryGetAdjacentStandCell(tgt, new Vector2Int(1, 1),
+                new Vector2(18, 20), c => ReservationManager.IsCellReservedByOther(c, p2), out lockB);
+            if (gotB) ReservationManager.TryReserveCell(lockB, p2);
+            bool distinctCells = gotA && gotB && lockA != lockB;
+
+            bool ok = distinctTargets && ownersCorrect && noShared && oneOnly
+                      && distinctCells;
+            Debug.Log($"[TestRunner] V75: {(ok ? "OK" : "FAIL")} - distinctTargets={distinctTargets} oneOnly={oneOnly} distinctCells={distinctCells}(A={lockA},B={lockB}) (예약→서로 다른 대상/cell)");
+            Assert(ok, $"distinctTargets={distinctTargets}(p1={(pick1!=null?pick1.name:"null")},p2={(pick2!=null?pick2.name:"null")}) ownersCorrect={ownersCorrect} noShared={noShared} oneOnly={oneOnly}(sole1={(sole1!=null)},sole2={(sole2!=null)}) distinctCells={distinctCells}(A={lockA},B={lockB})");
+
+            Object.DestroyImmediate(p1);
+            Object.DestroyImmediate(p2);
+            Object.DestroyImmediate(tgtA);
+            Object.DestroyImmediate(tgtB);
+            Object.DestroyImmediate(solo);
+            ReservationManager.Clear();
             yield break;
         }
 

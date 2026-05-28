@@ -15,7 +15,10 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(PawnMovement))]
     public class PawnHauler : MonoBehaviour
     {
-        [SerializeField] private float pickupRange = 1.0f;
+        // #199 C1 — hauler stands adjacent to the item/blueprint (RimWorld) for
+        //  pickup/deposit.  1.0 was too tight to even reach an orthogonal neighbour
+        //  (center dist 1.0); bumped to 1.5 for diagonal adjacency (√2≈1.414).
+        [SerializeField] private float pickupRange = 1.5f;
         [SerializeField] private float giveUpAfterSec = 8f;
 
         // 림 vanilla pile stack 유지 - stockpile 도착 시 새 pile spawn.
@@ -31,6 +34,9 @@ namespace MelonS.GameProto
         // #199 B2 (R-1) - path-aware give-up for the GoToItem approach phase
         //  (pile/meat/stone — only one active at a time).  See WorkGiveUp.
         private WorkGiveUp giveUp;
+        // #199 C2 — reserved stand cell for the current approach target.  Released
+        //  on phase change (SetPhase) and ClearTask so a hauler never leaks a cell.
+        private Vector2Int standCell = PawnMovement.INVALID_CELL;
         // #121/#142 - 줍은 후 운반 phase: pickup → blueprint(우선) OR stockpile.
         private enum Phase { GoToItem, GoToStockpile, GoToBlueprint }
         private Phase phase = Phase.GoToItem;
@@ -50,6 +56,32 @@ namespace MelonS.GameProto
             movement = GetComponent<PawnMovement>();
         }
 
+        // #199 C1/C2 — walk to a RESERVED walkable cell ADJACENT to a 1×1 target
+        //  (pile/stone/meat/stockpile), RimWorld-style.  The helper reserves the
+        //  stand cell (so two haulers don't crowd one pickup) and reuses it each
+        //  frame; on a target/phase change the world target moves and a fresh cell
+        //  is reserved (the old one released).  Returns false if unreachable/occupied.
+        private bool WalkAdjacentTo(Vector2 targetWorld)
+            => WalkAdjacentTo(targetWorld, new Vector2Int(1, 1));
+
+        // #199 C1/C2 — adjacency for a (possibly multi-cell) blueprint deposit target.
+        private bool WalkAdjacentTo(Vector2 targetWorld, Vector2Int footprint)
+        {
+            if (PawnMovement.TryReserveWorkStandPos(targetWorld, footprint, transform.position,
+                    gameObject, ref standCell, out Vector2 stand))
+            { movement.SetTarget(stand); return true; }
+            return false;
+        }
+
+        private void ReleaseStandCell()
+        {
+            if (standCell.x != PawnMovement.INVALID_CELL.x)
+            {
+                MelonS.GameProto.AI.ReservationManager.ReleaseCell(standCell, gameObject);
+                standCell = PawnMovement.INVALID_CELL;
+            }
+        }
+
         public void SetPileTarget(WoodPileEntity pile)
         {
             ClearTask();
@@ -59,7 +91,7 @@ namespace MelonS.GameProto
             {
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, pile.transform.position));
                 pile.ReservedBy = gameObject;
-                movement.SetTarget(pile.transform.position);
+                WalkAdjacentTo(pile.transform.position);
             }
         }
 
@@ -72,7 +104,7 @@ namespace MelonS.GameProto
             {
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, stone.transform.position));
                 stone.ReservedBy = gameObject;
-                movement.SetTarget(stone.transform.position);
+                WalkAdjacentTo(stone.transform.position);
             }
         }
 
@@ -85,7 +117,7 @@ namespace MelonS.GameProto
             {
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, meat.transform.position));
                 meat.ReservedBy = gameObject;
-                movement.SetTarget(meat.transform.position);
+                WalkAdjacentTo(meat.transform.position);
             }
         }
 
@@ -107,6 +139,7 @@ namespace MelonS.GameProto
             dropTarget = null;
             bpDropTarget = null;
             phase = Phase.GoToItem;
+            ReleaseStandCell();   // #199 C2 — free the reserved approach cell
             movement.ClearTarget();
         }
 
@@ -140,7 +173,7 @@ namespace MelonS.GameProto
                     {
                         dropTarget = sp;
                         phase = Phase.GoToStockpile;
-                        movement.SetTarget(sp.transform.position);
+                        WalkAdjacentTo(sp.transform.position);
                     }
                     else
                     {
@@ -148,8 +181,10 @@ namespace MelonS.GameProto
                     }
                     return;
                 }
-                float bdist = Vector2.Distance(transform.position, bpDropTarget.transform.position);
-                if (bdist <= pickupRange)
+                // #199 C1 - nearest-footprint-cell distance (multi-cell blueprint).
+                float bdist = PawnMovement.DistanceToFootprint(
+                    bpDropTarget.transform.position, bpDropTarget.Footprint, transform.position);
+                if (bdist <= pickupRange || movement.AtStandCell(standCell))  // #199 C2
                 {
                     if (carryingWood > 0)
                     {
@@ -171,7 +206,7 @@ namespace MelonS.GameProto
                 }
                 else
                 {
-                    movement.SetTarget(bpDropTarget.transform.position);
+                    WalkAdjacentTo(bpDropTarget.transform.position, bpDropTarget.Footprint);
                 }
                 return;
             }
@@ -188,7 +223,7 @@ namespace MelonS.GameProto
                     return;
                 }
                 float ddist = Vector2.Distance(transform.position, dropTarget.transform.position);
-                if (ddist <= pickupRange)
+                if (ddist <= pickupRange || movement.AtStandCell(standCell))  // #199 C2
                 {
                     // 림 vanilla: stockpile 도착 시 pile 을 stockpile 위에 그대로 stack.
                     //  pile 사라지지 X.  inventory counter 는 derived (모든 pile 합).
@@ -226,7 +261,7 @@ namespace MelonS.GameProto
                 }
                 else
                 {
-                    movement.SetTarget(dropTarget.transform.position);
+                    WalkAdjacentTo(dropTarget.transform.position);
                 }
                 return;
             }
@@ -242,7 +277,7 @@ namespace MelonS.GameProto
                     ClearTask();
                     return;
                 }
-                if (dist <= pickupRange)
+                if (dist <= pickupRange || movement.AtStandCell(standCell))  // #199 C2
                 {
                     movement.ClearTarget();
                     int amount = targetPile.Wood;
@@ -255,7 +290,7 @@ namespace MelonS.GameProto
                     {
                         bpDropTarget = bp;
                         phase = Phase.GoToBlueprint;
-                        movement.SetTarget(bp.transform.position);
+                        WalkAdjacentTo(bp.transform.position, bp.Footprint);
                     }
                     else
                     {
@@ -264,7 +299,7 @@ namespace MelonS.GameProto
                         {
                             dropTarget = sp;
                             phase = Phase.GoToStockpile;
-                            movement.SetTarget(sp.transform.position);
+                            WalkAdjacentTo(sp.transform.position);
                         }
                         else
                         {
@@ -275,7 +310,7 @@ namespace MelonS.GameProto
                 }
                 else
                 {
-                    movement.SetTarget(targetPile.transform.position);
+                    WalkAdjacentTo(targetPile.transform.position);
                 }
                 return;
             }
@@ -291,7 +326,7 @@ namespace MelonS.GameProto
                     ClearTask();
                     return;
                 }
-                if (dist <= pickupRange)
+                if (dist <= pickupRange || movement.AtStandCell(standCell))  // #199 C2
                 {
                     movement.ClearTarget();
                     int amount = targetMeat.Food;
@@ -303,7 +338,7 @@ namespace MelonS.GameProto
                         carryingFood += amount;
                         dropTarget = sp;
                         phase = Phase.GoToStockpile;
-                        movement.SetTarget(sp.transform.position);
+                        WalkAdjacentTo(sp.transform.position);
                     }
                     else
                     {
@@ -312,7 +347,7 @@ namespace MelonS.GameProto
                 }
                 else
                 {
-                    movement.SetTarget(targetMeat.transform.position);
+                    WalkAdjacentTo(targetMeat.transform.position);
                 }
                 return;
             }
@@ -328,7 +363,7 @@ namespace MelonS.GameProto
                     ClearTask();
                     return;
                 }
-                if (dist <= pickupRange)
+                if (dist <= pickupRange || movement.AtStandCell(standCell))  // #199 C2
                 {
                     movement.ClearTarget();
                     int amount = targetStone.Stone;
@@ -341,7 +376,7 @@ namespace MelonS.GameProto
                     {
                         bpDropTarget = bp;
                         phase = Phase.GoToBlueprint;
-                        movement.SetTarget(bp.transform.position);
+                        WalkAdjacentTo(bp.transform.position, bp.Footprint);
                     }
                     else
                     {
@@ -350,7 +385,7 @@ namespace MelonS.GameProto
                         {
                             dropTarget = sp;
                             phase = Phase.GoToStockpile;
-                            movement.SetTarget(sp.transform.position);
+                            WalkAdjacentTo(sp.transform.position);
                         }
                         else
                         {
@@ -361,7 +396,7 @@ namespace MelonS.GameProto
                 }
                 else
                 {
-                    movement.SetTarget(targetStone.transform.position);
+                    WalkAdjacentTo(targetStone.transform.position);
                 }
             }
         }

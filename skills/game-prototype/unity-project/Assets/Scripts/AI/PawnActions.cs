@@ -30,27 +30,23 @@ namespace MelonS.GameProto.AI
             if (ctx.needs.food >= foodThreshold) return false;
             BerryBushEntity bush = FindNearestBush(ctx);
             if (bush == null) return false;
+            // #199 C2 — reserve the chosen bush (central registry).
+            if (!ReservationManager.TryReserve(bush, ctx.transform.gameObject)) return false;
             ctx.gatherer.SetBushTarget(bush);
             return true;
         }
         private static BerryBushEntity FindNearestBush(PawnContext ctx)
         {
             var arr = Object.FindObjectsByType<BerryBushEntity>(FindObjectsSortMode.None);
-            // 운영자: 림들 겹침 - 다른 gatherer 가 target 한 bush skip.
-            var others = Object.FindObjectsByType<PawnGatherer>(FindObjectsSortMode.None);
-            var claimed = new System.Collections.Generic.HashSet<BerryBushEntity>();
-            foreach (var g in others)
-            {
-                if (g == null || g == ctx.gatherer) continue;
-                if (g.Target != null) claimed.Add(g.Target);
-            }
+            // #199 C2 — central reservation: skip bushes reserved by ANOTHER pawn.
+            var claimant = ctx.transform.gameObject;
             BerryBushEntity best = null;
             float bestSq = float.MaxValue;
             Vector2 me = ctx.transform.position;
             foreach (var b in arr)
             {
                 if (b == null || b.IsDepleted) continue;
-                if (claimed.Contains(b)) continue;
+                if (ReservationManager.IsReservedByOther(b, claimant)) continue;
                 Vector3 bp = b.transform.position;
                 if (Mathf.Abs(bp.x) > 28.5f || Mathf.Abs(bp.y) > 28.5f) continue;
                 float sq = ((Vector2)bp - me).sqrMagnitude;
@@ -73,27 +69,25 @@ namespace MelonS.GameProto.AI
             if (ResourceManager.Instance.food >= globalFoodThreshold) return false;
             AnimalEntity deer = FindNearestAnimal(ctx);
             if (deer == null) return false;
+            // #199 C2 — reserve the chosen animal (central registry).  Hunter has no
+            //  fixed stand cell (animal moves), but the TARGET reservation still
+            //  stops two hunters chasing one deer.
+            if (!ReservationManager.TryReserve(deer, ctx.transform.gameObject)) return false;
             ctx.hunter.SetAnimalTarget(deer);
             return true;
         }
         private static AnimalEntity FindNearestAnimal(PawnContext ctx)
         {
             var arr = Object.FindObjectsByType<AnimalEntity>(FindObjectsSortMode.None);
-            // 운영자: 림들 겹침 - 다른 hunter 가 target 한 animal skip.
-            var others = Object.FindObjectsByType<PawnHunter>(FindObjectsSortMode.None);
-            var claimed = new System.Collections.Generic.HashSet<AnimalEntity>();
-            foreach (var h in others)
-            {
-                if (h == null || h == ctx.hunter) continue;
-                if (h.Target != null) claimed.Add(h.Target);
-            }
+            // #199 C2 — central reservation: skip animals reserved by ANOTHER pawn.
+            var claimant = ctx.transform.gameObject;
             AnimalEntity best = null;
             float bestSq = float.MaxValue;
             Vector2 me = ctx.transform.position;
             foreach (var a in arr)
             {
                 if (a == null || a.IsDead) continue;
-                if (claimed.Contains(a)) continue;
+                if (ReservationManager.IsReservedByOther(a, claimant)) continue;
                 Vector3 ap = a.transform.position;
                 if (Mathf.Abs(ap.x) > 28.5f || Mathf.Abs(ap.y) > 28.5f) continue;
                 float sq = ((Vector2)ap - me).sqrMagnitude;
@@ -115,18 +109,22 @@ namespace MelonS.GameProto.AI
             if (ResourceManager.Instance.food <= foodSurplus) return false;
             StoveEntity stove = FindNearestStove(ctx);
             if (stove == null) return false;
+            // #199 C2 — reserve the stove (only one cook per stove, RimWorld).
+            if (!ReservationManager.TryReserve(stove, ctx.transform.gameObject)) return false;
             ctx.cook.SetStoveTarget(stove);
             return true;
         }
         private static StoveEntity FindNearestStove(PawnContext ctx)
         {
             var arr = Object.FindObjectsByType<StoveEntity>(FindObjectsSortMode.None);
+            var claimant = ctx.transform.gameObject;
             StoveEntity best = null;
             float bestSq = float.MaxValue;
             Vector2 me = ctx.transform.position;
             foreach (var s in arr)
             {
                 if (s == null) continue;
+                if (ReservationManager.IsReservedByOther(s, claimant)) continue;  // #199 C2
                 float sq = ((Vector2)s.transform.position - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = s; }
             }
@@ -143,29 +141,30 @@ namespace MelonS.GameProto.AI
             if (ctx.chopper == null) return false;
             TreeEntity tree = FindNearestTree(ctx);
             if (tree == null) return false;
+            // #199 C2 — reserve the chosen tree (RimWorld).  FindNearestTree already
+            //  skipped trees reserved by OTHERS, so this should succeed; the guard
+            //  covers a same-frame race (two pawns deciding the same tick).  On
+            //  failure, yield this tick — the AI retries next decision interval and
+            //  picks a different tree.
+            var claimant = ctx.transform.gameObject;
+            if (!ReservationManager.TryReserve(tree, claimant)) return false;
             ctx.chopper.SetTreeTarget(tree);
             return true;
         }
         private static TreeEntity FindNearestTree(PawnContext ctx)
         {
             var arr = Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
-            // 운영자 피드백 "림들이 왜케 겹쳐서 이동" - 다른 pawn 이 이미 target 한 tree 는 skip.
-            //  각 pawn 이 다른 tree pick 하도록 reservation 시스템.
-            var otherChoppers = Object.FindObjectsByType<PawnChopper>(FindObjectsSortMode.None);
-            System.Collections.Generic.HashSet<TreeEntity> claimed
-                = new System.Collections.Generic.HashSet<TreeEntity>();
-            foreach (var c in otherChoppers)
-            {
-                if (c == null || c == ctx.chopper) continue;
-                if (c.Target != null) claimed.Add(c.Target);
-            }
+            // #199 C2 — central reservation registry replaces the per-chopper scan.
+            //  Skip any tree reserved by ANOTHER pawn so each idle pawn picks a
+            //  DIFFERENT tree (operator: "림들이 왜케 겹쳐서 이동").
+            var claimant = ctx.transform.gameObject;
             TreeEntity best = null;
             float bestSq = float.MaxValue;
             Vector2 me = ctx.transform.position;
             foreach (var t in arr)
             {
                 if (t == null || t.IsDestroyed) continue;
-                if (claimed.Contains(t)) continue;  // 이미 다른 pawn 의 target
+                if (ReservationManager.IsReservedByOther(t, claimant)) continue;  // 다른 pawn 의 target
                 Vector3 tp = t.transform.position;
                 if (Mathf.Abs(tp.x) > 28.5f || Mathf.Abs(tp.y) > 28.5f) continue;
                 float sq = ((Vector2)tp - me).sqrMagnitude;
@@ -185,6 +184,9 @@ namespace MelonS.GameProto.AI
             if (ctx.builder == null) return false;
             BlueprintEntity bp = FindNearestBlueprint(ctx);
             if (bp == null) return false;
+            // #199 C2 — reserve via central registry (Builder also keeps ReservedBy
+            //  in sync for legacy reads).  Skip on a same-frame race.
+            if (!ReservationManager.TryReserve(bp, ctx.transform.gameObject)) return false;
             ctx.builder.SetBlueprintTarget(bp);
             return true;
         }
@@ -221,12 +223,15 @@ namespace MelonS.GameProto.AI
             if (ctx.doctor == null) return false;
             PawnHealth patient = FindNearestDowned(ctx);
             if (patient == null) return false;
+            // #199 C2 — reserve the patient so two doctors don't tend the same one.
+            if (!ReservationManager.TryReserve(patient, ctx.transform.gameObject)) return false;
             ctx.doctor.SetPatientTarget(patient);
             return true;
         }
         private static PawnHealth FindNearestDowned(PawnContext ctx)
         {
             var arr = Object.FindObjectsByType<PawnHealth>(FindObjectsSortMode.None);
+            var claimant = ctx.transform.gameObject;
             PawnHealth best = null;
             float bestSq = float.MaxValue;
             Vector2 me = ctx.transform.position;
@@ -234,6 +239,7 @@ namespace MelonS.GameProto.AI
             {
                 if (h == null || h.IsDead) continue;
                 if (h.gameObject == ctx.transform.gameObject) continue;  // self skip
+                if (ReservationManager.IsReservedByOther(h, claimant)) continue;  // #199 C2
                 // 의식불명 or 출혈 중 = 환자
                 bool bleeding = false;
                 if (h.parts != null)
@@ -260,27 +266,23 @@ namespace MelonS.GameProto.AI
             if (ctx.miner == null) return false;
             StoneVeinEntity vein = FindNearestVein(ctx);
             if (vein == null) return false;
+            // #199 C2 — reserve the chosen vein (central registry).
+            if (!ReservationManager.TryReserve(vein, ctx.transform.gameObject)) return false;
             ctx.miner.SetVeinTarget(vein);
             return true;
         }
         private static StoneVeinEntity FindNearestVein(PawnContext ctx)
         {
             var arr = Object.FindObjectsByType<StoneVeinEntity>(FindObjectsSortMode.None);
-            // 다른 miner 가 이미 채광 중인 vein skip
-            var others = Object.FindObjectsByType<PawnMiner>(FindObjectsSortMode.None);
-            var claimed = new System.Collections.Generic.HashSet<StoneVeinEntity>();
-            foreach (var m in others)
-            {
-                if (m == null || m == ctx.miner) continue;
-                if (m.Target != null) claimed.Add(m.Target);
-            }
+            // #199 C2 — central reservation: skip veins reserved by ANOTHER pawn.
+            var claimant = ctx.transform.gameObject;
             StoneVeinEntity best = null;
             float bestSq = float.MaxValue;
             Vector2 me = ctx.transform.position;
             foreach (var v in arr)
             {
                 if (v == null || v.IsDestroyed) continue;
-                if (claimed.Contains(v)) continue;
+                if (ReservationManager.IsReservedByOther(v, claimant)) continue;
                 Vector3 vp = v.transform.position;
                 if (Mathf.Abs(vp.x) > 28.5f || Mathf.Abs(vp.y) > 28.5f) continue;
                 float sq = ((Vector2)vp - me).sqrMagnitude;

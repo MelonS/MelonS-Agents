@@ -9,7 +9,10 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(PawnMovement))]
     public class PawnCook : MonoBehaviour
     {
-        [SerializeField] private float cookRange = 1.0f;
+        // #199 C1 — stand adjacent to the stove (RimWorld).  1.0 was too tight to
+        //  even reach a stove from an orthogonal neighbour (center dist 1.0) and
+        //  impossible from a diagonal (1.414); bumped to 1.5.
+        [SerializeField] private float cookRange = 1.5f;
         [SerializeField] private float cookInterval = 1.5f;
 
         private StoveEntity targetStove;
@@ -18,8 +21,11 @@ namespace MelonS.GameProto
         // #199 B2 (R-1) - path-aware give-up (see WorkGiveUp).
         private WorkGiveUp giveUp;
         private const float GiveUpAfterSec = 10f;
+        // #199 C2 — reserved stand cell next to the stove.
+        private Vector2Int standCell = PawnMovement.INVALID_CELL;
 
         public bool HasTask => targetStove != null;
+        public StoveEntity Target => targetStove;
 
         private void Awake()
         {
@@ -28,16 +34,43 @@ namespace MelonS.GameProto
 
         public void SetStoveTarget(StoveEntity s)
         {
+            if (targetStove != null && targetStove != s)
+                MelonS.GameProto.AI.ReservationManager.Release(targetStove, gameObject);
+            ReleaseStandCell();
             targetStove = s;
             if (s != null)
             {
+                MelonS.GameProto.AI.ReservationManager.TryReserve(s, gameObject);
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, s.transform.position));
-                movement.SetTarget(s.transform.position);
+                WalkToWork();
+            }
+        }
+
+        // #199 C1/C2 — walk to a RESERVED adjacent walkable cell next to the stove.
+        private void WalkToWork()
+        {
+            if (targetStove == null) return;
+            if (PawnMovement.TryReserveWorkStandPos(targetStove.transform.position,
+                    new Vector2Int(1, 1), transform.position, gameObject, ref standCell, out Vector2 stand))
+                movement.SetTarget(stand);
+            else
+                ClearTask();   // no free adjacent stand cell → stove unreachable/occupied
+        }
+
+        private void ReleaseStandCell()
+        {
+            if (standCell.x != PawnMovement.INVALID_CELL.x)
+            {
+                MelonS.GameProto.AI.ReservationManager.ReleaseCell(standCell, gameObject);
+                standCell = PawnMovement.INVALID_CELL;
             }
         }
 
         public void ClearTask()
         {
+            if (targetStove != null)
+                MelonS.GameProto.AI.ReservationManager.Release(targetStove, gameObject);
+            ReleaseStandCell();
             targetStove = null;
             movement.ClearTarget();
         }
@@ -57,7 +90,7 @@ namespace MelonS.GameProto
                 ClearTask();
                 return;
             }
-            if (dist <= cookRange)
+            if (dist <= cookRange || movement.AtStandCell(standCell))  // #199 C2 stand-cell in-range
             {
                 movement.ClearTarget();
                 // #164 - PawnTraits workSpeedMul 적용 (cook interval 단축).
@@ -82,7 +115,7 @@ namespace MelonS.GameProto
             }
             else
             {
-                movement.SetTarget(targetStove.transform.position);
+                WalkToWork();
             }
         }
     }

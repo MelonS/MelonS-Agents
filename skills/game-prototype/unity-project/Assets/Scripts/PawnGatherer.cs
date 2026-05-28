@@ -12,7 +12,9 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(PawnMovement))]
     public class PawnGatherer : MonoBehaviour
     {
-        [SerializeField] private float gatherRange = 1.2f;
+        // #199 C1 — stand adjacent (RimWorld).  1.2 → 1.5 to accept diagonal
+        //  adjacency (√2≈1.414 center-to-center).
+        [SerializeField] private float gatherRange = 1.5f;
         [SerializeField] private float gatherInterval = 0.8f;
 
         private BerryBushEntity targetBush;
@@ -21,6 +23,8 @@ namespace MelonS.GameProto
         // #199 B2 (R-1) - path-aware give-up (see WorkGiveUp).
         private WorkGiveUp giveUp;
         private const float GiveUpAfterSec = 10f;
+        // #199 C2 — reserved stand cell next to the bush.
+        private Vector2Int standCell = PawnMovement.INVALID_CELL;
 
         public bool HasTask => targetBush != null;
         public BerryBushEntity Target => targetBush;
@@ -32,16 +36,43 @@ namespace MelonS.GameProto
 
         public void SetBushTarget(BerryBushEntity bush)
         {
+            if (targetBush != null && targetBush != bush)
+                MelonS.GameProto.AI.ReservationManager.Release(targetBush, gameObject);
+            ReleaseStandCell();
             targetBush = bush;
             if (bush != null)
             {
+                MelonS.GameProto.AI.ReservationManager.TryReserve(bush, gameObject);
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, bush.transform.position));
-                movement.SetTarget(bush.transform.position);
+                WalkToWork();
+            }
+        }
+
+        // #199 C1/C2 — walk to a RESERVED adjacent walkable cell next to the bush.
+        private void WalkToWork()
+        {
+            if (targetBush == null) return;
+            if (PawnMovement.TryReserveWorkStandPos(targetBush.transform.position,
+                    new Vector2Int(1, 1), transform.position, gameObject, ref standCell, out Vector2 stand))
+                movement.SetTarget(stand);
+            else
+                ClearTask();   // no free adjacent stand cell → bush unreachable/occupied
+        }
+
+        private void ReleaseStandCell()
+        {
+            if (standCell.x != PawnMovement.INVALID_CELL.x)
+            {
+                MelonS.GameProto.AI.ReservationManager.ReleaseCell(standCell, gameObject);
+                standCell = PawnMovement.INVALID_CELL;
             }
         }
 
         public void ClearTask()
         {
+            if (targetBush != null)
+                MelonS.GameProto.AI.ReservationManager.Release(targetBush, gameObject);
+            ReleaseStandCell();
             targetBush = null;
             movement.ClearTarget();
         }
@@ -62,7 +93,7 @@ namespace MelonS.GameProto
                 ClearTask();
                 return;
             }
-            if (dist <= gatherRange)
+            if (dist <= gatherRange || movement.AtStandCell(standCell))  // #199 C2 stand-cell in-range
             {
                 // In range — stop walking, gather on interval (NOT every frame —
                 // lesson #4 audio-buzz-style throttle pattern, same shape).
@@ -92,9 +123,8 @@ namespace MelonS.GameProto
             }
             else
             {
-                // Keep walking toward bush (re-target every frame — bush is
-                // static but safe; same pattern as PawnChopper).
-                movement.SetTarget(targetBush.transform.position);
+                // Keep walking toward the adjacent stand cell (SetTarget caches A*).
+                WalkToWork();
             }
         }
     }

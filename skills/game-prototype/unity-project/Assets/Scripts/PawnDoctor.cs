@@ -29,10 +29,14 @@ namespace MelonS.GameProto
 
         public void SetPatientTarget(PawnHealth patient)
         {
+            // #199 C2 — release previous patient on switch (RimWorld job-switch).
+            if (targetPatient != null && targetPatient != patient)
+                MelonS.GameProto.AI.ReservationManager.Release(targetPatient, gameObject);
             targetPatient = patient;
             tendProgress = 0f;
             if (patient != null)
             {
+                MelonS.GameProto.AI.ReservationManager.TryReserve(patient, gameObject);
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, patient.transform.position));
                 movement.SetTarget(patient.transform.position);
             }
@@ -40,6 +44,8 @@ namespace MelonS.GameProto
 
         public void ClearTask()
         {
+            if (targetPatient != null)
+                MelonS.GameProto.AI.ReservationManager.Release(targetPatient, gameObject);
             targetPatient = null;
             tendProgress = 0f;
             movement.ClearTarget();

@@ -10,7 +10,8 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(PawnMovement))]
     public class PawnMiner : MonoBehaviour
     {
-        [SerializeField] private float mineRange = 1.2f;
+        // #199 C1 — stand adjacent (RimWorld).  1.2 → 1.5 for diagonal adjacency.
+        [SerializeField] private float mineRange = 1.5f;
         [SerializeField] private float mineDamagePerSec = 20f;  // 광맥 HP 200 → 10s
         [SerializeField] private float giveUpAfterSec = 12f;
 
@@ -18,6 +19,8 @@ namespace MelonS.GameProto
         private PawnMovement movement;
         // #199 B2 (R-1) - path-aware give-up (see WorkGiveUp).
         private WorkGiveUp giveUp;
+        // #199 C2 — reserved stand cell next to the vein.
+        private Vector2Int standCell = PawnMovement.INVALID_CELL;
 
         public bool HasTask => targetVein != null;
         public StoneVeinEntity Target => targetVein;
@@ -26,16 +29,46 @@ namespace MelonS.GameProto
 
         public void SetVeinTarget(StoneVeinEntity vein)
         {
+            if (targetVein != null && targetVein != vein)
+                MelonS.GameProto.AI.ReservationManager.Release(targetVein, gameObject);
+            ReleaseStandCell();
             targetVein = vein;
             if (vein != null)
             {
+                MelonS.GameProto.AI.ReservationManager.TryReserve(vein, gameObject);
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, vein.transform.position));
-                movement.SetTarget(vein.transform.position);
+                WalkToWork();
+            }
+        }
+
+        // #199 C1/C2 — walk to a RESERVED adjacent walkable cell next to the vein.
+        private void WalkToWork()
+        {
+            if (targetVein == null) return;
+            if (PawnMovement.TryReserveWorkStandPos(targetVein.transform.position,
+                    new Vector2Int(1, 1), transform.position, gameObject, ref standCell, out Vector2 stand))
+                movement.SetTarget(stand);
+            else
+            {
+                Debug.Log($"[Miner] {name} give up vein (no free adjacent stand cell — unreachable/occupied)");
+                ClearTask();
+            }
+        }
+
+        private void ReleaseStandCell()
+        {
+            if (standCell.x != PawnMovement.INVALID_CELL.x)
+            {
+                MelonS.GameProto.AI.ReservationManager.ReleaseCell(standCell, gameObject);
+                standCell = PawnMovement.INVALID_CELL;
             }
         }
 
         public void ClearTask()
         {
+            if (targetVein != null)
+                MelonS.GameProto.AI.ReservationManager.Release(targetVein, gameObject);
+            ReleaseStandCell();
             targetVein = null;
             movement.ClearTarget();
         }
@@ -52,7 +85,7 @@ namespace MelonS.GameProto
                 ClearTask();
                 return;
             }
-            if (dist <= mineRange)
+            if (dist <= mineRange || movement.AtStandCell(standCell))  // #199 C2 stand-cell in-range
             {
                 movement.ClearTarget();
                 var abil = GetComponent<PawnAbilities>();  // #120
@@ -69,7 +102,7 @@ namespace MelonS.GameProto
             }
             else
             {
-                movement.SetTarget(targetVein.transform.position);
+                WalkToWork();
             }
         }
     }

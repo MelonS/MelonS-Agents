@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using MelonS.GameProto.AI;   // #199 C3 - PathGrid terrain walkability
 
 namespace MelonS.GameProto
 {
@@ -191,7 +192,8 @@ namespace MelonS.GameProto
             bool stoneMode = CurrentMode == Mode.WallStone;
             bool canAfford = ResourceManager.Instance != null
                 && (stoneMode ? ResourceManager.Instance.stone : ResourceManager.Instance.wood) >= cost;
-            bool areaFree = !AreaOccupied(cx, cy, size.x, size.y);
+            // #199 C3 - ghost 색: terrain(물/바위) or 점유 시 빨강 (RimWorld red ghost).
+            bool areaFree = ValidatePlacement(cx, cy, size.x, size.y) == PlaceReject.None;
             ghostRenderer.color = (canAfford && areaFree)
                 ? new Color(1f, 1f, 1f, 0.55f)
                 : new Color(1f, 0.4f, 0.4f, 0.55f);
@@ -207,7 +209,13 @@ namespace MelonS.GameProto
                 if (h.GetComponent<WallEntity>() != null) return true;
                 if (h.GetComponent<DoorEntity>() != null) return true;
                 if (h.GetComponent<TreeEntity>() != null) return true;
-                if (h.GetComponent<PawnEntity>() != null) return true;
+                // #199 C3 - RimWorld fidelity: a pawn STANDING on the cell does NOT
+                //  block placement.  In RimWorld you can drop a blueprint under a
+                //  colonist; the pawn simply walks off (the blueprint only needs the
+                //  cell clear of *structures/terrain*, not transient occupants).  So
+                //  PawnEntity (and animals, which carry no structural footprint) are
+                //  intentionally NOT treated as occupancy here.  Removing this also
+                //  de-fragiles Build Click QA (settlement cells often have pawns).
                 if (h.GetComponent<BerryBushEntity>() != null) return true;
                 if (h.GetComponent<StoveEntity>() != null) return true;
                 if (h.GetComponent<BedEntity>() != null) return true;
@@ -216,6 +224,19 @@ namespace MelonS.GameProto
             return false;
         }
 
+        /// <summary>
+        /// #199 C3 - RimWorld placement rule: a blueprint may NOT sit on impassable
+        /// TERRAIN (water / rock).  Deliberately terrain-ONLY (not walls): we reuse
+        /// PawnMovement.IsBlockedAt — the exact raw-tilemap Water/Rock guard the pawn
+        /// movement core uses — so "can a pawn step here" and "can I build here" share
+        /// one terrain definition.  Walls/blueprints are handled separately by
+        /// CellOccupied so each rejection keeps an accurate reason (and so a wall cell
+        /// reads "영역 점유됨", not "물/바위").  A null tilemap (pure unit-test scene)
+        /// → not blocked, so isolated scenes with no terrain don't false-reject.
+        /// </summary>
+        private bool TerrainBlocked(int cx, int cy)
+            => PawnMovement.IsBlockedAt(new Vector2(cx + 0.5f, cy + 0.5f));
+
         /// <summary>#193 - multi-cell footprint occupy 검사.  anchor=(cx,cy), w x h 영역 전부 free 여야 false.</summary>
         private bool AreaOccupied(int cx, int cy, int w, int h)
         {
@@ -223,6 +244,31 @@ namespace MelonS.GameProto
                 for (int dy = 0; dy < h; dy++)
                     if (CellOccupied(cx + dx, cy + dy)) return true;
             return false;
+        }
+
+        // #199 C3 - placement-validation result for the footprint.  Distinguishes
+        //  the rejection reasons so the toast can tell the player WHY (RimWorld
+        //  shows a red ghost + reason string).
+        private enum PlaceReject { None, Terrain, Occupied }
+
+        /// <summary>
+        /// #199 C3 - validate EVERY covered cell of a w×h footprint at anchor
+        /// (cx,cy) BEFORE creating a blueprint, RimWorld-style:
+        ///   - reject if ANY cell is impassable terrain (Water/Rock) → PlaceReject.Terrain;
+        ///   - reject if ANY cell already holds a structure/blueprint → PlaceReject.Occupied.
+        /// Terrain is checked first so a water cell reads "물 위엔 못 지음" rather than
+        /// a generic occupied message.  All cells validated (multi-cell beds/benches).
+        /// Returns PlaceReject.None when the whole footprint is buildable.
+        /// </summary>
+        private PlaceReject ValidatePlacement(int cx, int cy, int w, int h)
+        {
+            for (int dx = 0; dx < w; dx++)
+                for (int dy = 0; dy < h; dy++)
+                    if (TerrainBlocked(cx + dx, cy + dy)) return PlaceReject.Terrain;
+            for (int dx = 0; dx < w; dx++)
+                for (int dy = 0; dy < h; dy++)
+                    if (CellOccupied(cx + dx, cy + dy)) return PlaceReject.Occupied;
+            return PlaceReject.None;
         }
 
         /// <summary>#179 - test harness 호출용 (Input.mousePosition 우회).
@@ -254,8 +300,17 @@ namespace MelonS.GameProto
             }
             int cost = CostFor(CurrentMode);
             // #193 - multi-cell entity (침대 1x2 등) footprint 검사
+            // #199 C3 - RimWorld 배치 규칙: terrain(물/바위) + 구조물/청사진 중복 모두 거부.
+            //  pawn 이 서 있는 cell 은 거부 X (pawn 이 비켜남).  multi-cell 은 전 cell 검사.
             Vector2Int size = SizeFor(CurrentMode);
-            if (AreaOccupied(cx, cy, size.x, size.y))
+            PlaceReject reject = ValidatePlacement(cx, cy, size.x, size.y);
+            if (reject == PlaceReject.Terrain)
+            {
+                Debug.Log($"[Build] TryPlace skip: terrain (water/rock) at ({cx},{cy}) {size.x}x{size.y} for mode={CurrentMode}");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"✗ 물/바위 위엔 못 지음 ({cx},{cy})");
+                return false;
+            }
+            if (reject == PlaceReject.Occupied)
             {
                 Debug.Log($"[Build] TryPlace skip: area ({cx},{cy}) {size.x}x{size.y} occupied for mode={CurrentMode}");
                 if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"✗ {size.x}x{size.y} 영역 점유됨 ({cx},{cy}) - 다른 곳 시도");

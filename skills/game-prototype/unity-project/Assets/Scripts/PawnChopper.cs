@@ -11,7 +11,12 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(PawnMovement))]
     public class PawnChopper : MonoBehaviour
     {
-        [SerializeField] private float chopRange = 1.2f;
+        // #199 C1 — pawn now stands in an ADJACENT cell (RimWorld-style) instead
+        //  of on top of the tree.  Standing in a diagonal neighbour leaves the pawn
+        //  at center-to-center distance up to √2≈1.414 from the tree, so chopRange
+        //  must accept that: bumped 1.2 → 1.5 (covers diagonal adjacency, still <2
+        //  so the pawn can't work from a cell away).
+        [SerializeField] private float chopRange = 1.5f;
         [SerializeField] private float chopDamagePerSec = 25f;
 
         private TreeEntity targetTree;
@@ -22,6 +27,11 @@ namespace MelonS.GameProto
         //  around obstacles under A*).  See WorkGiveUp.
         private WorkGiveUp giveUp;
         private const float GiveUpAfterSec = 10f;
+        // #199 C2 — the stand cell this chopper has RESERVED next to the tree.
+        //  Locked once on commit and reused every frame (fixes C1's per-frame
+        //  recompute) and stops a second pawn pathing to the same adjacent cell.
+        //  Released on ClearTask.
+        private Vector2Int standCell = PawnMovement.INVALID_CELL;
 
         public bool HasTask => targetTree != null;
         public TreeEntity Target => targetTree;
@@ -33,16 +43,53 @@ namespace MelonS.GameProto
 
         public void SetTreeTarget(TreeEntity tree)
         {
+            // #199 C2 — switching target: release the previous tree + stand cell so
+            //  they free up for other pawns (RimWorld job-switch release).
+            if (targetTree != null && targetTree != tree)
+                MelonS.GameProto.AI.ReservationManager.Release(targetTree, gameObject);
+            ReleaseStandCell();
             targetTree = tree;
             if (tree != null)
             {
+                // The reservation is taken by ChopTreeAction (AI) before SetTreeTarget;
+                //  re-assert here so manual/direct callers also hold it (idempotent).
+                MelonS.GameProto.AI.ReservationManager.TryReserve(tree, gameObject);
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, tree.transform.position));
-                movement.SetTarget(tree.transform.position);
+                WalkToWork();
+            }
+        }
+
+        // #199 C1/C2 — walk to a RESERVED adjacent walkable cell next to the tree
+        //  (RimWorld reach-over), not onto the tree.  The cell is reserved once and
+        //  reused; if none is reachable/free the tree is unreachable → give up.
+        private void WalkToWork()
+        {
+            if (targetTree == null) return;
+            if (PawnMovement.TryReserveWorkStandPos(targetTree.transform.position,
+                    new Vector2Int(1, 1), transform.position, gameObject, ref standCell, out Vector2 stand))
+                movement.SetTarget(stand);
+            else
+            {
+                Debug.Log($"[Chopper] {name} give up tree (no free adjacent stand cell — unreachable/occupied)");
+                ClearTask();
+            }
+        }
+
+        private void ReleaseStandCell()
+        {
+            if (standCell.x != PawnMovement.INVALID_CELL.x)
+            {
+                MelonS.GameProto.AI.ReservationManager.ReleaseCell(standCell, gameObject);
+                standCell = PawnMovement.INVALID_CELL;
             }
         }
 
         public void ClearTask()
         {
+            // #199 C2 — release the tree + stand cell so other pawns can claim them.
+            if (targetTree != null)
+                MelonS.GameProto.AI.ReservationManager.Release(targetTree, gameObject);
+            ReleaseStandCell();
             targetTree = null;
             movement.ClearTarget();
         }
@@ -65,7 +112,11 @@ namespace MelonS.GameProto
                 ClearTask();
                 return;
             }
-            if (dist <= chopRange)
+            // #199 C2 — in range if within chopRange OR standing in the reserved
+            //  stand cell (the lock can leave the pawn an arriveDistance short of the
+            //  cell centre, exactly on the chopRange boundary; standing in the cell
+            //  means it's in work position, RimWorld-style).
+            if (dist <= chopRange || movement.AtStandCell(standCell))
             {
                 // In range — stop walking, chop
                 movement.ClearTarget();
@@ -85,8 +136,10 @@ namespace MelonS.GameProto
             }
             else
             {
-                // Keep walking toward tree (re-target every frame in case tree moved — it doesn't, but safe)
-                movement.SetTarget(targetTree.transform.position);
+                // Keep walking toward the adjacent stand cell (re-target every
+                //  frame; SetTarget caches the A* path so this is not a per-frame
+                //  re-path — R-4).
+                WalkToWork();
             }
         }
     }
