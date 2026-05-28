@@ -65,9 +65,11 @@ namespace MelonS.GameProto
                 // #164 - PawnTraits workSpeedMul (Industrious 1.30x / Lazy 0.75x)
                 var traits = GetComponent<PawnTraits>();
                 if (traits != null) mul *= traits.workSpeedMul;
+                // #177 - Build skill level (+4%/lvl, lvl 10 = +40%)
+                var skills = GetComponent<PawnSkills>();
+                if (skills != null) mul *= 1f + skills.GetLevel(SkillKind.Build) * 0.04f;
                 bool done = targetBp.AddWork(Time.deltaTime * mul);
                 // build skill XP
-                var skills = GetComponent<PawnSkills>();
                 if (skills != null) skills.AddXP(SkillKind.Build, 5f * Time.deltaTime);
                 if (done)
                 {

@@ -54,9 +54,10 @@ namespace MelonS.GameProto
                 // #164 - PawnTraits workSpeedMul 적용
                 var traits = GetComponent<PawnTraits>();
                 if (traits != null) mul *= traits.workSpeedMul;
-                bool done = targetVein.TakeMineDamage(mineDamagePerSec * Time.deltaTime * mul);
-                // 채광 skill - Chop 으로 재활용 (#120 에서 Mining 별도 추가 가능)
+                // #177 - Chop skill level 재활용 (Mining 별도 skill 없음, +4%/lvl)
                 var skills = GetComponent<PawnSkills>();
+                if (skills != null) mul *= 1f + skills.GetLevel(SkillKind.Chop) * 0.04f;
+                bool done = targetVein.TakeMineDamage(mineDamagePerSec * Time.deltaTime * mul);
                 if (skills != null) skills.AddXP(SkillKind.Chop, mineDamagePerSec * Time.deltaTime * 0.5f);
                 if (done) ClearTask();
             }

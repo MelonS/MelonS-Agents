@@ -66,12 +66,13 @@ namespace MelonS.GameProto
                 var abil = GetComponent<PawnAbilities>();
                 float mul = abil != null ? abil.chopMul * abil.manipulation : 1f;
                 // #164 - PawnTraits workSpeedMul (Lazy 0.75x, Industrious 1.30x).
-                //  이전: traits 이 wired 되어 있지만 effect 없음 - 표시만.
                 var traits = GetComponent<PawnTraits>();
                 if (traits != null) mul *= traits.workSpeedMul;
+                // #177 - Chop skill level (+4%/lvl, lvl 10 = +40%).
+                var skills = GetComponent<PawnSkills>();
+                if (skills != null) mul *= 1f + skills.GetLevel(SkillKind.Chop) * 0.04f;
                 bool destroyed = targetTree.TakeChopDamage(chopDamagePerSec * Time.deltaTime * mul);
                 // Day 19: Chop XP — granted each frame proportional to dmg
-                var skills = GetComponent<PawnSkills>();
                 if (skills != null) skills.AddXP(SkillKind.Chop, chopDamagePerSec * Time.deltaTime * 0.5f);
                 if (destroyed) ClearTask();
             }

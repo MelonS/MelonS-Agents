@@ -65,11 +65,14 @@ namespace MelonS.GameProto
                 movement.ClearTarget();
                 // #164 - PawnTraits workSpeedMul 적용 (Industrious 1.30x = 짧은 interval).
                 // #174 - PawnAbilities.plantsMul × manipulation (이전: SET-only, gather 영향 0).
+                // #177 - Gather skill level (+4%/lvl)
                 var traits = GetComponent<PawnTraits>();
                 var abil = GetComponent<PawnAbilities>();
+                var skills = GetComponent<PawnSkills>();
                 float traitMul = traits != null ? traits.workSpeedMul : 1f;
                 float abilMul = abil != null ? abil.plantsMul * abil.manipulation : 1f;
-                float effectiveInterval = gatherInterval / Mathf.Max(0.1f, traitMul * abilMul);
+                float skillMul = skills != null ? 1f + skills.GetLevel(SkillKind.Gather) * 0.04f : 1f;
+                float effectiveInterval = gatherInterval / Mathf.Max(0.1f, traitMul * abilMul * skillMul);
                 if (Time.time - lastGatherTime >= effectiveInterval)
                 {
                     int got = targetBush.TakeBerry();
@@ -77,8 +80,7 @@ namespace MelonS.GameProto
                     if (got > 0)
                     {
                         ResourceManager.Instance?.AddFood(got);
-                        // Day 19: Gather XP per berry
-                        var skills = GetComponent<PawnSkills>();
+                        // Day 19: Gather XP per berry (skills 위에서 GetComponent 이미 됨)
                         if (skills != null) skills.AddXP(SkillKind.Gather, 8f * got);
                     }
                     if (targetBush.IsDepleted) ClearTask();
