@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace MelonS.GameProto
 {
@@ -63,7 +64,14 @@ namespace MelonS.GameProto
             if (Input.GetKeyDown(KeyCode.Y)) SetMode(CurrentMode == Mode.Bed ? Mode.Off : Mode.Bed);
             if (BuildModeActive && Input.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }
             UpdateGhost();
-            if (BuildModeActive && Input.GetMouseButtonDown(0)) TryPlace();
+            // #179 - 운영자 fb "건축 청사진 바닥에 설치 안됨":
+            //  Architect menu 버튼 클릭이 같은 frame 에 TryPlace 호출하던 race.
+            //  EventSystem.IsPointerOverGameObject() 로 UI 위 클릭이면 skip.
+            if (BuildModeActive && Input.GetMouseButtonDown(0))
+            {
+                bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+                if (!overUI) TryPlace();
+            }
         }
 
         public void SetMode(Mode m)
@@ -150,18 +158,43 @@ namespace MelonS.GameProto
             return false;
         }
 
+        /// <summary>#179 - test harness 호출용 (Input.mousePosition 우회).
+        ///  실제 cell (cx, cy) 에 청사진 placement 시도.  성공 시 true.</summary>
+        public bool TryPlaceAt(int cx, int cy)
+        {
+            return DoTryPlaceAt(cx, cy);
+        }
+
         private void TryPlace()
         {
-            if (cam == null) return;
-            var prefab = PrefabFor(CurrentMode);
-            if (prefab == null) return;
-            int cost = CostFor(CurrentMode);
+            if (cam == null) { Debug.LogWarning("[Build] TryPlace skip: camera null"); return; }
             Vector3 mw = cam.ScreenToWorldPoint(Input.mousePosition);
-            // tile 시각 center 정렬 (운영자 #1 fix)
             int cx = Mathf.FloorToInt(mw.x);
             int cy = Mathf.FloorToInt(mw.y);
-            if (CellOccupied(cx, cy)) return;
-            if (ResourceManager.Instance == null) return;
+            DoTryPlaceAt(cx, cy);
+        }
+
+        private bool DoTryPlaceAt(int cx, int cy)
+        {
+            // #179 - silent return 4개를 명시 log 로 진단 가능하게.
+            var prefab = PrefabFor(CurrentMode);
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[Build] TryPlace skip: prefab null for mode={CurrentMode}");
+                return false;
+            }
+            int cost = CostFor(CurrentMode);
+            if (CellOccupied(cx, cy))
+            {
+                Debug.Log($"[Build] TryPlace skip: cell ({cx},{cy}) occupied for mode={CurrentMode}");
+                return false;
+            }
+            if (ResourceManager.Instance == null)
+            {
+                Debug.LogWarning("[Build] TryPlace skip: ResourceManager null");
+                return false;
+            }
+            Debug.Log($"[Build] TryPlace OK: mode={CurrentMode} → blueprint at ({cx+0.5f}, {cy+0.5f}), need wood={(CurrentMode == Mode.WallStone ? 0 : cost)} stone={(CurrentMode == Mode.WallStone ? cost : 0)}");
             // 운영자 fb v4 - 림월드 정상 흐름: 청사진 spawn 시 자원 차감 X.
             //  hauler 가 자재를 청사진 위치까지 운반 후 PawnBuilder 가 건설 작업.
             bool stoneMode = CurrentMode == Mode.WallStone;
@@ -174,6 +207,7 @@ namespace MelonS.GameProto
             var bp = bpGo.AddComponent<BlueprintEntity>();
             float secs = CurrentMode == Mode.Floor ? 2f : 5f;
             bp.Init(CurrentMode, prefab, ghostSpr, needWood, needStone, secs);
+            return true;
         }
 
         private Sprite SpriteForCurrentMode() => CurrentMode switch

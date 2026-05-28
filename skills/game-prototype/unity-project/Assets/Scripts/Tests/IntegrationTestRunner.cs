@@ -107,6 +107,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I35-blueprint-haul-build", TestI35_BlueprintHaulBuild);
             // #154/#165 - bed quality blueprint (Fine) → 완성 시 BedQuality.Fine 확인
             yield return RunOne("I36-bed-fine-blueprint-quality", TestI36_BedFineBlueprintQuality);
+            // #179 - 운영자 fb: "건축 청사진 바닥에 설치 안됨" - Architect → click 시뮬
+            yield return RunOne("I37-blueprint-click-to-place", TestI37_BlueprintClickToPlace);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1263,6 +1265,33 @@ namespace MelonS.GameProto.Tests
             // cleanup
             if (foundBed != null) Object.Destroy(foundBed.gameObject);
             if (bp != null && bp.gameObject != null) Object.Destroy(bp.gameObject);
+        }
+
+        /// <summary>#179 - SetMode(Wall) → TryPlaceAt(cx,cy) → BlueprintEntity 생성 확인.
+        /// 운영자 fb "청사진 설치 안됨" 회귀 검사 (이전 click flow 자동 검증 없었음).</summary>
+        private IEnumerator TestI37_BlueprintClickToPlace()
+        {
+            yield return null;
+            var bm = BuildManager.Instance;
+            if (bm == null) { Assert(false, "BuildManager.Instance null"); yield break; }
+            int wallsBefore = Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None).Length;
+            bm.SetMode(BuildManager.Mode.Wall);
+            yield return null;
+            // 빈 cell 선택 (settlement 영역 밖 - (28, 28) 맵 경계 근처).
+            int cx = 28, cy = 28;
+            bool placed = bm.TryPlaceAt(cx, cy);
+            yield return null;
+            int wallsAfter = Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None).Length;
+            bm.SetMode(BuildManager.Mode.Off);
+            // cleanup - 우리가 만든 청사진 destroy
+            foreach (var bp in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
+            {
+                if (bp == null) continue;
+                if (Vector2.Distance(bp.transform.position, new Vector2(cx+0.5f, cy+0.5f)) < 0.6f)
+                    Object.Destroy(bp.gameObject);
+            }
+            Assert(placed && wallsAfter > wallsBefore,
+                $"BuildManager.TryPlaceAt({cx},{cy}) Wall: placed={placed} bp count {wallsBefore}→{wallsAfter}");
         }
 
         private void FinalizeReport()
