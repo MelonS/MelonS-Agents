@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -40,6 +41,29 @@ namespace MelonS.GameProto.AI
         private readonly TileBase _water;
         private readonly TileBase _rock;
 
+        // #199 B3 — structure blockers (walls).  RimWorld: a wall fully blocks its
+        //  cell; pawns route around it.  WallEntity registers its cell on enable
+        //  and unregisters on destroy via the static MarkStructureBlocked API.
+        //  Reference-COUNTED so overlapping / double-registered walls (e.g. two
+        //  walls the same starter cell maps to) clear correctly — the cell only
+        //  reopens when the LAST blocker on it is gone.  Folded into walkability by
+        //  Rebuild() and by the per-cell RecomputeCell() fast path.  Doors are NOT
+        //  registered → door cells stay walkable (pawns path THROUGH them).
+        private readonly Dictionary<Vector2Int, int> _structureBlockers
+            = new Dictionary<Vector2Int, int>();
+
+        // #199 B3 — grid version counter.  Bumped on EVERY walkability change that
+        //  comes from a structure (wall build/destroy → Rebuild / Mark / Unmark).
+        //  In-flight pawns cache the version their path was computed against; when
+        //  the live grid's Version moves on (a wall changed mid-walk), the pawn
+        //  invalidates its cached path and re-paths so it can't walk through a
+        //  freshly-built wall or keep routing around a wall that was just removed.
+        //  Starts at 1 so a pawn's default cached 0 always looks stale until it
+        //  computes a real path (forces a clean first computation).
+        public int Version { get; private set; } = 1;
+
+        private void BumpVersion() { Version++; }
+
         /// <summary>
         /// Build a grid from explicit tilemap refs.  Used by the scene
         /// bootstrap (via PawnMovement statics) and directly by tests.
@@ -78,17 +102,65 @@ namespace MelonS.GameProto.AI
             {
                 for (int y = 0; y < SIZE; y++)
                 {
-                    if (_ground == null)
+                    bool terrainBlocked = false;
+                    if (_ground != null)
                     {
-                        _walkable[x, y] = true;   // headless: nothing blocks
-                        continue;
+                        Vector3Int c = new Vector3Int(x + MIN, y + MIN, 0);
+                        TileBase t = _ground.GetTile(c);
+                        terrainBlocked = t != null && (t == _water || t == _rock);
                     }
-                    Vector3Int c = new Vector3Int(x + MIN, y + MIN, 0);
-                    TileBase t = _ground.GetTile(c);
-                    bool blocked = t != null && (t == _water || t == _rock);
-                    _walkable[x, y] = !blocked;
+                    // #199 B3 — a cell is walkable iff terrain allows it AND no
+                    //  structure (wall) occupies it.  Doors never register here.
+                    var cell = new Vector2Int(x + MIN, y + MIN);
+                    bool structureBlocked =
+                        _structureBlockers.TryGetValue(cell, out int n) && n > 0;
+                    _walkable[x, y] = !terrainBlocked && !structureBlocked;
                 }
             }
+            BumpVersion();
+        }
+
+        // #199 B3 — true if a wall blocker is registered on this cell.  Used by
+        //  RecomputeCell so terrain-walkable cells under a wall stay blocked.
+        private bool HasStructureBlocker(Vector2Int cell)
+            => _structureBlockers.TryGetValue(cell, out int n) && n > 0;
+
+        // #199 B3 — terrain-only walkability for one cell (ignores structures).
+        private bool TerrainWalkable(Vector2Int cell)
+        {
+            if (_ground == null) return true;   // headless: nothing blocks
+            Vector3Int c = new Vector3Int(cell.x, cell.y, 0);
+            TileBase t = _ground.GetTile(c);
+            return !(t != null && (t == _water || t == _rock));
+        }
+
+        // #199 B3 — recompute a SINGLE cell's walkability from terrain + blockers.
+        //  Cheaper than a full Rebuild for the common single-wall build/destroy.
+        private void RecomputeCell(Vector2Int cell)
+        {
+            if (!InBounds(cell)) return;
+            _walkable[cell.x - MIN, cell.y - MIN] =
+                TerrainWalkable(cell) && !HasStructureBlocker(cell);
+        }
+
+        /// <summary>
+        /// #199 B3 — register/unregister a structure (wall) blocker on a cell and
+        /// update walkability immediately.  Reference-counted: build adds 1,
+        /// destroy removes 1; the cell only reopens at count 0.  Bumps Version so
+        /// in-flight pawns re-path (item 3).  No-op for out-of-bounds cells.
+        /// Operates on a PathGrid INSTANCE; the live game routes through the static
+        /// helper on PawnMovement.Grid (see WallEntity).
+        /// </summary>
+        public void SetStructureBlocked(Vector2Int cell, bool blocked)
+        {
+            if (!InBounds(cell)) return;
+            _structureBlockers.TryGetValue(cell, out int n);
+            if (blocked) n++;
+            else n = Mathf.Max(0, n - 1);
+            if (n > 0) _structureBlockers[cell] = n;
+            else _structureBlockers.Remove(cell);
+            RecomputeCell(cell);
+            BumpVersion();
         }
 
         public bool InBounds(Vector2Int cell)
@@ -108,6 +180,7 @@ namespace MelonS.GameProto.AI
         {
             if (!InBounds(cell)) return;
             _walkable[cell.x - MIN, cell.y - MIN] = walkable;
+            BumpVersion();
         }
 
         // ---- world ↔ cell conversion (matches Tilemap.WorldToCell, cellSize 1)

@@ -50,6 +50,36 @@ namespace MelonS.GameProto
             if (hp <= 0f) hp = maxHp;
         }
 
+        // #199 B3 — wall→grid: this wall blocks its cell for pathfinding.
+        //  Registered in Start (NOT Awake) so the PathGrid built in
+        //  TilemapStaticRefInit.Awake is guaranteed to exist (all Awakes run
+        //  before any Start).  Runtime-spawned walls (blueprint complete) register
+        //  the frame after Instantiate — same Start path, no special-casing.
+        //  We cache the cell we registered so OnDestroy clears the SAME cell even
+        //  if the transform ever moved (it won't, but this keeps the ref-count
+        //  balanced — never double-clears, never leaks a blocked cell).
+        private bool _cellRegistered;
+        private Vector2Int _registeredCell;
+
+        private void Start()
+        {
+            _registeredCell = AI.PathGrid.WorldToCell(transform.position);
+            PawnMovement.RegisterWallCell(transform.position);
+            _cellRegistered = true;
+        }
+
+        private void OnDestroy()
+        {
+            // RimWorld: a destroyed wall reopens its cell.  Unregister so pawns
+            //  immediately path through the gap (PathGrid bumps Version → in-flight
+            //  pawns re-path).  Guard: only clear if we actually registered, and
+            //  clear the cached cell so the ref-count stays balanced.
+            if (!_cellRegistered) return;
+            if (PawnMovement.Grid != null)
+                PawnMovement.Grid.SetStructureBlocked(_registeredCell, false);
+            _cellRegistered = false;
+        }
+
         public void TakeDamage(float dmg)
         {
             hp -= dmg;

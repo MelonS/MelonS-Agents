@@ -109,6 +109,10 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I36-bed-fine-blueprint-quality", TestI36_BedFineBlueprintQuality);
             // #179 - 운영자 fb: "건축 청사진 바닥에 설치 안됨" - Architect → click 시뮬
             yield return RunOne("I37-blueprint-click-to-place", TestI37_BlueprintClickToPlace);
+            // #199 B3 - 벽이 경로를 막으면 우회 (live rebuild + in-flight 재경로)
+            yield return RunOne("I38-wall-blocks-path-detour", TestI38_WallBlocksPathDetour);
+            // #199 B3 - 벽 라인 사이의 문은 통과 가능 (door cell 은 walkable 유지)
+            yield return RunOne("I39-door-in-wall-passable", TestI39_DoorInWallPassable);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1292,6 +1296,200 @@ namespace MelonS.GameProto.Tests
             }
             Assert(placed && wallsAfter > wallsBefore,
                 $"BuildManager.TryPlaceAt({cx},{cy}) Wall: placed={placed} bp count {wallsBefore}→{wallsAfter}");
+        }
+
+        // #199 B3 helper — spawn a real Wall prefab at a CELL (center placement,
+        //  same convention BuildManager uses), parent-free, so its Start() registers
+        //  the cell with the live PathGrid.  Returns the GameObject (null if no
+        //  prefab).  Caller yields a frame afterward so Start() runs + grid updates.
+        private GameObject SpawnWallAtCell(int cx, int cy)
+        {
+            if (BuildManager.Instance == null) return null;
+            var prefabFld = typeof(BuildManager).GetField("wallPrefab",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            if (prefabFld == null) return null;
+            var wallPrefab = prefabFld.GetValue(BuildManager.Instance) as GameObject;
+            if (wallPrefab == null) return null;
+            var go = Object.Instantiate(wallPrefab, new Vector3(cx + 0.5f, cy + 0.5f, 0f), Quaternion.identity);
+            go.name = $"TestWall_{cx}_{cy}";
+            return go;
+        }
+
+        /// <summary>I38 (#199 B3): a wall line built ACROSS a pawn's straight path
+        /// mid-walk forces a detour through a gap — the pawn still arrives.  Proves
+        /// wall→grid blocking + live Rebuild + in-flight path invalidation (item 3):
+        /// the path is computed BEFORE the wall exists, the wall is built mid-walk,
+        /// and the pawn must re-path and route through the 1-cell gap.</summary>
+        private IEnumerator TestI38_WallBlocksPathDetour()
+        {
+            yield return null;
+            var grid = PawnMovement.Grid;
+            if (grid == null || !PawnMovement.UsePathfinding)
+            { Assert(false, $"Grid={grid!=null} UsePathfinding={PawnMovement.UsePathfinding} (live A* 필요)"); yield break; }
+
+            // Terrain-clear region near origin (verified vs lake/rock layout:
+            //  nearest lake (15,18)r4 and rock (8,22)r3.2 are >7 cells away).
+            //  Trees do NOT enter the PathGrid (only Water/Rock terrain + walls do),
+            //  so this region is reliably walkable.  Pawn at cell (0,10), target
+            //  (0,16) — a 6-cell cardinal run north.  Wall line at y=13 spans
+            //  x∈[-1..2]; the GAP is at x=-2 (west end) so the pawn detours
+            //  west-then-north.  fixtureOk still re-verifies at runtime → if some
+            //  future terrain edit intrudes we skip rather than FALSE-fail, but with
+            //  the current map this asserts the REAL wall-block path.
+            int baseX = 0, startY = 10, goalY = 16, wallY = 13;
+            int wallLo = -1, wallHi = 2, gapX = -2;
+            bool fixtureOk = true;
+            for (int x = -3; x <= 3 && fixtureOk; x++)
+                for (int y = startY; y <= goalY && fixtureOk; y++)
+                    if (!grid.IsWalkable(new Vector2Int(x, y))) fixtureOk = false;
+            if (!fixtureOk)
+            { Assert(false, "I38 fixture cells unexpectedly blocked on real terrain — pick a clearer region"); yield break; }
+
+            var pgo = new GameObject("I38_PathPawn");
+            pgo.transform.position = new Vector3(baseX + 0.5f, startY + 0.5f, 0f);
+            pgo.AddComponent<SpriteRenderer>();
+            pgo.AddComponent<BoxCollider2D>().size = Vector2.one;
+            var pm = pgo.AddComponent<PawnMovement>();
+            yield return null;
+
+            Vector2 goalWorld = new Vector2(baseX + 0.5f, goalY + 0.5f);
+            pm.SetTarget(goalWorld);          // path computed with NO wall yet (clear)
+            bool initialPathOk = !pm.LastPathFailed && pm.HasTarget;
+
+            // Drop the wall while the pawn is still SOUTH of the wall line.  At
+            //  moveSpeed 3 it covers ~0.4s*3=1.2 units from y=12.5 → ~y=13.7, well
+            //  short of y=15.  This guarantees the wall appears IN FRONT of the
+            //  pawn → forces the live re-path/detour (item 3), not a no-op.
+            yield return new WaitForSeconds(0.4f);
+
+            // Wall line across y=wallY, x∈[wallLo..wallHi], GAP at gapX (west end open).
+            //  pawn must detour west to the gap column then continue north.
+            var walls = new List<GameObject>();
+            for (int x = wallLo; x <= wallHi; x++)
+            {
+                var w = SpawnWallAtCell(x, wallY);
+                if (w != null) walls.Add(w);
+            }
+            yield return null;   // WallEntity.Start() runs → cells registered, Version bumped
+            yield return null;
+
+            // Confirm the wall actually blocked the grid (live rebuild worked).
+            bool gridBlocked = !grid.IsWalkable(new Vector2Int(baseX, wallY))
+                               && grid.IsWalkable(new Vector2Int(gapX, wallY));   // gap open
+
+            // Give the pawn time to re-path + detour through the gap and arrive.
+            float endDist = 999f;
+            for (int i = 0; i < 120; i++)   // up to ~6s of sim (0.05 * 120)
+            {
+                yield return new WaitForSeconds(0.05f);
+                endDist = Vector2.Distance(pm.transform.position, goalWorld);
+                if (!pm.HasTarget && endDist <= 1.2f) break;
+            }
+            Vector3 endPos = pm.transform.position;
+            bool arrived = endDist <= 1.2f;
+            bool didNotCrossWall = pm.transform.position.y < wallY + 0.5f || arrived;
+
+            // cleanup
+            Object.Destroy(pgo);
+            foreach (var w in walls) if (w != null) Object.Destroy(w.gameObject);
+            yield return null;   // OnDestroy → cells unregistered (grid reopens)
+
+            Assert(initialPathOk && gridBlocked && arrived,
+                $"I38 detour: initialPath={initialPathOk} gridBlocked={gridBlocked} arrived={arrived} endPos=({endPos.x:F1},{endPos.y:F1}) endDist={endDist:F2} (벽 우회 도착)");
+            Debug.Log($"[Int] I38 detail: initialPath={initialPathOk} gridBlocked={gridBlocked} arrived={arrived} endDist={endDist:F2} crossGuard={didNotCrossWall}");
+        }
+
+        /// <summary>I39 (#199 B3): a DOOR sitting in a wall line stays walkable —
+        /// the pawn routes THROUGH the door cell to the far side.  Wall cells on
+        /// both sides are blocked; only the door cell is passable, so arrival proves
+        /// the door cell remained a valid path cell (doors are NOT registered as
+        /// wall blockers).</summary>
+        private IEnumerator TestI39_DoorInWallPassable()
+        {
+            yield return null;
+            var grid = PawnMovement.Grid;
+            if (grid == null || !PawnMovement.UsePathfinding)
+            { Assert(false, $"Grid={grid!=null} UsePathfinding={PawnMovement.UsePathfinding}"); yield break; }
+
+            // Terrain-clear region offset WEST of I38 so cleanup can't collide
+            //  (verified vs layout: nearest lake (-22,22)r3.5 / rock (-22,19)r3.2
+            //  are >10 cells away; lake (-18,-12) >20).  Pawn at (-9,10), target
+            //  (-9,16), full wall line at y=13 x∈[-11..-7] EXCEPT the door cell at
+            //  x=-9 → the door is the ONLY opening.
+            int baseX = -9, startY = 10, goalY = 16, wallY = 13;
+            int wallLo = -11, wallHi = -7;
+            bool fixtureOk = true;
+            for (int x = -12; x <= -6 && fixtureOk; x++)
+                for (int y = startY; y <= goalY && fixtureOk; y++)
+                    if (!grid.IsWalkable(new Vector2Int(x, y))) fixtureOk = false;
+            if (!fixtureOk)
+            { Assert(false, "I39 fixture cells unexpectedly blocked on real terrain — pick a clearer region"); yield break; }
+
+            // Wall line with a door at x=baseX (the door cell stays walkable).
+            var walls = new List<GameObject>();
+            for (int x = wallLo; x <= wallHi; x++)
+            {
+                if (x == baseX) continue;   // door gap
+                var w = SpawnWallAtCell(x, wallY);
+                if (w != null) walls.Add(w);
+            }
+
+            // Spawn a real Door prefab at the door cell (center placement).
+            GameObject doorGo = null;
+            var doorPrefabFld = typeof(BuildManager).GetField("doorPrefab",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            if (doorPrefabFld != null && BuildManager.Instance != null)
+            {
+                var doorPrefab = doorPrefabFld.GetValue(BuildManager.Instance) as GameObject;
+                if (doorPrefab != null)
+                {
+                    doorGo = Object.Instantiate(doorPrefab, new Vector3(baseX + 0.5f, wallY + 0.5f, 0f), Quaternion.identity);
+                    doorGo.name = "I39_Door";
+                }
+            }
+            yield return null;   // Start() of walls registers cells
+            yield return null;
+
+            // The door cell must be WALKABLE (door does NOT block); the flanking
+            //  wall cells must be blocked → the door is the only opening.
+            bool doorWalkable = grid.IsWalkable(new Vector2Int(baseX, wallY));
+            bool flanksBlocked = !grid.IsWalkable(new Vector2Int(baseX - 1, wallY))
+                                 && !grid.IsWalkable(new Vector2Int(baseX + 1, wallY));
+
+            var pgo = new GameObject("I39_DoorPawn");
+            pgo.transform.position = new Vector3(baseX + 0.5f, startY + 0.5f, 0f);
+            pgo.AddComponent<SpriteRenderer>();
+            pgo.AddComponent<BoxCollider2D>().size = Vector2.one;
+            var pm = pgo.AddComponent<PawnMovement>();
+            yield return null;
+
+            Vector2 goalWorld = new Vector2(baseX + 0.5f, goalY + 0.5f);
+            pm.SetTarget(goalWorld);
+            bool pathOk = !pm.LastPathFailed && pm.HasTarget;
+
+            // Track whether the pawn passed through the door cell (column baseX, row wallY).
+            bool passedDoorCell = false;
+            float endDist = 999f;
+            for (int i = 0; i < 160; i++)   // up to ~8s
+            {
+                yield return new WaitForSeconds(0.05f);
+                var cell = AI.PathGrid.WorldToCell(pm.transform.position);
+                if (cell.x == baseX && cell.y == wallY) passedDoorCell = true;
+                endDist = Vector2.Distance(pm.transform.position, goalWorld);
+                if (!pm.HasTarget && endDist <= 1.2f) break;
+            }
+            bool arrived = endDist <= 1.2f;
+            Vector3 endPos = pm.transform.position;
+
+            // cleanup
+            Object.Destroy(pgo);
+            if (doorGo != null) Object.Destroy(doorGo);
+            foreach (var w in walls) if (w != null) Object.Destroy(w.gameObject);
+            yield return null;
+
+            Assert(doorWalkable && flanksBlocked && pathOk && arrived && passedDoorCell,
+                $"I39 door pass: doorWalkable={doorWalkable} flanksBlocked={flanksBlocked} pathOk={pathOk} arrived={arrived} passedDoorCell={passedDoorCell} endPos=({endPos.x:F1},{endPos.y:F1}) (문 통과)");
+            Debug.Log($"[Int] I39 detail: doorWalkable={doorWalkable} flanksBlocked={flanksBlocked} arrived={arrived} passedDoor={passedDoorCell} endDist={endDist:F2}");
         }
 
         private void FinalizeReport()

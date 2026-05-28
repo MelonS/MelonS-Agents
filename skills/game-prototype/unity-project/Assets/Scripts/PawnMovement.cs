@@ -35,6 +35,26 @@ namespace MelonS.GameProto
         //  tilemap.  Exists at runtime so B1 can consume it; null-safe everywhere.
         public static PathGrid Grid;
 
+        // #199 B3 — wall→grid coupling.  WallEntity calls these on build/destroy so
+        //  the live PathGrid marks/clears its cell.  Null-safe: if the grid hasn't
+        //  been built yet (or in a headless V-scene without bootstrap) the call is a
+        //  no-op — the wall simply isn't a path blocker there, which is correct for
+        //  those contexts.  Reference-counted inside PathGrid, so a cell two walls
+        //  map to reopens only when both are gone.  Cell is derived the SAME way
+        //  pawns derive their cell (WorldToCell of the world position) so a wall and
+        //  the pawns share one coordinate convention.
+        public static void RegisterWallCell(Vector2 worldPos)
+        {
+            if (Grid == null) return;
+            Grid.SetStructureBlocked(PathGrid.WorldToCell(worldPos), true);
+        }
+
+        public static void UnregisterWallCell(Vector2 worldPos)
+        {
+            if (Grid == null) return;
+            Grid.SetStructureBlocked(PathGrid.WorldToCell(worldPos), false);
+        }
+
         public static bool IsBlockedAt(Vector2 worldPos)
         {
             if (GroundTilemap == null) return false;
@@ -65,6 +85,15 @@ namespace MelonS.GameProto
         private System.Collections.Generic.List<Vector2Int> _path;
         private int _pathIndex;
         private Vector2Int _pathGoalCell;   // goal cell of the current cached path
+
+        // #199 B3 — grid version the cached path was computed against.  When the
+        //  live Grid.Version moves on (a wall was built/destroyed mid-walk), the
+        //  cached path is STALE and must be recomputed so the pawn respects the new
+        //  obstacle / opened gap.  SetTarget's recompute-skip checks this; Update
+        //  also force-repaths once when it detects a version change, so a pawn under
+        //  a one-shot SetTarget (manual move) re-routes too — not just workers that
+        //  re-call SetTarget every frame.
+        private int _pathGridVersion = -1;
 
         // #199 B1 — RimWorld "destination unreachable" signal.  Set true when an
         //  A* request returns null/empty (target cannot be reached) and the target
@@ -112,7 +141,13 @@ namespace MelonS.GameProto
                 // R-4: callers re-call SetTarget every frame.  If we already have a
                 //  live path to the same goal cell, do NOT recompute A* — keep
                 //  following the cached path.  Only recompute on a goal-cell change.
-                if (_path != null && _pathIndex < _path.Count && _pathGoalCell == goalCell)
+                //  #199 B3: ALSO recompute when the grid Version changed (a wall was
+                //  built/destroyed) — a same-goal path computed before the change is
+                //  stale and could walk through a brand-new wall.  This is the
+                //  in-flight invalidation (plan item 3).
+                if (_path != null && _pathIndex < _path.Count
+                    && _pathGoalCell == goalCell
+                    && _pathGridVersion == Grid.Version)
                 {
                     target = clamped;   // refresh world target (visual), keep path
                     return;
@@ -133,6 +168,7 @@ namespace MelonS.GameProto
                 _path = path;
                 _pathIndex = 0;
                 _pathGoalCell = goalCell;
+                _pathGridVersion = Grid.Version;
                 target = clamped;
                 LastPathFailed = false;
                 return;
@@ -151,6 +187,7 @@ namespace MelonS.GameProto
             target = null;
             _path = null;
             _pathIndex = 0;
+            _pathGridVersion = -1;
         }
 
         /// <summary>
@@ -198,6 +235,21 @@ namespace MelonS.GameProto
             if (UsePathfinding && Grid != null)
             {
                 if (!target.HasValue || _path == null) return;
+
+                // #199 B3 — in-flight invalidation (plan item 3).  If a wall was
+                //  built/destroyed since this path was computed, the cached path is
+                //  stale.  Re-path to the SAME world target through SetTarget (which
+                //  recomputes because the version moved).  Covers the one-shot
+                //  SetTarget case (manual move) — workers re-call SetTarget every
+                //  frame and get the same effect via the recompute-skip guard.
+                if (_pathGridVersion != Grid.Version)
+                {
+                    Vector2 reTarget = target.Value;
+                    SetTarget(reTarget);
+                    // If the rebuild walled us off, SetTarget cleared the target →
+                    //  LastPathFailed is now set; bail this frame.
+                    if (!target.HasValue || _path == null) return;
+                }
 
                 Vector2 curP = transform.position;
                 float speedMulP = health != null ? health.MovementSpeedMultiplier() : 1f;
