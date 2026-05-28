@@ -33,12 +33,15 @@ namespace MelonS.GameProto
         }
 
         // (mode, label, ArchitectMenu 카테고리, ArchitectMenu buildable index, place cell)
+        //  #192 - WallStone + Bed-Wood 추가 = 8 modes 완전체 (Architect 메뉴 모든 entry).
         private static readonly (BuildManager.Mode mode, string label, string category, int buildableIdx, int cx, int cy)[] TestCases = {
             (BuildManager.Mode.Wall,            "Wall(목재5)",       "Structure (구조)", 0, -18, -8),
+            (BuildManager.Mode.WallStone,       "Wall(석재5)",       "Structure (구조)", 1, -16, -8),
             (BuildManager.Mode.Floor,           "Floor(목재1)",      "Floors (바닥)",    0, -18, -10),
             (BuildManager.Mode.Door,            "Door(목재3)",       "Structure (구조)", 2, -18, -12),
             (BuildManager.Mode.Stove,           "Stove(목재10)",     "Production (생산)",0, -20, -8),
             (BuildManager.Mode.BedSleepingSpot, "수면자리(자재0)",   "Furniture (가구)", 0, -20, -10),
+            (BuildManager.Mode.Bed,             "목재침대(목재8)",   "Furniture (가구)", 1, -16, -10),
             (BuildManager.Mode.BedFine,         "고급침대(목재30)",  "Furniture (가구)", 2, -20, -12),
         };
 

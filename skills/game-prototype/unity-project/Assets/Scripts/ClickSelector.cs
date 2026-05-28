@@ -267,6 +267,29 @@ namespace MelonS.GameProto
 
         // 통합 검증용 - 실제 mouse input 시뮬레이션 (IntegrationTestRunner 호출)
         public void SimulateSelect(PawnEntity pawn) { Select(pawn); }
+
+        /// <summary>#192 - context menu item 진짜 호출 (vein 채광 / bandit 포섭 등 context-menu-only action).
+        ///  worldPos 에서 entity hit + 같은 menu 생성 → label 포함 item 찾아서 action 실행.
+        ///  미발견 시 false.</summary>
+        public bool SimulateContextMenuAction(Vector2 worldPos, string itemLabelContains)
+        {
+            if (currentSelection == null) return false;
+            Vector3 mouseWorld = new Vector3(worldPos.x, worldPos.y, 0f);
+            Collider2D hit = Physics2D.OverlapPoint(mouseWorld);
+            if (hit == null) return false;
+            var items = BuildContextMenu(hit, mouseWorld);
+            if (items == null) return false;
+            foreach (var (label, action) in items)
+            {
+                if (label.Contains(itemLabelContains))
+                {
+                    action?.Invoke();
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public void SimulateRightClick(Vector2 worldPos)
         {
             if (currentSelection == null) return;
