@@ -27,11 +27,11 @@ namespace MelonS.GameProto
         private Button architectBtn;  // #110 - 5 build btn 대체 (Architect 메뉴 열기)
         private Button researchBtn;
 
-        // 상태 색 — active 면 노란, 아니면 panel 색
-        private static readonly Color InactiveBg = new Color(0.12f, 0.14f, 0.16f, 0.92f);
-        private static readonly Color ActiveBg   = new Color(0.95f, 0.78f, 0.20f, 0.95f);
-        private static readonly Color TextNormal = new Color(0.94f, 0.94f, 0.92f, 1f);
-        private static readonly Color TextActive = new Color(0.10f, 0.10f, 0.08f, 1f);
+        // #185 - UITheme 통일 (Kenney warm tone 매치)
+        private static readonly Color InactiveBg = MelonS.GameProto.Core.UITheme.BtnInactiveBg;
+        private static readonly Color ActiveBg   = MelonS.GameProto.Core.UITheme.BtnActiveBg;
+        private static readonly Color TextNormal = MelonS.GameProto.Core.UITheme.TextPrimary;
+        private static readonly Color TextActive = MelonS.GameProto.Core.UITheme.TextDark;
 
         private Font font;
         // Lesson #4 - FindFirstObjectByType per-Update 비쌈.
@@ -100,7 +100,7 @@ namespace MelonS.GameProto
 
             // Background panel
             var bg = gameObject.AddComponent<Image>();
-            bg.color = new Color(0.05f, 0.06f, 0.08f, 0.85f);
+            bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
             // padding 그리기 위해 살짝 키움
             rt.sizeDelta = new Vector2(totalW + 16, BtnH + 12);
 
