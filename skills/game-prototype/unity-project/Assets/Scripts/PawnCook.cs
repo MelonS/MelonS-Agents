@@ -61,12 +61,16 @@ namespace MelonS.GameProto
                 float effectiveInterval = cookInterval / Mathf.Max(0.1f, traitMul);
                 if (Time.time - lastCookTime >= effectiveInterval)
                 {
-                    // #131 - Build skill 5+ pawn 이 만들면 fine meal (mood +20)
-                    var sk = GetComponent<PawnSkills>();
-                    bool fine = sk != null && sk.GetLevel(SkillKind.Build) >= 5;
+                    // #131/#172 - 이전: Build skill 5+ 면 fine meal (wiki 와 mismatch).
+                    //  지금: wiki - cooking skill 영향.  PawnAbilities.cookingMul 1.10+ 이면 fine.
+                    //  (Cook skill 별도 추가는 #172 PawnSkills 확장 시 진행.)
+                    var abil = GetComponent<PawnAbilities>();
+                    bool fine = abil != null && abil.cookingMul >= 1.10f;
                     if (targetStove.CookOne(fine))
                     {
                         lastCookTime = Time.time;
+                        // legacy: Build skill XP 도 부여 (PawnSkills 확장 전 임시)
+                        var sk = GetComponent<PawnSkills>();
                         if (sk != null) sk.AddXP(SkillKind.Build, 8f);
                     }
                 }
