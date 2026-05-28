@@ -331,6 +331,12 @@ namespace MelonS.GameProto.AI
         }
         private static StoneChunkEntity FindNearestChunk(PawnContext ctx)
         {
+            // #196 - stone 도 같은 패턴.  blueprint 가 석재 필요 시 stockpile chunk 도 pickup 허용.
+            bool anyBpNeedsStone = false;
+            foreach (var bp in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
+            {
+                if (bp != null && bp.RemainingStone > 0) { anyBpNeedsStone = true; break; }
+            }
             var arr = Object.FindObjectsByType<StoneChunkEntity>(FindObjectsSortMode.None);
             StoneChunkEntity best = null;
             float bestSq = float.MaxValue;
@@ -339,7 +345,7 @@ namespace MelonS.GameProto.AI
             {
                 if (c == null) continue;
                 if (c.IsReserved && c.ReservedBy != ctx.hauler.gameObject) continue;
-                if (c.InStockpile) continue;  // 림 - stockpile 안 chunk 재운반 X
+                if (c.InStockpile && !anyBpNeedsStone) continue;
                 Vector3 cp = c.transform.position;
                 if (Mathf.Abs(cp.x) > 28.5f || Mathf.Abs(cp.y) > 28.5f) continue;
                 float sq = ((Vector2)cp - me).sqrMagnitude;
@@ -364,6 +370,16 @@ namespace MelonS.GameProto.AI
         }
         private static WoodPileEntity FindNearestPile(PawnContext ctx)
         {
+            // #196 - 운영자 fb "건축 실제 안 됨" 핵심 원인:
+            //  이전 코드는 InStockpile=true 인 wood pile 을 무조건 skip.
+            //  결과: stockpile 에 wood 쌓여있어도 청사진으로 운반 X → 건축 무한 대기.
+            //  fix: 청사진이 자재 필요하면 stockpile pile 도 pickup target.
+            //       청사진 없으면만 skip (stockpile → stockpile 재운반 loop 방지).
+            bool anyBpNeedsWood = false;
+            foreach (var bp in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
+            {
+                if (bp != null && bp.RemainingWood > 0) { anyBpNeedsWood = true; break; }
+            }
             var arr = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None);
             WoodPileEntity best = null;
             float bestSq = float.MaxValue;
@@ -373,7 +389,8 @@ namespace MelonS.GameProto.AI
                 if (p == null) continue;
                 // 다른 hauler 가 이미 reserve 했으면 skip
                 if (p.IsReserved && p.ReservedBy != ctx.hauler.gameObject) continue;
-                if (p.InStockpile) continue;  // 림 - stockpile 안 pile 재운반 X
+                // #196 - InStockpile pile 은 청사진 자재 필요 시에만 pickup (stockpile→stockpile loop 차단).
+                if (p.InStockpile && !anyBpNeedsWood) continue;
                 Vector3 pp = p.transform.position;
                 if (Mathf.Abs(pp.x) > 28.5f || Mathf.Abs(pp.y) > 28.5f) continue;
                 float sq = ((Vector2)pp - me).sqrMagnitude;

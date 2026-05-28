@@ -22,10 +22,25 @@ namespace MelonS.GameProto
 
         public event Action<SkillKind, int> OnLevelUp;
 
+        // #196 - 운영자 fb "초기 build skill 높은 수준으로".
+        //  Build 8 = +32% 작업 속도 (#177 +4%/lvl).  건축 빠르게 진행.
+        public const int InitialBuildLevel = 8;
+        public const int InitialChopLevel = 4;
+        public const int InitialGatherLevel = 4;
+
         private void Awake()
         {
-            for (int i = 0; i < entries.Length; i++)
-                entries[i] = new SkillEntry { kind = (SkillKind)i, level = 0, xp = 0f };
+            entries[0] = new SkillEntry { kind = SkillKind.Gather, level = InitialGatherLevel, xp = 0f };
+            entries[1] = new SkillEntry { kind = SkillKind.Chop,   level = InitialChopLevel,   xp = 0f };
+            entries[2] = new SkillEntry { kind = SkillKind.Build,  level = InitialBuildLevel,  xp = 0f };
+            entries[3] = new SkillEntry { kind = SkillKind.Combat, level = 0, xp = 0f };
+        }
+
+        /// <summary>#196 - 외부에서 skill level 강제 설정 (테스트/시작값).</summary>
+        public void SetLevel(SkillKind k, int level)
+        {
+            entries[(int)k].level = Mathf.Clamp(level, 0, 20);
+            entries[(int)k].xp = 0f;
         }
 
         public int GetLevel(SkillKind k) => entries[(int)k].level;

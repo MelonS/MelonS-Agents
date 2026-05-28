@@ -57,6 +57,8 @@ namespace MelonS.GameProto
         }
 
         private SpriteRenderer sr;
+        // #196 - 진행도 표시 (운영자 fb step 3 "자재 들어갔다는 표시", step 4 "건설 진행도 보임")
+        private TextMesh statusLabel;
 
         public void Init(BuildManager.Mode m, GameObject prefab, Sprite ghostSprite,
             int wood, int stone, float secs = 5f)
@@ -70,28 +72,67 @@ namespace MelonS.GameProto
             if (sr == null) sr = gameObject.AddComponent<SpriteRenderer>();
             sr.sprite = ghostSprite;
             sr.sortingOrder = 15;
+            EnsureStatusLabel();
             UpdateVisual();
+        }
+
+        private void EnsureStatusLabel()
+        {
+            if (statusLabel != null) return;
+            var labelGo = new GameObject("BlueprintStatus");
+            labelGo.transform.SetParent(transform, false);
+            labelGo.transform.localPosition = new Vector3(0, 0.6f / Mathf.Max(0.01f, transform.localScale.y), 0);
+            statusLabel = labelGo.AddComponent<TextMesh>();
+            statusLabel.fontSize = 24;
+            statusLabel.characterSize = 0.05f;
+            statusLabel.anchor = TextAnchor.MiddleCenter;
+            statusLabel.alignment = TextAlignment.Center;
+            statusLabel.color = new Color(0.95f, 0.95f, 0.85f, 1f);
+            // 한국어 OS font
+            string[] cands = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
+            foreach (var n in cands)
+            {
+                var f = Font.CreateDynamicFontFromOSFont(n, 24);
+                if (f != null) { statusLabel.font = f; statusLabel.GetComponent<MeshRenderer>().material = f.material; break; }
+            }
+            statusLabel.GetComponent<MeshRenderer>().sortingOrder = 25;
         }
 
         private void UpdateVisual()
         {
             if (sr == null) return;
-            // #190 - 운영자 "청사진 설치 안 됨" 진짜 원인 진단:
-            //   placement 후 alpha 0.45 회색 + ghostSprite 그대로 → 운영자 시야에 안 들어옴.
-            //   클릭 성공해도 "안 보여서 → 안 됨" 으로 해석.  fix: 청록 outline 강조 + alpha 0.85+.
-            //   자재 대기: 청록 (선명) / 자재 충분: 형광 청록 / 건설 중: 흰 진해짐.
             float matRatio = (needWood + needStone) > 0
                 ? ((float)(collectedWood + collectedStone) / (needWood + needStone))
                 : 1f;
             if (!HasAllMaterials)
             {
-                // 청록 강조 (자재 대기 청사진 - "여기 짓기 예약됨" 명확히)
+                // 청록 강조 (자재 대기)
                 sr.color = new Color(0.55f, 0.85f, 1.0f, 0.85f + matRatio * 0.10f);
             }
             else
             {
-                // 형광 청록 (자재 완비, 건설 중 = 흰색으로 점점 진해짐)
+                // 형광 청록 → 흰 진해짐 (건설 중)
                 sr.color = new Color(0.65f + Progress * 0.35f, 1.0f, 1.0f, 0.90f + Progress * 0.10f);
+            }
+            // #196 - 운영자 fb step 3/4: 자재 표시 + 건설 진행도 텍스트.
+            if (statusLabel != null)
+            {
+                if (!HasAllMaterials)
+                {
+                    string woodLine = needWood > 0 ? $"🪵{collectedWood}/{needWood}" : "";
+                    string stoneLine = needStone > 0 ? $"⛏{collectedStone}/{needStone}" : "";
+                    statusLabel.text = (woodLine + (woodLine.Length > 0 && stoneLine.Length > 0 ? " " : "") + stoneLine).Trim();
+                    statusLabel.color = new Color(1.0f, 0.85f, 0.40f, 1f);  // 노랑 - 자재 대기
+                }
+                else if (!IsComplete)
+                {
+                    statusLabel.text = $"건설 {Progress * 100f:F0}%";
+                    statusLabel.color = new Color(0.55f, 1.0f, 0.65f, 1f);  // 녹색 - 건설 중
+                }
+                else
+                {
+                    statusLabel.text = "";
+                }
             }
         }
 
