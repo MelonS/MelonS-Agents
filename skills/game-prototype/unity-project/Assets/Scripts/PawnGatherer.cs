@@ -64,9 +64,12 @@ namespace MelonS.GameProto
                 // lesson #4 audio-buzz-style throttle pattern, same shape).
                 movement.ClearTarget();
                 // #164 - PawnTraits workSpeedMul 적용 (Industrious 1.30x = 짧은 interval).
+                // #174 - PawnAbilities.plantsMul × manipulation (이전: SET-only, gather 영향 0).
                 var traits = GetComponent<PawnTraits>();
+                var abil = GetComponent<PawnAbilities>();
                 float traitMul = traits != null ? traits.workSpeedMul : 1f;
-                float effectiveInterval = gatherInterval / Mathf.Max(0.1f, traitMul);
+                float abilMul = abil != null ? abil.plantsMul * abil.manipulation : 1f;
+                float effectiveInterval = gatherInterval / Mathf.Max(0.1f, traitMul * abilMul);
                 if (Time.time - lastGatherTime >= effectiveInterval)
                 {
                     int got = targetBush.TakeBerry();

@@ -239,11 +239,16 @@ namespace MelonS.GameProto
                     if (Time.time - lastDraftAttackTime > DraftAttackInterval)
                     {
                         lastDraftAttackTime = Time.time;
-                        // #173 - PawnEquipment.TotalMeleeDamageBonus (롱소드 +3, 도끼 +2, 단검 +1) 가산.
+                        // #173 - 무기 dmg, #175 - meleeMul + Combat skill 가산.
                         var equip = GetComponent<PawnEquipment>();
-                        int dmg = 2 + Mathf.RoundToInt(equip != null ? equip.TotalMeleeDamageBonus() : 0f);
-                        bandit.TakeDamage(dmg, gameObject);
+                        var abil = GetComponent<PawnAbilities>();
                         var skills = GetComponent<PawnSkills>();
+                        float wpn = equip != null ? equip.TotalMeleeDamageBonus() : 0f;
+                        float ml = abil != null ? abil.meleeMul : 1f;
+                        // Combat skill 1당 +3% 데미지 (lvl 10 = +30%).
+                        float sk = skills != null ? (1f + skills.GetLevel(SkillKind.Combat) * 0.03f) : 1f;
+                        int dmg = Mathf.Max(1, Mathf.RoundToInt((2f + wpn) * ml * sk));
+                        bandit.TakeDamage(dmg, gameObject);
                         if (skills != null) skills.AddXP(SkillKind.Combat, 8f);
                     }
                 }
@@ -259,11 +264,15 @@ namespace MelonS.GameProto
                     if (Time.time - lastDraftAttackTime > DraftAttackInterval)
                     {
                         lastDraftAttackTime = Time.time;
-                        // #173 - 무기 dmg bonus 가산
+                        // #173/#175 - 무기 + meleeMul + Combat skill 가산
                         var equip = GetComponent<PawnEquipment>();
-                        int dmg = 3 + Mathf.RoundToInt(equip != null ? equip.TotalMeleeDamageBonus() : 0f);
-                        wolf.TakeDamage(dmg, gameObject);
+                        var abil = GetComponent<PawnAbilities>();
                         var skills = GetComponent<PawnSkills>();
+                        float wpn = equip != null ? equip.TotalMeleeDamageBonus() : 0f;
+                        float ml = abil != null ? abil.meleeMul : 1f;
+                        float sk = skills != null ? (1f + skills.GetLevel(SkillKind.Combat) * 0.03f) : 1f;
+                        int dmg = Mathf.Max(1, Mathf.RoundToInt((3f + wpn) * ml * sk));
+                        wolf.TakeDamage(dmg, gameObject);
                         if (skills != null) skills.AddXP(SkillKind.Combat, 10f);
                     }
                 }
