@@ -78,6 +78,15 @@ namespace MelonS.GameProto
                 Debug.Log($"[Trader] 콜로니스트가 {TradeRangeUnits:F0}u 안에 없음 (가장 가까운={(nearestPawn!=null?nearestPawn.PawnName:"?")} dist={nearestDist:F1})");
                 return false;
             }
+            // #178 - socialMul 가격 보정 (이전: SET-only).
+            //  가장 가까운 pawn 의 socialMul (0.80~1.20) 를 receive 측에 곱.
+            //  높으면 더 많이 받음, 낮으면 적게 받음.  give 는 그대로.
+            float socMul = 1f;
+            if (nearestPawn != null)
+            {
+                var abil = nearestPawn.GetComponent<PawnAbilities>();
+                if (abil != null) socMul = abil.socialMul;
+            }
             var (label, gW, gS, gF, rW, rS, rF, rM) = TradeOptions[idx];
             if (rm.wood < gW || rm.stone < gS || rm.food < gF)
             {
@@ -87,11 +96,15 @@ namespace MelonS.GameProto
             if (gW > 0) rm.AddWood(-gW);
             if (gS > 0) rm.AddStone(-gS);
             if (gF > 0) rm.AddFood(-gF);
-            if (rW > 0) rm.AddWood(rW);
-            if (rS > 0) rm.AddStone(rS);
-            if (rF > 0) rm.AddFood(rF);
-            if (rM > 0) rm.AddMeals(rM);
-            Debug.Log($"[Trader] 거래 성공: {label}");
+            int rWa = Mathf.Max(0, Mathf.RoundToInt(rW * socMul));
+            int rSa = Mathf.Max(0, Mathf.RoundToInt(rS * socMul));
+            int rFa = Mathf.Max(0, Mathf.RoundToInt(rF * socMul));
+            int rMa = Mathf.Max(0, Mathf.RoundToInt(rM * socMul));
+            if (rWa > 0) rm.AddWood(rWa);
+            if (rSa > 0) rm.AddStone(rSa);
+            if (rFa > 0) rm.AddFood(rFa);
+            if (rMa > 0) rm.AddMeals(rMa);
+            Debug.Log($"[Trader] 거래 성공: {label} (social {socMul:F2}x → {rWa}/{rSa}/{rFa}/{rMa})");
             return true;
         }
 

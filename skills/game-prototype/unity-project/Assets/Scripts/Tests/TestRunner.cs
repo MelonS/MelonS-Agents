@@ -1013,8 +1013,10 @@ namespace MelonS.GameProto.Tests
             yield return null;
             int endWood = rm.wood, endFood = rm.food;
             Object.Destroy(pgo);
+            // #178 - 테스트 pawn 에 PawnAbilities 없음 → socMul=1.0 → +8 (정확).
+            //  scene pawn 가 PawnAbilities 가지면 +6~+10 분포지만 본 test 는 격리.
             Assert(ok && endWood == startWood - 5 && endFood == startFood + 8,
-                $"trade: wood {startWood}→{endWood} (-5), food {startFood}→{endFood} (+8)");
+                $"trade: wood {startWood}→{endWood} (-5), food {startFood}→{endFood} (+8 expected, no abilities)");
         }
 
         private IEnumerator TestV26_NeedsDecay()
