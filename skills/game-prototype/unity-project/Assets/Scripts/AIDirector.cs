@@ -227,6 +227,11 @@ namespace MelonS.GameProto
             {
                 min *= 0.6f; max *= 0.6f;  // 무작위 — 사건 자주
             }
+            // #175 - threat tier 가 올라가면 event 빈도 증가 (wiki: late-game 빠른 raid pace).
+            //  tier 0 = ×1.0, tier 1 = ×0.85, tier 2 = ×0.70, tier 3 = ×0.55 (interval).
+            int tier = CurrentThreatTier;
+            float tierMul = 1f - tier * 0.15f;
+            min *= tierMul; max *= tierMul;
             float wait = UnityEngine.Random.Range(min, max);
             nextFireTime = Time.timeSinceLevelLoad + wait;
         }
