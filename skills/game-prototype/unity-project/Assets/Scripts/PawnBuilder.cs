@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto.AI;
 
 namespace MelonS.GameProto
 {
@@ -15,7 +16,8 @@ namespace MelonS.GameProto
 
         private BlueprintEntity targetBp;
         private PawnMovement movement;
-        private float taskStartTime = -10f;
+        // #199 B2 (R-1) - path-aware give-up (see WorkGiveUp).
+        private WorkGiveUp giveUp;
 
         public bool HasTask => targetBp != null;
         public BlueprintEntity Target => targetBp;
@@ -27,9 +29,9 @@ namespace MelonS.GameProto
             if (targetBp != null && targetBp.ReservedBy == gameObject)
                 targetBp.ReservedBy = null;
             targetBp = bp;
-            taskStartTime = Time.time;
             if (bp != null)
             {
+                giveUp.Reset(Time.time, Vector2.Distance(transform.position, bp.transform.position));
                 bp.ReservedBy = gameObject;
                 movement.SetTarget(bp.transform.position);
             }
@@ -51,9 +53,10 @@ namespace MelonS.GameProto
             if (targetBp.IsComplete) { ClearTask(); return; }
 
             float dist = Vector2.Distance(transform.position, targetBp.transform.position);
-            if (Time.time - taskStartTime > giveUpAfterSec && dist > buildRange)
+            // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
+            if (dist > buildRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
             {
-                Debug.Log($"[Builder] {name} give up blueprint (dist={dist:F2})");
+                Debug.Log($"[Builder] {name} give up blueprint (dist={dist:F2}, pathFailed={movement.LastPathFailed})");
                 ClearTask();
                 return;
             }

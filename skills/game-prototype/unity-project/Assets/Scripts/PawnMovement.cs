@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using MelonS.GameProto.Data;
+using MelonS.GameProto.AI;
 
 namespace MelonS.GameProto
 {
@@ -25,6 +26,15 @@ namespace MelonS.GameProto
         public static TileBase WaterTile;
         public static TileBase RockTile;
 
+        // #199 B0 — grid A* pathfinding scaffold.
+        //  UsePathfinding: master flag.  DEFAULT OFF — nothing reads it in B0;
+        //  B1 wires SetTarget to follow an A* path when true.  Old MoveTowards
+        //  stays the live behavior until B2 flips this on.
+        public static bool UsePathfinding = false;
+        //  Grid: built once at scene start (TilemapStaticRefInit) from the
+        //  tilemap.  Exists at runtime so B1 can consume it; null-safe everywhere.
+        public static PathGrid Grid;
+
         public static bool IsBlockedAt(Vector2 worldPos)
         {
             if (GroundTilemap == null) return false;
@@ -44,18 +54,30 @@ namespace MelonS.GameProto
 
         private Vector2? target;
         private PawnHealth health;  // Step45 — leg damage 영향
-        // I19 bug — pawn 이 obstacle 옆에서 target 계속 cancel 되며 정체.
-        //  1.5s 동안 안 움직였으면 perpendicular nudge 로 escape.
-        private Vector3 lastPos;
-        private float lastMoveTime;
-        private float lastUnstuckTime = -10f;
+
+        // #199 B1 — A* path-follow state (only used when UsePathfinding == true).
+        //  _path: inclusive cell list [start..goal] from AStar.FindPath.
+        //  _pathIndex: index of the waypoint the pawn is currently walking toward.
+        //  Stored in SetTarget, advanced cell-by-cell in Update / AdvanceAlongPath.
+        //  R-4 de-risk: the path is computed ONCE per SetTarget (callers like
+        //  PawnChopper re-call SetTarget every frame — see below, we skip recompute
+        //  when the requested target cell is unchanged AND a live path exists).
+        private System.Collections.Generic.List<Vector2Int> _path;
+        private int _pathIndex;
+        private Vector2Int _pathGoalCell;   // goal cell of the current cached path
+
+        // #199 B1 — RimWorld "destination unreachable" signal.  Set true when an
+        //  A* request returns null/empty (target cannot be reached) and the target
+        //  is cleared.  Set false whenever a new target is accepted with a valid
+        //  path.  C1 give-up timers should switch from "timer + dist>range" to
+        //  consuming THIS flag (real unreachability), not straight-line distance.
+        //  Exposed now so C1 can wire it; nothing reads it yet at runtime (flag OFF).
+        public bool LastPathFailed { get; private set; }
 
         private void Awake()
         {
             health = GetComponent<PawnHealth>();
             if (stats == null) stats = PawnStats.CreateDefault();
-            lastPos = transform.position;
-            lastMoveTime = Time.time;
         }
 
         public static Vector2 ClampToWorld(Vector2 p)
@@ -72,49 +94,144 @@ namespace MelonS.GameProto
         {
             // I19 bug fix — chopper/AI 가 world bound 밖 entity 위치를 target 으로 줄 때
             //  ClampToWorld 가 안 적용돼서 pawn 이 도달 못 함.  여기서 강제 clamp.
-            target = ClampToWorld(worldPos);
+            Vector2 clamped = ClampToWorld(worldPos);
+
+            // #199 B1 — pathfinding branch.  When ON, compute an A* path from the
+            //  pawn's current cell to the (clamped) target cell and follow it.
+            //  When OFF, fall through to the OLD point-lerp behavior (byte-for-byte
+            //  unchanged below) — this is the live path until B2.
+            if (UsePathfinding && Grid != null)
+            {
+                // Clamp the goal cell into grid bounds (I19 "tree outside ±29"):
+                //  a slightly-out-of-bounds work target snaps to the nearest
+                //  in-bounds cell so the chopper still gets a reachable path,
+                //  matching ClampToWorld intent.  ClampToWorld already bounded the
+                //  world pos; the cell derived from it is therefore in-bounds.
+                Vector2Int goalCell = PathGrid.WorldToCell(clamped);
+
+                // R-4: callers re-call SetTarget every frame.  If we already have a
+                //  live path to the same goal cell, do NOT recompute A* — keep
+                //  following the cached path.  Only recompute on a goal-cell change.
+                if (_path != null && _pathIndex < _path.Count && _pathGoalCell == goalCell)
+                {
+                    target = clamped;   // refresh world target (visual), keep path
+                    return;
+                }
+
+                Vector2Int startCell = PathGrid.WorldToCell(transform.position);
+                var path = AStar.FindPath(Grid, startCell, goalCell);
+                if (path == null || path.Count == 0)
+                {
+                    // RimWorld "destination unreachable" — give up the target.
+                    _path = null;
+                    _pathIndex = 0;
+                    target = null;
+                    LastPathFailed = true;
+                    return;
+                }
+
+                _path = path;
+                _pathIndex = 0;
+                _pathGoalCell = goalCell;
+                target = clamped;
+                LastPathFailed = false;
+                return;
+            }
+
+            // ---- OLD behavior (flag OFF) — live until B2.  Unchanged. ----
+            target = clamped;
+            // Keep path state clean when running the old branch.
+            _path = null;
+            _pathIndex = 0;
+            LastPathFailed = false;
         }
 
         public void ClearTarget()
         {
             target = null;
+            _path = null;
+            _pathIndex = 0;
+        }
+
+        /// <summary>
+        /// #199 B1 — one tick of A* path-following, factored out so V-tests can
+        /// drive it deterministically without a full scene/Update loop.  Moves
+        /// the transform toward the current waypoint's cell center by
+        /// <paramref name="maxDelta"/> world units (already speed-scaled by the
+        /// caller), advances the waypoint index on arrival, and clears the target
+        /// (returns true) when the final waypoint is reached.  No-op when there is
+        /// no live path.  Smooth lerp between cell centers (RimWorld glide).
+        /// Returns true when arrival happened this tick.
+        /// </summary>
+        public bool AdvanceAlongPath(float maxDelta)
+        {
+            if (_path == null || _pathIndex >= _path.Count) return false;
+
+            Vector2 cur = transform.position;
+            Vector2 wp = PathGrid.CellToWorld(_path[_pathIndex]);
+            Vector2 next = Vector2.MoveTowards(cur, wp, maxDelta);
+            transform.position = new Vector3(next.x, next.y, transform.position.z);
+
+            // Within arriveDistance of the current waypoint → advance.
+            if (Vector2.Distance(next, wp) <= stats.arriveDistance)
+            {
+                _pathIndex++;
+                if (_pathIndex >= _path.Count)
+                {
+                    // Final waypoint reached → arrive, exactly like the old branch.
+                    target = null;
+                    _path = null;
+                    _pathIndex = 0;
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void Update()
         {
-            // I19 unstuck — pawn 이 target 있는데 1.5s 동안 안 움직였으면 다른 방향 nudge.
-            //  perpendicular shift 0.5 unit (rock 한 칸 정도).  cooldown 3s.
-            if (target.HasValue)
+            // #199 B1 — pathfinding branch (LIVE in the game since B2).  Reuses
+            //  the FULL speed block (leg damage, abilities, floor bonus, door
+            //  slowdown) then steps along the cached A* path.  When the flag is
+            //  OFF (isolated V-test scene only) this is skipped and the minimal
+            //  OLD fallback below runs.
+            if (UsePathfinding && Grid != null)
             {
-                Vector3 curPos = transform.position;
-                if ((curPos - lastPos).sqrMagnitude > 0.001f) { lastPos = curPos; lastMoveTime = Time.time; }
-                // #197 운영자 fb "이동 버벅임" - 3s → 5s 로 늘려서 false-trigger 줄임.
-                //  실제 stuck 만 nudge.  cooldown 도 5s → 8s.
-                if (Time.time - lastMoveTime > 5.0f && Time.time - lastUnstuckTime > 8f)
+                if (!target.HasValue || _path == null) return;
+
+                Vector2 curP = transform.position;
+                float speedMulP = health != null ? health.MovementSpeedMultiplier() : 1f;
+                var abilP = GetComponent<PawnAbilities>();
+                if (abilP != null) speedMulP *= abilP.moveSpeedMul;
+                if (IsOnFloor(curP)) speedMulP *= FloorEntity.MoveSpeedMul;
+                if (DoorEntity.IsInsideDoor(curP))
                 {
-                    // 4 방향 시도 - 가장 가까운 (target 방향과 90도) 으로 nudge
-                    Vector2 toTarget = (target.Value - (Vector2)curPos).normalized;
-                    Vector2[] nudges = {
-                        new Vector2(-toTarget.y,  toTarget.x) * 0.6f,
-                        new Vector2( toTarget.y, -toTarget.x) * 0.6f,
-                        new Vector2( toTarget.x,  toTarget.y) * 0.6f,
-                        new Vector2(-toTarget.x, -toTarget.y) * 0.6f,
-                    };
-                    foreach (var n in nudges)
+                    speedMulP *= DoorEntity.PassMul;
+                    var doorHitsP = Physics2D.OverlapBoxAll(curP, Vector2.one * 0.3f, 0f);
+                    foreach (var h in doorHitsP)
                     {
-                        Vector2 candidate = ClampToWorld((Vector2)curPos + n);
-                        if (!IsBlockedAt(candidate))
-                        {
-                            transform.position = new Vector3(candidate.x, candidate.y, curPos.z);
-                            lastPos = transform.position;
-                            lastMoveTime = Time.time;
-                            lastUnstuckTime = Time.time;
-                            break;
-                        }
+                        var d = h != null ? h.GetComponent<DoorEntity>() : null;
+                        if (d != null) { d.NotifyPassing(); break; }
                     }
                 }
+                AdvanceAlongPath(stats.moveSpeed * speedMulP * Time.deltaTime);
+                return;
             }
 
+            // ===== OLD fallback branch (flag OFF) =====
+            //  #199 B2: the live Game scene flips UsePathfinding ON at bootstrap
+            //  (TilemapStaticRefInit), so this branch is NOT reachable in the
+            //  shipped game — A* owns movement now.  It survives ONLY as the
+            //  deterministic point-lerp the isolated V-test scene relies on
+            //  (V28 movement-tick, the DoorEntity pass tests) where no bootstrap
+            //  runs and the flag stays at its source default (false).
+            //
+            //  DELETED in B2 (real pathing replaces both, operator "real pathing
+            //  owns movement"): the I19 perpendicular-nudge unstuck block and the
+            //  x/y axis-slide obstacle dodge.  Both were band-aids for the lack of
+            //  pathfinding; A* + LastPathFailed cover every case they patched.
+            //  What stays: ClampToWorld, the Water/Rock IsBlockedAt stop, speed
+            //  multipliers, arrive logic — cheap, correct, still wanted.
             if (!target.HasValue) return;
 
             Vector2 cur = transform.position;
@@ -148,21 +265,14 @@ namespace MelonS.GameProto
             }
             Vector2 next = Vector2.MoveTowards(cur, clampedTarget, stats.moveSpeed * speedMul * Time.deltaTime);
             next = ClampToWorld(next);
-            // I19 bug fix - 다음 step 이 obstacle 이라도 alternative direction 시도.
-            //  rock 옆에서 pawn 영원히 멈춰있던 버그 (target 즉시 cancel → chop/etc. fail).
+            // #199 B2: x/y axis-slide obstacle dodge DELETED (was a no-pathfinding
+            //  band-aid).  In this fallback branch we simply stop if the next step
+            //  would enter an obstacle — the live game never hits this (A* routes
+            //  around obstacles instead).  Keeps the cheap Water/Rock safety stop.
             if (IsBlockedAt(next))
             {
-                // x-axis 만 이동 시도 (y 는 유지)
-                Vector2 nextX = new Vector2(next.x, cur.y);
-                Vector2 nextY = new Vector2(cur.x, next.y);
-                if (!IsBlockedAt(nextX))      next = nextX;
-                else if (!IsBlockedAt(nextY)) next = nextY;
-                else
-                {
-                    // 양쪽 다 막힘 — target 자체를 cancel (영구 stuck 방지)
-                    target = null;
-                    return;
-                }
+                target = null;
+                return;
             }
             transform.position = new Vector3(next.x, next.y, transform.position.z);
 

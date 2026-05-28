@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using MelonS.GameProto.Core;
+using MelonS.GameProto.AI;
 
 namespace MelonS.GameProto.Tests
 {
@@ -114,6 +115,11 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V65-bed-sprite-runtime-binding", TestV65_BedSpriteRuntimeBinding);
             yield return RunOne("V66-pawn-1x1-render-collider", TestV66_Pawn1x1RenderCollider);
             yield return RunOne("V67-floatingbar-namelabel-anchor", TestV67_FloatingBarNameLabelAnchor);
+            yield return RunOne("V68-astar-straight-path", TestV68_AStarStraightPath);
+            yield return RunOne("V69-astar-around-obstacle", TestV69_AStarAroundObstacle);
+            yield return RunOne("V70-astar-no-path-enclosed", TestV70_AStarNoPathEnclosed);
+            yield return RunOne("V71-pathfollow-reaches-target", TestV71_PathFollowReachesTarget);
+            yield return RunOne("V72-pathfollow-unreachable-signal", TestV72_PathFollowUnreachableSignal);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1531,6 +1537,217 @@ namespace MelonS.GameProto.Tests
             Debug.Log($"[TestRunner] V67: {(ok ? "OK" : "FAIL")} - headY={headY:F2} HP={hpY:F2}(Δ{hpY-headY:F2}) mood={moodY:F2} name={nameY:F2} status={statusY:F2} (RimWorld 머리 위 바+라벨)");
             Assert(ok,
                 $"children={childrenOk} HP={hpY:F2}(band[0.6,1.2]={hpBandOk}) mood={moodY:F2}(>=head={moodAboveHead},<HP={stackOrderOk}) name={nameY:F2}(>HP={nameAboveBar}) status={statusY:F2}(between={statusBetween})");
+        }
+
+        // ---- #199 B0 — A* pathfinding (in-memory grid, no scene/AssetDatabase) ----
+
+        // Build a fully-walkable PathGrid mask the size of the real grid.
+        private static bool[,] AllWalkableMask()
+        {
+            var m = new bool[PathGrid.SIZE, PathGrid.SIZE];
+            for (int x = 0; x < PathGrid.SIZE; x++)
+                for (int y = 0; y < PathGrid.SIZE; y++)
+                    m[x, y] = true;
+            return m;
+        }
+
+        // V68 — A* finds a straight clear path on an open grid.
+        private IEnumerator TestV68_AStarStraightPath()
+        {
+            var grid = PathGrid.FromMask(AllWalkableMask());
+            var start = new Vector2Int(0, 0);
+            var goal  = new Vector2Int(5, 0);   // 5 cells east, clear line
+            var path = AStar.FindPath(grid, start, goal);
+
+            bool notNull   = path != null && path.Count > 0;
+            bool endpointsOk = notNull && path[0] == start && path[path.Count - 1] == goal;
+            // Straight horizontal run of 5 cardinal steps → 6 cells inclusive.
+            bool lengthOk  = notNull && path.Count == 6;
+            bool allWalkable = true;
+            if (notNull) foreach (var c in path) if (!grid.IsWalkable(c)) { allWalkable = false; break; }
+
+            bool ok = notNull && endpointsOk && lengthOk && allWalkable;
+            Debug.Log($"[TestRunner] V68: {(ok ? "OK" : "FAIL")} - straight path count={(path?.Count ?? -1)} start={start} goal={goal} (RimWorld 8-dir A* 직선)");
+            Assert(ok, $"notNull={notNull} endpoints={endpointsOk} count={(path?.Count ?? -1)}(==6={lengthOk}) allWalkable={allWalkable}");
+            yield break;
+        }
+
+        // V69 — A* routes AROUND a blocking wall line, never crossing it.
+        private IEnumerator TestV69_AStarAroundObstacle()
+        {
+            var grid = PathGrid.FromMask(AllWalkableMask());
+            // Vertical wall at x=2 from y=-3..3 with NO gap on the direct line;
+            //  the only way around is over the top (y=4) or bottom (y=-4).
+            var blocked = new System.Collections.Generic.List<Vector2Int>();
+            for (int y = -3; y <= 3; y++)
+            {
+                var c = new Vector2Int(2, y);
+                grid.SetWalkable(c, false);
+                blocked.Add(c);
+            }
+            var start = new Vector2Int(0, 0);
+            var goal  = new Vector2Int(4, 0);
+            var path = AStar.FindPath(grid, start, goal);
+
+            bool notNull = path != null && path.Count > 0;
+            bool endpointsOk = notNull && path[0] == start && path[path.Count - 1] == goal;
+            bool everyCellWalkable = true;
+            bool avoidsWall = true;
+            if (notNull)
+            {
+                foreach (var c in path)
+                {
+                    if (!grid.IsWalkable(c)) everyCellWalkable = false;
+                    if (blocked.Contains(c)) avoidsWall = false;
+                }
+            }
+            // A detour must be strictly longer than the blocked straight line
+            //  (4 cells inclusive = 5 if it could go straight).
+            bool detoured = notNull && path.Count > 5;
+
+            bool ok = notNull && endpointsOk && everyCellWalkable && avoidsWall && detoured;
+            Debug.Log($"[TestRunner] V69: {(ok ? "OK" : "FAIL")} - detour count={(path?.Count ?? -1)} avoidsWall={avoidsWall} (장애물 우회)");
+            Assert(ok, $"notNull={notNull} endpoints={endpointsOk} walkable={everyCellWalkable} avoidsWall={avoidsWall} detoured={detoured}(count={(path?.Count ?? -1)})");
+            yield break;
+        }
+
+        // V70 — A* returns no-path for a fully-enclosed goal, within the cap.
+        private IEnumerator TestV70_AStarNoPathEnclosed()
+        {
+            var grid = PathGrid.FromMask(AllWalkableMask());
+            // Enclose goal cell (5,5) with a solid 8-cell wall ring.  No gap →
+            //  unreachable.  Corners blocked too so no diagonal squeeze.
+            var goal = new Vector2Int(5, 5);
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                    if (!(dx == 0 && dy == 0))
+                        grid.SetWalkable(new Vector2Int(goal.x + dx, goal.y + dy), false);
+
+            var start = new Vector2Int(0, 0);
+            float t0 = Time.realtimeSinceStartup;
+            var path = AStar.FindPath(grid, start, goal);
+            float elapsed = Time.realtimeSinceStartup - t0;
+
+            bool noPath = path == null || path.Count == 0;
+            // Must return promptly (node cap guarantees no hang) — generous bound.
+            bool prompt = elapsed < 1.0f;
+
+            bool ok = noPath && prompt;
+            Debug.Log($"[TestRunner] V70: {(ok ? "OK" : "FAIL")} - enclosed goal noPath={noPath} elapsed={elapsed:F3}s (도달불가 capped)");
+            Assert(ok, $"noPath={noPath}(path={(path == null ? "null" : path.Count.ToString())}) prompt={prompt}({elapsed:F3}s<1.0)");
+            yield break;
+        }
+
+        // V71 — flag-ON pawn FOLLOWS its A* path and arrives within arriveDistance.
+        //  Exercises the real follow loop (PawnMovement.AdvanceAlongPath via the
+        //  cached A* path set in SetTarget), driven by simulated ticks.  Resets
+        //  UsePathfinding=false in cleanup so every later test keeps OLD behavior.
+        private IEnumerator TestV71_PathFollowReachesTarget()
+        {
+            bool prevFlag = PawnMovement.UsePathfinding;
+            PathGrid prevGrid = PawnMovement.Grid;
+            // Build a known all-walkable grid and a pawn at cell-center (0.5,0.5).
+            PawnMovement.Grid = PathGrid.FromMask(AllWalkableMask());
+            PawnMovement.UsePathfinding = true;
+
+            GameObject go = null;
+            bool arrived = false;
+            float startDist = 0f, endDist = 0f;
+            float movedTotal = 0f;
+            try
+            {
+                go = new GameObject("V71_PathPawn");
+                go.transform.position = new Vector3(0.5f, 0.5f, 0f);   // cell (0,0) center
+                go.AddComponent<SpriteRenderer>();
+                var pm = go.AddComponent<PawnMovement>();
+                // Awake runs on AddComponent; stats default in → arriveDistance 1.0.
+
+                // Target the center of cell (8,3) — a clear diagonal+cardinal run.
+                Vector2 goalWorld = PathGrid.CellToWorld(new Vector2Int(8, 3));
+                pm.SetTarget(goalWorld);
+                Assert(!pm.LastPathFailed, "V71 setup: clear path unexpectedly failed");
+
+                startDist = Vector2.Distance(go.transform.position, goalWorld);
+
+                // Drive the follow loop deterministically.  Default moveSpeed 3.0,
+                //  dt 0.05 → 0.15 world units/tick.  The path is ~8 cells (~8 units),
+                //  so ~55 ticks suffice; budget 500 ticks (~37 units) generously.
+                //  Stop as soon as the final waypoint is reached.
+                float maxDelta = 3.0f * 0.05f;   // stats.moveSpeed * dt (default)
+                Vector2 prevPos = go.transform.position;
+                for (int i = 0; i < 500 && !arrived; i++)
+                {
+                    arrived = pm.AdvanceAlongPath(maxDelta);
+                    Vector2 nowPos = go.transform.position;
+                    movedTotal += Vector2.Distance(prevPos, nowPos);
+                    prevPos = nowPos;
+                }
+                endDist = Vector2.Distance(go.transform.position, goalWorld);
+            }
+            finally
+            {
+                if (go != null) Object.Destroy(go);
+                PawnMovement.UsePathfinding = prevFlag;   // restore OLD behavior
+                PawnMovement.Grid = prevGrid;
+            }
+
+            // Real follow logic proven: arrived flag set, ended within arriveDist
+            //  (1.0) of goal, and the pawn actually MOVED (movedTotal > 0).
+            bool ended = arrived && endDist <= 1.0f && movedTotal > 0.5f && startDist > 2f;
+            Debug.Log($"[TestRunner] V71: {(ended ? "OK" : "FAIL")} - pathfollow arrived={arrived} startDist={startDist:F2} endDist={endDist:F2} moved={movedTotal:F2} (A* follow loop)");
+            Assert(ended, $"arrived={arrived} startDist={startDist:F2} endDist={endDist:F2}(<=1.0) moved={movedTotal:F2}(>0.5)");
+            yield break;
+        }
+
+        // V72 — flag-ON pawn given an ENCLOSED (unreachable) target sets
+        //  LastPathFailed=true, clears its target, and does NOT wander.  Proves
+        //  the RimWorld "destination unreachable" signal B1 introduces.
+        private IEnumerator TestV72_PathFollowUnreachableSignal()
+        {
+            bool prevFlag = PawnMovement.UsePathfinding;
+            PathGrid prevGrid = PawnMovement.Grid;
+            var grid = PathGrid.FromMask(AllWalkableMask());
+            // Enclose goal cell (6,6) with a solid 8-cell ring (corners too) → no path.
+            var goalCell = new Vector2Int(6, 6);
+            for (int dx = -1; dx <= 1; dx++)
+                for (int dy = -1; dy <= 1; dy++)
+                    if (!(dx == 0 && dy == 0))
+                        grid.SetWalkable(new Vector2Int(goalCell.x + dx, goalCell.y + dy), false);
+            PawnMovement.Grid = grid;
+            PawnMovement.UsePathfinding = true;
+
+            GameObject go = null;
+            bool failed = false;
+            bool hasTarget = true;
+            float moved = 0f;
+            try
+            {
+                go = new GameObject("V72_UnreachablePawn");
+                go.transform.position = new Vector3(0.5f, 0.5f, 0f);
+                go.AddComponent<SpriteRenderer>();
+                var pm = go.AddComponent<PawnMovement>();
+                Vector2 startPos = go.transform.position;
+
+                pm.SetTarget(PathGrid.CellToWorld(goalCell));   // enclosed → no path
+                failed = pm.LastPathFailed;
+                hasTarget = pm.HasTarget;
+
+                // Drive ticks: with no path the pawn must NOT move (no jitter/wander).
+                float maxDelta = 3.0f * 0.05f;
+                for (int i = 0; i < 50; i++) pm.AdvanceAlongPath(maxDelta);
+                moved = Vector2.Distance(startPos, go.transform.position);
+            }
+            finally
+            {
+                if (go != null) Object.Destroy(go);
+                PawnMovement.UsePathfinding = prevFlag;
+                PawnMovement.Grid = prevGrid;
+            }
+
+            bool ok = failed && !hasTarget && moved < 0.01f;
+            Debug.Log($"[TestRunner] V72: {(ok ? "OK" : "FAIL")} - unreachable LastPathFailed={failed} hasTarget={hasTarget} moved={moved:F3} (도달불가 신호)");
+            Assert(ok, $"LastPathFailed={failed} hasTarget={hasTarget}(should be false) moved={moved:F3}(<0.01)");
+            yield break;
         }
 
         private static Sprite MakeNamedSprite(string name)

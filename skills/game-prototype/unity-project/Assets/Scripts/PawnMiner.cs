@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto.AI;
 
 namespace MelonS.GameProto
 {
@@ -15,7 +16,8 @@ namespace MelonS.GameProto
 
         private StoneVeinEntity targetVein;
         private PawnMovement movement;
-        private float taskStartTime = -10f;
+        // #199 B2 (R-1) - path-aware give-up (see WorkGiveUp).
+        private WorkGiveUp giveUp;
 
         public bool HasTask => targetVein != null;
         public StoneVeinEntity Target => targetVein;
@@ -25,8 +27,11 @@ namespace MelonS.GameProto
         public void SetVeinTarget(StoneVeinEntity vein)
         {
             targetVein = vein;
-            taskStartTime = Time.time;
-            if (vein != null) movement.SetTarget(vein.transform.position);
+            if (vein != null)
+            {
+                giveUp.Reset(Time.time, Vector2.Distance(transform.position, vein.transform.position));
+                movement.SetTarget(vein.transform.position);
+            }
         }
 
         public void ClearTask()
@@ -40,9 +45,10 @@ namespace MelonS.GameProto
             if (targetVein == null) return;
             if (targetVein.IsDestroyed) { ClearTask(); return; }
             float dist = Vector2.Distance(transform.position, targetVein.transform.position);
-            if (Time.time - taskStartTime > giveUpAfterSec && dist > mineRange)
+            // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
+            if (dist > mineRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
             {
-                Debug.Log($"[Miner] {name} give up vein (dist={dist:F2})");
+                Debug.Log($"[Miner] {name} give up vein (dist={dist:F2}, pathFailed={movement.LastPathFailed})");
                 ClearTask();
                 return;
             }

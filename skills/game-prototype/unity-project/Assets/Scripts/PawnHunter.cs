@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using MelonS.GameProto.AI;
 
 namespace MelonS.GameProto
 {
@@ -16,8 +17,10 @@ namespace MelonS.GameProto
         private AnimalEntity targetAnimal;
         private PawnMovement movement;
         private float lastAttackTime = -10f;
-        // I19 safety - 15s 동안 in-range 못 들어가면 포기 (PawnChopper 와 같은 패턴)
-        private float taskStartTime = -10f;
+        // #199 B2 (R-1) - path-aware give-up.  Animals MOVE, so the target cell
+        //  changes; give-up keys on real unreachability + a no-progress stall
+        //  (pawn never closes on a fleeing-but-faster animal), not dist>range.
+        private WorkGiveUp giveUp;
         private const float GiveUpAfterSec = 15f;
 
         public bool HasTask => targetAnimal != null && !targetAnimal.IsDead;
@@ -31,8 +34,11 @@ namespace MelonS.GameProto
         public void SetAnimalTarget(AnimalEntity animal)
         {
             targetAnimal = animal;
-            taskStartTime = Time.time;
-            if (animal != null) movement.SetTarget(animal.transform.position);
+            if (animal != null)
+            {
+                giveUp.Reset(Time.time, Vector2.Distance(transform.position, animal.transform.position));
+                movement.SetTarget(animal.transform.position);
+            }
         }
 
         public void ClearTask()
@@ -53,8 +59,8 @@ namespace MelonS.GameProto
                 return;
             }
             float dist = Vector2.Distance(transform.position, targetAnimal.transform.position);
-            // I19 safety - unreachable animal 영원 추적 방지
-            if (Time.time - taskStartTime > GiveUpAfterSec && dist > attackRange)
+            // #199 B2 (R-1) - give up only on real unreachability/stall.
+            if (dist > attackRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, GiveUpAfterSec))
             {
                 ClearTask();
                 return;

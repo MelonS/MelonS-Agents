@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto.AI;
 
 namespace MelonS.GameProto
 {
@@ -16,7 +17,9 @@ namespace MelonS.GameProto
 
         private PawnHealth targetPatient;
         private PawnMovement movement;
-        private float taskStartTime = -10f;
+        // #199 B2 (R-1) - path-aware give-up (see WorkGiveUp).  Patients can be
+        //  downed/moving; give-up keys on real unreachability + stall, not detour.
+        private WorkGiveUp giveUp;
         private float tendProgress = 0f;
 
         public bool HasTask => targetPatient != null;
@@ -27,9 +30,12 @@ namespace MelonS.GameProto
         public void SetPatientTarget(PawnHealth patient)
         {
             targetPatient = patient;
-            taskStartTime = Time.time;
             tendProgress = 0f;
-            if (patient != null) movement.SetTarget(patient.transform.position);
+            if (patient != null)
+            {
+                giveUp.Reset(Time.time, Vector2.Distance(transform.position, patient.transform.position));
+                movement.SetTarget(patient.transform.position);
+            }
         }
 
         public void ClearTask()
@@ -45,9 +51,10 @@ namespace MelonS.GameProto
             // 환자 죽었으면 task 종료
             if (targetPatient.IsDead) { ClearTask(); return; }
             float dist = Vector2.Distance(transform.position, targetPatient.transform.position);
-            if (Time.time - taskStartTime > giveUpAfterSec && dist > tendRange)
+            // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
+            if (dist > tendRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
             {
-                Debug.Log($"[Doctor] {name} give up patient");
+                Debug.Log($"[Doctor] {name} give up patient (pathFailed={movement.LastPathFailed})");
                 ClearTask();
                 return;
             }

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using MelonS.GameProto.AI;
 
 namespace MelonS.GameProto
 {
@@ -17,8 +18,8 @@ namespace MelonS.GameProto
         private BerryBushEntity targetBush;
         private PawnMovement movement;
         private float lastGatherTime = -999f;
-        // I19 safety - 10s 안에 in-range 못 가면 포기 (PawnChopper 와 같은 패턴)
-        private float taskStartTime = -10f;
+        // #199 B2 (R-1) - path-aware give-up (see WorkGiveUp).
+        private WorkGiveUp giveUp;
         private const float GiveUpAfterSec = 10f;
 
         public bool HasTask => targetBush != null;
@@ -32,8 +33,11 @@ namespace MelonS.GameProto
         public void SetBushTarget(BerryBushEntity bush)
         {
             targetBush = bush;
-            taskStartTime = Time.time;
-            if (bush != null) movement.SetTarget(bush.transform.position);
+            if (bush != null)
+            {
+                giveUp.Reset(Time.time, Vector2.Distance(transform.position, bush.transform.position));
+                movement.SetTarget(bush.transform.position);
+            }
         }
 
         public void ClearTask()
@@ -52,8 +56,8 @@ namespace MelonS.GameProto
             }
 
             float dist = Vector2.Distance(transform.position, targetBush.transform.position);
-            // I19 safety - unreachable bush 영원 시도 방지
-            if (Time.time - taskStartTime > GiveUpAfterSec && dist > gatherRange)
+            // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
+            if (dist > gatherRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, GiveUpAfterSec))
             {
                 ClearTask();
                 return;

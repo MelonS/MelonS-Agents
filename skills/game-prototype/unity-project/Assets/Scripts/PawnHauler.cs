@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto.AI;
 
 namespace MelonS.GameProto
 {
@@ -27,7 +28,9 @@ namespace MelonS.GameProto
         private StoneChunkEntity targetStone;  // #119
         private MeatPileEntity targetMeat;     // #129
         private PawnMovement movement;
-        private float taskStartTime = -10f;
+        // #199 B2 (R-1) - path-aware give-up for the GoToItem approach phase
+        //  (pile/meat/stone — only one active at a time).  See WorkGiveUp.
+        private WorkGiveUp giveUp;
         // #121/#142 - 줍은 후 운반 phase: pickup → blueprint(우선) OR stockpile.
         private enum Phase { GoToItem, GoToStockpile, GoToBlueprint }
         private Phase phase = Phase.GoToItem;
@@ -52,9 +55,9 @@ namespace MelonS.GameProto
             ClearTask();
             targetPile = pile;
             phase = Phase.GoToItem;
-            taskStartTime = Time.time;
             if (pile != null)
             {
+                giveUp.Reset(Time.time, Vector2.Distance(transform.position, pile.transform.position));
                 pile.ReservedBy = gameObject;
                 movement.SetTarget(pile.transform.position);
             }
@@ -65,9 +68,9 @@ namespace MelonS.GameProto
             ClearTask();
             targetStone = stone;
             phase = Phase.GoToItem;
-            taskStartTime = Time.time;
             if (stone != null)
             {
+                giveUp.Reset(Time.time, Vector2.Distance(transform.position, stone.transform.position));
                 stone.ReservedBy = gameObject;
                 movement.SetTarget(stone.transform.position);
             }
@@ -78,9 +81,9 @@ namespace MelonS.GameProto
             ClearTask();
             targetMeat = meat;
             phase = Phase.GoToItem;
-            taskStartTime = Time.time;
             if (meat != null)
             {
+                giveUp.Reset(Time.time, Vector2.Distance(transform.position, meat.transform.position));
                 meat.ReservedBy = gameObject;
                 movement.SetTarget(meat.transform.position);
             }
@@ -232,9 +235,10 @@ namespace MelonS.GameProto
             {
                 if (targetPile.gameObject == null) { targetPile = null; return; }
                 float dist = Vector2.Distance(transform.position, targetPile.transform.position);
-                if (Time.time - taskStartTime > giveUpAfterSec && dist > pickupRange)
+                // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
+                if (dist > pickupRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
                 {
-                    Debug.Log($"[Hauler] {name} give up pile (dist={dist:F2})");
+                    Debug.Log($"[Hauler] {name} give up pile (dist={dist:F2}, pathFailed={movement.LastPathFailed})");
                     ClearTask();
                     return;
                 }
@@ -280,9 +284,10 @@ namespace MelonS.GameProto
             {
                 if (targetMeat.gameObject == null) { targetMeat = null; return; }
                 float dist = Vector2.Distance(transform.position, targetMeat.transform.position);
-                if (Time.time - taskStartTime > giveUpAfterSec && dist > pickupRange)
+                // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
+                if (dist > pickupRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
                 {
-                    Debug.Log($"[Hauler] {name} give up meat (dist={dist:F2})");
+                    Debug.Log($"[Hauler] {name} give up meat (dist={dist:F2}, pathFailed={movement.LastPathFailed})");
                     ClearTask();
                     return;
                 }
@@ -316,9 +321,10 @@ namespace MelonS.GameProto
             {
                 if (targetStone.gameObject == null) { targetStone = null; return; }
                 float dist = Vector2.Distance(transform.position, targetStone.transform.position);
-                if (Time.time - taskStartTime > giveUpAfterSec && dist > pickupRange)
+                // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
+                if (dist > pickupRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
                 {
-                    Debug.Log($"[Hauler] {name} give up stone (dist={dist:F2})");
+                    Debug.Log($"[Hauler] {name} give up stone (dist={dist:F2}, pathFailed={movement.LastPathFailed})");
                     ClearTask();
                     return;
                 }
