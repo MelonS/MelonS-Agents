@@ -17,6 +17,10 @@ namespace MelonS.GameProto
         public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine }  // #127 - stone wall, #154 - bed quality 3종
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
+        // #182 - placement cooldown: SetMode 후 0.15s 동안 TryPlace skip.
+        //  목적: Architect 버튼 click 같은 frame race 방지 (EventSystem guard 보다 견고).
+        private float setModeTime = -10f;
+        private const float PlaceCooldownSec = 0.15f;
 
         [SerializeField] private GameObject wallPrefab, floorPrefab, doorPrefab, stovePrefab, bedPrefab;
         // #159 - BuildAutoQA 가 spriteAsset 접근 필요 (외부 prefab 인스턴스는 SR.sprite 비할당).
@@ -64,19 +68,42 @@ namespace MelonS.GameProto
             if (Input.GetKeyDown(KeyCode.Y)) SetMode(CurrentMode == Mode.Bed ? Mode.Off : Mode.Bed);
             if (BuildModeActive && Input.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }
             UpdateGhost();
-            // #179 - 운영자 fb "건축 청사진 바닥에 설치 안됨":
-            //  Architect menu 버튼 클릭이 같은 frame 에 TryPlace 호출하던 race.
-            //  EventSystem.IsPointerOverGameObject() 로 UI 위 클릭이면 skip.
+            // #179/#182 - click 처리.  cooldown 으로 SetMode 직후 race 방지.
+            //  EventSystem guard 는 over-blocking 위험 (TopBar/GuiControlBar 가 항상 raycast target).
+            //  대신 PlaceCooldownSec (0.15s) 으로 메뉴 버튼 click → SetMode → 즉시 TryPlace race 차단.
             if (BuildModeActive && Input.GetMouseButtonDown(0))
             {
-                bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
-                if (!overUI) TryPlace();
+                float since = Time.unscaledTime - setModeTime;
+                if (since < PlaceCooldownSec)
+                {
+                    Debug.Log($"[Build] CLICK skip: cooldown {since:F2}s < {PlaceCooldownSec}s (mode just set)");
+                }
+                else
+                {
+                    // UI 위 클릭은 EventSystem 이 별도로 처리 (Button 클릭 등).
+                    //  여기는 map area 만 도달함 - UI Image 가 raycastTarget=true 면 EventSystem 가 이벤트 소비.
+                    //  단 ClickSelector 와 BuildManager 둘 다 Input.GetMouseButtonDown 으로 raw input 잡음.
+                    //  BuildManager 는 raw input 받지만, UI 가 raycastTarget 으로 EventSystem 이벤트만 소비.
+                    //  결과: UI 위 클릭이어도 BuildManager.Update 가 받음.  EventSystem.IsPointerOverGameObject() check 추가.
+                    bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+                    Vector3 mwLog = (cam != null) ? cam.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero;
+                    if (overUI)
+                    {
+                        Debug.Log($"[Build] CLICK skip: overUI=true at screen={Input.mousePosition} world=({mwLog.x:F1},{mwLog.y:F1})");
+                    }
+                    else
+                    {
+                        Debug.Log($"[Build] CLICK at screen={Input.mousePosition} world=({mwLog.x:F1},{mwLog.y:F1})");
+                        TryPlace();
+                    }
+                }
             }
         }
 
         public void SetMode(Mode m)
         {
             CurrentMode = m;
+            setModeTime = Time.unscaledTime;  // #182 cooldown reset
             if (ghostRenderer == null) return;
             if (m == Mode.Off) { ghostRenderer.enabled = false; return; }
             ghostRenderer.enabled = true;
