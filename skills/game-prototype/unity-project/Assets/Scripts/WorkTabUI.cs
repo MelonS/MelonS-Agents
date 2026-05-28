@@ -54,7 +54,7 @@ namespace MelonS.GameProto
             rt.sizeDelta = new Vector2(w, h);
             rt.anchoredPosition = Vector2.zero;
             bg = gameObject.AddComponent<Image>();
-            bg.color = new Color(0.07f, 0.08f, 0.10f, 0.95f);
+            bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
 
             BuildShell();
             gameObject.SetActive(false);

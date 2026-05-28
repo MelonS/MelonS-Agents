@@ -45,7 +45,7 @@ namespace MelonS.GameProto
             panelRt.pivot = new Vector2(0, 1);
             panelRt.sizeDelta = new Vector2(200, 0);  // height grows by items
             bg = gameObject.AddComponent<Image>();
-            bg.color = new Color(0.08f, 0.10f, 0.13f, 0.95f);
+            bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
             gameObject.SetActive(false);
         }
 

@@ -42,7 +42,7 @@ namespace MelonS.GameProto
             rt.pivot = new Vector2(0, 0);
             rt.sizeDelta = new Vector2(200, 32);
             bg = gameObject.AddComponent<Image>();
-            bg.color = new Color(0.05f, 0.06f, 0.08f, 0.88f);
+            bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
             bg.raycastTarget = false;
             // label
             var lblGo = new GameObject("Label");
