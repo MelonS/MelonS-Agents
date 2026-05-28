@@ -12,7 +12,9 @@ namespace MelonS.GameProto
         [SerializeField] private float panSpeed = 8f;
         [SerializeField] private float fastPanMultiplier = 2.5f;
         [SerializeField] private float zoomStep = 1.2f;
-        [SerializeField] private float zoomMin = 3f;
+        // #199 A1: default ortho 6→3.5 (pawn 1x1).  zoomMin 3→1.5 로 낮춰
+        //  단일 1x1 pawn 근접 inspection 가능 (1.5 → pawn 이 화면 33% 차지).
+        [SerializeField] private float zoomMin = 1.5f;
         // Day 40: 40x40 맵 — zoomMax 14 → 22 (전체 맵 한 화면에 보기 가능)
         [SerializeField] private float zoomMax = 32f;  // #108 - 60x60 맵 전체 보기
 
@@ -80,7 +82,9 @@ namespace MelonS.GameProto
                 // 사용자 pan 입력 - auto-follow 즉시 종료
                 followingPawn = null;
 
-                float speed = panSpeed * (cam.orthographicSize / 6f);
+                // #199 A1: 기준 ortho 6 → 3.5 (pawn 1x1).  pan 속도 정규화 divisor 도 맞춤
+                //  (default zoom 에서 pan = panSpeed 유지).
+                float speed = panSpeed * (cam.orthographicSize / 3.5f);
                 if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                     speed *= fastPanMultiplier;
 

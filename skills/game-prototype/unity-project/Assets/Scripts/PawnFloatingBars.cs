@@ -15,12 +15,15 @@ namespace MelonS.GameProto
     /// </summary>
     public class PawnFloatingBars : MonoBehaviour
     {
-        // 운영자 피드백 2026-05-27 ortho 6 zoom — barHeight 0.10 너무 얇아서 보이질 않음.
-        //  0.16 로 60% 증가, 너비도 1.0 → 1.1 약간 키움.
-        [SerializeField] private float yOffset = 0.95f;          // pawn 머리 위 (world unit) - 0.1 낮춤 (name label 자리 줌)
-        [SerializeField] private float barWidth = 1.1f;          // 풀 너비
-        [SerializeField] private float barHeight = 0.16f;        // 한 바 높이
-        [SerializeField] private float gap = 0.05f;              // 두 바 사이 간격
+        // #199 A2 ortho 3.5 + 1x1 pawn — 머리 ≈ +0.5 (예전 2-unit pawn 은 +1.0).
+        //  바를 머리 바로 위로 끌어내리고, 카메라가 ~1.7x 더 줌-인 됐으므로 너비/높이를
+        //  ~40% 축소해도 화면 상 동일하게 읽힘 (plan-199 §5).
+        //  yOffset = HP(상단) 바, mood 바는 그 아래로 (bottom = yOffset - barHeight - gap).
+        //  bottom = 0.68 - 0.10 - 0.03 = 0.55 → 머리(0.5) 바로 위, 몸통과 겹치지 않음.
+        [SerializeField] private float yOffset = 0.68f;          // HP 바 (상단) — 머리(0.5) 바로 위
+        [SerializeField] private float barWidth = 0.66f;         // 풀 너비 (1.1 → 0.66, ~40% 축소)
+        [SerializeField] private float barHeight = 0.10f;        // 한 바 높이 (0.16 → 0.10)
+        [SerializeField] private float gap = 0.03f;              // 두 바 사이 간격
         [SerializeField] private int sortingOrder = 30;
 
         private SpriteRenderer hpBg, hpFill, moodBg, moodFill;

@@ -8,11 +8,12 @@ namespace MelonS.GameProto
     /// </summary>
     public class PawnNameLabel : MonoBehaviour
     {
-        // 운영자 피드백 2026-05-27: ortho 6 zoom 에서 characterSize 0.04 너무 작아 안 보임.
-        //   0.08 → 두 배 — 한글 1글자 약 0.08 world unit = 4-5px @ 1080p
-        [SerializeField] private Vector3 offset = new Vector3(0, 1.30f, 0);  // bar(1.05) 위에 위치
+        // #199 A2 ortho 3.5 + 1x1 pawn — 라벨을 HP 바(top 0.68) 바로 위로 내림.
+        //  순서(위→아래): name(0.98) > status(0.80) > HP 바(0.68) > mood 바(0.55) > 머리(0.5).
+        //  카메라 ~1.7x 줌-인 → characterSize 0.08 → 0.05 로 축소해도 동일하게 읽힘 (plan §5).
+        [SerializeField] private Vector3 offset = new Vector3(0, 0.98f, 0);  // bar(0.68) + status(0.80) 위
         [SerializeField] private float fontSize = 64;
-        [SerializeField] private float characterSize = 0.08f;
+        [SerializeField] private float characterSize = 0.05f;
 
         private TextMesh nameTm;
         private TextMesh statusTm;
@@ -54,7 +55,8 @@ namespace MelonS.GameProto
             // 2번째 라인: status (작은 글씨, 살짝 아래)
             var statusGo = new GameObject("StatusLabel");
             statusGo.transform.SetParent(transform, false);
-            statusGo.transform.localPosition = new Vector3(offset.x, offset.y - 0.18f, offset.z);
+            // #199 A2: characterSize 0.08→0.05 로 줄었으니 줄간격도 0.18→0.15 로 (status 0.83).
+            statusGo.transform.localPosition = new Vector3(offset.x, offset.y - 0.15f, offset.z);
             statusTm = statusGo.AddComponent<TextMesh>();
             statusTm.text = "";
             statusTm.fontSize = (int)(fontSize * 0.7f);

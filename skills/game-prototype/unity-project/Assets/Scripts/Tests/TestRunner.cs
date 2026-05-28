@@ -112,6 +112,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V63-research-bench-speed-sum", TestV63_ResearchBenchSpeedSum);
             yield return RunOne("V64-door-pass-slowdown", TestV64_DoorPassSlowdown);
             yield return RunOne("V65-bed-sprite-runtime-binding", TestV65_BedSpriteRuntimeBinding);
+            yield return RunOne("V66-pawn-1x1-render-collider", TestV66_Pawn1x1RenderCollider);
+            yield return RunOne("V67-floatingbar-namelabel-anchor", TestV67_FloatingBarNameLabelAnchor);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1446,6 +1448,89 @@ namespace MelonS.GameProto.Tests
         private void CleanupV65(GameObject template)
         {
             if (template != null) Object.Destroy(template);
+        }
+
+        // #199 A1 - RimWorld 와 같이 pawn 은 정확히 1x1 tile 점유.
+        //   SceneSetup 가 만드는 pawn 계약을 isolated 로 재현·검증:
+        //   (1) pawn_colonist.png 는 16x16 px, PPU 16 → SpriteRenderer.bounds.size ≈ (1,1).
+        //   (2) selection/click BoxCollider2D.size == (1,1).
+        //   build 에선 AssetDatabase 못 쓰므로 import 와 동일한 방식(16px tex @ PPU 16)으로
+        //   sprite 를 만들어 world size 계약을 잠근다.  prefab collider 회귀는
+        //   SceneSetup.Pawn.cs:col.size 와 이 V66 이 함께 가드.
+        private IEnumerator TestV66_Pawn1x1RenderCollider()
+        {
+            // import 재현: 16x16 px texture @ PPU 16 (SceneSetup.ForceImportAllSprites 와 동일).
+            var tex = new Texture2D(16, 16, TextureFormat.RGBA32, false);
+            var px = new Color[16 * 16];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color(0.6f, 0.45f, 0.3f, 1f);
+            tex.SetPixels(px);
+            tex.Apply();
+            var sprite = Sprite.Create(tex, new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 16f);
+            sprite.name = "pawn_colonist";
+
+            var go = new GameObject("V66_Pawn");
+            go.transform.localScale = Vector3.one;  // SceneSetup.Pawn.cs:localScale = (1,1,1)
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            var col = go.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(1f, 1f);  // SceneSetup.Pawn.cs:col.size = (1,1)
+            yield return null;
+
+            Vector2 bsize = sr.bounds.size;
+            bool widthOk  = bsize.x >= 0.9f && bsize.x <= 1.1f;
+            bool heightOk = bsize.y >= 0.9f && bsize.y <= 1.1f;
+            bool colOk = Mathf.Abs(col.size.x - 1f) < 0.001f && Mathf.Abs(col.size.y - 1f) < 0.001f;
+
+            Object.Destroy(go);
+
+            bool ok = widthOk && heightOk && colOk;
+            Debug.Log($"[TestRunner] V66: {(ok ? "OK" : "FAIL")} - bounds.size=({bsize.x:F3},{bsize.y:F3}) collider=({col.size.x:F2},{col.size.y:F2}) (RimWorld 1x1 tile)");
+            Assert(ok,
+                $"bounds=({bsize.x:F3},{bsize.y:F3}) widthOk={widthOk} heightOk={heightOk} collider=({col.size.x:F2},{col.size.y:F2}) colOk={colOk}");
+        }
+
+        // #199 A2 — 1x1 pawn (머리 ≈ +0.5) 위로 HP/mood 바 + name/status 라벨이
+        //   머리 바로 위에 앉는지 검증.  실제 Awake 가 만든 child 의 localPosition.y 를 읽음.
+        //   기대 순서(위→아래): name > status > HP 바 > mood 바 > 머리(0.5).
+        //   plan-199 §A2 accept band: bar yOffset - headY ∈ [0.1, 0.7] → headY=0.5 이므로
+        //   HP 바 y ∈ [0.6, 1.2].  바가 머리 위 (mood 바 ≥ 0.5), 라벨이 바 위.
+        private IEnumerator TestV67_FloatingBarNameLabelAnchor()
+        {
+            const float headY = 0.5f;  // 1x1 pawn pivot center 0, 머리 top ≈ +0.5
+
+            var go = SpawnTestPawn(new Vector3(46, 0, 0), includeAI: false);
+            go.AddComponent<PawnFloatingBars>();
+            go.AddComponent<PawnNameLabel>();
+            yield return new WaitForSeconds(0.1f);  // Awake + Start child 생성 대기
+
+            var hpBar    = go.transform.Find("HpBg");
+            var moodBar  = go.transform.Find("MoodBg");
+            var nameLbl  = go.transform.Find("NameLabel");
+            var statusLbl = go.transform.Find("StatusLabel");
+
+            bool childrenOk = hpBar != null && moodBar != null && nameLbl != null && statusLbl != null;
+            float hpY     = hpBar    != null ? hpBar.localPosition.y    : -99f;
+            float moodY   = moodBar  != null ? moodBar.localPosition.y  : -99f;
+            float nameY   = nameLbl  != null ? nameLbl.localPosition.y  : -99f;
+            float statusY = statusLbl != null ? statusLbl.localPosition.y : -99f;
+
+            // HP 바: 머리 바로 위 (band [0.1,0.7] above head → [0.6,1.2])
+            bool hpBandOk   = (hpY - headY) >= 0.1f && (hpY - headY) <= 0.7f;
+            // mood 바(아래쪽): 머리(0.5) 위에 있고 몸통과 안 겹침
+            bool moodAboveHead = moodY >= headY;
+            // mood 가 HP 보다 아래 (스택 순서)
+            bool stackOrderOk = moodY < hpY;
+            // name 라벨: HP 바 위
+            bool nameAboveBar = nameY > hpY;
+            // status: name 과 HP 바 사이 (둘 다 겹치지 않음)
+            bool statusBetween = statusY < nameY && statusY > hpY;
+
+            Object.Destroy(go);
+
+            bool ok = childrenOk && hpBandOk && moodAboveHead && stackOrderOk && nameAboveBar && statusBetween;
+            Debug.Log($"[TestRunner] V67: {(ok ? "OK" : "FAIL")} - headY={headY:F2} HP={hpY:F2}(Δ{hpY-headY:F2}) mood={moodY:F2} name={nameY:F2} status={statusY:F2} (RimWorld 머리 위 바+라벨)");
+            Assert(ok,
+                $"children={childrenOk} HP={hpY:F2}(band[0.6,1.2]={hpBandOk}) mood={moodY:F2}(>=head={moodAboveHead},<HP={stackOrderOk}) name={nameY:F2}(>HP={nameAboveBar}) status={statusY:F2}(between={statusBetween})");
         }
 
         private static Sprite MakeNamedSprite(string name)

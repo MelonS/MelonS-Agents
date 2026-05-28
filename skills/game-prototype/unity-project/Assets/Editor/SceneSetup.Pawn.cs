@@ -21,8 +21,10 @@ namespace MelonS.GameProto.EditorTools
                 if (ti != null)
                 {
                     ti.textureType = TextureImporterType.Sprite;
-                    // #141 - 64px sprite 는 PPU 32 (world 동일).
-                    ti.spritePixelsPerUnit = 32;
+                    // #199 A1 - pawn_colonist.png 는 16x16 px.  PPU 16 → 1x1 world unit
+                    //  (= grid cell 1x1, RimWorld colonist 와 동일).  ForceImportAllSprites
+                    //  (SceneSetup.cs)도 PPU 16 으로 강제하므로 fallback 도 16 으로 일치시킴.
+                    ti.spritePixelsPerUnit = 16;
                     ti.filterMode = FilterMode.Point;
                     ti.SaveAndReimport();
                     pawnSprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
@@ -30,8 +32,9 @@ namespace MelonS.GameProto.EditorTools
             }
 
             GameObject pawnGo = new GameObject("Pawn");
-            // P5: pawn sprite 32x32 detailed (Day 37 의 2x scale 대신 sprite 자체 큼).
-            //  PPU 16 + 32px sprite = 2 world unit.  scale 1.0 → 2x2 unit (이전 2x2 동일).
+            // #199 A1: RimWorld 와 같이 pawn 은 정확히 1x1 tile 점유.
+            //  pawn_colonist.png 는 16x16 px, PPU 16 (ForceImportAllSprites 강제) → 1x1 world unit.
+            //  scale 1.0 유지 (PPU 가 1x1 을 만들어내므로 scale 보정 불필요).
             pawnGo.transform.localScale = new Vector3(1f, 1f, 1f);
             SpriteRenderer sr = pawnGo.AddComponent<SpriteRenderer>();
             sr.sprite = pawnSprite;
@@ -45,7 +48,8 @@ namespace MelonS.GameProto.EditorTools
                 Debug.LogError("[GeneratePawnPrefab] PAWN SPRITE NULL — using flat color fallback");
             }
             BoxCollider2D col = pawnGo.AddComponent<BoxCollider2D>();
-            col.size = new Vector2(2f, 2f);
+            // #199 A1: selection/click box 도 1x1 (이전 2x2 는 2x2 sprite 기준이라 stale).
+            col.size = new Vector2(1f, 1f);
             pawnGo.AddComponent<PawnEntity>();
             pawnGo.AddComponent<PawnMovement>();
             pawnGo.AddComponent<PawnNeeds>();
