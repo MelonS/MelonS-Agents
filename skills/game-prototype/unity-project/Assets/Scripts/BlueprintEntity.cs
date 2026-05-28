@@ -58,19 +58,22 @@ namespace MelonS.GameProto
         private void UpdateVisual()
         {
             if (sr == null) return;
-            // 자재 부족 = 회색 반투명, 자재 충분 = 청록, 건설 중 = 점점 진해짐
+            // #190 - 운영자 "청사진 설치 안 됨" 진짜 원인 진단:
+            //   placement 후 alpha 0.45 회색 + ghostSprite 그대로 → 운영자 시야에 안 들어옴.
+            //   클릭 성공해도 "안 보여서 → 안 됨" 으로 해석.  fix: 청록 outline 강조 + alpha 0.85+.
+            //   자재 대기: 청록 (선명) / 자재 충분: 형광 청록 / 건설 중: 흰 진해짐.
             float matRatio = (needWood + needStone) > 0
                 ? ((float)(collectedWood + collectedStone) / (needWood + needStone))
                 : 1f;
             if (!HasAllMaterials)
             {
-                // 회색 반투명 (자재 대기)
-                sr.color = new Color(0.7f, 0.7f, 0.75f, 0.45f + matRatio * 0.2f);
+                // 청록 강조 (자재 대기 청사진 - "여기 짓기 예약됨" 명확히)
+                sr.color = new Color(0.55f, 0.85f, 1.0f, 0.85f + matRatio * 0.10f);
             }
             else
             {
-                // 청록 (건설 가능)
-                sr.color = new Color(0.5f, 0.9f, 1.0f, 0.50f + Progress * 0.4f);
+                // 형광 청록 (자재 완비, 건설 중 = 흰색으로 점점 진해짐)
+                sr.color = new Color(0.65f + Progress * 0.35f, 1.0f, 1.0f, 0.90f + Progress * 0.10f);
             }
         }
 

@@ -77,19 +77,16 @@ namespace MelonS.GameProto
                 if (since < PlaceCooldownSec)
                 {
                     Debug.Log($"[Build] CLICK skip: cooldown {since:F2}s < {PlaceCooldownSec}s (mode just set)");
+                    // #190 - 첫 cooldown 안내 (메뉴 클릭 직후의 자연스러운 skip 이므로 noise X)
                 }
                 else
                 {
-                    // UI 위 클릭은 EventSystem 이 별도로 처리 (Button 클릭 등).
-                    //  여기는 map area 만 도달함 - UI Image 가 raycastTarget=true 면 EventSystem 가 이벤트 소비.
-                    //  단 ClickSelector 와 BuildManager 둘 다 Input.GetMouseButtonDown 으로 raw input 잡음.
-                    //  BuildManager 는 raw input 받지만, UI 가 raycastTarget 으로 EventSystem 이벤트만 소비.
-                    //  결과: UI 위 클릭이어도 BuildManager.Update 가 받음.  EventSystem.IsPointerOverGameObject() check 추가.
                     bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
                     Vector3 mwLog = (cam != null) ? cam.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero;
                     if (overUI)
                     {
                         Debug.Log($"[Build] CLICK skip: overUI=true at screen={Input.mousePosition} world=({mwLog.x:F1},{mwLog.y:F1})");
+                        if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail("✗ UI 위 클릭 - 맵에 직접 클릭하세요");
                     }
                     else
                     {
@@ -204,16 +201,19 @@ namespace MelonS.GameProto
         private bool DoTryPlaceAt(int cx, int cy)
         {
             // #179 - silent return 4개를 명시 log 로 진단 가능하게.
+            // #190 - 각 실패 path 에 BuildClickToast 추가 (운영자가 화면에서 바로 원인 확인).
             var prefab = PrefabFor(CurrentMode);
             if (prefab == null)
             {
                 Debug.LogWarning($"[Build] TryPlace skip: prefab null for mode={CurrentMode}");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"✗ prefab 미설정 ({CurrentMode})");
                 return false;
             }
             int cost = CostFor(CurrentMode);
             if (CellOccupied(cx, cy))
             {
                 Debug.Log($"[Build] TryPlace skip: cell ({cx},{cy}) occupied for mode={CurrentMode}");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"✗ 셀 점유됨 ({cx},{cy}) - 다른 곳 시도");
                 return false;
             }
             // #189 - 운영자 fb "건축 여전히 안 됨" root cause:
@@ -239,8 +239,28 @@ namespace MelonS.GameProto
             var bp = bpGo.AddComponent<BlueprintEntity>();
             float secs = CurrentMode == Mode.Floor ? 2f : 5f;
             bp.Init(CurrentMode, prefab, ghostSpr, needWood, needStone, secs);
+            // #190 - 클릭 성공 토스트 + 시각 ring (운영자가 "어디에 청사진 생겼지?" 즉시 확인)
+            if (BuildClickToast.Instance != null)
+            {
+                string kr = ModeKr(CurrentMode);
+                BuildClickToast.Instance.ShowSuccess($"✓ 청사진 - {kr} @ ({cx},{cy})");
+            }
+            ClickEffect.Spawn(new Vector3(cx + 0.5f, cy + 0.5f, 0), new Color(0.55f, 0.85f, 1.0f, 0.95f));
             return true;
         }
+
+        private static string ModeKr(Mode m) => m switch
+        {
+            Mode.Wall            => "벽(목재)",
+            Mode.WallStone       => "벽(석재)",
+            Mode.Floor           => "바닥",
+            Mode.Door            => "문",
+            Mode.Stove           => "화덕",
+            Mode.Bed             => "목재 침대",
+            Mode.BedSleepingSpot => "수면 자리",
+            Mode.BedFine         => "고급 침대",
+            _ => m.ToString(),
+        };
 
         private Sprite SpriteForCurrentMode() => CurrentMode switch
         {
