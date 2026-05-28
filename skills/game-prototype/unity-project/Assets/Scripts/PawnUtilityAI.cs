@@ -239,7 +239,10 @@ namespace MelonS.GameProto
                     if (Time.time - lastDraftAttackTime > DraftAttackInterval)
                     {
                         lastDraftAttackTime = Time.time;
-                        bandit.TakeDamage(2, gameObject);
+                        // #173 - PawnEquipment.TotalMeleeDamageBonus (롱소드 +3, 도끼 +2, 단검 +1) 가산.
+                        var equip = GetComponent<PawnEquipment>();
+                        int dmg = 2 + Mathf.RoundToInt(equip != null ? equip.TotalMeleeDamageBonus() : 0f);
+                        bandit.TakeDamage(dmg, gameObject);
                         var skills = GetComponent<PawnSkills>();
                         if (skills != null) skills.AddXP(SkillKind.Combat, 8f);
                     }
@@ -256,7 +259,10 @@ namespace MelonS.GameProto
                     if (Time.time - lastDraftAttackTime > DraftAttackInterval)
                     {
                         lastDraftAttackTime = Time.time;
-                        wolf.TakeDamage(3, gameObject);
+                        // #173 - 무기 dmg bonus 가산
+                        var equip = GetComponent<PawnEquipment>();
+                        int dmg = 3 + Mathf.RoundToInt(equip != null ? equip.TotalMeleeDamageBonus() : 0f);
+                        wolf.TakeDamage(dmg, gameObject);
                         var skills = GetComponent<PawnSkills>();
                         if (skills != null) skills.AddXP(SkillKind.Combat, 10f);
                     }

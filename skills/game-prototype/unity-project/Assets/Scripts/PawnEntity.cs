@@ -139,6 +139,22 @@ namespace MelonS.GameProto
         public void TakeDamage(int dmg, GameObject source = null)
         {
             if (IsDead) return;
+            // #173 - PawnEquipment.TotalMelArmor 감소율 적용 (이전: armor SET 만 됨, 효과 0).
+            //  체인메일 0.45 + 철 헬멧 0.30 → 0.75 (cap 0.85) → 데미지 25% 만 통과.
+            var equip = GetComponent<PawnEquipment>();
+            if (equip != null)
+            {
+                float armor = equip.TotalMelArmor();  // 0~0.85
+                int reduced = Mathf.Max(0, Mathf.RoundToInt(dmg * (1f - armor)));
+                if (reduced <= 0 && dmg > 0)
+                {
+                    Debug.Log($"[Pawn:{pawnName}] armor 완전 방어 ({dmg}→0, armor={armor:F2})");
+                    return;
+                }
+                if (reduced < dmg)
+                    Debug.Log($"[Pawn:{pawnName}] armor {armor:F2}x → dmg {dmg}→{reduced}");
+                dmg = reduced;
+            }
             // Day 45: route damage to PawnHealth body parts if present.
             var health = GetComponent<PawnHealth>();
             if (health != null)
