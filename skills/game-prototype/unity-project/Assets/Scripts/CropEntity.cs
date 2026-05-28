@@ -16,8 +16,11 @@ namespace MelonS.GameProto
     public class CropEntity : MonoBehaviour
     {
         [SerializeField] private float growth = 0f;        // 0..1
-        [SerializeField] private float growthPerSecond = 0.025f;  // ~40s real to ripen
-        [SerializeField] private int   harvestFood = 5;
+        // #170 - wiki: rice 3.5 game days = ~ 14 real-min @ 1x.  prototype 가속:
+        //   1.5 min (90s) - 너무 빠르지도 느리지도 않은 plays-per-session 적합.
+        //   이전 40s 는 wiki 14배 빠름 - 식량 사이클 깨짐.
+        [SerializeField] private float growthPerSecond = 0.011f;  // ~90s real to ripen
+        [SerializeField] private int   harvestFood = 8;           // wiki rice yield 8 per plant
 
         // Sprite colors by stage (RimWorld feel)
         private static readonly Color SPROUT_COLOR = new Color(0.51f, 0.78f, 0.31f, 1f);
