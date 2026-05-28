@@ -18,6 +18,15 @@ namespace MelonS.GameProto
 
         public bool HasResearcherNearby()
         {
+            // #169 - 이전 단순 bool 반환.  지금은 ResearcherSpeedSum() 사용 권장.
+            return ResearcherSpeedSum() > 0.001f;
+        }
+
+        /// <summary>#169 - wiki: research speed 는 manipulation skill 의 sum.
+        /// 가까운 모든 살아있는 pawn 의 EffectiveWorkMul(Research) 합계.
+        /// 활동 중인 pawn 없으면 0 반환.</summary>
+        public float ResearcherSpeedSum()
+        {
             // Tally any PawnEntity within radius.  Cheap O(n_pawns) check.
             //  pawn 캐시 1s (모든 bench 가 같은 list 공유 - static)
             if (cachedPawns == null || Time.time >= nextPawnSearchTime)
@@ -25,17 +34,22 @@ namespace MelonS.GameProto
                 cachedPawns = GameObject.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
                 nextPawnSearchTime = Time.time + PawnSearchInterval;
             }
-            if (cachedPawns == null || cachedPawns.Length == 0) return false;
+            if (cachedPawns == null || cachedPawns.Length == 0) return 0f;
             Vector2 me = transform.position;
+            float sum = 0f;
             foreach (var p in cachedPawns)
             {
                 if (p == null) continue;
                 if (p.IsDead) continue;
-                // Idle/drafted/working - doesn't matter - proximity counts.
-                if (Vector2.Distance(p.transform.position, me) <= researchRadius)
-                    return true;
+                if (Vector2.Distance(p.transform.position, me) > researchRadius) continue;
+                var abil = p.GetComponent<PawnAbilities>();
+                float mul = abil != null ? abil.EffectiveWorkMul(WorkKind.Research) : 1f;
+                // PawnTraits.workSpeedMul (Industrious/Lazy) 도 적용
+                var traits = p.GetComponent<PawnTraits>();
+                if (traits != null) mul *= traits.workSpeedMul;
+                sum += mul;
             }
-            return false;
+            return sum;
         }
     }
 }

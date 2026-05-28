@@ -109,6 +109,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V60-wall-damage-tint-preserved", TestV60_WallDamageTintPreserved);
             yield return RunOne("V61-stone-vein-tint-preserved", TestV61_StoneVeinTintPreserved);
             yield return RunOne("V62-traits-work-speed-applied", TestV62_TraitsWorkSpeedApplied);
+            yield return RunOne("V63-research-bench-speed-sum", TestV63_ResearchBenchSpeedSum);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -373,6 +374,47 @@ namespace MelonS.GameProto.Tests
             float night = clock.DayProgress;
             Assert(dawn < 0.3f && night > 0.85f,
                 $"dawn={dawn:F2} (<0.3), night={night:F2} (>0.85)");
+        }
+
+        // #169 - ResearchBench.ResearcherSpeedSum 가 pawn 의 manipulation/traits 합계 반환.
+        //   0 pawn → 0,  pawn 1명 (manipulation 1.0 가정) → ~1.0,  pawn 2명 → ~2.0.
+        private IEnumerator TestV63_ResearchBenchSpeedSum()
+        {
+            var benchGo = new GameObject("TestBenchV63");
+            benchGo.transform.position = new Vector3(40, -20, 0);
+            benchGo.AddComponent<SpriteRenderer>();
+            var bench = benchGo.AddComponent<ResearchBench>();
+            yield return null;
+            // 0 pawn 일 때 0
+            float sum0 = bench.ResearcherSpeedSum();
+            // pawn 1명 옆에
+            var p1 = new GameObject("TestPawn1V63");
+            p1.transform.position = new Vector3(40.5f, -20, 0);
+            p1.AddComponent<SpriteRenderer>();
+            p1.AddComponent<PawnEntity>();
+            var abil1 = p1.AddComponent<PawnAbilities>();
+            yield return null;
+            // 캐시 만료 강제 (정적 캐시 1s) - 1s 기다림
+            yield return new WaitForSeconds(1.1f);
+            float sum1 = bench.ResearcherSpeedSum();
+            // pawn 2명
+            var p2 = new GameObject("TestPawn2V63");
+            p2.transform.position = new Vector3(40.5f, -20.5f, 0);
+            p2.AddComponent<SpriteRenderer>();
+            p2.AddComponent<PawnEntity>();
+            var abil2 = p2.AddComponent<PawnAbilities>();
+            yield return null;
+            yield return new WaitForSeconds(1.1f);
+            float sum2 = bench.ResearcherSpeedSum();
+            Object.Destroy(p1); Object.Destroy(p2); Object.Destroy(benchGo);
+            // PawnAbilities 가 random 0.85~1.15, manipulation 0.90~1.10 분포.
+            // EffectiveWorkMul(Research)=manipulation*manipulation 이므로 0.81~1.21.
+            // PawnTraits workSpeedMul 0.75~1.30 곱 = 0.6~1.6 까지 범위.
+            bool noPawnOk = sum0 < 0.001f;
+            bool onePawnOk = sum1 > 0.4f && sum1 < 2.0f;
+            bool twoPawnOk = sum2 > sum1 * 1.5f && sum2 < sum1 * 2.5f;  // 약 2배
+            Assert(noPawnOk && onePawnOk && twoPawnOk,
+                $"sum0={sum0:F2} (=0), sum1={sum1:F2} (0.4~2.0), sum2={sum2:F2} (sum1×1.5~2.5)");
         }
 
         // #164 - PawnTraits.workSpeedMul 가 실제 chop/gather/build/mine/cook 에 효과.

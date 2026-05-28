@@ -85,14 +85,17 @@ namespace MelonS.GameProto
             }
             ResearchBench[] benches = cachedBenches;
             if (benches == null || benches.Length == 0) return;
-            int activeBenches = 0;
+            // #169 - 이전: bench 별 0/1 active 카운트.  지금: pawn.manipulation 합계로
+            //  wiki: Intellectual skill 영향 (lvl 0 = 0.13x, lvl 20 = 1.83x) 의 단순화.
+            //  여러 bench/pawn 동시 연구 시 sum 으로 가산.
+            float speedMul = 0f;
             foreach (var b in benches)
             {
                 if (b == null) continue;
-                if (b.HasResearcherNearby()) activeBenches++;
+                speedMul += b.ResearcherSpeedSum();
             }
-            if (activeBenches == 0) return;
-            float gain = pointsPerSecondPerBench * activeBenches * Time.deltaTime;
+            if (speedMul <= 0.001f) return;
+            float gain = pointsPerSecondPerBench * speedMul * Time.deltaTime;
             pointsFraction += gain;
             int whole = Mathf.FloorToInt(pointsFraction);
             if (whole > 0)
