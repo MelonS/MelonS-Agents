@@ -338,6 +338,51 @@ G:/.../PawnSim.exe -starthour 22 -delay 3 -screenshot G:/ai/night.png
 
 ---
 
+## [/loop 12h 세션 2026-05-28 wave 2] — #160~#178 (19 commit)
+
+### 한 줄
+**wiki 정합 #160~#178 (19 commit, 5 entity tint 보존 + SET-only fields 6종 wiring + Plan agent 활용 + QA 강화), 64/64 V + 36/36 I + BuildAutoQA Phase 1+2 안정.**
+
+### 주요 패턴 발견 (multi-agent pipeline 활용)
+1. **Tint 보존 lesson** (#156~#162): 5 entity (Tree/Wall/StoneVein/BerryBush/Animal) 가 같은 `new Color(t,t,t,1)` 버그 → TintHelper utility 추출 (#167).
+2. **SET-only fields lesson** (#164/#173/#174): Plan agent audit 으로 6종 (PawnTraits 5 + PawnEquipment 2 + PawnAbilities 5 + threat tier) 발견 → 실제 wiring.
+
+### Commit 목록 wave 2
+| # | 내용 | 결과 |
+|---|------|------|
+| #160 | StoneVein 채광 tint 보존 | hue 유지 |
+| #161 | BerryBush tint 보존 | 녹색 유지 |
+| #162 | AnimalEntity hit-flash 후 species tint 복원 | 갈회/흰/옅회 유지 |
+| #163 | WolfEnemy hit-flash 추가 | 데미지 시각 피드백 |
+| #164 | PawnTraits effects wiring | Lazy 0.75x / Industrious 1.30x 실제 |
+| #165 | bed_wood.png.meta textureType fix | BuildAutoQA Phase 2 동작 시작 |
+| #166 | I36 BedFine regression test | 90s graphics QA → 2s in-process |
+| #167 | TintHelper 추출 + 4 entity DRY | 5x 인라인 → 1 helper |
+| #168 | Trader proximity check (5u 안 pawn) | 맵 끝에서 거래 X |
+| #169 | Research = sum(pawn.manipulation) | bench count → 능력 sum |
+| #170 | Crop 90s + harvest 8 (wiki rice) | 식량 사이클 정상화 |
+| #171 | Door pass-through 0.65x 감속 | 문 의미 있음 |
+| #172 | Fine meal → cookingMul (Cook skill 정합) | Build skill mismatch fix |
+| #173 | Equipment armor + dmg bonus wiring | 체인메일 0.45 / 롱소드 +3 실제 |
+| #174 | plantsMul + meleeMul + Combat skill | 데미지 +30%@lvl10 |
+| #175 | Threat tier → event 빈도 (×0.55~1.0) | late-game raid pace |
+| #176 | Arrow shootingAccuracy spread | 100% → 0~9° |
+| #177 | PawnSkills lvl → 작업 속도 +4%/lvl | XP grind cosmetic → 실제 |
+| #178 | Trader socialMul → 가격 보정 | social 1.20 +20% receive |
+
+### 검증
+- 64/64 V tests + 36/36 I tests PASS
+- REAL QA 25s wood +28~+40 안정
+- BuildAutoQA: Wall 15s + BedFine 45s 완성 + Quality.Fine 확인
+
+### 알려진 미해결
+- carryCapacity → PawnHauler 용량 cap (효율 큼, 작업 무거움)
+- BanditEnemy body parts (PawnHealth 재사용, Effort M)
+- PawnSkills 14종 확장 (Cook/Mine/Medical/Intellectual)
+- SaveLoadManager fidelity (BedQuality/StockpilePriority/Species 등 저장 X)
+
+---
+
 ## Commit 목록 (자율 세션)
 
 `git log --oneline` 상위 25개:
