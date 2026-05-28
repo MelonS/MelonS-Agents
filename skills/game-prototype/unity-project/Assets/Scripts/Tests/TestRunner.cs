@@ -362,9 +362,12 @@ namespace MelonS.GameProto.Tests
             var go = new GameObject("TestSkillsProg");
             var sk = go.AddComponent<PawnSkills>();
             yield return null;
-            for (int i = 0; i < 10; i++) sk.AddXP(SkillKind.Chop, 200f);  // 충분한 XP
+            // #200 XP curve base 100→1000: Chop starts lvl 4, XPToLevel(5)=11180.
+            //  Was 10×200=2000 (no longer levels up).  Bumped to 10×1300=13000 so
+            //  the pawn genuinely rises past lvl 5.  Intent unchanged: XP accrual → level rise.
+            for (int i = 0; i < 10; i++) sk.AddXP(SkillKind.Chop, 1300f);
             int lvl = sk.GetLevel(SkillKind.Chop);
-            Assert(lvl >= 4, $"Chop XP 2000 누적 → lvl {lvl} (≥4 expected, log curve)");
+            Assert(lvl >= 5, $"Chop XP 13000 누적 → lvl {lvl} (≥5 expected, starts at 4, curve)");
         }
 
         private IEnumerator TestV54_DayNightCycle()
@@ -558,7 +561,12 @@ namespace MelonS.GameProto.Tests
             floorGo.AddComponent<SpriteRenderer>();
             floorGo.AddComponent<FloorEntity>();
             var floorCol = floorGo.AddComponent<BoxCollider2D>();
-            floorCol.size = Vector2.one;
+            // #200 moveSpeed 3.0→4.6: at the higher base speed pawn B crossed a
+            //  1x1 floor cell in <0.1s and spent most of the 0.4s window OFF the
+            //  floor, diluting the bonus to ~1.08x (false FAIL).  Widen the floor
+            //  to span the whole travelled path so B stays ON it for the full
+            //  window — the comparison (floor-bonus vs plain) is unchanged in intent.
+            floorCol.size = new Vector2(16f, 1f);
             floorCol.isTrigger = true;
             var goB = new GameObject("TestPawnB_V59");
             goB.transform.position = new Vector3(0, -20, 0);
@@ -706,7 +714,9 @@ namespace MelonS.GameProto.Tests
         private IEnumerator TestV43_PawnTraitsHpMul()
         {
             // PawnTraits 가 maxHpMul 통해 PawnHealth.parts 변경 (Tough +35% 또는 Frail -25%)
-            //  여러 random 시도 - 적어도 한 번은 default 30 과 다름
+            //  여러 random 시도 - 적어도 한 번은 default 와 다름
+            //  #200 torso base 30→40, so default-compare changed 30→40 (no-trait=40,
+            //  Tough=54, Frail=30).  Intent unchanged: trait must shift HP off base.
             int variations = 0;
             for (int i = 0; i < 5; i++)
             {
@@ -716,10 +726,10 @@ namespace MelonS.GameProto.Tests
                 go.AddComponent<PawnTraits>();
                 yield return null;
                 int torsoMax = health.GetPart(PawnHealth.PartId.Torso).maxHp;
-                if (torsoMax != 30) variations++;  // default 와 다름
+                if (torsoMax != 40) variations++;  // default(40) 와 다름
             }
             Assert(variations >= 1,
-                $"5 trait pawn 중 {variations}개 torso maxHp ≠ 30 (Tough/Frail 적용)");
+                $"5 trait pawn 중 {variations}개 torso maxHp ≠ 40 (Tough/Frail 적용)");
         }
 
         private IEnumerator TestV44_HealthHealAll()
@@ -904,8 +914,9 @@ namespace MelonS.GameProto.Tests
         {
             // PawnStats SO default 값 검증
             var stats = MelonS.GameProto.Data.PawnStats.CreateDefault();
+            // #200 moveSpeed 3.0→4.6 (RimWorld human base).
             Assert(stats.maxHp == 30 && stats.attackDamage == 1
-                && Mathf.Approximately(stats.moveSpeed, 3f)
+                && Mathf.Approximately(stats.moveSpeed, 4.6f)
                 && Mathf.Approximately(stats.attackRange, 1f),
                 $"default stats: HP={stats.maxHp} dmg={stats.attackDamage} speed={stats.moveSpeed} range={stats.attackRange}");
             yield break;
@@ -1081,7 +1092,7 @@ namespace MelonS.GameProto.Tests
             yield return new WaitForSeconds(0.05f);
             Vector3 start = go.transform.position;
             mv.SetTarget(new Vector2(3, 6));  // 3 unit 위로
-            yield return new WaitForSeconds(0.8f);  // moveSpeed 3 → 0.8초에 ~2.4 unit
+            yield return new WaitForSeconds(0.8f);  // #200 moveSpeed 4.6 → 3 unit 도착 (<0.7s)
             Vector3 end = go.transform.position;
             bool moved = (end - start).magnitude > 1.0f;
             Assert(moved, $"pawn 이동: ({start.x:F1},{start.y:F1})→({end.x:F1},{end.y:F1}) dist={(end-start).magnitude:F2}");
@@ -1139,7 +1150,9 @@ namespace MelonS.GameProto.Tests
             var sk = go.AddComponent<PawnSkills>();
             yield return null;
             int startLvl = sk.GetLevel(SkillKind.Combat);
-            sk.AddXP(SkillKind.Combat, 500f);  // 충분한 XP
+            // #200 XP curve base 100→1000: L0→1 now costs 1000 XP (was 100).
+            //  Bumped 500→1500 to still cross level 1.  Intent unchanged: XP → level up.
+            sk.AddXP(SkillKind.Combat, 1500f);
             int endLvl = sk.GetLevel(SkillKind.Combat);
             Assert(endLvl > startLvl, $"Combat lvl {startLvl} → {endLvl}");
         }
@@ -1224,7 +1237,7 @@ namespace MelonS.GameProto.Tests
             var go = SpawnTestPawn(new Vector3(26, 0, 0), includeAI: false);
             var health = go.GetComponent<PawnHealth>();
             yield return new WaitForSeconds(0.05f);
-            // 머리(vital, 10 HP) 완전 파괴 → IsDead true
+            // 머리(vital, #200: 20 HP) 완전 파괴 → IsDead true (99×3 dmg >> 20)
             for (int i = 0; i < 3; i++) health.TakeDamage(99, PawnHealth.PartId.Head);
             yield return new WaitForSeconds(0.1f);
             Assert(health.IsDead,
@@ -1672,11 +1685,11 @@ namespace MelonS.GameProto.Tests
 
                 startDist = Vector2.Distance(go.transform.position, goalWorld);
 
-                // Drive the follow loop deterministically.  Default moveSpeed 3.0,
-                //  dt 0.05 → 0.15 world units/tick.  The path is ~8 cells (~8 units),
-                //  so ~55 ticks suffice; budget 500 ticks (~37 units) generously.
+                // Drive the follow loop deterministically.  #200 default moveSpeed
+                //  3.0→4.6, dt 0.05 → 0.23 world units/tick.  The path is ~8 cells
+                //  (~8 units), so ~35 ticks suffice; budget 500 ticks generously.
                 //  Stop as soon as the final waypoint is reached.
-                float maxDelta = 3.0f * 0.05f;   // stats.moveSpeed * dt (default)
+                float maxDelta = 4.6f * 0.05f;   // stats.moveSpeed * dt (default)
                 Vector2 prevPos = go.transform.position;
                 for (int i = 0; i < 500 && !arrived; i++)
                 {

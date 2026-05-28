@@ -64,7 +64,12 @@ namespace MelonS.GameProto
         private void BuildTree()
         {
             // Tier 1 (no prerequisites)
-            techs.Add(new Tech("simple_bow",     "원시 활",       "원거리 사냥/방어 가능. 12 dmg 화살.", 100));
+            // #200 truth-in-UI fix: description said "12 dmg 화살" but pawns actually
+            //  shoot 3-5 dmg arrows (PawnUtilityAI rDmg), tuned to the small enemy HP
+            //  pools (deer 12 / rabbit 3 / wolf 18).  Raising arrow dmg to 12 would
+            //  one-shot most animals — an unrealistic combat rewrite the operator
+            //  forbade.  So the honest fix is the description, not the damage.
+            techs.Add(new Tech("simple_bow",     "원시 활",       "원거리 사냥/방어 가능. 3~5 dmg 화살.", 100));
             techs.Add(new Tech("stone_walls",    "석재 벽 건설",  "나무 벽보다 4배 튼튼 (HP 200).",     150));
             techs.Add(new Tech("better_stove",   "개선된 화덕",   "조리 속도 2배, 식사 mood +5.",       120));
             // Tier 2 (require tier 1)

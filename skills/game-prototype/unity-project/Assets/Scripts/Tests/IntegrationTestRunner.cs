@@ -220,7 +220,7 @@ namespace MelonS.GameProto.Tests
                 $"start={startPos} end={endPos} moved={distMoved:F2}, target={target} distToTarget={distToTarget:F2}");
         }
 
-        /// <summary>I3: pawn 을 호수 좌표 (10, 12) 로 이동 명령 → IsBlockedAt 작동, 멈춤</summary>
+        /// <summary>I3: pawn 을 실제 호수 중심으로 이동 명령 → IsBlockedAt 작동, 멈춤</summary>
         private IEnumerator TestI3_TilemapObstacle()
         {
             var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
@@ -228,16 +228,23 @@ namespace MelonS.GameProto.Tests
             var pawn = pawns[0];
             var mv = pawn.GetComponent<PawnMovement>();
             Vector3 startPos = pawn.transform.position;
-            // 호수 중심 (10, 12) 으로 강제 이동 명령
-            mv.SetTarget(new Vector2(10f, 12f));
+            // #200 moveSpeed 3.0→4.6 exposed a false-positive here: the old target
+            //  (10,12) is NOT lake (real lake center ~15,18 r4), so the pawn just
+            //  walked there — and only "passed" because at speed 3 it couldn't reach
+            //  the spot in 3s.  At 4.6 it arrived → FAIL.  Fix preserves the INTENT
+            //  (a water target must be rejected by IsBlockedAt): pick a cell the live
+            //  guard genuinely reports blocked and verify the pawn never enters it.
+            Vector2 lake = new Vector2(15f, 18f);   // real lake center on the map
+            bool targetIsWater = PawnMovement.IsBlockedAt(lake);
+            mv.SetTarget(lake);
             pawn.ManualMoveUntil = Time.time + 5f;
             yield return new WaitForSeconds(3.0f);
             Vector3 endPos = pawn.transform.position;
-            // 호수에 도달하면 안 됨 (IsBlockedAt 으로 stop)
-            float distToLake = Vector2.Distance(new Vector2(endPos.x, endPos.y), new Vector2(10f, 12f));
-            bool blockedSomewhere = distToLake > 2.0f;  // 호수 반경 4 — 2 이상 떨어져 있어야 OK (또는 멈춤)
-            Assert(blockedSomewhere,
-                $"호수(10,12) target → end={endPos} distToLake={distToLake:F2} (>2 expected, blocked)");
+            // 호수(blocked target) → SetTarget 즉시 거부 → pawn 은 호수 안으로 못 들어감.
+            float distToLake = Vector2.Distance(new Vector2(endPos.x, endPos.y), lake);
+            bool blocked = targetIsWater && distToLake > 2.0f;  // 호수 반경 4 → 2 이상 밖
+            Assert(blocked,
+                $"호수{lake} target water={targetIsWater} → end={endPos} distToLake={distToLake:F2} (>2 expected, blocked)");
         }
 
         /// <summary>I4: 15초 시뮬 → 자원 (wood/food/meals) 중 하나가 바뀜 (AI 가 뭐라도 함).
@@ -1386,10 +1393,10 @@ namespace MelonS.GameProto.Tests
             pm.SetTarget(goalWorld);          // path computed with NO wall yet (clear)
             bool initialPathOk = !pm.LastPathFailed && pm.HasTarget;
 
-            // Drop the wall while the pawn is still SOUTH of the wall line.  At
-            //  moveSpeed 3 it covers ~0.4s*3=1.2 units from y=12.5 → ~y=13.7, well
-            //  short of y=15.  This guarantees the wall appears IN FRONT of the
-            //  pawn → forces the live re-path/detour (item 3), not a no-op.
+            // Drop the wall while the pawn is still SOUTH of the wall line.  #200
+            //  moveSpeed 3→4.6: 0.4s*4.6=1.84 units from y=10.5 → ~y=12.3, still
+            //  short of the wall at y=13.5.  This guarantees the wall appears IN
+            //  FRONT of the pawn → forces the live re-path/detour (item 3), not a no-op.
             yield return new WaitForSeconds(0.4f);
 
             // Wall line across y=wallY, x∈[wallLo..wallHi], GAP at gapX (west end open).

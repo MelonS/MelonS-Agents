@@ -15,7 +15,11 @@ namespace MelonS.GameProto
         [Range(0f, 100f)] public float mood = 80f;
 
         [Header("Decay rates (units per second)")]
-        [SerializeField] private float foodDecay = 0.5f;
+        // #200 RimWorld fidelity: food (0-100) should empty over ~2.5-3 in-game
+        //  days like RimWorld (hunger ~1.6 nutrition/day).  1 in-game day = 240
+        //  real seconds (GameClock), so a 3-day budget = 100 / (3*240) = 0.139/s.
+        //  Was 0.5/s → emptied in 200s = 0.83 day (~3.5x too fast).  0.14 ≈ 2.97 days.
+        [SerializeField] private float foodDecay = 0.14f;
         [SerializeField] private float sleepDecay = 0.3f;
         [SerializeField] private float moodDecay = 0.2f;
 

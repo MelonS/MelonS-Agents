@@ -14,7 +14,10 @@ namespace MelonS.GameProto
         [SerializeField] private float attackRange = 0.9f;
         [SerializeField] private float attackInterval = 1.2f;
         [SerializeField] private float detectionRadius = 5.0f;
-        [SerializeField] private float chaseSpeed = 2.5f;
+        // #200 RimWorld fidelity ripple: pawn moveSpeed rose 3.0→4.6, so wolf
+        //  chase must be >= 4.6 or a predator can never catch a fleeing pawn.
+        //  RimWorld timber wolf ~4.6 c/s; set 5.0 so wolves stay a credible threat.
+        [SerializeField] private float chaseSpeed = 5.0f;
         [SerializeField] private float wanderSpeed = 0.8f;
         [SerializeField] private int dropFood = 8;
 

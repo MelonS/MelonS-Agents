@@ -26,7 +26,9 @@ namespace MelonS.GameProto.Data
         public float attackInterval = 1.0f;
 
         [Header("Movement")]
-        public float moveSpeed = 3.0f;
+        // #200 RimWorld fidelity: human base move speed is 4.6 cells/sec.
+        //  Was 3.0 (~35% too slow).  MoveTowards clamps to target so no overshoot.
+        public float moveSpeed = 4.6f;
         public float arriveDistance = 0.05f;
 
         [Header("Bandit AI (defensive)")]
