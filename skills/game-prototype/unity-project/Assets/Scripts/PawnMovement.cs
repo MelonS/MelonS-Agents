@@ -125,6 +125,19 @@ namespace MelonS.GameProto
             // #157 - wiki: 바닥 위 pawn 은 이동 속도 보너스 (paved tile 50% 근사).
             //  per-frame OverlapBox 인 점은 비싸지만 (#104 audit) tiny radius 라 ok.
             if (IsOnFloor(cur)) speedMul *= FloorEntity.MoveSpeedMul;
+            // #171 - 문 통과 중 감속 (wiki: 0.45s pass-through delay).
+            //  PassMul=0.65 이므로 평균 속도 65% (~40% 더 시간 소요).
+            if (DoorEntity.IsInsideDoor(cur))
+            {
+                speedMul *= DoorEntity.PassMul;
+                // 가까운 door 에 NotifyPassing - 시각 피드백 (밝아짐)
+                var doorHits = Physics2D.OverlapBoxAll(cur, Vector2.one * 0.3f, 0f);
+                foreach (var h in doorHits)
+                {
+                    var d = h != null ? h.GetComponent<DoorEntity>() : null;
+                    if (d != null) { d.NotifyPassing(); break; }
+                }
+            }
             // Step 81: target 도 맵 안쪽으로 강제.  target 자체가 호수/바위면 stop.
             Vector2 clampedTarget = ClampToWorld(target.Value);
             if (IsBlockedAt(clampedTarget))

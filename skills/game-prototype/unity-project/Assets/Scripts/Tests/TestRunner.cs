@@ -110,6 +110,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V61-stone-vein-tint-preserved", TestV61_StoneVeinTintPreserved);
             yield return RunOne("V62-traits-work-speed-applied", TestV62_TraitsWorkSpeedApplied);
             yield return RunOne("V63-research-bench-speed-sum", TestV63_ResearchBenchSpeedSum);
+            yield return RunOne("V64-door-pass-slowdown", TestV64_DoorPassSlowdown);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -374,6 +375,40 @@ namespace MelonS.GameProto.Tests
             float night = clock.DayProgress;
             Assert(dawn < 0.3f && night > 0.85f,
                 $"dawn={dawn:F2} (<0.3), night={night:F2} (>0.85)");
+        }
+
+        // #171 - DoorEntity.IsInsideDoor + PawnMovement 가 안에 있을 때 PassMul 적용.
+        //   같은 거리 같은 시간에서 door 안 pawn 이 평지보다 느려야.
+        private IEnumerator TestV64_DoorPassSlowdown()
+        {
+            // pawn A: 평지 (-10, -10) → (0, -10)
+            var goA = new GameObject("TestPawnA_V64");
+            goA.transform.position = new Vector3(-10, -10, 0);
+            goA.AddComponent<SpriteRenderer>();
+            goA.AddComponent<PawnEntity>();
+            var mvA = goA.AddComponent<PawnMovement>();
+            mvA.SetTarget(new Vector2(0, -10));
+            // door at (5, -10) → pawn B 가 시작점 (5, -10) 안에서 시작
+            var doorGo = new GameObject("TestDoorV64");
+            doorGo.transform.position = new Vector3(5, -10, 0);
+            doorGo.AddComponent<SpriteRenderer>();
+            var doorCol = doorGo.AddComponent<BoxCollider2D>();
+            doorCol.size = Vector2.one;
+            doorGo.AddComponent<DoorEntity>();
+            var goB = new GameObject("TestPawnB_V64");
+            goB.transform.position = new Vector3(5, -10, 0);
+            goB.AddComponent<SpriteRenderer>();
+            goB.AddComponent<PawnEntity>();
+            var mvB = goB.AddComponent<PawnMovement>();
+            mvB.SetTarget(new Vector2(15, -10));
+            yield return new WaitForSeconds(0.3f);
+            float movedA = goA.transform.position.x - (-10f);
+            float movedB = goB.transform.position.x - 5f;
+            Object.Destroy(goA); Object.Destroy(goB); Object.Destroy(doorGo);
+            // A 가 B 보다 빠르게 움직여야 (A 는 평지, B 는 문 안).
+            bool slowedOk = movedB < movedA * 0.9f && movedA > 0.5f;
+            Assert(slowedOk,
+                $"평지 movedA={movedA:F2}, door movedB={movedB:F2} (B/A={movedB/Mathf.Max(0.01f,movedA):F2}x, <0.90 expected)");
         }
 
         // #169 - ResearchBench.ResearcherSpeedSum 가 pawn 의 manipulation/traits 합계 반환.
