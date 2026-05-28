@@ -139,6 +139,51 @@ def step_real_qa(delay: float = 30.0) -> int:
     return 0
 
 
+def step_build_click_qa() -> int:
+    """#187 - BuildClickAutoQA 6-mode 자동 회귀 보호.
+    -build-click-qa flag 로 binary 실행 → [BuildClickQA] OVERALL: PASS/FAIL 파싱.
+    매 commit cycle 에서 건축 click chain 회귀 검출."""
+    builds = sorted((REPO / "skills" / "game-prototype" / "builds").glob("day-*-2026-*"),
+                    key=lambda p: p.stat().st_mtime)
+    target = builds[-1] / "PawnSim.exe" if builds else BUILD_EXE
+    if not target.exists():
+        print("[refactor] (4.6/7) Build Click QA - 빌드 없음, skip")
+        return 0
+    print(f"[refactor] (4.6/7) Build Click QA - {target.parent.name} (6 mode chain) ...")
+    QA_LOG = Path("G:/ai/_refactor_clickqa.log")
+    import subprocess
+    try:
+        proc = subprocess.run(
+            [str(target), "-batchmode", "-nographics", "-build-click-qa",
+             "-autostart", "-logFile", str(QA_LOG)],
+            timeout=180, capture_output=True
+        )
+    except subprocess.TimeoutExpired:
+        print("  FAIL: timeout 180s")
+        return 16
+    if not QA_LOG.exists():
+        print("  WARN: log 없음 - skip")
+        return 0
+    log = QA_LOG.read_text(encoding="utf-8", errors="ignore")
+    pass_count = log.count("[BuildClickQA] OVERALL: PASS")
+    fail_count = log.count("[BuildClickQA] OVERALL: FAIL")
+    # 개별 case PASS/FAIL 도 카운트
+    case_pass = log.count(": PASS")
+    case_fail = log.count(": FAIL")
+    if pass_count > 0:
+        print(f"  Build Click QA OK - 6 mode chain OVERALL PASS (case {case_pass}/{case_pass+case_fail})")
+        return 0
+    if fail_count > 0:
+        print(f"  FAIL - OVERALL FAIL (case pass={case_pass}, fail={case_fail})")
+        # log 의 FAIL 줄들 출력
+        for line in log.splitlines():
+            if "[BuildClickQA]" in line and "FAIL" in line:
+                print(f"    {line.strip()}")
+        return 17
+    print("  WARN: BuildClickQA 결과 없음 (BuildClickAutoQA 미박힘?) - skip")
+    return 0
+
+
 def step_log_check() -> int:
     print("[refactor] (4/5) Player.log error scan ...")
     if not PLAYER_LOG.exists():
@@ -305,6 +350,11 @@ def main():
         rc = step_real_qa(delay=args.real_qa_seconds)
         if rc != 0:
             print(f"\n[refactor] FAIL @ real QA (rc={rc})")
+            return rc
+        # #187 - 건축 click chain 회귀 보호 (운영자 fb "건축 안 됨")
+        rc = step_build_click_qa()
+        if rc != 0:
+            print(f"\n[refactor] FAIL @ build click QA (rc={rc})")
             return rc
     rc = step_visual_diff(threshold_pct=args.threshold)
     if rc != 0:

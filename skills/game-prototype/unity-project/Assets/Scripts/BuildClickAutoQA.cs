@@ -85,6 +85,9 @@ namespace MelonS.GameProto
             Debug.Log($"[BuildClickQA] {totalPass}/{TestCases.Length} PASS, {totalFail} FAIL");
             foreach (var f in failedCases) Debug.Log($"[BuildClickQA] FAIL: {f}");
             Debug.Log($"[BuildClickQA] OVERALL: {(totalFail == 0 ? "PASS" : "FAIL")}");
+            // #187 - refactor_check 통합 - QA 끝나면 Application.Quit() 으로 timeout 방지
+            yield return new WaitForSeconds(0.5f);
+            Application.Quit();
         }
 
         private IEnumerator RunOneCase(BuildManager.Mode mode, string label, int cx, int cy, int timeoutSec,
