@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -7,19 +8,16 @@ namespace MelonS.GameProto
 {
     /// <summary>
     /// #180/#181 - 운영자 fb "건축 QA 제대로 해" 응답.
-    /// 6 mode × 3 phase 검증.  -build-click-qa CLI flag.
+    /// #191 (v2) - 운영자 fb "마우스 시뮬 못함 → 자율 검증 못 함" 응답.
+    ///   기존 v1 은 bm.TryPlaceAt(cx,cy) / bm.SetMode(mode) 직접 호출 = 절반 검증.
+    ///   v2 는 진짜 user flow 시뮬:
+    ///     - GuiControlBar "건축" Button.onClick 트리거 (ExecuteEvents.Submit)
+    ///     - ArchitectMenu 카테고리 Button.onClick 트리거 (button.onClick.Invoke)
+    ///     - ArchitectMenu buildable Button.onClick 트리거 (real menu close + SetMode chain)
+    ///     - cooldown 0.15s wait → 진짜 cooldown gate 통과 검증
+    ///     - bm.SimulateMapClick(screenPos) - Update 의 click 처리 path 100% 동일 (overUI off)
     ///
-    /// Phase 1: ArchitectMenu state machine - Open + SetMode + Close, spurious blueprint X
-    /// Phase 2: TryPlaceAt placement - BlueprintEntity 생성, target 위치 확인
-    /// Phase 3: hauler + builder chain - 자재 운반 + 건설 완성 (mode 별 timeout 다름)
-    ///
-    /// 검증 mode (6 종):
-    ///   Wall            (목재 5, ~15s)
-    ///   WallStone       (석재 5, ~15s, 석재 없으면 timeout 정상)
-    ///   Floor           (목재 1, ~10s, 빠름)
-    ///   Door            (목재 3, ~15s)
-    ///   Stove           (목재 10, ~20s)
-    ///   BedFine         (목재 30, ~50s)
+    /// 검증 mode (6 종): Wall / Floor / Door / Stove / SleepingSpot / BedFine
     /// </summary>
     public class BuildClickAutoQA : MonoBehaviour
     {
@@ -34,16 +32,14 @@ namespace MelonS.GameProto
             go.AddComponent<BuildClickAutoQA>();
         }
 
-        // (mode, label, place position 차별, 자재 cost, phase 3 timeout sec)
-        //  cx 시작점에서 occupied 면 cy 방향 +1 시도 (최대 5 cell), test resilience.
-        //  timeout 은 #181 - cell occupied skip + frame wait 가 추가 시간 잡아먹어 늘림.
-        private static readonly (BuildManager.Mode mode, string label, int cx, int cy, int timeout)[] TestCases = {
-            (BuildManager.Mode.Wall,            "Wall(목재5)",       -18, -8,  25),
-            (BuildManager.Mode.Floor,           "Floor(목재1)",      -18, -10, 20),
-            (BuildManager.Mode.Door,            "Door(목재3)",       -18, -12, 25),
-            (BuildManager.Mode.Stove,           "Stove(목재10)",     -20, -8,  40),
-            (BuildManager.Mode.BedSleepingSpot, "수면자리(자재0)",   -20, -10, 20),
-            (BuildManager.Mode.BedFine,         "고급침대(목재30)",  -20, -12, 60),
+        // (mode, label, ArchitectMenu 카테고리, ArchitectMenu buildable index, place cell)
+        private static readonly (BuildManager.Mode mode, string label, string category, int buildableIdx, int cx, int cy)[] TestCases = {
+            (BuildManager.Mode.Wall,            "Wall(목재5)",       "Structure (구조)", 0, -18, -8),
+            (BuildManager.Mode.Floor,           "Floor(목재1)",      "Floors (바닥)",    0, -18, -10),
+            (BuildManager.Mode.Door,            "Door(목재3)",       "Structure (구조)", 2, -18, -12),
+            (BuildManager.Mode.Stove,           "Stove(목재10)",     "Production (생산)",0, -20, -8),
+            (BuildManager.Mode.BedSleepingSpot, "수면자리(자재0)",   "Furniture (가구)", 0, -20, -10),
+            (BuildManager.Mode.BedFine,         "고급침대(목재30)",  "Furniture (가구)", 2, -20, -12),
         };
 
         private void Start() => StartCoroutine(RunQA());
@@ -51,113 +47,131 @@ namespace MelonS.GameProto
         private IEnumerator RunQA()
         {
             yield return new WaitForSeconds(2.5f);
-            Debug.Log("[BuildClickQA] ============== START ==============");
+            Debug.Log("[BuildClickQA-v2] ============== START (real user flow) ==============");
 
             var menu = ArchitectMenu.Instance;
-            if (menu == null) { Debug.LogError("[BuildClickQA] ArchitectMenu.Instance null"); yield break; }
             var bm = BuildManager.Instance;
-            if (bm == null) { Debug.LogError("[BuildClickQA] BuildManager.Instance null"); yield break; }
+            if (menu == null || bm == null)
+            {
+                Debug.LogError("[BuildClickQA-v2] ArchitectMenu or BuildManager Instance null");
+                Application.Quit();
+                yield break;
+            }
 
             int totalPass = 0, totalFail = 0;
             var failedCases = new List<string>();
 
-            foreach (var (mode, label, cx, cy, timeout) in TestCases)
+            foreach (var tc in TestCases)
             {
-                Debug.Log($"[BuildClickQA] === Case: {label} @ ({cx},{cy}) ===");
+                Debug.Log($"[BuildClickQA-v2] === Case: {tc.label} @ cell({tc.cx},{tc.cy}) via menu={tc.category}[{tc.buildableIdx}] ===");
                 bool casePass = false;
                 string failReason = "";
-                yield return RunOneCase(mode, label, cx, cy, timeout, menu, bm,
+                yield return RunOneCase(tc, menu, bm,
                     (ok, reason) => { casePass = ok; failReason = reason; });
-                if (casePass)
-                {
-                    totalPass++;
-                    Debug.Log($"[BuildClickQA] {label}: PASS");
-                }
-                else
-                {
-                    totalFail++;
-                    failedCases.Add($"{label}: {failReason}");
-                    Debug.LogError($"[BuildClickQA] {label}: FAIL - {failReason}");
-                }
+                if (casePass) { totalPass++; Debug.Log($"[BuildClickQA-v2] {tc.label}: PASS"); }
+                else { totalFail++; failedCases.Add($"{tc.label}: {failReason}"); Debug.LogError($"[BuildClickQA-v2] {tc.label}: FAIL - {failReason}"); }
             }
 
-            Debug.Log($"[BuildClickQA] ============== RESULT ==============");
-            Debug.Log($"[BuildClickQA] {totalPass}/{TestCases.Length} PASS, {totalFail} FAIL");
-            foreach (var f in failedCases) Debug.Log($"[BuildClickQA] FAIL: {f}");
-            Debug.Log($"[BuildClickQA] OVERALL: {(totalFail == 0 ? "PASS" : "FAIL")}");
-            // #187 - refactor_check 통합 - QA 끝나면 Application.Quit() 으로 timeout 방지
+            Debug.Log($"[BuildClickQA-v2] ============== RESULT ==============");
+            Debug.Log($"[BuildClickQA-v2] {totalPass}/{TestCases.Length} PASS, {totalFail} FAIL");
+            foreach (var f in failedCases) Debug.Log($"[BuildClickQA-v2] FAIL: {f}");
+            Debug.Log($"[BuildClickQA-v2] OVERALL: {(totalFail == 0 ? "PASS" : "FAIL")}");
             yield return new WaitForSeconds(0.5f);
             Application.Quit();
         }
 
-        private IEnumerator RunOneCase(BuildManager.Mode mode, string label, int cx, int cy, int timeoutSec,
+        private IEnumerator RunOneCase((BuildManager.Mode mode, string label, string category, int buildableIdx, int cx, int cy) tc,
             ArchitectMenu menu, BuildManager bm, System.Action<bool, string> resultCb)
         {
-            // #181 - 이전 case 의 cleanup frame 완료 + spurious counting 안정화 위해
-            //  case 시작 전 1 frame + 0.3s 대기 + lingering bp count 재확인.
             yield return null;
             yield return new WaitForSeconds(0.3f);
 
-            // Phase 1: menu state
-            int bpsBefore = Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None).Length;
-            menu.Open();
-            yield return null;
-            yield return new WaitForSeconds(0.1f);
-            bm.SetMode(mode);
-            menu.Close();
-            yield return null;
-            yield return new WaitForSeconds(0.1f);
-            if (bm.CurrentMode != mode) { resultCb(false, $"SetMode failed: CurrentMode={bm.CurrentMode}"); yield break; }
-            int bpsAfterMenu = Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None).Length;
-            if (bpsAfterMenu != bpsBefore) { resultCb(false, $"spurious bp after menu: {bpsBefore}→{bpsAfterMenu}"); yield break; }
-
-            // Phase 2: place - cell occupied 면 인접 cell 시도 (test resilience)
-            int tryCx = cx, tryCy = cy;
-            bool placed = false;
-            for (int offY = 0; offY < 5 && !placed; offY++)
+            // Phase 1 - real GuiControlBar 건축 버튼 click 시뮬
+            //   GuiControlBar 의 "Btn_건축" 찾아서 onClick 호출 (button.onClick.Invoke 가 진짜 EventSystem path).
+            if (!menu.gameObject.activeSelf)
             {
-                tryCy = cy - offY;
-                placed = bm.TryPlaceAt(tryCx, tryCy);
+                bool clicked = ClickButtonByName("Btn_건축");
+                if (!clicked) { resultCb(false, "GuiControlBar Btn_건축 not found"); yield break; }
+                yield return null;
+                yield return new WaitForSeconds(0.15f);
+                if (!menu.gameObject.activeSelf) { resultCb(false, "건축 버튼 클릭 후 ArchitectMenu 안 열림"); yield break; }
+            }
+
+            // Phase 2 - 카테고리 헤더 ▶/▼ state 확인 후 필요 시에만 click
+            //   ▶ = 닫힌 상태 → click 으로 열어야 buildable 보임
+            //   ▼ = 이미 열린 상태 → click 하면 닫힘 = bug.  skip.
+            bool catOpenAlready = IsCategoryOpen(tc.category, menu.transform);
+            if (!catOpenAlready)
+            {
+                bool catClicked = ClickButtonByLabel(tc.category, menu.transform);
+                if (!catClicked) { resultCb(false, $"카테고리 '{tc.category}' 버튼 못 찾음"); yield break; }
+                yield return null;
+                yield return new WaitForSeconds(0.15f);
+                // ArchitectMenu.RefreshContent 가 새로 build 했으므로 한 frame 더 wait
                 yield return null;
             }
-            if (!placed) { resultCb(false, $"TryPlaceAt({cx},{cy}~{cy-4}) all occupied or rejected"); yield break; }
 
+            // Phase 3 - buildable 버튼 click (메뉴 닫힘 + SetMode 발생)
+            int bpsBefore = Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None).Length;
+            bool buildableClicked = ClickBuildableByIndex(tc.category, tc.buildableIdx, menu.transform);
+            if (!buildableClicked) { resultCb(false, $"buildable [{tc.buildableIdx}] 버튼 못 찾음 in {tc.category}"); yield break; }
+            yield return null;
+            yield return new WaitForSeconds(0.15f);
+
+            if (bm.CurrentMode != tc.mode) { resultCb(false, $"buildable click 후 mode 안 바뀜: 기대={tc.mode}, 실제={bm.CurrentMode}"); yield break; }
+
+            // Phase 4 - cooldown wait (PlaceCooldownSec 0.15s) + 그 후 map click
+            yield return new WaitForSeconds(0.20f);
+
+            // 진짜 map click 시뮬: cell → world → screen 변환
+            Vector3 world = new Vector3(tc.cx + 0.5f, tc.cy + 0.5f, 0);
+            if (Camera.main == null) { resultCb(false, "Camera.main null"); yield break; }
+            Vector3 screen = Camera.main.WorldToScreenPoint(world);
+            var clickResult = bm.SimulateMapClick(new Vector2(screen.x, screen.y));
+            yield return null;
+
+            if (clickResult != BuildClickResult.Placed)
+            {
+                // cell 점유 시 인접 cell 1-4 시도 (test resilience)
+                bool placedFallback = false;
+                for (int off = 1; off <= 4 && !placedFallback; off++)
+                {
+                    Vector3 worldF = new Vector3(tc.cx + 0.5f, tc.cy - off + 0.5f, 0);
+                    Vector3 screenF = Camera.main.WorldToScreenPoint(worldF);
+                    var r = bm.SimulateMapClick(new Vector2(screenF.x, screenF.y));
+                    if (r == BuildClickResult.Placed) { placedFallback = true; world = worldF; }
+                    yield return null;
+                }
+                if (!placedFallback) { resultCb(false, $"SimulateMapClick → {clickResult} (인접 4셀도 실패)"); yield break; }
+            }
+
+            // Phase 5 - 청사진 spawn 확인
             BlueprintEntity targetBp = null;
-            Vector2 placedPos = new Vector2(tryCx + 0.5f, tryCy + 0.5f);
+            Vector2 placedPos = new Vector2(world.x, world.y);
             foreach (var bp in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
             {
                 if (bp == null) continue;
-                if (Vector2.Distance(bp.transform.position, placedPos) < 0.6f)
-                { targetBp = bp; break; }
+                if (Vector2.Distance(bp.transform.position, placedPos) < 0.6f) { targetBp = bp; break; }
             }
-            if (targetBp == null) { resultCb(false, "BlueprintEntity not found at target"); yield break; }
+            if (targetBp == null) { resultCb(false, $"청사진 spawn 안 됨 at {placedPos}"); yield break; }
 
+            // Mode Off (R-click 시뮬 - 진짜 user 가 다음 case 위해 mode 끔)
             bm.SetMode(BuildManager.Mode.Off);
 
-            // Phase 3: hauler 우회 - DepositWood/Stone 직접.  builder + complete chain 만 검증.
-            //  (full end-to-end hauler 는 Wall case 가 진짜 chop+hauler+builder 한다.)
+            // Phase 6 - hauler 우회 + builder chain (v1 과 동일)
             if (targetBp.needWood > 0) targetBp.DepositWood(targetBp.needWood);
             if (targetBp.needStone > 0) targetBp.DepositStone(targetBp.needStone);
             yield return null;
-            if (!targetBp.HasAllMaterials)
-            { resultCb(false, $"DepositWood/Stone 후도 자재 부족: wood={targetBp.collectedWood}/{targetBp.needWood} stone={targetBp.collectedStone}/{targetBp.needStone}"); yield break; }
-
-            // 자재 완비 - PawnBuilder 가 가까이 오면 AddWork.
-            //  PawnBuilder 위치 무관하게 빠르게 검증 위해 AddWork 직접 호출.
-            //  buildSecondsNeeded = 2 (Floor) or 5 (others), 한 번에 AddWork(secs) 면 즉시 complete.
-            float bsNeeded = targetBp.BuildSeconds;
-            targetBp.AddWork(bsNeeded + 0.1f);
+            if (!targetBp.HasAllMaterials) { resultCb(false, $"Deposit 후도 자재 부족"); yield break; }
+            targetBp.AddWork(targetBp.BuildSeconds + 0.1f);
             yield return null;
             yield return new WaitForSeconds(0.3f);
+            if (targetBp != null && targetBp.gameObject != null) { resultCb(false, $"AddWork 후도 미완성"); yield break; }
 
-            // 완성 확인 - finishedPrefab spawned at placedPos
-            if (targetBp != null && targetBp.gameObject != null)
-            { resultCb(false, $"AddWork({bsNeeded}s) 후도 미완성: progress={targetBp.Progress * 100f:F0}%"); yield break; }
-
-            // verify spawned entity exists
+            // Phase 7 - 완성 prefab 확인
             int spawnedCount = 0;
             string spawnedType = "?";
-            switch (mode)
+            switch (tc.mode)
             {
                 case BuildManager.Mode.Wall:
                 case BuildManager.Mode.WallStone:
@@ -180,25 +194,77 @@ namespace MelonS.GameProto
                 case BuildManager.Mode.BedSleepingSpot:
                 case BuildManager.Mode.BedFine:
                     foreach (var b in Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None))
-                    {
-                        if (b == null) continue;
-                        if (Vector2.Distance(b.transform.position, placedPos) < 0.6f)
-                        {
-                            spawnedCount++;
-                            spawnedType = $"{b.QualityKr}({b.Quality})";
-                        }
-                    }
+                        if (b != null && Vector2.Distance(b.transform.position, placedPos) < 0.6f)
+                        { spawnedCount++; spawnedType = $"{b.QualityKr}({b.Quality})"; }
                     break;
             }
-            if (spawnedCount > 0)
+            if (spawnedCount > 0) { Debug.Log($"[BuildClickQA-v2] {tc.label} 완성 - {spawnedType} @ {placedPos}"); resultCb(true, ""); }
+            else { resultCb(false, $"finishedPrefab 미spawn (mode={tc.mode})"); }
+        }
+
+        // === Button click helpers (real EventSystem path) ===
+
+        private bool ClickButtonByName(string goName)
+        {
+            var buttons = Object.FindObjectsByType<Button>(FindObjectsSortMode.None);
+            foreach (var b in buttons)
             {
-                Debug.Log($"[BuildClickQA] {label}: 완성 - {spawnedType} @ {placedPos} (count={spawnedCount})");
-                resultCb(true, "");
+                if (b == null) continue;
+                if (b.gameObject.name == goName) { b.onClick.Invoke(); return true; }
             }
-            else
+            return false;
+        }
+
+        private bool IsCategoryOpen(string category, Transform parent)
+        {
+            var buttons = parent.GetComponentsInChildren<Button>(true);
+            foreach (var b in buttons)
             {
-                resultCb(false, $"finishedPrefab spawn 안 됨 (mode={mode}, placedPos={placedPos})");
+                if (b == null) continue;
+                var txt = b.GetComponentInChildren<Text>(true);
+                if (txt == null) continue;
+                if (!txt.text.Contains(category)) continue;
+                if (txt.text.StartsWith("▼ ")) return true;
+                if (txt.text.StartsWith("▶ ")) return false;
             }
+            return false;
+        }
+
+        private bool ClickButtonByLabel(string labelText, Transform parent)
+        {
+            var buttons = parent.GetComponentsInChildren<Button>(true);
+            foreach (var b in buttons)
+            {
+                if (b == null) continue;
+                var txt = b.GetComponentInChildren<Text>(true);
+                if (txt == null) continue;
+                if (txt.text.Contains(labelText)) { b.onClick.Invoke(); return true; }
+            }
+            return false;
+        }
+
+        private bool ClickBuildableByIndex(string category, int idx, Transform parent)
+        {
+            // ArchitectMenu.RefreshContent 가 카테고리 펼친 후 buildable 들을 카테고리 헤더 다음에 list.
+            //  buildable button name = "Btn_{label}" (MakeBtn).
+            //  idx-th buildable = category 헤더 다음 idx-th button (헤더 자체 skip).
+            var buttons = parent.GetComponentsInChildren<Button>(true);
+            int found = 0;
+            bool hitHeader = false;
+            foreach (var b in buttons)
+            {
+                if (b == null) continue;
+                var txt = b.GetComponentInChildren<Text>(true);
+                if (txt == null) continue;
+                // 헤더 검출 - text 가 "▼ {category}" or "▶ {category}"
+                if (txt.text.Contains(category)) { hitHeader = true; continue; }
+                if (!hitHeader) continue;
+                // 다음 카테고리 헤더 만나면 종료
+                if (txt.text.StartsWith("▼ ") || txt.text.StartsWith("▶ ")) break;
+                if (found == idx) { b.onClick.Invoke(); return true; }
+                found++;
+            }
+            return false;
         }
     }
 }

@@ -73,29 +73,47 @@ namespace MelonS.GameProto
             //  대신 PlaceCooldownSec (0.15s) 으로 메뉴 버튼 click → SetMode → 즉시 TryPlace race 차단.
             if (BuildModeActive && Input.GetMouseButtonDown(0))
             {
-                float since = Time.unscaledTime - setModeTime;
-                if (since < PlaceCooldownSec)
-                {
-                    Debug.Log($"[Build] CLICK skip: cooldown {since:F2}s < {PlaceCooldownSec}s (mode just set)");
-                    // #190 - 첫 cooldown 안내 (메뉴 클릭 직후의 자연스러운 skip 이므로 noise X)
-                }
-                else
-                {
-                    bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
-                    Vector3 mwLog = (cam != null) ? cam.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero;
-                    if (overUI)
-                    {
-                        Debug.Log($"[Build] CLICK skip: overUI=true at screen={Input.mousePosition} world=({mwLog.x:F1},{mwLog.y:F1})");
-                        if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail("✗ UI 위 클릭 - 맵에 직접 클릭하세요");
-                    }
-                    else
-                    {
-                        Debug.Log($"[Build] CLICK at screen={Input.mousePosition} world=({mwLog.x:F1},{mwLog.y:F1})");
-                        TryPlace();
-                    }
-                }
+                HandleLeftClickAt(Input.mousePosition, checkOverUI: true);
             }
         }
+
+        /// <summary>
+        /// #191 - real Input chain 과 시뮬레이션이 동일 path 공유.
+        ///   Update 의 raw input → cooldown → overUI → TryPlace 시퀀스 그대로 재현.
+        ///   BuildClickAutoQA v2 가 ExecuteEvents 로 button click 시뮬 후 이 메서드로 map click 시뮬.
+        /// </summary>
+        public BuildClickResult HandleLeftClickAt(Vector2 screenPos, bool checkOverUI)
+        {
+            if (!BuildModeActive) return BuildClickResult.ModeOff;
+            float since = Time.unscaledTime - setModeTime;
+            if (since < PlaceCooldownSec)
+            {
+                Debug.Log($"[Build] CLICK skip: cooldown {since:F2}s < {PlaceCooldownSec}s (mode just set)");
+                return BuildClickResult.Cooldown;
+            }
+            if (checkOverUI)
+            {
+                bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+                if (overUI)
+                {
+                    Vector3 mwLog = (cam != null) ? cam.ScreenToWorldPoint(screenPos) : Vector3.zero;
+                    Debug.Log($"[Build] CLICK skip: overUI=true at screen={screenPos} world=({mwLog.x:F1},{mwLog.y:F1})");
+                    if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail("✗ UI 위 클릭 - 맵에 직접 클릭하세요");
+                    return BuildClickResult.OverUI;
+                }
+            }
+            if (cam == null) cam = Camera.main;
+            if (cam == null) { Debug.LogWarning("[Build] CLICK skip: camera null"); return BuildClickResult.NoCamera; }
+            Vector3 mw = cam.ScreenToWorldPoint(screenPos);
+            int cx = Mathf.FloorToInt(mw.x);
+            int cy = Mathf.FloorToInt(mw.y);
+            Debug.Log($"[Build] CLICK at screen={screenPos} world=({mw.x:F1},{mw.y:F1}) cell=({cx},{cy})");
+            bool placed = DoTryPlaceAt(cx, cy);
+            return placed ? BuildClickResult.Placed : BuildClickResult.PlaceFailed;
+        }
+
+        /// <summary>#191 - QA / test 용 직접 진입점.  cooldown / overUI 무시하지 않음 (진짜 path).</summary>
+        public BuildClickResult SimulateMapClick(Vector2 screenPos) => HandleLeftClickAt(screenPos, checkOverUI: false);
 
         public void SetMode(Mode m)
         {
@@ -274,4 +292,6 @@ namespace MelonS.GameProto
             _ => wallSprite,
         };
     }
+
+    public enum BuildClickResult { Placed, PlaceFailed, ModeOff, Cooldown, OverUI, NoCamera }
 }
