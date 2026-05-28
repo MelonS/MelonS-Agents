@@ -38,6 +38,24 @@ namespace MelonS.GameProto
         // 자재 운반 reservation (hauler)
         public GameObject HaulReservedBy { get; set; }
 
+        // #193 - multi-cell entity (침대 1x2 등) footprint.  default 1x1.
+        [SerializeField] private Vector2Int footprint = new Vector2Int(1, 1);
+        public Vector2Int Footprint => footprint;
+
+        public void SetSize(Vector2Int sz)
+        {
+            footprint = sz;
+            // sprite 가 1:1 비율 + footprint 가 1x2 면 transform.localScale 로 확장.
+            //  sprite 가 이미 1x2 비율 (16x32 등) 이면 그대로.
+            if (sr == null) sr = GetComponent<SpriteRenderer>();
+            if (sr != null && sr.sprite != null)
+            {
+                Vector2 sw = sr.sprite.bounds.size;
+                if (sw.x > 0.01f && sw.y > 0.01f)
+                    transform.localScale = new Vector3(sz.x / sw.x, sz.y / sw.y, 1f);
+            }
+        }
+
         private SpriteRenderer sr;
 
         public void Init(BuildManager.Mode m, GameObject prefab, Sprite ghostSprite,
@@ -112,6 +130,14 @@ namespace MelonS.GameProto
             if (finishedPrefab != null)
             {
                 var spawned = Object.Instantiate(finishedPrefab, transform.position, Quaternion.identity);
+                // #193 - 완성 prefab 도 footprint 의 scale 적용.  Bed 의 Start() 에서 ApplyVisualSize 가 다시 적용되므로 OK 지만 spawn 직후 1 frame 시각 일관성 위해 여기서도.
+                var spawnedSr = spawned.GetComponent<SpriteRenderer>();
+                if (spawnedSr != null && spawnedSr.sprite != null)
+                {
+                    Vector2 sw = spawnedSr.sprite.bounds.size;
+                    if (sw.x > 0.01f && sw.y > 0.01f)
+                        spawned.transform.localScale = new Vector3(footprint.x / sw.x, footprint.y / sw.y, 1f);
+                }
                 // #150 - WallStone mode = stone wall, else wood
                 if (mode == BuildManager.Mode.Wall || mode == BuildManager.Mode.WallStone)
                 {

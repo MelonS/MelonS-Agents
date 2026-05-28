@@ -162,21 +162,37 @@ namespace MelonS.GameProto
             _ => null,
         };
 
+        // #193 - RimWorld vanilla 침대 1x2 칸.  multi-cell entity footprint 인프라.
+        //  Bed/BedFine: 1x2.  나머지: 1x1.  anchor = bottom-left cell (cx, cy).
+        public static Vector2Int SizeFor(Mode m) => m switch
+        {
+            Mode.Bed             => new Vector2Int(1, 2),
+            Mode.BedFine         => new Vector2Int(1, 2),
+            _ => new Vector2Int(1, 1),
+        };
+
         private void UpdateGhost()
         {
             if (!BuildModeActive || ghostRenderer == null || cam == null) return;
             Vector3 mw = cam.ScreenToWorldPoint(Input.mousePosition);
-            // 운영자 fb #1 - tile 시각 center 가 (x+0.5, y+0.5).  FloorToInt → +0.5 로 정렬.
-            //  이전 RoundToInt 는 tile 모서리에 wall 배치돼서 floor 와 mismatch.
             int cx = Mathf.FloorToInt(mw.x);
             int cy = Mathf.FloorToInt(mw.y);
-            ghostRenderer.transform.position = new Vector3(cx + 0.5f, cy + 0.5f, 0);
+            // #193 - multi-cell ghost: center = (cx + w*0.5, cy + h*0.5)
+            Vector2Int size = SizeFor(CurrentMode);
+            ghostRenderer.transform.position = new Vector3(cx + size.x * 0.5f, cy + size.y * 0.5f, 0);
+            // ghost scale 도 size 적용 (sprite world bound 보정)
+            if (ghostRenderer.sprite != null)
+            {
+                Vector2 sw = ghostRenderer.sprite.bounds.size;
+                if (sw.x > 0.01f && sw.y > 0.01f)
+                    ghostRenderer.transform.localScale = new Vector3(size.x / sw.x, size.y / sw.y, 1f);
+            }
             int cost = CostFor(CurrentMode);
             bool stoneMode = CurrentMode == Mode.WallStone;
             bool canAfford = ResourceManager.Instance != null
                 && (stoneMode ? ResourceManager.Instance.stone : ResourceManager.Instance.wood) >= cost;
-            bool cellFree  = !CellOccupied(cx, cy);
-            ghostRenderer.color = (canAfford && cellFree)
+            bool areaFree = !AreaOccupied(cx, cy, size.x, size.y);
+            ghostRenderer.color = (canAfford && areaFree)
                 ? new Color(1f, 1f, 1f, 0.55f)
                 : new Color(1f, 0.4f, 0.4f, 0.55f);
         }
@@ -197,6 +213,15 @@ namespace MelonS.GameProto
                 if (h.GetComponent<BedEntity>() != null) return true;
                 if (h.GetComponent<BlueprintEntity>() != null) return true;  // #118
             }
+            return false;
+        }
+
+        /// <summary>#193 - multi-cell footprint occupy 검사.  anchor=(cx,cy), w x h 영역 전부 free 여야 false.</summary>
+        private bool AreaOccupied(int cx, int cy, int w, int h)
+        {
+            for (int dx = 0; dx < w; dx++)
+                for (int dy = 0; dy < h; dy++)
+                    if (CellOccupied(cx + dx, cy + dy)) return true;
             return false;
         }
 
@@ -228,10 +253,12 @@ namespace MelonS.GameProto
                 return false;
             }
             int cost = CostFor(CurrentMode);
-            if (CellOccupied(cx, cy))
+            // #193 - multi-cell entity (침대 1x2 등) footprint 검사
+            Vector2Int size = SizeFor(CurrentMode);
+            if (AreaOccupied(cx, cy, size.x, size.y))
             {
-                Debug.Log($"[Build] TryPlace skip: cell ({cx},{cy}) occupied for mode={CurrentMode}");
-                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"✗ 셀 점유됨 ({cx},{cy}) - 다른 곳 시도");
+                Debug.Log($"[Build] TryPlace skip: area ({cx},{cy}) {size.x}x{size.y} occupied for mode={CurrentMode}");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"✗ {size.x}x{size.y} 영역 점유됨 ({cx},{cy}) - 다른 곳 시도");
                 return false;
             }
             // #189 - 운영자 fb "건축 여전히 안 됨" root cause:
@@ -253,17 +280,21 @@ namespace MelonS.GameProto
 
             Sprite ghostSpr = SpriteForCurrentMode();
             var bpGo = new GameObject($"Blueprint_{CurrentMode}");
-            bpGo.transform.position = new Vector3(cx + 0.5f, cy + 0.5f, 0);
+            // #193 - multi-cell entity center = (cx + w*0.5, cy + h*0.5).  1x1 이면 (+0.5,+0.5) = 기존.
+            Vector3 center = new Vector3(cx + size.x * 0.5f, cy + size.y * 0.5f, 0);
+            bpGo.transform.position = center;
             var bp = bpGo.AddComponent<BlueprintEntity>();
             float secs = CurrentMode == Mode.Floor ? 2f : 5f;
             bp.Init(CurrentMode, prefab, ghostSpr, needWood, needStone, secs);
+            bp.SetSize(size);  // #193 - 청사진 sprite 도 1x2 비율 적용
             // #190 - 클릭 성공 토스트 + 시각 ring (운영자가 "어디에 청사진 생겼지?" 즉시 확인)
             if (BuildClickToast.Instance != null)
             {
                 string kr = ModeKr(CurrentMode);
-                BuildClickToast.Instance.ShowSuccess($"✓ 청사진 - {kr} @ ({cx},{cy})");
+                string sizeKr = (size.x == 1 && size.y == 1) ? "" : $" {size.x}x{size.y}";
+                BuildClickToast.Instance.ShowSuccess($"✓ 청사진 - {kr}{sizeKr} @ ({cx},{cy})");
             }
-            ClickEffect.Spawn(new Vector3(cx + 0.5f, cy + 0.5f, 0), new Color(0.55f, 0.85f, 1.0f, 0.95f));
+            ClickEffect.Spawn(center, new Color(0.55f, 0.85f, 1.0f, 0.95f));
             return true;
         }
 

@@ -35,11 +35,45 @@ namespace MelonS.GameProto
         public float RestMul => QualityStats[(int)quality].restMul;
         public float MoodBonus => QualityStats[(int)quality].moodBonus;
 
+        // #193 - RimWorld vanilla 침대 크기.  wiki:
+        //   Sleeping spot  1x1  (자재 0)
+        //   Wood bed       1x2  (목재 45 wiki / 우리 8 단순화)
+        //   Fine bed       1x2  (목재 + quality)
+        //   Royal bed      2x2  (현재는 Fine 으로 단순화)
+        public static Vector2Int SizeFor(BedQuality q) => q switch
+        {
+            BedQuality.SleepingSpot => new Vector2Int(1, 1),
+            BedQuality.Wood         => new Vector2Int(1, 2),
+            BedQuality.Fine         => new Vector2Int(1, 2),
+            _ => new Vector2Int(1, 1),
+        };
+
+        public Vector2Int Size => SizeFor(quality);
+
         public void SetQuality(BedQuality q)
         {
             quality = q;
             var sr = GetComponent<SpriteRenderer>();
             if (sr != null) sr.color = QualityStats[(int)q].tint;
+            // #193 - 1x2 침대 → sprite 가 16x32 가 아니어도 transform.localScale 로 강제 (PPU 자동 detect 안 될 시 fallback)
+            //  bed_wood.png 가 16x32 면 PPU 16 자동 = world 1x2.  16x16 PNG 면 scale (1,2) 보정.
+            ApplyVisualSize();
+        }
+
+        private void ApplyVisualSize()
+        {
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) return;
+            // sprite.bounds.size = world unit (PPU 반영).  target = Size (Vector2Int).
+            //  ratio 로 transform.localScale 보정 → 결과 world bound = target.
+            Vector2 worldSize = sr.sprite.bounds.size;
+            if (worldSize.x < 0.01f || worldSize.y < 0.01f) return;
+            transform.localScale = new Vector3(Size.x / worldSize.x, Size.y / worldSize.y, 1f);
+        }
+
+        private void Start()
+        {
+            ApplyVisualSize();
         }
     }
 }
