@@ -110,6 +110,7 @@ namespace MelonS.GameProto
             ResourceMonitorLogger.EnsureInScene();  // #140 - 자원 변화 log dump (QA 검증)
             ResourceLowAlert.EnsureInScene();       // #136 - 자원 부족 popup
             BuildAutoQA.EnsureInScene();            // #147 - -build-qa flag 시 자동 건축 시나리오
+            BuildClickAutoQA.EnsureInScene();       // #180 - -build-click-qa flag (운영자 fb 진짜 click QA)
             // → mouse hover 시 entity 종류 + 가능한 action 표시
             HoverTooltip.EnsureInScene();
             // → wolf/bandit 접근 시 큰 빨강 "⚠ 위협" 우상단 (auto-pause X, 시각 only)
