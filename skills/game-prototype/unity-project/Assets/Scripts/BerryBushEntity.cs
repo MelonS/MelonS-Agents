@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto.Core;
 
 namespace MelonS.GameProto
 {
@@ -92,10 +93,11 @@ namespace MelonS.GameProto
             if (spriteRenderer == null) return;
             // #161 - base 녹색을 brightness 곱으로 조절 (회색 덮어쓰기 X).
             //  Depleted=0.35 (어두운 녹) / Full=1.0 (밝은 녹).
+            //  #167 - TintHelper 로 통합.
             float t = IsDepleted
                 ? 0.35f
                 : Mathf.Lerp(0.4f, 1f, (float)berries / Mathf.Max(1, initialBerries));
-            spriteRenderer.color = new Color(baseColor.r * t, baseColor.g * t, baseColor.b * t, baseColor.a);
+            TintHelper.ApplyBrightness(spriteRenderer, baseColor, t);
         }
     }
 }

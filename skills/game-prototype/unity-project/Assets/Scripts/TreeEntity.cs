@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto.Core;
 
 namespace MelonS.GameProto
 {
@@ -71,12 +72,11 @@ namespace MelonS.GameProto
             if (IsDestroyed) return false;
             hp -= dmg;
             // #156 - Visual feedback (darken) 가 #149 species tint 를 덮어쓰면 종 구분 사라짐.
-            //  species tint 를 base 로 두고 brightness 만 hp 비례로 곱해 유지.
+            //  #167 - TintHelper 로 통합 (minBright=0 으로 100% tree 가 까매질 수 있음).
             if (spriteRenderer != null)
             {
-                float t = Mathf.Clamp01(hp / maxHp);
                 var (_, _, _, baseTint) = SpeciesStats[(int)species];
-                spriteRenderer.color = new Color(baseTint.r * t, baseTint.g * t, baseTint.b * t, baseTint.a);
+                TintHelper.ApplyHpBrightness(spriteRenderer, baseTint, hp / maxHp, minBright: 0f);
             }
             // Chop SFX — throttled so it sounds rhythmic, not buzzy
             if (Time.time - lastChopSoundTime >= ChopSoundInterval)
