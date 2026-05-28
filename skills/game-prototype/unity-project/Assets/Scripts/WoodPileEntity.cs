@@ -20,9 +20,11 @@ namespace MelonS.GameProto
 
         // #152 - 림 vanilla deteriorate (옥외 noroof 2 HP/day, indoor/roof 0).
         //  InStockpile=true 이면 indoor 가정 (현재 roof 시스템 없음 - stockpile 마커 위치 = indoor).
-        //  옥외 pile (deer 사냥 위치 등) 만 매 5초 1 wood 손실 (테스트 가속 = day 1=2분 game time).
+        //  #197 - 운영자 fb "목재 너무 빨리 사라짐": 5s → 30s (6x 느림).
+        //   wiki: 1 game day = 2분 = 24sec 인데 5s 마다 -1 = 1day -4 wood 이건 너무 가속.
+        //   30s 마다 -1 = 약 wiki 정합 (1day ~2 wood).
         private float lastDeteriorate = -10f;
-        private const float DeteriorateInterval = 5f;
+        private const float DeteriorateInterval = 30f;
 
         public int Wood => wood;
         public GameObject ReservedBy { get; set; }   // PawnHauler 가 set/clear

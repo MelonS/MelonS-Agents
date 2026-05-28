@@ -88,8 +88,9 @@ namespace MelonS.GameProto
             {
                 Vector3 curPos = transform.position;
                 if ((curPos - lastPos).sqrMagnitude > 0.001f) { lastPos = curPos; lastMoveTime = Time.time; }
-                // batchmode V test 에서 false-fire 한 적 있어 3s grace 로 늘림.
-                if (Time.time - lastMoveTime > 3.0f && Time.time - lastUnstuckTime > 5f)
+                // #197 운영자 fb "이동 버벅임" - 3s → 5s 로 늘려서 false-trigger 줄임.
+                //  실제 stuck 만 nudge.  cooldown 도 5s → 8s.
+                if (Time.time - lastMoveTime > 5.0f && Time.time - lastUnstuckTime > 8f)
                 {
                     // 4 방향 시도 - 가장 가까운 (target 방향과 90도) 으로 nudge
                     Vector2 toTarget = (target.Value - (Vector2)curPos).normalized;

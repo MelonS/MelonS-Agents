@@ -190,6 +190,10 @@ namespace MelonS.GameProto.AI
         }
         private static BlueprintEntity FindNearestBlueprint(PawnContext ctx)
         {
+            // #197 운영자 fb "두 번째 벽 건축 안 됨" root cause:
+            //  이전 코드: builder 가 자재 부족 blueprint 도 reserve → 그 자리에 멍하니 서있음.
+            //  hauler 가 자재 deposit 못 함 (실제로는 deposit 가능하지만 builder 가 ReserveBy 잡음).
+            //  fix: HasAllMaterials=true 인 blueprint 만 builder 후보.  자재 부족은 hauler 가 자재 운반 책임.
             var arr = Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None);
             BlueprintEntity best = null;
             float bestSq = float.MaxValue;
@@ -197,6 +201,7 @@ namespace MelonS.GameProto.AI
             foreach (var bp in arr)
             {
                 if (bp == null || bp.IsComplete) continue;
+                if (!bp.HasAllMaterials) continue;  // #197 - 자재 완비 안 됐으면 skip
                 if (bp.IsReserved && bp.ReservedBy != ctx.builder.gameObject) continue;
                 Vector3 bpp = bp.transform.position;
                 if (Mathf.Abs(bpp.x) > 28.5f || Mathf.Abs(bpp.y) > 28.5f) continue;

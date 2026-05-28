@@ -123,7 +123,7 @@ namespace MelonS.GameProto
                     // Otherwise: manual movement (no chop while drafted)
                     PawnMovement mvD = currentSelection.GetComponent<PawnMovement>();
                     if (mvD != null) mvD.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
-                    currentSelection.ManualMoveUntil = Time.time + 5f;
+                    currentSelection.ManualMoveUntil = Time.time + 15f;
                     return;
                 }
 
@@ -169,7 +169,7 @@ namespace MelonS.GameProto
                     PawnMovement mv = currentSelection.GetComponent<PawnMovement>();
                     if (mv != null) mv.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
                     // 수동 이동 명령 → AI 5초 skip (즉시 override 방지)
-                    currentSelection.ManualMoveUntil = Time.time + 5f;
+                    currentSelection.ManualMoveUntil = Time.time + 15f;
                 }
             }
         }
@@ -310,7 +310,7 @@ namespace MelonS.GameProto
                 }
                 var mvD = currentSelection.GetComponent<PawnMovement>();
                 if (mvD != null) mvD.SetTarget(worldPos);
-                currentSelection.ManualMoveUntil = Time.time + 5f;
+                currentSelection.ManualMoveUntil = Time.time + 15f;
                 return;
             }
             // 비-drafted: trader/animal/crop/tree/empty
@@ -339,7 +339,7 @@ namespace MelonS.GameProto
             if (cookE != null) cookE.ClearTask();
             var mv = currentSelection.GetComponent<PawnMovement>();
             if (mv != null) mv.SetTarget(worldPos);
-            currentSelection.ManualMoveUntil = Time.time + 5f;
+            currentSelection.ManualMoveUntil = Time.time + 15f;
         }
 
         private void Select(PawnEntity pawn)
