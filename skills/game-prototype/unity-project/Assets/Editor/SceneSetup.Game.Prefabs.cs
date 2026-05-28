@@ -19,6 +19,7 @@ namespace MelonS.GameProto.EditorTools
             public GameObject benchPrefab;
             public GameObject bedPrefab;
             public Sprite wallSprite, floorSprite, doorSprite, stoveSprite, treeSprite, bedSprite;
+            public Sprite bedFineSprite;  // #198 D4-1 - Fine quality 전용 sprite (royal-blue/gold)
         }
 
         private static BuildPrefabSet GenerateBuildPrefabs()
@@ -101,13 +102,17 @@ namespace MelonS.GameProto.EditorTools
 
             // 운영자 피드백 #107: 침대 prefab
             ps.bedSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/bed_wood.png");
+            // #198 D4-1: Fine quality 전용 sprite (royal-blue/gold).  BedEntity.SetQuality 가 swap.
+            ps.bedFineSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/bed_fine.png");
             GameObject bedTemplate = new GameObject("Bed");
             var bedsr = bedTemplate.AddComponent<SpriteRenderer>();
             bedsr.sprite = ps.bedSprite; bedsr.sortingOrder = 4;
             var bedcol = bedTemplate.AddComponent<BoxCollider2D>();
             bedcol.size = new Vector2(0.95f, 0.95f);
             bedcol.isTrigger = true;  // pawn 통과 가능 (위에 눕기)
-            bedTemplate.AddComponent<BedEntity>();
+            var bedEntity = bedTemplate.AddComponent<BedEntity>();
+            // #198 D4-1: 두 quality sprite ref 를 prefab 에 baked (완성 path 에서 SetQuality 가 swap).
+            bedEntity.SetSpriteRefs(ps.bedSprite, ps.bedFineSprite);
             ps.bedPrefab = PrefabUtility.SaveAsPrefabAsset(bedTemplate, "Assets/Prefabs/Bed.prefab");
             Object.DestroyImmediate(bedTemplate);
 

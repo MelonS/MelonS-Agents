@@ -17,6 +17,20 @@ namespace MelonS.GameProto
     {
         [SerializeField] private BedQuality quality = BedQuality.Wood;
 
+        // #198 D4-1 - quality 별 sprite swap.  SceneSetup 가 prefab 빌드 시 두 ref 주입.
+        //   Fine → fineSprite (royal-blue/gold), Wood/SleepingSpot → woodSprite.
+        //  serialized 라 prefab 에 baked → 완성 path(Instantiate)에서도 ref 살아있음
+        //  (BuildManager 의존 없이 entity 가 자체 resolve → bm.BedSpriteRef plumbing 과 독립적으로 견고).
+        [SerializeField] private Sprite woodSprite;
+        [SerializeField] private Sprite fineSprite;
+
+        /// <summary>SceneSetup.GenerateBuildPrefabs 가 prefab 빌드 시 호출 (두 quality sprite 주입).</summary>
+        public void SetSpriteRefs(Sprite wood, Sprite fine)
+        {
+            woodSprite = wood;
+            fineSprite = fine;
+        }
+
         public BedQuality Quality => quality;
         public string QualityKr => quality switch
         {
@@ -54,7 +68,23 @@ namespace MelonS.GameProto
         {
             quality = q;
             var sr = GetComponent<SpriteRenderer>();
-            if (sr != null) sr.color = QualityStats[(int)q].tint;
+            if (sr != null)
+            {
+                // #198 D4-1 - quality 별 sprite swap.
+                //  Fine → 전용 fine sprite (royal-blue/gold) + Color.white (sprite 자체가 고급 표현).
+                //    기존 Fine tint (1.00,0.95,0.70) 은 파란 sprite 위에서 충돌 → white 로 교체.
+                //  Wood/SleepingSpot → wood sprite + 기존 material tint.
+                if (q == BedQuality.Fine && fineSprite != null)
+                {
+                    sr.sprite = fineSprite;
+                    sr.color = Color.white;
+                }
+                else
+                {
+                    if (woodSprite != null) sr.sprite = woodSprite;
+                    sr.color = QualityStats[(int)q].tint;
+                }
+            }
             // #193 - 1x2 침대 → sprite 가 16x32 가 아니어도 transform.localScale 로 강제 (PPU 자동 detect 안 될 시 fallback)
             //  bed_wood.png 가 16x32 면 PPU 16 자동 = world 1x2.  16x16 PNG 면 scale (1,2) 보정.
             ApplyVisualSize();

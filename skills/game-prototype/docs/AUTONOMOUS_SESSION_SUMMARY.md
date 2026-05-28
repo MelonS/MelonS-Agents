@@ -2,6 +2,49 @@
 
 ---
 
+## [세션 2026-05-29] #198 — 멀티-에이전트 파이프라인 강제 (QA / 건축 fix / 디자인)
+
+운영자 directive: **"QA / 건축 fix / 디자인 / 파이프라인. 파이프라인 =
+`.claude/agents/` 의 game-pm/programmer/qa 직군 invoke 패턴 강제 적용."**
+
+### 한 줄
+**game-pm(계획) → game-programmer(건축 fix) → game-artist(bed_fine sprite) →
+game-programmer(wiring) → game-qa(게이트) 파이프라인으로 실행.  QA baseline 이
+2개 실결함 발견 (Build Click QA prefix mismatch + 시각 baseline 해상도 staleness)
+→ fix → bed_fine.png 신규 + Fine 침대 sprite-swap wiring → #198 PASS.**
+
+### 파이프라인 흐름 (직군별 invoke)
+| 단계 | 직군 | 산출 |
+|------|------|------|
+| 계획 | game-pm | `docs/plan-198.md` — 보수적 scope (상위 2개), binary 합격 기준, QA 게이트 |
+| QA baseline | (orchestrator) | refactor_check `baseline-198` → **실결함 2건 발견** |
+| 건축 fix | game-programmer | Build Click QA 가 안 돌던 root cause = 로그 prefix `[BuildClickQA-v2]` ↔ 하니스 grep `[BuildClickQA]` mismatch.  rename fix + bed SpriteRef null-guard + V65 추가 (64→65) |
+| 디자인 (art) | game-artist | `bed_fine.png` 16x32 (royal-blue/gold, 골드 헤드보드) — wood 의 red/brown 과 명확히 구분.  `_gen_bed.py` 에 `gen_bed_fine()` 추가 |
+| 디자인 (wiring) | game-programmer | `BedEntity.SetQuality` sprite-swap (Fine→bed_fine+white, Wood/Spot→bed_wood+tint), `SceneSetup.Game.Prefabs` bedFineSprite bake, ForceImportAllSprites 등록 |
+| 게이트 | game-qa | full harness `--tag 198 --accept-visual` → **PASS** |
+
+### 검증 (game-qa, 정직)
+- build OK / runtime error 0 / REAL QA wood +47
+- **Build Click QA `OVERALL: PASS` 8/8** (이전엔 silently skip — 이제 진짜 게이트됨)
+- isolated **65/65** (V65 신규, V56/V60 회귀 0) / integration **37/37** (I36 고급침대 restMul=1.40)
+- visual diff 0.42% (신규 bed sprite 의도 변경 → baseline 재수용)
+- PNG Read: 월드 정상 렌더 + bed_wood vs bed_fine 시각 구분 확인
+
+### 발견된 교훈
+- **"코드 있음 != 검증됨" 의 메타 버전**: 검증 하니스 자체도 검증돼야 한다.
+  Build Click QA 는 코드가 멀쩡히 돌고 `OVERALL: PASS` 를 찍고 있었지만, 로그
+  prefix 한 글자(`-v2`) 차이로 하니스가 결과를 못 읽어 **수개월간 silently skip**.
+  baseline QA 를 정직하게 돌린 게 이걸 잡았다.
+- 시각 baseline 은 해상도가 바뀌면(2858x1481 → 3840x2160) size-mismatch 로
+  무조건 FAIL — `--accept-visual` 재수용 필요.
+
+### 다음 increment (#199 후보, plan-198 §6)
+- SaveLoadManager fidelity (BedQuality/StockpilePriority/TreeSpecies/WallMaterial 직렬화 + V-scenario)
+- P7 combat 시퀀스 screenshot
+- Stretch (power/trading/taming/bills) — 운영자 명시 지시 전까지 보류
+
+---
+
 ## [후속 세션 2026-05-27 (운영자 자는 동안)] — UX 폴리시 + 키보드 의존 제거
 
 운영자 깨기 직전 발화: **"디자인 구리고 프로토타입 수준도 안되고 ui들 그냥

@@ -111,6 +111,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V62-traits-work-speed-applied", TestV62_TraitsWorkSpeedApplied);
             yield return RunOne("V63-research-bench-speed-sum", TestV63_ResearchBenchSpeedSum);
             yield return RunOne("V64-door-pass-slowdown", TestV64_DoorPassSlowdown);
+            yield return RunOne("V65-bed-sprite-runtime-binding", TestV65_BedSpriteRuntimeBinding);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1384,6 +1385,79 @@ namespace MelonS.GameProto.Tests
                 ai.SetArrowSprite(GetWhiteSprite());
             }
             return go;
+        }
+
+        // defect #1 (#198 D3-1) - 침대 sprite 런타임 binding 영구 가드.
+        //   BlueprintEntity.Complete() → Instantiate(finishedPrefab) → BedEntity.SetQuality()
+        //   가 완성 bed 의 SpriteRenderer.sprite 를 null 로 만들지 않고 bed_* sprite 를 유지하는지.
+        //   in-game 의 bm.BedSpriteRef null 회귀는 BuildClickAutoQA bed case 가 추가로 가드.
+        //   여기선 isolated 로 entity 계약(SetQuality 가 sprite 안 날림)을 검증.
+        private IEnumerator TestV65_BedSpriteRuntimeBinding()
+        {
+            // 실제 게임처럼 bed sprite 를 가진 finishedPrefab 을 BlueprintEntity 로 완성시킨다.
+            var bedSprite = MakeNamedSprite("bed_wood");
+            // finishedPrefab 역할: SpriteRenderer(sprite=bed_wood) + BedEntity 를 가진 template.
+            var bedTemplate = new GameObject("V65_BedTemplate");
+            bedTemplate.transform.position = new Vector3(500, 500, 0);  // 멀리 두고 reference 로 제외
+            var tsr = bedTemplate.AddComponent<SpriteRenderer>();
+            tsr.sprite = bedSprite;
+            bedTemplate.AddComponent<BedEntity>();
+
+            // blueprint → deposit → addwork → complete chain (실 게임 path)
+            var bpGo = new GameObject("V65_Blueprint");
+            bpGo.AddComponent<SpriteRenderer>();
+            var bp = bpGo.AddComponent<BlueprintEntity>();
+            bp.Init(BuildManager.Mode.BedFine, bedTemplate, bedSprite, wood: 30, stone: 0, secs: 1f);
+            bp.SetSize(new Vector2Int(1, 2));
+            yield return null;
+            bp.DepositWood(30);
+            yield return null;
+            Assert(bp.HasAllMaterials, "deposit 후 자재 충족 안 됨");
+            if (!bp.HasAllMaterials) { CleanupV65(bedTemplate); yield break; }
+            bp.AddWork(2f);  // > buildSecondsNeeded → Complete
+            yield return null;
+
+            // Complete() 가 Instantiate 한 활성 BedEntity 를 찾는다 (template 은 inactive).
+            BedEntity completed = null;
+            foreach (var b in Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None))
+            {
+                if (b == null) continue;
+                if (b.gameObject == bedTemplate) continue;
+                completed = b; break;
+            }
+            yield return null;
+
+            bool spawned = completed != null;
+            var csr = spawned ? completed.GetComponent<SpriteRenderer>() : null;
+            string sprName = (csr != null && csr.sprite != null) ? csr.sprite.name : "<null>";
+            bool spriteOk = csr != null && csr.sprite != null
+                            && (sprName.Contains("bed_wood") || sprName.Contains("bed_fine") || sprName.Contains("bed"));
+            // quality 도 BedFine 로 binding 됐는지 (완성 path 의 SetQuality)
+            bool qualOk = spawned && completed.Quality == BedQuality.Fine;
+
+            CleanupV65(bedTemplate);
+            if (completed != null) Object.Destroy(completed.gameObject);
+
+            Debug.Log($"[TestRunner] V65: {(spriteOk && qualOk ? "OK" : "FAIL")} - spawned={spawned} sprite={sprName} quality={(spawned ? completed.Quality.ToString() : "?")}");
+            Assert(spawned && spriteOk && qualOk,
+                $"spawned={spawned} sprite={sprName} spriteOk={spriteOk} qualOk={qualOk}");
+        }
+
+        private void CleanupV65(GameObject template)
+        {
+            if (template != null) Object.Destroy(template);
+        }
+
+        private static Sprite MakeNamedSprite(string name)
+        {
+            var tex = new Texture2D(16, 32, TextureFormat.RGBA32, false);
+            var px = new Color[16 * 32];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color(0.6f, 0.45f, 0.3f, 1f);
+            tex.SetPixels(px);
+            tex.Apply();
+            var sp = Sprite.Create(tex, new Rect(0, 0, 16, 32), new Vector2(0.5f, 0.5f), 16f);
+            sp.name = name;
+            return sp;
         }
 
         private static Sprite _whiteSprite;

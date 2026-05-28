@@ -50,13 +50,13 @@ namespace MelonS.GameProto
         private IEnumerator RunQA()
         {
             yield return new WaitForSeconds(2.5f);
-            Debug.Log("[BuildClickQA-v2] ============== START (real user flow) ==============");
+            Debug.Log("[BuildClickQA] ============== START (real user flow) ==============");
 
             var menu = ArchitectMenu.Instance;
             var bm = BuildManager.Instance;
             if (menu == null || bm == null)
             {
-                Debug.LogError("[BuildClickQA-v2] ArchitectMenu or BuildManager Instance null");
+                Debug.LogError("[BuildClickQA] ArchitectMenu or BuildManager Instance null");
                 Application.Quit();
                 yield break;
             }
@@ -66,19 +66,19 @@ namespace MelonS.GameProto
 
             foreach (var tc in TestCases)
             {
-                Debug.Log($"[BuildClickQA-v2] === Case: {tc.label} @ cell({tc.cx},{tc.cy}) via menu={tc.category}[{tc.buildableIdx}] ===");
+                Debug.Log($"[BuildClickQA] === Case: {tc.label} @ cell({tc.cx},{tc.cy}) via menu={tc.category}[{tc.buildableIdx}] ===");
                 bool casePass = false;
                 string failReason = "";
                 yield return RunOneCase(tc, menu, bm,
                     (ok, reason) => { casePass = ok; failReason = reason; });
-                if (casePass) { totalPass++; Debug.Log($"[BuildClickQA-v2] {tc.label}: PASS"); }
-                else { totalFail++; failedCases.Add($"{tc.label}: {failReason}"); Debug.LogError($"[BuildClickQA-v2] {tc.label}: FAIL - {failReason}"); }
+                if (casePass) { totalPass++; Debug.Log($"[BuildClickQA] {tc.label}: PASS"); }
+                else { totalFail++; failedCases.Add($"{tc.label}: {failReason}"); Debug.LogError($"[BuildClickQA] {tc.label}: FAIL - {failReason}"); }
             }
 
-            Debug.Log($"[BuildClickQA-v2] ============== RESULT ==============");
-            Debug.Log($"[BuildClickQA-v2] {totalPass}/{TestCases.Length} PASS, {totalFail} FAIL");
-            foreach (var f in failedCases) Debug.Log($"[BuildClickQA-v2] FAIL: {f}");
-            Debug.Log($"[BuildClickQA-v2] OVERALL: {(totalFail == 0 ? "PASS" : "FAIL")}");
+            Debug.Log($"[BuildClickQA] ============== RESULT ==============");
+            Debug.Log($"[BuildClickQA] {totalPass}/{TestCases.Length} PASS, {totalFail} FAIL");
+            foreach (var f in failedCases) Debug.Log($"[BuildClickQA] FAIL: {f}");
+            Debug.Log($"[BuildClickQA] OVERALL: {(totalFail == 0 ? "PASS" : "FAIL")}");
             yield return new WaitForSeconds(0.5f);
             Application.Quit();
         }
@@ -198,10 +198,33 @@ namespace MelonS.GameProto
                 case BuildManager.Mode.BedFine:
                     foreach (var b in Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None))
                         if (b != null && Vector2.Distance(b.transform.position, placedPos) < 0.6f)
-                        { spawnedCount++; spawnedType = $"{b.QualityKr}({b.Quality})"; }
+                        {
+                            spawnedCount++; spawnedType = $"{b.QualityKr}({b.Quality})";
+                            // defect #1 (D3-1) - 완성된 침대 entity 의 sprite 런타임 binding 정직 검증.
+                            //   bm.BedSpriteRef 가 null 이면(SceneSetup bedSprite 미연결) 여기서 FAIL.
+                            //   완성 entity 의 SpriteRenderer.sprite 가 실제 bed_* sprite 여야 함.
+                            var bsr = b.GetComponent<SpriteRenderer>();
+                            Sprite refSprite = bm.BedSpriteRef;
+                            string rendSpriteName = (bsr != null && bsr.sprite != null) ? bsr.sprite.name : "<null>";
+                            bool refOk = refSprite != null;
+                            bool rendOk = bsr != null && bsr.sprite != null && rendSpriteName.Contains("bed");
+                            Debug.Log($"[BuildClickQA] bed: SpriteRef {(refOk ? "non-null" : "NULL")}, renderer.sprite={rendSpriteName}, quality={b.Quality}");
+                            if (!refOk) { resultCb(false, "bm.BedSpriteRef null (SceneSetup bedSprite 미연결)"); yield break; }
+                            if (!rendOk) { resultCb(false, $"완성 bed renderer.sprite 가 bed_* 아님 (={rendSpriteName})"); yield break; }
+                            // #198 D4-1 - Fine quality 는 bed_fine sprite 로 swap 됐는지 정직 검증.
+                            //   SetQuality 가 fine sprite + Color.white 적용했어야 함.
+                            if (tc.mode == BuildManager.Mode.BedFine)
+                            {
+                                bool fineSpriteOk = rendSpriteName.Contains("bed_fine");
+                                bool fineColorOk = bsr != null && bsr.color == Color.white;
+                                Debug.Log($"[BuildClickQA] bedFine: sprite={rendSpriteName} (fine={fineSpriteOk}), color={(bsr != null ? bsr.color.ToString() : "<null>")} (white={fineColorOk})");
+                                if (!fineSpriteOk) { resultCb(false, $"Fine bed renderer.sprite 가 bed_fine 아님 (={rendSpriteName}) - SetQuality swap 실패"); yield break; }
+                                if (!fineColorOk) { resultCb(false, $"Fine bed color 가 white 아님 (={(bsr != null ? bsr.color.ToString() : "<null>")}) - 충돌 tint 미제거"); yield break; }
+                            }
+                        }
                     break;
             }
-            if (spawnedCount > 0) { Debug.Log($"[BuildClickQA-v2] {tc.label} 완성 - {spawnedType} @ {placedPos}"); resultCb(true, ""); }
+            if (spawnedCount > 0) { Debug.Log($"[BuildClickQA] {tc.label} 완성 - {spawnedType} @ {placedPos}"); resultCb(true, ""); }
             else { resultCb(false, $"finishedPrefab 미spawn (mode={tc.mode})"); }
         }
 

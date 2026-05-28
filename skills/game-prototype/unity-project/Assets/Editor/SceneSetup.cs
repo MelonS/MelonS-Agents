@@ -73,6 +73,8 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/arrow.png",           // Day 50
                 "Assets/Sprites/trader.png",          // Stretch — Trader
                 "Assets/Sprites/lamp.png",            // Stretch — Lamp
+                "Assets/Sprites/bed_wood.png",        // #107 — Wood bed
+                "Assets/Sprites/bed_fine.png",        // #198 D4-1 — Fine bed (royal-blue/gold)
             };
             foreach (var p in paths)
             {
