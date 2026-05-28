@@ -10,6 +10,25 @@ namespace MelonS.GameProto
     public class ResearchBench : MonoBehaviour
     {
         [SerializeField] private float researchRadius = 1.5f;
+        // #195 - RimWorld wiki: research bench 2x1 footprint.  sprite 32x16 정합.
+        public static readonly Vector2Int FootprintSize = new Vector2Int(2, 1);
+
+        private void Start()
+        {
+            ApplyVisualSize();
+        }
+
+        private void ApplyVisualSize()
+        {
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) return;
+            Vector2 worldSize = sr.sprite.bounds.size;
+            if (worldSize.x < 0.01f || worldSize.y < 0.01f) return;
+            transform.localScale = new Vector3(
+                FootprintSize.x / worldSize.x,
+                FootprintSize.y / worldSize.y,
+                1f);
+        }
 
         // Lesson #4 - FindObjects per call 비쌈.  자체 1s 캐시.
         private static PawnEntity[] cachedPawns;

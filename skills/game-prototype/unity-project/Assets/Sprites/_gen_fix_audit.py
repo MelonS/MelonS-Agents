@@ -339,28 +339,35 @@ def gen_meat_pile():
     return im
 
 
-# ─── research_bench 16x16 - 책상 + 책 + 잉크 ─────────────────────
+# ─── research_bench 32x16 - 2x1 책상 (RimWorld wiki 정합) ────────
 def gen_research_bench():
-    im = new_img(16, 16)
-    # 책상 top (가로 wood plank)
-    rect_fill(im, 1, 6, 14, 10, WOOD_MD)
-    rect_outline(im, 1, 6, 14, 10, OUTLINE)
-    # plank grain
-    hline(im, 2, 13, 8, WOOD_DK)
-    # 다리 (두 다리)
-    rect_fill(im, 2, 10, 3, 14, WOOD_DK)
-    rect_fill(im, 12, 10, 13, 14, WOOD_DK)
-    put(im, 2, 14, OUTLINE); put(im, 13, 14, OUTLINE)
-    # 책 (가운데 열린 책)
-    rect_fill(im, 5, 3, 10, 6, PAPER)
-    rect_outline(im, 5, 3, 10, 6, OUTLINE)
-    # 책 중앙선
-    vline(im, 7, 3, 6, OUTLINE)
-    # 책 글씨 (잉크 줄)
-    hline(im, 5, 6, 5, INK)
-    hline(im, 8, 10, 5, INK)
-    # 잉크 병 (작은 점)
-    put(im, 11, 5, INK); put(im, 11, 4, INK)
+    # #195 - wiki: 2x1 footprint.  sprite 도 32x16 (가로 길게).
+    im = new_img(32, 16)
+    # 긴 책상 top (가로 wood plank)
+    rect_fill(im, 1, 6, 30, 10, WOOD_MD)
+    rect_outline(im, 1, 6, 30, 10, OUTLINE)
+    # plank grain (가운데 + 좌우)
+    hline(im, 2, 29, 8, WOOD_DK)
+    # 4 개 다리 (양 끝 + 중간 2개)
+    for lx in [2, 11, 20, 29]:
+        rect_fill(im, lx, 10, lx + 1, 14, WOOD_DK)
+        put(im, lx, 14, OUTLINE)
+    # 책 1 (왼쪽 열린 책)
+    rect_fill(im, 4, 3, 11, 6, PAPER)
+    rect_outline(im, 4, 3, 11, 6, OUTLINE)
+    vline(im, 7, 3, 6, OUTLINE)  # 책 중앙선
+    hline(im, 4, 6, 5, INK); hline(im, 8, 10, 5, INK)
+    # 책 2 (오른쪽 닫힌 책 / 두루마리)
+    rect_fill(im, 14, 3, 20, 6, PAPER)
+    rect_outline(im, 14, 3, 20, 6, OUTLINE)
+    hline(im, 14, 20, 4, INK)
+    hline(im, 14, 20, 5, INK)
+    # 잉크 병
+    rect_fill(im, 24, 3, 26, 5, INK)
+    put(im, 25, 2, INK)  # 마개
+    # 깃펜
+    put(im, 27, 2, PAPER); put(im, 28, 3, PAPER)
+    put(im, 28, 4, INK); put(im, 27, 5, INK)
     return im
 
 
