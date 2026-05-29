@@ -84,14 +84,18 @@ namespace MelonS.GameProto.EditorTools
             //  여기에 wood/food/meal/stone 아이콘 스프라이트를 넣으면 됨.
             //  (ICON SLOT 은 "ResIcon_<key>" 이름의 빈 Image, 현재 alpha 0).
             //  각 텍스트 width 120, 세로선 2px, 텍스트간 28px 간격. 총 너비 ~580.
+            // topbar-icons FINAL-FIX: icons grew 24→36px and now hug the visible text
+            //   (icon left edge ≈ readoutX - 96 - 6 - 36 = readoutX - 138).  Re-spaced the
+            //   readouts to ~172px pitch and pushed each divider clear of the next icon so
+            //   the larger pictograms don't render on top of the thin divider rules.
             Text foodText  = MakeResText(parent, "FoodText",  "식량: 0", "food",  uiFont, colAccentFood, -16);
-            MakeResSeparator(parent, "ResSep2", -150);
-            Text mealsText = MakeResText(parent, "MealsText", "식사: 0", "meal",  uiFont, new Color(0.93f, 0.81f, 0.45f, 1f), -176);
-            MakeResSeparator(parent, "ResSep1", -310);
-            Text woodText  = MakeResText(parent, "WoodText",  "목재: 0", "wood",  uiFont, colAccentWood, -336);
-            MakeResSeparator(parent, "ResSep3", -470);
+            MakeResSeparator(parent, "ResSep2", -164);
+            Text mealsText = MakeResText(parent, "MealsText", "식사: 0", "meal",  uiFont, new Color(0.93f, 0.81f, 0.45f, 1f), -188);
+            MakeResSeparator(parent, "ResSep1", -336);
+            Text woodText  = MakeResText(parent, "WoodText",  "목재: 0", "wood",  uiFont, colAccentWood, -360);
+            MakeResSeparator(parent, "ResSep3", -508);
             // #119 - 석재 (회색)
-            Text stoneText = MakeResText(parent, "StoneText", "석재: 0", "stone", uiFont, new Color(0.78f, 0.78f, 0.80f, 1f), -496);
+            Text stoneText = MakeResText(parent, "StoneText", "석재: 0", "stone", uiFont, new Color(0.78f, 0.78f, 0.80f, 1f), -532);
 
             // ResourceCounterUI host (no longer has its own panel image; just script)
             GameObject resHostGo = new GameObject("ResourceCounter");
@@ -125,11 +129,25 @@ namespace MelonS.GameProto.EditorTools
             rt.sizeDelta = new Vector2(120, 0);
             rt.anchoredPosition = new Vector2(anchoredX, 0);
 
-            // ICON SLOT — 24x24 Image placed just LEFT of this readout's left edge.
+            // ICON SLOT — Image placed just LEFT of this readout's VISIBLE text.
             //   Round 7: art landed.  Load Assets/Sprites/icon_<key>.png (point-filtered,
             //   force-imported by ForceImportAllSprites) and make it visible (alpha 1).
             //   Map is 1:1 — iconKey is stone/wood/meal/food → icon_<key>.png.
             //   Named "ResIcon_<key>" so future passes can still Find() each slot.
+            //
+            //   FINAL-FIX (Day, topbar-icons): QA read the bar as "text-only" — icons were
+            //   24px (too small vs the 28px Bold Korean text) AND anchored to the readout
+            //   BLOCK's left edge (anchoredX-120).  Because each "식량: 0" label is
+            //   right-aligned and only ~95px wide, that left-block-edge sat ~25px to the
+            //   LEFT of the first glyph, dumping the icon next to the PREVIOUS readout's
+            //   divider — so it read as belonging to the wrong number, hence "ambiguous".
+            //   Fixes: (1) icon 24→36px so it reads as a distinct pictogram at capture res;
+            //   (2) anchor to the VISIBLE text left edge (anchoredX - kLabelWidth) with a
+            //   tight 6px gap so each icon hugs ITS number; (3) raise icon a hair off-center
+            //   is not needed — text is MiddleRight, icon MiddleY → both vertically centered.
+            const float kIconPx    = 36f;   // distinct pictogram at 1920+ capture res
+            const float kLabelWidth = 96f;  // measured visible width of "OO: N" @ font28 Bold
+            const float kIconGap    = 6f;   // breathing room between icon and first glyph
             GameObject iconGo = new GameObject($"ResIcon_{iconKey}");
             iconGo.transform.SetParent(parent.transform, false);
             Image icon = iconGo.AddComponent<Image>();
@@ -139,6 +157,7 @@ namespace MelonS.GameProto.EditorTools
             {
                 icon.sprite = iconSprite;
                 icon.color = Color.white;             // visible (alpha 1)
+                icon.preserveAspect = true;           // don't squash non-square art
             }
             else
             {
@@ -152,9 +171,10 @@ namespace MelonS.GameProto.EditorTools
             irt.anchorMin = new Vector2(1f, 0.5f);
             irt.anchorMax = new Vector2(1f, 0.5f);
             irt.pivot = new Vector2(1f, 0.5f);
-            irt.sizeDelta = new Vector2(24, 24);
-            // readout left edge ≈ anchoredX - 120 (right-anchored, 120 wide); gap 6px.
-            irt.anchoredPosition = new Vector2(anchoredX - 120f - 6f, 0);
+            irt.sizeDelta = new Vector2(kIconPx, kIconPx);
+            // Place icon's RIGHT edge just left of the visible text's first glyph:
+            //   readout right edge = anchoredX; visible text spans ~kLabelWidth to its left.
+            irt.anchoredPosition = new Vector2(anchoredX - kLabelWidth - kIconGap, 0);
             return t;
         }
 
