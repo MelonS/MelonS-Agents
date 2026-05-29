@@ -251,7 +251,12 @@ namespace MelonS.GameProto.EditorTools
             starterBench.transform.position = new Vector3(-6f, 0f, 0f);
 
             // 12 crops (3 stage 시각 다양성)
+            Sprite cropSprSeedling = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice_seedling.png");
+            if (cropSprSeedling == null) Debug.LogWarning("[SetupStarterSettlement] crop_rice_seedling.png NULL — stage sprite missing");
+            Sprite cropSprGrowing = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice_growing.png");
+            if (cropSprGrowing == null) Debug.LogWarning("[SetupStarterSettlement] crop_rice_growing.png NULL — stage sprite missing");
             Sprite cropSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice.png");
+            if (cropSprite == null) Debug.LogWarning("[SetupStarterSettlement] crop_rice.png NULL — stage sprite missing");
             var growthField = typeof(CropEntity).GetField("growth",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             for (int cx = 3; cx <= 6; cx++)
@@ -269,6 +274,15 @@ namespace MelonS.GameProto.EditorTools
                         float startGrowth = 0.4f + ((cx + cy + 100) % 5) * 0.10f;
                         growthField.SetValue(ce, startGrowth);
                     }
+                    // V6 crop-stage wiring: wire the 3 stage sprite SerializeFields so
+                    //  CropEntity.RefreshVisual() uses the sprite-swap path (not legacy
+                    //  color-tint fallback). Same SerializedObject pattern as PawnSpriteBob
+                    //  (SceneSetup.Pawn.cs) so refs persist into scene instances.
+                    var ceSo = new SerializedObject(ce);
+                    ceSo.FindProperty("spriteSeedling").objectReferenceValue = cropSprSeedling;
+                    ceSo.FindProperty("spriteGrowing").objectReferenceValue = cropSprGrowing;
+                    ceSo.FindProperty("spriteRipe").objectReferenceValue = cropSprite;
+                    ceSo.ApplyModifiedPropertiesWithoutUndo();
                     layout.tilemap.SetTile(new Vector3Int(cx, cy, 0), layout.dirtTile);
                 }
             }

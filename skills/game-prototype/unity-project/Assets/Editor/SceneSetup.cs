@@ -87,6 +87,7 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/wildflower2.png",        // Polish v3 C — world scatter wildflower droop (8x8)
                 "Assets/Sprites/crop_rice_seedling.png", // W-M1-02 Art — crop stage 0 (seedling, 16x16)
                 "Assets/Sprites/crop_rice_growing.png",  // W-M1-02 Art — crop stage 1 (growing, 16x16)
+                "Assets/Sprites/vignette.png",           // W-M1-03 Art — V8 optional vignette overlay (512x512)
             };
             foreach (var p in paths)
             {

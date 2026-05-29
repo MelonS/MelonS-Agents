@@ -1,0 +1,21 @@
+{
+  "role": "PM",
+  "status": "Done",
+  "cycle": "C-004",
+  "wave": "W-M1-03",
+  "ts": "2026-05-30",
+  "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"],
+  "audit": {
+    "W-M1-02": "all 3 lanes written, pending QA only (no RED on disk)",
+    "v3_done_code": ["V1 walk-bob (+RED fix)", "V3 shadows", "V4 tree", "V5 flicker", "V7 inspector empty-state"],
+    "v3_done_full": ["V2 scatter (SpawnScatterDecor wired in SceneSetup.Game.Scatter.cs)"],
+    "v3_remaining": ["V6 crop-stage WIRING (SceneSetup never assigns 3 stage refs)", "V8 optional vignette (unstarted)"]
+  },
+  "wave_lanes": [
+    {"lane": "A", "role": "game-build-engineer", "label": "v6-crop-stage-wire", "file": "Assets/Editor/SceneSetup.Game.Entities.cs"},
+    {"lane": "B", "role": "game-artist", "label": "v8-vignette-overlay", "file": "new _gen_vignette.py + new overlay builder (NOT Entities.cs)"}
+  ],
+  "non_overlapping": true,
+  "op_gated_excluded": ["work-priority", "mood/mental-break rewrite"],
+  "notes": "After W-M1-03 lands + QA verifies W-M1-02 backlog, M1 'living colony' v3 polish is effectively complete (V8 optional). Next PM action: gate QA on the accumulated walk-bob/flicker/inspector/crop/vignette set; if GREEN, M1 closes and chain can end."
+}

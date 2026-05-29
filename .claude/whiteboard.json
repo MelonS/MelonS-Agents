@@ -1,7 +1,7 @@
 {
   "system": "GameDev Multi-Agent Orchestration",
   "project": "PawnSim",
-  "updated": "2026-05-30",
+  "updated": "2026-05-30T2",
   "protocol": {
     "whiteboard_rule": "모든 서브에이전트는 작업 시작 전 .claude/whiteboard.json 을 읽고, 종료 전 반드시 .claude/wb/<ROLE>.json 에 자신의 상태(Status: Waiting|In Progress|Done)와 산출물 경로를 기록한다. 규칙을 어기고 종료 금지.",
     "parallel_write_note": "JSON 손상 방지: 병렬 에이전트는 공유 whiteboard.json 을 직접 쓰지 않고 각자 .claude/wb/<ROLE>.json 에 기록. PM 이 단일 writer 로 병합해 whiteboard.json 갱신.",
@@ -19,18 +19,18 @@
     "AIDesigner": "FSM/BT 등 AI 로직 설계 + 경로탐색 안전 제약"
   },
   "current_cycle": {
-    "id": "C-003",
+    "id": "C-004",
     "task_ref": ".claude/task.json",
-    "phase": "Programmer+Art-Implement (parallel)",
-    "title": "M1 wave W-M1-02 — FIX walk-bob root-wire RED bug + V6 crop-stage art + V7 inspector empty-state",
+    "phase": "Build+Art-Implement (parallel)",
+    "title": "M1 wave W-M1-03 — V6 crop-stage WIRING (last unwired v3 feature) + V8 optional vignette overlay",
     "wave": {
-      "id": "W-M1-02",
+      "id": "W-M1-03",
       "lanes_non_overlapping": true,
       "op_gated_excluded": ["work-priority", "mood/mental-break rewrite"],
+      "audit_note": "W-M1-02 (walk-bob RED fix / V6 crop art / V7 inspector) all written; pending QA only. No qa.json RED report on disk. V1/V3/V4/V5/V7 code DONE; V2 scatter fully wired (SpawnScatterDecor in SceneSetup.Game.Scatter.cs). Remaining genuinely-unstarted v3 work = V6 crop-stage WIRING (PNGs+CropEntity logic exist, SceneSetup never assigns the 3 stage refs -> falls back to legacy color-tint) + V8 optional vignette (never started). Both non-gated, non-overlapping files.",
       "subtasks": [
-        "FIX(RED) walk-bob: PawnSpriteBob attached to CHILD bobGo, but Awake GetComponent<PawnMovement>() finds nothing (PawnMovement is on ROOT) -> IsMoving always false -> walk-bob never fires (idle-only), and MirrorRootTint GetComponent<SpriteRenderer>() reads the child's own renderer not the root tint-anchor -> variant/selection/drafted tint never shows. Lane A: PawnSpriteBob.cs + SceneSetup.Pawn.cs",
-        "V6 crop growth-stage markers: _gen_fix_audit.py gen_crop_rice seedling/growing/ripe variants (art, wiring flagged for QA)",
-        "V7 inspector empty-state styling: PawnInfoPanel.cs empty-state branch (programmer)"
+        "Lane A (build): V6 crop-stage WIRING. crop_rice_seedling/growing/ripe PNGs + CropEntity.spriteSeedling/Growing/Ripe SerializeField switch logic both EXIST, but SetupStarterSettlement (SceneSetup.Game.Entities.cs, crop block ~L253-274) only assigns crop_rice.png and never wires the 3 stage refs -> RefreshVisual stays on the legacy color-tint fallback. Wire all 3 stage sprites onto each CropEntity via SerializedObject. Single file: SceneSetup.Game.Entities.cs",
+        "Lane B (art): V8 optional subtle vignette overlay. NEW gen (_gen_vignette.py producing a low-alpha radial OUTLINE_OBJ-tone full-screen PNG) + a NEW self-contained overlay builder file (do NOT touch SceneSetup.Game.Entities.cs / SceneSetup.cs core). Barely perceptible; reject-if-muddies. Separate files from Lane A."
       ]
     },
     "in_flight_uncommitted": [
@@ -41,24 +41,27 @@
     "already_done_this_session": [
       "V4 tree 3-cluster canopy (_gen_sprites.py gen_tree) — DONE",
       "V3 contact shadows pawn/tree (SceneSetup.Pawn.cs PawnShadow child) — DONE",
-      "V5 fire flicker (FlickerLight.cs self-attaching) — written, sound vs StoveEntity API, QA-verify pending",
-      "V2 scatter generator + PNGs (_gen_scatter.py, decor_rock/grass_tuft/wildflower1-2) — generated, wiring still flagged for QA",
-      "V1 walk-bob (PawnSpriteBob.cs + SceneSetup.Pawn.cs) — written but RED: child-attach breaks IsMoving + tint mirror; FIX is W-M1-02 lane A"
+      "V2 scatter — DONE: gen + 4 PNGs + SpawnScatterDecor wired (SceneSetup.Game.Scatter.cs, called from GenerateGame L159). Re-audited: NOT just generated, fully placed.",
+      "V5 fire flicker (FlickerLight.cs self-attaching) — code DONE, QA-verify pending",
+      "V7 inspector empty-state (PawnInfoPanel.cs EnsureEmptyState branch) — code DONE, QA-verify pending",
+      "V1 walk-bob RED fix (W-M1-02 lane A) — code DONE: PawnSpriteBob has explicit movementSource+rootTintRenderer refs; SceneSetup.Pawn.cs wires them via SerializedObject. QA-verify pending.",
+      "V6 crop art (crop_rice_seedling/growing/ripe PNGs + CropEntity stage-switch logic) — DONE in code, but SceneSetup never wires the 3 stage refs -> W-M1-03 lane A finishes it."
     ]
   },
   "agents": {
-    "PM":        {"status": "Done", "outputs": [".claude/whiteboard.json"], "notes": "C-003 wave W-M1-02 발행: walk-bob RED fix + V6 crop art + V7 inspector, 3 병렬 non-overlap 레인"},
+    "PM":        {"status": "Done", "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"], "notes": "C-004 wave W-M1-03 발행: V6 crop-stage 와이어링(마지막 미배선 v3) + V8 옵션 비네트, 2 병렬 non-overlap 레인. W-M1-02 코드 전부 작성됨(QA 대기), V2 scatter 재감사 결과 완전 배선됨으로 스킵."},
     "Director":  {"status": "Waiting", "outputs": [], "notes": ""},
     "Designer":  {"status": "Waiting", "outputs": [], "notes": ""},
     "AIDesigner":{"status": "Waiting", "outputs": [], "notes": ""},
-    "Programmer":{"status": "Assigned", "outputs": [], "notes": "lane A(FIX): PawnSpriteBob.cs+SceneSetup.Pawn.cs (child->root movement/tint wire) / lane C: PawnInfoPanel.cs empty-state"},
-    "Art":       {"status": "Assigned", "outputs": [], "notes": "lane B: _gen_fix_audit.py gen_crop_rice growth stages"},
-    "QA":        {"status": "Waiting", "outputs": [], "notes": "wave 후 Unity 검증: walk-bob 2-frame body moves + nameplate/bars/shadow do NOT bob + V77 root-undrift, crop 3-stage PNG, inspector empty-state border+hint"},
+    "BuildEngineer":{"status": "Assigned", "outputs": [], "notes": "lane A: V6 crop-stage SerializedObject wiring in SceneSetup.Game.Entities.cs (3 stage refs per CropEntity)"},
+    "Art":       {"status": "Assigned", "outputs": [], "notes": "lane B: V8 optional vignette — new _gen_vignette.py + new overlay builder file (must NOT touch Entities.cs/SceneSetup.cs core)"},
+    "QA":        {"status": "Waiting", "outputs": [], "notes": "W-M1-02 + W-M1-03 합산 Unity 검증: walk-bob 2-frame body moves + nameplate/bars/shadow do NOT bob + root-undrift 10s, V5 flame 2-frame flicker, V7 inspector border+hint, V6 3-stage crop sprites (seedling/growing/ripe distinct, not color-tint), V8 vignette barely-perceptible-or-reject"},
     "Sound":     {"status": "Waiting", "outputs": [], "notes": ""}
   },
   "log": [
     {"ts": "2026-05-30", "by": "main", "msg": "오케스트레이션 시스템 부트스트랩, C-001 시작"},
     {"ts": "2026-05-30", "by": "PM", "msg": "C-002 wave W-M1-01 발행. M1 living-colony 폴리시 3 레인(walk-bob/flicker/scatter), 파일 레인 비충돌, OP-gated(work-priority/mood) 제외. V3 shadow + V4 tree 는 done 으로 확인, 스킵."},
-    {"ts": "2026-05-30", "by": "PM", "msg": "W-M1-01 감사: PawnSpriteBob.cs/FlickerLight.cs/_gen_scatter.py 3종 모두 작성 확인. RED 발견 — PawnSpriteBob 이 child bobGo 에 부착됐는데 Awake 의 GetComponent<PawnMovement>() 가 root(PawnMovement 위치)를 못 찾아 IsMoving 항상 false (walk-bob 미작동, idle-only), MirrorRootTint 도 child 자기 renderer 를 읽어 root tint-anchor 미러 깨짐. C-003 wave W-M1-02 발행: lane A=RED fix, lane B=V6 crop-stage art, lane C=V7 inspector empty-state. 비충돌 파일 레인. V5 flicker/V2 scatter 는 written→QA-verify 대기로 스킵."}
+    {"ts": "2026-05-30", "by": "PM", "msg": "W-M1-01 감사: PawnSpriteBob.cs/FlickerLight.cs/_gen_scatter.py 3종 모두 작성 확인. RED 발견 — PawnSpriteBob 이 child bobGo 에 부착됐는데 Awake 의 GetComponent<PawnMovement>() 가 root(PawnMovement 위치)를 못 찾아 IsMoving 항상 false (walk-bob 미작동, idle-only), MirrorRootTint 도 child 자기 renderer 를 읽어 root tint-anchor 미러 깨짐. C-003 wave W-M1-02 발행: lane A=RED fix, lane B=V6 crop-stage art, lane C=V7 inspector empty-state. 비충돌 파일 레인. V5 flicker/V2 scatter 는 written→QA-verify 대기로 스킵."},
+    {"ts": "2026-05-30", "by": "PM", "msg": "C-004 감사: W-M1-02 3 레인 코드 전부 작성 확인 (PawnSpriteBob movementSource+rootTintRenderer 명시 ref + SceneSetup.Pawn.cs SerializedObject 배선 완료 -> RED 해소; PawnInfoPanel EnsureEmptyState/EnsureBorder 완료; _gen_fix_audit.py crop seedling/growing PNG 3종). disk 에 qa.json RED 리포트 없음 -> FIX 서브태스크 불필요, QA 검증 대기. V2 scatter 재감사: SpawnScatterDecor(SceneSetup.Game.Scatter.cs)가 GenerateGame L159 에서 호출됨 -> 완전 배선 확인, DONE 처리. 남은 진짜 미시작 v3 작업 2건: (1) V6 crop-stage 와이어링 — PNG+CropEntity 로직 존재하나 SetupStarterSettlement 가 3 stage ref 미배선 -> color-tint fallback 잔존. (2) V8 옵션 비네트 미시작. W-M1-03 발행: lane A=crop 와이어링(SceneSetup.Game.Entities.cs 단일), lane B=V8 비네트(신규 gen+신규 빌더, Entities.cs 무접촉). 비충돌, 비게이트. work-priority/mood 게이트 제외 유지."}
   ]
 }

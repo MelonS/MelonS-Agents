@@ -1,0 +1,13 @@
+{
+  "role": "BuildEngineer",
+  "cycle": "C-004",
+  "wave": "W-M1-03",
+  "lane": "A",
+  "status": "Done",
+  "file_changed": "skills/game-prototype/unity-project/Assets/Editor/SceneSetup.Game.Entities.cs",
+  "properties_wired": ["spriteSeedling", "spriteGrowing", "spriteRipe"],
+  "note": "SetupStarterSettlement now loads all 3 stage sprites before the crop loop and wires them onto each CropEntity via SerializedObject+ApplyModifiedPropertiesWithoutUndo so RefreshVisual takes the sprite-swap path instead of the legacy color-tint fallback.",
+  "qa_flags": [
+    "V6: 3 stage sprites SerializedObject-wired onto each CropEntity in SetupStarterSettlement — QA verify seedling/growing/ripe render distinctly, not color-tint"
+  ]
+}
