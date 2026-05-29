@@ -1,0 +1,58 @@
+{
+  "role": "game-programmer",
+  "lane": "B14",
+  "wave": "W-M6-02",
+  "milestone": "M6-ui",
+  "task": "in-game hotkey cheat-sheet overlay (H key) — consolidates scattered hotkeys into one bordered UITheme panel",
+  "status": "Done",
+  "artifacts": [
+    "skills/game-prototype/unity-project/Assets/Scripts/HotkeyCheatSheet.cs"
+  ],
+  "new_file_only": true,
+  "files_edited": [],
+  "files_read_only": [
+    "skills/game-prototype/unity-project/Assets/Scripts/AlertStackUI.cs (self-bootstrap pattern reference)",
+    "skills/game-prototype/unity-project/Assets/Scripts/Core/UITheme.cs (PanelBg/HeaderBg/Divider/AccentGold/AccentOrange/AccentTan/PanelBgLight/TextPrimary/PadOuter/RowGap/BorderPx/MakeBorderedPanel/LoadKoreanFont)",
+    "BuildManager.cs / ClickSelector.cs / DeconstructDesignation.cs / MineDesignation.cs / GrowZoneDesignation.cs / TimeController.cs / GameSaveButtons.cs / ArchitectMenu.cs / WorkTabUI.cs / ScheduleUI.cs / ResearchUI.cs / BlueprintDragDesignation.cs (key bindings discovered READ-ONLY)"
+  ],
+  "toggle_key": "H",
+  "key_collision": false,
+  "key_collision_note": "H confirmed FREE — not in taken set (B/F/G/T/Y/L/K/J build, R draft, X deconstruct, M mine, P grow, N research, Alpha1-3 speed, Space pause, F1/F4/F5/F8/F9 panels/save, Esc close). No re-pick, no flag needed.",
+  "hotkeys_listed": {
+    "build": {"B": "Wall", "F": "Floor", "G": "Door", "T": "Stove", "Y": "Bed", "L": "Lamp", "K": "StoneFloor", "J": "Table+Chair"},
+    "designation": {"X": "Deconstruct", "M": "Mine", "P": "GrowZone"},
+    "selection": {"R": "Draft toggle", "LMB-Drag": "Marquee", "RMB": "Move order"},
+    "speed": {"1": "1x", "2": "2x", "3": "4x", "Space": "Pause"},
+    "panels": {"N": "Research", "F1": "Work", "F4": "Schedule", "F8": "Architect"},
+    "save": {"F5": "Save", "F9": "Load"},
+    "help": {"H": "Toggle this panel", "Esc": "Close"}
+  },
+  "design_spec_compliance": {
+    "panel_bg": "UITheme.PanelBg",
+    "border": "UITheme.Divider on all 4 edges via UITheme.MakeBorderedPanel(border=BorderPx)",
+    "header_strip": "UITheme.HeaderBg with UITheme.AccentGold title text",
+    "section_headers": "UITheme.AccentOrange",
+    "key_chips": "UITheme.PanelBgLight bg + UITheme.AccentTan text",
+    "body_text": "UITheme.TextPrimary",
+    "padding_rhythm": "UITheme.PadOuter / RowGap / BorderPx",
+    "font": "UITheme.LoadKoreanFont() for ALL text (title + sections + rows)"
+  },
+  "bug_firewall_compliance": {
+    "lesson_4_audio_buzz": "n/a (no audio)",
+    "lesson_5_instanceid": "n/a (no collision)",
+    "lesson_6_collision_enter_only": "n/a",
+    "lesson_7_singleton_subscription": "n/a (no event subscription; no singleton OnEnable subscribe)",
+    "lesson_8_justspawned_default_true": "n/a",
+    "lesson_9_runinbackground": "COMPLIANT — no coroutine / no WaitForSeconds / no always-on background timer. Toggle is instant SetActive on a GetKeyDown in Update. No background heartbeat added; AutoScreenshotter still owns runInBackground for CLI QA."
+  },
+  "text_input_firewall": "IsTypingInTextField() guards H — swallows toggle while a uGUI InputField or any *InputField (TMP, by component-name reflection, no hard TMP dependency) holds EventSystem focus. Esc only CLOSES when visible (never opens), so it does not fight designation/menu Esc-cancel handlers.",
+  "self_bootstrap": "[RuntimeInitializeOnLoadMethod(AfterSceneLoad)] spawns hidden DontDestroyOnLoad '~HotkeyCheatSheet' GO with FindFirstObjectByType idempotency guard; builds its OWN ScreenSpaceOverlay Canvas (sortingOrder 250) + CanvasScaler + GraphicRaycaster — exactly like AlertStackUI. Zero edits to GuiControlBar/SceneSetup/any existing UI builder.",
+  "alloc_note": "Section/Row are immutable readonly structs in a static table built once; UI built once in Awake; Update does only GetKeyDown checks — no per-frame allocation.",
+  "qa_flags": [
+    "SCENE-WIRING (Canvas bootstrap): like AlertStackUI, this self-creates its own Canvas via RuntimeInitializeOnLoadMethod. QA should confirm the '~HotkeyCheatSheet' GO + its Canvas appear at runtime and that H toggles the bordered panel visible/hidden (panel starts hidden).",
+    "ACCEPTANCE (B14 binary): pressing H toggles a bordered panel listing all build/speed/draft/designation/panel/save hotkeys; pressing H again OR Esc hides it. Verify panel fits content (height auto-measured from section table)."
+  ],
+  "acceptance": "B14 (binary) — pressing H toggles a bordered panel listing all build/speed/draft hotkeys; pressing H/ESC again hides it.",
+  "unity_run": false,
+  "notes": "NEW file only. No forbidden file touched (UITheme.cs read-only; GuiControlBar/ArchitectMenu/BuildManager/SaveLoadManager/SceneSetup/W-M6-01 in-flight files untouched). No .meta written — Unity will generate it on import (QA/Build Engineer step)."
+}

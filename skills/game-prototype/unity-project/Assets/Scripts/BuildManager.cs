@@ -12,6 +12,7 @@ namespace MelonS.GameProto
     ///   T: 화덕 (목재 10, Day 25 cooking station)
     ///   L: 램프 (목재 4, W-M4-04 #19 standing-lamp / torch — night light pool)
     ///   K: 석재 바닥 (석재 1, W-M4-05 #21 stone/paved floor — higher move bonus than wood)
+    ///   E: 울타리 (목재 1, W-M6-02 B3 fence; LOW + PASSABLE, gate via Architect)
     ///   J: 탁자+의자 (목재 6, W-M4-06 #20 table+chair — eat/rec spot)
     /// </summary>
     public class BuildManager : MonoBehaviour
@@ -35,7 +36,14 @@ namespace MelonS.GameProto
         //   only the cost, sprite, and placed entity (TableEntity + ChairEntity
         //   markers, so the existing eat/rest mood path can detect an eat spot
         //   under the pawn read-only) differ.
-        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair }
+        // W-M6-02 (B3) - Fence + FenceGate: the cheapest Structure-tab staple.
+        //   1 wood, LOW, PASSABLE — placed FenceEntity carries NO collider so a
+        //   pawn paths straight through (mirrors the wood Floor's "no collider,
+        //   walk over" model).  Both use the same lazy procedural prefab/sprite
+        //   path as Lamp/FloorStone/TableChair so the build never produces a
+        //   null/magenta entity even without an asset import + ZERO SceneSetup
+        //   edit.  FenceGate is the same entity (IsGate=true) with a gate sprite.
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair, Fence, FenceGate }
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
         // #182 - placement cooldown: SetMode 후 0.15s 동안 TryPlace skip.
@@ -88,6 +96,24 @@ namespace MelonS.GameProto
         [SerializeField] private Sprite tableChairSprite;
         private GameObject _tableChairPrefabRuntime;  // cached lazily-built template
         private Sprite     _tableChairSpriteRuntime;  // cached lazily-built sprite
+        // W-M6-02 (B3) - Fence cost.  RimWorld fence ~= 1 wood/segment; this
+        //   prototype keeps the cheapest Structure-tab staple at 목재 1.  The
+        //   gate variant uses the same cost (a fence opening, not a costlier door).
+        [SerializeField] private int fenceCost = 1;
+        // W-M6-02 (B3) - Fence + FenceGate prefab + sprite, built LAZILY +
+        //   PROCEDURALLY exactly like the Lamp / StoneFloor / TableChair entries
+        //   (the Lane contract forbids a SceneSetup edit, so these stay null and
+        //   BuildManager self-builds them on first use; a later wave can wire real
+        //   refs via SetRefs with zero code change).  Fence and gate are separate
+        //   sprites/templates but share the cost + place path.
+        [SerializeField] private GameObject fencePrefab;
+        [SerializeField] private Sprite fenceSprite;
+        [SerializeField] private GameObject fenceGatePrefab;
+        [SerializeField] private Sprite fenceGateSprite;
+        private GameObject _fencePrefabRuntime;       // cached lazily-built fence template
+        private Sprite     _fenceSpriteRuntime;       // cached lazily-built fence sprite
+        private GameObject _fenceGatePrefabRuntime;   // cached lazily-built gate template
+        private Sprite     _fenceGateSpriteRuntime;   // cached lazily-built gate sprite
         // #154 - bed quality 별 cost (wiki: sleeping spot 0 / wood bed 8 / fine 30).
         //  Fine 은 wiki 가 비싸지만 (60+) 프로토타입에선 30 으로 낮춰 reachable.
         [SerializeField] private int bedSleepingSpotCost = 0;
@@ -130,6 +156,11 @@ namespace MelonS.GameProto
             if (Input.GetKeyDown(KeyCode.K)) SetMode(CurrentMode == Mode.FloorStone ? Mode.Off : Mode.FloorStone);
             // W-M4-06 (#20) - J = 탁자+의자 (free hotkey; B/F/G/T/Y/N/R/X/M/P/L/K taken).
             if (Input.GetKeyDown(KeyCode.J)) SetMode(CurrentMode == Mode.TableChair ? Mode.Off : Mode.TableChair);
+            // W-M6-02 (B3) - E = 울타리 (free hotkey; avoids B/F/G/T/Y/N/R/X/M/P/K/J/H/L
+            //   and WASD camera A/D/S/W).  The fence-GATE variant is surfaced via the
+            //   Architect menu ONLY (no hotkey) to keep the gate off the contended
+            //   key space while still being one-click buildable.
+            if (Input.GetKeyDown(KeyCode.E)) SetMode(CurrentMode == Mode.Fence ? Mode.Off : Mode.Fence);
             if (BuildModeActive && Input.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }
             UpdateGhost();
             // #179/#182 - click 처리.  cooldown 으로 SetMode 직후 race 방지.
@@ -198,6 +229,8 @@ namespace MelonS.GameProto
                 Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
                 Mode.FloorStone => EnsureFloorStoneSprite(),  // W-M4-05 #21
                 Mode.TableChair => EnsureTableChairSprite(),  // W-M4-06 #20
+                Mode.Fence => EnsureFenceSprite(),            // W-M6-02 B3
+                Mode.FenceGate => EnsureFenceGateSprite(),    // W-M6-02 B3
                 _ => wallSprite,
             };
             // 바닥류(목재/석재)는 ghost sortingOrder 1 (지면 위), 나머지 구조물은 20.
@@ -217,6 +250,8 @@ namespace MelonS.GameProto
             Mode.Lamp            => lampCost,             // W-M4-04 #19 - 목재 4
             Mode.FloorStone      => floorStoneCost,       // W-M4-05 #21 - 석재 1
             Mode.TableChair      => tableChairCost,       // W-M4-06 #20 - 목재 6
+            Mode.Fence           => fenceCost,            // W-M6-02 B3 - 목재 1
+            Mode.FenceGate       => fenceCost,            // W-M6-02 B3 - 목재 1 (same as fence)
             _ => 0,
         };
 
@@ -233,6 +268,8 @@ namespace MelonS.GameProto
             Mode.Lamp            => EnsureLampPrefab(),  // W-M4-04 #19
             Mode.FloorStone      => EnsureFloorStonePrefab(),  // W-M4-05 #21
             Mode.TableChair      => EnsureTableChairPrefab(),  // W-M4-06 #20
+            Mode.Fence           => EnsureFencePrefab(),       // W-M6-02 B3
+            Mode.FenceGate       => EnsureFenceGatePrefab(),   // W-M6-02 B3
             _ => null,
         };
 
@@ -442,6 +479,8 @@ namespace MelonS.GameProto
             Mode.Lamp            => "램프",   // W-M4-04 #19
             Mode.FloorStone      => "석재 바닥",  // W-M4-05 #21
             Mode.TableChair      => "탁자+의자",  // W-M4-06 #20
+            Mode.Fence           => "울타리",     // W-M6-02 B3
+            Mode.FenceGate       => "울타리 문",  // W-M6-02 B3
             _ => m.ToString(),
         };
 
@@ -460,6 +499,8 @@ namespace MelonS.GameProto
             Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
             Mode.FloorStone => EnsureFloorStoneSprite(),  // W-M4-05 #21
             Mode.TableChair => EnsureTableChairSprite(),  // W-M4-06 #20
+            Mode.Fence => EnsureFenceSprite(),            // W-M6-02 B3
+            Mode.FenceGate => EnsureFenceGateSprite(),    // W-M6-02 B3
             _ => wallSprite,
         };
 
@@ -908,6 +949,192 @@ namespace MelonS.GameProto
             for (int x = 1; x <= 3; x++) { Set(x, 8, WOOD_LT); Set(x, 9, WOOD_MD); }
             for (int y = 10; y <= 13; y++) Set(2, y, WOOD_DK);
             Set(2, 10, WOOD_MD);
+
+            // 1px OUTLINE_OBJ on transparent pixels 4-adjacent to wood.  Collect
+            //  first, then write (no self-feed).
+            var outlinePts = new System.Collections.Generic.List<(int, int)>();
+            for (int y = 0; y < SIZE; y++)
+                for (int x = 0; x < SIZE; x++)
+                {
+                    if (!IsEmpty(x, y)) continue;
+                    if (IsWood(x + 1, y) || IsWood(x - 1, y) || IsWood(x, y + 1) || IsWood(x, y - 1))
+                        outlinePts.Add((x, y));
+                }
+            foreach (var (x, y) in outlinePts) Set(x, y, OUTLINE);
+
+            tex.SetPixels32(px);
+            tex.Apply(updateMipmaps: false);
+
+            return Sprite.Create(
+                tex,
+                new Rect(0, 0, SIZE, SIZE),
+                new Vector2(0.5f, 0.5f),
+                pixelsPerUnit: 16f);
+        }
+
+        // ---------------------------------------------------------------- //
+        //  W-M6-02 (B3) - Fence + FenceGate prefab + sprite, LAZILY in code. //
+        //                                                                    //
+        //  Mirrors the Lamp / StoneFloor / TableChair lazy-build path EXACTLY //
+        //  (the Lane contract forbids a SceneSetup edit, so the finished      //
+        //  fence/gate prefab + sprite are self-built once on first use):      //
+        //    - the sprite loads from Assets/Sprites/fence.png /               //
+        //      fence_gate.png in the Editor/batchmode via AssetDatabase, and  //
+        //      ALWAYS falls back to a procedural texture so a PLAYER BUILD     //
+        //      (AssetDatabase absent, PNG outside Resources/) still shows a    //
+        //      real fence/gate instead of a null/magenta sprite.              //
+        //    - the prefab is an in-memory template carrying a SpriteRenderer   //
+        //      at sortingOrder 2 (LOW barrier — above floors @1, below         //
+        //      furniture/walls @5+) and a FenceEntity marker, and CRUCIALLY    //
+        //      NO collider — exactly like the wood FloorEntity — so the fence  //
+        //      is PASSABLE (a pawn paths straight through; this is the B3      //
+        //      acceptance: "blocks nothing").                                  //
+        //                                                                    //
+        //  >>> QA FLAG: fence + fence-gate use BuildManager's lazy procedural  //
+        //      prefab/sprite path — NO SceneSetup prefab wiring was added.     //
+        //      If a future wave prefers a real prefab asset, wire fencePrefab/ //
+        //      fenceSprite (+ gate) via SetRefs and these lazy builders        //
+        //      become no-ops.                                                  //
+        // ---------------------------------------------------------------- //
+
+        private Sprite EnsureFenceSprite()
+        {
+            if (fenceSprite != null) return fenceSprite;          // wired via SetRefs (future)
+            if (_fenceSpriteRuntime != null) return _fenceSpriteRuntime;
+            _fenceSpriteRuntime = LoadOrBuildFenceSprite("Assets/Sprites/fence.png", isGate: false);
+            return _fenceSpriteRuntime;
+        }
+
+        private Sprite EnsureFenceGateSprite()
+        {
+            if (fenceGateSprite != null) return fenceGateSprite;  // wired via SetRefs (future)
+            if (_fenceGateSpriteRuntime != null) return _fenceGateSpriteRuntime;
+            _fenceGateSpriteRuntime = LoadOrBuildFenceSprite("Assets/Sprites/fence_gate.png", isGate: true);
+            return _fenceGateSpriteRuntime;
+        }
+
+        private GameObject EnsureFencePrefab()
+        {
+            if (fencePrefab != null) return fencePrefab;          // wired via SetRefs (future)
+            if (_fencePrefabRuntime != null) return _fencePrefabRuntime;
+            _fencePrefabRuntime = BuildFenceTemplate("FenceTemplate", EnsureFenceSprite(), isGate: false);
+            return _fencePrefabRuntime;
+        }
+
+        private GameObject EnsureFenceGatePrefab()
+        {
+            if (fenceGatePrefab != null) return fenceGatePrefab;  // wired via SetRefs (future)
+            if (_fenceGatePrefabRuntime != null) return _fenceGatePrefabRuntime;
+            _fenceGatePrefabRuntime = BuildFenceTemplate("FenceGateTemplate", EnsureFenceGateSprite(), isGate: true);
+            return _fenceGatePrefabRuntime;
+        }
+
+        /// <summary>
+        /// In-memory fence/gate template (NOT a saved .prefab — runtime only).
+        /// SR sortingOrder 2 (LOW barrier — above floors, below furniture) and
+        /// NO collider (like the wood Floor) so the fence is PASSABLE: a pawn
+        /// walks straight through the cell.  Carries a FenceEntity marker with
+        /// IsGate set.  Hidden + inactive so it's never seen; Instantiate copies it.
+        /// </summary>
+        private static GameObject BuildFenceTemplate(string name, Sprite spr, bool isGate)
+        {
+            var go = new GameObject(name);
+            go.hideFlags = HideFlags.HideAndDontSave;
+            go.SetActive(false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite       = spr;
+            sr.sortingOrder = 2;                               // LOW barrier read
+            var fence = go.AddComponent<FenceEntity>();
+            fence.IsGate = isGate;
+            // Deliberately NO collider — fence blocks nothing (B3 acceptance).
+            return go;
+        }
+
+        /// <summary>
+        /// Load fence.png / fence_gate.png via AssetDatabase (Editor/batchmode)
+        /// so this runtime script needs no UnityEditor reference; ALWAYS falls
+        /// back to a procedural texture so a player build is never null (same
+        /// guard as the lamp / stone-floor / table sprites).
+        /// </summary>
+        private static Sprite LoadOrBuildFenceSprite(string assetPath, bool isGate)
+        {
+#if UNITY_EDITOR
+            var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+            if (sp != null) return sp;
+#endif
+            return BuildProceduralFenceSprite(isGate);
+        }
+
+        /// <summary>
+        /// Build a 16x16 fence (or fence-gate) sprite in code, matching
+        /// _gen_fence.py's authored content (a LOW horizontal wood rail on short
+        /// posts, drawn in the lower half of the tile so it reads as a low
+        /// barrier; the gate variant has a centre opening with two jamb posts).
+        /// 1px OBJ outline.  Guarantees a real fence/gate in a player build with
+        /// zero asset-load dependency.
+        /// </summary>
+        private static Sprite BuildProceduralFenceSprite(bool isGate)
+        {
+            const int SIZE = 16;
+            var tex = new Texture2D(SIZE, SIZE, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode   = TextureWrapMode.Clamp;
+            tex.name       = isGate ? "FenceGate_Proc" : "Fence_Proc";
+
+            var px = new Color32[SIZE * SIZE];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color32(0, 0, 0, 0);
+
+            var WOOD_DK = new Color32(92, 60, 36, 255);
+            var WOOD_MD = new Color32(140, 92, 54, 255);
+            var WOOD_LT = new Color32(188, 138, 88, 255);
+            var OUTLINE = new Color32(40, 30, 22, 255);   // OUTLINE_OBJ
+
+            // Texture y is bottom-up; _gen_fence.py uses top-down PIL y.
+            //  Convert each authored (gx, gyTop) to texture row: ty = SIZE-1-gyTop.
+            void Set(int gx, int gyTop, Color32 c)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return;
+                px[ty * SIZE + gx] = c;
+            }
+            bool IsEmpty(int gx, int gyTop)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return false;
+                return px[ty * SIZE + gx].a == 0;
+            }
+            bool IsWood(int gx, int gyTop)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return false;
+                var c = px[ty * SIZE + gx];
+                return (c.r == WOOD_DK.r && c.g == WOOD_DK.g && c.b == WOOD_DK.b)
+                    || (c.r == WOOD_MD.r && c.g == WOOD_MD.g && c.b == WOOD_MD.b)
+                    || (c.r == WOOD_LT.r && c.g == WOOD_LT.g && c.b == WOOD_LT.b);
+            }
+
+            // LOW barrier: everything in the lower half of the tile (y >= 7) so
+            //  the rail reads as waist-height, leaving the top half open.
+            //  Posts at x=2,8,13 (gate: jamb posts at x=2,13, centre open).
+            int[] posts = isGate ? new[] { 2, 13 } : new[] { 2, 8, 13 };
+            foreach (int px0 in posts)
+            {
+                // short vertical post, rows 7..13, light-left / shadow-right.
+                for (int y = 7; y <= 13; y++)
+                {
+                    Set(px0,     y, (y % 2 == 0) ? WOOD_MD : WOOD_DK);
+                    Set(px0 + 1, y, (y % 2 == 0) ? WOOD_DK : WOOD_MD);
+                }
+            }
+            // Two horizontal rails (top rail row 8, mid rail row 11) spanning the
+            //  width.  For the gate, the rails STOP at the centre opening
+            //  (x 6..9 left clear) so it reads as a gate gap.
+            for (int x = 2; x <= 14; x++)
+            {
+                if (isGate && x >= 6 && x <= 9) continue;   // gate opening
+                Set(x, 8,  (x % 2 == 0) ? WOOD_LT : WOOD_MD);   // top rail (highlight)
+                Set(x, 11, (x % 2 == 0) ? WOOD_MD : WOOD_DK);   // mid rail (shadow)
+            }
 
             // 1px OUTLINE_OBJ on transparent pixels 4-adjacent to wood.  Collect
             //  first, then write (no self-feed).

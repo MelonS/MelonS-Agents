@@ -54,6 +54,15 @@ namespace MelonS.GameProto
                 (BuildManager.Mode.Wall,      "벽 (목재 5)",   5),
                 (BuildManager.Mode.WallStone, "벽 (석재 5)",   5),  // #127
                 (BuildManager.Mode.Door,      "문 (목재 3)",   3),
+                // W-M6-02 (B3) — fence + fence-gate, the cheapest Structure-tab
+                //   staple (목재 1, LOW, PASSABLE).  Fence also has hotkey E;
+                //   the gate is surfaced HERE ONLY (no hotkey).  The existing
+                //   buildable onClick wiring in RefreshContent routes every
+                //   (mode,label,cost) tuple through BuildManager.Instance.SetMode,
+                //   so clicking 울타리 / 울타리 문 enters Mode.Fence / Mode.FenceGate
+                //   with ZERO click-plumbing change.  Both pay 목재 1 (fenceCost).
+                (BuildManager.Mode.Fence,     "울타리 (목재 1)",     1),
+                (BuildManager.Mode.FenceGate, "울타리 문 (목재 1)",  1),
             },
             // W-M4-06 (#21 / W-M4-05 QA flag) — surface the stone/paved floor in the
             //   Architect catalogue.  The stone floor (BuildManager.Mode.FloorStone,

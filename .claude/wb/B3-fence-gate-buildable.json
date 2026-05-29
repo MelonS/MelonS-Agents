@@ -1,0 +1,45 @@
+{
+  "role": "game-programmer",
+  "lane": "B3",
+  "wave": "W-M6-02",
+  "milestone": "M4-building",
+  "task": "Fence + fence-gate buildable (1 wood, passable, low) — vanilla Structure-tab staple",
+  "status": "Done",
+  "wiki_acceptance": "B3 (binary) — a fence is buildable from Architect, renders a LOW barrier, and BLOCKS NOTHING (a pawn paths straight through where a fence stands; gate variant likewise passable). SATISFIED.",
+  "files_owned_and_changed": [
+    "skills/game-prototype/unity-project/Assets/Scripts/BuildManager.cs (EDIT — the single build-catalogue lane this wave)",
+    "skills/game-prototype/unity-project/Assets/Scripts/FenceEntity.cs (NEW)",
+    "skills/game-prototype/unity-project/Assets/Scripts/ArchitectMenu.cs (EDIT — catalogue surfacing into 'Structure (구조)')",
+    "skills/game-prototype/unity-project/Assets/Sprites/_gen_fence.py (NEW)",
+    "skills/game-prototype/unity-project/Assets/Sprites/fence.png (NEW, 16x16)",
+    "skills/game-prototype/unity-project/Assets/Sprites/fence_gate.png (NEW, 16x16)",
+    "skills/game-prototype/unity-project/Assets/Sprites/_preview_fence.png (NEW, 8x QA preview)",
+    "skills/game-prototype/unity-project/Assets/Sprites/_preview_fence_gate.png (NEW, 8x QA preview)"
+  ],
+  "implementation": {
+    "enum": "Added BuildManager.Mode.Fence + Mode.FenceGate (one entity, gate via IsGate flag).",
+    "cost": "fenceCost = 1 (목재/wood); FenceGate uses the same cost (a fence opening, not a costlier door).",
+    "lazy_path": "Mirrors the Lamp/FloorStone/TableChair lazy-procedural prefab+sprite path EXACTLY: EnsureFenceSprite/EnsureFenceGateSprite -> LoadOrBuildFenceSprite (AssetDatabase #if UNITY_EDITOR, else procedural) -> BuildProceduralFenceSprite mirrors _gen_fence.py pixel-for-pixel. EnsureFencePrefab/EnsureFenceGatePrefab -> BuildFenceTemplate (in-memory HideAndDontSave template). Never null/magenta even with no asset import.",
+    "passable": "FenceEntity carries NO collider (like FloorEntity). PawnMovement.IsBlockedAt reads ONLY terrain tilemap (Water/Rock) so a built fence is invisible to terrain blocking; with no collider it is invisible to physics/wall occupancy too. CellOccupied does NOT list FenceEntity -> a fence neither blocks other placements nor is blocked. Net: pawn walks straight through.",
+    "low_barrier": "Prefab SpriteRenderer sortingOrder = 2 (above floors @1, below furniture/walls @5+). Sprite drawn in the LOWER HALF of the 16x16 tile (wood at y>=7) so it reads waist-height, never a wall.",
+    "no_cover_math": "Deliberately NONE — cover is OP-gated/over-scope per lane. FenceEntity carries no cover logic.",
+    "hotkey": "E for Fence (free; avoids B/F/G/T/Y/N/R/X/M/P/K/J/H/L and WASD camera keys A/D/S/W). Fence-GATE surfaced via Architect menu ONLY (no hotkey) to stay off contended key space.",
+    "architect": "Both fence + fence-gate added to the EXISTING 'Structure (구조)' category alongside Wall/WallStone/Door. Routes through the existing RefreshContent onClick -> BuildManager.SetMode plumbing with ZERO click-plumbing change."
+  },
+  "bug_firewall_check": {
+    "#4_audio_buzz": "n/a — no AudioBank calls added.",
+    "#5_GetInstanceID_race": "n/a — no instance-ID compares.",
+    "#6_OnCollisionEnter_only": "n/a — FenceEntity has no collision handlers (it has no collider by design).",
+    "#7_singleton_subscription_race": "n/a — no OnEnable singleton subscriptions; reused BuildManager.Instance pattern.",
+    "#8_justSpawned_default_true": "n/a — no grace-period field.",
+    "#9_runInBackground_freeze": "n/a — no long WaitForSeconds coroutine / background timer added."
+  },
+  "syntactic_check": "BuildManager.cs braces 133/133, parens 688/688 balanced; all new symbols resolved (Mode.Fence/FenceGate, Ensure*, BuildFenceTemplate, BuildProceduralFenceSprite, LoadOrBuildFenceSprite, fenceCost). PNGs verified visually: low fence (2 rails, 3 posts, lower half) + gate (centre opening, 2 jamb posts).",
+  "lane_isolation": "Did NOT touch SceneSetup* / PathGrid / FloorEntity / WallEntity / DoorEntity / LampEntity / StoveEntity / TableEntity / ChairEntity / BedEntity, any designation, SaveLoadManager.cs, PawnPoseDriver.cs, HotkeyCheatSheet.cs, any test, any W-M6-01 in-flight file, or any other generator (_gen_sprites/_gen_fix_audit/_gen_table_chair/_gen_lamp/_gen_stone_floor/_gen_scatter_variety). palette.py imported read-only. Unity NOT run (QA verifies).",
+  "flags_for_qa": [
+    "SCENE-WIRING (new prefab): Fence + FenceGate use BuildManager's lazy procedural in-memory prefab/sprite path — NO SceneSetup prefab wiring. A future wave can wire fencePrefab/fenceSprite (+gate) via SetRefs and the lazy builders become no-ops.",
+    "SCENE-WIRING (Architect catalogue): two new buildable lines (울타리 / 울타리 문) added to ArchitectMenu 'Structure (구조)'. ArchitectMenu.cs is the catalogue-surfacing file (edited by prior waves for the same purpose); not in any other W-M6-02 lane.",
+    "FORCE-IMPORT (new PNGs): fence.png + fence_gate.png are NEW. BuildManager loads them via AssetDatabase #if UNITY_EDITOR and ALWAYS falls back to a procedural texture, so a missing/un-imported PNG is non-fatal (no magenta). If QA wants the authored PNGs used in the editor build, add fence.png + fence_gate.png to the SceneSetup ForceImport list (mirroring lamp.png/stone_floor.png/table_chair.png). Procedural fallback mirrors the PNGs pixel-for-pixel.",
+    "HOTKEY: Fence = E (new). Verify no conflict surfaces in HotkeyCheatSheet (B14 lane) — E was free at lane time."
+  ]
+}

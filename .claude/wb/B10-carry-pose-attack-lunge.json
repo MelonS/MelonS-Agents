@@ -1,0 +1,75 @@
+{
+  "lane": "B10",
+  "milestone": "M1-design",
+  "wave": "W-M6-02",
+  "status": "Done",
+  "agent": "Visual Artist (Art)",
+  "timestamp": "2026-05-30",
+
+  "outputs": [
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Scripts/PawnPoseDriver.cs",
+      "type": "new",
+      "description": "Self-bootstrapping pawn pose driver. Attaches to pawn ROOT via [RuntimeInitializeOnLoadMethod(AfterSceneLoad)] + PawnMovement sweep (identical pattern to PawnFacing/SleepPoseDriver). Reads PawnHauler.HasTask and PawnEntity.IsDrafted+DraftedAttackTarget READ-ONLY. Applies (a) carry-bundle child-SR enabled/disabled for hauling, (b) body-child localPosition.X lunge offset (0.08 world units, 0.15s ease-back) for melee attack. Root transform NEVER touched — firewall identical to PawnFacing."
+    },
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Sprites/_gen_carry_item.py",
+      "type": "new",
+      "description": "Procedural generator for carry_bundle.png (8x8). Imports palette.py READ-ONLY. Warm WOOD ramp body + DIRT_LT rope cross. Transparent background, point-filter intent PPU16."
+    },
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Sprites/carry_bundle.png",
+      "type": "new",
+      "description": "8x8 carry-bundle sprite emitted by _gen_carry_item.py."
+    }
+  ],
+
+  "firewall_audit": {
+    "root_transform_written": false,
+    "PawnFacing_edited": false,
+    "PawnSpriteBob_edited": false,
+    "SleepPoseDriver_edited": false,
+    "any_existing_generator_edited": false,
+    "any_SceneSetup_file_edited": false,
+    "any_WM601_inFlight_file_edited": false,
+    "BuildManager_edited": false,
+    "SaveLoadManager_edited": false,
+    "HotkeyCheatSheet_edited": false
+  },
+
+  "child_property_ownership": {
+    "localPosition_Y": "PawnSpriteBob (untouched by PawnPoseDriver)",
+    "flipX": "PawnFacing (untouched by PawnPoseDriver)",
+    "color": "SleepPoseDriver (untouched by PawnPoseDriver)",
+    "localPosition_X": "PawnPoseDriver (lunge offset, reads current Y from localPosition before writing)",
+    "carry_bundle_enabled": "PawnPoseDriver (new child GO PawnCarryBundle, separate from body child)"
+  },
+
+  "flags_for_qa": [
+    {
+      "id": "FLAG-B10-1",
+      "severity": "scene-wiring",
+      "description": "carry_bundle.png must be copied/moved from Assets/Sprites/carry_bundle.png to Assets/Resources/Sprites/carry_bundle.png for Resources.Load('Sprites/carry_bundle') to succeed at runtime. If null, carry-bundle child renderer stays disabled (graceful no-op). QA or Build-Engineer handles the Resources/ placement."
+    },
+    {
+      "id": "FLAG-B10-2",
+      "severity": "missing-accessor",
+      "description": "PawnHauler has no public IsCarrying accessor. HasTask is used as a conservative proxy (true when any haul job is assigned, including walk-to-item phase). Programmer should add: public bool IsCarrying => carryingWood > 0 || carryingStone > 0 || carryingFood > 0; for a tighter 'holding item' signal. Driver comment documents this."
+    },
+    {
+      "id": "FLAG-B10-3",
+      "severity": "missing-accessor",
+      "description": "PawnEntity has no public IsAttacking accessor (nextAttackTime is private). Driver uses IsDrafted + DraftedAttackTarget non-null + in range as the drafted-melee signal, and throttled BanditEnemy proximity scan for auto-attack. Programmer should add: public bool IsAttacking => Time.time < nextAttackTime + AttackInterval * 0.5f; for single-frame-accurate lunge timing. Driver comment documents this."
+    },
+    {
+      "id": "FLAG-B10-4",
+      "severity": "scene-wiring",
+      "description": "PawnCarryBundle child GO is created at runtime by PawnPoseDriver.EnsureBundleChild() — no prefab or SceneSetup change needed. QA should confirm child GO appears under each pawn root at runtime and does not appear in Editor hierarchy (it is created in Awake, not in Editor)."
+    }
+  ],
+
+  "wiki_acceptance": {
+    "B10_binary": "A hauling pawn visibly carries something (carry-bundle sprite appears above body child) AND a melee/attack shows a brief forward jab offset on the body child; no pawn drifts off its cell over 10s of walking (root untouched — same firewall as PawnFacing).",
+    "root_drift_prevention": "PawnPoseDriver only writes bodyChild.localPosition.x (lunge) and bundleChild.enabled (carry). Root transform is never touched. PathGrid.WorldToCell / reservations / eject read the root — they are unaffected."
+  }
+}

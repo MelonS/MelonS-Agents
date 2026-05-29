@@ -1,0 +1,56 @@
+{
+  "lane": "B13",
+  "milestone": "M5-gameplay-verify",
+  "wave": "W-M6-02",
+  "Status": "Done",
+  "timestamp": "2026-05-30",
+  "summary": "SaveLoadManager.cs serialization for all four sub-states (BedQuality/StockpilePriority/TreeSpecies/WallMaterial) was already complete from W-M4-02 #29. No serialization fields were missing; no edits to SaveLoadManager.cs were needed.",
+  "outputs": {
+    "SaveLoadManager.cs": {
+      "path": "skills/game-prototype/unity-project/Assets/Scripts/SaveLoadManager.cs",
+      "action": "NO_EDIT_NEEDED",
+      "reason": "All four BedSave/StockpileSave/TreeSave(species)/WallSave structs, SaveData list fields, Save() serialization loops, and ApplyLoadedSubStates() re-application are already present and correct from W-M4-02."
+    },
+    "new_test": {
+      "path": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V13SubStateRoundTripTest.cs",
+      "action": "CREATED",
+      "description": "NEW companion test. ONE binary PASS asserting Fine bed (BedQuality.Fine) + tier-1 stockpile (StockpilePriority.Normal = enum 1) + Oak tree + Stone wall all survive Save()->Load() data round-trip. Positions at (400-403, 0) avoid collision with V4/V5/V7/V9/V15 test objects. Follows RunOne/Assert/GetWhiteSprite harness from V15DeconstructRefundTest.cs."
+    }
+  },
+  "entity_accessors_verified": {
+    "BedEntity.Quality": "public property getter — confirmed present",
+    "BedEntity.SetQuality": "public setter — confirmed present",
+    "StockpileZoneEntity.Priority": "public property getter — confirmed present",
+    "StockpileZoneEntity.SetPriority": "public setter — confirmed present",
+    "StockpileZoneEntity.Spawn": "public static factory — confirmed present",
+    "TreeEntity.Species": "public property getter — confirmed present",
+    "TreeEntity.SetSpecies": "public setter — confirmed present",
+    "WallEntity.Material": "public property getter — confirmed present",
+    "WallEntity.SetMaterial": "public setter — confirmed present"
+  },
+  "flags_for_qa": [
+    "FLAG-1 (.meta): V13SubStateRoundTripTest.cs requires a Unity-generated .meta file. Unity editor auto-generates on first import; confirm compilation in batchmode before asserting runtime PASS.",
+    "FLAG-2 (load-path wiring): SaveLoadManager.ApplyLoadedSubStates(data) must be called by the scene-reload host (GameManager or equivalent) after rebuilding scene entities from SaveData. This test verifies serialization only (data payload). The live wiring that calls ApplyLoadedSubStates on scene-reload must be confirmed by QA in the built game.",
+    "FLAG-3 (no missing setters): All four entity public setters were pre-existing. No entity file was widened. No accessor is missing."
+  ],
+  "wiki_acceptance": "B13 (binary) — a test (V13SubStateRoundTripTest.cs) asserts that after save->load a Fine bed is still Fine and a tier-1 stockpile is still tier-1, as ONE PASS line.",
+  "files_not_touched": [
+    "V9SaveLoadRoundTripTest.cs (existing test — NOT edited)",
+    "BedEntity.cs (read-only)",
+    "StockpileZoneEntity.cs (read-only)",
+    "TreeEntity.cs (read-only)",
+    "WallEntity.cs (read-only)",
+    "BuildManager.cs",
+    "FenceEntity.cs",
+    "PawnPoseDriver.cs",
+    "HotkeyCheatSheet.cs",
+    "FloatingText.cs",
+    "MarqueeSelector.cs",
+    "AudioBank.cs",
+    "FootstepDriver.cs",
+    "ClickSelector.cs",
+    "V10DeconstructWalkableTest.cs",
+    "V11GrowZoneCropTest.cs",
+    "All SceneSetup files"
+  ]
+}
