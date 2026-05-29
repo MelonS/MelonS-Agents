@@ -1,22 +1,21 @@
 {
   "role": "PM",
   "status": "Done",
-  "cycle": "C-011",
-  "wave": "W-M4-03",
-  "prior_wave_status": "W-M4-02 IMPLEMENTED across all 4 lanes (mine-designation/saveload-fix/tree-sway/v8-pathfind wb json Status=Done; no disk RED). V9SaveLoadRoundTripTest already QA-wired in a cx-w6 follow-up (assertions read real data fields, flipped FAIL->PASS). qa.json still shows the prior W-M4-01 PASS snapshot — QA must publish the W-M4-02 PASS json BEFORE verifying W-M4-03.",
-  "carried_followups_not_actioned": [
-    "Lane A flagged: make mining DESIGNATION-ONLY by gating MineStoneAction (PawnActions.cs) — behavior tweak, defer.",
-    "Lane B flagged: wire ApplyLoadedSubStates into the scene-reload load path + confirm 0.1.0 saves degrade gracefully — QA to confirm at verify."
-  ],
-  "rationale": "Cheap non-gated backlog (Dim2 sound 1-9, Dim1 motion 10-14, Dim6 alert/inspector 22/23) is exhausted; M4 build-ops #15 deconstruct + #16 mine are shipped. Per wiki sequencing ('build-ops 15-18 one at a time, design-a-base feel; verification continuous as the gate') the next M4 build-op is #17 grow-zone. The remaining non-gated wiki backlog is concentrated in M4 build-ops that share BuildManager/designation hot zones (one per wave) + the V1-V9 verify slate + M1 environmental-richness polish. This wave runs the single M4 hot-zone lane (#17) plus three lanes that touch zero M4 hot zone (M1 scatter, V6 verify, V2 verify).",
+  "cycle": "C-012",
+  "wave": "W-M4-04",
+  "wave_title": "W-M4-04 — torch/lamp buildable (#19) + scatter-load fix + V3 research verify + V1 drafted verify",
+  "prior_wave_status": "W-M4-03 (grow-zone #17 / scatter-variety / V6 body-part / V2 wolf-chase) CLOSED: qa.json Status=PASS @adad6a7 build cy-w1 (isolated 76/76 +V2/V6, integration 42/42, build-click 9/9, real-qa wood +60/30s, visual-diff 2.08%). No disk RED. ONE actionable QA flag carried -> this wave Lane B.",
+  "qa_flag_actioned": "ScatterVarietyDriver.cs uses Resources.Load<Sprite>() which returns null for sprites outside an Assets/Resources/ folder -> falls back to a procedural magenta dot in the built game. Lane B fixes the load strategy so the 3 decals resolve to their real sprites in a player build.",
+  "rationale": "Cheap non-gated backlog (Dim2 sound 1-9, Dim1 motion 10-14, Dim6 alert/inspector 22/23) exhausted; M4 build-ops #15 deconstruct + #16 mine + #17 grow-zone shipped. Per wiki sequencing ('build-ops + #19-21 catalogue one new-buildable per wave; verification continuous as the gate') the next build-op is #19 torch/standing-lamp. Remaining non-gated verify slate: V3 research-progress->unlock and V1 drafted-tint (V2/V4/V5/V6/V7/V8 shipped; V9 mood-break is OP-gated #30). This wave: one BuildManager catalogue lane (#19) + the carried QA-flag fix + two verify tests touching zero hot zone.",
   "lanes": {
-    "A": "game-programmer / M4 #17 Grow-zone designation — GrowZoneDesignation.cs(new, Mine/Deconstruct self-bootstrapping mirror) drag-rect dirt cells -> grow zone -> idle pawn auto-plants a CropEntity. Single M4 hot-zone lane. ZERO SceneSetup budget target. CropEntity.cs untouched (reuse starter-settlement spawn path).",
-    "B": "game-artist / M1 Dim1 environmental richness — _gen_scatter_variety.py(new generator, existing gens untouched, palette read-only) + ScatterVarietyDriver.cs(new, self-attach, deterministic seed, clusters near trees/rock). More scatter variety, recedes below pawns.",
-    "C": "game-build-engineer / M5 V6 verify — new test .cs: body-part damage -> part HP drops -> bleed -> downed/death as ONE PASS. Runtime untouched.",
-    "D": "game-ai-designer / M5 V2 verify — another new test .cs (different file from C): wolf within detection range detects a pawn and chases (closes distance) as ONE PASS. Runtime untouched."
+    "A": "game-programmer / M4 #19 torch/standing-lamp buildable — BuildManager.cs(edit: new Mode+cost+prefab/sprite+place handler, mirror wall/stove) + _gen_lamp.py(new generator) + lamp PNG; lamp emits a night light pool via the EXISTING NightLightPoolDriver scan (auto-detect preferred, zero driver edit; tiny new self-attach glow only if undetectable). The single build hot-file lane.",
+    "B": "game-artist / scatter Resources.Load FIX (W-M4-03 QA flag) — ScatterVarietyDriver.cs(edit: load strategy) + relocate the 3 scatter PNGs to Assets/Resources/ (or pre-wire) so they resolve to real sprites in a built game instead of the magenta-dot fallback. Generator (_gen_scatter_variety.py) untouched.",
+    "C": "game-build-engineer / M5 V3 verify — new test .cs: research accrues -> tech (bow) reaches 100% -> unlocks -> gated buildable/ability available, as ONE PASS. Runtime untouched.",
+    "D": "game-ai-designer / M5 V1 verify — another new test .cs (different file from C): draft a pawn (SetDrafted) -> drafted state true + drafted tint/marker reflects it -> undraft clears both, as ONE PASS. Runtime untouched."
   },
-  "non_overlap_proof": "A=GrowZoneDesignation.cs(new)(+CropEntity.cs only-if-a-tiny-accessor-missing); B=_gen_scatter_variety.py(new)+ScatterVarietyDriver.cs(new); C=new test .cs; D=another new test .cs. No file in two lanes. C and D are two DIFFERENT new test files in the same Assets/Scripts/Tests default asmdef (W-M4-01/02 precedent: two new test files in one asmdef is safe). Only A may (should not) touch a SceneSetup hot file; B/C/D touch zero SceneSetup.",
-  "op_gated_excluded": ["work-priority", "mood/mental-break #30", "per-terrain path-cost #24", "roof/collapse", "drag-rect-walls #18 (BuildManager input-ownership hot zone -> own future wave)", "catalogue #19 torch / #20 table+chair / #21 stone-floor (shared BuildManager catalogue hot zone -> one new-buildable per future wave)", "M4 breadth trading/power/taming/bills", "P5 detailed-pawn redraw (superseded by flat #202 — confirm with operator)"],
-  "backlog_remaining_after_this_wave": "#18 drag-rect-walls (own wave), #19/#20/#21 catalogue (one per wave), plus remaining V-slate verify items V1 drafted-tint / V3 research-progress->unlock / V9 mood-break (continuous gate). When all non-gated items are shipped/verified, the chain ENDS (done=true).",
-  "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"]
+  "non_overlap_proof": "A=BuildManager.cs(edit)+_gen_lamp.py(new)+lamp PNG(+optional tiny new glow only-if NightLightPoolDriver can't auto-detect); B=ScatterVarietyDriver.cs(edit)+relocate 3 scatter PNGs; C=new V3 test .cs; D=new V1 test .cs (different file from C). No file in two lanes. ONLY Lane A touches a build hot file (BuildManager.cs); no lane touches a SceneSetup hot file (FLAG if unavoidable in A/B). C and D are two different new test files in the same Assets/Scripts/Tests default asmdef (W-M4-01/02/03 precedent).",
+  "op_gated_excluded": ["work-priority", "mood/mental-break #30 (= V9 mood-break verify)", "per-terrain path-cost #24", "roof/collapse", "drag-rect-walls #18 (BuildManager build-input hot zone -> own future wave)", "catalogue #20 table+chair / #21 stone-floor (shared BuildManager catalogue hot zone -> one new-buildable per future wave)", "M4 breadth trading/power/taming/bills", "P5 detailed-pawn redraw (superseded by flat #202 — confirm with operator)"],
+  "backlog_remaining_after_this_wave": "#18 drag-rect-walls (own wave), #20 table+chair + #21 stone-floor (one catalogue lane per wave), plus V9 mood-break verify (OP-gated #30). When the non-gated remainder is exhausted, the chain ENDS (done=true).",
+  "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"],
+  "done": false
 }

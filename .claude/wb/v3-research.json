@@ -1,0 +1,63 @@
+{
+  "role": "BuildEngineer",
+  "lane": "C",
+  "cycle": "C-012",
+  "wave": "W-M4-04",
+  "milestone": "M5-gameplay-verify",
+  "wiki_item": "V3",
+  "status": "Done",
+  "wiki_acceptance": "A gated test asserts research accrues on a bench -> tech unlocks (bow) -> bow becomes buildable/usable as ONE PASS line.",
+  "output_file": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V3ResearchProgressTest.cs",
+  "output_meta": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V3ResearchProgressTest.cs.meta",
+  "test_id": "V3-research-progress",
+  "test_class": "MelonS.GameProto.Tests.V3ResearchProgressTest",
+  "report_path": "G:/ai/_v3_research_progress_report.json",
+  "chain_steps": [
+    "Step 1: ResearchManager has simple_bow tech; reset to currentPoints=0, completed=false, activeTech=bowTech — confirmed incomplete",
+    "Step 2: ResearchBench spawned at (300,0,0); PawnEntity spawned at same position (distance 0 < researchRadius 1.5); wait 1.5s; assert currentPoints rose above 0 (research accrued)",
+    "Step 3: Pre-seed currentPoints = requiredPoints - 2; wait 3s for Update ticks to complete; assert bowTech.completed == true",
+    "Step 4: ResearchManager.IsUnlocked('simple_bow') == true (public READ-ONLY method)",
+    "Step 5: canShoot predicate = (arrowSprite != null) && IsUnlocked('simple_bow') == true — bow ability now gated-open"
+  ],
+  "api_gaps_flagged_for_qa": [
+    {
+      "id": "G1",
+      "description": "ResearchManager.Instance routes through Services.Get<ResearchManager>(); may be null in the headless test scene. Test bootstraps one when absent (same pattern as V4/V5).",
+      "severity": "low",
+      "workaround": "Test adds AddComponent<ResearchManager> to a fresh GameObject when Instance is null."
+    },
+    {
+      "id": "G2",
+      "description": "ResearchBench.researchRadius is [SerializeField] private (default 1.5). Test places pawn at distance 0 (same position as bench), which is always inside any positive radius. No reflection needed.",
+      "severity": "none",
+      "workaround": "Pawn placed at bench transform.position; distance = 0 < 1.5."
+    },
+    {
+      "id": "G3",
+      "description": "ResearchBench.cachedPawns is a private static cache; nextPawnSearchTime initializes to -10f so the first Update call refreshes it. No reflection needed; test waits one frame after pawn spawn.",
+      "severity": "none",
+      "workaround": "yield return null after pawn spawn allows cache refresh on next Update."
+    },
+    {
+      "id": "G4",
+      "description": "PawnAbilities and PawnTraits are absent from the test pawn; ResearcherSpeedSum() falls back to mul=1.0 per its null-guards ('abil != null ? ... : 1f' and 'if (traits != null) mul *= ...'). Speed sum = 1.0, accrual = 2 pts/s.",
+      "severity": "none",
+      "workaround": "Null-guards already in production code handle absent components."
+    },
+    {
+      "id": "G5",
+      "description": "PawnUtilityAI.HandleDraftedCombat is private; the test reconstructs the canShoot predicate directly using the two public READ-ONLY operands: (a) SetArrowSprite() public accessor confirms sprite is set; (b) IsUnlocked('simple_bow') confirmed in step 4. FLAG: if PawnUtilityAI ever exposes a public CanShoot property, prefer it over the reconstructed predicate.",
+      "severity": "low",
+      "workaround": "Predicate reconstructed as: arrowSprite != null && ResearchManager.Instance.IsUnlocked('simple_bow'). Matches the exact runtime path in PawnUtilityAI.cs lines 202-204."
+    }
+  ],
+  "lane_contract_compliance": {
+    "new_file_only": true,
+    "no_existing_test_file_edited": true,
+    "no_runtime_cs_edited": true,
+    "no_scenesetup_touched": true,
+    "unity_not_run": true,
+    "different_file_from_lane_d": true
+  },
+  "updated": "2026-05-30"
+}

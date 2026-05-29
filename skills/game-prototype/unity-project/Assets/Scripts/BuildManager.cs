@@ -10,12 +10,17 @@ namespace MelonS.GameProto
     ///   F: 바닥 (목재 1, no collider, indoor marker)
     ///   G: 문 (목재 3, trigger collider)
     ///   T: 화덕 (목재 10, Day 25 cooking station)
+    ///   L: 램프 (목재 4, W-M4-04 #19 standing-lamp / torch — night light pool)
     /// </summary>
     public class BuildManager : MonoBehaviour
     {
         public static BuildManager Instance { get; private set; }
 
-        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine }  // #127 - stone wall, #154 - bed quality 3종
+        // #154 - bed quality 3종, #127 - stone wall.
+        // W-M4-04 (#19) - Lamp: torch/standing-lamp buildable that emits a warm
+        //   night light pool (drawn by LampGlowDriver).  Mirrors the Stove entry
+        //   exactly (1×1 footprint, wood cost, same ghost/cooldown/place path).
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp }
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
         // #182 - placement cooldown: SetMode 후 0.15s 동안 TryPlace skip.
@@ -31,6 +36,19 @@ namespace MelonS.GameProto
         public GameObject BedPrefabRef => bedPrefab;
         [SerializeField] private int wallCost = 5, floorCost = 1, doorCost = 3, stoveCost = 10, bedCost = 8;
         [SerializeField] private int wallStoneCost = 5;  // #127 - 석재 5
+        // W-M4-04 (#19) - Lamp cost.  RimWorld torch ≈ 1 wood, standing lamp needs
+        //   power; this prototype lamp is a cheap always-on light at 목재 4.
+        [SerializeField] private int lampCost = 4;
+        // W-M4-04 (#19) - Lamp prefab + sprite.  Normally wired via SetRefs from
+        //   SceneSetup like the others; but the Lane A contract forbids a
+        //   SceneSetup edit, so these stay null and BuildManager builds them
+        //   LAZILY + PROCEDURALLY (see EnsureLampPrefab / EnsureLampSprite)
+        //   exactly like NightLightPoolDriver builds its glow at runtime.  A
+        //   later wave can wire real refs via SetRefs with zero code change.
+        [SerializeField] private GameObject lampPrefab;
+        [SerializeField] private Sprite lampSprite;
+        private GameObject _lampPrefabRuntime;  // cached lazily-built template
+        private Sprite     _lampSpriteRuntime;  // cached lazily-built sprite
         // #154 - bed quality 별 cost (wiki: sleeping spot 0 / wood bed 8 / fine 30).
         //  Fine 은 wiki 가 비싸지만 (60+) 프로토타입에선 30 으로 낮춰 reachable.
         [SerializeField] private int bedSleepingSpotCost = 0;
@@ -67,6 +85,8 @@ namespace MelonS.GameProto
             if (Input.GetKeyDown(KeyCode.T)) SetMode(CurrentMode == Mode.Stove ? Mode.Off : Mode.Stove);
             // 운영자 피드백 - 침대 추가
             if (Input.GetKeyDown(KeyCode.Y)) SetMode(CurrentMode == Mode.Bed ? Mode.Off : Mode.Bed);
+            // W-M4-04 (#19) - L = 램프/횃불 (free hotkey; B/F/G/T/Y/N/R/X/M/P taken).
+            if (Input.GetKeyDown(KeyCode.L)) SetMode(CurrentMode == Mode.Lamp ? Mode.Off : Mode.Lamp);
             if (BuildModeActive && Input.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }
             UpdateGhost();
             // #179/#182 - click 처리.  cooldown 으로 SetMode 직후 race 방지.
@@ -132,6 +152,7 @@ namespace MelonS.GameProto
                 Mode.Bed   => bedSprite,
                 Mode.BedSleepingSpot => bedSprite,  // #154
                 Mode.BedFine => bedSprite,  // #154
+                Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
                 _ => wallSprite,
             };
             ghostRenderer.sortingOrder = m == Mode.Floor ? 1 : 20;
@@ -147,6 +168,7 @@ namespace MelonS.GameProto
             Mode.Bed             => bedCost,
             Mode.BedSleepingSpot => bedSleepingSpotCost,  // #154 - 0
             Mode.BedFine         => bedFineCost,          // #154 - 30
+            Mode.Lamp            => lampCost,             // W-M4-04 #19 - 목재 4
             _ => 0,
         };
 
@@ -160,6 +182,7 @@ namespace MelonS.GameProto
             Mode.Bed             => bedPrefab,
             Mode.BedSleepingSpot => bedPrefab,  // #154 - 같은 prefab, quality 다름
             Mode.BedFine         => bedPrefab,  // #154
+            Mode.Lamp            => EnsureLampPrefab(),  // W-M4-04 #19
             _ => null,
         };
 
@@ -218,6 +241,7 @@ namespace MelonS.GameProto
                 //  de-fragiles Build Click QA (settlement cells often have pawns).
                 if (h.GetComponent<BerryBushEntity>() != null) return true;
                 if (h.GetComponent<StoveEntity>() != null) return true;
+                if (h.GetComponent<LampEntity>() != null) return true;   // W-M4-04 #19
                 if (h.GetComponent<BedEntity>() != null) return true;
                 if (h.GetComponent<BlueprintEntity>() != null) return true;  // #118
             }
@@ -363,6 +387,7 @@ namespace MelonS.GameProto
             Mode.Bed             => "목재 침대",
             Mode.BedSleepingSpot => "수면 자리",
             Mode.BedFine         => "고급 침대",
+            Mode.Lamp            => "램프",   // W-M4-04 #19
             _ => m.ToString(),
         };
 
@@ -375,8 +400,173 @@ namespace MelonS.GameProto
             Mode.Bed   => bedSprite,
             Mode.BedSleepingSpot => bedSprite,
             Mode.BedFine         => bedSprite,
+            Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
             _ => wallSprite,
         };
+
+        // ---------------------------------------------------------------- //
+        //  W-M4-04 (#19) - Lamp prefab + sprite, built LAZILY in code.       //
+        //                                                                    //
+        //  The Lane A contract forbids a SceneSetup edit, so the lamp's      //
+        //  finished prefab + sprite cannot be wired via SetRefs the way the  //
+        //  other buildables are.  Instead BuildManager constructs them once  //
+        //  on first use:                                                     //
+        //    - the sprite is loaded from Assets/Sprites/lamp.png in the      //
+        //      Editor / batchmode via AssetDatabase (reflection — no Editor  //
+        //      assembly reference from a runtime script), and ALWAYS falls   //
+        //      back to a procedural lamp texture so a PLAYER BUILD (where    //
+        //      AssetDatabase is absent and the PNG is outside Resources/)    //
+        //      still shows a real lamp instead of a magenta/null sprite —    //
+        //      the exact trap Lane B is fixing for scatter.                  //
+        //    - the prefab is an in-memory template GameObject carrying a     //
+        //      SpriteRenderer + BoxCollider2D + LampEntity, mirroring the    //
+        //      SceneSetup Stove template.  BlueprintEntity.Complete will     //
+        //      Instantiate it on build completion.                           //
+        //                                                                    //
+        //  >>> QA FLAG: lamp uses BuildManager's lazy procedural prefab/     //
+        //      sprite path — NO SceneSetup prefab wiring was added.  If a    //
+        //      future wave prefers a real prefab asset, wire lampPrefab /    //
+        //      lampSprite via SetRefs and these lazy builders become no-ops. //
+        // ---------------------------------------------------------------- //
+
+        private Sprite EnsureLampSprite()
+        {
+            if (lampSprite != null) return lampSprite;        // wired via SetRefs (future)
+            if (_lampSpriteRuntime != null) return _lampSpriteRuntime;
+            _lampSpriteRuntime = LoadOrBuildLampSprite();
+            return _lampSpriteRuntime;
+        }
+
+        private GameObject EnsureLampPrefab()
+        {
+            if (lampPrefab != null) return lampPrefab;         // wired via SetRefs (future)
+            if (_lampPrefabRuntime != null) return _lampPrefabRuntime;
+
+            // In-memory template (NOT a saved .prefab asset — runtime only).
+            //  Mirrors the SceneSetup Stove template: SR sortingOrder 5 +
+            //  1×1 BoxCollider2D + the entity marker component.  Kept inactive
+            //  and hidden so it is never seen in the scene; Instantiate copies it.
+            var go = new GameObject("LampTemplate");
+            go.hideFlags = HideFlags.HideAndDontSave;
+            go.SetActive(false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite       = EnsureLampSprite();
+            sr.sortingOrder = 5;                               // same as Stove body
+            var box = go.AddComponent<BoxCollider2D>();
+            box.size = Vector2.one;
+            go.AddComponent<LampEntity>();
+            _lampPrefabRuntime = go;
+            return _lampPrefabRuntime;
+        }
+
+        /// <summary>
+        /// Load lamp.png via AssetDatabase (Editor/batchmode) through reflection
+        /// so this runtime script needs no UnityEditor reference; ALWAYS falls
+        /// back to a procedural lamp texture so a player build is never null.
+        /// </summary>
+        private static Sprite LoadOrBuildLampSprite()
+        {
+#if UNITY_EDITOR
+            var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/lamp.png");
+            if (sp != null) return sp;
+#endif
+            return BuildProceduralLampSprite();
+        }
+
+        /// <summary>
+        /// Build a 16×16 lamp sprite in code, matching _gen_lamp.py's authored
+        /// content (wood post + base, warm flame head) so it is visually
+        /// interchangeable with lamp.png.  Guarantees a real lamp in a player
+        /// build with zero asset-load dependency (same guard as
+        /// NightLightPoolDriver's procedural glow).
+        /// </summary>
+        private static Sprite BuildProceduralLampSprite()
+        {
+            const int SIZE = 16;
+            var tex = new Texture2D(SIZE, SIZE, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode   = TextureWrapMode.Clamp;
+            tex.name       = "Lamp_Proc";
+
+            var px = new Color32[SIZE * SIZE];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color32(0, 0, 0, 0);
+
+            // Palette (mirrors palette.py; RGBA).
+            var WOOD_DK   = new Color32(92, 60, 36, 255);
+            var WOOD_MD   = new Color32(140, 92, 54, 255);
+            var WOOD_LT   = new Color32(188, 138, 88, 255);
+            var FIRE_OR   = new Color32(232, 120, 44, 255);
+            var FIRE_LT   = new Color32(250, 196, 96, 255);
+            var OUTLINE   = new Color32(40, 30, 22, 255);   // OUTLINE_OBJ
+
+            // Texture y is bottom-up; _gen_lamp.py uses top-down PIL y.  Convert
+            // each authored (gx, gyTop) to texture row: ty = SIZE-1 - gyTop.
+            void Set(int gx, int gyTop, Color32 c)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return;
+                px[ty * SIZE + gx] = c;
+            }
+            bool IsEmpty(int gx, int gyTop)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return false;
+                return px[ty * SIZE + gx].a == 0;
+            }
+            bool IsWood(int gx, int gyTop)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return false;
+                var c = px[ty * SIZE + gx];
+                return (c.r == WOOD_DK.r && c.g == WOOD_DK.g && c.b == WOOD_DK.b)
+                    || (c.r == WOOD_MD.r && c.g == WOOD_MD.g && c.b == WOOD_MD.b)
+                    || (c.r == WOOD_LT.r && c.g == WOOD_LT.g && c.b == WOOD_LT.b);
+            }
+
+            // Flame head (rows 1-4) — un-outlined.
+            foreach (var (x, y) in new (int, int)[] { (8,1),(6,2),(9,2),(6,3),(9,3),(6,4),(7,4),(8,4),(9,4) })
+                Set(x, y, FIRE_OR);
+            foreach (var (x, y) in new (int, int)[] { (7,1),(7,2),(8,2),(7,3),(8,3) })
+                Set(x, y, FIRE_LT);
+
+            // Wood post (rows 5-11) — alternating light/shadow read.
+            for (int y = 5; y <= 11; y++)
+            {
+                Set(7, y, (y % 2 == 0) ? WOOD_LT : WOOD_MD);
+                Set(8, y, (y % 2 == 0) ? WOOD_MD : WOOD_DK);
+            }
+            Set(6, 5, WOOD_MD);
+            Set(9, 5, WOOD_DK);
+
+            // Base / foot (rows 12-14).
+            foreach (var (x, y) in new (int, int)[] { (6,12),(7,12),(8,12),(9,12),(6,13),(7,13),(8,13),(9,13) })
+                Set(x, y, WOOD_MD);
+            foreach (var (x, y) in new (int, int)[] { (5,13),(10,13),(5,14),(6,14),(7,14),(8,14),(9,14),(10,14) })
+                Set(x, y, WOOD_DK);
+
+            // 1px OUTLINE_OBJ on transparent pixels 4-adjacent to wood at y>=5
+            //  (flame head left open).  Collect first, then write (no self-feed).
+            var outlinePts = new System.Collections.Generic.List<(int, int)>();
+            for (int y = 5; y < SIZE; y++)
+            {
+                for (int x = 0; x < SIZE; x++)
+                {
+                    if (!IsEmpty(x, y)) continue;
+                    if (IsWood(x + 1, y) || IsWood(x - 1, y) || IsWood(x, y + 1) || IsWood(x, y - 1))
+                        outlinePts.Add((x, y));
+                }
+            }
+            foreach (var (x, y) in outlinePts) Set(x, y, OUTLINE);
+
+            tex.SetPixels32(px);
+            tex.Apply(updateMipmaps: false);
+
+            return Sprite.Create(
+                tex,
+                new Rect(0, 0, SIZE, SIZE),
+                new Vector2(0.5f, 0.5f),
+                pixelsPerUnit: 16f);
+        }
     }
 
     public enum BuildClickResult { Placed, PlaceFailed, ModeOff, Cooldown, OverUI, NoCamera }

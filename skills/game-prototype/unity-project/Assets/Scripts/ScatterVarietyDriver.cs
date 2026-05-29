@@ -40,22 +40,31 @@ namespace MelonS.GameProto
     ///   decal layout appears every run (important for QA screenshot comparison
     ///   and to avoid visual churn on session restart).
     ///
+    /// SPRITE LOADING (W-M4-04 Lane B fix — QA flag actioned):
+    ///   PNGs live at Assets/Resources/scatter/*.png.  Resources.Load resolves
+    ///   them in BOTH batchmode (Editor/AssetDatabase) AND player builds (Unity
+    ///   bundles the entire Resources/ tree automatically).  The load path is
+    ///   "scatter/<name>" matching the subfolder.  A magenta procedural dot is
+    ///   kept ONLY as a last-resort fallback (should never be seen in a normal
+    ///   build — indicates the Resources/scatter/ PNGs are missing from the project).
+    ///
     /// READ-ONLY usage of entities:
     ///   - TreeEntity: position read via transform.position only.
     ///   - StoneVeinEntity: position read via transform.position only.
     ///   Neither class is modified.
     ///
-    /// Lane contract (W-M4-03 Lane B):
-    ///   This file and _gen_scatter_variety.py are the ONLY files owned by Lane B.
-    ///   NOT edited: SceneSetup.Game.Scatter.cs, _gen_fix_audit.py, _gen_sprites.py,
-    ///   palette.py, any SceneSetup/entity, GrowZoneDesignation, SaveLoadManager,
-    ///   TreeSwayDriver, or any test.  NEW files only.
+    /// Lane contract (W-M4-03/04 Lane B):
+    ///   This file and the 3 scatter PNGs at Assets/Resources/scatter/ are the
+    ///   ONLY files owned by Lane B.
+    ///   NOT edited: _gen_scatter_variety.py, SceneSetup.Game.Scatter.cs,
+    ///   _gen_fix_audit.py, _gen_sprites.py, palette.py, any SceneSetup/entity,
+    ///   GrowZoneDesignation, SaveLoadManager, TreeSwayDriver, BuildManager,
+    ///   NightLightPoolDriver, or any test.
     ///
-    /// >>> QA FLAG: confirm stone_chunk_small.png / dead_leaves.png /
-    ///     pebble_scatter.png are present in Assets/Sprites/ and loaded correctly
-    ///     (no "sprite null" warnings in console).  The driver falls back to a 1px
-    ///     procedural magenta dot if a sprite is missing at runtime, which would be
-    ///     immediately obvious and indicates the PNG is not in the project.
+    /// >>> QA FLAG: confirm scatter/stone_chunk_small.png / scatter/dead_leaves.png /
+    ///     scatter/pebble_scatter.png are present at Assets/Resources/scatter/ and
+    ///     loaded correctly (no "sprite null" warnings in console).  If any decal
+    ///     appears as a tiny magenta dot the PNG is missing from Resources/scatter/.
     ///
     /// >>> QA FLAG: sortingOrder 1 — confirm new decals render BELOW pawns (order
     ///     9+) and structures (10+), and ABOVE terrain tiles (0).  Decals should
@@ -70,11 +79,23 @@ namespace MelonS.GameProto
     ///     RuntimeInitializeOnLoadMethod. Confirm no double-attach on scene reload
     ///     (idempotency guard via FindFirstObjectByType).
     ///
+    /// >>> QA FLAG (SceneSetup stale entries): SceneSetup.cs ForceImportAllSprites
+    ///     still lists the OLD Assets/Sprites/stone_chunk_small.png path (and the
+    ///     other two).  These will emit "[SceneSetup] missing: ..." warnings during
+    ///     scene-regen because the PNGs have moved to Resources/scatter/.  The
+    ///     warnings are HARMLESS (ForceImport is an editor setup tool; the build
+    ///     picks up Resources/ automatically), but QA should expect 3 extra missing-
+    ///     file warnings in scene-regen output.  No SceneSetup edit was made per
+    ///     lane contract (prefer path requiring no SceneSetup edit).
+    ///
     /// ACCEPTANCE (binary, cite Dim1 row):
     ///   A wide screenshot shows MORE incidental variety than before: new chunk /
     ///   leaf / pebble decals visibly scattered, some clustered near trees and
     ///   StoneVeins.  They recede — the eye lands on pawns first.  Nothing brighter
     ///   than a pawn.  No tile-seam grid pattern.  No clutter.
+    ///   In a fresh built game the 3 scatter decals render as their real
+    ///   chunk/leaf/pebble sprites (NOT magenta dots) — QA screenshot shows no
+    ///   magenta scatter.
     /// </summary>
     public class ScatterVarietyDriver : MonoBehaviour
     {
@@ -118,12 +139,13 @@ namespace MelonS.GameProto
         private const int SpawnAvoidY = 3;
 
         // ------------------------------------------------------------------ //
-        //  Sprite names (loaded from Resources fallback or by path)           //
+        //  Resources paths (PNGs live at Assets/Resources/scatter/)           //
+        //  Resources.Load path = subfolder/filename_without_extension         //
         // ------------------------------------------------------------------ //
 
-        private const string SpriteChunk  = "stone_chunk_small";
-        private const string SpriteLeaves = "dead_leaves";
-        private const string SpritePebble = "pebble_scatter";
+        private const string ResourcePathChunk  = "scatter/stone_chunk_small";
+        private const string ResourcePathLeaves = "scatter/dead_leaves";
+        private const string ResourcePathPebble = "scatter/pebble_scatter";
 
         // ------------------------------------------------------------------ //
         //  Runtime state                                                        //
@@ -212,34 +234,31 @@ namespace MelonS.GameProto
         }
 
         // ------------------------------------------------------------------ //
-        //  Sprite loading                                                       //
+        //  Sprite loading — Resources.Load resolves in Editor, batchmode,     //
+        //  and player builds because PNGs are under Assets/Resources/scatter/ //
         // ------------------------------------------------------------------ //
 
         private void LoadSprites()
         {
-            _chunkSprite  = LoadSprite(SpriteChunk);
-            _leavesSprite = LoadSprite(SpriteLeaves);
-            _pebbleSprite = LoadSprite(SpriteSpriteName(SpritePebble));
+            _chunkSprite  = LoadSprite(ResourcePathChunk,  "stone_chunk_small");
+            _leavesSprite = LoadSprite(ResourcePathLeaves, "dead_leaves");
+            _pebbleSprite = LoadSprite(ResourcePathPebble, "pebble_scatter");
         }
 
-        private static string SpriteSpriteName(string baseName) => baseName;
-
-        private static Sprite LoadSprite(string baseName)
+        private static Sprite LoadSprite(string resourcePath, string friendlyName)
         {
-            // Try Resources.Load first (works if the PNG is inside a Resources folder).
-            Sprite s = Resources.Load<Sprite>(baseName);
+            Sprite s = Resources.Load<Sprite>(resourcePath);
             if (s != null) return s;
 
-            // The PNG lives in Assets/Sprites/ — not a Resources folder at
-            // edit time.  At runtime we build a procedural fallback sprite so
-            // the driver is always valid.  QA will verify the real PNGs via
-            // AssetDatabase path load in the Editor.
-            // Runtime path (built game): procedural fallback — a tiny coloured dot.
-            // This is clearly wrong visually and will alert QA immediately.
-            // >>> QA FLAG: if any decal appears as a tiny magenta dot, the PNG
-            //     was not bundled in the build.  Ensure Assets/Sprites/*.png are
-            //     included (either in Resources/ or via a SpriteAtlas / AssetBundle).
-            return BuildFallbackSprite(baseName);
+            // Last-resort fallback — a magenta dot.
+            // In a correct build this path is never reached because the PNGs
+            // live at Assets/Resources/scatter/ and are auto-bundled by Unity.
+            // Seeing a magenta decal in the built game means the Resources/scatter/
+            // folder is missing from the project — report to QA immediately.
+            Debug.LogWarning($"[ScatterVarietyDriver] Sprite not found at Resources path '{resourcePath}' " +
+                             $"(friendly: {friendlyName}). Falling back to magenta dot. " +
+                             "Ensure Assets/Resources/scatter/{friendlyName}.png is in the project.");
+            return BuildFallbackSprite(friendlyName);
         }
 
         private static Sprite BuildFallbackSprite(string name)
@@ -249,7 +268,7 @@ namespace MelonS.GameProto
             tex.name       = $"FallbackSprite_{name}";
             var pix = new Color32[16];
             for (int i = 0; i < 16; i++)
-                pix[i] = new Color32(200, 0, 200, 200); // magenta — clearly wrong
+                pix[i] = new Color32(200, 0, 200, 200); // magenta — clearly wrong, alerts QA
             tex.SetPixels32(pix);
             tex.Apply(false);
             return Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 16f);
@@ -269,7 +288,7 @@ namespace MelonS.GameProto
             PlaceClusterDecals();
         }
 
-        // ── Baseline: sparse scatter across the map ────────────────────────
+        // -- Baseline: sparse scatter across the map ────────────────────────
 
         private void PlaceBaselineDecals()
         {
@@ -314,7 +333,7 @@ namespace MelonS.GameProto
             }
         }
 
-        // ── Cluster: extra decals near trees and stone veins ──────────────
+        // -- Cluster: extra decals near trees and stone veins ──────────────
 
         private void PlaceClusterDecals()
         {
@@ -422,9 +441,6 @@ namespace MelonS.GameProto
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite       = sprite;
             sr.sortingOrder = DecalSortingOrder;
-            // Use Sprites/Default material (point-filter is set per sprite at
-            // import time; runtime material does not override filterMode).
-            // No special material needed — these are simple opaque sprites.
 
             // Parent to this driver's GO so cleanup is trivially safe.
             go.transform.SetParent(transform, worldPositionStays: true);

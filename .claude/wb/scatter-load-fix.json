@@ -1,0 +1,75 @@
+{
+  "role": "Art (Visual Artist)",
+  "lane": "B",
+  "wave": "W-M4-04",
+  "cycle": "C-012",
+  "status": "Done",
+  "milestone": "M1-design",
+  "qa_flag_actioned": "W-M4-03 QA flag: ScatterVarietyDriver Resources.Load<Sprite>() returned null for sprites outside Resources/ folder, falling back to magenta procedural dot in built game.",
+  "acceptance_criterion": "rimworld-comparison.md Dimension 1 'Environmental richness' row: 'More scatter variety (chunks, dead leaves); cluster scatter near trees/rock.' Binary acceptance: in a fresh built game the 3 scatter decals render as their real chunk/leaf/pebble sprites (NOT magenta dots). QA screenshot shows no magenta scatter.",
+  "fix_approach": "Option (a) — move 3 PNGs into Assets/Resources/scatter/ and update Resources.Load path to match. Resources.Load resolves in Editor, batchmode, and player builds because Unity auto-bundles everything under Resources/. No SceneSetup edit required.",
+  "changes": [
+    {
+      "file": "Assets/Scripts/ScatterVarietyDriver.cs",
+      "change": "Replaced SpriteChunk/SpriteLeaves/SpritePebble const strings (bare names) with ResourcePathChunk/ResourcePathLeaves/ResourcePathPebble ('scatter/stone_chunk_small', 'scatter/dead_leaves', 'scatter/pebble_scatter'). LoadSprite() now passes the subfolder-qualified resource path to Resources.Load<Sprite>(). Magenta dot kept as last-resort fallback with Debug.LogWarning. All placement and clustering logic unchanged."
+    },
+    {
+      "file": "Assets/Resources/scatter/stone_chunk_small.png",
+      "change": "Copied from Assets/Sprites/stone_chunk_small.png. PNG data identical."
+    },
+    {
+      "file": "Assets/Resources/scatter/stone_chunk_small.png.meta",
+      "change": "New meta — TextureImporter Sprite type, PPU=16, Point filter, alphaIsTransparency=1. GUID f1a2b3c4d5e6078901f2a3b4c5d6e7f8 (new, distinct from old Sprites/ GUID)."
+    },
+    {
+      "file": "Assets/Resources/scatter/dead_leaves.png",
+      "change": "Copied from Assets/Sprites/dead_leaves.png. PNG data identical."
+    },
+    {
+      "file": "Assets/Resources/scatter/dead_leaves.png.meta",
+      "change": "New meta — TextureImporter Sprite type, PPU=16, Point filter, alphaIsTransparency=1. GUID a2b3c4d5e6f7089012a3b4c5d6e7f8a9 (new)."
+    },
+    {
+      "file": "Assets/Resources/scatter/pebble_scatter.png",
+      "change": "Copied from Assets/Sprites/pebble_scatter.png. PNG data identical."
+    },
+    {
+      "file": "Assets/Resources/scatter/pebble_scatter.png.meta",
+      "change": "New meta — TextureImporter Sprite type, PPU=16, Point filter, alphaIsTransparency=1. GUID b3c4d5e6f7a8190123b4c5d6e7f8a9b0 (new)."
+    },
+    {
+      "file": "Assets/Resources.meta",
+      "change": "New folder meta. GUID a1b2c3d4e5f6078901a2b3c4d5e6f7a8."
+    },
+    {
+      "file": "Assets/Resources/scatter.meta",
+      "change": "New folder meta. GUID b2c3d4e5f6a7189012b3c4d5e6f7a8b9."
+    }
+  ],
+  "not_changed": [
+    "_gen_scatter_variety.py (generator stays — only runtime load path + asset location changed)",
+    "BuildManager.cs",
+    "NightLightPoolDriver.cs",
+    "_gen_lamp.py",
+    "GrowZoneDesignation.cs",
+    "SaveLoadManager.cs",
+    "Any test .cs",
+    "Any SceneSetup file"
+  ],
+  "qa_flags": [
+    "STALE FORCEIMPORT ENTRIES (harmless): SceneSetup.cs ForceImportAllSprites still lists Assets/Sprites/stone_chunk_small.png, Assets/Sprites/dead_leaves.png, Assets/Sprites/pebble_scatter.png at the old path. These will produce '[SceneSetup] missing: ...' warnings during scene-regen because the PNGs have moved to Resources/scatter/. Warnings are HARMLESS — ForceImport is an editor setup tool; the player build picks up Resources/ automatically. No SceneSetup edit was made per lane contract. QA should expect 3 extra missing-file warnings in scene-regen output.",
+    "The original PNGs at Assets/Sprites/stone_chunk_small.png / dead_leaves.png / pebble_scatter.png remain on disk as dead copies (original .meta GUIDs intact). They are no longer referenced by ScatterVarietyDriver at runtime. QA may remove them in a future cleanup wave if desired.",
+    "Resources.Load is synchronous and occurs in Awake() before any frame is rendered — no async loading concern."
+  ],
+  "output_paths": [
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Scripts/ScatterVarietyDriver.cs",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Resources/scatter/stone_chunk_small.png",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Resources/scatter/stone_chunk_small.png.meta",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Resources/scatter/dead_leaves.png",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Resources/scatter/dead_leaves.png.meta",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Resources/scatter/pebble_scatter.png",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Resources/scatter/pebble_scatter.png.meta",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Resources.meta",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Resources/scatter.meta"
+  ]
+}

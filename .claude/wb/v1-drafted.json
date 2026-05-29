@@ -1,0 +1,32 @@
+{
+  "role": "AIDesigner",
+  "lane": "D",
+  "wave": "W-M4-04",
+  "cycle": "C-012",
+  "milestone": "M5-gameplay-verify",
+  "task": "V1 drafted-tint continuous-gate verify test",
+  "status": "Done",
+  "acceptance_criterion": "rimworld-comparison.md Dim 5 'V1-V9 verification slate' (V1 = drafted tint) + 'Defend' loop row #114: a gated test asserts drafting a pawn sets drafted state + drafted tint, and undrafting clears it, as ONE PASS line.",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/Tests/V1DraftedTintTest.cs"
+  ],
+  "new_file_only": true,
+  "different_from_lane_c": "V1DraftedTintTest.cs is a DIFFERENT file from Lane C's V3 research test (V3...Test.cs); same Assets/Scripts/Tests asmdef as V4/V5/V6/V7/V8/V9 V-tests.",
+  "edits_to_existing_cs": "NONE — no existing test or runtime .cs edited.",
+  "ran_unity": false,
+  "todo_markers": 0,
+  "test_design": {
+    "draft_api_used": "PawnEntity.SetDrafted(bool) (public; the R-key/ClickSelector path) — same call V4CombatChainTest uses.",
+    "state_read": "PawnEntity.IsDrafted (public getter, read-only).",
+    "tint_read": "SpriteRenderer.color off the pawn GameObject (public read-only handle) — the marker PawnEntity.ApplyVisual() paints. Read-only the way V7 reads bandit transform state; no reflection.",
+    "drafted_tint_literal": "new Color(0.55,0.85,1.0,1.0) cyan — mirrors PawnEntity.ApplyVisual.",
+    "undrafted_tint_literal": "Color.white (PawnEntity.unselectedColor default).",
+    "binary_chain": "[0]baseline notDrafted+notCyan -> [1]SetDrafted(true) -> IsDrafted true -> [2]SR.color == cyan -> [3a]SetDrafted(false) -> IsDrafted false -> [3b]SR.color off cyan AND == white. allPass = ONE binary PASS.",
+    "bootstrap_reuse": "RunOne/Assert/SpawnTestPawn/GetWhiteSprite/outputPath copied from V4CombatChainTest + V7RaidThreatTest. Pawn spawned at (200,0,0) far from ambient entities; includeAI:false (tint is pure PawnEntity)."
+  },
+  "flags_for_qa": [
+    "NO blocking accessor missing — IsDrafted public getter + SetDrafted public + tint observable via SpriteRenderer.color read-only. Test PASSES without any runtime edit.",
+    "G-NOTE (non-blocking, FLAGGED not required): the drafted cyan (0.55,0.85,1.0,1.0) and undrafted white are PRIVATE SerializeFields in PawnEntity.ApplyVisual; the test asserts against the same literals the renderer paints rather than reading the private fields. If a future re-skin changes the drafted color constant, this test's literal must track it. A public read-only PawnEntity.DraftedTint (and UnselectedTint) accessor would decouple the test from the literal. Proposed to Programmer as a tiny read-only accessor; NOT required for this PASS.",
+    "QA wiring: V1DraftedTintTest.cs needs a .meta (mirror V4/V7 .meta) and, if qa.py enumerates companion V-tests explicitly, registration of report path G:/ai/_v1_drafted_tint_report.json — same convention as _v4_/_v7_."
+  ]
+}
