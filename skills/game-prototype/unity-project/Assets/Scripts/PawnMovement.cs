@@ -55,6 +55,56 @@ namespace MelonS.GameProto
             Grid.SetStructureBlocked(PathGrid.WorldToCell(worldPos), false);
         }
 
+        // #201 — RimWorld eject-on-block.  When a solid structure (wall) COMPLETES
+        //  on a cell, any pawn already standing in that cell would be sealed inside
+        //  an impassable cell (AStar refuses a blocked START cell → the pawn can
+        //  never path out, and an idle pawn never even calls SetTarget).  RimWorld
+        //  PUSHES such a pawn out to the nearest open cell.  WallEntity.Start()
+        //  calls this AFTER it registers the cell as blocked, so TryNearestWalkable
+        //  sees the cell as occupied and lands the pawn on a genuinely-open
+        //  neighbour.  Wall-build is a rare event (not per-frame), so the
+        //  FindObjectsByType scan here is fine (lesson #4: it is NOT in a tight loop).
+        //
+        //  Edge case — a pawn fully enclosed by walls (no walkable neighbour within
+        //  the bounded ring search): TryNearestWalkable returns false; we LEAVE the
+        //  pawn where it is (can't push it into a wall) and clear its path so it
+        //  doesn't keep trying to walk through. The continuous safety net in Update
+        //  will retry once a neighbouring cell opens. No crash, no infinite loop.
+        public static void EjectPawnsFromCell(Vector2 cellWorld)
+        {
+            if (Grid == null) return;
+            Vector2Int blockedCell = PathGrid.WorldToCell(cellWorld);
+            var pawns = Object.FindObjectsByType<PawnMovement>(FindObjectsSortMode.None);
+            foreach (var pm in pawns)
+            {
+                if (pm == null) continue;
+                Vector2Int pawnCell = PathGrid.WorldToCell(pm.transform.position);
+                if (pawnCell != blockedCell) continue;   // not on the blocked cell
+                pm.EjectToNearestWalkable(blockedCell);
+            }
+        }
+
+        // #201 — push THIS pawn out of a now-blocked cell to the nearest open cell.
+        //  Instance method so it can also serve the Update safety net (Part 2).
+        //  Moves the transform to the open cell's CENTRE and clears the cached path
+        //  so the pawn re-paths cleanly on its next SetTarget (it won't try to walk
+        //  back through the wall).  If genuinely sealed in, clears the path but
+        //  leaves the transform (documented enclosed-pawn edge case).
+        private void EjectToNearestWalkable(Vector2Int fromCell)
+        {
+            if (Grid == null) return;
+            if (TryNearestWalkable(fromCell, out Vector2Int open))
+            {
+                Vector2 dest = PathGrid.CellToWorld(open);
+                transform.position = new Vector3(dest.x, dest.y, transform.position.z);
+            }
+            // else: sealed in — can't eject into a wall; leave position, just clear path.
+            _path = null;
+            _pathIndex = 0;
+            _pathGridVersion = -1;
+            target = null;
+        }
+
         // #199 C1 — shared RimWorld-style "stand adjacent to the work object"
         //  helper for all workers (Chop/Gather/Build/Mine/Cook/Haul/...).  Returns
         //  the world position the worker should WALK TO (an adjacent walkable cell
@@ -414,6 +464,32 @@ namespace MelonS.GameProto
             //  OLD fallback below runs.
             if (UsePathfinding && Grid != null)
             {
+                // #201 — continuous safety net (defense in depth for the eject-on-
+                //  block fix).  If this pawn's CURRENT cell is not walkable — for ANY
+                //  reason (wall completed under it, future cause) and regardless of
+                //  whether it has a target — push it toward the nearest open cell.
+                //  Cheap: the IsWalkable check is O(1) and the rare-event eject only
+                //  runs when actually on a blocked cell (normally never).  Engages
+                //  ONLY when standing on a blocked cell, so it never fights the normal
+                //  path-follow below; once on an open cell, normal behaviour resumes.
+                Vector2Int myCell = PathGrid.WorldToCell(transform.position);
+                if (!Grid.IsWalkable(myCell))
+                {
+                    if (TryNearestWalkable(myCell, out Vector2Int open))
+                    {
+                        Vector2 dest = PathGrid.CellToWorld(open);
+                        float speed = stats.moveSpeed
+                            * (health != null ? health.MovementSpeedMultiplier() : 1f);
+                        var ab = GetComponent<PawnAbilities>();
+                        if (ab != null) speed *= ab.moveSpeedMul;
+                        Vector2 step = Vector2.MoveTowards(transform.position, dest, speed * Time.deltaTime);
+                        transform.position = new Vector3(step.x, step.y, transform.position.z);
+                    }
+                    // else: enclosed — no open neighbour; wait (do nothing) until one
+                    //  opens.  Don't path-follow this frame (we're inside a wall).
+                    return;
+                }
+
                 if (!target.HasValue || _path == null) return;
 
                 // #199 B3 — in-flight invalidation (plan item 3).  If a wall was

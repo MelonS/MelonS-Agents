@@ -117,6 +117,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I40-chop-from-adjacent-cell", TestI40_ChopFromAdjacentCell);
             // #199 C3 - 청사진 배치 검증: 물/바위 거부, 벽 점유 거부, 빈 잔디 허용 (RimWorld)
             yield return RunOne("I41-build-placement-validation", TestI41_BuildPlacementValidation);
+            // #201 운영자 fb - 벽이 림 위에 완성되면 림을 밀어냄 (안 갇힘) + 이후 이동 가능
+            yield return RunOne("I42-wall-completes-on-pawn-ejects", TestI42_WallCompletesOnPawnEjects);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1720,6 +1722,107 @@ namespace MelonS.GameProto.Tests
                 + $"wall({openCell})→reject={rejectOccupied}(placed={placed_b},bp {before_b}->{after_b}) "
                 + $"open({openCell})→accept={acceptOpen}(placed={placed_c},bp {before_c}->{after_c})");
             Debug.Log($"[Int] I41 detail: rejectTerrain={rejectTerrain} rejectOccupied={rejectOccupied} acceptOpen={acceptOpen} terrainCell={terrainCell} openCell={openCell}");
+        }
+
+        /// <summary>I42 (#201, operator bug): a wall COMPLETES on the exact cell a
+        /// pawn stands on.  Pre-fix the pawn was sealed inside the impassable cell
+        /// (AStar refuses a blocked start cell; an idle pawn never re-paths) → stuck
+        /// forever.  RimWorld pushes the pawn out.  Asserts: (a) the pawn is NO
+        /// LONGER on the wall cell (its cell changed to a walkable neighbour), AND
+        /// (b) the pawn can MOVE afterward (give a target, advance, make progress).
+        ///
+        /// This is the operator's exact scenario.  Bug-repro confirmation: WITHOUT
+        /// the eject-on-block + safety-net fix, (a) is false (pawn still on the wall
+        /// cell) AND (b) is false (SetTarget can't path from a blocked start → no
+        /// movement), so the test FAILS pre-fix and PASSES post-fix.</summary>
+        private IEnumerator TestI42_WallCompletesOnPawnEjects()
+        {
+            yield return null;
+            var grid = PawnMovement.Grid;
+            if (grid == null || !PawnMovement.UsePathfinding)
+            { Assert(false, $"Grid={grid!=null} UsePathfinding={PawnMovement.UsePathfinding} (live A* 필요)"); yield break; }
+
+            // Terrain-clear region distinct from I38(0,10)/I39(-9,10)/I40(12,-8):
+            //  use the south region around (5,-15).  Verify a 3x3 block around the
+            //  pawn cell is walkable so the pawn has open neighbours to be pushed to.
+            int px = 5, py = -15;
+            bool fixtureOk = true;
+            for (int x = px - 1; x <= px + 1 && fixtureOk; x++)
+                for (int y = py - 1; y <= py + 1 && fixtureOk; y++)
+                    if (!grid.IsWalkable(new Vector2Int(x, y))) fixtureOk = false;
+            if (!fixtureOk)
+            { Assert(false, "I42 fixture cells unexpectedly blocked on real terrain — pick a clearer region"); yield break; }
+
+            var pawnCell = new Vector2Int(px, py);
+
+            // Spawn an idle pawn standing exactly on the cell.  IDLE (no target) is
+            //  the worst case — the C3 escape-hatch only fires on SetTarget, so an
+            //  idle pawn pre-fix never re-paths.
+            var pgo = new GameObject("I42_Pawn");
+            pgo.transform.position = new Vector3(px + 0.5f, py + 0.5f, 0f);
+            pgo.AddComponent<SpriteRenderer>();
+            pgo.AddComponent<BoxCollider2D>().size = Vector2.one;
+            var pm = pgo.AddComponent<PawnMovement>();
+            yield return null;   // PawnMovement.Awake runs
+
+            Vector2Int beforeCell = AI.PathGrid.WorldToCell(pm.transform.position);
+            bool onTargetCellBefore = beforeCell == pawnCell;
+
+            // Complete a wall ON that exact cell.  SpawnWallAtCell instantiates the
+            //  real wall prefab at the cell centre; WallEntity.Start() registers the
+            //  cell as blocked AND (with the fix) ejects the pawn.
+            var wallGo = SpawnWallAtCell(px, py);
+            if (wallGo == null) { Object.Destroy(pgo); Assert(false, "I42: wall prefab unavailable"); yield break; }
+            yield return null;   // WallEntity.Start() runs → register + eject
+            yield return null;
+
+            bool cellNowBlocked = !grid.IsWalkable(pawnCell);
+
+            // Give the continuous safety net a few frames too (defense in depth path).
+            for (int i = 0; i < 5; i++) yield return null;
+
+            // (a) pawn is NO LONGER on the wall cell.
+            Vector2Int afterCell = AI.PathGrid.WorldToCell(pm.transform.position);
+            bool offWallCell = afterCell != pawnCell;
+            bool landedWalkable = grid.IsWalkable(afterCell);
+
+            // (b) pawn can MOVE afterward.  Aim at a known walkable cell 4 north
+            //  (region verified clear above + open beyond); assert real progress.
+            Vector2 startMovePos = pm.transform.position;
+            Vector2 moveTarget = new Vector2(afterCell.x + 0.5f, afterCell.y + 4.5f);
+            // pick a walkable target deterministically (fallback search if blocked).
+            if (!grid.IsWalkable(AI.PathGrid.WorldToCell(moveTarget)))
+            {
+                Vector2[] cands = {
+                    new Vector2(afterCell.x + 0.5f, afterCell.y + 4.5f),
+                    new Vector2(afterCell.x + 4.5f, afterCell.y + 0.5f),
+                    new Vector2(afterCell.x + 0.5f, afterCell.y - 4.5f),
+                    new Vector2(afterCell.x - 4.5f, afterCell.y + 0.5f),
+                };
+                foreach (var c in cands)
+                    if (grid.IsWalkable(AI.PathGrid.WorldToCell(c))) { moveTarget = c; break; }
+            }
+            pm.SetTarget(moveTarget);
+            bool pathAccepted = !pm.LastPathFailed && pm.HasTarget;
+            float moved = 0f;
+            for (int i = 0; i < 60; i++)   // ~3s of sim
+            {
+                yield return new WaitForSeconds(0.05f);
+                moved = Vector2.Distance(pm.transform.position, startMovePos);
+                if (moved > 1.0f) break;
+            }
+            bool canMove = moved > 1.0f;
+
+            // cleanup
+            Object.Destroy(pgo);
+            if (wallGo != null) Object.Destroy(wallGo);
+            yield return null;   // OnDestroy → cell reopens
+
+            Assert(onTargetCellBefore && cellNowBlocked && offWallCell && landedWalkable && canMove,
+                $"I42 eject: beforeOnCell={onTargetCellBefore} cellBlocked={cellNowBlocked} "
+                + $"offWallCell={offWallCell}(after={afterCell}) landedWalkable={landedWalkable} "
+                + $"pathAccepted={pathAccepted} canMove={canMove}(moved={moved:F2}) (벽 완성 시 림 밀려남 + 이동 가능)");
+            Debug.Log($"[Int] I42 detail: before={beforeCell} after={afterCell} cellBlocked={cellNowBlocked} offWall={offWallCell} canMove={canMove} moved={moved:F2}");
         }
 
         private void FinalizeReport()

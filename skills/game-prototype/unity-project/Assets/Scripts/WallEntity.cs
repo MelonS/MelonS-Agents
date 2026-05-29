@@ -66,6 +66,15 @@ namespace MelonS.GameProto
             _registeredCell = AI.PathGrid.WorldToCell(transform.position);
             PawnMovement.RegisterWallCell(transform.position);
             _cellRegistered = true;
+            // #201 — RimWorld eject-on-block.  This wall now makes its cell
+            //  impassable.  Any pawn standing in that cell (idle, mid-walk, drafted)
+            //  would be sealed inside a solid structure — AStar refuses a blocked
+            //  START cell so it could never path out, and an idle pawn never even
+            //  re-paths.  Push every such pawn out to the nearest open cell, exactly
+            //  like RimWorld pushes a pawn off a freshly-built wall.  Called AFTER
+            //  RegisterWallCell so the cell already reads as blocked → the ejected
+            //  pawn lands on a genuinely-open neighbour, not back under the wall.
+            PawnMovement.EjectPawnsFromCell(transform.position);
         }
 
         private void OnDestroy()

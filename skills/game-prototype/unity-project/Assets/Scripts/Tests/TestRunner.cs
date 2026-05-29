@@ -123,6 +123,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V73-adjacent-stand-cell", TestV73_AdjacentStandCell);
             yield return RunOne("V74-reservation-registry", TestV74_ReservationRegistry);
             yield return RunOne("V75-distinct-target-and-cell", TestV75_DistinctTargetAndCell);
+            yield return RunOne("V76-eject-pawn-from-blocked-cell", TestV76_EjectPawnFromBlockedCell);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -2000,6 +2001,73 @@ namespace MelonS.GameProto.Tests
             Object.DestroyImmediate(tgtB);
             Object.DestroyImmediate(solo);
             ReservationManager.Clear();
+            yield break;
+        }
+
+        // V76 (#201) — isolated unit test of EjectPawnsFromCell.  Build an
+        //  all-walkable grid, place a pawn ON cell (5,5), block that cell (as a wall
+        //  completion would), then call EjectPawnsFromCell and assert the pawn moved
+        //  OFF the blocked cell onto a walkable neighbour.  Also covers the enclosed
+        //  edge case: surround a pawn on (20,20) by blocking all 8 neighbours + its
+        //  own cell → eject leaves the pawn in place (can't push into a wall) without
+        //  throwing.  No scene/bootstrap needed (flag toggled here, restored after).
+        private IEnumerator TestV76_EjectPawnFromBlockedCell()
+        {
+            bool prevFlag = PawnMovement.UsePathfinding;
+            PathGrid prevGrid = PawnMovement.Grid;
+            var grid = PathGrid.FromMask(AllWalkableMask());
+            PawnMovement.Grid = grid;
+            PawnMovement.UsePathfinding = true;
+
+            GameObject go = null, enc = null;
+            bool ejected = false, landedWalkable = false, enclosedStayed = false, noThrow = true;
+            try
+            {
+                // --- (1) normal eject: pawn on a cell that becomes blocked.
+                var cell = new Vector2Int(5, 5);
+                go = new GameObject("V76_Pawn");
+                go.transform.position = new Vector3(cell.x + 0.5f, cell.y + 0.5f, 0f);
+                go.AddComponent<SpriteRenderer>();
+                go.AddComponent<PawnMovement>();   // Awake runs (stats default)
+
+                grid.SetWalkable(cell, false);     // simulate wall now occupying it
+                PawnMovement.EjectPawnsFromCell(PathGrid.CellToWorld(cell));
+
+                var after = PathGrid.WorldToCell(go.transform.position);
+                ejected = after != cell;
+                landedWalkable = grid.IsWalkable(after);
+
+                // --- (2) enclosed edge case: pawn sealed on all sides → stays, no throw.
+                var ec = new Vector2Int(20, 20);
+                enc = new GameObject("V76_Enclosed");
+                enc.transform.position = new Vector3(ec.x + 0.5f, ec.y + 0.5f, 0f);
+                enc.AddComponent<SpriteRenderer>();
+                enc.AddComponent<PawnMovement>();
+                // block the cell + a wide region around it so TryNearestWalkable's
+                //  ring search (radius ≤8) finds NO open cell.
+                for (int dx = -8; dx <= 8; dx++)
+                    for (int dy = -8; dy <= 8; dy++)
+                        grid.SetWalkable(new Vector2Int(ec.x + dx, ec.y + dy), false);
+                PawnMovement.EjectPawnsFromCell(PathGrid.CellToWorld(ec));
+                var encAfter = PathGrid.WorldToCell(enc.transform.position);
+                enclosedStayed = encAfter == ec;   // can't push into a wall → unchanged
+            }
+            catch (System.Exception e)
+            {
+                noThrow = false;
+                Debug.LogError($"[TestRunner] V76 threw: {e.Message}");
+            }
+            finally
+            {
+                if (go != null) Object.Destroy(go);
+                if (enc != null) Object.Destroy(enc);
+                PawnMovement.UsePathfinding = prevFlag;
+                PawnMovement.Grid = prevGrid;
+            }
+
+            bool ok = ejected && landedWalkable && enclosedStayed && noThrow;
+            Debug.Log($"[TestRunner] V76: {(ok ? "OK" : "FAIL")} - ejected={ejected} landedWalkable={landedWalkable} enclosedStayed={enclosedStayed} noThrow={noThrow} (벽 완성 시 림 push-out + 갇힘 edge)");
+            Assert(ok, $"ejected={ejected} landedWalkable={landedWalkable} enclosedStayed={enclosedStayed} noThrow={noThrow}");
             yield break;
         }
 
