@@ -125,13 +125,28 @@ namespace MelonS.GameProto.EditorTools
             rt.sizeDelta = new Vector2(120, 0);
             rt.anchoredPosition = new Vector2(anchoredX, 0);
 
-            // ICON SLOT — empty 24x24 Image placed just LEFT of this readout's left edge.
-            //   Next art round: assign sr.sprite (point-filtered) + set alpha to 1.
-            //   Named "ResIcon_<key>" so the art pass can Find() each slot deterministically.
+            // ICON SLOT — 24x24 Image placed just LEFT of this readout's left edge.
+            //   Round 7: art landed.  Load Assets/Sprites/icon_<key>.png (point-filtered,
+            //   force-imported by ForceImportAllSprites) and make it visible (alpha 1).
+            //   Map is 1:1 — iconKey is stone/wood/meal/food → icon_<key>.png.
+            //   Named "ResIcon_<key>" so future passes can still Find() each slot.
             GameObject iconGo = new GameObject($"ResIcon_{iconKey}");
             iconGo.transform.SetParent(parent.transform, false);
             Image icon = iconGo.AddComponent<Image>();
-            icon.color = new Color(1f, 1f, 1f, 0f);   // invisible until art lands
+            string iconPath = $"Assets/Sprites/icon_{iconKey}.png";
+            Sprite iconSprite = AssetDatabase.LoadAssetAtPath<Sprite>(iconPath);
+            if (iconSprite != null)
+            {
+                icon.sprite = iconSprite;
+                icon.color = Color.white;             // visible (alpha 1)
+            }
+            else
+            {
+                // Art missing → keep the slot invisible rather than showing a
+                // white box.  Warn so a broken import is caught in scene-gen logs.
+                Debug.LogWarning($"[SceneSetup] top-bar icon missing: {iconPath}");
+                icon.color = new Color(1f, 1f, 1f, 0f);
+            }
             icon.raycastTarget = false;
             RectTransform irt = iconGo.GetComponent<RectTransform>();
             irt.anchorMin = new Vector2(1f, 0.5f);

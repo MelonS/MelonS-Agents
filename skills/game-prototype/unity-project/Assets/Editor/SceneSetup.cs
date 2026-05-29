@@ -78,23 +78,49 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/lamp.png",            // Stretch — Lamp
                 "Assets/Sprites/bed_wood.png",        // #107 — Wood bed
                 "Assets/Sprites/bed_fine.png",        // #198 D4-1 — Fine bed (royal-blue/gold)
+                "Assets/Sprites/berry_bush.png",      // Round 6/7 — dedicated berry-bush art (was tree reuse + neon tint)
             };
             foreach (var p in paths)
             {
-                if (!File.Exists(p)) { Debug.LogWarning($"[SceneSetup] missing: {p}"); continue; }
-                // Force re-import to ensure .meta exists + Sprite type
-                AssetDatabase.ImportAsset(p, ImportAssetOptions.ForceUpdate);
-                TextureImporter ti = AssetImporter.GetAtPath(p) as TextureImporter;
-                if (ti == null) { Debug.LogWarning($"[SceneSetup] no TextureImporter for {p}"); continue; }
-                ti.textureType = TextureImporterType.Sprite;
-                ti.spriteImportMode = SpriteImportMode.Single;
-                ti.spritePixelsPerUnit = 16;
-                ti.filterMode = FilterMode.Point;
-                ti.SaveAndReimport();
-                Debug.Log($"[SceneSetup] forced sprite import: {p}");
+                ImportSprite(p, 16);
             }
+
+            // Round 7 — top-bar resource ICONS (24x24).  PPU=24 so a 24px source
+            //   maps 1:1 to the 24x24 UI slot when read at native size; UI Image
+            //   in any case scales to its RectTransform, so this just keeps the
+            //   .meta self-consistent with the slot size.
+            string[] iconPaths = new[]
+            {
+                "Assets/Sprites/icon_stone.png",
+                "Assets/Sprites/icon_wood.png",
+                "Assets/Sprites/icon_meal.png",
+                "Assets/Sprites/icon_food.png",
+            };
+            foreach (var p in iconPaths)
+            {
+                ImportSprite(p, 24);
+            }
+
             AssetDatabase.Refresh();
             AssetDatabase.SaveAssets();
+        }
+
+        // Round 7 — extracted from the inline loop so the icon set can opt into a
+        //   different PPU (24) than the world sprites (16) while sharing the exact
+        //   same Sprite/Point/no-compress import path.
+        private static void ImportSprite(string p, int ppu)
+        {
+            if (!File.Exists(p)) { Debug.LogWarning($"[SceneSetup] missing: {p}"); return; }
+            // Force re-import to ensure .meta exists + Sprite type
+            AssetDatabase.ImportAsset(p, ImportAssetOptions.ForceUpdate);
+            TextureImporter ti = AssetImporter.GetAtPath(p) as TextureImporter;
+            if (ti == null) { Debug.LogWarning($"[SceneSetup] no TextureImporter for {p}"); return; }
+            ti.textureType = TextureImporterType.Sprite;
+            ti.spriteImportMode = SpriteImportMode.Single;
+            ti.spritePixelsPerUnit = ppu;
+            ti.filterMode = FilterMode.Point;
+            ti.SaveAndReimport();
+            Debug.Log($"[SceneSetup] forced sprite import: {p} (PPU {ppu})");
         }
 
         // GeneratePawnPrefab() moved to SceneSetup.Pawn.cs (R4)

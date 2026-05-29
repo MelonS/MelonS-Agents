@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEditor;
 using MelonS.GameProto;
 
 namespace MelonS.GameProto.EditorTools
@@ -9,10 +10,18 @@ namespace MelonS.GameProto.EditorTools
     {
         private static void SpawnBerryBushes(Sprite treeSprite)
         {
-            // Day 11/41: 6 berry bushes (40x40 맵).  AI gatherer 가 target.
-            //   tree sprite 재사용 (green tint).  BerryBushEntity.Awake 가 stock 별
-            //   sprite color 갱신 — 여기 green tint 는 placeholder.
-            // #108: 60x60 맵 - 10개로 확장 (이전 6)
+            // Day 11/41: 10 berry bushes (60x60 맵).  AI gatherer 가 target.
+            // Round 7: dedicated berry_bush.png art landed → tree-reuse + neon
+            //   tint 제거.  BerryBushEntity.Awake 가 spriteRenderer.color 를 base 로
+            //   캐시한 뒤 stock 별 brightness 곱(0.35~1.0)을 적용하므로, base 를
+            //   Color.white 로 두면 새 스프라이트가 본래 색으로 시작하고 stock
+            //   상태는 밝기 변화로 계속 표현된다 (treeSprite fallback only if 미import).
+            Sprite bushSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/berry_bush.png");
+            if (bushSprite == null)
+            {
+                Debug.LogWarning("[SceneSetup] berry_bush.png missing → falling back to tree sprite");
+                bushSprite = treeSprite;
+            }
             Vector2[] bushPositions = new[]
             {
                 new Vector2(-9f,  -2f),  new Vector2(  6f,  -8f), new Vector2( 11f,   3f),
@@ -25,9 +34,9 @@ namespace MelonS.GameProto.EditorTools
                 GameObject b = new GameObject($"BerryBush_{pos.x}_{pos.y}");
                 b.transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, 0);  // tile center 정렬
                 SpriteRenderer bsr = b.AddComponent<SpriteRenderer>();
-                bsr.sprite = treeSprite;
+                bsr.sprite = bushSprite;
                 bsr.sortingOrder = 5;
-                bsr.color = new Color(0.6f, 0.9f, 0.4f, 1f);
+                bsr.color = Color.white;   // neutral base; BerryBushEntity tints by stock brightness
                 BoxCollider2D bcol = b.AddComponent<BoxCollider2D>();
                 bcol.size = Vector2.one;
                 b.AddComponent<BerryBushEntity>();
