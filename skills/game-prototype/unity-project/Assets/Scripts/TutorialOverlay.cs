@@ -33,6 +33,10 @@ namespace MelonS.GameProto
 
         [SerializeField] private Image bg;
         [SerializeField] private Text tipText;
+        // #UI-restyle U8 — the banner is now a bordered panel (border Image + fill child +
+        //   text).  We fade the whole subtree via a CanvasGroup instead of tweening one Image
+        //   alpha, so the warm border/fill/text fade together as one panel.
+        [SerializeField] private CanvasGroup group;
 
         private int currentTipIdx = -1;
         private float currentTipFadeTime;
@@ -41,8 +45,10 @@ namespace MelonS.GameProto
 
         private void Start()
         {
-            if (bg != null) { var c = bg.color; c.a = 0f; bg.color = c; }
-            if (tipText != null) { var c = tipText.color; c.a = 0f; tipText.color = c; }
+            if (group != null) group.alpha = 0f;
+            // legacy single-image fade fallback (only if no CanvasGroup wired)
+            if (group == null && bg != null) { var c = bg.color; c.a = 0f; bg.color = c; }
+            if (group == null && tipText != null) { var c = tipText.color; c.a = 0f; tipText.color = c; }
         }
 
         private void Update()
@@ -84,19 +90,29 @@ namespace MelonS.GameProto
                 else FadeOut();
             }
             // Smooth fade
-            if (bg != null)
+            if (group != null)
             {
-                float target = currentVisible ? 0.78f : 0f;
-                var c = bg.color;
-                c.a = Mathf.MoveTowards(c.a, target, Time.unscaledDeltaTime * 2f);
-                bg.color = c;
+                // whole bordered-panel fade (border + fill + text) — warm panel reads as one.
+                float target = currentVisible ? 0.92f : 0f;
+                group.alpha = Mathf.MoveTowards(group.alpha, target, Time.unscaledDeltaTime * 2f);
             }
-            if (tipText != null)
+            else
             {
-                float target = currentVisible ? 1f : 0f;
-                var c = tipText.color;
-                c.a = Mathf.MoveTowards(c.a, target, Time.unscaledDeltaTime * 2f);
-                tipText.color = c;
+                // legacy fallback (single Image + Text alpha) for any unmigrated wiring.
+                if (bg != null)
+                {
+                    float target = currentVisible ? 0.78f : 0f;
+                    var c = bg.color;
+                    c.a = Mathf.MoveTowards(c.a, target, Time.unscaledDeltaTime * 2f);
+                    bg.color = c;
+                }
+                if (tipText != null)
+                {
+                    float target = currentVisible ? 1f : 0f;
+                    var c = tipText.color;
+                    c.a = Mathf.MoveTowards(c.a, target, Time.unscaledDeltaTime * 2f);
+                    tipText.color = c;
+                }
             }
         }
 
@@ -107,6 +123,14 @@ namespace MelonS.GameProto
         {
             bg = bgImg;
             tipText = txt;
+        }
+
+        // #UI-restyle U8 overload — bordered-panel version (border Image + fill + CanvasGroup).
+        public void SetRefs(Image bgImg, Text txt, CanvasGroup cg)
+        {
+            bg = bgImg;
+            tipText = txt;
+            group = cg;
         }
     }
 }

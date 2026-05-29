@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using MelonS.GameProto;
+using MelonS.GameProto.Core;
 
 namespace MelonS.GameProto.EditorTools
 {
@@ -10,40 +11,50 @@ namespace MelonS.GameProto.EditorTools
     {
         private static void GenerateTutorialOverlay(GameObject canvasGo, Font uiFont, Image resProg)
         {
+            // #UI-restyle U8 (Round 5) — tutorial banner = warm bordered panel (was a cold
+            //   flat near-black box).  The root TutorialBg Image becomes the Divider BORDER;
+            //   MakeBorderedPanel adds a PanelBg fill child; a CanvasGroup on TutorialBg lets
+            //   TutorialOverlay fade the WHOLE bordered panel (border + fill + text) together
+            //   instead of tweening a single Image alpha.  Keeps the same GameObject names so
+            //   SetRefs / any lookups stay valid.
             GameObject tutBgGo = new GameObject("TutorialBg");
             tutBgGo.transform.SetParent(canvasGo.transform, false);
-            Image tutBg = tutBgGo.AddComponent<Image>();
-            tutBg.color = new Color(0.03f, 0.05f, 0.08f, 0f);  // start hidden
-            tutBg.sprite = resProg.sprite;  // reuse white 2x2
-            RectTransform tutBgRt = tutBgGo.GetComponent<RectTransform>();
+            RectTransform tutBgRt = tutBgGo.AddComponent<RectTransform>();
             tutBgRt.anchorMin = new Vector2(0.5f, 1f);
             tutBgRt.anchorMax = new Vector2(0.5f, 1f);
             tutBgRt.pivot = new Vector2(0.5f, 1f);
             tutBgRt.sizeDelta = new Vector2(720, 100);
             tutBgRt.anchoredPosition = new Vector2(0, -80);
+            // bordered panel (returns padded inner content RT; TutorialText parents here)
+            RectTransform tutContent = UITheme.MakeBorderedPanel(
+                tutBgRt, UITheme.BorderPx, UITheme.PanelBg, UITheme.PadOuter);
+            // CanvasGroup drives the whole-panel fade (border Image is the root TutorialBg).
+            Image tutBg = tutBgGo.GetComponent<Image>();   // the Divider border Image
+            CanvasGroup tutCg = tutBgGo.AddComponent<CanvasGroup>();
+            tutCg.alpha = 0f;   // start hidden
 
             GameObject tutTextGo = new GameObject("TutorialText");
-            tutTextGo.transform.SetParent(tutBgGo.transform, false);
+            tutTextGo.transform.SetParent(tutContent, false);
             Text tutText = tutTextGo.AddComponent<Text>();
             tutText.text = "";
-            tutText.font = uiFont;
+            tutText.font = UITheme.LoadKoreanFont(28);
             tutText.fontSize = 28;
             tutText.alignment = TextAnchor.MiddleCenter;
-            tutText.color = new Color(0.98f, 0.95f, 0.85f, 0f);
+            tutText.color = UITheme.TextPrimary;   // cream body text
             tutText.supportRichText = true;
             tutText.horizontalOverflow = HorizontalWrapMode.Wrap;
             tutText.verticalOverflow = VerticalWrapMode.Overflow;
             RectTransform tutTextRt = tutTextGo.GetComponent<RectTransform>();
             tutTextRt.anchorMin = Vector2.zero;
             tutTextRt.anchorMax = Vector2.one;
-            tutTextRt.sizeDelta = new Vector2(-24, -12);
+            tutTextRt.sizeDelta = Vector2.zero;
             tutTextRt.anchoredPosition = Vector2.zero;
 
             GameObject tutHost = new GameObject("TutorialOverlayHost");
             tutHost.transform.SetParent(canvasGo.transform, false);
             tutHost.AddComponent<RectTransform>();
             TutorialOverlay tutOv = tutHost.AddComponent<TutorialOverlay>();
-            tutOv.SetRefs(tutBg, tutText);
+            tutOv.SetRefs(tutBg, tutText, tutCg);
         }
     }
 }

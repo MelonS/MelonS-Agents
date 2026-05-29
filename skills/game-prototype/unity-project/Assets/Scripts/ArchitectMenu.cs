@@ -18,11 +18,15 @@ namespace MelonS.GameProto
         public static ArchitectMenu Instance => _instance;
 
         private RectTransform rt;
-        private Image bg;
+        private RectTransform panelContent;   // #UI-restyle U7 — inner content RT (inside border+fill)
         private Font font;
         private bool isOpen = false;
         private GameObject contentRoot;
         private string activeCategory = "";
+
+        // #UI-restyle U7 (Round 5) — share the control bar's exact button palette.
+        private static readonly Color InactiveBg = MelonS.GameProto.Core.UITheme.BtnInactiveBg;
+        private static readonly Color HeaderBg   = MelonS.GameProto.Core.UITheme.HeaderBg;
 
         // 림월드 vanilla 패턴 — 카테고리별 buildable 목록
         private static readonly Dictionary<string, (BuildManager.Mode mode, string label, int cost)[]> Categories = new()
@@ -58,7 +62,8 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            font = LoadKoreanFont();
+            // #UI-restyle U9 — route through UITheme (no per-script font fallback drift).
+            font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(18);
             rt = gameObject.AddComponent<RectTransform>();
             // 좌측 stack - TopBar 아래 + GuiControlBar 위.  size 280x440.
             rt.anchorMin = new Vector2(0f, 0.5f);
@@ -66,51 +71,58 @@ namespace MelonS.GameProto
             rt.pivot = new Vector2(0f, 0.5f);
             rt.sizeDelta = new Vector2(280, 440);
             rt.anchoredPosition = new Vector2(12, 0);
-            bg = gameObject.AddComponent<Image>();
-            bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
+
+            // #UI-restyle U7 — same MakeBorderedPanel the control bar / inspector use:
+            //   warm-brown fill + Divider border on all 4 edges (was a flat borderless rect).
+            //   PadOuter inset so the header + buttons breathe inside the frame.
+            panelContent = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(
+                rt, MelonS.GameProto.Core.UITheme.BorderPx, MelonS.GameProto.Core.UITheme.PanelBg,
+                MelonS.GameProto.Core.UITheme.PadOuter);
 
             BuildMenu();
             gameObject.SetActive(false);
         }
 
-        private Font LoadKoreanFont()
-        {
-            string[] candidates = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
-            foreach (var name in candidates)
-            {
-                var f = Font.CreateDynamicFontFromOSFont(name, 18);
-                if (f != null) return f;
-            }
-            return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        }
-
         private void BuildMenu()
         {
-            // 제목
+            // 헤더 strip — HeaderBg 띠 + AccentGold 제목 (모든 패널 헤더와 동일 톤).
+            var headerStripGo = new GameObject("HeaderStrip");
+            headerStripGo.transform.SetParent(panelContent, false);
+            var hsImg = headerStripGo.AddComponent<Image>();
+            hsImg.color = HeaderBg;
+            hsImg.raycastTarget = false;
+            var hsrt = headerStripGo.GetComponent<RectTransform>();
+            hsrt.anchorMin = new Vector2(0, 1);
+            hsrt.anchorMax = new Vector2(1, 1);
+            hsrt.pivot = new Vector2(0.5f, 1);
+            hsrt.sizeDelta = new Vector2(0, 36);
+            hsrt.anchoredPosition = new Vector2(0, 0);
+
+            // 제목 (gold, 헤더 띠 위)
             var titleGo = new GameObject("Title");
-            titleGo.transform.SetParent(transform, false);
+            titleGo.transform.SetParent(headerStripGo.transform, false);
             var t = titleGo.AddComponent<Text>();
             t.text = "🏛 건축 (F8)";
             t.font = font;
-            t.fontSize = 22;
+            t.fontSize = 20;
             t.fontStyle = FontStyle.Bold;
-            t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
-            t.alignment = TextAnchor.UpperCenter;
+            t.color = MelonS.GameProto.Core.UITheme.AccentGold;
+            t.alignment = TextAnchor.MiddleCenter;
+            t.raycastTarget = false;
             var trt = titleGo.GetComponent<RectTransform>();
-            trt.anchorMin = new Vector2(0, 1);
-            trt.anchorMax = new Vector2(1, 1);
-            trt.pivot = new Vector2(0.5f, 1);
-            trt.sizeDelta = new Vector2(0, 36);
-            trt.anchoredPosition = new Vector2(0, -8);
+            trt.anchorMin = Vector2.zero;
+            trt.anchorMax = Vector2.one;
+            trt.sizeDelta = Vector2.zero;
+            trt.anchoredPosition = Vector2.zero;
 
-            // content 영역 (카테고리 list + 펼친 buildables)
+            // content 영역 (카테고리 list + 펼친 buildables) — 헤더 strip 아래.
             contentRoot = new GameObject("Content");
-            contentRoot.transform.SetParent(transform, false);
+            contentRoot.transform.SetParent(panelContent, false);
             var crt = contentRoot.AddComponent<RectTransform>();
             crt.anchorMin = new Vector2(0, 0);
             crt.anchorMax = new Vector2(1, 1);
-            crt.sizeDelta = new Vector2(-16, -56);
-            crt.anchoredPosition = new Vector2(0, -16);
+            crt.offsetMin = new Vector2(0, 0);
+            crt.offsetMax = new Vector2(0, -44);   // leave room for the 36px header + 8 gap
             RefreshContent();
         }
 
@@ -166,21 +178,32 @@ namespace MelonS.GameProto
             brt.pivot = new Vector2(0, 1);
             brt.sizeDelta = new Vector2(-pos.x, 30);
             brt.anchoredPosition = pos;
+
+            // #UI-restyle U7 — identical treatment to GuiControlBar.MakeBtn:
+            //   root Image = Divider border; inset PanelFill = the body color; Button
+            //   targets the FILL so hover/pressed tint the body, border stays consistent.
             var img = go.AddComponent<Image>();
-            img.color = col;
+            img.color = MelonS.GameProto.Core.UITheme.Divider;
+            var fillRt = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(brt, 2f, col);
+            var fillImg = fillRt.parent.GetComponent<Image>();   // PanelFill image
             var btn = go.AddComponent<Button>();
+            btn.targetGraphic = fillImg;
             var cb = btn.colors;
-            cb.normalColor = Color.white;
-            cb.highlightedColor = new Color(1.2f, 1.2f, 1.2f, 1f);
-            cb.pressedColor = new Color(0.6f, 0.6f, 0.6f, 1f);
+            cb.normalColor      = Color.white;
+            cb.highlightedColor = new Color(1.18f, 1.18f, 1.18f, 1f);
+            cb.pressedColor     = new Color(0.72f, 0.72f, 0.72f, 1f);
+            cb.selectedColor    = Color.white;
+            cb.fadeDuration     = 0.06f;
             btn.colors = cb;
             btn.onClick.AddListener(() => onClick?.Invoke());
+
             var txtGo = new GameObject("Label");
             txtGo.transform.SetParent(go.transform, false);
             var t = txtGo.AddComponent<Text>();
             t.text = label;
             t.font = font;
             t.fontSize = 16;
+            t.fontStyle = FontStyle.Bold;
             t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleLeft;
             t.raycastTarget = false;

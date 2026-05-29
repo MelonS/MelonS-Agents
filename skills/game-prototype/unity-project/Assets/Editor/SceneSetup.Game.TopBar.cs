@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor;
 using MelonS.GameProto;
+using MelonS.GameProto.Core;
 
 namespace MelonS.GameProto.EditorTools
 {
@@ -15,9 +16,7 @@ namespace MelonS.GameProto.EditorTools
         {
             GameObject topBarGo = new GameObject("TopBar");
             topBarGo.transform.SetParent(canvasGo.transform, false);
-            Image topBarBg = topBarGo.AddComponent<Image>();
-            topBarBg.color = colPanel;
-            RectTransform topRt = topBarGo.GetComponent<RectTransform>();
+            RectTransform topRt = topBarGo.AddComponent<RectTransform>();
             topRt.anchorMin = new Vector2(0f, 1f);
             topRt.anchorMax = new Vector2(1f, 1f);
             topRt.pivot = new Vector2(0.5f, 1f);
@@ -26,14 +25,31 @@ namespace MelonS.GameProto.EditorTools
             topRt.sizeDelta = new Vector2(0, 60);
             topRt.anchoredPosition = new Vector2(0, 0);
 
-            // TopBar LEFT - ClockUI "Day 1 - 06:00"
+            // #UI-restyle U4 (Round 5) — bring the top bar onto the global bordered-panel
+            //   system (same MakeBorderedPanel the control bar / inspector use): warm-brown
+            //   HeaderBg fill + Divider border.  The bar spans full width and anchors to the
+            //   top, so the border's BOTTOM edge reads as the bar's defined bottom rule.
+            //   We parent every readout to the returned inner Content RT so text sits inside
+            //   the border (the SerializedObject text refs below are unaffected — they bind
+            //   by component reference, not by name/path).
+            RectTransform topContent = UITheme.MakeBorderedPanel(topRt, UITheme.BorderPx, UITheme.HeaderBg);
+            // Use the canonical UITheme font + colors instead of the legacy passed-in Color args.
+            uiFont = UITheme.LoadKoreanFont(28);
+            colTextPrimary = UITheme.TextPrimary;
+            colTextMuted   = UITheme.Divider;          // separators tint with the border tone
+            colAccentWood  = UITheme.AccentTan;         // 목재 → warm tan
+            colAccentFood  = new Color(0.478f, 0.604f, 0.302f, 1f);  // 식량 → olive-green (matches food bars)
+            GameObject parent = topContent.gameObject;
+
+            // TopBar LEFT - ClockUI "Day 1 - 06:00"  (gold clock readout, matches panel titles)
             GameObject clockGo = new GameObject("ClockUI");
-            clockGo.transform.SetParent(topBarGo.transform, false);
+            clockGo.transform.SetParent(parent.transform, false);
             Text clockText = clockGo.AddComponent<Text>();
             clockText.text = "Day 1 - 06:00";
             clockText.font = uiFont;
             clockText.fontSize = 28;
-            clockText.color = colTextPrimary;
+            clockText.fontStyle = FontStyle.Bold;
+            clockText.color = UITheme.AccentGold;   // clock is the "title" of the bar → gold
             clockText.alignment = TextAnchor.MiddleLeft;
             RectTransform clockRt = clockGo.GetComponent<RectTransform>();
             clockRt.anchorMin = new Vector2(0f, 0f);
@@ -45,11 +61,12 @@ namespace MelonS.GameProto.EditorTools
 
             // TopBar CENTER - TimeUI "▶ 1x"
             GameObject timeGo = new GameObject("TimeUI");
-            timeGo.transform.SetParent(topBarGo.transform, false);
+            timeGo.transform.SetParent(parent.transform, false);
             Text timeText = timeGo.AddComponent<Text>();
             timeText.text = "▶ 1x";
             timeText.font = uiFont;
             timeText.fontSize = 28;
+            timeText.fontStyle = FontStyle.Bold;
             timeText.color = colTextPrimary;
             timeText.alignment = TextAnchor.MiddleCenter;
             RectTransform timeRt = timeGo.GetComponent<RectTransform>();
@@ -60,17 +77,21 @@ namespace MelonS.GameProto.EditorTools
             timeRt.anchoredPosition = new Vector2(0, 0);
             timeGo.AddComponent<TimeUI>();
 
-            // Day 38: 우측 리소스 영역 layout - overlap fix.
-            //  [목재: N] · [식사: N] · [식량: N] · [석재: N]  16px padding from right
-            //  각 텍스트 width 120, 점 width 16, 텍스트간 8px 간격. 총 너비 ~580.
-            Text foodText = MakeResText(topBarGo, "FoodText", "식량: 0", uiFont, colAccentFood, -16);
-            MakeResSeparator(topBarGo, "ResSep2", uiFont, colTextMuted, -144);
-            Text mealsText = MakeResText(topBarGo, "MealsText", "식사: 0", uiFont, new Color(0.93f, 0.81f, 0.45f, 1f), -168);
-            MakeResSeparator(topBarGo, "ResSep1", uiFont, colTextMuted, -296);
-            Text woodText = MakeResText(topBarGo, "WoodText", "목재: 0", uiFont, colAccentWood, -320);
-            MakeResSeparator(topBarGo, "ResSep3", uiFont, colTextMuted, -448);
+            // Day 38 / #UI-restyle U4 (Round 5): 우측 리소스 영역.
+            //  [icon|식량: N] │ [icon|식사: N] │ [icon|목재: N] │ [icon|석재: N]  16px from right.
+            //  점(·) 구분자 → 얇은 Divider 세로선(MakeVDivider 스타일)으로 교체해 제어바와 통일.
+            //  각 readout 앞에 24x24 ICON SLOT(빈 자리)을 둠 → 다음 art round 에서
+            //  여기에 wood/food/meal/stone 아이콘 스프라이트를 넣으면 됨.
+            //  (ICON SLOT 은 "ResIcon_<key>" 이름의 빈 Image, 현재 alpha 0).
+            //  각 텍스트 width 120, 세로선 2px, 텍스트간 28px 간격. 총 너비 ~580.
+            Text foodText  = MakeResText(parent, "FoodText",  "식량: 0", "food",  uiFont, colAccentFood, -16);
+            MakeResSeparator(parent, "ResSep2", -150);
+            Text mealsText = MakeResText(parent, "MealsText", "식사: 0", "meal",  uiFont, new Color(0.93f, 0.81f, 0.45f, 1f), -176);
+            MakeResSeparator(parent, "ResSep1", -310);
+            Text woodText  = MakeResText(parent, "WoodText",  "목재: 0", "wood",  uiFont, colAccentWood, -336);
+            MakeResSeparator(parent, "ResSep3", -470);
             // #119 - 석재 (회색)
-            Text stoneText = MakeResText(topBarGo, "StoneText", "석재: 0", uiFont, new Color(0.78f, 0.78f, 0.80f, 1f), -472);
+            Text stoneText = MakeResText(parent, "StoneText", "석재: 0", "stone", uiFont, new Color(0.78f, 0.78f, 0.80f, 1f), -496);
 
             // ResourceCounterUI host (no longer has its own panel image; just script)
             GameObject resHostGo = new GameObject("ResourceCounter");
@@ -86,7 +107,7 @@ namespace MelonS.GameProto.EditorTools
         }
 
         private static Text MakeResText(GameObject parent, string name, string label,
-                                        Font uiFont, Color col, float anchoredX)
+                                        string iconKey, Font uiFont, Color col, float anchoredX)
         {
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent.transform, false);
@@ -94,6 +115,7 @@ namespace MelonS.GameProto.EditorTools
             t.text = label;
             t.font = uiFont;
             t.fontSize = 28;
+            t.fontStyle = FontStyle.Bold;
             t.color = col;
             t.alignment = TextAnchor.MiddleRight;
             RectTransform rt = go.GetComponent<RectTransform>();
@@ -102,25 +124,39 @@ namespace MelonS.GameProto.EditorTools
             rt.pivot = new Vector2(1f, 0.5f);
             rt.sizeDelta = new Vector2(120, 0);
             rt.anchoredPosition = new Vector2(anchoredX, 0);
+
+            // ICON SLOT — empty 24x24 Image placed just LEFT of this readout's left edge.
+            //   Next art round: assign sr.sprite (point-filtered) + set alpha to 1.
+            //   Named "ResIcon_<key>" so the art pass can Find() each slot deterministically.
+            GameObject iconGo = new GameObject($"ResIcon_{iconKey}");
+            iconGo.transform.SetParent(parent.transform, false);
+            Image icon = iconGo.AddComponent<Image>();
+            icon.color = new Color(1f, 1f, 1f, 0f);   // invisible until art lands
+            icon.raycastTarget = false;
+            RectTransform irt = iconGo.GetComponent<RectTransform>();
+            irt.anchorMin = new Vector2(1f, 0.5f);
+            irt.anchorMax = new Vector2(1f, 0.5f);
+            irt.pivot = new Vector2(1f, 0.5f);
+            irt.sizeDelta = new Vector2(24, 24);
+            // readout left edge ≈ anchoredX - 120 (right-anchored, 120 wide); gap 6px.
+            irt.anchoredPosition = new Vector2(anchoredX - 120f - 6f, 0);
             return t;
         }
 
-        private static void MakeResSeparator(GameObject parent, string name,
-                                             Font uiFont, Color col, float anchoredX)
+        // #UI-restyle U4 — slim Divider-colored vertical rule between readouts
+        //   (replaces the old "·" debug-text separator), matching the control bar's group lines.
+        private static void MakeResSeparator(GameObject parent, string name, float anchoredX)
         {
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent.transform, false);
-            Text t = go.AddComponent<Text>();
-            t.text = "·";
-            t.font = uiFont;
-            t.fontSize = 28;
-            t.color = col;
-            t.alignment = TextAnchor.MiddleCenter;
+            Image img = go.AddComponent<Image>();
+            img.color = UITheme.Divider;
+            img.raycastTarget = false;
             RectTransform rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(1f, 0f);
-            rt.anchorMax = new Vector2(1f, 1f);
+            rt.anchorMin = new Vector2(1f, 0.5f);
+            rt.anchorMax = new Vector2(1f, 0.5f);
             rt.pivot = new Vector2(1f, 0.5f);
-            rt.sizeDelta = new Vector2(16, 0);
+            rt.sizeDelta = new Vector2(2f, 32f);
             rt.anchoredPosition = new Vector2(anchoredX, 0);
         }
     }
