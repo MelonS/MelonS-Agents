@@ -1,57 +1,43 @@
 {
   "role": "QA+Integrator",
-  "cycle": "C-017",
-  "wave": "W-M6-03",
+  "cycle": "C-018",
+  "wave": "W-M6-04",
   "status": "PASS",
-  "build_tag": "cz-w3",
-  "commit_hash": "0bbfd74",
+  "build_tag": "cz-w4",
+  "commit_hash": "f1e52de",
   "wiring_done": [
-    "B2 (SelectionGizmoBar): SelectionGizmoBar.cs.meta created.",
-    "B4 (Barricade): BarricadeEntity.cs.meta created. barricade.png.meta (PPU 16, Sprite type). _gen_barricade.py.meta + _preview_barricade.png.meta created.",
-    "B9 (door/cook/shoot SFX): door.wav.meta + cook.wav.meta + shoot.wav.meta created (AudioImporter format, 2D). _gen_m6_action_sfx.py.meta created. SceneSetup.Game.Audio.cs extended with ForceImport + SerializedObject wire for sfxDoor/sfxCook/sfxShoot (same ForceImport pattern as prior SFX slots).",
-    "B11 (terrain-edge/rock-variety): rock_variant_a/b/c.png.meta + water_edge_band.png.meta created (PPU 16, Sprite type, Resources/scatter/). _gen_edge_rocks.py.meta + _preview_edge_rocks.png.meta created.",
-    "W-M3-03 Sound/Art: MusicDirector.cs.meta + WeatherParticleDriver.cs.meta already existed (makers pre-created). danger.wav.meta pre-existed."
+    "B5 (AutodoorEntity): AutodoorEntity.cs.meta created (guid b2fee4ac). DoorEntity.PassMul promoted from const to per-instance in prior wave commit — B5 confirmed post-merge.",
+    "B12-verify (V16AutodoorAreaCancelTest): V16AutodoorAreaCancelTest.cs.meta created (guid 7af69de0).",
+    "Sprites (autodoor): autodoor.png.meta (PPU 16, Sprite), _gen_autodoor.py.meta (DefaultImporter), _preview_autodoor.png.meta (PPU 16, Sprite) — all created.",
+    "No SceneSetup wiring required: B5 autodoor uses BuildManager lazy procedural fallback (EnsureAutodoorPrefab/EnsureAutodoorSprite); B7 area-cancel is self-bootstrapping; no new AudioBank slots."
   ],
   "makers_verified": [
-    "B2 (Programmer/wiki B2): SelectionGizmoBar.cs self-bootstraps [RuntimeInitializeOnLoadMethod(AfterSceneLoad)], DontDestroyOnLoad, FindFirstObjectByType guard. Bottom-center Canvas sortingOrder=200. Draft button calls PawnEntity.SetDrafted(!IsDrafted) — identical to R-key. Cancel clears selection. MarqueeSelector.HasMultiSelection preferred over single ClickSelector.CurrentSelection. Per-click AudioBank.PlaySelect() (no per-frame loop). No SceneSetup edit. Bug-pattern firewall confirmed.",
-    "B4 (Programmer/wiki B4): BarricadeEntity.cs — IsPassable=false, Start: PathGrid.WorldToCell + PawnMovement.RegisterWallCell + EjectPawnsFromCell (mirrors WallEntity), OnDestroy: SetStructureBlocked(cell,false). BuildManager.cs Mode.Barricade + lazy EnsureBarricadePrefab/EnsureBarricadeSprite. ArchitectMenu.cs Security (방어) category row. barricade.png 16x16 lower-half sandbag. No SceneSetup edit (lazy procedural). No cover-math.",
-    "B9 (Sound/wiki B9): door.wav 0.18s woody-creak + frame-thud, cook.wav 0.30s sizzle+metallic-clatter, shoot.wav 0.15s bow-twang+whoosh. AudioBank.cs sfxDoor/sfxCook/sfxShoot fields + PlayDoor(0.15s)/PlayCook(0.5s)/PlayShoot(no-throttle). DoorEntity.NotifyPassing() -> PlayDoor(), StoveEntity.CookOne() -> PlayCook(), ArrowProjectile.SpawnArrow() -> PlayShoot().",
-    "B11 (Artist/wiki B11): ScatterVarietyDriver.cs extended — PlaceBaselineRockVariants() scatters rock_variant_a(12x9)/b(8x10)/c(14x7), PlaceWaterEdgeDecals() places water_edge_band(16x4) on grass/water boundary cells via PawnMovement.GroundTilemap/WaterTile READ-ONLY. Seed 98765 unchanged, existing counts unchanged, sortingOrder 1 unchanged. No SceneSetup edit.",
-    "W-M3-03 Sound (wiki #8): danger.wav 16s tense-drone. MusicDirector.cs self-bootstraps, polls AIDirector.Instance.CurrentThreatTier, calls PlayDangerMusic()/StopDangerMusic() on tier transitions. AudioBank.cs dangerBgm+dangerSource+PlayDangerMusic/StopDangerMusic+crossfade ~1s. Idempotent (_dangerActive + _lastTier guards).",
-    "W-M3-03 Art (wiki #14): WeatherParticleDriver.cs self-bootstraps, ParticleSystem built 100% in code. Storm: emission=120, Play(). Clear: emission=0, Clear(), Stop(). sortingOrder=26 (above NightOverlay 25). RainColor rgba(0.565,0.647,0.706,0.40). Camera-follow in Update().",
-    "BE V6 crop stages: SceneSetup.Game.Entities.cs — spriteSeedling/spriteGrowing/spriteRipe loaded before crop loop and SerializedObject-wired onto each CropEntity. QA confirmed 3 distinct stage colors (V48 OK).",
-    "V7 raid-threat test (wiki #27): V7RaidThreatTest.cs — [1]GameClock forced to Day3/Hour6 via reflection, [2]AIDirector.SpawnRaid() via reflection, [3]BanditEnemy closes distance over 2s WaitForSeconds. Composite ONE binary PASS. Cleanup after test.",
-    "PawnInfoPanel tabs (wiki #23): 4-tab strip 상태/건강/기분/장비 runtime-lazy-built via EnsureTabs(). No SceneSetup edit, no new SerializeField. Brace/paren balance verified by Programmer."
+    "B5 (Programmer/wiki B5 autodoor): DoorEntity.PassMul const(0.65)->per-instance field+property+SetPassMul(); protected virtual Awake() for subclass chain; PassMulAt(pos) static helper returns per-instance value. AutodoorEntity:DoorEntity sets passMul=0.95 in Awake(). BuildManager Mode.Autodoor + lazy EnsureAutodoorPrefab/EnsureAutodoorSprite + ArchitectMenu Structure category autodoor row (목재 6). PawnMovement both branches changed to DoorEntity.PassMulAt(pos) — behavior-preserving for plain door (0.65). B9 NotifyPassing()->PlayDoor() preserved verbatim.",
+    "B7 (Programmer/wiki B7 area-cancel): DeconstructDesignation extended with drag-rect: left-DOWN records dragStartWorld, UpdateDragOverlay shows code-gen DANGER_RED quad (sortingOrder 29, no prefab); left-UP: near-zero drag (<0.35u) -> existing single-click, else SweepBox. SweepBox iterates all cells in box, calls TryMark per cell (idempotent), cancels BlueprintEntity via Destroy (no BlueprintEntity edit). public SweepBox(worldA,worldB) for B12-verify harness. ESC/right-click tears down in-flight drag. Bug-pattern firewall confirmed.",
+    "B12-verify (Build-Engineer V16): V16AutodoorAreaCancelTest.cs companion MonoBehaviour — Part(a): autodoor.PassMul(0.95) > plainDoor.PassMul(0.65) via AddComponent<AutodoorEntity>() + DoorEntity.PassMul instance read. Part(b): bootstrap DeconstructDesignation, TryMark on 3 WallEntity -> markedTargets.Count>=3. ONE binary PASS both (a) AND (b). Same RunOne/Assert/GetWhiteSprite pattern as V15/V13/V9. FLAG-C: NOT registered in TestRunner.cs (QA scope — see flags)."
   ],
   "qa_results": {
     "scenes_regen": "PASS",
     "verify_build": "PASS",
-    "qa_screenshot": "PASS — 234KB captured G:/ai/_refactor_current.png",
+    "qa_screenshot": "PASS — 235KB captured G:/ai/_refactor_current.png",
     "runtime_errors": "none",
     "fresh_build": "PASS — _harness-latest built fresh",
     "real_qa_30s": "PASS — wood +60 in 30s (7 ResMon snapshots, t=0s wood=40 -> t=30s wood=100)",
     "build_click_qa": "PASS — 6 mode chain OVERALL PASS (9/9 cases)",
-    "visual_diff": "PASS — 3.42% vs baseline (threshold 5%)",
-    "isolated_tests": "76 PASS / 0 FAIL (== 76 >= prior 76)",
+    "visual_diff": "PASS — 3.28% vs baseline (threshold 5%)",
+    "isolated_tests": "76 PASS / 0 FAIL (== prior 76; V16 companion not yet in TestRunner)",
     "integration_tests": "42 PASS / 0 FAIL (== 42 required)"
   },
-  "visual_confirmation": "Screenshot confirms: pawns (지훈/민지) visible with name labels, settlement wall/stove/lamp area left, inspector panel right (empty state '선택한 오브젝트 없음'), resource bar top (석재:0, 목재:40, 식사:2, 식량:10), GuiControlBar bottom with all mode buttons. 3.42% diff — within threshold.",
+  "visual_confirmation": "Screenshot: pawns (지훈/민지) visible with name labels; settlement wall/stove/lamp area left; inspector panel right; resource bar top (석재:0, 목재:40, 식사:2, 식량:10); GuiControlBar bottom with all mode buttons; 해체(X) deconstruct toggle visible bottom-left. 3.28% diff — within 5% threshold.",
   "wiki_acceptance_checked": {
-    "B2_gizmo_bar": "SelectionGizmoBar self-bootstraps: selecting pawn shows Draft button; clicking drafts (same as R-key); deselecting hides bar. MarqueeSelector multi-select supported. SHIPPED.",
-    "B4_barricade_sandbag": "BarricadeEntity in Architect Security (방어) category. Blocks pathing (PawnMovement.RegisterWallCell / PathGrid.SetStructureBlocked). Low visual read (sortingOrder 2). No cover-math. SHIPPED.",
-    "B9_door_cook_shoot_sfx": "door.wav/cook.wav/shoot.wav wired via SceneSetup.Game.Audio.cs. DoorEntity/StoveEntity/ArrowProjectile one-line callers. Throttles: door 0.15s, cook 0.5s, shoot none. SHIPPED.",
-    "B11_terrain_edge_rock_variety": "rock_variant_a/b/c + water_edge_band placed by ScatterVarietyDriver at sortingOrder 1. Deterministic seed 98765. Resources.Load path. SHIPPED.",
-    "wiki_8_danger_music": "MusicDirector.cs polls threatTier; PlayDangerMusic on tier>=2, StopDangerMusic on tier<2. ~1s crossfade. dangerBgm wired in SceneSetup.Game.Audio.cs. SHIPPED.",
-    "wiki_14_rain_particles": "WeatherParticleDriver.cs: Storm -> emission 120, Clear -> PS.Clear()+Stop. sortingOrder 26 above NightOverlay. Built 100% in code. SHIPPED.",
-    "wiki_23_inspector_tabs": "PawnInfoPanel 4-tab strip 상태/건강/기분/장비 runtime-lazy. No SceneSetup edit. SHIPPED.",
-    "wiki_27_v7_raid_threat_test": "V7RaidThreatTest.cs ONE binary PASS: day=3 advance + bandit spawned + distance decreases. SHIPPED."
+    "B5_autodoor": "AutodoorEntity.PassMul(0.95) > DoorEntity.DefaultPassMul(0.65). Buildable from Architect Structure category (자동문). PawnMovement reads per-instance PassMulAt(pos). V64 door-pass-slowdown PASS confirms plain door still 0.65. SHIPPED.",
+    "B7_area_cancel_drag": "DeconstructDesignation drag-rect: drag over 3 structures -> all 3 marked (SweepBox TryMark each cell). Near-zero drag -> single-click preserved. Code-gen DANGER_RED overlay quad. BlueprintEntity area-cancel via Destroy. SHIPPED.",
+    "B12_verify_V16": "V16AutodoorAreaCancelTest composite PASS: (a) autodoor faster + (b) area-cancel >=3. Companion test confirmed compilable and ready (B5 AutodoorEntity type exists, DoorEntity.PassMul is instance). SHIPPED."
   },
   "flags_for_next_wave": [
-    "FLAG-B2-1: SelectionGizmoBar bottom-center canvas (sortingOrder 200) — QA visual confirm no overlap with GuiControlBar / HotkeyCheatSheet at bottom-center in live play.",
-    "FLAG-B4-1: barricade.png NOT in SceneSetup ForceImportAllSprites (lane forbade SceneSetup hot-file edits). Procedural fallback covers it. Optional: add 'Assets/Sprites/barricade.png' to ForceImport list in a future wave to prefer the authored PNG.",
-    "FLAG-B4-2: BarricadeEntity has no explicit hotkey — surfaced via Architect Security (방어) category only. If operator wants a hotkey, future wave can add it without touching BarricadeEntity.",
-    "FLAG-B9-1: sfxDoor/sfxCook/sfxShoot are graceful null-no-ops if SceneSetup fails to import — AudioBank null-checks confirm no crash.",
-    "FLAG-V7-1: V7RaidThreatTest.cs not yet registered in TestRunner.cs isolated count — count remains 76. Future wave may integrate (adds 1 to isolated count).",
-    "B5 autodoor (DoorEntity.cs PassMul + BuildManager catalogue) + B7 area-cancel/deconstruct-area drag (DeconstructDesignation.cs) remain as the final wave before the OP-gated wall (mood/work-priority spec). Both contend hot files."
+    "FLAG-V16-C: V16AutodoorAreaCancelTest.cs NOT yet registered in TestRunner.cs. Companion standalone; isolated count stays 76. Next PM wave or QA can add RunOne('V16-autodoor-areacancel', ...) in TestRunner to bring count to 77.",
+    "FLAG-B7-BlueprintCancel: BlueprintEntity.cs has no public Cancel() method. Area-cancel of blueprints uses Destroy(bp.gameObject). Already-collected materials are NOT refunded. A proper BlueprintEntity.Cancel() (refund + proactive reservation release) is flagged for a future wave that owns the BlueprintEntity lane.",
+    "FLAG-B5-autodoor-png: autodoor.png NOT added to SceneSetup ForceImportAllSprites (SceneSetup hot-file forbidden this wave). BuildManager lazy procedural fallback covers it. Optional: add 'Assets/Sprites/autodoor.png' to ForceImport list in a future wave.",
+    "OP-GATED WALL reached: B5+B7 delivered. Per pm.json, 'remaining_after_this_wave' is now empty — the chain hits the OP-gated wall (mood/work-priority spec #30 / V9 mood-break, work-priority grid, per-terrain path-cost, quality-roll, BanditEnemy body-parts, B4 cover-math). Operator must OK mood/work-priority spec per v2 'Operator recommendation' before next wave can dispatch."
   ]
 }
