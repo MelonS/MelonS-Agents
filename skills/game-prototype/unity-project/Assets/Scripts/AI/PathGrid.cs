@@ -163,6 +163,22 @@ namespace MelonS.GameProto.AI
             BumpVersion();
         }
 
+        /// <summary>
+        /// W-M4-01 Lane A / wiki #15 (Deconstruct) — explicit, symmetric named
+        /// counterparts to the wall ref-count add/remove, so the deconstruct path
+        /// can decrement a cell's wall blocker with intent that reads next to how a
+        /// build INCREMENTED it.  These are thin wrappers over SetStructureBlocked
+        /// (which is already reference-counted + Version-bumping): BlockWallCell is
+        /// what a built wall does (count+1), ReleaseWallCell is what a deconstructed
+        /// wall does (count−1, cell reopens at 0).  The live game's normal wall
+        /// lifecycle still flows through WallEntity.Start/OnDestroy →
+        /// PawnMovement.RegisterWallCell / Grid.SetStructureBlocked — these names
+        /// exist so the #15 removal flow and any test can express the decrement
+        /// directly and provably balanced against the build-time increment.
+        /// </summary>
+        public void BlockWallCell(Vector2Int cell)   => SetStructureBlocked(cell, true);
+        public void ReleaseWallCell(Vector2Int cell) => SetStructureBlocked(cell, false);
+
         public bool InBounds(Vector2Int cell)
             => cell.x >= MIN && cell.x <= MAX && cell.y >= MIN && cell.y <= MAX;
 

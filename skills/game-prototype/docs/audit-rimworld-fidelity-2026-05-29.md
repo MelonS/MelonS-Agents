@@ -44,7 +44,7 @@ that are wrong in a way that hurts the RimWorld feel.
 | **Head death/downed** | head HP=0 → death; head <30% → downed (`PawnHealth.cs:197,212`) | Brain destruction kills; downing is from **pain/blood-loss/consciousness**, not raw head % ([Health]) | LOW | Simplification is fine; the *value* fix is the head HP above. |
 | **Bleed model** | `bleed = dmg×0.25`, capped 3.0 HP/s, decays 0.05/s (`PawnHealth.cs:103-107`) | Bleeding is per-wound bleed-rate summed into a blood-loss need over hours; tend stops it ([Health]) | LOW | Gamified but plausible; cap prevents instakills. Keep. |
 | **Pawn base HP** | `maxHp = 30` flat pool (`PawnStats.cs:23`); used for bandit-facing combat only | RimWorld has **no single 30 HP bar** — health is per-part (torso 40 etc.) | LOW | This `maxHp` is a parallel legacy combat pool; the per-part system (PawnHealth) is the real one. Not worth changing for a prototype; note the dual system to operator. |
-| **Pawn move speed** | `moveSpeed = 3.0` units/sec (`PawnStats.cs:29`) | Human base **4.6 c/s** ([Move Speed]) | **MED** | If 1 unit = 1 tile, pawns move ~35% too slow. Bump to ~`4.6`. Easy, high feel-impact (you just reworked pathing — good time to align). |
+| **Pawn move speed** | `moveSpeed = 4.6` units/sec (`PawnStats.cs:31`) ✓ FIXED (#200, verified #28) | Human base **4.6 c/s** ([Move Speed]) | ~~MED~~ **CLOSED** | Value matches RimWorld canonical. V8MoveSpeedTest.cs asserts PASS. |
 | **Melee base dmg** | bandit `attackDamage = 1` (`PawnStats.cs:24`); drafted melee `2 + weapon` vs bandit, `3` vs wolf (`PawnUtilityAI.cs:250,274`) | Fist ~8.2 dmg; weapons 9–25 ([Weapons]) | LOW | Numbers are internally consistent (small HP pools), so combat *feels* right relative to enemy HP. Not RimWorld-scaled but coherent — leave unless rescaling all combat. |
 | **Bow / arrow damage** | arrow `damage = 4` default (`ArrowProjectile.cs:16`); drafted ranged 4/5/3 by target (`PawnUtilityAI.cs:210-212`); tech desc claims "12 dmg" (`ResearchManager.cs:67`) | Short bow **18 damage**, 12-tile range, ~moderate accuracy ([Short bow]) | **MED** | Two issues: (a) actual arrow dmg (4) is far below 18 *and* (b) the research description says "12 dmg 화살" — **description lies about the code**. Either bump arrow dmg toward ~12–18 or fix the desc string. Internal-consistency bug worth fixing cheaply. |
 | **Bow range** | `RangedAttackRange = 5.0` (`PawnUtilityAI.cs:39`) | Short bow range **12 tiles** ([Short bow]) | **MED** | If 1 unit = 1 tile, bow reaches <½ its RimWorld range. Bump to ~`9–12`. |
@@ -73,10 +73,10 @@ one-line value change (no logic rework), so all fit the operator's "기능추가
    starve in ~0.83 in-game days; RimWorld is ~3 days. This is the single most game-feel-breaking
    value (HIGH). Use `0.14` for ~3-day fidelity, or `0.21` for a safer ~2-day budget.
 
-2. **Pawn move speed — `PawnStats.cs:29`  `moveSpeed` 3.0 → ~4.6.** RimWorld human base is
-   4.6 c/s; pawns move ~35% too slow. You just reworked pathing, so this is the moment to align.
-   (Pair with bumping wolf `chaseSpeed` 2.5 → ~3.8–4.0 in `WolfEnemy.cs:17` so predators can still
-   catch pawns.)
+2. **Pawn move speed — `PawnStats.cs:31`  `moveSpeed` ~~3.0 → ~4.6~~.** DONE (#200). Value is
+   now 4.6, matching RimWorld human base. Confirmed by V8MoveSpeedTest.cs (#28 verify gate).
+   (Wolf chaseSpeed 2.5 in `WolfEnemy.cs:17` still lower than RimWorld's ~4.6 — tied note below
+   still applies; wolf speed is a separate future fix.)
 
 3. **Head body-part HP — `HealthPartsConfig.cs:27`  head `maxHp` 10 → 25** (and torso 30 → 40,
    `:28`). Head at 10 HP makes decapitation/head-death far too easy vs RimWorld's ~25. One-line

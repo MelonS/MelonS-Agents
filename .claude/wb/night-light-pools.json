@@ -1,0 +1,35 @@
+{
+  "role": "Art",
+  "lane": "D",
+  "wave": "W-M4-01",
+  "status": "Done",
+  "driver_path": "skills/game-prototype/unity-project/Assets/Scripts/NightLightPoolDriver.cs",
+  "new_png": "skills/game-prototype/unity-project/Assets/Sprites/glow_fire_pool.png",
+  "new_png_meta": "skills/game-prototype/unity-project/Assets/Sprites/glow_fire_pool.png.meta",
+  "driver_meta": "skills/game-prototype/unity-project/Assets/Scripts/NightLightPoolDriver.cs.meta",
+  "binary_acceptance": {
+    "night_glow_visible": "At night (DayProgress in deep-night band 0.00-0.17 or 0.83-1.00) a lit StoveEntity has a warm amber radial pool at sortingOrder 8 (floor layer); alpha up to ~0.42 * MaxGlowAlpha.",
+    "day_no_glow": "During full day (DayProgress 0.33-0.71 = 08:00-17:00) ComputeNightAlpha returns 0.0 so glow alpha is 0 — pool is invisible.",
+    "below_pawns": "sortingOrder = 8, which is above ground tiles (0-7) and BELOW pawns (9-11), NightOverlay (25), floating bars (29-31). Pawn silhouette is never washed."
+  },
+  "qa_flags": [
+    "NightLightPoolDriver uses a procedural fallback sprite (BuildProceduralGlowSprite) because glow_fire_pool.png lives in Assets/Sprites, not in a Resources/ subfolder. QA must confirm the procedural path fires and the pool is visible at runtime. Alternatively the Build Engineer can move glow_fire_pool.png into a Resources/ subfolder and remove the _spriteFailed fallback path so the authored PNG is used.",
+    "Glow child GOs are parented to the driver's DontDestroyOnLoad GameObject, NOT to the StoveEntity. The Update loop repositions them to match each stove each frame. QA must verify glow pools track stoves that move (if any) and are correctly removed when a stove is destroyed.",
+    "Lit-gating heuristic mirrors FlickerLight.IsLit: stove.MealsAvailable > 0 || stove.CanCookOne(). QA should confirm this matches design intent — a cold stove with no food should have no glow pool.",
+    "No SceneSetup file was edited. The driver self-attaches via [RuntimeInitializeOnLoadMethod(AfterSceneLoad)]. QA must confirm the driver boots without a scene reference."
+  ],
+  "files_read_only_confirmed": [
+    "DayNightCycle.cs — NOT edited; DayProgress read via GameClock.Instance.DayProgress",
+    "NightOverlay.cs — NOT edited",
+    "FlickerLight.cs — NOT edited",
+    "StoveEntity.cs — NOT edited; MealsAvailable and CanCookOne() read-only",
+    "AudioBank.cs — NOT edited",
+    "WeatherController.cs — NOT edited",
+    "All SceneSetup*.cs — NOT edited",
+    "All prefab/entity files — NOT edited"
+  ],
+  "sorting_order_rationale": "sortingOrder 8 = above ground/tile layer (0-7), below pawns (9-11), below NightOverlay (25), below floating bars (29-31). Glow pools on the floor do not overlay pawn silhouettes.",
+  "palette": "FIRE_LT (250,196,96) center to FIRE_OR (232,120,44) edge, cosine falloff, max combined alpha 0.42 at deep night.",
+  "blend_mode": "Sprites/Default alpha-blend (SrcAlpha/OneMinusSrcAlpha). Additive avoided per WeatherParticleDriver.CreateRainMaterial note — additive on dark scene = white wash, not warm amber pool.",
+  "timestamp": "2026-05-30"
+}

@@ -1,0 +1,46 @@
+{
+  "role": "Programmer",
+  "lane": "A",
+  "wave": "W-M4-01",
+  "wiki_item": "#15 Deconstruct (Dim4 건축, ★★★)",
+  "status": "Done",
+  "wiki_acceptance": "Designating a built wall -> a pawn removes it, refunds material, the cell becomes walkable.",
+  "summary": "Full Deconstruct flow implemented within lane A's 3 owned files + 1 new .meta. ZERO SceneSetup hot-file budget spent (toggle button self-attaches to the existing Canvas like GuiControlBar.EnsureInScene; designation marker is a runtime code-built TextMesh). No new pathfinding introduced - the deconstruct action reuses the existing build/haul stand-cell + WorkGiveUp + DistanceToFootprint pathing wholesale. Cell-walkable is achieved via the EXISTING WallEntity.OnDestroy -> PathGrid.SetStructureBlocked(false) ref-count decrement, symmetric to WallEntity.Start's increment.",
+  "files_touched": [
+    "skills/game-prototype/unity-project/Assets/Scripts/DeconstructDesignation.cs (NEW: self-bootstrapping designation+input-mode manager + DeconstructTarget marker component)",
+    "skills/game-prototype/unity-project/Assets/Scripts/DeconstructDesignation.cs.meta (NEW: MonoImporter meta, guid 4fdb778444f943ca82d2f656c357f83d)",
+    "skills/game-prototype/unity-project/Assets/Scripts/PawnBuilder.cs (deconstruct ACTION: SetDeconstructTarget/WalkToDeconstruct/UpdateDeconstruct/ClearDeconstructTask + HasTask now reports either build OR deconstruct)",
+    "skills/game-prototype/unity-project/Assets/Scripts/AI/PathGrid.cs (added symmetric named BlockWallCell/ReleaseWallCell wrappers over the existing ref-counted SetStructureBlocked, so the #15 decrement reads with intent next to the build increment)"
+  ],
+  "files_NOT_touched_per_lane": [
+    "no SceneSetup*.cs edited (hot-file budget unspent)",
+    "AudioBank.cs (only called read-only via existing AudioBank.Instance?.PlaySelect() on toggle click - wiki #5 reuse, no edit)",
+    "PawnInfoPanel.cs", "WeatherController.cs", "test asmdef / any test .cs",
+    "PawnUtilityAI.cs / PawnContext.cs / PawnActions.cs (deconstruct dispatch is owned by the manager, NOT wired through the utility-AI action list, to stay in lane)"
+  ],
+  "design": {
+    "manager_discipline": "Mirrors AlertStackUI.cs / RainSoundDriver.cs EXACTLY: [RuntimeInitializeOnLoadMethod(AfterSceneLoad)] spawns one hidden DontDestroyOnLoad GO; FindFirstObjectByType idempotency guard; READ-ONLY poll-find of BuildManager / Canvas / PawnBuilders each frame (no OnEnable singleton capture - bug-pattern #7 firewall); timing via Time.unscaledTime deltas in Update, NOT a WaitForSeconds heartbeat (bug-pattern #9 firewall - no new background timer).",
+    "mode": "Deconstruct mode toggled via self-built '해체 (X)' Canvas button + X hotkey; mutually exclusive with BuildManager build mode (each cancels the other so one left-click never fires both handlers); right-click / ESC cancels.",
+    "mark": "Left-click in mode -> Physics2D.OverlapBox at the clicked cell center -> if a WallEntity/DoorEntity/StoveEntity/BedEntity, attach a DeconstructTarget marker (red TextMesh ✕, sortingOrder 30) + ClickEffect. Idempotent (re-click returns existing marker).",
+    "dispatch": "Throttled (0.5s) read-only poll: for each unclaimed marked target, find the nearest IDLE builder (HasTask==false, not drafted/sleeping/breaking/manual) and SetDeconstructTarget - exactly how BuildBlueprintAction hands a builder a blueprint, but assigned directly by the manager to avoid editing the utility-AI files (out of lane).",
+    "action": "PawnBuilder.UpdateDeconstruct mirrors the build branch: same WorkGiveUp give-up, same TryReserveWorkStandPos adjacent reserved stand cell, same DistanceToFootprint in-range test, same construction-skill/trait/ability-scaled per-frame AddWork accumulation. A builder works EITHER a blueprint OR a deconstruct target (SetDeconstructTarget drops any build task first).",
+    "refund": "~50% of build cost on completion via ResourceManager.AddWood/AddStone: wall 5->2 (wood or stone by WallEntity.Material), door 3->1, stove 10->5, bed 8->4 (bed footprint 1x2).",
+    "cell_walkable": "On CompleteRemoval the WallEntity is Destroy()'d; WallEntity.OnDestroy already calls PathGrid.SetStructureBlocked(cell,false) (ref-count decrement + Version bump -> in-flight pawns re-path), the exact symmetric inverse of WallEntity.Start's RegisterWallCell increment. No extra grid call needed; doors/stoves/beds never registered a blocker."
+  },
+  "qa_flags": [
+    "SCENE-WIRING (button): the '해체 (X)' deconstruct-mode toggle button is created at RUNTIME on the first Canvas found (anchored bottom-center, x-offset -360 to avoid overlapping the centered GuiControlBar, y inset 104 above the bar). It is NOT wired in any SceneSetup file. QA: confirm the button appears, click toggles deconstruct mode (orange active highlight), and the X hotkey toggles it.",
+    "SCENE-WIRING (marker): the designation marker is a code-generated red '✕' TextMesh (Arial OS font, sortingOrder 30) parented to the marked structure - no imported PNG / no prefab / no SceneSetup ref. QA: confirm a red ✕ appears on a clicked wall and disappears on removal.",
+    "VERIFY #15 end-to-end: enter deconstruct mode, click a built wall -> red ✕ marker; an idle colonist walks to an adjacent stand cell and removes it after ~3s of work; wood/stone count rises by ~50% of build cost; a pawn can then path through the now-open cell (PathGrid Version bumped, in-flight pawns re-path).",
+    "NO HOT-FILE EDIT this wave: the lane's single SceneSetup hot-file budget was NOT spent. If QA prefers the toggle routed through GuiControlBar's bar instead of a free-floating self-attached button, that would be a follow-up (GuiControlBar.cs is outside lane A's owned-file proof, so it was intentionally not edited here)."
+  ],
+  "firewall_compliance": {
+    "#4_audio_buzz": "AudioBank called once per toggle click only (AudioBank.Instance?.PlaySelect via existing helper) - not in a tight loop.",
+    "#5_instanceid": "n/a - no GetInstanceID collision compares.",
+    "#6_collision_enter_only": "n/a - deconstruct uses no OnCollisionEnter/Stay merge handler.",
+    "#7_singleton_subscription": "OBSERVED - manager poll-finds BuildManager/Canvas/PawnBuilders read-only each frame, never subscribes to a singleton event in OnEnable with no live ref (AlertStackUI EnsureDirector pattern).",
+    "#8_justspawned_default": "n/a - DeconstructTarget.removed defaults false; AssignedTo defaults null (no grace-period flag).",
+    "#9_runinbackground": "OBSERVED - all timing uses Time.unscaledTime deltas in Update; no new WaitForSeconds heartbeat / always-on background timer introduced."
+  },
+  "build_note": "Did NOT run Unity (QA verifies). Brace-balance checked on all 3 .cs files (50/50, 45/45, 28/28). No // TODO present. Cross-file API verified read-only: ResourceManager.AddWood/AddStone, WallEntity.Material, PawnEntity.IsDrafted/IsUnderManualControl, PawnNeeds.IsSleeping/IsBreaking, ReservationManager.ReleaseCell, UITheme.MakeBorderedPanel/colors all exist with matching signatures.",
+  "handoff": "QA (Unity batchmode merge-compile + #15 acceptance). No Build Engineer SceneSetup wiring required since the button/marker self-attach; if QA wants the toggle in the GuiControlBar strip, queue a tiny follow-up edit to GuiControlBar.cs."
+}

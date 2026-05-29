@@ -21,8 +21,31 @@ namespace MelonS.GameProto
         // #199 C2 — reserved stand cell next to the blueprint footprint.
         private Vector2Int standCell = PawnMovement.INVALID_CELL;
 
-        public bool HasTask => targetBp != null;
+        // ----------------------------------------------------------------------
+        // W-M4-01 Lane A / wiki #15 Deconstruct — the deconstruct ACTION lives on
+        //  the EXISTING builder so it REUSES the build/haul pathing wholesale: the
+        //  same WorkGiveUp, the same TryReserveWorkStandPos adjacent-stand-cell
+        //  logic, the same DistanceToFootprint in-range test, the same AddWork-style
+        //  per-frame accumulation.  NO new pathfinding is introduced.
+        //
+        //  Dispatch is owned by DeconstructDesignation.cs (the self-bootstrapping
+        //  manager): each frame it poll-finds idle builders and hands them a
+        //  DeconstructTarget, exactly the way BuildBlueprintAction hands them a
+        //  BlueprintEntity — but without touching PawnUtilityAI/PawnContext/
+        //  PawnActions (those are out of this lane), so the manager assigns the
+        //  target directly via SetDeconstructTarget below.
+        //
+        //  A builder works EITHER a blueprint OR a deconstruct target, never both;
+        //  HasTask reports either so the utility AI / DeconstructDesignation both
+        //  see the builder as busy and don't double-assign.
+        private DeconstructTarget targetDe;
+        private Vector2Int deStandCell = PawnMovement.INVALID_CELL;
+        private WorkGiveUp deGiveUp;
+
+        public bool HasTask => targetBp != null || targetDe != null;
         public BlueprintEntity Target => targetBp;
+        public DeconstructTarget DeconstructTarget => targetDe;
+        public bool HasDeconstructTask => targetDe != null;
 
         private void Awake() { movement = GetComponent<PawnMovement>(); }
 
@@ -80,11 +103,81 @@ namespace MelonS.GameProto
                 MelonS.GameProto.AI.ReservationManager.Release(targetBp, gameObject);
             ReleaseStandCell();
             targetBp = null;
+            ClearDeconstructTask();
             movement.ClearTarget();
+        }
+
+        // ======================================================================
+        //  W-M4-01 Lane A / wiki #15 — Deconstruct action (REUSES build pathing).
+        // ======================================================================
+
+        /// <summary>
+        /// Assign a deconstruct target.  Called by DeconstructDesignation when it
+        /// hands an idle builder a marked structure.  Mirrors SetBlueprintTarget:
+        /// release the previous target + stand cell, reserve the new one through the
+        /// SAME central ReservationManager (the structure's GameObject is the key),
+        /// then walk to a reserved adjacent stand cell via the existing pathing.
+        /// </summary>
+        public void SetDeconstructTarget(DeconstructTarget de)
+        {
+            if (targetDe != null && targetDe != de)
+                targetDe.ReleaseFrom(gameObject);
+            ReleaseDeStandCell();
+            targetDe = de;
+            if (de != null)
+            {
+                // A deconstruct target and a build target are mutually exclusive —
+                //  drop any blueprint work so the builder commits to the removal.
+                if (targetBp != null)
+                {
+                    if (targetBp.ReservedBy == gameObject) targetBp.ReservedBy = null;
+                    MelonS.GameProto.AI.ReservationManager.Release(targetBp, gameObject);
+                    ReleaseStandCell();
+                    targetBp = null;
+                }
+                deGiveUp.Reset(Time.time, Vector2.Distance(transform.position, de.transform.position));
+                de.AssignTo(gameObject);
+                WalkToDeconstruct();
+            }
+        }
+
+        private void WalkToDeconstruct()
+        {
+            if (targetDe == null) return;
+            // Footprint 1×1 (walls/doors/stoves) — beds are 1×2; read it off the
+            //  target so the adjacent-stand-cell math is correct for any structure.
+            if (PawnMovement.TryReserveWorkStandPos(targetDe.transform.position, targetDe.Footprint,
+                    transform.position, gameObject, ref deStandCell, out Vector2 stand))
+                movement.SetTarget(stand);
+            else
+            {
+                Debug.Log($"[Builder] {name} give up deconstruct (no free adjacent stand cell)");
+                ClearDeconstructTask();
+            }
+        }
+
+        private void ReleaseDeStandCell()
+        {
+            if (deStandCell.x != PawnMovement.INVALID_CELL.x)
+            {
+                MelonS.GameProto.AI.ReservationManager.ReleaseCell(deStandCell, gameObject);
+                deStandCell = PawnMovement.INVALID_CELL;
+            }
+        }
+
+        public void ClearDeconstructTask()
+        {
+            if (targetDe != null)
+                targetDe.ReleaseFrom(gameObject);
+            ReleaseDeStandCell();
+            targetDe = null;
         }
 
         private void Update()
         {
+            // Deconstruct work takes the dedicated branch (it never coexists with a
+            //  blueprint — SetDeconstructTarget drops any build task first).
+            if (targetDe != null) { UpdateDeconstruct(); return; }
             if (targetBp == null) return;
             // blueprint 사라졌으면 종료 (#199 C2 — release reservations via ClearTask so
             //  the destroyed-blueprint case can't leak the stand cell).
@@ -129,6 +222,66 @@ namespace MelonS.GameProto
             else
             {
                 WalkToWork();
+            }
+        }
+
+        // ----------------------------------------------------------------------
+        //  wiki #15 — per-frame deconstruct work.  Structurally identical to the
+        //  build branch above (same give-up, same in-range test, same skill-scaled
+        //  per-frame accumulation), but it BURNS DOWN the structure's HP-as-work
+        //  instead of building progress, and on completion REFUNDS ~50% material
+        //  and removes the structure.  Removing the WallEntity reopens its PathGrid
+        //  cell automatically (WallEntity.OnDestroy → PathGrid.SetStructureBlocked
+        //  false → ref-count decrement → Version bump → in-flight pawns re-path),
+        //  mirroring EXACTLY how WallEntity.Start INCREMENTED it on build.
+        private void UpdateDeconstruct()
+        {
+            // Structure already gone (destroyed by something else / another pawn) →
+            //  release and let the AI pick fresh work.
+            if (targetDe == null || targetDe.gameObject == null || targetDe.IsRemoved)
+            {
+                ClearDeconstructTask();
+                movement.ClearTarget();
+                return;
+            }
+
+            float dist = PawnMovement.DistanceToFootprint(
+                targetDe.transform.position, targetDe.Footprint, transform.position);
+
+            if (dist > buildRange && deGiveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
+            {
+                Debug.Log($"[Builder] {name} give up deconstruct (dist={dist:F2}, pathFailed={movement.LastPathFailed})");
+                ClearDeconstructTask();
+                movement.ClearTarget();
+                return;
+            }
+
+            if (dist <= buildRange || movement.AtStandCell(deStandCell))
+            {
+                movement.ClearTarget();
+                // Same construction-skill scaling as building — deconstruct is a
+                //  Construction job in RimWorld too.
+                var abil = GetComponent<PawnAbilities>();
+                float mul = abil != null ? abil.constructionMul * abil.manipulation : 1f;
+                var traits = GetComponent<PawnTraits>();
+                if (traits != null) mul *= traits.workSpeedMul;
+                var skills = GetComponent<PawnSkills>();
+                if (skills != null) mul *= 1f + skills.GetLevel(SkillKind.Build) * 0.04f;
+
+                bool done = targetDe.AddWork(Time.deltaTime * mul);
+                if (skills != null) skills.AddXP(SkillKind.Build, 5f * Time.deltaTime);
+                if (done)
+                {
+                    Debug.Log($"[Builder] {name} 해체 완료 ({targetDe.name})");
+                    // CompleteRemoval refunds material + destroys the structure
+                    //  (which clears the PathGrid cell via WallEntity.OnDestroy).
+                    targetDe.CompleteRemoval();
+                    ClearDeconstructTask();
+                }
+            }
+            else
+            {
+                WalkToDeconstruct();
             }
         }
     }

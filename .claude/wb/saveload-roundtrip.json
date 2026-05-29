@@ -1,0 +1,44 @@
+{
+  "lane": "C",
+  "wave": "W-M4-01",
+  "milestone": "M5-gameplay-verify",
+  "wiki_item": "#29",
+  "wiki_acceptance": "After save->load, a fine bed is still fine (not reverted to default).",
+  "Status": "Done",
+  "test_file": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V9SaveLoadRoundTripTest.cs",
+  "test_class": "MelonS.GameProto.Tests.V9SaveLoadRoundTripTest",
+  "test_id": "V9-saveload-roundtrip",
+  "asmdef": "same as V4CombatChainTest/V5FoodChainTest/V7RaidThreatTest (Assets/Scripts/Tests/)",
+  "distinct_from_lane_b": true,
+  "runtime_cs_edited": false,
+  "saveload_cs_edited": false,
+  "expected_result": "FAIL (documents serialization gaps)",
+  "serialization_gaps": {
+    "GAP-1": {
+      "field": "BedEntity.quality (BedQuality enum)",
+      "save_data_status": "ABSENT — SaveData has no BedSave list at all",
+      "impact": "BedQuality.Fine is not written to save.json; after load the bed defaults to BedQuality.Wood"
+    },
+    "GAP-2": {
+      "field": "StockpileZoneEntity.priority (StockpilePriority enum)",
+      "save_data_status": "ABSENT — SaveData has no StockpileSave list",
+      "impact": "StockpilePriority.Critical is not written to save.json; after load priority reverts to Normal"
+    },
+    "GAP-3": {
+      "field": "TreeEntity.species (TreeSpecies enum)",
+      "save_data_status": "PARTIAL — TreeSave only stores position (Vector2), no species field",
+      "impact": "TreeSpecies.Oak is not written to save.json; after load species reverts to Pine (default)"
+    },
+    "GAP-4": {
+      "field": "WallEntity.material (WallMaterial enum)",
+      "save_data_status": "ABSENT — SaveData has no WallSave list",
+      "impact": "WallMaterial.Stone is not written to save.json; after load material reverts to Wood (default)"
+    }
+  },
+  "FLAG": {
+    "for": "QA + dedicated future serialization CODE wave",
+    "action_required": "Add BedSave (position + quality int) list to SaveData; add StockpileSave (position + priority int) list to SaveData; add species int field to TreeSave; add WallSave (position + material int) list to SaveData. Then re-run V9SaveLoadRoundTripTest — it will PASS when all four fields are in the serialized payload.",
+    "do_not_widen_this_lane": "Lane C is verify-only (W-M4-01). SaveLoadManager.cs and entity .cs files must NOT be edited in this lane."
+  },
+  "notes": "SaveLoadManager.cs (SaveData class) confirmed: only serializes wood, food, List<PawnSave> (name/pos/food/sleep/mood), List<TreeSave> (position only). All four entity sub-states (BedQuality/StockpilePriority/TreeSpecies/WallMaterial) are absent from the payload. Test seeds Fine bed + Critical stockpile + Oak tree + Stone wall, calls Save(), calls Load(), and asserts each field is present in the returned SaveData — all four assertions evaluate to false, producing one FAIL that documents the exact gaps. This is the correct output for verify-only mode."
+}
