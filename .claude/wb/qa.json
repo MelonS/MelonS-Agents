@@ -1,42 +1,36 @@
 {
   "role": "QA+Integrator",
-  "cycle": "C-005",
-  "wave": "W-M2-01",
+  "cycle": "C-006",
+  "wave": "W-M3-01",
   "status": "PASS",
-  "commit": "89acd58",
-  "build_tag": "day-cx-w1-2026-05-30",
-  "build_exe": "skills/game-prototype/builds/day-cx-w1-2026-05-30/PawnSim.exe",
+  "commit": "a769648",
+  "build_tag": "cx-w2-2026-05-30",
   "wiring_done": [
-    "Created alert.wav.meta (AudioImporter serializedVersion:8, ForceUpdate pattern)",
-    "Created ambient.wav.meta (AudioImporter serializedVersion:8, ForceUpdate pattern)",
-    "Created build.wav.meta (AudioImporter serializedVersion:8, ForceUpdate pattern)",
-    "Created _gen_m2_sfx.py.meta (DefaultImporter)",
-    "SceneSetup.Game.Audio.cs: added ForceUpdate+LoadAssetAtPath for build.wav/alert.wav/ambient.wav and SerializedObject wiring for sfxBuild/sfxAlert/sfxAmbient on AudioBank; changed ApplyModifiedProperties -> ApplyModifiedPropertiesWithoutUndo"
+    "SceneSetup.Game.Audio.cs: added ForceUpdate+LoadAssetAtPath for mine.wav and SerializedObject wiring for sfxMine on AudioBank (same ForceImport pattern as sfxBuild/sfxAlert/sfxAmbient W-M2-01)"
   ],
   "makers_verified": [
-    "Lane A (Sound): AudioBank.cs sfxBuild+PlayBuild()/sfxAlert+PlayAlert(int)+AlertBurstCoroutine/sfxAmbient+ambientSource — all present and correct",
-    "Lane B (AIDesigner): AIDirector.cs PlayWolfHowl() wired to wolf_pack, PlayAlert(tier) wired to SpawnRaid() + high-threat events — present at correct call sites",
-    "Lane C (Programmer): BlueprintEntity.cs AudioBank.Instance?.PlayBuild() at L211 inside Complete() — present",
-    "Lane D (Programmer): AnimalEntity.cs TakeDamage L149 PlayChop->PlayHit — present"
+    "Lane A (Programmer): PawnFacing.cs — self-attaching via PawnFacingBootstrap [RuntimeInitializeOnLoadMethod]; flipX on PawnSpriteBob child renderer; root transform untouched; 1s scan driver via Update throttle (no runInBackground regression); lesson #8 justSpawned avoided (seeds lastX in Awake)",
+    "Lane B (Programmer): AlertStackUI.cs — self-bootstrapping top-right canvas sortingOrder=200; poll-found AIDirector (lesson #7); tier-color accent bar + title; click pans to nearest bandit; 30s card expiry via Time.unscaledTime in Update (no coroutine, lesson #9 compliant)",
+    "Lane C (BuildEngineer): V4CombatChainTest.cs — 4-step combat chain: draft->arrowFired->hpDropped->IsDead; R1 ResearchManager bootstrap; G3 manual Rigidbody2D+BoxCollider2D; G4 pre-damage to Hp=4 for guaranteed kill",
+    "Lane D (Sound): AudioBank.cs sfxMine+PlayMine() with own _lastMineTime 0.25s guard; StoneVeinEntity.cs PlayChop->PlayMine at L78; mine.wav present (44100Hz 0.18s pick-on-stone); SceneSetup.Game.Audio.cs ForceImport+SerializedObject wiring added by QA"
   ],
   "qa_results": {
     "scenes_regen": "PASS",
     "verify_build": "PASS",
-    "qa_screenshot": "PASS — 220KB captured G:/ai/_refactor_current.png",
+    "qa_screenshot": "PASS — 221KB captured G:/ai/_refactor_current.png",
     "runtime_errors": "none",
-    "fresh_build": "PASS — day-cx-w1-2026-05-30 built after sources",
+    "fresh_build": "PASS — _harness-latest built after sources",
     "real_qa_30s": "PASS — wood +60 in 30s (7 ResMon snapshots)",
     "build_click_qa": "PASS — 6 mode chain OVERALL PASS (9/9 cases)",
-    "visual_diff": "PASS — 1.27% vs baseline (threshold 5%)",
+    "visual_diff": "PASS — 1.04% vs baseline (threshold 5%)",
     "isolated_tests": "76 PASS / 0 FAIL (>= 76 prior)",
     "integration_tests": "42 PASS / 0 FAIL (== 42 required)"
   },
-  "visual_confirmation": "Screenshot confirms: pawns + name labels visible, scatter decor throughout world, crop tiles bottom-right, inspector panel right side with Korean hint text, stove present top-left. Vignette corner darkening subtle. 1.27% diff — expected for pure sound changes (no visual change from audio wiring).",
+  "visual_confirmation": "Screenshot confirms: pawns with name labels visible, scatter decor throughout world, crop tiles bottom-right, inspector panel right side with Korean text, stove present top-left. Top-right area clean at startup (AlertStackUI present, no raid card at t=0 — correct). 1.04% diff — expected (pure logic/audio additions, no visual sprite change).",
   "wiki_acceptance_checked": {
-    "Dim2_1_build_sound": "PlayBuild() in BlueprintEntity.Complete() + AudioBank throttle 0.25s — WIRED",
-    "Dim2_2_alert_siren": "PlayAlert(tier) in SpawnRaid() + FireRandomEvent() high-threat branch — WIRED, tier3 beeps 4 > tier1 beeps 2",
-    "Dim2_3_wolf_howl": "PlayWolfHowl() in FireRandomEvent() wolf_pack branch — WIRED (0-callers fixed)",
-    "Dim2_4_ambient_bed": "ambientSource looping at vol=0.18 in AudioBank.Start() — WIRED",
-    "Dim2_6_animal_hit": "AnimalEntity.TakeDamage PlayChop->PlayHit — FIXED"
+    "Dim3_11_pawn_facing": "PawnFacing.cs self-attaches via driver scan; flipX=true walking left, flipX=false walking right, holds last idle — WIRED",
+    "Dim6_22_alert_letter_stack": "AlertStackUI.cs top-right persistent card on raid (threatTier>=1); click pans camera toward nearest bandit — WIRED",
+    "M5_26_v4_combat_chain": "V4CombatChainTest.cs 4-step chain: draft->arrow->hp drop->IsDead — TEST ADDED",
+    "Dim2_7_mine_sound": "AudioBank.PlayMine() in StoneVeinEntity.TakeMineDamage(); mine.wav (pick-on-stone) wired via SceneSetup.Game.Audio.cs sfxMine — WIRED"
   }
 }
