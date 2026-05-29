@@ -697,6 +697,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spriteChild: {fileID: 5498374441835989232}
   childRenderer: {fileID: 3711056049870239056}
+  movementSource: {fileID: 209550779354629814}
+  rootTintRenderer: {fileID: 138713815239893335}
   walkAmplitude: 0.05
   walkFrequencyHz: 7
   idleAmplitude: 0.012
