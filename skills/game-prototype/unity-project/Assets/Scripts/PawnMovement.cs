@@ -517,7 +517,11 @@ namespace MelonS.GameProto
                 speedMulP *= FloorEntity.BonusAt(curP);
                 if (DoorEntity.IsInsideDoor(curP))
                 {
-                    speedMulP *= DoorEntity.PassMul;
+                    // W-M6-04 (B5) — per-instance pass mul: plain door 0.65,
+                    //  autodoor ≈0.95 (slows less = faster cross).  PassMulAt
+                    //  returns 0.65 for a plain door, so this is identical to the
+                    //  former `*= DoorEntity.PassMul` const for every plain door.
+                    speedMulP *= DoorEntity.PassMulAt(curP);
                     var doorHitsP = Physics2D.OverlapBoxAll(curP, Vector2.one * 0.3f, 0f);
                     foreach (var h in doorHitsP)
                     {
@@ -559,7 +563,10 @@ namespace MelonS.GameProto
             //  PassMul=0.65 이므로 평균 속도 65% (~40% 더 시간 소요).
             if (DoorEntity.IsInsideDoor(cur))
             {
-                speedMul *= DoorEntity.PassMul;
+                // W-M6-04 (B5) — per-instance pass mul (see UsePathfinding branch
+                //  above): plain door 0.65, autodoor ≈0.95.  PassMulAt returns
+                //  0.65 for a plain door = identical to the former const.
+                speedMul *= DoorEntity.PassMulAt(cur);
                 // 가까운 door 에 NotifyPassing - 시각 피드백 (밝아짐)
                 var doorHits = Physics2D.OverlapBoxAll(cur, Vector2.one * 0.3f, 0f);
                 foreach (var h in doorHits)

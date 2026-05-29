@@ -1,0 +1,72 @@
+{
+  "role": "build-engineer",
+  "lane": "B12-verify",
+  "wave": "W-M6-04",
+  "milestone": "M5-gameplay-verify",
+  "status": "Done",
+  "updated": "2026-05-30",
+  "output_file": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V16AutodoorAreaCancelTest.cs",
+  "pattern": "companion MonoBehaviour, RunOne/Assert/GetWhiteSprite from V15/V13/V9; NO TestRunner.cs edit; NO runtime .cs edit",
+  "assembly": "MelonS.GameProto (parent assembly, Assets/Scripts/Tests/ folder — no separate asmdef, same as V13/V15)",
+  "wiki_acceptance": {
+    "B5_autodoor": "ONE PASS line: autodoor.PassMul > plainDoor.PassMul (higher PassMul = less slowdown = faster cross)",
+    "B7_area_cancel": "ONE PASS line: area-cancel TryMark over 3 WallEntity structures -> markedTargets.Count >= 3"
+  },
+  "flags_for_qa": [
+    {
+      "id": "FLAG-A",
+      "severity": "COMPILE_BLOCKER",
+      "description": "DoorEntity.PassMul is currently 'public const float PassMul = 0.65f'. A const is not readable per-instance (CS0176). B5 programmer lane MUST promote this to an instance field/property before V16 can compile. QA must hold compilation of V16 until B5 Status=Done.",
+      "resolution": "Confirm B5 has landed (DoorEntity.PassMul is instance member), then compile isolated build."
+    },
+    {
+      "id": "FLAG-B",
+      "severity": "COMPILE_DEPENDENCY",
+      "description": "Test written for AutodoorEntity : DoorEntity subclass pattern (most idiomatic). If B5 uses a flag field on DoorEntity instead, the AddComponent<AutodoorEntity>() line won't compile. QA must confirm B5 implementation pattern and adjust if B5 chose pattern (ii) flag or (iii) factory.",
+      "resolution": "If B5 adds AutodoorEntity.cs: no change needed. If B5 uses isAutodoor flag: swap AddComponent<AutodoorEntity> for AddComponent<DoorEntity>+setter call."
+    },
+    {
+      "id": "FLAG-C",
+      "severity": "INFO",
+      "description": "V16 is NOT registered in TestRunner.cs (editing existing files disallowed this lane). It adds +1 to isolated companion count (77/77 post-B5+B7). QA may add a RunOne call in TestRunner.cs after B5+B7 confirm green — that edit is QA scope.",
+      "resolution": "QA adds single RunOne(\"V16-autodoor-areacancel\", ...) in TestRunner if harness requires explicit registration."
+    },
+    {
+      "id": "FLAG-D",
+      "severity": "INFO",
+      "description": "V16AutodoorAreaCancelTest.cs requires a Unity-generated .meta file (guid). Unity editor auto-creates it on first import. Batchmode compiles it as part of the parent MelonS.GameProto assembly. QA must confirm compilation before runtime PASS.",
+      "resolution": "Unity editor import or batchmode -importPackage generates .meta automatically."
+    },
+    {
+      "id": "FLAG-E",
+      "severity": "INFO",
+      "description": "DeconstructDesignation.marked is private — no public accessor needed. Test collects DeconstructTarget handles from TryMark() return values directly (TryMark is public), avoiding any need for a new accessor.",
+      "resolution": "No runtime change needed. Test already uses TryMark return value collection."
+    },
+    {
+      "id": "FLAG-F",
+      "severity": "INFO",
+      "description": "SimulateClick() requires Camera.main (unavailable headless). Test drives area-cancel via direct TryMark(go) calls instead — the same primitive SimulateClick calls after screen->world conversion. This is correct for the headless test environment.",
+      "resolution": "No change needed. TryMark is the correct headless entry point."
+    }
+  ],
+  "blocker_summary": "FLAG-A is the ONLY compile blocker. V16 will not compile until B5 (game-programmer lane) promotes DoorEntity.PassMul from const to per-instance field/property and introduces AutodoorEntity (or equivalent). All other flags are informational. Once B5 lands, V16 should compile and PASS with zero runtime edits.",
+  "test_positions_used": {
+    "plain_door": "(500, 0, 0)",
+    "autodoor": "(501, 0, 0)",
+    "wall_0": "(510, 0, 0)",
+    "wall_1": "(511, 0, 0)",
+    "wall_2": "(512, 0, 0)"
+  },
+  "no_edits_to": [
+    "DoorEntity.cs",
+    "BuildManager.cs",
+    "DeconstructDesignation.cs",
+    "TestRunner.cs",
+    "V15DeconstructRefundTest.cs",
+    "V13SubStateRoundTripTest.cs",
+    "V9SaveLoadRoundTripTest.cs",
+    "SceneSetup*.cs",
+    "any W-M6-01/02/03 in-flight file"
+  ]
+}

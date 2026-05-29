@@ -53,7 +53,7 @@ namespace MelonS.GameProto
         //   Lamp/FloorStone/TableChair/Fence so the build never produces a
         //   null/magenta entity even without an asset import + ZERO SceneSetup edit.
         //   NO cover-math (gated/over-scope) — visual + pathing only.
-        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair, Fence, FenceGate, Barricade }
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair, Fence, FenceGate, Barricade, Autodoor }
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
         // #182 - placement cooldown: SetMode 후 0.15s 동안 TryPlace skip.
@@ -137,6 +137,21 @@ namespace MelonS.GameProto
         [SerializeField] private Sprite barricadeSprite;
         private GameObject _barricadePrefabRuntime;   // cached lazily-built barricade template
         private Sprite     _barricadeSpriteRuntime;   // cached lazily-built barricade sprite
+        // W-M6-04 (B5) - Autodoor cost + faster-cross multiplier.  Vanilla
+        //   RimWorld's autodoor costs more Stuff than a plain door for a faster
+        //   open; this prototype keeps a plain door at 목재 3 and the autodoor at
+        //   목재 6 (clearly costlier).  AutodoorPassMul 0.95 ≈ barely slows the
+        //   crossing pawn, vs the plain door's DoorEntity.DefaultPassMul 0.65 —
+        //   so a pawn crosses an autodoor FASTER (wiki B5 acceptance).  Prefab +
+        //   sprite are built LAZILY + PROCEDURALLY (same as Lamp / StoneFloor /
+        //   TableChair / Fence / Barricade) so the Lane needs NO SceneSetup edit;
+        //   a later wave can wire real refs via SetRefs with zero code change.
+        [SerializeField] private int   autodoorCost    = 6;
+        [SerializeField] private float autodoorPassMul = 0.95f;
+        [SerializeField] private GameObject autodoorPrefab;
+        [SerializeField] private Sprite     autodoorSprite;
+        private GameObject _autodoorPrefabRuntime;    // cached lazily-built autodoor template
+        private Sprite     _autodoorSpriteRuntime;    // cached lazily-built autodoor sprite (tinted door)
         // #154 - bed quality 별 cost (wiki: sleeping spot 0 / wood bed 8 / fine 30).
         //  Fine 은 wiki 가 비싸지만 (60+) 프로토타입에선 30 으로 낮춰 reachable.
         [SerializeField] private int bedSleepingSpotCost = 0;
@@ -255,6 +270,7 @@ namespace MelonS.GameProto
                 Mode.Fence => EnsureFenceSprite(),            // W-M6-02 B3
                 Mode.FenceGate => EnsureFenceGateSprite(),    // W-M6-02 B3
                 Mode.Barricade => EnsureBarricadeSprite(),    // W-M6-03 B4
+                Mode.Autodoor  => EnsureAutodoorSprite(),     // W-M6-04 B5
                 _ => wallSprite,
             };
             // 바닥류(목재/석재)는 ghost sortingOrder 1 (지면 위), 나머지 구조물은 20.
@@ -277,6 +293,7 @@ namespace MelonS.GameProto
             Mode.Fence           => fenceCost,            // W-M6-02 B3 - 목재 1
             Mode.FenceGate       => fenceCost,            // W-M6-02 B3 - 목재 1 (same as fence)
             Mode.Barricade       => barricadeCost,        // W-M6-03 B4 - 목재 5
+            Mode.Autodoor        => autodoorCost,         // W-M6-04 B5 - 목재 6 (> 문 3)
             _ => 0,
         };
 
@@ -296,6 +313,7 @@ namespace MelonS.GameProto
             Mode.Fence           => EnsureFencePrefab(),       // W-M6-02 B3
             Mode.FenceGate       => EnsureFenceGatePrefab(),   // W-M6-02 B3
             Mode.Barricade       => EnsureBarricadePrefab(),   // W-M6-03 B4
+            Mode.Autodoor        => EnsureAutodoorPrefab(),    // W-M6-04 B5
             _ => null,
         };
 
@@ -509,6 +527,7 @@ namespace MelonS.GameProto
             Mode.Fence           => "울타리",     // W-M6-02 B3
             Mode.FenceGate       => "울타리 문",  // W-M6-02 B3
             Mode.Barricade       => "바리케이드",  // W-M6-03 B4
+            Mode.Autodoor        => "자동문",      // W-M6-04 B5
             _ => m.ToString(),
         };
 
@@ -530,6 +549,7 @@ namespace MelonS.GameProto
             Mode.Fence => EnsureFenceSprite(),            // W-M6-02 B3
             Mode.FenceGate => EnsureFenceGateSprite(),    // W-M6-02 B3
             Mode.Barricade => EnsureBarricadeSprite(),    // W-M6-03 B4
+            Mode.Autodoor  => EnsureAutodoorSprite(),     // W-M6-04 B5
             _ => wallSprite,
         };
 
@@ -1252,6 +1272,133 @@ namespace MelonS.GameProto
             go.AddComponent<BarricadeEntity>();                // blocks pathing like a low wall
             _barricadePrefabRuntime = go;
             return _barricadePrefabRuntime;
+        }
+
+        // ============================ W-M6-04 (B5) Autodoor ===================== //
+
+        private Sprite EnsureAutodoorSprite()
+        {
+            if (autodoorSprite != null) return autodoorSprite;          // wired via SetRefs (future)
+            if (_autodoorSpriteRuntime != null) return _autodoorSpriteRuntime;
+            _autodoorSpriteRuntime = LoadOrBuildAutodoorSprite();
+            return _autodoorSpriteRuntime;
+        }
+
+        private GameObject EnsureAutodoorPrefab()
+        {
+            if (autodoorPrefab != null) return autodoorPrefab;          // wired via SetRefs (future)
+            if (_autodoorPrefabRuntime != null) return _autodoorPrefabRuntime;
+
+            // In-memory template (NOT a saved .prefab asset — runtime only), built
+            //  the SAME lazy way as the Lamp / StoneFloor / TableChair / Fence /
+            //  Barricade entries so the Lane needs ZERO SceneSetup edit.  An
+            //  autodoor IS an AutodoorEntity : DoorEntity (so it inherits the
+            //  trigger-collider pass-through, B9's NotifyPassing→PlayDoor SFX, the
+            //  CellOccupied no-stack guard, and the EntityInspector/HoverTooltip/
+            //  Deconstruct read paths that key off GetComponent<DoorEntity>()),
+            //  and AutodoorEntity.Awake raises passMul to its higher value
+            //  (≈0.95 vs the plain door's DefaultPassMul 0.65) so a pawn crosses
+            //  it FASTER.  Awake runs on every Instantiate'd copy, so the value
+            //  needs no per-template SetPassMul here.  We also push BuildManager's
+            //  serialized autodoorPassMul onto the template via SetPassMul so a
+            //  designer override on the manager wins; AutodoorEntity.Awake would
+            //  otherwise re-apply its own default — but since Instantiate copies
+            //  the live component and Awake re-runs on the copy, the AutodoorEntity
+            //  default is authoritative for placed doors (kept in sync at 0.95).
+            //  SR sortingOrder 20 (structure read, above floors).  Hidden +
+            //  inactive so the template is never seen; Instantiate copies it.
+            var go = new GameObject("AutodoorTemplate");
+            go.hideFlags = HideFlags.HideAndDontSave;
+            go.SetActive(false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite       = EnsureAutodoorSprite();
+            sr.sortingOrder = 20;
+            var box = go.AddComponent<BoxCollider2D>();
+            box.size = Vector2.one;
+            var door = go.AddComponent<AutodoorEntity>();
+            door.SetPassMul(autodoorPassMul);   // template value; Awake re-asserts on Instantiate
+            _autodoorPrefabRuntime = go;
+            return _autodoorPrefabRuntime;
+        }
+
+        /// <summary>
+        /// Load autodoor.png via AssetDatabase (Editor/batchmode) so this runtime
+        /// script needs no UnityEditor reference; ALWAYS falls back to a procedural
+        /// autodoor texture so a player build is never null/magenta (same guard as
+        /// the lamp / stone-floor / table / fence / barricade sprites).
+        /// </summary>
+        private static Sprite LoadOrBuildAutodoorSprite()
+        {
+#if UNITY_EDITOR
+            var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/autodoor.png");
+            if (sp != null) return sp;
+#endif
+            return BuildProceduralAutodoorSprite();
+        }
+
+        /// <summary>
+        /// Build a 16×16 autodoor sprite in code, matching _gen_autodoor.py's
+        /// authored content: a plain wooden door panel reskinned with a teal/cyan
+        /// AUTOMATION light strip down the centre split (so it reads as a powered
+        /// door, distinct from the plain door) on WOOD tones with a 1px OBJ
+        /// outline (flat-Kenney style).  Guarantees a real autodoor in a player
+        /// build with zero asset-load dependency.
+        /// </summary>
+        private static Sprite BuildProceduralAutodoorSprite()
+        {
+            const int SIZE = 16;
+            var tex = new Texture2D(SIZE, SIZE, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode   = TextureWrapMode.Clamp;
+            tex.name       = "Autodoor_Proc";
+
+            var px = new Color32[SIZE * SIZE];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color32(0, 0, 0, 0);
+
+            // Palette (mirrors palette.py WOOD_* / OUTLINE_OBJ + a teal tech strip).
+            var WOOD_DK   = new Color32(92, 60, 36, 255);
+            var WOOD_MD   = new Color32(132, 92, 56, 255);
+            var WOOD_LT   = new Color32(168, 124, 80, 255);
+            var TECH_LT   = new Color32(120, 224, 220, 255);   // cyan automation glow
+            var TECH_DK   = new Color32(48, 150, 152, 255);
+            var OUTLINE   = new Color32(40, 30, 22, 255);       // OUTLINE_OBJ
+
+            // Texture y is bottom-up; authored coords are top-down PIL y.
+            void Set(int gx, int gyTop, Color32 c)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return;
+                px[ty * SIZE + gx] = c;
+            }
+
+            // Door panel fills cols 2..13, rows 1..14 (1px transparent margin).
+            for (int gy = 1; gy <= 14; gy++)
+            {
+                for (int gx = 2; gx <= 13; gx++)
+                {
+                    Color32 c;
+                    if (gy == 1 || gy == 14 || gx == 2 || gx == 13) c = OUTLINE;      // 1px OBJ outline
+                    else if (gx <= 4) c = WOOD_LT;                                    // left highlight
+                    else if (gx >= 11) c = WOOD_DK;                                   // right shadow
+                    else c = WOOD_MD;                                                 // body
+                    Set(gx, gy, c);
+                }
+            }
+
+            // Centre automation light strip (cols 7..8, rows 3..12) — the visual
+            //  tell that this is a powered/auto door vs a plain wooden door.
+            for (int gy = 3; gy <= 12; gy++)
+            {
+                Set(7, gy, (gy % 2 == 0) ? TECH_LT : TECH_DK);
+                Set(8, gy, (gy % 2 == 0) ? TECH_DK : TECH_LT);
+            }
+
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            var spr = Sprite.Create(tex, new Rect(0, 0, SIZE, SIZE),
+                                    new Vector2(0.5f, 0.5f), SIZE);
+            spr.name = "Autodoor_Proc";
+            return spr;
         }
 
         /// <summary>

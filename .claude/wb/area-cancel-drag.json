@@ -1,0 +1,38 @@
+{
+  "role": "B7 game-programmer",
+  "lane": "area-cancel / deconstruct-area drag",
+  "wave": "W-M6-04",
+  "milestone": "M4-building",
+  "status": "Done",
+  "updated": "2026-05-30",
+  "wiki_ref": "skills/game-prototype/docs/rimworld-comparison-v2.md B7",
+  "files_edited": [
+    "skills/game-prototype/unity-project/Assets/Scripts/DeconstructDesignation.cs"
+  ],
+  "files_read_only": [
+    "skills/game-prototype/unity-project/Assets/Scripts/BlueprintEntity.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/BuildManager.cs"
+  ],
+  "lane_proof": "ONLY DeconstructDesignation.cs edited. BuildManager.cs / BlueprintEntity.cs read-only. No SceneSetup, no W-M6-01/02/03 in-flight file, no test, no DoorEntity, no MineDesignation/GrowZoneDesignation/BlueprintDragDesignation touched.",
+  "summary": "Extended the EXISTING single-click HandleClick/TryMark path into a drag-rect marquee. Left-mouse-DOWN in deconstruct mode records start world cell + shows a code-generated DANGER_RED translucent selection quad (1x1 white Sprite stretched, snapped to whole cells, sortingOrder 29 — no prefab). Left-mouse-UP: near-zero drag (< dragClickThreshold 0.35u) -> existing single-cell HandleClick unchanged; real drag -> SweepBox iterates EVERY cell in the box, reusing the EXACT per-cell Physics2D.OverlapBoxAll+TryMark path (no new pathfinding/dispatch — DispatchToIdleBuilders already handles N targets) to (1) mark each deconstructable structure and (2) CANCEL each unbuilt BlueprintEntity. SweepBox returns affected-count and is public for the B12-verify harness.",
+  "single_click_preserved": true,
+  "mutual_exclusion_preserved": "build/mine/grow mode mutual-exclusion unchanged (SetMode/Update guard intact); ESC/right-click now also tears down an in-flight drag overlay.",
+  "bug_firewall": {
+    "#4_audio_buzz": "no AudioBank call in the sweep loop (ClickEffect only)",
+    "#5_GetInstanceID_race": "HashSet dedup uses go.GetInstanceID() on the BlueprintEntity GameObject itself (self-dedup), never a Component-vs-collision compare",
+    "#6_OnCollisionEnter_only": "no collision handlers added",
+    "#7_singleton_sub_race": "no OnEnable subscription; all read-only poll-find as before",
+    "#8_justSpawned_default_true": "no such field added",
+    "#9_runInBackground": "no WaitForSeconds/coroutine added; drag handled in Update via Input + Time.unscaledTime as before"
+  },
+  "flags_for_qa": [
+    "CODE-GENERATED drag-overlay quad: runtime SpriteRenderer with a 1x1 white texture stretched over the box, DANGER_RED translucent (0.95,0.44,0.36,0.28), sortingOrder 29, child of ~DeconstructDesignation. No prefab / no imported PNG — same no-prefab style as the existing red X marker.",
+    "MISSING BlueprintEntity public cancel API: BlueprintEntity.cs exposes NO public Cancel()/Remove() (only the PRIVATE Complete()->Destroy). Lane forbidden to edit BlueprintEntity.cs, so area-cancel uses the public Unity Destroy(bp.gameObject). Stale PawnBuilder/PawnHauler reservations (ReservedBy/HaulReservedBy) self-release on the next poll's Unity null-check (same mechanism as PruneMarked dropping a null marker). A proper BlueprintEntity.Cancel() — which would ALSO refund already-collected wood/stone and proactively release reservations — is FLAGGED for a follow-up wave that owns the BlueprintEntity lane."
+  ],
+  "acceptance_binary": "In deconstruct mode, dragging a box over 3 walls -> all 3 get a X (marked, then DispatchToIdleBuilders removes each); dragging a box over 3 pending blueprints -> all 3 cancelled (destroyed) in one drag. SweepBox returns the affected count for B12-verify.",
+  "qa_entry_points": [
+    "public DeconstructTarget SimulateClick(Vector2 screenPos)  // existing single-click",
+    "public int SweepBox(Vector3 worldA, Vector3 worldB)  // NEW — drives the area drag without a pointer; returns marked+cancelled count"
+  ],
+  "unity_run": "NOT run (QA verifies per lane constraint)"
+}

@@ -54,6 +54,18 @@ namespace MelonS.GameProto
                 (BuildManager.Mode.Wall,      "벽 (목재 5)",   5),
                 (BuildManager.Mode.WallStone, "벽 (석재 5)",   5),  // #127
                 (BuildManager.Mode.Door,      "문 (목재 3)",   3),
+                // W-M6-04 (B5) — autodoor, the Door-tab variety row (vanilla
+                //   RimWorld Door tab has plain door + autodoor).  An autodoor is
+                //   the SAME DoorEntity built with a HIGHER passMul (≈0.95 vs the
+                //   plain door's 0.65) so a pawn crosses it FASTER, at a HIGHER
+                //   wood cost (목재 6 > 문 3).  Surfaced HERE ONLY (no hotkey — the
+                //   key space B/F/G/T/Y/N/R/X/M/P/K/J/H/L/E + WASD is contended),
+                //   exactly like the fence-gate / barricade rows.  The existing
+                //   buildable onClick wiring in RefreshContent routes this
+                //   (mode,label,cost) tuple through BuildManager.Instance.SetMode,
+                //   so clicking 자동문 enters Mode.Autodoor with ZERO click-plumbing
+                //   change.  Cost 6 = wood, matches BuildManager.autodoorCost.
+                (BuildManager.Mode.Autodoor,  "자동문 (목재 6)", 6),
                 // W-M6-02 (B3) — fence + fence-gate, the cheapest Structure-tab
                 //   staple (목재 1, LOW, PASSABLE).  Fence also has hotkey E;
                 //   the gate is surfaced HERE ONLY (no hotkey).  The existing

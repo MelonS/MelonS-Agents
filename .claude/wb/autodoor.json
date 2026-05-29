@@ -1,0 +1,48 @@
+{
+  "role": "B5 game-programmer",
+  "wave": "W-M6-04",
+  "lane": "B5 autodoor — DoorEntity.cs PassMul const->instance field + BuildManager.cs Mode.Autodoor catalogue (the SINGLE BuildManager lane this wave)",
+  "milestone": "M4-building",
+  "status": "Done",
+  "wiki_acceptance_B5": "An autodoor is buildable from Architect AND a pawn crosses it FASTER than a plain door (autodoor.PassMul 0.95 > plain door 0.65 = slows the pawn less).",
+  "files_edited": [
+    "skills/game-prototype/unity-project/Assets/Scripts/DoorEntity.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/BuildManager.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/PawnMovement.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/ArchitectMenu.cs"
+  ],
+  "files_new": [
+    "skills/game-prototype/unity-project/Assets/Scripts/AutodoorEntity.cs",
+    "skills/game-prototype/unity-project/Assets/Sprites/_gen_autodoor.py",
+    "skills/game-prototype/unity-project/Assets/Sprites/autodoor.png",
+    "skills/game-prototype/unity-project/Assets/Sprites/_preview_autodoor.png"
+  ],
+  "changes": {
+    "DoorEntity.cs": "PassMul const(0.65) -> (1) public const DefaultPassMul=0.65 kept for the historical value, (2) [SerializeField] private float passMul=DefaultPassMul per-instance, (3) public float PassMul => passMul read-only property, (4) public void SetPassMul(float), (5) NEW static float PassMulAt(Vector2 pos) returns the per-instance passMul of the door at pos (DefaultPassMul=0.65 when none), (6) Awake made protected virtual so AutodoorEntity can chain. B9's NotifyPassing()->AudioBank.Instance?.PlayDoor() PRESERVED VERBATIM (untouched).",
+    "AutodoorEntity.cs (new)": "AutodoorEntity : DoorEntity; [SerializeField] autodoorPassMul=0.95; Awake() calls base.Awake() then SetPassMul(0.95). IS a DoorEntity so it inherits every GetComponent<DoorEntity>() read path + the PlayDoor SFX + IsInsideDoor/PassMulAt. Required by the in-flight B12-verify test V16AutodoorAreaCancelTest.cs (line 189 AddComponent<AutodoorEntity>()) — without this type that test would not compile.",
+    "BuildManager.cs": "NEW Mode.Autodoor enum member; autodoorCost=6 (> door 3) + autodoorPassMul=0.95 + autodoorPrefab/autodoorSprite SerializeFields + runtime caches; Autodoor case added to all 5 mode switches (ghost-sprite, CostFor, PrefabFor, ModeKr, SpriteForCurrentMode); EnsureAutodoorSprite/EnsureAutodoorPrefab/LoadOrBuildAutodoorSprite/BuildProceduralAutodoorSprite lazy-procedural pattern (mirrors Barricade) — prefab is an AutodoorEntity, sprite never null/magenta (Editor AssetDatabase load of Assets/Sprites/autodoor.png with procedural fallback). NO SceneSetup edit needed.",
+    "PawnMovement.cs": "FLAGGED unavoidable edit — 2 reads of DoorEntity.PassMul (static const) changed to DoorEntity.PassMulAt(pos). Behavior-preserving for plain doors (PassMulAt returns 0.65 inside a plain door = identical to the old const).",
+    "ArchitectMenu.cs": "Added autodoor row to the existing Structure (구조) category: (Mode.Autodoor, '자동문 (목재 6)', 6), right after the plain door row — same (mode,label,cost) tuple wiring as Fence/Barricade. Surfaced via Architect ONLY (no hotkey)."
+  },
+  "hotkey": "NONE — surfaced via Architect Structure category ONLY (like fence-gate/barricade). Avoided the contended key space B/F/G/T/Y/N/R/X/M/P/K/J/H/L/E + WASD-camera. BuildManager.Update() input handler UNTOUCHED.",
+  "firewall_checks": {
+    "B9_PlayDoor_preserved": "YES — DoorEntity.NotifyPassing() still calls AudioBank.Instance?.PlayDoor(); not removed/altered (committed @0bbfd74).",
+    "lesson_4_audio_buzz": "N/A — no tight-loop AudioBank call added; PlayDoor untouched (already throttled in AudioBank).",
+    "lesson_5_GetInstanceID": "N/A — no GetInstanceID comparison added.",
+    "lesson_6_OnCollisionEnter_only": "N/A — door uses trigger OverlapBox polling (existing pattern), no collision handler added.",
+    "lesson_7_singleton_subscription": "N/A — no OnEnable singleton subscription added.",
+    "lesson_8_justSpawned_default_true": "N/A — no spawn-grace field added.",
+    "lesson_9_runInBackground": "N/A — no new long WaitForSeconds coroutine / background timer added."
+  },
+  "forbidden_files_untouched": "DeconstructDesignation.cs / AudioBank.cs / SceneSetup*.cs / all W-M6-01/02/03 in-flight files (FloatingText/MarqueeSelector/FootstepDriver/ClickSelector/FenceEntity/PawnPoseDriver/SaveLoadManager/HotkeyCheatSheet/SelectionGizmoBar/BarricadeEntity/_gen_barricade/ScatterVarietyDriver/StoveEntity/ArrowProjectile) / V10/V11/V13/V16 tests — all UNTOUCHED. _gen_autodoor.py imports palette.py READ-ONLY; no other generator edited.",
+  "flags_for_qa": [
+    "FLAG SCENE-WIRING (none required): autodoor prefab + sprite are built LAZILY + PROCEDURALLY in BuildManager (EnsureAutodoorPrefab/EnsureAutodoorSprite) — NO SceneSetup edit, NO new ForceImport entry needed. autodoor.png is loaded via UnityEditor.AssetDatabase in Editor/batchmode with a pixel-matched procedural fallback (BuildProceduralAutodoorSprite) for player builds, so it is never null/magenta even if the PNG is not in a Resources folder.",
+    "FLAG PawnMovement.cs EDIT (genuinely unavoidable): the autodoor's faster-cross can only surface if PawnMovement reads the PER-INSTANCE passMul. PawnMovement previously did `speedMul *= DoorEntity.PassMul` (a static const) which would ignore the autodoor's higher value. Changed BOTH reads (UsePathfinding branch + fallback branch) to `speedMul *= DoorEntity.PassMulAt(pos)`. For a plain door PassMulAt returns 0.65 = byte-identical behavior to the old const. Confirm V64 DoorPassSlowdown test still PASSES (plain door, default 0.65).",
+    "FLAG ArchitectMenu.cs EDIT: added the autodoor catalogue tuple to the Structure (구조) category (not in the explicit lane_proof file list, but the directive requires 'routed into the Architect Door/Structure category the same way the plain door is surfaced'; ArchitectMenu is NOT a forbidden file and not a SceneSetup hot file — it is the catalogue surfacing layer, same one-tuple-row change Fence/Barricade made).",
+    "FLAG plain-door 0.65 unchanged: after the const->field change, a plain DoorEntity's passMul defaults to DefaultPassMul=0.65, PassMulAt returns 0.65 for it, and TestRunner V64 (which AddComponent<DoorEntity>() with no override) is unaffected. CONFIRMED a plain door still reads exactly 0.65.",
+    "FLAG B12-verify reconciliation: the in-flight V16AutodoorAreaCancelTest.cs (NOT edited by this lane) hard-requires an AutodoorEntity component type (line 189) and reads autoDoor.PassMul. This lane chose pattern (i) from the test's FLAG-B: a subclass AutodoorEntity : DoorEntity with a HIGHER passMul (0.95). So the test compiles AND part (a) autodoor.PassMul(0.95) > plainDoor.PassMul(0.65) holds. autoPassMul-plainPassMul delta = +0.30.",
+    "FLAG .meta files (FLAG-D style): new files AutodoorEntity.cs / _gen_autodoor.py / autodoor.png / _preview_autodoor.png need Unity-generated .meta guids — Unity editor auto-creates them on first import (same as barricade.png/_gen_barricade.py last wave). AutodoorEntity.cs lives in Assets/Scripts/ (parent MelonS.GameProto assembly, same as DoorEntity). QA confirm compilation before runtime PASS."
+  ],
+  "no_todo": true,
+  "unity_run": "NOT RUN (QA verifies, per lane constraint)."
+}

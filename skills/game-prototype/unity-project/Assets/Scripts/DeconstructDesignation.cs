@@ -52,6 +52,35 @@ namespace MelonS.GameProto
     ///       code-generated, never SceneSetup-wired — QA should confirm the button
     ///       appears, toggles mode, and the red ✕ marker shows on a clicked wall.
     ///       No SceneSetup*.cs file was edited this lane.
+    ///
+    /// ----------------------------------------------------------------------------
+    /// B7 — AREA-CANCEL / DECONSTRUCT-AREA DRAG (wiki rimworld-comparison-v2 B7):
+    ///   On left-mouse-DOWN in deconstruct mode we record the start world cell and
+    ///   show a code-generated rectangular selection quad (a 1×1 white Sprite
+    ///   stretched over the box, DANGER_RED translucent — same NO-PREFAB style as
+    ///   the ✕ marker).  On left-mouse-UP we sweep EVERY cell in the box and:
+    ///     (1) TryMark each deconstructable structure (reusing the EXACT single-
+    ///         click TryMark path per cell — no new pathfinding/dispatch; the
+    ///         existing DispatchToIdleBuilders loop already handles N targets), and
+    ///     (2) CANCEL each pending unbuilt BlueprintEntity (an unbuilt blueprint is
+    ///         CANCELLED, not deconstructed — exactly as this file already notes).
+    ///   A near-zero drag (< dragClickThreshold) falls back to the existing single-
+    ///   cell click, so prior single-click behavior is unchanged.
+    ///
+    ///   >>> QA FLAG (code-gen overlay): the drag selection rectangle is a runtime
+    ///       SpriteRenderer quad (1×1 white texture, no prefab / no imported PNG),
+    ///       child of this manager, sortingOrder 29.  QA: drag a box over 3 walls →
+    ///       all 3 get a ✕; drag over 3 pending blueprints in cancel mode → all 3
+    ///       vanish (B7 binary acceptance).
+    ///
+    ///   >>> QA FLAG (missing BlueprintEntity cancel API): BlueprintEntity.cs has
+    ///       NO public Cancel()/Remove() — its only self-destruct is the PRIVATE
+    ///       Complete()→Destroy.  This lane may NOT edit BlueprintEntity.cs, so we
+    ///       cancel via the public Unity Destroy(bp.gameObject); stale builder/
+    ///       hauler reservations self-release on the next poll's Unity null-check.
+    ///       A proper BlueprintEntity.Cancel() (refund already-collected materials +
+    ///       proactively release ReservedBy/HaulReservedBy) is FLAGGED for a
+    ///       follow-up wave that owns the BlueprintEntity lane.
     /// </summary>
     public class DeconstructDesignation : MonoBehaviour
     {
@@ -65,6 +94,11 @@ namespace MelonS.GameProto
         [SerializeField] private float btnHeight = 40f;
         [SerializeField] private int btnFontSize = 16;
         [SerializeField] private float btnBottomInset = 104f;     // sit above the control bar
+
+        [Header("Drag-rect (B7 area-cancel / deconstruct-area)")]
+        // A drag shorter than this (in world units) on mouse-UP counts as a plain
+        //  click → preserves the EXISTING single-cell TryMark behavior exactly.
+        [SerializeField] private float dragClickThreshold = 0.35f;
 
         // ---- runtime state ---------------------------------------------------
         public static DeconstructDesignation Instance { get; private set; }
@@ -84,6 +118,16 @@ namespace MelonS.GameProto
         private Image toggleFill;
         private Text toggleLabel;
         private bool toggleBuilt;
+
+        // ---- drag-rect runtime state (B7) ------------------------------------
+        // Left-mouse-DOWN in deconstruct mode records the start world point; while
+        //  the button is held we show a code-generated selection quad; on UP we
+        //  sweep every cell in the box.  A near-zero drag falls back to single click.
+        private bool dragging;
+        private Vector3 dragStartWorld;
+        private GameObject dragOverlay;          // code-generated quad (no prefab — QA flag)
+        private SpriteRenderer dragOverlaySr;
+        private Sprite dragOverlaySprite;         // 1×1 white sprite, generated once
 
         // ============================================================
         //  Self-bootstrap — no SceneSetup edit (AlertStackUI/RainSound pattern).
@@ -146,12 +190,17 @@ namespace MelonS.GameProto
                 // Right-click / ESC cancels the mode (same convention as build).
                 if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
                 {
+                    CancelDrag();
                     SetMode(false);
                 }
-                else if (Input.GetMouseButtonDown(0))
+                else
                 {
-                    HandleClick(Input.mousePosition, checkOverUI: true);
+                    UpdateDrag();
                 }
+            }
+            else
+            {
+                CancelDrag();   // leaving the mode mid-drag tears the overlay down
             }
 
             PruneMarked();
@@ -209,6 +258,200 @@ namespace MelonS.GameProto
             ClickEffect.Spawn(go.transform.position, new Color(0.95f, 0.44f, 0.36f, 0.95f)); // DANGER_RED ish
             Debug.Log($"[Deconstruct] marked {go.name} for removal ({de.RefundWood}🪵 / {de.RefundStone}⛏ refund on done)");
             return de;
+        }
+
+        // ============================================================
+        //  B7 — drag-rect: hold-and-drag a box to mark/cancel MANY things at once.
+        //  A near-zero drag is a plain click (existing single-cell TryMark path,
+        //  unchanged).  Reuses TryMark per cell — NO new pathfinding / dispatch;
+        //  DispatchToIdleBuilders already handles N marked targets.
+        // ============================================================
+        private void UpdateDrag()
+        {
+            if (cam == null) return;
+
+            // DOWN — begin a drag (skip if pressing over a UI button like the toggle).
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                    return;
+                dragging = true;
+                dragStartWorld = ScreenToWorldFlat(Input.mousePosition);
+                UpdateDragOverlay(dragStartWorld, dragStartWorld);
+            }
+
+            // HELD — grow the selection overlay.
+            if (dragging && Input.GetMouseButton(0))
+            {
+                Vector3 cur = ScreenToWorldFlat(Input.mousePosition);
+                UpdateDragOverlay(dragStartWorld, cur);
+            }
+
+            // UP — resolve.  Tiny drag → single click (preserve existing behavior);
+            //  otherwise sweep every cell in the box.
+            if (dragging && Input.GetMouseButtonUp(0))
+            {
+                Vector3 end = ScreenToWorldFlat(Input.mousePosition);
+                dragging = false;
+                HideDragOverlay();
+
+                Vector2 delta = (Vector2)(end - dragStartWorld);
+                if (delta.magnitude < dragClickThreshold)
+                {
+                    // No meaningful drag → exactly the prior single-click path.
+                    HandleClick(Input.mousePosition, checkOverUI: false);
+                }
+                else
+                {
+                    SweepBox(dragStartWorld, end);
+                }
+            }
+        }
+
+        private void CancelDrag()
+        {
+            if (!dragging) return;
+            dragging = false;
+            HideDragOverlay();
+        }
+
+        /// <summary>Mark every deconstructable structure AND cancel every unbuilt
+        /// blueprint whose cell falls inside the drag box.  Each cell reuses the
+        /// EXISTING TryMark path (one OverlapBox per cell, like the single click) so
+        /// there is no new pathfinding or dispatch logic — DispatchToIdleBuilders
+        /// already assigns idle builders to all marked targets.  Returns the count
+        /// of newly affected things (marked structures + cancelled blueprints).
+        /// Exposed for the QA harness (B12-verify) to drive a box without a pointer.</summary>
+        public int SweepBox(Vector3 worldA, Vector3 worldB)
+        {
+            int minX = Mathf.FloorToInt(Mathf.Min(worldA.x, worldB.x));
+            int maxX = Mathf.FloorToInt(Mathf.Max(worldA.x, worldB.x));
+            int minY = Mathf.FloorToInt(Mathf.Min(worldA.y, worldB.y));
+            int maxY = Mathf.FloorToInt(Mathf.Max(worldA.y, worldB.y));
+
+            int affected = 0;
+            // De-dupe within a single sweep: a multi-cell structure (e.g. a 1×2 bed)
+            //  overlaps several cells, but TryMark is already idempotent (returns the
+            //  existing marker), so a repeat cell adds nothing — we only count the
+            //  first mark.  A HashSet guards the blueprint side the same way.
+            var seenBlueprints = new HashSet<int>();
+
+            for (int cx = minX; cx <= maxX; cx++)
+            {
+                for (int cy = minY; cy <= maxY; cy++)
+                {
+                    Vector2 cellCenter = new Vector2(cx + 0.5f, cy + 0.5f);
+                    var hits = Physics2D.OverlapBoxAll(cellCenter, Vector2.one * pickRadius, 0f);
+                    if (hits == null) continue;
+                    foreach (var h in hits)
+                    {
+                        if (h == null) continue;
+                        var go = h.gameObject;
+
+                        // (1) DECONSTRUCT a built structure — reuse the click path.
+                        //     TryMark returns the existing marker if already marked,
+                        //     so it never double-counts; count only fresh marks.
+                        bool wasMarked = go.GetComponent<DeconstructTarget>() != null;
+                        var de = TryMark(go);
+                        if (de != null && !wasMarked) { affected++; continue; }
+
+                        // (2) AREA-CANCEL a pending BLUEPRINT — an UNBUILT blueprint is
+                        //     CANCELLED, not deconstructed (per this file's own note &
+                        //     the DeconstructTarget.IsDeconstructable doc).
+                        var bp = go.GetComponent<BlueprintEntity>();
+                        if (bp != null && !bp.IsComplete
+                            && seenBlueprints.Add(go.GetInstanceID()))
+                        {
+                            if (CancelBlueprint(bp)) affected++;
+                        }
+                    }
+                }
+            }
+
+            if (affected > 0)
+                Debug.Log($"[Deconstruct] area drag affected {affected} thing(s) " +
+                          $"in box [{minX},{minY}]..[{maxX},{maxY}]");
+            return affected;
+        }
+
+        /// <summary>Cancel an unbuilt blueprint.
+        ///
+        /// >>> QA FLAG (missing public cancel API): BlueprintEntity.cs exposes NO
+        ///     public Cancel()/Remove() — its only self-destruct is the PRIVATE
+        ///     Complete() → Destroy(gameObject).  This lane is forbidden to edit
+        ///     BlueprintEntity.cs, so a clean cancel accessor cannot be added here.
+        ///     We therefore cancel via the public Unity API Destroy(blueprint
+        ///     .gameObject).  Any PawnBuilder / PawnHauler holding a stale reference
+        ///     self-releases on the Unity null-check next poll (same way PruneMarked
+        ///     drops a marker whose gameObject became null) — so no dangling
+        ///     reservation results.  A proper BlueprintEntity.Cancel() would ALSO
+        ///     refund already-collectedWood/Stone and proactively release ReservedBy
+        ///     / HaulReservedBy; that refund-on-cancel is NOT possible without
+        ///     editing BlueprintEntity.cs and is flagged for a follow-up wave.</summary>
+        private bool CancelBlueprint(BlueprintEntity bp)
+        {
+            if (bp == null) return false;
+            ClickEffect.Spawn(bp.transform.position, new Color(0.95f, 0.44f, 0.36f, 0.95f));
+            Debug.Log($"[Deconstruct] cancelled pending blueprint {bp.name} " +
+                      $"(mode {bp.Mode}) — collected {bp.collectedWood}🪵/{bp.collectedStone}⛏ " +
+                      $"NOT refunded (no public BlueprintEntity.Cancel — see QA flag)");
+            Destroy(bp.gameObject);
+            return true;
+        }
+
+        private Vector3 ScreenToWorldFlat(Vector2 screenPos)
+        {
+            if (cam == null) cam = Camera.main;
+            if (cam == null) return Vector3.zero;
+            Vector3 w = cam.ScreenToWorldPoint(screenPos);
+            w.z = 0f;
+            return w;
+        }
+
+        // ---- code-generated selection overlay (no prefab — QA flag) ----------
+        //  Same no-prefab discipline as the red ✕ DeconstructTarget marker: a 1×1
+        //  white sprite stretched across the drag box, tinted DANGER_RED translucent.
+        private void UpdateDragOverlay(Vector3 a, Vector3 b)
+        {
+            EnsureDragOverlay();
+            if (dragOverlay == null) return;
+
+            float minX = Mathf.Min(a.x, b.x), maxX = Mathf.Max(a.x, b.x);
+            float minY = Mathf.Min(a.y, b.y), maxY = Mathf.Max(a.y, b.y);
+            // Snap to whole cells so the overlay matches the cell sweep exactly.
+            int cMinX = Mathf.FloorToInt(minX), cMaxX = Mathf.FloorToInt(maxX);
+            int cMinY = Mathf.FloorToInt(minY), cMaxY = Mathf.FloorToInt(maxY);
+            float w = (cMaxX - cMinX) + 1f;
+            float h = (cMaxY - cMinY) + 1f;
+            dragOverlay.transform.position = new Vector3(cMinX + w * 0.5f, cMinY + h * 0.5f, 0f);
+            dragOverlay.transform.localScale = new Vector3(w, h, 1f);
+            dragOverlay.SetActive(true);
+        }
+
+        private void EnsureDragOverlay()
+        {
+            if (dragOverlay != null) return;
+            if (dragOverlaySprite == null)
+            {
+                var tex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+                tex.SetPixel(0, 0, Color.white);
+                tex.Apply();
+                tex.wrapMode = TextureWrapMode.Clamp;
+                dragOverlaySprite = Sprite.Create(
+                    tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
+            }
+            dragOverlay = new GameObject("~DeconstructDragOverlay");
+            dragOverlay.transform.SetParent(transform, false);
+            dragOverlaySr = dragOverlay.AddComponent<SpriteRenderer>();
+            dragOverlaySr.sprite = dragOverlaySprite;
+            dragOverlaySr.color = new Color(0.95f, 0.44f, 0.36f, 0.28f); // DANGER_RED translucent
+            dragOverlaySr.sortingOrder = 29;   // just under the ✕ markers (30)
+            dragOverlay.SetActive(false);
+        }
+
+        private void HideDragOverlay()
+        {
+            if (dragOverlay != null) dragOverlay.SetActive(false);
         }
 
         private void PruneMarked()
