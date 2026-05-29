@@ -167,7 +167,7 @@ def step_real_qa(delay: float = 30.0, allow_stale: bool = False,
             f"[refactor] (4.5/7) REAL QA - STALE BUILD DETECTED\n"
             f"  Selected: {target.parent.name}\n"
             f"  The day-N build is older than Assets/Scripts sources.\n"
-            f"  This means REAL QA would test OLD code — a false pass.\n"
+            f"  This means REAL QA would test OLD code -- a false pass.\n"
             f"  Fix: run with --fresh-build (rebuilds full game, ~3-5 min extra)\n"
             f"       OR run `agent.py integrate --method build` first\n"
             f"       OR pass --allow-stale to force-proceed (risks false pass)."
