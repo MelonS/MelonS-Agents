@@ -87,15 +87,95 @@ def step_qa(delay: float = 3.0) -> int:
     return 0
 
 
-def step_real_qa(delay: float = 30.0) -> int:
+def _find_day_build_target(harness_latest: Path | None = None) -> tuple[Path, bool]:
+    """Return (exe_path, is_fresh) for REAL QA / Build Click QA.
+
+    Resolution order:
+      1. harness_latest  (builds/_harness-latest, produced by --fresh-build)
+      2. newest day-*-2026-* directory by mtime
+      3. fallback: builds/verify-game-only  (no menu path, but always fresh)
+
+    Also returns is_fresh=False when a day-N build is selected but its mtime
+    is older than the newest .cs source file (staleness guard).
+    Callers should treat is_fresh=False as a hard FAIL unless --allow-stale.
+    """
+    if harness_latest is not None and harness_latest.exists():
+        return harness_latest, True
+
+    builds_dir = REPO / "skills" / "game-prototype" / "builds"
+    day_builds = sorted(builds_dir.glob("day-*-2026-*"),
+                        key=lambda p: p.stat().st_mtime)
+    if day_builds:
+        candidate = day_builds[-1] / "PawnSim.exe"
+        if candidate.exists():
+            # Staleness guard: compare build mtime vs newest .cs source file.
+            build_mtime = day_builds[-1].stat().st_mtime
+            scripts_dir = UNITY_PROJ / "Assets" / "Scripts"
+            newest_src_mtime = 0.0
+            if scripts_dir.exists():
+                for cs in scripts_dir.rglob("*.cs"):
+                    t = cs.stat().st_mtime
+                    if t > newest_src_mtime:
+                        newest_src_mtime = t
+            is_fresh = (newest_src_mtime == 0.0 or build_mtime >= newest_src_mtime)
+            return candidate, is_fresh
+
+    # No day-N build at all; fall back to verify-game-only (always rebuilt each run).
+    return BUILD_EXE, True  # verify-game-only is always fresh; no menu path, but honest.
+
+
+def step_fresh_build(day_tag: str = "_harness-latest") -> int:
+    """Optional step triggered by --fresh-build flag.
+
+    Runs a full BuildWindows into builds/_harness-latest so that steps 4.5/4.6
+    test current code WITH the MainMenu->Game path, without touching the
+    operator-facing day-N builds.  Adds ~2-5 min per run.
+    """
+    import shutil
+    harness_out = REPO / "skills" / "game-prototype" / "builds" / "_harness-latest"
+    print(f"[refactor] (4.4/7) fresh build → {harness_out} ...")
+    # Temporarily set env so BuildScript writes to _harness-latest folder.
+    import os
+    os.environ["MELONS_BUILD_DAY"] = day_tag
+    proc = subprocess.run(
+        [sys.executable, str(REPO / "skills" / "game-dev-agent" / "scripts" / "agent.py"),
+         "integrate", "--project", str(UNITY_PROJ), "--method", "build"],
+        capture_output=True, text=True,
+    )
+    if proc.returncode != 0:
+        print(f"  FAIL rc={proc.returncode}")
+        print(proc.stderr[-500:])
+        return 18
+    print("  fresh build OK")
+    return 0
+
+
+def step_real_qa(delay: float = 30.0, allow_stale: bool = False,
+                 harness_latest: Path | None = None) -> int:
     """운영자 fb (#140) - graphics 모드 30s 시뮬 + 자원 변화 자동 검증.
     운영자 fb 두 번째 (#137 root cause 3): verify-game-only build 만 검증하면
     MainMenu->Game 전이 등 실제 운영자 path 누락.  최신 day-N 빌드 우선 사용.
+
+    Staleness guard (fix for false-pass blind-spot):
+      If the selected day-N build is older than the newest Assets/Scripts/*.cs
+      file, the run is aborted with FAIL (rc=19) unless --allow-stale is set.
+      Use --fresh-build to produce a fresh full build before this step.
     """
-    # 최신 day-N build 찾기 (운영자가 실제로 받는 빌드). mtime 으로 정렬 (lex sort 가 day-9 vs day-18 헷갈림).
-    builds = sorted((REPO / "skills" / "game-prototype" / "builds").glob("day-*-2026-*"),
-                    key=lambda p: p.stat().st_mtime)
-    target = builds[-1] / "PawnSim.exe" if builds else BUILD_EXE
+    target, is_fresh = _find_day_build_target(harness_latest)
+    if not is_fresh:
+        msg = (
+            f"[refactor] (4.5/7) REAL QA - STALE BUILD DETECTED\n"
+            f"  Selected: {target.parent.name}\n"
+            f"  The day-N build is older than Assets/Scripts sources.\n"
+            f"  This means REAL QA would test OLD code — a false pass.\n"
+            f"  Fix: run with --fresh-build (rebuilds full game, ~3-5 min extra)\n"
+            f"       OR run `agent.py integrate --method build` first\n"
+            f"       OR pass --allow-stale to force-proceed (risks false pass)."
+        )
+        print(msg)
+        if not allow_stale:
+            return 19
+        print("  WARN: --allow-stale set, proceeding with stale build.")
     if not target.exists():
         target = BUILD_EXE
     print(f"[refactor] (4.5/7) REAL QA - {target.parent.name} {delay}s 시뮬 ...")
@@ -139,13 +219,27 @@ def step_real_qa(delay: float = 30.0) -> int:
     return 0
 
 
-def step_build_click_qa() -> int:
+def step_build_click_qa(allow_stale: bool = False,
+                        harness_latest: Path | None = None) -> int:
     """#187 - BuildClickAutoQA 6-mode 자동 회귀 보호.
     -build-click-qa flag 로 binary 실행 → [BuildClickQA] OVERALL: PASS/FAIL 파싱.
-    매 commit cycle 에서 건축 click chain 회귀 검출."""
-    builds = sorted((REPO / "skills" / "game-prototype" / "builds").glob("day-*-2026-*"),
-                    key=lambda p: p.stat().st_mtime)
-    target = builds[-1] / "PawnSim.exe" if builds else BUILD_EXE
+    매 commit cycle 에서 건축 click chain 회귀 검출.
+
+    Staleness guard: same policy as step_real_qa — FAIL if day-N is older
+    than current sources unless --allow-stale / --fresh-build is used.
+    """
+    target, is_fresh = _find_day_build_target(harness_latest)
+    if not is_fresh:
+        msg = (
+            f"[refactor] (4.6/7) Build Click QA - STALE BUILD DETECTED\n"
+            f"  Selected: {target.parent.name}\n"
+            f"  The day-N build is older than Assets/Scripts sources.\n"
+            f"  Refusing to validate old code. Use --fresh-build or --allow-stale."
+        )
+        print(msg)
+        if not allow_stale:
+            return 19
+        print("  WARN: --allow-stale set, proceeding with stale build.")
     if not target.exists():
         print("[refactor] (4.6/7) Build Click QA - 빌드 없음, skip")
         return 0
@@ -323,6 +417,19 @@ def main():
                     help="skip 30s graphics 모드 자원 검증 (개발 중 빠른 iter 용)")
     ap.add_argument("--real-qa-seconds", type=float, default=30.0,
                     help="REAL QA graphics 시뮬 길이 (default 30s)")
+    ap.add_argument("--fresh-build", action="store_true",
+                    help=(
+                        "Build a fresh full game (with MainMenu) into builds/_harness-latest "
+                        "before REAL QA + Build Click QA. Guarantees steps 4.5/4.6 test current "
+                        "code. Adds ~3-5 min. Default OFF for quick iters but staleness guard "
+                        "will FAIL if day-N build is older than source files."
+                    ))
+    ap.add_argument("--allow-stale", action="store_true",
+                    help=(
+                        "Allow REAL QA / Build Click QA to proceed even when the selected "
+                        "day-N build is older than current source files. Risks false passes. "
+                        "Use only when you know the sources haven't changed since last build."
+                    ))
     args = ap.parse_args()
 
     print(f"\n=== refactor cycle [{args.tag}] ===")
@@ -347,12 +454,26 @@ def main():
         return rc
     # 운영자 fb #140 - 진짜 QA: 30s graphics 시뮬 + 자원 변화 자동 검증
     if not args.skip_real_qa:
-        rc = step_real_qa(delay=args.real_qa_seconds)
+        # --fresh-build: produce a fresh full build into builds/_harness-latest.
+        # Without it, the staleness guard will FAIL if day-N is older than sources.
+        harness_latest: Path | None = None
+        if args.fresh_build:
+            rc = step_fresh_build()
+            if rc != 0:
+                print(f"\n[refactor] FAIL @ fresh build (rc={rc})")
+                return rc
+            harness_latest = (
+                REPO / "skills" / "game-prototype" / "builds" / "_harness-latest" / "PawnSim.exe"
+            )
+        rc = step_real_qa(delay=args.real_qa_seconds,
+                          allow_stale=args.allow_stale,
+                          harness_latest=harness_latest)
         if rc != 0:
             print(f"\n[refactor] FAIL @ real QA (rc={rc})")
             return rc
         # #187 - 건축 click chain 회귀 보호 (운영자 fb "건축 안 됨")
-        rc = step_build_click_qa()
+        rc = step_build_click_qa(allow_stale=args.allow_stale,
+                                 harness_latest=harness_latest)
         if rc != 0:
             print(f"\n[refactor] FAIL @ build click QA (rc={rc})")
             return rc

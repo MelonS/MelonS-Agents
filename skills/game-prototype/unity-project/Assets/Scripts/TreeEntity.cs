@@ -86,17 +86,17 @@ namespace MelonS.GameProto
             }
             if (hp <= 0f)
             {
-                // 운영자 fb v4 - 림월드 정상 흐름 복원: chop 즉시 +N 안 함.
-                //  wood pile 만 바닥에 drop → hauler 가 stockpile 까지 운반 → 거기서 inventory 차감.
-                //  sprite 없으면 legacy fallback (즉시 +N).
-                if (WoodPileSprite != null)
-                {
-                    WoodPileEntity.Spawn(transform.position, woodDrop, WoodPileSprite);
-                }
-                else
-                {
-                    ResourceManager.Instance?.AddWood(woodDrop);
-                }
+                // #212 운영자 fb — 림월드 정상 흐름: 벌목 시 즉시 +N 절대 안 함.
+                //  목재 더미(WoodPile)가 "나무가 쓰러진 자리" = 이 나무의 cell 에 떨어진다.
+                //  이후 hauler 가 stockpile priority 에 따라 운반 → stockpile 도착 시점에만
+                //  inventory(global counter) 가 증가한다 (PawnHauler.GoToStockpile).
+                //
+                //  과거 v4 fallback 은 sprite 가 null 이면 ResourceManager.AddWood 로
+                //  즉시 카운터에 꽂아 넣었다 — 이게 운영자가 본 "즉시 운반(=즉시 적립)" 버그의
+                //  핵심.  WoodPileEntity.Spawn 이 이제 sprite null 도 허용(아래)하므로
+                //  무조건 물리 pile 을 떨군다.  sprite 가 없으면 보이지 않을 뿐, 여전히
+                //  hauler 가 줍어 운반해야 카운터에 들어간다 = 운영자 멘탈 모델과 일치.
+                WoodPileEntity.Spawn(transform.position, woodDrop, WoodPileSprite);
                 // Day 12: enqueue a future sapling at this tree's position
                 // BEFORE Destroy(gameObject) — `transform.position` is read
                 // synchronously, the scheduler stashes a Vector3, so once

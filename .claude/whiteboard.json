@@ -1,0 +1,45 @@
+{
+  "system": "GameDev Multi-Agent Orchestration",
+  "project": "PawnSim",
+  "updated": "2026-05-30",
+  "protocol": {
+    "whiteboard_rule": "모든 서브에이전트는 작업 시작 전 .claude/whiteboard.json 을 읽고, 종료 전 반드시 .claude/wb/<ROLE>.json 에 자신의 상태(Status: Waiting|In Progress|Done)와 산출물 경로를 기록한다. 규칙을 어기고 종료 금지.",
+    "parallel_write_note": "JSON 손상 방지: 병렬 에이전트는 공유 whiteboard.json 을 직접 쓰지 않고 각자 .claude/wb/<ROLE>.json 에 기록. PM 이 단일 writer 로 병합해 whiteboard.json 갱신.",
+    "unity_constraint": "Unity batchmode 는 단일 배타 자원 → 빌드/검증(QA)만 직렬. 코드/에셋/사운드 제작은 병렬.",
+    "pipeline": ["PM publish task.json", "Director+Designer+AIDesigner 동시 검토/승인", "Programmer+Art 구현(병렬)", "QA+Sound 병렬 검증", "PM 최종 승인+commit+close"]
+  },
+  "roles": {
+    "PM": "전체 일정 관리 및 task.json 발행, whiteboard 병합, commit/close",
+    "Director": "핵심 기획 및 아트/사운드 최종 승인 (feel/tone)",
+    "Designer": "시스템/기획서 작성, scope 검토",
+    "Programmer": "코드 구현 및 테스트",
+    "Art": "에셋 생성 + 파이프라인 가이드 + 목업 검토",
+    "QA": "버그 리포트 + 프로그램 검증 (Unity 빌드/하니스 - 단일 배타)",
+    "Sound": "사운드 큐시트/이벤트 코드 동기화",
+    "AIDesigner": "FSM/BT 등 AI 로직 설계 + 경로탐색 안전 제약"
+  },
+  "current_cycle": {
+    "id": "C-001",
+    "task_ref": ".claude/task.json",
+    "phase": "PM-Publish",
+    "title": "in-flight 통합 + M1 living-colony 폴리시",
+    "in_flight_uncommitted": [
+      "#212 벌목 목재 드롭 위치 + 우선순위 운반 (TreeEntity.cs, WoodPileEntity.cs)",
+      "#211 액션 SFX (AudioBank.cs, Assets/Audio/*.wav)",
+      "하니스 stale-build 맹점 fix (refactor_check.py: --fresh-build/--allow-stale)"
+    ]
+  },
+  "agents": {
+    "PM":        {"status": "In Progress", "outputs": [], "notes": "C-001 발행 중"},
+    "Director":  {"status": "Waiting", "outputs": [], "notes": ""},
+    "Designer":  {"status": "Waiting", "outputs": [], "notes": ""},
+    "AIDesigner":{"status": "Waiting", "outputs": [], "notes": ""},
+    "Programmer":{"status": "Waiting", "outputs": [], "notes": ""},
+    "Art":       {"status": "Waiting", "outputs": [], "notes": ""},
+    "QA":        {"status": "Waiting", "outputs": [], "notes": ""},
+    "Sound":     {"status": "Waiting", "outputs": [], "notes": ""}
+  },
+  "log": [
+    {"ts": "2026-05-30", "by": "main", "msg": "오케스트레이션 시스템 부트스트랩, C-001 시작"}
+  ]
+}

@@ -14,6 +14,12 @@ RETIRED from this file: gen_pawn (→ _gen_pawn.py), gen_wall_wood,
 
 Style: flat-Kenney (flat colour fills + OUTLINE_OBJ / OUTLINE_PLANT, NO
 gradients, NO gaussian blur).  All colours from palette.py.
+
+Polish Wave v3 V4/V5 (2026-05-30):
+  gen_tree rewritten with 3-cluster directional canopy (GRASS_DK core +
+  GRASS_MD mid-ring + GRASS_LT rim-light offset up-left) and a trunk-shadow
+  pixel under the canopy.  Light direction: upper-left.  Still flat (no
+  gradients), still recedes behind pawns (lower saturation than cloth).
 """
 from __future__ import annotations
 from PIL import Image, ImageDraw
@@ -24,15 +30,11 @@ from palette import (
     OUTLINE_OBJ   as OUTLINE,
     OUTLINE_PLANT,
     WOOD_DK, WOOD_MD, WOOD_LT,
-    GRASS_DK,
+    GRASS_DK, GRASS_MD, GRASS_LT,
     SKIN_MD, SKIN_SH, HAIR_DK,
 )
 
-# Additional colours needed for tree and trader not in main palette export
-_LEAF_MID  = (80,  108, 56, 255)   # muted olive mid-canopy  (between GRASS_DK and MD)
-_LEAF_LT   = (104, 136, 74, 255)   # dappled highlight leaf
-_LEAF_DK   = (56,  76,  38, 255)   # deep shadow leaf
-
+# Additional colours needed for trader not in main palette export
 _HOOD      = (78, 58, 96, 255)     # muted dusty purple hood (trader)
 _HOOD_DK   = (52, 38, 66, 255)
 _ROBE      = (100, 80, 116, 255)   # robe body
@@ -71,73 +73,135 @@ def rect_outline(im, x0, y0, x1, y1, c):
     vline(im, x0, y0, y1, c); vline(im, x1, y0, y1, c)
 
 
-# ─────────────────────────────────────────────────────────────────────────
-# tree.png — 16x16 flat-style top-down tree
-# Flat 3-tone canopy + trunk stripe. No gradients. OUTLINE_PLANT border.
-# Must RECEDE behind pawns (lower saturation than cloth colours).
-# ─────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# tree.png — 16x16 flat-style top-down tree (Polish Wave v3 V4 improved)
+#
+# CHANGE from prior version:
+#   BEFORE: 3 tone zones but roughly concentric rings — reads as a flat blob
+#           with no clear light direction; mid and dark rings wrap equally.
+#   AFTER:  3 clusters with explicit UP-LEFT light direction:
+#             GRASS_LT  → tight cluster offset upper-left (rim light, ~5px)
+#             GRASS_MD  → large mid-ring
+#             GRASS_DK  → lower-right shadow mass (largest zone)
+#           Plus: single-pixel trunk-shadow at canopy base (col 9, y=9)
+#           so the trunk reads as going INTO the canopy shadow, not just
+#           appearing below it.
+#   Both before and after: OUTLINE_PLANT edge, WOOD_MD/DK trunk,
+#   16x16, transparent bg, no gradients.
+#
+# Visual check:
+#   - Canopy has THREE visually distinct brightness zones, not a uniform fill.
+#   - Upper-left corner is the brightest cluster.
+#   - Lower-right is the darkest shadow.
+#   - Placed next to a pawn (CLOTH_BLUE = 74,96,132): pawn's outline pops,
+#     tree recedes — GRASS_LT (118,138,86) has lower saturation than CLOTH_BLUE.
+# ─────────────────────────────────────────────────────────────────────────────
 
 def gen_tree() -> Image.Image:
-    """16x16 flat top-down tree.  3-tone canopy, dark trunk stripe, plant outline."""
+    """16x16 flat top-down tree.
+    3-cluster directional canopy (light from upper-left), trunk, OUTLINE_PLANT.
+    """
     W = H = 16
     im = new_canvas(W, H)
 
-    # Canopy fills a roughly circular region
-    # Centre ring (lighter highlight)
-    canopy_pixels_lt = [
-        (5,3),(6,3),(7,3),(8,3),(9,3),(10,3),
-        (4,4),(5,4),(6,4),(7,4),(8,4),(9,4),(10,4),(11,4),
-        (4,5),(5,5),(6,5),(7,5),(8,5),(9,5),(10,5),(11,5),
-        (5,6),(6,6),(7,6),(8,6),(9,6),(10,6),
+    # ── ZONE 1: GRASS_DK — deep shadow (lower-right mass) ────────────────────
+    # This is the large base fill — most of the canopy reads as recessed shadow.
+    shadow_zone = [
+        # Upper rows: only the far edges (shadow rim where light can't reach)
+        (8, 1), (9, 1), (10, 1), (11, 1),
+        (11, 2), (12, 2),
+        (11, 3), (12, 3),
+        (10, 4), (11, 4), (12, 4),
+        (10, 5), (11, 5),
+        (9, 6), (10, 6), (11, 6),
+        # Mid canopy right side
+        (8, 3), (9, 3), (10, 3),
+        (8, 4), (9, 4),
+        (8, 5), (9, 5),
+        (8, 6), (9, 6),
+        # Lower canopy (shadow mass) — the heaviest zone
+        (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (11, 7),
+        (5, 8), (6, 8), (7, 8), (8, 8), (9, 8), (10, 8),
     ]
-    canopy_pixels_mid = [
-        (4,2),(5,2),(6,2),(7,2),(8,2),(9,2),(10,2),(11,2),
-        (3,3),(11,3),
-        (3,4),(12,4),
-        (3,5),(12,5),
-        (3,6),(11,6),
-        (4,7),(5,7),(6,7),(7,7),(8,7),(9,7),(10,7),(11,7),
-    ]
-    canopy_pixels_dk = [
-        (5,1),(6,1),(7,1),(8,1),(9,1),(10,1),
-        (4,8),(5,8),(6,8),(7,8),(8,8),(9,8),(10,8),(11,8),
-        (3,2),(12,2),
-    ]
-    for x, y in canopy_pixels_lt:  put_px(im, x, y, _LEAF_LT)
-    for x, y in canopy_pixels_mid: put_px(im, x, y, _LEAF_MID)
-    for x, y in canopy_pixels_dk:  put_px(im, x, y, _LEAF_DK)
+    for x, y in shadow_zone:
+        put_px(im, x, y, GRASS_DK)
 
-    # Trunk (visible below canopy, 2 wide)
+    # ── ZONE 2: GRASS_MD — mid-tone ring (majority of canopy body) ───────────
+    mid_zone = [
+        # Upper canopy fill (centre and left-of-centre)
+        (4, 2), (5, 2), (6, 2), (7, 2),
+        (3, 3), (4, 3), (5, 3), (6, 3), (7, 3),
+        (3, 4), (4, 4), (5, 4), (6, 4), (7, 4),
+        (3, 5), (4, 5), (5, 5), (6, 5), (7, 5),
+        (4, 6), (5, 6), (6, 6), (7, 6),
+        # Canopy lower mid
+        (3, 7), (4, 7),
+        (3, 8), (4, 8),
+    ]
+    for x, y in mid_zone:
+        put_px(im, x, y, GRASS_MD)
+
+    # ── ZONE 3: GRASS_LT — rim-light cluster, upper-left ─────────────────────
+    # A compact bright cluster offset toward (3-5, 1-4) — implies light from
+    # upper-left.  Small enough to feel like a highlight, not a gradient wash.
+    rimlight_zone = [
+        (4, 1), (5, 1), (6, 1),
+        (3, 2), (4, 2), (5, 2),      # overwrites some GRASS_MD — intentional
+        (3, 3), (4, 3), (5, 3),
+        (3, 4), (4, 4),
+    ]
+    for x, y in rimlight_zone:
+        put_px(im, x, y, GRASS_LT)
+
+    # ── Trunk — 2px wide, visible below canopy ────────────────────────────────
+    # WOOD_LT (lighter) on left, WOOD_DK on right — same light-left convention
     vline(im, 7, 9, 14, WOOD_MD)
     vline(im, 8, 9, 14, WOOD_DK)
 
-    # Plant outline: just the silhouette edge of canopy
+    # Trunk-shadow pixel: the pixel where trunk meets canopy base gets darkened
+    # so the trunk reads as going INTO shadow under the canopy (depth cue).
+    put_px(im, 7, 9, WOOD_DK)
+    put_px(im, 8, 9, GRASS_DK)    # canopy-shadow bleeds onto trunk top
+
+    # ── OUTLINE_PLANT border — silhouette edge only ───────────────────────────
+    # Drawn on transparent pixels at the canopy edge; does not overwrite fills.
     outline_ring = [
-        (4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(10,1),(11,1),
-        (3,2),(12,2),
-        (2,3),(13,3),
-        (2,4),(13,4),
-        (2,5),(13,5),
-        (2,6),(13,6),
-        (3,7),(12,7),
-        (3,8),(4,8),(5,8),(6,8),(7,8),(8,8),(9,8),(10,8),(11,8),(12,8),
+        # Top edge
+        (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (11, 0), (12, 0),
+        # Left edge
+        (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6),
+        # Right edge
+        (13, 2), (13, 3), (13, 4), (13, 5), (13, 6),
+        # Bottom of canopy
+        (3, 9), (4, 9), (5, 9), (6, 9), (9, 9), (10, 9), (11, 9), (12, 9),
+        # Lower-right corners
+        (12, 7), (12, 8),
+        # Lower-left corners
+        (2, 7), (2, 8),
+        # Transition into trunk sides
+        (6, 9), (9, 9),
     ]
     for x, y in outline_ring:
-        # Only draw outline if transparent (don't overwrite canopy interior)
-        if im.getpixel((x, y))[3] == 0:
-            put_px(im, x, y, OUTLINE_PLANT)
+        if 0 <= x < W and 0 <= y < H:
+            if im.getpixel((x, y))[3] == 0:
+                put_px(im, x, y, OUTLINE_PLANT)
 
-    # Trunk base outline
-    put_px(im, 6, 9, OUTLINE_PLANT)
-    put_px(im, 9, 9, OUTLINE_PLANT)
+    # Trunk side outlines (below canopy)
+    for y in range(9, 15):
+        if im.getpixel((6, y))[3] == 0:
+            put_px(im, 6, y, OUTLINE_PLANT)
+        if im.getpixel((9, y))[3] == 0:
+            put_px(im, 9, y, OUTLINE_PLANT)
+    # Trunk base
+    hline(im, 7, 8, 15, OUTLINE_PLANT)
 
     return im
 
 
-# ─────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 # trader.png — 16x16 flat robed humanoid (NPC)
 # Flat colour fills, OUTLINE_OBJ (1px — NPC is object tier not pawn tier).
-# ─────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 
 def gen_trader() -> Image.Image:
     """16x16 flat-style hooded trader.  Muted purple robe + belt accent."""
@@ -207,9 +271,9 @@ def gen_trader() -> Image.Image:
     return im
 
 
-# ─────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 # Main
-# ─────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 
 def main():
     targets = [
