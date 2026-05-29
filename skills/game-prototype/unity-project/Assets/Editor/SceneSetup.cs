@@ -93,6 +93,9 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Resources/scatter/pebble_scatter.png",      // W-M4-03 Lane B — scatter variety: pebble group (10x6); moved to Resources/scatter/; QA-FLAG W-M4-06 Lane B
                 "Assets/Sprites/stone_floor.png",         // W-M4-05 Lane B — stone/paved floor tile (16x16, PPU 16)
                 "Assets/Sprites/table_chair.png",         // W-M4-06 Lane A — table+chair furniture (16x16, PPU 16); procedural fallback exists but import ensures real sprite resolves
+                "Assets/Sprites/fence.png",               // W-M6-02 Lane B3 — fence low-barrier (16x16, PPU 16); procedural fallback exists
+                "Assets/Sprites/fence_gate.png",          // W-M6-02 Lane B3 — fence-gate variant (16x16, PPU 16); procedural fallback exists
+                "Assets/Sprites/carry_bundle.png",        // W-M6-02 Lane B10 — carry-bundle overlay sprite (8x8, PPU 16); also copied to Resources/Sprites/ for Resources.Load path
             };
             foreach (var p in paths)
             {

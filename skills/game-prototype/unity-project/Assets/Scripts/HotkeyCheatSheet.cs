@@ -364,7 +364,15 @@ namespace MelonS.GameProto
             chipImg.color = UITheme.PanelBgLight;
             chipImg.raycastTarget = false;
 
-            var keyTxt = chipGo.AddComponent<Text>();
+            // Key text must live in a CHILD GO — Unity forbids Image + Text on same GO.
+            var keyTextGo = new GameObject("KeyText");
+            keyTextGo.transform.SetParent(chipRt, false);
+            var keyTextRt = keyTextGo.AddComponent<RectTransform>();
+            keyTextRt.anchorMin = Vector2.zero;
+            keyTextRt.anchorMax = Vector2.one;
+            keyTextRt.offsetMin = Vector2.zero;
+            keyTextRt.offsetMax = Vector2.zero;
+            var keyTxt = keyTextGo.AddComponent<Text>();
             keyTxt.font = bodyFont;
             keyTxt.fontSize = rowFontSize;
             keyTxt.fontStyle = FontStyle.Bold;
