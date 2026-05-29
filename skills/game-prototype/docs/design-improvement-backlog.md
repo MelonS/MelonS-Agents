@@ -226,3 +226,82 @@ After these six, proceed: A5 (trees recede) → U4 (top bar icons) → U5 (inspe
 QA gate: each item ships independently; QA Reads a fresh screenshot and checks
 the binary acceptance. Any asset/UI that violates a north-star rule = REJECT
 back to the owning agent regardless of effort spent.
+
+---
+
+# Polish Wave v3 — from 7/10 toward 8.5–9/10
+
+Game Director, 2026-05-29 (second pass). Wave v1/v2 (A1–A10, U1–U9) is DONE; QA
+moved polish ~3/10 → ~7/10 and the "너무 별로" bar is cleared. The remaining gap
+between "competent prototype" and "feels like a real game" is now **a different
+category of problem**: v1/v2 fixed *coherence and readability* (every sprite is
+clean, on-palette, pops correctly). What's left is **life, richness, and depth** —
+the things that make a *still screenshot* of RimWorld feel like a paused living
+world instead of a diorama.
+
+## Honest assessment of the CURRENT build (`_design_build_check.png`)
+
+Studied as a harsh art director. The frame is now *clean* — pawns pop with their
+2 px outline, name plates are legible, the control bar reads as a real toolbar,
+the wood wall/floor are one family, grass is muted. That is genuine 7/10 work.
+What still reads as PROTOTYPE, loudest first:
+
+1. **EVERYTHING IS FROZEN — the single biggest remaining gap.** Two pawns stand
+   perfectly rigid on bare grass. Nothing moves, nothing breathes. A still of
+   RimWorld *implies* motion (a pawn mid-stride, a flame, swaying grass); this
+   still implies a paused diorama. The colony does not feel ALIVE. No amount of
+   sprite polish fixes "dead world" — only motion does. **This is #1 by a wide
+   margin and it's the cheapest big win we have left.**
+2. **The world is empty and flat.** Huge uniform grass expanses with *nothing*
+   scattered on them — no rocks, no flowers, no grass tufts, no terrain breakup.
+   The v2 dappling helped the tile but the *world* still has zero incidental
+   stuff. Real colony maps are quietly busy everywhere.
+3. **The single tree is a flat blob.** Trees are the largest natural objects on
+   screen; this one is a 2-tone lump. A layered canopy (a few internal tone
+   clusters + a hint of trunk shadow) reads far richer while still receding per
+   the plant rule.
+4. **No grounding / depth.** Pawns, trees, and the wall sit on the same flat
+   plane with no contact shadow, so they look *pasted on* rather than standing
+   *in* the world. A single soft elliptical shadow blob under each
+   pawn/tree/building is the standard 2D-game depth trick and is nearly free.
+5. **Crop field reads as bare brown lines.** The tilled rows bottom-left have
+   faint/absent plant markers (QA already flagged the crop-field markers + the
+   inspector empty-state). Low-priority but it's visible dead space.
+
+The locked constraints are respected by every item below: **1×1 pawn size,
+60×60 grid, the established `palette.py` — no style change, no new art language.**
+These items add *life and richness within* the existing flat-Kenney + outline
+language, they do not restyle it.
+
+## ART + PROGRAMMER STREAM — Polish Wave v3
+
+| ID | stream | what's still prototype-level | target | file(s) | binary QA-checkable acceptance | impact | effort |
+|----|--------|------------------------------|--------|---------|--------------------------------|--------|--------|
+| **V1** | **programmer** | Everything is frozen — pawns stand rigid even while walking; world feels dead. | **Walk-bob**: a tiny vertical sine offset on the pawn's SPRITE child (NOT the root) while `PawnMovement.IsMoving`, plus a slow idle "breathe" bob at lower amplitude when stopped. Amplitude ≈ 1–1.5 px-equivalent (~0.04–0.06 world units at current PPU), freq ~6–8 Hz walking / ~1 Hz idle. Bob eases to zero on stop. | NEW `Assets/Scripts/PawnSpriteBob.cs` (reads `PawnMovement.IsMoving`); attached to pawn prefab in the SceneSetup pawn builder. **Must offset the SpriteRenderer's transform only** — root transform is what `PathGrid.WorldToCell` / movement / clamp read; bobbing root would desync pathfinding + reserved cells + floating bars. | Capture two frames of a walking pawn ~0.1 s apart: the pawn's body is at a *visibly different* vertical offset between frames (bobbing); a stopped pawn shows a much smaller, slow oscillation; the name plate / HP bar do NOT bob (they track root). No pawn drifts off its cell over 10 s of walking (pathfinding intact). | **H** | **S–M** |
+| **V2** | **art** | World is empty/flat — no incidental scatter. | Low-density **scatter decals**: 3–4 tiny sprites (small rock, grass tuft, 2 wildflower colors) placed sparsely (~1 per 6–10 tiles, deterministic seed) on grass. Must use `palette.py` (rocks `ROCK_*`, tufts `GRASS_DK/LT`, flowers ONE muted accent each — NOT competing with pawn saturation), `OUTLINE_PLANT` or none, render BELOW pawns/structures. | NEW gen funcs in `_gen_fix_audit.py` (`gen_scatter_rock`, `gen_grass_tuft`, `gen_flower_a/b`); scatter placement in the ground/scenery builder (`SceneSetup.Game.*` ground partial). | Wide screenshot: grass is no longer uniform — small rocks/tufts/flowers are visibly scattered at low density; they recede (eye still lands on pawns first); no clutter, no tile-seam grid pattern; nothing brighter than a pawn. | **H** | **M** |
+| **V3** | **art + programmer** | Pawns/trees/buildings look pasted on the flat plane — no grounding. | **Contact shadow**: one soft dark elliptical sprite (semi-transparent, `OUTLINE_STORY`-tone @ ~35% alpha, point-filtered) parented under each pawn/tree/building at its base, sorting just above ground and below the object. Static (no need to animate v1). | NEW `gen_blob_shadow` in `_gen_fix_audit.py`; programmer adds a `GroundShadow` child in the pawn + tree + building builders (or a tiny `BlobShadow.cs` that auto-attaches by sprite bounds). | Screenshot: every pawn/tree/building has a soft dark ellipse at its base; objects read as standing IN the world, not floating; shadow is subtle (not a hard black disc) and sits beneath the object's feet. | **H** | **S–M** |
+| **V4** | **art** | The tree is a flat 2-tone blob — largest natural object, lowest effort-to-richness. | Re-do canopy with 3 tone clusters (`GRASS_DK` core → `GRASS_MD` → one `GRASS_LT` rim-light cluster offset up-left as if lit), subtle trunk-base shadow, `OUTLINE_PLANT`. Still flat, still recedes — richer SHAPE, not more detail. | `_gen_sprites.py::gen_tree` (or wherever A5 landed the flat tree). | Tree screenshot: canopy has visible internal light/shadow clustering (not one flat fill) and a consistent light direction; still lower saturation than pawns; still recedes behind a pawn placed next to it. | **M** | **S** |
+| **V5** | **programmer** | Static world even where motion is *expected* — fire/stove dead, trees rigid. | **Ambient micro-motion**: (a) stove/fire/campfire sprite flickers (2-frame swap or scale/alpha pulse ~4 Hz on the FIRE_* pixels only); (b) optional very-subtle tree-canopy sway (±1 px horizontal sine, ~0.3 Hz) on the sprite child. Reuses the V1 sprite-child-offset pattern. | extend `PawnSpriteBob.cs` into a small shared `SpriteIdleAnim.cs`, OR per-object: `StoveFlicker.cs`; attach in stove/tree builders. | When a lit stove is on screen: its flame pixels visibly change between two frames 0.25 s apart (flicker). Trees (if swayed) show ≤1 px lateral drift, not a static lump. Nothing else jitters. | **M** | **S** |
+| **V6** | **art** | Crop field = bare brown tilled lines; faint/absent plant markers (QA-flagged). | Distinct growth-stage markers ON the tilled rows: seedling (tiny `GRASS_LT` sprout dots) → growing (muted green rows) → ripe (`CROP_GOLD` heads, the reserved accent). Each stage clearly different at a glance. | `_gen_fix_audit.py::gen_crop_rice` growth-stage variants + the crop-field render wiring. | A planted field screenshot: tilled rows clearly carry plant sprites (not bare dirt); a ripe field is unmistakably gold and pops; an unripe field is muted green and recedes. | **M** | **S** |
+| **V7** | **programmer** | Inspector empty-state is a bare "선택된 오브젝트 없음" line (QA-flagged) — looks unfinished. | Give the empty inspector a styled empty-state: header still drawn, a muted centered hint ("오브젝트를 선택하세요" + a small dimmed cursor/select glyph) inside the bordered panel, consistent with U5. | `PawnInfoPanel.cs` empty-state branch. | With nothing selected: the inspector still shows its bordered/titled panel with a centered muted hint and glyph, not a single cramped line of text on a bare rectangle. | **L** | **S** |
+| **V8** | **art** | Day/night tint exists but the world has no atmospheric depth at the edges. | OPTIONAL subtle vignette / ambient edge-darkening overlay (a soft radial `OUTLINE_OBJ`-tone gradient at very low alpha) to add depth and focus the eye toward center. Must be barely perceptible — reject if it muddies the palette. | a full-screen overlay sprite + the camera/canvas builder. | Screenshot: frame corners are *very* slightly darker than center, adding depth; the effect is subtle enough that on-palette colors are unchanged in the play area. | **L** | **S** |
+
+## Polish Wave v3 — dispatch order (impact-per-effort)
+
+1. **V1 — Pawn walk-bob + idle breathe** (programmer). *The single biggest
+   "feels like a real game" lever left. A dead-still colony reads as a tech demo;
+   the moment pawns bob while walking, the whole scene comes alive — and it's
+   cheap. Owns: NEW `PawnSpriteBob.cs`, sprite-child offset only.*
+2. **V3 — Contact shadows** (art + programmer). *Grounds every object; kills the
+   "pasted on" look across pawns, trees, AND buildings in one pass. Pairs
+   naturally with V1 (both touch the pawn builder).*
+3. **V2 — Low-density world scatter** (art). *Fills the empty world with quiet
+   life; makes the whole map feel inhabited rather than a blank board.*
+
+After these three: V4 (richer tree) → V5 (fire flicker / tree sway, completes the
+"alive" story V1 starts) → V6 (crop stages) → V7 (inspector empty-state) → V8
+(optional vignette). V8 is explicitly optional — reject if it muddies the palette.
+
+QA gate unchanged: each item ships independently; QA Reads a fresh (and for V1/V5,
+a TWO-frame) screenshot and checks the binary acceptance. Any item that violates a
+north-star rule, changes pawn size, or restyles the art language = REJECT.
