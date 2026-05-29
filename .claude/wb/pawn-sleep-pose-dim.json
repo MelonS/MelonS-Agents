@@ -1,0 +1,46 @@
+{
+  "role": "game-programmer",
+  "lane": "A",
+  "wave": "W-M3-02",
+  "cycle": "C-007",
+  "milestone": "M3-movement",
+  "wiki_item": 12,
+  "wiki_acceptance": "#12: a sleeping pawn is visually distinct (dimmed) from a standing one.",
+  "status": "Done",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/SleepPoseDriver.cs"
+  ],
+  "files_created": [
+    "Assets/Scripts/SleepPoseDriver.cs (NEW, lane-A-only)"
+  ],
+  "files_edited": [],
+  "summary": "NEW SleepPoseDriver.cs only. Self-attaches via [RuntimeInitializeOnLoadMethod(AfterSceneLoad)] hidden persistent driver that periodically sweeps PawnMovement (pawn root) instances and EnsureOn-attaches exactly one SleepPoseDriver each — exact FlickerLight.cs / PawnFacing.cs driver + EnsureOn + 1.0s Time-throttled scan pattern (Time-in-Update throttle, NOT a WaitForSeconds heartbeat -> no bug-pattern #9 background-only timer). Per-frame reads sleep state via PawnNeeds.IsSleeping (the SAME public bool { get; private set; } PawnInfoPanel reads through pawn.GetComponent<PawnNeeds>(); PawnNeeds + PawnMovement + PawnEntity all colocated on the pawn root). When sleeping, eases the CHILD body SpriteRenderer.color toward awakeBase * dimTint(0.6/0.6/0.66 value, slight desaturate, alpha 1) so a sleeping pawn is clearly darker; restores exact awake base color when awake.",
+  "hard_rule_compliance": {
+    "writes_only": "child body SpriteRenderer.color (2 assignment sites: ease in Update + restore in OnDisable)",
+    "child_flipX": "NOT touched (PawnFacing owns) — only appears in doc comments",
+    "child_localPosition_Y": "NOT touched (PawnSpriteBob owns) — only appears in doc comments",
+    "root_transform": "NOT touched (pathfinding/PathGrid.WorldToCell reads it) — zero transform.position writes",
+    "root_renderer_color": "NOT touched (tint anchor) — zero rootRenderer.color writes; rootRenderer cached ONLY to exclude it from the body-renderer fallback search",
+    "shadow_child": "explicitly skipped by name (PawnShadow) so the contact shadow is never dimmed",
+    "no_collision_rationale": "color / flipX / localPosition are three distinct fields on the same child renderer/transform -> three systems coexist without clobbering"
+  },
+  "body_renderer_resolution": "child named 'PawnSpriteBob' (matches PawnSpriteBob/PawnFacing wiring); fallback = first child SpriteRenderer that is neither PawnShadow nor the root renderer; null-guarded -> graceful no-op if absent.",
+  "files_NOT_touched": ["SceneSetup*", "SceneSetup.Pawn.cs", "PawnFacing.cs", "PawnSpriteBob.cs", "PawnMovement.cs", "PawnNeeds.cs", "PawnEntity.cs", "AudioBank.cs", "any other file"],
+  "syntactic_check": "brace 23/23 balanced, paren 113/113 balanced, 0 TODO, 0 stubbed logic, 0 transform.position writes, 0 rootRenderer.color writes, 2 bodyRenderer.color writes. Actual compile is QA's Unity batchmode.",
+  "unity_run": "NOT run (per lane rule — QA verifies in Unity batchmode).",
+  "qa_flags": [
+    "META: SleepPoseDriver.cs has no .cs.meta yet — Unity generates it on first import (same as every other runtime script). No hand-authored GUID needed; QA's Unity batchmode import will create it. No scene SerializeField wiring is required for this lane (component is fully self-attached at runtime; dimTint/fadeSpeed have day-1 defaults).",
+    "SLEEP-API CONFIRMED (not a guess): sleep detection uses PawnNeeds.IsSleeping (PawnNeeds.cs:35 public bool IsSleeping { get; private set; }; set true at PawnNeeds.cs:75 when sleep<30 && night, cleared at :86 when sleep>=80). Same access path PawnInfoPanel.cs:152 uses (pawn.GetComponent<PawnNeeds>()). No ambiguity to flag for resolution.",
+    "VERIFY non-fight: confirm in a running frame that a sleeping pawn is darker AND still bobs (PawnSpriteBob childY) AND still faces movement (PawnFacing flipX) with no property fighting — three distinct fields, expected clean.",
+    "DIRECTOR feel-check: dimTint value ~0.6 — confirm 'asleep' reads clearly but not 'dead/invisible'. Tunable via SerializeField dimTint/fadeSpeed without code change."
+  ],
+  "scene_wiring_needed": "None for this lane (self-attaching runtime component; no SerializeField slot must be wired in SceneSetup).",
+  "bug_pattern_firewall": {
+    "#9_runInBackground": "OK — Time-in-Update throttle, no WaitForSeconds heartbeat, no new always-on background timer.",
+    "#4_audio": "N/A (no AudioBank call).",
+    "#5_GetInstanceID": "N/A (no collision/instance-id compare).",
+    "#6_OnCollisionEnter": "N/A (no collision handler).",
+    "#7_singleton_OnEnable_subscribe": "OK — polls PawnNeeds in Update, no OnEnable event subscription.",
+    "#8_justSpawned_default_true": "N/A (no spawn-grace field; reads live IsSleeping)."
+  }
+}

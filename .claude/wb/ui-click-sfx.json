@@ -1,0 +1,36 @@
+{
+  "role": "game-programmer",
+  "lane": "B",
+  "wave": "W-M3-02",
+  "milestone": "M2-sound",
+  "wiki_item": "#5",
+  "wiki_acceptance": "clicking any UI button plays the blip",
+  "status": "Done",
+  "summary": "Routed UI button onClick through the EXISTING AudioBank.PlaySelect() (same soft-blip pawn-select uses, 0.0s throttle). AudioBank resolved find-once + cached, mirroring the ClickSelector cached-reference pattern; null no-op if absent. AudioBank.cs NOT edited (lane D owns it). No entity/SceneSetup file touched.",
+  "files_edited": [
+    "Assets/Scripts/GuiControlBar.cs",
+    "Assets/Scripts/ArchitectMenu.cs",
+    "Assets/Scripts/ResearchUI.cs"
+  ],
+  "files_NOT_edited_per_lane_contract": [
+    "Assets/Scripts/AudioBank.cs (lane D solely owns this wave; PlaySelect already exists)",
+    "any entity/*Entity.cs or SceneSetup*.cs"
+  ],
+  "implementation": {
+    "pattern": "Each file gained a private 'AudioBank cachedAudio' + 'bool audioResolved' + 'PlayClickBlip()' helper. PlayClickBlip resolves once via 'AudioBank.Instance ?? FindFirstObjectByType<AudioBank>()' then caches; calls cachedAudio.PlaySelect() (null no-op). No per-Update or per-click FindFirstObjectByType (Lesson #4 honored).",
+    "GuiControlBar.cs": "Single chokepoint: MakeBtn's central 'btn.onClick.AddListener' now does '{ PlayClickBlip(); onClick?.Invoke(); }'. Covers ALL 9 bar buttons (멈춤/1x/2x/4x/징집/직업/일정/건축/연구) with one edit.",
+    "ArchitectMenu.cs": "Single chokepoint: MakeBtn's central 'btn.onClick.AddListener' now does '{ PlayClickBlip(); onClick?.Invoke(); }'. Covers ALL category headers + buildable buttons (Structure/Floors/Furniture/Production).",
+    "ResearchUI.cs": "ResearchUI owns NO Button objects (picker is keyboard/number-key driven; opened from GuiControlBar's 연구 button). Blip added at the genuine ResearchUI-owned action surface: in-picker tech selection (number-key -> SetActive). TogglePicker() intentionally does NOT blip — its only caller is the GuiControlBar 연구 button which already blips via its own chokepoint; double-blipping would fire PlaySelect twice in one frame (documented in a code comment)."
+  },
+  "bug_firewall_check": {
+    "#4_audio_buzz": "OK — PlaySelect is per-discrete-user-click (0.0s throttle by design), not a tight loop. No Update/per-frame audio calls added.",
+    "lesson4_find_per_frame": "OK — AudioBank find-once cached behind audioResolved flag; no FindFirstObjectByType in Update or per-click."
+  },
+  "qa_flags": [
+    "SCENE WIRING: No new SerializeField slots introduced by lane B; AudioBank is resolved at runtime. The blip will be SILENT until the AudioBank GameObject's sfxSelect clip + sfxSource are assigned in the scene (pre-existing wiring used by pawn-select). Confirm pawn-select already audibly blips in the build; if so, UI buttons will too. No new scene wiring required from this lane.",
+    "VERIFY: clicking any GuiControlBar button, any ArchitectMenu category/buildable button, and selecting a tech in the research picker each plays the soft select blip.",
+    "NO Unity run performed by this lane (per lane contract — QA verifies after merge)."
+  ],
+  "no_regression_notes": "Pure additive: each button's existing onClick action is preserved and invoked after the blip. Braces balanced (Gui 32/32, Architect 26/26, Research 24/24). AudioBank.Instance is in the same MelonS.GameProto namespace — no new using directives needed.",
+  "updated": "2026-05-30"
+}

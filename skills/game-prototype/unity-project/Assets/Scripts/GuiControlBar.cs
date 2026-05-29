@@ -37,6 +37,26 @@ namespace MelonS.GameProto
         // Lesson #4 - FindFirstObjectByType per-Update 비쌈.
         private ClickSelector cachedCs;
 
+        // wiki Dim2 acceptance #5: clicking any UI button plays the blip.
+        //  Route every button onClick through the EXISTING AudioBank.PlaySelect()
+        //  (the same soft-blip pawn-select uses; 0.0s throttle = per-click ok).
+        //  Find-once + cache, mirroring the ClickSelector cached-reference pattern;
+        //  null no-op if the bank is absent (clips/sources may be unassigned).
+        private AudioBank cachedAudio;
+        private bool audioResolved;
+
+        private void PlayClickBlip()
+        {
+            if (!audioResolved)
+            {
+                cachedAudio = AudioBank.Instance != null
+                    ? AudioBank.Instance
+                    : Object.FindFirstObjectByType<AudioBank>();
+                audioResolved = true;
+            }
+            if (cachedAudio != null) cachedAudio.PlaySelect();
+        }
+
         private static GuiControlBar _instance;
 
         public static void EnsureInScene()
@@ -152,7 +172,8 @@ namespace MelonS.GameProto
             cb.selectedColor    = Color.white;
             cb.fadeDuration     = 0.06f;
             btn.colors = cb;
-            btn.onClick.AddListener(()=>onClick?.Invoke());
+            // wiki #5 — central chokepoint: every bar button blips on click.
+            btn.onClick.AddListener(()=>{ PlayClickBlip(); onClick?.Invoke(); });
 
             // 주 라벨
             var labelGo = new GameObject("Label");

@@ -28,6 +28,25 @@ namespace MelonS.GameProto
         private static readonly Color InactiveBg = MelonS.GameProto.Core.UITheme.BtnInactiveBg;
         private static readonly Color HeaderBg   = MelonS.GameProto.Core.UITheme.HeaderBg;
 
+        // wiki Dim2 acceptance #5: clicking any UI button plays the blip.
+        //  Route category/buildable button onClick through the EXISTING
+        //  AudioBank.PlaySelect() (same soft-blip pawn-select uses). Find-once +
+        //  cache (ClickSelector cached-reference pattern); null no-op if absent.
+        private AudioBank cachedAudio;
+        private bool audioResolved;
+
+        private void PlayClickBlip()
+        {
+            if (!audioResolved)
+            {
+                cachedAudio = AudioBank.Instance != null
+                    ? AudioBank.Instance
+                    : Object.FindFirstObjectByType<AudioBank>();
+                audioResolved = true;
+            }
+            if (cachedAudio != null) cachedAudio.PlaySelect();
+        }
+
         // 림월드 vanilla 패턴 — 카테고리별 buildable 목록
         private static readonly Dictionary<string, (BuildManager.Mode mode, string label, int cost)[]> Categories = new()
         {
@@ -195,7 +214,8 @@ namespace MelonS.GameProto
             cb.selectedColor    = Color.white;
             cb.fadeDuration     = 0.06f;
             btn.colors = cb;
-            btn.onClick.AddListener(() => onClick?.Invoke());
+            // wiki #5 — central chokepoint: every architect button blips on click.
+            btn.onClick.AddListener(() => { PlayClickBlip(); onClick?.Invoke(); });
 
             var txtGo = new GameObject("Label");
             txtGo.transform.SetParent(go.transform, false);

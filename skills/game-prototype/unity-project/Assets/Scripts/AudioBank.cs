@@ -26,6 +26,13 @@ namespace MelonS.GameProto
     ///                   not the chop thunk; 2400Hz metal-pick transient + 420Hz stone
     ///                   resonance body + grit noise burst; 0.18s — shorter/denser than chop).
     ///
+    /// M3 sound-coverage push 2026-05-30 (wiki Dim2 item #9, W-M3-02 Lane D):
+    ///   rain.wav      — soft continuous filtered-noise rain bed, loopable (wiki #9:
+    ///                   a storm plays a rain loop; clear weather is silent of rain).
+    ///                   Played on a dedicated rainSource (2D, vol=0.20).
+    ///                   RainSoundDriver.cs polls WeatherController and calls
+    ///                   PlayRain()/StopRain() when weather transitions.
+    ///
     /// Throttle discipline (Lesson #4, 2026-05-27 PawnSim chop-buzz):
     ///   PlayChop()    — 0.25s min-interval.  PawnChopper.Update() calls
     ///                   TakeChopDamage every frame; without throttle = 60
@@ -48,6 +55,10 @@ namespace MelonS.GameProto
     ///                   already has an entity-level 0.6s SfxInterval guard, but
     ///                   AudioBank-side throttle guards any future callers that
     ///                   might lack the entity guard (defense-in-depth pattern).
+    ///   PlayRain()    — No per-call throttle: it is a looping bed, not a one-shot.
+    ///                   RainSoundDriver polls once per frame via Update(); the
+    ///                   isPlaying guard inside PlayRain() is the idempotency gate
+    ///                   (calling PlayRain() again while the loop runs is a no-op).
     ///
     /// PROGRAMMER ACTIONS FLAGGED (Sound Designer lane — do not edit entities):
     ///   1. TreeEntity.cs:84  — PlayChop() called from inside TakeChopDamage()
@@ -66,6 +77,10 @@ namespace MelonS.GameProto
     ///   6. sfxMine slot requires scene-side SerializeField assignment on the
     ///      AudioBank GameObject (assign mine.wav same as sfxBuild/alert/ambient
     ///      last wave).  QA FLAG: wire sfxMine in the Inspector before verifying.
+    ///   7. rainLoop slot requires scene-side SerializeField assignment on the
+    ///      AudioBank GameObject — assign rain.wav.
+    ///      QA FLAG: wire rainLoop in the Inspector (same workflow as sfxBuild/
+    ///      sfxAlert/sfxAmbient/sfxMine). Wiki #9 cannot verify without this wire.
     /// </summary>
     public class AudioBank : MonoBehaviour
     {
@@ -89,11 +104,20 @@ namespace MelonS.GameProto
         // the Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient last wave).
         public AudioClip sfxMine;      // pick-on-stone — mining impact (distinct from chop)
 
+        // ── M3 SFX slots (wiki #9, W-M3-02 Lane D) ─────────────────────────
+        // QA FLAG: assign rain.wav to this slot on the AudioBank GameObject in
+        // the Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient/sfxMine).
+        // RainSoundDriver.cs calls PlayRain()/StopRain() when weather transitions.
+        public AudioClip rainLoop;     // soft loopable rain bed — played on rainSource
+
         // ── Audio sources ───────────────────────────────────────────────────
         [SerializeField] private AudioSource bgmSource;
         [SerializeField] private AudioSource sfxSource;
         // ambientSource: independent looping outdoor bed (NOT bgmSource — wiki #4)
         private AudioSource ambientSource;
+        // rainSource: dedicated looping source for rain bed (wiki #9 — distinct
+        // from ambientSource so rain can start/stop independently of ambient).
+        private AudioSource rainSource;
 
         // ── Per-key throttle timestamps (Sound Designer — 2026-05-30) ──────
         private float _lastChopTime    = -10f;
@@ -126,6 +150,9 @@ namespace MelonS.GameProto
             // ambientSource: second independent source — does NOT share bgmSource
             ambientSource = gameObject.AddComponent<AudioSource>();
 
+            // rainSource: third independent source — loopable rain bed (wiki #9)
+            rainSource = gameObject.AddComponent<AudioSource>();
+
             bgmSource.loop   = true;
             bgmSource.volume = 0.45f;
             sfxSource.volume = 0.7f;
@@ -134,6 +161,11 @@ namespace MelonS.GameProto
             ambientSource.volume          = 0.18f;  // quiet bed, below BGM and SFX
             ambientSource.spatialBlend    = 0f;     // 2-D (global, not positional)
             ambientSource.playOnAwake     = false;
+
+            rainSource.loop            = true;
+            rainSource.volume          = 0.20f;  // quiet bed — rain behind everything
+            rainSource.spatialBlend    = 0f;     // 2-D (global, not positional)
+            rainSource.playOnAwake     = false;
         }
 
         private void Start()
@@ -152,6 +184,8 @@ namespace MelonS.GameProto
                 ambientSource.clip = sfxAmbient;
                 ambientSource.Play();
             }
+
+            // rain.wav does NOT auto-start — RainSoundDriver controls it.
         }
 
         // ────────────────────────────────────────────────────────────────────
@@ -310,6 +344,52 @@ namespace MelonS.GameProto
             if (Time.time - _lastMineTime < MineInterval) return;
             _lastMineTime = Time.time;
             sfxSource.PlayOneShot(sfxMine, 0.80f);
+        }
+
+        // ────────────────────────────────────────────────────────────────────
+        //  M3 NEW METHODS (wiki #9, W-M3-02 Lane D)
+        // ────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Start the looping rain bed — called by RainSoundDriver when
+        /// WeatherController.Current == WeatherKind.Storm.
+        ///
+        /// Idempotent: if rainSource is already playing the correct clip,
+        /// this is a no-op (avoids restarting the loop mid-weather-event
+        /// if the driver polls while rain is already running).
+        ///
+        /// Graceful null no-op if rainLoop clip or rainSource is not ready
+        /// (e.g. scene-side SerializeField wiring for rainLoop not yet done).
+        ///
+        /// Wiki acceptance #9: "A storm plays a rain loop."
+        ///
+        /// QA FLAG: AudioBank.rainLoop requires scene-side SerializeField
+        /// assignment on the AudioBank GameObject — assign rain.wav in the
+        /// Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient/sfxMine).
+        /// </summary>
+        public void PlayRain()
+        {
+            if (rainLoop == null || rainSource == null) return;
+            if (rainSource.isPlaying && rainSource.clip == rainLoop) return;
+            rainSource.clip = rainLoop;
+            rainSource.loop = true;
+            rainSource.Play();
+        }
+
+        /// <summary>
+        /// Stop the looping rain bed — called by RainSoundDriver when
+        /// WeatherController.Current == WeatherKind.Clear.
+        ///
+        /// Graceful: if rainSource is not playing, Stop() is a no-op in Unity.
+        /// Null-safe if rainSource was never created (should not happen after
+        /// Awake, but defensive check prevents NRE in edge-case domain reloads).
+        ///
+        /// Wiki acceptance #9: "Clear weather is silent of rain."
+        /// </summary>
+        public void StopRain()
+        {
+            if (rainSource == null) return;
+            if (rainSource.isPlaying) rainSource.Stop();
         }
     }
 }

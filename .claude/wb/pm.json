@@ -1,31 +1,35 @@
 {
   "role": "PM",
   "status": "Done",
-  "cycle": "C-006",
-  "wave": "W-M3-01",
+  "cycle": "C-007",
+  "wave": "W-M3-02",
   "ts": "2026-05-30",
   "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"],
   "prev_wave_closed": {
-    "id": "W-M2-01",
+    "id": "W-M3-01",
     "verdict": "PASS",
-    "commit": "89acd58",
-    "build_tag": "day-cx-w1-2026-05-30",
-    "note": "sound coverage push GREEN+WIRED (sfxBuild/sfxAlert tier/ambient bed/wolf-howl 0-callers fix/animal-hit fix); no RED on disk -> no FIX subtask needed"
+    "commit": "a769648",
+    "build_tag": "cx-w2-2026-05-30",
+    "note": "facing flipX #11 + alert-stack #22 + V4 combat-chain verify #26 + sfxMine #7 all GREEN/WIRED; no RED on disk -> no FIX subtask needed"
   },
   "audit": {
-    "walk_bob_10": "PASS @333c515 — already done, skipped",
+    "facing_11": "PASS @a769648 — done, skipped",
+    "walk_bob_10": "PASS @333c515 — done, skipped",
+    "alert_stack_22": "PASS @a769648 — done, skipped",
+    "v4_combat_26": "PASS @a769648 — test added, skipped",
+    "sfxmine_7": "PASS @a769648 — done, skipped",
     "red_on_disk": "none",
-    "next_driver": "wiki rimworld-comparison.md sequencing: after Sound 1-9 (done) + walk-bob #10 (done) -> facing/feel 10-13 + build-ops/alert 15-22, with verify 25-29 as continuous gate"
+    "next_driver": "wiki rimworld-comparison.md continuing sequence: facing #11 done -> sleep-pose #12 (completes motion/facing story) + remaining cheap non-gated sound #5 (UI-click) / #9 (rain) + food-chain verify #25 (continuous gate)"
   },
   "wave_lanes": [
-    {"lane": "A", "role": "game-programmer", "milestone": "M3-movement", "label": "pawn-facing-flipx", "files": ["NEW Assets/Scripts/PawnFacing.cs"], "wiki_item": "#11", "binary": "pawn walking left faces left, right faces right; no root cell-drift"},
-    {"lane": "B", "role": "game-programmer", "milestone": "M6-ui", "label": "alert-letter-stack", "files": ["NEW Assets/Scripts/AlertStackUI.cs"], "wiki_item": "#22", "binary": "raid -> persistent top-right card; click pans camera toward threat"},
-    {"lane": "C", "role": "game-build-engineer", "milestone": "M5-gameplay-verify", "label": "v4-combat-chain-verify", "files": ["NEW test .cs under existing test asmdef"], "wiki_item": "#26", "binary": "gated test asserts drafted arrow reduces enemy HP to death"},
-    {"lane": "D", "role": "game-sound-designer", "milestone": "M2-sound", "label": "sfxmine-wire", "files": ["Assets/Scripts/AudioBank.cs", "Assets/Scripts/StoneVeinEntity.cs"], "wiki_item": "#7-partial", "binary": "mining plays distinct pick-on-stone sound, not chop thunk"}
+    {"lane": "A", "role": "game-programmer", "milestone": "M3-movement", "label": "pawn-sleep-pose-dim", "files": ["NEW Assets/Scripts/SleepPoseDriver.cs"], "wiki_item": "#12", "binary": "sleeping pawn is dimmed/visually distinct from a standing one; no flipX/bob conflict"},
+    {"lane": "B", "role": "game-programmer", "milestone": "M2-sound", "label": "ui-click-sfx", "files": ["Assets/Scripts/GuiControlBar.cs", "Assets/Scripts/ArchitectMenu.cs", "Assets/Scripts/ResearchUI.cs"], "wiki_item": "#5", "binary": "clicking any UI button plays the PlaySelect blip"},
+    {"lane": "C", "role": "game-build-engineer", "milestone": "M5-gameplay-verify", "label": "v5-food-chain-verify", "files": ["NEW test .cs under existing test asmdef"], "wiki_item": "#25", "binary": "gated test asserts plant->ripen->harvest->cook->eat raises pawn food need"},
+    {"lane": "D", "role": "game-sound-designer", "milestone": "M2-sound", "label": "rain-loop-wire", "files": ["Assets/Scripts/AudioBank.cs", "NEW Assets/Scripts/RainSoundDriver.cs"], "wiki_item": "#9", "binary": "storm plays a rain loop; clear weather is silent of rain"}
   ],
   "non_overlapping": true,
-  "non_overlap_proof": "A=NEW PawnFacing.cs; B=NEW AlertStackUI.cs; C=NEW test .cs; D=AudioBank.cs+StoneVeinEntity.cs. No file in two lanes. No SceneSetup*.cs (incl .Pawn.cs/.Game.Entities.cs) touched by any lane. Runtime non-fight: A writes only child SpriteRenderer.flipX (PawnSpriteBob owns child localY, FlickerLight owns stove overlay); B owns its own Canvas + read-only AIDirector.OnEventFired subscribe (no AIDirector/EventLogUI edit); C touches no runtime; D's two files touched by no other lane.",
-  "op_gated_excluded": ["work-priority", "mood/mental-break rewrite", "#24 per-terrain path-cost", "#30 mood thought-sum"],
-  "qa_flags_expected": ["scene-side SerializeField wiring of sfxMine on AudioBank GameObject (Lane D, same pattern as prior sfxBuild/alert/ambient)", "AlertStackUI camera-pan target precision (Lane B) if no exact threat source available"],
-  "notes": "Remaining wiki backlog for future waves: build-ops #15 deconstruct / #16 mine-designation / #17 grow-zone / #18 drag-rect (each multi-file, sequence carefully for lane isolation), sound #5 UI-click / #8 dynamic music / #9 rain loop, #12 sleep-pose (conflicts with facing on pawn child -> sequence AFTER #11 lands), verify #25 food-chain / #27 raid-threat / #28 move-speed reconcile / #29 save-load round-trip. Gated (#24, #30, M4 breadth) wait for OP-OK."
+  "non_overlap_proof": "A=NEW SleepPoseDriver.cs; B=GuiControlBar.cs+ArchitectMenu.cs+ResearchUI.cs; C=NEW test .cs; D=AudioBank.cs+NEW RainSoundDriver.cs. No file in two lanes. No SceneSetup*.cs (incl .Pawn.cs/.Game.Entities.cs), no PawnFacing/PawnSpriteBob/PawnMovement, no WeatherController/AIDirector/EventLogUI edited. Runtime non-fight on the pawn child: A writes child SpriteRenderer.color ONLY (PawnFacing owns flipX, PawnSpriteBob owns localPos.Y — three distinct properties). B touches UI .cs only and CALLS the existing AudioBank.PlaySelect (does NOT edit AudioBank). D solely owns AudioBank.cs this wave (B does not edit it) + a new self-attach RainSoundDriver that polls WeatherController read-only. C touches no runtime.",
+  "op_gated_excluded": ["work-priority", "mood/mental-break rewrite", "#24 per-terrain path-cost", "#30 mood thought-sum", "M4 deconstruct/mine-designation/grow-zone/drag-rect (multi-file, not lane-isolatable alongside 3 other lanes -> dedicated future wave)"],
+  "qa_flags_expected": ["scene-side SerializeField wiring of rainLoop on AudioBank GameObject (Lane D, same pattern as prior sfxBuild/alert/ambient/mine)", "Lane A sleep-detection API location (if IsSleeping flag access is unclear)", "Lane C food-chain runtime drive API (plant/ripen/cook/eat) if missing -> flag not edit"],
+  "notes": "Remaining wiki backlog for future waves: build-ops #15 deconstruct / #16 mine-designation / #17 grow-zone / #18 drag-rect — EACH is multi-file (PawnBuilder + designation + PathGrid + SceneSetup) and must run in its OWN dedicated wave (cannot lane-isolate 4 of them at once). Sound #8 dynamic music (AudioBank + threat-tier crossfade driver). Build catalogue #19 torch/lamp / #20 table+chair / #21 stone floor (art+code, multi-file). UI #23 inspector tabs (PawnInfoPanel). Verify #27 raid-threat / #28 move-speed reconcile / #29 save-load round-trip. Gated (#24, #30, M4 trading/power/taming/bills) wait for OP-OK."
 }

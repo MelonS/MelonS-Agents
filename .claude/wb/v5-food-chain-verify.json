@@ -1,0 +1,66 @@
+{
+  "role": "BuildEngineer",
+  "lane": "C",
+  "wave": "W-M3-02",
+  "milestone": "M5-gameplay-verify",
+  "backlog_item": "#25",
+  "wiki_acceptance": "A single gated test asserts the full food chain raises a pawn's food need.",
+  "status": "Done",
+  "output_file": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V5FoodChainTest.cs",
+  "output_meta": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V5FoodChainTest.cs.meta",
+  "test_id": "V5-food-chain",
+  "test_class": "MelonS.GameProto.Tests.V5FoodChainTest",
+  "assert_steps": [
+    "Step 1 — crop plant exists (CropEntity spawned, growth = 0, !IsRipe == true)",
+    "Step 2 — crop ripens (growth forced to 1.0 via reflection → crop.IsRipe == true)",
+    "Step 3 — harvest yields raw food (crop.Harvest() returns > 0 AND ResourceManager.food rises)",
+    "Step 4 — cook at stove converts food to meal (stove.CookOne() returns true AND ResourceManager.meals rises)",
+    "Step 5 — pawn eats (PawnNeeds.food set to 20 < eatThreshold 40, meals >= 1, wait 1s for Update/TryEatTick → food rises above 20)"
+  ],
+  "api_gaps_flagged_for_qa": [
+    {
+      "id": "G1",
+      "description": "ResearchManager.Instance may be null in the headless test scene. The test bootstraps one when absent. This is the same pattern V4CombatChainTest uses.",
+      "severity": "low",
+      "workaround": "Test adds AddComponent<ResearchManager> to a fresh GameObject when Instance is null."
+    },
+    {
+      "id": "G2",
+      "description": "ResourceManager.Instance routes through Services.Get<ResourceManager>(). In the headless test scene there may be no ResourceManager present. The test bootstraps one when absent so crop.Harvest() and stove.CookOne() can credit food/meals.",
+      "severity": "medium",
+      "workaround": "Test adds AddComponent<ResourceManager> to a fresh GameObject when ResourceManager.Instance is null and waits one frame for Awake to register it."
+    },
+    {
+      "id": "G3",
+      "description": "CropEntity.growth is [SerializeField] private. There is no public SetGrowth() or ForceRipe() method. Ripening is forced via reflection (BindingFlags.NonPublic|Instance) as in TestRunner.TestV5_CropHarvest (line 1382-1384) and TestV48_CropColorStage.",
+      "severity": "low",
+      "workaround": "Reflection: typeof(CropEntity).GetField('growth', NonPublic|Instance).SetValue(crop, 1.0f). If a public ForceRipe() is ever added, the test should be updated to use it instead."
+    },
+    {
+      "id": "G4",
+      "description": "PawnNeeds.TryEatTick is private and fires automatically from PawnNeeds.Update. There is no public ForceEat() or EatOnce() method. The test sets pawn.food = 20 (< eatThreshold 40) and waits 1 s for Update to fire TryEatTick. If Unity batchmode headless mode stalls Time.deltaTime (reported in some CI configurations), TryEatTick may not accumulate enough time to pass the 0.5 s eatTickInterval guard and the test would FAIL at Step 5. QA should confirm the eat tick fires within the 1 s window in the actual test runner scene.",
+      "severity": "medium",
+      "workaround": "Wait 1.0 s (2x the 0.5 s eatTickInterval). If Step 5 fails in CI, recommend adding a public ForceEatOnce() test accessor to PawnNeeds (runtime edit, flagged for Programmer)."
+    },
+    {
+      "id": "G5",
+      "description": "PawnNeeds.Update checks IsNightTime() via GameClock.Instance. If GameClock.Instance is null (headless test scene), IsNightTime() returns false, so IsSleeping stays false and Update proceeds to TryEatTick normally. No bootstrap needed for GameClock in this test.",
+      "severity": "none",
+      "workaround": "GameClock.Instance == null is handled gracefully by PawnNeeds (returns false for night check). No action needed."
+    },
+    {
+      "id": "G6",
+      "description": "StoveEntity.CanCookOne() requires ResourceManager.food >= 3. The crop harvest deposits harvestFood (default 8) so the stove will have enough raw food. If the ResourceManager bootstrap in G2 starts food=0 and Harvest() does not fire before CookOne() is called, the cook step fails. The test waits one frame between Harvest and CookOne to ensure AddFood has propagated.",
+      "severity": "low",
+      "workaround": "Test calls crop.Harvest() then yields null before calling stove.CookOne(). With harvestFood=8 and cookCost=3, there is a 5-unit safety margin even if other tests consumed some food."
+    }
+  ],
+  "lane_contract_compliance": {
+    "new_file_only": true,
+    "no_existing_test_file_edited": true,
+    "no_runtime_cs_edited": true,
+    "no_scenesetup_touched": true,
+    "unity_not_run": true
+  },
+  "timestamp": "2026-05-30"
+}

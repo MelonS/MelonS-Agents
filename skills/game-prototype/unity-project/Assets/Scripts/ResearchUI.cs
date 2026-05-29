@@ -18,6 +18,28 @@ namespace MelonS.GameProto
         private float lastUpdate = -10f;
         private bool pickerOpen = false;
 
+        // wiki Dim2 acceptance #5: clicking any UI button plays the blip.
+        //  ResearchUI has no Button objects of its own (picker is keyboard/number-
+        //  key driven and opened from the GuiControlBar 연구 button), so the
+        //  user-action surfaces here are the picker toggle + a tech selection.
+        //  Route both through the EXISTING AudioBank.PlaySelect() (same soft-blip
+        //  pawn-select uses). Find-once + cache (ClickSelector cached-reference
+        //  pattern); null no-op if the bank is absent.
+        private AudioBank cachedAudio;
+        private bool audioResolved;
+
+        private void PlayClickBlip()
+        {
+            if (!audioResolved)
+            {
+                cachedAudio = AudioBank.Instance != null
+                    ? AudioBank.Instance
+                    : Object.FindFirstObjectByType<AudioBank>();
+                audioResolved = true;
+            }
+            if (cachedAudio != null) cachedAudio.PlaySelect();
+        }
+
         private void Update()
         {
             if (ResearchManager.Instance == null) return;
@@ -40,6 +62,7 @@ namespace MelonS.GameProto
                         {
                             var t = ResearchManager.Instance.techs[idx];
                             ResearchManager.Instance.SetActive(t);
+                            PlayClickBlip();   // wiki #5 — tech-pick is a UI action
                             RefreshPicker();
                         }
                     }
@@ -88,6 +111,9 @@ namespace MelonS.GameProto
         /// <summary>운영자 피드백 — N 키 대신 GUI 버튼에서 picker 토글</summary>
         public void TogglePicker()
         {
+            // NOTE: the only caller is GuiControlBar's 연구 button, which already
+            //  blips via its own onClick chokepoint — do NOT blip here too or the
+            //  research button double-fires PlaySelect in one frame.
             pickerOpen = !pickerOpen;
             if (pickerPanel != null) pickerPanel.gameObject.SetActive(pickerOpen);
             if (pickerOpen) RefreshPicker();
