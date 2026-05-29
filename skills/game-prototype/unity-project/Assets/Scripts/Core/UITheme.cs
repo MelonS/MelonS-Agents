@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace MelonS.GameProto.Core
 {
@@ -52,6 +53,78 @@ namespace MelonS.GameProto.Core
                 if (f != null) return f;
             }
             return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        }
+
+        // ── Padding rhythm (one scale everywhere) ────────────────────────────
+        public const float PadOuter = 12f;   // panel inner padding
+        public const float RowGap   = 6f;    // gap between rows
+        public const float BorderPx = 2f;    // border thickness on every panel
+
+        /// <summary>
+        /// #UI-restyle — ONE shared panel system.  The root Image is the BORDER
+        /// (Divider color); an inset child Image is the PanelBg fill.  This gives
+        /// every panel (control bar, tooltip, inspector, name plate) the same
+        /// "warm dark-brown panel + 1-2px lighter border" RimWorld treatment
+        /// without a 9-slice sprite.  Returns the INNER content RectTransform —
+        /// parent your text/rows to it so they sit inside the border + padding.
+        /// </summary>
+        /// <param name="root">RectTransform that becomes the bordered frame.</param>
+        /// <param name="border">border thickness (defaults BorderPx).</param>
+        /// <param name="bg">fill color (defaults PanelBg).</param>
+        /// <param name="pad">extra inner padding inset for the content child (0 = flush to fill).</param>
+        public static RectTransform MakeBorderedPanel(RectTransform root, float border = -1f,
+                                                      Color? bg = null, float pad = 0f)
+        {
+            if (border < 0f) border = BorderPx;
+            Color fill = bg ?? PanelBg;
+
+            // root Image == the border color (shows on all 4 edges)
+            var borderImg = root.GetComponent<Image>();
+            if (borderImg == null) borderImg = root.gameObject.AddComponent<Image>();
+            borderImg.color = Divider;
+            borderImg.raycastTarget = false;
+
+            // inset fill child
+            var fillGo = new GameObject("PanelFill");
+            fillGo.transform.SetParent(root, false);
+            var fillRt = fillGo.AddComponent<RectTransform>();
+            fillRt.anchorMin = Vector2.zero;
+            fillRt.anchorMax = Vector2.one;
+            fillRt.offsetMin = new Vector2(border, border);
+            fillRt.offsetMax = new Vector2(-border, -border);
+            var fillImg = fillGo.AddComponent<Image>();
+            fillImg.color = fill;
+            fillImg.raycastTarget = false;
+
+            // content child (padded inside the fill)
+            var contentGo = new GameObject("Content");
+            contentGo.transform.SetParent(fillRt, false);
+            var contentRt = contentGo.AddComponent<RectTransform>();
+            contentRt.anchorMin = Vector2.zero;
+            contentRt.anchorMax = Vector2.one;
+            contentRt.offsetMin = new Vector2(pad, pad);
+            contentRt.offsetMax = new Vector2(-pad, -pad);
+            return contentRt;
+        }
+
+        /// <summary>
+        /// Adds a thin Divider-colored vertical line as a child of <paramref name="parent"/>.
+        /// Used for group separators in the control bar.
+        /// </summary>
+        public static Image MakeVDivider(RectTransform parent, float anchoredX, float height, float thickness = 2f)
+        {
+            var go = new GameObject("VDivider");
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(thickness, height);
+            rt.anchoredPosition = new Vector2(anchoredX, 0f);
+            var img = go.AddComponent<Image>();
+            img.color = Divider;
+            img.raycastTarget = false;
+            return img;
         }
     }
 }

@@ -20,8 +20,50 @@ namespace MelonS.GameProto
         // Day 55: 부위별 health 표시 — 클릭 시 RimWorld vanilla 처럼.
         [SerializeField] private Text healthText;
 
+        // #UI-restyle U5 — runtime border frame so this panel matches the global
+        //   bordered-panel system (Editor builder only made the flat fill).  Added
+        //   lazily as 4 Divider-colored edge Images; toggled with the panel.
+        private Image[] borderEdges;
+
+        private void EnsureBorder()
+        {
+            if (borderEdges != null || panelBg == null) return;
+            var prt = panelBg.GetComponent<RectTransform>();
+            if (prt == null) { borderEdges = new Image[0]; return; }
+            float t = MelonS.GameProto.Core.UITheme.BorderPx;
+            borderEdges = new Image[4];
+            // top, bottom, left, right
+            borderEdges[0] = MakeEdge("BorderTop",    prt, new Vector2(0,1), new Vector2(1,1), new Vector2(0,t),  new Vector2(0, 0));
+            borderEdges[1] = MakeEdge("BorderBottom", prt, new Vector2(0,0), new Vector2(1,0), new Vector2(0,t),  new Vector2(0, 0));
+            borderEdges[2] = MakeEdge("BorderLeft",   prt, new Vector2(0,0), new Vector2(0,1), new Vector2(t,0),  new Vector2(0, 0));
+            borderEdges[3] = MakeEdge("BorderRight",  prt, new Vector2(1,0), new Vector2(1,1), new Vector2(t,0),  new Vector2(0, 0));
+        }
+
+        private Image MakeEdge(string name, RectTransform parent, Vector2 aMin, Vector2 aMax, Vector2 size, Vector2 pos)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = aMin;
+            rt.anchorMax = aMax;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = size;   // 0 on the stretched axis, thickness on the other
+            rt.anchoredPosition = pos;
+            var img = go.AddComponent<Image>();
+            img.color = MelonS.GameProto.Core.UITheme.Divider;
+            img.raycastTarget = false;
+            return img;
+        }
+
+        private void SetBorderVisible(bool v)
+        {
+            if (borderEdges == null) return;
+            foreach (var e in borderEdges) if (e != null) e.enabled = v;
+        }
+
         private void Update()
         {
+            EnsureBorder();
             if (selector == null)
             {
                 Debug.LogWarning("[PawnInfoPanel] no selector");
@@ -44,6 +86,7 @@ namespace MelonS.GameProto
             // Day 15: collapse panel background when no pawn — show only
             // the empty-text hint, no dark rectangle.
             if (panelBg != null) panelBg.enabled = any;
+            SetBorderVisible(any);  // #UI-restyle U5 — border shows only when populated
 
             if (!any) return;
 

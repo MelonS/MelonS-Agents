@@ -17,6 +17,9 @@ namespace MelonS.GameProto
 
         private TextMesh nameTm;
         private TextMesh statusTm;
+        private SpriteRenderer plate;          // #UI-restyle U3 — dark plate behind name+status
+        private string lastPlateName = null;
+        private string lastPlateStatus = null;
         private PawnEntity entity;
         private PawnNeeds needs;
         private PawnChopper chopper;
@@ -26,6 +29,7 @@ namespace MelonS.GameProto
         private PawnMovement movement;
 
         private float lastStatusUpdate;
+        private int plateRefitFrames = 4;   // re-fit plate a few frames so TextMesh bounds bake
 
         private void Awake()
         {
@@ -39,6 +43,19 @@ namespace MelonS.GameProto
 
             string name = entity != null ? entity.PawnName : "Pawn";
 
+            // #UI-restyle U3 — semi-transparent dark plate behind name+status so the
+            //   label is readable over ANY terrain (was naked text on grass).  Crisp
+            //   point-filtered sprite; warm-dark UITheme tone; sits BEHIND the text.
+            var plateGo = new GameObject("NamePlate");
+            plateGo.transform.SetParent(transform, false);
+            // centered between name (offset.y) and status (offset.y - 0.15)
+            plateGo.transform.localPosition = new Vector3(offset.x, offset.y - 0.075f, offset.z);
+            plate = plateGo.AddComponent<SpriteRenderer>();
+            plate.sprite = PlateSprite;
+            // UITheme.PanelBg tone; opaque enough for contrast over bright grass.
+            plate.color = new Color(0.118f, 0.086f, 0.063f, 0.82f);  // warm dark brown a0.82
+            plate.sortingOrder = 29;  // just under the text (text = 30)
+
             var nameGo = new GameObject("NameLabel");
             nameGo.transform.SetParent(transform, false);
             nameGo.transform.localPosition = offset;
@@ -48,7 +65,8 @@ namespace MelonS.GameProto
             nameTm.characterSize = characterSize;
             nameTm.anchor = TextAnchor.MiddleCenter;
             nameTm.alignment = TextAlignment.Center;
-            nameTm.color = new Color(0.95f, 0.92f, 0.85f, 0.95f);
+            // #UI-restyle U3 — gold name (matches AccentGold) on the dark plate.
+            nameTm.color = MelonS.GameProto.Core.UITheme.AccentGold;
             var nameMr = nameGo.GetComponent<MeshRenderer>();
             if (nameMr != null) nameMr.sortingOrder = 30;
 
@@ -63,9 +81,66 @@ namespace MelonS.GameProto
             statusTm.characterSize = characterSize * 0.85f;
             statusTm.anchor = TextAnchor.MiddleCenter;
             statusTm.alignment = TextAlignment.Center;
-            statusTm.color = new Color(0.75f, 0.85f, 0.95f, 0.90f);
+            // #UI-restyle U3 — muted cream status (matches TextSecondary).
+            statusTm.color = MelonS.GameProto.Core.UITheme.TextSecondary;
             var statusMr = statusGo.GetComponent<MeshRenderer>();
             if (statusMr != null) statusMr.sortingOrder = 30;
+
+            ResizePlate();  // initial sizing for the name
+        }
+
+        // crisp point-filtered 2x2 white quad shared by all plates
+        private static Sprite _plateSprite;
+        private static Sprite PlateSprite
+        {
+            get
+            {
+                if (_plateSprite == null)
+                {
+                    var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                    tex.SetPixels(new[] { Color.white, Color.white, Color.white, Color.white });
+                    tex.filterMode = FilterMode.Point;   // crisp, matches pixel art
+                    tex.wrapMode = TextureWrapMode.Clamp;
+                    tex.Apply();
+                    _plateSprite = Sprite.Create(tex, new Rect(0,0,2,2), new Vector2(0.5f,0.5f), 2f);
+                    _plateSprite.name = "NamePlateWhite";
+                }
+                return _plateSprite;
+            }
+        }
+
+        // Size the plate to enclose the longer of name/status.  TextMesh exposes its
+        // baked extents via the MeshRenderer.bounds (in world units); reading it gives
+        // an exact fit (advance-width guessing for CJK fonts is unreliable).  Bounds
+        // bake one frame after a text change, so ResizePlate is also re-called next
+        // frame from Update; we union both lines + a small padding margin.
+        private void ResizePlate()
+        {
+            if (plate == null) return;
+            string nm = nameTm != null ? nameTm.text : "";
+            string st = statusTm != null ? statusTm.text : "";
+            bool hasAny = !string.IsNullOrEmpty(nm) || !string.IsNullOrEmpty(st);
+            plate.enabled = hasAny;
+            if (!hasAny) return;
+
+            float wName = TextWorldWidth(nameTm);
+            float wStat = TextWorldWidth(statusTm);
+            float w = Mathf.Max(wName, wStat) + characterSize * 1.6f;   // + horizontal padding
+            float h = characterSize * 3.4f + 0.05f;                      // name + status + pad
+            plate.transform.localScale = new Vector3(Mathf.Max(w, 0.30f), h, 1f);
+        }
+
+        // Exact rendered width of a TextMesh from its MeshRenderer bounds (world units).
+        // Falls back to a CJK-aware char estimate before the first bake.
+        private float TextWorldWidth(TextMesh tm)
+        {
+            if (tm == null || string.IsNullOrEmpty(tm.text)) return 0f;
+            var mr = tm.GetComponent<MeshRenderer>();
+            if (mr != null && mr.bounds.size.x > 0.001f) return mr.bounds.size.x;
+            // pre-bake fallback (rarely hit): CJK ~1.0, latin ~0.58, * empirical scale
+            float u = 0f;
+            foreach (char c in tm.text) u += (c > 0x2E80) ? 1.0f : 0.58f;
+            return u * tm.characterSize * (tm.fontSize / 64f) * 4.2f;
         }
 
         private void Start()
@@ -75,15 +150,30 @@ namespace MelonS.GameProto
             if (entity != null && nameTm != null && !string.IsNullOrEmpty(entity.PawnName))
             {
                 nameTm.text = entity.PawnName;
+                ResizePlate();
             }
         }
 
         private void Update()
         {
+            // TextMesh bounds bake a frame or two after text is set — re-fit the plate
+            //  for the first few frames so it snaps to the real glyph extents.
+            if (plateRefitFrames > 0)
+            {
+                plateRefitFrames--;
+                ResizePlate();
+            }
             // status 0.25s 마다 — every-frame 은 textmesh re-bake 비싸짐
             if (Time.time - lastStatusUpdate < 0.25f) return;
             lastStatusUpdate = Time.time;
             statusTm.text = ComputeStatusLabel();
+            // #UI-restyle U3 — re-fit the plate only when the displayed text changed.
+            if (nameTm.text != lastPlateName || statusTm.text != lastPlateStatus)
+            {
+                lastPlateName = nameTm.text;
+                lastPlateStatus = statusTm.text;
+                ResizePlate();
+            }
         }
 
         private string ComputeStatusLabel()

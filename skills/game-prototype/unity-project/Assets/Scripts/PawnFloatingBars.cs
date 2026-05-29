@@ -42,7 +42,10 @@ namespace MelonS.GameProto
                     // 2x2 white at PPU 2 → 1 world unit per side.  localScale = ratio.
                     var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                     tex.SetPixels(new[] { Color.white, Color.white, Color.white, Color.white });
-                    tex.filterMode = FilterMode.Bilinear;
+                    // #UI-restyle U2 — Point filter (was Bilinear → soft/blurry against
+                    //   crisp pixel-art).  Sharp bar edges now match the sprite style.
+                    tex.filterMode = FilterMode.Point;
+                    tex.wrapMode = TextureWrapMode.Clamp;
                     tex.Apply();
                     _whiteSprite = Sprite.Create(tex, new Rect(0,0,2,2), new Vector2(0.5f,0.5f), 2f);
                     _whiteSprite.name = "FloatingBarWhite";
@@ -60,14 +63,22 @@ namespace MelonS.GameProto
             // diagnostic log dropped post Day 42 verify — bars confirmed visible.
         }
 
+        // #UI-restyle U2 — dark outline frame color (warm near-black, matches
+        //   OUTLINE_OBJ).  bg sits a hair wider/taller than the fill so it reads
+        //   as a crisp 1px-style frame around each bar instead of a flat backing.
+        private static readonly Color FrameColor = new Color(0.106f, 0.082f, 0.063f, 0.95f); // #1B1510
+        private float FrameMarginX => barWidth  * 0.06f;
+        private float FrameMarginY => barHeight * 0.30f;
+
         private void BuildBars()
         {
             float top    = yOffset;
             float bottom = yOffset - barHeight - gap;
 
-            hpBg   = MakeBar("HpBg",   new Color(0.10f, 0.10f, 0.10f, 0.85f), top,    barWidth);
+            // backgrounds = dark outline frame (slightly larger than the fill)
+            hpBg   = MakeBar("HpBg",   FrameColor, top,    barWidth + FrameMarginX, barHeight + FrameMarginY);
             hpFill = MakeBar("HpFill", new Color(0.95f, 0.30f, 0.25f, 1.00f), top,    barWidth);
-            moodBg   = MakeBar("MoodBg",   new Color(0.10f, 0.10f, 0.10f, 0.85f), bottom, barWidth);
+            moodBg   = MakeBar("MoodBg",   FrameColor, bottom, barWidth + FrameMarginX, barHeight + FrameMarginY);
             moodFill = MakeBar("MoodFill", new Color(1.00f, 0.85f, 0.30f, 1.00f), bottom, barWidth);
             // pivot fills to left so scaleX = ratio looks correct
             hpFill.transform.localPosition = new Vector3(-barWidth * 0.5f, top, 0);
@@ -83,16 +94,18 @@ namespace MelonS.GameProto
             ReanchorFillPivot(moodFill);
         }
 
-        private SpriteRenderer MakeBar(string name, Color color, float yLocal, float width)
+        private SpriteRenderer MakeBar(string name, Color color, float yLocal, float width, float height = -1f)
         {
+            if (height < 0f) height = barHeight;
             GameObject go = new GameObject(name);
             go.transform.SetParent(transform, false);
             go.transform.localPosition = new Vector3(0, yLocal, 0);
-            go.transform.localScale    = new Vector3(width, barHeight, 1f);
+            go.transform.localScale    = new Vector3(width, height, 1f);
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = WhiteSprite;
             sr.color = color;
-            sr.sortingOrder = sortingOrder;
+            // frames render 1 below the fills so the fill sits ON TOP of the frame.
+            sr.sortingOrder = name.EndsWith("Bg") ? sortingOrder : sortingOrder + 1;
             return sr;
         }
 

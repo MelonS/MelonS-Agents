@@ -56,21 +56,10 @@ namespace MelonS.GameProto
 
         private void Start()
         {
-            font = LoadKoreanFont();
+            // #UI-restyle U9 — route through UITheme (kill the per-script fallback drift).
+            font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(18);
             BuildLayout();
             HideOldHintIfPresent();
-        }
-
-        private Font LoadKoreanFont()
-        {
-            // SceneSetup 과 같은 fallback chain
-            string[] candidates = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
-            foreach (var name in candidates)
-            {
-                var f = Font.CreateDynamicFontFromOSFont(name, 18);
-                if (f != null) return f;
-            }
-            return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         }
 
         private void HideOldHintIfPresent()
@@ -85,6 +74,8 @@ namespace MelonS.GameProto
             }
         }
 
+        private RectTransform contentRt;  // bordered-panel inner content (buttons + dividers live here)
+
         private void BuildLayout()
         {
             // 부모 panel — 하단 중앙
@@ -93,43 +84,49 @@ namespace MelonS.GameProto
             rt.anchorMax = new Vector2(0.5f, 0f);
             rt.pivot = new Vector2(0.5f, 0f);
             // 9 buttons (#126 - 일정 추가)
-            //  layout: [멈춤][1x][2x][4x] [징집] [직업] [일정] [건축] [연구]
+            //  layout: [멈춤][1x][2x][4x] | [징집] | [직업][일정] | [건축] | [연구]
             float totalW = 9 * BtnW + 4 * Gap + 4 * GroupGap;
-            rt.sizeDelta = new Vector2(totalW, BtnH);
             rt.anchoredPosition = new Vector2(0, 40);  // 화면 하단에서 40px
 
-            // Background panel
-            var bg = gameObject.AddComponent<Image>();
-            bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
-            // padding 그리기 위해 살짝 키움
-            rt.sizeDelta = new Vector2(totalW + 16, BtnH + 12);
+            // #UI-restyle U1 — ONE bordered panel (warm brown + 2px lighter border),
+            //   not a borderless flat rectangle.  Pad the frame so buttons breathe.
+            float padX = MelonS.GameProto.Core.UITheme.PadOuter;
+            float padY = 8f;
+            rt.sizeDelta = new Vector2(totalW + padX * 2f, BtnH + padY * 2f);
+            // MakeBorderedPanel returns inner content RT (inside border+fill); we lay buttons there.
+            contentRt = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(rt);
 
             float x = -totalW * 0.5f;
+            float dividerH = BtnH + 4f;
 
-            // Speed group
+            // Speed group: [멈춤][1x][2x][4x]
             pauseBtn  = MakeBtn("멈춤", "(Space)",   x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.TogglePause(); }); x += BtnW + Gap;
             speed1Btn = MakeBtn("1x",  "(1)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(1f); });   x += BtnW + Gap;
             speed2Btn = MakeBtn("2x",  "(2)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(2f); });   x += BtnW + Gap;
-            speed4Btn = MakeBtn("4x",  "(3)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(4f); });   x += BtnW + GroupGap;
+            speed4Btn = MakeBtn("4x",  "(3)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(4f); });   x += BtnW;
+            MelonS.GameProto.Core.UITheme.MakeVDivider(contentRt, x + GroupGap * 0.5f, dividerH); x += GroupGap;
 
-            // Draft
-            draftBtn  = MakeBtn("징집",  "(R)",      x, ToggleDraft);                                                                       x += BtnW + GroupGap;
+            // Draft group: [징집]
+            draftBtn  = MakeBtn("징집",  "(R)",      x, ToggleDraft);                                                                       x += BtnW;
+            MelonS.GameProto.Core.UITheme.MakeVDivider(contentRt, x + GroupGap * 0.5f, dividerH); x += GroupGap;
 
-            // Work tab (#114) - 림월드 F1 패턴.  per-pawn 우선순위 grid.
+            // Tabs group: [직업][일정] (#114 F1 / #126 F4)
             workBtn = MakeBtn("직업", "(F1)", x, () => { if (WorkTabUI.Instance != null) WorkTabUI.Instance.Toggle(); }); x += BtnW + GroupGap;
+            scheduleBtn = MakeBtn("일정", "(F4)", x, () => { if (ScheduleUI.Instance != null) ScheduleUI.Instance.Toggle(); }); x += BtnW;
+            MelonS.GameProto.Core.UITheme.MakeVDivider(contentRt, x + GroupGap * 0.5f, dividerH); x += GroupGap;
 
-            // Schedule (#126) - 림월드 F4 패턴.  24h slot grid.
-            scheduleBtn = MakeBtn("일정", "(F4)", x, () => { if (ScheduleUI.Instance != null) ScheduleUI.Instance.Toggle(); }); x += BtnW + GroupGap;
+            // Build group: [건축]
+            architectBtn = MakeBtn("건축", "(F8)", x, () => { if (ArchitectMenu.Instance != null) ArchitectMenu.Instance.Toggle(); }); x += BtnW;
+            MelonS.GameProto.Core.UITheme.MakeVDivider(contentRt, x + GroupGap * 0.5f, dividerH); x += GroupGap;
 
-            // Architect 단일 버튼 - 림월드 패턴.  좌측 popup 카테고리 메뉴.
-            architectBtn = MakeBtn("건축", "(F8)", x, () => { if (ArchitectMenu.Instance != null) ArchitectMenu.Instance.Toggle(); }); x += BtnW + GroupGap;
-
-            // Research
+            // Research group: [연구]
             researchBtn = MakeBtn("연구", "(N)",     x, OpenResearchPicker);
         }
 
         private Button MakeBtn(string label, string hint, float x, System.Action onClick)
         {
+            // NOTE: button MUST stay a DIRECT child of the bar root — IntegrationTestRunner
+            //   does bar.transform.Find("Btn_멈춤") (depth-1).  Don't reparent into Content.
             var go = new GameObject($"Btn_{label}");
             go.transform.SetParent(transform, false);
             var rt = go.AddComponent<RectTransform>();
@@ -138,13 +135,22 @@ namespace MelonS.GameProto
             rt.pivot = new Vector2(0f, 0.5f);
             rt.sizeDelta = new Vector2(BtnW, BtnH);
             rt.anchoredPosition = new Vector2(x, 0);
+
+            // #UI-restyle U1 — each button gets its own 2px Divider border (root Image)
+            //   + an inset fill child, matching the global panel system → reads as a real button.
             var img = go.AddComponent<Image>();
-            img.color = InactiveBg;
+            img.color = MelonS.GameProto.Core.UITheme.Divider;   // border edge
+            var fillRt = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(rt, 2f, InactiveBg);
+            // The button targets the FILL image so hover/pressed tints the body, not the border.
+            var fillImg = fillRt.parent.GetComponent<Image>();   // PanelFill image
             var btn = go.AddComponent<Button>();
+            btn.targetGraphic = fillImg;
             var cb = btn.colors;
-            cb.normalColor = Color.white;
-            cb.highlightedColor = new Color(1.2f, 1.2f, 1.2f, 1f);
-            cb.pressedColor = new Color(0.6f, 0.6f, 0.6f, 1f);
+            cb.normalColor      = Color.white;
+            cb.highlightedColor = new Color(1.18f, 1.18f, 1.18f, 1f);  // hover lighten
+            cb.pressedColor     = new Color(0.72f, 0.72f, 0.72f, 1f);  // pressed darken
+            cb.selectedColor    = Color.white;
+            cb.fadeDuration     = 0.06f;
             btn.colors = cb;
             btn.onClick.AddListener(()=>onClick?.Invoke());
 
@@ -237,7 +243,10 @@ namespace MelonS.GameProto
         private void RefreshBuildHighlight(Button btn, bool active)
         {
             if (btn == null) return;
-            var img = btn.GetComponent<Image>();
+            // #UI-restyle — tint the FILL graphic (Button.targetGraphic), not the border edge,
+            //   so active build/speed buttons glow orange while the border stays consistent.
+            var img = btn.targetGraphic as Image;
+            if (img == null) img = btn.GetComponent<Image>();
             if (img == null) return;
             var targetBg = active ? ActiveBg : InactiveBg;
             if (img.color != targetBg) img.color = targetBg;

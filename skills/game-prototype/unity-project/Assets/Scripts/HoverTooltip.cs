@@ -41,37 +41,30 @@ namespace MelonS.GameProto
             rt.anchorMax = new Vector2(0, 0);
             rt.pivot = new Vector2(0, 0);
             rt.sizeDelta = new Vector2(200, 32);
-            bg = gameObject.AddComponent<Image>();
-            bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
-            bg.raycastTarget = false;
-            // label
+
+            // #UI-restyle U6 — bordered warm-brown panel (root Image = border edge),
+            //   matching control bar / inspector.  No more bare PanelBg rectangle.
+            var content = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(rt, 2f);
+            bg = GetComponent<Image>();  // border image (kept for legacy ref)
+
+            // label (parented INSIDE the bordered content with padding)
             var lblGo = new GameObject("Label");
-            lblGo.transform.SetParent(transform, false);
+            lblGo.transform.SetParent(content, false);
             label = lblGo.AddComponent<Text>();
             label.text = "";
-            label.font = LoadKoreanFont();
+            label.font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(14);
             label.fontSize = 14;
-            label.color = new Color(0.95f, 0.95f, 0.9f, 1f);
+            label.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             label.alignment = TextAnchor.MiddleCenter;
             label.raycastTarget = false;
             var lrt = label.GetComponent<RectTransform>();
             lrt.anchorMin = Vector2.zero;
             lrt.anchorMax = Vector2.one;
-            lrt.sizeDelta = new Vector2(-8, -4);
+            lrt.offsetMin = new Vector2(8, 4);
+            lrt.offsetMax = new Vector2(-8, -4);
             lrt.anchoredPosition = Vector2.zero;
             // start hidden
             gameObject.SetActive(false);
-        }
-
-        private Font LoadKoreanFont()
-        {
-            string[] candidates = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
-            foreach (var name in candidates)
-            {
-                var f = Font.CreateDynamicFontFromOSFont(name, 14);
-                if (f != null) return f;
-            }
-            return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         }
 
         private void Update()
