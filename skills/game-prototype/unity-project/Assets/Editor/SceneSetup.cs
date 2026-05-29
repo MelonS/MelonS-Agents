@@ -88,6 +88,9 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/crop_rice_seedling.png", // W-M1-02 Art — crop stage 0 (seedling, 16x16)
                 "Assets/Sprites/crop_rice_growing.png",  // W-M1-02 Art — crop stage 1 (growing, 16x16)
                 "Assets/Sprites/vignette.png",           // W-M1-03 Art — V8 optional vignette overlay (512x512)
+                "Assets/Sprites/stone_chunk_small.png",  // W-M4-03 Lane B — scatter variety: small rock chunk (10x8)
+                "Assets/Sprites/dead_leaves.png",         // W-M4-03 Lane B — scatter variety: dead leaf cluster (8x8)
+                "Assets/Sprites/pebble_scatter.png",      // W-M4-03 Lane B — scatter variety: pebble group (10x6)
             };
             foreach (var p in paths)
             {
