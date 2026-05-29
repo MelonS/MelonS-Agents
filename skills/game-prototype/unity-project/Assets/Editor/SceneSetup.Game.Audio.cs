@@ -29,14 +29,28 @@ namespace MelonS.GameProto.EditorTools
             AudioClip hitClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/hit.wav");
             AudioClip harvestClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/harvest.wav");
             AudioClip howlClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/wolf_howl.wav");
+            // W-M2-01 Lane A: M2 SFX slots (wiki Dim2 #1/#2/#4)
+            if (File.Exists("Assets/Audio/build.wav"))
+                AssetDatabase.ImportAsset("Assets/Audio/build.wav", ImportAssetOptions.ForceUpdate);
+            if (File.Exists("Assets/Audio/alert.wav"))
+                AssetDatabase.ImportAsset("Assets/Audio/alert.wav", ImportAssetOptions.ForceUpdate);
+            if (File.Exists("Assets/Audio/ambient.wav"))
+                AssetDatabase.ImportAsset("Assets/Audio/ambient.wav", ImportAssetOptions.ForceUpdate);
+            AudioClip buildClip   = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/build.wav");
+            AudioClip alertClip   = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/alert.wav");
+            AudioClip ambientClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/ambient.wav");
             SerializedObject abSo = new SerializedObject(audioBank);
-            if (chopClip != null) abSo.FindProperty("sfxChop").objectReferenceValue = chopClip;
-            if (selClip != null) abSo.FindProperty("sfxSelect").objectReferenceValue = selClip;
-            if (bgmClip != null) abSo.FindProperty("bgm").objectReferenceValue = bgmClip;
-            if (hitClip != null) abSo.FindProperty("sfxHit").objectReferenceValue = hitClip;
+            if (chopClip != null)    abSo.FindProperty("sfxChop").objectReferenceValue    = chopClip;
+            if (selClip != null)     abSo.FindProperty("sfxSelect").objectReferenceValue  = selClip;
+            if (bgmClip != null)     abSo.FindProperty("bgm").objectReferenceValue        = bgmClip;
+            if (hitClip != null)     abSo.FindProperty("sfxHit").objectReferenceValue     = hitClip;
             if (harvestClip != null) abSo.FindProperty("sfxHarvest").objectReferenceValue = harvestClip;
-            if (howlClip != null) abSo.FindProperty("sfxWolfHowl").objectReferenceValue = howlClip;
-            abSo.ApplyModifiedProperties();
+            if (howlClip != null)    abSo.FindProperty("sfxWolfHowl").objectReferenceValue = howlClip;
+            // M2 new slots — wiki #1 build, #2 alert, #4 ambient
+            if (buildClip != null)   abSo.FindProperty("sfxBuild").objectReferenceValue   = buildClip;
+            if (alertClip != null)   abSo.FindProperty("sfxAlert").objectReferenceValue   = alertClip;
+            if (ambientClip != null) abSo.FindProperty("sfxAmbient").objectReferenceValue = ambientClip;
+            abSo.ApplyModifiedPropertiesWithoutUndo();
         }
     }
 }
