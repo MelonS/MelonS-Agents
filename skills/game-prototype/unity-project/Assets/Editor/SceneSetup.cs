@@ -91,6 +91,7 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/stone_chunk_small.png",  // W-M4-03 Lane B — scatter variety: small rock chunk (10x8)
                 "Assets/Sprites/dead_leaves.png",         // W-M4-03 Lane B — scatter variety: dead leaf cluster (8x8)
                 "Assets/Sprites/pebble_scatter.png",      // W-M4-03 Lane B — scatter variety: pebble group (10x6)
+                "Assets/Sprites/stone_floor.png",         // W-M4-05 Lane B — stone/paved floor tile (16x16, PPU 16)
             };
             foreach (var p in paths)
             {
