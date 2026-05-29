@@ -1,49 +1,57 @@
 {
   "role": "QA+Integrator",
-  "cycle": "C-016",
-  "wave": "W-M6-02",
+  "cycle": "C-017",
+  "wave": "W-M6-03",
   "status": "PASS",
-  "build_tag": "cz-w2",
-  "commit_hash": "4cf239d",
+  "build_tag": "cz-w3",
+  "commit_hash": "0bbfd74",
   "wiring_done": [
-    "B3 (Fence+FenceGate): fence.png + fence_gate.png .meta created (PPU 16, Sprite type, lesson #1 compliance). Both added to SceneSetup.cs ForceImportAllSprites list. FenceEntity.cs.meta created. BuildManager.cs + ArchitectMenu.cs edits confirmed by Lane B3 (already present).",
-    "B10 (carry-pose+lunge): carry_bundle.png .meta created (PPU 16, Sprite type). PawnPoseDriver.cs.meta created. carry_bundle.png copied to Assets/Resources/Sprites/ (FLAG-B10-1 resolved) + carry_bundle.png added to SceneSetup ForceImport list. Resources/Sprites.meta created.",
-    "B13 (saveload-substate roundtrip): V13SubStateRoundTripTest.cs.meta created (FLAG-1 resolved). SaveLoadManager.cs confirmed no edit needed (FLAG-2 pre-existing wiring). No accessor gaps (FLAG-3).",
-    "B14 (HotkeyCheatSheet): HotkeyCheatSheet.cs.meta created. Bug-fix applied: AddRow() was adding Text component to chipGo which already had Image — Unity forbids two Graphic components on same GO. Fixed by moving key text to a KeyText child GO under chipRt (standard pattern matching rest of UI code). No logic change.",
-    "_gen_carry_item.py.meta, _gen_fence.py.meta, _preview_fence.png.meta, _preview_fence_gate.png.meta created."
+    "B2 (SelectionGizmoBar): SelectionGizmoBar.cs.meta created.",
+    "B4 (Barricade): BarricadeEntity.cs.meta created. barricade.png.meta (PPU 16, Sprite type). _gen_barricade.py.meta + _preview_barricade.png.meta created.",
+    "B9 (door/cook/shoot SFX): door.wav.meta + cook.wav.meta + shoot.wav.meta created (AudioImporter format, 2D). _gen_m6_action_sfx.py.meta created. SceneSetup.Game.Audio.cs extended with ForceImport + SerializedObject wire for sfxDoor/sfxCook/sfxShoot (same ForceImport pattern as prior SFX slots).",
+    "B11 (terrain-edge/rock-variety): rock_variant_a/b/c.png.meta + water_edge_band.png.meta created (PPU 16, Sprite type, Resources/scatter/). _gen_edge_rocks.py.meta + _preview_edge_rocks.png.meta created.",
+    "W-M3-03 Sound/Art: MusicDirector.cs.meta + WeatherParticleDriver.cs.meta already existed (makers pre-created). danger.wav.meta pre-existed."
   ],
-  "compile_fixes": "HotkeyCheatSheet.cs bug-fix: AddRow() key-chip Text component moved to dedicated KeyText child GameObject (Image+Text must be on separate GOs — Unity hard constraint). One-line fix; no logic regression.",
   "makers_verified": [
-    "B3 (Programmer/wiki Dim4 B3): FenceEntity.cs + BuildManager.cs (Mode.Fence/FenceGate + lazy prefab/sprite) + ArchitectMenu.cs (Structure row: 울타리/울타리문). fence.png 16x16 + fence_gate.png 16x16 + preview PNGs. No SceneSetup edit (lazy procedural). Fence hotkey E, gate via menu only. Passable (no collider). Low barrier (sortingOrder 2, lower-half tile).",
-    "B10 (Art/wiki B10): PawnPoseDriver.cs self-bootstraps, reads PawnHauler.HasTask + PawnEntity.IsDrafted+DraftedAttackTarget READ-ONLY. Carry-bundle child SR (Resources.Load 'Sprites/carry_bundle') + melee lunge X-offset 0.08 units / 0.15s ease. Root transform NEVER touched — firewall identical to PawnFacing. carry_bundle.png 8x8.",
-    "B13 (BuildEngineer/wiki B13): V13SubStateRoundTripTest.cs (Fine bed + tier-1 stockpile save/load roundtrip ONE PASS). Positions at (400-403,0) avoid V4/V5/V7/V9/V15 collision. SaveLoadManager.cs required NO edits (all 4 sub-state structs pre-existing from W-M4-02).",
-    "B14 (Programmer/wiki B14): HotkeyCheatSheet.cs — H-toggle bordered panel, self-bootstrap [RuntimeInitializeOnLoadMethod(AfterSceneLoad)], DontDestroyOnLoad, FindFirstObjectByType guard. All 7 sections / 24 rows from live handlers. UITheme.MakeBorderedPanel + AccentGold title + AccentOrange sections + AccentTan key chips. Text-input firewall (EventSystem InputField guard).",
-    "W-M6-01 (already landed): FloatingText.Spawn API (.meta pre-existing), MarqueeSelector multi-select (.meta pre-existing), FootstepDriver + AudioBank sfxFootstep/sfxAmbientNight (SceneSetup.Game.Audio.cs already wired in prior wave), V10DeconstructWalkableTest + V11GrowZoneCropTest (.meta pre-existing)."
+    "B2 (Programmer/wiki B2): SelectionGizmoBar.cs self-bootstraps [RuntimeInitializeOnLoadMethod(AfterSceneLoad)], DontDestroyOnLoad, FindFirstObjectByType guard. Bottom-center Canvas sortingOrder=200. Draft button calls PawnEntity.SetDrafted(!IsDrafted) — identical to R-key. Cancel clears selection. MarqueeSelector.HasMultiSelection preferred over single ClickSelector.CurrentSelection. Per-click AudioBank.PlaySelect() (no per-frame loop). No SceneSetup edit. Bug-pattern firewall confirmed.",
+    "B4 (Programmer/wiki B4): BarricadeEntity.cs — IsPassable=false, Start: PathGrid.WorldToCell + PawnMovement.RegisterWallCell + EjectPawnsFromCell (mirrors WallEntity), OnDestroy: SetStructureBlocked(cell,false). BuildManager.cs Mode.Barricade + lazy EnsureBarricadePrefab/EnsureBarricadeSprite. ArchitectMenu.cs Security (방어) category row. barricade.png 16x16 lower-half sandbag. No SceneSetup edit (lazy procedural). No cover-math.",
+    "B9 (Sound/wiki B9): door.wav 0.18s woody-creak + frame-thud, cook.wav 0.30s sizzle+metallic-clatter, shoot.wav 0.15s bow-twang+whoosh. AudioBank.cs sfxDoor/sfxCook/sfxShoot fields + PlayDoor(0.15s)/PlayCook(0.5s)/PlayShoot(no-throttle). DoorEntity.NotifyPassing() -> PlayDoor(), StoveEntity.CookOne() -> PlayCook(), ArrowProjectile.SpawnArrow() -> PlayShoot().",
+    "B11 (Artist/wiki B11): ScatterVarietyDriver.cs extended — PlaceBaselineRockVariants() scatters rock_variant_a(12x9)/b(8x10)/c(14x7), PlaceWaterEdgeDecals() places water_edge_band(16x4) on grass/water boundary cells via PawnMovement.GroundTilemap/WaterTile READ-ONLY. Seed 98765 unchanged, existing counts unchanged, sortingOrder 1 unchanged. No SceneSetup edit.",
+    "W-M3-03 Sound (wiki #8): danger.wav 16s tense-drone. MusicDirector.cs self-bootstraps, polls AIDirector.Instance.CurrentThreatTier, calls PlayDangerMusic()/StopDangerMusic() on tier transitions. AudioBank.cs dangerBgm+dangerSource+PlayDangerMusic/StopDangerMusic+crossfade ~1s. Idempotent (_dangerActive + _lastTier guards).",
+    "W-M3-03 Art (wiki #14): WeatherParticleDriver.cs self-bootstraps, ParticleSystem built 100% in code. Storm: emission=120, Play(). Clear: emission=0, Clear(), Stop(). sortingOrder=26 (above NightOverlay 25). RainColor rgba(0.565,0.647,0.706,0.40). Camera-follow in Update().",
+    "BE V6 crop stages: SceneSetup.Game.Entities.cs — spriteSeedling/spriteGrowing/spriteRipe loaded before crop loop and SerializedObject-wired onto each CropEntity. QA confirmed 3 distinct stage colors (V48 OK).",
+    "V7 raid-threat test (wiki #27): V7RaidThreatTest.cs — [1]GameClock forced to Day3/Hour6 via reflection, [2]AIDirector.SpawnRaid() via reflection, [3]BanditEnemy closes distance over 2s WaitForSeconds. Composite ONE binary PASS. Cleanup after test.",
+    "PawnInfoPanel tabs (wiki #23): 4-tab strip 상태/건강/기분/장비 runtime-lazy-built via EnsureTabs(). No SceneSetup edit, no new SerializeField. Brace/paren balance verified by Programmer."
   ],
   "qa_results": {
     "scenes_regen": "PASS",
     "verify_build": "PASS",
-    "qa_screenshot": "PASS — 235KB captured G:/ai/_refactor_current.png",
-    "runtime_errors": "none (after HotkeyCheatSheet bug-fix)",
+    "qa_screenshot": "PASS — 234KB captured G:/ai/_refactor_current.png",
+    "runtime_errors": "none",
     "fresh_build": "PASS — _harness-latest built fresh",
-    "real_qa_30s": "PASS — wood +65 in 30s (7 ResMon snapshots, t=0s wood=40 -> t=30s wood=105)",
+    "real_qa_30s": "PASS — wood +60 in 30s (7 ResMon snapshots, t=0s wood=40 -> t=30s wood=100)",
     "build_click_qa": "PASS — 6 mode chain OVERALL PASS (9/9 cases)",
-    "visual_diff": "PASS — 2.82% vs baseline (threshold 5%)",
+    "visual_diff": "PASS — 3.42% vs baseline (threshold 5%)",
     "isolated_tests": "76 PASS / 0 FAIL (== 76 >= prior 76)",
     "integration_tests": "42 PASS / 0 FAIL (== 42 required)"
   },
-  "visual_confirmation": "Screenshot confirms: pawns (지훈/민지) with name labels, settlement wall/stove/lamp/grow-zone visible, inspector panel right-side (empty state), resource bar top (석재:0, 목재:40, 식사:2, 식량:10), game world intact. 2.82% diff — within threshold.",
+  "visual_confirmation": "Screenshot confirms: pawns (지훈/민지) visible with name labels, settlement wall/stove/lamp area left, inspector panel right (empty state '선택한 오브젝트 없음'), resource bar top (석재:0, 목재:40, 식사:2, 식량:10), GuiControlBar bottom with all mode buttons. 3.42% diff — within threshold.",
   "wiki_acceptance_checked": {
-    "B3_fence_gate": "FenceEntity + BuildManager Mode.Fence/FenceGate + ArchitectMenu Structure row (울타리/울타리문). Passable (no collider), low barrier (sortingOrder 2, lower-half 16x16 tile). Hotkey E for fence, gate via menu. Lazy procedural prefab/sprite path — no null/magenta without import. SHIPPED.",
-    "B10_carry_pose_attack_lunge": "PawnPoseDriver self-bootstraps: carry-bundle child SR (Resources.Load resolved via Resources/Sprites/carry_bundle.png) + melee lunge X-offset 0.08u / 0.15s ease. Root transform firewall confirmed (identical to PawnFacing). SHIPPED.",
-    "B13_saveload_substate_roundtrip": "V13SubStateRoundTripTest.cs: Fine bed + tier-1 stockpile save->load data roundtrip ONE binary PASS. SaveLoadManager.cs no edit needed (all 4 sub-state structs pre-existing). SHIPPED.",
-    "B14_hotkey_cheatsheet_overlay": "HotkeyCheatSheet: H toggles bordered panel of 7 sections / 24 hotkey rows; H/Esc hides. Self-bootstrap, DontDestroyOnLoad. UITheme styling. Bug-fix (Text on child GO). SHIPPED."
+    "B2_gizmo_bar": "SelectionGizmoBar self-bootstraps: selecting pawn shows Draft button; clicking drafts (same as R-key); deselecting hides bar. MarqueeSelector multi-select supported. SHIPPED.",
+    "B4_barricade_sandbag": "BarricadeEntity in Architect Security (방어) category. Blocks pathing (PawnMovement.RegisterWallCell / PathGrid.SetStructureBlocked). Low visual read (sortingOrder 2). No cover-math. SHIPPED.",
+    "B9_door_cook_shoot_sfx": "door.wav/cook.wav/shoot.wav wired via SceneSetup.Game.Audio.cs. DoorEntity/StoveEntity/ArrowProjectile one-line callers. Throttles: door 0.15s, cook 0.5s, shoot none. SHIPPED.",
+    "B11_terrain_edge_rock_variety": "rock_variant_a/b/c + water_edge_band placed by ScatterVarietyDriver at sortingOrder 1. Deterministic seed 98765. Resources.Load path. SHIPPED.",
+    "wiki_8_danger_music": "MusicDirector.cs polls threatTier; PlayDangerMusic on tier>=2, StopDangerMusic on tier<2. ~1s crossfade. dangerBgm wired in SceneSetup.Game.Audio.cs. SHIPPED.",
+    "wiki_14_rain_particles": "WeatherParticleDriver.cs: Storm -> emission 120, Clear -> PS.Clear()+Stop. sortingOrder 26 above NightOverlay. Built 100% in code. SHIPPED.",
+    "wiki_23_inspector_tabs": "PawnInfoPanel 4-tab strip 상태/건강/기분/장비 runtime-lazy. No SceneSetup edit. SHIPPED.",
+    "wiki_27_v7_raid_threat_test": "V7RaidThreatTest.cs ONE binary PASS: day=3 advance + bandit spawned + distance decreases. SHIPPED."
   },
   "flags_for_next_wave": [
-    "FLAG-B10-2: PawnHauler has no public IsCarrying accessor; HasTask used as conservative proxy. Programmer should add: public bool IsCarrying => carryingWood > 0 || carryingStone > 0 || carryingFood > 0;",
-    "FLAG-B10-3: PawnEntity has no public IsAttacking accessor. Programmer should add: public bool IsAttacking => Time.time < nextAttackTime + AttackInterval * 0.5f;",
-    "FLAG-B10-4: PawnCarryBundle child GO created at runtime by PawnPoseDriver — not in Editor hierarchy. Confirmed: child GO appears at runtime under each pawn root after Bootstrap().",
-    "V13SubStateRoundTripTest.cs not yet registered in TestRunner.cs — isolated count still 76. Future wave may integrate if count needs to grow.",
-    "HotkeyCheatSheet E-hotkey (Fence) is listed in the overlay. W-M6-02 adds E=울타리 — not yet in the overlay's section table (HotkeyCheatSheet authored before B3 landed). A future wave may add the E key row."
+    "FLAG-B2-1: SelectionGizmoBar bottom-center canvas (sortingOrder 200) — QA visual confirm no overlap with GuiControlBar / HotkeyCheatSheet at bottom-center in live play.",
+    "FLAG-B4-1: barricade.png NOT in SceneSetup ForceImportAllSprites (lane forbade SceneSetup hot-file edits). Procedural fallback covers it. Optional: add 'Assets/Sprites/barricade.png' to ForceImport list in a future wave to prefer the authored PNG.",
+    "FLAG-B4-2: BarricadeEntity has no explicit hotkey — surfaced via Architect Security (방어) category only. If operator wants a hotkey, future wave can add it without touching BarricadeEntity.",
+    "FLAG-B9-1: sfxDoor/sfxCook/sfxShoot are graceful null-no-ops if SceneSetup fails to import — AudioBank null-checks confirm no crash.",
+    "FLAG-V7-1: V7RaidThreatTest.cs not yet registered in TestRunner.cs isolated count — count remains 76. Future wave may integrate (adds 1 to isolated count).",
+    "B5 autodoor (DoorEntity.cs PassMul + BuildManager catalogue) + B7 area-cancel/deconstruct-area drag (DeconstructDesignation.cs) remain as the final wave before the OP-gated wall (mood/work-priority spec). Both contend hot files."
   ]
 }
