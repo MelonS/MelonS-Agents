@@ -37,7 +37,18 @@ namespace MelonS.GameProto
         private static readonly (BuildManager.Mode mode, string label, string category, int buildableIdx, int cx, int cy)[] TestCases = {
             (BuildManager.Mode.Wall,            "Wall(목재5)",       "Structure (구조)", 0, -18, -8),
             (BuildManager.Mode.WallStone,       "Wall(석재5)",       "Structure (구조)", 1, -16, -8),
-            (BuildManager.Mode.Floor,           "Floor(목재1)",      "Floors (바닥)",    0, -18, -10),
+            // #210 fix — the old Floor cell (-18,-10) and ALL FOUR downward fallback
+            //  cells (-18,-11 .. -18,-14) sit INSIDE the lake centred at (-18,-12)
+            //  r≈2.8 (added in #108).  C3 terrain validation correctly rejects water,
+            //  so the floor genuinely could not be placed on ANY of the 5 cells the
+            //  test tried → real Build-Click FAIL.  Door/BedFine "passed" only because
+            //  their downward fallback reached the grass row y=-15 (off=3); Floor's
+            //  off cap of 4 stopped one cell short of grass.  This was a TEST-FIXTURE
+            //  defect (water-targeted), NOT a placement-logic regression.  Move the
+            //  Floor case to the dedicated grass column x=-22 (y=-8 and all downward
+            //  fallbacks -9..-12 are grass, well clear of every lake/rock and every
+            //  other test case's cells) so the floor lands on open ground first-try.
+            (BuildManager.Mode.Floor,           "Floor(목재1)",      "Floors (바닥)",    0, -22, -8),
             (BuildManager.Mode.Door,            "Door(목재3)",       "Structure (구조)", 2, -18, -12),
             (BuildManager.Mode.Stove,           "Stove(목재10)",     "Production (생산)",0, -20, -8),
             (BuildManager.Mode.BedSleepingSpot, "수면자리(자재0)",   "Furniture (가구)", 0, -20, -10),
