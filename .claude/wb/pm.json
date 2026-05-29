@@ -1,23 +1,31 @@
 {
   "role": "PM",
   "status": "Done",
-  "cycle": "C-005",
-  "wave": "W-M2-01",
+  "cycle": "C-006",
+  "wave": "W-M3-01",
   "ts": "2026-05-30",
   "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"],
+  "prev_wave_closed": {
+    "id": "W-M2-01",
+    "verdict": "PASS",
+    "commit": "89acd58",
+    "build_tag": "day-cx-w1-2026-05-30",
+    "note": "sound coverage push GREEN+WIRED (sfxBuild/sfxAlert tier/ambient bed/wolf-howl 0-callers fix/animal-hit fix); no RED on disk -> no FIX subtask needed"
+  },
   "audit": {
-    "M1_v3": "CLOSED — qa.json PASS @333c515 (build day-c1-w3-2026-05-30). walk-bob/scatter/flicker/inspector/crop-stage/vignette all GREEN. isolated 76/76, integration 42/42, build-click 9/9, visual-diff 0.59%.",
-    "red_on_disk": "none — no FIX subtask needed",
-    "next_driver": "wiki rimworld-comparison.md Dim2 사운드 ~30% (highest impact-per-effort) + sequencing recco 'Sound 1-9 first, no operator gate'"
+    "walk_bob_10": "PASS @333c515 — already done, skipped",
+    "red_on_disk": "none",
+    "next_driver": "wiki rimworld-comparison.md sequencing: after Sound 1-9 (done) + walk-bob #10 (done) -> facing/feel 10-13 + build-ops/alert 15-22, with verify 25-29 as continuous gate"
   },
   "wave_lanes": [
-    {"lane": "A", "role": "game-sound-designer", "label": "audiobank-build-alert-ambient", "file": "Assets/Scripts/AudioBank.cs", "wiki_items": ["#1 sfxBuild", "#2 sfxAlert tier", "#4 ambient bed"]},
-    {"lane": "B", "role": "game-ai-designer", "label": "aidirector-wolf-howl-alert-wire", "file": "Assets/Scripts/AIDirector.cs", "wiki_items": ["#3 PlayWolfHowl 0-callers", "#2 PlayAlert on raid/wolf_pack"]},
-    {"lane": "C", "role": "game-programmer", "label": "blueprint-build-sfx", "file": "Assets/Scripts/BlueprintEntity.cs", "wiki_items": ["#1 sfxBuild call on Complete()"]},
-    {"lane": "D", "role": "game-programmer", "label": "animal-hit-sfx-fix", "file": "Assets/Scripts/AnimalEntity.cs", "wiki_items": ["#6 PlayChop->PlayHit"]}
+    {"lane": "A", "role": "game-programmer", "milestone": "M3-movement", "label": "pawn-facing-flipx", "files": ["NEW Assets/Scripts/PawnFacing.cs"], "wiki_item": "#11", "binary": "pawn walking left faces left, right faces right; no root cell-drift"},
+    {"lane": "B", "role": "game-programmer", "milestone": "M6-ui", "label": "alert-letter-stack", "files": ["NEW Assets/Scripts/AlertStackUI.cs"], "wiki_item": "#22", "binary": "raid -> persistent top-right card; click pans camera toward threat"},
+    {"lane": "C", "role": "game-build-engineer", "milestone": "M5-gameplay-verify", "label": "v4-combat-chain-verify", "files": ["NEW test .cs under existing test asmdef"], "wiki_item": "#26", "binary": "gated test asserts drafted arrow reduces enemy HP to death"},
+    {"lane": "D", "role": "game-sound-designer", "milestone": "M2-sound", "label": "sfxmine-wire", "files": ["Assets/Scripts/AudioBank.cs", "Assets/Scripts/StoneVeinEntity.cs"], "wiki_item": "#7-partial", "binary": "mining plays distinct pick-on-stone sound, not chop thunk"}
   ],
   "non_overlapping": true,
-  "cross_lane_contract": "AudioBank.cs (Lane A) is the SOLE owner of new sfx slots+methods (PlayBuild/PlayAlert/ambient). Lanes B/C CALL them, MUST NOT edit AudioBank.cs. PlayWolfHowl already exists (Lane B partly independent). All 4 lanes land in ONE wave -> QA compiles merged set together. Lane D only swaps an existing call.",
-  "op_gated_excluded": ["work-priority", "mood/mental-break rewrite"],
-  "notes": "Highest impact-per-effort dimension per wiki. Remaining wiki Sound items for future waves: #5 UI-click routing, #7 sfxMine/sfxCook/sfxShoot, #8 dynamic music swap, #9 rain loop. After Sound dimension, sequencing -> build-ops (#15 deconstruct / #16 mine-designation / #17 grow-zone / #18 drag-rect) + #22 alert/letter stack, with verification (#25-#29) running as the gate. Gated (#24 terrain-cost, #30 mood) wait for OP-OK."
+  "non_overlap_proof": "A=NEW PawnFacing.cs; B=NEW AlertStackUI.cs; C=NEW test .cs; D=AudioBank.cs+StoneVeinEntity.cs. No file in two lanes. No SceneSetup*.cs (incl .Pawn.cs/.Game.Entities.cs) touched by any lane. Runtime non-fight: A writes only child SpriteRenderer.flipX (PawnSpriteBob owns child localY, FlickerLight owns stove overlay); B owns its own Canvas + read-only AIDirector.OnEventFired subscribe (no AIDirector/EventLogUI edit); C touches no runtime; D's two files touched by no other lane.",
+  "op_gated_excluded": ["work-priority", "mood/mental-break rewrite", "#24 per-terrain path-cost", "#30 mood thought-sum"],
+  "qa_flags_expected": ["scene-side SerializeField wiring of sfxMine on AudioBank GameObject (Lane D, same pattern as prior sfxBuild/alert/ambient)", "AlertStackUI camera-pan target precision (Lane B) if no exact threat source available"],
+  "notes": "Remaining wiki backlog for future waves: build-ops #15 deconstruct / #16 mine-designation / #17 grow-zone / #18 drag-rect (each multi-file, sequence carefully for lane isolation), sound #5 UI-click / #8 dynamic music / #9 rain loop, #12 sleep-pose (conflicts with facing on pawn child -> sequence AFTER #11 lands), verify #25 food-chain / #27 raid-threat / #28 move-speed reconcile / #29 save-load round-trip. Gated (#24, #30, M4 breadth) wait for OP-OK."
 }

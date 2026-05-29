@@ -1,0 +1,49 @@
+{
+  "role": "Sound",
+  "lane": "D",
+  "wave": "W-M3-01",
+  "milestone": "M2-sound",
+  "status": "Done",
+  "timestamp": "2026-05-30",
+  "wiki_acceptance": "#7 Mining ... plays a distinct sound (pick-on-stone, not the chop thunk)",
+  "outputs": {
+    "AudioBank.cs": "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Scripts/AudioBank.cs",
+    "StoneVeinEntity.cs": "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Scripts/StoneVeinEntity.cs",
+    "mine.wav": "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Audio/mine.wav",
+    "mine.wav.meta": "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Audio/mine.wav.meta",
+    "_gen_m3_mine_sfx.py": "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Audio/_gen_m3_mine_sfx.py",
+    "_gen_m3_mine_sfx.py.meta": "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Audio/_gen_m3_mine_sfx.py.meta"
+  },
+  "changes": {
+    "AudioBank.cs": [
+      "Added 'public AudioClip sfxMine;' slot under M3 SFX slots section (after sfxAmbient)",
+      "Added 'private float _lastMineTime = -10f;' throttle timestamp field",
+      "Added 'private const float MineInterval = 0.25f;' constant",
+      "Added 'public void PlayMine()' method — pick-on-stone character, throttled 0.25s with own _lastMineTime guard, graceful null no-op exactly like PlayChop/PlayBuild",
+      "Updated header comment: M3 mine.wav entry + PlayMine() throttle rationale + header flag #3 updated (was 'ideally add sfxMine', now 'DONE')",
+      "Added QA FLAG comment on sfxMine field: scene-side SerializeField assignment required"
+    ],
+    "StoneVeinEntity.cs": [
+      "Line 78 (was): AudioBank.Instance?.PlayChop();  // 채광 SFX 도 chop 재활용",
+      "Line 78 (now): AudioBank.Instance?.PlayMine();  // wiki #7: distinct pick-on-stone, not chop",
+      "Entity-level SfxInterval guard (0.6s, lastSfxTime) preserved intact — not changed",
+      "Comment added explaining the swap rationale and AudioBank-side throttle independence"
+    ],
+    "mine.wav": "44100Hz mono 16bit 0.180s — pick-on-stone: 2400+3100+1800Hz metal-pick transient (180 exp decay) + 420+580+280Hz stone resonance body (28 exp decay) + grit noise burst. Shorter/denser than chop.wav (0.30s). Peak=0.840 after normalize(0.84).",
+    "mine.wav.meta": "AudioImporter ForceUpdate pattern — guid a9f3e2d1c8b7a6f5e4d3c2b1a0f9e8d7, loadType 0, compressionFormat 1, normalize 1, 3D 1 (matches build/alert/ambient .meta pattern)"
+  },
+  "throttle_rationale": {
+    "MineInterval": "0.25s — StoneVeinEntity.TakeMineDamage() has entity-level 0.6s guard already; AudioBank-side 0.25s is defense-in-depth for future callers without entity guard. Own _lastMineTime: swapping PlayChop->PlayMine does NOT consume the chop throttle window — a tree chop and mine hit in the same frame no longer share a throttle bucket.",
+    "entity_guard_preserved": "SfxInterval=0.6s / lastSfxTime in StoneVeinEntity.TakeMineDamage() is unchanged"
+  },
+  "qa_flag": {
+    "required_scene_action": "Assign mine.wav to AudioBank.sfxMine SerializeField on the AudioBank GameObject in the Unity Inspector — same workflow as sfxBuild/sfxAlert/sfxAmbient wired last wave (W-M2-01). Without this assignment PlayMine() gracefully no-ops (null guard) but no sound plays.",
+    "verify_criterion": "During mining: pick-on-stone sound plays (distinct high-freq transient, NOT the woody axe thunk of PlayChop); chop sound plays when chopping a tree (PlayChop unaffected); no regression on other SFX."
+  },
+  "files_NOT_touched": [
+    "No SceneSetup*.cs touched",
+    "No AIDirector.cs touched",
+    "No other entity files touched",
+    "No lane A/B/C files touched"
+  ]
+}

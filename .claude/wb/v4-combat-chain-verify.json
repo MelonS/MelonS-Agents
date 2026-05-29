@@ -1,0 +1,53 @@
+{
+  "role": "BuildEngineer",
+  "lane": "C",
+  "wave": "W-M3-01",
+  "milestone": "M5-gameplay-verify",
+  "backlog_item": "#26",
+  "wiki_acceptance": "A gated test asserts a drafted arrow reduces enemy HP to death.",
+  "status": "Done",
+  "output_file": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V4CombatChainTest.cs",
+  "output_meta": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V4CombatChainTest.cs.meta",
+  "test_id": "V4-combat-chain",
+  "test_class": "MelonS.GameProto.Tests.V4CombatChainTest",
+  "assert_steps": [
+    "Step 1 — pawn.IsDrafted == true after SetDrafted(true)",
+    "Step 2 — ArrowProjectile count rises (arrow fired toward enemy in ranged window 1.2–5.0 units)",
+    "Step 3 — bandit.Hp drops below pre-damage level after arrow hit",
+    "Step 4 — bandit.IsDead == true (Hp == 0, GameObject destroyed)"
+  ],
+  "api_gaps_flagged_for_qa": [
+    {
+      "id": "G1",
+      "description": "ResearchManager.Instance may be null in the headless test scene. The test bootstraps one when absent. QA should verify that a real Game.unity scene test would pass without this bootstrap.",
+      "severity": "low",
+      "workaround": "Test adds AddComponent<ResearchManager> to a fresh GameObject when Instance is null."
+    },
+    {
+      "id": "G2",
+      "description": "PawnUtilityAI.arrowSprite is [SerializeField] private. The public SetArrowSprite() accessor exists and is used. No reflection needed.",
+      "severity": "none",
+      "workaround": "Used SetArrowSprite() which is already public."
+    },
+    {
+      "id": "G3",
+      "description": "BanditEnemy does not have [RequireComponent(typeof(Rigidbody2D))]. The test adds a Kinematic Rigidbody2D manually so ArrowProjectile.OnTriggerEnter2D fires on physics overlap. Without it the arrow may pass through the bandit collider without triggering.",
+      "severity": "medium",
+      "workaround": "Test manually adds Rigidbody2D (gravityScale=0, Kinematic) + BoxCollider2D (isTrigger=false) to the test BanditEnemy. QA should confirm physics collision fires in the test scene."
+    },
+    {
+      "id": "G4",
+      "description": "BanditEnemy.maxHp is [SerializeField] private (default 20). Arrow damage is 4 per hit; killing from full HP requires 5 hits × 1.5s interval = 7.5s minimum. The test pre-damages the bandit to 4 HP so a single arrow finishes it within 2.5s. This relies on TakeDamage(16, null) being callable from test code — it is public.",
+      "severity": "low",
+      "workaround": "Pre-damage via bandit.TakeDamage(initialHp - 4, null) leaves Hp=4; one arrow hit (damage=4) achieves the kill. Full 5-hit chain is exercised if QA wants to extend the wait window to 12s and remove pre-damage."
+    }
+  ],
+  "lane_contract_compliance": {
+    "new_file_only": true,
+    "no_existing_test_file_edited": true,
+    "no_runtime_cs_edited": true,
+    "no_scenesetup_touched": true,
+    "unity_not_run": true
+  },
+  "timestamp": "2026-05-30"
+}

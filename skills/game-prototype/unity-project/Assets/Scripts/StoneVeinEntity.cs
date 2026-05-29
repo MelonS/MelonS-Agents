@@ -75,7 +75,12 @@ namespace MelonS.GameProto
             }
             if (Time.time - lastSfxTime >= SfxInterval)
             {
-                AudioBank.Instance?.PlayChop();  // 채광 SFX 도 chop 재활용
+                // W-M3-01 Lane D: PlayMine() replaces PlayChop() — wiki #7 acceptance:
+                // "Mining ... plays a distinct sound" (pick-on-stone, not the chop thunk).
+                // AudioBank.PlayMine() has its own _lastMineTime throttle (0.25s, independent
+                // of the chop throttle) + graceful null no-op if sfxMine unassigned.
+                // Entity-level SfxInterval guard (0.6s) above is kept intact.
+                AudioBank.Instance?.PlayMine();
                 lastSfxTime = Time.time;
             }
             if (hp <= 0f)

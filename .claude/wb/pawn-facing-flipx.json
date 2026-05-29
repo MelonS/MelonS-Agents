@@ -1,0 +1,40 @@
+{
+  "role": "Programmer",
+  "lane": "A",
+  "wave": "W-M3-01",
+  "milestone": "M3-movement",
+  "wiki_item": "#11 (Dim3 Facing / rotation)",
+  "Status": "Done",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/PawnFacing.cs"
+  ],
+  "binary_satisfied": "A pawn walking left faces left (flipX=true), walking right faces right (flipX=false), idle holds last facing. Root transform never moved/rotated/scaled (only transform.position.x is READ for delta) so PathGrid.WorldToCell cells/reservations/eject are untouched and the pawn cannot drift off its cell. Child localPosition never written (PawnSpriteBob keeps sole ownership of child Y) - only SpriteRenderer.flipX is set on the body child.",
+  "implementation_summary": {
+    "self_attach": "FlickerLight.cs pattern copied: [RuntimeInitializeOnLoadMethod(AfterSceneLoad)] Bootstrap spawns hidden ~PawnFacingDriver (HideAndDontSave, DontDestroyOnLoad). Driver Time-throttled scan (1.0s) of all PawnMovement instances -> EnsureOn adds one PawnFacing per pawn root (DisallowMultipleComponent + null guard = idempotent, picks up mid-game spawns).",
+    "body_renderer_location": "Same wiring as PawnSpriteBob: visible body SpriteRenderer is on child named 'PawnSpriteBob' (SceneSetup.Pawn wires it as PawnSpriteBob.childRenderer). PawnFacing resolves transform.Find(\"PawnSpriteBob\").GetComponent<SpriteRenderer>(). Fallback: first child SpriteRenderer that is NOT 'PawnShadow' and NOT the root tint-anchor renderer.",
+    "facing_logic": "Per-frame: dx = root.position.x - lastX. dx > epsilon -> flipX=false (right); dx < -epsilon -> flipX=true (left); |dx|<=epsilon -> hold last. moveEpsilon=0.0005 SerializeField. lastX seeded in Awake from spawn pos.",
+    "null_guards": "rootRenderer/bodyRenderer null-safe; Update re-resolves bodyRenderer if lost then no-ops if still null; shadow explicitly excluded; root renderer explicitly excluded."
+  },
+  "bug_pattern_firewall": {
+    "#5_GetInstanceID": "N/A (no collision identity compares).",
+    "#6_OnCollisionEnter": "N/A (no collision handlers).",
+    "#8_justSpawned_default_true": "Avoided - no spawn-grace bool defaulting true; baseline seeded in Awake (position-based), pre-spawned scene pawns get a real lastX immediately.",
+    "#9_runInBackground_freeze": "Avoided - driver throttles via Time.unscaledTime INSIDE Update, NOT a WaitForSeconds heartbeat coroutine. No new always-on background timer added; AutoScreenshotter retains ownership of Application.runInBackground for CLI QA. Short- and long-delay QA behave identically.",
+    "#4_audio_buzz": "N/A (no audio).",
+    "#7_singleton_subscription": "N/A (no Singleton.OnX subscription; driver polls via Update)."
+  },
+  "lane_compliance": {
+    "files_created": ["Assets/Scripts/PawnFacing.cs"],
+    "files_edited": [],
+    "verified": "git status shows ONLY ?? Assets/Scripts/PawnFacing.cs new; SceneSetup*.cs, PawnMovement.cs, PawnSpriteBob.cs untouched.",
+    "runtime_contract": "Writes ONLY child SpriteRenderer.flipX. No other lane touches the pawn child; PawnSpriteBob owns child localPosition Y (untouched here). No root transform write."
+  },
+  "qa_flags": [
+    "NO SerializeField scene wiring is required for PawnFacing (fully self-attaching like FlickerLight). QA only needs to confirm the driver scan attaches it to pawn roots at runtime and that flipX updates on horizontal movement.",
+    "PawnFacing.cs.meta does not exist yet - Unity batchmode import will generate it on first load (same as other newly-added scripts). QA: ensure the import step runs before the build/verify so the type compiles.",
+    "Body-renderer location ASSUMPTION: relies on the body child being named 'PawnSpriteBob' (per SceneSetup.Pawn) with the visible SpriteRenderer on it. If a future art pipeline renames that child, the named lookup fails over to the first non-shadow non-root child SpriteRenderer. QA: confirm the left/right pawn flips the BODY (not the shadow) in the running scene.",
+    "Default sprite art is assumed to face RIGHT (right = un-flipped, left = flipX=true). QA: if pawn art is authored facing LEFT, the two branches are inverted and moveEpsilon stays valid - flag for a one-line swap (no logic change needed elsewhere)."
+  ],
+  "do_not_run_unity": "Confirmed - did not run Unity; QA owns batchmode verification.",
+  "no_todo_left": true
+}

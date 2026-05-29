@@ -21,6 +21,11 @@ namespace MelonS.GameProto
     ///   alert.wav     — alert siren (wiki #2: tier-scaled repeat count, tier3 > tier1)
     ///   ambient.wav   — looping outdoor wind/birds bed (wiki #4: continuous ambient independent of music)
     ///
+    /// M3 sound-coverage push 2026-05-30 (wiki Dim2 item #7, W-M3-01 Lane D):
+    ///   mine.wav      — pick-on-stone impact (wiki #7: mining plays a distinct sound,
+    ///                   not the chop thunk; 2400Hz metal-pick transient + 420Hz stone
+    ///                   resonance body + grit noise burst; 0.18s — shorter/denser than chop).
+    ///
     /// Throttle discipline (Lesson #4, 2026-05-27 PawnSim chop-buzz):
     ///   PlayChop()    — 0.25s min-interval.  PawnChopper.Update() calls
     ///                   TakeChopDamage every frame; without throttle = 60
@@ -39,6 +44,10 @@ namespace MelonS.GameProto
     ///                   without guard a multi-enemy raid trigger loop could spam
     ///                   back-to-back bursts.  Tier-scaled beep count runs inside
     ///                   the burst via a coroutine on the AudioBank MonoBehaviour.
+    ///   PlayMine()    — 0.25s (MineInterval).  StoneVeinEntity.TakeMineDamage()
+    ///                   already has an entity-level 0.6s SfxInterval guard, but
+    ///                   AudioBank-side throttle guards any future callers that
+    ///                   might lack the entity guard (defense-in-depth pattern).
     ///
     /// PROGRAMMER ACTIONS FLAGGED (Sound Designer lane — do not edit entities):
     ///   1. TreeEntity.cs:84  — PlayChop() called from inside TakeChopDamage()
@@ -49,12 +58,14 @@ namespace MelonS.GameProto
     ///   2. AnimalEntity.cs:149 — PlayChop() used for animal hit sound.
     ///      Semantically wrong: animal combat hit should call PlayHit().
     ///      Change AnimalEntity.TakeDamage() line 149 to PlayHit().
-    ///   3. StoneVeinEntity.cs:78 — PlayChop() for mining.  Already has
-    ///      entity-level 0.6s guard (SfxInterval).  Acceptable for now;
-    ///      ideally add sfxMine slot + mine.wav for distinct pick-on-stone feel.
+    ///   3. StoneVeinEntity.cs — mining now calls PlayMine() (was PlayChop()).
+    ///      Wiki #7: pick-on-stone distinct from axe-on-wood chop thunk. DONE.
     ///   4. PlayWolfHowl() has no callers.  Wire to AIDirector wolf_pack event.
     ///   5. sfxBuild/sfxAlert/sfxAmbient slots require scene-side SerializeField
     ///      assignment on the AudioBank GameObject — see QA flags below.
+    ///   6. sfxMine slot requires scene-side SerializeField assignment on the
+    ///      AudioBank GameObject (assign mine.wav same as sfxBuild/alert/ambient
+    ///      last wave).  QA FLAG: wire sfxMine in the Inspector before verifying.
     /// </summary>
     public class AudioBank : MonoBehaviour
     {
@@ -73,6 +84,11 @@ namespace MelonS.GameProto
         public AudioClip sfxAlert;     // alert siren — tier-scaled raid warning
         public AudioClip sfxAmbient;   // outdoor ambient bed — wind/birds (loops on ambientSource)
 
+        // ── M3 SFX slots (wiki #7, W-M3-01 Lane D) ─────────────────────────
+        // QA FLAG: assign mine.wav to this slot on the AudioBank GameObject in
+        // the Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient last wave).
+        public AudioClip sfxMine;      // pick-on-stone — mining impact (distinct from chop)
+
         // ── Audio sources ───────────────────────────────────────────────────
         [SerializeField] private AudioSource bgmSource;
         [SerializeField] private AudioSource sfxSource;
@@ -85,6 +101,7 @@ namespace MelonS.GameProto
         private float _lastHarvestTime = -10f;
         private float _lastBuildTime   = -10f;   // wiki #1: wall finish throttle
         private float _lastAlertTime   = -10f;   // wiki #2: alert burst guard
+        private float _lastMineTime    = -10f;   // wiki #7: pick-on-stone throttle
 
         // ── Min-interval constants — rationale documented above ─────────────
         private const float ChopInterval    = 0.25f;  // per-frame work-loop safe
@@ -92,6 +109,7 @@ namespace MelonS.GameProto
         private const float HarvestInterval = 0.25f;  // gather-loop safe
         private const float BuildInterval   = 0.25f;  // per-complete safe
         private const float AlertInterval   = 3.0f;   // burst-guard (raid spam)
+        private const float MineInterval    = 0.25f;  // per-mine-hit safe (entity has own 0.6s guard)
 
         // ── Alert beep inter-repeat gap (pitch variation spread) ────────────
         private const float AlertBeepGap    = 0.35f;  // seconds between beeps in a burst
@@ -260,6 +278,38 @@ namespace MelonS.GameProto
             }
 
             sfxSource.pitch = 1.0f;  // ensure clean reset even if loop exits early
+        }
+
+        // ────────────────────────────────────────────────────────────────────
+        //  M3 NEW METHODS (wiki #7, W-M3-01 Lane D)
+        // ────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Pick-on-stone mining impact — call from StoneVeinEntity.TakeMineDamage().
+        /// Wiki acceptance #7: "Mining ... plays a distinct sound" — a pick-on-stone,
+        /// NOT the chop thunk (chop = axe-into-wood, low woody resonance 150-240Hz;
+        /// mine = metal pick on rock, high 2400Hz transient + 420Hz stone ring).
+        ///
+        /// Throttled 0.25s (MineInterval) with its own _lastMineTime guard, independent
+        /// of PlayChop/_lastChopTime — swapping PlayChop->PlayMine in StoneVeinEntity
+        /// does NOT share the chop throttle window, which would have silenced mining
+        /// for 0.25s after any tree chop in the same frame.
+        ///
+        /// StoneVeinEntity.TakeMineDamage() also has its own entity-level 0.6s
+        /// SfxInterval guard.  The AudioBank-side 0.25s guard is defense-in-depth
+        /// for any future caller lacking the entity guard (same pattern as PlayChop).
+        ///
+        /// Graceful null no-op if sfxMine or sfxSource is not assigned.
+        /// QA FLAG: AudioBank.sfxMine requires scene-side SerializeField assignment
+        /// on the AudioBank GameObject — assign mine.wav in the Inspector
+        /// (same workflow as sfxBuild/sfxAlert/sfxAmbient last wave).
+        /// </summary>
+        public void PlayMine()
+        {
+            if (sfxMine == null || sfxSource == null) return;
+            if (Time.time - _lastMineTime < MineInterval) return;
+            _lastMineTime = Time.time;
+            sfxSource.PlayOneShot(sfxMine, 0.80f);
         }
     }
 }

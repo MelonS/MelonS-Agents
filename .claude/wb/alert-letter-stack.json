@@ -1,0 +1,55 @@
+{
+  "role": "game-programmer",
+  "lane": "B",
+  "wave": "W-M3-01",
+  "milestone": "M6-ui",
+  "wiki_item": "#22 (Dim6 alert/letter stack)",
+  "status": "Done",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/AlertStackUI.cs"
+  ],
+  "files_touched_count": 1,
+  "files_NOT_touched": [
+    "AIDirector.cs",
+    "EventLogUI.cs",
+    "SceneSetup*.cs",
+    "UITheme.cs (read-only)"
+  ],
+  "acceptance_criterion": "A raid creates a persistent top-right card; clicking it pans the camera to the bandits.",
+  "implementation": {
+    "bootstrap": "[RuntimeInitializeOnLoadMethod(AfterSceneLoad)] spawns one persistent ~AlertStackUI GameObject (DontDestroyOnLoad), separate object from EventLogUI. Idempotent (FindExisting guard).",
+    "canvas": "Self-built ScreenSpaceOverlay Canvas sortingOrder=200, top-right anchored/pivoted column root, edgeMargin inset.",
+    "panel_style": "Uses UITheme.MakeBorderedPanel (shared warm dark-brown fill + Divider border) + UITheme.LoadKoreanFont -> matches every other panel.",
+    "subscription": "READ-ONLY director.OnEventFired += HandleEvent. Lesson #7 firewall: director is poll-found in Update (EnsureDirector), NOT blind-subscribed in OnEnable; re-finds if null. Unsub in OnDestroy.",
+    "filter": "threatTier >= 1 only (raid/wolf_pack/mental-break/siege/infestation/large_raid). Tier 0 ambient stays in EventLog only.",
+    "card": "Persistent clickable card: bordered panel + left tier-color accent bar + bold tier-tinted title. Full-card transparent raycast hit area (IPointerClickHandler). Tier1=AccentOrange (amber), tier2=lerp, tier3=TextDanger (DANGER_RED).",
+    "expiry": "Auto-expire ~30s (cardLifetimeSec) via Time.unscaledTime delta in Update, OR on click. maxCards=6 cap evicts oldest.",
+    "camera_pan": "Click -> BeginPanToThreat -> MoveTowards (fixed units/sec, batchmode-deterministic, mirrors CameraController.RequestFocus). Camera.main null-safe.",
+    "allocations": "No per-frame List allocation; cards list reused, FindObjectsByType used only on click/relayout not every frame for bandits."
+  },
+  "bug_pattern_firewall": {
+    "#7_singleton_subscription_race": "AVOIDED — poll-find director via Update, not OnEnable blind subscribe.",
+    "#9_runInBackground_freeze": "AVOIDED — expiry + pan use Time.unscaledTime deltas inside Update, NO WaitForSeconds heartbeat coroutine, NO new always-on background timer. AutoScreenshotter retains runInBackground ownership for CLI QA.",
+    "#4_audio_buzz": "N/A — no AudioBank calls from this file.",
+    "#5_GetInstanceID_race": "N/A — no collision id compares.",
+    "#6_collision_enter_only": "N/A — no collision handlers.",
+    "#8_justSpawned_default_true": "N/A — spawnTime set to Time.unscaledTime at creation, no default-true grace field."
+  },
+  "QA_FLAGS": [
+    {
+      "id": "camera-pan-target-precision",
+      "severity": "assumption",
+      "detail": "GameEvent has NO source-position field (id/title/description/flavor/threatTier only) and AIDirector.cs is OUT OF LANE (cannot add one). Pan target is a best-effort heuristic, NOT the exact bandit spawn point. Priority order: (1) nearest live BanditEnemy to colony centroid -> (2) colony centroid of living PawnMovement -> (3) first PawnMovement -> (4) world center (0,0).",
+      "acceptance_impact": "Satisfies 'pans the camera toward the threat/bandits' for the raid case (live BanditEnemy exists during a raid). For non-spawning threat events (wolf_pack narrative card, mental-break) with no on-map entity, it pans to the colony centroid instead — toward, not at, the source.",
+      "followup_if_exact_required": "Add a source-position (Vector3) field to GameEvent + populate it in AIDirector.SpawnRaid/FireRandomEvent, then have AlertStackUI cards carry that position. This is a separate wave (touches AIDirector.cs, OP/lane-gated)."
+    },
+    {
+      "id": "scene-wiring",
+      "severity": "info",
+      "detail": "NO scene-side SerializeField wiring required. AlertStackUI is fully self-bootstrapping (RuntimeInitializeOnLoadMethod + self-built Canvas + poll-found AIDirector). No SceneSetup change needed; QA only needs merge-compile + runtime verify."
+    }
+  ],
+  "no_todo_left": true,
+  "unity_run": false,
+  "notes": "Compiles against existing public surface: AIDirector.OnEventFired (event Action<GameEvent>), GameEvent.{title,threatTier}, BanditEnemy, PawnMovement, PawnEntity, UITheme.* — all in MelonS.GameProto / .Core. Hand off to QA for merge-compile (alongside Lane A PawnFacing.cs + Lane D AudioBank.PlayMine) and runtime verify of raid->card->click->pan."
+}
