@@ -1,0 +1,16 @@
+{
+  "role": "Designer (lane C — M6 UI)",
+  "cycle": "C-013",
+  "wave": "W-M4-05",
+  "lane": "C",
+  "task_ref": "W-M4-04 QA flag #42 (lamp reachable only by L hotkey, not in Architect menu)",
+  "status": "Done",
+  "milestone": "M6-ui",
+  "note": "Alias of .claude/wb/lamp-architect.json (footer named *-catalogue, header named lamp-architect; both written so QA finds it under either name).",
+  "files_changed": [
+    "skills/game-prototype/unity-project/Assets/Scripts/ArchitectMenu.cs"
+  ],
+  "change_summary": "Added ONE catalogue line to ArchitectMenu.Categories: new 'Lighting (조명)' category -> (BuildManager.Mode.Lamp, '램프 (목재 4)', 4). Mode.Lamp + lampCost=4 already exist in BuildManager (read-only confirmed). Existing buildable onClick wiring routes the click through BuildManager.SetMode(Mode.Lamp). No BuildManager edit, no click-plumbing edit, no enum add, no SceneSetup/test/Lane-A/Lane-B file touched.",
+  "scene_wiring_flags_for_qa": ["NONE required — uses existing self-bootstrap + existing SetMode wiring."],
+  "acceptance": "Lamp appears in Architect menu under 'Lighting (조명)'; click -> BuildManager.CurrentMode == Mode.Lamp."
+}

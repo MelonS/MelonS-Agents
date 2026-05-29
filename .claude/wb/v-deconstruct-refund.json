@@ -1,0 +1,38 @@
+{
+  "role": "build-engineer",
+  "lane": "D",
+  "milestone": "M5-gameplay-verify",
+  "task": "#15 deconstruct-refund chain — standalone gated PASS test",
+  "status": "Done",
+  "output_file": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V15DeconstructRefundTest.cs",
+  "test_class": "MelonS.GameProto.Tests.V15DeconstructRefundTest",
+  "report_path": "G:/ai/_v15_deconstruct_refund_report.json",
+  "wiki_acceptance": "#15 (binary): designate built wall -> pawn removes it -> ~50% material refund -> cell becomes walkable — ONE PASS line",
+  "chain_steps": [
+    "[1] WallEntity exists at (5,5) — PathGrid cell BLOCKED after wall.Start() registers it",
+    "[2] Wall designated via DeconstructDesignation.TryMark -> DeconstructTarget attached, RefundWood=2 (50% of wood build cost 5)",
+    "[3] PawnBuilder.SetDeconstructTarget dispatches the builder -> WallEntity DESTROYED within 4.5s sim window",
+    "[4] ResourceManager.wood rises by >= RefundWood (2) — CompleteRemoval called rm.AddWood",
+    "[5] PathGrid cell (5,5) is now WALKABLE — WallEntity.OnDestroy called SetStructureBlocked(false)"
+  ],
+  "api_flags_for_qa": [
+    "G1: DeconstructDesignation.Instance is null in headless test runner ([RuntimeInitializeOnLoadMethod] does not fire) — test bootstraps via AddComponent + yield; Instance must be a publicly-settable static OR FindFirstObjectByType must find the component",
+    "G2: WallEntity.Start registers the cell via PawnMovement.RegisterWallCell (static, public) -> PawnMovement.Grid (public static field) — test installs PathGrid.FromMask into the static slot before spawning the wall so the lifecycle registration is correct",
+    "G3: ResourceManager.Instance routes via Services.Get — test bootstraps ResourceManager via AddComponent (Awake calls Services.Register); the live CompleteRemoval path finds it correctly",
+    "G4: PawnBuilder.UpdateDeconstruct is private (standard Unity Update) — test gives a 4.5s WaitForSeconds window with builder placed at wallPos+1.0 (within buildRange=1.5f) so it enters in-range work branch immediately; workToRemove default 3f is satisfied well within the window"
+  ],
+  "files_touched": [
+    "skills/game-prototype/unity-project/Assets/Scripts/Tests/V15DeconstructRefundTest.cs (NEW)"
+  ],
+  "files_not_touched": [
+    "DeconstructDesignation.cs (READ-ONLY)",
+    "PawnBuilder.cs (READ-ONLY)",
+    "PathGrid.cs (READ-ONLY)",
+    "ResourceManager.cs (READ-ONLY)",
+    "WallEntity.cs (READ-ONLY)",
+    "TestRunner.cs (READ-ONLY)",
+    "IntegrationTestRunner.cs (READ-ONLY)"
+  ],
+  "missing_accessors": [],
+  "updated": "2026-05-30"
+}

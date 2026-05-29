@@ -1,0 +1,12 @@
+{
+  "role": "game-programmer",
+  "lane": "A",
+  "wave": "W-M4-05",
+  "wiki_item": "#18",
+  "status": "Done",
+  "note": "Canonical status at .claude/wb/drag-rect-placement.json (LANE-forced filename). This is a pointer alias.",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/BlueprintDragDesignation.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/BlueprintDragDesignation.cs.meta"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "role": "Designer (lane C — M6 UI)",
+  "cycle": "C-013",
+  "wave": "W-M4-05",
+  "lane": "C",
+  "task_ref": "W-M4-04 QA flag #42 (lamp reachable only by L hotkey, not in Architect menu)",
+  "status": "Done",
+  "milestone": "M6-ui",
+  "files_changed": [
+    "skills/game-prototype/unity-project/Assets/Scripts/ArchitectMenu.cs"
+  ],
+  "files_NOT_touched": [
+    "BuildManager.cs (read-only — confirmed Mode.Lamp enum @ line 23 + lampCost=4 wood @ line 41 already exist)",
+    "BlueprintDragDesignation (Lane A)",
+    "stone-floor files (Lane B)",
+    "any test",
+    "any SceneSetup file"
+  ],
+  "change_summary": "Added ONE catalogue line to ArchitectMenu.Categories static dictionary: new 'Lighting (조명)' category with a single buildable (BuildManager.Mode.Lamp, '램프 (목재 4)', 4). Cost 4 = wood, matches BuildManager.lampCost. The label format matches the existing convention (이름 (목재 N)). NO enum added. NO BuildManager edit. NO click-plumbing edit.",
+  "click_chain": "RefreshContent() (UNCHANGED) iterates every (mode,label,cost) tuple in the active category and wires the buildable button onClick to BuildManager.Instance.SetMode(bcap) where bcap == Mode.Lamp. Clicking '램프 (목재 4)' under the expanded 'Lighting (조명)' category calls SetMode(Mode.Lamp) -> BuildManager.CurrentMode == Mode.Lamp (toggles to Off on re-click, same as all other buildables). Menu closes on selection (existing Close() call).",
+  "scene_wiring_flags_for_qa": [
+    "NONE required. ArchitectMenu self-bootstraps (EnsureInScene / GameManager). The lamp uses the EXISTING buildable onClick wiring — no prefab, no SerializeField, no SceneSetup edit. Open menu via F8, expand 'Lighting (조명)', click '램프 (목재 4)'."
+  ],
+  "acceptance": "Lamp appears as an item in the Architect build menu under 'Lighting (조명)'; clicking it enters lamp build mode (BuildManager.CurrentMode == Mode.Lamp). Binary, QA-verifiable via screenshot (F8 menu shows Lighting category + 램프 item) + click chain (SetMode(Mode.Lamp))."
+}

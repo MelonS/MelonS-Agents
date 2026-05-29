@@ -511,7 +511,10 @@ namespace MelonS.GameProto
                 float speedMulP = health != null ? health.MovementSpeedMultiplier() : 1f;
                 var abilP = GetComponent<PawnAbilities>();
                 if (abilP != null) speedMulP *= abilP.moveSpeedMul;
-                if (IsOnFloor(curP)) speedMulP *= FloorEntity.MoveSpeedMul;
+                // #157 / W-M4-05 #21 - 바닥 위 이동 보너스.  BonusAt 가 해당 cell 의
+                //  가장 높은 FloorEntity.MoveBonus 를 돌려줌 (wood 1.30x, stone 1.50x).
+                //  바닥 없으면 1.0 → 보너스 없음.  IsOnFloor 와 동일한 tiny OverlapBox.
+                speedMulP *= FloorEntity.BonusAt(curP);
                 if (DoorEntity.IsInsideDoor(curP))
                 {
                     speedMulP *= DoorEntity.PassMul;
@@ -548,9 +551,10 @@ namespace MelonS.GameProto
             // #120 - PawnAbilities move speed multiplier
             var _abil = GetComponent<PawnAbilities>();
             if (_abil != null) speedMul *= _abil.moveSpeedMul;
-            // #157 - wiki: 바닥 위 pawn 은 이동 속도 보너스 (paved tile 50% 근사).
-            //  per-frame OverlapBox 인 점은 비싸지만 (#104 audit) tiny radius 라 ok.
-            if (IsOnFloor(cur)) speedMul *= FloorEntity.MoveSpeedMul;
+            // #157 / W-M4-05 #21 - wiki: 바닥 위 pawn 은 이동 속도 보너스 (paved 50% 근사).
+            //  BonusAt 가 cell 의 최고 FloorEntity.MoveBonus 반환 (wood 1.30x / stone 1.50x),
+            //  바닥 없으면 1.0.  per-frame OverlapBox 비용은 tiny radius 라 ok (#104 audit).
+            speedMul *= FloorEntity.BonusAt(cur);
             // #171 - 문 통과 중 감속 (wiki: 0.45s pass-through delay).
             //  PassMul=0.65 이므로 평균 속도 65% (~40% 더 시간 소요).
             if (DoorEntity.IsInsideDoor(cur))

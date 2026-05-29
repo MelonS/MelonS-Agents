@@ -1,0 +1,48 @@
+{
+  "role": "game-programmer",
+  "lane": "A",
+  "wave": "W-M4-05",
+  "cycle": "C-013",
+  "milestone": "M4-building",
+  "wiki_item": "#18",
+  "wiki_dimension": "Dimension 4 (건축)",
+  "wiki_acceptance": "Click-drag places a ROW/RECT of wall (or floor) blueprints, not a single cell.",
+  "status": "Done",
+  "summary": "Added ONE NEW self-bootstrapping file BlueprintDragDesignation.cs implementing drag-rect/line blueprint placement (#18) by calling ONLY BuildManager's read-only public API (BuildModeActive / CurrentMode / SizeFor / TryPlaceAt). ZERO edits to BuildManager.cs, ArchitectMenu.cs, the other designation managers, AudioBank.cs, any test/asmdef, or any SceneSetup file. ZERO SceneSetup budget (ghost preview is a runtime-built 4-quad outline, self-attached to the hidden manager GO).",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/BlueprintDragDesignation.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/BlueprintDragDesignation.cs.meta"
+  ],
+  "behavior": {
+    "activation": "Operates ONLY while BuildManager.Instance != null && BuildModeActive. Build mode and the designation modes are already mutually exclusive (designation managers turn build mode off), so this never fights deconstruct/mine/grow.",
+    "press_down": "On left mouse-DOWN inside the map (not over UI) records the anchor world point (pressStartWorld); does NOT itself place — BuildManager's existing Update places the single anchor cell on the same DOWN.",
+    "drag": "Once the cursor moves past dragThreshold (0.6 world units) it becomes a DRAG; a live ghost rect (4 thin code-built outline quads) follows the cursor every frame.",
+    "release_commit": "On left mouse-UP, if it was a drag, loops EVERY covered cell (stepping by the buildable footprint via BuildManager.SizeFor so 1x2 beds tile without overlap) calling BuildManager.TryPlaceAt(cx,cy) once per cell. 1-wide drag = degenerate line/row. maxCellsPerDrag=400 safety cap.",
+    "tap_vs_drag": "A plain tap (< dragThreshold) is left entirely to BuildManager's single-cell path — this manager does nothing, so single-cell placement is unchanged.",
+    "no_double_place": "The anchor cell may already hold the blueprint BuildManager dropped on mouse-DOWN; a repeat TryPlaceAt there is harmlessly rejected by BuildManager's own CellOccupied validation (detects BlueprintEntity). No cell is double-placed.",
+    "cancel": "Right-click OR ESC mid-drag cancels with NO blueprints placed and hides the ghost. Build mode turning off mid-drag also aborts the drag."
+  },
+  "bug_pattern_firewall": {
+    "4_audio_buzz": "AudioBank.Instance?.PlaySelect() called EXACTLY ONCE per committed drag (FinishCommit), never inside the per-cell TryPlaceAt loop — a 400-cell rect plays one blip.",
+    "7_singleton_subscription_race": "No OnEnable singleton subscription. BuildManager + AudioBank found via static Instance read-only EACH frame in Update.",
+    "9_runinbackground_freeze": "No WaitForSeconds / coroutine / always-on heartbeat. All timing is Time.unscaledTime-free polling inside Update; the only background object is the hidden DontDestroyOnLoad manager which does no timed work.",
+    "self_bootstrap": "[RuntimeInitializeOnLoadMethod(AfterSceneLoad)] + FindFirstObjectByType idempotency guard + Awake Instance guard — mirrors GrowZone/Mine/Deconstruct exactly. No double manager on domain/scene reload."
+  },
+  "scene_wiring_flags_for_qa": [
+    "FLAG: drag-ghost preview is a runtime-built 4-edge outline of unit white quads (1x1 white Texture2D, FilterMode.Point) parented to the hidden ~BlueprintDragDesignation GO, sortingOrder 25 (above the build ghost 20). NO prefab, NO imported PNG, never SceneSetup-wired. QA confirm: in build mode, press-drag shows a rectangle outline following the cursor.",
+    "FLAG: no toggle button added (build mode is already entered via BuildManager hotkeys B/F/G/T/Y/L + the Architect menu). This manager is purely an additive input layer; it needs no UI of its own.",
+    "QA verify binary #18: (1) enter build mode (B), press-drag over open ground -> a ROW/RECT of wall blueprints appears (NOT one cell); (2) drag a 1-wide span -> a line of blueprints; (3) right-click/ESC mid-drag -> no blueprints placed; (4) a plain tap still places exactly one cell.",
+    "QA test entry points (no real pointer needed): SimulateDragRect(Vector2 worldA, Vector2 worldB) and SimulateDragCells(Vector2Int a, Vector2Int b) both return the count placed; both require BuildModeActive."
+  ],
+  "files_NOT_touched": [
+    "BuildManager.cs (read-only API calls only — never edited)",
+    "ArchitectMenu.cs",
+    "DeconstructDesignation.cs / MineDesignation.cs / GrowZoneDesignation.cs",
+    "AudioBank.cs (read-only PlaySelect only)",
+    "any test / asmdef",
+    "any SceneSetup*.cs"
+  ],
+  "op_queue": [],
+  "syntax_check": "brace/paren/bracket balanced after stripping comments+strings; no // TODO present.",
+  "unity_run": "NOT run (QA verifies per lane contract)."
+}

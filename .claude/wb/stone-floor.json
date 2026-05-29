@@ -1,0 +1,67 @@
+{
+  "role": "game-programmer",
+  "lane": "B",
+  "wave": "W-M4-05",
+  "milestone": "M4-building",
+  "wiki_item": "#21 Stone/paved floor variant (from stone, faster)",
+  "wiki_acceptance_binary": "A stone floor is buildable and gives a HIGHER move bonus than the wood floor.",
+  "status": "Done",
+  "unity_run": false,
+  "summary": "Added Mode.FloorStone to BuildManager.cs mirroring the EXISTING Floor entry exactly (1x1, no collider, sortingOrder-1 ghost, same cooldown/ghost/placement-validation/blueprint path) but paid from STONE (like WallStone) and placing a StoneFloorEntity (a FloorEntity SUBCLASS) that gives a HIGHER move bonus (1.50x paved vs wood 1.30x) via the EXISTING floor-bonus mechanism. New free hotkey K (B/F/G/T/Y/N/R/X/M/P/L all taken). New dedicated generator _gen_stone_floor.py emits stone_floor.png (cool grey-blue paved slabs on ROCK_DK/MD/LT + 1px OUTLINE_OBJ, darker/harder than wood floor). Lamp-style lazy procedural prefab/sprite path -> ZERO SceneSetup edit. Did NOT run Unity (QA verifies).",
+  "files_changed": [
+    {
+      "path": "skills/game-prototype/unity-project/Assets/Scripts/BuildManager.cs",
+      "kind": "edit",
+      "what": "Mode.FloorStone enum + floorStoneCost(석재1) + lazy floorStonePrefab/Sprite fields + K hotkey + switch arms (SetMode sprite & sortingOrder1, CostFor, PrefabFor, SpriteForCurrentMode, ModeKr) + PaysWithStone(m) helper (WallStone||FloorStone -> stone) wired into UpdateGhost affordability + DoTryPlaceAt needWood/needStone + 2s floor build time + EnsureFloorStoneSprite/EnsureFloorStonePrefab/LoadOrBuildFloorStoneSprite/BuildProceduralStoneFloorSprite (Lamp lazy-build mirror; prefab = SR sortingOrder1 + StoneFloorEntity + NO collider, like wood Floor)."
+    },
+    {
+      "path": "skills/game-prototype/unity-project/Assets/Scripts/StoneFloorEntity.cs",
+      "kind": "new",
+      "what": "NEW. StoneFloorEntity : FloorEntity (subclass so every GetComponent<FloorEntity>() consumer detects it as a floor with ZERO changes — indoor, tooltip, bonus). Overrides virtual MoveBonus to 1.50f (SerializeField stoneMoveBonus, designer-tunable). No collider."
+    },
+    {
+      "path": "skills/game-prototype/unity-project/Assets/Scripts/FloorEntity.cs",
+      "kind": "edit",
+      "what": "FLAGGED minimal read-only-file edit (allowed by lane: 'tiny public bonus accessor if genuinely missing'). Added virtual MoveBonus (=> MoveSpeedMul, base wood 1.30x) + static BonusAt(Vector2 pos) returning the HIGHEST overlapping FloorEntity.MoveBonus (or 1.0 if none) via the same tiny OverlapBox the old IsOnFloor used. Legacy const MoveSpeedMul kept unchanged for back-compat."
+    },
+    {
+      "path": "skills/game-prototype/unity-project/Assets/Scripts/PawnMovement.cs",
+      "kind": "edit",
+      "what": "FLAGGED 2-line change (NOT in forbidden list; required for the binary acceptance to actually hold at runtime). Both 'if (IsOnFloor(pos)) speedMul *= FloorEntity.MoveSpeedMul;' sites -> 'speedMul *= FloorEntity.BonusAt(pos);' so the stone floor's HIGHER per-instance bonus applies. Reuses the existing bonus mechanism — NO new movement system. NOTE: the now-unused private static IsOnFloor method was left in place (unused private method = no C# compile warning/error); QA may delete it as cleanup if desired."
+    },
+    {
+      "path": "skills/game-prototype/unity-project/Assets/Sprites/_gen_stone_floor.py",
+      "kind": "new",
+      "what": "NEW dedicated generator. Imports palette.py READ-ONLY (ROCK_DK/MD/LT, OUTLINE_OBJ). Emits stone_floor.png 16x16 (2x2 cut paving slabs, ROCK_DK mortar cross, ROCK_LT top/left bevel, full 1px OUTLINE_OBJ border) + _preview_stone_floor.png (8x 2x2-tiled QA). Pixel layout kept byte-for-byte in sync with BuildManager BuildProceduralStoneFloorSprite() so PNG and player-build fallback match. Did NOT edit _gen_sprites.py/_gen_fix_audit.py/_gen_lamp.py/_gen_scatter_variety.py/palette.py."
+    },
+    {
+      "path": "skills/game-prototype/unity-project/Assets/Sprites/stone_floor.png",
+      "kind": "new-asset",
+      "what": "Generated 16x16 stone/paved floor sprite (143 bytes). Cool grey-blue, hard-outlined — visibly distinct from + darker/harder than the warm wood floor; recedes under pawns."
+    }
+  ],
+  "files_NOT_touched_per_contract": [
+    "ArchitectMenu.cs (Lane C owned; stone floor is hotkey-K reachable this wave — Architect surfacing is the follow-up)",
+    "DeconstructDesignation / MineDesignation / GrowZoneDesignation / BlueprintDragDesignation",
+    "ScatterVarietyDriver.cs, SaveLoadManager.cs, AudioBank.cs (read-only), any test/asmdef",
+    "_gen_sprites.py / _gen_fix_audit.py / _gen_lamp.py / _gen_scatter_variety.py (palette.py read-only import only)",
+    "any SceneSetup file (used BuildManager lazy procedural prefab/sprite path like Lamp — ZERO SceneSetup edit)"
+  ],
+  "design_decisions": [
+    "Subclass over standalone: StoneFloorEntity : FloorEntity gives >90% pattern overlap (indoor flag, floor detection, tooltip, bonus). Subclassing means every existing GetComponent<FloorEntity>() consumer keeps working with zero edits — the higher bonus is the ONLY delta, expressed by overriding the existing virtual MoveBonus.",
+    "Stone paid from STONE (PaysWithStone helper) mirroring WallStone, per wiki '#21 from stone'. Cost 석재 1 (cheap/reachable like wood floor's 목재 1).",
+    "Bonus values: wood 1.30x (existing), stone 1.50x = wiki paved-tile 50% (the comment already in FloorEntity). 1.50 > 1.30 satisfies the binary 'HIGHER'. Exposed as SerializeField for designer tuning.",
+    "Hotkey K chosen (B/F/G/T/Y/N/R/X/M/P/L all taken per lane brief).",
+    "Lazy procedural prefab/sprite mirrors the Lamp entry exactly: AssetDatabase load in Editor/batchmode (#if UNITY_EDITOR) + ALWAYS a procedural fallback so a player build (PNG outside Resources/) never shows null/magenta — the exact trap W-M4-04 Lane B fixed for scatter."
+  ],
+  "bug_firewall_check": "No baked-lesson re-introduction. No AudioBank tight-loop (#4). No GetInstanceID compare (#5). No Enter-only collide handler (#6). No singleton OnEnable subscribe (#7). No justSpawned default-true (#8). No new always-on background timer / WaitForSeconds heartbeat (#9) — only per-frame OverlapBox in existing movement path.",
+  "qa_flags": [
+    "SCENE-WIRING / .meta: new files need Unity .meta + import settings (QA-owned, per lamp precedent): StoneFloorEntity.cs (.meta), stone_floor.png (.meta: PPU 16, FilterMode Point, no compression — matches floor.png), _gen_stone_floor.py (.meta auto). Add stone_floor.png to any ForceImportAllSprites list if used (mirror how floor.png / lamp.png are listed).",
+    "NO SceneSetup prefab wiring added — stone floor uses BuildManager lazy procedural prefab/sprite path (Lamp pattern). If a future wave prefers a real prefab asset, wire floorStonePrefab/floorStoneSprite via SetRefs and the lazy builders become no-ops.",
+    "HOTKEY: K = toggle stone-floor build mode (new). Reachable without Architect menu (Lane C follow-up will surface it in ArchitectMenu).",
+    "READ-ONLY-FILE EDIT (FLAGGED): FloorEntity.cs got a minimal virtual MoveBonus + static BonusAt accessor (lane explicitly permits 'tiny public bonus accessor if genuinely missing, add minimally and FLAG').",
+    "ADJACENT-FILE EDIT (FLAGGED): PawnMovement.cs got a 2-line swap (FloorEntity.MoveSpeedMul const -> FloorEntity.BonusAt(pos)) so the higher per-instance bonus actually applies at runtime. Without it the stone floor would compile + place but still give only the wood-const bonus, failing the binary acceptance. Reuses existing mechanism, no new movement system. Private IsOnFloor now unused (no warning); delete as optional cleanup.",
+    "VERIFY suggestion: a pawn standing on a stone floor cell should move faster than on a wood floor cell (BonusAt returns 1.50 vs 1.30). FloorEntity.BonusAt(pos) is a clean read-only assert point for a V-test."
+  ],
+  "no_todo": true
+}

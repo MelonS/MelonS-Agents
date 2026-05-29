@@ -11,6 +11,7 @@ namespace MelonS.GameProto
     ///   G: 문 (목재 3, trigger collider)
     ///   T: 화덕 (목재 10, Day 25 cooking station)
     ///   L: 램프 (목재 4, W-M4-04 #19 standing-lamp / torch — night light pool)
+    ///   K: 석재 바닥 (석재 1, W-M4-05 #21 stone/paved floor — higher move bonus than wood)
     /// </summary>
     public class BuildManager : MonoBehaviour
     {
@@ -20,7 +21,13 @@ namespace MelonS.GameProto
         // W-M4-04 (#19) - Lamp: torch/standing-lamp buildable that emits a warm
         //   night light pool (drawn by LampGlowDriver).  Mirrors the Stove entry
         //   exactly (1×1 footprint, wood cost, same ghost/cooldown/place path).
-        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp }
+        // W-M4-05 (#21) - FloorStone: a stone/paved floor variant, paid from
+        //   STONE (like WallStone) and giving a HIGHER move bonus than the wood
+        //   floor.  Mirrors the EXISTING Floor entry EXACTLY (1×1, no collider,
+        //   sortingOrder 1 ghost, same cooldown/ghost/placement-validation path)
+        //   — only the cost resource, sprite, and placed entity (StoneFloorEntity,
+        //   a FloorEntity subclass with a higher MoveBonus) differ.
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone }
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
         // #182 - placement cooldown: SetMode 후 0.15s 동안 TryPlace skip.
@@ -49,6 +56,17 @@ namespace MelonS.GameProto
         [SerializeField] private Sprite lampSprite;
         private GameObject _lampPrefabRuntime;  // cached lazily-built template
         private Sprite     _lampSpriteRuntime;  // cached lazily-built sprite
+        // W-M4-05 (#21) - Stone floor cost.  Wood floor = 목재 1; stone floor is
+        //   paid from STONE (like WallStone).  석재 1 keeps it reachable / cheap.
+        [SerializeField] private int floorStoneCost = 1;
+        // W-M4-05 (#21) - Stone-floor prefab + sprite, built LAZILY + PROCEDURALLY
+        //   exactly like the Lamp entry (the Lane B contract forbids a SceneSetup
+        //   edit, so these stay null and BuildManager self-builds them on first
+        //   use; a later wave can wire real refs via SetRefs with zero code change).
+        [SerializeField] private GameObject floorStonePrefab;
+        [SerializeField] private Sprite floorStoneSprite;
+        private GameObject _floorStonePrefabRuntime;  // cached lazily-built template
+        private Sprite     _floorStoneSpriteRuntime;  // cached lazily-built sprite
         // #154 - bed quality 별 cost (wiki: sleeping spot 0 / wood bed 8 / fine 30).
         //  Fine 은 wiki 가 비싸지만 (60+) 프로토타입에선 30 으로 낮춰 reachable.
         [SerializeField] private int bedSleepingSpotCost = 0;
@@ -87,6 +105,8 @@ namespace MelonS.GameProto
             if (Input.GetKeyDown(KeyCode.Y)) SetMode(CurrentMode == Mode.Bed ? Mode.Off : Mode.Bed);
             // W-M4-04 (#19) - L = 램프/횃불 (free hotkey; B/F/G/T/Y/N/R/X/M/P taken).
             if (Input.GetKeyDown(KeyCode.L)) SetMode(CurrentMode == Mode.Lamp ? Mode.Off : Mode.Lamp);
+            // W-M4-05 (#21) - K = 석재 바닥 (free hotkey; B/F/G/T/Y/N/R/X/M/P/L taken).
+            if (Input.GetKeyDown(KeyCode.K)) SetMode(CurrentMode == Mode.FloorStone ? Mode.Off : Mode.FloorStone);
             if (BuildModeActive && Input.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }
             UpdateGhost();
             // #179/#182 - click 처리.  cooldown 으로 SetMode 직후 race 방지.
@@ -153,9 +173,11 @@ namespace MelonS.GameProto
                 Mode.BedSleepingSpot => bedSprite,  // #154
                 Mode.BedFine => bedSprite,  // #154
                 Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
+                Mode.FloorStone => EnsureFloorStoneSprite(),  // W-M4-05 #21
                 _ => wallSprite,
             };
-            ghostRenderer.sortingOrder = m == Mode.Floor ? 1 : 20;
+            // 바닥류(목재/석재)는 ghost sortingOrder 1 (지면 위), 나머지 구조물은 20.
+            ghostRenderer.sortingOrder = (m == Mode.Floor || m == Mode.FloorStone) ? 1 : 20;
         }
 
         private int CostFor(Mode m) => m switch
@@ -169,6 +191,7 @@ namespace MelonS.GameProto
             Mode.BedSleepingSpot => bedSleepingSpotCost,  // #154 - 0
             Mode.BedFine         => bedFineCost,          // #154 - 30
             Mode.Lamp            => lampCost,             // W-M4-04 #19 - 목재 4
+            Mode.FloorStone      => floorStoneCost,       // W-M4-05 #21 - 석재 1
             _ => 0,
         };
 
@@ -183,6 +206,7 @@ namespace MelonS.GameProto
             Mode.BedSleepingSpot => bedPrefab,  // #154 - 같은 prefab, quality 다름
             Mode.BedFine         => bedPrefab,  // #154
             Mode.Lamp            => EnsureLampPrefab(),  // W-M4-04 #19
+            Mode.FloorStone      => EnsureFloorStonePrefab(),  // W-M4-05 #21
             _ => null,
         };
 
@@ -212,7 +236,7 @@ namespace MelonS.GameProto
                     ghostRenderer.transform.localScale = new Vector3(size.x / sw.x, size.y / sw.y, 1f);
             }
             int cost = CostFor(CurrentMode);
-            bool stoneMode = CurrentMode == Mode.WallStone;
+            bool stoneMode = PaysWithStone(CurrentMode);
             bool canAfford = ResourceManager.Instance != null
                 && (stoneMode ? ResourceManager.Instance.stone : ResourceManager.Instance.wood) >= cost;
             // #199 C3 - ghost 색: terrain(물/바위) or 점유 시 빨강 (RimWorld red ghost).
@@ -350,12 +374,13 @@ namespace MelonS.GameProto
             {
                 Debug.LogWarning("[Build] WARNING: ResourceManager.Instance null - blueprint 는 spawn 진행 (hauler 가 자재 운반)");
             }
-            Debug.Log($"[Build] TryPlace OK: mode={CurrentMode} → blueprint at ({cx+0.5f}, {cy+0.5f}), need wood={(CurrentMode == Mode.WallStone ? 0 : cost)} stone={(CurrentMode == Mode.WallStone ? cost : 0)}");
             // 운영자 fb v4 - 림월드 정상 흐름: 청사진 spawn 시 자원 차감 X.
             //  hauler 가 자재를 청사진 위치까지 운반 후 PawnBuilder 가 건설 작업.
-            bool stoneMode = CurrentMode == Mode.WallStone;
+            // W-M4-05 (#21) - 석재로 짓는 모드(석재 벽 / 석재 바닥)는 stone 으로 결제.
+            bool stoneMode = PaysWithStone(CurrentMode);
             int needWood = stoneMode ? 0 : cost;
             int needStone = stoneMode ? cost : 0;
+            Debug.Log($"[Build] TryPlace OK: mode={CurrentMode} → blueprint at ({cx+0.5f}, {cy+0.5f}), need wood={needWood} stone={needStone}");
 
             Sprite ghostSpr = SpriteForCurrentMode();
             var bpGo = new GameObject($"Blueprint_{CurrentMode}");
@@ -363,7 +388,7 @@ namespace MelonS.GameProto
             Vector3 center = new Vector3(cx + size.x * 0.5f, cy + size.y * 0.5f, 0);
             bpGo.transform.position = center;
             var bp = bpGo.AddComponent<BlueprintEntity>();
-            float secs = CurrentMode == Mode.Floor ? 2f : 5f;
+            float secs = (CurrentMode == Mode.Floor || CurrentMode == Mode.FloorStone) ? 2f : 5f;
             bp.Init(CurrentMode, prefab, ghostSpr, needWood, needStone, secs);
             bp.SetSize(size);  // #193 - 청사진 sprite 도 1x2 비율 적용
             // #190 - 클릭 성공 토스트 + 시각 ring (운영자가 "어디에 청사진 생겼지?" 즉시 확인)
@@ -388,8 +413,12 @@ namespace MelonS.GameProto
             Mode.BedSleepingSpot => "수면 자리",
             Mode.BedFine         => "고급 침대",
             Mode.Lamp            => "램프",   // W-M4-04 #19
+            Mode.FloorStone      => "석재 바닥",  // W-M4-05 #21
             _ => m.ToString(),
         };
+
+        // W-M4-05 (#21) - 석재로 결제하는 모드 (석재 벽 / 석재 바닥).  나머지는 목재.
+        private static bool PaysWithStone(Mode m) => m == Mode.WallStone || m == Mode.FloorStone;
 
         private Sprite SpriteForCurrentMode() => CurrentMode switch
         {
@@ -401,6 +430,7 @@ namespace MelonS.GameProto
             Mode.BedSleepingSpot => bedSprite,
             Mode.BedFine         => bedSprite,
             Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
+            Mode.FloorStone => EnsureFloorStoneSprite(),  // W-M4-05 #21
             _ => wallSprite,
         };
 
@@ -557,6 +587,151 @@ namespace MelonS.GameProto
                 }
             }
             foreach (var (x, y) in outlinePts) Set(x, y, OUTLINE);
+
+            tex.SetPixels32(px);
+            tex.Apply(updateMipmaps: false);
+
+            return Sprite.Create(
+                tex,
+                new Rect(0, 0, SIZE, SIZE),
+                new Vector2(0.5f, 0.5f),
+                pixelsPerUnit: 16f);
+        }
+
+        // ---------------------------------------------------------------- //
+        //  W-M4-05 (#21) - Stone-floor prefab + sprite, built LAZILY in code.//
+        //                                                                    //
+        //  Mirrors the Lamp lazy-build path EXACTLY (the Lane B contract     //
+        //  forbids a SceneSetup edit, so the finished stone-floor prefab +   //
+        //  sprite are self-built once on first use):                         //
+        //    - the sprite loads from Assets/Sprites/stone_floor.png in the   //
+        //      Editor/batchmode via AssetDatabase reflection, and ALWAYS     //
+        //      falls back to a procedural paved-stone texture so a PLAYER    //
+        //      BUILD (AssetDatabase absent, PNG outside Resources/) still    //
+        //      shows a real stone floor instead of a null/magenta sprite.    //
+        //    - the prefab is an in-memory template carrying a SpriteRenderer //
+        //      at sortingOrder 1 (ground level, like the wood Floor) and a   //
+        //      StoneFloorEntity marker — and NO collider, exactly like the   //
+        //      wood FloorEntity (pawns walk over it).                        //
+        //                                                                    //
+        //  >>> QA FLAG: stone floor uses BuildManager's lazy procedural      //
+        //      prefab/sprite path — NO SceneSetup prefab wiring was added.   //
+        //      If a future wave prefers a real prefab asset, wire            //
+        //      floorStonePrefab / floorStoneSprite via SetRefs and these     //
+        //      lazy builders become no-ops.                                  //
+        // ---------------------------------------------------------------- //
+
+        private Sprite EnsureFloorStoneSprite()
+        {
+            if (floorStoneSprite != null) return floorStoneSprite;       // wired via SetRefs (future)
+            if (_floorStoneSpriteRuntime != null) return _floorStoneSpriteRuntime;
+            _floorStoneSpriteRuntime = LoadOrBuildFloorStoneSprite();
+            return _floorStoneSpriteRuntime;
+        }
+
+        private GameObject EnsureFloorStonePrefab()
+        {
+            if (floorStonePrefab != null) return floorStonePrefab;        // wired via SetRefs (future)
+            if (_floorStonePrefabRuntime != null) return _floorStonePrefabRuntime;
+
+            // In-memory template (NOT a saved .prefab asset — runtime only).
+            //  Mirrors the wood Floor: SR sortingOrder 1 (ground), NO collider
+            //  (pawns walk over floors), StoneFloorEntity marker (a FloorEntity
+            //  subclass → detected by every existing floor consumer, higher
+            //  MoveBonus).  Hidden + inactive so it's never seen; Instantiate copies it.
+            var go = new GameObject("StoneFloorTemplate");
+            go.hideFlags = HideFlags.HideAndDontSave;
+            go.SetActive(false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite       = EnsureFloorStoneSprite();
+            sr.sortingOrder = 1;                                // same as wood Floor ghost/tile
+            go.AddComponent<StoneFloorEntity>();               // FloorEntity subclass, higher MoveBonus
+            _floorStonePrefabRuntime = go;
+            return _floorStonePrefabRuntime;
+        }
+
+        /// <summary>
+        /// Load stone_floor.png via AssetDatabase (Editor/batchmode) through
+        /// reflection-free #if so this runtime script needs no UnityEditor
+        /// reference; ALWAYS falls back to a procedural paved-stone texture so a
+        /// player build is never null (same guard as the lamp sprite).
+        /// </summary>
+        private static Sprite LoadOrBuildFloorStoneSprite()
+        {
+#if UNITY_EDITOR
+            var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stone_floor.png");
+            if (sp != null) return sp;
+#endif
+            return BuildProceduralStoneFloorSprite();
+        }
+
+        /// <summary>
+        /// Build a 16×16 stone / paved-floor sprite in code, matching
+        /// _gen_stone_floor.py's authored content (cut paving slabs on ROCK
+        /// dark/mid/light with a 1px OBJ outline border, darker / harder read
+        /// than the wood floor so the two are distinguishable).  Guarantees a
+        /// real stone floor in a player build with zero asset-load dependency.
+        /// </summary>
+        private static Sprite BuildProceduralStoneFloorSprite()
+        {
+            const int SIZE = 16;
+            var tex = new Texture2D(SIZE, SIZE, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode   = TextureWrapMode.Clamp;
+            tex.name       = "StoneFloor_Proc";
+
+            // Palette (mirrors palette.py ROCK_* / OUTLINE_OBJ; RGBA).
+            var ROCK_DK  = new Color32(66, 66, 74, 255);    // palette.py ROCK_DK
+            var ROCK_MD  = new Color32(104, 104, 114, 255); // palette.py ROCK_MD
+            var ROCK_LT  = new Color32(150, 150, 160, 255); // palette.py ROCK_LT
+            var OUTLINE  = new Color32(40, 30, 22, 255);    // palette.py OUTLINE_OBJ
+
+            var px = new Color32[SIZE * SIZE];
+
+            // Texture y is bottom-up; _gen_stone_floor.py uses top-down PIL y.
+            //  Convert each authored (gx, gyTop) to texture row: ty = SIZE-1-gyTop.
+            void Set(int gx, int gyTop, Color32 c)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return;
+                px[ty * SIZE + gx] = c;
+            }
+
+            // Fill the whole tile with mid rock (paved base).
+            for (int y = 0; y < SIZE; y++)
+                for (int x = 0; x < SIZE; x++)
+                    Set(x, y, ROCK_MD);
+
+            // 2×2 cut-slab grid: a darker mortar groove at the mid lines (x=8, y=8)
+            //  and at the tile border reads as four laid pavers.  Slight light
+            //  bevel on the top/left of each paver for a hard, cut-stone read.
+            for (int i = 0; i < SIZE; i++)
+            {
+                // mortar grooves (darker) — vertical x=7/8, horizontal y=7/8.
+                Set(7, i, ROCK_DK); Set(8, i, ROCK_DK);
+                Set(i, 7, ROCK_DK); Set(i, 8, ROCK_DK);
+            }
+            // light bevel (top + left edge of each of the four pavers).
+            foreach (int oy in new[] { 0, 9 })
+                for (int x = (oy == 0 ? 1 : 0); x < SIZE; x++)
+                {
+                    if (x == 7 || x == 8) continue;
+                    Set(x, oy == 0 ? 1 : 9, ROCK_LT);
+                }
+            foreach (int ox in new[] { 0, 9 })
+                for (int y = 1; y < SIZE; y++)
+                {
+                    if (y == 7 || y == 8) continue;
+                    Set(ox == 0 ? 1 : 9, y, ROCK_LT);
+                }
+
+            // 1px OBJ outline border around the whole tile (hard edge — harder
+            //  read than the wood floor, which is softer).
+            for (int i = 0; i < SIZE; i++)
+            {
+                Set(i, 0, OUTLINE); Set(i, SIZE - 1, OUTLINE);
+                Set(0, i, OUTLINE); Set(SIZE - 1, i, OUTLINE);
+            }
 
             tex.SetPixels32(px);
             tex.Apply(updateMipmaps: false);

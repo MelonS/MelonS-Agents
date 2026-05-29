@@ -67,6 +67,19 @@ namespace MelonS.GameProto
             ["Production (생산)"] = new[] {
                 (BuildManager.Mode.Stove, "화덕 (목재 10)", 10),
             },
+            // W-M4-05 (#42) — surface the W-M4-04 Lamp buildable in the Architect
+            //   catalogue (was L-hotkey-only, per qa.json flags_for_next_wave #42).
+            //   Catalogue line ONLY: the existing buildable onClick wiring in
+            //   RefreshContent routes every (mode,label,cost) tuple through
+            //   BuildManager.Instance.SetMode — so clicking 램프 enters Lamp build
+            //   mode (CurrentMode == Mode.Lamp) with ZERO click-plumbing change.
+            //   Cost 4 = wood, matches BuildManager.lampCost.  Mode.Lamp already
+            //   exists in BuildManager (not added/edited here).  A dedicated
+            //   "Lighting (조명)" category keeps the lamp out of Production's
+            //   crafting-station grouping and leaves room for future light types.
+            ["Lighting (조명)"] = new[] {
+                (BuildManager.Mode.Lamp, "램프 (목재 4)", 4),
+            },
         };
 
         public static void EnsureInScene()
