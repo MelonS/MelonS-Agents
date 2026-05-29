@@ -79,6 +79,8 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/bed_wood.png",        // #107 — Wood bed
                 "Assets/Sprites/bed_fine.png",        // #198 D4-1 — Fine bed (royal-blue/gold)
                 "Assets/Sprites/berry_bush.png",      // Round 6/7 — dedicated berry-bush art (was tree reuse + neon tint)
+                "Assets/Sprites/shadow_small.png",    // Polish v2 — pawn grounding shadow (16x8, alpha baked)
+                "Assets/Sprites/shadow_tree.png",     // Polish v2 — tree trunk grounding shadow (20x6, alpha baked)
             };
             foreach (var p in paths)
             {

@@ -48,6 +48,25 @@ namespace MelonS.GameProto.EditorTools
             BoxCollider2D templateCol = treeTemplate.AddComponent<BoxCollider2D>();
             templateCol.size = new Vector2(1.5f, 1.5f);
             treeTemplate.AddComponent<TreeEntity>();
+            // Polish v2 — tree grounding shadow at trunk base.  Wired into the
+            //  shared Tree prefab template, so SpawnTrees (PrefabUtility.Instantiate)
+            //  AND RegrowthScheduler (same prefab) both inherit it → all 20 +
+            //  regrown trees get the shadow.  shadow_tree.png 20x6 @ PPU16 =
+            //  1.25 x 0.375 world units, alpha baked → white. sortingOrder =
+            //  body(5) − 1 = 4, under the trunk; same default sortingLayer.
+            Sprite treeShadowSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
+                "Assets/Sprites/shadow_tree.png");
+            GameObject treeShadowGo = new GameObject("TreeShadow");
+            treeShadowGo.transform.SetParent(treeTemplate.transform, false);
+            treeShadowGo.transform.localPosition = new Vector3(0f, -0.56f, 0f);
+            treeShadowGo.transform.localScale = Vector3.one;
+            var treeShadowSr = treeShadowGo.AddComponent<SpriteRenderer>();
+            treeShadowSr.sprite = treeShadowSprite;
+            treeShadowSr.color = Color.white;
+            treeShadowSr.sortingLayerID = templateSr.sortingLayerID;
+            treeShadowSr.sortingOrder = templateSr.sortingOrder - 1;  // = 4
+            if (treeShadowSprite == null)
+                Debug.LogWarning("[SceneSetup] shadow_tree.png NULL — tree shadow skipped");
             ps.treePrefab = PrefabUtility.SaveAsPrefabAsset(treeTemplate, TreePrefabPath);
             Object.DestroyImmediate(treeTemplate);
             Debug.Log($"[SceneSetup] Tree prefab -> {TreePrefabPath}");

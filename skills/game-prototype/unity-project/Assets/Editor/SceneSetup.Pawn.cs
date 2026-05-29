@@ -74,6 +74,27 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnUtilityAI>();
             pawnGo.AddComponent<PawnFloatingBars>(); // Day 42 — HP/mood floating bars 머리 위
 
+            // Polish v2 — grounding shadow.  Separate child renderer so the
+            //  per-pawn variant color / selection-yellow / drafted-cyan logic
+            //  (GameManager + PawnEntity both call GetComponent<SpriteRenderer>()
+            //  on the ROOT, never children) leaves the shadow untinted.
+            //  shadow_small.png is 16x8 @ PPU16 → 1.0 x 0.5 world units, alpha
+            //  baked in, so color stays white.  sortingOrder = body(10) − 1 = 9
+            //  → renders under the pawn body, same default sortingLayer.
+            Sprite shadowSprite = AssetDatabase.LoadAssetAtPath<Sprite>(
+                "Assets/Sprites/shadow_small.png");
+            GameObject shadowGo = new GameObject("PawnShadow");
+            shadowGo.transform.SetParent(pawnGo.transform, false);
+            shadowGo.transform.localPosition = new Vector3(0f, -0.30f, 0f);
+            shadowGo.transform.localScale = Vector3.one;
+            var shadowSr = shadowGo.AddComponent<SpriteRenderer>();
+            shadowSr.sprite = shadowSprite;
+            shadowSr.color = Color.white;            // alpha baked in sprite
+            shadowSr.sortingLayerID = sr.sortingLayerID;
+            shadowSr.sortingOrder = sr.sortingOrder - 1;  // = 9, under body
+            if (shadowSprite == null)
+                Debug.LogWarning("[GeneratePawnPrefab] shadow_small.png NULL — pawn shadow skipped");
+
             PrefabUtility.SaveAsPrefabAsset(pawnGo, PawnPrefabPath);
             Object.DestroyImmediate(pawnGo);
             Debug.Log($"[SceneSetup] Pawn prefab -> {PawnPrefabPath}");
