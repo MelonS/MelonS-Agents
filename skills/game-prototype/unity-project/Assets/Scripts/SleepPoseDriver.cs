@@ -211,7 +211,10 @@ namespace MelonS.GameProto
             // Ease toward target, then write ONLY the color channel of the CHILD
             //  body renderer.  We never read/write flipX, localPosition, or the
             //  root transform anywhere in this method.
-            current = Color.MoveTowards(current, target, fadeSpeed * Time.unscaledDeltaTime);
+            // Color.MoveTowards does not exist in Unity; use Vector4 MoveTowards
+            //  then cast back to Color (Color is implicitly convertible to/from Vector4).
+            current = (Color)Vector4.MoveTowards(
+                (Vector4)current, (Vector4)target, fadeSpeed * Time.unscaledDeltaTime);
             bodyRenderer.color = current;
         }
 

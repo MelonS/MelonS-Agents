@@ -1,36 +1,36 @@
 {
   "role": "QA+Integrator",
-  "cycle": "C-006",
-  "wave": "W-M3-01",
+  "cycle": "C-007",
+  "wave": "W-M3-02",
   "status": "PASS",
-  "commit": "a769648",
-  "build_tag": "cx-w2-2026-05-30",
+  "build_tag": "cx-w3-2026-05-30",
   "wiring_done": [
-    "SceneSetup.Game.Audio.cs: added ForceUpdate+LoadAssetAtPath for mine.wav and SerializedObject wiring for sfxMine on AudioBank (same ForceImport pattern as sfxBuild/sfxAlert/sfxAmbient W-M2-01)"
+    "SceneSetup.Game.Audio.cs: added ForceUpdate+LoadAssetAtPath for rain.wav and SerializedObject wiring for rainLoop on AudioBank (same ForceImport pattern as sfxBuild/sfxAlert/sfxAmbient/sfxMine prior waves)"
   ],
+  "compile_fix": "SleepPoseDriver.cs line 214: Color.MoveTowards does not exist in Unity — replaced with (Color)Vector4.MoveTowards((Vector4)current, (Vector4)target, ...). Bug introduced by Programmer (Lane A). Fixed by QA.",
   "makers_verified": [
-    "Lane A (Programmer): PawnFacing.cs — self-attaching via PawnFacingBootstrap [RuntimeInitializeOnLoadMethod]; flipX on PawnSpriteBob child renderer; root transform untouched; 1s scan driver via Update throttle (no runInBackground regression); lesson #8 justSpawned avoided (seeds lastX in Awake)",
-    "Lane B (Programmer): AlertStackUI.cs — self-bootstrapping top-right canvas sortingOrder=200; poll-found AIDirector (lesson #7); tier-color accent bar + title; click pans to nearest bandit; 30s card expiry via Time.unscaledTime in Update (no coroutine, lesson #9 compliant)",
-    "Lane C (BuildEngineer): V4CombatChainTest.cs — 4-step combat chain: draft->arrowFired->hpDropped->IsDead; R1 ResearchManager bootstrap; G3 manual Rigidbody2D+BoxCollider2D; G4 pre-damage to Hp=4 for guaranteed kill",
-    "Lane D (Sound): AudioBank.cs sfxMine+PlayMine() with own _lastMineTime 0.25s guard; StoneVeinEntity.cs PlayChop->PlayMine at L78; mine.wav present (44100Hz 0.18s pick-on-stone); SceneSetup.Game.Audio.cs ForceImport+SerializedObject wiring added by QA"
+    "Lane A (Programmer): SleepPoseDriver.cs — self-attaching via SleepPoseDriverBootstrap [RuntimeInitializeOnLoadMethod(AfterSceneLoad)]; EnsureOn scan pattern mirrors PawnFacing/FlickerLight; writes ONLY child SpriteRenderer.color (dimTint=0.6/0.6/0.66 when IsSleeping, restored on wake); no flipX/localPosition/root transform writes; Vector4.MoveTowards easing (Color.MoveTowards did not compile — fixed by QA). PawnShadow child explicitly skipped. No scene wiring required.",
+    "Lane B (Programmer): GuiControlBar.cs + ArchitectMenu.cs + ResearchUI.cs — PlayClickBlip() helper added to each; find-once cached AudioBank.Instance; calls PlaySelect() on every button onClick; no per-Update FindFirstObjectByType; AudioBank.cs not touched by this lane.",
+    "Lane C (BuildEngineer): V5FoodChainTest.cs — 5-step food chain: plant->ripen(reflection)->harvest->cook->eat; bootstraps ResourceManager+ResearchManager when absent; waits 1s for TryEatTick; G1-G6 API gaps documented; test added under existing asmdef alongside V4CombatChainTest.",
+    "Lane D (Sound): AudioBank.cs PlayRain()/StopRain() with rainSource dedicated loop source; RainSoundDriver.cs self-attaching poll of WeatherController.Instance.Current; rain.wav 44100Hz 12s loopable bed; rainLoop SerializedObject-wired via SceneSetup.Game.Audio.cs by QA."
   ],
   "qa_results": {
     "scenes_regen": "PASS",
     "verify_build": "PASS",
-    "qa_screenshot": "PASS — 221KB captured G:/ai/_refactor_current.png",
+    "qa_screenshot": "PASS — 220KB captured G:/ai/_refactor_current.png",
     "runtime_errors": "none",
-    "fresh_build": "PASS — _harness-latest built after sources",
+    "fresh_build": "PASS — day-cx-w3-2026-05-30 built after compile fix applied",
     "real_qa_30s": "PASS — wood +60 in 30s (7 ResMon snapshots)",
     "build_click_qa": "PASS — 6 mode chain OVERALL PASS (9/9 cases)",
-    "visual_diff": "PASS — 1.04% vs baseline (threshold 5%)",
+    "visual_diff": "PASS — 0.61% vs baseline (threshold 5%)",
     "isolated_tests": "76 PASS / 0 FAIL (>= 76 prior)",
     "integration_tests": "42 PASS / 0 FAIL (== 42 required)"
   },
-  "visual_confirmation": "Screenshot confirms: pawns with name labels visible, scatter decor throughout world, crop tiles bottom-right, inspector panel right side with Korean text, stove present top-left. Top-right area clean at startup (AlertStackUI present, no raid card at t=0 — correct). 1.04% diff — expected (pure logic/audio additions, no visual sprite change).",
+  "visual_confirmation": "Screenshot confirms: pawns with name labels visible, scatter decor, crop tiles bottom-right, inspector panel right side with Korean text, stove top-left, bottom UI bar intact. 0.61% diff — expected (logic/audio additions, no sprite change).",
   "wiki_acceptance_checked": {
-    "Dim3_11_pawn_facing": "PawnFacing.cs self-attaches via driver scan; flipX=true walking left, flipX=false walking right, holds last idle — WIRED",
-    "Dim6_22_alert_letter_stack": "AlertStackUI.cs top-right persistent card on raid (threatTier>=1); click pans camera toward nearest bandit — WIRED",
-    "M5_26_v4_combat_chain": "V4CombatChainTest.cs 4-step chain: draft->arrow->hp drop->IsDead — TEST ADDED",
-    "Dim2_7_mine_sound": "AudioBank.PlayMine() in StoneVeinEntity.TakeMineDamage(); mine.wav (pick-on-stone) wired via SceneSetup.Game.Audio.cs sfxMine — WIRED"
+    "Dim3_12_sleep_pose_dim": "SleepPoseDriver.cs self-attaches; dims body SpriteRenderer.color to 0.6/0.6/0.66 when IsSleeping; restores on wake — WIRED",
+    "Dim2_5_ui_click_sfx": "GuiControlBar+ArchitectMenu+ResearchUI each PlayClickBlip()->AudioBank.PlaySelect() on every button click — WIRED",
+    "M5_25_v5_food_chain": "V5FoodChainTest.cs 5-step chain: plant->ripen->harvest->cook->eat raises food need — TEST ADDED",
+    "Dim2_9_rain_loop": "AudioBank.PlayRain()/StopRain() + RainSoundDriver polls WeatherController; rain.wav wired via SceneSetup.Game.Audio.cs rainLoop — WIRED"
   }
 }
