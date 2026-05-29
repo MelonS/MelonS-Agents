@@ -55,6 +55,9 @@ namespace MelonS.GameProto.EditorTools
             string[] paths = new[]
             {
                 "Assets/Sprites/pawn_colonist.png",
+                "Assets/Sprites/pawn_blue.png",   // #199 A2 — colonist 0 셔츠 (muted denim blue)
+                "Assets/Sprites/pawn_rust.png",   // #199 A2 — colonist 1 셔츠 (muted rust)
+                "Assets/Sprites/pawn_olive.png",  // #199 A2 — colonist 2 셔츠 (muted olive)
                 "Assets/Sprites/tile_grass.png",
                 "Assets/Sprites/tile_dirt.png",
                 "Assets/Sprites/tile_water.png",
@@ -128,8 +131,23 @@ namespace MelonS.GameProto.EditorTools
             Sprite woodPileSpriteRef = LoadOrSetupSprite("Assets/Sprites/wood_pile.png");
             Sprite stoneChunkSpriteRef = LoadOrSetupSprite("Assets/Sprites/stone_chunk.png");  // #119
             Sprite meatPileSpriteRef = LoadOrSetupSprite("Assets/Sprites/meat_pile.png");      // #129
+            // #199 A2 — per-colonist 셔츠 변형 sprite 3종 (blue/rust/olive).
+            //  ForceImportAllSprites 가 이미 Sprite 타입 + PPU16 으로 import 함.
+            Sprite pawnBlueRef  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/pawn_blue.png");
+            Sprite pawnRustRef  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/pawn_rust.png");
+            Sprite pawnOliveRef = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/pawn_olive.png");
+            if (pawnBlueRef == null)  Debug.LogWarning("[SceneSetup] pawn_blue.png sprite null");
+            if (pawnRustRef == null)  Debug.LogWarning("[SceneSetup] pawn_rust.png sprite null");
+            if (pawnOliveRef == null) Debug.LogWarning("[SceneSetup] pawn_olive.png sprite null");
+
             SerializedObject gmSo = new SerializedObject(gm);
             gmSo.FindProperty("pawnPrefab").objectReferenceValue = pawnPrefab;
+            // colonistVariantSprites 배열 = [blue, rust, olive] (colonist 0/1/2 순서)
+            var variantsProp = gmSo.FindProperty("colonistVariantSprites");
+            variantsProp.arraySize = 3;
+            variantsProp.GetArrayElementAtIndex(0).objectReferenceValue = pawnBlueRef;
+            variantsProp.GetArrayElementAtIndex(1).objectReferenceValue = pawnRustRef;
+            variantsProp.GetArrayElementAtIndex(2).objectReferenceValue = pawnOliveRef;
             gmSo.FindProperty("arrowSpriteRuntime").objectReferenceValue = arrowSpriteRef;
             gmSo.FindProperty("woodPileSpriteRuntime").objectReferenceValue = woodPileSpriteRef;
             gmSo.FindProperty("stoneChunkSpriteRuntime").objectReferenceValue = stoneChunkSpriteRef;

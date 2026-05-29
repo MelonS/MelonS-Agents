@@ -11,6 +11,11 @@ namespace MelonS.GameProto
     {
         [Header("Spawn settings")]
         [SerializeField] private GameObject pawnPrefab;
+        // #199 A2 — per-colonist 셔츠 변형 sprite.  SceneSetup 가 [blue, rust, olive]
+        //  순서로 채움.  colonist i 는 colonistVariantSprites[i] 를 입음 (sr.color=white,
+        //  sprite 자체가 옷색을 담음 → 더 이상 tint multiplier 불필요).  비어있거나
+        //  부족하면 prefab 기본 sprite(pawn_colonist) 유지 (fallback).
+        [SerializeField] private Sprite[] colonistVariantSprites;
         [SerializeField] private Sprite arrowSpriteRuntime;  // Day 50
         [SerializeField] private Sprite woodPileSpriteRuntime;  // #116 - 벌목 후 wood pile drop
         [SerializeField] private Sprite stoneChunkSpriteRuntime;  // #119 - 채광 후 stone chunk drop
@@ -64,10 +69,30 @@ namespace MelonS.GameProto
                 var sr = p.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
+                    // #199 A2 — colonist i 에게 변형 셔츠 sprite 배정.
+                    //  SceneSetup 가 [blue, rust, olive] 채움 → 3 colonist 각각 다른 muted 색.
+                    //  sprite 자체가 옷색을 담으므로 color multiplier 없이 white 로 둠.
+                    //  변형이 없거나 부족하면 prefab 기본 sprite(pawn_colonist) 유지 (fallback).
+                    if (colonistVariantSprites != null &&
+                        i < colonistVariantSprites.Length &&
+                        colonistVariantSprites[i] != null)
+                    {
+                        sr.sprite = colonistVariantSprites[i];
+                    }
+                    else if (colonistVariantSprites != null && colonistVariantSprites.Length > 0)
+                    {
+                        Debug.LogWarning($"[GameManager] colonist[{i}] variant sprite missing — keeping prefab default (pawn_colonist)");
+                    }
+
                     if (sr.sprite == null)
                     {
                         Debug.LogError($"[GameManager] pawn[{i}] SpriteRenderer.sprite NULL — flat-color fallback");
                         sr.color = new Color(0.95f, 0.65f, 0.35f, 1f);
+                    }
+                    else
+                    {
+                        // variant/기본 sprite 가 옷색을 담음 → multiplier 없이 true color.
+                        sr.color = Color.white;
                     }
                     sr.enabled = true;
                 }
@@ -79,17 +104,13 @@ namespace MelonS.GameProto
                         System.Reflection.BindingFlags.NonPublic |
                         System.Reflection.BindingFlags.Instance);
                     if (nameField != null) nameField.SetValue(entity, name);
-                    // P7: 각 pawn 다른 셔츠 tint - 즉시 visible 다양성
-                    Color[] pawnTints = {
-                        new Color(1.00f, 0.95f, 0.90f, 1f),  // pawn 0: 거의 white (default 갈색)
-                        new Color(0.85f, 0.95f, 1.05f, 1f),  // pawn 1: 살짝 푸른빛 (파란 셔츠 느낌)
-                        new Color(0.95f, 1.05f, 0.85f, 1f),  // pawn 2: 살짝 녹색빛 (녹색 셔츠 느낌)
-                    };
-                    Color tint = pawnTints[i % pawnTints.Length];
+                    // #199 A2 — unselectedColor=white 로 강제: idle(미선택/미징집) 시
+                    //  PawnEntity.ApplyVisual 이 sr.color=unselectedColor 로 덮어쓰는데,
+                    //  여기서 white 가 아니면 변형 sprite 의 옷색이 tint 로 더럽혀짐.
+                    //  selected=yellow / drafted=cyan 분기는 그대로 동작.
                     var tintField = typeof(PawnEntity).GetField("unselectedColor",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    if (tintField != null) tintField.SetValue(entity, tint);
-                    if (sr != null) sr.color = tint;
+                    if (tintField != null) tintField.SetValue(entity, Color.white);
                 }
                 // Day 50: arrow sprite injection — PawnUtilityAI 가 ranged
                 //  attack용으로 사용 (단 research "simple_bow" 완료 후 활성).
