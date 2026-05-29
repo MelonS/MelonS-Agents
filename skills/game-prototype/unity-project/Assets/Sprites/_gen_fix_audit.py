@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
 """#194 - 운영자 fb "kenney 매핑이 의미와 안 맞음, 다 검증해 수정해".
 #A1  - palette unified: all colours now imported from palette.py.
+#A4  - floor_wood base darkened to WOOD_MD (was WOOD_LT) so floor reads
+       visually darker than wall (wall base = WOOD_MD; floor was WOOD_LT
+       which made floor LIGHTER — wrong direction).  WOOD_LT now used only
+       for highlight grain dots, keeping same texture language.
+#A8  - crop_rice soil hint row changed from WOOD_MD to DIRT_MD; WOOD_MD on
+       a crop sprite was a palette bleed.  DIRT_MD reads correctly as soil
+       and stays muted under all three runtime tints.
+#A9  - wood_pile / meat_pile / stone_chunk get a 1px semi-transparent drop
+       shadow (bottom + right edge, OUTLINE_OBJ at alpha 120) so the three
+       item-drop sprites share a "loot on the ground" visual class.
 
 sprite audit 결과 부적합 11종 PIL Kenney-style 로 재생성:
   wall_wood, floor_wood, stove, deer, wolf, crop_rice,
@@ -23,6 +33,7 @@ from palette import (
     WOOD_DK, WOOD_MD, WOOD_LT,
     ROCK_DK, ROCK_MD, ROCK_LT,
     GRASS_DK,
+    DIRT_MD,         # A8: soil hint for crop base row
     CROP_GOLD,
     FIRE_OR as FIRE, FIRE_LT,
     MEAT_RED as MEAT,
@@ -40,6 +51,9 @@ STONE_LT = ROCK_LT
 WHEAT    = CROP_GOLD
 WHEAT_DK = (168, 136, 52, 255)   # 25% darker than CROP_GOLD — no palette entry, derived
 LEAF     = (100, 160, 80, 255)   # plant mid — stays near OUTLINE_PLANT range (A5 refactor)
+
+# A9 drop shadow: OUTLINE_OBJ at 50% alpha — unobtrusive, consistent class marker
+SHADOW   = (OUTLINE_OBJ[0], OUTLINE_OBJ[1], OUTLINE_OBJ[2], 120)
 
 # Animal colours — close to old values; animals use OUTLINE_STORY (1px at this res)
 DEER_COLOR = (160, 110, 75, 255)
@@ -84,6 +98,18 @@ def rect_outline(im, x0, y0, x1, y1, c):
     vline(im, x0, y0, y1, c); vline(im, x1, y0, y1, c)
 
 
+def add_drop_shadow(im, outline_pixels):
+    """Paint a 1px shadow 1px below+right of the outline ring.
+    Only writes to fully-transparent pixels so the shadow never
+    overwrites real sprite content.  Uses SHADOW (semi-transparent).
+    """
+    for x, y in outline_pixels:
+        sx, sy = x + 1, y + 1
+        if 0 <= sx < im.width and 0 <= sy < im.height:
+            if im.getpixel((sx, sy))[3] == 0:
+                put(im, sx, sy, SHADOW)
+
+
 # ─── wall_wood 16x16 - wood plank wall (가로 plank 3줄) ───────────
 def gen_wall_wood():
     im = new_img(16, 16)
@@ -108,18 +134,22 @@ def gen_wall_wood():
 
 
 # ─── floor_wood 16x16 - wood plank floor (세로 plank) ────────────
+# A4 fix: base changed WOOD_LT → WOOD_MD so floor is visually darker
+# than the wall (wall base = WOOD_MD; floor now reads as a recessed
+# surface beneath walls, not a brighter platform).
+# WOOD_LT retained only as sparse highlight grain dots.
 def gen_floor_wood():
     im = new_img(16, 16)
-    rect_fill(im, 0, 0, 15, 15, WOOD_LT)
-    # 4 plank dividers (세로)
+    rect_fill(im, 0, 0, 15, 15, WOOD_MD)
+    # vertical plank dividers — WOOD_DK for clear grain separation
     for x in [3, 7, 11]:
         vline(im, x, 0, 15, WOOD_DK)
-    # plank grain
-    put(im, 1, 4, WOOD_MD); put(im, 5, 9, WOOD_MD)
-    put(im, 9, 3, WOOD_MD); put(im, 13, 11, WOOD_MD)
-    # 가장자리 outline (subtle)
-    hline(im, 0, 15, 0, WOOD_MD)
-    hline(im, 0, 15, 15, WOOD_MD)
+    # sparse highlight grain (WOOD_LT) — keeps texture, not dominant
+    put(im, 1, 4, WOOD_LT); put(im, 5, 9, WOOD_LT)
+    put(im, 9, 3, WOOD_LT); put(im, 13, 11, WOOD_LT)
+    # subtle edge (WOOD_DK, not OUTLINE — floor has no story outline)
+    hline(im, 0, 15, 0, WOOD_DK)
+    hline(im, 0, 15, 15, WOOD_DK)
     return im
 
 
@@ -216,7 +246,16 @@ def gen_wolf():
     return im
 
 
-# ─── crop_rice 16x16 - 노란 곡식 (밀 비슷) ───────────────────────
+# ─── crop_rice 16x16 - 곡식 (밀/쌀) ─────────────────────────────
+# CropEntity.cs multiplies this sprite by a runtime color:
+#   growth < 0.33  → SPROUT_COLOR (0.51, 0.78, 0.31) = lime green tint
+#   growth < 0.66  → GROWN_COLOR  (0.32, 0.62, 0.20) = dark green tint
+#   growth >= 0.66 → RIPE_COLOR   (0.85, 0.75, 0.20) = golden tint
+# Design target (A8): growing = muted green; ripe = clearly gold.
+# The sprite is drawn in CROP_GOLD (ripe appearance) so the ripe tint
+# multiplies through accurately.  Green tints pull stems and heads toward
+# muted green.  The soil hint row now uses DIRT_MD (was WOOD_MD — palette
+# bleed; DIRT_MD stays muted across all three tints).
 def gen_crop_rice():
     im = new_img(16, 16)
     # 줄기 (녹색 5줄)
@@ -229,8 +268,8 @@ def gen_crop_rice():
         put(im, sx - 1, top + 1, WHEAT_DK)
         put(im, sx + 1, top + 1, WHEAT_DK)
         put(im, sx, top - 1, WHEAT)
-    # 바닥 갈색 흙 hint
-    hline(im, 0, 15, 15, WOOD_MD)
+    # 바닥 흙 hint — DIRT_MD (was WOOD_MD — wrong material)
+    hline(im, 0, 15, 15, DIRT_MD)
     return im
 
 
@@ -253,6 +292,7 @@ def gen_stone_vein():
 
 
 # ─── stone_chunk 16x16 - 돌멩이 (작은 회색 다각형) ───────────────
+# A9: drop shadow added at bottom+right of outline ring.
 def gen_stone_chunk():
     im = new_img(16, 16)
     chunk_pixels = [
@@ -281,10 +321,13 @@ def gen_stone_chunk():
     ]
     for x, y in outline_pixels:
         put(im, x, y, OUTLINE)
+    # A9: drop shadow
+    add_drop_shadow(im, outline_pixels)
     return im
 
 
 # ─── wood_pile 16x16 - 통나무 더미 (가로 통나무 3개 쌓임) ─────────
+# A9: drop shadow added below the bottom log outline row.
 def gen_wood_pile():
     im = new_img(16, 16)
     for ly, c_main in [(10, WOOD_LT), (7, WOOD_MD), (4, WOOD_LT)]:
@@ -297,10 +340,15 @@ def gen_wood_pile():
         put(im, 2, ly + 1, OUTLINE)
         put(im, 13, ly + 1, OUTLINE)
     hline(im, 2, 13, 13, OUTLINE)
+    # A9: shadow below bottom edge (y=13 outline row) + right side
+    outline_bottom = [(x, 13) for x in range(2, 14)]
+    outline_right  = [(14, y) for y in range(4, 14)]
+    add_drop_shadow(im, outline_bottom + outline_right)
     return im
 
 
 # ─── meat_pile 16x16 - 고기 (불그스름한 raw meat) ────────────────
+# A9: drop shadow added along outline ring.
 def gen_meat_pile():
     im = new_img(16, 16)
     meat_pixels = [
@@ -328,6 +376,8 @@ def gen_meat_pile():
     ]
     for x, y in outline_pixels:
         put(im, x, y, OUTLINE)
+    # A9: drop shadow
+    add_drop_shadow(im, outline_pixels)
     return im
 
 
