@@ -146,7 +146,7 @@ namespace MelonS.GameProto
             if (IsDead) return;
             Hp = Mathf.Max(0, Hp - dmg);
             if (sr != null) { sr.color = Color.white; flashUntil = Time.time + 0.06f; }
-            if (AudioBank.Instance != null) AudioBank.Instance.PlayChop();
+            if (AudioBank.Instance != null) AudioBank.Instance.PlayHit();
             if (Hp <= 0)
             {
                 // 운영자 fb v4 - 림월드 정상 흐름: 즉시 +N 안 함. meat pile 만 drop.

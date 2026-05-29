@@ -206,6 +206,9 @@ namespace MelonS.GameProto
                     }
                 }
             }
+            // W-M2-01 Lane C / wiki Dim2 #1: 벽 등 구조물 완성 시 건설 사운드 1회 재생 (throttled).
+            // PlayBuild() 자체가 AudioBank 에서 throttle 되므로 완성 1회 = 사운드 1회.
+            AudioBank.Instance?.PlayBuild();
             Destroy(gameObject);
         }
     }

@@ -1,7 +1,7 @@
 {
   "system": "GameDev Multi-Agent Orchestration",
   "project": "PawnSim",
-  "updated": "2026-05-30T2",
+  "updated": "2026-05-30T3",
   "protocol": {
     "whiteboard_rule": "모든 서브에이전트는 작업 시작 전 .claude/whiteboard.json 을 읽고, 종료 전 반드시 .claude/wb/<ROLE>.json 에 자신의 상태(Status: Waiting|In Progress|Done)와 산출물 경로를 기록한다. 규칙을 어기고 종료 금지.",
     "parallel_write_note": "JSON 손상 방지: 병렬 에이전트는 공유 whiteboard.json 을 직접 쓰지 않고 각자 .claude/wb/<ROLE>.json 에 기록. PM 이 단일 writer 로 병합해 whiteboard.json 갱신.",
@@ -19,24 +19,28 @@
     "AIDesigner": "FSM/BT 등 AI 로직 설계 + 경로탐색 안전 제약"
   },
   "current_cycle": {
-    "id": "C-004",
+    "id": "C-005",
     "task_ref": ".claude/task.json",
-    "phase": "Build+Art-Implement (parallel)",
-    "title": "M1 wave W-M1-03 — V6 crop-stage WIRING (last unwired v3 feature) + V8 optional vignette overlay",
+    "phase": "Sound+Combat-Implement (parallel)",
+    "title": "M2 wave W-M2-01 — sound coverage push (wiki Dim2 highest impact/effort): sfxBuild + sfxAlert(tier) + ambient bed (AudioBank), wolf-howl + alert wiring (AIDirector), build sound (BlueprintEntity), animal-hit SFX fix (AnimalEntity)",
     "wave": {
-      "id": "W-M1-03",
+      "id": "W-M2-01",
       "lanes_non_overlapping": true,
       "op_gated_excluded": ["work-priority", "mood/mental-break rewrite"],
-      "audit_note": "W-M1-02 (walk-bob RED fix / V6 crop art / V7 inspector) all written; pending QA only. No qa.json RED report on disk. V1/V3/V4/V5/V7 code DONE; V2 scatter fully wired (SpawnScatterDecor in SceneSetup.Game.Scatter.cs). Remaining genuinely-unstarted v3 work = V6 crop-stage WIRING (PNGs+CropEntity logic exist, SceneSetup never assigns the 3 stage refs -> falls back to legacy color-tint) + V8 optional vignette (never started). Both non-gated, non-overlapping files.",
+      "audit_note": "M1 Polish Wave v3 CLOSED: qa.json reports W-M1-03 PASS @333c515 (walk-bob/scatter/flicker/inspector/crop-stage/vignette all GREEN, no RED on disk). Per wiki rimworld-comparison.md Dim2 (사운드 ~30%, 'highest impact-per-effort dimension') + sequencing recco 'run Sound 1-9 first, no operator gate'. This wave takes wiki backlog items #1 (sfxBuild), #2 (sfxAlert tier-scaled), #3 (wire PlayWolfHowl 0-callers), #6 (AnimalEntity PlayChop->PlayHit). 4 non-overlapping files. Cross-lane contract: Lane A (AudioBank.cs) adds new methods PlayBuild()/PlayAlert(int)+ambient; Lanes B/C call them; they land in ONE wave so QA compiles the merged set together. PlayWolfHowl already exists (Lane B partially independent). All non-gated.",
+      "lane_contract": "AudioBank.cs (Lane A) is the SINGLE owner of new sfx slots+methods. Lanes B(AIDirector)/C(BlueprintEntity) CALL AudioBank.Instance.PlayAlert(tier)/PlayBuild()/PlayWolfHowl() but MUST NOT edit AudioBank.cs. Lane D (AnimalEntity) only swaps an existing call. No two lanes touch the same file.",
       "subtasks": [
-        "Lane A (build): V6 crop-stage WIRING. crop_rice_seedling/growing/ripe PNGs + CropEntity.spriteSeedling/Growing/Ripe SerializeField switch logic both EXIST, but SetupStarterSettlement (SceneSetup.Game.Entities.cs, crop block ~L253-274) only assigns crop_rice.png and never wires the 3 stage refs -> RefreshVisual stays on the legacy color-tint fallback. Wire all 3 stage sprites onto each CropEntity via SerializedObject. Single file: SceneSetup.Game.Entities.cs",
-        "Lane B (art): V8 optional subtle vignette overlay. NEW gen (_gen_vignette.py producing a low-alpha radial OUTLINE_OBJ-tone full-screen PNG) + a NEW self-contained overlay builder file (do NOT touch SceneSetup.Game.Entities.cs / SceneSetup.cs core). Barely perceptible; reject-if-muddies. Separate files from Lane A."
+        "Lane A (sound): AudioBank.cs ONLY. Add slots sfxBuild, sfxAlert, sfxAmbient (+placeholder .wav if needed) and methods PlayBuild() (throttled ~0.25s, graceful null no-op), PlayAlert(int tier) (tier-scaled repeat count: tier1=2 / tier3=4 siren beeps, low-throttle so it doesn't spam), and a looping ambient bed on a 2nd AudioSource independent of bgm (start in Awake/Start, low volume). Wiki items #1/#2/#4. Do NOT edit any entity/director file.",
+        "Lane B (ai): AIDirector.cs ONLY. (1) Wire existing AudioBank.Instance.PlayWolfHowl() on the 'wolf_pack' event fire (item #3 — currently 0 callers). (2) Call AudioBank.Instance.PlayAlert(CurrentThreatTier) in SpawnRaid() and on 'wolf_pack'/'large_raid'/'siege_camp'/'infestation' high-threat events (item #2). Null-guard AudioBank.Instance. Do NOT edit AudioBank.cs.",
+        "Lane C (programmer): BlueprintEntity.cs ONLY. Call AudioBank.Instance?.PlayBuild() inside Complete() (L169, after prefab spawn / before Destroy) so a finishing build plays the construct sound once (item #1). Null-guard. Do NOT edit AudioBank.cs.",
+        "Lane D (programmer): AnimalEntity.cs ONLY. Change the animal-hit sound call from PlayChop() to PlayHit() (wiki item #6, AudioBank header flags AnimalEntity ~L149). Single-line semantic fix. Do NOT edit AudioBank.cs."
       ]
     },
-    "in_flight_uncommitted": [
-      "#212 벌목 목재 드롭 위치 + 우선순위 운반 (TreeEntity.cs, WoodPileEntity.cs)",
-      "#211 액션 SFX (AudioBank.cs, Assets/Audio/*.wav)",
-      "하니스 stale-build 맹점 fix (refactor_check.py: --fresh-build/--allow-stale)"
+    "in_flight_uncommitted": [],
+    "closed_this_session": [
+      "M1 Polish Wave v3 — W-M1-01/02/03 all GREEN. qa.json PASS @333c515 build day-c1-w3-2026-05-30: walk-bob (root-undrift), scatter (91 decor), flicker, inspector empty-state, crop-stage 3-sprite wiring, vignette. isolated 76/76 · integration 42/42 · build-click 9/9 · visual-diff 0.59%.",
+      "#212 벌목 목재 드롭 + 우선순위 운반 (committed)",
+      "#211 액션 SFX chop/harvest/hit/select (committed)"
     ],
     "already_done_this_session": [
       "V4 tree 3-cluster canopy (_gen_sprites.py gen_tree) — DONE",
@@ -49,19 +53,22 @@
     ]
   },
   "agents": {
-    "PM":        {"status": "Done", "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"], "notes": "C-004 wave W-M1-03 발행: V6 crop-stage 와이어링(마지막 미배선 v3) + V8 옵션 비네트, 2 병렬 non-overlap 레인. W-M1-02 코드 전부 작성됨(QA 대기), V2 scatter 재감사 결과 완전 배선됨으로 스킵."},
-    "Director":  {"status": "Waiting", "outputs": [], "notes": ""},
+    "PM":        {"status": "Done", "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"], "notes": "C-005 wave W-M2-01 발행: 사운드 커버리지 푸시 (wiki Dim2 최고 impact/effort, 비게이트). 4 non-overlap 레인 — AudioBank(slots+PlayBuild/PlayAlert/ambient) / AIDirector(wolf-howl+alert 와이어링) / BlueprintEntity(빌드 사운드) / AnimalEntity(PlayChop->PlayHit). M1 v3 폴리시는 qa.json PASS@333c515 로 CLOSED."},
+    "Director":  {"status": "Waiting", "outputs": [], "notes": "사운드 tone/feel 최종 승인 — alert siren 이 위협적이되 spam 아닌지, ambient bed 가 bgm 과 안 겹치는지"},
     "Designer":  {"status": "Waiting", "outputs": [], "notes": ""},
-    "AIDesigner":{"status": "Waiting", "outputs": [], "notes": ""},
-    "BuildEngineer":{"status": "Assigned", "outputs": [], "notes": "lane A: V6 crop-stage SerializedObject wiring in SceneSetup.Game.Entities.cs (3 stage refs per CropEntity)"},
-    "Art":       {"status": "Assigned", "outputs": [], "notes": "lane B: V8 optional vignette — new _gen_vignette.py + new overlay builder file (must NOT touch Entities.cs/SceneSetup.cs core)"},
-    "QA":        {"status": "Waiting", "outputs": [], "notes": "W-M1-02 + W-M1-03 합산 Unity 검증: walk-bob 2-frame body moves + nameplate/bars/shadow do NOT bob + root-undrift 10s, V5 flame 2-frame flicker, V7 inspector border+hint, V6 3-stage crop sprites (seedling/growing/ripe distinct, not color-tint), V8 vignette barely-perceptible-or-reject"},
-    "Sound":     {"status": "Waiting", "outputs": [], "notes": ""}
+    "AIDesigner":{"status": "Assigned", "outputs": [], "notes": "lane B: AIDirector.cs — wolf_pack 이벤트에 PlayWolfHowl() 와이어(0-callers fix) + SpawnRaid/high-threat 이벤트에 PlayAlert(tier). AudioBank.cs 무접촉."},
+    "BuildEngineer":{"status": "Waiting", "outputs": [], "notes": ""},
+    "Art":       {"status": "Waiting", "outputs": [], "notes": ""},
+    "Programmer":{"status": "Assigned", "outputs": [], "notes": "lane C: BlueprintEntity.cs Complete()->PlayBuild(); lane D: AnimalEntity PlayChop->PlayHit. 각자 단일 파일, AudioBank.cs 무접촉."},
+    "Sound":     {"status": "Assigned", "outputs": [], "notes": "lane A: AudioBank.cs 단일 — sfxBuild/sfxAlert/sfxAmbient slots + PlayBuild()/PlayAlert(int tier, tier-scaled repeats)/ambient loop on 2nd AudioSource. 다른 레인이 이 메서드를 호출 (cross-lane 계약). 엔티티/디렉터 파일 무접촉."},
+    "QA":        {"status": "Waiting", "outputs": [], "notes": "W-M2-01 합산 Unity 검증: (1) 벽 완성 시 build sound 1회 재생(throttled), (2) raid 이벤트 시 alert siren — tier3 가 tier1 보다 반복 많음, (3) 늑대 스폰/wolf_pack 시 기존 howl 클립 재생(이전 0-callers), (4) 동물 타격 시 thud(PlayHit) 재생-chop 아님, (5) 무이벤트 시 ambient bed 가 bgm 과 별개로 들림. 컴파일: 4 레인 머지 후 cross-lane 메서드(PlayBuild/PlayAlert) 해소 확인. no-regression: isolated>=76, integration==42, build 켜짐."},
+    "Sound2":    {"status": "Waiting", "outputs": [], "notes": ""}
   },
   "log": [
     {"ts": "2026-05-30", "by": "main", "msg": "오케스트레이션 시스템 부트스트랩, C-001 시작"},
     {"ts": "2026-05-30", "by": "PM", "msg": "C-002 wave W-M1-01 발행. M1 living-colony 폴리시 3 레인(walk-bob/flicker/scatter), 파일 레인 비충돌, OP-gated(work-priority/mood) 제외. V3 shadow + V4 tree 는 done 으로 확인, 스킵."},
     {"ts": "2026-05-30", "by": "PM", "msg": "W-M1-01 감사: PawnSpriteBob.cs/FlickerLight.cs/_gen_scatter.py 3종 모두 작성 확인. RED 발견 — PawnSpriteBob 이 child bobGo 에 부착됐는데 Awake 의 GetComponent<PawnMovement>() 가 root(PawnMovement 위치)를 못 찾아 IsMoving 항상 false (walk-bob 미작동, idle-only), MirrorRootTint 도 child 자기 renderer 를 읽어 root tint-anchor 미러 깨짐. C-003 wave W-M1-02 발행: lane A=RED fix, lane B=V6 crop-stage art, lane C=V7 inspector empty-state. 비충돌 파일 레인. V5 flicker/V2 scatter 는 written→QA-verify 대기로 스킵."},
-    {"ts": "2026-05-30", "by": "PM", "msg": "C-004 감사: W-M1-02 3 레인 코드 전부 작성 확인 (PawnSpriteBob movementSource+rootTintRenderer 명시 ref + SceneSetup.Pawn.cs SerializedObject 배선 완료 -> RED 해소; PawnInfoPanel EnsureEmptyState/EnsureBorder 완료; _gen_fix_audit.py crop seedling/growing PNG 3종). disk 에 qa.json RED 리포트 없음 -> FIX 서브태스크 불필요, QA 검증 대기. V2 scatter 재감사: SpawnScatterDecor(SceneSetup.Game.Scatter.cs)가 GenerateGame L159 에서 호출됨 -> 완전 배선 확인, DONE 처리. 남은 진짜 미시작 v3 작업 2건: (1) V6 crop-stage 와이어링 — PNG+CropEntity 로직 존재하나 SetupStarterSettlement 가 3 stage ref 미배선 -> color-tint fallback 잔존. (2) V8 옵션 비네트 미시작. W-M1-03 발행: lane A=crop 와이어링(SceneSetup.Game.Entities.cs 단일), lane B=V8 비네트(신규 gen+신규 빌더, Entities.cs 무접촉). 비충돌, 비게이트. work-priority/mood 게이트 제외 유지."}
+    {"ts": "2026-05-30", "by": "PM", "msg": "C-004 감사: W-M1-02 3 레인 코드 전부 작성 확인 (PawnSpriteBob movementSource+rootTintRenderer 명시 ref + SceneSetup.Pawn.cs SerializedObject 배선 완료 -> RED 해소; PawnInfoPanel EnsureEmptyState/EnsureBorder 완료; _gen_fix_audit.py crop seedling/growing PNG 3종). disk 에 qa.json RED 리포트 없음 -> FIX 서브태스크 불필요, QA 검증 대기. V2 scatter 재감사: SpawnScatterDecor(SceneSetup.Game.Scatter.cs)가 GenerateGame L159 에서 호출됨 -> 완전 배선 확인, DONE 처리. 남은 진짜 미시작 v3 작업 2건: (1) V6 crop-stage 와이어링 — PNG+CropEntity 로직 존재하나 SetupStarterSettlement 가 3 stage ref 미배선 -> color-tint fallback 잔존. (2) V8 옵션 비네트 미시작. W-M1-03 발행: lane A=crop 와이어링(SceneSetup.Game.Entities.cs 단일), lane B=V8 비네트(신규 gen+신규 빌더, Entities.cs 무접촉). 비충돌, 비게이트. work-priority/mood 게이트 제외 유지."},
+    {"ts": "2026-05-30", "by": "PM", "msg": "C-005 감사: qa.json 가 W-M1-03 PASS@333c515 (build day-c1-w3) 보고 — M1 Polish Wave v3 전부 GREEN (walk-bob root-undrift / scatter / flicker / inspector / crop-stage 3-sprite / vignette). disk 에 RED 리포트 없음 -> FIX 불필요, M1 CLOSED. 다음 파동은 wiki rimworld-comparison.md Dim2(사운드 ~30%, '최고 impact-per-effort 차원') + 시퀀싱 권고('Sound 1-9 먼저, 운영자 게이트 없음')에 따라 사운드 커버리지. W-M2-01 발행: 4 non-overlap 레인 — Lane A AudioBank.cs(sfxBuild/sfxAlert/sfxAmbient slots+PlayBuild/PlayAlert(tier)/ambient loop, wiki #1/#2/#4), Lane B AIDirector.cs(PlayWolfHowl 0-callers 와이어 #3 + PlayAlert(tier) raid/wolf_pack #2), Lane C BlueprintEntity.cs(Complete()->PlayBuild() #1), Lane D AnimalEntity.cs(PlayChop->PlayHit #6). cross-lane 계약: AudioBank 가 단일 메서드 owner, B/C 가 호출만(같은 파동에 머지 컴파일). work-priority/mood 게이트 제외 유지."}
   ]
 }

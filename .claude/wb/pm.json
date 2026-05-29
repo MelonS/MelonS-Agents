@@ -1,21 +1,23 @@
 {
   "role": "PM",
   "status": "Done",
-  "cycle": "C-004",
-  "wave": "W-M1-03",
+  "cycle": "C-005",
+  "wave": "W-M2-01",
   "ts": "2026-05-30",
   "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"],
   "audit": {
-    "W-M1-02": "all 3 lanes written, pending QA only (no RED on disk)",
-    "v3_done_code": ["V1 walk-bob (+RED fix)", "V3 shadows", "V4 tree", "V5 flicker", "V7 inspector empty-state"],
-    "v3_done_full": ["V2 scatter (SpawnScatterDecor wired in SceneSetup.Game.Scatter.cs)"],
-    "v3_remaining": ["V6 crop-stage WIRING (SceneSetup never assigns 3 stage refs)", "V8 optional vignette (unstarted)"]
+    "M1_v3": "CLOSED — qa.json PASS @333c515 (build day-c1-w3-2026-05-30). walk-bob/scatter/flicker/inspector/crop-stage/vignette all GREEN. isolated 76/76, integration 42/42, build-click 9/9, visual-diff 0.59%.",
+    "red_on_disk": "none — no FIX subtask needed",
+    "next_driver": "wiki rimworld-comparison.md Dim2 사운드 ~30% (highest impact-per-effort) + sequencing recco 'Sound 1-9 first, no operator gate'"
   },
   "wave_lanes": [
-    {"lane": "A", "role": "game-build-engineer", "label": "v6-crop-stage-wire", "file": "Assets/Editor/SceneSetup.Game.Entities.cs"},
-    {"lane": "B", "role": "game-artist", "label": "v8-vignette-overlay", "file": "new _gen_vignette.py + new overlay builder (NOT Entities.cs)"}
+    {"lane": "A", "role": "game-sound-designer", "label": "audiobank-build-alert-ambient", "file": "Assets/Scripts/AudioBank.cs", "wiki_items": ["#1 sfxBuild", "#2 sfxAlert tier", "#4 ambient bed"]},
+    {"lane": "B", "role": "game-ai-designer", "label": "aidirector-wolf-howl-alert-wire", "file": "Assets/Scripts/AIDirector.cs", "wiki_items": ["#3 PlayWolfHowl 0-callers", "#2 PlayAlert on raid/wolf_pack"]},
+    {"lane": "C", "role": "game-programmer", "label": "blueprint-build-sfx", "file": "Assets/Scripts/BlueprintEntity.cs", "wiki_items": ["#1 sfxBuild call on Complete()"]},
+    {"lane": "D", "role": "game-programmer", "label": "animal-hit-sfx-fix", "file": "Assets/Scripts/AnimalEntity.cs", "wiki_items": ["#6 PlayChop->PlayHit"]}
   ],
   "non_overlapping": true,
+  "cross_lane_contract": "AudioBank.cs (Lane A) is the SOLE owner of new sfx slots+methods (PlayBuild/PlayAlert/ambient). Lanes B/C CALL them, MUST NOT edit AudioBank.cs. PlayWolfHowl already exists (Lane B partly independent). All 4 lanes land in ONE wave -> QA compiles merged set together. Lane D only swaps an existing call.",
   "op_gated_excluded": ["work-priority", "mood/mental-break rewrite"],
-  "notes": "After W-M1-03 lands + QA verifies W-M1-02 backlog, M1 'living colony' v3 polish is effectively complete (V8 optional). Next PM action: gate QA on the accumulated walk-bob/flicker/inspector/crop/vignette set; if GREEN, M1 closes and chain can end."
+  "notes": "Highest impact-per-effort dimension per wiki. Remaining wiki Sound items for future waves: #5 UI-click routing, #7 sfxMine/sfxCook/sfxShoot, #8 dynamic music swap, #9 rain loop. After Sound dimension, sequencing -> build-ops (#15 deconstruct / #16 mine-designation / #17 grow-zone / #18 drag-rect) + #22 alert/letter stack, with verification (#25-#29) running as the gate. Gated (#24 terrain-cost, #30 mood) wait for OP-OK."
 }

@@ -1,0 +1,107 @@
+{
+  "role": "Sound",
+  "cycle": "C-005",
+  "wave": "W-M2-01",
+  "lane": "A",
+  "milestone": "M2-sound",
+  "status": "Done",
+
+  "files_changed": [
+    "skills/game-prototype/unity-project/Assets/Scripts/AudioBank.cs"
+  ],
+
+  "assets_added": [
+    "skills/game-prototype/unity-project/Assets/Audio/build.wav",
+    "skills/game-prototype/unity-project/Assets/Audio/alert.wav",
+    "skills/game-prototype/unity-project/Assets/Audio/ambient.wav",
+    "skills/game-prototype/unity-project/Assets/Audio/_gen_m2_sfx.py"
+  ],
+
+  "slots_added": [
+    {
+      "field": "sfxBuild",
+      "type": "AudioClip",
+      "wav": "build.wav",
+      "description": "Hammer/clink construction finish — wiki #1"
+    },
+    {
+      "field": "sfxAlert",
+      "type": "AudioClip",
+      "wav": "alert.wav",
+      "description": "Alert siren single beep — wiki #2, tier-scaled repeat in PlayAlert(int)"
+    },
+    {
+      "field": "sfxAmbient",
+      "type": "AudioClip",
+      "wav": "ambient.wav",
+      "description": "Outdoor wind/birds ambient bed — wiki #4, loops on ambientSource"
+    }
+  ],
+
+  "methods_added": [
+    {
+      "name": "PlayBuild()",
+      "throttle": "0.25s via _lastBuildTime + BuildInterval",
+      "null_guard": true,
+      "wiki_item": "#1 — wall finishing plays a construct sound once (throttled)",
+      "callers": ["BlueprintEntity.Complete() — Lane C"]
+    },
+    {
+      "name": "PlayAlert(int tier)",
+      "throttle": "3.0s global burst guard via _lastAlertTime + AlertInterval",
+      "tier_scaling": "tier<=1 => 2 beeps, tier==2 => 3 beeps, tier>=3 => 4 beeps",
+      "impl": "StartCoroutine(AlertBurstCoroutine) — staggered 0.35s gap, pitch offsets [1.0, 1.08, 0.96, 1.04] for siren sweep",
+      "null_guard": true,
+      "wiki_item": "#2 — raid event plays alert siren; tier-3 repeats more than tier-1",
+      "callers": ["AIDirector.SpawnRaid() / wolf_pack / high-threat events — Lane B"]
+    },
+    {
+      "name": "ambientSource loop (Start())",
+      "mechanism": "New AudioSource added in Awake(), loop=true, vol=0.18, spatialBlend=0; sfxAmbient assigned + Play() called in Start() if not null",
+      "independence": "Completely separate AudioSource from bgmSource — does NOT replace or share music source",
+      "null_guard": true,
+      "wiki_item": "#4 — continuous ambient layer audible independent of music"
+    }
+  ],
+
+  "cross_lane_contract": {
+    "Lane_B_calls": ["AudioBank.Instance.PlayAlert(tier)", "AudioBank.Instance.PlayWolfHowl()"],
+    "Lane_C_calls": ["AudioBank.Instance?.PlayBuild()"],
+    "Lane_D_fix": "AnimalEntity.TakeDamage PlayChop() -> PlayHit()",
+    "AudioBank_is_single_owner": true
+  },
+
+  "qa_wiring_flags": [
+    {
+      "slot": "sfxBuild",
+      "action": "Scene-side SerializeField assignment required on AudioBank GameObject — drag build.wav into sfxBuild field in Inspector",
+      "consequence_if_missing": "PlayBuild() null-guards gracefully (no crash), but wall-finish sound will be silent"
+    },
+    {
+      "slot": "sfxAlert",
+      "action": "Scene-side SerializeField assignment required — drag alert.wav into sfxAlert field in Inspector",
+      "consequence_if_missing": "PlayAlert() null-guards gracefully, raid siren will be silent"
+    },
+    {
+      "slot": "sfxAmbient",
+      "action": "Scene-side SerializeField assignment required — drag ambient.wav into sfxAmbient field in Inspector",
+      "consequence_if_missing": "ambientSource.Play() skipped in Start(), ambient bed silent; no crash"
+    },
+    {
+      "note": "ambientSource AudioSource is added programmatically in Awake() — no manual GameObject component needed; only the clip slot requires scene assignment"
+    }
+  ],
+
+  "wiki_acceptance_criteria_addressed": [
+    "#1: A wall finishing plays a construct sound once (throttled) — PlayBuild() 0.25s throttle, called from BlueprintEntity.Complete() [Lane C]",
+    "#2: A raid event plays an alert siren; tier-3 repeats more than tier-1 — PlayAlert(int tier) with 2/3/4 beep scaling, 3s burst guard",
+    "#4: With nothing happening, a continuous ambient layer is audible (not the music) — ambientSource loop at vol=0.18 on independent AudioSource"
+  ],
+
+  "throttle_audit": {
+    "PlayBuild": "0.25s — BlueprintEntity.Complete() fires once per wall but batch-completions could stack; safe",
+    "PlayAlert": "3.0s burst guard — raid events may fire multiple triggers in same frame; guards overlap",
+    "ambientSource": "looping, no throttle needed — set-and-forget in Start()",
+    "sfxSource.pitch_reset": "AlertBurstCoroutine resets pitch to 1.0 after each burst to avoid bleeding into other SFX"
+  }
+}

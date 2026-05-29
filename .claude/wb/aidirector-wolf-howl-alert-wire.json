@@ -1,0 +1,52 @@
+{
+  "role": "AIDesigner",
+  "lane": "B",
+  "wave": "W-M2-01",
+  "cycle": "C-005",
+  "milestone": "M3-movement",
+  "status": "Done",
+  "file_edited": "skills/game-prototype/unity-project/Assets/Scripts/AIDirector.cs",
+  "files_NOT_touched": [
+    "skills/game-prototype/unity-project/Assets/Scripts/AudioBank.cs (Lane A owns; only CALLED, not edited)"
+  ],
+  "wiki_acceptance_criteria": [
+    "Dim2 #3 (row 156): 'A wolf spawn plays the existing howl clip (currently 0 callers).' — PlayWolfHowl() now has a caller on the wolf_pack event fire.",
+    "Dim2 #2 (row 155): 'A raid event plays an alert siren; tier-3 repeats more than tier-1.' — PlayAlert(tier) fired from SpawnRaid() (every raid) and from high-threat narrative events, passing the event's threatTier so tier3 repeats more."
+  ],
+  "call_sites_added": [
+    {
+      "method": "SpawnRaid()",
+      "context": "after 'int tier = CurrentThreatTier;', before the banditCount switch (~L131-133)",
+      "call": "AudioBank.Instance?.PlayAlert(tier);",
+      "wiki_item": "#2 — every raid sounds the siren, tier-scaled (CurrentThreatTier)"
+    },
+    {
+      "method": "FireRandomEvent()",
+      "context": "in the post-OnEventFired branch block, immediately after the existing 'if (next.id == \"trader_caravan\") SpawnTrader();' line (~L296+)",
+      "call": "if (next.id == \"wolf_pack\") AudioBank.Instance?.PlayWolfHowl();",
+      "wiki_item": "#3 — wolf_pack event plays the existing howl clip (0-callers fix)"
+    },
+    {
+      "method": "FireRandomEvent()",
+      "context": "directly after the wolf-howl branch in the same block",
+      "call": "if (next.id == \"wolf_pack\" || next.id == \"large_raid\" || next.id == \"siege_camp\" || next.id == \"infestation\") AudioBank.Instance?.PlayAlert(next.threatTier);",
+      "wiki_item": "#2 — high-threat narrative events sound the siren, tier-scaled via next.threatTier"
+    }
+  ],
+  "cross_lane_dependency": {
+    "method": "AudioBank.PlayAlert(int tier)",
+    "owner_lane": "A (AudioBank.cs)",
+    "status": "NEW this same wave — does NOT exist on disk yet; resolves at compile time only after Lane A merges. PlayWolfHowl() already exists today.",
+    "guard": "All calls use AudioBank.Instance?. null-guard (graceful no-op if AudioBank absent)."
+  },
+  "logic_change": "NONE. Sound wiring only — no threat tier, raid scheduling, spawn count, interval, or balance value was modified. No operator gate required.",
+  "no_todo": true,
+  "do_not_run_unity": true,
+  "qa_flags": [
+    "COMPILE: AIDirector.cs references AudioBank.PlayAlert(int) which lands from Lane A this same wave — compile the merged 4-lane set together (PlayWolfHowl already on disk).",
+    "VERIFY #3: wolf_pack event fire -> existing howl clip plays (previously 0 callers).",
+    "VERIFY #2 (raid): SpawnRaid sounds alert siren on every raid, tier3 repeats more than tier1 (PlayAlert(CurrentThreatTier)).",
+    "VERIFY #2 (narrative): wolf_pack/large_raid/siege_camp/infestation events sound alert siren tier-scaled (next.threatTier; tier3 events e.g. large_raid/siege_camp/infestation repeat more than tier2 wolf_pack).",
+    "NO-REGRESSION: trader_caravan -> SpawnTrader branch untouched; raid scheduling/counts/intervals unchanged."
+  ]
+}

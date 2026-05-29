@@ -1,0 +1,31 @@
+{
+  "role": "Programmer (Lane D)",
+  "wave": "W-M2-01",
+  "milestone": "M5-gameplay-verify",
+  "wiki_item": 6,
+  "wiki_acceptance": "Hitting an animal plays the combat thud, not the chop.",
+  "status": "Done",
+  "file": "skills/game-prototype/unity-project/Assets/Scripts/AnimalEntity.cs",
+  "change": {
+    "method": "TakeDamage(int dmg, GameObject source = null)",
+    "line": 149,
+    "before": "if (AudioBank.Instance != null) AudioBank.Instance.PlayChop();",
+    "after": "if (AudioBank.Instance != null) AudioBank.Instance.PlayHit();"
+  },
+  "qa_flag": {
+    "lines_changed": "L149 only (single semantic SFX-call swap PlayChop -> PlayHit)",
+    "non_combat_playchop_altered": false,
+    "playchop_count_in_file_after": 0,
+    "verification": "Only one PlayChop() existed in AnimalEntity.cs and it was inside TakeDamage() (the combat/hit path, per AudioBank header note). No wood-chopping call exists in this file, so none was touched.",
+    "null_guard_throttle_intact": true,
+    "null_guard_note": "Existing 'if (AudioBank.Instance != null)' guard preserved; PlayHit() carries its own throttle in AudioBank (no Lane A dependency — PlayHit already exists today).",
+    "logic_unchanged": "No HP/damage/drop logic modified.",
+    "cross_lane": "None. PlayHit() exists in AudioBank today; no dependency on Lane A new methods."
+  },
+  "rules_compliance": {
+    "edited_only": "AnimalEntity.cs",
+    "audiobank_untouched": true,
+    "unity_run": false,
+    "no_todo": true
+  }
+}

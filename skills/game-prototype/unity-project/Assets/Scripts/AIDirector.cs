@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -129,6 +129,10 @@ namespace MelonS.GameProto
             //   tier 2: 3명
             //   tier 3: 5명 (critical)
             int tier = CurrentThreatTier;
+            // Wiki Dim2 #2 (sound wiring only — no threat/balance change): every raid
+            // sounds the alert siren, tier-scaled (tier3 repeats more than tier1).
+            // PlayAlert(int) lands from Lane A (AudioBank.cs) this same wave; null-guard.
+            AudioBank.Instance?.PlayAlert(tier);
             int banditCount = tier switch { 0 => 1, 1 => 2, 2 => 3, _ => 5 };
             for (int i = 0; i < banditCount; i++) SpawnSingleBandit(i);
         }
@@ -295,6 +299,18 @@ namespace MelonS.GameProto
             Debug.Log($"[AIDirector:{activeStoryteller} T{curTier}] {next.title}: {next.description}");
             // Stretch: trader_caravan event → actual Trader entity spawn
             if (next.id == "trader_caravan") SpawnTrader();
+            // Wiki Dim2 #3 (sound wiring — 0-callers fix): wolf_pack event plays the
+            // existing howl clip.  PlayWolfHowl() exists today; null-guard.
+            if (next.id == "wolf_pack") AudioBank.Instance?.PlayWolfHowl();
+            // Wiki Dim2 #2 (sound wiring): high-threat narrative events sound the
+            // alert siren, tier-scaled via next.threatTier (tier3 events repeat
+            // more than tier1).  PlayAlert(int) lands from Lane A this same wave;
+            // null-guard.  No threat/scheduling/balance change — sound only.
+            if (next.id == "wolf_pack" || next.id == "large_raid"
+                || next.id == "siege_camp" || next.id == "infestation")
+            {
+                AudioBank.Instance?.PlayAlert(next.threatTier);
+            }
         }
 
         private void BuildDefaultPool()
