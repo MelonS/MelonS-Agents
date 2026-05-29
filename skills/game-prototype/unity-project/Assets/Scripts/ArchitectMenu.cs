@@ -55,8 +55,23 @@ namespace MelonS.GameProto
                 (BuildManager.Mode.WallStone, "벽 (석재 5)",   5),  // #127
                 (BuildManager.Mode.Door,      "문 (목재 3)",   3),
             },
+            // W-M4-06 (#21 / W-M4-05 QA flag) — surface the stone/paved floor in the
+            //   Architect catalogue.  The stone floor (BuildManager.Mode.FloorStone,
+            //   hotkey K, paid 석재 1, V59b move-bonus 1.50x > wood 1.30x) already
+            //   EXISTS and is fully functional via the K hotkey; it was only missing
+            //   from this menu (qa.json flags_for_next_wave).  It sits as a SECOND
+            //   buildable inside the EXISTING "Floors (바닥)" flooring category —
+            //   mirroring how WallStone sits alongside Wall under Structure — so both
+            //   floor variants are grouped and NO new category is introduced (no
+            //   collision with Lane A's Furniture entries).  The existing buildable
+            //   onClick wiring in RefreshContent routes every (mode,label,cost) tuple
+            //   through BuildManager.Instance.SetMode, so clicking 석재 바닥 enters
+            //   Mode.FloorStone (CurrentMode == Mode.FloorStone) with ZERO
+            //   click-plumbing change.  Cost 1 = stone, matches BuildManager
+            //   .floorStoneCost.  Mode.FloorStone is used READ-ONLY (not added/edited).
             ["Floors (바닥)"] = new[] {
-                (BuildManager.Mode.Floor, "나무 바닥 (목재 1)", 1),
+                (BuildManager.Mode.Floor,      "나무 바닥 (목재 1)", 1),
+                (BuildManager.Mode.FloorStone, "석재 바닥 (석재 1)", 1),
             },
             ["Furniture (가구)"] = new[] {
                 // #154 - wiki: sleeping spot 0.8x / wood bed 1.0x / fine 1.4x

@@ -1,0 +1,40 @@
+{
+  "role": "Designer (Lane C — stone-floor Architect surfacing)",
+  "cycle": "C-014",
+  "wave": "W-M4-06",
+  "milestone": "M6-ui",
+  "status": "Done",
+  "lane_file_edited": "skills/game-prototype/unity-project/Assets/Scripts/ArchitectMenu.cs",
+  "lane_scope": "ArchitectMenu.cs ONLY — single catalogue-line edit. No other file touched.",
+  "summary": "Surfaced the EXISTING stone/paved floor (BuildManager.Mode.FloorStone, hotkey K, 석재 1, V59b move-bonus 1.50x) in the Architect menu (F8). Added it as a SECOND buildable inside the EXISTING 'Floors (바닥)' flooring category — mirroring exactly how WallStone sits alongside Wall under 'Structure (구조)'. Clicking '석재 바닥 (석재 1)' routes through the existing RefreshContent onClick wiring -> BuildManager.Instance.SetMode(Mode.FloorStone), entering CurrentMode == Mode.FloorStone with ZERO click-plumbing change.",
+  "registration_pattern_mirrored": "Identical to the WallStone-alongside-Wall and the W-M4-05 Lamp (Lighting) catalogue precedent: a (BuildManager.Mode, label, cost) tuple appended to the static Categories dictionary. Same MakeBtn button style, same BtnInactiveBg color, same SetMode/Close routing, same PlayClickBlip audio chokepoint. No new MakeBtn variant, no new onClick path.",
+  "category_decision": "Used the EXISTING 'Floors (바닥)' category (which already holds 'Floor' wood floor) rather than a NEW 'Flooring'/'Materials' category. Rationale: (1) 'Floors (바닥)' already IS the flooring lane category and satisfies the wiki acceptance ('appears under a Flooring/Materials category'); (2) grouping both floor variants together mirrors WallStone-with-Wall; (3) avoids introducing any new category -> ZERO collision risk with Lane A's Furniture (table/chair) entries. No category was added or renamed.",
+  "read_only_facts_verified_from_BuildManager_cs": {
+    "enum_member": "BuildManager.Mode.FloorStone (line 30, exists — NOT added/edited)",
+    "cost": "floorStoneCost = 1 (STONE) — label '석재 바닥 (석재 1)' matches",
+    "hotkey": "K (line 109, unchanged — menu is an ADDITIONAL surface, not a replacement)",
+    "placed_entity": "StoneFloorEntity (FloorEntity subclass, MoveBonus 1.50x) — untouched"
+  },
+  "constraints_honored": [
+    "Mode.FloorStone used READ-ONLY — no new enum member added",
+    "No new buildable created",
+    "BuildManager.cs NOT edited (Lane A owns the only BuildManager touch)",
+    "No table/chair touch (Lane A owns Furniture) — kept entry in Floors, no category collision",
+    "SceneSetup.cs NOT touched (Lane B)",
+    "No test touched (Lane D)",
+    "No entity / generator touched",
+    "Unity NOT run (QA verifies)",
+    "No // TODO left in code"
+  ],
+  "scene_wiring_flags_for_qa": [
+    "NONE required — ArchitectMenu self-bootstraps (GameManager.EnsureInScene -> EnsureInScene attaches to existing Canvas). The new entry uses the existing SetMode click wiring (same as the W-M4-05 Lamp catalogue add, which QA confirmed needed no SceneSetup wiring). No new SerializeField, no prefab, no .meta change."
+  ],
+  "wiki_acceptance": {
+    "dimension": "Dim6 (메뉴 UX/UI) — Architect-menu row; resolves W-M4-05 QA flags_for_next_wave stone-floor item",
+    "binary": "Open Architect menu (F8) -> expand 'Floors (바닥)' -> '석재 바닥 (석재 1)' is listed -> clicking it sets BuildManager.CurrentMode == Mode.FloorStone (and closes the menu). SATISFIED."
+  },
+  "qa_verification_requested": [
+    "build-click QA: confirm clicking the Architect '석재 바닥' entry sets CurrentMode == Mode.FloorStone (mirror the Lamp-entry check from W-M4-05 cy-w3).",
+    "qa screenshot: 'Floors (바닥)' category expanded shows two rows (나무 바닥, 석재 바닥)."
+  ]
+}

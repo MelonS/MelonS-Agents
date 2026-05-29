@@ -1,0 +1,26 @@
+{
+  "role": "BuildEngineer",
+  "cycle": "C-014",
+  "wave": "W-M4-06",
+  "lane": "B",
+  "status": "Done",
+  "task": "scatter ForceImport cleanup #41 — kill '[SceneSetup] missing:' warnings for stone_chunk_small/dead_leaves/pebble_scatter",
+  "files_touched": [
+    "skills/game-prototype/unity-project/Assets/Editor/SceneSetup.cs"
+  ],
+  "files_NOT_touched": [
+    "ScatterVarietyDriver.cs (lane contract)",
+    "_gen_scatter_variety.py (lane contract)",
+    "BuildManager.cs (Lane A)",
+    "ArchitectMenu.cs (Lane C)",
+    "any test (Lane D)",
+    "Assets/Resources/scatter/*.meta (already correct: spriteMode=1, filterMode=Point, PPU=16)"
+  ],
+  "change_summary": "Updated 3 ForceImportAllSprites entries in SceneSetup.cs from dead 'Assets/Sprites/' paths to live 'Assets/Resources/scatter/' paths. The PNGs were already relocated to Assets/Resources/scatter/ by the W-M4-04 Lane B wave; the SceneSetup list was left pointing at the old Sprites/ location, producing 3 '[SceneSetup] missing:' warnings on every scene-regen. The Resources/scatter/ .meta files were already correct (Sprite type, FilterMode Point, PPU 16) — no .meta edits required.",
+  "design_decision": "Updated paths rather than removing entries, because batchmode ForceImport (lesson #1) is still needed even for Resources-folder assets to guarantee the .meta is applied before any LoadAssetAtPath<Sprite>() call during GenerateAll(). Removing the entries would re-introduce the sprite-import-race for these three assets.",
+  "qa_flag": "SCENESET-HOT: SceneSetup.cs ForceImportAllSprites list — the wave's single sanctioned SceneSetup-hot touch. Acceptance: scene-regen produces ZERO '[SceneSetup] missing:' warnings for stone_chunk_small/dead_leaves/pebble_scatter. The 3 decals must still render as real chunk/leaf/pebble sprites (no magenta dots, no missing-sprite warnings in regen log). Resources/scatter/ PNGs and their .meta files are untouched.",
+  "acceptance_criteria": {
+    "zero_missing_warnings": "scene-regen emits ZERO '[SceneSetup] missing:' warnings for stone_chunk_small/dead_leaves/pebble_scatter",
+    "sprites_resolve": "ScatterVarietyDriver still loads 'scatter/stone_chunk_small', 'scatter/dead_leaves', 'scatter/pebble_scatter' via Resources.Load (unchanged); QA screenshot shows no magenta dots"
+  }
+}

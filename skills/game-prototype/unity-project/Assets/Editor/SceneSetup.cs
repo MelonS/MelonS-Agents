@@ -88,9 +88,9 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/crop_rice_seedling.png", // W-M1-02 Art — crop stage 0 (seedling, 16x16)
                 "Assets/Sprites/crop_rice_growing.png",  // W-M1-02 Art — crop stage 1 (growing, 16x16)
                 "Assets/Sprites/vignette.png",           // W-M1-03 Art — V8 optional vignette overlay (512x512)
-                "Assets/Sprites/stone_chunk_small.png",  // W-M4-03 Lane B — scatter variety: small rock chunk (10x8)
-                "Assets/Sprites/dead_leaves.png",         // W-M4-03 Lane B — scatter variety: dead leaf cluster (8x8)
-                "Assets/Sprites/pebble_scatter.png",      // W-M4-03 Lane B — scatter variety: pebble group (10x6)
+                "Assets/Resources/scatter/stone_chunk_small.png",  // W-M4-03 Lane B — scatter variety: small rock chunk (10x8); moved to Resources/scatter/ so ScatterVarietyDriver Resources.Load resolves; QA-FLAG W-M4-06 Lane B
+                "Assets/Resources/scatter/dead_leaves.png",         // W-M4-03 Lane B — scatter variety: dead leaf cluster (8x8); moved to Resources/scatter/; QA-FLAG W-M4-06 Lane B
+                "Assets/Resources/scatter/pebble_scatter.png",      // W-M4-03 Lane B — scatter variety: pebble group (10x6); moved to Resources/scatter/; QA-FLAG W-M4-06 Lane B
                 "Assets/Sprites/stone_floor.png",         // W-M4-05 Lane B — stone/paved floor tile (16x16, PPU 16)
             };
             foreach (var p in paths)

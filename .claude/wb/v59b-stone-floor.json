@@ -1,0 +1,48 @@
+{
+  "role": "BuildEngineer",
+  "lane": "D (V59b stone-floor move-speed companion test)",
+  "cycle": "C-014",
+  "wave": "W-M4-06",
+  "milestone": "M5-gameplay-verify",
+  "status": "Done",
+  "file_created": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V59bStoneFloorTest.cs",
+  "meta_created": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V59bStoneFloorTest.cs.meta",
+  "files_edited": [],
+  "runtime_edits": "none — READ-ONLY from all runtime .cs",
+  "design": {
+    "test_id": "V59b-stone-floor-move-speed",
+    "assertion": "ONE binary PASS: movedC(stone) > movedB(wood) > movedA(bare) over 0.4s window",
+    "branches_used": "OLD fallback branch (UsePathfinding=false default in isolated V-test scenes, same as V59)",
+    "three_lanes": [
+      "Pawn A: bare ground (y=-24), no floor entity, bonus=1.0x",
+      "Pawn B: FloorEntity (y=-26), BoxCollider2D isTrigger 30x1, MoveBonus=1.30x",
+      "Pawn C: StoneFloorEntity IS-A FloorEntity (y=-28), BoxCollider2D isTrigger 30x1, MoveBonus=1.50x"
+    ],
+    "lane_separation_units": 2,
+    "floor_width_units": 30,
+    "rationale_floor_width": "V59 lesson: pawn crosses 1x1 cell in <0.1s at speed 4.6 — spans full travel to keep pawn on bonus for the whole window",
+    "thresholds": {
+      "B_over_A": ">=1.15x (actual 1.30x, 15% margin)",
+      "C_over_B": ">=1.08x (actual 1.15x, 7% margin)",
+      "C_over_A": ">=1.40x (actual 1.50x, 10% margin)"
+    },
+    "sanity_check": "FloorEntity.BonusAt() read at startX+1 on each lane's y after one physics frame, reported in assert message"
+  },
+  "read_only_accessors_used": [
+    "FloorEntity.MoveBonus (public virtual float) -> 1.30x",
+    "StoneFloorEntity.MoveBonus (public override float) -> 1.50x",
+    "FloorEntity.BonusAt(Vector2 pos) (public static float) -> live per-cell measurement",
+    "PawnMovement.SetTarget (public void)",
+    "PawnMovement.WORLD_MIN/MAX (public static Vector2)",
+    "transform.position (public)"
+  ],
+  "flags_for_qa": [
+    "StoneFloorEntity.stoneMoveBonus is [SerializeField] private — MoveBonus public override is sufficient; no gap blocks this test.",
+    "Physics2D.OverlapBoxAll (used by BonusAt) requires that BoxCollider2D.isTrigger=true colliders are registered before the measurement window; test yields one physics frame after spawning floors before the timed window.",
+    "Lane y-separation of 2 units is > 6x the BonusAt OverlapBox radius (0.3f) so adjacent-lane cross-contamination cannot occur.",
+    "UsePathfinding is false by default (same as V59 and all prior isolated V-tests); test does NOT touch PawnMovement.UsePathfinding."
+  ],
+  "wiki_acceptance": "Dim3 terrain-move-cost row + Dim5 V59b: a gated test asserts stone-floor effective move speed (1.50x) > wood-floor (1.30x) > bare ground as ONE PASS line.",
+  "existing_tests_untouched": "TestRunner.cs, V59_FloorMoveSpeed (in TestRunner.cs), V4CombatChainTest.cs, V5FoodChainTest.cs, V8MoveSpeedTest.cs, V15DeconstructRefundTest.cs, V1DraftedTintTest.cs, V2WolfChaseTest.cs, V3ResearchProgressTest.cs, V6BodyPartTest.cs, V7RaidThreatTest.cs, V8ObstaclePathfindTest.cs, V9SaveLoadRoundTripTest.cs — all untouched.",
+  "runtime_files_untouched": "FloorEntity.cs, StoneFloorEntity.cs, PawnMovement.cs, BuildManager.cs, SceneSetup.cs, ArchitectMenu.cs — all untouched."
+}

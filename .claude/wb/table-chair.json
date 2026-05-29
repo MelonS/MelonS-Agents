@@ -1,0 +1,49 @@
+{
+  "role": "game-programmer",
+  "lane": "A",
+  "cycle": "C-014",
+  "wave": "W-M4-06",
+  "wiki_item": "Dim4 #20 — Add table+chair buildable (eat/rec spot)",
+  "acceptance": "table+chair can be built and a pawn uses it to eat",
+  "status": "Done",
+  "summary": "Added a combined table+chair furniture buildable to the M4 catalogue, mirroring the EXISTING Lamp/Stove catalogue entry EXACTLY (new Mode enum entry + cost + free hotkey + ghost/cooldown/placement-validation/place handler) via the proven Lamp/StoneFloor LAZY PROCEDURAL prefab+sprite path, so ZERO SceneSetup edit was needed. New _gen_table_chair.py emits a flat-Kenney 16x16 wood table+stool PNG on WOOD_DK/MD/LT + 1px OUTLINE_OBJ. New TableEntity.cs / ChairEntity.cs are thin passive markers (bed/stove entity pattern) that expose a read-only EatSpotAt/ChairAt probe (mirroring FloorEntity.BonusAt + PawnNeeds.GetBedUnderPawn OverlapBox) so the EXISTING eat path can detect an eat spot under the pawn and grant an 'ate at a table' mood bonus — NO new need, NO new dispatch, NO new pathfinding, NO utility-AI edit.",
+  "files_changed": [
+    "skills/game-prototype/unity-project/Assets/Scripts/BuildManager.cs (edit — Lane A single build-catalogue hot file)",
+    "skills/game-prototype/unity-project/Assets/Sprites/_gen_table_chair.py (new generator)",
+    "skills/game-prototype/unity-project/Assets/Sprites/table_chair.png (new sprite, 16x16)",
+    "skills/game-prototype/unity-project/Assets/Sprites/_preview_table_chair.png (new 8x QA preview)",
+    "skills/game-prototype/unity-project/Assets/Scripts/TableEntity.cs (new entity marker + eat-spot probe)",
+    "skills/game-prototype/unity-project/Assets/Scripts/ChairEntity.cs (new entity marker + comfort probe)"
+  ],
+  "buildmanager_changes": {
+    "enum": "Mode.TableChair appended to enum Mode",
+    "hotkey": "J (free; B/F/G/T/Y/N/R/X/M/P/K/L all taken) — also surface via Architect Furniture (Lane C)",
+    "cost": "tableChairCost = 6 wood (SerializeField, > lamp 4)",
+    "footprint": "1x1 (SizeFor default) — single 1x1 build op, like stove/sleeping-spot",
+    "pays_with": "wood (PaysWithStone default false)",
+    "build_secs": "5s (default non-floor secs in DoTryPlaceAt)",
+    "ghost_sortingOrder": "20 (furniture body, not a floor)",
+    "place_handler": "shared DoTryPlaceAt + BlueprintEntity.Complete generic Instantiate — NO mode-specific handling needed (no quality/material variant)",
+    "occupancy": "TableEntity added to CellOccupied so a second piece cannot stack on it",
+    "prefab_sprite": "EnsureTableChairPrefab/EnsureTableChairSprite + LoadOrBuildTableChairSprite + BuildProceduralTableChairSprite — LAZY PROCEDURAL, mirrors Lamp/StoneFloor exactly. AssetDatabase load in Editor, ALWAYS falls back to a procedural texture so a PLAYER BUILD is never null/magenta. Template carries SpriteRenderer(sortingOrder 5) + 1x1 BoxCollider2D + TableEntity + ChairEntity."
+  },
+  "eat_spot_reuse": "Acceptance #20 'a pawn uses it to eat' is satisfied by REUSING the existing eat path (PawnNeeds.TryEatTick eats in place from the shared stockpile). TableEntity.EatSpotAt(pos) is a read-only OverlapBox probe identical in shape to PawnNeeds.GetBedUnderPawn — a pawn standing on the table+chair cell can be granted an 'ate at a table' mood thought. The entity + probe ship fully self-contained; the SINGLE one-line opt-in lives in PawnNeeds (out of Lane A) and is FLAGGED below.",
+  "bug_firewall_checks": {
+    "#4_audio_buzz": "N/A — no audio loop added; BlueprintEntity.Complete's existing AudioBank.PlayBuild() (throttled) fires once on completion, unchanged.",
+    "#5_GetInstanceID_race": "N/A — no GetInstanceID comparisons.",
+    "#6_OnCollisionEnter_only": "N/A — no collision handlers; detection is OverlapBox polling like existing furniture.",
+    "#7_singleton_subscription_race": "N/A — entities are passive markers; static probes poll via OverlapBox, no OnEnable singleton subscription.",
+    "#8_justSpawned_default_true": "N/A — no spawn-grace field.",
+    "#9_runInBackground_freeze": "N/A — no new WaitForSeconds coroutine or background timer added."
+  },
+  "flags_for_qa": [
+    "SCENE-WIRING / IMPORT: table_chair.png is a NEW sprite. QA must import it like the other catalogue PNGs (lamp.png / stone_floor.png precedent): PPU 16, FilterMode Point, and add it to SceneSetup's ForceImportAllSprites list + a .meta. NOTE: even without the import, BuildManager falls back to BuildProceduralTableChairSprite() so a built game still shows a real table+chair (never magenta) — same robustness guard as Lamp/StoneFloor.",
+    "ARCHITECT FURNITURE ENTRY (Lane C owns ArchitectMenu.cs — do NOT touch from Lane A): register the new buildable under the EXISTING 'Furniture (가구)' category by adding this tuple to that category's array in ArchitectMenu.cs: (BuildManager.Mode.TableChair, \"탁자+의자 (목재 6)\", 6). Mode.TableChair already routes through the existing SetMode/click plumbing with ZERO further change. Do NOT register under Flooring/Materials (Lane C's stone-floor row is separate).",
+    "EAT-SPOT ONE-LINE OPT-IN (PawnNeeds.cs is OUT of Lane A — FLAGGED, not edited): to make 'a pawn uses it to eat' grant the RimWorld 'ate at a table' mood bonus, add a single read-only line inside PawnNeeds.TryEatTick right after a meal is consumed (after each rm.AddMeals/AddFineMeals/AddFood branch, or once at the end of a successful eat): `var tbl = TableEntity.EatSpotAt(transform.position); if (tbl != null) { var th = GetComponent<PawnThoughts>(); if (th != null) th.AddThought(\"식탁에서 식사\", tbl.AteAtTableMoodBonus, tbl.AteAtTableThoughtDur); }`. (PawnThoughts catalog does not yet contain '식탁에서 식사' — the 3-arg AddThought overload accepts an ad-hoc label/offset/dur, so no PawnThoughts.cs Catalog edit is strictly required; QA may optionally add it to the Catalog for the inspector breakdown.) This is the only behavioral wiring; the buildable itself (build + place) is complete and testable without it.",
+    "BUILD-CLICK QA: TableChair is a 1x1 furniture piece on wood cost 6. A build-click test can simulate Mode.TableChair via BuildManager.SetMode + TryPlaceAt(cx,cy) on a free grass/dirt cell exactly like the lamp/stove tests; expect a Blueprint_TableChair, then on completion a placed object with TableEntity + ChairEntity + a 1x1 BoxCollider2D + the table_chair sprite (or procedural fallback)."
+  ],
+  "no_sceneSetup_edit": true,
+  "no_unity_run": true,
+  "no_todo": true,
+  "lane_isolation_respected": "Only BuildManager.cs (build-catalogue hot file) + new _gen_table_chair.py + new table_chair PNG(s) + new TableEntity.cs/ChairEntity.cs touched. Did NOT touch SceneSetup*.cs, ArchitectMenu.cs (Lane C), FloorEntity/StoneFloorEntity/LampEntity, any Designation, SaveLoadManager.cs, any test/asmdef, AudioBank.cs, PawnNeeds.cs, PawnUtilityAI.cs. palette.py imported READ-ONLY."
+}

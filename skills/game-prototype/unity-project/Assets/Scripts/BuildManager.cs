@@ -12,6 +12,7 @@ namespace MelonS.GameProto
     ///   T: 화덕 (목재 10, Day 25 cooking station)
     ///   L: 램프 (목재 4, W-M4-04 #19 standing-lamp / torch — night light pool)
     ///   K: 석재 바닥 (석재 1, W-M4-05 #21 stone/paved floor — higher move bonus than wood)
+    ///   J: 탁자+의자 (목재 6, W-M4-06 #20 table+chair — eat/rec spot)
     /// </summary>
     public class BuildManager : MonoBehaviour
     {
@@ -27,7 +28,14 @@ namespace MelonS.GameProto
         //   sortingOrder 1 ghost, same cooldown/ghost/placement-validation path)
         //   — only the cost resource, sprite, and placed entity (StoneFloorEntity,
         //   a FloorEntity subclass with a higher MoveBonus) differ.
-        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone }
+        // W-M4-06 (#20) - TableChair: a combined table+chair furniture piece (an
+        //   eat/rec spot), paid from WOOD.  Mirrors the EXISTING Stove entry
+        //   EXACTLY (1×1 footprint, wood cost, sortingOrder-5 body + 1×1
+        //   collider, same ghost/cooldown/placement-validation/place path) —
+        //   only the cost, sprite, and placed entity (TableEntity + ChairEntity
+        //   markers, so the existing eat/rest mood path can detect an eat spot
+        //   under the pawn read-only) differ.
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair }
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
         // #182 - placement cooldown: SetMode 후 0.15s 동안 TryPlace skip.
@@ -67,6 +75,19 @@ namespace MelonS.GameProto
         [SerializeField] private Sprite floorStoneSprite;
         private GameObject _floorStonePrefabRuntime;  // cached lazily-built template
         private Sprite     _floorStoneSpriteRuntime;  // cached lazily-built sprite
+        // W-M4-06 (#20) - Table+chair cost.  A simple wood dining spot; RimWorld
+        //   table ≈ 25 wood + stool ≈ small — 목재 6 keeps it cheap/reachable in
+        //   the prototype while clearly costing more than a lamp (4).
+        [SerializeField] private int tableChairCost = 6;
+        // W-M4-06 (#20) - Table+chair prefab + sprite, built LAZILY + PROCEDURALLY
+        //   exactly like the Lamp / StoneFloor entries (the Lane A contract forbids
+        //   a SceneSetup edit, so these stay null and BuildManager self-builds them
+        //   on first use; a later wave can wire real refs via SetRefs with zero
+        //   code change).
+        [SerializeField] private GameObject tableChairPrefab;
+        [SerializeField] private Sprite tableChairSprite;
+        private GameObject _tableChairPrefabRuntime;  // cached lazily-built template
+        private Sprite     _tableChairSpriteRuntime;  // cached lazily-built sprite
         // #154 - bed quality 별 cost (wiki: sleeping spot 0 / wood bed 8 / fine 30).
         //  Fine 은 wiki 가 비싸지만 (60+) 프로토타입에선 30 으로 낮춰 reachable.
         [SerializeField] private int bedSleepingSpotCost = 0;
@@ -107,6 +128,8 @@ namespace MelonS.GameProto
             if (Input.GetKeyDown(KeyCode.L)) SetMode(CurrentMode == Mode.Lamp ? Mode.Off : Mode.Lamp);
             // W-M4-05 (#21) - K = 석재 바닥 (free hotkey; B/F/G/T/Y/N/R/X/M/P/L taken).
             if (Input.GetKeyDown(KeyCode.K)) SetMode(CurrentMode == Mode.FloorStone ? Mode.Off : Mode.FloorStone);
+            // W-M4-06 (#20) - J = 탁자+의자 (free hotkey; B/F/G/T/Y/N/R/X/M/P/L/K taken).
+            if (Input.GetKeyDown(KeyCode.J)) SetMode(CurrentMode == Mode.TableChair ? Mode.Off : Mode.TableChair);
             if (BuildModeActive && Input.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }
             UpdateGhost();
             // #179/#182 - click 처리.  cooldown 으로 SetMode 직후 race 방지.
@@ -174,6 +197,7 @@ namespace MelonS.GameProto
                 Mode.BedFine => bedSprite,  // #154
                 Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
                 Mode.FloorStone => EnsureFloorStoneSprite(),  // W-M4-05 #21
+                Mode.TableChair => EnsureTableChairSprite(),  // W-M4-06 #20
                 _ => wallSprite,
             };
             // 바닥류(목재/석재)는 ghost sortingOrder 1 (지면 위), 나머지 구조물은 20.
@@ -192,6 +216,7 @@ namespace MelonS.GameProto
             Mode.BedFine         => bedFineCost,          // #154 - 30
             Mode.Lamp            => lampCost,             // W-M4-04 #19 - 목재 4
             Mode.FloorStone      => floorStoneCost,       // W-M4-05 #21 - 석재 1
+            Mode.TableChair      => tableChairCost,       // W-M4-06 #20 - 목재 6
             _ => 0,
         };
 
@@ -207,6 +232,7 @@ namespace MelonS.GameProto
             Mode.BedFine         => bedPrefab,  // #154
             Mode.Lamp            => EnsureLampPrefab(),  // W-M4-04 #19
             Mode.FloorStone      => EnsureFloorStonePrefab(),  // W-M4-05 #21
+            Mode.TableChair      => EnsureTableChairPrefab(),  // W-M4-06 #20
             _ => null,
         };
 
@@ -266,6 +292,7 @@ namespace MelonS.GameProto
                 if (h.GetComponent<BerryBushEntity>() != null) return true;
                 if (h.GetComponent<StoveEntity>() != null) return true;
                 if (h.GetComponent<LampEntity>() != null) return true;   // W-M4-04 #19
+                if (h.GetComponent<TableEntity>() != null) return true;  // W-M4-06 #20
                 if (h.GetComponent<BedEntity>() != null) return true;
                 if (h.GetComponent<BlueprintEntity>() != null) return true;  // #118
             }
@@ -414,6 +441,7 @@ namespace MelonS.GameProto
             Mode.BedFine         => "고급 침대",
             Mode.Lamp            => "램프",   // W-M4-04 #19
             Mode.FloorStone      => "석재 바닥",  // W-M4-05 #21
+            Mode.TableChair      => "탁자+의자",  // W-M4-06 #20
             _ => m.ToString(),
         };
 
@@ -431,6 +459,7 @@ namespace MelonS.GameProto
             Mode.BedFine         => bedSprite,
             Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
             Mode.FloorStone => EnsureFloorStoneSprite(),  // W-M4-05 #21
+            Mode.TableChair => EnsureTableChairSprite(),  // W-M4-06 #20
             _ => wallSprite,
         };
 
@@ -732,6 +761,165 @@ namespace MelonS.GameProto
                 Set(i, 0, OUTLINE); Set(i, SIZE - 1, OUTLINE);
                 Set(0, i, OUTLINE); Set(SIZE - 1, i, OUTLINE);
             }
+
+            tex.SetPixels32(px);
+            tex.Apply(updateMipmaps: false);
+
+            return Sprite.Create(
+                tex,
+                new Rect(0, 0, SIZE, SIZE),
+                new Vector2(0.5f, 0.5f),
+                pixelsPerUnit: 16f);
+        }
+
+        // ---------------------------------------------------------------- //
+        //  W-M4-06 (#20) - Table+chair prefab + sprite, built LAZILY in code.//
+        //                                                                    //
+        //  Mirrors the Lamp / StoneFloor lazy-build path EXACTLY (the Lane A //
+        //  contract forbids a SceneSetup edit, so the finished table+chair    //
+        //  prefab + sprite are self-built once on first use):                //
+        //    - the sprite loads from Assets/Sprites/table_chair.png in the    //
+        //      Editor/batchmode via AssetDatabase, and ALWAYS falls back to a //
+        //      procedural table+chair texture so a PLAYER BUILD (AssetDatabase//
+        //      absent, PNG outside Resources/) still shows a real piece       //
+        //      instead of a null/magenta sprite — the trap Lane B fixed for   //
+        //      scatter.                                                       //
+        //    - the prefab is an in-memory template carrying a SpriteRenderer  //
+        //      at sortingOrder 5 (furniture body, like the Stove) + a 1×1     //
+        //      BoxCollider2D + BOTH a TableEntity and a ChairEntity marker so //
+        //      the one build op produces a combined table+chair eat/rec spot. //
+        //                                                                    //
+        //  >>> QA FLAG: table+chair uses BuildManager's lazy procedural       //
+        //      prefab/sprite path — NO SceneSetup prefab wiring was added.    //
+        //      If a future wave prefers a real prefab asset, wire             //
+        //      tableChairPrefab / tableChairSprite via SetRefs and these lazy //
+        //      builders become no-ops.                                        //
+        // ---------------------------------------------------------------- //
+
+        private Sprite EnsureTableChairSprite()
+        {
+            if (tableChairSprite != null) return tableChairSprite;        // wired via SetRefs (future)
+            if (_tableChairSpriteRuntime != null) return _tableChairSpriteRuntime;
+            _tableChairSpriteRuntime = LoadOrBuildTableChairSprite();
+            return _tableChairSpriteRuntime;
+        }
+
+        private GameObject EnsureTableChairPrefab()
+        {
+            if (tableChairPrefab != null) return tableChairPrefab;         // wired via SetRefs (future)
+            if (_tableChairPrefabRuntime != null) return _tableChairPrefabRuntime;
+
+            // In-memory template (NOT a saved .prefab asset — runtime only).
+            //  Mirrors the SceneSetup Stove template: SR sortingOrder 5 (furniture
+            //  body) + 1×1 BoxCollider2D + the entity markers.  Carries BOTH a
+            //  TableEntity (the eat-spot probe) and a ChairEntity (the comfort
+            //  marker) so the single build op yields a combined table+chair.
+            //  Hidden + inactive so it's never seen; Instantiate copies it.
+            var go = new GameObject("TableChairTemplate");
+            go.hideFlags = HideFlags.HideAndDontSave;
+            go.SetActive(false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite       = EnsureTableChairSprite();
+            sr.sortingOrder = 5;                               // same as Stove body
+            var box = go.AddComponent<BoxCollider2D>();
+            box.size = Vector2.one;
+            go.AddComponent<TableEntity>();                    // eat-spot probe + mood bonus
+            go.AddComponent<ChairEntity>();                    // chair comfort marker
+            _tableChairPrefabRuntime = go;
+            return _tableChairPrefabRuntime;
+        }
+
+        /// <summary>
+        /// Load table_chair.png via AssetDatabase (Editor/batchmode) so this
+        /// runtime script needs no UnityEditor reference; ALWAYS falls back to a
+        /// procedural table+chair texture so a player build is never null (same
+        /// guard as the lamp / stone-floor sprites).
+        /// </summary>
+        private static Sprite LoadOrBuildTableChairSprite()
+        {
+#if UNITY_EDITOR
+            var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/table_chair.png");
+            if (sp != null) return sp;
+#endif
+            return BuildProceduralTableChairSprite();
+        }
+
+        /// <summary>
+        /// Build a 16×16 table+chair sprite in code, matching _gen_table_chair.py's
+        /// authored content (a low wood table slab on two legs with a small stool
+        /// tucked to the left, 1px OBJ outline) so it is visually interchangeable
+        /// with table_chair.png.  Guarantees a real piece in a player build with
+        /// zero asset-load dependency (same guard as the lamp / stone-floor procs).
+        /// </summary>
+        private static Sprite BuildProceduralTableChairSprite()
+        {
+            const int SIZE = 16;
+            var tex = new Texture2D(SIZE, SIZE, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode   = TextureWrapMode.Clamp;
+            tex.name       = "TableChair_Proc";
+
+            var px = new Color32[SIZE * SIZE];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color32(0, 0, 0, 0);
+
+            // Palette (mirrors palette.py WOOD_* / OUTLINE_OBJ; RGBA).
+            var WOOD_DK = new Color32(92, 60, 36, 255);
+            var WOOD_MD = new Color32(140, 92, 54, 255);
+            var WOOD_LT = new Color32(188, 138, 88, 255);
+            var OUTLINE = new Color32(40, 30, 22, 255);   // OUTLINE_OBJ
+
+            // Texture y is bottom-up; _gen_table_chair.py uses top-down PIL y.
+            //  Convert each authored (gx, gyTop) to texture row: ty = SIZE-1-gyTop.
+            void Set(int gx, int gyTop, Color32 c)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return;
+                px[ty * SIZE + gx] = c;
+            }
+            bool IsEmpty(int gx, int gyTop)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return false;
+                return px[ty * SIZE + gx].a == 0;
+            }
+            bool IsWood(int gx, int gyTop)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return false;
+                var c = px[ty * SIZE + gx];
+                return (c.r == WOOD_DK.r && c.g == WOOD_DK.g && c.b == WOOD_DK.b)
+                    || (c.r == WOOD_MD.r && c.g == WOOD_MD.g && c.b == WOOD_MD.b)
+                    || (c.r == WOOD_LT.r && c.g == WOOD_LT.g && c.b == WOOD_LT.b);
+            }
+
+            // Table top slab (rows 4-6): WOOD_LT top highlight / WOOD_MD body /
+            //  WOOD_DK under-shadow, spanning x=4..13.
+            for (int x = 4; x <= 13; x++) { Set(x, 4, WOOD_LT); Set(x, 5, WOOD_MD); Set(x, 6, WOOD_DK); }
+
+            // Table legs (rows 7-12) at x=5 and x=12, alternating mid/dark read.
+            for (int y = 7; y <= 12; y++)
+            {
+                Set(5,  y, (y % 2 == 0) ? WOOD_MD : WOOD_DK);
+                Set(12, y, (y % 2 == 0) ? WOOD_MD : WOOD_DK);
+            }
+
+            // Stool / chair tucked left (rows 8-13): 3-wide seat (x=1..3) on a
+            //  single centre leg (x=2).
+            for (int x = 1; x <= 3; x++) { Set(x, 8, WOOD_LT); Set(x, 9, WOOD_MD); }
+            for (int y = 10; y <= 13; y++) Set(2, y, WOOD_DK);
+            Set(2, 10, WOOD_MD);
+
+            // 1px OUTLINE_OBJ on transparent pixels 4-adjacent to wood.  Collect
+            //  first, then write (no self-feed).
+            var outlinePts = new System.Collections.Generic.List<(int, int)>();
+            for (int y = 0; y < SIZE; y++)
+                for (int x = 0; x < SIZE; x++)
+                {
+                    if (!IsEmpty(x, y)) continue;
+                    if (IsWood(x + 1, y) || IsWood(x - 1, y) || IsWood(x, y + 1) || IsWood(x, y - 1))
+                        outlinePts.Add((x, y));
+                }
+            foreach (var (x, y) in outlinePts) Set(x, y, OUTLINE);
 
             tex.SetPixels32(px);
             tex.Apply(updateMipmaps: false);
