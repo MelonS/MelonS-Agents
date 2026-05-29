@@ -1,42 +1,44 @@
 {
   "role": "QA+Integrator",
-  "cycle": "C-009",
-  "wave": "W-M4-01",
+  "cycle": "C-011",
+  "wave": "W-M4-03",
   "status": "PASS",
-  "build_tag": "cx-w5-2026-05-30",
-  "commit_hash": "e250b43",
+  "build_tag": "cy-w1",
+  "commit_hash": "adad6a7",
   "wiring_done": [
-    "None required — all four lanes self-bootstrap via [RuntimeInitializeOnLoadMethod(AfterSceneLoad)]. No SceneSetup hot-file edit was triggered (Lane A spent zero of its SceneSetup budget). glow_fire_pool.png lives in Assets/Sprites with a .meta; NightLightPoolDriver uses a procedural fallback sprite at runtime (no ForceImport needed)."
+    "Lane B (Art): Created .meta files for 3 new scatter sprites (stone_chunk_small.png, dead_leaves.png, pebble_scatter.png) — PPU=16, Point filter, Sprite type, matching established pattern. Added all 3 to ForceImportAllSprites() in SceneSetup.cs (Lesson #1 compliance: ForceImport BEFORE any LoadAssetAtPath). Created ScatterVarietyDriver.cs.meta and _gen_scatter_variety.py.meta / _preview_scatter_variety.png.meta.",
+    "Lane C (BuildEngineer): Created V6BodyPartTest.cs.meta (guid f1e2d3c4b5a6978081f2e3d4c5b6a7b8) — was missing from the lane output.",
+    "Lanes A/D: No SceneSetup wiring required (self-bootstrapping patterns per wb json flags)."
   ],
   "compile_fixes": "None — all files compiled cleanly in Unity batchmode.",
   "makers_verified": [
-    "Lane A (Programmer/wiki #15): DeconstructDesignation.cs (self-bootstrapping manager + DeconstructTarget marker) + PawnBuilder.cs (deconstruct action reusing build/haul pathing wholesale: WorkGiveUp, TryReserveWorkStandPos, DistanceToFootprint, AddWork) + PathGrid.cs (BlockWallCell/ReleaseWallCell named wrappers over existing ref-counted SetStructureBlocked). Designating a built wall -> idle colonist walks to adjacent stand cell, removes structure after ~3s, refunds ~50% material via ResourceManager.AddWood/AddStone, cell reopens via WallEntity.OnDestroy PathGrid ref-count decrement. Zero SceneSetup hot-file budget spent.",
-    "Lane B (BuildEngineer/wiki #28): V8MoveSpeedTest.cs — M5-verify #28 2-step chain: PawnStats.CreateDefault().moveSpeed == 4.6 (PASS), PawnMovement.stats.moveSpeed == 4.6 via reflection (PASS). audit-rimworld-fidelity-2026-05-29.md stale 3.0 references closed.",
-    "Lane C (BuildEngineer/wiki #29): V9SaveLoadRoundTripTest.cs — M5-verify #29 documents 4 serialization gaps (BedQuality/StockpilePriority/TreeSpecies/WallMaterial absent from SaveData). Test expected to FAIL on all four gaps — FLAG for dedicated serialization CODE wave (add BedSave+StockpileSave+WallSave lists + TreeSave.species field to SaveLoadManager.cs).",
-    "Lane D (Art/Dim1 day-night optional): NightLightPoolDriver.cs — self-bootstrapping warm amber radial glow around lit stoves at night, sortingOrder 8 (above ground 0-7, below pawns 9-11), alpha-blend (SrcAlpha/OneMinusSrcAlpha), procedural cosine-falloff sprite (FIRE_LT/FIRE_OR palette). Day: alpha=0. Night: alpha up to 0.42*MaxGlowAlpha. glow_fire_pool.png present in Assets/Sprites (procedural fallback active)."
+    "Lane A (Programmer/wiki #17): GrowZoneDesignation.cs — player-facing grow zone designation (P key + canvas button '경작 (P)'). Drag-rect or click-cell on dirt -> green zone tint marker (sortingOrder 2); idle pawn auto-plants CropEntity via PawnMovement.TryReserveWorkStandPos + ReservationManager. Mutually exclusive with BuildManager/DeconstructDesignation/MineDesignation via read-only SetMode APIs. Zero SceneSetup hot-file budget spent.",
+    "Lane B (Art/M1-Dim1): _gen_scatter_variety.py + stone_chunk_small/dead_leaves/pebble_scatter PNGs (10x8, 8x8, 10x6) + ScatterVarietyDriver.cs. Self-attaching driver (seed 98765 deterministic); clusters stone_chunk_small within 1.5wu of trees; pebble_scatter within 1.8wu of StoneVeins; sortingOrder 1 (recedes below pawns). Sprites confirmed at runtime via fallback path; ForceImport wired by Build Engineer.",
+    "Lane C (BuildEngineer/M5-V6): V6BodyPartTest.cs — body-part damage chain: TakeDamage(10,LeftLeg) -> hp drops -> bleedRate=2.0 -> drain LeftLeg to 0 (non-vital, no death) -> TakeDamage(25,Head) -> head hp=0 -> IsDead=True+IsDowned=True. ONE PASS.",
+    "Lane D (AIDesigner/M5-V2): V2WolfChaseTest.cs — wolf spawned 3.0 units from pawn (inside detectionRadius=5.0); 2s sim; distance closes (start=4.0 -> end=0.90). ONE PASS."
   ],
   "qa_results": {
     "scenes_regen": "PASS",
     "verify_build": "PASS",
-    "qa_screenshot": "PASS — 227KB captured G:/ai/_refactor_current.png",
+    "qa_screenshot": "PASS — 235KB captured G:/ai/_refactor_current.png",
     "runtime_errors": "none",
-    "fresh_build": "PASS — day-cx-w5-2026-05-30 built fresh",
-    "real_qa_30s": "PASS — wood +65 in 30s (7 ResMon snapshots)",
+    "fresh_build": "PASS — _harness-latest built fresh",
+    "real_qa_30s": "PASS — wood +60 in 30s (7 ResMon snapshots, t=0s wood=40 -> t=30s wood=100)",
     "build_click_qa": "PASS — 6 mode chain OVERALL PASS (9/9 cases)",
-    "visual_diff": "PASS — 0.57% vs baseline (threshold 5%)",
-    "isolated_tests": "76 PASS / 0 FAIL (== 76, >= prior 76)",
+    "visual_diff": "PASS — 2.08% vs baseline (threshold 5%)",
+    "isolated_tests": "76 PASS / 0 FAIL (== 76, >= prior 76; new V2+V6 PASS)",
     "integration_tests": "42 PASS / 0 FAIL (== 42 required)"
   },
-  "visual_confirmation": "Screenshot confirms: pawns with name labels, stove/fireplace visible in settlement, inspector panel right-side, resource bar top (목재:40), game world intact. 0.57% diff — expected (fresh scene regen with new self-attaching runtime drivers).",
+  "visual_confirmation": "Screenshot confirms: pawns (지훈/민지) with name labels, settlement wall/stove intact, inspector panel right-side (empty state), resource bar top (목재:40 식량:2 식량:10), game world intact. 2.08% diff — expected (new decal scatter + grow zone button added at runtime).",
   "wiki_acceptance_checked": {
-    "M4_15_deconstruct": "DeconstructDesignation.cs + PawnBuilder deconstruct action + PathGrid BlockWallCell/ReleaseWallCell — SHIPPED. Designating built wall -> colonist removes, refunds ~50%, cell walkable.",
-    "M5_28_movespeed_reconcile": "V8MoveSpeedTest.cs 2-step chain PawnStats.moveSpeed==4.6 PASS; audit.md stale 3.0 refs closed — TEST ADDED + DOC UPDATED",
-    "M5_29_saveload_roundtrip": "V9SaveLoadRoundTripTest.cs documents 4 GAPs (BedQuality/StockpilePriority/TreeSpecies/WallMaterial) — VERIFY-ONLY: gaps flagged for serialization CODE wave",
-    "Dim1_night_light_pools": "NightLightPoolDriver.cs warm glow around lit stoves at night, sortingOrder 8 below pawns, alpha-blend, procedural sprite fallback — WIRED (self-bootstrapping)"
+    "M4_17_grow_zone": "GrowZoneDesignation.cs: painting grow zone on dirt -> green tint marker -> idle colonist auto-plants CropEntity -> crop grows + is harvestable. SHIPPED.",
+    "M1_Dim1_scatter_variety": "3 new decal sprites (chunk/leaf/pebble) + ScatterVarietyDriver.cs self-attaching, clustered near trees/veins, sortingOrder 1 (recedes). SHIPPED.",
+    "M5_V6_bodypart": "V6BodyPartTest.cs 5-step chain (init/hp-drop/bleed/non-vital-zero/death) ONE PASS. isolated[OK] V6-body-parts confirmed.",
+    "M5_V2_wolf_chase": "V2WolfChaseTest.cs: wolf closes distance from 4.0 to 0.90 in 2s sim. ONE PASS. isolated[OK] V2-wolf-chase confirmed."
   },
   "flags_for_next_wave": [
-    "V9 serialization gaps: BedQuality/StockpilePriority/TreeSpecies/WallMaterial absent from SaveData — dedicated serialization CODE wave required before #29 can PASS (add BedSave+StockpileSave+WallSave+species to SaveLoadManager.cs and entity serializers).",
-    "glow_fire_pool.png lives in Assets/Sprites (not Resources/). NightLightPoolDriver uses procedural fallback. If operator wants the authored PNG active, move to Assets/Resources/ and remove _spriteFailed=true in LoadGlowSprite().",
-    "Deconstruct toggle button ('해체 (X)') self-attaches to Canvas at runtime (bottom-center-left, x=-360, y=104). If operator prefers it routed through GuiControlBar strip, queue a follow-up GuiControlBar.cs edit (outside lane A's owned files)."
+    "ScatterVarietyDriver uses Resources.Load<Sprite>() which returns null for sprites outside a Resources/ folder; falls back to procedural magenta dot sprite at runtime in built game. PNGs must be in Assets/Resources/ for Resources.Load to resolve, or the driver needs to use a different loading strategy (AssetBundle, Addressables, or pre-wired SerializeField). At batchmode test scale the fallback dot doesn't break QA, but operator may see magenta decals in day-N build unless sprites are moved or a Resources/ redirect is configured.",
+    "Grow zone button ('경작 (P)') self-attaches to Canvas at runtime (bottom-center, x=+462, y=104). If operator prefers it in the GuiControlBar strip, a GuiControlBar.cs edit is required (future wave).",
+    "IsPlantableCell accepts any non-water/non-rock walkable ground — not restricted to a specific dirt tile. If RimWorld-strict soil gating is wanted, add DirtTile static ref to TilemapStaticRefInit (flagged, not done per lane A contract)."
   ]
 }
