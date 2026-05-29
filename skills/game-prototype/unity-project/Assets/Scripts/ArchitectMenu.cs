@@ -64,6 +64,23 @@ namespace MelonS.GameProto
                 (BuildManager.Mode.Fence,     "울타리 (목재 1)",     1),
                 (BuildManager.Mode.FenceGate, "울타리 문 (목재 1)",  1),
             },
+            // W-M6-03 (B4) — Security (방어) category, the vanilla Architect
+            //   Security tab.  Mirrors EXACTLY how the Fence rows were added under
+            //   Structure: a (mode,label,cost) tuple whose onClick is routed by the
+            //   EXISTING buildable wiring in RefreshContent through
+            //   BuildManager.Instance.SetMode — so clicking 바리케이드 enters
+            //   Mode.Barricade with ZERO click-plumbing change.  Cost 5 = wood,
+            //   matches BuildManager.barricadeCost.  UNLIKE the passable fence, the
+            //   placed BarricadeEntity blocks pathing like a low wall (pawns detour
+            //   around it).  A dedicated Security category keeps defensive
+            //   structures out of the Structure grouping and leaves room for future
+            //   defensive types — and is the row B4 acceptance ("buildable from
+            //   Architect Security category").  NO cover-math (gated).  The barricade
+            //   has NO hotkey (surfaced HERE ONLY, like the fence-gate) to avoid the
+            //   contended key space (B/F/G/T/Y/N/R/X/M/P/K/J/H/L/E + WASD camera).
+            ["Security (방어)"] = new[] {
+                (BuildManager.Mode.Barricade, "바리케이드 (목재 5)", 5),
+            },
             // W-M4-06 (#21 / W-M4-05 QA flag) — surface the stone/paved floor in the
             //   Architect catalogue.  The stone floor (BuildManager.Mode.FloorStone,
             //   hotkey K, paid 석재 1, V59b move-bonus 1.50x > wood 1.30x) already

@@ -1,0 +1,53 @@
+{
+  "role": "game-programmer",
+  "wave": "W-M6-03",
+  "subtask": "B4",
+  "item": "Barricade/sandbag buildable (wiki rimworld-comparison-v2.md row B4)",
+  "status": "Done",
+  "milestone": "M4-building",
+  "lane": "the SINGLE BuildManager.cs build-catalogue lane this wave",
+  "summary": "Added Mode.Barricade to the BuildManager lazy-procedural-prefab catalogue (mirrors Fence/Lamp/StoneFloor/TableChair EXACTLY), a NEW BarricadeEntity that — UNLIKE the passable Fence — BLOCKS PATHING like a low wall by reusing the EXISTING wall pathing-block API READ-ONLY, a NEW dedicated _gen_barricade.py generator + barricade.png, and a NEW Architect 'Security (방어)' category row. NO cover-math (gated). NO SceneSetup edit (lazy procedural fallback). NO Unity run (QA verifies).",
+  "files_owned": [
+    "skills/game-prototype/unity-project/Assets/Scripts/BuildManager.cs (EDIT — Mode.Barricade enum + barricadeCost(5) + barricade prefab/sprite SerializeFields + cached runtime fields + SetMode ghost case + CostFor + PrefabFor + SpriteForCurrentMode + ModeKr + CellOccupied BarricadeEntity guard + lazy EnsureBarricadeSprite/EnsureBarricadePrefab + LoadOrBuildBarricadeSprite + BuildProceduralBarricadeSprite section)",
+    "skills/game-prototype/unity-project/Assets/Scripts/BarricadeEntity.cs (NEW — low barrier, sortingOrder 2, IsPassable=>false; Start: PathGrid.WorldToCell + PawnMovement.RegisterWallCell + EjectPawnsFromCell; OnDestroy: PawnMovement.Grid.SetStructureBlocked(cell,false) — mirrors WallEntity line-for-line)",
+    "skills/game-prototype/unity-project/Assets/Sprites/_gen_barricade.py (NEW — sandbag generator, palette.py READ-ONLY import: DIRT_DK/MD/LT + WOOD_DK tie strap + OUTLINE_OBJ)",
+    "skills/game-prototype/unity-project/Assets/Sprites/barricade.png (NEW — 16x16, two staggered sandbag rows in lower half, low read)",
+    "skills/game-prototype/unity-project/Assets/Sprites/_preview_barricade.png (NEW — 8x QA preview)",
+    "skills/game-prototype/unity-project/Assets/Scripts/ArchitectMenu.cs (EDIT — NEW 'Security (방어)' category row: (Mode.Barricade, 바리케이드 (목재 5), 5) — mirrors how Fence rows were added under Structure; routed by existing RefreshContent onClick wiring with ZERO click-plumbing change)"
+  ],
+  "design_decisions": {
+    "cost": "목재 5 (vanilla-plausible; > fence 1, ~ wood wall 5)",
+    "hotkey": "NONE — surfaced via Architect 'Security (방어)' category ONLY, mirroring the fence-gate precedent, to avoid the contended key space (B/F/G/T/Y/N/R/X/M/P/K/J/H/L/E + WASD camera). Hotkey was not required (task allowed 'or surface via Architect only').",
+    "pathing": "BLOCKS pathing like a low wall. BarricadeEntity reuses the EXISTING wall pathing-block API READ-ONLY (PawnMovement.RegisterWallCell -> PathGrid.SetStructureBlocked(cell,true) in Start; SetStructureBlocked(cell,false) in OnDestroy; EjectPawnsFromCell on build). NO new pathfinding invented. This is the DELIBERATE inverse of FenceEntity (which is passable, no collider, no PathGrid registration).",
+    "sortingOrder": "2 — LOW barrier read (above floors @1, below furniture/walls @5+), same as fence.",
+    "collider": "1x1 BoxCollider2D on the prefab so CellOccupied's OverlapBox detects it (no stacking / no blueprint-on-top), same as WallEntity. Pathing block is via PathGrid, not the collider.",
+    "no_cover_math": "Confirmed NONE. Barricade is visual + pathing only (cover-math is gated/over-scope). A future cover wave can add accuracy math without touching BarricadeEntity."
+  },
+  "bug_firewall": "No baked-in lesson re-introduced. No audio loop, no GetInstanceID compare, no OnCollisionEnter-only handler, no Singleton OnEnable subscribe, no justSpawned default-true, no new always-on background timer. BarricadeEntity registers the PathGrid cell in Start (NOT Awake) so the grid built in TilemapStaticRefInit.Awake exists — same correctness guard WallEntity uses.",
+  "flags_for_qa": [
+    "SCENE-WIRING (prefab): barricade uses BuildManager's LAZY procedural prefab/sprite path (EnsureBarricadePrefab/EnsureBarricadeSprite) — NO SceneSetup prefab wiring added (lane forbids SceneSetup hot-file edits). Build never produces null/magenta even without an import. A future wave may wire barricadePrefab/barricadeSprite via SetRefs (lazy builders then no-op).",
+    "SCENE-WIRING (Architect category): NEW 'Security (방어)' category added to ArchitectMenu.Categories with the 바리케이드 row. Routed by existing RefreshContent onClick wiring (BuildManager.Instance.SetMode) — no new plumbing. QA: verify the category appears in the F8 Architect menu and the row enters Mode.Barricade.",
+    "SCENE-WIRING (ForceImport, OPTIONAL): Assets/Sprites/barricade.png is NOT added to SceneSetup.ForceImportAllSprites (SceneSetup.cs is a forbidden hot file this lane). The procedural fallback (BuildProceduralBarricadeSprite) guarantees a real barricade even without the import, so this is OPTIONAL polish — a future wave can add 'barricade.png' to the ForceImport list to use the authored PNG over the procedural one. NOT a blocker."
+  ],
+  "acceptance": "BINARY (wiki B4): a barricade is buildable from Architect (Security category) AND pawns path AROUND it like a low wall (a pawn walking from one side to the other detours rather than passing straight through). Met: ArchitectMenu 'Security (방어)' -> 바리케이드 enters Mode.Barricade -> blueprint -> BarricadeEntity registers its PathGrid cell as blocked (same API as WallEntity) -> AStar routes around it.",
+  "lane_compliance": {
+    "edited_BuildManager": true,
+    "new_BarricadeEntity": true,
+    "new_generator_and_png": true,
+    "edited_ArchitectMenu": "YES — the catalogue-surfacing partner to BuildManager.cs (required by task: 'route into a NEW Architect Security category, mirror how Structure category was added for Fence'). ArchitectMenu.cs is NOT a SceneSetup hot file and NOT a W-M6-01/W-M6-02 in-flight file; the W-M6-02 B3 fence work edited it the same way. FLAGGED for QA above.",
+    "no_AudioBank_edit": true,
+    "no_SceneSetup_hot_edit": true,
+    "no_cover_math": true,
+    "no_forbidden_inflight_file_touched": true,
+    "no_unity_run": true
+  },
+  "verification_done": [
+    "_gen_barricade.py ast.parse OK",
+    "barricade.png 16x16 RGBA, opaque pixels y=6..14 (lower half -> LOW read confirmed)",
+    "BuildManager.cs braces balanced 148/148",
+    "BarricadeEntity.cs braces balanced 4/4",
+    "ArchitectMenu.cs braces balanced 28/28",
+    "wall pathing-block API signatures confirmed READ-ONLY: PawnMovement.RegisterWallCell(Vector2), PawnMovement.EjectPawnsFromCell(Vector2), PawnMovement.Grid.SetStructureBlocked(Vector2Int,bool), AI.PathGrid.WorldToCell(Vector2)",
+    "all BuildManager Mode switches have _ => default (new enum value safe)"
+  ]
+}

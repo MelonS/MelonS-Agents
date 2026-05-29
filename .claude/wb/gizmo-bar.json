@@ -1,0 +1,56 @@
+{
+  "role": "game-programmer",
+  "lane": "B2",
+  "task": "M6 gizmo command bar on selection (SelectionGizmoBar.cs)",
+  "wave": "W-M6-03",
+  "milestone": "M6-ui",
+  "wiki_row": "B2 (rimworld-comparison-v2.md) — InspectGizmoGrid: bottom-center contextual command buttons for the selected thing",
+  "status": "Done",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/SelectionGizmoBar.cs"
+  ],
+  "new_file_only": true,
+  "files_edited": [],
+  "lane_compliance": {
+    "edited_ClickSelector": false,
+    "edited_MarqueeSelector": false,
+    "edited_BuildManager": false,
+    "edited_UITheme": false,
+    "edited_SceneSetup": false,
+    "edited_any_test": false,
+    "edited_any_WM601_WM602_inflight_file": false,
+    "note": "ONLY a new SelectionGizmoBar.cs was added. All reads are READ-ONLY. (BuildManager.cs M + BarricadeEntity.cs in git status belong to the parallel B4 lane, NOT this lane.)"
+  },
+  "design": {
+    "bootstrap": "[RuntimeInitializeOnLoadMethod(AfterSceneLoad)] -> hidden DontDestroyOnLoad GO '~SelectionGizmoBar' + FindFirstObjectByType idempotency guard, EXACTLY like AlertStackUI/HotkeyCheatSheet.",
+    "own_canvas": "Own ScreenSpaceOverlay Canvas (sortingOrder 200, below HotkeyCheatSheet 250), bottom-center anchored bordered frame. Does NOT touch GuiControlBar/ArchitectMenu/any existing UI hierarchy.",
+    "ui_style": "UITheme.MakeBorderedPanel (Divider 2px border + PanelBg fill), UITheme.LoadKoreanFont, AccentGold count label, BtnInactiveBg/BtnActiveBg(AccentOrange) draft states, TextDark/TextPrimary label, Divider Outline per button.",
+    "selection_read": "READ-ONLY poll each frame (singleton-subscriber pattern, NOT OnEnable subscribe): MarqueeSelector.CurrentMultiSelection / .HasMultiSelection FIRST, else ClickSelector.CurrentSelection. Skips dead pawns.",
+    "draft_command": "Draft/Undraft button calls PawnEntity.SetDrafted(!IsDrafted) — the EXACT same public API ClickSelector's R-key uses (ClickSelector.Update line ~59). Multi-select applies the first pawn's target state to all selected. NO new draft behavior.",
+    "cancel_command": "Cancel/Deselect button calls PawnEntity.SetSelected(false) on selected pawns (same minimal read-only clear MarqueeSelector uses) then hides bar; selectors re-evaluate on next click.",
+    "hide_when_empty": "Update hides the bar (SetActive(false)) whenever the collected selection is empty.",
+    "click_sfx": "Single AudioBank.PlaySelect() on discrete user click (matches GuiControlBar), read-only, skipped if AudioBank absent. NOT per-frame (no tight-loop audio)."
+  },
+  "bug_pattern_firewall": {
+    "#4_audio_buzz": "PlaySelect fires only on a discrete onClick, never per-frame / never in a loop.",
+    "#5_GetInstanceID": "no GetInstanceID compares.",
+    "#6_OnCollisionEnter": "no collision handlers.",
+    "#7_singleton_subscription_race": "selectors + AudioBank are POLLED/lazy-found in Update, never subscribed in OnEnable.",
+    "#8_justSpawned_default": "no spawn-grace field.",
+    "#9_runInBackground": "NO coroutine, NO WaitForSeconds, NO always-on background timer/heartbeat. Refresh is frame-driven Update (shares AutoScreenshotter runInBackground path under qa.py). No new background-only timer introduced."
+  },
+  "no_per_frame_alloc": "Reusable List<PawnEntity> selectionBuf — no new List<> in Update.",
+  "no_todo": true,
+  "wiki_acceptance_binary": {
+    "selecting_a_pawn_shows_draft_button": "YES — single ClickSelector pawn (or marquee list) makes the bar visible with a Draft button.",
+    "clicking_drafts_same_as_R_key": "YES — calls PawnEntity.SetDrafted, identical to ClickSelector R-key path.",
+    "deselecting_hides_bar": "YES — Cancel button + empty-selection poll both SetActive(false)."
+  },
+  "flags_for_qa": [
+    "FLAG (Canvas bootstrap): SelectionGizmoBar self-bootstraps its OWN bottom-center ScreenSpaceOverlay Canvas (sortingOrder 200) via RuntimeInitializeOnLoadMethod(AfterSceneLoad) + DontDestroyOnLoad, mirroring AlertStackUI/HotkeyCheatSheet. QA should confirm exactly ONE '~SelectionGizmoBar' GO exists (idempotency guard) and the bar does not visually collide with GuiControlBar / the H cheat-sheet overlay at the bottom-center.",
+    "FLAG (selection accessors): both read accessors EXIST and were used READ-ONLY (no edit needed) — ClickSelector.CurrentSelection (PawnEntity) and MarqueeSelector.CurrentMultiSelection (IReadOnlyList<PawnEntity>) + .HasMultiSelection. NO missing accessor; nothing had to be added to ClickSelector/MarqueeSelector.",
+    "FLAG (draft accessor): PawnEntity.SetDrafted(bool) + IsDrafted EXIST and are the same API the R-key uses — invoked READ-ONLY, NO PawnEntity edit. NO missing accessor.",
+    "VERIFY: marquee-vs-single precedence — when MarqueeSelector.HasMultiSelection is true the bar reflects the marquee list; otherwise the single ClickSelector pawn. Confirm a single left-click pawn (no drag) shows the bar with the correct pawn name/draft state.",
+    "VERIFY: clicking Draft with a multi-selection drafts ALL selected pawns to the first pawn's target state (same as R-key applied to each)."
+  ]
+}

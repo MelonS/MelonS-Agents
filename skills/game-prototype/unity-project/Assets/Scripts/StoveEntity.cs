@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace MelonS.GameProto
 {
@@ -26,6 +26,7 @@ namespace MelonS.GameProto
             if (fineMeal) ResourceManager.Instance.AddFineMeals(+1);
             else ResourceManager.Instance.AddMeals(+1);
             MealsAvailable++;
+            AudioBank.Instance?.PlayCook();  // wiki B9: cook tick/complete SFX
             return true;
         }
     }

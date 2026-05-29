@@ -55,6 +55,17 @@ namespace MelonS.GameProto
     ///                       SwapAmbientToNight(). FootstepDriver polls GameClock.DayProgress
     ///                       and calls the swap on day/night boundary transitions.
     ///
+    /// M6 sound-coverage push (wiki B9, W-M6-03 B9 lane):
+    ///   door.wav   — soft door creak/thud, ~0.18s (wiki B9: opening a door plays a
+    ///                distinct sound). Played via PlayDoor(); 0.15s throttle (DoorInterval).
+    ///                DoorEntity.NotifyPassing() calls AudioBank.Instance?.PlayDoor().
+    ///   cook.wav   — sizzle/clatter cooking sound, ~0.30s (wiki B9: cooking at a stove
+    ///                plays a distinct sound). Played via PlayCook(); 0.5s throttle
+    ///                (CookInterval). StoveEntity.CookOne() calls AudioBank.Instance?.PlayCook().
+    ///   shoot.wav  — bow-twang arrow-launch, ~0.15s (wiki B9: firing an arrow plays a
+    ///                distinct sound). Played via PlayShoot(); no throttle (ShootInterval=0).
+    ///                ArrowProjectile.SpawnArrow() calls AudioBank.Instance?.PlayShoot().
+    ///
     /// Throttle discipline (Lesson #4, 2026-05-27 PawnSim chop-buzz):
     ///   PlayChop()        — 0.25s min-interval.  PawnChopper.Update() calls
     ///                       TakeChopDamage every frame; without throttle = 60
@@ -95,6 +106,16 @@ namespace MelonS.GameProto
     ///                       is state-machine driven (only fires on day/night boundary).
     ///                       Idempotency: _isNightAmbient flag prevents clip-restart if
     ///                       already in the correct ambient state.
+    ///   PlayDoor()        — 0.15s (DoorInterval). DoorEntity.NotifyPassing() fires
+    ///                       once per pawn pass-through; 0.15s guards the brief window
+    ///                       where a pawn's enter+exit might both fire in one frame.
+    ///   PlayCook()        — 0.5s (CookInterval). PawnCook.Update() calls
+    ///                       StoveEntity.CookOne() at cookInterval=1.5s, so 0.5s bank
+    ///                       guard is well within normal use but blocks sub-frame bursts
+    ///                       if two pawns share a stove simultaneously.
+    ///   PlayShoot()       — 0.0s (no throttle). ArrowProjectile.SpawnArrow() fires
+    ///                       once per bow-draw cycle -- each arrow is a distinct event,
+    ///                       not a tight loop. No throttle needed.
     ///
     /// PROGRAMMER ACTIONS FLAGGED (Sound Designer lane -- do not edit entities):
     ///   1. TreeEntity.cs:84  -- PlayChop() called from inside TakeChopDamage()
@@ -133,6 +154,15 @@ namespace MelonS.GameProto
     ///      SwapAmbientToNight() / SwapAmbientToDay() on day/night transitions.
     ///      Without this wire, the ambient bed stays on the day clip indefinitely
     ///      (graceful null no-op -- no crash, just no night variation).
+    ///  11. sfxDoor slot requires scene-side Inspector assignment on the AudioBank GO.
+    ///      QA FLAG: assign door.wav to sfxDoor. DoorEntity.NotifyPassing() calls
+    ///      AudioBank.Instance?.PlayDoor(). Without wire: graceful null no-op.
+    ///  12. sfxCook slot requires scene-side Inspector assignment on the AudioBank GO.
+    ///      QA FLAG: assign cook.wav to sfxCook. StoveEntity.CookOne() calls
+    ///      AudioBank.Instance?.PlayCook(). Without wire: graceful null no-op.
+    ///  13. sfxShoot slot requires scene-side Inspector assignment on the AudioBank GO.
+    ///      QA FLAG: assign shoot.wav to sfxShoot. ArrowProjectile.SpawnArrow() calls
+    ///      AudioBank.Instance?.PlayShoot(). Without wire: graceful null no-op.
     /// </summary>
     public class AudioBank : MonoBehaviour
     {
@@ -182,6 +212,22 @@ namespace MelonS.GameProto
         // Without this assignment, night ambient stays silent (graceful null no-op).
         public AudioClip sfxAmbientNight; // outdoor night cricket/insect bed -- ~15s loop
 
+        // -- M6 SFX slots (wiki B9, W-M6-03 B9 lane) --
+        // QA FLAG: assign door.wav to sfxDoor on the AudioBank GameObject in the Inspector.
+        // DoorEntity.NotifyPassing() calls AudioBank.Instance?.PlayDoor() on pawn pass-through.
+        // Without this assignment: graceful null no-op (no crash, just silent door).
+        public AudioClip sfxDoor;      // soft door creak/thud -- ~0.18s
+
+        // QA FLAG: assign cook.wav to sfxCook on the AudioBank GameObject in the Inspector.
+        // StoveEntity.CookOne() calls AudioBank.Instance?.PlayCook() on each successful cook.
+        // Without this assignment: graceful null no-op (no crash, just silent cooking).
+        public AudioClip sfxCook;      // sizzle/clatter cooking sound -- ~0.30s
+
+        // QA FLAG: assign shoot.wav to sfxShoot on the AudioBank GameObject in the Inspector.
+        // ArrowProjectile.SpawnArrow() calls AudioBank.Instance?.PlayShoot() on arrow launch.
+        // Without this assignment: graceful null no-op (no crash, just silent bow).
+        public AudioClip sfxShoot;     // bow-twang arrow-launch -- ~0.15s
+
         // -- Audio sources --
         [SerializeField] private AudioSource bgmSource;
         [SerializeField] private AudioSource sfxSource;
@@ -204,6 +250,8 @@ namespace MelonS.GameProto
         private float _lastAlertTime    = -10f;   // wiki #2: alert burst guard
         private float _lastMineTime     = -10f;   // wiki #7: pick-on-stone throttle
         private float _lastFootstepTime = -10f;   // wiki B8: footstep bank-side guard
+        private float _lastDoorTime     = -10f;   // wiki B9: door pass-through guard
+        private float _lastCookTime     = -10f;   // wiki B9: cook tick guard
 
         // -- Ambient state (wiki B8 day/night swap) --
         // True when ambientSource is playing sfxAmbientNight; false when on sfxAmbient (day).
@@ -229,6 +277,8 @@ namespace MelonS.GameProto
         private const float AlertInterval     = 3.0f;   // burst-guard (raid spam)
         private const float MineInterval      = 0.25f;  // per-mine-hit safe (entity has own 0.6s guard)
         private const float FootstepInterval  = 0.20f;  // bank-side guard; outer per-pawn 0.4s in FootstepDriver
+        private const float DoorInterval      = 0.15f;  // door pass-through: enter+exit sub-frame dedup
+        private const float CookInterval      = 0.50f;  // cook tick: outer cookInterval=1.5s; bank guard for multi-pawn edge
 
         // -- Alert beep inter-repeat gap (pitch variation spread) --
         private const float AlertBeepGap    = 0.35f;  // seconds between beeps in a burst
@@ -726,6 +776,83 @@ namespace MelonS.GameProto
             {
                 ambientSource.Stop();
             }
+        }
+
+        // --------------------------------------------------------------------
+        //  M6 NEW METHODS (wiki B9, W-M6-03 B9 lane)
+        // --------------------------------------------------------------------
+
+        /// <summary>
+        /// Soft door creak/thud -- called by DoorEntity.NotifyPassing() on pawn pass-through.
+        ///
+        /// Wiki B9 acceptance: "Opening a door plays a distinct sound."
+        ///
+        /// Throttle: 0.15s (DoorInterval). DoorEntity.OpenHintDuration is 0.3s; the
+        /// 0.15s bank guard prevents a pawn whose enter/exit straddles a frame boundary
+        /// from triggering two sounds within a single visual open-hint window.
+        ///
+        /// Volume 0.75: door sound should be clearly audible but not above SFX impacts.
+        ///
+        /// Graceful null no-op if sfxDoor or sfxSource is not assigned.
+        /// QA FLAG: AudioBank.sfxDoor requires scene-side Inspector assignment on the
+        /// AudioBank GameObject -- assign door.wav. DoorEntity.NotifyPassing() calls
+        /// AudioBank.Instance?.PlayDoor(). Without wire: graceful null no-op.
+        /// </summary>
+        public void PlayDoor()
+        {
+            if (sfxDoor == null || sfxSource == null) return;
+            if (Time.time - _lastDoorTime < DoorInterval) return;
+            _lastDoorTime = Time.time;
+            sfxSource.PlayOneShot(sfxDoor, 0.75f);
+        }
+
+        /// <summary>
+        /// Sizzle/clatter cooking sound -- called by StoveEntity.CookOne() on each
+        /// successful cook action.
+        ///
+        /// Wiki B9 acceptance: "Cooking at a stove plays a distinct sound."
+        ///
+        /// Throttle: 0.5s (CookInterval). PawnCook outer cookInterval is 1.5s, so
+        /// this is well within normal use.  Bank-side guard covers edge cases where
+        /// two pawns share a stove or a rapid API call completes multiple cooks in
+        /// quick succession.
+        ///
+        /// Volume 0.70: cooking sound is foreground feedback, clearly audible.
+        ///
+        /// Graceful null no-op if sfxCook or sfxSource is not assigned.
+        /// QA FLAG: AudioBank.sfxCook requires scene-side Inspector assignment on the
+        /// AudioBank GameObject -- assign cook.wav. StoveEntity.CookOne() calls
+        /// AudioBank.Instance?.PlayCook(). Without wire: graceful null no-op.
+        /// </summary>
+        public void PlayCook()
+        {
+            if (sfxCook == null || sfxSource == null) return;
+            if (Time.time - _lastCookTime < CookInterval) return;
+            _lastCookTime = Time.time;
+            sfxSource.PlayOneShot(sfxCook, 0.70f);
+        }
+
+        /// <summary>
+        /// Bow-twang arrow-launch -- called by ArrowProjectile.SpawnArrow() on arrow fire.
+        ///
+        /// Wiki B9 acceptance: "Firing an arrow plays a distinct sound."
+        ///
+        /// Throttle: none (ShootInterval=0.0). Each arrow spawn is a discrete,
+        /// intentional event (one per PawnHunter bow-draw cycle, not a tight loop).
+        /// No global throttle -- rapid manual fire by scripted tests is acceptable and
+        /// each arrow is a distinct event that should be heard.
+        ///
+        /// Volume 0.80: bow-twang is a satisfying action-feedback sound, prominent.
+        ///
+        /// Graceful null no-op if sfxShoot or sfxSource is not assigned.
+        /// QA FLAG: AudioBank.sfxShoot requires scene-side Inspector assignment on the
+        /// AudioBank GameObject -- assign shoot.wav. ArrowProjectile.SpawnArrow() calls
+        /// AudioBank.Instance?.PlayShoot(). Without wire: graceful null no-op.
+        /// </summary>
+        public void PlayShoot()
+        {
+            if (sfxShoot == null || sfxSource == null) return;
+            sfxSource.PlayOneShot(sfxShoot, 0.80f);
         }
     }
 }

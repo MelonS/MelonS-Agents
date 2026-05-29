@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace MelonS.GameProto
 {
@@ -23,6 +24,19 @@ namespace MelonS.GameProto
     ///      units of each TreeEntity (reads as fallen bark/debris near base).
     ///   C. CLUSTERED near stone veins — pebble_scatter placed within 1.8 world
     ///      units of each StoneVeinEntity (reads as chip-off from the vein).
+    ///
+    /// W-M6-03 Lane B11 ADDITIONS (add-only, no existing behaviour changed):
+    ///   D. ROCK SHAPE VARIETY — 3 new rock silhouettes (rock_variant_a/b/c)
+    ///      scattered alongside stone_chunk_small.  Same deterministic seed,
+    ///      same sortingOrder 1.  Silhouettes differ markedly so the eye reads
+    ///      variety instead of repetition.
+    ///   E. WATER-EDGE TRANSITION DECALS — water_edge_band placed 1-tile deep
+    ///      along grass/water boundaries.  Reads terrain positions via
+    ///      PawnMovement.GroundTilemap + PawnMovement.WaterTile (READ-ONLY
+    ///      statics set by TilemapStaticRefInit; never written here).  One
+    ///      band sprite per boundary cell, oriented so the gradient flows from
+    ///      water (top) to grass (bottom).  If the tilemap is not yet set at
+    ///      bootstrap time, edge placement is deferred to the next periodic scan.
     ///
     /// Render order: sortingOrder 1 (same as existing scatter — below pawns at
     /// 9+, below structures at 10+, above terrain tiles at 0).  This means the
@@ -51,24 +65,41 @@ namespace MelonS.GameProto
     /// READ-ONLY usage of entities:
     ///   - TreeEntity: position read via transform.position only.
     ///   - StoneVeinEntity: position read via transform.position only.
-    ///   Neither class is modified.
+    ///   - PawnMovement.GroundTilemap / WaterTile: read-only statics; never written.
+    ///   Neither class nor any statics are modified.
     ///
-    /// Lane contract (W-M4-03/04 Lane B):
-    ///   This file and the 3 scatter PNGs at Assets/Resources/scatter/ are the
-    ///   ONLY files owned by Lane B.
+    /// Lane contract (W-M4-03/04 Lane B + W-M6-03 Lane B11):
+    ///   This file and the scatter PNGs at Assets/Resources/scatter/ are the
+    ///   ONLY files owned by these lanes.
     ///   NOT edited: _gen_scatter_variety.py, SceneSetup.Game.Scatter.cs,
-    ///   _gen_fix_audit.py, _gen_sprites.py, palette.py, any SceneSetup/entity,
-    ///   GrowZoneDesignation, SaveLoadManager, TreeSwayDriver, BuildManager,
-    ///   NightLightPoolDriver, or any test.
+    ///   _gen_fix_audit.py, _gen_sprites.py, palette.py (read-only import),
+    ///   _gen_fence.py, _gen_barricade.py, _gen_table_chair.py, _gen_lamp.py,
+    ///   any SceneSetup/entity, BuildManager, AudioBank, SaveLoadManager,
+    ///   SelectionGizmoBar, BarricadeEntity, or any test.
     ///
     /// >>> QA FLAG: confirm scatter/stone_chunk_small.png / scatter/dead_leaves.png /
     ///     scatter/pebble_scatter.png are present at Assets/Resources/scatter/ and
     ///     loaded correctly (no "sprite null" warnings in console).  If any decal
     ///     appears as a tiny magenta dot the PNG is missing from Resources/scatter/.
     ///
+    /// >>> QA FLAG (B11 new sprites): confirm scatter/rock_variant_a.png /
+    ///     scatter/rock_variant_b.png / scatter/rock_variant_c.png /
+    ///     scatter/water_edge_band.png are present at Assets/Resources/scatter/.
+    ///     If any appears magenta the PNG is missing or misnamed.
+    ///
     /// >>> QA FLAG: sortingOrder 1 — confirm new decals render BELOW pawns (order
     ///     9+) and structures (10+), and ABOVE terrain tiles (0).  Decals should
     ///     visually recede; the eye should land on pawns first.
+    ///
+    /// >>> QA FLAG (B11 rock variety): three distinct rock silhouettes (variant_a
+    ///     wide slab, variant_b tall spire, variant_c fractured plate) should
+    ///     be visibly different from each other and from stone_chunk_small in
+    ///     a zoomed-out game view.  All clearly duller than pawn skin/cloth.
+    ///
+    /// >>> QA FLAG (B11 water-edge): water tiles should show an organic transition
+    ///     band against adjacent grass tiles.  One band per grass-adjacent water
+    ///     cell boundary.  If PawnMovement.GroundTilemap is null (headless test),
+    ///     water-edge placement is gracefully skipped (no throw).
     ///
     /// >>> QA FLAG: clustering — confirm some stone_chunk_small decals appear
     ///     visibly near tree trunks and some pebble_scatter decals near StoneVeins.
@@ -88,6 +119,12 @@ namespace MelonS.GameProto
     ///     file warnings in scene-regen output.  No SceneSetup edit was made per
     ///     lane contract (prefer path requiring no SceneSetup edit).
     ///
+    /// >>> QA FLAG (B11 scene-wiring): new B11 sprites (rock_variant_a/b/c +
+    ///     water_edge_band) live under Assets/Resources/scatter/ — they are auto-
+    ///     bundled by Unity's Resources system.  No ForceImport SceneSetup entry
+    ///     is required.  QA should verify their .meta files exist (auto-created on
+    ///     first AssetDatabase refresh).
+    ///
     /// ACCEPTANCE (binary, cite Dim1 row):
     ///   A wide screenshot shows MORE incidental variety than before: new chunk /
     ///   leaf / pebble decals visibly scattered, some clustered near trees and
@@ -96,6 +133,12 @@ namespace MelonS.GameProto
     ///   In a fresh built game the 3 scatter decals render as their real
     ///   chunk/leaf/pebble sprites (NOT magenta dots) — QA screenshot shows no
     ///   magenta scatter.
+    ///
+    /// ACCEPTANCE (B11 additions, binary, cite wiki B11):
+    ///   Water tiles show an edge band against grass.
+    ///   Scattered rocks vary in shape (2-3 distinct rock silhouettes visible).
+    ///   Everything recedes (eye still lands on pawns first), nothing brighter
+    ///   than a pawn.
     /// </summary>
     public class ScatterVarietyDriver : MonoBehaviour
     {
@@ -114,6 +157,13 @@ namespace MelonS.GameProto
         private const int BaselineChunkCount  = 18;  // stone_chunk_small on open terrain
         private const int BaselineLeafCount   = 22;  // dead_leaves on grass/dirt
         private const int BaselinePebbleCount = 12;  // pebble_scatter on open terrain
+
+        // B11: baseline counts for the 3 new rock shape variants.
+        // Kept slightly lower than stone_chunk_small so the scene doesn't feel
+        // rock-heavy — variety reads better when each silhouette is infrequent.
+        private const int BaselineRockACount = 8;   // rock_variant_a (wide slab)
+        private const int BaselineRockBCount = 6;   // rock_variant_b (tall spire)
+        private const int BaselineRockCCount = 7;   // rock_variant_c (fractured plate)
 
         // Cluster radius around trees (world units).
         private const float TreeClusterRadius  = 1.5f;
@@ -138,14 +188,26 @@ namespace MelonS.GameProto
         private const int SpawnAvoidX = 5;
         private const int SpawnAvoidY = 3;
 
+        // B11: Cell scan range for water-edge detection.
+        // PathGrid uses MIN=-30/MAX=29; we scan -MapHalf..MapHalf-1 to stay
+        // within the terrain area used by SceneSetup (MAP_HALF=25 → ±25 cells).
+        private const int WaterEdgeScanMin = -MapHalf;
+        private const int WaterEdgeScanMax =  MapHalf - 1;
+
         // ------------------------------------------------------------------ //
         //  Resources paths (PNGs live at Assets/Resources/scatter/)           //
         //  Resources.Load path = subfolder/filename_without_extension         //
         // ------------------------------------------------------------------ //
 
-        private const string ResourcePathChunk  = "scatter/stone_chunk_small";
-        private const string ResourcePathLeaves = "scatter/dead_leaves";
-        private const string ResourcePathPebble = "scatter/pebble_scatter";
+        private const string ResourcePathChunk    = "scatter/stone_chunk_small";
+        private const string ResourcePathLeaves   = "scatter/dead_leaves";
+        private const string ResourcePathPebble   = "scatter/pebble_scatter";
+
+        // B11 — new rock shape variants + water-edge band
+        private const string ResourcePathRockA    = "scatter/rock_variant_a";
+        private const string ResourcePathRockB    = "scatter/rock_variant_b";
+        private const string ResourcePathRockC    = "scatter/rock_variant_c";
+        private const string ResourcePathWaterEdge= "scatter/water_edge_band";
 
         // ------------------------------------------------------------------ //
         //  Runtime state                                                        //
@@ -155,9 +217,15 @@ namespace MelonS.GameProto
         private Sprite _leavesSprite;
         private Sprite _pebbleSprite;
 
+        // B11 — new sprites
+        private Sprite _rockASprite;
+        private Sprite _rockBSprite;
+        private Sprite _rockCSprite;
+        private Sprite _waterEdgeSprite;
+
         // Pool of instantiated decal GOs owned by this driver.
         // Stored so we can clean up if the driver is destroyed.
-        private readonly List<GameObject> _decalGOs = new List<GameObject>(128);
+        private readonly List<GameObject> _decalGOs = new List<GameObject>(256);
 
         // Track which trees and veins we have already clustered around.
         private readonly HashSet<int> _clusteredTreeIDs  = new HashSet<int>();
@@ -165,6 +233,9 @@ namespace MelonS.GameProto
 
         // Occupied world positions (floored to 0.5-unit grid) to avoid overlap.
         private readonly HashSet<long> _occupied = new HashSet<long>();
+
+        // B11 — track whether water-edge placement has completed.
+        private bool _waterEdgeDone;
 
         private float _nextScan;
         private bool  _baselineDone;
@@ -221,6 +292,10 @@ namespace MelonS.GameProto
             // Subsequent scans only add cluster decals for newly discovered
             // trees/veins (baseline is placed once at Start).
             PlaceClusterDecals();
+
+            // B11: retry water-edge placement if the tilemap wasn't ready at Start.
+            if (!_waterEdgeDone)
+                PlaceWaterEdgeDecals();
         }
 
         private void OnDestroy()
@@ -243,6 +318,12 @@ namespace MelonS.GameProto
             _chunkSprite  = LoadSprite(ResourcePathChunk,  "stone_chunk_small");
             _leavesSprite = LoadSprite(ResourcePathLeaves, "dead_leaves");
             _pebbleSprite = LoadSprite(ResourcePathPebble, "pebble_scatter");
+
+            // B11 — load new sprites
+            _rockASprite     = LoadSprite(ResourcePathRockA,     "rock_variant_a");
+            _rockBSprite     = LoadSprite(ResourcePathRockB,     "rock_variant_b");
+            _rockCSprite     = LoadSprite(ResourcePathRockC,     "rock_variant_c");
+            _waterEdgeSprite = LoadSprite(ResourcePathWaterEdge, "water_edge_band");
         }
 
         private static Sprite LoadSprite(string resourcePath, string friendlyName)
@@ -283,9 +364,11 @@ namespace MelonS.GameProto
             if (!_baselineDone)
             {
                 PlaceBaselineDecals();
+                PlaceBaselineRockVariants(); // B11: new rock shapes
                 _baselineDone = true;
             }
             PlaceClusterDecals();
+            PlaceWaterEdgeDecals(); // B11: water-edge transition bands
         }
 
         // -- Baseline: sparse scatter across the map ────────────────────────
@@ -331,6 +414,19 @@ namespace MelonS.GameProto
                 _occupied.Add(key);
                 placed++;
             }
+        }
+
+        // -- B11: Baseline rock shape variants ──────────────────────────────
+        // Scattered identically to stone_chunk_small but using the 3 new
+        // silhouettes so the scene has visibly more rock shape variety.
+        // Uses the SAME _rng state (continuing from BaselineDecals) so the
+        // combined layout is deterministic and non-overlapping with existing decals.
+
+        private void PlaceBaselineRockVariants()
+        {
+            PlaceBaseline(_rockASprite, "RockA", BaselineRockACount);
+            PlaceBaseline(_rockBSprite, "RockB", BaselineRockBCount);
+            PlaceBaseline(_rockCSprite, "RockC", BaselineRockCCount);
         }
 
         // -- Cluster: extra decals near trees and stone veins ──────────────
@@ -427,6 +523,80 @@ namespace MelonS.GameProto
 
                 _clusteredVeinIDs.Add(id);
             }
+        }
+
+        // ------------------------------------------------------------------ //
+        //  B11 — Water-edge transition decals                                  //
+        //                                                                      //
+        //  Scans the tilemap (READ-ONLY via PawnMovement statics) for cells   //
+        //  that are water-type AND have at least one grass/walkable neighbour. //
+        //  Places water_edge_band at the water cell's position so the band     //
+        //  bridges the hard tile boundary.                                     //
+        //                                                                      //
+        //  Graceful degradation: if PawnMovement.GroundTilemap is null (e.g.  //
+        //  headless test scene), the scan is skipped and _waterEdgeDone stays  //
+        //  false so the next periodic Update retries.                          //
+        // ------------------------------------------------------------------ //
+
+        private void PlaceWaterEdgeDecals()
+        {
+            if (_waterEdgeSprite == null) return;
+
+            // READ-ONLY access to the tilemap statics set by TilemapStaticRefInit.
+            // This driver NEVER writes these statics.
+            Tilemap ground = PawnMovement.GroundTilemap;
+            TileBase waterTile = PawnMovement.WaterTile;
+
+            if (ground == null || waterTile == null)
+            {
+                // Tilemap not yet initialised (headless or very early bootstrap).
+                // Retry on next periodic scan.
+                return;
+            }
+
+            // Scan the terrain area used by SceneSetup (±MapHalf cells).
+            // For each water cell, check 4 orthogonal neighbours.  If ANY
+            // neighbour is NOT water (i.e. it is grass/dirt/walkable), this
+            // water cell sits on the boundary — place an edge band.
+            for (int cx = WaterEdgeScanMin; cx <= WaterEdgeScanMax; cx++)
+            {
+                for (int cy = WaterEdgeScanMin; cy <= WaterEdgeScanMax; cy++)
+                {
+                    var cell = new Vector3Int(cx, cy, 0);
+                    TileBase t = ground.GetTile(cell);
+                    if (t == null || t != waterTile) continue; // not a water cell
+
+                    // Check 4-neighbour: is any adjacent cell non-water (grass/dirt)?
+                    bool hasGrassNeighbour = false;
+                    for (int d = 0; d < 4 && !hasGrassNeighbour; d++)
+                    {
+                        int nx = cx + (d == 0 ? 1 : d == 1 ? -1 : 0);
+                        int ny = cy + (d == 2 ? 1 : d == 3 ? -1 : 0);
+                        var ncell = new Vector3Int(nx, ny, 0);
+                        TileBase nt = ground.GetTile(ncell);
+                        // null tile (map edge) is treated as non-water → also an edge
+                        if (nt != waterTile)
+                            hasGrassNeighbour = true;
+                    }
+
+                    if (!hasGrassNeighbour) continue; // interior water cell — skip
+
+                    // Place the edge band at the water cell's world centre.
+                    // The band sprite (16x4) is oriented horizontally so its top
+                    // rows (water tones) align with the water tile and its bottom
+                    // rows (grass tones) bleed onto the adjacent grass tile.
+                    float wx = cx + 0.5f;
+                    float wy = cy + 0.5f;
+
+                    long key = GridKey(wx, wy);
+                    if (_occupied.Contains(key)) continue; // another decal already here
+
+                    SpawnDecal(_waterEdgeSprite, $"WaterEdge_{cx}_{cy}", wx, wy);
+                    _occupied.Add(key);
+                }
+            }
+
+            _waterEdgeDone = true;
         }
 
         // ------------------------------------------------------------------ //

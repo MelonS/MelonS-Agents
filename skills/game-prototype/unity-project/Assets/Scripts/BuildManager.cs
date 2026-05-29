@@ -43,7 +43,17 @@ namespace MelonS.GameProto
         //   path as Lamp/FloorStone/TableChair so the build never produces a
         //   null/magenta entity even without an asset import + ZERO SceneSetup
         //   edit.  FenceGate is the same entity (IsGate=true) with a gate sprite.
-        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair, Fence, FenceGate }
+        // W-M6-03 (B4) - Barricade: the cheapest Security-tab staple (목재 5).
+        //   The DELIBERATE OPPOSITE of the passable Fence: the placed
+        //   BarricadeEntity BLOCKS PATHING like a low wall (it reuses the EXISTING
+        //   wall pathing-block API READ-ONLY — RegisterWallCell / SetStructureBlocked
+        //   — in its own Start/OnDestroy, inventing no new pathfinding), so a pawn
+        //   paths AROUND it.  It still reads LOW (sandbag row in the lower half,
+        //   sortingOrder 2).  Uses the same lazy procedural prefab/sprite path as
+        //   Lamp/FloorStone/TableChair/Fence so the build never produces a
+        //   null/magenta entity even without an asset import + ZERO SceneSetup edit.
+        //   NO cover-math (gated/over-scope) — visual + pathing only.
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair, Fence, FenceGate, Barricade }
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
         // #182 - placement cooldown: SetMode 후 0.15s 동안 TryPlace skip.
@@ -114,6 +124,19 @@ namespace MelonS.GameProto
         private Sprite     _fenceSpriteRuntime;       // cached lazily-built fence sprite
         private GameObject _fenceGatePrefabRuntime;   // cached lazily-built gate template
         private Sprite     _fenceGateSpriteRuntime;   // cached lazily-built gate sprite
+        // W-M6-03 (B4) - Barricade cost.  RimWorld sandbags cost a few Stuff; this
+        //   prototype keeps the cheapest Security-tab staple at 목재 5 (clearly
+        //   costing more than a fence's 1, less than a stone wall's 5-stone).
+        [SerializeField] private int barricadeCost = 5;
+        // W-M6-03 (B4) - Barricade prefab + sprite, built LAZILY + PROCEDURALLY
+        //   exactly like the Lamp / StoneFloor / TableChair / Fence entries (the
+        //   Lane contract forbids a SceneSetup edit, so these stay null and
+        //   BuildManager self-builds them on first use; a later wave can wire real
+        //   refs via SetRefs with zero code change).
+        [SerializeField] private GameObject barricadePrefab;
+        [SerializeField] private Sprite barricadeSprite;
+        private GameObject _barricadePrefabRuntime;   // cached lazily-built barricade template
+        private Sprite     _barricadeSpriteRuntime;   // cached lazily-built barricade sprite
         // #154 - bed quality 별 cost (wiki: sleeping spot 0 / wood bed 8 / fine 30).
         //  Fine 은 wiki 가 비싸지만 (60+) 프로토타입에선 30 으로 낮춰 reachable.
         [SerializeField] private int bedSleepingSpotCost = 0;
@@ -231,6 +254,7 @@ namespace MelonS.GameProto
                 Mode.TableChair => EnsureTableChairSprite(),  // W-M4-06 #20
                 Mode.Fence => EnsureFenceSprite(),            // W-M6-02 B3
                 Mode.FenceGate => EnsureFenceGateSprite(),    // W-M6-02 B3
+                Mode.Barricade => EnsureBarricadeSprite(),    // W-M6-03 B4
                 _ => wallSprite,
             };
             // 바닥류(목재/석재)는 ghost sortingOrder 1 (지면 위), 나머지 구조물은 20.
@@ -252,6 +276,7 @@ namespace MelonS.GameProto
             Mode.TableChair      => tableChairCost,       // W-M4-06 #20 - 목재 6
             Mode.Fence           => fenceCost,            // W-M6-02 B3 - 목재 1
             Mode.FenceGate       => fenceCost,            // W-M6-02 B3 - 목재 1 (same as fence)
+            Mode.Barricade       => barricadeCost,        // W-M6-03 B4 - 목재 5
             _ => 0,
         };
 
@@ -270,6 +295,7 @@ namespace MelonS.GameProto
             Mode.TableChair      => EnsureTableChairPrefab(),  // W-M4-06 #20
             Mode.Fence           => EnsureFencePrefab(),       // W-M6-02 B3
             Mode.FenceGate       => EnsureFenceGatePrefab(),   // W-M6-02 B3
+            Mode.Barricade       => EnsureBarricadePrefab(),   // W-M6-03 B4
             _ => null,
         };
 
@@ -330,6 +356,7 @@ namespace MelonS.GameProto
                 if (h.GetComponent<StoveEntity>() != null) return true;
                 if (h.GetComponent<LampEntity>() != null) return true;   // W-M4-04 #19
                 if (h.GetComponent<TableEntity>() != null) return true;  // W-M4-06 #20
+                if (h.GetComponent<BarricadeEntity>() != null) return true;  // W-M6-03 B4 - impassable, can't stack
                 if (h.GetComponent<BedEntity>() != null) return true;
                 if (h.GetComponent<BlueprintEntity>() != null) return true;  // #118
             }
@@ -481,6 +508,7 @@ namespace MelonS.GameProto
             Mode.TableChair      => "탁자+의자",  // W-M4-06 #20
             Mode.Fence           => "울타리",     // W-M6-02 B3
             Mode.FenceGate       => "울타리 문",  // W-M6-02 B3
+            Mode.Barricade       => "바리케이드",  // W-M6-03 B4
             _ => m.ToString(),
         };
 
@@ -501,6 +529,7 @@ namespace MelonS.GameProto
             Mode.TableChair => EnsureTableChairSprite(),  // W-M4-06 #20
             Mode.Fence => EnsureFenceSprite(),            // W-M6-02 B3
             Mode.FenceGate => EnsureFenceGateSprite(),    // W-M6-02 B3
+            Mode.Barricade => EnsureBarricadeSprite(),    // W-M6-03 B4
             _ => wallSprite,
         };
 
@@ -1144,6 +1173,182 @@ namespace MelonS.GameProto
                 {
                     if (!IsEmpty(x, y)) continue;
                     if (IsWood(x + 1, y) || IsWood(x - 1, y) || IsWood(x, y + 1) || IsWood(x, y - 1))
+                        outlinePts.Add((x, y));
+                }
+            foreach (var (x, y) in outlinePts) Set(x, y, OUTLINE);
+
+            tex.SetPixels32(px);
+            tex.Apply(updateMipmaps: false);
+
+            return Sprite.Create(
+                tex,
+                new Rect(0, 0, SIZE, SIZE),
+                new Vector2(0.5f, 0.5f),
+                pixelsPerUnit: 16f);
+        }
+
+        // ---------------------------------------------------------------- //
+        //  W-M6-03 (B4) - Barricade prefab + sprite, built LAZILY in code.   //
+        //                                                                    //
+        //  Mirrors the Lamp / StoneFloor / TableChair / Fence lazy-build path //
+        //  EXACTLY (the Lane contract forbids a SceneSetup edit, so the       //
+        //  finished barricade prefab + sprite are self-built once on first    //
+        //  use):                                                             //
+        //    - the sprite loads from Assets/Sprites/barricade.png in the      //
+        //      Editor/batchmode via AssetDatabase, and ALWAYS falls back to a //
+        //      procedural sandbag texture so a PLAYER BUILD (AssetDatabase    //
+        //      absent, PNG outside Resources/) still shows a real barricade   //
+        //      instead of a null/magenta sprite.                             //
+        //    - the prefab is an in-memory template carrying a SpriteRenderer   //
+        //      at sortingOrder 2 (LOW barrier read — above floors @1, below   //
+        //      furniture/walls @5+), a 1×1 BoxCollider2D (so CellOccupied's   //
+        //      OverlapBox detects it → no stacking / no blueprint-on-top), and //
+        //      a BarricadeEntity marker.  UNLIKE the passable Fence, the       //
+        //      BarricadeEntity BLOCKS PATHING like a low wall: in its OWN      //
+        //      Start it calls the EXISTING wall pathing-block API READ-ONLY    //
+        //      (PawnMovement.RegisterWallCell) and releases it on destroy —    //
+        //      so a pawn paths AROUND it (the B4 acceptance).  No new          //
+        //      pathfinding is invented here.                                  //
+        //                                                                    //
+        //  NO cover-math (gated/over-scope): the barricade is visual + pathing //
+        //  only.  A future cover wave can add accuracy math without touching   //
+        //  this.                                                              //
+        //                                                                    //
+        //  >>> QA FLAG: barricade uses BuildManager's lazy procedural prefab/  //
+        //      sprite path — NO SceneSetup prefab wiring was added.  If a      //
+        //      future wave prefers a real prefab asset, wire barricadePrefab / //
+        //      barricadeSprite via SetRefs and these lazy builders become      //
+        //      no-ops.                                                        //
+        // ---------------------------------------------------------------- //
+
+        private Sprite EnsureBarricadeSprite()
+        {
+            if (barricadeSprite != null) return barricadeSprite;       // wired via SetRefs (future)
+            if (_barricadeSpriteRuntime != null) return _barricadeSpriteRuntime;
+            _barricadeSpriteRuntime = LoadOrBuildBarricadeSprite();
+            return _barricadeSpriteRuntime;
+        }
+
+        private GameObject EnsureBarricadePrefab()
+        {
+            if (barricadePrefab != null) return barricadePrefab;        // wired via SetRefs (future)
+            if (_barricadePrefabRuntime != null) return _barricadePrefabRuntime;
+
+            // In-memory template (NOT a saved .prefab asset — runtime only).
+            //  SR sortingOrder 2 (LOW barrier read, same as the fence) + a 1×1
+            //  BoxCollider2D so CellOccupied's OverlapBox sees it (no stacking,
+            //  no blueprint placed on top) + a BarricadeEntity marker.  The
+            //  BarricadeEntity itself registers the PathGrid cell as blocked in
+            //  Start (reusing the wall pathing-block API) so a pawn paths AROUND
+            //  it.  Hidden + inactive so it's never seen; Instantiate copies it.
+            var go = new GameObject("BarricadeTemplate");
+            go.hideFlags = HideFlags.HideAndDontSave;
+            go.SetActive(false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite       = EnsureBarricadeSprite();
+            sr.sortingOrder = 2;                               // LOW barrier read (same as fence)
+            var box = go.AddComponent<BoxCollider2D>();
+            box.size = Vector2.one;
+            go.AddComponent<BarricadeEntity>();                // blocks pathing like a low wall
+            _barricadePrefabRuntime = go;
+            return _barricadePrefabRuntime;
+        }
+
+        /// <summary>
+        /// Load barricade.png via AssetDatabase (Editor/batchmode) so this
+        /// runtime script needs no UnityEditor reference; ALWAYS falls back to a
+        /// procedural sandbag texture so a player build is never null (same guard
+        /// as the lamp / stone-floor / table / fence sprites).
+        /// </summary>
+        private static Sprite LoadOrBuildBarricadeSprite()
+        {
+#if UNITY_EDITOR
+            var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/barricade.png");
+            if (sp != null) return sp;
+#endif
+            return BuildProceduralBarricadeSprite();
+        }
+
+        /// <summary>
+        /// Build a 16×16 barricade sprite in code, matching _gen_barricade.py's
+        /// authored content (two staggered rows of piled sandbags on muted DIRT
+        /// tones with a WOOD_DK tie strap, drawn in the LOWER HALF so it reads as
+        /// a low defensive line, 1px OBJ outline) so it is visually
+        /// interchangeable with barricade.png.  Guarantees a real barricade in a
+        /// player build with zero asset-load dependency.
+        /// </summary>
+        private static Sprite BuildProceduralBarricadeSprite()
+        {
+            const int SIZE = 16;
+            var tex = new Texture2D(SIZE, SIZE, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode   = TextureWrapMode.Clamp;
+            tex.name       = "Barricade_Proc";
+
+            var px = new Color32[SIZE * SIZE];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color32(0, 0, 0, 0);
+
+            // Palette (mirrors palette.py DIRT_* / WOOD_DK / OUTLINE_OBJ; RGBA).
+            var DIRT_DK = new Color32(86, 66, 46, 255);
+            var DIRT_MD = new Color32(112, 88, 62, 255);
+            var DIRT_LT = new Color32(138, 112, 80, 255);
+            var WOOD_DK = new Color32(92, 60, 36, 255);
+            var OUTLINE = new Color32(40, 30, 22, 255);   // OUTLINE_OBJ
+
+            // Texture y is bottom-up; _gen_barricade.py uses top-down PIL y.
+            //  Convert each authored (gx, gyTop) to texture row: ty = SIZE-1-gyTop.
+            void Set(int gx, int gyTop, Color32 c)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return;
+                px[ty * SIZE + gx] = c;
+            }
+            bool IsEmpty(int gx, int gyTop)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return false;
+                return px[ty * SIZE + gx].a == 0;
+            }
+            bool IsSolid(int gx, int gyTop)
+            {
+                int ty = SIZE - 1 - gyTop;
+                if (gx < 0 || gx >= SIZE || ty < 0 || ty >= SIZE) return false;
+                return px[ty * SIZE + gx].a != 0;
+            }
+
+            // One 3-wide sandbag lump centred at column cx, top at yTop, height h.
+            //  Mirrors _gen_barricade.py's sandbag(): rounded LT top, MD/LT body,
+            //  DK shadow underside.
+            void Sandbag(int cx, int yTop, int h)
+            {
+                for (int row = 0; row < h; row++)
+                {
+                    int y = yTop + row;
+                    Color32 cL, cM, cR;
+                    if (row == 0)            { cL = DIRT_LT; cM = DIRT_LT; cR = DIRT_LT; }
+                    else if (row == h - 1)   { cL = DIRT_DK; cM = DIRT_DK; cR = DIRT_DK; }
+                    else                     { cL = DIRT_MD; cM = DIRT_LT; cR = DIRT_MD; }
+                    Set(cx - 1, y, cL); Set(cx, y, cM); Set(cx + 1, y, cR);
+                }
+            }
+
+            // Back row — shorter bags (height 3), staggered right.
+            foreach (int cx in new[] { 3, 7, 11 }) Sandbag(cx, 7, 3);
+            // Front row — taller bags (height 4), staggered left, overlapping.
+            foreach (int cx in new[] { 1, 5, 9, 13 }) Sandbag(cx, 10, 4);
+
+            // WOOD_DK tie strap across the front row (row 11) — only over bag px.
+            for (int x = 0; x < SIZE; x++)
+                if (IsSolid(x, 11)) Set(x, 11, WOOD_DK);
+
+            // 1px OUTLINE_OBJ on transparent pixels 4-adjacent to a solid.
+            //  Collect first, then write (no self-feed).
+            var outlinePts = new System.Collections.Generic.List<(int, int)>();
+            for (int y = 0; y < SIZE; y++)
+                for (int x = 0; x < SIZE; x++)
+                {
+                    if (!IsEmpty(x, y)) continue;
+                    if (IsSolid(x + 1, y) || IsSolid(x - 1, y) || IsSolid(x, y + 1) || IsSolid(x, y - 1))
                         outlinePts.Add((x, y));
                 }
             foreach (var (x, y) in outlinePts) Set(x, y, OUTLINE);

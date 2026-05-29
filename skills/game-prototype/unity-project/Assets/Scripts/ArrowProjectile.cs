@@ -55,6 +55,7 @@ namespace MelonS.GameProto
             ap.direction = perturbedDir;
             ap.damage = damage;
             ap.shooter = shooter;
+            AudioBank.Instance?.PlayShoot();  // wiki B9: arrow fire/launch SFX
             return go;
         }
 

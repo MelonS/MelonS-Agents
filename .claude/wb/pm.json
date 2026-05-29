@@ -1,21 +1,18 @@
 {
   "role": "PM",
   "status": "Done",
-  "cycle": "C-014",
-  "wave": "W-M4-06",
-  "wave_title": "W-M4-06 (FINAL non-gated) — #20 table+chair + scatter ForceImport cleanup #41 + stone-floor->Architect + V59b stone-floor verify",
-  "is_final_nongated_wave": true,
+  "cycle": "C-018",
+  "wave": "W-M6-03",
   "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"],
-  "audit": "qa.json reports W-M4-05 PASS@8a61c91 build cy-w3 (drag-rect #18 / stone-floor #21 / lamp->Architect #42 / V15 deconstruct-refund). isolated 76/76 (+V15), integration 42/42, build-click 9/9, real-qa wood +60/30s, visual-diff 3.46%. No disk RED -> no FIX subtask, W-M4-05 CLOSED. QA flags_for_next_wave enumerate the ONLY remaining non-gated items: #20 table+chair (last single-build-op, shared BuildManager catalogue), scatter ForceImport SceneSetup.cs dead-path cleanup #41 (harmless warnings), stone-floor not surfaced in ArchitectMenu (K hotkey only), V59b stone-floor 1.50x move-speed companion verify.",
+  "decision": "W-M6-02 QA PASS@4cf239d cz-w2 (B3 fence / B10 carry-pose / B13 saveload-substate / B14 hotkey-sheet), no disk RED -> no FIX subtask. Advanced per parallel pipeline. Dispatched W-M6-03 = 4 strictly non-overlapping lanes from v2 backlog remainder.",
   "lanes": {
-    "A": "game-programmer — #20 table+chair buildable (BuildManager.cs edit, the single build-catalogue hot lane) + new _gen_table_chair.py + PNG + new TableEntity/ChairEntity, procedural-lazy prefab (Lamp/StoneFloor pattern) so ZERO SceneSetup edit. M4 build #20.",
-    "B": "game-build-engineer — scatter ForceImport cleanup #41 (SceneSetup.cs ForceImportAllSprites list, the wave's single SceneSetup-hot touch): update stone_chunk_small/dead_leaves/pebble_scatter entries to Assets/Resources/scatter/ real paths or remove dead Assets/Sprites/ copies -> zero '[SceneSetup] missing:' warnings on scene-regen.",
-    "C": "game-designer — stone-floor->ArchitectMenu surfacing (ArchitectMenu.cs only): add a Flooring/Materials category entry routing through existing Mode.FloorStone SetMode (read-only, NO new enum, NO BuildManager edit). Resolves W-M4-05 QA flag.",
-    "D": "game-build-engineer — V59b stone-floor move-speed companion verify (new test .cs in test asmdef): assert stone-floor effective move speed (1.50x) > wood-floor (1.30x) > bare ground as ONE PASS. Runtime read-only, flag if accessor missing."
+    "B2": "game-programmer, M6 gizmo command bar — NEW SelectionGizmoBar.cs (B1 marquee QA-green so unblocked; ClickSelector/MarqueeSelector READ-ONLY; own Canvas; draft API read-only invoke)",
+    "B4": "game-programmer, M4 barricade/sandbag — SINGLE BuildManager.cs lane + NEW BarricadeEntity.cs (pathing-block, pawns detour; NO cover-math=gated) + _gen_barricade.py PNG + Architect Security category",
+    "B9": "game-sound-designer, M2 door/cook/shoot SFX — SINGLE AudioBank.cs lane (sfxDoor/sfxCook/sfxShoot slots) + one-line PlaySound calls into DoorEntity/StoveEntity/ArrowProjectile",
+    "B11": "game-artist, M1 terrain-edge decals + rock variety — extend ScatterVarietyDriver.cs + new edge/rock sprites (visual-only, recede)"
   },
-  "lane_isolation_proof": "A=BuildManager.cs(edit)+_gen_table_chair.py(new)+table/chair PNG(new)+TableEntity/ChairEntity(new) / B=SceneSetup.cs(edit ForceImport)+scatter PNG .meta / C=ArchitectMenu.cs(edit) / D=new V59b test .cs. No file in two lanes. ONLY A touches BuildManager.cs; ONLY B touches a SceneSetup hot file; C and D isolated. ArchitectMenu category split: table/chair stays under Furniture (Lane A may register it there via BuildManager's existing catalogue path) vs stone-floor under Flooring (Lane C owns the Flooring/Materials row) — distinct rows, no collision.",
-  "op_gate_excluded": ["work-priority", "mood/mental-break #30 (= V9 mood-break verify)", "per-terrain path-cost #24", "roof/collapse system", "M4 breadth trading/power/taming/bills", "P5 detailed-pawn redraw (superseded by flat #202)"],
-  "chain_end_note": "After W-M4-06 PASS the non-gated wiki backlog (rimworld-comparison.md Consolidated PRIORITIZED BACKLOG, all non-[OP-OK] items) is EXHAUSTED. Shipped: sound 1-9, motion 10-14, UI alert/inspector 22/23, M4 #15/#16/#17/#18/#19/#21 + this wave's #20, verify V1-V8 + #28 + #29 + V15. The next PM cycle must set done=true with empty subtasks UNLESS the operator opens an OP-gated item (#24 terrain-cost, #30 mood/V9, roof, M4 breadth, P5 redraw) or QA emits a RED.",
-  "daily_shippable": "All 4 lanes preserve daily-shippable: Lane A is a new buildable (additive, build opens with or without it), Lane B is a warning-only cleanup (no behavior change), Lane C is a menu-entry addition, Lane D is test-only. End-of-wave build opens regardless of any single lane's completeness.",
-  "notes": "PM single-writer merge done. whiteboard.json current_cycle=C-014, wave=W-M4-06, agent statuses + log entry updated. Awaiting worker wb json (.claude/wb/table-chair.json, scatter-forceimport-cleanup.json, stone-floor-architect.json, v59b-stone-floor.json) + QA PASS."
+  "lane_proof": "B2=SelectionGizmoBar.cs(new) / B4=BuildManager.cs(edit)+BarricadeEntity.cs(new)+_gen_barricade.py(new)+PNG / B9=AudioBank.cs(edit)+DoorEntity/StoveEntity/ArrowProjectile(1-line calls) / B11=ScatterVarietyDriver.cs(edit)+new gen+PNG. No file in two lanes; ONLY B4 edits BuildManager; ONLY B9 edits AudioBank; no SceneSetup hot file; no W-M6-01/W-M6-02 in-flight file. None OP-gated.",
+  "excluded_op_gated": ["mood thought-sum #30 / V9 mood-break", "work-priority grid", "per-terrain path-cost #24", "quality-roll on build", "BanditEnemy body-parts / carryCap", "B4 cover-math (visual+pathing only this wave)"],
+  "remaining_after_this_wave": "B5 autodoor (DoorEntity.cs PassMul + BuildManager catalogue — contends both the BuildManager lane and the DoorEntity file B9 wires) + B7 area-cancel/deconstruct-area drag (extends DeconstructDesignation.cs) -> ONE final wave drains them; then chain reaches OP-gated wall (operator must OK mood/work-priority spec per v2 'Operator recommendation').",
+  "done": false
 }

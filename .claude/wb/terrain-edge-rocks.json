@@ -1,0 +1,99 @@
+{
+  "agent": "game-artist",
+  "lane": "B11",
+  "task": "terrain-edge decals + rock variety (wiki B11)",
+  "status": "Done",
+  "updated": "2026-05-30",
+  "wave": "W-M6-03",
+
+  "deliverables": {
+    "new_generator": "skills/game-prototype/unity-project/Assets/Sprites/_gen_edge_rocks.py",
+    "new_pngs": [
+      "skills/game-prototype/unity-project/Assets/Resources/scatter/rock_variant_a.png",
+      "skills/game-prototype/unity-project/Assets/Resources/scatter/rock_variant_b.png",
+      "skills/game-prototype/unity-project/Assets/Resources/scatter/rock_variant_c.png",
+      "skills/game-prototype/unity-project/Assets/Resources/scatter/water_edge_band.png"
+    ],
+    "extended_driver": "skills/game-prototype/unity-project/Assets/Scripts/ScatterVarietyDriver.cs",
+    "preview": "skills/game-prototype/unity-project/Assets/Sprites/_preview_edge_rocks.png"
+  },
+
+  "sprite_specs": {
+    "rock_variant_a": {
+      "size": "12x9",
+      "desc": "wide flat slab — broad trapezoid, distinctly wider-than-tall",
+      "palette": "ROCK_LT/MD/DK body, OUTLINE_OBJ 1px",
+      "saturation": "max ROCK_LT sat=0.063 — well below pawn CLOTH_BLUE sat=0.440"
+    },
+    "rock_variant_b": {
+      "size": "8x10",
+      "desc": "tall jagged spire — vertically elongated outcrop shard",
+      "palette": "ROCK_LT tip, ROCK_MD body, ROCK_DK base, OUTLINE_OBJ 1px",
+      "saturation": "same low-saturation rock ramp"
+    },
+    "rock_variant_c": {
+      "size": "14x7",
+      "desc": "fractured plate — very wide, two separate pieces with visible gap",
+      "palette": "ROCK_LT/MD/DK, OUTLINE_OBJ 1px",
+      "saturation": "same low-saturation rock ramp"
+    },
+    "water_edge_band": {
+      "size": "16x4",
+      "desc": "water/grass transition: top=WATER_DK/MD dither, row1=water+GRASS_DK intrusions, row2=GRASS_DK+WATER_DK intrusions, row3=GRASS_MD",
+      "palette": "WATER_DK, WATER_MD, GRASS_DK, GRASS_MD — no outline",
+      "saturation": "WATER_MD sat=0.270, GRASS_DK sat=0.236 — both below pawn cloth"
+    }
+  },
+
+  "driver_changes": {
+    "added_constants": [
+      "BaselineRockACount=8", "BaselineRockBCount=6", "BaselineRockCCount=7",
+      "WaterEdgeScanMin=-25", "WaterEdgeScanMax=24",
+      "ResourcePathRockA/B/C", "ResourcePathWaterEdge"
+    ],
+    "added_fields": [
+      "_rockASprite", "_rockBSprite", "_rockCSprite", "_waterEdgeSprite",
+      "_waterEdgeDone"
+    ],
+    "added_methods": [
+      "PlaceBaselineRockVariants() — scatters 3 new silhouettes via existing PlaceBaseline()",
+      "PlaceWaterEdgeDecals() — READ-ONLY scan of PawnMovement.GroundTilemap/WaterTile; places water_edge_band on boundary water cells"
+    ],
+    "existing_methods_unchanged": [
+      "PlaceBaselineDecals()", "PlaceBaseline()", "PlaceClusterDecals()",
+      "PlaceTreeClusters()", "PlaceVeinClusters()", "SpawnDecal()", "GridKey()",
+      "LoadSprites() extended (non-destructive append only)", "PlaceAll() extended (non-destructive)"
+    ],
+    "invariants_preserved": [
+      "PlacementSeed=98765 unchanged — same seed, same layout for existing decals",
+      "DecalSortingOrder=1 unchanged — all decals below pawns (9+) and structures (10+)",
+      "Existing chunk/leaf/pebble baseline counts unchanged",
+      "Tree cluster and vein cluster logic unchanged",
+      "Self-attach Bootstrap unchanged",
+      "No SceneSetup, entity, BuildManager, AudioBank, SaveLoadManager, BarricadeEntity, SelectionGizmoBar, or test touched"
+    ]
+  },
+
+  "water_edge_accessor_status": {
+    "tilemap_access": "PawnMovement.GroundTilemap (public static, set by TilemapStaticRefInit) — READ-ONLY",
+    "water_tile_access": "PawnMovement.WaterTile (public static, set by TilemapStaticRefInit) — READ-ONLY",
+    "verdict": "Both accessors exist and are already public statics. No missing accessor. No FLAG needed.",
+    "graceful_null": "If GroundTilemap==null (headless), PlaceWaterEdgeDecals returns early without throw; retries on next ScanInterval tick."
+  },
+
+  "qa_flags": [
+    "QA: rock_variant_a/b/c + water_edge_band lack .meta files — Unity AssetDatabase auto-creates them on first import/refresh. No ForceImport SceneSetup entry required (Resources/ auto-bundled). QA should verify .meta files appear after first scene open.",
+    "QA: water-edge placement only fires when PawnMovement.GroundTilemap != null — confirm TilemapStaticRefInit Awake has run before ScatterVarietyDriver.Start (scene load order). If bands missing, check console for 'Tilemap not yet initialised' absence.",
+    "QA: three rock silhouettes (A=wide slab 12x9, B=tall spire 8x10, C=fractured plate 14x7) must be visibly distinct from stone_chunk_small and each other at normal play zoom.",
+    "QA: all 4 new sprites must NOT appear magenta — if magenta, the PNG is missing from Assets/Resources/scatter/.",
+    "QA: existing chunk/leaf/pebble decals must be unchanged in count and position — seed 98765 preserved.",
+    "QA (B11 binary acceptance): water tiles show an edge band against grass; scattered rocks vary in shape; eye lands on pawns first, not decals."
+  ],
+
+  "files_not_touched": [
+    "_gen_scatter_variety.py", "_gen_fix_audit.py", "_gen_sprites.py", "palette.py",
+    "_gen_fence.py", "_gen_barricade.py", "_gen_table_chair.py", "_gen_lamp.py",
+    "BuildManager.cs", "AudioBank.cs", "SelectionGizmoBar.cs", "BarricadeEntity.cs",
+    "any SceneSetup file", "any entity file", "SaveLoadManager.cs", "any test"
+  ]
+}

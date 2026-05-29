@@ -42,6 +42,7 @@ namespace MelonS.GameProto
         public void NotifyPassing()
         {
             openHintTime = Time.time;
+            AudioBank.Instance?.PlayDoor();  // wiki B9: door open/pass-through SFX
         }
 
         private void Update()

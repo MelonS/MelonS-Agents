@@ -1,0 +1,155 @@
+{
+  "role": "Sound",
+  "task": "B9 door/cook/shoot SFX — wiki W-M6-03 B9 lane",
+  "milestone": "M2-sound",
+  "Status": "Done",
+  "date": "2026-05-30",
+  "wave": "W-M6-03",
+
+  "wav_assets": [
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Audio/door.wav",
+      "kind": "procedural",
+      "generator": "skills/game-prototype/unity-project/Assets/Audio/_gen_m6_action_sfx.py",
+      "duration_s": 0.18,
+      "sr": 44100,
+      "channels": 1,
+      "bit_depth": 16,
+      "peak": 0.78,
+      "character": "soft door creak (180-400Hz woody resonance) + frame thud (80-130Hz transient)"
+    },
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Audio/cook.wav",
+      "kind": "procedural",
+      "generator": "skills/game-prototype/unity-project/Assets/Audio/_gen_m6_action_sfx.py",
+      "duration_s": 0.30,
+      "sr": 44100,
+      "channels": 1,
+      "bit_depth": 16,
+      "peak": 0.72,
+      "character": "sizzle bandpass noise (1200-4000Hz) + metallic clatter transient (820+1250Hz)"
+    },
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Audio/shoot.wav",
+      "kind": "procedural",
+      "generator": "skills/game-prototype/unity-project/Assets/Audio/_gen_m6_action_sfx.py",
+      "duration_s": 0.15,
+      "sr": 44100,
+      "channels": 1,
+      "bit_depth": 16,
+      "peak": 0.82,
+      "character": "bow-string twang (145Hz fundamental + harmonics, pitch-descend) + arrow whoosh onset"
+    }
+  ],
+
+  "audiobank_slots_added": [
+    {
+      "field": "sfxDoor",
+      "type": "AudioClip",
+      "method": "PlayDoor()",
+      "throttle_s": 0.15,
+      "throttle_field": "_lastDoorTime",
+      "constant": "DoorInterval",
+      "volume": 0.75,
+      "rationale": "0.15s: DoorEntity.OpenHintDuration=0.3s; bank guard prevents enter+exit in same frame triggering two sounds"
+    },
+    {
+      "field": "sfxCook",
+      "type": "AudioClip",
+      "method": "PlayCook()",
+      "throttle_s": 0.5,
+      "throttle_field": "_lastCookTime",
+      "constant": "CookInterval",
+      "volume": 0.70,
+      "rationale": "0.5s: outer cookInterval=1.5s in PawnCook is primary gate; bank guard blocks sub-frame bursts if two pawns share stove"
+    },
+    {
+      "field": "sfxShoot",
+      "type": "AudioClip",
+      "method": "PlayShoot()",
+      "throttle_s": 0.0,
+      "throttle_field": "none",
+      "constant": "none",
+      "volume": 0.80,
+      "rationale": "no throttle: ArrowProjectile.SpawnArrow fires once per bow-draw cycle, each arrow is a distinct event, not a tight loop"
+    }
+  ],
+
+  "caller_wires": [
+    {
+      "entity": "DoorEntity.cs",
+      "method_hooked": "NotifyPassing()",
+      "call_added": "AudioBank.Instance?.PlayDoor();",
+      "line_change": "one-line SFX call only — no behavior change",
+      "hook_quality": "clean: NotifyPassing() is the existing pass-through callback, called by PawnMovement when pawn enters door collider"
+    },
+    {
+      "entity": "StoveEntity.cs",
+      "method_hooked": "CookOne(bool fineMeal)",
+      "call_added": "AudioBank.Instance?.PlayCook();",
+      "line_change": "one-line SFX call only — no behavior change",
+      "hook_quality": "clean: inserted after successful cook (after CanCookOne guard, after resource debit + counter increment), before return true"
+    },
+    {
+      "entity": "ArrowProjectile.cs",
+      "method_hooked": "SpawnArrow() static",
+      "call_added": "AudioBank.Instance?.PlayShoot();",
+      "line_change": "one-line SFX call only — no behavior change",
+      "hook_quality": "clean: inserted just before return go, after all ArrowProjectile fields are set — fires once per arrow spawn"
+    }
+  ],
+
+  "files_edited": [
+    "skills/game-prototype/unity-project/Assets/Scripts/AudioBank.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/DoorEntity.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/StoveEntity.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/ArrowProjectile.cs"
+  ],
+  "files_created": [
+    "skills/game-prototype/unity-project/Assets/Audio/_gen_m6_action_sfx.py",
+    "skills/game-prototype/unity-project/Assets/Audio/door.wav",
+    "skills/game-prototype/unity-project/Assets/Audio/cook.wav",
+    "skills/game-prototype/unity-project/Assets/Audio/shoot.wav"
+  ],
+  "files_NOT_edited": [
+    "BuildManager.cs", "SelectionGizmoBar.cs", "BarricadeEntity.cs",
+    "ScatterVarietyDriver.cs", "FloatingText.cs", "MarqueeSelector.cs",
+    "FootstepDriver.cs", "ClickSelector.cs", "FenceEntity.cs",
+    "PawnPoseDriver.cs", "SaveLoadManager.cs", "HotkeyCheatSheet.cs",
+    "V10DeconstructWalkableTest.cs", "V11GrowZoneCropTest.cs", "V13*"
+  ],
+
+  "qa_flags": [
+    {
+      "flag": "sfxDoor Inspector assignment",
+      "description": "AudioBank GameObject in the Unity scene must have door.wav assigned to sfxDoor slot in the Inspector. Without this, PlayDoor() is a graceful null no-op (no crash, silent door).",
+      "action": "In Unity Editor: select AudioBank GO -> Inspector -> sfxDoor -> assign door.wav"
+    },
+    {
+      "flag": "sfxCook Inspector assignment",
+      "description": "AudioBank GameObject must have cook.wav assigned to sfxCook slot in the Inspector. Without this, PlayCook() is graceful null no-op.",
+      "action": "In Unity Editor: select AudioBank GO -> Inspector -> sfxCook -> assign cook.wav"
+    },
+    {
+      "flag": "sfxShoot Inspector assignment",
+      "description": "AudioBank GameObject must have shoot.wav assigned to sfxShoot slot in the Inspector. Without this, PlayShoot() is graceful null no-op.",
+      "action": "In Unity Editor: select AudioBank GO -> Inspector -> sfxShoot -> assign shoot.wav"
+    },
+    {
+      "flag": "door.wav / cook.wav / shoot.wav .meta files",
+      "description": "Unity will auto-generate .meta files on import. No manual .meta action needed; flag for QA to confirm import settings (AudioClip, LoadType=DecompressOnLoad, Mono, 44100Hz)."
+    }
+  ],
+
+  "wiki_b9_acceptance": {
+    "door": "Opening a door (pawn passes through DoorEntity) -> door.wav plays (soft creak/thud, throttled 0.15s)",
+    "cook": "Cooking at a stove (StoveEntity.CookOne succeeds) -> cook.wav plays (sizzle/clatter, throttled 0.5s)",
+    "shoot": "Firing an arrow (ArrowProjectile.SpawnArrow called) -> shoot.wav plays (bow-twang, no throttle)"
+  },
+
+  "throttle_audit": {
+    "door_calling_pattern": "NotifyPassing() called by PawnMovement.Update() while pawn inside door trigger — could fire multiple frames; 0.15s bank throttle prevents buzz",
+    "cook_calling_pattern": "CookOne() called from PawnCook.Update() at outer cookInterval 1.5s — low risk, 0.5s bank guard covers multi-pawn edge case",
+    "shoot_calling_pattern": "SpawnArrow() called once per bow-draw cycle in PawnHunter — event-driven, not a frame loop; no throttle required"
+  }
+}
