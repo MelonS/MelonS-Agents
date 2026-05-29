@@ -19,18 +19,18 @@
     "AIDesigner": "FSM/BT 등 AI 로직 설계 + 경로탐색 안전 제약"
   },
   "current_cycle": {
-    "id": "C-002",
+    "id": "C-003",
     "task_ref": ".claude/task.json",
     "phase": "Programmer+Art-Implement (parallel)",
-    "title": "M1 living-colony 폴리시 wave — walk-bob(V1) + fire-flicker(V5) + scatter-art(V2)",
+    "title": "M1 wave W-M1-02 — FIX walk-bob root-wire RED bug + V6 crop-stage art + V7 inspector empty-state",
     "wave": {
-      "id": "W-M1-01",
+      "id": "W-M1-02",
       "lanes_non_overlapping": true,
       "op_gated_excluded": ["work-priority", "mood/mental-break rewrite"],
       "subtasks": [
-        "walk-bob: NEW PawnSpriteBob.cs + SceneSetup.Pawn.cs (sprite-child only, root untouched)",
-        "fire/lamp flicker: NEW FlickerLight.cs (self-attaching, no SceneSetup edit)",
-        "world scatter art: _gen_scatter.py PNG regen (wiring flagged for QA)"
+        "FIX(RED) walk-bob: PawnSpriteBob attached to CHILD bobGo, but Awake GetComponent<PawnMovement>() finds nothing (PawnMovement is on ROOT) -> IsMoving always false -> walk-bob never fires (idle-only), and MirrorRootTint GetComponent<SpriteRenderer>() reads the child's own renderer not the root tint-anchor -> variant/selection/drafted tint never shows. Lane A: PawnSpriteBob.cs + SceneSetup.Pawn.cs",
+        "V6 crop growth-stage markers: _gen_fix_audit.py gen_crop_rice seedling/growing/ripe variants (art, wiring flagged for QA)",
+        "V7 inspector empty-state styling: PawnInfoPanel.cs empty-state branch (programmer)"
       ]
     },
     "in_flight_uncommitted": [
@@ -41,21 +41,24 @@
     "already_done_this_session": [
       "V4 tree 3-cluster canopy (_gen_sprites.py gen_tree) — DONE",
       "V3 contact shadows pawn/tree (SceneSetup.Pawn.cs PawnShadow child) — DONE",
-      "V2 scatter generator written (_gen_scatter.py) — generated, wiring pending"
+      "V5 fire flicker (FlickerLight.cs self-attaching) — written, sound vs StoveEntity API, QA-verify pending",
+      "V2 scatter generator + PNGs (_gen_scatter.py, decor_rock/grass_tuft/wildflower1-2) — generated, wiring still flagged for QA",
+      "V1 walk-bob (PawnSpriteBob.cs + SceneSetup.Pawn.cs) — written but RED: child-attach breaks IsMoving + tint mirror; FIX is W-M1-02 lane A"
     ]
   },
   "agents": {
-    "PM":        {"status": "Done", "outputs": [".claude/whiteboard.json"], "notes": "C-002 wave W-M1-01 발행: 3 병렬 non-overlap 레인"},
+    "PM":        {"status": "Done", "outputs": [".claude/whiteboard.json"], "notes": "C-003 wave W-M1-02 발행: walk-bob RED fix + V6 crop art + V7 inspector, 3 병렬 non-overlap 레인"},
     "Director":  {"status": "Waiting", "outputs": [], "notes": ""},
     "Designer":  {"status": "Waiting", "outputs": [], "notes": ""},
     "AIDesigner":{"status": "Waiting", "outputs": [], "notes": ""},
-    "Programmer":{"status": "Assigned", "outputs": [], "notes": "lane A: PawnSpriteBob.cs+SceneSetup.Pawn.cs / lane B: FlickerLight.cs"},
-    "Art":       {"status": "Assigned", "outputs": [], "notes": "lane C: _gen_scatter.py PNG regen"},
-    "QA":        {"status": "Waiting", "outputs": [], "notes": "wave 후 Unity 검증 (root-undrift V77 + flicker 2-frame + scatter wiring)"},
+    "Programmer":{"status": "Assigned", "outputs": [], "notes": "lane A(FIX): PawnSpriteBob.cs+SceneSetup.Pawn.cs (child->root movement/tint wire) / lane C: PawnInfoPanel.cs empty-state"},
+    "Art":       {"status": "Assigned", "outputs": [], "notes": "lane B: _gen_fix_audit.py gen_crop_rice growth stages"},
+    "QA":        {"status": "Waiting", "outputs": [], "notes": "wave 후 Unity 검증: walk-bob 2-frame body moves + nameplate/bars/shadow do NOT bob + V77 root-undrift, crop 3-stage PNG, inspector empty-state border+hint"},
     "Sound":     {"status": "Waiting", "outputs": [], "notes": ""}
   },
   "log": [
     {"ts": "2026-05-30", "by": "main", "msg": "오케스트레이션 시스템 부트스트랩, C-001 시작"},
-    {"ts": "2026-05-30", "by": "PM", "msg": "C-002 wave W-M1-01 발행. M1 living-colony 폴리시 3 레인(walk-bob/flicker/scatter), 파일 레인 비충돌, OP-gated(work-priority/mood) 제외. V3 shadow + V4 tree 는 done 으로 확인, 스킵."}
+    {"ts": "2026-05-30", "by": "PM", "msg": "C-002 wave W-M1-01 발행. M1 living-colony 폴리시 3 레인(walk-bob/flicker/scatter), 파일 레인 비충돌, OP-gated(work-priority/mood) 제외. V3 shadow + V4 tree 는 done 으로 확인, 스킵."},
+    {"ts": "2026-05-30", "by": "PM", "msg": "W-M1-01 감사: PawnSpriteBob.cs/FlickerLight.cs/_gen_scatter.py 3종 모두 작성 확인. RED 발견 — PawnSpriteBob 이 child bobGo 에 부착됐는데 Awake 의 GetComponent<PawnMovement>() 가 root(PawnMovement 위치)를 못 찾아 IsMoving 항상 false (walk-bob 미작동, idle-only), MirrorRootTint 도 child 자기 renderer 를 읽어 root tint-anchor 미러 깨짐. C-003 wave W-M1-02 발행: lane A=RED fix, lane B=V6 crop-stage art, lane C=V7 inspector empty-state. 비충돌 파일 레인. V5 flicker/V2 scatter 는 written→QA-verify 대기로 스킵."}
   ]
 }

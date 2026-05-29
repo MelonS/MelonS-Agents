@@ -22,7 +22,14 @@ namespace MelonS.GameProto
         [SerializeField] private float growthPerSecond = 0.011f;  // ~90s real to ripen
         [SerializeField] private int   harvestFood = 8;           // wiki rice yield 8 per plant
 
-        // Sprite colors by stage (RimWorld feel)
+        // W-M1-02 Art: per-stage sprites (wired by SceneSetup.Game.Settlement via
+        // SerializedObject).  When null, falls back to the pre-existing color-tint
+        // so pre-wired scenes and unit tests do not regress.
+        [SerializeField] private Sprite spriteSeedling;  // stage 0: growth < 0.33
+        [SerializeField] private Sprite spriteGrowing;   // stage 1: 0.33..0.66
+        [SerializeField] private Sprite spriteRipe;      // stage 2: >= 0.66
+
+        // Fallback colors used when stage sprites are not assigned (legacy path).
         private static readonly Color SPROUT_COLOR = new Color(0.51f, 0.78f, 0.31f, 1f);
         private static readonly Color GROWN_COLOR  = new Color(0.32f, 0.62f, 0.20f, 1f);
         private static readonly Color RIPE_COLOR   = new Color(0.85f, 0.75f, 0.20f, 1f);
@@ -77,9 +84,34 @@ namespace MelonS.GameProto
         private void RefreshVisual()
         {
             if (sr == null) return;
-            if (growth < 0.33f)      sr.color = SPROUT_COLOR;
-            else if (growth < 0.66f) sr.color = GROWN_COLOR;
-            else                     sr.color = RIPE_COLOR;
+            // W-M1-02: sprite-based stage switching.  When SceneSetup has wired
+            // the three sprite refs, swap the sprite and reset tint to white so
+            // the palette-correct art shows without color multiplication.
+            // Falls back to color-tinting when sprites are not wired (editor /
+            // unit-test scenes that predate this wave).
+            if (spriteSeedling != null && spriteGrowing != null && spriteRipe != null)
+            {
+                if (growth < 0.33f)
+                {
+                    sr.sprite = spriteSeedling;
+                }
+                else if (growth < 0.66f)
+                {
+                    sr.sprite = spriteGrowing;
+                }
+                else
+                {
+                    sr.sprite = spriteRipe;
+                }
+                sr.color = Color.white;
+            }
+            else
+            {
+                // Legacy color-tint path (no stage sprites wired).
+                if (growth < 0.33f)      sr.color = SPROUT_COLOR;
+                else if (growth < 0.66f) sr.color = GROWN_COLOR;
+                else                     sr.color = RIPE_COLOR;
+            }
         }
     }
 }

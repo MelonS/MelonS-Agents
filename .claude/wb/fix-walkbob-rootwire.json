@@ -1,0 +1,18 @@
+{
+  "Status": "Done",
+  "wave": "W-M1-02",
+  "lane": "A (RED fix walk-bob root-wire)",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/PawnSpriteBob.cs",
+    "skills/game-prototype/unity-project/Assets/Editor/SceneSetup.Pawn.cs"
+  ],
+  "qa_flags": [
+    "PREFAB FIELD CHANGE (scene-prefab wiring, NOT visible in plain code diff at runtime without regenerating prefab): SceneSetup.GeneratePawnPrefab now sets TWO additional [SerializeField] refs on the PawnSpriteBob component via SerializedObject before SaveAsPrefabAsset. The Pawn prefab MUST be regenerated (run SceneSetup) for the fix to take effect; an old cached Pawn.prefab will still have the null/wrong refs.",
+    "NEW prefab field 'movementSource' (PawnMovement) -> wired to ROOT pawnGo.GetComponent<PawnMovement>(). Expected: drives IsMoving so walk-bob fires while the pawn is pathing.",
+    "NEW prefab field 'rootTintRenderer' (SpriteRenderer) -> wired to ROOT 'sr' (the draw-disabled tint anchor). Expected: per-pawn variant color / selection-yellow / drafted-cyan written to the root by GameManager+PawnEntity now mirrors onto the visible bobbing child each frame.",
+    "VERIFY walk-bob: select/draft a pawn and order a move -> the visible body sprite (PawnSpriteBob child) should bob ~2px vertical at ~7Hz while moving, ease to idle-breathe (~1px, 1Hz) on stop, no pop.",
+    "VERIFY root-untouched (V77 undrift): nameplate (PawnNameLabel), floating bars (PawnFloatingBars), shadow (PawnShadow) anchor to the ROOT and must NOT bob. PathGrid.WorldToCell / reservations / eject read the ROOT transform.position which is never written by this component (only the child's local Y).",
+    "VERIFY tint: selection-yellow / drafted-cyan / variant color appears on the visible body (was previously invisible because MirrorRootTint read the child's own renderer)."
+  ],
+  "notes": "RED bug from W-M1-01 lane A fixed. Root cause: PawnSpriteBob sits on CHILD 'bobGo', but Awake did GetComponent<PawnMovement>() (PawnMovement is on ROOT -> null -> IsMoving always false -> walk-bob never fired, idle-only) and MirrorRootTint did GetComponent<SpriteRenderer>() (returned child's own bobSr, not the root tint anchor -> tint never mirrored). Fix: added explicit [SerializeField] movementSource (PawnMovement) + rootTintRenderer (SpriteRenderer); Awake uses movementSource (null-guarded), MirrorRootTint uses rootTintRenderer (null-guarded). No runtime GetComponent left on the child. SceneSetup wires both refs to ROOT components via the existing SerializedObject pattern. UNTOUCHED per contract: pawn size/scale, sortingOrder (10 body / 9 shadow), disabled-root-renderer tint-anchor design, all pathfinding wiring, authored amplitudes/frequencies, ease-to-zero-on-stop. Did NOT run Unity (QA verifies in batchmode). Component left on the child bobGo (cleanest: the child already owns the bobbed transform + body renderer); only the resolved refs point to root."
+}

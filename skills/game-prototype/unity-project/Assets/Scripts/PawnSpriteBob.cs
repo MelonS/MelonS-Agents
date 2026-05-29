@@ -36,6 +36,16 @@ namespace MelonS.GameProto
         [SerializeField] private Transform spriteChild;
         // The child renderer that actually draws the body (gets the mirrored tint).
         [SerializeField] private SpriteRenderer childRenderer;
+        // EXPLICIT ref to the ROOT's PawnMovement (this component lives on the
+        //  CHILD, so GetComponent here would find nothing — that was the RED bug:
+        //  movement resolved null, IsMoving always false, walk-bob never fired).
+        //  Wired by SceneSetup to the root pawnGo's PawnMovement.
+        [SerializeField] private PawnMovement movementSource;
+        // EXPLICIT ref to the ROOT SpriteRenderer tint-anchor (left present but
+        //  draw-disabled by SceneSetup).  GetComponent<SpriteRenderer>() on the
+        //  CHILD returns the child's OWN renderer (the other half of the RED bug:
+        //  tint never mirrored).  Wired by SceneSetup to the root sr.
+        [SerializeField] private SpriteRenderer rootTintRenderer;
 
         [Header("Walk bob (vertical sine)")]
         // ~1-1.5 px at PPU16 (1px = 1/16 = 0.0625 world unit).
@@ -55,6 +65,8 @@ namespace MelonS.GameProto
         [SerializeField] private float amplitudeLerpSpeed = 8f;
 
         // Cached so we never allocate / GetComponent per frame.
+        //  Resolved from movementSource (explicit ROOT ref) in Awake — NEVER via
+        //  GetComponent on this (child) GameObject.
         private PawnMovement movement;
         // The child's authored local position (everything except our Y offset).
         private Vector3 baseLocalPos;
@@ -71,7 +83,10 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            movement = GetComponent<PawnMovement>();
+            // Use the EXPLICIT root ref (wired by SceneSetup) — NOT GetComponent,
+            //  because this component sits on the CHILD bob GameObject and the
+            //  PawnMovement lives on the ROOT.  Null-guarded everywhere it's read.
+            movement = movementSource;
             if (spriteChild != null) baseLocalPos = spriteChild.localPosition;
             liveAmplitude = idleAmplitude;
             liveFrequency = idleFrequencyHz;
@@ -115,11 +130,12 @@ namespace MelonS.GameProto
         private void MirrorRootTint()
         {
             if (childRenderer == null) return;
-            // Root renderer is the tint anchor (left present + disabled by
-            //  SceneSetup).  Read its color; push to child only when it changed.
-            var rootSr = GetComponent<SpriteRenderer>();
-            if (rootSr == null) return;
-            Color c = rootSr.color;
+            // Root renderer is the tint anchor (left present + draw-disabled by
+            //  SceneSetup).  Use the EXPLICIT rootTintRenderer ref — GetComponent
+            //  here would read THIS child's own renderer (the RED bug), not the
+            //  root anchor that GameManager + PawnEntity actually write tint to.
+            if (rootTintRenderer == null) return;
+            Color c = rootTintRenderer.color;
             if (hasPushedColor && c == lastPushedColor) return;
             childRenderer.color = c;
             lastPushedColor = c;

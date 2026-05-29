@@ -11,6 +11,11 @@
 #A9  - wood_pile / meat_pile / stone_chunk get a 1px semi-transparent drop
        shadow (bottom + right edge, OUTLINE_OBJ at alpha 120) so the three
        item-drop sprites share a "loot on the ground" visual class.
+#V6  - crop growth-stage variants: crop_rice_seedling / crop_rice_growing /
+       crop_rice (ripe).  Three DISTINCT 16x16 PNGs replace the old
+       single-sprite + runtime-tint approach for the V6 polish wave.
+       All colours strictly from palette.py — no ad-hoc values.
+       CROP_GOLD is the ONLY saturated accent (ripe only).
 
 sprite audit 결과 부적합 11종 PIL Kenney-style 로 재생성:
   wall_wood, floor_wood, stove, deer, wolf, crop_rice,
@@ -30,11 +35,15 @@ from pathlib import Path
 from palette import (
     OUTLINE_STORY,   # near-black warm — pawns + animals 2px / 1px
     OUTLINE_OBJ,     # dark brown — buildings / items 1px
+    OUTLINE_PLANT,   # dark green — plant edge (receding; use or omit)
     WOOD_DK, WOOD_MD, WOOD_LT,
     ROCK_DK, ROCK_MD, ROCK_LT,
-    GRASS_DK,
-    DIRT_MD,         # A8: soil hint for crop base row
-    CROP_GOLD,
+    GRASS_DK,        # darkest grass/plant — stalks, deep foliage
+    GRASS_MD,        # mid grass — growing body
+    GRASS_LT,        # lightest grass — seedling sprouts, tip highlight
+    DIRT_MD,         # tilled soil base row
+    DIRT_DK,         # darker tilled soil / row shadow
+    CROP_GOLD,       # #DAB246 — ripe-only saturated accent
     FIRE_OR as FIRE, FIRE_LT,
     MEAT_RED as MEAT,
 )
@@ -48,9 +57,8 @@ OUTLINE  = OUTLINE_OBJ      # 1px building/item outline
 STONE_DK = ROCK_DK
 STONE_MD = ROCK_MD
 STONE_LT = ROCK_LT
+# WHEAT alias points to the palette CROP_GOLD — no ad-hoc value.
 WHEAT    = CROP_GOLD
-WHEAT_DK = (168, 136, 52, 255)   # 25% darker than CROP_GOLD — no palette entry, derived
-LEAF     = (100, 160, 80, 255)   # plant mid — stays near OUTLINE_PLANT range (A5 refactor)
 
 # A9 drop shadow: OUTLINE_OBJ at 50% alpha — unobtrusive, consistent class marker
 SHADOW   = (OUTLINE_OBJ[0], OUTLINE_OBJ[1], OUTLINE_OBJ[2], 120)
@@ -246,30 +254,101 @@ def gen_wolf():
     return im
 
 
-# ─── crop_rice 16x16 - 곡식 (밀/쌀) ─────────────────────────────
-# CropEntity.cs multiplies this sprite by a runtime color:
-#   growth < 0.33  → SPROUT_COLOR (0.51, 0.78, 0.31) = lime green tint
-#   growth < 0.66  → GROWN_COLOR  (0.32, 0.62, 0.20) = dark green tint
-#   growth >= 0.66 → RIPE_COLOR   (0.85, 0.75, 0.20) = golden tint
-# Design target (A8): growing = muted green; ripe = clearly gold.
-# The sprite is drawn in CROP_GOLD (ripe appearance) so the ripe tint
-# multiplies through accurately.  Green tints pull stems and heads toward
-# muted green.  The soil hint row now uses DIRT_MD (was WOOD_MD — palette
-# bleed; DIRT_MD stays muted across all three tints).
+# ─── crop growth stage helpers ────────────────────────────────────
+# V6 design rule: three distinct 16x16 PNGs replace single-sprite
+# runtime-tint approach.  All colours strictly from palette.py.
+# Canvas: 16x16 RGBA, matching crop_rice.png PPU slot.
+# Layout:
+#   y=15       DIRT_MD  tilled-soil base row (all stages)
+#   y=14       DIRT_DK  darker groove between plant rows (all stages)
+#   stalks at  x = 3, 6, 9, 12  (4 plant rows, spread across tile)
+
+# ─── crop_rice_seedling 16x16 - 새싹 (sparse GRASS_LT sprout dots) ──
+# Stage intent: just-planted / early germination.
+# Visual language: pale, sparse, barely-there dots on tilled dirt.
+# Saturation: lowest of the three — must recede behind any other object.
+# OUTLINE: none (seedlings do not compete at all).
+def gen_crop_rice_seedling():
+    im = new_img(16, 16)
+    # Tilled soil base — the dominant colour at this stage
+    hline(im, 0, 15, 15, DIRT_MD)
+    hline(im, 0, 15, 14, DIRT_DK)
+    # Short soil fill rows (rows 13-10 tilled but mostly dirt)
+    for y in range(10, 14):
+        hline(im, 0, 15, y, DIRT_MD)
+    # Tiny sprout dots: 2px tall per column, GRASS_LT (pale highlight)
+    # Each sprout is just 1-2 pixels — barely visible, intentionally sparse.
+    # Heights vary slightly so they don't read as a flat grid.
+    for sx, tip_y in [(3, 12), (6, 11), (9, 12), (12, 13)]:
+        put(im, sx, tip_y,     GRASS_LT)   # tip (palest, topmost)
+        put(im, sx, tip_y + 1, GRASS_MD)   # base of sprout (slightly darker)
+    # No OUTLINE_PLANT at seedling — plants must fully recede
+    return im
+
+
+# ─── crop_rice_growing 16x16 - 성장 중 (muted green rows) ───────────
+# Stage intent: established crop, mid-growth, filling in.
+# Visual language: muted green rows (GRASS_DK stalks, GRASS_MD body,
+#   GRASS_LT single-pixel tip). No saturated accent — must recede.
+# OUTLINE: OUTLINE_PLANT on top pixel of each stalk only (darkest plant
+#   edge, still recedes; optional 1px cap so shape reads without pop).
+def gen_crop_rice_growing():
+    im = new_img(16, 16)
+    # Tilled soil base
+    hline(im, 0, 15, 15, DIRT_MD)
+    hline(im, 0, 15, 14, DIRT_DK)
+    # Mid-range stalks: GRASS_DK lower, GRASS_MD upper
+    # 4 stalk columns, each 6px tall (y=8..13 lower, y=5..7 upper body)
+    for sx in [3, 6, 9, 12]:
+        # Lower stalk — darkest, anchor to soil
+        vline(im, sx, 10, 13, GRASS_DK)
+        # Upper stalk body — mid green, filling in
+        vline(im, sx, 7, 9, GRASS_MD)
+        # Top tip — lightest, still muted
+        put(im, sx, 6, GRASS_LT)
+        # OUTLINE_PLANT cap at very top — dark green, not black; recedes
+        put(im, sx, 5, OUTLINE_PLANT)
+    # Slight leaf spread at mid-height (1px left/right of stalk, GRASS_MD)
+    # — gives a "filling-in" silhouette without adding saturation
+    for sx in [3, 6, 9, 12]:
+        put(im, sx - 1, 8, GRASS_MD)
+        put(im, sx + 1, 8, GRASS_MD)
+    return im
+
+
+# ─── crop_rice 16x16 - 익은 작물 ripe (CROP_GOLD heads pop) ─────────
+# Stage intent: fully ripe, ready for harvest.
+# Visual language: tall GRASS_DK stalks + CROP_GOLD grain heads that
+#   POP as the sole saturated accent on the tile.  No other warm accent.
+# OUTLINE: OUTLINE_PLANT on stalk only (not on heads — heads use their
+#   own gold fill to stand out; adding a dark outline would suppress them).
+# Note: WHEAT_DK ad-hoc value removed (V6 rule).  Head shading uses
+#   DIRT_MD (a palette-legal muted warm) for the lower grain bead shadow.
 def gen_crop_rice():
     im = new_img(16, 16)
-    # 줄기 (녹색 5줄)
-    for sx in [3, 6, 9, 12]:
-        vline(im, sx, 6, 14, GRASS_DK)
-    # 익은 이삭 (노란 그레인)
-    for sx, top in [(3, 4), (6, 3), (9, 4), (12, 5)]:
-        put(im, sx, top, WHEAT)
-        put(im, sx, top + 1, WHEAT)
-        put(im, sx - 1, top + 1, WHEAT_DK)
-        put(im, sx + 1, top + 1, WHEAT_DK)
-        put(im, sx, top - 1, WHEAT)
-    # 바닥 흙 hint — DIRT_MD (was WOOD_MD — wrong material)
+    # Tilled soil base
     hline(im, 0, 15, 15, DIRT_MD)
+    hline(im, 0, 15, 14, DIRT_DK)
+    # Full-height stalks — GRASS_DK (dark, muted; recedes)
+    for sx in [3, 6, 9, 12]:
+        vline(im, sx, 6, 13, GRASS_DK)
+        # OUTLINE_PLANT cap at stalk base connection (bottom bead shadow)
+        put(im, sx, 13, OUTLINE_PLANT)
+    # Ripe grain heads — staggered heights for natural rhythm
+    # Head shape: 3px tall column + 1px side beads → small seed cluster
+    # CROP_GOLD is the ONLY saturated colour on this sprite.
+    for sx, tip_y in [(3, 3), (6, 2), (9, 3), (12, 4)]:
+        # Top grain bead (tip)
+        put(im, sx, tip_y,     CROP_GOLD)
+        # Mid grain bead
+        put(im, sx, tip_y + 1, CROP_GOLD)
+        # Lower grain bead — DIRT_MD shadow (palette-legal, warm muted)
+        put(im, sx, tip_y + 2, DIRT_MD)
+        # Side beads (give the head a T/drooping shape — wheat silhouette)
+        put(im, sx - 1, tip_y + 1, CROP_GOLD)
+        put(im, sx + 1, tip_y + 1, CROP_GOLD)
+        # Neck connecting head to stalk — GRASS_DK continuation
+        put(im, sx, tip_y + 3, GRASS_DK)
     return im
 
 
@@ -411,17 +490,20 @@ def gen_research_bench():
 
 def main():
     out = {
-        "wall_wood.png":       gen_wall_wood(),
-        "floor_wood.png":      gen_floor_wood(),
-        "stove.png":           gen_stove(),
-        "deer.png":            gen_deer(),
-        "wolf.png":            gen_wolf(),
-        "crop_rice.png":       gen_crop_rice(),
-        "stone_vein.png":      gen_stone_vein(),
-        "stone_chunk.png":     gen_stone_chunk(),
-        "wood_pile.png":       gen_wood_pile(),
-        "meat_pile.png":       gen_meat_pile(),
-        "research_bench.png":  gen_research_bench(),
+        "wall_wood.png":            gen_wall_wood(),
+        "floor_wood.png":           gen_floor_wood(),
+        "stove.png":                gen_stove(),
+        "deer.png":                 gen_deer(),
+        "wolf.png":                 gen_wolf(),
+        # V6 growth stages — three distinct PNGs replace single tint sprite
+        "crop_rice_seedling.png":   gen_crop_rice_seedling(),
+        "crop_rice_growing.png":    gen_crop_rice_growing(),
+        "crop_rice.png":            gen_crop_rice(),          # ripe / canonical slot
+        "stone_vein.png":           gen_stone_vein(),
+        "stone_chunk.png":          gen_stone_chunk(),
+        "wood_pile.png":            gen_wood_pile(),
+        "meat_pile.png":            gen_meat_pile(),
+        "research_bench.png":       gen_research_bench(),
     }
     for name, im in out.items():
         p = HERE / name

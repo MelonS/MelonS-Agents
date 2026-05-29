@@ -61,9 +61,65 @@ namespace MelonS.GameProto
             foreach (var e in borderEdges) if (e != null) e.enabled = v;
         }
 
+        // #UI-restyle V7 — styled empty-state.  Instead of one bare cramped
+        //   line on a collapsed rectangle, the empty inspector keeps its
+        //   bordered/titled frame (panelBg + borderEdges) and shows a centered
+        //   MUTED hint plus a small dimmed select/cursor glyph above it.
+        //   Built lazily as children of emptyText so it inherits the same
+        //   Korean-font path SceneSetup already wired onto emptyText.
+        private Text emptyGlyph;
+
+        private void EnsureEmptyState()
+        {
+            if (emptyText == null) return;
+            // Center the hint inside the panel rather than the cramped corner
+            //   line the Editor builder produced.
+            var ert = emptyText.GetComponent<RectTransform>();
+            if (ert != null)
+            {
+                ert.anchorMin = new Vector2(0f, 0f);
+                ert.anchorMax = new Vector2(1f, 1f);
+                ert.offsetMin = new Vector2(MelonS.GameProto.Core.UITheme.PadOuter, MelonS.GameProto.Core.UITheme.PadOuter);
+                ert.offsetMax = new Vector2(-MelonS.GameProto.Core.UITheme.PadOuter, -MelonS.GameProto.Core.UITheme.PadOuter);
+            }
+            emptyText.alignment = TextAnchor.MiddleCenter;
+            emptyText.color = MelonS.GameProto.Core.UITheme.TextSecondary;  // muted cream
+            emptyText.text = "오브젝트를 선택하세요";
+
+            if (emptyGlyph != null) return;
+            // Small dimmed select/cursor glyph centered just above the hint.
+            var go = new GameObject("EmptyGlyph");
+            go.transform.SetParent(emptyText.transform.parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(48f, 48f);
+            rt.anchoredPosition = new Vector2(0f, 22f);  // above the centered hint
+            emptyGlyph = go.AddComponent<Text>();
+            // Route through the same Korean-font path used for all text here;
+            //   borrow emptyText's already-resolved font if present.
+            emptyGlyph.font = emptyText.font != null
+                ? emptyText.font
+                : MelonS.GameProto.Core.UITheme.LoadKoreanFont(32);
+            emptyGlyph.fontSize = 30;
+            emptyGlyph.alignment = TextAnchor.MiddleCenter;
+            emptyGlyph.text = "▸";  // ▸ small select/cursor caret glyph
+            var dim = MelonS.GameProto.Core.UITheme.TextSecondary;
+            dim.a = 0.5f;  // dimmed (alpha only — no new inline panel color)
+            emptyGlyph.color = dim;
+            emptyGlyph.raycastTarget = false;
+        }
+
+        private void SetEmptyStateVisible(bool v)
+        {
+            if (emptyGlyph != null) emptyGlyph.enabled = v;
+        }
+
         private void Update()
         {
             EnsureBorder();
+            EnsureEmptyState();
             if (selector == null)
             {
                 Debug.LogWarning("[PawnInfoPanel] no selector");
@@ -83,10 +139,13 @@ namespace MelonS.GameProto
             if (sleepBar != null) sleepBar.transform.parent.parent.gameObject.SetActive(any);
             if (moodBar  != null) moodBar.transform.parent.parent.gameObject.SetActive(any);
             if (emptyText != null) emptyText.gameObject.SetActive(!any);
-            // Day 15: collapse panel background when no pawn — show only
-            // the empty-text hint, no dark rectangle.
-            if (panelBg != null) panelBg.enabled = any;
-            SetBorderVisible(any);  // #UI-restyle U5 — border shows only when populated
+            SetEmptyStateVisible(!any);  // #UI-restyle V7 — dimmed glyph only when empty
+            // #UI-restyle V7 — keep the bordered/titled frame drawn in the
+            //   empty state too (was Day-15 collapse-to-bare-line).  The empty
+            //   inspector now reads as a finished styled panel, not an
+            //   unfinished cramped rectangle.  Frame is always on.
+            if (panelBg != null) panelBg.enabled = true;
+            SetBorderVisible(true);
 
             if (!any) return;
 

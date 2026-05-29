@@ -1,0 +1,30 @@
+{
+  "Status": "Done",
+  "agent": "Art",
+  "task": "V6 crop growth-stage markers",
+  "wave": "W-M1-02",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Sprites/_gen_fix_audit.py",
+    "skills/game-prototype/unity-project/Assets/Sprites/crop_rice_seedling.png",
+    "skills/game-prototype/unity-project/Assets/Sprites/crop_rice_growing.png",
+    "skills/game-prototype/unity-project/Assets/Sprites/crop_rice.png"
+  ],
+  "sprite_semantics": {
+    "crop_rice_seedling.png": "Stage 0 (seedling): sparse GRASS_LT 2px sprout dots on DIRT_MD/DIRT_DK tilled base. Pale + sparse — barely-there, fully recedes. 5 unique colours (transparent + 4 palette). No outline.",
+    "crop_rice_growing.png":  "Stage 1 (growing): 4-column stalks GRASS_DK (lower) -> GRASS_MD (mid body) -> GRASS_LT (tip) with 1px OUTLINE_PLANT cap. 1px left/right leaf spread at mid-height. Muted green — recedes below pawn saturation. 7 unique colours.",
+    "crop_rice.png":          "Stage 2 (ripe / canonical slot): GRASS_DK stalks + CROP_GOLD grain head cluster (tip + mid + side beads). DIRT_MD lower bead shadow (palette-legal). CROP_GOLD is the ONLY saturated accent. 6 unique colours. Unmistakably gold, pops."
+  },
+  "qa_flags": [
+    "WIRING NEEDED (programmer): CropEntity.cs must switch sprite reference by growth stage bracket — suggested: growth < 0.33 -> crop_rice_seedling, 0.33..0.66 -> crop_rice_growing, >= 0.66 -> crop_rice (ripe). Remove or disable old runtime Color tint multiplication (SPROUT_COLOR / GROWN_COLOR / RIPE_COLOR) on CropEntity SpriteRenderer — new sprites are self-describing, tint multiplication would corrupt palette.",
+    "WIRING NEEDED (programmer/scene): All three crop sprites must be registered in SceneSetup.SpritePaths[] so ForceImportAllAssets sets TextureImporter.spritePixelsPerUnit = 16 (matching crop_rice.png PPU). Slugs: crop_rice_seedling, crop_rice_growing, crop_rice.",
+    "SORTING ORDER: crop sprites should render at sortingOrder = ground+1 (below pawns, above bare terrain). Verify CropEntity SpriteRenderer.sortingOrder does not compete with pawn layer.",
+    "UNITY META: crop_rice_seedling.png and crop_rice_growing.png are NEW files — Unity will need .meta files generated on first import (batchmode ForceImportAllAssets handles this if added to SpritePaths). QA to verify no missing-meta warnings."
+  ],
+  "palette_compliance": {
+    "ad_hoc_colours_removed": ["WHEAT_DK = (168, 136, 52, 255) — was defined inline, now fully removed from all crop functions"],
+    "all_colours_from_palette_py": true,
+    "CROP_GOLD_usage": "ripe (crop_rice.png) grain heads ONLY — not present in seedling or growing sprites"
+  },
+  "canvas": "16x16 RGBA — matches existing crop_rice.png PPU slot",
+  "notes": "gen_crop_rice() rewritten (ripe stage); gen_crop_rice_seedling() and gen_crop_rice_growing() added as siblings. WHEAT_DK ad-hoc value removed; DIRT_MD used for lower-bead shadow (palette-legal warm muted). OUTLINE_PLANT used on growing cap only; seedling has no outline. All three PNGs run-verified via PIL pixel sampling — zero ad-hoc colours, zero WHEAT_DK occurrences."
+}

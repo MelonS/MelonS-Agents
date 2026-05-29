@@ -1,0 +1,11 @@
+{
+  "Status": "Done",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/PawnInfoPanel.cs"
+  ],
+  "qa_flags": [
+    "NEW runtime UI child 'EmptyGlyph' (Text) anchored center of inspector panel, parented under emptyText.transform.parent. Visible ONLY in empty state (nothing selected). QA: screenshot the empty inspector — expect the bordered/titled frame STILL DRAWN (panelBg + 4 border edges visible), a centered MUTED hint '오브젝트를 선택하세요', and a small dimmed (alpha 0.5) '▸' caret glyph above the hint. NOT a single cramped corner line.",
+    "QA: select a pawn — verify populated layout UNCHANGED (title + Food/Sleep/Mood bars + healthText), and EmptyGlyph + emptyText both hidden. Border/panelBg remain on (was already on when populated)."
+  ],
+  "notes": "V7 inspector empty-state. PawnInfoPanel.cs ONLY edited. Empty state now keeps bordered/titled frame drawn (panelBg.enabled=true + SetBorderVisible(true) always — removed Day-15 collapse-to-bare-line), re-anchors existing emptyText to fill+MiddleCenter with UITheme.TextSecondary (muted cream) hint '오브젝트를 선택하세요', and lazily builds a dimmed '▸' select/cursor glyph (UITheme.TextSecondary at alpha 0.5 — alpha-only dim, NO new inline panel color). Glyph font borrows emptyText.font (same Korean-font path SceneSetup wired) with UITheme.LoadKoreanFont fallback. Pure UI, no logic/behavior/dependency change. Populated layout untouched. No SceneSetup/UITheme/sprite-gen edits. No // TODO. Unity not run — QA verifies."
+}

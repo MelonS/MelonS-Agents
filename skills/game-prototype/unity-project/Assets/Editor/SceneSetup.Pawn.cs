@@ -137,6 +137,17 @@ namespace MelonS.GameProto.EditorTools
             var bobSo = new SerializedObject(bob);
             bobSo.FindProperty("spriteChild").objectReferenceValue = bobGo.transform;
             bobSo.FindProperty("childRenderer").objectReferenceValue = bobSr;
+            // RED-bug fix (W-M1-02 lane A): the bob component lives on the CHILD,
+            //  so its old Awake GetComponent<PawnMovement>() / GetComponent<SpriteRenderer>()
+            //  resolved to nothing / the child's own renderer.  Wire EXPLICIT refs
+            //  to the ROOT components instead:
+            //    movementSource   -> root pawnGo's PawnMovement (drives IsMoving → walk-bob)
+            //    rootTintRenderer -> root 'sr' tint-anchor (variant/selection/drafted color)
+            //  Same SerializedObject pattern as spriteChild/childRenderer so the
+            //  refs persist into the prefab asset.
+            bobSo.FindProperty("movementSource").objectReferenceValue =
+                pawnGo.GetComponent<PawnMovement>();
+            bobSo.FindProperty("rootTintRenderer").objectReferenceValue = sr;
             bobSo.ApplyModifiedPropertiesWithoutUndo();
 
             PrefabUtility.SaveAsPrefabAsset(pawnGo, PawnPrefabPath);

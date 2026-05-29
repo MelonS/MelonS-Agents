@@ -26,7 +26,11 @@ namespace MelonS.GameProto.EditorTools
             //   X . . . X   <- 좌우 벽 + 가운데 floor
             //
             // 벽 5개: (-7, 1)..(-3, 1) 위쪽 가로벽 + 좌우 양끝 (-7, 0) (-3, 0)
-            Sprite cropSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice.png");
+            Sprite cropSprite         = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice.png");
+            Sprite cropSeedlingSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice_seedling.png");
+            Sprite cropGrowingSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice_growing.png");
+            if (cropSeedlingSprite == null) Debug.LogWarning("[SceneSetup] crop_rice_seedling.png null — stage-sprite wiring skipped");
+            if (cropGrowingSprite  == null) Debug.LogWarning("[SceneSetup] crop_rice_growing.png null — stage-sprite wiring skipped");
             Sprite stockSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stockpile_marker.png");
 
             // 벽 5개 - 북쪽 벽 라인 (y=1, x=-7..-3) + 좌우 벽 (x=-7, x=-3, y=0)
@@ -84,6 +88,18 @@ namespace MelonS.GameProto.EditorTools
                     {
                         float startGrowth = 0.4f + ((cx + cy + 100) % 5) * 0.10f;  // deterministic
                         ceField.SetValue(ce, startGrowth);
+                    }
+                    // W-M1-02 Art: wire the three per-stage sprite refs via
+                    // SerializedObject so [SerializeField] private fields persist
+                    // into the scene.  When all three are assigned, CropEntity
+                    // switches sprites at runtime instead of color-tinting.
+                    if (cropSeedlingSprite != null && cropGrowingSprite != null && cropSprite != null)
+                    {
+                        var ceSo = new SerializedObject(ce);
+                        ceSo.FindProperty("spriteSeedling").objectReferenceValue = cropSeedlingSprite;
+                        ceSo.FindProperty("spriteGrowing").objectReferenceValue  = cropGrowingSprite;
+                        ceSo.FindProperty("spriteRipe").objectReferenceValue     = cropSprite;
+                        ceSo.ApplyModifiedPropertiesWithoutUndo();
                     }
                     // 농경지 dirt 타일 강제 부착 (배경)
                     tm.SetTile(new Vector3Int(cx, cy, 0), dirtTile);
