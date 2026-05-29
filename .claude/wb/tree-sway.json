@@ -1,0 +1,40 @@
+{
+  "role": "Art",
+  "lane": "C",
+  "wave": "W-M4-02",
+  "status": "Done",
+  "task": "V5 remainder — tree-canopy sway (fire-flicker already shipped)",
+  "output": "skills/game-prototype/unity-project/Assets/Scripts/TreeSwayDriver.cs",
+  "pattern": "Self-attaching [RuntimeInitializeOnLoadMethod(AfterSceneLoad)], hidden DontDestroyOnLoad GO, FindFirstObjectByType idempotency guard — mirrors FlickerLight/RainSoundDriver/NightLightPoolDriver",
+  "approach": {
+    "sprite_child": "Creates 'TreeSway' child GO per tree at runtime with mirrored SpriteRenderer (same sprite/sortingLayerID/sortingOrder as root). Root SR set enabled=false (tint anchor, draw-disabled). Child SR draws the canopy and is swayed.",
+    "sway": "+/-0.04 world units (~0.64 px at PPU16, within spec ±1 px) horizontal sine at 0.3 Hz on child localPosition.x ONLY. Root transform never touched.",
+    "phase": "Deterministic per-tree phase offset derived from GO instanceID & 0xFF — 45 trees get distributed phases; no lock-step sway.",
+    "easing": "liveAmplitude eases from 0 → target via exp lerp (EaseLerpSpeed=2.0) on first attach — no position pop.",
+    "tint_mirror": "Root SR color (written by TakeChopDamage / TintHelper / SetSpecies) mirrored to child SR each frame so chop-tint and species-tint remain visible.",
+    "rescan": "Periodic poll every 2.0s (Time.unscaledTime) picks up trees regrown by RegrowthScheduler. Dead-tree entries pruned each scan + each Update."
+  },
+  "files_not_touched": [
+    "TreeEntity.cs",
+    "FlickerLight.cs",
+    "_gen_sprites.py",
+    "SceneSetup*.cs",
+    "SaveLoadManager.cs",
+    "MineDesignation.cs",
+    "PawnBuilder.cs",
+    "StoneVeinEntity.cs"
+  ],
+  "qa_flags": [
+    "TreeSway child GOs are children of TreeEntity GOs; Destroy(tree.gameObject) cascades — confirm no orphan 'TreeSway' GOs after a chop.",
+    "Root SpriteRenderer.enabled=false; confirm species-tint (SetSpecies) and chop-damage tint (TakeChopDamage/TintHelper) are still visible via per-frame color mirror in TreeSwayEntry.Update.",
+    "Scene-wiring: zero SceneSetup edits; confirm no double-attach on scene reload (FindFirstObjectByType guard).",
+    "Binary acceptance: tree canopy shows <=1px lateral drift between frames ~1s apart; tree does NOT drift off its cell (root untouched); nothing else jitters; sway recedes (does not out-move pawns)."
+  ],
+  "acceptance": {
+    "visual_sway": "Canopy shows <=1px lateral drift between two frames ~1s apart",
+    "root_intact": "Tree does NOT drift off its cell (root transform.position untouched)",
+    "no_jitter": "Nothing else on screen jitters",
+    "recedes": "Sway is subtle; pawns still draw the eye first"
+  },
+  "updated": "2026-05-30"
+}

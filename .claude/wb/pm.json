@@ -1,35 +1,17 @@
 {
   "role": "PM",
   "status": "Done",
-  "cycle": "C-009",
-  "wave": "W-M4-01",
-  "ts": "2026-05-30",
-  "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"],
-  "prev_wave_closed": {
-    "id": "W-M3-03",
-    "verdict": "PASS",
-    "build_tag": "cx-w4-2026-05-30",
-    "commit_hash": "996e224",
-    "note": "dynamic-music #8 (MusicDirector.cs + AudioBank dangerBgm crossfade) + inspector-tabs #23 (PawnInfoPanel 4-tab) + raid-threat-verify #27 (V7RaidThreatTest.cs) + weather-particles #14 (WeatherParticleDriver.cs) all GREEN/WIRED. QA fixed MusicDirector AIDirector.Instance->FindFirstObjectByType in-wave + supplied missing .meta + danger.wav wiring (PASSED, not residual RED). no RED on disk -> no FIX subtask needed"
+  "cycle": "C-010",
+  "wave": "W-M4-02",
+  "prior_wave_closed": "W-M4-01 PASS @e250b43 build cx-w5-2026-05-30 (Deconstruct #15 / move-speed reconcile #28 / save-load round-trip VERIFY #29 / night warm-light pools). No compile fixes, no SceneSetup hot-file edit, no disk RED.",
+  "carried_flag": "#29 serialization gaps (BedQuality/StockpilePriority/TreeSpecies/WallMaterial absent from SaveData) -> actioned this wave as Lane B (highest-trust follow-up).",
+  "lanes": {
+    "A": "game-programmer / M4 #16 Mine designation — MineDesignation.cs(new, DeconstructDesignation mirror) + PawnMiner-or-PawnBuilder.cs mine action + (StoneVeinEntity.cs only-if-needed). drag/click designate vein -> idle miner mines -> stone. ZERO SceneSetup budget target.",
+    "B": "game-build-engineer / M5 #29 save-load serialization FIX — SaveLoadManager.cs ONLY. BedSave/StockpileSave/WallSave + TreeSave.species. Flip existing V9 test FAIL->PASS. Skip+flag any entity lacking a setter (no entity-file widening).",
+    "C": "game-artist / M1 V5 tree-sway remainder — TreeSwayDriver.cs(new, self-attach) sprite-child +/-1px sine only, root untouched.",
+    "D": "game-build-engineer / M5 V8 obstacle-pathfind verify — new test .cs, blocked path routes around/stops, never occupies blocked cell."
   },
-  "audit": {
-    "dynamic_music_8": "PASS @996e224 — done, skipped",
-    "inspector_tabs_23": "PASS @996e224 — done, skipped",
-    "raid_threat_verify_27": "PASS @996e224 — test added, skipped",
-    "weather_particles_14": "PASS @996e224 — done, skipped",
-    "all_cheap_sound_motion_ui": "EXHAUSTED — sound 1-9 + motion 10-13 + UI #5/#22/#23 + weather #9/#14 + dynamic-music #8 landed",
-    "red_on_disk": "none",
-    "next_driver": "wiki rimworld-comparison.md sequencing: cheap lane-isolatable items exhausted -> 'then build-ops 15-18 (the design-a-base feel) ... verification 25-29 runs continuously as the gate'. Open the FIRST M4 build-op with the single ★★★ highest-impact item #15 Deconstruct as a dedicated multi-file lane, advance the verify gate with the LAST two verify items #28 (move-speed reconcile) + #29 (save-load round-trip), and complete the night atmosphere visual (warm light pools, Dim1 day-night optional row) to match the rain/danger ambience that shipped."
-  },
-  "wave_lanes": [
-    {"lane": "A", "role": "game-programmer", "milestone": "M4-building", "label": "deconstruct", "files": ["NEW Assets/Scripts/DeconstructDesignation.cs", "Assets/Scripts/PawnBuilder.cs (or build-action class)", "Assets/Scripts/PathGrid.cs", "<=1 SceneSetup hot file ONLY IF unavoidable (FLAG)"], "wiki_item": "#15", "binary": "designating a built wall -> a pawn removes it, refunds ~50% material, the cell becomes walkable"},
-    {"lane": "B", "role": "game-build-engineer", "milestone": "M5-gameplay-verify", "label": "movespeed-reconcile", "files": ["NEW test .cs under existing test asmdef", "skills/game-prototype/docs/audit-rimworld-fidelity-2026-05-29.md (doc tick)"], "wiki_item": "#28", "binary": "effective PawnStats.moveSpeed reads 4.6 and the audit/goal checkbox is updated"},
-    {"lane": "C", "role": "game-build-engineer", "milestone": "M5-gameplay-verify", "label": "saveload-roundtrip", "files": ["NEW test .cs under existing test asmdef (different file from Lane B)"], "wiki_item": "#29", "binary": "after save->load, a fine bed is still fine (not reverted to default); if a field is unserialized -> document + FLAG, do not widen lane"},
-    {"lane": "D", "role": "game-artist", "milestone": "M1-design", "label": "night-light-pools", "files": ["NEW Assets/Scripts/NightLightPoolDriver.cs", "optional NEW small radial-glow PNG(+.meta)"], "wiki_item": "Dim1 day-night optional row", "binary": "at night a lit stove/fire has a warm glow pool on the ground; by day none; glow sits below pawns (no wash)"}
-  ],
-  "non_overlapping": true,
-  "non_overlap_proof": "A=NEW DeconstructDesignation.cs + PawnBuilder.cs + PathGrid.cs (+ at most ONE SceneSetup hot file, the wave's ONLY hot-file budget); B=NEW test .cs + audit.md (doc-only); C=NEW test .cs (a DIFFERENT new file from B's, same asmdef); D=NEW NightLightPoolDriver.cs (+ optional new glow PNG). No file appears in two lanes. Exactly one lane (A) is permitted a SceneSetup hot-file touch this wave (so the 'at most ONE subtask edits each hot SceneSetup file' rule holds — and only IF unavoidable, prefer the existing Architect/ControlBar build infra). B/C touch zero runtime .cs; they read moveSpeed/SaveLoad read-only and FLAG rather than edit if a value/field is wrong. D touches only its own new driver and reads DayNightCycle/fire entities read-only. Cross-lane symbol deps are read-only.",
-  "op_gated_excluded": ["work-priority", "mood/mental-break rewrite", "#24 per-terrain path-cost", "#30 mood thought-sum", "roof/collapse system", "#16 mine-designation", "#17 grow-zone", "#18 drag-rect placement", "#19 torch/lamp", "#20 table+chair", "#21 stone-floor", "M4 breadth trading/power/taming/bills"],
-  "qa_flags_expected": ["Lane A deconstruct mode-toggle button: scene-side wiring if a SceneSetup hot file edit was unavoidable (the wave's only hot-file budget)", "Lane A: pawn path to designated structure must reuse existing build/haul pathing + adjacent-stand-cell (no new pathfinding) — verify no cell-desync", "Lane A: PathGrid wall ref-count decrement on deconstruct-complete (cell becomes walkable; mirror the build-time increment)", "Lane B: if effective moveSpeed is NOT 4.6 -> FLAGGED, not silently edited", "Lane C: if BedQuality/StockpilePriority/TreeSpecies/WallMaterial are genuinely unserialized -> test documents the failing field + FLAG for a dedicated serialization code wave (verify-only this wave)", "Lane D: glow render order below pawns/floating-bars, alpha-blend not additive, must not wash pawn saturation"],
-  "notes": "Remaining wiki backlog for future waves (one build-op per dedicated wave, each multi-file PawnBuilder/designation/PathGrid/SceneSetup so NOT lane-isolatable alongside other build-ops): #16 mine-designation (drag-rect rock/ore -> PawnMiner) / #17 grow-zone (drag-rect dirt -> auto-plant crops) / #18 drag-rect wall/floor line placement. Build catalogue (art+code, multi-file, own waves): #19 torch/standing-lamp / #20 table+chair / #21 stone/paved floor. If Lane C reveals a real serialization gap, the immediate next wave should be the dedicated #29 serialization CODE wave (SaveLoad.cs + the 4 entity serializers) before more build-ops. Gated (#24 terrain-cost, #30 mood-sum, roof/collapse, M4 trading/power/taming/bills) wait for explicit OP-OK. After W-M4-01 the loop = continue M4 build-ops one-at-a-time (#16->#17->#18) + catalogue (#19->#20->#21), with verify (#28/#29 here, plus any newly-needed V-test) as the continuous gate."
+  "non_overlap_proof": "A=MineDesignation.cs(new)+PawnMiner-or-PawnBuilder.cs(+StoneVein only-if-needed); B=SaveLoadManager.cs; C=TreeSwayDriver.cs(new); D=new test .cs. No file in two lanes. Only A may (should not) touch a SceneSetup hot file; B/C/D touch zero SceneSetup.",
+  "op_gated_excluded": ["work-priority", "mood/mental-break #30", "per-terrain path-cost #24", "roof/collapse", "grow-zone #17", "drag-rect-walls #18", "catalogue #19/#20/#21", "M4 breadth trading/power/taming/bills"],
+  "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"]
 }

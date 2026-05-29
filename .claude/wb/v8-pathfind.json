@@ -1,0 +1,34 @@
+{
+  "role": "BuildEngineer",
+  "lane": "D",
+  "milestone": "M5-gameplay-verify",
+  "wave": "W-M4-02",
+  "task": "V8 obstacle-pathfind verify test",
+  "status": "Done",
+  "output": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V8ObstaclePathfindTest.cs",
+  "asmdef": "same implicit asmdef as V4CombatChainTest / V7RaidThreatTest / V8MoveSpeedTest (Assets/Scripts/Tests folder, no separate .asmdef file found — same Unity default assembly)",
+  "namespace": "MelonS.GameProto.Tests",
+  "class": "V8ObstaclePathfindTest",
+  "v8_acceptance": "a pawn whose direct path is blocked by an obstacle pathfinds around it (or stops) and never walks through the blocked cell — asserted as one PASS line",
+  "test_design": {
+    "map": "PathGrid.FromMask — 60x60 all-walkable except cell (1,0) which is the wall blocking the straight line between pawn-start (0,0) and target (2,0)",
+    "detour_exists": "route (0,0)->(0,1)->(1,1)->(2,1)->(2,0) is fully walkable",
+    "steps": [
+      "Step 1: wallCell (1,0) is not walkable — PathGrid.IsWalkable returns false",
+      "Step 2: AStar.FindPath returns a non-null path that does NOT contain (1,0)",
+      "Step 3: pawn commanded via SetTarget reaches target OR stops cleanly (LastPathFailed/HasTarget==false) — both outcomes accepted per V8 spec",
+      "Step 4: during simulation pawn never occupies cell (1,0) — asserting no clip-through",
+      "Step 5: pawn never exits PathGrid bounds — no off-grid stuck"
+    ],
+    "runtime_edits": "NONE — zero runtime .cs touched",
+    "existing_test_edits": "NONE — zero existing test files touched"
+  },
+  "flags_for_qa": [
+    "FLAG-G1: PawnMovement.UsePathfinding and PawnMovement.Grid are public static fields — the test saves/restores them around the simulation; if another test runs concurrently (parallel test runner) these statics could collide. These tests are designed to run sequentially per the harness.",
+    "FLAG-G2: PawnMovement.AdvanceAlongPath drives movement directly (bypasses Unity Update); the pawn is moved at 1.5 * fixedDeltaTime world-units per tick, which is generous for 1-cell grid steps. If PawnStats.CreateDefault().arriveDistance is large the pawn may overshoot the final cell — the test accepts 'arrived OR stopped cleanly' so overshoot is not a failure.",
+    "FLAG-G3: No PawnChopper or PawnUtilityAI added to the test pawn — the pawn has no autonomous AI. SetTarget + AdvanceAlongPath is called directly, which is the correct read-only API convention matching prior tests.",
+    "FLAG-G4: PathGrid.FromMask indexes as mask[x-MIN, y-MIN] — tested by inspecting PathGrid.cs source. If the MIN offset changes in a future refactor, the mask construction here will need to be updated."
+  ],
+  "compile_risk": "Low — uses only public APIs already used by prior tests. No reflection. No new runtime dependencies. No using directives beyond System.Collections.Generic, UnityEngine, MelonS.GameProto.AI, MelonS.GameProto.Data.",
+  "qa_next": "QA: run Unity batchmode with V8ObstaclePathfindTest scene / component; expect PASS on the composite assert. Verify no regression on isolated>=76, integration==42, build-click 9/9."
+}
