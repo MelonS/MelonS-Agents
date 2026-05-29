@@ -47,6 +47,10 @@ namespace MelonS.GameProto.EditorTools
             if (File.Exists("Assets/Audio/rain.wav"))
                 AssetDatabase.ImportAsset("Assets/Audio/rain.wav", ImportAssetOptions.ForceUpdate);
             AudioClip rainClip    = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/rain.wav");
+            // W-M3-03 Lane A: M3 SFX slot (wiki Dim2 #8 — danger/tension music during raid)
+            if (File.Exists("Assets/Audio/danger.wav"))
+                AssetDatabase.ImportAsset("Assets/Audio/danger.wav", ImportAssetOptions.ForceUpdate);
+            AudioClip dangerClip  = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/danger.wav");
             SerializedObject abSo = new SerializedObject(audioBank);
             if (chopClip != null)    abSo.FindProperty("sfxChop").objectReferenceValue    = chopClip;
             if (selClip != null)     abSo.FindProperty("sfxSelect").objectReferenceValue  = selClip;
@@ -62,6 +66,8 @@ namespace MelonS.GameProto.EditorTools
             if (mineClip != null)    abSo.FindProperty("sfxMine").objectReferenceValue    = mineClip;
             // M3 new slot — wiki #9 rain loop (W-M3-02 Lane D)
             if (rainClip != null)    abSo.FindProperty("rainLoop").objectReferenceValue   = rainClip;
+            // M3 new slot — wiki #8 danger music (W-M3-03 Lane A)
+            if (dangerClip != null)  abSo.FindProperty("dangerBgm").objectReferenceValue  = dangerClip;
             abSo.ApplyModifiedPropertiesWithoutUndo();
         }
     }

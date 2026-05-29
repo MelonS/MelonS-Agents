@@ -42,9 +42,18 @@ namespace MelonS.GameProto
         // the tier has not changed since bootstrap (handles load-into-raid edge case).
         private int _lastTier = -1;
 
+        // Cached AIDirector reference -- re-polled each frame until found.
+        // AIDirector does not use the Services locator (it is a scene MonoBehaviour
+        // placed by SceneSetup); the correct search pattern is FindFirstObjectByType,
+        // matching AlertStackUI.cs which resolves AIDirector the same way.
+        private AIDirector _director;
+
         private void Update()
         {
-            var director = AIDirector.Instance;
+            // Re-poll until the director is live (handles late-spawned scenes).
+            if (_director == null)
+                _director = FindAIDirector();
+            var director = _director;
             if (director == null) return;
 
             int tier = director.CurrentThreatTier;
@@ -82,6 +91,17 @@ namespace MelonS.GameProto
             return Object.FindFirstObjectByType<MusicDirector>();
 #else
             return Object.FindObjectOfType<MusicDirector>();
+#endif
+        }
+
+        // AIDirector is a scene MonoBehaviour; it does NOT expose a Services-based
+        // Instance property.  Search via FindFirstObjectByType (lesson #7 pattern).
+        private static AIDirector FindAIDirector()
+        {
+#if UNITY_2023_1_OR_NEWER
+            return Object.FindFirstObjectByType<AIDirector>();
+#else
+            return Object.FindObjectOfType<AIDirector>();
 #endif
         }
     }
