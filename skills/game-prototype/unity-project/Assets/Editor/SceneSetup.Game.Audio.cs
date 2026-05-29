@@ -68,6 +68,15 @@ namespace MelonS.GameProto.EditorTools
             if (rainClip != null)    abSo.FindProperty("rainLoop").objectReferenceValue   = rainClip;
             // M3 new slot — wiki #8 danger music (W-M3-03 Lane A)
             if (dangerClip != null)  abSo.FindProperty("dangerBgm").objectReferenceValue  = dangerClip;
+            // W-M6-01 Lane B8: M6 SFX slots (wiki B8 footstep + night ambient)
+            if (File.Exists("Assets/Audio/footstep.wav"))
+                AssetDatabase.ImportAsset("Assets/Audio/footstep.wav", ImportAssetOptions.ForceUpdate);
+            if (File.Exists("Assets/Audio/ambient_night.wav"))
+                AssetDatabase.ImportAsset("Assets/Audio/ambient_night.wav", ImportAssetOptions.ForceUpdate);
+            AudioClip footstepClip    = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/footstep.wav");
+            AudioClip ambientNightClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/ambient_night.wav");
+            if (footstepClip != null)     abSo.FindProperty("sfxFootstep").objectReferenceValue     = footstepClip;
+            if (ambientNightClip != null) abSo.FindProperty("sfxAmbientNight").objectReferenceValue = ambientNightClip;
             abSo.ApplyModifiedPropertiesWithoutUndo();
         }
     }
