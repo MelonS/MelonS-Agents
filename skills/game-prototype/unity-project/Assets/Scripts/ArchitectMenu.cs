@@ -78,6 +78,10 @@ namespace MelonS.GameProto
                 (BuildManager.Mode.BedSleepingSpot, "수면 자리 (자재 X)",     0),
                 (BuildManager.Mode.Bed,             "목재 침대 (목재 8)",     8),
                 (BuildManager.Mode.BedFine,         "고급 침대 (목재 30)",   30),
+                // W-M4-06 (#20) — table+chair eat/rec spot (hotkey J, 목재 6).
+                //   Flagged by Lane A for QA wiring: Mode.TableChair routes through
+                //   the existing SetMode/Close onClick plumbing with ZERO further change.
+                (BuildManager.Mode.TableChair,      "탁자+의자 (목재 6)",     6),
             },
             ["Production (생산)"] = new[] {
                 (BuildManager.Mode.Stove, "화덕 (목재 10)", 10),
