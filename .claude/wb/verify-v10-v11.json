@@ -1,0 +1,46 @@
+{
+  "agent": "build-engineer",
+  "lane": "B12",
+  "wave": "W-M6-01",
+  "cycle": "C-016",
+  "milestone": "M5-gameplay-verify",
+  "Status": "Done",
+  "updated": "2026-05-30",
+
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/Tests/V10DeconstructWalkableTest.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/Tests/V11GrowZoneCropTest.cs"
+  ],
+
+  "note_new_meta_files_needed": "QA FLAG: Unity requires .meta files for V10DeconstructWalkableTest.cs and V11GrowZoneCropTest.cs before the project compiles cleanly in batchmode. Both files live in the EXISTING Assets/Scripts/Tests/ asmdef (same default assembly as V15DeconstructRefundTest, V4CombatChainTest, etc.) — no asmdef edit needed. QA must generate the two .meta files (guid can be any valid GUID) on first domain reload.",
+
+  "note_testrunner_registration": "QA FLAG: V10 and V11 are companion MonoBehaviour tests (same pattern as V15DeconstructRefundTest — not listed in TestRunner.cs). They run as standalone scene-attached scripts. QA must confirm whether they need an entry in TestRunner.cs / IntegrationTestRunner.cs to count in the isolated suite 76/76 tally, or whether they count separately as scene-level tests.",
+
+  "note_reservation_manager_headless": "QA FLAG (V11 G4): GrowZoneDesignation.DispatchToIdlePlanters calls ReservationManager.IsCellReservedByOther. In a headless test scene ReservationManager may not be initialised. If a NullRef fires here the V11 RunOne try/catch catches it and the test FAILs with the exception message — QA should note it as a missing ReservationManager bootstrap in the test scene rather than a runtime bug.",
+
+  "note_missing_accessors": "No read-only accessor gaps blocked either test. All required API is already public: GrowZoneDesignation.DesignateCell(Vector2Int), GrowZoneDesignation.IsPlantableCell(int,int), PathGrid.FromMask/IsWalkable/WorldToCell/SIZE, DeconstructDesignation.TryMark(GO), DeconstructTarget.IsRemoved/Initialize, PawnBuilder.SetDeconstructTarget/HasDeconstructTask.",
+
+  "wiki_acceptance": {
+    "V10": "A test asserts deconstructing a wall makes its cell walkable — assert blocked BEFORE designation+work, walkable AFTER completion. ONE binary PASS.",
+    "V11": "A test asserts painting a grow zone yields a crop — assert no CropEntity BEFORE designation, CropEntity present AFTER plant work completes. ONE binary PASS."
+  },
+
+  "files_not_touched": [
+    "TestRunner.cs",
+    "IntegrationTestRunner.cs",
+    "DeconstructDesignation.cs",
+    "GrowZoneDesignation.cs",
+    "WallEntity.cs",
+    "CropEntity.cs",
+    "PawnBuilder.cs",
+    "PawnMovement.cs",
+    "PathGrid (AI/PathGrid.cs)",
+    "SceneSetup.cs (any variant)",
+    "BuildManager.cs",
+    "FloatingText.cs",
+    "MarqueeSelector.cs",
+    "FootstepDriver.cs",
+    "AudioBank.cs",
+    "ClickSelector.cs"
+  ]
+}

@@ -24,7 +24,7 @@ namespace MelonS.GameProto
     /// M3 sound-coverage push 2026-05-30 (wiki Dim2 item #7, W-M3-01 Lane D):
     ///   mine.wav      — pick-on-stone impact (wiki #7: mining plays a distinct sound,
     ///                   not the chop thunk; 2400Hz metal-pick transient + 420Hz stone
-    ///                   resonance body + grit noise burst; 0.18s — shorter/denser than chop).
+    ///                   resonance body + grit noise burst; 0.18s -- shorter/denser than chop).
     ///
     /// M3 sound-coverage push 2026-05-30 (wiki Dim2 item #9, W-M3-02 Lane D):
     ///   rain.wav      — soft continuous filtered-noise rain bed, loopable (wiki #9:
@@ -43,71 +43,102 @@ namespace MelonS.GameProto
     ///                   Crossfade: ~1s volume lerp between bgmSource and dangerSource
     ///                   via DangerCrossfadeCoroutine; idempotent; graceful null no-op.
     ///
-    /// Throttle discipline (Lesson #4, 2026-05-27 PawnSim chop-buzz):
-    ///   PlayChop()    — 0.25s min-interval.  PawnChopper.Update() calls
-    ///                   TakeChopDamage every frame; without throttle = 60
-    ///                   PlayOneShot/sec = audio buffer collapse ("이상한 사운드").
-    ///   PlayHit()     — 0.25s (per-entity at call site; ArrowProjectile
-    ///                   fires per-collision so stays at 0.25s here).
-    ///   PlayHarvest() — 0.25s (was 0.15s; CropEntity may call from tight
-    ///                   gather loops; increased to match chop safety margin).
-    ///   PlaySelect()  — 0.0s (no throttle: each pawn click is a distinct
-    ///                   user action, not a tight loop).
-    ///   PlayWolfHowl()— 0.0s (event-driven, one-shot per wolf spawn event).
-    ///   PlayBuild()   — 0.25s (BlueprintEntity.Complete() fires once per wall,
-    ///                   but rapid-place scripts could batch completions; throttle
-    ///                   guards overlapping build-finish calls in a single frame).
-    ///   PlayAlert()   — 3.0s global burst guard.  Alert fires on raid events;
-    ///                   without guard a multi-enemy raid trigger loop could spam
-    ///                   back-to-back bursts.  Tier-scaled beep count runs inside
-    ///                   the burst via a coroutine on the AudioBank MonoBehaviour.
-    ///   PlayMine()    — 0.25s (MineInterval).  StoneVeinEntity.TakeMineDamage()
-    ///                   already has an entity-level 0.6s SfxInterval guard, but
-    ///                   AudioBank-side throttle guards any future callers that
-    ///                   might lack the entity guard (defense-in-depth pattern).
-    ///   PlayRain()    — No per-call throttle: it is a looping bed, not a one-shot.
-    ///                   RainSoundDriver polls once per frame via Update(); the
-    ///                   isPlaying guard inside PlayRain() is the idempotency gate
-    ///                   (calling PlayRain() again while the loop runs is a no-op).
-    ///   PlayDangerMusic() — No per-call throttle: looping bed controlled by
-    ///                   MusicDirector state-machine (only fires on tier transitions).
-    ///                   Idempotency: _dangerActive flag prevents re-triggering while
-    ///                   already in danger mode or mid-crossfade.
-    ///   StopDangerMusic() — Same idempotency pattern via _dangerActive flag.
+    /// M6 sound-coverage push (wiki B8, W-M6-01 B8 lane):
+    ///   footstep.wav      — short soft earth-thud footfall, ~0.07s (wiki B8: a walking
+    ///                       pawn plays a faint footstep ~every 0.4s). Played via
+    ///                       PlayFootstep(); 0.2s AudioBank-side throttle (defense-in-depth,
+    ///                       outer per-pawn 0.4s in FootstepDriver is the primary gate).
+    ///   ambient_night.wav — looping outdoor cricket/insect night bed, ~15s (wiki B8:
+    ///                       ambient bed differs at 02:00 vs 12:00). AudioBank.ambientSource
+    ///                       clip is swapped between sfxAmbient (day: birds) and
+    ///                       sfxAmbientNight (night: crickets) via SwapAmbientToDay() /
+    ///                       SwapAmbientToNight(). FootstepDriver polls GameClock.DayProgress
+    ///                       and calls the swap on day/night boundary transitions.
     ///
-    /// PROGRAMMER ACTIONS FLAGGED (Sound Designer lane — do not edit entities):
-    ///   1. TreeEntity.cs:84  — PlayChop() called from inside TakeChopDamage()
+    /// Throttle discipline (Lesson #4, 2026-05-27 PawnSim chop-buzz):
+    ///   PlayChop()        — 0.25s min-interval.  PawnChopper.Update() calls
+    ///                       TakeChopDamage every frame; without throttle = 60
+    ///                       PlayOneShot/sec = audio buffer collapse ("이상한 사운드").
+    ///   PlayHit()         — 0.25s (per-entity at call site; ArrowProjectile
+    ///                       fires per-collision so stays at 0.25s here).
+    ///   PlayHarvest()     — 0.25s (was 0.15s; CropEntity may call from tight
+    ///                       gather loops; increased to match chop safety margin).
+    ///   PlaySelect()      — 0.0s (no throttle: each pawn click is a distinct
+    ///                       user action, not a tight loop).
+    ///   PlayWolfHowl()    — 0.0s (event-driven, one-shot per wolf spawn event).
+    ///   PlayBuild()       — 0.25s (BlueprintEntity.Complete() fires once per wall,
+    ///                       but rapid-place scripts could batch completions; throttle
+    ///                       guards overlapping build-finish calls in a single frame).
+    ///   PlayAlert()       — 3.0s global burst guard.  Alert fires on raid events;
+    ///                       without guard a multi-enemy raid trigger loop could spam
+    ///                       back-to-back bursts.  Tier-scaled beep count runs inside
+    ///                       the burst via a coroutine on the AudioBank MonoBehaviour.
+    ///   PlayMine()        — 0.25s (MineInterval).  StoneVeinEntity.TakeMineDamage()
+    ///                       already has an entity-level 0.6s SfxInterval guard, but
+    ///                       AudioBank-side throttle guards any future callers that
+    ///                       might lack the entity guard (defense-in-depth pattern).
+    ///   PlayRain()        — No per-call throttle: it is a looping bed, not a one-shot.
+    ///                       RainSoundDriver polls once per frame via Update(); the
+    ///                       isPlaying guard inside PlayRain() is the idempotency gate
+    ///                       (calling PlayRain() again while the loop runs is a no-op).
+    ///   PlayDangerMusic() — No per-call throttle: looping bed controlled by
+    ///                       MusicDirector state-machine (only fires on tier transitions).
+    ///                       Idempotency: _dangerActive flag prevents re-triggering while
+    ///                       already in danger mode or mid-crossfade.
+    ///   StopDangerMusic() — Same idempotency pattern via _dangerActive flag.
+    ///   PlayFootstep()    — 0.2s AudioBank-side throttle (defense-in-depth).
+    ///                       FootstepDriver throttles 0.4s per-pawn as the primary gate.
+    ///                       Pawn movement Update() fires every frame; multiple walking
+    ///                       pawns at 60fps without per-pawn + bank throttle = footstep
+    ///                       spam. Volume 0.45 (faint, below SFX 0.7 and BGM 0.25 bed).
+    ///   SwapAmbientToNight() / SwapAmbientToDay() -- No per-call throttle: transition
+    ///                       is state-machine driven (only fires on day/night boundary).
+    ///                       Idempotency: _isNightAmbient flag prevents clip-restart if
+    ///                       already in the correct ambient state.
+    ///
+    /// PROGRAMMER ACTIONS FLAGGED (Sound Designer lane -- do not edit entities):
+    ///   1. TreeEntity.cs:84  -- PlayChop() called from inside TakeChopDamage()
     ///      which PawnChopper.Update() calls every frame with deltaTime damage.
     ///      The 0.25s throttle added HERE in PlayChop() guards this.
     ///      If you want per-tree independence, add lastChopTime to TreeEntity
     ///      and guard there instead (remove throttle here when done).
-    ///   2. AnimalEntity.cs:149 — PlayChop() used for animal hit sound.
+    ///   2. AnimalEntity.cs:149 -- PlayChop() used for animal hit sound.
     ///      Semantically wrong: animal combat hit should call PlayHit().
     ///      Change AnimalEntity.TakeDamage() line 149 to PlayHit().
-    ///   3. StoneVeinEntity.cs — mining now calls PlayMine() (was PlayChop()).
+    ///   3. StoneVeinEntity.cs -- mining now calls PlayMine() (was PlayChop()).
     ///      Wiki #7: pick-on-stone distinct from axe-on-wood chop thunk. DONE.
     ///   4. PlayWolfHowl() has no callers.  Wire to AIDirector wolf_pack event.
     ///   5. sfxBuild/sfxAlert/sfxAmbient slots require scene-side SerializeField
-    ///      assignment on the AudioBank GameObject — see QA flags below.
+    ///      assignment on the AudioBank GameObject -- see QA flags below.
     ///   6. sfxMine slot requires scene-side SerializeField assignment on the
     ///      AudioBank GameObject (assign mine.wav same as sfxBuild/alert/ambient
     ///      last wave).  QA FLAG: wire sfxMine in the Inspector before verifying.
     ///   7. rainLoop slot requires scene-side SerializeField assignment on the
-    ///      AudioBank GameObject — assign rain.wav.
+    ///      AudioBank GameObject -- assign rain.wav.
     ///      QA FLAG: wire rainLoop in the Inspector (same workflow as sfxBuild/
     ///      sfxAlert/sfxAmbient/sfxMine). Wiki #9 cannot verify without this wire.
     ///   8. dangerBgm slot requires scene-side SerializeField assignment on the
-    ///      AudioBank GameObject — assign danger.wav.
+    ///      AudioBank GameObject -- assign danger.wav.
     ///      QA FLAG: wire dangerBgm in the Inspector (same workflow as sfxBuild/
     ///      sfxAlert/sfxAmbient/sfxMine/rainLoop). Wiki #8 cannot verify without
     ///      this wire.  MusicDirector.cs calls PlayDangerMusic()/StopDangerMusic()
     ///      when AIDirector.CurrentThreatTier crosses the tier=2 threshold.
+    ///   9. sfxFootstep slot requires scene-side SerializeField assignment on the
+    ///      AudioBank GameObject -- assign footstep.wav.
+    ///      QA FLAG: wire sfxFootstep in the Inspector (same workflow as above).
+    ///      FootstepDriver.cs calls PlayFootstep() per walking pawn (~every 0.4s).
+    ///  10. sfxAmbientNight slot requires scene-side SerializeField assignment on the
+    ///      AudioBank GameObject -- assign ambient_night.wav.
+    ///      QA FLAG: wire sfxAmbientNight in the Inspector. FootstepDriver calls
+    ///      SwapAmbientToNight() / SwapAmbientToDay() on day/night transitions.
+    ///      Without this wire, the ambient bed stays on the day clip indefinitely
+    ///      (graceful null no-op -- no crash, just no night variation).
     /// </summary>
     public class AudioBank : MonoBehaviour
     {
         public static AudioBank Instance => Services.Get<AudioBank>();  // R6
 
-        // ── existing SFX slots ──────────────────────────────────────────────
+        // -- existing SFX slots --
         public AudioClip bgm;
         public AudioClip sfxChop;
         public AudioClip sfxSelect;
@@ -115,51 +146,72 @@ namespace MelonS.GameProto
         public AudioClip sfxHarvest;   // crop harvest
         public AudioClip sfxWolfHowl;  // wolf appear
 
-        // ── M2 SFX slots (wiki #1/#2/#4) ───────────────────────────────────
-        public AudioClip sfxBuild;     // hammer/clink — wall/blueprint construction finish
-        public AudioClip sfxAlert;     // alert siren — tier-scaled raid warning
-        public AudioClip sfxAmbient;   // outdoor ambient bed — wind/birds (loops on ambientSource)
+        // -- M2 SFX slots (wiki #1/#2/#4) --
+        public AudioClip sfxBuild;     // hammer/clink -- wall/blueprint construction finish
+        public AudioClip sfxAlert;     // alert siren -- tier-scaled raid warning
+        public AudioClip sfxAmbient;   // outdoor ambient bed -- wind/birds (loops on ambientSource)
 
-        // ── M3 SFX slots (wiki #7, W-M3-01 Lane D) ─────────────────────────
+        // -- M3 SFX slots (wiki #7, W-M3-01 Lane D) --
         // QA FLAG: assign mine.wav to this slot on the AudioBank GameObject in
         // the Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient last wave).
-        public AudioClip sfxMine;      // pick-on-stone — mining impact (distinct from chop)
+        public AudioClip sfxMine;      // pick-on-stone -- mining impact (distinct from chop)
 
-        // ── M3 SFX slots (wiki #9, W-M3-02 Lane D) ─────────────────────────
+        // -- M3 SFX slots (wiki #9, W-M3-02 Lane D) --
         // QA FLAG: assign rain.wav to this slot on the AudioBank GameObject in
         // the Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient/sfxMine).
         // RainSoundDriver.cs calls PlayRain()/StopRain() when weather transitions.
-        public AudioClip rainLoop;     // soft loopable rain bed — played on rainSource
+        public AudioClip rainLoop;     // soft loopable rain bed -- played on rainSource
 
-        // ── M3 SFX slots (wiki #8, W-M3-03 Lane A) ─────────────────────────
+        // -- M3 SFX slots (wiki #8, W-M3-03 Lane A) --
         // QA FLAG: assign danger.wav to this slot on the AudioBank GameObject in
         // the Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient/sfxMine/rainLoop).
         // MusicDirector.cs calls PlayDangerMusic()/StopDangerMusic() when
         // AIDirector.CurrentThreatTier crosses the tier=2 boundary.
-        public AudioClip dangerBgm;    // tense drone/percussive bed — played on dangerSource
+        public AudioClip dangerBgm;    // tense drone/percussive bed -- played on dangerSource
 
-        // ── Audio sources ───────────────────────────────────────────────────
+        // -- M6 SFX slots (wiki B8, W-M6-01 B8 lane) --
+        // QA FLAG: assign footstep.wav to sfxFootstep on the AudioBank GameObject in
+        // the Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient/sfxMine/rainLoop/dangerBgm).
+        // FootstepDriver.cs calls PlayFootstep() per walking pawn (throttled 0.4s per-pawn
+        // in FootstepDriver; 0.2s guard here as defense-in-depth).
+        public AudioClip sfxFootstep;  // soft earth-thud footfall -- ~0.07s
+
+        // QA FLAG: assign ambient_night.wav to sfxAmbientNight on the AudioBank GameObject
+        // in the Inspector. FootstepDriver swaps ambientSource clip between sfxAmbient
+        // (day: birds) and sfxAmbientNight (night: crickets) via SwapAmbientToNight/Day.
+        // Without this assignment, night ambient stays silent (graceful null no-op).
+        public AudioClip sfxAmbientNight; // outdoor night cricket/insect bed -- ~15s loop
+
+        // -- Audio sources --
         [SerializeField] private AudioSource bgmSource;
         [SerializeField] private AudioSource sfxSource;
-        // ambientSource: independent looping outdoor bed (NOT bgmSource — wiki #4)
+        // ambientSource: independent looping outdoor bed (NOT bgmSource -- wiki #4)
+        // Also used for night-ambient swap (FootstepDriver swaps its clip).
         private AudioSource ambientSource;
-        // rainSource: dedicated looping source for rain bed (wiki #9 — distinct
+        // rainSource: dedicated looping source for rain bed (wiki #9 -- distinct
         // from ambientSource so rain can start/stop independently of ambient).
         private AudioSource rainSource;
         // dangerSource: dedicated looping source for the danger/tension music track
-        // (wiki #8). Exists alongside bgmSource — crossfade coroutine lerps volumes
+        // (wiki #8). Exists alongside bgmSource -- crossfade coroutine lerps volumes
         // between the two sources so the transition is smooth (~1s).
         private AudioSource dangerSource;
 
-        // ── Per-key throttle timestamps (Sound Designer — 2026-05-30) ──────
-        private float _lastChopTime    = -10f;
-        private float _lastHitTime     = -10f;
-        private float _lastHarvestTime = -10f;
-        private float _lastBuildTime   = -10f;   // wiki #1: wall finish throttle
-        private float _lastAlertTime   = -10f;   // wiki #2: alert burst guard
-        private float _lastMineTime    = -10f;   // wiki #7: pick-on-stone throttle
+        // -- Per-key throttle timestamps (Sound Designer -- 2026-05-30) --
+        private float _lastChopTime     = -10f;
+        private float _lastHitTime      = -10f;
+        private float _lastHarvestTime  = -10f;
+        private float _lastBuildTime    = -10f;   // wiki #1: wall finish throttle
+        private float _lastAlertTime    = -10f;   // wiki #2: alert burst guard
+        private float _lastMineTime     = -10f;   // wiki #7: pick-on-stone throttle
+        private float _lastFootstepTime = -10f;   // wiki B8: footstep bank-side guard
 
-        // ── Danger music state (wiki #8 crossfade) ─────────────────────────
+        // -- Ambient state (wiki B8 day/night swap) --
+        // True when ambientSource is playing sfxAmbientNight; false when on sfxAmbient (day).
+        // Guards idempotency so FootstepDriver can call SwapAmbientToNight every frame on
+        // nighttime DayProgress without restarting the clip each frame.
+        private bool _isNightAmbient = false;
+
+        // -- Danger music state (wiki #8 crossfade) --
         // True while dangerSource is playing (or mid-fade-in); false while calm
         // bgmSource is primary (or mid-fade-out).  Guards idempotency so
         // MusicDirector can call PlayDangerMusic every frame on tier>=2 without
@@ -169,21 +221,22 @@ namespace MelonS.GameProto
         // previous one if a rapid tier transition reverses direction mid-fade.
         private Coroutine _crossfadeCoroutine;
 
-        // ── Min-interval constants — rationale documented above ─────────────
-        private const float ChopInterval    = 0.25f;  // per-frame work-loop safe
-        private const float HitInterval     = 0.25f;  // per-collision safe
-        private const float HarvestInterval = 0.25f;  // gather-loop safe
-        private const float BuildInterval   = 0.25f;  // per-complete safe
-        private const float AlertInterval   = 3.0f;   // burst-guard (raid spam)
-        private const float MineInterval    = 0.25f;  // per-mine-hit safe (entity has own 0.6s guard)
+        // -- Min-interval constants -- rationale documented above --
+        private const float ChopInterval      = 0.25f;  // per-frame work-loop safe
+        private const float HitInterval       = 0.25f;  // per-collision safe
+        private const float HarvestInterval   = 0.25f;  // gather-loop safe
+        private const float BuildInterval     = 0.25f;  // per-complete safe
+        private const float AlertInterval     = 3.0f;   // burst-guard (raid spam)
+        private const float MineInterval      = 0.25f;  // per-mine-hit safe (entity has own 0.6s guard)
+        private const float FootstepInterval  = 0.20f;  // bank-side guard; outer per-pawn 0.4s in FootstepDriver
 
-        // ── Alert beep inter-repeat gap (pitch variation spread) ────────────
+        // -- Alert beep inter-repeat gap (pitch variation spread) --
         private const float AlertBeepGap    = 0.35f;  // seconds between beeps in a burst
 
-        // ── Crossfade duration (wiki #8: ~1s fade) ─────────────────────────
+        // -- Crossfade duration (wiki #8: ~1s fade) --
         private const float CrossfadeDuration = 1.0f;
 
-        // ── BGM and danger volumes ──────────────────────────────────────────
+        // -- BGM and danger volumes --
         private const float BgmVolume    = 0.25f;    // calm track volume
         private const float DangerVolume = 0.30f;    // danger track volume (slightly higher for urgency)
 
@@ -196,13 +249,13 @@ namespace MelonS.GameProto
             if (bgmSource == null) bgmSource = gameObject.AddComponent<AudioSource>();
             if (sfxSource == null) sfxSource = gameObject.AddComponent<AudioSource>();
 
-            // ambientSource: second independent source — does NOT share bgmSource
+            // ambientSource: second independent source -- does NOT share bgmSource
             ambientSource = gameObject.AddComponent<AudioSource>();
 
-            // rainSource: third independent source — loopable rain bed (wiki #9)
+            // rainSource: third independent source -- loopable rain bed (wiki #9)
             rainSource = gameObject.AddComponent<AudioSource>();
 
-            // dangerSource: fourth independent source — loopable danger music (wiki #8)
+            // dangerSource: fourth independent source -- loopable danger music (wiki #8)
             // Starts silent (volume=0); PlayDangerMusic() fades it in while fading bgmSource out.
             dangerSource = gameObject.AddComponent<AudioSource>();
 
@@ -216,7 +269,7 @@ namespace MelonS.GameProto
             ambientSource.playOnAwake     = false;
 
             rainSource.loop            = true;
-            rainSource.volume          = 0.20f;  // quiet bed — rain behind everything
+            rainSource.volume          = 0.20f;  // quiet bed -- rain behind everything
             rainSource.spatialBlend    = 0f;     // 2-D (global, not positional)
             rainSource.playOnAwake     = false;
 
@@ -237,22 +290,24 @@ namespace MelonS.GameProto
             }
 
             // wiki #4: start looping outdoor ambient bed independent of music
+            // Default: day ambient (birds). FootstepDriver swaps to night if needed.
             if (sfxAmbient != null)
             {
                 ambientSource.clip = sfxAmbient;
                 ambientSource.Play();
+                _isNightAmbient = false;
             }
 
-            // rain.wav does NOT auto-start — RainSoundDriver controls it.
-            // danger.wav does NOT auto-start — MusicDirector controls it.
+            // rain.wav does NOT auto-start -- RainSoundDriver controls it.
+            // danger.wav does NOT auto-start -- MusicDirector controls it.
         }
 
-        // ────────────────────────────────────────────────────────────────────
+        // --------------------------------------------------------------------
         //  EXISTING METHODS (unchanged)
-        // ────────────────────────────────────────────────────────────────────
+        // --------------------------------------------------------------------
 
         /// <summary>
-        /// Axe-into-wood thunk.  Throttled 0.25s — caller (TreeEntity via
+        /// Axe-into-wood thunk.  Throttled 0.25s -- caller (TreeEntity via
         /// PawnChopper.Update) fires every frame; without throttle = buzz.
         /// </summary>
         public void PlayChop()
@@ -264,7 +319,7 @@ namespace MelonS.GameProto
         }
 
         /// <summary>
-        /// Soft UI blip.  No throttle — each pawn click is a distinct user
+        /// Soft UI blip.  No throttle -- each pawn click is a distinct user
         /// action, not a per-frame loop.  Volume kept low (0.6) so it never
         /// fatigues on rapid clicks.
         /// </summary>
@@ -276,7 +331,7 @@ namespace MelonS.GameProto
 
         /// <summary>
         /// Combat thud (melee/arrow impact).  Throttled 0.25s.
-        /// Note: AnimalEntity.TakeDamage currently calls PlayChop() — it
+        /// Note: AnimalEntity.TakeDamage currently calls PlayChop() -- it
         /// should call PlayHit() instead for correct audio character.
         /// </summary>
         public void PlayHit()
@@ -299,8 +354,8 @@ namespace MelonS.GameProto
         }
 
         /// <summary>
-        /// Eerie wolf howl.  No throttle — event-driven, one per wolf spawn.
-        /// Currently has no callers — wire to AIDirector wolf_pack event.
+        /// Eerie wolf howl.  No throttle -- event-driven, one per wolf spawn.
+        /// Currently has no callers -- wire to AIDirector wolf_pack event.
         /// </summary>
         public void PlayWolfHowl()
         {
@@ -308,17 +363,17 @@ namespace MelonS.GameProto
                 sfxSource.PlayOneShot(sfxWolfHowl, 0.65f);
         }
 
-        // ────────────────────────────────────────────────────────────────────
+        // --------------------------------------------------------------------
         //  M2 NEW METHODS (wiki #1/#2)
-        // ────────────────────────────────────────────────────────────────────
+        // --------------------------------------------------------------------
 
         /// <summary>
-        /// Hammer/clink construct finish — call from BlueprintEntity.Complete().
+        /// Hammer/clink construct finish -- call from BlueprintEntity.Complete().
         /// Wiki acceptance: "A wall finishing plays a construct sound once (throttled)."
         /// Throttled 0.25s (BuildInterval) so rapid batch-completions in the same
         /// frame do not stack into a burst.  Graceful null no-op if sfxBuild or
         /// sfxSource is not assigned (Scene-side SerializeField wiring may be absent
-        /// on prototype day-1 — QA flag: AudioBank.sfxBuild needs scene assignment).
+        /// on prototype day-1 -- QA flag: AudioBank.sfxBuild needs scene assignment).
         /// </summary>
         public void PlayBuild()
         {
@@ -331,9 +386,9 @@ namespace MelonS.GameProto
         /// <summary>
         /// Alert siren with tier-scaled repeat count.
         /// Wiki acceptance: "A raid event plays an alert siren; tier-3 repeats more than tier-1."
-        ///   tier &lt;= 1  => 2 beeps
-        ///   tier == 2   => 3 beeps
-        ///   tier >= 3   => 4 beeps
+        ///   tier &lt;= 1  =&gt; 2 beeps
+        ///   tier == 2   =&gt; 3 beeps
+        ///   tier &gt;= 3   =&gt; 4 beeps
         /// Global burst guard: AlertInterval (3.0s) prevents raid-loop spam.
         /// Beeps are staggered via a coroutine (AlertBeepGap = 0.35s between repeats)
         /// with slight pitch offsets so the siren pattern feels mechanical/urgent.
@@ -373,18 +428,18 @@ namespace MelonS.GameProto
             sfxSource.pitch = 1.0f;  // ensure clean reset even if loop exits early
         }
 
-        // ────────────────────────────────────────────────────────────────────
+        // --------------------------------------------------------------------
         //  M3 NEW METHODS (wiki #7, W-M3-01 Lane D)
-        // ────────────────────────────────────────────────────────────────────
+        // --------------------------------------------------------------------
 
         /// <summary>
-        /// Pick-on-stone mining impact — call from StoneVeinEntity.TakeMineDamage().
-        /// Wiki acceptance #7: "Mining ... plays a distinct sound" — a pick-on-stone,
+        /// Pick-on-stone mining impact -- call from StoneVeinEntity.TakeMineDamage().
+        /// Wiki acceptance #7: "Mining ... plays a distinct sound" -- a pick-on-stone,
         /// NOT the chop thunk (chop = axe-into-wood, low woody resonance 150-240Hz;
         /// mine = metal pick on rock, high 2400Hz transient + 420Hz stone ring).
         ///
         /// Throttled 0.25s (MineInterval) with its own _lastMineTime guard, independent
-        /// of PlayChop/_lastChopTime — swapping PlayChop->PlayMine in StoneVeinEntity
+        /// of PlayChop/_lastChopTime -- swapping PlayChop->PlayMine in StoneVeinEntity
         /// does NOT share the chop throttle window, which would have silenced mining
         /// for 0.25s after any tree chop in the same frame.
         ///
@@ -394,7 +449,7 @@ namespace MelonS.GameProto
         ///
         /// Graceful null no-op if sfxMine or sfxSource is not assigned.
         /// QA FLAG: AudioBank.sfxMine requires scene-side SerializeField assignment
-        /// on the AudioBank GameObject — assign mine.wav in the Inspector
+        /// on the AudioBank GameObject -- assign mine.wav in the Inspector
         /// (same workflow as sfxBuild/sfxAlert/sfxAmbient last wave).
         /// </summary>
         public void PlayMine()
@@ -405,12 +460,12 @@ namespace MelonS.GameProto
             sfxSource.PlayOneShot(sfxMine, 0.80f);
         }
 
-        // ────────────────────────────────────────────────────────────────────
+        // --------------------------------------------------------------------
         //  M3 NEW METHODS (wiki #9, W-M3-02 Lane D)
-        // ────────────────────────────────────────────────────────────────────
+        // --------------------------------------------------------------------
 
         /// <summary>
-        /// Start the looping rain bed — called by RainSoundDriver when
+        /// Start the looping rain bed -- called by RainSoundDriver when
         /// WeatherController.Current == WeatherKind.Storm.
         ///
         /// Idempotent: if rainSource is already playing the correct clip,
@@ -423,7 +478,7 @@ namespace MelonS.GameProto
         /// Wiki acceptance #9: "A storm plays a rain loop."
         ///
         /// QA FLAG: AudioBank.rainLoop requires scene-side SerializeField
-        /// assignment on the AudioBank GameObject — assign rain.wav in the
+        /// assignment on the AudioBank GameObject -- assign rain.wav in the
         /// Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient/sfxMine).
         /// </summary>
         public void PlayRain()
@@ -436,7 +491,7 @@ namespace MelonS.GameProto
         }
 
         /// <summary>
-        /// Stop the looping rain bed — called by RainSoundDriver when
+        /// Stop the looping rain bed -- called by RainSoundDriver when
         /// WeatherController.Current == WeatherKind.Clear.
         ///
         /// Graceful: if rainSource is not playing, Stop() is a no-op in Unity.
@@ -451,16 +506,16 @@ namespace MelonS.GameProto
             if (rainSource.isPlaying) rainSource.Stop();
         }
 
-        // ────────────────────────────────────────────────────────────────────
+        // --------------------------------------------------------------------
         //  M3 NEW METHODS (wiki #8, W-M3-03 Lane A)
-        // ────────────────────────────────────────────────────────────────────
+        // --------------------------------------------------------------------
 
         /// <summary>
         /// Crossfade to the danger/tension music track over ~1s.
         /// Called by MusicDirector when AIDirector.CurrentThreatTier >= 2.
         ///
         /// Idempotent: if danger is already active (or mid-fade-in), this is a
-        /// no-op — MusicDirector calls this every frame while tier >= 2 so the
+        /// no-op -- MusicDirector calls this every frame while tier >= 2 so the
         /// _dangerActive guard prevents re-triggering the coroutine.
         ///
         /// Crossfade behavior:
@@ -478,13 +533,13 @@ namespace MelonS.GameProto
         /// (threatTier>=2) and back when clear."
         ///
         /// QA FLAG: AudioBank.dangerBgm requires scene-side SerializeField
-        /// assignment on the AudioBank GameObject — assign danger.wav in the
+        /// assignment on the AudioBank GameObject -- assign danger.wav in the
         /// Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient/sfxMine/rainLoop).
         /// </summary>
         public void PlayDangerMusic()
         {
             if (dangerBgm == null || dangerSource == null) return;
-            if (_dangerActive) return;  // already in danger mode — idempotent
+            if (_dangerActive) return;  // already in danger mode -- idempotent
 
             _dangerActive = true;
 
@@ -528,7 +583,7 @@ namespace MelonS.GameProto
         public void StopDangerMusic()
         {
             if (dangerSource == null) return;
-            if (!_dangerActive) return;  // already in calm mode — idempotent
+            if (!_dangerActive) return;  // already in calm mode -- idempotent
 
             _dangerActive = false;
 
@@ -579,6 +634,98 @@ namespace MelonS.GameProto
                 dangerSource.Stop();
 
             _crossfadeCoroutine = null;
+        }
+
+        // --------------------------------------------------------------------
+        //  M6 NEW METHODS (wiki B8, W-M6-01 B8 lane)
+        // --------------------------------------------------------------------
+
+        /// <summary>
+        /// Soft earth-thud footfall -- called by FootstepDriver per walking pawn.
+        ///
+        /// Wiki B8 acceptance: "A walking pawn plays a faint footstep ~every 0.4s."
+        ///
+        /// Throttle: 0.2s AudioBank-side guard (FootstepInterval) as defense-in-depth.
+        /// The outer per-pawn 0.4s throttle in FootstepDriver is the primary gate.
+        /// Without the bank-side guard, multiple pawns walking simultaneously could
+        /// combine their per-pawn calls to exceed the intended footstep rate:
+        ///   e.g. 4 pawns each at 0.4s = 10 calls/sec through the bank without this guard.
+        /// The 0.2s bank guard caps the bank's rate at 5 plays/sec regardless of pawn count.
+        ///
+        /// Volume 0.45 (faint): footsteps should be present but clearly below BGM,
+        /// SFX impacts, and ambient -- they are texture, not foreground.
+        ///
+        /// Graceful null no-op if sfxFootstep or sfxSource is not assigned.
+        /// QA FLAG: AudioBank.sfxFootstep requires scene-side SerializeField assignment
+        /// on the AudioBank GameObject -- assign footstep.wav in the Inspector
+        /// (same workflow as sfxBuild/sfxAlert/sfxAmbient/sfxMine/rainLoop/dangerBgm).
+        /// </summary>
+        public void PlayFootstep()
+        {
+            if (sfxFootstep == null || sfxSource == null) return;
+            if (Time.time - _lastFootstepTime < FootstepInterval) return;
+            _lastFootstepTime = Time.time;
+            sfxSource.PlayOneShot(sfxFootstep, 0.45f);
+        }
+
+        /// <summary>
+        /// Swap the ambient bed to the night clip (cricket/insect).
+        /// Called by FootstepDriver when GameClock.DayProgress enters nighttime
+        /// (DayProgress >= 0.83 [22:00] or DayProgress &lt; 0.27 [06:30]).
+        ///
+        /// Idempotent: if already playing the night clip, this is a no-op.
+        /// Snap (not crossfade): clip swap is immediate -- the night-to-day
+        /// boundary is a single moment, not a gradual twilight audio transition.
+        ///
+        /// Graceful null no-op if sfxAmbientNight is not assigned. If sfxAmbient
+        /// (day clip) is also missing, ambientSource stays silent -- same as the
+        /// existing no-ambient case before M6. No crash.
+        ///
+        /// Wiki B8 acceptance: ambient differs at 02:00 vs 12:00.
+        ///
+        /// QA FLAG: AudioBank.sfxAmbientNight requires scene-side SerializeField
+        /// assignment on the AudioBank GameObject -- assign ambient_night.wav.
+        /// Without this wire, this method is a silent no-op (graceful degradation).
+        /// </summary>
+        public void SwapAmbientToNight()
+        {
+            if (_isNightAmbient) return;          // already night -- idempotent
+            if (sfxAmbientNight == null) return;  // graceful null no-op
+            if (ambientSource == null) return;
+
+            _isNightAmbient = true;
+            ambientSource.clip = sfxAmbientNight;
+            ambientSource.loop = true;
+            ambientSource.Play();
+        }
+
+        /// <summary>
+        /// Swap the ambient bed back to the day clip (birds/wind).
+        /// Called by FootstepDriver when GameClock.DayProgress enters daytime
+        /// (DayProgress in [0.27, 0.83) -- sunrise 06:30 to 22:00).
+        ///
+        /// Idempotent: if already playing the day clip, this is a no-op.
+        /// Graceful: if sfxAmbient is null, ambientSource is stopped (no day clip
+        /// assigned -- same as prototype-day-1 no-wiring state, no crash).
+        ///
+        /// Wiki B8 acceptance: ambient differs at 02:00 vs 12:00 (daytime = birds).
+        /// </summary>
+        public void SwapAmbientToDay()
+        {
+            if (!_isNightAmbient) return;   // already day -- idempotent
+            if (ambientSource == null) return;
+
+            _isNightAmbient = false;
+            if (sfxAmbient != null)
+            {
+                ambientSource.clip = sfxAmbient;
+                ambientSource.loop = true;
+                ambientSource.Play();
+            }
+            else
+            {
+                ambientSource.Stop();
+            }
         }
     }
 }

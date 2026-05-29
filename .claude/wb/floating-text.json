@@ -1,0 +1,25 @@
+{
+  "role": "Art",
+  "task": "B6 floating combat/work text (W-M6-01)",
+  "status": "Done",
+  "output_paths": [
+    "skills/game-prototype/unity-project/Assets/Scripts/FloatingText.cs"
+  ],
+  "api": "FloatingText.Spawn(Vector3 worldPos, string text, Color color)",
+  "animation": "rises 0.5 world-unit, fades alpha 1->0, duration 1.0s, Time.unscaledDeltaTime",
+  "sorting_order": 50,
+  "font": "Unity built-in Arial (Resources.GetBuiltinResource) — no external asset required",
+  "bootstrap": "[RuntimeInitializeOnLoadMethod(AfterSceneLoad)] hidden DontDestroyOnLoad FloatingTextHost GO, FindFirstObjectByType idempotency guard",
+  "no_existing_file_edits": true,
+  "flags_for_qa": [
+    "FloatingText.Spawn exists and is callable. Console test: FloatingText.Spawn(Camera.main.transform.position + Vector3.up, \"-5\", Color.red)",
+    "Call-sites (arrow hit -> red '-N', harvest -> '+N wood') are a follow-up wave — not wired in this file",
+    "TextMesh uses Unity built-in Arial (Arial.ttf via Resources.GetBuiltinResource) — no .meta/font/material import needed at runtime",
+    "sortingOrder 50 places text above all known layers (pawns 9-11, bars 29-31, NightOverlay 25) — confirm no UI Canvas z-fighting in player build",
+    "FloatingTextHost is an internal sealed MonoBehaviour on the hidden host GO; it is what FindFirstObjectByType targets for idempotency"
+  ],
+  "wiki_b6_acceptance": "An arrow hit (or QA-invoked Spawn) produces a colored number that rises and fades over ~1s above the target",
+  "milestone": "M6-ui",
+  "wave": "W-M6-01",
+  "timestamp": "2026-05-30"
+}

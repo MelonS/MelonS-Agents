@@ -1,0 +1,40 @@
+{
+  "role": "game-programmer",
+  "lane": "B1 multi-select marquee",
+  "cycle": "C-016",
+  "wave": "W-M6-01",
+  "milestone": "M4-building",
+  "status": "Done",
+  "wiki_ref": "skills/game-prototype/docs/rimworld-comparison-v2.md row B1",
+  "wiki_acceptance": "Drag a box over 3 pawns -> all 3 show selection ring; a right-click move-order moves all 3.",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/MarqueeSelector.cs"
+  ],
+  "files_edited_hot": [],
+  "clicksector_edited": false,
+  "design": {
+    "self_bootstrap": "[RuntimeInitializeOnLoadMethod(AfterSceneLoad)] -> hidden DontDestroyOnLoad GO '~MarqueeSelector' + FindFirstObjectByType idempotency guard (MineDesignation pattern).",
+    "gesture_split": "Owns left-DRAG only: arm on mouse-down over EMPTY ground (no PawnEntity under cursor), promote to drag once cursor moves >= dragThresholdPixels (6px default), finalize on mouse-up. A below-threshold press/release does NOTHING here so ClickSelector's single left-CLICK still single-selects -> no double-fire (click vs drag is mutually exclusive by the threshold).",
+    "selection_read_api": "CurrentMultiSelection (IReadOnlyList<PawnEntity>) + HasMultiSelection bool.",
+    "ring_visual": "Each boxed pawn gets PawnEntity.SetSelected(true) -> reuses the existing selection tint/marker the single-select path uses. ClearMultiSelection drops the rings.",
+    "box_query": "Physics2D.OverlapAreaNonAlloc(min,max,buf[256]) then GetComponent<PawnEntity>() filter (mirrors ClickSelector's OverlapPoint+GetComponent approach); skips IsDead + de-dups multi-collider pawns. No per-frame List alloc.",
+    "move_order": "Right-click while HasMultiSelection: for each pawn clear residual chopper/gatherer/hunter/cook tasks (exactly as ClickSelector's empty-ground branch) then PawnMovement.SetTarget + ManualMoveUntil = Time.time + 15f. REUSES existing move API; NO new pathfinding.",
+    "guards": "InputBlocked() skips when EventSystem.IsPointerOverGameObject, BuildManager.BuildModeActive, DeconstructDesignation.ModeActive, MineDesignation.ModeActive, GrowZoneDesignation.ModeActive, or ContextMenuUI.IsOpen.",
+    "overlay": "GL quad (translucent fill) + GL.LINES border drawn in OnRenderObject using Hidden/Internal-Colored, viewport-space (LoadOrtho + WorldToViewportPoint). No extra GameObject; Camera.current==cam guard avoids double-draw; lineMat destroyed in OnDestroy."
+  },
+  "bug_firewall": {
+    "4_audio_buzz": "no AudioBank loop (no audio calls at all).",
+    "5_getinstanceid_race": "no GetInstanceID compares.",
+    "6_collision_enter_only": "no collision handlers.",
+    "7_singleton_subscription_race": "managers POLLED in Update (singleton-subscriber), no .OnX subscription in OnEnable.",
+    "8_justspawned_default_true": "no spawn-grace serialized default.",
+    "9_runinbackground_freeze": "no coroutine / no WaitForSeconds / no background timer; overlay is frame-driven via OnRenderObject."
+  },
+  "flags_for_qa": [
+    "MARQUEE OVERLAY RENDER: marquee rectangle uses GL in OnRenderObject with Hidden/Internal-Colored shader + LoadOrtho viewport-space. QA confirm the box renders during drag (translucent green fill + border) in batchmode/build and is not invisible or mis-projected.",
+    "MULTI-SELECT RING VISUALS: each boxed pawn calls PawnEntity.SetSelected(true). QA confirm a 3-pawn box -> all 3 show the selection tint/ring simultaneously (B1 acceptance).",
+    "NO DOUBLE-FIRE WITH ClickSelector LEFT-CLICK: a single click (<6px move) must still single-select via ClickSelector and must NOT start a marquee; a drag (>=6px) must multi-select and ClickSelector's single ring is dropped via SetSelected(false). QA confirm clicking a pawn single-selects (ClickSelector) while drag-on-empty multi-selects (this file), with no two-ring competing state.",
+    "RIGHT-CLICK MOVE-ALL: with a marquee active, one right-click moves ALL selected pawns (PawnMovement.SetTarget reused). QA confirm all 3 walk to the clicked point (B1 acceptance). Note: marquee right-click uses the UNDRAFTED manual-move branch for every pawn (drafted-specific attack semantics stay under ClickSelector single-select).",
+    "ClickSelector.cs was NOT edited (lane firewall held). ClearClickSelectorSingle() only calls PawnEntity.SetSelected(false) on ClickSelector.CurrentSelection (read-only public getter) to avoid two competing rings."
+  ]
+}

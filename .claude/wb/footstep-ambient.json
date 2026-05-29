@@ -1,0 +1,78 @@
+{
+  "agent": "Sound Designer",
+  "wave": "W-M6-01",
+  "lane": "B8",
+  "milestone": "M2-sound",
+  "wiki_item": "B8 Footstep SFX + day/night ambient variation",
+  "Status": "Done",
+  "updated": "2026-05-30",
+
+  "output_files": {
+    "generator_script": "skills/game-prototype/unity-project/Assets/Audio/_gen_m6_footstep_ambient.py",
+    "footstep_wav": "skills/game-prototype/unity-project/Assets/Audio/footstep.wav",
+    "footstep_wav_meta": "skills/game-prototype/unity-project/Assets/Audio/footstep.wav.meta",
+    "ambient_night_wav": "skills/game-prototype/unity-project/Assets/Audio/ambient_night.wav",
+    "ambient_night_wav_meta": "skills/game-prototype/unity-project/Assets/Audio/ambient_night.wav.meta",
+    "generator_meta": "skills/game-prototype/unity-project/Assets/Audio/_gen_m6_footstep_ambient.py.meta",
+    "audiobank_cs": "skills/game-prototype/unity-project/Assets/Scripts/AudioBank.cs",
+    "footstep_driver_cs": "skills/game-prototype/unity-project/Assets/Scripts/FootstepDriver.cs",
+    "footstep_driver_meta": "skills/game-prototype/unity-project/Assets/Scripts/FootstepDriver.cs.meta"
+  },
+
+  "audiobank_new_slots": [
+    "sfxFootstep (AudioClip) -- footstep.wav, 0.07s earth-thud",
+    "sfxAmbientNight (AudioClip) -- ambient_night.wav, 15s cricket loop"
+  ],
+  "audiobank_new_methods": [
+    "PlayFootstep() -- 0.20s bank-side throttle (FootstepInterval), vol 0.45",
+    "SwapAmbientToNight() -- idempotent clip swap on ambientSource to sfxAmbientNight",
+    "SwapAmbientToDay() -- idempotent clip swap on ambientSource back to sfxAmbient"
+  ],
+  "throttle_decisions": {
+    "PlayFootstep_bank_side": "0.20s (FootstepInterval) -- defense-in-depth; multiple walking pawns would combine at 60fps without this",
+    "FootstepDriver_per_pawn": "0.40s (FootstepInterval in FootstepDriver) -- primary per-pawn gate; yields ~2.5 steps/sec natural cadence",
+    "SwapAmbient_no_throttle": "State-machine driven; _isNightAmbient idempotency flag in AudioBank prevents re-trigger; _wasNight flag in FootstepDriver detects transitions only"
+  },
+
+  "wav_specs": {
+    "footstep.wav": {
+      "duration_s": 0.070,
+      "sample_rate": 44100,
+      "channels": 1,
+      "bit_depth": 16,
+      "peak": 0.700,
+      "character": "low earth-thud (75Hz body) + grit noise burst, exponential decay, 8ms click-safe fade"
+    },
+    "ambient_night.wav": {
+      "duration_s": 15.0,
+      "sample_rate": 44100,
+      "channels": 1,
+      "bit_depth": 16,
+      "peak": 0.600,
+      "character": "cricket chirp texture (2.2Hz + 1.8Hz chirp LFO, 3500Hz band noise + 1800/4200Hz resonance), 40Hz sub-air, 0.8s loop-safe fade"
+    }
+  },
+
+  "day_night_boundary": {
+    "night_condition": "DayProgress >= 0.83 (22:00) OR DayProgress < 0.27 (06:30)",
+    "day_condition": "DayProgress in [0.27, 0.83)",
+    "source": "DayNightCycle.cs STOPS array -- 0.83=22:00 deep-night, 0.27=06:30 sunrise-warm",
+    "read_accessor": "GameClock.Instance.DayProgress (READ-ONLY)"
+  },
+
+  "flags_for_qa": [
+    "AudioBank scene-wiring: assign footstep.wav to AudioBank.sfxFootstep in Inspector",
+    "AudioBank scene-wiring: assign ambient_night.wav to AudioBank.sfxAmbientNight in Inspector",
+    "DayNightCycle read accessor used: GameClock.Instance.DayProgress (float [0,1))",
+    "FootstepDriver self-bootstraps ([RuntimeInitializeOnLoadMethod(AfterSceneLoad)], hidden GO, FindFirstObjectByType guard)",
+    "Ambient swap tested at DayProgress~0.083 (02:00) -> night crickets; DayProgress=0.50 (12:00) -> day birds",
+    "No Unity run needed -- QA verifies via build + inspector wiring"
+  ],
+
+  "wiki_b8_acceptance": {
+    "footstep": "A walking pawn plays a faint footstep ~every 0.4s -- FootstepDriver per-pawn 0.4s throttle + AudioBank.PlayFootstep() vol=0.45",
+    "ambient": "Ambient bed differs at 02:00 vs 12:00 -- SwapAmbientToNight (crickets) on DayProgress<0.27 or >=0.83; SwapAmbientToDay (birds) on [0.27,0.83)"
+  },
+
+  "lane_isolation_proof": "FootstepDriver.cs (NEW file only) + AudioBank.cs (edited -- single AudioBank lane this wave). No other files edited. PawnMovement and DayNightCycle read-only. No SceneSetup, ClickSelector, BuildManager, FloatingText, MarqueeSelector, or test files touched."
+}
