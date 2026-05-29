@@ -19,10 +19,11 @@ namespace MelonS.GameProto.Tests
     ///   Field 3 — TreeEntity.Species  (Oak stays Oak)
     ///   Field 4 — WallEntity.Material  (Stone stays Stone)
     ///
-    /// VERIFY-ONLY lane (Lane C, W-M4-01).  This test does NOT edit
-    /// SaveLoadManager.cs or any entity .cs file.  If a field is not serialized,
-    /// the test documents the exact failing field and FLAGS it for a dedicated
-    /// future serialization CODE wave.
+    /// VERIFY lane (Lane C W-M4-01 documented gaps; Lane B W-M4-02 FIXED them).
+    /// SaveLoadManager.cs now carries BedSave/StockpileSave/WallSave lists and
+    /// species field on TreeSave.  This test was updated (QA wiring, cx-w6) to
+    /// read actual data fields — all four assertions now PASS when serialization
+    /// is correct.
     ///
     /// Harness conventions: same RunOne/Assert/GetWhiteSprite pattern as
     /// V4CombatChainTest.cs, V5FoodChainTest.cs, V7RaidThreatTest.cs.
@@ -204,32 +205,24 @@ namespace MelonS.GameProto.Tests
 
             // ---- Round-trip assertions: check SaveData for sub-state fields ----
             //
-            // SaveData (as of this writing) has NO BedSave, NO StockpileSave,
-            // NO species field in TreeSave, and NO WallSave.  Each assertion
-            // below evaluates whether the field survives the round-trip.
+            // W-M4-02 Lane B fix: SaveLoadManager now carries BedSave/StockpileSave/
+            // WallSave lists and a species field on TreeSave.  All four assertions
+            // below now read actual data fields instead of hardcoded false.
             //
-            // GAP-1: BedQuality — SaveData has no bed list at all.
-            //   Round-trip result: FAILS (bed quality not in payload).
-            //   To verify: check if data contained a fine-bed record.
-            //   Since SaveData has no bed list, we assert false to document the gap.
-            bool bedQualitySerialized = false; // GAP-1: no BedSave in SaveData
-            // (If SaveData.beds were added with a quality field, we would assert:
-            //   data.beds != null && data.beds.Count > 0 &&
-            //   data.beds.Exists(b => b.quality == (int)BedQuality.Fine)
-            // )
+            // GAP-1 (FIXED): BedQuality — SaveData.beds carries BedSave(position, quality).
+            bool bedQualitySerialized = loadedOk
+                && data.beds != null && data.beds.Count > 0
+                && data.beds.Exists(b => b.quality == (int)BedQuality.Fine);
 
-            // GAP-2: StockpilePriority — SaveData has no stockpile list.
-            bool stockPrioritySerialized = false; // GAP-2: no StockpileSave in SaveData
-            // (If SaveData.stockpiles were added with a priority field, we would assert:
-            //   data.stockpiles != null && data.stockpiles.Count > 0 &&
-            //   data.stockpiles.Exists(s => s.priority == (int)StockpilePriority.Critical)
-            // )
+            // GAP-2 (FIXED): StockpilePriority — SaveData.stockpiles carries StockpileSave(position, priority).
+            bool stockPrioritySerialized = loadedOk
+                && data.stockpiles != null && data.stockpiles.Count > 0
+                && data.stockpiles.Exists(s => s.priority == (int)StockpilePriority.Critical);
 
-            // GAP-3: TreeSpecies — TreeSave only stores position, not species.
-            // We can verify: the tree at (302,0) position IS in data.trees, but
-            // its species is not stored (no species field on TreeSave).
+            // GAP-3 (FIXED): TreeSpecies — TreeSave now carries species field.
+            // We also verify the tree position is in the payload.
             bool treePositionSaved = false;
-            bool treeSpeciesSerialized = false; // GAP-3: TreeSave has no species field
+            bool treeSpeciesSerialized = false;
             if (loadedOk && data.trees != null)
             {
                 foreach (var ts in data.trees)
@@ -237,20 +230,16 @@ namespace MelonS.GameProto.Tests
                     if (Vector2.Distance(ts.position, new Vector2(302f, 0f)) < 0.5f)
                     {
                         treePositionSaved = true;
-                        // GAP-3: TreeSave has no species field — species is lost.
-                        // treeSpeciesSerialized would be true only if a species field existed.
-                        treeSpeciesSerialized = false;
+                        treeSpeciesSerialized = (ts.species == (int)TreeSpecies.Oak);
                         break;
                     }
                 }
             }
 
-            // GAP-4: WallMaterial — SaveData has no wall list.
-            bool wallMaterialSerialized = false; // GAP-4: no WallSave in SaveData
-            // (If SaveData.walls were added with a material field, we would assert:
-            //   data.walls != null && data.walls.Count > 0 &&
-            //   data.walls.Exists(w => w.material == (int)WallMaterial.Stone)
-            // )
+            // GAP-4 (FIXED): WallMaterial — SaveData.walls carries WallSave(position, material).
+            bool wallMaterialSerialized = loadedOk
+                && data.walls != null && data.walls.Count > 0
+                && data.walls.Exists(w => w.material == (int)WallMaterial.Stone);
 
             // ---- Composite assertion — ONE binary PASS ----
             // Wiki acceptance #29: after save->load, a fine bed is still fine.
@@ -266,13 +255,11 @@ namespace MelonS.GameProto.Tests
                 $"round-trip: " +
                 $"saveExists={saveExists} " +
                 $"loadedOk={loadedOk} " +
-                $"[GAP-1]bedQuality(Fine)={bedQualitySerialized} " +
-                $"[GAP-2]stockPriority(Critical)={stockPrioritySerialized} " +
-                $"[GAP-3]treeSpecies(Oak,posInPayload={treePositionSaved})={treeSpeciesSerialized} " +
-                $"[GAP-4]wallMaterial(Stone)={wallMaterialSerialized} — " +
-                $"FLAG: BedQuality/StockpilePriority/TreeSpecies/WallMaterial absent from SaveData; " +
-                $"dedicated serialization CODE wave required (add BedSave+StockpileSave+WallSave " +
-                $"lists to SaveData + species field to TreeSave, then re-run this test).");
+                $"[1]bedQuality(Fine)={bedQualitySerialized} " +
+                $"[2]stockPriority(Critical)={stockPrioritySerialized} " +
+                $"[3]treeSpecies(Oak,posInPayload={treePositionSaved})={treeSpeciesSerialized} " +
+                $"[4]wallMaterial(Stone)={wallMaterialSerialized} — " +
+                $"wiki #29 acceptance: fine bed/critical stockpile/oak tree/stone wall survive save->load");
 
             // ---- Cleanup ----
             Object.Destroy(bedGo);
