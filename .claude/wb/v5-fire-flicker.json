@@ -1,0 +1,27 @@
+{
+  "role": "Programmer-laneB",
+  "task": "V5 ambient micro-motion: stove fire flicker",
+  "Status": "Done",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/FlickerLight.cs"
+  ],
+  "mechanism": {
+    "self_attach": "[RuntimeInitializeOnLoadMethod(AfterSceneLoad)] spawns a hidden DontDestroyOnLoad '~FlickerLightDriver'. Driver Update() throttles (Time.unscaledTime, every 1.0s) and runs FindObjectsByType<StoveEntity>, calling FlickerLight.EnsureOn for any stove without one. Picks up runtime/mid-game-built stoves within ~1s. No SceneSetup/BuildManager/stovePrefab edit.",
+    "flicker": "Additive child overlay GameObject 'FlameOverlay' parented to stove; reuses body sprite as flame silhouette, warm orange tint, sortingOrder = body+1. Pulses alpha (base 0.55 +/-0.18) and scale (1.0 +/-0.08) at ~4Hz using two detuned Perlin-noise streams + per-instance random phase seeds -> organic, out-of-sync, NOT a strobe. Body root SpriteRenderer NEVER recolored (tint contract untouched); OnDisable just fades overlay to alpha 0, nothing on body to restore.",
+    "lit_gating": "IsLit() = stove.MealsAvailable > 0 || stove.CanCookOne(). Lit -> full flame; not lit -> faint ember (alpha 0.10). No explicit isLit on StoveEntity, so heuristic used."
+  },
+  "bug_firewall": {
+    "#9_runInBackground": "No new always-on background timer. Driver uses Time-based throttle inside Update (no WaitForSeconds heartbeat). AutoScreenshotter still owns Application.runInBackground for CLI QA.",
+    "#4_audio": "No AudioBank calls.",
+    "alloc": "Driver uses a static reused List scratch + cached scan interval; no per-frame allocations in flicker Update."
+  },
+  "lamp_scope": "OUT this wave. lamp.png sprite exists but no LampEntity script and no lamp GameObject discoverable by name at runtime (grep found none). Flagged as follow-up.",
+  "qa_flags": [
+    "self-attach: confirm FlickerLight lands on runtime-built stoves (driver rescans every 1.0s via FindObjectsByType<StoveEntity>)",
+    "two frames 0.25s apart of an on-screen stove show visibly changed flame pixels",
+    "nothing else jitters; not a strobe (per-instance random phase, ~4Hz low-amplitude Perlin)",
+    "lamp scoped OUT — no LampEntity/named lamp object exists; follow-up wave",
+    "lit-gating signal used: MealsAvailable>0 || CanCookOne() == lit; confirm matches design intent (ember when neither)",
+    "additive overlay: confirm Particles/Standard Unlit (or Sprites/Default fallback) resolves in build; overlay sortingOrder=body+1 sits above stove body (~20)"
+  ]
+}

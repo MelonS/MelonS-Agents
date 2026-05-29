@@ -1,0 +1,39 @@
+{
+  "Status": "Done",
+  "lane": "C — world scatter art (_gen_scatter.py PNG regen)",
+  "session": "2026-05-30",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Sprites/_gen_scatter.py",
+    "skills/game-prototype/unity-project/Assets/Sprites/decor_rock.png",
+    "skills/game-prototype/unity-project/Assets/Sprites/grass_tuft.png",
+    "skills/game-prototype/unity-project/Assets/Sprites/wildflower1.png",
+    "skills/game-prototype/unity-project/Assets/Sprites/wildflower2.png",
+    "skills/game-prototype/unity-project/Assets/Sprites/_preview_scatter.png"
+  ],
+  "palette_compliance": {
+    "imports": ["OUTLINE_PLANT","ROCK_DK","ROCK_MD","ROCK_LT","GRASS_DK","GRASS_MD","GRASS_LT","DIRT_MD"],
+    "no_adhoc_colours": true,
+    "removed": "_FLOWER1_STEM/_HEAD/_ACC and _FLOWER2_STEM/_HEAD/_ACC ad-hoc tuples replaced entirely by palette imports"
+  },
+  "qa_metrics": {
+    "max_luminance_vs_SKIN_MD": "151.1 < 185.3 — PASS (all four sprites)",
+    "flower_head_sat_vs_min_cloth_sat": "ROCK_LT=0.062, ROCK_MD=0.088, ROCK_DK=0.122 — all < 0.375 CLOTH_OLIVE min — PASS",
+    "grass_stem_sat_note": "GRASS_MD stem pixels in wf2 reach sat=0.40; this uses the canonical GRASS_MD terrain entry (not a flower accent), intent is that stems read as ground-green and recede",
+    "outline_note": "OUTLINE_PLANT on decor_rock has sat=0.43 by design — it is a palette-defined plant border colour, not a flower accent",
+    "transparent_bg": true,
+    "canvas_size_8x8": true,
+    "outline_tier": "OUTLINE_PLANT only (rock border); flowers and grass use no outline"
+  },
+  "qa_flags": [
+    "WIRING PENDING: add decor_rock.png / grass_tuft.png / wildflower1.png / wildflower2.png to SceneSetup ForceImportAllSprites (PPU16, Point filter, No compression) AND scatter-place them deterministically below pawns/structures — programmer task, verify in a wide screenshot",
+    "verify: nothing brighter/more saturated than a pawn; scatter recedes; no tile-seam grid pattern",
+    "wf1 vs wf2 distinction: both use ROCK_* head colours (near-zero sat grey-blue); they differ only by silhouette (cross vs 2-lobe drooping) and stem colour (DIRT_MD warm brown vs GRASS_MD muted khaki) — verify readable at game zoom"
+  ],
+  "files_not_touched": [
+    "_gen_fix_audit.py",
+    "_gen_sprites.py",
+    "_gen_bed.py",
+    "palette.py (read-only import)",
+    "*.cs (zero .cs files edited)"
+  ]
+}

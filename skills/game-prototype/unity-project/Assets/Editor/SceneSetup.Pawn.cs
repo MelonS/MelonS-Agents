@@ -36,9 +36,23 @@ namespace MelonS.GameProto.EditorTools
             //  pawn_colonist.png 는 16x16 px, PPU 16 (ForceImportAllSprites 강제) → 1x1 world unit.
             //  scale 1.0 유지 (PPU 가 1x1 을 만들어내므로 scale 보정 불필요).
             pawnGo.transform.localScale = new Vector3(1f, 1f, 1f);
+            // ROOT SpriteRenderer — KEPT EXACTLY AS-IS as the TINT ANCHOR.
+            //  GameManager + PawnEntity call GetComponent<SpriteRenderer>() on the
+            //  ROOT for per-pawn variant color / selection-yellow / drafted-cyan,
+            //  so this component MUST stay on the root, untouched, with its sprite
+            //  + sortingOrder set.  Polish v3 V1 walk-bob: to bob the body WITHOUT
+            //  moving the root (root transform feeds PathGrid.WorldToCell / cells /
+            //  reservations / eject / bars / shadow — moving it desyncs pathfinding,
+            //  the exact bug being fixed), the VISIBLE body is drawn by a child
+            //  'PawnSpriteBob' renderer that PawnSpriteBob.cs bobs.  We disable the
+            //  root renderer's DRAWING (renderer.enabled = false) to avoid a
+            //  double-draw, but the component itself stays so all tint callers still
+            //  find it; PawnSpriteBob mirrors the root color onto the child each
+            //  frame.  See PawnSpriteBob.cs header for the full tint-contract note.
             SpriteRenderer sr = pawnGo.AddComponent<SpriteRenderer>();
             sr.sprite = pawnSprite;
             sr.sortingOrder = 10;
+            sr.enabled = false;   // tint anchor only; child draws the visible body
             Debug.Log($"[GeneratePawnPrefab] pawnSprite={(pawnSprite == null ? "NULL" : pawnSprite.name)} sortingOrder={sr.sortingOrder}");
             // Day 35 fix: if sprite was null, force-color the renderer
             // so the pawn is at least visible.
@@ -94,6 +108,36 @@ namespace MelonS.GameProto.EditorTools
             shadowSr.sortingOrder = sr.sortingOrder - 1;  // = 9, under body
             if (shadowSprite == null)
                 Debug.LogWarning("[GeneratePawnPrefab] shadow_small.png NULL — pawn shadow skipped");
+
+            // Polish v3 — V1 walk-bob / idle-breathe.  The VISIBLE body sprite
+            //  lives on this CHILD so PawnSpriteBob.cs can bob its LOCAL Y without
+            //  ever touching the root transform (root drives pathfinding cells /
+            //  reservations / eject; bars / nameplate / shadow anchor to root — all
+            //  must NOT bob).  Child sortingOrder matches the body (10) and uses the
+            //  same sortingLayer as the (now draw-disabled) root renderer, so it
+            //  renders exactly where the old root body did, above the shadow (9).
+            GameObject bobGo = new GameObject("PawnSpriteBob");
+            bobGo.transform.SetParent(pawnGo.transform, false);
+            bobGo.transform.localPosition = Vector3.zero;   // authored base; bob adds Y
+            bobGo.transform.localScale = Vector3.one;
+            var bobSr = bobGo.AddComponent<SpriteRenderer>();
+            bobSr.sprite = pawnSprite;
+            bobSr.sortingLayerID = sr.sortingLayerID;
+            bobSr.sortingOrder = sr.sortingOrder;   // = 10, same as old root body
+            bobSr.color = sr.color;                 // initial tint mirror
+            if (pawnSprite == null)
+            {
+                // Mirror the root null-sprite fallback so the pawn stays visible.
+                bobSr.color = new Color(1f, 0.5f, 0.3f, 1f);
+            }
+            var bob = bobGo.AddComponent<PawnSpriteBob>();
+            // Wire the bob component to the child it animates + the child renderer
+            //  it tint-mirrors.  Uses SerializedObject so private [SerializeField]
+            //  refs persist into the prefab asset.
+            var bobSo = new SerializedObject(bob);
+            bobSo.FindProperty("spriteChild").objectReferenceValue = bobGo.transform;
+            bobSo.FindProperty("childRenderer").objectReferenceValue = bobSr;
+            bobSo.ApplyModifiedPropertiesWithoutUndo();
 
             PrefabUtility.SaveAsPrefabAsset(pawnGo, PawnPrefabPath);
             Object.DestroyImmediate(pawnGo);

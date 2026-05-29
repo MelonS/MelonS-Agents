@@ -81,6 +81,10 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/berry_bush.png",      // Round 6/7 — dedicated berry-bush art (was tree reuse + neon tint)
                 "Assets/Sprites/shadow_small.png",    // Polish v2 — pawn grounding shadow (16x8, alpha baked)
                 "Assets/Sprites/shadow_tree.png",     // Polish v2 — tree trunk grounding shadow (20x6, alpha baked)
+                "Assets/Sprites/decor_rock.png",      // Polish v3 C — world scatter rock (8x8)
+                "Assets/Sprites/grass_tuft.png",      // Polish v3 C — world scatter grass tuft (8x8)
+                "Assets/Sprites/wildflower1.png",     // Polish v3 C — world scatter wildflower cross (8x8)
+                "Assets/Sprites/wildflower2.png",     // Polish v3 C — world scatter wildflower droop (8x8)
             };
             foreach (var p in paths)
             {
@@ -149,6 +153,8 @@ namespace MelonS.GameProto.EditorTools
             float dirtRadius = layout.dirtRadius;
             const int MAP_HALF = 20;
             SetupFlowerDecor(layout);
+            // Polish v3 C — scatter rock/grass/wildflower decor
+            SpawnScatterDecor(layout);
 
             // GameManager + spawn pawn via prefab
             GameObject gmGo = new GameObject("GameManager");

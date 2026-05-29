@@ -19,27 +19,43 @@
     "AIDesigner": "FSM/BT 등 AI 로직 설계 + 경로탐색 안전 제약"
   },
   "current_cycle": {
-    "id": "C-001",
+    "id": "C-002",
     "task_ref": ".claude/task.json",
-    "phase": "PM-Publish",
-    "title": "in-flight 통합 + M1 living-colony 폴리시",
+    "phase": "Programmer+Art-Implement (parallel)",
+    "title": "M1 living-colony 폴리시 wave — walk-bob(V1) + fire-flicker(V5) + scatter-art(V2)",
+    "wave": {
+      "id": "W-M1-01",
+      "lanes_non_overlapping": true,
+      "op_gated_excluded": ["work-priority", "mood/mental-break rewrite"],
+      "subtasks": [
+        "walk-bob: NEW PawnSpriteBob.cs + SceneSetup.Pawn.cs (sprite-child only, root untouched)",
+        "fire/lamp flicker: NEW FlickerLight.cs (self-attaching, no SceneSetup edit)",
+        "world scatter art: _gen_scatter.py PNG regen (wiring flagged for QA)"
+      ]
+    },
     "in_flight_uncommitted": [
       "#212 벌목 목재 드롭 위치 + 우선순위 운반 (TreeEntity.cs, WoodPileEntity.cs)",
       "#211 액션 SFX (AudioBank.cs, Assets/Audio/*.wav)",
       "하니스 stale-build 맹점 fix (refactor_check.py: --fresh-build/--allow-stale)"
+    ],
+    "already_done_this_session": [
+      "V4 tree 3-cluster canopy (_gen_sprites.py gen_tree) — DONE",
+      "V3 contact shadows pawn/tree (SceneSetup.Pawn.cs PawnShadow child) — DONE",
+      "V2 scatter generator written (_gen_scatter.py) — generated, wiring pending"
     ]
   },
   "agents": {
-    "PM":        {"status": "In Progress", "outputs": [], "notes": "C-001 발행 중"},
+    "PM":        {"status": "Done", "outputs": [".claude/whiteboard.json"], "notes": "C-002 wave W-M1-01 발행: 3 병렬 non-overlap 레인"},
     "Director":  {"status": "Waiting", "outputs": [], "notes": ""},
     "Designer":  {"status": "Waiting", "outputs": [], "notes": ""},
     "AIDesigner":{"status": "Waiting", "outputs": [], "notes": ""},
-    "Programmer":{"status": "Waiting", "outputs": [], "notes": ""},
-    "Art":       {"status": "Waiting", "outputs": [], "notes": ""},
-    "QA":        {"status": "Waiting", "outputs": [], "notes": ""},
+    "Programmer":{"status": "Assigned", "outputs": [], "notes": "lane A: PawnSpriteBob.cs+SceneSetup.Pawn.cs / lane B: FlickerLight.cs"},
+    "Art":       {"status": "Assigned", "outputs": [], "notes": "lane C: _gen_scatter.py PNG regen"},
+    "QA":        {"status": "Waiting", "outputs": [], "notes": "wave 후 Unity 검증 (root-undrift V77 + flicker 2-frame + scatter wiring)"},
     "Sound":     {"status": "Waiting", "outputs": [], "notes": ""}
   },
   "log": [
-    {"ts": "2026-05-30", "by": "main", "msg": "오케스트레이션 시스템 부트스트랩, C-001 시작"}
+    {"ts": "2026-05-30", "by": "main", "msg": "오케스트레이션 시스템 부트스트랩, C-001 시작"},
+    {"ts": "2026-05-30", "by": "PM", "msg": "C-002 wave W-M1-01 발행. M1 living-colony 폴리시 3 레인(walk-bob/flicker/scatter), 파일 레인 비충돌, OP-gated(work-priority/mood) 제외. V3 shadow + V4 tree 는 done 으로 확인, 스킵."}
   ]
 }

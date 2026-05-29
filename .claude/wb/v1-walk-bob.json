@@ -1,0 +1,25 @@
+{
+  "role": "Programmer-laneA",
+  "task": "Polish Wave v3 V1 walk-bob + idle breathe (RETRY of pathfinding-desync attempt)",
+  "Status": "Done",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/PawnSpriteBob.cs",
+    "skills/game-prototype/unity-project/Assets/Editor/SceneSetup.Pawn.cs"
+  ],
+  "approach": {
+    "root_rule": "Root pawn transform NEVER moved/scaled/rotated. PawnSpriteBob writes ONLY the local Y of a child 'PawnSpriteBob' transform. PathGrid.WorldToCell reads root transform.position which is unaffected.",
+    "tint_contract": "Root SpriteRenderer kept on root EXACTLY as-is (sprite+sortingOrder) so GameManager+PawnEntity GetComponent<SpriteRenderer>()-on-root tint logic is untouched. Root renderer DRAWING disabled (sr.enabled=false) to avoid double-draw; visible body moved to child 'PawnSpriteBob' renderer. PawnSpriteBob.cs mirrors root.color -> child each frame so existing tint writes (variant/selection-yellow/drafted-cyan) remain visible.",
+    "ismoving": "PawnMovement.IsMoving already exists as public read-only getter (line 335: target.HasValue). READ-ONLY use. NO PawnMovement.cs edit. NO lane-exception.",
+    "bob_params": "Walk: vertical sine, amplitude 0.05 world (~0.8px@PPU16), freq 7Hz. Idle: amplitude 0.012, freq 1Hz. Amplitude+frequency EASE (frame-rate-independent lerp, speed 8) so offset fades to idle breathe on stop, no pop. Continuous phase clock so walk<->idle transition does not jump phase.",
+    "bug_firewall": "No tight-loop AudioBank (#4). No GetInstanceID (#5). No collision handlers (#6). No singleton OnEnable subscribe (#7). No justSpawned default-true (#8). No new long WaitForSeconds/background timer (#9) — pure Update sine, no coroutine, no runInBackground dependency."
+  },
+  "qa_flags": [
+    "SCENE-WIRING: SceneSetup.Pawn.cs adds child 'PawnSpriteBob' GameObject + SpriteRenderer (sortingOrder 10, same sortingLayer as root) and attaches PawnSpriteBob component wired via SerializedObject (spriteChild=child transform, childRenderer=child SR). Root SpriteRenderer left present but sr.enabled=false. VERIFY in Unity that the prefab serialized these refs and the pawn renders (single body, no double-draw, tint visible).",
+    "V77 root-unaffected test: no pawn drifts off its cell over 10s of walking (root transform.position must equal pathfinding cell at all times; only child local Y moves)",
+    "name plate / HP bar / shadow must NOT bob (they parent to / track the ROOT, which never moves)",
+    "two frames 0.1s apart of a walking pawn show visibly different vertical sprite offset (7Hz sine, amp 0.05)",
+    "tint contract: select a pawn (yellow) and draft a pawn (cyan) and confirm the variant/selection/drafted tint set on the ROOT renderer is mirrored onto the visible child each frame",
+    "NO PawnMovement.cs lane-exception edit was needed — IsMoving getter already existed; flagging only that QA should confirm no PawnMovement.cs diff exists"
+  ],
+  "lane_compliance": "Touched ONLY PawnSpriteBob.cs (new) + SceneSetup.Pawn.cs (edit). Did not touch FlickerLight.cs, _gen_scatter.py, PawnShadow block (read-only), or PawnMovement.cs. Unity NOT run (QA verifies)."
+}
