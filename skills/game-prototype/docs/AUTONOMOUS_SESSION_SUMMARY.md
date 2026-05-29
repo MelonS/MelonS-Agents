@@ -2,6 +2,50 @@
 
 ---
 
+## [세션 2026-05-29 야간 2부] #201-#208 — 림 갇힘 fix + 디자인/UI 전면 개편 (자율 5h+)
+
+운영자 directive: (1) "건축 완료 시점 림이 있으면 고정되서 못움직임" 버그 fix.
+(2) "디자인+ui개선 계속... 아직 너무 별로", "기획자 선정 → 아트 → QA 파이프라인",
+"자리 비울거 같으니 자율로 5시간 이상".
+
+### 한 줄
+**#201 벽-갇힘 버그 fix (eject + 상시 안전망) + #202-208 디자인/UI 전면 개편 —
+game-director(백로그) → game-artist(아트) → game-programmer(와이어링) → game-qa
+파이프라인으로 백로그(A1-A10, U1-U9) 전 항목 완료. 최종 QA: 시각 폴리시
+~3/10 → ~6.5-7/10, "너무 별로" bar 통과.**
+
+### #201 벽-갇힘 버그 (`c5e9e22`)
+원인: 셀 blocked 등록 시 eject 부재 + 탈출이 SetTarget 시만 발동(idle 림 영구
+갇힘). fix: WallEntity.Start 가 EjectPawnsFromCell 호출(RimWorld push-out) +
+PawnMovement.Update 상시 안전망(blocked 셀이면 nearest walkable 로). I42 가
+fix off=FAIL/on=PASS 로 버그 재현. V76.
+
+### #202-208 디자인/UI 개편 (game-director 진단: "스타일 내전")
+진단: 생성기 2종이 상충 팔레트(디테일/네온 vs flat-Kenney) → "네온 배 갈색 감자"
+콜로니스트가 과채도 잔디에 묻힘. UI 는 검정 debug 박스.
+
+| commit | 내용 |
+|--------|------|
+| `e558ef3` #202 | A1 palette.py 단일 소스 + 생성기 통합 / A2 콜로니스트 flat+2px 외곽선 + 3 변형(청/적갈/올리브) 와이어링 |
+| `2c84294` #203 | A3 지형 타일 muted(grass 네온→올리브) + door 정합 |
+| `2c1467c` #204 | U1-U3 UI 패널 시스템 통일(MakeBorderedPanel) - 컨트롤바/툴팁/인스펙터/이름표/플로팅바 |
+| `3d06c4f` #205 | U4/U7/U8 - 상단바/ArchitectMenu/튜토리얼/SL 버튼 전부 통일 |
+| `b2ad22b` #206 | 자원 아이콘 4종 + lamp/berry/marker/flower/arrow 네온 제거 |
+| `558585f` #207 | A4 목재 구조물 cohesion(floor 한 단계 darker) + A8 작물 + A9 드롭 shadow |
+| `46ed505` #208 | 상단 자원 아이콘 가독성(24→36px, 텍스트 밀착) |
+
+매 commit harness PASS, 매 단계 스크린샷 검증. 최종 누적 QA(game-qa):
+isolated 76/76 / integration 42/42 / Build Click 9/9 / REAL QA wood +55 /
+GATE GREEN. unified 팔레트로 terrain+pawn+building+UI 한 스타일.
+
+### ⚠ 운영자용 메모
+- **KlingAI 7.4k 포인트**: 인게임 픽셀 스프라이트/UI 엔 부적합(cohesion 깨짐).
+  단, **메인메뉴 배경 키아트** 한 장엔 적합 — 원하면 프롬프트 제공. 뽑아서
+  `Assets/Sprites/menu_bg.png` 넣어주면 programmer 가 와이어링.
+- 남은 diminishing-returns 항목(QA): 작물 필드 마커 soil patch, 인스펙터 빈 상태.
+
+---
+
 ## [세션 2026-05-29 야간] #199+#200 — RimWorld 풀 그리드 정합 + 충실도 감사/튜닝
 
 운영자 directive (자기 전): "최대한 림월드와 같은 방식으로 처리하도록" +
