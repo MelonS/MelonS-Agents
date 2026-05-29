@@ -1,17 +1,22 @@
 {
   "role": "PM",
   "status": "Done",
-  "cycle": "C-010",
-  "wave": "W-M4-02",
-  "prior_wave_closed": "W-M4-01 PASS @e250b43 build cx-w5-2026-05-30 (Deconstruct #15 / move-speed reconcile #28 / save-load round-trip VERIFY #29 / night warm-light pools). No compile fixes, no SceneSetup hot-file edit, no disk RED.",
-  "carried_flag": "#29 serialization gaps (BedQuality/StockpilePriority/TreeSpecies/WallMaterial absent from SaveData) -> actioned this wave as Lane B (highest-trust follow-up).",
+  "cycle": "C-011",
+  "wave": "W-M4-03",
+  "prior_wave_status": "W-M4-02 IMPLEMENTED across all 4 lanes (mine-designation/saveload-fix/tree-sway/v8-pathfind wb json Status=Done; no disk RED). V9SaveLoadRoundTripTest already QA-wired in a cx-w6 follow-up (assertions read real data fields, flipped FAIL->PASS). qa.json still shows the prior W-M4-01 PASS snapshot — QA must publish the W-M4-02 PASS json BEFORE verifying W-M4-03.",
+  "carried_followups_not_actioned": [
+    "Lane A flagged: make mining DESIGNATION-ONLY by gating MineStoneAction (PawnActions.cs) — behavior tweak, defer.",
+    "Lane B flagged: wire ApplyLoadedSubStates into the scene-reload load path + confirm 0.1.0 saves degrade gracefully — QA to confirm at verify."
+  ],
+  "rationale": "Cheap non-gated backlog (Dim2 sound 1-9, Dim1 motion 10-14, Dim6 alert/inspector 22/23) is exhausted; M4 build-ops #15 deconstruct + #16 mine are shipped. Per wiki sequencing ('build-ops 15-18 one at a time, design-a-base feel; verification continuous as the gate') the next M4 build-op is #17 grow-zone. The remaining non-gated wiki backlog is concentrated in M4 build-ops that share BuildManager/designation hot zones (one per wave) + the V1-V9 verify slate + M1 environmental-richness polish. This wave runs the single M4 hot-zone lane (#17) plus three lanes that touch zero M4 hot zone (M1 scatter, V6 verify, V2 verify).",
   "lanes": {
-    "A": "game-programmer / M4 #16 Mine designation — MineDesignation.cs(new, DeconstructDesignation mirror) + PawnMiner-or-PawnBuilder.cs mine action + (StoneVeinEntity.cs only-if-needed). drag/click designate vein -> idle miner mines -> stone. ZERO SceneSetup budget target.",
-    "B": "game-build-engineer / M5 #29 save-load serialization FIX — SaveLoadManager.cs ONLY. BedSave/StockpileSave/WallSave + TreeSave.species. Flip existing V9 test FAIL->PASS. Skip+flag any entity lacking a setter (no entity-file widening).",
-    "C": "game-artist / M1 V5 tree-sway remainder — TreeSwayDriver.cs(new, self-attach) sprite-child +/-1px sine only, root untouched.",
-    "D": "game-build-engineer / M5 V8 obstacle-pathfind verify — new test .cs, blocked path routes around/stops, never occupies blocked cell."
+    "A": "game-programmer / M4 #17 Grow-zone designation — GrowZoneDesignation.cs(new, Mine/Deconstruct self-bootstrapping mirror) drag-rect dirt cells -> grow zone -> idle pawn auto-plants a CropEntity. Single M4 hot-zone lane. ZERO SceneSetup budget target. CropEntity.cs untouched (reuse starter-settlement spawn path).",
+    "B": "game-artist / M1 Dim1 environmental richness — _gen_scatter_variety.py(new generator, existing gens untouched, palette read-only) + ScatterVarietyDriver.cs(new, self-attach, deterministic seed, clusters near trees/rock). More scatter variety, recedes below pawns.",
+    "C": "game-build-engineer / M5 V6 verify — new test .cs: body-part damage -> part HP drops -> bleed -> downed/death as ONE PASS. Runtime untouched.",
+    "D": "game-ai-designer / M5 V2 verify — another new test .cs (different file from C): wolf within detection range detects a pawn and chases (closes distance) as ONE PASS. Runtime untouched."
   },
-  "non_overlap_proof": "A=MineDesignation.cs(new)+PawnMiner-or-PawnBuilder.cs(+StoneVein only-if-needed); B=SaveLoadManager.cs; C=TreeSwayDriver.cs(new); D=new test .cs. No file in two lanes. Only A may (should not) touch a SceneSetup hot file; B/C/D touch zero SceneSetup.",
-  "op_gated_excluded": ["work-priority", "mood/mental-break #30", "per-terrain path-cost #24", "roof/collapse", "grow-zone #17", "drag-rect-walls #18", "catalogue #19/#20/#21", "M4 breadth trading/power/taming/bills"],
+  "non_overlap_proof": "A=GrowZoneDesignation.cs(new)(+CropEntity.cs only-if-a-tiny-accessor-missing); B=_gen_scatter_variety.py(new)+ScatterVarietyDriver.cs(new); C=new test .cs; D=another new test .cs. No file in two lanes. C and D are two DIFFERENT new test files in the same Assets/Scripts/Tests default asmdef (W-M4-01/02 precedent: two new test files in one asmdef is safe). Only A may (should not) touch a SceneSetup hot file; B/C/D touch zero SceneSetup.",
+  "op_gated_excluded": ["work-priority", "mood/mental-break #30", "per-terrain path-cost #24", "roof/collapse", "drag-rect-walls #18 (BuildManager input-ownership hot zone -> own future wave)", "catalogue #19 torch / #20 table+chair / #21 stone-floor (shared BuildManager catalogue hot zone -> one new-buildable per future wave)", "M4 breadth trading/power/taming/bills", "P5 detailed-pawn redraw (superseded by flat #202 — confirm with operator)"],
+  "backlog_remaining_after_this_wave": "#18 drag-rect-walls (own wave), #19/#20/#21 catalogue (one per wave), plus remaining V-slate verify items V1 drafted-tint / V3 research-progress->unlock / V9 mood-break (continuous gate). When all non-gated items are shipped/verified, the chain ENDS (done=true).",
   "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"]
 }

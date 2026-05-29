@@ -1,0 +1,65 @@
+{
+  "role": "BuildEngineer",
+  "lane": "C",
+  "wave": "W-M4-03",
+  "milestone": "M5-gameplay-verify",
+  "backlog_item": "V6",
+  "wiki_acceptance": "A gated test asserts body-part damage -> part HP drops -> bleed -> downed/death as ONE PASS line.",
+  "status": "Done",
+  "output_file": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V6BodyPartTest.cs",
+  "test_id": "V6-bodypart-chain",
+  "test_class": "MelonS.GameProto.Tests.V6BodyPartTest",
+  "report_path": "G:/ai/_v6_bodypart_report.json",
+  "assert_steps": [
+    "init — PawnHealth.parts[] populated with 6 entries via HealthPartsConfig.CreateDefault() fallback",
+    "Step 1 — TakeDamage(10, LeftLeg): part.hp drops from 20 to 10 (< initial)",
+    "Step 2 — part.bleedRate rises from 0 to 2.5 (= 10 * 0.25f) immediately after TakeDamage",
+    "Step 3a — LeftLeg drained to 0 HP; non-vital part at 0 does NOT set IsDead (confirms non-vital semantics)",
+    "Step 3b — TakeDamage(25, Head): head.hp reduces to 0 → CheckDeath sets IsDead=true AND IsDowned=true"
+  ],
+  "api_used_read_only": [
+    "PawnHealth.TakeDamage(int dmg, PartId? preferPart) — existing public combat API, zero edits",
+    "PawnHealth.GetPart(PartId) — public accessor",
+    "PawnHealth.parts[] — public array; BodyPart.hp / bleedRate / maxHp are public fields",
+    "PawnHealth.IsDead — public property (private set)",
+    "PawnHealth.IsDowned — public property (private set)"
+  ],
+  "api_gaps_flagged_for_qa": [
+    {
+      "id": "G1",
+      "description": "PawnHealth.parts[], BodyPart.hp, BodyPart.bleedRate are public — read directly without reflection. No gap.",
+      "severity": "none"
+    },
+    {
+      "id": "G2",
+      "description": "PawnHealth.TakeDamage(int, PartId?) is the existing public combat API. No gap.",
+      "severity": "none"
+    },
+    {
+      "id": "G3",
+      "description": "PawnHealth [SerializeField] HealthPartsConfig reference is not wired in a headless test scene. PawnHealth.Awake() calls HealthPartsConfig.CreateDefault() when partsConfig is null, creating a runtime ScriptableObject instance with canonical defaults (head 20, torso 40, limbs 18-20). QA should confirm CreateDefault() path executes without error in batchmode.",
+      "severity": "low",
+      "workaround": "No workaround needed; CreateDefault() branch already exists in runtime code."
+    },
+    {
+      "id": "G4",
+      "description": "IsDowned for PawnHealth is driven by CheckDeath() (private), which fires synchronously inside TakeDamage. The test reads IsDowned immediately after TakeDamage returns — no frame delay needed. QA should confirm IsDowned is correctly true after head HP reaches 0.",
+      "severity": "none"
+    },
+    {
+      "id": "G5",
+      "description": "The bleed tick in PawnHealth.Update fires once per real second (Time.time gated). The test reads bleedRate immediately after TakeDamage (before any Update tick fires), so the bleed assertion is frame-deterministic and does not require WaitForSeconds. If batchmode deltaTime is unusual this remains safe because bleedRate is set inside TakeDamage synchronously.",
+      "severity": "none"
+    }
+  ],
+  "lane_contract_compliance": {
+    "new_file_only": true,
+    "no_existing_test_file_edited": true,
+    "no_runtime_cs_edited": true,
+    "no_scenesetup_touched": true,
+    "unity_not_run": true,
+    "different_file_from_lane_d": true
+  },
+  "note": "Step 3a verifies non-vital part zero-HP semantics (leg at 0 = no death), which strengthens the gate beyond the minimum V6 spec. Step 3b directly asserts the downed/death threshold via head HP=0. bleedRate is read immediately post-TakeDamage (frame-deterministic, no Update tick required).",
+  "timestamp": "2026-05-30"
+}

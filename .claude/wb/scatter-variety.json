@@ -1,0 +1,65 @@
+{
+  "role": "Art",
+  "lane": "B",
+  "wave": "W-M4-03",
+  "cycle": "C-011",
+  "status": "Done",
+  "milestone": "M1-design",
+  "dim1_row": "Environmental richness — More scatter variety (chunks, dead leaves); cluster scatter near trees/rock",
+  "outputs": [
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Sprites/_gen_scatter_variety.py",
+      "type": "NEW generator (Lane B only)",
+      "description": "Produces 3 new low-saturation decal PNGs. Imports palette.py READ-ONLY. Does NOT edit _gen_fix_audit.py, _gen_sprites.py, or palette.py."
+    },
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Sprites/stone_chunk_small.png",
+      "type": "NEW asset",
+      "size": "10x8",
+      "palette": "ROCK_LT/MD/DK + OUTLINE_PLANT border",
+      "saturation": "ROCK_MD sat ~0.084 — well below all pawn cloth"
+    },
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Sprites/dead_leaves.png",
+      "type": "NEW asset",
+      "size": "8x8",
+      "palette": "DIRT_DK/MD/LT only, no outline",
+      "saturation": "DIRT_MD sat ~0.283 — well below SKIN_MD (0.411)"
+    },
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Sprites/pebble_scatter.png",
+      "type": "NEW asset",
+      "size": "10x6",
+      "palette": "ROCK_DK/MD only, no outline",
+      "saturation": "ROCK_DK sat ~0.058 — minimal, recedes strongly"
+    },
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Scripts/ScatterVarietyDriver.cs",
+      "type": "NEW runtime driver",
+      "description": "Self-attaches via [RuntimeInitializeOnLoadMethod(AfterSceneLoad)]. Hidden DontDestroyOnLoad GO. FindFirstObjectByType idempotency guard. Deterministic seed 98765. Places stone_chunk_small + dead_leaves + pebble_scatter sparsely on terrain AND clusters stone_chunk_small near TreeEntity positions (1.5wu radius, 2 per tree) and pebble_scatter near StoneVeinEntity positions (1.8wu radius, 3 per vein). All reads of TreeEntity/StoneVeinEntity are READ-ONLY (transform.position only). sortingOrder=1 — same as existing V2 scatter, below pawns (9+), structures (10+), above terrain (0)."
+    }
+  ],
+  "files_not_edited": [
+    "SceneSetup.Game.Scatter.cs",
+    "_gen_fix_audit.py",
+    "_gen_sprites.py",
+    "palette.py (import read-only only)",
+    "TreeSwayDriver.cs",
+    "TreeEntity.cs",
+    "StoneVeinEntity.cs",
+    "SaveLoadManager.cs",
+    "GrowZoneDesignation.cs",
+    "any test .cs"
+  ],
+  "qa_flags": [
+    "QA FLAG: Confirm stone_chunk_small.png / dead_leaves.png / pebble_scatter.png are present in Assets/Sprites/ and load without 'sprite null' console warnings. If any decal appears as a magenta dot, the PNG is not bundled — ensure Assets/Sprites/*.png are included in the build (Resources/ folder or SpriteAtlas).",
+    "QA FLAG: Verify sortingOrder=1 renders NEW decals BELOW pawns (9+) and structures (10+), and ABOVE terrain tiles (0). Eye should land on pawns first.",
+    "QA FLAG: Clustering — confirm some stone_chunk_small decals appear near tree trunks (within ~1.5 world units) and some pebble_scatter decals near StoneVeins (within ~1.8 world units). Placement is deterministic (seed 98765) — same layout every run.",
+    "QA FLAG: scene-wiring is ZERO. Self-attaches via RuntimeInitializeOnLoadMethod. Confirm no double-attach on scene reload (idempotency guard).",
+    "QA FLAG: Sprite import settings — PPU=16 (stone_chunk_small and dead_leaves are 8-10px sprites at PPU16 = 0.5-0.625 world units). pebble_scatter 10x6 at PPU16 = 0.625x0.375 world units. All point filter. Confirm TextureImporter settings are applied."
+  ],
+  "acceptance_binary": "A wide screenshot shows MORE incidental variety than before (new chunk/leaf/pebble decals visibly scattered, some clustered near trees/rock). They recede (eye lands on pawns first). Nothing brighter than a pawn. No tile-seam grid pattern. No clutter.",
+  "lane_contract_verified": true,
+  "unity_run": false,
+  "note": "Unity not run per lane contract. QA verifies after merge."
+}

@@ -1,0 +1,33 @@
+{
+  "role": "AIDesigner",
+  "lane": "D",
+  "wave": "W-M4-03",
+  "cycle": "C-011",
+  "milestone": "M5-gameplay-verify",
+  "task": "V2 wolf-detection->chase verify test (slate item V2)",
+  "status": "Done",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/Tests/V2WolfChaseTest.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/Tests/V2WolfChaseTest.cs.meta"
+  ],
+  "lane_compliance": {
+    "new_test_file_only": true,
+    "different_file_from_lane_C": "Lane C = V6 body-part test (separate new file); this lane = V2WolfChaseTest.cs",
+    "same_test_asmdef": "Assets/Scripts/Tests default assembly, alongside V4CombatChainTest/V7RaidThreatTest/V8ObstaclePathfindTest/V9SaveLoadRoundTripTest",
+    "runtime_cs_edited": false,
+    "existing_test_edited": false,
+    "unity_run": false,
+    "todo_left": false
+  },
+  "what_it_asserts": "ONE binary PASS for V2 slate: spawn a WolfEnemy with a live PawnEntity 3.0 units away (inside WolfEnemy.detectionRadius=5.0); advance the real sim ~2.0s; assert [1] pawn in detection range + both alive, [2] wolf DETECTS (gap to pawn decreases after the wolf's 0.4s target-search tick), [3] wolf CHASES (distance to pawn decreases over the window OR closes to within attackRange 0.9). Read-only: only public Hp/IsDead + world transform.position, identical to V7's bandit closing-in distance proof.",
+  "bootstrap_convention": "Reused V4/V7 RunOne/Assert/GetWhiteSprite + shared report-path convention (outputPath=G:/ai/_v2_wolf_chase_report.json, matching _v4_/_v7_).",
+  "wiki_acceptance": "Dimension 5 'V1-V9 verification slate', V2 = wolf detection -> chase: 'a gated test asserts a wolf within detection range detects a pawn and chases it (closes distance / enters chase state) as ONE PASS line.'",
+  "flags_for_qa": [
+    "G1 (KEY) — WolfEnemy exposes NO public chase-state / detection accessor. The chase target is the PRIVATE field cachedTarget (WolfEnemy.cs:31); there is no public IsChasing/CurrentTarget/AIState. The test therefore proves chase the only read-only way available: DISTANCE CLOSING over the window (identical to how V7RaidThreatTest proves a bandit closes in). If a binary chase-STATE accessor is wanted, WolfEnemy should add a read-only property, e.g. 'public bool IsChasing => cachedTarget != null && !cachedTarget.IsDead;' or 'public PawnEntity CurrentTarget => cachedTarget;'. FLAGGED, NOT edited (lane rule: no runtime .cs edits).",
+    "G2 — WolfEnemy.detectionRadius(5.0)/chaseSpeed(5.0)/attackRange(0.9) are SerializeField private; test does not read them (uses fixed 3.0-unit placement + known constants in asserts). No reflection needed.",
+    "G3 — WolfEnemy.FindNearestPawn skips IsDead pawns; PawnEntity.Awake sets Hp=stats.maxHp (alive after one frame), so spawned pawn is a valid target (same bootstrap V7 uses for its colony pawn).",
+    "G5 — wolf may reach attackRange(0.9) and stop closing within window; arrival within attackRange is accepted as a closing success (still proves detect+chase).",
+    "META — created V2WolfChaseTest.cs.meta with a fresh guid (d2e3f4a5b6c7089123d4e5f6a7b8c9d0) so QA does not need to supply one (W-M3-03 flagged a missing .meta as friction)."
+  ],
+  "no_regression_expectation": "Adds one isolated companion test (isolated count +1). Does not touch integration/build-click suites. No runtime edit -> no compile impact beyond the new test file (which references only public WolfEnemy/PawnEntity APIs)."
+}
