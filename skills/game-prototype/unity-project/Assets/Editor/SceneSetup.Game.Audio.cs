@@ -39,6 +39,10 @@ namespace MelonS.GameProto.EditorTools
             AudioClip buildClip   = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/build.wav");
             AudioClip alertClip   = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/alert.wav");
             AudioClip ambientClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/ambient.wav");
+            // W-M3-01 Lane D: M3 SFX slot (wiki Dim2 #7 — pick-on-stone, not chop thunk)
+            if (File.Exists("Assets/Audio/mine.wav"))
+                AssetDatabase.ImportAsset("Assets/Audio/mine.wav", ImportAssetOptions.ForceUpdate);
+            AudioClip mineClip    = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/mine.wav");
             SerializedObject abSo = new SerializedObject(audioBank);
             if (chopClip != null)    abSo.FindProperty("sfxChop").objectReferenceValue    = chopClip;
             if (selClip != null)     abSo.FindProperty("sfxSelect").objectReferenceValue  = selClip;
@@ -50,6 +54,8 @@ namespace MelonS.GameProto.EditorTools
             if (buildClip != null)   abSo.FindProperty("sfxBuild").objectReferenceValue   = buildClip;
             if (alertClip != null)   abSo.FindProperty("sfxAlert").objectReferenceValue   = alertClip;
             if (ambientClip != null) abSo.FindProperty("sfxAmbient").objectReferenceValue = ambientClip;
+            // M3 new slot — wiki #7 mine pick-on-stone
+            if (mineClip != null)    abSo.FindProperty("sfxMine").objectReferenceValue    = mineClip;
             abSo.ApplyModifiedPropertiesWithoutUndo();
         }
     }
