@@ -77,6 +77,19 @@ namespace MelonS.GameProto.EditorTools
             AudioClip ambientNightClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/ambient_night.wav");
             if (footstepClip != null)     abSo.FindProperty("sfxFootstep").objectReferenceValue     = footstepClip;
             if (ambientNightClip != null) abSo.FindProperty("sfxAmbientNight").objectReferenceValue = ambientNightClip;
+            // W-M6-03 Lane B9: M6 SFX slots (wiki B9 door/cook/shoot action SFX)
+            if (File.Exists("Assets/Audio/door.wav"))
+                AssetDatabase.ImportAsset("Assets/Audio/door.wav", ImportAssetOptions.ForceUpdate);
+            if (File.Exists("Assets/Audio/cook.wav"))
+                AssetDatabase.ImportAsset("Assets/Audio/cook.wav", ImportAssetOptions.ForceUpdate);
+            if (File.Exists("Assets/Audio/shoot.wav"))
+                AssetDatabase.ImportAsset("Assets/Audio/shoot.wav", ImportAssetOptions.ForceUpdate);
+            AudioClip doorClip  = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/door.wav");
+            AudioClip cookClip  = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/cook.wav");
+            AudioClip shootClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/shoot.wav");
+            if (doorClip != null)  abSo.FindProperty("sfxDoor").objectReferenceValue  = doorClip;
+            if (cookClip != null)  abSo.FindProperty("sfxCook").objectReferenceValue  = cookClip;
+            if (shootClip != null) abSo.FindProperty("sfxShoot").objectReferenceValue = shootClip;
             abSo.ApplyModifiedPropertiesWithoutUndo();
         }
     }
