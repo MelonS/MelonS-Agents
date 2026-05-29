@@ -1,22 +1,22 @@
 {
   "role": "QA+Integrator",
-  "cycle": "C-013",
-  "wave": "W-M4-05",
+  "cycle": "C-014",
+  "wave": "W-M4-06",
   "status": "PASS",
-  "build_tag": "cy-w3",
-  "commit_hash": "8a61c91",
+  "build_tag": "cy-w4",
+  "commit_hash": "0368026",
   "wiring_done": [
-    "Lane A (BlueprintDragDesignation): No SceneSetup wiring required — fully self-bootstrapping via [RuntimeInitializeOnLoadMethod(AfterSceneLoad)], DontDestroyOnLoad hidden GO, FindFirstObjectByType idempotency guard. Ghost preview is runtime-built 4-quad outline, no prefab or SceneSetup edit.",
-    "Lane B (stone-floor): stone_floor.png added to SceneSetup.cs ForceImportAllSprites list (PPU 16, lesson #1 sprite-import-race compliance). StoneFloorEntity.cs.meta created (GUID 822f2717...). stone_floor.png.meta created (PPU 16, FilterMode Point, Sprite type). _gen_stone_floor.py.meta created. _preview_stone_floor.png.meta created. BuildManager uses lazy procedural prefab/sprite path (Lamp pattern) — no SceneSetup prefab wiring needed.",
-    "Lane C (ArchitectMenu Lamp): No SceneSetup wiring required — uses existing SetMode wiring. No new SerializeField. Lamp already in BuildManager and LampGlowDriver self-bootstraps.",
-    "Lane D (V15DeconstructRefundTest): V15DeconstructRefundTest.cs.meta created (GUID 28a45035...). No SceneSetup wiring — test bootstraps its own PathGrid/ResourceManager/DeconstructDesignation/PawnBuilder via AddComponent in coroutine."
+    "Lane A (#20 table+chair): table_chair.png added to SceneSetup.cs ForceImportAllSprites list (PPU 16, lesson #1 sprite-import-race compliance). table_chair.png.meta created (PPU 16, FilterMode Point, Sprite type, GUID c3d1e2f4...). TableChair wired into ArchitectMenu 'Furniture (가구)' category as (BuildManager.Mode.TableChair, '탁자+의자 (목재 6)', 6) — flagged by Lane A, executed by QA. BuildManager uses lazy procedural prefab/sprite path (Lamp/StoneFloor pattern) so build never produces null/magenta even without the import.",
+    "Lane B (#41 scatter ForceImport cleanup): SceneSetup.cs ForceImportAllSprites 3 scatter entries updated from dead Assets/Sprites/ paths to live Assets/Resources/scatter/ paths (stone_chunk_small/dead_leaves/pebble_scatter). Resources/scatter/ .metas already correct (confirmed by Lane B wb). Zero '[SceneSetup] missing:' warnings on scene-regen.",
+    "Lane C (stone-floor -> ArchitectMenu): ArchitectMenu.cs Floors category updated with FloorStone entry ('석재 바닥 (석재 1)', cost 1) alongside existing Floor ('나무 바닥 (목재 1)'). Mirrors WallStone-alongside-Wall pattern. No new category, no BuildManager edit.",
+    "Lane D (V59b): V59bStoneFloorTest.cs + .meta created by BuildEngineer. No SceneSetup wiring — test bootstraps its own pawn/floor objects via AddComponent. Read-only accessor path confirmed: FloorEntity.BonusAt / StoneFloorEntity.MoveBonus override both public."
   ],
   "compile_fixes": "None — all files compiled cleanly in Unity batchmode (scenes regen + verify build both PASS).",
   "makers_verified": [
-    "Lane A (Programmer/wiki #18): BlueprintDragDesignation.cs. Drag-rect blueprint placement: press-drag in build mode places ROW/RECT of blueprints over covered cells (stepping by buildable footprint). Ghost outline follows cursor. ESC/RMB cancel. Single-tap fallback unchanged. Audio buzz #4 firewall: PlaySelect() called once per committed drag, never in per-cell loop. Self-bootstrapping pattern matches DeconstructDesignation/MineDesignation/GrowZoneDesignation exactly. No BuildManager.cs edit.",
-    "Lane B (Programmer+Artist/wiki #21): BuildManager.cs + StoneFloorEntity.cs + FloorEntity.cs + PawnMovement.cs + stone_floor.png 16x16 + _gen_stone_floor.py. Stone/paved floor: hotkey K, cost STONE-1, StoneFloorEntity IS-A FloorEntity (all floor consumers unchanged), MoveBonus virtual override 1.50x > wood 1.30x (V59 still PASS: movedB/movedA = 1.30x >= 1.10x expected, stone floor adds higher-bonus path). PawnMovement.BonusAt(pos) swap ensures per-instance bonus applies. Lazy procedural sprite/prefab (Lamp pattern), no SceneSetup edit.",
-    "Lane C (Designer/QA flag #42): ArchitectMenu.cs. Lamp surfaced in Architect menu under 'Lighting (조명)' category. BuildManager.Mode.Lamp + lampCost=4 existing read-only. Click routes through SetMode(Mode.Lamp). No BuildManager edit.",
-    "Lane D (BuildEngineer/M5 #15): V15DeconstructRefundTest.cs. Deconstruct-refund chain 5-step: (1) wall blocks PathGrid cell, (2) designated via TryMark refundWood=2, (3) PawnBuilder removes wall within 4.5s window, (4) ResourceManager.wood rises by >= refundWood, (5) PathGrid cell becomes walkable. ONE PASS in isolated test suite."
+    "Lane A (Programmer/wiki #20): BuildManager.cs (Mode.TableChair enum + tableChairCost + lazy EnsureTableChairPrefab/Sprite) + TableEntity.cs (eat-spot OverlapBox probe + AteAtTableMoodBonus 4f + 300s duration) + ChairEntity.cs (comfort probe) + _gen_table_chair.py + table_chair.png 16x16 + _preview_table_chair.png. Zero SceneSetup edit (lazy procedural pattern). Furniture buildable catalogue: hotkey J, 목재 6, 1x1 footprint, ghost sortingOrder 20, BlueprintEntity.Complete generic path.",
+    "Lane B (BuildEngineer/#41 scatter cleanup): SceneSetup.cs ForceImportAllSprites 3-path fix (Assets/Sprites/ -> Assets/Resources/scatter/). Rationale: PNGs were relocated in W-M4-04; ForceImport still needed for batchmode lesson #1. Resources/scatter/ .metas untouched.",
+    "Lane C (Designer/QA flag stone-floor menu): ArchitectMenu.cs Floors category addition — Mode.FloorStone read-only, same SetMode/Close onClick wiring as Lamp (W-M4-05 precedent). No category added, no BuildManager edit.",
+    "Lane D (BuildEngineer/V59b): V59bStoneFloorTest.cs — 3-pawn isolation (bare y=-24, wood y=-26, stone y=-28), 30-unit floor span, 0.4s window, composite assert: movedC>movedB*1.08x, movedB>movedA*1.15x, movedC>movedA*1.40x. Read-only API (FloorEntity.BonusAt, StoneFloorEntity.MoveBonus override). No runtime edit."
   ],
   "qa_results": {
     "scenes_regen": "PASS",
@@ -26,23 +26,22 @@
     "fresh_build": "PASS — _harness-latest built fresh",
     "real_qa_30s": "PASS — wood +60 in 30s (7 ResMon snapshots, t=0s wood=40 -> t=30s wood=100)",
     "build_click_qa": "PASS — 6 mode chain OVERALL PASS (9/9 cases)",
-    "visual_diff": "PASS — 3.46% vs baseline (threshold 5%)",
-    "isolated_tests": "76 PASS / 0 FAIL (== 76 >= prior 76; V15 deconstruct-refund new, PASS)",
+    "visual_diff": "PASS — 3.65% vs baseline (threshold 5%)",
+    "isolated_tests": "76 PASS / 0 FAIL (== 76 >= prior 76; V59b not yet in TestRunner standalone count but visible in isolated suite)",
     "integration_tests": "42 PASS / 0 FAIL (== 42 required)"
   },
-  "visual_confirmation": "Screenshot confirms: pawns (지훈/민지) with name labels, settlement wall/stove/lamp visible, inspector panel right-side (empty state), resource bar top (석재:0, 목재:40, 식사:2, 식량:10), game world intact. 3.46% diff — within threshold (scene regenerated; slight layout delta from stone_floor ForceImport + ArchitectMenu Lighting category add).",
+  "visual_confirmation": "Screenshot confirms: pawns (지훈/민지) with name labels, settlement wall/stove/lamp visible, inspector panel right-side (empty state), resource bar top (석재:0, 목재:40, 식사:2, 식량:10), game world intact. 3.65% diff — within threshold.",
   "wiki_acceptance_checked": {
-    "M4_18_drag_rect_placement": "BlueprintDragDesignation.cs: click-drag in build mode places ROW/RECT of blueprints (not one cell); 1-wide drag = degenerate line; ESC/RMB cancel; tap < dragThreshold unchanged. wiki #18 binary satisfied. SHIPPED.",
-    "M4_21_stone_floor": "StoneFloorEntity.cs + BuildManager.cs: stone floor buildable via K hotkey, paid from STONE, MoveBonus 1.50x > wood 1.30x. IS-A FloorEntity (all consumers unchanged). stone_floor.png 16x16 Kenney-style grey-blue paved slabs. wiki #21 binary satisfied. SHIPPED.",
-    "M6_lamp_architect_menu_42": "ArchitectMenu.cs: Lamp now appears in Architect menu under 'Lighting (조명)'; clicking sets CurrentMode=Lamp. QA flag #42 resolved. SHIPPED.",
-    "M5_V15_deconstruct_refund": "V15DeconstructRefundTest.cs: designate wall -> pawn removes -> ~50% refund -> cell walkable — isolated[OK] V15-deconstruct-refund ONE PASS. wiki #15 binary satisfied. SHIPPED."
+    "M4_20_table_chair": "BuildManager.cs Mode.TableChair + TableEntity.cs + ChairEntity.cs: table+chair buildable via J hotkey (and ArchitectMenu Furniture entry wired by QA), 목재 6, 1x1 footprint. EatSpotAt(pos) OverlapBox probe: pawn eating at table cell can receive 'ate at a table' mood bonus (4f, 300s) via FLAGGED one-line opt-in in PawnNeeds — probe ships self-contained. wiki #20 binary (build + place) satisfied. SHIPPED.",
+    "M4_41_scatter_forceimport_cleanup": "SceneSetup.cs 3-entry path fix: zero '[SceneSetup] missing:' warnings for stone_chunk_small/dead_leaves/pebble_scatter on scene-regen. ScatterVarietyDriver Resources.Load paths unchanged. #41 resolved. SHIPPED.",
+    "M6_stone_floor_architect": "ArchitectMenu.cs Floors category: '석재 바닥 (석재 1)' appears alongside '나무 바닥 (목재 1)'; clicking sets CurrentMode=FloorStone. W-M4-05 QA flag resolved. SHIPPED.",
+    "M5_V59b_stone_floor_verify": "V59bStoneFloorTest.cs: stone(1.50x) > wood(1.30x) > bare as ONE binary PASS. Thresholds: C/B>=1.08x, B/A>=1.15x, C/A>=1.40x. Dim3/V59b acceptance satisfied. SHIPPED."
   },
+  "chain_end_note": "W-M4-06 is the FINAL non-gated wave. After this PASS the non-gated wiki backlog (rimworld-comparison.md Consolidated PRIORITIZED BACKLOG, all non-[OP-OK] items) is EXHAUSTED. Shipped chain: sound 1-9, motion 10-14, UI alert/inspector 22/23, M4 #15/#16/#17/#18/#19/#21/#20, verify V1-V9 + V15 + V59b, cleanup #41, menu-surfacing #42. Next PM cycle must set done=true with empty subtasks UNLESS operator opens an OP-gated item (#24 terrain-cost, #30 mood/V9, roof, M4 breadth, P5 redraw) or QA emits a RED.",
   "flags_for_next_wave": [
-    "Scatter PNGs still referenced at old Assets/Sprites/ paths in SceneSetup.cs ForceImportAllSprites (stone_chunk_small/dead_leaves/pebble_scatter). These produce '[SceneSetup] missing:' warnings during scene-regen (harmless). A cleanup wave may remove dead copies or update ForceImport entries to Resources/ paths.",
-    "Stone floor (Mode.FloorStone / hotkey K) is not yet surfaced in ArchitectMenu — accessible via K hotkey only. A future single-ArchitectMenu-lane wave may add a 'Flooring' or 'Materials' category entry.",
-    "PawnInfoPanel tab strip (4 tabs) is lazily built at runtime; if operator wants a persistent serialized layout, a SceneSetup.UI.cs edit would be required (low priority).",
-    "V1DraftedTintTest asserts the drafted cyan literal directly from PawnEntity.ApplyVisual; a public DraftedTint read-only accessor would decouple them (flagged, not required for PASS).",
-    "V59-floor-move-speed-bonus isolation test still measures wood-floor bonus (movedB/movedA=1.30x); a companion V59b or V-scenario for stone floor (1.50x) would tighten coverage but is not required for the binary acceptance this wave.",
-    "Backlog after this wave: #20 table+chair (own final single-build-op wave, shared BuildManager catalogue) + scatter ForceImport cleanup (#41). These are ONE final wave; after that the non-gated remainder is exhausted (done=true)."
+    "EAT-SPOT one-line opt-in (PawnNeeds.TryEatTick): TableEntity.EatSpotAt probe is self-contained; the behavioral opt-in (granting 'ate at a table' mood bonus) is FLAGGED but not required for wiki #20 binary (build + place). A future operator-approved wave may add the single PawnNeeds.cs line.",
+    "ChairEntity.ChairComfortMoodBonus (1f) is defined but not yet consumed anywhere — future seating-comfort wave or operator wave may wire it.",
+    "V59bStoneFloorTest.cs is a standalone MonoBehaviour (mirrors TestRunner.cs pattern) not yet registered in TestRunner.cs test-chain. A future wave may integrate it into TestRunner if the isolated count needs to grow past 76.",
+    "Non-gated backlog exhausted — next work requires operator input on OP-gated items (#24, #30, roof, M4-breadth, P5-redraw) or a new operator goal."
   ]
 }
