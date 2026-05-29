@@ -1,38 +1,42 @@
 {
   "role": "QA+Integrator",
-  "cycle": "C-008",
-  "wave": "W-M3-03",
+  "cycle": "C-009",
+  "wave": "W-M4-01",
   "status": "PASS",
-  "build_tag": "cx-w4-2026-05-30",
-  "commit_hash": "996e224",
+  "build_tag": "cx-w5-2026-05-30",
+  "commit_hash": "e250b43",
   "wiring_done": [
-    "SceneSetup.Game.Audio.cs: ForceImport danger.wav + SerializedObject wire dangerBgm on AudioBank (same pattern as sfxBuild/sfxAlert/sfxAmbient/sfxMine/rainLoop prior waves)",
-    "WeatherParticleDriver.cs.meta: created (was missing from Lane D output)"
+    "None required — all four lanes self-bootstrap via [RuntimeInitializeOnLoadMethod(AfterSceneLoad)]. No SceneSetup hot-file edit was triggered (Lane A spent zero of its SceneSetup budget). glow_fire_pool.png lives in Assets/Sprites with a .meta; NightLightPoolDriver uses a procedural fallback sprite at runtime (no ForceImport needed)."
   ],
-  "compile_fix": "MusicDirector.cs: referenced AIDirector.Instance which does not exist (AIDirector uses FindFirstObjectByType not Services locator). Fixed by QA: added _director cached field + FindAIDirector() using FindFirstObjectByType<AIDirector>(), matching AlertStackUI.cs pattern.",
+  "compile_fixes": "None — all files compiled cleanly in Unity batchmode.",
   "makers_verified": [
-    "Lane A (Sound): AudioBank.cs extended with dangerBgm AudioClip + dangerSource AudioSource + PlayDangerMusic()/StopDangerMusic() crossfade (~1s, unscaled time, idempotent _dangerActive guard). NEW MusicDirector.cs polls AIDirector via FindFirstObjectByType (after QA fix); self-attaches [RuntimeInitializeOnLoadMethod(AfterSceneLoad)] DontDestroyOnLoad hidden GO. NEW danger.wav 16s tense drone + percussive hits.",
-    "Lane B (Programmer): PawnInfoPanel.cs 4-tab strip 상태/건강/기분/장비 built runtime-lazy via EnsureTabs()/MakeBodyText(). No SceneSetup edit, no new SerializeField. SetTab() flips activeTab; Update() gates content per tab. Active BtnActiveBg+TextDark, inactive BtnInactiveBg+TextPrimary.",
-    "Lane C (BuildEngineer): V7RaidThreatTest.cs — M5-verify #27 3-step chain: clock forced Day=3 via reflection on <GameSeconds>k__BackingField, SpawnRaid() via NonPublic reflection, bandit distance decreases over 2s WaitForSeconds.",
-    "Lane D (Art): WeatherParticleDriver.cs self-attaching rain particle layer (emission 120/s Storm, 0+Clear() on Clear). sortingOrder=26 above NightOverlay(25). 100% in-code ParticleSystem, no PNG, Unity built-in Default-Particle. Camera-follow in Update()."
+    "Lane A (Programmer/wiki #15): DeconstructDesignation.cs (self-bootstrapping manager + DeconstructTarget marker) + PawnBuilder.cs (deconstruct action reusing build/haul pathing wholesale: WorkGiveUp, TryReserveWorkStandPos, DistanceToFootprint, AddWork) + PathGrid.cs (BlockWallCell/ReleaseWallCell named wrappers over existing ref-counted SetStructureBlocked). Designating a built wall -> idle colonist walks to adjacent stand cell, removes structure after ~3s, refunds ~50% material via ResourceManager.AddWood/AddStone, cell reopens via WallEntity.OnDestroy PathGrid ref-count decrement. Zero SceneSetup hot-file budget spent.",
+    "Lane B (BuildEngineer/wiki #28): V8MoveSpeedTest.cs — M5-verify #28 2-step chain: PawnStats.CreateDefault().moveSpeed == 4.6 (PASS), PawnMovement.stats.moveSpeed == 4.6 via reflection (PASS). audit-rimworld-fidelity-2026-05-29.md stale 3.0 references closed.",
+    "Lane C (BuildEngineer/wiki #29): V9SaveLoadRoundTripTest.cs — M5-verify #29 documents 4 serialization gaps (BedQuality/StockpilePriority/TreeSpecies/WallMaterial absent from SaveData). Test expected to FAIL on all four gaps — FLAG for dedicated serialization CODE wave (add BedSave+StockpileSave+WallSave lists + TreeSave.species field to SaveLoadManager.cs).",
+    "Lane D (Art/Dim1 day-night optional): NightLightPoolDriver.cs — self-bootstrapping warm amber radial glow around lit stoves at night, sortingOrder 8 (above ground 0-7, below pawns 9-11), alpha-blend (SrcAlpha/OneMinusSrcAlpha), procedural cosine-falloff sprite (FIRE_LT/FIRE_OR palette). Day: alpha=0. Night: alpha up to 0.42*MaxGlowAlpha. glow_fire_pool.png present in Assets/Sprites (procedural fallback active)."
   ],
   "qa_results": {
     "scenes_regen": "PASS",
     "verify_build": "PASS",
-    "qa_screenshot": "PASS — 221KB captured G:/ai/_refactor_current.png",
+    "qa_screenshot": "PASS — 227KB captured G:/ai/_refactor_current.png",
     "runtime_errors": "none",
-    "fresh_build": "PASS — day-cx-w4-2026-05-30 built fresh",
+    "fresh_build": "PASS — day-cx-w5-2026-05-30 built fresh",
     "real_qa_30s": "PASS — wood +65 in 30s (7 ResMon snapshots)",
     "build_click_qa": "PASS — 6 mode chain OVERALL PASS (9/9 cases)",
-    "visual_diff": "PASS — 0.98% vs baseline (threshold 5%)",
-    "isolated_tests": "76 PASS / 0 FAIL (== 76, >= prior)",
+    "visual_diff": "PASS — 0.57% vs baseline (threshold 5%)",
+    "isolated_tests": "76 PASS / 0 FAIL (== 76, >= prior 76)",
     "integration_tests": "42 PASS / 0 FAIL (== 42 required)"
   },
-  "visual_confirmation": "Screenshot confirms: pawns with name labels, inspector panel right-side with Korean tabs visible, resource bar top (목재:40), game world intact. 0.98% diff — expected (new self-attaching audio/particle drivers, no sprite change at scene-load moment).",
+  "visual_confirmation": "Screenshot confirms: pawns with name labels, stove/fireplace visible in settlement, inspector panel right-side, resource bar top (목재:40), game world intact. 0.57% diff — expected (fresh scene regen with new self-attaching runtime drivers).",
   "wiki_acceptance_checked": {
-    "Dim2_8_dynamic_music": "MusicDirector + AudioBank.PlayDangerMusic()/StopDangerMusic() crossfade on threatTier>=2; danger.wav wired via SceneSetup.Game.Audio.cs dangerBgm — WIRED",
-    "Dim6_23_inspector_tabs": "PawnInfoPanel.cs 4-tab strip 상태/건강/기분/장비 runtime-lazy; SetTab() switches content — WIRED",
-    "M5_27_v7_raid_threat": "V7RaidThreatTest.cs 3-step chain: day3+banditSpawn+closingIn — TEST ADDED",
-    "Dim1_14_weather_particles": "WeatherParticleDriver.cs rain particle layer emission on Storm, cleared on Clear; sortingOrder=26 — WIRED"
-  }
+    "M4_15_deconstruct": "DeconstructDesignation.cs + PawnBuilder deconstruct action + PathGrid BlockWallCell/ReleaseWallCell — SHIPPED. Designating built wall -> colonist removes, refunds ~50%, cell walkable.",
+    "M5_28_movespeed_reconcile": "V8MoveSpeedTest.cs 2-step chain PawnStats.moveSpeed==4.6 PASS; audit.md stale 3.0 refs closed — TEST ADDED + DOC UPDATED",
+    "M5_29_saveload_roundtrip": "V9SaveLoadRoundTripTest.cs documents 4 GAPs (BedQuality/StockpilePriority/TreeSpecies/WallMaterial) — VERIFY-ONLY: gaps flagged for serialization CODE wave",
+    "Dim1_night_light_pools": "NightLightPoolDriver.cs warm glow around lit stoves at night, sortingOrder 8 below pawns, alpha-blend, procedural sprite fallback — WIRED (self-bootstrapping)"
+  },
+  "flags_for_next_wave": [
+    "V9 serialization gaps: BedQuality/StockpilePriority/TreeSpecies/WallMaterial absent from SaveData — dedicated serialization CODE wave required before #29 can PASS (add BedSave+StockpileSave+WallSave+species to SaveLoadManager.cs and entity serializers).",
+    "glow_fire_pool.png lives in Assets/Sprites (not Resources/). NightLightPoolDriver uses procedural fallback. If operator wants the authored PNG active, move to Assets/Resources/ and remove _spriteFailed=true in LoadGlowSprite().",
+    "Deconstruct toggle button ('해체 (X)') self-attaches to Canvas at runtime (bottom-center-left, x=-360, y=104). If operator prefers it routed through GuiControlBar strip, queue a follow-up GuiControlBar.cs edit (outside lane A's owned files)."
+  ]
 }
