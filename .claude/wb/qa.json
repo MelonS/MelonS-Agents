@@ -1,21 +1,21 @@
 {
   "role": "QA+Integrator",
-  "cycle": "C-011",
-  "wave": "W-M4-03",
+  "cycle": "C-012",
+  "wave": "W-M4-04",
   "status": "PASS",
-  "build_tag": "cy-w1",
-  "commit_hash": "adad6a7",
+  "build_tag": "cy-w2",
+  "commit_hash": "c0ce5bf",
   "wiring_done": [
-    "Lane B (Art): Created .meta files for 3 new scatter sprites (stone_chunk_small.png, dead_leaves.png, pebble_scatter.png) — PPU=16, Point filter, Sprite type, matching established pattern. Added all 3 to ForceImportAllSprites() in SceneSetup.cs (Lesson #1 compliance: ForceImport BEFORE any LoadAssetAtPath). Created ScatterVarietyDriver.cs.meta and _gen_scatter_variety.py.meta / _preview_scatter_variety.png.meta.",
-    "Lane C (BuildEngineer): Created V6BodyPartTest.cs.meta (guid f1e2d3c4b5a6978081f2e3d4c5b6a7b8) — was missing from the lane output.",
-    "Lanes A/D: No SceneSetup wiring required (self-bootstrapping patterns per wb json flags)."
+    "Lane D (AIDesigner/V1): V1DraftedTintTest.cs.meta created (GUID d34c40a282b4c6742b46e269e902a70a) — was missing from lane output. Matches V2/V3/V4/V7 meta pattern.",
+    "Lane A/B/C: No SceneSetup wiring required. Lamp uses self-bootstrapping LampGlowDriver ([RuntimeInitializeOnLoadMethod]) + AssetDatabase/procedural fallback (no SceneSetup edit needed). ScatterVarietyDriver Resources.Load fix resolves sprites in player builds without SceneSetup change. V3ResearchProgressTest.cs.meta was already present. dangerBgm already wired in SceneSetup.Game.Audio.cs from prior wave."
   ],
   "compile_fixes": "None — all files compiled cleanly in Unity batchmode.",
   "makers_verified": [
-    "Lane A (Programmer/wiki #17): GrowZoneDesignation.cs — player-facing grow zone designation (P key + canvas button '경작 (P)'). Drag-rect or click-cell on dirt -> green zone tint marker (sortingOrder 2); idle pawn auto-plants CropEntity via PawnMovement.TryReserveWorkStandPos + ReservationManager. Mutually exclusive with BuildManager/DeconstructDesignation/MineDesignation via read-only SetMode APIs. Zero SceneSetup hot-file budget spent.",
-    "Lane B (Art/M1-Dim1): _gen_scatter_variety.py + stone_chunk_small/dead_leaves/pebble_scatter PNGs (10x8, 8x8, 10x6) + ScatterVarietyDriver.cs. Self-attaching driver (seed 98765 deterministic); clusters stone_chunk_small within 1.5wu of trees; pebble_scatter within 1.8wu of StoneVeins; sortingOrder 1 (recedes below pawns). Sprites confirmed at runtime via fallback path; ForceImport wired by Build Engineer.",
-    "Lane C (BuildEngineer/M5-V6): V6BodyPartTest.cs — body-part damage chain: TakeDamage(10,LeftLeg) -> hp drops -> bleedRate=2.0 -> drain LeftLeg to 0 (non-vital, no death) -> TakeDamage(25,Head) -> head hp=0 -> IsDead=True+IsDowned=True. ONE PASS.",
-    "Lane D (AIDesigner/M5-V2): V2WolfChaseTest.cs — wolf spawned 3.0 units from pawn (inside detectionRadius=5.0); 2s sim; distance closes (start=4.0 -> end=0.90). ONE PASS."
+    "Lane A (Programmer/wiki #19): BuildManager.cs + LampEntity.cs + LampGlowDriver.cs. L-key toggles Lamp mode; wood cost 4; placed lamp emits warm amber night glow (LampGlowDriver self-bootstraps, sortingOrder 8, procedural sprite, same day/night alpha curve as NightLightPoolDriver). No SceneSetup edit. No Resources.Load magenta risk (AssetDatabase+procedural fallback).",
+    "Lane B (Art/scatter fix): ScatterVarietyDriver.cs Resources.Load strategy fixed to 'scatter/<name>' path; 3 PNGs moved to Assets/Resources/scatter/ — dead_leaves/pebble_scatter/stone_chunk_small now resolve to real sprites in player builds (no magenta dots). Generator untouched.",
+    "Lane C (BuildEngineer/M5-V3): V3ResearchProgressTest.cs — research accrues on bench -> bow tech reaches 100% -> unlocked -> canShoot predicate true. ONE PASS. isolated[OK] V3-research confirmed.",
+    "Lane D (AIDesigner/M5-V1): V1DraftedTintTest.cs — SetDrafted(true) -> IsDrafted=true + SR.color==cyan; SetDrafted(false) -> IsDrafted=false + SR.color==white. ONE PASS. isolated[OK] V1-drafted confirmed.",
+    "Programmer (wiki #23/Dim6): PawnInfoPanel.cs tabbed inspector — 4-tab strip 상태/건강/기분/장비 built lazily (EnsureTabs pattern). No SerializeField added. No SceneSetup edit."
   ],
   "qa_results": {
     "scenes_regen": "PASS",
@@ -23,22 +23,24 @@
     "qa_screenshot": "PASS — 235KB captured G:/ai/_refactor_current.png",
     "runtime_errors": "none",
     "fresh_build": "PASS — _harness-latest built fresh",
-    "real_qa_30s": "PASS — wood +60 in 30s (7 ResMon snapshots, t=0s wood=40 -> t=30s wood=100)",
+    "real_qa_30s": "PASS — wood +65 in 30s (7 ResMon snapshots, t=0s wood=40 -> t=30s wood=105)",
     "build_click_qa": "PASS — 6 mode chain OVERALL PASS (9/9 cases)",
-    "visual_diff": "PASS — 2.08% vs baseline (threshold 5%)",
-    "isolated_tests": "76 PASS / 0 FAIL (== 76, >= prior 76; new V2+V6 PASS)",
+    "visual_diff": "PASS — 2.69% vs baseline (threshold 5%)",
+    "isolated_tests": "76 PASS / 0 FAIL (== 76 >= prior 76; V1-drafted + V3-research new, both PASS)",
     "integration_tests": "42 PASS / 0 FAIL (== 42 required)"
   },
-  "visual_confirmation": "Screenshot confirms: pawns (지훈/민지) with name labels, settlement wall/stove intact, inspector panel right-side (empty state), resource bar top (목재:40 식량:2 식량:10), game world intact. 2.08% diff — expected (new decal scatter + grow zone button added at runtime).",
+  "visual_confirmation": "Screenshot confirms: pawns (지훈/민지) with name labels, settlement wall/stove/lamp visible, inspector panel right-side (empty state), resource bar top (석재:0, 목재:40, 식량:2, 식량:10), game world intact. 2.69% diff — expected (lamp sprite added to settlement area, new tab UI layout).",
   "wiki_acceptance_checked": {
-    "M4_17_grow_zone": "GrowZoneDesignation.cs: painting grow zone on dirt -> green tint marker -> idle colonist auto-plants CropEntity -> crop grows + is harvestable. SHIPPED.",
-    "M1_Dim1_scatter_variety": "3 new decal sprites (chunk/leaf/pebble) + ScatterVarietyDriver.cs self-attaching, clustered near trees/veins, sortingOrder 1 (recedes). SHIPPED.",
-    "M5_V6_bodypart": "V6BodyPartTest.cs 5-step chain (init/hp-drop/bleed/non-vital-zero/death) ONE PASS. isolated[OK] V6-body-parts confirmed.",
-    "M5_V2_wolf_chase": "V2WolfChaseTest.cs: wolf closes distance from 4.0 to 0.90 in 2s sim. ONE PASS. isolated[OK] V2-wolf-chase confirmed."
+    "M4_19_lamp_buildable": "LampEntity.cs + LampGlowDriver.cs: built lamp emits warm amber night glow pool (sortingOrder 8, below pawns); L hotkey; wood cost 4; procedural glow sprite (no magenta risk). SHIPPED.",
+    "M1_scatter_fix": "ScatterVarietyDriver Resources.Load fix: 3 scatter PNGs at Assets/Resources/scatter/ resolve to real sprites in player builds. No magenta dots. SHIPPED.",
+    "M5_V3_research": "V3ResearchProgressTest.cs: research accrues -> bow tech unlocks -> canShoot predicate ONE PASS. isolated[OK] V3-research confirmed. SHIPPED.",
+    "M5_V1_drafted": "V1DraftedTintTest.cs: draft tint cyan gate + undraft white gate ONE PASS. isolated[OK] V1-drafted confirmed. SHIPPED.",
+    "M6_ui_23_inspector_tabs": "PawnInfoPanel.cs: 4-tab strip 상태/건강/기분/장비 lazy-built; switching tabs changes content. SHIPPED."
   },
   "flags_for_next_wave": [
-    "ScatterVarietyDriver uses Resources.Load<Sprite>() which returns null for sprites outside a Resources/ folder; falls back to procedural magenta dot sprite at runtime in built game. PNGs must be in Assets/Resources/ for Resources.Load to resolve, or the driver needs to use a different loading strategy (AssetBundle, Addressables, or pre-wired SerializeField). At batchmode test scale the fallback dot doesn't break QA, but operator may see magenta decals in day-N build unless sprites are moved or a Resources/ redirect is configured.",
-    "Grow zone button ('경작 (P)') self-attaches to Canvas at runtime (bottom-center, x=+462, y=104). If operator prefers it in the GuiControlBar strip, a GuiControlBar.cs edit is required (future wave).",
-    "IsPlantableCell accepts any non-water/non-rock walkable ground — not restricted to a specific dirt tile. If RimWorld-strict soil gating is wanted, add DirtTile static ref to TilemapStaticRefInit (flagged, not done per lane A contract)."
+    "Scatter PNGs still referenced at old Assets/Sprites/ paths in SceneSetup.cs ForceImportAllSprites (stone_chunk_small/dead_leaves/pebble_scatter). These produce '[SceneSetup] missing:' warnings during scene-regen (harmless — player build picks up Resources/ automatically). A cleanup wave may remove dead copies at Assets/Sprites/ or update ForceImport entries to new paths.",
+    "LampEntity not yet in ArchitectMenu catalogue — accessible via L hotkey only. To add it to the Architect menu, add one line to ArchitectMenu.Categories (future wave; BuildManager.cs is the hot file, own-lane concern).",
+    "PawnInfoPanel tab strip (4 tabs) is lazily built at runtime; if operator wants a persistent serialized layout, a SceneSetup.UI.cs edit would be required (low priority).",
+    "V1DraftedTintTest.cs asserts the drafted cyan literal (0.55,0.85,1.0,1.0) directly from PawnEntity.ApplyVisual; if a future re-skin changes that constant, the test literal must track it. A public PawnEntity.DraftedTint read-only accessor would decouple them (flagged, not required for PASS)."
   ]
 }
