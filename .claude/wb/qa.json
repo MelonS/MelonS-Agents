@@ -1,0 +1,45 @@
+{
+  "role": "QA+Integrator",
+  "cycle": "C-004",
+  "wave": "W-M1-03",
+  "status": "PASS",
+  "commit": "333c515",
+  "build_tag": "day-c1-w3-2026-05-30",
+  "build_exe": "skills/game-prototype/builds/day-c1-w3-2026-05-30/PawnSim.exe",
+  "wiring_done": [
+    "Created vignette.png.meta (TextureImporter Sprite PPU16 Point filter) — art note said SceneSetup not edited, but meta needed for CLI import",
+    "Created VignetteOverlay.cs.meta (MonoImporter) — new file had no meta",
+    "Created _preview_vignette.png.meta and _gen_vignette.py.meta — prevent Unity missing-meta warnings",
+    "Added 'Assets/Sprites/vignette.png' to ForceImportAllSprites list in SceneSetup.cs (PPU16, Point, no-compress)"
+  ],
+  "makers_wiring_already_done": [
+    "V6 crop-stage: SceneSetup.Game.Entities.cs (build-engineer) + SceneSetup.Game.Settlement.cs (already had wiring from W-M1-02) both wire spriteSeedling/spriteGrowing/spriteRipe via SerializedObject — verified both files correct",
+    "V1 walk-bob: SceneSetup.Pawn.cs wires movementSource+rootTintRenderer via SerializedObject — correct",
+    "V2 scatter: SceneSetup.Game.Scatter.cs SpawnScatterDecor called from GenerateGame — already wired",
+    "V5 flicker: self-attaching RuntimeInitializeOnLoadMethod — no SceneSetup wiring needed",
+    "V7 inspector: PawnInfoPanel.cs only — no SceneSetup wiring needed",
+    "V8 vignette: self-attaching RuntimeInitializeOnLoadMethod — SceneSetup.cs only needed ForceImport entry"
+  ],
+  "qa_results": {
+    "scenes_regen": "PASS",
+    "verify_build": "PASS",
+    "qa_screenshot": "PASS — 220KB captured G:/ai/_refactor_current.png",
+    "runtime_errors": "none",
+    "fresh_build": "PASS — day-c1-w3-2026-05-30 built after sources (3:21 AM > 3:16 AM)",
+    "real_qa_30s": "PASS — wood +60 in 30s (7 ResMon snapshots)",
+    "build_click_qa": "PASS — 6 mode chain OVERALL PASS (9/9 cases)",
+    "visual_diff": "PASS — 0.59% vs baseline (threshold 5%)",
+    "isolated_tests": "76 PASS / 0 FAIL (>= 76 prior)",
+    "integration_tests": "42 PASS / 0 FAIL (== 42 required)"
+  },
+  "visual_confirmation": "Screenshot confirms: pawns 1x1 visible, scatter decor (rock/grass/wildflower) throughout world, crop tiles bottom-right, empty inspector panel shows bordered frame with Korean hint text, stove present. Visual diff 0.59% — scatter+vignette changes landed.",
+  "qa_flags_checked": {
+    "V1_walk_bob": "movementSource+rootTintRenderer wired via SerializedObject in SceneSetup.Pawn.cs — root transform untouched, child bobGo bobs local Y only",
+    "V2_scatter": "91 decor objects placed deterministically seed 54321, sortingOrder=1 (below decor_flower at 2)",
+    "V5_flicker": "FlickerLight self-attaches, warm-orange overlay on stove — runtime-only, not testable in still screenshot",
+    "V6_crop_stage": "SerializedObject wiring in both Entities.cs and Settlement.cs — 3 stage sprites assigned; CropEntity.RefreshVisual takes sprite-swap path; V48 isolated test confirms 3 distinct stage colors still pass (fallback path still works when sprites null)",
+    "V7_inspector": "Empty inspector shows bordered frame + Korean hint — visible in screenshot",
+    "V8_vignette": "VignetteOverlay self-attaches, raycastTarget=false, sortingOrder=1 (above world, below UI panels), graceful null-guard if PNG missing — subtle corners darkening, not muddy",
+    "no_regression": "0 integration failures, 0 isolated failures, no NREs in 60s stress test (I23)"
+  }
+}
