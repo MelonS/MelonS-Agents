@@ -1,47 +1,49 @@
 {
   "role": "QA+Integrator",
-  "cycle": "C-014",
-  "wave": "W-M4-06",
+  "cycle": "C-016",
+  "wave": "W-M6-02",
   "status": "PASS",
-  "build_tag": "cy-w4",
-  "commit_hash": "0368026",
+  "build_tag": "cz-w2",
+  "commit_hash": "4cf239d",
   "wiring_done": [
-    "Lane A (#20 table+chair): table_chair.png added to SceneSetup.cs ForceImportAllSprites list (PPU 16, lesson #1 sprite-import-race compliance). table_chair.png.meta created (PPU 16, FilterMode Point, Sprite type, GUID c3d1e2f4...). TableChair wired into ArchitectMenu 'Furniture (가구)' category as (BuildManager.Mode.TableChair, '탁자+의자 (목재 6)', 6) — flagged by Lane A, executed by QA. BuildManager uses lazy procedural prefab/sprite path (Lamp/StoneFloor pattern) so build never produces null/magenta even without the import.",
-    "Lane B (#41 scatter ForceImport cleanup): SceneSetup.cs ForceImportAllSprites 3 scatter entries updated from dead Assets/Sprites/ paths to live Assets/Resources/scatter/ paths (stone_chunk_small/dead_leaves/pebble_scatter). Resources/scatter/ .metas already correct (confirmed by Lane B wb). Zero '[SceneSetup] missing:' warnings on scene-regen.",
-    "Lane C (stone-floor -> ArchitectMenu): ArchitectMenu.cs Floors category updated with FloorStone entry ('석재 바닥 (석재 1)', cost 1) alongside existing Floor ('나무 바닥 (목재 1)'). Mirrors WallStone-alongside-Wall pattern. No new category, no BuildManager edit.",
-    "Lane D (V59b): V59bStoneFloorTest.cs + .meta created by BuildEngineer. No SceneSetup wiring — test bootstraps its own pawn/floor objects via AddComponent. Read-only accessor path confirmed: FloorEntity.BonusAt / StoneFloorEntity.MoveBonus override both public."
+    "B3 (Fence+FenceGate): fence.png + fence_gate.png .meta created (PPU 16, Sprite type, lesson #1 compliance). Both added to SceneSetup.cs ForceImportAllSprites list. FenceEntity.cs.meta created. BuildManager.cs + ArchitectMenu.cs edits confirmed by Lane B3 (already present).",
+    "B10 (carry-pose+lunge): carry_bundle.png .meta created (PPU 16, Sprite type). PawnPoseDriver.cs.meta created. carry_bundle.png copied to Assets/Resources/Sprites/ (FLAG-B10-1 resolved) + carry_bundle.png added to SceneSetup ForceImport list. Resources/Sprites.meta created.",
+    "B13 (saveload-substate roundtrip): V13SubStateRoundTripTest.cs.meta created (FLAG-1 resolved). SaveLoadManager.cs confirmed no edit needed (FLAG-2 pre-existing wiring). No accessor gaps (FLAG-3).",
+    "B14 (HotkeyCheatSheet): HotkeyCheatSheet.cs.meta created. Bug-fix applied: AddRow() was adding Text component to chipGo which already had Image — Unity forbids two Graphic components on same GO. Fixed by moving key text to a KeyText child GO under chipRt (standard pattern matching rest of UI code). No logic change.",
+    "_gen_carry_item.py.meta, _gen_fence.py.meta, _preview_fence.png.meta, _preview_fence_gate.png.meta created."
   ],
-  "compile_fixes": "None — all files compiled cleanly in Unity batchmode (scenes regen + verify build both PASS).",
+  "compile_fixes": "HotkeyCheatSheet.cs bug-fix: AddRow() key-chip Text component moved to dedicated KeyText child GameObject (Image+Text must be on separate GOs — Unity hard constraint). One-line fix; no logic regression.",
   "makers_verified": [
-    "Lane A (Programmer/wiki #20): BuildManager.cs (Mode.TableChair enum + tableChairCost + lazy EnsureTableChairPrefab/Sprite) + TableEntity.cs (eat-spot OverlapBox probe + AteAtTableMoodBonus 4f + 300s duration) + ChairEntity.cs (comfort probe) + _gen_table_chair.py + table_chair.png 16x16 + _preview_table_chair.png. Zero SceneSetup edit (lazy procedural pattern). Furniture buildable catalogue: hotkey J, 목재 6, 1x1 footprint, ghost sortingOrder 20, BlueprintEntity.Complete generic path.",
-    "Lane B (BuildEngineer/#41 scatter cleanup): SceneSetup.cs ForceImportAllSprites 3-path fix (Assets/Sprites/ -> Assets/Resources/scatter/). Rationale: PNGs were relocated in W-M4-04; ForceImport still needed for batchmode lesson #1. Resources/scatter/ .metas untouched.",
-    "Lane C (Designer/QA flag stone-floor menu): ArchitectMenu.cs Floors category addition — Mode.FloorStone read-only, same SetMode/Close onClick wiring as Lamp (W-M4-05 precedent). No category added, no BuildManager edit.",
-    "Lane D (BuildEngineer/V59b): V59bStoneFloorTest.cs — 3-pawn isolation (bare y=-24, wood y=-26, stone y=-28), 30-unit floor span, 0.4s window, composite assert: movedC>movedB*1.08x, movedB>movedA*1.15x, movedC>movedA*1.40x. Read-only API (FloorEntity.BonusAt, StoneFloorEntity.MoveBonus override). No runtime edit."
+    "B3 (Programmer/wiki Dim4 B3): FenceEntity.cs + BuildManager.cs (Mode.Fence/FenceGate + lazy prefab/sprite) + ArchitectMenu.cs (Structure row: 울타리/울타리문). fence.png 16x16 + fence_gate.png 16x16 + preview PNGs. No SceneSetup edit (lazy procedural). Fence hotkey E, gate via menu only. Passable (no collider). Low barrier (sortingOrder 2, lower-half tile).",
+    "B10 (Art/wiki B10): PawnPoseDriver.cs self-bootstraps, reads PawnHauler.HasTask + PawnEntity.IsDrafted+DraftedAttackTarget READ-ONLY. Carry-bundle child SR (Resources.Load 'Sprites/carry_bundle') + melee lunge X-offset 0.08 units / 0.15s ease. Root transform NEVER touched — firewall identical to PawnFacing. carry_bundle.png 8x8.",
+    "B13 (BuildEngineer/wiki B13): V13SubStateRoundTripTest.cs (Fine bed + tier-1 stockpile save/load roundtrip ONE PASS). Positions at (400-403,0) avoid V4/V5/V7/V9/V15 collision. SaveLoadManager.cs required NO edits (all 4 sub-state structs pre-existing from W-M4-02).",
+    "B14 (Programmer/wiki B14): HotkeyCheatSheet.cs — H-toggle bordered panel, self-bootstrap [RuntimeInitializeOnLoadMethod(AfterSceneLoad)], DontDestroyOnLoad, FindFirstObjectByType guard. All 7 sections / 24 rows from live handlers. UITheme.MakeBorderedPanel + AccentGold title + AccentOrange sections + AccentTan key chips. Text-input firewall (EventSystem InputField guard).",
+    "W-M6-01 (already landed): FloatingText.Spawn API (.meta pre-existing), MarqueeSelector multi-select (.meta pre-existing), FootstepDriver + AudioBank sfxFootstep/sfxAmbientNight (SceneSetup.Game.Audio.cs already wired in prior wave), V10DeconstructWalkableTest + V11GrowZoneCropTest (.meta pre-existing)."
   ],
   "qa_results": {
     "scenes_regen": "PASS",
     "verify_build": "PASS",
     "qa_screenshot": "PASS — 235KB captured G:/ai/_refactor_current.png",
-    "runtime_errors": "none",
+    "runtime_errors": "none (after HotkeyCheatSheet bug-fix)",
     "fresh_build": "PASS — _harness-latest built fresh",
-    "real_qa_30s": "PASS — wood +60 in 30s (7 ResMon snapshots, t=0s wood=40 -> t=30s wood=100)",
+    "real_qa_30s": "PASS — wood +65 in 30s (7 ResMon snapshots, t=0s wood=40 -> t=30s wood=105)",
     "build_click_qa": "PASS — 6 mode chain OVERALL PASS (9/9 cases)",
-    "visual_diff": "PASS — 3.65% vs baseline (threshold 5%)",
-    "isolated_tests": "76 PASS / 0 FAIL (== 76 >= prior 76; V59b not yet in TestRunner standalone count but visible in isolated suite)",
+    "visual_diff": "PASS — 2.82% vs baseline (threshold 5%)",
+    "isolated_tests": "76 PASS / 0 FAIL (== 76 >= prior 76)",
     "integration_tests": "42 PASS / 0 FAIL (== 42 required)"
   },
-  "visual_confirmation": "Screenshot confirms: pawns (지훈/민지) with name labels, settlement wall/stove/lamp visible, inspector panel right-side (empty state), resource bar top (석재:0, 목재:40, 식사:2, 식량:10), game world intact. 3.65% diff — within threshold.",
+  "visual_confirmation": "Screenshot confirms: pawns (지훈/민지) with name labels, settlement wall/stove/lamp/grow-zone visible, inspector panel right-side (empty state), resource bar top (석재:0, 목재:40, 식사:2, 식량:10), game world intact. 2.82% diff — within threshold.",
   "wiki_acceptance_checked": {
-    "M4_20_table_chair": "BuildManager.cs Mode.TableChair + TableEntity.cs + ChairEntity.cs: table+chair buildable via J hotkey (and ArchitectMenu Furniture entry wired by QA), 목재 6, 1x1 footprint. EatSpotAt(pos) OverlapBox probe: pawn eating at table cell can receive 'ate at a table' mood bonus (4f, 300s) via FLAGGED one-line opt-in in PawnNeeds — probe ships self-contained. wiki #20 binary (build + place) satisfied. SHIPPED.",
-    "M4_41_scatter_forceimport_cleanup": "SceneSetup.cs 3-entry path fix: zero '[SceneSetup] missing:' warnings for stone_chunk_small/dead_leaves/pebble_scatter on scene-regen. ScatterVarietyDriver Resources.Load paths unchanged. #41 resolved. SHIPPED.",
-    "M6_stone_floor_architect": "ArchitectMenu.cs Floors category: '석재 바닥 (석재 1)' appears alongside '나무 바닥 (목재 1)'; clicking sets CurrentMode=FloorStone. W-M4-05 QA flag resolved. SHIPPED.",
-    "M5_V59b_stone_floor_verify": "V59bStoneFloorTest.cs: stone(1.50x) > wood(1.30x) > bare as ONE binary PASS. Thresholds: C/B>=1.08x, B/A>=1.15x, C/A>=1.40x. Dim3/V59b acceptance satisfied. SHIPPED."
+    "B3_fence_gate": "FenceEntity + BuildManager Mode.Fence/FenceGate + ArchitectMenu Structure row (울타리/울타리문). Passable (no collider), low barrier (sortingOrder 2, lower-half 16x16 tile). Hotkey E for fence, gate via menu. Lazy procedural prefab/sprite path — no null/magenta without import. SHIPPED.",
+    "B10_carry_pose_attack_lunge": "PawnPoseDriver self-bootstraps: carry-bundle child SR (Resources.Load resolved via Resources/Sprites/carry_bundle.png) + melee lunge X-offset 0.08u / 0.15s ease. Root transform firewall confirmed (identical to PawnFacing). SHIPPED.",
+    "B13_saveload_substate_roundtrip": "V13SubStateRoundTripTest.cs: Fine bed + tier-1 stockpile save->load data roundtrip ONE binary PASS. SaveLoadManager.cs no edit needed (all 4 sub-state structs pre-existing). SHIPPED.",
+    "B14_hotkey_cheatsheet_overlay": "HotkeyCheatSheet: H toggles bordered panel of 7 sections / 24 hotkey rows; H/Esc hides. Self-bootstrap, DontDestroyOnLoad. UITheme styling. Bug-fix (Text on child GO). SHIPPED."
   },
-  "chain_end_note": "W-M4-06 is the FINAL non-gated wave. After this PASS the non-gated wiki backlog (rimworld-comparison.md Consolidated PRIORITIZED BACKLOG, all non-[OP-OK] items) is EXHAUSTED. Shipped chain: sound 1-9, motion 10-14, UI alert/inspector 22/23, M4 #15/#16/#17/#18/#19/#21/#20, verify V1-V9 + V15 + V59b, cleanup #41, menu-surfacing #42. Next PM cycle must set done=true with empty subtasks UNLESS operator opens an OP-gated item (#24 terrain-cost, #30 mood/V9, roof, M4 breadth, P5 redraw) or QA emits a RED.",
   "flags_for_next_wave": [
-    "EAT-SPOT one-line opt-in (PawnNeeds.TryEatTick): TableEntity.EatSpotAt probe is self-contained; the behavioral opt-in (granting 'ate at a table' mood bonus) is FLAGGED but not required for wiki #20 binary (build + place). A future operator-approved wave may add the single PawnNeeds.cs line.",
-    "ChairEntity.ChairComfortMoodBonus (1f) is defined but not yet consumed anywhere — future seating-comfort wave or operator wave may wire it.",
-    "V59bStoneFloorTest.cs is a standalone MonoBehaviour (mirrors TestRunner.cs pattern) not yet registered in TestRunner.cs test-chain. A future wave may integrate it into TestRunner if the isolated count needs to grow past 76.",
-    "Non-gated backlog exhausted — next work requires operator input on OP-gated items (#24, #30, roof, M4-breadth, P5-redraw) or a new operator goal."
+    "FLAG-B10-2: PawnHauler has no public IsCarrying accessor; HasTask used as conservative proxy. Programmer should add: public bool IsCarrying => carryingWood > 0 || carryingStone > 0 || carryingFood > 0;",
+    "FLAG-B10-3: PawnEntity has no public IsAttacking accessor. Programmer should add: public bool IsAttacking => Time.time < nextAttackTime + AttackInterval * 0.5f;",
+    "FLAG-B10-4: PawnCarryBundle child GO created at runtime by PawnPoseDriver — not in Editor hierarchy. Confirmed: child GO appears at runtime under each pawn root after Bootstrap().",
+    "V13SubStateRoundTripTest.cs not yet registered in TestRunner.cs — isolated count still 76. Future wave may integrate if count needs to grow.",
+    "HotkeyCheatSheet E-hotkey (Fence) is listed in the overlay. W-M6-02 adds E=울타리 — not yet in the overlay's section table (HotkeyCheatSheet authored before B3 landed). A future wave may add the E key row."
   ]
 }
