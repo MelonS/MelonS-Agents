@@ -1,0 +1,24 @@
+{
+  "role": "BuildEngineer",
+  "cycle": "C-008",
+  "wave": "W-M3-03",
+  "lane": "C",
+  "milestone": "M5-gameplay-verify",
+  "wiki_item": "#27",
+  "status": "Done",
+  "test_file": "skills/game-prototype/unity-project/Assets/Scripts/Tests/V7RaidThreatTest.cs",
+  "binary_acceptance": "wiki #27 — 'A gated test asserts a bandit spawns day 3 and moves toward the colony.'",
+  "chain_steps": [
+    "Step 1: GameClock forced to Day=3 Hour=6 via reflection on <GameSeconds>k__BackingField",
+    "Step 2: AIDirector.SpawnRaid() invoked via reflection (BindingFlags.NonPublic); BanditEnemy count rises",
+    "Step 3: tracked BanditEnemy distance to colony origin (Vector3.zero) measured at spawn and after 2s WaitForSeconds; asserted distance DECREASED (bandit closed in)"
+  ],
+  "api_gap_flags": [
+    "G1: GameClock.GameSeconds { private set } — reflection on backing field '<GameSeconds>k__BackingField'. If reflection fails in batchmode: add public SetGameSecondsForTest(float) to GameClock.",
+    "G2: AIDirector.SpawnRaid() private — BindingFlags.NonPublic reflection. If fails: add public ForceRaidForTest() to AIDirector.",
+    "G3: No public AIDirector.ForceRaid() / ForceRaidForTest() method exists.",
+    "G4: AudioBank.Instance?.PlayAlert() called inside SpawnRaid() — null-guarded, graceful no-op expected.",
+    "G5: BanditEnemy requires live PawnEntity to path toward — test spawns V7_ColonyPawn at origin first."
+  ],
+  "updated": "2026-05-30"
+}

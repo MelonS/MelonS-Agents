@@ -1,0 +1,35 @@
+{
+  "role": "Sound",
+  "wave": "W-M3-03",
+  "lane": "A",
+  "status": "Done",
+  "milestone": "M2-sound",
+  "wiki_item": "#8 Dynamic music (Dimension 2 -- tense low-drone crossfade on threatTier>=2)",
+  "binary_acceptance": "Music swaps to the tension track during a raid (threatTier>=2) and back when clear.",
+  "files_written": [
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Scripts/AudioBank.cs",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Scripts/MusicDirector.cs",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Scripts/MusicDirector.cs.meta",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Audio/danger.wav",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Audio/danger.wav.meta",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Audio/_gen_m3_danger_sfx.py",
+    "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Audio/_gen_m3_danger_sfx.py.meta"
+  ],
+  "files_NOT_touched": [
+    "AIDirector.cs",
+    "WeatherController.cs",
+    "RainSoundDriver.cs",
+    "PawnInfoPanel.cs",
+    "SceneSetup.cs",
+    "SceneSetup.Pawn.cs",
+    "SceneSetup.Game.Entities.cs",
+    "SceneSetup.Game.Audio.cs"
+  ],
+  "scene_wiring_flag": {
+    "required": true,
+    "field": "AudioBank.dangerBgm (public AudioClip SerializeField)",
+    "clip_to_assign": "danger.wav",
+    "qa_action": "Wire dangerBgm in the AudioBank GameObject Inspector (SceneSetup.Game.Audio.cs ForceImport pattern, same as sfxBuild/sfxAlert/sfxAmbient/sfxMine/rainLoop). Wiki #8 cannot verify without this wire."
+  },
+  "summary": "AudioBank.cs extended with dangerBgm AudioClip + dangerSource AudioSource (4th, 2D, loop, starts vol=0) + PlayDangerMusic()/StopDangerMusic() that crossfade over ~1s using Time.unscaledDeltaTime (pause-safe). Both methods are idempotent (_dangerActive guard) and graceful null no-ops if dangerBgm/sources unassigned. NEW MusicDirector.cs self-attaches via [RuntimeInitializeOnLoadMethod(AfterSceneLoad)] (DontDestroyOnLoad hidden GO, FindFirstObjectByType guard), mirrors RainSoundDriver pattern exactly. Polls AIDirector.Instance.CurrentThreatTier with _lastTier=-1 sentinel state guard (only acts on transitions). tier>=2 -> PlayDangerMusic(); tier<2 -> StopDangerMusic(). Null-safe for both singletons. NEW danger.wav: 44100Hz mono 16-bit, 16.0s, peak=0.700, tense low-drone (55/82.5/110Hz minor-5th + vibrato) + AM shimmer + 4 slow percussive hits, cosine-fade loop boundary."
+}

@@ -1,0 +1,41 @@
+{
+  "role": "BuildEngineer",
+  "cycle": "C-008",
+  "wave": "W-M3-03",
+  "lane": "C",
+  "milestone": "M5-gameplay-verify",
+  "wiki_item": "#27",
+  "status": "Done",
+  "outputs": [
+    "skills/game-prototype/unity-project/Assets/Scripts/Tests/V7RaidThreatTest.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/Tests/V7RaidThreatTest.cs.meta"
+  ],
+  "binary_acceptance": "wiki #27 — 'A gated test asserts a bandit spawns day 3 and moves toward the colony.' — implemented as ONE binary PASS: step1 day=3 (GameClock forced via reflection), step2 bandit spawned (AIDirector.SpawnRaid() via reflection), step3 distance to colony decreases over 2s sim window.",
+  "api_gap_flags": [
+    "G1: GameClock.GameSeconds has { private set } — Day 3 is forced by reflecting the auto-property backing field '<GameSeconds>k__BackingField'. If Unity batchmode reflection fails, add public SetGameSecondsForTest(float) accessor to GameClock.",
+    "G2: AIDirector.SpawnRaid() is private — the raid-spawn path is invoked via BindingFlags.NonPublic reflection. If batchmode reflection fails, add public ForceRaidForTest() accessor to AIDirector.",
+    "G3: No public AIDirector.ForceRaid() method exists. The test drives the raid path through reflection on SpawnRaid() rather than through TryScheduleRaid() natural polling (which would require waiting real time for Update() at exactly hour=6).",
+    "G4: AIDirector.SpawnRaid() calls AudioBank.Instance?.PlayAlert() — already null-guarded in runtime; expected to be a graceful no-op in headless test scene.",
+    "G5: BanditEnemy.FindNearestPawn() requires at least one live PawnEntity; test spawns V7_ColonyPawn at origin before triggering the raid."
+  ],
+  "files_not_edited": [
+    "V4CombatChainTest.cs",
+    "V5FoodChainTest.cs",
+    "TestRunner.cs",
+    "IntegrationTestRunner.cs",
+    "AIDirector.cs",
+    "GameClock.cs",
+    "BanditEnemy.cs"
+  ],
+  "conventions_followed": [
+    "Same MonoBehaviour / IEnumerator Start() / RunOne / Assert static pattern as V4CombatChainTest and V5FoodChainTest",
+    "Same GetWhiteSprite() helper",
+    "Same CountX() FindObjectsByType helper pattern",
+    "Manager bootstrap when absent (GameClock, AIDirector)",
+    "Manual component add for colony pawn (same pattern as V4 SpawnTestPawn)",
+    "No // TODO comments",
+    "No runtime .cs edits",
+    "Same test directory: Assets/Scripts/Tests/ (same default assembly as V4/V5)"
+  ],
+  "updated": "2026-05-30"
+}

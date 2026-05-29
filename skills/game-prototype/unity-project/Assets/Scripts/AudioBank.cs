@@ -33,6 +33,16 @@ namespace MelonS.GameProto
     ///                   RainSoundDriver.cs polls WeatherController and calls
     ///                   PlayRain()/StopRain() when weather transitions.
     ///
+    /// M3 sound-coverage push 2026-05-30 (wiki Dim2 item #8, W-M3-03 Lane A):
+    ///   danger.wav    — tense low-drone + slow percussive bed, loopable (wiki #8:
+    ///                   music swaps to the tension track during a raid (threatTier>=2)
+    ///                   and back when clear).
+    ///                   Played on a dedicated dangerSource (2D, loop=true).
+    ///                   MusicDirector.cs polls AIDirector.Instance.CurrentThreatTier
+    ///                   and calls PlayDangerMusic()/StopDangerMusic() on transitions.
+    ///                   Crossfade: ~1s volume lerp between bgmSource and dangerSource
+    ///                   via DangerCrossfadeCoroutine; idempotent; graceful null no-op.
+    ///
     /// Throttle discipline (Lesson #4, 2026-05-27 PawnSim chop-buzz):
     ///   PlayChop()    — 0.25s min-interval.  PawnChopper.Update() calls
     ///                   TakeChopDamage every frame; without throttle = 60
@@ -59,6 +69,11 @@ namespace MelonS.GameProto
     ///                   RainSoundDriver polls once per frame via Update(); the
     ///                   isPlaying guard inside PlayRain() is the idempotency gate
     ///                   (calling PlayRain() again while the loop runs is a no-op).
+    ///   PlayDangerMusic() — No per-call throttle: looping bed controlled by
+    ///                   MusicDirector state-machine (only fires on tier transitions).
+    ///                   Idempotency: _dangerActive flag prevents re-triggering while
+    ///                   already in danger mode or mid-crossfade.
+    ///   StopDangerMusic() — Same idempotency pattern via _dangerActive flag.
     ///
     /// PROGRAMMER ACTIONS FLAGGED (Sound Designer lane — do not edit entities):
     ///   1. TreeEntity.cs:84  — PlayChop() called from inside TakeChopDamage()
@@ -81,6 +96,12 @@ namespace MelonS.GameProto
     ///      AudioBank GameObject — assign rain.wav.
     ///      QA FLAG: wire rainLoop in the Inspector (same workflow as sfxBuild/
     ///      sfxAlert/sfxAmbient/sfxMine). Wiki #9 cannot verify without this wire.
+    ///   8. dangerBgm slot requires scene-side SerializeField assignment on the
+    ///      AudioBank GameObject — assign danger.wav.
+    ///      QA FLAG: wire dangerBgm in the Inspector (same workflow as sfxBuild/
+    ///      sfxAlert/sfxAmbient/sfxMine/rainLoop). Wiki #8 cannot verify without
+    ///      this wire.  MusicDirector.cs calls PlayDangerMusic()/StopDangerMusic()
+    ///      when AIDirector.CurrentThreatTier crosses the tier=2 threshold.
     /// </summary>
     public class AudioBank : MonoBehaviour
     {
@@ -110,6 +131,13 @@ namespace MelonS.GameProto
         // RainSoundDriver.cs calls PlayRain()/StopRain() when weather transitions.
         public AudioClip rainLoop;     // soft loopable rain bed — played on rainSource
 
+        // ── M3 SFX slots (wiki #8, W-M3-03 Lane A) ─────────────────────────
+        // QA FLAG: assign danger.wav to this slot on the AudioBank GameObject in
+        // the Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient/sfxMine/rainLoop).
+        // MusicDirector.cs calls PlayDangerMusic()/StopDangerMusic() when
+        // AIDirector.CurrentThreatTier crosses the tier=2 boundary.
+        public AudioClip dangerBgm;    // tense drone/percussive bed — played on dangerSource
+
         // ── Audio sources ───────────────────────────────────────────────────
         [SerializeField] private AudioSource bgmSource;
         [SerializeField] private AudioSource sfxSource;
@@ -118,6 +146,10 @@ namespace MelonS.GameProto
         // rainSource: dedicated looping source for rain bed (wiki #9 — distinct
         // from ambientSource so rain can start/stop independently of ambient).
         private AudioSource rainSource;
+        // dangerSource: dedicated looping source for the danger/tension music track
+        // (wiki #8). Exists alongside bgmSource — crossfade coroutine lerps volumes
+        // between the two sources so the transition is smooth (~1s).
+        private AudioSource dangerSource;
 
         // ── Per-key throttle timestamps (Sound Designer — 2026-05-30) ──────
         private float _lastChopTime    = -10f;
@@ -126,6 +158,16 @@ namespace MelonS.GameProto
         private float _lastBuildTime   = -10f;   // wiki #1: wall finish throttle
         private float _lastAlertTime   = -10f;   // wiki #2: alert burst guard
         private float _lastMineTime    = -10f;   // wiki #7: pick-on-stone throttle
+
+        // ── Danger music state (wiki #8 crossfade) ─────────────────────────
+        // True while dangerSource is playing (or mid-fade-in); false while calm
+        // bgmSource is primary (or mid-fade-out).  Guards idempotency so
+        // MusicDirector can call PlayDangerMusic every frame on tier>=2 without
+        // retriggering the fade each frame.
+        private bool _dangerActive = false;
+        // Reference to any in-progress crossfade coroutine so we can stop the
+        // previous one if a rapid tier transition reverses direction mid-fade.
+        private Coroutine _crossfadeCoroutine;
 
         // ── Min-interval constants — rationale documented above ─────────────
         private const float ChopInterval    = 0.25f;  // per-frame work-loop safe
@@ -137,6 +179,13 @@ namespace MelonS.GameProto
 
         // ── Alert beep inter-repeat gap (pitch variation spread) ────────────
         private const float AlertBeepGap    = 0.35f;  // seconds between beeps in a burst
+
+        // ── Crossfade duration (wiki #8: ~1s fade) ─────────────────────────
+        private const float CrossfadeDuration = 1.0f;
+
+        // ── BGM and danger volumes ──────────────────────────────────────────
+        private const float BgmVolume    = 0.25f;    // calm track volume
+        private const float DangerVolume = 0.30f;    // danger track volume (slightly higher for urgency)
 
         private void Awake()
         {
@@ -153,8 +202,12 @@ namespace MelonS.GameProto
             // rainSource: third independent source — loopable rain bed (wiki #9)
             rainSource = gameObject.AddComponent<AudioSource>();
 
+            // dangerSource: fourth independent source — loopable danger music (wiki #8)
+            // Starts silent (volume=0); PlayDangerMusic() fades it in while fading bgmSource out.
+            dangerSource = gameObject.AddComponent<AudioSource>();
+
             bgmSource.loop   = true;
-            bgmSource.volume = 0.45f;
+            bgmSource.volume = BgmVolume;
             sfxSource.volume = 0.7f;
 
             ambientSource.loop            = true;
@@ -166,6 +219,11 @@ namespace MelonS.GameProto
             rainSource.volume          = 0.20f;  // quiet bed — rain behind everything
             rainSource.spatialBlend    = 0f;     // 2-D (global, not positional)
             rainSource.playOnAwake     = false;
+
+            dangerSource.loop          = true;
+            dangerSource.volume        = 0f;     // starts silent; crossfade brings it in
+            dangerSource.spatialBlend  = 0f;     // 2-D (global, not positional)
+            dangerSource.playOnAwake   = false;
         }
 
         private void Start()
@@ -174,7 +232,7 @@ namespace MelonS.GameProto
             {
                 bgmSource.clip   = bgm;
                 bgmSource.loop   = true;
-                bgmSource.volume = 0.25f;
+                bgmSource.volume = BgmVolume;
                 bgmSource.Play();
             }
 
@@ -186,6 +244,7 @@ namespace MelonS.GameProto
             }
 
             // rain.wav does NOT auto-start — RainSoundDriver controls it.
+            // danger.wav does NOT auto-start — MusicDirector controls it.
         }
 
         // ────────────────────────────────────────────────────────────────────
@@ -390,6 +449,136 @@ namespace MelonS.GameProto
         {
             if (rainSource == null) return;
             if (rainSource.isPlaying) rainSource.Stop();
+        }
+
+        // ────────────────────────────────────────────────────────────────────
+        //  M3 NEW METHODS (wiki #8, W-M3-03 Lane A)
+        // ────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Crossfade to the danger/tension music track over ~1s.
+        /// Called by MusicDirector when AIDirector.CurrentThreatTier >= 2.
+        ///
+        /// Idempotent: if danger is already active (or mid-fade-in), this is a
+        /// no-op — MusicDirector calls this every frame while tier >= 2 so the
+        /// _dangerActive guard prevents re-triggering the coroutine.
+        ///
+        /// Crossfade behavior:
+        ///   - Ensures dangerSource has dangerBgm clip loaded and is playing
+        ///     (paused at vol=0 if not yet started) before beginning the lerp.
+        ///   - Over CrossfadeDuration (~1s) lerps:
+        ///       bgmSource.volume  : BgmVolume -> 0
+        ///       dangerSource.volume: 0 -> DangerVolume
+        ///   - Any previous crossfade coroutine is stopped first to prevent
+        ///     simultaneous opposing fades (rapid tier flip edge case).
+        ///
+        /// Graceful null no-op if dangerBgm or dangerSource is unassigned.
+        ///
+        /// Wiki acceptance #8: "Music swaps to the tension track during a raid
+        /// (threatTier>=2) and back when clear."
+        ///
+        /// QA FLAG: AudioBank.dangerBgm requires scene-side SerializeField
+        /// assignment on the AudioBank GameObject — assign danger.wav in the
+        /// Inspector (same workflow as sfxBuild/sfxAlert/sfxAmbient/sfxMine/rainLoop).
+        /// </summary>
+        public void PlayDangerMusic()
+        {
+            if (dangerBgm == null || dangerSource == null) return;
+            if (_dangerActive) return;  // already in danger mode — idempotent
+
+            _dangerActive = true;
+
+            // Ensure dangerSource has the clip and is playing before we start fading
+            if (dangerSource.clip != dangerBgm)
+            {
+                dangerSource.clip   = dangerBgm;
+                dangerSource.loop   = true;
+                dangerSource.volume = 0f;
+                dangerSource.Play();
+            }
+            else if (!dangerSource.isPlaying)
+            {
+                dangerSource.volume = 0f;
+                dangerSource.Play();
+            }
+
+            if (_crossfadeCoroutine != null) StopCoroutine(_crossfadeCoroutine);
+            _crossfadeCoroutine = StartCoroutine(
+                DangerCrossfadeCoroutine(towardsDanger: true));
+        }
+
+        /// <summary>
+        /// Crossfade back to the calm BGM over ~1s.
+        /// Called by MusicDirector when AIDirector.CurrentThreatTier falls below 2.
+        ///
+        /// Idempotent: if calm is already active (or mid-fade-out), this is a no-op.
+        ///
+        /// Crossfade behavior:
+        ///   - Over CrossfadeDuration (~1s) lerps:
+        ///       dangerSource.volume: DangerVolume -> 0
+        ///       bgmSource.volume  : 0 -> BgmVolume
+        ///   - After the fade completes, dangerSource.Stop() so it does not
+        ///     consume audio resources while idle.
+        ///   - Any previous crossfade coroutine is stopped first.
+        ///
+        /// Graceful null no-op if dangerSource is unassigned.
+        ///
+        /// Wiki acceptance #8: "Music swaps ... back when clear."
+        /// </summary>
+        public void StopDangerMusic()
+        {
+            if (dangerSource == null) return;
+            if (!_dangerActive) return;  // already in calm mode — idempotent
+
+            _dangerActive = false;
+
+            if (_crossfadeCoroutine != null) StopCoroutine(_crossfadeCoroutine);
+            _crossfadeCoroutine = StartCoroutine(
+                DangerCrossfadeCoroutine(towardsDanger: false));
+        }
+
+        /// <summary>
+        /// Shared crossfade coroutine used by both PlayDangerMusic and StopDangerMusic.
+        /// Lerps bgmSource and dangerSource volumes over CrossfadeDuration seconds.
+        ///   towardsDanger=true  : bgm -> 0 / danger -> DangerVolume
+        ///   towardsDanger=false : danger -> 0 / bgm -> BgmVolume (then stops danger)
+        ///
+        /// Uses unscaled time (Time.unscaledDeltaTime) so the crossfade is not
+        /// affected by Time.timeScale pausing (player pauses game during a raid).
+        /// </summary>
+        private IEnumerator DangerCrossfadeCoroutine(bool towardsDanger)
+        {
+            float elapsed = 0f;
+
+            // Snapshot current volumes at fade start so we lerp from wherever
+            // the sources currently sit (handles mid-fade reversal cleanly).
+            float bgmStart    = (bgmSource    != null) ? bgmSource.volume    : 0f;
+            float dangerStart = (dangerSource != null) ? dangerSource.volume : 0f;
+
+            float bgmTarget    = towardsDanger ? 0f        : BgmVolume;
+            float dangerTarget = towardsDanger ? DangerVolume : 0f;
+
+            while (elapsed < CrossfadeDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / CrossfadeDuration);
+
+                if (bgmSource    != null) bgmSource.volume    = Mathf.Lerp(bgmStart,    bgmTarget,    t);
+                if (dangerSource != null) dangerSource.volume = Mathf.Lerp(dangerStart, dangerTarget, t);
+
+                yield return null;
+            }
+
+            // Snap to exact targets at end of fade
+            if (bgmSource    != null) bgmSource.volume    = bgmTarget;
+            if (dangerSource != null) dangerSource.volume = dangerTarget;
+
+            // After a fade-to-calm completes, stop the danger source so it
+            // does not consume audio resources while silent.
+            if (!towardsDanger && dangerSource != null && dangerSource.isPlaying)
+                dangerSource.Stop();
+
+            _crossfadeCoroutine = null;
         }
     }
 }

@@ -1,0 +1,28 @@
+{
+  "role": "Programmer",
+  "lane": "B",
+  "milestone": "M6-ui",
+  "wiki_item": "#23 (Dim6 — Selected inspector -> tabbed)",
+  "status": "Done",
+  "files_touched": [
+    "skills/game-prototype/unity-project/Assets/Scripts/PawnInfoPanel.cs"
+  ],
+  "files_NOT_touched_confirm": [
+    "SceneSetup* (any)", "ClickSelector.cs", "AudioBank.cs", "UITheme.cs", "any other .cs", "any test file"
+  ],
+  "scene_wiring_flag": "none",
+  "scene_wiring_detail": "No new SerializeField added. Tab strip + 기분/장비 content bodies are runtime-lazy-created in code (EnsureTabs() / MakeBodyText()) using the SAME lazy-create-on-first-show idiom as the existing EnsureBorder()/EnsureEmptyState(). Reuses ONLY components already read (PawnNeeds/PawnHealth/PawnAbilities/PawnThoughts/PawnEquipment) and existing serialized refs (titleText, food/sleep/moodBar, healthText, panelBg, emptyText). Borrows the Korean font already resolved on titleText/healthText/emptyText. NO scene edit required.",
+  "acceptance": "wiki #23 — 'Inspector shows tabs; switching tabs changes content.' SATISFIED: 4-tab strip 상태/건강/기분/장비 built lazily on first show; each tab Button.onClick -> SetTab() flips activeTab; Update() gates visibility per tab: 상태=title+food/sleep/mood bars, 건강=health parts+abilities (existing healthText), 기분=moodBar+thought breakdown (new moodDetailText), 장비=equipment list or muted '장비 없음' placeholder (new equipText, U5/V7 empty-state styling). Active tab styled BtnActiveBg+TextDark, inactive BtnInactiveBg+TextPrimary.",
+  "design_notes": [
+    "Single info dump that previously crammed health+abilities+thoughts+equipment into healthText is now SPLIT across 건강/기분/장비 tabs.",
+    "moodBar reused on both 상태 (quick glance) and 기분 (with detail) per lane spec.",
+    "Tabs hidden when no pawn selected; V7 empty-state hint unchanged.",
+    "No new SceneSetup builder dependency, no prefab, no new SerializeField, no // TODO, no new runtime API access. Missing data -> styled muted placeholder."
+  ],
+  "qa_notes_for_verify": [
+    "Merge-compile: PawnInfoPanel.cs only; uses UnityEngine.UI.Button (already imported via 'using UnityEngine.UI;').",
+    "Visual: 기분 tab moodBar (at its SceneSetup-fixed row position) sits above moodDetailText body — acceptable; if overlap looks off, it is layout-only, content-switching correctness is unaffected.",
+    "Brace/paren balance verified (56/56, 246/246). Unity batchmode is the authoritative compile — not run per instruction."
+  ],
+  "unity_run": "NO (per lane constraint — QA verifies after merge-compile)"
+}

@@ -1,0 +1,10 @@
+{
+  "lane": "B",
+  "milestone": "M6-ui",
+  "wiki_item": "#23",
+  "status": "Done",
+  "file_touched": "skills/game-prototype/unity-project/Assets/Scripts/PawnInfoPanel.cs",
+  "scene_wiring_flag": "none",
+  "acceptance_cite": "wiki #23 — 'Inspector shows tabs; switching tabs changes content.' SATISFIED via runtime-lazy 4-tab strip (상태/건강/기분/장비), per-tab visibility gating in Update(), tab Button onClick -> SetTab().",
+  "summary": "Added runtime-lazy tab strip + 기분/장비 content bodies using the existing EnsureBorder()-style lazy-create pattern. No SceneSetup builder, no prefab, no new SerializeField. Reuses only components/refs the panel already reads; missing data shows styled muted placeholder (U5/V7 styling). UITheme colors/font reused. Unity NOT run (QA verifies). Brace/paren balance verified."
+}

@@ -1,53 +1,56 @@
 {
   "agent": "Art",
-  "cycle": "C-004",
-  "wave": "W-M1-03",
-  "lane": "B",
+  "cycle": "C-008",
+  "wave": "W-M3-03",
+  "lane": "D",
   "status": "Done",
-  "task": "V8 optional subtle vignette overlay",
+  "task": "wiki #14 — weather particles: rain particle layer tied to WeatherController",
   "files_created": [
-    "skills/game-prototype/unity-project/Assets/Sprites/_gen_vignette.py",
-    "skills/game-prototype/unity-project/Assets/Sprites/vignette.png",
-    "skills/game-prototype/unity-project/Assets/Sprites/_preview_vignette.png",
-    "skills/game-prototype/unity-project/Assets/Scripts/VignetteOverlay.cs"
+    "skills/game-prototype/unity-project/Assets/Scripts/WeatherParticleDriver.cs"
   ],
   "files_touched_existing": [],
-  "alpha_range": {
-    "center": "0/255 (0.000) — fully transparent",
-    "corner": "56/255 (0.220) — maximum 22% OUTLINE_OBJ darkening at extreme corners",
-    "gamma_shaping": 1.8,
-    "note": "gamma=1.8 keeps the central play area near 0 alpha; the gradient concentrates darkening in the outer ~25% of the frame"
+  "particle_texture": {
+    "used": false,
+    "reason": "Unity built-in Default-Particle sprite is sufficient for rain streaks; no external PNG needed. Stretch renderMode + size3D aspect ratio produces thin downward-falling streaks without a custom texture."
   },
-  "sprite_spec": {
-    "canvas": "512x512 RGBA",
-    "color_tone": "OUTLINE_OBJ = (40,30,22) from palette.py — no ad-hoc colors",
-    "filter_mode": "Point (set at runtime in VignetteOverlay.cs)",
-    "ppu": "not applicable — stretched to full screen by Canvas Image"
+  "rain_particle_spec": {
+    "pattern": "[RuntimeInitializeOnLoadMethod(AfterSceneLoad)] self-attaching, DontDestroyOnLoad, HideAndDontSave — identical to RainSoundDriver.cs and FlickerLight.cs",
+    "emission_rate_storm": 120,
+    "lifetime_s": 0.65,
+    "velocity_x": -0.8,
+    "velocity_y": -7.5,
+    "render_mode": "Stretch (lengthScale=2.8)",
+    "sorting_order": 26,
+    "sorting_rationale": "above NightOverlay(25) and ground(0-7)/pawn(9-11), below PawnFloatingBars(29-31) and UI Canvas(200+)",
+    "color_tint": "rgba(0.565, 0.647, 0.706, 0.40) — cool blue-grey, WATER_* family, low alpha so pawns remain legible",
+    "shader": "Particles/Standard Unlit with alpha-blend (SrcAlpha / OneMinusSrcAlpha); fallback Sprites/Default",
+    "camera_follow": "Update() repositions PS transform to camera.position + (0, SpawnAboveCam=5.5, -1) each frame",
+    "clear_weather": "emission rate=0, PS.Clear(), PS.Stop — in-flight particles cleared immediately on Clear transition"
   },
-  "cs_builder": {
-    "file": "VignetteOverlay.cs",
-    "pattern": "[RuntimeInitializeOnLoadMethod(AfterSceneLoad)] self-attaching, DontDestroyOnLoad, HideAndDontSave",
-    "canvas": "Screen Space Overlay, sortingOrder=1 (above world render, below all UI panels at sortingOrder>=2)",
-    "raycast_target": false,
-    "sprite_load": "AssetDatabase.LoadAssetAtPath in Editor; Resources.Load('Sprites/vignette') at runtime; procedural C# fallback available (ProcFallbackEnabled=false by default)",
-    "null_guard": "Debug.LogWarning + graceful no-op if vignette.png not found — build runs without the overlay",
-    "removable": "delete VignetteOverlay.cs to remove entirely; no other system depends on it"
+  "state_machine": {
+    "guard": "_lastKind + _initialized flag, mirrors RainSoundDriver._lastKind pattern — no per-frame restart",
+    "storm_to_clear": "emission 0, Clear(), Stop",
+    "clear_to_storm": "emission 120, Play()"
   },
-  "scenesetup_note": "VignetteOverlay.cs is self-attaching — SceneSetup.cs was NOT edited. If vignette.png needs to be in ForceImportAllSprites for a clean CLI build, the Build Engineer should add it to SceneSetup.cs's sprite import list in a separate commit (lane A). The .cs file also has a procedural C# fallback (disabled by default) that requires zero file import.",
+  "binary_acceptance": "wiki #14 — During a storm a rain particle layer is visible; clear weather has none.",
   "qa_flags": [
-    "V8 OPTIONAL vignette: subtle radial OUTLINE_OBJ darkening at corners (alpha 0.0 center → 0.22 max corners, gamma=1.8 shaping) — QA REJECT if corners are visibly muddy or any play-area color shifts",
-    "raycastTarget=false on Image component — QA verify zero click intercept across all UI interactions",
-    "Canvas sortingOrder=1 — QA verify all gameplay UI panels (PawnInfoPanel, resource bars, clock, event log, context menus, research UI) draw ABOVE the vignette",
-    "Graceful null-guard: if vignette.png missing at runtime, only a Debug.LogWarning fires — QA confirm build opens and plays normally without the PNG",
-    "SceneSetup.cs was NOT edited this wave — if ForceImportAllSprites needs vignette.png, flag for Build Engineer to add in a separate commit"
+    "QA: Storm-to-Clear transition should immediately clear all in-flight rain particles (PS.Clear() called) — verify no lingering rain after storm ends",
+    "QA: Rain alpha (0.40 base, gradient 0-1-1-0 over lifetime) must NOT occlude pawn sprites or UI bars — verify pawn silhouettes remain legible through rain",
+    "QA: sortingOrder=26 places rain above NightOverlay(25); verify rain draws above the night dark overlay during night storms",
+    "QA: No particle texture PNG was generated; driver uses Unity built-in Default-Particle — verify ParticleSystemRenderer material resolves without import error",
+    "QA: WeatherController.cs was NOT edited — verify WeatherController.Instance.Current reads correctly from a separate file (same property RainSoundDriver polls)",
+    "QA: Camera-follow logic runs in Update() — verify no jitter or 1-frame lag at camera edges during panning",
+    "QA: [RuntimeInitializeOnLoadMethod] guard (FindFirstObjectByType) — verify no duplicate ~WeatherParticleDriver GameObjects on scene reload"
   ],
   "constraints_respected": [
-    "Did NOT touch SceneSetup.Game.Entities.cs",
-    "Did NOT touch SceneSetup.cs",
-    "Did NOT touch CropEntity.cs",
-    "Did NOT touch any existing builder",
+    "Did NOT edit WeatherController.cs",
+    "Did NOT edit AudioBank.cs",
+    "Did NOT edit RainSoundDriver.cs",
+    "Did NOT edit MusicDirector.cs",
+    "Did NOT touch any SceneSetup*.cs",
+    "Did NOT touch any entity/prefab",
     "Did NOT run Unity (-batchmode)",
-    "No TODO stubs — overlay is a real working, removable component",
-    "Color sourced strictly from palette.py OUTLINE_OBJ"
+    "No prefab or scene edit — ParticleSystem built 100% in code",
+    "No particle PNG generated — Unity built-in sprite used"
   ]
 }

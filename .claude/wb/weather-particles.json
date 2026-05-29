@@ -1,0 +1,46 @@
+{
+  "agent": "Art",
+  "lane": "D",
+  "cycle": "C-008",
+  "wave": "W-M3-03",
+  "milestone": "M1-design",
+  "wiki_item": "#14",
+  "dimension": "Dimension 1 — 디자인/비주얼, Animation / motion",
+  "status": "Done",
+  "binary_acceptance": "During a storm a rain particle layer is visible; clear weather has none.",
+  "files_created": [
+    "skills/game-prototype/unity-project/Assets/Scripts/WeatherParticleDriver.cs"
+  ],
+  "particle_texture_created": false,
+  "particle_texture_note": "Unity built-in Default-Particle used; no external PNG required",
+  "key_design": {
+    "self_attach": "[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]",
+    "guard": "FindFirstObjectByType<WeatherParticleDriver> idempotency check",
+    "poll_source": "WeatherController.Instance.Current (read-only, same property as RainSoundDriver)",
+    "state_guard": "_lastKind + _initialized flag — transitions only on WeatherKind change",
+    "particle_system": "built in code via AddComponent<ParticleSystem>(); no prefab no scene edit",
+    "render_mode": "Stretch, lengthScale=2.8 for rain-streak appearance",
+    "sorting_order": 26,
+    "color": "rgba(0.565, 0.647, 0.706, 0.40) cool blue-grey low-alpha",
+    "camera_follow": "Update repositions transform above Camera.main each frame",
+    "storm_emit_rate": 120,
+    "clear_action": "emission.rateOverTime=0, Clear(), Stop — immediate particle flush"
+  },
+  "files_not_touched": [
+    "WeatherController.cs",
+    "AudioBank.cs",
+    "RainSoundDriver.cs",
+    "MusicDirector.cs",
+    "SceneSetup.cs",
+    "SceneSetup.Pawn.cs",
+    "SceneSetup.Game.Entities.cs",
+    "SceneSetup.Game.Audio.cs"
+  ],
+  "qa_flags": [
+    "Storm->Clear: PS.Clear() flushes in-flight particles immediately",
+    "Alpha 0.40 + gradient fade: pawn silhouettes must remain legible through rain layer",
+    "sortingOrder=26 sits above NightOverlay(25), below PawnFloatingBars(29)",
+    "Built-in Default-Particle material — no import error expected",
+    "FindFirstObjectByType guard prevents duplicate driver on scene reload"
+  ]
+}

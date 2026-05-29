@@ -1,0 +1,58 @@
+{
+  "milestone": "M2-sound",
+  "wave": "W-M3-03",
+  "lane": "A",
+  "status": "Done",
+  "wiki_item": "#8 Dynamic music (Dimension 2)",
+  "binary_acceptance": "Music swaps to the tension track during a raid (threatTier>=2) and back when clear.",
+  "files_written": [
+    "skills/game-prototype/unity-project/Assets/Scripts/AudioBank.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/MusicDirector.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/MusicDirector.cs.meta",
+    "skills/game-prototype/unity-project/Assets/Audio/danger.wav",
+    "skills/game-prototype/unity-project/Assets/Audio/danger.wav.meta",
+    "skills/game-prototype/unity-project/Assets/Audio/_gen_m3_danger_sfx.py",
+    "skills/game-prototype/unity-project/Assets/Audio/_gen_m3_danger_sfx.py.meta"
+  ],
+  "files_NOT_touched": [
+    "AIDirector.cs (read-only CurrentThreatTier poll -- NOT edited)",
+    "WeatherController.cs",
+    "RainSoundDriver.cs",
+    "PawnInfoPanel.cs",
+    "SceneSetup.*.cs (all variants)"
+  ],
+  "audiobank_additions": {
+    "field_dangerBgm": "public AudioClip dangerBgm -- loopable danger/tension bed",
+    "field_dangerSource": "private AudioSource dangerSource -- 4th independent source, 2D, loop=true, starts vol=0",
+    "field_dangerActive": "private bool _dangerActive -- idempotency guard",
+    "field_crossfadeCoroutine": "private Coroutine _crossfadeCoroutine -- stops prior fade on rapid tier flip",
+    "method_PlayDangerMusic": "public void PlayDangerMusic() -- fades dangerSource in / bgmSource out over ~1s; null no-op if dangerBgm unassigned; idempotent via _dangerActive",
+    "method_StopDangerMusic": "public void StopDangerMusic() -- fades bgmSource in / dangerSource out over ~1s; stops dangerSource after fade; idempotent",
+    "method_DangerCrossfadeCoroutine": "private IEnumerator -- lerps both volumes using Time.unscaledDeltaTime (pause-safe); snapshots start volumes for mid-fade reversal safety"
+  },
+  "musicdirector_design": {
+    "bootstrap": "[RuntimeInitializeOnLoadMethod(AfterSceneLoad)] -- hidden DontDestroyOnLoad GameObject, FindFirstObjectByType guard, mirrors RainSoundDriver pattern exactly",
+    "state_guard": "int _lastTier = -1 sentinel (like RainSoundDriver._lastKind bool); only acts on tier transitions, not every frame",
+    "null_safety": "AIDirector.Instance null -> silent idle; AudioBank.Instance null -> silent idle; both checked per-frame",
+    "logic": "tier >= 2 -> PlayDangerMusic(); tier < 2 -> StopDangerMusic()"
+  },
+  "danger_wav": {
+    "spec": "44100Hz mono 16-bit PCM, 16.0s, peak=0.700",
+    "character": "tense low-drone (55/82.5/110Hz minor-5th stack + 0.15Hz vibrato) + tension shimmer (900Hz narrow-band noise AM at 1.8Hz) + 4 slow percussive hits (~0.4Hz rate, 60Hz kick with pitch-drop + noise burst)",
+    "loop_integrity": "0.8s cosine fade-in + 0.8s cosine fade-out at endpoints for click-free AudioSource.loop=true",
+    "meta_settings": "compressionFormat=1 (PCM), 3D=0 (Point/2D), sampleRateOverride=44100"
+  },
+  "scene_wiring_flag": {
+    "required": true,
+    "field": "AudioBank.dangerBgm (public AudioClip)",
+    "clip": "danger.wav",
+    "method": "Same Inspector wiring workflow as sfxBuild/sfxAlert/sfxAmbient/sfxMine/rainLoop -- QA wires via SceneSetup.Game.Audio.cs ForceImport",
+    "consequence_if_missing": "PlayDangerMusic/StopDangerMusic are null no-ops; wiki #8 cannot verify"
+  },
+  "crossfade_throttle": {
+    "crossfade_duration": "1.0s (CrossfadeDuration constant)",
+    "bgm_volume": "0.25 (BgmVolume -- calm track)",
+    "danger_volume": "0.30 (DangerVolume -- slightly higher for urgency feel)",
+    "time_basis": "Time.unscaledDeltaTime (pause-safe -- crossfade continues even if player pauses mid-raid)"
+  }
+}
