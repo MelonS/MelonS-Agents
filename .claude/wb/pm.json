@@ -1,18 +1,32 @@
 {
   "role": "PM",
   "status": "Done",
-  "cycle": "C-018",
-  "wave": "W-M6-03",
+  "cycle": "C-020",
+  "wave": "CHAIN-END",
   "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"],
-  "decision": "W-M6-02 QA PASS@4cf239d cz-w2 (B3 fence / B10 carry-pose / B13 saveload-substate / B14 hotkey-sheet), no disk RED -> no FIX subtask. Advanced per parallel pipeline. Dispatched W-M6-03 = 4 strictly non-overlapping lanes from v2 backlog remainder.",
-  "lanes": {
-    "B2": "game-programmer, M6 gizmo command bar — NEW SelectionGizmoBar.cs (B1 marquee QA-green so unblocked; ClickSelector/MarqueeSelector READ-ONLY; own Canvas; draft API read-only invoke)",
-    "B4": "game-programmer, M4 barricade/sandbag — SINGLE BuildManager.cs lane + NEW BarricadeEntity.cs (pathing-block, pawns detour; NO cover-math=gated) + _gen_barricade.py PNG + Architect Security category",
-    "B9": "game-sound-designer, M2 door/cook/shoot SFX — SINGLE AudioBank.cs lane (sfxDoor/sfxCook/sfxShoot slots) + one-line PlaySound calls into DoorEntity/StoveEntity/ArrowProjectile",
-    "B11": "game-artist, M1 terrain-edge decals + rock variety — extend ScatterVarietyDriver.cs + new edge/rock sprites (visual-only, recede)"
+  "decision": "W-M6-04 (the explicitly-final non-gated v2 wave) qa.json Status=PASS @f1e52de build cz-w4 (B5 autodoor / B7 area-cancel-drag / B12-verify V16). NO disk RED -> no FIX subtask. Per PM rule: the entire v2 second-pass non-gated backlog (B1-B14, rimworld-comparison-v2.md) is EXHAUSTED across W-M6-01..04. QA flags_for_next_wave explicitly: 'OP-GATED WALL reached: B5+B7 delivered. remaining_after_this_wave is now empty.' -> done=true, EMPTY subtasks, CHAIN ENDS.",
+  "v2_backlog_completion": {
+    "W-M6-01": "B6 floating-text / B1 multi-select marquee / B8 footstep+day/night ambient / B12 verify V10+V11",
+    "W-M6-02": "B3 fence+gate / B10 carry-pose+attack-lunge / B13 save-load sub-state / B14 hotkey cheat-sheet",
+    "W-M6-03": "B2 gizmo command bar / B4 barricade+sandbag / B9 door/cook/shoot SFX / B11 terrain-edge+rock variety",
+    "W-M6-04": "B5 autodoor / B7 area-cancel drag / B12 verify V16 (autodoor faster + area-cancel >=3)"
   },
-  "lane_proof": "B2=SelectionGizmoBar.cs(new) / B4=BuildManager.cs(edit)+BarricadeEntity.cs(new)+_gen_barricade.py(new)+PNG / B9=AudioBank.cs(edit)+DoorEntity/StoveEntity/ArrowProjectile(1-line calls) / B11=ScatterVarietyDriver.cs(edit)+new gen+PNG. No file in two lanes; ONLY B4 edits BuildManager; ONLY B9 edits AudioBank; no SceneSetup hot file; no W-M6-01/W-M6-02 in-flight file. None OP-gated.",
-  "excluded_op_gated": ["mood thought-sum #30 / V9 mood-break", "work-priority grid", "per-terrain path-cost #24", "quality-roll on build", "BanditEnemy body-parts / carryCap", "B4 cover-math (visual+pathing only this wave)"],
-  "remaining_after_this_wave": "B5 autodoor (DoorEntity.cs PassMul + BuildManager catalogue — contends both the BuildManager lane and the DoorEntity file B9 wires) + B7 area-cancel/deconstruct-area drag (extends DeconstructDesignation.cs) -> ONE final wave drains them; then chain reaches OP-gated wall (operator must OK mood/work-priority spec per v2 'Operator recommendation').",
-  "done": false
+  "remaining_after_this_wave": "EMPTY. All v2 non-gated items shipped. Only OP-gated + over-scope items remain.",
+  "op_gated_wall": [
+    "mood thought-sum + 3-tier mental-break (#30 / V9 mood-break) — [OP-OK], MILESTONES.md M3",
+    "work-priority grid semantics — [OP-OK], MILESTONES.md M3",
+    "per-terrain path-cost (#24) — [OP-OK]",
+    "quality-roll on build — [OP-OK]",
+    "BanditEnemy body-parts / carryCapacity->hauler cap — [OP-OK]",
+    "B4 cover-math (barricade currently visual+pathing only) — [OP-OK]"
+  ],
+  "over_scope_guardrails_unchanged": ["roofs/collapse", "temperature", "joy/recreation", "hediffs/disease", "cover/accuracy tables", "trading/power/taming/bills", "detailed 32x32 pawn redraw", "14-skill expansion"],
+  "operator_recommendation": "Per rimworld-comparison-v2.md 'Operator recommendation' + MILESTONES.md M3: the next leap from 'looks/sounds like RimWorld' to 'PLAYS like RimWorld' requires the operator to APPROVE the mood thought-sum + 3-tier mental-break spec and the work-priority grid spec (both drafted, behavior-logic [OP-OK]). Without that unlock the autonomous chain would produce diminishing busywork.",
+  "carried_qa_flags_non_blocking": [
+    "V16AutodoorAreaCancelTest.cs not yet registered in TestRunner.cs (isolated count stays 76; add RunOne to reach 77) — whoever owns the test lane next",
+    "BlueprintEntity.cs has no public Cancel() method (area-cancel uses Destroy, no material refund) — defer proper Cancel()+refund to a BlueprintEntity-lane wave",
+    "autodoor.png not in SceneSetup ForceImportAllSprites (BuildManager lazy procedural fallback covers it) — optional add in a future SceneSetup wave"
+  ],
+  "daily_shippable": "INTACT. PawnSim.exe opens, menu + world render, all v2 features live (floating text, marquee+gizmo command bar, footstep/ambient + door/cook/shoot SFX, fence/barricade/autodoor catalogue, carry-pose+lunge, hotkey cheat-sheet, terrain decals, area-cancel drag).",
+  "done": true
 }

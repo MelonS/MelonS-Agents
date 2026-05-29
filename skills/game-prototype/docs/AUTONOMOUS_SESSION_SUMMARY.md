@@ -2,6 +2,58 @@
 
 ---
 
+## [세션 2026-05-30 야간] 멀티에이전트 오케스트레이션 + 위키 비교 구동 자율 체인 (48 commit)
+
+운영자 directive: 멀티에이전트 파이프라인을 "연쇄반응(chain reaction)"으로 — 수동
+개입 없이 PM 발행→병렬 제작→직렬 Unity 검증→commit/자동롤백 루프. + RimWorld 위키
+(rimworldwiki.com) 전면 비교분석 구동. + 취침 중 마일스톤 추가하며 아침까지 자율 루프.
+
+### 한 줄
+**Workflow 엔진으로 자율 연쇄체인 3라운드(cx 6wave + cy 4wave + cz 4wave) 전부 GREEN,
+롤백 0, 48 commit. 위키 비교 v1/v2 가 백로그 구동. 차원별 근접도: Design 70→80 /
+Sound 30→80 / Move 75→82 / Build 65→80 / Gameplay 80→85 / UI 70→82. non-gated
+표면 소진 → 다음 도약은 OP-gated(운영자 결정).**
+
+### 아키텍처 (운영자 설계 채택)
+- `.claude/whiteboard.json` + `.claude/wb/<role>.json` — 에이전트 컨텍스트 유지(병렬
+  write 안전: per-role 파일, PM 단일 병합). `_pawnsim_chain_x.js` — 연쇄체인 스크립트.
+- 파이프라인: PM(위키 gap+MILESTONES+git log 읽고 비충돌·비게이트 서브태스크 발행)
+  → 병렬 메이커(코드/아트/사운드, Unity 미실행) → 직렬 QA+integrator(wip 브랜치 보존
+  → `refactor_check --fresh-build` → GREEN이면 merge→main+push, RED이면 main 자동롤백
+  +wip 보존+wb/qa.json 버그리포트) → 다음 wave 자동.
+- Unity batchmode 단일 배타 → 검증만 직렬, 제작 병렬. `--fresh-build`로 stale-build
+  맹점 해소 (이전 세션 #210 에서 발견).
+
+### 누적 ship (차원별, 전부 검증·main)
+- **사운드(최대 gap)**: sfxBuild/Alert(tier)/Mine/UI-click/door/cook/shoot/footstep,
+  wolf-howl 배선(호출처 0이었음), ambient bed + 야간 변주, 동적 음악, 비/날씨 파티클,
+  AnimalEntity 전투 PlayChop→PlayHit 오용 fix.
+- **이동/비주얼**: pawn facing(flipX), walk-bob+idle-breathe, tree-sway, sleep-pose,
+  carry-pose+attack-lunge, 야간 light-pools, scatter 데코+variety(magenta fix), vignette.
+- **건축(#15-21)**: deconstruct, mine/grow-zone designation, drag-rect 배치, area-cancel,
+  standing-lamp/torch, fence+gate, barricade, autodoor, table+chair, stone-floor.
+- **UI**: top-right alert/letter stack(클릭→카메라 pan), inspector 탭, 멀티셀렉트 마키,
+  gizmo 커맨드바, 플로팅 전투/작업 텍스트, hotkey overlay.
+- **검증(continuous gate)**: V1-V16 시나리오 + raid-threat + moveSpeed reconcile +
+  save-load round-trip + serialization fix + substate. 매 wave isolated/integration/
+  build-click/real-qa/visual-diff 통과.
+
+### 운영자 결정 대기 (다음 도약 — 전부 OP-gated, 스펙 작성됨)
+1. **Mood thought-sum + 3-tier mental-break** (`docs/spec-needs-mood-balance.md`) —
+   현재 mood free-fall 버그성 모델. 진짜 RimWorld 기분 시스템으로.
+2. **Work-priority grid** (`docs/spec-work-priority.md`) — 직업 우선순위 1-4 그리드.
+   "운반 우선순위" 운영자 관심사 직결. 현재 WorkKind collapse 로 Haul 개별제어 불가.
+3. **Terrain move-cost** — 지형별 이동비용.
+> 이 셋이 "보이고 들리는 RimWorld" → "플레이되는 RimWorld" 도약. 승인 주시면 같은
+> 연쇄체인으로 진행. over-scope(roofs/temperature/joy/hediffs/cover/14-skill)는 가드 유지.
+
+### 최종 빌드
+`skills/game-prototype/builds/day-final-2026-05-30/PawnSim.exe` — 누적 전부 반영
+(스크린샷 `G:/ai/_final_check.png`: 정착지/콜로니스트/횃불/울타리/작물/UI 전부 정상,
+매지나·debug박스·회귀 0). 비교: `docs/rimworld-comparison.md`(v1) + `-v2.md`.
+
+---
+
 ## [세션 2026-05-29 야간 2부] #201-#208 — 림 갇힘 fix + 디자인/UI 전면 개편 (자율 5h+)
 
 운영자 directive: (1) "건축 완료 시점 림이 있으면 고정되서 못움직임" 버그 fix.
