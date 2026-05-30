@@ -108,16 +108,27 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > orchestrates sprite generation, C# scaffolding, balance tuning,
 > audio generation, and an in-game AI director — the meta-skill
 > that drives the game prototypes built alongside it.  Two
-> prototype skills serve as its empirical validation surface: a
-> top-down colony-sim vertical slice
-> ([`skills/game-prototype/`](skills/game-prototype/)) and a 2D
-> physics-merge puzzle
+> prototype skills serve as its empirical validation surface.  The
+> flagship is **PawnSim**, a RimWorld-lite colony-sim vertical slice
+> ([`skills/game-prototype/`](skills/game-prototype/)) that has grown
+> across many autonomous multi-agent sessions into a deep slice —
+> grid A* pathfinding, pawns with needs/health/skills/traits,
+> drafted + ranged combat, research, build/deconstruct/designations,
+> farming, hauling, storytellers, sound, day/night, save/load — at
+> ~85% RimWorld-vanilla core coverage, gated on every commit by a
+> 6-stage `refactor_check` harness (isolated 76/76 · integration
+> 42/42 · Build Click QA 9/9 · visual diff), with per-dimension
+> wiki-fidelity tracked in
+> [`skills/game-prototype/docs/rimworld-comparison-v2.md`](skills/game-prototype/docs/rimworld-comparison-v2.md)
+> (design 80% · sound 80% · movement 82% · building 80% · loop 85% ·
+> UI 82%).  The second prototype is a 2D physics-merge puzzle
 > ([`skills/game-prototype-suika/`](skills/game-prototype-suika/),
 > Day 2 shipped at ~15× wall-clock speedup vs the no-framework
 > baseline).  Graduates into the production-skill count once both
-> prototypes hit their end-of-day deliverable schedules.  Skill
-> definitions live in
-> [`skills/game-dev-agent/`](skills/game-dev-agent/).
+> prototypes hit their deliverable schedules.  Skill definitions live
+> in [`skills/game-dev-agent/`](skills/game-dev-agent/); PawnSim's own
+> README + PM milestones at
+> [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
 >
 > **Two ways to drive this repo.**
 > - *Agent-driven* (primary) — install Claude Code, point it at the
