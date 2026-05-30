@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.unity.recorder": "5.1.0",
     "com.unity.ugui": "2.0.0",
     "com.unity.2d.tilemap": "1.0.0",
     "com.unity.2d.sprite": "1.0.0",

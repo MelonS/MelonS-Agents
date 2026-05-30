@@ -123,6 +123,12 @@ def cmd_integrate(args):
         return integrator.build_windows(proj, day=args.day)
     elif args.method == "verify-build":
         return integrator.build_verify(proj)
+    elif args.method == "record":
+        import os
+        secs = int(os.environ.get("MELONS_REC_SECONDS", "120"))
+        out  = os.environ.get("MELONS_REC_OUT", "G:/ai/pawnsim_gameplay.mp4")
+        fps  = int(os.environ.get("MELONS_REC_FPS", "30"))
+        return integrator.record_gameplay(proj, duration_sec=secs, out_path=out, fps=fps)
     else:
         rc, _ = integrator.run_unity_method(proj, args.method)
         return rc
@@ -235,7 +241,8 @@ def main():
     intg = sub.add_parser("integrate", help="invoke Unity batchmode method")
     intg.add_argument("--project", required=True, help="Unity project path")
     intg.add_argument("--method", default="scenes",
-                      help="scenes | build | verify-build | <fully-qualified static method>")
+                      help="scenes | build | verify-build | record | <fully-qualified static method>"
+                           " (record: use env MELONS_REC_SECONDS/MELONS_REC_OUT/MELONS_REC_FPS)")
     intg.add_argument("--day", default="X", help="day index for MELONS_BUILD_DAY env")
     intg.set_defaults(func=cmd_integrate)
 

@@ -105,3 +105,76 @@ def build_verify(project_path: Path) -> int:
         log_file=Path("G:/ai/_unity_build.log"),
     )
     return rc
+
+
+def record_gameplay(
+    project_path: Path,
+    duration_sec: int = 120,
+    out_path: str = "G:/ai/pawnsim_gameplay.mp4",
+    fps: int = 30,
+    unity_exe: Optional[str] = None,
+) -> int:
+    """Record gameplay video via Unity Recorder (H.264 mp4, Game View).
+
+    IMPORTANT: does NOT pass -nographics — Unity Recorder requires rendering.
+    Runs Unity with -batchmode only (windowed editor on a machine with display).
+
+    Args:
+        project_path: Unity project root
+        duration_sec: recording length in seconds
+        out_path:     absolute path for the output mp4
+        fps:          capture frame rate (30 recommended)
+        unity_exe:    override Unity.exe path (uses DEFAULT_UNITY if None)
+
+    Returns Unity exit code (0 = success).
+    """
+    import os as _os
+
+    unity = unity_exe or DEFAULT_UNITY
+    if not Path(unity).exists():
+        raise FileNotFoundError(f"Unity not found at {unity} (set UNITY_EXE env)")
+
+    log_file = Path("G:/ai/_unity_recorder.log")
+
+    # Env vars for GameplayRecorderTool.cs
+    env = _os.environ.copy()
+    env["MELONS_REC_SECONDS"] = str(duration_sec)
+    env["MELONS_REC_OUT"]     = out_path
+    env["MELONS_REC_FPS"]     = str(fps)
+
+    # NOTE: -nographics intentionally omitted — Recorder needs the render pipeline.
+    # NOTE: -quit intentionally omitted — GameplayRecorderTool calls EditorApplication.Exit()
+    #       itself; -quit would kill Unity before the EditorApplication callbacks fire.
+    cmd = [
+        unity,
+        "-batchmode",
+        "-projectPath", str(project_path),
+        "-executeMethod", "MelonS.GameProto.EditorTools.GameplayRecorderTool.Record",
+        "-logFile", str(log_file),
+    ]
+
+    print(f"[integrator] record_gameplay: {duration_sec}s -> {out_path}")
+    print(f"[integrator] cmd: {' '.join(cmd)}")
+
+    result = subprocess.run(cmd, env=env)
+
+    log_tail = ""
+    if log_file.exists():
+        with open(log_file, "r", encoding="utf-8", errors="ignore") as f:
+            lines = f.readlines()
+            log_tail = "".join(lines[-30:])
+
+    if result.returncode != 0:
+        print(f"[integrator] record_gameplay FAIL rc={result.returncode}")
+        if log_tail:
+            print("--- log tail ---")
+            print(log_tail)
+    else:
+        found = Path(out_path).exists() or Path(out_path.replace(".mp4", "_0001.mp4")).exists()
+        if found:
+            p = Path(out_path) if Path(out_path).exists() else Path(out_path.replace(".mp4", "_0001.mp4"))
+            print(f"[integrator] record_gameplay OK: {p} ({p.stat().st_size // 1024} KB)")
+        else:
+            print(f"[integrator] record_gameplay: Unity ok but output file missing at {out_path}")
+
+    return result.returncode
