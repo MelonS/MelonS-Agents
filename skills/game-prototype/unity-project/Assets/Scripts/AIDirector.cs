@@ -83,8 +83,34 @@ namespace MelonS.GameProto
             }
         }
 
-        // Day 13 raid scheduling
+        // Day 13 raid scheduling.
+        //
+        // RAID CALIBRATION (recalibrated 2026-05-31 — operator goal "생존 유지").
+        // Symptom that triggered this: a 3-pawn colony was WIPED in a ~19-day
+        // LongPlay because raids fired every 3 days from day 3 and the size was
+        // driven off the day-based CurrentThreatTier (tier3 = 5 bandits from
+        // day 14), so by mid-game 5-bandit waves arrived every 3 days.  RimWorld
+        // calibration: first raid ~day 5-10, raids days apart, small early, slow
+        // escalation.  All four knobs below are serialized so the operator can
+        // re-tune difficulty without a code change.
+        //
+        //   RaidGraceDays      — no raid can fire before this in-game day.
+        //   RaidIntervalDays   — minimum in-game days BETWEEN raids.
+        //   MaxConcurrentGroups— hard cap on bandits in a single raid (escalation
+        //                        ceiling; was effectively 5 via tier3).
+        //   BaseRaidGroupSize  — first raid's bandit count.  Each subsequent raid
+        //                        adds +1 every RaidsPerSizeStep raids, clamped to
+        //                        MaxConcurrentGroups.  This DECOUPLES raid scale
+        //                        from the day-based threat tier so escalation is
+        //                        slow + countable, not a step-jump to 5.
+        [Header("Day 13 / raid calibration (RimWorld-ish — tunable)")]
+        [SerializeField] private int RaidGraceDays = 6;        // first raid not before ~day 6
+        [SerializeField] private int RaidIntervalDays = 5;     // raids ~5 in-game days apart
+        [SerializeField] private int MaxConcurrentGroups = 2;  // escalation ceiling (bandits/raid)
+        [SerializeField] private int BaseRaidGroupSize = 1;    // first raid = 1 bandit
+        [SerializeField] private int RaidsPerSizeStep = 2;     // +1 bandit every 2 raids
         private int lastRaidDay = -1;
+        private int raidCount = 0;     // how many raids have fired this run (drives slow size escalation)
         [SerializeField] private float raidSpawnRadius = 12f;
 
         // Stretch: trader sprite 주입 (SceneSetup 에서 wire)
@@ -120,27 +146,40 @@ namespace MelonS.GameProto
             if (clock == null) return;
             int day = clock.Day;
             int hour = clock.Hour;
-            if (day < 3) return;
-            if (day % 3 != 0) return;
+            // Grace period: no raids before RaidGraceDays.
+            if (day < RaidGraceDays) return;
+            // Fire at the morning window (hour 6) so the colony has daylight to
+            // respond — same window as before.
             if (hour != 6) return;
-            if (lastRaidDay == day) return; // throttle: one raid per day
+            // Spacing: at least RaidIntervalDays must have elapsed since the last
+            // raid.  lastRaidDay starts at -1 so the first eligible morning fires.
+            if (lastRaidDay >= 0 && day - lastRaidDay < RaidIntervalDays) return;
             lastRaidDay = day;
             SpawnRaid();
         }
 
         private void SpawnRaid()
         {
-            // #134 - threat tier 에 따른 raid 규모 (이전 단일 강도, 이제 wave).
-            //   tier 0: 1명 (mild)
-            //   tier 1: 2명
-            //   tier 2: 3명
-            //   tier 3: 5명 (critical)
-            int tier = CurrentThreatTier;
+            // Raid size is now driven by raidCount (how many raids have fired this
+            // run) instead of the day-based CurrentThreatTier.  The old tier path
+            // step-jumped to 5 bandits at day 14 which, combined with a raid every
+            // 3 days, wiped a 3-pawn colony.  New escalation is slow + capped:
+            //   group = BaseRaidGroupSize + (raidCount / RaidsPerSizeStep), clamped
+            //   to MaxConcurrentGroups.  e.g. with defaults (base 1, step 2, cap 2):
+            //   raid#0=1, raid#1=1, raid#2=2, raid#3=2, ... (never exceeds 2).
+            int banditCount = Mathf.Clamp(
+                BaseRaidGroupSize + (raidCount / Mathf.Max(1, RaidsPerSizeStep)),
+                1, Mathf.Max(1, MaxConcurrentGroups));
+            raidCount++;
+
             // Wiki Dim2 #2 (sound wiring only — no threat/balance change): every raid
-            // sounds the alert siren, tier-scaled (tier3 repeats more than tier1).
-            // PlayAlert(int) lands from Lane A (AudioBank.cs) this same wave; null-guard.
-            AudioBank.Instance?.PlayAlert(tier);
-            int banditCount = tier switch { 0 => 1, 1 => 2, 2 => 3, _ => 5 };
+            // sounds the alert siren, scaled by current threat tier for audio flavor
+            // only (does NOT affect bandit count anymore).  PlayAlert(int) null-guard.
+            AudioBank.Instance?.PlayAlert(CurrentThreatTier);
+
+            // ONE log line per raid (was one per bandit) so the raid cadence is
+            // countable from the play log: grep '[AIDirector] RAID'.
+            Debug.Log($"[AIDirector] RAID #{raidCount} day={clockDayForLog()} bandits={banditCount} (grace={RaidGraceDays} interval={RaidIntervalDays} cap={MaxConcurrentGroups})");
             for (int i = 0; i < banditCount; i++) SpawnSingleBandit(i);
         }
 
@@ -209,7 +248,9 @@ namespace MelonS.GameProto
                 };
                 lastEvent = ev;
                 OnEventFired?.Invoke(ev);
-                Debug.Log($"[AIDirector] RAID day={clockDayForLog()} pos={pos}");
+                // Per-bandit detail kept at a quieter level; the RAID summary line
+                // is emitted once per raid in SpawnRaid() and is the countable one.
+                Debug.Log($"[AIDirector] bandit spawn wave={waveIndex} pos={pos}");
             }
             catch (Exception e)
             {
