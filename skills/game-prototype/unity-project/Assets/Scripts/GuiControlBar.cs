@@ -26,6 +26,7 @@ namespace MelonS.GameProto
         private Button scheduleBtn;   // #126 - Schedule tab (F4)
         private Button architectBtn;  // #110 - 5 build btn 대체 (Architect 메뉴 열기)
         private Button researchBtn;
+        private Button settingsBtn;   // 설정 통합 (SettingsMenu 열기 — gear)
 
         // #185 - UITheme 통일 (Kenney warm tone 매치)
         private static readonly Color InactiveBg = MelonS.GameProto.Core.UITheme.BtnInactiveBg;
@@ -103,9 +104,9 @@ namespace MelonS.GameProto
             rt.anchorMin = new Vector2(0.5f, 0f);
             rt.anchorMax = new Vector2(0.5f, 0f);
             rt.pivot = new Vector2(0.5f, 0f);
-            // 9 buttons (#126 - 일정 추가)
-            //  layout: [멈춤][1x][2x][4x] | [징집] | [직업][일정] | [건축] | [연구]
-            float totalW = 9 * BtnW + 4 * Gap + 4 * GroupGap;
+            // 10 buttons (설정 통합 추가)
+            //  layout: [멈춤][1x][2x][4x] | [징집] | [직업][일정] | [건축] | [연구] | [설정]
+            float totalW = 10 * BtnW + 4 * Gap + 5 * GroupGap;
             // ui-audit §3.2 Band A — main command bar baseline y=24 (was 40).
             //   This is the persistent bottom-center bar; the contextual gizmo row
             //   (SelectionGizmoBar, Band C) sits ABOVE it at y=112, so 24 anchors the
@@ -152,7 +153,11 @@ namespace MelonS.GameProto
             MelonS.GameProto.Core.UITheme.MakeVDivider(contentRt, x + GroupGap * 0.5f, dividerH); x += GroupGap;
 
             // Research group: [연구]
-            researchBtn = MakeBtn("연구", "(N)",     x, OpenResearchPicker);
+            researchBtn = MakeBtn("연구", "(N)",     x, OpenResearchPicker); x += BtnW;
+            MelonS.GameProto.Core.UITheme.MakeVDivider(contentRt, x + GroupGap * 0.5f, dividerH); x += GroupGap;
+
+            // Settings group: [설정] — opens the unified SettingsMenu panel.
+            settingsBtn = MakeBtn("설정", "(ESC)", x, () => SettingsMenu.ToggleStatic(), displayLabel:"⚙ 설정");
         }
 
         private Button MakeBtn(string label, string hint, float x, System.Action onClick, string displayLabel = null)

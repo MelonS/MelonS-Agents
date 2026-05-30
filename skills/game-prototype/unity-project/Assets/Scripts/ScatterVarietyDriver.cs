@@ -153,21 +153,18 @@ namespace MelonS.GameProto
         // Pawns are 9+, structures 10+, terrain 0.  Decals at 1 always recede.
         private const int DecalSortingOrder = 1;
 
-        // Total baseline (non-clustered) decals to place.
-        // 운영자 fb 2026-05-30: "돌같은게 많이 뿌려져 있고 막 뿌려놨다" — 바위가 너무 많아
-        //  rock field 처럼 보이고, decorative 돌이 minable StoneVein 과 헷갈림.
-        //  → 장식 돌 개수를 대폭 감축 (60×60 맵 전체 기준 baseline chunk 18→4).
-        //  leaves/pebble 도 light accent 수준으로 낮춤.
-        private const int BaselineChunkCount  = 4;   // stone_chunk_small on open terrain (was 18)
-        private const int BaselineLeafCount   = 14;  // dead_leaves on grass/dirt (was 22) — 잎은 돌이 아니라 덜 거슬림
-        private const int BaselinePebbleCount = 6;   // pebble_scatter on open terrain (was 12)
+        // 운영자 fb 2026-05-31: function-first — 기능없는 장식 오브젝트 제거.
+        // decor_rock/stone_chunk/rock_variant/pebble 은 보이는데 기능없고 StoneVein 과 혼동 → 0.
+        // dead_leaves 도 기능없는 장식 오브젝트 → 0.
+        // water_edge_band 는 지형 타일 텍스처 전환(순수 배경) → 유지(PlaceWaterEdgeDecals).
+        private const int BaselineChunkCount  = 0;  // stone_chunk_small — 기능없는 장식 돌, 제거
+        private const int BaselineLeafCount   = 0;  // dead_leaves — 기능없는 장식 오브젝트, 제거
+        private const int BaselinePebbleCount = 0;  // pebble_scatter — 기능없는 장식, 제거
 
-        // B11: baseline counts for the 3 new rock shape variants.
-        // 운영자 fb 2026-05-30: 바위 silhouette variety 는 유지하되 각 1개씩만 — 전체
-        //  장식 바위가 occasional ground detail 로 읽히도록 (was 8/6/7 = 21 → 1/1/1 = 3).
-        private const int BaselineRockACount = 1;   // rock_variant_a (wide slab)  (was 8)
-        private const int BaselineRockBCount = 1;   // rock_variant_b (tall spire) (was 6)
-        private const int BaselineRockCCount = 1;   // rock_variant_c (fractured plate) (was 7)
+        // B11: rock shape variants — 기능없는 장식 바위, 제거.
+        private const int BaselineRockACount = 0;  // rock_variant_a — 제거
+        private const int BaselineRockBCount = 0;  // rock_variant_b — 제거
+        private const int BaselineRockCCount = 0;  // rock_variant_c — 제거
 
         // 운영자 fb 2026-05-30: 장식 바위(chunk/variant)는 작은 땅 자갈처럼 보이게 축소하여
         //  minable StoneVein 과 명확히 구분.  SpawnDecal 이 rock 류 decal 에 이 scale 적용.
@@ -177,15 +174,13 @@ namespace MelonS.GameProto
 
         // Cluster radius around trees (world units).
         private const float TreeClusterRadius  = 1.5f;
-        // Number of chunk decals to spawn per tree in cluster mode.
-        // 운영자 fb 2026-05-30: 나무당 2→1 로 (전체 chunk 밀도 추가 감축).
-        private const int   TreeClusterPerTree = 1;  // was 2
+        // 운영자 fb 2026-05-31: function-first — 나무 주변 장식 돌 제거.
+        private const int   TreeClusterPerTree = 0;  // chunk near trees 제거
 
         // Cluster radius around stone veins (world units).
         private const float VeinClusterRadius  = 1.8f;
-        // Number of pebble decals to spawn per vein in cluster mode.
-        // 운영자 fb 2026-05-30: vein당 3→1 (작은 pebble chip 한 개면 충분).
-        private const int   VeinClusterPerVein = 1;  // was 3
+        // 운영자 fb 2026-05-31: function-first — vein 주변 pebble 장식 제거.
+        private const int   VeinClusterPerVein = 0;  // pebble near veins 제거
 
         // Rescan interval (picks up regrown trees / newly placed veins).
         private const float ScanInterval = 3.0f;

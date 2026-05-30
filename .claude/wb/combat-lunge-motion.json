@@ -1,0 +1,80 @@
+{
+  "lane": "combat-lunge-motion",
+  "agent": "Gameplay Programmer",
+  "status": "Done",
+  "timestamp": "2026-05-31",
+  "operator_fb": "처음엔 맨주먹으로 싸우는데 싸우는 모션이 아예 없음. 멜리/맨주먹 공격이 데미지만 주고 시각 모션 없음 (B10 attack-lunge 미작동 의심).",
+
+  "root_cause": [
+    "B10 PawnPoseDriver lunge wrote bodyChild.localPosition.x in Update, but PawnSpriteBob.Update writes the FULL localPosition vector every frame as (baseLocalPos.x, baseY+bob, baseZ) — hard-resetting X to baseLocalPos.x. Two Update writers + full-vector reset = lunge X clobbered same frame → zero visible motion.",
+    "PawnPoseDriver lunge was proximity-gated (attacking && !lungeActive); 'attacking' stays continuously true while an enemy sits in range, so it fired at most ONCE then never re-triggered per swing. Only watched BanditEnemy (no wolf/animal) + DraftedAttackTarget."
+  ],
+
+  "fix": [
+    "New CombatLungeDriver.cs writes the lunge X in LateUpdate (runs AFTER all four pose drivers' Update — confirmed all use Update), making it the authoritative LAST writer of bodyChild.localPosition.x. Reads post-bob localPosition, writes ONLY X, preserves Y (bob) and Z. Root transform never touched.",
+    "Lunge is HIT-driven: PawnEntity.RegisterMeleeHit stamps LastMeleeHitTime + unit direction on each ACTUAL auto-attack tick; CombatLungeDriver POLLS LastMeleeHitTime (no event subscribe — bug #7) and edge-detects to re-fire per swing.",
+    "Drafted-melee fallback in CombatLungeDriver edge-fires on its own cadence when PawnEntity reports a live drafted target (bandit/wolf/animal via public DraftedAttackTarget/DraftedWolfTarget/DraftedHuntTarget) within melee range — animates wolf/animal swings WITHOUT editing PawnUtilityAI (out of lane). Suppressed at ranged distance (archer shoots arrow, no jab).",
+    "Hit-flash: brief brightness pulse on the body child renderer at the lunge peak, multiplied off the current ROOT color (TintHelper lesson #167 — never flat-white overwrite), restored to root color when flash ends so PawnSpriteBob's color mirror re-asserts cleanly.",
+    "PawnEntity gains public LastMeleeHitTime / LastMeleeHitDir / LastAttackWasMelee / IsAttacking (fulfils B10 FLAG-B10-3 missing-accessor request)."
+  ],
+
+  "outputs": [
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Scripts/CombatLungeDriver.cs",
+      "type": "new",
+      "description": "Self-bootstrapping (RuntimeInitializeOnLoadMethod AfterSceneLoad + PawnMovement sweep behind GameSceneGate.RunWhenGameScene; [DisallowMultipleComponent]). Hit-driven forward lunge (0.2 world units, 0.16s ease-back) on body child localPosition.x in LateUpdate + brief hit-flash. Time-throttled inside LateUpdate (no WaitForSeconds — bug #9 safe). No root transform write."
+    },
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Scripts/PawnEntity.cs",
+      "type": "edit",
+      "description": "Added public LastMeleeHitTime/LastMeleeHitDir/LastAttackWasMelee + RegisterMeleeHit(targetWorldPos, melee) + IsAttacking accessor. Auto-attack hit in Update now calls RegisterMeleeHit(nearest.transform.position, melee:true). No change to death/downed tint (ApplyVisual) or selection logic."
+    }
+  ],
+
+  "lane_compliance": {
+    "PawnActions_cs_edited": false,
+    "PawnActions_cs_reason": "Inspected — contains zero melee-attack code (all IPawnAction classes are work tasks). Actual melee lives in PawnEntity.Update (edited) + PawnUtilityAI.HandleDraftedCombat (out of lane, covered by CombatLungeDriver drafted fallback).",
+    "PawnUtilityAI_edited": false,
+    "PawnPoseDriver_edited": false,
+    "PawnSpriteBob_edited": false,
+    "BanditEnemy_edited": false,
+    "WolfEnemy_edited": false,
+    "AnimalEntity_edited": false,
+    "ArchitectMenu_edited": false,
+    "GuiControlBar_edited": false,
+    "unity_launched": false
+  },
+
+  "firewall_audit": {
+    "root_transform_written": false,
+    "bug4_audio_loop": "n/a (no AudioBank calls). Lunge re-trigger throttled by lungeMinInterval — per-swing not per-frame.",
+    "bug5_getinstanceid": "n/a (no collision id compares).",
+    "bug6_collisionenter_only": "n/a (no collision handlers; range polling like PawnEntity).",
+    "bug7_singleton_subscription": "PASS — CombatLungeDriver POLLS PawnEntity.LastMeleeHitTime + PawnHealth.State every LateUpdate; subscribes to nothing.",
+    "bug8_justspawned_default_true": "n/a (no spawn-grace field).",
+    "bug9_runinbackground_freeze": "PASS — throttle is Time-based inside LateUpdate; no WaitForSeconds/always-on background timer introduced.",
+    "test_gameobject_names_preserved": true,
+    "no_todo_comments": true
+  },
+
+  "writer_ownership_extension": {
+    "localPosition.Y": "PawnSpriteBob (CombatLungeDriver reads + preserves, never sets)",
+    "localPosition.X": "CombatLungeDriver (LateUpdate, authoritative last writer — supersedes PawnPoseDriver's stomped Update write)",
+    "localRotation": "PawnPoseDriver (corpse roll; CombatLungeDriver early-outs on dead/downed)",
+    "flipX": "PawnFacing (CombatLungeDriver READS to mirror lunge direction when target is directly above/below)",
+    "color": "PawnSpriteBob mirror + brief CombatLungeDriver flash (restored to root color after flash so mirror re-asserts)"
+  },
+
+  "flags_for_qa": [
+    {
+      "id": "FLAG-CLUNGE-1",
+      "severity": "info",
+      "description": "Two lunge implementations now coexist: B10 PawnPoseDriver (Update, stomped by PawnSpriteBob so visually inert) and CombatLungeDriver (LateUpdate, authoritative). CombatLungeDriver wins every frame. Recommend a follow-up to remove the now-dead UpdateAttackLunge from PawnPoseDriver (out of this lane — PawnPoseDriver is the Art/B10 lane). No functional conflict because CombatLungeDriver writes localPosition.x LAST."
+    },
+    {
+      "id": "FLAG-CLUNGE-2",
+      "severity": "info",
+      "description": "Drafted bandit/wolf/animal melee + auto-attack on bandits both animate. Drafted hits use a range+cadence fallback (not a PawnUtilityAI stamp) because PawnUtilityAI is out of lane. If a future lane edits PawnUtilityAI.HandleDraftedCombat, calling entity.RegisterMeleeHit(target.transform.position, true) on each TakeDamage there would make drafted lunges frame-accurate too (the fallback would then no-op via the lungeMinInterval throttle)."
+    }
+  ]
+}

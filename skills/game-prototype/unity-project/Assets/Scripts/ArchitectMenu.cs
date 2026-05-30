@@ -80,12 +80,26 @@ namespace MelonS.GameProto
                     () => { if (DeconstructDesignation.Instance != null) DeconstructDesignation.Instance.SetMode(true); },
                     () => DeconstructDesignation.Instance != null && DeconstructDesignation.Instance.ModeActive),
             },
-            // Zone (구역) — RimWorld Zone tab: Grow zone.
+            // Zone (구역) — RimWorld Zone tab: Grow zone + Stockpile + Dumping.
+            //   ZONE wave (운영자 "영역지정 필수"): 저장존(Z1)/폐기존(Z3) 추가.  둘 다
+            //   StockpileDesignation 의 drag 모드를 켠다 — 저장=일반 preset, 폐기=Low+
+            //   Stone-only preset.  buildable 과 동일한 MakeBtn onClick 플러밍(저장은
+            //   ▣ active 반영) — Zone 카테고리에 항목 추가만, 다른 카테고리/구조 미변경.
             ["Zone (구역)"] = new[]
             {
                 new OrderItem("경작 (P)",
                     () => { if (GrowZoneDesignation.Instance != null) GrowZoneDesignation.Instance.SetMode(true); },
                     () => GrowZoneDesignation.Instance != null && GrowZoneDesignation.Instance.ModeActive),
+                new OrderItem("저장 (O)",
+                    () => { if (StockpileDesignation.Instance != null) StockpileDesignation.Instance.SetMode(true); },
+                    () => StockpileDesignation.Instance != null
+                          && StockpileDesignation.Instance.ModeActive
+                          && !StockpileDesignation.Instance.DumpingMode),
+                new OrderItem("폐기",
+                    () => { if (StockpileDesignation.Instance != null) StockpileDesignation.Instance.SetDumpingMode(true); },
+                    () => StockpileDesignation.Instance != null
+                          && StockpileDesignation.Instance.ModeActive
+                          && StockpileDesignation.Instance.DumpingMode),
             },
         };
 

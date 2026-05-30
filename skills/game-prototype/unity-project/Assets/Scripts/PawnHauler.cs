@@ -178,6 +178,18 @@ namespace MelonS.GameProto
             }
         }
 
+        // Z2 — 지금 등에 진 운반물의 종류 flag(들).  blueprint-fallback 처럼 한 hauler 가
+        //  여러 종류를 동시에 들 수 있는 경로에서 "들고 있는 것 중 무엇이든 받는 zone" 을
+        //  찾기 위해 OR 로 합친다.  아무것도 안 들었으면 All(=필터 없음, 기존 동작).
+        private StockItemKind CarriedKind()
+        {
+            StockItemKind k = StockItemKind.None;
+            if (carryingWood  > 0) k |= StockItemKind.Wood;
+            if (carryingStone > 0) k |= StockItemKind.Stone;
+            if (carryingFood  > 0) k |= StockItemKind.Food;
+            return k == StockItemKind.None ? StockItemKind.All : k;
+        }
+
         public void ClearTask()
         {
             if (targetPile != null && targetPile.ReservedBy == gameObject)
@@ -226,7 +238,8 @@ namespace MelonS.GameProto
                 if (bpDropTarget == null || bpDropTarget.gameObject == null)
                 {
                     // blueprint 사라짐 - stockpile fallback (#155 priority 우선)
-                    var sp = StockpileZoneEntity.FindBest(transform.position);
+                    //  Z2 — 현재 운반물 종류를 받는 zone 만 (wood-only/food-only 등 존중).
+                    var sp = StockpileZoneEntity.FindBest(transform.position, CarriedKind());
                     if (sp != null)
                     {
                         dropTarget = sp;
@@ -358,7 +371,8 @@ namespace MelonS.GameProto
                     }
                     else
                     {
-                        var sp = StockpileZoneEntity.FindBest(transform.position);
+                        // Z2 — 목재를 받는 stockpile 만 (wood 거부 zone 은 skip).
+                        var sp = StockpileZoneEntity.FindBest(transform.position, StockItemKind.Wood);
                         if (sp != null)
                         {
                             dropTarget = sp;
@@ -396,7 +410,8 @@ namespace MelonS.GameProto
                     int amount = targetMeat.Food;
                     UnityEngine.Object.Destroy(targetMeat.gameObject);
                     targetMeat = null;
-                    var sp = StockpileZoneEntity.FindBest(transform.position);
+                    // Z2 — 식량을 받는 stockpile 만 (food 거부 zone 은 skip).
+                    var sp = StockpileZoneEntity.FindBest(transform.position, StockItemKind.Food);
                     if (sp != null)
                     {
                         carryingFood += amount;
@@ -446,7 +461,9 @@ namespace MelonS.GameProto
                     }
                     else
                     {
-                        var sp = StockpileZoneEntity.FindBest(transform.position);
+                        // Z2 — 석재(chunk 포함)를 받는 stockpile 만.  dumping zone(Stone-only)
+                        //  이 chunk/석재를 받는 경로가 여기.
+                        var sp = StockpileZoneEntity.FindBest(transform.position, StockItemKind.Stone);
                         if (sp != null)
                         {
                             dropTarget = sp;

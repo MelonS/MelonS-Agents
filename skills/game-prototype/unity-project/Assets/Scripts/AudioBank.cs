@@ -286,15 +286,48 @@ namespace MelonS.GameProto
         // -- Crossfade duration (wiki #8: ~1s fade) --
         private const float CrossfadeDuration = 1.0f;
 
-        // -- BGM and danger volumes --
+        // -- BGM and danger volumes (BASE design volumes -- scaled by _musicVolume) --
         private const float BgmVolume    = 0.25f;    // calm track volume
         private const float DangerVolume = 0.30f;    // danger track volume (slightly higher for urgency)
+
+        // -- Master volume mixers (Settings menu integration 2026-05-31) --
+        //   SettingsMenu sliders call SetSfxVolume()/SetMusicVolume() with a 0..1
+        //   value; both persist to PlayerPrefs and apply immediately.
+        //
+        //   _sfxVolume   scales sfxSource.volume (one-shots: PlayChop/Hit/etc.).
+        //   _musicVolume scales the bgm/danger/ambient/rain bed source volumes.
+        //
+        //   We keep base design volumes as constants and multiply by the master so
+        //   the relative mix (BGM 0.25 < SFX 0.7) is preserved at any master setting.
+        //
+        //   Defaults to 1.0 (full) when no PlayerPrefs key exists -- day-1 feel is
+        //   unchanged for a fresh install.
+        private float _sfxVolume   = 1f;
+        private float _musicVolume = 1f;
+
+        public const string PrefSfxVolume   = "audio_sfx_volume";
+        public const string PrefMusicVolume = "audio_music_volume";
+
+        // Base (design) volumes for the bed sources so the master multiply has a
+        // stable reference (matches the literals used in Awake/Start).
+        private const float SfxBaseVolume     = 0.7f;
+        private const float AmbientBaseVolume = 0.18f;
+        private const float RainBaseVolume    = 0.20f;
+
+        /// <summary>Current SFX master volume (0..1).  Read by SettingsMenu to init its slider.</summary>
+        public float SfxVolume => _sfxVolume;
+        /// <summary>Current music master volume (0..1).  Read by SettingsMenu to init its slider.</summary>
+        public float MusicVolume => _musicVolume;
 
         private void Awake()
         {
             if (Services.Has<AudioBank>() && Services.Get<AudioBank>() != this)
             { Destroy(gameObject); return; }
             Services.Register<AudioBank>(this);
+
+            // Settings persistence: load saved master volumes (default 1.0 = full).
+            _sfxVolume   = Mathf.Clamp01(PlayerPrefs.GetFloat(PrefSfxVolume,   1f));
+            _musicVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(PrefMusicVolume, 1f));
 
             if (bgmSource == null) bgmSource = gameObject.AddComponent<AudioSource>();
             if (sfxSource == null) sfxSource = gameObject.AddComponent<AudioSource>();
@@ -310,16 +343,16 @@ namespace MelonS.GameProto
             dangerSource = gameObject.AddComponent<AudioSource>();
 
             bgmSource.loop   = true;
-            bgmSource.volume = BgmVolume;
-            sfxSource.volume = 0.7f;
+            bgmSource.volume = BgmVolume * _musicVolume;
+            sfxSource.volume = SfxBaseVolume * _sfxVolume;
 
             ambientSource.loop            = true;
-            ambientSource.volume          = 0.18f;  // quiet bed, below BGM and SFX
+            ambientSource.volume          = AmbientBaseVolume * _musicVolume;  // quiet bed, below BGM and SFX
             ambientSource.spatialBlend    = 0f;     // 2-D (global, not positional)
             ambientSource.playOnAwake     = false;
 
             rainSource.loop            = true;
-            rainSource.volume          = 0.20f;  // quiet bed -- rain behind everything
+            rainSource.volume          = RainBaseVolume * _musicVolume;  // quiet bed -- rain behind everything
             rainSource.spatialBlend    = 0f;     // 2-D (global, not positional)
             rainSource.playOnAwake     = false;
 
@@ -335,7 +368,7 @@ namespace MelonS.GameProto
             {
                 bgmSource.clip   = bgm;
                 bgmSource.loop   = true;
-                bgmSource.volume = BgmVolume;
+                bgmSource.volume = BgmVolume * _musicVolume;
                 bgmSource.Play();
             }
 
@@ -660,8 +693,8 @@ namespace MelonS.GameProto
             float bgmStart    = (bgmSource    != null) ? bgmSource.volume    : 0f;
             float dangerStart = (dangerSource != null) ? dangerSource.volume : 0f;
 
-            float bgmTarget    = towardsDanger ? 0f        : BgmVolume;
-            float dangerTarget = towardsDanger ? DangerVolume : 0f;
+            float bgmTarget    = towardsDanger ? 0f                      : BgmVolume * _musicVolume;
+            float dangerTarget = towardsDanger ? DangerVolume * _musicVolume : 0f;
 
             while (elapsed < CrossfadeDuration)
             {
@@ -853,6 +886,63 @@ namespace MelonS.GameProto
         {
             if (sfxShoot == null || sfxSource == null) return;
             sfxSource.PlayOneShot(sfxShoot, 0.80f);
+        }
+
+        // --------------------------------------------------------------------
+        //  SETTINGS MENU VOLUME CONTROL (2026-05-31)
+        // --------------------------------------------------------------------
+
+        /// <summary>
+        /// Set the SFX master volume (0..1) -- called live by the SettingsMenu
+        /// SFX slider.  Applies immediately to sfxSource (so the next PlayOneShot
+        /// is at the new level -- and looping clips already playing on sfxSource
+        /// pick it up instantly) and persists to PlayerPrefs.
+        ///
+        /// One-shots use a per-call volumeScale that multiplies sfxSource.volume,
+        /// so scaling the source's base volume scales every SFX uniformly while
+        /// preserving the relative per-clip mix (e.g. footstep 0.45 stays quieter
+        /// than shoot 0.80).
+        /// </summary>
+        public void SetSfxVolume(float v)
+        {
+            _sfxVolume = Mathf.Clamp01(v);
+            if (sfxSource != null) sfxSource.volume = SfxBaseVolume * _sfxVolume;
+            PlayerPrefs.SetFloat(PrefSfxVolume, _sfxVolume);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>
+        /// Set the music master volume (0..1) -- called live by the SettingsMenu
+        /// MUSIC slider.  Applies immediately to every music/bed source and
+        /// persists to PlayerPrefs.
+        ///
+        /// Live-source handling:
+        ///   - When NOT in danger mode, bgmSource is primary at BgmVolume*master
+        ///     and dangerSource is silent (0).
+        ///   - When IN danger mode, dangerSource is primary at DangerVolume*master
+        ///     and bgmSource is silent (0).
+        ///   We respect _dangerActive so dragging the slider mid-raid scales the
+        ///     currently-audible track, not the silent one.  A crossfade in flight
+        ///     will re-derive its targets from the updated _musicVolume on the next
+        ///     frame (targets are computed as BgmVolume*_musicVolume), so the fade
+        ///     lands on the new level cleanly.
+        ///   - ambientSource and rainSource are beds: always scaled to their base.
+        /// </summary>
+        public void SetMusicVolume(float v)
+        {
+            _musicVolume = Mathf.Clamp01(v);
+
+            if (bgmSource != null)
+                bgmSource.volume = (_dangerActive ? 0f : BgmVolume) * _musicVolume;
+            if (dangerSource != null)
+                dangerSource.volume = (_dangerActive ? DangerVolume : 0f) * _musicVolume;
+            if (ambientSource != null)
+                ambientSource.volume = AmbientBaseVolume * _musicVolume;
+            if (rainSource != null)
+                rainSource.volume = RainBaseVolume * _musicVolume;
+
+            PlayerPrefs.SetFloat(PrefMusicVolume, _musicVolume);
+            PlayerPrefs.Save();
         }
     }
 }

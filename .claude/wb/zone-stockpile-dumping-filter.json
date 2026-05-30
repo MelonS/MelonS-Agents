@@ -1,0 +1,50 @@
+{
+  "label": "zone-stockpile-dumping-filter",
+  "agent": "gameplay-programmer",
+  "date": "2026-05-31",
+  "lane": ["StockpileDesignation.cs(new)", "StockpileZoneEntity.cs", "PawnHauler.cs", "ArchitectMenu.cs(Zone add-only)"],
+  "spec": "G:/ai/_zone_research.md",
+  "items": {
+    "Z1": {
+      "what": "Drag-rect designate STOCKPILE zone (MineDesignation/GrowZoneDesignation clone).",
+      "files": ["StockpileDesignation.cs (new)", "ArchitectMenu.cs Zone += 저장 (O)"],
+      "details": "Self-bootstrap + GameSceneGate.RunWhenGameScene gate, O hotkey, mutual-exclusion with build/decon/mine/grow, ESC/right-click cancel, idempotent re-mark, IsFloorCell reject water/rock/occupied. Spawns StockpileZoneEntity per cell (Normal, All). Runtime 1x1 white marker sprite (priority tint via StockpileZoneEntity.ApplyTint)."
+    },
+    "Z2": {
+      "what": "Coarse allowed-items filter + hauler honors it.",
+      "files": ["StockpileZoneEntity.cs", "PawnHauler.cs"],
+      "details": "[Flags] StockItemKind {Wood,Stone,Food,All}; allowedKinds field (default All, back-compat); Accepts(kind); ToggleKind (last-one-on guard); SetAllowedKinds; FindBest(from,kind) overload skips non-accepting zones, old FindBest(from)=FindBest(from,All). Hauler: wood drop -> FindBest(.,Wood), food -> .Food, stone -> .Stone, blueprint-fallback -> CarriedKind() OR-merge."
+    },
+    "Z2b": {
+      "what": "Minimal per-zone filter toggle UI.",
+      "files": ["StockpileDesignation.cs"],
+      "details": "Left-click an existing stockpile (when no designation mode active, not over UI) -> floating 3-button toolbar 🪵🪨🍖 on first Canvas, follows zone in screen space. Lit=allowed/dim=forbidden, click toggles StockpileZoneEntity.ToggleKind -> hauler Z2 filter respects immediately. Buttons fill.raycastTarget=true."
+    },
+    "Z3": {
+      "what": "Dumping zone preset = Low priority + Stone-only.",
+      "files": ["StockpileDesignation.cs (dumping mode)", "ArchitectMenu.cs Zone += 폐기"],
+      "details": "StockpileDesignation.SetDumpingMode(true) lays Spawn(Low, Stone). Low priority grey tint reads as refuse. Wood/food prefer normal zones (Z2 filter), chunks/stone accepted. No separate entity class."
+    },
+    "Z4": "DEFERRED per spec — single crop type, crop-selection invisible. Untouched."
+  },
+  "bug_firewall": {
+    "#4_audio_buzz": "PlaySelect 1x per new cell / 1x per toggle click (AudioBank internal throttle); idempotent re-mark silent.",
+    "#7_singleton_race": "No OnEnable subscribe; poll-find managers each frame.",
+    "#9_runInBackground": "No WaitForSeconds heartbeat; all timing via Time.unscaledTime in Update.",
+    "GameSceneGate": "New ~StockpileDesignation gated via GameSceneGate.RunWhenGameScene (no MainMenu leak).",
+    "raycast": "Toolbar button fill.raycastTarget=true; backdrop+label raycastTarget=false."
+  },
+  "lane_discipline": {
+    "did_not_touch": ["ClickSelector.cs", "EntityInspectorPanel.cs", "GuiControlBar.cs", "PawnActions.cs", "AI/*"],
+    "ArchitectMenu": "Zone (구역) category: added 저장/폐기 OrderItem only. No other category/struct/settings change.",
+    "note": "Lane named AI/PawnHauler.cs; actual file is Scripts/PawnHauler.cs (no AI-subfolder duplicate) — edited that."
+  },
+  "compile_check": "brace/paren balanced on all 4 files; Unity batchmode compile not run (QA owns).",
+  "qa_flags": [
+    "Architect->Zone->저장, drag 3x3 floor -> 9 StockpileZoneEntity (Normal yellow tint).",
+    "Architect->Zone->폐기, drag -> Low (grey) Stone-only zones; wood/food prefer normal zone, stone goes to dump.",
+    "Click a stockpile -> 🪵🪨🍖 toolbar; turn off all but 🍖 -> wood-carrying hauler skips it (FindBest(.,Wood) null on food-only).",
+    "FindBest(pos,Wood) returns null when only zone is food-only (unit-testable).",
+    "O hotkey toggles storage mode; ESC/right-click cancels."
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "lane": "settings-menu-unify",
+  "agent": "gameplay-programmer",
+  "date": "2026-05-31",
+  "mandate": "설정 메뉴 통합 — 단일 SettingsMenu 패널: SAVE/LOAD(기존 떠다니는 S/L 통합) + SFX 볼륨 슬라이더 + MUSIC 볼륨 슬라이더. 인게임 GuiControlBar gear + MainMenu Options 양쪽서 열기. 볼륨 즉시 AudioBank 반영 + PlayerPrefs 영속. 버튼 fill.raycastTarget=true.",
+  "files_touched": [
+    "skills/game-prototype/unity-project/Assets/Scripts/SettingsMenu.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/SettingsMenu.cs.meta",
+    "skills/game-prototype/unity-project/Assets/Scripts/AudioBank.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/MainMenuController.cs",
+    "skills/game-prototype/unity-project/Assets/Scripts/GuiControlBar.cs",
+    "skills/game-prototype/unity-project/Assets/Editor/SceneSetup.Menu.cs"
+  ],
+  "files_in_lane_not_touched": [
+    "skills/game-prototype/unity-project/Assets/Editor/SceneSetup.UI.cs (CreateIconButton helper already correct; unification handled by SettingsMenu invoking the existing wired SaveBtn/LoadBtn onClick — no edit required)"
+  ],
+  "changes": [
+    {
+      "file": "SettingsMenu.cs",
+      "what": "NEW unified settings panel (UITheme MakeBorderedPanel, screen-centered modal).",
+      "detail": "Contains: ⚙ 설정 header + close(X); SAVE/LOAD row; SFX(사운드) slider; MUSIC(음악) slider. NOT self-bootstrapping — created on demand via EnsureInScene()/Open()/ToggleStatic(), attached to the active scene's Canvas. Because it never auto-spawns it cannot leak onto MainMenu (the 2026-05-30 menu-leak bug class), so GameSceneGate gate is intentionally not used (documented in class header). Save/Load row hides when no GameSaveButtons in scene (MainMenu degrades to pure audio panel). ESC closes ONLY while open (does not consume the in-game ESC=build-cancel binding when closed).",
+      "behavioral_change": true
+    },
+    {
+      "file": "SettingsMenu.cs",
+      "what": "SAVE/LOAD reuses existing wired logic (no duplication).",
+      "detail": "OnSaveClicked/OnLoadClicked call InvokeExistingButton('SaveBtn'/'LoadBtn') which finds the GameSaveButtons host and invokes the canonical SaveBtn/LoadBtn onClick (those buttons own the pawnPrefab/treeSprite SerializeField refs needed for restore). Save has a SaveLoadManager.Save() fallback if host absent. The panel's own buttons are named SettingsSaveBtn/SettingsLoadBtn to avoid colliding with the test-referenced SaveBtn/LoadBtn names.",
+      "behavioral_change": false
+    },
+    {
+      "file": "AudioBank.cs",
+      "what": "Added SFX + MUSIC master volume (0..1) with PlayerPrefs persistence.",
+      "detail": "New _sfxVolume/_musicVolume (default 1.0 = day-1 unchanged), public SfxVolume/MusicVolume getters, SetSfxVolume()/SetMusicVolume() apply live to sfxSource (one-shots) and bgm/danger/ambient/rain bed sources then persist to PlayerPrefs keys audio_sfx_volume / audio_music_volume. Prefs loaded in Awake before source setup; Awake/Start/crossfade-targets all scaled by _musicVolume so relative mix (BGM 0.25 < SFX 0.7) preserved at any master. SetMusicVolume respects _dangerActive so dragging mid-raid scales the audible track.",
+      "behavioral_change": true
+    },
+    {
+      "file": "GuiControlBar.cs",
+      "what": "Added [설정](⚙ 설정, ESC) gear button at the right end of the bar.",
+      "detail": "10th button (was 9): totalW bumped to 10*BtnW + 4*Gap + 5*GroupGap; new VDivider + settingsBtn = MakeBtn('설정','(ESC)', ..., () => SettingsMenu.ToggleStatic(), displayLabel:'⚙ 설정'). GameObject name Btn_설정 (label-derived). Existing 9 button names unchanged. onClick already routes through PlayClickBlip via MakeBtn.",
+      "behavioral_change": true
+    },
+    {
+      "file": "MainMenuController.cs",
+      "what": "Added optionsButton SerializeField + OnOptionsClicked() → SettingsMenu.Open().",
+      "detail": "Wired in WireListeners (runtime) and public so SceneSetup bakes a persistent listener. autostart/menushot flow untouched.",
+      "behavioral_change": true
+    },
+    {
+      "file": "Editor/SceneSetup.Menu.cs",
+      "what": "Added OptionsButton to MainMenu scene; moved Quit down a slot.",
+      "detail": "Start y=0.45, Options y=0.30 ('Options / 설정'), Quit y=0.15 (was 0.30). SerializedObject wires optionsButton ref; UnityEventTools bakes persistent OnOptionsClicked listener alongside Start/Quit. CreateMenuButton uses a plain Image (raycastTarget default true).",
+      "behavioral_change": true
+    }
+  ],
+  "raycast_target": "SettingsMenu MakeButton sets the FILL image (Button.targetGraphic) raycastTarget=true explicitly (MakeBorderedPanel defaults fills to false for decorative panels; overridden here since the fill IS the click target). Slider Background + Handle images raycastTarget=true so drag always lands. Labels/text raycastTarget=false.",
+  "names_preserved": {
+    "test_referenced": ["SaveBtn", "LoadBtn"],
+    "note": "Canonical SaveBtn/LoadBtn (SaveHint lane, out of my lane) left fully intact + functional; SettingsMenu invokes their onClick rather than replacing them. Panel's own buttons use distinct names SettingsSaveBtn/SettingsLoadBtn. GuiControlBar Btn_멈춤..Btn_연구 unchanged; new Btn_설정 added.",
+    "main_menu": ["StartButton", "QuitButton", "OptionsButton(new)"]
+  },
+  "lesson_firewall": {
+    "#4_audio_buzz": "n/a — volume setters not in a tight loop; SetSfxVolume/SetMusicVolume only fire on slider drag (onValueChanged).",
+    "#7_singleton_subscription_race": "AudioBank resolved via AudioBank.Instance ?? FindFirstObjectByType (poll/find pattern), cached; no OnEnable event subscription.",
+    "#9_runInBackground": "n/a — no new long WaitForSeconds background timer added. SettingsMenu has no coroutines; AudioBank crossfade coroutine pre-existing/unchanged in timing.",
+    "menu_leak_class": "SettingsMenu deliberately NOT self-bootstrapping (no RuntimeInitializeOnLoadMethod) → cannot spawn on MainMenu uninvited; gate not required, rationale in class header."
+  },
+  "out_of_lane_dependencies": [
+    "GameSaveButtons.cs (SaveHint lane / not edited) — SettingsMenu depends on its SaveBtn/LoadBtn child Button names + wired onClick. If that lane renames those buttons, update InvokeExistingButton args.",
+    "SceneSetup.Game.SaveHint.cs (not my lane) still creates the floating S/L corner buttons; they remain visible. If operator wants them removed, that edit belongs to the SaveHint lane owner — flagged."
+  ],
+  "verification": {
+    "unity_run": false,
+    "syntactic": {
+      "braces_balanced": {"SettingsMenu.cs": "32/32", "GuiControlBar.cs": "32/32", "MainMenuController.cs": "15/15", "AudioBank.cs": "36/36", "SceneSetup.Menu.cs": "5/5", "SceneSetup.UI.cs": "4/4"},
+      "no_TODO": true,
+      "no_stale_refs": true,
+      "raycast_target_true_on_buttons": true
+    }
+  },
+  "status": "complete"
+}

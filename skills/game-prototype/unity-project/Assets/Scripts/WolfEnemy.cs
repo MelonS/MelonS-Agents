@@ -73,21 +73,63 @@ namespace MelonS.GameProto
                     }
                     return;
                 }
-                // Chase
-                Vector3 step = dir.normalized * chaseSpeed * Time.deltaTime;
-                Vector3 newPos = transform.position + step;
-                Vector2 clamped = PawnMovement.ClampToWorld(newPos);  // Step 81
-                transform.position = new Vector3(clamped.x, clamped.y, newPos.z);
+                // Chase — #202: 벽/물/바위 존중.  pawn 은 #199 A* 그리드로 막힌 셀을
+                //  돌아가지만 늑대는 직선 이동이라 벽을 통과했음.  TryStep 가 다음 셀이
+                //  막혔으면 axis-slide(한 축만)→그래도 막히면 정지.  (늑대 비활성이나
+                //  WolfEnemy/BanditEnemy/AnimalEntity 정합 위해 동일 패턴 적용.)
+                Vector2 chaseStep = (Vector2)dir.normalized * chaseSpeed * Time.deltaTime;
+                TryStep(chaseStep);
                 return;
             }
             // Wander
             if (Time.time > nextWanderPick) PickNewWanderTarget();
             Vector3 d = wanderTarget - transform.position;
             if (d.magnitude < 0.1f) { PickNewWanderTarget(); return; }
-            Vector3 wstep = d.normalized * wanderSpeed * Time.deltaTime;
-            Vector3 wnew = transform.position + wstep;
-            Vector2 wc = PawnMovement.ClampToWorld(wnew);  // Step 81
-            transform.position = new Vector3(wc.x, wc.y, wnew.z);
+            Vector2 wstep = (Vector2)d.normalized * wanderSpeed * Time.deltaTime;
+            // #202: wander 도 벽 막히면 새 목표 재선택(끼임 방지).
+            if (!TryStep(wstep)) PickNewWanderTarget();
+        }
+
+        // #202 — 한 step 만큼 이동 시도.  목적 셀이 walkable 이면 그대로 이동,
+        //  아니면 X-only / Y-only axis-slide 로 벽을 따라 미끄러짐, 둘 다 막히면
+        //  제자리(false 반환).  PawnMovement.IsBlockedAt = 물/바위 타일,
+        //  PawnMovement.Grid.IsWalkable = 벽(구조물) 셀.  Grid==null(headless V-scene)
+        //  이면 벽 체크 skip — 기존 clamp-only 동작 유지(회귀 없음).
+        private bool TryStep(Vector2 step)
+        {
+            Vector3 cur = transform.position;
+            Vector2 want = PawnMovement.ClampToWorld((Vector2)cur + step);
+            if (!IsCellBlocked(want))
+            {
+                transform.position = new Vector3(want.x, want.y, cur.z);
+                return true;
+            }
+            // axis-slide: X 만
+            Vector2 slideX = PawnMovement.ClampToWorld(new Vector2(cur.x + step.x, cur.y));
+            if (!Mathf.Approximately(slideX.x, cur.x) && !IsCellBlocked(slideX))
+            {
+                transform.position = new Vector3(slideX.x, slideX.y, cur.z);
+                return true;
+            }
+            // axis-slide: Y 만
+            Vector2 slideY = PawnMovement.ClampToWorld(new Vector2(cur.x, cur.y + step.y));
+            if (!Mathf.Approximately(slideY.y, cur.y) && !IsCellBlocked(slideY))
+            {
+                transform.position = new Vector3(slideY.x, slideY.y, cur.z);
+                return true;
+            }
+            return false;   // 둘 다 막힘 → 정지
+        }
+
+        // #202 — 물/바위(IsBlockedAt) 또는 벽 구조물(Grid !IsWalkable) 이면 막힘.
+        private static bool IsCellBlocked(Vector2 worldPos)
+        {
+            if (PawnMovement.IsBlockedAt(worldPos)) return true;
+            var grid = PawnMovement.Grid;
+            if (grid != null && !grid.IsWalkable(
+                    MelonS.GameProto.AI.PathGrid.WorldToCell(worldPos)))
+                return true;
+            return false;
         }
 
         private PawnEntity FindNearestPawn()

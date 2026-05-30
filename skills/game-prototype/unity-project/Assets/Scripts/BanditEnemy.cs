@@ -121,8 +121,11 @@ namespace MelonS.GameProto
 
             if (dist > contactRange)
             {
-                transform.position = Vector3.MoveTowards(
-                    myPos, tgtPos, moveSpeed * Time.deltaTime);
+                // #202: 벽/물/바위 존중.  pawn 은 #199 A* 그리드로 막힌 셀을 돌아가지만
+                //  강도는 직선 MoveTowards 라 벽을 통과했음.  TryStep 가 다음 셀이
+                //  막혔으면 axis-slide(한 축만)→그래도 막히면 정지.
+                Vector2 want = Vector2.MoveTowards(myPos, tgtPos, moveSpeed * Time.deltaTime);
+                TryStep(want - (Vector2)myPos);
             }
             else
             {
@@ -134,6 +137,44 @@ namespace MelonS.GameProto
                     target.TakeDamage(contactDamage, gameObject);
                 }
             }
+        }
+
+        // #202 — 한 step 만큼 이동 시도.  목적 셀이 walkable 이면 이동, 아니면
+        //  X-only / Y-only axis-slide, 둘 다 막히면 정지(false).  PawnMovement.IsBlockedAt
+        //  = 물/바위, PawnMovement.Grid.IsWalkable = 벽 구조물.  Grid==null(headless
+        //  V-scene) 이면 벽 체크 skip — 기존 직선 이동 유지(회귀 없음).
+        private bool TryStep(Vector2 step)
+        {
+            Vector3 cur = transform.position;
+            Vector2 want = PawnMovement.ClampToWorld((Vector2)cur + step);
+            if (!IsCellBlocked(want))
+            {
+                transform.position = new Vector3(want.x, want.y, cur.z);
+                return true;
+            }
+            Vector2 slideX = PawnMovement.ClampToWorld(new Vector2(cur.x + step.x, cur.y));
+            if (!Mathf.Approximately(slideX.x, cur.x) && !IsCellBlocked(slideX))
+            {
+                transform.position = new Vector3(slideX.x, slideX.y, cur.z);
+                return true;
+            }
+            Vector2 slideY = PawnMovement.ClampToWorld(new Vector2(cur.x, cur.y + step.y));
+            if (!Mathf.Approximately(slideY.y, cur.y) && !IsCellBlocked(slideY))
+            {
+                transform.position = new Vector3(slideY.x, slideY.y, cur.z);
+                return true;
+            }
+            return false;
+        }
+
+        private static bool IsCellBlocked(Vector2 worldPos)
+        {
+            if (PawnMovement.IsBlockedAt(worldPos)) return true;
+            var grid = PawnMovement.Grid;
+            if (grid != null && !grid.IsWalkable(
+                    MelonS.GameProto.AI.PathGrid.WorldToCell(worldPos)))
+                return true;
+            return false;
         }
 
         private PawnEntity FindNearestPawn()

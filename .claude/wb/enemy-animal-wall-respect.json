@@ -1,0 +1,20 @@
+{
+  "label": "enemy-animal-wall-respect",
+  "issue": "#202 적/동물이 벽 통과 (운영자). #199 에서 pawn 만 A* 그리드로 벽 차단; WolfEnemy/BanditEnemy/AnimalEntity 는 옛 직선 이동이라 벽/물/바위 통과.",
+  "lane": [
+    "Assets/Scripts/WolfEnemy.cs",
+    "Assets/Scripts/BanditEnemy.cs",
+    "Assets/Scripts/AnimalEntity.cs"
+  ],
+  "fix": "각 파일에 private TryStep + static IsCellBlocked 헬퍼 추가. 이동 step 적용 전 목적 셀을 PawnMovement.IsBlockedAt(물/바위) + PawnMovement.Grid.IsWalkable(벽 구조물) 로 검사. 막혔으면 X-only/Y-only axis-slide(벽 따라 미끄러짐), 둘 다 막히면 정지. wander 는 정지 시 새 목표 재선택(끼임 방지).",
+  "wolf": "chase Vector3 step → TryStep, wander → !TryStep 면 PickNewWanderTarget. 늑대 비활성이나 코드 정합 위해 동일 수정.",
+  "bandit": "chase Vector3.MoveTowards delta → TryStep. contact damage 로직 무변.",
+  "animal": "rb.MovePosition 기반 TryStep(me, step); 막히면 PickNewTarget.",
+  "headless_safe": "PawnMovement.Grid==null (bootstrap 없는 V-scene) 이면 벽 체크 skip → 기존 clamp-only 직선 이동 유지 (회귀 없음). 물/바위 IsBlockedAt 는 GroundTilemap null 일 때 false 반환이라 동일.",
+  "lane_compliance": "PawnMovement/PawnActions/PawnEntity 미편집 — 헬퍼는 PawnMovement 의 기존 public static (IsBlockedAt, Grid, ClampToWorld) + PathGrid 의 public (IsWalkable, WorldToCell) 만 소비. PawnMovement 에 공유 헬퍼 추가하지 않고 3 파일에 동일 private 메서드 복제 (lane 격리).",
+  "bug_firewall": "신규 always-on 타이머/heartbeat 없음 (#9 무관). 오디오 루프 없음 (#4 무관). 충돌 핸들러 미추가 (#5/#6 무관). justSpawned 패턴 미사용 (#8 무관).",
+  "qa_validation": "syntactic only (brace/paren balanced 3/3). Unity batchmode 컴파일은 QA lane.",
+  "test_gameobjects": "변경 없음 (이름 보존).",
+  "date": "2026-05-31",
+  "agent": "gameplay-programmer"
+}

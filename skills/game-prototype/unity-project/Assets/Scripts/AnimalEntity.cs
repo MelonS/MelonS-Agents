@@ -125,12 +125,43 @@ namespace MelonS.GameProto
                     nextIdleEnd = Time.time + Random.Range(wanderMin, wanderMax);
                     return;
                 }
-                rb.MovePosition(me + dir.normalized * wanderSpeed * Time.deltaTime);
+                // #202: 벽/물/바위 존중.  pawn 은 #199 A* 그리드로 막힌 셀을 돌아가지만
+                //  동물은 직선 wander 라 벽을 통과했음.  TryStep 가 다음 셀이 막혔으면
+                //  axis-slide(한 축만)→둘 다 막히면 정지 + 새 목표 재선택(끼임 방지).
+                Vector2 step = dir.normalized * wanderSpeed * Time.deltaTime;
+                if (!TryStep(me, step)) PickNewTarget();
             }
             else
             {
                 if (Time.time > nextIdleEnd) PickNewTarget();
             }
+        }
+
+        // #202 — rb.MovePosition 기반 1 step 이동 시도.  목적 셀 walkable 이면 이동,
+        //  아니면 X-only / Y-only axis-slide, 둘 다 막히면 정지(false).
+        //  PawnMovement.IsBlockedAt = 물/바위, Grid.IsWalkable = 벽 구조물.
+        //  Grid==null(headless V-scene) 이면 벽 체크 skip — 기존 wander 유지(회귀 없음).
+        private bool TryStep(Vector2 me, Vector2 step)
+        {
+            Vector2 want = PawnMovement.ClampToWorld(me + step);
+            if (!IsCellBlocked(want)) { rb.MovePosition(want); return true; }
+            Vector2 slideX = PawnMovement.ClampToWorld(new Vector2(me.x + step.x, me.y));
+            if (!Mathf.Approximately(slideX.x, me.x) && !IsCellBlocked(slideX))
+            { rb.MovePosition(slideX); return true; }
+            Vector2 slideY = PawnMovement.ClampToWorld(new Vector2(me.x, me.y + step.y));
+            if (!Mathf.Approximately(slideY.y, me.y) && !IsCellBlocked(slideY))
+            { rb.MovePosition(slideY); return true; }
+            return false;
+        }
+
+        private static bool IsCellBlocked(Vector2 worldPos)
+        {
+            if (PawnMovement.IsBlockedAt(worldPos)) return true;
+            var grid = PawnMovement.Grid;
+            if (grid != null && !grid.IsWalkable(
+                    MelonS.GameProto.AI.PathGrid.WorldToCell(worldPos)))
+                return true;
+            return false;
         }
 
         private void PickNewTarget()

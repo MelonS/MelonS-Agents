@@ -63,8 +63,13 @@ namespace MelonS.GameProto.EditorTools
             GameObject startGo = CreateMenuButton(canvasGo.transform, "StartButton", "Start Game", new Vector2(0.5f, 0.45f));
             Button startBtn = startGo.GetComponent<Button>();
 
-            // Quit button
-            GameObject quitGo = CreateMenuButton(canvasGo.transform, "QuitButton", "Quit", new Vector2(0.5f, 0.30f));
+            // Options button (설정 통합) — opens the unified SettingsMenu panel
+            //  (audio sliders; no save/load on the menu where there's nothing to save).
+            GameObject optionsGo = CreateMenuButton(canvasGo.transform, "OptionsButton", "Options / 설정", new Vector2(0.5f, 0.30f));
+            Button optionsBtn = optionsGo.GetComponent<Button>();
+
+            // Quit button (moved down one slot to make room for Options)
+            GameObject quitGo = CreateMenuButton(canvasGo.transform, "QuitButton", "Quit", new Vector2(0.5f, 0.15f));
             Button quitBtn = quitGo.GetComponent<Button>();
 
             // Controller
@@ -73,6 +78,7 @@ namespace MelonS.GameProto.EditorTools
             SerializedObject so = new SerializedObject(ctrl);
             so.FindProperty("startButton").objectReferenceValue = startBtn;
             so.FindProperty("quitButton").objectReferenceValue = quitBtn;
+            so.FindProperty("optionsButton").objectReferenceValue = optionsBtn;
             so.FindProperty("gameSceneName").stringValue = "Game";
             so.ApplyModifiedProperties();
 
@@ -80,9 +86,11 @@ namespace MelonS.GameProto.EditorTools
             // if Awake-time runtime wiring fails for any reason)
             UnityAction startAction = new UnityAction(ctrl.OnStartClicked);
             UnityEventTools.AddPersistentListener(startBtn.onClick, startAction);
+            UnityAction optionsAction = new UnityAction(ctrl.OnOptionsClicked);
+            UnityEventTools.AddPersistentListener(optionsBtn.onClick, optionsAction);
             UnityAction quitAction = new UnityAction(ctrl.OnQuitClicked);
             UnityEventTools.AddPersistentListener(quitBtn.onClick, quitAction);
-            Debug.Log("[SceneSetup] MainMenu — persistent onClick listeners baked");
+            Debug.Log("[SceneSetup] MainMenu — persistent onClick listeners baked (Start/Options/Quit)");
 
             // 운영자 fb 2026-05-30 (BUG1 검증): MainMenu 에도 AutoScreenshotter 를 둔다.
             //  -menushot -screenshot <path> -delay <t> 로 실행하면 MainMenuController 가

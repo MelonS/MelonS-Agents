@@ -13,6 +13,7 @@ namespace MelonS.GameProto
     {
         [SerializeField] private Button startButton;
         [SerializeField] private Button quitButton;
+        [SerializeField] private Button optionsButton;   // 설정 통합 (SettingsMenu 열기)
         [SerializeField] private string gameSceneName = "Game";
 
         private void Awake()
@@ -72,6 +73,11 @@ namespace MelonS.GameProto
                 quitButton.onClick.RemoveListener(OnQuitClicked);
                 quitButton.onClick.AddListener(OnQuitClicked);
             }
+            if (optionsButton != null)
+            {
+                optionsButton.onClick.RemoveListener(OnOptionsClicked);
+                optionsButton.onClick.AddListener(OnOptionsClicked);
+            }
         }
 
         // public so UnityEventTools can target it as a persistent listener
@@ -79,6 +85,13 @@ namespace MelonS.GameProto
         {
             Debug.Log("[MainMenu] OnStartClicked — loading scene: " + gameSceneName);
             SceneManager.LoadScene(gameSceneName);
+        }
+
+        // public so UnityEventTools can bake it as a persistent listener
+        public void OnOptionsClicked()
+        {
+            Debug.Log("[MainMenu] OnOptionsClicked — opening SettingsMenu");
+            SettingsMenu.Open();
         }
 
         public void OnQuitClicked()

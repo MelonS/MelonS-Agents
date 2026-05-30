@@ -1,0 +1,29 @@
+{
+  "label": "scatter-decor-remove",
+  "date": "2026-05-31",
+  "lane": "ScatterVarietyDriver.cs + Editor/SceneSetup.Game.Scatter.cs",
+  "operator_instruction": "function-first: 기능없는 장식 오브젝트(decor_rock/grass_tuft/wildflower/pebble/rock_variant) 제거",
+  "changes": {
+    "ScatterVarietyDriver.cs": {
+      "BaselineChunkCount": "4 -> 0 (stone_chunk_small, 기능없는 장식 돌 제거)",
+      "BaselineLeafCount": "14 -> 0 (dead_leaves, 기능없는 장식 제거)",
+      "BaselinePebbleCount": "6 -> 0 (pebble_scatter, 기능없는 장식 제거)",
+      "BaselineRockACount": "1 -> 0 (rock_variant_a, 기능없는 장식 바위 제거)",
+      "BaselineRockBCount": "1 -> 0 (rock_variant_b, 기능없는 장식 바위 제거)",
+      "BaselineRockCCount": "1 -> 0 (rock_variant_c, 기능없는 장식 바위 제거)",
+      "TreeClusterPerTree": "1 -> 0 (나무 주변 장식 돌 클러스터 제거)",
+      "VeinClusterPerVein": "1 -> 0 (vein 주변 pebble 클러스터 제거)"
+    },
+    "SceneSetup.Game.Scatter.cs": {
+      "SpawnScatterDecor": "decor_rock/grass_tuft/wildflower1/wildflower2 스폰 전체 제거 — 빈 메서드로 대체"
+    }
+  },
+  "preserved": [
+    "water_edge_band (ScatterVarietyDriver.PlaceWaterEdgeDecals) — 지형 타일 텍스처 전환, 순수 배경",
+    "TreeEntity / StoneVeinEntity / BedEntity / StoveEntity — 기능 오브젝트, 미접촉",
+    "SceneSetup.Game.Terrain.cs / SceneSetup.Game.Trees.cs 등 다른 lane 파일 — 미접촉"
+  ],
+  "not_touched": [
+    "ArchitectMenu.cs", "GuiControlBar.cs", "PawnActions.cs"
+  ]
+}

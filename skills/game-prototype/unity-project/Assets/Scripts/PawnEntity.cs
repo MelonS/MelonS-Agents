@@ -47,6 +47,37 @@ namespace MelonS.GameProto
         public int Hp { get; private set; }
         public bool IsDead => Hp <= 0;
 
+        // ─── Melee-hit signal for CombatLungeDriver (운영자 fb 2026-05-31) ───────
+        //  B10 FLAG-B10-3 fulfilled: a public, frame-accurate "an attack just landed"
+        //  signal so the lunge driver fires per-swing instead of guessing from
+        //  proximity.  RegisterMeleeHit stamps Time.time + a unit direction toward the
+        //  target on EACH actual attack tick (called from this entity's auto-attack
+        //  hit below).  CombatLungeDriver POLLS LastMeleeHitTime (no event subscription
+        //  — bug-pattern #7) and edge-detects a new value to trigger a fresh lunge.
+        //  LastAttackWasMelee lets the driver suppress the lunge on a ranged (bow) shot
+        //  (an arrow shows the attack, not a jab).
+        public float   LastMeleeHitTime { get; private set; } = -999f;
+        public Vector2 LastMeleeHitDir  { get; private set; } = Vector2.right;
+        public bool    LastAttackWasMelee { get; private set; } = true;
+
+        /// <summary>Record an attack tick for the visual lunge.  targetWorldPos = the
+        ///  thing being hit (for the jab direction).  melee=false for a ranged shot
+        ///  (suppresses the lunge; the arrow is the visual).  Direction degenerates to
+        ///  the last value when the target overlaps the pawn exactly.</summary>
+        public void RegisterMeleeHit(Vector2 targetWorldPos, bool melee = true)
+        {
+            LastMeleeHitTime = Time.time;
+            LastAttackWasMelee = melee;
+            Vector2 d = targetWorldPos - (Vector2)transform.position;
+            if (d.sqrMagnitude > 1e-6f) LastMeleeHitDir = d.normalized;
+        }
+
+        // B10 FLAG-B10-3: public "currently mid-swing" window derived from the auto-
+        //  attack timer.  True for the first half of the attack interval after a tick.
+        public bool IsAttacking =>
+            Time.time < nextAttackTime &&
+            Time.time < LastMeleeHitTime + (stats != null ? stats.attackInterval : 1f) * 0.5f;
+
         // 운영자 피드백: 우클릭 이동이 AI 에 즉시 override 됐던 문제.
         //  ClickSelector 가 우클릭 시 이 값을 Time.time + 5 로 set.
         //  PawnUtilityAI.Update 가 Time.time < ManualMoveUntil 이면 AI Decide skip.
@@ -163,6 +194,9 @@ namespace MelonS.GameProto
             if (Time.time < nextAttackTime) return;
             nextAttackTime = Time.time + stats.attackInterval;
             nearest.TakeDamage(stats.attackDamage, gameObject);
+            // 운영자 fb 2026-05-31: stamp the actual hit so CombatLungeDriver shows a
+            //  forward jab on this bare-fist / melee swing (it polls LastMeleeHitTime).
+            RegisterMeleeHit(nearest.transform.position, melee: true);
             // Day 20: Combat XP per attack tick
             var skills = GetComponent<PawnSkills>();
             if (skills != null) skills.AddXP(SkillKind.Combat, 5f);
