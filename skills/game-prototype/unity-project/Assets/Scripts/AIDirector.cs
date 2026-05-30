@@ -38,6 +38,13 @@ namespace MelonS.GameProto
     {
         public event Action<GameEvent> OnEventFired;
 
+        // 늑대 비활성화 게이트 (운영자 요청 2026-05-31): 현재 늑대를 처리할
+        // 게임플레이 방법이 없어 wolf_pack 위협 이벤트를 발화하지 않음.
+        //   되살리려면 true 로 (SceneSetup.WolvesEnabled 와 짝).  다른 이벤트
+        //   (raid bandit, storm, infestation 등)는 영향 없음.  false 인 동안
+        //   wolf_pack 이 pool 에 추가되지 않아 PlayWolfHowl 도 호출되지 않음.
+        public const bool WolvesEnabled = false;
+
         [Header("Day 73: Storyteller (3 종류)")]
         [SerializeField] public Storyteller activeStoryteller = Storyteller.Cassandra;
 
@@ -384,12 +391,17 @@ namespace MelonS.GameProto
                 description = "상인 일행이 방문하여 거래를 제안한다. (실제 거래 시스템: 향후 Day)",
                 flavor = "그들의 마차에서 새로운 냄새가 난다.",
             });
-            pool.Add(new GameEvent {
-                id = "wolf_pack", threatTier = 2,
-                title = "늑대 무리",
-                description = "굶주린 늑대 무리가 야영지 외곽을 어슬렁거린다.",
-                flavor = "송곳니가 달빛에 번뜩였다.",
-            });
+            // 늑대 비활성화 게이트: WolvesEnabled=false 인 동안 wolf_pack 이벤트는
+            //   pool 에 추가하지 않음 → 발화/PlayWolfHowl 모두 안 됨.  되살리려면 true.
+            if (WolvesEnabled)
+            {
+                pool.Add(new GameEvent {
+                    id = "wolf_pack", threatTier = 2,
+                    title = "늑대 무리",
+                    description = "굶주린 늑대 무리가 야영지 외곽을 어슬렁거린다.",
+                    flavor = "송곳니가 달빛에 번뜩였다.",
+                });
+            }
             pool.Add(new GameEvent {
                 id = "food_blight", threatTier = 2,
                 title = "역병",

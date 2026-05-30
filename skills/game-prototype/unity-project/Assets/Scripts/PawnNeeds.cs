@@ -34,6 +34,36 @@ namespace MelonS.GameProto
 
         public bool IsSleeping { get; private set; }
 
+        // ── rcfix: RimWorld 우클릭 "Rest" / "Sleep" 명령 ─────────────────────────
+        //  ClickSelector 가 침대 우클릭 시 SetRestTarget(bed) 호출.  pawn 은
+        //  ClickSelector 가 박은 movement target + ManualMoveUntil 로 침대까지 이동.
+        //  이 컴포넌트는 매 frame 침대 도착 여부만 검사 (이동은 PawnMovement 담당):
+        //    - 아직 침대 위 아님  → 대기 (이동 중)
+        //    - 침대 위 도착       → forcedResting=true → 졸리지 않아도/낮에도 잠.
+        //  졸음(sleep) 이 wakeSleepLevel 이상으로 회복되면 자동 해제.
+        //  사용자가 다른 명령(이동/작업) 내리면 ClearRestTarget 로 즉시 취소.
+        //  forcedResting 동안 sleep 회복 = night 자동 수면과 동일 (bed.RestMul 반영).
+        private BedEntity restTarget;
+        private bool forcedResting = false;
+        [SerializeField] private float forcedWakeSleepLevel = 95f;  // 강제 휴식은 거의 만충까지
+        public bool HasRestOrder => restTarget != null;
+        public BedEntity RestTarget => restTarget;
+        public bool IsForcedResting => forcedResting;
+
+        /// <summary>ClickSelector 가 침대 우클릭 시 호출 — 이 침대로 가서 쉬라는 명령.</summary>
+        public void SetRestTarget(BedEntity bed)
+        {
+            restTarget = bed;
+            forcedResting = false;  // 도착 전까지는 이동 중 (아직 안 잠)
+        }
+
+        /// <summary>사용자가 다른 명령을 내리거나 휴식이 끝나면 호출 — 강제 휴식 취소.</summary>
+        public void ClearRestTarget()
+        {
+            restTarget = null;
+            forcedResting = false;
+        }
+
         // #164 - PawnTraits 효과 캐시 (Awake 시 traits.moodBaselineBonus 적용).
         private bool traitsApplied = false;
 
@@ -60,6 +90,45 @@ namespace MelonS.GameProto
                     mood = Mathf.Clamp(mood + tr.moodBaselineBonus, 0f, 100f);
                 }
                 traitsApplied = true;
+            }
+
+            // ── rcfix: 강제 휴식 명령 처리 (night/tired 게이트보다 우선) ──────────
+            //  사용자가 침대 우클릭 → SetRestTarget.  pawn 이 그 침대 위에 도착하면
+            //  졸리지 않아도/낮이어도 눕는다 (RimWorld 우클릭 Rest).
+            if (restTarget != null)
+            {
+                // target 침대가 파괴됐으면 명령 취소.
+                if (restTarget == null || restTarget.gameObject == null)
+                {
+                    ClearRestTarget();
+                }
+                else
+                {
+                    var bedUnder = GetBedUnderPawn();
+                    bool onTargetBed = bedUnder != null && bedUnder == restTarget;
+                    if (onTargetBed)
+                    {
+                        // 침대 도착 → 강제 수면 진입/유지.
+                        forcedResting = true;
+                        IsSleeping = true;
+                        float restMul = restTarget.RestMul;
+                        float moodPerSec = restTarget.MoodBonus;
+                        sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * restMul * dt);
+                        food = Mathf.Max(0f, food - foodDecay * 0.5f * dt);
+                        mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
+                        if (moodPerSec > 0f) mood = Mathf.Min(100f, mood + moodPerSec * dt);
+                        // 충분히 쉬었으면 명령 종료 (자동 기상).
+                        if (sleep >= forcedWakeSleepLevel)
+                        {
+                            IsSleeping = false;
+                            ClearRestTarget();
+                        }
+                        return;
+                    }
+                    // 아직 침대로 이동 중 — 일반 decay 만 진행 (아래로 fall-through 하되
+                    //  강제 수면은 아직 아님).  forcedResting 은 false 유지.
+                    forcedResting = false;
+                }
             }
 
             // Day 10: when sleep is low AND it's night, pawn sleeps in place.

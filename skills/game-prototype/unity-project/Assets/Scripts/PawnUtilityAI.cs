@@ -105,6 +105,28 @@ namespace MelonS.GameProto
             //  그 동안 AI Decide skip (사용자 이동 명령 존중).
             if (entity != null && entity.IsUnderManualControl) return;
 
+            // rcfix: 사용자가 침대 우클릭으로 "쉬어" 명령(needs.HasRestOrder)을 내린 동안은
+            //  AI 가 다른 work 를 집지 않는다.  pawn 이 침대로 이동 → 도착 후 PawnNeeds 가
+            //  강제 수면(IsSleeping) 처리.  아직 침대로 가는 중(ManualMoveUntil 만료 후)에도
+            //  AI 가 끼어들어 target 을 뺏지 않도록 여기서 모든 task 정리 + 조기 return.
+            if (needs != null && needs.HasRestOrder && !needs.IsSleeping)
+            {
+                // 침대로 가는 중 — 잔여 work task 만 정리 (이동 target 은 ClickSelector 가 박음).
+                chopper.ClearTask();
+                if (gatherer != null) gatherer.ClearTask();
+                if (hunter != null) hunter.ClearTask();
+                if (cook != null) cook.ClearTask();
+                if (hauler != null) hauler.ClearTask();
+                if (builder != null) builder.ClearTask();
+                if (miner != null) miner.ClearTask();
+                if (doctor != null) doctor.ClearTask();
+                // 침대로 가는 이동 target 이 풀렸으면(도착 못 했는데 멈춤) 다시 박아준다.
+                if (!movement.IsMoving && needs.RestTarget != null)
+                    movement.SetTarget(needs.RestTarget.transform.position);
+                lastDecision = Time.timeSinceLevelLoad;
+                return;
+            }
+
             if (Time.timeSinceLevelLoad - lastDecision < decisionInterval) return;
 
             if (needs != null && needs.IsSleeping)

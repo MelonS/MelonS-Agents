@@ -51,6 +51,63 @@ namespace MelonS.GameProto
         public WoodPileEntity Target => targetPile;
         public StoneChunkEntity TargetStone => targetStone;
 
+        // #213 운영자 fb — "목재가 순간이동".  root cause (c): pile 은 나무에서 Destroy
+        //  되고 stockpile 에서 새로 Spawn 되는데 그 사이 운반물의 시각 표현이 전혀 없다 →
+        //  운영자 눈엔 "나무에서 사라졌다가 stockpile 에 뿅" = 순간이동.  pawn 이동 자체는
+        //  PawnMovement 가 부드럽게 lerp/A* 하므로, 운반 중 pawn 위에 등짐 아이콘을 띄우면
+        //  목재가 pawn 과 함께 부드럽게 따라온다 = 순간이동 아님.
+        private GameObject carryVisual;
+        private SpriteRenderer carryVisualSr;
+        private static Sprite _carryBundleSprite;
+        private static bool _carryBundleTried;
+
+        private static Sprite CarryBundleSprite()
+        {
+            if (_carryBundleSprite != null) return _carryBundleSprite;
+            if (!_carryBundleTried)
+            {
+                _carryBundleTried = true;
+                _carryBundleSprite = Resources.Load<Sprite>("Sprites/carry_bundle");
+            }
+            // Resources asset 없으면 WoodPile 기본 sprite 재사용 (항상 non-null).
+            return _carryBundleSprite != null ? _carryBundleSprite : WoodPileEntity.EnsureSprite(null);
+        }
+
+        // 운반물 유무에 따라 pawn 머리 위 등짐 아이콘 on/off.  매 pickup/deposit 후 호출.
+        private void UpdateCarryVisual()
+        {
+            bool carrying = carryingWood > 0 || carryingStone > 0 || carryingFood > 0;
+            if (carrying)
+            {
+                if (carryVisual == null)
+                {
+                    carryVisual = new GameObject("CarryVisual");
+                    carryVisual.transform.SetParent(transform, worldPositionStays: false);
+                    carryVisual.transform.localPosition = new Vector3(0f, 0.45f, 0f);  // 머리 위
+                    carryVisual.transform.localScale = Vector3.one * 0.7f;
+                    carryVisualSr = carryVisual.AddComponent<SpriteRenderer>();
+                    carryVisualSr.sortingOrder = 12;  // pawn(10) 위
+                }
+                carryVisualSr.sprite = CarryBundleSprite();
+                carryVisualSr.color = carryingFood > 0
+                    ? new Color(0.85f, 0.45f, 0.45f, 1f)   // 고기 = 붉은 tint
+                    : carryingStone > 0
+                        ? new Color(0.7f, 0.7f, 0.72f, 1f) // 석재 = 회색 tint
+                        : Color.white;                     // 목재 = 원색
+                carryVisual.SetActive(true);
+            }
+            else if (carryVisual != null)
+            {
+                carryVisual.SetActive(false);
+            }
+        }
+
+        private void OnDisable()
+        {
+            // pawn 비활성/파괴 시 잔존 아이콘 정리 (carryVisual 은 자식이라 같이 사라지지만 안전).
+            if (carryVisual != null) carryVisual.SetActive(false);
+        }
+
         private void Awake()
         {
             movement = GetComponent<PawnMovement>();
@@ -136,6 +193,7 @@ namespace MelonS.GameProto
             if (carryingWood > 0)  { ResourceManager.Instance?.AddWood(carryingWood);   carryingWood = 0; }
             if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
             if (carryingFood > 0)  { ResourceManager.Instance?.AddFood(carryingFood);   carryingFood = 0; }
+            UpdateCarryVisual();  // #213 - 운반물 0 → 등짐 아이콘 끔
             dropTarget = null;
             bpDropTarget = null;
             phase = Phase.GoToItem;
@@ -200,6 +258,7 @@ namespace MelonS.GameProto
                     }
                     if (carryingFood > 0)
                     { ResourceManager.Instance?.AddFood(carryingFood); carryingFood = 0; }
+                    UpdateCarryVisual();  // #213 - 운반 끝 → 등짐 아이콘 끔
                     bpDropTarget = null;
                     phase = Phase.GoToItem;
                     movement.ClearTarget();
@@ -218,6 +277,7 @@ namespace MelonS.GameProto
                     // stockpile 없으면 그냥 inventory 추가
                     if (carryingWood > 0)  { ResourceManager.Instance?.AddWood(carryingWood);   carryingWood = 0; }
                     if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
+                    UpdateCarryVisual();  // #213 - 운반 끝 → 등짐 아이콘 끔
                     phase = Phase.GoToItem;
                     movement.ClearTarget();
                     return;
@@ -228,8 +288,11 @@ namespace MelonS.GameProto
                     // 림 vanilla: stockpile 도착 시 pile 을 stockpile 위에 그대로 stack.
                     //  pile 사라지지 X.  inventory counter 는 derived (모든 pile 합).
                     Vector3 dropPos = dropTarget.transform.position;
-                    // stockpile 안 pile 은 InStockpile=true (재운반 loop 방지).
-                    if (carryingWood > 0 && WoodPileSpriteRef != null)
+                    // #213 - WoodPileEntity.Spawn 이 sprite null 이어도 기본 sprite 를
+                    //  보장하므로 SpriteRef!=null 가드 제거.  stockpile 에 항상 눈에 보이는
+                    //  pile 이 stack 된다 (과거엔 ref null 이면 pile 없이 카운터만 +N →
+                    //  목재가 "어디론가 사라진" 것처럼 보임).  InStockpile=true 로 재운반 loop 방지.
+                    if (carryingWood > 0)
                     {
                         var p = WoodPileEntity.Spawn(dropPos, carryingWood, WoodPileSpriteRef);
                         if (p != null) p.InStockpile = true;
@@ -250,10 +313,10 @@ namespace MelonS.GameProto
                         ResourceManager.Instance?.AddFood(carryingFood);
                         carryingFood = 0;
                     }
-                    // sprite null fallback 만 inventory 직접 (legacy 호환)
-                    if (carryingWood > 0)  { ResourceManager.Instance?.AddWood(carryingWood);   carryingWood = 0; }
+                    // stone/food sprite null fallback 만 inventory 직접 (legacy 호환)
                     if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
                     if (carryingFood > 0)  { ResourceManager.Instance?.AddFood(carryingFood);   carryingFood = 0; }
+                    UpdateCarryVisual();  // #213 - 운반 끝 → 등짐 아이콘 끔
                     Debug.Log($"[Hauler] {name} stockpile 도착, pile stack 보존");
                     dropTarget = null;
                     phase = Phase.GoToItem;
@@ -284,6 +347,7 @@ namespace MelonS.GameProto
                     UnityEngine.Object.Destroy(targetPile.gameObject);
                     targetPile = null;
                     carryingWood += amount;
+                    UpdateCarryVisual();  // #213 - 줍는 순간 등짐 아이콘 on (운반 중 시각화)
                     // #142 - 자재 필요한 blueprint 우선, 없으면 stockpile, 그것도 없으면 inventory.
                     var bp = FindBlueprintNeeding(transform.position, needWood: true);
                     if (bp != null)
@@ -336,6 +400,7 @@ namespace MelonS.GameProto
                     if (sp != null)
                     {
                         carryingFood += amount;
+                        UpdateCarryVisual();  // #213 - 운반 중 시각화
                         dropTarget = sp;
                         phase = Phase.GoToStockpile;
                         WalkAdjacentTo(sp.transform.position);
@@ -370,6 +435,7 @@ namespace MelonS.GameProto
                     UnityEngine.Object.Destroy(targetStone.gameObject);
                     targetStone = null;
                     carryingStone += amount;
+                    UpdateCarryVisual();  // #213 - 운반 중 시각화
                     // #142 - stone blueprint 우선
                     var bp = FindBlueprintNeeding(transform.position, needWood: false);
                     if (bp != null)

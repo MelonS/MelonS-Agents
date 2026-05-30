@@ -1,0 +1,22 @@
+{
+  "label": "wood-teleport-fix",
+  "issue": "#213",
+  "agent": "gameplay-programmer",
+  "status": "done",
+  "lane": ["WoodPileEntity.cs", "TreeEntity.cs", "PawnHauler.cs"],
+  "complaint": "벌목 목재가 나무 위치에 안 떨어지고 '어디론가 순간이동'",
+  "root_causes": {
+    "a_invisible_pile": "WoodPileEntity.Spawn 이 받은 sprite 가 null 이면 (GameManager 는 woodPileSpriteRuntime!=null 일 때만 static field 채움 → SceneSetup 미배선 시 null) pile 이 나무 자리에 떨어지지만 보이지 않음 → '목재가 없음'.",
+    "c_pickup_teleport": "pile 은 나무에서 Destroy, stockpile 에서 새로 Spawn. 운반 중 시각 표현이 전무 → '나무에서 사라졌다 stockpile 에 뿅' = 순간이동.",
+    "b_deposit_guard": "GoToStockpile 의 stockpile pile 생성이 WoodPileSpriteRef!=null 가드로 막혀, ref null 이면 카운터만 +N 하고 pile 없음 → '목재가 사라진' 인상."
+  },
+  "fixes": {
+    "WoodPileEntity.cs": "EnsureSprite(candidate) 추가: null 이면 Resources/Sprites/wood_pile 시도 후, 없으면 런타임 생성한 갈색 통나무더미 텍스처(16x12) 반환. Spawn 이 항상 EnsureSprite 통과 → pile 은 나무 쓰러진 자리에 항상 가시.",
+    "PawnHauler.cs": "(1) 운반 중 pawn 머리 위 'CarryVisual' 등짐 아이콘 child 추가(목재=원색/석재=회색/고기=붉은tint) — UpdateCarryVisual() 을 모든 pickup/deposit/ClearTask 에서 호출 → 운반물이 pawn 과 함께 부드럽게 이동(PawnMovement lerp/A*), 순간이동 아님. (2) GoToStockpile 목재 deposit 의 WoodPileSpriteRef!=null 가드 제거 → 항상 가시 pile stack.",
+    "TreeEntity.cs": "벌목 drop = transform.position(나무 cell=쓰러진 자리) 유지, 주석을 #213 가시성 보장으로 갱신. 로직 변경 없음."
+  },
+  "carry_sprite_source": "Resources/Sprites/carry_bundle.png (존재), 없으면 WoodPileEntity.EnsureSprite(null) fallback.",
+  "bug_pattern_firewall": "위반 없음 — WaitForSeconds/OnEnable구독/GetInstanceID/per-frame alloc 없음. sprite/texture 는 static lazy-cache 1회 생성.",
+  "test_names_preserved": "테스트는 WoodPileEntity 를 type 으로 조회 + WoodPileEntity.Spawn 호출, WoodPile_{amount} 이름 유지. 신규 child 'CarryVisual' 은 additive.",
+  "handoff": "Build Engineer 별도 배선 불필요 — SceneSetup 이 woodPileSpriteRuntime 을 배선하면 그 sprite 사용, 안 하면 코드 fallback. QA: 벌목 후 (1)나무 자리 가시 pile (2)hauler 머리 위 등짐 (3)stockpile 가시 pile 확인."
+}

@@ -96,6 +96,7 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/fence.png",               // W-M6-02 Lane B3 — fence low-barrier (16x16, PPU 16); procedural fallback exists
                 "Assets/Sprites/fence_gate.png",          // W-M6-02 Lane B3 — fence-gate variant (16x16, PPU 16); procedural fallback exists
                 "Assets/Sprites/carry_bundle.png",        // W-M6-02 Lane B10 — carry-bundle overlay sprite (8x8, PPU 16); also copied to Resources/Sprites/ for Resources.Load path
+                "Assets/Sprites/stone_vein.png",          // #119 — minable stone vein (16x16, PPU 16); ForceImport ensures Sprite type before SpawnStoneVeins LoadAssetAtPath
             };
             foreach (var p in paths)
             {
@@ -228,6 +229,11 @@ namespace MelonS.GameProto.EditorTools
 
             // R10l: Tree spawn (20 tree) extract -> SceneSetup.Game.Trees.cs
             SpawnTrees(treePrefab, MAP_HALF, lakeCenters, lakeRadii, rockClusterCenters, rockRadius);
+
+            // #119 fix: StoneVeinEntity 8-14개 deterministic 배치 (rock cluster 근처 우선).
+            //   R10 refactor 시 SetupWorldEntities 가 제거되면서 SpawnStoneVeins 호출이
+            //   GenerateGame() 에서 누락됐던 것을 복구.
+            SpawnStoneVeins(layout);
 
             // Day 12: RegrowthScheduler — drives bush regen + tree-to-sapling
             // chains.  Created AFTER treePrefab exists so we can wire it.

@@ -16,7 +16,13 @@ namespace MelonS.GameProto
     ///   door behaves EXACTLY as before).  B9's NotifyPassing()→PlayDoor SFX call
     ///   is preserved verbatim.
     ///
-    /// 추후 확장: faction filter (bandit 차단), 열림/닫힘 animation, HP/repair.
+    /// Operator follow-up — 문 열림/닫힘 모션: while a pawn passes (NotifyPassing
+    ///   fires every PawnMovement tick), the leaf slides sideways (localPosition.x)
+    ///   and tucks its width (localScale.x) toward an open pose, then lerps shut
+    ///   after the pass.  Real transform motion (NOT a colour flash); no new sprite,
+    ///   no per-frame allocation, no audio inside the lerp loop.
+    ///
+    /// 추후 확장: faction filter (bandit 차단), HP/repair.
     /// </summary>
     [RequireComponent(typeof(SpriteRenderer))]
     [RequireComponent(typeof(BoxCollider2D))]
@@ -50,10 +56,26 @@ namespace MelonS.GameProto
         /// </summary>
         public void SetPassMul(float v) => passMul = v;
 
-        private SpriteRenderer sr;
-        private Color baseColor = Color.white;
         private float openHintTime = -10f;
-        private const float OpenHintDuration = 0.3f;
+
+        // --- Open/close slide motion (operator: 문 열림/닫힘 모션) ---------------
+        //   While a pawn is passing, PawnMovement calls NotifyPassing() every tick,
+        //   so openHintTime stays fresh.  We treat the door as "wanting open" for
+        //   OpenHoldDuration after the last NotifyPassing, then it slides shut.
+        //   The visual is a real open/close motion (NOT a colour flash):
+        //   the sprite slides sideways (localPosition.x) AND its width shrinks
+        //   (localScale.x) toward a "tucked into the frame" pose, lerped smoothly.
+        //   Pure transform interpolation — no per-frame allocation, no audio in
+        //   the loop (NotifyPassing already throttles its own SFX).
+        private const float OpenHoldDuration = 0.18f; // grace after last pass tick before closing
+        private const float OpenSlideX = 0.42f;       // local-X offset of the fully-open leaf
+        private const float OpenScaleX = 0.18f;       // fully-open leaf width (fraction of closed)
+        private const float OpenLerpRate = 14f;       // open speed (snappier)
+        private const float CloseLerpRate = 8f;       // close speed (a touch slower = settling)
+
+        private Vector3 closedLocalPos;   // captured in Awake — the built/closed pose
+        private float closedScaleX;       // captured in Awake
+        private float openness;           // 0 = closed, 1 = fully open (lerped each frame)
 
         /// <summary>
         /// protected virtual so AutodoorEntity can run base setup (trigger
@@ -64,8 +86,13 @@ namespace MelonS.GameProto
         {
             var col = GetComponent<BoxCollider2D>();
             col.isTrigger = true;
-            sr = GetComponent<SpriteRenderer>();
-            if (sr != null) baseColor = sr.color;
+
+            // Capture the closed (built) pose once so the slide always returns to
+            // the authored transform — works regardless of where BuildManager
+            // placed the sprite child.
+            closedLocalPos = transform.localPosition;
+            closedScaleX = transform.localScale.x;
+            openness = 0f;
         }
 
         /// <summary>#171 - pos 가 door collider 안에 있는가 (OverlapBox).</summary>
@@ -107,17 +134,30 @@ namespace MelonS.GameProto
 
         private void Update()
         {
-            // 통과 중 sprite 살짝 밝아짐 - 시각 피드백
-            if (sr != null && baseColor.a > 0)
-            {
-                bool recentPass = Time.time - openHintTime < OpenHintDuration;
-                float b = recentPass ? 1.25f : 1f;
-                sr.color = new Color(
-                    Mathf.Min(1f, baseColor.r * b),
-                    Mathf.Min(1f, baseColor.g * b),
-                    Mathf.Min(1f, baseColor.b * b),
-                    baseColor.a);
-            }
+            // Real open/close slide motion (operator: 문 모션 없음 → 실제 열림/닫힘).
+            //   target openness is 1 while a pawn is mid-pass (NotifyPassing keeps
+            //   openHintTime fresh), then decays to 0 after the hold grace.
+            //   asymmetric lerp: opens fast, closes a touch slower (settling feel).
+            bool wantOpen = Time.time - openHintTime < OpenHoldDuration;
+            float target = wantOpen ? 1f : 0f;
+            float rate = wantOpen ? OpenLerpRate : CloseLerpRate;
+
+            // exp-style frame-rate-independent approach to target; no alloc.
+            openness = Mathf.MoveTowards(
+                openness, target, rate * Time.deltaTime * Mathf.Max(0.05f, Mathf.Abs(target - openness) + 0.15f));
+            openness = Mathf.Clamp01(openness);
+
+            // Slide the leaf sideways and tuck its width — the door "opens".
+            // smoothstep so the leaf eases in/out instead of moving linearly.
+            float t = openness * openness * (3f - 2f * openness);
+
+            Vector3 lp = closedLocalPos;
+            lp.x = closedLocalPos.x + OpenSlideX * t;
+            transform.localPosition = lp;
+
+            Vector3 ls = transform.localScale;
+            ls.x = Mathf.Lerp(closedScaleX, closedScaleX * OpenScaleX, t);
+            transform.localScale = ls;
         }
     }
 }

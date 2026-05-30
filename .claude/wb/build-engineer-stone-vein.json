@@ -1,0 +1,24 @@
+{
+  "label": "build-engineer-stone-vein",
+  "date": "2026-05-31",
+  "status": "done",
+  "root_cause": "R10 refactor split GenerateGame() into partials. SpawnStoneVeins existed in SceneSetup.Game.Entities.cs but was only called from SetupWorldEntities(), which was never called from the refactored GenerateGame(). SpawnTrees/SpawnWildlife/SpawnBerryBushes all got wired; SpawnStoneVeins was missed.",
+  "changes": [
+    {
+      "file": "Assets/Editor/SceneSetup.cs",
+      "change": "Added stone_vein.png to ForceImportAllSprites paths array (sprite race fix, lesson #1). Added SpawnStoneVeins(layout) call after SpawnTrees in GenerateGame()."
+    },
+    {
+      "file": "Assets/Editor/SceneSetup.Game.Entities.cs",
+      "change": "Added SpawnStoneVeins(TerrainLayout layout) overload (no tree list required) that delegates to existing SpawnStoneVeins(layout, treePositions) with an empty list. Existing logic unchanged: 12 veins, seed=31415, lake+pawn-spawn avoidance, 4 StoneType weighted distribution."
+    }
+  ],
+  "spawn_count": 12,
+  "seed": 31415,
+  "stone_types": "Sandstone(4) Limestone(3) Granite(2) Marble(1) weighted",
+  "sprite": "Assets/Sprites/stone_vein.png (pre-existing)",
+  "lane_files_touched_only": [
+    "Assets/Editor/SceneSetup.cs",
+    "Assets/Editor/SceneSetup.Game.Entities.cs"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "label": "gameclock-time-flow-fix",
+  "agent": "gameplay-programmer",
+  "date": "2026-05-31",
+  "lane": "Assets/Scripts/GameClock.cs (only edited file)",
+  "status": "done",
+  "issue": "운영자: '시간이 안 흐르는 것 같다' (1x 에서 시계가 멈춰 보임)",
+  "diagnosis": {
+    "start_state": "OK - TimeController.Awake 가 Time.timeScale=1f 로 시작 (pause 아님). 시작 시 멈춤 아님.",
+    "ui": "OK - ClockUI.Update 매 프레임 폴링, 분/시/일 변할 때만 repaint. 정상.",
+    "root_cause": "GameClock 의 rate 가 realSecondsPerInGameDay(SerializeField, default 240) 로 정의됨. SerializeField 라 scene 직렬화 값이 코드 default 를 override 가능. stale scene 값이 크면(예: 1 게임초/실초 = 86400) 분(minute) 표시가 실초 60초마다 한 번만 갱신 -> 1x 에서 멈춘 것처럼 보임. 코드 default 240 자체는 빠르지만, 직렬화 override 가 동결 유발."
+  },
+  "fix": {
+    "rename": "realSecondsPerInGameDay -> inGameMinutesPerRealSecond (직관적: 1x 에서 실초당 흘릴 게임 분)",
+    "default": "60f = 게임 1시간 / 실초 (운영자 '1게임시간/초 근사' 타겟, RimWorld-ish, 체감되지만 과하지 않음)",
+    "clamp": "Update 에서 Mathf.Clamp(rate, 6, 600) -> 어떤 직렬화 override 도 시계를 동결(너무 느림)시키거나 판독불가(너무 빠름)로 만들 수 없음",
+    "scaling": "Time.deltaTime 이 이미 timeScale 배율 포함 -> 1x/2x/4x/pause 자동 처리. 변경 없음."
+  },
+  "buildeng_followup": "SceneSetup 에 GameClock 의 옛 직렬화 필드 realSecondsPerInGameDay 값이 남아있으면 inGameMinutesPerRealSecond 로 재바인딩 필요(필드명 변경). 미설정 시 코드 default 60 적용 + clamp 가 안전망. (Build Engineer 레인)",
+  "files_changed": [
+    "skills/game-prototype/unity-project/Assets/Scripts/GameClock.cs"
+  ],
+  "gameobject_names_preserved": true,
+  "unity_run": false,
+  "qa_check": "1x 시작 시 ClockUI 의 분 표시가 ~1초당 1분씩(default 60/min-per-sec 면 분 표시 매우 빠름; 시 표시는 실초당 1시간) 흐르는지. pause(Space) 시 멈추는지. 2x/4x 비례 가속 확인."
+}

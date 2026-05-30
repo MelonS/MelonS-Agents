@@ -1,0 +1,41 @@
+{
+  "role": "Gameplay Programmer",
+  "lane": "DoorEntity.cs only",
+  "status": "Done",
+  "task": "Operator: 문 모션 없음 — add real open/close motion to DoorEntity (transform-based, no new sprite)",
+  "output": "skills/game-prototype/unity-project/Assets/Scripts/DoorEntity.cs",
+  "root_cause": "DoorEntity.Update only did a colour brighten (sr.color *=1.25) on pass — no actual open/close motion. Operator flagged '문 모션 없음'.",
+  "approach": {
+    "trigger": "Unchanged. PawnMovement Update already calls DoorEntity.NotifyPassing() every tick the pawn is inside the door collider (#171). NotifyPassing() refreshes openHintTime; the slide reads that, no new wiring needed.",
+    "motion": "Real open/close slide: while wantOpen (Time.time - openHintTime < OpenHoldDuration 0.18s) target openness=1 else 0. Update lerps openness via Mathf.MoveTowards (asymmetric: OpenLerpRate 14 fast open, CloseLerpRate 8 slower close = settling feel).",
+    "transform": "smoothstep t = openness^2*(3-2*openness). localPosition.x = closedLocalPos.x + OpenSlideX(0.42)*t (leaf slides sideways); localScale.x = lerp(closedScaleX, closedScaleX*OpenScaleX(0.18), t) (leaf tucks/shrinks into frame). Closed pose captured ONCE in Awake (closedLocalPos, closedScaleX) so it always returns to the authored built transform.",
+    "removed": "Deleted the colour-brighten path and now-unused sr / baseColor fields (would have been CS0414 unused-assignment warnings). Replaced with true motion per operator request ('색 깜빡임 말고 실제 열림/닫힘 모션')."
+  },
+  "firewall_checks": {
+    "no_4_audio_buzz": "Added zero audio in the lerp loop. NotifyPassing()'s PlayDoor() is unchanged and already throttled 0.15s (DoorInterval) inside AudioBank — pre-existing, covered.",
+    "no_per_frame_alloc": "No new List/array/object alloc in Update; mutates cached Vector3 locals only.",
+    "no_9_runinbackground": "No coroutine / WaitForSeconds / background timer added. Pure Update transform interpolation — no AutoScreenshotter/runInBackground concern.",
+    "no_8_justspawned": "No spawn-grace boolean default added.",
+    "no_5_no_6_no_7": "No collision-instanceID compare, no OnCollisionEnter handler, no singleton OnEnable subscription added."
+  },
+  "preserved": {
+    "public_api": "DefaultPassMul (const), passMul SerializeField, PassMul getter, SetPassMul(), IsInsideDoor(), PassMulAt(), NotifyPassing() — all unchanged signatures (V16AutodoorAreaCancelTest + PawnMovement + BuildManager depend on these).",
+    "virtual_awake": "Awake stays protected virtual; AutodoorEntity.base.Awake() still runs (now captures closed pose + sets trigger). AutodoorEntity untouched — inherits the new motion for free.",
+    "requirecomponent": "[RequireComponent SpriteRenderer/BoxCollider2D] kept — sprite still must exist to be visible/slidable."
+  },
+  "files_not_touched": [
+    "AutodoorEntity.cs",
+    "PawnMovement.cs",
+    "BuildManager.cs",
+    "AudioBank.cs",
+    "Tests/V16AutodoorAreaCancelTest.cs",
+    "SceneSetup*.cs"
+  ],
+  "qa_flags": [
+    "Door leaf should slide sideways + narrow as a pawn passes, then slide/widen shut ~0.18s after the pawn clears. NOT a colour flash.",
+    "Door must return EXACTLY to its built cell pose when closed (closed pose captured in Awake; openness clamps to 0).",
+    "Autodoor (faster cross) closes faster in practice since pawn clears sooner; same motion code.",
+    "Confirm no door sprite drifts permanently — if BuildManager re-parents/moves the door AFTER Awake, closedLocalPos would be stale (current build path sets transform before AddComponent, so capture-in-Awake is correct)."
+  ],
+  "updated": "2026-05-31"
+}

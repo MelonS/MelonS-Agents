@@ -107,6 +107,24 @@ namespace MelonS.GameProto
         // Y=0.55 puts it just above the pawn head; Z=-0.1 draws in front.
         [SerializeField] private Vector3 bundleLocalPos = new Vector3(0f, 0.55f, -0.1f);
 
+        // ─────────────── Death / downed corpse pose (운영자 fb 2026-05-31) ────
+        // 운영자: "죽었을 때 이미지 변화 없음 + 상태별 처리 필요".
+        //  Dead   → body 자식을 90° 눕혀 corpse 처럼 + 머리위 바/이름 숨김 + walk-bob
+        //            정지(정지는 PawnHealth.StopBodyBob 이 state-source 에서 게이트).
+        //  Downed → 의식불명: 살짝 기운 누움(부분 회전)으로 Dead 와 구분, 살아있음.
+        //  회전은 자식 transform.localRotation 에만 적용(root 는 절대 안 건드림 —
+        //   PathGrid.WorldToCell / 바 / 이름 / shadow 가 root 를 anchor).  Dead 림은
+        //   movement 가 이미 disable 됐지만, root 회전은 바/이름 anchor 까지 기울이므로
+        //   여전히 금지.  Tint(회색조/desaturate)는 PawnEntity.ApplyVisual 이 root 색에
+        //   쓰고 PawnSpriteBob 가 자식으로 mirror 한다(이 driver 는 색을 안 건드림).
+        [Header("Corpse pose")]
+        // 사망 시 body 자식을 눕히는 각도(Z).  90° = 완전히 옆으로 쓰러짐.
+        [SerializeField] private float deadRollDeg = 90f;
+        // 의식불명(downed) 시 기울임 각도.  Dead 보다 작게 → 시각적으로 구분.
+        [SerializeField] private float downedRollDeg = 55f;
+        // 회전이 목표각으로 ease 되는 속도(deg/sec 비례).  쓰러짐이 톡 튀지 않게.
+        [SerializeField] private float rollEaseSpeed = 8f;
+
         // ─────────────── Runtime state ───────────────────────────────────────
         // Names from SceneSetup.Pawn (shared with PawnFacing / SleepPoseDriver).
         private const string BodyChildName   = "PawnSpriteBob";
@@ -123,6 +141,17 @@ namespace MelonS.GameProto
         // Components on the pawn ROOT (GetComponent from THIS root-attached driver).
         private PawnHauler hauler;
         private PawnEntity pawnEntity;
+        private PawnHealth health;            // 상태 source (poll, 구독 X — bug #7)
+        // 사망 시 숨길 머리위 바(HpBg/HpFill/MoodBg/MoodFill) 와 이름/상태 라벨은
+        //  자식 GameObject 이름으로 직접 토글(아래 SetBarsAndLabelVisible).
+        // 이름/상태 라벨 자식 렌더러(PawnNameLabel 가 만든 child GO).
+        private const string NameLabelChild   = "NameLabel";
+        private const string StatusLabelChild = "StatusLabel";
+        private const string NamePlateChild   = "NamePlate";
+
+        // Corpse-pose runtime state.
+        private float currentRoll;               // eased Z roll currently applied
+        private bool barsHidden;                 // 바/이름 숨김 1회만 적용
 
         // Lunge state — current eased X offset applied on top of bodyChild.localPosition.
         private float currentLungeX;
@@ -139,6 +168,7 @@ namespace MelonS.GameProto
         {
             hauler     = GetComponent<PawnHauler>();
             pawnEntity = GetComponent<PawnEntity>();
+            health     = GetComponent<PawnHealth>();
             bodyChild  = ResolveBodyChild();
             bundleRenderer = EnsureBundleChild();
         }
@@ -216,8 +246,122 @@ namespace MelonS.GameProto
 
         private void Update()
         {
+            // 상태별 처리: Dead/Downed 면 corpse-pose lane 만 돌고 carry/lunge 는 정지.
+            //  PawnHealth.State 를 매 프레임 read(이벤트 구독 X — bug-pattern #7 회피).
+            PawnHealth.PoseState state = (health != null)
+                ? health.State : PawnHealth.PoseState.Alive;
+
+            if (state == PawnHealth.PoseState.Dead || state == PawnHealth.PoseState.Downed)
+            {
+                UpdateCorpsePose(state);
+                return; // 죽은/의식불명 림은 짐 들기/공격 lunge 안 함
+            }
+
+            // 살아있으면 corpse 회전을 0 으로 되돌리고(회복/부활 대비) 바/이름 복구.
+            if (currentRoll != 0f || barsHidden) RestoreFromCorpse();
+
             UpdateCarryBundle();
             UpdateAttackLunge();
+        }
+
+        // ─────────────── Corpse / downed pose (운영자 fb 2026-05-31) ──────────
+        // Dead   → body 자식을 deadRollDeg 만큼 눕히고, 머리위 바/이름을 숨긴다.
+        // Downed → downedRollDeg 만큼 기울여 Dead 와 구분(살아있으므로 바/이름 유지).
+        // 회전은 자식 transform.localRotation.Z 에만 적용(root 절대 안 건드림).
+        // walk-bob 정지는 PawnHealth.StopBodyBob 이 state-source 에서 게이트하므로
+        //  자식 localPosition.Y 가 더 안 흔들려, 여기 회전과 충돌하지 않는다.
+        private void UpdateCorpsePose(PawnHealth.PoseState state)
+        {
+            float targetRoll = (state == PawnHealth.PoseState.Dead)
+                ? deadRollDeg : downedRollDeg;
+
+            // 회전 각을 부드럽게 ease (톡 튀지 않게).  unscaledDeltaTime → 일시정지/
+            //  타임스케일 변화에도 일관 (lunge 와 동일 규칙).
+            currentRoll = Mathf.MoveTowards(
+                currentRoll, targetRoll, rollEaseSpeed * 60f * Time.unscaledDeltaTime);
+
+            if (bodyChild != null)
+            {
+                // 자식 localRotation 의 Z 만 set.  X 의 lunge offset 은 corpse 상태에선
+                //  적용 안 하므로(위 early-return) 여기서 그대로 둬도 충돌 없음.
+                bodyChild.localRotation = Quaternion.Euler(0f, 0f, currentRoll);
+
+                // Dead 면 PawnSpriteBob 컴포넌트가 PawnHealth.StopBodyBob 에 의해
+                //  disable 되어 root tint 를 자식으로 mirror 하지 못한다 → 자식 body 가
+                //  alive 색에 멈춤.  그러면 corpse 가 회색조로 안 보이므로, 이 driver 가
+                //  root 렌더러(PawnEntity 가 deadTint 로 set)의 색을 자식에 직접 mirror
+                //  한다.  PawnSpriteBob 가 꺼져 있으므로 색 writer 충돌 없음(단독 writer).
+                //  Downed 는 PawnSpriteBob 가 살아있어 스스로 mirror 하므로 여기선 안 건드림.
+                if (state == PawnHealth.PoseState.Dead)
+                    MirrorRootColorToBody();
+            }
+
+            // Dead 일 때만 머리위 바/이름 숨김(downed 는 정보 유지).
+            if (state == PawnHealth.PoseState.Dead && !barsHidden)
+                SetBarsAndLabelVisible(false);
+            else if (state == PawnHealth.PoseState.Downed && barsHidden)
+                SetBarsAndLabelVisible(true); // dead→downed 회복 경로 대비
+        }
+
+        // Dead 일 때 root 렌더러 색(PawnEntity 가 deadTint 로 set)을 자식 body
+        //  렌더러에 직접 복사.  PawnSpriteBob 가 꺼진 동안의 단독 색 writer.
+        private void MirrorRootColorToBody()
+        {
+            if (bodyChild == null) return;
+            var bodySr = bodyChild.GetComponent<SpriteRenderer>();
+            if (bodySr == null) return;
+            var rootSr = GetComponent<SpriteRenderer>();
+            if (rootSr == null) return;
+            if (bodySr.color != rootSr.color) bodySr.color = rootSr.color;
+        }
+
+        // 살아난(또는 처음부터 alive) 림의 corpse 흔적을 원복.
+        private void RestoreFromCorpse()
+        {
+            currentRoll = Mathf.MoveTowards(
+                currentRoll, 0f, rollEaseSpeed * 60f * Time.unscaledDeltaTime);
+            if (bodyChild != null)
+                bodyChild.localRotation = Quaternion.Euler(0f, 0f, currentRoll);
+            if (barsHidden) SetBarsAndLabelVisible(true);
+        }
+
+        // 머리위 HP/mood 바 + 이름/상태 라벨 표시 토글.  PawnFloatingBars 컴포넌트는
+        //  바 4개 SpriteRenderer 의 부모이므로 컴포넌트 enabled 만으로는 그림이 안
+        //  사라진다 → 자식 렌더러를 직접 토글.  이름은 PawnNameLabel 가 만든
+        //  NameLabel/StatusLabel/NamePlate 자식 렌더러를 토글.
+        private void SetBarsAndLabelVisible(bool visible)
+        {
+            barsHidden = !visible;
+            // 바: PawnFloatingBars 가 만든 자식 GameObject 이름으로만 토글.
+            //  GetComponentsInChildren 로 싹 토글하면 body(PawnSpriteBob)/shadow 까지
+            //  꺼져 corpse 자체가 사라지므로, 바 4개 자식 이름만 정확히 끈다.
+            ToggleBarRenderer("HpBg",   visible);
+            ToggleBarRenderer("HpFill", visible);
+            ToggleBarRenderer("MoodBg", visible);
+            ToggleBarRenderer("MoodFill", visible);
+            // 이름/상태/plate 자식.
+            ToggleChildRenderers(NameLabelChild, visible);
+            ToggleChildRenderers(StatusLabelChild, visible);
+            ToggleChildRenderers(NamePlateChild, visible);
+        }
+
+        private void ToggleChildRenderers(string childName, bool visible)
+        {
+            Transform t = transform.Find(childName);
+            if (t == null) return;
+            var mr = t.GetComponent<MeshRenderer>();   // TextMesh → MeshRenderer
+            if (mr != null) mr.enabled = visible;
+            var sr = t.GetComponent<SpriteRenderer>(); // NamePlate
+            if (sr != null) sr.enabled = visible;
+        }
+
+        // 바 자식(직속 child) SpriteRenderer 1개를 토글.
+        private void ToggleBarRenderer(string childName, bool visible)
+        {
+            Transform t = transform.Find(childName);
+            if (t == null) return;
+            var sr = t.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.enabled = visible;
         }
 
         // ─────────────── Carry bundle ────────────────────────────────────────

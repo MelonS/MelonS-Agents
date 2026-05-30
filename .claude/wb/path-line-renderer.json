@@ -1,0 +1,26 @@
+{
+  "label": "path-line-renderer",
+  "agent": "gameplay-programmer",
+  "status": "complete",
+  "date": "2026-05-31",
+  "request": "림 우클릭 이동 경로 표시 — 선택된 pawn 의 A* 경로를 LineRenderer 로 그림",
+  "lane": [
+    "Assets/Scripts/PathLineRenderer.cs (NEW)",
+    "Assets/Scripts/PawnMovement.cs (read-only getters ONLY)"
+  ],
+  "changes": {
+    "PawnMovement.cs": "Added 2 READ-ONLY members; movement logic byte-for-byte unchanged. (1) bool TryGetRemainingPathWorld(List<Vector2>) — fills caller-owned list with pawn-feet + remaining A* cell-centre world points; returns true when >=2 points. (2) int PathVersionToken — cheap change-detection hash (goal cell + path index + count + grid version); 0 when no path, so renderer treats arrival/idle as hide.",
+    "PathLineRenderer.cs": "NEW self-bootstrap (RuntimeInitializeOnLoadMethod + GameSceneGate.RunWhenGameScene, never spawns on MainMenu). Awake adds a LineRenderer: useWorldSpace, Sprites/Default mat, muted color (0.55,0.85,1,0.55), width 0.12, sortingOrder 8 (above ground=0/ring=6, below pawn=10). Update polls ClickSelector.CurrentSelection (singleton-subscriber poll, cached find), gets its PawnMovement, draws remaining path when present, hides when no selection / no PawnMovement / no path (token==0). Rebuilds positions only when PathVersionToken changes (zero-alloc steady state). z=-0.05 belt+braces depth."
+  },
+  "firewall": {
+    "#4_audio_buzz": "n/a — no AudioBank calls",
+    "#5_GetInstanceID": "n/a — no collision/ID compares",
+    "#6_OnCollisionEnter": "n/a — no collision handlers",
+    "#7_singleton_race": "ClickSelector polled in Update (cached FindFirstObjectByType), NOT subscribed in OnEnable",
+    "#8_justSpawned": "n/a — no spawn-grace field",
+    "#9_runInBackground": "n/a — no coroutine/WaitForSeconds/background timer; all frame-driven in Update"
+  },
+  "gc_hygiene": "pointBuf List reused; LineRenderer positions rebuilt only on path-version change",
+  "verification": "brace balance ok (PathLineRenderer 18/18, PawnMovement 52/52). Unity compile = QA. No GameObject names renamed; new object '~PathLineRenderer'.",
+  "handoff": "No SceneSetup wiring needed (self-bootstrap, same pattern as MarqueeSelector). Build Engineer: nothing required."
+}

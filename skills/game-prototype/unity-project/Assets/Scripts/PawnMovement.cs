@@ -334,6 +334,36 @@ namespace MelonS.GameProto
         public bool HasTarget => target.HasValue;
         public bool IsMoving => target.HasValue;
 
+        // 운영자 요청 (우클릭 이동 경로 표시) — READ-ONLY exposure of the live A*
+        //  path for PathLineRenderer.  Returns the REMAINING cell-centre world
+        //  points the pawn still has to walk (from the pawn's current position up to
+        //  the goal), or null when there is no active path.  The pawn's current
+        //  position is prepended so the drawn line starts at the pawn, not at the
+        //  already-reached previous waypoint (RimWorld-style "line from feet to dest").
+        //  Allocation note: this allocates only when a renderer asks for it — the
+        //  renderer caches the array and only re-fetches when the path changes, so
+        //  this is NOT a per-frame allocation in the tight loop.  No state mutated.
+        public bool TryGetRemainingPathWorld(System.Collections.Generic.List<Vector2> outPoints)
+        {
+            if (outPoints == null) return false;
+            outPoints.Clear();
+            if (_path == null || _pathIndex >= _path.Count) return false;
+
+            // Start at the pawn's feet so the polyline visibly originates at the pawn.
+            outPoints.Add(transform.position);
+            for (int i = _pathIndex; i < _path.Count; i++)
+                outPoints.Add(PathGrid.CellToWorld(_path[i]));
+            return outPoints.Count >= 2;
+        }
+
+        // Lightweight change-detection token for the renderer's cache: changes when
+        //  the path is rebuilt (goal cell or grid version) or the pawn advances a
+        //  waypoint.  The renderer compares this each frame and only rebuilds its
+        //  LineRenderer point array when it differs — keeps the hot path allocation-free.
+        public int PathVersionToken => _path == null ? 0
+            : (_pathGoalCell.x * 73856093) ^ (_pathGoalCell.y * 19349663)
+              ^ (_pathIndex * 83492791) ^ (_path.Count << 3) ^ _pathGridVersion;
+
         public void SetTarget(Vector2 worldPos)
         {
             // I19 bug fix — chopper/AI 가 world bound 밖 entity 위치를 target 으로 줄 때

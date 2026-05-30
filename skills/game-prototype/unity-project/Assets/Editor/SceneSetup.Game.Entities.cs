@@ -153,6 +153,12 @@ namespace MelonS.GameProto.EditorTools
             return pf;
         }
 
+        /// <summary>#119 fix - GenerateGame() 진입점: tree list 없이 호출 가능한 overload.</summary>
+        private static void SpawnStoneVeins(TerrainLayout layout)
+        {
+            SpawnStoneVeins(layout, new System.Collections.Generic.List<Vector2>());
+        }
+
         /// <summary>#119 - 광맥 (StoneVeinEntity) cluster 배치.  rock terrain 근처 우선.</summary>
         private static void SpawnStoneVeins(TerrainLayout layout, System.Collections.Generic.List<Vector2> treePositions)
         {

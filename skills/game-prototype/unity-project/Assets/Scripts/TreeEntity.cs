@@ -93,9 +93,10 @@ namespace MelonS.GameProto
                 //
                 //  과거 v4 fallback 은 sprite 가 null 이면 ResourceManager.AddWood 로
                 //  즉시 카운터에 꽂아 넣었다 — 이게 운영자가 본 "즉시 운반(=즉시 적립)" 버그의
-                //  핵심.  WoodPileEntity.Spawn 이 이제 sprite null 도 허용(아래)하므로
-                //  무조건 물리 pile 을 떨군다.  sprite 가 없으면 보이지 않을 뿐, 여전히
-                //  hauler 가 줍어 운반해야 카운터에 들어간다 = 운영자 멘탈 모델과 일치.
+                //  핵심.  #213: WoodPileEntity.Spawn 이 sprite null 이면 코드 기본 sprite 를
+                //  보장하므로 pile 은 항상 "나무 쓰러진 자리"(transform.position)에 눈에 보이게
+                //  떨어진다.  hauler 가 줍어 운반(등짐 아이콘 + 부드러운 이동)해야 카운터에
+                //  들어간다 = 운영자 멘탈 모델과 일치 (순간이동 아님).
                 WoodPileEntity.Spawn(transform.position, woodDrop, WoodPileSprite);
                 // Day 12: enqueue a future sapling at this tree's position
                 // BEFORE Destroy(gameObject) — `transform.position` is read

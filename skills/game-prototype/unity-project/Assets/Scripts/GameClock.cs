@@ -4,9 +4,22 @@ using MelonS.GameProto.Core;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// Day 9: in-game clock.  1 real-time second = some game-time fraction.
-    /// Default: 1 in-game day = 240 real seconds (4 min at 1x).  At 4x
-    /// speed that's 1 minute per in-game day, which feels like RimWorld.
+    /// Day 9: in-game clock.  Drives the "Day N - HH:MM" display.
+    ///
+    /// "시간이 안 흐른다" root cause (2026-05-31): the rate was authored as
+    /// realSecondsPerInGameDay (default 240 = 4 real-min per in-game day).
+    /// That field is SerializeField, so a stale scene-serialized value could
+    /// override the code default to something huge (e.g. one in-game second
+    /// per real second) which makes the MINUTE display tick only once every
+    /// 60 real seconds -> reads as frozen at 1x.
+    ///
+    /// Fix: express the rate as in-game MINUTES advanced per real second at
+    /// 1x (intuitive + matches operator's "~1 game-hour/sec" feel), and
+    /// CLAMP it inside Update so no serialized override can freeze the clock.
+    /// At the default 60 in-game minutes/real-second, 1x advances one in-game
+    /// hour per real second (RimWorld-ish, clearly perceptible, not frantic).
+    /// Time.deltaTime is already scaled by Time.timeScale, so 2x/4x/pause all
+    /// follow for free.
     /// </summary>
     public class GameClock : MonoBehaviour
     {
@@ -14,7 +27,14 @@ namespace MelonS.GameProto
         //  Awake 가 Services.Register 호출.
         public static GameClock Instance => Services.Get<GameClock>();
 
-        [SerializeField] private float realSecondsPerInGameDay = 240f;
+        [Tooltip("1x 에서 실제 1초당 흘려보낼 게임 내 '분'. 60 = 게임 1시간/실초.")]
+        [SerializeField] private float inGameMinutesPerRealSecond = 60f;
+
+        // Lower/upper guard so a bad serialized value cannot freeze (too low)
+        // or make the clock unreadable (too fast).  Operator target sits at
+        // the default 60 (1 game-hour / real-second).
+        private const float MinRate = 6f;    // >= 1 game-minute / 0.1 real-sec
+        private const float MaxRate = 600f;   // <= 10 game-hours / real-sec
 
         // Total in-game seconds since start.  Scales with Time.timeScale
         // since we use deltaTime (which is already scaled).
@@ -46,11 +66,13 @@ namespace MelonS.GameProto
 
         private void Update()
         {
-            // 1 in-game day = 86400 in-game seconds.  realSecondsPerInGameDay
-            // real seconds map to 86400 in-game seconds, so per real-second
-            // we advance 86400/realSecondsPerInGameDay in-game seconds.
-            float perSec = 86400f / Mathf.Max(1f, realSecondsPerInGameDay);
-            GameSeconds += perSec * Time.deltaTime;
+            // in-game seconds advanced per real second at 1x = minutes/sec * 60.
+            // Clamp guards against a stale serialized override freezing time.
+            float rate = Mathf.Clamp(inGameMinutesPerRealSecond, MinRate, MaxRate);
+            float inGameSecPerRealSec = rate * 60f;
+            // Time.deltaTime is already multiplied by Time.timeScale, so 1x/2x/4x
+            // and pause (timeScale 0 -> deltaTime 0) all flow through correctly.
+            GameSeconds += inGameSecPerRealSec * Time.deltaTime;
         }
     }
 }

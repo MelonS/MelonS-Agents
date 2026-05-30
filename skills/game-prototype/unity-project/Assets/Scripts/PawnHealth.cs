@@ -46,6 +46,30 @@ namespace MelonS.GameProto
         public bool IsDowned { get; private set; }
         public float TotalHpRatio { get; private set; }   // 0..1 — for floating bar
 
+        // 운영자 fb (2026-05-31): 죽었을 때 이미지 변화 없음 + 상태별 처리.
+        //  PoseState 는 PawnPoseDriver / PawnEntity 가 읽어 시각화하는 단일 상태 신호.
+        //  - Dead   → 회색조 corpse + 90° 쓰러짐 + 바/이름 숨김 + walk-bob 정지
+        //  - Downed → 의식불명(누움 tint), 아직 살아있음
+        //  - Alive  → 기존 standing/sleeping/drafted 유지
+        public enum PoseState { Alive = 0, Downed = 1, Dead = 2 }
+        public PoseState State
+        {
+            get
+            {
+                if (IsDead) return PoseState.Dead;
+                if (IsDowned) return PoseState.Downed;
+                return PoseState.Alive;
+            }
+        }
+        // 상태 전환을 polling 으로 감지하는 driver 를 위한 버전 카운터 (싱글톤 구독
+        //  race 회피 — bug-pattern #7: 이벤트 구독 대신 driver 가 State 를 매 프레임 read).
+        public int StateVersion { get; private set; }
+
+        // 자식 "PawnSpriteBob" GameObject 이름 (SceneSetup.Pawn 와 동일).  죽은 림이
+        //  walk-bob/idle-breathe 안 하도록 이 자식의 PawnSpriteBob 컴포넌트를 끈다.
+        //  (PawnSpriteBob 은 다른 lane 파일 → 편집 금지.  컴포넌트 enabled 만 게이트.)
+        private const string BodyChildName = "PawnSpriteBob";
+
         // R3: 6 body parts 데이터 외부화 - HealthPartsConfig SO 참조
         [SerializeField] private HealthPartsConfig partsConfig;
 
@@ -192,24 +216,55 @@ namespace MelonS.GameProto
 
         private void CheckDeath()
         {
+            PoseState prev = State;
+
             BodyPart head  = parts[(int)PartId.Head];
             BodyPart torso = parts[(int)PartId.Torso];
             if (head.hp <= 0 || torso.hp <= 0)
             {
-                IsDead = true;
-                IsDowned = true;
-                Debug.Log($"[PawnHealth] {gameObject.name} 사망 — 머리={head.hp} 몸통={torso.hp}");
-                // Disable AI components on death (SpriteRenderer 는 MonoBehaviour 아니라 자동 제외됨)
-                foreach (var mb in GetComponents<MonoBehaviour>())
+                if (!IsDead)
                 {
-                    if (mb == this) continue;
-                    if (mb is PawnFloatingBars) continue;
-                    mb.enabled = false;
+                    IsDead = true;
+                    IsDowned = true;
+                    Debug.Log($"[PawnHealth] {gameObject.name} 사망 — 머리={head.hp} 몸통={torso.hp}");
+                    // Disable AI/work components on death.  GetComponents on the ROOT
+                    //  catches PawnMovement/AI/worker scripts (all root-attached).
+                    //  SpriteRenderer 는 MonoBehaviour 아니라 자동 제외됨.
+                    //  PawnFloatingBars 는 여기서 끄지 않고 PawnPoseDriver 가 바/이름을
+                    //   숨긴다(아래 StopBodyBob 와 함께 단일 시각화 lane 유지).
+                    foreach (var mb in GetComponents<MonoBehaviour>())
+                    {
+                        if (mb == this) continue;
+                        if (mb is PawnFloatingBars) continue;
+                        // PawnPoseDriver 는 죽은 뒤에도 corpse 90° 회전을 ease 로
+                        //  적용하고 바/이름을 숨겨야 하므로 비활성화에서 제외.
+                        if (mb is PawnPoseDriver) continue;
+                        mb.enabled = false;
+                    }
+                    // 죽은 림이 계속 walk-bob/idle-breathe 하던 버그 fix:
+                    //  PawnSpriteBob 컴포넌트는 자식 GameObject 에 있어 위 root-only
+                    //  loop 가 못 끈다.  자식의 컴포넌트만 직접 게이트(다른 lane 파일
+                    //  소스는 건드리지 않음 — enabled 만 set).
+                    StopBodyBob();
                 }
+                if (State != prev) StateVersion++;
                 return;
             }
-            // Downed: head <30% triggers unconsciousness
+            // Downed: head <30% triggers unconsciousness (alive)
             IsDowned = (head.hp < head.maxHp * 0.3f);
+            if (State != prev) StateVersion++;
+        }
+
+        // 자식 "PawnSpriteBob" 의 PawnSpriteBob 컴포넌트를 비활성화해 죽은 림의
+        //  walk-bob/idle-breathe 를 멈춘다.  PawnPoseDriver 가 corpse 90° 회전을
+        //  적용한 뒤 bob 이 계속 돌면 자식 localPosition.Y 를 덮어써 충돌하므로,
+        //  상태 게이트는 여기 state-source 에서 한다.
+        private void StopBodyBob()
+        {
+            Transform body = transform.Find(BodyChildName);
+            if (body == null) return;
+            var bob = body.GetComponent<PawnSpriteBob>();
+            if (bob != null) bob.enabled = false;
         }
     }
 }

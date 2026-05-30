@@ -132,6 +132,40 @@ namespace MelonS.GameProto
                 CropEntity crop = (rhit != null) ? rhit.GetComponent<CropEntity>() : null;
                 TraderEntity trader = (rhit != null) ? rhit.GetComponent<TraderEntity>() : null;
                 AnimalEntity animalC = (rhit != null) ? rhit.GetComponent<AnimalEntity>() : null;
+                // rcfix - 건설중 벽(blueprint) / 목재침대(bed) 직접 우클릭 단일 행동
+                BlueprintEntity bp = (rhit != null) ? rhit.GetComponent<BlueprintEntity>() : null;
+                BedEntity bed = (rhit != null) ? rhit.GetComponent<BedEntity>() : null;
+                BerryBushEntity bushC = (rhit != null) ? rhit.GetComponent<BerryBushEntity>() : null;
+                WoodPileEntity pileC = (rhit != null) ? rhit.GetComponent<WoodPileEntity>() : null;
+                if (bp != null && !bp.IsComplete)
+                {
+                    // 건설중 벽 우클릭 = 그 blueprint 를 짓도록 명령 (PawnBuilder).
+                    var b = currentSelection.GetComponent<PawnBuilder>();
+                    if (b != null)
+                    {
+                        var nr = currentSelection.GetComponent<PawnNeeds>();
+                        if (nr != null) nr.ClearRestTarget();  // 휴식 명령 취소
+                        b.SetBlueprintTarget(bp);
+                        currentSelection.ManualMoveUntil = Time.time + 12f;
+                        Debug.Log($"[Build] {currentSelection.PawnName} → 건설 ({bp.Mode})");
+                    }
+                    return;
+                }
+                if (bed != null)
+                {
+                    // 목재침대 우클릭 = 그 침대로 가서 수면 (PawnNeeds.SetRestTarget).
+                    var nr = currentSelection.GetComponent<PawnNeeds>();
+                    if (nr != null)
+                    {
+                        ClearAllWorkTasks(currentSelection);  // 잔여 작업 override 방지
+                        nr.SetRestTarget(bed);
+                        var mv2 = currentSelection.GetComponent<PawnMovement>();
+                        if (mv2 != null) mv2.SetTarget(bed.transform.position);
+                        currentSelection.ManualMoveUntil = Time.time + 30f;  // 침대 도착까지 AI skip
+                        Debug.Log($"[Rest] {currentSelection.PawnName} → 수면 ({bed.QualityKr})");
+                    }
+                    return;
+                }
                 if (trader != null)
                 {
                     bool ok = trader.TryTrade();
@@ -150,6 +184,20 @@ namespace MelonS.GameProto
                     Debug.Log($"[Harvest] +{food} 식량");
                     return;
                 }
+                if (bushC != null && !bushC.IsDepleted)
+                {
+                    var g = currentSelection.GetComponent<PawnGatherer>();
+                    if (g != null) { g.SetBushTarget(bushC); currentSelection.ManualMoveUntil = Time.time + 8f; }
+                    Debug.Log($"[Gather] {currentSelection.PawnName} → 채집");
+                    return;
+                }
+                if (pileC != null)
+                {
+                    var h = currentSelection.GetComponent<PawnHauler>();
+                    if (h != null) { h.SetPileTarget(pileC); currentSelection.ManualMoveUntil = Time.time + 8f; }
+                    Debug.Log($"[Haul] {currentSelection.PawnName} → 운반");
+                    return;
+                }
                 if (tree != null)
                 {
                     PawnChopper chopper = currentSelection.GetComponent<PawnChopper>();
@@ -157,21 +205,33 @@ namespace MelonS.GameProto
                 }
                 else
                 {
-                    // 모든 task ClearTask (chopper/gatherer/hunter/cook) - 잔여 task override 방지
-                    PawnChopper chopper = currentSelection.GetComponent<PawnChopper>();
-                    if (chopper != null) chopper.ClearTask();
-                    var gather = currentSelection.GetComponent<PawnGatherer>();
-                    if (gather != null) gather.ClearTask();
-                    var hunter = currentSelection.GetComponent<PawnHunter>();
-                    if (hunter != null) hunter.ClearTask();
-                    var cook = currentSelection.GetComponent<PawnCook>();
-                    if (cook != null) cook.ClearTask();
+                    // 모든 task ClearTask - 잔여 task override 방지 (rcfix: rest 명령도 취소)
+                    ClearAllWorkTasks(currentSelection);
                     PawnMovement mv = currentSelection.GetComponent<PawnMovement>();
                     if (mv != null) mv.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
                     // 수동 이동 명령 → AI 5초 skip (즉시 override 방지)
                     currentSelection.ManualMoveUntil = Time.time + 15f;
                 }
             }
+        }
+
+        // rcfix - 모든 작업/휴식 task 취소 (사용자 명령이 잔여 AI task 에 override 되는 것 방지).
+        //  chopper/gatherer/hunter/cook/builder.ClearTask + needs.ClearRestTarget.
+        private void ClearAllWorkTasks(PawnEntity pawn)
+        {
+            if (pawn == null) return;
+            var chopper = pawn.GetComponent<PawnChopper>();
+            if (chopper != null) chopper.ClearTask();
+            var gather = pawn.GetComponent<PawnGatherer>();
+            if (gather != null) gather.ClearTask();
+            var hunter = pawn.GetComponent<PawnHunter>();
+            if (hunter != null) hunter.ClearTask();
+            var cook = pawn.GetComponent<PawnCook>();
+            if (cook != null) cook.ClearTask();
+            var builder = pawn.GetComponent<PawnBuilder>();
+            if (builder != null) builder.ClearTask();
+            var needs = pawn.GetComponent<PawnNeeds>();
+            if (needs != null) needs.ClearRestTarget();
         }
 
         // #113 - 림월드 우클릭 prioritize 메뉴 아이템 build (undrafted 만)
@@ -191,6 +251,46 @@ namespace MelonS.GameProto
             var vein = hit.GetComponent<StoneVeinEntity>();  // #119
             var bandit = hit.GetComponent<BanditEnemy>();    // #135
             var stockpile = hit.GetComponent<StockpileZoneEntity>();  // #155
+            var bp = hit.GetComponent<BlueprintEntity>();    // rcfix - 건설중
+            var bed = hit.GetComponent<BedEntity>();         // rcfix - 수면
+            var pile = hit.GetComponent<WoodPileEntity>();   // rcfix - 운반
+            if (bp != null && !bp.IsComplete)
+            {
+                var bpCap = bp;
+                list.Add(("🔨 건설 우선", () => {
+                    var b = pawn.GetComponent<PawnBuilder>();
+                    if (b != null)
+                    {
+                        var nr = pawn.GetComponent<PawnNeeds>();
+                        if (nr != null) nr.ClearRestTarget();
+                        b.SetBlueprintTarget(bpCap);
+                        pawn.ManualMoveUntil = Time.time + 12f;
+                    }
+                }));
+            }
+            if (bed != null)
+            {
+                var bedCap = bed;
+                list.Add(($"🛏 수면 ({bed.QualityKr})", () => {
+                    var nr = pawn.GetComponent<PawnNeeds>();
+                    if (nr != null)
+                    {
+                        ClearAllWorkTasks(pawn);
+                        nr.SetRestTarget(bedCap);
+                        var mv = pawn.GetComponent<PawnMovement>();
+                        if (mv != null) mv.SetTarget(bedCap.transform.position);
+                        pawn.ManualMoveUntil = Time.time + 30f;
+                    }
+                }));
+            }
+            if (pile != null)
+            {
+                var pileCap = pile;
+                list.Add(("📦 운반 우선", () => {
+                    var h = pawn.GetComponent<PawnHauler>();
+                    if (h != null) { h.SetPileTarget(pileCap); pawn.ManualMoveUntil = Time.time + 8f; }
+                }));
+            }
             if (tree != null)
             {
                 list.Add(("⛏ 벌목 우선", () => {
@@ -313,14 +413,55 @@ namespace MelonS.GameProto
                 currentSelection.ManualMoveUntil = Time.time + 15f;
                 return;
             }
-            // 비-drafted: trader/animal/crop/tree/empty
+            // 비-drafted: blueprint/bed/trader/animal/crop/bush/pile/tree/empty
             TraderEntity trader = (rhit != null) ? rhit.GetComponent<TraderEntity>() : null;
             AnimalEntity animalC = (rhit != null) ? rhit.GetComponent<AnimalEntity>() : null;
             CropEntity crop = (rhit != null) ? rhit.GetComponent<CropEntity>() : null;
             TreeEntity tree = (rhit != null) ? rhit.GetComponent<TreeEntity>() : null;
+            BlueprintEntity bp = (rhit != null) ? rhit.GetComponent<BlueprintEntity>() : null;
+            BedEntity bed = (rhit != null) ? rhit.GetComponent<BedEntity>() : null;
+            BerryBushEntity bushC = (rhit != null) ? rhit.GetComponent<BerryBushEntity>() : null;
+            WoodPileEntity pileC = (rhit != null) ? rhit.GetComponent<WoodPileEntity>() : null;
+            if (bp != null && !bp.IsComplete)
+            {
+                var b = currentSelection.GetComponent<PawnBuilder>();
+                if (b != null)
+                {
+                    var nr = currentSelection.GetComponent<PawnNeeds>();
+                    if (nr != null) nr.ClearRestTarget();
+                    b.SetBlueprintTarget(bp);
+                    currentSelection.ManualMoveUntil = Time.time + 12f;
+                }
+                return;
+            }
+            if (bed != null)
+            {
+                var nr = currentSelection.GetComponent<PawnNeeds>();
+                if (nr != null)
+                {
+                    ClearAllWorkTasks(currentSelection);
+                    nr.SetRestTarget(bed);
+                    var mvB = currentSelection.GetComponent<PawnMovement>();
+                    if (mvB != null) mvB.SetTarget(bed.transform.position);
+                    currentSelection.ManualMoveUntil = Time.time + 30f;
+                }
+                return;
+            }
             if (trader != null) { trader.TryTrade(); return; }
             if (animalC != null) { animalC.TryTame(); return; }
             if (crop != null && crop.IsRipe) { crop.Harvest(); return; }
+            if (bushC != null && !bushC.IsDepleted)
+            {
+                var g = currentSelection.GetComponent<PawnGatherer>();
+                if (g != null) { g.SetBushTarget(bushC); currentSelection.ManualMoveUntil = Time.time + 8f; }
+                return;
+            }
+            if (pileC != null)
+            {
+                var h = currentSelection.GetComponent<PawnHauler>();
+                if (h != null) { h.SetPileTarget(pileC); currentSelection.ManualMoveUntil = Time.time + 8f; }
+                return;
+            }
             if (tree != null)
             {
                 var chopper = currentSelection.GetComponent<PawnChopper>();
@@ -329,14 +470,7 @@ namespace MelonS.GameProto
             }
             // 통합 검증 I2 결과 — chopper 만 ClearTask 했더니 잔여 gatherer/hunter/cook task 가
             //  movement.SetTarget(자기 target) 호출해서 사용자 target 무시됨.  전부 ClearTask.
-            var chopperE = currentSelection.GetComponent<PawnChopper>();
-            if (chopperE != null) chopperE.ClearTask();
-            var gatherE = currentSelection.GetComponent<PawnGatherer>();
-            if (gatherE != null) gatherE.ClearTask();
-            var hunterE = currentSelection.GetComponent<PawnHunter>();
-            if (hunterE != null) hunterE.ClearTask();
-            var cookE = currentSelection.GetComponent<PawnCook>();
-            if (cookE != null) cookE.ClearTask();
+            ClearAllWorkTasks(currentSelection);
             var mv = currentSelection.GetComponent<PawnMovement>();
             if (mv != null) mv.SetTarget(worldPos);
             currentSelection.ManualMoveUntil = Time.time + 15f;

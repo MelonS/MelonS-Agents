@@ -1,0 +1,102 @@
+{
+  "lane": "pawn-death-downed-visual",
+  "status": "Done",
+  "agent": "Gameplay Programmer",
+  "timestamp": "2026-05-31",
+  "operator_feedback": "죽었을 때 이미지 변화 없음 + 상태별 처리 필요",
+
+  "root_cause": [
+    "PawnHealth.CheckDeath disabled all ROOT MonoBehaviours on death but PawnSpriteBob lives on the CHILD 'PawnSpriteBob' GameObject (root-only GetComponents loop never caught it) — so a dead pawn kept walk-bobbing/idle-breathing.",
+    "No visual differentiation existed for Dead vs Downed vs Alive — the body sprite color/pose was untouched on death, so a corpse looked identical to a living pawn (operator's 'no image change on death').",
+    "PawnEntity.ApplyVisual only branched on drafted/selected — never read PawnHealth state."
+  ],
+
+  "lane_files_edited": [
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Scripts/PawnHealth.cs",
+      "changes": [
+        "Added PoseState enum (Alive/Downed/Dead) + public State property + StateVersion counter (poll-friendly; no event subscription — bug-pattern #7 safe).",
+        "CheckDeath now bumps StateVersion on transitions and is idempotent on the death branch (only runs the disable sweep once).",
+        "Exempted PawnPoseDriver from the on-death MonoBehaviour disable sweep (alongside PawnFloatingBars) so the corpse driver keeps running to ease the rolled pose + hide bars.",
+        "Added StopBodyBob(): disables the CHILD 'PawnSpriteBob' component's PawnSpriteBob so a dead pawn stops walk-bob/idle-breathe. Disables the component only (does NOT edit the PawnSpriteBob source file — other lane)."
+      ]
+    },
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Scripts/PawnEntity.cs",
+      "changes": [
+        "ApplyVisual now prioritizes health state: Dead -> deadTint (grayscale), Downed -> downedTint (desaturate), else drafted-cyan / selected / unselected (existing).",
+        "Health-state tint written to ROOT renderer (PawnSpriteBob mirrors root color to the child for the Downed case where bob is still alive).",
+        "Update polls PawnHealth.StateVersion (poll-via-Update, bug #7 safe) to refresh tint on downed/recover transitions.",
+        "On body-part death in TakeDamage, ApplyVisual is called BEFORE enabled=false so the dead tint lands even though the component is about to stop updating.",
+        "Added SerializeField deadTint / downedTint so designer can tune."
+      ]
+    },
+    {
+      "file": "skills/game-prototype/unity-project/Assets/Scripts/PawnPoseDriver.cs",
+      "changes": [
+        "Added corpse-pose lane: when State is Dead/Downed, Update runs UpdateCorpsePose and skips carry-bundle + attack-lunge.",
+        "Dead -> eases body CHILD localRotation.Z to deadRollDeg (90 deg, lying corpse) + hides head bars (HpBg/HpFill/MoodBg/MoodFill) + name/status/plate child renderers.",
+        "Downed -> eases to downedRollDeg (55 deg, partial tilt) to read distinct from Dead; keeps bars/name (still alive).",
+        "Rotation applied to CHILD transform.localRotation ONLY — root transform never touched (PathGrid.WorldToCell / bars / name / shadow anchor to root).",
+        "Dead-only MirrorRootColorToBody(): since PawnHealth.StopBodyBob disabled the child PawnSpriteBob (which normally mirrors root tint), this driver becomes the sole writer of the child body color while dead and copies the deadTint from the root renderer onto the child so the corpse actually reads grayscale.",
+        "RestoreFromCorpse() un-rolls + restores bars/name when State returns to Alive (downed-recovery path).",
+        "Removed unused floatingBars field and lastSeenHealthVersion (poll State directly)."
+      ]
+    }
+  ],
+
+  "child_property_ownership_after": {
+    "localPosition_Y": "PawnSpriteBob (disabled by PawnHealth on death so it stops writing)",
+    "flipX": "PawnFacing (untouched)",
+    "color_alive_downed": "PawnSpriteBob mirrors ROOT color (PawnEntity writes downedTint to root) + SleepPoseDriver dim",
+    "color_dead": "PawnPoseDriver.MirrorRootColorToBody (PawnSpriteBob disabled -> single writer, no fight)",
+    "localPosition_X": "PawnPoseDriver lunge (skipped while dead/downed)",
+    "localRotation_Z": "PawnPoseDriver corpse roll (NEW — only when dead/downed)"
+  },
+
+  "firewall_audit": {
+    "root_transform_written": false,
+    "root_renderer_COLOR_written_by": "PawnEntity.ApplyVisual (already owned root color)",
+    "PawnSpriteBob_source_edited": false,
+    "PawnSpriteBob_component_enabled_gated": "yes (PawnHealth.StopBodyBob disables the CHILD component to stop walk-bob on death — source untouched)",
+    "PawnFacing_edited": false,
+    "SleepPoseDriver_edited": false,
+    "PawnMovement_or_worker_files_edited": false,
+    "SceneSetup_edited": false,
+    "bug7_singleton_subscription_race": "avoided — PawnEntity + PawnPoseDriver POLL PawnHealth state, no OnX subscription",
+    "bug9_runInBackground_freeze": "no new WaitForSeconds/background timer; all easing via Time inside Update",
+    "bug4_audio": "no AudioBank calls added",
+    "test_gameobject_names_preserved": "TestPawn / PawnSpriteBob / NameLabel / StatusLabel / NamePlate / HpBg / HpFill / MoodBg / MoodFill all referenced by existing names, none renamed"
+  },
+
+  "test_compat": [
+    "TestV16_PawnDeath still asserts health.IsDead after head destruction — IsDead set the same way; CheckDeath only made idempotent + version bump.",
+    "Test pawns have no 'PawnSpriteBob' child (SpriteRenderer on root) and no PawnPoseDriver (bootstrap gates on GameSceneGate) — StopBodyBob and corpse rotation are null-guarded no-ops; only the root deadTint (via PawnEntity) applies in test scenes."
+  ],
+
+  "designer_tunables": {
+    "PawnEntity.deadTint": "default (0.42,0.40,0.40,1) grayscale corpse",
+    "PawnEntity.downedTint": "default (0.62,0.55,0.62,1) desaturate dim",
+    "PawnPoseDriver.deadRollDeg": "default 90",
+    "PawnPoseDriver.downedRollDeg": "default 55",
+    "PawnPoseDriver.rollEaseSpeed": "default 8"
+  },
+
+  "flags_for_qa": [
+    {
+      "id": "FLAG-DEATH-1",
+      "severity": "verify",
+      "description": "Confirm a dead pawn (kill head via PawnHealth.TakeDamage(99, Head) x3): body child rotates ~90deg to a lying corpse, body sprite turns grayscale (deadTint), HP/mood bars + name/status labels hidden, and the pawn no longer walk-bobs/idle-breathes."
+    },
+    {
+      "id": "FLAG-DEATH-2",
+      "severity": "verify",
+      "description": "Confirm a downed pawn (head HP <30% but torso/head >0): body child tilts ~55deg (distinct from dead 90deg), body desaturates (downedTint), bars/name remain visible, pawn is still alive. Recovery (heal head >30%) should un-tilt and restore normal tint."
+    },
+    {
+      "id": "FLAG-DEATH-3",
+      "severity": "interaction",
+      "description": "drafted-cyan no longer overrides dead/downed tint (priority Dead>Downed>Drafted>Selected). A drafted pawn that dies should read as a grey corpse, not cyan."
+    }
+  ]
+}

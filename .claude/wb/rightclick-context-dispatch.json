@@ -1,0 +1,25 @@
+{
+  "label": "rightclick-context-dispatch",
+  "status": "done",
+  "lane": ["Assets/Scripts/ClickSelector.cs", "Assets/Scripts/PawnNeeds.cs"],
+  "summary": "우클릭 컨텍스트 디스패치에 건설중 벽(BlueprintEntity)→건설, 목재침대(BedEntity)→수면 추가. PawnNeeds rest-target 로직은 이미 구현돼 있어(SetRestTarget/ClearRestTarget/forcedResting at lines 37-132) 그대로 활용 — 추가 편집 불필요.",
+  "changes": [
+    "ClickSelector: 직접 우클릭(undrafted) 캐스케이드에 BlueprintEntity(!IsComplete)→PawnBuilder.SetBlueprintTarget+ManualMoveUntil 12s, BedEntity→PawnNeeds.SetRestTarget+movement.SetTarget(침대)+ManualMoveUntil 30s 추가.",
+    "ClickSelector: berry bush→PawnGatherer.SetBushTarget, wood pile→PawnHauler.SetPileTarget 보강 (직접 우클릭 캐스케이드).",
+    "ClickSelector: BuildContextMenu 에 '🔨 건설 우선', '🛏 수면 (품질)', '📦 운반 우선' 항목 추가.",
+    "ClickSelector: ClearAllWorkTasks(pawn) 헬퍼 신설 — chopper/gatherer/hunter/cook/builder.ClearTask + needs.ClearRestTarget 통합. 기존 중복 ClearTask 캐스케이드(직접 우클릭 empty-ground branch + SimulateRightClick) 를 이 헬퍼로 교체.",
+    "ClickSelector: SimulateRightClick 테스트 헬퍼도 동일하게 blueprint/bed/bush/pile 분기 미러링 (QA 검증용).",
+    "PawnNeeds: 변경 없음 — rest-target 강제수면(forcedResting, RestMul/MoodBonus 반영, forcedWakeSleepLevel 자동기상) 이미 완비."
+  ],
+  "dispatch_priority": "blueprint(!complete) > bed > trader > animal > ripe-crop > bush(!depleted) > pile > tree > empty-ground(clear+move). 건설/수면은 명백한 단일 행동이라 직접 우클릭 + 메뉴 둘 다 제공.",
+  "rest_command_flow": "침대 우클릭 → ClearAllWorkTasks(잔여 작업 취소) → PawnNeeds.SetRestTarget(bed) + movement.SetTarget(bed.pos) + ManualMoveUntil 30s. PawnNeeds.Update 가 매 frame GetBedUnderPawn()==restTarget 검사 → 도착 시 forcedResting=true, sleep>=95 자동 기상.",
+  "firewall_check": "신규 background timer/WaitForSeconds 없음(#9 무관). GetInstanceID/OnCollision/Singleton-OnEnable/justSpawned/audio-loop 패턴 미도입 — 전부 무관.",
+  "gameobject_names": "보존 — Select/ClearSelection, currentSelection/currentInspect 공개 API, SimulateSelect/SimulateRightClick/SimulateContextMenuAction 시그니처 전부 그대로.",
+  "verified_apis": [
+    "BlueprintEntity.IsComplete/.Mode", "BedEntity.QualityKr/.transform",
+    "PawnBuilder.SetBlueprintTarget/.ClearTask", "PawnNeeds.SetRestTarget/.ClearRestTarget",
+    "PawnGatherer.SetBushTarget", "PawnHauler.SetPileTarget", "BerryBushEntity.IsDepleted",
+    "PawnEntity.PawnName"
+  ],
+  "handoff": "QA 검증 대기 (Unity batchmode compile). SceneSetup 와이어링 불필요 — 신규 SerializeField 없음."
+}

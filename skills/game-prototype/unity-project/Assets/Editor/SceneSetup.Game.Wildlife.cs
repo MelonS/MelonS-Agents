@@ -9,24 +9,34 @@ namespace MelonS.GameProto.EditorTools
     //   원본 SceneSetup.cs L174-214 (40 LOC).
     public static partial class SceneSetup
     {
+        // 늑대 비활성화 게이트 (운영자 요청 2026-05-31): 현재 늑대를 처리할
+        // 게임플레이 방법이 없어 맵에 등장하지 않게 함.  되살리려면 true 로.
+        //   - SpawnWildlife 의 wolf 스폰 블록을 게이트.
+        //   - AIDirector.WolvesEnabled 와 짝.  둘 다 false 여야 늑대 완전 제거.
+        private const bool WolvesEnabled = false;
+
         private static void SpawnWildlife()
         {
-            // Day 64 + #108: Wolf predator - 3 마리 (60x60), 맵 외곽에서 wander
-            Sprite wolfSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/wolf.png");
-            Vector2[] wolfPositions = new[] {
-                new Vector2(-27f, 27f), new Vector2(27f, -27f), new Vector2(-27f, -25f),
-            };
-            foreach (var wpos in wolfPositions)
+            // Day 64 + #108: Wolf predator - 3 마리 (60x60), 맵 외곽에서 wander.
+            //   WolvesEnabled=false 인 동안 스폰하지 않음 (deer 등 평화 동물은 유지).
+            if (WolvesEnabled)
             {
-                GameObject wGo = new GameObject($"Wolf_{wpos.x}_{wpos.y}");
-                wGo.transform.position = new Vector3(wpos.x + 0.5f, wpos.y + 0.5f, 0);
-                wGo.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
-                var wsr2 = wGo.AddComponent<SpriteRenderer>();
-                wsr2.sprite = wolfSpr;
-                wsr2.sortingOrder = 8;
-                var wcol = wGo.AddComponent<BoxCollider2D>();
-                wcol.size = new Vector2(1.2f, 0.8f);
-                wGo.AddComponent<WolfEnemy>();
+                Sprite wolfSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/wolf.png");
+                Vector2[] wolfPositions = new[] {
+                    new Vector2(-27f, 27f), new Vector2(27f, -27f), new Vector2(-27f, -25f),
+                };
+                foreach (var wpos in wolfPositions)
+                {
+                    GameObject wGo = new GameObject($"Wolf_{wpos.x}_{wpos.y}");
+                    wGo.transform.position = new Vector3(wpos.x + 0.5f, wpos.y + 0.5f, 0);
+                    wGo.transform.localScale = new Vector3(1.3f, 1.3f, 1f);
+                    var wsr2 = wGo.AddComponent<SpriteRenderer>();
+                    wsr2.sprite = wolfSpr;
+                    wsr2.sortingOrder = 8;
+                    var wcol = wGo.AddComponent<BoxCollider2D>();
+                    wcol.size = new Vector2(1.2f, 0.8f);
+                    wGo.AddComponent<WolfEnemy>();
+                }
             }
 
             // Day 23+41 + #108: 14 wandering deer - 60x60 맵 비례

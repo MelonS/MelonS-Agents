@@ -1,0 +1,17 @@
+{
+  "label": "wolves-disable",
+  "status": "done",
+  "lane": [
+    "Assets/Editor/SceneSetup.Game.Wildlife.cs",
+    "Assets/Scripts/AIDirector.cs"
+  ],
+  "task": "Disable wolves entirely (no spawn, no threat event). Gate behind WolvesEnabled=false flag for easy revival. Do not touch deer/boar/chicken/rabbit or raid bandit / other events.",
+  "changes": [
+    "SceneSetup.Game.Wildlife.cs: added `private const bool WolvesEnabled = false;`. Wrapped the 3-wolf spawn block in `if (WolvesEnabled)`. Deer/Boar/Chicken/Rabbit (14 animals) untouched.",
+    "AIDirector.cs: added `public const bool WolvesEnabled = false;`. Wrapped the `wolf_pack` GameEvent pool.Add in `if (WolvesEnabled)` inside BuildDefaultPool, so the wolf threat event is never fired and PlayWolfHowl (gated by next.id=='wolf_pack') is never reached. Raid bandit, storm, infestation, trader, all other events untouched."
+  ],
+  "result": "With WolvesEnabled=false on both gates, no Wolf GameObject is created and no wolf_pack event fires. Wolves absent from game/map. Set both constants to true to revive.",
+  "preserved_gameobjects": "Deer_/Boar_/Chicken_/Rabbit_ names unchanged. Wolf_ GameObjects no longer created (intended).",
+  "unity_run": false,
+  "date": "2026-05-31"
+}

@@ -32,6 +32,16 @@ namespace MelonS.GameProto
         private SpriteRenderer spriteRenderer;
         private bool selected;
 
+        // 운영자 fb (2026-05-31): 상태별 시각 처리.  ROOT 렌더러 색은 PawnSpriteBob 가
+        //  자식으로 mirror 하므로, dead/downed tint 를 root 에 쓰면 자식 body 에도 반영됨.
+        //  Dead   = 회색조 corpse tint, Downed = desaturate dim, 그 외 = drafted/selection.
+        [Header("Health-state tint (R - 2026-05-31)")]
+        [SerializeField] private Color deadTint   = new Color(0.42f, 0.40f, 0.40f, 1f); // 회색조 corpse
+        [SerializeField] private Color downedTint = new Color(0.62f, 0.55f, 0.62f, 1f); // 의식불명 누움
+        // State change 를 polling 으로 감지(이벤트 구독 race 회피, bug-pattern #7).
+        private PawnHealth healthRef;
+        private int lastSeenHealthVersion = -1;
+
         public string PawnName => pawnName;
         public bool IsSelected => selected;
         public int Hp { get; private set; }
@@ -112,6 +122,7 @@ namespace MelonS.GameProto
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
+            healthRef = GetComponent<PawnHealth>();
             // R2: SO 없으면 default 인스턴스 — game 멈추지 X
             if (stats == null) stats = PawnStats.CreateDefault();
             Hp = stats.maxHp;
@@ -120,6 +131,13 @@ namespace MelonS.GameProto
 
         private void Update()
         {
+            // 상태 변화(downed/회복 등) polling 감지 → root tint 갱신.  Dead 진입은
+            //  TakeDamage 에서 이 컴포넌트가 disable 되기 직전에 ApplyVisual 로 처리.
+            if (healthRef != null && healthRef.StateVersion != lastSeenHealthVersion)
+            {
+                lastSeenHealthVersion = healthRef.StateVersion;
+                ApplyVisual();
+            }
             if (IsDead) return;
             // Day 13: defensive auto-attack on nearby bandit (throttled, NOT
             // per-frame — lesson #4 firewall).  We use distance polling rather
@@ -200,6 +218,11 @@ namespace MelonS.GameProto
                     // #199 C2 — dead/downed pawn frees its work for others.
                     ClearAllWorkTasks();
                     MelonS.GameProto.AI.ReservationManager.ReleaseAll(gameObject);
+                    // 죽는 순간 corpse 회색조 tint 를 root 에 적용(PawnSpriteBob 가
+                    //  자식으로 mirror).  이 컴포넌트가 disable 되기 직전에 호출해야
+                    //  Update poll 이 못 도는 사망 상태에서도 색이 반영된다.
+                    lastSeenHealthVersion = health.StateVersion;
+                    ApplyVisual();
                     enabled = false;
                     return;
                 }
@@ -232,6 +255,23 @@ namespace MelonS.GameProto
         private void ApplyVisual()
         {
             if (spriteRenderer == null) return;
+            // 우선순위: Dead > Downed > Drafted > Selected > Unselected.
+            //  health-state tint 는 root 에 쓰고 PawnSpriteBob 가 자식으로 mirror 한다.
+            //  Dead 의 90° 쓰러짐 회전은 PawnPoseDriver(자식 transform lane)가 담당.
+            if (healthRef != null)
+            {
+                var st = healthRef.State;
+                if (st == PawnHealth.PoseState.Dead)
+                {
+                    spriteRenderer.color = deadTint;     // 회색조 corpse
+                    return;
+                }
+                if (st == PawnHealth.PoseState.Downed)
+                {
+                    spriteRenderer.color = downedTint;   // 의식불명 누움
+                    return;
+                }
+            }
             // Day 1: tint to indicate selection. Real outline shader = later.
             // Day 48: drafted pawn tinted cyan (manual-control mode).
             if (IsDrafted)
