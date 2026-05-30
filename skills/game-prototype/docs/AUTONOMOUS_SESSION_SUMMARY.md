@@ -2,6 +2,49 @@
 
 ---
 
+## [세션 2026-05-30~31 라이브+야간] 운영자 라이브 피드백 폭주 + 자율 처리 (75 commit)
+
+운영자가 빌드 돌려보며 실시간 피드백을 쏟아냄. 멀티에이전트 병렬(파일 lane 분리)
++ Unity 직렬 검증 + strict LongPlay QA 로 처리. 핵심 교훈 2개: (1) ★대충/hack
+금지([[no-sloppy-shortcuts]]) — 영상 녹화를 PNG-frame timelapse hack 으로 때우려다
+거부당함, 표준 Unity Recorder 로 제대로. (2) ★auto-QA 관대함 — verify 가
+survived=YES/“pre-existing” 만 보고 회귀(PAWN-STUCK, integration 39/42)를 통과시킨
+사례 반복 → 내가 직접 플레이로그/프레임 판정으로 정정.
+
+### 처리한 운영자 피드백 (전부 main + 검증)
+- 8버그(우클릭컨텍스트/목재드롭/문모션/이동경로/시간/광맥/사망비주얼/늑대제거)
+- 생존 루프: 식량생산(HarvestCrop AI), raid calibration(survivable), 침대 자율취침
+  (stuck 회귀 fix), 아이템 물리운반(teleport 제거 — 림이 직접 carry)
+- UI 전면 재구성: RimWorld식 Architect 메뉴(Orders/Zone/… 카테고리, raycast-click
+  버그 fix — UITheme fill.raycastTarget=false 가 원인), 인스펙터 통합+선택구동,
+  설정 메뉴(Save/Load+SFX/BGM 볼륨+PlayerPrefs), 건축버튼 툴팁/아이콘
+- 영역지정: 저장존 드래그+아이템필터+폐기존 / 지붕 기능+지붕영역 메뉴(그늘 오버레이)
+- 전투 lunge 모션 / 적·동물 벽통과 fix / 기능없는 장식 제거
+- ★녹화 기능(표준): Unity Recorder 5.1.0 + record-gameplay.py — 1x/줌12/오디오
+  mp4 직접. 집(침대2+화덕+저장존) 완전판. 재사용.
+- integration 회귀 정정: Chop/Mine 우선순위(자원축적 복구), I2 stall, I6 stale → 42/42
+
+### 검증 인프라(재사용)
+- LongPlaySurvivalRunner(-longplay): 집건축→5분+생존→플레이로그(docs/playtest-logs/)
+  + 불변식(exception/시간/벽통과/stuck). 매 wave strict 판정.
+- record-gameplay.py(-record): Unity Recorder 실시간 1x 영상.
+
+### 현재 상태 / honest 결론
+- day-final-2026-05-31: isolated 76/76, integration 42/42, Build Click 9/9, LongPlay
+  생존(자원축적 복구 후), 0 불변식위반. 운영자 피드백 전부 반영.
+- ★non-gated 그래픽/UI/사운드 표면 소진(사운드92/그래픽85/UI88) — 더 cosmetic =
+  busywork 라 grind 안 함.
+
+### ⚠️ 운영자 결정 / flagged
+1. ★다음 도약 = OP-gated 티어(mood thought-sum+3tier break / work-priority grid /
+   terrain move-cost) — “보이는 RimWorld”→“플레이되는 RimWorld”. 승인 필요(스펙 작성됨).
+2. late-game 자원 고갈 — base 근처 나무/광맥/동물 소진 + 먼 자원 path-fail(give-up)
+   → 장기 생산 plateau(생존은 surplus 로 유지). edge 밸런스, 별도 wave 후보.
+3. 게임 “1x” 속도 = 60 game-min/real-sec(하루 24초)로 빠름 — 자연화(예 하루 1~4분)
+   할지. needs decay 가 실초 기준이라 늦추면 밸런스 재튜닝 동반.
+
+---
+
 ## [세션 2026-05-30 야간] 멀티에이전트 오케스트레이션 + 위키 비교 구동 자율 체인 (48 commit)
 
 운영자 directive: 멀티에이전트 파이프라인을 "연쇄반응(chain reaction)"으로 — 수동
