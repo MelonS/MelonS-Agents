@@ -111,7 +111,7 @@ namespace MelonS.GameProto
             {
                 if (FindExisting() != null) return;   // idempotent — never a 2nd manager
                 var go = new GameObject("~RoofDesignation");
-                Object.DontDestroyOnLoad(go);
+                UnityEngine.Object.DontDestroyOnLoad(go);
                 go.AddComponent<RoofDesignation>();
             });
         }
@@ -119,9 +119,9 @@ namespace MelonS.GameProto
         private static RoofDesignation FindExisting()
         {
 #if UNITY_2023_1_OR_NEWER
-            return Object.FindFirstObjectByType<RoofDesignation>();
+            return UnityEngine.Object.FindFirstObjectByType<RoofDesignation>();
 #else
-            return Object.FindObjectOfType<RoofDesignation>();
+            return UnityEngine.Object.FindObjectOfType<RoofDesignation>();
 #endif
         }
 

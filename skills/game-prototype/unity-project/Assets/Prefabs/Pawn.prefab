@@ -298,7 +298,9 @@ MonoBehaviour:
   sleepRegenAtNight: 8
   eatThreshold: 50
   eatRestore: 30
-  eatTickInterval: 0.5
+  eatReachRange: 1.3
+  eatWalkTimeout: 12
+  eatRetryCooldown: 4
   forcedWakeSleepLevel: 95
   autoSleepThreshold: 35
   autoWakeSleepLevel: 80
