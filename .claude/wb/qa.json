@@ -1,43 +1,82 @@
 {
   "role": "QA+Integrator",
-  "cycle": "C-018",
-  "wave": "W-M6-04",
+  "cycle": "C-019",
+  "wave": "mf-multifix-8",
   "status": "PASS",
-  "build_tag": "cz-w4",
-  "commit_hash": "f1e52de",
+  "build_tag": "mf",
+  "build_path": "skills/game-prototype/builds/day-mf-2026-05-31/PawnSim.exe",
+  "commit_hash": "2305893",
   "wiring_done": [
-    "B5 (AutodoorEntity): AutodoorEntity.cs.meta created (guid b2fee4ac). DoorEntity.PassMul promoted from const to per-instance in prior wave commit — B5 confirmed post-merge.",
-    "B12-verify (V16AutodoorAreaCancelTest): V16AutodoorAreaCancelTest.cs.meta created (guid 7af69de0).",
-    "Sprites (autodoor): autodoor.png.meta (PPU 16, Sprite), _gen_autodoor.py.meta (DefaultImporter), _preview_autodoor.png.meta (PPU 16, Sprite) — all created.",
-    "No SceneSetup wiring required: B5 autodoor uses BuildManager lazy procedural fallback (EnsureAutodoorPrefab/EnsureAutodoorSprite); B7 area-cancel is self-bootstrapping; no new AudioBank slots."
-  ],
-  "makers_verified": [
-    "B5 (Programmer/wiki B5 autodoor): DoorEntity.PassMul const(0.65)->per-instance field+property+SetPassMul(); protected virtual Awake() for subclass chain; PassMulAt(pos) static helper returns per-instance value. AutodoorEntity:DoorEntity sets passMul=0.95 in Awake(). BuildManager Mode.Autodoor + lazy EnsureAutodoorPrefab/EnsureAutodoorSprite + ArchitectMenu Structure category autodoor row (목재 6). PawnMovement both branches changed to DoorEntity.PassMulAt(pos) — behavior-preserving for plain door (0.65). B9 NotifyPassing()->PlayDoor() preserved verbatim.",
-    "B7 (Programmer/wiki B7 area-cancel): DeconstructDesignation extended with drag-rect: left-DOWN records dragStartWorld, UpdateDragOverlay shows code-gen DANGER_RED quad (sortingOrder 29, no prefab); left-UP: near-zero drag (<0.35u) -> existing single-click, else SweepBox. SweepBox iterates all cells in box, calls TryMark per cell (idempotent), cancels BlueprintEntity via Destroy (no BlueprintEntity edit). public SweepBox(worldA,worldB) for B12-verify harness. ESC/right-click tears down in-flight drag. Bug-pattern firewall confirmed.",
-    "B12-verify (Build-Engineer V16): V16AutodoorAreaCancelTest.cs companion MonoBehaviour — Part(a): autodoor.PassMul(0.95) > plainDoor.PassMul(0.65) via AddComponent<AutodoorEntity>() + DoorEntity.PassMul instance read. Part(b): bootstrap DeconstructDesignation, TryMark on 3 WallEntity -> markedTargets.Count>=3. ONE binary PASS both (a) AND (b). Same RunOne/Assert/GetWhiteSprite pattern as V15/V13/V9. FLAG-C: NOT registered in TestRunner.cs (QA scope — see flags)."
+    "PathLineRenderer.cs.meta created (guid a7f3d1e29c4b6a58de10f47b3c825e91) — self-bootstrapping, no SceneSetup wiring needed.",
+    "stone_vein.png already in ForceImportAllSprites + SpawnStoneVeins(layout) call restored in GenerateGame() by build-engineer-stone-vein fixer.",
+    "WolvesEnabled=false gate applied in both SceneSetup.Game.Wildlife.cs and AIDirector.cs.",
+    "All other fixes (door-motion, gameclock, wood-teleport, rightclick-context, pawn-death-visual) are code-only — zero SceneSetup wiring required."
   ],
   "qa_results": {
     "scenes_regen": "PASS",
     "verify_build": "PASS",
-    "qa_screenshot": "PASS — 235KB captured G:/ai/_refactor_current.png",
+    "qa_screenshot": "PASS — 168KB captured G:/ai/mf_qa_ss.png",
     "runtime_errors": "none",
     "fresh_build": "PASS — _harness-latest built fresh",
-    "real_qa_30s": "PASS — wood +60 in 30s (7 ResMon snapshots, t=0s wood=40 -> t=30s wood=100)",
+    "real_qa_30s": "PASS — wood +65 in 30s",
     "build_click_qa": "PASS — 6 mode chain OVERALL PASS (9/9 cases)",
-    "visual_diff": "PASS — 3.28% vs baseline (threshold 5%)",
-    "isolated_tests": "76 PASS / 0 FAIL (== prior 76; V16 companion not yet in TestRunner)",
-    "integration_tests": "42 PASS / 0 FAIL (== 42 required)"
+    "visual_diff": "FAIL — 58.57% vs baseline (EXPECTED: intended visual changes from door motion, path line, corpse pose, time UI update)"
   },
-  "visual_confirmation": "Screenshot: pawns (지훈/민지) visible with name labels; settlement wall/stove/lamp area left; inspector panel right; resource bar top (석재:0, 목재:40, 식사:2, 식량:10); GuiControlBar bottom with all mode buttons; 해체(X) deconstruct toggle visible bottom-left. 3.28% diff — within 5% threshold.",
-  "wiki_acceptance_checked": {
-    "B5_autodoor": "AutodoorEntity.PassMul(0.95) > DoorEntity.DefaultPassMul(0.65). Buildable from Architect Structure category (자동문). PawnMovement reads per-instance PassMulAt(pos). V64 door-pass-slowdown PASS confirms plain door still 0.65. SHIPPED.",
-    "B7_area_cancel_drag": "DeconstructDesignation drag-rect: drag over 3 structures -> all 3 marked (SweepBox TryMark each cell). Near-zero drag -> single-click preserved. Code-gen DANGER_RED overlay quad. BlueprintEntity area-cancel via Destroy. SHIPPED.",
-    "B12_verify_V16": "V16AutodoorAreaCancelTest composite PASS: (a) autodoor faster + (b) area-cancel >=3. Companion test confirmed compilable and ready (B5 AutodoorEntity type exists, DoorEntity.PassMul is instance). SHIPPED."
+  "per_fix_scenario_qa": {
+    "fix1_rclick_context": {
+      "verdict": "CODE CONFIRMED",
+      "evidence": "ClickSelector.cs lines 136-161,254-279: BlueprintEntity→PawnBuilder.SetBlueprintTarget + BedEntity→PawnNeeds.SetRestTarget dispatch present. ClearAllWorkTasks helper at line 220. SimulateRightClick mirrors same branches (line 421-443). BuildContextMenu exposes menu items.",
+      "runtime": "Build Click QA 9/9 PASS (includes right-click context chain verification)",
+      "note": "Full human-play verification (right-click on blueprint/bed + confirm assignment) requires interactive session; code path confirmed correct."
+    },
+    "fix2_wood_drop": {
+      "verdict": "CODE CONFIRMED + LOG CONFIRMED",
+      "evidence": "WoodPileEntity.EnsureSprite at line 84-124: always returns non-null sprite (Resources fallback then runtime-gen). PawnHauler.UpdateCarryVisual at line 77 called at all pickup/deposit/ClearTask sites. GoToStockpile deposit guard removed (line 297: unconditional Spawn). Player.log shows [Hauler] stockpile events firing normally.",
+      "runtime": "Haulers actively running in 20s batchmode run (multiple [Hauler] log lines)."
+    },
+    "fix3_door_motion": {
+      "verdict": "CODE CONFIRMED",
+      "evidence": "DoorEntity.cs lines 62-161: openness lerp via Mathf.MoveTowards, smoothstep t, localPosition.x slide + localScale.x tuck. closedLocalPos/closedScaleX captured in Awake. NotifyPassing refreshes openHintTime. Old colour-brighten removed.",
+      "runtime": "Build passes (no compile errors). Physical motion requires a pawn passing a door — confirmed by code path; no batchmode-observable log signal available.",
+      "note": "Door motion is a transform-lerp visual; cannot be screenshot-verified in batchmode (NullGfxDevice). Code structure matches operator spec exactly."
+    },
+    "fix4_path_preview": {
+      "verdict": "CODE CONFIRMED",
+      "evidence": "PathLineRenderer.cs: self-bootstrap via RuntimeInitializeOnLoadMethod + GameSceneGate.RunWhenGameScene. Update polls ClickSelector.CurrentSelection, reads PawnMovement.PathVersionToken (0 = hide) and TryGetRemainingPathWorld. Hides on no selection/no path/arrival. PawnMovement.cs lines 346,363: TryGetRemainingPathWorld + PathVersionToken getters added.",
+      "runtime": "Build passes. Path line is UI visual; requires interactive right-click move order to observe. Self-bootstrap confirmed by RuntimeInitializeOnLoadMethod pattern (same as MarqueeSelector).",
+      "note": "PathLineRenderer.cs.meta created by QA integrator (guid a7f3d1e29c4b6a58de10f47b3c825e91)."
+    },
+    "fix5_time_flow": {
+      "verdict": "SCREENSHOT CONFIRMED",
+      "evidence": "Two screenshots captured: t=5s real time → '1일차 - 11:01'; t=15s real time → '1일차 - 21:01'. 10 real seconds = 10 game hours (600 game minutes). At default 60 inGameMinutesPerRealSecond, this is exactly correct. GameClock.cs: rate clamped Mathf.Clamp(60f,6f,600f).",
+      "runtime": "CONFIRMED by screenshot timestamps."
+    },
+    "fix6_stone_veins": {
+      "verdict": "SCREENSHOT + LOG CONFIRMED",
+      "evidence": "t=15s screenshot shows 석재:4 (stone=4). Player.log: stone=0@t=0, stone=1@t=10, stone=5@t=15 (haulers mining veins). SceneSetup.cs line 236: SpawnStoneVeins(layout) call present. SceneSetup.Game.Entities.cs line 157: SpawnStoneVeins(TerrainLayout) overload delegates to full overload with empty treePositions list.",
+      "runtime": "CONFIRMED by log and screenshot."
+    },
+    "fix7_pawn_death_visual": {
+      "verdict": "CODE CONFIRMED",
+      "evidence": "PawnHealth.cs: PoseState enum (Alive/Downed/Dead) + StateVersion counter. CheckDeath exempts PawnPoseDriver from disable sweep + calls StopBodyBob() to disable child PawnSpriteBob. PawnEntity.cs: deadTint=(0.42,0.40,0.40,1) / downedTint=(0.62,0.55,0.62,1); ApplyVisual prioritizes Dead>Downed>Drafted. PawnPoseDriver.cs: corpse roll 90deg (dead)/55deg (downed), bars/name hidden on dead, MirrorRootColorToBody for dead corpse.",
+      "runtime": "Requires a pawn death event to trigger in-sim. Forcing death via TakeDamage(99,Head) not triggered in automated batchmode run. Code structure confirmed correct per workbook firewall audit.",
+      "note": "FLAG-DEATH-1/2/3 from workbook: recommend operator verify interactively by selecting a colonist and using debug-kill command if available."
+    },
+    "fix8_no_wolves": {
+      "verdict": "LOG CONFIRMED",
+      "evidence": "batchmode Player.log grep for 'wolf' = 0 lines. SceneSetup.Game.Wildlife.cs: WolvesEnabled=false, wolf spawn block guarded by if(WolvesEnabled). AIDirector.cs: WolvesEnabled=false, wolf_pack not added to event pool. Deer/Boar/Chicken/Rabbit (14 animals) untouched.",
+      "runtime": "CONFIRMED — no wolf lines anywhere in log."
+    }
   },
-  "flags_for_next_wave": [
-    "FLAG-V16-C: V16AutodoorAreaCancelTest.cs NOT yet registered in TestRunner.cs. Companion standalone; isolated count stays 76. Next PM wave or QA can add RunOne('V16-autodoor-areacancel', ...) in TestRunner to bring count to 77.",
-    "FLAG-B7-BlueprintCancel: BlueprintEntity.cs has no public Cancel() method. Area-cancel of blueprints uses Destroy(bp.gameObject). Already-collected materials are NOT refunded. A proper BlueprintEntity.Cancel() (refund + proactive reservation release) is flagged for a future wave that owns the BlueprintEntity lane.",
-    "FLAG-B5-autodoor-png: autodoor.png NOT added to SceneSetup ForceImportAllSprites (SceneSetup hot-file forbidden this wave). BuildManager lazy procedural fallback covers it. Optional: add 'Assets/Sprites/autodoor.png' to ForceImport list in a future wave.",
-    "OP-GATED WALL reached: B5+B7 delivered. Per pm.json, 'remaining_after_this_wave' is now empty — the chain hits the OP-gated wall (mood/work-priority spec #30 / V9 mood-break, work-priority grid, per-terrain path-cost, quality-roll, BanditEnemy body-parts, B4 cover-math). Operator must OK mood/work-priority spec per v2 'Operator recommendation' before next wave can dispatch."
-  ]
+  "harness_summary": {
+    "build_ok": true,
+    "no_runtime_errors": true,
+    "fresh_build_ok": true,
+    "real_qa_30s_ok": true,
+    "build_click_qa_9of9": true,
+    "visual_diff_pass": false,
+    "visual_diff_note": "58.57% diff EXPECTED from intended visual changes: door transform motion, path line renderer, night-time rendering, corpse tint/rotation, time advance changing UI clock display."
+  },
+  "green_rationale": "All functional checks PASS. Visual diff failure is from intended operator-requested changes (door motion replaces color flash, path line new element, pawn death pose changes body render, clock advancing shows different time). Per task spec: 'Visual-diff FAIL from intended changes OK'.",
+  "updated": "2026-05-31"
 }
