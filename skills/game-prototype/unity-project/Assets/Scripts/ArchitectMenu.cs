@@ -47,6 +47,48 @@ namespace MelonS.GameProto
             if (cachedAudio != null) cachedAudio.PlaySelect();
         }
 
+        // ── operator fb #1+A: RimWorld "Orders (지시)" + "Zone (구역)" categories ──
+        //   In vanilla RimWorld, Mine + Deconstruct live under an ORDERS tab and
+        //   Grow-zone lives under a ZONE tab — NOT as standalone screen buttons.
+        //   We removed the 3 standalone toggles (Btn_채광/Btn_경작/해체) and fold
+        //   them here.  These items are NOT BuildManager build-modes; each invokes
+        //   the existing designation manager's public SetMode(...)/Toggle() entry
+        //   point.  We model them as (label, action) so RefreshContent can render
+        //   them with the SAME MakeBtn click plumbing as buildables — the fix that
+        //   made buildables clickable (fillImg.raycastTarget=true) covers these too.
+        //
+        //   Ordered RimWorld-like: Orders, then Zone, then the build categories.
+        //   "isActive" lets the row reflect the current designation mode (▣ when on).
+        private struct OrderItem
+        {
+            public string label;
+            public System.Action invoke;        // enter/toggle the designation mode
+            public System.Func<bool> isActive;  // is that mode currently active?
+            public OrderItem(string label, System.Action invoke, System.Func<bool> isActive)
+            { this.label = label; this.invoke = invoke; this.isActive = isActive; }
+        }
+
+        private static readonly Dictionary<string, OrderItem[]> OrderCategories = new()
+        {
+            // Orders (지시) — RimWorld Orders tab: Mine + Deconstruct.
+            ["Orders (지시)"] = new[]
+            {
+                new OrderItem("채광 (M)",
+                    () => { if (MineDesignation.Instance != null) MineDesignation.Instance.SetMode(true); },
+                    () => MineDesignation.Instance != null && MineDesignation.Instance.ModeActive),
+                new OrderItem("해체 (X)",
+                    () => { if (DeconstructDesignation.Instance != null) DeconstructDesignation.Instance.SetMode(true); },
+                    () => DeconstructDesignation.Instance != null && DeconstructDesignation.Instance.ModeActive),
+            },
+            // Zone (구역) — RimWorld Zone tab: Grow zone.
+            ["Zone (구역)"] = new[]
+            {
+                new OrderItem("경작 (P)",
+                    () => { if (GrowZoneDesignation.Instance != null) GrowZoneDesignation.Instance.SetMode(true); },
+                    () => GrowZoneDesignation.Instance != null && GrowZoneDesignation.Instance.ModeActive),
+            },
+        };
+
         // 림월드 vanilla 패턴 — 카테고리별 buildable 목록
         private static readonly Dictionary<string, (BuildManager.Mode mode, string label, int cost)[]> Categories = new()
         {
@@ -158,7 +200,9 @@ namespace MelonS.GameProto
             rt.anchorMin = new Vector2(0f, 0.5f);
             rt.anchorMax = new Vector2(0f, 0.5f);
             rt.pivot = new Vector2(0f, 0.5f);
-            rt.sizeDelta = new Vector2(280, 440);
+            // operator fb #1 added 2 categories (Orders+Zone) → taller panel so the
+            //  10 collapsed headers + one expanded category's items fit without clip.
+            rt.sizeDelta = new Vector2(280, 560);
             rt.anchoredPosition = new Vector2(12, 0);
 
             // #UI-restyle U7 — same MakeBorderedPanel the control bar / inspector use:
@@ -222,6 +266,44 @@ namespace MelonS.GameProto
                 Destroy(contentRoot.transform.GetChild(i).gameObject);
 
             float y = 0;
+
+            // ── Orders (지시) + Zone (구역) FIRST (RimWorld tab order) ──────────
+            //   operator fb #1: Mine/Deconstruct under Orders, Grow-zone under Zone.
+            foreach (var kv in OrderCategories)
+            {
+                string catName = kv.Key;
+                var items = kv.Value;
+                var headerGo = MakeBtn(contentRoot.transform, catName,
+                    new Vector2(0, -y), MelonS.GameProto.Core.UITheme.HeaderBg,
+                    () => { activeCategory = (activeCategory == catName) ? "" : catName; RefreshContent(); });
+                var oht = headerGo.GetComponentInChildren<Text>();
+                oht.text = (activeCategory == catName ? "▼ " : "▶ ") + catName;
+                oht.fontStyle = FontStyle.Bold;
+                y += 36;
+                if (activeCategory == catName)
+                {
+                    foreach (var oi in items)
+                    {
+                        var item = oi;  // closure capture
+                        bool on = item.isActive != null && item.isActive();
+                        var itemGo = MakeBtn(contentRoot.transform,
+                            (on ? "▣ " : "") + item.label,
+                            new Vector2(16, -y),
+                            on ? MelonS.GameProto.Core.UITheme.BtnActiveBg
+                               : MelonS.GameProto.Core.UITheme.BtnInactiveBg,
+                            () => {
+                                // Enter the designation mode, then close the menu so
+                                //  the player can immediately drag-select on the map
+                                //  (mirrors how a buildable enters build mode + closes).
+                                item.invoke?.Invoke();
+                                Close();
+                            });
+                        y += 32;
+                    }
+                }
+            }
+
+            // ── then the BUILD categories (Structure/Security/Floors/...) ───────
             foreach (var kv in Categories)
             {
                 string catName = kv.Key;
@@ -275,6 +357,17 @@ namespace MelonS.GameProto
             img.color = MelonS.GameProto.Core.UITheme.Divider;
             var fillRt = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(brt, 2f, col);
             var fillImg = fillRt.parent.GetComponent<Image>();   // PanelFill image
+            // ROOT-CAUSE FIX (operator fb #2 "하위 메뉴가 아예 안 눌러짐"):
+            //   MakeBorderedPanel sets BOTH the root border Image (img) AND the
+            //   PanelFill Image (fillImg) to raycastTarget=false.  The Button below
+            //   targets fillImg — so with fillImg.raycastTarget=false the Button GO
+            //   had NO raycastable graphic at all and the GraphicRaycaster never hit
+            //   it: every category-header / buildable click passed straight through.
+            //   The standalone designation toggles worked because they explicitly
+            //   re-enable toggleFill.raycastTarget=true (see e.g. MineDesignation);
+            //   this menu never did.  Re-enable it on the targeted fill so real
+            //   pointer clicks register.
+            if (fillImg != null) fillImg.raycastTarget = true;
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = fillImg;
             var cb = btn.colors;

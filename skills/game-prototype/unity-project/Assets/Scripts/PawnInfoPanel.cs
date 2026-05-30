@@ -410,6 +410,31 @@ namespace MelonS.GameProto
             // not an entity selection → hide the entity body for the pawn/empty paths.
             if (entityBodyText != null) entityBodyText.gameObject.SetActive(false);
 
+            // ── operator fb #3 (2026-05-31): "선택되면 나왔다 선택 안 되면 없어져야" ──
+            //   When NOTHING is selected (no pawn AND no inspected entity), HIDE the
+            //   whole panel — frame fill, border, tab strip, bars, empty hint — so no
+            //   inspector chrome lingers on an empty selection.  Previously the panel
+            //   kept its bordered/titled frame + "선택된 오브젝트 없음" hint always
+            //   drawn (V7 styled-empty-state), which the operator flagged as wrong:
+            //   RimWorld shows the inspector ONLY while something is selected.
+            bool nothingSelected = (pawn == null) && (inspect == null);
+            if (nothingSelected)
+            {
+                if (panelBg != null) panelBg.enabled = false;
+                SetBorderVisible(false);
+                SetTabStripVisible(false);
+                if (titleText != null) titleText.gameObject.SetActive(false);
+                if (foodBar  != null) foodBar.transform.parent.parent.gameObject.SetActive(false);
+                if (sleepBar != null) sleepBar.transform.parent.parent.gameObject.SetActive(false);
+                if (moodBar  != null) moodBar.transform.parent.parent.gameObject.SetActive(false);
+                if (healthText != null) healthText.gameObject.SetActive(false);
+                if (moodDetailText != null) moodDetailText.gameObject.SetActive(false);
+                if (equipText != null) equipText.gameObject.SetActive(false);
+                if (emptyText != null) emptyText.gameObject.SetActive(false);
+                SetEmptyStateVisible(false);
+                return;
+            }
+
             bool any = (pawn != null);
 
             // #23 — title is part of the 상태 tab now; tab strip only when a

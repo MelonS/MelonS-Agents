@@ -78,18 +78,13 @@ namespace MelonS.GameProto
         [Header("Drag-rect")]
         [SerializeField] private float dragThreshold = 0.35f;     // world units before a click becomes a drag
 
-        [Header("Toggle button")]
-        // ui-audit.md §3.3 designation-row shared origin: left-anchored (0,0),
-        //  x = x0 + index*(width+gap), y = baseline. Index fixed per file so the
-        //  three toggles tile a single left-edge strip with no cross-file dep and
-        //  no overlap with the centered command bar (kills the -360/+360/+462 guesses).
-        [SerializeField] private float btnWidth = 96f;
-        [SerializeField] private float btnHeight = 40f;
-        [SerializeField] private int btnFontSize = 16;
-        [SerializeField] private float rowX0 = 16f;               // §3.3 left-edge inset
-        [SerializeField] private float rowGap = 4f;               // §3.3 inter-toggle gap
-        [SerializeField] private float rowBaselineY = 24f;        // §3.3/§3.2 Band-A baseline
-        private const int RowIndex = 1;                           // 해체=0, 채광=1, 경작=2
+        // ── operator fb #1 (2026-05-31): the standalone "채광 (M)" toggle button
+        //   was REMOVED.  In RimWorld, Mine lives inside the Architect menu's
+        //   Orders (지시) category, not as a standalone screen button.  The mine
+        //   DESIGNATION logic below is unchanged and is now invoked from
+        //   ArchitectMenu (Orders → 채광 → MineDesignation.Instance.SetMode(true)).
+        //   The M HOTKEY is preserved.  All toggle-button UI fields / builders /
+        //   RefreshToggleVisual were deleted.
 
         // ---- runtime state ---------------------------------------------------
         public static MineDesignation Instance { get; private set; }
@@ -108,12 +103,6 @@ namespace MelonS.GameProto
         //  press-release-without-drag is treated as a single click (one cell).
         private bool dragging;
         private Vector3 dragStartWorld;
-
-        // self-built toggle button (on the existing Canvas).
-        private Button toggleBtn;
-        private Image toggleFill;
-        private Text toggleLabel;
-        private bool toggleBuilt;
 
         // ============================================================
         //  Self-bootstrap — no SceneSetup edit (DeconstructDesignation pattern).
@@ -164,7 +153,6 @@ namespace MelonS.GameProto
                     DeconstructDesignation.Instance.SetMode(false);
             }
             if (!on) { dragging = false; }
-            RefreshToggleVisual();
         }
 
         public void Toggle() => SetMode(!ModeActive);
@@ -172,7 +160,6 @@ namespace MelonS.GameProto
         private void Update()
         {
             if (cam == null) cam = Camera.main;
-            EnsureToggleButton();   // read-only poll-find of the Canvas (no OnEnable capture)
 
             // Hotkey M mirrors the build hotkeys (B/F/G/T/Y) and deconstruct (X).
             if (Input.GetKeyDown(KeyCode.M)) Toggle();
@@ -201,7 +188,6 @@ namespace MelonS.GameProto
 
             PruneMarked();
             DispatchToIdleMiners();
-            RefreshToggleVisual();
         }
 
         // ---- left-press / drag / release → mark vein(s) ----------------------
@@ -376,79 +362,10 @@ namespace MelonS.GameProto
 #endif
         }
 
-        // ============================================================
-        //  Self-built toggle button on the existing Canvas (no SceneSetup edit).
-        //  Mirrors DeconstructDesignation.EnsureToggleButton: poll-find a Canvas,
-        //  parent a new child button onto it, edit nothing that already exists.
-        // ============================================================
-        private void EnsureToggleButton()
-        {
-            if (toggleBuilt && toggleBtn != null) return;
-            var canvas = FindCanvas();
-            if (canvas == null) return;   // retry next frame (read-only poll)
-
-            var go = new GameObject("Btn_채광");
-            go.transform.SetParent(canvas.transform, false);
-            var rt = go.AddComponent<RectTransform>();
-            // ui-audit.md §3.3: left-anchored shared designation row, fixed index.
-            rt.anchorMin = new Vector2(0f, 0f);
-            rt.anchorMax = new Vector2(0f, 0f);
-            rt.pivot = new Vector2(0f, 0f);
-            rt.sizeDelta = new Vector2(btnWidth, btnHeight);
-            rt.anchoredPosition = new Vector2(rowX0 + RowIndex * (btnWidth + rowGap), rowBaselineY);
-
-            var border = go.AddComponent<Image>();
-            border.color = UITheme.Divider;
-            var fillRt = UITheme.MakeBorderedPanel(rt, 2f, UITheme.BtnInactiveBg);
-            toggleFill = fillRt.parent.GetComponent<Image>();
-            if (toggleFill != null) toggleFill.raycastTarget = true;
-
-            toggleBtn = go.AddComponent<Button>();
-            toggleBtn.targetGraphic = toggleFill;
-            toggleBtn.onClick.AddListener(() =>
-            {
-                AudioBank.Instance?.PlaySelect();   // wiki #5: UI click blip (existing helper)
-                Toggle();
-            });
-
-            var labelGo = new GameObject("Label");
-            labelGo.transform.SetParent(go.transform, false);
-            toggleLabel = labelGo.AddComponent<Text>();
-            toggleLabel.text = "채광 (M)";
-            toggleLabel.font = UITheme.LoadKoreanFont(btnFontSize);
-            toggleLabel.fontSize = btnFontSize;
-            toggleLabel.fontStyle = FontStyle.Bold;
-            toggleLabel.color = UITheme.TextPrimary;
-            toggleLabel.alignment = TextAnchor.MiddleCenter;
-            var lrt = toggleLabel.GetComponent<RectTransform>();
-            lrt.anchorMin = Vector2.zero;
-            lrt.anchorMax = Vector2.one;
-            lrt.offsetMin = Vector2.zero;
-            lrt.offsetMax = Vector2.zero;
-
-            toggleBuilt = true;
-            RefreshToggleVisual();
-        }
-
-        private void RefreshToggleVisual()
-        {
-            if (toggleFill != null)
-            {
-                var target = ModeActive ? UITheme.BtnActiveBg : UITheme.BtnInactiveBg;
-                if (toggleFill.color != target) toggleFill.color = target;
-            }
-            if (toggleLabel != null)
-                toggleLabel.color = ModeActive ? UITheme.TextDark : UITheme.TextPrimary;
-        }
-
-        private static Canvas FindCanvas()
-        {
-#if UNITY_2023_1_OR_NEWER
-            return Object.FindFirstObjectByType<Canvas>();
-#else
-            return Object.FindObjectOfType<Canvas>();
-#endif
-        }
+        // operator fb #1: the standalone "Btn_채광" toggle button + its
+        //  EnsureToggleButton / RefreshToggleVisual / FindCanvas helpers were
+        //  removed.  Mine is now entered from ArchitectMenu's Orders (지시) category
+        //  (or the M hotkey).  The designation logic above is unchanged.
     }
 
     /// <summary>

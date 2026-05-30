@@ -89,16 +89,13 @@ namespace MelonS.GameProto
         [SerializeField] private float dispatchInterval = 0.5f;   // how often we assign idle builders
         [SerializeField] private float pickRadius = 0.45f;        // click hit-test box half-extent
 
-        [Header("Toggle button")]
-        // ui-audit.md §3.3 designation-row shared origin: left-anchored (0,0),
-        //  x = x0 + index*(width+gap). 해체 = index 0 (leftmost of the strip).
-        [SerializeField] private float btnWidth = 96f;
-        [SerializeField] private float btnHeight = 40f;
-        [SerializeField] private int btnFontSize = 16;
-        [SerializeField] private float rowX0 = 16f;               // §3.3 left-edge inset
-        [SerializeField] private float rowGap = 4f;               // §3.3 inter-toggle gap
-        [SerializeField] private float rowBaselineY = 24f;        // §3.3/§3.2 Band-A baseline
-        private const int RowIndex = 0;                           // 해체=0, 채광=1, 경작=2
+        // ── operator fb #1 (2026-05-31): the standalone "해체 (X)" toggle button
+        //   was REMOVED.  In RimWorld, Deconstruct lives inside the Architect menu's
+        //   Orders (지시) category, not as a standalone screen button.  The
+        //   deconstruct DESIGNATION logic below is unchanged and is now invoked from
+        //   ArchitectMenu (Orders → 해체 → DeconstructDesignation.Instance.SetMode(true)).
+        //   The X HOTKEY is preserved.  All toggle-button UI fields / builders /
+        //   RefreshToggleVisual were deleted.
 
         [Header("Drag-rect (B7 area-cancel / deconstruct-area)")]
         // A drag shorter than this (in world units) on mouse-UP counts as a plain
@@ -117,12 +114,6 @@ namespace MelonS.GameProto
         // Live marked structures awaiting / undergoing removal.  Read-only poll
         //  dispatch hands these to idle builders; entries self-prune when removed.
         private readonly List<DeconstructTarget> marked = new List<DeconstructTarget>(16);
-
-        // self-built toggle button (on the existing Canvas).
-        private Button toggleBtn;
-        private Image toggleFill;
-        private Text toggleLabel;
-        private bool toggleBuilt;
 
         // ---- drag-rect runtime state (B7) ------------------------------------
         // Left-mouse-DOWN in deconstruct mode records the start world point; while
@@ -176,7 +167,6 @@ namespace MelonS.GameProto
             ModeActive = on;
             if (on && BuildManager.Instance != null && BuildManager.Instance.BuildModeActive)
                 BuildManager.Instance.SetMode(BuildManager.Mode.Off);
-            RefreshToggleVisual();
         }
 
         public void Toggle() => SetMode(!ModeActive);
@@ -184,7 +174,6 @@ namespace MelonS.GameProto
         private void Update()
         {
             if (cam == null) cam = Camera.main;
-            EnsureToggleButton();   // read-only poll-find of the Canvas (no OnEnable capture)
 
             // Hotkey X mirrors the build hotkeys (B/F/G/T/Y) — toggle deconstruct.
             if (Input.GetKeyDown(KeyCode.X)) Toggle();
@@ -214,7 +203,6 @@ namespace MelonS.GameProto
 
             PruneMarked();
             DispatchToIdleBuilders();
-            RefreshToggleVisual();
         }
 
         // ---- click → mark a structure ---------------------------------------
@@ -528,81 +516,10 @@ namespace MelonS.GameProto
 #endif
         }
 
-        // ============================================================
-        //  Self-built toggle button on the existing Canvas (no SceneSetup edit).
-        //  Mirrors GuiControlBar.EnsureInScene: poll-find a Canvas, parent a new
-        //  child button onto it, edit nothing that already exists.
-        // ============================================================
-        private void EnsureToggleButton()
-        {
-            if (toggleBuilt && toggleBtn != null) return;
-            var canvas = FindCanvas();
-            if (canvas == null) return;   // retry next frame (read-only poll)
-
-            var go = new GameObject("Btn_해체");
-            go.transform.SetParent(canvas.transform, false);
-            var rt = go.AddComponent<RectTransform>();
-            // ui-audit.md §3.3: left-anchored shared designation row, fixed index.
-            rt.anchorMin = new Vector2(0f, 0f);
-            rt.anchorMax = new Vector2(0f, 0f);
-            rt.pivot = new Vector2(0f, 0f);
-            rt.sizeDelta = new Vector2(btnWidth, btnHeight);
-            rt.anchoredPosition = new Vector2(rowX0 + RowIndex * (btnWidth + rowGap), rowBaselineY);
-
-            var border = go.AddComponent<Image>();
-            border.color = UITheme.Divider;
-            var fillRt = UITheme.MakeBorderedPanel(rt, 2f, UITheme.BtnInactiveBg);
-            toggleFill = fillRt.parent.GetComponent<Image>();
-            // Button click needs a raycastable graphic; the fill body catches it
-            //  (MakeBorderedPanel leaves graphics non-raycast by default).
-            if (toggleFill != null) toggleFill.raycastTarget = true;
-
-            toggleBtn = go.AddComponent<Button>();
-            toggleBtn.targetGraphic = toggleFill;
-            toggleBtn.onClick.AddListener(() =>
-            {
-                AudioBank.Instance?.PlaySelect();   // wiki #5: UI click blip (existing helper)
-                Toggle();
-            });
-
-            var labelGo = new GameObject("Label");
-            labelGo.transform.SetParent(go.transform, false);
-            toggleLabel = labelGo.AddComponent<Text>();
-            toggleLabel.text = "해체 (X)";
-            toggleLabel.font = UITheme.LoadKoreanFont(btnFontSize);
-            toggleLabel.fontSize = btnFontSize;
-            toggleLabel.fontStyle = FontStyle.Bold;
-            toggleLabel.color = UITheme.TextPrimary;
-            toggleLabel.alignment = TextAnchor.MiddleCenter;
-            var lrt = toggleLabel.GetComponent<RectTransform>();
-            lrt.anchorMin = Vector2.zero;
-            lrt.anchorMax = Vector2.one;
-            lrt.offsetMin = Vector2.zero;
-            lrt.offsetMax = Vector2.zero;
-
-            toggleBuilt = true;
-            RefreshToggleVisual();
-        }
-
-        private void RefreshToggleVisual()
-        {
-            if (toggleFill != null)
-            {
-                var target = ModeActive ? UITheme.BtnActiveBg : UITheme.BtnInactiveBg;
-                if (toggleFill.color != target) toggleFill.color = target;
-            }
-            if (toggleLabel != null)
-                toggleLabel.color = ModeActive ? UITheme.TextDark : UITheme.TextPrimary;
-        }
-
-        private static Canvas FindCanvas()
-        {
-#if UNITY_2023_1_OR_NEWER
-            return Object.FindFirstObjectByType<Canvas>();
-#else
-            return Object.FindObjectOfType<Canvas>();
-#endif
-        }
+        // operator fb #1: the standalone "Btn_해체" toggle button + its
+        //  EnsureToggleButton / RefreshToggleVisual / FindCanvas helpers were
+        //  removed.  Deconstruct is now entered from ArchitectMenu's Orders (지시)
+        //  category (or the X hotkey).  The designation logic above is unchanged.
     }
 
     /// <summary>
