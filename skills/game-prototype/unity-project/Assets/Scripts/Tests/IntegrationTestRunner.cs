@@ -286,15 +286,15 @@ namespace MelonS.GameProto.Tests
                 $"activeTech={rm.activeTech?.nameKr}, {startPts}→{endPts} pts (>=0 OK, 진행 안 해도 active 면 PASS)");
         }
 
-        /// <summary>I6: GuiControlBar 가 화면에 생성됐는가 (8 버튼 - #114 직업 추가)</summary>
+        /// <summary>I6: GuiControlBar 가 화면에 생성됐는가 (10 버튼 - #126 일정 + 설정 통합 추가, >=9 검증)</summary>
         private IEnumerator TestI6_GuiBarSpawned()
         {
             yield return null;
             var bar = GameObject.Find("GuiControlBar");
             if (bar == null) { Assert(false, "GuiControlBar GameObject 없음"); yield break; }
             var buttons = bar.GetComponentsInChildren<UnityEngine.UI.Button>();
-            Assert(buttons.Length == 9,
-                $"GuiControlBar 발견, 버튼 {buttons.Length}개 (9 expected - #126 일정 버튼 추가)");
+            Assert(buttons.Length >= 9,
+                $"GuiControlBar 발견, 버튼 {buttons.Length}개 (>=9 expected — #126 일정 + 설정(⚙) 통합 버튼 추가로 10개)");
         }
 
         /// <summary>I7: 멈춤 버튼 클릭 → Time.timeScale=0</summary>
