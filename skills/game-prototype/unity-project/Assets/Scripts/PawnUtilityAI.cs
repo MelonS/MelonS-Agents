@@ -96,11 +96,22 @@ namespace MelonS.GameProto
                 //  cook→eat chain.  WorkKind.Gather so it shares the gather priority slot.
                 new HarvestCropAction(),
                 new BuildBlueprintAction(),  // #118 - 청사진 건설 (chop 보다 우선)
-                new HaulWoodAction(),     // #116 - 벌목 후 떨어진 wood pile 운반 (chop 보다 우선)
+                // ── HAUL loose ground piles FIRST (above raw extraction) ──
+                //  운영자 fb #I4-regress: 떨어진 더미가 적립 전에 부패(옥외 30s/-1)하지
+                //  않도록, 줍을 더미가 있으면 새 채집/벌목보다 운반을 먼저 한다.  세 종류를
+                //  나란히 둬서 wood/stone/meat 어느 것이든 바닥에 있으면 즉시 stockpile 로
+                //  운반→카운터 적립(물리 운반 유지, 순간이동 아님).
+                new HaulWoodAction(),     // #116 - 벌목 후 떨어진 wood pile 운반
                 new HaulStoneAction(),    // #119 - 채광 후 떨어진 stone chunk 운반
                 new HaulMeatAction(),     // #129 - 사냥 후 떨어진 meat pile 운반
-                new MineStoneAction(),    // #119 - 광맥 채광 (chop 과 동급)
+                // ── RAW extraction: 벌목을 채광보다 먼저 ──
+                //  #I4-regress ROOT CAUSE: Chop/Mine 둘 다 WorkKind.Chop priority=1 →
+                //  list 순서가 곧 선택 순서.  과거엔 Mine 이 앞이라 시작 시 세 림이 전부
+                //  채광만 함 → wood 영영 정체(stone 만 증가), I4 woodUp 실패.  wood 는 벽/집
+                //  주재료라 경제 병목 → ChopTree 를 Mine 보다 먼저 둬 wood 생산을 보장한다.
+                //  (벌목으로 떨어진 더미는 위 HaulWood 가 곧장 운반 → 카운터 적립.)
                 new ChopTreeAction(),
+                new MineStoneAction(),    // #119 - 광맥 채광
                 new WanderAction(),
             };
         }
