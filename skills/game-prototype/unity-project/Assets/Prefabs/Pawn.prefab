@@ -300,6 +300,8 @@ MonoBehaviour:
   eatRestore: 30
   eatTickInterval: 0.5
   forcedWakeSleepLevel: 95
+  autoSleepThreshold: 35
+  autoWakeSleepLevel: 80
   moodBreakThreshold: 20
   moodBreakRecoverAt: 35
   moodBreakDuration: 30
