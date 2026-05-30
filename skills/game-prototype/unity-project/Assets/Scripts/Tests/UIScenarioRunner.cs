@@ -354,6 +354,13 @@ namespace MelonS.GameProto.Tests
             }
 
             // Capture AFTER the action so the screenshot reflects the new UI/world state.
+            // yield return null — wait one full frame so any overlay Update() that polls a
+            //  Version change (e.g. RoofOverlayRenderer) has time to rebuild its quads
+            //  BEFORE the WaitForEndOfFrame screenshot captures the rendered output.
+            //  Without this extra frame, the Version bump from action() lands AFTER the
+            //  current frame's Updates have already run, and the shade quads are not yet
+            //  visible in the same-frame capture.
+            yield return null;
             yield return new WaitForEndOfFrame();
             string path = CapturePath(n, name);
             CaptureScreenshot(path);
