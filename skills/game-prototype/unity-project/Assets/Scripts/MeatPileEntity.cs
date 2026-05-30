@@ -24,13 +24,10 @@ namespace MelonS.GameProto
         public void SetFood(int v) { food = v; }
         private void Awake() { spawnTime = Time.time; }
 
-        public bool Pickup()
-        {
-            if (this == null || gameObject == null) return false;
-            ResourceManager.Instance?.AddFood(food);
-            Destroy(gameObject);
-            return true;
-        }
+        // #214 운영자 fb: "아이템이 먹거나 하면 뿅 이동" — 즉시-credit/teleport 제거.
+        //  과거 Pickup() 은 줍는 즉시 ResourceManager.AddFood + Destroy = 순간이동이었다.
+        //  현재 운반은 PawnHauler(물리 carry), 섭취는 PawnNeeds(물리 도착 후 소비)가
+        //  전담하므로 이 즉시-적립 경로는 완전히 제거한다.  외부 호출처 없음(확인됨).
 
         private void Update()
         {

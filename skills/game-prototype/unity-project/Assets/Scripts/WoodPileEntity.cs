@@ -39,18 +39,11 @@ namespace MelonS.GameProto
             spawnTime = Time.time;
         }
 
-        /// <summary>[DEPRECATED #212] 줍는 즉시 inventory +N + entity 제거.
-        ///  림월드 정상 흐름(줍기→stockpile 운반→도착 시 적립)과 충돌하므로
-        ///  현재 hauler 경로(PawnHauler)는 이걸 호출하지 않는다.  호출 시 목재가
-        ///  stockpile 을 거치지 않고 카운터에 즉시 들어가 priority-haul 을 무력화함.
-        ///  남겨둔 것은 호환용일 뿐 — 신규 코드에서 사용 금지.</summary>
-        public bool Pickup()
-        {
-            if (this == null || gameObject == null) return false;
-            ResourceManager.Instance?.AddWood(wood);
-            Destroy(gameObject);
-            return true;
-        }
+        // #214 운영자 fb "아이템이 뿅 이동" — 즉시-credit/teleport 완전 제거.
+        //  과거 Pickup() 은 줍는 즉시 ResourceManager.AddWood + Destroy = 순간이동으로,
+        //  stockpile 운반(물리)을 우회해 priority-haul 을 무력화했다.  현재 운반은
+        //  PawnHauler 가 줍기→물리 carry→내려놓기로 전담하므로 이 경로를 삭제한다.
+        //  외부 호출처 없음(확인됨).
 
         private void Update()
         {

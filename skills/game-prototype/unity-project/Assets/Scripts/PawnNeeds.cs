@@ -1,4 +1,5 @@
 using UnityEngine;
+using MelonS.GameProto.AI;
 
 namespace MelonS.GameProto
 {
@@ -35,8 +36,34 @@ namespace MelonS.GameProto
         //  phantom decline.  RimWorld pawns eat around the "Hungry" (~ half) mark.
         [SerializeField] private float eatThreshold = 50f;
         [SerializeField] private float eatRestore = 30f;
-        [SerializeField] private float eatTickInterval = 0.5f;
-        private float lastEatTime = -999f;
+
+        // ── #214 운영자 fb: "아이템이 먹거나 하면 저장/건축공간으로 뿅 이동" ──────────
+        //  ROOT CAUSE: 기존 TryEatTick 은 배고프면 ResourceManager 의 meals/food 카운터를
+        //  그 자리에서 즉시 차감(= 음식이 림에게 순간이동/추상 섭취)했다.  림이 음식이 있는
+        //  곳으로 걸어가는 행동이 전혀 없었다.  이건 운영자가 말한 "뿅 이동" 그 자체.
+        //  FIX (물리 섭취): 배고프면 가장 가까운 *물리적 음식원* 으로 걸어가서 도착해야만
+        //  먹는다.  음식원 우선순위:
+        //    1) 바닥/저장고의 MeatPileEntity (진짜 entity — 줍어서 먹음, 카운터 동기 차감)
+        //    2) 식량을 담는 StockpileZoneEntity (조리된 meal/food 카운터의 물리적 보관 위치
+        //       — meal 은 entity 가 없으므로 저장고 cell 이 그 "장소" 역할.  도착해야 섭취)
+        //    3) 익은 BerryBushEntity (덤불에서 직접 따 먹음)
+        //  도착 전에는 카운터/덤불을 절대 건드리지 않는다 = 순간이동 제거.
+        //  이동은 PawnMovement(읽기 전용 lane) 의 SetTarget 으로 박고, AI override 를
+        //  막기 위해 PawnEntity.ManualMoveUntil 을 매 frame 밀어준다(auto-sleep 과 동일 정신).
+        private enum EatState { None, Walking }
+        private EatState eatState = EatState.None;
+        private MeatPileEntity eatMeatTarget;       // 1) 물리 고기 더미
+        private StockpileZoneEntity eatStockTarget; // 2) meal/food 카운터의 보관 장소
+        private BerryBushEntity eatBushTarget;      // 3) 익은 베리 덤불
+        private Vector2 eatDestWorld;
+        private float eatStartTime = -999f;
+        [SerializeField] private float eatReachRange = 1.3f;   // 음식원 인접 도달 판정
+        [SerializeField] private float eatWalkTimeout = 12f;   // 도달 못 하면 포기(stuck 방지)
+        [SerializeField] private float eatRetryCooldown = 4f;  // 포기 후 재시도 쿨다운
+        private float eatSuppressUntil = -999f;
+        private PawnMovement movement;
+        private PawnEntity pawnEntity;
+        public bool IsEating => eatState == EatState.Walking;
 
         public bool IsSleeping { get; private set; }
 
@@ -125,6 +152,12 @@ namespace MelonS.GameProto
         private bool isBreaking = false;
         private float breakUntil = -10f;
         public bool IsBreaking => isBreaking;
+
+        private void Awake()
+        {
+            movement = GetComponent<PawnMovement>();
+            pawnEntity = GetComponent<PawnEntity>();
+        }
 
         private void Update()
         {
@@ -302,56 +335,226 @@ namespace MelonS.GameProto
                 isBreaking = false;
             }
 
-            // Day 11: eat from food stockpile when hungry (only while awake).
-            // We poll ResourceManager.Instance every frame instead of subscribing —
-            // lesson #7 singleton-subscription-race avoidance: PawnNeeds.Awake
-            // could fire before ResourceManager.Awake, and OnEnable subscription
-            // would miss the eventual instance.  Poll-via-Update is the safe shape.
-            TryEatTick();
+            // #214 - 물리 섭취: 배고프면 음식원으로 걸어가서 도착 후에만 먹는다.
+            //  (과거의 즉시-카운터-차감 = 순간이동 제거.)  poll-via-Update — lesson #7
+            //  singleton-subscription-race 회피와 동일한 안전한 형태.
+            TryPhysicalEatTick();
         }
 
-        private void TryEatTick()
+        // ── #214 물리 섭취 상태기계 ──────────────────────────────────────────────────
+        //  배고프면(food < eatThreshold) 음식원을 물색해 그쪽으로 이동시키고, 인접 도달
+        //  시에만 1회 섭취.  drafted/manual/sleep/rest 중에는 발동하지 않는다(상위 생존/
+        //  사용자 명령 우선 — 이 메서드는 그 블록들을 지난 awake 상태에서만 호출됨).
+        private void TryPhysicalEatTick()
         {
-            if (food >= eatThreshold) return;
-            if (Time.time - lastEatTime < eatTickInterval) return;
-            var rm = ResourceManager.Instance;
-            if (rm == null) return;
+            // 사용자 수동 제어/징집 중에는 자율 섭취 보류 (명령 우선).
+            if (pawnEntity != null && (pawnEntity.IsDrafted || pawnEntity.IsUnderManualControl))
+            {
+                if (eatState == EatState.Walking) ClearEatTask();
+                return;
+            }
 
-            // Day 27: prefer cooked meal — +eatRestore food AND +10 mood bonus.
-            // #131 - fine meal 우선 (mood +20, "최고의 식사" thought)
-            // #164 - PawnTraits.mealMoodBonus (Gourmand +15) 가산.
+            // 진행 중인 섭취 이동이 있으면 그걸 우선 처리.
+            if (eatState == EatState.Walking)
+            {
+                StepEatWalk();
+                return;
+            }
+
+            if (food >= eatThreshold) return;
+            if (Time.time < eatSuppressUntil) return;           // 직전 포기 후 쿨다운
+            if (movement == null) return;
+            // 이미 다른 이동/작업 중이면 이 frame 은 양보 — 작업이 끝나 idle 일 때 출발.
+            //  (단, 너무 배고프면 식사가 생존이므로 작업보다 우선해야 하나, 작업 task 정리는
+            //   PawnUtilityAI lane 이라 여기서 건드리지 않는다.  대신 ManualMoveUntil 로
+            //   다음 AI tick 부터 식사 이동을 보호한다.)
+            BeginEatWalk();
+        }
+
+        // 가장 가까운 물리 음식원을 골라 이동 시작.  못 찾으면 아무 것도 안 함(굶주림 유지 —
+        //  순간이동으로 카운터에서 뽑아 먹지 않는다).
+        private void BeginEatWalk()
+        {
+            Vector2 me = transform.position;
+            var rm = ResourceManager.Instance;
+
+            // 1) 물리 MeatPileEntity (바닥/저장고).  reserve 로 두 림이 한 더미에 안 몰리게.
+            MeatPileEntity bestMeat = null;
+            float bestSq = float.MaxValue;
+            foreach (var m in Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None))
+            {
+                if (m == null) continue;
+                if (ReservationManager.IsReservedByOther(m, gameObject)) continue;
+                float sq = ((Vector2)m.transform.position - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; bestMeat = m; }
+            }
+
+            // 2) meal/food 카운터가 있으면 그 보관 장소(식량 허용 stockpile)로 걸어가 먹는다.
+            //  meal 은 별도 entity 가 없으므로 저장고 cell 이 "음식이 있는 위치" 역할을 한다.
+            StockpileZoneEntity bestStock = null;
+            if (rm != null && (rm.fineMeals > 0 || rm.meals > 0 || rm.food > 0))
+            {
+                bestStock = StockpileZoneEntity.FindBest(me, StockItemKind.Food);
+            }
+
+            // 3) 익은 베리 덤불에서 직접 따 먹기.
+            BerryBushEntity bestBush = null;
+            float bushSq = float.MaxValue;
+            foreach (var b in Object.FindObjectsByType<BerryBushEntity>(FindObjectsSortMode.None))
+            {
+                if (b == null || b.IsDepleted) continue;
+                if (ReservationManager.IsReservedByOther(b, gameObject)) continue;
+                float sq = ((Vector2)b.transform.position - me).sqrMagnitude;
+                if (sq < bushSq) { bushSq = sq; bestBush = b; }
+            }
+
+            // 가장 가까운 음식원 선택 (meat > stock > bush 동률시 거리 비교).
+            //  meal 카운터를 가진 stockpile 이 더 가까우면 그쪽 우선 — 조리식이 mood 도 높음.
+            float meatD = bestMeat != null ? bestSq : float.MaxValue;
+            float stockD = bestStock != null
+                ? ((Vector2)bestStock.transform.position - me).sqrMagnitude : float.MaxValue;
+            float bushD = bestBush != null ? bushSq : float.MaxValue;
+
+            if (meatD == float.MaxValue && stockD == float.MaxValue && bushD == float.MaxValue)
+                return;  // 물리 음식원 전무 → 순간이동 금지, 굶주림 유지
+
+            eatMeatTarget = null; eatStockTarget = null; eatBushTarget = null;
+            if (meatD <= stockD && meatD <= bushD)
+            {
+                eatMeatTarget = bestMeat;
+                eatDestWorld = bestMeat.transform.position;
+                ReservationManager.TryReserve(bestMeat, gameObject);
+            }
+            else if (stockD <= bushD)
+            {
+                eatStockTarget = bestStock;
+                eatDestWorld = bestStock.transform.position;
+            }
+            else
+            {
+                eatBushTarget = bestBush;
+                eatDestWorld = bestBush.transform.position;
+                ReservationManager.TryReserve(bestBush, gameObject);
+            }
+
+            eatState = EatState.Walking;
+            eatStartTime = Time.time;
+            movement.SetTarget(eatDestWorld);
+            // AI override 는 PawnUtilityAI 의 busy-gate(movement.IsMoving) 가 막아준다 —
+            //  이동 중엔 Decide 가 돌지 않아 work target 으로 가로채지 못한다.  ManualMoveUntil
+            //  은 쓰지 않는다(그걸 쓰면 IsUnderManualControl 이 켜져 다음 frame 에 내 자신의
+            //  TryPhysicalEatTick 가 "수동 제어 중"으로 오인해 eat 을 취소하는 자기상쇄 발생).
+        }
+
+        // 매 frame: 음식원 도달 여부 검사.  도달하면 섭취, 아니면 이동 유지(+timeout fallback).
+        private void StepEatWalk()
+        {
+            // 목표 entity 가 사라졌으면(소비/부패) 재탐색.
+            bool targetGone =
+                (eatMeatTarget != null && eatMeatTarget.gameObject == null) ||
+                (eatBushTarget != null && eatBushTarget.gameObject == null) ||
+                (eatStockTarget != null && eatStockTarget.gameObject == null);
+            if (targetGone) { ClearEatTask(); return; }
+
+            float dist = Vector2.Distance(transform.position, eatDestWorld);
+            if (dist <= eatReachRange)
+            {
+                ConsumeAtSource();
+                ClearEatTask();
+                return;
+            }
+
+            // 도달 timeout — 경로 실패/막힘이면 포기하고 쿨다운(stuck 방지, 순간이동 금지 유지).
+            if (Time.time - eatStartTime > eatWalkTimeout)
+            {
+                Debug.Log($"[Eat] {name} 음식원 도달 실패(timeout) → 재시도 쿨다운, food={food:F0}");
+                eatSuppressUntil = Time.time + eatRetryCooldown;
+                ClearEatTask();
+                return;
+            }
+
+            // 이동이 끊겼으면(도착 못 했는데 멈춤) 다시 음식원으로 향하게 — AI override 는
+            //  busy-gate(movement.IsMoving) 가 막으므로 ManualMoveUntil 불필요.
+            if (movement != null && !movement.IsMoving) movement.SetTarget(eatDestWorld);
+        }
+
+        // 음식원에 도착한 순간에만 1회 섭취 — 여기서만 카운터/덤불이 줄어든다(물리 도착 후).
+        private void ConsumeAtSource()
+        {
+            var rm = ResourceManager.Instance;
             var traits = GetComponent<PawnTraits>();
             float traitMealBonus = traits != null ? traits.mealMoodBonus : 0f;
-            if (rm.fineMeals > 0)
+
+            // 1) 물리 고기 더미: 더미를 집어 먹는다.  더미가 저장고에 들어가 있던
+            //  것(InStockpile)이면 그 양은 보관 카운터에 적립돼 있으므로 동기 차감한다.
+            //  바닥에 흩어진(아직 미적립) 더미는 카운터를 건드리지 않는다(이중 차감 방지).
+            if (eatMeatTarget != null && eatMeatTarget.gameObject != null)
             {
-                rm.AddFineMeals(-1);
+                int amount = eatMeatTarget.Food;
+                bool counted = eatMeatTarget.InStockpile;
+                Object.Destroy(eatMeatTarget.gameObject);
+                if (counted && rm != null) rm.AddFood(-amount);
                 food = Mathf.Min(100f, food + eatRestore);
-                mood = Mathf.Min(100f, mood + 20f + traitMealBonus);
-                lastEatTime = Time.time;
-                var th2 = GetComponent<PawnThoughts>();
-                if (th2 != null) th2.AddThought("최고의 식사", +12f, 800f);
-                return;
-            }
-            if (rm.meals > 0)
-            {
-                rm.AddMeals(-1);
-                food = Mathf.Min(100f, food + eatRestore);
-                mood = Mathf.Min(100f, mood + 10f + traitMealBonus);
-                lastEatTime = Time.time;
-                // #122 - mood thought 추가
-                var th = GetComponent<PawnThoughts>();
-                if (th != null) th.AddThought("맛있는 식사");
-                return;
-            }
-            if (rm.food > 0)
-            {
-                rm.AddFood(-1);
-                food = Mathf.Min(100f, food + eatRestore);
-                lastEatTime = Time.time;
-                // #122 - raw food = 배부름 only (생식)
                 var th = GetComponent<PawnThoughts>();
                 if (th != null) th.AddThought("배부름");
+                return;
             }
+
+            // 2) 저장고 도착: 보관된 조리식/식량을 한 단위 꺼내 먹는다(우선순위 fine>meal>raw).
+            if (eatStockTarget != null && rm != null)
+            {
+                if (rm.fineMeals > 0)
+                {
+                    rm.AddFineMeals(-1);
+                    food = Mathf.Min(100f, food + eatRestore);
+                    mood = Mathf.Min(100f, mood + 20f + traitMealBonus);
+                    var th2 = GetComponent<PawnThoughts>();
+                    if (th2 != null) th2.AddThought("최고의 식사", +12f, 800f);
+                    return;
+                }
+                if (rm.meals > 0)
+                {
+                    rm.AddMeals(-1);
+                    food = Mathf.Min(100f, food + eatRestore);
+                    mood = Mathf.Min(100f, mood + 10f + traitMealBonus);
+                    var th = GetComponent<PawnThoughts>();
+                    if (th != null) th.AddThought("맛있는 식사");
+                    return;
+                }
+                if (rm.food > 0)
+                {
+                    rm.AddFood(-1);
+                    food = Mathf.Min(100f, food + eatRestore);
+                    var th = GetComponent<PawnThoughts>();
+                    if (th != null) th.AddThought("배부름");
+                    return;
+                }
+                // 도착했는데 보관 식량이 0 (다른 림이 먼저 먹음) → 그냥 종료, 다음 tick 재탐색.
+                return;
+            }
+
+            // 3) 익은 베리 덤불: 덤불에서 직접 따 먹는다(카운터 경유 없이 직접 섭취).
+            if (eatBushTarget != null && eatBushTarget.gameObject != null)
+            {
+                int got = eatBushTarget.TakeBerry();
+                if (got > 0)
+                {
+                    food = Mathf.Min(100f, food + eatRestore);
+                    var th = GetComponent<PawnThoughts>();
+                    if (th != null) th.AddThought("배부름");
+                }
+            }
+        }
+
+        private void ClearEatTask()
+        {
+            if (eatMeatTarget != null) ReservationManager.Release(eatMeatTarget, gameObject);
+            if (eatBushTarget != null) ReservationManager.Release(eatBushTarget, gameObject);
+            eatMeatTarget = null;
+            eatStockTarget = null;
+            eatBushTarget = null;
+            eatState = EatState.None;
+            if (movement != null) movement.ClearTarget();
         }
 
         private bool IsOnFloor()

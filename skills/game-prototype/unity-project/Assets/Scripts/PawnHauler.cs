@@ -130,6 +130,33 @@ namespace MelonS.GameProto
             return false;
         }
 
+        // #214 — 운반 중이던 자원을 림 발밑에 물리 더미로 내려놓는다(순간이동 금지).
+        //  InStockpile=false 로 두어 카운터에 적립하지 않는다(아직 저장 전).  다른 hauler 가
+        //  나중에 줍어서 stockpile 로 옮긴다.  발밑 drop 이라 stockpile 위 drop 의 재줍기
+        //  무한루프와는 무관하다(그 우려는 stockpile cell 에 놓을 때만 해당).
+        private void DropCarriedAtFeet()
+        {
+            Vector3 at = transform.position;
+            if (carryingWood > 0)
+            {
+                var p = WoodPileEntity.Spawn(at, carryingWood, WoodPileSpriteRef);
+                if (p != null) p.InStockpile = false;
+                carryingWood = 0;
+            }
+            if (carryingStone > 0)
+            {
+                var c = StoneChunkEntity.Spawn(at, carryingStone, StoneChunkSpriteRef);
+                if (c != null) c.InStockpile = false;
+                carryingStone = 0;
+            }
+            if (carryingFood > 0)
+            {
+                var m = MeatPileEntity.Spawn(at, carryingFood, MeatPileSpriteRef);
+                if (m != null) m.InStockpile = false;
+                carryingFood = 0;
+            }
+        }
+
         private void ReleaseStandCell()
         {
             if (standCell.x != PawnMovement.INVALID_CELL.x)
@@ -201,10 +228,12 @@ namespace MelonS.GameProto
             targetPile = null;
             targetStone = null;
             targetMeat = null;
-            // 운반 중인 자원은 inventory 로 즉시 (drop 자리에 새 pile 만들면 다시 hauler 가 줍어서 무한 loop).
-            if (carryingWood > 0)  { ResourceManager.Instance?.AddWood(carryingWood);   carryingWood = 0; }
-            if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
-            if (carryingFood > 0)  { ResourceManager.Instance?.AddFood(carryingFood);   carryingFood = 0; }
+            // #214 운영자 fb "아이템이 뿅 이동" — 운반 중 task 포기 시 즉시-credit(순간이동)
+            //  대신 그 자리에 *물리 더미*로 내려놓는다.  과거엔 carryingX 를 곧장 카운터에
+            //  적립(=발밑에서 저장공간으로 순간이동)했다.  이제 림이 들고 있던 것은 발밑에
+            //  떨어지고, 나중에 다른 hauler 가 물리적으로 다시 줍어 stockpile 로 옮긴다.
+            //  떨어진 더미는 InStockpile=false → 카운터 미적립(저장 전이므로) → 이중집계 없음.
+            DropCarriedAtFeet();
             UpdateCarryVisual();  // #213 - 운반물 0 → 등짐 아이콘 끔
             dropTarget = null;
             bpDropTarget = null;
@@ -269,8 +298,10 @@ namespace MelonS.GameProto
                         Debug.Log($"[Hauler] {name} blueprint 자재 넣음: 석재 {carryingStone}");
                         carryingStone = 0;
                     }
-                    if (carryingFood > 0)
-                    { ResourceManager.Instance?.AddFood(carryingFood); carryingFood = 0; }
+                    // 식량은 blueprint 에 안 들어간다 — 들고 있던 식량은 발밑에 물리 드롭
+                    //  (#214 즉시-credit 순간이동 제거).  food hauler 가 blueprint 로 잘못
+                    //  배차된 드문 경우의 안전 처리.
+                    if (carryingFood > 0) DropCarriedAtFeet();
                     UpdateCarryVisual();  // #213 - 운반 끝 → 등짐 아이콘 끔
                     bpDropTarget = null;
                     phase = Phase.GoToItem;
@@ -287,9 +318,9 @@ namespace MelonS.GameProto
             {
                 if (dropTarget == null || dropTarget.gameObject == null)
                 {
-                    // stockpile 없으면 그냥 inventory 추가
-                    if (carryingWood > 0)  { ResourceManager.Instance?.AddWood(carryingWood);   carryingWood = 0; }
-                    if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
+                    // #214 — stockpile 이 운반 도중 사라짐.  즉시-credit(순간이동) 대신
+                    //  발밑에 물리 더미로 내려놓는다(미적립).  다른 hauler 가 나중에 줍어 옮김.
+                    DropCarriedAtFeet();
                     UpdateCarryVisual();  // #213 - 운반 끝 → 등짐 아이콘 끔
                     phase = Phase.GoToItem;
                     movement.ClearTarget();
@@ -312,23 +343,24 @@ namespace MelonS.GameProto
                         ResourceManager.Instance?.AddWood(carryingWood);
                         carryingWood = 0;
                     }
-                    if (carryingStone > 0 && StoneChunkSpriteRef != null)
+                    // #214 — 석재/식량도 목재와 동일하게 *항상* 물리 더미를 stack 한다.
+                    //  과거엔 SpriteRef==null 이면 pile 없이 카운터만 +N (legacy fallback) →
+                    //  "저장공간으로 뿅" 처럼 보였다.  sprite 가 null 이어도 entity 는 만들어
+                    //  카운터(=물리 더미 합)와 화면이 항상 일치하게 한다.
+                    if (carryingStone > 0)
                     {
                         var c = StoneChunkEntity.Spawn(dropPos, carryingStone, StoneChunkSpriteRef);
                         if (c != null) c.InStockpile = true;
                         ResourceManager.Instance?.AddStone(carryingStone);
                         carryingStone = 0;
                     }
-                    if (carryingFood > 0 && MeatPileSpriteRef != null)
+                    if (carryingFood > 0)
                     {
                         var m = MeatPileEntity.Spawn(dropPos, carryingFood, MeatPileSpriteRef);
                         if (m != null) m.InStockpile = true;
                         ResourceManager.Instance?.AddFood(carryingFood);
                         carryingFood = 0;
                     }
-                    // stone/food sprite null fallback 만 inventory 직접 (legacy 호환)
-                    if (carryingStone > 0) { ResourceManager.Instance?.AddStone(carryingStone); carryingStone = 0; }
-                    if (carryingFood > 0)  { ResourceManager.Instance?.AddFood(carryingFood);   carryingFood = 0; }
                     UpdateCarryVisual();  // #213 - 운반 끝 → 등짐 아이콘 끔
                     Debug.Log($"[Hauler] {name} stockpile 도착, pile stack 보존");
                     dropTarget = null;
@@ -381,8 +413,11 @@ namespace MelonS.GameProto
                         }
                         else
                         {
-                            ResourceManager.Instance?.AddWood(carryingWood);
-                            carryingWood = 0;
+                            // #214 — 받을 stockpile/blueprint 없음.  즉시-credit(순간이동) 대신
+                            //  그 자리에 물리 더미로 내려놓는다(미적립).  나중에 stockpile 이
+                            //  생기면 다른 hauler 가 물리적으로 줍어 옮긴다.
+                            DropCarriedAtFeet();
+                            UpdateCarryVisual();
                         }
                     }
                 }
@@ -410,19 +445,21 @@ namespace MelonS.GameProto
                     int amount = targetMeat.Food;
                     UnityEngine.Object.Destroy(targetMeat.gameObject);
                     targetMeat = null;
+                    carryingFood += amount;
+                    UpdateCarryVisual();  // #213 - 줍는 순간 등짐 아이콘 on
                     // Z2 — 식량을 받는 stockpile 만 (food 거부 zone 은 skip).
                     var sp = StockpileZoneEntity.FindBest(transform.position, StockItemKind.Food);
                     if (sp != null)
                     {
-                        carryingFood += amount;
-                        UpdateCarryVisual();  // #213 - 운반 중 시각화
                         dropTarget = sp;
                         phase = Phase.GoToStockpile;
                         WalkAdjacentTo(sp.transform.position);
                     }
                     else
                     {
-                        ResourceManager.Instance?.AddFood(amount);
+                        // #214 — 받을 stockpile 없음.  즉시-credit(순간이동) 대신 물리 드롭.
+                        DropCarriedAtFeet();
+                        UpdateCarryVisual();
                     }
                 }
                 else
@@ -472,8 +509,10 @@ namespace MelonS.GameProto
                         }
                         else
                         {
-                            ResourceManager.Instance?.AddStone(carryingStone);
-                            carryingStone = 0;
+                            // #214 — 받을 stockpile/blueprint 없음.  즉시-credit(순간이동)
+                            //  대신 물리 더미로 발밑에 드롭.
+                            DropCarriedAtFeet();
+                            UpdateCarryVisual();
                         }
                     }
                 }

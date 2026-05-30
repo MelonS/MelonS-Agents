@@ -1,0 +1,38 @@
+{
+  "role": "game-programmer",
+  "lane": "roof-area",
+  "milestone": "M4-building",
+  "task": "지붕 기능 + 지붕영역 지정 메뉴 (운영자: RimWorld처럼 지붕영역 설정 메뉴 따로 있음)",
+  "status": "Done",
+  "rimworld_concept": "(1) RoofDesignation — Architect Zone(구역) 메뉴 '지붕 영역' 드래그-rect 지정(MineDesignation/Stockpile 드래그 패턴 clone), 지정 셀을 roofed 로 마크. (2) RoofOverlayRenderer(self-bootstrap, GameSceneGate) — roofed 셀 위 반투명 어두운 그늘 오버레이. (3) 벽으로 둘러싸인 방 auto-roof (flood-fill, 열린맵이면 bail → 수동만 OK). 효과 = 시각(그늘) + IsRoofed 플래그(향후 비/온도 hook).",
+  "files_owned_and_changed": [
+    "skills/game-prototype/unity-project/Assets/Scripts/RoofDesignation.cs (NEW)",
+    "skills/game-prototype/unity-project/Assets/Scripts/RoofOverlayRenderer.cs (NEW)",
+    "skills/game-prototype/unity-project/Assets/Scripts/ArchitectMenu.cs (EDIT — Zone(구역) 카테고리에 '지붕 영역 (U)' OrderItem 1줄 추가만)"
+  ],
+  "implementation": {
+    "RoofDesignation": "MineDesignation.cs / GrowZoneDesignation.cs 를 EXACT clone — self-bootstrap [RuntimeInitializeOnLoadMethod(AfterSceneLoad)] behind GameSceneGate, idempotent FindFirstObjectByType, drag-rect MarkRect / single-click MarkCell, Time.unscaledTime only, 다른 designation 모드와 mutual-exclusion(Build/Deconstruct/Mine/Grow/Stockpile). roofed 셀은 HashSet<Vector2Int> 에 저장, Version int 가 변경마다 bump. 공개 API: IsRoofed(cell) (roofed 플래그 hook), Roofed (IReadOnlyCollection, 오버레이가 read-only enumerate), SetMode/Toggle. QA 진입점: SimulateClick/SimulateDragRect/DesignateCell.",
+    "auto_roof": "TryAutoRoofEnclosedFrom — seed 에서 flood-fill, 벽/문/impassable terrain 을 경계로. region 이 autoRoofMaxCells(400) 넘으면 open map 으로 보고 bail (수동 지정만 유지). bounded 면 interior 전체 roof. 필수는 수동 지정, auto-roof 는 bonus.",
+    "RoofOverlayRenderer": "self-bootstrap(GameSceneGate) renderer, RoofDesignation.Instance 를 매 프레임 read-only poll, Version 비교로 변경시에만 Rebuild. POOLED 그늘 쿼드(List<SpriteRenderer>, 재사용/성장만, 프레임당 new 없음 — GC firewall). 공유 1x1 white sprite 를 shadeTint(어두운 반투명)로 tint. sortingOrder 24 = pawns/structures 위, NightOverlay(25) 아래, UI Canvas 아래.",
+    "architect": "ArchitectMenu Zone(구역) OrderItem 배열에 '지붕 영역 (U)' 1줄 추가만 — 기존 MakeBtn onClick 플러밍(▣ active 반영) 재사용, RoofDesignation.Instance.SetMode(true). 다른 카테고리/구조 미변경.",
+    "hotkey": "U (roof Up) — 자유 키 (B/F/G/T/Y build, N/R, X deconstruct, M mine, P plant, O stockpile, K floor-stone, J table, H, L lamp, E fence, WASD camera 모두 taken)."
+  },
+  "bug_firewall_check": {
+    "#4_audio_buzz": "PASS — AudioBank.PlaySelect() 는 셀당 1회 단발(single click) 또는 rect/auto-roof 전체당 1회만 호출(throttle inside AudioBank); 절대 per-cell tight loop 아님. idempotent 재-roof 는 silent.",
+    "#5_GetInstanceID_race": "n/a — instance-ID 비교 없음.",
+    "#6_OnCollisionEnter_only": "n/a — collision 핸들러 없음 (designation/overlay 둘 다 폴링 기반, IsWallCell 는 OverlapBox read-only probe).",
+    "#7_singleton_subscription_race": "PASS — OnEnable 에서 singleton 구독/캡처 없음. RoofOverlayRenderer 는 RoofDesignation.Instance 를 Update 에서 read-only poll-find + 사라지면 re-find. RoofDesignation 은 다른 designation Instance 를 read-only 참조만.",
+    "#8_justSpawned_default_true": "n/a — grace-period 필드 없음.",
+    "#9_runInBackground_freeze": "PASS — 코루틴/WaitForSeconds/always-on background timer 전혀 없음. 모든 타이밍은 Update 내 Time.unscaledTime. overlay 는 Version 비교 1줄 + 변경시에만 rebuild."
+  },
+  "no_per_frame_alloc": "RoofOverlayRenderer 쿼드는 pool(List<SpriteRenderer>) 재사용 — 변경시에만 Rebuild, surplus 는 SetActive(false), 프레임당 new List/GameObject 없음. RoofDesignation 의 auto-roof 만 일시적 HashSet/Stack 할당(드래그-완료 이벤트 1회, per-frame 아님).",
+  "syntactic_check": "RoofDesignation.cs braces 37/37 parens 221/221; RoofOverlayRenderer.cs braces 19/19 parens 83/83; ArchitectMenu.cs braces 44/44 parens 276/276. 참조 API 확인: ClickEffect.Spawn(Vector3,Color), PawnMovement.IsBlockedAt(Vector2), AudioBank.PlaySelect(), WallEntity/DoorEntity 존재, StockpileDesignation.ModeActive/SetMode/DumpingMode/SetDumpingMode 존재, GameSceneGate.RunWhenGameScene 존재. Span/stackalloc 위해 using System 추가.",
+  "lane_isolation": "STRICT — 신규 RoofDesignation.cs + RoofOverlayRenderer.cs 만, ArchitectMenu.cs 는 Zone 항목 1줄 추가만(다른 카테고리/구조/MakeBtn/RefreshContent 미변경). SceneSetup* / PathGrid / 다른 designation / PawnMovement / NightOverlay / 어떤 Entity 도 미수정. 다른 designation Instance 는 read-only SetMode 호출만. Unity 실행 안함(QA verifies).",
+  "flags_for_qa": [
+    "SCENE-WIRING (zero): RoofDesignation + RoofOverlayRenderer 둘 다 self-bootstrap(GameSceneGate) — SceneSetup 미수정. MainMenu 에는 안 뜸(게이트), Game scene 에서만.",
+    "CODE-GEN (no prefab/PNG): 그늘 오버레이는 공유 1x1 white sprite 를 어두운 반투명으로 tint 한 pooled 쿼드. QA: Architect Zone '지붕 영역' 행 클릭 또는 U 키 → 맵에 드래그-rect → 해당 셀에 어두운 그늘 오버레이가 pawn/구조물 위, 밤 오버레이 아래로 보이는지 확인.",
+    "AUTO-ROOF: 벽으로 완전히 둘러싸인 방 내부 셀을 roof 하면 flood-fill 로 방 전체 자동 지붕. 열린 공간(벽 없음)을 roof 하면 region>400 으로 bail → 수동 지정 셀만 지붕(의도된 동작, 필수는 수동).",
+    "HOTKEY: 지붕 = U (신규). HotkeyCheatSheet(별도 lane) 에서 충돌 없는지 확인 — lane 시점에 U 는 free 였음.",
+    "FUTURE-HOOK: RoofDesignation.IsRoofed(cell) 가 roofed 플래그 — 향후 비/온도 시스템이 read-only 로 hook 가능(현재는 시각 그늘만)."
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "role": "game-programmer",
+  "label": "item-physical-haul-no-teleport",
+  "task": "아이템 순간이동 제거 — 모든 item transfer 를 림이 직접 물리 운반/섭취. (1) EAT 카운터 즉시-차감 순간이동 제거 → 음식원으로 걸어가 도착 후 섭취. (2) HAUL 즉시-credit/teleport 잔재 제거 → 물리 carry/drop. (3) Pickup() teleport 메서드 삭제.",
+  "status": "Done",
+  "lane_files_changed": [
+    "skills/game-prototype/unity-project/Assets/Scripts/PawnNeeds.cs (EDIT)",
+    "skills/game-prototype/unity-project/Assets/Scripts/PawnHauler.cs (EDIT)",
+    "skills/game-prototype/unity-project/Assets/Scripts/MeatPileEntity.cs (EDIT)",
+    "skills/game-prototype/unity-project/Assets/Scripts/StoneChunkEntity.cs (EDIT)",
+    "skills/game-prototype/unity-project/Assets/Scripts/WoodPileEntity.cs (EDIT)"
+  ],
+  "lane_files_read_only": [
+    "AI/PawnActions.cs (lane, no edit needed — eat driven from PawnNeeds)",
+    "PawnMovement.cs (read-only API: SetTarget/ClearTarget/IsMoving used)",
+    "PawnUtilityAI.cs / PawnEntity.cs / PawnGatherer.cs / ResourceManager.cs / StockpileZoneEntity.cs / BerryBushEntity.cs / AI/ReservationManager.cs (read for integration, NOT edited)"
+  ],
+  "root_cause": "PawnNeeds.TryEatTick 가 배고프면 ResourceManager.{fineMeals,meals,food} 카운터를 그 자리에서 즉시 -1 차감 = 음식이 림에게 순간이동(물리 이동 0). 또한 PawnHauler 의 여러 fallback (no-stockpile / stockpile-destroyed / ClearTask 포기 / sprite-null legacy) 이 carryingX 를 곧장 카운터에 적립 = 발밑에서 저장공간으로 순간이동. WoodPile/StoneChunk/MeatPile.Pickup() 도 줍는 즉시 AddX+Destroy 순간이동(현재 호출처는 없음, dead teleport).",
+  "implementation": {
+    "EAT_physical": "PawnNeeds 에 물리 섭취 상태기계(EatState None/Walking) 추가. food<eatThreshold 이고 awake(상위 sleep/rest 블록을 지난 상태)이며 drafted/manual 아닐 때 BeginEatWalk: 가장 가까운 *물리 음식원* 선택 — 1)MeatPileEntity(reserve) 2)식량 허용 StockpileZoneEntity(조리 meal/food 카운터의 보관 위치 proxy) 3)익은 BerryBushEntity(reserve). movement.SetTarget 으로 이동, eatReachRange(1.3) 인접 도달 시에만 ConsumeAtSource 로 1회 섭취. eatWalkTimeout(12s) 초과 시 포기+eatRetryCooldown(4s). 음식원 전무 시 아무 것도 안 함(굶주림 유지, 순간이동 금지).",
+    "EAT_counter_sync": "MeatPile 섭취: InStockpile(=적립된 보관물)일 때만 food 카운터 동기 -amount, 바닥 미적립 더미는 카운터 미차감(이중차감 방지). Stockpile 도착 섭취: fine>meal>raw 우선 1단위 차감(보관 위치에 물리 도착 후이므로 순간이동 아님). Berry: TakeBerry()로 덤불에서 직접 따 먹음(카운터 무관).",
+    "EAT_ai_override_guard": "ManualMoveUntil 은 *쓰지 않음*. 이동 중엔 PawnUtilityAI busy-gate(movement.IsMoving)가 Decide 를 막아 work target 가로채기가 원천 차단됨. ManualMoveUntil 을 쓰면 IsUnderManualControl 이 켜져 다음 frame 에 자신의 eat-tick 이 '수동제어'로 오인→자기상쇄 버그가 나므로 의도적으로 회피.",
+    "HAUL_drop_at_feet": "PawnHauler.DropCarriedAtFeet() 신규 — 운반 중 자원을 림 발밑에 물리 더미(InStockpile=false, 미적립)로 Spawn. ClearTask / no-stockpile fallback(wood/meat/stone) / GoToStockpile-target-destroyed / GoToBlueprint-food-edge 의 모든 즉시-credit(AddWood/AddStone/AddFood) 순간이동을 이 물리 드롭으로 교체. 발밑 드롭이라 stockpile-cell 재줍기 무한루프 우려와 무관.",
+    "HAUL_deposit_always_physical": "stockpile 도착 deposit 에서 stone/food 의 SpriteRef==null legacy-credit fallback 제거 — wood 와 동일하게 *항상* StoneChunk/MeatPile.Spawn(InStockpile=true)+카운터적립. sprite null 이어도 entity 는 만들어 카운터(=물리 더미 합)와 화면 일치.",
+    "Pickup_removed": "WoodPile/StoneChunk/MeatPile.Pickup() 3개 teleport 메서드 삭제(호출처 없음 확인 — grep '.Pickup()' 0건). 주석으로 제거 사유 명시."
+  },
+  "counter_model": "ResourceManager 카운터 = '저장고에 물리적으로 보관된 자원 합' 의미로 유지. 적립은 hauler 가 stockpile 에 물리 도착해 더미를 stack 할 때만. 차감은 림이 음식원에 물리 도착해 섭취할 때만. 어떤 경로도 림 이동 없이 카운터를 늘리거나 줄이지 않음 = 순간이동 0.",
+  "bug_firewall_check": {
+    "#4_audio_buzz": "n/a — no AudioBank calls.",
+    "#5_GetInstanceID_race": "n/a — no instance-ID compares; reservations via ReservationManager(object key).",
+    "#6_OnCollisionEnter_only": "n/a — no collision handlers added; arrival is frame-polled distance check.",
+    "#7_singleton_subscription_race": "OK — ResourceManager.Instance polled in Update, no OnEnable subscription.",
+    "#8_justSpawned_default_true": "OK — eatState defaults to None (not Walking/eating); no grace-default-true field.",
+    "#9_runInBackground_freeze": "OK — NO coroutine/WaitForSeconds added. eat-walk + timeout are Time.time frame-polled in Update; no background timer/heartbeat."
+  },
+  "syntactic_check": "Brace balance: PawnNeeds 68/68, PawnHauler 85/85, MeatPileEntity 8/8, StoneChunkEntity 8/8, WoodPileEntity 15/15. New symbols resolved: EatState, eatMeatTarget/eatStockTarget/eatBushTarget, BeginEatWalk/StepEatWalk/ConsumeAtSource/ClearEatTask, DropCarriedAtFeet. Namespaces: added 'using MelonS.GameProto.AI' to PawnNeeds (ReservationManager); StockItemKind/StockpileZoneEntity/MeatPileEntity/BerryBushEntity/PawnMovement/PawnEntity all in MelonS.GameProto. BerryBushEntity.TakeBerry()/IsDepleted verified.",
+  "lane_isolation": "Edited ONLY PawnNeeds.cs / PawnHauler.cs / MeatPileEntity.cs / StoneChunkEntity.cs / WoodPileEntity.cs. Did NOT touch PawnMovement / PawnUtilityAI / PawnGatherer / ResourceManager / StockpileZoneEntity / AI/PawnActions.cs / ArchitectMenu / SceneSetup / any test / any Editor script. Unity NOT run (QA verifies). No new self-bootstrap added (no GameSceneGate change needed — logic rides existing PawnNeeds/PawnHauler MonoBehaviours).",
+  "flags_for_qa": [
+    "EAT now requires a physical food source in range. If a colony has food only as abstract meal counters with NO food-allowed StockpileZoneEntity and NO MeatPile/BerryBush, pawns will NOT eat (by design — no teleport). Day-1 scenes already place a food stockpile + meat/berry sources, so the survival loop holds; verify a hungry pawn visibly WALKS to the stockpile/meat/bush before food rises.",
+    "Minor accepted desync: if a food-stockpile is closer than a physical MeatPile, eating debits the meal/food counter while the distant MeatPile entity remains; counter still reads total stored food, self-reconciles as piles are hauled/eaten. Not a teleport, not a crash.",
+    "Dropped field piles from DropCarriedAtFeet use StoneChunk/MeatPile.Spawn which set sprite from static ref (may be null if SceneSetup unwired) — entity still exists & is haulable; only the icon may be missing in an unwired scene. WoodPile self-heals via EnsureSprite."
+  ]
+}

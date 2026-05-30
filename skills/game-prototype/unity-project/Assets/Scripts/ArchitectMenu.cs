@@ -100,6 +100,15 @@ namespace MelonS.GameProto
                     () => StockpileDesignation.Instance != null
                           && StockpileDesignation.Instance.ModeActive
                           && StockpileDesignation.Instance.DumpingMode),
+                // ROOF wave (운영자: "RimWorld처럼 지붕영역 설정 메뉴 따로 있음") — the
+                //   vanilla RimWorld "Roof Area" (지붕 영역) lives under the Zone tab.
+                //   This row enters RoofDesignation's drag-rect mode (hotkey U); the
+                //   same MakeBtn onClick plumbing the other Zone items use renders it
+                //   (▣ active reflected).  ROOF-row addition ONLY — no other
+                //   category/structure touched.
+                new OrderItem("지붕 영역 (U)",
+                    () => { if (RoofDesignation.Instance != null) RoofDesignation.Instance.SetMode(true); },
+                    () => RoofDesignation.Instance != null && RoofDesignation.Instance.ModeActive),
             },
         };
 

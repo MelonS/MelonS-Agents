@@ -23,13 +23,9 @@ namespace MelonS.GameProto
 
         private void Awake() { spawnTime = Time.time; }
 
-        public bool Pickup()
-        {
-            if (this == null || gameObject == null) return false;
-            ResourceManager.Instance?.AddStone(stone);
-            Destroy(gameObject);
-            return true;
-        }
+        // #214 운영자 fb: 즉시-credit/teleport 제거.  과거 Pickup() 은 줍는 즉시
+        //  ResourceManager.AddStone + Destroy = 순간이동.  운반은 PawnHauler(물리 carry)
+        //  전담이므로 이 즉시-적립 경로는 완전히 제거한다.  외부 호출처 없음(확인됨).
 
         private void Update()
         {
