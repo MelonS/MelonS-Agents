@@ -1,0 +1,49 @@
+{
+  "lane": "inspector",
+  "spec": "docs/ui-audit.md (skills/game-prototype/docs/ui-audit.md)",
+  "problem": "P5",
+  "date": "2026-05-30",
+  "files": [
+    "Assets/Scripts/EntityInspectorPanel.cs",
+    "Assets/Scripts/PawnInfoPanel.cs"
+  ],
+  "mandate": "pawns -> bottom-left PawnInfoPanel ONLY; non-pawn entities -> right EntityInspectorPanel ONLY; unify empty-state copy; confirm borders.",
+  "changes": [
+    {
+      "file": "Assets/Scripts/EntityInspectorPanel.cs",
+      "edit": "Update(): added isPawn check (inspect.GetComponent<PawnEntity>()). When selection is a pawn (or null), render the hint state instead of pawn data, so the right panel no longer double-shows pawn info that PawnInfoPanel owns.",
+      "rationale": "kills the #128 double-panel clutter per §3.4"
+    },
+    {
+      "file": "Assets/Scripts/EntityInspectorPanel.cs",
+      "edit": "Describe(): removed the PawnEntity branch (old lines 137-160) that built pawn name/needs/abilities. Method now describes NON-pawn entities only (blueprint/woodpile/vein/tree/wall/etc unchanged).",
+      "rationale": "§3.4 explicit: remove PawnEntity branch"
+    },
+    {
+      "file": "Assets/Scripts/EntityInspectorPanel.cs",
+      "edit": "Hint body copy updated to add '(콜로니스트 정보는 좌측 하단 패널)' so a user who clicks a pawn is told the data is in the left panel.",
+      "rationale": "UX clarity for the now-redirected pawn selection"
+    },
+    {
+      "file": "Assets/Scripts/PawnInfoPanel.cs",
+      "edit": "EnsureEmptyState(): empty-state copy changed '오브젝트를 선택하세요' -> '선택된 오브젝트 없음'.",
+      "rationale": "§3.4 unify empty copy to the single canonical string (matches EntityInspectorPanel title)"
+    }
+  ],
+  "empty_state_copy": "선택된 오브젝트 없음",
+  "borders_confirmed": {
+    "EntityInspectorPanel": "UITheme.MakeBorderedPanel(rt, 2f) at Awake — bordered + HeaderBg gold title + cream body + PadOuter. OK per §3.4.",
+    "PawnInfoPanel": "EnsureBorder() builds 4 Divider-colored edge Images (BorderTop/Bottom/Left/Right) over panelBg; frame always on (V7). OK per §3.4."
+  },
+  "constraints_honored": {
+    "lane_files_only": true,
+    "unity_not_run": true,
+    "no_TODO": true,
+    "test_referenced_names_preserved": "no Btn_ / resource Text names touched in this lane"
+  },
+  "out_of_lane_notes": [
+    "EntityInspectorPanel still anchors right-center (1,0.5) 360x380 — anchor unchanged, lane mandate was data-ownership + copy, not re-anchor.",
+    "PawnInfoPanel bottom-left position is set by SceneSetup (Editor, build-engineer lane) — untouched."
+  ],
+  "status": "done"
+}

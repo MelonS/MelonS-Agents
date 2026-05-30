@@ -1,0 +1,31 @@
+{
+  "lane": "ui-scenario-runner",
+  "role": "gameplay-programmer",
+  "status": "code-complete",
+  "date": "2026-05-30",
+  "file": "skills/game-prototype/unity-project/Assets/Scripts/Tests/UIScenarioRunner.cs",
+  "files_edited_other": [],
+  "summary": "Human-play scenario QA runner. Self-bootstraps via [RuntimeInitializeOnLoadMethod(AfterSceneLoad)] gated through Core/GameSceneGate.RunWhenGameScene (Game scene only) AND argv contains '-ui-scenario'. Coroutine drives a realistic 7-step play session over EXISTING simulation hooks, capturing a PNG at each step to G:/ai/_scn_<NN>_<name>.png.",
+  "activation": "exe ... -ui-scenario   (plus AutoScreenshotter args NOT required; this runner self-captures)",
+  "steps": [
+    {"n": 1, "name": "startup",             "hook": "GameClock.Instance read; screenshot of startup view"},
+    {"n": 2, "name": "select_colonist",     "hook": "ClickSelector.SimulateSelect(pawn) -> inspector + SelectionGizmoBar appear"},
+    {"n": 3, "name": "open_architect",      "hook": "GuiControlBar 'Btn_건축'.onClick (fallback ArchitectMenu.Open) -> catalogue visible"},
+    {"n": 4, "name": "place_wall",          "hook": "ArchitectMenu Structure->벽 button onClick -> SetMode(Wall); BuildManager.SimulateMapClick on candidate grass cells (x=-22 col, downward fallback) -> BuildClickResult.Placed"},
+    {"n": 5, "name": "designate_mine",      "hook": "MineDesignation.SetMode(true) + SimulateClick(screen) on a StoneVeinEntity vein"},
+    {"n": 6, "name": "marquee_multiselect", "hook": "MineDesignation.SetMode(false); reproduce MarqueeSelector box-select READ-ONLY (Physics2D.OverlapArea over pawn bounds + PawnEntity.SetSelected(true)) - MarqueeSelector has NO public QA entry point and lane forbids editing it"},
+    {"n": 7, "name": "chop_tree",           "hook": "re-select pawn via SimulateSelect; ClickSelector.SimulateRightClick(treeWorld) -> PawnChopper.SetTreeTarget queues chop work"}
+  ],
+  "logging": "[UIScenario] step N <name> OK  (or WARN + skip when target missing). Ends '[UIScenario] DONE steps=7'.",
+  "robustness": "Each step wrapped in try/catch; missing target -> logged WARN + continue (never crash). Wall placement iterates a spread of candidate grass cells so water/rock/occupied rejection just tries the next.",
+  "bug_pattern_firewall": {
+    "#9_runInBackground": "Set Application.runInBackground = true on Start (AutoScreenshotter contract) so the long WaitForSeconds step coroutine does NOT freeze when the Unity window loses OS focus to the qa.py launcher console. ScreenCapture.CaptureScreenshot used exactly like AutoScreenshotter. No always-on heartbeat timer added.",
+    "#7_singleton_subscription": "Every manager (ClickSelector/BuildManager/ArchitectMenu/MineDesignation/GameClock) is poll-found read-only with null-guarded skip; nothing subscribed in OnEnable.",
+    "#4_audio_buzz": "No AudioBank calls from this file; only the existing per-click UI blips inside the menu/designation handlers fire.",
+    "#5_#6_#8": "No GetInstanceID compares, no OnCollision handlers, no justSpawned-default field."
+  },
+  "queue_notes": [
+    "MarqueeSelector exposes no public Simulate/QA entry point. To keep this lane to a single new file, step 6 reproduces the marquee box-select math read-only. RECOMMEND a future MarqueeSelector.SimulateMarquee(worldMin, worldMax) public hook (mirrors MineDesignation.SimulateDragRect) so QA can drive the genuine selector instead of a local re-impl. Queue as OPERATOR_QUEUE follow-up if the operator wants the real selector exercised end-to-end."
+  ],
+  "next": "Build Engineer: no SceneSetup wiring required (fully self-bootstrapping). QA: launch Game build with -ui-scenario and read G:/ai/_scn_01..07_*.png + the [UIScenario] log lines."
+}

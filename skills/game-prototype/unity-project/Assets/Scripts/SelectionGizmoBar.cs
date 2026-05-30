@@ -66,7 +66,10 @@ namespace MelonS.GameProto
         [SerializeField] private float buttonWidth = 96f;
         [SerializeField] private float buttonHeight = 40f;
         [SerializeField] private float buttonGap = 8f;
-        [SerializeField] private float barBottomMargin = 16f;
+        // ui-audit.md §3.2 Band C: contextual gizmo row sits clearly ABOVE the
+        //  main command bar (Band A top ~y=100) with a ~12px gap, never the old
+        //  y=16 that collided 24px into GuiControlBar (P4).
+        [SerializeField] private float barBottomMargin = 112f;
         [SerializeField] private int buttonFontSize = 16;
         [SerializeField] private int countFontSize = 14;
 
@@ -259,10 +262,11 @@ namespace MelonS.GameProto
         {
             // Own Canvas (separate object) so we never touch any existing UI
             //  hierarchy.  Screen-space overlay, sort order below the cheat-sheet
-            //  (250) but above world/HUD so the commands sit on top of the map.
+            //  (250) and alerts (200) but above world/HUD so the commands sit on
+            //  top of the map. ui-audit.md §3.6 canonical z-stack: gizmo = 150.
             canvas = gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 200;
+            canvas.sortingOrder = 150;
             var scaler = gameObject.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);

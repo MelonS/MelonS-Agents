@@ -106,7 +106,11 @@ namespace MelonS.GameProto
             // 9 buttons (#126 - 일정 추가)
             //  layout: [멈춤][1x][2x][4x] | [징집] | [직업][일정] | [건축] | [연구]
             float totalW = 9 * BtnW + 4 * Gap + 4 * GroupGap;
-            rt.anchoredPosition = new Vector2(0, 40);  // 화면 하단에서 40px
+            // ui-audit §3.2 Band A — main command bar baseline y=24 (was 40).
+            //   This is the persistent bottom-center bar; the contextual gizmo row
+            //   (SelectionGizmoBar, Band C) sits ABOVE it at y=112, so 24 anchors the
+            //   visual "floor" of the bottom UI stack and clears the gizmo overlap (P4).
+            rt.anchoredPosition = new Vector2(0, 24);  // 화면 하단에서 24px (ui-audit Band A)
 
             // #UI-restyle U1 — ONE bordered panel (warm brown + 2px lighter border),
             //   not a borderless flat rectangle.  Pad the frame so buttons breathe.
@@ -120,6 +124,10 @@ namespace MelonS.GameProto
             float dividerH = BtnH + 4f;
 
             // Speed group: [멈춤][1x][2x][4x]
+            // ui-audit P1 — the bar's LEFTMOST slot is ALWAYS the pause control, never a
+            //   build-mode readout ("없음(0)"/mode-count string).  This file builds 멈춤 first
+            //   and writes NO mode-indicator Text into the bar; build-mode active state lives
+            //   only on the 건축 button highlight (see Update → RefreshBuildHighlight(architectBtn)).
             pauseBtn  = MakeBtn("멈춤", "(Space)",   x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.TogglePause(); }); x += BtnW + Gap;
             speed1Btn = MakeBtn("1x",  "(1)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(1f); });   x += BtnW + Gap;
             speed2Btn = MakeBtn("2x",  "(2)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(2f); });   x += BtnW + Gap;

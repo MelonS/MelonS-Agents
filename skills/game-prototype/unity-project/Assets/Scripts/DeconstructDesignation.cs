@@ -90,10 +90,15 @@ namespace MelonS.GameProto
         [SerializeField] private float pickRadius = 0.45f;        // click hit-test box half-extent
 
         [Header("Toggle button")]
+        // ui-audit.md §3.3 designation-row shared origin: left-anchored (0,0),
+        //  x = x0 + index*(width+gap). 해체 = index 0 (leftmost of the strip).
         [SerializeField] private float btnWidth = 96f;
         [SerializeField] private float btnHeight = 40f;
         [SerializeField] private int btnFontSize = 16;
-        [SerializeField] private float btnBottomInset = 104f;     // sit above the control bar
+        [SerializeField] private float rowX0 = 16f;               // §3.3 left-edge inset
+        [SerializeField] private float rowGap = 4f;               // §3.3 inter-toggle gap
+        [SerializeField] private float rowBaselineY = 24f;        // §3.3/§3.2 Band-A baseline
+        private const int RowIndex = 0;                           // 해체=0, 채광=1, 경작=2
 
         [Header("Drag-rect (B7 area-cancel / deconstruct-area)")]
         // A drag shorter than this (in world units) on mouse-UP counts as a plain
@@ -537,13 +542,12 @@ namespace MelonS.GameProto
             var go = new GameObject("Btn_해체");
             go.transform.SetParent(canvas.transform, false);
             var rt = go.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.5f, 0f);
-            rt.anchorMax = new Vector2(0.5f, 0f);
-            rt.pivot = new Vector2(0.5f, 0f);
+            // ui-audit.md §3.3: left-anchored shared designation row, fixed index.
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot = new Vector2(0f, 0f);
             rt.sizeDelta = new Vector2(btnWidth, btnHeight);
-            // Sit just above the bottom control bar, offset left so it doesn't
-            //  overlap the centered GuiControlBar.
-            rt.anchoredPosition = new Vector2(-360f, btnBottomInset);
+            rt.anchoredPosition = new Vector2(rowX0 + RowIndex * (btnWidth + rowGap), rowBaselineY);
 
             var border = go.AddComponent<Image>();
             border.color = UITheme.Divider;

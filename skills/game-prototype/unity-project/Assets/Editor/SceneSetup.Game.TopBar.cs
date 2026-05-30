@@ -77,25 +77,58 @@ namespace MelonS.GameProto.EditorTools
             timeRt.anchoredPosition = new Vector2(0, 0);
             timeGo.AddComponent<TimeUI>();
 
-            // Day 38 / #UI-restyle U4 (Round 5): 우측 리소스 영역.
-            //  [icon|식량: N] │ [icon|식사: N] │ [icon|목재: N] │ [icon|석재: N]  16px from right.
-            //  점(·) 구분자 → 얇은 Divider 세로선(MakeVDivider 스타일)으로 교체해 제어바와 통일.
-            //  각 readout 앞에 24x24 ICON SLOT(빈 자리)을 둠 → 다음 art round 에서
-            //  여기에 wood/food/meal/stone 아이콘 스프라이트를 넣으면 됨.
-            //  (ICON SLOT 은 "ResIcon_<key>" 이름의 빈 Image, 현재 alpha 0).
-            //  각 텍스트 width 120, 세로선 2px, 텍스트간 28px 간격. 총 너비 ~580.
-            // topbar-icons FINAL-FIX: icons grew 24→36px and now hug the visible text
-            //   (icon left edge ≈ readoutX - 96 - 6 - 36 = readoutX - 138).  Re-spaced the
-            //   readouts to ~172px pitch and pushed each divider clear of the next icon so
-            //   the larger pictograms don't render on top of the thin divider rules.
-            Text foodText  = MakeResText(parent, "FoodText",  "식량: 0", "food",  uiFont, colAccentFood, -16);
-            MakeResSeparator(parent, "ResSep2", -164);
-            Text mealsText = MakeResText(parent, "MealsText", "식사: 0", "meal",  uiFont, new Color(0.93f, 0.81f, 0.45f, 1f), -188);
-            MakeResSeparator(parent, "ResSep1", -336);
-            Text woodText  = MakeResText(parent, "WoodText",  "목재: 0", "wood",  uiFont, colAccentWood, -360);
-            MakeResSeparator(parent, "ResSep3", -508);
+            // ui-audit P2 / §3.1 — RIGHT resource chips, layout-driven (no magic X chain).
+            //   Root cause of the old code: each readout was placed by a hand-tuned
+            //   anchoredX (-16/-164/-188/-336/-360/-508/-532) and each icon by
+            //   (anchoredX - kLabelWidth - kIconGap) where kLabelWidth=96 was a GUESSED
+            //   pixel width of the Korean string.  When a value grew to 2-3 digits the
+            //   real text widened past 96px, so the icon no longer hugged its number and
+            //   the next divider drifted into the neighbouring icon — the "icon next to
+            //   the wrong number" symptom the file's own comment admitted to.
+            //
+            //   §3.1 fix: a RIGHT-anchored HorizontalLayoutGroup of N IDENTICAL chips,
+            //   one per resource, order food → meal → wood → stone.  Each chip is a
+            //   self-contained [icon][value] cell of equal width (kChipW≥150) and equal
+            //   gap (kChipGap), with a thin Divider drawn between cells by the layout.
+            //   Because the layout group sizes/positions every cell, a value growing a
+            //   digit can NEVER desync the icon from its number or shove a divider into a
+            //   neighbour: the icon lives INSIDE its own chip, left-anchored, the value
+            //   fills the rest of the same chip.  No per-resource anchoredX exists anymore.
+            //   Preserved for wiring/tests: Text names FoodText/MealsText/WoodText/StoneText,
+            //   icon names ResIcon_<key>, and the ResourceCounterUI SerializedObject refs
+            //   (which bind by component reference, not by name/path).
+            const float kChipW   = 156f;  // equal cell width (≥150 per §3.1), holds icon + "OO: NNN"
+            const float kChipGap = 8f;    // equal gap between chips (divider sits in the gap)
+            const float kRightInset = 16f; // group's right edge inset from the bar's right edge
+
+            // Right-anchored layout container; HorizontalLayoutGroup lays the chips
+            // right→left with equal spacing.  Width is driven by the layout (child
+            // controlled), so we give it a generous fixed extent and right-align children.
+            GameObject resRowGo = new GameObject("ResourceRow");
+            resRowGo.transform.SetParent(parent.transform, false);
+            RectTransform resRowRt = resRowGo.AddComponent<RectTransform>();
+            resRowRt.anchorMin = new Vector2(1f, 0f);
+            resRowRt.anchorMax = new Vector2(1f, 1f);
+            resRowRt.pivot = new Vector2(1f, 0.5f);
+            // 4 chips + 3 inter-chip gaps, anchored to the right edge.
+            float rowW = 4f * kChipW + 3f * kChipGap;
+            resRowRt.sizeDelta = new Vector2(rowW, 0);
+            resRowRt.anchoredPosition = new Vector2(-kRightInset, 0);
+            var hlg = resRowGo.AddComponent<HorizontalLayoutGroup>();
+            hlg.childAlignment = TextAnchor.MiddleRight;
+            hlg.spacing = kChipGap;
+            hlg.childControlWidth = true;
+            hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = true;
+            hlg.padding = new RectOffset(0, 0, 8, 8);
+
+            // Chips in screen order (left→right): food → meal → wood → stone.
+            Text foodText  = MakeResChip(resRowGo, "FoodText",  "식량: 0", "food",  uiFont, colAccentFood,                               kChipW);
+            Text mealsText = MakeResChip(resRowGo, "MealsText", "식사: 0", "meal",  uiFont, new Color(0.93f, 0.81f, 0.45f, 1f),          kChipW);
+            Text woodText  = MakeResChip(resRowGo, "WoodText",  "목재: 0", "wood",  uiFont, colAccentWood,                               kChipW);
             // #119 - 석재 (회색)
-            Text stoneText = MakeResText(parent, "StoneText", "석재: 0", "stone", uiFont, new Color(0.78f, 0.78f, 0.80f, 1f), -532);
+            Text stoneText = MakeResChip(resRowGo, "StoneText", "석재: 0", "stone", uiFont, new Color(0.78f, 0.78f, 0.80f, 1f),          kChipW);
 
             // ResourceCounterUI host (no longer has its own panel image; just script)
             GameObject resHostGo = new GameObject("ResourceCounter");
@@ -110,46 +143,58 @@ namespace MelonS.GameProto.EditorTools
             rcSo.ApplyModifiedProperties();
         }
 
-        private static Text MakeResText(GameObject parent, string name, string label,
-                                        string iconKey, Font uiFont, Color col, float anchoredX)
+        // ui-audit §3.1 — ONE identical "resource chip" cell: [divider][icon][value].
+        //   Built as a single GameObject that the parent HorizontalLayoutGroup sizes and
+        //   positions; the chip itself uses a nested HorizontalLayoutGroup to keep its own
+        //   icon left-anchored and its value filling the remaining width.  Because the icon
+        //   and the value live in the SAME fixed-width cell, a value growing a digit pushes
+        //   nothing out of alignment and can never reach a neighbouring chip's icon.
+        //
+        //   The icon keeps name "ResIcon_<key>" and the value keeps the caller-supplied
+        //   Text name (FoodText/MealsText/WoodText/StoneText) so existing Find()/test refs
+        //   and the ResourceCounterUI SerializedObject wiring are untouched.
+        private static Text MakeResChip(GameObject row, string textName, string label,
+                                        string iconKey, Font uiFont, Color col, float chipW)
         {
-            GameObject go = new GameObject(name);
-            go.transform.SetParent(parent.transform, false);
-            Text t = go.AddComponent<Text>();
-            t.text = label;
-            t.font = uiFont;
-            t.fontSize = 28;
-            t.fontStyle = FontStyle.Bold;
-            t.color = col;
-            t.alignment = TextAnchor.MiddleRight;
-            RectTransform rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(1f, 0f);
-            rt.anchorMax = new Vector2(1f, 1f);
-            rt.pivot = new Vector2(1f, 0.5f);
-            rt.sizeDelta = new Vector2(120, 0);
-            rt.anchoredPosition = new Vector2(anchoredX, 0);
+            const float kIconPx = 36f;   // distinct pictogram at 1920+ capture res
+            const float kIconGap = 6f;   // breathing room between icon and first glyph
+            const float kDividerW = 2f;  // thin Divider rule on the chip's leading edge
 
-            // ICON SLOT — Image placed just LEFT of this readout's VISIBLE text.
-            //   Round 7: art landed.  Load Assets/Sprites/icon_<key>.png (point-filtered,
-            //   force-imported by ForceImportAllSprites) and make it visible (alpha 1).
-            //   Map is 1:1 — iconKey is stone/wood/meal/food → icon_<key>.png.
-            //   Named "ResIcon_<key>" so future passes can still Find() each slot.
-            //
-            //   FINAL-FIX (Day, topbar-icons): QA read the bar as "text-only" — icons were
-            //   24px (too small vs the 28px Bold Korean text) AND anchored to the readout
-            //   BLOCK's left edge (anchoredX-120).  Because each "식량: 0" label is
-            //   right-aligned and only ~95px wide, that left-block-edge sat ~25px to the
-            //   LEFT of the first glyph, dumping the icon next to the PREVIOUS readout's
-            //   divider — so it read as belonging to the wrong number, hence "ambiguous".
-            //   Fixes: (1) icon 24→36px so it reads as a distinct pictogram at capture res;
-            //   (2) anchor to the VISIBLE text left edge (anchoredX - kLabelWidth) with a
-            //   tight 6px gap so each icon hugs ITS number; (3) raise icon a hair off-center
-            //   is not needed — text is MiddleRight, icon MiddleY → both vertically centered.
-            const float kIconPx    = 36f;   // distinct pictogram at 1920+ capture res
-            const float kLabelWidth = 96f;  // measured visible width of "OO: N" @ font28 Bold
-            const float kIconGap    = 6f;   // breathing room between icon and first glyph
+            // Chip cell — a fixed-width container the parent layout treats as one element.
+            GameObject chipGo = new GameObject($"ResChip_{iconKey}");
+            chipGo.transform.SetParent(row.transform, false);
+            RectTransform chipRt = chipGo.AddComponent<RectTransform>();
+            var chipLe = chipGo.AddComponent<LayoutElement>();
+            chipLe.preferredWidth = chipW;       // equal width for every chip
+            chipLe.minWidth = chipW;
+            var chipLayout = chipGo.AddComponent<HorizontalLayoutGroup>();
+            chipLayout.childAlignment = TextAnchor.MiddleLeft;
+            chipLayout.spacing = kIconGap;
+            chipLayout.childControlWidth = true;
+            chipLayout.childControlHeight = true;
+            chipLayout.childForceExpandWidth = false;
+            chipLayout.childForceExpandHeight = true;
+
+            // Leading Divider rule — separates this chip from the one to its left,
+            //   matching the control bar's group lines (§3 shared style).
+            GameObject divGo = new GameObject($"ResSep_{iconKey}");
+            divGo.transform.SetParent(chipGo.transform, false);
+            divGo.AddComponent<RectTransform>();
+            var divImg = divGo.AddComponent<Image>();
+            divImg.color = UITheme.Divider;
+            divImg.raycastTarget = false;
+            var divLe = divGo.AddComponent<LayoutElement>();
+            divLe.preferredWidth = kDividerW;
+            divLe.minWidth = kDividerW;
+            divLe.preferredHeight = 32f;
+
+            // ICON SLOT — left-anchored inside the chip, fixed 36px.
+            //   Load Assets/Sprites/icon_<key>.png (point-filtered, force-imported by
+            //   ForceImportAllSprites); map is 1:1 — iconKey stone/wood/meal/food.
+            //   Named "ResIcon_<key>" so future passes / tests can still Find() the slot.
             GameObject iconGo = new GameObject($"ResIcon_{iconKey}");
-            iconGo.transform.SetParent(parent.transform, false);
+            iconGo.transform.SetParent(chipGo.transform, false);
+            iconGo.AddComponent<RectTransform>();
             Image icon = iconGo.AddComponent<Image>();
             string iconPath = $"Assets/Sprites/icon_{iconKey}.png";
             Sprite iconSprite = AssetDatabase.LoadAssetAtPath<Sprite>(iconPath);
@@ -167,32 +212,27 @@ namespace MelonS.GameProto.EditorTools
                 icon.color = new Color(1f, 1f, 1f, 0f);
             }
             icon.raycastTarget = false;
-            RectTransform irt = iconGo.GetComponent<RectTransform>();
-            irt.anchorMin = new Vector2(1f, 0.5f);
-            irt.anchorMax = new Vector2(1f, 0.5f);
-            irt.pivot = new Vector2(1f, 0.5f);
-            irt.sizeDelta = new Vector2(kIconPx, kIconPx);
-            // Place icon's RIGHT edge just left of the visible text's first glyph:
-            //   readout right edge = anchoredX; visible text spans ~kLabelWidth to its left.
-            irt.anchoredPosition = new Vector2(anchoredX - kLabelWidth - kIconGap, 0);
-            return t;
-        }
+            var iconLe = iconGo.AddComponent<LayoutElement>();
+            iconLe.preferredWidth = kIconPx;
+            iconLe.minWidth = kIconPx;
+            iconLe.preferredHeight = kIconPx;
 
-        // #UI-restyle U4 — slim Divider-colored vertical rule between readouts
-        //   (replaces the old "·" debug-text separator), matching the control bar's group lines.
-        private static void MakeResSeparator(GameObject parent, string name, float anchoredX)
-        {
-            GameObject go = new GameObject(name);
-            go.transform.SetParent(parent.transform, false);
-            Image img = go.AddComponent<Image>();
-            img.color = UITheme.Divider;
-            img.raycastTarget = false;
-            RectTransform rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(1f, 0.5f);
-            rt.anchorMax = new Vector2(1f, 0.5f);
-            rt.pivot = new Vector2(1f, 0.5f);
-            rt.sizeDelta = new Vector2(2f, 32f);
-            rt.anchoredPosition = new Vector2(anchoredX, 0);
+            // VALUE — fills the remaining chip width, left-aligned so it hugs its icon.
+            GameObject txtGo = new GameObject(textName);
+            txtGo.transform.SetParent(chipGo.transform, false);
+            txtGo.AddComponent<RectTransform>();
+            Text t = txtGo.AddComponent<Text>();
+            t.text = label;
+            t.font = uiFont;
+            t.fontSize = 28;
+            t.fontStyle = FontStyle.Bold;
+            t.color = col;
+            t.alignment = TextAnchor.MiddleLeft;
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;  // 2-3 digit values never clip
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+            var txtLe = txtGo.AddComponent<LayoutElement>();
+            txtLe.flexibleWidth = 1f;   // value cell takes the rest of the fixed chip width
+            return t;
         }
     }
 }

@@ -84,7 +84,9 @@ namespace MelonS.GameProto
             }
             emptyText.alignment = TextAnchor.MiddleCenter;
             emptyText.color = MelonS.GameProto.Core.UITheme.TextSecondary;  // muted cream
-            emptyText.text = "오브젝트를 선택하세요";
+            // ui-audit §3.4 (P5) — unified empty-state copy across both
+            //   inspectors (was "오브젝트를 선택하세요"; matches EntityInspectorPanel).
+            emptyText.text = "선택된 오브젝트 없음";
 
             if (emptyGlyph != null) return;
             // Small dimmed select/cursor glyph centered just above the hint.

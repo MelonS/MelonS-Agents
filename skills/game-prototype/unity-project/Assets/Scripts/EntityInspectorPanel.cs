@@ -118,11 +118,17 @@ namespace MelonS.GameProto
             if (cachedCs == null) cachedCs = Object.FindFirstObjectByType<ClickSelector>();
             if (cachedCs == null) return;
             GameObject inspect = cachedCs.CurrentInspect;
-            // #128 - 패널 항상 켜둠. inspect 없으면 hint 표시.
-            if (inspect == null)
+            // ui-audit §3.4 (P5) — pawns belong to the bottom-LEFT PawnInfoPanel
+            //   ONLY.  The right entity panel no longer mirrors pawn data (that
+            //   was the #128 double-panel clutter).  A pawn selection is treated
+            //   here as "nothing for this panel" → show the hint, so only ONE
+            //   inspector lights up per selection.
+            bool isPawn = inspect != null && inspect.GetComponent<PawnEntity>() != null;
+            // #128 - 패널 항상 켜둠. inspect 없으면 (or pawn) hint 표시.
+            if (inspect == null || isPawn)
             {
                 string hintTitle = "선택된 오브젝트 없음";
-                string hintBody = "💡 나무/벽/사슴/광맥/콜로니스트 등을\n좌클릭하면 정보가 표시됩니다.\n\n📋 직업: F1\n🏛 건축: F8\n🔬 연구: N\n⏸ 멈춤: Space";
+                string hintBody = "💡 나무/벽/사슴/광맥 등을\n좌클릭하면 정보가 표시됩니다.\n(콜로니스트 정보는 좌측 하단 패널)\n\n📋 직업: F1\n🏛 건축: F8\n🔬 연구: N\n⏸ 멈춤: Space";
                 if (titleText.text != hintTitle) titleText.text = hintTitle;
                 if (bodyText.text != hintBody) bodyText.text = hintBody;
                 return;
@@ -134,30 +140,10 @@ namespace MelonS.GameProto
 
         private (string, string) Describe(GameObject go)
         {
-            // #128 - pawn 도 패널에 표시 (좌측 PawnInfoPanel 와 동시 - 일관성)
-            var pawn = go.GetComponent<PawnEntity>();
-            if (pawn != null)
-            {
-                var needs = go.GetComponent<PawnNeeds>();
-                var abil = go.GetComponent<PawnAbilities>();
-                var traits = go.GetComponent<PawnTraits>();
-                var sb = new System.Text.StringBuilder();
-                sb.AppendLine($"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})");
-                if (traits != null) sb.AppendLine($"성격: {traits.SummaryKr()}");
-                if (needs != null)
-                {
-                    sb.AppendLine($"식량: {needs.food:F0}/100");
-                    sb.AppendLine($"수면: {needs.sleep:F0}/100");
-                    sb.AppendLine($"기분: {needs.mood:F0}/100");
-                }
-                if (abil != null)
-                {
-                    sb.AppendLine($"\n능력:");
-                    sb.AppendLine($"  이동 {abil.moveSpeedMul:F2}  벌목 {abil.chopMul:F2}");
-                    sb.AppendLine($"  채광 {abil.miningMul:F2}  건설 {abil.constructionMul:F2}");
-                }
-                return ($"{pawn.PawnName}", sb.ToString());
-            }
+            // ui-audit §3.4 (P5) — pawns are handled BEFORE this method (Update
+            //   short-circuits to the hint for a pawn selection).  The right
+            //   entity panel describes NON-pawn entities only; the duplicate
+            //   #128 pawn branch was removed to kill the double-inspector.
             var bp = go.GetComponent<BlueprintEntity>();
             if (bp != null)
             {

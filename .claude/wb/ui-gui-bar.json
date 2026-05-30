@@ -1,0 +1,44 @@
+{
+  "lane": "gui-bar",
+  "date": "2026-05-30",
+  "spec": "skills/game-prototype/docs/ui-audit.md",
+  "files_touched": [
+    "skills/game-prototype/unity-project/Assets/Scripts/GuiControlBar.cs"
+  ],
+  "mandate": "P1 (leftmost = 멈춤, kill any '없음(0)' mode-readout) + §3.2 Band A geometry y=24",
+  "changes": [
+    {
+      "id": "P1",
+      "what": "Verified + locked leftmost bar slot = 멈춤(Space) pause control.",
+      "detail": "GuiControlBar already builds MakeBtn(\"멈춤\",...) first and writes NO build-mode readout Text into the bar. The '없음(0)' string in _ui_check.png originated from an earlier wave's stray BuildManager mode-indicator (not this file). Added a contract comment at the pause-button line documenting that the leftmost slot is always 멈춤 and build-mode active state lives only on the 건축 highlight (RefreshBuildHighlight(architectBtn)). No behavioral change needed in this file for P1.",
+      "behavioral_change": false
+    },
+    {
+      "id": "§3.2-BandA",
+      "what": "Moved main command bar baseline from y=40 to y=24.",
+      "detail": "rt.anchoredPosition changed from new Vector2(0, 40) to new Vector2(0, 24). Band A is the persistent bottom-center bar / visual floor; the contextual gizmo row (Band C, owned by designation-cluster lane) anchors above at y=112. y=24 establishes the shared baseline the other lanes place relative to.",
+      "behavioral_change": true,
+      "line_region": "BuildLayout()"
+    }
+  ],
+  "names_preserved": {
+    "buttons": ["Btn_멈춤", "Btn_1x", "Btn_2x", "Btn_4x", "Btn_징집", "Btn_직업", "Btn_일정", "Btn_건축", "Btn_연구"],
+    "note": "Names derive from MakeBtn label (Btn_{label}); all 9 labels unchanged → all test-referenced names intact. Buttons remain DIRECT children of bar root (IntegrationTestRunner depth-1 Find)."
+  },
+  "out_of_lane_dependencies": [
+    "Band C gizmo at y=112 sort 150 + alert top-inset belong to designation-cluster lane (SelectionGizmoBar.cs / AlertStackUI.cs) — NOT touched here.",
+    "Stray '없음(0)' source label (if live, not stale capture) is a BuildManager mode-indicator outside this lane; flag for whoever owns BuildManager mode-readout placement per §3."
+  ],
+  "verification": {
+    "unity_run": false,
+    "syntactic": {
+      "braces_balanced": "32/32",
+      "parens_balanced": "184/184",
+      "no_TODO": true,
+      "leftmost_is_멈춤": true,
+      "band_a_y_24": true,
+      "all_button_labels_present": true
+    }
+  },
+  "status": "complete"
+}

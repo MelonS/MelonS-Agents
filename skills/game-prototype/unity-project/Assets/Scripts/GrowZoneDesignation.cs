@@ -101,10 +101,15 @@ namespace MelonS.GameProto
         [SerializeField] private int markerSortingOrder = 2;      // below crops(3)/pawns, above ground
 
         [Header("Toggle button")]
+        // ui-audit.md §3.3 designation-row shared origin: left-anchored (0,0),
+        //  x = x0 + index*(width+gap). 경작 = index 2 (rightmost of the strip).
         [SerializeField] private float btnWidth = 96f;
         [SerializeField] private float btnHeight = 40f;
         [SerializeField] private int btnFontSize = 16;
-        [SerializeField] private float btnBottomInset = 104f;     // sit above the control bar
+        [SerializeField] private float rowX0 = 16f;               // §3.3 left-edge inset
+        [SerializeField] private float rowGap = 4f;               // §3.3 inter-toggle gap
+        [SerializeField] private float rowBaselineY = 24f;        // §3.3/§3.2 Band-A baseline
+        private const int RowIndex = 2;                           // 해체=0, 채광=1, 경작=2
 
         // ---- runtime state ---------------------------------------------------
         public static GrowZoneDesignation Instance { get; private set; }
@@ -686,13 +691,12 @@ namespace MelonS.GameProto
             var go = new GameObject("Btn_경작");
             go.transform.SetParent(canvas.transform, false);
             var rt = go.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.5f, 0f);
-            rt.anchorMax = new Vector2(0.5f, 0f);
-            rt.pivot = new Vector2(0.5f, 0f);
+            // ui-audit.md §3.3: left-anchored shared designation row, fixed index.
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot = new Vector2(0f, 0f);
             rt.sizeDelta = new Vector2(btnWidth, btnHeight);
-            // Sit above the control bar, offset further RIGHT of the Mine button
-            //  (Deconstruct -360, Mine +360, Grow +462) so the four toggles don't overlap.
-            rt.anchoredPosition = new Vector2(462f, btnBottomInset);
+            rt.anchoredPosition = new Vector2(rowX0 + RowIndex * (btnWidth + rowGap), rowBaselineY);
 
             var border = go.AddComponent<Image>();
             border.color = UITheme.Divider;

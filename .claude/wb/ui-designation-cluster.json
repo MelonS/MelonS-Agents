@@ -1,0 +1,73 @@
+{
+  "lane": "designation-cluster",
+  "spec": "skills/game-prototype/docs/ui-audit.md",
+  "date": "2026-05-30",
+  "mandate": "P3 designation toggles into left-edge shared row (§3.3); P4 gizmo bar to Band C y=112 sort 150; P6 z-stack; §3.5 alert stack top-inset -72",
+  "unity_run": false,
+  "files": [
+    {
+      "path": "Assets/Scripts/DeconstructDesignation.cs",
+      "problem": "P3",
+      "change": "해체 toggle was anchor (0.5,0) anchoredPosition (-360,104). Now left-anchored (0,0) shared designation row, RowIndex 0. x = rowX0(16) + 0*(96+4) = 16, y = rowBaselineY(24).",
+      "btn_name": "Btn_해체",
+      "serialized_added": ["rowX0=16", "rowGap=4", "rowBaselineY=24"],
+      "serialized_removed": ["btnBottomInset"]
+    },
+    {
+      "path": "Assets/Scripts/MineDesignation.cs",
+      "problem": "P3",
+      "change": "채광 toggle was anchor (0.5,0) anchoredPosition (+360,104). Now left-anchored (0,0) shared designation row, RowIndex 1. x = 16 + 1*(96+4) = 116, y = 24.",
+      "btn_name": "Btn_채광",
+      "serialized_added": ["rowX0=16", "rowGap=4", "rowBaselineY=24"],
+      "serialized_removed": ["btnBottomInset"]
+    },
+    {
+      "path": "Assets/Scripts/GrowZoneDesignation.cs",
+      "problem": "P3",
+      "change": "경작 toggle was anchor (0.5,0) anchoredPosition (+462,104). Now left-anchored (0,0) shared designation row, RowIndex 2. x = 16 + 2*(96+4) = 216, y = 24.",
+      "btn_name": "Btn_경작",
+      "serialized_added": ["rowX0=16", "rowGap=4", "rowBaselineY=24"],
+      "serialized_removed": ["btnBottomInset"]
+    },
+    {
+      "path": "Assets/Scripts/SelectionGizmoBar.cs",
+      "problem": "P4+P6",
+      "change": "barBottomMargin 16->112 (Band C, clears the y=24 command bar with ~12px gap above its ~y=100 top). canvas.sortingOrder 200->150 (§3.6 z-stack: gizmo below alerts 200 and cheatsheet 250).",
+      "names_preserved": ["DraftBtn", "CancelBtn"]
+    },
+    {
+      "path": "Assets/Scripts/AlertStackUI.cs",
+      "problem": "P6+§3.5",
+      "change": "stackRoot.anchoredPosition.y -edgeMargin(-12) -> -(topBarHeight 60 + edgeMargin 12) = -72, so first alert card starts below the 60px top resource bar and never overlaps the right-edge resource chips. sortingOrder 200 confirmed correct, unchanged.",
+      "serialized_added": ["topBarHeight=60"]
+    }
+  ],
+  "designation_row_geometry": {
+    "anchor": "(0,0) bottom-left, pivot (0,0)",
+    "x0": 16,
+    "gap": 4,
+    "baselineY": 24,
+    "btnWidth": 96,
+    "btnHeight": 40,
+    "layout": "해체@16 | 채광@116 | 경작@216 (single left-edge strip, no cross-file dependency, fixed RowIndex per file)"
+  },
+  "z_stack_final": {
+    "gizmo_bar": 150,
+    "alert_stack": 200,
+    "cheatsheet": 250
+  },
+  "firewall_check": {
+    "bug4_audio_buzz": "n/a - no new tight-loop audio; existing PlaySelect on click only",
+    "bug5_getinstanceid": "n/a - no collision id compares touched",
+    "bug6_collisionenter": "n/a - no collision handlers touched",
+    "bug7_singleton_subscribe": "n/a - designation files use poll-find EnsureToggleButton (read-only Canvas poll), no OnEnable subscription added",
+    "bug8_justspawned": "n/a",
+    "bug9_runinbackground": "n/a - no new long WaitForSeconds/heartbeat coroutine added; layout-only field changes"
+  },
+  "verify": {
+    "no_todo": true,
+    "no_stray_magic_offsets": "grep for 360f/462f/btnBottomInset/104f returns empty",
+    "btn_names_preserved": ["Btn_해체", "Btn_채광", "Btn_경작", "DraftBtn", "CancelBtn"],
+    "files_outside_lane_touched": "none"
+  }
+}

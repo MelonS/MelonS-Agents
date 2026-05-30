@@ -1,0 +1,46 @@
+{
+  "lane": "top-bar",
+  "label": "ui-top-bar",
+  "date": "2026-05-30",
+  "spec": "docs/ui-audit.md  P2 / §3.1",
+  "problem": "P2 — top resource bar built each readout with a hand-tuned magic anchoredX chain (-16/-164/-188/-336/-360/-508/-532) and each icon at (anchoredX - kLabelWidth - kIconGap) where kLabelWidth=96 was a GUESSED pixel width of the Korean string. A 2-3 digit value widened the real text past 96px so the icon stopped hugging its number and the divider drifted into the neighbouring icon — the 'icon next to the wrong number' symptom the file's own comment admitted to and never fixed. Four readouts also had no shared cell, so spacing read random.",
+  "fix": "Replaced the magic-offset chain with a RIGHT-anchored HorizontalLayoutGroup of N IDENTICAL [divider][icon][value] chips, order food->meal->wood->stone, equal width 156 (>=150 per spec), equal gap 8, thin Divider on each chip's leading edge, icon 36px left-anchored, value left-aligned filling the rest of the same fixed-width cell. Layout group computes every position, so a value growing a digit can never desync the icon or shove a divider into a neighbour. No per-resource anchoredX exists anymore.",
+  "files_changed": [
+    "skills/game-prototype/unity-project/Assets/Editor/SceneSetup.Game.TopBar.cs"
+  ],
+  "files_outside_lane_touched": [],
+  "layout": {
+    "anchor": "top full-width HeaderBg bordered panel, height 60 (unchanged)",
+    "left": "ClockUI gold Day/time (unchanged)",
+    "center": "TimeUI '▶ 1x' (unchanged)",
+    "right": "ResourceRow: HorizontalLayoutGroup anchored (1,0)-(1,1) pivot (1,0.5), rightInset 16, childAlignment MiddleRight, spacing 8",
+    "chip": "ResChip_<key>: fixed width 156 (LayoutElement preferred+min), inner HorizontalLayoutGroup MiddleLeft spacing 6 -> [ResSep_<key> 2px Divider][ResIcon_<key> 36px][<Name>Text flexibleWidth]",
+    "order": "food -> meal -> wood -> stone"
+  },
+  "constants": {
+    "kChipW": 156,
+    "kChipGap": 8,
+    "kRightInset": 16,
+    "kIconPx": 36,
+    "kIconGap": 6,
+    "kDividerW": 2,
+    "rowWidth": "4*156 + 3*8 = 648"
+  },
+  "preserved": {
+    "text_names": ["FoodText", "MealsText", "WoodText", "StoneText"],
+    "icon_names": ["ResIcon_food", "ResIcon_meal", "ResIcon_wood", "ResIcon_stone"],
+    "wiring": "ResourceCounterUI SerializedObject refs (woodText/foodText/mealsText/stoneText) bind by component reference and still receive the Text objects returned by MakeResChip — unchanged.",
+    "panel": "MakeBorderedPanel HeaderBg frame kept; ClockUI + TimeUI untouched",
+    "icon_load": "Assets/Sprites/icon_<key>.png via AssetDatabase, missing-art warns + alpha 0 (kept)"
+  },
+  "removed": ["MakeResText helper (magic anchoredX + guessed kLabelWidth)", "MakeResSeparator helper (free-floating divider at magic X)"],
+  "added": ["MakeResChip helper (self-contained equal-width chip cell)"],
+  "bug_firewall": "No baked-in lesson re-introduced. No audio loop, no GetInstanceID, no collision handler, no singleton OnEnable subscribe, no justSpawned default, no background timer/coroutine — this is pure static Editor scene-gen geometry.",
+  "verification": {
+    "unity_run": false,
+    "reason": "lane forbids running Unity (QA owns that path)",
+    "syntactic": "brace 11/11 balanced, paren 109/109 balanced, 1 MakeResChip def, 4 calls, all 4 Text names + 4 ResIcon keys present once, 0 leftover MakeResText/MakeResSeparator"
+  },
+  "todo_left": false,
+  "handoff": "Build Engineer: SceneSetup wiring unchanged (binds by reference). QA: capture _ui_check.png and confirm the 4 resource chips read as evenly-pitched [icon value] cells right-aligned under the 60px HeaderBg top bar, no icon/number desync at multi-digit values."
+}

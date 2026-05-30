@@ -61,7 +61,12 @@ namespace MelonS.GameProto
         [SerializeField] private float cardWidth = 230f;
         [SerializeField] private float cardHeight = 44f;
         [SerializeField] private float cardGap = 6f;
-        [SerializeField] private float edgeMargin = 12f;        // inset from top/right
+        [SerializeField] private float edgeMargin = 12f;        // inset from right edge
+        // ui-audit.md §3.5: the top resource bar is 60px tall and its right cluster
+        //  (resource chips) shares the top-right corner. Start the first alert card
+        //  BELOW that bar: y = -(topBarHeight + edgeMargin) = -72, not -12, so alert
+        //  cards never overlap the resource readouts on the right edge.
+        [SerializeField] private float topBarHeight = 60f;      // §3.1 header height
         [SerializeField] private int fontSize = 15;
 
         [Header("Camera pan")]
@@ -135,7 +140,8 @@ namespace MelonS.GameProto
             stackRoot.anchorMin = new Vector2(1f, 1f);
             stackRoot.anchorMax = new Vector2(1f, 1f);
             stackRoot.pivot = new Vector2(1f, 1f);
-            stackRoot.anchoredPosition = new Vector2(-edgeMargin, -edgeMargin);
+            // §3.5 top inset: drop below the 60px top resource bar (was -edgeMargin).
+            stackRoot.anchoredPosition = new Vector2(-edgeMargin, -(topBarHeight + edgeMargin));
             stackRoot.sizeDelta = new Vector2(cardWidth, 0f);
         }
 
