@@ -72,6 +72,7 @@ namespace MelonS.GameProto.EditorTools
             pawnGo.AddComponent<PawnHunter>();    // Day 24 — auto-hunt animals
             pawnGo.AddComponent<PawnCook>();      // Day 26 — auto-cook at stove
             pawnGo.AddComponent<PawnHauler>();    // #116 — wood pile pickup
+            pawnGo.AddComponent<PawnHarvester>(); // #202 — ripe crop harvest (survival loop)
             pawnGo.AddComponent<PawnBuilder>();   // #118 — blueprint 건설
             pawnGo.AddComponent<PawnMiner>();     // #119 — 채광
             pawnGo.AddComponent<PawnAbilities>(); // #120 — 능력치 (이동/작업/전투 multiplier)

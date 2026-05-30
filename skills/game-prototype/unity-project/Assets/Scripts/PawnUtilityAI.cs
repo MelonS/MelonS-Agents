@@ -24,6 +24,7 @@ namespace MelonS.GameProto
         private PawnHunter hunter;
         private PawnCook cook;
         private PawnHauler hauler;  // #116 — wood pile pickup
+        private PawnHarvester harvester;  // #202 — ripe crop harvest
         private PawnBuilder builder;  // #118 — blueprint 건설
         private PawnMiner miner;      // #119 — 채광
         private PawnDoctor doctor;    // #125 — 의료
@@ -53,6 +54,7 @@ namespace MelonS.GameProto
             hunter = GetComponent<PawnHunter>();
             cook = GetComponent<PawnCook>();
             hauler = GetComponent<PawnHauler>();  // #116
+            harvester = GetComponent<PawnHarvester>();  // #202
             builder = GetComponent<PawnBuilder>();  // #118
             miner = GetComponent<PawnMiner>();      // #119
             doctor = GetComponent<PawnDoctor>();    // #125
@@ -66,6 +68,7 @@ namespace MelonS.GameProto
                 entity = entity, movement = movement, chopper = chopper,
                 gatherer = gatherer, hunter = hunter, cook = cook,
                 hauler = hauler,
+                harvester = harvester,  // #202
                 builder = builder,
                 miner = miner,
                 doctor = doctor,
@@ -82,6 +85,11 @@ namespace MelonS.GameProto
                 //  모든 pawn 이 cook 만 → food 떨어지면 hunt → 다시 cook 무한 loop,
                 //  ChopTree 영영 안 됨 = "목재 안 캐짐" 진짜 원인.
                 new CookMealAction   { foodSurplus = 15f },
+                // #202 SURVIVAL-LOOP FIX — harvest ripe crops into the food stockpile.
+                //  Placed here (above build/haul/chop generic labor) so idle pawns
+                //  prioritise sustenance work; this is the missing link that feeds the
+                //  cook→eat chain.  WorkKind.Gather so it shares the gather priority slot.
+                new HarvestCropAction(),
                 new BuildBlueprintAction(),  // #118 - 청사진 건설 (chop 보다 우선)
                 new HaulWoodAction(),     // #116 - 벌목 후 떨어진 wood pile 운반 (chop 보다 우선)
                 new HaulStoneAction(),    // #119 - 채광 후 떨어진 stone chunk 운반

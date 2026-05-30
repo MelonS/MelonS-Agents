@@ -106,6 +106,7 @@ GameObject:
   - component: {fileID: 4870207347937742543}
   - component: {fileID: 1559290421963357156}
   - component: {fileID: 7417103467123377494}
+  - component: {fileID: 3460318569961242805}
   - component: {fileID: 6757673875825368526}
   - component: {fileID: 6728790258122392901}
   - component: {fileID: 591835251418990162}
@@ -295,7 +296,7 @@ MonoBehaviour:
   sleepDecay: 0.3
   moodDecay: 0.2
   sleepRegenAtNight: 8
-  eatThreshold: 40
+  eatThreshold: 50
   eatRestore: 30
   eatTickInterval: 0.5
   forcedWakeSleepLevel: 95
@@ -373,6 +374,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pickupRange: 1.5
   giveUpAfterSec: 8
+--- !u!114 &3460318569961242805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6165637930717161905}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b330df43e5c7f24eaf9172920e62a8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  harvestRange: 1.5
 --- !u!114 &6757673875825368526
 MonoBehaviour:
   m_ObjectHideFlags: 0

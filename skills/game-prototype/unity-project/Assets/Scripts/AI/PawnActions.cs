@@ -132,6 +132,50 @@ namespace MelonS.GameProto.AI
         }
     }
 
+    /// <summary>
+    /// #202 SURVIVAL-LOOP FIX — harvest the nearest RIPE crop into the global food
+    /// stockpile.  This was the missing utility-AI action: crops ripened but idle
+    /// pawns never harvested them (manual right-click only), so global food stayed
+    /// stuck → no cook ingredients → starvation.  High value: ripe-crop harvest is
+    /// sustenance work, so it sits with the other gather work (WorkKind.Gather) and
+    /// is registered ABOVE generic chop/haul labor in the priority list.
+    /// </summary>
+    public class HarvestCropAction : IPawnAction
+    {
+        public string DisplayName => "수확";
+        public WorkKind Kind => WorkKind.Gather;
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.harvester == null) return false;
+            CropEntity crop = FindNearestRipeCrop(ctx);
+            if (crop == null) return false;
+            // #199 C2 — reserve the chosen crop so two pawns don't both walk to it.
+            //  FindNearestRipeCrop already skips crops reserved by OTHERS; this guard
+            //  covers a same-frame race (two pawns deciding the same tick).
+            if (!ReservationManager.TryReserve(crop, ctx.transform.gameObject)) return false;
+            ctx.harvester.SetCropTarget(crop);
+            return true;
+        }
+        private static CropEntity FindNearestRipeCrop(PawnContext ctx)
+        {
+            var arr = Object.FindObjectsByType<CropEntity>(FindObjectsSortMode.None);
+            var claimant = ctx.transform.gameObject;
+            CropEntity best = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = ctx.transform.position;
+            foreach (var c in arr)
+            {
+                if (c == null || !c.IsRipe) continue;  // only RIPE crops are harvestable
+                if (ReservationManager.IsReservedByOther(c, claimant)) continue;
+                Vector3 cp = c.transform.position;
+                if (Mathf.Abs(cp.x) > 28.5f || Mathf.Abs(cp.y) > 28.5f) continue;
+                float sq = ((Vector2)cp - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = c; }
+            }
+            return best;
+        }
+    }
+
     public class ChopTreeAction : IPawnAction
     {
         public string DisplayName => "벌목";

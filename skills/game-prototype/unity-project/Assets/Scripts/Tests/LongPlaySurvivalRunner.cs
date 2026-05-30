@@ -541,6 +541,7 @@ namespace MelonS.GameProto.Tests
             if (needs != null && needs.HasRestOrder) return "휴식이동";
             if (p.GetComponent<PawnChopper>()?.HasTask == true)  return "벌목";
             if (p.GetComponent<PawnMiner>()?.HasTask == true)    return "채광";
+            if (p.GetComponent<PawnHarvester>()?.HasTask == true) return "수확";
             if (p.GetComponent<PawnGatherer>()?.HasTask == true) return "채집";
             if (p.GetComponent<PawnHunter>()?.HasTask == true)   return "사냥";
             if (p.GetComponent<PawnCook>()?.HasTask == true)     return "요리";

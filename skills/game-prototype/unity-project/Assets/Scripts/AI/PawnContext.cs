@@ -17,6 +17,7 @@ namespace MelonS.GameProto.AI
         public PawnHunter hunter;
         public PawnCook cook;
         public PawnHauler hauler;  // #116
+        public PawnHarvester harvester;  // #202 — ripe crop harvest (survival loop)
         public PawnBuilder builder;  // #118 — blueprint 건설
         public PawnMiner miner;   // #119 — 채광
         public PawnDoctor doctor; // #125 — 의료
@@ -33,6 +34,7 @@ namespace MelonS.GameProto.AI
             if (hunter   != null && hunter.HasTask)   return true;
             if (cook     != null && cook.HasTask)     return true;
             if (hauler   != null && hauler.HasTask)   return true;
+            if (harvester != null && harvester.HasTask) return true;  // #202
             if (builder  != null && builder.HasTask)  return true;
             if (miner    != null && miner.HasTask)    return true;
             if (doctor   != null && doctor.HasTask)   return true;

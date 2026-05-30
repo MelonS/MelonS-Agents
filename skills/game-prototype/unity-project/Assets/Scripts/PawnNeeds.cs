@@ -27,7 +27,13 @@ namespace MelonS.GameProto
         [SerializeField] private float sleepRegenAtNight = 8f;
 
         [Header("Day 11: eat-from-stockpile")]
-        [SerializeField] private float eatThreshold = 40f;
+        // #202 SURVIVAL-LOOP FIX — eat at 50 (was 40).  With the harvest loop now
+        //  feeding the cook→meal supply, pawns can afford to eat sooner; a higher
+        //  threshold narrows the food sawtooth (band ~50-80 instead of ~45-80),
+        //  giving more starvation margin AND keeping the colony's food trend STABLE
+        //  rather than swinging wide enough that quarter-window sampling reads a
+        //  phantom decline.  RimWorld pawns eat around the "Hungry" (~ half) mark.
+        [SerializeField] private float eatThreshold = 50f;
         [SerializeField] private float eatRestore = 30f;
         [SerializeField] private float eatTickInterval = 0.5f;
         private float lastEatTime = -999f;
