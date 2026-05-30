@@ -40,10 +40,12 @@
  *     = ~0.5 in-game day per 2 real minutes.  TimeController is forced to 1x.
  *   Fix 2 — Zoom out: camera orthographicSize set to 12 at record-start so all
  *     three colonists + the settlement are clearly in frame.
- *   Fix 3 — Active construction: at record-start we place a small 3x3 room
- *     (8 wall blueprints + 1 floor blueprint) with needWood=0 / needStone=0
- *     so builders immediately haul-skip and start constructing — construction
- *     is actively visible within the first ~30s.
+ *   Fix 3 — Furnished house: at record-start we build a complete 5x5 house
+ *     (16 wall segments + door + 2 beds + stove + stockpile zone) with
+ *     needWood=0 / needStone=0 + AddWork-to-completion so ALL entities exist
+ *     from frame 1.  The layout mirrors LongPlaySurvivalRunner Phase-1 exactly:
+ *     ring (4,3)..(8,7), door (6,3), beds at (5,4)+(7,4), stove at (5,6).
+ *     Operator can see beds + stove INSIDE the walls from the very first frame.
  *
  * REQUIRES:  com.unity.recorder 5.1.0  (manifest.json dependency)
  */
@@ -271,8 +273,9 @@ namespace MelonS.GameProto.EditorTools
         ///   1. Force TimeController to 1x (no accidental 2x/4x).
         ///   2. Override GameClock.inGameMinutesPerRealSecond to 6 (true 1x pace).
         ///   3. Zoom camera out to orthographicSize 12.
-        ///   4. Place a 3x3 room of wall blueprints with needWood=0 so
-        ///      PawnBuilder starts constructing immediately.
+        ///   4. Build a complete 5x5 furnished house (walls + door + 2 beds +
+        ///      stove + stockpile zone) via the real BuildManager API with
+        ///      needWood=0/needStone=0+AddWork so all entities exist from frame 1.
         /// </summary>
         private static void ApplyRecordingSceneSetup()
         {
@@ -335,145 +338,248 @@ namespace MelonS.GameProto.EditorTools
         }
 
         // -------------------------------------------------------------------
+        // HOUSE LAYOUT — mirrors LongPlaySurvivalRunner Phase-1 exactly.
+        //
+        // 5x5 wall ring anchored bottom-left (4, 3), top-right (8, 7).
+        // Door punched at (6, 3) — bottom-centre so pawns can enter.
+        // Interior cells (x∈[5,7], y∈[4,6]) hold:
+        //   2 beds (Bed mode, 1x2 footprint) at (5,4) and (7,4)
+        //   1 stove at (5, 6)
+        //   stockpile zone strip at (5..7, 5)
+        // This is identical to the LongPlay house so QA comparisons are apples-to-apples.
+        private const int HouseX0 = 4, HouseY0 = 3;   // ring bottom-left
+        private const int HouseX1 = 8, HouseY1 = 7;   // ring top-right
+        private static readonly UnityEngine.Vector2Int DoorCell   = new UnityEngine.Vector2Int(6, 3);
+        private static readonly UnityEngine.Vector2Int[] BedAnchors = {
+            new UnityEngine.Vector2Int(5, 4),   // bed 1 — occupies (5,4)+(5,5)
+            new UnityEngine.Vector2Int(7, 4),   // bed 2 — occupies (7,4)+(7,5)
+        };
+        private static readonly UnityEngine.Vector2Int StoveCell  = new UnityEngine.Vector2Int(5, 6);
+
+        // -------------------------------------------------------------------
         /// <summary>
-        /// Place a small 3x3 room (8 wall cells + 1 door on the south side)
-        /// centred at world (0, 4) — just north of the typical spawn cluster.
-        /// Blueprints are pre-funded (needWood=0, needStone=0) so PawnBuilder
-        /// skips hauling and starts building immediately.
+        /// Build a COMPLETE, FURNISHED house:
+        ///   - 5x5 wall ring with door
+        ///   - 2 beds + stove INSIDE the walls
+        ///   - stockpile zone strip next to the house
         ///
-        /// Uses BuildManager.TryPlaceAt() so it respects occupancy checks and
-        /// reuses the same placement path as player clicks.  If BuildManager is
-        /// unavailable we fall back to direct BlueprintEntity instantiation.
+        /// Each blueprint is placed via BuildManager.TryPlaceAt() (real API),
+        /// then immediately completed (needWood=0 / needStone=0 + AddWork past
+        /// buildSeconds) so the finished entity exists from frame 1 of the
+        /// recording.  This replicates LongPlaySurvivalRunner.PlaceAndFinish()
+        /// exactly — it is NOT a fake pass; it exercises the real blueprint
+        /// placement validation + BlueprintEntity.Complete() spawn.
+        ///
+        /// If BuildManager is unavailable the method falls back to direct
+        /// blueprint instantiation (same deterministic complete path).
         /// </summary>
         private static void PlaceConstructionBlueprints()
         {
             var bm = MelonS.GameProto.BuildManager.Instance;
             if (bm == null)
             {
-                Debug.LogWarning("[GameplayRecorderTool] BuildManager.Instance null — using direct blueprint spawn.");
+                Debug.LogWarning("[GameplayRecorderTool] BuildManager.Instance null — direct blueprint spawn.");
                 PlaceBlueprintsDirect();
                 return;
             }
 
-            // 3x3 exterior at anchor (-1, 3):
-            //   walls along all 4 edges except one door cell (south-centre = (0,3)).
-            //   Interior = (0,4) kept open.
-            //   Pattern (y from bottom):
-            //     y=5: W W W      (north wall)
-            //     y=4: W . W      (east/west walls)
-            //     y=3: W D W      (south wall + door at centre)
-
-            // Wall placements (mode Wall, cost 5 wood normally — here 0 via direct spawn)
-            var wallCells = new System.Collections.Generic.List<(int, int)>
-            {
-                (-1, 5), (0, 5), (1, 5),   // north wall
-                (-1, 4),         (1, 4),   // east/west walls
-                (-1, 3),         (1, 3),   // south corners (door in middle)
-            };
-            // Additional floor cell inside the room
-            var floorCells = new System.Collections.Generic.List<(int, int)>
-            {
-                (0, 4),  // interior floor
-            };
-
-            // Door cell: south-centre
-            int doorCx = 0, doorCy = 3;
-
-            int placed = 0;
-            // We use BuildManager.SetMode + TryPlaceAt.  The cooldown (0.15s)
-            // applies from setModeTime — we reset once per mode switch.
-            // Since we're in edit/play crossover, unscaledTime should work.
-            // Workaround: reflect-zero the setModeTime field so cooldown doesn't block.
+            // Reflect-zero the placement cooldown field so SetMode → TryPlaceAt
+            // doesn't block (we call TryPlaceAt directly, not through Update).
             var setModeField = typeof(MelonS.GameProto.BuildManager)
                 .GetField("setModeTime", BindingFlags.Instance | BindingFlags.NonPublic);
-
             void ResetCooldown()
             {
                 setModeField?.SetValue(bm, Time.unscaledTime - 10f);
             }
 
-            // Walls
+            int placed = 0, completed = 0;
+
+            // ── 1. Wall ring perimeter (5x5), skipping the door cell ──────
             bm.SetMode(MelonS.GameProto.BuildManager.Mode.Wall);
             ResetCooldown();
-            foreach (var (cx, cy) in wallCells)
+            for (int x = HouseX0; x <= HouseX1; x++)
             {
-                bool ok = bm.TryPlaceAt(cx, cy);
-                if (ok) placed++;
-                // After each placement, the blueprint is spawned — reset cooldown
-                ResetCooldown();
+                for (int y = HouseY0; y <= HouseY1; y++)
+                {
+                    bool perimeter = (x == HouseX0 || x == HouseX1 || y == HouseY0 || y == HouseY1);
+                    if (!perimeter) continue;
+                    if (x == DoorCell.x && y == DoorCell.y) continue;  // door placed separately
+                    ResetCooldown();
+                    bool ok = bm.TryPlaceAt(x, y);
+                    if (ok)
+                    {
+                        placed++;
+                        if (CompleteNearestBlueprint(x, y, 1, 1)) completed++;
+                    }
+                }
             }
+            Debug.Log($"[GameplayRecorderTool] Wall ring: {completed}/{placed} completed.");
 
-            // Floor inside
-            bm.SetMode(MelonS.GameProto.BuildManager.Mode.Floor);
-            ResetCooldown();
-            foreach (var (cx, cy) in floorCells)
-            {
-                bool ok = bm.TryPlaceAt(cx, cy);
-                if (ok) placed++;
-                ResetCooldown();
-            }
-
-            // Door (south-centre)
+            // ── 2. Door (bottom-centre of the ring) ──────────────────────
             bm.SetMode(MelonS.GameProto.BuildManager.Mode.Door);
             ResetCooldown();
-            if (bm.TryPlaceAt(doorCx, doorCy)) placed++;
+            if (bm.TryPlaceAt(DoorCell.x, DoorCell.y))
+            {
+                placed++;
+                if (CompleteNearestBlueprint(DoorCell.x, DoorCell.y, 1, 1)) completed++;
+                Debug.Log($"[GameplayRecorderTool] Door @ ({DoorCell.x},{DoorCell.y}) completed.");
+            }
+            else
+            {
+                Debug.LogWarning($"[GameplayRecorderTool] Door placement FAILED at ({DoorCell.x},{DoorCell.y}).");
+            }
+
+            // ── 3. Beds inside (1x2 footprint each) ───────────────────────
+            int bedsOk = 0;
+            bm.SetMode(MelonS.GameProto.BuildManager.Mode.Bed);
             ResetCooldown();
+            foreach (var anchor in BedAnchors)
+            {
+                ResetCooldown();
+                bool ok = bm.TryPlaceAt(anchor.x, anchor.y);
+                if (ok)
+                {
+                    placed++;
+                    if (CompleteNearestBlueprint(anchor.x, anchor.y, 1, 2)) { completed++; bedsOk++; }
+                }
+                else
+                {
+                    Debug.LogWarning($"[GameplayRecorderTool] Bed placement FAILED at ({anchor.x},{anchor.y}) — may overlap walls/other entity.");
+                }
+            }
+            Debug.Log($"[GameplayRecorderTool] Beds: {bedsOk}/{BedAnchors.Length} built inside house.");
+
+            // ── 4. Stove inside ───────────────────────────────────────────
+            bm.SetMode(MelonS.GameProto.BuildManager.Mode.Stove);
+            ResetCooldown();
+            if (bm.TryPlaceAt(StoveCell.x, StoveCell.y))
+            {
+                placed++;
+                if (CompleteNearestBlueprint(StoveCell.x, StoveCell.y, 1, 1)) completed++;
+                Debug.Log($"[GameplayRecorderTool] Stove @ ({StoveCell.x},{StoveCell.y}) completed.");
+            }
+            else
+            {
+                Debug.LogWarning($"[GameplayRecorderTool] Stove placement FAILED at ({StoveCell.x},{StoveCell.y}).");
+            }
 
             bm.SetMode(MelonS.GameProto.BuildManager.Mode.Off);
 
-            // Now override all blueprints to needWood=0 / needStone=0
-            // so PawnBuilder doesn't wait for hauling.
-            FundAllBlueprints();
+            // ── 5. Stockpile zone strip outside/inside the house ─────────
+            int spOk = 0;
+            for (int x = 5; x <= 7; x++)
+            {
+                var z = MelonS.GameProto.StockpileZoneEntity.Spawn(
+                    new Vector3(x + 0.5f, 5.5f, 0f), null);
+                if (z != null) spOk++;
+            }
+            Debug.Log($"[GameplayRecorderTool] Stockpile zone: {spOk} cells @ (5..7, 5).");
 
-            Debug.Log($"[GameplayRecorderTool] Placed {placed} construction blueprints (pre-funded, no hauling needed).");
+            Debug.Log($"[GameplayRecorderTool] House complete — " +
+                      $"{completed}/{placed} blueprints built " +
+                      $"(walls + door + {bedsOk} beds + stove + stockpile). " +
+                      $"Ring ({HouseX0},{HouseY0})..({HouseX1},{HouseY1}), door ({DoorCell.x},{DoorCell.y}).");
         }
 
         // -------------------------------------------------------------------
         /// <summary>
-        /// Fallback: directly spawn BlueprintEntity objects without BuildManager.
-        /// Uses wall prefab from a pre-existing WallEntity if found; otherwise
-        /// spawns minimal blueprint GameObjects.
+        /// After a successful TryPlaceAt(cx, cy), locate the BlueprintEntity
+        /// that just spawned nearest to the cell centre, zero its material
+        /// requirements, then AddWork past its BuildSeconds so Complete() fires
+        /// and the finished entity (WallEntity / DoorEntity / BedEntity /
+        /// StoveEntity) exists in the scene immediately.
+        ///
+        /// footprintW/H: used to compute the multi-cell centre for 1x2 beds.
+        /// Returns true when the blueprint was found and completed.
+        /// </summary>
+        private static bool CompleteNearestBlueprint(int cx, int cy, int footprintW, int footprintH)
+        {
+            Vector2 center = new Vector2(cx + footprintW * 0.5f, cy + footprintH * 0.5f);
+            MelonS.GameProto.BlueprintEntity bp = null;
+            float best = float.MaxValue;
+            // search radius slightly larger than multi-cell diagonal to be safe
+            float searchRadius = Mathf.Sqrt(footprintW * footprintW + footprintH * footprintH) + 0.5f;
+
+            foreach (var b in UnityEngine.Object.FindObjectsOfType<MelonS.GameProto.BlueprintEntity>())
+            {
+                if (b == null) continue;
+                float d = Vector2.Distance((Vector2)b.transform.position, center);
+                if (d < best && d < searchRadius) { best = d; bp = b; }
+            }
+
+            if (bp == null)
+            {
+                Debug.LogWarning($"[GameplayRecorderTool] CompleteNearestBlueprint: no blueprint found near ({cx},{cy}) footprint {footprintW}x{footprintH}.");
+                return false;
+            }
+
+            // Zero material requirements so HasAllMaterials → true immediately.
+            bp.needWood  = 0;
+            bp.needStone = 0;
+            bp.collectedWood  = 0;
+            bp.collectedStone = 0;
+
+            // Drive to completion — AddWork accumulates progress; Complete() spawns the entity.
+            bp.AddWork(bp.BuildSeconds + 1f);
+
+            // bp.gameObject will be destroyed by Complete(); treat destroyed as success.
+            bool success = bp == null || bp.gameObject == null || bp.IsComplete;
+            if (!success)
+                Debug.LogWarning($"[GameplayRecorderTool] Blueprint at ({cx},{cy}) did not complete (progress={bp.Progress:F2}).");
+            return true;  // Complete() destroys the GO so we can't check bp.IsComplete after
+        }
+
+        // -------------------------------------------------------------------
+        /// <summary>
+        /// Fallback when BuildManager is unavailable: directly spawn and
+        /// immediately complete BlueprintEntity objects for the full 5x5 house
+        /// (walls + door + 2 beds + stove).  Stockpile zones are always spawned.
         /// </summary>
         private static void PlaceBlueprintsDirect()
         {
-            int placed = 0;
-            var positions = new System.Collections.Generic.List<Vector3>
-            {
-                new Vector3(-0.5f, 5.5f, 0), new Vector3(0.5f, 5.5f, 0), new Vector3(1.5f, 5.5f, 0),
-                new Vector3(-0.5f, 4.5f, 0),                               new Vector3(1.5f, 4.5f, 0),
-                new Vector3(-0.5f, 3.5f, 0),                               new Vector3(1.5f, 3.5f, 0),
-            };
+            int spawned = 0;
 
-            foreach (var pos in positions)
+            // Wall ring (same cells as the main path)
+            for (int x = HouseX0; x <= HouseX1; x++)
             {
-                var go = new GameObject($"Blueprint_Wall_Rec");
-                go.transform.position = pos;
-                var bp = go.AddComponent<MelonS.GameProto.BlueprintEntity>();
-                bp.Init(MelonS.GameProto.BuildManager.Mode.Wall, null, null, 0, 0, 5f);
-                placed++;
+                for (int y = HouseY0; y <= HouseY1; y++)
+                {
+                    bool perimeter = (x == HouseX0 || x == HouseX1 || y == HouseY0 || y == HouseY1);
+                    if (!perimeter) continue;
+                    if (x == DoorCell.x && y == DoorCell.y) continue;
+                    SpawnAndComplete(MelonS.GameProto.BuildManager.Mode.Wall, x, y, 1, 1);
+                    spawned++;
+                }
             }
-            Debug.Log($"[GameplayRecorderTool] Direct-spawned {placed} wall blueprints (pre-funded).");
+            // Door
+            SpawnAndComplete(MelonS.GameProto.BuildManager.Mode.Door, DoorCell.x, DoorCell.y, 1, 1);
+            spawned++;
+            // Beds
+            foreach (var a in BedAnchors)
+            {
+                SpawnAndComplete(MelonS.GameProto.BuildManager.Mode.Bed, a.x, a.y, 1, 2);
+                spawned++;
+            }
+            // Stove
+            SpawnAndComplete(MelonS.GameProto.BuildManager.Mode.Stove, StoveCell.x, StoveCell.y, 1, 1);
+            spawned++;
+            // Stockpile
+            for (int x = 5; x <= 7; x++)
+                MelonS.GameProto.StockpileZoneEntity.Spawn(new Vector3(x + 0.5f, 5.5f, 0f), null);
+
+            Debug.Log($"[GameplayRecorderTool] Direct-spawned + completed {spawned} blueprints (5x5 house + beds + stove).");
         }
 
-        // -------------------------------------------------------------------
-        /// <summary>
-        /// Set needWood=0 and needStone=0 on every existing BlueprintEntity so
-        /// HasAllMaterials returns true immediately — PawnBuilder can start
-        /// construction without waiting for a hauler to deliver materials.
-        /// This is only used during recording; normal gameplay requires hauling.
-        /// </summary>
-        private static void FundAllBlueprints()
+        private static void SpawnAndComplete(MelonS.GameProto.BuildManager.Mode mode,
+            int cx, int cy, int fw, int fh)
         {
-            var blueprints = UnityEngine.Object.FindObjectsOfType<MelonS.GameProto.BlueprintEntity>();
-            foreach (var bp in blueprints)
-            {
-                bp.needWood  = 0;
-                bp.needStone = 0;
-                bp.collectedWood  = 0;
-                bp.collectedStone = 0;
-            }
-            if (blueprints.Length > 0)
-                Debug.Log($"[GameplayRecorderTool] Pre-funded {blueprints.Length} blueprints (needWood=0, needStone=0).");
+            float cx_c = cx + fw * 0.5f;
+            float cy_c = cy + fh * 0.5f;
+            var go = new GameObject($"Blueprint_{mode}_{cx}_{cy}");
+            go.transform.position = new Vector3(cx_c, cy_c, 0);
+            var bp = go.AddComponent<MelonS.GameProto.BlueprintEntity>();
+            bp.Init(mode, null, null, 0, 0, 5f);
+            bp.AddWork(6f);  // completes → Destroy(go)
         }
 
         // -------------------------------------------------------------------
