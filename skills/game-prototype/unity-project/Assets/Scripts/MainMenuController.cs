@@ -31,10 +31,20 @@ namespace MelonS.GameProto
             //  자동으로 Start Game 클릭 시뮬.
             string[] args = System.Environment.GetCommandLineArgs();
             bool autostart = false;
+            bool menushot = false;
             foreach (var a in args)
             {
                 if (a == "-autostart" || a == "-delay" || a == "-batchmode")
-                { autostart = true; break; }
+                    autostart = true;
+                // 운영자 fb 2026-05-30 (BUG1 검증): -menushot 이면 MainMenu 에 머물러
+                //  메뉴 화면을 캡처할 수 있게 autostart 억제.  AutoScreenshotter(메뉴 scene)
+                //  가 캡처 후 quit 한다.
+                if (a == "-menushot") menushot = true;
+            }
+            if (menushot)
+            {
+                Debug.Log("[MainMenu] -menushot detected, suppressing autostart (stay on menu for capture)");
+                autostart = false;
             }
             if (autostart)
             {

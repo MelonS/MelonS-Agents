@@ -99,10 +99,14 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            if (FindExisting() != null) return;   // idempotent — never a 2nd manager
-            var go = new GameObject("~BlueprintDragDesignation");
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<BlueprintDragDesignation>();
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
+            {
+                if (FindExisting() != null) return;   // idempotent — never a 2nd manager
+                var go = new GameObject("~BlueprintDragDesignation");
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<BlueprintDragDesignation>();
+                    });
         }
 
         private static BlueprintDragDesignation FindExisting()

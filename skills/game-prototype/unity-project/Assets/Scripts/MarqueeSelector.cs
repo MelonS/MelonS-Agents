@@ -72,10 +72,14 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            if (FindExisting() != null) return;   // idempotent — never a 2nd marquee
-            var go = new GameObject("~MarqueeSelector");
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<MarqueeSelector>();
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
+            {
+                if (FindExisting() != null) return;   // idempotent — never a 2nd marquee
+                var go = new GameObject("~MarqueeSelector");
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<MarqueeSelector>();
+                    });
         }
 
         private static MarqueeSelector FindExisting()

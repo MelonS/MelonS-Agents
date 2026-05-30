@@ -12,8 +12,12 @@ namespace MelonS.GameProto.EditorTools
     // sortingOrder = 1 (below decor_flower at 2, above tilemap at 0) — scatter recedes.
     public static partial class SceneSetup
     {
-        // Proportions: rocks sparse (20), grass tufts medium (35), wf1/wf2 each light (18).
-        // Total budget 91 objects; avoid clusters that would create a grid pattern.
+        // 운영자 fb 2026-05-30: "돌같은게 많이 뿌려져 있고 막 뿌려놨다" — V2 decor_rock 20개가
+        //  ScatterVarietyDriver 의 chunk/variant 와 합쳐져 rock field 처럼 보였고, 장식 돌이
+        //  minable StoneVein 과 헷갈림.  → V2 rock 20→4 대폭 감축 + 작은 자갈로 축소(scale).
+        //  grass/wildflower 는 light accent 로 약간만 감축.
+        // Proportions(after): rocks 4, grass tufts 24, wf1/wf2 each 12.
+        // 장식 돌은 RockDecorScale 로 축소되어 minable vein 과 명확히 구분된다.
         private static void SpawnScatterDecor(TerrainLayout layout)
         {
             Sprite rockSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/decor_rock.png");
@@ -26,30 +30,25 @@ namespace MelonS.GameProto.EditorTools
             if (wf1Spr == null) Debug.LogWarning("[SceneSetup] scatter: wildflower1.png sprite null — skipped");
             if (wf2Spr == null) Debug.LogWarning("[SceneSetup] scatter: wildflower2.png sprite null — skipped");
 
-            // [rock*20, grass*35, wf1*18, wf2*18]
+            // 운영자 fb 2026-05-30: [rock*4, grass*24, wf1*12, wf2*12] (was 20/35/18/18)
             Sprite[] spritePool = new Sprite[]
             {
-                rockSpr, rockSpr, rockSpr, rockSpr, rockSpr,
-                rockSpr, rockSpr, rockSpr, rockSpr, rockSpr,
-                rockSpr, rockSpr, rockSpr, rockSpr, rockSpr,
-                rockSpr, rockSpr, rockSpr, rockSpr, rockSpr,    // 20 rocks
+                rockSpr, rockSpr, rockSpr, rockSpr,               // 4 rocks (was 20)
                 grassSpr, grassSpr, grassSpr, grassSpr, grassSpr,
                 grassSpr, grassSpr, grassSpr, grassSpr, grassSpr,
                 grassSpr, grassSpr, grassSpr, grassSpr, grassSpr,
                 grassSpr, grassSpr, grassSpr, grassSpr, grassSpr,
-                grassSpr, grassSpr, grassSpr, grassSpr, grassSpr,
-                grassSpr, grassSpr, grassSpr, grassSpr, grassSpr,
-                grassSpr, grassSpr, grassSpr, grassSpr, grassSpr,  // 35 grass
-                wf1Spr, wf1Spr, wf1Spr, wf1Spr, wf1Spr,
-                wf1Spr, wf1Spr, wf1Spr, wf1Spr, wf1Spr,
-                wf1Spr, wf1Spr, wf1Spr, wf1Spr, wf1Spr,
-                wf1Spr, wf1Spr, wf1Spr,                           // 18 wf1
-                wf2Spr, wf2Spr, wf2Spr, wf2Spr, wf2Spr,
-                wf2Spr, wf2Spr, wf2Spr, wf2Spr, wf2Spr,
-                wf2Spr, wf2Spr, wf2Spr, wf2Spr, wf2Spr,
-                wf2Spr, wf2Spr, wf2Spr,                           // 18 wf2
+                grassSpr, grassSpr, grassSpr, grassSpr,           // 24 grass (was 35)
+                wf1Spr, wf1Spr, wf1Spr, wf1Spr, wf1Spr, wf1Spr,
+                wf1Spr, wf1Spr, wf1Spr, wf1Spr, wf1Spr, wf1Spr,   // 12 wf1 (was 18)
+                wf2Spr, wf2Spr, wf2Spr, wf2Spr, wf2Spr, wf2Spr,
+                wf2Spr, wf2Spr, wf2Spr, wf2Spr, wf2Spr, wf2Spr,   // 12 wf2 (was 18)
             };
-            int total = spritePool.Length; // 91
+            int total = spritePool.Length; // 52
+
+            // 운영자 fb 2026-05-30: 장식 돌(decor_rock)은 작은 자갈로 축소하여 minable
+            //  StoneVein(stone_vein.png, 풀스케일 타일) 과 명확히 구분.
+            const float RockDecorScale = 0.45f;
 
             int half = TerrainLayout.MAP_HALF;
             System.Random rng = new System.Random(54321);
@@ -90,6 +89,9 @@ namespace MelonS.GameProto.EditorTools
                              spr == wf1Spr ? "WF1" : "WF2";
                 GameObject go = new GameObject($"Scatter_{tag}_{placed}");
                 go.transform.position = new Vector3(fx + ox, fy + oy, 0f);
+                // 장식 돌만 작게 축소 (minable vein 과 구분).  grass/wf 는 원래 크기.
+                if (spr == rockSpr)
+                    go.transform.localScale = new Vector3(RockDecorScale, RockDecorScale, 1f);
                 SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = spr;
                 // sortingOrder 1 — below decor_flower (2), above tilemap (0).

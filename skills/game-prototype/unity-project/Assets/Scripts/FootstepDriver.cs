@@ -65,13 +65,17 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            // Idempotency guard: if a FootstepDriver already exists in the scene
-            // (e.g. second scene load, test scene with manual GO), do not add another.
-            if (Object.FindFirstObjectByType<FootstepDriver>() != null) return;
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
+            {
+                // Idempotency guard: if a FootstepDriver already exists in the scene
+                // (e.g. second scene load, test scene with manual GO), do not add another.
+                if (Object.FindFirstObjectByType<FootstepDriver>() != null) return;
 
-            var go = new GameObject("[FootstepDriver]");
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<FootstepDriver>();
+                var go = new GameObject("[FootstepDriver]");
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<FootstepDriver>();
+                    });
         }
 
         // -- Per-pawn footstep throttle --

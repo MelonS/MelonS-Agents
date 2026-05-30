@@ -258,14 +258,18 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            // Idempotent: avoid a second driver on scene reload / domain-reload-
-            //  disabled play sessions.
-            if (FindDriver() != null) return;
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
+            {
+                // Idempotent: avoid a second driver on scene reload / domain-reload-
+                //  disabled play sessions.
+                if (FindDriver() != null) return;
 
-            var go = new GameObject("~SleepPoseDriver");
-            go.hideFlags = HideFlags.HideAndDontSave;
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<SleepPoseSweepDriver>();
+                var go = new GameObject("~SleepPoseDriver");
+                go.hideFlags = HideFlags.HideAndDontSave;
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<SleepPoseSweepDriver>();
+                    });
         }
 
         private static SleepPoseSweepDriver FindDriver()

@@ -81,12 +81,16 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            if (FindDriver() != null) return;
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
+            {
+                if (FindDriver() != null) return;
 
-            var go = new GameObject("~WeatherParticleDriver");
-            go.hideFlags = HideFlags.HideAndDontSave;
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<WeatherParticleDriver>();
+                var go = new GameObject("~WeatherParticleDriver");
+                go.hideFlags = HideFlags.HideAndDontSave;
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<WeatherParticleDriver>();
+                    });
         }
 
         private static WeatherParticleDriver FindDriver()

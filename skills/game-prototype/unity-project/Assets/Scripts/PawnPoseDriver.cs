@@ -352,12 +352,16 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            if (FindSweepDriver() != null) return;
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
+            {
+                if (FindSweepDriver() != null) return;
 
-            var go = new GameObject("~PawnPoseDriver");
-            go.hideFlags = HideFlags.HideAndDontSave;
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<PawnPoseSweepDriver>();
+                var go = new GameObject("~PawnPoseDriver");
+                go.hideFlags = HideFlags.HideAndDontSave;
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<PawnPoseSweepDriver>();
+                    });
         }
 
         private static PawnPoseSweepDriver FindSweepDriver()

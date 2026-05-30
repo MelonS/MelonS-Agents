@@ -84,6 +84,12 @@ namespace MelonS.GameProto.EditorTools
             UnityEventTools.AddPersistentListener(quitBtn.onClick, quitAction);
             Debug.Log("[SceneSetup] MainMenu — persistent onClick listeners baked");
 
+            // 운영자 fb 2026-05-30 (BUG1 검증): MainMenu 에도 AutoScreenshotter 를 둔다.
+            //  -menushot -screenshot <path> -delay <t> 로 실행하면 MainMenuController 가
+            //  autostart 를 억제하므로 게임씬 진입 전 메뉴 화면을 캡처할 수 있다.
+            GameObject ssGo = new GameObject("AutoScreenshotter");
+            ssGo.AddComponent<AutoScreenshotter>();
+
             EditorSceneManager.SaveScene(scene, MainMenuPath);
             Debug.Log($"[SceneSetup] MainMenu -> {MainMenuPath}");
         }

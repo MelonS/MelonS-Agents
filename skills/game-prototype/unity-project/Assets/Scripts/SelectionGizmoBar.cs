@@ -97,10 +97,14 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            if (FindExisting() != null) return;   // idempotent — never a 2nd bar
-            var go = new GameObject("~SelectionGizmoBar");
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<SelectionGizmoBar>();
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
+            {
+                if (FindExisting() != null) return;   // idempotent — never a 2nd bar
+                var go = new GameObject("~SelectionGizmoBar");
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<SelectionGizmoBar>();
+                    });
         }
 
         private static SelectionGizmoBar FindExisting()

@@ -175,14 +175,18 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            // Idempotent: avoid spawning a second driver on scene reload / domain
-            // reload-disabled play sessions.
-            if (FindDriver() != null) return;
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
+            {
+                // Idempotent: avoid spawning a second driver on scene reload / domain
+                // reload-disabled play sessions.
+                if (FindDriver() != null) return;
 
-            var go = new GameObject("~FlickerLightDriver");
-            go.hideFlags = HideFlags.HideAndDontSave;
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<FlickerLightDriver>();
+                var go = new GameObject("~FlickerLightDriver");
+                go.hideFlags = HideFlags.HideAndDontSave;
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<FlickerLightDriver>();
+                    });
         }
 
         private static FlickerLightDriver FindDriver()

@@ -137,11 +137,15 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            // Idempotent: never spawn a second overlay on scene/domain reload.
-            if (FindExisting() != null) return;
-            var go = new GameObject("~HotkeyCheatSheet");
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<HotkeyCheatSheet>();
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
+            {
+                // Idempotent: never spawn a second overlay on scene/domain reload.
+                if (FindExisting() != null) return;
+                var go = new GameObject("~HotkeyCheatSheet");
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<HotkeyCheatSheet>();
+                    });
         }
 
         private static HotkeyCheatSheet FindExisting()

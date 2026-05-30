@@ -94,13 +94,17 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            // Idempotency guard — only one host GO ever lives in the scene.
-            if (FindHost() != null) return;
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
+            {
+                // Idempotency guard — only one host GO ever lives in the scene.
+                if (FindHost() != null) return;
 
-            var go = new GameObject("~FloatingTextHost");
-            go.hideFlags = HideFlags.HideAndDontSave;
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<FloatingTextHost>();
+                var go = new GameObject("~FloatingTextHost");
+                go.hideFlags = HideFlags.HideAndDontSave;
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<FloatingTextHost>();
+                    });
         }
 
         private static FloatingTextHost FindHost()

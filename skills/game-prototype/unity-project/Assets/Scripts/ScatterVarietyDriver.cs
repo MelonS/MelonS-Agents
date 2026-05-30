@@ -154,26 +154,38 @@ namespace MelonS.GameProto
         private const int DecalSortingOrder = 1;
 
         // Total baseline (non-clustered) decals to place.
-        private const int BaselineChunkCount  = 18;  // stone_chunk_small on open terrain
-        private const int BaselineLeafCount   = 22;  // dead_leaves on grass/dirt
-        private const int BaselinePebbleCount = 12;  // pebble_scatter on open terrain
+        // 운영자 fb 2026-05-30: "돌같은게 많이 뿌려져 있고 막 뿌려놨다" — 바위가 너무 많아
+        //  rock field 처럼 보이고, decorative 돌이 minable StoneVein 과 헷갈림.
+        //  → 장식 돌 개수를 대폭 감축 (60×60 맵 전체 기준 baseline chunk 18→4).
+        //  leaves/pebble 도 light accent 수준으로 낮춤.
+        private const int BaselineChunkCount  = 4;   // stone_chunk_small on open terrain (was 18)
+        private const int BaselineLeafCount   = 14;  // dead_leaves on grass/dirt (was 22) — 잎은 돌이 아니라 덜 거슬림
+        private const int BaselinePebbleCount = 6;   // pebble_scatter on open terrain (was 12)
 
         // B11: baseline counts for the 3 new rock shape variants.
-        // Kept slightly lower than stone_chunk_small so the scene doesn't feel
-        // rock-heavy — variety reads better when each silhouette is infrequent.
-        private const int BaselineRockACount = 8;   // rock_variant_a (wide slab)
-        private const int BaselineRockBCount = 6;   // rock_variant_b (tall spire)
-        private const int BaselineRockCCount = 7;   // rock_variant_c (fractured plate)
+        // 운영자 fb 2026-05-30: 바위 silhouette variety 는 유지하되 각 1개씩만 — 전체
+        //  장식 바위가 occasional ground detail 로 읽히도록 (was 8/6/7 = 21 → 1/1/1 = 3).
+        private const int BaselineRockACount = 1;   // rock_variant_a (wide slab)  (was 8)
+        private const int BaselineRockBCount = 1;   // rock_variant_b (tall spire) (was 6)
+        private const int BaselineRockCCount = 1;   // rock_variant_c (fractured plate) (was 7)
+
+        // 운영자 fb 2026-05-30: 장식 바위(chunk/variant)는 작은 땅 자갈처럼 보이게 축소하여
+        //  minable StoneVein 과 명확히 구분.  SpawnDecal 이 rock 류 decal 에 이 scale 적용.
+        //  (leaves/pebble/waterEdge 는 원래 작아서 영향 없음 — DecalScaleDefault 사용.)
+        private const float RockDecalScale    = 0.45f; // 장식 돌: 작고 납작한 자갈로 축소
+        private const float DecalScaleDefault = 1.0f;  // 그 외 decal 은 원래 크기
 
         // Cluster radius around trees (world units).
         private const float TreeClusterRadius  = 1.5f;
         // Number of chunk decals to spawn per tree in cluster mode.
-        private const int   TreeClusterPerTree = 2;
+        // 운영자 fb 2026-05-30: 나무당 2→1 로 (전체 chunk 밀도 추가 감축).
+        private const int   TreeClusterPerTree = 1;  // was 2
 
         // Cluster radius around stone veins (world units).
         private const float VeinClusterRadius  = 1.8f;
         // Number of pebble decals to spawn per vein in cluster mode.
-        private const int   VeinClusterPerVein = 3;
+        // 운영자 fb 2026-05-30: vein당 3→1 (작은 pebble chip 한 개면 충분).
+        private const int   VeinClusterPerVein = 1;  // was 3
 
         // Rescan interval (picks up regrown trees / newly placed veins).
         private const float ScanInterval = 3.0f;
@@ -375,17 +387,18 @@ namespace MelonS.GameProto
 
         private void PlaceBaselineDecals()
         {
-            // stone_chunk_small — on open terrain (grass / non-rock-cluster areas)
-            PlaceBaseline(_chunkSprite, "Chunk", BaselineChunkCount);
+            // stone_chunk_small — on open terrain.  Rock-type → shrunk to pebble scale
+            //  so it never reads as a minable StoneVein (운영자 fb 2026-05-30).
+            PlaceBaseline(_chunkSprite, "Chunk", BaselineChunkCount, RockDecalScale);
 
-            // dead_leaves — warm organic scatter, slightly denser
-            PlaceBaseline(_leavesSprite, "Leaves", BaselineLeafCount);
+            // dead_leaves — warm organic scatter, light accent (not a rock → default scale).
+            PlaceBaseline(_leavesSprite, "Leaves", BaselineLeafCount, DecalScaleDefault);
 
-            // pebble_scatter — on open terrain, relatively sparse
-            PlaceBaseline(_pebbleSprite, "Pebble", BaselinePebbleCount);
+            // pebble_scatter — small ground pebbles, already tiny → default scale.
+            PlaceBaseline(_pebbleSprite, "Pebble", BaselinePebbleCount, DecalScaleDefault);
         }
 
-        private void PlaceBaseline(Sprite sprite, string tag, int count)
+        private void PlaceBaseline(Sprite sprite, string tag, int count, float scale)
         {
             if (sprite == null) return;
 
@@ -410,7 +423,7 @@ namespace MelonS.GameProto
                 long key = GridKey(wx, wy);
                 if (_occupied.Contains(key)) continue;
 
-                SpawnDecal(sprite, $"Var_{tag}_{placed}", wx, wy);
+                SpawnDecal(sprite, $"Var_{tag}_{placed}", wx, wy, scale);
                 _occupied.Add(key);
                 placed++;
             }
@@ -424,9 +437,10 @@ namespace MelonS.GameProto
 
         private void PlaceBaselineRockVariants()
         {
-            PlaceBaseline(_rockASprite, "RockA", BaselineRockACount);
-            PlaceBaseline(_rockBSprite, "RockB", BaselineRockBCount);
-            PlaceBaseline(_rockCSprite, "RockC", BaselineRockCCount);
+            // Rock-type silhouettes → shrunk to pebble scale (운영자 fb 2026-05-30).
+            PlaceBaseline(_rockASprite, "RockA", BaselineRockACount, RockDecalScale);
+            PlaceBaseline(_rockBSprite, "RockB", BaselineRockBCount, RockDecalScale);
+            PlaceBaseline(_rockCSprite, "RockC", BaselineRockCCount, RockDecalScale);
         }
 
         // -- Cluster: extra decals near trees and stone veins ──────────────
@@ -474,7 +488,7 @@ namespace MelonS.GameProto
                         if (_occupied.Contains(key)) continue;
                     }
 
-                    SpawnDecal(_chunkSprite, $"Var_TreeChunk_{id}_{k}", wx, wy);
+                    SpawnDecal(_chunkSprite, $"Var_TreeChunk_{id}_{k}", wx, wy, RockDecalScale);
                     _occupied.Add(key);
                 }
 
@@ -517,7 +531,7 @@ namespace MelonS.GameProto
                         if (_occupied.Contains(key)) continue;
                     }
 
-                    SpawnDecal(_pebbleSprite, $"Var_VeinPebble_{id}_{k}", wx, wy);
+                    SpawnDecal(_pebbleSprite, $"Var_VeinPebble_{id}_{k}", wx, wy, DecalScaleDefault);
                     _occupied.Add(key);
                 }
 
@@ -591,7 +605,7 @@ namespace MelonS.GameProto
                     long key = GridKey(wx, wy);
                     if (_occupied.Contains(key)) continue; // another decal already here
 
-                    SpawnDecal(_waterEdgeSprite, $"WaterEdge_{cx}_{cy}", wx, wy);
+                    SpawnDecal(_waterEdgeSprite, $"WaterEdge_{cx}_{cy}", wx, wy, DecalScaleDefault);
                     _occupied.Add(key);
                 }
             }
@@ -603,10 +617,13 @@ namespace MelonS.GameProto
         //  Decal spawn helper                                                   //
         // ------------------------------------------------------------------ //
 
-        private void SpawnDecal(Sprite sprite, string goName, float wx, float wy)
+        private void SpawnDecal(Sprite sprite, string goName, float wx, float wy, float scale)
         {
             var go = new GameObject(goName);
             go.transform.position = new Vector3(wx, wy, 0f);
+            // 운영자 fb 2026-05-30: 장식 돌은 작은 자갈로 축소하여 minable StoneVein 과 구분.
+            if (scale != 1.0f)
+                go.transform.localScale = new Vector3(scale, scale, 1f);
 
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite       = sprite;

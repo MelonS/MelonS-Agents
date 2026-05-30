@@ -87,11 +87,15 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            // Idempotent: never spawn a second stack on scene/domain reload.
-            if (FindExisting() != null) return;
-            var go = new GameObject("~AlertStackUI");
-            Object.DontDestroyOnLoad(go);
-            go.AddComponent<AlertStackUI>();
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
+            {
+                // Idempotent: never spawn a second stack on scene/domain reload.
+                if (FindExisting() != null) return;
+                var go = new GameObject("~AlertStackUI");
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<AlertStackUI>();
+                    });
         }
 
         private static AlertStackUI FindExisting()

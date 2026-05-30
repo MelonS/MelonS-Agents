@@ -74,31 +74,35 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
-            // Guard: do not spawn a second overlay if one already exists
-            // (handles Enter Play Mode without domain reload, or scene reloads).
-            if (FindOverlay() != null) return;
-
-            Sprite spr = LoadVignetteSprite();
-            if (spr == null)
+            // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
+            GameSceneGate.RunWhenGameScene(() =>
             {
-                // Missing sprite → graceful no-op.  Build opens normally.
-                Debug.LogWarning(
-                    "[VignetteOverlay] vignette.png not found at '"
-                    + SpritePath + "'. "
-                    + "V8 vignette overlay is disabled. "
-                    + "Run Assets/Sprites/_gen_vignette.py to generate it."
-                );
-                return;
-            }
+                // Guard: do not spawn a second overlay if one already exists
+                // (handles Enter Play Mode without domain reload, or scene reloads).
+                if (FindOverlay() != null) return;
 
-            var go = new GameObject("~VignetteOverlay");
-            // HideAndDontSave keeps it out of the hierarchy and prevents
-            // scene serialisation (no accidental save pollution).
-            go.hideFlags = HideFlags.HideAndDontSave;
-            Object.DontDestroyOnLoad(go);
+                Sprite spr = LoadVignetteSprite();
+                if (spr == null)
+                {
+                    // Missing sprite → graceful no-op.  Build opens normally.
+                    Debug.LogWarning(
+                        "[VignetteOverlay] vignette.png not found at '"
+                        + SpritePath + "'. "
+                        + "V8 vignette overlay is disabled. "
+                        + "Run Assets/Sprites/_gen_vignette.py to generate it."
+                    );
+                    return;
+                }
 
-            var overlay = go.AddComponent<VignetteOverlay>();
-            overlay.Build(spr);
+                var go = new GameObject("~VignetteOverlay");
+                // HideAndDontSave keeps it out of the hierarchy and prevents
+                // scene serialisation (no accidental save pollution).
+                go.hideFlags = HideFlags.HideAndDontSave;
+                Object.DontDestroyOnLoad(go);
+
+                var overlay = go.AddComponent<VignetteOverlay>();
+                overlay.Build(spr);
+                    });
         }
 
         // ── Build ──────────────────────────────────────────────────────────────
