@@ -1,0 +1,36 @@
+{
+  "role": "game-programmer",
+  "lane": "buildmenu",
+  "label": "buildmenu-tooltip-icon",
+  "audit": "v3 (실제 UI 갭): Architect 건축 버튼이 text-only + HoverTooltip 이 월드 엔티티만 커버(메뉴 row 미커버)",
+  "task": "건축 메뉴 buildable/order 버튼 hover 시 자재·비용 툴팁 + 버튼 좌측 작은 아이콘(해당 sprite), UITheme 스타일 일관",
+  "status": "Done",
+  "files_owned_and_changed": [
+    "skills/game-prototype/unity-project/Assets/Scripts/ArchitectMenu.cs (EDIT)",
+    "skills/game-prototype/unity-project/Assets/Scripts/HoverTooltip.cs (EDIT)"
+  ],
+  "implementation": {
+    "tooltip_path": "HoverTooltip 의 Update() 는 EventSystem.IsPointerOverGameObject() 가 true(메뉴 row 위)면 Hide()+return 하므로 월드 hover 텍스트가 메뉴 row 를 못 덮는다. 그래서 row(=UI) 는 별도 'UI override' 경로로 처리: ArchitectMenu 가 HoverTooltip.Instance.ShowText(text, screenPos) 로 row 텍스트를 push, Update() 가 그 override 를 over-UI 여부와 무관하게 최우선 렌더(기존 월드 경로는 override 가 비었을 때만 동작).",
+    "tooltip_content": "buildable: BuildableTooltip(mode,cost) -> '<ThingKr> — <목재|석재> <n>' (cost 0 이면 '자재 불필요'). 예: '목재 벽 — 목재 5', '석재 바닥 (이동 보너스) — 석재 1', '수면 자리 (자재 불필요) — 자재 불필요'. 자재 종류는 로컬 PaysWithStone(mode)(BuildManager.PaysWithStone 미러, WallStone/FloorStone=석재, 그 외 목재) 로 도출. Orders/Zone row 는 자재 없음 -> '<label> — 맵에서 드래그하여 지정' 힌트.",
+    "tooltip_wiring": "MakeBtn 에 optional tooltip 파라미터 추가. tooltip 있으면 EventTrigger 의 PointerEnter(ShowText)/PointerExit(ClearUIOverride(text)) 2개만 추가 — Button.onClick / GameObject 이름 미변경. row Destroy 시 PointerExit 가 안 떠 툴팁이 박힐 수 있어 RefreshContent 시작 + Close() 에서 HoverTooltip.ClearUIOverride() force-clear.",
+    "icon_path": "MakeBtn 에 optional icon(Sprite)+iconTint(Color?) 추가. 있으면 row 좌측에 22px 정사각 Image(raycastTarget=false, preserveAspect)를 그리고 Label inset 을 우측으로 밀어 겹침 방지. icon 없는 row(Orders/Zone)는 기존 inset 유지.",
+    "icon_source": "Resources.Load<Sprite>('Sprites/<key>') 로 로드(IconKey(mode): wall_wood/door_wood/autodoor/fence/fence_gate/barricade/floor_wood/stone_floor/bed_wood/bed_fine/stove/lamp). Resources 아래 없는 PNG 는 null -> MaterialColor(mode) 솔리드 swatch(목재=갈색, 석재=회색)로 폴백하여 항상 무언가 보임(절대 magenta/빈칸 아님). WoodPileEntity/VignetteOverlay 가 쓰는 'Resources.Load 우선, 없으면 절차적 폴백' 동일 패턴. 로드 결과는 _iconCache 로 캐시(반복 category-toggle 시 재probe 없음).",
+    "stone_tint": "석재 buildable(WallStone)은 wall_wood 실루엣을 회색(0.72,0.72,0.78)으로 tint 재사용, 목재는 white(as-authored).",
+    "style": "아이콘/툴팁 모두 UITheme 사용: 툴팁은 기존 HoverTooltip 의 UITheme.MakeBorderedPanel 패널·TextPrimary·LoadKoreanFont 그대로(공유 ShowAt 헬퍼로 월드/UI 경로 동일 렌더). 버튼/Label 색·폰트 미변경.",
+    "preserved": "모든 버튼 GameObject 이름($\"Btn_{label}\") 과 onClick(PlayClickBlip + SetMode/Close, 그리고 designation invoke+Close) 그대로. Categories/OrderCategories 데이터·구조·click 플러밍 무변경 — MakeBtn 에 비파괴 optional 인자만 추가."
+  },
+  "bug_firewall_check": {
+    "#4_audio_buzz": "n/a — AudioBank 신규 호출 없음. 기존 PlayClickBlip(onClick 당 1회) 유지.",
+    "#5_GetInstanceID_race": "n/a — instance-ID 비교 없음.",
+    "#6_OnCollisionEnter_only": "n/a — collision 핸들러 없음.",
+    "#7_singleton_subscription_race": "OnEnable 에서 Singleton.OnX 구독 안 함. HoverTooltip.Instance / BuildManager.Instance 는 콜백/Update 시점에 lazy 해소(null no-op). 정적 Instance 게터 노출만 추가, 이벤트 구독 없음.",
+    "#8_justSpawned_default_true": "n/a — grace/justSpawned 필드 없음.",
+    "#9_runInBackground_freeze": "n/a — 긴 WaitForSeconds 코루틴/백그라운드 타이머 추가 없음. 툴팁은 EventTrigger + 기존 Update 폴링."
+  },
+  "syntactic_check": "ArchitectMenu.cs braces 59/59 parens 359/359 brackets 19/19; HoverTooltip.cs braces 26/26 parens 134/134 brackets 1/1 — 균형. 참조한 BuildManager.Mode 멤버(Wall/WallStone/Floor/FloorStone/Door/Autodoor/Stove/Bed/BedFine/BedSleepingSpot/Lamp/Fence/FenceGate/Barricade) 전부 enum 에 존재(line 56). TableChair 는 IconKey '' -> swatch 폴백.",
+  "lane_isolation": "ArchitectMenu.cs + HoverTooltip.cs 만 편집. BuildManager.cs/UITheme.cs/SceneSetup*/엔티티/designation/테스트 등 다른 파일 미변경(전부 read-only). Unity 미실행(QA 검증).",
+  "flags_for_qa": [
+    "FORCE-IMPORT/RESOURCES: 아이콘 PNG(wall_wood/door_wood/floor_wood/stone_floor/bed_wood/bed_fine/stove/lamp/fence/fence_gate/barricade/autodoor)는 현재 Assets/Sprites/ 에 있고 Resources/ 아래엔 없음 -> Resources.Load 가 null 반환하여 현재는 material-colored swatch(목재 갈색/석재 회색)로 표시됨. 실제 sprite 아이콘을 쓰려면 해당 PNG 를 Assets/Resources/Sprites/ 로 복사/이동(Build Engineer lane). 코드는 sprite 있으면 자동 사용, 없으면 swatch — 둘 다 정상.",
+    "TOOLTIP UI-override 경로: HoverTooltip.Update() 가 over-UI 여도 override 우선 렌더하도록 변경. 월드 hover 동작은 override 가 비었을 때(메뉴 row 밖) 그대로 유지됨 — 회귀 확인 포인트."
+  ]
+}

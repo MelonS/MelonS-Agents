@@ -52,8 +52,16 @@ namespace MelonS.GameProto
     {
         // ---- tunables (SerializeField so designer can tune day-1 feel) -------
         [Header("Shade look")]
-        [SerializeField] private Color shadeTint = new Color(0.06f, 0.07f, 0.12f, 0.32f); // soft indoor shade
+        // alpha 0.45 (was 0.32): the shade must be CLEARLY visible in a daytime
+        //  screenshot over the lit floor — 0.32 read too faint against the bright grass
+        //  when the night overlay alpha is ~0 (operator: 인게임에서 눈에 보이는 그늘).
+        [SerializeField] private Color shadeTint = new Color(0.05f, 0.06f, 0.11f, 0.45f); // soft indoor shade
         [SerializeField] private int shadeSortingOrder = 24;   // above pawns/structures, below night overlay(25)
+        // Match NightOverlay's sorting LAYER explicitly ("Default").  A SpriteRenderer
+        //  created at runtime defaults to the "Default" layer, but pin it so the
+        //  shadeSortingOrder ordering vs NightOverlay(25)/bars(30) is well-defined
+        //  regardless of any project sorting-layer config (visibility firewall).
+        [SerializeField] private string shadeSortingLayer = "Default";
 
         // ---- runtime state ---------------------------------------------------
         public static RoofOverlayRenderer Instance { get; private set; }
@@ -131,6 +139,7 @@ namespace MelonS.GameProto
                 var sr = GetQuad(i);
                 sr.transform.position = new Vector3(cell.x + 0.5f, cell.y + 0.5f, 0f);
                 sr.color = shadeTint;
+                sr.sortingLayerName = shadeSortingLayer;
                 sr.sortingOrder = shadeSortingOrder;
                 if (!sr.gameObject.activeSelf) sr.gameObject.SetActive(true);
                 i++;
@@ -157,6 +166,7 @@ namespace MelonS.GameProto
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = ShadeSprite();
                 sr.color = shadeTint;
+                sr.sortingLayerName = shadeSortingLayer;   // pin layer (visibility firewall)
                 sr.sortingOrder = shadeSortingOrder;
                 go.SetActive(false);
                 pool.Add(sr);

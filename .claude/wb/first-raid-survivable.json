@@ -1,0 +1,20 @@
+{
+  "label": "first-raid-survivable",
+  "status": "done",
+  "lane": [
+    "Assets/Scripts/AIDirector.cs"
+  ],
+  "task": "Operator goal '생존 유지': after the enemy-wall-respect fix bandits reach pawns reliably, so the Day-6 first raid killed 1 of 3 pawns in LongPlay (later raids survived with 2). Soften the FIRST (opening) raid so a 3-pawn colony survives it with no death, while the threat still exists and escalates afterward. LANE STRICT: AIDirector.cs only. Do NOT touch raid frequency / edge-spawn (both just calibrated). Keep all knobs serialized. Cannot weaken BanditEnemy HP/attack (out of lane), so softened via scheduling knobs only.",
+  "changes": [
+    "RaidGraceDays 6 -> 9 (serialized). First raid no longer before ~day 9; within operator's suggested 8~10 window. Gives the colony ~3 more in-game days to grow pawn count / combat skill / defenses before first contact.",
+    "Added [SerializeField] private int FirstRaidExtraGraceDays = 2; — additional in-game days the FIRST raid (raidCount==0) waits BEYOND RaidGraceDays. Pushes opening contact to ~day 11. Subsequent raids use the normal RaidIntervalDays cadence, so post-opening escalation is unchanged. Set to 0 to restore exact-grace behavior.",
+    "TryScheduleRaid(): computed graceDays = RaidGraceDays + (raidCount==0 ? max(0,FirstRaidExtraGraceDays) : 0); the day<RaidGraceDays gate now uses graceDays. Mathf.Max guards against a negative serialized value."
+  ],
+  "result": "First raid now lands ~day 11 (9 grace + 2 first-raid extra) instead of day 6, still 1 bandit (BaseRaidGroupSize=1 unchanged), giving a young 3-pawn colony time to build skill/defense and survive the opening contact without a death. Threat is preserved and later raids escalate on the unchanged 5-day cadence + slow size step. No change to raid frequency between raids, edge-spawn, bandit count math, or any event/threat-tier logic.",
+  "untouched": "RaidIntervalDays(5), MaxConcurrentGroups(2), BaseRaidGroupSize(1), RaidsPerSizeStep(2), SpawnRaid size math, RaidSpawnEdge / edge-spawn placement, SpawnSingleBandit, FireRandomEvent, BuildDefaultPool, SpawnTrader, wolves gate, CurrentThreatTier, ScheduleNext. BanditEnemy.cs NOT touched (out of lane — could not weaken HP/attack from AIDirector cleanly: maxHp/contactDamage are SerializeField private with HP set in Awake and no public setter; softening done via scheduling instead).",
+  "tests_preserved": "V7RaidThreatTest invokes SpawnRaid() directly via reflection (bypasses TryScheduleRaid grace), still spawns >=1 bandit (raidCount=0 -> BaseRaidGroupSize=1) and asserts movement toward colony — unaffected. No test asserts on RaidGraceDays value (grep clean). No test renamed.",
+  "bug_firewall_check": "No new long WaitForSeconds/heartbeat coroutine (#9 N/A). No AudioBank tight-loop call (PlayAlert still once-per-raid, unchanged). No GetInstanceID compare (#5). No OnCollisionEnter-only handler (#6). No singleton OnEnable subscription (#7) — raid scheduling still polls GameClock from Update. No justSpawned default-true (#8) — FirstRaidExtraGraceDays gates on raidCount==0, not a grace-default flag. All clean.",
+  "no_todo": true,
+  "unity_run": false,
+  "date": "2026-05-31"
+}

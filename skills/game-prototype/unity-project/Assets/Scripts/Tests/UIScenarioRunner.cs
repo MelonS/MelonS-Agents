@@ -23,11 +23,14 @@ namespace MelonS.GameProto.Tests
     ///   6) MULTI-SELECT marquee      (MarqueeSelector.SimulateMarquee over the colonists)
     ///   7) right-click a TREE        (re-select a pawn, ClickSelector.SimulateRightClick on a tree
     ///                                 → PawnChopper.SetTreeTarget = chop work queued)
+    ///   8) designate a ROOF area     (RoofDesignation.SetMode(true) + SimulateDragRect over a
+    ///                                 small house-sized rect → RoofOverlayRenderer draws the
+    ///                                 visible indoor SHADE quads; the screenshot is the check)
     ///
     /// Each step logs "[UIScenario] step N <name> OK" (or WARN + skip if a target is
     /// missing — robust, never crashes the session) and writes a PNG to
     ///   G:/ai/_scn_<NN>_<name>.png
-    /// Ends with "[UIScenario] DONE steps=7".
+    /// Ends with "[UIScenario] DONE steps=8".
     ///
     /// ────────────────────────────────────────────────────────────────────────────
     /// SELF-BOOTSTRAP DISCIPLINE (mirrors MarqueeSelector / MineDesignation / the
@@ -279,6 +282,50 @@ namespace MelonS.GameProto.Tests
                 bool queued = chopper != null;   // chopper exists → SetTreeTarget was invokable
                 Debug.Log($"[UIScenario] chop work right-clicked on tree '{tree.name}', chopper={(queued ? "present" : "ABSENT")}");
                 return queued;
+            });
+
+            // Step 8 — designate a ROOF AREA so the in-game SHADE overlay actually
+            //  renders (operator: 인게임 그늘 오버레이가 실제 렌더되는지 미확인 — LongPlay
+            //  never exercised the roof UI).  We enter roof mode through the real
+            //  RoofDesignation.SetMode and roof a small house-sized rectangle centred on
+            //  the colonists (so it lands inside the camera view for the screenshot),
+            //  using the public SimulateDragRect QA hook — the EXACT drag-rect MarkRect
+            //  path a player's mouse drag drives.  RoofOverlayRenderer then draws the
+            //  translucent shade quads; the PNG this step captures is the visual check.
+            yield return Step(8, "designate_roof", () =>
+            {
+                var roof = RoofDesignation.Instance;
+                if (roof == null) { Debug.LogWarning("[UIScenario] step 8 WARN: RoofDesignation not found — skip"); return false; }
+
+                // Leave any prior designation mode so roof mode owns the gesture
+                //  (matches the real mutual-exclusion the UI enforces).
+                if (MineDesignation.Instance != null) MineDesignation.Instance.SetMode(false);
+                roof.SetMode(true);
+
+                // Centre a small roof rect on the colonists (camera follows them) so the
+                //  shade is on-screen.  Fall back to a fixed grass rect near the wall
+                //  step's cells if no pawns are found — robust, always roofs something.
+                Vector2 a, b;
+                if (ComputePawnBounds(out Vector2 pMin, out Vector2 pMax))
+                {
+                    Vector2 c = (pMin + pMax) * 0.5f;
+                    a = new Vector2(Mathf.Floor(c.x) - 2f, Mathf.Floor(c.y) - 2f);
+                    b = new Vector2(Mathf.Floor(c.x) + 2f, Mathf.Floor(c.y) + 2f);  // ~5×5 cell house
+                }
+                else
+                {
+                    a = new Vector2(-23f, -12f);
+                    b = new Vector2(-20f, -9f);
+                }
+
+                int roofedBefore = roof.RoofedCount;
+                int n = roof.SimulateDragRect(a, b);   // real drag-rect MarkRect path
+                int roofedAfter = roof.RoofedCount;
+                Debug.Log($"[UIScenario] roof designated rect ({a.x:F1},{a.y:F1})-({b.x:F1},{b.y:F1}): " +
+                          $"+{n} new, total roofed cells={roofedAfter} (overlay Version={roof.Version})");
+                // leave roof mode so the screenshot shows only the shade, not a mode cursor.
+                roof.SetMode(false);
+                return roofedAfter > roofedBefore;
             });
 
             Debug.Log($"[UIScenario] DONE steps={stepCount}");

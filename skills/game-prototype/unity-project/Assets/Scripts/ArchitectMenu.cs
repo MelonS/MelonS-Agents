@@ -204,6 +204,90 @@ namespace MelonS.GameProto
             },
         };
 
+        // ── v3 audit: per-buildable tooltip (자재/비용) + icon ────────────────
+        //   The audit flagged the Architect rows as text-only with no hover help.
+        //   For each buildable we derive (a) the material it is paid in and (b)
+        //   the sprite key, so a hover shows e.g. "목재 벽 — 목재 5" and the row
+        //   carries a small icon (wall=wall_wood).  These are READ-ONLY lookups
+        //   keyed by BuildManager.Mode; they add NO new build modes and do NOT
+        //   change any GameObject name or onClick wiring.
+
+        // Stone-paid modes (mirrors BuildManager.PaysWithStone — kept local so we
+        //   don't reach into another lane; if a mode is here it costs 석재, else 목재).
+        private static bool PaysWithStone(BuildManager.Mode m) =>
+            m == BuildManager.Mode.WallStone || m == BuildManager.Mode.FloorStone;
+
+        // Sprite key under Resources/Sprites/<key> (designer-replaceable PNG).
+        //   Resources.Load returns null for keys whose PNG isn't under Resources;
+        //   in that case MakeIcon falls back to a flat material-colored swatch, so
+        //   the row always shows SOMETHING (never magenta / never empty).
+        private static string IconKey(BuildManager.Mode m) => m switch
+        {
+            BuildManager.Mode.Wall            => "wall_wood",
+            BuildManager.Mode.WallStone       => "wall_wood",   // same silhouette; tinted grey by swatch fallback
+            BuildManager.Mode.Door            => "door_wood",
+            BuildManager.Mode.Autodoor        => "autodoor",
+            BuildManager.Mode.Fence           => "fence",
+            BuildManager.Mode.FenceGate       => "fence_gate",
+            BuildManager.Mode.Barricade       => "barricade",
+            BuildManager.Mode.Floor           => "floor_wood",
+            BuildManager.Mode.FloorStone      => "stone_floor",
+            BuildManager.Mode.Bed             => "bed_wood",
+            BuildManager.Mode.BedFine         => "bed_fine",
+            BuildManager.Mode.BedSleepingSpot => "bed_wood",
+            BuildManager.Mode.Stove           => "stove",
+            BuildManager.Mode.Lamp            => "lamp",
+            _ => "",
+        };
+
+        // Plain Korean noun for the tooltip body (label already has the cost in
+        //   parens; the tooltip restates "<thing> — <material> <n>" RimWorld-style).
+        private static string ThingKr(BuildManager.Mode m) => m switch
+        {
+            BuildManager.Mode.Wall            => "목재 벽",
+            BuildManager.Mode.WallStone       => "석재 벽",
+            BuildManager.Mode.Door            => "문",
+            BuildManager.Mode.Autodoor        => "자동문 (통과 빠름)",
+            BuildManager.Mode.Fence           => "울타리 (통과 가능)",
+            BuildManager.Mode.FenceGate       => "울타리 문 (통과 가능)",
+            BuildManager.Mode.Barricade       => "바리케이드 (경로 차단)",
+            BuildManager.Mode.Floor           => "나무 바닥",
+            BuildManager.Mode.FloorStone      => "석재 바닥 (이동 보너스)",
+            BuildManager.Mode.Bed             => "목재 침대",
+            BuildManager.Mode.BedFine         => "고급 침대 (수면 1.4x)",
+            BuildManager.Mode.BedSleepingSpot => "수면 자리 (자재 불필요)",
+            BuildManager.Mode.Stove           => "화덕 (요리)",
+            BuildManager.Mode.Lamp            => "램프 (조명)",
+            _ => "건축물",
+        };
+
+        // Final tooltip string for a buildable row.  cost 0 == 자재 불필요.
+        private static string BuildableTooltip(BuildManager.Mode m, int cost)
+        {
+            if (cost <= 0) return $"{ThingKr(m)} — 자재 불필요";
+            string mat = PaysWithStone(m) ? "석재" : "목재";
+            return $"{ThingKr(m)} — {mat} {cost}";
+        }
+
+        // Material accent for the swatch fallback (wood = warm brown, stone = grey).
+        private static Color MaterialColor(BuildManager.Mode m) =>
+            PaysWithStone(m)
+                ? new Color(0.62f, 0.62f, 0.66f, 1f)   // stone grey
+                : new Color(0.55f, 0.38f, 0.20f, 1f);  // wood brown
+
+        // Cache loaded icon sprites (Resources.Load each frame would be wasteful;
+        //   we build the row once per RefreshContent so this is small, but caching
+        //   keeps repeated category-toggles allocation-free).
+        private readonly Dictionary<string, Sprite> _iconCache = new();
+        private Sprite LoadIcon(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return null;
+            if (_iconCache.TryGetValue(key, out var cached)) return cached;
+            var s = Resources.Load<Sprite>("Sprites/" + key);
+            _iconCache[key] = s;   // may be null — cached so we don't re-probe
+            return s;
+        }
+
         public static void EnsureInScene()
         {
             if (_instance != null) return;
@@ -284,6 +368,10 @@ namespace MelonS.GameProto
 
         private void RefreshContent()
         {
+            // v3 audit: rows about to be destroyed can't fire PointerExit, so
+            //   force-clear any lingering tooltip override before rebuilding.
+            if (HoverTooltip.Instance != null) HoverTooltip.Instance.ClearUIOverride();
+
             // 기존 children 정리
             for (int i = contentRoot.transform.childCount - 1; i >= 0; i--)
                 Destroy(contentRoot.transform.GetChild(i).gameObject);
@@ -320,7 +408,10 @@ namespace MelonS.GameProto
                                 //  (mirrors how a buildable enters build mode + closes).
                                 item.invoke?.Invoke();
                                 Close();
-                            });
+                            },
+                            // v3 audit: orders/zone rows cost no material — the
+                            //   tooltip explains the drag-designation action instead.
+                            tooltip: $"{item.label} — 맵에서 드래그하여 지정");
                         y += 32;
                     }
                 }
@@ -345,6 +436,14 @@ namespace MelonS.GameProto
                     foreach (var (mode, label, cost) in items)
                     {
                         var bcap = mode;  // closure capture
+                        // v3 audit: icon + 자재/비용 tooltip per buildable row.
+                        //   Authored sprite when present; stone reuses the wall
+                        //   silhouette tinted grey, otherwise white (use as-authored).
+                        Sprite icon = LoadIcon(IconKey(mode));
+                        Color tint = icon != null
+                            ? (PaysWithStone(mode) ? new Color(0.72f, 0.72f, 0.78f, 1f) : Color.white)
+                            : MaterialColor(mode);   // null sprite → solid material swatch
+                        string tip = BuildableTooltip(mode, cost);
                         MakeBtn(contentRoot.transform, label,
                             new Vector2(16, -y), MelonS.GameProto.Core.UITheme.BtnInactiveBg,
                             () => {
@@ -355,14 +454,16 @@ namespace MelonS.GameProto
                                     BuildManager.Instance.SetMode(newMode);
                                     Close();
                                 }
-                            });
+                            },
+                            icon: icon, iconTint: tint, tooltip: tip);
                         y += 32;
                     }
                 }
             }
         }
 
-        private GameObject MakeBtn(Transform parent, string label, Vector2 pos, Color col, System.Action onClick)
+        private GameObject MakeBtn(Transform parent, string label, Vector2 pos, Color col, System.Action onClick,
+                                   Sprite icon = null, Color? iconTint = null, string tooltip = null)
         {
             var go = new GameObject($"Btn_{label}");
             go.transform.SetParent(parent, false);
@@ -403,6 +504,33 @@ namespace MelonS.GameProto
             // wiki #5 — central chokepoint: every architect button blips on click.
             btn.onClick.AddListener(() => { PlayClickBlip(); onClick?.Invoke(); });
 
+            // ── v3 audit: small buildable icon at the row's left edge ─────────
+            //   When an icon sprite is supplied, draw a 22px square swatch inside
+            //   the fill (raycastTarget=false so it never steals the button click)
+            //   and push the label right so text doesn't overlap the glyph.
+            //   No icon (e.g. Orders/Zone rows) → label keeps its original inset.
+            float labelLeft = 8f;
+            if (icon != null || iconTint.HasValue)
+            {
+                const float IconBox = 22f;
+                var iconGo = new GameObject("Icon");
+                iconGo.transform.SetParent(go.transform, false);
+                var iimg = iconGo.AddComponent<Image>();
+                iimg.sprite = icon;                       // may be null → flat swatch
+                // Caller picks the color: authored-sprite tint (grey for stone
+                //   reuse) when icon!=null, else the solid material swatch color.
+                iimg.color = iconTint ?? Color.white;
+                iimg.preserveAspect = true;
+                iimg.raycastTarget = false;
+                var irt = iconGo.GetComponent<RectTransform>();
+                irt.anchorMin = new Vector2(0, 0.5f);
+                irt.anchorMax = new Vector2(0, 0.5f);
+                irt.pivot = new Vector2(0, 0.5f);
+                irt.sizeDelta = new Vector2(IconBox, IconBox);
+                irt.anchoredPosition = new Vector2(6, 0);
+                labelLeft = 6 + IconBox + 6;              // icon inset + box + gap
+            }
+
             var txtGo = new GameObject("Label");
             txtGo.transform.SetParent(go.transform, false);
             var t = txtGo.AddComponent<Text>();
@@ -416,14 +544,51 @@ namespace MelonS.GameProto
             var trt = txtGo.GetComponent<RectTransform>();
             trt.anchorMin = Vector2.zero;
             trt.anchorMax = Vector2.one;
-            trt.sizeDelta = new Vector2(-16, 0);
-            trt.anchoredPosition = new Vector2(8, 0);
+            trt.sizeDelta = new Vector2(-(labelLeft + 8), 0);
+            trt.anchoredPosition = new Vector2(labelLeft, 0);
+
+            // ── v3 audit: hover tooltip (자재/비용) on the row ────────────────
+            //   The row IS UI, so HoverTooltip's world path Hide()s over it; we
+            //   push the text through HoverTooltip.ShowText (UI override path).
+            //   EventTrigger PointerEnter/Exit ONLY — does not touch the Button's
+            //   onClick or the GameObject name.  No singleton OnEnable subscribe
+            //   (#7): we resolve HoverTooltip.Instance lazily inside the callback.
+            if (!string.IsNullOrEmpty(tooltip))
+            {
+                var trig = go.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+                var tipText = tooltip;   // closure capture
+
+                var enter = new UnityEngine.EventSystems.EventTrigger.Entry
+                { eventID = UnityEngine.EventSystems.EventTriggerType.PointerEnter };
+                enter.callback.AddListener((data) =>
+                {
+                    if (HoverTooltip.Instance != null)
+                        HoverTooltip.Instance.ShowText(tipText, Input.mousePosition);
+                });
+                trig.triggers.Add(enter);
+
+                var exit = new UnityEngine.EventSystems.EventTrigger.Entry
+                { eventID = UnityEngine.EventSystems.EventTriggerType.PointerExit };
+                exit.callback.AddListener((data) =>
+                {
+                    if (HoverTooltip.Instance != null)
+                        HoverTooltip.Instance.ClearUIOverride(tipText);
+                });
+                trig.triggers.Add(exit);
+            }
+
             return go;
         }
 
         public void Toggle() { if (isOpen) Close(); else Open(); }
         public void Open() { isOpen = true; gameObject.SetActive(true); }
-        public void Close() { isOpen = false; gameObject.SetActive(false); }
+        public void Close()
+        {
+            isOpen = false;
+            // v3 audit: clear any row tooltip so it doesn't linger after the menu hides.
+            if (HoverTooltip.Instance != null) HoverTooltip.Instance.ClearUIOverride();
+            gameObject.SetActive(false);
+        }
 
         private void Update()
         {

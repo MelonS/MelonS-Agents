@@ -91,7 +91,7 @@ namespace MelonS.GameProto
         // driven off the day-based CurrentThreatTier (tier3 = 5 bandits from
         // day 14), so by mid-game 5-bandit waves arrived every 3 days.  RimWorld
         // calibration: first raid ~day 5-10, raids days apart, small early, slow
-        // escalation.  All four knobs below are serialized so the operator can
+        // escalation.  All knobs below are serialized so the operator can
         // re-tune difficulty without a code change.
         //
         //   RaidGraceDays      — no raid can fire before this in-game day.
@@ -103,12 +103,31 @@ namespace MelonS.GameProto
         //                        MaxConcurrentGroups.  This DECOUPLES raid scale
         //                        from the day-based threat tier so escalation is
         //                        slow + countable, not a step-jump to 5.
+        //
+        // FIRST-RAID SOFTENING (recalibrated 2026-05-31 #2 — operator goal
+        // "콜로니가 첫 습격에 림을 안 잃게").  Symptom that triggered THIS pass:
+        // after the enemy-wall-respect fix bandits reach pawns far more reliably,
+        // so the Day-6 first raid was killing 1 of 3 pawns (later raids survived
+        // with 2).  We soften the OPENING WITHOUT touching raid frequency or
+        // edge-spawn (those were just calibrated — see RaidSpawnEdge) and WITHOUT
+        // touching BanditEnemy (out of this lane).  Two serialized levers:
+        //
+        //   RaidGraceDays 6 → 9 — the colony gets ~3 more in-game days to grow
+        //     pawn count / combat skill / defenses before the first contact.
+        //     Within the operator's suggested 8~10 window.
+        //   FirstRaidExtraGraceDays — additional days the FIRST raid waits beyond
+        //     RaidGraceDays (only the first; subsequent raids use the normal
+        //     RaidIntervalDays cadence).  This pushes the opening contact to
+        //     ~day 11 so a young 3-pawn colony can survive a single bandit, while
+        //     the threat still exists and escalates afterward.  Set to 0 to make
+        //     the first raid land exactly at RaidGraceDays (old behavior).
         [Header("Day 13 / raid calibration (RimWorld-ish — tunable)")]
-        [SerializeField] private int RaidGraceDays = 6;        // first raid not before ~day 6
+        [SerializeField] private int RaidGraceDays = 9;        // first raid not before ~day 9
         [SerializeField] private int RaidIntervalDays = 5;     // raids ~5 in-game days apart
         [SerializeField] private int MaxConcurrentGroups = 2;  // escalation ceiling (bandits/raid)
         [SerializeField] private int BaseRaidGroupSize = 1;    // first raid = 1 bandit
         [SerializeField] private int RaidsPerSizeStep = 2;     // +1 bandit every 2 raids
+        [SerializeField] private int FirstRaidExtraGraceDays = 2;  // first raid waits +2 days beyond grace
         private int lastRaidDay = -1;
         private int raidCount = 0;     // how many raids have fired this run (drives slow size escalation)
         // raidSpawnRadius is RETAINED for any legacy/other callers but is NO LONGER
@@ -161,8 +180,13 @@ namespace MelonS.GameProto
             if (clock == null) return;
             int day = clock.Day;
             int hour = clock.Hour;
-            // Grace period: no raids before RaidGraceDays.
-            if (day < RaidGraceDays) return;
+            // Grace period: no raids before RaidGraceDays.  The FIRST raid (none
+            // fired yet → raidCount==0) waits an additional FirstRaidExtraGraceDays
+            // so the opening contact lands later and a young colony can survive it
+            // without a death.  Subsequent raids use the normal RaidIntervalDays
+            // cadence (the spacing check below), so escalation is unchanged.
+            int graceDays = RaidGraceDays + (raidCount == 0 ? Mathf.Max(0, FirstRaidExtraGraceDays) : 0);
+            if (day < graceDays) return;
             // Fire at the morning window (hour 6) so the colony has daylight to
             // respond — same window as before.
             if (hour != 6) return;

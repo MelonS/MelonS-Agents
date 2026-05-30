@@ -34,5 +34,17 @@
     "AUTO-ROOF: 벽으로 완전히 둘러싸인 방 내부 셀을 roof 하면 flood-fill 로 방 전체 자동 지붕. 열린 공간(벽 없음)을 roof 하면 region>400 으로 bail → 수동 지정 셀만 지붕(의도된 동작, 필수는 수동).",
     "HOTKEY: 지붕 = U (신규). HotkeyCheatSheet(별도 lane) 에서 충돌 없는지 확인 — lane 시점에 U 는 free 였음.",
     "FUTURE-HOOK: RoofDesignation.IsRoofed(cell) 가 roofed 플래그 — 향후 비/온도 시스템이 read-only 로 hook 가능(현재는 시각 그늘만)."
-  ]
+  ],
+  "verify_lane_2026-05-31": {
+    "trigger": "운영자: LongPlay 가 지붕 UI 를 안 써서 인게임 그늘 오버레이가 실제 렌더되는지 미확인. 지붕 지정 시 눈에 보이는 그늘 오버레이 확인 + 안 보이면 수정.",
+    "lane_files": "RoofOverlayRenderer.cs + RoofDesignation.cs(미변경) + Tests/UIScenarioRunner.cs. ArchitectMenu 미변경(buildmenu lane).",
+    "found_and_fixed": {
+      "RoofOverlayRenderer.cs": "(1) sortingLayerName 미설정 버그 — NightOverlay 는 명시적으로 sr.sortingLayerName='Default' 를 박는데 roof 쿼드는 안 박았음. 런타임 생성 SpriteRenderer 의 기본 layer 가 Default 라 대부분 OK 이지만, shadeSortingLayer SerializeField('Default') 추가 + GetQuad/Rebuild 양쪽에서 sr.sortingLayerName 명시 설정(visibility firewall). (2) alpha 0.32 → 0.45 상향 — 한낮(NightOverlay alpha ~0) 밝은 잔디 위에서 0.32 는 너무 흐려 스샷에서 그늘이 안 보임. tint=(0.05,0.06,0.11,0.45).",
+      "geometry_verified": "쿼드 = 공유 1x1 white sprite @ pixelsPerUnit 1 (1 world unit), pivot center, position=(cx+0.5,cy+0.5) → 셀 [cx,cx+1]x[cy,cy+1] 정확 커버. sortingOrder 24 = pawns/structures 위, NightOverlay(25) 아래 — 한낮엔 NightOverlay 가 거의 투명해 그늘이 비쳐 보임. 렌더 체인 정상."
+    },
+    "UIScenarioRunner_step8": "step 8 'designate_roof' 추가 — RoofDesignation.SetMode(true) → 콜로니스트 중심 ~5x5 셀 rect 를 SimulateDragRect(실제 drag-rect MarkRect 경로)로 지붕 지정(pawn 없으면 벽 셀 근처 fallback rect) → roof 모드 해제 → Step 하베스(WaitForEndOfFrame 후 캡처)가 _scn_08_designate_roof.png 저장. WaitForEndOfFrame 은 RoofOverlayRenderer.Update 의 Version-rebuild 이후라 스샷에 그늘 포함. DONE steps=7 → steps=8 갱신, 기존 step 이름/순서 보존.",
+    "bug_firewall_recheck": "#9 PASS — step8 은 기존 Step() 코루틴 하베스 재사용(runInBackground=ON 이미 Start 에서 설정), 신규 always-on 타이머 없음. #4 PASS — SimulateDragRect 는 rect 전체당 PlaySelect 1회(기존 MarkRect throttle). #7 PASS — RoofDesignation.Instance read-only poll, OnEnable 구독 없음.",
+    "syntactic_check": "RoofOverlayRenderer.cs braces 19/19; UIScenarioRunner.cs braces 98/98. Unity 미실행(QA 가 batchmode 컴파일/스샷 검증).",
+    "qa_action": "-ui-scenario 플래그로 QA 실행 시 _scn_08_designate_roof.png 에 콜로니스트 영역 ~5x5 셀에 어두운 반투명 그늘 사각이 보여야 함. 안 보이면(빈 잔디) NightOverlay 가 그 시각에 어두운지 또는 sortingLayer 충돌 여부 확인."
+  }
 }

@@ -15,11 +15,49 @@ namespace MelonS.GameProto
     public class HoverTooltip : MonoBehaviour
     {
         private static HoverTooltip _instance;
+        public static HoverTooltip Instance => _instance;
         private RectTransform rt;
         private Image bg;
         private Text label;
         private Camera mainCam;
         private Canvas canvas;
+
+        // ── UI-driven override (v3 audit: Architect menu rows) ──────────────
+        //   The world-hover path below early-returns + Hide()s whenever the
+        //   pointer is over a UI GameObject (so a world tooltip never covers a
+        //   button).  But menu ROWS are themselves UI — they need a tooltip too
+        //   (자재/비용).  ArchitectMenu pushes its row text here via ShowText();
+        //   while an override string is set, Update() renders THAT (honored even
+        //   over-UI) instead of the world OverlapPoint result.  ClearUIOverride()
+        //   on PointerExit returns to the normal world-hover behaviour.
+        //   No singleton OnEnable subscription (#7): the caller polls Instance.
+        private string uiOverrideText;
+        private Vector2 uiOverrideScreenPos;
+
+        /// <summary>UI panel (e.g. ArchitectMenu row) requests the tooltip show
+        /// <paramref name="text"/> anchored near <paramref name="screenPos"/>.
+        /// Takes precedence over the world-hover path, even while over UI.</summary>
+        public void ShowText(string text, Vector2 screenPos)
+        {
+            uiOverrideText = text;
+            uiOverrideScreenPos = screenPos;
+        }
+
+        /// <summary>Clears a previously-set UI override (PointerExit).  Only clears
+        /// if the live override still matches, so a stale exit can't wipe a newer
+        /// row's tooltip set by a near-simultaneous enter.</summary>
+        public void ClearUIOverride(string text)
+        {
+            if (uiOverrideText == text) uiOverrideText = null;
+        }
+
+        /// <summary>Force-clear any UI override regardless of which row set it.
+        /// Called when the owning panel rebuilds/closes its rows so a destroyed
+        /// row (whose PointerExit may never fire) can't leave a tooltip stuck on.</summary>
+        public void ClearUIOverride()
+        {
+            uiOverrideText = null;
+        }
 
         public static void EnsureInScene()
         {
@@ -69,6 +107,15 @@ namespace MelonS.GameProto
 
         private void Update()
         {
+            // ── UI-driven override first (Architect menu rows) ──────────────
+            //   A menu row that the pointer is over has pushed its 자재/비용 text;
+            //   render it at the row's screen position and skip the world path.
+            if (!string.IsNullOrEmpty(uiOverrideText))
+            {
+                ShowAt(uiOverrideText, uiOverrideScreenPos);
+                return;
+            }
+
             // UI 위면 가림 (GUI 버튼 hover 시 tooltip 가리면 UX 나쁨)
             bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
             if (overUI) { Hide(); return; }
@@ -81,20 +128,25 @@ namespace MelonS.GameProto
             string text = DescribeHit(hit);
             if (string.IsNullOrEmpty(text)) { Hide(); return; }
 
-            // Show + position
+            ShowAt(text, Input.mousePosition);
+        }
+
+        /// <summary>Show + size + position the tooltip at a screen point.  Shared
+        /// by the world-hover path and the UI override path so both render
+        /// identically (UITheme-consistent bordered panel).</summary>
+        private void ShowAt(string text, Vector2 screenPos)
+        {
             if (!gameObject.activeSelf) gameObject.SetActive(true);
             label.text = text;
             // resize bg by text width (approx 8px per Korean char + padding)
             float w = Mathf.Max(120, label.preferredWidth + 16);
             rt.sizeDelta = new Vector2(w, 32);
-            // 위치: mouse 옆, 살짝 위 (Canvas Screen-Space-Overlay 라면 mouse pos 그대로)
-            Vector2 pos = Input.mousePosition;
-            // CanvasScaler 적용된 좌표 변환
+            // 위치: mouse/row 옆, 살짝 위 (Canvas Screen-Space-Overlay 라면 mouse pos 그대로)
             if (canvas != null)
             {
                 var canvasRt = canvas.GetComponent<RectTransform>();
                 Vector2 localPos;
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRt, pos, null, out localPos);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRt, screenPos, null, out localPos);
                 rt.anchoredPosition = new Vector2(localPos.x + 14, localPos.y + 18);
             }
         }
