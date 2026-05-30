@@ -4,19 +4,24 @@ using UnityEngine.UI;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// 운영자 피드백 #105 - 오브젝트 클릭 시 정보 패널.
-    /// 트리/벽/화덕/연구대/침대/floor/door 등 비-pawn entity 좌클릭 시
-    /// 우상단 (EventLog 아래) 작은 정보 패널 표시.
-    /// PawnInfoPanel 은 pawn 전용이라 별도.
+    /// 운영자 피드백 #105 - 오브젝트(비-pawn entity) 설명 텍스트 제공자.
     ///
-    /// Self-bootstrap (GameManager.EnsureInScene).  ClickSelector.CurrentInspect 폴링.
+    /// ── 2026-05-31 single-inspector 통합 (운영자 fb "DUAL INSPECTOR") ──
+    /// 이전: 우측 가운데에 자체 패널을 그렸고 (pawn 선택 시 좌측 PawnInfoPanel 과
+    ///   동시에 떠서 "오른쪽은 '없음' / 왼쪽은 pawn" 이중 패널 혼란).
+    /// 지금: RimWorld 처럼 좌측 하단 PawnInfoPanel 하나만 보이는 selection-info 로
+    ///   통합.  이 컴포넌트는 더 이상 화면에 패널을 그리지 않고, 비-pawn entity 의
+    ///   설명 텍스트만 제공하는 "logic-only" 컴포넌트로 남는다.
+    ///   PawnInfoPanel 이 entity 선택 시 EntityInspectorPanel.DescribeEntity() 를
+    ///   호출해서 같은 좌측 패널에 표시한다 → 단일 inspector.
+    ///
+    /// 컴포넌트 자체는 그대로 둔다 (IntegrationTestRunner I25 가
+    ///   FindFirstObjectByType<EntityInspectorPanel> + private Describe() reflection
+    ///   으로 entity describe 로직을 검증하므로).  GameManager.EnsureInScene 도 유지.
     /// </summary>
     public class EntityInspectorPanel : MonoBehaviour
     {
         private static EntityInspectorPanel _instance;
-        private Text titleText, bodyText;
-        private Image bg;
-        private ClickSelector cachedCs;
 
         public static void EnsureInScene()
         {
@@ -28,114 +33,24 @@ namespace MelonS.GameProto
             _instance = go.AddComponent<EntityInspectorPanel>();
         }
 
-        private const float HeaderH = 38f;  // header strip height
+        public static EntityInspectorPanel Instance => _instance;
 
         private void Awake()
         {
-            // 운영자 fb #128 - 운영자 패널 못 봄.
-            //  원인 진단: (a) raycastTarget=true 가 클릭 차단 → 모두 false 로.
-            //              (b) 패널 위치 작아서 못 봄 → 우측 stack 큰 패널.
-            //              (c) hidden by default → 항상 보임 (없을 때는 hint text).
-            var rt = gameObject.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(1f, 0.5f);
-            rt.anchorMax = new Vector2(1f, 0.5f);
-            rt.pivot = new Vector2(1f, 0.5f);
-            rt.sizeDelta = new Vector2(360, 380);
-            rt.anchoredPosition = new Vector2(-12, 0);  // 화면 우측 정확히 가운데
-
-            // #UI-restyle U5 — ONE bordered panel (warm brown + 2px border) matching
-            //   control bar / tooltip.  MakeBorderedPanel returns the inner content RT.
-            var content = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(rt, 2f);
-            bg = GetComponent<Image>();  // border image (legacy ref; raycast already off)
-
-            float pad = MelonS.GameProto.Core.UITheme.PadOuter;
-
-            // ── Header strip (HeaderBg + gold bold title) ────────────────────
-            var headerGo = new GameObject("Header");
-            headerGo.transform.SetParent(content, false);
-            var hImg = headerGo.AddComponent<Image>();
-            hImg.color = MelonS.GameProto.Core.UITheme.HeaderBg;
-            hImg.raycastTarget = false;
-            var hrt = headerGo.GetComponent<RectTransform>();
-            hrt.anchorMin = new Vector2(0, 1);
-            hrt.anchorMax = new Vector2(1, 1);
-            hrt.pivot = new Vector2(0.5f, 1);
-            hrt.sizeDelta = new Vector2(0, HeaderH);
-            hrt.anchoredPosition = Vector2.zero;
-            // thin Divider under the header to separate it from body
-            var hRule = new GameObject("HeaderRule");
-            hRule.transform.SetParent(content, false);
-            var hrImg = hRule.AddComponent<Image>();
-            hrImg.color = MelonS.GameProto.Core.UITheme.Divider;
-            hrImg.raycastTarget = false;
-            var hrRt = hRule.GetComponent<RectTransform>();
-            hrRt.anchorMin = new Vector2(0, 1);
-            hrRt.anchorMax = new Vector2(1, 1);
-            hrRt.pivot = new Vector2(0.5f, 1);
-            hrRt.sizeDelta = new Vector2(0, 1f);
-            hrRt.anchoredPosition = new Vector2(0, -HeaderH);
-
-            // 제목 - 노란 강조 (림 inspect 느낌) — inside header
-            var titleGo = new GameObject("Title");
-            titleGo.transform.SetParent(headerGo.transform, false);
-            titleText = titleGo.AddComponent<Text>();
-            titleText.text = "선택된 오브젝트 없음";
-            titleText.font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(20);
-            titleText.fontSize = 20;
-            titleText.fontStyle = FontStyle.Bold;
-            titleText.color = MelonS.GameProto.Core.UITheme.AccentGold;
-            titleText.alignment = TextAnchor.MiddleLeft;
-            titleText.raycastTarget = false;
-            var trt = titleGo.GetComponent<RectTransform>();
-            trt.anchorMin = Vector2.zero;
-            trt.anchorMax = Vector2.one;
-            trt.offsetMin = new Vector2(pad, 0);
-            trt.offsetMax = new Vector2(-pad, 0);
-
-            // 본문 (info text) — below header, padding rhythm
-            var bodyGo = new GameObject("Body");
-            bodyGo.transform.SetParent(content, false);
-            bodyText = bodyGo.AddComponent<Text>();
-            bodyText.text = "💡 나무/벽/사슴/광맥 등을\n좌클릭하면 정보가 표시됩니다.";
-            bodyText.font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(15);
-            bodyText.fontSize = 15;
-            bodyText.color = MelonS.GameProto.Core.UITheme.TextPrimary;
-            bodyText.alignment = TextAnchor.UpperLeft;
-            bodyText.horizontalOverflow = HorizontalWrapMode.Wrap;
-            bodyText.verticalOverflow = VerticalWrapMode.Overflow;
-            bodyText.raycastTarget = false;
-            var brt = bodyGo.GetComponent<RectTransform>();
-            brt.anchorMin = new Vector2(0, 0);
-            brt.anchorMax = new Vector2(1, 1);
-            brt.offsetMin = new Vector2(pad, pad);
-            brt.offsetMax = new Vector2(-pad, -(HeaderH + MelonS.GameProto.Core.UITheme.RowGap));
-
-            // 패널 항상 활성 (hint 가 보임).  SetActive(false) 제거.
+            // logic-only: NO RectTransform / Image / Text built.  This component
+            //   draws nothing — the single visible inspector is PawnInfoPanel
+            //   (bottom-left).  We only expose entity description text.
+            if (_instance == null) _instance = this;
         }
 
-        private void Update()
+        /// <summary>비-pawn entity 의 (제목, 본문) 설명.  PawnInfoPanel 이 entity
+        ///   선택 시 이 메서드로 텍스트를 받아 좌측 단일 패널에 표시한다.
+        ///   pawn 이거나 null 이면 (null, null) 반환 (= "이 entity 패널이 표시할 것 없음").</summary>
+        public (string, string) DescribeEntity(GameObject go)
         {
-            if (cachedCs == null) cachedCs = Object.FindFirstObjectByType<ClickSelector>();
-            if (cachedCs == null) return;
-            GameObject inspect = cachedCs.CurrentInspect;
-            // ui-audit §3.4 (P5) — pawns belong to the bottom-LEFT PawnInfoPanel
-            //   ONLY.  The right entity panel no longer mirrors pawn data (that
-            //   was the #128 double-panel clutter).  A pawn selection is treated
-            //   here as "nothing for this panel" → show the hint, so only ONE
-            //   inspector lights up per selection.
-            bool isPawn = inspect != null && inspect.GetComponent<PawnEntity>() != null;
-            // #128 - 패널 항상 켜둠. inspect 없으면 (or pawn) hint 표시.
-            if (inspect == null || isPawn)
-            {
-                string hintTitle = "선택된 오브젝트 없음";
-                string hintBody = "💡 나무/벽/사슴/광맥 등을\n좌클릭하면 정보가 표시됩니다.\n(콜로니스트 정보는 좌측 하단 패널)\n\n📋 직업: F1\n🏛 건축: F8\n🔬 연구: N\n⏸ 멈춤: Space";
-                if (titleText.text != hintTitle) titleText.text = hintTitle;
-                if (bodyText.text != hintBody) bodyText.text = hintBody;
-                return;
-            }
-            (string title, string body) = Describe(inspect);
-            if (titleText.text != title) titleText.text = title;
-            if (bodyText.text != body) bodyText.text = body;
+            if (go == null) return (null, null);
+            if (go.GetComponent<PawnEntity>() != null) return (null, null);  // pawns → PawnInfoPanel own path
+            return Describe(go);
         }
 
         private (string, string) Describe(GameObject go)

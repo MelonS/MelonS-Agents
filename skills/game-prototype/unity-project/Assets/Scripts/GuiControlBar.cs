@@ -123,12 +123,16 @@ namespace MelonS.GameProto
             float x = -totalW * 0.5f;
             float dividerH = BtnH + 4f;
 
-            // Speed group: [멈춤][1x][2x][4x]
-            // ui-audit P1 — the bar's LEFTMOST slot is ALWAYS the pause control, never a
-            //   build-mode readout ("없음(0)"/mode-count string).  This file builds 멈춤 first
-            //   and writes NO mode-indicator Text into the bar; build-mode active state lives
-            //   only on the 건축 button highlight (see Update → RefreshBuildHighlight(architectBtn)).
-            pauseBtn  = MakeBtn("멈춤", "(Space)",   x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.TogglePause(); }); x += BtnW + Gap;
+            // Speed group: [⏸ 멈춤][1x][2x][4x]
+            // ui-audit P1 (운영자 fb "없음(0)") — the bar's LEFTMOST slot is ALWAYS the
+            //   pause/speed-0 control, never a build-mode readout ("없음(0)"/mode-count
+            //   string).  This file builds the pause button FIRST and writes NO
+            //   mode-indicator Text anywhere in the bar; build-mode active state lives
+            //   ONLY on the 건축 button highlight (Update → RefreshBuildHighlight(architectBtn)).
+            //   The GameObject name MUST stay "Btn_멈춤" (IntegrationTestRunner depth-1
+            //   Find), so we pass goName="멈춤" but show a clean "⏸ 멈춤" pause glyph as
+            //   the visible label → reads unambiguously as the stop control next to 1x/2x/4x.
+            pauseBtn  = MakeBtn("멈춤", "(Space)",   x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.TogglePause(); }, displayLabel:"⏸ 멈춤"); x += BtnW + Gap;
             speed1Btn = MakeBtn("1x",  "(1)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(1f); });   x += BtnW + Gap;
             speed2Btn = MakeBtn("2x",  "(2)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(2f); });   x += BtnW + Gap;
             speed4Btn = MakeBtn("4x",  "(3)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(4f); });   x += BtnW;
@@ -151,10 +155,13 @@ namespace MelonS.GameProto
             researchBtn = MakeBtn("연구", "(N)",     x, OpenResearchPicker);
         }
 
-        private Button MakeBtn(string label, string hint, float x, System.Action onClick)
+        private Button MakeBtn(string label, string hint, float x, System.Action onClick, string displayLabel = null)
         {
             // NOTE: button MUST stay a DIRECT child of the bar root — IntegrationTestRunner
             //   does bar.transform.Find("Btn_멈춤") (depth-1).  Don't reparent into Content.
+            //   `label` drives the GameObject name (test-referenced); `displayLabel`, when
+            //   given, drives ONLY the visible Text so we can show e.g. "⏸ 멈춤" without
+            //   renaming the GO away from "Btn_멈춤".
             var go = new GameObject($"Btn_{label}");
             go.transform.SetParent(transform, false);
             var rt = go.AddComponent<RectTransform>();
@@ -187,7 +194,7 @@ namespace MelonS.GameProto
             var labelGo = new GameObject("Label");
             labelGo.transform.SetParent(go.transform, false);
             var lbl = labelGo.AddComponent<Text>();
-            lbl.text = label;
+            lbl.text = displayLabel ?? label;
             lbl.font = font;
             lbl.fontSize = 20;
             lbl.fontStyle = FontStyle.Bold;

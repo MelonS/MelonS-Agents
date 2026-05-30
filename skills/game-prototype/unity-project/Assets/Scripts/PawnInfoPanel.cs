@@ -4,9 +4,18 @@ using UnityEngine.UI;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// Bottom-left UI panel showing selected pawn's needs as bars.
-    /// Subscribes to ClickSelector's selection events.  Day 2 = static
-    /// panel, always rendered, refreshes per-frame.
+    /// Bottom-left SINGLE selection-info panel (RimWorld convention).
+    ///
+    /// ── 2026-05-31 single-inspector 통합 (운영자 fb "DUAL INSPECTOR") ──
+    /// 이전: pawn 전용.  비-pawn entity 는 우측 EntityInspectorPanel 이 따로 표시
+    ///   → pawn 선택 시 좌/우 패널이 동시에 떠서 혼란.
+    /// 지금: 이 패널 하나가 pawn AND entity 둘 다 표시하는 유일한 inspector.
+    ///   - PAWN 선택 (selector.CurrentSelection != null) → 기존 탭 UI (상태/건강/기분/장비).
+    ///   - 비-pawn ENTITY 선택 (selector.CurrentInspect 가 pawn 아님) →
+    ///       EntityInspectorPanel.DescribeEntity() 로 받은 (제목, 본문) 을 표시.
+    ///   - 둘 다 없으면 empty-state.
+    ///   우측 EntityInspectorPanel 은 더 이상 패널을 그리지 않음 (logic-only).
+    /// Subscribes to ClickSelector via per-frame poll (no event-subscription race).
     /// </summary>
     public class PawnInfoPanel : MonoBehaviour
     {
@@ -19,6 +28,12 @@ namespace MelonS.GameProto
         [SerializeField] private Image panelBg;
         // Day 55: 부위별 health 표시 — 클릭 시 RimWorld vanilla 처럼.
         [SerializeField] private Text healthText;
+
+        // single-inspector 통합 — 비-pawn entity 선택 시 설명 본문을 보여주는
+        //   lazily-built Text (탭 위에 겹치지 않게 panel 본문 영역을 채움).  pawn
+        //   탭 UI 와 상호 배타적으로 토글된다.
+        private Text entityBodyText;
+        private EntityInspectorPanel cachedEntityDesc;
 
         // #UI-restyle U5 — runtime border frame so this panel matches the global
         //   bordered-panel system (Editor builder only made the flat fill).  Added
@@ -279,11 +294,64 @@ namespace MelonS.GameProto
             if (tabStrip != null) tabStrip.gameObject.SetActive(v);
         }
 
+        // ui-audit P6/§3.7 (운영자 fb "bottom-left overlap") — enforce a SAFE
+        //   bottom-left position at runtime so the single inspector never sits on
+        //   top of the S/L save/load buttons or the architect menu, regardless of
+        //   the Editor builder's offset.  Layout (anchor (0,0), 1920x1080 ref):
+        //     S/L buttons:  x=12, y=12, 92x40   → top edge y=52.
+        //     ArchitectMenu: anchor (0,0.5), x=12, 280x440 → on a 1080 screen its
+        //                    bottom edge ≈ screenCenter(540) - 220 = y≈320.
+        //   So a panel at x=12, y=58, height ≤ 256 lives in the clear band
+        //   y=[58, 314]: above the S/L row (52) with a 6px gap, below the architect
+        //   menu bottom (~320) with a small gap.  Width 380 (< architect's left x).
+        private void EnsurePlacement()
+        {
+            var rt = (panelBg != null) ? panelBg.GetComponent<RectTransform>() : GetComponent<RectTransform>();
+            if (rt == null) return;
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot     = new Vector2(0f, 0f);
+            rt.sizeDelta = new Vector2(380f, 248f);          // ≤256 → top edge ≤ 314
+            rt.anchoredPosition = new Vector2(12f, 58f);     // above S/L (y=52) + gap
+        }
+
+        // single-inspector — body text for a non-pawn ENTITY selection.  Built
+        //   lazily (same idiom as MakeBodyText) filling the panel below the title
+        //   band; toggled mutually-exclusive with the pawn tab content.
+        private void EnsureEntityBody()
+        {
+            if (entityBodyText != null || panelBg == null) return;
+            var prt = panelBg.GetComponent<RectTransform>();
+            if (prt == null) return;
+            float pad = MelonS.GameProto.Core.UITheme.PadOuter;
+            var go = new GameObject("EntityBody");
+            go.transform.SetParent(prt, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.offsetMin = new Vector2(pad, pad);
+            // leave the top title band clear (Editor title strip ≈ 34px tall) so the
+            //   entity title (set on titleText) doesn't overlap the description body.
+            rt.offsetMax = new Vector2(-pad, -(pad + 34f));
+            entityBodyText = go.AddComponent<Text>();
+            entityBodyText.font = ResolveFont();
+            entityBodyText.fontSize = 14;
+            entityBodyText.alignment = TextAnchor.UpperLeft;
+            entityBodyText.color = MelonS.GameProto.Core.UITheme.TextPrimary;
+            entityBodyText.supportRichText = true;
+            entityBodyText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            entityBodyText.verticalOverflow = VerticalWrapMode.Overflow;
+            entityBodyText.raycastTarget = false;
+            entityBodyText.gameObject.SetActive(false);
+        }
+
         private void Update()
         {
+            EnsurePlacement();
             EnsureBorder();
             EnsureEmptyState();
             EnsureTabs();
+            EnsureEntityBody();
             if (selector == null)
             {
                 Debug.LogWarning("[PawnInfoPanel] no selector");
@@ -291,6 +359,57 @@ namespace MelonS.GameProto
             }
 
             PawnEntity pawn = selector.CurrentSelection;
+
+            // single-inspector — entity branch.  When NO pawn is selected but a
+            //   non-pawn entity is inspected, this ONE panel shows its description
+            //   (text from EntityInspectorPanel.DescribeEntity, kept as the single
+            //   source of entity copy + the I25 test's Describe target).
+            GameObject inspect = selector.CurrentInspect;
+            bool entitySelected = false;
+            string entTitle = null, entBody = null;
+            if (pawn == null && inspect != null && inspect.GetComponent<PawnEntity>() == null)
+            {
+                if (cachedEntityDesc == null)
+                    cachedEntityDesc = EntityInspectorPanel.Instance != null
+                        ? EntityInspectorPanel.Instance
+                        : Object.FindFirstObjectByType<EntityInspectorPanel>();
+                if (cachedEntityDesc != null)
+                {
+                    (entTitle, entBody) = cachedEntityDesc.DescribeEntity(inspect);
+                    entitySelected = entTitle != null;
+                }
+            }
+
+            if (entitySelected)
+            {
+                // Hide pawn tab UI + empty state; show the entity description.
+                SetTabStripVisible(false);
+                if (titleText != null)
+                {
+                    titleText.gameObject.SetActive(true);
+                    titleText.supportRichText = true;
+                    titleText.text = entTitle;
+                }
+                if (foodBar  != null) foodBar.transform.parent.parent.gameObject.SetActive(false);
+                if (sleepBar != null) sleepBar.transform.parent.parent.gameObject.SetActive(false);
+                if (moodBar  != null) moodBar.transform.parent.parent.gameObject.SetActive(false);
+                if (healthText != null) healthText.gameObject.SetActive(false);
+                if (moodDetailText != null) moodDetailText.gameObject.SetActive(false);
+                if (equipText != null) equipText.gameObject.SetActive(false);
+                if (emptyText != null) emptyText.gameObject.SetActive(false);
+                SetEmptyStateVisible(false);
+                if (entityBodyText != null)
+                {
+                    entityBodyText.gameObject.SetActive(true);
+                    entityBodyText.text = entBody;
+                }
+                if (panelBg != null) panelBg.enabled = true;
+                SetBorderVisible(true);
+                return;
+            }
+            // not an entity selection → hide the entity body for the pawn/empty paths.
+            if (entityBodyText != null) entityBodyText.gameObject.SetActive(false);
+
             bool any = (pawn != null);
 
             // #23 — title is part of the 상태 tab now; tab strip only when a
