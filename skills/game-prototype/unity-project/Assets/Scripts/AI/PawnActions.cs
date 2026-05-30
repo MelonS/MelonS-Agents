@@ -51,12 +51,34 @@ namespace MelonS.GameProto.AI
             if (!ReservationManager.TryReserve(bed, ctx.transform.gameObject)) return false;
 
             ctx.needs.SetAutoSleepTarget(bed);
-            // 침대 footprint 인접 stand cell 로 이동 (없으면 침대 위치).
-            Vector2 standPos;
-            PawnMovement.TryGetWorkStandPos(
-                bed.transform.position, bed.Size, ctx.transform.position, out standPos);
-            ctx.movement.SetTarget(standPos);
+            // 수면은 침대 "위" 에서 일어난다 (PawnNeeds.GetBedUnderPawn 이 발밑 OverlapBox).
+            //  ── REGRESSION FIX ──
+            //  기존엔 TryGetWorkStandPos (침대 footprint *인접* stand cell) 로 이동시켰다.
+            //  그러면 림이 침대 옆에 서고, GetBedUnderPawn 은 발밑(=옆 cell)에서 침대를
+            //  못 찾아 onTargetBed 영영 false → "휴식이동" stuck, sleep 0 crash.
+            //  채광/벌목은 옆에 서서 일하지만, 취침은 림월드처럼 침대 cell 위로 올라가야 한다.
+            //  → 우클릭 rcfix(SetRestTarget) 와 동일하게 침대 cell 자체를 target.
+            //    1x2 침대는 두 cell 중 림에게 가까운 cell 로 (door/벽 때문에 한쪽만 닿을 수 있음).
+            ctx.movement.SetTarget(BedStandPos(bed, ctx.transform.position));
             return true;
+        }
+
+        /// <summary>침대 footprint 의 cell 중 from 에 가장 가까운 cell 의 world 중심.
+        ///  림이 그 위로 올라가 GetBedUnderPawn 이 침대를 인식하도록.</summary>
+        internal static Vector2 BedStandPos(BedEntity bed, Vector2 from)
+        {
+            var covered = new System.Collections.Generic.HashSet<Vector2Int>();
+            PathGrid.CoveredCells(bed.transform.position, bed.Size, covered);
+            Vector2 best = bed.transform.position;
+            float bestSq = float.MaxValue;
+            bool any = false;
+            foreach (var c in covered)
+            {
+                Vector2 w = PathGrid.CellToWorld(c);
+                float sq = (w - from).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = w; any = true; }
+            }
+            return any ? best : (Vector2)bed.transform.position;
         }
     }
 

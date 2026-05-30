@@ -170,9 +170,11 @@ namespace MelonS.GameProto
                     if (builder != null) builder.ClearTask();
                     if (miner != null) miner.ClearTask();
                     if (doctor != null) doctor.ClearTask();
-                    // 이동이 멈췄는데 아직 침대 위가 아니면 다시 침대로 향하게.
+                    // 이동이 멈췄는데 아직 침대 위가 아니면 다시 침대 cell 위로 향하게.
+                    //  GoSleepAction 과 동일하게 침대 footprint cell (옆이 아니라 위) 을 target.
                     if (!movement.IsMoving)
-                        movement.SetTarget(needs.AutoRestTarget.transform.position);
+                        movement.SetTarget(
+                            AI.GoSleepAction.BedStandPos(needs.AutoRestTarget, transform.position));
                     lastDecision = Time.timeSinceLevelLoad;
                     return;
                 }

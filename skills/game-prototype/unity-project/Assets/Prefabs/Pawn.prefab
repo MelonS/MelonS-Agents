@@ -302,6 +302,8 @@ MonoBehaviour:
   forcedWakeSleepLevel: 95
   autoSleepThreshold: 35
   autoWakeSleepLevel: 80
+  autoSleepArriveTimeout: 12
+  autoSleepRetryCooldown: 20
   moodBreakThreshold: 20
   moodBreakRecoverAt: 35
   moodBreakDuration: 30

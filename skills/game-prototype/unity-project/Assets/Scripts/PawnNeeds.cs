@@ -69,15 +69,30 @@ namespace MelonS.GameProto
         private BedEntity autoRestTarget;
         [SerializeField] private float autoSleepThreshold = 35f;  // 졸음 — 침대로 가기 시작
         [SerializeField] private float autoWakeSleepLevel = 80f;  // 일반 기상 수준
+        // ── 도달 timeout (robustness) ─────────────────────────────────────────────
+        //  자율 취침으로 침대를 향해 출발한 시각.  이 시간 안에 침대 위에 도착 못 하면
+        //  (door 막힘 / 경로 실패 / stand-cell 불일치) 제자리 취침으로 fallback 한다.
+        //  운영자가 잡은 회귀: 림이 침대 옆에 멈춰 "휴식이동" 으로 영영 stuck → sleep 0.
+        //  이제 어떤 경우에도 sleep 이 0 으로 추락하거나 stuck 되지 않는다.
+        private float autoSleepStartTime = -999f;
+        [SerializeField] private float autoSleepArriveTimeout = 12f;  // 침대 도달 제한시간
+        // 도달 timeout 후 재시도 쿨다운 — 같은 침대로 다시 출발 → 다시 timeout 하는
+        //  re-path loop (이것도 stuck 처럼 보임) 방지.  이 동안엔 WantsAutoSleep=false 라
+        //  GoSleepAction 이 발동 안 하고 제자리 취침(sleep<30 && night)으로 안정 회복.
+        private float autoSleepSuppressUntil = -999f;
+        [SerializeField] private float autoSleepRetryCooldown = 20f;
         public bool HasAutoSleepOrder => autoRestTarget != null;
         public BedEntity AutoRestTarget => autoRestTarget;
-        /// <summary>밤에 졸려서 자율로 침대를 찾아가야 하는가 (GoSleepAction 의 eligibility).</summary>
-        public bool WantsAutoSleep => sleep < autoSleepThreshold && IsNightTime();
+        /// <summary>밤에 졸려서 자율로 침대를 찾아가야 하는가 (GoSleepAction 의 eligibility).
+        ///  도달 실패 직후엔 쿨다운 동안 false (제자리 취침으로 안정 회복하게).</summary>
+        public bool WantsAutoSleep =>
+            sleep < autoSleepThreshold && IsNightTime() && Time.time >= autoSleepSuppressUntil;
 
         /// <summary>GoSleepAction 이 빈 침대를 예약한 뒤 호출 — 이 침대로 가서 자라.</summary>
         public void SetAutoSleepTarget(BedEntity bed)
         {
             autoRestTarget = bed;
+            autoSleepStartTime = Time.time;  // 도달 timeout 기준 시각 리셋
         }
 
         /// <summary>자율 취침 취소 (침대 파괴/도달불가/기상).  예약 해제는 호출측 책임.</summary>
@@ -201,11 +216,31 @@ namespace MelonS.GameProto
                         }
                         return;
                     }
-                    // 아직 침대로 이동 중 — 제자리 취침에 빠지지 않도록 일반 decay 만 진행.
-                    food = Mathf.Max(0f, food - foodDecay * dt);
-                    sleep = Mathf.Max(0f, sleep - sleepDecay * dt);
-                    mood = Mathf.Max(0f, mood - moodDecay * dt);
-                    return;
+                    // ── ROBUST FALLBACK ──
+                    //  아직 침대 위가 아니다.  제한시간 안에 도착했으면 이동 계속 (일반 decay),
+                    //  하지만 timeout 을 넘겼는데도 침대에 못 닿았으면 (경로 실패 / door 막힘 /
+                    //  stand-cell 불일치) 자율 취침 target 을 버리고 아래 제자리 취침으로 fall
+                    //  through 한다.  이렇게 해서 림이 "휴식이동" 으로 stuck 되거나 sleep 이
+                    //  0 으로 추락하는 회귀를 막는다 (9ecfaab 회귀의 핵심 수정).
+                    bool arriveTimedOut = Time.time - autoSleepStartTime > autoSleepArriveTimeout;
+                    if (arriveTimedOut)
+                    {
+                        // 침대 도달 포기 → 예약 해제는 PawnUtilityAI 가 HasAutoSleepOrder
+                        //  풀린 걸 보고 다음 frame 처리.  쿨다운을 걸어 같은 침대로 재출발
+                        //  → 또 timeout 하는 loop 를 막고, 그 동안 제자리 취침으로 회복한다.
+                        ClearAutoSleepTarget();
+                        autoSleepSuppressUntil = Time.time + autoSleepRetryCooldown;
+                        Debug.Log($"[AutoSleep] {name} bed unreachable (timeout {autoSleepArriveTimeout}s) → 제자리 취침 fallback, sleep={sleep:F0}");
+                        // (return 하지 않고 아래 sleep<30 && night 제자리 취침 블록으로 진행)
+                    }
+                    else
+                    {
+                        // 아직 이동 제한시간 내 — 일반 decay 만 진행 (도착 시 위에서 수면 진입).
+                        food = Mathf.Max(0f, food - foodDecay * dt);
+                        sleep = Mathf.Max(0f, sleep - sleepDecay * dt);
+                        mood = Mathf.Max(0f, mood - moodDecay * dt);
+                        return;
+                    }
                 }
             }
 
@@ -217,7 +252,10 @@ namespace MelonS.GameProto
             //    Wood         1.00x rest +3 mood/s
             //    Fine         1.40x rest +8 mood/s
             //  bed 가 없으면 ground (rest 0.6x, mood 패널티 약간).
-            if (sleep < 30f && night)
+            // 제자리 취침 gate.  autoSleepThreshold(35) 와 동일하게 묶어, 침대 도달에
+            //  실패해 fallback 으로 내려온 림이 (sleep≈30~35) 곧장 누워 회복하도록 한다.
+            //  발밑이 침대면 자동으로 bed.RestMul 보너스 (위 cell 에 멈췄을 때 포함).
+            if (sleep < autoSleepThreshold && night)
             {
                 IsSleeping = true;
                 var bed = GetBedUnderPawn();
