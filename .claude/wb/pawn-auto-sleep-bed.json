@@ -1,0 +1,23 @@
+{
+  "label": "pawn-auto-sleep-bed",
+  "agent": "gameplay-programmer",
+  "date": "2026-05-31",
+  "summary": "림이 졸릴 때(sleep<35 && night) 자율로 가장 가까운 빈 침대를 예약→이동→그 위에서 IsSleeping. 운영자 fb '림이 그 자리에서 자고 침대를 안 씀' fix.",
+  "lane": [
+    "Assets/Scripts/PawnNeeds.cs",
+    "Assets/Scripts/AI/PawnActions.cs",
+    "Assets/Scripts/PawnUtilityAI.cs",
+    "Assets/Scripts/AI/PawnContext.cs"
+  ],
+  "changes": [
+    "PawnNeeds: autoRestTarget 경로 추가 (forcedResting/우클릭 휴식과 별개). SetAutoSleepTarget/ClearAutoSleepTarget/HasAutoSleepOrder/AutoRestTarget/WantsAutoSleep. Update: forced-rest 다음, 제자리취침 앞에서 침대 도착 검사 → IsSleeping + bed.RestMul 회복, wake@80 (autoWakeSleepLevel). 이동 중엔 일반 decay 만 (제자리 취침 안 빠짐).",
+    "PawnContext: FindNearestFreeBed() — ReservationManager.IsReservedByOther 로 다른 림 예약 침대 skip.",
+    "PawnActions: GoSleepAction(IPawnAction) — WantsAutoSleep && !HasRestOrder 일 때 빈 침대 예약 + SetAutoSleepTarget + TryGetWorkStandPos 로 인접 stand cell 이동. 침대 없음/도달불가 → false → 제자리 취침 fallback.",
+    "PawnUtilityAI: goSleep 을 work-priority loop 보다 먼저 Decide() 생존 pre-pass 에서 시도(work settings 무관). reservedSleepBed 추적 → 기상/우클릭휴식 끼어들면 매 frame 예약 해제. 침대로 가는 중(HasAutoSleepOrder && !IsSleeping) 전용 블록: work task 정리 + 이동 target 유지. 진행 중 work 있어도 졸리고 밤이면 중단(생존 우선)."
+  ],
+  "firewall": "no audio-loop / no GetInstanceID / no OnCollisionEnter-only / no OnEnable-subscription / no justSpawned-default-true / no new background timer. Update-poll + Time-free 로직만.",
+  "rcfix_compat": "사용자 우클릭 휴식(restTarget/forcedResting)이 항상 우선 — needs.HasRestOrder 면 자율 취침 시작 안 하고, 끼어들면 예약 즉시 해제.",
+  "task_readout": "PawnNameLabel.ComputeStatusLabel 이 이미 needs.IsSleeping → '수면' 반환 (work task 보다 위). lane 밖이라 변경 불필요. LongPlay snapshot 이 이 라벨 읽음.",
+  "qa": "Unity 미실행. 브레이스 균형 확인 + 참조 정합 grep 통과.",
+  "concurrent_agent_note": "다른 1개 에이전트와 동시실행. 위 4개 lane 파일만 편집."
+}

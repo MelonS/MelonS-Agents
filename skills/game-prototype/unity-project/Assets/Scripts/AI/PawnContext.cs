@@ -26,6 +26,30 @@ namespace MelonS.GameProto.AI
         public Transform transform;
         public float idleWanderRadius = 3f;
 
+        // 자율 취침: 가장 가까운, 다른 림이 예약하지 않은 BedEntity 를 찾는다.
+        //  중앙 ReservationManager 로 한 침대당 한 림만 배정 (림들이 같은 침대로
+        //  몰리지 않게).  내가 이미 예약한 침대(claimant 동일)는 후보로 허용 —
+        //  여러 frame 에 걸쳐 같은 침대를 다시 고를 수 있도록 (idempotent).
+        public BedEntity FindNearestFreeBed()
+        {
+            if (transform == null) return null;
+            var arr = Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None);
+            var claimant = transform.gameObject;
+            BedEntity best = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = transform.position;
+            foreach (var b in arr)
+            {
+                if (b == null) continue;
+                if (ReservationManager.IsReservedByOther(b, claimant)) continue;
+                Vector3 bp = b.transform.position;
+                if (Mathf.Abs(bp.x) > 28.5f || Mathf.Abs(bp.y) > 28.5f) continue;
+                float sq = ((Vector2)bp - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = b; }
+            }
+            return best;
+        }
+
         /// <summary>이미 어떤 외부 시스템 (chopper/gatherer/etc.) 가 진행중인 task 있는지.</summary>
         public bool HasActiveTask()
         {

@@ -111,7 +111,22 @@ namespace MelonS.GameProto
         [SerializeField] private int RaidsPerSizeStep = 2;     // +1 bandit every 2 raids
         private int lastRaidDay = -1;
         private int raidCount = 0;     // how many raids have fired this run (drives slow size escalation)
+        // raidSpawnRadius is RETAINED for any legacy/other callers but is NO LONGER
+        // used to place raid bandits — see RaidSpawnEdge below.
         [SerializeField] private float raidSpawnRadius = 12f;
+
+        // EDGE SPAWN (operator 2026-05-31): bandits used to appear at raidSpawnRadius
+        // (=12) which is mid-map, right next to the settlement — they "갑툭튀"
+        // (popped in) on top of the colony.  Operator wants them to WALK IN from
+        // the map edge.  The world bound is ±29 (WORLD_HALF); we spawn just inside
+        // that at ±RaidSpawnEdge so bandits enter from off-screen and their AI
+        // (BanditEnemy pawn-chase) paths them toward the colony.  Serialized so the
+        // operator can re-tune how far out they appear without a code change.
+        //
+        //   - The chosen side fixes ONE axis to ±RaidSpawnEdge (the edge).
+        //   - The "along" axis now spans the full edge length (±RaidSpawnEdge) so
+        //     bandits can enter from anywhere along that edge, not just the middle.
+        [SerializeField] private float RaidSpawnEdge = 28f;
 
         // Stretch: trader sprite 주입 (SceneSetup 에서 wire)
         [SerializeField] private Sprite traderSprite;
@@ -187,18 +202,22 @@ namespace MelonS.GameProto
         {
             try
             {
-                // 같은 side 에서 약간 흩어진 위치 (전체 wave 가 함께 진입)
+                // 같은 side 에서 약간 흩어진 위치 (전체 wave 가 함께 진입).
+                // EDGE SPAWN: the fixed axis sits at ±RaidSpawnEdge (map edge, just
+                // inside the ±29 world bound) so bandits enter from off-screen and
+                // walk toward the colony via BanditEnemy pawn-chase.  The "along"
+                // axis spans the whole edge so they can come from any point along it.
                 int side = (waveIndex == 0)
                     ? UnityEngine.Random.Range(0, 4)
                     : (waveIndex % 4);
-                float along = UnityEngine.Random.Range(-raidSpawnRadius, raidSpawnRadius);
+                float along = UnityEngine.Random.Range(-RaidSpawnEdge, RaidSpawnEdge);
                 Vector3 pos;
                 switch (side)
                 {
-                    case 0: pos = new Vector3( raidSpawnRadius, along, 0); break;
-                    case 1: pos = new Vector3(-raidSpawnRadius, along, 0); break;
-                    case 2: pos = new Vector3(along,  raidSpawnRadius, 0); break;
-                    default: pos = new Vector3(along, -raidSpawnRadius, 0); break;
+                    case 0: pos = new Vector3( RaidSpawnEdge, along, 0); break;
+                    case 1: pos = new Vector3(-RaidSpawnEdge, along, 0); break;
+                    case 2: pos = new Vector3(along,  RaidSpawnEdge, 0); break;
+                    default: pos = new Vector3(along, -RaidSpawnEdge, 0); break;
                 }
                 // 같은 wave 끼리 살짝 spread
                 pos.x += UnityEngine.Random.Range(-1.5f, 1.5f);

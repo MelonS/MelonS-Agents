@@ -56,6 +56,36 @@ namespace MelonS.GameProto
         public BedEntity RestTarget => restTarget;
         public bool IsForcedResting => forcedResting;
 
+        // ── 자율 취침: 졸리고 밤이면 림이 스스로 침대로 걸어가서 잔다 ─────────────
+        //  운영자 fb: "림이 그 자리에서 자고 침대를 안 씀."  기존엔 sleep<30 && night
+        //  면 GetBedUnderPawn 으로 마침 발밑이 침대면 보너스, 아니면 제자리 취침뿐.
+        //  자율로 침대를 찾아가는 행동이 없었다.  GoSleepAction(IPawnAction) 이
+        //  비어있는 BedEntity 를 예약 후 SetAutoSleepTarget 호출 → PawnUtilityAI 가
+        //  침대로 이동시킴 → 발밑에 그 침대 도착 시 여기서 IsSleeping=true.
+        //  rcfix forcedResting(우클릭 침대) 와 별개의 경로 — 사용자 명령이 항상 우선:
+        //   1) restTarget(우클릭)  : 졸음 무관/낮에도 강제 수면, wake @ 95.
+        //   2) autoRestTarget(AI) : sleep 낮고 밤일 때만, wake @ 80 (일반 수면).
+        //  도달 못 하거나 침대 없으면 기존 제자리 취침(아래 sleep<30 && night) fallback.
+        private BedEntity autoRestTarget;
+        [SerializeField] private float autoSleepThreshold = 35f;  // 졸음 — 침대로 가기 시작
+        [SerializeField] private float autoWakeSleepLevel = 80f;  // 일반 기상 수준
+        public bool HasAutoSleepOrder => autoRestTarget != null;
+        public BedEntity AutoRestTarget => autoRestTarget;
+        /// <summary>밤에 졸려서 자율로 침대를 찾아가야 하는가 (GoSleepAction 의 eligibility).</summary>
+        public bool WantsAutoSleep => sleep < autoSleepThreshold && IsNightTime();
+
+        /// <summary>GoSleepAction 이 빈 침대를 예약한 뒤 호출 — 이 침대로 가서 자라.</summary>
+        public void SetAutoSleepTarget(BedEntity bed)
+        {
+            autoRestTarget = bed;
+        }
+
+        /// <summary>자율 취침 취소 (침대 파괴/도달불가/기상).  예약 해제는 호출측 책임.</summary>
+        public void ClearAutoSleepTarget()
+        {
+            autoRestTarget = null;
+        }
+
         /// <summary>ClickSelector 가 침대 우클릭 시 호출 — 이 침대로 가서 쉬라는 명령.</summary>
         public void SetRestTarget(BedEntity bed)
         {
@@ -134,6 +164,48 @@ namespace MelonS.GameProto
                     // 아직 침대로 이동 중 — 일반 decay 만 진행 (아래로 fall-through 하되
                     //  강제 수면은 아직 아님).  forcedResting 은 false 유지.
                     forcedResting = false;
+                }
+            }
+
+            // ── 자율 취침 처리 (사용자 forcedResting 다음 우선, 제자리 취침보다 위) ──
+            //  GoSleepAction 이 SetAutoSleepTarget 한 침대로 PawnUtilityAI 가 이동시킨다.
+            //  여기서는 도착 여부만 검사:
+            //    - 발밑에 그 침대 도착  → IsSleeping=true, bed.RestMul 로 회복.
+            //    - 아직 이동 중          → 일반 decay 만 (아래로 fall-through, 아직 안 잠).
+            //  자율 취침은 일반 기상(80)에서 종료 — 강제(95)보다 가볍게.
+            if (autoRestTarget != null)
+            {
+                if (autoRestTarget == null || autoRestTarget.gameObject == null)
+                {
+                    ClearAutoSleepTarget();
+                }
+                else
+                {
+                    var bedUnder = GetBedUnderPawn();
+                    bool onTargetBed = bedUnder != null && bedUnder == autoRestTarget;
+                    if (onTargetBed)
+                    {
+                        IsSleeping = true;
+                        float restMul = autoRestTarget.RestMul;
+                        float moodPerSec = autoRestTarget.MoodBonus;
+                        sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * restMul * dt);
+                        food = Mathf.Max(0f, food - foodDecay * 0.5f * dt);
+                        mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
+                        if (moodPerSec > 0f) mood = Mathf.Min(100f, mood + moodPerSec * dt);
+                        // 충분히 잤으면(80) 자율 취침 종료.  예약 해제는 GoSleepAction/AI 가
+                        //  HasAutoSleepOrder 가 풀린 걸 보고 처리.
+                        if (sleep >= autoWakeSleepLevel)
+                        {
+                            IsSleeping = false;
+                            ClearAutoSleepTarget();
+                        }
+                        return;
+                    }
+                    // 아직 침대로 이동 중 — 제자리 취침에 빠지지 않도록 일반 decay 만 진행.
+                    food = Mathf.Max(0f, food - foodDecay * dt);
+                    sleep = Mathf.Max(0f, sleep - sleepDecay * dt);
+                    mood = Mathf.Max(0f, mood - moodDecay * dt);
+                    return;
                 }
             }
 

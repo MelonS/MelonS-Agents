@@ -45,6 +45,10 @@ namespace MelonS.GameProto
         // R5: Strategy pattern — Decide() priority list + reusable context
         private PawnContext ctx;
         private List<IPawnAction> actions;
+        // 자율 취침: 생존 행동이라 work-priority loop 보다 먼저 시도 (work settings 무관).
+        private GoSleepAction goSleep;
+        // 자율 취침으로 예약한 침대 — 기상/취소 시 ReservationManager 에서 해제하기 위해 추적.
+        private BedEntity reservedSleepBed;
 
         private void Awake()
         {
@@ -76,6 +80,7 @@ namespace MelonS.GameProto
                 transform = transform,
                 idleWanderRadius = idleWanderRadius,
             };
+            goSleep = new GoSleepAction();
             actions = new List<IPawnAction>
             {
                 new TendPatientAction(),       // #125 - 부상 동료 치료 최우선
@@ -113,6 +118,16 @@ namespace MelonS.GameProto
             //  그 동안 AI Decide skip (사용자 이동 명령 존중).
             if (entity != null && entity.IsUnderManualControl) return;
 
+            // 자율 취침 예약 해제: 기상/취소(PawnNeeds 가 autoRestTarget 을 비움)나
+            //  사용자 우클릭 휴식 명령이 끼어든 경우, 잡고 있던 침대 예약을 푼다.
+            //  매 frame 검사 (이동 중에도) — 림이 깬 즉시 다른 림이 그 침대 쓸 수 있게.
+            if (reservedSleepBed != null
+                && (needs == null || !needs.HasAutoSleepOrder || needs.HasRestOrder))
+            {
+                AI.ReservationManager.Release(reservedSleepBed, gameObject);
+                reservedSleepBed = null;
+            }
+
             // rcfix: 사용자가 침대 우클릭으로 "쉬어" 명령(needs.HasRestOrder)을 내린 동안은
             //  AI 가 다른 work 를 집지 않는다.  pawn 이 침대로 이동 → 도착 후 PawnNeeds 가
             //  강제 수면(IsSleeping) 처리.  아직 침대로 가는 중(ManualMoveUntil 만료 후)에도
@@ -133,6 +148,34 @@ namespace MelonS.GameProto
                     movement.SetTarget(needs.RestTarget.transform.position);
                 lastDecision = Time.timeSinceLevelLoad;
                 return;
+            }
+
+            // 자율 취침: 침대로 가는 중(HasAutoSleepOrder && !IsSleeping).  사용자
+            //  forcedResting 과 동일하게 잔여 work task 정리 + 이동 target 유지.  도착 시
+            //  PawnNeeds 가 IsSleeping 처리 (아래 IsSleeping 블록으로 넘어감).
+            if (needs != null && needs.HasAutoSleepOrder && !needs.IsSleeping && !needs.HasRestOrder)
+            {
+                // 침대가 파괴됐으면 자율 취침 취소 (예약 해제는 위 블록이 다음 frame 처리).
+                if (needs.AutoRestTarget == null)
+                {
+                    needs.ClearAutoSleepTarget();
+                }
+                else
+                {
+                    chopper.ClearTask();
+                    if (gatherer != null) gatherer.ClearTask();
+                    if (hunter != null) hunter.ClearTask();
+                    if (cook != null) cook.ClearTask();
+                    if (hauler != null) hauler.ClearTask();
+                    if (builder != null) builder.ClearTask();
+                    if (miner != null) miner.ClearTask();
+                    if (doctor != null) doctor.ClearTask();
+                    // 이동이 멈췄는데 아직 침대 위가 아니면 다시 침대로 향하게.
+                    if (!movement.IsMoving)
+                        movement.SetTarget(needs.AutoRestTarget.transform.position);
+                    lastDecision = Time.timeSinceLevelLoad;
+                    return;
+                }
             }
 
             if (Time.timeSinceLevelLoad - lastDecision < decisionInterval) return;
@@ -168,6 +211,26 @@ namespace MelonS.GameProto
                 return;
             }
 
+            // 자율 취침은 생존 우선 — 진행 중인 work 가 있어도 졸리고 밤이면 중단하고
+            //  침대로.  busy-gate 보다 먼저: 현재 task 정리 후 Decide 로 GoSleep 시도.
+            //  (work 가 없으면 어차피 아래 gate 를 통과해 Decide 가 GoSleep 을 잡는다.)
+            if (needs != null && reservedSleepBed == null
+                && needs.WantsAutoSleep && !needs.HasRestOrder
+                && ctx != null && ctx.HasActiveTask())
+            {
+                chopper.ClearTask();
+                if (gatherer != null) gatherer.ClearTask();
+                if (hunter != null) hunter.ClearTask();
+                if (cook != null) cook.ClearTask();
+                if (hauler != null) hauler.ClearTask();
+                if (builder != null) builder.ClearTask();
+                if (miner != null) miner.ClearTask();
+                if (doctor != null) doctor.ClearTask();
+                lastDecision = Time.timeSinceLevelLoad;
+                Decide();
+                return;
+            }
+
             if (movement.IsMoving || chopper.HasTask) return;
             if (gatherer != null && gatherer.HasTask) return;
             if (hunter != null && hunter.HasTask) return;
@@ -188,6 +251,20 @@ namespace MelonS.GameProto
 
         private void Decide()
         {
+            // 생존 pre-pass — 자율 취침은 work-priority loop 보다 먼저, work settings 와
+            //  무관하게 시도 (졸리고 밤이면 일을 멈추고 침대로).  TryStart 가 true 면
+            //  needs.SetAutoSleepTarget + 침대 예약이 끝난 상태 → 예약 침대 추적.
+            if (goSleep != null && needs != null && reservedSleepBed == null
+                && needs.WantsAutoSleep && !needs.HasRestOrder)
+            {
+                if (goSleep.TryStart(ctx))
+                {
+                    reservedSleepBed = needs.AutoRestTarget;
+                    return;
+                }
+                // 빈 침대 없음/도달불가 → 제자리 취침은 PawnNeeds(sleep<30 && night) 가 처리.
+            }
+
             // R5: Strategy pattern — priority list 순회.  첫 TryStart 가 true 반환 시 종료.
             // #114: PawnWorkSettings 가 disable 한 work 는 skip.  priority 1(highest) 부터.
             //  순서: 베리채집(Gather) → 사냥(Hunt) → 요리(Cook) → 벌목(Chop) → 어슬렁(fallback)

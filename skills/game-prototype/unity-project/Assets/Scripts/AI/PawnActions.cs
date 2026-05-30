@@ -19,6 +19,47 @@ namespace MelonS.GameProto.AI
     ///   - return true = action 시작됨, false = 다음 action 시도
     /// </summary>
 
+    /// <summary>
+    /// 자율 취침 — 운영자 fb "림이 그 자리에서 자고 침대를 안 씀" fix.
+    /// 졸리고(autoSleepThreshold 미만) 밤이면 가장 가까운 빈 BedEntity 를 예약하고
+    /// 그 침대 위(인접 stand cell)로 이동시킨다.  발밑에 침대 도착하면 PawnNeeds 가
+    /// IsSleeping=true (task readout "수면", bed.RestMul 회복) 처리.
+    ///
+    /// 생존 행동이라 PawnUtilityAI 가 작업 priority loop 보다 먼저 시도 (work settings
+    /// 무관하게 항상 동작).  빈 침대가 없거나 도달 불가면 false 반환 → 기존 제자리
+    /// 취침(PawnNeeds 의 sleep<30 && night) fallback.
+    ///
+    /// rcfix forcedResting(우클릭 침대) 와 정합: needs.HasRestOrder(사용자 명령) 가
+    /// 있으면 자율 취침은 시작하지 않는다 (사용자 명령 우선).
+    /// </summary>
+    public class GoSleepAction : IPawnAction
+    {
+        public string DisplayName => "수면";
+        // work settings 와 무관하게 PawnUtilityAI 의 생존 pre-pass 에서만 호출되므로
+        //  Kind 는 priority 매핑에 쓰이지 않는다.  형식상 Gather 로 둔다.
+        public WorkKind Kind => WorkKind.Gather;
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.needs == null || ctx.movement == null) return false;
+            // 졸리고 밤일 때만.  사용자 우클릭 휴식 명령 중이면 양보.
+            if (!ctx.needs.WantsAutoSleep) return false;
+            if (ctx.needs.HasRestOrder) return false;
+
+            BedEntity bed = ctx.FindNearestFreeBed();
+            if (bed == null) return false;  // 침대 없음 → 제자리 취침 fallback
+            // 중앙 예약 — 같은 침대로 두 림이 몰리지 않게.
+            if (!ReservationManager.TryReserve(bed, ctx.transform.gameObject)) return false;
+
+            ctx.needs.SetAutoSleepTarget(bed);
+            // 침대 footprint 인접 stand cell 로 이동 (없으면 침대 위치).
+            Vector2 standPos;
+            PawnMovement.TryGetWorkStandPos(
+                bed.transform.position, bed.Size, ctx.transform.position, out standPos);
+            ctx.movement.SetTarget(standPos);
+            return true;
+        }
+    }
+
     public class EatBerryAction : IPawnAction
     {
         public string DisplayName => "베리채집";

@@ -1,0 +1,19 @@
+{
+  "label": "raid-edge-spawn",
+  "status": "done",
+  "lane": [
+    "Assets/Scripts/AIDirector.cs"
+  ],
+  "task": "Bandits were popping in mid-map (raidSpawnRadius=12, next to settlement). Operator wants them to walk in from the map EDGE (off-screen) and path toward the colony. Move raid spawn from radius 12 to the map edge (~28, just inside the +/-29 world bound). Keep side selection. Do NOT touch raid frequency/size (just recalibrated).",
+  "changes": [
+    "Added [SerializeField] private float RaidSpawnEdge = 28f; (serialized so operator can re-tune how far out bandits appear). Just inside the +/-29 WORLD_HALF bound.",
+    "SpawnSingleBandit: replaced both the fixed-axis placement and the 'along' axis range from raidSpawnRadius (12) to RaidSpawnEdge (28). Side selection (0..3) preserved; the chosen side fixes one axis to +/-RaidSpawnEdge (the edge), and 'along' now spans the full +/-RaidSpawnEdge so bandits can enter from anywhere along that edge.",
+    "raidSpawnRadius field RETAINED (legacy/other callers) but no longer used for raid bandit placement; commented as such.",
+    "Existing +/-1.5f wave-spread jitter kept; from 28 it stays within the 29 bound."
+  ],
+  "result": "Raid bandits now spawn at +/-28 on the chosen edge instead of radius 12 mid-map. They enter from off-screen and BanditEnemy pawn-chase AI walks them toward the colony. No change to raid frequency (RaidGraceDays/RaidIntervalDays), size (BaseRaidGroupSize/MaxConcurrentGroups/RaidsPerSizeStep), or any other event/threat logic.",
+  "untouched": "RaidGraceDays, RaidIntervalDays, MaxConcurrentGroups, BaseRaidGroupSize, RaidsPerSizeStep, SpawnRaid size math, TryScheduleRaid timing, FireRandomEvent, BuildDefaultPool, SpawnTrader, wolves gate.",
+  "bug_firewall_check": "No new long WaitForSeconds/heartbeat (no #9). No AudioBank tight loop (PlayAlert is once-per-raid, unchanged). No GetInstanceID compare. No OnCollisionEnter-only handler. No singleton OnEnable subscription. No justSpawned default. All clean.",
+  "unity_run": false,
+  "date": "2026-05-31"
+}
