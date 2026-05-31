@@ -16,12 +16,12 @@ namespace MelonS.GameProto
         //  단일 1x1 pawn 근접 inspection 가능 (1.5 → pawn 이 화면 33% 차지).
         [SerializeField] private float zoomMin = 1.5f;
         // Day 40: 40x40 맵 — zoomMax 14 → 22 (전체 맵 한 화면에 보기 가능)
-        [SerializeField] private float zoomMax = 32f;  // #108 - 60x60 맵 전체 보기
+        [SerializeField] private float zoomMax = 48f;  // #108 60x60→32.  #235 90x90 전체 보기 → 48
 
         // Soft world bounds so camera can't pan into infinity.
-        // #108: map ±30 + zoom 여유 → ±35
-        [SerializeField] private Vector2 worldMin = new Vector2(-35, -35);
-        [SerializeField] private Vector2 worldMax = new Vector2( 35,  35);
+        // #108: map ±30 → ±35.  #235 map ±45 + zoom 여유 → ±50
+        [SerializeField] private Vector2 worldMin = new Vector2(-50, -50);
+        [SerializeField] private Vector2 worldMax = new Vector2( 50,  50);
 
         private Camera cam;
 

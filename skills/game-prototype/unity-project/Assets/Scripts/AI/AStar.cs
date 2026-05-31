@@ -31,7 +31,7 @@ namespace MelonS.GameProto.AI
     {
         public const int COST_CARDINAL = 10;
         public const int COST_DIAGONAL = 14;
-        public const int DEFAULT_NODE_CAP = 4000;
+        public const int DEFAULT_NODE_CAP = 12000;  // #235 90x90(8100셀) 맵 cross-path 여유 (4000→12000)
 
         // 8 neighbour offsets.  Cardinals first, then diagonals — deterministic
         // expansion order for stable tie-breaking.

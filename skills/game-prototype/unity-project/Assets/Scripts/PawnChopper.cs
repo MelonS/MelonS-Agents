@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using MelonS.GameProto.AI;
 
 namespace MelonS.GameProto
@@ -21,6 +22,14 @@ namespace MelonS.GameProto
 
         private TreeEntity targetTree;
         private PawnMovement movement;
+        // #236 도달 불가 나무를 포기한 직후 같은 걸 또 배정받아 무한 포기 루프(PawnMiner #221
+        //  과 동일 패턴).  TreeChopDesignation.DispatchToIdleChoppers 가 이 cooldown 을
+        //  소비해 한시적으로 그 나무를 건너뛴다.  영구 블랙리스트 대신 막힘 해소 가능성 위해 한시적.
+        private readonly Dictionary<TreeEntity, float> _giveUpUntil
+            = new Dictionary<TreeEntity, float>();
+        private const float GiveUpCooldownSec = 60f;
+        public bool IsRecentlyGivenUp(TreeEntity t)
+            => t != null && _giveUpUntil.TryGetValue(t, out float u) && Time.time < u;
         // #199 B2 (R-1) — give-up now keys on real path-unreachability
         //  (PawnMovement.LastPathFailed) + a no-progress stall, NOT raw
         //  dist>range (which false-trips while the pawn legitimately detours
@@ -70,6 +79,7 @@ namespace MelonS.GameProto
                 movement.SetTarget(stand);
             else
             {
+                if (targetTree != null) _giveUpUntil[targetTree] = Time.time + GiveUpCooldownSec;  // #236
                 Debug.Log($"[Chopper] {name} give up tree (no free adjacent stand cell — unreachable/occupied)");
                 ClearTask();
             }
@@ -108,6 +118,7 @@ namespace MelonS.GameProto
             //  stall, not on dist>range during a legitimate A* detour.
             if (dist > chopRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, GiveUpAfterSec))
             {
+                if (targetTree != null) _giveUpUntil[targetTree] = Time.time + GiveUpCooldownSec;  // #236
                 Debug.Log($"[Chopper] {name} give up tree (unreachable/stalled, dist={dist:F2}, pathFailed={movement.LastPathFailed})");
                 ClearTask();
                 return;

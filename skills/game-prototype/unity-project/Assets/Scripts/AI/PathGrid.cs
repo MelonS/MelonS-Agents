@@ -30,9 +30,11 @@ namespace MelonS.GameProto.AI
     public class PathGrid
     {
         // Cell coordinate bounds (inclusive).  Mirrors SetupTilemap's loop.
-        public const int MIN = -30;
-        public const int MAX = 29;       // exclusive 30 in the loop → last cell is 29
-        public const int SIZE = MAX - MIN + 1;   // 60
+        // #235 60x60 → 90x90 (TerrainLayout.MAP_HALF 30→45).  MUST stay in sync
+        //  with MAP_HALF, PawnMovement.WORLD_MIN/MAX, CameraController bounds.
+        public const int MIN = -45;
+        public const int MAX = 44;       // exclusive 45 in the loop → last cell is 44
+        public const int SIZE = MAX - MIN + 1;   // 90
 
         // walkable[x - MIN, y - MIN].  true = passable.
         private readonly bool[,] _walkable = new bool[SIZE, SIZE];

@@ -204,6 +204,7 @@ namespace MelonS.GameProto
                     if (c == null) continue;
                     if (c.HasTask) continue;
                     if (!ChopperAvailable(c)) continue;
+                    if (c.IsRecentlyGivenUp(ct.Tree)) continue;  // #236 도달 불가 나무 무한 재배정 방지
                     float sq = ((Vector2)c.transform.position - tp).sqrMagnitude;
                     if (sq < bestSq) { bestSq = sq; best = c; }
                 }

@@ -12,8 +12,10 @@ namespace MelonS.GameProto.EditorTools
         // R8: layout 데이터 묶음 (lake/rock/dirt 위치 — 후속 entity/flower 배치 시 충돌 회피 용)
         public class TerrainLayout
         {
-            // 운영자 피드백 #108 - 40x40 → 60x60 (림월드 small-medium 수준)
-            public const int MAP_HALF = 30;
+            // 운영자 피드백 #108 - 40x40 → 60x60.  #235 "기본맵부터 상당히 큼" → 90x90.
+            //  PathGrid MIN/MAX, CameraController bounds, ScatterVarietyDriver.MapHalf,
+            //  AStar nodeCap 모두 이 값에 동기화돼야 함 (각 파일 #235 주석 참조).
+            public const int MAP_HALF = 45;
             public Tilemap tilemap;
             public Tile grassTile, dirtTile, waterTile, rockTile;
             // 호수 4개 (이전 2개) + 위치 비례 확장

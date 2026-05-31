@@ -188,8 +188,9 @@ namespace MelonS.GameProto
         // Sub-cell jitter magnitude — decals placed at cell + random [0,jitter].
         private const float Jitter = 0.85f;
 
-        // Map half-size (matches SceneSetup TerrainLayout.MAP_HALF = 25).
-        private const int MapHalf = 25;
+        // Map half-size — MUST match SceneSetup TerrainLayout.MAP_HALF.
+        // #235 25(stale, 실제 30 과도 불일치였음)→45 로 동기화 (90x90 전체 잔디 커버).
+        private const int MapHalf = 45;
 
         // Pawn spawn-zone avoidance (matches existing scatter rule).
         private const int SpawnAvoidX = 5;

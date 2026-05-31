@@ -70,7 +70,7 @@ namespace MelonS.GameProto.EditorTools
             System.Random tr = new System.Random(24680);
             int tries = 0;
             int half = TerrainLayout.MAP_HALF;
-            while (treePositionsList.Count < 20 && tries < 400)
+            while (treePositionsList.Count < 20 && tries < 400)  // (NOTE: SetupWorldEntities 는 R10 이후 dead — 실제 tree 스폰은 Trees.cs)
             {
                 tries++;
                 int tx = tr.Next(-(half-2), half-1);
@@ -159,6 +159,26 @@ namespace MelonS.GameProto.EditorTools
             SpawnStoneVeins(layout, new System.Collections.Generic.List<Vector2>());
         }
 
+        /// <summary>#237 (x,y) 셀의 4 cardinal 이웃 중 하나라도 걷기 가능(물/바위/맵밖 아님)이면
+        ///  true.  도달 가능 stand cell 이 보장됨.  실제 생성된 tilemap 타일로 검사하므로
+        ///  지형 RNG 지터까지 런타임 PathGrid 와 정확히 일치.  terrain 은 entity spawn 보다
+        ///  먼저 생성됨(SceneSetup.cs: SetupTilemap → SpawnStoneVeins).</summary>
+        private static bool HasWalkableNeighbor(TerrainLayout layout, int x, int y)
+        {
+            int half = TerrainLayout.MAP_HALF;
+            int[] dx = { 1, -1, 0, 0 };
+            int[] dy = { 0, 0, 1, -1 };
+            for (int i = 0; i < 4; i++)
+            {
+                int nx = x + dx[i], ny = y + dy[i];
+                if (nx < -half || nx >= half || ny < -half || ny >= half) continue;  // 맵밖 = 막힘
+                var tile = layout.tilemap.GetTile(new Vector3Int(nx, ny, 0));
+                if (tile == layout.waterTile || tile == layout.rockTile) continue;   // 막힌 지형
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>#119 - 광맥 (StoneVeinEntity) cluster 배치.  rock terrain 근처 우선.</summary>
         private static void SpawnStoneVeins(TerrainLayout layout, System.Collections.Generic.List<Vector2> treePositions)
         {
@@ -167,12 +187,11 @@ namespace MelonS.GameProto.EditorTools
 
             int half = TerrainLayout.MAP_HALF;
             int placed = 0;
-            int target = 20;  // #220 운영자 fb "맵에 석재 없음" — 광맥은 재생 안 돼 고갈되면
-                              //  영구 부족(나무 20 은 재생).  12→20 으로 초반 석재 가용성 ↑.
+            int target = 45;  // #220 "맵에 석재 없음" 12→20.  #235 90x90 면적 ×2.25 → 20→45.
             System.Random sr = new System.Random(31415);
             var positions = new System.Collections.Generic.List<Vector2>();
             int tries = 0;
-            while (placed < target && tries < 400)
+            while (placed < target && tries < 900)  // #235 target 45 도달 위해 400→900
             {
                 tries++;
                 int sx = sr.Next(-(half-2), half-1);
@@ -193,6 +212,11 @@ namespace MelonS.GameProto.EditorTools
                 foreach (var ex in positions)
                     if (Vector2.Distance(ex, sp) < 2.0f) { skip = true; break; }
                 if (skip) continue;
+                // #237 도달 가능성 보장 — 광맥은 자기 셀을 막으므로 pawn 은 인접 cell 에 서서
+                //  캔다.  4 cardinal 이웃이 모두 물/바위/맵밖이면 'no free adjacent stand cell'
+                //  로 영원히 못 캐는 광맥(맵 확대 #235 로 box-in 사례 ↑ → miner 무한 give-up).
+                //  실제 tilemap 타일로 검사(런타임 PathGrid 와 동일 소스, 지형 지터까지 정확).
+                if (!HasWalkableNeighbor(layout, sx, sy)) continue;
                 positions.Add(sp);
                 placed++;
             }

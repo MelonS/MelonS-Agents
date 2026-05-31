@@ -15,10 +15,10 @@ namespace MelonS.GameProto
         [SerializeField] private PawnStats stats;
         // legacy fallback - SO 없으면 default 30/1/1.0/1.0/3.0 채워줌
 
-        // 운영자 피드백 #108 - 60x60 tile 맵의 안쪽 (±29) 으로 강제 clamp.
-        //  타일이 그려진 영역 밖으로는 절대 못 나감.
-        public static readonly Vector2 WORLD_MIN = new Vector2(-29f, -29f);
-        public static readonly Vector2 WORLD_MAX = new Vector2( 29f,  29f);
+        // 운영자 피드백 #108 - tile 맵 안쪽으로 강제 clamp.  #235 90x90 → ±44
+        //  (PathGrid.MAX=44 와 동기화. 타일 영역 밖으로는 절대 못 나감.)
+        public static readonly Vector2 WORLD_MIN = new Vector2(-44f, -44f);
+        public static readonly Vector2 WORLD_MAX = new Vector2( 44f,  44f);
 
         // Step 81: 호수/바위 통과 방지 — SceneSetup이 GroundTilemap 과
         //  Water/Rock TileBase 참조를 정적 세팅.  null 이면 obstacle 체크 skip.

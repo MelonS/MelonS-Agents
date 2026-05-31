@@ -332,6 +332,10 @@ namespace MelonS.GameProto
                     if (m == null) continue;
                     if (m.HasTask) continue;            // busy mining something already
                     if (!MinerAvailable(m)) continue;   // not drafted / sleeping / manual / breaking
+                    // #236 도달 불가 광맥 무한 재배정 방지 — #230 이 MineStoneAction 을 지우면서
+                    //  PawnMiner._giveUpUntil cooldown 을 소비하던 유일한 경로가 사라져, 포기 직후
+                    //  같은 miner 가 즉시 재배정되는 루프(LongPlay 120 give-up).  여기서 skip.
+                    if (m.IsRecentlyGivenUp(mt.Vein)) continue;
                     float sq = ((Vector2)m.transform.position - tp).sqrMagnitude;
                     if (sq < bestSq) { bestSq = sq; best = m; }
                 }
