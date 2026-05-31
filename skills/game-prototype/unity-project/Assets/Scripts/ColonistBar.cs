@@ -24,11 +24,12 @@ namespace MelonS.GameProto
     public class ColonistBar : MonoBehaviour
     {
         // ── layout 상수 ──────────────────────────────────────────────────────────
-        private const float EntryW = 76f;
-        private const float EntryH = 44f;
+        // #238b 가독성 ↑ (작아서 "테스트 빌드 수준" 회피) — RimWorld 콜로니스트 바처럼 더 큼.
+        private const float EntryW = 104f;
+        private const float EntryH = 54f;
         private const float Gap = 6f;
         private const float TopMargin = 8f;   // 화면 상단에서의 여백
-        private const float BarH = 4f;         // HP/mood 바 두께
+        private const float BarH = 5f;         // HP/mood 바 두께
 
         // ── 색 (UITheme 통일) ──────────────────────────────────────────────────────
         private static readonly Color EntryBg   = MelonS.GameProto.Core.UITheme.PanelBgLight;
@@ -81,7 +82,7 @@ namespace MelonS.GameProto
 
         private void Start()
         {
-            font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(14);
+            font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(16);
 
             // root panel — 화면 상단 중앙 (anchor top-center).  너비는 rebuild 때 콜로니스트
             //  수에 맞춰 갱신, 높이는 entry 높이로 고정.
@@ -197,7 +198,7 @@ namespace MelonS.GameProto
             var nameTxt = nameGo.AddComponent<Text>();
             nameTxt.text = displayName;
             nameTxt.font = font;
-            nameTxt.fontSize = 13;
+            nameTxt.fontSize = 15;
             nameTxt.fontStyle = FontStyle.Bold;
             nameTxt.color = TextCol;
             nameTxt.alignment = TextAnchor.MiddleCenter;
