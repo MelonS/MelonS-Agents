@@ -267,7 +267,8 @@ namespace MelonS.GameProto.Tests
             for (int i = 0; i < pawns.Length; i++)
                 totalPawnMove += (pawns[i].transform.position - startPos[i]).magnitude;
             bool resChange = endWood != startWood || endFood != startFood || endMeals != startMeals;
-            bool pawnMoved = totalPawnMove > 2.0f;  // 3 pawn 합산 > 2 unit
+            bool pawnMoved = totalPawnMove > 0.3f;  // #243/#246 지정경제+포만+창고無 시작 = idle
+                                                    //  wander 위주라 이동 적음(>0.3 = 최소 활동 확인)
             // #229 RimWorld 정합: 'ai does something' = 림이 실제로 활동(이동/일/하울)한다.
             //  과거엔 wood 자동증가를 요구했으나, RimWorld 는 야생나무 벌목이 *지정제*라
             //  자동으로 wood 가 늘지 않는다(STEP2).  그래서 자동-자원증가 대신 pawn 활동으로
@@ -434,11 +435,14 @@ namespace MelonS.GameProto.Tests
             yield return null;
             var rm = Services.Get<ResourceManager>();
             if (rm == null) { Assert(false, "ResourceManager null"); yield break; }
-            // GameManager.Start 후 0.5s 정도 지났음 (Start 의 1s wait 후 yield)
-            // wood 는 거의 안 줄어듬, food 는 3 pawn × 0.5s 약간 줄어듬
-            bool hasResources = rm.wood >= 30 && (rm.food + rm.meals) >= 3;
+            // #243 시작 목재는 '카운터 숫자'가 아니라 바닥 물리 wood pile 로 드롭(운영자 fb).
+            //  → rm.wood 는 0(stockpile 운반 전), 대신 바닥 물리 목재 총량을 검증.
+            int groundWood = 0;
+            foreach (var p in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
+                if (p != null) groundWood += p.Wood;
+            bool hasResources = groundWood >= 100 && (rm.food + rm.meals) >= 3;
             Assert(hasResources,
-                $"starter: wood={rm.wood} (>=30 expected), food={rm.food} meals={rm.meals} (food+meals>=3 expected)");
+                $"starter: 바닥물리목재={groundWood} (>=100 드롭), food={rm.food} meals={rm.meals} (food+meals>=3)");
         }
 
         /// <summary>I14: HoverTooltip MonoBehaviour 가 씬에 존재 (active 여부 상관 X)</summary>
@@ -527,7 +531,8 @@ namespace MelonS.GameProto.Tests
             if (rm == null) { Assert(false, "ResourceManager null"); yield break; }
             int startWood = rm.wood;
             int startWallCount = Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None).Length;
-            if (startWood < 5) { Assert(false, $"wood {startWood} < 5"); yield break; }
+            // #243 시작 wood 는 물리 드롭(카운터 0).  이 테스트는 실제 건설이 아니라 빌드모드
+            //  토글만 검증하므로 카운터 잔량 요구를 제거(과거 counter-차감 모델 잔재).
 
             // I17 - SetMode 직접 호출로 빌드모드 (Wall) 검증 (#110 이후 UI 경로 Architect → 카테고리 → buildable)
             if (BuildManager.Instance == null) { Assert(false, "BuildManager null"); yield break; }
@@ -1048,13 +1053,16 @@ namespace MelonS.GameProto.Tests
         private IEnumerator TestI30_StockpileZoneExists()
         {
             yield return null;
+            // #246 운영자 fb: 시작 시 창고존 자동스폰 없음 — 플레이어가 직접 지정.
             var zones = Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None);
-            Assert(zones.Length >= 9, $"stockpile zone {zones.Length} (>=9 expected: settlement 3x3)");
-            if (zones.Length == 0) yield break;
+            Assert(zones.Length == 0, $"#246 시작 시 창고존 자동스폰 0 expected (유저 지정): actual {zones.Length}");
 
-            // FindNearest 동작
+            // Spawn + FindNearest API 동작 검증 (직접 하나 스폰).
+            var z = StockpileZoneEntity.Spawn(new Vector3(0.5f, 0.5f, 0f), null);
+            yield return null;
             var nearest = StockpileZoneEntity.FindNearest(new Vector2(0f, 0f));
-            Assert(nearest != null, "FindNearest 동작");
+            Assert(nearest != null, "Spawn+FindNearest 동작");
+            if (z != null) Object.Destroy(z.gameObject);
         }
 
         /// <summary>I34: #129 - 동물 죽음 시 즉시 +food 대신 MeatPileEntity drop</summary>

@@ -171,6 +171,13 @@ namespace MelonS.GameProto
             if (finishedPrefab != null)
             {
                 var spawned = Object.Instantiate(finishedPrefab, transform.position, Quaternion.identity);
+                // #248 자가-audit ROOT FIX — Lamp/Barricade/Fence/FenceGate/TableChair/FloorStone 은
+                //  런타임 prefab 템플릿(BuildManager.Ensure*Prefab)이 SetActive(false) 로 숨겨져 있어
+                //  Instantiate clone 도 비활성 → 완성 시 '사라짐'(invisible).  asset prefab(Wall/Door/
+                //  Stove/Bed/Floor)은 활성이라 무영향.  spawn 직후 강제 활성화로 6종 동시 해결.
+                spawned.SetActive(true);
+                spawned.hideFlags = HideFlags.None;  // #248 런타임 템플릿의 HideAndDontSave 상속 제거
+                                                     //  (저장/쿼리/관리 정상화 — 클론은 일반 엔티티).
                 // #193 - 완성 prefab 도 footprint 의 scale 적용.  Bed 의 Start() 에서 ApplyVisualSize 가 다시 적용되므로 OK 지만 spawn 직후 1 frame 시각 일관성 위해 여기서도.
                 var spawnedSr = spawned.GetComponent<SpriteRenderer>();
                 if (spawnedSr != null && spawnedSr.sprite != null)

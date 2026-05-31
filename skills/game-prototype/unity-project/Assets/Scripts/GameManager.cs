@@ -143,6 +143,7 @@ namespace MelonS.GameProto
             ThreatAlertUI.EnsureInScene();
             // → 비-pawn entity 좌클릭 시 인포 패널 (#105)
             EntityInspectorPanel.EnsureInScene();
+            FeatureAuditQA.EnsureInScene();   // #248 -feature-audit 자가-발견 QA
             // → #113 RimWorld 우클릭 prioritize 컨텍스트 메뉴
             ContextMenuUI.EnsureInScene();
             // → #110 림월드 Architect 좌측 카테고리 메뉴 (F8)
