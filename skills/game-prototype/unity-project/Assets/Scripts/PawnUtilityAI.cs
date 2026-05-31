@@ -104,14 +104,14 @@ namespace MelonS.GameProto
                 new HaulWoodAction(),     // #116 - 벌목 후 떨어진 wood pile 운반
                 new HaulStoneAction(),    // #119 - 채광 후 떨어진 stone chunk 운반
                 new HaulMeatAction(),     // #129 - 사냥 후 떨어진 meat pile 운반
-                // ── RAW extraction: 벌목을 채광보다 먼저 ──
-                //  #I4-regress ROOT CAUSE: Chop/Mine 둘 다 WorkKind.Chop priority=1 →
-                //  list 순서가 곧 선택 순서.  과거엔 Mine 이 앞이라 시작 시 세 림이 전부
-                //  채광만 함 → wood 영영 정체(stone 만 증가), I4 woodUp 실패.  wood 는 벽/집
-                //  주재료라 경제 병목 → ChopTree 를 Mine 보다 먼저 둬 wood 생산을 보장한다.
-                //  (벌목으로 떨어진 더미는 위 HaulWood 가 곧장 운반 → 카운터 적립.)
-                new ChopTreeAction(),
-                new MineStoneAction(),    // #119 - 광맥 채광
+                // ── #230 RimWorld 정합: 야생나무 벌목·광맥 채광은 *플레이어 지정제* ──
+                //  RimWorld 에선 림이 아무 나무·바위나 자동으로 캐지 않는다 — 이게 우리 게임의
+                //  '자원 무한 자동축적'(목재 40→180)의 원인이었다.  자동 ChopTree/MineStone 을
+                //  auto-loop 에서 제거:
+                //    채광 = MineDesignation(플레이어가 drag-마킹 → idle 광부 자동 디스패치)
+                //    벌목 = 우클릭 '벌목 우선'(PawnChopper) 으로 플레이어가 지정
+                //  → 자원이 플레이어 지정으로만 모이고 건설로 소비된다(RimWorld 경제).
+                //  운반·요리·수확·사냥(생존)·경작 zone 은 RimWorld 처럼 자동 유지.
                 new WanderAction(),
             };
         }
