@@ -23,8 +23,11 @@ namespace MelonS.GameProto
     /// poll Update, same mutual-exclusion with the other designation modes — but
     /// instead of dispatching a worker it simply MARKS cells as roofed in a shared
     /// cell set that <see cref="RoofOverlayRenderer"/> reads READ-ONLY to draw the
-    /// shade overlay.  No worker / pathfinding is involved (roofing is instant in
-    /// this prototype — the "build a roof" job is intentionally out of scope/필수만).
+    /// shade overlay.  No worker / pathfinding is involved, but 운영자 fb (2026-06-01,
+    /// "지붕 영역을 정해줘도 지붕건설을 안함") added a light TIME-BASED build progression:
+    /// a designated cell is '짓는 중'(pending) for buildSeconds, then auto-promotes to
+    /// '지어진 지붕'(built) — so the designation visibly turns into a real roof without
+    /// touching any worker/pathfinding file (lane-conflict-safe, 필수만).
     ///
     /// ----------------------------------------------------------------------------
     /// DISCIPLINE — mirrors MineDesignation.cs / GrowZoneDesignation.cs EXACTLY:
@@ -77,6 +80,18 @@ namespace MelonS.GameProto
         [SerializeField] private bool autoRoofEnclosed = true;    // auto-roof a wall-enclosed room on designate
         [SerializeField] private int autoRoofMaxCells = 400;      // safety cap so a flood-fill can't run away (open map)
 
+        [Header("Build progression (RimWorld처럼 짓는 시간)")]
+        // 운영자 fb (2026-06-01) "지붕 영역을 정해줘도 지붕건설을 안함" — vanilla RimWorld 에서
+        //  지붕 영역을 지정하면 즉시 roofed 가 아니라 pawn 이 잠시 '건설'한 뒤 확정된다.  이
+        //  프로토타입은 별도 worker/pathfinding 파일을 건드리지 않으므로(레인 충돌 방지) 시간
+        //  기반의 가벼운 진행만 둔다: 지정 → buildSeconds 동안 '짓는 중'(pending) → 자동으로
+        //  '지어진 지붕'(built) 확정.  RoofOverlayRenderer 가 두 상태를 시각적으로 다르게 그려
+        //  "지정 즉시 변화가 보이고 → 잠시 후 진짜 지붕이 된다"가 눈에 보이게 한다.
+        // 0.8s: 실플레이에선 '짓는 중→지어짐' 진행이 분명히 보이면서도, QA 시나리오의 step
+        //  pacing + 스크린샷 타이밍 안에서 BUILT(진한 지붕)로 확정돼 PNG 에 '진짜 지붕'이 잡히도록
+        //  짧게 둔다(운영자: 지정 즉시 변화가 보이고 곧 진짜 지붕이 되어야 함).  0 이면 즉시 완성.
+        [SerializeField] private float buildSeconds = 0.8f;       // pending → built 까지 걸리는 시간(0 이면 즉시)
+
         // ---- runtime state ---------------------------------------------------
         public static RoofDesignation Instance { get; private set; }
 
@@ -89,15 +104,24 @@ namespace MelonS.GameProto
         /// Clear' 토글과 동일 개념(여기선 roofed 셀 제거).  ModeActive 안에서만 의미가 있다.</summary>
         public bool EraseMode { get; private set; }
 
-        // The shared set of roofed cells.  RoofOverlayRenderer reads this READ-ONLY
-        //  (via the public Roofed accessor) to draw the shade overlay; future rain /
-        //  temperature systems can read IsRoofed(cell) as the roofed FLAG hook.
-        private readonly HashSet<Vector2Int> roofed = new HashSet<Vector2Int>(128);
+        // The shared map of roof cells.  Each designated cell carries a BUILD-DONE
+        //  timestamp (Time.time at which it finishes building); while now < that time
+        //  the cell is PENDING ('짓는 중'), at/after it the cell is BUILT ('지어진 지붕').
+        //  RoofOverlayRenderer reads this READ-ONLY (via Roofed / IsRoofed / IsPending)
+        //  to draw the two distinct visuals; future rain/temperature systems read
+        //  IsRoofed(cell) as the roofed FLAG hook (only a BUILT roof counts as roofed).
+        private readonly Dictionary<Vector2Int, float> roofCells = new Dictionary<Vector2Int, float>(128);
 
-        /// <summary>Monotonic version bumped whenever the roofed set changes, so the
-        /// overlay renderer can cheaply detect "did the roof change since I last
-        /// rebuilt?" without diffing the whole set every frame.</summary>
+        /// <summary>Monotonic version bumped whenever the roof set's MEMBERSHIP changes
+        /// (add/remove), so the overlay renderer can cheaply detect a structural change.
+        /// NOTE: a pending→built transition does NOT bump Version (membership is
+        /// unchanged) — the renderer also polls PendingCount each frame to catch those.</summary>
         public int Version { get; private set; }
+
+        /// <summary>Count of cells still in the '짓는 중'(pending) state.  The overlay
+        /// renderer watches this (cheap) so a pending→built promotion (which does not
+        /// change membership / Version) still triggers a visual refresh.</summary>
+        public int PendingCount { get; private set; }
 
         private Camera cam;
 
@@ -141,15 +165,27 @@ namespace MelonS.GameProto
         // ---- public roofed-cell accessors (read by RoofOverlayRenderer + future
         //  rain/temperature hooks) ---------------------------------------------
 
-        /// <summary>True if cell (cx,cy) is currently roofed (the roofed FLAG hook).</summary>
-        public bool IsRoofed(int cx, int cy) => roofed.Contains(new Vector2Int(cx, cy));
-        public bool IsRoofed(Vector2Int cell) => roofed.Contains(cell);
+        /// <summary>True if cell (cx,cy) is a FINISHED roof (the roofed FLAG hook — a
+        /// '짓는 중' pending cell does NOT count as roofed for rain/temperature yet).</summary>
+        public bool IsRoofed(int cx, int cy) => IsRoofed(new Vector2Int(cx, cy));
+        public bool IsRoofed(Vector2Int cell)
+            => roofCells.TryGetValue(cell, out float done) && Time.time >= done;
 
-        /// <summary>READ-ONLY enumeration of the roofed cells, for the overlay
-        /// renderer to draw a shade quad on each.  Returns the live set; callers
-        /// must not mutate it (they only enumerate).</summary>
-        public IReadOnlyCollection<Vector2Int> Roofed => roofed;
-        public int RoofedCount => roofed.Count;
+        /// <summary>True if cell is designated but still '짓는 중'(under construction):
+        /// it is in the set but its build-done time hasn't arrived yet.  The overlay
+        /// renderer draws these with a distinct in-progress look.</summary>
+        public bool IsPending(int cx, int cy) => IsPending(new Vector2Int(cx, cy));
+        public bool IsPending(Vector2Int cell)
+            => roofCells.TryGetValue(cell, out float done) && Time.time < done;
+
+        /// <summary>True if cell is in the roof set at all (pending OR built).</summary>
+        public bool IsDesignated(Vector2Int cell) => roofCells.ContainsKey(cell);
+
+        /// <summary>READ-ONLY enumeration of ALL roof cells (pending + built), for the
+        /// overlay renderer to draw a quad on each (it picks the look via IsRoofed /
+        /// IsPending).  Returns the live key collection; callers only enumerate.</summary>
+        public IReadOnlyCollection<Vector2Int> Roofed => roofCells.Keys;
+        public int RoofedCount => roofCells.Count;
 
         // ---- mode control ----------------------------------------------------
 
@@ -190,6 +226,14 @@ namespace MelonS.GameProto
         private void Update()
         {
             if (cam == null) cam = Camera.main;
+
+            // ---- build progression tick (RimWorld처럼 '짓는 중' → '지어진 지붕') ----
+            //  Cheap O(pending) scan: only recomputes the pending count, and only does
+            //  any work while at least one cell is still building.  No coroutine /
+            //  WaitForSeconds heartbeat — this rides the existing per-frame Update
+            //  (bug-pattern #9 firewall: no new always-on background timer).  Once
+            //  PendingCount hits 0 the early-out makes this effectively free.
+            TickBuildProgress();
 
             // Hotkey U (roof "Up") — free key (build B/F/G/T/Y, N/R, deconstruct X,
             //  mine M, plant P, stockpile O, floor-stone K, table J, lamp L, fence E,
@@ -307,20 +351,51 @@ namespace MelonS.GameProto
             return n;
         }
 
-        /// <summary>Add one cell to the roofed set.  Idempotent (a re-roof of an
-        /// already-roofed cell is a silent no-op).  Bumps Version on a real change so
-        /// the overlay renderer rebuilds.  Returns true if the cell was newly added.</summary>
+        // ---- build progression -----------------------------------------------
+
+        /// <summary>Promote any '짓는 중'(pending) cell whose build-done time has
+        /// arrived to BUILT, and keep PendingCount in sync.  Called once per frame from
+        /// Update; early-outs to (near) free once nothing is building.  When a cell
+        /// finishes we DON'T bump Version (membership unchanged) — the renderer watches
+        /// PendingCount to refresh on a pending→built transition.</summary>
+        private void TickBuildProgress()
+        {
+            if (PendingCount == 0) return;   // nothing building — effectively free
+
+            int pending = 0;
+            float now = Time.time;
+            foreach (var kv in roofCells)
+                if (now < kv.Value) pending++;   // still '짓는 중'
+
+            int finished = PendingCount - pending;   // how many promoted to BUILT this frame
+            PendingCount = pending;
+
+            if (finished > 0)
+            {
+                // One throttled blip when a batch of roof finishes building (never a
+                //  per-cell tight loop — bug-pattern #4 firewall; PlaySelect self-throttles).
+                AudioBank.Instance?.PlaySelect();
+                Debug.Log($"[Roof] {finished} cell(s) finished building → 지어진 지붕");
+            }
+        }
+
+        /// <summary>Add one cell to the roof set.  Idempotent (a re-roof of an already-
+        /// designated cell is a silent no-op).  Bumps Version on a real change so the
+        /// overlay rebuilds.  The cell starts '짓는 중'(pending) and auto-promotes to
+        /// BUILT after buildSeconds (TickBuildProgress).  Returns true if newly added.</summary>
         private bool AddRoof(Vector2Int cell, bool playBlip, bool fx)
         {
-            if (roofed.Contains(cell)) return false;   // idempotent re-roof (silent)
-            roofed.Add(cell);
+            if (roofCells.ContainsKey(cell)) return false;   // idempotent re-roof (silent)
+            float doneTime = Time.time + Mathf.Max(0f, buildSeconds);
+            roofCells.Add(cell, doneTime);
+            if (buildSeconds > 0f) PendingCount++;           // starts building
             Version++;
             if (playBlip) AudioBank.Instance?.PlaySelect();
             if (fx)
             {
                 ClickEffect.Spawn(new Vector3(cell.x + 0.5f, cell.y + 0.5f, 0f),
                     new Color(0.30f, 0.32f, 0.40f, 0.95f)); // slate shade
-                Debug.Log($"[Roof] designated cell ({cell.x},{cell.y}) as roof area");
+                Debug.Log($"[Roof] designated cell ({cell.x},{cell.y}) — 지붕 짓는 중");
             }
             return true;
         }
@@ -331,7 +406,9 @@ namespace MelonS.GameProto
         /// and the shade quad disappears.  Returns true if the cell was actually removed.</summary>
         private bool RemoveRoof(Vector2Int cell, bool playBlip, bool fx)
         {
-            if (!roofed.Remove(cell)) return false;   // wasn't roofed — silent no-op
+            if (!roofCells.TryGetValue(cell, out float done)) return false;   // wasn't designated — silent no-op
+            roofCells.Remove(cell);
+            if (Time.time < done && PendingCount > 0) PendingCount--;   // it was still building
             Version++;
             if (playBlip) AudioBank.Instance?.PlaySelect();
             if (fx)

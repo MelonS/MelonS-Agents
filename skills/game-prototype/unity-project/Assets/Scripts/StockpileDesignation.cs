@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 using MelonS.GameProto.AI;
 using MelonS.GameProto.Core;
 
@@ -16,9 +14,11 @@ namespace MelonS.GameProto
     ///       (priority Normal, 모든 종류 허용).  림월드 Architect → Zone → Stockpile.
     ///   Z3 (폐기존): 같은 drag 모드의 'dumping' preset — priority Low + Stone(chunk/refuse)
     ///       만 허용 + 회색 dim tint.  림월드 Dumping stockpile = stockpile preset.
-    ///   Z2b (아이템 필터 최소 UI): 저장존 하나를 클릭하면 🪵목재/🪨석재/🍖식량 toggle 3개가
-    ///       뜨고, 클릭으로 그 zone 의 AllowedKinds 를 즉시 바꾼다(= 운영자 '아이템 저장공간
-    ///       설정').  hauler 의 Z2 필터가 그 zone 을 곧바로 존중한다.
+    ///   (구 Z2b 아이템 필터 toolbar — 저장존 클릭 시 뜨던 🪵목재/🪨석재/🍖식량 toggle 3개 —
+    ///       는 운영자 fb 2026-06-01 로 제거되었다("정체불명 3버튼").  저장존은 spawn 시
+    ///       StockItemKind.All(전부 수용)이 기본이므로 toolbar 없이도 모든 자원을 받고,
+    ///       필터 데이터/API 는 StockpileZoneEntity.cs 에 그대로 살아 있어 hauler Z2
+    ///       필터는 계속 작동한다.)
     ///
     /// 이 매니저는 StockpileZoneEntity.cs 의 데이터/필터(Z2)와 hauler(Z2)는 건드리지 않고
     /// (그건 같은 wave 의 다른 edit), 그것들이 노출한 public API(Spawn(...,priority,allowed),
@@ -47,10 +47,10 @@ namespace MelonS.GameProto
     ///   (B/F/G/T/Y/N/R/X/M/P/K/J/H/L/E + WASD 충돌 회피).  SceneSetup hot-file budget 0.
     ///
     ///   >>> QA FLAG (scene-wiring): 저장존 마커 = 런타임 1×1 흰 sprite(priority tint),
-    ///       Z2b 토글 toolbar = 첫 Canvas 위 런타임 child 패널(raycastTarget=true 버튼),
     ///       전부 code-generated / SceneSetup 미편집.  QA 확인: Architect→Zone→저장,
     ///       3×3 드래그 → 9 StockpileZoneEntity(Normal 노랑); 폐기 드래그 → Low(회색)
-    ///       + Stone-only; 저장존 클릭 시 🪵🪨🍖 toolbar, 식량만 켜면 wood hauler 가 skip.
+    ///       + Stone-only.  (구 Z2b 필터 toolbar 는 운영자 fb 2026-06-01 로 제거됨 —
+    ///       저장존은 전부 수용(All)이 기본이라 클릭해도 UI 가 뜨지 않는다.)
     /// </summary>
     public class StockpileDesignation : MonoBehaviour
     {
@@ -62,8 +62,11 @@ namespace MelonS.GameProto
         [Header("Markers")]
         [SerializeField] private int markerSortingOrder = 2;      // below crops(3)/pawns, above ground
 
-        [Header("Z2b filter toolbar")]
-        [SerializeField] private float toolbarHideAfterSec = 0f;  // 0 = stay until deselect/mode-change
+        // 운영자 fb (2026-06-01): "저장공간에서 셀을 누르면 뜨던 3버튼(목재/석재/식량 필터
+        //  토글바, 구 Z2b)"을 제거했다 — 정체불명 UI 라 혼란만 줬다.  저장존은 spawn 시
+        //  StockItemKind.All(전부 수용)로 만들어지므로, 토글바 없이도 모든 자원을 받는 게
+        //  기본 동작이다(= 안전한 default).  필터 데이터(StockpileZoneEntity.AllowedKinds/
+        //  ToggleKind/Accepts)는 그 파일에 그대로 살아 있어 hauler Z2 필터는 정상 작동한다.
 
         // ---- runtime state ---------------------------------------------------
         public static StockpileDesignation Instance { get; private set; }
@@ -86,10 +89,6 @@ namespace MelonS.GameProto
         // Drag-rect state.
         private bool dragging;
         private Vector3 dragStartWorld;
-
-        // Z2b — the currently-selected stockpile whose filter toolbar is shown.
-        private StockpileZoneEntity selectedZone;
-        private float selectedAtTime;
 
         // ============================================================
         //  Self-bootstrap — no SceneSetup edit (GrowZoneDesignation pattern).
@@ -154,7 +153,6 @@ namespace MelonS.GameProto
                     MineDesignation.Instance.SetMode(false);
                 if (GrowZoneDesignation.Instance != null && GrowZoneDesignation.Instance.ModeActive)
                     GrowZoneDesignation.Instance.SetMode(false);
-                ClearSelectedZone();   // designating ≠ inspecting; close the Z2b toolbar
             }
             if (!on) { dragging = false; }
         }
@@ -196,16 +194,8 @@ namespace MelonS.GameProto
                 else
                     HandleDragInput();
             }
-            else
-            {
-                // Z2b — not designating: a left-click on an existing stockpile opens its
-                //  filter toolbar.  We only act when NOT over UI and no other designation
-                //  mode is active, so this never fights ClickSelector's pawn-pick (a pawn
-                //  hit returns no StockpileZoneEntity → we leave selection untouched).
-                HandleSelectClick();
-            }
-
-            UpdateToolbar();
+            // 구 Z2b 필터 토글바 제거(운영자 fb 2026-06-01): 저장존을 클릭해도 더 이상
+            //  아무 UI 도 뜨지 않는다 — 저장존은 spawn 시 전부 수용(All)이 기본.
         }
 
         // ---- left-press / drag / release → lay stockpile cell(s) -------------
@@ -277,7 +267,7 @@ namespace MelonS.GameProto
         /// StockpileZoneEntity at the cell centre and Destroys it (the zone holds no
         /// PathGrid blocker, so a plain Unity Destroy frees the cell; haulers holding it
         /// as a target self-release on their next null-check poll, the same way an erased
-        /// crop/marker is dropped).  Closes the Z2b toolbar if it was on the erased zone.
+        /// crop/marker is dropped).
         /// Idempotent: erasing an empty cell is a silent no-op.  Returns true if a zone
         /// was removed.</summary>
         public bool EraseCellAt(int cx, int cy)
@@ -286,7 +276,6 @@ namespace MelonS.GameProto
             var z = ExistingStockpileAt(center);
             if (z == null) return false;   // nothing here — silent no-op
 
-            if (selectedZone == z) ClearSelectedZone();   // don't leave a toolbar on a dead zone
             Destroy(z.gameObject);
 
             AudioBank.Instance?.PlaySelect();
@@ -394,148 +383,12 @@ namespace MelonS.GameProto
         }
 
         // ====================================================================
-        //  Z2b — minimal allowed-items filter toolbar on a selected stockpile.
+        //  (구 Z2b 필터 토글바 제거 — 운영자 fb 2026-06-01)
+        //  저장존을 클릭하면 뜨던 🪵목재/🪨석재/🍖식량 3버튼 toolbar 와 그 selection/
+        //  follow/EnsureToolbar 로직 전체를 삭제했다.  저장존은 StockpileZoneEntity.Spawn
+        //  시점에 StockItemKind.All(전부 수용)로 초기화되므로 UI 없이도 모든 자원을 받는
+        //  것이 기본 동작이고, 필터 데이터/API(AllowedKinds·ToggleKind·Accepts)는
+        //  StockpileZoneEntity.cs 에 그대로 남아 hauler Z2 필터가 계속 정상 작동한다.
         // ====================================================================
-
-        private void HandleSelectClick()
-        {
-            if (cam == null) return;
-            if (!Input.GetMouseButtonDown(0)) return;
-            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-                return;   // a click ON the toolbar shouldn't re-pick / deselect
-
-            // Don't steal clicks while another designation/build mode is active.
-            if ((BuildManager.Instance != null && BuildManager.Instance.BuildModeActive) ||
-                (DeconstructDesignation.Instance != null && DeconstructDesignation.Instance.ModeActive) ||
-                (MineDesignation.Instance != null && MineDesignation.Instance.ModeActive) ||
-                (GrowZoneDesignation.Instance != null && GrowZoneDesignation.Instance.ModeActive))
-                return;
-
-            Vector3 world = cam.ScreenToWorldPoint(Input.mousePosition);
-            var z = ExistingStockpileAt(new Vector2(world.x, world.y));
-            if (z != null)
-            {
-                if (z != selectedZone) { selectedZone = z; selectedAtTime = Time.unscaledTime; }
-            }
-            else
-            {
-                // Clicked empty/other → close the toolbar (don't disturb pawn selection).
-                ClearSelectedZone();
-            }
-        }
-
-        private void ClearSelectedZone()
-        {
-            selectedZone = null;
-            if (toolbar != null) toolbar.SetActive(false);
-        }
-
-        // --- toolbar UI (runtime, on the first Canvas; raycastTarget buttons) ---
-        private GameObject toolbar;
-        private Text[] toolbarLabels;     // 0=Wood 1=Stone 2=Food
-        private static readonly StockItemKind[] ToolbarKinds =
-            { StockItemKind.Wood, StockItemKind.Stone, StockItemKind.Food };
-        private static readonly string[] ToolbarIcons = { "🪵", "🪨", "🍖" };
-
-        private void UpdateToolbar()
-        {
-            if (selectedZone == null || selectedZone.gameObject == null)
-            {
-                if (toolbar != null && toolbar.activeSelf) toolbar.SetActive(false);
-                selectedZone = null;
-                return;
-            }
-            if (toolbarHideAfterSec > 0f && Time.unscaledTime - selectedAtTime > toolbarHideAfterSec)
-            {
-                ClearSelectedZone();
-                return;
-            }
-
-            EnsureToolbar();
-            if (toolbar == null) return;   // no Canvas yet
-
-            // Follow the selected zone in screen space (above the cell).
-            if (cam == null) cam = Camera.main;
-            if (cam != null)
-            {
-                Vector3 sp = cam.WorldToScreenPoint(
-                    (Vector3)selectedZone.ZoneCenter + new Vector3(0f, 0.7f, 0f));
-                var trt = toolbar.GetComponent<RectTransform>();
-                if (trt != null) trt.position = sp;
-            }
-            toolbar.SetActive(true);
-
-            // Lit = allowed; dim = forbidden — reflects AllowedKinds live.
-            for (int i = 0; i < ToolbarKinds.Length; i++)
-            {
-                if (toolbarLabels[i] == null) continue;
-                bool on = selectedZone.Accepts(ToolbarKinds[i]);
-                toolbarLabels[i].color = on
-                    ? MelonS.GameProto.Core.UITheme.TextPrimary
-                    : new Color(0.45f, 0.42f, 0.38f, 0.6f);
-            }
-        }
-
-        private void EnsureToolbar()
-        {
-            if (toolbar != null) return;
-            var canvas = Object.FindFirstObjectByType<Canvas>();
-            if (canvas == null) return;
-
-            toolbar = new GameObject("StockpileFilterToolbar");
-            toolbar.transform.SetParent(canvas.transform, false);
-            var trt = toolbar.AddComponent<RectTransform>();
-            trt.sizeDelta = new Vector2(132, 38);
-            trt.pivot = new Vector2(0.5f, 0f);
-
-            // Bordered backdrop matching the rest of the UI; backdrop is non-raycast,
-            //  the three buttons below carry their own raycast fill.
-            var bg = toolbar.AddComponent<Image>();
-            bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
-            bg.raycastTarget = false;
-
-            toolbarLabels = new Text[ToolbarKinds.Length];
-            for (int i = 0; i < ToolbarKinds.Length; i++)
-            {
-                int idx = i;   // closure capture
-                var btnGo = new GameObject($"Kind_{ToolbarKinds[i]}");
-                btnGo.transform.SetParent(toolbar.transform, false);
-                var brt = btnGo.AddComponent<RectTransform>();
-                brt.sizeDelta = new Vector2(40, 32);
-                brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0.5f);
-                brt.anchoredPosition = new Vector2((i - 1) * 42f, 0f);
-
-                var fill = btnGo.AddComponent<Image>();
-                fill.color = MelonS.GameProto.Core.UITheme.BtnInactiveBg;
-                // raycast-button fill MUST be hittable (mandate: fill.raycastTarget=true).
-                fill.raycastTarget = true;
-
-                var btn = btnGo.AddComponent<Button>();
-                btn.targetGraphic = fill;
-                btn.onClick.AddListener(() =>
-                {
-                    if (selectedZone != null)
-                    {
-                        selectedZone.ToggleKind(ToolbarKinds[idx]);
-                        AudioBank.Instance?.PlaySelect();   // 1회/클릭, throttle 안전
-                    }
-                });
-
-                var lblGo = new GameObject("Icon");
-                lblGo.transform.SetParent(btnGo.transform, false);
-                var lbl = lblGo.AddComponent<Text>();
-                lbl.text = ToolbarIcons[i];
-                lbl.font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(20);
-                lbl.fontSize = 18;
-                lbl.alignment = TextAnchor.MiddleCenter;
-                lbl.raycastTarget = false;
-                lbl.color = MelonS.GameProto.Core.UITheme.TextPrimary;
-                var lrt = lblGo.GetComponent<RectTransform>();
-                lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
-                lrt.sizeDelta = Vector2.zero; lrt.anchoredPosition = Vector2.zero;
-                toolbarLabels[i] = lbl;
-            }
-            toolbar.SetActive(false);
-        }
     }
 }

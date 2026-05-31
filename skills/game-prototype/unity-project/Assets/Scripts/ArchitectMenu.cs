@@ -114,6 +114,30 @@ namespace MelonS.GameProto
                 new OrderItem("지붕 영역 (U)",
                     () => { if (RoofDesignation.Instance != null) RoofDesignation.Instance.SetMode(true); },
                     () => RoofDesignation.Instance != null && RoofDesignation.Instance.ModeActive),
+                // ERASE wave (운영자 fb "창고/다른 영역/건축물 제거 기능 필요") — RimWorld
+                //   의 각 Zone 도구는 영역 추가뿐 아니라 드래그 삭제를 갖는다.  방금
+                //   추가된 RoofDesignation/GrowZoneDesignation/StockpileDesignation 의
+                //   SetEraseMode(true) 공개 API 로 그 삭제 모드에 진입하는 항목을
+                //   노출한다.  SetEraseMode 는 내부적으로 다른 designation/빌드 모드를
+                //   전부 끄므로(SetModeInternal) 별도 "다른 모드 끄기" 배선 불필요.
+                //   isActive 는 해당 도구가 켜진 채 EraseMode 일 때만 ▣ 로 반영(추가
+                //   모드와 구분).  buildable/기존 OrderItem 과 동일한 MakeBtn onClick
+                //   플러밍 — Zone 카테고리에 항목 추가만, 다른 구조 미변경.
+                new OrderItem("경작 영역 제거",
+                    () => { if (GrowZoneDesignation.Instance != null) GrowZoneDesignation.Instance.SetEraseMode(true); },
+                    () => GrowZoneDesignation.Instance != null
+                          && GrowZoneDesignation.Instance.ModeActive
+                          && GrowZoneDesignation.Instance.EraseMode),
+                new OrderItem("저장/폐기 영역 제거",
+                    () => { if (StockpileDesignation.Instance != null) StockpileDesignation.Instance.SetEraseMode(true); },
+                    () => StockpileDesignation.Instance != null
+                          && StockpileDesignation.Instance.ModeActive
+                          && StockpileDesignation.Instance.EraseMode),
+                new OrderItem("지붕 영역 제거",
+                    () => { if (RoofDesignation.Instance != null) RoofDesignation.Instance.SetEraseMode(true); },
+                    () => RoofDesignation.Instance != null
+                          && RoofDesignation.Instance.ModeActive
+                          && RoofDesignation.Instance.EraseMode),
             },
         };
 

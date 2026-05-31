@@ -52,10 +52,16 @@ namespace MelonS.GameProto
     {
         // ---- tunables (SerializeField so designer can tune day-1 feel) -------
         [Header("Shade look")]
-        // alpha 0.45 (was 0.32): the shade must be CLEARLY visible in a daytime
-        //  screenshot over the lit floor — 0.32 read too faint against the bright grass
-        //  when the night overlay alpha is ~0 (operator: 인게임에서 눈에 보이는 그늘).
-        [SerializeField] private Color shadeTint = new Color(0.05f, 0.06f, 0.11f, 0.45f); // soft indoor shade
+        // 운영자 fb (2026-06-01) "지붕 영역을 정해줘도 지붕건설을 안함" — 핵심 불만은 '지정해도
+        //  아무 변화가 안 보인다'.  그래서 BUILT(지어진 지붕)는 분명히 보이는 '진짜 지붕 타일'로,
+        //  PENDING(짓는 중)은 옅은 공사중 음영으로, 두 상태를 시각적으로 확실히 다르게 그린다.
+        //
+        //  builtTint: 완성된 지붕 — 불투명에 가까운 진한 슬레이트(alpha 0.78)로 '실내가 덮였다'가
+        //   확실히 보이게.  RimWorld 의 thick/thin roof 처럼 바닥 위를 분명히 덮는 느낌.
+        [SerializeField] private Color builtTint = new Color(0.10f, 0.11f, 0.16f, 0.78f);  // 지어진 지붕(불투명 슬레이트)
+        //  pendingTint: 짓는 중 — 옅고 약간 푸른 공사중 음영(alpha 0.30)으로 '지금 짓고 있다'가
+        //   보이되 완성과 헷갈리지 않게.
+        [SerializeField] private Color pendingTint = new Color(0.20f, 0.30f, 0.45f, 0.30f); // 짓는 중(옅은 공사 음영)
         [SerializeField] private int shadeSortingOrder = 24;   // above pawns/structures, below night overlay(25)
         // Match NightOverlay's sorting LAYER explicitly ("Default").  A SpriteRenderer
         //  created at runtime defaults to the "Default" layer, but pin it so the
@@ -72,8 +78,12 @@ namespace MelonS.GameProto
         private GameObject quadRoot;
 
         // Last roof Version we rebuilt for.  A cheap per-frame compare; a full rebuild
-        //  runs ONLY when this differs from RoofDesignation.Version.
+        //  runs ONLY when this differs from RoofDesignation.Version (membership change)
+        //  OR when lastPending differs (a '짓는 중'→'지어진 지붕' promotion, which does
+        //  not change membership and so doesn't bump Version — we watch PendingCount to
+        //  catch the look-swap).
         private int lastVersion = -1;
+        private int lastPending = -1;
 
         // ============================================================
         //  Self-bootstrap — no SceneSetup edit (NightOverlay/designation pattern).
@@ -116,15 +126,18 @@ namespace MelonS.GameProto
             if (roof == null)
             {
                 // No designation manager yet (or destroyed) — hide all quads.
-                if (lastVersion != -1) { DeactivateAll(); lastVersion = -1; }
+                if (lastVersion != -1) { DeactivateAll(); lastVersion = -1; lastPending = -1; }
                 return;
             }
 
-            // Rebuild ONLY when the roofed set actually changed (cheap Version compare).
-            if (roof.Version != lastVersion)
+            // Rebuild when membership changed (Version) OR when a '짓는 중'→'지어진 지붕'
+            //  promotion happened (PendingCount dropped without a Version bump).  Both
+            //  are cheap int compares per frame.
+            if (roof.Version != lastVersion || roof.PendingCount != lastPending)
             {
                 Rebuild(roof);
                 lastVersion = roof.Version;
+                lastPending = roof.PendingCount;
             }
         }
 
@@ -138,7 +151,9 @@ namespace MelonS.GameProto
             {
                 var sr = GetQuad(i);
                 sr.transform.position = new Vector3(cell.x + 0.5f, cell.y + 0.5f, 0f);
-                sr.color = shadeTint;
+                // BUILT(지어진 지붕)는 진한 불투명 슬레이트, PENDING(짓는 중)은 옅은 공사 음영.
+                //  IsRoofed/IsPending 는 Time.time 기반이라 이 두 갈래가 곧 시각 차이가 된다.
+                sr.color = roof.IsRoofed(cell) ? builtTint : pendingTint;
                 sr.sortingLayerName = shadeSortingLayer;
                 sr.sortingOrder = shadeSortingOrder;
                 if (!sr.gameObject.activeSelf) sr.gameObject.SetActive(true);
@@ -165,7 +180,7 @@ namespace MelonS.GameProto
                 go.transform.SetParent(quadRoot.transform, false);
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = ShadeSprite();
-                sr.color = shadeTint;
+                sr.color = builtTint;   // overwritten per-cell in Rebuild (pending vs built)
                 sr.sortingLayerName = shadeSortingLayer;   // pin layer (visibility firewall)
                 sr.sortingOrder = shadeSortingOrder;
                 go.SetActive(false);
