@@ -75,8 +75,10 @@ namespace MelonS.GameProto
             if (!IsRipe) return 0;
             growth = 0f;
             RefreshVisual();
-            if (ResourceManager.Instance != null)
-                ResourceManager.Instance.AddFood(harvestFood);
+            // #215 운영자 fb "먹거리(자원) 순간이동" — 즉시 AddFood(텔레포트) 대신 물리 식량
+            //  더미를 그 자리에 떨어뜨린다.  hauler 가 저장고로 운반해야 카운터에 적립되고,
+            //  배고픈 림은 그 자리서 직접 집어먹는다(PawnNeeds 물리 섭취 경로 1).
+            MeatPileEntity.Spawn(transform.position, harvestFood, MeatPileEntity.SharedSprite);
             AudioBank.Instance?.PlayHarvest();  // Day 80
             return harvestFood;
         }

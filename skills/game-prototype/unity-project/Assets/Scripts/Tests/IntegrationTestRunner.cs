@@ -647,9 +647,15 @@ namespace MelonS.GameProto.Tests
             cs.SimulateSelect(pawns[0]);
             cs.SimulateRightClick(new Vector2(crop.transform.position.x, crop.transform.position.y));
             yield return null;
+            // #215 운영자 fb "먹거리 순간이동": 수확은 더 이상 즉시 food 를 적립하지 않고 물리
+            //  식량 더미를 작물 자리에 떨어뜨린다(hauler 가 운반해야 적립).  따라서 (a) 더미가
+            //  생겼고 (b) food 가 즉시 오르지 '않았음'(텔레포트 없음)을 검증한다.
+            MeatPileEntity pile = null;
+            foreach (var mp in Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None))
+                if (Vector2.Distance(mp.transform.position, crop.transform.position) < 1.5f) { pile = mp; break; }
             int endFood = rm.food;
-            Assert(endFood > startFood,
-                $"crop 수확: food {startFood}->{endFood} (>0 expected, crop.IsRipe={crop.IsRipe})");
+            Assert(pile != null && endFood == startFood,
+                $"crop 수확 물리드롭: pile={pile!=null} food {startFood}->{endFood} (즉시적립 없어야 = 무텔레포트)");
         }
 
         /// <summary>I21: drafted pawn → wolf 강제 spawn → 우클릭 = attack.

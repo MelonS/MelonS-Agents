@@ -32,12 +32,52 @@ namespace MelonS.GameProto
             if (Time.time - spawnTime > lifetimeSec) Destroy(gameObject);
         }
 
+        // #215 운영자 fb "캐면 순간이동" — StoneVein 이 sprite null 일 때 즉시 AddStone
+        //  하던 텔레포트를 없애려면, chunk 가 sprite 없이도 항상 보여야 한다.  WoodPile
+        //  의 EnsureSprite 패턴을 그대로 복제 — null 이면 코드에서 회색 돌덩이를 생성.
+        private static Sprite _fallbackSprite;
+        public static Sprite EnsureSprite(Sprite candidate)
+        {
+            if (candidate != null) return candidate;
+            if (_fallbackSprite != null) return _fallbackSprite;
+            var loaded = Resources.Load<Sprite>("Sprites/stone_chunk");
+            if (loaded != null) { _fallbackSprite = loaded; return _fallbackSprite; }
+            const int W = 14, H = 10;
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            var clear = new Color(0f, 0f, 0f, 0f);
+            var rock    = new Color(0.50f, 0.50f, 0.54f, 1f);   // 회색 돌
+            var rockLit = new Color(0.66f, 0.66f, 0.70f, 1f);   // 윗면 하이라이트
+            var rockDk  = new Color(0.34f, 0.34f, 0.38f, 1f);   // 그림자
+            var px = new Color[W * H];
+            for (int i = 0; i < px.Length; i++) px[i] = clear;
+            void Blob(int cx, int cy, int rx, int ry)
+            {
+                for (int y = 0; y < H; y++)
+                    for (int x = 0; x < W; x++)
+                    {
+                        float dx = (x - cx) / (float)rx, dy = (y - cy) / (float)ry;
+                        if (dx * dx + dy * dy > 1f) continue;
+                        bool top = y >= cy + ry - 1;
+                        bool bot = y <= cy - ry + 1;
+                        px[y * W + x] = top ? rockLit : (bot ? rockDk : rock);
+                    }
+            }
+            Blob(5, 4, 4, 3);
+            Blob(9, 5, 4, 3);
+            tex.SetPixels(px);
+            tex.Apply();
+            _fallbackSprite = Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 16f);
+            _fallbackSprite.name = "StoneChunk_RuntimeFallback";
+            return _fallbackSprite;
+        }
+
         public static StoneChunkEntity Spawn(Vector3 pos, int amount, Sprite sprite)
         {
             var go = new GameObject($"StoneChunk_{amount}");
             go.transform.position = new Vector3(pos.x, pos.y, 0f);
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
+            sr.sprite = EnsureSprite(sprite);  // #215 - null 이면 코드 기본 sprite (항상 가시)
             sr.sortingOrder = 7;
             var col = go.AddComponent<BoxCollider2D>();
             col.size = new Vector2(0.8f, 0.6f);

@@ -1385,9 +1385,20 @@ namespace MelonS.GameProto.Tests
             yield return new WaitForSeconds(0.1f);
             int gained = crop.Harvest();
             yield return new WaitForSeconds(0.1f);
+            // #215 운영자 fb: Harvest() now drops a PHYSICAL food pile (no instant credit
+            //  = no "순간이동").  Verify the pile spawned + no teleport, then simulate the
+            //  hauler delivering it to a stockpile so the food counter rises.
+            MeatPileEntity hp = null;
+            foreach (var mp in Object.FindObjectsOfType<MeatPileEntity>())
+                if (Vector2.Distance(mp.transform.position, (Vector2)cropGo.transform.position) < 1.5f)
+                { hp = mp; break; }
+            bool pileSpawned = hp != null;                 // capture BEFORE Destroy (Unity null-overload)
+            bool noTeleport  = rm.food == startFood;        // #215 - 즉시 적립(텔레포트) 없어야 함
+            if (hp != null) { int amt = hp.Food; Object.Destroy(hp.gameObject); rm.AddFood(amt); }
+            yield return new WaitForSeconds(0.1f);
             int endFood = rm.food;
-            Assert(gained > 0 && endFood > startFood,
-                $"harvest gained={gained}, food {startFood} → {endFood}");
+            Assert(gained > 0 && pileSpawned && noTeleport && endFood > startFood,
+                $"harvest gained={gained}, pile={pileSpawned}, food {startFood} → {endFood}");
         }
 
         // ---- Helpers ----

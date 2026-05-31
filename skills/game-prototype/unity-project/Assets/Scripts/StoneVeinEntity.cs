@@ -87,17 +87,13 @@ namespace MelonS.GameProto
             {
                 // 운영자 fb v4 - 림월드 정상 흐름: 즉시 +N 안 함. chunk 만 drop.
                 int yieldN = Random.Range(stoneYieldMin, stoneYieldMax + 1);
-                if (StoneChunkSprite != null)
+                // #215 운영자 fb "캐면 순간이동" — StoneChunkEntity.EnsureSprite 가 sprite
+                //  null 이어도 코드 기본 돌덩이를 보장하므로, 즉시 AddStone 폴백(텔레포트)을
+                //  완전히 제거하고 항상 물리 chunk 를 떨어뜨린다(hauler 가 운반해야 적립).
+                for (int i = 0; i < yieldN; i++)
                 {
-                    for (int i = 0; i < yieldN; i++)
-                    {
-                        Vector3 off = new Vector3(Random.Range(-0.3f, 0.3f), Random.Range(-0.3f, 0.3f), 0);
-                        StoneChunkEntity.Spawn(transform.position + off, 1, StoneChunkSprite);
-                    }
-                }
-                else
-                {
-                    ResourceManager.Instance?.AddStone(yieldN);
+                    Vector3 off = new Vector3(Random.Range(-0.3f, 0.3f), Random.Range(-0.3f, 0.3f), 0);
+                    StoneChunkEntity.Spawn(transform.position + off, 1, StoneChunkSprite);
                 }
                 Destroy(gameObject);
                 return true;

@@ -34,12 +34,51 @@ namespace MelonS.GameProto
             if (Time.time - spawnTime > lifetimeSec) Destroy(gameObject);
         }
 
+        // #215 운영자 fb "먹거리 순간이동" — CropEntity 수확이 물리 식량 더미를 떨어뜨릴
+        //  때 sprite 가 null 이어도 보이도록 WoodPile.EnsureSprite 패턴 복제 (붉은 식량 더미).
+        private static Sprite _fallbackSprite;
+        public static Sprite EnsureSprite(Sprite candidate)
+        {
+            if (candidate != null) return candidate;
+            if (_fallbackSprite != null) return _fallbackSprite;
+            var loaded = Resources.Load<Sprite>("Sprites/meat_pile");
+            if (loaded != null) { _fallbackSprite = loaded; return _fallbackSprite; }
+            const int W = 14, H = 10;
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            var clear = new Color(0f, 0f, 0f, 0f);
+            var food    = new Color(0.78f, 0.34f, 0.26f, 1f);   // 붉은 식량
+            var foodLit = new Color(0.90f, 0.50f, 0.38f, 1f);
+            var foodDk  = new Color(0.55f, 0.22f, 0.18f, 1f);
+            var px = new Color[W * H];
+            for (int i = 0; i < px.Length; i++) px[i] = clear;
+            void Blob(int cx, int cy, int rx, int ry)
+            {
+                for (int y = 0; y < H; y++)
+                    for (int x = 0; x < W; x++)
+                    {
+                        float dx = (x - cx) / (float)rx, dy = (y - cy) / (float)ry;
+                        if (dx * dx + dy * dy > 1f) continue;
+                        bool top = y >= cy + ry - 1;
+                        bool bot = y <= cy - ry + 1;
+                        px[y * W + x] = top ? foodLit : (bot ? foodDk : food);
+                    }
+            }
+            Blob(5, 4, 4, 3);
+            Blob(9, 5, 4, 3);
+            tex.SetPixels(px);
+            tex.Apply();
+            _fallbackSprite = Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 16f);
+            _fallbackSprite.name = "MeatPile_RuntimeFallback";
+            return _fallbackSprite;
+        }
+
         public static MeatPileEntity Spawn(Vector3 pos, int amount, Sprite sprite)
         {
             var go = new GameObject($"MeatPile_{amount}");
             go.transform.position = new Vector3(pos.x, pos.y, 0f);
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite = sprite;
+            sr.sprite = EnsureSprite(sprite);  // #215 - null 이면 코드 기본 sprite (항상 가시)
             sr.sortingOrder = 7;
             var col = go.AddComponent<BoxCollider2D>();
             col.size = new Vector2(0.8f, 0.6f);

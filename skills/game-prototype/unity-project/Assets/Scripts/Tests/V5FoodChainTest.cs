@@ -145,13 +145,32 @@ namespace MelonS.GameProto.Tests
 
             bool step2_ripe = crop.IsRipe;
 
-            // ---- Step 3 — harvest: crop.Harvest() returns harvestFood (default 8) ----
-            // Harvest() calls ResourceManager.Instance.AddFood(harvestFood).
+            // ---- Step 3 — harvest: crop.Harvest() drops a PHYSICAL food pile ----
+            // #215 운영자 fb "먹거리 순간이동": Harvest() no longer instant-credits rm.food
+            //  (that WAS the teleport).  It spawns a MeatPileEntity at the crop that a
+            //  hauler must physically carry to a stockpile before rm.food rises.  Assert
+            //  (a) the pile appeared, (b) NO instant credit happened, then simulate the
+            //  haul delivery so the cook step can continue exercising the chain.
             int gained = crop.Harvest();
             yield return null;
 
+            MeatPileEntity harvestPile = null;
+            foreach (var mp in Object.FindObjectsOfType<MeatPileEntity>())
+                if (Vector2.Distance(mp.transform.position, new Vector2(200f, 0f)) < 1.5f)
+                { harvestPile = mp; break; }
+            bool pileSpawned = gained > 0 && harvestPile != null;
+            bool noTeleport  = rm.food == foodBefore;   // #215 - 즉시 적립(텔레포트) 없어야 함
+
+            if (harvestPile != null)   // simulate hauler delivering pile → physical credit
+            {
+                int amt = harvestPile.Food;
+                Object.Destroy(harvestPile.gameObject);
+                rm.AddFood(amt);
+            }
+            yield return null;
+
             int foodAfterHarvest = rm.food;
-            bool step3_harvested = gained > 0 && foodAfterHarvest > foodBefore;
+            bool step3_harvested = pileSpawned && noTeleport && foodAfterHarvest > foodBefore;
 
             // ---- Step 4 — cook: stove.CookOne() converts 3 raw food → 1 meal ----
             // G6: CanCookOne() requires food >= 3; harvest deposited 8 so this is satisfied.
