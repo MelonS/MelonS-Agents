@@ -635,10 +635,27 @@ namespace MelonS.GameProto
             gameObject.SetActive(false);
         }
 
+        // #241b 자재 부족 dim 을 live 로 — 메뉴 열린 동안 wood/stone 이 바뀌면(채집/소비)
+        //  RefreshContent 로 affordability 재평가.  매 frame 아니라 값 변화 시에만 rebuild
+        //  (자원은 자주 안 바뀌어 flicker/비용 무시 가능).  RimWorld 도 live 로 회색 갱신.
+        private int _lastWood = int.MinValue;
+        private int _lastStone = int.MinValue;
+
         private void Update()
         {
             // F8 림월드 Architect 단축키
             if (Input.GetKeyDown(KeyCode.F8)) Toggle();
+
+            if (isOpen && ResourceManager.Instance != null)
+            {
+                int w = ResourceManager.Instance.wood;
+                int s = ResourceManager.Instance.stone;
+                if (w != _lastWood || s != _lastStone)
+                {
+                    _lastWood = w; _lastStone = s;
+                    RefreshContent();
+                }
+            }
         }
     }
 }
