@@ -357,7 +357,11 @@ namespace MelonS.GameProto
             rt.pivot = new Vector2(0f, 0.5f);
             // operator fb #1 added 2 categories (Orders+Zone) → taller panel so the
             //  10 collapsed headers + one expanded category's items fit without clip.
-            rt.sizeDelta = new Vector2(280, 560);
+            // 시각버그 fix (운영자: 항목 텍스트 오른쪽 잘림) — 280→320 으로 폭을 넓혀
+            //  "저장/폐기 영역 제거" / "자동문 (목재 6)" 같은 긴 라벨이 16px 들여쓰기 +
+            //  26px 아이콘 inset 이후에도 우측 여백까지 다 들어가게.  (텍스트 영역은
+            //  MakeBtn 에서 horizontalOverflow=Overflow 로도 잘림 방지.)
+            rt.sizeDelta = new Vector2(320, 560);
             rt.anchoredPosition = new Vector2(12, 0);
 
             // #UI-restyle U7 — same MakeBorderedPanel the control bar / inspector use:
@@ -642,10 +646,16 @@ namespace MelonS.GameProto
             t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleLeft;
             t.raycastTarget = false;
+            // 시각버그 fix (운영자: 항목 텍스트 오른쪽 잘림) — 라벨은 한 줄짜리이므로
+            //  가로 overflow 를 Overflow 로 둬 rect 폭이 살짝 모자라도 글자가 잘리거나
+            //  엉뚱하게 줄바꿈되지 않게(폭 확장과 병행).  세로는 한 줄 고정.
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.verticalOverflow = VerticalWrapMode.Truncate;
             var trt = txtGo.GetComponent<RectTransform>();
             trt.anchorMin = Vector2.zero;
             trt.anchorMax = Vector2.one;
-            trt.sizeDelta = new Vector2(-(labelLeft + 8), 0);
+            // 텍스트 영역을 아이콘 우측부터 패널 오른쪽 끝까지 충분히 — 우측 여백 6px.
+            trt.sizeDelta = new Vector2(-(labelLeft + 6), 0);
             trt.anchoredPosition = new Vector2(labelLeft, 0);
 
             // ── v3 audit: hover tooltip (자재/비용) on the row ────────────────

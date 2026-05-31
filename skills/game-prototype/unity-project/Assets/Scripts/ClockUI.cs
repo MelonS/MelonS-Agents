@@ -139,10 +139,14 @@ namespace MelonS.GameProto
             int year = StartYear + d0 / DaysPerYear;
             int quadrumIndex = (d0 / DaysPerQuadrum) % QuadrumsPerYear; // 0..3
             int dayInQuadrum = (d0 % DaysPerQuadrum) + 1;               // 1..15
-            int quadrumNumber = quadrumIndex + 1;                       // 1..4
+            string season = SeasonNames[quadrumIndex];                  // 봄/여름/가을/겨울
 
-            dateText.text = $"{year}년 {quadrumNumber}분기 {dayInQuadrum}일";
-            seasonText.text = SeasonNames[quadrumIndex];
+            // RimWorld 세계관 정합: 회계용어 "N분기" 대신 계절명을 날짜 전면에.
+            //  예) "봄 1일, 5500년" — 계절을 첫머리에 둬 RimWorld 의 "Spring 1st, 5500"
+            //  감성과 맞춘다.  연도는 뒤에 붙여 보조 정보로.
+            dateText.text = $"{season} {dayInQuadrum}일, {year}년";
+            // 보조줄: 계절을 라벨로 단독 표기 (날짜줄과 톤 분리; 시각/계절 표시 유지).
+            seasonText.text = $"{season}철";
         }
 
         /// <summary>24시간 Hour/Minute → "6:08 AM" / "12:00 PM" 형식.</summary>

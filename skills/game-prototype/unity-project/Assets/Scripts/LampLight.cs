@@ -44,25 +44,11 @@ namespace MelonS.GameProto
     public class LampLight : MonoBehaviour
     {
         // ------------------------------------------------------------------ //
-        //  Day/night 알파 커브 — LampGlowDriver / NightOverlay 와 동기화        //
-        //  (밤에 1.0, 낮에 0.0).  빛의 세기를 이 커브로 변조.                  //
+        //  Day/night 커브는 공용 NightCurve(LampEntity.cs) 로 통합(2026-06-01). //
+        //  이전엔 드라이버마다 동일 스톱 배열을 복붙해 드리프트 위험이 있었다.  //
+        //  이제 NightOverlay / LampGlowDriver / LampLight / LampEntity 가 같은   //
+        //  곡선을 읽어 점등·소등 위상이 항상 일치한다.                          //
         // ------------------------------------------------------------------ //
-
-        private struct AlphaStop { public float t; public float a; }
-
-        private static readonly AlphaStop[] NightAlphaStops = new AlphaStop[]
-        {
-            new AlphaStop { t = 0.00f, a = 1.00f },  // 00:00 깊은 밤
-            new AlphaStop { t = 0.17f, a = 1.00f },  // 04:00 깊은 밤
-            new AlphaStop { t = 0.23f, a = 0.70f },  // 05:30 새벽
-            new AlphaStop { t = 0.27f, a = 0.20f },  // 06:30 일출
-            new AlphaStop { t = 0.33f, a = 0.00f },  // 08:00 한낮
-            new AlphaStop { t = 0.71f, a = 0.00f },  // 17:00 한낮
-            new AlphaStop { t = 0.77f, a = 0.30f },  // 18:30 일몰
-            new AlphaStop { t = 0.83f, a = 0.65f },  // 20:00 황혼
-            new AlphaStop { t = 0.92f, a = 0.90f },  // 22:00 밤
-            new AlphaStop { t = 1.00f, a = 1.00f },  // 24:00 깊은 밤
-        };
 
         // ------------------------------------------------------------------ //
         //  외형 튜너블 (SerializeField 대신 const — 이 드라이버는 절차 생성    //
@@ -242,19 +228,9 @@ namespace MelonS.GameProto
         private static float ComputeNightAlpha()
         {
             if (GameClock.Instance == null) return 0f;
-
-            float t = Mathf.Repeat(GameClock.Instance.DayProgress, 1f);
-            for (int i = 0; i < NightAlphaStops.Length - 1; i++)
-            {
-                float t0 = NightAlphaStops[i].t;
-                float t1 = NightAlphaStops[i + 1].t;
-                if (t >= t0 && t <= t1)
-                {
-                    float local = Mathf.InverseLerp(t0, t1, t);
-                    return Mathf.Lerp(NightAlphaStops[i].a, NightAlphaStops[i + 1].a, local);
-                }
-            }
-            return NightAlphaStops[0].a;
+            // 공용 NightCurve: 한낮 0 … 한밤 1.  IsLit 게이트가 임계 미만이면 어차피
+            // 0 으로 꺼지므로, 여기선 밝기 변조만 담당.
+            return NightCurve.Sample(GameClock.Instance.DayProgress);
         }
 
         // ------------------------------------------------------------------ //
