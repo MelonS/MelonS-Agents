@@ -77,10 +77,15 @@ namespace MelonS.GameProto
         }
 
         public static MeatPileEntity Spawn(Vector3 pos, int amount, Sprite sprite)
-            => Spawn(pos, amount, sprite, "고기");
+            => Spawn(pos, amount, sprite, "고기", 90f);
 
-        // #219 - displayName 으로 고기/농작물/베리 구분 (raw 식량 공용 더미).
         public static MeatPileEntity Spawn(Vector3 pos, int amount, Sprite sprite, string displayName)
+            => Spawn(pos, amount, sprite, displayName, 90f);
+
+        // #219/#223 - displayName 으로 고기/농작물/베리 구분 + 종류별 수명.  raw 고기는 빨리
+        //  상하지만(90s) 작물(쌀)/베리는 오래 간다.  #223 운영자 fb 후속(식량 빈약): 작물
+        //  더미가 운반 전에 90s 만에 상해 식량 적립이 불안정했던 것 → 작물/베리 수명 ↑.
+        public static MeatPileEntity Spawn(Vector3 pos, int amount, Sprite sprite, string displayName, float lifetime)
         {
             var go = new GameObject($"FoodPile_{displayName}_{amount}");
             go.transform.position = new Vector3(pos.x, pos.y, 0f);
@@ -93,6 +98,7 @@ namespace MelonS.GameProto
             var m = go.AddComponent<MeatPileEntity>();
             m.SetFood(amount);
             m.DisplayName = displayName;
+            m.lifetimeSec = lifetime;
             return m;
         }
     }

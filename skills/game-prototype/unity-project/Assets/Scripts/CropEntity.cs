@@ -81,7 +81,7 @@ namespace MelonS.GameProto
             // #219 운영자 fb "작물 채집하면 고기?" — 작물은 고기가 아니라 농작물 식량 더미를
             //  떨어뜨린다.  익은 작물 sprite(spriteRipe) + 표시명 "농작물" 로 구분.
             MeatPileEntity.Spawn(transform.position, harvestFood,
-                spriteRipe != null ? spriteRipe : MeatPileEntity.SharedSprite, "농작물");
+                spriteRipe != null ? spriteRipe : MeatPileEntity.SharedSprite, "농작물", 600f);  // #223 쌀은 오래 감
             AudioBank.Instance?.PlayHarvest();  // Day 80
             return harvestFood;
         }

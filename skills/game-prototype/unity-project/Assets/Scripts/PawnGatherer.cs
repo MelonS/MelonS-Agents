@@ -117,7 +117,7 @@ namespace MelonS.GameProto
                         // #215 운영자 fb "자원 순간이동" — 즉시 AddFood(텔레포트) 대신 물리 식량
                         //  더미를 덤불 자리에 떨어뜨린다.  hauler 가 저장고로 운반해야 적립되고,
                         //  배고픈 림은 그 자리서 직접 집어먹는다(crop/wood/stone 과 동일 흐름).
-                        MeatPileEntity.Spawn(targetBush.transform.position, got, MeatPileEntity.SharedSprite);
+                        MeatPileEntity.Spawn(targetBush.transform.position, got, MeatPileEntity.SharedSprite, "산딸기", 300f);  // #223 베리 라벨+수명
                         // Day 19: Gather XP per berry (skills 위에서 GetComponent 이미 됨)
                         if (skills != null) skills.AddXP(SkillKind.Gather, 8f * got);
                     }
