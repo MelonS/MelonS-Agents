@@ -57,7 +57,11 @@ namespace MelonS.GameProto
         private System.Collections.IEnumerator AutoStartCoroutine()
         {
             yield return new WaitForSeconds(0.5f);
-            OnStartClicked();
+            // #217 - 실제 버튼 클릭 경로를 그대로 재현(persistent+runtime 리스너 모두 발동)해야
+            //  운영자가 겪는 2중 로드 같은 버그를 QA 가 잡는다.  OnStartClicked 직접 호출은
+            //  단일 발동이라 그 버그를 가렸었다.
+            if (startButton != null) startButton.onClick.Invoke();
+            else OnStartClicked();
         }
 
         private void WireListeners()
@@ -80,9 +84,21 @@ namespace MelonS.GameProto
             }
         }
 
+        // #217 운영자 fb (실제 로그 증거): "OnStartClicked — loading scene: Game" 가 2번
+        //  찍힘 = Game 씬 2중 로드.  원인: 시작 버튼에 (a) 씬에 baked 된 persistent
+        //  UnityEvent 리스너 + (b) WireListeners 가 매번 Add 하는 runtime 리스너 가 둘 다
+        //  걸려 클릭 1회에 OnStartClicked 가 2회 발동.  2중 로드는 GameManager/GameClock/
+        //  ResourceManager 싱글톤을 중복 생성 → dedup 자가파괴로 GameClock.Instance=null →
+        //  ClockUI 가 06:00 에 영구 고정 + HUD 가 빈 ResourceManager 를 읽어 목재 0 (운반은
+        //  되는데 카운터/시계가 죽음).  -autostart 경로는 OnStartClicked 1회라 멀쩡했다.
+        //  FIX: 로드 1회 가드 (몇 개의 리스너가 발동하든 씬은 한 번만 로드).
+        private bool _loading;
+
         // public so UnityEventTools can target it as a persistent listener
         public void OnStartClicked()
         {
+            if (_loading) { Debug.Log("[MainMenu] OnStartClicked 중복 무시 (이미 로딩 중)"); return; }
+            _loading = true;
             Debug.Log("[MainMenu] OnStartClicked — loading scene: " + gameSceneName);
             SceneManager.LoadScene(gameSceneName);
         }
