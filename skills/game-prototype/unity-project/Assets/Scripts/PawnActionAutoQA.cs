@@ -62,14 +62,13 @@ namespace MelonS.GameProto
                 var tree = FindNearest<TreeEntity>(t => t != null && !t.IsDestroyed)
                            ?? ForceSpawn<TreeEntity>(pawn.transform.position + new Vector3(2.5f, 0, 0), "QA_Tree");
                 if (tree == null) return ("no tree spawn", false);
-                // #231 운영자 fb '우클릭 벌목 안됨' — 정상 림의 실제 경로는 컨텍스트 메뉴('벌목
-                //  우선')다.  과거 테스트는 SimulateRightClick(직접 Block2)만 봐서 메뉴 경로를
-                //  검증 못 했다.  실제 메뉴 경로로 검증한다.
-                bool invoked = cs.SimulateContextMenuAction(tree.transform.position, "벌목");
-                if (!invoked) return ("context menu '벌목' 항목 못 찾음/실행 안 됨", false);
-                var chopper = pawn.GetComponent<PawnChopper>();
-                if (chopper == null) return ("PawnChopper 컴포넌트 없음", false);
-                if (chopper.Target != tree) return ($"벌목 명령 후 chopper.Target != tree (got {chopper.Target})", false);
+                // #232 운영자 fb '우클릭 벌목 안됨' — 실제 우클릭 경로(SimulateRightClick, 이제
+                //  Update 와 동일하게 나무→TreeChopDesignation.TryMark)로 검증한다.  우클릭이
+                //  나무를 '벌목 지정'(ChopTarget 마커 부착)했는지 확인 = RimWorld 처럼 나무 위에
+                //  표시가 생기고 림이 dispatch 됨.  (메뉴 시뮬 아닌 실제 우클릭 경로 = test==real.)
+                cs.SimulateRightClick(tree.transform.position);
+                if (tree.GetComponent<ChopTarget>() == null)
+                    return ("우클릭 후 ChopTarget 마커 없음 (벌목 지정 안 됨)", false);
                 return ("", true);
             }, Result);
 

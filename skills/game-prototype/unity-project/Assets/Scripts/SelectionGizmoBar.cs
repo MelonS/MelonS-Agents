@@ -100,6 +100,11 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
+            // #232 운영자 fb "가운데 징집/취소 UI 저건 머냐" — 이 bottom-center Draft/Cancel
+            //  바는 GuiControlBar 의 [징집] 버튼과 중복 + 화면 가운데 잡동사니 + 클릭 가로챌
+            //  위험.  비활성화(GuiControlBar 의 징집(R) 으로 일원화).  코드는 보존(되돌리기 쉽게).
+            return;
+#pragma warning disable CS0162
             // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
             GameSceneGate.RunWhenGameScene(() =>
             {
@@ -108,6 +113,7 @@ namespace MelonS.GameProto
                 Object.DontDestroyOnLoad(go);
                 go.AddComponent<SelectionGizmoBar>();
                     });
+#pragma warning restore CS0162
         }
 
         private static SelectionGizmoBar FindExisting()

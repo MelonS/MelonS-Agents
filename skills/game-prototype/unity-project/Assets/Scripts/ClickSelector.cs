@@ -104,6 +104,23 @@ namespace MelonS.GameProto
                 Vector3 mw = mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mw.z = 0f;
                 Collider2D ehit = PickEntityAt(mw);
+                // #232 운영자 fb "우클릭 벌목 안됨 + RimWorld 처럼 나무 위에 표시" — 나무/광맥
+                //  우클릭은 컨텍스트 메뉴(버튼 클릭이 실제로 안 먹던 문제) 대신 *바로 지정*한다.
+                //  TreeChopDesignation/MineDesignation.TryMark → 🪓/⛏ 마커가 그 자리에 생기고
+                //  idle 림이 dispatch 되어 작업(I43 로 검증된 신뢰 경로).  메뉴 의존 제거.
+                if (ehit != null)
+                {
+                    if (ehit.GetComponent<TreeEntity>() != null && TreeChopDesignation.Instance != null)
+                    {
+                        if (TreeChopDesignation.Instance.TryMark(ehit.gameObject) != null)
+                        { Debug.Log("[Chop] 우클릭 벌목 지정"); return; }
+                    }
+                    if (ehit.GetComponent<StoneVeinEntity>() != null && MineDesignation.Instance != null)
+                    {
+                        if (MineDesignation.Instance.TryMark(ehit.gameObject) != null)
+                        { Debug.Log("[Mine] 우클릭 채광 지정"); return; }
+                    }
+                }
                 if (ehit != null && ContextMenuUI.Instance != null)
                 {
                     var items = BuildContextMenu(ehit, mw);
@@ -486,6 +503,15 @@ namespace MelonS.GameProto
                 if (mvD != null) mvD.SetTarget(worldPos);
                 currentSelection.ManualMoveUntil = Time.time + 15f;
                 return;
+            }
+            // #232 - 실제 Update 우클릭과 동일: 나무/광맥은 바로 지정(마커+dispatch).  테스트
+            //  시뮬과 실제 핸들러가 분기돼 '검증됐는데 실제 안 됨' 나던 것 방지(test==real).
+            if (rhit != null)
+            {
+                if (rhit.GetComponent<TreeEntity>() != null && TreeChopDesignation.Instance != null
+                    && TreeChopDesignation.Instance.TryMark(rhit.gameObject) != null) return;
+                if (rhit.GetComponent<StoneVeinEntity>() != null && MineDesignation.Instance != null
+                    && MineDesignation.Instance.TryMark(rhit.gameObject) != null) return;
             }
             // 비-drafted: blueprint/bed/trader/animal/crop/bush/pile/tree/empty
             TraderEntity trader = (rhit != null) ? rhit.GetComponent<TraderEntity>() : null;

@@ -500,11 +500,21 @@ namespace MelonS.GameProto.Tests
             cs.SimulateSelect(bestPawn);
             cs.SimulateRightClick(new Vector2(freshTreePos.x, freshTreePos.y));
             yield return null;
-            var chopper = bestPawn.GetComponent<PawnChopper>();
-            bool taskSet = chopper != null && chopper.HasTask;
+            // #232 RimWorld 정합 새 모델: 우클릭 나무 = 벌목 '지정'(ChopTarget 마커 부착 = RimWorld
+            //  처럼 나무 위 표시) → TreeChopDesignation 이 idle 림을 dispatch.  즉시 chopper task 가
+            //  아니라 (a) 마커가 붙고 (b) 곧(throttle 0.5s) 림이 배정되는지 검증.
+            bool marked = freshTree != null && freshTree.GetComponent<ChopTarget>() != null;
+            bool dispatched = false;
+            float t0 = Time.time;
+            while (Time.time - t0 < 4f && !dispatched)
+            {
+                foreach (var p in pawns)
+                { var ch = p.GetComponent<PawnChopper>(); if (ch != null && ch.Target == freshTree) { dispatched = true; break; } }
+                yield return null;
+            }
             Destroy(tGo);  // cleanup
-            Assert(taskSet,
-                $"chop task set={taskSet} (fresh tree at {freshTreePos}, pawn={bestPawn.PawnName})");
+            Assert(marked && dispatched,
+                $"우클릭 벌목 지정: 마커={marked} dispatch={dispatched} (fresh tree at {freshTreePos})");
         }
 
         /// <summary>I17: GUI 벽 버튼 → 빌드모드 → reflection 으로 BuildManager.TryPlace 호출
