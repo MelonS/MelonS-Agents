@@ -90,11 +90,16 @@ namespace MelonS.GameProto
                 string found = WhatIsAt(new Vector2(cx + 0.5f, cy + 0.5f), mode);
                 Debug.Log($"[AUDIT] {idx:00} {mode} @ ({cx},{cy}) → 완성결과: {found}");
 
+                // #253 sprite 품질 검사 가능하도록 해당 건물로 카메라 클로즈업 후 캡처
+                //  (이전엔 줌아웃 전경이라 건물이 20px 점으로 보여 sprite 판단 불가 — 도구 결함).
+                if (cam != null) { cam.orthographicSize = 2.2f; cam.transform.position = new Vector3(cx + 0.5f, cy + 0.5f, cam.transform.position.z); }
+                yield return null; yield return null;
                 ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"audit_{idx:00}_{mode}.png"));
                 yield return null; yield return null;
             }
 
-            // 전체 한 장 (모든 건축물 한눈에).
+            // 전체 한 장 (모든 건축물 한눈에) — 다시 와이드로.
+            if (cam != null) { cam.orthographicSize = 9f; cam.transform.position = new Vector3(6f, 3f, cam.transform.position.z); }
             yield return new WaitForSeconds(0.3f);
             ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, "audit_ALL.png"));
             yield return new WaitForSeconds(0.5f);
