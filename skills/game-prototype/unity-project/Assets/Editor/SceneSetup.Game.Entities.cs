@@ -190,12 +190,34 @@ namespace MelonS.GameProto.EditorTools
             int target = 45;  // #220 "맵에 석재 없음" 12→20.  #235 90x90 면적 ×2.25 → 20→45.
             System.Random sr = new System.Random(31415);
             var positions = new System.Collections.Generic.List<Vector2>();
+            // #250 운영자 fb "광맥은 그룹을 이루는 형태로 서로 모여있어야" — 균일 산개 대신 ~7개
+            //  클러스터 중심을 잡고 각 중심 주위 작은 반경에 광맥을 모아 배치(RimWorld 광맥처럼).
+            var centers = new System.Collections.Generic.List<Vector2>();
+            int ctries = 0;
+            while (centers.Count < 7 && ctries < 300)
+            {
+                ctries++;
+                int ccx = sr.Next(-(half-5), half-4);
+                int ccy = sr.Next(-(half-5), half-4);
+                if (Mathf.Abs(ccx) < 6 && Mathf.Abs(ccy) < 4) continue;  // spawn 넓게 회피
+                var cc = new Vector2(ccx, ccy);
+                bool bad = false;
+                for (int li = 0; li < layout.lakeCenters.Length; li++)
+                    if ((cc - layout.lakeCenters[li]).magnitude < layout.lakeRadii[li] + 3f) { bad = true; break; }
+                if (bad) continue;
+                foreach (var ex in centers) if (Vector2.Distance(ex, cc) < 9f) { bad = true; break; }  // 클러스터 간 간격
+                if (bad) continue;
+                centers.Add(cc);
+            }
+            if (centers.Count == 0) centers.Add(new Vector2(Mathf.RoundToInt(half * 0.5f), Mathf.RoundToInt(half * 0.5f)));
             int tries = 0;
-            while (placed < target && tries < 900)  // #235 target 45 도달 위해 400→900
+            while (placed < target && tries < 1500)
             {
                 tries++;
-                int sx = sr.Next(-(half-2), half-1);
-                int sy = sr.Next(-(half-2), half-1);
+                var center = centers[sr.Next(0, centers.Count)];
+                int sx = Mathf.RoundToInt(center.x) + sr.Next(-3, 4);   // 중심 ±3 반경에 모음
+                int sy = Mathf.RoundToInt(center.y) + sr.Next(-3, 4);
+                if (Mathf.Abs(sx) > half - 1 || Mathf.Abs(sy) > half - 1) continue;
                 Vector2 sp = new Vector2(sx, sy);
                 // pawn spawn 회피
                 if (Mathf.Abs(sx) < 4 && Mathf.Abs(sy) < 2) continue;
@@ -208,9 +230,10 @@ namespace MelonS.GameProto.EditorTools
                 foreach (var tp in treePositions)
                     if (Vector2.Distance(tp, sp) < 1.8f) { skip = true; break; }
                 if (skip) continue;
-                // 기존 광맥 회피
+                // 기존 광맥 회피 — #250 클러스터 내 밀집 위해 2.0→1.4 (서로 가깝게 모임,
+                //  단 HasWalkableNeighbor 로 채굴 가능성은 보장).
                 foreach (var ex in positions)
-                    if (Vector2.Distance(ex, sp) < 2.0f) { skip = true; break; }
+                    if (Vector2.Distance(ex, sp) < 1.4f) { skip = true; break; }
                 if (skip) continue;
                 // #237 도달 가능성 보장 — 광맥은 자기 셀을 막으므로 pawn 은 인접 cell 에 서서
                 //  캔다.  4 cardinal 이웃이 모두 물/바위/맵밖이면 'no free adjacent stand cell'
