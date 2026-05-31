@@ -253,7 +253,10 @@ namespace MelonS.GameProto
         private static string IconKey(BuildManager.Mode m) => m switch
         {
             BuildManager.Mode.Wall            => "wall_wood",
-            BuildManager.Mode.WallStone       => "wall_wood",   // same silhouette; tinted grey by swatch fallback
+            // 시각버그 fix: 석재 벽은 갈색 wall_wood 를 회색 tint 하면 muddy brown 으로
+            //  보여 목재 벽과 구분이 안 됐다 → 실제 회색 석재 sprite(stone_floor)로 교체해
+            //  목재(갈색 판자) vs 석재(회색 블록)가 한눈에 구분되게.
+            BuildManager.Mode.WallStone       => "stone_floor",
             BuildManager.Mode.Door            => "door_wood",
             BuildManager.Mode.Autodoor        => "autodoor",
             BuildManager.Mode.Fence           => "fence",
@@ -304,15 +307,31 @@ namespace MelonS.GameProto
                 ? new Color(0.62f, 0.62f, 0.66f, 1f)   // stone grey
                 : new Color(0.55f, 0.38f, 0.20f, 1f);  // wood brown
 
-        // Cache loaded icon sprites (Resources.Load each frame would be wasteful;
-        //   we build the row once per RefreshContent so this is small, but caching
-        //   keeps repeated category-toggles allocation-free).
+        // Cache loaded icon sprites (load-once; we build the row once per
+        //   RefreshContent so this is small, but caching keeps repeated
+        //   category-toggles allocation-free).
+        //
+        // ── 시각버그 fix (회색 플레이스홀더) ──────────────────────────────────
+        //   이전 버전은 Resources.Load<Sprite>("Sprites/"+key) 로 아이콘을 찾았는데,
+        //   실제 건물 sprite(wall_wood/door_wood/bed_wood/stove ...)는 전부
+        //   Assets/Sprites/ 아래에 있고 Resources 폴더엔 없다 → 모든 key 가 null →
+        //   모든 행이 MaterialColor swatch(대부분 목재 갈색)로만 그려져 구분 불가였다.
+        //   BuildManager.EnsureLampSprite 와 동일한 정공법으로, Editor/batchmode
+        //   에선 AssetDatabase 로 Assets/Sprites/<key>.png 를 직접 로드한다.
+        //   (이 스크립트는 Assembly-CSharp 라 #if UNITY_EDITOR 로 UnityEditor 참조
+        //    가능; 런타임 빌드에선 swatch fallback 으로 자재색 구분 유지 → 헤드리스 안전.)
         private readonly Dictionary<string, Sprite> _iconCache = new();
         private Sprite LoadIcon(string key)
         {
             if (string.IsNullOrEmpty(key)) return null;
             if (_iconCache.TryGetValue(key, out var cached)) return cached;
-            var s = Resources.Load<Sprite>("Sprites/" + key);
+            Sprite s = null;
+#if UNITY_EDITOR
+            // Editor/batchmode(헤드리스 QA 포함): 실제 authored PNG 를 그대로 사용.
+            s = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/" + key + ".png");
+#endif
+            // 런타임 빌드 보강(폴백): 혹시 Resources 로 옮겨둔 sprite 가 있으면 사용.
+            if (s == null) s = Resources.Load<Sprite>("Sprites/" + key);
             _iconCache[key] = s;   // may be null — cached so we don't re-probe
             return s;
         }
@@ -497,7 +516,17 @@ namespace MelonS.GameProto
                         // v3 audit: icon + 자재/비용 tooltip per buildable row.
                         //   Authored sprite when present; stone reuses the wall
                         //   silhouette tinted grey, otherwise white (use as-authored).
-                        Sprite icon = LoadIcon(IconKey(mode));
+                        // 시각버그 fix: 이제 석재 항목도 실제 회색 stone sprite 를 쓰므로
+                        //  authored sprite 는 그대로(흰색=as-authored) 렌더 — 추가 회색 tint
+                        //  불필요(이중 회색화 방지).  sprite 가 없을 때만 자재색 swatch
+                        //  (목재=갈색 / 석재=회색)로 구분.
+                        // #255 플레이어 빌드에서도 아이콘이 나오게 — BuildManager 런타임 sprite
+                        //  (AssetDatabase 는 에디터 전용이라 플레이어에선 null→회색 swatch 였음).
+                        Sprite icon = BuildManager.Instance != null
+                            ? BuildManager.Instance.SpriteForMode(mode)
+                            : LoadIcon(IconKey(mode));
+                        // 석재 buildable 은 wood sprite 를 회색 tint 해 구분(SpriteForMode 가
+                        //  WallStone 등에 wood sprite 를 줄 수 있음).  목재는 as-authored.
                         Color tint = icon != null
                             ? (PaysWithStone(mode) ? new Color(0.72f, 0.72f, 0.78f, 1f) : Color.white)
                             : MaterialColor(mode);   // null sprite → solid material swatch
@@ -581,7 +610,8 @@ namespace MelonS.GameProto
             float labelLeft = 8f;
             if (icon != null || iconTint.HasValue)
             {
-                const float IconBox = 22f;
+                // 시각버그 fix: 아이콘을 22→26px 로 키워 실제 sprite 가 또렷이 보이게.
+                const float IconBox = 26f;
                 var iconGo = new GameObject("Icon");
                 iconGo.transform.SetParent(go.transform, false);
                 var iimg = iconGo.AddComponent<Image>();
@@ -605,7 +635,9 @@ namespace MelonS.GameProto
             var t = txtGo.AddComponent<Text>();
             t.text = label;
             t.font = font;
-            t.fontSize = 16;
+            // 시각버그 fix: 행 텍스트 가독성 — 14→16 은 이미 적용돼 있었으나 운영자가
+            //  여전히 작다 보고 → 17px 로 한 단계 더 키워 어떤 건물인지 명확히 읽히게.
+            t.fontSize = 17;
             t.fontStyle = FontStyle.Bold;
             t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleLeft;

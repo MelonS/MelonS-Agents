@@ -255,27 +255,31 @@ namespace MelonS.GameProto
             if (ghostRenderer == null) return;
             if (m == Mode.Off) { ghostRenderer.enabled = false; return; }
             ghostRenderer.enabled = true;
-            ghostRenderer.sprite = m switch
-            {
-                Mode.Wall  => wallSprite,
-                Mode.Floor => floorSprite,
-                Mode.Door  => doorSprite,
-                Mode.Stove => stoveSprite,
-                Mode.Bed   => bedSprite,
-                Mode.BedSleepingSpot => bedSprite,  // #154
-                Mode.BedFine => bedSprite,  // #154
-                Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
-                Mode.FloorStone => EnsureFloorStoneSprite(),  // W-M4-05 #21
-                Mode.TableChair => EnsureTableChairSprite(),  // W-M4-06 #20
-                Mode.Fence => EnsureFenceSprite(),            // W-M6-02 B3
-                Mode.FenceGate => EnsureFenceGateSprite(),    // W-M6-02 B3
-                Mode.Barricade => EnsureBarricadeSprite(),    // W-M6-03 B4
-                Mode.Autodoor  => EnsureAutodoorSprite(),     // W-M6-04 B5
-                _ => wallSprite,
-            };
+            ghostRenderer.sprite = SpriteForMode(m);
             // 바닥류(목재/석재)는 ghost sortingOrder 1 (지면 위), 나머지 구조물은 20.
             ghostRenderer.sortingOrder = (m == Mode.Floor || m == Mode.FloorStone) ? 1 : 20;
         }
+
+        // #255 ArchitectMenu 아이콘이 플레이어 빌드에서도 실제 sprite 를 쓰도록 런타임 접근 공개
+        //  (이전 ArchitectMenu 는 AssetDatabase=에디터전용 으로 로드해 플레이어에선 회색 swatch 뿐).
+        public Sprite SpriteForMode(Mode m) => m switch
+        {
+            Mode.Wall  => wallSprite,
+            Mode.Floor => floorSprite,
+            Mode.Door  => doorSprite,
+            Mode.Stove => stoveSprite,
+            Mode.Bed   => bedSprite,
+            Mode.BedSleepingSpot => bedSprite,
+            Mode.BedFine => bedSprite,
+            Mode.Lamp  => EnsureLampSprite(),
+            Mode.FloorStone => EnsureFloorStoneSprite(),
+            Mode.TableChair => EnsureTableChairSprite(),
+            Mode.Fence => EnsureFenceSprite(),
+            Mode.FenceGate => EnsureFenceGateSprite(),
+            Mode.Barricade => EnsureBarricadeSprite(),
+            Mode.Autodoor  => EnsureAutodoorSprite(),
+            _ => wallSprite,
+        };
 
         private int CostFor(Mode m) => m switch
         {
