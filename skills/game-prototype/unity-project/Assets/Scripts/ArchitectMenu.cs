@@ -70,9 +70,14 @@ namespace MelonS.GameProto
 
         private static readonly Dictionary<string, OrderItem[]> OrderCategories = new()
         {
-            // Orders (지시) — RimWorld Orders tab: Mine + Deconstruct.
+            // Orders (지시) — RimWorld Orders tab: Chop + Mine + Deconstruct.
             ["Orders (지시)"] = new[]
             {
+                // #231 RimWorld 정합 — 벌목 drag 지정(채광과 대칭).  STEP2 로 자동벌목을 끊은
+                //  뒤 벌목 수단이 우클릭뿐이라 불편했던 것 해결: drag 로 나무 여러 그루 지정.
+                new OrderItem("벌목 (C)",
+                    () => { if (TreeChopDesignation.Instance != null) TreeChopDesignation.Instance.SetMode(true); },
+                    () => TreeChopDesignation.Instance != null && TreeChopDesignation.Instance.ModeActive),
                 new OrderItem("채광 (M)",
                     () => { if (MineDesignation.Instance != null) MineDesignation.Instance.SetMode(true); },
                     () => MineDesignation.Instance != null && MineDesignation.Instance.ModeActive),

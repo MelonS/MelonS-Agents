@@ -119,6 +119,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I41-build-placement-validation", TestI41_BuildPlacementValidation);
             // #201 운영자 fb - 벽이 림 위에 완성되면 림을 밀어냄 (안 갇힘) + 이후 이동 가능
             yield return RunOne("I42-wall-completes-on-pawn-ejects", TestI42_WallCompletesOnPawnEjects);
+            // #231 RimWorld 벌목 지정 — drag-designate 한 나무가 idle 림에게 dispatch 되어 벌목됨
+            yield return RunOne("I43-chop-designation-dispatch", TestI43_ChopDesignation);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1840,6 +1842,30 @@ namespace MelonS.GameProto.Tests
                 + $"offWallCell={offWallCell}(after={afterCell}) landedWalkable={landedWalkable} "
                 + $"pathAccepted={pathAccepted} canMove={canMove}(moved={moved:F2}) (벽 완성 시 림 밀려남 + 이동 가능)");
             Debug.Log($"[Int] I42 detail: before={beforeCell} after={afterCell} cellBlocked={cellNowBlocked} offWall={offWallCell} canMove={canMove} moved={moved:F2}");
+        }
+
+        /// <summary>I43: RimWorld 벌목 지정 — 나무 force-spawn → TreeChopDesignation 으로 지정
+        ///  → idle 림이 dispatch 되어 walk+chop → 나무 쓰러짐(IsDestroyed) 검증.</summary>
+        private IEnumerator TestI43_ChopDesignation()
+        {
+            yield return null;
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            if (pawns.Length == 0) { Assert(false, "pawn 없음"); yield break; }
+            if (TreeChopDesignation.Instance == null) { Assert(false, "TreeChopDesignation.Instance null"); yield break; }
+            // 나무 force-spawn (pawn 근처 빈 칸)
+            var tGo = new GameObject("QA_ChopTree");
+            tGo.transform.position = pawns[0].transform.position + new Vector3(2.5f, 0f, 0f);
+            tGo.AddComponent<SpriteRenderer>();
+            tGo.AddComponent<BoxCollider2D>().size = Vector2.one;
+            var tree = tGo.AddComponent<TreeEntity>();
+            yield return null;
+            var ct = TreeChopDesignation.Instance.MarkWorld(tree.transform.position);
+            if (ct == null) { Assert(false, "벌목 지정 실패 (MarkWorld null — 나무 감지 못함)"); yield break; }
+            // dispatch(0.5s) + 림 walk + chop 대기.
+            float t0 = Time.time;
+            while (Time.time - t0 < 15f && tree != null && !tree.IsDestroyed) yield return null;
+            Assert(tree == null || tree.IsDestroyed,
+                $"벌목 지정 후 15s 내 나무 벌목 안 됨 (dispatch/chop 실패) destroyed={(tree==null||tree.IsDestroyed)}");
         }
 
         private void FinalizeReport()

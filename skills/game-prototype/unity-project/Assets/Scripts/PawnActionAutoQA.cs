@@ -59,12 +59,17 @@ namespace MelonS.GameProto
             yield return RunCase("Tree chop", () => {
                 pawn.SetDrafted(false);
                 cs.SimulateSelect(pawn);
-                var tree = FindNearest<TreeEntity>(t => t != null && !t.IsDestroyed);
+                var tree = FindNearest<TreeEntity>(t => t != null && !t.IsDestroyed)
+                           ?? ForceSpawn<TreeEntity>(pawn.transform.position + new Vector3(2.5f, 0, 0), "QA_Tree");
                 if (tree == null) return ("no tree spawn", false);
-                cs.SimulateRightClick(tree.transform.position);
+                // #231 운영자 fb '우클릭 벌목 안됨' — 정상 림의 실제 경로는 컨텍스트 메뉴('벌목
+                //  우선')다.  과거 테스트는 SimulateRightClick(직접 Block2)만 봐서 메뉴 경로를
+                //  검증 못 했다.  실제 메뉴 경로로 검증한다.
+                bool invoked = cs.SimulateContextMenuAction(tree.transform.position, "벌목");
+                if (!invoked) return ("context menu '벌목' 항목 못 찾음/실행 안 됨", false);
                 var chopper = pawn.GetComponent<PawnChopper>();
                 if (chopper == null) return ("PawnChopper 컴포넌트 없음", false);
-                if (chopper.Target != tree) return ($"chopper.Target != tree (got {chopper.Target})", false);
+                if (chopper.Target != tree) return ($"벌목 명령 후 chopper.Target != tree (got {chopper.Target})", false);
                 return ("", true);
             }, Result);
 
@@ -75,9 +80,11 @@ namespace MelonS.GameProto
                 var crop = FindNearest<CropEntity>(c => c != null && c.IsRipe);
                 if (crop == null)
                 {
-                    // ripe crop 없으면 가장 가까운 crop 의 growth 강제 1.0 (reflection)
-                    var any = FindNearest<CropEntity>(c => c != null);
-                    if (any == null) return ("crop 자체 없음", false);
+                    // ripe crop 없으면 가장 가까운 crop 의 growth 강제 1.0 (reflection).
+                    //  #231 맨땅 시작이라 작물 없으면 force-spawn (QA artifact 방지).
+                    var any = FindNearest<CropEntity>(c => c != null)
+                              ?? ForceSpawn<CropEntity>(pawn.transform.position + new Vector3(2f, 0, 0), "QA_Crop");
+                    if (any == null) return ("crop 자체 없음/스폰실패", false);
                     var f = typeof(CropEntity).GetField("growth",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     if (f == null) return ("CropEntity.growth field 못 찾음", false);
