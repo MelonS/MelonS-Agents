@@ -325,7 +325,29 @@ namespace MelonS.GameProto
                 MelonS.GameProto.Core.UITheme.PadOuter);
 
             BuildMenu();
-            gameObject.SetActive(false);
+
+            // QA 전용: -open-architect [-arch-cat "<카테고리>"] 면 시작부터 메뉴를 열어둔다
+            //  (AutoScreenshotter 결정적 캡처용; 비활성 오브젝트에선 Start 코루틴이 안 돌아서
+            //   Awake 에서 직접 처리).  게임 동작엔 영향 없음 — 평소엔 SetActive(false).
+            var args = System.Environment.GetCommandLineArgs();
+            bool autoOpen = false;
+            string cat = "Structure (구조)";
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == "-open-architect") autoOpen = true;
+                if (args[i] == "-arch-cat" && i + 1 < args.Length) cat = args[i + 1];
+            }
+            if (autoOpen)
+            {
+                activeCategory = cat;
+                isOpen = true;
+                gameObject.SetActive(true);
+                RefreshContent();
+            }
+            else
+            {
+                gameObject.SetActive(false);
+            }
         }
 
         private void BuildMenu()
@@ -438,9 +460,16 @@ namespace MelonS.GameProto
                 // 펼친 buildables (active 카테고리만)
                 if (activeCategory == catName)
                 {
+                    // #241 자재 부족 항목은 RimWorld 처럼 dim 표시 (석재 0 일 때 석재 항목 회색 등).
+                    //  스냅샷(메뉴 열 때 기준) — 클릭은 막지 않음(RimWorld 도 자재 없이 청사진을
+                    //  깔 수 있고 pawn 이 모이면 짓는다; ghost 빨강 + placement 가 별도 처리).
+                    int curWood = ResourceManager.Instance != null ? ResourceManager.Instance.wood : 0;
+                    int curStone = ResourceManager.Instance != null ? ResourceManager.Instance.stone : 0;
                     foreach (var (mode, label, cost) in items)
                     {
                         var bcap = mode;  // closure capture
+                        bool affordable = cost <= 0
+                            || (PaysWithStone(mode) ? curStone : curWood) >= cost;
                         // v3 audit: icon + 자재/비용 tooltip per buildable row.
                         //   Authored sprite when present; stone reuses the wall
                         //   silhouette tinted grey, otherwise white (use as-authored).
@@ -448,9 +477,15 @@ namespace MelonS.GameProto
                         Color tint = icon != null
                             ? (PaysWithStone(mode) ? new Color(0.72f, 0.72f, 0.78f, 1f) : Color.white)
                             : MaterialColor(mode);   // null sprite → solid material swatch
-                        string tip = BuildableTooltip(mode, cost);
-                        MakeBtn(contentRoot.transform, label,
-                            new Vector2(16, -y), MelonS.GameProto.Core.UITheme.BtnInactiveBg,
+                        // #241 자재 부족 시 row 배경/아이콘/텍스트 dim.
+                        Color rowBg = affordable
+                            ? MelonS.GameProto.Core.UITheme.BtnInactiveBg
+                            : new Color(0.11f, 0.09f, 0.08f, 0.55f);
+                        if (!affordable) tint = new Color(tint.r, tint.g, tint.b, 0.4f);
+                        string tip = affordable ? BuildableTooltip(mode, cost)
+                            : BuildableTooltip(mode, cost) + "  — 자재 부족";
+                        var rowGo = MakeBtn(contentRoot.transform, label,
+                            new Vector2(16, -y), rowBg,
                             () => {
                                 if (BuildManager.Instance != null)
                                 {
@@ -461,6 +496,11 @@ namespace MelonS.GameProto
                                 }
                             },
                             icon: icon, iconTint: tint, tooltip: tip);
+                        if (!affordable)
+                        {
+                            var rt2 = rowGo.GetComponentInChildren<Text>();
+                            if (rt2 != null) rt2.color = new Color(0.55f, 0.50f, 0.45f, 1f);  // 회색 텍스트
+                        }
                         y += 32;
                     }
                 }
