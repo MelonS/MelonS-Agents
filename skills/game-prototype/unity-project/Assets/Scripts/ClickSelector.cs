@@ -351,7 +351,12 @@ namespace MelonS.GameProto
             }
             if (crop != null && crop.IsRipe)
             {
-                list.Add(("🌾 수확", () => crop.Harvest()));
+                var cropCap = crop;
+                list.Add(("🌾 수확 우선", () => {
+                    // #226 일관성 — 다른 메뉴 항목처럼 림이 걸어가서 수확 (과거엔 즉시 Harvest).
+                    var hv = pawn.GetComponent<PawnHarvester>();
+                    if (hv != null) { ClearAllWorkTasks(pawn); hv.SetCropTarget(cropCap); pawn.ManualMoveUntil = Time.time + 10f; }
+                }));
             }
             if (animal != null && !animal.IsDead)
             {

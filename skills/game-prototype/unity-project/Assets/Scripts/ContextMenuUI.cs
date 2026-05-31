@@ -131,15 +131,15 @@ namespace MelonS.GameProto
             // open 직후 같은 frame 의 left-click 으로 닫지 않게 0.1s grace
             if (!IsOpen) return;
             if (Time.unscaledTime - openTime < 0.1f) return;
-            // 메뉴 밖 click = close
+            // 메뉴 밖 click = close.  ★#226 운영자 fb "오브젝트 우클릭 기능 전혀 동작 안 함"
+            //  root cause: 항목 버튼 onClick 은 마우스 UP 에 발동하는데, 과거 코드는 overMenu 를
+            //  항상 false 로 둬 마우스 DOWN 에 무조건 Close → 버튼이 비활성화되어 UP 의 onClick 이
+            //  영영 안 발동 = 메뉴 항목 전혀 실행 안 됨.  FIX: 클릭이 메뉴 패널 위면 닫지 않는다
+            //  (버튼이 down→up 을 받아 onClick 실행 후 스스로 Close).  패널 밖 클릭만 닫는다.
             if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
             {
-                bool overMenu = false;
-                if (EventSystem.current != null)
-                {
-                    // 단순화 - menu 영역 안 check 안 하고 닫음 + 클릭 처리 우선
-                    //  Button.onClick 이 먼저 fire 후 이 Update 가 fire (메뉴 닫힘).
-                }
+                bool overMenu = RectTransformUtility.RectangleContainsScreenPoint(
+                    panelRt, Input.mousePosition, null);
                 if (!overMenu) Close();
             }
         }
