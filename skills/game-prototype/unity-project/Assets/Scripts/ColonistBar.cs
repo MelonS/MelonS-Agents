@@ -30,6 +30,9 @@ namespace MelonS.GameProto
         private const float Gap = 6f;
         private const float TopMargin = 8f;   // 화면 상단에서의 여백
         private const float BarH = 5f;         // HP/mood 바 두께
+        // #240 초상화 (RimWorld 콜로니스트 바 시그니처) — entry 좌측 정사각, pawn body sprite.
+        private const float PortraitW = 46f;   // 좌측 초상화 폭(정사각)
+        private const float PortraitPad = 4f;  // 초상화 ↔ 이름/바 간격
 
         // ── 색 (UITheme 통일) ──────────────────────────────────────────────────────
         private static readonly Color EntryBg   = MelonS.GameProto.Core.UITheme.PanelBgLight;
@@ -177,6 +180,34 @@ namespace MelonS.GameProto
             //  클릭 raycast 를 받게 다시 켠다 (이게 없으면 entry 클릭이 안 먹음).
             border.raycastTarget = true;
 
+            // ── 초상화 (좌측 정사각, pawn body sprite) — RimWorld 콜로니스트 바 시그니처 ──
+            var portraitGo = new GameObject("Portrait");
+            portraitGo.transform.SetParent(contentRt, false);
+            var portraitBg = portraitGo.AddComponent<Image>();
+            portraitBg.color = new Color(0.08f, 0.06f, 0.05f, 0.95f);  // 어두운 액자 배경
+            portraitBg.raycastTarget = false;
+            var pRt = portraitBg.GetComponent<RectTransform>();
+            pRt.anchorMin = new Vector2(0f, 0f);
+            pRt.anchorMax = new Vector2(0f, 1f);   // 좌측 가장자리, 높이 stretch
+            pRt.offsetMin = new Vector2(0f, 0f);
+            pRt.offsetMax = new Vector2(PortraitW, 0f);  // 폭 = PortraitW
+            // pawn body sprite 를 액자 안에 표시 (preserveAspect — 픽셀 비율 유지).
+            var psr = pawn.GetComponentInChildren<SpriteRenderer>();
+            if (psr != null && psr.sprite != null)
+            {
+                var portSpriteGo = new GameObject("PortraitSprite");
+                portSpriteGo.transform.SetParent(pRt, false);
+                var portImg = portSpriteGo.AddComponent<Image>();
+                portImg.sprite = psr.sprite;
+                portImg.preserveAspect = true;
+                portImg.raycastTarget = false;
+                var psRt = portImg.GetComponent<RectTransform>();
+                psRt.anchorMin = Vector2.zero;
+                psRt.anchorMax = Vector2.one;
+                psRt.offsetMin = new Vector2(3f, 3f);
+                psRt.offsetMax = new Vector2(-3f, -3f);
+            }
+
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = fillImg;
             var cb = btn.colors;
@@ -206,7 +237,7 @@ namespace MelonS.GameProto
             var nameRt = nameTxt.GetComponent<RectTransform>();
             nameRt.anchorMin = new Vector2(0f, 0.42f);
             nameRt.anchorMax = new Vector2(1f, 1f);
-            nameRt.offsetMin = Vector2.zero;
+            nameRt.offsetMin = new Vector2(PortraitW + PortraitPad, 0f);  // #240 초상화 우측으로 inset
             nameRt.offsetMax = Vector2.zero;
 
             // ── HP 바 (이름 아래) ──
@@ -241,7 +272,8 @@ namespace MelonS.GameProto
         private (Image, RectTransform) MakeMiniBar(RectTransform parent, float anchorY,
             Color trackCol, Color fillCol)
         {
-            float pad = 6f;  // 좌우 여백
+            float pad = 6f;  // 우측 여백
+            float leftPad = PortraitW + PortraitPad;  // #240 좌측은 초상화 우측부터 시작
             // track
             var trackGo = new GameObject("BarTrack");
             trackGo.transform.SetParent(parent, false);
@@ -251,7 +283,7 @@ namespace MelonS.GameProto
             trackRt.anchorMin = new Vector2(0f, anchorY);
             trackRt.anchorMax = new Vector2(1f, anchorY);
             trackRt.pivot = new Vector2(0.5f, 0.5f);
-            trackRt.offsetMin = new Vector2(pad, -BarH * 0.5f);
+            trackRt.offsetMin = new Vector2(leftPad, -BarH * 0.5f);
             trackRt.offsetMax = new Vector2(-pad, BarH * 0.5f);
 
             // fill (track 의 왼쪽 정렬, width = 비율 * trackWidth — RefreshFills 에서 anchorMax.x 조절)
