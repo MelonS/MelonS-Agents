@@ -20,8 +20,13 @@ namespace MelonS.GameProto
         //  days like RimWorld (hunger ~1.6 nutrition/day).  1 in-game day = 240
         //  real seconds (GameClock), so a 3-day budget = 100 / (3*240) = 0.139/s.
         //  Was 0.5/s → emptied in 200s = 0.83 day (~3.5x too fast).  0.14 ≈ 2.97 days.
-        [SerializeField] private float foodDecay = 0.14f;
-        [SerializeField] private float sleepDecay = 0.3f;
+        // #228 운영자 fb "배고픔·수면 게이지가 정상동작 안 하는 느낌" — 시계 fix(rate 6,
+        //  하루=240s) 후 needs(실시간 decay)가 하루 주기와 분리돼 게이지가 며칠에 걸쳐 찔끔
+        //  움직였다(food~3일/sleep~1.4일).  하루 주기로 재튜닝: 매일 먹고/밤마다 자도록.
+        //  food 0.14→0.2(eat≈1회/일), sleep 0.3→0.4(sleep 100→0 ≈ 1게임일 → 밤마다 졸림).
+        //  느슨한 생존 방향이라 죽을 만큼은 아니고 '가시적 일일 리듬' 목적.
+        [SerializeField] private float foodDecay = 0.2f;
+        [SerializeField] private float sleepDecay = 0.4f;
         [SerializeField] private float moodDecay = 0.2f;
 
         [Header("Day 9+: sleep regen when sleeping at night")]
@@ -117,8 +122,13 @@ namespace MelonS.GameProto
         public BedEntity AutoRestTarget => autoRestTarget;
         /// <summary>밤에 졸려서 자율로 침대를 찾아가야 하는가 (GoSleepAction 의 eligibility).
         ///  도달 실패 직후엔 쿨다운 동안 false (제자리 취침으로 안정 회복하게).</summary>
+        // #228 - 평소엔 밤에 졸리면(sleep<35 && 밤) 침대로.  단 ★탈진(sleep<15)이면 낮에도
+        //  자러 간다 — 과거엔 밤 게이트 때문에 낮에 sleep 이 20까지 떨어져도 안 자고 게이지가
+        //  바닥에 정체돼 "수면 게이지가 정상동작 안 함"처럼 보였다.
+        private const float ExhaustedSleepLevel = 15f;
         public bool WantsAutoSleep =>
-            sleep < autoSleepThreshold && IsNightTime() && Time.time >= autoSleepSuppressUntil;
+            (sleep < ExhaustedSleepLevel || (sleep < autoSleepThreshold && IsNightTime()))
+            && Time.time >= autoSleepSuppressUntil;
 
         /// <summary>GoSleepAction 이 빈 침대를 예약한 뒤 호출 — 이 침대로 가서 자라.</summary>
         public void SetAutoSleepTarget(BedEntity bed)
@@ -301,7 +311,8 @@ namespace MelonS.GameProto
             // 제자리 취침 gate.  autoSleepThreshold(35) 와 동일하게 묶어, 침대 도달에
             //  실패해 fallback 으로 내려온 림이 (sleep≈30~35) 곧장 누워 회복하도록 한다.
             //  발밑이 침대면 자동으로 bed.RestMul 보너스 (위 cell 에 멈췄을 때 포함).
-            if (sleep < autoSleepThreshold && night)
+            //  #228 - 탈진(sleep<15)이면 낮에도 그 자리서 쓰러져 잔다(밤 게이트 무시).
+            if (sleep < ExhaustedSleepLevel || (sleep < autoSleepThreshold && night))
             {
                 IsSleeping = true;
                 var bed = GetBedUnderPawn();
