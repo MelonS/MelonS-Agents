@@ -23,7 +23,7 @@ namespace MelonS.GameProto
         //  고르게 한다(막힘이 풀릴 수 있으니 영구 블랙리스트 대신 한시적).
         private readonly Dictionary<StoneVeinEntity, float> _giveUpUntil
             = new Dictionary<StoneVeinEntity, float>();
-        private const float GiveUpCooldownSec = 20f;
+        private const float GiveUpCooldownSec = 60f;  // #221b 20→60: 도달불가 광맥 재시도 churn ↓
         public bool IsRecentlyGivenUp(StoneVeinEntity v)
             => v != null && _giveUpUntil.TryGetValue(v, out float t) && Time.time < t;
         // #199 B2 (R-1) - path-aware give-up (see WorkGiveUp).
