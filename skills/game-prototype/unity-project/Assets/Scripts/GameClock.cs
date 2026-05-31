@@ -28,14 +28,15 @@ namespace MelonS.GameProto
         public static GameClock Instance => Services.Get<GameClock>();
 
         [Tooltip("1x 에서 실제 1초당 흘려보낼 게임 내 '분'. 60 = 게임 1시간/실초.")]
-        // #219 운영자 fb "시간이 너무 빨리" — 60(하루=24초)은 과속.  6 = 하루 4분(실측
-        //  자연스러운 1x, recorder 가 쓰던 값).  하단 MinRate clamp 와 동일.
-        [SerializeField] private float inGameMinutesPerRealSecond = 6f;
+        // #234 RimWorld 정합 (위키 Time) — RimWorld 1x: 하루=60000틱=1000초(16.7분), 60틱/초.
+        //  하루 1440 게임분 / 1000 실초 = 1.44 게임분/실초.  (니즈 decay 도 #234 에서 비례
+        //  축소해 게임-하루 리듬은 동일하게 유지 — 둘 다 timeScale 곱이라 2x/4x 도 자동 정합.)
+        [SerializeField] private float inGameMinutesPerRealSecond = 1.44f;
 
         // Lower/upper guard so a bad serialized value cannot freeze (too low)
         // or make the clock unreadable (too fast).  Operator target sits at
         // the default 60 (1 game-hour / real-second).
-        private const float MinRate = 6f;    // >= 1 game-minute / 0.1 real-sec
+        private const float MinRate = 1f;    // #234 RimWorld 1x(1.44) 허용 위해 6→1 하향
         private const float MaxRate = 600f;   // <= 10 game-hours / real-sec
 
         // Total in-game seconds since start.  Scales with Time.timeScale

@@ -24,10 +24,12 @@ namespace MelonS.GameProto
         //  하루=240s) 후 needs(실시간 decay)가 하루 주기와 분리돼 게이지가 며칠에 걸쳐 찔끔
         //  움직였다(food~3일/sleep~1.4일).  하루 주기로 재튜닝: 매일 먹고/밤마다 자도록.
         //  food 0.14→0.2(eat≈1회/일), sleep 0.3→0.4(sleep 100→0 ≈ 1게임일 → 밤마다 졸림).
-        //  느슨한 생존 방향이라 죽을 만큼은 아니고 '가시적 일일 리듬' 목적.
-        [SerializeField] private float foodDecay = 0.2f;
-        [SerializeField] private float sleepDecay = 0.4f;
-        [SerializeField] private float moodDecay = 0.2f;
+        //  #234 RimWorld 시계(1x=하루1000초)에 맞춰 decay 를 비례 축소(×0.24)해 게임-하루
+        //  리듬은 동일 유지: foodDecay 0.2→0.048, sleepDecay 0.4→0.096, moodDecay 0.2→0.048.
+        //  (game-day 당 food≈48/sleep≈96 으로 rate-6 때와 동일 — 둘 다 timeScale 곱이라 정합.)
+        [SerializeField] private float foodDecay = 0.048f;
+        [SerializeField] private float sleepDecay = 0.096f;
+        [SerializeField] private float moodDecay = 0.048f;  // #234 RimWorld 시계 비례 축소
 
         [Header("Day 9+: sleep regen when sleeping at night")]
         [SerializeField] private float sleepRegenAtNight = 8f;
