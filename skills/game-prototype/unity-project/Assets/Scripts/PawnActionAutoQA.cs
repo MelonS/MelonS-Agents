@@ -85,10 +85,12 @@ namespace MelonS.GameProto
                     crop = any;
                     if (!crop.IsRipe) return ("growth=1 후도 IsRipe false", false);
                 }
-                var rmBefore = ResourceManager.Instance != null ? ResourceManager.Instance.food : 0;
+                // #227 - 수확은 이제 물리(림이 걸어가 수확 후 더미 드롭)라 즉시 food 안 오름.
+                //  우클릭이 선택 림에게 '수확 task'를 부여했는지로 조작 성공을 검증한다.
                 cs.SimulateRightClick(crop.transform.position);
-                var rmAfter = ResourceManager.Instance != null ? ResourceManager.Instance.food : 0;
-                if (rmAfter <= rmBefore) return ($"food delta=0 (before={rmBefore} after={rmAfter})", false);
+                var harvester = pawn.GetComponent<PawnHarvester>();
+                if (harvester == null || !harvester.HasTask)
+                    return ("우클릭 후 수확 task 미부여 (물리수확 명령 실패)", false);
                 return ("", true);
             }, Result);
 
@@ -147,8 +149,11 @@ namespace MelonS.GameProto
             yield return RunCase("Wolf attack (drafted)", () => {
                 pawn.SetDrafted(true);
                 cs.SimulateSelect(pawn);
-                var wolf = FindNearest<WolfEnemy>(w => w != null && !w.IsDead);
-                if (wolf == null) return ("wolf 없음 (이벤트 미발생)", false);
+                // #227 - 늑대는 운영자 요청으로 자연 스폰 비활성.  drafted 공격 '조작' 자체를
+                //  검증하려고 강제 스폰(밴딧 케이스와 동일).  실제 게임엔 여전히 안 나옴.
+                var wolf = FindNearest<WolfEnemy>(w => w != null && !w.IsDead)
+                           ?? ForceSpawn<WolfEnemy>(pawn.transform.position + new Vector3(4f, 1f, 0), "QA_Wolf");
+                if (wolf == null) return ("wolf 강제스폰 실패", false);
                 cs.SimulateRightClick(wolf.transform.position);
                 if (pawn.DraftedWolfTarget != wolf) return ($"DraftedWolfTarget != wolf (got {pawn.DraftedWolfTarget})", false);
                 return ("", true);

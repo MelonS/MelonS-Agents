@@ -24,6 +24,42 @@ namespace MelonS.GameProto
             if (mainCamera == null) mainCamera = Camera.main;
         }
 
+        // #227 운영자 fb "조작 제대로 안됨" — 단일 OverlapPoint 는 한 점에 여러 콜라이더가
+        //  겹칠 때 actionable 하지 않은 것(바닥 데코 등)을 반환할 수 있어 우클릭 메뉴/작업이
+        //  안 잡히는 사례(예: 채광).  OverlapPointAll 로 '작업 가능한 엔티티'를 우선 선택.
+        private static readonly System.Type[] _actionableTypes = {
+            typeof(PawnEntity), typeof(TreeEntity), typeof(StoneVeinEntity), typeof(CropEntity),
+            typeof(BerryBushEntity), typeof(AnimalEntity), typeof(BanditEnemy), typeof(WolfEnemy),
+            typeof(BedEntity), typeof(BlueprintEntity), typeof(WoodPileEntity), typeof(StoneChunkEntity),
+            typeof(MeatPileEntity), typeof(StoveEntity), typeof(ResearchBench), typeof(TraderEntity),
+            typeof(StockpileZoneEntity)
+        };
+        private static bool IsActionable(Collider2D c)
+        {
+            foreach (var t in _actionableTypes)
+                if (c.GetComponent(t) != null) return true;
+            return false;
+        }
+        private Collider2D PickEntityAt(Vector2 world)
+        {
+            var hits = Physics2D.OverlapPointAll(world);
+            if (hits == null || hits.Length == 0) return null;
+            if (hits.Length == 1) return hits[0];
+            // #227 - 여러 콜라이더 겹침: actionable 엔티티 우선 + 그 중 클릭 지점에 중심이
+            //  가장 가까운 것 선택(클릭한 바로 그 오브젝트가 의도일 확률 최고).  단일 actionable
+            //  우선 로직이 '첫 번째'를 골라 밴딧 공격 등이 엉뚱한 엔티티를 잡던 회귀 fix.
+            Collider2D best = null; float bestSq = float.MaxValue; bool bestAct = false;
+            foreach (var h in hits)
+            {
+                if (h == null) continue;
+                bool act = IsActionable(h);
+                float sq = ((Vector2)h.transform.position - world).sqrMagnitude;
+                if (best == null || (act && !bestAct) || (act == bestAct && sq < bestSq))
+                { best = h; bestSq = sq; bestAct = act; }
+            }
+            return best;
+        }
+
         private void Update()
         {
             // UI 위 클릭 무시 (운영자 피드백 - UI 가 가로채던 문제)
@@ -36,7 +72,7 @@ namespace MelonS.GameProto
             {
                 Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mouseWorld.z = 0f;
-                Collider2D hit = Physics2D.OverlapPoint(mouseWorld);
+                Collider2D hit = PickEntityAt(mouseWorld);
                 PawnEntity pawn = (hit != null) ? hit.GetComponent<PawnEntity>() : null;
                 if (pawn != null) {
                     Select(pawn);
@@ -67,7 +103,7 @@ namespace MelonS.GameProto
             {
                 Vector3 mw = mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mw.z = 0f;
-                Collider2D ehit = Physics2D.OverlapPoint(mw);
+                Collider2D ehit = PickEntityAt(mw);
                 if (ehit != null && ContextMenuUI.Instance != null)
                 {
                     var items = BuildContextMenu(ehit, mw);
@@ -85,7 +121,7 @@ namespace MelonS.GameProto
                 mouseWorld.z = 0f;
                 // 시각 피드백 - 사용자에게 클릭 위치 보여줌
                 ClickEffect.Spawn(mouseWorld, new Color(1f, 0.9f, 0.3f, 0.95f));
-                Collider2D rhit = Physics2D.OverlapPoint(mouseWorld);
+                Collider2D rhit = PickEntityAt(mouseWorld);
 
                 // Day 48: drafted pawn — right-click on enemy/animal = attack/hunt
                 if (currentSelection.IsDrafted)
@@ -412,8 +448,8 @@ namespace MelonS.GameProto
         {
             if (currentSelection == null) return false;
             Vector3 mouseWorld = new Vector3(worldPos.x, worldPos.y, 0f);
-            Collider2D hit = Physics2D.OverlapPoint(mouseWorld);
-            if (hit == null) return false;
+            Collider2D hit = PickEntityAt(mouseWorld);
+            if (hit == null) { Debug.Log($"[CtxQA] PickEntityAt null at {mouseWorld}"); return false; }
             var items = BuildContextMenu(hit, mouseWorld);
             if (items == null) return false;
             foreach (var (label, action) in items)
@@ -424,6 +460,7 @@ namespace MelonS.GameProto
                     return true;
                 }
             }
+            Debug.Log($"[CtxQA] '{itemLabelContains}' 미발견. hit={hit.gameObject.name} items=[{string.Join(",", items.ConvertAll(i => i.Item1))}]");
             return false;
         }
 
@@ -432,7 +469,7 @@ namespace MelonS.GameProto
             if (currentSelection == null) return;
             Vector3 mouseWorld = new Vector3(worldPos.x, worldPos.y, 0f);
             ClickEffect.Spawn(mouseWorld, new Color(0.3f, 0.9f, 1f, 0.95f));  // 통합 검증 - 파란 X
-            Collider2D rhit = Physics2D.OverlapPoint(mouseWorld);
+            Collider2D rhit = PickEntityAt(mouseWorld);
             if (currentSelection.IsDrafted)
             {
                 // drafted 분기: 적/늑대/동물 우선
@@ -486,7 +523,13 @@ namespace MelonS.GameProto
             }
             if (trader != null) { trader.TryTrade(); return; }
             if (animalC != null) { animalC.TryTame(); return; }
-            if (crop != null && crop.IsRipe) { crop.Harvest(); return; }
+            if (crop != null && crop.IsRipe)
+            {
+                // #227 - 실제 Update 핸들러와 동일하게 PawnHarvester 명령(물리수확).
+                var hv = currentSelection.GetComponent<PawnHarvester>();
+                if (hv != null) { ClearAllWorkTasks(currentSelection); hv.SetCropTarget(crop); currentSelection.ManualMoveUntil = Time.time + 10f; }
+                return;
+            }
             if (bushC != null && !bushC.IsDepleted)
             {
                 var g = currentSelection.GetComponent<PawnGatherer>();
