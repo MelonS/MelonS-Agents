@@ -167,7 +167,8 @@ namespace MelonS.GameProto.EditorTools
 
             int half = TerrainLayout.MAP_HALF;
             int placed = 0;
-            int target = 12;  // 12 광맥
+            int target = 20;  // #220 운영자 fb "맵에 석재 없음" — 광맥은 재생 안 돼 고갈되면
+                              //  영구 부족(나무 20 은 재생).  12→20 으로 초반 석재 가용성 ↑.
             System.Random sr = new System.Random(31415);
             var positions = new System.Collections.Generic.List<Vector2>();
             int tries = 0;
