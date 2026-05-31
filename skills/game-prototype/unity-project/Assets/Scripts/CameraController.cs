@@ -43,6 +43,22 @@ namespace MelonS.GameProto
             followStartTime = Time.unscaledTime;
         }
 
+        // ColonistBar (콜로니스트 바) 가 entry 클릭 시 즉시 camera 를 그 pawn 으로 중앙 정렬할 때 호출.
+        //  RequestFocus(부드러운 0.6s pan) 와 달리 이건 즉시 점프 — bar 클릭은 "지금 바로 보여달라"는
+        //  의도라 deterministic 한 즉시 이동이 적절(batchmode 에서도 한 frame 에 반영).  worldMin/Max
+        //  로 clamp 해 맵 밖으로 안 나가게.  진행 중인 auto-follow 가 다시 덮어쓰지 않도록 해제.
+        public void FocusOn(Vector2 worldPos)
+        {
+            if (cam == null) cam = GetComponent<Camera>();
+            if (cam == null) cam = Camera.main;
+            if (cam == null) return;
+            followingPawn = null;  // bar 클릭 = 명시적 jump, auto-follow 종료
+            Vector3 p = cam.transform.position;
+            p.x = Mathf.Clamp(worldPos.x, worldMin.x, worldMax.x);
+            p.y = Mathf.Clamp(worldPos.y, worldMin.y, worldMax.y);
+            cam.transform.position = p;  // z 유지
+        }
+
         private void Update()
         {
             if (cam == null) return;

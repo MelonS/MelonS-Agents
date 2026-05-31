@@ -749,9 +749,9 @@ namespace MelonS.GameProto.Tests
 
         private IEnumerator TestV45_ClampStatic()
         {
-            // #108 - PawnMovement.WORLD_MIN/MAX 60x60 맵 ±29
-            bool minOk = PawnMovement.WORLD_MIN.x == -29f && PawnMovement.WORLD_MIN.y == -29f;
-            bool maxOk = PawnMovement.WORLD_MAX.x == 29f && PawnMovement.WORLD_MAX.y == 29f;
+            // #108 60x60 ±29 → #235 90x90 ±44
+            bool minOk = PawnMovement.WORLD_MIN.x == -44f && PawnMovement.WORLD_MIN.y == -44f;
+            bool maxOk = PawnMovement.WORLD_MAX.x == 44f && PawnMovement.WORLD_MAX.y == 44f;
             Assert(minOk && maxOk,
                 $"WORLD_MIN={PawnMovement.WORLD_MIN}, WORLD_MAX={PawnMovement.WORLD_MAX}");
             yield break;
@@ -1252,7 +1252,7 @@ namespace MelonS.GameProto.Tests
             bool blocked = PawnMovement.IsBlockedAt(new Vector2(1000, 1000));
             // ClampToWorld test
             Vector2 c = PawnMovement.ClampToWorld(new Vector2(-100, 50));
-            bool clampOk = c.x >= -29.01f && c.y <= 29.01f;
+            bool clampOk = c.x >= -44.01f && c.y <= 44.01f;  // #235 맵 ±29→±44
             Assert(!blocked && clampOk,
                 $"blocked(1000,1000)={blocked} (false ok if no tilemap), clamp(-100,50)→({c.x:F1},{c.y:F1})");
             yield break;
@@ -1340,7 +1340,7 @@ namespace MelonS.GameProto.Tests
             // PawnMovement.ClampToWorld 검증 (sync — yield 없음)
             Vector2 outside = new Vector2(100, 100);
             Vector2 clamped = PawnMovement.ClampToWorld(outside);
-            bool clampWorks = clamped.x <= 29.01f && clamped.y <= 29.01f;
+            bool clampWorks = clamped.x <= 44.01f && clamped.y <= 44.01f;  // #235 맵 ±29→±44
             Vector2 inside = new Vector2(5, 5);
             Vector2 unchanged = PawnMovement.ClampToWorld(inside);
             bool insideOk = Mathf.Approximately(unchanged.x, 5f) && Mathf.Approximately(unchanged.y, 5f);

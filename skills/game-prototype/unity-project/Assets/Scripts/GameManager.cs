@@ -124,6 +124,9 @@ namespace MelonS.GameProto
             // → GUI 버튼 바 자동 부착 (Speed/Draft/Build/Research 10 버튼)
             GuiControlBar.EnsureInScene();
 
+            // RimWorld 식 콜로니스트 바 (화면 상단 중앙) — 이름 + HP/mood 바, 클릭 시 선택+카메라 focus
+            ColonistBar.EnsureInScene();
+
             // 운영자 피드백 (2026-05-27): "디자인 구리고 프로토타입 수준도 안되고"
             // → 선택된 콜로니스트 발밑에 명시적 노란 ring (펄스)
             SelectionRing.EnsureInScene();
