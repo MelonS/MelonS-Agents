@@ -178,10 +178,18 @@ namespace MelonS.GameProto
                 return true;
             }
 
-            // Fast path — already locked, still valid, still ours.
+            // Fast path — already locked, still valid, still ours, AND still adjacent
+            //  to the CURRENT target.  #218 운영자 fb "목재 순간이동" root cause: a hauler
+            //  reuses its locked stand cell across a TARGET CHANGE (pile→stockpile).  The
+            //  old cell sits next to the pile, not the stockpile, yet the fast path kept
+            //  it → AtStandCell() instantly true at the new target → pawn "arrives" w/o
+            //  walking → deposits wood at the stockpile while standing at the tree
+            //  (=teleport).  Gate the fast path on the locked cell still being adjacent
+            //  to targetWorld; otherwise fall through and pick a fresh cell near it.
             if (lockedCell.x != INVALID_CELL.x
                 && Grid.IsWalkable(lockedCell)
-                && !ReservationManager.IsCellReservedByOther(lockedCell, claimant))
+                && !ReservationManager.IsCellReservedByOther(lockedCell, claimant)
+                && DistanceToFootprint(targetWorld, footprint, PathGrid.CellToWorld(lockedCell)) <= 1.6f)
             {
                 // Re-assert ownership (idempotent) so a sweep can't drop it.
                 ReservationManager.TryReserveCell(lockedCell, claimant);
