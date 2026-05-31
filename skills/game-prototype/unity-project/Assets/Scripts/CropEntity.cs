@@ -20,7 +20,11 @@ namespace MelonS.GameProto
         //   1.5 min (90s) - 너무 빠르지도 느리지도 않은 plays-per-session 적합.
         //   이전 40s 는 wiki 14배 빠름 - 식량 사이클 깨짐.
         [SerializeField] private float growthPerSecond = 0.011f;  // ~90s real to ripen
-        [SerializeField] private int   harvestFood = 8;           // wiki rice yield 8 per plant
+        // #224 QA fix — 장기 식량 고갈(800s LongPlay: meals 16→0, food 0 고착, Day11
+        //  굶주림 직전).  정상상태 food 가 요리 임계(15) 밑이라 요리 중단→식사 고갈.
+        //  수확량 8→14 로 지속 가능한 잉여 확보(농장 12타일 재생).  wiki rice 8 보다 높지만
+        //  prototype 3림 생존 균형용.
+        [SerializeField] private int   harvestFood = 14;
 
         // W-M1-02 Art: per-stage sprites (wired by SceneSetup.Game.Settlement via
         // SerializedObject).  When null, falls back to the pre-existing color-tint

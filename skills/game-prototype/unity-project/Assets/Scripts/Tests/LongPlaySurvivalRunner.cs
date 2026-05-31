@@ -495,7 +495,13 @@ namespace MelonS.GameProto.Tests
                     _lastPos[id] = ps.pos;
                     _lastMoveTime[id] = Time.realtimeSinceStartup;
                 }
-                bool hasTask = ps.task != "유휴" && ps.task != "수면" && !ps.dead && !ps.downed;
+                // #224 - 제자리 작업(요리/연구)은 정의상 안 움직인다 → no-move stuck 오탐 제외.
+                //  (요리는 stove, 연구는 bench 앞에 서서 진행 — 이동작업 chop/mine/haul/build 와 다름.)
+                //  식량 잉여가 커지면 림이 한 자리서 수십 식사를 연속 요리(meals 128→164)하는데
+                //  이를 stuck 으로 잘못 잡던 문제.
+                bool stationaryWork = ps.task == "요리" || ps.task == "연구";
+                bool hasTask = ps.task != "유휴" && ps.task != "수면" && !stationaryWork
+                               && !ps.dead && !ps.downed;
                 float still = Time.realtimeSinceStartup - _lastMoveTime[id];
                 if (hasTask && still > StuckSec)
                 {
