@@ -390,6 +390,7 @@ namespace MelonS.GameProto.AI
             {
                 if (v == null || v.IsDestroyed) continue;
                 if (ReservationManager.IsReservedByOther(v, claimant)) continue;
+                if (ctx.miner != null && ctx.miner.IsRecentlyGivenUp(v)) continue;  // #221 도달불가 광맥 쿨다운 스킵
                 Vector3 vp = v.transform.position;
                 if (Mathf.Abs(vp.x) > 28.5f || Mathf.Abs(vp.y) > 28.5f) continue;
                 float sq = ((Vector2)vp - me).sqrMagnitude;

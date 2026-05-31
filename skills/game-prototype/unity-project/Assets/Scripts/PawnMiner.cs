@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using MelonS.GameProto.AI;
 
@@ -17,6 +18,14 @@ namespace MelonS.GameProto
 
         private StoneVeinEntity targetVein;
         private PawnMovement movement;
+        // #221 QA fix — 도달 불가 광맥을 포기한 직후 같은 걸 또 골라 무한 포기 루프(로그에서
+        //  give-up vein 358회)를 돌던 문제.  포기한 광맥에 쿨다운을 줘 그 동안 다른 광맥을
+        //  고르게 한다(막힘이 풀릴 수 있으니 영구 블랙리스트 대신 한시적).
+        private readonly Dictionary<StoneVeinEntity, float> _giveUpUntil
+            = new Dictionary<StoneVeinEntity, float>();
+        private const float GiveUpCooldownSec = 20f;
+        public bool IsRecentlyGivenUp(StoneVeinEntity v)
+            => v != null && _giveUpUntil.TryGetValue(v, out float t) && Time.time < t;
         // #199 B2 (R-1) - path-aware give-up (see WorkGiveUp).
         private WorkGiveUp giveUp;
         // #199 C2 — reserved stand cell next to the vein.
@@ -50,6 +59,7 @@ namespace MelonS.GameProto
                 movement.SetTarget(stand);
             else
             {
+                if (targetVein != null) _giveUpUntil[targetVein] = Time.time + GiveUpCooldownSec;  // #221
                 Debug.Log($"[Miner] {name} give up vein (no free adjacent stand cell — unreachable/occupied)");
                 ClearTask();
             }
@@ -81,6 +91,7 @@ namespace MelonS.GameProto
             // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
             if (dist > mineRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
             {
+                _giveUpUntil[targetVein] = Time.time + GiveUpCooldownSec;  // #221
                 Debug.Log($"[Miner] {name} give up vein (dist={dist:F2}, pathFailed={movement.LastPathFailed})");
                 ClearTask();
                 return;
