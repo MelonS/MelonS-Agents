@@ -15,11 +15,25 @@ RETIRED from this file: gen_pawn (→ _gen_pawn.py), gen_wall_wood,
 Style: flat-Kenney (flat colour fills + OUTLINE_OBJ / OUTLINE_PLANT, NO
 gradients, NO gaussian blur).  All colours from palette.py.
 
-Polish Wave v3 V4/V5 (2026-05-30):
-  gen_tree rewritten with 3-cluster directional canopy (GRASS_DK core +
-  GRASS_MD mid-ring + GRASS_LT rim-light offset up-left) and a trunk-shadow
-  pixel under the canopy.  Light direction: upper-left.  Still flat (no
-  gradients), still recedes behind pawns (lower saturation than cloth).
+Polish Wave v3 V6 (2026-06-01):
+  gen_tree 대폭 개선 — 단순 blob → 잎 질감 + 명암 있는 트리.
+  접근법: 불규칙 타원 수관 base fill → GRASS_DK 그림자 클러스터 덮기
+          → GRASS_LT 하이라이트 클러스터 덮기.
+  픽셀 맵 (V6 final, 검증 완료):
+    y00: ...OOOOOOOOO.....
+    y01: ....LLLMDDDDO....
+    y02: .OOLLLLMMDDDDO...
+    y03: .OLLLLMMMDDDDO...
+    y04: .OLLLLMMDDDDD....
+    y05: .OLMMMMMDDDDD....
+    y06: .OMMMMMDDDDDO....
+    y07: .ODDDDDDDDDO.....
+    y08: ..ODDDWWDDDO.....
+    y09: ....OOWwOOO......
+    y10..14: ......OWwO......
+    y15: .......OO.......
+  진한 하이라이트 좌상단, 그림자 우하단, 기둥 자연스러운 연결.
+  RuntimeTint (Pine/Birch/Oak) 하에도 3-tone 상대명암 유지.
 """
 from __future__ import annotations
 from PIL import Image, ImageDraw
@@ -74,125 +88,153 @@ def rect_outline(im, x0, y0, x1, y1, c):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# tree.png — 16x16 flat-style top-down tree (Polish Wave v3 V4 improved)
+# tree.png — 16x16 개선 트리 (Polish Wave v3 V6, 2026-06-01)
 #
-# CHANGE from prior version:
-#   BEFORE: 3 tone zones but roughly concentric rings — reads as a flat blob
-#           with no clear light direction; mid and dark rings wrap equally.
-#   AFTER:  3 clusters with explicit UP-LEFT light direction:
-#             GRASS_LT  → tight cluster offset upper-left (rim light, ~5px)
-#             GRASS_MD  → large mid-ring
-#             GRASS_DK  → lower-right shadow mass (largest zone)
-#           Plus: single-pixel trunk-shadow at canopy base (col 9, y=9)
-#           so the trunk reads as going INTO the canopy shadow, not just
-#           appearing below it.
-#   Both before and after: OUTLINE_PLANT edge, WOOD_MD/DK trunk,
-#   16x16, transparent bg, no gradients.
+# 렌더 레이어 순서 (뒤에서 앞으로 덮어쓰기):
+#   1. 수관 base: GRASS_MD 로 불규칙 타원 전체 채움 (빈 픽셀 없음 보장)
+#   2. GRASS_DK 그림자 클러스터 덮기 (우하단)
+#   3. GRASS_LT 하이라이트 클러스터 덮기 (좌상단)
+#   4. 기둥 flare + 기둥 본체 + 접합 그림자
+#   5. OUTLINE_PLANT 테두리
 #
-# Visual check:
-#   - Canopy has THREE visually distinct brightness zones, not a uniform fill.
-#   - Upper-left corner is the brightest cluster.
-#   - Lower-right is the darkest shadow.
-#   - Placed next to a pawn (CLOTH_BLUE = 74,96,132): pawn's outline pops,
-#     tree recedes — GRASS_LT (118,138,86) has lower saturation than CLOTH_BLUE.
+# 수관 범위:
+#   y=1: x=4..11  (상단 좁음, 불규칙 — 우측 더 넓어 우상단 잎 덩어리 표현)
+#   y=2: x=3..12
+#   y=3: x=3..12
+#   y=4: x=3..11
+#   y=5: x=3..11
+#   y=6: x=3..11
+#   y=7: x=3..10  (하단 수관, 기둥 위)
+#   y=8: x=3..11  (수관 하단 / 기둥 접합 행)
 # ─────────────────────────────────────────────────────────────────────────────
 
+# 수관 외곽 범위 (row → (x_start, x_end) inclusive)
+_CANOPY_ROWS = {
+    1: (4, 11),
+    2: (3, 12),
+    3: (3, 12),
+    4: (3, 11),
+    5: (3, 11),
+    6: (3, 11),
+    7: (3, 10),
+    8: (3, 11),
+}
+
+
 def gen_tree() -> Image.Image:
-    """16x16 flat top-down tree.
-    3-cluster directional canopy (light from upper-left), trunk, OUTLINE_PLANT.
-    """
+    """16x16 개선 트리: 불규칙 수관 + 잎 클러스터 명암 + 자연스러운 기둥 연결."""
     W = H = 16
     im = new_canvas(W, H)
 
-    # ── ZONE 1: GRASS_DK — deep shadow (lower-right mass) ────────────────────
-    # This is the large base fill — most of the canopy reads as recessed shadow.
-    shadow_zone = [
-        # Upper rows: only the far edges (shadow rim where light can't reach)
-        (8, 1), (9, 1), (10, 1), (11, 1),
-        (11, 2), (12, 2),
+    # ─────────────────────────────────────────────────────────────────────────
+    # PASS 1: 수관 base fill — GRASS_MD 로 전체 수관 영역 채우기
+    #   빈 픽셀(hole) 없음 보장.  후속 pass 가 선택적으로 덮어씀.
+    # ─────────────────────────────────────────────────────────────────────────
+    for y, (x0, x1) in _CANOPY_ROWS.items():
+        hline(im, x0, x1, y, GRASS_MD)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PASS 2: GRASS_DK — 그림자 클러스터 (우측·하단 덮어쓰기)
+    #   목표: 우상단 잎 덩어리 그림자, 중앙 우측 그림자, 하단 수관 전체.
+    #   좌측 돌출 x=2 (y=3..5) 는 GRASS_LT 에서 처리.
+    # ─────────────────────────────────────────────────────────────────────────
+    dark = [
+        # 우상단 잎 클러스터 그림자
+        (9,  1), (10, 1), (11, 1),
+        (10, 2), (11, 2), (12, 2),
         (11, 3), (12, 3),
-        (10, 4), (11, 4), (12, 4),
-        (10, 5), (11, 5),
-        (9, 6), (10, 6), (11, 6),
-        # Mid canopy right side
-        (8, 3), (9, 3), (10, 3),
-        (8, 4), (9, 4),
-        (8, 5), (9, 5),
-        (8, 6), (9, 6),
-        # Lower canopy (shadow mass) — the heaviest zone
-        (5, 7), (6, 7), (7, 7), (8, 7), (9, 7), (10, 7), (11, 7),
-        (5, 8), (6, 8), (7, 8), (8, 8), (9, 8), (10, 8),
+        (11, 4),
+        # 중앙 우측 그림자
+        (9,  3), (10, 3),
+        (9,  4), (10, 4),
+        (9,  5), (10, 5), (11, 5),
+        (9,  6), (10, 6), (11, 6),
+        # 수관 내부 잎 틈 클러스터 (어두운 공간감)
+        (8,  4),
+        (8,  5), (8,  6),
+        # 수관 하단 전체 — 가장 무거운 그림자 zone
+        (3,  7), (4,  7), (5,  7), (6,  7), (7,  7), (8,  7), (9,  7), (10, 7),
+        (3,  8), (4,  8), (5,  8), (6,  8), (7,  8), (8,  8), (9,  8), (10, 8), (11, 8),
     ]
-    for x, y in shadow_zone:
+    for x, y in dark:
         put_px(im, x, y, GRASS_DK)
 
-    # ── ZONE 2: GRASS_MD — mid-tone ring (majority of canopy body) ───────────
-    mid_zone = [
-        # Upper canopy fill (centre and left-of-centre)
-        (4, 2), (5, 2), (6, 2), (7, 2),
-        (3, 3), (4, 3), (5, 3), (6, 3), (7, 3),
-        (3, 4), (4, 4), (5, 4), (6, 4), (7, 4),
-        (3, 5), (4, 5), (5, 5), (6, 5), (7, 5),
-        (4, 6), (5, 6), (6, 6), (7, 6),
-        # Canopy lower mid
-        (3, 7), (4, 7),
-        (3, 8), (4, 8),
+    # ─────────────────────────────────────────────────────────────────────────
+    # PASS 3: GRASS_LT — 하이라이트 클러스터 (좌상단 덮어쓰기)
+    #   빛 방향 좌상단.  소규모 픽셀 클러스터로 잎 질감.
+    #   좌측 극돌출 x=2 (y=3..5) 포함 — 불규칙 실루엣.
+    # ─────────────────────────────────────────────────────────────────────────
+    light = [
+        # 상단 좌측 주 하이라이트 클러스터
+        (4,  1), (5,  1), (6,  1),
+        (3,  2), (4,  2), (5,  2), (6,  2),
+        (3,  3), (4,  3), (5,  3),
+        (3,  4), (4,  4),
+        (3,  5), (4,  5),
+        # 좌측 돌출 하이라이트 — 불규칙 실루엣 (수관 범위 밖 x=2)
+        (2,  3), (2,  4), (2,  5),
     ]
-    for x, y in mid_zone:
-        put_px(im, x, y, GRASS_MD)
-
-    # ── ZONE 3: GRASS_LT — rim-light cluster, upper-left ─────────────────────
-    # A compact bright cluster offset toward (3-5, 1-4) — implies light from
-    # upper-left.  Small enough to feel like a highlight, not a gradient wash.
-    rimlight_zone = [
-        (4, 1), (5, 1), (6, 1),
-        (3, 2), (4, 2), (5, 2),      # overwrites some GRASS_MD — intentional
-        (3, 3), (4, 3), (5, 3),
-        (3, 4), (4, 4),
-    ]
-    for x, y in rimlight_zone:
+    for x, y in light:
         put_px(im, x, y, GRASS_LT)
 
-    # ── Trunk — 2px wide, visible below canopy ────────────────────────────────
-    # WOOD_LT (lighter) on left, WOOD_DK on right — same light-left convention
+    # ─────────────────────────────────────────────────────────────────────────
+    # PASS 4a: 기둥 flare (y=8) — 수관 하단에 기둥 폭 표시
+    #   x=7: WOOD_MD (빛 받는 좌측)
+    #   x=8: WOOD_DK (우측 그림자)
+    #   (이미 GRASS_DK 로 채워진 y=8 행 위에 기둥 픽셀 2개만 덮어씀)
+    # ─────────────────────────────────────────────────────────────────────────
+    put_px(im, 7, 8, WOOD_MD)
+    put_px(im, 8, 8, WOOD_DK)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PASS 4b: 기둥 본체 (y=9..14)
+    #   2px: x=7 WOOD_MD (좌, 빛), x=8 WOOD_DK (우, 그림자)
+    # ─────────────────────────────────────────────────────────────────────────
     vline(im, 7, 9, 14, WOOD_MD)
     vline(im, 8, 9, 14, WOOD_DK)
 
-    # Trunk-shadow pixel: the pixel where trunk meets canopy base gets darkened
-    # so the trunk reads as going INTO shadow under the canopy (depth cue).
-    put_px(im, 7, 9, WOOD_DK)
-    put_px(im, 8, 9, GRASS_DK)    # canopy-shadow bleeds onto trunk top
+    # ─────────────────────────────────────────────────────────────────────────
+    # PASS 4c: 기둥 접합 그림자 (y=9, x=8)
+    #   GRASS_DK — 수관 그림자 색이 기둥 상단으로 스며들어 depth cue.
+    # ─────────────────────────────────────────────────────────────────────────
+    put_px(im, 8, 9, GRASS_DK)
 
-    # ── OUTLINE_PLANT border — silhouette edge only ───────────────────────────
-    # Drawn on transparent pixels at the canopy edge; does not overwrite fills.
-    outline_ring = [
-        # Top edge
-        (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0), (9, 0), (10, 0), (11, 0), (12, 0),
-        # Left edge
-        (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6),
-        # Right edge
-        (13, 2), (13, 3), (13, 4), (13, 5), (13, 6),
-        # Bottom of canopy
-        (3, 9), (4, 9), (5, 9), (6, 9), (9, 9), (10, 9), (11, 9), (12, 9),
-        # Lower-right corners
-        (12, 7), (12, 8),
-        # Lower-left corners
+    # ─────────────────────────────────────────────────────────────────────────
+    # PASS 5: OUTLINE_PLANT 테두리
+    #   수관 외곽: 투명 픽셀에만 적용 (채워진 픽셀 덮지 않음).
+    #   x=2 돌출 포함.
+    #   기둥 측면: x=6, x=9 (y=9..14), 기둥 하단 y=15.
+    # ─────────────────────────────────────────────────────────────────────────
+    canopy_outline = [
+        # 상단 (y=0)
+        (3, 0), (4, 0), (5, 0), (6, 0), (7, 0), (8, 0),
+        (9, 0), (10, 0), (11, 0), (12, 0),
+        # 상단 y=1 좌우 끝
+        (3, 1), (12, 1),
+        # 좌측 (y=2..8)
+        (2, 2), (2, 3), (2, 4), (2, 5), (2, 6),
+        # 좌측 돌출 x=2 상하 코너
+        (1, 3), (1, 4), (1, 5),
         (2, 7), (2, 8),
-        # Transition into trunk sides
-        (6, 9), (9, 9),
+        # 우측 (y=1..8)
+        (13, 2), (13, 3), (13, 4), (13, 5), (13, 6), (13, 7),
+        (12, 8),
+        # 수관 하단 좌측 (기둥 좌)
+        (3, 9), (4, 9), (5, 9), (6, 9),
+        # 수관 하단 우측 (기둥 우)
+        (9, 9), (10, 9), (11, 9), (12, 9),
     ]
-    for x, y in outline_ring:
-        if 0 <= x < W and 0 <= y < H:
-            if im.getpixel((x, y))[3] == 0:
-                put_px(im, x, y, OUTLINE_PLANT)
+    for x, y in canopy_outline:
+        if 0 <= x < W and 0 <= y < H and im.getpixel((x, y))[3] == 0:
+            put_px(im, x, y, OUTLINE_PLANT)
 
-    # Trunk side outlines (below canopy)
+    # 기둥 측면 테두리 (y=9..14)
     for y in range(9, 15):
         if im.getpixel((6, y))[3] == 0:
             put_px(im, 6, y, OUTLINE_PLANT)
         if im.getpixel((9, y))[3] == 0:
             put_px(im, 9, y, OUTLINE_PLANT)
-    # Trunk base
+    # 기둥 하단
     hline(im, 7, 8, 15, OUTLINE_PLANT)
 
     return im
