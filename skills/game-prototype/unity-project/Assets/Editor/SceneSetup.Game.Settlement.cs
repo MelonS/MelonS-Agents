@@ -33,6 +33,11 @@ namespace MelonS.GameProto.EditorTools
             if (cropGrowingSprite  == null) Debug.LogWarning("[SceneSetup] crop_rice_growing.png null — stage-sprite wiring skipped");
             Sprite stockSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stockpile_marker.png");
 
+            // #229 RimWorld Crashlanded 정합 — 맨땅 시작.  미리 지어진 베이스(벽/바닥/화덕/
+            //  연구대/작물/램프)를 제거하고 플레이어가 직접 건설하게 한다.  저장 구역만 유지
+            //  (RimWorld 도 stockpile zone 은 무료 지정).  코드는 플래그로 보존(되돌리기 쉽게).
+            bool prebuiltBase = false;
+            if (prebuiltBase) {
             // 벽 5개 - 북쪽 벽 라인 (y=1, x=-7..-3) + 좌우 벽 (x=-7, x=-3, y=0)
             //  운영자 피드백: tile 시각 center 가 (x+0.5, y+0.5) 라서 entity 도 +0.5 정렬.
             Vector2Int[] wallSpots = new[]
@@ -118,6 +123,8 @@ namespace MelonS.GameProto.EditorTools
                 lsr.sprite = lampSprite;
                 lsr.sortingOrder = 6;
             }
+
+            } // #229 end prebuiltBase — 맨땅 시작이라 위 구조물은 스폰 안 함
 
             // Day 57 → #121 - stockpile zone 으로 업그레이드. 3x3 영역, 각 cell 이 zone instance.
             //  hauler 가 가장 가까운 zone center 로 자원 운반 후 inventory 차감.

@@ -171,14 +171,18 @@ namespace MelonS.GameProto
                 PawnHauler.MeatPileSpriteRef = meatPileSpriteRuntime;
             }
 
-            // 운영자 피드백 — 게임 시작 시 자원 0 이면 빌드 모드도 못 켜고 무엇도 못함.
-            // 림월드 starter 처럼 약간의 자원: 벽 6 + 화덕 1 + 식사 며칠
+            // #229 RimWorld Crashlanded 정합 — 맨땅 시작이라 첫 베이스를 직접 지을 자재 +
+            //  지을 동안 버틸 식량 버퍼가 필요하다.  RimWorld(목재~300 + 생존식량~50)에 매핑:
+            //   목재 300 = 벽/바닥/화덕/침대 첫 베이스 건설분
+            //   식사 50  = 생존식량 버퍼(바닥에서 자고 이걸로 버티며 농장·화덕 건설)
+            //  무한 축적 방지는 STEP2(벌목/채광 지정제)에서 — 자동 채집을 끊어 이 버퍼가
+            //  건설로 '소비'되고 플레이어 지정으로만 다시 모인다.
             if (ResourceManager.Instance != null)
             {
-                ResourceManager.Instance.AddWood(40);   // 벽 6 + 화덕 1 (남는 거 약간)
-                ResourceManager.Instance.AddFood(10);   // 모자라면 AI 사냥/채집 발동
-                ResourceManager.Instance.AddMeals(2);   // 식사 2 (즉시 먹을 수 있음)
-                Debug.Log("[GameManager] starter resources: wood=40 food=10 meals=2");
+                ResourceManager.Instance.AddWood(300);
+                ResourceManager.Instance.AddFood(0);
+                ResourceManager.Instance.AddMeals(50);
+                Debug.Log("[GameManager] starter resources (RimWorld bare): wood=300 food=0 meals=50");
             }
 
             if (integrationTest)

@@ -266,10 +266,12 @@ namespace MelonS.GameProto.Tests
                 totalPawnMove += (pawns[i].transform.position - startPos[i]).magnitude;
             bool resChange = endWood != startWood || endFood != startFood || endMeals != startMeals;
             bool pawnMoved = totalPawnMove > 2.0f;  // 3 pawn 합산 > 2 unit
-            // #137 운영자 fb: wood 증가 진짜 검증 (이전 PASS 도 wood 정체 허용했음).
-            bool woodUp = endWood > startWood;
-            Assert((resChange || pawnMoved) && woodUp,
-                $"15초 시뮬: wood {startWood}→{endWood} (증가 필수), food {startFood}→{endFood}, meals {startMeals}→{endMeals}, totalPawnMove={totalPawnMove:F2}");
+            // #229 RimWorld 정합: 'ai does something' = 림이 실제로 활동(이동/일/하울)한다.
+            //  과거엔 wood 자동증가를 요구했으나, RimWorld 는 야생나무 벌목이 *지정제*라
+            //  자동으로 wood 가 늘지 않는다(STEP2).  그래서 자동-자원증가 대신 pawn 활동으로
+            //  AI 가동을 검증한다(자원 변화는 부수적으로 OR).
+            Assert(pawnMoved || resChange,
+                $"15초 시뮬 ai-active: totalPawnMove={totalPawnMove:F2} (>2 필요) wood {startWood}→{endWood} food {startFood}→{endFood} meals {startMeals}→{endMeals}");
         }
 
         /// <summary>I5: research bench 가 정착지 안에 있음 + 3 pawn 중 누군가 옆에 있으면 진행</summary>
@@ -633,11 +635,21 @@ namespace MelonS.GameProto.Tests
             var rm = Services.Get<ResourceManager>();
             var cs = Object.FindFirstObjectByType<ClickSelector>();
             var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            if (rm == null || cs == null || pawns.Length == 0)
+            { Assert(false, $"rm={rm!=null} cs={cs!=null} pawns={pawns.Length}"); yield break; }
             var crops = Object.FindObjectsByType<CropEntity>(FindObjectsSortMode.None);
-            if (rm == null || cs == null || pawns.Length == 0 || crops.Length == 0)
-            { Assert(false, $"rm={rm!=null} cs={cs!=null} pawns={pawns.Length} crops={crops.Length}"); yield break; }
-            // 첫 crop 을 ripe 로 강제 - growth field reflection
-            var crop = crops[0];
+            CropEntity crop;
+            if (crops.Length > 0) crop = crops[0];
+            else
+            {
+                // #229 RimWorld 맨땅 시작 — 씬에 미리 깔린 작물 없음.  테스트용 작물 force-spawn.
+                var cGo = new GameObject("QA_Crop");
+                cGo.transform.position = pawns[0].transform.position + new Vector3(2f, 0f, 0f);
+                cGo.AddComponent<SpriteRenderer>();
+                crop = cGo.AddComponent<CropEntity>();
+                yield return null;  // Awake → BoxCollider2D 부착 (우클릭 raycast 용)
+            }
+            // crop 을 ripe 로 강제 - growth field reflection
             var growthField = typeof(CropEntity).GetField("growth",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (growthField != null) growthField.SetValue(crop, 1.0f);
@@ -647,15 +659,14 @@ namespace MelonS.GameProto.Tests
             cs.SimulateSelect(pawns[0]);
             cs.SimulateRightClick(new Vector2(crop.transform.position.x, crop.transform.position.y));
             yield return null;
-            // #215 운영자 fb "먹거리 순간이동": 수확은 더 이상 즉시 food 를 적립하지 않고 물리
-            //  식량 더미를 작물 자리에 떨어뜨린다(hauler 가 운반해야 적립).  따라서 (a) 더미가
-            //  생겼고 (b) food 가 즉시 오르지 '않았음'(텔레포트 없음)을 검증한다.
-            MeatPileEntity pile = null;
-            foreach (var mp in Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None))
-                if (Vector2.Distance(mp.transform.position, crop.transform.position) < 1.5f) { pile = mp; break; }
+            // #229 RimWorld 정합: 작물 우클릭 = 선택 림에게 '수확 명령'(PawnHarvester) → 걸어가
+            //  수확 후 물리 식량 더미.  즉시 수확/적립이 아니므로 (a) 림이 수확 task 를 받았고
+            //  (b) food 가 즉시 오르지 '않았음'(무텔레포트)을 검증한다.
+            var harvester = pawns[0].GetComponent<PawnHarvester>();
+            bool commanded = harvester != null && harvester.HasTask;
             int endFood = rm.food;
-            Assert(pile != null && endFood == startFood,
-                $"crop 수확 물리드롭: pile={pile!=null} food {startFood}->{endFood} (즉시적립 없어야 = 무텔레포트)");
+            Assert(commanded && endFood == startFood,
+                $"crop 우클릭 수확명령: task={commanded} food {startFood}->{endFood} (즉시적립 없어야 = 무텔레포트)");
         }
 
         /// <summary>I21: drafted pawn → wolf 강제 spawn → 우클릭 = attack.
@@ -1183,18 +1194,18 @@ namespace MelonS.GameProto.Tests
         {
             yield return null;
             // 기존 wall prefab 가져오기 (DefaultWallPrefab 활용)
+            // #229 RimWorld 맨땅 시작 — 씬에 미리 깔린 벽이 없으므로 BuildManager 의 wall
+            //  prefab/sprite 를 직접 가져온다(빌드 시스템의 정식 출처, 씬 검색 대신).
             GameObject wallPrefab = null;
             Sprite wallSpr = null;
-            var existingWall = Object.FindFirstObjectByType<WallEntity>();
-            if (existingWall != null)
+            if (BuildManager.Instance != null)
             {
-                wallSpr = existingWall.GetComponent<SpriteRenderer>()?.sprite;
-            }
-            var prefabAny = Resources.FindObjectsOfTypeAll<GameObject>();
-            foreach (var p in prefabAny)
-            {
-                if (p == null) continue;
-                if (p.name == "Wall" && p.GetComponent<WallEntity>() != null) { wallPrefab = p; break; }
+                var pf = typeof(BuildManager).GetField("wallPrefab",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var sf = typeof(BuildManager).GetField("wallSprite",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (pf != null) wallPrefab = pf.GetValue(BuildManager.Instance) as GameObject;
+                if (sf != null) wallSpr = sf.GetValue(BuildManager.Instance) as Sprite;
             }
             if (wallPrefab == null || wallSpr == null)
             { Assert(false, $"wall prefab/sprite 못 찾음 (prefab={wallPrefab!=null} spr={wallSpr!=null})"); yield break; }
