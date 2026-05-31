@@ -93,7 +93,9 @@ namespace MelonS.GameProto
                 // #253 sprite 품질 검사 가능하도록 해당 건물로 카메라 클로즈업 후 캡처
                 //  (이전엔 줌아웃 전경이라 건물이 20px 점으로 보여 sprite 판단 불가 — 도구 결함).
                 if (cam != null) { cam.orthographicSize = 2.2f; cam.transform.position = new Vector3(cx + 0.5f, cy + 0.5f, cam.transform.position.z); }
-                yield return null; yield return null;
+                // #257 배치 시 생기는 ClickEffect(파란 X, lifetime 0.6s, sortingOrder 40)가 sprite
+                //  위에 찍혀 '파란 십자 아티팩트'로 오인됐음 — 사라질 때까지(>0.6s) 기다린 뒤 캡처.
+                yield return new WaitForSeconds(0.8f);
                 ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(dir, $"audit_{idx:00}_{mode}.png"));
                 yield return null; yield return null;
             }
