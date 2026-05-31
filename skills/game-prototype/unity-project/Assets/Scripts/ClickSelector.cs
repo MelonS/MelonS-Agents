@@ -95,6 +95,24 @@ namespace MelonS.GameProto
                 currentSelection.SetDrafted(!currentSelection.IsDrafted);
             }
 
+            // #233 ★진짜 원인(진단 로그 sel=False): 우클릭 벌목/채광이 'currentSelection!=null'
+            //  게이트에 막혀 림이 선택 안 돼 있으면 안 됐다.  RimWorld 에선 벌목/채광 *지정*은
+            //  림 선택이 불필요(Architect>Orders 처럼).  → 선택 무관하게 우클릭 나무/광맥 = 바로
+            //  지정(🪓/⛏ 마커 + idle 림 dispatch).  이 블록을 selection 게이트 밖에 둔다.
+            if (Input.GetMouseButtonDown(1) && !overUI && !buildActive)
+            {
+                Vector3 dmw = mainCamera.ScreenToWorldPoint(Input.mousePosition); dmw.z = 0f;
+                Collider2D dhit = PickEntityAt(dmw);
+                if (dhit != null)
+                {
+                    if (dhit.GetComponent<TreeEntity>() != null && TreeChopDesignation.Instance != null
+                        && TreeChopDesignation.Instance.TryMark(dhit.gameObject) != null)
+                    { Debug.Log("[Chop] 우클릭 벌목 지정"); return; }
+                    if (dhit.GetComponent<StoneVeinEntity>() != null && MineDesignation.Instance != null
+                        && MineDesignation.Instance.TryMark(dhit.gameObject) != null)
+                    { Debug.Log("[Mine] 우클릭 채광 지정"); return; }
+                }
+            }
             // Right click = move OR chop OR attack (drafted) for selected pawn
             //   buildActive 면 BuildManager 가 우클릭 = cancel 처리 (overlap 방지)
             //   #113 - undrafted + entity hit = RimWorld 스타일 "Prioritize" 컨텍스트 메뉴
