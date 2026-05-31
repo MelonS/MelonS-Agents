@@ -83,6 +83,12 @@ namespace MelonS.GameProto
         /// <summary>True while the player is in roof designation mode.</summary>
         public bool ModeActive { get; private set; }
 
+        /// <summary>운영자 fb (2026-06-01) "다른 영역도 제거하는 기능 필요" — true 면 같은
+        /// drag-rect 가 지붕을 '지우는' ERASE 모드.  add 경로와 대칭: 같은 입력/드래그
+        /// 로직을 타되 AddRoof 대신 RemoveRoof 를 호출한다.  RimWorld 의 Zone 'Expand/
+        /// Clear' 토글과 동일 개념(여기선 roofed 셀 제거).  ModeActive 안에서만 의미가 있다.</summary>
+        public bool EraseMode { get; private set; }
+
         // The shared set of roofed cells.  RoofOverlayRenderer reads this READ-ONLY
         //  (via the public Roofed accessor) to draw the shade overlay; future rain /
         //  temperature systems can read IsRoofed(cell) as the roofed FLAG hook.
@@ -152,9 +158,17 @@ namespace MelonS.GameProto
         /// so the click-handlers never fight over one left-click.  Cancels the others
         /// on entry via their existing read-only SetMode APIs (no edit to those files).
         /// </summary>
-        public void SetMode(bool on)
+        public void SetMode(bool on) => SetModeInternal(on, erase: false);
+
+        /// <summary>운영자 fb (2026-06-01): 지붕 영역을 '지우는' 모드로 진입.  add 모드와
+        /// 같은 drag-rect 입력을 쓰되 RemoveRoof 를 호출한다.  ArchitectMenu Zone →
+        /// 지붕 제거 행(또는 Shift+U 토글)에서 호출.</summary>
+        public void SetEraseMode(bool on) => SetModeInternal(on, erase: true);
+
+        private void SetModeInternal(bool on, bool erase)
         {
             ModeActive = on;
+            EraseMode = on && erase;
             if (on)
             {
                 if (BuildManager.Instance != null && BuildManager.Instance.BuildModeActive)
@@ -179,8 +193,14 @@ namespace MelonS.GameProto
 
             // Hotkey U (roof "Up") — free key (build B/F/G/T/Y, N/R, deconstruct X,
             //  mine M, plant P, stockpile O, floor-stone K, table J, lamp L, fence E,
-            //  H, and WASD camera are all taken).
-            if (Input.GetKeyDown(KeyCode.U)) Toggle();
+            //  H, and WASD camera are all taken).  Shift+U toggles the ERASE submode
+            //  (운영자 fb: 지붕 영역 제거); plain U is add.
+            if (Input.GetKeyDown(KeyCode.U))
+            {
+                bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                if (shift) { if (ModeActive && EraseMode) SetEraseMode(false); else SetEraseMode(true); }
+                else       { if (ModeActive && !EraseMode) SetMode(false);     else SetMode(true); }
+            }
 
             // If another mode was entered elsewhere, leave roof mode so they never
             //  fight over the same left-click.
@@ -256,6 +276,7 @@ namespace MelonS.GameProto
             int cx = Mathf.FloorToInt(world.x);
             int cy = Mathf.FloorToInt(world.y);
             var cell = new Vector2Int(cx, cy);
+            if (EraseMode) { RemoveRoof(cell, playBlip: true, fx: true); return cell; }
             AddRoof(cell, playBlip: true, fx: true);
             // RimWorld auto-roof: if this single cell completed/enclosed a room, fill it.
             if (autoRoofEnclosed) TryAutoRoofEnclosedFrom(cell);
@@ -271,7 +292,8 @@ namespace MelonS.GameProto
             int n = 0;
             for (int cx = x0; cx <= x1; cx++)
                 for (int cy = y0; cy <= y1; cy++)
-                    if (AddRoof(new Vector2Int(cx, cy), playBlip: false, fx: false)) n++;
+                    if (EraseMode ? RemoveRoof(new Vector2Int(cx, cy), playBlip: false, fx: false)
+                                  : AddRoof(new Vector2Int(cx, cy), playBlip: false, fx: false)) n++;
             if (n > 0)
             {
                 // Single throttled blip + one FX at the rect centre for the whole
@@ -280,7 +302,7 @@ namespace MelonS.GameProto
                 ClickEffect.Spawn(
                     new Vector3((x0 + x1) * 0.5f + 0.5f, (y0 + y1) * 0.5f + 0.5f, 0f),
                     new Color(0.30f, 0.32f, 0.40f, 0.95f)); // slate shade
-                Debug.Log($"[Roof] designated {n} cell(s) as roof area");
+                Debug.Log($"[Roof] {(EraseMode ? "removed" : "designated")} {n} cell(s) roof area");
             }
             return n;
         }
@@ -302,6 +324,27 @@ namespace MelonS.GameProto
             }
             return true;
         }
+
+        /// <summary>운영자 fb (2026-06-01): remove one cell from the roofed set (erase
+        /// mode).  Symmetric to AddRoof — idempotent (un-roofing a non-roofed cell is a
+        /// silent no-op), bumps Version on a real change so RoofOverlayRenderer rebuilds
+        /// and the shade quad disappears.  Returns true if the cell was actually removed.</summary>
+        private bool RemoveRoof(Vector2Int cell, bool playBlip, bool fx)
+        {
+            if (!roofed.Remove(cell)) return false;   // wasn't roofed — silent no-op
+            Version++;
+            if (playBlip) AudioBank.Instance?.PlaySelect();
+            if (fx)
+            {
+                ClickEffect.Spawn(new Vector3(cell.x + 0.5f, cell.y + 0.5f, 0f),
+                    new Color(0.55f, 0.55f, 0.60f, 0.85f)); // lighter slate = removed
+                Debug.Log($"[Roof] removed roof at cell ({cell.x},{cell.y})");
+            }
+            return true;
+        }
+
+        /// <summary>QA / test entry point: erase the roof on a specific cell directly.</summary>
+        public bool EraseCell(Vector2Int cell) => RemoveRoof(cell, playBlip: true, fx: true);
 
         // ---- RimWorld auto-roof of a wall-enclosed room ----------------------
         //  A light version of vanilla's auto-roof: when the player roofs a cell, we

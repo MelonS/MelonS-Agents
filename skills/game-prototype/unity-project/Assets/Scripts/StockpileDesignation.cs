@@ -75,6 +75,12 @@ namespace MelonS.GameProto
         ///  rather than normal storage zones.</summary>
         public bool DumpingMode { get; private set; }
 
+        /// <summary>운영자 fb (2026-06-01) "창고영역 삭제 기능 필요" — true 면 같은 drag-rect
+        /// 가 stockpile/dumping zone 을 '지우는' ERASE 모드.  add 경로와 대칭: 같은 입력/
+        /// 드래그 로직을 타되 MarkCellAt 대신 EraseCellAt 을 호출해 그 셀의 StockpileZoneEntity
+        /// 를 제거한다.  RimWorld 의 Zone 'Delete/Clear' 와 동일.  ModeActive 안에서만 의미.</summary>
+        public bool EraseMode { get; private set; }
+
         private Camera cam;
 
         // Drag-rect state.
@@ -121,16 +127,22 @@ namespace MelonS.GameProto
 
         /// <summary>Enter/leave STORAGE (저장) mode.  Mutually exclusive with build /
         /// deconstruct / mine / grow.  ArchitectMenu Zone → 저장 calls SetMode(true).</summary>
-        public void SetMode(bool on) => SetModeInternal(on, dumping: false);
+        public void SetMode(bool on) => SetModeInternal(on, dumping: false, erase: false);
 
         /// <summary>Enter DUMPING (폐기) mode — same drag, Low+Stone-only preset.
         /// ArchitectMenu Zone → 폐기 calls SetDumpingMode(true).</summary>
-        public void SetDumpingMode(bool on) => SetModeInternal(on, dumping: true);
+        public void SetDumpingMode(bool on) => SetModeInternal(on, dumping: true, erase: false);
 
-        private void SetModeInternal(bool on, bool dumping)
+        /// <summary>운영자 fb (2026-06-01): enter ERASE (삭제) mode — the same drag-rect
+        /// removes any stockpile/dumping zone under each swept cell.  ArchitectMenu Zone
+        /// → 창고 삭제 row (or Shift+O hotkey) calls SetEraseMode(true).</summary>
+        public void SetEraseMode(bool on) => SetModeInternal(on, dumping: false, erase: true);
+
+        private void SetModeInternal(bool on, bool dumping, bool erase)
         {
             ModeActive = on;
             DumpingMode = on && dumping;
+            EraseMode = on && erase;
             if (on)
             {
                 // Cancel the other four designation modes so one click fires one handler.
@@ -155,8 +167,14 @@ namespace MelonS.GameProto
             if (cam == null) cam = Camera.main;
 
             // Hotkey O (stOrage) — free key (build B/F/G/T/Y, N/R, X decon, M mine,
-            //  P plant, K/J/H/L/E builds are taken).  Toggles plain storage mode.
-            if (Input.GetKeyDown(KeyCode.O)) Toggle();
+            //  P plant, K/J/H/L/E builds are taken).  Plain O toggles storage mode;
+            //  Shift+O toggles the ERASE submode (운영자 fb: 창고영역 삭제).
+            if (Input.GetKeyDown(KeyCode.O))
+            {
+                bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                if (shift) { if (ModeActive && EraseMode) SetEraseMode(false); else SetEraseMode(true); }
+                else       { if (ModeActive && !EraseMode && !DumpingMode) SetMode(false); else SetMode(true); }
+            }
 
             // If a build / deconstruct / mine / grow mode was entered elsewhere, leave
             //  stockpile mode so they never fight over the same left-click.
@@ -235,7 +253,11 @@ namespace MelonS.GameProto
         // ---- marking ---------------------------------------------------------
 
         private StockpileZoneEntity MarkCell(Vector3 world)
-            => MarkCellAt(Mathf.FloorToInt(world.x), Mathf.FloorToInt(world.y));
+        {
+            int cx = Mathf.FloorToInt(world.x), cy = Mathf.FloorToInt(world.y);
+            if (EraseMode) { EraseCellAt(cx, cy); return null; }
+            return MarkCellAt(cx, cy);
+        }
 
         private int MarkRect(Vector3 a, Vector3 b)
         {
@@ -246,9 +268,36 @@ namespace MelonS.GameProto
             int n = 0;
             for (int cx = x0; cx <= x1; cx++)
                 for (int cy = y0; cy <= y1; cy++)
-                    if (MarkCellAt(cx, cy) != null) n++;
+                    if (EraseMode ? EraseCellAt(cx, cy) : (MarkCellAt(cx, cy) != null)) n++;
             return n;
         }
+
+        /// <summary>운영자 fb (2026-06-01) "창고영역 삭제 기능 필요": remove the stockpile/
+        /// dumping zone occupying cell (cx,cy).  Symmetric to MarkCellAt — finds the live
+        /// StockpileZoneEntity at the cell centre and Destroys it (the zone holds no
+        /// PathGrid blocker, so a plain Unity Destroy frees the cell; haulers holding it
+        /// as a target self-release on their next null-check poll, the same way an erased
+        /// crop/marker is dropped).  Closes the Z2b toolbar if it was on the erased zone.
+        /// Idempotent: erasing an empty cell is a silent no-op.  Returns true if a zone
+        /// was removed.</summary>
+        public bool EraseCellAt(int cx, int cy)
+        {
+            Vector2 center = new Vector2(cx + 0.5f, cy + 0.5f);
+            var z = ExistingStockpileAt(center);
+            if (z == null) return false;   // nothing here — silent no-op
+
+            if (selectedZone == z) ClearSelectedZone();   // don't leave a toolbar on a dead zone
+            Destroy(z.gameObject);
+
+            AudioBank.Instance?.PlaySelect();
+            ClickEffect.Spawn(new Vector3(center.x, center.y, 0f),
+                new Color(0.85f, 0.40f, 0.36f, 0.95f)); // DANGER_RED-ish = removed
+            Debug.Log($"[Stockpile] 영역 삭제 cell ({cx},{cy})");
+            return true;
+        }
+
+        /// <summary>QA / test entry point: erase the stockpile zone at a specific cell.</summary>
+        public bool EraseCell(Vector2Int cell) => EraseCellAt(cell.x, cell.y);
 
         /// <summary>Lay a StockpileZoneEntity on cell (cx,cy) if it is open floor.
         /// Idempotent: a cell that already holds a stockpile is skipped (returns the

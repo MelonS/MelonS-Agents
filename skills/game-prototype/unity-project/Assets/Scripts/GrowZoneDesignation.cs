@@ -114,6 +114,13 @@ namespace MelonS.GameProto
         /// <summary>True while the player is in grow designation mode.</summary>
         public bool ModeActive { get; private set; }
 
+        /// <summary>운영자 fb (2026-06-01) "다른 영역도 제거하는 기능 필요" — true 면 같은
+        /// drag-rect 가 경작 영역을 '지우는' ERASE 모드.  add 경로와 대칭: 같은 입력/드래그
+        /// 로직을 타되 MarkCellAt 대신 EraseCellAt 을 호출해 designated 셀의 마커를
+        /// 제거하고 zone 기록을 드롭한다.  이미 심어진 CropEntity 는 건드리지 않음(designation
+        /// 만 제거 — RimWorld Zone Clear 와 동일).  ModeActive 안에서만 의미가 있다.</summary>
+        public bool EraseMode { get; private set; }
+
         private Camera cam;
         private float lastDispatch = -999f;
 
@@ -178,9 +185,17 @@ namespace MelonS.GameProto
         /// MineDesignation mine mode, so the four click-handlers never fight over one
         /// left-click.  Cancels the other three on entry via their existing read-only
         /// SetMode APIs (no edit to those files).</summary>
-        public void SetMode(bool on)
+        public void SetMode(bool on) => SetModeInternal(on, erase: false);
+
+        /// <summary>운영자 fb (2026-06-01): 경작 영역을 '지우는' 모드로 진입.  add 모드와
+        /// 같은 drag-rect 입력을 쓰되 designation 을 제거한다(심어진 작물은 보존).
+        /// ArchitectMenu Zone → 경작 제거 행(또는 Shift+P 토글)에서 호출.</summary>
+        public void SetEraseMode(bool on) => SetModeInternal(on, erase: true);
+
+        private void SetModeInternal(bool on, bool erase)
         {
             ModeActive = on;
+            EraseMode = on && erase;
             if (on)
             {
                 if (BuildManager.Instance != null && BuildManager.Instance.BuildModeActive)
@@ -200,8 +215,14 @@ namespace MelonS.GameProto
             if (cam == null) cam = Camera.main;
 
             // Hotkey P (Plant) — free key (build B/F/G/T/Y, N/R, deconstruct X, mine M
-            //  are all taken).
-            if (Input.GetKeyDown(KeyCode.P)) Toggle();
+            //  are all taken).  Shift+P toggles the ERASE submode (운영자 fb: 경작 영역
+            //  제거); plain P is add.
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                if (shift) { if (ModeActive && EraseMode) SetEraseMode(false); else SetEraseMode(true); }
+                else       { if (ModeActive && !EraseMode) SetMode(false);     else SetMode(true); }
+            }
 
             // If a build / deconstruct / mine mode was entered elsewhere, leave grow
             //  mode so they never fight over the same left-click.
@@ -281,6 +302,7 @@ namespace MelonS.GameProto
         {
             int cx = Mathf.FloorToInt(world.x);
             int cy = Mathf.FloorToInt(world.y);
+            if (EraseMode) { EraseCellAt(cx, cy); return null; }
             return MarkCellAt(cx, cy);
         }
 
@@ -293,9 +315,45 @@ namespace MelonS.GameProto
             int n = 0;
             for (int cx = x0; cx <= x1; cx++)
                 for (int cy = y0; cy <= y1; cy++)
-                    if (MarkCellAt(cx, cy) != null) n++;
+                    if (EraseMode ? EraseCellAt(cx, cy) : (MarkCellAt(cx, cy) != null)) n++;
             return n;
         }
+
+        /// <summary>운영자 fb (2026-06-01): erase a grow-zone designation on cell (cx,cy).
+        /// Symmetric to MarkCellAt — destroys the tinted marker, drops the zone record,
+        /// and cancels any in-flight plant job aimed at that cell so a pawn doesn't plant
+        /// on an un-designated cell.  Does NOT touch an already-planted CropEntity (the
+        /// designation is removed, the crop keeps growing — RimWorld Zone Clear).  Returns
+        /// true if a designation was actually removed (idempotent: erasing a non-zone cell
+        /// is a silent no-op).</summary>
+        public bool EraseCellAt(int cx, int cy)
+        {
+            var key = new Vector2Int(cx, cy);
+            if (!zone.TryGetValue(key, out var gc)) return false;   // not designated — no-op
+            if (gc != null && gc.Marker != null) Destroy(gc.Marker.gameObject);
+            zone.Remove(key);
+
+            // Cancel an in-flight plant job aimed at this cell (release its reservations
+            //  via the existing EndJob path) so no pawn plants on the now-cleared cell.
+            for (int i = jobs.Count - 1; i >= 0; i--)
+            {
+                if (jobs[i].Cell == key)
+                {
+                    if (jobs[i].Movement != null) jobs[i].Movement.ClearTarget();
+                    EndJob(jobs[i]);
+                    jobs.RemoveAt(i);
+                }
+            }
+
+            AudioBank.Instance?.PlaySelect();
+            ClickEffect.Spawn(new Vector3(cx + 0.5f, cy + 0.5f, 0f),
+                new Color(0.70f, 0.55f, 0.30f, 0.95f)); // dirt-brown = de-designated
+            Debug.Log($"[Grow] erased grow-zone designation at ({cx},{cy})");
+            return true;
+        }
+
+        /// <summary>QA / test entry point: erase a grow-zone designation directly.</summary>
+        public bool EraseCell(Vector2Int cell) => EraseCellAt(cell.x, cell.y);
 
         /// <summary>Designate cell (cx,cy) as grow zone if it is plantable DIRT/soil.
         /// REJECTS non-dirt the way build-placement validation rejects water/rock:

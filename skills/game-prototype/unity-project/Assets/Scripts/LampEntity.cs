@@ -9,17 +9,25 @@ namespace MelonS.GameProto
     ///
     /// The placed standing-lamp / torch.  A passive structure entity in the same
     /// family as StoveEntity / WallEntity: a sprite + a 1×1 collider footprint.
-    /// It carries NO state of its own beyond "I am a lamp" — the warm night glow
-    /// pool it casts is drawn by LampGlowDriver.cs (a self-attached driver that
-    /// mirrors NightLightPoolDriver), so this file stays a thin marker component.
+    /// It carries NO state of its own beyond "I am a lamp" — the night lighting it
+    /// casts is drawn by two self-attached driver layers that both scan for this
+    /// marker, so this file stays a thin marker component:
+    ///   - LampGlowDriver.cs : warm amber floor pool UNDER the night overlay
+    ///                         (sortingOrder 8) — ambience/colour on the ground.
+    ///   - LampLight.cs      : soft additive light disc ABOVE the night overlay
+    ///                         (sortingOrder 26) — actually lifts the darkness so
+    ///                         the map reads as LIT around the lamp at night
+    ///                         (operator fb "조명이 실제로 맵을 밝히는 효과 필요").
+    /// The two layers together give RimWorld-style "light pushes back the dark".
     ///
     /// Why a marker, not a glow-owner:
     ///   NightLightPoolDriver.cs scans ONLY for StoveEntity and gates on
     ///   stove.MealsAvailable/CanCookOne — it cannot detect a lamp without an
-    ///   edit, and the W-M4-04 lane contract forbids editing it.  So a dedicated
-    ///   LampGlowDriver scans for LampEntity instead, reusing the identical
-    ///   procedural-glow + day/night-alpha pattern.  This component is the thing
-    ///   that driver scans for.
+    ///   edit, and the W-M4-04 lane contract forbids editing it.  So dedicated
+    ///   LampGlowDriver / LampLight drivers scan for LampEntity instead, reusing
+    ///   the identical procedural + day/night-alpha pattern.  This component is
+    ///   the thing those drivers scan for; FlameHeightCells / IsLit are the only
+    ///   surface they read.
     ///
     /// Lit model (prototype scope):
     ///   A standing lamp / torch is ALWAYS LIT — it has no fuel or power loop in

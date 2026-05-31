@@ -96,17 +96,21 @@ namespace MelonS.GameProto
         }
 
         private RectTransform contentRt;  // bordered-panel inner content (buttons + dividers live here)
+        private RectTransform speedPanelRt;  // 우하단 속도/멈춤 클러스터 (RimWorld 레이아웃)
 
         private void BuildLayout()
         {
-            // 부모 panel — 하단 중앙
+            // === 하단 중앙 탭 바 (징집/직업/일정/건축/연구/설정) ===
+            // 운영자 fb "속도 제어랑 멈춤 버튼은 우하단으로 이동(RimWorld 참고)":
+            //   속도(멈춤/1x/2x/4x) 4개는 별도 우하단 패널로 분리, 나머지 탭 버튼만 하단 중앙 유지.
+            //   단, 모든 Button 은 여전히 GuiControlBar transform 의 DIRECT child (IntegrationTestRunner
+            //   가 bar.transform.Find("Btn_멈춤") depth-1 검사 + Button 총 >=9 검사) → 시각 위치만 분리.
             var rt = gameObject.AddComponent<RectTransform>();
             rt.anchorMin = new Vector2(0.5f, 0f);
             rt.anchorMax = new Vector2(0.5f, 0f);
             rt.pivot = new Vector2(0.5f, 0f);
-            // 10 buttons (설정 통합 추가)
-            //  layout: [멈춤][1x][2x][4x] | [징집] | [직업][일정] | [건축] | [연구] | [설정]
-            float totalW = 10 * BtnW + 4 * Gap + 5 * GroupGap;
+            // 6 tab buttons: [징집] | [직업][일정] | [건축] | [연구] | [설정]
+            float totalW = 6 * BtnW + 4 * GroupGap;
             // ui-audit §3.2 Band A — main command bar baseline y=24 (was 40).
             //   This is the persistent bottom-center bar; the contextual gizmo row
             //   (SelectionGizmoBar, Band C) sits ABOVE it at y=112, so 24 anchors the
@@ -121,23 +125,37 @@ namespace MelonS.GameProto
             // MakeBorderedPanel returns inner content RT (inside border+fill); we lay buttons there.
             contentRt = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(rt);
 
-            float x = -totalW * 0.5f;
+            // === 우하단 속도 패널 (RimWorld 의 우하단 시계/속도 클러스터 위치) ===
+            //   ClockUI 날짜 클러스터 근처 (anchor (1,0)).  자체 bordered panel 을 만들되,
+            //   속도 버튼들은 여전히 GuiControlBar transform 의 direct child 로 두고
+            //   speedPanelRt 를 시각 배경으로만 사용한다 (버튼은 speedPanelRt 에 부모붙이지 않음).
+            var spGo = new GameObject("SpeedPanel");
+            spGo.transform.SetParent(transform, false);
+            speedPanelRt = spGo.AddComponent<RectTransform>();
+            speedPanelRt.anchorMin = new Vector2(1f, 0f);
+            speedPanelRt.anchorMax = new Vector2(1f, 0f);
+            speedPanelRt.pivot = new Vector2(1f, 0f);
+            float speedW = 4 * BtnW + 3 * Gap;
+            speedPanelRt.sizeDelta = new Vector2(speedW + padX * 2f, BtnH + padY * 2f);
+            speedPanelRt.anchoredPosition = new Vector2(-16f, 24f);  // 우하단 모서리 16px, 바닥 24px
+            MelonS.GameProto.Core.UITheme.MakeBorderedPanel(speedPanelRt);
+
             float dividerH = BtnH + 4f;
 
-            // Speed group: [⏸ 멈춤][1x][2x][4x]
-            // ui-audit P1 (운영자 fb "없음(0)") — the bar's LEFTMOST slot is ALWAYS the
-            //   pause/speed-0 control, never a build-mode readout ("없음(0)"/mode-count
-            //   string).  This file builds the pause button FIRST and writes NO
-            //   mode-indicator Text anywhere in the bar; build-mode active state lives
-            //   ONLY on the 건축 button highlight (Update → RefreshBuildHighlight(architectBtn)).
-            //   The GameObject name MUST stay "Btn_멈춤" (IntegrationTestRunner depth-1
-            //   Find), so we pass goName="멈춤" but show a clean "⏸ 멈춤" pause glyph as
-            //   the visible label → reads unambiguously as the stop control next to 1x/2x/4x.
-            pauseBtn  = MakeBtn("멈춤", "(Space)",   x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.TogglePause(); }, displayLabel:"⏸ 멈춤"); x += BtnW + Gap;
-            speed1Btn = MakeBtn("1x",  "(1)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(1f); });   x += BtnW + Gap;
-            speed2Btn = MakeBtn("2x",  "(2)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(2f); });   x += BtnW + Gap;
-            speed4Btn = MakeBtn("4x",  "(3)",       x, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(4f); });   x += BtnW;
-            MelonS.GameProto.Core.UITheme.MakeVDivider(contentRt, x + GroupGap * 0.5f, dividerH); x += GroupGap;
+            // Speed group: [⏸ 멈춤][1x][2x][4x] — 우하단 패널 anchor (1,0) 기준 배치.
+            // ui-audit P1 (운영자 fb "없음(0)") — the speed cluster's LEFTMOST slot is ALWAYS the
+            //   pause/speed-0 control, never a build-mode readout.  No mode-indicator Text anywhere.
+            //   The GameObject name MUST stay "Btn_멈춤" (IntegrationTestRunner depth-1 Find).
+            //   anchor (1,0): 우하단 모서리 기준, x 는 left 로 갈수록 더 음수.
+            float spRight = -16f;  // 우측 여백 (speedPanelRt anchoredPosition.x 와 동일)
+            float sx = spRight - padX - BtnW;  // 가장 오른쪽 버튼(4x)의 left edge
+            speed4Btn = MakeBtn("4x",  "(3)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(4f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
+            speed2Btn = MakeBtn("2x",  "(2)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(2f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
+            speed1Btn = MakeBtn("1x",  "(1)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(1f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
+            pauseBtn  = MakeBtn("멈춤", "(Space)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.TogglePause(); }, displayLabel:"⏸ 멈춤", anchorBottomRight:true);
+
+            // === 하단 중앙: 탭 버튼들 ===
+            float x = -totalW * 0.5f;
 
             // Draft group: [징집]
             draftBtn  = MakeBtn("징집",  "(R)",      x, ToggleDraft);                                                                       x += BtnW;
@@ -160,21 +178,35 @@ namespace MelonS.GameProto
             settingsBtn = MakeBtn("설정", "(ESC)", x, () => SettingsMenu.ToggleStatic(), displayLabel:"⚙ 설정");
         }
 
-        private Button MakeBtn(string label, string hint, float x, System.Action onClick, string displayLabel = null)
+        private Button MakeBtn(string label, string hint, float x, System.Action onClick, string displayLabel = null, bool anchorBottomRight = false)
         {
             // NOTE: button MUST stay a DIRECT child of the bar root — IntegrationTestRunner
-            //   does bar.transform.Find("Btn_멈춤") (depth-1).  Don't reparent into Content.
-            //   `label` drives the GameObject name (test-referenced); `displayLabel`, when
-            //   given, drives ONLY the visible Text so we can show e.g. "⏸ 멈춤" without
-            //   renaming the GO away from "Btn_멈춤".
+            //   does bar.transform.Find("Btn_멈춤") (depth-1).  Don't reparent into Content
+            //   nor into SpeedPanel.  `label` drives the GameObject name (test-referenced);
+            //   `displayLabel`, when given, drives ONLY the visible Text so we can show e.g.
+            //   "⏸ 멈춤" without renaming the GO away from "Btn_멈춤".
+            //   anchorBottomRight=true → 우하단 속도 클러스터용 (anchor (1,0), pivot right).
             var go = new GameObject($"Btn_{label}");
             go.transform.SetParent(transform, false);
             var rt = go.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.5f, 0.5f);
-            rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.pivot = new Vector2(0f, 0.5f);
-            rt.sizeDelta = new Vector2(BtnW, BtnH);
-            rt.anchoredPosition = new Vector2(x, 0);
+            if (anchorBottomRight)
+            {
+                // 우하단 anchor: x 는 화면 우측 모서리 기준 음수 오프셋(버튼 left edge).
+                rt.anchorMin = new Vector2(1f, 0f);
+                rt.anchorMax = new Vector2(1f, 0f);
+                rt.pivot = new Vector2(0f, 0f);
+                rt.sizeDelta = new Vector2(BtnW, BtnH);
+                // 패널 바닥에서 padY(8) 만큼 띄움 + 패널 자체가 y=24 → 시각상 중앙 정렬.
+                rt.anchoredPosition = new Vector2(x, 24f + 8f);
+            }
+            else
+            {
+                rt.anchorMin = new Vector2(0.5f, 0.5f);
+                rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.pivot = new Vector2(0f, 0.5f);
+                rt.sizeDelta = new Vector2(BtnW, BtnH);
+                rt.anchoredPosition = new Vector2(x, 0);
+            }
 
             // #UI-restyle U1 — each button gets its own 2px Divider border (root Image)
             //   + an inset fill child, matching the global panel system → reads as a real button.

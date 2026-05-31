@@ -85,14 +85,30 @@ namespace MelonS.GameProto
                     ClearSelection();
                     // #128 - 클릭 시각 피드백 (yellow ring) - 패널 안 보였던 원인 진단 도움
                     ClickEffect.Spawn(mouseWorld, new Color(1.0f, 0.85f, 0.30f, 0.95f));
+                    // 운영자 fb — 나무/베리덤불/광맥/청사진 등 상호작용 가능한 엔티티는 좌클릭 시
+                    //  inspect 와 함께 '플로트 액션 메뉴'(벌목/채집/채광/취소 등)를 띄운다.
+                    //  RimWorld 처럼 선택만으로 작업 지정에 접근 가능.  지정 액션은 림 선택 불필요
+                    //  (designation manager 가 idle 림 dispatch).  메뉴 항목이 없으면 inspect 만.
+                    if (ContextMenuUI.Instance != null)
+                    {
+                        var litems = BuildLeftClickMenu(hit, mouseWorld);
+                        if (litems != null && litems.Count > 0)
+                            ContextMenuUI.Instance.Open(Input.mousePosition, litems);
+                        else if (ContextMenuUI.Instance.IsOpen)
+                            ContextMenuUI.Instance.Close();
+                    }
                 }
                 else { ClearSelection(); currentInspect = null; }
             }
 
-            // Day 48: R key toggles drafted on selected pawn
-            if (Input.GetKeyDown(KeyCode.R) && currentSelection != null)
+            // Day 48: R key toggles drafted on selected pawn.
+            // 운영자 fb "징집은 여러 림 한꺼번에 선택해 쓰는 기능인데 여러 마리 선택 시 안 됨" —
+            //  MarqueeSelector 로 다중 선택돼 있으면 R 키 징집을 *선택된 전원*에게 적용한다.
+            //  단일 선택(currentSelection) 은 기존대로.  GizmoBar 의 OnDraftClicked 와 동일하게
+            //  첫 림 상태 기준으로 토글 target 을 정해 전원 일괄 적용(혼재 상태 → 일괄 ON).
+            if (Input.GetKeyDown(KeyCode.R))
             {
-                currentSelection.SetDrafted(!currentSelection.IsDrafted);
+                ToggleDraftOnSelection();
             }
 
             // #233 ★진짜 원인(진단 로그 sel=False): 우클릭 벌목/채광이 'currentSelection!=null'
@@ -318,6 +334,48 @@ namespace MelonS.GameProto
             }
         }
 
+        // ── 다중 선택 징집 ────────────────────────────────────────────────────
+        //  MarqueeSelector(있고 다중 선택 중)이면 그 전원에게, 아니면 currentSelection 단일에게
+        //  Draft 토글을 적용.  토글 target 은 '첫 림이 현재 drafted 인가'의 반대(전원 일괄) —
+        //  SelectionGizmoBar.OnDraftClicked 와 동일 규약.  PawnEntity.SetDrafted 는 R 키가
+        //  쓰던 바로 그 공개 API(새 징집 로직 없음).
+        private MarqueeSelector cachedMarquee;
+        private MarqueeSelector FindMarquee()
+        {
+            if (cachedMarquee != null) return cachedMarquee;
+#if UNITY_2023_1_OR_NEWER
+            cachedMarquee = Object.FindFirstObjectByType<MarqueeSelector>();
+#else
+            cachedMarquee = Object.FindObjectOfType<MarqueeSelector>();
+#endif
+            return cachedMarquee;
+        }
+
+        private void ToggleDraftOnSelection()
+        {
+            var marquee = FindMarquee();
+            if (marquee != null && marquee.HasMultiSelection)
+            {
+                var sel = marquee.CurrentMultiSelection;
+                // 첫 생존 림 기준으로 target 상태 결정 후 전원 일괄 적용.
+                PawnEntity firstAlive = null;
+                for (int i = 0; i < sel.Count; i++)
+                    if (sel[i] != null && !sel[i].IsDead) { firstAlive = sel[i]; break; }
+                if (firstAlive == null) return;
+                bool target = !firstAlive.IsDrafted;
+                int n = 0;
+                for (int i = 0; i < sel.Count; i++)
+                {
+                    var p = sel[i];
+                    if (p != null && !p.IsDead) { p.SetDrafted(target); n++; }
+                }
+                Debug.Log($"[Draft] 다중 선택 {n}명 → drafted={target}");
+                return;
+            }
+            if (currentSelection != null)
+                currentSelection.SetDrafted(!currentSelection.IsDrafted);
+        }
+
         // rcfix - 모든 작업/휴식 task 취소 (사용자 명령이 잔여 AI task 에 override 되는 것 방지).
         //  chopper/gatherer/hunter/cook/builder.ClearTask + needs.ClearRestTarget.
         private void ClearAllWorkTasks(PawnEntity pawn)
@@ -473,8 +531,152 @@ namespace MelonS.GameProto
             return list;
         }
 
+        // 운영자 fb #1~3 — 엔티티 *좌클릭 선택* 시 뜨는 플로트 액션 메뉴.
+        //  BuildContextMenu(우클릭, 선택된 림에게 '우선' 명령)와 달리, 이쪽은 선택된 림이
+        //  없어도 동작하는 *지정(designation)* 액션을 노출한다(RimWorld Orders 동등):
+        //   - 나무   → 🪓 벌목 지정 (TreeChopDesignation.TryMark)  [fb #1]
+        //   - 베리덤불 → 🍇 채집 지정 (PawnGatherer dispatch; 가까운 idle 림에게)  [fb #2]
+        //   - 광맥   → ⛏ 채광 지정 (MineDesignation.TryMark)  [fb #3]
+        //   - 청사진 → 🔨 건설 / ✕ 청사진 취소  [fb #3]
+        //   - 구조물(벽/문/난로/침대) → ✕ 철거 지정 (DeconstructDesignation.TryMark)  [fb #3]
+        //  저장공간(StockpileZoneEntity) 은 StockpileDesignation 의 전용 토글 toolbar 가
+        //  좌클릭을 이미 처리하므로 여기서 메뉴를 만들지 않는다(중복/충돌 방지 — fb #4 참고).
+        private System.Collections.Generic.List<(string, System.Action)> BuildLeftClickMenu(
+            Collider2D hit, Vector3 worldPos)
+        {
+            var list = new System.Collections.Generic.List<(string, System.Action)>();
+            if (hit == null) return list;
+            var go = hit.gameObject;
+
+            var tree = hit.GetComponent<TreeEntity>();
+            if (tree != null && !tree.IsDestroyed && TreeChopDesignation.Instance != null)
+            {
+                list.Add(("🪓 벌목 지정", () => {
+                    if (TreeChopDesignation.Instance != null) TreeChopDesignation.Instance.TryMark(go);
+                }));
+            }
+
+            var vein = hit.GetComponent<StoneVeinEntity>();
+            if (vein != null && !vein.IsDestroyed && MineDesignation.Instance != null)
+            {
+                list.Add(("⛏ 채광 지정", () => {
+                    if (MineDesignation.Instance != null) MineDesignation.Instance.TryMark(go);
+                }));
+            }
+
+            var bush = hit.GetComponent<BerryBushEntity>();
+            if (bush != null && !bush.IsDepleted)
+            {
+                var bushCap = bush;
+                list.Add(("🍇 채집 지정", () => DispatchGatherToIdle(bushCap)));
+            }
+
+            var bp = hit.GetComponent<BlueprintEntity>();
+            if (bp != null && !bp.IsComplete)
+            {
+                var bpCap = bp;
+                list.Add(("🔨 건설 우선", () => PrioritizeBuild(bpCap)));
+                list.Add(("✕ 청사진 취소", () => { if (bpCap != null) Destroy(bpCap.gameObject); }));
+            }
+
+            // 완성된 구조물(벽/문/난로/침대) → 철거 지정.  DeconstructTarget.IsDeconstructable 가
+            //  허용 타입을 판정(청사진은 위에서 '취소'로 처리되므로 제외됨).
+            if (DeconstructDesignation.Instance != null && bp == null
+                && DeconstructTarget.IsDeconstructable(go))
+            {
+                list.Add(("✕ 철거 지정", () => {
+                    if (DeconstructDesignation.Instance != null) DeconstructDesignation.Instance.TryMark(go);
+                }));
+            }
+
+            return list;
+        }
+
+        // 베리덤불 채집 지정 — 가장 가까운 'idle' PawnGatherer 에게 직접 배정(designation manager 가
+        //  없는 채집을 위한 dispatch).  drafted/manual/sleeping/breaking 림은 제외.  TreeChop/
+        //  Mine designation 의 idle-dispatch 와 동일한 가용성 규약.
+        private void DispatchGatherToIdle(BerryBushEntity bush)
+        {
+            if (bush == null || bush.IsDepleted) return;
+#if UNITY_2023_1_OR_NEWER
+            var gatherers = Object.FindObjectsByType<PawnGatherer>(FindObjectsSortMode.None);
+#else
+            var gatherers = Object.FindObjectsOfType<PawnGatherer>();
+#endif
+            if (gatherers == null || gatherers.Length == 0) return;
+            PawnGatherer best = null; float bestSq = float.MaxValue;
+            Vector2 tp = bush.transform.position;
+            foreach (var g in gatherers)
+            {
+                if (g == null) continue;
+                var e = g.GetComponent<PawnEntity>();
+                if (e != null && (e.IsDrafted || e.IsUnderManualControl)) continue;
+                var nd = g.GetComponent<PawnNeeds>();
+                if (nd != null && (nd.IsSleeping || nd.IsBreaking)) continue;
+                float sq = ((Vector2)g.transform.position - tp).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = g; }
+            }
+            if (best != null)
+            {
+                best.SetBushTarget(bush);
+                var e = best.GetComponent<PawnEntity>();
+                if (e != null) e.ManualMoveUntil = Time.time + 8f;
+                Debug.Log("[Gather] 채집 지정 → idle 림 배정");
+            }
+        }
+
+        // 청사진 건설 우선 — 가장 가까운 idle PawnBuilder 에게 직접 배정.
+        private void PrioritizeBuild(BlueprintEntity bp)
+        {
+            if (bp == null || bp.IsComplete) return;
+#if UNITY_2023_1_OR_NEWER
+            var builders = Object.FindObjectsByType<PawnBuilder>(FindObjectsSortMode.None);
+#else
+            var builders = Object.FindObjectsOfType<PawnBuilder>();
+#endif
+            if (builders == null || builders.Length == 0) return;
+            PawnBuilder best = null; float bestSq = float.MaxValue;
+            Vector2 tp = bp.transform.position;
+            foreach (var b in builders)
+            {
+                if (b == null) continue;
+                var e = b.GetComponent<PawnEntity>();
+                if (e != null && (e.IsDrafted || e.IsUnderManualControl)) continue;
+                var nd = b.GetComponent<PawnNeeds>();
+                if (nd != null && (nd.IsSleeping || nd.IsBreaking)) continue;
+                float sq = ((Vector2)b.transform.position - tp).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = b; }
+            }
+            if (best != null)
+            {
+                var nr = best.GetComponent<PawnNeeds>();
+                if (nr != null) nr.ClearRestTarget();
+                best.SetBlueprintTarget(bp);
+                var e = best.GetComponent<PawnEntity>();
+                if (e != null) e.ManualMoveUntil = Time.time + 12f;
+                Debug.Log("[Build] 건설 우선 → idle 림 배정");
+            }
+        }
+
         // 통합 검증용 - 실제 mouse input 시뮬레이션 (IntegrationTestRunner 호출)
         public void SimulateSelect(PawnEntity pawn) { Select(pawn); }
+
+        /// <summary>QA — 좌클릭 액션 메뉴 항목을 직접 호출(벌목/채집/채광 지정 등).
+        ///  worldPos 의 entity hit + 같은 좌클릭 메뉴 생성 → label 포함 item 실행.  미발견 시 false.</summary>
+        public bool SimulateLeftClickMenuAction(Vector2 worldPos, string itemLabelContains)
+        {
+            Vector3 mouseWorld = new Vector3(worldPos.x, worldPos.y, 0f);
+            Collider2D hit = PickEntityAt(mouseWorld);
+            if (hit == null) { Debug.Log($"[LeftMenuQA] PickEntityAt null at {mouseWorld}"); return false; }
+            var items = BuildLeftClickMenu(hit, mouseWorld);
+            if (items == null) return false;
+            foreach (var (label, action) in items)
+            {
+                if (label.Contains(itemLabelContains)) { action?.Invoke(); return true; }
+            }
+            Debug.Log($"[LeftMenuQA] '{itemLabelContains}' 미발견. hit={hit.gameObject.name} items=[{string.Join(",", items.ConvertAll(i => i.Item1))}]");
+            return false;
+        }
 
         /// <summary>#192 - context menu item 진짜 호출 (vein 채광 / bandit 포섭 등 context-menu-only action).
         ///  worldPos 에서 entity hit + 같은 menu 생성 → label 포함 item 찾아서 action 실행.

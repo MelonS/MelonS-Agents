@@ -15,8 +15,12 @@ namespace MelonS.GameProto
     ///   22:00        alpha 0.62
     ///   24:00        alpha 0.65
     /// Plus weather multiplier (storm 1.4x darker).
-    /// Auto-tracks camera position so the overlay is always centered.
+    /// Auto-tracks camera position AND ortho size each LateUpdate so the overlay
+    /// stays exactly centred on, and large enough to cover, the camera view at any
+    /// zoom/pan — no edge ever shows, no drift between map and overlay (operator fb
+    /// "밤이 맵 위에 레이어 덮은 것처럼 따로 논다").
     /// Sorting order high enough to render above tiles + entities, below UI canvas.
+    /// Headless/-batchmode safe: every camera access is null-guarded.
     /// </summary>
     public class NightOverlay : MonoBehaviour
     {
@@ -56,7 +60,26 @@ namespace MelonS.GameProto
             new Stop(1.00f, 0.65f),
         };
 
+        // 2x2 px white sprite → 1 world-unit wide at PPU 2.  localScale therefore
+        // maps 1:1 to world units, so scale = view size in units covers the view.
+        // Margin keeps a safety border so a fast pan/zoom can never reveal an edge
+        // for a single frame.
+        private const float CoverMargin = 1.25f;
+
         private void Awake()
+        {
+            AcquireCamera();
+            sr = GetComponent<SpriteRenderer>();
+            if (sr == null) sr = gameObject.AddComponent<SpriteRenderer>();
+            sr.sprite = WhiteSprite;
+            sr.color = new Color(0.05f, 0.08f, 0.20f, 0f);
+            sr.sortingLayerName = "Default";
+            sr.sortingOrder = 25;  // above ground/tiles (0/1/5/7) below floating bars (30)
+            // Initial fallback scale; LateUpdate re-fits to the live camera view.
+            transform.localScale = new Vector3(100f, 100f, 1f);
+        }
+
+        private void AcquireCamera()
         {
             cam = Camera.main;
             if (cam == null)
@@ -64,23 +87,29 @@ namespace MelonS.GameProto
                 var camObj = GameObject.FindFirstObjectByType<Camera>();
                 if (camObj != null) cam = camObj;
             }
-            sr = GetComponent<SpriteRenderer>();
-            if (sr == null) sr = gameObject.AddComponent<SpriteRenderer>();
-            sr.sprite = WhiteSprite;
-            sr.color = new Color(0.05f, 0.08f, 0.20f, 0f);
-            sr.sortingLayerName = "Default";
-            sr.sortingOrder = 25;  // above ground/tiles (0/1/5/7) below floating bars (30)
-            // 50x50 unit cover — bigger than any reasonable camera ortho 22 ortho
-            //  (camera vertical extent at zoomMax 22 = 44 unit, horizontal = 78).
-            transform.localScale = new Vector3(100f, 100f, 1f);
         }
 
         private void LateUpdate()
         {
+            // Camera can be created after Awake (scene bootstrap order); re-acquire.
+            if (cam == null) AcquireCamera();
             if (cam != null)
             {
+                // Centre exactly on the camera (X/Y), pinned to z=0 so it sits on
+                // the world plane regardless of camera depth.
                 Vector3 p = cam.transform.position;
                 transform.position = new Vector3(p.x, p.y, 0f);
+
+                // Re-fit the cover quad to the live view every frame so zoom/pan
+                // can never reveal an uncovered edge and the dark layer always
+                // moves locked to the map.  orthographicSize = half-height in units.
+                float halfH = cam.orthographic
+                    ? cam.orthographicSize
+                    : Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) * Mathf.Abs(p.z);
+                float aspect = cam.aspect > 0.01f ? cam.aspect : (16f / 9f);
+                float coverH = (halfH * 2f) * CoverMargin;
+                float coverW = coverH * aspect;
+                transform.localScale = new Vector3(coverW, coverH, 1f);
             }
             float t = GameClock.Instance != null ? GameClock.Instance.DayProgress : 0.5f;
             float a = SampleStops(t);
