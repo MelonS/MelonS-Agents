@@ -126,8 +126,11 @@ namespace MelonS.GameProto.EditorTools
 
             } // #229 end prebuiltBase — 맨땅 시작이라 위 구조물은 스폰 안 함
 
-            // Day 57 → #121 - stockpile zone 으로 업그레이드. 3x3 영역, 각 cell 이 zone instance.
-            //  hauler 가 가장 가까운 zone center 로 자원 운반 후 inventory 차감.
+            // #246 운영자 fb "게임 시작 시 창고영역 세팅 안 되어 있고 유저가 정하게" —
+            //  시작 시 stockpile zone 자동 스폰 안 함.  플레이어가 구상>지시>저장(O)로 직접
+            //  지정 (RimWorld: 시작 시 저장구역 없음).
+            bool autoStockpile = false;
+            if (autoStockpile)
             for (int sx = -2; sx <= 0; sx++)
             {
                 for (int sy = -3; sy <= -1; sy++)

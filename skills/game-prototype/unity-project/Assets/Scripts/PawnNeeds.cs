@@ -27,8 +27,12 @@ namespace MelonS.GameProto
         //  #234 RimWorld 시계(1x=하루1000초)에 맞춰 decay 를 비례 축소(×0.24)해 게임-하루
         //  리듬은 동일 유지: foodDecay 0.2→0.048, sleepDecay 0.4→0.096, moodDecay 0.2→0.048.
         //  (game-day 당 food≈48/sleep≈96 으로 rate-6 때와 동일 — 둘 다 timeScale 곱이라 정합.)
-        [SerializeField] private float foodDecay = 0.048f;
-        [SerializeField] private float sleepDecay = 0.096f;
+        //  #247 운영자 fb "식량·수면 감소가 없어 식사·잠 불필요 (심각). RimWorld는 빨리 내려감"
+        //  — #234 의 느린 시계(1x=16.7분/일)로 needs 가 실시간 4× 느려져 체감상 '안 내려감'.
+        //  식사·잠이 실제로 필요하도록 상향: food 0.048→0.13(게임일당 ~130 → 하루 2~3회 식사),
+        //  sleep 0.096→0.18(~180/일 → 밤마다 + 부족시 졸림).  생존은 meals/berry/사냥+밤잠으로 유지.
+        [SerializeField] private float foodDecay = 0.13f;
+        [SerializeField] private float sleepDecay = 0.18f;
         [SerializeField] private float moodDecay = 0.048f;  // #234 RimWorld 시계 비례 축소
 
         [Header("Day 9+: sleep regen when sleeping at night")]

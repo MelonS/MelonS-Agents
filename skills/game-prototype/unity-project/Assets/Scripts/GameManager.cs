@@ -182,10 +182,25 @@ namespace MelonS.GameProto
             //  건설로 '소비'되고 플레이어 지정으로만 다시 모인다.
             if (ResourceManager.Instance != null)
             {
-                ResourceManager.Instance.AddWood(300);
+                // #243 운영자 fb "목재 처음에 수치로 주지말고 바닥에 랜덤하게 떨궈둬" — RimWorld
+                //  추락 잔해처럼 시작 목재를 '카운터 숫자'가 아니라 바닥의 물리 wood pile 로 흩뿌린다.
+                //  pawn 이 이걸 청사진까지 운반(haul)해 organic 하게 건설 → 건설 루프가 물리 자재로
+                //  굴러간다(카운터는 stockpile 운반 시 자연 적립).  결정론적 scatter(seed) — spawn
+                //  cell(±2,±2) 회피, 6 pile × 50 = 300 목재.
+                var woodRng = new System.Random(73101);
+                int dropped = 0, tries = 0;
+                while (dropped < 6 && tries < 200)
+                {
+                    tries++;
+                    float wx = (float)(woodRng.NextDouble() * 14.0 - 7.0);   // ±7 범위
+                    float wy = (float)(woodRng.NextDouble() * 14.0 - 7.0);
+                    if (Mathf.Abs(wx) < 2.5f && Mathf.Abs(wy) < 2.5f) continue;  // pawn spawn 회피
+                    WoodPileEntity.Spawn(new Vector3(Mathf.Floor(wx) + 0.5f, Mathf.Floor(wy) + 0.5f, 0f), 50, null);
+                    dropped++;
+                }
                 ResourceManager.Instance.AddFood(0);
                 ResourceManager.Instance.AddMeals(50);
-                Debug.Log("[GameManager] starter resources (RimWorld bare): wood=300 food=0 meals=50");
+                Debug.Log($"[GameManager] starter resources (RimWorld): 목재 {dropped*50} 바닥 물리 드롭, meals=50 (수치 X)");
             }
 
             if (integrationTest)

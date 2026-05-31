@@ -12,6 +12,10 @@ namespace MelonS.GameProto.EditorTools
         private static void GenerateSaveLoadButtons(
             GameObject canvasGo, Color colPanel, Color colTextPrimary, Font uiFont)
         {
+            // #245 운영자 fb "왼쪽 밑에 s l 버튼 제거" — 좌하단 Save/Load 버튼 패널을 만들지
+            //  않는다.  저장/불러오기는 설정 메뉴(ESC) / F5·F9 핫키로 계속 가능.
+            return;
+#pragma warning disable CS0162
             GameObject saveBtnPanel = new GameObject("SaveLoadButtons");
             saveBtnPanel.transform.SetParent(canvasGo.transform, false);
             RectTransform sbpRt = saveBtnPanel.AddComponent<RectTransform>();
