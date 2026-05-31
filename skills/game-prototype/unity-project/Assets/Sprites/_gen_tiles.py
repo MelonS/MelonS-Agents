@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""A3 - Muted cohesive terrain tiles + bonus door_wood fix.
+"""A3 + Polish-Grass — muted cohesive terrain tiles + 잔디 variant 3종.
 
 Generates 16x16 RGBA PNGs for the 4 terrain tiles used by
 SceneSetup.Game.Terrain.cs via LoadOrCreateTile.  All colours
@@ -11,10 +11,16 @@ Design rules (from design-improvement-backlog.md A3 + north-star):
 - No outline on terrain tiles (background, not story-relevant objects).
 - Subtle per-pixel speckle within each tile's ramp for visual interest
   without creating readable noise that fights the map read.
-- Seamless tiling: the generator does NOT paint a hard border;
-  speckle is interior-only so repeated tiles blend at edges.
+- Seamless tiling: edges stay base colour so repeated tiles blend.
 - Grass uses GRASS_DK/MD/LT ramp (muted olive-khaki), NOT neon green.
 - Dirt uses DIRT_DK/MD/LT ramp, Water WATER_DK/MD/LT, Rock ROCK_DK/MD/LT.
+
+폴리싱 추가 (2026-06-01): 잔디 반복감 개선.
+  tile_grass.png   — 원본 자리, asymmetric micro-zone 패턴으로 교체.
+                      SceneSetup 이 이미 4방향 랜덤 rotation 을 적용하므로,
+                      내부에 비대칭 구조가 있으면 rotation 4가지가 서로 다르게 보임.
+  tile_grass_b.png — 밝은 풀 variant (GRASS_LT 중심).
+  tile_grass_c.png — 어두운/습한 풀 + 흙점 variant (GRASS_DK + DIRT_DK 반점).
 
 Bonus (A4 pre-work): door_wood.png remapped to palette.py colours
 if the old off-palette colours are detected.
@@ -109,14 +115,183 @@ def _water_tile(size, seed=0):
     return img
 
 
-# -- tile generators ------------------------------------------------------
+# -- grass tile generators ------------------------------------------------
+#
+# 핵심 원칙: 타일은 16x16 이고 SceneSetup 이 각 셀마다 0/90/180/270 도 랜덤 rotation 을
+# 적용한다(ApplyRandomTileTransform).  따라서 내부 패턴이 비대칭(asymmetric)일수록
+# rotation 4가지가 서로 다른 면을 보여주어 반복감이 줄어든다.
+#
+# tile_grass (A variant): GRASS_MD 기반, 비대칭 zone 3개
+#   - 좌상단 quadrant: GRASS_LT 덩어리 (밝은 풀 뭉치)
+#   - 우하단 quadrant: GRASS_DK 덩어리 (그늘진 풀)
+#   - 중앙~기타: GRASS_MD + 개별 speckle
+#   테두리 1px 는 GRASS_MD 고정 (seamless).
+#
+# tile_grass_b (B variant): GRASS_LT 기반 — 밝고 열린 풀밭.
+#   밝은 잔디 위주, 드문 GRASS_MD 점, 아주 드문 DIRT_LT 흙점 (햇빛 받은 건조 지면).
+#
+# tile_grass_c (C variant): GRASS_DK 기반 — 어둡고 촉촉한 풀밭.
+#   어두운 잔디 위주, DIRT_DK 흙점 다수 (습한 흙/그늘 지면), GRASS_MD 하이라이트 점.
 
 def gen_grass(size=16):
-    """Muted olive-khaki grass - desaturated so pawns pop."""
-    return _speckle_tile(
-        size, GRASS_MD, GRASS_DK, GRASS_LT,
-        dark_prob=0.08, light_prob=0.06, seed=1001,
-    )
+    """
+    tile_grass.png (variant A) — GRASS_MD 기반 비대칭 micro-zone 패턴.
+
+    내부를 4개 zone 으로 나누어 각기 다른 색 bias 를 준 뒤 edge 픽셀을 GRASS_MD 로
+    덮어써서 seamless tiling 을 보장한다.  4방향 rotation 에서 각각 다른 zone 이
+    코너에 오므로 반복감이 최소화된다.
+    """
+    rng = random.Random(7001)
+    img = Image.new("RGBA", (size, size), GRASS_MD)
+    pixels = img.load()
+
+    # -- zone 정의: 각 내부 픽셀의 좌표로 zone 결정 (1-indexed quadrant 방식)
+    # zone A (좌상): x < size//2, y < size//2  → GRASS_LT bias
+    # zone B (우상): x >= size//2, y < size//2 → GRASS_MD (baseline)
+    # zone C (좌하): x < size//2, y >= size//2 → GRASS_MD + DIRT_DK 미세 흙점
+    # zone D (우하): x >= size//2, y >= size//2 → GRASS_DK bias
+    half = size // 2
+
+    for y in range(1, size - 1):      # 테두리 제외
+        for x in range(1, size - 1):
+            r = rng.random()
+            in_top = y < half
+            in_left = x < half
+
+            if in_left and in_top:
+                # zone A: 밝은 풀 뭉치 (GRASS_LT 중심)
+                if r < 0.45:
+                    pixels[x, y] = GRASS_LT
+                elif r < 0.75:
+                    pixels[x, y] = GRASS_MD
+                else:
+                    pixels[x, y] = GRASS_DK
+            elif not in_left and not in_top:
+                # zone D: 그늘진 풀 (GRASS_DK 중심)
+                if r < 0.45:
+                    pixels[x, y] = GRASS_DK
+                elif r < 0.75:
+                    pixels[x, y] = GRASS_MD
+                else:
+                    pixels[x, y] = GRASS_LT
+            elif in_left and not in_top:
+                # zone C: GRASS_MD + 드문 흙점
+                if r < 0.06:
+                    pixels[x, y] = DIRT_DK    # 흙점: 작은 맨땅
+                elif r < 0.22:
+                    pixels[x, y] = GRASS_DK
+                elif r < 0.45:
+                    pixels[x, y] = GRASS_LT
+                else:
+                    pixels[x, y] = GRASS_MD
+            else:
+                # zone B (우상): 중성 baseline
+                if r < 0.12:
+                    pixels[x, y] = GRASS_DK
+                elif r < 0.22:
+                    pixels[x, y] = GRASS_LT
+                else:
+                    pixels[x, y] = GRASS_MD
+
+    # seamless: 테두리 1px 를 GRASS_MD 로 덮어씀
+    for x in range(size):
+        pixels[x, 0] = GRASS_MD
+        pixels[x, size - 1] = GRASS_MD
+    for y in range(size):
+        pixels[0, y] = GRASS_MD
+        pixels[size - 1, y] = GRASS_MD
+
+    return img
+
+
+def gen_grass_b(size=16):
+    """
+    tile_grass_b.png (variant B) — GRASS_LT 중심 밝은 풀밭.
+
+    햇빛을 많이 받아 밝고 건조한 지면.  드문드문 DIRT_LT 흙점이 섞여 건조감을 준다.
+    내부 zone 분할: 좌상 = 가장 밝음(GRASS_LT 뭉치), 우하 = GRASS_MD 로 어두움.
+    seamless edge: GRASS_MD.
+    """
+    rng = random.Random(7002)
+    img = Image.new("RGBA", (size, size), GRASS_LT)
+    pixels = img.load()
+
+    half = size // 2
+    for y in range(1, size - 1):
+        for x in range(1, size - 1):
+            r = rng.random()
+            in_bright = (x < half + 2) and (y < half + 2)  # 살짝 비대칭
+
+            if in_bright:
+                if r < 0.04:
+                    pixels[x, y] = DIRT_LT    # 건조 흙점 (밝은 색)
+                elif r < 0.20:
+                    pixels[x, y] = GRASS_MD
+                else:
+                    pixels[x, y] = GRASS_LT
+            else:
+                if r < 0.03:
+                    pixels[x, y] = DIRT_MD    # 좀 더 어두운 흙점
+                elif r < 0.12:
+                    pixels[x, y] = GRASS_DK
+                elif r < 0.40:
+                    pixels[x, y] = GRASS_LT
+                else:
+                    pixels[x, y] = GRASS_MD
+
+    # seamless edge
+    for x in range(size):
+        pixels[x, 0] = GRASS_MD
+        pixels[x, size - 1] = GRASS_MD
+    for y in range(size):
+        pixels[0, y] = GRASS_MD
+        pixels[size - 1, y] = GRASS_MD
+
+    return img
+
+
+def gen_grass_c(size=16):
+    """
+    tile_grass_c.png (variant C) — GRASS_DK 중심 어둡고 습한 풀밭.
+
+    그늘지거나 수분이 많은 지면.  DIRT_DK 흙점이 잦아 젖은 흙 느낌.
+    우상 quadrant 에 GRASS_MD 하이라이트 cluster — 비대칭 보장.
+    seamless edge: GRASS_MD.
+    """
+    rng = random.Random(7003)
+    img = Image.new("RGBA", (size, size), GRASS_DK)
+    pixels = img.load()
+
+    half = size // 2
+    for y in range(1, size - 1):
+        for x in range(1, size - 1):
+            r = rng.random()
+            in_highlight = (x >= half - 1) and (y < half + 1)  # 우상 하이라이트 zone
+
+            if in_highlight:
+                if r < 0.35:
+                    pixels[x, y] = GRASS_MD
+                elif r < 0.55:
+                    pixels[x, y] = GRASS_LT
+                else:
+                    pixels[x, y] = GRASS_DK
+            else:
+                if r < 0.14:
+                    pixels[x, y] = DIRT_DK    # 젖은 흙 반점 (어두운 갈색)
+                elif r < 0.22:
+                    pixels[x, y] = GRASS_MD
+                else:
+                    pixels[x, y] = GRASS_DK
+
+    # seamless edge
+    for x in range(size):
+        pixels[x, 0] = GRASS_MD
+        pixels[x, size - 1] = GRASS_MD
+    for y in range(size):
+        pixels[0, y] = GRASS_MD
+        pixels[size - 1, y] = GRASS_MD
+
+    return img
 
 
 def gen_dirt(size=16):
@@ -194,29 +369,51 @@ def remap_door_wood():
 def gen_preview(tile_size=16):
     """
     Composite preview:
-      Row 0: single tile of each (grass / dirt / water / rock)
-      Row 1-3: 3x3 grass repeat to verify seamless tiling
+      Row 0: 5 tiles (grass_a / grass_b / grass_c / dirt / water / rock)
+      Row 1-3: 3x4 grass_a 연속 배치 (seamless tiling 확인)
+      Row 4-6: grass_a 4가지 rotation 시뮬레이션 (0/90/180/270 도)
     Scaled up 4x (nearest-neighbour) for readability.
     """
     scale = 4
 
-    grass = gen_grass(tile_size)
-    dirt  = gen_dirt(tile_size)
-    water = gen_water(tile_size)
-    rock  = gen_rock(tile_size)
-    tiles_row = [grass, dirt, water, rock]
+    grass_a = gen_grass(tile_size)
+    grass_b = gen_grass_b(tile_size)
+    grass_c = gen_grass_c(tile_size)
+    dirt    = gen_dirt(tile_size)
+    water   = gen_water(tile_size)
+    rock    = gen_rock(tile_size)
+    top_row = [grass_a, grass_b, grass_c, dirt, water, rock]
 
-    col_count = 4
+    col_count = len(top_row)
     canvas_w = tile_size * col_count
-    canvas_h = tile_size * 4  # 1 row singles + 3 rows repeat
+    canvas_h = tile_size * 7  # 1 header + 3 seamless + 3 rotation rows
     canvas = Image.new("RGBA", (canvas_w, canvas_h), (30, 25, 20, 255))
 
-    for i, t in enumerate(tiles_row):
+    # Row 0: 각 tile 종류
+    for i, t in enumerate(top_row):
         canvas.paste(t, (i * tile_size, 0))
 
+    # Rows 1-3: 4x3 grass_a 반복 (seamless 확인)
     for gy in range(3):
-        for gx in range(3):
-            canvas.paste(grass, (gx * tile_size, (gy + 1) * tile_size))
+        for gx in range(4):
+            canvas.paste(grass_a, (gx * tile_size, (gy + 1) * tile_size))
+
+    # Rows 4-6: 4가지 rotation 시뮬레이션
+    #  (SceneSetup.ApplyRandomTileTransform 가 하는 것을 여기서 프리뷰)
+    rotations = [0, 90, 180, 270]
+    for ri, angle in enumerate(rotations):
+        rotated = grass_a.rotate(angle)
+        canvas.paste(rotated, (ri * tile_size, 4 * tile_size))
+
+    # Row 5: grass_b rotation 4종
+    for ri, angle in enumerate(rotations):
+        rotated = grass_b.rotate(angle)
+        canvas.paste(rotated, (ri * tile_size, 5 * tile_size))
+
+    # Row 6: grass_c rotation 4종
+    for ri, angle in enumerate(rotations):
+        rotated = grass_c.rotate(angle)
+        canvas.paste(rotated, (ri * tile_size, 6 * tile_size))
 
     big = canvas.resize((canvas_w * scale, canvas_h * scale), Image.NEAREST)
     preview_path = os.path.join(OUT_DIR, "_preview_tiles.png")
@@ -227,29 +424,36 @@ def gen_preview(tile_size=16):
 # -- main -----------------------------------------------------------------
 
 def main():
-    print("=== _gen_tiles.py - A3 terrain tile regen ===")
+    print("=== _gen_tiles.py - terrain tile regen (잔디 variant 3종) ===")
     size = 16  # must match existing tile size exactly
 
-    print("\n[1/4] Grass tile")
+    print("\n[1/3] Grass tile A (tile_grass.png) — asymmetric micro-zone")
     _save(gen_grass(size), "tile_grass.png")
 
-    print("[2/4] Dirt tile")
+    print("[2/3] Grass tile B (tile_grass_b.png) — bright/dry variant")
+    _save(gen_grass_b(size), "tile_grass_b.png")
+
+    print("[3/3] Grass tile C (tile_grass_c.png) — dark/wet variant")
+    _save(gen_grass_c(size), "tile_grass_c.png")
+
+    print("\n[4/4] Dirt tile")
     _save(gen_dirt(size), "tile_dirt.png")
 
-    print("[3/4] Water tile")
+    print("[5/5] Water tile")
     _save(gen_water(size), "tile_water.png")
 
-    print("[4/4] Rock tile")
+    print("[6/6] Rock tile")
     _save(gen_rock(size), "tile_rock.png")
 
     print("\n[Bonus] Door wood remap")
     remap_door_wood()
 
-    print("\n[Preview] Composite")
+    print("\n[Preview] Composite (tile variants + rotation 시뮬레이션)")
     gen_preview(size)
 
     print("\nDone.")
-    print("Tiles are 16x16 RGBA - same dimensions as before.")
+    print("tile_grass.png: asymmetric zone 패턴 - 4방향 rotation 마다 다른 면 노출.")
+    print("tile_grass_b.png / tile_grass_c.png: 밝은/어두운 variant (향후 tilemap 확장용).")
     print("LoadOrCreateTile + ForceImportAllSprites in SceneSetup will")
     print("auto-reimport these when scene-regen runs (no .meta changes needed).")
 
