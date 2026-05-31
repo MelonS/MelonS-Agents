@@ -301,6 +301,15 @@ namespace MelonS.GameProto
             return $"{ThingKr(m)} — {mat} {cost}";
         }
 
+        // #260 카테고리 헤더를 한글 전용으로 표시(운영자 fb '완성도/일관성' — UI 가 한글인데
+        //  카테고리만 "English (한글)" 혼용이라 미완성 현지화처럼 보임).  키는 영한 혼용 그대로
+        //  두되(로직 안정), 표시만 괄호 안 한글 추출.  괄호 없으면 원문 그대로.
+        private static string KrCat(string cat)
+        {
+            int a = cat.IndexOf('('), b = cat.IndexOf(')');
+            return (a >= 0 && b > a) ? cat.Substring(a + 1, b - a - 1).Trim() : cat;
+        }
+
         // Material accent for the swatch fallback (wood = warm brown, stone = grey).
         private static Color MaterialColor(BuildManager.Mode m) =>
             PaysWithStone(m)
@@ -462,7 +471,7 @@ namespace MelonS.GameProto
                     new Vector2(0, -y), MelonS.GameProto.Core.UITheme.HeaderBg,
                     () => { activeCategory = (activeCategory == catName) ? "" : catName; RefreshContent(); });
                 var oht = headerGo.GetComponentInChildren<Text>();
-                oht.text = (activeCategory == catName ? "▼ " : "▶ ") + catName;
+                oht.text = (activeCategory == catName ? "▼ " : "▶ ") + KrCat(catName);
                 oht.fontStyle = FontStyle.Bold;
                 y += 36;
                 if (activeCategory == catName)
@@ -501,7 +510,7 @@ namespace MelonS.GameProto
                     new Vector2(0, -y), MelonS.GameProto.Core.UITheme.HeaderBg,
                     () => { activeCategory = (activeCategory == catName) ? "" : catName; RefreshContent(); });
                 var ht = headerGo.GetComponentInChildren<Text>();
-                ht.text = (activeCategory == catName ? "▼ " : "▶ ") + catName;
+                ht.text = (activeCategory == catName ? "▼ " : "▶ ") + KrCat(catName);
                 ht.fontStyle = FontStyle.Bold;
                 y += 36;
                 // 펼친 buildables (active 카테고리만)
