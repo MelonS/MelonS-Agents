@@ -168,6 +168,17 @@ namespace MelonS.GameProto
 
         private void Complete()
         {
+            // #249 나무 위 건축 — 완성 시 footprint 와 겹친 나무를 제거(RimWorld: 식물 위 건설 시
+            //  식물 클리어).  자재는 안 줌(단순 제거).
+            {
+                Vector2 sz = new Vector2(Mathf.Max(1, footprint.x), Mathf.Max(1, footprint.y));
+                foreach (var h in Physics2D.OverlapBoxAll(transform.position, sz * 0.9f, 0f))
+                {
+                    if (h == null) continue;
+                    var tree = h.GetComponent<TreeEntity>();
+                    if (tree != null) Object.Destroy(tree.gameObject);
+                }
+            }
             if (finishedPrefab != null)
             {
                 var spawned = Object.Instantiate(finishedPrefab, transform.position, Quaternion.identity);

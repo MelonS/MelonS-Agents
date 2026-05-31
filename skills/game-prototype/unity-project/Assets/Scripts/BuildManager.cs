@@ -362,7 +362,11 @@ namespace MelonS.GameProto
                 if (h == null) continue;
                 if (h.GetComponent<WallEntity>() != null) return true;
                 if (h.GetComponent<DoorEntity>() != null) return true;
-                if (h.GetComponent<TreeEntity>() != null) return true;
+                // #249 운영자 fb "나무 위에 건축 안됨" — RimWorld 에선 나무/식물 위에 청사진을
+                //  놓을 수 있고(건설 시작 시 식물 제거), 나무가 배치를 막지 않는다.  TreeEntity 를
+                //  점유물에서 제외 → 나무 위 배치 허용.  완성 시 겹친 나무는 BlueprintEntity.Complete
+                //  가 제거(자재는 안 줌 — 단순 클리어).
+                // (was: if (h.GetComponent<TreeEntity>() != null) return true;)
                 // #199 C3 - RimWorld fidelity: a pawn STANDING on the cell does NOT
                 //  block placement.  In RimWorld you can drop a blueprint under a
                 //  colonist; the pawn simply walks off (the blueprint only needs the
