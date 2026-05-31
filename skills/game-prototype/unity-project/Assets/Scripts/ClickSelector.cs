@@ -137,6 +137,7 @@ namespace MelonS.GameProto
                 BedEntity bed = (rhit != null) ? rhit.GetComponent<BedEntity>() : null;
                 BerryBushEntity bushC = (rhit != null) ? rhit.GetComponent<BerryBushEntity>() : null;
                 WoodPileEntity pileC = (rhit != null) ? rhit.GetComponent<WoodPileEntity>() : null;
+                StoneVeinEntity veinC = (rhit != null) ? rhit.GetComponent<StoneVeinEntity>() : null;  // #219 우클릭 채광
                 if (bp != null && !bp.IsComplete)
                 {
                     // 건설중 벽 우클릭 = 그 blueprint 를 짓도록 명령 (PawnBuilder).
@@ -180,8 +181,17 @@ namespace MelonS.GameProto
                 }
                 if (crop != null && crop.IsRipe)
                 {
-                    int food = crop.Harvest();
-                    Debug.Log($"[Harvest] +{food} 식량");
+                    // #219 운영자 fb "우클릭 강제지정 잘 안됨" — 과거엔 crop.Harvest() 를 즉시
+                    //  호출해 선택 림이 가지도 않고 수확됐다(텔레포트 수확).  이제 PawnHarvester
+                    //  에 명령 → 림이 작물로 걸어가 수확(물리).  ManualMoveUntil 로 AI override 방지.
+                    var hv = currentSelection.GetComponent<PawnHarvester>();
+                    if (hv != null)
+                    {
+                        ClearAllWorkTasks(currentSelection);
+                        hv.SetCropTarget(crop);
+                        currentSelection.ManualMoveUntil = Time.time + 10f;
+                        Debug.Log($"[Harvest] {currentSelection.PawnName} → 수확 명령");
+                    }
                     return;
                 }
                 if (bushC != null && !bushC.IsDepleted)
@@ -198,10 +208,32 @@ namespace MelonS.GameProto
                     Debug.Log($"[Haul] {currentSelection.PawnName} → 운반");
                     return;
                 }
+                if (veinC != null)
+                {
+                    // #219 운영자 fb — 광맥 우클릭 = 그 림이 채광하러 가도록 명령 (과거엔
+                    //  직접 핸들러에 없어 이동 명령으로 빠졌음 = 채광 강제지정 불가).
+                    var mn = currentSelection.GetComponent<PawnMiner>();
+                    if (mn != null)
+                    {
+                        ClearAllWorkTasks(currentSelection);
+                        mn.SetVeinTarget(veinC);
+                        currentSelection.ManualMoveUntil = Time.time + 12f;
+                        Debug.Log($"[Mine] {currentSelection.PawnName} → 채광 명령");
+                    }
+                    return;
+                }
                 if (tree != null)
                 {
+                    // #219 - 벌목 강제지정에도 ManualMoveUntil 부여 (AI 가 즉시 다른 일로
+                    //  override 하지 않도록 — 다른 우클릭 명령과 동일하게 존중).
                     PawnChopper chopper = currentSelection.GetComponent<PawnChopper>();
-                    if (chopper != null) chopper.SetTreeTarget(tree);
+                    if (chopper != null)
+                    {
+                        ClearAllWorkTasks(currentSelection);
+                        chopper.SetTreeTarget(tree);
+                        currentSelection.ManualMoveUntil = Time.time + 12f;
+                        Debug.Log($"[Chop] {currentSelection.PawnName} → 벌목 명령");
+                    }
                 }
                 else
                 {

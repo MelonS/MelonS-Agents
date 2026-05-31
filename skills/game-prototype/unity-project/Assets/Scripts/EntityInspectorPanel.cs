@@ -81,7 +81,7 @@ namespace MelonS.GameProto
             if (chunk != null) return ("돌덩이",
                 $"석재 {chunk.Stone}개\n예약: {(chunk.IsReserved ? "운반중" : "대기")}\n3분 후 사라짐");
             var meat = go.GetComponent<MeatPileEntity>();
-            if (meat != null) return ("고기",
+            if (meat != null) return (meat.DisplayName,   // #219 - 고기/농작물/베리 구분
                 $"식량 {meat.Food}개\n예약: {(meat.IsReserved ? "운반중" : "대기")}\n1.5분 후 상함");
             var sp = go.GetComponent<StockpileZoneEntity>();
             if (sp != null) return ($"창고 영역 [{sp.PriorityKr}]",

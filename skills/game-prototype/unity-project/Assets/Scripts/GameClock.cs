@@ -28,7 +28,9 @@ namespace MelonS.GameProto
         public static GameClock Instance => Services.Get<GameClock>();
 
         [Tooltip("1x 에서 실제 1초당 흘려보낼 게임 내 '분'. 60 = 게임 1시간/실초.")]
-        [SerializeField] private float inGameMinutesPerRealSecond = 60f;
+        // #219 운영자 fb "시간이 너무 빨리" — 60(하루=24초)은 과속.  6 = 하루 4분(실측
+        //  자연스러운 1x, recorder 가 쓰던 값).  하단 MinRate clamp 와 동일.
+        [SerializeField] private float inGameMinutesPerRealSecond = 6f;
 
         // Lower/upper guard so a bad serialized value cannot freeze (too low)
         // or make the clock unreadable (too fast).  Operator target sits at

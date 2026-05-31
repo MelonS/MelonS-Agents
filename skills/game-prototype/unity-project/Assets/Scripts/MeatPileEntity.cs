@@ -17,6 +17,9 @@ namespace MelonS.GameProto
         public static Sprite SharedSprite;
 
         public int Food => food;
+        // #219 운영자 fb "작물 채집하면 고기가 나옴?" — 이 더미는 raw 식량 일반 (고기/농작물/
+        //  베리 공용).  표시명을 인스턴스별로 지정해 인스펙터가 올바르게 보여준다(기본=고기).
+        public string DisplayName = "고기";
         public GameObject ReservedBy { get; set; }
         public bool IsReserved => ReservedBy != null;
 
@@ -74,8 +77,12 @@ namespace MelonS.GameProto
         }
 
         public static MeatPileEntity Spawn(Vector3 pos, int amount, Sprite sprite)
+            => Spawn(pos, amount, sprite, "고기");
+
+        // #219 - displayName 으로 고기/농작물/베리 구분 (raw 식량 공용 더미).
+        public static MeatPileEntity Spawn(Vector3 pos, int amount, Sprite sprite, string displayName)
         {
-            var go = new GameObject($"MeatPile_{amount}");
+            var go = new GameObject($"FoodPile_{displayName}_{amount}");
             go.transform.position = new Vector3(pos.x, pos.y, 0f);
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = EnsureSprite(sprite);  // #215 - null 이면 코드 기본 sprite (항상 가시)
@@ -85,6 +92,7 @@ namespace MelonS.GameProto
             col.isTrigger = true;
             var m = go.AddComponent<MeatPileEntity>();
             m.SetFood(amount);
+            m.DisplayName = displayName;
             return m;
         }
     }
