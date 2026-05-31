@@ -49,12 +49,26 @@ namespace MelonS.GameProto
             }
 
             // -- Phase 1: wall blueprint at (-1.5, 3.5) --
+            //  #242 verify-the-real-path: 직접 spawn(우회) 대신 실제 플레이 경로
+            //  (BuildManager.SetMode + TryPlaceAt) 로 배치 → TryPlace 의 카운터-funding 까지
+            //  포함해 검증.  배치 시 카운터가 자재를 감당하면 funding 되고 builder 가 건설.
             Vector3 bpPos = new Vector3(-1.5f, 3.5f, 0);
-            var bpGo = new GameObject("BuildQA_Blueprint_Wall");
-            bpGo.transform.position = bpPos;
-            var bp = bpGo.AddComponent<BlueprintEntity>();
-            bp.Init(BuildManager.Mode.Wall, wallPrefab, wallSpr, wood: 5, stone: 0, secs: 5f);
-            Debug.Log($"[BuildQA] t=3s: wall 청사진 spawn at ({bpPos.x},{bpPos.y}), 자재 5목재 필요");
+            int wallCx = -2, wallCy = 3;   // floor((-1.5,3.5)) → cell center (-1.5,3.5) = bpPos
+            BlueprintEntity bp = null;
+            if (BuildManager.Instance != null)
+            {
+                BuildManager.Instance.SetMode(BuildManager.Mode.Wall);
+                BuildManager.Instance.TryPlaceAt(wallCx, wallCy);
+                BuildManager.Instance.SetMode(BuildManager.Mode.Off);
+                foreach (var b in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
+                    if (b != null && Vector2.Distance(b.transform.position, bpPos) < 0.8f) { bp = b; break; }
+            }
+            if (bp == null)
+            {
+                Debug.LogError("[BuildQA] wall 청사진 TryPlaceAt 실패 (배치 거부?)");
+                yield break;
+            }
+            Debug.Log($"[BuildQA] t=3s: wall 청사진 배치(실경로) at ({bpPos.x},{bpPos.y}), collected={bp.collectedWood}/{bp.needWood} hasMat={bp.HasAllMaterials}");
 
             // 5초 간격 상태 로그 (wall 완성까지)
             bool wallDone = false;

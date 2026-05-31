@@ -111,7 +111,7 @@ namespace MelonS.GameProto.AI
                 if (b == null || b.IsDepleted) continue;
                 if (ReservationManager.IsReservedByOther(b, claimant)) continue;
                 Vector3 bp = b.transform.position;
-                if (Mathf.Abs(bp.x) > 28.5f || Mathf.Abs(bp.y) > 28.5f) continue;
+                if (Mathf.Abs(bp.x) > 43.5f || Mathf.Abs(bp.y) > 43.5f) continue;
                 float sq = ((Vector2)bp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = b; }
             }
@@ -129,7 +129,11 @@ namespace MelonS.GameProto.AI
         {
             if (ctx.hunter == null) return false;
             if (ResourceManager.Instance == null) return false;
-            if (ResourceManager.Instance.food >= globalFoodThreshold) return false;
+            // #242 건설 굶김 ROOT FIX — 이전엔 raw food 만 검사해서, bare start(food=0,
+            //  meals=50)에서 pawn 이 50끼를 두고도 영구 사냥 → BuildBlueprint(같은 p1, 리스트
+            //  뒤)에 영영 안 닿아 "건설 안됨"(WINDIAG 28/28 '사냥').  meals 도 식량이므로 합산:
+            //  먹을 게(raw+meals) 충분하면 사냥 안 함 → idle pawn 이 건설/운반으로 감.
+            if (ResourceManager.Instance.food + ResourceManager.Instance.meals >= globalFoodThreshold) return false;
             AnimalEntity deer = FindNearestAnimal(ctx);
             if (deer == null) return false;
             // #199 C2 — reserve the chosen animal (central registry).  Hunter has no
@@ -152,7 +156,7 @@ namespace MelonS.GameProto.AI
                 if (a == null || a.IsDead) continue;
                 if (ReservationManager.IsReservedByOther(a, claimant)) continue;
                 Vector3 ap = a.transform.position;
-                if (Mathf.Abs(ap.x) > 28.5f || Mathf.Abs(ap.y) > 28.5f) continue;
+                if (Mathf.Abs(ap.x) > 43.5f || Mathf.Abs(ap.y) > 43.5f) continue;
                 float sq = ((Vector2)ap - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = a; }
             }
@@ -231,7 +235,7 @@ namespace MelonS.GameProto.AI
                 if (c == null || !c.IsRipe) continue;  // only RIPE crops are harvestable
                 if (ReservationManager.IsReservedByOther(c, claimant)) continue;
                 Vector3 cp = c.transform.position;
-                if (Mathf.Abs(cp.x) > 28.5f || Mathf.Abs(cp.y) > 28.5f) continue;
+                if (Mathf.Abs(cp.x) > 43.5f || Mathf.Abs(cp.y) > 43.5f) continue;
                 float sq = ((Vector2)cp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = c; }
             }
@@ -273,7 +277,7 @@ namespace MelonS.GameProto.AI
                 if (t == null || t.IsDestroyed) continue;
                 if (ReservationManager.IsReservedByOther(t, claimant)) continue;  // 다른 pawn 의 target
                 Vector3 tp = t.transform.position;
-                if (Mathf.Abs(tp.x) > 28.5f || Mathf.Abs(tp.y) > 28.5f) continue;
+                if (Mathf.Abs(tp.x) > 43.5f || Mathf.Abs(tp.y) > 43.5f) continue;
                 float sq = ((Vector2)tp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = t; }
             }
@@ -313,7 +317,7 @@ namespace MelonS.GameProto.AI
                 if (!bp.HasAllMaterials) continue;  // #197 - 자재 완비 안 됐으면 skip
                 if (bp.IsReserved && bp.ReservedBy != ctx.builder.gameObject) continue;
                 Vector3 bpp = bp.transform.position;
-                if (Mathf.Abs(bpp.x) > 28.5f || Mathf.Abs(bpp.y) > 28.5f) continue;
+                if (Mathf.Abs(bpp.x) > 43.5f || Mathf.Abs(bpp.y) > 43.5f) continue;
                 float sq = ((Vector2)bpp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = bp; }
             }
@@ -356,7 +360,7 @@ namespace MelonS.GameProto.AI
                 }
                 if (!h.IsDowned && !bleeding) continue;
                 Vector3 hp = h.transform.position;
-                if (Mathf.Abs(hp.x) > 28.5f || Mathf.Abs(hp.y) > 28.5f) continue;
+                if (Mathf.Abs(hp.x) > 43.5f || Mathf.Abs(hp.y) > 43.5f) continue;
                 float sq = ((Vector2)hp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = h; }
             }
@@ -392,7 +396,7 @@ namespace MelonS.GameProto.AI
                 if (ReservationManager.IsReservedByOther(v, claimant)) continue;
                 if (ctx.miner != null && ctx.miner.IsRecentlyGivenUp(v)) continue;  // #221 도달불가 광맥 쿨다운 스킵
                 Vector3 vp = v.transform.position;
-                if (Mathf.Abs(vp.x) > 28.5f || Mathf.Abs(vp.y) > 28.5f) continue;
+                if (Mathf.Abs(vp.x) > 43.5f || Mathf.Abs(vp.y) > 43.5f) continue;
                 float sq = ((Vector2)vp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = v; }
             }
@@ -424,7 +428,7 @@ namespace MelonS.GameProto.AI
                 if (m.IsReserved && m.ReservedBy != ctx.hauler.gameObject) continue;
                 if (m.InStockpile) continue;  // 림 - stockpile 안 meat 재운반 X
                 Vector3 mp = m.transform.position;
-                if (Mathf.Abs(mp.x) > 28.5f || Mathf.Abs(mp.y) > 28.5f) continue;
+                if (Mathf.Abs(mp.x) > 43.5f || Mathf.Abs(mp.y) > 43.5f) continue;
                 float sq = ((Vector2)mp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = m; }
             }
@@ -462,7 +466,7 @@ namespace MelonS.GameProto.AI
                 if (c.IsReserved && c.ReservedBy != ctx.hauler.gameObject) continue;
                 if (c.InStockpile && !anyBpNeedsStone) continue;
                 Vector3 cp = c.transform.position;
-                if (Mathf.Abs(cp.x) > 28.5f || Mathf.Abs(cp.y) > 28.5f) continue;
+                if (Mathf.Abs(cp.x) > 43.5f || Mathf.Abs(cp.y) > 43.5f) continue;
                 float sq = ((Vector2)cp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = c; }
             }
@@ -507,7 +511,7 @@ namespace MelonS.GameProto.AI
                 // #196 - InStockpile pile 은 청사진 자재 필요 시에만 pickup (stockpile→stockpile loop 차단).
                 if (p.InStockpile && !anyBpNeedsWood) continue;
                 Vector3 pp = p.transform.position;
-                if (Mathf.Abs(pp.x) > 28.5f || Mathf.Abs(pp.y) > 28.5f) continue;
+                if (Mathf.Abs(pp.x) > 43.5f || Mathf.Abs(pp.y) > 43.5f) continue;
                 float sq = ((Vector2)pp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = p; }
             }

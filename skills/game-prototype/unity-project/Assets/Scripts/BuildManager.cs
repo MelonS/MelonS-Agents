@@ -500,6 +500,24 @@ namespace MelonS.GameProto
             float secs = (CurrentMode == Mode.Floor || CurrentMode == Mode.FloorStone) ? 2f : 5f;
             bp.Init(CurrentMode, prefab, ghostSpr, needWood, needStone, secs);
             bp.SetSize(size);  // #193 - 청사진 sprite 도 1x2 비율 적용
+
+            // #242 건설 루프 ROOT FIX — 물리-haul 모델(#118)은 시작 자원이 '카운터'(물리 pile 0)
+            //  라 청상풍이 영원히 funding 안 됐다(-build-qa: 30s 내내 0/5 collected = "건설 안됨").
+            //  자원 카운터가 자재를 감당하면 배치 즉시 차감 + funding(collectedWood=needWood) →
+            //  builder 가 바로 건설.  카운터 부족 시엔 unfunded 로 두고 벌목 물리 wood 가 운반-
+            //  funding(기존 경로 유지).  이로써 카운터 = 실제 건축 자원(chop→+, build→-) 으로
+            //  coherent + RimWorld '자재 소비해 건설' 정합.
+            if (ResourceManager.Instance != null)
+            {
+                int have = stoneMode ? ResourceManager.Instance.stone : ResourceManager.Instance.wood;
+                if (cost <= 0 || have >= cost)
+                {
+                    if (stoneMode) ResourceManager.Instance.AddStone(-cost);
+                    else           ResourceManager.Instance.AddWood(-cost);
+                    if (needWood  > 0) bp.DepositWood(needWood);
+                    if (needStone > 0) bp.DepositStone(needStone);
+                }
+            }
             // #190 - 클릭 성공 토스트 + 시각 ring (운영자가 "어디에 청사진 생겼지?" 즉시 확인)
             if (BuildClickToast.Instance != null)
             {
