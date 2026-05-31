@@ -78,6 +78,11 @@ namespace MelonS.GameProto
         //  forcedResting 동안 sleep 회복 = night 자동 수면과 동일 (bed.RestMul 반영).
         private BedEntity restTarget;
         private bool forcedResting = false;
+        // #222 QA fix — 유저 rest 명령(restTarget)에도 도달 timeout (자율취침엔 이미 있음).
+        //  LongPlay 로그: 민지 '휴식이동' no-move 60s = SetRestTarget 한 침대에 못 닿았는데
+        //  restTarget 경로엔 timeout 이 없어 영구 stuck.  도달 못 하면 명령을 풀어 stuck 방지.
+        private float restStartTime = -999f;
+        [SerializeField] private float restArriveTimeout = 15f;
         [SerializeField] private float forcedWakeSleepLevel = 95f;  // 강제 휴식은 거의 만충까지
         public bool HasRestOrder => restTarget != null;
         public BedEntity RestTarget => restTarget;
@@ -133,6 +138,7 @@ namespace MelonS.GameProto
         {
             restTarget = bed;
             forcedResting = false;  // 도착 전까지는 이동 중 (아직 안 잠)
+            restStartTime = Time.time;  // #222 도달 timeout 기준
         }
 
         /// <summary>사용자가 다른 명령을 내리거나 휴식이 끝나면 호출 — 강제 휴식 취소.</summary>
@@ -209,9 +215,16 @@ namespace MelonS.GameProto
                         }
                         return;
                     }
+                    // #222 도달 timeout — 침대에 못 닿고 시간 초과면 명령을 풀어 stuck 방지
+                    //  (경로 막힘/stand-cell 불일치/문 막힘).  자율취침과 동일한 robustness.
+                    if (Time.time - restStartTime > restArriveTimeout)
+                    {
+                        Debug.Log($"[Rest] {name} 침대 도달 실패(timeout {restArriveTimeout}s) → 휴식 명령 해제, sleep={sleep:F0}");
+                        ClearRestTarget();
+                    }
                     // 아직 침대로 이동 중 — 일반 decay 만 진행 (아래로 fall-through 하되
                     //  강제 수면은 아직 아님).  forcedResting 은 false 유지.
-                    forcedResting = false;
+                    else forcedResting = false;
                 }
             }
 
