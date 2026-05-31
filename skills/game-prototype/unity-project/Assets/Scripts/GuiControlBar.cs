@@ -98,37 +98,54 @@ namespace MelonS.GameProto
         private RectTransform contentRt;  // bordered-panel inner content (buttons + dividers live here)
         private RectTransform speedPanelRt;  // 우하단 속도/멈춤 클러스터 (RimWorld 레이아웃)
 
+        // 우하단 속도 클러스터 배치 상수 (root=full-screen stretch 기준 anchor (1,0) 좌표 계산용).
+        private const float PadX = 12f;   // = UITheme.PadOuter
+        private const float PadY = 8f;
+        private const float SpRight = 16f;  // 화면 우측 모서리 여백
+        private const float SpBottom = 24f; // 화면 바닥 여백
+
         private void BuildLayout()
         {
-            // === 하단 중앙 탭 바 (징집/직업/일정/건축/연구/설정) ===
-            // 운영자 fb "속도 제어랑 멈춤 버튼은 우하단으로 이동(RimWorld 참고)":
-            //   속도(멈춤/1x/2x/4x) 4개는 별도 우하단 패널로 분리, 나머지 탭 버튼만 하단 중앙 유지.
-            //   단, 모든 Button 은 여전히 GuiControlBar transform 의 DIRECT child (IntegrationTestRunner
-            //   가 bar.transform.Find("Btn_멈춤") depth-1 검사 + Button 총 >=9 검사) → 시각 위치만 분리.
+            // === ROOT: 전체 화면 stretch ===
+            // 핵심 fix (시각버그): 이전엔 root RectTransform 이 "하단 중앙" 작은 rect (anchor 0.5,0)
+            //   였다.  그 안에서 속도 버튼이 anchor (1,0) 을 써도 (1,0) 은 "작은 중앙 바의 우측 끝"
+            //   을 가리켜서, 속도 버튼이 화면 우하단이 아니라 중앙 바 안에 인라인으로 박혔다.
+            //   → root 를 전체 화면 stretch 로 바꿔야 자식의 anchor (1,0) 이 "화면 우하단" 을 가리킨다.
+            //   탭 바(하단 중앙)는 별도 child 컨테이너(tabBarRt, anchor 0.5,0)로 분리한다.
+            //   속도 버튼 4개는 여전히 GuiControlBar root 의 DIRECT child (IntegrationTestRunner
+            //   가 bar.transform.Find("Btn_멈춤") depth-1 검사 + Button 총 >=9 검사) → 위치만 우하단.
             var rt = gameObject.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.5f, 0f);
-            rt.anchorMax = new Vector2(0.5f, 0f);
-            rt.pivot = new Vector2(0.5f, 0f);
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+
+            float padX = PadX;
+            float padY = PadY;
+
             // 6 tab buttons: [징집] | [직업][일정] | [건축] | [연구] | [설정]
             float totalW = 6 * BtnW + 4 * GroupGap;
-            // ui-audit §3.2 Band A — main command bar baseline y=24 (was 40).
-            //   This is the persistent bottom-center bar; the contextual gizmo row
-            //   (SelectionGizmoBar, Band C) sits ABOVE it at y=112, so 24 anchors the
-            //   visual "floor" of the bottom UI stack and clears the gizmo overlap (P4).
-            rt.anchoredPosition = new Vector2(0, 24);  // 화면 하단에서 24px (ui-audit Band A)
 
-            // #UI-restyle U1 — ONE bordered panel (warm brown + 2px lighter border),
-            //   not a borderless flat rectangle.  Pad the frame so buttons breathe.
-            float padX = MelonS.GameProto.Core.UITheme.PadOuter;
-            float padY = 8f;
-            rt.sizeDelta = new Vector2(totalW + padX * 2f, BtnH + padY * 2f);
-            // MakeBorderedPanel returns inner content RT (inside border+fill); we lay buttons there.
-            contentRt = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(rt);
+            // === 하단 중앙 탭 바 컨테이너 (징집/직업/일정/건축/연구/설정) ===
+            //   root 가 full-screen stretch 이므로, 중앙 바는 자체 컨테이너로 anchor (0.5,0) 고정.
+            var tabBarGo = new GameObject("TabBar");
+            tabBarGo.transform.SetParent(transform, false);
+            var tabBarRt = tabBarGo.AddComponent<RectTransform>();
+            tabBarRt.anchorMin = new Vector2(0.5f, 0f);
+            tabBarRt.anchorMax = new Vector2(0.5f, 0f);
+            tabBarRt.pivot = new Vector2(0.5f, 0f);
+            // ui-audit §3.2 Band A — main command bar baseline y=24.
+            tabBarRt.anchoredPosition = new Vector2(0, 24);
+            tabBarRt.sizeDelta = new Vector2(totalW + padX * 2f, BtnH + padY * 2f);
+            // #UI-restyle U1 — ONE bordered panel (warm brown + 2px lighter border).
+            //   MakeBorderedPanel returns inner content RT; dividers live there.
+            contentRt = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(tabBarRt);
 
             // === 우하단 속도 패널 (RimWorld 의 우하단 시계/속도 클러스터 위치) ===
-            //   ClockUI 날짜 클러스터 근처 (anchor (1,0)).  자체 bordered panel 을 만들되,
-            //   속도 버튼들은 여전히 GuiControlBar transform 의 direct child 로 두고
-            //   speedPanelRt 를 시각 배경으로만 사용한다 (버튼은 speedPanelRt 에 부모붙이지 않음).
+            //   root=full-screen 이므로 anchor (1,0) 이 화면 우하단 모서리를 가리킨다.
+            //   자체 bordered panel 을 배경으로 만들되, 속도 버튼들은 여전히 GuiControlBar root
+            //   의 direct child 로 두고 speedPanelRt 는 시각 배경으로만 사용 (버튼 부모붙이지 않음).
             var spGo = new GameObject("SpeedPanel");
             spGo.transform.SetParent(transform, false);
             speedPanelRt = spGo.AddComponent<RectTransform>();
@@ -137,24 +154,24 @@ namespace MelonS.GameProto
             speedPanelRt.pivot = new Vector2(1f, 0f);
             float speedW = 4 * BtnW + 3 * Gap;
             speedPanelRt.sizeDelta = new Vector2(speedW + padX * 2f, BtnH + padY * 2f);
-            speedPanelRt.anchoredPosition = new Vector2(-16f, 24f);  // 우하단 모서리 16px, 바닥 24px
+            speedPanelRt.anchoredPosition = new Vector2(-SpRight, SpBottom);  // 우하단 모서리 16px, 바닥 24px
             MelonS.GameProto.Core.UITheme.MakeBorderedPanel(speedPanelRt);
 
             float dividerH = BtnH + 4f;
 
-            // Speed group: [⏸ 멈춤][1x][2x][4x] — 우하단 패널 anchor (1,0) 기준 배치.
+            // Speed group: [⏸ 멈춤][1x][2x][4x] — root anchor (1,0)=화면 우하단 기준 배치.
             // ui-audit P1 (운영자 fb "없음(0)") — the speed cluster's LEFTMOST slot is ALWAYS the
             //   pause/speed-0 control, never a build-mode readout.  No mode-indicator Text anywhere.
             //   The GameObject name MUST stay "Btn_멈춤" (IntegrationTestRunner depth-1 Find).
-            //   anchor (1,0): 우하단 모서리 기준, x 는 left 로 갈수록 더 음수.
-            float spRight = -16f;  // 우측 여백 (speedPanelRt anchoredPosition.x 와 동일)
-            float sx = spRight - padX - BtnW;  // 가장 오른쪽 버튼(4x)의 left edge
+            //   anchor (1,0): 화면 우하단 모서리 기준, x 는 버튼 left edge (음수, left 로 갈수록 더 음수).
+            //   speedPanelRt 내부 패딩(padX)만큼 안쪽에서 시작 → 패널 배경과 버튼 정렬.
+            float sx = -SpRight - padX - BtnW;  // 가장 오른쪽 버튼(4x)의 left edge
             speed4Btn = MakeBtn("4x",  "(3)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(4f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
             speed2Btn = MakeBtn("2x",  "(2)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(2f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
             speed1Btn = MakeBtn("1x",  "(1)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(1f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
             pauseBtn  = MakeBtn("멈춤", "(Space)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.TogglePause(); }, displayLabel:"⏸ 멈춤", anchorBottomRight:true);
 
-            // === 하단 중앙: 탭 버튼들 ===
+            // === 하단 중앙: 탭 버튼들 (tabBarRt 컨테이너 기준 로컬 좌표) ===
             float x = -totalW * 0.5f;
 
             // Draft group: [징집]
@@ -185,27 +202,33 @@ namespace MelonS.GameProto
             //   nor into SpeedPanel.  `label` drives the GameObject name (test-referenced);
             //   `displayLabel`, when given, drives ONLY the visible Text so we can show e.g.
             //   "⏸ 멈춤" without renaming the GO away from "Btn_멈춤".
-            //   anchorBottomRight=true → 우하단 속도 클러스터용 (anchor (1,0), pivot right).
+            //   anchorBottomRight=true → 우하단 속도 클러스터용 (anchor (1,0), pivot left-bottom).
+            //   둘 다 GuiControlBar root(=full-screen stretch)의 DIRECT child 로 유지 (test depth-1 Find).
             var go = new GameObject($"Btn_{label}");
             go.transform.SetParent(transform, false);
             var rt = go.AddComponent<RectTransform>();
             if (anchorBottomRight)
             {
-                // 우하단 anchor: x 는 화면 우측 모서리 기준 음수 오프셋(버튼 left edge).
+                // 우하단 anchor: root 가 full-screen 이므로 (1,0)=화면 우하단 모서리.
+                //   x 는 화면 우측 모서리 기준 음수 오프셋(버튼 left edge).  y 는 화면 바닥 기준.
                 rt.anchorMin = new Vector2(1f, 0f);
                 rt.anchorMax = new Vector2(1f, 0f);
                 rt.pivot = new Vector2(0f, 0f);
                 rt.sizeDelta = new Vector2(BtnW, BtnH);
-                // 패널 바닥에서 padY(8) 만큼 띄움 + 패널 자체가 y=24 → 시각상 중앙 정렬.
-                rt.anchoredPosition = new Vector2(x, 24f + 8f);
+                // SpeedPanel 바닥에서 padY 만큼 띄움 + 패널 자체가 y=SpBottom → 시각상 중앙 정렬.
+                rt.anchoredPosition = new Vector2(x, SpBottom + PadY);
             }
             else
             {
-                rt.anchorMin = new Vector2(0.5f, 0.5f);
-                rt.anchorMax = new Vector2(0.5f, 0.5f);
-                rt.pivot = new Vector2(0f, 0.5f);
+                // 하단 중앙 탭 버튼: root 가 full-screen 이므로 (0.5,0)=화면 하단 중앙.
+                //   TabBar 컨테이너(anchor 0.5,0, y=24, 높이 BtnH+padY*2)와 동일 위치에 겹치도록
+                //   버튼 높이만큼 안쪽(y=SpBottom+padY=중앙)에 배치.  x 는 컨테이너 로컬과 동일한
+                //   바 중앙 기준 오프셋(buttons 의 left edge, pivot left-bottom).
+                rt.anchorMin = new Vector2(0.5f, 0f);
+                rt.anchorMax = new Vector2(0.5f, 0f);
+                rt.pivot = new Vector2(0f, 0f);
                 rt.sizeDelta = new Vector2(BtnW, BtnH);
-                rt.anchoredPosition = new Vector2(x, 0);
+                rt.anchoredPosition = new Vector2(x, SpBottom + PadY);
             }
 
             // #UI-restyle U1 — each button gets its own 2px Divider border (root Image)
