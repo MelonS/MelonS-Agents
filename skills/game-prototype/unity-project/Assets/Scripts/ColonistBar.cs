@@ -28,7 +28,15 @@ namespace MelonS.GameProto
         private const float EntryW = 104f;
         private const float EntryH = 54f;
         private const float Gap = 6f;
-        private const float TopMargin = 8f;   // 화면 상단에서의 여백
+        // 운영자 fb: "12시에 림얼굴 나오는거랑 그 뒤 UI 겹침" — 콜로니스트 바(portrait/림얼굴)가
+        //   상단 자원 readout(TopBar)과 겹쳤음.  TopBar 는 화면 최상단 full-width 높이 76px
+        //   (SceneSetup.Game.TopBar.cs: topRt.sizeDelta y=76, anchor top, y=0)에 clock/time/
+        //   자원 chip 을 그린다.  그래서 콜로니스트 바를 TopBar 바로 아래로 내려 절대 안 겹치게 함.
+        //   RimWorld 식: 바는 최상단 중앙이지만, 이 프로토타입은 최상단을 자원 바가 점유하므로
+        //   "자원 바 바로 아래 중앙" 이 깔끔한 동치 위치.
+        private const float TopBarH = 76f;     // SceneSetup TopBar 높이와 일치(변경 시 같이 갱신)
+        private const float TopBarGap = 8f;    // TopBar 와 콜로니스트 바 사이 숨 쉴 틈
+        private const float TopMargin = TopBarH + TopBarGap;  // TopBar 아래로 내림(겹침 방지)
         private const float BarH = 5f;         // HP/mood 바 두께
         // #240 초상화 (RimWorld 콜로니스트 바 시그니처) — entry 좌측 정사각, pawn body sprite.
         private const float PortraitW = 46f;   // 좌측 초상화 폭(정사각)

@@ -978,13 +978,14 @@ namespace MelonS.GameProto
             var px = new Color32[SIZE * SIZE];
             for (int i = 0; i < px.Length; i++) px[i] = new Color32(0, 0, 0, 0);
 
-            // Palette (mirrors palette.py WOOD_* / OUTLINE_OBJ; RGBA).
-            var WOOD_DK = new Color32(92, 60, 36, 255);
-            var WOOD_MD = new Color32(140, 92, 54, 255);
-            var WOOD_LT = new Color32(188, 138, 88, 255);
-            var OUTLINE = new Color32(40, 30, 22, 255);   // OUTLINE_OBJ
+            // 밝고 대비 강한 목재 톤 — 평평한 넓은 상판 + 의자 실루엣을 또렷하게.
+            //  펜스(성긴 격자)·바리케이드(흙더미)와 형태로 분리.
+            var WOOD_DK = new Color32(110, 72, 42, 255);
+            var WOOD_MD = new Color32(168, 116, 68, 255);
+            var WOOD_LT = new Color32(212, 164, 108, 255);
+            var OUTLINE = new Color32(28, 18, 12, 255);   // OUTLINE_OBJ (더 진하게)
 
-            // Texture y is bottom-up; _gen_table_chair.py uses top-down PIL y.
+            // Texture y is bottom-up; 권위 좌표는 top-down PIL y.
             //  Convert each authored (gx, gyTop) to texture row: ty = SIZE-1-gyTop.
             void Set(int gx, int gyTop, Color32 c)
             {
@@ -1008,22 +1009,22 @@ namespace MelonS.GameProto
                     || (c.r == WOOD_LT.r && c.g == WOOD_LT.g && c.b == WOOD_LT.b);
             }
 
-            // Table top slab (rows 4-6): WOOD_LT top highlight / WOOD_MD body /
-            //  WOOD_DK under-shadow, spanning x=4..13.
-            for (int x = 4; x <= 13; x++) { Set(x, 4, WOOD_LT); Set(x, 5, WOOD_MD); Set(x, 6, WOOD_DK); }
+            // 넓고 평평한 상판(rows 3-5): 3px 두께로 두툼하게, x=3..14 가로로 길게.
+            //  → "탁자"의 핵심 실루엣인 넓은 천판을 강조.
+            for (int x = 3; x <= 14; x++) { Set(x, 3, WOOD_LT); Set(x, 4, WOOD_MD); Set(x, 5, WOOD_DK); }
 
-            // Table legs (rows 7-12) at x=5 and x=12, alternating mid/dark read.
-            for (int y = 7; y <= 12; y++)
+            // 탁자 다리(rows 6-9) 좌우 끝 x=4,13 — 짧고 굵게(2px).
+            for (int y = 6; y <= 9; y++)
             {
-                Set(5,  y, (y % 2 == 0) ? WOOD_MD : WOOD_DK);
-                Set(12, y, (y % 2 == 0) ? WOOD_MD : WOOD_DK);
+                Set(4,  y, (y % 2 == 0) ? WOOD_MD : WOOD_DK);
+                Set(13, y, (y % 2 == 0) ? WOOD_MD : WOOD_DK);
             }
 
-            // Stool / chair tucked left (rows 8-13): 3-wide seat (x=1..3) on a
-            //  single centre leg (x=2).
-            for (int x = 1; x <= 3; x++) { Set(x, 8, WOOD_LT); Set(x, 9, WOOD_MD); }
-            for (int y = 10; y <= 13; y++) Set(2, y, WOOD_DK);
-            Set(2, 10, WOOD_MD);
+            // 의자 1개 — 하단에 또렷한 등받이+좌판 형태(점이 아닌 "의자 모양").
+            //  좌판(rows 11-12, x=6..10) 위로 등받이(rows 8-10, x=10) 세로 한 줄.
+            for (int x = 6; x <= 10; x++) { Set(x, 11, WOOD_LT); Set(x, 12, WOOD_MD); }  // 좌판
+            for (int y = 8; y <= 10; y++) Set(10, y, WOOD_DK);                            // 등받이
+            Set(6, 13, WOOD_DK); Set(10, 13, WOOD_DK);                                    // 의자 다리 2개
 
             // 1px OUTLINE_OBJ on transparent pixels 4-adjacent to wood.  Collect
             //  first, then write (no self-feed).
@@ -1159,12 +1160,15 @@ namespace MelonS.GameProto
             var px = new Color32[SIZE * SIZE];
             for (int i = 0; i < px.Length; i++) px[i] = new Color32(0, 0, 0, 0);
 
-            var WOOD_DK = new Color32(92, 60, 36, 255);
-            var WOOD_MD = new Color32(140, 92, 54, 255);
-            var WOOD_LT = new Color32(188, 138, 88, 255);
-            var OUTLINE = new Color32(40, 30, 22, 255);   // OUTLINE_OBJ
+            // 밝은 목재 톤 + 대비 강한 외곽선 — 펜스는 "성긴 격자"로 읽혀야 하므로
+            //  바리케이드(흙더미)·탁자(목재 덩어리)와 톤·실루엣을 모두 분리한다.
+            var WOOD_DK = new Color32(120, 78, 44, 255);
+            var WOOD_MD = new Color32(172, 120, 72, 255);
+            var WOOD_LT = new Color32(214, 168, 112, 255);
+            var METAL   = new Color32(176, 184, 196, 255);   // 게이트 경첩(철물) — 색으로 구분
+            var OUTLINE = new Color32(28, 18, 12, 255);       // OUTLINE_OBJ (더 진하게)
 
-            // Texture y is bottom-up; _gen_fence.py uses top-down PIL y.
+            // Texture y is bottom-up; 권위 좌표는 top-down PIL y.
             //  Convert each authored (gx, gyTop) to texture row: ty = SIZE-1-gyTop.
             void Set(int gx, int gyTop, Color32 c)
             {
@@ -1185,30 +1189,34 @@ namespace MelonS.GameProto
                 var c = px[ty * SIZE + gx];
                 return (c.r == WOOD_DK.r && c.g == WOOD_DK.g && c.b == WOOD_DK.b)
                     || (c.r == WOOD_MD.r && c.g == WOOD_MD.g && c.b == WOOD_MD.b)
-                    || (c.r == WOOD_LT.r && c.g == WOOD_LT.g && c.b == WOOD_LT.b);
+                    || (c.r == WOOD_LT.r && c.g == WOOD_LT.g && c.b == WOOD_LT.b)
+                    || (c.r == METAL.r   && c.g == METAL.g   && c.b == METAL.b);
             }
 
-            // LOW barrier: everything in the lower half of the tile (y >= 7) so
-            //  the rail reads as waist-height, leaving the top half open.
-            //  Posts at x=2,8,13 (gate: jamb posts at x=2,13, centre open).
-            int[] posts = isGate ? new[] { 2, 13 } : new[] { 2, 8, 13 };
+            // 성긴 격자(piquet) 실루엣: 가는 1px 수직 기둥(키 큼, rows 2..14) +
+            //  얇은 2개 수평 줄.  기둥 사이를 넓게 비워 "성긴 울타리"로 읽히게 하고
+            //  바리케이드의 꽉 찬 더미와 확연히 다르게 한다.
+            //  일반 펜스: 기둥 x=2,7,13 (3개) / 게이트: 좌우 문기둥 x=2,13만.
+            int[] posts = isGate ? new[] { 2, 13 } : new[] { 2, 7, 13 };
             foreach (int px0 in posts)
             {
-                // short vertical post, rows 7..13, light-left / shadow-right.
-                for (int y = 7; y <= 13; y++)
-                {
-                    Set(px0,     y, (y % 2 == 0) ? WOOD_MD : WOOD_DK);
-                    Set(px0 + 1, y, (y % 2 == 0) ? WOOD_DK : WOOD_MD);
-                }
+                // 가는 1px 수직 기둥, 위는 살짝 뾰족(밝게)하게 키 큰 말뚝 느낌.
+                for (int y = 2; y <= 14; y++)
+                    Set(px0, y, (y <= 4) ? WOOD_LT : ((y % 2 == 0) ? WOOD_MD : WOOD_DK));
             }
-            // Two horizontal rails (top rail row 8, mid rail row 11) spanning the
-            //  width.  For the gate, the rails STOP at the centre opening
-            //  (x 6..9 left clear) so it reads as a gate gap.
-            for (int x = 2; x <= 14; x++)
+            // 수평 줄 2개(상단 row 5, 하단 row 10) — 1px 얇게, 점선 느낌으로 성기게.
+            for (int x = 2; x <= 13; x++)
             {
-                if (isGate && x >= 6 && x <= 9) continue;   // gate opening
-                Set(x, 8,  (x % 2 == 0) ? WOOD_LT : WOOD_MD);   // top rail (highlight)
-                Set(x, 11, (x % 2 == 0) ? WOOD_MD : WOOD_DK);   // mid rail (shadow)
+                if (isGate && x >= 6 && x <= 9) continue;   // 게이트 중앙 개구부
+                Set(x, 5,  (x % 2 == 0) ? WOOD_LT : WOOD_MD);   // 상단 줄(하이라이트)
+                Set(x, 10, (x % 2 == 0) ? WOOD_MD : WOOD_DK);   // 하단 줄(그림자)
+            }
+            if (isGate)
+            {
+                // 게이트 전용 tell: 양쪽 문기둥 안쪽에 철물 경첩 점을 찍어
+                //  "여닫는 문"임을 한눈에 보이게 한다(펜스에는 없음).
+                Set(3,  6, METAL); Set(3,  9, METAL);   // 좌측 경첩
+                Set(12, 6, METAL); Set(12, 9, METAL);   // 우측 경첩
             }
 
             // 1px OUTLINE_OBJ on transparent pixels 4-adjacent to wood.  Collect
@@ -1461,14 +1469,16 @@ namespace MelonS.GameProto
             var px = new Color32[SIZE * SIZE];
             for (int i = 0; i < px.Length; i++) px[i] = new Color32(0, 0, 0, 0);
 
-            // Palette (mirrors palette.py DIRT_* / WOOD_DK / OUTLINE_OBJ; RGBA).
-            var DIRT_DK = new Color32(86, 66, 46, 255);
-            var DIRT_MD = new Color32(112, 88, 62, 255);
-            var DIRT_LT = new Color32(138, 112, 80, 255);
-            var WOOD_DK = new Color32(92, 60, 36, 255);
-            var OUTLINE = new Color32(40, 30, 22, 255);   // OUTLINE_OBJ
+            // 바리케이드 팔레트: 채도 낮은 모래주머니(녹황색 흙)로 펜스의 따뜻한
+            //  목재 톤과 색상부터 분리한다.  꽉 찬 비대칭 지그재그 더미 실루엣 →
+            //  성긴 펜스 격자와 한눈에 구분.
+            var DIRT_DK = new Color32(74, 70, 44, 255);
+            var DIRT_MD = new Color32(120, 112, 70, 255);
+            var DIRT_LT = new Color32(160, 152, 100, 255);
+            var WOOD_DK = new Color32(70, 52, 32, 255);    // 끈/말뚝(짙은 갈색)
+            var OUTLINE = new Color32(28, 24, 14, 255);     // OUTLINE_OBJ (더 진하게)
 
-            // Texture y is bottom-up; _gen_barricade.py uses top-down PIL y.
+            // Texture y is bottom-up; 권위 좌표는 top-down PIL y.
             //  Convert each authored (gx, gyTop) to texture row: ty = SIZE-1-gyTop.
             void Set(int gx, int gyTop, Color32 c)
             {
@@ -1489,30 +1499,33 @@ namespace MelonS.GameProto
                 return px[ty * SIZE + gx].a != 0;
             }
 
-            // One 3-wide sandbag lump centred at column cx, top at yTop, height h.
-            //  Mirrors _gen_barricade.py's sandbag(): rounded LT top, MD/LT body,
-            //  DK shadow underside.
+            // 4-wide 통통한 모래주머니 한 덩어리(둥근 윗면 LT / 몸통 MD / 밑그림자 DK).
             void Sandbag(int cx, int yTop, int h)
             {
                 for (int row = 0; row < h; row++)
                 {
                     int y = yTop + row;
-                    Color32 cL, cM, cR;
-                    if (row == 0)            { cL = DIRT_LT; cM = DIRT_LT; cR = DIRT_LT; }
-                    else if (row == h - 1)   { cL = DIRT_DK; cM = DIRT_DK; cR = DIRT_DK; }
-                    else                     { cL = DIRT_MD; cM = DIRT_LT; cR = DIRT_MD; }
-                    Set(cx - 1, y, cL); Set(cx, y, cM); Set(cx + 1, y, cR);
+                    Color32 c = (row == 0) ? DIRT_LT : (row == h - 1 ? DIRT_DK : DIRT_MD);
+                    for (int dx = -1; dx <= 2; dx++)
+                    {
+                        // 가운데 두 칸은 한 단계 밝게 → 통통한 입체감.
+                        var cc = (dx == 0 || dx == 1) && row != 0 && row != h - 1 ? DIRT_LT : c;
+                        Set(cx + dx, y, cc);
+                    }
                 }
             }
 
-            // Back row — shorter bags (height 3), staggered right.
-            foreach (int cx in new[] { 3, 7, 11 }) Sandbag(cx, 7, 3);
-            // Front row — taller bags (height 4), staggered left, overlapping.
-            foreach (int cx in new[] { 1, 5, 9, 13 }) Sandbag(cx, 10, 4);
+            // 지그재그 2단 더미 — 펜스의 일직선 격자와 정반대의 "비스듬히 쌓인 둔덕".
+            //  뒷줄(아래·낮음)과 앞줄(살짝 위·높음)을 어긋나게 겹쳐 꽉 채운다.
+            foreach (int cx in new[] { 2, 6, 10, 13 }) Sandbag(cx, 9, 4);   // 뒷줄(낮은 더미)
+            foreach (int cx in new[] { 4, 8, 12 })     Sandbag(cx, 5, 5);   // 앞줄(높은 더미, 어긋남)
 
-            // WOOD_DK tie strap across the front row (row 11) — only over bag px.
+            // WOOD_DK 끈(tie strap) — 더미를 가로지르는 가는 2줄로 "묶음" 느낌.
             for (int x = 0; x < SIZE; x++)
+            {
+                if (IsSolid(x, 7))  Set(x, 7,  WOOD_DK);
                 if (IsSolid(x, 11)) Set(x, 11, WOOD_DK);
+            }
 
             // 1px OUTLINE_OBJ on transparent pixels 4-adjacent to a solid.
             //  Collect first, then write (no self-feed).
