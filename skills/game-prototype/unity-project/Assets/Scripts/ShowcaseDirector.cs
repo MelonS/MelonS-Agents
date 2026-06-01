@@ -472,27 +472,120 @@ namespace MelonS.GameProto
             Debug.Log("[Showcase] 자연 취침 시작 (침대 아래칸으로 도보).");
         }
 
-        // 아침: 림을 깨워 일상 재개 — AI 재가동 + 기상 + 농사(grow zone) 부여.
+        private PawnEntity _huntPawn;
+        private PawnEntity _chopPawn;
+
+        private TreeEntity FindTreeNear(Vector2 p, float maxDist)
+        {
+            TreeEntity best = null; float bestSq = maxDist * maxDist;
+            foreach (var t in Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None))
+            {
+                if (t == null) continue;
+                float sq = ((Vector2)t.transform.position - p).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = t; }
+            }
+            return best;
+        }
+
+        // 구역의 돌(StoneVein) 제거 + 그리드 unblock.
+        private void ClearArea(float minX, float maxX, float minY, float maxY)
+        {
+            foreach (var v in Object.FindObjectsByType<StoneVeinEntity>(FindObjectsSortMode.None))
+            {
+                if (v == null) continue;
+                Vector2 p = v.transform.position;
+                if (p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY)
+                {
+                    var c = new Vector2Int(Mathf.FloorToInt(p.x), Mathf.FloorToInt(p.y));
+                    if (PawnMovement.Grid != null) PawnMovement.Grid.SetWalkable(c, true);
+                    Destroy(v.gameObject);
+                }
+            }
+        }
+
+        private AnimalEntity FindHuntTarget()
+        {
+            AnimalEntity best = null; float bestSq = float.MaxValue; bool bestDeer = false;
+            foreach (var a in Object.FindObjectsByType<AnimalEntity>(FindObjectsSortMode.None))
+            {
+                if (a == null || a.IsDead) continue;
+                bool deer = a.Species == AnimalSpecies.Deer;
+                float sq = ((Vector2)a.transform.position - HouseCenter).sqrMagnitude;
+                // 사슴 우선, 그 안에서 가까운 것.
+                if ((deer && !bestDeer) || (deer == bestDeer && sq < bestSq))
+                { best = a; bestSq = sq; bestDeer = deer; }
+            }
+            return best;
+        }
+
+        // 아침: 림을 깨워 일상 재개 — 큰 농사 + 벌목 + 사슴 사냥.
         private void WakePawnsAndStartMorning()
         {
             var regenField = RegenField;
-            foreach (var pawn in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+            var pawns = new List<PawnEntity>();
+            foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
             {
-                if (pawn == null || pawn.IsDead) continue;
-                var needs = pawn.GetComponent<PawnNeeds>();
+                if (p == null || p.IsDead) continue;
+                pawns.Add(p);
+                var needs = p.GetComponent<PawnNeeds>();
                 if (needs != null)
                 {
-                    needs.ClearRestTarget();                      // 기상
-                    needs.sleep = 92f;                            // 잘 잤음 → 안 졸림
-                    if (regenField != null) regenField.SetValue(needs, 8f);   // 원복
+                    needs.ClearRestTarget();
+                    needs.sleep = 92f;
+                    needs.food = 35f;                              // 아침 → 배고픔 → 밥 먹음
+                    if (regenField != null) regenField.SetValue(needs, 8f);
                 }
-                var ai = pawn.GetComponent<PawnUtilityAI>();
-                if (ai != null) ai.enabled = true;                // AI 재가동 → 밥/일/농사
             }
-            // 농사: 집 동쪽에 grow zone → 림이 파종(아침 활동).
+
+            // 큰 농사 zone — 집 남쪽 grass (돌 정리 후 8x6 마킹).  운영자 "농사 더 크게".
+            ClearArea(0.5f, 8.5f, -6.5f, -0.5f);
             var gz = GrowZoneDesignation.Instance;
-            if (gz != null) gz.SimulateDragRect(new Vector2(X1 + 2, Y0 - 1), new Vector2(X1 + 5, Y0 + 3));
-            Debug.Log("[Showcase] 아침 기상 + grow zone 부여.");
+            if (gz != null) gz.SimulateDragRect(new Vector2(1f, -6f), new Vector2(8f, -1f));
+
+            // 벌목 지정 — 집 근처 나무 여러 그루 (림이 벌목).
+            var chop = TreeChopDesignation.Instance;
+            if (chop != null)
+            {
+                int marked = 0;
+                foreach (var tree in Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None))
+                {
+                    if (tree == null || marked >= 6) continue;
+                    Vector2 tp = tree.transform.position;
+                    if ((tp - HouseCenter).sqrMagnitude < 20f * 20f) { chop.MarkWorld(tp); marked++; }
+                }
+            }
+
+            // 림 명시 분담 — 뭉치지 않고 각자 다른 일을 하도록 직접 지정.
+            //  [0] 사냥(사슴 추격), [1] 벌목(가까운 나무), [2+] 농사(grow zone, AI on).
+            _huntPawn = null; _chopPawn = null;
+            var deer = FindHuntTarget();
+            for (int i = 0; i < pawns.Count; i++)
+            {
+                var pe = pawns[i];
+                var ai = pe.GetComponent<PawnUtilityAI>();
+                if (i == 0 && deer != null)
+                {
+                    if (ai != null) ai.enabled = false;       // AI off → PawnHunter 가 추격
+                    var hunter = pe.GetComponent<PawnHunter>();
+                    if (hunter != null) { hunter.SetAnimalTarget(deer); _huntPawn = pe; }
+                }
+                else if (i == 1)
+                {
+                    var tree = FindTreeNear(HouseCenter, 22f);
+                    var chopper = pe.GetComponent<PawnChopper>();
+                    if (tree != null && chopper != null)
+                    {
+                        if (ai != null) ai.enabled = false;   // AI off → PawnChopper 가 벌목
+                        chopper.SetTreeTarget(tree); _chopPawn = pe;
+                    }
+                    else if (ai != null) ai.enabled = true;
+                }
+                else
+                {
+                    if (ai != null) ai.enabled = true;        // 농사(grow zone 가 배정)
+                }
+            }
+            Debug.Log($"[Showcase] 아침 분담: 사냥={(_huntPawn != null)}, 벌목={(_chopPawn != null)}, 농사=나머지.");
         }
 
         private PawnEntity PickActivePawn()
@@ -546,18 +639,39 @@ namespace MelonS.GameProto
             if (tc != null) tc.SetScale(2f);
             TrySetClock(7.5f);                          // 아침(Work 슬롯, 조명 off)
             WakePawnsAndStartMorning();
-            yield return MoveCam(HouseCenter + new Vector2(2.5f, -0.5f), 7.5f, 3.5f);
 
-            // 아침 활동(밥/농사/일) 따라가기
-            float t = 0f;
-            while (t < 34f)
+            // ① 농사: 남쪽 밭 전경 → 파종하는 림 클로즈업
+            yield return MoveCam(new Vector2((1f + 8f) / 2f, -3.5f), 8.0f, 4f);
+            yield return Wait(6f);
+            var planter = PickPawnExcept(_huntPawn, _chopPawn);
+            if (planter != null) yield return FollowPawn(planter, 5.0f, 8f);
+            else yield return Wait(8f);
+
+            // ② 벌목: 나무 베는 림
+            if (_chopPawn != null && !_chopPawn.IsDead)
+                yield return FollowPawn(_chopPawn, 5.0f, 8f);
+
+            // ③ 피날레: 사슴 사냥 추격을 따라가며 끝 (운영자: 사슴 잡다가 끝).
+            if (_huntPawn != null && !_huntPawn.IsDead)
+                yield return FollowPawn(_huntPawn, 5.2f, 13f);
+            else
             {
                 var p = PickActivePawn();
-                float seg = Mathf.Min(8f, 34f - t);
-                if (p != null) yield return FollowPawn(p, 5.0f, seg);
-                else yield return Wait(seg);
-                t += seg;
+                if (p != null) yield return FollowPawn(p, 5.2f, 13f);
+                else yield return Wait(13f);
             }
+        }
+
+        private PawnEntity PickPawnExcept(PawnEntity a, PawnEntity b)
+        {
+            PawnEntity best = null; float bestSq = float.MaxValue;
+            foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+            {
+                if (p == null || p.IsDead || p == a || p == b) continue;
+                float sq = ((Vector2)p.transform.position - new Vector2(4.5f, -3.5f)).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = p; }
+            }
+            return best;
         }
 
         // ====================================================================
