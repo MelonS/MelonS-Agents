@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using MelonS.GameProto.AI;   // #264 PathGrid (formation fan-out)
 
 namespace MelonS.GameProto
 {
@@ -257,12 +258,22 @@ namespace MelonS.GameProto
         {
             ClickEffect.Spawn(worldTarget, new Color(1f, 0.9f, 0.3f, 0.95f));  // same yellow X as ClickSelector
             var target = new Vector2(worldTarget.x, worldTarget.y);
-            int moved = 0;
+
+            // 살아있는 선택 림만 추려 순서 보존 (dead 제거).
+            var pawns = new List<PawnEntity>(multiSelection.Count);
             for (int i = multiSelection.Count - 1; i >= 0; i--)
             {
-                PawnEntity pawn = multiSelection[i];
-                if (pawn == null || pawn.IsDead) { multiSelection.RemoveAt(i); continue; }
+                if (multiSelection[i] == null || multiSelection[i].IsDead) { multiSelection.RemoveAt(i); continue; }
+            }
+            for (int i = 0; i < multiSelection.Count; i++) pawns.Add(multiSelection[i]);
 
+            // #264 분대 분산: 모두 같은 칸으로 보내 겹치던 버그(운영자 "여러마리 제대로 안 됨")
+            //  수정.  target 중심 확장 링에서 walkable 셀을 림 수만큼 골라 1:1 배정 (RimWorld식 fan-out).
+            var dests = BuildFormationCells(target, pawns.Count);
+
+            for (int i = 0; i < pawns.Count; i++)
+            {
+                PawnEntity pawn = pawns[i];
                 // Drafted pawns keep their own right-click semantics under ClickSelector;
                 //  the marquee move-order applies the undrafted manual-move path, matching
                 //  ClickSelector's empty-ground branch (clear residual tasks, then SetTarget).
@@ -276,11 +287,36 @@ namespace MelonS.GameProto
                 if (cook != null) cook.ClearTask();
 
                 var mv = pawn.GetComponent<PawnMovement>();
-                if (mv != null) mv.SetTarget(target);
+                if (mv != null) mv.SetTarget(dests[i]);
                 pawn.ManualMoveUntil = Time.time + manualMoveGrace;   // AI override grace, same as ClickSelector
-                moved++;
             }
-            Debug.Log($"[MarqueeSelector] move-order issued to {moved} pawn(s).");
+            Debug.Log($"[MarqueeSelector] move-order issued to {pawns.Count} pawn(s) (formation fan-out).");
+        }
+
+        /// <summary>#264 target 중심 확장 링(8-이웃)에서 walkable 셀을 n개 모아 반환.
+        ///  분대 이동 시 림들이 한 칸에 겹치지 않도록 서로 다른 도착 셀을 준다.
+        ///  walkable 셀이 부족하면 남은 자리는 target 자체로 채움(최소한의 fallback).</summary>
+        private List<Vector2> BuildFormationCells(Vector2 target, int n)
+        {
+            var result = new List<Vector2>(n > 0 ? n : 1);
+            if (n <= 0) return result;
+            var grid = PawnMovement.Grid;
+            Vector2Int center = PathGrid.WorldToCell(target);
+            var used = new HashSet<Vector2Int>();
+            for (int ring = 0; ring <= 6 && result.Count < n; ring++)
+            {
+                for (int dx = -ring; dx <= ring && result.Count < n; dx++)
+                for (int dy = -ring; dy <= ring && result.Count < n; dy++)
+                {
+                    if (ring > 0 && Mathf.Abs(dx) != ring && Mathf.Abs(dy) != ring) continue; // 링 경계 셀만
+                    var c = new Vector2Int(center.x + dx, center.y + dy);
+                    if (!used.Add(c)) continue;
+                    if (grid != null && !grid.IsWalkable(c)) continue;
+                    result.Add(PathGrid.CellToWorld(c));
+                }
+            }
+            while (result.Count < n) result.Add(target);
+            return result;
         }
 
         /// <summary>Drop all marquee rings + empty the multi-selection list.</summary>
