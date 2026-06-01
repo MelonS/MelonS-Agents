@@ -551,6 +551,25 @@ namespace MelonS.GameProto
             }
         }
 
+        // 피날레용: 농사 림 한 명을 사슴 사냥으로 전환.
+        private void StartHuntForFinale()
+        {
+            var deer = FindHuntTarget();
+            if (deer == null) return;
+            foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+            {
+                if (p == null || p.IsDead) continue;
+                var hunter = p.GetComponent<PawnHunter>();
+                if (hunter == null) continue;
+                var ai = p.GetComponent<PawnUtilityAI>();
+                if (ai != null) ai.enabled = false;
+                hunter.SetAnimalTarget(deer);
+                _huntPawn = p;
+                break;
+            }
+            Debug.Log($"[Showcase] 피날레 사냥 전환: {(_huntPawn != null ? _huntPawn.PawnName : "없음")} → {deer.SpeciesKr}");
+        }
+
         private AnimalEntity FindHuntTarget()
         {
             AnimalEntity best = null; float bestSq = float.MaxValue; bool bestDeer = false;
@@ -644,33 +663,19 @@ namespace MelonS.GameProto
                 }
             }
 
-            // 림 분담 — 농사를 최우선으로 보여준다(운영자 반복 요구).
-            //  [0] 사슴 사냥(피날레), [1..] 농사(AI on → grow zone 가 배정).  벌목은
-            //  designation 으로 깔아두어 농사 끝낸 idle 림이 자연히 한다(배경).
+            // #273 운영자 선택: 전원(3명) 농사 → 밭을 빨리 채운다.  사냥은 피날레에서
+            //  한 명을 전환(StartHuntForFinale).  농사 림은 AI off 여야 배회 안 하고
+            //  grow zone 이 계속 파종 배정한다(WorkKind 에 농사 없어 idle 만 파종).
             _huntPawn = null; _chopPawn = null;
-            var deer = FindHuntTarget();
             for (int i = 0; i < pawns.Count; i++)
             {
                 var pe = pawns[i];
                 var ai = pe.GetComponent<PawnUtilityAI>();
-                if (i == 0 && deer != null)
-                {
-                    if (ai != null) ai.enabled = false;       // AI off → PawnHunter 가 추격
-                    var hunter = pe.GetComponent<PawnHunter>();
-                    if (hunter != null) { hunter.SetAnimalTarget(deer); _huntPawn = pe; }
-                }
-                else
-                {
-                    // #272 농사 림은 AI off — idle-배회(=moving)를 막아야 grow zone 이 계속
-                    //  배정한다(FindNearestIdlePawn 은 '가만히 선' 림만 고름).  AI 가 켜져
-                    //  있으면 할 일 없을 때 배회해서 농사를 거의 안 했음.  AI off → 가만히
-                    //  → grow zone 이 적극 파종시킨다.
-                    if (ai != null) ai.enabled = false;
-                    var mv = pe.GetComponent<PawnMovement>();
-                    if (mv != null) mv.ClearTarget();         // 잔여 이동 정리 → 즉시 idle
-                }
+                if (ai != null) ai.enabled = false;
+                var mv = pe.GetComponent<PawnMovement>();
+                if (mv != null) mv.ClearTarget();
             }
-            Debug.Log($"[Showcase] 아침 분담: 사냥={(_huntPawn != null)}, 농사 림={pawns.Count - (_huntPawn != null ? 1 : 0)}명(AI off→적극 파종).");
+            Debug.Log($"[Showcase] 아침: 전원 {pawns.Count}명 농사(AI off→적극 파종).");
         }
 
         private PawnEntity PickActivePawn()
@@ -738,7 +743,8 @@ namespace MelonS.GameProto
             yield return MoveCam(new Vector2(5f, -1.5f), 5.5f, 2.5f);
             yield return Wait(15f);
 
-            // ③ 피날레: 사슴 사냥 추격을 따라가며 끝 (운영자: 사슴 잡다가 끝).
+            // ③ 피날레: 농사 림 한 명을 사냥으로 전환 → 사슴 추격을 따라가며 끝.
+            StartHuntForFinale();
             if (_huntPawn != null && !_huntPawn.IsDead)
                 yield return FollowPawn(_huntPawn, 5.2f, 13f);
             else
