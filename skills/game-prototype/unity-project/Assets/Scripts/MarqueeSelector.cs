@@ -188,10 +188,42 @@ namespace MelonS.GameProto
                 return;
             }
 
-            // -------- right-button: move-order to ALL multi-selected ---------
+            // -------- right-button: 다중 선택 전원에게 명령 ---------
+            //  #262 운영자 fb "징집은 여러 림 한꺼번에 선택해 쓰는 기능인데 여러 마리 선택 시
+            //   제대로 안 됨" — 이전엔 우클릭이 이동만 전원 적용했고, '적 우클릭=공격'은 ClickSelector
+            //   가 currentSelection(1명)만 처리해 그룹 공격이 안 됐다.  적/늑대/동물을 우클릭하고
+            //   선택에 징집된 림이 있으면 **전원**에게 attack/hunt target 을 박는다.  빈 땅이면 전원 이동.
             if (Input.GetMouseButtonDown(1) && HasMultiSelection && !InputBlocked())
             {
-                IssueMoveOrderToAll(ScreenToWorld(Input.mousePosition));
+                Vector3 wt = ScreenToWorld(Input.mousePosition);
+                var hit = Physics2D.OverlapPoint(new Vector2(wt.x, wt.y));
+                BanditEnemy bandit = hit != null ? hit.GetComponent<BanditEnemy>() : null;
+                WolfEnemy   wolf   = hit != null ? hit.GetComponent<WolfEnemy>()   : null;
+                AnimalEntity animal= hit != null ? hit.GetComponent<AnimalEntity>(): null;
+                bool anyDrafted = false;
+                for (int i = 0; i < multiSelection.Count; i++)
+                    if (multiSelection[i] != null && !multiSelection[i].IsDead && multiSelection[i].IsDrafted)
+                    { anyDrafted = true; break; }
+                if (anyDrafted && (bandit != null || wolf != null || animal != null))
+                {
+                    int atk = 0;
+                    for (int i = 0; i < multiSelection.Count; i++)
+                    {
+                        var p = multiSelection[i];
+                        if (p == null || p.IsDead || !p.IsDrafted) continue;
+                        p.DraftedAttackTarget = bandit;
+                        p.DraftedWolfTarget   = wolf;
+                        p.DraftedHuntTarget   = (bandit == null && wolf == null) ? animal : null;
+                        atk++;
+                    }
+                    ClickEffect.Spawn(wt, new Color(1f, 0.3f, 0.3f, 0.95f));  // 빨강 = 공격 명령
+                    string tgtKr = bandit != null ? "적" : (wolf != null ? "늑대" : "동물");
+                    Debug.Log($"[MarqueeSelector] 다중 공격 명령 {atk}명 → {tgtKr}");
+                }
+                else
+                {
+                    IssueMoveOrderToAll(wt);
+                }
             }
         }
 
