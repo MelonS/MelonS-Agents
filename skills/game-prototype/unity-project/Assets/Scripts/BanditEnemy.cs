@@ -19,15 +19,20 @@ namespace MelonS.GameProto
     {
         [SerializeField] private int maxHp = 20;
         [SerializeField] private int contactDamage = 2;
-        [SerializeField] private float moveSpeed = 1.2f;
+        // #277 1.2→4.2: pawn(4.6)보다 약간 느리되 추격 가능해야 레이드가 위협이 됨
+        //  (1.2 는 영원히 못 따라잡아 레이드 무력화 — 2차 감사 rank8, 운영자 승인).
+        [SerializeField] private float moveSpeed = 4.2f;
+        // #277 적 기본 방어 — pawn 만 armor 감면받고 적은 full 피해받던 비대칭 보정(rank12).
+        [SerializeField] private float baseArmor = 0.12f;
         [SerializeField] private float contactRange = 1.0f;
         [SerializeField] private float hitFlashSeconds = 0.06f;
         [SerializeField] private float damageInterval = 1.0f;
 
         public int Hp { get; private set; }
         public bool IsDead => Hp <= 0;
-        // #135 - downed (hp 1/4 이하) 면 capture 시도 가능.  진짜 죽이는 대신.
-        public bool IsDowned => Hp > 0 && Hp <= maxHp / 4;
+        // #135 - downed 면 capture 시도 가능.  #277 임계 25%→30% 로 PawnHealth(머리 30%)와
+        //  정합(rank3, 운영자 승인).  정수 hp 보정 FloorToInt.
+        public bool IsDowned => Hp > 0 && Hp <= Mathf.FloorToInt(maxHp * 0.3f);
 
         /// <summary>운영자 우클릭 capture - 50% 확률 colonist 합류.</summary>
         public bool TryCapture()
@@ -197,7 +202,8 @@ namespace MelonS.GameProto
         public void TakeDamage(int dmg, GameObject source = null)
         {
             if (IsDead) return;
-            Hp = Mathf.Max(0, Hp - dmg);
+            int eff = Mathf.Max(1, Mathf.RoundToInt(dmg * (1f - baseArmor)));  // #277 적 방어 감면
+            Hp = Mathf.Max(0, Hp - eff);
             if (sr != null)
             {
                 sr.color = Color.white;

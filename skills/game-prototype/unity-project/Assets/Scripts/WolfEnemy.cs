@@ -13,7 +13,9 @@ namespace MelonS.GameProto
         [SerializeField] private int attackDamage = 4;
         [SerializeField] private float attackRange = 0.9f;
         [SerializeField] private float attackInterval = 1.2f;
-        [SerializeField] private float detectionRadius = 5.0f;
+        // #277 5→7: ThreatAlertUI 경고(8)와 1유닛 버퍼 정합 + 위협 성립(rank8, 승인).
+        [SerializeField] private float detectionRadius = 7.0f;
+        [SerializeField] private float baseArmor = 0.05f;   // #277 적 방어 비대칭 보정(rank12)
         // #200 RimWorld fidelity ripple: pawn moveSpeed rose 3.0→4.6, so wolf
         //  chase must be >= 4.6 or a predator can never catch a fleeing pawn.
         //  RimWorld timber wolf ~4.6 c/s; set 5.0 so wolves stay a credible threat.
@@ -161,7 +163,8 @@ namespace MelonS.GameProto
         public void TakeDamage(int dmg, GameObject source = null)
         {
             if (IsDead) return;
-            Hp = Mathf.Max(0, Hp - dmg);
+            int eff = Mathf.Max(1, Mathf.RoundToInt(dmg * (1f - baseArmor)));  // #277 적 방어 감면
+            Hp = Mathf.Max(0, Hp - eff);
             // #163 - 시각 피드백
             if (sr != null)
             {

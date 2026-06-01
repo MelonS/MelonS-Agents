@@ -106,8 +106,9 @@ namespace MelonS.GameProto
                     //  bleed drains the source part itself first then random
                     //  redistribution to torso/head if part is below 30%.
                     p.hp = Mathf.Max(0, p.hp - Mathf.CeilToInt(p.bleedRate));
-                    // Heal-rate slow: bleeding parts slowly stop bleeding over time
-                    p.bleedRate = Mathf.Max(0f, p.bleedRate - 0.05f);
+                    // #277 출혈 감쇠 0.05→0.15: 2.5 출혈이 50초→~17초에 멈춰 RimWorld
+                    //  '출혈 후 안정화' 정합 + 초기 death-spiral 완화 (rank11, 승인).
+                    p.bleedRate = Mathf.Max(0f, p.bleedRate - 0.15f);
                 }
                 if (anyBleed) RecomputeAggregates();
                 CheckDeath();
@@ -250,8 +251,9 @@ namespace MelonS.GameProto
                 if (State != prev) StateVersion++;
                 return;
             }
-            // Downed: head <30% triggers unconsciousness (alive)
-            IsDowned = (head.hp < head.maxHp * 0.3f);
+            // Downed: head ≤30% triggers unconsciousness (alive).  #277 정수 hp 보정
+            //  (FloorToInt) — enemy IsDowned(30%)와 동일 경계로 정합(rank3, 승인).
+            IsDowned = (head.hp <= Mathf.FloorToInt(head.maxHp * 0.3f));
             if (State != prev) StateVersion++;
         }
 

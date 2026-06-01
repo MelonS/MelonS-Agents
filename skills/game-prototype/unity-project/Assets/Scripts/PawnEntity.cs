@@ -193,12 +193,21 @@ namespace MelonS.GameProto
             if (Vector3.Distance(transform.position, nearest.transform.position) > stats.attackRange) return;
             if (Time.time < nextAttackTime) return;
             nextAttackTime = Time.time + stats.attackInterval;
-            nearest.TakeDamage(stats.attackDamage, gameObject);
+            // #277 자동공격도 무기/근접배수/전투스킬 반영 — 이전엔 stats.attackDamage 만 써
+            //  drafted 공식((base+wpn)*ml*sk)과 2~6배 비대칭이었다(rank10, 승인).  draft 토글은
+            //  스윙 *간격*만 다르고 스윙당 데미지는 동일해진다.
+            var skills = GetComponent<PawnSkills>();
+            var equip = GetComponent<PawnEquipment>();
+            var abil = GetComponent<PawnAbilities>();
+            float wpn = equip != null ? equip.TotalMeleeDamageBonus() : 0f;
+            float ml = abil != null ? abil.meleeMul : 1f;
+            float sk = skills != null ? (1f + skills.GetLevel(SkillKind.Combat) * 0.03f) : 1f;
+            int admg = Mathf.Max(1, Mathf.RoundToInt((stats.attackDamage + wpn) * ml * sk));
+            nearest.TakeDamage(admg, gameObject);
             // 운영자 fb 2026-05-31: stamp the actual hit so CombatLungeDriver shows a
             //  forward jab on this bare-fist / melee swing (it polls LastMeleeHitTime).
             RegisterMeleeHit(nearest.transform.position, melee: true);
             // Day 20: Combat XP per attack tick
-            var skills = GetComponent<PawnSkills>();
             if (skills != null) skills.AddXP(SkillKind.Combat, 5f);
         }
 
