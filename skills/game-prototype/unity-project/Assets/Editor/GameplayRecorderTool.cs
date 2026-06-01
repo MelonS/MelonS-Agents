@@ -333,8 +333,11 @@ namespace MelonS.GameProto.EditorTools
                 Debug.LogWarning("[GameplayRecorderTool] Camera.main is null — zoom-out skipped.");
             }
 
-            // --- Fix 3: place construction blueprints so building is visible -
-            PlaceConstructionBlueprints();
+            // --- Fix 3 (#265): 사람이 플레이하는 듯한 연출을 ShowcaseDirector 에 위임.
+            //   카메라 팬/줌인·줌아웃 + 예쁜 집 점진 건설 + 작업 중인 림 클로즈업.
+            //   (이전엔 PlaceConstructionBlueprints() 로 1프레임에 집을 통째로 완성 +
+            //    카메라 고정 → AI 시뮬처럼 보였음.  디렉터가 totalSeconds 동안 연출한다.)
+            MelonS.GameProto.ShowcaseDirector.Spawn(_durationSec);
         }
 
         // -------------------------------------------------------------------
