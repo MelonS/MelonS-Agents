@@ -33,10 +33,15 @@ namespace MelonS.GameProto
         [SerializeField] private Sprite spriteGrowing;   // stage 1: 0.33..0.66
         [SerializeField] private Sprite spriteRipe;      // stage 2: >= 0.66
 
+        // #272 런타임 파종 crop 용 기본 stage 스프라이트 (레코더/SceneSetup 이 실제
+        //  crop_rice_* 에셋으로 세팅 → 절차적 모양 대신 진짜 스프라이트가 보인다).
+        public static Sprite DefSeedling, DefGrowing, DefRipe;
+
         // Fallback colors used when stage sprites are not assigned (legacy path).
-        private static readonly Color SPROUT_COLOR = new Color(0.51f, 0.78f, 0.31f, 1f);
-        private static readonly Color GROWN_COLOR  = new Color(0.32f, 0.62f, 0.20f, 1f);
-        private static readonly Color RIPE_COLOR   = new Color(0.85f, 0.75f, 0.20f, 1f);
+        // #272 zone(연두) 위에서도 또렷하도록 대비 강한 톤 (어두운 외곽선 sprite 와 함께).
+        private static readonly Color SPROUT_COLOR = new Color(0.40f, 0.90f, 0.25f, 1f);  // 밝은 새싹
+        private static readonly Color GROWN_COLOR  = new Color(0.20f, 0.65f, 0.12f, 1f);  // 진한 초록
+        private static readonly Color RIPE_COLOR   = new Color(0.95f, 0.80f, 0.15f, 1f);  // 노란 이삭
 
         private SpriteRenderer sr;
         public bool IsRipe => growth >= 1f;
@@ -44,6 +49,25 @@ namespace MelonS.GameProto
         private void Awake()
         {
             sr = GetComponent<SpriteRenderer>();
+            // #272 런타임 grow-zone 파종 crop 이 stage 스프라이트가 없어 안 보이던 문제.
+            //  실제 작물 스프라이트(crop_rice_*)를 static 기본값으로 받아 쓴다(레코더/
+            //  SceneSetup 이 세팅).  없으면 절차적 폴백.
+            if (sr != null)
+            {
+                if (sr.sprite == null)
+                {
+                    if (spriteSeedling == null && DefSeedling != null)
+                    {
+                        spriteSeedling = DefSeedling;
+                        spriteGrowing  = DefGrowing != null ? DefGrowing : DefSeedling;
+                        spriteRipe     = DefRipe    != null ? DefRipe    : DefSeedling;
+                    }
+                    sr.sprite = spriteSeedling != null ? spriteSeedling : ProcCropSprite;
+                }
+                // #272 항상 확실히 보이게 — zone 마커/바닥 위 + 한 칸보다 크게.
+                sr.sortingOrder = 12;
+                transform.localScale = Vector3.one * 1.5f;   // 한 칸 넘게 — 또렷이
+            }
             RefreshVisual();
             // Add collider so right-click can target it
             if (GetComponent<Collider2D>() == null)
@@ -88,6 +112,47 @@ namespace MelonS.GameProto
                 spriteRipe != null ? spriteRipe : MeatPileEntity.SharedSprite, "농작물", 600f);  // #223 쌀은 오래 감
             AudioBank.Instance?.PlayHarvest();  // Day 80
             return harvestFood;
+        }
+
+        // #272 절차적 새싹 스프라이트 (흰색 식물 모양 → color-tint 로 단계별 초록/노랑).
+        private static Sprite _procCrop;
+        private static Sprite ProcCropSprite
+        {
+            get
+            {
+                if (_procCrop != null) return _procCrop;
+                const int S = 24;
+                var tex = new Texture2D(S, S, TextureFormat.RGBA32, false);
+                tex.filterMode = FilterMode.Point;
+                var px = new Color32[S * S];
+                // 두툼한 3-잎 덤불(채워진 형태) + 어두운 외곽선 → 연두 zone 위에서도 또렷.
+                //  흰색 내부는 color-tint 로 단계별 초록/노랑, 회색 외곽선은 더 진한 톤이 된다.
+                var lobes = new (float cx, float cy, float r)[]
+                {
+                    (12f, 14f, 5.5f),   // 위 잎
+                    (8f, 9f, 5.0f),     // 좌 잎
+                    (16f, 9f, 5.0f),    // 우 잎
+                    (12f, 8f, 5.0f),    // 중앙 아래
+                };
+                for (int y = 0; y < S; y++)
+                    for (int x = 0; x < S; x++)
+                    {
+                        float maxDepth = -999f;   // union 안쪽으로 얼마나 깊은지(최대)
+                        foreach (var L in lobes)
+                        {
+                            float d = Mathf.Sqrt((x + 0.5f - L.cx) * (x + 0.5f - L.cx) + (y + 0.5f - L.cy) * (y + 0.5f - L.cy));
+                            maxDepth = Mathf.Max(maxDepth, L.r - d);   // 양수면 그 lobe 내부
+                        }
+                        if (maxDepth <= 0f) { px[y * S + x] = new Color32(0, 0, 0, 0); continue; }
+                        bool edge = maxDepth < 1.3f;                    // union 가장자리
+                        px[y * S + x] = edge ? new Color32(60, 90, 40, 255)    // 외곽선(진한 초록)
+                                             : new Color32(255, 255, 255, 255); // 내부(틴트시 초록)
+                    }
+                tex.SetPixels32(px); tex.Apply(false);
+                _procCrop = Sprite.Create(tex, new Rect(0, 0, S, S), new Vector2(0.5f, 0.5f), S);
+                _procCrop.name = "ProcCrop";
+                return _procCrop;
+            }
         }
 
         private void RefreshVisual()

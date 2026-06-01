@@ -333,6 +333,15 @@ namespace MelonS.GameProto.EditorTools
                 Debug.LogWarning("[GameplayRecorderTool] Camera.main is null — zoom-out skipped.");
             }
 
+            // #272 런타임 파종 작물이 실제 스프라이트로 보이도록 stage 스프라이트를 static
+            //  기본값에 세팅 (CropEntity 가 받아 씀).  AssetDatabase 는 에디터에서만 가능.
+            MelonS.GameProto.CropEntity.DefSeedling =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice_seedling.png");
+            MelonS.GameProto.CropEntity.DefGrowing =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice_growing.png");
+            MelonS.GameProto.CropEntity.DefRipe =
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice.png");
+
             // --- Fix 3 (#265): 사람이 플레이하는 듯한 연출을 ShowcaseDirector 에 위임.
             //   카메라 팬/줌인·줌아웃 + 예쁜 집 점진 건설 + 작업 중인 림 클로즈업.
             //   (이전엔 PlaceConstructionBlueprints() 로 1프레임에 집을 통째로 완성 +

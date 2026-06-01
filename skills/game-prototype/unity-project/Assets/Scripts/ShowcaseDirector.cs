@@ -279,6 +279,54 @@ namespace MelonS.GameProto
             return null;
         }
 
+        private Button FindButtonByLabel(string label, Transform parent)
+        {
+            foreach (var b in parent.GetComponentsInChildren<Button>(true))
+            {
+                if (b == null) continue;
+                var t = b.GetComponentInChildren<Text>(true);
+                if (t != null && t.text.Contains(label)) return b;
+            }
+            return null;
+        }
+
+        // 유저처럼 농사 영역 생성: 커서가 건축→구역→경작 클릭 후 맵을 드래그 → 영역 생성.
+        private IEnumerator CreateGrowZoneWithCursor()
+        {
+            var gz = GrowZoneDesignation.Instance;
+            if (gz == null) yield break;
+            var menu = ArchitectMenu.Instance;
+            if (menu != null)
+            {
+                if (!menu.gameObject.activeSelf)
+                {
+                    var ab = FindButtonByName("Btn_건축");
+                    if (ab != null) yield return ClickButton(ab); else menu.Toggle();
+                    yield return Wait(0.35f);
+                }
+                if (!IsCategoryOpen("Zone (구역)", menu.transform))
+                {
+                    var cb = FindCategoryButton("Zone (구역)", menu.transform);
+                    if (cb != null) yield return ClickButton(cb);
+                    yield return Wait(0.3f);
+                }
+                var gbtn = FindButtonByLabel("경작", menu.transform);   // "경작 (P)"
+                if (gbtn != null) yield return ClickButton(gbtn);
+                yield return Wait(0.25f);
+            }
+            gz.SetMode(true);   // 드래그 모드 보장(메뉴 클릭 실패 대비)
+
+            // 맵을 모서리→모서리로 드래그 (커서 모션) → 영역 확정.
+            Vector3 a = cam.WorldToScreenPoint(new Vector3(2.5f, -2.5f, 0f));
+            Vector3 b = cam.WorldToScreenPoint(new Vector3(8.5f, 0.5f, 0f));
+            yield return MoveCursorTo(a, 0.5f);
+            yield return Wait(0.2f);
+            yield return MoveCursorTo(b, 0.9f);
+            gz.SimulateDragRect(new Vector2(2f, -3f), new Vector2(8f, 0f));
+            yield return Wait(0.2f);
+            gz.SetMode(false);
+        }
+
         // ====================================================================
         //  가짜 커서
         // ====================================================================
@@ -518,6 +566,47 @@ namespace MelonS.GameProto
             return best;
         }
 
+        // 파종된 작물의 growth 를 가속해 새싹→성장→완숙(꽉 찬 벼)으로 빠르게 보이게.
+        //  (growth=0 seedling 스프라이트는 작아서 안 보임 — 운영자 "심어도 안 보임" 해결.)
+        private IEnumerator GrowCropsFast(float dur)
+        {
+            var gf = typeof(CropEntity).GetField("growth",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            if (gf == null) yield break;
+            float t = 0f;
+            while (t < dur)
+            {
+                t += Time.unscaledDeltaTime;
+                foreach (var c in Object.FindObjectsByType<CropEntity>(FindObjectsSortMode.None))
+                {
+                    if (c == null) continue;
+                    float g = (float)gf.GetValue(c);
+                    if (g < 0.95f) gf.SetValue(c, Mathf.Min(0.95f, g + Time.unscaledDeltaTime * 0.8f));
+                }
+                yield return null;
+            }
+        }
+
+        // 실제 rice 스프라이트 작물로 밭을 채운다 (CropEntity.Awake 가 DefSeedling 사용).
+        private void SpawnCropField(int yFrom, int yTo)
+        {
+            var growthField = typeof(CropEntity).GetField("growth",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            int i = 0;
+            for (int x = 2; x <= 8; x++)
+                for (int y = yFrom; y <= yTo; y++)
+                {
+                    var cell = new Vector2Int(x, y);
+                    if (PawnMovement.Grid != null && !PawnMovement.Grid.IsWalkable(cell)) continue;
+                    var go = new GameObject($"ShowcaseCrop_{x}_{y}");
+                    go.transform.position = new Vector3(x + 0.5f, y + 0.5f, 0f);
+                    go.AddComponent<SpriteRenderer>();
+                    var crop = go.AddComponent<CropEntity>();   // Awake → 실제 스프라이트
+                    if (growthField != null) growthField.SetValue(crop, 0.4f + (i % 3) * 0.2f);
+                    i++;
+                }
+        }
+
         // 아침: 림을 깨워 일상 재개 — 큰 농사 + 벌목 + 사슴 사냥.
         private void WakePawnsAndStartMorning()
         {
@@ -532,15 +621,15 @@ namespace MelonS.GameProto
                 {
                     needs.ClearRestTarget();
                     needs.sleep = 92f;
-                    needs.food = 35f;                              // 아침 → 배고픔 → 밥 먹음
+                    needs.food = 60f;                              // #272 안 굶게(농사 대신 밥
+                    //  먹으러 가버려 작물 0개였음) — 농사를 최우선으로 보여준다.
                     if (regenField != null) regenField.SetValue(needs, 8f);
                 }
             }
 
-            // 큰 농사 zone — 집 남쪽 grass (돌 정리 후 8x6 마킹).  운영자 "농사 더 크게".
-            ClearArea(0.5f, 8.5f, -6.5f, -0.5f);
-            var gz = GrowZoneDesignation.Instance;
-            if (gz != null) gz.SimulateDragRect(new Vector2(1f, -6f), new Vector2(8f, -1f));
+            // 농사 — 집 남쪽 밭터 돌만 정리.  영역은 커서가 유저처럼 만들고(CreateGrowZoneWithCursor),
+            //  작물은 림이 직접 심는다(미리 심어두지 않음 — 운영자 fb).
+            ClearArea(1.5f, 8.5f, -4.5f, 1.5f);
 
             // 벌목 지정 — 집 근처 나무 여러 그루 (림이 벌목).
             var chop = TreeChopDesignation.Instance;
@@ -555,8 +644,9 @@ namespace MelonS.GameProto
                 }
             }
 
-            // 림 명시 분담 — 뭉치지 않고 각자 다른 일을 하도록 직접 지정.
-            //  [0] 사냥(사슴 추격), [1] 벌목(가까운 나무), [2+] 농사(grow zone, AI on).
+            // 림 분담 — 농사를 최우선으로 보여준다(운영자 반복 요구).
+            //  [0] 사슴 사냥(피날레), [1..] 농사(AI on → grow zone 가 배정).  벌목은
+            //  designation 으로 깔아두어 농사 끝낸 idle 림이 자연히 한다(배경).
             _huntPawn = null; _chopPawn = null;
             var deer = FindHuntTarget();
             for (int i = 0; i < pawns.Count; i++)
@@ -569,23 +659,18 @@ namespace MelonS.GameProto
                     var hunter = pe.GetComponent<PawnHunter>();
                     if (hunter != null) { hunter.SetAnimalTarget(deer); _huntPawn = pe; }
                 }
-                else if (i == 1)
-                {
-                    var tree = FindTreeNear(HouseCenter, 22f);
-                    var chopper = pe.GetComponent<PawnChopper>();
-                    if (tree != null && chopper != null)
-                    {
-                        if (ai != null) ai.enabled = false;   // AI off → PawnChopper 가 벌목
-                        chopper.SetTreeTarget(tree); _chopPawn = pe;
-                    }
-                    else if (ai != null) ai.enabled = true;
-                }
                 else
                 {
-                    if (ai != null) ai.enabled = true;        // 농사(grow zone 가 배정)
+                    // #272 농사 림은 AI off — idle-배회(=moving)를 막아야 grow zone 이 계속
+                    //  배정한다(FindNearestIdlePawn 은 '가만히 선' 림만 고름).  AI 가 켜져
+                    //  있으면 할 일 없을 때 배회해서 농사를 거의 안 했음.  AI off → 가만히
+                    //  → grow zone 이 적극 파종시킨다.
+                    if (ai != null) ai.enabled = false;
+                    var mv = pe.GetComponent<PawnMovement>();
+                    if (mv != null) mv.ClearTarget();         // 잔여 이동 정리 → 즉시 idle
                 }
             }
-            Debug.Log($"[Showcase] 아침 분담: 사냥={(_huntPawn != null)}, 벌목={(_chopPawn != null)}, 농사=나머지.");
+            Debug.Log($"[Showcase] 아침 분담: 사냥={(_huntPawn != null)}, 농사 림={pawns.Count - (_huntPawn != null ? 1 : 0)}명(AI off→적극 파종).");
         }
 
         private PawnEntity PickActivePawn()
@@ -636,20 +721,22 @@ namespace MelonS.GameProto
             yield return Wait(18f);                    // 밤 경과 (3배속 타임랩스, unscaled 18s)
 
             // ── 아침: 기상 → 밥/농사 (2배속) ──
-            if (tc != null) tc.SetScale(2f);
+            if (tc != null) tc.SetScale(1f);            // #272 수면 끝 → 1배속 복귀
             TrySetClock(7.5f);                          // 아침(Work 슬롯, 조명 off)
             WakePawnsAndStartMorning();
 
-            // ① 농사: 남쪽 밭 전경 → 파종하는 림 클로즈업
-            yield return MoveCam(new Vector2((1f + 8f) / 2f, -3.5f), 8.0f, 4f);
-            yield return Wait(6f);
-            var planter = PickPawnExcept(_huntPawn, _chopPawn);
-            if (planter != null) yield return FollowPawn(planter, 5.0f, 8f);
-            else yield return Wait(8f);
+            // ① 농사 영역을 유저처럼 커서로 만든다 (메뉴 구역→경작 → 맵 드래그).
+            if (_cursor != null) _cursor.gameObject.SetActive(true);
+            yield return MoveCam(new Vector2(5f, -0.5f), 7.5f, 3f);
+            yield return StartCoroutine(CreateGrowZoneWithCursor());
+            if (_cursor != null) _cursor.gameObject.SetActive(false);
 
-            // ② 벌목: 나무 베는 림
-            if (_chopPawn != null && !_chopPawn.IsDead)
-                yield return FollowPawn(_chopPawn, 5.0f, 8f);
+            // ② 림이 빈 영역에 작물을 하나씩 심는 모습 (미리 심어두지 않음 — 림이 파종).
+            //   파종된 작물(처음엔 작은 새싹)을 빠르게 키워 꽉 찬 벼로 보이게(성장 가속).
+            StartCoroutine(GrowCropsFast(20f));
+            // 밭 전경 — 림이 파종한 작물이 자라는 모습.
+            yield return MoveCam(new Vector2(5f, -1.5f), 5.5f, 2.5f);
+            yield return Wait(15f);
 
             // ③ 피날레: 사슴 사냥 추격을 따라가며 끝 (운영자: 사슴 잡다가 끝).
             if (_huntPawn != null && !_huntPawn.IsDead)
@@ -668,7 +755,7 @@ namespace MelonS.GameProto
             foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
             {
                 if (p == null || p.IsDead || p == a || p == b) continue;
-                float sq = ((Vector2)p.transform.position - new Vector2(4.5f, -3.5f)).sqrMagnitude;
+                float sq = ((Vector2)p.transform.position - new Vector2(5f, -1.5f)).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = p; }
             }
             return best;
