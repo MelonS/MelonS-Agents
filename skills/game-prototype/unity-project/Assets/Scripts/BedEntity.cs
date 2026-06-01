@@ -7,7 +7,7 @@ namespace MelonS.GameProto
 
     /// <summary>
     /// 운영자 fb - 침대 (#107) + quality 시스템 (#151).
-    /// 림월드: quality 별 rest multiplier 다름.
+    /// 레퍼런스 콜로니심: quality 별 rest multiplier 다름.
     ///   SleepingSpot 0.8x (자재 0)
     ///   Wood        1.0x (목재 8) - default
     ///   Fine        1.4x (목재 30 + 건축 skill 5+)
@@ -49,7 +49,7 @@ namespace MelonS.GameProto
         public float RestMul => QualityStats[(int)quality].restMul;
         public float MoodBonus => QualityStats[(int)quality].moodBonus;
 
-        // #193 - RimWorld vanilla 침대 크기.  wiki:
+        // #193 - vanilla colony-sim 침대 크기.  wiki:
         //   Sleeping spot  1x1  (자재 0)
         //   Wood bed       1x2  (목재 45 wiki / 우리 8 단순화)
         //   Fine bed       1x2  (목재 + quality)

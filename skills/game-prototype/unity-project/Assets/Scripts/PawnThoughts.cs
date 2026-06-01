@@ -4,7 +4,7 @@ using UnityEngine;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// #122 - 림월드 mood thoughts 시스템.
+    /// #122 - 레퍼런스 콜로니심 mood thoughts 시스템.
     ///  각 thought = (label, offset, expireSec).  현재 mood 는 base(50) + Σ thoughts.offset.
     ///  PawnNeeds.mood 는 이 값으로 매 frame 업데이트.
     ///  PawnInfoPanel 에 breakdown 표시 ("좋은 식사 +5", "추웠음 -3").

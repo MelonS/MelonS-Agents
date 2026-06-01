@@ -6,7 +6,7 @@ namespace MelonS.GameProto
     /// <summary>
     /// A choppable tree.  Day 3 = HP + on-chop damage + destroy + wood drop.
     /// </summary>
-    /// <summary>#149 - 림월드 wiki tree species (Oak 단단/yield 큼, Pine 빠름, Birch 중간).</summary>
+    /// <summary>#149 - 레퍼런스 콜로니심 wiki tree species (Oak 단단/yield 큼, Pine 빠름, Birch 중간).</summary>
     public enum TreeSpecies { Pine, Birch, Oak }
 
     [RequireComponent(typeof(SpriteRenderer))]
@@ -86,7 +86,7 @@ namespace MelonS.GameProto
             }
             if (hp <= 0f)
             {
-                // #212 운영자 fb — 림월드 정상 흐름: 벌목 시 즉시 +N 절대 안 함.
+                // #212 운영자 fb — 레퍼런스 콜로니심 정상 흐름: 벌목 시 즉시 +N 절대 안 함.
                 //  목재 더미(WoodPile)가 "나무가 쓰러진 자리" = 이 나무의 cell 에 떨어진다.
                 //  이후 hauler 가 stockpile priority 에 따라 운반 → stockpile 도착 시점에만
                 //  inventory(global counter) 가 증가한다 (PawnHauler.GoToStockpile).

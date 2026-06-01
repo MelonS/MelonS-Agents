@@ -124,7 +124,7 @@ namespace MelonS.GameProto
             // → GUI 버튼 바 자동 부착 (Speed/Draft/Build/Research 10 버튼)
             GuiControlBar.EnsureInScene();
 
-            // RimWorld 식 콜로니스트 바 (화면 상단 중앙) — 이름 + HP/mood 바, 클릭 시 선택+카메라 focus
+            // 콜로니심식 콜로니스트 바 (화면 상단 중앙) — 이름 + HP/mood 바, 클릭 시 선택+카메라 focus
             ColonistBar.EnsureInScene();
 
             // 운영자 피드백 (2026-05-27): "디자인 구리고 프로토타입 수준도 안되고"
@@ -144,13 +144,13 @@ namespace MelonS.GameProto
             // → 비-pawn entity 좌클릭 시 인포 패널 (#105)
             EntityInspectorPanel.EnsureInScene();
             FeatureAuditQA.EnsureInScene();   // #248 -feature-audit 자가-발견 QA
-            // → #113 RimWorld 우클릭 prioritize 컨텍스트 메뉴
+            // → #113 the reference sim 우클릭 prioritize 컨텍스트 메뉴
             ContextMenuUI.EnsureInScene();
-            // → #110 림월드 Architect 좌측 카테고리 메뉴 (F8)
+            // → #110 레퍼런스 콜로니심 Architect 좌측 카테고리 메뉴 (F8)
             ArchitectMenu.EnsureInScene();
-            // → #114 림월드 Work tab (F1) — per-pawn 우선순위 grid
+            // → #114 레퍼런스 콜로니심 Work tab (F1) — per-pawn 우선순위 grid
             WorkTabUI.EnsureInScene();
-            // → #126 림월드 Schedule (F4) — 24h slot grid
+            // → #126 레퍼런스 콜로니심 Schedule (F4) — 24h slot grid
             ScheduleUI.EnsureInScene();
             // → #190 운영자 "청사진 설치 안 됨" 진단 토스트 (build click 결과 화면 표시)
             BuildClickToast.EnsureInScene();
@@ -175,15 +175,15 @@ namespace MelonS.GameProto
                 PawnHauler.MeatPileSpriteRef = meatPileSpriteRuntime;
             }
 
-            // #229 RimWorld Crashlanded 정합 — 맨땅 시작이라 첫 베이스를 직접 지을 자재 +
-            //  지을 동안 버틸 식량 버퍼가 필요하다.  RimWorld(목재~300 + 생존식량~50)에 매핑:
+            // #229 the reference sim Crashlanded 정합 — 맨땅 시작이라 첫 베이스를 직접 지을 자재 +
+            //  지을 동안 버틸 식량 버퍼가 필요하다.  the reference sim(목재~300 + 생존식량~50)에 매핑:
             //   목재 300 = 벽/바닥/화덕/침대 첫 베이스 건설분
             //   식사 50  = 생존식량 버퍼(바닥에서 자고 이걸로 버티며 농장·화덕 건설)
             //  무한 축적 방지는 STEP2(벌목/채광 지정제)에서 — 자동 채집을 끊어 이 버퍼가
             //  건설로 '소비'되고 플레이어 지정으로만 다시 모인다.
             if (ResourceManager.Instance != null)
             {
-                // #243 운영자 fb "목재 처음에 수치로 주지말고 바닥에 랜덤하게 떨궈둬" — RimWorld
+                // #243 운영자 fb "목재 처음에 수치로 주지말고 바닥에 랜덤하게 떨궈둬" — the reference sim
                 //  추락 잔해처럼 시작 목재를 '카운터 숫자'가 아니라 바닥의 물리 wood pile 로 흩뿌린다.
                 //  pawn 이 이걸 청사진까지 운반(haul)해 organic 하게 건설 → 건설 루프가 물리 자재로
                 //  굴러간다(카운터는 stockpile 운반 시 자연 적립).  결정론적 scatter(seed) — spawn
@@ -201,7 +201,7 @@ namespace MelonS.GameProto
                 }
                 ResourceManager.Instance.AddFood(0);
                 ResourceManager.Instance.AddMeals(50);
-                Debug.Log($"[GameManager] starter resources (RimWorld): 목재 {dropped*50} 바닥 물리 드롭, meals=50 (수치 X)");
+                Debug.Log($"[GameManager] starter resources (the reference sim): 목재 {dropped*50} 바닥 물리 드롭, meals=50 (수치 X)");
             }
 
             if (integrationTest)

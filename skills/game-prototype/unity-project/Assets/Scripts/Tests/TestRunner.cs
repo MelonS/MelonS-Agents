@@ -329,10 +329,10 @@ namespace MelonS.GameProto.Tests
 
         private IEnumerator TestV51_RandyRandom()
         {
-            // Randy storyteller 의 CurrentThreatTier 는 매번 0..3 random
+            // Chaos storyteller 의 CurrentThreatTier 는 매번 0..3 random
             var dGo = new GameObject("TestRandyDir");
             var dir = dGo.AddComponent<AIDirector>();
-            dir.activeStoryteller = Storyteller.Randy;
+            dir.activeStoryteller = Storyteller.Chaos;
             yield return null;
             // 20번 샘플 → 적어도 2개 다른 tier 나옴 (random 검증)
             var seen = new System.Collections.Generic.HashSet<int>();
@@ -340,7 +340,7 @@ namespace MelonS.GameProto.Tests
             {
                 seen.Add(dir.CurrentThreatTier);
             }
-            Assert(seen.Count >= 2, $"Randy 20 sample → distinct tiers = {seen.Count}");
+            Assert(seen.Count >= 2, $"Chaos 20 sample → distinct tiers = {seen.Count}");
         }
 
         private IEnumerator TestV52_ArrowLifetime()
@@ -915,7 +915,7 @@ namespace MelonS.GameProto.Tests
         {
             // PawnStats SO default 값 검증
             var stats = MelonS.GameProto.Data.PawnStats.CreateDefault();
-            // #200 moveSpeed 3.0→4.6 (RimWorld human base).
+            // #200 moveSpeed 3.0→4.6 (the reference sim human base).
             Assert(stats.maxHp == 30 && stats.attackDamage == 1
                 && Mathf.Approximately(stats.moveSpeed, 4.6f)
                 && Mathf.Approximately(stats.attackRange, 1f),
@@ -1311,7 +1311,7 @@ namespace MelonS.GameProto.Tests
 
         private IEnumerator TestV7_StorytellerTier()
         {
-            // AIDirector 찾아서 day 14 시뮬레이션 (Cassandra tier 2 이상)
+            // AIDirector 찾아서 day 14 시뮬레이션 (Steady tier 2 이상)
             var dir = Object.FindFirstObjectByType<AIDirector>();
             if (dir == null)
             {
@@ -1319,7 +1319,7 @@ namespace MelonS.GameProto.Tests
                 var dGo = new GameObject("TestAIDirector");
                 dir = dGo.AddComponent<AIDirector>();
             }
-            dir.activeStoryteller = Storyteller.Cassandra;
+            dir.activeStoryteller = Storyteller.Steady;
             // GameClock 강제 day 14
             var clock = Services.Get<GameClock>();
             if (clock == null)
@@ -1332,7 +1332,7 @@ namespace MelonS.GameProto.Tests
             if (f != null) f.SetValue(clock, 14f * 86400f);
             yield return new WaitForSeconds(0.1f);
             int tier = dir.CurrentThreatTier;
-            Assert(tier >= 2, $"day 14 Cassandra threatTier={tier} (>=2 expected)");
+            Assert(tier >= 2, $"day 14 Steady threatTier={tier} (>=2 expected)");
         }
 
         private IEnumerator TestV8_MapObstacle()
@@ -1484,7 +1484,7 @@ namespace MelonS.GameProto.Tests
             if (template != null) Object.Destroy(template);
         }
 
-        // #199 A1 - RimWorld 와 같이 pawn 은 정확히 1x1 tile 점유.
+        // #199 A1 - the reference sim 와 같이 pawn 은 정확히 1x1 tile 점유.
         //   SceneSetup 가 만드는 pawn 계약을 isolated 로 재현·검증:
         //   (1) pawn_colonist.png 는 16x16 px, PPU 16 → SpriteRenderer.bounds.size ≈ (1,1).
         //   (2) selection/click BoxCollider2D.size == (1,1).
@@ -1518,7 +1518,7 @@ namespace MelonS.GameProto.Tests
             Object.Destroy(go);
 
             bool ok = widthOk && heightOk && colOk;
-            Debug.Log($"[TestRunner] V66: {(ok ? "OK" : "FAIL")} - bounds.size=({bsize.x:F3},{bsize.y:F3}) collider=({col.size.x:F2},{col.size.y:F2}) (RimWorld 1x1 tile)");
+            Debug.Log($"[TestRunner] V66: {(ok ? "OK" : "FAIL")} - bounds.size=({bsize.x:F3},{bsize.y:F3}) collider=({col.size.x:F2},{col.size.y:F2}) (the reference sim 1x1 tile)");
             Assert(ok,
                 $"bounds=({bsize.x:F3},{bsize.y:F3}) widthOk={widthOk} heightOk={heightOk} collider=({col.size.x:F2},{col.size.y:F2}) colOk={colOk}");
         }
@@ -1562,7 +1562,7 @@ namespace MelonS.GameProto.Tests
             Object.Destroy(go);
 
             bool ok = childrenOk && hpBandOk && moodAboveHead && stackOrderOk && nameAboveBar && statusBetween;
-            Debug.Log($"[TestRunner] V67: {(ok ? "OK" : "FAIL")} - headY={headY:F2} HP={hpY:F2}(Δ{hpY-headY:F2}) mood={moodY:F2} name={nameY:F2} status={statusY:F2} (RimWorld 머리 위 바+라벨)");
+            Debug.Log($"[TestRunner] V67: {(ok ? "OK" : "FAIL")} - headY={headY:F2} HP={hpY:F2}(Δ{hpY-headY:F2}) mood={moodY:F2} name={nameY:F2} status={statusY:F2} (the reference sim 머리 위 바+라벨)");
             Assert(ok,
                 $"children={childrenOk} HP={hpY:F2}(band[0.6,1.2]={hpBandOk}) mood={moodY:F2}(>=head={moodAboveHead},<HP={stackOrderOk}) name={nameY:F2}(>HP={nameAboveBar}) status={statusY:F2}(between={statusBetween})");
         }
@@ -1595,7 +1595,7 @@ namespace MelonS.GameProto.Tests
             if (notNull) foreach (var c in path) if (!grid.IsWalkable(c)) { allWalkable = false; break; }
 
             bool ok = notNull && endpointsOk && lengthOk && allWalkable;
-            Debug.Log($"[TestRunner] V68: {(ok ? "OK" : "FAIL")} - straight path count={(path?.Count ?? -1)} start={start} goal={goal} (RimWorld 8-dir A* 직선)");
+            Debug.Log($"[TestRunner] V68: {(ok ? "OK" : "FAIL")} - straight path count={(path?.Count ?? -1)} start={start} goal={goal} (the reference sim 8-dir A* 직선)");
             Assert(ok, $"notNull={notNull} endpoints={endpointsOk} count={(path?.Count ?? -1)}(==6={lengthOk}) allWalkable={allWalkable}");
             yield break;
         }
@@ -1729,7 +1729,7 @@ namespace MelonS.GameProto.Tests
 
         // V72 — flag-ON pawn given an ENCLOSED (unreachable) target sets
         //  LastPathFailed=true, clears its target, and does NOT wander.  Proves
-        //  the RimWorld "destination unreachable" signal B1 introduces.
+        //  the colony-sim "destination unreachable" signal B1 introduces.
         private IEnumerator TestV72_PathFollowUnreachableSignal()
         {
             bool prevFlag = PawnMovement.UsePathfinding;

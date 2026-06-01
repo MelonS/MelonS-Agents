@@ -4,7 +4,7 @@ namespace MelonS.GameProto
 {
     /// <summary>
     /// W-M6-04 (B5) — autodoor variant of the plain door (wiki row B5: vanilla
-    /// RimWorld Door-tab variety — a faster door at a higher Stuff cost).
+    /// the reference sim Door-tab variety — a faster door at a higher Stuff cost).
     ///
     /// An autodoor IS a DoorEntity (so it inherits EVERYTHING: the trigger
     /// pass-through collider, B9's NotifyPassing()→AudioBank.PlayDoor() SFX, the

@@ -10,7 +10,7 @@ namespace MelonS.GameProto
     /// Wave W-M6-02 Lane B14 / wiki row B14 (M6, Dim6 UX) — the missing in-game
     /// hotkey cheat-sheet overlay.
     ///
-    /// RimWorld convention: a controls / hotkey panel consolidates every binding
+    /// the reference sim convention: a controls / hotkey panel consolidates every binding
     /// in one place so the player isn't forced to memorize scattered keys.  Today
     /// PawnSim's hotkeys live across ~13 separate handlers (ArchitectMenu,
     /// BuildManager build modes, TimeController speed, ClickSelector draft,

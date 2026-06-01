@@ -3,7 +3,7 @@ using UnityEngine;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// #126 - 림월드 Schedule tab (단순화).
+    /// #126 - 레퍼런스 콜로니심 Schedule tab (단순화).
     ///  24 시간 grid × per-pawn × (Anytime/Sleep/Work/Joy).
     ///  AI Decide 가 현재 시간대 slot 따름 - Sleep 시간엔 작업 skip.
     ///

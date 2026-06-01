@@ -20,7 +20,7 @@ namespace MelonS.GameProto.AI
     ///   old condition would false-trip mid-detour and the worker would abandon a
     ///   reachable tree → REGRESSION (chopping stalls, wood stops rising).
     ///
-    /// THE NEW CONTRACT (RimWorld-style "destination unreachable"):
+    /// THE NEW CONTRACT (colony-sim-style "destination unreachable"):
     ///   Give up when EITHER
     ///     (a) the pathfinder reported the target genuinely UNREACHABLE
     ///         (PawnMovement.LastPathFailed — empty A* result), OR

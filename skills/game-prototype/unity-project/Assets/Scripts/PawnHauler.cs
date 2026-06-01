@@ -4,7 +4,7 @@ using MelonS.GameProto.AI;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// 운영자 fb #116 - 림월드 Haul 작업.
+    /// 운영자 fb #116 - 레퍼런스 콜로니심 Haul 작업.
     /// nearest WoodPileEntity 찾아서 가서 줍기 (inventory 차감).
     /// AI 가 다른 일 (chop/cook/hunt) 끝낸 후 fallback 으로 시도.
     ///
@@ -15,7 +15,7 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(PawnMovement))]
     public class PawnHauler : MonoBehaviour
     {
-        // #199 C1 — hauler stands adjacent to the item/blueprint (RimWorld) for
+        // #199 C1 — hauler stands adjacent to the item/blueprint (the reference sim) for
         //  pickup/deposit.  1.0 was too tight to even reach an orthogonal neighbour
         //  (center dist 1.0); bumped to 1.5 for diagonal adjacency (√2≈1.414).
         [SerializeField] private float pickupRange = 1.5f;
@@ -114,7 +114,7 @@ namespace MelonS.GameProto
         }
 
         // #199 C1/C2 — walk to a RESERVED walkable cell ADJACENT to a 1×1 target
-        //  (pile/stone/meat/stockpile), RimWorld-style.  The helper reserves the
+        //  (pile/stone/meat/stockpile), colony-sim-style.  The helper reserves the
         //  stand cell (so two haulers don't crowd one pickup) and reuses it each
         //  frame; on a target/phase change the world target moves and a fresh cell
         //  is reserved (the old one released).  Returns false if unreachable/occupied.

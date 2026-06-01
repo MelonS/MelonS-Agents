@@ -6,7 +6,7 @@
   - 중앙 회색 사각형(ROCK_LT/MD) → 창문처럼 보임, 문의 특징 없음
   - 세로 판자 없음, 경첩/손잡이 없음, 문 실루엣 없음
 
-새 door_wood.png 디자인 (RimWorld 바닐라 스타일):
+새 door_wood.png 디자인 (바닐라 콜로니심 스타일):
   - 투명 배경 (RGBA)
   - 문 패널: cols 2-13, rows 1-14 (1px 투명 마진 사방)
     - 1px OUTLINE_OBJ 프레임
@@ -70,7 +70,7 @@ def rect_fill(im: Image.Image, x0: int, y0: int, x1: int, y1: int, c: tuple) -> 
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# door_wood.png  16x16  (투명 배경, RimWorld 바닐라 문 스타일)
+# door_wood.png  16x16  (투명 배경, 바닐라 콜로니심 문 스타일)
 #
 # 레이아웃 (PIL origin 좌상단, y=0=TOP):
 #

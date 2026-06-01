@@ -4,7 +4,7 @@ using UnityEngine;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// #123 - 림월드 의류/무기 equip (단순화).
+    /// #123 - 레퍼런스 콜로니심 의류/무기 equip (단순화).
     ///  Per-pawn 슬롯: 셔츠/바지/모자/무기. 각 item 이 stat modifier 보유.
     ///  시각화 1차 skip (32x32 sprite 위에 layered render 추후), stats only.
     ///

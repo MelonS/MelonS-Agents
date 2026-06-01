@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""PawnSim master palette v1 — warm muted earth, RimWorld-grounded.
+"""PawnSim master palette v1 — warm muted earth, the reference sim-grounded.
 
 Single source of truth for ALL sprite generators.  Import here; never
 define ad-hoc colors in individual generators.

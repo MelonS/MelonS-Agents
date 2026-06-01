@@ -1,4 +1,4 @@
-# PawnSim 40h Sprint — 림월드 바닐라 수준 Roadmap
+# PawnSim 40h Sprint — 바닐라 콜로니심 수준 Roadmap
 
 **Hard contract (오퍼레이터 지시 2026-05-27)**
 1. **중간 정지 금지** — 전체 작업 완벽 완료 + 자기 검증 전까지 절대 멈추지 않음.
@@ -10,9 +10,9 @@
 - AI Director 8 events (raid 포함), build mode 4종 (wall/floor/door/stove)
 - skills 4종 + XP, mood break, weather (storm), 한글화, save/load
 - TopBar (clock / time-speed / 목재·식사·식량)
-- 림월드 바닐라 시스템 커버리지 ~64%
+- 바닐라 콜로니심 시스템 커버리지 ~64%
 
-**목표 (Step 78):** 바닐라 림월드 커버리지 90%+ — Health/body-parts, drafted-combat, research-tree, power-grid, trading, animal-taming, farming, stockpile, storyteller, polish.
+**목표 (Step 78):** 바닐라 레퍼런스 콜로니심 커버리지 90%+ — Health/body-parts, drafted-combat, research-tree, power-grid, trading, animal-taming, farming, stockpile, storyteller, polish.
 
 ---
 
@@ -56,7 +56,7 @@
 
 ## PHASE F — Storyteller & Polish (Step 73-78)
 
-- [x] **Step 73** — 3 Storytellers (Cassandra/Phoebe/Randy) + threat tier 0-3 + 15 events
+- [x] **Step 73** — 3 Storytellers (Steady/Calm/Chaos) + threat tier 0-3 + 15 events
 - [x] **Step 74** — Tutorial overlay (90초 한글 9 팁)
 - [x] **Step 75** — Research 자동 활성화 + fractional accumulator fix
 - [x] **Step 56** — PawnTraits (8 성격: 활기/게으름/부지런/호전/약골/강골/미식가/무던)
@@ -85,7 +85,7 @@
 - Wolf predator (감지/추격/공격)
 
 ### 메타시스템
-- 3 Storyteller (Cassandra/Phoebe/Randy)
+- 3 Storyteller (Steady/Calm/Chaos)
 - threat tier 0-3 자동 상승 (day별)
 - 15 events (안전 5 / mild 4 / severe 3 / critical 3)
 - 5 research techs (tier 의존)
@@ -106,7 +106,7 @@
 - UTF-8 BOM 강제 (한글 .cs)
 - LoadOrCreateTile race fix (sprite import 동기화)
 
-## 림월드 바닐라 커버리지 추정 (Step 78 기준)
+## 바닐라 콜로니심 커버리지 추정 (Step 78 기준)
 
 | 시스템 | Step 38 baseline | Step 78 현재 | 비고 |
 |--------|-----------------|------------|------|

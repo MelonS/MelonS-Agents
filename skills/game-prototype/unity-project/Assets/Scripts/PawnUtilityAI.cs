@@ -104,14 +104,14 @@ namespace MelonS.GameProto
                 new HaulWoodAction(),     // #116 - 벌목 후 떨어진 wood pile 운반
                 new HaulStoneAction(),    // #119 - 채광 후 떨어진 stone chunk 운반
                 new HaulMeatAction(),     // #129 - 사냥 후 떨어진 meat pile 운반
-                // ── #230 RimWorld 정합: 야생나무 벌목·광맥 채광은 *플레이어 지정제* ──
-                //  RimWorld 에선 림이 아무 나무·바위나 자동으로 캐지 않는다 — 이게 우리 게임의
+                // ── #230 장르 정합: 야생나무 벌목·광맥 채광은 *플레이어 지정제* ──
+                //  the reference sim 에선 림이 아무 나무·바위나 자동으로 캐지 않는다 — 이게 우리 게임의
                 //  '자원 무한 자동축적'(목재 40→180)의 원인이었다.  자동 ChopTree/MineStone 을
                 //  auto-loop 에서 제거:
                 //    채광 = MineDesignation(플레이어가 drag-마킹 → idle 광부 자동 디스패치)
                 //    벌목 = 우클릭 '벌목 우선'(PawnChopper) 으로 플레이어가 지정
-                //  → 자원이 플레이어 지정으로만 모이고 건설로 소비된다(RimWorld 경제).
-                //  운반·요리·수확·사냥(생존)·경작 zone 은 RimWorld 처럼 자동 유지.
+                //  → 자원이 플레이어 지정으로만 모이고 건설로 소비된다(the reference sim 경제).
+                //  운반·요리·수확·사냥(생존)·경작 zone 은 the reference sim 처럼 자동 유지.
                 new WanderAction(),
             };
         }

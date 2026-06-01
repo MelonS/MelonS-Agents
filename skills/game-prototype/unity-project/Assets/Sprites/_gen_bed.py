@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""#193 / #198 - bed sprites for PawnSim (RimWorld-style colony sim).
+"""#193 / #198 - bed sprites for PawnSim (colony-sim-style colony sim).
 #A1  - palette unified: frame colours now imported from palette.py.
 
-bed_wood.png  16x32 - utilitarian wood bed (RimWorld Wood Bed)
-bed_fine.png  16x32 - quality wood bed (RimWorld Fine Bed)
+bed_wood.png  16x32 - utilitarian wood bed (the reference sim Wood Bed)
+bed_fine.png  16x32 - quality wood bed (the reference sim Fine Bed)
 
 Both follow Kenney Tiny Town style:
   - 16x32 px canvas = world 1x2 cells at PPU 16.

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// Bottom-left SINGLE selection-info panel (RimWorld convention).
+    /// Bottom-left SINGLE selection-info panel (the reference sim convention).
     ///
     /// ── 2026-05-31 single-inspector 통합 (운영자 fb "DUAL INSPECTOR") ──
     /// 이전: pawn 전용.  비-pawn entity 는 우측 EntityInspectorPanel 이 따로 표시
@@ -26,7 +26,7 @@ namespace MelonS.GameProto
         [SerializeField] private Image moodBar;
         [SerializeField] private Text emptyText;
         [SerializeField] private Image panelBg;
-        // Day 55: 부위별 health 표시 — 클릭 시 RimWorld vanilla 처럼.
+        // Day 55: 부위별 health 표시 — 클릭 시 vanilla colony-sim 처럼.
         [SerializeField] private Text healthText;
 
         // single-inspector 통합 — 비-pawn entity 선택 시 설명 본문을 보여주는
@@ -416,7 +416,7 @@ namespace MelonS.GameProto
             //   inspector chrome lingers on an empty selection.  Previously the panel
             //   kept its bordered/titled frame + "선택된 오브젝트 없음" hint always
             //   drawn (V7 styled-empty-state), which the operator flagged as wrong:
-            //   RimWorld shows the inspector ONLY while something is selected.
+            //   the reference sim shows the inspector ONLY while something is selected.
             bool nothingSelected = (pawn == null) && (inspect == null);
             if (nothingSelected)
             {

@@ -17,7 +17,7 @@ namespace MelonS.GameProto.EditorTools
         {
             // Day 57: 시작 정착지 - 화면 중앙 좌측에 미리 짠 구조물 + 농장 + stockpile.
             //  보여주기용 (벽 5 + 바닥 6 + 화덕 1 + 연구대 1).  pawn 1명이 이 안에
-            //  자리잡고 시작하는 RimWorld vanilla 첫 게임 느낌.
+            //  자리잡고 시작하는 vanilla colony-sim 첫 게임 느낌.
             //  좌표 기준: 정착지 중심 (-5, 0).  방 크기 4x3.
             //
             //   X X X X X
@@ -33,9 +33,9 @@ namespace MelonS.GameProto.EditorTools
             if (cropGrowingSprite  == null) Debug.LogWarning("[SceneSetup] crop_rice_growing.png null — stage-sprite wiring skipped");
             Sprite stockSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stockpile_marker.png");
 
-            // #229 RimWorld Crashlanded 정합 — 맨땅 시작.  미리 지어진 베이스(벽/바닥/화덕/
+            // #229 the reference sim Crashlanded 정합 — 맨땅 시작.  미리 지어진 베이스(벽/바닥/화덕/
             //  연구대/작물/램프)를 제거하고 플레이어가 직접 건설하게 한다.  저장 구역만 유지
-            //  (RimWorld 도 stockpile zone 은 무료 지정).  코드는 플래그로 보존(되돌리기 쉽게).
+            //  (the reference sim 도 stockpile zone 은 무료 지정).  코드는 플래그로 보존(되돌리기 쉽게).
             bool prebuiltBase = false;
             if (prebuiltBase) {
             // 벽 5개 - 북쪽 벽 라인 (y=1, x=-7..-3) + 좌우 벽 (x=-7, x=-3, y=0)
@@ -128,7 +128,7 @@ namespace MelonS.GameProto.EditorTools
 
             // #246 운영자 fb "게임 시작 시 창고영역 세팅 안 되어 있고 유저가 정하게" —
             //  시작 시 stockpile zone 자동 스폰 안 함.  플레이어가 구상>지시>저장(O)로 직접
-            //  지정 (RimWorld: 시작 시 저장구역 없음).
+            //  지정 (the reference sim: 시작 시 저장구역 없음).
             bool autoStockpile = false;
             if (autoStockpile)
             for (int sx = -2; sx <= 0; sx++)

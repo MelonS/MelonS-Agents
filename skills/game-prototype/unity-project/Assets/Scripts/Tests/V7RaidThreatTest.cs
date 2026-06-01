@@ -167,8 +167,8 @@ namespace MelonS.GameProto.Tests
                 yield return null;  // Awake + Start (ScheduleNext called)
             }
 
-            // Ensure the director uses Cassandra (deterministic tier at day 3 = tier 1).
-            director.activeStoryteller = Storyteller.Cassandra;
+            // Ensure the director uses Steady (deterministic tier at day 3 = tier 1).
+            director.activeStoryteller = Storyteller.Steady;
 
             // Count bandits before invoking the raid path.
             int banditsBefore = CountBandits();

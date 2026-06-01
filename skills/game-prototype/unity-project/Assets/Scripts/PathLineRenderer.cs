@@ -8,7 +8,7 @@ namespace MelonS.GameProto
     ///
     /// Draws the SELECTED pawn's live A* path (PawnMovement) as a world-space
     /// polyline connecting cell centres, from the pawn's feet to its destination.
-    /// RimWorld shows this faint dotted route when you order a colonist somewhere;
+    /// the reference sim shows this faint dotted route when you order a colonist somewhere;
     /// here it is a muted solid LineRenderer that appears on a move order and
     /// disappears the instant the pawn arrives (path cleared) or selection is lost.
     ///

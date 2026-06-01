@@ -54,7 +54,7 @@ namespace MelonS.GameProto
     ///       No SceneSetup*.cs file was edited this lane.
     ///
     /// ----------------------------------------------------------------------------
-    /// B7 — AREA-CANCEL / DECONSTRUCT-AREA DRAG (wiki rimworld-comparison-v2 B7):
+    /// B7 — AREA-CANCEL / DECONSTRUCT-AREA DRAG (wiki genre-comparison-v2 B7):
     ///   On left-mouse-DOWN in deconstruct mode we record the start world cell and
     ///   show a code-generated rectangular selection quad (a 1×1 white Sprite
     ///   stretched over the box, DANGER_RED translucent — same NO-PREFAB style as
@@ -90,7 +90,7 @@ namespace MelonS.GameProto
         [SerializeField] private float pickRadius = 0.45f;        // click hit-test box half-extent
 
         // ── operator fb #1 (2026-05-31): the standalone "해체 (X)" toggle button
-        //   was REMOVED.  In RimWorld, Deconstruct lives inside the Architect menu's
+        //   was REMOVED.  In the reference sim, Deconstruct lives inside the Architect menu's
         //   Orders (지시) category, not as a standalone screen button.  The
         //   deconstruct DESIGNATION logic below is unchanged and is now invoked from
         //   ArchitectMenu (Orders → 해체 → DeconstructDesignation.Instance.SetMode(true)).
@@ -533,7 +533,7 @@ namespace MelonS.GameProto
     /// </summary>
     public class DeconstructTarget : MonoBehaviour
     {
-        // ~50% material refund (RimWorld deconstruct returns roughly half).  Walls
+        // ~50% material refund (the reference sim deconstruct returns roughly half).  Walls
         //  cost 5 (wood OR stone per material), so 50% → 2.  Computed at Initialize
         //  from the structure type; serialized so it survives inspection/tuning.
         [SerializeField] private int refundWood;

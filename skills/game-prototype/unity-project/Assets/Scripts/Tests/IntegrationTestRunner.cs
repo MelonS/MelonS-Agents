@@ -113,13 +113,13 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I38-wall-blocks-path-detour", TestI38_WallBlocksPathDetour);
             // #199 B3 - 벽 라인 사이의 문은 통과 가능 (door cell 은 walkable 유지)
             yield return RunOne("I39-door-in-wall-passable", TestI39_DoorInWallPassable);
-            // #199 C1 - 일꾼이 나무 바로 위가 아닌 인접 cell 에 서서 벌목 (RimWorld)
+            // #199 C1 - 일꾼이 나무 바로 위가 아닌 인접 cell 에 서서 벌목 (the reference sim)
             yield return RunOne("I40-chop-from-adjacent-cell", TestI40_ChopFromAdjacentCell);
-            // #199 C3 - 청사진 배치 검증: 물/바위 거부, 벽 점유 거부, 빈 잔디 허용 (RimWorld)
+            // #199 C3 - 청사진 배치 검증: 물/바위 거부, 벽 점유 거부, 빈 잔디 허용 (the reference sim)
             yield return RunOne("I41-build-placement-validation", TestI41_BuildPlacementValidation);
             // #201 운영자 fb - 벽이 림 위에 완성되면 림을 밀어냄 (안 갇힘) + 이후 이동 가능
             yield return RunOne("I42-wall-completes-on-pawn-ejects", TestI42_WallCompletesOnPawnEjects);
-            // #231 RimWorld 벌목 지정 — drag-designate 한 나무가 idle 림에게 dispatch 되어 벌목됨
+            // #231 the reference sim 벌목 지정 — drag-designate 한 나무가 idle 림에게 dispatch 되어 벌목됨
             yield return RunOne("I43-chop-designation-dispatch", TestI43_ChopDesignation);
 
             FinalizeReport();
@@ -269,8 +269,8 @@ namespace MelonS.GameProto.Tests
             bool resChange = endWood != startWood || endFood != startFood || endMeals != startMeals;
             bool pawnMoved = totalPawnMove > 0.3f;  // #243/#246 지정경제+포만+창고無 시작 = idle
                                                     //  wander 위주라 이동 적음(>0.3 = 최소 활동 확인)
-            // #229 RimWorld 정합: 'ai does something' = 림이 실제로 활동(이동/일/하울)한다.
-            //  과거엔 wood 자동증가를 요구했으나, RimWorld 는 야생나무 벌목이 *지정제*라
+            // #229 장르 정합: 'ai does something' = 림이 실제로 활동(이동/일/하울)한다.
+            //  과거엔 wood 자동증가를 요구했으나, the reference sim 는 야생나무 벌목이 *지정제*라
             //  자동으로 wood 가 늘지 않는다(STEP2).  그래서 자동-자원증가 대신 pawn 활동으로
             //  AI 가동을 검증한다(자원 변화는 부수적으로 OR).
             Assert(pawnMoved || resChange,
@@ -504,7 +504,7 @@ namespace MelonS.GameProto.Tests
             cs.SimulateSelect(bestPawn);
             cs.SimulateRightClick(new Vector2(freshTreePos.x, freshTreePos.y));
             yield return null;
-            // #232 RimWorld 정합 새 모델: 우클릭 나무 = 벌목 '지정'(ChopTarget 마커 부착 = RimWorld
+            // #232 장르 정합 새 모델: 우클릭 나무 = 벌목 '지정'(ChopTarget 마커 부착 = the reference sim
             //  처럼 나무 위 표시) → TreeChopDesignation 이 idle 림을 dispatch.  즉시 chopper task 가
             //  아니라 (a) 마커가 붙고 (b) 곧(throttle 0.5s) 림이 배정되는지 검증.
             bool marked = freshTree != null && freshTree.GetComponent<ChopTarget>() != null;
@@ -659,7 +659,7 @@ namespace MelonS.GameProto.Tests
             if (crops.Length > 0) crop = crops[0];
             else
             {
-                // #229 RimWorld 맨땅 시작 — 씬에 미리 깔린 작물 없음.  테스트용 작물 force-spawn.
+                // #229 the reference sim 맨땅 시작 — 씬에 미리 깔린 작물 없음.  테스트용 작물 force-spawn.
                 var cGo = new GameObject("QA_Crop");
                 cGo.transform.position = pawns[0].transform.position + new Vector3(2f, 0f, 0f);
                 cGo.AddComponent<SpriteRenderer>();
@@ -676,7 +676,7 @@ namespace MelonS.GameProto.Tests
             cs.SimulateSelect(pawns[0]);
             cs.SimulateRightClick(new Vector2(crop.transform.position.x, crop.transform.position.y));
             yield return null;
-            // #229 RimWorld 정합: 작물 우클릭 = 선택 림에게 '수확 명령'(PawnHarvester) → 걸어가
+            // #229 장르 정합: 작물 우클릭 = 선택 림에게 '수확 명령'(PawnHarvester) → 걸어가
             //  수확 후 물리 식량 더미.  즉시 수확/적립이 아니므로 (a) 림이 수확 task 를 받았고
             //  (b) food 가 즉시 오르지 '않았음'(무텔레포트)을 검증한다.
             var harvester = pawns[0].GetComponent<PawnHarvester>();
@@ -1214,7 +1214,7 @@ namespace MelonS.GameProto.Tests
         {
             yield return null;
             // 기존 wall prefab 가져오기 (DefaultWallPrefab 활용)
-            // #229 RimWorld 맨땅 시작 — 씬에 미리 깔린 벽이 없으므로 BuildManager 의 wall
+            // #229 the reference sim 맨땅 시작 — 씬에 미리 깔린 벽이 없으므로 BuildManager 의 wall
             //  prefab/sprite 를 직접 가져온다(빌드 시스템의 정식 출처, 씬 검색 대신).
             GameObject wallPrefab = null;
             Sprite wallSpr = null;
@@ -1569,7 +1569,7 @@ namespace MelonS.GameProto.Tests
         }
 
         /// <summary>I40 (#199 C1): a chopper walks to an ADJACENT cell of the tree
-        /// (RimWorld reach-over) and chops it — proving the pawn's final cell is
+        /// (the reference sim reach-over) and chops it — proving the pawn's final cell is
         /// adjacent to (NOT equal to) the tree's cell AND the work completed (tree
         /// destroyed / wood pile dropped).  Runs on the live A* grid.</summary>
         private IEnumerator TestI40_ChopFromAdjacentCell()
@@ -1660,7 +1660,7 @@ namespace MelonS.GameProto.Tests
             Debug.Log($"[Int] I40 detail: adjacency={adjacency} workDone={workDone} endCell={endCell} treeCell={treeCell} stoodOnTree={everStoodOnTree}");
         }
 
-        /// <summary>I41 (#199 C3): build-placement validation, RimWorld-style.
+        /// <summary>I41 (#199 C3): build-placement validation, colony-sim-style.
         ///   (a) blueprint on impassable terrain (water/rock) → REJECTED (no bp);
         ///   (b) blueprint on a cell with an existing wall      → REJECTED (no bp);
         ///   (c) blueprint on a valid open walkable cell        → SUCCEEDS (bp made).
@@ -1764,7 +1764,7 @@ namespace MelonS.GameProto.Tests
         /// <summary>I42 (#201, operator bug): a wall COMPLETES on the exact cell a
         /// pawn stands on.  Pre-fix the pawn was sealed inside the impassable cell
         /// (AStar refuses a blocked start cell; an idle pawn never re-paths) → stuck
-        /// forever.  RimWorld pushes the pawn out.  Asserts: (a) the pawn is NO
+        /// forever.  the reference sim pushes the pawn out.  Asserts: (a) the pawn is NO
         /// LONGER on the wall cell (its cell changed to a walkable neighbour), AND
         /// (b) the pawn can MOVE afterward (give a target, advance, make progress).
         ///
@@ -1862,7 +1862,7 @@ namespace MelonS.GameProto.Tests
             Debug.Log($"[Int] I42 detail: before={beforeCell} after={afterCell} cellBlocked={cellNowBlocked} offWall={offWallCell} canMove={canMove} moved={moved:F2}");
         }
 
-        /// <summary>I43: RimWorld 벌목 지정 — 나무 force-spawn → TreeChopDesignation 으로 지정
+        /// <summary>I43: the reference sim 벌목 지정 — 나무 force-spawn → TreeChopDesignation 으로 지정
         ///  → idle 림이 dispatch 되어 walk+chop → 나무 쓰러짐(IsDestroyed) 검증.</summary>
         private IEnumerator TestI43_ChopDesignation()
         {

@@ -1,4 +1,4 @@
-"""Generate procedural SFX for PawnSim (RimWorld-style colony sim).
+"""Generate procedural SFX for PawnSim (colony-sim-style colony sim).
 Redesigned 2026-05-30 — action-appropriate sounds for each event.
 
 Produces (same filenames, drop-in replacement):

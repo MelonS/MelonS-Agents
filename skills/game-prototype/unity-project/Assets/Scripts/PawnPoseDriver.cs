@@ -6,7 +6,7 @@ namespace MelonS.GameProto
     /// <summary>
     /// Wave W-M6-02 / Lane B10 — pawn carry-pose + attack-lunge (wiki B10).
     ///
-    /// Wiki acceptance criterion (rimworld-comparison-v2.md B10):
+    /// Wiki acceptance criterion (genre-comparison-v2.md B10):
     ///   "A hauling pawn visibly carries something (a carried-item sprite appears)
     ///    AND a melee/attack shows a brief forward jab offset; no pawn drifts off
     ///    its cell over 10s of walking (root untouched — same firewall as PawnFacing)."

@@ -5,7 +5,7 @@ using MelonS.GameProto.Data;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// Day 45 — RimWorld-style body part health system.
+    /// Day 45 — colony-sim-style body part health system.
     /// 6 parts: head, torso, leftArm, rightArm, leftLeg, rightLeg.
     /// Each part has maxHp and currentHp.  Damage routes to a chosen part
     /// (random by default, weighted: torso 35%, legs 20%, arms 20%, head 5%).
@@ -106,7 +106,7 @@ namespace MelonS.GameProto
                     //  bleed drains the source part itself first then random
                     //  redistribution to torso/head if part is below 30%.
                     p.hp = Mathf.Max(0, p.hp - Mathf.CeilToInt(p.bleedRate));
-                    // #277 출혈 감쇠 0.05→0.15: 2.5 출혈이 50초→~17초에 멈춰 RimWorld
+                    // #277 출혈 감쇠 0.05→0.15: 2.5 출혈이 50초→~17초에 멈춰 the reference sim
                     //  '출혈 후 안정화' 정합 + 초기 death-spiral 완화 (rank11, 승인).
                     p.bleedRate = Mathf.Max(0f, p.bleedRate - 0.15f);
                 }

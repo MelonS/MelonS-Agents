@@ -16,24 +16,24 @@ namespace MelonS.GameProto
         [Range(0f, 100f)] public float mood = 80f;
 
         [Header("Decay rates (units per second)")]
-        // #200 RimWorld fidelity: food (0-100) should empty over ~2.5-3 in-game
-        //  days like RimWorld (hunger ~1.6 nutrition/day).  1 in-game day = 240
+        // #200 genre fidelity: food (0-100) should empty over ~2.5-3 in-game
+        //  days like the reference sim (hunger ~1.6 nutrition/day).  1 in-game day = 240
         //  real seconds (GameClock), so a 3-day budget = 100 / (3*240) = 0.139/s.
         //  Was 0.5/s → emptied in 200s = 0.83 day (~3.5x too fast).  0.14 ≈ 2.97 days.
         // #228 운영자 fb "배고픔·수면 게이지가 정상동작 안 하는 느낌" — 시계 fix(rate 6,
         //  하루=240s) 후 needs(실시간 decay)가 하루 주기와 분리돼 게이지가 며칠에 걸쳐 찔끔
         //  움직였다(food~3일/sleep~1.4일).  하루 주기로 재튜닝: 매일 먹고/밤마다 자도록.
         //  food 0.14→0.2(eat≈1회/일), sleep 0.3→0.4(sleep 100→0 ≈ 1게임일 → 밤마다 졸림).
-        //  #234 RimWorld 시계(1x=하루1000초)에 맞춰 decay 를 비례 축소(×0.24)해 게임-하루
+        //  #234 the reference sim 시계(1x=하루1000초)에 맞춰 decay 를 비례 축소(×0.24)해 게임-하루
         //  리듬은 동일 유지: foodDecay 0.2→0.048, sleepDecay 0.4→0.096, moodDecay 0.2→0.048.
         //  (game-day 당 food≈48/sleep≈96 으로 rate-6 때와 동일 — 둘 다 timeScale 곱이라 정합.)
-        //  #247 운영자 fb "식량·수면 감소가 없어 식사·잠 불필요 (심각). RimWorld는 빨리 내려감"
+        //  #247 운영자 fb "식량·수면 감소가 없어 식사·잠 불필요 (심각). the reference sim는 빨리 내려감"
         //  — #234 의 느린 시계(1x=16.7분/일)로 needs 가 실시간 4× 느려져 체감상 '안 내려감'.
         //  식사·잠이 실제로 필요하도록 상향: food 0.048→0.13(게임일당 ~130 → 하루 2~3회 식사),
         //  sleep 0.096→0.18(~180/일 → 밤마다 + 부족시 졸림).  생존은 meals/berry/사냥+밤잠으로 유지.
         [SerializeField] private float foodDecay = 0.13f;
         [SerializeField] private float sleepDecay = 0.18f;
-        [SerializeField] private float moodDecay = 0.048f;  // #234 RimWorld 시계 비례 축소
+        [SerializeField] private float moodDecay = 0.048f;  // #234 the reference sim 시계 비례 축소
 
         [Header("Day 9+: sleep regen when sleeping at night")]
         [SerializeField] private float sleepRegenAtNight = 8f;
@@ -44,7 +44,7 @@ namespace MelonS.GameProto
         //  threshold narrows the food sawtooth (band ~50-80 instead of ~45-80),
         //  giving more starvation margin AND keeping the colony's food trend STABLE
         //  rather than swinging wide enough that quarter-window sampling reads a
-        //  phantom decline.  RimWorld pawns eat around the "Hungry" (~ half) mark.
+        //  phantom decline.  the reference sim pawns eat around the "Hungry" (~ half) mark.
         [SerializeField] private float eatThreshold = 50f;
         [SerializeField] private float eatRestore = 30f;
 
@@ -78,7 +78,7 @@ namespace MelonS.GameProto
 
         public bool IsSleeping { get; private set; }
 
-        // ── rcfix: RimWorld 우클릭 "Rest" / "Sleep" 명령 ─────────────────────────
+        // ── rcfix: the reference sim 우클릭 "Rest" / "Sleep" 명령 ─────────────────────────
         //  ClickSelector 가 침대 우클릭 시 SetRestTarget(bed) 호출.  pawn 은
         //  ClickSelector 가 박은 movement target + ManualMoveUntil 로 침대까지 이동.
         //  이 컴포넌트는 매 frame 침대 도착 여부만 검사 (이동은 PawnMovement 담당):
@@ -184,9 +184,9 @@ namespace MelonS.GameProto
             schedule = GetComponent<PawnSchedule>();
         }
 
-        // #269 RimWorld 스케줄: 현재 시간대가 Sleep 슬롯이면 졸리지 않아도 침대로 가 자고,
+        // #269 the reference sim 스케줄: 현재 시간대가 Sleep 슬롯이면 졸리지 않아도 침대로 가 자고,
         //  슬롯 동안 풀충전돼도 안 깬다(Anything 은 피곤할 때만 — 기존 동작).
-        //  운영자 fb "스케줄에 수면이 있는데 왜 안 따르냐" + rimworldwiki Schedule.
+        //  운영자 fb "스케줄에 수면이 있는데 왜 안 따르냐" + reference-simwiki Schedule.
         public bool ScheduledSleepNow => schedule != null
             && schedule.GetCurrentSlot() == TimeSlot.Sleep;
 
@@ -209,7 +209,7 @@ namespace MelonS.GameProto
 
             // ── rcfix: 강제 휴식 명령 처리 (night/tired 게이트보다 우선) ──────────
             //  사용자가 침대 우클릭 → SetRestTarget.  pawn 이 그 침대 위에 도착하면
-            //  졸리지 않아도/낮이어도 눕는다 (RimWorld 우클릭 Rest).
+            //  졸리지 않아도/낮이어도 눕는다 (the reference sim 우클릭 Rest).
             if (restTarget != null)
             {
                 // target 침대가 파괴됐으면 명령 취소.
@@ -279,7 +279,7 @@ namespace MelonS.GameProto
                         mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
                         if (moodPerSec > 0f) mood = Mathf.Min(100f, mood + moodPerSec * dt);
                         // 충분히 잤으면(80) 자율 취침 종료.  단 #269 스케줄 Sleep 슬롯 중엔
-                        //  풀충전돼도 계속 잔다(슬롯 끝날 때까지) — RimWorld Sleep 동작.
+                        //  풀충전돼도 계속 잔다(슬롯 끝날 때까지) — the reference sim Sleep 동작.
                         if (sleep >= autoWakeSleepLevel && !ScheduledSleepNow)
                         {
                             IsSleeping = false;

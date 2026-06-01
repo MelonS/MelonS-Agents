@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// RimWorld 식 콜로니스트 바 (화면 TOP-CENTER HUD).  Self-bootstrapping —
+    /// 콜로니심식 콜로니스트 바 (화면 TOP-CENTER HUD).  Self-bootstrapping —
     /// GameManager.Start 가 EnsureInScene() 호출 → 기존 Canvas 를 찾아(GuiControlBar 등이
     /// 만든 것 재사용) 거기에 자기 root 를 붙인다.  Canvas 가 없으면(headless/-batchmode
     /// 또는 MainMenu) 조용히 skip → null throw 없음 (GuiControlBar.EnsureInScene 패턴 미러).
@@ -24,7 +24,7 @@ namespace MelonS.GameProto
     public class ColonistBar : MonoBehaviour
     {
         // ── layout 상수 ──────────────────────────────────────────────────────────
-        // #238b 가독성 ↑ (작아서 "테스트 빌드 수준" 회피) — RimWorld 콜로니스트 바처럼 더 큼.
+        // #238b 가독성 ↑ (작아서 "테스트 빌드 수준" 회피) — the reference sim 콜로니스트 바처럼 더 큼.
         private const float EntryW = 104f;
         private const float EntryH = 54f;
         private const float Gap = 6f;
@@ -32,13 +32,13 @@ namespace MelonS.GameProto
         //   상단 자원 readout(TopBar)과 겹쳤음.  TopBar 는 화면 최상단 full-width 높이 76px
         //   (SceneSetup.Game.TopBar.cs: topRt.sizeDelta y=76, anchor top, y=0)에 clock/time/
         //   자원 chip 을 그린다.  그래서 콜로니스트 바를 TopBar 바로 아래로 내려 절대 안 겹치게 함.
-        //   RimWorld 식: 바는 최상단 중앙이지만, 이 프로토타입은 최상단을 자원 바가 점유하므로
+        //   콜로니심식: 바는 최상단 중앙이지만, 이 프로토타입은 최상단을 자원 바가 점유하므로
         //   "자원 바 바로 아래 중앙" 이 깔끔한 동치 위치.
         private const float TopBarH = 76f;     // SceneSetup TopBar 높이와 일치(변경 시 같이 갱신)
         private const float TopBarGap = 8f;    // TopBar 와 콜로니스트 바 사이 숨 쉴 틈
         private const float TopMargin = TopBarH + TopBarGap;  // TopBar 아래로 내림(겹침 방지)
         private const float BarH = 5f;         // HP/mood 바 두께
-        // #240 초상화 (RimWorld 콜로니스트 바 시그니처) — entry 좌측 정사각, pawn body sprite.
+        // #240 초상화 (the reference sim 콜로니스트 바 시그니처) — entry 좌측 정사각, pawn body sprite.
         private const float PortraitW = 46f;   // 좌측 초상화 폭(정사각)
         private const float PortraitPad = 4f;  // 초상화 ↔ 이름/바 간격
 
@@ -124,7 +124,7 @@ namespace MelonS.GameProto
         private int CountColonists()
         {
             // 이 프로토타입엔 PawnEntity 에 faction flag 가 없음 → 모든 PawnEntity = 콜로니스트.
-            //  죽은(IsDead) pawn 은 바에서 제외 (RimWorld 바도 시체는 안 보임).
+            //  죽은(IsDead) pawn 은 바에서 제외 (the reference sim 바도 시체는 안 보임).
             var all = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
             int n = 0;
             foreach (var p in all)
@@ -188,7 +188,7 @@ namespace MelonS.GameProto
             //  클릭 raycast 를 받게 다시 켠다 (이게 없으면 entry 클릭이 안 먹음).
             border.raycastTarget = true;
 
-            // ── 초상화 (좌측 정사각, pawn body sprite) — RimWorld 콜로니스트 바 시그니처 ──
+            // ── 초상화 (좌측 정사각, pawn body sprite) — the reference sim 콜로니스트 바 시그니처 ──
             var portraitGo = new GameObject("Portrait");
             portraitGo.transform.SetParent(contentRt, false);
             var portraitBg = portraitGo.AddComponent<Image>();

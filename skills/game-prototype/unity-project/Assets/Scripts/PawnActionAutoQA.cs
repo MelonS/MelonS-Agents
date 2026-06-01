@@ -64,7 +64,7 @@ namespace MelonS.GameProto
                 if (tree == null) return ("no tree spawn", false);
                 // #232 운영자 fb '우클릭 벌목 안됨' — 실제 우클릭 경로(SimulateRightClick, 이제
                 //  Update 와 동일하게 나무→TreeChopDesignation.TryMark)로 검증한다.  우클릭이
-                //  나무를 '벌목 지정'(ChopTarget 마커 부착)했는지 확인 = RimWorld 처럼 나무 위에
+                //  나무를 '벌목 지정'(ChopTarget 마커 부착)했는지 확인 = the reference sim 처럼 나무 위에
                 //  표시가 생기고 림이 dispatch 됨.  (메뉴 시뮬 아닌 실제 우클릭 경로 = test==real.)
                 cs.SimulateRightClick(tree.transform.position);
                 if (tree.GetComponent<ChopTarget>() == null)

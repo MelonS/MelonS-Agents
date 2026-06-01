@@ -22,7 +22,7 @@ namespace MelonS.GameProto.EditorTools
                 {
                     ti.textureType = TextureImporterType.Sprite;
                     // #199 A1 - pawn_colonist.png 는 16x16 px.  PPU 16 → 1x1 world unit
-                    //  (= grid cell 1x1, RimWorld colonist 와 동일).  ForceImportAllSprites
+                    //  (= grid cell 1x1, the reference sim colonist 와 동일).  ForceImportAllSprites
                     //  (SceneSetup.cs)도 PPU 16 으로 강제하므로 fallback 도 16 으로 일치시킴.
                     ti.spritePixelsPerUnit = 16;
                     ti.filterMode = FilterMode.Point;
@@ -32,7 +32,7 @@ namespace MelonS.GameProto.EditorTools
             }
 
             GameObject pawnGo = new GameObject("Pawn");
-            // #199 A1: RimWorld 와 같이 pawn 은 정확히 1x1 tile 점유.
+            // #199 A1: the reference sim 와 같이 pawn 은 정확히 1x1 tile 점유.
             //  pawn_colonist.png 는 16x16 px, PPU 16 (ForceImportAllSprites 강제) → 1x1 world unit.
             //  scale 1.0 유지 (PPU 가 1x1 을 만들어내므로 scale 보정 불필요).
             pawnGo.transform.localScale = new Vector3(1f, 1f, 1f);

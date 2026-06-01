@@ -3,7 +3,7 @@ using UnityEngine;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// #142 (운영자 fb v2) - 림월드 정상 청사진 흐름.
+    /// #142 (운영자 fb v2) - 레퍼런스 콜로니심 정상 청사진 흐름.
     ///   1. Architect → 벽 선택 → 클릭으로 청사진 spawn (자원 차감 X).
     ///   2. 청사진 = needWood/needStone 표시.
     ///   3. Hauler 가 stockpile 의 wood pile 을 청사진까지 운반 (자재 넣음).
@@ -168,7 +168,7 @@ namespace MelonS.GameProto
 
         private void Complete()
         {
-            // #249 나무 위 건축 — 완성 시 footprint 와 겹친 나무를 제거(RimWorld: 식물 위 건설 시
+            // #249 나무 위 건축 — 완성 시 footprint 와 겹친 나무를 제거(the reference sim: 식물 위 건설 시
             //  식물 클리어).  자재는 안 줌(단순 제거).
             {
                 Vector2 sz = new Vector2(Mathf.Max(1, footprint.x), Mathf.Max(1, footprint.y));

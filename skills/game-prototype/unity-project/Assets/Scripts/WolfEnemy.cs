@@ -16,9 +16,9 @@ namespace MelonS.GameProto
         // #277 5→7: ThreatAlertUI 경고(8)와 1유닛 버퍼 정합 + 위협 성립(rank8, 승인).
         [SerializeField] private float detectionRadius = 7.0f;
         [SerializeField] private float baseArmor = 0.05f;   // #277 적 방어 비대칭 보정(rank12)
-        // #200 RimWorld fidelity ripple: pawn moveSpeed rose 3.0→4.6, so wolf
+        // #200 genre fidelity ripple: pawn moveSpeed rose 3.0→4.6, so wolf
         //  chase must be >= 4.6 or a predator can never catch a fleeing pawn.
-        //  RimWorld timber wolf ~4.6 c/s; set 5.0 so wolves stay a credible threat.
+        //  the reference sim timber wolf ~4.6 c/s; set 5.0 so wolves stay a credible threat.
         [SerializeField] private float chaseSpeed = 5.0f;
         [SerializeField] private float wanderSpeed = 0.8f;
         [SerializeField] private int dropFood = 8;
@@ -174,7 +174,7 @@ namespace MelonS.GameProto
             if (Hp <= 0)
             {
                 Debug.Log($"[Wolf] killed → +{dropFood} 고기 (pile drop)");
-                // 운영자 fb v4 - 림월드 정상 흐름: meat pile 만 drop.
+                // 운영자 fb v4 - 레퍼런스 콜로니심 정상 흐름: meat pile 만 drop.
                 if (MeatPileEntity.SharedSprite != null)
                 {
                     MeatPileEntity.Spawn(transform.position, dropFood, MeatPileEntity.SharedSprite);

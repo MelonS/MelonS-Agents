@@ -39,7 +39,7 @@ namespace MelonS.GameProto
 
         public void SetAnimalTarget(AnimalEntity animal)
         {
-            // #199 C2 — release previous animal on switch (RimWorld job-switch).
+            // #199 C2 — release previous animal on switch (the reference sim job-switch).
             if (targetAnimal != null && targetAnimal != animal)
                 MelonS.GameProto.AI.ReservationManager.Release(targetAnimal, gameObject);
             targetAnimal = animal;

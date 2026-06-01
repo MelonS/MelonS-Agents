@@ -7,7 +7,7 @@ namespace MelonS.GameProto
     /// <summary>
     /// Wave W-M4-05 Lane A / wiki #18 (Dimension 4 건축) — DRAG-RECT BLUEPRINT PLACEMENT.
     ///
-    /// Wiki acceptance criterion (#18, rimworld-comparison.md line 171):
+    /// Wiki acceptance criterion (#18, genre-comparison.md line 171):
     ///   "Click-drag places a ROW of wall blueprints, not one cell."
     ///
     /// Single-cell placement ALREADY works: BuildManager consumes a left-click in its
@@ -71,7 +71,7 @@ namespace MelonS.GameProto
         //  it is a plain tap → BuildManager's single-cell path handles it, we do nothing.
         [SerializeField] private float dragThreshold = 0.6f;
         // Safety cap so a wild drag across the whole map can't spawn thousands of
-        //  blueprints in one frame (RimWorld also caps drag area implicitly).
+        //  blueprints in one frame (the reference sim also caps drag area implicitly).
         [SerializeField] private int maxCellsPerDrag = 400;
 
         [Header("Ghost preview")]

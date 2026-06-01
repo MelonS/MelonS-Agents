@@ -4,9 +4,9 @@ using UnityEngine;
 namespace MelonS.GameProto.AI
 {
     /// <summary>
-    /// #199 C2 — RimWorld-style reservation registry.
+    /// #199 C2 — colony-sim-style reservation registry.
     ///
-    /// In RimWorld a pawn that takes a job RESERVES its target (the tree / bush /
+    /// In the reference sim a pawn that takes a job RESERVES its target (the tree / bush /
     /// vein / blueprint / stove / pile) and usually the cell it stands in.  Other
     /// pawns skip reserved things and pick something else; on job end / abandon /
     /// death the reservation releases so the target frees up again.  This class is

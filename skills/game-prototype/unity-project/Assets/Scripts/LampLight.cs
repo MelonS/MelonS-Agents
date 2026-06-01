@@ -12,13 +12,13 @@ namespace MelonS.GameProto
     /// 전혀 안 난다.  이 드라이버는 그 문제를 해결한다:
     ///
     ///   NightOverlay(25) "위"(sortingOrder 26)에 램프마다 부드러운 가산(additive)
-    ///   빛 원을 그려서, 밤 어둠을 램프 주변에서 실제로 걷어낸다.  RimWorld 의
+    ///   빛 원을 그려서, 밤 어둠을 램프 주변에서 실제로 걷어낸다.  the reference sim 의
     ///   조명처럼 — 어두운 밤에 램프 주변만 은은하게 밝아 보인다.
     ///
     /// LampGlowDriver 와의 관계(둘 다 유지):
     ///   - LampGlowDriver : 바닥에 깔리는 따뜻한 amber 풀(분위기). 어둠 아래.
     ///   - LampLight(이 파일): 어둠 위에서 빛을 더해 맵을 실제로 밝힘(가시성).
-    ///   두 레이어가 합쳐져 "불빛이 어둠을 밀어낸다"는 RimWorld 식 조명이 된다.
+    ///   두 레이어가 합쳐져 "불빛이 어둠을 밀어낸다"는 콜로니심식 조명이 된다.
     ///
     /// 패턴(NightLightPoolDriver / LampGlowDriver / FlickerLight 와 동일):
     ///   - [RuntimeInitializeOnLoadMethod(AfterSceneLoad)] — SceneSetup 편집 불필요.
@@ -56,12 +56,12 @@ namespace MelonS.GameProto
         //  동일하게 코드 상단 한 곳에서.)                                       //
         // ------------------------------------------------------------------ //
 
-        // #267 RimWorld 라이트 글로우 캡은 0.5.  가산이라 약간 높게 잡아도 어둠 위에서
+        // #267 the reference sim 라이트 글로우 캡은 0.5.  가산이라 약간 높게 잡아도 어둠 위에서
         //  은은하게 밝히는 수준(하얗게 안 씀).
         private const float MaxLightIntensity = 0.62f;
 
-        // 빛 원의 월드 지름(칸) = 전체 반경 4칸(=LightScale/2).  RimWorld 토치램프(전체
-        //  반경 10, lit 6.5)를 작은 집 규모로 축소.  #267 falloff 를 RimWorld 공식
+        // 빛 원의 월드 지름(칸) = 전체 반경 4칸(=LightScale/2).  the reference sim 토치램프(전체
+        //  반경 10, lit 6.5)를 작은 집 규모로 축소.  #267 falloff 를 the reference sim 공식
         //  (중심 1/d² 집중 + 선형, BuildProceduralLightSprite)으로 바꿔 "뿌연 안개"가
         //  아니라 중심이 또렷이 밝고 가장자리로 깔끔히 떨어지는 조명이 된다.
         private const float LightScale = 8.0f;
@@ -94,7 +94,7 @@ namespace MelonS.GameProto
         private static void Bootstrap()
         {
             // #268 비활성화 — 이 가산(additive) 빛 안개가 "조명이 뿌옇게만 보임"의
-            //  원인이었다.  RimWorld 식 조명은 NightOverlay 의 동적 라이트맵(램프 반경의
+            //  원인이었다.  콜로니심식 조명은 NightOverlay 의 동적 라이트맵(램프 반경의
             //  어둠을 걷어 바닥이 드러남)으로 통합됐다.  중복·뿌연 안개 방지 위해 미스폰.
             return;
 #pragma warning disable CS0162
@@ -279,7 +279,7 @@ namespace MelonS.GameProto
                     }
 
                     float t = dist / rMax;                       // 0 중심, 1 가장자리
-                    // #267 RimWorld 글로우 falloff 공식 적용 (rimworldwiki Torch lamp):
+                    // #267 the reference sim 글로우 falloff 공식 적용 (reference-simwiki Torch lamp):
                     //   r=반경(칸), d=거리+1, a=1-d/r(선형), bq=1/d²(중심집중),
                     //   f=a+(bq-a)*0.4.  중심값으로 정규화 → 또렷한 코어 + 깔끔한 감쇠.
                     //   (이전 1-smoothstep 은 균일하게 흐려 "뿌옇게" 보였음.)

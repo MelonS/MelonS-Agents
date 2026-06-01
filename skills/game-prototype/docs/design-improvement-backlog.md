@@ -14,9 +14,9 @@ visibly kill the "cheap" feeling.
 
 ## Visual coherence north star (every item MUST respect this)
 
-RimWorld's polish does **not** come from detail — it comes from **discipline**:
+the reference sim's polish does **not** come from detail — it comes from **discipline**:
 a tight, muted, warm-earth palette; a strict outline hierarchy; and clean,
-readable silhouettes on a desaturated background. Per RimWorld's own art guide:
+readable silhouettes on a desaturated background. Per the reference sim's own art guide:
 *"making the graphics really simple reduces noise… story-relevant things have a
 2–3 px black border so characters pop while plants smear into the background."*
 
@@ -29,11 +29,11 @@ non-negotiable; reject any asset/UI that violates them.
    different browns, different greens, different styles. This single
    inconsistency is the #1 reason it looks "cheap." **Kill one style. Keep the
    flat-Kenney-with-outline style** (`_gen_fix_audit.py`'s approach) — it is
-   closer to RimWorld and far cheaper to keep cohesive. The detailed
+   closer to the reference sim and far cheaper to keep cohesive. The detailed
    `_gen_sprites.py` pawn/tree must be **re-done in the flat style** at matching
    PPU. Everything draws from `PALETTE` below.
 
-2. **Outline hierarchy (RimWorld's core trick).**
+2. **Outline hierarchy (the reference sim's core trick).**
    - Pawns, animals, enemies: **2 px** outline, color `OUTLINE_STORY` (near-black warm).
    - Buildings, items (wall/door/stove/bench/bed/wood pile/stone): **1 px** outline, `OUTLINE_OBJ`.
    - Plants (tree/bush/crop): **dark-green outline or none** — they must
@@ -68,7 +68,7 @@ Every sprite generator imports these. No ad-hoc colors. This is what makes 15
 separate assets read as one game instead of a pile of upgrades.
 
 ```python
-# ── PawnSim master palette v1 (warm muted earth, RimWorld-grounded) ──
+# ── PawnSim master palette v1 (warm muted earth, the reference sim-grounded) ──
 # Outlines (hierarchy)
 OUTLINE_STORY = (26, 20, 16, 255)    # #1A1410  pawns/animals — 2px
 OUTLINE_OBJ   = (40, 30, 22, 255)    # #281E16  buildings/items — 1px
@@ -129,7 +129,7 @@ What an art director sees in `_refactor_current.png`, harshest first:
 
 - **Pawns look like potatoes in pots.** The colonist sprite reads as a brown
   blob (the `_gen_sprites.py` 64×64 over-detailed coat) with a bright blue belly
-  patch and no clean outline, so it does NOT pop from the grass. RimWorld's
+  patch and no clean outline, so it does NOT pop from the grass. the reference sim's
   whole point is the pawn popping. This one sinks in.
 - **Ground is one flat green with a single ugly dark blob** (the dirt patch
   bottom-left). No tile cohesion, no subtle dappling, saturation too high so it
@@ -164,7 +164,7 @@ not a from-scratch rebuild.
 | **A2** | Colonist = detailed brown blob, no outline, bright-blue belly, doesn't pop. | Flat-style 16×16 (or 32×32 @PPU32) top-down colonist: muted cloth body (`CLOTH_BLUE`), skin head, simple 2-color hair, **2 px `OUTLINE_STORY`** all around. Clear human silhouette. | `_gen_sprites.py::gen_pawn` rewritten flat (or new `_gen_pawn.py`) | Pawn on grass: a crisp dark outline separates it from ground; reads as a person from across the frame, NOT a blob; no neon-blue patch. | **H** | M |
 | **A3** | Grass is one flat over-saturated green + ugly dark dirt blob; no cohesion. | 2–3 muted grass tile variants (`GRASS_DK/MD/LT` dappling, low saturation) + a proper `dirt`/path tile. Tiles seamless, no harsh seams. Saturation clearly below pawn. | the terrain/ground generator (locate grass tile gen or `SceneSetup` ground partial) | Ground reads as soft muted khaki-green with gentle variation; pawns/buildings visibly pop above it; no single hard dark rectangle. | **H** | M |
 | **A4** | Wall/floor/door/bench/bed each on their own wood ramp → patchwork. | All wood structures use the single `WOOD_DK/MD/LT` ramp + 1 px `OUTLINE_OBJ`. Door distinct from wall; floor subtly darker than walls. | `_gen_fix_audit.py` (wall/floor/stove/bench), `_gen_bed.py` (beds), door gen | A built room screenshot: walls, floor, door, bed all share one wood tone family; structure is legible. | **H** | M |
-| **A5** | Tree is hyper-detailed gradient blob that competes with pawns. | Flat 2–3 tone canopy, `OUTLINE_PLANT` (dark green) or no outline, lower saturation than pawns so it *recedes*. | `_gen_sprites.py::gen_tree` rewritten flat | In a frame with trees + a pawn, the pawn pops and the trees smear into background (RimWorld rule). | **H** | M |
+| **A5** | Tree is hyper-detailed gradient blob that competes with pawns. | Flat 2–3 tone canopy, `OUTLINE_PLANT` (dark green) or no outline, lower saturation than pawns so it *recedes*. | `_gen_sprites.py::gen_tree` rewritten flat | In a frame with trees + a pawn, the pawn pops and the trees smear into background (the reference sim rule). | **H** | M |
 | **A6** | Stone vein / chunk grey clashes (one cool-grey, one neutral). | Unify on `ROCK_DK/MD/LT` (cool grey-blue) with 1 px outline; ore specks = `CROP_GOLD`. | `_gen_fix_audit.py::gen_stone_vein, gen_stone_chunk` | Vein and chunk share identical grey ramp; ore specks are the only warm accent. | **M** | S |
 | **A7** | Deer/wolf colors and outlines inconsistent with new hierarchy. | Animals get **2 px `OUTLINE_STORY`** (same tier as pawns — they're story actors). Deer warm-brown, wolf cool-grey, both muted-but-readable silhouettes. | `_gen_fix_audit.py::gen_deer, gen_wolf` | Deer and wolf each read as a clear 4-legged silhouette with a thick outline matching the pawn's; distinguishable at a glance. | **M** | S |
 | **A8** | Crop sprite (rice/wheat) saturation/读 unclear vs grass. | Growing crop = muted green rows; **ripe** crop = `CROP_GOLD` (the reserved saturated accent). Strong ripe/unripe contrast. | `_gen_fix_audit.py::gen_crop_rice` (+ growth-stage variants if present) | Ripe field is unmistakably gold and pops; unripe field is muted green and recedes. | **M** | S |
@@ -236,7 +236,7 @@ moved polish ~3/10 → ~7/10 and the "너무 별로" bar is cleared. The remaini
 between "competent prototype" and "feels like a real game" is now **a different
 category of problem**: v1/v2 fixed *coherence and readability* (every sprite is
 clean, on-palette, pops correctly). What's left is **life, richness, and depth** —
-the things that make a *still screenshot* of RimWorld feel like a paused living
+the things that make a *still screenshot* of the reference sim feel like a paused living
 world instead of a diorama.
 
 ## Honest assessment of the CURRENT build (`_design_build_check.png`)
@@ -248,7 +248,7 @@ What still reads as PROTOTYPE, loudest first:
 
 1. **EVERYTHING IS FROZEN — the single biggest remaining gap.** Two pawns stand
    perfectly rigid on bare grass. Nothing moves, nothing breathes. A still of
-   RimWorld *implies* motion (a pawn mid-stride, a flame, swaying grass); this
+   the reference sim *implies* motion (a pawn mid-stride, a flame, swaying grass); this
    still implies a paused diorama. The colony does not feel ALIVE. No amount of
    sprite polish fixes "dead world" — only motion does. **This is #1 by a wide
    margin and it's the cheapest big win we have left.**

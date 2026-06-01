@@ -18,7 +18,7 @@ namespace MelonS.GameProto
     ///                         (sortingOrder 26) — actually lifts the darkness so
     ///                         the map reads as LIT around the lamp at night
     ///                         (operator fb "조명이 실제로 맵을 밝히는 효과 필요").
-    /// The two layers together give RimWorld-style "light pushes back the dark".
+    /// The two layers together give colony-sim-style "light pushes back the dark".
     ///
     /// Why a marker, not a glow-owner:
     ///   NightLightPoolDriver.cs scans ONLY for StoveEntity and gates on
@@ -31,7 +31,7 @@ namespace MelonS.GameProto
     ///
     /// Lit model (폴리싱 2026-06-01 — 운영자 fb "램프가 낮에도 불꽃 ON"):
     ///   이전엔 IsLit => true 로 항상 켜져 있어 낮(audit 6AM)에도 불꽃/빛이 났다.
-    ///   RimWorld 처럼 **어두울 때만** 켜지도록 GameClock 의 day/night 진행도를
+    ///   the reference sim 처럼 **어두울 때만** 켜지도록 GameClock 의 day/night 진행도를
     ///   읽어 NightFactor(밤 0→1) 가 임계값 이상일 때만 IsLit = true 가 된다.
     ///   이렇게 하면 IsLit 을 게이트로 쓰는 LampGlowDriver / LampLight 의 빛·풀이
     ///   모두 밤에만 켜지고, 낮엔 자동으로 꺼진다(드라이버 파일은 손대지 않음).

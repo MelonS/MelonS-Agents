@@ -6,11 +6,11 @@ namespace MelonS.GameProto
     /// <summary>
     /// Wave W-M3-01 / Lane A — pawn facing via SpriteRenderer.flipX (wiki #11).
     ///
-    /// Wiki acceptance criterion (rimworld-comparison.md Dim3 'Facing / rotation',
+    /// Wiki acceptance criterion (genre-comparison.md Dim3 'Facing / rotation',
     /// backlog #11): "a pawn walking left faces left, walking right faces right."
     /// This is the #2 player-felt gap — a pawn moonwalking reads as broken even
     /// with perfect pathing.  We give every pawn a horizontal facing that tracks
-    /// its movement direction and HOLDS when idle (RimWorld keeps the last facing).
+    /// its movement direction and HOLDS when idle (the reference sim keeps the last facing).
     ///
     /// CRITICAL ROOT-TRANSFORM RULE (shared with PawnSpriteBob.cs):
     ///   PathGrid.WorldToCell reads the pawn ROOT transform for cells /

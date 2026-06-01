@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""A2 rev3 — top-down colonist sprite (RimWorld-grounded, 사람처럼 보이게 개선).
+"""A2 rev3 — top-down colonist sprite (the reference sim-grounded, 사람처럼 보이게 개선).
 
 v1 문제: outline-first 방식이 좁은 zone(leg 3px, arm 3px)을 거의 검은색으로 덮어
          "검은 헬멧 + 파란 사각형"처럼 읽혔음.

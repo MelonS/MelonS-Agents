@@ -4,7 +4,7 @@ using MelonS.GameProto.AI;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// 운영자 fb #118 - 림월드 Construction 작업.
+    /// 운영자 fb #118 - 레퍼런스 콜로니심 Construction 작업.
     ///  nearest BlueprintEntity 찾아가 5초 동안 work → 완성.
     ///  PawnHauler 와 동일 패턴 (target reserve, walk, accumulate progress).
     /// </summary>
@@ -71,7 +71,7 @@ namespace MelonS.GameProto
         }
 
         // #199 C1/C2 — walk to a RESERVED walkable cell ADJACENT to the blueprint
-        //  footprint (RimWorld).  Multi-cell aware (1×2 bed / 2×1 bench): adjacent to
+        //  footprint (the reference sim).  Multi-cell aware (1×2 bed / 2×1 bench): adjacent to
         //  any footprint cell, never inside it.
         private void WalkToWork()
         {
@@ -260,7 +260,7 @@ namespace MelonS.GameProto
             {
                 movement.ClearTarget();
                 // Same construction-skill scaling as building — deconstruct is a
-                //  Construction job in RimWorld too.
+                //  Construction job in the reference sim too.
                 var abil = GetComponent<PawnAbilities>();
                 float mul = abil != null ? abil.constructionMul * abil.manipulation : 1f;
                 var traits = GetComponent<PawnTraits>();

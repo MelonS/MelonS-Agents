@@ -1186,7 +1186,7 @@ MonoBehaviour:
     m_LineSpacing: 1
   m_Text: 'PAWN SIM
 
-    (RimWorld-lite vertical slice)'
+    (colony-sim-lite vertical slice)'
 --- !u!222 &2073952429
 CanvasRenderer:
   m_ObjectHideFlags: 0

@@ -21,7 +21,7 @@
 
 ## 1. Scope decision — vision-impact 순 랭킹
 
-알려진 미해결 결함 + 디자인 항목을 vision-impact (림월드 바닐라급 +
+알려진 미해결 결함 + 디자인 항목을 vision-impact (바닐라 콜로니심급 +
 정직한 검증) 로 랭킹.  이번 increment 는 **상위 2개만** 가져간다 (보수적).
 
 | 순위 | 항목 | vision-impact | 이번 #198? | 근거 |

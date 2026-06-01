@@ -1,6 +1,6 @@
 ---
 name: game-prototype
-description: Unity-based mini RimWorld-style game prototype, built using game-dev-agent. Portfolio piece demonstrating AI agent + game dev T-shape skill.
+description: Unity-based mini colony-sim-style game prototype, built using game-dev-agent. Portfolio piece demonstrating AI agent + game dev T-shape skill.
 license: MIT
 compatibility:
   - agentskills.io
@@ -10,7 +10,7 @@ metadata:
   pipeline-source: standalone
   domain: game-development
   unity-version: 2022.3.32f1
-  reference-game: RimWorld (lite vertical slice)
+  reference-game: the reference sim (lite vertical slice)
 allowed-tools:
   - Read
   - Write
@@ -20,13 +20,13 @@ allowed-tools:
 
 # game-prototype
 
-Unity mini RimWorld-style colony sim vertical slice, built in 7 days
+Unity mini colony-sim-style colony sim vertical slice, built in 7 days
 using [`game-dev-agent`](../game-dev-agent/) for asset generation,
 code scaffolding, balance tuning, and in-game AI Director.
 
 ## Reference game
 
-RimWorld (Ludeon Studios). We're building a vertical slice — NOT a
+콜로니 심 장르. We're building a vertical slice — NOT a
 clone, NOT competing. Demonstration only.
 
 ## Scope (locked at start of Day 1)

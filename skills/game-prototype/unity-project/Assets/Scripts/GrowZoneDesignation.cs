@@ -101,7 +101,7 @@ namespace MelonS.GameProto
         [SerializeField] private int markerSortingOrder = 2;      // below crops(3)/pawns, above ground
 
         // ── operator fb #1 (2026-05-31): the standalone "경작 (P)" toggle button
-        //   was REMOVED.  In RimWorld, Grow zone lives inside the Architect menu's
+        //   was REMOVED.  In the reference sim, Grow zone lives inside the Architect menu's
         //   Zone (구역) category, not as a standalone screen button.  The grow-zone
         //   DESIGNATION logic below is unchanged and is now invoked from
         //   ArchitectMenu (Zone → 경작 → GrowZoneDesignation.Instance.SetMode(true)).
@@ -118,7 +118,7 @@ namespace MelonS.GameProto
         /// drag-rect 가 경작 영역을 '지우는' ERASE 모드.  add 경로와 대칭: 같은 입력/드래그
         /// 로직을 타되 MarkCellAt 대신 EraseCellAt 을 호출해 designated 셀의 마커를
         /// 제거하고 zone 기록을 드롭한다.  이미 심어진 CropEntity 는 건드리지 않음(designation
-        /// 만 제거 — RimWorld Zone Clear 와 동일).  ModeActive 안에서만 의미가 있다.</summary>
+        /// 만 제거 — the reference sim Zone Clear 와 동일).  ModeActive 안에서만 의미가 있다.</summary>
         public bool EraseMode { get; private set; }
 
         private Camera cam;
@@ -323,7 +323,7 @@ namespace MelonS.GameProto
         /// Symmetric to MarkCellAt — destroys the tinted marker, drops the zone record,
         /// and cancels any in-flight plant job aimed at that cell so a pawn doesn't plant
         /// on an un-designated cell.  Does NOT touch an already-planted CropEntity (the
-        /// designation is removed, the crop keeps growing — RimWorld Zone Clear).  Returns
+        /// designation is removed, the crop keeps growing — the reference sim Zone Clear).  Returns
         /// true if a designation was actually removed (idempotent: erasing a non-zone cell
         /// is a silent no-op).</summary>
         public bool EraseCellAt(int cx, int cy)

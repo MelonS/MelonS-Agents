@@ -4,7 +4,7 @@ using MelonS.GameProto.Core;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// #119 - 림월드 광맥 (stone vein).
+    /// #119 - 레퍼런스 콜로니심 광맥 (stone vein).
     ///  채광 시 stone chunk drop (1-3 개).  HP 200 (나무 100 보다 더 단단).
     ///  PawnMiner 가 채광.  HaulStoneAction 으로 chunk 운반.
     /// </summary>
@@ -85,7 +85,7 @@ namespace MelonS.GameProto
             }
             if (hp <= 0f)
             {
-                // 운영자 fb v4 - 림월드 정상 흐름: 즉시 +N 안 함. chunk 만 drop.
+                // 운영자 fb v4 - 레퍼런스 콜로니심 정상 흐름: 즉시 +N 안 함. chunk 만 drop.
                 int yieldN = Random.Range(stoneYieldMin, stoneYieldMax + 1);
                 // #215 운영자 fb "캐면 순간이동" — StoneChunkEntity.EnsureSprite 가 sprite
                 //  null 이어도 코드 기본 돌덩이를 보장하므로, 즉시 AddStone 폴백(텔레포트)을

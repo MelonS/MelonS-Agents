@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// #126 - 림월드 Schedule tab.
+    /// #126 - 레퍼런스 콜로니심 Schedule tab.
     ///  표: 행 = pawn, 열 = 24 시간.  cell 클릭 = 순환 (Anytime → Sleep → Work → Joy → Anytime).
     ///  F4 토글.  WorkTabUI 와 동일 패턴.
     /// </summary>

@@ -68,17 +68,17 @@ namespace MelonS.GameProto
             _registeredCell = AI.PathGrid.WorldToCell(transform.position);
             PawnMovement.RegisterWallCell(transform.position);
             _cellRegistered = true;
-            // #201 — RimWorld eject-on-block.  This wall now makes its cell
+            // #201 — the reference sim eject-on-block.  This wall now makes its cell
             //  impassable.  Any pawn standing in that cell (idle, mid-walk, drafted)
             //  would be sealed inside a solid structure — AStar refuses a blocked
             //  START cell so it could never path out, and an idle pawn never even
             //  re-paths.  Push every such pawn out to the nearest open cell, exactly
-            //  like RimWorld pushes a pawn off a freshly-built wall.  Called AFTER
+            //  like the reference sim pushes a pawn off a freshly-built wall.  Called AFTER
             //  RegisterWallCell so the cell already reads as blocked → the ejected
             //  pawn lands on a genuinely-open neighbour, not back under the wall.
             PawnMovement.EjectPawnsFromCell(transform.position);
 
-            // #260 시각 연결감 — RimWorld 벽처럼 인접 벽과 '이어져' 보이게.
+            // #260 시각 연결감 — the reference sim 벽처럼 인접 벽과 '이어져' 보이게.
             //  pathing/collider/HP 와 완전히 독립된 순수 시각 레이어.
             //  내 이음새 갱신 + 새로 생긴 벽 때문에 이웃의 이음새도 갱신.
             RefreshSeams();
@@ -92,7 +92,7 @@ namespace MelonS.GameProto
             //  이웃이 이미 파괴 중일 수 있으나 NotifyNeighbours 는 null/파괴 안전.)
             NotifyNeighbours();
 
-            // RimWorld: a destroyed wall reopens its cell.  Unregister so pawns
+            // the reference sim: a destroyed wall reopens its cell.  Unregister so pawns
             //  immediately path through the gap (PathGrid bumps Version → in-flight
             //  pawns re-path).  Guard: only clear if we actually registered, and
             //  clear the cached cell so the ref-count stays balanced.
@@ -121,7 +121,7 @@ namespace MelonS.GameProto
         // ===================================================================
         //
         //  문제: 벽 여러 개가 나란히 있어도 각각 독립 사각형으로 보여 레고블록처럼
-        //        따로 논다.  RimWorld 는 이웃 방향에 따라 벽이 이어져 보인다.
+        //        따로 논다.  the reference sim 는 이웃 방향에 따라 벽이 이어져 보인다.
         //
         //  접근(저위험): 완전 16조각 autotile 대신, 인접 4방향(상하좌우)에 벽이
         //        있으면 그 방향으로 셀 경계를 살짝 넘는 얇은 '이음새(seam)' 자식
@@ -252,7 +252,7 @@ namespace MelonS.GameProto
                 if (col == null) continue;
                 var go = col.gameObject;
                 if (go == gameObject) continue;                 // 나 자신 제외
-                // 문도 벽선을 잇는 구조물 → 시각적으로 연결 (RimWorld 동일).
+                // 문도 벽선을 잇는 구조물 → 시각적으로 연결 (the reference sim 동일).
                 if (go.GetComponent<WallEntity>() != null) return true;
                 if (go.GetComponent<DoorEntity>() != null) return true;
             }

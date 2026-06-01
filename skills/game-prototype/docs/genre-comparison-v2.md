@@ -1,10 +1,10 @@
-# PawnSim vs RimWorld — SECOND-PASS Gap Re-Audit (v2)
+# PawnSim vs the reference sim — SECOND-PASS Gap Re-Audit (v2)
 
 Date: 2026-05-30. Author: research agent (read-only on `skills/game-prototype/unity-project/`).
 Scope: the operator's **6 gameplay dimensions** (디자인/비주얼 · 사운드 · 림 이동 · 건축 · 게임플레이 루프 · 메뉴 UX/UI).
-Predecessor: `skills/game-prototype/docs/rimworld-comparison.md` (v1) drove cx waves 1-6 + cy waves 1-4. This v2 **verifies what shipped, then finds the next layer.**
+Predecessor: `skills/game-prototype/docs/genre-comparison.md` (v1) drove cx waves 1-6 + cy waves 1-4. This v2 **verifies what shipped, then finds the next layer.**
 
-> **Source caveat:** rimworldwiki.com still blocks direct fetch (403); canonical values below come from WebSearch snippets of the wiki + RimWorld domain knowledge. URLs at the end.
+> **Source caveat:** 장르 위키 still blocks direct fetch (403); canonical values below come from WebSearch snippets of the wiki + the reference sim domain knowledge. URLs at the end.
 
 ---
 
@@ -52,7 +52,7 @@ Tags: **code / art / sound / verify**. **[OP-OK]** = behavior-logic, needs opera
 | # | M | Item | Tag | Imp/Eff | OP-gate | Binary acceptance | New-file hint |
 |---|---|---|---|:--:|:--:|---|---|
 | **B1** | M4 | **Multi-select marquee** — left-drag empty ground selects all pawns in the box; commands apply to all | code | ★★★ | | Drag a box over 3 pawns → all 3 show selection ring; right-click move-order moves all 3 | `MarqueeSelector.cs` (reads ClickSelector.currentSelection → promote to `List`; self-bootstrap) |
-| **B2** | M6 | **Gizmo command bar on selection** — bottom-center contextual buttons (Draft / Deconstruct-here / Cancel) for the selected thing, mirroring RimWorld InspectGizmoGrid | code | ★★★ | | Selecting a pawn shows a Draft button; clicking it drafts (same as R-key) | `SelectionGizmoBar.cs` (reads ClickSelector selection + existing PawnEntity.Draft) |
+| **B2** | M6 | **Gizmo command bar on selection** — bottom-center contextual buttons (Draft / Deconstruct-here / Cancel) for the selected thing, mirroring the reference sim InspectGizmoGrid | code | ★★★ | | Selecting a pawn shows a Draft button; clicking it drafts (same as R-key) | `SelectionGizmoBar.cs` (reads ClickSelector selection + existing PawnEntity.Draft) |
 | **B3** | M4 | **Fence + fence-gate buildable** (1 wood, passable, low) — vanilla Structure tab staple, cheap | art+code | ★★ | | A fence is buildable from Architect, blocks nothing but renders a low barrier | `FenceEntity.cs` + BuildManager.Mode.Fence (mirror FloorStone lazy-prefab pattern) |
 | **B4** | M4 | **Barricade/sandbag buildable** (defense cover marker) — vanilla Security tab; visual+pathing only (no cover-math, that's gated) | art+code | ★★ | | A sandbag is buildable; pawns path around it like a low wall | `BarricadeEntity.cs` + Mode.Barricade + Architect "Security (방어)" category |
 | **B5** | M4 | **Autodoor variant** — a faster door (lower PassMul) at higher wood cost; vanilla Door-tab variety | code | ★★ | | An autodoor is buildable and pawns cross it faster than a plain door | extend `DoorEntity.cs` (PassMul field) + Mode.Autodoor catalogue line |
@@ -83,7 +83,7 @@ Roofs+collapse, temperature, joy/recreation need, real hediffs/disease, cover/ac
 Run in this order — all non-gated, all independently shippable, ordered by impact-per-effort and the proven one-new-file lane discipline:
 
 1. **B6** Floating combat/work text (★★★ — biggest remaining feel win, pure-additive)
-2. **B1** Multi-select marquee (★★★ — core RimWorld UX, currently single-select only)
+2. **B1** Multi-select marquee (★★★ — core the reference sim UX, currently single-select only)
 3. **B2** Gizmo command bar on selection (★★★ — pairs with B1)
 4. **B8** Footstep + day/night ambient (★★ — last cheap sound layer)
 5. **B9** Door/cook/shoot SFX (★★ — closes action-SFX coverage)
@@ -97,18 +97,18 @@ Run in this order — all non-gated, all independently shippable, ordered by imp
 
 ## Operator recommendation (the real headline)
 
-**The autonomous chain has nearly exhausted the non-gated surface.** v2's 14 items are genuine and worth running, but they are the *last layer of polish/breadth before the gates*. After they ship, every meaningful next leap in player-felt depth — mood that feels like RimWorld, colonists obeying a work-priority grid, terrain that affects movement — is **behind the [OP-OK] wall** that v1 and MILESTONES.md §5 already flagged.
+**The autonomous chain has nearly exhausted the non-gated surface.** v2's 14 items are genuine and worth running, but they are the *last layer of polish/breadth before the gates*. After they ship, every meaningful next leap in player-felt depth — mood that feels like the reference sim, colonists obeying a work-priority grid, terrain that affects movement — is **behind the [OP-OK] wall** that v1 and MILESTONES.md §5 already flagged.
 
-**Recommendation:** approve the **mood thought-sum + 3-tier mental-break** spec and the **work-priority grid** spec (both drafted per MILESTONES §2/§5) so the next wave can move from "looks and sounds like RimWorld" to "*plays* like RimWorld." Without that unlock, the chain will start producing diminishing busywork.
+**Recommendation:** approve the **mood thought-sum + 3-tier mental-break** spec and the **work-priority grid** spec (both drafted per MILESTONES §2/§5) so the next wave can move from "looks and sounds like the reference sim" to "*plays* like the reference sim." Without that unlock, the chain will start producing diminishing busywork.
 
 ---
 
 ## Sources
-- [User interface — RimWorld Wiki](https://rimworldwiki.com/wiki/User_interface) — gizmo grid, letter stack, inspect window
-- [Controls — RimWorld Wiki](https://rimworldwiki.com/wiki/Controls) — multi-select, right-click-drag line orders
-- [Architect — RimWorld Wiki](https://rimworldwiki.com/wiki/Architect) / [Structure](https://rimworldwiki.com/wiki/Structure) — Structure tab buildable list (wall, door, autodoor, fence, fence gate, column, bridge)
-- [Door — RimWorld Wiki](https://rimworldwiki.com/wiki/Door) / [Autodoor](https://rimworldwiki.com/wiki/Autodoor) — manual-vs-auto pass delay
-- [Fence — RimWorld Wiki](https://rimworldwiki.com/wiki/Fence) — 1 Stuff, passable, 70-tick build
-- [Barricade — RimWorld Wiki](https://rimworldwiki.com/wiki/Barricade) / [Defense structures](https://rimworldwiki.com/wiki/Defense_structures) — Security tab, 55% cover (cover-math itself is gated/over-scope)
-- Numeric/balance values: see `skills/game-prototype/docs/audit-rimworld-fidelity-2026-05-29.md` (not restated)
-- v1 structural audit: `skills/game-prototype/docs/rimworld-comparison.md`
+- User interface — gizmo grid, letter stack, inspect window
+- Controls — multi-select, right-click-drag line orders
+- Architect / Structure — Structure tab buildable list (wall, door, autodoor, fence, fence gate, column, bridge)
+- Door / Autodoor — manual-vs-auto pass delay
+- Fence — 1 Stuff, passable, 70-tick build
+- Barricade / Defense structures — Security tab, 55% cover (cover-math itself is gated/over-scope)
+- Numeric/balance values: see `skills/game-prototype/docs/audit-genre-fidelity-2026-05-29.md` (not restated)
+- v1 structural audit: `skills/game-prototype/docs/genre-comparison.md`

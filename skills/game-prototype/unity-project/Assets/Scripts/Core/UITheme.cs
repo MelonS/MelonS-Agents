@@ -7,7 +7,7 @@ namespace MelonS.GameProto.Core
     /// #185 - UI 톤 통일 (운영자 fb "디자인 구려" 응답).
     ///
     /// Kenney Tiny Town 의 warm earth tone 과 매치되는 palette.
-    /// 모든 panel/button 이 이 색을 사용해야 RimWorld vibe 통일.
+    /// 모든 panel/button 이 이 색을 사용해야 the reference sim vibe 통일.
     ///
     /// 전체 톤: dark warm brown (배경) + warm gold (제목) + cream (본문) + warm orange (active).
     /// Korean 한글 가독성 위해 대비 충분.
@@ -64,7 +64,7 @@ namespace MelonS.GameProto.Core
         /// #UI-restyle — ONE shared panel system.  The root Image is the BORDER
         /// (Divider color); an inset child Image is the PanelBg fill.  This gives
         /// every panel (control bar, tooltip, inspector, name plate) the same
-        /// "warm dark-brown panel + 1-2px lighter border" RimWorld treatment
+        /// "warm dark-brown panel + 1-2px lighter border" the reference sim treatment
         /// without a 9-slice sprite.  Returns the INNER content RectTransform —
         /// parent your text/rows to it so they sit inside the border + padding.
         /// </summary>

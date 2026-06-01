@@ -3,8 +3,8 @@ using UnityEngine;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// #120 - 림월드 stats 시스템 (per-pawn 능력치).
-    ///  RimWorld vanilla 의 Move Speed, Work Speed (Construction/Mining/Cooking/Plants),
+    /// #120 - 레퍼런스 콜로니심 stats 시스템 (per-pawn 능력치).
+    ///  vanilla colony-sim 의 Move Speed, Work Speed (Construction/Mining/Cooking/Plants),
     ///  Manipulation, Combat (Melee/Shooting), Carrying Capacity 단순화 버전.
     ///
     /// Awake 에 0.85~1.15 사이 랜덤 분포로 초기화 (Trait 가 추가 보정).

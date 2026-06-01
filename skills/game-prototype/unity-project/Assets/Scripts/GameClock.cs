@@ -17,7 +17,7 @@ namespace MelonS.GameProto
     /// 1x (intuitive + matches operator's "~1 game-hour/sec" feel), and
     /// CLAMP it inside Update so no serialized override can freeze the clock.
     /// At the default 60 in-game minutes/real-second, 1x advances one in-game
-    /// hour per real second (RimWorld-ish, clearly perceptible, not frantic).
+    /// hour per real second (the reference sim-ish, clearly perceptible, not frantic).
     /// Time.deltaTime is already scaled by Time.timeScale, so 2x/4x/pause all
     /// follow for free.
     /// </summary>
@@ -28,7 +28,7 @@ namespace MelonS.GameProto
         public static GameClock Instance => Services.Get<GameClock>();
 
         [Tooltip("1x 에서 실제 1초당 흘려보낼 게임 내 '분'. 60 = 게임 1시간/실초.")]
-        // #234 RimWorld 정합 (위키 Time) — RimWorld 1x: 하루=60000틱=1000초(16.7분), 60틱/초.
+        // #234 장르 정합 (위키 Time) — the reference sim 1x: 하루=60000틱=1000초(16.7분), 60틱/초.
         //  하루 1440 게임분 / 1000 실초 = 1.44 게임분/실초.  (니즈 decay 도 #234 에서 비례
         //  축소해 게임-하루 리듬은 동일하게 유지 — 둘 다 timeScale 곱이라 2x/4x 도 자동 정합.)
         [SerializeField] private float inGameMinutesPerRealSecond = 1.44f;
@@ -36,7 +36,7 @@ namespace MelonS.GameProto
         // Lower/upper guard so a bad serialized value cannot freeze (too low)
         // or make the clock unreadable (too fast).  Operator target sits at
         // the default 60 (1 game-hour / real-second).
-        private const float MinRate = 1f;    // #234 RimWorld 1x(1.44) 허용 위해 6→1 하향
+        private const float MinRate = 1f;    // #234 the reference sim 1x(1.44) 허용 위해 6→1 하향
         private const float MaxRate = 600f;   // <= 10 game-hours / real-sec
 
         // Total in-game seconds since start.  Scales with Time.timeScale

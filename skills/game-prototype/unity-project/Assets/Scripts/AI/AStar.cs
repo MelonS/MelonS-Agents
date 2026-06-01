@@ -4,9 +4,9 @@ using UnityEngine;
 namespace MelonS.GameProto.AI
 {
     /// <summary>
-    /// #199 B0 — A* pathfinder over PathGrid, modeled on RimWorld's grid pathing.
+    /// #199 B0 — A* pathfinder over PathGrid, modeled on the reference sim's grid pathing.
     ///
-    /// RIMWORLD-FIDELITY RULES (operator: "최대한 림월드와 같은 방식으로"):
+    /// genre fidelity RULES (operator: "최대한 레퍼런스 콜로니심와 같은 방식으로"):
     ///  - 8-directional movement.
     ///  - Integer move cost: 10 cardinal, 14 diagonal (≈ 1.414 scaled ×10).
     ///    Integer costs avoid float drift so ties resolve deterministically.
@@ -15,7 +15,7 @@ namespace MelonS.GameProto.AI
     ///    so it is ADMISSIBLE (never overestimates) → optimal paths.
     ///  - NO diagonal corner-cutting: a diagonal step A→B is allowed only if
     ///    BOTH orthogonally-adjacent shared cells (the two cells you'd "clip")
-    ///    are walkable.  RimWorld forbids squeezing between two blocked corners.
+    ///    are walkable.  the reference sim forbids squeezing between two blocked corners.
     ///  - Node cap (default 4000 expanded nodes): a pathological/unreachable
     ///    request returns "no path" instead of hanging the frame.
     ///  - Pure function.  No MonoBehaviour, no persistent static state.
@@ -101,7 +101,7 @@ namespace MelonS.GameProto.AI
                     if (diagonal)
                     {
                         // No corner-cutting: both shared orthogonal cells must
-                        // be walkable (RimWorld rule).
+                        // be walkable (the reference sim rule).
                         Vector2Int side1 = new Vector2Int(best.Cell.x + step.x, best.Cell.y);
                         Vector2Int side2 = new Vector2Int(best.Cell.x, best.Cell.y + step.y);
                         if (!grid.IsWalkable(side1) || !grid.IsWalkable(side2)) continue;

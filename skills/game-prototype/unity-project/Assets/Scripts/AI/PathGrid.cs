@@ -5,7 +5,7 @@ using UnityEngine.Tilemaps;
 namespace MelonS.GameProto.AI
 {
     /// <summary>
-    /// #199 B0 — Walkability grid over the 60x60 tile map, RimWorld-style.
+    /// #199 B0 — Walkability grid over the 60x60 tile map, colony-sim-style.
     ///
     /// The map is 60x60 cells.  Tilemap cells span x,y ∈ [-30, 29] (see
     /// SceneSetup.Game.Terrain.cs: for (x = -half; x &lt; half; ...) with
@@ -43,7 +43,7 @@ namespace MelonS.GameProto.AI
         private readonly TileBase _water;
         private readonly TileBase _rock;
 
-        // #199 B3 — structure blockers (walls).  RimWorld: a wall fully blocks its
+        // #199 B3 — structure blockers (walls).  the reference sim: a wall fully blocks its
         //  cell; pawns route around it.  WallEntity registers its cell on enable
         //  and unregisters on destroy via the static MarkStructureBlocked API.
         //  Reference-COUNTED so overlapping / double-registered walls (e.g. two
@@ -210,9 +210,9 @@ namespace MelonS.GameProto.AI
         public static Vector2 CellToWorld(Vector2Int cell)
             => new Vector2(cell.x + 0.5f, cell.y + 0.5f);
 
-        // ---- #199 C1 — RimWorld-style adjacent work-cell selection ------------
+        // ---- #199 C1 — colony-sim-style adjacent work-cell selection ------------
         //
-        //  RimWorld pawns do NOT stand ON the thing they work; they stand in a
+        //  the reference sim pawns do NOT stand ON the thing they work; they stand in a
         //  WALKABLE cell ADJACENT (8-neighbour, diagonals included) to the target
         //  and reach over.  These helpers return the world CENTER of the best such
         //  adjacent cell so every worker (Chop/Gather/Build/Mine/Cook/Haul/...)
@@ -224,7 +224,7 @@ namespace MelonS.GameProto.AI
         //  AND naturally lands it on the near side of the object (so it doesn't
         //  walk the long way round to a far neighbour).  We avoid running a full
         //  A* per candidate (R-4 cost) — the nearest walkable neighbour is the
-        //  RimWorld-cheap heuristic and A* from the pawn to that cell still routes
+        //  the reference sim-cheap heuristic and A* from the pawn to that cell still routes
         //  around any obstacle in between.
         //
         //  Corner-cut safety: a DIAGONAL stand cell is only offered if the pawn
@@ -280,7 +280,7 @@ namespace MelonS.GameProto.AI
         /// <summary>
         /// #199 C1 — primary entry.  Find the best WALKABLE cell ADJACENT
         /// (8-neighbour) to the target's footprint for a pawn at
-        /// <paramref name="fromPos"/> to stand in and reach over, RimWorld-style.
+        /// <paramref name="fromPos"/> to stand in and reach over, colony-sim-style.
         /// <paramref name="targetWorld"/> is the target transform position,
         /// <paramref name="footprint"/> its size in cells (1×1 default; 1×2 bed,
         /// 2×1 bench).  "Adjacent" = adjacent to ANY footprint cell.  Cells INSIDE
@@ -344,7 +344,7 @@ namespace MelonS.GameProto.AI
 
         // ---- #199 C2 — reservable stand-cell selection -----------------------
         //
-        //  RimWorld reserves the cell a worker stands in so two pawns don't path to
+        //  the reference sim reserves the cell a worker stands in so two pawns don't path to
         //  the same adjacent cell.  TryGetAdjacentStandCell above always returns the
         //  single nearest walkable neighbour; for C2 we need to be able to SKIP a
         //  neighbour another pawn already reserved and fall back to the next-nearest

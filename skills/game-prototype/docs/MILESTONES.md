@@ -1,11 +1,11 @@
 # PawnSim — Milestones (PM source-of-truth)
 
 Owner: **game-pm**. This is the single production-management view of the
-PawnSim (RimWorld-style colony sim) prototype: what's **shipped**, what's
+PawnSim (colony-sim-style colony sim) prototype: what's **shipped**, what's
 **in-flight this session**, and what's **queued** — grouped into named,
 daily-shippable milestones.
 
-- **Outcome layer**: [`goal.md`](goal.md) — "림월드 바닐라급 prototype + 정직한 작동 검증" (R/V/P series Done-when).
+- **Outcome layer**: [`goal.md`](goal.md) — "바닐라 콜로니심급 prototype + 정직한 작동 검증" (R/V/P series Done-when).
 - **Work queue (legacy step list)**: [`ROADMAP_40H.md`](ROADMAP_40H.md) — Step 38→78 sprint, now mostly historical.
 - **Design/polish backlog**: [`design-improvement-backlog.md`](design-improvement-backlog.md) — A1–A10, U1–U9 (DONE) + Polish Wave v3 (V1–V8, partial).
 - **Session history**: [`AUTONOMOUS_SESSION_SUMMARY.md`](AUTONOMOUS_SESSION_SUMMARY.md) — narrative log through #209.
@@ -33,7 +33,7 @@ daily-shippable milestones.
 
 ## 1. Current state snapshot — SHIPPED
 
-Synthesized from the session summary. Coverage estimate **~85%** of RimWorld
+Synthesized from the session summary. Coverage estimate **~85%** of the reference sim
 vanilla core systems; the active goal is to push verified coverage to 90%+ and
 to raise visual polish from ~7/10.
 
@@ -43,10 +43,10 @@ to raise visual polish from ~7/10.
 | **Health & combat** | 6 body-parts health (bleed/downed/death), drafted state (R-key), bow+arrow ranged (research-gated), wolf predator, arrow accuracy spread | Step 45–64 |
 | **Research** | ResearchBench (2×1, wiki-aligned) + 5-tech tree (tier deps) + auto-first-tech + manipulation-sum progress | Step 52–54, #169, #195 |
 | **Build/economy** | wall/floor/door/stove/bench/bed build, cooking, farming (grow+harvest), hunting, 5-tier stockpile priority, bed quality (Sleeping/Wood/Fine) w/ rest+mood mul | Step 57–68, #153–155 |
-| **Meta** | 3 storytellers (Cassandra/Phoebe/Randy), threat tier 0–3 → event frequency, 15 events, tutorial overlay, save/load | Step 73–78, #175 |
-| **★ Grid pathfinding (#199)** | RimWorld full-grid cutover: PathGrid + A* (8-dir, octile, no corner-cut, cap 4000), pawn 1×1 collider fix, wall path-block (ref-count), door pass-through, adjacent work-cell (TryGetAdjacentStandCell), ReservationManager (no double-occupy), build-placement validation (reject water/rock/occupied + toast) | `61dd2e7`, `3b2c373`, `c8aa5ca`, `7271079` |
+| **Meta** | 3 storytellers (Steady/Calm/Chaos), threat tier 0–3 → event frequency, 15 events, tutorial overlay, save/load | Step 73–78, #175 |
+| **★ Grid pathfinding (#199)** | the reference sim full-grid cutover: PathGrid + A* (8-dir, octile, no corner-cut, cap 4000), pawn 1×1 collider fix, wall path-block (ref-count), door pass-through, adjacent work-cell (TryGetAdjacentStandCell), ReservationManager (no double-occupy), build-placement validation (reject water/rock/occupied + toast) | `61dd2e7`, `3b2c373`, `c8aa5ca`, `7271079` |
 | **★ Balance (#200)** | Fidelity audit (~28 systems vs wiki) + Top-5 tuning: hunger 0.5→0.14 (3-day starve), move 3.0→4.6 + wolf chase 5.0, head HP 10→20 / torso 30→40, arrow desc fix, skill XP base ×10 | `ad6326f` |
-| **★ Eject / wall-trap fix (#201)** | EjectPawnsFromCell (RimWorld push-out) + PawnMovement.Update standing safety-net (idle pawn in blocked cell → nearest walkable). I42 reproduces the bug. | `c5e9e22` |
+| **★ Eject / wall-trap fix (#201)** | EjectPawnsFromCell (the reference sim push-out) + PawnMovement.Update standing safety-net (idle pawn in blocked cell → nearest walkable). I42 reproduces the bug. | `c5e9e22` |
 | **★ Design/UI overhaul (#202–208)** | Style civil war resolved → single `palette.py`; flat colonist + 2px outline (3 variants); muted terrain; unified wood; full UI panel system (MakeBorderedPanel: control bar / tooltip / inspector / name-plates / floating bars / top bar / architect / tutorial / S-L); resource icons; neon removed; drop shadows. Polish ~3/10 → ~6.5–7/10. | `e558ef3`–`46ed505` |
 | **Architecture** | refactor_check.py 6-stage harness; PawnStats + HealthPartsConfig SO; PawnUtilityAI Strategy (IPawnAction + 6 actions); ServiceLocator; PlayMode TestRunner; SceneSetup 1057L → 310L across 14 partial files | R1–R10m |
 | **Recent wiki-fidelity** |림 이동 제어 + 목재 부패 + 2nd wall fix (#197), 건축 실작동 fix (#196), ResearchBench 2×1 (#195), sprite audit + 11종 재생성 (#194), 침대 1×2 multi-cell (#193) | #193–#197 |
@@ -67,7 +67,7 @@ gate. Each must land with a green harness + daily-shippable build.
 | **Action SFX** | programmer + audio | in-flight | chop/build/cook/combat action sound feedback (AudioBank wiring exists) |
 | **World scatter + tree art** | art | in-flight | Polish Wave **V2** (scatter decals) + **V4** (richer tree canopy) |
 | **Harness blind-spot fix** | qa | in-flight | close the "verifier wasn't being read" class of gap (cf. #198 Build Click QA prefix mismatch — harness self-verification) |
-| **Spec: work-priority** | director/pm | drafting | RimWorld work-tab priority semantics; **[OP-OK]** before behavior lands |
+| **Spec: work-priority** | director/pm | drafting | the reference sim work-tab priority semantics; **[OP-OK]** before behavior lands |
 | **Spec: needs/mood balance** | director/pm | drafting | mood free-fall + mental-break 3-tier (audit MED, #200 deferred); **[OP-OK]** |
 | **This doc (MILESTONES.md)** | pm | this task | PM source-of-truth |
 
@@ -100,7 +100,7 @@ first."
 - [ ] **P7** — combat sequence screenshot set (idle → draft → enemy → arrow → death).
 
 ### D. Deferred behavior specs — MEDIUM, **[OP-OK] gated**
-- [ ] **Work-priority** system (RimWorld work-tab) — spec in-flight; build pending operator approval.
+- [ ] **Work-priority** system (the reference sim work-tab) — spec in-flight; build pending operator approval.
 - [ ] **Needs/mood rebalance** — mood free-fall + mental-break 3-tier (#200 audit MED, explicitly held).
 
 ### E. Persistence & known gaps — MEDIUM
@@ -157,7 +157,7 @@ over raw estimates (team runs slower than estimates).
 
 ### M3 — Colony-management depth **[OP-OK gated]**
 *Behavior-logic changes — needs explicit operator approval before landing.*
-- Work-priority system (RimWorld work-tab) — spec in-flight.
+- Work-priority system (the reference sim work-tab) — spec in-flight.
 - Needs/mood rebalance: mood free-fall + mental-break 3-tier.
 - Stockpile filter logic; PawnSkills 14-type expansion.
 - **Deliverable**: colonists obey a player-set work priority; mood/break feels vanilla.

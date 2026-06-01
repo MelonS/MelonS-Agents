@@ -10,7 +10,7 @@ namespace MelonS.GameProto
     /// Wave W-M3-01 Lane B / wiki #22 (Dim6, the one HIGH UI gap) — the missing
     /// top-right alert/letter stack.
     ///
-    /// RimWorld convention ([User interface]): alerts/letters stack TOP-RIGHT,
+    /// the reference sim convention ([User interface]): alerts/letters stack TOP-RIGHT,
     /// persistent + clickable, and clicking jumps the camera to the source.
     /// Today PawnSim fires events ONLY into the bottom-center scrolling EventLog
     /// with no persistent, clickable, jump-to-source card — so threats are easy

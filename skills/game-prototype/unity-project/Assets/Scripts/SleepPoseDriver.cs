@@ -6,7 +6,7 @@ namespace MelonS.GameProto
     /// <summary>
     /// Wave W-M3-02 / Lane A — sleep pose via body SpriteRenderer.color dim (wiki #12).
     ///
-    /// Wiki acceptance criterion (rimworld-comparison.md Dim1 'Pawn rendering' +
+    /// Wiki acceptance criterion (genre-comparison.md Dim1 'Pawn rendering' +
     /// Dim3 'Facing/rotation' follow-up, backlog #12): "a sleeping pawn is visually
     /// distinct (rotated/flat/dimmed) from a standing one."  We deliver the cheapest
     /// distinct read — a DIM/desaturate of the body sprite — so a sleeping colonist

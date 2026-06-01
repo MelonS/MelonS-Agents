@@ -7,8 +7,8 @@ using MelonS.GameProto.Core;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// #231 운영자 fb "우클릭으로 벌목이 안됨" — RimWorld 정합.  STEP2 에서 자동 벌목을
-    /// 끊은 뒤 벌목 수단이 per-tree 우클릭 메뉴뿐이라 불편/발견難 했다.  RimWorld 처럼
+    /// #231 운영자 fb "우클릭으로 벌목이 안됨" — 장르 정합.  STEP2 에서 자동 벌목을
+    /// 끊은 뒤 벌목 수단이 per-tree 우클릭 메뉴뿐이라 불편/발견難 했다.  the reference sim 처럼
     /// 야생나무 '벌목' 을 drag-지정하는 도구.  MineDesignation(채광)의 정확한 미러 —
     /// 같은 drag-rect 마킹 + 같은 throttled idle-worker dispatch, 단 StoneVeinEntity/
     /// PawnMiner 대신 TreeEntity/PawnChopper 를 대상으로 한다.  PawnChopper 의 기존

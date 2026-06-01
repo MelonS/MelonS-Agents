@@ -10,7 +10,7 @@ namespace MelonS.GameProto
     public class ResearchBench : MonoBehaviour
     {
         [SerializeField] private float researchRadius = 1.5f;
-        // #195 - RimWorld wiki: research bench 2x1 footprint.  sprite 32x16 정합.
+        // #195 - the reference sim wiki: research bench 2x1 footprint.  sprite 32x16 정합.
         public static readonly Vector2Int FootprintSize = new Vector2Int(2, 1);
 
         private void Start()

@@ -7,9 +7,9 @@ namespace MelonS.GameProto
 
     /// <summary>
     /// Day 19: per-pawn skill levels + XP.
-    /// 4 skills (채집/벌목/건축/전투), levels 0-20 (RimWorld 풍이지만
+    /// 4 skills (채집/벌목/건축/전투), levels 0-20 (콜로니심풍이지만
     /// 보편 RPG 패턴 — 저작권 안전).  XP gain → Level via log curve:
-    ///   xp_to_next(L) = 1000 * L^1.5   (#200 RimWorld ~1000 XP/level)
+    ///   xp_to_next(L) = 1000 * L^1.5   (#200 the reference sim ~1000 XP/level)
     /// Hook points: PawnGatherer (Gather), PawnChopper (Chop),
     /// BuildManager.TryPlace (Build via static helper), bandit hit
     /// (Combat via PawnEntity counter-attack).
@@ -63,7 +63,7 @@ namespace MelonS.GameProto
 
         private static float XPToLevel(int level)
         {
-            // #200 RimWorld fidelity: RimWorld costs ~1000 XP/level early on.
+            // #200 genre fidelity: the reference sim costs ~1000 XP/level early on.
             //  Was 100*L^1.5 → L0→1 = 100 XP (~10x too cheap, pawns blew through
             //  low levels in seconds).  Base 100→1000 keeps the curve shape but
             //  makes early progression earned.  L0→1 = 1000, L1→2 = 2828, L4→5 = 11180.

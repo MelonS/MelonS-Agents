@@ -17,7 +17,7 @@ namespace MelonS.GameProto.EditorTools
             cam.orthographic = true;
             // 운영자 피드백 2026-05-27 "프로토타입 수준도 안됨":
             //  ortho 10 일 때 pawn 1 unit / 화면 20 unit = 5% — 너무 작음.
-            // #199 A1: pawn 2x2 → 1x1 (RimWorld 동일) 로 줄면서 화면상 절반 크기.
+            // #199 A1: pawn 2x2 → 1x1 (the reference sim 동일) 로 줄면서 화면상 절반 크기.
             //  apparent size 유지/향상 위해 ortho 6 → 3.5.  1-unit pawn / 화면 7 unit = 28.6%
             //  (이전 2-unit pawn @ ortho6 = 16.7% 보다 오히려 큼 — 디테일 가독성 ↑).
             //  zoomMax(CameraController) 32 살아있어 wheel 로 60x60 전체 줌아웃 가능.

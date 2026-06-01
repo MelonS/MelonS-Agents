@@ -6,7 +6,7 @@ using MelonS.GameProto.AI;   // #264 PathGrid (formation fan-out)
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// B1 (rimworld-comparison-v2) — Multi-select marquee.
+    /// B1 (genre-comparison-v2) — Multi-select marquee.
     ///
     /// Owns the left-DRAG gesture on empty ground: mouse-down on empty ground,
     /// move past a small pixel threshold, mouse-up.  On release it OverlapArea's
@@ -268,7 +268,7 @@ namespace MelonS.GameProto
             for (int i = 0; i < multiSelection.Count; i++) pawns.Add(multiSelection[i]);
 
             // #264 분대 분산: 모두 같은 칸으로 보내 겹치던 버그(운영자 "여러마리 제대로 안 됨")
-            //  수정.  target 중심 확장 링에서 walkable 셀을 림 수만큼 골라 1:1 배정 (RimWorld식 fan-out).
+            //  수정.  target 중심 확장 링에서 walkable 셀을 림 수만큼 골라 1:1 배정 (콜로니심식 fan-out).
             var dests = BuildFormationCells(target, pawns.Count);
 
             for (int i = 0; i < pawns.Count; i++)

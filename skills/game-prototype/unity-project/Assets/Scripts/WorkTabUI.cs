@@ -5,12 +5,12 @@ using UnityEngine.UI;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// 운영자 fb #114 + #8 - 림월드 Work tab 패턴.
+    /// 운영자 fb #114 + #8 - 레퍼런스 콜로니심 Work tab 패턴.
     ///  표: 행 = pawn, 열 = work type (벌목/채집/사냥/요리/연구).
     ///  cell 좌클릭 = priority +1 (0→1→2→3→4→0 순환).  우클릭 = 즉시 0 (disable).
     ///  PawnUtilityAI 가 priority 1 부터 순서대로 시도. 0 = skip.
     ///
-    /// F1 림월드 Work tab 단축키 토글.  GuiControlBar 에 "직업" 버튼도 추가.
+    /// F1 레퍼런스 콜로니심 Work tab 단축키 토글.  GuiControlBar 에 "직업" 버튼도 추가.
     /// Self-bootstrap via EnsureInScene() (GameManager 가 호출).
     ///
     /// 이전 (#114 전): 모든 pawn 이 same hardcoded action 순서.
@@ -44,7 +44,7 @@ namespace MelonS.GameProto
         {
             font = LoadKoreanFont();
             rt = gameObject.AddComponent<RectTransform>();
-            // 화면 중앙 hover - 림월드 Work tab 도 화면 중앙쯤.
+            // 화면 중앙 hover - 레퍼런스 콜로니심 Work tab 도 화면 중앙쯤.
             rt.anchorMin = new Vector2(0.5f, 0.5f);
             rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);
@@ -250,7 +250,7 @@ namespace MelonS.GameProto
             brt.sizeDelta = new Vector2(ColWidth - 2, RowHeight - 2);
             brt.anchoredPosition = new Vector2(pos.x + 1, pos.y - 1);
             var img = go.AddComponent<Image>();
-            // 색상 by priority - 림월드 Work tab 의 노랑→빨강 그라데이션 모방.
+            // 색상 by priority - 레퍼런스 콜로니심 Work tab 의 노랑→빨강 그라데이션 모방.
             //   0 disabled = dark grey
             //   1 highest   = bright yellow
             //   2           = lime
@@ -296,7 +296,7 @@ namespace MelonS.GameProto
 
         private void Update()
         {
-            // F1 림월드 Work tab 단축키
+            // F1 레퍼런스 콜로니심 Work tab 단축키
             if (Input.GetKeyDown(KeyCode.F1)) Toggle();
         }
     }

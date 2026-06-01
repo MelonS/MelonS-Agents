@@ -1,13 +1,13 @@
-# PawnSim vs RimWorld — Comprehensive Comparative Gap Analysis
+# PawnSim vs the reference sim — Comprehensive Comparative Gap Analysis
 
 Date: 2026-05-30. Author: research agent (read-only on `skills/game-prototype/unity-project/`).
 Scope: the operator's **6 gameplay dimensions** (디자인/비주얼 · 사운드 · 림 이동 · 건축 · 게임플레이 루프 · 메뉴 UX/UI), as a gap matrix feeding an autonomous improvement backlog.
 
-This report is **complementary** to `docs/audit-rimworld-fidelity-2026-05-29.md`. That audit owns the **numeric/balance** layer (decay rates, HP, dmg, XP curve, move-speed value 3.0→4.6). This report deliberately does **not** re-derive those constants; it covers the **structural/experiential** gaps the balance audit explicitly left out (art, sound coverage, movement feel, build-flow completeness, loop verification, UI conventions). Where they touch (e.g. move-speed 4.6), this report references the audit instead of restating.
+This report is **complementary** to `docs/audit-genre-fidelity-2026-05-29.md`. That audit owns the **numeric/balance** layer (decay rates, HP, dmg, XP curve, move-speed value 3.0→4.6). This report deliberately does **not** re-derive those constants; it covers the **structural/experiential** gaps the balance audit explicitly left out (art, sound coverage, movement feel, build-flow completeness, loop verification, UI conventions). Where they touch (e.g. move-speed 4.6), this report references the audit instead of restating.
 
 Verification status note: the move-speed value fix (3.0→4.6) is recorded as landed in MILESTONES `#200`, but the audit file still reads 3.0 — there is a goal-vs-log reconciliation gap (see M5).
 
-> **Source caveat:** rimworldwiki.com blocks direct fetch (403). Canonical values below come from WebSearch snippets of the wiki + the RimWorld art guide, supplemented by RimWorld domain knowledge. Items resting on knowledge the search didn't confirm are tagged **[knowledge, unverified]**. Source URLs are listed at the end.
+> **Source caveat:** 장르 위키 blocks direct fetch (403). Canonical values below come from WebSearch snippets of the wiki + the colony-sim art guide, supplemented by the reference sim domain knowledge. Items resting on knowledge the search didn't confirm are tagged **[knowledge, unverified]**. Source URLs are listed at the end.
 
 ---
 
@@ -20,18 +20,18 @@ Verification status note: the move-speed value fix (3.0→4.6) is recorded as la
 | 3 | 림 이동 / 움직임 | **~75%** | A* full-grid cutover is genuinely good (octile, no corner-cut, reservations, eject). Gaps: **no pawn facing/rotation**, **no terrain move-cost variety** (only floor bonus + door slow), no smoothing/crowding nuance. |
 | 4 | 건축 | **~65%** | blueprint→haul→frame→build + stockpile + multi-cell + red-ghost validation is real and correct. Gaps: **no deconstruct, no roofs, no zone-paint (floors/mine/grow placed per-click only), no quality on build, limited build catalogue**. |
 | 5 | 기본 게임플레이 루프 | **~80%** | All core loops present (food/sleep/mood/threat/grow/build/research/defend). Gap is **depth + honest end-to-end verification** (V1–V9), plus mood is a free-fall timer not a thought-sum (logic, OP-gated). |
-| 6 | 메뉴 UX / UI 위치 | **~70%** | Restyled bordered-panel system is cohesive; hotkeys + architect categories match. Gap is **panel POSITIONS** — inspector is bottom-**LEFT** (RimWorld = bottom-left info is correct-ish, but the *selected-thing inspector* sits bottom-left while **alerts/letters top-right are entirely missing**), no alert stack, no work/schedule polish. |
+| 6 | 메뉴 UX / UI 위치 | **~70%** | Restyled bordered-panel system is cohesive; hotkeys + architect categories match. Gap is **panel POSITIONS** — inspector is bottom-**LEFT** (the reference sim = bottom-left info is correct-ish, but the *selected-thing inspector* sits bottom-left while **alerts/letters top-right are entirely missing**), no alert stack, no work/schedule polish. |
 
 ### Top-3 overall gaps (by player-felt impact)
 1. **Sound coverage (Dim 2).** The game is ~70% silent during play. No build/mine/cook/melee/UI-click/ambient/weather/alert sounds and no dynamic music. This is the single biggest "feels unfinished" lever and most of it is cheap (wire existing AudioBank slots + add ~6 clips). Highest impact-per-effort in the whole backlog.
-2. **Frozen world / no pawn motion & facing (Dim 1 + 3).** Pawns stand rigid, never face their movement direction, never lie down to sleep. RimWorld implies motion in every still. Walk-bob (V1) is queued but unshipped; facing is not even queued. A still screenshot still reads "diorama."
-3. **Missing alert / letter stack (Dim 6).** RimWorld's top-right letter stack ("Raid!", "Mental break") is how the player learns what's happening. PawnSim fires events only into a scrolling EventLog with no persistent, clickable, jump-to-source alert — so threats are easy to miss. This is a loop-legibility gap as much as a UI gap.
+2. **Frozen world / no pawn motion & facing (Dim 1 + 3).** Pawns stand rigid, never face their movement direction, never lie down to sleep. the reference sim implies motion in every still. Walk-bob (V1) is queued but unshipped; facing is not even queued. A still screenshot still reads "diorama."
+3. **Missing alert / letter stack (Dim 6).** the reference sim's top-right letter stack ("Raid!", "Mental break") is how the player learns what's happening. PawnSim fires events only into a scrolling EventLog with no persistent, clickable, jump-to-source alert — so threats are easy to miss. This is a loop-legibility gap as much as a UI gap.
 
 ---
 
 ## Dimension 1 — 디자인 / 비주얼
 
-| Aspect | RimWorld canonical | PawnSim current | Gap | Sev | Fix-items |
+| Aspect | the reference sim canonical | PawnSim current | Gap | Sev | Fix-items |
 |---|---|---|---|:--:|---|
 | Art language | Flat, low-noise, 2–3px black border on story-relevant things; 64×64 textures; tight muted palette ([Artstyle guide]) | Single `palette.py`; flat colonist + 2px outline (3 cloth variants); muted terrain; unified wood ramp; drop shadows (#202–208) | **Style war already resolved** — language matches vanilla intent. Minor: textures are 16/32px not 64. | L | None urgent. Optionally up-res key sprites to 32px for crispness at zoom. |
 | Pawn rendering | Pawn **faces 4 directions** (N/S/E/W body+head), head bobs, **lies down** to sleep; subtle sway ([Artstyle]; [knowledge]) | Single static sprite, no flipX/rotation, no sleep pose; walk-bob queued (V1) but **unshipped** | **HIGH** — no facing + no walk motion = the "frozen diorama" complaint #1 | **H** | (a) Ship V1 walk-bob (sprite-child offset only). (b) Add E/W `flipX` toward movement dir (cheapest facing). (c) Sleep = lay sprite flat / dim. |
@@ -46,9 +46,9 @@ Verification status note: the move-speed value fix (3.0→4.6) is recorded as la
 
 ## Dimension 2 — 사운드
 
-RimWorld sound model ([Modding Tutorials/Sounds]; [Category:Sounds]): per-action SFX for nearly every interaction (chop, mine, construct, cook, shoot, melee-hit, door, UI clicks), continuous **ambient beds** (wind, birds, indoor room-tone), **weather** sound (rain/thunder), an **alert siren** system (low danger = 2 sirens, high danger = 4), and **dynamic music** that swaps to tension/combat tracks during threats.
+the reference sim sound model ([Modding Tutorials/Sounds]; [Category:Sounds]): per-action SFX for nearly every interaction (chop, mine, construct, cook, shoot, melee-hit, door, UI clicks), continuous **ambient beds** (wind, birds, indoor room-tone), **weather** sound (rain/thunder), an **alert siren** system (low danger = 2 sirens, high danger = 4), and **dynamic music** that swaps to tension/combat tracks during threats.
 
-| Action / layer | RimWorld | PawnSim current | Gap | Sev | Fix-items |
+| Action / layer | the reference sim | PawnSim current | Gap | Sev | Fix-items |
 |---|---|---|---|:--:|---|
 | Chop | woody axe thunk | `PlayChop()` (0.25s throttle) ✔ | none | — | — |
 | Harvest | plant snap | `PlayHarvest()` ✔ | none | — | — |
@@ -70,7 +70,7 @@ RimWorld sound model ([Modding Tutorials/Sounds]; [Category:Sounds]): per-action
 
 ## Dimension 3 — 림 이동 / 움직임
 
-| Aspect | RimWorld | PawnSim current | Gap | Sev | Fix-items |
+| Aspect | the reference sim | PawnSim current | Gap | Sev | Fix-items |
 |---|---|---|---|:--:|---|
 | Grid + A* | 8-dir grid, octile, no corner-cut | PathGrid + AStar (8-dir octile, no corner-cut, cap 4000), reservations, eject-on-block, adjacent-stand-cell — **strong** (#199) | none | — | Keep. |
 | Base speed | 4.6 c/s human | `moveSpeed` 4.6 per MILESTONES #200 (audit file still says 3.0 — reconcile) | L (value) | L | Confirm 4.6 actually in `PawnStats`; tick the audit. |
@@ -87,14 +87,14 @@ RimWorld sound model ([Modding Tutorials/Sounds]; [Category:Sounds]): per-action
 
 ## Dimension 4 — 건축
 
-| Aspect | RimWorld | PawnSim current | Gap | Sev | Fix-items |
+| Aspect | the reference sim | PawnSim current | Gap | Sev | Fix-items |
 |---|---|---|---|:--:|---|
 | Build flow | blueprint → haul materials → frame → construct | blueprint (no upfront cost) → hauler carries → PawnBuilder builds; multi-cell footprint; secs by type — **correct end-to-end** | none | — | Keep; verify in a V-scenario. |
 | Placement validation | red ghost on water/occupied/no-roof-support | red ghost on terrain(water/rock)+occupied, per-cell footprint, toast reasons — **good** | none | — | Keep. |
 | Build catalogue | walls, doors, floors, furniture, production, power, security, art, etc. | wall(wood/stone), floor, door, stove, bed×3 quality, research bench (pre-placed) | **M** — small catalogue; no table/chair/torch/sandbag/cooler | M | Add a few high-value items: torch/standing-lamp (light), table+chair (eat/rec), sandbag/barricade (defense). Each independently shippable. |
 | **Deconstruct** | designate → pawn removes, refunds ~50% | **none** — cannot remove a built wall | **H** | **H** | Add a Deconstruct designation mode + PawnBuilder deconstruct action; refund 50% material; clears PathGrid cell. |
 | **Roofs** | auto-roof under enclosed walls; build/remove roof zones; collapse on support loss | **none** — no roof concept at all | **M** (vanilla-defining but heavy) | M | OP-gated. A *visual* "indoor" overlay when enclosed is a cheap stand-in; full roof+collapse is M-heavy, defer. |
-| **Zone painting** | drag-rect to paint floors / mining / growing / stockpile zones | floor & build are **per-click single cell**; stockpile is a zone entity; **no drag-paint, no mining designation, no grow-zone designation** | **H** | **H** | Add drag-rect designation for: floor build, **mine** (designate rock/ore → PawnMiner), **grow zone** (designate → crops auto-plant). Biggest "feels like RimWorld" build-UX win. |
+| **Zone painting** | drag-rect to paint floors / mining / growing / stockpile zones | floor & build are **per-click single cell**; stockpile is a zone entity; **no drag-paint, no mining designation, no grow-zone designation** | **H** | **H** | Add drag-rect designation for: floor build, **mine** (designate rock/ore → PawnMiner), **grow zone** (designate → crops auto-plant). Biggest "feels like the reference sim" build-UX win. |
 | Quality on build | constructed items roll Awful→Legendary by Construction skill | bed has 3 *fixed* tiers (sleeping-spot/wood/fine) chosen at build; **no rolled quality** | M | M | Optional: roll a quality tier on completion from builder's skill; affects mood/value. OP-gated (logic). |
 | Floors | many floor types, speed/beauty | one wood floor (speed bonus) | L | L | Add stone/paved floor variant (faster, from stone). |
 | Designation UX | drag-select, copy, cancel-area, mirror | single-click place + ESC/right-click cancel; no drag, no cancel-area | **M** | M | Pair with zone-painting: drag-place walls/floors in a line/rect; area-cancel of blueprints. |
@@ -105,7 +105,7 @@ RimWorld sound model ([Modding Tutorials/Sounds]; [Category:Sounds]): per-action
 
 ## Dimension 5 — 기본 게임플레이 루프
 
-| Loop piece | RimWorld | PawnSim current | Gap | Sev | Fix / VERIFY |
+| Loop piece | the reference sim | PawnSim current | Gap | Sev | Fix / VERIFY |
 |---|---|---|---|:--:|---|
 | Food | grow→cook→eat; hunger over ~2–3 days | crops grow+harvest, stove cooks, eat-from-stockpile w/ meal mood; hunger 0.14/s (~3 days) ✔ | depth: no bills/recipes queue | L | **V-VERIFY: crop plant→ripen→harvest→cook→eat→food restored** end-to-end. |
 | Sleep | schedule + bed quality | sleep<30 & night → sleep in bed, quality rest/mood mul ✔ | sleep-decay/regen tuning (audit MED) | L | **VERIFY: pawn seeks bed at night, rest rises.** |
@@ -126,9 +126,9 @@ RimWorld sound model ([Modding Tutorials/Sounds]; [Category:Sounds]): per-action
 
 ## Dimension 6 — 메뉴 UX / UI 위치
 
-RimWorld conventions ([User interface]): **Architect** button bottom-left → opens category column → buildables; **selected-thing inspector** bottom-left; **gizmos** (Draft/actions) bottom-center; **resources** read-out + **date/speed** top; **alerts/letters** stack **top-right** (clickable, jump-to-source); **work/schedule/research** as top tabs; rich hotkeys.
+the reference sim conventions ([User interface]): **Architect** button bottom-left → opens category column → buildables; **selected-thing inspector** bottom-left; **gizmos** (Draft/actions) bottom-center; **resources** read-out + **date/speed** top; **alerts/letters** stack **top-right** (clickable, jump-to-source); **work/schedule/research** as top tabs; rich hotkeys.
 
-| Element | RimWorld position/behavior | PawnSim current | Gap | Sev | Fix-items |
+| Element | the reference sim position/behavior | PawnSim current | Gap | Sev | Fix-items |
 |---|---|---|---|:--:|---|
 | Architect menu | bottom-left button → category column | ArchitectMenu left-mid panel, collapsible categories (F8), bordered — **good match** | L | L | Optionally anchor to bottom-left to mirror exactly. |
 | Build/speed/draft controls | gizmos bottom-center | GuiControlBar bottom-center, grouped w/ dividers, active highlight — **good** | L | L | Add per-button SFX (Dim 2). |
@@ -203,14 +203,14 @@ Per operator "**기능추가 보수적 — 게임이 되는게 먼저**", explic
 
 ## Sources
 
-Numeric/balance values: see `docs/audit-rimworld-fidelity-2026-05-29.md` (move speed 4.6, hunger, HP, XP, bow, wolf — not restated here).
+Numeric/balance values: see `docs/audit-genre-fidelity-2026-05-29.md` (move speed 4.6, hunger, HP, XP, bow, wolf — not restated here).
 
-- [User interface — RimWorld Wiki](https://rimworldwiki.com/wiki/User_interface) — architect bottom, gizmos, selected-thing info, letter stack
-- [Modding Tutorials/Sounds — RimWorld Wiki](https://rimworldwiki.com/wiki/Modding_Tutorials/Sounds) — sound def model, parameters
-- [Category:Sounds — RimWorld Wiki](https://rimworldwiki.com/wiki/Category:Sounds) — sound coverage categories
+- User interface — architect bottom, gizmos, selected-thing info, letter stack
+- Modding Tutorials/Sounds — sound def model, parameters
+- Category:Sounds — sound coverage categories
 - alert siren tiers (2 low / 4 high danger): [Alert Tones — Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2025650566) [knowledge-corroborated]
-- [Move Speed — RimWorld Wiki](https://rimworldwiki.com/wiki/Move_Speed) — path cost 13/(13+pathcost), soil cost 2, terrain speed cap
-- [Moving — RimWorld Wiki](https://rimworldwiki.com/wiki/Moving) / [Environment — RimWorld Wiki](https://rimworldwiki.com/wiki/Environment) — terrain path costs
-- [Roof — RimWorld Wiki](https://rimworldwiki.com/wiki/Roof) / [Build roof area](https://rimworldwiki.com/wiki/Build_roof_area) / [Remove roof area](https://rimworldwiki.com/wiki/Remove_roof_area) — roof zones, 65-tick build, 6-tile support, collapse
-- [Officially unofficial guide to RimWorld's Artstyle](https://spdskatr.github.io/RWModdingResources/artstyle.html) — 2–3px black border, 64×64, low-noise discipline
-- Pawn facing 4-dir / minimal animation / sleep pose / fire flicker / weather particles: **[knowledge, unverified]** (wiki search did not return a directional-rendering page; corroborated by the art guide's "almost no animation" note and general RimWorld knowledge)
+- Move Speed — path cost 13/(13+pathcost), soil cost 2, terrain speed cap
+- Moving / Environment — terrain path costs
+- Roof / Build roof area / Remove roof area — roof zones, 65-tick build, 6-tile support, collapse
+- [Officially unofficial guide to the reference sim's Artstyle](https://spdskatr.github.io/RWModdingResources/artstyle.html) — 2–3px black border, 64×64, low-noise discipline
+- Pawn facing 4-dir / minimal animation / sleep pose / fire flicker / weather particles: **[knowledge, unverified]** (wiki search did not return a directional-rendering page; corroborated by the art guide's "almost no animation" note and general the reference sim knowledge)

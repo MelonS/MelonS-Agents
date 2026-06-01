@@ -48,7 +48,7 @@ namespace MelonS.GameProto.EditorTools
             GameObject titleGo = new GameObject("Title");
             titleGo.transform.SetParent(canvasGo.transform, false);
             Text title = titleGo.AddComponent<Text>();
-            title.text = "PAWN SIM\n(RimWorld-lite vertical slice)";
+            title.text = "PAWN SIM\n(colony-sim-lite vertical slice)";
             title.alignment = TextAnchor.MiddleCenter;
             title.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             title.fontSize = 36;

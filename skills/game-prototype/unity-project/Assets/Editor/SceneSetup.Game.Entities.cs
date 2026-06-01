@@ -106,7 +106,7 @@ namespace MelonS.GameProto.EditorTools
                 if (te != null) te.SetSpecies(spp);
             }
 
-            // #119 - 광맥 (stone vein) 12 개 procedural 배치 (림월드처럼 cluster).
+            // #119 - 광맥 (stone vein) 12 개 procedural 배치 (레퍼런스 콜로니심처럼 cluster).
             SpawnStoneVeins(layout, treePositionsList);
 
             // RegrowthScheduler (Day 12)
@@ -191,7 +191,7 @@ namespace MelonS.GameProto.EditorTools
             System.Random sr = new System.Random(31415);
             var positions = new System.Collections.Generic.List<Vector2>();
             // #250 운영자 fb "광맥은 그룹을 이루는 형태로 서로 모여있어야" — 균일 산개 대신 ~7개
-            //  클러스터 중심을 잡고 각 중심 주위 작은 반경에 광맥을 모아 배치(RimWorld 광맥처럼).
+            //  클러스터 중심을 잡고 각 중심 주위 작은 반경에 광맥을 모아 배치(the reference sim 광맥처럼).
             var centers = new System.Collections.Generic.List<Vector2>();
             int ctries = 0;
             while (centers.Count < 7 && ctries < 300)

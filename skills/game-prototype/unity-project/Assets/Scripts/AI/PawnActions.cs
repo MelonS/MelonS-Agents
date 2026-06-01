@@ -56,7 +56,7 @@ namespace MelonS.GameProto.AI
             //  기존엔 TryGetWorkStandPos (침대 footprint *인접* stand cell) 로 이동시켰다.
             //  그러면 림이 침대 옆에 서고, GetBedUnderPawn 은 발밑(=옆 cell)에서 침대를
             //  못 찾아 onTargetBed 영영 false → "휴식이동" stuck, sleep 0 crash.
-            //  채광/벌목은 옆에 서서 일하지만, 취침은 림월드처럼 침대 cell 위로 올라가야 한다.
+            //  채광/벌목은 옆에 서서 일하지만, 취침은 레퍼런스 콜로니심처럼 침대 cell 위로 올라가야 한다.
             //  → 우클릭 rcfix(SetRestTarget) 와 동일하게 침대 cell 자체를 target.
             //    1x2 침대는 두 cell 중 림에게 가까운 cell 로 (door/벽 때문에 한쪽만 닿을 수 있음).
             ctx.movement.SetTarget(BedStandPos(bed, ctx.transform.position));
@@ -176,7 +176,7 @@ namespace MelonS.GameProto.AI
             if (ResourceManager.Instance.food <= foodSurplus) return false;
             StoveEntity stove = FindNearestStove(ctx);
             if (stove == null) return false;
-            // #199 C2 — reserve the stove (only one cook per stove, RimWorld).
+            // #199 C2 — reserve the stove (only one cook per stove, the reference sim).
             if (!ReservationManager.TryReserve(stove, ctx.transform.gameObject)) return false;
             ctx.cook.SetStoveTarget(stove);
             return true;
@@ -252,7 +252,7 @@ namespace MelonS.GameProto.AI
             if (ctx.chopper == null) return false;
             TreeEntity tree = FindNearestTree(ctx);
             if (tree == null) return false;
-            // #199 C2 — reserve the chosen tree (RimWorld).  FindNearestTree already
+            // #199 C2 — reserve the chosen tree (the reference sim).  FindNearestTree already
             //  skipped trees reserved by OTHERS, so this should succeed; the guard
             //  covers a same-frame race (two pawns deciding the same tick).  On
             //  failure, yield this tick — the AI retries next decision interval and

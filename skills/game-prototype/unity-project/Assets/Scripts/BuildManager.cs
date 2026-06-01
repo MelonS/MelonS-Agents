@@ -69,7 +69,7 @@ namespace MelonS.GameProto
         public GameObject BedPrefabRef => bedPrefab;
         [SerializeField] private int wallCost = 5, floorCost = 1, doorCost = 3, stoveCost = 10, bedCost = 8;
         [SerializeField] private int wallStoneCost = 5;  // #127 - 석재 5
-        // W-M4-04 (#19) - Lamp cost.  RimWorld torch ≈ 1 wood, standing lamp needs
+        // W-M4-04 (#19) - Lamp cost.  the reference sim torch ≈ 1 wood, standing lamp needs
         //   power; this prototype lamp is a cheap always-on light at 목재 4.
         [SerializeField] private int lampCost = 4;
         // W-M4-04 (#19) - Lamp prefab + sprite.  Normally wired via SetRefs from
@@ -93,7 +93,7 @@ namespace MelonS.GameProto
         [SerializeField] private Sprite floorStoneSprite;
         private GameObject _floorStonePrefabRuntime;  // cached lazily-built template
         private Sprite     _floorStoneSpriteRuntime;  // cached lazily-built sprite
-        // W-M4-06 (#20) - Table+chair cost.  A simple wood dining spot; RimWorld
+        // W-M4-06 (#20) - Table+chair cost.  A simple wood dining spot; the reference sim
         //   table ≈ 25 wood + stool ≈ small — 목재 6 keeps it cheap/reachable in
         //   the prototype while clearly costing more than a lamp (4).
         [SerializeField] private int tableChairCost = 6;
@@ -106,7 +106,7 @@ namespace MelonS.GameProto
         [SerializeField] private Sprite tableChairSprite;
         private GameObject _tableChairPrefabRuntime;  // cached lazily-built template
         private Sprite     _tableChairSpriteRuntime;  // cached lazily-built sprite
-        // W-M6-02 (B3) - Fence cost.  RimWorld fence ~= 1 wood/segment; this
+        // W-M6-02 (B3) - Fence cost.  the reference sim fence ~= 1 wood/segment; this
         //   prototype keeps the cheapest Structure-tab staple at 목재 1.  The
         //   gate variant uses the same cost (a fence opening, not a costlier door).
         [SerializeField] private int fenceCost = 1;
@@ -124,7 +124,7 @@ namespace MelonS.GameProto
         private Sprite     _fenceSpriteRuntime;       // cached lazily-built fence sprite
         private GameObject _fenceGatePrefabRuntime;   // cached lazily-built gate template
         private Sprite     _fenceGateSpriteRuntime;   // cached lazily-built gate sprite
-        // W-M6-03 (B4) - Barricade cost.  RimWorld sandbags cost a few Stuff; this
+        // W-M6-03 (B4) - Barricade cost.  the reference sim sandbags cost a few Stuff; this
         //   prototype keeps the cheapest Security-tab staple at 목재 5 (clearly
         //   costing more than a fence's 1, less than a stone wall's 5-stone).
         [SerializeField] private int barricadeCost = 5;
@@ -138,7 +138,7 @@ namespace MelonS.GameProto
         private GameObject _barricadePrefabRuntime;   // cached lazily-built barricade template
         private Sprite     _barricadeSpriteRuntime;   // cached lazily-built barricade sprite
         // W-M6-04 (B5) - Autodoor cost + faster-cross multiplier.  Vanilla
-        //   RimWorld's autodoor costs more Stuff than a plain door for a faster
+        //   the reference sim's autodoor costs more Stuff than a plain door for a faster
         //   open; this prototype keeps a plain door at 목재 3 and the autodoor at
         //   목재 6 (clearly costlier).  AutodoorPassMul 0.95 ≈ barely slows the
         //   crossing pawn, vs the plain door's DoorEntity.DefaultPassMul 0.65 —
@@ -321,7 +321,7 @@ namespace MelonS.GameProto
             _ => null,
         };
 
-        // #193 - RimWorld vanilla 침대 1x2 칸.  multi-cell entity footprint 인프라.
+        // #193 - vanilla colony-sim 침대 1x2 칸.  multi-cell entity footprint 인프라.
         //  Bed/BedFine: 1x2.  나머지: 1x1.  anchor = bottom-left cell (cx, cy).
         public static Vector2Int SizeFor(Mode m) => m switch
         {
@@ -350,7 +350,7 @@ namespace MelonS.GameProto
             bool stoneMode = PaysWithStone(CurrentMode);
             bool canAfford = ResourceManager.Instance != null
                 && (stoneMode ? ResourceManager.Instance.stone : ResourceManager.Instance.wood) >= cost;
-            // #199 C3 - ghost 색: terrain(물/바위) or 점유 시 빨강 (RimWorld red ghost).
+            // #199 C3 - ghost 색: terrain(물/바위) or 점유 시 빨강 (the reference sim red ghost).
             bool areaFree = ValidatePlacement(cx, cy, size.x, size.y) == PlaceReject.None;
             ghostRenderer.color = (canAfford && areaFree)
                 ? new Color(1f, 1f, 1f, 0.55f)
@@ -366,13 +366,13 @@ namespace MelonS.GameProto
                 if (h == null) continue;
                 if (h.GetComponent<WallEntity>() != null) return true;
                 if (h.GetComponent<DoorEntity>() != null) return true;
-                // #249 운영자 fb "나무 위에 건축 안됨" — RimWorld 에선 나무/식물 위에 청사진을
+                // #249 운영자 fb "나무 위에 건축 안됨" — the reference sim 에선 나무/식물 위에 청사진을
                 //  놓을 수 있고(건설 시작 시 식물 제거), 나무가 배치를 막지 않는다.  TreeEntity 를
                 //  점유물에서 제외 → 나무 위 배치 허용.  완성 시 겹친 나무는 BlueprintEntity.Complete
                 //  가 제거(자재는 안 줌 — 단순 클리어).
                 // (was: if (h.GetComponent<TreeEntity>() != null) return true;)
-                // #199 C3 - RimWorld fidelity: a pawn STANDING on the cell does NOT
-                //  block placement.  In RimWorld you can drop a blueprint under a
+                // #199 C3 - genre fidelity: a pawn STANDING on the cell does NOT
+                //  block placement.  In the reference sim you can drop a blueprint under a
                 //  colonist; the pawn simply walks off (the blueprint only needs the
                 //  cell clear of *structures/terrain*, not transient occupants).  So
                 //  PawnEntity (and animals, which carry no structural footprint) are
@@ -390,7 +390,7 @@ namespace MelonS.GameProto
         }
 
         /// <summary>
-        /// #199 C3 - RimWorld placement rule: a blueprint may NOT sit on impassable
+        /// #199 C3 - the reference sim placement rule: a blueprint may NOT sit on impassable
         /// TERRAIN (water / rock).  Deliberately terrain-ONLY (not walls): we reuse
         /// PawnMovement.IsBlockedAt — the exact raw-tilemap Water/Rock guard the pawn
         /// movement core uses — so "can a pawn step here" and "can I build here" share
@@ -412,13 +412,13 @@ namespace MelonS.GameProto
         }
 
         // #199 C3 - placement-validation result for the footprint.  Distinguishes
-        //  the rejection reasons so the toast can tell the player WHY (RimWorld
+        //  the rejection reasons so the toast can tell the player WHY (the reference sim
         //  shows a red ghost + reason string).
         private enum PlaceReject { None, Terrain, Occupied }
 
         /// <summary>
         /// #199 C3 - validate EVERY covered cell of a w×h footprint at anchor
-        /// (cx,cy) BEFORE creating a blueprint, RimWorld-style:
+        /// (cx,cy) BEFORE creating a blueprint, colony-sim-style:
         ///   - reject if ANY cell is impassable terrain (Water/Rock) → PlaceReject.Terrain;
         ///   - reject if ANY cell already holds a structure/blueprint → PlaceReject.Occupied.
         /// Terrain is checked first so a water cell reads "물 위엔 못 지음" rather than
@@ -465,7 +465,7 @@ namespace MelonS.GameProto
             }
             int cost = CostFor(CurrentMode);
             // #193 - multi-cell entity (침대 1x2 등) footprint 검사
-            // #199 C3 - RimWorld 배치 규칙: terrain(물/바위) + 구조물/청사진 중복 모두 거부.
+            // #199 C3 - the reference sim 배치 규칙: terrain(물/바위) + 구조물/청사진 중복 모두 거부.
             //  pawn 이 서 있는 cell 은 거부 X (pawn 이 비켜남).  multi-cell 은 전 cell 검사.
             Vector2Int size = SizeFor(CurrentMode);
             PlaceReject reject = ValidatePlacement(cx, cy, size.x, size.y);
@@ -491,7 +491,7 @@ namespace MelonS.GameProto
             {
                 Debug.LogWarning("[Build] WARNING: ResourceManager.Instance null - blueprint 는 spawn 진행 (hauler 가 자재 운반)");
             }
-            // 운영자 fb v4 - 림월드 정상 흐름: 청사진 spawn 시 자원 차감 X.
+            // 운영자 fb v4 - 레퍼런스 콜로니심 정상 흐름: 청사진 spawn 시 자원 차감 X.
             //  hauler 가 자재를 청사진 위치까지 운반 후 PawnBuilder 가 건설 작업.
             // W-M4-05 (#21) - 석재로 짓는 모드(석재 벽 / 석재 바닥)는 stone 으로 결제.
             bool stoneMode = PaysWithStone(CurrentMode);
@@ -514,7 +514,7 @@ namespace MelonS.GameProto
             //  자원 카운터가 자재를 감당하면 배치 즉시 차감 + funding(collectedWood=needWood) →
             //  builder 가 바로 건설.  카운터 부족 시엔 unfunded 로 두고 벌목 물리 wood 가 운반-
             //  funding(기존 경로 유지).  이로써 카운터 = 실제 건축 자원(chop→+, build→-) 으로
-            //  coherent + RimWorld '자재 소비해 건설' 정합.
+            //  coherent + the reference sim '자재 소비해 건설' 정합.
             if (ResourceManager.Instance != null)
             {
                 int have = stoneMode ? ResourceManager.Instance.stone : ResourceManager.Instance.wood;

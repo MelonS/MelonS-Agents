@@ -1,4 +1,4 @@
-# game-prototype — PawnSim: a RimWorld-lite colony-sim vertical slice (Skill #3-A)
+# game-prototype — PawnSim: a lightweight colony-sim vertical slice (Skill #3-A)
 
 A top-down colony-sim **vertical slice** built **with** the
 [`game-dev-agent`](../game-dev-agent/) AI assistant — every sprite, script,
@@ -6,20 +6,20 @@ scene, and verification harness is agent-scaffolded from the CLI, with no
 manual Unity Editor work in the build chain.
 
 Originally a 7-day shippable prototype; it has since grown — through many
-autonomous multi-agent sessions verified against the
-[RimWorld wiki](https://rimworldwiki.com) — into a far deeper slice with
+autonomous multi-agent sessions verified against vanilla colony-sim
+references — into a far deeper slice with
 grid A* pathfinding, body-part health + combat, research, build/deconstruct
 designations, farming, hauling, storytellers, sound, day/night, and
-save/load. The bar is no longer "7-day shippable" but **"림월드 바닐라급
-prototype + 정직한 작동 검증"** (RimWorld-vanilla-grade prototype with honest,
+save/load. The bar is no longer "7-day shippable" but **"바닐라 콜로니심급
+prototype + 정직한 작동 검증"** (vanilla colony-sim-grade prototype with honest,
 automated proof-of-function) — see [`docs/goal.md`](docs/goal.md).
 
 | | |
 |---|---|
 | Engine | Unity 6000.0.75f1 LTS |
 | Build target | Windows x64 (Standalone) |
-| Scope | RimWorld-lite colony-sim vertical slice — **NOT a clone** |
-| Core coverage | ~85% of RimWorld vanilla core systems (estimate; verified slice growing) |
+| Scope | lightweight colony-sim vertical slice — **NOT a clone** |
+| Core coverage | ~85% of vanilla colony-sim core systems (estimate; verified slice growing) |
 | Verification | `refactor_check.py` 6-stage gate; isolated 76/76 · integration 43/43 · Build Click QA 8/8 · pawn-action 7/7 · feature-audit 13/13 · visual diff — last green post-#275 (2026-06-02) |
 | Latest build | date-stamped: `builds/day-PLAY-2026-06-01/PawnSim.exe` (newest via `ls -dt builds/day-*/`) |
 
@@ -39,14 +39,14 @@ and designation orders, and watches needs/health/mood play out, with full
 save/load.
 
 It is deliberately **a slice, not a clone**: it implements the loud, core
-RimWorld loops at prototype fidelity, and explicitly defers the long tail
+colony-sim loops at prototype fidelity, and explicitly defers the long tail
 (roofs, temperature, joy, real hediffs, cover tables, 14-skill, power/trading/
 taming/bills) — see [Out of scope](#out-of-scope-deliberately-deferred).
 
 ## Current feature coverage
 
 Verified in code and gated by the harness (see
-[`docs/rimworld-comparison-v2.md`](docs/rimworld-comparison-v2.md) for the
+[`docs/genre-comparison-v2.md`](docs/genre-comparison-v2.md) for the
 verified-vs-stub audit):
 
 - **Grid + pathfinding** — **90×90 map** (#235, enlarged from 40→60→90 per
@@ -58,7 +58,7 @@ verified-vs-stub audit):
   (rejects water/rock/occupied with a toast), eject/push-out + standing
   safety-net so a pawn never gets trapped by a freshly-built wall.
 - **Pawns** — needs (food/sleep/mood), **schedule-driven sleep** (#269 — the
-  RimWorld Sleep time-slot makes a pawn walk to a bed and stay asleep through
+  the reference sim Sleep time-slot makes a pawn walk to a bed and stay asleep through
   the block, not just collapse when exhausted), 6-body-part health (bleed /
   downed / death), 4 skills + XP/level (gather/chop/build/combat), 8 traits with real
   effects (Lazy 0.75× / Industrious 1.30× …), equipment (armor + damage
@@ -79,18 +79,18 @@ verified-vs-stub audit):
 - **Farming / economy** — crops grow + harvest, cooking at stove, eat-from-
   stockpile with meal-quality mood, 5-tier stockpile priority, hauling with
   priority-aware target selection.
-- **Storyteller / threats** — 3 storytellers (Cassandra / Phoebe / Randy),
+- **Storyteller / threats** — 3 storytellers (Steady / Calm / Chaos),
   threat tier 0–3 → event frequency scaling, ~15 events, raids day-gated.
 - **Sound** — `AudioBank` with 11 wired slots: chop / harvest / mine / build /
   cook / shoot / hit / door / UI-click / footstep / wolf-howl, plus
   tier-scaled alert siren, looping ambient bed (day/night variation),
   dynamic music crossfade on threat, rain/weather loop.
 - **Day / night + lighting + weather** — `DayNightCycle` (11 colour stops) +
-  `NightOverlay` rebuilt (#267) as a **RimWorld-style dynamic lightmap**: night
+  `NightOverlay` rebuilt (#267) as a **colony-sim-style dynamic lightmap**: night
   darkness is a per-texel texture that lamps *reveal* (lift the darkness so the
   real floor/walls show) with warm candle colour and **line-of-sight occlusion**
   (light is blocked by walls + closed doors, bilinear-softened edges) following
-  the RimWorld torch-lamp glow formula — replacing the old additive light-pools
+  the colony-sim torch-lamp glow formula — replacing the old additive light-pools
   (which read as a hazy fog). `WeatherController` (storm darkening + rain).
 - **UI** — unified bordered-panel system (`MakeBorderedPanel`): top bar
   (clock / speed / resources), Architect menu, bottom-center gizmo command
@@ -113,12 +113,12 @@ all on the sprite child so pathfinding is unaffected). Operator-assessed visual
 polish moved from ~3/10 to ~6.5–7/10, clearing the "프로토타입 수준도 안됨"
 (below-prototype) bar.
 
-## RimWorld-fidelity comparison
+## genre fidelity comparison
 
 Per-dimension closeness to vanilla, from the second-pass audit
-([`docs/rimworld-comparison-v2.md`](docs/rimworld-comparison-v2.md); v1 in
-[`docs/rimworld-comparison.md`](docs/rimworld-comparison.md); numeric/balance
-fidelity in [`docs/audit-rimworld-fidelity-2026-05-29.md`](docs/audit-rimworld-fidelity-2026-05-29.md)):
+([`docs/genre-comparison-v2.md`](docs/genre-comparison-v2.md); v1 in
+[`docs/genre-comparison.md`](docs/genre-comparison.md); numeric/balance
+fidelity in [`docs/audit-genre-fidelity-2026-05-29.md`](docs/audit-genre-fidelity-2026-05-29.md)):
 
 | Dimension | v1 → v2 | Note |
 |---|:--:|---|
@@ -129,8 +129,8 @@ fidelity in [`docs/audit-rimworld-fidelity-2026-05-29.md`](docs/audit-rimworld-f
 | 게임플레이 루프 (gameplay loop) | 80 → **85%** | Loops present + verified; mood-model & work-priority are **[OP-gated]**. |
 | 메뉴 UX / UI | 70 → **82%** | Alert stack + tabs + multi-select + gizmo bar done. |
 
-> Source caveat: rimworldwiki.com blocks direct fetch (403); canonical values
-> come from WebSearch snippets + RimWorld domain knowledge. The audit's honest
+> Source caveat: 장르 위키 blocks direct fetch (403); canonical values
+> come from WebSearch snippets + the reference sim domain knowledge. The audit's honest
 > headline: **the non-gated improvement surface is nearly exhausted** — the
 > next leap in player-felt depth is behind the operator-gated tier below.
 
@@ -259,12 +259,12 @@ across 14 partials.
 ## Gated / next
 
 The autonomous chain has nearly drained the **non-gated** surface. The next
-leap from "looks and sounds like RimWorld" to "*plays* like RimWorld" is
+leap from "looks and sounds like the reference sim" to "*plays* like the reference sim" is
 **operator-gated** (behavior-logic changes need explicit OK per the project's
 §5 logic-change rule). Specs are drafted and waiting:
 
 - **Mood = thought-sum + 3-tier mental-break** ([`docs/spec-needs-mood-balance.md`](docs/spec-needs-mood-balance.md)) —
-  replaces the current free-fall mood timer with a true RimWorld mood model.
+  replaces the current free-fall mood timer with a true the reference sim mood model.
 - **Work-priority grid** ([`docs/spec-work-priority.md`](docs/spec-work-priority.md)) —
   per-job 1–4 priority grid; directly addresses the operator's hauling-priority
   interest (currently WorkKind is collapsed, so Haul can't be controlled alone).
@@ -310,7 +310,7 @@ roles. Key talking points:
    commit, three test layers, auto-rollback on RED, and the "verify the
    verifier" discipline (#198).
 4. **Wiki-grounded fidelity** — improvement backlogs derived from a
-   per-dimension RimWorld-wiki comparison, with closeness tracked over time.
+   per-dimension the reference sim-wiki comparison, with closeness tracked over time.
 5. **Multi-agent production pipeline** — PM → director → programmer/artist →
    QA, run as an autonomous chain reaction with file-based handoff.
 

@@ -2,14 +2,14 @@
 
 Status: PROPOSAL — operator approval required before any code change.
 Author: systems-designer subagent. Date: 2026-05-30.
-Source audit: `skills/game-prototype/docs/audit-rimworld-fidelity-2026-05-29.md`
+Source audit: `skills/game-prototype/docs/audit-genre-fidelity-2026-05-29.md`
 (rows "Mood decay" and "Mood-break threshold", §4 "Uncertain values").
 
 This document covers ONLY the two behavior-logic items the #200 audit deferred
 because they change *behavior*, not just numbers:
 
 1. Mood "free-fall" — the mood model is conceptually wrong.
-2. Mental break — collapsed to 1 tier; RimWorld has 3.
+2. Mental break — collapsed to 1 tier; the reference sim has 3.
 
 The numeric-only #200 fixes (food decay 0.5→0.14, move speed, skill XP, body-part
 HP) are already landed and are explicitly OUT of scope here. Nothing in this spec
@@ -36,7 +36,7 @@ disagree. This is the root of the "free-fall" flag.
 
 ### 1b. `PawnThoughts.cs` — the (correct-shaped but conflicting) thought path
 
-- Already implements the RimWorld-shaped model: `CurrentMood = baseMood(50) + Σ thought.offset`,
+- Already implements the colony-sim-shaped model: `CurrentMood = baseMood(50) + Σ thought.offset`,
   clamped 0–100 (`:81-89`).
 - Has a thought `Catalog` (`:28-42`) with both positive ("최고의 식사" +12, "푹 잠" +4)
   and negative ("배고픔" -4, "수면 부족" -3, "동료 사망" -15) offsets and expiry timers.
@@ -65,18 +65,14 @@ disagree. This is the root of the "free-fall" flag.
   wrong AND it actively fights the already-correct PawnThoughts path.
 - **Mood-break threshold (MED):** "Three tiers: minor 35% / major 20% / extreme 5%;
   break is a mean-time-to-event below each, not instant." The prototype's single 20
-  threshold ≈ RimWorld "major"; minor and extreme tiers are missing, and break is
+  threshold ≈ the reference sim "major"; minor and extreme tiers are missing, and break is
   instant-on-cross rather than a probabilistic mean-time-to-break.
 
 ---
 
-## 2. RimWorld reference
+## 2. the reference sim reference
 
-Sources: [Mental break](https://rimworldwiki.com/wiki/Mental_break),
-[Mental Break Threshold](https://rimworldwiki.com/wiki/Mental_Break_Threshold),
-[Mood](https://rimworldwiki.com/wiki/Mood).
-
-### 2a. Mood model
+Sources: Mental break Mental Break Threshold Mood ### 2a. Mood model
 
 - Mood is the **sum of all active thought mood-offsets**, evaluated continuously and
   clamped 0–100%. There is no decay timer; mood *settles* wherever the thought sum lands.
@@ -105,7 +101,7 @@ Sources: [Mental break](https://rimworldwiki.com/wiki/Mental_break),
 
 ---
 
-## 3. Proposed prototype model (simplified, RimWorld-shaped)
+## 3. Proposed prototype model (simplified, the reference sim-shaped)
 
 Design intent: make `PawnThoughts` the single source of truth for mood (kill the
 free-fall decay), feed it continuous need-driven thoughts, and split the one break
@@ -132,11 +128,11 @@ conflict and extends an existing-shaped system rather than adding a new one.
   | ate fine/normal meal | 최고의/맛있는 식사 (exists) | +12/+5 | event, already wired |
 
   Baseline stays `baseMood = 50`. A fed, rested pawn with no negatives sits at ~50–60
-  (RimWorld-shaped), a failing one is pulled to break range by stacked negatives.
+  (the reference sim-shaped), a failing one is pulled to break range by stacked negatives.
 
 ### 3b. Three break tiers
 
-Replace the single `moodBreakThreshold` with three, matching RimWorld defaults:
+Replace the single `moodBreakThreshold` with three, matching the reference sim defaults:
 
 | Tier | Threshold (mood <) | Prototype behavior | Reuses |
 |---|---|---|---|
@@ -229,19 +225,16 @@ Each phase is independently shippable and reversible. Effort = rough dev-hours.
 3. **Trait baseline:** move `moodBaselineBonus` to `PawnThoughts.baseMood`? (Required for
    it to survive the authoritative-thought change — flagging because it touches #164.)
 4. **Break determinism:** keep instant-on-cross (deterministic, easy to QA) or move to
-   probabilistic mean-time-to-break (RimWorld-faithful, harder to test)? Recommend
+   probabilistic mean-time-to-break (the reference sim-faithful, harder to test)? Recommend
    instant for phases 1–2, MTB as optional phase 3.
 5. **Major-break target:** tantrum should damage *colony structures* — acceptable for a
    pawn to damage player buildings in a prototype, or prefer a safer "bedroom tantrum"
    that only flails without real damage? (Risk: pawn destroying a wall mid-raid.)
 6. **Extreme-break target:** berserk attacks "nearest living" — include other colonists
-   (true RimWorld), or restrict to animals/enemies only to avoid colonist-on-colonist
+   (true the reference sim), or restrict to animals/enemies only to avoid colonist-on-colonist
    death in a prototype with small HP pools?
 
 ---
 
 ## Sources
-- [Mental break — RimWorld Wiki](https://rimworldwiki.com/wiki/Mental_break)
-- [Mental Break Threshold — RimWorld Wiki](https://rimworldwiki.com/wiki/Mental_Break_Threshold)
-- [Mood — RimWorld Wiki](https://rimworldwiki.com/wiki/Mood)
-- #200 audit: `skills/game-prototype/docs/audit-rimworld-fidelity-2026-05-29.md`
+- Mental break - Mental Break Threshold - Mood - #200 audit: `skills/game-prototype/docs/audit-genre-fidelity-2026-05-29.md`

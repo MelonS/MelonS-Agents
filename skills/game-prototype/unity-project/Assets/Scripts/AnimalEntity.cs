@@ -180,7 +180,7 @@ namespace MelonS.GameProto
             if (AudioBank.Instance != null) AudioBank.Instance.PlayHit();
             if (Hp <= 0)
             {
-                // 운영자 fb v4 - 림월드 정상 흐름: 즉시 +N 안 함. meat pile 만 drop.
+                // 운영자 fb v4 - 레퍼런스 콜로니심 정상 흐름: 즉시 +N 안 함. meat pile 만 drop.
                 if (MeatPileEntity.SharedSprite != null)
                 {
                     MeatPileEntity.Spawn(transform.position, foodDrop, MeatPileEntity.SharedSprite);

@@ -22,9 +22,9 @@ namespace MelonS.GameProto
     /// <summary>Day 73 — Storyteller personality affects event frequency + threat curve.</summary>
     public enum Storyteller
     {
-        Cassandra,  // 꾸준한 사건 — 일정 간격, 위협도 단계적 상승
-        Phoebe,     // 평온한 시간 — 사건 드물게, 위협도 천천히
-        Randy,      // 무작위 — 사건 자주 + 위협도 변동 큼
+        Steady,  // 꾸준한 사건 — 일정 간격, 위협도 단계적 상승
+        Calm,     // 평온한 시간 — 사건 드물게, 위협도 천천히
+        Chaos,      // 무작위 — 사건 자주 + 위협도 변동 큼
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ namespace MelonS.GameProto
         public const bool WolvesEnabled = false;
 
         [Header("Day 73: Storyteller (3 종류)")]
-        [SerializeField] public Storyteller activeStoryteller = Storyteller.Cassandra;
+        [SerializeField] public Storyteller activeStoryteller = Storyteller.Steady;
 
         [SerializeField] private float minIntervalSec = 15f;
         [SerializeField] private float maxIntervalSec = 30f;
@@ -62,23 +62,23 @@ namespace MelonS.GameProto
             {
                 int day = (GameClock.Instance != null) ? GameClock.Instance.Day : 1;
                 if (day < 1) day = 1;
-                // Cassandra: 일정 (3/7/14일 임계점)
-                if (activeStoryteller == Storyteller.Cassandra)
+                // Steady: 일정 (3/7/14일 임계점)
+                if (activeStoryteller == Storyteller.Steady)
                 {
                     if (day >= 14) return 3;
                     if (day >= 7) return 2;
                     if (day >= 3) return 1;
                     return 0;
                 }
-                // Phoebe: 느림 (6/14/25일)
-                if (activeStoryteller == Storyteller.Phoebe)
+                // Calm: 느림 (6/14/25일)
+                if (activeStoryteller == Storyteller.Calm)
                 {
                     if (day >= 25) return 3;
                     if (day >= 14) return 2;
                     if (day >= 6) return 1;
                     return 0;
                 }
-                // Randy: 랜덤 — day 와 무관, 0..3 random
+                // Chaos: 랜덤 — day 와 무관, 0..3 random
                 return UnityEngine.Random.Range(0, 4);
             }
         }
@@ -89,7 +89,7 @@ namespace MelonS.GameProto
         // Symptom that triggered this: a 3-pawn colony was WIPED in a ~19-day
         // LongPlay because raids fired every 3 days from day 3 and the size was
         // driven off the day-based CurrentThreatTier (tier3 = 5 bandits from
-        // day 14), so by mid-game 5-bandit waves arrived every 3 days.  RimWorld
+        // day 14), so by mid-game 5-bandit waves arrived every 3 days.  the reference sim
         // calibration: first raid ~day 5-10, raids days apart, small early, slow
         // escalation.  All knobs below are serialized so the operator can
         // re-tune difficulty without a code change.
@@ -121,7 +121,7 @@ namespace MelonS.GameProto
         //     ~day 11 so a young 3-pawn colony can survive a single bandit, while
         //     the threat still exists and escalates afterward.  Set to 0 to make
         //     the first raid land exactly at RaidGraceDays (old behavior).
-        [Header("Day 13 / raid calibration (RimWorld-ish — tunable)")]
+        [Header("Day 13 / raid calibration (the reference sim-ish — tunable)")]
         [SerializeField] private int RaidGraceDays = 9;        // first raid not before ~day 9
         [SerializeField] private int RaidIntervalDays = 5;     // raids ~5 in-game days apart
         [SerializeField] private int MaxConcurrentGroups = 2;  // escalation ceiling (bandits/raid)
@@ -314,11 +314,11 @@ namespace MelonS.GameProto
         {
             // Day 73: storyteller마다 간격 다름
             float min = minIntervalSec, max = maxIntervalSec;
-            if (activeStoryteller == Storyteller.Phoebe)
+            if (activeStoryteller == Storyteller.Calm)
             {
                 min *= 2f; max *= 2f;  // 평온한 시간 — 사건 드물게
             }
-            else if (activeStoryteller == Storyteller.Randy)
+            else if (activeStoryteller == Storyteller.Chaos)
             {
                 min *= 0.6f; max *= 0.6f;  // 무작위 — 사건 자주
             }
@@ -367,13 +367,13 @@ namespace MelonS.GameProto
         private void FireRandomEvent()
         {
             if (pool.Count == 0) return;
-            // Day 73: 현재 tier 이하 이벤트만 선택 (Cassandra/Phoebe) 또는
-            //  완전 무작위 (Randy)
+            // Day 73: 현재 tier 이하 이벤트만 선택 (Steady/Calm) 또는
+            //  완전 무작위 (Chaos)
             int curTier = CurrentThreatTier;
             List<GameEvent> candidates = new List<GameEvent>();
             foreach (var ev in pool)
             {
-                if (activeStoryteller == Storyteller.Randy || ev.threatTier <= curTier)
+                if (activeStoryteller == Storyteller.Chaos || ev.threatTier <= curTier)
                     candidates.Add(ev);
             }
             if (candidates.Count == 0) candidates.AddRange(pool);

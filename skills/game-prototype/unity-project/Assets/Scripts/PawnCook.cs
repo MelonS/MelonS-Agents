@@ -9,7 +9,7 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(PawnMovement))]
     public class PawnCook : MonoBehaviour
     {
-        // #199 C1 — stand adjacent to the stove (RimWorld).  1.0 was too tight to
+        // #199 C1 — stand adjacent to the stove (the reference sim).  1.0 was too tight to
         //  even reach a stove from an orthogonal neighbour (center dist 1.0) and
         //  impossible from a diagonal (1.414); bumped to 1.5.
         [SerializeField] private float cookRange = 1.5f;

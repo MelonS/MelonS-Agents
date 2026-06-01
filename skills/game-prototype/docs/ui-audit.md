@@ -1,11 +1,11 @@
 # PawnSim UI/UX Full Audit + Unified Layout Spec
 
-Date: 2026-05-30. Author: Game Director (read-only pass over all UI code + `_ui_check.png` + `rimworld-comparison.md` Dim 6).
+Date: 2026-05-30. Author: Game Director (read-only pass over all UI code + `_ui_check.png` + `genre-comparison.md` Dim 6).
 Operator trigger: "UI쪽 이상해, 전체적으로 다시 체크" — autonomous waves each self-positioned a UI system with NO unified layout owner → clutter / overlap / inconsistency.
 
 This document is the SINGLE SOURCE OF TRUTH for PawnSim screen layout. Every UI fix subtask must read it and conform. It does two things:
 1. **Audit** — every concrete problem found, with file + line evidence.
-2. **Layout spec** — the one canonical RimWorld-convention layout all panels must obey, with exact anchors / offsets / a shared bottom-bar geometry contract that ends the position guessing.
+2. **Layout spec** — the one canonical the reference sim-convention layout all panels must obey, with exact anchors / offsets / a shared bottom-bar geometry contract that ends the position guessing.
 
 ---
 
@@ -52,7 +52,7 @@ This is the "끊임없이 파이프라인 최적화" failure mode for UI: each w
 ### P3 — Designation toggles (해체/채광/경작) float at conflicting anchors, no shared panel  **[HIGH]**
 Three buttons, three files, three magic X offsets (−360 / +360 / +462) all at y=104, none measuring the actual control-bar width.
 
-- They are conceptually part of the **command/architect bar** (RimWorld: designation tools live in the architect/command cluster, not floating mid-air).
+- They are conceptually part of the **command/architect bar** (the reference sim: designation tools live in the architect/command cluster, not floating mid-air).
 - `_ui_check.png` confirms they render as loose, unconnected buttons at the bottom-right, detached from the main bar, no enclosing frame.
 - Each builds its toggle independently (`EnsureToggleButton` in all three) with copy-pasted geometry.
 - FIX OWNER: the **designation cluster** — `MineDesignation.cs` / `GrowZoneDesignation.cs` / `DeconstructDesignation.cs`. They must STOP using personal magic offsets and instead place themselves into ONE shared designation row defined by the layout contract in §3 (a left-anchored or bar-adjacent group), so the three sit in a single bordered strip with consistent gaps. They keep their `Btn_해체`/`Btn_채광`/`Btn_경작` names.
@@ -60,7 +60,7 @@ Three buttons, three files, three magic X offsets (−360 / +360 / +462) all at 
 ### P4 — SelectionGizmoBar overlaps the main control bar  **[HIGH]**
 `SelectionGizmoBar.cs:287` anchors bottom-center y=16; `GuiControlBar` is bottom-center y=40. The gizmo (징집/취소, ~216px wide) renders on top of / immediately under the speed buttons whenever a pawn is selected. Two bottom-center bars stacked 24px apart = visual collision.
 
-- RimWorld convention: the contextual gizmo row sits ABOVE the persistent command bar, clearly separated, and only appears on selection.
+- the reference sim convention: the contextual gizmo row sits ABOVE the persistent command bar, clearly separated, and only appears on selection.
 - FIX OWNER: `SelectionGizmoBar.cs`. Re-anchor to the dedicated gizmo band defined in §3 (a row sitting clearly ABOVE the main command bar with a gap, not 24px into it). Keep `Btn`-style behavior; no test references its GO names (verify), but preserve `DraftBtn`/`CancelBtn` names.
 
 ### P5 — Two competing "selected object" inspectors with inconsistent empty-state copy  **[MED]**
@@ -69,7 +69,7 @@ Three buttons, three files, three magic X offsets (−360 / +360 / +462) all at 
 - `_ui_check.png` shows the right-center panel reading "선택한 오브젝트 없음".
 - So there are TWO inspectors, on two different edges, and `EntityInspectorPanel.Describe()` (line 137) even DUPLICATES pawn info that `PawnInfoPanel` already shows on the left — by design ("#128 일관성") but in practice it means selecting a pawn lights up BOTH a left panel AND a right panel with overlapping data. Cluttered.
 - Copy is inconsistent ("선택된" vs "선택한" vs "선택하세요").
-- FIX OWNER: the **inspector** lane — `EntityInspectorPanel.cs` + `PawnInfoPanel.cs`. Per §3: ONE inspector edge. RimWorld puts the selected-thing inspector bottom-LEFT. Decision (§3.4): keep `PawnInfoPanel` bottom-left as the pawn inspector; keep `EntityInspectorPanel` right side ONLY for non-pawn entities (trees/walls/veins) and STOP it re-describing pawns (let the left panel own pawns) to kill the double-panel. Unify empty-state copy to one string. Both share the bordered-panel style (they already call UITheme; verify border edges present).
+- FIX OWNER: the **inspector** lane — `EntityInspectorPanel.cs` + `PawnInfoPanel.cs`. Per §3: ONE inspector edge. the reference sim puts the selected-thing inspector bottom-LEFT. Decision (§3.4): keep `PawnInfoPanel` bottom-left as the pawn inspector; keep `EntityInspectorPanel` right side ONLY for non-pawn entities (trees/walls/veins) and STOP it re-describing pawns (let the left panel own pawns) to kill the double-panel. Unify empty-state copy to one string. Both share the bordered-panel style (they already call UITheme; verify border edges present).
 
 ### P6 — Inconsistent canvas sort orders / multiple canvases  **[MED]**
 AlertStackUI canvas sortingOrder=200, SelectionGizmoBar=200, HotkeyCheatSheet=250. The designation toggles + GuiControlBar live on the SHARED scene Canvas (whatever its sort is). FloatingText is world-space sortingOrder 50. This is mostly fine, but the gizmo bar (200) and the main bar (scene canvas) being on DIFFERENT canvases means their relative draw order isn't guaranteed across resolutions — contributing to the P4 overlap reading badly. Document the intended z-stack (§3.6) so future waves don't invent new sort numbers.
@@ -107,7 +107,7 @@ The three designation managers MUST NOT each pick a personal X. Define the row i
 - Result: a tidy left-edge group of three equal toggles, never near the centered command bar. (If the lane prefers one owner builds the strip frame and the other two parent into it, that is allowed AS LONG AS file isolation per §4 holds — simplest correct version: each computes its own X from the shared `x0 + i*(w+gap)` formula above with i = 0/1/2 fixed per file, so no cross-file dependency and no overlap.)
 
 ### 3.4 RIGHT — inspector
-- Selected-thing inspector. RimWorld puts it bottom-left, but PawnSim already splits: pawn inspector bottom-LEFT (`PawnInfoPanel`), entity inspector right-center (`EntityInspectorPanel`).
+- Selected-thing inspector. the reference sim puts it bottom-left, but PawnSim already splits: pawn inspector bottom-LEFT (`PawnInfoPanel`), entity inspector right-center (`EntityInspectorPanel`).
 - Rule: **pawns → left panel only; non-pawn entities → right panel only.** `EntityInspectorPanel.Describe()` must STOP returning pawn descriptions (remove the `PawnEntity` branch at lines 137-160 so it no longer double-shows pawn data the left panel owns). Right panel hint when nothing selected: keep one consistent empty string.
 - Both panels: bordered (`MakeBorderedPanel` / border edges), gold bold header, cream body, PadOuter padding. Unify empty-state copy to exactly **"선택된 오브젝트 없음"** (pick one; this one matches EntityInspectorPanel's existing title) across both panels.
 

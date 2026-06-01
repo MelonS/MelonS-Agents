@@ -96,7 +96,7 @@ namespace MelonS.GameProto
         }
 
         private RectTransform contentRt;  // bordered-panel inner content (buttons + dividers live here)
-        private RectTransform speedPanelRt;  // 우하단 속도/멈춤 클러스터 (RimWorld 레이아웃)
+        private RectTransform speedPanelRt;  // 우하단 속도/멈춤 클러스터 (the reference sim 레이아웃)
 
         // 우하단 속도 클러스터 배치 상수 (root=full-screen stretch 기준 anchor (1,0) 좌표 계산용).
         private const float PadX = 12f;   // = UITheme.PadOuter
@@ -142,7 +142,7 @@ namespace MelonS.GameProto
             //   MakeBorderedPanel returns inner content RT; dividers live there.
             contentRt = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(tabBarRt);
 
-            // === 우하단 속도 패널 (RimWorld 의 우하단 시계/속도 클러스터 위치) ===
+            // === 우하단 속도 패널 (the reference sim 의 우하단 시계/속도 클러스터 위치) ===
             //   root=full-screen 이므로 anchor (1,0) 이 화면 우하단 모서리를 가리킨다.
             //   자체 bordered panel 을 배경으로 만들되, 속도 버튼들은 여전히 GuiControlBar root
             //   의 direct child 로 두고 speedPanelRt 는 시각 배경으로만 사용 (버튼 부모붙이지 않음).

@@ -79,7 +79,7 @@ namespace MelonS.GameProto
         [SerializeField] private float dragThreshold = 0.35f;     // world units before a click becomes a drag
 
         // ── operator fb #1 (2026-05-31): the standalone "채광 (M)" toggle button
-        //   was REMOVED.  In RimWorld, Mine lives inside the Architect menu's
+        //   was REMOVED.  In the reference sim, Mine lives inside the Architect menu's
         //   Orders (지시) category, not as a standalone screen button.  The mine
         //   DESIGNATION logic below is unchanged and is now invoked from
         //   ArchitectMenu (Orders → 채광 → MineDesignation.Instance.SetMode(true)).

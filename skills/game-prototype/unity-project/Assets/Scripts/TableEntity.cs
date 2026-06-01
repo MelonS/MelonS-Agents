@@ -22,7 +22,7 @@ namespace MelonS.GameProto
     ///   OverlapBox) to grant a rest/mood bonus, this entity exposes a static
     ///   read-only <see cref="IsEatSpotAt"/> probe that the eat path can opt
     ///   into with a SINGLE read-only line to grant an "ate at a table" mood
-    ///   bonus — RimWorld's "ate at a table" thought.  No new dispatch, no new
+    ///   bonus — the reference sim's "ate at a table" thought.  No new dispatch, no new
     ///   pathfinding, no utility-AI edit: the pawn already walks the map and
     ///   eats where it stands, and a pawn standing on the table+chair cell
     ///   simply gets the bonus, the same shape as eating on/near a bed.
@@ -36,7 +36,7 @@ namespace MelonS.GameProto
     public class TableEntity : MonoBehaviour
     {
         /// <summary>
-        /// "Ate at a table" mood bonus (RimWorld grants a small positive thought
+        /// "Ate at a table" mood bonus (the reference sim grants a small positive thought
         /// for eating at a proper table).  SerializeField so the designer can
         /// tune day-1 feel without a code change.  Kept modest so the table is a
         /// nice-to-have, not a mandatory crutch.

@@ -460,7 +460,7 @@ def gen_meat_pile():
     return im
 
 
-# ─── research_bench 32x16 - 2x1 책상 (RimWorld wiki 정합) ────────
+# ─── research_bench 32x16 - 2x1 책상 (the reference sim wiki 정합) ────────
 def gen_research_bench():
     im = new_img(32, 16)
     rect_fill(im, 1, 6, 30, 10, WOOD_MD)

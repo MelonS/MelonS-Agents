@@ -195,7 +195,7 @@ namespace MelonS.GameProto.Tests
             float autoPassMul = autoDoor.PassMul;
 
             // Wiki B5 acceptance: autodoor PassMul > plain door PassMul
-            // (higher PassMul = less slowdown = faster crossing, matching RimWorld autodoor).
+            // (higher PassMul = less slowdown = faster crossing, matching the reference sim autodoor).
             bool partA_autodoorFaster = autoPassMul > plainPassMul;
 
             // ================================================================

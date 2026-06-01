@@ -87,7 +87,7 @@ namespace MelonS.GameProto
                     ClickEffect.Spawn(mouseWorld, new Color(1.0f, 0.85f, 0.30f, 0.95f));
                     // 운영자 fb — 나무/베리덤불/광맥/청사진 등 상호작용 가능한 엔티티는 좌클릭 시
                     //  inspect 와 함께 '플로트 액션 메뉴'(벌목/채집/채광/취소 등)를 띄운다.
-                    //  RimWorld 처럼 선택만으로 작업 지정에 접근 가능.  지정 액션은 림 선택 불필요
+                    //  the reference sim 처럼 선택만으로 작업 지정에 접근 가능.  지정 액션은 림 선택 불필요
                     //  (designation manager 가 idle 림 dispatch).  메뉴 항목이 없으면 inspect 만.
                     if (ContextMenuUI.Instance != null)
                     {
@@ -112,7 +112,7 @@ namespace MelonS.GameProto
             }
 
             // #233 ★진짜 원인(진단 로그 sel=False): 우클릭 벌목/채광이 'currentSelection!=null'
-            //  게이트에 막혀 림이 선택 안 돼 있으면 안 됐다.  RimWorld 에선 벌목/채광 *지정*은
+            //  게이트에 막혀 림이 선택 안 돼 있으면 안 됐다.  the reference sim 에선 벌목/채광 *지정*은
             //  림 선택이 불필요(Architect>Orders 처럼).  → 선택 무관하게 우클릭 나무/광맥 = 바로
             //  지정(🪓/⛏ 마커 + idle 림 dispatch).  이 블록을 selection 게이트 밖에 둔다.
             if (Input.GetMouseButtonDown(1) && !overUI && !buildActive)
@@ -131,7 +131,7 @@ namespace MelonS.GameProto
             }
             // Right click = move OR chop OR attack (drafted) for selected pawn
             //   buildActive 면 BuildManager 가 우클릭 = cancel 처리 (overlap 방지)
-            //   #113 - undrafted + entity hit = RimWorld 스타일 "Prioritize" 컨텍스트 메뉴
+            //   #113 - undrafted + entity hit = the reference sim 스타일 "Prioritize" 컨텍스트 메뉴
             if (Input.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null
                 && !currentSelection.IsDrafted)
             {
@@ -381,7 +381,7 @@ namespace MelonS.GameProto
             if (needs != null) needs.ClearRestTarget();
         }
 
-        // #113 - 림월드 우클릭 prioritize 메뉴 아이템 build (undrafted 만)
+        // #113 - 레퍼런스 콜로니심 우클릭 prioritize 메뉴 아이템 build (undrafted 만)
         private System.Collections.Generic.List<(string, System.Action)> BuildContextMenu(
             Collider2D hit, Vector3 worldPos)
         {
@@ -519,7 +519,7 @@ namespace MelonS.GameProto
 
         // 운영자 fb #1~3 — 엔티티 *좌클릭 선택* 시 뜨는 플로트 액션 메뉴.
         //  BuildContextMenu(우클릭, 선택된 림에게 '우선' 명령)와 달리, 이쪽은 선택된 림이
-        //  없어도 동작하는 *지정(designation)* 액션을 노출한다(RimWorld Orders 동등):
+        //  없어도 동작하는 *지정(designation)* 액션을 노출한다(the reference sim Orders 동등):
         //   - 나무   → 🪓 벌목 지정 (TreeChopDesignation.TryMark)  [fb #1]
         //   - 베리덤불 → 🍇 채집 지정 (PawnGatherer dispatch; 가까운 idle 림에게)  [fb #2]
         //   - 광맥   → ⛏ 채광 지정 (MineDesignation.TryMark)  [fb #3]

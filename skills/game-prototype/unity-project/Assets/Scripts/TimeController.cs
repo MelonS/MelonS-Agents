@@ -36,7 +36,7 @@ namespace MelonS.GameProto
         {
             Time.timeScale = Mathf.Max(0f, s);
             // #244 운영자 fb "게임 멈췄을때 사운드 계속 들리는 버그" — 일시정지(timeScale=0)면
-            //  AudioListener 도 멈춰 BGM/효과음/앰비언트 전부 정지(RimWorld 도 정지 시 게임
+            //  AudioListener 도 멈춰 BGM/효과음/앰비언트 전부 정지(the reference sim 도 정지 시 게임
             //  사운드 멈춤).  재개 시 해제.
             AudioListener.pause = (Time.timeScale == 0f);
             if (s > 0f) lastNonPauseScale = s;

@@ -11,9 +11,9 @@ namespace MelonS.GameProto
     ///
     /// spec: G:/ai/_zone_research.md.
     ///   Z1 (저장존): drag-rect 로 floor cell 위에 StockpileZoneEntity 를 cell 마다 spawn
-    ///       (priority Normal, 모든 종류 허용).  림월드 Architect → Zone → Stockpile.
+    ///       (priority Normal, 모든 종류 허용).  레퍼런스 콜로니심 Architect → Zone → Stockpile.
     ///   Z3 (폐기존): 같은 drag 모드의 'dumping' preset — priority Low + Stone(chunk/refuse)
-    ///       만 허용 + 회색 dim tint.  림월드 Dumping stockpile = stockpile preset.
+    ///       만 허용 + 회색 dim tint.  레퍼런스 콜로니심 Dumping stockpile = stockpile preset.
     ///   (구 Z2b 아이템 필터 toolbar — 저장존 클릭 시 뜨던 🪵목재/🪨석재/🍖식량 toggle 3개 —
     ///       는 운영자 fb 2026-06-01 로 제거되었다("정체불명 3버튼").  저장존은 spawn 시
     ///       StockItemKind.All(전부 수용)이 기본이므로 toolbar 없이도 모든 자원을 받고,
@@ -81,7 +81,7 @@ namespace MelonS.GameProto
         /// <summary>운영자 fb (2026-06-01) "창고영역 삭제 기능 필요" — true 면 같은 drag-rect
         /// 가 stockpile/dumping zone 을 '지우는' ERASE 모드.  add 경로와 대칭: 같은 입력/
         /// 드래그 로직을 타되 MarkCellAt 대신 EraseCellAt 을 호출해 그 셀의 StockpileZoneEntity
-        /// 를 제거한다.  RimWorld 의 Zone 'Delete/Clear' 와 동일.  ModeActive 안에서만 의미.</summary>
+        /// 를 제거한다.  the reference sim 의 Zone 'Delete/Clear' 와 동일.  ModeActive 안에서만 의미.</summary>
         public bool EraseMode { get; private set; }
 
         private Camera cam;

@@ -1,4 +1,4 @@
-# PawnSim — Vanilla RimWorld Feature-Gap Analysis
+# PawnSim — Vanilla the reference sim Feature-Gap Analysis
 
 **Author:** Game Designer subagent
 **Date:** 2026-05-30
@@ -16,7 +16,7 @@
 ## 0. Framing — coverage % is the wrong scoreboard
 
 The roadmap reports 85% vanilla coverage by counting *systems present*. That number is honest
-but misleading for "feels like RimWorld," because RimWorld's feel comes from **depth and
+but misleading for "feels like the reference sim," because the reference sim's feel comes from **depth and
 interlock of a few core systems**, not breadth. A colony sim with 22 shallow systems feels
 like a tech demo; one with 6 deep, interlocking systems feels like a game.
 
@@ -110,7 +110,7 @@ than building net-new systems, and aligns directly with "playability first."
 | **Animal taming** | MED | MED | Playability-positive but **defer** — adds a charming subsystem, not core loop. |
 | **Power grid** (conduits/battery/solar) | MED | HIGH | **Scope-creep risk.** See note below. |
 | **Trading caravan UI** | MED | HIGH | **Luxury** — defer. See note. |
-| **Temperature / indoor climate** | MED-HIGH | HIGH | Deep RimWorld signature, but big. Defer past Day 3. |
+| **Temperature / indoor climate** | MED-HIGH | HIGH | Deep the reference sim signature, but big. Defer past Day 3. |
 | **Drop-pod / quest / world map** | LOW (for this scope) | VERY HIGH | **Out of scope** — pure scope-creep. |
 
 ### Notes per system
@@ -135,7 +135,7 @@ than building net-new systems, and aligns directly with "playability first."
 - **Animal taming** — moderate effort, genuinely charming, low coupling. Good *Day-4+*
   addition once the core loop runs. Not playability-critical.
 
-- **Temperature** — RimWorld's most distinctive survival pressure (freeze/heatstroke, food
+- **Temperature** — the reference sim's most distinctive survival pressure (freeze/heatstroke, food
   spoilage in/out of freezer). High feel but high effort and it cascades (needs walls to be
   airtight, needs heaters → needs power → §power-grid). **Defer; it's a Phase-2 pillar, not a
   Day-1 fix.**
@@ -152,7 +152,7 @@ Even with every system above, three non-feature gaps separate "tech demo" from "
    *depth* problem, not a *feature-count* problem** — which is exactly the operator's
    conservative thesis vindicated.
 
-2. **Feedback & legibility.** RimWorld constantly tells you *why* things happen — the mood
+2. **Feedback & legibility.** the reference sim constantly tells you *why* things happen — the mood
    thought stack, the "needs roof" alert, the job-priority tooltip, the red event letters.
    PawnSim has TopBar + InfoPanel but lacks the **alert/why layer** (e.g., "pawn idle: no
    reachable work", "meal failed: no ingredients"). Without legibility, even working systems

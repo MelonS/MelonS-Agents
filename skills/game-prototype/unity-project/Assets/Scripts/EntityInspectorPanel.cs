@@ -9,7 +9,7 @@ namespace MelonS.GameProto
     /// ── 2026-05-31 single-inspector 통합 (운영자 fb "DUAL INSPECTOR") ──
     /// 이전: 우측 가운데에 자체 패널을 그렸고 (pawn 선택 시 좌측 PawnInfoPanel 과
     ///   동시에 떠서 "오른쪽은 '없음' / 왼쪽은 pawn" 이중 패널 혼란).
-    /// 지금: RimWorld 처럼 좌측 하단 PawnInfoPanel 하나만 보이는 selection-info 로
+    /// 지금: the reference sim 처럼 좌측 하단 PawnInfoPanel 하나만 보이는 selection-info 로
     ///   통합.  이 컴포넌트는 더 이상 화면에 패널을 그리지 않고, 비-pawn entity 의
     ///   설명 텍스트만 제공하는 "logic-only" 컴포넌트로 남는다.
     ///   PawnInfoPanel 이 entity 선택 시 EntityInspectorPanel.DescribeEntity() 를

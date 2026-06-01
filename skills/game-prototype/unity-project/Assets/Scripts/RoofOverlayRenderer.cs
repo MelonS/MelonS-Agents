@@ -5,10 +5,10 @@ using MelonS.GameProto.Core;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// ROOF wave (운영자: "RimWorld처럼 지붕영역 설정 메뉴 따로 있음") — ROOF SHADE OVERLAY.
+    /// ROOF wave (운영자: "the reference sim처럼 지붕영역 설정 메뉴 따로 있음") — ROOF SHADE OVERLAY.
     ///
     /// Draws a subtle translucent dark quad over every cell that
-    /// <see cref="RoofDesignation"/> has marked as roofed, giving the RimWorld
+    /// <see cref="RoofDesignation"/> has marked as roofed, giving the colony-sim
     /// "indoor shade" (실내 그늘) look.  This is the VISUAL half of the roof feature;
     /// RoofDesignation owns the cell set + the roofed FLAG (future rain/temperature
     /// hooks read RoofDesignation.IsRoofed).  This renderer is purely cosmetic and
@@ -57,7 +57,7 @@ namespace MelonS.GameProto
         //  PENDING(짓는 중)은 옅은 공사중 음영으로, 두 상태를 시각적으로 확실히 다르게 그린다.
         //
         //  builtTint: 완성된 지붕 — 불투명에 가까운 진한 슬레이트(alpha 0.78)로 '실내가 덮였다'가
-        //   확실히 보이게.  RimWorld 의 thick/thin roof 처럼 바닥 위를 분명히 덮는 느낌.
+        //   확실히 보이게.  the reference sim 의 thick/thin roof 처럼 바닥 위를 분명히 덮는 느낌.
         [SerializeField] private Color builtTint = new Color(0.10f, 0.11f, 0.16f, 0.78f);  // 지어진 지붕(불투명 슬레이트)
         //  pendingTint: 짓는 중 — 옅고 약간 푸른 공사중 음영(alpha 0.30)으로 '지금 짓고 있다'가
         //   보이되 완성과 헷갈리지 않게.

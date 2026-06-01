@@ -33,7 +33,7 @@ namespace MelonS.GameProto
             PawnMovement.Grid = new PathGrid(groundTilemap, waterTile, rockTile);
             // #199 B2 — LIVE CUTOVER.  Flip pathfinding ON now that the Grid is
             //  built.  The live game + the -integration (real game flow) suite
-            //  now move every pawn via grid A* (operator: "최대한 림월드와 같은 방식으로").
+            //  now move every pawn via grid A* (operator: "최대한 레퍼런스 콜로니심와 같은 방식으로").
             //
             //  EXCEPTION — the isolated -testmode suite runs in THIS SAME Game
             //  scene (this Awake fires before GameManager picks its branch), so a

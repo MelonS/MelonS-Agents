@@ -1,4 +1,4 @@
-# Spec: RimWorld-Style Work-Priority System (PawnSim)
+# Spec: colony-sim-style Work-Priority System (PawnSim)
 
 Status: DESIGN / not yet implemented
 Author: AI Designer subagent
@@ -80,9 +80,9 @@ The taxonomy is **collapsed**. Several distinct jobs are forced onto one slot:
 
 ---
 
-## 2. Target — RimWorld-style priority model
+## 2. Target — colony-sim-style priority model
 
-RimWorld's grid: each pawn has a column per work type, cell value 0 (disabled) or
+the reference sim's grid: each pawn has a column per work type, cell value 0 (disabled) or
 1–4 (1 = highest). Each pawn, when free, scans work types **in ascending priority
 number** (1 first), and within the chosen type picks the nearest reachable job.
 We adapt this to the existing `IPawnAction` chain + `WorkKind` taxonomy.
@@ -108,7 +108,7 @@ prioritizable. Target enum:
 
 `WanderAction` stays a non-work fallback (no `WorkKind`-gating; always runs last).
 Slots marked "future" can be enum entries with no action yet — they keep the grid
-shape RimWorld-shaped and avoid a second refactor later.
+shape the reference sim-shaped and avoid a second refactor later.
 
 > Migration note: today `Construct`, `Mine`, `Haul*` all report `Chop`, and
 > `Doctor` reports `Research`. De-collapsing means changing each action's `Kind`
@@ -134,14 +134,14 @@ hardcoded-weights pitfall).
 Suggested defaults (every pawn, until operator overrides):
 `Firefight=1, Doctor=2, Cook=3, Hunt=3, Construct=3, Mine=3, Chop=3, Gather=3,
 Haul=4, Clean=4, Research=4, Grow=3`. (Haul/Clean default to lowest so they're
-"chore" work — matches RimWorld feel and the operator's "haul by priority" ask.)
+"chore" work — matches the reference sim feel and the operator's "haul by priority" ask.)
 
 ### 2.3 Selection rule (replaces the fixed chain)
 Per pawn, each decision tick:
 
 1. **Survival overrides stay hard-wired** (not on the grid): a starving pawn
    (`needs.food < threshold`) still runs `EatBerryAction` first regardless of the
-   `Gather` priority — RimWorld does the same (eating/sleeping aren't on the work
+   `Gather` priority — the reference sim does the same (eating/sleeping aren't on the work
    tab). Keep `EatBerryAction` as a pre-grid forced check.
 2. **Group eligible actions by `WorkKind`.** An action is eligible if its
    `TryStart` *would* succeed (see note below) **and** its `WorkKind` priority for
@@ -199,7 +199,7 @@ Combined flow when a pawn decides to haul:
 4. **Re-haul rule preserved.** Item already in an *equal-or-higher* tier
    stockpile ⇒ not re-hauled (prevents loops; mirrors current `InStockpile` skip
    in `HaulWoodAction` L399-400). Item in a *lower*-tier stockpile and a free
-   higher-tier slot exists ⇒ eligible to upgrade (RimWorld behaviour).
+   higher-tier slot exists ⇒ eligible to upgrade (the reference sim behaviour).
 
 Net: **work-priority gates the *worker*, stockpile-priority routes the *item*.**
 They compose; neither needs to know the other's numbers.
@@ -223,7 +223,7 @@ header bar, row striping, hover highlight as the current zone/stockpile panels).
 ```
 
 Interaction:
-- Rows = pawns, columns = work types (RimWorld layout exactly).
+- Rows = pawns, columns = work types (the reference sim layout exactly).
 - **Left-click a cell** cycles `disabled(-) → 1 → 2 → 3 → 4 → disabled`.
 - **Right-click** cycles backwards (quality-of-life; optional phase 2).
 - `-` renders dimmed (disabled). Priority `1` rendered in a warm/accent UITheme
@@ -276,7 +276,7 @@ hauls) — and the same lever already works for every other work type for free.
 
 ### Phase 3 — polish (EFFORT: S, optional)
 - Right-click reverse-cycle, column-header bulk set, "copy row to all".
-- Manual-priority hint (RimWorld's checkbox between numbers/checkboxes modes).
+- Manual-priority hint (the reference sim's checkbox between numbers/checkboxes modes).
 - Per-pawn skill-gating: grey out a work type the pawn is incapable of
   (needs `PawnSkills` "incapable" flags — not confirmed present; verify file).
 
@@ -311,7 +311,7 @@ hauls) — and the same lever already works for every other work type for free.
    keep self-feeding (`EatBerryAction` low-food branch) as a forced pre-grid
    check, NOT a grid-gated work type (§2.3 step 1).
 2. **All-disabled deadlock.** If every work type for a pawn is 0, it only Wanders.
-   That's intended (RimWorld allows it) but warn in UI (dim the row / "no work").
+   That's intended (the reference sim allows it) but warn in UI (dim the row / "no work").
 3. **Tie-break instability → jitter.** Equal-priority work with shifting nearest
    targets could thrash. Mitigation: 0.3–0.5 s decision interval + stable
    secondary tie-break (chain order) so equal distances resolve deterministically.

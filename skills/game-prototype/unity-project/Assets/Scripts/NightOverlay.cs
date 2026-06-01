@@ -8,12 +8,12 @@ namespace MelonS.GameProto
     /// #268 운영자 fb "조명이 뿌옇게만 보임" 근본 수정:
     ///   이전 구조 = 균일한 어둠 한 장(이 오버레이) + 그 위에 LampLight 가 주황빛을
     ///   가산(additive).  가산 빛은 어둠 위에 "빛나는 안개"로만 보여서, falloff 를
-    ///   아무리 바꿔도 뿌옇다.  RimWorld 의 조명은 반대다 — 램프 반경에서 어둠 자체를
+    ///   아무리 바꿔도 뿌옇다.  the reference sim 의 조명은 반대다 — 램프 반경에서 어둠 자체를
     ///   걷어내(라이트맵) 실제 바닥/벽/림이 환히 드러나고, 거기에 따뜻한 색이 입혀진다.
     ///
     ///   그래서 이 오버레이를 카메라 뷰를 덮는 동적 텍스처(라이트맵)로 만든다.  매 프레임
     ///   각 텍셀의 월드 위치를 구해, 기본 밤 어둠 alpha 에서 켜진 램프 반경만큼 alpha 를
-    ///   낮추고(=어둠을 걷어 바닥이 드러남) 따뜻한 촛불색을 입힌다.  감쇠는 RimWorld
+    ///   낮추고(=어둠을 걷어 바닥이 드러남) 따뜻한 촛불색을 입힌다.  감쇠는 the reference sim
     ///   토치램프 글로우 공식(중심 1/d² 집중 + 선형)을 따라 또렷한 코어 + 깔끔한 가장자리.
     ///
     ///   → LampLight(가산 안개) / LampGlowDriver(바닥 풀) 는 비활성(중복·뿌연 원인).
@@ -28,7 +28,7 @@ namespace MelonS.GameProto
         //  하므로 텍셀이 비정방형으로 늘어나도 빛 원은 월드에서 정원으로 유지된다.
         private const int TEX = 160;
 
-        // 램프 빛 반경(칸) — RimWorld 토치램프(lit ~6.5)를 참고한 값.  중심 또렷, ~6.5칸에서 0.
+        // 램프 빛 반경(칸) — the reference sim 토치램프(lit ~6.5)를 참고한 값.  중심 또렷, ~6.5칸에서 0.
         private const float LightRadiusTiles = 6.5f;
 
         // reveal 1(램프 중심)에서 어둠 alpha 를 얼마나 걷을지(0.88 → 거의 다 걷어 바닥 보임).
@@ -59,7 +59,7 @@ namespace MelonS.GameProto
         private readonly int[] lcxCache = new int[32];   // 램프 셀좌표(SampleVis 공유)
         private readonly int[] lcyCache = new int[32];
 
-        // RimWorld 글로우 중심 정규화 상수 (dist0 → d=1)
+        // the reference sim 글로우 중심 정규화 상수 (dist0 → d=1)
         private static readonly float FCenter = ComputeFCenter();
         private static float ComputeFCenter()
         {
@@ -170,7 +170,7 @@ namespace MelonS.GameProto
                 Vector3 wp = walls[i].transform.position;
                 _wallCells.Add(new Vector2Int(Mathf.FloorToInt(wp.x), Mathf.FloorToInt(wp.y)));
             }
-            // #268d 문도 빛을 막는다(닫힌 문 = 벽).  RimWorld 정석: 닫힌 문은 빛 차단.
+            // #268d 문도 빛을 막는다(닫힌 문 = 벽).  the reference sim 정석: 닫힌 문은 빛 차단.
             //  문은 대부분 닫혀 있고, 상시 문틈 누광이 어색하다는 운영자 fb 반영.
 #if UNITY_2023_1_OR_NEWER
             var doors = Object.FindObjectsByType<DoorEntity>(FindObjectsSortMode.None);

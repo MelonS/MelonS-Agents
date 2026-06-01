@@ -21,7 +21,7 @@ namespace MelonS.GameProto
     ///                  cell for pathfinding exactly the way a WALL does, so a
     ///                  pawn detours around it.  It reads visually LOW (a piled
     ///                  sandbag row, drawn in the lower half of the tile) but it
-    ///                  is a hard pathing obstacle, mirroring how RimWorld
+    ///                  is a hard pathing obstacle, mirroring how the reference sim
     ///                  sandbags fill their cell as impassable cover.
     ///
     /// PATHING BLOCK — the load-bearing property of this row:
@@ -44,7 +44,7 @@ namespace MelonS.GameProto
     ///   wall — even though it blocks pathing like one.
     ///
     /// NO cover-math:
-    ///   RimWorld barricades give a 55% ranged cover bonus.  Cover math /
+    ///   the reference sim barricades give a 55% ranged cover bonus.  Cover math /
     ///   accuracy-reduction is explicitly OUT OF SCOPE / OP-gated for this lane —
     ///   this component carries NONE.  It is visual + pathing only.  A future
     ///   cover wave can add accuracy math without touching this file.
@@ -79,7 +79,7 @@ namespace MelonS.GameProto
             //  barricade (the B4 acceptance).  Same call WallEntity uses.
             PawnMovement.RegisterWallCell(transform.position);
             _cellRegistered = true;
-            // RimWorld eject-on-block: the barricade just made its cell
+            // the reference sim eject-on-block: the barricade just made its cell
             //  impassable.  Any pawn standing in that cell would be sealed on a
             //  blocked START cell (AStar refuses a blocked start), so push it out
             //  to the nearest open neighbour — exactly like a freshly-built wall.

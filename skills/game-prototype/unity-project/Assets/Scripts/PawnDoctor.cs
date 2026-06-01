@@ -4,7 +4,7 @@ using MelonS.GameProto.AI;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// #125 - 림월드 의료 (단순화).
+    /// #125 - 레퍼런스 콜로니심 의료 (단순화).
     ///  다친/의식불명 pawn 옆에 가서 tend → bleed stop + body part heal.
     ///  PawnHauler/PawnBuilder 와 동일 패턴.
     /// </summary>
@@ -29,7 +29,7 @@ namespace MelonS.GameProto
 
         public void SetPatientTarget(PawnHealth patient)
         {
-            // #199 C2 — release previous patient on switch (RimWorld job-switch).
+            // #199 C2 — release previous patient on switch (the reference sim job-switch).
             if (targetPatient != null && targetPatient != patient)
                 MelonS.GameProto.AI.ReservationManager.Release(targetPatient, gameObject);
             targetPatient = patient;

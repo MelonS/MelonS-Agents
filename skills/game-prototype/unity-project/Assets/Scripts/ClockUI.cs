@@ -7,8 +7,8 @@ namespace MelonS.GameProto
     /// <summary>
     /// Day 9 origin: 단순 "N일차 - HH:MM" 좌상단 시계.
     ///
-    /// #clock-cluster (2026-06-01): RimWorld 우하단 info cluster 로 이전 + 확장.
-    ///   RimWorld 는 화면 우하단(하단 명령바 오른쪽 끝 바로 위)에 시각/날짜/계절을
+    /// #clock-cluster (2026-06-01): the reference sim 우하단 info cluster 로 이전 + 확장.
+    ///   the reference sim 는 화면 우하단(하단 명령바 오른쪽 끝 바로 위)에 시각/날짜/계절을
     ///   한 덩어리로 표시한다.  날짜/계절은 GameClock.Day(1-based) 하나에서 전부
     ///   파생 가능 (밸런스 0 영향) 하므로 데이터 소스는 GameClock 그대로 두고
     ///   표시만 바꾼다.  온도/날씨 등 생존-밸런스 시스템은 운영자 결정 전까지 표시 안 함.
@@ -17,14 +17,14 @@ namespace MelonS.GameProto
     ///   클래스명/부트스트랩(Awake) 진입점은 유지하되, Awake 에서
     ///     1) 기존 좌상단 Text 를 비워(공백) 두고 (TopBar 내 자기 슬롯 제거),
     ///     2) 메인 Canvas 루트에 우하단 bordered panel 을 새로 구성해 3줄을 그린다.
-    ///   → date readout 은 화면에 정확히 하나 (RimWorld 와 동일; 둘이면 테스트 빌드처럼 보임).
+    ///   → date readout 은 화면에 정확히 하나 (the reference sim 와 동일; 둘이면 테스트 빌드처럼 보임).
     ///
     /// Headless/-batchmode 안전: Canvas/Text 없으면 null no-op (GuiControlBar 패턴 미러).
     /// </summary>
     [RequireComponent(typeof(Text))]
     public class ClockUI : MonoBehaviour
     {
-        // RimWorld 달력 상수 (위키 Time/Calendar 정합)
+        // the reference sim 달력 상수 (위키 Time/Calendar 정합)
         //  1년 = 4분기(quadrum) × 15일 = 60일.  온대 바이옴 분기→계절:
         //  0 Aprimay→봄, 1 Jugust→여름, 2 Septober→가을, 3 Decembary→겨울.
         private const int DaysPerQuadrum = 15;
@@ -67,7 +67,7 @@ namespace MelonS.GameProto
             var font = UITheme.LoadKoreanFont(22);
 
             // 패널 root — 우하단 앵커.  하단 명령바(GuiControlBar, y=24, 높이≈72) 위에
-            //  떠 있도록 bottom margin 을 명령바 위로 잡는다 (RimWorld 우하단 배치).
+            //  떠 있도록 bottom margin 을 명령바 위로 잡는다 (the reference sim 우하단 배치).
             const float panelW = 200f;
             const float panelH = 96f;
             const float marginRight = 16f;
@@ -134,15 +134,15 @@ namespace MelonS.GameProto
             // 1) 시각 — 12시간 + AM/PM (Hour 0-23).
             timeText.text = Format12Hour(h, m);
 
-            // 2/3) RimWorld 달력 파생 (Day 1-based → 0-based d0).
+            // 2/3) the reference sim 달력 파생 (Day 1-based → 0-based d0).
             int d0 = d - 1;
             int year = StartYear + d0 / DaysPerYear;
             int quadrumIndex = (d0 / DaysPerQuadrum) % QuadrumsPerYear; // 0..3
             int dayInQuadrum = (d0 % DaysPerQuadrum) + 1;               // 1..15
             string season = SeasonNames[quadrumIndex];                  // 봄/여름/가을/겨울
 
-            // RimWorld 세계관 정합: 회계용어 "N분기" 대신 계절명을 날짜 전면에.
-            //  예) "봄 1일, 5500년" — 계절을 첫머리에 둬 RimWorld 의 "Spring 1st, 5500"
+            // the reference sim 세계관 정합: 회계용어 "N분기" 대신 계절명을 날짜 전면에.
+            //  예) "봄 1일, 5500년" — 계절을 첫머리에 둬 the reference sim 의 "Spring 1st, 5500"
             //  감성과 맞춘다.  연도는 뒤에 붙여 보조 정보로.
             dateText.text = $"{season} {dayInQuadrum}일, {year}년";
             // 보조줄: 계절을 라벨로 단독 표기 (날짜줄과 톤 분리; 시각/계절 표시 유지).

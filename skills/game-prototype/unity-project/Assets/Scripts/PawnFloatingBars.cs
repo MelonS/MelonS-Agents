@@ -9,7 +9,7 @@ namespace MelonS.GameProto
     /// Built procedurally (4 SpriteRenderers per pawn: 2 backgrounds + 2 fills).
     /// Position auto-tracks transform with a fixed world-space offset.
     ///
-    /// Color rules (RimWorld-style):
+    /// Color rules (colony-sim-style):
     ///   HP   < 30%: dark red,   < 70%: orange-red, else bright red
     ///   Mood < 25%: red (breaking), < 50%: orange, else yellow
     /// </summary>

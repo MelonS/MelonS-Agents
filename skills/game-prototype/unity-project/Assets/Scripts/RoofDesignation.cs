@@ -7,13 +7,13 @@ using MelonS.GameProto.Core;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// ROOF wave (운영자: "RimWorld처럼 지붕영역 설정 메뉴 따로 있음") — ROOF AREA DESIGNATION.
+    /// ROOF wave (운영자: "the reference sim처럼 지붕영역 설정 메뉴 따로 있음") — ROOF AREA DESIGNATION.
     ///
-    /// RimWorld concept (필수만, 위키 근사):
-    ///   In vanilla RimWorld the player paints a "Roof Area" (지붕 영역) under the
+    /// the reference sim concept (필수만, 위키 근사):
+    ///   In vanilla the reference sim the player paints a "Roof Area" (지붕 영역) under the
     ///   Architect ZONE/ORDERS group; designated cells become ROOFED.  A roof gives
     ///   the indoor "shade" look (this prototype's visual effect) and carries a
-    ///   ROOFED flag for future rain/temperature hooks.  RimWorld also AUTO-ROOFS a
+    ///   ROOFED flag for future rain/temperature hooks.  the reference sim also AUTO-ROOFS a
     ///   room fully enclosed by walls; we implement a light version of that (수동
     ///   지정이 필수, auto-roof는 bonus).
     ///
@@ -80,8 +80,8 @@ namespace MelonS.GameProto
         [SerializeField] private bool autoRoofEnclosed = true;    // auto-roof a wall-enclosed room on designate
         [SerializeField] private int autoRoofMaxCells = 400;      // safety cap so a flood-fill can't run away (open map)
 
-        [Header("Build progression (RimWorld처럼 짓는 시간)")]
-        // 운영자 fb (2026-06-01) "지붕 영역을 정해줘도 지붕건설을 안함" — vanilla RimWorld 에서
+        [Header("Build progression (the reference sim처럼 짓는 시간)")]
+        // 운영자 fb (2026-06-01) "지붕 영역을 정해줘도 지붕건설을 안함" — vanilla the reference sim 에서
         //  지붕 영역을 지정하면 즉시 roofed 가 아니라 pawn 이 잠시 '건설'한 뒤 확정된다.  이
         //  프로토타입은 별도 worker/pathfinding 파일을 건드리지 않으므로(레인 충돌 방지) 시간
         //  기반의 가벼운 진행만 둔다: 지정 → buildSeconds 동안 '짓는 중'(pending) → 자동으로
@@ -100,7 +100,7 @@ namespace MelonS.GameProto
 
         /// <summary>운영자 fb (2026-06-01) "다른 영역도 제거하는 기능 필요" — true 면 같은
         /// drag-rect 가 지붕을 '지우는' ERASE 모드.  add 경로와 대칭: 같은 입력/드래그
-        /// 로직을 타되 AddRoof 대신 RemoveRoof 를 호출한다.  RimWorld 의 Zone 'Expand/
+        /// 로직을 타되 AddRoof 대신 RemoveRoof 를 호출한다.  the reference sim 의 Zone 'Expand/
         /// Clear' 토글과 동일 개념(여기선 roofed 셀 제거).  ModeActive 안에서만 의미가 있다.</summary>
         public bool EraseMode { get; private set; }
 
@@ -227,7 +227,7 @@ namespace MelonS.GameProto
         {
             if (cam == null) cam = Camera.main;
 
-            // ---- build progression tick (RimWorld처럼 '짓는 중' → '지어진 지붕') ----
+            // ---- build progression tick (the reference sim처럼 '짓는 중' → '지어진 지붕') ----
             //  Cheap O(pending) scan: only recomputes the pending count, and only does
             //  any work while at least one cell is still building.  No coroutine /
             //  WaitForSeconds heartbeat — this rides the existing per-frame Update
@@ -322,7 +322,7 @@ namespace MelonS.GameProto
             var cell = new Vector2Int(cx, cy);
             if (EraseMode) { RemoveRoof(cell, playBlip: true, fx: true); return cell; }
             AddRoof(cell, playBlip: true, fx: true);
-            // RimWorld auto-roof: if this single cell completed/enclosed a room, fill it.
+            // the reference sim auto-roof: if this single cell completed/enclosed a room, fill it.
             if (autoRoofEnclosed) TryAutoRoofEnclosedFrom(cell);
             return cell;
         }
@@ -423,7 +423,7 @@ namespace MelonS.GameProto
         /// <summary>QA / test entry point: erase the roof on a specific cell directly.</summary>
         public bool EraseCell(Vector2Int cell) => RemoveRoof(cell, playBlip: true, fx: true);
 
-        // ---- RimWorld auto-roof of a wall-enclosed room ----------------------
+        // ---- the reference sim auto-roof of a wall-enclosed room ----------------------
         //  A light version of vanilla's auto-roof: when the player roofs a cell, we
         //  flood-fill from it through walkable, non-wall cells; if that region is
         //  FULLY enclosed by walls/doors (the flood never escapes past

@@ -6,12 +6,12 @@ using UnityEngine.EventSystems;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// 운영자 fb #3 - 림월드 vanilla 패턴.
+    /// 운영자 fb #3 - 레퍼런스 콜로니심 vanilla 패턴.
     ///  비-drafted pawn 으로 entity 우클릭 → 컨텍스트 메뉴 ("벌목 우선", "채집 우선" 등) 팝업.
     ///  메뉴 항목 클릭 → 그 action 강제 우선 실행.
     ///
     /// drafted pawn 은 메뉴 X, 직접 move/attack (기존 동작).
-    /// 빈 곳 우클릭 (undrafted) 은 manual move 유지 (실험적 - RimWorld 는 메뉴 없음).
+    /// 빈 곳 우클릭 (undrafted) 은 manual move 유지 (실험적 - the reference sim 는 메뉴 없음).
     /// </summary>
     public class ContextMenuUI : MonoBehaviour
     {

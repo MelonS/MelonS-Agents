@@ -12,7 +12,7 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(PawnMovement))]
     public class PawnChopper : MonoBehaviour
     {
-        // #199 C1 — pawn now stands in an ADJACENT cell (RimWorld-style) instead
+        // #199 C1 — pawn now stands in an ADJACENT cell (colony-sim-style) instead
         //  of on top of the tree.  Standing in a diagonal neighbour leaves the pawn
         //  at center-to-center distance up to √2≈1.414 from the tree, so chopRange
         //  must accept that: bumped 1.2 → 1.5 (covers diagonal adjacency, still <2
@@ -53,7 +53,7 @@ namespace MelonS.GameProto
         public void SetTreeTarget(TreeEntity tree)
         {
             // #199 C2 — switching target: release the previous tree + stand cell so
-            //  they free up for other pawns (RimWorld job-switch release).
+            //  they free up for other pawns (the reference sim job-switch release).
             if (targetTree != null && targetTree != tree)
                 MelonS.GameProto.AI.ReservationManager.Release(targetTree, gameObject);
             ReleaseStandCell();
@@ -69,7 +69,7 @@ namespace MelonS.GameProto
         }
 
         // #199 C1/C2 — walk to a RESERVED adjacent walkable cell next to the tree
-        //  (RimWorld reach-over), not onto the tree.  The cell is reserved once and
+        //  (the reference sim reach-over), not onto the tree.  The cell is reserved once and
         //  reused; if none is reachable/free the tree is unreachable → give up.
         private void WalkToWork()
         {
@@ -126,7 +126,7 @@ namespace MelonS.GameProto
             // #199 C2 — in range if within chopRange OR standing in the reserved
             //  stand cell (the lock can leave the pawn an arriveDistance short of the
             //  cell centre, exactly on the chopRange boundary; standing in the cell
-            //  means it's in work position, RimWorld-style).
+            //  means it's in work position, colony-sim-style).
             if (dist <= chopRange || movement.AtStandCell(standCell))
             {
                 // In range — stop walking, chop

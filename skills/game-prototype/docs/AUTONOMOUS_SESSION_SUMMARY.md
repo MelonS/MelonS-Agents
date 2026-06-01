@@ -15,7 +15,7 @@ survived=YES/“pre-existing” 만 보고 회귀(PAWN-STUCK, integration 39/42)
 - 8버그(우클릭컨텍스트/목재드롭/문모션/이동경로/시간/광맥/사망비주얼/늑대제거)
 - 생존 루프: 식량생산(HarvestCrop AI), raid calibration(survivable), 침대 자율취침
   (stuck 회귀 fix), 아이템 물리운반(teleport 제거 — 림이 직접 carry)
-- UI 전면 재구성: RimWorld식 Architect 메뉴(Orders/Zone/… 카테고리, raycast-click
+- UI 전면 재구성: 콜로니심식 Architect 메뉴(Orders/Zone/… 카테고리, raycast-click
   버그 fix — UITheme fill.raycastTarget=false 가 원인), 인스펙터 통합+선택구동,
   설정 메뉴(Save/Load+SFX/BGM 볼륨+PlayerPrefs), 건축버튼 툴팁/아이콘
 - 영역지정: 저장존 드래그+아이템필터+폐기존 / 지붕 기능+지붕영역 메뉴(그늘 오버레이)
@@ -37,7 +37,7 @@ survived=YES/“pre-existing” 만 보고 회귀(PAWN-STUCK, integration 39/42)
 
 ### ⚠️ 운영자 결정 / flagged
 1. ★다음 도약 = OP-gated 티어(mood thought-sum+3tier break / work-priority grid /
-   terrain move-cost) — “보이는 RimWorld”→“플레이되는 RimWorld”. 승인 필요(스펙 작성됨).
+   terrain move-cost) — “보이는 the reference sim”→“플레이되는 the reference sim”. 승인 필요(스펙 작성됨).
 2. late-game 자원 고갈 — base 근처 나무/광맥/동물 소진 + 먼 자원 path-fail(give-up)
    → 장기 생산 plateau(생존은 surplus 로 유지). edge 밸런스, 별도 wave 후보.
 3. 게임 “1x” 속도 = 60 game-min/real-sec(하루 24초)로 빠름 — 자연화(예 하루 1~4분)
@@ -48,8 +48,8 @@ survived=YES/“pre-existing” 만 보고 회귀(PAWN-STUCK, integration 39/42)
 ## [세션 2026-05-30 야간] 멀티에이전트 오케스트레이션 + 위키 비교 구동 자율 체인 (48 commit)
 
 운영자 directive: 멀티에이전트 파이프라인을 "연쇄반응(chain reaction)"으로 — 수동
-개입 없이 PM 발행→병렬 제작→직렬 Unity 검증→commit/자동롤백 루프. + RimWorld 위키
-(rimworldwiki.com) 전면 비교분석 구동. + 취침 중 마일스톤 추가하며 아침까지 자율 루프.
+개입 없이 PM 발행→병렬 제작→직렬 Unity 검증→commit/자동롤백 루프. + the reference sim 위키
+(장르 위키) 전면 비교분석 구동. + 취침 중 마일스톤 추가하며 아침까지 자율 루프.
 
 ### 한 줄
 **Workflow 엔진으로 자율 연쇄체인 3라운드(cx 6wave + cy 4wave + cz 4wave) 전부 GREEN,
@@ -83,17 +83,17 @@ Sound 30→80 / Move 75→82 / Build 65→80 / Gameplay 80→85 / UI 70→82. no
 
 ### 운영자 결정 대기 (다음 도약 — 전부 OP-gated, 스펙 작성됨)
 1. **Mood thought-sum + 3-tier mental-break** (`docs/spec-needs-mood-balance.md`) —
-   현재 mood free-fall 버그성 모델. 진짜 RimWorld 기분 시스템으로.
+   현재 mood free-fall 버그성 모델. 진짜 the reference sim 기분 시스템으로.
 2. **Work-priority grid** (`docs/spec-work-priority.md`) — 직업 우선순위 1-4 그리드.
    "운반 우선순위" 운영자 관심사 직결. 현재 WorkKind collapse 로 Haul 개별제어 불가.
 3. **Terrain move-cost** — 지형별 이동비용.
-> 이 셋이 "보이고 들리는 RimWorld" → "플레이되는 RimWorld" 도약. 승인 주시면 같은
+> 이 셋이 "보이고 들리는 the reference sim" → "플레이되는 the reference sim" 도약. 승인 주시면 같은
 > 연쇄체인으로 진행. over-scope(roofs/temperature/joy/hediffs/cover/14-skill)는 가드 유지.
 
 ### 최종 빌드
 `skills/game-prototype/builds/day-final-2026-05-30/PawnSim.exe` — 누적 전부 반영
 (스크린샷 `G:/ai/_final_check.png`: 정착지/콜로니스트/횃불/울타리/작물/UI 전부 정상,
-매지나·debug박스·회귀 0). 비교: `docs/rimworld-comparison.md`(v1) + `-v2.md`.
+매지나·debug박스·회귀 0). 비교: `docs/genre-comparison.md`(v1) + `-v2.md`.
 
 ---
 
@@ -111,7 +111,7 @@ game-director(백로그) → game-artist(아트) → game-programmer(와이어�
 
 ### #201 벽-갇힘 버그 (`c5e9e22`)
 원인: 셀 blocked 등록 시 eject 부재 + 탈출이 SetTarget 시만 발동(idle 림 영구
-갇힘). fix: WallEntity.Start 가 EjectPawnsFromCell 호출(RimWorld push-out) +
+갇힘). fix: WallEntity.Start 가 EjectPawnsFromCell 호출(the reference sim push-out) +
 PawnMovement.Update 상시 안전망(blocked 셀이면 nearest walkable 로). I42 가
 fix off=FAIL/on=PASS 로 버그 재현. V76.
 
@@ -141,18 +141,18 @@ GATE GREEN. unified 팔레트로 terrain+pawn+building+UI 한 스타일.
 
 ---
 
-## [세션 2026-05-29 야간] #199+#200 — RimWorld 풀 그리드 정합 + 충실도 감사/튜닝
+## [세션 2026-05-29 야간] #199+#200 — the reference sim 풀 그리드 정합 + 충실도 감사/튜닝
 
-운영자 directive (자기 전): "최대한 림월드와 같은 방식으로 처리하도록" +
+운영자 directive (자기 전): "최대한 레퍼런스 콜로니심와 같은 방식으로 처리하도록" +
 "위키에 다른 카테고리들 알아서 찾아서 현재 구현된것들 문제 있는지 체크하면서 개선해".
 앞선 발화: 림 사이즈 1x1 맞는지 위키 확인 + 건축/이동/액션 잘 처리.
 
 ### 한 줄
 **위키 확정(림=1x1, 침대=1x2) → A+B+C 풀 그리드 정합 (#199, 5 commit) =
-point-자유이동을 RimWorld 그리드 A* 경로탐색으로 전면 전환 + 충실도 감사 →
+point-자유이동을 the reference sim 그리드 A* 경로탐색으로 전면 전환 + 충실도 감사 →
 밸런스 튜닝 5건 (#200). 전부 game-pm→programmer→qa 파이프라인 + 매 단계 harness PASS.**
 
-### #199 — RimWorld 풀 그리드 정합 (A+B+C, 9 step → 4 commit)
+### #199 — the reference sim 풀 그리드 정합 (A+B+C, 9 step → 4 commit)
 위키: 림(pawn)=1x1, 침대=1x2 (침대는 이미 정합이었음). 감사로 진짜 문제 3개 발견:
 림 2x2 선택 collider / point-기반 자유 lerp (경로탐색 없음) / 칸 점유·예약 없음.
 
@@ -166,8 +166,8 @@ point-자유이동을 RimWorld 그리드 A* 경로탐색으로 전면 전환 + �
 검증: isolated 65→75, integration 37→41. 매 phase game-qa milestone gate PASS.
 효과: 3 림이 서로 다른 나무 벌목 (totalPawnMove 6.9→26.6), 벽 우회, 대상 옆에 섬.
 
-### #200 — RimWorld 값 충실도 감사 + 튜닝 (`ad6326f`)
-감사 리포트 `docs/audit-rimworld-fidelity-2026-05-29.md` (~28 시스템 vs 위키).
+### #200 — the reference sim 값 충실도 감사 + 튜닝 (`ad6326f`)
+감사 리포트 `docs/audit-genre-fidelity-2026-05-29.md` (~28 시스템 vs 위키).
 Top-5 적용: 식량감소 0.5→0.14(굶주림 0.83일→3일, prefab baked값도), 이동 3.0→4.6
 + 늑대 chase 5.0(scene baked 3마리도), head HP 10→20/torso 30→40, 활 설명 정합,
 스킬 XP base ×10. 거짓양성 테스트 2건(V59/I3) 적발·강화.
@@ -532,7 +532,7 @@ G:/.../PawnSim.exe -starthour 22 -delay 3 -screenshot G:/ai/night.png
 운영자 directive: **"기존 시스템 개선이면 머든 오케이"** (기능 추가 X, 정합성 ↑).
 
 ### 한 줄
-**RimWorld wiki spec 정합 #153~#159 (7 commit), 55/55 → 60/60 V tests, REAL QA 25s wood +40 안정.**
+**the reference sim wiki spec 정합 #153~#159 (7 commit), 55/55 → 60/60 V tests, REAL QA 25s wood +40 안정.**
 
 | commit | 영향 |
 |--------|------|

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// #155 - 림월드 vanilla stockpile priority (5 tier).
+    /// #155 - 레퍼런스 콜로니심 vanilla stockpile priority (5 tier).
     ///   Critical=4 (긴급) → Low=0.  Hauler 는 priority 높은 zone 우선.
     ///   wiki: Critical/Important/Preferred/Normal/Low 다섯 단계.
     /// </summary>
@@ -11,7 +11,7 @@ namespace MelonS.GameProto
 
     /// <summary>
     /// Z2 (운영자 '아이템 저장공간 설정') — coarse allowed-items filter on a stockpile.
-    ///  림월드 Storage 탭 category 체크트리의 최소 coarse 버전: PawnSim 이 실제로
+    ///  레퍼런스 콜로니심 Storage 탭 category 체크트리의 최소 coarse 버전: PawnSim 이 실제로
     ///  운반하는 3종(목재/석재/식량)만.  [Flags] 라 한 zone 이 여러 종류를 동시 허용
     ///  가능(wood+stone 등) 하고, 단일 종류(wood-only/food-only)도 가능.
     ///  Chunk(돌무더기/refuse)는 PawnSim 에 별도 refuse item 이 없어 Stone 으로 접음
@@ -28,7 +28,7 @@ namespace MelonS.GameProto
     }
 
     /// <summary>
-    /// #121 - 림월드 stockpile zone.  #155 - priority 추가.
+    /// #121 - 레퍼런스 콜로니심 stockpile zone.  #155 - priority 추가.
     ///  Hauler 가 pile/chunk 를 줍어서 priority 높은 zone center 로 가져가서 drop.
     ///  Zone 우클릭 = priority 한 단계 상승 (Low → Normal → Preferred → ... → Low 순환).
     ///

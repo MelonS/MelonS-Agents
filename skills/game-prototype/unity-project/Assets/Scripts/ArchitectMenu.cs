@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// 운영자 fb #5+#10 - 림월드 Architect 메뉴 패턴.
+    /// 운영자 fb #5+#10 - 레퍼런스 콜로니심 Architect 메뉴 패턴.
     ///  좌측 collapsible 카테고리 패널: Structure / Furniture / Production / Misc.
     ///  카테고리 클릭 → 하위 buildable 펼침.  Buildable 클릭 → BuildManager.SetMode.
     ///
@@ -47,8 +47,8 @@ namespace MelonS.GameProto
             if (cachedAudio != null) cachedAudio.PlaySelect();
         }
 
-        // ── operator fb #1+A: RimWorld "Orders (지시)" + "Zone (구역)" categories ──
-        //   In vanilla RimWorld, Mine + Deconstruct live under an ORDERS tab and
+        // ── operator fb #1+A: the reference sim "Orders (지시)" + "Zone (구역)" categories ──
+        //   In vanilla the reference sim, Mine + Deconstruct live under an ORDERS tab and
         //   Grow-zone lives under a ZONE tab — NOT as standalone screen buttons.
         //   We removed the 3 standalone toggles (Btn_채광/Btn_경작/해체) and fold
         //   them here.  These items are NOT BuildManager build-modes; each invokes
@@ -57,7 +57,7 @@ namespace MelonS.GameProto
         //   them with the SAME MakeBtn click plumbing as buildables — the fix that
         //   made buildables clickable (fillImg.raycastTarget=true) covers these too.
         //
-        //   Ordered RimWorld-like: Orders, then Zone, then the build categories.
+        //   Ordered colony-sim-like: Orders, then Zone, then the build categories.
         //   "isActive" lets the row reflect the current designation mode (▣ when on).
         private struct OrderItem
         {
@@ -70,10 +70,10 @@ namespace MelonS.GameProto
 
         private static readonly Dictionary<string, OrderItem[]> OrderCategories = new()
         {
-            // Orders (지시) — RimWorld Orders tab: Chop + Mine + Deconstruct.
+            // Orders (지시) — the reference sim Orders tab: Chop + Mine + Deconstruct.
             ["Orders (지시)"] = new[]
             {
-                // #231 RimWorld 정합 — 벌목 drag 지정(채광과 대칭).  STEP2 로 자동벌목을 끊은
+                // #231 장르 정합 — 벌목 drag 지정(채광과 대칭).  STEP2 로 자동벌목을 끊은
                 //  뒤 벌목 수단이 우클릭뿐이라 불편했던 것 해결: drag 로 나무 여러 그루 지정.
                 new OrderItem("벌목 (C)",
                     () => { if (TreeChopDesignation.Instance != null) TreeChopDesignation.Instance.SetMode(true); },
@@ -85,7 +85,7 @@ namespace MelonS.GameProto
                     () => { if (DeconstructDesignation.Instance != null) DeconstructDesignation.Instance.SetMode(true); },
                     () => DeconstructDesignation.Instance != null && DeconstructDesignation.Instance.ModeActive),
             },
-            // Zone (구역) — RimWorld Zone tab: Grow zone + Stockpile + Dumping.
+            // Zone (구역) — the reference sim Zone tab: Grow zone + Stockpile + Dumping.
             //   ZONE wave (운영자 "영역지정 필수"): 저장존(Z1)/폐기존(Z3) 추가.  둘 다
             //   StockpileDesignation 의 drag 모드를 켠다 — 저장=일반 preset, 폐기=Low+
             //   Stone-only preset.  buildable 과 동일한 MakeBtn onClick 플러밍(저장은
@@ -105,8 +105,8 @@ namespace MelonS.GameProto
                     () => StockpileDesignation.Instance != null
                           && StockpileDesignation.Instance.ModeActive
                           && StockpileDesignation.Instance.DumpingMode),
-                // ROOF wave (운영자: "RimWorld처럼 지붕영역 설정 메뉴 따로 있음") — the
-                //   vanilla RimWorld "Roof Area" (지붕 영역) lives under the Zone tab.
+                // ROOF wave (운영자: "the reference sim처럼 지붕영역 설정 메뉴 따로 있음") — the
+                //   vanilla the reference sim "Roof Area" (지붕 영역) lives under the Zone tab.
                 //   This row enters RoofDesignation's drag-rect mode (hotkey U); the
                 //   same MakeBtn onClick plumbing the other Zone items use renders it
                 //   (▣ active reflected).  ROOF-row addition ONLY — no other
@@ -114,7 +114,7 @@ namespace MelonS.GameProto
                 new OrderItem("지붕 영역 (U)",
                     () => { if (RoofDesignation.Instance != null) RoofDesignation.Instance.SetMode(true); },
                     () => RoofDesignation.Instance != null && RoofDesignation.Instance.ModeActive),
-                // ERASE wave (운영자 fb "창고/다른 영역/건축물 제거 기능 필요") — RimWorld
+                // ERASE wave (운영자 fb "창고/다른 영역/건축물 제거 기능 필요") — the reference sim
                 //   의 각 Zone 도구는 영역 추가뿐 아니라 드래그 삭제를 갖는다.  방금
                 //   추가된 RoofDesignation/GrowZoneDesignation/StockpileDesignation 의
                 //   SetEraseMode(true) 공개 API 로 그 삭제 모드에 진입하는 항목을
@@ -141,7 +141,7 @@ namespace MelonS.GameProto
             },
         };
 
-        // 림월드 vanilla 패턴 — 카테고리별 buildable 목록
+        // 레퍼런스 콜로니심 vanilla 패턴 — 카테고리별 buildable 목록
         private static readonly Dictionary<string, (BuildManager.Mode mode, string label, int cost)[]> Categories = new()
         {
             ["Structure (구조)"] = new[] {
@@ -149,7 +149,7 @@ namespace MelonS.GameProto
                 (BuildManager.Mode.WallStone, "벽 (석재 5)",   5),  // #127
                 (BuildManager.Mode.Door,      "문 (목재 3)",   3),
                 // W-M6-04 (B5) — autodoor, the Door-tab variety row (vanilla
-                //   RimWorld Door tab has plain door + autodoor).  An autodoor is
+                //   the reference sim Door tab has plain door + autodoor).  An autodoor is
                 //   the SAME DoorEntity built with a HIGHER passMul (≈0.95 vs the
                 //   plain door's 0.65) so a pawn crosses it FASTER, at a HIGHER
                 //   wood cost (목재 6 > 문 3).  Surfaced HERE ONLY (no hotkey — the
@@ -273,7 +273,7 @@ namespace MelonS.GameProto
         };
 
         // Plain Korean noun for the tooltip body (label already has the cost in
-        //   parens; the tooltip restates "<thing> — <material> <n>" RimWorld-style).
+        //   parens; the tooltip restates "<thing> — <material> <n>" colony-sim-style).
         private static string ThingKr(BuildManager.Mode m) => m switch
         {
             BuildManager.Mode.Wall            => "목재 벽",
@@ -461,7 +461,7 @@ namespace MelonS.GameProto
 
             float y = 0;
 
-            // ── Orders (지시) + Zone (구역) FIRST (RimWorld tab order) ──────────
+            // ── Orders (지시) + Zone (구역) FIRST (the reference sim tab order) ──────────
             //   operator fb #1: Mine/Deconstruct under Orders, Grow-zone under Zone.
             foreach (var kv in OrderCategories)
             {
@@ -516,8 +516,8 @@ namespace MelonS.GameProto
                 // 펼친 buildables (active 카테고리만)
                 if (activeCategory == catName)
                 {
-                    // #241 자재 부족 항목은 RimWorld 처럼 dim 표시 (석재 0 일 때 석재 항목 회색 등).
-                    //  스냅샷(메뉴 열 때 기준) — 클릭은 막지 않음(RimWorld 도 자재 없이 청사진을
+                    // #241 자재 부족 항목은 the reference sim 처럼 dim 표시 (석재 0 일 때 석재 항목 회색 등).
+                    //  스냅샷(메뉴 열 때 기준) — 클릭은 막지 않음(the reference sim 도 자재 없이 청사진을
                     //  깔 수 있고 pawn 이 모이면 짓는다; ghost 빨강 + placement 가 별도 처리).
                     int curWood = ResourceManager.Instance != null ? ResourceManager.Instance.wood : 0;
                     int curStone = ResourceManager.Instance != null ? ResourceManager.Instance.stone : 0;
@@ -712,13 +712,13 @@ namespace MelonS.GameProto
 
         // #241b 자재 부족 dim 을 live 로 — 메뉴 열린 동안 wood/stone 이 바뀌면(채집/소비)
         //  RefreshContent 로 affordability 재평가.  매 frame 아니라 값 변화 시에만 rebuild
-        //  (자원은 자주 안 바뀌어 flicker/비용 무시 가능).  RimWorld 도 live 로 회색 갱신.
+        //  (자원은 자주 안 바뀌어 flicker/비용 무시 가능).  the reference sim 도 live 로 회색 갱신.
         private int _lastWood = int.MinValue;
         private int _lastStone = int.MinValue;
 
         private void Update()
         {
-            // F8 림월드 Architect 단축키
+            // F8 레퍼런스 콜로니심 Architect 단축키
             if (Input.GetKeyDown(KeyCode.F8)) Toggle();
 
             if (isOpen && ResourceManager.Instance != null)

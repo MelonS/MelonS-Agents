@@ -12,7 +12,7 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(PawnMovement))]
     public class PawnGatherer : MonoBehaviour
     {
-        // #199 C1 — stand adjacent (RimWorld).  1.2 → 1.5 to accept diagonal
+        // #199 C1 — stand adjacent (the reference sim).  1.2 → 1.5 to accept diagonal
         //  adjacency (√2≈1.414 center-to-center).
         [SerializeField] private float gatherRange = 1.5f;
         [SerializeField] private float gatherInterval = 0.8f;

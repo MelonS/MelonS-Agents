@@ -10,7 +10,7 @@ namespace MelonS.GameProto
     /// Wave W-M6-03 Lane B2 / wiki row B2 (M6, Dim6 UX) — the gizmo command bar
     /// on selection.
     ///
-    /// RimWorld convention (InspectGizmoGrid): when a thing is selected, a row of
+    /// the reference sim convention (InspectGizmoGrid): when a thing is selected, a row of
     /// contextual command buttons appears at the bottom-center of the screen
     /// (Draft / Undraft, Cancel/deselect, etc).  PawnSim already has single-select
     /// (ClickSelector) and, since W-M6-01, multi-select (MarqueeSelector) — but the

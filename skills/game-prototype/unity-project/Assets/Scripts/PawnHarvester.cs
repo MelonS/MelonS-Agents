@@ -12,7 +12,7 @@ namespace MelonS.GameProto
     ///
     /// Same shape as PawnChopper / PawnCook (the established worker pattern):
     ///   - reserve the crop + an adjacent stand cell (ReservationManager / C2)
-    ///   - walk to the reserved adjacent walkable cell (RimWorld reach-over)
+    ///   - walk to the reserved adjacent walkable cell (the reference sim reach-over)
     ///   - when in range, Harvest() once the crop is ripe
     ///   - path-aware give-up (WorkGiveUp) on real unreachability / stall
     ///   - clear the task once the crop is harvested (no longer ripe) or destroyed
@@ -23,7 +23,7 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(PawnMovement))]
     public class PawnHarvester : MonoBehaviour
     {
-        // #199 C1 — stand adjacent to the crop (RimWorld).  1.5 covers diagonal
+        // #199 C1 — stand adjacent to the crop (the reference sim).  1.5 covers diagonal
         //  adjacency (center dist √2≈1.414) yet stays < 2 so a pawn can't harvest
         //  from a full cell away.  Matches PawnChopper.chopRange / PawnCook.cookRange.
         [SerializeField] private float harvestRange = 1.5f;

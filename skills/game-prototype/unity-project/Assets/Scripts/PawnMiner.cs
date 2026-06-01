@@ -5,13 +5,13 @@ using MelonS.GameProto.AI;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// #119 - 림월드 채광 작업.  PawnChopper 와 동일 패턴.
+    /// #119 - 레퍼런스 콜로니심 채광 작업.  PawnChopper 와 동일 패턴.
     ///  StoneVeinEntity target 설정 후 mineRange 도달 → 데미지 누적 → 소진 시 chunks drop.
     /// </summary>
     [RequireComponent(typeof(PawnMovement))]
     public class PawnMiner : MonoBehaviour
     {
-        // #199 C1 — stand adjacent (RimWorld).  1.2 → 1.5 for diagonal adjacency.
+        // #199 C1 — stand adjacent (the reference sim).  1.2 → 1.5 for diagonal adjacency.
         [SerializeField] private float mineRange = 1.5f;
         [SerializeField] private float mineDamagePerSec = 20f;  // 광맥 HP 200 → 10s
         [SerializeField] private float giveUpAfterSec = 12f;

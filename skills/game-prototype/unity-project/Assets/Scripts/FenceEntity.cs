@@ -25,7 +25,7 @@ namespace MelonS.GameProto
     ///        FloorEntity, which pawns walk over).  WallEntity / DoorEntity own
     ///        the colliders that stop pawns; FenceEntity deliberately owns none.
     ///   Net result: a pawn walks straight through a cell that holds a fence,
-    ///   which is the RimWorld fence (vanilla fences are pawn-passable; they
+    ///   which is the colony-sim fence (vanilla fences are pawn-passable; they
     ///   only block farm animals via a separate roaming system that is OUT OF
     ///   SCOPE here per the over-scoping guardrails).
     ///
@@ -37,7 +37,7 @@ namespace MelonS.GameProto
     ///   waist-height barrier line, never as a full wall.
     ///
     /// NO cover-math:
-    ///   RimWorld fences give a small ranged cover bonus.  Cover math is
+    ///   the reference sim fences give a small ranged cover bonus.  Cover math is
     ///   explicitly OUT OF SCOPE / OP-gated for this lane — this component
     ///   carries none.  A future cover wave can add it without touching this.
     ///

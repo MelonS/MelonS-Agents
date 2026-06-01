@@ -7,7 +7,7 @@ namespace MelonS.GameProto.Tests
     /// <summary>
     /// M5-verify #V1 — V1 drafted-tint gate test.
     ///
-    /// Wiki acceptance criterion (rimworld-comparison.md Dim 5 'V1-V9 verification
+    /// Wiki acceptance criterion (genre-comparison.md Dim 5 'V1-V9 verification
     /// slate', V1 = drafted tint; 'Defend' loop row #114): "a gated test asserts
     /// drafting a pawn sets drafted state + drafted tint, and undrafting clears it,
     /// as ONE PASS line."

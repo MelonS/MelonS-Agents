@@ -4,7 +4,7 @@ using UnityEngine;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// 운영자 fb #7 + #114 - 림월드 Work tab priority 시스템.
+    /// 운영자 fb #7 + #114 - 레퍼런스 콜로니심 Work tab priority 시스템.
     ///   각 pawn × work type 마다 우선순위 0(disabled)~4(highest).
     ///   PawnUtilityAI 가 Decide 시 priority 높은 work 부터 시도.
     ///

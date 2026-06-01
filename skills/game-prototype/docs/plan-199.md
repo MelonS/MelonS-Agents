@@ -1,4 +1,4 @@
-# Plan #199 — Pawn movement: full RimWorld-grid fidelity (A + B + C)
+# Plan #199 — Pawn movement: full the reference sim-grid fidelity (A + B + C)
 
 > PM / resource-allocation plan.  Operator decision 2026-05-29: bring pawn
 > movement to full grid fidelity — **A** (pawn render 2×2 → 1×1 + camera/labels),
@@ -124,7 +124,7 @@ and collider size == (1,1).
   once at scene start and on wall build/destroy (subscribe or rebuild-dirty).
 - New `Pathfinding/AStar.cs`: 4- or 8-neighbour A\* over PathGrid returning a
   `List<Vector2Int>` cell path (or empty = unreachable).  8-neighbour with
-  corner-cut prevention is preferred (RimWorld is 8-dir) but 4-dir is an
+  corner-cut prevention is preferred (the reference sim is 8-dir) but 4-dir is an
   acceptable shippable first cut — programmer's call.
 - **No wiring into PawnMovement yet.**  Pure additive code.
   `PawnMovement.UsePathfinding` flag added, default **false**.
@@ -225,7 +225,7 @@ and collider size == (1,1).
 ### C1 — Pawns path to an ADJACENT cell of work targets (not on top)
 **Deliverable**
 - Work actions (Chop/Build/Harvest/Cook/Gather/Hunt/Mine/Haul) request a
-  path to a **walkable cell adjacent to the target's cell**, RimWorld-style,
+  path to a **walkable cell adjacent to the target's cell**, colony-sim-style,
   instead of the target's exact position.  Add a helper
   `PathGrid.NearestAdjacentWalkableCell(targetCell, fromCell)`.
 - The give-up / in-range checks in every worker (`PawnChopper.cs:53-61` pattern

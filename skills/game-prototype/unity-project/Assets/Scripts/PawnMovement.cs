@@ -55,10 +55,10 @@ namespace MelonS.GameProto
             Grid.SetStructureBlocked(PathGrid.WorldToCell(worldPos), false);
         }
 
-        // #201 — RimWorld eject-on-block.  When a solid structure (wall) COMPLETES
+        // #201 — the reference sim eject-on-block.  When a solid structure (wall) COMPLETES
         //  on a cell, any pawn already standing in that cell would be sealed inside
         //  an impassable cell (AStar refuses a blocked START cell → the pawn can
-        //  never path out, and an idle pawn never even calls SetTarget).  RimWorld
+        //  never path out, and an idle pawn never even calls SetTarget).  the reference sim
         //  PUSHES such a pawn out to the nearest open cell.  WallEntity.Start()
         //  calls this AFTER it registers the cell as blocked, so TryNearestWalkable
         //  sees the cell as occupied and lands the pawn on a genuinely-open
@@ -105,7 +105,7 @@ namespace MelonS.GameProto
             target = null;
         }
 
-        // #199 C1 — shared RimWorld-style "stand adjacent to the work object"
+        // #199 C1 — shared colony-sim-style "stand adjacent to the work object"
         //  helper for all workers (Chop/Gather/Build/Mine/Cook/Haul/...).  Returns
         //  the world position the worker should WALK TO (an adjacent walkable cell
         //  centre next to the target footprint) and whether such a cell exists.
@@ -157,7 +157,7 @@ namespace MelonS.GameProto
         //  stand cell is now LOCKED (not recomputed every frame), AdvanceAlongPath
         //  stops the pawn within arriveDistance of the cell CENTRE — which can leave
         //  it ~arriveDistance short, i.e. at the cell edge.  A pure dist-to-target
-        //  check then sits exactly on the work-range boundary and flaps (RimWorld:
+        //  check then sits exactly on the work-range boundary and flaps (the reference sim:
         //  the pawn IS in its reserved work cell, so it should work regardless of the
         //  sub-cell offset).  Workers treat "standing in the reserved cell" as
         //  in-range.  Returns false for an invalid lock (legacy dist path still
@@ -318,7 +318,7 @@ namespace MelonS.GameProto
         //  re-call SetTarget every frame.
         private int _pathGridVersion = -1;
 
-        // #199 B1 — RimWorld "destination unreachable" signal.  Set true when an
+        // #199 B1 — the reference sim "destination unreachable" signal.  Set true when an
         //  A* request returns null/empty (target cannot be reached) and the target
         //  is cleared.  Set false whenever a new target is accepted with a valid
         //  path.  C1 give-up timers should switch from "timer + dist>range" to
@@ -347,7 +347,7 @@ namespace MelonS.GameProto
         //  points the pawn still has to walk (from the pawn's current position up to
         //  the goal), or null when there is no active path.  The pawn's current
         //  position is prepended so the drawn line starts at the pawn, not at the
-        //  already-reached previous waypoint (RimWorld-style "line from feet to dest").
+        //  already-reached previous waypoint (colony-sim-style "line from feet to dest").
         //  Allocation note: this allocates only when a renderer asks for it — the
         //  renderer caches the array and only re-fetches when the path changes, so
         //  this is NOT a per-frame allocation in the tight loop.  No state mutated.
@@ -408,7 +408,7 @@ namespace MelonS.GameProto
 
                 Vector2Int startCell = PathGrid.WorldToCell(transform.position);
                 // #199 C3 (item 3) — a wall blueprint may be placed on a cell a pawn
-                //  is standing on (RimWorld allows it; the pawn walks off).  If the
+                //  is standing on (the reference sim allows it; the pawn walks off).  If the
                 //  wall COMPLETES before the pawn moved, the pawn's start cell becomes
                 //  blocked and AStar would refuse to path (it rejects a blocked start)
                 //  → trapped.  Escape hatch: when the start cell is no longer walkable,
@@ -420,12 +420,12 @@ namespace MelonS.GameProto
                     if (TryNearestWalkable(startCell, out escape))
                         startCell = escape;
                     // else: genuinely sealed in on all sides → falls through to the
-                    //  null-path give-up below (LastPathFailed), same as RimWorld.
+                    //  null-path give-up below (LastPathFailed), same as the reference sim.
                 }
                 var path = AStar.FindPath(Grid, startCell, goalCell);
                 if (path == null || path.Count == 0)
                 {
-                    // RimWorld "destination unreachable" — give up the target.
+                    // the reference sim "destination unreachable" — give up the target.
                     _path = null;
                     _pathIndex = 0;
                     target = null;
@@ -465,7 +465,7 @@ namespace MelonS.GameProto
         /// <paramref name="maxDelta"/> world units (already speed-scaled by the
         /// caller), advances the waypoint index on arrival, and clears the target
         /// (returns true) when the final waypoint is reached.  No-op when there is
-        /// no live path.  Smooth lerp between cell centers (RimWorld glide).
+        /// no live path.  Smooth lerp between cell centers (the reference sim glide).
         /// Returns true when arrival happened this tick.
         /// </summary>
         public bool AdvanceAlongPath(float maxDelta)
