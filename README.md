@@ -117,7 +117,8 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > farming, hauling, storytellers, sound, day/night, save/load — at
 > ~85% RimWorld-vanilla core coverage, gated on every commit by a
 > 6-stage `refactor_check` harness (isolated 76/76 · integration
-> 42/42 · Build Click QA 9/9 · visual diff), with per-dimension
+> 43/43 · Build Click QA 8/8 · pawn-action 7/7 · feature-audit 13/13 ·
+> visual diff), with per-dimension
 > wiki-fidelity tracked in
 > [`skills/game-prototype/docs/rimworld-comparison-v2.md`](skills/game-prototype/docs/rimworld-comparison-v2.md)
 > (design 80% · sound 80% · movement 82% · building 80% · loop 85% ·
