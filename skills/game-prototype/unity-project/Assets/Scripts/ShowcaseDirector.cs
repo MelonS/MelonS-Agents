@@ -67,7 +67,7 @@ namespace MelonS.GameProto
 
             float T = totalSeconds;
             float introDur = Mathf.Max(6f, T * 0.05f);
-            float buildWatchDur = T * 0.30f;
+            float buildWatchDur = T * 0.18f;   // 밤→아침 시퀀스에 시간 양보
 
             // 인트로: 집터 전경 줌인
             SnapCam(HouseCenter, 13f);
@@ -81,8 +81,8 @@ namespace MelonS.GameProto
 
             FinishRemaining();
 
-            // 밤 수면 피날레 (촛불 조명)
-            yield return StartCoroutine(NightSleepFinale());
+            // 밤(자연스럽게 침대로 → 3배속 타임랩스) → 아침(기상 → 밥/농사)
+            yield return StartCoroutine(NightSleepThenMorning());
         }
 
         // ====================================================================
@@ -416,11 +416,12 @@ namespace MelonS.GameProto
             float t = 0f;
             while (t < dur)
             {
-                t += Time.deltaTime;
+                float udt = Time.unscaledDeltaTime;   // 배속과 무관하게 영상 페이스 유지
+                t += udt;
                 if (p == null || p.IsDead) yield break;
                 Vector3 want = new Vector3(p.transform.position.x, p.transform.position.y, camZ);
-                cam.transform.position = Vector3.Lerp(cam.transform.position, want, Time.deltaTime * 2.5f);
-                cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, ortho, Time.deltaTime * 2.0f);
+                cam.transform.position = Vector3.Lerp(cam.transform.position, want, udt * 2.5f);
+                cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, ortho, udt * 2.0f);
                 yield return null;
             }
         }
@@ -428,39 +429,85 @@ namespace MelonS.GameProto
         // 피날레: 림을 침대에 확실히 재운다.  AI 를 끄고(침대에서 안 끌려나가게) 빈 침대로
         //  안착시킨 뒤 SetRestTarget → forcedResting.  regen 을 낮춰(reflection) 피날레 동안
         //  풀충전돼 깨는 일이 없게 한다.
-        private void ForcePawnsAsleepInBeds()
+        private static FieldInfo RegenField =>
+            typeof(PawnNeeds).GetField("sleepRegenAtNight", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private BedEntity FindBedNear(Vector2 p)
         {
-            var beds = new List<BedEntity>();
+            BedEntity best = null; float bestSq = 2.5f * 2.5f;
             foreach (var b in Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None))
-                if (b != null) beds.Add(b);
-
-            var regenField = typeof(PawnNeeds).GetField("sleepRegenAtNight",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-
-            int bi = 0;
-            foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
             {
-                if (p == null || p.IsDead || bi >= beds.Count) continue;
-                var bed = beds[bi]; bi++;
+                if (b == null) continue;
+                float sq = ((Vector2)b.transform.position - p).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = b; }
+            }
+            return best;
+        }
 
-                var ai = p.GetComponent<PawnUtilityAI>();
-                if (ai != null) ai.enabled = false;          // 자율행동 정지 → 침대 고정
-                var mv = p.GetComponent<PawnMovement>();
-                if (mv != null) mv.SetTarget(bed.transform.position);  // 잔여 이동 정리
+        // 밤: 림을 자연스럽게(텔레포트 X) 침대 "아래칸"(anchor)으로 걸어가게 해 재운다.
+        //  AI 를 꺼 이동이 방해받지 않게 하고, regen 을 낮춰 자는 동안 안 깨게.
+        private void StartNaturalSleep()
+        {
+            var regenField = RegenField;
+            int i = 0;
+            foreach (var pawn in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+            {
+                if (pawn == null || pawn.IsDead || i >= Beds.Length) continue;
+                Vector2Int anchor = Beds[i]; i++;                 // 아래칸 = anchor(작은 y)
+                Vector2 bottomCell = new Vector2(anchor.x + 0.5f, anchor.y + 0.5f);
+                var bed = FindBedNear(bottomCell);
 
-                // 침대 셀로 안착 (경로 실패와 무관하게 확실히 침대 위에).
-                p.transform.position = new Vector3(
-                    bed.transform.position.x, bed.transform.position.y, p.transform.position.z);
-
-                var needs = p.GetComponent<PawnNeeds>();
+                var ai = pawn.GetComponent<PawnUtilityAI>();
+                if (ai != null) ai.enabled = false;              // 이동 방해 방지
+                var needs = pawn.GetComponent<PawnNeeds>();
                 if (needs != null)
                 {
-                    if (regenField != null) regenField.SetValue(needs, 0.05f); // 거의 안 차게 → 안 깸
-                    needs.sleep = 18f;                       // 졸린 상태로
-                    needs.SetRestTarget(bed);                // 침대 위 → forcedResting=true
+                    if (regenField != null) regenField.SetValue(needs, 0.04f);  // 안 깨게
+                    needs.sleep = 16f;
+                    if (bed != null) needs.SetRestTarget(bed);    // 아래칸 도착 시 forcedResting
                 }
+                var mv = pawn.GetComponent<PawnMovement>();
+                if (mv != null) mv.SetTarget(bottomCell);         // 걸어서 침대 아래칸으로
             }
-            Debug.Log($"[Showcase] 피날레 {bi}명 침대 수면 고정.");
+            Debug.Log("[Showcase] 자연 취침 시작 (침대 아래칸으로 도보).");
+        }
+
+        // 아침: 림을 깨워 일상 재개 — AI 재가동 + 기상 + 농사(grow zone) 부여.
+        private void WakePawnsAndStartMorning()
+        {
+            var regenField = RegenField;
+            foreach (var pawn in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+            {
+                if (pawn == null || pawn.IsDead) continue;
+                var needs = pawn.GetComponent<PawnNeeds>();
+                if (needs != null)
+                {
+                    needs.ClearRestTarget();                      // 기상
+                    needs.sleep = 92f;                            // 잘 잤음 → 안 졸림
+                    if (regenField != null) regenField.SetValue(needs, 8f);   // 원복
+                }
+                var ai = pawn.GetComponent<PawnUtilityAI>();
+                if (ai != null) ai.enabled = true;                // AI 재가동 → 밥/일/농사
+            }
+            // 농사: 집 동쪽에 grow zone → 림이 파종(아침 활동).
+            var gz = GrowZoneDesignation.Instance;
+            if (gz != null) gz.SimulateDragRect(new Vector2(X1 + 2, Y0 - 1), new Vector2(X1 + 5, Y0 + 3));
+            Debug.Log("[Showcase] 아침 기상 + grow zone 부여.");
+        }
+
+        private PawnEntity PickActivePawn()
+        {
+            // 움직이거나 일하는 림 우선 (집 근처).
+            PawnEntity best = null; float bestSq = float.MaxValue;
+            foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+            {
+                if (p == null || p.IsDead) continue;
+                float sq = ((Vector2)p.transform.position - HouseCenter).sqrMagnitude;
+                var mv = p.GetComponent<PawnMovement>();
+                if (mv != null && mv.IsMoving) sq -= 100f;        // 이동 중인 림 가산점
+                if (sq < bestSq) { bestSq = sq; best = p; }
+            }
+            return best;
         }
 
         private void FinishRemaining()
@@ -477,25 +524,39 @@ namespace MelonS.GameProto
             Debug.Log($"[Showcase] 피날레 잔여 청사진 {left}개 마감.");
         }
 
-        private IEnumerator NightSleepFinale()
+        private IEnumerator NightSleepThenMorning()
         {
-            // 커서 숨김 (피날레엔 UI 안 씀)
             if (_cursor != null) _cursor.gameObject.SetActive(false);
+            var tc = TimeController.Instance;
 
-            // #269 게임 로직상 림은 Sleep 슬롯에 스스로 침대로 가지만, 공개 영상의 피날레는
-            //  반드시 "침대에서 자는" 그림이 나와야 하므로 확실히 재운다(AI off + 침대 안착).
-            ForcePawnsAsleepInBeds();
+            // ── 저녁 전경 (1배속) ──
+            if (tc != null) tc.SetScale(1f);
+            TrySetClock(20f);
+            yield return MoveCam(HouseCenter, 10.5f, 3.5f);
 
-            Vector2 bedView = HouseCenter + new Vector2(0f, 1.0f);
-            yield return MoveCam(bedView, 6.0f, 6f);
+            // ── 밤: 림이 침대로 걸어가 잔다 + 3배속 타임랩스 ──
+            TrySetClock(22.5f);                       // 밤(조명 on)
+            StartNaturalSleep();                       // 자연스럽게 도보 취침
+            if (tc != null) tc.SetScale(3f);           // 3배속 — 자는 동안 빠르게
+            Vector2 bedView = HouseCenter + new Vector2(0f, 0.6f);
+            yield return MoveCam(bedView, 5.6f, 4f);   // 집 줌인(자는 모습 + 촛불)
+            yield return Wait(18f);                    // 밤 경과 (3배속 타임랩스, unscaled 18s)
+
+            // ── 아침: 기상 → 밥/농사 (2배속) ──
+            if (tc != null) tc.SetScale(2f);
+            TrySetClock(7.5f);                          // 아침(Work 슬롯, 조명 off)
+            WakePawnsAndStartMorning();
+            yield return MoveCam(HouseCenter + new Vector2(2.5f, -0.5f), 7.5f, 3.5f);
+
+            // 아침 활동(밥/농사/일) 따라가기
             float t = 0f;
-            while (t < 120f)
+            while (t < 34f)
             {
-                t += Time.deltaTime;
-                cam.orthographicSize = Mathf.Lerp(6.0f, 5.2f, Mathf.Clamp01(t / 45f));
-                cam.transform.position = new Vector3(
-                    bedView.x + Mathf.Sin(t * 0.13f) * 0.25f, bedView.y, camZ);
-                yield return null;
+                var p = PickActivePawn();
+                float seg = Mathf.Min(8f, 34f - t);
+                if (p != null) yield return FollowPawn(p, 5.0f, seg);
+                else yield return Wait(seg);
+                t += seg;
             }
         }
 
@@ -516,7 +577,7 @@ namespace MelonS.GameProto
             if (dur <= 0f) { SnapCam(pos, ortho); yield break; }
             while (t < dur)
             {
-                t += Time.deltaTime;
+                t += Time.unscaledDeltaTime;
                 float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / dur));
                 cam.transform.position = new Vector3(Mathf.Lerp(from.x, pos.x, u),
                                                      Mathf.Lerp(from.y, pos.y, u), camZ);
@@ -528,7 +589,7 @@ namespace MelonS.GameProto
         private IEnumerator Wait(float s)
         {
             float t = 0f;
-            while (t < s) { t += Time.deltaTime; yield return null; }
+            while (t < s) { t += Time.unscaledDeltaTime; yield return null; }
         }
 
         private void TrySetClock(float hour)
