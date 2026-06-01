@@ -146,17 +146,24 @@ namespace MelonS.GameProto
 
             if (clickResult != BuildClickResult.Placed)
             {
-                // cell 점유 시 인접 cell 1-4 시도 (test resilience)
+                // #263 점유/지형(물·바위) 시 나선형으로 근처 빈 셀 탐색 (test resilience).
+                //  이전엔 아래(cy-off)로만 4칸 시도 → 절차적 맵에서 호수가 그 방향으로 뻗으면
+                //  전부 실패하는 false-fail.  맵이 바뀌어도 근처 buildable 셀을 찾도록 전방위 스캔.
                 bool placedFallback = false;
-                for (int off = 1; off <= 4 && !placedFallback; off++)
+                for (int ring = 1; ring <= 5 && !placedFallback; ring++)
                 {
-                    Vector3 worldF = new Vector3(tc.cx + 0.5f, tc.cy - off + 0.5f, 0);
-                    Vector3 screenF = Camera.main.WorldToScreenPoint(worldF);
-                    var r = bm.SimulateMapClick(new Vector2(screenF.x, screenF.y));
-                    if (r == BuildClickResult.Placed) { placedFallback = true; world = worldF; }
-                    yield return null;
+                    for (int dx = -ring; dx <= ring && !placedFallback; dx++)
+                    for (int dy = -ring; dy <= ring && !placedFallback; dy++)
+                    {
+                        if (System.Math.Abs(dx) != ring && System.Math.Abs(dy) != ring) continue; // ring 경계만
+                        Vector3 worldF = new Vector3(tc.cx + dx + 0.5f, tc.cy + dy + 0.5f, 0);
+                        Vector3 screenF = Camera.main.WorldToScreenPoint(worldF);
+                        var r = bm.SimulateMapClick(new Vector2(screenF.x, screenF.y));
+                        if (r == BuildClickResult.Placed) { placedFallback = true; world = worldF; }
+                        yield return null;
+                    }
                 }
-                if (!placedFallback) { resultCb(false, $"SimulateMapClick → {clickResult} (인접 4셀도 실패)"); yield break; }
+                if (!placedFallback) { resultCb(false, $"SimulateMapClick → {clickResult} (나선형 5-ring 탐색도 실패 — 진짜 배치 불가 버그?)"); yield break; }
             }
 
             // Phase 5 - 청사진 spawn 확인
@@ -301,11 +308,14 @@ namespace MelonS.GameProto
                 if (b == null) continue;
                 var txt = b.GetComponentInChildren<Text>(true);
                 if (txt == null) continue;
-                // 헤더 검출 - text 가 "▼ {category}" or "▶ {category}" (#261 한글표시 대응)
-                if (txt.text.Contains(KoreanOf(category))) { hitHeader = true; continue; }
+                // #263 헤더는 "▼/▶ " 접두사로만 식별.  이전엔 Contains(category)만 봐서
+                //  buildable 라벨 "목재 바닥" 이 카테고리명 "바닥" 을 포함 → 헤더로 오인·skip →
+                //  Floor[0] 을 영영 못 찾는 false-fail.  접두사 + 카테고리명 동시 만족만 헤더.
+                bool isHeader = txt.text.StartsWith("▼ ") || txt.text.StartsWith("▶ ");
+                if (isHeader && txt.text.Contains(KoreanOf(category))) { hitHeader = true; continue; }
                 if (!hitHeader) continue;
                 // 다음 카테고리 헤더 만나면 종료
-                if (txt.text.StartsWith("▼ ") || txt.text.StartsWith("▶ ")) break;
+                if (isHeader) break;
                 if (found == idx) { b.onClick.Invoke(); return true; }
                 found++;
             }
