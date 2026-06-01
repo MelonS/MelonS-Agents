@@ -22,6 +22,33 @@ namespace MelonS.GameProto.EditorTools
             public Sprite bedFineSprite;  // #198 D4-1 - Fine quality 전용 sprite (royal-blue/gold)
         }
 
+        // Polish — free-standing furniture grounding shadow.  Same idea as the
+        //  tree-base shadow: a soft ellipse (shadow_tree.png, alpha-baked) parented
+        //  under the body so the object reads as resting ON the ground instead of
+        //  floating.  Only for object-like furniture (stove / bench / bed); walls /
+        //  floors / doors are tile-structural and need no drop shadow.  Shadow sits
+        //  one sortingOrder under the body, on the same layer, nudged down so it
+        //  pools at the object's base.
+        private static void AttachGroundShadow(GameObject parent, SpriteRenderer bodySr,
+                                               float yOffset, float scale)
+        {
+            Sprite shadow = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/shadow_tree.png");
+            if (shadow == null)
+            {
+                Debug.LogWarning($"[SceneSetup] shadow_tree.png NULL — {parent.name} shadow skipped");
+                return;
+            }
+            GameObject go = new GameObject("GroundShadow");
+            go.transform.SetParent(parent.transform, false);
+            go.transform.localPosition = new Vector3(0f, yOffset, 0f);
+            go.transform.localScale = new Vector3(scale, scale, 1f);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = shadow;
+            sr.color = new Color(1f, 1f, 1f, 0.7f);   // slightly lighter than tree-base
+            sr.sortingLayerID = bodySr.sortingLayerID;
+            sr.sortingOrder = bodySr.sortingOrder - 1;
+        }
+
         private static BuildPrefabSet GenerateBuildPrefabs()
         {
             BuildPrefabSet ps = new BuildPrefabSet();
@@ -106,6 +133,7 @@ namespace MelonS.GameProto.EditorTools
             ssr.sprite = ps.stoveSprite; ssr.sortingOrder = 5;
             var sbox = stoveTemplate.AddComponent<BoxCollider2D>(); sbox.size = Vector2.one;
             stoveTemplate.AddComponent<StoveEntity>();
+            AttachGroundShadow(stoveTemplate, ssr, -0.34f, 0.85f);
             ps.stovePrefab = PrefabUtility.SaveAsPrefabAsset(stoveTemplate, "Assets/Prefabs/Stove.prefab");
             Object.DestroyImmediate(stoveTemplate);
 
@@ -116,6 +144,8 @@ namespace MelonS.GameProto.EditorTools
             rbsr.sprite = benchSprite; rbsr.sortingOrder = 5;
             var rbcol = benchTemplate.AddComponent<BoxCollider2D>(); rbcol.size = Vector2.one;
             benchTemplate.AddComponent<ResearchBench>();
+            // bench is 2x1 — a wider shadow spans the footprint.
+            AttachGroundShadow(benchTemplate, rbsr, -0.30f, 1.15f);
             ps.benchPrefab = PrefabUtility.SaveAsPrefabAsset(benchTemplate, "Assets/Prefabs/ResearchBench.prefab");
             Object.DestroyImmediate(benchTemplate);
 
@@ -132,6 +162,8 @@ namespace MelonS.GameProto.EditorTools
             var bedEntity = bedTemplate.AddComponent<BedEntity>();
             // #198 D4-1: 두 quality sprite ref 를 prefab 에 baked (완성 path 에서 SetQuality 가 swap).
             bedEntity.SetSpriteRefs(ps.bedSprite, ps.bedFineSprite);
+            // bed is 1x2 (16x32) — shadow pools at the foot of the frame.
+            AttachGroundShadow(bedTemplate, bedsr, -0.92f, 0.95f);
             ps.bedPrefab = PrefabUtility.SaveAsPrefabAsset(bedTemplate, "Assets/Prefabs/Bed.prefab");
             Object.DestroyImmediate(bedTemplate);
 
