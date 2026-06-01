@@ -56,12 +56,15 @@ namespace MelonS.GameProto
         //  동일하게 코드 상단 한 곳에서.)                                       //
         // ------------------------------------------------------------------ //
 
-        // 가산 빛의 최대 세기(밤 절정).  너무 높으면 하얗게 씻기므로 은은하게.
-        private const float MaxLightIntensity = 0.55f;
+        // #267 RimWorld 라이트 글로우 캡은 0.5.  가산이라 약간 높게 잡아도 어둠 위에서
+        //  은은하게 밝히는 수준(하얗게 안 씀).
+        private const float MaxLightIntensity = 0.62f;
 
-        // 빛 원의 월드 지름(칸).  바닥 풀(2.8)보다 약간 넓게 잡아 빛이 풀 밖까지
-        // 자연스럽게 번지도록.  RimWorld 조명 반경 느낌.
-        private const float LightScale = 3.6f;
+        // 빛 원의 월드 지름(칸) = 전체 반경 4칸(=LightScale/2).  RimWorld 토치램프(전체
+        //  반경 10, lit 6.5)를 작은 집 규모로 축소.  #267 falloff 를 RimWorld 공식
+        //  (중심 1/d² 집중 + 선형, BuildProceduralLightSprite)으로 바꿔 "뿌연 안개"가
+        //  아니라 중심이 또렷이 밝고 가장자리로 깔끔히 떨어지는 조명이 된다.
+        private const float LightScale = 8.0f;
 
         // NightOverlay(25) "위", floating bars(29-31) "아래".  pawn(9-11) 위라서
         // 빛이 pawn 도 함께 밝히지만 가산이라 실루엣을 지우지 않고 비추기만 한다.
@@ -90,6 +93,11 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
+            // #268 비활성화 — 이 가산(additive) 빛 안개가 "조명이 뿌옇게만 보임"의
+            //  원인이었다.  RimWorld 식 조명은 NightOverlay 의 동적 라이트맵(램프 반경의
+            //  어둠을 걷어 바닥이 드러남)으로 통합됐다.  중복·뿌연 안개 방지 위해 미스폰.
+            return;
+#pragma warning disable CS0162
             // 게임 씬 게이트: MainMenu 에서는 절대 스폰하지 않는다.
             GameSceneGate.RunWhenGameScene(() =>
             {
@@ -271,15 +279,26 @@ namespace MelonS.GameProto
                     }
 
                     float t = dist / rMax;                       // 0 중심, 1 가장자리
-                    // cos^2 falloff: 중심에서 평평하게 밝고 가장자리에서 매우 부드럽게 0.
-                    float cos     = 0.5f * (1f + Mathf.Cos(Mathf.PI * t));
-                    float falloff = cos * cos;
+                    // #267 RimWorld 글로우 falloff 공식 적용 (rimworldwiki Torch lamp):
+                    //   r=반경(칸), d=거리+1, a=1-d/r(선형), bq=1/d²(중심집중),
+                    //   f=a+(bq-a)*0.4.  중심값으로 정규화 → 또렷한 코어 + 깔끔한 감쇠.
+                    //   (이전 1-smoothstep 은 균일하게 흐려 "뿌옇게" 보였음.)
+                    float rTiles    = LightScale * 0.5f;
+                    float distTiles = t * rTiles;
+                    float d  = distTiles + 1f;
+                    float aL = 1f - d / rTiles;
+                    float bq = 1f / (d * d);
+                    float f  = aL + (bq - aL) * 0.4f;
+                    // 중심(거리0 → d=1) 정규화값
+                    float ac = 1f - 1f / rTiles;
+                    float fc = ac + (1f - ac) * 0.4f;
+                    float falloff = Mathf.Clamp01(f / Mathf.Max(0.0001f, fc));
 
-                    // 따뜻한 빛: 중심은 거의 흰색에 가까운 따뜻한 톤,
-                    // 가장자리로 갈수록 amber 쪽으로(불빛 색온도).
-                    byte r = (byte)Mathf.RoundToInt(Mathf.Lerp(255f, 250f, t));
-                    byte g = (byte)Mathf.RoundToInt(Mathf.Lerp(244f, 196f, t));
-                    byte b = (byte)Mathf.RoundToInt(Mathf.Lerp(214f, 120f, t));
+                    // #267 촛불색: 오렌지/붉은 따뜻한 불꽃색.  중심 밝은 오렌지 → 가장자리
+                    //  짙은 적황.  너무 어둡지 않게(혈색 아님) 불빛 톤.
+                    byte r = (byte)Mathf.RoundToInt(Mathf.Lerp(255f, 214f, t));
+                    byte g = (byte)Mathf.RoundToInt(Mathf.Lerp(168f,  92f, t));
+                    byte b = (byte)Mathf.RoundToInt(Mathf.Lerp( 86f,  40f, t));
                     byte a = (byte)Mathf.RoundToInt(falloff * 255f);
 
                     pixels[y * SIZE + x] = new Color32(r, g, b, a);

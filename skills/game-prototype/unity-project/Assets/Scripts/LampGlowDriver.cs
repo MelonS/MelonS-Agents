@@ -87,6 +87,10 @@ namespace MelonS.GameProto
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
+            // #268 비활성화 — 바닥 amber 풀은 NightOverlay 라이트맵(램프 반경 reveal)으로
+            //  통합됨.  중복 레이어로 인한 뿌연 느낌 방지 위해 미스폰.
+            return;
+#pragma warning disable CS0162
             // Game-scene gate: never spawn on MainMenu (operator 2026-05-30).
             GameSceneGate.RunWhenGameScene(() =>
             {

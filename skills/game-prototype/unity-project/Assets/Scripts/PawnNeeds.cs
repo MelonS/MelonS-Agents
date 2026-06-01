@@ -133,7 +133,7 @@ namespace MelonS.GameProto
         //  바닥에 정체돼 "수면 게이지가 정상동작 안 함"처럼 보였다.
         private const float ExhaustedSleepLevel = 15f;
         public bool WantsAutoSleep =>
-            (sleep < ExhaustedSleepLevel || (sleep < autoSleepThreshold && IsNightTime()))
+            (sleep < ExhaustedSleepLevel || (sleep < autoSleepThreshold && IsNightTime()) || ScheduledSleepNow)
             && Time.time >= autoSleepSuppressUntil;
 
         /// <summary>GoSleepAction 이 빈 침대를 예약한 뒤 호출 — 이 침대로 가서 자라.</summary>
@@ -175,11 +175,20 @@ namespace MelonS.GameProto
         private float breakUntil = -10f;
         public bool IsBreaking => isBreaking;
 
+        private PawnSchedule schedule;   // #269 스케줄 수면 연동
+
         private void Awake()
         {
             movement = GetComponent<PawnMovement>();
             pawnEntity = GetComponent<PawnEntity>();
+            schedule = GetComponent<PawnSchedule>();
         }
+
+        // #269 RimWorld 스케줄: 현재 시간대가 Sleep 슬롯이면 졸리지 않아도 침대로 가 자고,
+        //  슬롯 동안 풀충전돼도 안 깬다(Anything 은 피곤할 때만 — 기존 동작).
+        //  운영자 fb "스케줄에 수면이 있는데 왜 안 따르냐" + rimworldwiki Schedule.
+        public bool ScheduledSleepNow => schedule != null
+            && schedule.GetCurrentSlot() == TimeSlot.Sleep;
 
         private void Update()
         {
@@ -269,9 +278,9 @@ namespace MelonS.GameProto
                         food = Mathf.Max(0f, food - foodDecay * 0.5f * dt);
                         mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
                         if (moodPerSec > 0f) mood = Mathf.Min(100f, mood + moodPerSec * dt);
-                        // 충분히 잤으면(80) 자율 취침 종료.  예약 해제는 GoSleepAction/AI 가
-                        //  HasAutoSleepOrder 가 풀린 걸 보고 처리.
-                        if (sleep >= autoWakeSleepLevel)
+                        // 충분히 잤으면(80) 자율 취침 종료.  단 #269 스케줄 Sleep 슬롯 중엔
+                        //  풀충전돼도 계속 잔다(슬롯 끝날 때까지) — RimWorld Sleep 동작.
+                        if (sleep >= autoWakeSleepLevel && !ScheduledSleepNow)
                         {
                             IsSleeping = false;
                             ClearAutoSleepTarget();
@@ -318,6 +327,9 @@ namespace MelonS.GameProto
             //  실패해 fallback 으로 내려온 림이 (sleep≈30~35) 곧장 누워 회복하도록 한다.
             //  발밑이 침대면 자동으로 bed.RestMul 보너스 (위 cell 에 멈췄을 때 포함).
             //  #228 - 탈진(sleep<15)이면 낮에도 그 자리서 쓰러져 잔다(밤 게이트 무시).
+            // #269 주의: ScheduledSleepNow 를 여기(제자리 취침)에 넣으면 침대로 가기 전에
+            //  그 자리서 자버린다.  스케줄 수면은 WantsAutoSleep → GoSleepAction(침대 이동)
+            //  으로 처리하고, 여긴 기존 조건(졸림/밤/탈진)만 — 침대 도달 실패 시의 fallback.
             if (sleep < ExhaustedSleepLevel || (sleep < autoSleepThreshold && night))
             {
                 IsSleeping = true;
@@ -330,8 +342,8 @@ namespace MelonS.GameProto
                 if (moodPerSec > 0f) mood = Mathf.Min(100f, mood + moodPerSec * dt);
                 return;
             }
-            // Wake up when sleep refilled past 80, even if still night
-            if (IsSleeping && sleep >= 80f) IsSleeping = false;
+            // Wake up when sleep refilled past 80 — 단 #269 스케줄 Sleep 슬롯 중엔 계속 잔다.
+            if (IsSleeping && sleep >= 80f && !ScheduledSleepNow) IsSleeping = false;
             if (IsSleeping)
             {
                 sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * dt);
