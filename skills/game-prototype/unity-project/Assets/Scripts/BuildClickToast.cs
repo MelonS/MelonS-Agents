@@ -39,12 +39,12 @@ namespace MelonS.GameProto
         private void Awake()
         {
             rt = gameObject.AddComponent<RectTransform>();
-            // 우상단, TopBar 아래
+            // #275 우상단 계층화 — TopBar(76) + AlertStack 카드군(-88~) 아래에 둬 겹침 제거.
             rt.anchorMin = new Vector2(1, 1);
             rt.anchorMax = new Vector2(1, 1);
             rt.pivot = new Vector2(1, 1);
             rt.sizeDelta = new Vector2(360, 38);
-            rt.anchoredPosition = new Vector2(-16, -64);
+            rt.anchoredPosition = new Vector2(-16, -148);
             bg = gameObject.AddComponent<Image>();
             bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
             bg.raycastTarget = false;

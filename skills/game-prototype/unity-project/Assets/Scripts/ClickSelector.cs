@@ -138,23 +138,9 @@ namespace MelonS.GameProto
                 Vector3 mw = mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mw.z = 0f;
                 Collider2D ehit = PickEntityAt(mw);
-                // #232 운영자 fb "우클릭 벌목 안됨 + RimWorld 처럼 나무 위에 표시" — 나무/광맥
-                //  우클릭은 컨텍스트 메뉴(버튼 클릭이 실제로 안 먹던 문제) 대신 *바로 지정*한다.
-                //  TreeChopDesignation/MineDesignation.TryMark → 🪓/⛏ 마커가 그 자리에 생기고
-                //  idle 림이 dispatch 되어 작업(I43 로 검증된 신뢰 경로).  메뉴 의존 제거.
-                if (ehit != null)
-                {
-                    if (ehit.GetComponent<TreeEntity>() != null && TreeChopDesignation.Instance != null)
-                    {
-                        if (TreeChopDesignation.Instance.TryMark(ehit.gameObject) != null)
-                        { Debug.Log("[Chop] 우클릭 벌목 지정"); return; }
-                    }
-                    if (ehit.GetComponent<StoneVeinEntity>() != null && MineDesignation.Instance != null)
-                    {
-                        if (MineDesignation.Instance.TryMark(ehit.gameObject) != null)
-                        { Debug.Log("[Mine] 우클릭 채광 지정"); return; }
-                    }
-                }
+                // #275 나무/광맥 우클릭 벌목·채광 지정은 위 선택-무관 블록(line 118-131)이 이미
+                //  모든 케이스를 처리하고 return 하므로, 여기 중복 TryMark 는 제거(dead).  이
+                //  블록은 '나무/광맥이 아닌' 엔티티의 컨텍스트 메뉴만 담당한다.
                 if (ehit != null && ContextMenuUI.Instance != null)
                 {
                     var items = BuildContextMenu(ehit, mw);

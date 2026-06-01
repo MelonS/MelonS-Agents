@@ -71,7 +71,7 @@ namespace MelonS.GameProto
             const float panelW = 200f;
             const float panelH = 96f;
             const float marginRight = 16f;
-            const float marginBottom = 108f; // 하단 명령바(24 + 패널높이+패딩) 위로 클리어
+            const float marginBottom = 120f; // #275 속도패널(높이 72, y24~96) 위 안전 간격(108→120)
 
             var panelGo = new GameObject("ClockCluster");
             panelGo.transform.SetParent(canvas.transform, false);

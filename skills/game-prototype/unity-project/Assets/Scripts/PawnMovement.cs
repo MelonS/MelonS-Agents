@@ -189,7 +189,7 @@ namespace MelonS.GameProto
             if (lockedCell.x != INVALID_CELL.x
                 && Grid.IsWalkable(lockedCell)
                 && !ReservationManager.IsCellReservedByOther(lockedCell, claimant)
-                && DistanceToFootprint(targetWorld, footprint, PathGrid.CellToWorld(lockedCell)) <= 1.6f)
+                && DistanceToFootprint(targetWorld, footprint, PathGrid.CellToWorld(lockedCell)) <= 1.2f)  // #275 1.6→1.2 직각 인접만 (순간이동 재발 방지)
             {
                 // Re-assert ownership (idempotent) so a sweep can't drop it.
                 ReservationManager.TryReserveCell(lockedCell, claimant);

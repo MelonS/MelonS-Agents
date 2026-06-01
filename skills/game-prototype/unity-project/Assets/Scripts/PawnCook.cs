@@ -111,6 +111,13 @@ namespace MelonS.GameProto
                         var sk = GetComponent<PawnSkills>();
                         if (sk != null) sk.AddXP(SkillKind.Build, 8f);
                     }
+                    else
+                    {
+                        // #275 조리 불가(자재 부족/화덕 불가) — 무한 재시도로 stove 앞에 멈추지
+                        //  않게 즉시 작업 정리.  AI 가 다른 일을 잡는다.
+                        ClearTask();
+                        return;
+                    }
                 }
             }
             else

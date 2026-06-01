@@ -110,10 +110,16 @@ namespace MelonS.GameProto
             }
             panelRt.sizeDelta = new Vector2(200, itemHeight * items.Count + 4);
 
-            // 위치 (mouse 옆, screen edge 안)
+            // 위치 (mouse 옆) — #275 화면 가장자리 클램프: pivot(0,1)이라 우/하로 확장하므로
+            //  메뉴 우측·하단이 캔버스 밖으로 잘리지 않게 보정.
             Vector2 localPos;
+            var canvasRt = canvas.GetComponent<RectTransform>();
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                canvas.GetComponent<RectTransform>(), screenPos, null, out localPos);
+                canvasRt, screenPos, null, out localPos);
+            Rect cr = canvasRt.rect;
+            float pw = panelRt.sizeDelta.x, ph = panelRt.sizeDelta.y;
+            localPos.x = Mathf.Clamp(localPos.x, cr.xMin, Mathf.Max(cr.xMin, cr.xMax - pw));
+            localPos.y = Mathf.Clamp(localPos.y, Mathf.Min(cr.yMax, cr.yMin + ph), cr.yMax);
             panelRt.anchoredPosition = localPos;
             gameObject.SetActive(true);
             openTime = Time.unscaledTime;

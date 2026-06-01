@@ -34,7 +34,7 @@ namespace MelonS.GameProto
             rt.anchorMax = new Vector2(1f, 1f);
             rt.pivot = new Vector2(1f, 1f);
             rt.sizeDelta = new Vector2(280, 64);
-            rt.anchoredPosition = new Vector2(-12, -100);  // TopBar 아래
+            rt.anchoredPosition = new Vector2(-12, -196);  // #275 우상단 계층: TopBar+AlertStack+Toast 아래
 
             bg = gameObject.AddComponent<Image>();
             bg.color = new Color(0.45f, 0.10f, 0.10f, 0.92f);

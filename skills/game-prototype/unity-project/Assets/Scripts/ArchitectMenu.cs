@@ -701,7 +701,7 @@ namespace MelonS.GameProto
         }
 
         public void Toggle() { if (isOpen) Close(); else Open(); }
-        public void Open() { isOpen = true; gameObject.SetActive(true); }
+        public void Open() { isOpen = true; gameObject.SetActive(true); transform.SetAsLastSibling(); }  // #275 최상단
         public void Close()
         {
             isOpen = false;

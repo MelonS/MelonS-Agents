@@ -62,11 +62,10 @@ namespace MelonS.GameProto
         [SerializeField] private float cardHeight = 44f;
         [SerializeField] private float cardGap = 6f;
         [SerializeField] private float edgeMargin = 12f;        // inset from right edge
-        // ui-audit.md §3.5: the top resource bar is 60px tall and its right cluster
-        //  (resource chips) shares the top-right corner. Start the first alert card
-        //  BELOW that bar: y = -(topBarHeight + edgeMargin) = -72, not -12, so alert
-        //  cards never overlap the resource readouts on the right edge.
-        [SerializeField] private float topBarHeight = 60f;      // §3.1 header height
+        // #275 실제 TopBar 높이는 76px(SceneSetup.Game.TopBar.cs:27, ColonistBar 와 동일).
+        //  이전 60f 는 과소평가라 알림 카드가 상단바 하단 16px 와 겹쳤다.  76 으로 교정 →
+        //  첫 카드가 y = -(76+12) = -88 에서 시작해 상단 자원바 아래로 내려간다.
+        [SerializeField] private float topBarHeight = 76f;      // TopBar header height (검증됨)
         [SerializeField] private int fontSize = 15;
 
         [Header("Camera pan")]

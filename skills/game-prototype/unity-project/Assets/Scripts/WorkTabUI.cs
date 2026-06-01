@@ -290,7 +290,7 @@ namespace MelonS.GameProto
         {
             if (isOpen) Close(); else Open();
         }
-        public void Open() { isOpen = true; gameObject.SetActive(true); RefreshGrid(); }
+        public void Open() { isOpen = true; gameObject.SetActive(true); transform.SetAsLastSibling(); RefreshGrid(); }  // #275 최상단
         public void Close() { isOpen = false; gameObject.SetActive(false); }
         public bool IsOpen => isOpen;
 
