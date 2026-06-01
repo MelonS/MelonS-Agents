@@ -165,8 +165,23 @@ namespace MelonS.GameProto
                 Debug.LogWarning("[SaveLoad] no save file");
                 return null;
             }
-            string json = File.ReadAllText(SavePath);
-            SaveData data = JsonUtility.FromJson<SaveData>(json);
+            // #276 손상 save 견고성 — 파싱 실패/빈 데이터에 크래시·부분초기화 대신 안전 실패.
+            SaveData data;
+            try
+            {
+                string json = File.ReadAllText(SavePath);
+                data = JsonUtility.FromJson<SaveData>(json);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[SaveLoad] JSON 파싱 실패 — 로드 취소: {e.Message}");
+                return null;
+            }
+            if (data == null || data.pawns == null)
+            {
+                Debug.LogError("[SaveLoad] save 데이터 손상(null) — 로드 취소");
+                return null;
+            }
             Debug.Log($"[SaveLoad] loaded (pawns={data.pawns.Count} trees={data.trees.Count} " +
                       $"beds={data.beds.Count} stockpiles={data.stockpiles.Count} " +
                       $"walls={data.walls.Count} wood={data.wood})");

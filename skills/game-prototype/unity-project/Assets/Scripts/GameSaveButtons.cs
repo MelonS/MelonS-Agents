@@ -104,7 +104,12 @@ namespace MelonS.GameProto
                 }
             }
 
-            Debug.Log($"[SaveLoad] restored: {data.pawns.Count} pawns, {data.trees.Count} trees");
+            // #276 서브상태 복원 — 침대 품질/스톡파일 우선순위/벽 재질/트리 종.  Save()는
+            //  이미 직렬화하나 OnLoad 가 이 호출을 빠뜨려 매 로드마다 default 로 리셋됐다
+            //  (V13SubStateRoundTripTest 가 FLAG 한 미배선).  엔티티 spawn 이후 호출.
+            SaveLoadManager.ApplyLoadedSubStates(data);
+
+            Debug.Log($"[SaveLoad] restored: {data.pawns.Count} pawns, {data.trees.Count} trees + 서브상태");
         }
     }
 }

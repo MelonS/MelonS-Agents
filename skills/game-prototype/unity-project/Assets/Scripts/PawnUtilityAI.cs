@@ -369,6 +369,7 @@ namespace MelonS.GameProto
                         float sk = skills != null ? (1f + skills.GetLevel(SkillKind.Combat) * 0.03f) : 1f;
                         int dmg = Mathf.Max(1, Mathf.RoundToInt((2f + wpn) * ml * sk));
                         bandit.TakeDamage(dmg, gameObject);
+                        GetComponent<PawnEntity>()?.RegisterMeleeHit(targetPos, melee: true);  // #276 lunge 시각(auto만 호출하던 누락)
                         if (skills != null) skills.AddXP(SkillKind.Combat, 8f);
                     }
                 }
@@ -393,6 +394,7 @@ namespace MelonS.GameProto
                         float sk = skills != null ? (1f + skills.GetLevel(SkillKind.Combat) * 0.03f) : 1f;
                         int dmg = Mathf.Max(1, Mathf.RoundToInt((3f + wpn) * ml * sk));
                         wolf.TakeDamage(dmg, gameObject);
+                        GetComponent<PawnEntity>()?.RegisterMeleeHit(targetPos, melee: true);  // #276 lunge 시각
                         if (skills != null) skills.AddXP(SkillKind.Combat, 10f);
                     }
                 }
@@ -409,6 +411,7 @@ namespace MelonS.GameProto
                     {
                         lastDraftAttackTime = Time.time;
                         animal.TakeDamage(2);
+                        GetComponent<PawnEntity>()?.RegisterMeleeHit(targetPos, melee: true);  // #276 lunge 시각
                         var skills = GetComponent<PawnSkills>();
                         if (skills != null) skills.AddXP(SkillKind.Combat, 5f);
                     }
