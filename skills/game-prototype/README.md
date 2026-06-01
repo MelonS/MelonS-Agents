@@ -20,8 +20,8 @@ automated proof-of-function) — see [`docs/goal.md`](docs/goal.md).
 | Build target | Windows x64 (Standalone) |
 | Scope | RimWorld-lite colony-sim vertical slice — **NOT a clone** |
 | Core coverage | ~85% of RimWorld vanilla core systems (estimate; verified slice growing) |
-| Verification | `refactor_check.py` 6-stage gate; isolated 76/76 · integration 42/42 · Build Click QA 9/9 · REAL QA · visual diff — last green post-#208 |
-| Latest build | `builds/day-final-2026-05-30/PawnSim.exe` |
+| Verification | `refactor_check.py` 6-stage gate; isolated 76/76 · integration 43/43 · Build Click QA 8/8 · pawn-action 7/7 · feature-audit 13/13 · visual diff — last green post-#275 (2026-06-02) |
+| Latest build | date-stamped: `builds/day-PLAY-2026-06-01/PawnSim.exe` (newest via `ls -dt builds/day-*/`) |
 
 > **PM source-of-truth**: [`docs/MILESTONES.md`](docs/MILESTONES.md) (shipped /
 > in-flight / queued). **Outcome layer**: [`docs/goal.md`](docs/goal.md).
@@ -49,15 +49,18 @@ Verified in code and gated by the harness (see
 [`docs/rimworld-comparison-v2.md`](docs/rimworld-comparison-v2.md) for the
 verified-vs-stub audit):
 
-- **Grid + pathfinding** — `PathGrid` + A* (8-direction, octile cost 10/14,
-  no corner-cut, 4000-node cap). Pawn 1×1 collider, multi-cell footprints
+- **Grid + pathfinding** — **90×90 map** (#235, enlarged from 40→60→90 per
+  operator "기본맵부터 상당히 큼"). `PathGrid` + A* (8-direction, octile cost
+  10/14, no corner-cut, 12000-node cap). Pawn 1×1 collider, multi-cell footprints
   (e.g. bed 1×2, research bench 2×1), wall path-blocking (ref-counted),
   door pass-through (slowed), adjacent-stand-cell work positioning,
   `ReservationManager` (no double-occupy), build-placement validation
   (rejects water/rock/occupied with a toast), eject/push-out + standing
   safety-net so a pawn never gets trapped by a freshly-built wall.
-- **Pawns** — needs (food/sleep/mood), 6-body-part health (bleed / downed /
-  death), 4 skills + XP/level (gather/chop/build/combat), 8 traits with real
+- **Pawns** — needs (food/sleep/mood), **schedule-driven sleep** (#269 — the
+  RimWorld Sleep time-slot makes a pawn walk to a bed and stay asleep through
+  the block, not just collapse when exhausted), 6-body-part health (bleed /
+  downed / death), 4 skills + XP/level (gather/chop/build/combat), 8 traits with real
   effects (Lazy 0.75× / Industrious 1.30× …), equipment (armor + damage
   bonus), per-pawn facing (flipX) + walk-bob + idle-breathe + sleep-pose
   (sprite-child only — root untouched for pathfinding).
@@ -82,9 +85,13 @@ verified-vs-stub audit):
   cook / shoot / hit / door / UI-click / footstep / wolf-howl, plus
   tier-scaled alert siren, looping ambient bed (day/night variation),
   dynamic music crossfade on threat, rain/weather loop.
-- **Day / night + weather** — `DayNightCycle` (11 colour stops) + real
-  `NightOverlay` darkening + night light-pools around lit objects +
-  `WeatherController` (storm darkening + rain particles).
+- **Day / night + lighting + weather** — `DayNightCycle` (11 colour stops) +
+  `NightOverlay` rebuilt (#267) as a **RimWorld-style dynamic lightmap**: night
+  darkness is a per-texel texture that lamps *reveal* (lift the darkness so the
+  real floor/walls show) with warm candle colour and **line-of-sight occlusion**
+  (light is blocked by walls + closed doors, bilinear-softened edges) following
+  the RimWorld torch-lamp glow formula — replacing the old additive light-pools
+  (which read as a hazy fog). `WeatherController` (storm darkening + rain).
 - **UI** — unified bordered-panel system (`MakeBorderedPanel`): top bar
   (clock / speed / resources), Architect menu, bottom-center gizmo command
   bar, top-right alert/letter stack (clickable → camera pan), tabbed pawn
@@ -154,13 +161,16 @@ pushes, RED auto-rolls-back + preserves a wip branch + writes a bug report).
 
 ## Running it
 
-Pre-built `.exe`:
+Pre-built `.exe` (date-stamped — pick the newest):
 
 ```
-builds/day-final-2026-05-30/PawnSim.exe
+builds/day-PLAY-2026-06-01/PawnSim.exe        # newest
+# generally: ls -dt builds/day-*/ | head -1
 ```
 
-Per-day snapshots live under `builds/day-X-<date>/PawnSim.exe`.
+Per-day snapshots live under `builds/day-<day>-<date>/PawnSim.exe` (the folder
+is date-stamped, so after midnight the newest is a new dated folder — always
+resolve it dynamically, never a hardcoded date).
 
 Rebuild from source (idempotent):
 
