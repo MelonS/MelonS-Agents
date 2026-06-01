@@ -43,6 +43,9 @@ namespace MelonS.GameProto
         // since we use deltaTime (which is already scaled).
         public float GameSeconds { get; private set; }
 
+        /// <summary>#276 세이브 로드 시 게임 시계 복원(레이드/이벤트 스케줄 정합).</summary>
+        public void SetGameSeconds(float s) => GameSeconds = Mathf.Max(0f, s);
+
         public int Day => 1 + (int)(GameSeconds / 86400f);
         public int Hour => (int)((GameSeconds % 86400f) / 3600f);
         public int Minute => (int)((GameSeconds % 3600f) / 60f);

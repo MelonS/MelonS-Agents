@@ -64,6 +64,7 @@ namespace MelonS.GameProto
         public List<BedSave>       beds       = new List<BedSave>();
         public List<StockpileSave> stockpiles = new List<StockpileSave>();
         public List<WallSave>      walls      = new List<WallSave>();
+        public float gameSeconds;   // #276 게임 시계 — 로드 시 시계 리셋(레이드 스케줄 파손) 방지
         public string version = "0.2.0";
         public string savedAtIso;
     }
@@ -96,6 +97,8 @@ namespace MelonS.GameProto
                 data.wood = ResourceManager.Instance.wood;
                 data.food = ResourceManager.Instance.food;
             }
+            if (GameClock.Instance != null)
+                data.gameSeconds = GameClock.Instance.GameSeconds;   // #276
 
             foreach (var pawn in UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
             {

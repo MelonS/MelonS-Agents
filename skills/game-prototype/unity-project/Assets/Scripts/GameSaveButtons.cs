@@ -109,7 +109,11 @@ namespace MelonS.GameProto
             //  (V13SubStateRoundTripTest 가 FLAG 한 미배선).  엔티티 spawn 이후 호출.
             SaveLoadManager.ApplyLoadedSubStates(data);
 
-            Debug.Log($"[SaveLoad] restored: {data.pawns.Count} pawns, {data.trees.Count} trees + 서브상태");
+            // #276 게임 시계 복원 — 로드 시 0 으로 리셋되면 AIDirector 레이드 스케줄이
+            //  전부 어긋난다(밤/낮·이벤트 타이밍 파손).  저장된 GameSeconds 로 복원.
+            if (GameClock.Instance != null) GameClock.Instance.SetGameSeconds(data.gameSeconds);
+
+            Debug.Log($"[SaveLoad] restored: {data.pawns.Count} pawns, {data.trees.Count} trees + 서브상태 + 시계 {data.gameSeconds:F0}s");
         }
     }
 }
