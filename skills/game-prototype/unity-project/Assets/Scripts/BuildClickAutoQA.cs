@@ -260,7 +260,7 @@ namespace MelonS.GameProto
                 if (b == null) continue;
                 var txt = b.GetComponentInChildren<Text>(true);
                 if (txt == null) continue;
-                if (!txt.text.Contains(category)) continue;
+                if (!txt.text.Contains(KoreanOf(category))) continue;  // #261 메뉴 한글표시(#260) 대응
                 if (txt.text.StartsWith("▼ ")) return true;
                 if (txt.text.StartsWith("▶ ")) return false;
             }
@@ -275,9 +275,17 @@ namespace MelonS.GameProto
                 if (b == null) continue;
                 var txt = b.GetComponentInChildren<Text>(true);
                 if (txt == null) continue;
-                if (txt.text.Contains(labelText)) { b.onClick.Invoke(); return true; }
+                if (txt.text.Contains(KoreanOf(labelText))) { b.onClick.Invoke(); return true; }
             }
             return false;
+        }
+
+        // #261 카테고리 헤더가 #260 부터 한글 전용("구조")으로 표시됨 — 영한키("Structure (구조)")
+        //  에서 괄호 안 한글을 뽑아 텍스트 매칭(괄호 없으면 원문).
+        private static string KoreanOf(string s)
+        {
+            int a = s.IndexOf('('), b = s.IndexOf(')');
+            return (a >= 0 && b > a) ? s.Substring(a + 1, b - a - 1).Trim() : s;
         }
 
         private bool ClickBuildableByIndex(string category, int idx, Transform parent)
@@ -293,8 +301,8 @@ namespace MelonS.GameProto
                 if (b == null) continue;
                 var txt = b.GetComponentInChildren<Text>(true);
                 if (txt == null) continue;
-                // 헤더 검출 - text 가 "▼ {category}" or "▶ {category}"
-                if (txt.text.Contains(category)) { hitHeader = true; continue; }
+                // 헤더 검출 - text 가 "▼ {category}" or "▶ {category}" (#261 한글표시 대응)
+                if (txt.text.Contains(KoreanOf(category))) { hitHeader = true; continue; }
                 if (!hitHeader) continue;
                 // 다음 카테고리 헤더 만나면 종료
                 if (txt.text.StartsWith("▼ ") || txt.text.StartsWith("▶ ")) break;
