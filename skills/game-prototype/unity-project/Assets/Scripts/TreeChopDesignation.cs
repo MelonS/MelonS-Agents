@@ -195,7 +195,11 @@ namespace MelonS.GameProto
             foreach (var ct in marked)
             {
                 if (ct == null || ct.IsChopped) continue;
-                if (ReservationManager.IsReserved(ct.gameObject)) continue;
+                // 운영자 #38 "왜 다같이 가는거야?": SetTreeTarget 은 TreeEntity(ct.Tree) 를
+                //  예약 키로 쓰는데 여기선 ct.gameObject 로 조회 → 키 불일치로 항상 false →
+                //  배정 직후에도 unreserved 로 보여 다음 dispatch 틱마다 또 다른 idle 림에게
+                //  같은 나무를 재배정(전원 한 나무로 몰림).  예약 키를 일치시켜 1나무=1림.
+                if (ReservationManager.IsReserved(ct.Tree)) continue;
                 PawnChopper best = null;
                 float bestSq = float.MaxValue;
                 Vector2 tp = ct.transform.position;

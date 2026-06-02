@@ -322,7 +322,9 @@ namespace MelonS.GameProto
                 if (mt == null || mt.IsMined) continue;
                 // Skip a vein already reserved (a miner is already heading to it —
                 //  either via this dispatch or the existing MineStoneAction).
-                if (ReservationManager.IsReserved(mt.gameObject)) continue;
+                // #38 키 일치: SetVeinTarget 은 mt.Vein(StoneVeinEntity)을 예약 키로 쓰므로
+                //  여기서도 mt.Vein 으로 조회해야 재배정(전원 몰림)을 막는다. (mt.gameObject → 키 불일치)
+                if (ReservationManager.IsReserved(mt.Vein)) continue;
 
                 PawnMiner best = null;
                 float bestSq = float.MaxValue;
