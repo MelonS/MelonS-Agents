@@ -170,6 +170,7 @@ namespace MelonS.GameProto
                 if (builder != null) builder.ClearTask();
                 if (miner != null) miner.ClearTask();
                 if (doctor != null) doctor.ClearTask();
+                if (harvester != null) harvester.ClearTask();  // 감사 rank1: 누락→작물 예약 영구점유 fix
                 // 침대로 가는 이동 target 이 풀렸으면(도착 못 했는데 멈춤) 다시 박아준다.
                 if (!movement.IsMoving && needs.RestTarget != null)
                     movement.SetTarget(needs.RestTarget.transform.position);
@@ -197,6 +198,7 @@ namespace MelonS.GameProto
                     if (builder != null) builder.ClearTask();
                     if (miner != null) miner.ClearTask();
                     if (doctor != null) doctor.ClearTask();
+                    if (harvester != null) harvester.ClearTask();  // 감사 rank1
                     // 이동이 멈췄는데 아직 침대 위가 아니면 다시 침대 cell 위로 향하게.
                     //  GoSleepAction 과 동일하게 침대 footprint cell (옆이 아니라 위) 을 target.
                     if (!movement.IsMoving)
@@ -234,6 +236,7 @@ namespace MelonS.GameProto
                 if (builder != null) builder.ClearTask();
                 if (miner != null) miner.ClearTask();
                 if (doctor != null) doctor.ClearTask();
+                if (harvester != null) harvester.ClearTask();  // 감사 rank1: 누락→작물 예약 영구점유 fix
                 lastDecision = Time.timeSinceLevelLoad;
                 return;
             }
@@ -246,6 +249,7 @@ namespace MelonS.GameProto
                 if (builder != null) builder.ClearTask();
                 if (miner != null) miner.ClearTask();
                 if (doctor != null) doctor.ClearTask();
+                if (harvester != null) harvester.ClearTask();  // 감사 rank1: 누락→작물 예약 영구점유 fix
                 if (!movement.IsMoving)
                 {
                     Vector2 cur = transform.position;
@@ -270,6 +274,7 @@ namespace MelonS.GameProto
                 if (builder != null) builder.ClearTask();
                 if (miner != null) miner.ClearTask();
                 if (doctor != null) doctor.ClearTask();
+                if (harvester != null) harvester.ClearTask();  // 감사 rank1: 누락→작물 예약 영구점유 fix
                 lastDecision = Time.timeSinceLevelLoad;
                 Decide();
                 return;
@@ -283,6 +288,7 @@ namespace MelonS.GameProto
             if (builder != null && builder.HasTask) return;
             if (miner != null && miner.HasTask) return;
             if (doctor != null && doctor.HasTask) return;
+            if (harvester != null && harvester.HasTask) return;  // 감사 rank2: 누락→수확 중 우왕좌왕 fix
 
             // #126 → 운영자 fb fix: Schedule slot 이 work 를 hard-block 하면
             //  startHour=6 (Sleep) 일 때 nothing 하는 회귀 발생.
