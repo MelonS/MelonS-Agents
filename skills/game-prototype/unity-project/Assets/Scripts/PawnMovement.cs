@@ -189,7 +189,7 @@ namespace MelonS.GameProto
             if (lockedCell.x != INVALID_CELL.x
                 && Grid.IsWalkable(lockedCell)
                 && !ReservationManager.IsCellReservedByOther(lockedCell, claimant)
-                && DistanceToFootprint(targetWorld, footprint, PathGrid.CellToWorld(lockedCell)) <= 1.2f)  // #275 1.6→1.2 직각 인접만 (순간이동 재발 방지)
+                && DistanceToFootprint(targetWorld, footprint, PathGrid.CellToWorld(lockedCell)) <= 1.5f)  // 대각 인접(√2≈1.414) 포함 — 1.2 면 대각 stand cell 을 매 프레임 무효화해 재선정/재경로 지터(머뭇거림).  2셀(>1.5)은 여전히 차단
             {
                 // Re-assert ownership (idempotent) so a sweep can't drop it.
                 ReservationManager.TryReserveCell(lockedCell, claimant);

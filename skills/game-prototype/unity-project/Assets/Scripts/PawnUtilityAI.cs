@@ -137,13 +137,25 @@ namespace MelonS.GameProto
             // Day 48: drafted pawn skip utility AI — manual control only.
             if (entity != null && entity.IsDrafted)
             {
+                // 회귀 fix(2026-06-02): 징집/수동 이동도 정상 속도여야 함.  MoveSpeedScale 을
+                //  pacing 블록(아래)에서만 set 하면 여기서 early-return 돼 idle 의 0.5 가 끼인다.
+                if (movement != null) movement.MoveSpeedScale = 1f;
                 HandleDraftedCombat();
                 return;
             }
             // 운영자 피드백: 우클릭 이동이 AI 에 즉시 override 됐던 문제 fix.
-            //  ClickSelector 가 ManualMoveUntil 을 Time.time+5 로 설정하면
-            //  그 동안 AI Decide skip (사용자 이동 명령 존중).
-            if (entity != null && entity.IsUnderManualControl) return;
+            //  ClickSelector 가 ManualMoveUntil 을 설정하면 그 동안 AI Decide skip(사용자 이동 존중).
+            if (entity != null && entity.IsUnderManualControl)
+            {
+                // 회귀 fix: 수동 이동(우클릭 이동/벌목 지정)은 항상 정상 속도.  (이전: idle 의
+                //  0.5 가 여기 early-return 으로 안 풀려 수동 이동이 절반 속도로 기어가던 버그.)
+                if (movement != null) movement.MoveSpeedScale = 1f;
+                return;
+            }
+
+            // MoveSpeedScale 단일 출처: 작업/필요 활동 중 = 1.0, 떠도는중(idle) = 0.5.
+            //  매 프레임 계산해 decision 윈도우 밖에서도 작업 이동이 0.5 로 끼이지 않게 한다.
+            if (movement != null) movement.MoveSpeedScale = HasRealActivity() ? 1f : 0.5f;
 
             // 자율 취침 예약 해제: 기상/취소(PawnNeeds 가 autoRestTarget 을 비움)나
             //  사용자 우클릭 휴식 명령이 끼어든 경우, 잡고 있던 침대 예약을 푼다.
@@ -216,21 +228,13 @@ namespace MelonS.GameProto
             //  pacing 이 일감 획득을 굶기지 않는다.  이동 중(hop 수행 중)엔 새 hop 안 함.
             if (Time.timeSinceLevelLoad - lastDecision < decisionInterval)
             {
-                if (HasRealActivity())
+                // MoveSpeedScale 은 위 단일 출처에서 이미 설정됨(작업1.0/idle0.5).
+                if (HasRealActivity()) hasIdleAnchor = false;
+                else if (movement != null && !movement.IsMoving
+                         && Time.timeSinceLevelLoad - lastIdleStep >= idleStepInterval)
                 {
-                    hasIdleAnchor = false;
-                    if (movement != null) movement.MoveSpeedScale = 1f;   // 작업 이동은 정상 속도
-                }
-                else
-                {
-                    // 운영자 2026-06-02: 떠도는중 이동은 절반 속도(한가로이 어슬렁).
-                    if (movement != null) movement.MoveSpeedScale = 0.5f;
-                    if (movement != null && !movement.IsMoving
-                        && Time.timeSinceLevelLoad - lastIdleStep >= idleStepInterval)
-                    {
-                        IssueWanderHop();
-                        lastIdleStep = Time.timeSinceLevelLoad;
-                    }
+                    IssueWanderHop();
+                    lastIdleStep = Time.timeSinceLevelLoad;
                 }
                 return;
             }
