@@ -241,6 +241,8 @@ namespace MelonS.GameProto
                 if (reduced <= 0 && dmg > 0)
                 {
                     Debug.Log($"[Pawn:{pawnName}] armor 완전 방어 ({dmg}→0, armor={armor:F2})");
+                    // 감사 rank5: 완전방어 시각 피드백.
+                    FloatingText.Spawn(transform.position + Vector3.up * 0.6f, "막음", new Color(0.72f, 0.74f, 0.78f));
                     return;
                 }
                 if (reduced < dmg)
@@ -253,7 +255,12 @@ namespace MelonS.GameProto
             {
                 var part = health.TakeDamage(dmg);
                 if (part != null)
+                {
                     Debug.Log($"[Pawn:{pawnName}] {part.nameKr}({part.hp}/{part.maxHp}) -{dmg} dmg");
+                    // 감사 rank5(B6 미연결 fix): 부위명+데미지 플로팅 숫자(이미 구현된 FloatingText 연결).
+                    FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
+                        $"{part.nameKr} -{dmg}", new Color(0.95f, 0.30f, 0.25f));
+                }
                 if (health.IsDead)
                 {
                     Hp = 0;

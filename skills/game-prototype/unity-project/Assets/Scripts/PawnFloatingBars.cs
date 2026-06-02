@@ -127,8 +127,26 @@ namespace MelonS.GameProto
             else if (entity != null) hpRatio = Mathf.Clamp01(entity.Hp / 30f);
             else hpRatio = 1f;
             float moodRatio = needs != null ? Mathf.Clamp01(needs.mood / 100f) : 1f;
-            UpdateFill(hpFill,   hpRatio,   ColorForHp(hpRatio));
+            // 감사 rank8: 출혈 중이면 HP fill 을 2Hz 로 어두운빨강↔밝은빨강 깜빡여 월드에서
+            //  "피흘리는 중"이 보이게(이전엔 인포패널 밖에선 안 보임).  붕대 감으면 멈춤.
+            Color hpColor = ColorForHp(hpRatio);
+            if (IsBleeding())
+            {
+                float p = (Mathf.Sin(Time.time * Mathf.PI * 4f) + 1f) * 0.5f;  // 0..1
+                hpColor = Color.Lerp(new Color(0.35f, 0.04f, 0.04f, 1f),
+                                     new Color(1.00f, 0.25f, 0.20f, 1f), p);
+            }
+            UpdateFill(hpFill,   hpRatio,   hpColor);
             UpdateFill(moodFill, moodRatio, ColorForMood(moodRatio));
+        }
+
+        // 붕대 안 감은 출혈 부위가 하나라도 있으면 true (PawnHealth.parts 공개 필드).
+        private bool IsBleeding()
+        {
+            if (health == null || health.parts == null) return false;
+            foreach (var p in health.parts)
+                if (p != null && !p.bandaged && p.bleedRate > 0.1f) return true;
+            return false;
         }
 
         private void UpdateFill(SpriteRenderer fill, float ratio, Color color)

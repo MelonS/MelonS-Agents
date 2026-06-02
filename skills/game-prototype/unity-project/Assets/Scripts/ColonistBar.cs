@@ -57,6 +57,7 @@ namespace MelonS.GameProto
         {
             public PawnEntity pawn;
             public PawnNeeds needs;   // null 가능 (mood 바 skip)
+            public Image border;      // 감사 rank4: 선택 시 테두리 강조용 root border
             public Image hpFill;
             public RectTransform hpFillRt;
             public Image moodFill;    // null 가능
@@ -265,6 +266,7 @@ namespace MelonS.GameProto
             {
                 pawn = pawn,
                 needs = needs,
+                border = border,
                 hpFill = hpFill,
                 hpFillRt = hpFillRt,
                 moodFill = moodFill,
@@ -311,12 +313,23 @@ namespace MelonS.GameProto
 
         private void RefreshFills()
         {
+            // 감사 rank4: 현재 선택된 림을 콜로니바에서 테두리로 표시(맵 클릭·바 클릭 무관).
+            //  cachedCs lazy-init(클릭 진입점과 동일 패턴).  selectedColor(EventSystem 전용)는
+            //  맵 클릭에 무반응이라 매 frame border 색으로 직접 반영.
+            if (cachedCs == null) cachedCs = Object.FindFirstObjectByType<ClickSelector>();
+            PawnEntity selected = cachedCs != null ? cachedCs.CurrentSelection : null;
             for (int i = 0; i < entries.Count; i++)
             {
                 var e = entries[i];
                 // pawn 이 파괴됐으면 다음 rebuild 가 정리 — 이 frame 은 skip (NRE 방지).
                 if (e.pawn == null || e.pawn.gameObject == null) continue;
                 UpdateEntryFill(e);
+                if (e.border != null)
+                {
+                    Color want = (selected != null && e.pawn == selected)
+                        ? MelonS.GameProto.Core.UITheme.AccentGold : BorderCol;
+                    if (e.border.color != want) e.border.color = want;
+                }
             }
         }
 
