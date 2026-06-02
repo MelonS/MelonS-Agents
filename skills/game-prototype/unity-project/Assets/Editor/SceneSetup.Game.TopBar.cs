@@ -102,30 +102,34 @@ namespace MelonS.GameProto.EditorTools
             //   (which bind by component reference, not by name/path).
             // 시각 QA: 아이콘 48px + 폰트 32 라벨이 한 칩에 안 겹치게 156→184 로 확장.
             const float kChipW   = 184f;  // equal cell width, holds 48px icon + "식량: NNN"
-            const float kChipGap = 10f;   // equal gap between chips (divider sits in the gap)
-            const float kRightInset = 16f; // group's right edge inset from the bar's right edge
 
-            // Right-anchored layout container; HorizontalLayoutGroup lays the chips
-            // right→left with equal spacing.  Width is driven by the layout (child
-            // controlled), so we give it a generous fixed extent and right-align children.
+            // #41 운영자 "자원표시는 좌상단에 RimWorld처럼": 상단바 우측 가로행 → 캔버스
+            //   좌상단(상단바 아래) 세로 목록으로 이전(RimWorld ResourceReadout 정합).
+            //   캔버스에 직접 붙여 바 영역 밖(맵 위)에 떠 있게 한다.  반투명 배경 + 세로 스택.
             GameObject resRowGo = new GameObject("ResourceRow");
-            resRowGo.transform.SetParent(parent.transform, false);
+            resRowGo.transform.SetParent(canvasGo.transform, false);
             RectTransform resRowRt = resRowGo.AddComponent<RectTransform>();
-            resRowRt.anchorMin = new Vector2(1f, 0f);
-            resRowRt.anchorMax = new Vector2(1f, 1f);
-            resRowRt.pivot = new Vector2(1f, 0.5f);
-            // 4 chips + 3 inter-chip gaps, anchored to the right edge.
-            float rowW = 4f * kChipW + 3f * kChipGap;
-            resRowRt.sizeDelta = new Vector2(rowW, 0);
-            resRowRt.anchoredPosition = new Vector2(-kRightInset, 0);
-            var hlg = resRowGo.AddComponent<HorizontalLayoutGroup>();
-            hlg.childAlignment = TextAnchor.MiddleRight;
-            hlg.spacing = kChipGap;
-            hlg.childControlWidth = true;
-            hlg.childControlHeight = true;
-            hlg.childForceExpandWidth = false;
-            hlg.childForceExpandHeight = true;
-            hlg.padding = new RectOffset(0, 0, 8, 8);
+            resRowRt.anchorMin = new Vector2(0f, 1f);
+            resRowRt.anchorMax = new Vector2(0f, 1f);
+            resRowRt.pivot = new Vector2(0f, 1f);
+            resRowRt.sizeDelta = new Vector2(kChipW + 12f, 0);  // 한 열 폭(+패딩), 높이는 레이아웃이 결정
+            resRowRt.anchoredPosition = new Vector2(8f, -(76f + 8f));  // 좌상단, 상단바(76) 아래
+            // 반투명 어두운 배경(맵 위에서 가독성).
+            var resBg = resRowGo.AddComponent<Image>();
+            resBg.color = new Color(0.07f, 0.07f, 0.09f, 0.62f);
+            resBg.raycastTarget = false;
+            var vlg = resRowGo.AddComponent<VerticalLayoutGroup>();
+            vlg.childAlignment = TextAnchor.UpperLeft;
+            vlg.spacing = 4f;
+            vlg.childControlWidth = true;
+            vlg.childControlHeight = true;
+            vlg.childForceExpandWidth = false;
+            vlg.childForceExpandHeight = false;
+            vlg.padding = new RectOffset(6, 6, 6, 6);
+            // 높이를 자식(칩 4개)에 맞춰 자동 조절.
+            var resFitter = resRowGo.AddComponent<ContentSizeFitter>();
+            resFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            resFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
             // Chips in screen order (left→right): food → meal → wood → stone.
             // 시각 QA(2026-06-01): 식사(pale-gold)/목재(tan) 가 비슷해 구분 약함 → 식사를
@@ -174,6 +178,10 @@ namespace MelonS.GameProto.EditorTools
             var chipLe = chipGo.AddComponent<LayoutElement>();
             chipLe.preferredWidth = chipW;       // equal width for every chip
             chipLe.minWidth = chipW;
+            // #41 세로 목록(좌상단 RimWorld식)에서도 각 칩이 높이를 가지도록 명시.
+            //  가로 바에선 부모의 childForceExpandHeight 가 우선하므로 영향 없음.
+            chipLe.preferredHeight = 42f;
+            chipLe.minHeight = 38f;
             var chipLayout = chipGo.AddComponent<HorizontalLayoutGroup>();
             chipLayout.childAlignment = TextAnchor.MiddleLeft;
             chipLayout.spacing = kIconGap;
