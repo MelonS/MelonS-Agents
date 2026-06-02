@@ -20,7 +20,7 @@ automated proof-of-function) — see [`docs/goal.md`](docs/goal.md).
 | Build target | Windows x64 (Standalone) |
 | Scope | lightweight colony-sim vertical slice — **NOT a clone** |
 | Core coverage | ~85% of vanilla colony-sim core systems (estimate; verified slice growing) |
-| Verification | `refactor_check.py` 6-stage gate. Last full-suite green at #275 (2026-06-02): isolated 76/76 · integration 42/42 · Build Click QA 9/9 · pawn-action 7/7 · feature-audit 13/13 · visual diff. The 2026-06-03 playtest-fix batch (#32–#43) is build-verified + screenshot/coordinate-verified per fix; full V/I-suite re-run pending. |
+| Verification | `refactor_check.py` 6-stage gate. **Full suite re-run green 2026-06-03** after the #32–#44 batch: isolated PlayMode **76/76**, integration **43/43**, Build Click QA **9/9**, no runtime errors, pawn-action 7/7 · feature-audit 13/13. (Visual-diff step is intentionally noisy for a live sim — pawns/AI move, so two captures of the same build differ a few %; treated as advisory, not a hard gate.) |
 | Latest build | date-stamped `builds/day-PLAY-<date>/PawnSim.exe` — **always resolve dynamically** (`ls -dt builds/day-*/ \| head -1`); the per-day folder rolls over at midnight, so a hardcoded date silently runs a stale build. |
 
 > **PM source-of-truth**: [`docs/MILESTONES.md`](docs/MILESTONES.md) (shipped /
@@ -230,10 +230,10 @@ Three verification layers feed the gate:
 
 - **V-series** (isolated PlayMode scenarios, in `Assets/Scripts/Tests/`) —
   combat / movement / health / resource / AI / time-mood / system /
-  persistence assertions (V1…; isolated **76/76** at last green).
+  persistence assertions (V1…; isolated **76/76**, green 2026-06-03).
 - **I-series** (integration scenarios on the real `Game.unity` with spawned
   pawns/trees) — GUI buttons, click round-trips, end-to-end chop / harvest /
-  combat, save→load round-trip, 60s stress (**42/42** at last green).
+  combat, save→load round-trip, 60s stress (**43/43**, green 2026-06-03).
 - **Build Click QA** — drives real on-screen button clicks against the built
   `.exe` (9/9; this harness itself was found silently skipping for months due
   to a log-prefix mismatch — fixed in #198, a "the verifier must be verified
