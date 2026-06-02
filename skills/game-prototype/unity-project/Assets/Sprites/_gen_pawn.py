@@ -119,8 +119,22 @@ def _outline_ring(mask: set) -> set:
     return ring
 
 
+def _scale(c: tuple, f: float) -> tuple:
+    """RGB 를 f 배 (alpha 유지).  f<1 어둡게, f>1 밝게 — 채널 클램프."""
+    r, g, b, a = c
+    return (max(0, min(255, int(r * f))),
+            max(0, min(255, int(g * f))),
+            max(0, min(255, int(b * f))), a)
+
+
 def gen_pawn(cloth: tuple, cloth_dk: tuple, trouser: tuple) -> Image.Image:
     """16x16 flat-style 콜로니스트 생성. cloth 색은 외부에서 주입 (중립 베이스).
+
+    #UI-A 음영 추가: 실루엣/스타일은 유지하되 top-down 조명으로 입체감을 준다.
+      - 머리: 윗줄 하이라이트 / 얼굴 턱줄 그림자
+      - 상의: 상단(어깨/가슴) 하이라이트, 배 아래 그림자 → 옷이 둥글게 읽힘
+      - 바지: 정강이 그림자, 신발 윗면 하이라이트
+    면 채색 → 외곽 아웃라인 순서는 그대로(평면 톤 유지).
 
     Args:
         cloth:    상의/몸통 색 (CLOTH_*)
@@ -132,24 +146,38 @@ def gen_pawn(cloth: tuple, cloth_dk: tuple, trouser: tuple) -> Image.Image:
     """
     im = Image.new("RGBA", (16, 16), T)
 
-    zone_color: dict[int, tuple] = {
-        1: HAIR_DK,
-        2: SKIN_MD,
-        3: cloth,
-        4: cloth_dk,
-        5: trouser,
-        6: WOOD_DK,
-        7: SKIN_SH,
-    }
+    cloth_lt   = _scale(cloth, 1.20)     # 상의 하이라이트(어깨/가슴)
+    cloth_lo   = _scale(cloth, 0.82)     # 상의 하단 그림자
+    hair_lt    = _scale(HAIR_DK, 1.55)   # 머리 하이라이트
+    trouser_lo = _scale(trouser, 0.82)   # 바지 하단 그림자
+    boot_lt    = _scale(WOOD_DK, 1.28)   # 신발 윗면 하이라이트
+
+    def shade(z: int, y: int) -> tuple:
+        """zone+행 위치로 음영 색 결정 (top-down 라이팅)."""
+        if z == 1:                                   # hair
+            return hair_lt if y <= 1 else HAIR_DK
+        if z == 2:                                   # skin
+            return SKIN_SH if y >= 5 else SKIN_MD    # 턱줄 그림자
+        if z == 3:                                   # torso cloth
+            if y <= 7:  return cloth_lt              # 어깨/가슴 하이라이트
+            if y >= 11: return cloth_lo              # 배 아래 그림자
+            return cloth
+        if z == 4:  return cloth_dk                  # arm (이미 그림자색)
+        if z == 5:                                   # trouser
+            return trouser_lo if y >= 14 else trouser
+        if z == 6:                                   # boot
+            return boot_lt if y == 15 else WOOD_DK
+        if z == 7:  return SKIN_SH                   # eyes
+        return SKIN_MD
 
     mask    = _build_mask()
     outline = _outline_ring(mask)
 
-    # 패스 1: 모든 zone 픽셀에 기본 색 채우기
+    # 패스 1: zone 픽셀에 음영 적용 색 채우기
     for y, row in enumerate(ZONE_MAP):
         for x, z in enumerate(row):
             if z != 0:
-                im.putpixel((x, y), zone_color[z])
+                im.putpixel((x, y), shade(z, y))
 
     # 패스 2: 외곽 아웃라인 덮어쓰기 (실루엣 경계만)
     for (x, y) in outline:
