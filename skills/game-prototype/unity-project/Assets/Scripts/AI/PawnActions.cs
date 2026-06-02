@@ -411,6 +411,10 @@ namespace MelonS.GameProto.AI
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.hauler == null) return false;
+            // 운영자 2026-06-02: 받을 곳(식량 stockpile)이 없으면 운반을 시작하지 않는다.
+            //  없으면 줍→둘곳없음→발밑드롭→재줍 무한루프(저장구역 없을 때 관찰됨).
+            if (StockpileZoneEntity.FindBest(ctx.transform.position, StockItemKind.Food) == null)
+                return false;
             MeatPileEntity meat = FindNearestMeat(ctx);
             if (meat == null) return false;
             ctx.hauler.SetMeatTarget(meat);
@@ -443,19 +447,26 @@ namespace MelonS.GameProto.AI
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.hauler == null) return false;
+            // 운영자 2026-06-02: 받을 곳(석재 stockpile 또는 석재 필요한 청사진) 없으면 운반 안 함
+            //  — 줍→발밑드롭→재줍 무한루프 방지.
+            if (StockpileZoneEntity.FindBest(ctx.transform.position, StockItemKind.Stone) == null
+                && !AnyBlueprintNeedsStone())
+                return false;
             StoneChunkEntity chunk = FindNearestChunk(ctx);
             if (chunk == null) return false;
             ctx.hauler.SetStoneTarget(chunk);
             return true;
         }
+        private static bool AnyBlueprintNeedsStone()
+        {
+            foreach (var bp in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
+                if (bp != null && bp.RemainingStone > 0) return true;
+            return false;
+        }
         private static StoneChunkEntity FindNearestChunk(PawnContext ctx)
         {
             // #196 - stone 도 같은 패턴.  blueprint 가 석재 필요 시 stockpile chunk 도 pickup 허용.
-            bool anyBpNeedsStone = false;
-            foreach (var bp in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
-            {
-                if (bp != null && bp.RemainingStone > 0) { anyBpNeedsStone = true; break; }
-            }
+            bool anyBpNeedsStone = AnyBlueprintNeedsStone();
             var arr = Object.FindObjectsByType<StoneChunkEntity>(FindObjectsSortMode.None);
             StoneChunkEntity best = null;
             float bestSq = float.MaxValue;
@@ -482,10 +493,21 @@ namespace MelonS.GameProto.AI
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.hauler == null) return false;
+            // 운영자 2026-06-02: 받을 곳(목재 stockpile 또는 목재 필요한 청사진) 없으면 운반 안 함
+            //  — 저장구역 없을 때 줍→발밑드롭→재줍 무한루프(림이 통나무 들었다 놨다)를 막는다.
+            if (StockpileZoneEntity.FindBest(ctx.transform.position, StockItemKind.Wood) == null
+                && !AnyBlueprintNeedsWood())
+                return false;
             WoodPileEntity pile = FindNearestPile(ctx);
             if (pile == null) return false;
             ctx.hauler.SetPileTarget(pile);
             return true;
+        }
+        private static bool AnyBlueprintNeedsWood()
+        {
+            foreach (var bp in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
+                if (bp != null && bp.RemainingWood > 0) return true;
+            return false;
         }
         private static WoodPileEntity FindNearestPile(PawnContext ctx)
         {
@@ -494,11 +516,7 @@ namespace MelonS.GameProto.AI
             //  결과: stockpile 에 wood 쌓여있어도 청사진으로 운반 X → 건축 무한 대기.
             //  fix: 청사진이 자재 필요하면 stockpile pile 도 pickup target.
             //       청사진 없으면만 skip (stockpile → stockpile 재운반 loop 방지).
-            bool anyBpNeedsWood = false;
-            foreach (var bp in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
-            {
-                if (bp != null && bp.RemainingWood > 0) { anyBpNeedsWood = true; break; }
-            }
+            bool anyBpNeedsWood = AnyBlueprintNeedsWood();
             var arr = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None);
             WoodPileEntity best = null;
             float bestSq = float.MaxValue;
