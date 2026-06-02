@@ -10,9 +10,9 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(Text))]
     public class TimeUI : MonoBehaviour
     {
-        // Palette colors (must stay in sync with SceneSetup palette)
-        private static readonly Color TextPrimary = new Color(0.910f, 0.875f, 0.816f, 1f);
-        private static readonly Color AccentWarn  = new Color(0.769f, 0.353f, 0.227f, 1f);
+        // 감사 rank2: 하드코딩 팔레트 → UITheme 토큰 직접 참조(탑바 색 불일치 영구 해소).
+        private static readonly Color TextPrimary = MelonS.GameProto.Core.UITheme.TextPrimary;
+        private static readonly Color AccentWarn  = MelonS.GameProto.Core.UITheme.TextDanger;
 
         private Text txt;
         private float lastShown = -1f;

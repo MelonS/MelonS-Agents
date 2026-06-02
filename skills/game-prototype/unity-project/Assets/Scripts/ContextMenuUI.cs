@@ -83,12 +83,16 @@ namespace MelonS.GameProto
                 brt.sizeDelta = new Vector2(0, itemHeight);
                 brt.anchoredPosition = new Vector2(0, -itemHeight * idx);
                 var itemImg = bgo.AddComponent<Image>();
-                itemImg.color = new Color(0.10f, 0.12f, 0.16f, 0.0f);
+                // 감사 rank1: base 가 alpha=0 이라 Button tint(곱연산) 가 항상 0 → hover 피드백
+                //  전무했음.  base=white 로 두고 state 색을 직접 지정(평소 투명 → hover/press 시
+                //  warm 톤 표시).  곱연산이라도 base white 면 state 색이 그대로 나온다.
+                itemImg.color = Color.white;
                 var btn = bgo.AddComponent<Button>();
                 var cb = btn.colors;
-                cb.normalColor = new Color(1, 1, 1, 0.95f);
-                cb.highlightedColor = new Color(1.25f, 1.25f, 1.10f, 1f);
-                cb.pressedColor = new Color(0.7f, 0.7f, 0.7f, 1f);
+                cb.normalColor      = new Color(1, 1, 1, 0f);                       // 평소 투명
+                cb.highlightedColor = MelonS.GameProto.Core.UITheme.BtnHover;       // hover = warm 강조
+                cb.pressedColor     = MelonS.GameProto.Core.UITheme.AccentOrange;   // press = orange
+                cb.fadeDuration     = 0.08f;
                 btn.colors = cb;
                 btn.onClick.AddListener(() => { action?.Invoke(); Close(); });
 

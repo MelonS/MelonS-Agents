@@ -144,9 +144,10 @@ namespace MelonS.GameProto
             // the reference sim 세계관 정합: 회계용어 "N분기" 대신 계절명을 날짜 전면에.
             //  예) "봄 1일, 5500년" — 계절을 첫머리에 둬 the reference sim 의 "Spring 1st, 5500"
             //  감성과 맞춘다.  연도는 뒤에 붙여 보조 정보로.
-            dateText.text = $"{season} {dayInQuadrum}일, {year}년";
-            // 보조줄: 계절을 라벨로 단독 표기 (날짜줄과 톤 분리; 시각/계절 표시 유지).
-            seasonText.text = $"{season}철";
+            // 감사 rank8: 계절이 날짜줄+보조줄에 중복("봄 1일,5500년" + "봄철")이던 것 제거.
+            //  날짜줄=계절+일, 보조줄=연도 로 분리해 중복 없이 정보 유지.
+            dateText.text = $"{season} {dayInQuadrum}일";
+            seasonText.text = $"{year}년";
         }
 
         /// <summary>24시간 Hour/Minute → "6:08 AM" / "12:00 PM" 형식.</summary>

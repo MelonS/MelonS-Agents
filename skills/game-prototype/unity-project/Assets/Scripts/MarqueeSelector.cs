@@ -36,11 +36,11 @@ namespace MelonS.GameProto
         [Tooltip("Pixels the cursor must move from press before a press becomes a marquee DRAG (below this = a single click, left to ClickSelector).")]
         [SerializeField] private float dragThresholdPixels = 6f;
 
-        [Tooltip("Fill color of the marquee rectangle while dragging.")]
-        [SerializeField] private Color marqueeFill = new Color(0.30f, 1.0f, 0.50f, 0.12f);
-
-        [Tooltip("Border color of the marquee rectangle while dragging.")]
-        [SerializeField] private Color marqueeBorder = new Color(0.35f, 1.0f, 0.55f, 0.85f);
+        // 감사 rank4: 형광 녹색 → warm gold(선택 계열 통일).  씬에 옛 녹색이 baked 돼
+        //  SerializeField 기본값을 덮으므로 non-serialized 로 둬 source(gold)가 항상 적용되게 함.
+        //  AccentGold = (0.957,0.843,0.541).
+        private Color marqueeFill = new Color(0.957f, 0.843f, 0.541f, 0.12f);
+        private Color marqueeBorder = new Color(0.957f, 0.843f, 0.541f, 0.85f);
 
         [Tooltip("Manual-control grace applied to each pawn on a multi move-order (matches ClickSelector's 15f).")]
         [SerializeField] private float manualMoveGrace = 15f;
