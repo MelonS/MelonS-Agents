@@ -98,12 +98,20 @@ namespace MelonS.GameProto
             for (int i = active.Count - 1; i >= 0; i--)
                 if (Time.time >= active[i].expireTime) active.RemoveAt(i);
 
-            // PawnNeeds.mood 를 thought 합으로 lerp (즉시 set 하면 decay 무시됨 → 50% blend).
-            //  단순화: thoughts 가 있으면 needs.mood = CurrentMood (override).
+            // 운영자 2026-06-02: 부정 thought(배고픔/수면부족/부상)가 catalog 엔 있으나 게임
+            //  코드에서 AddThought 가 한 번도 안 불려 mood 가 항상 ≥50 (기분이 안 나빠짐).
+            //  → needs/health 를 읽어 부정 thought 를 환류(낮으면 추가, 회복되면 제거)해서
+            //  "배고프면/못 자면/다치면 기분이 나빠진다"가 실제로 작동하게 한다.
             var needs = GetComponent<PawnNeeds>();
-            if (needs != null && active.Count > 0)
+            if (needs != null)
             {
-                needs.mood = CurrentMood;
+                if (needs.food  < 25f) AddThought("배고픔");    else RemoveThought("배고픔");
+                if (needs.sleep < 25f) AddThought("수면 부족"); else RemoveThought("수면 부족");
+                var health = GetComponent<PawnHealth>();
+                if (health != null && health.TotalHpRatio < 0.6f) AddThought("부상");
+                else RemoveThought("부상");
+                // thought(양수+음수)가 있으면 그 합이 mood.  없으면 PawnNeeds 자체 decay 유지.
+                if (active.Count > 0) needs.mood = CurrentMood;
             }
         }
     }

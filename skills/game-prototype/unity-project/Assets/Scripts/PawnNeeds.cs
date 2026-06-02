@@ -31,8 +31,10 @@ namespace MelonS.GameProto
         //  — #234 의 느린 시계(1x=16.7분/일)로 needs 가 실시간 4× 느려져 체감상 '안 내려감'.
         //  식사·잠이 실제로 필요하도록 상향: food 0.048→0.13(게임일당 ~130 → 하루 2~3회 식사),
         //  sleep 0.096→0.18(~180/일 → 밤마다 + 부족시 졸림).  생존은 meals/berry/사냥+밤잠으로 유지.
-        [SerializeField] private float foodDecay = 0.13f;
-        [SerializeField] private float sleepDecay = 0.18f;
+        // 운영자 2026-06-02 "수면/식량 게이지가 왜 안 줄어드냐" — decay 는 돌고 있었으나 너무
+        //  느려 체감이 안 됐다.  눈에 보이게 ~1.6x 상향(perceptible).  여전히 game-day 단위 생존.
+        [SerializeField] private float foodDecay = 0.21f;
+        [SerializeField] private float sleepDecay = 0.29f;
         [SerializeField] private float moodDecay = 0.048f;  // #234 the reference sim 시계 비례 축소
 
         [Header("Day 9+: sleep regen when sleeping at night")]

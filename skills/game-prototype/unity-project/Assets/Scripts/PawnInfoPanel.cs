@@ -518,22 +518,7 @@ namespace MelonS.GameProto
                     }
                     if (health.IsDowned) sb.AppendLine("<color=#ff6464>의식불명</color>");
                     if (health.IsDead)   sb.AppendLine("<color=#ff0000>사망</color>");
-
-                    // #120 - 능력치 (PawnAbilities)
-                    var abil = pawn.GetComponent<PawnAbilities>();
-                    if (abil != null)
-                    {
-                        sb.AppendLine();
-                        sb.AppendLine("<color=#ddc28a>능력치:</color>");
-                        foreach (var (key, label) in PawnAbilities.DisplayMap)
-                        {
-                            float v = abil.GetByKey(key);
-                            // 1.0 기준 색상 - 좋음 녹색, 평균 옅음, 나쁨 빨강
-                            string col = v >= 1.10f ? "#9adb86" : (v >= 0.95f ? "#dddddd" : "#e88c54");
-                            sb.AppendLine($"  <color={col}>{label}: {v:F2}</color>");
-                        }
-                    }
-
+                    // 운영자 2026-06-02: 건강 탭엔 건강(부위 HP/출혈/붕대)만.  능력치는 장비 탭으로 이전.
                     healthText.text = sb.ToString();
                 }
                 else
@@ -570,14 +555,14 @@ namespace MelonS.GameProto
                 }
             }
 
-            // ---- 장비 tab: equipment list (#123), or muted '장비 없음' ----
+            // ---- 장비 tab: 장비 목록 + 능력치(건강탭에서 이전, 운영자 fb) ----
             if (equipText != null)
             {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("<color=#ddc28a>장비:</color>");
                 var eq = pawn.GetComponent<PawnEquipment>();
                 if (eq != null && eq.equipped.Count > 0)
                 {
-                    var sb = new System.Text.StringBuilder();
-                    sb.AppendLine("<color=#ddc28a>장비:</color>");
                     string[] slotLabels = { "셔츠", "바지", "모자", "무기" };
                     var slots = (PawnEquipment.Slot[])System.Enum.GetValues(typeof(PawnEquipment.Slot));
                     for (int i = 0; i < slots.Length; i++)
@@ -587,17 +572,24 @@ namespace MelonS.GameProto
                         string col = it != null ? "#dddddd" : "#888888";
                         sb.AppendLine($"  <color={col}>{slotLabels[i]}: {val}</color>");
                     }
-                    equipText.text = sb.ToString();
-                    equipText.color = MelonS.GameProto.Core.UITheme.TextPrimary;
-                    equipText.alignment = TextAnchor.UpperLeft;
                 }
-                else
+                else sb.AppendLine("  <color=#888888>(장비 없음)</color>");
+                // #120 능력치 — 건강탭에서 이전(건강엔 건강만, 능력치는 여기).
+                var abil = pawn.GetComponent<PawnAbilities>();
+                if (abil != null)
                 {
-                    // U5/V7-consistent muted empty-state.
-                    equipText.text = "장비 없음";
-                    equipText.color = MelonS.GameProto.Core.UITheme.TextSecondary;
-                    equipText.alignment = TextAnchor.MiddleCenter;
+                    sb.AppendLine();
+                    sb.AppendLine("<color=#ddc28a>능력치:</color>");
+                    foreach (var (key, label) in PawnAbilities.DisplayMap)
+                    {
+                        float v = abil.GetByKey(key);
+                        string col = v >= 1.10f ? "#9adb86" : (v >= 0.95f ? "#dddddd" : "#e88c54");
+                        sb.AppendLine($"  <color={col}>{label}: {v:F2}</color>");
+                    }
                 }
+                equipText.text = sb.ToString();
+                equipText.color = MelonS.GameProto.Core.UITheme.TextPrimary;
+                equipText.alignment = TextAnchor.UpperLeft;
             }
         }
     }
