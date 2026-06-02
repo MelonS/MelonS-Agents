@@ -20,8 +20,8 @@ automated proof-of-function) — see [`docs/goal.md`](docs/goal.md).
 | Build target | Windows x64 (Standalone) |
 | Scope | lightweight colony-sim vertical slice — **NOT a clone** |
 | Core coverage | ~85% of vanilla colony-sim core systems (estimate; verified slice growing) |
-| Verification | `refactor_check.py` 6-stage gate; isolated 76/76 · integration 43/43 · Build Click QA 8/8 · pawn-action 7/7 · feature-audit 13/13 · visual diff — last green post-#275 (2026-06-02) |
-| Latest build | date-stamped: `builds/day-PLAY-2026-06-01/PawnSim.exe` (newest via `ls -dt builds/day-*/`) |
+| Verification | `refactor_check.py` 6-stage gate. Last full-suite green at #275 (2026-06-02): isolated 76/76 · integration 42/42 · Build Click QA 9/9 · pawn-action 7/7 · feature-audit 13/13 · visual diff. The 2026-06-03 playtest-fix batch (#32–#43) is build-verified + screenshot/coordinate-verified per fix; full V/I-suite re-run pending. |
+| Latest build | date-stamped `builds/day-PLAY-<date>/PawnSim.exe` — **always resolve dynamically** (`ls -dt builds/day-*/ \| head -1`); the per-day folder rolls over at midnight, so a hardcoded date silently runs a stale build. |
 
 > **PM source-of-truth**: [`docs/MILESTONES.md`](docs/MILESTONES.md) (shipped /
 > in-flight / queued). **Outcome layer**: [`docs/goal.md`](docs/goal.md).
@@ -50,14 +50,22 @@ Verified in code and gated by the harness (see
 verified-vs-stub audit):
 
 - **Grid + pathfinding** — **90×90 map** (#235, enlarged from 40→60→90 per
-  operator "기본맵부터 상당히 큼"). `PathGrid` + A* (8-direction, octile cost
+  operator "기본맵부터 상당히 큼") with **4 terrain types** — grass / dirt-soil /
+  water (impassable lakes) / rock (impassable), the soil & rock patches widened
+  map-wide for visible variety (#43), and **clustered ore veins** (sandstone /
+  limestone / granite / marble) placed in dense RimWorld-style blobs rather than
+  scattered (#42). `PathGrid` + A* (8-direction, octile cost
   10/14, no corner-cut, 12000-node cap). Pawn 1×1 collider, multi-cell footprints
   (e.g. bed 1×2, research bench 2×1), wall path-blocking (ref-counted),
   door pass-through (slowed), adjacent-stand-cell work positioning,
   `ReservationManager` (no double-occupy), build-placement validation
   (rejects water/rock/occupied with a toast), eject/push-out + standing
   safety-net so a pawn never gets trapped by a freshly-built wall.
-- **Pawns** — needs (food/sleep/mood), **schedule-driven sleep** (#269 — the
+- **Pawns** — needs (food/sleep/mood) with perceptible decay; **mood now reacts
+  to state** — low food → 배고픔, low sleep → 수면 부족, injury → 부상 negative
+  thoughts feed the mood sum so it actually drops when needs/health degrade
+  (#35/#36, a first step toward the gated full thought-sum + mental-break model),
+  **schedule-driven sleep** (#269 — the
   the reference sim Sleep time-slot makes a pawn walk to a bed and stay asleep through
   the block, not just collapse when exhausted), 6-body-part health (bleed /
   downed / death), 4 skills + XP/level (gather/chop/build/combat), 8 traits with real
@@ -93,10 +101,13 @@ verified-vs-stub audit):
   the colony-sim torch-lamp glow formula — replacing the old additive light-pools
   (which read as a hazy fog). `WeatherController` (storm darkening + rain).
 - **UI** — unified bordered-panel system (`MakeBorderedPanel`): top bar
-  (clock / speed / resources), Architect menu, bottom-center gizmo command
-  bar, top-right alert/letter stack (clickable → camera pan), tabbed pawn
-  inspector, multi-select marquee, hover tooltips (Korean), floating
-  combat/work text, hotkey cheat-sheet overlay.
+  (clock / speed), **top-left vertical resource readout** (food / meals / wood /
+  stone, genre-standard placement — #41), Architect menu, bottom-center gizmo
+  command bar, top-right alert/letter stack (clickable → camera pan), tabbed pawn
+  inspector (health tab = body HP only, abilities live on the equipment tab —
+  #40), settings panel (audio sliders + save/load row), context/float action
+  menus (left-click an entity → 벌목/채광/채집 designation), multi-select marquee,
+  hover tooltips (Korean), floating combat/work text, hotkey cheat-sheet overlay.
 - **Persistence** — JSON save/load (F5/F9) of pawns / trees / resources /
   world state. (Known gap: some entity sub-state — BedQuality /
   StockpilePriority / TreeSpecies / WallMaterial — not yet serialized; see
@@ -164,8 +175,8 @@ pushes, RED auto-rolls-back + preserves a wip branch + writes a bug report).
 Pre-built `.exe` (date-stamped — pick the newest):
 
 ```
-builds/day-PLAY-2026-06-01/PawnSim.exe        # newest
-# generally: ls -dt builds/day-*/ | head -1
+# always resolve the newest dynamically (the folder is date-stamped):
+ls -dt builds/day-*/ | head -1      # → builds/day-PLAY-<latest-date>/PawnSim.exe
 ```
 
 Per-day snapshots live under `builds/day-<day>-<date>/PawnSim.exe` (the folder
@@ -264,7 +275,9 @@ leap from "looks and sounds like the reference sim" to "*plays* like the referen
 §5 logic-change rule). Specs are drafted and waiting:
 
 - **Mood = thought-sum + 3-tier mental-break** ([`docs/spec-needs-mood-balance.md`](docs/spec-needs-mood-balance.md)) —
-  replaces the current free-fall mood timer with a true the reference sim mood model.
+  the negative-thought wiring (배고픔/수면 부족/부상 → mood drop, #36) is now in;
+  the remaining gated piece is the full positive/negative catalogue balance +
+  the 3-tier mental-break behaviour.
 - **Work-priority grid** ([`docs/spec-work-priority.md`](docs/spec-work-priority.md)) —
   per-job 1–4 priority grid; directly addresses the operator's hauling-priority
   interest (currently WorkKind is collapsed, so Haul can't be controlled alone).
@@ -274,6 +287,9 @@ leap from "looks and sounds like the reference sim" to "*plays* like the referen
 
 - Save/load entity sub-state (BedQuality / StockpilePriority / TreeSpecies /
   WallMaterial) not yet serialized — reverts to default on load.
+- **Save/load UI row not appearing** (#44) — the settings panel's save/load row
+  stays hidden because `GameSaveButtons` isn't found in the built scene at
+  runtime; whether F5/F9 save/load is itself affected needs re-verification.
 - `carryCapacity` defined but not wired to a hauler carry cap.
 - BanditEnemy body-parts (reuse PawnHealth).
 
