@@ -194,7 +194,9 @@ namespace MelonS.GameProto.EditorTools
             //  클러스터 중심을 잡고 각 중심 주위 작은 반경에 광맥을 모아 배치(the reference sim 광맥처럼).
             var centers = new System.Collections.Generic.List<Vector2>();
             int ctries = 0;
-            while (centers.Count < 7 && ctries < 300)
+            // #257 운영자 "여전히 너무 띄엄띄엄": 중심 7→5 (적고 큰 군집) + 군집 간 간격 9→12
+            //  로 띄워, 각 군집을 더 조밀히 채운다.
+            while (centers.Count < 5 && ctries < 300)
             {
                 ctries++;
                 int ccx = sr.Next(-(half-5), half-4);
@@ -205,7 +207,7 @@ namespace MelonS.GameProto.EditorTools
                 for (int li = 0; li < layout.lakeCenters.Length; li++)
                     if ((cc - layout.lakeCenters[li]).magnitude < layout.lakeRadii[li] + 3f) { bad = true; break; }
                 if (bad) continue;
-                foreach (var ex in centers) if (Vector2.Distance(ex, cc) < 9f) { bad = true; break; }  // 클러스터 간 간격
+                foreach (var ex in centers) if (Vector2.Distance(ex, cc) < 12f) { bad = true; break; }  // 클러스터 간 간격
                 if (bad) continue;
                 centers.Add(cc);
             }
@@ -215,8 +217,8 @@ namespace MelonS.GameProto.EditorTools
             {
                 tries++;
                 var center = centers[sr.Next(0, centers.Count)];
-                int sx = Mathf.RoundToInt(center.x) + sr.Next(-3, 4);   // 중심 ±3 반경에 모음
-                int sy = Mathf.RoundToInt(center.y) + sr.Next(-3, 4);
+                int sx = Mathf.RoundToInt(center.x) + sr.Next(-2, 3);   // #257 ±3→±2 더 조밀
+                int sy = Mathf.RoundToInt(center.y) + sr.Next(-2, 3);
                 if (Mathf.Abs(sx) > half - 1 || Mathf.Abs(sy) > half - 1) continue;
                 Vector2 sp = new Vector2(sx, sy);
                 // pawn spawn 회피
@@ -230,10 +232,11 @@ namespace MelonS.GameProto.EditorTools
                 foreach (var tp in treePositions)
                     if (Vector2.Distance(tp, sp) < 1.8f) { skip = true; break; }
                 if (skip) continue;
-                // 기존 광맥 회피 — #250 클러스터 내 밀집 위해 2.0→1.4 (서로 가깝게 모임,
-                //  단 HasWalkableNeighbor 로 채굴 가능성은 보장).
+                // 기존 광맥 회피 — #257 1.4→0.9 (cardinal 인접 거리 1.0 허용 → 서로 맞붙어
+                //  RimWorld 광맥처럼 조밀한 덩어리 형성).  같은 셀 중복만 차단.
+                //  단 HasWalkableNeighbor 로 각 광맥의 채굴 가능성은 여전히 보장.
                 foreach (var ex in positions)
-                    if (Vector2.Distance(ex, sp) < 1.4f) { skip = true; break; }
+                    if (Vector2.Distance(ex, sp) < 0.9f) { skip = true; break; }
                 if (skip) continue;
                 // #237 도달 가능성 보장 — 광맥은 자기 셀을 막으므로 pawn 은 인접 cell 에 서서
                 //  캔다.  4 cardinal 이웃이 모두 물/바위/맵밖이면 'no free adjacent stand cell'
