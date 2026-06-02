@@ -277,6 +277,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   stats: {fileID: 0}
+  MoveSpeedScale: 1
 --- !u!114 &3384598379736067457
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -292,8 +293,8 @@ MonoBehaviour:
   food: 80
   sleep: 80
   mood: 80
-  foodDecay: 0.13
-  sleepDecay: 0.18
+  foodDecay: 0.21
+  sleepDecay: 0.29
   moodDecay: 0.048
   sleepRegenAtNight: 8
   eatThreshold: 50
@@ -598,7 +599,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   decisionInterval: 1.5
-  idleWanderRadius: 3
   foodHungryThreshold: 40
   globalFoodLowThreshold: 10
   arrowSprite: {fileID: 0}
@@ -728,3 +728,6 @@ MonoBehaviour:
   idleAmplitude: 0.012
   idleFrequencyHz: 1
   amplitudeLerpSpeed: 8
+  walkSquash: 0.09
+  turnPopAmount: 0.13
+  turnPopDur: 0.12
