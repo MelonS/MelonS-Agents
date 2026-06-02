@@ -136,6 +136,24 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 > 에이전트 시스템 자체가 자라온 흔적입니다 (산출물은 gitignored
 > `records/` 로컬에 남습니다).
 
+### PawnSim — 에이전트가 지금 가장 활발히 반복 개발 중인 프로토타입 (2026-06 focus)
+
+현재 가장 활발한 검증 표면은 **PawnSim** (Skill #3-A) 입니다 — 에이전트가
+만들면서 *동시에* 플레이테스트하는 타이트한 루프로 돌아가고, 운영자가 올린
+인게임 피드백이 곧바로 다음 수정 배치로 이어집니다.
+
+![PawnSim — 탑다운 콜로니-심 vertical slice. 좌상단 세로 자원 readout(식량/식사/목재/석재), 잔디·흙 지형 위의 이름표 달린 콜로니스트 3명, 나무, 하단 중앙 명령바(징집/직업/일정/건축/연구/설정), 에이전트 생성 flat-outline 스프라이트](docs/demo/pawnsim-2026-06-03.png)
+
+콜로니스트는 utility AI 로 벌목/채광/채집/농사/요리/운반/건축/연구/전투를
+자율 수행하고, AI 디렉터가 위협을 스폰하며, 플레이어는 림을 징집하고 건축·지정
+명령을 칠합니다. 모든 스프라이트·씬·C# 시스템은
+[`game-dev-agent`](skills/game-dev-agent/) 가 CLI 로 스캐폴딩하며 (수동 Unity
+에디터 작업 0), 모든 커밋이 6단계 `refactor_check` 게이트를 통과합니다. 위
+스크린샷은 실제 빌드 — 장르 표준 좌상단 자원 readout, 다양해진 흙/돌 지형,
+조밀한 광맥 군집, 이름표+개별 모션 콜로니스트. 전체 기능 + **정직한** 검증
+상태(알려진 결함 포함)는
+[`skills/game-prototype/README.md`](skills/game-prototype/README.md) 에 있습니다.
+
 > **엔지니어링 결정, 한 페이지로.**
 > [`docs/engineering-case-studies.ko.md`](docs/engineering-case-studies.ko.md)
 > — 프로덕션에서 드러난 9건의 문제와 각각이 만들어낸 최소 메커니즘
@@ -266,6 +284,15 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
 
 ### 최근 ship (롤링)
 
+- **2026-06-03 PawnSim 플레이테스트-수정 배치** (Skill #3-A) — 운영자
+  플레이테스트 루프가 [`skills/game-prototype/`](skills/game-prototype/) 에
+  12커밋 배치를 끌어냄: 림 이동 속도 회귀 + 벌목 접근 지터 수정(P0), needs→부정
+  thought 연동으로 배고프면/못 자면/다치면 기분이 실제로 나빠지게, idle 림 전원이
+  한 나무로 몰리던 dispatch 예약-키 버그 수정, 자원 readout 을 장르 표준 좌상단
+  세로 목록으로 이전, 광맥 조밀 군집 + 맵 전역 흙/돌 지형 재구성, 설정 패널 수정.
+  각 수정은 build + 스크린샷/좌표 검증;
+  [`docs/PLAYTEST-TODO.md`](skills/game-prototype/docs/PLAYTEST-TODO.md) 에
+  항목별 상태 (운영자 인게임 확인 전까지 미삭제).
 - **2026-05-23 production batch** — 6개 mp4 (`monday-v1/v2`,
   `convenience-v1/v2`, `smallhand-folk-v1/v2`) 가
   [`outputs/publish/shorts-2026-05-23-batch/`](outputs/publish/) 에
@@ -281,9 +308,6 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
   쉐이더-앵커 커버리지 / 가사 sync drift 통합 검증, exit 0/1/2)
   + `scripts/music-video-thumbnail.sh` (중반 클라이맥스 JPG).
   `MUSIC_VIDEO_VALIDATE=1` 로 두면 렌더 직후 자동 chain.
-- **planner + resourcer 를 opus 로** (2026-05-22 결정) — 1회 A/B 후
-  ~10-20 미션 누적까지 production trial.  근거 + revert 기준은
-  [`docs/research/2026-05-22-abtest-planner-opus.md`](docs/research/2026-05-22-abtest-planner-opus.md).
 
 ### v5 프로토타입 이후 누적된 것들
 
@@ -876,6 +900,31 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 ./scripts/mission-queue.sh
 ./scripts/install-scheduler.sh install      # 야간 launchd
 ```
+
+### Skill #3 — 게임 프로토타입 (PawnSim) 빌드 + 실행
+
+개발 중 (프로덕션 스킬 카운트 제외), 에이전트가 가장 활발히 플레이테스트하는
+루프입니다. **Windows + Unity 6000.0.75f1 LTS** 필요 (빌드 체인이 에디터를
+batchmode 로 구동); 나머지 레포는 Mac/Linux.
+
+```bash
+cd skills/game-prototype
+
+# 1) 씬 + 프리팹 재생성 (프로그래매틱 — 수동 에디터 작업 없음)
+python ../game-dev-agent/scripts/agent.py integrate --project unity-project --method scenes
+
+# 2) Windows .exe 빌드 (headless)
+python ../game-dev-agent/scripts/agent.py integrate --project unity-project --method build --day PLAY
+
+# 3) 가장 최신 빌드 실행 — 일별 폴더가 날짜 스탬프라 항상 동적으로 해석
+#    (날짜 하드코딩 시 stale 빌드를 조용히 실행하게 됨):
+"$(ls -dt builds/day-*/ | head -1)PawnSim.exe"
+```
+
+사전 빌드된 `.exe` 는 커밋하지 않음 (`builds/` gitignore); 2단계가 생성합니다.
+유용한 플래그: `-starthour 22` (야간 데모), `-delay 12 -screenshot <절대경로>`
+(headless 캡처), `-opensettings` (캡처 전 설정 패널 열기). 전체 조작·기능·정직한
+검증 상태는 [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
 
 ## 운영 계약
 

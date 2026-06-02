@@ -154,6 +154,25 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > system's own growth, not a record of its outputs (those stay local
 > in gitignored `records/`).
 
+### PawnSim — the prototype the agent is actively iterating on (2026-06 focus)
+
+The most active validation surface right now is **PawnSim** (Skill #3-A) — the
+agent builds *and* play-tests it in a tight loop, with the operator filing
+in-game feedback that turns straight into the next batch of fixes.
+
+![PawnSim — a top-down colony-sim vertical slice. Top-left vertical resource readout (food/meals/wood/stone), three named colonists on grass and dirt-soil terrain, trees, a bottom-center command bar (draft / work / schedule / build / research / settings), agent-generated flat-outline sprites](docs/demo/pawnsim-2026-06-03.png)
+
+Colonists autonomously chop / mine / gather / farm / cook / haul / build /
+research / fight under a utility AI; an AI Director spawns threats; the player
+drafts pawns and paints build + designation orders. Every sprite, scene, and
+C# system is CLI-scaffolded by [`game-dev-agent`](skills/game-dev-agent/) with
+no manual Unity Editor work, and every commit passes a 6-stage
+`refactor_check` gate. The shot above is a live build: genre-standard top-left
+resource readout, varied soil/rock terrain, clustered ore veins, named
+colonists with per-pawn motion. Full feature breakdown + **honest** verification
+status (including known gaps) in
+[`skills/game-prototype/README.md`](skills/game-prototype/README.md).
+
 > **Engineering decisions, one page.**
 > [`docs/engineering-case-studies.md`](docs/engineering-case-studies.md)
 > — nine production incidents and the minimum mechanism each one
@@ -295,6 +314,17 @@ on 2026-05-17
 
 ### Recently shipped (rolling)
 
+- **2026-06-03 PawnSim playtest-fix batch** (Skill #3-A) — an operator
+  play-test loop drove a 12-commit batch on
+  [`skills/game-prototype/`](skills/game-prototype/): fixed a pawn-movement
+  speed regression + chop-approach jitter (P0), wired needs→negative-thought
+  mood so colonists actually get unhappy when hungry/tired/hurt, fixed a
+  designation-dispatch reservation-key bug that made *every* idle pawn swarm one
+  tree, moved the resource readout to a genre-standard top-left vertical list,
+  rebuilt clustered ore veins + map-wide soil/rock terrain, and repaired the
+  settings panel. Each fix is build- + screenshot/coordinate-verified; see
+  [`docs/PLAYTEST-TODO.md`](skills/game-prototype/docs/PLAYTEST-TODO.md) for the
+  per-item status (kept open until the operator confirms in-game).
 - **2026-05-23 production batch** — 6 mp4s (`monday-v1/v2`,
   `convenience-v1/v2`, `smallhand-folk-v1/v2`) under
   [`outputs/publish/shorts-2026-05-23-batch/`](outputs/publish/) —
@@ -310,10 +340,6 @@ on 2026-05-17
   loudness / shader-anchor coverage / lyric-sync drift, exit 0/1/2)
   + `scripts/music-video-thumbnail.sh` (mid-climax JPG).  Both auto-chain
   post-render when `MUSIC_VIDEO_VALIDATE=1`.
-- **Planner + resourcer at opus** (2026-05-22 decision) — single
-  A/B + multi-week production trial per
-  [`docs/research/2026-05-22-abtest-planner-opus.md`](docs/research/2026-05-22-abtest-planner-opus.md).
-  Revert criteria documented; re-evaluate after ~10-20 missions.
 
 ### What's shipped on top of the v5 prototype
 
@@ -934,6 +960,32 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 ./scripts/mission-queue.sh
 ./scripts/install-scheduler.sh install      # nightly launchd
 ```
+
+### Skill #3 — game prototype (PawnSim) build + run
+
+In development (not in the production-skill count), and the agent's most active
+play-test loop. Requires **Windows + Unity 6000.0.75f1 LTS** (the build chain
+runs the Editor in batchmode); the rest of the repo is Mac/Linux.
+
+```bash
+cd skills/game-prototype
+
+# 1) regenerate scenes + prefabs (programmatic — no manual Editor work)
+python ../game-dev-agent/scripts/agent.py integrate --project unity-project --method scenes
+
+# 2) build the Windows .exe (headless)
+python ../game-dev-agent/scripts/agent.py integrate --project unity-project --method build --day PLAY
+
+# 3) run the NEWEST build — the per-day folder is date-stamped, so always
+#    resolve it dynamically (a hardcoded date silently runs a stale build):
+"$(ls -dt builds/day-*/ | head -1)PawnSim.exe"
+```
+
+No pre-built `.exe` is committed (`builds/` is gitignored); step 2 produces it.
+Useful flags: `-starthour 22` (night demo), `-delay 12 -screenshot <abs-path>`
+(headless capture), `-opensettings` (open the settings panel before capture).
+Full controls, feature coverage, and the honest verification status live in
+[`skills/game-prototype/README.md`](skills/game-prototype/README.md).
 
 ## Operator contract
 
