@@ -240,6 +240,7 @@ def gen_wolf():
     WOLF = WOLF_COLOR   # local alias
     # body
     rect_fill(im, 4, 11, 18, 17, WOLF)
+    hline(im, 6, 16, 12, WOLF_BLY)          # #UI-D 등(상단 내부행) 하이라이트 — 입체감(y11=테두리)
     hline(im, 5, 17, 17, WOLF_DK)
     hline(im, 5, 16, 16, WOLF_BLY)
     # head
