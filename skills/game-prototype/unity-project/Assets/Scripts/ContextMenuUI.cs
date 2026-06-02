@@ -125,6 +125,11 @@ namespace MelonS.GameProto
             localPos.x = Mathf.Clamp(localPos.x, cr.xMin, Mathf.Max(cr.xMin, cr.xMax - pw));
             localPos.y = Mathf.Clamp(localPos.y, Mathf.Min(cr.yMax, cr.yMin + ph), cr.yMax);
             panelRt.anchoredPosition = localPos;
+            // 운영자 #34 "나무 벌목 서브메뉴 안 뜸": 메뉴는 GameManager init 때 캔버스에 일찍
+            //  추가돼 이후 생성되는 HUD 패널들(topbar/inspect 등)이 더 높은 sibling index 로
+            //  위에 그려져 메뉴를 가렸음(z-order 관리 부재).  열 때마다 최상단 형제로 올려
+            //  항상 모든 UI 위에 보이게 한다.
+            transform.SetAsLastSibling();
             gameObject.SetActive(true);
             openTime = Time.unscaledTime;
         }

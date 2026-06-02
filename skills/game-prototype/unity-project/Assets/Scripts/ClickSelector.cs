@@ -102,7 +102,21 @@ namespace MelonS.GameProto
                             ContextMenuUI.Instance.Close();
                     }
                 }
-                else { ClearSelection(); currentInspect = null; }
+                else {
+                    // #34 보강: PickEntityAt 가 작은 콜라이더(나무 16x16 등)를 tie-break 로
+                    //  놓쳐 hit==null 이 돼도, 클릭점에 actionable 엔티티가 겹쳐 있으면
+                    //  좌클릭 메뉴(벌목/채광/채집)를 띄운다.  BuildLeftClickMenu 는 내부에서
+                    //  OverlapPointAll 로 다시 훑으므로 hit=null 로 호출해도 동작.
+                    var litems = (ContextMenuUI.Instance != null)
+                        ? BuildLeftClickMenu(null, mouseWorld) : null;
+                    if (litems != null && litems.Count > 0)
+                        ContextMenuUI.Instance.Open(Input.mousePosition, litems);
+                    else {
+                        ClearSelection(); currentInspect = null;
+                        if (ContextMenuUI.Instance != null && ContextMenuUI.Instance.IsOpen)
+                            ContextMenuUI.Instance.Close();
+                    }
+                }
             }
 
             // Day 48: R key toggles drafted on selected pawn.
