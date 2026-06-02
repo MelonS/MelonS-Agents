@@ -199,6 +199,9 @@ def gen_deer():
     DEER = DEER_COLOR   # local alias
     # body (oval)
     rect_fill(im, 4, 11, 18, 17, DEER)
+    # #UI-D top-light: 등(상단 내부행) 하이라이트 — 납작함 해소(입체감).
+    #  y11 은 rect_outline 상단 테두리라 덮어써짐 → 내부행 y12 에 칠한다.
+    hline(im, 6, 16, 12, DEER_BLY)
     # body shadow underside
     hline(im, 5, 17, 17, DEER_DK)
     # belly highlight
@@ -505,6 +508,7 @@ def gen_boar():
     im = new_img(24, 24)
     B, D, L = BOAR_COLOR, BOAR_DK, BOAR_BLY
     rect_fill(im, 4, 12, 19, 18, B)         # 크고 낮은 몸통
+    hline(im, 6, 17, 13, L)                 # #UI-D 등(상단 내부행 y13) 하이라이트 — 입체감(y12=테두리)
     hline(im, 5, 18, 18, D)
     hline(im, 5, 17, 17, L)
     for bx in range(6, 17, 2): put(im, bx, 11, D)   # 등 강모(ridge)
