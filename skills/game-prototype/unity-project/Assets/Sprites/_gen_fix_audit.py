@@ -562,6 +562,50 @@ def gen_rabbit():
     return im
 
 
+# ─── tree_birch 16x16 - 자작나무 (밝은 흰줄기 + 둥근 연두 수관, 좁음) ──
+BIRCH_LEAF   = (150, 200, 120, 255)
+BIRCH_LEAF_DK= (110, 160, 90,  255)
+BIRCH_BARK   = (225, 225, 215, 255)
+BARK_FLECK   = (80,  80,  75,  255)
+def gen_tree_birch():
+    im = new_img(16, 16)
+    L, D = BIRCH_LEAF, BIRCH_LEAF_DK
+    # 둥근 수관(상단, 좁음) — 행 0~8
+    rect_fill(im, 5, 1, 10, 8, L)
+    rect_fill(im, 4, 3, 11, 7, L)
+    hline(im, 5, 10, 8, D)              # 수관 아래 그늘
+    for px in [(6,2),(9,3),(7,5),(10,5),(5,6)]: put(im, px[0], px[1], D)  # 잎 디테일
+    rect_outline(im, 4, 1, 11, 8, OUTLINE_PLANT)
+    # 가는 흰 줄기(하단) — 행 9~15
+    rect_fill(im, 7, 9, 8, 15, BIRCH_BARK)
+    put(im, 7, 11, BARK_FLECK); put(im, 8, 13, BARK_FLECK)  # 자작 특유 검은 무늬
+    vline(im, 6, 9, 15, OUTLINE_PLANT); vline(im, 9, 9, 15, OUTLINE_PLANT)
+    return im
+
+
+# ─── tree_oak 16x16 - 참나무 (두꺼운 갈색줄기 + 넓고 진한 수관, 큼) ──
+OAK_LEAF    = (70,  120, 60,  255)
+OAK_LEAF_DK = (50,  90,  45,  255)
+OAK_LEAF_LT = (95,  150, 80,  255)
+OAK_BARK    = (95,  70,  45,  255)
+OAK_BARK_DK = (65,  48,  30,  255)
+def gen_tree_oak():
+    im = new_img(16, 16)
+    L, D, Lt = OAK_LEAF, OAK_LEAF_DK, OAK_LEAF_LT
+    # 넓은 둥근 수관(상단, 큼) — 행 0~9
+    rect_fill(im, 2, 1, 13, 9, L)
+    rect_fill(im, 1, 3, 14, 8, L)
+    hline(im, 3, 12, 2, Lt); put(im, 5, 1, Lt); put(im, 9, 1, Lt)   # 윗면 하이라이트
+    hline(im, 2, 13, 9, D)              # 아래 그늘
+    for px in [(4,4),(8,3),(11,5),(6,6),(10,7)]: put(im, px[0], px[1], D)
+    rect_outline(im, 1, 1, 14, 9, OUTLINE_PLANT)
+    # 두꺼운 갈색 줄기(하단) — 행 10~15
+    rect_fill(im, 6, 10, 9, 15, OAK_BARK)
+    vline(im, 6, 10, 15, OAK_BARK_DK); put(im, 7, 12, OAK_BARK_DK)
+    rect_outline(im, 6, 10, 9, 15, OUTLINE_OBJ)
+    return im
+
+
 def main():
     out = {
         "wall_wood.png":            gen_wall_wood(),
@@ -572,6 +616,8 @@ def main():
         "boar.png":                 gen_boar(),
         "chicken.png":              gen_chicken(),
         "rabbit.png":               gen_rabbit(),
+        "tree_birch.png":           gen_tree_birch(),
+        "tree_oak.png":             gen_tree_oak(),
         # V6 growth stages — three distinct PNGs replace single tint sprite
         "crop_rice_seedling.png":   gen_crop_rice_seedling(),
         "crop_rice_growing.png":    gen_crop_rice_growing(),

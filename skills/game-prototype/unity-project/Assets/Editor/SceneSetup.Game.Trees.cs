@@ -12,6 +12,30 @@ namespace MelonS.GameProto.EditorTools
                                        Vector2[] lakeCenters, float[] lakeRadii,
                                        Vector2[] rockClusterCenters, float rockRadius)
         {
+            // 운영자 2026-06-02: 나무가 소나무만 → 종별 스프라이트(Pine/Birch/Oak) 주입+배정.
+            //  신규 png 는 Sprite/Single/PPU16/Point 로 import(기본 Multiple 이면 로드 null).
+            AssetDatabase.Refresh();
+            foreach (var tp2 in new[] { "tree_birch.png", "tree_oak.png" })
+            {
+                string apath = $"Assets/Sprites/{tp2}";
+                if (!System.IO.File.Exists(apath)) continue;
+                AssetDatabase.ImportAsset(apath, ImportAssetOptions.ForceSynchronousImport);
+                var ti = AssetImporter.GetAtPath(apath) as TextureImporter;
+                if (ti != null)
+                {
+                    ti.textureType = TextureImporterType.Sprite;
+                    ti.spriteImportMode = SpriteImportMode.Single;
+                    ti.spritePixelsPerUnit = 16;
+                    ti.filterMode = FilterMode.Point;
+                    ti.SaveAndReimport();
+                }
+            }
+            MelonS.GameProto.TreeEntity.SpeciesSprites = new[] {
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree.png"),
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree_birch.png"),
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree_oak.png"),
+            };
+
             // #108: 60x60 맵 = 9x 면적.  20 → 45 그루 비례.
             //  결정론적 (seed=24680).
             var treePositionsList = new System.Collections.Generic.List<Vector2>();
@@ -41,8 +65,14 @@ namespace MelonS.GameProto.EditorTools
             foreach (var pos in treePositionsList)
             {
                 GameObject t = (GameObject)PrefabUtility.InstantiatePrefab(treePrefab);
-                t.name = $"Tree_{pos.x}_{pos.y}";
+                // 종 분포 Pine 45% / Birch 30% / Oak 25% (동일 seed tr 로 결정론적).
+                int roll = tr.Next(100);
+                TreeSpecies sp = roll < 45 ? TreeSpecies.Pine
+                               : (roll < 75 ? TreeSpecies.Birch : TreeSpecies.Oak);
+                t.name = $"Tree_{sp}_{pos.x}_{pos.y}";
                 t.transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, 0);  // tile center 정렬
+                var te = t.GetComponent<TreeEntity>();
+                if (te != null) te.SetSpecies(sp);
             }
         }
     }

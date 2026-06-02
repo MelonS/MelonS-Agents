@@ -26,11 +26,16 @@ namespace MelonS.GameProto
         };
 
         // 종별 spec (HP, woodDrop, scale, tint)
+        // 운영자 2026-06-02: 종별 스프라이트 추가(소나무만 → 자작·참나무).  sprite 가 색을
+        //  가지므로 tint 는 흰색(런타임 HP-darken 의 base).  scale 로 크기 다양성 유지.
         public static readonly (float hp, int yield, float scale, Color tint)[] SpeciesStats = {
-            (80f,  4, 0.95f, new Color(0.70f, 0.95f, 0.70f, 1f)),   // Pine - 빠름 작음 밝은 녹
-            (100f, 5, 1.00f, new Color(0.85f, 1.00f, 0.80f, 1f)),   // Birch - 중간 옅은
-            (150f, 7, 1.10f, new Color(0.55f, 0.85f, 0.55f, 1f)),   // Oak - 단단 큼 진한 녹
+            (80f,  4, 0.95f, new Color(1f, 1f, 1f, 1f)),   // Pine  - 빠름 작음
+            (100f, 5, 1.00f, new Color(1f, 1f, 1f, 1f)),   // Birch - 중간
+            (150f, 7, 1.10f, new Color(1f, 1f, 1f, 1f)),   // Oak   - 단단 큼
         };
+
+        // 종별 스프라이트 [Pine,Birch,Oak] — SceneSetup(SpawnTrees)이 로딩 후 주입.
+        public static Sprite[] SpeciesSprites;
 
         public void SetSpecies(TreeSpecies s)
         {
@@ -40,7 +45,15 @@ namespace MelonS.GameProto
             woodDrop = y;
             hp = h;
             transform.localScale = new Vector3(sc, sc, 1);
-            if (spriteRenderer != null) spriteRenderer.color = tint;
+            // 캐시 spriteRenderer 는 edit-time(Awake 미실행)엔 null → fresh GetComponent.
+            var sr = spriteRenderer != null ? spriteRenderer : GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                if (SpeciesSprites != null && (int)s < SpeciesSprites.Length
+                    && SpeciesSprites[(int)s] != null)
+                    sr.sprite = SpeciesSprites[(int)s];
+                sr.color = tint;
+            }
         }
 
         // 운영자 fb #116 - 벌목 시 즉시 inventory 추가가 아닌 WoodPile entity drop.
