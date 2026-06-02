@@ -56,8 +56,11 @@ namespace MelonS.GameProto
             // 내구도에 비례해 점점 흐려짐(통째로 뿅 사라지지 않게).
             if (_sr != null)
             {
+                // #37 운영자 "내구도 안 됨": 바닥 0.35 라 거의 끝까지 멀쩡해 보이다 갑자기
+                //  소멸 → 닳는 과정이 안 보였음.  바닥 0.12 로 낮춰 옥외 더미가 점점 옅어지다
+                //  사라지는 게 눈에 보이게 한다(속도는 RimWorld 정합 유지).
                 var c = _sr.color;
-                c.a = Mathf.Lerp(0.35f, 1f, Mathf.Clamp01(durability / 100f));
+                c.a = Mathf.Lerp(0.12f, 1f, Mathf.Clamp01(durability / 100f));
                 _sr.color = c;
             }
         }
