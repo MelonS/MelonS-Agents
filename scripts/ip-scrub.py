@@ -50,6 +50,18 @@ RULES = [
     (r'\bCassandra\b', 'Steady', False),
     (r'\bPhoebe\b', 'Calm', False),
     (r'\bRandy\b', 'Chaos', False),
+    # 7) 2차 패스(2026-06-02 '더할건 없어?') — RimWorld 고유명사/전문용어
+    (r'the reference sim Crashlanded 정합', '맨땅 시작 정합', False),
+    (r'Crashlanded', 'scratch-start', False),
+    (r'hediffs', 'injury systems', False),
+    (r'hediff', 'injury', False),
+    (r'TestV7_StorytellerTier', 'TestV7_DirectorModeTier', False),  # 식별자(_경계)
+    (r'activeStoryteller', 'directorMode', False),                  # 필드(부분문자열)
+    (r'\bStoryteller\b', 'DirectorMode', False),                    # enum 타입
+    (r'Storytellers', 'director modes', False),
+    (r'storytellers', 'director modes', False),
+    (r'storyteller', 'director mode', False),
+    (r'스토리텔러', '디렉터 모드', False),
 ]
 
 def gather():

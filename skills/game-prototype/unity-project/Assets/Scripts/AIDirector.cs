@@ -19,8 +19,8 @@ namespace MelonS.GameProto
                 : $"<b>{title}</b>: {description}\n<i>\"{flavor}\"</i>";
     }
 
-    /// <summary>Day 73 — Storyteller personality affects event frequency + threat curve.</summary>
-    public enum Storyteller
+    /// <summary>Day 73 — DirectorMode personality affects event frequency + threat curve.</summary>
+    public enum DirectorMode
     {
         Steady,  // 꾸준한 사건 — 일정 간격, 위협도 단계적 상승
         Calm,     // 평온한 시간 — 사건 드물게, 위협도 천천히
@@ -45,8 +45,8 @@ namespace MelonS.GameProto
         //   wolf_pack 이 pool 에 추가되지 않아 PlayWolfHowl 도 호출되지 않음.
         public const bool WolvesEnabled = false;
 
-        [Header("Day 73: Storyteller (3 종류)")]
-        [SerializeField] public Storyteller activeStoryteller = Storyteller.Steady;
+        [Header("Day 73: DirectorMode (3 종류)")]
+        [SerializeField] public DirectorMode directorMode = DirectorMode.Steady;
 
         [SerializeField] private float minIntervalSec = 15f;
         [SerializeField] private float maxIntervalSec = 30f;
@@ -63,7 +63,7 @@ namespace MelonS.GameProto
                 int day = (GameClock.Instance != null) ? GameClock.Instance.Day : 1;
                 if (day < 1) day = 1;
                 // Steady: 일정 (3/7/14일 임계점)
-                if (activeStoryteller == Storyteller.Steady)
+                if (directorMode == DirectorMode.Steady)
                 {
                     if (day >= 14) return 3;
                     if (day >= 7) return 2;
@@ -71,7 +71,7 @@ namespace MelonS.GameProto
                     return 0;
                 }
                 // Calm: 느림 (6/14/25일)
-                if (activeStoryteller == Storyteller.Calm)
+                if (directorMode == DirectorMode.Calm)
                 {
                     if (day >= 25) return 3;
                     if (day >= 14) return 2;
@@ -312,13 +312,13 @@ namespace MelonS.GameProto
 
         private void ScheduleNext()
         {
-            // Day 73: storyteller마다 간격 다름
+            // Day 73: director mode마다 간격 다름
             float min = minIntervalSec, max = maxIntervalSec;
-            if (activeStoryteller == Storyteller.Calm)
+            if (directorMode == DirectorMode.Calm)
             {
                 min *= 2f; max *= 2f;  // 평온한 시간 — 사건 드물게
             }
-            else if (activeStoryteller == Storyteller.Chaos)
+            else if (directorMode == DirectorMode.Chaos)
             {
                 min *= 0.6f; max *= 0.6f;  // 무작위 — 사건 자주
             }
@@ -373,7 +373,7 @@ namespace MelonS.GameProto
             List<GameEvent> candidates = new List<GameEvent>();
             foreach (var ev in pool)
             {
-                if (activeStoryteller == Storyteller.Chaos || ev.threatTier <= curTier)
+                if (directorMode == DirectorMode.Chaos || ev.threatTier <= curTier)
                     candidates.Add(ev);
             }
             if (candidates.Count == 0) candidates.AddRange(pool);
@@ -387,7 +387,7 @@ namespace MelonS.GameProto
             } while (next == lastEvent && tries < 5);
             lastEvent = next;
             OnEventFired?.Invoke(next);
-            Debug.Log($"[AIDirector:{activeStoryteller} T{curTier}] {next.title}: {next.description}");
+            Debug.Log($"[AIDirector:{directorMode} T{curTier}] {next.title}: {next.description}");
             // Stretch: trader_caravan event → actual Trader entity spawn
             if (next.id == "trader_caravan") SpawnTrader();
             // Wiki Dim2 #3 (sound wiring — 0-callers fix): wolf_pack event plays the

@@ -54,7 +54,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V4-arrow", TestV4_Arrow);
             yield return RunOne("V5-crop-harvest", TestV5_CropHarvest);
             yield return RunOne("V6-body-parts", TestV6_BodyParts);
-            yield return RunOne("V7-storyteller-tier", TestV7_StorytellerTier);
+            yield return RunOne("V7-directormode-tier", TestV7_DirectorModeTier);
             yield return RunOne("V8-map-obstacle", TestV8_MapObstacle);
             yield return RunOne("V9-mood-break", TestV9_MoodBreak);
             yield return RunOne("V10-bandit-auto-attack", TestV10_BanditAutoAttack);
@@ -329,10 +329,10 @@ namespace MelonS.GameProto.Tests
 
         private IEnumerator TestV51_RandyRandom()
         {
-            // Chaos storyteller 의 CurrentThreatTier 는 매번 0..3 random
+            // Chaos director mode 의 CurrentThreatTier 는 매번 0..3 random
             var dGo = new GameObject("TestRandyDir");
             var dir = dGo.AddComponent<AIDirector>();
-            dir.activeStoryteller = Storyteller.Chaos;
+            dir.directorMode = DirectorMode.Chaos;
             yield return null;
             // 20번 샘플 → 적어도 2개 다른 tier 나옴 (random 검증)
             var seen = new System.Collections.Generic.HashSet<int>();
@@ -1309,7 +1309,7 @@ namespace MelonS.GameProto.Tests
                 $"왼다리 HP={part.hp}/{part.maxHp} bleed={part.bleedRate:F2}");
         }
 
-        private IEnumerator TestV7_StorytellerTier()
+        private IEnumerator TestV7_DirectorModeTier()
         {
             // AIDirector 찾아서 day 14 시뮬레이션 (Steady tier 2 이상)
             var dir = Object.FindFirstObjectByType<AIDirector>();
@@ -1319,7 +1319,7 @@ namespace MelonS.GameProto.Tests
                 var dGo = new GameObject("TestAIDirector");
                 dir = dGo.AddComponent<AIDirector>();
             }
-            dir.activeStoryteller = Storyteller.Steady;
+            dir.directorMode = DirectorMode.Steady;
             // GameClock 강제 day 14
             var clock = Services.Get<GameClock>();
             if (clock == null)

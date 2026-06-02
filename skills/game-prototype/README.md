@@ -9,7 +9,7 @@ Originally a 7-day shippable prototype; it has since grown — through many
 autonomous multi-agent sessions verified against vanilla colony-sim
 references — into a far deeper slice with
 grid A* pathfinding, body-part health + combat, research, build/deconstruct
-designations, farming, hauling, storytellers, sound, day/night, and
+designations, farming, hauling, director modes, sound, day/night, and
 save/load. The bar is no longer "7-day shippable" but **"바닐라 콜로니심급
 prototype + 정직한 작동 검증"** (vanilla colony-sim-grade prototype with honest,
 automated proof-of-function) — see [`docs/goal.md`](docs/goal.md).
@@ -33,14 +33,14 @@ automated proof-of-function) — see [`docs/goal.md`](docs/goal.md).
 
 A small top-down colony sim. Colonists (pawns) autonomously chop wood, mine
 stone, gather berries, farm crops, cook, haul, build, research, and defend the
-colony — driven by a utility AI. An in-game AI Director / storyteller
+colony — driven by a utility AI. An in-game AI Director
 generates threats and events. The player drafts pawns for combat, paints build
 and designation orders, and watches needs/health/mood play out, with full
 save/load.
 
 It is deliberately **a slice, not a clone**: it implements the loud, core
 colony-sim loops at prototype fidelity, and explicitly defers the long tail
-(roofs, temperature, joy, real hediffs, cover tables, 14-skill, power/trading/
+(roofs, temperature, joy, real injury systems, cover tables, 14-skill, power/trading/
 taming/bills) — see [Out of scope](#out-of-scope-deliberately-deferred).
 
 ## Current feature coverage
@@ -79,7 +79,7 @@ verified-vs-stub audit):
 - **Farming / economy** — crops grow + harvest, cooking at stove, eat-from-
   stockpile with meal-quality mood, 5-tier stockpile priority, hauling with
   priority-aware target selection.
-- **Storyteller / threats** — 3 storytellers (Steady / Calm / Chaos),
+- **AI Director / threats** — 3 director modes (Steady / Calm / Chaos),
   threat tier 0–3 → event frequency scaling, ~15 events, raids day-gated.
 - **Sound** — `AudioBank` with 11 wired slots: chop / harvest / mine / build /
   cook / shoot / hit / door / UI-click / footstep / wolf-howl, plus
@@ -284,7 +284,7 @@ features; make it *play* first) and the v1/v2 over-scope guardrails — do **not
 start these until the core plays well and is verified, and several need
 operator direction:
 
-- Roofs + collapse, temperature, joy/recreation, real hediffs/disease,
+- Roofs + collapse, temperature, joy/recreation, real injury systems/disease,
   cover/accuracy-by-range tables.
 - Power grid, trading caravan UI (entity exists), animal taming, stockpile
   filter logic, bills queue — **[OP-gated]**, sequenced last.
@@ -305,7 +305,7 @@ roles. Key talking points:
    CLI-scaffolded; scenes are programmatically constructed; the whole `.exe`
    chain is reproducible with zero manual Editor work.
 2. **AI inside the game** — utility-AI colonist behavior (Strategy pattern) +
-   an AI Director / storyteller for emergent threats.
+   an AI Director for emergent threats.
 3. **Honest verification as a first-class concern** — a 6-stage gate on every
    commit, three test layers, auto-rollback on RED, and the "verify the
    verifier" discipline (#198).

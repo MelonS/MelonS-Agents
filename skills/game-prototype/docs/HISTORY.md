@@ -56,7 +56,7 @@
 - **연구**: ResearchBench + 트리 + UI
 - **성격/정착**: PawnTraits 8종, 시작 정착지 + 농장 + stockpile 미리 배치
 - **농경**: crop 성장 + 우클릭 수확
-- **연출**: Storyteller arcs 3종 + threat tier + 15 이벤트, 튜토리얼 오버레이(한글 팁 9), BGM 절차적 루프
+- **연출**: DirectorMode arcs 3종 + threat tier + 15 이벤트, 튜토리얼 오버레이(한글 팁 9), BGM 절차적 루프
 - **한글화**: UI/이벤트 전체 + 폰트 폴백 체인
 - **stretch**: 상인 caravan + 거래, 동물 길들이기 MVP
 - 이 시점 림 바닐라 커버리지 ~85% (자체 평가)

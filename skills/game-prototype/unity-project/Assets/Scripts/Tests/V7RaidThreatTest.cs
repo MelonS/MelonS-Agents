@@ -13,7 +13,7 @@ namespace MelonS.GameProto.Tests
     /// and moves toward the colony."
     ///
     /// Chain verified as ONE binary PASS:
-    ///   Step 1 — GameClock is at Day 3 / Hour 6 (the storyteller raid window)
+    ///   Step 1 — GameClock is at Day 3 / Hour 6 (the director mode raid window)
     ///   Step 2 — AIDirector.SpawnRaid() executes (forced via reflection), producing
     ///             at least one BanditEnemy in the scene
     ///   Step 3 — the spawned bandit's distance to the colony reference point
@@ -168,7 +168,7 @@ namespace MelonS.GameProto.Tests
             }
 
             // Ensure the director uses Steady (deterministic tier at day 3 = tier 1).
-            director.activeStoryteller = Storyteller.Steady;
+            director.directorMode = DirectorMode.Steady;
 
             // Count bandits before invoking the raid path.
             int banditsBefore = CountBandits();

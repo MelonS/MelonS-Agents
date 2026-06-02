@@ -33,7 +33,7 @@ namespace MelonS.GameProto.EditorTools
             if (cropGrowingSprite  == null) Debug.LogWarning("[SceneSetup] crop_rice_growing.png null — stage-sprite wiring skipped");
             Sprite stockSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stockpile_marker.png");
 
-            // #229 the reference sim Crashlanded 정합 — 맨땅 시작.  미리 지어진 베이스(벽/바닥/화덕/
+            // #229 맨땅 시작 정합 — 맨땅 시작.  미리 지어진 베이스(벽/바닥/화덕/
             //  연구대/작물/램프)를 제거하고 플레이어가 직접 건설하게 한다.  저장 구역만 유지
             //  (the reference sim 도 stockpile zone 은 무료 지정).  코드는 플래그로 보존(되돌리기 쉽게).
             bool prebuiltBase = false;

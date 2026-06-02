@@ -52,7 +52,7 @@
 - [ ] **V4** — Arrow hit: research 강제 완료 → drafted → 적 spawn → 화살 발사 + hit
 - [ ] **V5** — Crop harvest: ripe 작물 클릭 → +5 food + growth=0
 - [ ] **V6** — Body parts: 적이 pawn 공격 → 특정 부위 HP 감소 + 출혈 tick
-- [ ] **V7** — Storyteller tier: day 7 도달 → tier 1 이상 이벤트 발화 확인
+- [ ] **V7** — DirectorMode tier: day 7 도달 → tier 1 이상 이벤트 발화 확인
 - [ ] **V8** — Map obstacle: pawn 호수/바위 경계에서 정지
 - [ ] **V9** — Mood break: mood < 20 → IsBreaking = true, 1분 후 행동 중단
 

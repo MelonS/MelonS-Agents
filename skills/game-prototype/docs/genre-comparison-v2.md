@@ -39,7 +39,7 @@ I confirmed each of these is **real and wired**, not just stubbed:
 The v1 round closed the **loud** gaps. What's left splits cleanly into three buckets:
 1. **A genuine non-gated layer of ~10-12 items** concentrated in **Building catalogue/UX (Dim4)** and **selection/feedback UX (Dim6)**, plus a short tail of sound/visual polish. These are concrete, Unity-verifiable, independently shippable, and follow the proven self-bootstrapping designation/driver pattern the team already uses.
 2. **The big-leap items are OP-gated** (mood thought-sum model, work-priority grid, terrain move-cost) — exactly the tier v1 flagged as held. **No further autonomous progress is possible on player-felt depth without unlocking these.**
-3. **The over-scope guardrails from v1 still hold** (roofs/temperature/joy/hediffs/cover/14-skill). Do not start them.
+3. **The over-scope guardrails from v1 still hold** (roofs/temperature/joy/injury systems/cover/14-skill). Do not start them.
 
 So: **a meaningful non-gated layer DOES remain, but it is the last one of its kind.** After this v2 backlog is drained, the next leap requires the operator to unlock the **mood / work-priority** tier.
 
@@ -74,7 +74,7 @@ Tags: **code / art / sound / verify**. **[OP-OK]** = behavior-logic, needs opera
 - **BanditEnemy body-parts, carryCapacity→hauler cap** — combat/economy rebalance (medium logic risk; recommend bundling with the gated tier).
 
 ### Excluded — over-scope (v1 guardrails still hold)
-Roofs+collapse, temperature, joy/recreation need, real hediffs/disease, cover/accuracy-by-range tables, trading/power-grid/taming/bills, detailed 32×32 pawn redraw, 14-skill expansion. **Unchanged from v1 — do not start.**
+Roofs+collapse, temperature, joy/recreation need, real injury systems/disease, cover/accuracy-by-range tables, trading/power-grid/taming/bills, detailed 32×32 pawn redraw, 14-skill expansion. **Unchanged from v1 — do not start.**
 
 ---
 

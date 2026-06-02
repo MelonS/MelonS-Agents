@@ -110,7 +110,7 @@ the reference sim sound model ([Modding Tutorials/Sounds]; [Category:Sounds]): p
 | Food | grow→cook→eat; hunger over ~2–3 days | crops grow+harvest, stove cooks, eat-from-stockpile w/ meal mood; hunger 0.14/s (~3 days) ✔ | depth: no bills/recipes queue | L | **V-VERIFY: crop plant→ripen→harvest→cook→eat→food restored** end-to-end. |
 | Sleep | schedule + bed quality | sleep<30 & night → sleep in bed, quality rest/mood mul ✔ | sleep-decay/regen tuning (audit MED) | L | **VERIFY: pawn seeks bed at night, rest rises.** |
 | Mood | thought-SUM around baseline, 3 break tiers (35/20/5) | mood **free-falls** to 0 via `moodDecay`; single break threshold 20 | **M (logic)** | M | **OP-gated**: convert to thought-sum + 3 tiers. Audit flagged; held. |
-| Threats | points-scaled raids, predators, events | 3 storytellers, day-gated tiers, raids every 3d@06:00, wolf, 15 events | acceptable abstraction | L | **VERIFY: raid spawns day 3, bandits path to colony.** |
+| Threats | points-scaled raids, predators, events | 3 director modes, day-gated tiers, raids every 3d@06:00, wolf, 15 events | acceptable abstraction | L | **VERIFY: raid spawns day 3, bandits path to colony.** |
 | Defend | draft, ranged/melee, cover | draft (R), bow (research-gated), melee, wolf/bandit combat, body-parts dmg/bleed/downed | no cover system | M | **VERIFY: drafted pawn shoots arrow, hits, enemy HP drops, death.** |
 | Research | bench, tech tree, intellectual skill | bench + 5-tech tier tree + auto-first + manipulation-sum rate | compressed (intentional) | L | **VERIFY: research accrues, tech unlocks (bow), bow becomes buildable/usable.** |
 | Economy/haul | stockpiles, priorities, carry cap | 5-tier stockpile priority, hauler; carryCapacity 75kg defined but **not wired to hauler cap** | M | M | **VERIFY: hauler moves wood to blueprint; carry-cap fix queued (M2).** |
@@ -118,7 +118,7 @@ the reference sim sound model ([Modding Tutorials/Sounds]; [Category:Sounds]): p
 | Joy/Recreation | 4th core need | **absent** (audit: do-not-add) | — | — | Out of scope per operator. |
 | Temperature | hypothermia/heatstroke | **absent** (audit: do-not-add) | — | — | Out of scope. |
 
-**V1–V9 verification slate (promote "code exists"→"binary PASS"):** V1 drafted-tint, V2 wolf-detection→chase, V3 research-progress→unlock, V4 arrow-hit→dmg, V5 crop plant→harvest→cook→eat, V6 body-part dmg+bleed+downed, V7 storyteller tier@day7 + raid@day3, V8 map-obstacle stop / pathfind-around, V9 mood-break triggers below threshold. Each = one PASS line in the gate.
+**V1–V9 verification slate (promote "code exists"→"binary PASS"):** V1 drafted-tint, V2 wolf-detection→chase, V3 research-progress→unlock, V4 arrow-hit→dmg, V5 crop plant→harvest→cook→eat, V6 body-part dmg+bleed+downed, V7 director mode tier@day7 + raid@day3, V8 map-obstacle stop / pathfind-around, V9 mood-break triggers below threshold. Each = one PASS line in the gate.
 
 **Net:** the loop is **present and ~80% there**. The gap is **trust** (honest end-to-end V-tests) + two held logic items (mood model). Per "게임이 되는게 먼저," verification > new systems here.
 
@@ -191,7 +191,7 @@ Per operator "**기능추가 보수적 — 게임이 되는게 먼저**", explic
 - **Full roof + collapse system** (Dim 4). Vanilla-defining but heavy (support graph, collapse damage). A cheap "indoor" overlay when walls enclose a space is acceptable; the real system is M-heavy — defer. **[OP-OK]**
 - **Temperature / hypothermia / heatstroke** — audit said do-not-add. Stays out.
 - **Joy/Recreation need** (4th core need) — audit do-not-add. Mood stands in.
-- **Disease/infection hediff mechanics, pain/consciousness/blood-loss needs** — flavor events only; do not build real hediffs.
+- **Disease/infection injury mechanics, pain/consciousness/blood-loss needs** — flavor events only; do not build real injury systems.
 - **Cover/accuracy-by-range combat tables** — current flat-roll combat is coherent at the prototype's small HP scale; rescaling all combat is a separate large task.
 - **Trading UI / power grid / animal taming / bills queue** (M4 breadth) — all **[OP-OK] gated**, sequenced last. Do not start without operator direction.
 - **Detailed 32×32 pawn redraw (goal P5)** — likely *superseded* by the #202 flat-outline direction; the "potato in a pot" problem was caused by detail. Confirm with operator before redrawing; do **not** add detail back.

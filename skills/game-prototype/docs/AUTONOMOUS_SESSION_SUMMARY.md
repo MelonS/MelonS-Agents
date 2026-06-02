@@ -88,7 +88,7 @@ Sound 30→80 / Move 75→82 / Build 65→80 / Gameplay 80→85 / UI 70→82. no
    "운반 우선순위" 운영자 관심사 직결. 현재 WorkKind collapse 로 Haul 개별제어 불가.
 3. **Terrain move-cost** — 지형별 이동비용.
 > 이 셋이 "보이고 들리는 the reference sim" → "플레이되는 the reference sim" 도약. 승인 주시면 같은
-> 연쇄체인으로 진행. over-scope(roofs/temperature/joy/hediffs/cover/14-skill)는 가드 유지.
+> 연쇄체인으로 진행. over-scope(roofs/temperature/joy/injury systems/cover/14-skill)는 가드 유지.
 
 ### 최종 빌드
 `skills/game-prototype/builds/day-final-2026-05-30/PawnSim.exe` — 누적 전부 반영
@@ -419,7 +419,7 @@ game-programmer(wiring) → game-qa(게이트) 파이프라인으로 실행.  QA
 | Health | V6 Body parts damage+bleed, V16 Pawn death (vital part), V18 Bandage, V30 Multi-pawn aggregate |
 | Resource | V11 Tree chop +5 wood, V12 ResourceManager Add API, V15 Berry gather, V22 Stove cook, V23 Floor place |
 | AI | V3 Research progress, V20 Research complete unlock, V21 Skill XP+level, V27 AIDirector event fire |
-| Time/Mood | V7 Storyteller tier@day14, V9 Mood break threshold, V19 NightOverlay 22:00, V26 Needs decay |
+| Time/Mood | V7 DirectorMode tier@day14, V9 Mood break threshold, V19 NightOverlay 22:00, V26 Needs decay |
 | System | V13 ServiceLocator, V8 Map obstacle, V25 Traits deterministic, V14 Pawn traits |
 | Stretch | V5 Crop harvest, V31 Trader wander, V32 Trader trade |
 

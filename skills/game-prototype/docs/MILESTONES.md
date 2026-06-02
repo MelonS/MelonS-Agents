@@ -43,7 +43,7 @@ to raise visual polish from ~7/10.
 | **Health & combat** | 6 body-parts health (bleed/downed/death), drafted state (R-key), bow+arrow ranged (research-gated), wolf predator, arrow accuracy spread | Step 45–64 |
 | **Research** | ResearchBench (2×1, wiki-aligned) + 5-tech tree (tier deps) + auto-first-tech + manipulation-sum progress | Step 52–54, #169, #195 |
 | **Build/economy** | wall/floor/door/stove/bench/bed build, cooking, farming (grow+harvest), hunting, 5-tier stockpile priority, bed quality (Sleeping/Wood/Fine) w/ rest+mood mul | Step 57–68, #153–155 |
-| **Meta** | 3 storytellers (Steady/Calm/Chaos), threat tier 0–3 → event frequency, 15 events, tutorial overlay, save/load | Step 73–78, #175 |
+| **Meta** | 3 director modes (Steady/Calm/Chaos), threat tier 0–3 → event frequency, 15 events, tutorial overlay, save/load | Step 73–78, #175 |
 | **★ Grid pathfinding (#199)** | the reference sim full-grid cutover: PathGrid + A* (8-dir, octile, no corner-cut, cap 4000), pawn 1×1 collider fix, wall path-block (ref-count), door pass-through, adjacent work-cell (TryGetAdjacentStandCell), ReservationManager (no double-occupy), build-placement validation (reject water/rock/occupied + toast) | `61dd2e7`, `3b2c373`, `c8aa5ca`, `7271079` |
 | **★ Balance (#200)** | Fidelity audit (~28 systems vs wiki) + Top-5 tuning: hunger 0.5→0.14 (3-day starve), move 3.0→4.6 + wolf chase 5.0, head HP 10→20 / torso 30→40, arrow desc fix, skill XP base ×10 | `ad6326f` |
 | **★ Eject / wall-trap fix (#201)** | EjectPawnsFromCell (the reference sim push-out) + PawnMovement.Update standing safety-net (idle pawn in blocked cell → nearest walkable). I42 reproduces the bug. | `c5e9e22` |
@@ -83,7 +83,7 @@ first."
 - [ ] **R5** — PawnUtilityAI Strategy: confirm full IPawnAction + 6 action-class coverage (goal lists open; R-series log shows partial — reconcile).
 - [ ] **R6** — ServiceLocator: confirm 5 singletons fully migrated (log shows R6 done — reconcile vs goal checkbox).
 - [ ] **R7** — PlayMode auto-verify: drafted/wolf/research/arrow/crop 5 scenarios as a gated suite (TestRunner exists; promote to goal-grade gate).
-- [ ] **V1–V9** — promote "code exists" → "verified": drafted tint, wolf detection, research progress, arrow hit, crop harvest, body-parts damage+bleed, storyteller tier@day7, map-obstacle stop, mood-break. (Many have V-tests already; gap is goal-grade binary sign-off.)
+- [ ] **V1–V9** — promote "code exists" → "verified": drafted tint, wolf detection, research progress, arrow hit, crop harvest, body-parts damage+bleed, director mode tier@day7, map-obstacle stop, mood-break. (Many have V-tests already; gap is goal-grade binary sign-off.)
 
 ### B. Polish Wave v3 remainder (design backlog) — HIGH (operator-visible "alive")
 - [ ] **V1 (polish)** — Pawn walk-bob + idle breathe (sprite-child offset only; root untouched for pathfinding). **NOTE: prior walk-bob attempt needs retry — see Risks.**
@@ -130,7 +130,7 @@ over raw estimates (team runs slower than estimates).
 - Reconcile R5/R6/R7 goal checkboxes against the actual R-series log; promote
   TestRunner to a goal-grade gated suite.
 - V1–V9 binary sign-off (drafted/wolf/research/arrow/crop/body-parts/
-  storyteller/obstacle/mood) — each as a single PASS line in the gate.
+  director mode/obstacle/mood) — each as a single PASS line in the gate.
 - **Deliverable**: goal.md R/V series fully ticked or explicitly justified.
 - **Effort**: ~2–3 increments. **Daily-shippable**: yes (test-only, build unaffected).
 

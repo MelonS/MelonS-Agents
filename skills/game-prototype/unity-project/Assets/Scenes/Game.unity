@@ -104098,7 +104098,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee656e3dca1aa314dbf4ff1d8c3287b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  activeStoryteller: 0
+  directorMode: 0
   minIntervalSec: 15
   maxIntervalSec: 30
   RaidGraceDays: 9

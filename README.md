@@ -114,7 +114,7 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > across many autonomous multi-agent sessions into a deep slice —
 > grid A* pathfinding, pawns with needs/health/skills/traits,
 > drafted + ranged combat, research, build/deconstruct/designations,
-> farming, hauling, storytellers, sound, day/night, save/load — at
+> farming, hauling, director modes, sound, day/night, save/load — at
 > ~85% vanilla colony-sim core coverage, gated on every commit by a
 > 6-stage `refactor_check` harness (isolated 76/76 · integration
 > 43/43 · Build Click QA 8/8 · pawn-action 7/7 · feature-audit 13/13 ·

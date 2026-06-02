@@ -175,7 +175,7 @@ namespace MelonS.GameProto
                 PawnHauler.MeatPileSpriteRef = meatPileSpriteRuntime;
             }
 
-            // #229 the reference sim Crashlanded 정합 — 맨땅 시작이라 첫 베이스를 직접 지을 자재 +
+            // #229 맨땅 시작 정합 — 맨땅 시작이라 첫 베이스를 직접 지을 자재 +
             //  지을 동안 버틸 식량 버퍼가 필요하다.  the reference sim(목재~300 + 생존식량~50)에 매핑:
             //   목재 300 = 벽/바닥/화덕/침대 첫 베이스 건설분
             //   식사 50  = 생존식량 버퍼(바닥에서 자고 이걸로 버티며 농장·화덕 건설)

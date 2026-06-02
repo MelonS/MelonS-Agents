@@ -58,7 +58,7 @@ that are wrong in a way that hurts the colony-sim feel.
 | **Wolf move speed** | chase `2.5`, wander `0.8` (`WolfEnemy.cs:17-18`) | Timber wolf move **~4.6 c/s** ([Timber wolf]) | LOW | Slower than the reference sim; if pawn speed is bumped to 4.6, wolves should also rise (~3.5–4.6) or they can never catch a pawn. **Tie to the pawn-move-speed fix.** |
 | **Wolf detection** | `detectionRadius = 5.0` (`WolfEnemy.cs:16`) | Predators hunt across the map; manhunter packs target on sight | LOW | Fine for a prototype. |
 | **Deer/animal stats** | deer HP 12 / drop 5; boar 25/8; chicken 4/2; rabbit 3/1 (`AnimalEntity.cs:36-41`) | Deer ~50 HP, much larger meat yields; chicken/rabbit small | LOW | All scaled down together; internally coherent relative to hunter dmg (2/hit). Leave. |
-| **Storyteller threat tiers** | Steady day 3/7/14, Calm 6/14/25, raids every 3 days at 06:00 (`AIDirector.cs:59-76,116-119`) | Storytellers use **threat points** scaling with wealth+time, not fixed day gates ([no clean wiki value; knowledge]) | LOW | Day-gated tiers are a sound prototype abstraction of the points system. Not a wrong "value." |
+| **DirectorMode threat tiers** | Steady day 3/7/14, Calm 6/14/25, raids every 3 days at 06:00 (`AIDirector.cs:59-76,116-119`) | director modes use **threat points** scaling with wealth+time, not fixed day gates ([no clean wiki value; knowledge]) | LOW | Day-gated tiers are a sound prototype abstraction of the points system. Not a wrong "value." |
 | **Carry capacity** | `carryCapacity = 75kg` (`PawnAbilities.cs:26`) | Human carrying capacity **75 kg** ([Stats]) | — | **Correct.** No change. |
 | **Door pass slowdown** | `PassMul = 0.65` (referenced `PawnMovement.cs:482`) | Doors add a pass-through delay (~0.45s open) ([knowledge, unverified]) | LOW | Reasonable. |
 
@@ -109,8 +109,8 @@ rows above with MED/HIGH severity and concrete from→to fixes.
   (`NeedType` enum, `PawnNeeds.cs:217`). Mood partly stands in. (Do not add.)
 - **Pain / consciousness / blood-loss needs** — downing keys off head-% instead of a pain or
   blood-loss meter (`PawnHealth.cs:212`). (Do not add; the per-part HP *values* are the in-scope fix.)
-- **Disease/infection progression, hediffs** — `minor_disease`/`food_blight` are flavor-only
-  events (`AIDirector.cs:357,377`); no actual hediff mechanics. (Do not add.)
+- **Disease/infection progression, injury systems** — `minor_disease`/`food_blight` are flavor-only
+  events (`AIDirector.cs:357,377`); no actual injury mechanics. (Do not add.)
 - **Shooting accuracy by range/cover** — arrows perturb by a flat accuracy roll
   (`ArrowProjectile.cs:24-38`); no per-range accuracy table or cover. (Do not add.)
 - **Separate work types** (Hauling/Construction/Mining/Medical are folded into the `Chop`/`Research`

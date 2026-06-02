@@ -12,7 +12,7 @@
 - TopBar (clock / time-speed / 목재·식사·식량)
 - 바닐라 콜로니심 시스템 커버리지 ~64%
 
-**목표 (Step 78):** 바닐라 레퍼런스 콜로니심 커버리지 90%+ — Health/body-parts, drafted-combat, research-tree, power-grid, trading, animal-taming, farming, stockpile, storyteller, polish.
+**목표 (Step 78):** 바닐라 레퍼런스 콜로니심 커버리지 90%+ — Health/body-parts, drafted-combat, research-tree, power-grid, trading, animal-taming, farming, stockpile, director mode, polish.
 
 ---
 
@@ -54,9 +54,9 @@
 - [x] **Step 67-68** — Real crop growth + harvest (sprout→grown→ripe, +5 food)
 - [ ] **Step 69-72** — Stockpile zone logic / hauler / bills queue (SKIPPED — visual marker만)
 
-## PHASE F — Storyteller & Polish (Step 73-78)
+## PHASE F — DirectorMode & Polish (Step 73-78)
 
-- [x] **Step 73** — 3 Storytellers (Steady/Calm/Chaos) + threat tier 0-3 + 15 events
+- [x] **Step 73** — 3 director modes (Steady/Calm/Chaos) + threat tier 0-3 + 15 events
 - [x] **Step 74** — Tutorial overlay (90초 한글 9 팁)
 - [x] **Step 75** — Research 자동 활성화 + fractional accumulator fix
 - [x] **Step 56** — PawnTraits (8 성격: 활기/게으름/부지런/호전/약골/강골/미식가/무던)
@@ -85,7 +85,7 @@
 - Wolf predator (감지/추격/공격)
 
 ### 메타시스템
-- 3 Storyteller (Steady/Calm/Chaos)
+- 3 DirectorMode (Steady/Calm/Chaos)
 - threat tier 0-3 자동 상승 (day별)
 - 15 events (안전 5 / mild 4 / severe 3 / critical 3)
 - 5 research techs (tier 의존)
@@ -125,7 +125,7 @@
 | Predator threat | ❌ | ✅ Step 64 | Wolf |
 | Weather | ✅ | ✅ | 변경 없음 |
 | Day/Night | ✅ tint만 | ✅ Step 43 진짜 어두워짐 |
-| AI Storyteller | ❌ 랜덤 events | ✅ Step 73 | 3 종 + threat tier |
+| AI DirectorMode | ❌ 랜덤 events | ✅ Step 73 | 3 종 + threat tier |
 | Map terrain | 단조 grass | ✅ Step 39-41 | 4 tile, 2 호수 |
 | Save/Load | ✅ | ✅ | 변경 없음 |
 | Tutorial | ❌ | ✅ Step 74 | 9 팁 |
