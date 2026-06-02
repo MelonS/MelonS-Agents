@@ -12,26 +12,20 @@ namespace MelonS.GameProto.EditorTools
         private static void GenerateSaveLoadButtons(
             GameObject canvasGo, Color colPanel, Color colTextPrimary, Font uiFont)
         {
-            // #245 운영자 fb "왼쪽 밑에 s l 버튼 제거" — 좌하단 Save/Load 버튼 패널을 만들지
-            //  않는다.  저장/불러오기는 설정 메뉴(ESC) / F5·F9 핫키로 계속 가능.
-            return;
-#pragma warning disable CS0162
-            GameObject saveBtnPanel = new GameObject("SaveLoadButtons");
-            saveBtnPanel.transform.SetParent(canvasGo.transform, false);
-            RectTransform sbpRt = saveBtnPanel.AddComponent<RectTransform>();
-            sbpRt.anchorMin = new Vector2(0f, 0f);
-            sbpRt.anchorMax = new Vector2(0f, 0f);
-            sbpRt.pivot = new Vector2(0f, 0f);
-            sbpRt.sizeDelta = new Vector2(92, 40);
-            sbpRt.anchoredPosition = new Vector2(12, 12);
+            // #245 운영자 fb "왼쪽 밑에 s l 버튼 제거" — 좌하단 *시각* Save/Load 버튼은 안 만든다.
+            // #44 회귀 수정: 과거엔 여기서 통째로 return 해 GameSaveButtons *호스트 자체* 가
+            //  씬에서 사라졌고, 그 컴포넌트가 F5/F9 핫키 + 저장/복원 로직의 유일한 소유자라
+            //  저장/불러오기가 완전히 죽어 있었다(설정 메뉴 행도 못 뜸).  → 시각 버튼 없이
+            //  *로직 전용 호스트* 만 생성한다.  F5/F9(Update) 동작 + 설정 메뉴가 OnSave/OnLoad
+            //  를 직접 호출(아래 SettingsMenu) + pawnPrefab/treeSprite 복원 ref 보존.
+            GameObject saveHost = new GameObject("SaveLoadButtons");
+            saveHost.transform.SetParent(canvasGo.transform, false);
+            saveHost.AddComponent<RectTransform>();  // 캔버스 자식 표준(레이아웃엔 미관여)
 
-            GameObject saveBtnGo = CreateIconButton(saveBtnPanel.transform, "SaveBtn", "S", new Vector2(0, 0), colPanel, colTextPrimary, uiFont);
-            GameObject loadBtnGo = CreateIconButton(saveBtnPanel.transform, "LoadBtn", "L", new Vector2(48, 0), colPanel, colTextPrimary, uiFont);
-
-            GameSaveButtons gsb = saveBtnPanel.AddComponent<GameSaveButtons>();
+            GameSaveButtons gsb = saveHost.AddComponent<GameSaveButtons>();
             SerializedObject gsbSo = new SerializedObject(gsb);
-            gsbSo.FindProperty("saveButton").objectReferenceValue = saveBtnGo.GetComponent<Button>();
-            gsbSo.FindProperty("loadButton").objectReferenceValue = loadBtnGo.GetComponent<Button>();
+            // saveButton/loadButton 는 의도적으로 null(시각 버튼 없음) — Awake 의 onClick 배선은
+            //  null-guard 가 있고, F5/F9 + 설정 메뉴 직접 호출 경로는 버튼이 없어도 동작한다.
             gsbSo.FindProperty("pawnPrefab").objectReferenceValue =
                 AssetDatabase.LoadAssetAtPath<GameObject>(PawnPrefabPath);
             gsbSo.FindProperty("treeSprite").objectReferenceValue =

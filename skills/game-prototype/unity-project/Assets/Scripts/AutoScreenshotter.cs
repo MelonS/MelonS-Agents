@@ -18,6 +18,7 @@ namespace MelonS.GameProto
         public float delaySeconds = 0f;
         public string outputPath = "";
         private bool openSettings = false;  // 진단용: 캡처 직전 설정 메뉴를 연다 (-opensettings)
+        private bool testSave = false;      // 진단용: 캡처 직전 저장을 트리거 (-testsave, #44 검증)
 
         private void Start()
         {
@@ -40,6 +41,7 @@ namespace MelonS.GameProto
                     requested = true;
                 }
                 if (args[i] == "-opensettings") openSettings = true;
+                if (args[i] == "-testsave") testSave = true;
             }
             if (!requested || delaySeconds <= 0f || string.IsNullOrEmpty(outputPath))
             {
@@ -66,6 +68,15 @@ namespace MelonS.GameProto
             {
                 MelonS.GameProto.SettingsMenu.Open();
                 yield return new WaitForSeconds(0.4f);
+            }
+
+            // 진단(-testsave, #44): GameSaveButtons 호스트를 찾아 저장을 트리거 → save.json 작성 검증.
+            if (testSave)
+            {
+                var gsb = Object.FindFirstObjectByType<MelonS.GameProto.GameSaveButtons>(FindObjectsInactive.Include);
+                if (gsb != null) { gsb.OnSave(); Debug.Log("[AutoScreenshotter] -testsave: GameSaveButtons.OnSave() 호출"); }
+                else Debug.LogError("[AutoScreenshotter] -testsave: GameSaveButtons 호스트 없음!");
+                yield return new WaitForSeconds(0.5f);
             }
 
             string dir = Path.GetDirectoryName(outputPath);

@@ -282,44 +282,21 @@ namespace MelonS.GameProto
         private void OnSaveClicked()
         {
             PlayClickBlip();
-            // Reuse the EXACT wired logic on the existing GameSaveButtons host
-            // (operator: "SaveBtn/LoadBtn 로직 그대로").  We invoke the host's
-            // already-wired onClick so the canonical OnSave (which serializes via
-            // SaveLoadManager) runs — no duplicated save code in this lane.
-            if (!InvokeExistingButton("SaveBtn"))
-                SaveLoadManager.Save();   // fallback: direct save if host button absent
+            // #44 GameSaveButtons 는 이제 시각 버튼 없는 로직 전용 호스트 → 캐논 OnSave 를
+            //  직접 호출(버튼 onClick 우회).  호스트 없으면 SaveLoadManager 직접 호출 fallback.
+            var gsb = Object.FindFirstObjectByType<GameSaveButtons>(FindObjectsInactive.Include);
+            if (gsb != null) gsb.OnSave();
+            else SaveLoadManager.Save();
         }
 
         private void OnLoadClicked()
         {
             PlayClickBlip();
-            // Reuse the host's wired OnLoad (it holds the pawnPrefab/treeSprite
-            // SerializeField refs needed to re-instantiate on load).  We do NOT
-            // duplicate the restore logic here.
-            if (!InvokeExistingButton("LoadBtn"))
-                Debug.LogWarning("[SettingsMenu] SaveBtn/LoadBtn 호스트 없음 - load skip");
-        }
-
-        /// <summary>
-        /// Find the GameSaveButtons host (which owns the wired SaveBtn/LoadBtn) and
-        /// invoke its matching button's onClick listeners.  Searches the host's own
-        /// children for the named Button (works even if the floating corner buttons
-        /// are hidden — the GameObjects still exist).  Returns true if invoked.
-        /// </summary>
-        private bool InvokeExistingButton(string buttonName)
-        {
-            var gsb = Object.FindFirstObjectByType<GameSaveButtons>();
-            if (gsb == null) return false;
-            var buttons = gsb.GetComponentsInChildren<Button>(includeInactive: true);
-            foreach (var b in buttons)
-            {
-                if (b != null && b.gameObject.name == buttonName)
-                {
-                    b.onClick.Invoke();
-                    return true;
-                }
-            }
-            return false;
+            // #44 호스트의 OnLoad 직접 호출(pawnPrefab/treeSprite ref 로 월드 복원).  복원 로직은
+            //  GameSaveButtons 에만 있으므로 호스트 없으면 load 불가(경고).
+            var gsb = Object.FindFirstObjectByType<GameSaveButtons>(FindObjectsInactive.Include);
+            if (gsb != null) gsb.OnLoad();
+            else Debug.LogWarning("[SettingsMenu] GameSaveButtons 호스트 없음 - load skip");
         }
 
         // ----------------------------------------------------------------------

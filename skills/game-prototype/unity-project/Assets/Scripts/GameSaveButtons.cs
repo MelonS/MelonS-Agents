@@ -38,12 +38,14 @@ namespace MelonS.GameProto
             if (Input.GetKeyDown(KeyCode.F9)) OnLoad();
         }
 
-        private void OnSave()
+        // #44 public 화: 설정 메뉴(저장/불러오기 행)가 시각 버튼 없이도 이 캐논 로직을
+        //  직접 호출할 수 있게 한다.  F5/F9(Update) + onClick 배선도 그대로 사용.
+        public void OnSave()
         {
             SaveLoadManager.Save();
         }
 
-        private void OnLoad()
+        public void OnLoad()
         {
             SaveData data = SaveLoadManager.Load();
             if (data == null) return;
