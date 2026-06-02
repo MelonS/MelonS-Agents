@@ -24,19 +24,24 @@ namespace MelonS.GameProto.EditorTools
                 new Vector2(-22f, 22f), new Vector2(20f, -22f),
             };
             public float[] lakeRadii     = { 4.0f, 2.8f, 3.5f, 3.0f };
-            // 바위 cluster 5개 (이전 3개)
+            // 바위 cluster — #43 운영자 "흙바닥/돌바닥은?": 5→8개, 맵 전역으로 확장 + 반경
+            //  3.2→3.8 로 돌바닥이 눈에 띄게.  (스폰 중앙 회피 — 원점 ±10 안 없음)
             public Vector2[] rockClusterCenters = {
                 new Vector2(-22f, 19f), new Vector2(24f, -21f), new Vector2(-5f, -24f),
                 new Vector2(8f, 22f), new Vector2(22f, 6f),
+                new Vector2(-34f, -20f), new Vector2(38f, 28f), new Vector2(-40f, 5f),
             };
-            public float rockRadius = 3.2f;
-            // 흙 패치 9개 (이전 6개)
+            public float rockRadius = 3.8f;
+            // 흙 패치 — #43 9→18개, 맵 전역으로 확장 + 반경 2.0→3.4 로 흙바닥이 넓게 드러나게.
             public Vector2[] dirtCenters = {
                 new Vector2(-5f, 3f), new Vector2(6f, -9f), new Vector2(-15f, 7f),
                 new Vector2(12f, 6f), new Vector2(-10f, -18f), new Vector2(21f, 12f),
                 new Vector2(-18f, 1f), new Vector2(3f, -18f), new Vector2(17f, 16f),
+                new Vector2(-30f, -28f), new Vector2(32f, -30f), new Vector2(-35f, 25f),
+                new Vector2(30f, 30f), new Vector2(-28f, 12f), new Vector2(36f, -8f),
+                new Vector2(-8f, 33f), new Vector2(10f, -34f), new Vector2(-38f, -8f),
             };
-            public float dirtRadius = 2.0f;
+            public float dirtRadius = 3.4f;
         }
 
         /// <summary>R8: Grid + Tilemap + 4 tile asset + procedural 배치 + TilemapStaticRefInit</summary>
