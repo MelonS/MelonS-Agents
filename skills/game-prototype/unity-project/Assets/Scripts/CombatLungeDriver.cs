@@ -90,6 +90,16 @@ namespace MelonS.GameProto
         // Flash duration (seconds).  Shorter than the lunge so it reads as an impact.
         [SerializeField] private float flashSec = 0.08f;
 
+        [Header("Work swing")]
+        // 운영자 2026-06-02 "일하는 모션": 비전투 작업(벌목/채굴/건축/수확/채집/요리/치료/
+        //  사냥) 중 정지 상태에서 작업 대상 방향으로 주기적 jab.  전투 lunge 와 같은 X-offset
+        //  메커니즘을 LateUpdate(여기, 권위 작성자)에서 재사용 — PawnPoseDriver(Update)는
+        //  PawnSpriteBob 에 덮여 안 보였다.  flash 는 작업엔 안 켠다(피격처럼 보임 방지).
+        [SerializeField] private float workSwingInterval = 0.5f;
+        // 작업 jab 은 전투보다 살짝 작게(망치질 톤).  lungeDistance * 이 비율.
+        [SerializeField] private float workSwingScale = 0.7f;
+        private float lastWorkSwing = -999f;
+
         [Header("Drafted fallback")]
         // Melee range for the drafted-target fallback (matches PawnUtilityAI const 1.2).
         [SerializeField] private float draftedMeleeRange = 1.2f;
@@ -106,12 +116,15 @@ namespace MelonS.GameProto
         private SpriteRenderer rootSr;
         private PawnEntity pawnEntity;
         private PawnHealth health;
+        private PawnUtilityAI ai;           // 작업 대상 좌표(작업 스윙 방향)
+        private PawnMovement movement;      // 정지 상태 게이트(이동 중엔 작업 스윙 안 함)
 
         // Lunge state.
         private float lungeTimer;          // counts down from lungeReturnSec
         private bool lungeActive;
         private int lungeSign = 1;         // +1 = lunge right, -1 = lunge left
         private float lastLungeStart = -999f;
+        private float curLungeDistance;    // 이번 lunge 의 peak offset(전투=full, 작업=scaled)
 
         // Hit-edge detection (poll PawnEntity.LastMeleeHitTime — bug #7 safe).
         private float lastSeenHitTime = -999f;
@@ -127,6 +140,8 @@ namespace MelonS.GameProto
         {
             pawnEntity = GetComponent<PawnEntity>();
             health     = GetComponent<PawnHealth>();
+            ai         = GetComponent<PawnUtilityAI>();
+            movement   = GetComponent<PawnMovement>();
             rootSr     = GetComponent<SpriteRenderer>();
             bodyChild  = ResolveBodyChild();
             if (bodyChild != null) bodySr = bodyChild.GetComponent<SpriteRenderer>();
@@ -214,12 +229,30 @@ namespace MelonS.GameProto
                 }
             }
 
+            // Path 3 (work swing): 비전투 작업 중 정지 + 작업 대상 있음 → 작업 cadence 로
+            //  대상 방향 jab.  전투(path1/2)가 잡혔으면 건너뜀.  flash 는 안 켠다.
+            bool workSwing = false;
+            if (!fire && pawnEntity != null && !pawnEntity.IsDrafted
+                && (movement == null || !movement.IsMoving)
+                && ai != null && ai.TryGetWorkTargetPos(out Vector3 wt))
+            {
+                if (Time.time - lastWorkSwing >= workSwingInterval)
+                {
+                    lastWorkSwing = Time.time;
+                    fire = true;
+                    workSwing = true;
+                    dir = (Vector2)wt - (Vector2)transform.position;
+                }
+            }
+
             if (!fire) return;
             if (Time.time - lastLungeStart < lungeMinInterval) return;  // throttle
 
             lastLungeStart = Time.time;
             lungeActive = true;
             lungeTimer = lungeReturnSec;
+            // 작업 스윙은 전투보다 짧은 jab; 전투는 full lungeDistance.
+            curLungeDistance = workSwing ? lungeDistance * workSwingScale : lungeDistance;
             // Lunge sign from the world direction toward the target.  If the target is
             //  directly above/below (dir.x ~ 0), mirror the facing (flipX) instead so
             //  the jab still reads.
@@ -228,9 +261,12 @@ namespace MelonS.GameProto
             else
                 lungeSign = (bodySr != null && bodySr.flipX) ? -1 : 1;
 
-            // Kick off the impact flash too (peaks with the lunge).
-            flashActive = true;
-            flashTimer = flashSec;
+            // Kick off the impact flash too (peaks with the lunge) — 전투 타격만.
+            if (!workSwing)
+            {
+                flashActive = true;
+                flashTimer = flashSec;
+            }
         }
 
         private bool TryGetDraftedTargetPos(out Vector2 pos)
@@ -255,7 +291,7 @@ namespace MelonS.GameProto
                 // Ease: quick out to peak handled implicitly (we start AT peak and
                 //  ease back), so a single Lerp from peak→0 over the window.
                 float t = Mathf.Clamp01(1f - (lungeTimer / lungeReturnSec));
-                offsetX = Mathf.Lerp(lungeDistance, 0f, t) * lungeSign;
+                offsetX = Mathf.Lerp(curLungeDistance, 0f, t) * lungeSign;
                 if (lungeTimer <= 0f) { lungeActive = false; offsetX = 0f; }
             }
 

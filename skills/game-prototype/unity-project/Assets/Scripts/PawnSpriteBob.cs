@@ -64,12 +64,27 @@ namespace MelonS.GameProto
         //  start/stop, so the offset EASES to zero on stop (no popping).
         [SerializeField] private float amplitudeLerpSpeed = 8f;
 
+        [Header("Squash & stretch (운영자 2026-06-02 모션)")]
+        // 걸을 때 bob 에 동기화된 스쿼시·스트레치(2D 캐릭터 juice).  bob 꼭대기=스트레치
+        //  (살짝 키↑·폭↓), 바닥(발딛음)=스쿼시(키↓·폭↑).  walkAmplitude 비례로 fade →
+        //  idle 엔 거의 0.  child localScale 레인은 비어 있어 충돌 없음(소유 단독).
+        [SerializeField] private float walkSquash = 0.09f;       // 걷기 스쿼시 최대 비율
+        // 방향전환 팝: flipX 가 바뀌는 순간 가로로 짧게 눌렀다 펴 "발 딛고 도는" 느낌.
+        [SerializeField] private float turnPopAmount = 0.13f;
+        [SerializeField] private float turnPopDur = 0.12f;
+
         // Cached so we never allocate / GetComponent per frame.
         //  Resolved from movementSource (explicit ROOT ref) in Awake — NEVER via
         //  GetComponent on this (child) GameObject.
         private PawnMovement movement;
         // The child's authored local position (everything except our Y offset).
         private Vector3 baseLocalPos;
+        // The child's authored local scale (squash/stretch multiplies this).
+        private Vector3 baseScale = Vector3.one;
+        // Turn-pop state — flipX edge detection + remaining pop time.
+        private bool lastFlipX;
+        private bool hasLastFlip;
+        private float turnPopT;
         // Phase accumulator — advanced by the ACTIVE frequency so a walk→idle
         //  transition doesn't jump phase (we keep one continuous clock).
         private float phase;
@@ -87,7 +102,11 @@ namespace MelonS.GameProto
             //  because this component sits on the CHILD bob GameObject and the
             //  PawnMovement lives on the ROOT.  Null-guarded everywhere it's read.
             movement = movementSource;
-            if (spriteChild != null) baseLocalPos = spriteChild.localPosition;
+            if (spriteChild != null)
+            {
+                baseLocalPos = spriteChild.localPosition;
+                baseScale = spriteChild.localScale;
+            }
             liveAmplitude = idleAmplitude;
             liveFrequency = idleFrequencyHz;
         }
@@ -121,10 +140,45 @@ namespace MelonS.GameProto
             spriteChild.localPosition = new Vector3(
                 baseLocalPos.x, baseLocalPos.y + yOffset, baseLocalPos.z);
 
+            // ── Squash & stretch (운영자 2026-06-02) — child localScale 단독 소유 ──
+            //  bob 위상에 동기화: 꼭대기(sin=+1)=스트레치(키↑·폭↓), 바닥(sin=-1, 발딛음)=
+            //  스쿼시(키↓·폭↑).  walkFactor(걷기 비중)로 fade → idle 엔 거의 0(숨쉬기만).
+            float denom = Mathf.Max(0.0001f, walkAmplitude - idleAmplitude);
+            float walkFactor = Mathf.Clamp01((liveAmplitude - idleAmplitude) / denom);
+            float squash = Mathf.Sin(phase) * walkSquash * walkFactor;
+            float sx = 1f - squash * 0.5f;
+            float sy = 1f + squash;
+
+            // Turn-pop: childRenderer.flipX (PawnFacing 소유)가 바뀌는 순간 가로 squash.
+            if (childRenderer != null)
+            {
+                bool fx = childRenderer.flipX;
+                if (hasLastFlip && fx != lastFlipX) turnPopT = turnPopDur;
+                lastFlipX = fx;
+                hasLastFlip = true;
+            }
+            if (turnPopT > 0f)
+            {
+                turnPopT -= Time.deltaTime;
+                float tp = Mathf.Clamp01(turnPopT / Mathf.Max(0.0001f, turnPopDur));  // 1→0
+                sx -= turnPopAmount * tp;
+                sy += turnPopAmount * 0.5f * tp;
+            }
+            // baseScale 에 곱 — 작성자는 이 컴포넌트 단독(다른 lane 과 충돌 없음).
+            spriteChild.localScale = new Vector3(baseScale.x * sx, baseScale.y * sy, baseScale.z);
+
             // Mirror the ROOT renderer's tint onto the visible child so existing
             //  variant / selection / drafted tint (written to the root by
             //  GameManager + PawnEntity) shows on the bobbing sprite.
             MirrorRootTint();
+        }
+
+        // 사망 시 PawnHealth.StopBodyBob 이 이 컴포넌트를 끈다 → Update 가 안 돌아
+        //  마지막 squash 상태로 굳지 않도록, 비활성화 시 자식 scale 을 원본으로 복원.
+        //  (corpse 회전은 PawnPoseDriver, 위치는 그대로 — scale 만 정리.)
+        private void OnDisable()
+        {
+            if (spriteChild != null) spriteChild.localScale = baseScale;
         }
 
         private void MirrorRootTint()
