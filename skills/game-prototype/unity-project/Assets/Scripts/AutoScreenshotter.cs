@@ -20,6 +20,7 @@ namespace MelonS.GameProto
         private bool openSettings = false;  // 진단용: 캡처 직전 설정 메뉴를 연다 (-opensettings)
         private bool testSave = false;      // 진단용: 캡처 직전 저장을 트리거 (-testsave, #44 검증)
         private bool inspectPawn = false;   // 진단용: 첫 림 선택해 인스펙트 패널 표시 (-inspectpawn)
+        private bool openArchitect = false; // 진단용: Architect 건축 메뉴 열기 (-openarchitect)
 
         private void Start()
         {
@@ -44,6 +45,7 @@ namespace MelonS.GameProto
                 if (args[i] == "-opensettings") openSettings = true;
                 if (args[i] == "-testsave") testSave = true;
                 if (args[i] == "-inspectpawn") inspectPawn = true;
+                if (args[i] == "-openarchitect") openArchitect = true;
             }
             if (!requested || delaySeconds <= 0f || string.IsNullOrEmpty(outputPath))
             {
@@ -77,6 +79,14 @@ namespace MelonS.GameProto
             {
                 var sel = Object.FindFirstObjectByType<MelonS.GameProto.ClickSelector>();
                 if (sel != null) sel.DiagnosticInspectFirstPawn();
+                yield return new WaitForSeconds(0.5f);
+            }
+
+            // 진단(-openarchitect): Architect 건축 메뉴를 연다(UI 검증).
+            if (openArchitect)
+            {
+                if (MelonS.GameProto.ArchitectMenu.Instance != null)
+                    MelonS.GameProto.ArchitectMenu.Instance.Open();
                 yield return new WaitForSeconds(0.5f);
             }
 
