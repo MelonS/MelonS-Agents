@@ -223,7 +223,8 @@ namespace MelonS.GameProto
                 lrt.offsetMax = Vector2.zero;
                 var lbl = lgo.AddComponent<Text>();
                 lbl.font = ResolveFont();
-                lbl.fontSize = 13;
+                lbl.fontSize = 15;   // #UI-B 13→15 탭 라벨 가독성(짧은 라벨이라 overflow 위험 없음)
+                lbl.fontStyle = FontStyle.Bold;
                 lbl.alignment = TextAnchor.MiddleCenter;
                 lbl.text = TabLabels[i];
                 lbl.color = MelonS.GameProto.Core.UITheme.TextPrimary;
