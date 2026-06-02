@@ -54,8 +54,12 @@ namespace MelonS.GameProto
                 if (h == null) continue;
                 bool act = IsActionable(h);
                 float sq = ((Vector2)h.transform.position - world).sqrMagnitude;
-                if (best == null || (act && !bestAct) || (act == bestAct && sq < bestSq))
-                { best = h; bestSq = sq; bestAct = act; }
+                // 거리 동률(겹친 동일위치)일 때 InstanceID 로 결정적 tie-break — 같은 클릭이
+                //  호출마다 같은 엔티티를 반환하게 해 메뉴/선택 깜빡임을 막는다(운영자 fb).
+                bool better = best == null || (act && !bestAct)
+                    || (act == bestAct && (sq < bestSq - 1e-4f
+                        || (Mathf.Abs(sq - bestSq) < 1e-4f && h.GetInstanceID() < best.GetInstanceID())));
+                if (better) { best = h; bestSq = sq; bestAct = act; }
             }
             return best;
         }
@@ -531,33 +535,43 @@ namespace MelonS.GameProto
             Collider2D hit, Vector3 worldPos)
         {
             var list = new System.Collections.Generic.List<(string, System.Action)>();
-            if (hit == null) return list;
-            var go = hit.gameObject;
+            // 운영자 2026-06-02 "나무 벌목 버튼이 깜빡": PickEntityAt 가 겹친 콜라이더 중
+            //  단일 승자만 돌려줘(비결정 tie-break) 나무+광맥 겹친 칸에서 어떤 땐 나무, 어떤 땐
+            //  광맥이 잡혀 항목이 나타났다 사라졌다 했다.  메뉴는 클릭점에 겹친 *모든* actionable
+            //  을 훑어 각 액션을 넣는다 → 나무/광맥/철거가 동시에 떠 깜빡임 제거.
+            var cols = Physics2D.OverlapPointAll(worldPos);
+            if ((cols == null || cols.Length == 0) && hit != null) cols = new[] { hit };
+            if (cols == null || cols.Length == 0) return list;
 
-            var tree = hit.GetComponent<TreeEntity>();
+            var tree = FindIn<TreeEntity>(cols);
             if (tree != null && !tree.IsDestroyed && TreeChopDesignation.Instance != null)
             {
+                var go = tree.gameObject;
                 list.Add(("🪓 벌목 지정", () => {
                     if (TreeChopDesignation.Instance != null) TreeChopDesignation.Instance.TryMark(go);
                 }));
             }
 
-            var vein = hit.GetComponent<StoneVeinEntity>();
+            var vein = FindIn<StoneVeinEntity>(cols);
             if (vein != null && !vein.IsDestroyed && MineDesignation.Instance != null)
             {
+                var go = vein.gameObject;
                 list.Add(("⛏ 채광 지정", () => {
                     if (MineDesignation.Instance != null) MineDesignation.Instance.TryMark(go);
                 }));
             }
 
-            var bush = hit.GetComponent<BerryBushEntity>();
-            if (bush != null && !bush.IsDepleted)
+            var bush = FindIn<BerryBushEntity>(cols);
+            // 운영자 "베리 채집 버튼이 없음": AI 가 다 따먹어 60s 재생창 동안 IsDepleted 라
+            //  버튼이 통째로 사라졌다.  고갈/재생 중이어도 채집 지정 노출(레퍼런스 정합) →
+            //  지정한 림이 덤불로 걸어가 재생되면 채집(DispatchGatherToIdle 가드도 완화).
+            if (bush != null)
             {
                 var bushCap = bush;
                 list.Add(("🍇 채집 지정", () => DispatchGatherToIdle(bushCap)));
             }
 
-            var bp = hit.GetComponent<BlueprintEntity>();
+            var bp = FindIn<BlueprintEntity>(cols);
             if (bp != null && !bp.IsComplete)
             {
                 var bpCap = bp;
@@ -565,17 +579,39 @@ namespace MelonS.GameProto
                 list.Add(("✕ 청사진 취소", () => { if (bpCap != null) Destroy(bpCap.gameObject); }));
             }
 
-            // 완성된 구조물(벽/문/난로/침대) → 철거 지정.  DeconstructTarget.IsDeconstructable 가
-            //  허용 타입을 판정(청사진은 위에서 '취소'로 처리되므로 제외됨).
-            if (DeconstructDesignation.Instance != null && bp == null
-                && DeconstructTarget.IsDeconstructable(go))
+            // 완성된 구조물(벽/문/난로/침대) → 철거 지정.  겹친 콜라이더 중 deconstructable 한
+            //  첫 오브젝트(청사진 제외).
+            if (DeconstructDesignation.Instance != null && bp == null)
             {
-                list.Add(("✕ 철거 지정", () => {
-                    if (DeconstructDesignation.Instance != null) DeconstructDesignation.Instance.TryMark(go);
-                }));
+                foreach (var c in cols)
+                {
+                    if (c == null) continue;
+                    var dgo = c.gameObject;
+                    if (DeconstructTarget.IsDeconstructable(dgo))
+                    {
+                        list.Add(("✕ 철거 지정", () => {
+                            if (DeconstructDesignation.Instance != null) DeconstructDesignation.Instance.TryMark(dgo);
+                        }));
+                        break;
+                    }
+                }
             }
 
             return list;
+        }
+
+        // 겹친 콜라이더들 중 컴포넌트 T 를 가진 첫 번째를 반환(없으면 null).  PickEntityAt 의
+        //  단일-승자 비결정성을 메뉴 단계에서 무력화하기 위한 멀티-콜라이더 룩업.
+        private static T FindIn<T>(Collider2D[] cols) where T : Component
+        {
+            if (cols == null) return null;
+            foreach (var c in cols)
+            {
+                if (c == null) continue;
+                var t = c.GetComponent<T>();
+                if (t != null) return t;
+            }
+            return null;
         }
 
         // 베리덤불 채집 지정 — 가장 가까운 'idle' PawnGatherer 에게 직접 배정(designation manager 가
@@ -583,7 +619,10 @@ namespace MelonS.GameProto
         //  Mine designation 의 idle-dispatch 와 동일한 가용성 규약.
         private void DispatchGatherToIdle(BerryBushEntity bush)
         {
-            if (bush == null || bush.IsDepleted) return;
+            // 운영자 fb: 고갈(재생 중) 덤불에도 채집 지정 가능 — 림이 걸어가 60s 내 재생되면
+            //  채집한다.  완전 null 만 차단(IsDepleted 가드 제거).  PawnGatherer 의 give-up 이
+            //  도달 불가/장기 정체를 처리하므로 무한 대기는 없음.
+            if (bush == null) return;
 #if UNITY_2023_1_OR_NEWER
             var gatherers = Object.FindObjectsByType<PawnGatherer>(FindObjectsSortMode.None);
 #else

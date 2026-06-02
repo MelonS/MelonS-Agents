@@ -10,27 +10,21 @@ namespace MelonS.GameProto
     public class StoneChunkEntity : MonoBehaviour
     {
         [SerializeField] private int stone = 1;
-        [SerializeField] private float lifetimeSec = 180f;  // 3분
         public bool InStockpile = false;  // stockpile stack 보존
 
         public int Stone => stone;
         public GameObject ReservedBy { get; set; }
         public bool IsReserved => ReservedBy != null;
 
-        private float spawnTime;
-
         public void SetStone(int v) { stone = v; }
 
-        private void Awake() { spawnTime = Time.time; }
+        // 운영자 2026-06-02: "돌덩이가 너무 빨리 사라짐".  돌은 부패하지 않는 자원이므로
+        //  lifetimeSec 통째 Destroy(180s)를 제거 — 운반될 때까지 바닥에 영구히 남는다.
+        //  (Update 부패 로직 없음 = 자연스러운 광물 거동.)
 
         // #214 운영자 fb: 즉시-credit/teleport 제거.  과거 Pickup() 은 줍는 즉시
         //  ResourceManager.AddStone + Destroy = 순간이동.  운반은 PawnHauler(물리 carry)
         //  전담이므로 이 즉시-적립 경로는 완전히 제거한다.  외부 호출처 없음(확인됨).
-
-        private void Update()
-        {
-            if (Time.time - spawnTime > lifetimeSec) Destroy(gameObject);
-        }
 
         // #215 운영자 fb "캐면 순간이동" — StoneVein 이 sprite null 일 때 즉시 AddStone
         //  하던 텔레포트를 없애려면, chunk 가 sprite 없이도 항상 보여야 한다.  WoodPile

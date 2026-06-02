@@ -10,11 +10,17 @@ namespace MelonS.GameProto
     public class MeatPileEntity : MonoBehaviour
     {
         [SerializeField] private int food = 5;
-        [SerializeField] private float lifetimeSec = 90f;  // raw meat 빨리 상함 (1.5분)
         public bool InStockpile = false;  // stockpile stack 보존
 
         // GameManager 가 SceneSetup 으로부터 sprite 받아 박음
         public static Sprite SharedSprite;
+
+        // 운영자 2026-06-02: 통째 즉시소멸 대신 개별 내구도가 천천히 닳으며 점점 흐려짐.
+        //  raw 식량은 부패성이므로 wood 보다 빠른 decayPerDay(옥외, !InStockpile).  0 에서 소멸.
+        //  기존 lifetimeSec(90s) 통째 Destroy 제거.
+        [SerializeField] private float durability = 100f;
+        [SerializeField] private float decayPerDay = 20f;  // 100/20 = 5 game-day ≈ 120s, 점진 fade
+        private SpriteRenderer _sr;
 
         public int Food => food;
         // #219 운영자 fb "작물 채집하면 고기가 나옴?" — 이 더미는 raw 식량 일반 (고기/농작물/
@@ -23,9 +29,10 @@ namespace MelonS.GameProto
         public GameObject ReservedBy { get; set; }
         public bool IsReserved => ReservedBy != null;
 
-        private float spawnTime;
         public void SetFood(int v) { food = v; }
-        private void Awake() { spawnTime = Time.time; }
+        // 부패 속도 외부 설정(작물/베리는 느리게).  CropEntity 수확 등에서 호출 가능.
+        public void SetDecayPerDay(float v) { decayPerDay = Mathf.Max(0f, v); }
+        private void Awake() { _sr = GetComponent<SpriteRenderer>(); }
 
         // #214 운영자 fb: "아이템이 먹거나 하면 뿅 이동" — 즉시-credit/teleport 제거.
         //  과거 Pickup() 은 줍는 즉시 ResourceManager.AddFood + Destroy = 순간이동이었다.
@@ -34,7 +41,17 @@ namespace MelonS.GameProto
 
         private void Update()
         {
-            if (Time.time - spawnTime > lifetimeSec) Destroy(gameObject);
+            if (!InStockpile)
+            {
+                durability -= decayPerDay * (Time.deltaTime / 24f);  // 24s = 1 game day
+                if (durability <= 0f) { Destroy(gameObject); return; }
+            }
+            if (_sr != null)
+            {
+                var c = _sr.color;
+                c.a = Mathf.Lerp(0.35f, 1f, Mathf.Clamp01(durability / 100f));
+                _sr.color = c;
+            }
         }
 
         // #215 운영자 fb "먹거리 순간이동" — CropEntity 수확이 물리 식량 더미를 떨어뜨릴
@@ -98,7 +115,10 @@ namespace MelonS.GameProto
             var m = go.AddComponent<MeatPileEntity>();
             m.SetFood(amount);
             m.DisplayName = displayName;
-            m.lifetimeSec = lifetime;
+            // 기존 lifetime(통째 소멸까지 초) → durability decayPerDay 로 환산:
+            //  총 fade 시간 ≈ 기존 lifetime 이 되도록 decayPerDay = 100 / (lifetime/24).
+            //  작물/베리(긴 lifetime)=느린 부패, 고기(짧은 lifetime)=빠른 부패 보존.
+            m.SetDecayPerDay(lifetime > 0f ? 2400f / lifetime : 20f);
             return m;
         }
     }

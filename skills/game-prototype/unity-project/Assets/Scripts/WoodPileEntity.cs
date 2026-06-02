@@ -15,28 +15,27 @@ namespace MelonS.GameProto
     public class WoodPileEntity : MonoBehaviour
     {
         [SerializeField] private int wood = 5;
-        [SerializeField] private float lifetimeSec = 120f;  // 2분 후 사라짐 (legacy)
         public bool InStockpile = false;
 
-        // #152 - 림 vanilla deteriorate (옥외 noroof 2 HP/day, indoor/roof 0).
-        //  InStockpile=true 이면 indoor 가정 (현재 roof 시스템 없음 - stockpile 마커 위치 = indoor).
-        //  #197 - 운영자 fb "목재 너무 빨리 사라짐": 5s → 30s (6x 느림).
-        //   wiki: 1 game day = 2분 = 24sec 인데 5s 마다 -1 = 1day -4 wood 이건 너무 가속.
-        //   30s 마다 -1 = 약 wiki 정합 (1day ~2 wood).
-        private float lastDeteriorate = -10f;
-        private const float DeteriorateInterval = 30f;
+        // 운영자 2026-06-02: "통째로 빨리 사라질 게 아니라 개별 내구도가 조금씩 닳게".
+        //  durability 0~100 이 옥외(!InStockpile)에서 천천히 감소(1 game day=24s 기준
+        //  DurabilityPerDay/day) → 값에 비례해 스프라이트가 점점 흐려지고 0 에서 소멸.
+        //  InStockpile 이면 감소 정지(보존).  기존 lifetimeSec(120s) 통째 Destroy +
+        //  wood 수량 차감식 부패는 제거(수량 wood 는 그대로, 내구도만 닳는다).
+        [SerializeField] private float durability = 100f;
+        private const float DurabilityPerDay = 10f;   // 100/10 = 10 game-day ≈ 240s
 
         public int Wood => wood;
         public GameObject ReservedBy { get; set; }   // PawnHauler 가 set/clear
         public bool IsReserved => ReservedBy != null;
 
-        private float spawnTime;
+        private SpriteRenderer _sr;
 
         public void SetWood(int amount) { wood = amount; }
 
         private void Awake()
         {
-            spawnTime = Time.time;
+            _sr = GetComponent<SpriteRenderer>();
         }
 
         // #214 운영자 fb "아이템이 뿅 이동" — 즉시-credit/teleport 완전 제거.
@@ -47,21 +46,19 @@ namespace MelonS.GameProto
 
         private void Update()
         {
-            // #152 - 옥외 pile 부패 (림 wiki 2 HP/day, 1 game day = 2분 = 24 sec 이므로 5초마다 ~1 wood).
-            if (!InStockpile && Time.time - lastDeteriorate > DeteriorateInterval)
+            // 옥외 더미만 내구도 감소(저장구역에 들어가면 보존).  통째로 사라지지 않고
+            //  천천히 닳다가 0 에서 소멸 — 운영자 fb.
+            if (!InStockpile)
             {
-                lastDeteriorate = Time.time;
-                wood = Mathf.Max(0, wood - 1);
-                if (wood <= 0)
-                {
-                    Destroy(gameObject);
-                    return;
-                }
+                durability -= DurabilityPerDay * (Time.deltaTime / 24f);  // 24s = 1 game day
+                if (durability <= 0f) { Destroy(gameObject); return; }
             }
-            // legacy lifetime fallback
-            if (Time.time - spawnTime > lifetimeSec)
+            // 내구도에 비례해 점점 흐려짐(통째로 뿅 사라지지 않게).
+            if (_sr != null)
             {
-                Destroy(gameObject);
+                var c = _sr.color;
+                c.a = Mathf.Lerp(0.35f, 1f, Mathf.Clamp01(durability / 100f));
+                _sr.color = c;
             }
         }
 
