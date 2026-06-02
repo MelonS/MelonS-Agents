@@ -71,6 +71,18 @@ ANTLER     = (90,  60,  30, 255)
 WOLF_COLOR = (110, 110, 120, 255)
 WOLF_DK    = (70,  70,  80, 255)
 WOLF_BLY   = (170, 170, 175, 255)
+# 운영자 2026-06-02: 멧돼지·닭·토끼가 사슴 실루엣 공유 → 종별 스프라이트.  animal=OUTLINE_STORY.
+BOAR_COLOR = (110, 85,  62, 255)   # 멧돼지 어두운 갈색
+BOAR_DK    = (75,  55,  40, 255)
+BOAR_BLY   = (150, 120, 95, 255)
+TUSK       = (235, 225, 205, 255)
+CHICK      = (245, 240, 225, 255)  # 닭 크림빛 흰색
+CHICK_DK   = (200, 190, 170, 255)
+COMB       = (210, 60,  50, 255)   # 볏 빨강
+BEAK       = (230, 180, 60, 255)   # 부리/다리 노랑
+RAB_COLOR  = (200, 190, 175, 255)  # 토끼 옅은 회갈
+RAB_DK     = (150, 140, 125, 255)
+RAB_BLY    = (235, 230, 220, 255)
 MEAT_DK    = (130, 50,  40, 255)
 MEAT_FAT   = (240, 220, 200, 255)
 PAPER      = (240, 230, 200, 255)
@@ -488,6 +500,68 @@ def gen_research_bench():
     return im
 
 
+# ─── boar 24x24 - 멧돼지 (벌크 저상체 + 엄니, 뿔/긴다리 없음) ──────
+def gen_boar():
+    im = new_img(24, 24)
+    B, D, L = BOAR_COLOR, BOAR_DK, BOAR_BLY
+    rect_fill(im, 4, 12, 19, 18, B)         # 크고 낮은 몸통
+    hline(im, 5, 18, 18, D)
+    hline(im, 5, 17, 17, L)
+    for bx in range(6, 17, 2): put(im, bx, 11, D)   # 등 강모(ridge)
+    rect_fill(im, 1, 13, 6, 18, B)          # 큰 머리(좌)
+    rect_fill(im, 0, 15, 2, 17, D)          # 주둥이
+    put(im, 0, 16, (40, 30, 25, 255))       # 콧구멍
+    put(im, 1, 14, TUSK); put(im, 0, 13, TUSK)  # 엄니
+    put(im, 4, 14, OUTLINE_STORY)           # 눈
+    put(im, 5, 12, D); put(im, 6, 12, D)    # 귀
+    for lx in [5, 9, 14, 18]:               # 짧은 4다리
+        vline(im, lx, 19, 22, D); put(im, lx, 22, OUTLINE_STORY)
+    put(im, 20, 13, B); put(im, 21, 12, D)  # 짧은 꼬리
+    rect_outline(im, 4, 12, 19, 18, OUTLINE_STORY)
+    rect_outline(im, 1, 13, 6, 18, OUTLINE_STORY)
+    return im
+
+
+# ─── chicken 24x24 - 닭 (소형 + 볏 + 부리 + 2다리) ────────────────
+def gen_chicken():
+    im = new_img(24, 24)
+    C, D = CHICK, CHICK_DK
+    rect_fill(im, 8, 12, 15, 18, C)         # 작은 둥근 몸통
+    hline(im, 9, 14, 18, D)
+    rect_fill(im, 6, 8, 9, 12, C)           # 머리(좌상)
+    put(im, 6, 7, COMB); put(im, 7, 7, COMB); put(im, 8, 7, COMB)  # 볏
+    put(im, 5, 10, BEAK); put(im, 5, 9, BEAK)   # 부리
+    put(im, 7, 9, OUTLINE_STORY)            # 눈
+    hline(im, 10, 14, 15, D)                # 접은 날개
+    put(im, 16, 11, D); put(im, 17, 10, C); put(im, 16, 10, C)  # 꼬리깃
+    for lx in [10, 13]:                     # 노란 2다리
+        vline(im, lx, 19, 22, BEAK); put(im, lx - 1, 22, BEAK); put(im, lx, 22, BEAK)
+    rect_outline(im, 8, 12, 15, 18, OUTLINE_STORY)
+    rect_outline(im, 6, 8, 9, 12, OUTLINE_STORY)
+    return im
+
+
+# ─── rabbit 24x24 - 토끼 (소형 + 긴 귀 2 + 큰 뒷다리) ─────────────
+def gen_rabbit():
+    im = new_img(24, 24)
+    R, D, L = RAB_COLOR, RAB_DK, RAB_BLY
+    rect_fill(im, 7, 13, 16, 18, R)         # 작은 낮은 몸통
+    hline(im, 8, 15, 18, D)
+    hline(im, 8, 15, 17, L)
+    rect_fill(im, 4, 11, 8, 16, R)          # 머리(좌)
+    vline(im, 5, 6, 11, R); vline(im, 5, 6, 7, D)   # 긴 귀1
+    vline(im, 7, 6, 11, R); vline(im, 7, 6, 7, D)   # 긴 귀2
+    put(im, 5, 13, OUTLINE_STORY)           # 눈
+    put(im, 3, 14, (200, 120, 120, 255))    # 코
+    rect_fill(im, 13, 16, 17, 19, D)        # 큰 뒷다리
+    vline(im, 8, 19, 21, D); put(im, 8, 21, OUTLINE_STORY)   # 앞다리
+    vline(im, 14, 19, 21, D); put(im, 14, 21, OUTLINE_STORY)
+    put(im, 17, 14, L); put(im, 18, 14, L)  # 꼬리 puff
+    rect_outline(im, 7, 13, 16, 18, OUTLINE_STORY)
+    rect_outline(im, 4, 11, 8, 16, OUTLINE_STORY)
+    return im
+
+
 def main():
     out = {
         "wall_wood.png":            gen_wall_wood(),
@@ -495,6 +569,9 @@ def main():
         "stove.png":                gen_stove(),
         "deer.png":                 gen_deer(),
         "wolf.png":                 gen_wolf(),
+        "boar.png":                 gen_boar(),
+        "chicken.png":              gen_chicken(),
+        "rabbit.png":               gen_rabbit(),
         # V6 growth stages — three distinct PNGs replace single tint sprite
         "crop_rice_seedling.png":   gen_crop_rice_seedling(),
         "crop_rice_growing.png":    gen_crop_rice_growing(),

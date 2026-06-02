@@ -41,6 +41,31 @@ namespace MelonS.GameProto.EditorTools
 
             // Day 23+41 + #108: 14 wandering deer - 60x60 맵 비례
             Sprite deerSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/deer.png");
+            // 운영자 2026-06-02: 종별 스프라이트 주입([Deer,Boar,Chicken,Rabbit] 순) — 멧돼지·닭·
+            //  토끼가 사슴 모양으로 보이던 문제 fix.  AnimalEntity.SetSpecies 가 이 배열로 스왑.
+            //  신규 png 는 Sprite/PPU16/Point 로 import 설정(deer 와 동일 픽셀 컨벤션).
+            AssetDatabase.Refresh();   // 외부 Python 이 만든 신규 png 를 AssetDB 가 인식하도록
+            foreach (var ap in new[] { "boar.png", "chicken.png", "rabbit.png" })
+            {
+                string apath = $"Assets/Sprites/{ap}";
+                if (!System.IO.File.Exists(apath)) continue;
+                // 브랜뉴 png: ImportAsset 로 등록해야 GetAtPath 가 importer 반환(아니면 Sprite
+                //  설정 전 로드 → null → deer 폴백).
+                AssetDatabase.ImportAsset(apath, ImportAssetOptions.ForceSynchronousImport);
+                var ti = AssetImporter.GetAtPath(apath) as TextureImporter;
+                if (ti != null)
+                {
+                    ti.textureType = TextureImporterType.Sprite;
+                    ti.spriteImportMode = SpriteImportMode.Single;  // 기본 Multiple(2)이면 LoadAssetAtPath<Sprite>=null
+                    ti.spritePixelsPerUnit = 16;
+                    ti.filterMode = FilterMode.Point;
+                    ti.SaveAndReimport();
+                }
+            }
+            var boarSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/boar.png");
+            var chickenSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/chicken.png");
+            var rabbitSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/rabbit.png");
+            MelonS.GameProto.AnimalEntity.SpeciesSprites = new[] { deerSpr, boarSpr, chickenSpr, rabbitSpr };
             Vector2[] deerPositions = new[]
             {
                 new Vector2(-21f,  12f), new Vector2( 19f,  14f), new Vector2( 24f, -5f),

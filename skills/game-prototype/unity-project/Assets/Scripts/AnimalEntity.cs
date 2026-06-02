@@ -40,6 +40,11 @@ namespace MelonS.GameProto
             (3,  1, 0.9f, 0.50f, 0.6f, new Color(0.80f, 0.75f, 0.72f, 1f)),     // Rabbit 옅은 회색
         };
 
+        // 운영자 2026-06-02: 멧돼지·닭·토끼가 사슴 실루엣 공유 → 종별 스프라이트.
+        //  SceneSetup 이 [Deer,Boar,Chicken,Rabbit] 순으로 주입.  SetSpecies 가 스왑하므로
+        //  Wildlife 의 baked 스폰 + AIDirector 런타임 스폰 모두 올바른 모양이 된다.
+        public static Sprite[] SpeciesSprites;
+
         public void SetSpecies(AnimalSpecies s)
         {
             species = s;
@@ -48,9 +53,17 @@ namespace MelonS.GameProto
             transform.localScale = new Vector3(scale, scale, 1);
             Hp = hp;
             var sR = GetComponent<SpriteRenderer>();
-            if (sR != null) sR.color = tint;
-            // #162 - baseColor 도 species tint 로 갱신 (hit-flash 후 복원에 사용)
-            baseColor = tint;
+            // 종별 스프라이트 주입돼 있으면 그걸 쓰고 tint 는 흰색(스프라이트가 색을 가짐).
+            //  없으면 기존 deer 스프라이트 + 종 tint 폴백(회귀 안전).
+            bool hasSprite = SpeciesSprites != null && (int)s < SpeciesSprites.Length
+                             && SpeciesSprites[(int)s] != null;
+            if (sR != null)
+            {
+                if (hasSprite) { sR.sprite = SpeciesSprites[(int)s]; sR.color = Color.white; }
+                else sR.color = tint;
+            }
+            // #162 - hit-flash 후 복원 baseColor (스프라이트 있으면 흰색).
+            baseColor = hasSprite ? Color.white : tint;
         }
 
         public int Hp { get; private set; }
