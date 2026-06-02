@@ -68,7 +68,7 @@ namespace MelonS.GameProto
             var t = titleGo.AddComponent<Text>();
             t.text = "📅 일정 (F4) - 클릭하여 시간대별 행동 변경";
             t.font = font; t.fontSize = 20; t.fontStyle = FontStyle.Bold;
-            t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            t.color = MelonS.GameProto.Core.UITheme.AccentGold;   // 감사 rank5: 제목 골드
             t.alignment = TextAnchor.UpperCenter;
             var trt = titleGo.GetComponent<RectTransform>();
             trt.anchorMin = new Vector2(0, 1); trt.anchorMax = new Vector2(1, 1);
@@ -81,7 +81,7 @@ namespace MelonS.GameProto
             var lt = legendGo.AddComponent<Text>();
             lt.text = "  자유  |  <color=#4d66d9>수면</color>  |  <color=#4cc070>작업</color>  |  <color=#f29940>여가</color>";
             lt.font = font; lt.fontSize = 14;
-            lt.color = new Color(0.85f, 0.85f, 0.78f, 1f);
+            lt.color = MelonS.GameProto.Core.UITheme.TextSecondary;
             lt.alignment = TextAnchor.LowerCenter;
             lt.supportRichText = true;
             var lrt = legendGo.GetComponent<RectTransform>();
@@ -145,12 +145,12 @@ namespace MelonS.GameProto
             brt.pivot = new Vector2(0, 1); brt.sizeDelta = new Vector2(ColWidth, RowHeight);
             brt.anchoredPosition = pos;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.18f, 0.20f, 0.24f, 1f);
+            img.color = MelonS.GameProto.Core.UITheme.PanelBgLight;   // 감사 rank5: 헤더셀 warm
             var tgo = new GameObject("Lbl");
             tgo.transform.SetParent(go.transform, false);
             var t = tgo.AddComponent<Text>();
             t.text = label; t.font = font; t.fontSize = 11; t.fontStyle = FontStyle.Bold;
-            t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleCenter; t.raycastTarget = false;
             var trt = tgo.GetComponent<RectTransform>();
             trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
@@ -166,12 +166,12 @@ namespace MelonS.GameProto
             brt.pivot = new Vector2(0, 1); brt.sizeDelta = new Vector2(NameColWidth, RowHeight);
             brt.anchoredPosition = pos;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.12f, 0.14f, 0.17f, 1f);
+            img.color = MelonS.GameProto.Core.UITheme.PanelBg;   // 감사 rank5: 이름셀 warm
             var tgo = new GameObject("Lbl");
             tgo.transform.SetParent(go.transform, false);
             var t = tgo.AddComponent<Text>();
             t.text = label; t.font = font; t.fontSize = 13;
-            t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleLeft; t.raycastTarget = false;
             var trt = tgo.GetComponent<RectTransform>();
             trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;

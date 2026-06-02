@@ -81,7 +81,7 @@ namespace MelonS.GameProto
             t.font = font;
             t.fontSize = 22;
             t.fontStyle = FontStyle.Bold;
-            t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            t.color = MelonS.GameProto.Core.UITheme.AccentGold;   // 감사 rank5: 제목 골드
             t.alignment = TextAnchor.UpperCenter;
             var trt = titleGo.GetComponent<RectTransform>();
             trt.anchorMin = new Vector2(0, 1);
@@ -97,7 +97,7 @@ namespace MelonS.GameProto
             ht.text = "좌클릭: 우선순위 변경 (0→1→2→3→4)   우클릭: 끔(0)";
             ht.font = font;
             ht.fontSize = 13;
-            ht.color = new Color(0.75f, 0.75f, 0.70f, 1f);
+            ht.color = MelonS.GameProto.Core.UITheme.TextSecondary;
             ht.alignment = TextAnchor.LowerCenter;
             var hrt = hintGo.GetComponent<RectTransform>();
             hrt.anchorMin = new Vector2(0, 0);
@@ -196,7 +196,8 @@ namespace MelonS.GameProto
             brt.sizeDelta = new Vector2(ColWidth, RowHeight);
             brt.anchoredPosition = pos;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.18f, 0.20f, 0.24f, 1f);
+            img.color = MelonS.GameProto.Core.UITheme.PanelBgLight;   // 감사 rank5: 헤더셀 warm
+
             var txtGo = new GameObject("Label");
             txtGo.transform.SetParent(go.transform, false);
             var t = txtGo.AddComponent<Text>();
@@ -204,7 +205,7 @@ namespace MelonS.GameProto
             t.font = font;
             t.fontSize = 14;
             t.fontStyle = FontStyle.Bold;
-            t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleCenter;
             t.raycastTarget = false;
             var trt = txtGo.GetComponent<RectTransform>();
@@ -223,14 +224,15 @@ namespace MelonS.GameProto
             brt.sizeDelta = new Vector2(NameColWidth, RowHeight);
             brt.anchoredPosition = pos;
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.12f, 0.14f, 0.17f, 1f);
+            img.color = MelonS.GameProto.Core.UITheme.PanelBg;   // 감사 rank5: 이름셀 warm
+
             var txtGo = new GameObject("Label");
             txtGo.transform.SetParent(go.transform, false);
             var t = txtGo.AddComponent<Text>();
             t.text = label;
             t.font = font;
             t.fontSize = 14;
-            t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+            t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleLeft;
             t.raycastTarget = false;
             var trt = txtGo.GetComponent<RectTransform>();
