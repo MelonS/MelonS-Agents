@@ -478,6 +478,11 @@ namespace MelonS.GameProto
             if (titleText != null)
             {
                 string title = pawn.PawnName;
+                // #UI-B 현재 행동을 제목에 표시(머리위 라벨과 동일 정보) — 운영자 "뭐하는지 항상".
+                var nameLabel = pawn.GetComponent<PawnNameLabel>();
+                string act = nameLabel != null ? nameLabel.CurrentActivity : "";
+                if (!string.IsNullOrEmpty(act))
+                    title += $"  <size=13><color=#e8b560>· {act}</color></size>";
                 if (traits != null)
                 {
                     string ts = traits.SummaryKr();

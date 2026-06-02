@@ -17,6 +17,9 @@ namespace MelonS.GameProto
 
         private TextMesh nameTm;
         private TextMesh statusTm;
+
+        /// 현재 머리위 행동 라벨(떠도는중/벌목/수면 등).  인스펙트 패널이 같은 정보를 읽어 표시.
+        public string CurrentActivity => statusTm != null ? statusTm.text : "";
         private SpriteRenderer plate;          // #UI-restyle U3 — dark plate behind name+status
         private string lastPlateName = null;
         private string lastPlateStatus = null;
