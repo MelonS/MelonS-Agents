@@ -341,6 +341,9 @@ namespace MelonS.GameProto
 
         public bool HasTarget => target.HasValue;
         public bool IsMoving => target.HasValue;
+        // 운영자 2026-06-02: 떠도는중(idle wander) 시 PawnUtilityAI 가 0.5 로 낮춰 절반 속도.
+        //  실제 작업 이동은 1.0.  모든 이동 속도 계산에 곱해진다.
+        public float MoveSpeedScale = 1f;
 
         // 운영자 요청 (우클릭 이동 경로 표시) — READ-ONLY exposure of the live A*
         //  path for PathLineRenderer.  Returns the REMAINING cell-centre world
@@ -516,7 +519,7 @@ namespace MelonS.GameProto
                     if (TryNearestWalkable(myCell, out Vector2Int open))
                     {
                         Vector2 dest = PathGrid.CellToWorld(open);
-                        float speed = stats.moveSpeed
+                        float speed = stats.moveSpeed * MoveSpeedScale
                             * (health != null ? health.MovementSpeedMultiplier() : 1f);
                         var ab = GetComponent<PawnAbilities>();
                         if (ab != null) speed *= ab.moveSpeedMul;
@@ -546,7 +549,7 @@ namespace MelonS.GameProto
                 }
 
                 Vector2 curP = transform.position;
-                float speedMulP = health != null ? health.MovementSpeedMultiplier() : 1f;
+                float speedMulP = MoveSpeedScale * (health != null ? health.MovementSpeedMultiplier() : 1f);
                 var abilP = GetComponent<PawnAbilities>();
                 if (abilP != null) speedMulP *= abilP.moveSpeedMul;
                 // #157 / W-M4-05 #21 - 바닥 위 이동 보너스.  BonusAt 가 해당 cell 의
@@ -589,7 +592,7 @@ namespace MelonS.GameProto
 
             Vector2 cur = transform.position;
             // Step45: 다리 다친 만큼 속도 감소
-            float speedMul = health != null ? health.MovementSpeedMultiplier() : 1f;
+            float speedMul = MoveSpeedScale * (health != null ? health.MovementSpeedMultiplier() : 1f);
             // #120 - PawnAbilities move speed multiplier
             var _abil = GetComponent<PawnAbilities>();
             if (_abil != null) speedMul *= _abil.moveSpeedMul;

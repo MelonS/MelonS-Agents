@@ -543,22 +543,35 @@ def gen_chicken():
 
 # ─── rabbit 24x24 - 토끼 (소형 + 긴 귀 2 + 큰 뒷다리) ─────────────
 def gen_rabbit():
+    # 앉은 자세 토끼 — 둥근 몸통 + 위로 든 머리 + 긴 귀 2 + 큰 뒷다리 + 꼬리 puff.
     im = new_img(24, 24)
     R, D, L = RAB_COLOR, RAB_DK, RAB_BLY
-    rect_fill(im, 7, 13, 16, 18, R)         # 작은 낮은 몸통
-    hline(im, 8, 15, 18, D)
-    hline(im, 8, 15, 17, L)
-    rect_fill(im, 4, 11, 8, 16, R)          # 머리(좌)
-    vline(im, 5, 6, 11, R); vline(im, 5, 6, 7, D)   # 긴 귀1
-    vline(im, 7, 6, 11, R); vline(im, 7, 6, 7, D)   # 긴 귀2
-    put(im, 5, 13, OUTLINE_STORY)           # 눈
-    put(im, 3, 14, (200, 120, 120, 255))    # 코
-    rect_fill(im, 13, 16, 17, 19, D)        # 큰 뒷다리
-    vline(im, 8, 19, 21, D); put(im, 8, 21, OUTLINE_STORY)   # 앞다리
-    vline(im, 14, 19, 21, D); put(im, 14, 21, OUTLINE_STORY)
-    put(im, 17, 14, L); put(im, 18, 14, L)  # 꼬리 puff
-    rect_outline(im, 7, 13, 16, 18, OUTLINE_STORY)
-    rect_outline(im, 4, 11, 8, 16, OUTLINE_STORY)
+    # 둥근 몸통(하단)
+    rect_fill(im, 7, 13, 16, 20, R)
+    rect_fill(im, 8, 12, 15, 13, R)
+    hline(im, 8, 15, 20, D)                 # 바닥 그늘
+    hline(im, 8, 14, 13, L)                 # 등 하이라이트
+    # 머리(앞-좌, 위로)
+    rect_fill(im, 4, 8, 9, 14, R)
+    put(im, 9, 8, R)
+    # 긴 귀 2개(위로 쫑긋)
+    rect_fill(im, 5, 1, 6, 8, R); put(im, 5, 2, L); put(im, 5, 3, L)
+    rect_fill(im, 8, 1, 9, 8, R); put(im, 8, 2, L); put(im, 8, 3, L)
+    put(im, 5, 6, D); put(im, 8, 6, D)
+    # 눈 + 분홍 코
+    put(im, 6, 10, OUTLINE_STORY)
+    put(im, 3, 11, (215, 140, 140, 255))
+    # 큰 뒷다리(haunch)
+    rect_fill(im, 13, 17, 17, 20, D)
+    put(im, 14, 16, R)
+    # 앞발 2
+    vline(im, 9, 19, 21, D); put(im, 9, 21, OUTLINE_STORY)
+    vline(im, 12, 19, 21, D); put(im, 12, 21, OUTLINE_STORY)
+    # 꼬리 puff(우)
+    rect_fill(im, 17, 14, 18, 16, L)
+    # outline
+    rect_outline(im, 7, 13, 16, 20, OUTLINE_STORY)
+    rect_outline(im, 4, 8, 9, 14, OUTLINE_STORY)
     return im
 
 

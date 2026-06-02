@@ -216,12 +216,21 @@ namespace MelonS.GameProto
             //  pacing 이 일감 획득을 굶기지 않는다.  이동 중(hop 수행 중)엔 새 hop 안 함.
             if (Time.timeSinceLevelLoad - lastDecision < decisionInterval)
             {
-                if (HasRealActivity()) hasIdleAnchor = false;
-                else if (movement != null && !movement.IsMoving
-                         && Time.timeSinceLevelLoad - lastIdleStep >= idleStepInterval)
+                if (HasRealActivity())
                 {
-                    IssueWanderHop();
-                    lastIdleStep = Time.timeSinceLevelLoad;
+                    hasIdleAnchor = false;
+                    if (movement != null) movement.MoveSpeedScale = 1f;   // 작업 이동은 정상 속도
+                }
+                else
+                {
+                    // 운영자 2026-06-02: 떠도는중 이동은 절반 속도(한가로이 어슬렁).
+                    if (movement != null) movement.MoveSpeedScale = 0.5f;
+                    if (movement != null && !movement.IsMoving
+                        && Time.timeSinceLevelLoad - lastIdleStep >= idleStepInterval)
+                    {
+                        IssueWanderHop();
+                        lastIdleStep = Time.timeSinceLevelLoad;
+                    }
                 }
                 return;
             }
