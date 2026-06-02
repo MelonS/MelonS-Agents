@@ -35,8 +35,8 @@ namespace MelonS.GameProto
 
         // 우하단 클러스터 텍스트들 (Canvas 루트에 생성)
         private Text timeText;
-        private Text dateText;
-        private Text seasonText;
+        // 우하단 클러스터는 '시각' 전담.  날짜(달력)는 좌상단 topBarDate 가 표시(중복 제거).
+        private Text topBarDate;   // TopBar 좌측 gold Text — 빈 슬롯을 날짜로 채움(운영자 fb)
 
         // 갱신 throttle — 값이 바뀐 분(minute)/일(day) 에만 string 재구성 (GC 절감)
         private int lastShownMinute = -1;
@@ -47,8 +47,9 @@ namespace MelonS.GameProto
         {
             // 1) TopBar 내 옛 좌상단 슬롯 비우기 (RequireComponent 로 Text 는 항상 존재).
             //    GO/Text 컴포넌트는 남겨두되 글자만 공백 → 우하단 클러스터가 유일한 readout.
-            var oldTxt = GetComponent<Text>();
-            if (oldTxt != null) oldTxt.text = string.Empty;
+            // 좌상단 슬롯(TopBar 가 만든 gold Text)을 비우지 않고 '날짜(달력)' readout 으로
+            //  살린다 — 운영자 "탑바 좌측 빈 슬롯".  우하단 클러스터는 '시각' 전담 → 중복 없음.
+            topBarDate = GetComponent<Text>();
 
             BuildBottomRightCluster();
         }
@@ -68,8 +69,8 @@ namespace MelonS.GameProto
 
             // 패널 root — 우하단 앵커.  하단 명령바(GuiControlBar, y=24, 높이≈72) 위에
             //  떠 있도록 bottom margin 을 명령바 위로 잡는다 (the reference sim 우하단 배치).
-            const float panelW = 200f;
-            const float panelH = 96f;
+            const float panelW = 170f;
+            const float panelH = 52f;   // 시각 단일 라인 → 컴팩트(날짜는 좌상단)
             const float marginRight = 16f;
             const float marginBottom = 120f; // #275 속도패널(높이 72, y24~96) 위 안전 간격(108→120)
 
@@ -94,9 +95,8 @@ namespace MelonS.GameProto
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
-            timeText   = MakeLine(content, "ClockTime",   font, 26, FontStyle.Bold,   UITheme.AccentGold);
-            dateText   = MakeLine(content, "ClockDate",   font, 20, FontStyle.Normal, UITheme.TextPrimary);
-            seasonText = MakeLine(content, "ClockSeason", font, 18, FontStyle.Normal, UITheme.TextSecondary);
+            // 우하단은 시각만 (날짜는 좌상단).  단일 라인이라 패널도 컴팩트.
+            timeText   = MakeLine(content, "ClockTime",   font, 28, FontStyle.Bold,   UITheme.AccentGold);
         }
 
         private static Text MakeLine(RectTransform parent, string name, Font font,
@@ -123,7 +123,7 @@ namespace MelonS.GameProto
         {
             if (GameClock.Instance == null) return;
             // headless 등으로 클러스터가 안 만들어졌으면 no-op.
-            if (timeText == null || dateText == null || seasonText == null) return;
+            if (timeText == null) return;
 
             int d = GameClock.Instance.Day;
             int h = GameClock.Instance.Hour;
@@ -144,10 +144,9 @@ namespace MelonS.GameProto
             // the reference sim 세계관 정합: 회계용어 "N분기" 대신 계절명을 날짜 전면에.
             //  예) "봄 1일, 5500년" — 계절을 첫머리에 둬 the reference sim 의 "Spring 1st, 5500"
             //  감성과 맞춘다.  연도는 뒤에 붙여 보조 정보로.
-            // 감사 rank8: 계절이 날짜줄+보조줄에 중복("봄 1일,5500년" + "봄철")이던 것 제거.
-            //  날짜줄=계절+일, 보조줄=연도 로 분리해 중복 없이 정보 유지.
-            dateText.text = $"{season} {dayInQuadrum}일";
-            seasonText.text = $"{year}년";
+            // 좌상단 = 날짜(달력) readout.  우하단 = 시각 전담 → 중복 없이 정보 분리
+            //  (운영자: 탑바 좌측 빈 슬롯 채움).
+            if (topBarDate != null) topBarDate.text = $"{season} {dayInQuadrum}일, {year}년";
         }
 
         /// <summary>24시간 Hour/Minute → "6:08 AM" / "12:00 PM" 형식.</summary>
