@@ -287,9 +287,6 @@ leap from "looks and sounds like the reference sim" to "*plays* like the referen
 
 - Save/load entity sub-state (BedQuality / StockpilePriority / TreeSpecies /
   WallMaterial) not yet serialized — reverts to default on load.
-- **Save/load UI row not appearing** (#44) — the settings panel's save/load row
-  stays hidden because `GameSaveButtons` isn't found in the built scene at
-  runtime; whether F5/F9 save/load is itself affected needs re-verification.
 - `carryCapacity` defined but not wired to a hauler carry cap.
 - BanditEnemy body-parts (reuse PawnHealth).
 
