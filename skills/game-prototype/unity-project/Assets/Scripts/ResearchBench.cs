@@ -10,6 +10,8 @@ namespace MelonS.GameProto
     public class ResearchBench : MonoBehaviour
     {
         [SerializeField] private float researchRadius = 1.5f;
+        // 머리위 상태 라벨(PawnNameLabel)이 "연구" 표시 판정에 쓰는 read-only 반경.
+        public float Radius => researchRadius;
         // #195 - the reference sim wiki: research bench 2x1 footprint.  sprite 32x16 정합.
         public static readonly Vector2Int FootprintSize = new Vector2Int(2, 1);
 

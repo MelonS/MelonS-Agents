@@ -12,7 +12,19 @@ namespace MelonS.GameProto
     public class PawnUtilityAI : MonoBehaviour
     {
         [SerializeField] private float decisionInterval = 1.5f;
-        [SerializeField] private float idleWanderRadius = 3f;
+        // 운영자 2026-06-02: 떠도는중 = 근처 타일 왕복.  반경 3→2 로 좁혀 "근처" 유지.
+        //  non-serialized(=평범 private): 프리팹에 구워진 옛 값(3)이 덮어쓰지 않도록 —
+        //  source 값이 항상 적용된다(거대 씬 regen 커밋 불필요).
+        private float idleWanderRadius = 2f;
+        // 떠도는중 hop 간격 — 운영자 2026-06-02 "2초에 1칸은 움직여야": 1.5s 마다 1칸+
+        //  (2초 이내 최소 1칸 보장).  work-decision(1.5s)과 별개로 idle 림을 또박또박 이동.
+        //  non-serialized: 프리팹 직렬화 override 방지(0.8 잔존값 → source 1.5 항상 적용).
+        private float idleStepInterval = 1.5f;
+        private float lastIdleStep = -999f;
+        // 왕복(왔다갔다) 기준점 — idle 시작 시 고정, 그 주변 근처 타일을 오간다.
+        //  실제 작업/필요 상태가 되면 해제 → 다음 idle 때 새 위치에 다시 잡음.
+        private Vector2 idleAnchor;
+        private bool hasIdleAnchor;
         [Header("Day 11: food gather priority")]
         [SerializeField] private float foodHungryThreshold = 40f;
         [Header("Day 24: hunt when stockpile food low")]
@@ -112,7 +124,11 @@ namespace MelonS.GameProto
                 //    벌목 = 우클릭 '벌목 우선'(PawnChopper) 으로 플레이어가 지정
                 //  → 자원이 플레이어 지정으로만 모이고 건설로 소비된다(the reference sim 경제).
                 //  운반·요리·수확·사냥(생존)·경작 zone 은 the reference sim 처럼 자동 유지.
-                new WanderAction(),
+                // 운영자 2026-06-02: idle 배회는 리스트의 WanderAction(1.5s 간격, 긴 정지)
+                //  대신 Update 의 anchored pacing(idleStepInterval 0.8s, 근처 타일 왕복)이
+                //  전담한다.  WanderAction 이 리스트에 있으면 decision 프레임마다 폰을 멀리
+                //  움직여 pacing 의 '정지 상태' 조건을 굶겼다(IdleHop 0회 버그) → 제거.
+                //  (WanderAction 클래스 자체는 TestV41_WanderAction 이 직접 쓰므로 유지.)
             };
         }
 
@@ -191,7 +207,22 @@ namespace MelonS.GameProto
                 }
             }
 
-            if (Time.timeSinceLevelLoad - lastDecision < decisionInterval) return;
+            // work-decision 주기(1.5s)가 아직이면 → 그 사이 프레임엔 떠도는중 pacing 만.
+            //  운영자 2026-06-02: 작업 없는 림은 idleAnchor 주변 근처 타일을 idleStepInterval
+            //  (0.8s)마다 왕복 → 1.5s 대기 동안 가만히 서 있지 않고 또박또박 왔다갔다.
+            //  decision 주기 프레임(아래)에서는 work 탐지/Decide 가 정상 수행돼 일감을 잡으므로
+            //  pacing 이 일감 획득을 굶기지 않는다.  이동 중(hop 수행 중)엔 새 hop 안 함.
+            if (Time.timeSinceLevelLoad - lastDecision < decisionInterval)
+            {
+                if (HasRealActivity()) hasIdleAnchor = false;
+                else if (movement != null && !movement.IsMoving
+                         && Time.timeSinceLevelLoad - lastIdleStep >= idleStepInterval)
+                {
+                    IssueWanderHop();
+                    lastIdleStep = Time.timeSinceLevelLoad;
+                }
+                return;
+            }
 
             if (needs != null && needs.IsSleeping)
             {
@@ -297,6 +328,51 @@ namespace MelonS.GameProto
                     if (action.TryStart(ctx)) return;
                 }
             }
+        }
+
+        // 떠도는중 판정: 실제 작업 task / 생존 필요 / 징집·수동조작 중이면 "활동 중"
+        //  → pacing 안 함 + anchor 해제.  하나도 없으면 idle → 근처 타일 왕복 대상.
+        private bool HasRealActivity()
+        {
+            if (entity != null && (entity.IsDrafted || entity.IsDead || entity.IsUnderManualControl))
+                return true;
+            // NOTE: WantsAutoSleep 는 제외 — 침대가 없어 자려 해도 못 가는 림은 실제론
+            //  서성이는 "떠도는중"(라벨도 동일).  침대가 있으면 위쪽 autosleep 블록이 먼저
+            //  return 하므로 여기 도달 안 함 → 침대 가는 림을 배회시키지 않는다.
+            //  HasRestOrder 도 위 rest 블록(146)이 먼저 return → 여기선 무관.
+            if (needs != null && (needs.IsSleeping || needs.IsBreaking || needs.IsEating
+                || needs.IsForcedResting))
+                return true;
+            if (chopper != null && chopper.HasTask) return true;
+            if (gatherer != null && gatherer.HasTask) return true;
+            if (hunter != null && hunter.HasTask) return true;
+            if (cook != null && cook.HasTask) return true;
+            if (hauler != null && hauler.HasTask) return true;
+            if (harvester != null && harvester.HasTask) return true;
+            if (builder != null && builder.HasTask) return true;
+            if (miner != null && miner.HasTask) return true;
+            if (doctor != null && doctor.HasTask) return true;
+            return false;
+        }
+
+        // idleAnchor 주변 근처 타일(반경 idleWanderRadius) 하나로 hop.  tile-center 스냅
+        //  → 격자 위를 또박또박 오가는 "왔다갔다" 느낌.  anchor 를 기준으로 픽하므로
+        //  멀리 표류하지 않고 한 구역을 왕복한다.  movement 가 clamp/blocked 처리.
+        private void IssueWanderHop()
+        {
+            if (movement == null) return;
+            if (!hasIdleAnchor) { idleAnchor = transform.position; hasIdleAnchor = true; }
+            Vector2 cur = transform.position;
+            Vector2 curTile = new Vector2(Mathf.Floor(cur.x) + 0.5f, Mathf.Floor(cur.y) + 0.5f);
+            Vector2 raw = idleAnchor + Random.insideUnitCircle * idleWanderRadius;
+            Vector2 tile = new Vector2(Mathf.Floor(raw.x) + 0.5f, Mathf.Floor(raw.y) + 0.5f);
+            // 최소 1칸 이동 보장(운영자: "2초에 1칸"): 현재 타일과 같으면 인접 칸으로 민다.
+            if (Mathf.Approximately(tile.x, curTile.x) && Mathf.Approximately(tile.y, curTile.y))
+            {
+                Vector2[] card = { Vector2.right, Vector2.left, Vector2.up, Vector2.down };
+                tile = curTile + card[Random.Range(0, 4)];
+            }
+            movement.SetTarget(tile);
         }
 
         // R5: FindNearestStove/Animal/Bush/Tree moved to AI/PawnActions.cs (각 action 내부)

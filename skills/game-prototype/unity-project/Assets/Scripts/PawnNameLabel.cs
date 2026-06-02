@@ -27,6 +27,17 @@ namespace MelonS.GameProto
         private PawnGatherer gatherer;
         private PawnCook cook;
         private PawnMovement movement;
+        // 운영자 2026-06-02: "림이 머하는지 머리위에 항상" — 누락 워커 전부 배선.
+        private PawnBuilder builder;
+        private PawnHauler hauler;
+        private PawnDoctor doctor;
+        private PawnHarvester harvester;
+        private PawnMiner miner;
+
+        // "연구" 판정용 bench 캐시(모든 라벨 공유, 2s 갱신).  연구는 per-pawn 태스크가
+        //  없고 bench 근접+activeTech 로만 감지 → idle 분기에서만 조회(비용 게이트).
+        private static ResearchBench[] _benchCache;
+        private static float _nextBenchScan = -10f;
 
         private float lastStatusUpdate;
         private int plateRefitFrames = 4;   // re-fit plate a few frames so TextMesh bounds bake
@@ -40,6 +51,11 @@ namespace MelonS.GameProto
             gatherer = GetComponent<PawnGatherer>();
             cook = GetComponent<PawnCook>();
             movement = GetComponent<PawnMovement>();
+            builder = GetComponent<PawnBuilder>();
+            hauler = GetComponent<PawnHauler>();
+            doctor = GetComponent<PawnDoctor>();
+            harvester = GetComponent<PawnHarvester>();
+            miner = GetComponent<PawnMiner>();
 
             string name = entity != null ? entity.PawnName : "Pawn";
 
@@ -176,19 +192,60 @@ namespace MelonS.GameProto
             }
         }
 
+        // 운영자 2026-06-02: 림이 "머하는지" 머리위에 항상 표시.  우선순위(위→아래):
+        //  사망 > 징집 > 정신붕괴 > 수면 > 식사 > 휴식 > (작업 9종) > 이동 > 연구 > 유휴.
+        //  needs/생존 상태가 작업보다 우선, 작업이 단순 이동보다 우선(의도 표시).
+        //  마지막 유휴 fallback 으로 절대 빈칸이 되지 않게 한다("항상").
         private string ComputeStatusLabel()
         {
             if (entity == null) return "";
             if (entity.IsDead) return "사망";
             if (entity.IsDrafted) return "[징집]";
-            if (needs != null && needs.IsSleeping) return "수면";
             if (needs != null && needs.IsBreaking) return "정신붕괴";
+            if (needs != null && needs.IsSleeping) return "수면";
+            if (needs != null && needs.IsEating) return "식사";
+            if (needs != null && needs.IsForcedResting) return "휴식";
+            // 작업 9종 — HasTask(이동 포함, 의도 단계부터 표시).
+            if (builder != null && builder.HasTask)
+                return builder.HasDeconstructTask ? "철거" : "건축";
             if (chopper != null && chopper.HasTask) return "벌목";
-            if (hunter != null && hunter.HasTask) return "사냥";
+            if (miner != null && miner.HasTask) return "채굴";
+            if (harvester != null && harvester.HasTask) return "수확";
             if (gatherer != null && gatherer.HasTask) return "채집";
+            if (hunter != null && hunter.HasTask) return "사냥";
             if (cook != null && cook.HasTask) return "요리";
-            if (movement != null && movement.IsMoving) return "이동";
-            return "";
+            if (hauler != null && hauler.HasTask) return "운반";
+            if (doctor != null && doctor.HasTask) return "치료";
+            // 연구: per-pawn 태스크가 없으므로 정지 상태에서 활성 연구 + bench 근접으로 감지.
+            //  (이동 중엔 연구가 아니므로 정지 조건으로 게이트 → bench 옆 통과 오라벨 방지.)
+            bool moving = movement != null && movement.IsMoving;
+            if (!moving && IsResearchingHere()) return "연구";
+            // 작업이 없으면 림은 idleWanderRadius 안을 어슬렁거린다(PawnUtilityAI WanderAction).
+            //  걷든 잠깐 멈추든 결국 무목적 배회 → 운영자 2026-06-02 요청대로 "떠도는중"으로 통일
+            //  (이전 "이동"+"유휴" 분리는 wander-걸음/멈춤 사이 깜빡임 + "유휴"=아무것도 안 함 오해).
+            return "떠도는중";
+        }
+
+        // 정지한 림이 활성 연구 bench 반경 안이면 "연구".  ResearchManager.activeTech
+        //  가 있어야(진행 중) 빈 bench 옆 idle 을 오라벨하지 않는다.  bench 스캔은 이
+        //  분기(작업/이동 없는 idle)에서만 → 2s 캐시로 비용 게이트.
+        private bool IsResearchingHere()
+        {
+            var rm = ResearchManager.Instance;
+            if (rm == null || rm.activeTech == null || rm.activeTech.completed) return false;
+            if (Time.time >= _nextBenchScan || _benchCache == null)
+            {
+                _benchCache = Object.FindObjectsByType<ResearchBench>(FindObjectsSortMode.None);
+                _nextBenchScan = Time.time + 2f;
+            }
+            if (_benchCache == null) return false;
+            Vector2 me = transform.position;
+            foreach (var b in _benchCache)
+            {
+                if (b == null) continue;
+                if (Vector2.Distance(me, b.transform.position) <= b.Radius) return true;
+            }
+            return false;
         }
     }
 }
