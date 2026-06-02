@@ -19,6 +19,13 @@ namespace MelonS.GameProto
         private GameObject currentInspect;
         public GameObject CurrentInspect => currentInspect;
 
+        // 진단용(-inspectpawn): 첫 PawnEntity 를 선택해 인스펙트 패널을 띄운다 → 스크린샷 검증.
+        public void DiagnosticInspectFirstPawn()
+        {
+            var p = Object.FindFirstObjectByType<PawnEntity>();
+            if (p != null) { Select(p); currentInspect = p.gameObject; }
+        }
+
         private void Awake()
         {
             if (mainCamera == null) mainCamera = Camera.main;

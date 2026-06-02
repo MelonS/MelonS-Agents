@@ -19,6 +19,7 @@ namespace MelonS.GameProto
         public string outputPath = "";
         private bool openSettings = false;  // 진단용: 캡처 직전 설정 메뉴를 연다 (-opensettings)
         private bool testSave = false;      // 진단용: 캡처 직전 저장을 트리거 (-testsave, #44 검증)
+        private bool inspectPawn = false;   // 진단용: 첫 림 선택해 인스펙트 패널 표시 (-inspectpawn)
 
         private void Start()
         {
@@ -42,6 +43,7 @@ namespace MelonS.GameProto
                 }
                 if (args[i] == "-opensettings") openSettings = true;
                 if (args[i] == "-testsave") testSave = true;
+                if (args[i] == "-inspectpawn") inspectPawn = true;
             }
             if (!requested || delaySeconds <= 0f || string.IsNullOrEmpty(outputPath))
             {
@@ -68,6 +70,14 @@ namespace MelonS.GameProto
             {
                 MelonS.GameProto.SettingsMenu.Open();
                 yield return new WaitForSeconds(0.4f);
+            }
+
+            // 진단(-inspectpawn): 첫 림을 선택해 인스펙트 패널을 띄운다(UI 검증).
+            if (inspectPawn)
+            {
+                var sel = Object.FindFirstObjectByType<MelonS.GameProto.ClickSelector>();
+                if (sel != null) sel.DiagnosticInspectFirstPawn();
+                yield return new WaitForSeconds(0.5f);
             }
 
             // 진단(-testsave, #44): GameSaveButtons 호스트를 찾아 저장을 트리거 → save.json 작성 검증.
