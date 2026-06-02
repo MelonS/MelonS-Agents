@@ -52,9 +52,12 @@ namespace MelonS.GameProto
         private AudioBank cachedAudio;
         private bool audioResolved;
 
-        // Panel geometry
+        // Panel geometry — 운영자 #39 "설정 메뉴 깨짐": 콘텐츠에 맞춰 높이 동적 조정
+        //  (저장행 유무에 따라).  과거엔 320 고정 + SFX y=-140 라 헤더 아래 죽은 공백이 생겨
+        //  '깨진' 인상.  슬라이더를 헤더 바로 아래로 올리고 저장행을 하단에 둔다.
         private const float PanelW = 360f;
-        private const float PanelH = 320f;
+        private const float PanelH = 286f;          // 저장행 포함 높이
+        private const float PanelHNoSave = 210f;    // 저장행 숨김 시 높이
 
         /// <summary>
         /// Create the panel (once) attached to the active scene's Canvas, if not
@@ -161,7 +164,7 @@ namespace MelonS.GameProto
             slRt.anchorMax = new Vector2(0.5f, 1f);
             slRt.pivot = new Vector2(0.5f, 1f);
             slRt.sizeDelta = new Vector2(PanelW - UITheme.PadOuter * 2f, 56);
-            slRt.anchoredPosition = new Vector2(0, -56);
+            slRt.anchoredPosition = new Vector2(0, -176);  // 하단(슬라이더 아래)
 
             var slLabel = MakeLabel(saveLoadRow.transform, "저장 / 불러오기",
                 new Vector2(0, 0.5f), new Vector2(0, 18), TextAnchor.MiddleLeft, 16, UITheme.TextSecondary);
@@ -193,15 +196,15 @@ namespace MelonS.GameProto
             loadRt.pivot = new Vector2(1f, 0f);
             loadRt.anchoredPosition = new Vector2(0, 0);
 
-            // ---- SFX volume slider ----
-            float sfxY = -140;
+            // ---- SFX volume slider ---- (헤더 바로 아래로 올림)
+            float sfxY = -54;
             MakeLabel(panelContent, "SFX (사운드)", new Vector2(0f, 1f), new Vector2(0, sfxY),
                 TextAnchor.MiddleLeft, 16, UITheme.TextPrimary, anchorTopLeft: true, height: 22);
             sfxSlider = MakeSlider(panelContent, "SfxSlider", new Vector2(0, sfxY - 26),
                 OnSfxChanged);
 
             // ---- MUSIC volume slider ----
-            float musicY = -210;
+            float musicY = -116;
             MakeLabel(panelContent, "MUSIC (음악)", new Vector2(0f, 1f), new Vector2(0, musicY),
                 TextAnchor.MiddleLeft, 16, UITheme.TextPrimary, anchorTopLeft: true, height: 22);
             musicSlider = MakeSlider(panelContent, "MusicSlider", new Vector2(0, musicY - 26),
@@ -248,8 +251,12 @@ namespace MelonS.GameProto
         /// </summary>
         private void SyncSaveLoadAvailability()
         {
-            bool canSave = Object.FindFirstObjectByType<GameSaveButtons>() != null;
+            // #39 GameSaveButtons 의 GO 가 비활성(코너 S/L 버튼 숨김)이면 기본 Find 가 못 찾아
+            //  저장행이 영영 안 떴음 → 비활성 포함으로 조회.
+            bool canSave = Object.FindFirstObjectByType<GameSaveButtons>(FindObjectsInactive.Include) != null;
             if (saveLoadRow != null) saveLoadRow.SetActive(canSave);
+            // #39 저장행 유무에 따라 패널 높이를 조정해 하단 죽은 공백 제거.
+            if (rt != null) rt.sizeDelta = new Vector2(PanelW, canSave ? PanelH : PanelHNoSave);
         }
 
         private void SyncSlidersFromAudio()
@@ -467,13 +474,14 @@ namespace MelonS.GameProto
             var bgGo = new GameObject("Background");
             bgGo.transform.SetParent(go.transform, false);
             var bgImg = bgGo.AddComponent<Image>();
-            bgImg.color = UITheme.PanelBgLight;
+            // #39 저대비로 슬라이더가 가는 선처럼 보였음 → 어두운 트랙 색으로 또렷하게.
+            bgImg.color = new Color(0.10f, 0.10f, 0.13f, 1f);
             bgImg.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
             bgImg.type = Image.Type.Sliced;
             bgImg.raycastTarget = true;
             var bgRt = bgGo.GetComponent<RectTransform>();
-            bgRt.anchorMin = new Vector2(0f, 0.25f);
-            bgRt.anchorMax = new Vector2(1f, 0.75f);
+            bgRt.anchorMin = new Vector2(0f, 0.18f);
+            bgRt.anchorMax = new Vector2(1f, 0.82f);
             bgRt.sizeDelta = Vector2.zero;
             bgRt.anchoredPosition = Vector2.zero;
 

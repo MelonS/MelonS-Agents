@@ -17,6 +17,7 @@ namespace MelonS.GameProto
     {
         public float delaySeconds = 0f;
         public string outputPath = "";
+        private bool openSettings = false;  // 진단용: 캡처 직전 설정 메뉴를 연다 (-opensettings)
 
         private void Start()
         {
@@ -38,6 +39,7 @@ namespace MelonS.GameProto
                     delaySeconds = d;
                     requested = true;
                 }
+                if (args[i] == "-opensettings") openSettings = true;
             }
             if (!requested || delaySeconds <= 0f || string.IsNullOrEmpty(outputPath))
             {
@@ -58,6 +60,13 @@ namespace MelonS.GameProto
         private IEnumerator CaptureAndQuit()
         {
             yield return new WaitForSeconds(delaySeconds);
+
+            // 진단(-opensettings): 캡처 직전 설정 메뉴를 열어 레이아웃을 확인.
+            if (openSettings)
+            {
+                MelonS.GameProto.SettingsMenu.Open();
+                yield return new WaitForSeconds(0.4f);
+            }
 
             string dir = Path.GetDirectoryName(outputPath);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
