@@ -375,6 +375,31 @@ namespace MelonS.GameProto
             movement.SetTarget(tile);
         }
 
+        // 현재 active worker 의 작업 대상 월드 좌표 — 머리방향(PawnFacing)·작업 스윙
+        //  (PawnPoseDriver) 연출의 단일 출처(운영자 2026-06-02 "일하는 게 보이게").
+        //  우선순위는 라벨과 동일하게 채집계열보다 건설·채취를 앞에 둔다.  읽기 전용.
+        public bool TryGetWorkTargetPos(out Vector3 pos)
+        {
+            pos = default;
+            if (builder != null && builder.HasTask && builder.Target != null)
+            { pos = builder.Target.transform.position; return true; }
+            if (chopper != null && chopper.HasTask && chopper.Target != null)
+            { pos = chopper.Target.transform.position; return true; }
+            if (miner != null && miner.HasTask && miner.Target != null)
+            { pos = miner.Target.transform.position; return true; }
+            if (harvester != null && harvester.HasTask && harvester.Target != null)
+            { pos = harvester.Target.transform.position; return true; }
+            if (gatherer != null && gatherer.HasTask && gatherer.Target != null)
+            { pos = gatherer.Target.transform.position; return true; }
+            if (hunter != null && hunter.HasTask && hunter.Target != null)
+            { pos = hunter.Target.transform.position; return true; }
+            if (cook != null && cook.HasTask && cook.Target != null)
+            { pos = cook.Target.transform.position; return true; }
+            if (doctor != null && doctor.HasTask && doctor.Target != null)
+            { pos = doctor.Target.transform.position; return true; }
+            return false;
+        }
+
         // R5: FindNearestStove/Animal/Bush/Tree moved to AI/PawnActions.cs (각 action 내부)
 
         // Day 48: drafted pawn 전투 처리.  manual move target는 이미

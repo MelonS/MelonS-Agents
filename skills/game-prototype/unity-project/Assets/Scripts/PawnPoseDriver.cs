@@ -142,6 +142,12 @@ namespace MelonS.GameProto
         private PawnHauler hauler;
         private PawnEntity pawnEntity;
         private PawnHealth health;            // 상태 source (poll, 구독 X — bug #7)
+        // 작업 스윙(운영자 2026-06-02 "일하는 게 보이게"): 정지 상태에서 작업 대상이 있으면
+        //  주기적으로 lunge 를 재사용해 벌목/채굴/건축 망치질 모션을 낸다.
+        private PawnMovement movement;
+        private PawnUtilityAI ai;
+        [SerializeField] private float workSwingInterval = 0.5f;  // 작업 jab 주기(초)
+        private float nextWorkSwing;
         // 사망 시 숨길 머리위 바(HpBg/HpFill/MoodBg/MoodFill) 와 이름/상태 라벨은
         //  자식 GameObject 이름으로 직접 토글(아래 SetBarsAndLabelVisible).
         // 이름/상태 라벨 자식 렌더러(PawnNameLabel 가 만든 child GO).
@@ -169,6 +175,8 @@ namespace MelonS.GameProto
             hauler     = GetComponent<PawnHauler>();
             pawnEntity = GetComponent<PawnEntity>();
             health     = GetComponent<PawnHealth>();
+            movement   = GetComponent<PawnMovement>();
+            ai         = GetComponent<PawnUtilityAI>();
             bodyChild  = ResolveBodyChild();
             bundleRenderer = EnsureBundleChild();
         }
@@ -384,9 +392,24 @@ namespace MelonS.GameProto
 
             bool attacking = DetectAttack();
 
-            if (attacking && !lungeActive)
+            // 작업 스윙: 공격이 아니고, 제자리에서(이동 중 아님) 작업 대상이 있으면
+            //  workSwingInterval 마다 lunge 를 재사용 → 벌목/채굴/건축 등 망치질 모션.
+            //  PawnFacing 이 작업 대상을 바라보므로 아래 lunge 가 flipX(대상 방향)로 나간다.
+            bool workSwing = false;
+            if (!attacking && !lungeActive)
             {
-                // Trigger a new lunge.
+                bool stationary = movement == null || !movement.IsMoving;
+                if (stationary && ai != null && ai.TryGetWorkTargetPos(out _)
+                    && Time.unscaledTime >= nextWorkSwing)
+                {
+                    workSwing = true;
+                    nextWorkSwing = Time.unscaledTime + workSwingInterval;
+                }
+            }
+
+            if ((attacking || workSwing) && !lungeActive)
+            {
+                // Trigger a new lunge (combat attack OR work jab).
                 lungeActive = true;
                 currentLungeX = lungeDistance;
                 lungeTimer = lungeReturnSec;

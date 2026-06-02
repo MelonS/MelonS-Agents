@@ -71,11 +71,15 @@ namespace MelonS.GameProto
         private float lastX;
         // Whether lastX has been seeded (so frame 1 doesn't read a garbage delta).
         private bool hasLastX;
+        // 작업 중(정지) 림이 마지막 이동방향을 멍하니 유지하지 않고 작업 대상을 바라보게
+        //  한다(운영자 2026-06-02 "일하는 게 보이게").  작업 대상 좌표 단일 출처.
+        private PawnUtilityAI ai;
 
         private void Awake()
         {
             rootRenderer = GetComponent<SpriteRenderer>();
             bodyRenderer = ResolveBodyRenderer();
+            ai = GetComponent<PawnUtilityAI>();
             // Seed the position baseline so the first Update measures a real delta
             //  from the spawn position rather than from 0.
             lastX = transform.position.x;
@@ -154,7 +158,19 @@ namespace MelonS.GameProto
                 // Moving LEFT → face left = mirrored.
                 if (!bodyRenderer.flipX) bodyRenderer.flipX = true;
             }
-            // else: |dx| <= epsilon → not moving horizontally → keep last flipX.
+            else
+            {
+                // 정지(또는 순수 수직 이동): 작업 대상이 있으면 그쪽을 바라본다 — 벌목/채굴/
+                //  건축 중인 림이 대상을 등지지 않게(운영자 theme).  대상 없으면 마지막 facing 유지.
+                if (ai == null) ai = GetComponent<PawnUtilityAI>();
+                if (ai != null && ai.TryGetWorkTargetPos(out Vector3 wp))
+                {
+                    float wdx = wp.x - x;
+                    if (wdx > moveEpsilon && bodyRenderer.flipX) bodyRenderer.flipX = false;
+                    else if (wdx < -moveEpsilon && !bodyRenderer.flipX) bodyRenderer.flipX = true;
+                }
+                // else: 작업 대상 없음 → keep last flipX.
+            }
         }
     }
 
