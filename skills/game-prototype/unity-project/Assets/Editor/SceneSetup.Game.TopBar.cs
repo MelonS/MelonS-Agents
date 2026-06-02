@@ -62,7 +62,9 @@ namespace MelonS.GameProto.EditorTools
             clockRt.anchoredPosition = new Vector2(16, 0);
             clockGo.AddComponent<ClockUI>();
 
-            // TopBar CENTER - TimeUI "▶ 1x"
+            // TopBar RIGHT - TimeUI "▶ 1x" (속도 표시기).  #41 로 자원을 좌상단으로 옮긴 뒤
+            //  상단바 우측이 비어 있었음 → TimeUI 자체 주석의 원래 의도("top-right speed
+            //  indicator")대로 우측으로 옮겨 바를 균형(날짜 좌 ↔ 속도 우)있게 채운다.
             GameObject timeGo = new GameObject("TimeUI");
             timeGo.transform.SetParent(parent.transform, false);
             Text timeText = timeGo.AddComponent<Text>();
@@ -71,13 +73,13 @@ namespace MelonS.GameProto.EditorTools
             timeText.fontSize = 32;
             timeText.fontStyle = FontStyle.Bold;
             timeText.color = colTextPrimary;
-            timeText.alignment = TextAnchor.MiddleCenter;
+            timeText.alignment = TextAnchor.MiddleRight;
             RectTransform timeRt = timeGo.GetComponent<RectTransform>();
-            timeRt.anchorMin = new Vector2(0.5f, 0f);
-            timeRt.anchorMax = new Vector2(0.5f, 1f);
-            timeRt.pivot = new Vector2(0.5f, 0.5f);
+            timeRt.anchorMin = new Vector2(1f, 0f);
+            timeRt.anchorMax = new Vector2(1f, 1f);
+            timeRt.pivot = new Vector2(1f, 0.5f);
             timeRt.sizeDelta = new Vector2(220, 0);
-            timeRt.anchoredPosition = new Vector2(0, 0);
+            timeRt.anchoredPosition = new Vector2(-16, 0);
             timeGo.AddComponent<TimeUI>();
 
             // ui-audit P2 / §3.1 — RIGHT resource chips, layout-driven (no magic X chain).
