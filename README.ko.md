@@ -636,6 +636,49 @@ sonnet 으로 revert.  Editor + qa 는 sonnet 유지 — 이 두 stage 는
 
 서브 에이전트 정의: [`.claude/agents/`](.claude/agents/) · 미션 템플릿과 공용 셸 라이브러리: [`agents/`](agents/)
 
+### 게임 프로토타입 아키텍처 (Skill #3-A — PawnSim)
+
+게임 프로토타입은 **`game-dev-agent`** 메타-스킬이 CLI 로 처음부터 끝까지
+스캐폴딩하는 별도 Unity 코드베이스입니다. 아키텍처는 두 층 — *생성기*
+(에이전트 측 빌드 체인) 와 *생성물* (Unity 프로젝트 자체):
+
+```
+   ── 생성기: game-dev-agent CLI (수동 Unity 에디터 작업 없음) ─────────
+       agent.py gen-sprite / gen-sprite-proc   스프라이트 (SDXL / 절차적 / PIL palette.py)
+       agent.py gen-sfx                         절차적 WAV SFX
+       agent.py integrate --method scenes       Unity batchmode → SceneSetup.GenerateAll
+       agent.py integrate --method build        Unity batchmode → BuildScript.BuildWindows
+       refactor_check.py (6단계 게이트)         scenes→build→QA샷→로그스캔→비주얼diff→PlayMode
+
+   ── 생성물: skills/game-prototype/unity-project/Assets/ ─────────────
+       Editor/    SceneSetup.cs (+14 partial) — 프로그래매틱 씬/프리팹 생성
+                  BuildScript.cs               — headless 빌드 엔트리
+       Scripts/
+         Core/    Services.cs (ServiceLocator — 5 싱글톤 → 테스트 가능 lookup)
+         Data/    PawnStats / HealthPartsConfig (SO 외부화 튜닝)
+         AI/      IPawnAction + PawnActions (utility-AI Strategy 패턴)
+         Tests/   V-series PlayMode 시나리오
+         (~50+ 런타임 컴포넌트: PawnEntity, PathGrid, AStar,
+          ReservationManager, BuildManager, AIDirector, AudioBank, …)
+       Sprites/   palette.py + PIL 생성기 + SDXL/절차적 아트
+       Audio/     절차적 WAV (+ _gen_sfx.py)
+       Prefabs/   Pawn / Wall / Floor / Door / Stove / Bed / …
+       Scenes/    MainMenu.unity · Game.unity (둘 다 재생성, 수동 편집 아님)
+```
+
+게임 내부 아키텍처를 떠받치는 세 가지 설계: **utility-AI Strategy 패턴** (각
+콜로니스트 작업이 매 틱 점수화되는 `IPawnAction` 이라 거대 상태머신 없이 행동이
+조합됨), **ServiceLocator** (5개 런타임 싱글톤을 static 참조 대신 테스트 가능한
+lookup 으로 해소), **SO 외부화 튜닝** (pawn/health 수치를 하드코딩 대신
+ScriptableObject 로). `SceneSetup.cs` 는 1057L → ~310L 로 14개 partial 분할해
+씬 생성이 리뷰 가능하게 유지. 여기서 짚을 함정 하나: `[SerializeField]` 값은
+`.prefab`/`.unity` 에 **baked** 되므로, 소스 기본값 변경은 재생성된 prefab/scene
+을 함께 커밋해야 비로소 적용됨 — "픽스가 안 먹는다" 사례 다수가 여기서 옴.
+
+전체 구조·조작·기능·정직한 검증 상태:
+[`skills/game-prototype/README.md`](skills/game-prototype/README.md). 구동
+메타-스킬: [`skills/game-dev-agent/`](skills/game-dev-agent/).
+
 ## 코드 / 데이터 분리
 
 | 계층 | 경로 | 추적 여부 |

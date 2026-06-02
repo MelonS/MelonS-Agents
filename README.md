@@ -686,6 +686,52 @@ practice, with little room for opus's reasoning depth to bite.
 
 Subagent definitions: [`.claude/agents/`](.claude/agents/) · Mission templates and shared shell libs: [`agents/`](agents/)
 
+### Game prototype architecture (Skill #3-A — PawnSim)
+
+The game prototype is a separate Unity codebase that the **`game-dev-agent`**
+meta-skill scaffolds end-to-end from the CLI. Its architecture is two layers:
+the *generator* (agent-side, the build chain) and the *generated* (the Unity
+project itself).
+
+```
+   ── Generator: game-dev-agent CLI (no manual Unity Editor work) ─────
+       agent.py gen-sprite / gen-sprite-proc   sprites (SDXL / procedural / PIL palette.py)
+       agent.py gen-sfx                         procedural WAV SFX
+       agent.py integrate --method scenes       Unity batchmode → SceneSetup.GenerateAll
+       agent.py integrate --method build        Unity batchmode → BuildScript.BuildWindows
+       refactor_check.py (6-stage gate)         scenes→build→QA shot→log scan→visual diff→PlayMode
+
+   ── Generated: skills/game-prototype/unity-project/Assets/ ──────────
+       Editor/    SceneSetup.cs (+14 partials) — programmatic scene/prefab gen
+                  BuildScript.cs               — headless build entry points
+       Scripts/
+         Core/    Services.cs (ServiceLocator — 5 singletons → testable lookup)
+         Data/    PawnStats / HealthPartsConfig (SO-externalized tuning)
+         AI/      IPawnAction + PawnActions (utility-AI Strategy pattern)
+         Tests/   V-series PlayMode scenarios
+         (~50+ runtime components: PawnEntity, PathGrid, AStar,
+          ReservationManager, BuildManager, AIDirector, AudioBank, …)
+       Sprites/   palette.py + PIL generators + SDXL/procedural art
+       Audio/     procedural WAV (+ _gen_sfx.py)
+       Prefabs/   Pawn / Wall / Floor / Door / Stove / Bed / …
+       Scenes/    MainMenu.unity · Game.unity (both regenerated, not hand-edited)
+```
+
+Three design choices carry the game's internal architecture: **utility-AI
+Strategy pattern** (each colonist job is an `IPawnAction` scored per tick, so
+behaviours compose without a giant state machine), **ServiceLocator** (5
+runtime singletons resolved through a testable lookup instead of static refs),
+and **SO-externalized tuning** (pawn/health numbers live in ScriptableObjects,
+not hard-coded). `SceneSetup.cs` was split 1057L → ~310L across 14 partials so
+scene generation stays reviewable. One sharp edge worth flagging here:
+`[SerializeField]` values **bake into `.prefab`/`.unity`**, so a source-default
+change only takes effect once the regenerated prefab/scene is committed too —
+several "fix didn't apply" incidents trace back to this.
+
+Full structure, controls, feature coverage, and the honest verification status:
+[`skills/game-prototype/README.md`](skills/game-prototype/README.md). The
+meta-skill that drives it: [`skills/game-dev-agent/`](skills/game-dev-agent/).
+
 ## Code / Data separation
 
 | Layer | Path | Tracked |
