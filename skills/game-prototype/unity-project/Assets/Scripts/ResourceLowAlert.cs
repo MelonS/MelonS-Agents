@@ -83,9 +83,10 @@ namespace MelonS.GameProto
             {
                 if (label.text != msg) label.text = msg;
                 if (!gameObject.activeSelf) gameObject.SetActive(true);
-                // 펄스
-                float pulse = 0.75f + 0.20f * Mathf.Sin(Time.unscaledTime * 3f);
-                bg.color = new Color(0.45f * pulse, 0.10f, 0.10f, 0.92f);
+                // 감사 rank7: R 채널만 흔들던 약한 펄스 → 전체 밝기+알파 동반 펄스(또렷한 맥동).
+                float s = (Mathf.Sin(Time.unscaledTime * 3f) + 1f) * 0.5f;   // 0..1
+                float p = Mathf.Lerp(0.80f, 1.10f, s);
+                bg.color = new Color(0.55f * p, 0.13f * p, 0.13f * p, Mathf.Lerp(0.80f, 0.96f, s));
             }
             else
             {

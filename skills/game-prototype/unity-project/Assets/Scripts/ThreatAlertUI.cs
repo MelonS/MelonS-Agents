@@ -47,6 +47,10 @@ namespace MelonS.GameProto
             alertText.color = new Color(1f, 0.25f, 0.20f, 0f);  // start hidden
             alertText.alignment = TextAnchor.MiddleRight;
             alertText.supportRichText = true;
+            // 감사 rank17: 밝은 지형 위 빨강 텍스트 가독성 — 어두운 외곽선.
+            var ol = gameObject.AddComponent<Outline>();
+            ol.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            ol.effectDistance = new Vector2(2f, -2f);
         }
 
         private Font LoadKoreanFont()
