@@ -15,8 +15,16 @@ Uses stdlib only (math, struct, wave, random).
 import math
 import random
 import struct
+import sys
 import wave
 from pathlib import Path
+
+# Windows 콘솔(cp949)에서 진행 print 의 em-dash 등 유니코드가 크래시나지 않게 — wav 생성
+#  자체엔 영향 없으나 스크립트가 끝까지 깨끗이 돌도록 stdout 을 UTF-8 로 재설정.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 SR = 44100  # unified to 44100Hz for all files
 
@@ -325,7 +333,34 @@ def bgm_ambient_sound():
         sample = drone + noise + shimmer
         out.append(sample)
 
-    return normalize(out, peak=0.55)  # BGM at lower peak — AudioBank sets vol=0.25
+    # ── 멜로디 레이어 (운영자 2026-06-02: "BGM 슬슬 넣어보자" — 드론만 → 음악적으로) ──
+    #  D major 펜타토닉(D·E·F#·A·B)의 차분한 프런티어 테마.  부드러운 pluck(사인+옥타브+
+    #  소량 3배음, 빠른 attack + exp decay)으로 sparse 하게.  30s 루프: 첫 음 0.5s(페이드인
+    #  이후), 마지막 음 ~28.5s 종료(페이드아웃 구간에 자연 흡수) → 경계 클릭 없음.
+    #  drone 대비 적당한 비중(0.30)으로 얹어 BGM 이 곡처럼 들리되 작업음을 안 가린다.
+    D4, E4, Fs4, A4, B4, D5 = 293.66, 329.63, 369.99, 440.00, 493.88, 587.33
+    mel_notes = [
+        (0.5, D4, 1.8, 1.00), (2.5, A4, 1.4, 0.90), (4.2, Fs4, 1.8, 0.85),
+        (6.5, E4, 1.2, 0.80), (8.5, D4, 2.2, 0.90), (11.5, B4, 1.6, 0.85),
+        (13.8, A4, 1.8, 0.90), (16.5, Fs4, 2.0, 0.85), (19.5, E4, 1.4, 0.80),
+        (21.5, A4, 1.6, 0.85), (24.0, D5, 1.8, 0.80), (26.5, A4, 2.0, 0.90),
+    ]
+    atk = 0.012
+    for (start, freq, ndur, vel) in mel_notes:
+        i0 = int(start * SR)
+        nlen = int(ndur * SR)
+        for k in range(nlen):
+            idx = i0 + k
+            if idx >= n:
+                break
+            tt = k / SR
+            env = (tt / atk) if tt < atk else math.exp(-(tt - atk) * 3.2)
+            tone = (math.sin(2 * math.pi * freq * tt)
+                    + 0.30 * math.sin(2 * math.pi * 2 * freq * tt)
+                    + 0.12 * math.sin(2 * math.pi * 3 * freq * tt))
+            out[idx] += tone * env * vel * 0.30
+
+    return normalize(out, peak=0.60)  # BGM (드론+멜로디) — AudioBank sets vol=0.25
 
 
 # ---------------------------------------------------------------------------
