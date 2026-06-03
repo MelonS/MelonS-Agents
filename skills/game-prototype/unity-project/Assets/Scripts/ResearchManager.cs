@@ -6,7 +6,10 @@ namespace MelonS.GameProto
 {
     /// <summary>
     /// Day 53 — Research tree singleton.
-    /// 5 vanilla-style techs with prerequisites and Korean labels.
+    /// Tier-1 techs (no prereqs) with Korean labels.  Every listed tech has a
+    /// REAL gameplay effect wired via IsUnlocked(): simple_bow (PawnUtilityAI
+    /// 원거리 공격 해금) + better_stove (PawnCook 조리 2배).  Dead/non-vanilla
+    /// techs (electricity·solar_panel·stone_walls) were removed — see BuildTree.
     /// A pawn standing within range of a ResearchBench accumulates research
     /// points at base_rate * intelligenceMul (1.0 for now — could tie to Skill).
     /// Player picks active tech via Research UI; points flow into it until completed.
@@ -70,11 +73,17 @@ namespace MelonS.GameProto
             //  one-shot most animals — an unrealistic combat rewrite the operator
             //  forbade.  So the honest fix is the description, not the damage.
             techs.Add(new Tech("simple_bow",     "원시 활",       "원거리 사냥/방어 가능. 3~5 dmg 화살.", 100));
-            techs.Add(new Tech("stone_walls",    "석재 벽 건설",  "나무 벽보다 4배 튼튼 (HP 200).",     150));
-            techs.Add(new Tech("better_stove",   "개선된 화덕",   "조리 속도 2배, 식사 mood +5.",       120));
-            // #범위정합: 전기(electricity)·태양광(solar_panel) tech 제거 — README Out-of-scope
-            //  (Power grid)라 발전기/배터리/전선 등 해금 대상이 코드에 전혀 없어, 연구해도 아무
-            //  변화 없는 dead tech 였음(자동-연구가 빈 tech 를 갈게 됨).  배선 가능한 날 재도입.
+            // #truth-in-UI: better_stove 는 IsUnlocked 로 PawnCook 의 조리 속도 2배만
+            //  배선돼 있다.  이전 설명의 "식사 mood +5" 는 어디에도 배선이 없어(식사 mood 는
+            //  이미 meal +10 / fine +20 으로 별도 동작) 거짓 표기였음 → #200 활 설명 정정과
+            //  동일하게, 실제 효과(조리 2배)만 적도록 설명을 진실에 맞춘다.
+            techs.Add(new Tech("better_stove",   "개선된 화덕",   "조리 속도 2배.",                     120));
+            // #범위정합 / #spec-faithful: 전기·태양광에 이어 stone_walls(석재 벽) tech 도 제거.
+            //  (1) dead tech — IsUnlocked("stone_walls") 를 소비하는 코드가 전혀 없어 연구해도
+            //      아무 변화가 없었고, 설명("HP 200")조차 실제 석재 벽(HP 280)과 불일치한 거짓.
+            //  (2) 비바닐라 — 기준 콜로니심은 석재 벽에 연구가 필요 없다(시작부터 건설 가능,
+            //      실제로 Architect 메뉴 WallStone 으로 이미 건설된다).  연구 게이팅은 임의
+            //      설계라 금지(follow-spec).  배선 가능한 진짜 효과가 생기는 날 재도입.
         }
 
         private void Update()
