@@ -231,16 +231,17 @@ namespace MelonS.GameProto
 
             const float kMatchRadius = 0.6f;
 
+            // #버그헌트: 각 타입별 used 집합으로 1:1 매칭(같은 엔티티 중복 적용 방지).
             // Re-apply BedEntity quality.
             if (data.beds != null && data.beds.Count > 0)
             {
                 var sceneBeds = UnityEngine.Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None);
+                var used = new HashSet<BedEntity>();
                 foreach (var bs in data.beds)
                 {
                     BedEntity best = FindNearest(sceneBeds, bs.position, kMatchRadius,
-                        b => (Vector2)b.transform.position);
-                    if (best != null)
-                        best.SetQuality((BedQuality)bs.quality);
+                        b => (Vector2)b.transform.position, used);
+                    if (best != null) { best.SetQuality((BedQuality)bs.quality); used.Add(best); }
                 }
             }
 
@@ -248,12 +249,12 @@ namespace MelonS.GameProto
             if (data.stockpiles != null && data.stockpiles.Count > 0)
             {
                 var sceneZones = UnityEngine.Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None);
+                var used = new HashSet<StockpileZoneEntity>();
                 foreach (var ss in data.stockpiles)
                 {
                     StockpileZoneEntity best = FindNearest(sceneZones, ss.position, kMatchRadius,
-                        z => (Vector2)z.transform.position);
-                    if (best != null)
-                        best.SetPriority((StockpilePriority)ss.priority);
+                        z => (Vector2)z.transform.position, used);
+                    if (best != null) { best.SetPriority((StockpilePriority)ss.priority); used.Add(best); }
                 }
             }
 
@@ -261,12 +262,12 @@ namespace MelonS.GameProto
             if (data.trees != null && data.trees.Count > 0)
             {
                 var sceneTrees = UnityEngine.Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
+                var used = new HashSet<TreeEntity>();
                 foreach (var ts in data.trees)
                 {
                     TreeEntity best = FindNearest(sceneTrees, ts.position, kMatchRadius,
-                        t => (Vector2)t.transform.position);
-                    if (best != null)
-                        best.SetSpecies((TreeSpecies)ts.species);
+                        t => (Vector2)t.transform.position, used);
+                    if (best != null) { best.SetSpecies((TreeSpecies)ts.species); used.Add(best); }
                 }
             }
 
@@ -274,24 +275,29 @@ namespace MelonS.GameProto
             if (data.walls != null && data.walls.Count > 0)
             {
                 var sceneWalls = UnityEngine.Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None);
+                var used = new HashSet<WallEntity>();
                 foreach (var ws in data.walls)
                 {
                     WallEntity best = FindNearest(sceneWalls, ws.position, kMatchRadius,
-                        w => (Vector2)w.transform.position);
-                    if (best != null)
-                        best.SetMaterial((WallMaterial)ws.material);
+                        w => (Vector2)w.transform.position, used);
+                    if (best != null) { best.SetMaterial((WallMaterial)ws.material); used.Add(best); }
                 }
             }
         }
 
+        // #버그헌트(2026-06-03): used 집합을 받아 '이미 매칭된 씬 엔티티'를 제외한다.  이전엔
+        //  dense 그리드(1x1 벽/침대 다수)에서 여러 save 항목이 같은 씬 엔티티(가장 가까운 하나)에
+        //  매칭돼 sub-state(품질/재질 등)가 덮어써지는 데이터 손상이 있었다.  각 save 항목이
+        //  서로 다른 '가장 가까운 미사용' 엔티티에 1:1 매칭되게 한다.
         private static T FindNearest<T>(T[] candidates, Vector2 target, float maxDist,
-            System.Func<T, Vector2> posOf) where T : UnityEngine.Object
+            System.Func<T, Vector2> posOf, HashSet<T> used = null) where T : UnityEngine.Object
         {
             T best = null;
             float bestSq = maxDist * maxDist;
             foreach (var c in candidates)
             {
                 if (c == null) continue;
+                if (used != null && used.Contains(c)) continue;
                 float sq = (posOf(c) - target).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = c; }
             }
