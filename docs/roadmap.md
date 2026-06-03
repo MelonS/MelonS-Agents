@@ -198,6 +198,16 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-03** PawnSim 자율 세션 — 멀티에이전트 코드베이스 전면 버그 스윕 (11회 감사)
+  - 신선-각도 헌트로 저감사 영역의 실버그 발견·수정: 카메라 줌-인식 경계(void 렌더),
+    레이드 이벤트 중복발생, 날씨 폭풍 GameClock 전환, ResearchUI null, save/load 1:1 매칭
+    (데이터손상), PawnHauler stand-cell 예약 leak(작업정체 유발), 마퀴 inspect 잔존.
+  - 적대적 검증이 과확정/거짓/feature/paranoid 다수 기각(verify-real-path).  최종 스윕은
+    20건 중 실버그 1건 = 코드베이스 정리 수렴.  매 수정 컴파일+76/76+44/44 게이트.
+  - 보류(운영자 인지/플레이테스트): 트레잇 결정성(전원 동일 트레잇), save-load 완성,
+    behavior-medium(자동근접·스케줄 하드게이트), 대형 RimWorld 피처, 전투 절대값 rescale —
+    docs/autonomous-decisions.md 에 fix 계획과 함께 기록.
+
 - **2026-06-03** PawnSim 4h+ 자율 세션 — RimWorld 정합 + 회귀 수정 (운영자 부재, '묻지말고 일해')
   - 멀티에이전트 6회 감사(RimWorld 정합/회귀헌트 등) → 적대적 검증으로 과확정 걸러내며 적용.
   - 작업종류 분리(건축/채광/운반/의료 별도 work type, e8657b2), hover 작업명(e5d8435),
