@@ -429,6 +429,11 @@ namespace MelonS.GameProto
             if (cook != null) cook.ClearTask();
             var builder = pawn.GetComponent<PawnBuilder>();
             if (builder != null) builder.ClearTask();
+            // #회귀가드(2026-06-03): miner/harvester 누락 → 우클릭 재명령 시 이전 채광/수확
+            //  task 가 안 풀려 예약 점유·작업 충돌(PawnEntity.ClearAllWorkTasks 엔 있는데
+            //  여기만 빠졌던 불일치).  지정-구동 단일화로 채광 task 가 흔해져 영향 커짐.
+            pawn.GetComponent<PawnMiner>()?.ClearTask();
+            pawn.GetComponent<PawnHarvester>()?.ClearTask();
             var needs = pawn.GetComponent<PawnNeeds>();
             if (needs != null) needs.ClearRestTarget();
         }

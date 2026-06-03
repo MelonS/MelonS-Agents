@@ -557,7 +557,8 @@ namespace MelonS.GameProto
             }
 
             // 2) 저장고 도착: 보관된 조리식/식량을 한 단위 꺼내 먹는다(우선순위 fine>meal>raw).
-            if (eatStockTarget != null && rm != null)
+            //  #회귀가드: eatMeat/eatBush 와 동일하게 gameObject 파괴 방어(저장존 erase 레이스).
+            if (eatStockTarget != null && eatStockTarget.gameObject != null && rm != null)
             {
                 if (rm.fineMeals > 0)
                 {

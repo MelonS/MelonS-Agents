@@ -116,13 +116,16 @@ namespace MelonS.GameProto
                 new HaulWoodAction(),     // #116 - 벌목 후 떨어진 wood pile 운반
                 new HaulStoneAction(),    // #119 - 채광 후 떨어진 stone chunk 운반
                 new HaulMeatAction(),     // #129 - 사냥 후 떨어진 meat pile 운반
-                // ── #230 장르 정합: 야생나무 벌목·광맥 채광은 *플레이어 지정제* ──
-                //  the reference sim 에선 림이 아무 나무·바위나 자동으로 캐지 않는다 — 이게 우리 게임의
-                //  '자원 무한 자동축적'(목재 40→180)의 원인이었다.  자동 ChopTree/MineStone 을
-                //  auto-loop 에서 제거:
-                //    채광 = MineDesignation(플레이어가 drag-마킹 → idle 광부 자동 디스패치)
-                //    벌목 = 우클릭 '벌목 우선'(PawnChopper) 으로 플레이어가 지정
-                //  → 자원이 플레이어 지정으로만 모이고 건설로 소비된다(the reference sim 경제).
+                // ── #작업배정-단일화(2026-06-03) CRITICAL 회귀 수정 ──
+                //  #230 에선 ChopTree/MineStone 을 auto-loop 에서 빼고 TreeChopDesignation/
+                //  MineDesignation 의 DispatchToIdleX 가 마킹된 것만 idle 림에 배정했다.  오늘
+                //  단일화로 그 별도 dispatch 를 retire 하면서 ChopTreeAction/MineStoneAction 을
+                //  FindNearestTree/Vein 에서 IsMarked 게이트(지정된 것만)로 바꿨다 — 그런데 이
+                //  actions 리스트에 추가하는 것을 빠뜨려, 지정해도 아무도 자율 벌목/채광을 안 하는
+                //  CRITICAL 회귀가 났다.  이제 리스트에 추가해 단일 경로를 완성한다(여전히 '지정된'
+                //  나무/광맥만 — IsMarked 게이트 덕에 '아무거나 자동 채집' 회귀는 없음).
+                new ChopTreeAction(),     // 지정(마킹)된 나무만 자율 벌목 (IsMarked 게이트)
+                new MineStoneAction(),    // 지정(마킹)된 광맥만 자율 채광 (IsMarked 게이트)
                 //  운반·요리·수확·사냥(생존)·경작 zone 은 the reference sim 처럼 자동 유지.
                 // 운영자 2026-06-02: idle 배회는 리스트의 WanderAction(1.5s 간격, 긴 정지)
                 //  대신 Update 의 anchored pacing(idleStepInterval 0.8s, 근처 타일 왕복)이
