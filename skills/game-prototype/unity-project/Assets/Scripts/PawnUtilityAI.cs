@@ -135,6 +135,12 @@ namespace MelonS.GameProto
             };
         }
 
+        /// <summary>#회귀가드 — Decide actions 리스트에 특정 action 타입이 등록됐는지(테스트용).
+        /// 오늘 ChopTreeAction/MineStoneAction 을 리스트에 빠뜨려 '지정해도 아무도 안 벰'
+        /// CRITICAL 회귀가 났는데 기존 테스트(TryStart 직접 호출)가 못 잡았다 → 이 조회로 가드.</summary>
+        public bool HasRegisteredAction(System.Type actionType)
+            => actions != null && actionType != null && actions.Exists(a => a.GetType() == actionType);
+
         private void Update()
         {
             // Day 48: drafted pawn skip utility AI — manual control only.

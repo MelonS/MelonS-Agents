@@ -1904,12 +1904,18 @@ namespace MelonS.GameProto.Tests
             var chopAct = new MelonS.GameProto.AI.ChopTreeAction();
             bool assigned = chopAct.TryStart(ctx);
             bool gotMarked = assigned && p0ch != null && p0ch.Target == tree;
+            // #회귀가드(CRITICAL): ChopTreeAction/MineStoneAction 이 실제 Decide actions 리스트에
+            //  등록돼 있는가.  (TryStart 직접 호출만으론 '리스트 등록'을 못 잡아 오늘 단일화 시
+            //  리스트 누락 회귀를 놓쳤다 — 이제 직접 검증.)
+            var p0ai = p0.GetComponent<PawnUtilityAI>();
+            bool chopRegistered = p0ai != null && p0ai.HasRegisteredAction(typeof(MelonS.GameProto.AI.ChopTreeAction));
+            bool mineRegistered = p0ai != null && p0ai.HasRegisteredAction(typeof(MelonS.GameProto.AI.MineStoneAction));
             // 배정됐으면 그 림이 committed(HasTask) → walk+chop 으로 파괴까지 (best-effort).
             float t0 = Time.time;
             while (Time.time - t0 < 15f && tree != null && !tree.IsDestroyed) yield return null;
             bool destroyed = (tree == null || tree.IsDestroyed);
-            Assert(gotMarked,
-                $"지정된 나무를 자율 ChopTreeAction 이 idle 림에 배정 = {gotMarked} (assigned={assigned}), 이후 벌목완료={destroyed}");
+            Assert(gotMarked && chopRegistered && mineRegistered,
+                $"지정 나무 자율 배정={gotMarked}, ChopTreeAction 리스트등록={chopRegistered}, MineStoneAction 등록={mineRegistered} (벌목완료={destroyed})");
         }
 
         /// <summary>I44 (#34 회귀가드): 나무를 좌클릭하면 '🪓 벌목 지정' 플로트 메뉴가 실제로
