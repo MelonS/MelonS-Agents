@@ -25,7 +25,7 @@ namespace MelonS.GameProto
 
         // Read-only accessors (외부 코드 ePerty 변경 X)
         public int MaxHp => stats != null ? stats.maxHp : 30;
-        public int AttackDamage => stats != null ? stats.attackDamage : 1;
+        public int AttackDamage => stats != null ? stats.attackDamage : 5;  // #8 fallback 도 PawnStats 기본(5)과 동기화
         public float AttackRange => stats != null ? stats.attackRange : 1.0f;
         public float AttackInterval => stats != null ? stats.attackInterval : 1.0f;
 

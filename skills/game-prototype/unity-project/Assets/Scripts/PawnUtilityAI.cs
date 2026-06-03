@@ -259,6 +259,7 @@ namespace MelonS.GameProto
                 if (miner != null) miner.ClearTask();
                 if (doctor != null) doctor.ClearTask();
                 if (harvester != null) harvester.ClearTask();  // 감사 rank1: 누락→작물 예약 영구점유 fix
+                if (cook != null) cook.ClearTask();  // #회귀가드: cook 누락→수면 중 화덕 예약 점유
                 lastDecision = Time.timeSinceLevelLoad;
                 return;
             }
@@ -272,6 +273,7 @@ namespace MelonS.GameProto
                 if (miner != null) miner.ClearTask();
                 if (doctor != null) doctor.ClearTask();
                 if (harvester != null) harvester.ClearTask();  // 감사 rank1: 누락→작물 예약 영구점유 fix
+                if (cook != null) cook.ClearTask();  // #회귀가드: cook 누락→정신붕괴 중 화덕 예약 점유
                 if (!movement.IsMoving)
                 {
                     Vector2 cur = transform.position;
