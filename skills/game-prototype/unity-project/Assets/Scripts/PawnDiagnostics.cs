@@ -220,6 +220,37 @@ namespace MelonS.GameProto
                 Debug.Log($"[PAWNDIAG] F RESULT minDist={minD:F2} -> {verdict}");
             }
 
+            // ── Phase G: 바닥 자원 직접 건축 end-to-end (#60 Option B) ──
+            //  벽 청사진 배치(자원 무관) → idle 림이 바닥 목재를 청사진으로 운반 → 건설 완료 검증.
+            var bm = BuildManager.Instance;
+            if (bm != null)
+            {
+                bm.SetMode(BuildManager.Mode.Wall);
+                bool placed = bm.TryPlaceAt(4, 3);   // 원점 근처 빈 칸 (점유면 false)
+                if (!placed) placed = bm.TryPlaceAt(-3, 3);
+                bm.SetMode(BuildManager.Mode.Off);
+                BlueprintEntity bp = null;
+                foreach (var b in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
+                    if (b != null && !b.IsComplete) { bp = b; break; }
+                Debug.Log($"[PAWNDIAG] G PLACE wall placed={placed} bp={(bp!=null)}");
+                if (bp != null)
+                {
+                    bool built = false;
+                    for (int k = 0; k < 70; k++)   // 35s — 운반+건설 시간
+                    {
+                        yield return new WaitForSeconds(0.5f);
+                        if (bp == null) { built = true; break; }     // 완성 시 청사진 Destroy
+                        if (bp.IsComplete) { built = true; }
+                        if (k % 6 == 0)
+                            Debug.Log($"[PAWNDIAG] G t={k*0.5f:F1}s collected={bp.collectedWood}/{bp.needWood} complete={bp.IsComplete}");
+                        if (built) { Debug.Log($"[PAWNDIAG] G BUILT at t={k*0.5f:F1}s"); break; }
+                    }
+                    string verdict = built ? "PASS(바닥목재 운반→건설 완료)"
+                        : (bp != null && bp.collectedWood > 0 ? "PARTIAL(운반 시작됨, 미완)" : "FAIL(운반/건설 안 일어남)");
+                    Debug.Log($"[PAWNDIAG] G RESULT -> {verdict}");
+                }
+            }
+
             Debug.Log("[PAWNDIAG] === DONE ===");
             yield return new WaitForSeconds(0.5f);
             Application.Quit();
