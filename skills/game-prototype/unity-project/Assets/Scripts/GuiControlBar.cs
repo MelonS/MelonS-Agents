@@ -260,6 +260,13 @@ namespace MelonS.GameProto
             lbl.fontStyle = FontStyle.Bold;
             lbl.color = TextNormal;
             lbl.alignment = TextAnchor.MiddleCenter;
+            // #65 운영자 "설정 버튼 라벨/아이콘 잘림": "⚙ 설정"·"⏸ 멈춤"(아이콘+텍스트)이 76px
+            //  버튼 폭을 넘어 잘렸음.  best-fit 으로 버튼 안에 맞게 자동 축소(2자 라벨은 20 유지,
+            //  넓은 라벨만 줄어듦) + 가로 overflow 는 자르지 않게 → 잘림 제거.
+            lbl.resizeTextForBestFit = true;
+            lbl.resizeTextMinSize = 12;
+            lbl.resizeTextMaxSize = 20;
+            lbl.horizontalOverflow = HorizontalWrapMode.Wrap;
             var lrt = lbl.GetComponent<RectTransform>();
             lrt.anchorMin = new Vector2(0, 0.4f);
             lrt.anchorMax = new Vector2(1, 1);
