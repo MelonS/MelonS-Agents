@@ -176,7 +176,12 @@ namespace MelonS.GameProto
             if (pawn != null)
             {
                 string draftSuffix = pawn.IsDrafted ? " [징집됨]" : "";
-                return $"콜로니스트 {pawn.PawnName}{draftSuffix}  (좌클릭=선택)";
+                // #rimworld-fidelity — RimWorld 는 콜로니스트 hover 시 현재 작업을 보여준다.
+                //  PawnNameLabel.CurrentActivity(머리위 라벨과 동일 정보)를 덧붙인다.
+                var nl = pawn.GetComponent<PawnNameLabel>();
+                string act = (nl != null && !string.IsNullOrEmpty(nl.CurrentActivity))
+                    ? $" · {nl.CurrentActivity}" : "";
+                return $"콜로니스트 {pawn.PawnName}{draftSuffix}{act}  (좌클릭=선택)";
             }
             var tree = hit.GetComponent<TreeEntity>();
             if (tree != null) return "나무  (선택 후 우클릭=벌목)";
