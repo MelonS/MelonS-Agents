@@ -24,7 +24,9 @@ namespace MelonS.GameProto.EditorTools
             tutBgRt.anchorMax = new Vector2(0.5f, 1f);
             tutBgRt.pivot = new Vector2(0.5f, 1f);
             tutBgRt.sizeDelta = new Vector2(720, 100);
-            tutBgRt.anchoredPosition = new Vector2(0, -80);
+            // #64 운영자 "12시 메뉴 UI 겹침": 튜토리얼(y-80, 100h)이 ColonistBar(상단 76+8=84 아래
+            //  ~54h, 즉 -84~-138)와 정면 겹쳤음.  콜로니스트 바 아래(-160)로 내려 겹침 제거.
+            tutBgRt.anchoredPosition = new Vector2(0, -160);
             // bordered panel (returns padded inner content RT; TutorialText parents here)
             RectTransform tutContent = UITheme.MakeBorderedPanel(
                 tutBgRt, UITheme.BorderPx, UITheme.PanelBg, UITheme.PadOuter);
