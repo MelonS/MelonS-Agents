@@ -198,6 +198,15 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-03** PawnSim 2차 멀티에이전트 감사 (`8d8561e`, `<reservation-clear>`)
+  - AI행동/사운드/밸런스/save-load/needs 5차원 감사 → 20확정/24기각(적대적 검증이
+    move-speed·food-decay·skill-curve 등 의도적 스케일 정확히 기각).
+  - 안전·고가치만 선적용: 청사진 예약 desync(죽은 builder→영구 예약) 해소,
+    수면 중 food/mood 무한 무허기 버그 수정, PlayAlert tier 클램프, 로드 시 예약 reset.
+  - 보류(운영자 판단 필요): 밸런스 수치(팔 HP 18·공격력 1) + save-load 직렬화 확장
+    6건(작물성장/부위HP/지정/drafted/식사·휴식타겟/스킬) — 포맷·밸런스 영향.
+  - isolated 76/76 PASS.
+
 - **2026-06-03** PawnSim 멀티에이전트 폴리싱 감사 15건 (`aeb9c2e`)
   - 5차원 read-only 감사 → 적대적 검증(false-positive 7건 기각) → 확정 15건 일괄 적용:
     상호작용 hover 설명 12종(HoverTooltip), sortingOrder 정렬 3건(Bandit/Trader/캐리번들),

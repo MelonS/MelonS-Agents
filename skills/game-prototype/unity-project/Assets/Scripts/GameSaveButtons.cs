@@ -50,6 +50,12 @@ namespace MelonS.GameProto
             SaveData data = SaveLoadManager.Load();
             if (data == null) return;
 
+            // #audit2 #13 — 로드 직전 전체 예약 초기화.  아래에서 현재 pawn/tree 를 Destroy
+            //  하고 새로 spawn 하는데, 파괴되는 엔티티들이 ReservationManager 에 잡아둔 예약이
+            //  남으면 respawn 후 죽은 owner/타겟을 가리키는 orphaned 예약이 되어, 새 pawn 이
+            //  그 자원을 영구히 '예약됨'으로 보고 작업을 못 잡을 수 있다.  깨끗이 reset.
+            MelonS.GameProto.AI.ReservationManager.Clear();
+
             // Destroy current pawns + trees
             foreach (var p in FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
                 Destroy(p.gameObject);
