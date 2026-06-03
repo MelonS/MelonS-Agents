@@ -198,6 +198,17 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-03** PawnSim 4h+ 자율 세션 — RimWorld 정합 + 회귀 수정 (운영자 부재, '묻지말고 일해')
+  - 멀티에이전트 6회 감사(RimWorld 정합/회귀헌트 등) → 적대적 검증으로 과확정 걸러내며 적용.
+  - 작업종류 분리(건축/채광/운반/의료 별도 work type, e8657b2), hover 작업명(e5d8435),
+    근접 데미지 1→5(전투 지루함 #8), 팔=다리 HP 통일.
+  - **CRITICAL 회귀 자가발견·수정(f5969ff)**: 단일화 시 ChopTreeAction/MineStoneAction 을
+    Decide 리스트에 빠뜨려 '지정해도 아무도 안 벰' → 복구 + 회귀가드(d2cebf6, I43).
+  - cook task 수면/붕괴 중 미정리·ClearAllWorkTasks miner/harvester 누락 수정(15daa1c).
+  - #34 나무 좌클릭 메뉴 회귀가드(I44, 547f46a) — 좌클릭 메뉴 정상 작동 확인.
+  - 검증: 매 변경 컴파일 클린 + isolated 76/76 + integration 44/44; LongPlay 생존
+    survived=true·issues=0(물리 식량 경제 하 3림 장기 생존 확인).
+
 - **2026-06-03** PawnSim 림 시스템 RimWorld 정합 대개편 (운영자 실시간 플레이테스트)
   - `dc030f5` 작업배정 지정-구동 단일화: 벌목/채광 자율 AI를 '지정된 것만'으로 게이트 +
     중복 dispatch 폐기 + 우클릭=선택 림 전용.  반복 버그(다른 림 벌목/번갈이/freeze) 공통
