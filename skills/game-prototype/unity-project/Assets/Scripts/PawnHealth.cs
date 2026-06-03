@@ -28,6 +28,8 @@ namespace MelonS.GameProto
             public PartId id;
             public string nameKr;
             public int maxHp;
+            public int baseMaxHp;     // #트레잇 — config 기본값(트레잇 maxHpMul 적용 전).  base 에서
+                                      //  멱등 스케일해 재roll(트레잇 결정성 수정) 시 이중 적용 방지.
             public int hp;
             public float bleedRate;   // HP/sec drain when bleeding
             public bool bandaged;
@@ -35,7 +37,7 @@ namespace MelonS.GameProto
             public BodyPart(PartId id, string nameKr, int max, bool vital)
             {
                 this.id = id; this.nameKr = nameKr;
-                this.maxHp = max; this.hp = max;
+                this.maxHp = max; this.baseMaxHp = max; this.hp = max;
                 this.bleedRate = 0f; this.bandaged = false;
                 this.isVital = vital;
             }
@@ -74,6 +76,22 @@ namespace MelonS.GameProto
         [SerializeField] private HealthPartsConfig partsConfig;
 
         private float lastBleedTick = -10f;
+
+        // #트레잇(2026-06-03): 부위 max HP 를 base(config 기본)에서 mul 만큼 멱등 스케일.
+        //  PawnTraits 가 maxHpMul 을 (재roll 포함) 적용할 때 호출 — base 기준이라 여러 번 호출돼도
+        //  이중 적용 안 됨.  현재 HP 비율을 보존(부상 림도 동일 비율 유지; 신규 림은 full).
+        public void ApplyMaxHpMul(float mul)
+        {
+            if (parts == null) return;
+            foreach (var p in parts)
+            {
+                if (p == null) continue;
+                float ratio = p.maxHp > 0 ? (float)p.hp / p.maxHp : 1f;
+                p.maxHp = Mathf.Max(1, Mathf.RoundToInt(p.baseMaxHp * mul));
+                p.hp = Mathf.Clamp(Mathf.RoundToInt(p.maxHp * ratio), 1, p.maxHp);
+            }
+            RecomputeAggregates();
+        }
 
         private void Awake()
         {

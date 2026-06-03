@@ -47,16 +47,19 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            RollTraits();
+            RollTraits(gameObject.name);
             ApplyToHealth();
         }
 
-        private void RollTraits()
+        // #트레잇 결정성(2026-06-03): 시드 키를 인자로 받는다.  이전엔 항상 gameObject.name
+        //  ("Pawn(Clone)" — 모든 클론 동일)으로 굴려 전(全) 콜로니스트가 똑같은 트레잇이었다
+        //  (변종성 결여, 클래스 doc "각 pawn 1-2 랜덤 트레잇" 의도 위반).  GameManager/load 가
+        //  이름 설정 직후 ReRollFromName(고유 이름)으로 재시드 → 변종성 + save/load 결정성.
+        //  Awake 는 기본(gameObject.name) 유지 — 테스트/직접 생성 호환.
+        private void RollTraits(string seedKey)
         {
-            // Deterministic per-pawn-name hash so save/load gives same traits.
-            string n = gameObject.name;
             int seed = 0;
-            foreach (char ch in n) seed = unchecked(seed * 31 + ch);
+            foreach (char ch in seedKey) seed = unchecked(seed * 31 + ch);
             System.Random rng = new System.Random(seed);
             // 50% chance of 2 traits, else 1.
             int count = (rng.NextDouble() < 0.5) ? 2 : 1;
@@ -108,15 +111,29 @@ namespace MelonS.GameProto
 
         private void ApplyToHealth()
         {
+            // #트레잇 결정성: base(config 기본)에서 maxHpMul 을 멱등 적용 — 재roll 시 이중 스케일 없음.
             var health = GetComponent<PawnHealth>();
-            if (health == null || health.parts == null) return;
-            foreach (var p in health.parts)
-            {
-                int newMax = Mathf.Max(1, Mathf.RoundToInt(p.maxHp * maxHpMul));
-                int newCur = Mathf.Max(1, Mathf.RoundToInt(p.hp * maxHpMul));
-                p.maxHp = newMax;
-                p.hp = Mathf.Min(newMax, newCur);
-            }
+            if (health != null) health.ApplyMaxHpMul(maxHpMul);
+        }
+
+        // #트레잇 결정성: 트레잇 효과/목록을 기본값으로 리셋(재roll 전).
+        private void ResetTraitEffects()
+        {
+            ActiveTraits.Clear();
+            moveSpeedMul = 1f; workSpeedMul = 1f; combatXpMul = 1f; maxHpMul = 1f;
+            moodBaselineBonus = 0f; mealMoodBonus = 0f; moodSwingMul = 1f;
+        }
+
+        /// <summary>#트레잇 결정성 — 스폰/로드 시 pawn '이름'으로 트레잇을 재시드.  Awake 의 기본
+        /// roll(gameObject.name, 전원 동일)을 덮어써 콜로니스트마다 다른 트레잇 + 같은 이름이면
+        /// save/load 후에도 동일(결정성).  HP 는 base 에서 멱등 재적용이라 이중 스케일 없음.
+        /// GameManager/GameSaveButtons 가 pawnName 설정 직후 호출.</summary>
+        public void ReRollFromName(string nameKey)
+        {
+            if (string.IsNullOrEmpty(nameKey)) return;
+            ResetTraitEffects();
+            RollTraits(nameKey);
+            ApplyToHealth();
         }
 
         public string SummaryKr()

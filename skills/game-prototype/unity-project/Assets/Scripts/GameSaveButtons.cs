@@ -82,6 +82,9 @@ namespace MelonS.GameProto
                         System.Reflection.BindingFlags.Instance);
                     if (nameField != null) nameField.SetValue(entity, ps.name);
                 }
+                // #트레잇 결정성: 로드 시에도 이름으로 트레잇 재시드 → 같은 이름이면 저장 전과
+                //  동일 트레잇(save/load 결정성; 이전엔 클론 이름 시드라 비결정적이었음).
+                p.GetComponent<PawnTraits>()?.ReRollFromName(ps.name);
                 PawnNeeds needs = p.GetComponent<PawnNeeds>();
                 if (needs != null)
                 {
