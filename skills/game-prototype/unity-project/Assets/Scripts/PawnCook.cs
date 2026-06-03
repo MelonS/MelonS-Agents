@@ -96,7 +96,11 @@ namespace MelonS.GameProto
                 // #164 - PawnTraits workSpeedMul 적용 (cook interval 단축).
                 var traits = GetComponent<PawnTraits>();
                 float traitMul = traits != null ? traits.workSpeedMul : 1f;
-                float effectiveInterval = cookInterval / Mathf.Max(0.1f, traitMul);
+                // 연구 'better_stove' 해금 시 조리 2배 — 그동안 미배선(연구해도 무변화)이던 것
+                //  실효화.  진행 루프를 의미있게 한다.
+                float researchMul = (ResearchManager.Instance != null
+                    && ResearchManager.Instance.IsUnlocked("better_stove")) ? 2f : 1f;
+                float effectiveInterval = cookInterval / Mathf.Max(0.1f, traitMul * researchMul);
                 if (Time.time - lastCookTime >= effectiveInterval)
                 {
                     // #131/#172 - 이전: Build skill 5+ 면 fine meal (wiki 와 mismatch).
