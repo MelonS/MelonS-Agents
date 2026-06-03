@@ -123,9 +123,8 @@ namespace MelonS.GameProto
     ///      The 0.25s throttle added HERE in PlayChop() guards this.
     ///      If you want per-tree independence, add lastChopTime to TreeEntity
     ///      and guard there instead (remove throttle here when done).
-    ///   2. AnimalEntity.cs:149 -- PlayChop() used for animal hit sound.
-    ///      Semantically wrong: animal combat hit should call PlayHit().
-    ///      Change AnimalEntity.TakeDamage() line 149 to PlayHit().
+    ///   2. AnimalEntity.cs:193 -- TakeDamage() calls PlayHit() for animal hit
+    ///      sound (axe-on-flesh thunk distinct from chop).  DONE (was PlayChop()).
     ///   3. StoneVeinEntity.cs -- mining now calls PlayMine() (was PlayChop()).
     ///      Wiki #7: pick-on-stone distinct from axe-on-wood chop thunk. DONE.
     ///   4. PlayWolfHowl() has no callers.  Wire to AIDirector wolf_pack event.
@@ -484,6 +483,9 @@ namespace MelonS.GameProto
             if (Time.time - _lastAlertTime < AlertInterval) return;
             _lastAlertTime = Time.time;
 
+            // #audit2 #6 — tier 방어 클램프.  호출부가 손상된 tier(음수/4 초과)를 넘겨도
+            //  beepCount 가 의도 밖이 되지 않게 알려진 범위(0~3)로 고정.
+            tier = Mathf.Clamp(tier, 0, 3);
             int beepCount = tier <= 1 ? 2 : tier == 2 ? 3 : 4;
             StartCoroutine(AlertBurstCoroutine(beepCount));
         }

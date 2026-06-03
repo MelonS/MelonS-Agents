@@ -315,7 +315,12 @@ namespace MelonS.GameProto.AI
             {
                 if (bp == null || bp.IsComplete) continue;
                 if (!bp.HasAllMaterials) continue;  // #197 - 자재 완비 안 됐으면 skip
-                if (bp.IsReserved && bp.ReservedBy != ctx.builder.gameObject) continue;
+                // #audit2 #0 — 중앙 레지스트리로 예약 판정.  이전엔 레거시 BlueprintEntity
+                //  .ReservedBy 만 봤는데, 예약한 builder 가 죽어도 ReservedBy 는 정리되지 않아
+                //  (ReservationManager 는 죽은 owner 를 free 처리) 청사진이 영구히 "예약됨"으로
+                //  남아 아무도 못 짓는 desync 가 났다.  다른 모든 AI action 과 동일하게
+                //  IsReservedByOther(죽은 owner 자동 해제 포함)로 통일.
+                if (ReservationManager.IsReservedByOther(bp, ctx.builder.gameObject)) continue;
                 Vector3 bpp = bp.transform.position;
                 if (Mathf.Abs(bpp.x) > 43.5f || Mathf.Abs(bpp.y) > 43.5f) continue;
                 float sq = ((Vector2)bpp - me).sqrMagnitude;

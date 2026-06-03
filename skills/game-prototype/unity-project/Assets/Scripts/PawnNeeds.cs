@@ -355,6 +355,12 @@ namespace MelonS.GameProto
             if (IsSleeping)
             {
                 sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * dt);
+                // #audit2 #18 — 회복/스케줄 수면 분기에도 food/mood 0.5x decay.  이전엔 sleep 만
+                //  채우고 return 해서, sleep 이 회복 임계(~35)를 넘긴 뒤 80 까지 자는 동안(그리고
+                //  스케줄 수면 내내) 허기·기분이 전혀 줄지 않는 '무한 무허기' 버그였다.  정상
+                //  취침 분기(위)와 동일한 0.5x 감소로 통일 — RimWorld 도 수면 중 허기 진행.
+                food = Mathf.Max(0f, food - foodDecay * 0.5f * dt);
+                mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
                 return;
             }
 
