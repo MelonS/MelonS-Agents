@@ -135,6 +135,7 @@ namespace MelonS.GameProto
 
         // The body CHILD transform whose localPosition.X we offset for the lunge.
         private Transform bodyChild;
+        private SpriteRenderer cachedChildSr;   // #audit4 #3 — bodyChild 의 SpriteRenderer 캐시
         // Carry-bundle child SpriteRenderer (created once in Awake).
         private SpriteRenderer bundleRenderer;
 
@@ -170,6 +171,9 @@ namespace MelonS.GameProto
             pawnEntity = GetComponent<PawnEntity>();
             health     = GetComponent<PawnHealth>();
             bodyChild  = ResolveBodyChild();
+            // #audit4 #3 — 자식 SpriteRenderer 캐시.  UpdateAttackLunge 가 매 프레임
+            //  bodyChild.GetComponent<SpriteRenderer>() 를 호출하던 것 1회 캐시로 대체.
+            cachedChildSr = bodyChild != null ? bodyChild.GetComponent<SpriteRenderer>() : null;
             bundleRenderer = EnsureBundleChild();
         }
 
@@ -416,7 +420,7 @@ namespace MelonS.GameProto
             // Determine lunge direction: face right = positive X lunge; face left =
             // negative X.  PawnFacing writes the child SR's flipX, not the transform
             // localScale.  We read the child SR's flipX to mirror the lunge direction.
-            SpriteRenderer childSr = bodyChild.GetComponent<SpriteRenderer>();
+            SpriteRenderer childSr = cachedChildSr != null ? cachedChildSr : (bodyChild != null ? bodyChild.GetComponent<SpriteRenderer>() : null);  // #audit4 #3 캐시
             if (childSr != null && childSr.flipX)
                 targetX = -targetX;
 

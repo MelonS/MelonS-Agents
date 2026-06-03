@@ -11,6 +11,7 @@ namespace MelonS.GameProto
     public class ClickSelector : MonoBehaviour
     {
         [SerializeField] private Camera mainCamera;
+        private CameraController _cachedCameraController;   // #audit4 #4 — focus 폴백 캐시
 
         private PawnEntity currentSelection;
         public PawnEntity CurrentSelection => currentSelection;
@@ -888,7 +889,9 @@ namespace MelonS.GameProto
             //  same pawn 재선택도 focus 트리거 (재중심)
             var camForFocus = mainCamera != null ? mainCamera : Camera.main;
             var cc = camForFocus != null ? camForFocus.GetComponent<CameraController>() : null;
-            if (cc == null) cc = Object.FindFirstObjectByType<CameraController>();
+            // #audit4 #4 — FindFirstObjectByType 폴백 결과를 캐시(다음 선택부터 재탐색 회피).
+            if (cc == null) cc = _cachedCameraController;
+            if (cc == null) { cc = Object.FindFirstObjectByType<CameraController>(); _cachedCameraController = cc; }
             if (cc != null) cc.RequestFocus(pawn);
         }
 

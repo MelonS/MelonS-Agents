@@ -326,9 +326,14 @@ namespace MelonS.GameProto
         //  Exposed now so C1 can wire it; nothing reads it yet at runtime (flag OFF).
         public bool LastPathFailed { get; private set; }
 
+        // #audit4 #0 — PawnAbilities 캐시(health 캐시 패턴과 동일).  이전엔 Update 의 3개
+        //  분기에서 매 프레임 GetComponent<PawnAbilities>() 호출.  안정 컴포넌트라 1회 캐시.
+        private PawnAbilities _abilities;
+
         private void Awake()
         {
             health = GetComponent<PawnHealth>();
+            _abilities = GetComponent<PawnAbilities>();
             if (stats == null) stats = PawnStats.CreateDefault();
         }
 
@@ -521,7 +526,7 @@ namespace MelonS.GameProto
                         Vector2 dest = PathGrid.CellToWorld(open);
                         float speed = stats.moveSpeed * MoveSpeedScale
                             * (health != null ? health.MovementSpeedMultiplier() : 1f);
-                        var ab = GetComponent<PawnAbilities>();
+                        var ab = _abilities;   // #audit4 #0 캐시
                         if (ab != null) speed *= ab.moveSpeedMul;
                         Vector2 step = Vector2.MoveTowards(transform.position, dest, speed * Time.deltaTime);
                         transform.position = new Vector3(step.x, step.y, transform.position.z);
@@ -550,7 +555,7 @@ namespace MelonS.GameProto
 
                 Vector2 curP = transform.position;
                 float speedMulP = MoveSpeedScale * (health != null ? health.MovementSpeedMultiplier() : 1f);
-                var abilP = GetComponent<PawnAbilities>();
+                var abilP = _abilities;   // #audit4 #0 캐시
                 if (abilP != null) speedMulP *= abilP.moveSpeedMul;
                 // #157 / W-M4-05 #21 - 바닥 위 이동 보너스.  BonusAt 가 해당 cell 의
                 //  가장 높은 FloorEntity.MoveBonus 를 돌려줌 (wood 1.30x, stone 1.50x).
@@ -594,7 +599,7 @@ namespace MelonS.GameProto
             // Step45: 다리 다친 만큼 속도 감소
             float speedMul = MoveSpeedScale * (health != null ? health.MovementSpeedMultiplier() : 1f);
             // #120 - PawnAbilities move speed multiplier
-            var _abil = GetComponent<PawnAbilities>();
+            var _abil = _abilities;   // #audit4 #0 캐시
             if (_abil != null) speedMul *= _abil.moveSpeedMul;
             // #157 / W-M4-05 #21 - wiki: 바닥 위 pawn 은 이동 속도 보너스 (paved 50% 근사).
             //  BonusAt 가 cell 의 최고 FloorEntity.MoveBonus 반환 (wood 1.30x / stone 1.50x),
