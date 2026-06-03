@@ -25,7 +25,7 @@ namespace MelonS.GameProto
             Bloodthirsty,  // 호전적이다 — combat XP +50%, kill mood +5
             Frail,         // 약골 — HP max -25%
             Tough,         // 강골 — HP max +35%
-            Gourmand,      // 미식가 — meal +15 mood, no-meal -10
+            Gourmand,      // 미식가 — meal +15 mood (배선됨: PawnNeeds mealMoodBonus)
             Stoic,         // 무던하다 — mood swing ÷2 (안정적)
         }
 

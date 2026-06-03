@@ -29,6 +29,12 @@ namespace MelonS.GameProto
         // Day 55: 부위별 health 표시 — 클릭 시 vanilla colony-sim 처럼.
         [SerializeField] private Text healthText;
 
+        // #obj-audit: 탭 strip 높이 + body 와의 간격을 단일 상수로.  이전엔 EnsureTabs 와
+        //   MakeBodyText 가 각자 `float stripH = 22f` + body 의 `stripH + 6f` 를 따로
+        //   하드코딩해, 한쪽만 바꾸면 본문이 탭과 겹칠 brittleness 가 있었다(감사 #2).
+        private const float TabStripH = 22f;
+        private const float TabStripGap = 6f;
+
         // single-inspector 통합 — 비-pawn entity 선택 시 설명 본문을 보여주는
         //   lazily-built Text (탭 위에 겹치지 않게 panel 본문 영역을 채움).  pawn
         //   탭 UI 와 상호 배타적으로 토글된다.
@@ -178,7 +184,7 @@ namespace MelonS.GameProto
             if (prt == null) { tabButtons = new Button[0]; return; }
 
             float pad = MelonS.GameProto.Core.UITheme.PadOuter;
-            float stripH = 22f;
+            float stripH = TabStripH;
             // Tab strip pinned to the TOP edge of the panel, inset by padding so
             //   it sits inside the bordered frame rhythm (same PadOuter the
             //   empty-state inset uses).
@@ -240,7 +246,7 @@ namespace MelonS.GameProto
             var prt = panelBg.GetComponent<RectTransform>();
             if (prt == null) return null;
             float pad = MelonS.GameProto.Core.UITheme.PadOuter;
-            float stripH = 22f;
+            float stripH = TabStripH;
             var go = new GameObject(name);
             go.transform.SetParent(prt, false);
             var rt = go.AddComponent<RectTransform>();
@@ -248,7 +254,7 @@ namespace MelonS.GameProto
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(1f, 1f);
             rt.offsetMin = new Vector2(pad, pad);
-            rt.offsetMax = new Vector2(-pad, -(pad + stripH + 6f));
+            rt.offsetMax = new Vector2(-pad, -(pad + stripH + TabStripGap));
             var txt = go.AddComponent<Text>();
             txt.font = ResolveFont();
             txt.fontSize = 13;

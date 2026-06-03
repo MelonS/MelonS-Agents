@@ -183,6 +183,14 @@ namespace MelonS.GameProto
                 ert.anchorMin = Vector2.zero; ert.anchorMax = Vector2.one;
                 ert.sizeDelta = Vector2.zero; ert.anchoredPosition = Vector2.zero;
             }
+
+            // #obj-audit #0 — 패널 높이를 pawn 수에 맞춰 동적 조정.  이전엔 380px 고정이라
+            //  grid 가용 308px(=380-72) < (헤더1 + pawn N)×30 이면(N≥10) 아래 행이 잘렸다.
+            //  필요 높이 = (행 수)×RowHeight + 72(타이틀+힌트 inset) + 하단여백; 화면 안 clamp.
+            int rows = (pawns != null ? pawns.Length : 0) + 1;  // +1 헤더 행
+            float needed = rows * RowHeight + 72f + 16f;
+            float maxH = Screen.height > 0 ? Screen.height - 80f : 900f;
+            rt.sizeDelta = new Vector2(rt.sizeDelta.x, Mathf.Clamp(needed, 200f, maxH));
         }
 
         private void MakeHeaderCell(Transform parent, string label, Vector2 pos)

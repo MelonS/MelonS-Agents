@@ -216,10 +216,40 @@ namespace MelonS.GameProto
             if (bed != null) return $"{bed.QualityKr}  (수면 {bed.RestMul:F2}x · 기분 +{bed.MoodBonus:F0}/s)";
             var wall = hit.GetComponent<WallEntity>();
             if (wall != null) return "벽";
+            // #obj-audit: AutodoorEntity 는 DoorEntity 를 상속 → 반드시 Door 체크보다 먼저
+            //  검사해야 일반 문 설명에 가려지지 않는다(빠른 통과 특성 별도 안내).
+            var adoor = hit.GetComponent<AutodoorEntity>();
+            if (adoor != null) return "자동문 (콜로니스트 통과 빠름)";
             var door = hit.GetComponent<DoorEntity>();
             if (door != null) return "문 (콜로니스트 통과 가능)";
             var floor = hit.GetComponent<FloorEntity>();
             if (floor != null) return "바닥";
+            // ── #obj-audit (멀티에이전트 감사 #6~11): 상호작용·운반 대상인데 hover 설명이
+            //    없던 엔티티들.  문구는 ClickSelector 의 실제 우클릭 컨텍스트 메뉴 동작과
+            //    1:1 로 맞춰 거짓 안내가 없게 한다(선택된 림 우클릭 시 뜨는 '우선' 명령).
+            var vein = hit.GetComponent<StoneVeinEntity>();
+            if (vein != null) return "광맥  (선택 후 우클릭=채광 우선)";
+            var pile = hit.GetComponent<WoodPileEntity>();
+            if (pile != null) return $"목재 더미 (×{pile.Wood})  (선택 후 우클릭=운반 우선)";
+            var chunk = hit.GetComponent<StoneChunkEntity>();
+            if (chunk != null) return $"돌덩이 (석재 ×{chunk.Stone})  (운반 대상)";
+            var meat = hit.GetComponent<MeatPileEntity>();
+            if (meat != null) return $"{meat.DisplayName} 더미 (식량 ×{meat.Food})  (운반 대상)";
+            var stockpile = hit.GetComponent<StockpileZoneEntity>();
+            if (stockpile != null) return $"저장 구역 (우선순위 {stockpile.PriorityKr})  (선택 후 우클릭=우선순위 변경)";
+            var bp = hit.GetComponent<BlueprintEntity>();
+            if (bp != null && !bp.IsComplete) return "청사진 (건설 대기)  (선택 후 우클릭=건설 우선)";
+            // 상호작용 없는 건설 구조물 — 정체만 안내(무엇인지 모르겠다는 혼란 방지).
+            var barricade = hit.GetComponent<BarricadeEntity>();
+            if (barricade != null) return "바리케이드 (경로 차단·엄폐)";
+            var fence = hit.GetComponent<FenceEntity>();
+            if (fence != null) return "울타리 (동물 차단·통과 가능)";
+            var lamp = hit.GetComponent<LampEntity>();
+            if (lamp != null) return "램프 (주변 조명)";
+            var table = hit.GetComponent<TableEntity>();
+            if (table != null) return "탁자 (식사/휴식 장소)";
+            var chair = hit.GetComponent<ChairEntity>();
+            if (chair != null) return "의자 (앉는 자리)";
             return "";
         }
     }

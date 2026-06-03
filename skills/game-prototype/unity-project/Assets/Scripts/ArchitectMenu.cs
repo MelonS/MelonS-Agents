@@ -584,6 +584,14 @@ namespace MelonS.GameProto
                     }
                 }
             }
+
+            // #obj-audit #1 — 패널 높이를 콘텐츠(`y`)에 맞춰 동적 조정.  이전엔 560px 고정이라
+            //  Zone(헤더 8 + 항목 8 ≈ 544px) 펼침 시 맨 아래 항목이 패널 밖으로 잘렸다.
+            //  content 영역은 헤더 strip(36) + gap(8) 아래이므로 rt 높이 = y + 44 + 하단여백.
+            //  화면(1080) 안에서 clamp — 극단적으로 길어도 위/아래로 넘치지 않게.
+            float desired = y + 44f + 12f;
+            float maxH = Screen.height > 0 ? Screen.height - 80f : 900f;
+            rt.sizeDelta = new Vector2(rt.sizeDelta.x, Mathf.Clamp(desired, 200f, maxH));
         }
 
         private GameObject MakeBtn(Transform parent, string label, Vector2 pos, Color col, System.Action onClick,

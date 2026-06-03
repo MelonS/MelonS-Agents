@@ -205,6 +205,12 @@ namespace MelonS.GameProto
                 if (tr != null)
                 {
                     mood = Mathf.Clamp(mood + tr.moodBaselineBonus, 0f, 100f);
+                    // #obj-audit #13 — Stoic(무던하다) moodSwingMul(÷2) 실배선.  그동안
+                    //  PawnTraits 가 값만 계산하고 소비처가 없어 'mood swing ÷2' 가 무효과
+                    //  dead-trait 였다.  의도("안정적") 그대로, mood 자연 감소율을 1회 스케일
+                    //  (기본 1.0 → 무효, Stoic 0.5 → 절반 속도로 기분 하락).  moodDecay 를
+                    //  쓰는 모든 분기에 자동 반영(추가 임의 밸런스 없음).
+                    moodDecay *= tr.moodSwingMul;
                 }
                 traitsApplied = true;
             }

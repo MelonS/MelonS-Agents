@@ -270,7 +270,9 @@ namespace MelonS.GameProto
                 // need to abort the raid just because we lack a sprite asset.
                 sr.sprite = s;
                 sr.color = new Color(0.9f, 0.3f, 0.3f, 1f);
-                sr.sortingOrder = 11;
+                // #sort-audit: pawn 본체 규약은 10 (BanditEnemy 포섭 후도 10).  11 이면
+                //  운반중 콜로니스트(carry bundle=11)와 같은 층이라 본체 위로 떠 보였음 → 10.
+                sr.sortingOrder = 10;
                 // IMPORTANT: BoxCollider2D MUST be added BEFORE BanditEnemy
                 // because BanditEnemy declares [RequireComponent(typeof(Collider2D))]
                 // and Unity will auto-add a default Collider2D if missing, which
@@ -352,7 +354,9 @@ namespace MelonS.GameProto
                 var sr = go.AddComponent<SpriteRenderer>();
                 if (traderSpr != null) sr.sprite = traderSpr;
                 else sr.color = new Color(0.85f, 0.65f, 0.30f, 1f);  // 황금색 fallback
-                sr.sortingOrder = 9;
+                // #sort-audit: 9 는 그림자 층 — trader 본체가 일반 pawn 본체(10)에 가려졌음.
+                //  trader 도 보행 NPC 이므로 본체 규약 10 으로 정렬.
+                sr.sortingOrder = 10;
                 var col = go.AddComponent<BoxCollider2D>();
                 col.size = new Vector2(0.8f, 1.2f);
                 go.AddComponent<TraderEntity>();

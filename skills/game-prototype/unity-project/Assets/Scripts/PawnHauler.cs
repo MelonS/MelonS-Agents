@@ -86,7 +86,9 @@ namespace MelonS.GameProto
                     carryVisual.transform.localPosition = new Vector3(0f, 0.45f, 0f);  // 머리 위
                     carryVisual.transform.localScale = Vector3.one * 0.7f;
                     carryVisualSr = carryVisual.AddComponent<SpriteRenderer>();
-                    carryVisualSr.sortingOrder = 12;  // pawn(10) 위
+                    // #sort-audit: carry bundle 규약은 11 (PawnPoseDriver 와 통일).  12 면
+                    //  두 캐리 구현이 다른 층이라 일관성 깨짐 → pawn(10) 바로 위 11.
+                    carryVisualSr.sortingOrder = 11;  // pawn(10) 위
                 }
                 carryVisualSr.sprite = CarryBundleSprite();
                 carryVisualSr.color = carryingFood > 0
