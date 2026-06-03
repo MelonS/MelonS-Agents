@@ -189,6 +189,13 @@ namespace MelonS.GameProto
             //  here would read THIS child's own renderer (the RED bug), not the
             //  root anchor that GameManager + PawnEntity actually write tint to.
             if (rootTintRenderer == null) return;
+            // #54 콜로니스트 외형 다양화: 과거엔 color 만 mirror 해서, GameManager 가 root
+            //  tint-anchor 에 배정한 per-pawn 변형 sprite 가 가시 자식엔 안 나타났다(전원 동일).
+            //  sprite 도 mirror(참조 비교로 변경 시에만) → 변형 sprite 가 실제로 보인다.
+            //  color 미변경 early-return 보다 먼저 실행(아래 return 에 막히지 않게).
+            if (rootTintRenderer.sprite != null && childRenderer.sprite != rootTintRenderer.sprite)
+                childRenderer.sprite = rootTintRenderer.sprite;
+
             Color c = rootTintRenderer.color;
             if (hasPushedColor && c == lastPushedColor) return;
             childRenderer.color = c;

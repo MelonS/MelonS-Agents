@@ -127,19 +127,21 @@ def _scale(c: tuple, f: float) -> tuple:
             max(0, min(255, int(b * f))), a)
 
 
-def gen_pawn(cloth: tuple, cloth_dk: tuple, trouser: tuple) -> Image.Image:
-    """16x16 flat-style 콜로니스트 생성. cloth 색은 외부에서 주입 (중립 베이스).
+def gen_pawn(cloth: tuple, cloth_dk: tuple, trouser: tuple,
+             hair: tuple = HAIR_DK, skin_md: tuple = SKIN_MD,
+             skin_sh: tuple = SKIN_SH) -> Image.Image:
+    """16x16 flat-style 콜로니스트 생성. cloth/hair/skin 색은 외부에서 주입.
 
-    #UI-A 음영 추가: 실루엣/스타일은 유지하되 top-down 조명으로 입체감을 준다.
+    #UI-A 음영: 실루엣/스타일은 유지하되 top-down 조명으로 입체감.
       - 머리: 윗줄 하이라이트 / 얼굴 턱줄 그림자
       - 상의: 상단(어깨/가슴) 하이라이트, 배 아래 그림자 → 옷이 둥글게 읽힘
       - 바지: 정강이 그림자, 신발 윗면 하이라이트
-    면 채색 → 외곽 아웃라인 순서는 그대로(평면 톤 유지).
+    #54 외형 다양화: hair/skin 도 파라미터화 → 콜로니스트마다 머리색·피부톤 구분.
 
     Args:
-        cloth:    상의/몸통 색 (CLOTH_*)
-        cloth_dk: 팔/어깨 음영 (CLOTH_*_DK)
-        trouser:  하의 색 (TROUSER_*)
+        cloth/cloth_dk/trouser: 상의/팔음영/하의 색
+        hair:    머리색 (기본 HAIR_DK)
+        skin_md/skin_sh: 피부 기본/그림자 톤 (기본 SKIN_MD/SH)
 
     Returns:
         RGBA Image 16x16
@@ -148,16 +150,16 @@ def gen_pawn(cloth: tuple, cloth_dk: tuple, trouser: tuple) -> Image.Image:
 
     cloth_lt   = _scale(cloth, 1.20)     # 상의 하이라이트(어깨/가슴)
     cloth_lo   = _scale(cloth, 0.82)     # 상의 하단 그림자
-    hair_lt    = _scale(HAIR_DK, 1.55)   # 머리 하이라이트
+    hair_lt    = _scale(hair, 1.45)      # 머리 하이라이트
     trouser_lo = _scale(trouser, 0.82)   # 바지 하단 그림자
     boot_lt    = _scale(WOOD_DK, 1.28)   # 신발 윗면 하이라이트
 
     def shade(z: int, y: int) -> tuple:
         """zone+행 위치로 음영 색 결정 (top-down 라이팅)."""
         if z == 1:                                   # hair
-            return hair_lt if y <= 1 else HAIR_DK
+            return hair_lt if y <= 1 else hair
         if z == 2:                                   # skin
-            return SKIN_SH if y >= 5 else SKIN_MD    # 턱줄 그림자
+            return skin_sh if y >= 5 else skin_md    # 턱줄 그림자
         if z == 3:                                   # torso cloth
             if y <= 7:  return cloth_lt              # 어깨/가슴 하이라이트
             if y >= 11: return cloth_lo              # 배 아래 그림자
@@ -167,8 +169,8 @@ def gen_pawn(cloth: tuple, cloth_dk: tuple, trouser: tuple) -> Image.Image:
             return trouser_lo if y >= 14 else trouser
         if z == 6:                                   # boot
             return boot_lt if y == 15 else WOOD_DK
-        if z == 7:  return SKIN_SH                   # eyes
-        return SKIN_MD
+        if z == 7:  return skin_sh                   # eyes
+        return skin_md
 
     mask    = _build_mask()
     outline = _outline_ring(mask)
@@ -199,7 +201,21 @@ def gen_preview(sprites: list, scale: int = 4) -> Image.Image:
     return composite.resize((pw * scale, ph * scale), Image.NEAREST)
 
 
+# #54 콜로니스트 외형 다양화 — 머리색/피부톤 팔레트.
+HAIR_BLACK  = (32, 28, 30, 255)
+HAIR_BROWN  = HAIR_DK                  # (58,38,22)
+HAIR_AUBURN = (120, 58, 34, 255)
+HAIR_BLONDE = (176, 138, 78, 255)
+HAIR_GREY   = (158, 156, 150, 255)
+# 피부 (md, sh) 쌍 — 라이트/미디엄/탠/다크
+SKIN_LIGHT  = ((238, 202, 170, 255), (200, 162, 126, 255))
+SKIN_MED    = (SKIN_MD, SKIN_SH)               # 기존
+SKIN_TAN    = ((196, 150, 108, 255), (154, 114, 80, 255))
+SKIN_DARK   = ((150, 108, 76, 255),  (112, 80, 54, 255))
+
+
 def main():
+    # 기존 슬롯(back-compat) — cloth 변형만.
     variants = [
         ("pawn_colonist", CLOTH_BLUE,  CLOTH_BLUE_DK,  TROUSER_BLUE),
         ("pawn_blue",     CLOTH_BLUE,  CLOTH_BLUE_DK,  TROUSER_BLUE),
@@ -214,6 +230,34 @@ def main():
         im.save(out)
         print(f"[gen_pawn] {slug}.png  {im.size[0]}x{im.size[1]}")
         sprites.append((slug, im))
+
+    # #54 개인별 구분되는 콜로니스트 변형 8종 (cloth × hair × skin 조합).
+    #  GameManager.colonistVariantSprites 가 v0..v7 을 림 0..7 에 배정.
+    cloths = [
+        (CLOTH_BLUE,  CLOTH_BLUE_DK,  TROUSER_BLUE),
+        (CLOTH_RUST,  CLOTH_RUST_DK,  TROUSER_RUST),
+        (CLOTH_OLIVE, CLOTH_OLIVE_DK, TROUSER_OLIVE),
+    ]
+    combos = [
+        (0, HAIR_BROWN,  SKIN_MED),
+        (1, HAIR_BLACK,  SKIN_LIGHT),
+        (2, HAIR_BLONDE, SKIN_TAN),
+        (0, HAIR_AUBURN, SKIN_DARK),
+        (1, HAIR_GREY,   SKIN_MED),
+        (2, HAIR_BLACK,  SKIN_TAN),
+        (0, HAIR_BLONDE, SKIN_LIGHT),
+        (1, HAIR_BROWN,  SKIN_DARK),
+    ]
+    vsprites = []
+    for idx, (ci, hair, (smd, ssh)) in enumerate(combos):
+        cloth, cloth_dk, trouser = cloths[ci]
+        im = gen_pawn(cloth, cloth_dk, trouser, hair=hair, skin_md=smd, skin_sh=ssh)
+        out = HERE / f"pawn_v{idx}.png"
+        im.save(out)
+        print(f"[gen_pawn] pawn_v{idx}.png  {im.size[0]}x{im.size[1]}")
+        vsprites.append((f"v{idx}", im))
+    # 다양화 변형 프리뷰
+    gen_preview(vsprites, scale=4).save(HERE / "_preview_variants.png")
 
     prev      = gen_preview(sprites, scale=4)
     prev_path = HERE / "_preview_colonist.png"

@@ -188,12 +188,19 @@ namespace MelonS.GameProto.EditorTools
 
             SerializedObject gmSo = new SerializedObject(gm);
             gmSo.FindProperty("pawnPrefab").objectReferenceValue = pawnPrefab;
-            // colonistVariantSprites 배열 = [blue, rust, olive] (colonist 0/1/2 순서)
+            // #54 콜로니스트 외형 다양화: per-pawn 변형 8종(pawn_v0..v7) — 머리색/피부톤/옷색
+            //  조합으로 개인 구분.  GameManager 가 colonist i 에 colonistVariantSprites[i] 배정.
+            //  (PawnSpriteBob 이 root 변형 sprite 를 가시 자식에 mirror — 이전엔 color 만 mirror 라
+            //   변형이 안 보였음, 같은 배치에서 수정.)
             var variantsProp = gmSo.FindProperty("colonistVariantSprites");
-            variantsProp.arraySize = 3;
-            variantsProp.GetArrayElementAtIndex(0).objectReferenceValue = pawnBlueRef;
-            variantsProp.GetArrayElementAtIndex(1).objectReferenceValue = pawnRustRef;
-            variantsProp.GetArrayElementAtIndex(2).objectReferenceValue = pawnOliveRef;
+            const int NV = 8;
+            variantsProp.arraySize = NV;
+            for (int vi = 0; vi < NV; vi++)
+            {
+                var vs = LoadOrSetupSprite($"Assets/Sprites/pawn_v{vi}.png");
+                if (vs == null) Debug.LogWarning($"[SceneSetup] pawn_v{vi}.png sprite null");
+                variantsProp.GetArrayElementAtIndex(vi).objectReferenceValue = vs;
+            }
             gmSo.FindProperty("arrowSpriteRuntime").objectReferenceValue = arrowSpriteRef;
             gmSo.FindProperty("woodPileSpriteRuntime").objectReferenceValue = woodPileSpriteRef;
             gmSo.FindProperty("stoneChunkSpriteRuntime").objectReferenceValue = stoneChunkSpriteRef;
