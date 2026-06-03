@@ -147,7 +147,14 @@ namespace MelonS.GameProto
                 var canvasRt = canvas.GetComponent<RectTransform>();
                 Vector2 localPos;
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRt, screenPos, null, out localPos);
-                rt.anchoredPosition = new Vector2(localPos.x + 14, localPos.y + 18);
+                // #p2_2 화면 가장자리 clamp (ContextMenuUI #275 패턴): pivot(0,0)이라 우/상으로
+                //  확장 → 우측·상단이 캔버스 밖으로 잘리지 않게 보정.
+                float px = localPos.x + 14, py = localPos.y + 18;
+                Rect cr = canvasRt.rect;
+                float pw = rt.sizeDelta.x, ph = rt.sizeDelta.y;
+                px = Mathf.Clamp(px, cr.xMin, Mathf.Max(cr.xMin, cr.xMax - pw));
+                py = Mathf.Clamp(py, cr.yMin, Mathf.Max(cr.yMin, cr.yMax - ph));
+                rt.anchoredPosition = new Vector2(px, py);
             }
         }
 
