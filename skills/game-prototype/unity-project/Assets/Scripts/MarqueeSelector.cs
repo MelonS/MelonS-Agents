@@ -338,6 +338,7 @@ namespace MelonS.GameProto
         {
             ClickSelector cs = FindClickSelector();
             if (cs == null) return;
+            cs.ClearInspect();  // #버그헌트: 마퀴 시작 시 비-pawn inspect 패널 잔존 해소(pawn 무관)
             PawnEntity single = cs.CurrentSelection;
             if (single == null) return;
             // Don't deselect a pawn we're about to box-select; FinalizeMarquee will set it

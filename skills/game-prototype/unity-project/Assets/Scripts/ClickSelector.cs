@@ -19,6 +19,8 @@ namespace MelonS.GameProto
         // #105 - 비-pawn 오브젝트 inspect.  EntityInspectorPanel 폴링.
         private GameObject currentInspect;
         public GameObject CurrentInspect => currentInspect;
+        // #버그헌트(2026-06-03): 마퀴 드래그 시작 시 비-pawn inspect 패널도 해제하도록 공개 API.
+        public void ClearInspect() => currentInspect = null;
 
         // 진단용(-inspectpawn): 첫 PawnEntity 를 선택해 인스펙트 패널을 띄운다 → 스크린샷 검증.
         public void DiagnosticInspectFirstPawn()
