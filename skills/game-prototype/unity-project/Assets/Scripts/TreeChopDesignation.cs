@@ -97,7 +97,25 @@ namespace MelonS.GameProto
             }
 
             PruneMarked();
-            DispatchToIdleChoppers();
+            // #작업배정-단일화(운영자 승인 2026-06-03): 별도 dispatch 제거.  이전엔 (A) 자율
+            //  AI ChopTreeAction 과 (B) 이 DispatchToIdleChoppers 가 둘 다 마킹 나무를 idle
+            //  림에 배정해 충돌(다른 림이 벌목/다같이 감/번갈이).  이제 ChopTreeAction 이
+            //  '마킹된 나무만' 자율 선택하는 단일 경로 → 여기 dispatch 는 중복이라 끈다.
+            //  (마킹 시스템 자체는 유지 — ChopTreeAction 이 IsMarked 로 읽는다.)
+            // DispatchToIdleChoppers();  // retired — 단일 경로(ChopTreeAction)로 대체
+        }
+
+        /// <summary>#작업배정-단일화 — ChopTreeAction 이 '지정된 나무만' 자율 벌목하도록
+        /// 마킹 여부를 조회.  RimWorld: 지정 안 한 나무는 림이 베지 않는다.</summary>
+        public bool IsMarked(TreeEntity t)
+        {
+            if (t == null) return false;
+            for (int i = 0; i < marked.Count; i++)
+            {
+                var m = marked[i];
+                if (m != null && !m.IsChopped && m.Tree == t) return true;
+            }
+            return false;
         }
 
         private void HandleDragInput()

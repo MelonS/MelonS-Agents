@@ -187,7 +187,22 @@ namespace MelonS.GameProto
             }
 
             PruneMarked();
-            DispatchToIdleMiners();
+            // #작업배정-단일화(운영자 승인 2026-06-03): 벌목과 동일 — 별도 dispatch 제거.
+            //  MineStoneAction 이 '마킹된 광맥만' 자율 선택하는 단일 경로로 통일.
+            // DispatchToIdleMiners();  // retired — 단일 경로(MineStoneAction)로 대체
+        }
+
+        /// <summary>#작업배정-단일화 — MineStoneAction 이 '지정된 광맥만' 자율 채광하도록
+        /// 마킹 여부 조회.</summary>
+        public bool IsMarked(StoneVeinEntity v)
+        {
+            if (v == null) return false;
+            for (int i = 0; i < marked.Count; i++)
+            {
+                var m = marked[i];
+                if (m != null && !m.IsMined && m.Vein == v) return true;
+            }
+            return false;
         }
 
         // ---- left-press / drag / release → mark vein(s) ----------------------

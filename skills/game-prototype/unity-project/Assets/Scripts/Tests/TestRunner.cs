@@ -848,14 +848,24 @@ namespace MelonS.GameProto.Tests
 
         private IEnumerator TestV40_ChopTreeAction()
         {
+            // #작업배정-단일화(2026-06-03): ChopTreeAction 은 이제 '지정(마킹)된 나무'만
+            //  자율 벌목한다(RimWorld 모델 — 지정 안 한 나무는 안 벤다).  따라서 이 테스트는
+            //  TreeChopDesignation 싱글톤 보장 + 나무 마킹 후 TryStart 가 task 를 잡는지 검증.
+            //  (월드 경계 ±43.5 안에 둬야 FindNearestTree 가 후보로 본다 → x=20.)
+            if (TreeChopDesignation.Instance == null)
+                new GameObject("~TestTreeChopDesignation").AddComponent<TreeChopDesignation>();
+            yield return null;
             var treeGo = new GameObject("TestChopTree");
-            treeGo.transform.position = new Vector3(55, 0, 0);
+            treeGo.transform.position = new Vector3(20, 0, 0);
             treeGo.AddComponent<SpriteRenderer>();
             treeGo.AddComponent<BoxCollider2D>();
-            treeGo.AddComponent<TreeEntity>();
+            var tree = treeGo.AddComponent<TreeEntity>();
             yield return null;
+            var ct = TreeChopDesignation.Instance != null
+                ? TreeChopDesignation.Instance.TryMark(treeGo) : null;
+            Assert(ct != null, $"나무 마킹 실패 (designation={(TreeChopDesignation.Instance != null)})");
             var pawn = new GameObject("TestChopPawn");
-            pawn.transform.position = new Vector3(53, 0, 0);
+            pawn.transform.position = new Vector3(18, 0, 0);
             pawn.AddComponent<SpriteRenderer>();
             var chopper = pawn.AddComponent<PawnChopper>();
             var mv = pawn.AddComponent<PawnMovement>();
@@ -866,7 +876,9 @@ namespace MelonS.GameProto.Tests
             var action = new MelonS.GameProto.AI.ChopTreeAction();
             bool started = action.TryStart(ctx);
             Assert(started && chopper.HasTask,
-                $"started={started}, chopper.HasTask={chopper.HasTask}");
+                $"started={started}, chopper.HasTask={chopper.HasTask} (지정된 나무 자율 벌목)");
+            // 정리: 다음 격리 테스트에 마킹/싱글톤 잔여가 새지 않게 나무 제거.
+            if (tree != null) Object.Destroy(tree.gameObject);
         }
 
         private IEnumerator TestV41_WanderAction()

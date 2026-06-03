@@ -264,10 +264,16 @@ namespace MelonS.GameProto.AI
         }
         private static TreeEntity FindNearestTree(PawnContext ctx)
         {
+            // #작업배정-단일화(운영자 승인 2026-06-03) — RimWorld 모델: 림은 '지정된(마킹된)'
+            //  나무만 자율 벌목한다.  이전엔 지정과 무관하게 맵의 아무 나무나 골라(=#38 "다른
+            //  림이 벌목", "다같이 감"), 게다가 TreeChopDesignation 의 별도 dispatch 와 충돌했다.
+            //  이제 이 자율 경로가 유일한 배정자이고, 지정된 나무로만 한정한다.  지정 시스템이
+            //  없으면(테스트 부트스트랩 누락 등) 자율 벌목을 하지 않는다(안전 측).
+            var design = TreeChopDesignation.Instance;
+            if (design == null) return null;
             var arr = Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
-            // #199 C2 — central reservation registry replaces the per-chopper scan.
-            //  Skip any tree reserved by ANOTHER pawn so each idle pawn picks a
-            //  DIFFERENT tree (operator: "림들이 왜케 겹쳐서 이동").
+            // #199 C2 — central reservation registry: skip trees reserved by ANOTHER
+            //  pawn so each idle pawn picks a DIFFERENT marked tree.
             var claimant = ctx.transform.gameObject;
             TreeEntity best = null;
             float bestSq = float.MaxValue;
@@ -275,6 +281,7 @@ namespace MelonS.GameProto.AI
             foreach (var t in arr)
             {
                 if (t == null || t.IsDestroyed) continue;
+                if (!design.IsMarked(t)) continue;   // #단일화 — 지정된 나무만 자율 벌목
                 if (ReservationManager.IsReservedByOther(t, claimant)) continue;  // 다른 pawn 의 target
                 Vector3 tp = t.transform.position;
                 if (Mathf.Abs(tp.x) > 43.5f || Mathf.Abs(tp.y) > 43.5f) continue;
@@ -389,6 +396,10 @@ namespace MelonS.GameProto.AI
         }
         private static StoneVeinEntity FindNearestVein(PawnContext ctx)
         {
+            // #작업배정-단일화 — 벌목과 동일: 림은 '지정된(마킹된)' 광맥만 자율 채광한다.
+            //  지정 시스템 없으면 자율 채광 안 함.
+            var design = MineDesignation.Instance;
+            if (design == null) return null;
             var arr = Object.FindObjectsByType<StoneVeinEntity>(FindObjectsSortMode.None);
             // #199 C2 — central reservation: skip veins reserved by ANOTHER pawn.
             var claimant = ctx.transform.gameObject;
@@ -398,6 +409,7 @@ namespace MelonS.GameProto.AI
             foreach (var v in arr)
             {
                 if (v == null || v.IsDestroyed) continue;
+                if (!design.IsMarked(v)) continue;   // #단일화 — 지정된 광맥만 자율 채광
                 if (ReservationManager.IsReservedByOther(v, claimant)) continue;
                 if (ctx.miner != null && ctx.miner.IsRecentlyGivenUp(v)) continue;  // #221 도달불가 광맥 쿨다운 스킵
                 Vector3 vp = v.transform.position;

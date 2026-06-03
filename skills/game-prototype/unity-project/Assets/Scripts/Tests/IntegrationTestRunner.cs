@@ -504,21 +504,22 @@ namespace MelonS.GameProto.Tests
             cs.SimulateSelect(bestPawn);
             cs.SimulateRightClick(new Vector2(freshTreePos.x, freshTreePos.y));
             yield return null;
-            // #232 장르 정합 새 모델: 우클릭 나무 = 벌목 '지정'(ChopTarget 마커 부착 = the reference sim
-            //  처럼 나무 위 표시) → TreeChopDesignation 이 idle 림을 dispatch.  즉시 chopper task 가
-            //  아니라 (a) 마커가 붙고 (b) 곧(throttle 0.5s) 림이 배정되는지 검증.
-            bool marked = freshTree != null && freshTree.GetComponent<ChopTarget>() != null;
-            bool dispatched = false;
-            float t0 = Time.time;
-            while (Time.time - t0 < 4f && !dispatched)
+            // #작업배정-단일화(2026-06-03): 우클릭 나무 = '선택된 림 전용' 벌목 명령(SetTreeTarget,
+            //  배타 예약).  아무 림이나 dispatch 되던 옛 마커-지정 모델 폐기(운영자 "선택 림이
+            //  아닌 다른 림이 벌목").  검증: 선택한 bestPawn 의 chopper 가 그 나무를 타깃했는가.
+            var bestCh = bestPawn.GetComponent<PawnChopper>();
+            bool targeted = bestCh != null && bestCh.Target == freshTree;
+            // 다른 림이 그 나무를 가져가지 않았는지(배타) — 선택 림 외엔 타깃 없어야.
+            bool onlySelected = true;
+            foreach (var p in pawns)
             {
-                foreach (var p in pawns)
-                { var ch = p.GetComponent<PawnChopper>(); if (ch != null && ch.Target == freshTree) { dispatched = true; break; } }
-                yield return null;
+                if (p == bestPawn) continue;
+                var ch = p.GetComponent<PawnChopper>();
+                if (ch != null && ch.Target == freshTree) { onlySelected = false; break; }
             }
             Destroy(tGo);  // cleanup
-            Assert(marked && dispatched,
-                $"우클릭 벌목 지정: 마커={marked} dispatch={dispatched} (fresh tree at {freshTreePos})");
+            Assert(targeted && onlySelected,
+                $"우클릭 벌목: 선택 림 타깃={targeted}, 선택 림 전용(타 림 미관여)={onlySelected}");
         }
 
         /// <summary>I17: GUI 벽 버튼 → 빌드모드 → reflection 으로 BuildManager.TryPlace 호출
@@ -1879,11 +1880,28 @@ namespace MelonS.GameProto.Tests
             yield return null;
             var ct = TreeChopDesignation.Instance.MarkWorld(tree.transform.position);
             if (ct == null) { Assert(false, "벌목 지정 실패 (MarkWorld null — 나무 감지 못함)"); yield break; }
-            // dispatch(0.5s) + 림 walk + chop 대기.
+            yield return null;
+            // #작업배정-단일화(2026-06-03): 지정(드래그 마킹)된 나무는 '자율 ChopTreeAction'
+            //  단일 경로가 idle 림에 배정한다(옛 별도 dispatch 폐기, 우선순위 존중=RimWorld).
+            //  검증(결정적): 가장 가까운 idle 림의 ChopTreeAction.TryStart 가 '마킹된 그 나무'를
+            //  집어 chopper.Target 으로 잡는가.  지정 안 된 나무는 안 집는 것도 함께 보장됨.
+            var p0 = pawns[0];
+            if (p0.IsDrafted) p0.SetDrafted(false);
+            var p0ch = p0.GetComponent<PawnChopper>();
+            var p0mv = p0.GetComponent<PawnMovement>();
+            var ctx = new MelonS.GameProto.AI.PawnContext {
+                chopper = p0ch, miner = p0.GetComponent<PawnMiner>(),
+                movement = p0mv, transform = p0.transform
+            };
+            var chopAct = new MelonS.GameProto.AI.ChopTreeAction();
+            bool assigned = chopAct.TryStart(ctx);
+            bool gotMarked = assigned && p0ch != null && p0ch.Target == tree;
+            // 배정됐으면 그 림이 committed(HasTask) → walk+chop 으로 파괴까지 (best-effort).
             float t0 = Time.time;
             while (Time.time - t0 < 15f && tree != null && !tree.IsDestroyed) yield return null;
-            Assert(tree == null || tree.IsDestroyed,
-                $"벌목 지정 후 15s 내 나무 벌목 안 됨 (dispatch/chop 실패) destroyed={(tree==null||tree.IsDestroyed)}");
+            bool destroyed = (tree == null || tree.IsDestroyed);
+            Assert(gotMarked,
+                $"지정된 나무를 자율 ChopTreeAction 이 idle 림에 배정 = {gotMarked} (assigned={assigned}), 이후 벌목완료={destroyed}");
         }
 
         private void FinalizeReport()

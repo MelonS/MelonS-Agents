@@ -797,14 +797,28 @@ namespace MelonS.GameProto
                 currentSelection.ManualMoveUntil = Time.time + 15f;
                 return;
             }
-            // #232 - 실제 Update 우클릭과 동일: 나무/광맥은 바로 지정(마커+dispatch).  테스트
-            //  시뮬과 실제 핸들러가 분기돼 '검증됐는데 실제 안 됨' 나던 것 방지(test==real).
+            // #작업배정-단일화(2026-06-03, 운영자 승인) — test==real 진짜 일치.
+            //  이전엔 여기서 나무/광맥을 TryMark(지정 마커→아무 림 dispatch)했는데, 실제
+            //  Update 우클릭(L340/L326)은 '선택된 림'에게 SetTreeTarget/SetVeinTarget 하는
+            //  배타 명령이라 test 와 real 이 달랐다(운영자 "선택 림이 아닌 다른 림이 벌목").
+            //  이제 시뮬도 실제와 동일하게 '선택 림 전용 명령'으로 통일.  대량 지정은 드래그
+            //  마킹 모드(Orders→벌목/채광)가 담당하고, 거긴 자율 ChopTreeAction 이 처리한다.
             if (rhit != null)
             {
-                if (rhit.GetComponent<TreeEntity>() != null && TreeChopDesignation.Instance != null
-                    && TreeChopDesignation.Instance.TryMark(rhit.gameObject) != null) return;
-                if (rhit.GetComponent<StoneVeinEntity>() != null && MineDesignation.Instance != null
-                    && MineDesignation.Instance.TryMark(rhit.gameObject) != null) return;
+                var treeR = rhit.GetComponent<TreeEntity>();
+                if (treeR != null)
+                {
+                    var ch = currentSelection.GetComponent<PawnChopper>();
+                    if (ch != null) { ClearAllWorkTasks(currentSelection); ch.SetTreeTarget(treeR); currentSelection.ManualMoveUntil = Time.time + 12f; }
+                    return;
+                }
+                var veinR = rhit.GetComponent<StoneVeinEntity>();
+                if (veinR != null)
+                {
+                    var mn = currentSelection.GetComponent<PawnMiner>();
+                    if (mn != null) { ClearAllWorkTasks(currentSelection); mn.SetVeinTarget(veinR); currentSelection.ManualMoveUntil = Time.time + 12f; }
+                    return;
+                }
             }
             // 비-drafted: blueprint/bed/trader/animal/crop/bush/pile/tree/empty
             TraderEntity trader = (rhit != null) ? rhit.GetComponent<TraderEntity>() : null;
