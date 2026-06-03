@@ -168,11 +168,22 @@ namespace MelonS.GameProto
             }
         }
 
+        // #버그헌트(2026-06-03): phase 전환 시 이전 approach 의 stand-cell 예약을 반드시 해제.
+        //  이전엔 phase 를 직접 대입해 GoToBlueprint/Stockpile→GoToItem 전환·deposit 완료 시
+        //  예약 cell 이 ReservationManager 에 누수(설계 주석 L37-38 위반)→다른 hauler 가 그 cell 을
+        //  못 잡아 점점 막힘.  모든 phase 변경을 이 헬퍼로 라우팅(새 phase 는 WalkAdjacentTo 가
+        //  새 cell 재예약).  cell 을 안 쓰는 GoToItem 으로 갈 땐 그냥 해제.
+        private void SetPhase(Phase p)
+        {
+            if (p != phase) ReleaseStandCell();
+            phase = p;
+        }
+
         public void SetPileTarget(WoodPileEntity pile)
         {
             ClearTask();
             targetPile = pile;
-            phase = Phase.GoToItem;
+            SetPhase(Phase.GoToItem);
             if (pile != null)
             {
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, pile.transform.position));
@@ -185,7 +196,7 @@ namespace MelonS.GameProto
         {
             ClearTask();
             targetStone = stone;
-            phase = Phase.GoToItem;
+            SetPhase(Phase.GoToItem);
             if (stone != null)
             {
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, stone.transform.position));
@@ -198,7 +209,7 @@ namespace MelonS.GameProto
         {
             ClearTask();
             targetMeat = meat;
-            phase = Phase.GoToItem;
+            SetPhase(Phase.GoToItem);
             if (meat != null)
             {
                 giveUp.Reset(Time.time, Vector2.Distance(transform.position, meat.transform.position));
@@ -239,7 +250,7 @@ namespace MelonS.GameProto
             UpdateCarryVisual();  // #213 - 운반물 0 → 등짐 아이콘 끔
             dropTarget = null;
             bpDropTarget = null;
-            phase = Phase.GoToItem;
+            SetPhase(Phase.GoToItem);
             ReleaseStandCell();   // #199 C2 — free the reserved approach cell
             movement.ClearTarget();
         }
@@ -274,7 +285,7 @@ namespace MelonS.GameProto
                     if (sp != null)
                     {
                         dropTarget = sp;
-                        phase = Phase.GoToStockpile;
+                        SetPhase(Phase.GoToStockpile);
                         WalkAdjacentTo(sp.transform.position);
                     }
                     else
@@ -306,7 +317,7 @@ namespace MelonS.GameProto
                     if (carryingFood > 0) DropCarriedAtFeet();
                     UpdateCarryVisual();  // #213 - 운반 끝 → 등짐 아이콘 끔
                     bpDropTarget = null;
-                    phase = Phase.GoToItem;
+                    SetPhase(Phase.GoToItem);
                     movement.ClearTarget();
                 }
                 else
@@ -324,7 +335,7 @@ namespace MelonS.GameProto
                     //  발밑에 물리 더미로 내려놓는다(미적립).  다른 hauler 가 나중에 줍어 옮김.
                     DropCarriedAtFeet();
                     UpdateCarryVisual();  // #213 - 운반 끝 → 등짐 아이콘 끔
-                    phase = Phase.GoToItem;
+                    SetPhase(Phase.GoToItem);
                     movement.ClearTarget();
                     return;
                 }
@@ -366,7 +377,7 @@ namespace MelonS.GameProto
                     UpdateCarryVisual();  // #213 - 운반 끝 → 등짐 아이콘 끔
                     Debug.Log($"[Hauler] {name} stockpile 도착, pile stack 보존");
                     dropTarget = null;
-                    phase = Phase.GoToItem;
+                    SetPhase(Phase.GoToItem);
                     movement.ClearTarget();
                 }
                 else
@@ -378,7 +389,7 @@ namespace MelonS.GameProto
             // wood pile 우선
             if (targetPile != null)
             {
-                if (targetPile.gameObject == null) { targetPile = null; return; }
+                if (targetPile.gameObject == null) { ReleaseStandCell(); targetPile = null; return; }  // #버그헌트: cell 해제
                 float dist = Vector2.Distance(transform.position, targetPile.transform.position);
                 // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
                 if (dist > pickupRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
@@ -400,7 +411,7 @@ namespace MelonS.GameProto
                     if (bp != null)
                     {
                         bpDropTarget = bp;
-                        phase = Phase.GoToBlueprint;
+                        SetPhase(Phase.GoToBlueprint);
                         WalkAdjacentTo(bp.transform.position, bp.Footprint);
                     }
                     else
@@ -410,7 +421,7 @@ namespace MelonS.GameProto
                         if (sp != null)
                         {
                             dropTarget = sp;
-                            phase = Phase.GoToStockpile;
+                            SetPhase(Phase.GoToStockpile);
                             WalkAdjacentTo(sp.transform.position);
                         }
                         else
@@ -432,7 +443,7 @@ namespace MelonS.GameProto
             // meat pile - #129
             if (targetMeat != null)
             {
-                if (targetMeat.gameObject == null) { targetMeat = null; return; }
+                if (targetMeat.gameObject == null) { ReleaseStandCell(); targetMeat = null; return; }  // #버그헌트: cell 해제
                 float dist = Vector2.Distance(transform.position, targetMeat.transform.position);
                 // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
                 if (dist > pickupRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
@@ -454,7 +465,7 @@ namespace MelonS.GameProto
                     if (sp != null)
                     {
                         dropTarget = sp;
-                        phase = Phase.GoToStockpile;
+                        SetPhase(Phase.GoToStockpile);
                         WalkAdjacentTo(sp.transform.position);
                     }
                     else
@@ -473,7 +484,7 @@ namespace MelonS.GameProto
             // stone chunk
             if (targetStone != null)
             {
-                if (targetStone.gameObject == null) { targetStone = null; return; }
+                if (targetStone.gameObject == null) { ReleaseStandCell(); targetStone = null; return; }  // #버그헌트: cell 해제
                 float dist = Vector2.Distance(transform.position, targetStone.transform.position);
                 // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
                 if (dist > pickupRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
@@ -495,7 +506,7 @@ namespace MelonS.GameProto
                     if (bp != null)
                     {
                         bpDropTarget = bp;
-                        phase = Phase.GoToBlueprint;
+                        SetPhase(Phase.GoToBlueprint);
                         WalkAdjacentTo(bp.transform.position, bp.Footprint);
                     }
                     else
@@ -506,7 +517,7 @@ namespace MelonS.GameProto
                         if (sp != null)
                         {
                             dropTarget = sp;
-                            phase = Phase.GoToStockpile;
+                            SetPhase(Phase.GoToStockpile);
                             WalkAdjacentTo(sp.transform.position);
                         }
                         else
