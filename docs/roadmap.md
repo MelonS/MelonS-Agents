@@ -198,6 +198,13 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-03** PawnSim 멀티에이전트 폴리싱 감사 15건 (`aeb9c2e`)
+  - 5차원 read-only 감사 → 적대적 검증(false-positive 7건 기각) → 확정 15건 일괄 적용:
+    상호작용 hover 설명 12종(HoverTooltip), sortingOrder 정렬 3건(Bandit/Trader/캐리번들),
+    동적 패널 높이 2건(ArchitectMenu/WorkTabUI 클리핑 해소), PawnInfoPanel 탭 상수화,
+    dead-feature 정직화 2건(Stoic moodSwingMul 실배선 + Gourmand 주석 정정).
+  - isolated 76/76 PASS.
+
 - **2026-06-03** PawnSim 연구 트리 정직화 (truth-in-UI / spec-faithful)
   - `9d02e19` — feat: 연구 better_stove 배선 (해금 시 조리 2배, dead tech 실효화)
   - `def151a` — fix: dead/비바닐라 stone_walls tech 제거 + better_stove 설명 정정
