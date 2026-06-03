@@ -21,7 +21,11 @@ namespace MelonS.GameProto.Data
     {
         [Header("Combat")]
         public int   maxHp = 30;
-        public int   attackDamage = 1;
+        // #다림월드식/#8(2026-06-03): 맨손/기본 근접 데미지 1 → 5.  1 이면 강도(20HP·armor
+        //  0.12)를 ~20 타(≈20초)나 때려야 해 전투가 지루했다(운영자 fb).  활(3~5)·적 HP(18~20)
+        //  소스케일과 정합되게 5 로 — ~4 타에 제압(RimWorld 맨손도 몇 대면 제압).  적 공격력은
+        //  그대로라 위협 유지(전투가 시시해지지 않음).  무기 장착 시 +무기데미지로 더 강해진다.
+        public int   attackDamage = 5;
         public float attackRange = 1.0f;
         public float attackInterval = 1.0f;
 

@@ -937,7 +937,8 @@ namespace MelonS.GameProto.Tests
             // PawnStats SO default 값 검증
             var stats = MelonS.GameProto.Data.PawnStats.CreateDefault();
             // #200 moveSpeed 3.0→4.6 (the reference sim human base).
-            Assert(stats.maxHp == 30 && stats.attackDamage == 1
+            // #8(2026-06-03): 기본 근접 데미지 1→5 (전투 지루함 해소).
+            Assert(stats.maxHp == 30 && stats.attackDamage == 5
                 && Mathf.Approximately(stats.moveSpeed, 4.6f)
                 && Mathf.Approximately(stats.attackRange, 1f),
                 $"default stats: HP={stats.maxHp} dmg={stats.attackDamage} speed={stats.moveSpeed} range={stats.attackRange}");
