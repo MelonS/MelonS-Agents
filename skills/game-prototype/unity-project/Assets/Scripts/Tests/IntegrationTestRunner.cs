@@ -440,9 +440,15 @@ namespace MelonS.GameProto.Tests
             int groundWood = 0;
             foreach (var p in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
                 if (p != null) groundWood += p.Wood;
-            bool hasResources = groundWood >= 100 && (rm.food + rm.meals) >= 3;
+            // #다림월드식(2026-06-03): 시작 식량도 추상 카운터(meals) 폐기 → 물리 '간편식'
+            //  MeatPileEntity 더미로 드롭(목재와 동일).  meals/food 카운터는 0(운반 전)이고,
+            //  대신 바닥 물리 식량 더미가 존재하는지 검증한다.
+            int groundFood = 0;
+            foreach (var m in Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None))
+                if (m != null) groundFood += m.Food;
+            bool hasResources = groundWood >= 100 && groundFood >= 3;
             Assert(hasResources,
-                $"starter: 바닥물리목재={groundWood} (>=100 드롭), food={rm.food} meals={rm.meals} (food+meals>=3)");
+                $"starter(RimWorld식 물리): 바닥목재={groundWood}(>=100), 바닥식량={groundFood}(>=3) [food={rm.food} meals={rm.meals} 카운터는 0 정상]");
         }
 
         /// <summary>I14: HoverTooltip MonoBehaviour 가 씬에 존재 (active 여부 상관 X)</summary>
