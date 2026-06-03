@@ -105,3 +105,11 @@ ClearAllWorkTasks miner/harvester·save/load 1:1 매칭(데이터손상).  멀�
 (회귀헌트→CRITICAL chop, 신선→camera/event/weather) → 새 영역 감사 계속이 생산적.
 **테스트 노트**: I16-full-chop-cycle 이 라이브 씬 타이밍에 flaky(재실행 시 통과; chop 코드
 무관).  추후 전용 pawn 셋업으로 deterministic 하게 hardening 필요(현재는 재실행으로 확인).
+
+### 트레잇 결정성 — 보류→완료 (2026-06-03, d47b688)
+보류했던 #1(트레잇 결정성: 전원 동일 트레잇)을 base-HP 멱등 리팩터로 안전하게 해결.
+PawnHealth.baseMaxHp + ApplyMaxHpMul(멱등) → PawnTraits.ReRollFromName(이름 시드) 을
+GameManager 스폰/GameSaveButtons 로드에서 호출.  콜로니스트마다 다른 트레잇 + save/load
+결정성.  Awake 기본 roll 유지로 V14/V43 테스트 무변경.  검증: 76/76 + 44/44 + LongPlay
+survived(변종 트레잇 하 생존).  → 남은 보류: save-load 완성·behavior-medium·대형피처·전투
+절대값 rescale (운영자 플레이테스트/결정 필요).
