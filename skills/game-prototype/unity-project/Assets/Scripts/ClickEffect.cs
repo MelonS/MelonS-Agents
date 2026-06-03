@@ -42,13 +42,13 @@ namespace MelonS.GameProto
             hg.transform.SetParent(parent.transform, false);
             hg.transform.localScale = new Vector3(size, thick, 1f);
             var hsr = hg.AddComponent<SpriteRenderer>();
-            hsr.sprite = WhiteSprite; hsr.color = color; hsr.sortingOrder = 40;
+            hsr.sprite = WhiteSprite; hsr.color = color; hsr.sortingOrder = 18;  // #17 구조물 위·UI 아래(건축 직후 덮임 제거)
             // 수직
             var vg = new GameObject("V");
             vg.transform.SetParent(parent.transform, false);
             vg.transform.localScale = new Vector3(thick, size, 1f);
             var vsr = vg.AddComponent<SpriteRenderer>();
-            vsr.sprite = WhiteSprite; vsr.color = color; vsr.sortingOrder = 40;
+            vsr.sprite = WhiteSprite; vsr.color = color; vsr.sortingOrder = 18;
         }
 
         private void Awake() { spawnTime = Time.time; }

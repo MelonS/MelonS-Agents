@@ -168,7 +168,7 @@ namespace MelonS.GameProto
                 var ssr = go.AddComponent<SpriteRenderer>();
                 ssr.sprite = sr.sprite;             // 같은 텍스처 재사용 (메모리/배칭 ok)
                 ssr.sortingLayerID = sr.sortingLayerID;
-                ssr.sortingOrder = sr.sortingOrder - 1;  // 부모 벽 본체 바로 뒤에 깔림
+                ssr.sortingOrder = sr.sortingOrder;  // #18 부모 벽 본체와 같은 층 — 틈을 동일 레벨서 메움
                 ssr.enabled = false;                // 기본 off, 연결 시에만 on
                 _seams[i] = ssr;
             }

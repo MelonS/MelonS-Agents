@@ -123,6 +123,7 @@ namespace MelonS.GameProto
         {
             GetComponent<PawnChopper>()?.ClearTask();
             GetComponent<PawnGatherer>()?.ClearTask();
+            GetComponent<PawnHarvester>()?.ClearTask();  // #14 누락 보강 — 수확 중 징집/사망 시 작물 예약 누수 방지
             GetComponent<PawnHunter>()?.ClearTask();
             GetComponent<PawnCook>()?.ClearTask();
             GetComponent<PawnHauler>()?.ClearTask();

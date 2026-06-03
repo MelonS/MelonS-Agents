@@ -230,7 +230,7 @@ namespace MelonS.GameProto
 
             var sr = bundleGo.AddComponent<SpriteRenderer>();
             // SortingOrder: one above the body child so the bundle draws on top.
-            sr.sortingOrder = 2;
+            sr.sortingOrder = 11;
 
             // Load the carry_bundle sprite from Resources.
             // FLAG QA / Build-Engineer: Assets/Sprites/carry_bundle.png must be
