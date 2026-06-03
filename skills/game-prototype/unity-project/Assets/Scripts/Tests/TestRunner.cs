@@ -672,11 +672,20 @@ namespace MelonS.GameProto.Tests
             var trader2 = t2.AddComponent<TraderEntity>();
             yield return new WaitForSeconds(0.05f);
             Vector3 s1 = t1.transform.position, s2 = t2.transform.position;
-            yield return new WaitForSeconds(3.0f);  // wander cycle 충분히
-            Vector3 e1 = t1.transform.position, e2 = t2.transform.position;
-            bool both = (e1 - s1).magnitude > 0.05f && (e2 - s2).magnitude > 0.05f;
+            // #55 flaky 강건화: 종점 스냅샷 1회로 "둘 다 이동"을 보면, wander 가 간헐적(hop 사이
+            //  pause)이라 한 트레이더가 그 순간 pause 면 거짓 FAIL(trader2 moved 0.02).  대신
+            //  6s 동안 0.5s 간격으로 폴링해 각 트레이더의 *최대 변위*를 추적 → 윈도우 중 한 번이라도
+            //  hop 했으면 통과.  공존(IsHere)+wander 작동이라는 실제 성질을 더 신뢰성 있게 검증.
+            float max1 = 0f, max2 = 0f;
+            for (int k = 0; k < 12; k++)
+            {
+                yield return new WaitForSeconds(0.5f);
+                max1 = Mathf.Max(max1, (t1.transform.position - s1).magnitude);
+                max2 = Mathf.Max(max2, (t2.transform.position - s2).magnitude);
+            }
+            bool both = max1 > 0.1f && max2 > 0.1f;   // 실제 wander hop ≥1 타일
             Assert(both && trader1.IsHere && trader2.IsHere,
-                $"trader1 moved {(e1-s1).magnitude:F2}, trader2 moved {(e2-s2).magnitude:F2}");
+                $"trader1 maxMove {max1:F2}, trader2 maxMove {max2:F2}");
         }
 
         private IEnumerator TestV49_GameClockDay()
