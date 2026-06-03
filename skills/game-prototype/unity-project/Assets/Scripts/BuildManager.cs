@@ -348,8 +348,11 @@ namespace MelonS.GameProto
             }
             int cost = CostFor(CurrentMode);
             bool stoneMode = PaysWithStone(CurrentMode);
-            bool canAfford = ResourceManager.Instance != null
-                && (stoneMode ? ResourceManager.Instance.stone : ResourceManager.Instance.wood) >= cost;
+            // #60 RimWorld식: 청사진은 바닥 자원(WoodPile/StoneChunk)을 hauler 가 운반해 짓는다.
+            //  따라서 affordability(고스트 색)는 카운터뿐 아니라 *바닥에 깔린 자재*까지 합산해야
+            //  실제 건축 가능성을 반영한다.  과거엔 카운터(stockpile)만 봐서, 시작 시 목재 300이
+            //  바닥에 있어도 목재:0 → 고스트 빨강 → "못 짓는다" 오해(실제론 배치+운반 건축 가능).
+            bool canAfford = AvailableForBuild(stoneMode) >= cost;
             // #199 C3 - ghost 색: terrain(물/바위) or 점유 시 빨강 (the reference sim red ghost).
             bool areaFree = ValidatePlacement(cx, cy, size.x, size.y) == PlaceReject.None;
             ghostRenderer.color = (canAfford && areaFree)
@@ -450,6 +453,27 @@ namespace MelonS.GameProto
             int cx = Mathf.FloorToInt(mw.x);
             int cy = Mathf.FloorToInt(mw.y);
             DoTryPlaceAt(cx, cy);
+        }
+
+        // #60 건축 가용 자재 = stockpile 카운터 + 바닥 자재(WoodPile/StoneChunk).  hauler 가 바닥
+        //  자재를 청사진까지 운반하므로 둘 다 실제 건축에 쓰인다.  per-frame FindObjects 비용을
+        //  피하려 0.5s 캐시(고스트는 build 모드 중에만 갱신되므로 충분히 신선).
+        private float _availCacheTime = -1f;
+        private int _availWood, _availStone;
+        private int AvailableForBuild(bool stone)
+        {
+            if (Time.unscaledTime - _availCacheTime >= 0.5f)
+            {
+                _availCacheTime = Time.unscaledTime;
+                int w = ResourceManager.Instance != null ? ResourceManager.Instance.wood : 0;
+                foreach (var p in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
+                    if (p != null) w += p.Wood;
+                int s = ResourceManager.Instance != null ? ResourceManager.Instance.stone : 0;
+                foreach (var c in Object.FindObjectsByType<StoneChunkEntity>(FindObjectsSortMode.None))
+                    if (c != null) s += c.Stone;
+                _availWood = w; _availStone = s;
+            }
+            return stone ? _availStone : _availWood;
         }
 
         private bool DoTryPlaceAt(int cx, int cy)
