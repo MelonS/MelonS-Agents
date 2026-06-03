@@ -13,6 +13,13 @@ namespace MelonS.GameProto
         public float food;
         public float sleep;
         public float mood;
+        // #audit2 #15/#17 — 이전엔 needs(food/sleep/mood)만 저장돼, 로드 시 스킬 진행도와
+        //  징집 상태가 전부 default 로 리셋됐다(progression 소실).  순서 고정(SkillKind
+        //  Gather/Chop/Build/Combat = index 0~3)로 level+xp 를 저장/복원.  구(舊) 세이브엔
+        //  이 필드가 없어 JsonUtility 가 초기값(빈 배열/false)을 두므로 로드 시 length 가드.
+        public bool drafted;
+        public int[] skillLevels;
+        public float[] skillXp;
     }
 
     [Serializable]
@@ -103,14 +110,30 @@ namespace MelonS.GameProto
             foreach (var pawn in UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
             {
                 PawnNeeds needs = pawn.GetComponent<PawnNeeds>();
-                data.pawns.Add(new PawnSave
+                var ps = new PawnSave
                 {
                     name     = pawn.PawnName,
                     position = pawn.transform.position,
                     food     = needs != null ? needs.food  : 80f,
                     sleep    = needs != null ? needs.sleep : 80f,
                     mood     = needs != null ? needs.mood  : 80f,
-                });
+                    drafted  = pawn.IsDrafted,   // #audit2 #15
+                };
+                // #audit2 #17 — 스킬 level+xp 저장(entries 순서 = SkillKind 0~3).
+                var sk = pawn.GetComponent<PawnSkills>();
+                if (sk != null && sk.entries != null)
+                {
+                    int n = sk.entries.Length;
+                    ps.skillLevels = new int[n];
+                    ps.skillXp = new float[n];
+                    for (int i = 0; i < n; i++)
+                    {
+                        if (sk.entries[i] == null) continue;
+                        ps.skillLevels[i] = sk.entries[i].level;
+                        ps.skillXp[i] = sk.entries[i].xp;
+                    }
+                }
+                data.pawns.Add(ps);
             }
 
             foreach (var tree in UnityEngine.Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None))

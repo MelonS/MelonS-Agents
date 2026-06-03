@@ -89,6 +89,22 @@ namespace MelonS.GameProto
                     needs.sleep = ps.sleep;
                     needs.mood = ps.mood;
                 }
+                // #audit2 #17 — 스킬 level+xp 복원(Instantiate 후 Awake 가 기본 레벨을
+                //  깔아둔 뒤 덮어쓴다).  구 세이브 호환 위해 길이 가드.
+                var sk = p.GetComponent<PawnSkills>();
+                if (sk != null && sk.entries != null && ps.skillLevels != null && ps.skillXp != null
+                    && ps.skillLevels.Length == sk.entries.Length
+                    && ps.skillXp.Length == sk.entries.Length)
+                {
+                    for (int i = 0; i < sk.entries.Length; i++)
+                    {
+                        if (sk.entries[i] == null) continue;
+                        sk.entries[i].level = ps.skillLevels[i];
+                        sk.entries[i].xp = ps.skillXp[i];
+                    }
+                }
+                // #audit2 #15 — 징집 상태 복원.
+                if (entity != null && ps.drafted) entity.SetDrafted(true);
             }
 
             // Re-spawn trees (use treeSprite reference if no prefab)
