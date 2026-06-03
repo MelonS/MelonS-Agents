@@ -114,7 +114,14 @@ namespace MelonS.GameProto
                 activeTech.completed = true;
                 Debug.Log($"[Research] 완료: {activeTech.nameKr}");
                 if (OnTechCompleted != null) OnTechCompleted(activeTech);
+                // #루프 완료 후 다음 연구 자동선택 — 안 하면 activeTech=null 로 연구가 멈춰
+                //  플레이어가 N키로 수동 선택할 때까지 진행 정지(루프 stall).  시작 시 techs[0]
+                //  자동선택(L61)과 동일하게, 시작 가능한(prereq 충족) 첫 미완료 tech 를 잇는다.
                 activeTech = null;
+                foreach (var t in techs)
+                {
+                    if (CanStart(t)) { activeTech = t; Debug.Log($"[Research] 다음 자동선택: {t.nameKr}"); break; }
+                }
             }
         }
 
