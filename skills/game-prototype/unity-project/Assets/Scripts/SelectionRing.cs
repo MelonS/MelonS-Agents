@@ -34,6 +34,9 @@ namespace MelonS.GameProto
         }
 
         private static Sprite _ringSpriteCache;
+        /// <summary>#audit3 #0/#1 — 멀티선택 링 풀(MultiSelectionRings)이 동일한 링
+        /// 스프라이트를 재사용하도록 공개.  단일/멀티 선택 링이 시각적으로 일관된다.</summary>
+        public static Sprite SharedRingSprite() => MakeRingSprite();
         private static Sprite MakeRingSprite()
         {
             if (_ringSpriteCache != null) return _ringSpriteCache;

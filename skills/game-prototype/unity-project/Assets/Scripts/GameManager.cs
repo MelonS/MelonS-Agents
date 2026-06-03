@@ -132,6 +132,7 @@ namespace MelonS.GameProto
             // 운영자 피드백 (2026-05-27): "디자인 구리고 프로토타입 수준도 안되고"
             // → 선택된 콜로니스트 발밑에 명시적 노란 ring (펄스)
             SelectionRing.EnsureInScene();
+            MultiSelectionRings.EnsureInScene();  // #audit3 - 마퀴 다중선택 pawn 발밑 펄스 링
             InspectHighlight.EnsureInScene();  // #138 - 선택된 entity outline
             ResourceMonitorLogger.EnsureInScene();  // #140 - 자원 변화 log dump (QA 검증)
             ResourceLowAlert.EnsureInScene();       // #136 - 자원 부족 popup
