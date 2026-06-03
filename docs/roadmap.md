@@ -198,6 +198,12 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-03** PawnSim 세이브/로드 스킬·징집 직렬화 (`3e25dcf`)
+  - 로드 시 스킬 level/xp + drafted 가 default 로 리셋되던 progression 소실 버그 수정
+    (PawnSave 확장, OnLoad 순서 복원, 구 세이브 호환 가드).
+  - isolated 76/76 + integration 43/43 PASS (I22 round-trip 회귀 없음).
+  - 나머지 save 갭(부위 HP/지정/작물) 보류 — 운영자 scope 항목.
+
 - **2026-06-03** PawnSim 3차 멀티에이전트 감사 — 디자인·폴리싱 (`6ca5b45`, `fc6de4f`)
   - 비주얼피드백/월드아트/가독성/UX흐름 4차원 → 24확정/7기각.
   - 적용: 벽 이음새 HP-tint 동기화, 작업탭 대비↑, 스케줄 폰트↑, 자원 천단위 구분,

@@ -93,7 +93,9 @@ namespace MelonS.GameProto
                 new Row("K", "돌바닥 / Stone Floor"),
                 new Row("J", "탁자+의자 / Table+Chair"),
             }),
-            new Section("지정 / Designation", new[]
+            // #audit3 #22 — 지정 드래그 모드는 모두 '우클릭 또는 ESC' 로 취소된다(Mine/
+            //  Deconstruct/GrowZone 코드 확인).  exit 단서가 없어 모드에 갇힌 느낌이던 것 해소.
+            new Section("지정 / Designation  (우클릭·ESC 로 취소)", new[]
             {
                 new Row("X", "철거 / Deconstruct"),
                 new Row("M", "채굴 / Mine"),
