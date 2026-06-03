@@ -164,6 +164,7 @@ namespace MelonS.GameProto
         //   so we never reparent the SceneSetup-wired serialized refs.
         private Text moodDetailText;   // 기분 tab body
         private Text equipText;        // 장비 tab body
+        private bool healthRectNormalized;   // #obj-audit 탭 본문 정렬 1회 보정 가드
 
         private Font ResolveFont()
         {
@@ -511,6 +512,27 @@ namespace MelonS.GameProto
             //   tab is correct the instant it is clicked.
             if (moodDetailText == null) moodDetailText = MakeBodyText("MoodDetailBody");
             if (equipText == null)      equipText      = MakeBodyText("EquipBody");
+
+            // #obj-audit(운영자 '탭 누르면 UI 위치 정렬 안 됨') — healthText 는 SerializeField
+            //  (에디터 배치)라 MakeBodyText 로 만든 moodDetail/equip 본문과 rect 가 달라 건강
+            //  탭만 위치가 어긋났다.  런타임에 동일한 본문 영역(탭 strip 아래 채움 + PadOuter)
+            //  으로 1회 정규화 → 건강/기분/장비 탭 본문이 모두 같은 위치에 정렬된다.
+            if (!healthRectNormalized && healthText != null)
+            {
+                var hrt = healthText.GetComponent<RectTransform>();
+                if (hrt != null)
+                {
+                    float pad = MelonS.GameProto.Core.UITheme.PadOuter;
+                    hrt.anchorMin = new Vector2(0f, 0f);
+                    hrt.anchorMax = new Vector2(1f, 1f);
+                    hrt.offsetMin = new Vector2(pad, pad);
+                    hrt.offsetMax = new Vector2(-pad, -(pad + TabStripH + TabStripGap));
+                    healthText.alignment = TextAnchor.UpperLeft;
+                    healthText.horizontalOverflow = HorizontalWrapMode.Wrap;
+                    healthText.verticalOverflow = VerticalWrapMode.Overflow;
+                }
+                healthRectNormalized = true;
+            }
 
             // ---- 건강 tab: 부위별 health (Day 55) + 능력치 (#120) ----
             if (healthText != null)

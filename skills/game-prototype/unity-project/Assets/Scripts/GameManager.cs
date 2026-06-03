@@ -199,7 +199,12 @@ namespace MelonS.GameProto
                     float wx = (float)(woodRng.NextDouble() * 14.0 - 7.0);   // ±7 범위
                     float wy = (float)(woodRng.NextDouble() * 14.0 - 7.0);
                     if (Mathf.Abs(wx) < 2.5f && Mathf.Abs(wy) < 2.5f) continue;  // pawn spawn 회피
-                    WoodPileEntity.Spawn(new Vector3(Mathf.Floor(wx) + 0.5f, Mathf.Floor(wy) + 0.5f, 0f), 50, null);
+                    // 운영자 fb(2026-06-03) "통나무 더미 50개와 5개가 다른 아이템처럼 보임":
+                    //  시작 50-더미만 sprite=null 을 넘겨 EnsureSprite 의 fallback(절차생성/Resources)
+                    //  으로 그려진 반면, 나무 벌목 5-더미는 authored WoodPileSprite 를 써서 외형이
+                    //  달랐다.  나무 드롭과 동일한 authored sprite(woodPileSpriteRuntime)를 넘겨
+                    //  모든 통나무 더미가 같은 아이템으로 보이게 통일(수량은 hover '×N' 으로 구분).
+                    WoodPileEntity.Spawn(new Vector3(Mathf.Floor(wx) + 0.5f, Mathf.Floor(wy) + 0.5f, 0f), 50, woodPileSpriteRuntime);
                     dropped++;
                 }
                 ResourceManager.Instance.AddFood(0);
