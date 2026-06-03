@@ -233,6 +233,18 @@ namespace MelonS.GameProto
             },
         };
 
+        // #63 건축 카테고리 표시 순서(정렬) — 건축류 먼저, 방어(Security)는 맨 뒤로 모음.
+        //   dict 선언 순서와 분리해 표시 순서만 여기서 제어(항목/구조 미변경).
+        private static readonly string[] CategoryOrder =
+        {
+            "Structure (구조)",
+            "Floors (바닥)",
+            "Furniture (가구)",
+            "Production (생산)",
+            "Lighting (조명)",
+            "Security (방어)",
+        };
+
         // ── v3 audit: per-buildable tooltip (자재/비용) + icon ────────────────
         //   The audit flagged the Architect rows as text-only with no hover help.
         //   For each buildable we derive (a) the material it is paid in and (b)
@@ -500,11 +512,12 @@ namespace MelonS.GameProto
                 }
             }
 
-            // ── then the BUILD categories (Structure/Security/Floors/...) ───────
-            foreach (var kv in Categories)
+            // ── then the BUILD categories — #63 명시적 표시 순서로 정렬 ──────────
+            //   방어(Security)는 건축 카테고리(구조/바닥/가구/생산/조명) 뒤로 모아 그룹핑을
+            //   자연스럽게(이전엔 dict 선언 순서라 Security 가 구조 바로 뒤에 끼어 있었음).
+            foreach (var catName in CategoryOrder)
             {
-                string catName = kv.Key;
-                var items = kv.Value;
+                if (!Categories.TryGetValue(catName, out var items)) continue;
                 // 카테고리 헤더 (toggle)
                 var headerGo = MakeBtn(contentRoot.transform, catName,
                     new Vector2(0, -y), MelonS.GameProto.Core.UITheme.HeaderBg,
