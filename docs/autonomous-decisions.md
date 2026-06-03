@@ -73,3 +73,26 @@
 - 통나무 sprite 일관화 + info 탭 정렬(e7d229f).
 - 팔=다리 HP 통일 20(d351614) + 근접 데미지 1→5(전투 지루함 #8) — 소스케일 내부정합 유지.
 - 진행: 남은 운영자 플레이테스트 항목 + 멀티에이전트 감사로 RimWorld 정합/버그 계속.
+
+### 4h 자율 세션 — 누적 결과 + 보류 항목 (2026-06-03, 운영자 부재 중)
+**완료(전부 컴파일+isolated 76/76+integration 44/44 게이트 통과, LongPlay 생존 검증):**
+작업종류 분리(건축/채광/운반/의료)·근접데미지 1→5·팔=다리 HP·hover 작업명·통나무 sprite·
+info탭 정렬·물리 식량 경제·#34 좌클릭메뉴 회귀가드(I44)·CRITICAL 회귀(ChopTreeAction/
+MineStone Decide 리스트 누락) 자가발견·수정+가드(I43)·cook task 수면중 미정리·
+ClearAllWorkTasks miner/harvester·save/load 1:1 매칭(데이터손상).  멀티에이전트 7회 감사,
+적대적 검증으로 과(過)확정 다수 기각(verify-real-path).
+
+**보류(운영자 결정/플레이테스트 필요 — blind 수정 위험):**
+1. **트레잇 결정성 버그(고가치)**: 모든 pawn 이 gameObject.name="Pawn(Clone)" 공유 →
+   PawnTraits 가 동일 시드로 굴려 **전원 같은 트레잇**(RimWorld 변종성 결여).  fix 계획:
+   PawnHealth 에 baseMaxHp 저장 + PawnTraits.Initialize(name) 추가(reset→name 시드 재roll→
+   base 에서 HP 재적용) + GameManager/GameSaveButtons 가 이름 설정 후 호출 + V14/V43 테스트
+   timing 갱신.  4~5파일·HP 얽힘·feel 변화라 운영자 OK 후 실행 권장.
+2. **save/load 완성**: 부위 HP/지정상태/작물성장 미저장(로드 시 소실).  #1(트레잇 결정성)과
+   부분 얽힘.  포맷 변경이라 scope 확인 필요.
+3. **behavior-medium**: drafted 자동 근접교전, PawnHauler bpDropTarget 예약, 스케줄 하드게이트
+   — 동작 변화라 플레이테스트로 feel 확인 필요.
+4. **대형 RimWorld 피처**: 작업종류 추가(청소/소방), 연구 트리 확장(wireable 효과 필요),
+   forbidden/allowed zone, 길들이기 progression, 조리 품질 variance, 환경 mood — 큰 scope.
+5. **밸런스 절대값 rescale**: 전투 수치를 RimWorld full 스케일로(현재 소스케일 내부정합) —
+   pawn/적/무기 좌표화 동시 조정 + feel 플레이테스트 필요.
