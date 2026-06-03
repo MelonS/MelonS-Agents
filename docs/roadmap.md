@@ -198,6 +198,14 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-03** PawnSim 림 시스템 RimWorld 정합 대개편 (운영자 실시간 플레이테스트)
+  - `dc030f5` 작업배정 지정-구동 단일화: 벌목/채광 자율 AI를 '지정된 것만'으로 게이트 +
+    중복 dispatch 폐기 + 우클릭=선택 림 전용.  반복 버그(다른 림 벌목/번갈이/freeze) 공통
+    뿌리(3중 중첩) 제거.  I16/I43/V40 갱신.
+  - `e7d229f` 통나무더미 sprite 일관화 + info 탭 본문 정렬.
+  - `fee2325` 시작 식량 RimWorld식 물리 드롭(추상 식사50 카운터 폐기, '다 림월드식으로').
+  - 검증: isolated 76/76 + integration 43/43 PASS, 컴파일·실화면 캡처 확인.
+
 - **2026-06-03** PawnSim 세이브/로드 스킬·징집 직렬화 (`3e25dcf`)
   - 로드 시 스킬 level/xp + drafted 가 default 로 리셋되던 progression 소실 버그 수정
     (PawnSave 확장, OnLoad 순서 복원, 구 세이브 호환 가드).
