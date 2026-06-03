@@ -124,13 +124,100 @@ namespace MelonS.GameProto
                         Debug.Log($"[PAWNDIAG] C t={k*0.5f:F1}s dist={dist:F2} hasTask={ch} treeHp={tree.HpRatio:F2} act={Act(p)}");
                         if (tree.IsDestroyed) { destroyed = true; Debug.Log($"[PAWNDIAG] C TREE FELLED at t={k*0.5f:F1}s"); break; }
                     }
-                    bool reached = minDist < 1.7f;
+                    bool reached = minDist < 2.0f;   // 대각 stand-cell(√2)+footprint 허용
                     bool damaged = destroyed || (tree != null && tree.HpRatio < hp0 - 0.01f);
-                    string verdict = (reached && damaged) ? "PASS(도달+벌목)"
+                    // damaged=True 면 림이 유효 stand-cell 에서 실제로 벌목한 것 → 도달 성공으로 본다.
+                    string verdict = damaged ? "PASS(도달+벌목)"
                         : reached ? "PARTIAL(도달했으나 HP감소 안보임)"
                         : "FAIL(나무 미도달)";
                     Debug.Log($"[PAWNDIAG] C RESULT minDist={minDist:F2} damaged={damaged} -> {verdict}");
                 }
+            }
+
+            // ── Phase D: 작업 중 림에 새 명령(override) 검증 (#60 시나리오 2) ──
+            //  벌목 명령 → 1.5s 후 이동 명령 → 작업을 버리고 이동 목표로 가는지.
+            if (sel != null && sel.DiagnosticSelected != null)
+            {
+                var p = sel.DiagnosticSelected;
+                TreeEntity tree = null; float bestD = float.MaxValue;
+                foreach (var tr in Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None))
+                {
+                    if (tr == null || tr.IsDestroyed) continue;
+                    float d = (tr.transform.position - p.transform.position).sqrMagnitude;
+                    if (d < bestD) { bestD = d; tree = tr; }
+                }
+                var chopper = p.GetComponent<PawnChopper>();
+                if (tree != null && chopper != null)
+                {
+                    chopper.SetTreeTarget(tree); p.ManualMoveUntil = Time.time + 18f;
+                    yield return new WaitForSeconds(1.5f);
+                    bool wasChopping = chopper.HasTask;
+                    // 작업 중 새 이동 명령(실제 우클릭 빈땅 경로).
+                    Vector3 mp = p.transform.position;
+                    Vector2 moveTgt = new Vector2(mp.x - 5f, mp.y);
+                    sel.DiagnosticCommandMove(moveTgt);
+                    Debug.Log($"[PAWNDIAG] D OVERRIDE wasChopping={wasChopping} chopperCleared={!chopper.HasTask} -> moveTgt=({moveTgt.x:F1},{moveTgt.y:F1})");
+                    float minD = 999f;
+                    for (int k = 0; k < 20; k++)
+                    {
+                        yield return new WaitForSeconds(0.5f);
+                        if (p == null) break;
+                        float dist = ((Vector2)p.transform.position - moveTgt).magnitude;
+                        minD = Mathf.Min(minD, dist);
+                        if (dist < 1.2f) break;
+                    }
+                    string verdict = minD < 1.2f ? "PASS(작업버리고 이동 도달)" : "FAIL(이동 미도달 — 작업에 묶임?)";
+                    Debug.Log($"[PAWNDIAG] D RESULT minDist={minD:F2} chopperHasTask={chopper.HasTask} -> {verdict}");
+                }
+            }
+
+            // ── Phase E: 선택 지속 검증 (#60 시나리오 3) ──
+            //  림 재선택 후 입력 없이 6s — 선택이 저절로 풀리는지(currentSelection/IsSelected).
+            if (sel != null)
+            {
+                sel.DiagnosticInspectFirstPawn();
+                var p = sel.DiagnosticSelected;
+                bool dropped = false;
+                for (int k = 0; k < 12; k++)
+                {
+                    yield return new WaitForSeconds(0.5f);
+                    if (sel.DiagnosticSelected != p)
+                    {
+                        dropped = true;
+                        var cur = sel.DiagnosticSelected;
+                        string curName = cur == null ? "null" : cur.PawnName;
+                        Debug.Log($"[PAWNDIAG] E 선택 풀림 t={k*0.5f:F1}s (cur={curName})");
+                        break;
+                    }
+                }
+                string eVerdict = dropped ? "FAIL(선택 저절로 풀림)" : "PASS(선택 6s 유지)";
+                Debug.Log($"[PAWNDIAG] E RESULT {eVerdict}");
+            }
+
+            // ── Phase F: 원거리/장애물 너머 이동 경로 검증 (#60 시나리오 4) ──
+            //  정착지(중앙 좌측 ~(-5,0)) 벽 너머 먼 지점으로 이동 명령 → 경로 탐색 도달 검증.
+            if (sel != null && sel.DiagnosticSelected != null)
+            {
+                var p = sel.DiagnosticSelected;
+                Vector3 sp = p.transform.position;
+                Vector2 far = new Vector2(-9f, 0f);   // 정착지/벽 영역 너머 — 우회 필요 가능
+                sel.DiagnosticCommandMove(far);
+                Debug.Log($"[PAWNDIAG] F PATH-CMD {p.PawnName} ({sp.x:F1},{sp.y:F1}) -> far=({far.x:F1},{far.y:F1})");
+                float minD = 999f; float lastD = 999f; float stallSec = 0f; bool stalled = false;
+                for (int k = 0; k < 40; k++)   // 20s
+                {
+                    yield return new WaitForSeconds(0.5f);
+                    if (p == null) break;
+                    float dist = ((Vector2)p.transform.position - far).magnitude;
+                    minD = Mathf.Min(minD, dist);
+                    if (Mathf.Abs(dist - lastD) < 0.05f) stallSec += 0.5f; else stallSec = 0f;
+                    lastD = dist;
+                    if (stallSec >= 4f && dist > 1.5f) { stalled = true;
+                        Debug.Log($"[PAWNDIAG] F STALL t={k*0.5f:F1}s dist={dist:F2} (4s 정지 — 경로막힘 의심)"); break; }
+                    if (dist < 1.5f) break;
+                }
+                string verdict = minD < 1.5f ? "PASS(도달)" : (stalled ? "FAIL(중간 정지/경로막힘)" : (minD < 4f ? "PARTIAL(근접)" : "FAIL(미도달)"));
+                Debug.Log($"[PAWNDIAG] F RESULT minDist={minD:F2} -> {verdict}");
             }
 
             Debug.Log("[PAWNDIAG] === DONE ===");
