@@ -198,8 +198,11 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
-
-
+- **2026-06-03** PawnSim 연구 트리 정직화 (truth-in-UI / spec-faithful)
+  - `9d02e19` — feat: 연구 better_stove 배선 (해금 시 조리 2배, dead tech 실효화)
+  - `def151a` — fix: dead/비바닐라 stone_walls tech 제거 + better_stove 설명 정정
+    ('식사 mood +5' 미배선 문구 제거). 남은 tech(simple_bow·better_stove) 둘 다
+    실배선 확인. isolated 76/76 PASS.
 
 - **2026-05-22** (~16:04 KST, bulk auto-sync via `scripts/roadmap-done-sync.sh`)
   **1 commits backfilled** from base `f3d7781` to HEAD.
