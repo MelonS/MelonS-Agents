@@ -295,8 +295,8 @@ namespace MelonS.GameProto.AI
     public class BuildBlueprintAction : IPawnAction
     {
         public string DisplayName => "건설";
-        // 림 vanilla 에선 Construction 별 work type 이지만 1차로 Chop 슬롯에 묶음.
-        public WorkKind Kind => WorkKind.Chop;
+        // #작업종류확장: RimWorld 처럼 건축(Construction)을 별도 work type 으로.
+        public WorkKind Kind => WorkKind.Build;
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.builder == null) return false;
@@ -340,7 +340,7 @@ namespace MelonS.GameProto.AI
     public class TendPatientAction : IPawnAction
     {
         public string DisplayName => "치료";
-        public WorkKind Kind => WorkKind.Research;  // 1차로 Research 슬롯 재활용 (#126 에서 Medical 별도)
+        public WorkKind Kind => WorkKind.Doctor;  // #작업종류확장: 의료(Medical) 별도 work type
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.doctor == null) return false;
@@ -383,7 +383,7 @@ namespace MelonS.GameProto.AI
     public class MineStoneAction : IPawnAction
     {
         public string DisplayName => "채광";
-        public WorkKind Kind => WorkKind.Chop;  // 1차로 Chop 슬롯 (#120 에서 Mining 별도 가능)
+        public WorkKind Kind => WorkKind.Mine;  // #작업종류확장: 채광(Mining) 별도 work type
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.miner == null) return false;
@@ -424,7 +424,7 @@ namespace MelonS.GameProto.AI
     public class HaulMeatAction : IPawnAction
     {
         public string DisplayName => "고기 운반";
-        public WorkKind Kind => WorkKind.Chop;
+        public WorkKind Kind => WorkKind.Haul;  // #작업종류확장: 운반(Hauling) 별도
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.hauler == null) return false;
@@ -460,7 +460,7 @@ namespace MelonS.GameProto.AI
     public class HaulStoneAction : IPawnAction
     {
         public string DisplayName => "돌 운반";
-        public WorkKind Kind => WorkKind.Chop;
+        public WorkKind Kind => WorkKind.Haul;  // #작업종류확장: 운반(Hauling) 별도
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.hauler == null) return false;
@@ -505,8 +505,8 @@ namespace MelonS.GameProto.AI
     public class HaulWoodAction : IPawnAction
     {
         public string DisplayName => "운반";
-        // 운반도 림 vanilla 에선 Hauling 별 work type 이지만 1차로 Chop 슬롯에 묶음.
-        public WorkKind Kind => WorkKind.Chop;
+        // #작업종류확장: 운반(Hauling)을 별도 work type 으로 (이전엔 Chop 슬롯에 묶임).
+        public WorkKind Kind => WorkKind.Haul;
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.hauler == null) return false;
