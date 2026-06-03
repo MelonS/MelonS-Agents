@@ -287,7 +287,7 @@ namespace MelonS.GameProto
             t.fontSize = 18;
             t.fontStyle = FontStyle.Bold;
             t.color = priority == 0
-                ? new Color(0.55f, 0.55f, 0.55f, 1f)
+                ? new Color(0.76f, 0.76f, 0.76f, 1f)   // #audit3 #10 대비 ↑ (0.55→0.76, WCAG AA)
                 : new Color(0.10f, 0.10f, 0.10f, 1f);
             t.alignment = TextAnchor.MiddleCenter;
             t.raycastTarget = false;

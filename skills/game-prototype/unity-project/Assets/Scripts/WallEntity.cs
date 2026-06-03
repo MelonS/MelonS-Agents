@@ -112,6 +112,12 @@ namespace MelonS.GameProto
             {
                 var (_, baseTint) = MaterialStats[(int)material];
                 TintHelper.ApplyHpBrightness(sr, baseTint, hp / maxHp, minBright: 0.4f);
+                // #audit3 #9 — 이음새(seam) 자식도 본체와 같은 HP-darken 색으로 동기화.
+                //  이전엔 본체만 어두워지고 seam 은 밝게 남아 손상 벽이 얼룩져 보였다.
+                //  RefreshSeams 의 'seam.color = sr.color' 와 동일하게, 데미지 시점에도 맞춘다.
+                if (_seams != null)
+                    foreach (var ss in _seams)
+                        if (ss != null && ss.enabled) ss.color = sr.color;
             }
             if (hp <= 0f) Destroy(gameObject);
         }

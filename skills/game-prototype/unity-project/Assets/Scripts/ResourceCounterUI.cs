@@ -38,25 +38,25 @@ namespace MelonS.GameProto
             }
             if (rm.wood != lastWood)
             {
-                if (woodText != null) woodText.text = $"목재: {rm.wood}";
+                if (woodText != null) woodText.text = $"목재: {rm.wood:N0}";  // #audit3 #17 천단위 구분
                 if (lastWood >= 0) woodFlashUntil = Time.unscaledTime + FlashDuration;
                 lastWood = rm.wood;
             }
             if (rm.food != lastFood)
             {
-                if (foodText != null) foodText.text = $"식량: {rm.food}";
+                if (foodText != null) foodText.text = $"식량: {rm.food:N0}";
                 if (lastFood >= 0) foodFlashUntil = Time.unscaledTime + FlashDuration;
                 lastFood = rm.food;
             }
             if (rm.meals != lastMeals)
             {
-                if (mealsText != null) mealsText.text = $"식사: {rm.meals}";
+                if (mealsText != null) mealsText.text = $"식사: {rm.meals:N0}";
                 if (lastMeals >= 0) mealsFlashUntil = Time.unscaledTime + FlashDuration;
                 lastMeals = rm.meals;
             }
             if (rm.stone != lastStone)
             {
-                if (stoneText != null) stoneText.text = $"석재: {rm.stone}";
+                if (stoneText != null) stoneText.text = $"석재: {rm.stone:N0}";
                 if (lastStone >= 0) stoneFlashUntil = Time.unscaledTime + FlashDuration;
                 lastStone = rm.stone;
             }

@@ -149,7 +149,7 @@ namespace MelonS.GameProto
             var tgo = new GameObject("Lbl");
             tgo.transform.SetParent(go.transform, false);
             var t = tgo.AddComponent<Text>();
-            t.text = label; t.font = font; t.fontSize = 11; t.fontStyle = FontStyle.Bold;
+            t.text = label; t.font = font; t.fontSize = 13; t.fontStyle = FontStyle.Bold;  // #audit3 #11 가독성 11→13
             t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleCenter; t.raycastTarget = false;
             var trt = tgo.GetComponent<RectTransform>();
