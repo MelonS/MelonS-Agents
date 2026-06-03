@@ -72,10 +72,9 @@ namespace MelonS.GameProto
             techs.Add(new Tech("simple_bow",     "원시 활",       "원거리 사냥/방어 가능. 3~5 dmg 화살.", 100));
             techs.Add(new Tech("stone_walls",    "석재 벽 건설",  "나무 벽보다 4배 튼튼 (HP 200).",     150));
             techs.Add(new Tech("better_stove",   "개선된 화덕",   "조리 속도 2배, 식사 mood +5.",       120));
-            // Tier 2 (require tier 1)
-            techs.Add(new Tech("electricity",    "전기 기초",     "발전기·배터리·전선 해금.",           250, "stone_walls"));
-            // Tier 3 (require electricity)
-            techs.Add(new Tech("solar_panel",    "태양광 패널",   "낮 동안 무료 전력 생산.",            300, "electricity"));
+            // #범위정합: 전기(electricity)·태양광(solar_panel) tech 제거 — README Out-of-scope
+            //  (Power grid)라 발전기/배터리/전선 등 해금 대상이 코드에 전혀 없어, 연구해도 아무
+            //  변화 없는 dead tech 였음(자동-연구가 빈 tech 를 갈게 됨).  배선 가능한 날 재도입.
         }
 
         private void Update()
