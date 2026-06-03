@@ -198,6 +198,14 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-03** PawnSim 3차 멀티에이전트 감사 — 디자인·폴리싱 (`6ca5b45`, `fc6de4f`)
+  - 비주얼피드백/월드아트/가독성/UX흐름 4차원 → 24확정/7기각.
+  - 적용: 벽 이음새 HP-tint 동기화, 작업탭 대비↑, 스케줄 폰트↑, 자원 천단위 구분,
+    마퀴 다중선택 펄스 링(단일/멀티 선택 피드백 일관성, in-progress #50).
+  - false-fix 거름: pawn 그림자(다른 스프라이트+베이크 α), crop scale(의도값),
+    적 타격 flash(이미 동작) — 적대적 검증 통과해도 코드 재확인 후 기각.
+  - isolated 76/76 PASS.  (마퀴 링은 인게임 시각 확인 필요.)
+
 - **2026-06-03** PawnSim 2차 멀티에이전트 감사 (`8d8561e`, `<reservation-clear>`)
   - AI행동/사운드/밸런스/save-load/needs 5차원 감사 → 20확정/24기각(적대적 검증이
     move-speed·food-decay·skill-curve 등 의도적 스케일 정확히 기각).
