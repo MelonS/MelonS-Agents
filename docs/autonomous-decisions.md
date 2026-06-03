@@ -96,3 +96,12 @@ ClearAllWorkTasks miner/harvester·save/load 1:1 매칭(데이터손상).  멀�
    forbidden/allowed zone, 길들이기 progression, 조리 품질 variance, 환경 mood — 큰 scope.
 5. **밸런스 절대값 rescale**: 전투 수치를 RimWorld full 스케일로(현재 소스케일 내부정합) —
    pawn/적/무기 좌표화 동시 조정 + feel 플레이테스트 필요.
+
+### 신선-시스템 버그헌트 결과 (2026-06-03 자율, c63de9c)
+멀티에이전트가 저감사 영역(카메라/날씨/UI패널/경보)에서 21 실버그 확정 → 고가치 4건 적용:
+레이드 이벤트 중복발생(SpawnSingleBandit→SpawnRaid 1회), 카메라 줌-인식 경계(void 렌더
+방지), 날씨 폭풍 Time.time→GameClock(배속/일시정지 존중), ResearchUI null 가드.  나머지
+~15건은 paranoid null-가드(저가치)라 보류.  **각도 바꾼 감사가 매번 새 실버그를 잡음**
+(회귀헌트→CRITICAL chop, 신선→camera/event/weather) → 새 영역 감사 계속이 생산적.
+**테스트 노트**: I16-full-chop-cycle 이 라이브 씬 타이밍에 flaky(재실행 시 통과; chop 코드
+무관).  추후 전용 pawn 셋업으로 deterministic 하게 hardening 필요(현재는 재실행으로 확인).
