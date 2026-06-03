@@ -736,6 +736,28 @@ namespace MelonS.GameProto
 
         /// <summary>QA — 좌클릭 액션 메뉴 항목을 직접 호출(벌목/채집/채광 지정 등).
         ///  worldPos 의 entity hit + 같은 좌클릭 메뉴 생성 → label 포함 item 실행.  미발견 시 false.</summary>
+        /// <summary>#34 회귀가드 — 실제 Update 좌클릭 핸들러(L98~127)와 동일하게 PickEntityAt
+        /// → BuildLeftClickMenu → ContextMenuUI.Open 을 수행해, '나무 좌클릭 시 벌목 메뉴가
+        /// 실제로 열리는가'를 테스트가 검증할 수 있게 한다(이 상호작용은 그동안 테스트가 없어
+        /// 반복 회귀했다).  메뉴가 열렸으면 true.</summary>
+        public bool SimulateLeftClickOpenMenu(Vector2 worldPos)
+        {
+            Vector3 mouseWorld = new Vector3(worldPos.x, worldPos.y, 0f);
+            Collider2D hit = PickEntityAt(mouseWorld);
+            var pawn = (hit != null) ? hit.GetComponent<PawnEntity>() : null;
+            if (pawn != null) { Select(pawn); currentInspect = pawn.gameObject; return false; }
+            // 실제 핸들러와 동일: entity hit 이면 inspect + 좌클릭 메뉴, hit=null 이면 OverlapPointAll 재훑기.
+            if (hit != null) { currentInspect = hit.gameObject; ClearSelection(); }
+            if (ContextMenuUI.Instance == null) return false;
+            var litems = BuildLeftClickMenu(hit, mouseWorld);
+            if (litems != null && litems.Count > 0)
+            {
+                ContextMenuUI.Instance.Open(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f), litems);
+                return ContextMenuUI.Instance.IsOpen;
+            }
+            return false;
+        }
+
         public bool SimulateLeftClickMenuAction(Vector2 worldPos, string itemLabelContains)
         {
             Vector3 mouseWorld = new Vector3(worldPos.x, worldPos.y, 0f);

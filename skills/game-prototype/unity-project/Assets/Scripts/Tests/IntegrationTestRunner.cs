@@ -121,6 +121,8 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I42-wall-completes-on-pawn-ejects", TestI42_WallCompletesOnPawnEjects);
             // #231 the reference sim 벌목 지정 — drag-designate 한 나무가 idle 림에게 dispatch 되어 벌목됨
             yield return RunOne("I43-chop-designation-dispatch", TestI43_ChopDesignation);
+            // #34 회귀가드 — 나무 좌클릭 시 '벌목 지정' 플로트 메뉴가 실제로 열리는가(그동안 무테스트→반복 회귀)
+            yield return RunOne("I44-tree-leftclick-menu-opens", TestI44_TreeLeftClickMenu);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1908,6 +1910,35 @@ namespace MelonS.GameProto.Tests
             bool destroyed = (tree == null || tree.IsDestroyed);
             Assert(gotMarked,
                 $"지정된 나무를 자율 ChopTreeAction 이 idle 림에 배정 = {gotMarked} (assigned={assigned}), 이후 벌목완료={destroyed}");
+        }
+
+        /// <summary>I44 (#34 회귀가드): 나무를 좌클릭하면 '🪓 벌목 지정' 플로트 메뉴가 실제로
+        ///  열리는가.  운영자가 "나무 벌목 서브메뉴가 없다"를 반복 보고했는데 이 상호작용엔
+        ///  테스트가 없어 회귀를 못 잡았다.  PickEntityAt→BuildLeftClickMenu→ContextMenuUI.Open
+        ///  의 실제 경로(SimulateLeftClickOpenMenu)로 메뉴 open + 벌목 항목 존재를 검증한다.</summary>
+        private IEnumerator TestI44_TreeLeftClickMenu()
+        {
+            yield return null;
+            var cs = Object.FindFirstObjectByType<ClickSelector>();
+            if (cs == null) { Assert(false, "ClickSelector null"); yield break; }
+            if (ContextMenuUI.Instance == null) { Assert(false, "ContextMenuUI.Instance null (EnsureInScene 미호출?)"); yield break; }
+            if (TreeChopDesignation.Instance == null) { Assert(false, "TreeChopDesignation.Instance null"); yield break; }
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            Vector3 basePos = pawns.Length > 0 ? pawns[0].transform.position : Vector3.zero;
+            var tGo = new GameObject("I44Tree");
+            tGo.transform.position = basePos + new Vector3(3.5f, 0f, 0f);
+            var tsr = tGo.AddComponent<SpriteRenderer>(); tsr.sortingOrder = 5;
+            tGo.AddComponent<BoxCollider2D>().size = new Vector2(1.5f, 1.5f);
+            tGo.AddComponent<TreeEntity>();
+            yield return null;
+            if (ContextMenuUI.Instance.IsOpen) ContextMenuUI.Instance.Close();
+            Vector2 tp = new Vector2(tGo.transform.position.x, tGo.transform.position.y);
+            bool opened = cs.SimulateLeftClickOpenMenu(tp);
+            bool isOpen = ContextMenuUI.Instance.IsOpen;
+            bool hasChop = cs.SimulateLeftClickMenuAction(tp, "벌목");  // '벌목' 항목 존재 + 실행
+            Destroy(tGo);
+            Assert(opened && isOpen && hasChop,
+                $"나무 좌클릭 벌목 메뉴: opened={opened} isOpen={isOpen} 벌목항목={hasChop}");
         }
 
         private void FinalizeReport()
