@@ -103,6 +103,29 @@ Run in this order — all non-gated, all independently shippable, ordered by imp
 
 ---
 
+## v2.1 addendum — shipped 2026-05-31 → 06-03 (playtest + UI/art batch)
+
+운영자 플레이테스트 + UI/아트 배치로 v2 이후 출하·수정된 항목. 차원 점수 재산정.
+
+**Shipped (verified in code + 인게임/스크린샷):**
+- **게임플레이 루프**: 부정 thought(배고픔/수면부족/부상→mood 하락) 환류(#36, 게이트된 thought-sum 의 첫 단계) · needs decay 체감화(#35) · 저장/불러오기 **회귀 복구**(#44 — #245 가 GameSaveButtons 호스트를 통째로 지워 F5/F9 포함 죽어 있던 것, save.json 실측 복구) · 지정-dispatch 예약키 버그(전원이 한 나무로 몰림) 수정(#38).
+- **메뉴 UX/UI**: 자원 readout 좌상단 세로(#41, 장르 표준) · 상단바 균형 · 설정 메뉴 레이아웃 수정(#39) · 건강/장비 탭 분리(#40) · 인스펙트 패널에 현재 행동 표시 · 건축 카테고리 정렬(#63, 방어를 건축류 뒤로).
+- **디자인/비주얼**: 콜로니스트 외형 다양화(#54 — 머리색/피부톤/옷 8종, + 변형 sprite 가 자식에 mirror 안 되던 버그 수정) · 림/소나무/사슴·멧돼지·늑대 top-down 음영 · 소나무 수관을 잔디와 분리 · 흙/돌 지형 다양화(#43) · 광맥 군집(#42).
+
+**v2 표 정정(stale 였던 것):**
+- 건축 카탈로그는 **이미** autodoor·fence·fence-gate·barricade 를 포함(v2 의 "no fence, no door variety, no barricade" 는 outdated — Structure/Security 탭에 존재).
+- 메뉴: multi-select·gizmo command bar 도 이미 존재(GuiControlBar).
+
+**차원 재산정:** 디자인/비주얼 80→**84%**(콜로니스트 다양화+음영) · 게임플레이 루프 85→**87%**(mood 부분+저장복구) · 메뉴 UX 82→**85%**(자원 좌상단+패널 행동+정렬). 사운드/이동/건축은 v2 유지.
+
+**남은 진짜 갭(우선순위):**
+1. **[OP-attended] 림 이동/행동 자연스러움**(#60) — 로직 회귀 위험, 인게임 관찰 후 수정.
+2. **[OP-gated] mental-break 3-tier** + 완전 thought 카탈로그 밸런스 · 터레인 이동비용 · work-priority grid.
+3. save-load 엔티티 서브상태(BedQuality/StockpilePriority/TreeSpecies/WallMaterial) 미직렬화.
+4. **테스트 신뢰성**: `V55-multi-trader-coexist` flaky(trader2 가끔 0.02 만 이동) — 게이트 신뢰성 흠집, 어서션 강건화 필요.
+
+---
+
 ## Sources
 - User interface — gizmo grid, letter stack, inspect window
 - Controls — multi-select, right-click-drag line orders
