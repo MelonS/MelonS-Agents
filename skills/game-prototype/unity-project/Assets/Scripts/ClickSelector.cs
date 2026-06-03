@@ -26,6 +26,21 @@ namespace MelonS.GameProto
             if (p != null) { Select(p); currentInspect = p.gameObject; }
         }
 
+        public PawnEntity DiagnosticSelected => currentSelection;
+
+        // 진단용(-pawndiag): 선택된 림에게 우클릭 수동이동과 *동일한 실제 경로*로 이동 명령.
+        //  (ClickSelector 우클릭 핸들러 L317-323 과 같은 코드: 잔여작업 clear + SetTarget +
+        //   ManualMoveUntil → AI override 방지).  선택-림 처리 검증용.
+        public bool DiagnosticCommandMove(Vector2 worldTarget)
+        {
+            if (currentSelection == null) return false;
+            ClearAllWorkTasks(currentSelection);
+            var mv = currentSelection.GetComponent<PawnMovement>();
+            if (mv != null) mv.SetTarget(worldTarget);
+            currentSelection.ManualMoveUntil = Time.time + 15f;
+            return true;
+        }
+
         private void Awake()
         {
             if (mainCamera == null) mainCamera = Camera.main;

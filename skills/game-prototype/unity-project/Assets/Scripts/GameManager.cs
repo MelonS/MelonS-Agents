@@ -40,10 +40,12 @@ namespace MelonS.GameProto
             // 통합 검증: -integration → normal spawn + IntegrationTestRunner 둘 다 (진짜 game state 위에서)
             bool isolatedTest = false;
             bool integrationTest = false;
+            bool pawnDiag = false;
             foreach (var arg in System.Environment.GetCommandLineArgs())
             {
                 if (arg == "-testmode") isolatedTest = true;
                 if (arg == "-integration") integrationTest = true;
+                if (arg == "-pawndiag") pawnDiag = true;
             }
             if (isolatedTest)
             {
@@ -209,6 +211,12 @@ namespace MelonS.GameProto
                 var iGo = new GameObject("__IntegrationTestRunner__");
                 iGo.AddComponent<MelonS.GameProto.Tests.IntegrationTestRunner>();
                 Debug.Log("[GameManager] -integration → IntegrationTestRunner activated");
+            }
+            if (pawnDiag)
+            {
+                var dGo = new GameObject("__PawnDiagnostics__");
+                dGo.AddComponent<PawnDiagnostics>();
+                Debug.Log("[GameManager] -pawndiag → PawnDiagnostics activated");
             }
         }
     }

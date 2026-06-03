@@ -67,6 +67,7 @@ namespace MelonS.GameProto
         private SpriteRenderer spriteRenderer;
 
         public bool IsDestroyed => hp <= 0f;
+        public float HpRatio => maxHp > 0f ? hp / maxHp : 0f;   // 진단 로깅용 read-only
 
         private void Awake()
         {
