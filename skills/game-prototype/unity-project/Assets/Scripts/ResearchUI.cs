@@ -79,6 +79,7 @@ namespace MelonS.GameProto
         {
             if (statusText == null) return;
             var rm = ResearchManager.Instance;
+            if (rm == null) return;  // #버그헌트: Instance null deref 방어
             var active = rm.activeTech;
             if (active == null)
             {
@@ -95,6 +96,7 @@ namespace MelonS.GameProto
         {
             if (pickerText == null) return;
             var rm = ResearchManager.Instance;
+            if (rm == null) return;  // #버그헌트: Instance null deref 방어
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("== 연구 선택 (숫자키, N으로 닫기) ==");
             for (int i = 0; i < rm.techs.Count; i++)

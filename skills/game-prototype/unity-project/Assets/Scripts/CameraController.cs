@@ -53,10 +53,22 @@ namespace MelonS.GameProto
             if (cam == null) cam = Camera.main;
             if (cam == null) return;
             followingPawn = null;  // bar 클릭 = 명시적 jump, auto-follow 종료
-            Vector3 p = cam.transform.position;
-            p.x = Mathf.Clamp(worldPos.x, worldMin.x, worldMax.x);
-            p.y = Mathf.Clamp(worldPos.y, worldMin.y, worldMax.y);
-            cam.transform.position = p;  // z 유지
+            cam.transform.position = ClampCamPos(worldPos.x, worldPos.y, cam.transform.position.z);
+        }
+
+        // #버그헌트(2026-06-03): 줌-인식 카메라 경계.  이전엔 worldMin/Max 로 '카메라 중심'만
+        //  clamp 해, 줌아웃(orthographicSize 큼) 시 카메라가 월드 밖(검은 void)을 렌더했다.
+        //  현재 ortho size + 아스펙트로 '뷰 사각형'이 월드 안에 들어오게 중심을 clamp 한다.
+        //  뷰가 월드보다 크면(과도 줌아웃) 월드 중앙 고정(min>max 역전 방지).
+        private Vector3 ClampCamPos(float x, float y, float z)
+        {
+            float halfH = cam.orthographicSize;
+            float halfW = halfH * cam.aspect;
+            float minX = worldMin.x + halfW, maxX = worldMax.x - halfW;
+            float minY = worldMin.y + halfH, maxY = worldMax.y - halfH;
+            float cx = (minX <= maxX) ? Mathf.Clamp(x, minX, maxX) : (worldMin.x + worldMax.x) * 0.5f;
+            float cy = (minY <= maxY) ? Mathf.Clamp(y, minY, maxY) : (worldMin.y + worldMax.y) * 0.5f;
+            return new Vector3(cx, cy, z);
         }
 
         private void Update()
@@ -105,9 +117,10 @@ namespace MelonS.GameProto
                     speed *= fastPanMultiplier;
 
                 Vector3 p = cam.transform.position;
-                p.x = Mathf.Clamp(p.x + h * speed * Time.unscaledDeltaTime, worldMin.x, worldMax.x);
-                p.y = Mathf.Clamp(p.y + v * speed * Time.unscaledDeltaTime, worldMin.y, worldMax.y);
-                cam.transform.position = p;
+                // #버그헌트: 줌-인식 경계로 clamp (뷰 사각형이 월드 밖 void 를 안 보이게).
+                cam.transform.position = ClampCamPos(
+                    p.x + h * speed * Time.unscaledDeltaTime,
+                    p.y + v * speed * Time.unscaledDeltaTime, p.z);
             }
 
             // Zoom (mouse wheel)
@@ -118,6 +131,9 @@ namespace MelonS.GameProto
                     cam.orthographicSize = Mathf.Max(zoomMin, cam.orthographicSize / zoomStep);
                 else
                     cam.orthographicSize = Mathf.Min(zoomMax, cam.orthographicSize * zoomStep);
+                // #버그헌트: 줌 변경 후 경계 밖이면 재클램프(엣지에서 줌아웃 시 void 방지).
+                Vector3 zp = cam.transform.position;
+                cam.transform.position = ClampCamPos(zp.x, zp.y, zp.z);
             }
         }
     }

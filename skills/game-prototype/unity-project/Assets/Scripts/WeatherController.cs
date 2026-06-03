@@ -40,11 +40,16 @@ namespace MelonS.GameProto
         {
             // Late-bind in case OnEnable ran before director got assigned.
             if (director == null) return;
-            if (Current == WeatherKind.Storm && Time.time > StormUntil)
+            // #버그헌트(2026-06-03): 폭풍 지속을 실시간(Time.time) 대신 게임 시계(GameSeconds)로
+            //  측정 — 일시정지/배속을 존중(RimWorld 날씨는 게임 시간 기준).  set/check 모두 동일 출처.
+            if (Current == WeatherKind.Storm && NowGameSec() > StormUntil)
             {
                 Current = WeatherKind.Clear;
             }
         }
+
+        private static float NowGameSec()
+            => GameClock.Instance != null ? GameClock.Instance.GameSeconds : Time.time;
 
         private void HandleEvent(GameEvent ev)
         {
@@ -52,7 +57,7 @@ namespace MelonS.GameProto
             if (ev.id == "storm_warning")
             {
                 Current = WeatherKind.Storm;
-                StormUntil = Time.time + 60f;
+                StormUntil = NowGameSec() + 60f;  // 게임 시계 기준 60s (일시정지/배속 존중)
             }
         }
 

@@ -219,6 +219,18 @@ namespace MelonS.GameProto
             // ONE log line per raid (was one per bandit) so the raid cadence is
             // countable from the play log: grep '[AIDirector] RAID'.
             Debug.Log($"[AIDirector] RAID #{raidCount} day={clockDayForLog()} bandits={banditCount} (grace={RaidGraceDays} interval={RaidIntervalDays} cap={MaxConcurrentGroups})");
+            // #버그헌트(2026-06-03): 레이드 이벤트는 레이드당 1회만 발생해야 한다.  이전엔
+            //  SpawnSingleBandit 안에서 OnEventFired 를 호출해 bandit 수만큼 "약탈자 접근!"이
+            //  중복 발생(이벤트 로그/경보 도배)했다 → 레이드 단위로 1회 여기서 발생.
+            var raidEv = new GameEvent
+            {
+                id = "bandit_raid",
+                title = "약탈자 접근!",
+                description = "무장한 약탈자가 지도 외곽에 나타났다.",
+                flavor = "칼날에 새벽빛이 비친다.",
+            };
+            lastEvent = raidEv;
+            OnEventFired?.Invoke(raidEv);
             for (int i = 0; i < banditCount; i++) SpawnSingleBandit(i);
         }
 
@@ -281,20 +293,8 @@ namespace MelonS.GameProto
                 col.size = new Vector2(2f, 2f);
                 go.AddComponent<BanditEnemy>();
 
-                // Surface the raid in the existing event log (reuses EventLogUI
-                // subscribed to OnEventFired — same hook used by storm/wanderer
-                // events above).
-                var ev = new GameEvent
-                {
-                    id = "bandit_raid",
-                    title = "약탈자 접근!",
-                    description = "무장한 약탈자가 지도 외곽에 나타났다.",
-                    flavor = "칼날에 새벽빛이 비친다.",
-                };
-                lastEvent = ev;
-                OnEventFired?.Invoke(ev);
-                // Per-bandit detail kept at a quieter level; the RAID summary line
-                // is emitted once per raid in SpawnRaid() and is the countable one.
+                // #버그헌트: 레이드 이벤트(OnEventFired)는 SpawnRaid 에서 레이드당 1회만 발생.
+                //  여기(per-bandit)서 발생시키던 중복 호출 제거.  per-bandit 은 조용한 로그만.
                 Debug.Log($"[AIDirector] bandit spawn wave={waveIndex} pos={pos}");
             }
             catch (Exception e)
