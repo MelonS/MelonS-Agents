@@ -173,7 +173,7 @@ namespace MelonS.GameProto
             //   buildActive 면 BuildManager 가 우클릭 = cancel 처리 (overlap 방지)
             //   #113 - undrafted + entity hit = the reference sim 스타일 "Prioritize" 컨텍스트 메뉴
             if (Input.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null
-                && !currentSelection.IsDrafted)
+                && !currentSelection.IsDrafted && !MarqueeOwnsCommand())   // #60 다중선택 양보
             {
                 Vector3 mw = mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mw.z = 0f;
@@ -192,7 +192,8 @@ namespace MelonS.GameProto
                 }
                 // entity 없거나 메뉴 없으면 기존 동작 (manual move)
             }
-            if (Input.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null)
+            if (Input.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null
+                && !MarqueeOwnsCommand())   // #60 다중선택 중엔 MarqueeSelector 가 그룹 move 소유
             {
                 Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
                 mouseWorld.z = 0f;
@@ -375,6 +376,16 @@ namespace MelonS.GameProto
             cachedMarquee = Object.FindObjectOfType<MarqueeSelector>();
 #endif
             return cachedMarquee;
+        }
+
+        // #60 다중선택 충돌 방지: marquee 가 2+ 림을 선택 중이면 우클릭 그룹 move 는 MarqueeSelector
+        //  (formation fan-out)가 소유한다.  ClickSelector 의 단일-currentSelection 우클릭(이동/공격/
+        //  컨텍스트)이 동시에 발화하면 currentSelection 이 formation 셀 + raw 클릭점 이중명령을 받아
+        //  엉뚱/겹침("여러 림 명령 시 일부 엉뚱") → 다중선택 중엔 단일 경로를 양보(skip).
+        private bool MarqueeOwnsCommand()
+        {
+            var m = FindMarquee();
+            return m != null && m.HasMultiSelection;
         }
 
         private void ToggleDraftOnSelection()
