@@ -129,10 +129,25 @@ namespace MelonS.GameProto
                 float delta = sum - lastAppliedThoughtSum;
                 if (Mathf.Abs(delta) > 0.0001f)
                 {
-                    needs.mood = Mathf.Clamp(needs.mood + delta, 0f, 100f);
-                    lastAppliedThoughtSum = sum;
+                    // #버그헌트4(2026-06-05): clamp 로 잘린 양은 lastApplied 에 누적하지 않는다.  경계
+                    //  (0/100)에서 delta 일부가 clamp 로 삼켜질 때 lastApplied 에 전체 sum 을 기록하면
+                    //  thought 만료 시 역델타가 '전체' 적용돼 비대칭 영구 드리프트(식사 후 오히려 mood
+                    //  하락, 동료사망 회복 후 과대상승)였다.  실제 적용량(clamp 후-전)만 반영해 대칭 유지.
+                    float before = needs.mood;
+                    needs.mood = Mathf.Clamp(before + delta, 0f, 100f);
+                    lastAppliedThoughtSum += (needs.mood - before);
                 }
             }
+        }
+
+        // #버그헌트4(2026-06-05): save/load 후 GameSaveButtons 가 호출 — 복원된 needs.mood 에 이미
+        //  thought 효과가 녹아 있으므로(저장 당시 델타 반영분), 현재 active thought 합을 '적용됨'으로
+        //  잡아 첫 Update 가 재가산하지 않게 한다.  안 하면 lastApplied=0 + PawnEquipment.Awake 의
+        //  '좋은 옷차림' 재추가로 옷보너스가 복원 mood 위에 다시 얹혀 mood 가 점프했다.  신규 스폰은
+        //  호출 안 하므로 lastApplied=0 유지 → 첫 Update 가 thought 를 정상 1회 적용.
+        public void SyncThoughtBaseline()
+        {
+            lastAppliedThoughtSum = ThoughtSum;
         }
     }
 }

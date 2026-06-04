@@ -117,6 +117,12 @@ namespace MelonS.GameProto
                     needs.food = ps.food;
                     needs.sleep = ps.sleep;
                     needs.mood = ps.mood;
+                    // #버그헌트4(2026-06-05): 복원 mood 에 트레잇 baseline·thought 효과가 이미
+                    //  녹아 있으므로(저장 당시 가산분) 로드 직후 재가산을 막는다.  안 하면 매 로드마다
+                    //  트레잇 baseline(Cheerful+10 등) + 장비 thought(좋은옷차림) 가 다시 얹혀 mood 가
+                    //  누적 표류/점프했다.
+                    needs.MarkTraitsApplied();
+                    p.GetComponent<PawnThoughts>()?.SyncThoughtBaseline();
                 }
                 // #audit2 #17 — 스킬 level+xp 복원(Instantiate 후 Awake 가 기본 레벨을
                 //  깔아둔 뒤 덮어쓴다).  구 세이브 호환 위해 길이 가드.

@@ -169,6 +169,18 @@ namespace MelonS.GameProto
         // #164 - PawnTraits 효과 캐시 (Awake 시 traits.moodBaselineBonus 적용).
         private bool traitsApplied = false;
 
+        // #버그헌트4(2026-06-05): save/load 후 GameSaveButtons 가 호출.  복원된 mood 에 트레잇
+        //  moodBaselineBonus 가 이미 포함돼 있으므로(저장 당시 1회 가산분) Update 의 baseline 재가산을
+        //  막되(traitsApplied=true), moodDecay 의 Stoic swingMul 스케일은 fresh 인스턴스라 여기서
+        //  재적용한다.  안 하면 매 로드마다 Cheerful +10 / Lazy -8 baseline 이 누적 표류했다.
+        public void MarkTraitsApplied()
+        {
+            if (traitsApplied) return;
+            var tr = GetComponent<PawnTraits>();
+            if (tr != null) moodDecay *= tr.moodSwingMul;   // decay 스케일만(baseline 재가산 X)
+            traitsApplied = true;
+        }
+
         [Header("Day 20: mood break")]
         [SerializeField] private float moodBreakThreshold = 20f;
         [SerializeField] private float moodBreakRecoverAt = 35f;
