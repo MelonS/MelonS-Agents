@@ -1,5 +1,32 @@
 # Autonomous decisions log
 
+## 2026-06-04 멀티에이전트 버그헌트 2사이클 (운영자 "할거없어?" 재나ज)
+
+신규 7차원(경로탐색·예약/작업배정·save/load견고성·동물/길들이기·연구/스킬·일정/징집·렌더상태)
+병렬 감사 → 발견 22 → 적대적 2-검증 → **확정 10 / 기각 12**.  적대적 검증이 Unity fake-null
+의미론 오해 기반 false-positive(트리 중복증식·예약 leak·stand-cell 등 다수)를 정확히 기각.
+
+**수정 완료 8건**(전부 ISO83/INT46, 일부 LongPlay):
+- 징집/수동제어 중 자동공격 정지(후퇴 무시·이중타격 fix) · 출혈사망 corpse 회색조(ForceSyncDead
+  ApplyVisual) · 부상폰 로드 Hp 동기화 · Hunter.HasTask 순수 null(킬직후 hitch) · 길들인 동물
+  자동사냥 제외 · 연구 mul manipulation² → manipulation · 징집 중 자율취침 금지 · **연구 진행도
+  save/load**(재시작 unlock 소실 fix, I46)
+
+**보류 1 — 🔴 CRITICAL #2 구조물 재시작 persist+reconstruct (대형, 운영자 결정/플레이테스트 필요)**:
+GameSaveButtons.OnLoad 가 pawn+tree 만 Instantiate 하고 벽/침대/스톡파일/작물은 재생성 안 함
+(ApplyLoadedSubStates 는 기존 엔티티 서브상태만 위치매칭 덮기).  → 게임 **재시작 후** 로드 시
+플레이어 건축물 전부 소실(같은 세션 F9 는 엔티티 안 파괴라 우연히 동작 → 버그 은폐).  진짜 fix 는
+큰 save-system 피처: (a) SaveData 에 doors/stoves/lamps/fences/barricade/autodoor 등 **모든**
+플레이어 구조물 저장(현재 walls/beds/stockpiles/crops 만), (b) OnLoad 가 BuildManager.PrefabFor
+(private→공개 SpawnFinished 필요) + GrowZone 으로 전부 reconstruct + 등록(RegisterWallCell 등)
++ 멀티셀(침대 1x2) footprint, (c) 재시작 검증(자동 테스트는 same-session 만 커버 → 인게임 필요).
+말단 세션에서 급조하면 미등록/깨진 재구성 위험이라 미착수.  우선 ApplyLoadedSubStates 에 소실
+가시화 경고로그만 추가([[verify-the-real-path]] — 거짓 "복원됨"보다 가시화가 정직).
+
+**보류 2 — #5 길들이기 walk-to(feature)**: 현재 동물 우클릭 즉시 TryTame(텔레포트, 거리 무시).
+RimWorld 정합하려면 PawnTamer(또는 hunter 재사용)로 걸어가 인접 시 시도 — feature 라 운영자
+방향 확인 후.
+
 ## 2026-06-04 멀티에이전트 버그헌트 1사이클 (운영자 "멀티에이전트 버그헌트 한 사이클" 선택)
 
 7차원 병렬 감사(needs-decay/mood·운반저장·AI생존·건축·전투건강·시간날씨·UI) → 발견 34건

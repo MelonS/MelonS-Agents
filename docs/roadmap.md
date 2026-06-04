@@ -198,6 +198,12 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-04** PawnSim 멀티에이전트 버그헌트 2사이클 — 신규 7차원, 확정10/기각12, 수정 8건:
+  징집 자동공격 정지·출혈사망 corpse 회색조·부상폰 로드 Hp동기화·Hunter.HasTask·길들인동물
+  자동사냥 제외·연구 mul 제곱 fix·징집 자율취침 금지·연구 진행도 save/load(I46).  회귀가드 V83/I46.
+  ISO 83/83 · INT 46/46 · LongPlay survived.  🔴 보류 #2: 구조물 재시작 persist+reconstruct
+  (대형 save-system 피처 — 운영자 결정/플레이테스트 필요, 진단 경고로그만 우선 추가) · #5 길들이기
+  walk-to(feature).  상세 autonomous-decisions.
 - **2026-06-04** PawnSim 자원모델 단일화 Stage 2c (완료) — trader 물리화.  판매(give)는
   SpendStockpiledWood/Stone/Food(카운터+물리 동시 소비), 구매(receive)는 trader 위치에 물리
   더미 드롭(카운터 아님 — 림이 운반해야 적립).  V32 테스트 물리 동작으로 갱신.

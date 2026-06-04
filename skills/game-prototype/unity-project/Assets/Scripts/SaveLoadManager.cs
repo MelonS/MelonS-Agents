@@ -307,6 +307,23 @@ namespace MelonS.GameProto
 
             const float kMatchRadius = 0.6f;
 
+            // #버그헌트2(2026-06-04) 진단: ApplyLoadedSubStates 는 '이미 씬에 존재하는' 엔티티의
+            //  서브상태(품질/재질/우선순위/성장)만 위치매칭으로 덮어쓸 뿐, 없는 엔티티를 만들지
+            //  않는다.  벽/침대/스톡파일/작물은 플레이어가 런타임에 짓는 것이라 게임 재시작(새 씬)
+            //  후 로드 시 매칭 대상이 없어 전부 소실된다(같은 세션 F9 는 엔티티가 안 파괴돼 우연히
+            //  동작).  근본 해결(구조물 persist+reconstruct)은 별도 대형 작업 — 우선 소실을 가시화.
+            int sBeds = data.beds?.Count ?? 0, sStock = data.stockpiles?.Count ?? 0;
+            int sWalls = data.walls?.Count ?? 0, sCrops = data.crops?.Count ?? 0;
+            if (sBeds + sStock + sWalls + sCrops > 0)
+            {
+                int nBeds = UnityEngine.Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None).Length;
+                int nWalls = UnityEngine.Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None).Length;
+                int nCrops = UnityEngine.Object.FindObjectsByType<CropEntity>(FindObjectsSortMode.None).Length;
+                if ((sBeds > 0 && nBeds == 0) || (sWalls > 0 && nWalls == 0) || (sCrops > 0 && nCrops == 0))
+                    Debug.LogWarning($"[SaveLoad] ⚠ 구조물 재생성 미지원: save(beds={sBeds} walls={sWalls} crops={sCrops}) 인데 " +
+                                     $"씬(beds={nBeds} walls={nWalls} crops={nCrops}) — 재시작 후 로드면 플레이어 건축물이 소실된다(별도 reconstruct 작업 필요).");
+            }
+
             // #버그헌트: 각 타입별 used 집합으로 1:1 매칭(같은 엔티티 중복 적용 방지).
             // Re-apply BedEntity quality.
             if (data.beds != null && data.beds.Count > 0)
