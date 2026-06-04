@@ -133,7 +133,18 @@ namespace MelonS.GameProto.AI
             //  meals=50)에서 pawn 이 50끼를 두고도 영구 사냥 → BuildBlueprint(같은 p1, 리스트
             //  뒤)에 영영 안 닿아 "건설 안됨"(WINDIAG 28/28 '사냥').  meals 도 식량이므로 합산:
             //  먹을 게(raw+meals) 충분하면 사냥 안 함 → idle pawn 이 건설/운반으로 감.
-            if (ResourceManager.Instance.food + ResourceManager.Instance.meals >= globalFoodThreshold) return false;
+            // #버그헌트(2026-06-05) CRITICAL: 물리 식량(바닥/저장고 MeatPile)도 식량으로 합산한다.
+            //  자원모델 단일화(haul-required)로 ResourceManager.food 는 '저장(InStockpile)된' 식량만
+            //  세는데, 초반·평소엔 저장량이 0 이라 이 gate(food+meals<5)가 사실상 영구 true → 모든
+            //  pawn 이 매 Decide 마다 사냥(Hunt)을 먼저 잡아(우선순위 상위) 그 아래 운반/건축/요리/수확이
+            //  영영 굶었다.  게다가 사냥 대상이 멀거나 없으면 hunt task 가 곧 풀려 pawn 은 떠돌기만 함
+            //  (운영자 '저장공간·운반물 있는데 떠돈다'의 진짜 원인).  물리 MeatPile.Food 합까지 더해
+            //  '실제 먹을 게 충분하면' 사냥하지 않게 한다(starter 물리 고기·바닥 식량 포함).
+            int physFood = 0;
+            foreach (var m in Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None))
+                if (m != null) physFood += m.Food;
+            if (ResourceManager.Instance.food + ResourceManager.Instance.meals + physFood >= globalFoodThreshold)
+                return false;
             AnimalEntity deer = FindNearestAnimal(ctx);
             if (deer == null) return false;
             // #199 C2 — reserve the chosen animal (central registry).  Hunter has no

@@ -127,6 +127,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I46-research-save-load", TestI46_ResearchSaveLoad);
             yield return RunOne("I47-structure-save-reconstruct", TestI47_StructureSaveReconstruct);
             yield return RunOne("I48-raid-state-save-load", TestI48_RaidStateSaveLoad);
+            yield return RunOne("I49-haul-loose-pile-to-stockpile", TestI49_HaulLoosePileToStockpile);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1177,6 +1178,49 @@ namespace MelonS.GameProto.Tests
             var nearest = StockpileZoneEntity.FindNearest(new Vector2(0f, 0f));
             Assert(nearest != null, "Spawn+FindNearest 동작");
             if (z != null) Object.Destroy(z.gameObject);
+        }
+
+        /// <summary>I49: 운영자 보고 재현 — "저장공간 세팅 + 운반물 있는데 림이 떠돈다".
+        ///   Wood stockpile zone + 느슨한(InStockpile=false) 목재더미를 pawn 근처에 두고, 유휴 pawn 이
+        ///   20초 내 그 더미를 stockpile 로 운반하는지(줍힘=Destroy or InStockpile).  실제 운반 경로
+        ///   (HaulWoodAction→FindNearestPile→PawnHauler) 를 end-to-end 검증 — 이전엔 이 경로 무테스트.</summary>
+        private IEnumerator TestI49_HaulLoosePileToStockpile()
+        {
+            yield return null;
+            var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+            if (pawns.Length == 0) { Assert(false, "pawn 없음"); yield break; }
+            // pawn 군집(원점 근처) 가까운 빈 곳에 stockpile + loose 목재더미.
+            // 통제된 재현: 기존 loose 더미/존 전부 제거 → 깨끗한 상태에서 도달가능 더미 1개만.
+            foreach (var wp in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
+                if (wp != null && !wp.InStockpile) Object.Destroy(wp.gameObject);
+            foreach (var z0 in Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None))
+                if (z0 != null) Object.Destroy(z0.gameObject);
+            yield return null;
+
+            var p0 = pawns[0];
+            Vector3 ppos = p0.transform.position;
+            var zone = StockpileZoneEntity.Spawn(ppos + new Vector3(3f, 0f, 0f), null,
+                StockpilePriority.Normal, StockItemKind.All);
+            var pile = WoodPileEntity.Spawn(ppos + new Vector3(1.5f, 0f, 0f), 5, PawnHauler.WoodPileSpriteRef);
+            if (pile != null) pile.InStockpile = false;
+            yield return null;
+
+            // 직접명령 없음 — 순수 자율 Decide 로 운반되는지(운영자 '저장공간·운반물 있는데 떠돈다' 회귀).
+            float origScale = Time.timeScale;
+            if (TimeController.Instance != null) TimeController.Instance.SetScale(4f);
+            float t = 0f; bool hauled = false;
+            while (t < 20f)
+            {
+                yield return new WaitForSeconds(0.5f); t += 0.5f;
+                if (pile == null || pile.gameObject == null) { hauled = true; break; }  // 줍혀 사라짐
+                if (pile.InStockpile) { hauled = true; break; }
+            }
+            if (TimeController.Instance != null) TimeController.Instance.SetScale(origScale);
+            if (zone != null) Object.Destroy(zone.gameObject);
+            if (pile != null && pile.gameObject != null) Object.Destroy(pile.gameObject);
+            // 근본 원인(2026-06-05): HuntAnimal gate 가 저장된 식량만 봐서(haul-required 라 0) 영구
+            //  사냥-선점 → 운반/건축/요리/수확 굶음.  물리 식량 합산으로 fix → 자율 운반 복구.
+            Assert(hauled, $"자율 운반 복구: 도달가능 더미+stockpile+유휴림 → 20s 내 운반 (hauled={hauled})");
         }
 
         /// <summary>I34: #129 - 동물 죽음 시 즉시 +food 대신 MeatPileEntity drop</summary>
