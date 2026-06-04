@@ -198,6 +198,13 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-05** PawnSim mood 모델 decay+thought 합산 전환 (운영자 결정, 확정 #10/#11/#12 해결).
+  PawnThoughts 가 매초 needs.mood 를 `50+Σthought` 로 절대 override 하던 것을 **델타 가산**으로
+  변경 — thought 추가/만료 시 그 음·양수만큼만 mood 변동, 사이의 자연 decay·식사 즉시보너스·
+  save 복원 mood 는 누적 유지.  → mood = baseline-decay + Σthought 합산으로 굶주림·부상·동료사망
+  누적 시 실제 20 밑 도달 → 정신붕괴 발동(이전 하한 ~38 로 불가) + 식사 즉시보너스 보존 + save
+  복원 mood 유지.  회귀가드 V84(고mood 폰 -15 → 델타65, override35 구분).  ISO 84/84 · INT 48/48 ·
+  LongPlay survived.
 - **2026-06-04** PawnSim 멀티에이전트 버그헌트 3사이클 (회귀+신규 7차원, 확정13/기각7) — 수정 10건:
   자원회귀 2(hauler 청사진 초과분 영구손실, 길들이기 raw AddFood) · 레이드 스케줄 save/load(I48) ·
   마퀴 다중선택 stuck 해제 · 카메라 follow clamp · 마퀴 이동 잔여 task 정리 · 드래그-zone 오디오

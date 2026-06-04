@@ -88,6 +88,14 @@ namespace MelonS.GameProto
             }
         }
 
+        // #mood모델(2026-06-05) — thought offset 합(baseMood 제외).  decay+thought 합산 모델에서
+        //  needs.mood 에 '델타'로 반영하기 위한 값.
+        public float ThoughtSum
+        {
+            get { float s = 0f; foreach (var t in active) s += t.offset; return s; }
+        }
+        private float lastAppliedThoughtSum = 0f;
+
         private float lastCullTime = -1f;
 
         private void Update()
@@ -110,8 +118,20 @@ namespace MelonS.GameProto
                 var health = GetComponent<PawnHealth>();
                 if (health != null && health.TotalHpRatio < 0.6f) AddThought("부상");
                 else RemoveThought("부상");
-                // thought(양수+음수)가 있으면 그 합이 mood.  없으면 PawnNeeds 자체 decay 유지.
-                if (active.Count > 0) needs.mood = CurrentMood;
+                // #mood모델(2026-06-05, 운영자 "decay+thought 합산"): thought 를 절대 override(needs.mood
+                //  = 50+Σ) 대신 '델타'로 가산한다.  이전 절대 override 는 매초 PawnNeeds 의 자연 decay·
+                //  식사 즉시보너스(+20/+10)·save 복원 mood 를 모두 무력화 → mood 하한 ~38 로 정신붕괴
+                //  (mood<20) 불가, 식사보너스 증발이었다(확정 #10/#11/#12).  델타 방식: thought 추가/만료
+                //  시 그 음·양수만큼만 mood 가 변하고, 사이의 자연 decay/회복/즉시보너스는 그대로 누적
+                //  → mood = baseline-decay + Σthought 합산.  굶주림·부상·동료사망 누적 시 실제로 20 밑
+                //  으로 떨어져 정신붕괴 발동.
+                float sum = ThoughtSum;
+                float delta = sum - lastAppliedThoughtSum;
+                if (Mathf.Abs(delta) > 0.0001f)
+                {
+                    needs.mood = Mathf.Clamp(needs.mood + delta, 0f, 100f);
+                    lastAppliedThoughtSum = sum;
+                }
             }
         }
     }

@@ -131,6 +131,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V81-force-sync-dead", TestV81_ForceSyncDead);
             yield return RunOne("V82-deconstruct-bed-refund-by-quality", TestV82_DeconstructBedRefundByQuality);
             yield return RunOne("V83-research-mul-not-squared", TestV83_ResearchMulNotSquared);
+            yield return RunOne("V84-mood-thought-delta", TestV84_MoodThoughtDelta);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -914,6 +915,32 @@ namespace MelonS.GameProto.Tests
             Object.Destroy(go);
             Assert(Mathf.Abs(r - 1.2f) < 0.001f,
                 $"Research mul={r:F3} (1.2 기대 = manipulation 1배; 제곱 1.44 아님)");
+        }
+
+        // #mood모델(2026-06-05) 회귀 가드: thought 가 '델타'로 mood 에 가산되는지(절대 override 아님).
+        //  높은 mood(80) 폰에 -15 thought 추가 → 델타면 ~65, 구 override(50+Σ)면 ~35 로 구분.
+        private IEnumerator TestV84_MoodThoughtDelta()
+        {
+            if (Services.Get<GameClock>() == null)
+            {
+                var cGo = new GameObject("TestGameClockV84");
+                cGo.AddComponent<GameClock>();
+                yield return null;
+            }
+            var go = new GameObject("TestMoodDelta");
+            var needs = go.AddComponent<PawnNeeds>();
+            var th = go.AddComponent<PawnThoughts>();
+            yield return null;
+            needs.mood = 80f;
+            yield return new WaitForSeconds(1.1f);   // 첫 PawnThoughts.Update(델타 0, lastApplied 동기화)
+            float before = needs.mood;
+            th.AddThought("동료 사망");               // -15
+            yield return new WaitForSeconds(1.1f);    // 델타 적용 tick
+            float after = needs.mood;
+            Object.Destroy(go);
+            // 델타: ~before-15(>50).  구 override: 50+(-15)=35.  >50 이면 델타 모델 확인.
+            bool deltaModel = after > 50f && after < before;
+            Assert(deltaModel, $"mood 델타: before={before:F1}→after={after:F1} (델타 ~{before-15:F0} 기대, override 35 아님)");
         }
 
         private IEnumerator TestV45_ClampStatic()
