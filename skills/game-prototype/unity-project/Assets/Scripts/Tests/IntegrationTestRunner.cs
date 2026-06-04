@@ -123,6 +123,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I43-chop-designation-dispatch", TestI43_ChopDesignation);
             // #34 회귀가드 — 나무 좌클릭 시 '벌목 지정' 플로트 메뉴가 실제로 열리는가(그동안 무테스트→반복 회귀)
             yield return RunOne("I44-tree-leftclick-menu-opens", TestI44_TreeLeftClickMenu);
+            yield return RunOne("I45-designation-save-load", TestI45_DesignationSaveLoad);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -758,6 +759,41 @@ namespace MelonS.GameProto.Tests
             Assert(dataOk,
                 $"Save/Load: wood {beforeWood}->dirty{dirtyWood}->loaded{data.wood}, " +
                 $"food {beforeFood}->loaded{data.food}, pawns {beforePawnCount}=={data.pawns.Count}");
+        }
+
+        /// <summary>I45: #save-load 완성 — 벌목 지정 round-trip.  (1) 저장 경로: 마킹된 나무가
+        ///   GetMarkedTreePositions 에 잡히는지. (2) 로드 경로: ApplyLoadedSubStates 가 저장
+        ///   위치를 (respawn 모사) 다른 나무에 위치 매칭으로 재마킹하는지.  지정이 로드 시
+        ///   소실되던 것 fix 의 핵심 경로(엔티티 매칭+TryMark) 검증.</summary>
+        private IEnumerator TestI45_DesignationSaveLoad()
+        {
+            yield return null;
+            var des = TreeChopDesignation.Instance;
+            if (des == null) { Assert(false, "TreeChopDesignation.Instance null"); yield break; }
+            var trees = Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
+            var live = new List<TreeEntity>();
+            foreach (var t in trees) if (t != null && !t.IsDestroyed) live.Add(t);
+            if (live.Count < 2) { Assert(false, $"live trees={live.Count} (<2 필요)"); yield break; }
+            var a = live[0]; var b = live[1];
+
+            // (1) 저장 경로: A 마킹 → GetMarkedTreePositions 에 A 위치 포함.
+            des.TryMark(a.gameObject);
+            yield return null;
+            var saved = des.GetMarkedTreePositions();
+            bool savePathOk = des.IsMarked(a)
+                && saved.Exists(p => ((Vector2)a.transform.position - p).sqrMagnitude < 0.04f);
+
+            // (2) 로드 경로: B 위치를 chopMarks 로 → ApplyLoadedSubStates 가 B 를 재마킹.
+            bool bBefore = des.IsMarked(b);
+            var data = new SaveData();
+            data.chopMarks.Add(b.transform.position);
+            SaveLoadManager.ApplyLoadedSubStates(data);
+            yield return null;
+            bool loadPathOk = !bBefore && des.IsMarked(b);
+
+            Assert(savePathOk && loadPathOk,
+                $"지정 round-trip: 저장경로={savePathOk}, 로드재마킹={loadPathOk} " +
+                $"(B before={bBefore}, B after={des.IsMarked(b)})");
         }
 
         /// <summary>I23: 60초 시뮬 stress - AI/wolf/crop growth/event 동시 작동.

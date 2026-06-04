@@ -87,6 +87,10 @@ namespace MelonS.GameProto
         public List<WallSave>      walls      = new List<WallSave>();
         // #save-load 완성 — 작물 성장도(구 세이브엔 없어 빈 리스트 → 적용 스킵).
         public List<CropSave>      crops      = new List<CropSave>();
+        // #save-load 완성(2026-06-04) — 벌목/채광 지정(마킹된 나무·광맥 위치).  로드 시
+        //  트리 respawn 후 위치 매칭으로 재마킹.  구 세이브엔 없어 빈 리스트 → 스킵.
+        public List<Vector2>       chopMarks  = new List<Vector2>();
+        public List<Vector2>       mineMarks  = new List<Vector2>();
         public float gameSeconds;   // #276 게임 시계 — 로드 시 시계 리셋(레이드 스케줄 파손) 방지
         public string version = "0.2.0";
         public string savedAtIso;
@@ -218,6 +222,12 @@ namespace MelonS.GameProto
                 });
             }
 
+            // #save-load 완성(2026-06-04): serialize chop/mine designations (위치 목록).
+            if (TreeChopDesignation.Instance != null)
+                data.chopMarks = TreeChopDesignation.Instance.GetMarkedTreePositions();
+            if (MineDesignation.Instance != null)
+                data.mineMarks = MineDesignation.Instance.GetMarkedVeinPositions();
+
             string json = JsonUtility.ToJson(data, prettyPrint: true);
             File.WriteAllText(SavePath, json);
             Debug.Log($"[SaveLoad] saved -> {SavePath} " +
@@ -337,6 +347,35 @@ namespace MelonS.GameProto
                     CropEntity best = FindNearest(sceneCrops, cs.position, kMatchRadius,
                         c => (Vector2)c.transform.position, used);
                     if (best != null) { best.SetGrowth(cs.growth); used.Add(best); }
+                }
+            }
+
+            // #save-load 완성(2026-06-04): 벌목 지정 재적용 — respawn 된 나무에 위치 매칭 후
+            //  TryMark.  물리 OverlapBox(MarkWorld) 대신 엔티티 매칭을 쓰는 이유: respawn 직후
+            //  같은 프레임엔 collider 가 물리에 아직 등록 안 돼 overlap 이 빈손이 될 수 있다
+            //  (false "복원됨" 위험 회피 — verify-real-path).
+            if (data.chopMarks != null && data.chopMarks.Count > 0 && TreeChopDesignation.Instance != null)
+            {
+                var sceneTrees = UnityEngine.Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
+                var used = new HashSet<TreeEntity>();
+                foreach (var pos in data.chopMarks)
+                {
+                    TreeEntity best = FindNearest(sceneTrees, pos, kMatchRadius,
+                        t => (Vector2)t.transform.position, used);
+                    if (best != null) { TreeChopDesignation.Instance.TryMark(best.gameObject); used.Add(best); }
+                }
+            }
+
+            // #save-load 완성(2026-06-04): 채광 지정 재적용 — 씬-결정적 광맥에 위치 매칭 후 TryMark.
+            if (data.mineMarks != null && data.mineMarks.Count > 0 && MineDesignation.Instance != null)
+            {
+                var sceneVeins = UnityEngine.Object.FindObjectsByType<StoneVeinEntity>(FindObjectsSortMode.None);
+                var used = new HashSet<StoneVeinEntity>();
+                foreach (var pos in data.mineMarks)
+                {
+                    StoneVeinEntity best = FindNearest(sceneVeins, pos, kMatchRadius,
+                        v => (Vector2)v.transform.position, used);
+                    if (best != null) { MineDesignation.Instance.TryMark(best.gameObject); used.Add(best); }
                 }
             }
         }

@@ -198,6 +198,12 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-04** PawnSim save/load 완성 #3 — 벌목/채광 지정(designation) 복원.  로드 시
+  마킹된 나무·광맥 지정이 소실되던 것 수정.  TreeChopDesignation/MineDesignation 에
+  GetMarked...Positions 접근자, SaveData.chopMarks/mineMarks(List<Vector2>), Save 직렬화,
+  ApplyLoadedSubStates 가 respawn 된 나무/광맥에 **엔티티 위치 매칭+TryMark**로 재마킹
+  (물리 OverlapBox 의 respawn-직후 collider 미등록 타이밍 회피 → false-fix 방지).
+  회귀가드 I45(저장경로 + 로드 재마킹 실 경로).  ISO 78/78 · INT 45/45.
 - **2026-06-04** PawnSim save/load 완성 #2 — 작물 성장도(growth 0..1) 복원.  로드 시 farm
   타일 성장이 0 으로 리셋되던 것 수정.  CropEntity.Growth/SetGrowth 노출, CropSave 추가,
   Save 직렬화 + ApplyLoadedSubStates 위치 매칭 재적용(beds/walls 와 동일 1:1 패턴).

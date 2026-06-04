@@ -118,6 +118,20 @@ namespace MelonS.GameProto
             return false;
         }
 
+        // #save-load 완성(2026-06-04) — 마킹된(아직 안 베인) 나무 위치 목록.  SaveLoadManager 가
+        //  저장하고, 로드 시 트리 respawn 후 위치 매칭으로 재마킹한다(지정이 로드 시 소실되던 것 fix).
+        public System.Collections.Generic.List<Vector2> GetMarkedTreePositions()
+        {
+            var list = new System.Collections.Generic.List<Vector2>();
+            for (int i = 0; i < marked.Count; i++)
+            {
+                var m = marked[i];
+                if (m != null && !m.IsChopped && m.Tree != null)
+                    list.Add(m.Tree.transform.position);
+            }
+            return list;
+        }
+
         private void HandleDragInput()
         {
             if (cam == null) return;
