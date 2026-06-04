@@ -66,6 +66,14 @@ namespace MelonS.GameProto
         public int material;
     }
 
+    // #save-load 완성(2026-06-04) — 작물 성장도가 로드 시 0 으로 리셋되던 것 복원.
+    [Serializable]
+    public class CropSave
+    {
+        public Vector2 position;
+        public float growth;   // 0..1
+    }
+
     [Serializable]
     public class SaveData
     {
@@ -77,6 +85,8 @@ namespace MelonS.GameProto
         public List<BedSave>       beds       = new List<BedSave>();
         public List<StockpileSave> stockpiles = new List<StockpileSave>();
         public List<WallSave>      walls      = new List<WallSave>();
+        // #save-load 완성 — 작물 성장도(구 세이브엔 없어 빈 리스트 → 적용 스킵).
+        public List<CropSave>      crops      = new List<CropSave>();
         public float gameSeconds;   // #276 게임 시계 — 로드 시 시계 리셋(레이드 스케줄 파손) 방지
         public string version = "0.2.0";
         public string savedAtIso;
@@ -198,6 +208,16 @@ namespace MelonS.GameProto
                 });
             }
 
+            // #save-load 완성(2026-06-04): serialize crop growth sub-state.
+            foreach (var crop in UnityEngine.Object.FindObjectsByType<CropEntity>(FindObjectsSortMode.None))
+            {
+                data.crops.Add(new CropSave
+                {
+                    position = crop.transform.position,
+                    growth   = crop.Growth,
+                });
+            }
+
             string json = JsonUtility.ToJson(data, prettyPrint: true);
             File.WriteAllText(SavePath, json);
             Debug.Log($"[SaveLoad] saved -> {SavePath} " +
@@ -303,6 +323,20 @@ namespace MelonS.GameProto
                     WallEntity best = FindNearest(sceneWalls, ws.position, kMatchRadius,
                         w => (Vector2)w.transform.position, used);
                     if (best != null) { best.SetMaterial((WallMaterial)ws.material); used.Add(best); }
+                }
+            }
+
+            // #save-load 완성(2026-06-04): re-apply CropEntity growth onto deterministically
+            //  regenerated farm tiles (same position-match 1:1 pattern as beds/walls).
+            if (data.crops != null && data.crops.Count > 0)
+            {
+                var sceneCrops = UnityEngine.Object.FindObjectsByType<CropEntity>(FindObjectsSortMode.None);
+                var used = new HashSet<CropEntity>();
+                foreach (var cs in data.crops)
+                {
+                    CropEntity best = FindNearest(sceneCrops, cs.position, kMatchRadius,
+                        c => (Vector2)c.transform.position, used);
+                    if (best != null) { best.SetGrowth(cs.growth); used.Add(best); }
                 }
             }
         }

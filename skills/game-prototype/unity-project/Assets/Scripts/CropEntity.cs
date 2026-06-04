@@ -46,6 +46,16 @@ namespace MelonS.GameProto
         private SpriteRenderer sr;
         public bool IsRipe => growth >= 1f;
 
+        // #save-load 완성(2026-06-04) — 작물 성장도(0..1)가 로드 시 0 으로 리셋되던 것 복원용.
+        //  SaveLoadManager 가 Save 에서 Growth 를 읽고, ApplyLoadedSubStates 에서 SetGrowth 로
+        //  씬 재생성된 farm 타일에 위치 매칭 재적용(beds/walls 와 동일 패턴).
+        public float Growth => growth;
+        public void SetGrowth(float g)
+        {
+            growth = Mathf.Clamp01(g);
+            RefreshVisual();
+        }
+
         private void Awake()
         {
             sr = GetComponent<SpriteRenderer>();

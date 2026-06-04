@@ -125,6 +125,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V75-distinct-target-and-cell", TestV75_DistinctTargetAndCell);
             yield return RunOne("V76-eject-pawn-from-blocked-cell", TestV76_EjectPawnFromBlockedCell);
             yield return RunOne("V77-bodypart-save-restore", TestV77_BodyPartSaveRestore);
+            yield return RunOne("V78-crop-growth-saveload", TestV78_CropGrowthSaveLoad);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -807,6 +808,33 @@ namespace MelonS.GameProto.Tests
 
             Assert(hpOk && bleedOk && bandOk && deathOk && legacyOk,
                 $"부위 round-trip: hp={hpOk}, 출혈={bleedOk}, 붕대={bandOk}, 사망복원={deathOk}, 구세이브가드={legacyOk}");
+        }
+
+        // #save-load 완성(2026-06-04) — 작물 성장도가 ApplyLoadedSubStates(실 복원 경로)로
+        //  위치 매칭 재적용되는지 + Growth/SetGrowth clamp.  로드 시 0 으로 리셋되던 것 fix.
+        private IEnumerator TestV78_CropGrowthSaveLoad()
+        {
+            var go = new GameObject("TestCrop");
+            go.transform.position = new Vector3(80, 0, 0);
+            go.AddComponent<SpriteRenderer>();
+            var crop = go.AddComponent<CropEntity>();
+            yield return new WaitForSeconds(0.05f);
+            crop.SetGrowth(0.7f);
+            bool getOk = Mathf.Abs(crop.Growth - 0.7f) < 0.01f;
+
+            // '로드 시 리셋' 모사 후 SaveData 로 실 복원 경로(ApplyLoadedSubStates) 적용.
+            crop.SetGrowth(0f);
+            var data = new SaveData();
+            data.crops.Add(new CropSave { position = go.transform.position, growth = 0.55f });
+            SaveLoadManager.ApplyLoadedSubStates(data);
+            bool applyOk = Mathf.Abs(crop.Growth - 0.55f) < 0.01f;
+
+            crop.SetGrowth(1.5f);   // clamp → 1.0
+            bool clampOk = crop.Growth >= 0.99f && crop.Growth <= 1f;
+
+            Object.Destroy(go);
+            Assert(getOk && applyOk && clampOk,
+                $"작물 성장 round-trip: get={getOk}, apply={applyOk}, clamp={clampOk}");
         }
 
         private IEnumerator TestV45_ClampStatic()

@@ -198,6 +198,10 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-04** PawnSim save/load 완성 #2 — 작물 성장도(growth 0..1) 복원.  로드 시 farm
+  타일 성장이 0 으로 리셋되던 것 수정.  CropEntity.Growth/SetGrowth 노출, CropSave 추가,
+  Save 직렬화 + ApplyLoadedSubStates 위치 매칭 재적용(beds/walls 와 동일 1:1 패턴).
+  회귀가드 V78(ApplyLoadedSubStates 실 경로 + clamp).  ISO 78/78 · INT 44/44.
 - **2026-06-04** PawnSim save/load 완성 #1 — 부위별 HP/출혈/붕대 직렬화 복원.  로드 시
   부위 HP 가 전부 full 로 리셋돼 부상/출혈/붕대/사망(머리·몸통 HP=0)/다운 상태가 소실되던
   것 수정.  PawnSave 에 partHp/partBleed/partBandaged 추가, SaveLoadManager.Save 채움,
