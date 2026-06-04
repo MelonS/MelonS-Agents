@@ -126,6 +126,10 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V76-eject-pawn-from-blocked-cell", TestV76_EjectPawnFromBlockedCell);
             yield return RunOne("V77-bodypart-save-restore", TestV77_BodyPartSaveRestore);
             yield return RunOne("V78-crop-growth-saveload", TestV78_CropGrowthSaveLoad);
+            yield return RunOne("V79-storm-duration-not-trivial", TestV79_StormDurationNotTrivial);
+            yield return RunOne("V80-new-wound-clears-bandage", TestV80_NewWoundClearsBandage);
+            yield return RunOne("V81-force-sync-dead", TestV81_ForceSyncDead);
+            yield return RunOne("V82-deconstruct-bed-refund-by-quality", TestV82_DeconstructBedRefundByQuality);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -835,6 +839,66 @@ namespace MelonS.GameProto.Tests
             Object.Destroy(go);
             Assert(getOk && applyOk && clampOk,
                 $"작물 성장 round-trip: get={getOk}, apply={applyOk}, clamp={clampOk}");
+        }
+
+        // #버그헌트(2026-06-04) 회귀 가드: 폭풍 지속 상수가 게임시계 60(≈0.7 실초@1x)으로
+        //  되돌아가지 않도록.  의도는 ≈60 실초@1x = 5184 게임초.
+        private IEnumerator TestV79_StormDurationNotTrivial()
+        {
+            bool ok = WeatherController.StormDurationGameSec > 1000f;
+            Assert(ok, $"StormDurationGameSec={WeatherController.StormDurationGameSec} (>1000 기대, ≈60실초@1x)");
+            yield break;
+        }
+
+        // #버그헌트(2026-06-04) 회귀 가드: 새 상처가 붕대를 해제(영구 출혈면역 fix).  이전엔 의사
+        //  치료로 bandaged=true 가 영구라 이후 출혈이 발동 안 했다.
+        private IEnumerator TestV80_NewWoundClearsBandage()
+        {
+            var go = SpawnTestPawn(new Vector3(82, 0, 0), includeAI: false);
+            var h = go.GetComponent<PawnHealth>();
+            yield return new WaitForSeconds(0.05f);
+            var arm = h.GetPart(PawnHealth.PartId.LeftArm);
+            arm.bandaged = true;   // 의사 치료 모사
+            h.TakeDamage(3, PawnHealth.PartId.LeftArm);
+            bool cleared = !h.GetPart(PawnHealth.PartId.LeftArm).bandaged;
+            bool bleeds = h.GetPart(PawnHealth.PartId.LeftArm).bleedRate > 0f;
+            Assert(cleared && bleeds, $"새 상처 붕대 해제: cleared={cleared}, bleeds={bleeds}");
+        }
+
+        // #버그헌트(2026-06-04) 회귀 가드: PawnHealth 경로 사망이 PawnEntity.Hp 에 동기화(출혈 사망 시
+        //  적이 시체 헛공격 fix).  ForceSyncDead → IsDead.
+        private IEnumerator TestV81_ForceSyncDead()
+        {
+            var go = SpawnTestPawn(new Vector3(84, 0, 0), includeAI: false);
+            var e = go.GetComponent<PawnEntity>();
+            yield return new WaitForSeconds(0.05f);
+            bool aliveBefore = !e.IsDead;
+            e.ForceSyncDead();
+            Assert(aliveBefore && e.IsDead, $"ForceSyncDead: before alive={aliveBefore}, after dead={e.IsDead}");
+        }
+
+        // #버그헌트(2026-06-04) 회귀 가드: 침대 해체 환불 품질별 정합.  이전엔 4 고정 → SleepingSpot
+        //  (비용0) 해체 시 +4 복제 익스플로잇, Fine(비용30) 과소환불.
+        private IEnumerator TestV82_DeconstructBedRefundByQuality()
+        {
+            int Refund(BedQuality q)
+            {
+                var go = new GameObject("TestBed");
+                go.AddComponent<SpriteRenderer>();
+                var bed = go.AddComponent<BedEntity>();
+                bed.SetQuality(q);
+                var dt = go.AddComponent<DeconstructTarget>();
+                dt.Initialize();
+                int r = dt.RefundWood;
+                Object.Destroy(go);
+                return r;
+            }
+            int spot = Refund(BedQuality.SleepingSpot);
+            int wood = Refund(BedQuality.Wood);
+            int fine = Refund(BedQuality.Fine);
+            Assert(spot == 0 && wood == 4 && fine == 15,
+                $"침대 해체 환불: SleepingSpot={spot}(0 기대), Wood={wood}(4), Fine={fine}(15)");
+            yield break;
         }
 
         private IEnumerator TestV45_ClampStatic()

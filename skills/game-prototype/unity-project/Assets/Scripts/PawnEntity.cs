@@ -47,6 +47,13 @@ namespace MelonS.GameProto
         public int Hp { get; private set; }
         public bool IsDead => Hp <= 0;
 
+        // #버그헌트(2026-06-04): PawnHealth 경로 사망(출혈/부위 HP=0)을 PawnEntity.Hp 에 동기화.
+        //  출혈 사망은 PawnHealth.Update→CheckDeath 로 일어나 PawnEntity.TakeDamage 를 안 거치므로
+        //  Hp 가 >0 그대로 남아 IsDead(=Hp<=0)가 false → BanditEnemy/WolfEnemy 가 시체를 살아있는
+        //  타겟으로 보고 영원히 헛공격(멀쩡한 다른 폰 무시)했다.  PawnHealth.CheckDeath 가 사망
+        //  확정 시 호출(컴포넌트가 곧 disable 돼도 메서드 호출/프로퍼티는 동작).
+        public void ForceSyncDead() { Hp = 0; }
+
         // ─── Melee-hit signal for CombatLungeDriver (운영자 fb 2026-05-31) ───────
         //  B10 FLAG-B10-3 fulfilled: a public, frame-accurate "an attack just landed"
         //  signal so the lunge driver fires per-swing instead of guessing from
@@ -171,6 +178,9 @@ namespace MelonS.GameProto
                 ApplyVisual();
             }
             if (IsDead) return;
+            // #버그헌트(2026-06-04): 다운(의식불명)이면 자동공격 정지.  PawnUtilityAI 가 이동/작업을
+            //  멈춰도 이 자동공격 루프는 별도 경로라, 게이트 없으면 다운된 폰이 계속 적을 때렸다.
+            if (healthRef != null && healthRef.IsDowned) return;
             // Day 13: defensive auto-attack on nearby bandit (throttled, NOT
             // per-frame — lesson #4 firewall).  We use distance polling rather
             // than collider Enter/Stay because pawns and bandits both move on

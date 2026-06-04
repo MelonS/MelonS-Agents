@@ -568,7 +568,11 @@ namespace MelonS.GameProto
             return go.GetComponent<WallEntity>() != null
                 || go.GetComponent<DoorEntity>() != null
                 || go.GetComponent<StoveEntity>() != null
-                || go.GetComponent<BedEntity>() != null;
+                || go.GetComponent<BedEntity>() != null
+                // #버그헌트(2026-06-04): 바리케이드는 통행 차단(RegisterWallCell)인데 해체 대상에서
+                //  빠져 한 번 놓으면 영구 봉쇄였다(출구 막으면 pawn 영영 갇힘).  OnDestroy 가
+                //  SetStructureBlocked(false)로 셀을 풀므로 해체하면 실제로 통행이 복구된다.
+                || go.GetComponent<BarricadeEntity>() != null;
         }
 
         /// <summary>Compute the refund + footprint from the structure type, then draw
@@ -582,6 +586,12 @@ namespace MelonS.GameProto
                 if (wall.Material == WallMaterial.Stone) refundStone = 2;
                 else refundWood = 2;                       // Wood (Steel n/a as buildable)
             }
+            // #버그헌트(2026-06-04): AutodoorEntity 는 DoorEntity 서브클래스 → Door 분기보다 먼저
+            //  검사해야 한다.  자동문 비용 6 → 50% = 3 (이전엔 Door 분기에 걸려 1만 환불).
+            else if (GetComponent<AutodoorEntity>() != null)
+            {
+                refundWood = 3;                            // autodoor cost 6 → 50% = 3
+            }
             else if (GetComponent<DoorEntity>() != null)
             {
                 refundWood = 1;                            // door cost 3 → ~50% = 1
@@ -592,8 +602,22 @@ namespace MelonS.GameProto
             }
             else if (GetComponent<BedEntity>() != null)
             {
-                refundWood = 4;                            // wood bed cost 8 → 50% = 4
+                // #버그헌트(2026-06-04): 품질별 환불.  이전엔 4 고정 → (a) 수면자리(비용 0)를
+                //  해체하면 +4 가 생기는 자원 복제 익스플로잇, (b) 고급침대(비용 30)는 4 만
+                //  환불되는 과소환불.  50% 규칙: SleepingSpot 0 / Wood 4 / Fine 15.
+                var bed = GetComponent<BedEntity>();
+                refundWood = bed.Quality switch
+                {
+                    BedQuality.SleepingSpot => 0,
+                    BedQuality.Fine         => 15,         // fine cost 30 → 50% = 15
+                    _                       => 4,          // Wood cost 8 → 50% = 4
+                };
                 footprint = new Vector2Int(1, 2);          // beds are 1×2
+            }
+            // #버그헌트(2026-06-04): 바리케이드 환불.  비용 5 → 50% = 2.
+            else if (GetComponent<BarricadeEntity>() != null)
+            {
+                refundWood = 2;                            // barricade cost 5 → 50% = 2
             }
             BuildMarker();
         }

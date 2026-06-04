@@ -108,6 +108,14 @@ namespace MelonS.GameProto
         {
             // pawn 비활성/파괴 시 잔존 아이콘 정리 (carryVisual 은 자식이라 같이 사라지지만 안전).
             if (carryVisual != null) carryVisual.SetActive(false);
+            // #버그헌트(2026-06-04): 운반 중 pawn 사망(PawnHealth 가 모든 MonoBehaviour 를 disable)
+            //  시 들고 있던 자원이 disabled 컴포넌트에 갇혀 영구 소실됐다('운반하던 림이 죽으면
+            //  목재 증발 → 마을 자원이 까닭 없이 줄어듦').  발밑에 물리 더미로 떨어뜨려 보존
+            //  (ClearTask 의 #214 drop 정책과 동일).  씬 언로드/종료 중에는 새 오브젝트 생성을
+            //  피하려 scene.isLoaded 가드(teardown 시 spawn 경고/NRE 회피).
+            if (gameObject.scene.isLoaded
+                && (carryingWood > 0 || carryingStone > 0 || carryingFood > 0))
+                DropCarriedAtFeet();
         }
 
         private void Awake()

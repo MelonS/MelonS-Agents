@@ -43,6 +43,7 @@ namespace MelonS.GameProto
         private PawnSchedule schedule; // #126 — 시간대별 행동
         private PawnNeeds needs;
         private PawnEntity entity;  // Day 48 — drafted state check
+        private PawnHealth health;  // #버그헌트(2026-06-04) — 다운(의식불명) 게이트용
         private PawnWorkSettings workSettings;  // #114 — per-pawn work priority
         private float lastDecision = -999f;
         private float lastDraftAttackTime = -999f;
@@ -77,6 +78,7 @@ namespace MelonS.GameProto
             schedule = GetComponent<PawnSchedule>();// #126
             needs = GetComponent<PawnNeeds>();
             entity = GetComponent<PawnEntity>();
+            health = GetComponent<PawnHealth>();  // #버그헌트(2026-06-04)
             workSettings = GetComponent<PawnWorkSettings>();  // #114
             // R5: ctx + action priority list
             ctx = new PawnContext
@@ -159,6 +161,21 @@ namespace MelonS.GameProto
                 // 회귀 fix: 수동 이동(우클릭 이동/벌목 지정)은 항상 정상 속도.  (이전: idle 의
                 //  0.5 가 여기 early-return 으로 안 풀려 수동 이동이 절반 속도로 기어가던 버그.)
                 if (movement != null) movement.MoveSpeedScale = 1f;
+                return;
+            }
+
+            // #버그헌트(2026-06-04): 다운(의식불명) 상태면 모든 행동 정지.  설계(PawnHealth 주석
+            //  'head HP<30% → downed (consciousness loss)')대로 의식 잃은 폰은 이동·작업·전투를
+            //  멈춰야 한다.  이전엔 IsDowned 게이트가 없어 다운된 폰이 계속 걷고 일하고 적을
+            //  자동공격했다(누운 tint 인데 실제로는 활동 → 의사가 환자를 못 따라잡는 문제도 유발).
+            //  회복(치료로 머리 HP>30%)되면 IsDowned=false 가 돼 자동 재개.
+            if (health != null && health.IsDowned)
+            {
+                chopper?.ClearTask();
+                gatherer?.ClearTask(); hunter?.ClearTask(); cook?.ClearTask();
+                hauler?.ClearTask(); builder?.ClearTask(); miner?.ClearTask();
+                doctor?.ClearTask(); harvester?.ClearTask();
+                movement?.ClearTarget();
                 return;
             }
 

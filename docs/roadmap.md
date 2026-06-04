@@ -198,6 +198,11 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-04** PawnSim 멀티에이전트 버그헌트 1사이클 — 7차원 병렬감사+적대적검증(확정14/기각20),
+  모델-독립 7건 수정: 폭풍지속 회귀(0.7실초→≈60실초), 해체환불 품질정합+복제익스플로잇,
+  바리케이드 해체불가(영구봉쇄), 운반사망 자원소실, 다운 행동지속, 출혈사망 시체헛공격,
+  의사 영구출혈면역.  회귀가드 V79-82.  ISO 82/82 · INT 45/45.  자원모델(카운터vs물리) 클러스터
+  #1/#2/#3/#5 는 "다 림월드식" 단일화 설계결정 필요로 보류(autonomous-decisions 기록).
 - **2026-06-04** PawnSim save/load 완성 #3 — 벌목/채광 지정(designation) 복원.  로드 시
   마킹된 나무·광맥 지정이 소실되던 것 수정.  TreeChopDesignation/MineDesignation 에
   GetMarked...Positions 접근자, SaveData.chopMarks/mineMarks(List<Vector2>), Save 직렬화,

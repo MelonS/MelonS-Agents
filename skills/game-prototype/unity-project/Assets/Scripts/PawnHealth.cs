@@ -163,6 +163,11 @@ namespace MelonS.GameProto
             if (IsDead || dmg <= 0) return null;
             BodyPart target = preferPart.HasValue ? GetPart(preferPart.Value) : PickRandomPart();
             target.hp = Mathf.Max(0, target.hp - dmg);
+            // #버그헌트(2026-06-04): 새 상처는 붕대를 뜯는다 — bandaged=false 리셋.  이전엔 의사 치료가
+            //  모든 부위를 영구 bandaged=true 로 만들고 어디서도 false 로 안 풀려, 한 번 치료받은 폰은
+            //  이후 어떤 상처에도 출혈이 발동 안 하는 영구 출혈면역이었다(Update 의 'if(bandaged) continue').
+            //  RimWorld: 새 상처마다 다시 출혈하고 재치료가 필요하다.
+            target.bandaged = false;
             // Wound bleed: bigger damage on smaller part = relatively worse bleed
             float baseBleed = dmg * 0.25f;
             if (target.id == PartId.Head || target.id == PartId.Torso) baseBleed *= 1.5f;
@@ -266,6 +271,10 @@ namespace MelonS.GameProto
                 {
                     IsDead = true;
                     IsDowned = true;
+                    // #버그헌트(2026-06-04): 출혈/부위 HP=0 사망을 PawnEntity.Hp 에 동기화(아래에서
+                    //  PawnEntity 가 disable 되기 전에).  안 하면 PawnEntity.IsDead 가 false 로 남아
+                    //  적이 시체를 계속 타겟·헛공격한다.  메서드 호출은 enabled 와 무관하게 동작.
+                    GetComponent<PawnEntity>()?.ForceSyncDead();
                     Debug.Log($"[PawnHealth] {gameObject.name} 사망 — 머리={head.hp} 몸통={torso.hp}");
                     // Disable AI/work components on death.  GetComponents on the ROOT
                     //  catches PawnMovement/AI/worker scripts (all root-attached).

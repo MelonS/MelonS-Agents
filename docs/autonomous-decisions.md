@@ -1,5 +1,33 @@
 # Autonomous decisions log
 
+## 2026-06-04 멀티에이전트 버그헌트 1사이클 (운영자 "멀티에이전트 버그헌트 한 사이클" 선택)
+
+7차원 병렬 감사(needs-decay/mood·운반저장·AI생존·건축·전투건강·시간날씨·UI) → 발견 34건
+→ 발견별 적대적 2-검증(반박 시도) → **확정 14 / 반박기각 20**.  적대적 검증이 운영자 보고
+#35/#36(needs decay·mood)을 정확히 **기각**: "thought 기반 mood가 의도된 설계, decay 매 프레임
+정상 작동, 충분히 먹고 자면 mood 안 떨어지는 게 정상" — 작년 over-confirm 재발 방지.
+
+확정 14건 중 **모델-독립적 명백 correctness 버그 7건 수정**(전부 회귀 가드 + ISO82/INT45):
+- 🔴 폭풍 지속 회귀(내 2026-06-03 Time.time→GameSeconds 변경 시 상수 60 미보정 → 1x 0.7실초만
+  지속) → 5184 게임초(≈60실초@1x) 환산 (V79)
+- 해체 환불 품질별 정합: 수면자리(비용0) +4 복제 익스플로잇 / 고급침대 과소환불 / 자동문 1→3 (V82)
+- 바리케이드 해체 불가(영구 봉쇄) → IsDeconstructable 추가(OnDestroy가 셀 해제 확인)
+- 운반 중 pawn 사망 시 자원 영구 소실 → OnDisable에서 발밑 드롭(scene.isLoaded 가드)
+- 다운(의식불명) pawn이 계속 일/이동/자동공격 → PawnUtilityAI + PawnEntity 게이트
+- 출혈 사망이 PawnEntity.Hp 미동기화 → 적이 시체 헛공격 → ForceSyncDead (V81)
+- 의사 치료가 영구 bandaged → 영구 출혈면역 → 새 상처 시 bandaged 해제 (V80)
+
+**보류(운영자 결정 필요 — 자원 모델 단일화)**: 확정 #1/#2/#3/#5 는 모두 "ResourceManager
+카운터 vs 물리 더미"의 이중 표현 불일치라는 **단일 뿌리**에서 나온다 (주석은 'derived'라는데
+동작은 authoritative).  증상: (1) blueprint용 InStockpile 더미 pickup 시 카운터 미차감 →
+카운터 영구 과대, (2) stockpile 식량 소비 시 물리 더미 미파괴, (3) blueprint 카운터결제+물리운반
+이중 funding, (5) blueprint 취소 시 collected 자재 미환불(카운터 환불은 물리-haul 경우 복제 위험).
+**"다 림월드식"** 방향(RimWorld는 추상 카운터 없이 물리 stack 합이 곧 재고)으로 단일화하는 게
+정공법이나, 이는 feel/scope 설계 변경이라 운영자 판단 후 진행.  piecemeal 수정은 회계를 더
+악화시킬 수 있어 의도적으로 미착수([[verify-the-real-path]] / [[no-sloppy-shortcuts]]).
+
+---
+
 운영자 부재(2026-05-31, 6~10시간) 자율 작업.  "순서대로 전부"(코어검증→장기생존→폴리시)
 지시.  gated 신기능(#4)은 승인 사안이라 미착수.  매 항목 관찰→수정→검증(isolated/integration
 +LongPlay)→독립 커밋.  [[observe-dont-speculate]] + [[no-sloppy-shortcuts]] 적용.
