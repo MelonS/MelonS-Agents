@@ -505,7 +505,10 @@ namespace MelonS.GameProto
                 if (sfxAlert == null || sfxSource == null) yield break;
                 sfxSource.pitch = pitchOffsets[i % pitchOffsets.Length];
                 sfxSource.PlayOneShot(sfxAlert, 0.90f);
-                sfxSource.pitch = 1.0f;  // restore default after scheduling
+                // #버그헌트3(2026-06-04): 즉시 pitch=1.0 리셋 제거 — PlayOneShot 은 pitch 를 스냅샷
+                //  안 하고 렌더 시점의 source.pitch 를 쓰므로, 같은 프레임 리셋이면 모든 beep 가
+                //  1.0 으로 렌더돼 siren sweep 이 죽었다.  설정한 pitch 가 beep 렌더 동안 유지되게
+                //  두고, 다음 iteration 이 새 pitch 로 덮거나 루프 종료 후 아래에서 1.0 복원.
                 if (i < beepCount - 1)
                     yield return new WaitForSeconds(AlertBeepGap);
             }

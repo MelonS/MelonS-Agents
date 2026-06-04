@@ -295,6 +295,14 @@ namespace MelonS.GameProto
                     //  loop 가 못 끈다.  자식의 컴포넌트만 직접 게이트(다른 lane 파일
                     //  소스는 건드리지 않음 — enabled 만 set).
                     StopBodyBob();
+                    // #버그헌트3(2026-06-04): 주변 살아있는 콜로니스트에게 '동료 사망'(-15) thought 부여.
+                    //  catalog 에 정의됐으나 어디서도 AddThought 안 되던 dead feature 배선(사회/유대 반응).
+                    //  본인·죽은 림 제외(소규모 프로토타입이라 반경 제한 없이 콜로니 전체).
+                    foreach (var ph in FindObjectsByType<PawnHealth>(FindObjectsSortMode.None))
+                    {
+                        if (ph == null || ph == this || ph.IsDead) continue;
+                        ph.GetComponent<PawnThoughts>()?.AddThought("동료 사망");
+                    }
                 }
                 if (State != prev) StateVersion++;
                 return;

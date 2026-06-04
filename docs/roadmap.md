@@ -198,6 +198,14 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-04** PawnSim 멀티에이전트 버그헌트 3사이클 (회귀+신규 7차원, 확정13/기각7) — 수정 10건:
+  자원회귀 2(hauler 청사진 초과분 영구손실, 길들이기 raw AddFood) · 레이드 스케줄 save/load(I48) ·
+  마퀴 다중선택 stuck 해제 · 카메라 follow clamp · 마퀴 이동 잔여 task 정리 · 드래그-zone 오디오
+  buzz/마커flood(Stockpile/Grow 배치패턴) · alert pitch sweep · build 맵밖 청사진 차단 · 동료사망
+  thought 배선(dead feature).  적대적 검증이 다운폰타격(=cycle2 의도설계)·스톡파일필터(제거된 기능)
+  등 7건 정확히 기각.  ISO 83/83 · INT 48/48 · LongPlay survived.  보류: mood-모델 3건(#10/#11/#12
+  thought-override vs decay) = 자원모델처럼 설계결정 필요 → 운영자 확인.  minor: Mine 드래그 오디오
+  (sparse 라 buzz 경미).
 - **2026-06-04** PawnSim 🔴 CRITICAL #2 구조물 재시작 persist+reconstruct (운영자 "지금 바로 구현").
   로드 시 플레이어 건축물(벽/침대/문/화덕/램프/울타리/바리케이드/바닥)·작물·스톡파일이 재시작 후
   전부 소실되던 것 해결.  설계: StructureTag(빌드 Mode 스탬프) + BuildManager.SpawnFinished(빌드

@@ -457,7 +457,7 @@ namespace MelonS.GameProto
         // #199 C3 - placement-validation result for the footprint.  Distinguishes
         //  the rejection reasons so the toast can tell the player WHY (the reference sim
         //  shows a red ghost + reason string).
-        private enum PlaceReject { None, Terrain, Occupied }
+        private enum PlaceReject { None, Terrain, Occupied, OutOfBounds }
 
         /// <summary>
         /// #199 C3 - validate EVERY covered cell of a w×h footprint at anchor
@@ -470,6 +470,17 @@ namespace MelonS.GameProto
         /// </summary>
         private PlaceReject ValidatePlacement(int cx, int cy, int w, int h)
         {
+            // #버그헌트3(2026-06-04): 맵 경계(±44, pawn 도달 범위) 밖 셀 거부.  이전엔 bounds 검사가
+            //  없어 맵 밖 void(카메라가 ±50 까지 pan 가능)에 청사진을 놓을 수 있었고, pawn 은 ±44
+            //  로 clamp 되어 자재 운반이 영영 불가 → 영구 미완성 청사진(stuck build order)이 됐다.
+            for (int dx = 0; dx < w; dx++)
+                for (int dy = 0; dy < h; dy++)
+                {
+                    float wx = cx + dx + 0.5f, wy = cy + dy + 0.5f;
+                    if (wx < PawnMovement.WORLD_MIN.x || wx > PawnMovement.WORLD_MAX.x ||
+                        wy < PawnMovement.WORLD_MIN.y || wy > PawnMovement.WORLD_MAX.y)
+                        return PlaceReject.OutOfBounds;
+                }
             for (int dx = 0; dx < w; dx++)
                 for (int dy = 0; dy < h; dy++)
                     if (TerrainBlocked(cx + dx, cy + dy)) return PlaceReject.Terrain;
@@ -533,6 +544,12 @@ namespace MelonS.GameProto
             //  pawn 이 서 있는 cell 은 거부 X (pawn 이 비켜남).  multi-cell 은 전 cell 검사.
             Vector2Int size = SizeFor(CurrentMode);
             PlaceReject reject = ValidatePlacement(cx, cy, size.x, size.y);
+            if (reject == PlaceReject.OutOfBounds)
+            {
+                Debug.Log($"[Build] TryPlace skip: out of map bounds ({cx},{cy}) {size.x}x{size.y}");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"✗ 맵 밖엔 못 지음 ({cx},{cy})");
+                return false;
+            }
             if (reject == PlaceReject.Terrain)
             {
                 Debug.Log($"[Build] TryPlace skip: terrain (water/rock) at ({cx},{cy}) {size.x}x{size.y} for mode={CurrentMode}");

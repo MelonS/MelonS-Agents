@@ -315,7 +315,15 @@ namespace MelonS.GameProto
             int n = 0;
             for (int cx = x0; cx <= x1; cx++)
                 for (int cy = y0; cy <= y1; cy++)
-                    if (EraseMode ? EraseCellAt(cx, cy) : (MarkCellAt(cx, cy) != null)) n++;
+                    if (EraseMode ? EraseCellAt(cx, cy) : (MarkCellAt(cx, cy, playBlip: false, fx: false) != null)) n++;
+            // #버그헌트3(2026-06-04): 드래그 전체에 blip 1회 + FX 1회만 — 이전엔 per-cell 로 PlaySelect/
+            //  ClickEffect 가 한 프레임에 수십~수백 회 발화해 버즈/flood(PlaySelect throttle 없음, 주석 거짓).
+            if (n > 0 && !EraseMode)
+            {
+                AudioBank.Instance?.PlaySelect();
+                ClickEffect.Spawn(new Vector3((x0 + x1) * 0.5f + 0.5f, (y0 + y1) * 0.5f + 0.5f, 0f),
+                    new Color(0.55f, 0.80f, 0.38f, 0.95f)); // sprout-green
+            }
             return n;
         }
 
@@ -362,7 +370,7 @@ namespace MelonS.GameProto
         /// uses), is in-bounds + walkable on the PathGrid, and is not occupied by a
         /// structure/blueprint or an existing crop.  Idempotent: a re-mark returns the
         /// existing GrowCell.</summary>
-        private GrowCell MarkCellAt(int cx, int cy)
+        private GrowCell MarkCellAt(int cx, int cy, bool playBlip = true, bool fx = true)
         {
             var key = new Vector2Int(cx, cy);
             if (zone.TryGetValue(key, out var existing) && existing != null)
@@ -372,10 +380,11 @@ namespace MelonS.GameProto
 
             var gc = new GrowCell(key, MakeZoneMarker(cx, cy));
             zone[key] = gc;
-            // wiki #5 reuse: a single PlaySelect blip per newly-designated cell
-            //  (throttled inside AudioBank; never a tight-loop buzz — firewall #4).
-            AudioBank.Instance?.PlaySelect();
-            ClickEffect.Spawn(new Vector3(cx + 0.5f, cy + 0.5f, 0f),
+            // #버그헌트3(2026-06-04): 단일 클릭만 즉시 피드백; 드래그(MarkRect)는 playBlip/fx=false 로
+            //  넘겨 per-cell 버즈/flood 방지(PlaySelect 는 throttle 없음 — 이전 'throttled inside
+            //  AudioBank' 주석 거짓).  rect 당 1회만 MarkRect 가 발화.
+            if (playBlip) AudioBank.Instance?.PlaySelect();
+            if (fx) ClickEffect.Spawn(new Vector3(cx + 0.5f, cy + 0.5f, 0f),
                 new Color(0.55f, 0.80f, 0.38f, 0.95f)); // sprout-green
             Debug.Log($"[Grow] designated dirt cell ({cx},{cy}) as grow zone");
             return gc;

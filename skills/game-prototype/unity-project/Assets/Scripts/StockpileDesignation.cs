@@ -258,7 +258,17 @@ namespace MelonS.GameProto
             int n = 0;
             for (int cx = x0; cx <= x1; cx++)
                 for (int cy = y0; cy <= y1; cy++)
-                    if (EraseMode ? EraseCellAt(cx, cy) : (MarkCellAt(cx, cy) != null)) n++;
+                    if (EraseMode ? EraseCellAt(cx, cy) : (MarkCellAt(cx, cy, playBlip: false, fx: false) != null)) n++;
+            // #버그헌트3(2026-06-04): 드래그 전체에 blip 1회 + FX 1회(rect 중심)만 — 이전엔 per-cell 로
+            //  PlaySelect/ClickEffect 를 한 프레임에 수십~수백 회 발화해 오디오 버퍼 collapse 버즈
+            //  ('이상한 사운드') + 마커 flood 였다(PlaySelect 는 throttle 없음 — 기존 주석 거짓).
+            //  RoofDesignation 과 동일 배치 패턴.
+            if (n > 0 && !EraseMode)
+            {
+                AudioBank.Instance?.PlaySelect();
+                ClickEffect.Spawn(new Vector3((x0 + x1) * 0.5f + 0.5f, (y0 + y1) * 0.5f + 0.5f, 0f),
+                    DumpingMode ? new Color(0.6f, 0.6f, 0.62f, 0.95f) : new Color(0.95f, 0.85f, 0.30f, 0.95f));
+            }
             return n;
         }
 
@@ -294,7 +304,7 @@ namespace MelonS.GameProto
         /// cells occupied by a structure/blueprint/vein the way GrowZoneDesignation
         /// rejects non-plantable cells.  Preset = storage(Normal/All) or dumping
         /// (Low/Stone-only) per the active mode.</summary>
-        private StockpileZoneEntity MarkCellAt(int cx, int cy)
+        private StockpileZoneEntity MarkCellAt(int cx, int cy, bool playBlip = true, bool fx = true)
         {
             Vector2 center = new Vector2(cx + 0.5f, cy + 0.5f);
 
@@ -316,8 +326,10 @@ namespace MelonS.GameProto
             var sr = z.GetComponent<SpriteRenderer>();
             if (sr != null) sr.sortingOrder = markerSortingOrder;
 
-            AudioBank.Instance?.PlaySelect();   // 1회/cell, AudioBank 내부 throttle
-            ClickEffect.Spawn(new Vector3(center.x, center.y, 0f),
+            // #버그헌트3(2026-06-04): 단일 클릭만 즉시 피드백; 드래그(MarkRect)는 playBlip/fx=false 로
+            //  넘겨 per-cell 버즈/flood 를 막고 rect 당 1회만 발화(PlaySelect 는 throttle 없음).
+            if (playBlip) AudioBank.Instance?.PlaySelect();
+            if (fx) ClickEffect.Spawn(new Vector3(center.x, center.y, 0f),
                 DumpingMode ? new Color(0.6f, 0.6f, 0.62f, 0.95f)   // 폐기 = 회색
                             : new Color(0.95f, 0.85f, 0.30f, 0.95f)); // 저장 = 노랑
             Debug.Log($"[Stockpile] {(DumpingMode ? "폐기존" : "저장존")} 지정 cell ({cx},{cy})");
