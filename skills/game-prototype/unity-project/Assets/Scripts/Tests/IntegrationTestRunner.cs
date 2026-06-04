@@ -126,6 +126,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I45-designation-save-load", TestI45_DesignationSaveLoad);
             yield return RunOne("I46-research-save-load", TestI46_ResearchSaveLoad);
             yield return RunOne("I47-structure-save-reconstruct", TestI47_StructureSaveReconstruct);
+            yield return RunOne("I48-raid-state-save-load", TestI48_RaidStateSaveLoad);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -845,6 +846,23 @@ namespace MelonS.GameProto.Tests
             if (go != null) Object.Destroy(go);
             Assert(spawned && serialized,
                 $"structure save+재구성: SpawnFinished(tag)={spawned}, structures 직렬화={serialized}");
+        }
+
+        /// <summary>I48: #버그헌트3 — 레이드 스케줄러 상태(lastRaidDay/raidCount) save 직렬화.
+        ///   RestoreRaidState 로 세팅 → Save → Load → data.raidLastDay/raidCount 반영 확인.
+        ///   (OnLoad 가 이를 RestoreRaidState 로 복원 → 로드 직후 즉시 레이드/난이도 리셋 fix.)</summary>
+        private IEnumerator TestI48_RaidStateSaveLoad()
+        {
+            yield return null;
+            var aidir = Object.FindFirstObjectByType<AIDirector>();
+            if (aidir == null) { Assert(false, "AIDirector 없음"); yield break; }
+            int origDay = aidir.LastRaidDay, origCount = aidir.RaidCount;
+            aidir.RestoreRaidState(12, 4);
+            SaveLoadManager.Save();
+            var data = SaveLoadManager.Load();
+            bool ok = data != null && data.raidLastDay == 12 && data.raidCount == 4;
+            aidir.RestoreRaidState(origDay, origCount);   // 원복
+            Assert(ok, $"raid state save: lastDay={(data!=null?data.raidLastDay:-99)}(12), count={(data!=null?data.raidCount:-99)}(4)");
         }
 
         /// <summary>I23: 60초 시뮬 stress - AI/wolf/crop growth/event 동시 작동.

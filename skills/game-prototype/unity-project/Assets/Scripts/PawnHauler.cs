@@ -307,22 +307,35 @@ namespace MelonS.GameProto
                     bpDropTarget.transform.position, bpDropTarget.Footprint, transform.position);
                 if (bdist <= pickupRange || movement.AtStandCell(standCell))  // #199 C2
                 {
+                    // #버그헌트3(2026-06-04): 청사진엔 '필요한 만큼만' 넣고 초과분은 보존한다.
+                    //  이전엔 carryingWood/Stone 을 통째로 DepositWood 후 0 으로 zero 했는데,
+                    //  DepositWood 는 needWood 로 clamp(초과분 폐기)하므로 5 들고 와 1 만 필요하면
+                    //  4 가 증발했다.  게다가 pickup 때 카운터를 full(-5) 차감했으므로 그 4 는
+                    //  카운터·물리 양쪽에서 영구 손실(자원모델 단일화 회귀).  필요분만 deposit 하고
+                    //  남은 자재는 아래서 발밑 물리 드롭 → re-haul 로 회수, 카운터 정합 유지.
                     if (carryingWood > 0)
                     {
-                        bpDropTarget.DepositWood(carryingWood);
-                        Debug.Log($"[Hauler] {name} blueprint 자재 넣음: 목재 {carryingWood}");
-                        carryingWood = 0;
+                        int accepted = Mathf.Clamp(bpDropTarget.needWood - bpDropTarget.collectedWood, 0, carryingWood);
+                        if (accepted > 0)
+                        {
+                            bpDropTarget.DepositWood(accepted);
+                            Debug.Log($"[Hauler] {name} blueprint 자재 넣음: 목재 {accepted} (보유 {carryingWood})");
+                        }
+                        carryingWood -= accepted;   // 초과분 보존
                     }
                     if (carryingStone > 0)
                     {
-                        bpDropTarget.DepositStone(carryingStone);
-                        Debug.Log($"[Hauler] {name} blueprint 자재 넣음: 석재 {carryingStone}");
-                        carryingStone = 0;
+                        int accepted = Mathf.Clamp(bpDropTarget.needStone - bpDropTarget.collectedStone, 0, carryingStone);
+                        if (accepted > 0)
+                        {
+                            bpDropTarget.DepositStone(accepted);
+                            Debug.Log($"[Hauler] {name} blueprint 자재 넣음: 석재 {accepted} (보유 {carryingStone})");
+                        }
+                        carryingStone -= accepted;
                     }
-                    // 식량은 blueprint 에 안 들어간다 — 들고 있던 식량은 발밑에 물리 드롭
-                    //  (#214 즉시-credit 순간이동 제거).  food hauler 가 blueprint 로 잘못
-                    //  배차된 드문 경우의 안전 처리.
-                    if (carryingFood > 0) DropCarriedAtFeet();
+                    // 남은 자재(청사진 초과분) + 식량은 발밑에 물리 드롭(InStockpile=false → re-haul
+                    //  로 회수, 카운터 미적립).  이전엔 식량만 드롭하고 초과 자재는 증발했다.
+                    if (carryingWood > 0 || carryingStone > 0 || carryingFood > 0) DropCarriedAtFeet();
                     UpdateCarryVisual();  // #213 - 운반 끝 → 등짐 아이콘 끔
                     bpDropTarget = null;
                     SetPhase(Phase.GoToItem);

@@ -115,6 +115,9 @@ namespace MelonS.GameProto
         public string              activeTechId;
         // #버그헌트2(2026-06-04) — 플레이어 완성 구조물 전체(재시작 후 로드 재구성용).
         public List<StructureSave> structures = new List<StructureSave>();
+        // #버그헌트3(2026-06-04) — 레이드 스케줄러 상태(로드 직후 즉시 레이드/난이도 리셋 방지).
+        public int raidLastDay = -1;
+        public int raidCount = 0;
         public float gameSeconds;   // #276 게임 시계 — 로드 시 시계 리셋(레이드 스케줄 파손) 방지
         public string version = "0.2.0";
         public string savedAtIso;
@@ -258,6 +261,14 @@ namespace MelonS.GameProto
             {
                 if (tag == null || tag.modeInt < 0) continue;
                 data.structures.Add(new StructureSave { mode = tag.modeInt, position = tag.transform.position });
+            }
+
+            // #버그헌트3(2026-06-04): serialize 레이드 스케줄러 상태(lastRaidDay/raidCount).
+            var aidir = UnityEngine.Object.FindFirstObjectByType<AIDirector>();
+            if (aidir != null)
+            {
+                data.raidLastDay = aidir.LastRaidDay;
+                data.raidCount = aidir.RaidCount;
             }
 
             // #버그헌트2(2026-06-04): serialize 연구 진행도 + active tech (재시작 시 unlock 소실 방지).

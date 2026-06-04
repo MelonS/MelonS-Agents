@@ -213,6 +213,11 @@ namespace MelonS.GameProto
             //  전부 어긋난다(밤/낮·이벤트 타이밍 파손).  저장된 GameSeconds 로 복원.
             if (GameClock.Instance != null) GameClock.Instance.SetGameSeconds(data.gameSeconds);
 
+            // #버그헌트3(2026-06-04): 레이드 스케줄러 상태 복원 — 시계만 복원하던 #276 과 짝.
+            //  안 하면 로드 직후 첫 06:00 에 즉시 레이드 + 난이도(escalation) 초반 리셋.
+            var aidir = FindFirstObjectByType<AIDirector>();
+            if (aidir != null) aidir.RestoreRaidState(data.raidLastDay, data.raidCount);
+
             Debug.Log($"[SaveLoad] restored: {data.pawns.Count} pawns, {data.trees.Count} trees + 서브상태 + 시계 {data.gameSeconds:F0}s");
         }
     }

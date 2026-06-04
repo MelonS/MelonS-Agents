@@ -84,7 +84,10 @@ namespace MelonS.GameProto
             if (rm == null) return false;
             if (IsTamed) { Debug.Log("[Tame] 이미 길들임"); return false; }
             if (rm.food < tameFoodCost) { Debug.Log("[Tame] 식량 부족"); return false; }
-            rm.AddFood(-tameFoodCost);
+            // #버그헌트3(2026-06-04): 길들이기 식량도 SpendStockpiledFood 로 — 카운터 + 물리 InStockpile
+            //  MeatPile 함께 차감(cook/eat/trade 와 동일).  이전 raw AddFood(-cost)는 카운터만 줄여
+            //  '카운터 < 실제 물리 더미' desync 를 만들었다(자원모델 단일화 누락분).
+            rm.SpendStockpiledFood(tameFoodCost);
             float roll = Random.value;
             if (roll < tameSuccessRate)
             {

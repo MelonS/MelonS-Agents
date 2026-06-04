@@ -130,6 +130,17 @@ namespace MelonS.GameProto
         [SerializeField] private int FirstRaidExtraGraceDays = 2;  // first raid waits +2 days beyond grace
         private int lastRaidDay = -1;
         private int raidCount = 0;     // how many raids have fired this run (drives slow size escalation)
+
+        // #버그헌트3(2026-06-04): 레이드 스케줄러 상태 save/load.  시계(GameSeconds)만 복원되고
+        //  lastRaidDay/raidCount 는 인스턴스 필드라 로드 시 -1/0 으로 리셋 → 로드 직후 첫 06:00 에
+        //  즉시 레이드 + escalation(크기) 초반 수준 리셋됐다.  #276(시계 복원)과 짝을 맞춘다.
+        public int LastRaidDay => lastRaidDay;
+        public int RaidCount => raidCount;
+        public void RestoreRaidState(int lastDay, int count)
+        {
+            lastRaidDay = lastDay;
+            raidCount = Mathf.Max(0, count);
+        }
         // raidSpawnRadius is RETAINED for any legacy/other callers but is NO LONGER
         // used to place raid bandits — see RaidSpawnEdge below.
         [SerializeField] private float raidSpawnRadius = 12f;
