@@ -198,6 +198,13 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-04** PawnSim 자원모델 단일화 Stage 2a — build haul-required (운영자 선택 "순수
+  RimWorld").  TryPlace 의 카운터 즉시결제(#242) 제거 → 청사진은 빈 상태로 놓이고 림이 물리
+  목재/석재를 현장으로 운반해야 건설.  #3 이중지불 dupe 근절(카운터로 build 결제 안 함).
+  starter wood 50 물리라 haul-funding 정상.  검증: ISO 82/82 · INT 45/45 · I35(청사진→운반→벽
+  건설=True) · LongPlay survived=true issues=0 (wood400/stone200 축적).  ※ Stage 2b 잔여
+  물리화: trader구매·동물/늑대drop·해체환불·취소환불·eat/cook from stockpile (meals/fineMeals 는
+  물리 entity 없어 추상 유지).
 - **2026-06-04** PawnSim 자원모델 단일화 Stage 1 — pickup 대칭 차감.  운영자 "다 림월드식:
   물리 더미 단일화" 선택.  hauler 가 InStockpile 더미(목재/식량/석재)를 운반용으로 집을 때
   카운터 −amount (deposit 의 +amount 와 대칭) — 이전엔 차감 없어 카운터 영구 과대(#1).
