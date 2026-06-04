@@ -389,9 +389,15 @@ namespace MelonS.GameProto
         {
             if (bp == null) return false;
             ClickEffect.Spawn(bp.transform.position, new Color(0.95f, 0.44f, 0.36f, 0.95f));
+            // #자원모델 단일화/#5(2026-06-04): 취소 시 청사진에 모인 자재를 물리 더미로 떨어뜨려
+            //  보존(이전엔 환불 없이 소멸 = 자원 누수).  카운터(+)가 아니라 물리 드롭이라, collected
+            //  자재의 출처(물리 운반 funding)가 그대로 바닥으로 돌아가 dupe/유령자원 없이 일관.
+            if (bp.collectedWood > 0)
+                WoodPileEntity.Spawn(bp.transform.position, bp.collectedWood, PawnHauler.WoodPileSpriteRef);
+            if (bp.collectedStone > 0)
+                StoneChunkEntity.Spawn(bp.transform.position, bp.collectedStone, PawnHauler.StoneChunkSpriteRef);
             Debug.Log($"[Deconstruct] cancelled pending blueprint {bp.name} " +
-                      $"(mode {bp.Mode}) — collected {bp.collectedWood}🪵/{bp.collectedStone}⛏ " +
-                      $"NOT refunded (no public BlueprintEntity.Cancel — see QA flag)");
+                      $"(mode {bp.Mode}) — dropped {bp.collectedWood}🪵/{bp.collectedStone}⛏ as physical piles");
             Destroy(bp.gameObject);
             return true;
         }
@@ -664,13 +670,14 @@ namespace MelonS.GameProto
             if (removed) return;
             removed = true;
 
-            var rm = ResourceManager.Instance;
-            if (rm != null)
-            {
-                if (refundWood > 0) rm.AddWood(refundWood);
-                if (refundStone > 0) rm.AddStone(refundStone);
-            }
-            Debug.Log($"[Deconstruct] removed {name} → refunded {refundWood}🪵 {refundStone}⛏; cell reopens via structure OnDestroy");
+            // #자원모델 단일화(2026-06-04): 해체 환불을 카운터(+)가 아니라 물리 더미로 떨어뜨린다
+            //  (RimWorld: 해체 시 자재가 바닥에 드롭 → 림이 운반해야 stockpile 적립).  카운터 직접
+            //  +N 은 물리 없는 유령 자원이 돼 '카운터 = Σ InStockpile 더미' 불변식을 깬다.
+            if (refundWood > 0)
+                WoodPileEntity.Spawn(transform.position, refundWood, PawnHauler.WoodPileSpriteRef);
+            if (refundStone > 0)
+                StoneChunkEntity.Spawn(transform.position, refundStone, PawnHauler.StoneChunkSpriteRef);
+            Debug.Log($"[Deconstruct] removed {name} → dropped {refundWood}🪵 {refundStone}⛏ as physical piles; cell reopens via structure OnDestroy");
 
             // Cell-reopen note: a WallEntity decrements its PathGrid wall ref-count
             //  in its OWN OnDestroy (PathGrid.SetStructureBlocked false / the named

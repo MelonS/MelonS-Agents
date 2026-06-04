@@ -580,7 +580,10 @@ namespace MelonS.GameProto
                 }
                 if (rm.food > 0)
                 {
-                    rm.AddFood(-1);
+                    // #자원모델 단일화(2026-06-04): 저장고 raw 식량 1 을 카운터 + 물리 InStockpile
+                    //  MeatPile 에서 함께 소비(이전엔 카운터만 −1 → 물리 더미 잔존 #2: '카운터 0인데
+                    //  화면엔 식량 더미').
+                    rm.SpendStockpiledFood(1);
                     food = Mathf.Min(100f, food + eatRestore);
                     var th = GetComponent<PawnThoughts>();
                     if (th != null) th.AddThought("배부름");

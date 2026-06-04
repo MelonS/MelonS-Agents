@@ -60,5 +60,27 @@ namespace MelonS.GameProto
             fineMeals = Mathf.Max(0, fineMeals + amount);
             OnChanged?.Invoke();
         }
+
+        // #자원모델 단일화(2026-06-04): stockpile 보관 raw 식량 소비 — 카운터 −amount + 물리
+        //  InStockpile MeatPile 을 같은 양만큼 decrement/destroy (cook 의 재료 소비, 저장고
+        //  직접 섭취).  이전엔 카운터만 줄이고 물리 더미가 그대로 남아 '카운터 0인데 화면엔
+        //  식량 더미'(#2) desync 였다.  불변식 '카운터 = Σ InStockpile MeatPile 식량' 유지.
+        //  MeatPileEntity.OnDestroy 는 카운터를 안 건드리므로 여기서만 1회 차감(이중차감 없음).
+        public void SpendStockpiledFood(int amount)
+        {
+            if (amount <= 0) return;
+            AddFood(-amount);
+            int remain = amount;
+            foreach (var m in UnityEngine.Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None))
+            {
+                if (remain <= 0) break;
+                if (m == null || !m.InStockpile) continue;
+                int take = Mathf.Min(remain, m.Food);
+                remain -= take;
+                int left = m.Food - take;
+                if (left <= 0) UnityEngine.Object.Destroy(m.gameObject);
+                else m.SetFood(left);
+            }
+        }
     }
 }

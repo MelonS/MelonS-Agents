@@ -198,6 +198,12 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-04** PawnSim 자원모델 단일화 Stage 2b — 환불·소비 물리화.  (1) 해체 환불(#5 포함
+  청사진 취소)을 카운터(+) 대신 물리 더미 드롭으로(RimWorld: 해체/취소 시 자재 바닥에).
+  (2) cook 재료·저장고 직접섭취를 ResourceManager.SpendStockpiledFood 로 — 카운터 −amount +
+  물리 InStockpile MeatPile decrement 함께(#2: '카운터 0인데 화면엔 식량 더미' 해소).
+  ISO 82/82 · INT 45/45 · LongPlay survived=true issues=0.  ※ Stage 2c 잔여: trader 구매/판매
+  물리화(spawn 위치 결정 필요), meals/fineMeals 는 물리 entity 없어 추상 유지.
 - **2026-06-04** PawnSim 자원모델 단일화 Stage 2a — build haul-required (운영자 선택 "순수
   RimWorld").  TryPlace 의 카운터 즉시결제(#242) 제거 → 청사진은 빈 상태로 놓이고 림이 물리
   목재/석재를 현장으로 운반해야 건설.  #3 이중지불 dupe 근절(카운터로 build 결제 안 함).

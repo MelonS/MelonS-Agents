@@ -22,7 +22,9 @@ namespace MelonS.GameProto
         public bool CookOne(bool fineMeal)
         {
             if (!CanCookOne()) return false;
-            ResourceManager.Instance.AddFood(-3);
+            // #자원모델 단일화(2026-06-04): 조리 재료(raw 식량 3)를 카운터 + 물리 InStockpile
+            //  MeatPile 에서 함께 소비(이전엔 카운터만 차감 → 물리 더미 잔존 #2).
+            ResourceManager.Instance.SpendStockpiledFood(3);
             if (fineMeal) ResourceManager.Instance.AddFineMeals(+1);
             else ResourceManager.Instance.AddMeals(+1);
             MealsAvailable++;
