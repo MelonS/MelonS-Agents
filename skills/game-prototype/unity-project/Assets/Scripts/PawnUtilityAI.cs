@@ -467,9 +467,14 @@ namespace MelonS.GameProto
             Vector2 me = transform.position;
             const float attackRange = 1.2f;
             // Day 50: 활 연구 완료 + arrow sprite 존재 시 ranged 시도 (melee보다 우선)
+            // #버그헌트4(2026-06-05): 원거리 공격은 활/석궁 '장착' 시에만.  이전엔 연구(simple_bow)+
+            //  arrowSprite 만 보고 맨손/근접무기 폰도 허공에서 화살을 쐈다(HasRangedWeapon/rangedEnabled
+            //  가 dead code).  장비 검사 추가로 활 장착 폰만 사격, 나머지는 근접으로.
+            var eqShoot = GetComponent<PawnEquipment>();
             bool canShoot = arrowSprite != null
                             && ResearchManager.Instance != null
-                            && ResearchManager.Instance.IsUnlocked("simple_bow");
+                            && ResearchManager.Instance.IsUnlocked("simple_bow")
+                            && eqShoot != null && eqShoot.HasRangedWeapon();
             Vector2 targetPos;
             bool inRange;
             if (canShoot)

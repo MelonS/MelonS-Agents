@@ -178,7 +178,12 @@ namespace MelonS.GameProto
             // Deconstruct work takes the dedicated branch (it never coexists with a
             //  blueprint — SetDeconstructTarget drops any build task first).
             if (targetDe != null) { UpdateDeconstruct(); return; }
-            if (targetBp == null) return;
+            // #버그헌트4(2026-06-05): 외부에서 청사진 파괴(컨텍스트/철거박스 취소) → fake-null 이면
+            //  이전엔 그냥 return 해 WalkToWork 가 잡은 stand-cell 예약이 누수됐다.  ReleaseStandCell 로
+            //  해제.  주의: targetBp==null 은 '건설중 아님'(거의 매 프레임)에도 true 이므로 movement 를
+            //  건드리는 ClearTask 를 부르면 모든 비-건설 폰의 이동이 매 프레임 wipe 돼 전 폰이 마비된다.
+            //  ReleaseStandCell 은 movement 무관 + standCell INVALID 면 no-op(매 프레임 안전).
+            if (targetBp == null) { ReleaseStandCell(); return; }
             // blueprint 사라졌으면 종료 (#199 C2 — release reservations via ClearTask so
             //  the destroyed-blueprint case can't leak the stand cell).
             if (targetBp.gameObject == null) { ClearTask(); return; }

@@ -120,8 +120,9 @@ namespace MelonS.GameProto
         private bool IsLit()
         {
             if (stove == null) return true; // no entity to gate on -> always subtle flicker
-            // Active hearth = has cooked, or can cook right now.
-            return stove.MealsAvailable > 0 || stove.CanCookOne();
+            // #버그헌트4(2026-06-05): MealsAvailable 단조증가라 'MealsAvailable>0' 는 첫 조리 후 영구
+            //  true(불빛 영구 점등).  현재 조리 가능 여부로만 — 활성 화덕만 점등.
+            return stove.CanCookOne();
         }
 
         private void Update()

@@ -269,8 +269,10 @@ namespace MelonS.GameProto
         private static bool IsStoveLit(StoveEntity stove)
         {
             if (stove == null) return false;
-            // Active hearth: has cooked at least one meal, or can cook now.
-            return stove.MealsAvailable > 0 || stove.CanCookOne();
+            // #버그헌트4(2026-06-05): MealsAvailable 은 단조증가(차감 안 됨)라 'MealsAvailable>0' 는 첫
+            //  조리 후 영구 true → 식량·자재 0 이어도 화덕 불빛 영구 점등이었다.  현재 조리 가능
+            //  (자재 보유) 여부로만 판정 — 활성 화덕만 점등.
+            return stove.CanCookOne();
         }
 
         // ------------------------------------------------------------------ //

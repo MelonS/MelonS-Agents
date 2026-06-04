@@ -485,11 +485,23 @@ namespace MelonS.GameProto
             if (titleText != null)
             {
                 string title = pawn.PawnName;
-                // #UI-B 현재 행동을 제목에 표시(머리위 라벨과 동일 정보) — 운영자 "뭐하는지 항상".
-                var nameLabel = pawn.GetComponent<PawnNameLabel>();
-                string act = nameLabel != null ? nameLabel.CurrentActivity : "";
-                if (!string.IsNullOrEmpty(act))
-                    title += $"  <size=13><color=#e8b560>· {act}</color></size>";
+                // #버그헌트4(2026-06-05): 죽은 폰은 상태탭 타이틀에 '사망' 명시.  이전엔 IsDead 가드가
+                //  없어, 죽어도 Destroy 안 되는 시체(PawnEntity disable만)가 선택 유지되면 사망 직전
+                //  '현재 행동'(예: 벌목)이 frozen 표시돼 시체가 일하는 것처럼 보였다(PawnNameLabel 도
+                //  disable 돼 statusTm 갱신 정지 → stale).  사망 시 활동 라벨 대신 사망 배지.
+                var phDeadTitle = pawn.GetComponent<PawnHealth>();
+                if (phDeadTitle != null && phDeadTitle.IsDead)
+                {
+                    title += "  <size=13><color=#c0392b>· 사망</color></size>";
+                }
+                else
+                {
+                    // #UI-B 현재 행동을 제목에 표시(머리위 라벨과 동일 정보) — 운영자 "뭐하는지 항상".
+                    var nameLabel = pawn.GetComponent<PawnNameLabel>();
+                    string act = nameLabel != null ? nameLabel.CurrentActivity : "";
+                    if (!string.IsNullOrEmpty(act))
+                        title += $"  <size=13><color=#e8b560>· {act}</color></size>";
+                }
                 if (traits != null)
                 {
                     string ts = traits.SummaryKr();

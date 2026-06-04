@@ -50,6 +50,14 @@ namespace MelonS.GameProto
         public void AddXP(SkillKind k, float amount)
         {
             if (amount <= 0) return;
+            // #버그헌트4(2026-06-05): 전투 XP 에 PawnTraits.combatXpMul(Bloodthirsty/호전적 +50%) 반영.
+            //  이전엔 combatXpMul 이 계산만 되고 어떤 AddXP 호출도 소비 안 하는 dead trait effect 였다.
+            //  Combat XP 의 단일 통로인 여기서 1회 적용해 7개 호출처(PawnEntity/Hunter/UtilityAI) 전부 커버.
+            if (k == SkillKind.Combat)
+            {
+                var tr = GetComponent<PawnTraits>();
+                if (tr != null) amount *= tr.combatXpMul;
+            }
             var e = entries[(int)k];
             e.xp += amount;
             int safety = 0;

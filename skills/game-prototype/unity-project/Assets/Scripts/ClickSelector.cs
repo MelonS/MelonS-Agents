@@ -631,7 +631,17 @@ namespace MelonS.GameProto
             {
                 var bpCap = bp;
                 list.Add(("🔨 건설 우선", () => PrioritizeBuild(bpCap)));
-                list.Add(("✕ 청사진 취소", () => { if (bpCap != null) Destroy(bpCap.gameObject); }));
+                list.Add(("✕ 청사진 취소", () =>
+                {
+                    if (bpCap == null) return;
+                    // #버그헌트4(2026-06-05): 환불 경로 통일 — 채워진 자재를 물리 더미로 떨어뜨려 보존.
+                    //  이전엔 raw Destroy 라 collected 자재가 (pickup 때 카운터 -차감됨 + 물리 미드롭)
+                    //  양쪽에서 영구 증발했다(드래그-철거 취소는 환불되는데 컨텍스트 메뉴만 누수).
+                    if (DeconstructDesignation.Instance != null)
+                        DeconstructDesignation.Instance.CancelBlueprint(bpCap);
+                    else
+                        Destroy(bpCap.gameObject);
+                }));
             }
 
             // 완성된 구조물(벽/문/난로/침대) → 철거 지정.  겹친 콜라이더 중 deconstructable 한

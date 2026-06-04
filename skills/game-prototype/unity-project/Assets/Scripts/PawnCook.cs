@@ -111,9 +111,10 @@ namespace MelonS.GameProto
                     if (targetStove.CookOne(fine))
                     {
                         lastCookTime = Time.time;
-                        // legacy: Build skill XP 도 부여 (PawnSkills 확장 전 임시)
-                        var sk = GetComponent<PawnSkills>();
-                        if (sk != null) sk.AddXP(SkillKind.Build, 8f);
+                        // #버그헌트4(2026-06-05): 요리에 Build XP 주던 것 제거.  Build 레벨은 요리속도엔
+                        //  영향 없고 건설속도에만 반영돼, 요리만 시킨 폰의 건축 레벨이 올라 건설이
+                        //  빨라지는 잘못된 스킬 귀속이었다.  별도 Cook 스킬 추가 전까지 요리=무XP
+                        //  (요리속도는 PawnAbilities.cookingMul 로 스케일).
                     }
                     else
                     {

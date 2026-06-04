@@ -329,11 +329,16 @@ namespace MelonS.GameProto
         // #audit4 #0 — PawnAbilities 캐시(health 캐시 패턴과 동일).  이전엔 Update 의 3개
         //  분기에서 매 프레임 GetComponent<PawnAbilities>() 호출.  안정 컴포넌트라 1회 캐시.
         private PawnAbilities _abilities;
+        // #버그헌트4(2026-06-05): Cheerful(활기차다) 등 트레잇의 moveSpeedMul 적용용.  이전엔
+        //  PawnTraits.moveSpeedMul(+20%)이 계산만 되고 PawnMovement 가 PawnAbilities.moveSpeedMul
+        //  만 곱해 dead trait effect 였다(클래스 doc 'move +20%' 위반).
+        private PawnTraits _traitsMv;
 
         private void Awake()
         {
             health = GetComponent<PawnHealth>();
             _abilities = GetComponent<PawnAbilities>();
+            _traitsMv = GetComponent<PawnTraits>();   // #버그헌트4 — 트레잇 이동속도
             if (stats == null) stats = PawnStats.CreateDefault();
         }
 
@@ -528,6 +533,7 @@ namespace MelonS.GameProto
                             * (health != null ? health.MovementSpeedMultiplier() : 1f);
                         var ab = _abilities;   // #audit4 #0 캐시
                         if (ab != null) speed *= ab.moveSpeedMul;
+                        if (_traitsMv != null) speed *= _traitsMv.moveSpeedMul;   // #버그헌트4 — Cheerful 등
                         Vector2 step = Vector2.MoveTowards(transform.position, dest, speed * Time.deltaTime);
                         transform.position = new Vector3(step.x, step.y, transform.position.z);
                     }
@@ -557,6 +563,7 @@ namespace MelonS.GameProto
                 float speedMulP = MoveSpeedScale * (health != null ? health.MovementSpeedMultiplier() : 1f);
                 var abilP = _abilities;   // #audit4 #0 캐시
                 if (abilP != null) speedMulP *= abilP.moveSpeedMul;
+                if (_traitsMv != null) speedMulP *= _traitsMv.moveSpeedMul;   // #버그헌트4 — Cheerful 등
                 // #157 / W-M4-05 #21 - 바닥 위 이동 보너스.  BonusAt 가 해당 cell 의
                 //  가장 높은 FloorEntity.MoveBonus 를 돌려줌 (wood 1.30x, stone 1.50x).
                 //  바닥 없으면 1.0 → 보너스 없음.  IsOnFloor 와 동일한 tiny OverlapBox.
@@ -601,6 +608,7 @@ namespace MelonS.GameProto
             // #120 - PawnAbilities move speed multiplier
             var _abil = _abilities;   // #audit4 #0 캐시
             if (_abil != null) speedMul *= _abil.moveSpeedMul;
+            if (_traitsMv != null) speedMul *= _traitsMv.moveSpeedMul;   // #버그헌트4 — Cheerful 등
             // #157 / W-M4-05 #21 - wiki: 바닥 위 pawn 은 이동 속도 보너스 (paved 50% 근사).
             //  BonusAt 가 cell 의 최고 FloorEntity.MoveBonus 반환 (wood 1.30x / stone 1.50x),
             //  바닥 없으면 1.0.  per-frame OverlapBox 비용은 tiny radius 라 ok (#104 audit).

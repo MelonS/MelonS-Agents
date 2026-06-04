@@ -385,7 +385,7 @@ namespace MelonS.GameProto
         ///     refund already-collectedWood/Stone and proactively release ReservedBy
         ///     / HaulReservedBy; that refund-on-cancel is NOT possible without
         ///     editing BlueprintEntity.cs and is flagged for a follow-up wave.</summary>
-        private bool CancelBlueprint(BlueprintEntity bp)
+        public bool CancelBlueprint(BlueprintEntity bp)
         {
             if (bp == null) return false;
             ClickEffect.Spawn(bp.transform.position, new Color(0.95f, 0.44f, 0.36f, 0.95f));
