@@ -183,7 +183,15 @@ namespace MelonS.GameProto
                 {
                     FinalizeMarquee();
                 }
-                // Below-threshold release: do NOTHING — ClickSelector handled the click.
+                else if (pressArmed)
+                {
+                    // #버그헌트3(2026-06-04): 드래그 아닌 단일 좌클릭 릴리스 → 기존 다중선택 해제.
+                    //  이전엔 아무것도 안 해 multiSelection 이 영구 stuck(빈땅 클릭으로 안 풀림) →
+                    //  선택링 잔존 + MarqueeOwnsCommand 영구 true 로 단일 우클릭 명령 차단 + R 징집이
+                    //  stale 그룹에 적용됐다.  단일 클릭(빈땅/림 무관)은 새 선택 의도 → 그룹 해제
+                    //  (단일 림 선택은 ClickSelector 가 처리).
+                    if (HasMultiSelection) ClearMultiSelection();
+                }
                 pressArmed = false;
                 dragging = false;
                 return;
@@ -285,6 +293,14 @@ namespace MelonS.GameProto
                 if (hunter != null) hunter.ClearTask();
                 var cook = pawn.GetComponent<PawnCook>();
                 if (cook != null) cook.ClearTask();
+                // #버그헌트3(2026-06-04): miner/harvester/builder/rest 도 정리(ClickSelector.
+                //  ClearAllWorkTasks 와 동일).  이전엔 chopper/gather/hunter/cook 만 풀어, 채광/수확/
+                //  건설/수면 중이던 다중선택 림이 마퀴 이동 명령을 받아도 다음 AI 틱에 이전 task 의
+                //  SetTarget 이 덮어써 제자리/엉뚱한 곳으로 갔다(우클릭 단일경로엔 이미 적용된 회귀가드).
+                pawn.GetComponent<PawnMiner>()?.ClearTask();
+                pawn.GetComponent<PawnHarvester>()?.ClearTask();
+                pawn.GetComponent<PawnBuilder>()?.ClearTask();
+                pawn.GetComponent<PawnNeeds>()?.ClearRestTarget();
 
                 var mv = pawn.GetComponent<PawnMovement>();
                 if (mv != null) mv.SetTarget(dests[i]);

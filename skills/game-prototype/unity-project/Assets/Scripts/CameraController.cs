@@ -94,7 +94,11 @@ namespace MelonS.GameProto
                     //  MoveTowards 고정 거리/초.  속도 ~30 unit/s, 최소 0.5/frame (batchmode 보호).
                     float maxStep = 30f * Time.unscaledDeltaTime;
                     if (maxStep < 0.5f) maxStep = 0.5f;
-                    cam.transform.position = Vector3.MoveTowards(cam.transform.position, target, maxStep);
+                    // #버그헌트3(2026-06-04): 자동 follow 도 월드 경계 clamp.  이전엔 raw 림 위치로
+                    //  MoveTowards 만 해 맵 가장자리 림 선택 시 카메라가 경계를 넘어 void 가 보였다
+                    //  (pan/zoom/FocusOn 은 이미 ClampCamPos 적용 — 이 경로만 누락).
+                    Vector3 np = Vector3.MoveTowards(cam.transform.position, target, maxStep);
+                    cam.transform.position = ClampCamPos(np.x, np.y, np.z);
                 }
             }
 
