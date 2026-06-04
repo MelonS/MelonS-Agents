@@ -198,6 +198,12 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-04** PawnSim 자원모델 단일화 Stage 1 — pickup 대칭 차감.  운영자 "다 림월드식:
+  물리 더미 단일화" 선택.  hauler 가 InStockpile 더미(목재/식량/석재)를 운반용으로 집을 때
+  카운터 −amount (deposit 의 +amount 와 대칭) — 이전엔 차감 없어 카운터 영구 과대(#1).
+  불변식 '카운터 = Σ InStockpile 더미'의 한 축 복원.  ISO 82/82 · INT 45/45.
+  ※ 완전 단일화는 ~8지점(build결제·eat/cook·취소환불·trader·동물drop·해체환불) 추가 필요 +
+  build instant-fund vs haul-required feel 결정 → 운영자 확인 후 진행(Stage 2~).
 - **2026-06-04** PawnSim 멀티에이전트 버그헌트 1사이클 — 7차원 병렬감사+적대적검증(확정14/기각20),
   모델-독립 7건 수정: 폭풍지속 회귀(0.7실초→≈60실초), 해체환불 품질정합+복제익스플로잇,
   바리케이드 해체불가(영구봉쇄), 운반사망 자원소실, 다운 행동지속, 출혈사망 시체헛공격,

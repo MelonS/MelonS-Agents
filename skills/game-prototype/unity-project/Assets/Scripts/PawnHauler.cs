@@ -410,6 +410,12 @@ namespace MelonS.GameProto
                 {
                     movement.ClearTarget();
                     int amount = targetPile.Wood;
+                    // #자원모델 단일화(2026-06-04): InStockpile 더미를 운반용으로 집으면 stockpile
+                    //  에서 빠지는 것이므로 카운터를 −amount (deposit 의 +amount 와 대칭).  이 차감이
+                    //  없어 카운터가 영구 과대집계됐다(목재 N 표시되나 실제 물리 0 → 새 건축 자재부족
+                    //  정지).  바닥(비-stockpile) 더미는 애초에 미적립이라 차감 안 함(불변식: 카운터 =
+                    //  Σ InStockpile 더미).
+                    if (targetPile.InStockpile) ResourceManager.Instance?.AddWood(-amount);
                     UnityEngine.Object.Destroy(targetPile.gameObject);
                     targetPile = null;
                     carryingWood += amount;
@@ -464,6 +470,8 @@ namespace MelonS.GameProto
                 {
                     movement.ClearTarget();
                     int amount = targetMeat.Food;
+                    // #자원모델 단일화(2026-06-04): InStockpile 식량을 집으면 카운터 −amount (deposit 대칭).
+                    if (targetMeat.InStockpile) ResourceManager.Instance?.AddFood(-amount);
                     UnityEngine.Object.Destroy(targetMeat.gameObject);
                     targetMeat = null;
                     carryingFood += amount;
@@ -505,6 +513,8 @@ namespace MelonS.GameProto
                 {
                     movement.ClearTarget();
                     int amount = targetStone.Stone;
+                    // #자원모델 단일화(2026-06-04): InStockpile 석재를 집으면 카운터 −amount (deposit 대칭).
+                    if (targetStone.InStockpile) ResourceManager.Instance?.AddStone(-amount);
                     UnityEngine.Object.Destroy(targetStone.gameObject);
                     targetStone = null;
                     carryingStone += amount;
