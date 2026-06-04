@@ -198,6 +198,14 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-05** PawnSim 멀티에이전트 버그헌트 4사이클 (mood회귀+신규6차원, 확정12/기각4) — 12건 전부
+  수정: mood-델타 회귀 3(clamp 비대칭 영구드리프트·save/load thought 이중가산·트레잇 baseline
+  이중가산) + dead trait/장비 효과(Cheerful 이동+20%·Bloodthirsty 전투XP+50%·원거리 무기 게이트)
+  + 청사진 컨텍스트취소 환불누수 + builder stand-cell 누수 + 화덕 영구점등 + 요리→건축XP 오귀속
+  + 죽은폰 인스펙트 '사망' 표기.  ⚠ #4 builder fix 가 ClearTask(movement.ClearTarget) 를
+  targetBp==null(거의 매프레임)에 호출해 전 폰 이동 마비(I2/I4) 자가-회귀 → ReleaseStandCell 로
+  교정(verify-real-path: 검증된 확정버그라도 fix 가 회귀 가능).  기각4(신규스폰 이중가산·OnLevelUp·
+  skill clamp·부패단위) 정확.  ISO 84/84 · INT 48/48 · LongPlay survived.
 - **2026-06-05** PawnSim mood 모델 decay+thought 합산 전환 (운영자 결정, 확정 #10/#11/#12 해결).
   PawnThoughts 가 매초 needs.mood 를 `50+Σthought` 로 절대 override 하던 것을 **델타 가산**으로
   변경 — thought 추가/만료 시 그 음·양수만큼만 mood 변동, 사이의 자연 decay·식사 즉시보너스·
