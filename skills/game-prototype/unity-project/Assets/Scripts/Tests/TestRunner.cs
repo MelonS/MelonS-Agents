@@ -124,6 +124,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V74-reservation-registry", TestV74_ReservationRegistry);
             yield return RunOne("V75-distinct-target-and-cell", TestV75_DistinctTargetAndCell);
             yield return RunOne("V76-eject-pawn-from-blocked-cell", TestV76_EjectPawnFromBlockedCell);
+            yield return RunOne("V77-bodypart-save-restore", TestV77_BodyPartSaveRestore);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -754,6 +755,58 @@ namespace MelonS.GameProto.Tests
             int afterHeal = health.GetPart(PawnHealth.PartId.LeftArm).hp;
             Assert(afterHeal > beforeHeal,
                 $"left arm {beforeHeal} → {afterHeal} after HealAll(10)");
+        }
+
+        // #save-load 완성(2026-06-04) — 부위 HP/출혈/붕대 직렬화→복원 충실도 + 사망 상태 복원.
+        //  GameSaveButtons.OnLoad 가 ReRollFromName 직후 PawnHealth.RestorePartState 를 호출하는
+        //  실경로의 핵심 로직(SaveLoadManager.Save 가 채우는 배열 ↔ RestorePartState)을 검증.
+        //  이전엔 로드 시 부위 HP 가 전부 full 로 리셋돼 부상/출혈/붕대/사망이 소실됐다.
+        private IEnumerator TestV77_BodyPartSaveRestore()
+        {
+            var goA = SpawnTestPawn(new Vector3(70, 0, 0), includeAI: false);
+            var hA = goA.GetComponent<PawnHealth>();
+            yield return new WaitForSeconds(0.05f);
+            // 부상 상태 구성: 팔 데미지 + 다리 hp/출혈/붕대 직접 세팅(직렬화 충실도 테스트).
+            hA.TakeDamage(8, PawnHealth.PartId.LeftArm);
+            var legA = hA.GetPart(PawnHealth.PartId.LeftLeg);
+            legA.hp = 5; legA.bleedRate = 1.5f; legA.bandaged = true;
+            int n = hA.parts.Length;
+            int[] hp = new int[n]; float[] bleed = new float[n]; bool[] band = new bool[n];
+            for (int i = 0; i < n; i++)
+            { hp[i] = hA.parts[i].hp; bleed[i] = hA.parts[i].bleedRate; band[i] = hA.parts[i].bandaged; }
+
+            // 신규(full-HP) 림에 복원 → 부상 상태가 정확히 되살아나는지.
+            var goB = SpawnTestPawn(new Vector3(72, 0, 0), includeAI: false);
+            var hB = goB.GetComponent<PawnHealth>();
+            yield return new WaitForSeconds(0.05f);
+            hB.RestorePartState(hp, bleed, band);
+            bool hpOk = hB.GetPart(PawnHealth.PartId.LeftArm).hp == hA.GetPart(PawnHealth.PartId.LeftArm).hp
+                     && hB.GetPart(PawnHealth.PartId.LeftLeg).hp == 5;
+            bool bleedOk = Mathf.Abs(hB.GetPart(PawnHealth.PartId.LeftLeg).bleedRate - 1.5f) < 0.01f;
+            bool bandOk = hB.GetPart(PawnHealth.PartId.LeftLeg).bandaged;
+
+            // 사망 상태 복원: 머리 hp=0 → CheckDeath 가 IsDead 세팅.
+            var goC = SpawnTestPawn(new Vector3(74, 0, 0), includeAI: false);
+            var hC = goC.GetComponent<PawnHealth>();
+            yield return new WaitForSeconds(0.05f);
+            int cn = hC.parts.Length;
+            int[] dhp = new int[cn];
+            for (int i = 0; i < cn; i++) dhp[i] = hC.parts[i].hp;
+            dhp[(int)PawnHealth.PartId.Head] = 0;
+            hC.RestorePartState(dhp, null, null);
+            bool deathOk = hC.IsDead;
+
+            // 구 세이브 호환: null/길이불일치 배열은 복원 스킵(full-HP 유지, 예외 없음).
+            var goD = SpawnTestPawn(new Vector3(76, 0, 0), includeAI: false);
+            var hD = goD.GetComponent<PawnHealth>();
+            yield return new WaitForSeconds(0.05f);
+            int dFull = hD.GetPart(PawnHealth.PartId.Torso).hp;
+            hD.RestorePartState(null, null, null);
+            hD.RestorePartState(new int[2], null, null);   // 길이 불일치
+            bool legacyOk = hD.GetPart(PawnHealth.PartId.Torso).hp == dFull;
+
+            Assert(hpOk && bleedOk && bandOk && deathOk && legacyOk,
+                $"부위 round-trip: hp={hpOk}, 출혈={bleedOk}, 붕대={bandOk}, 사망복원={deathOk}, 구세이브가드={legacyOk}");
         }
 
         private IEnumerator TestV45_ClampStatic()

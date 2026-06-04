@@ -93,6 +93,27 @@ namespace MelonS.GameProto
             RecomputeAggregates();
         }
 
+        // #save-load 완성(2026-06-04): 부위별 HP/출혈/붕대(부상 상태)를 저장본에서 복원.
+        //  이전엔 save/load 가 needs/스킬/트레잇만 복원하고 부위 HP 는 전부 full 로 리셋돼,
+        //  부상·출혈·붕대·사망(머리/몸통 HP=0)·다운(머리≤30%) 상태가 로드 시 소실됐다.
+        //  GameSaveButtons.OnLoad 가 ReRollFromName(트레잇 maxHp 확정) '직후' 호출 →
+        //  maxHp 는 트레잇 결정성으로 재구성되고, 여기서 실제 hp/출혈/붕대를 덮어쓴 뒤
+        //  RecomputeAggregates+CheckDeath 로 사망/다운 상태까지 정확히 되살린다.
+        //  구(舊) 세이브 호환: 배열 null/길이 불일치면 복원 스킵(신규 full-HP 림 유지).
+        public void RestorePartState(int[] hp, float[] bleed, bool[] bandaged)
+        {
+            if (parts == null || hp == null || hp.Length != parts.Length) return;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (parts[i] == null) continue;
+                parts[i].hp = Mathf.Clamp(hp[i], 0, parts[i].maxHp);
+                if (bleed != null && bleed.Length == parts.Length) parts[i].bleedRate = bleed[i];
+                if (bandaged != null && bandaged.Length == parts.Length) parts[i].bandaged = bandaged[i];
+            }
+            RecomputeAggregates();
+            CheckDeath();
+        }
+
         private void Awake()
         {
             if (partsConfig == null) partsConfig = HealthPartsConfig.CreateDefault();

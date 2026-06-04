@@ -198,6 +198,12 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-04** PawnSim save/load 완성 #1 — 부위별 HP/출혈/붕대 직렬화 복원.  로드 시
+  부위 HP 가 전부 full 로 리셋돼 부상/출혈/붕대/사망(머리·몸통 HP=0)/다운 상태가 소실되던
+  것 수정.  PawnSave 에 partHp/partBleed/partBandaged 추가, SaveLoadManager.Save 채움,
+  GameSaveButtons.OnLoad 가 ReRollFromName(트레잇 maxHp 확정) 직후 PawnHealth.RestorePartState
+  호출(순서: maxHp 확정→실부상 복원→CheckDeath 사망/다운 재평가).  구 세이브 호환(길이 가드).
+  회귀가드 V77(직렬화→복원 충실도 + 사망복원 + 구세이브 가드).  ISO 77/77 · INT 44/44.
 - **2026-06-03** PawnSim 자율 세션 — 멀티에이전트 코드베이스 전면 버그 스윕 (11회 감사)
   - 신선-각도 헌트로 저감사 영역의 실버그 발견·수정: 카메라 줌-인식 경계(void 렌더),
     레이드 이벤트 중복발생, 날씨 폭풍 GameClock 전환, ResearchUI null, save/load 1:1 매칭

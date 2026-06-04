@@ -20,6 +20,12 @@ namespace MelonS.GameProto
         public bool drafted;
         public int[] skillLevels;
         public float[] skillXp;
+        // #save-load 완성(2026-06-04) — 부위별 HP/출혈/붕대(부상 상태)가 로드 시 전부 full 로
+        //  리셋되던 것 복원.  index = PartId 0~5(Head..RightLeg).  구 세이브엔 이 필드가 없어
+        //  JsonUtility 가 빈 배열을 두므로 PawnHealth.RestorePartState 가 길이 가드로 스킵한다.
+        public int[] partHp;
+        public float[] partBleed;
+        public bool[] partBandaged;
     }
 
     [Serializable]
@@ -131,6 +137,22 @@ namespace MelonS.GameProto
                         if (sk.entries[i] == null) continue;
                         ps.skillLevels[i] = sk.entries[i].level;
                         ps.skillXp[i] = sk.entries[i].xp;
+                    }
+                }
+                // #save-load 완성 — 부위별 HP/출혈/붕대 저장(index = PartId 0~5).
+                var ph = pawn.GetComponent<PawnHealth>();
+                if (ph != null && ph.parts != null)
+                {
+                    int pn = ph.parts.Length;
+                    ps.partHp = new int[pn];
+                    ps.partBleed = new float[pn];
+                    ps.partBandaged = new bool[pn];
+                    for (int i = 0; i < pn; i++)
+                    {
+                        if (ph.parts[i] == null) continue;
+                        ps.partHp[i] = ph.parts[i].hp;
+                        ps.partBleed[i] = ph.parts[i].bleedRate;
+                        ps.partBandaged[i] = ph.parts[i].bandaged;
                     }
                 }
                 data.pawns.Add(ps);

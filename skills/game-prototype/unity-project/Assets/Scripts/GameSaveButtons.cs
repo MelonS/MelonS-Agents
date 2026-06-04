@@ -85,6 +85,10 @@ namespace MelonS.GameProto
                 // #트레잇 결정성: 로드 시에도 이름으로 트레잇 재시드 → 같은 이름이면 저장 전과
                 //  동일 트레잇(save/load 결정성; 이전엔 클론 이름 시드라 비결정적이었음).
                 p.GetComponent<PawnTraits>()?.ReRollFromName(ps.name);
+                // #save-load 완성 — 부위별 HP/출혈/붕대 복원.  순서 중요: ReRollFromName 이
+                //  트레잇 maxHp 를 먼저 확정한 뒤, 실제 부상 상태(hp/출혈/붕대 + 사망/다운)를
+                //  덮어쓴다.  구 세이브(배열 없음)는 RestorePartState 가 길이 가드로 스킵.
+                p.GetComponent<PawnHealth>()?.RestorePartState(ps.partHp, ps.partBleed, ps.partBandaged);
                 PawnNeeds needs = p.GetComponent<PawnNeeds>();
                 if (needs != null)
                 {
