@@ -74,6 +74,15 @@ namespace MelonS.GameProto
         public float growth;   // 0..1
     }
 
+    // #버그헌트2(2026-06-04) — 연구 진행도가 save/load 에 빠져 재시작 시 모든 연구 unlock 소실.
+    [Serializable]
+    public class ResearchSave
+    {
+        public string id;
+        public int currentPoints;
+        public bool completed;
+    }
+
     [Serializable]
     public class SaveData
     {
@@ -91,6 +100,9 @@ namespace MelonS.GameProto
         //  트리 respawn 후 위치 매칭으로 재마킹.  구 세이브엔 없어 빈 리스트 → 스킵.
         public List<Vector2>       chopMarks  = new List<Vector2>();
         public List<Vector2>       mineMarks  = new List<Vector2>();
+        // #버그헌트2(2026-06-04) — 연구 진행도(구 세이브엔 없어 빈 리스트 → 복원 스킵).
+        public List<ResearchSave>  research   = new List<ResearchSave>();
+        public string              activeTechId;
         public float gameSeconds;   // #276 게임 시계 — 로드 시 시계 리셋(레이드 스케줄 파손) 방지
         public string version = "0.2.0";
         public string savedAtIso;
@@ -227,6 +239,18 @@ namespace MelonS.GameProto
                 data.chopMarks = TreeChopDesignation.Instance.GetMarkedTreePositions();
             if (MineDesignation.Instance != null)
                 data.mineMarks = MineDesignation.Instance.GetMarkedVeinPositions();
+
+            // #버그헌트2(2026-06-04): serialize 연구 진행도 + active tech (재시작 시 unlock 소실 방지).
+            if (ResearchManager.Instance != null && ResearchManager.Instance.techs != null)
+            {
+                foreach (var t in ResearchManager.Instance.techs)
+                {
+                    if (t == null) continue;
+                    data.research.Add(new ResearchSave { id = t.id, currentPoints = t.currentPoints, completed = t.completed });
+                }
+                data.activeTechId = ResearchManager.Instance.activeTech != null
+                    ? ResearchManager.Instance.activeTech.id : null;
+            }
 
             string json = JsonUtility.ToJson(data, prettyPrint: true);
             File.WriteAllText(SavePath, json);

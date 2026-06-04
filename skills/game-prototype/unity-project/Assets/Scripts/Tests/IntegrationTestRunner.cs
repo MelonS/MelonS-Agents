@@ -124,6 +124,7 @@ namespace MelonS.GameProto.Tests
             // #34 회귀가드 — 나무 좌클릭 시 '벌목 지정' 플로트 메뉴가 실제로 열리는가(그동안 무테스트→반복 회귀)
             yield return RunOne("I44-tree-leftclick-menu-opens", TestI44_TreeLeftClickMenu);
             yield return RunOne("I45-designation-save-load", TestI45_DesignationSaveLoad);
+            yield return RunOne("I46-research-save-load", TestI46_ResearchSaveLoad);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -794,6 +795,28 @@ namespace MelonS.GameProto.Tests
             Assert(savePathOk && loadPathOk,
                 $"지정 round-trip: 저장경로={savePathOk}, 로드재마킹={loadPathOk} " +
                 $"(B before={bBefore}, B after={des.IsMarked(b)})");
+        }
+
+        /// <summary>I46: #버그헌트2 — 연구 진행도가 save 에 직렬화되는지(재시작 unlock 소실 fix).
+        ///   tech[0] currentPoints 를 55 로 → Save → Load → data.research 에 반영됐는지.</summary>
+        private IEnumerator TestI46_ResearchSaveLoad()
+        {
+            yield return null;
+            var rmgr = ResearchManager.Instance;
+            if (rmgr == null || rmgr.techs == null || rmgr.techs.Count == 0)
+            { Assert(false, "ResearchManager 없음"); yield break; }
+            var tech = rmgr.techs[0];
+            int origPts = tech.currentPoints; bool origDone = tech.completed;
+            tech.currentPoints = 55; tech.completed = false;
+            SaveLoadManager.Save();
+            var data = SaveLoadManager.Load();
+            bool serialized = false;
+            if (data != null && data.research != null)
+                foreach (var rs in data.research)
+                    if (rs.id == tech.id && rs.currentPoints == 55) serialized = true;
+            tech.currentPoints = origPts; tech.completed = origDone;   // 원복
+            Assert(serialized,
+                $"research save: tech {tech.id} currentPoints=55 직렬화={serialized} (research count={(data != null && data.research != null ? data.research.Count : -1)})");
         }
 
         /// <summary>I23: 60초 시뮬 stress - AI/wolf/crop growth/event 동시 작동.
