@@ -301,6 +301,46 @@ namespace MelonS.GameProto
             _ => 0,
         };
 
+        // #버그헌트2(2026-06-04): 완성 구조물 스폰 단일 경로 — 빌드 완료(BlueprintEntity)와 save
+        //  재구성(GameSaveButtons.OnLoad)이 공용으로 호출.  prefab Instantiate + 활성화 + footprint
+        //  scale + 벽 재질/침대 품질(mode 기준) + StructureTag(mode) 스탬프.  두 경로가 같은 함수를
+        //  타므로 '빌드 결과 == 로드 재구성 결과' 가 보장된다(드리프트 없음).
+        public GameObject SpawnFinished(Mode mode, Vector3 pos)
+        {
+            var prefab = PrefabFor(mode);
+            if (prefab == null) return null;
+            var spawned = Instantiate(prefab, pos, Quaternion.identity);
+            spawned.SetActive(true);
+            spawned.hideFlags = HideFlags.None;   // #248 런타임 템플릿의 HideAndDontSave 상속 제거
+            Vector2Int fp = SizeFor(mode);
+            var sr = spawned.GetComponent<SpriteRenderer>();
+            if (sr != null && sr.sprite != null)
+            {
+                Vector2 sw = sr.sprite.bounds.size;
+                if (sw.x > 0.01f && sw.y > 0.01f)
+                    spawned.transform.localScale = new Vector3(fp.x / sw.x, fp.y / sw.y, 1f);
+            }
+            if (mode == Mode.Wall || mode == Mode.WallStone)
+            {
+                var w = spawned.GetComponent<WallEntity>();
+                if (w != null) w.SetMaterial(mode == Mode.WallStone ? WallMaterial.Stone : WallMaterial.Wood);
+            }
+            if (mode == Mode.Bed || mode == Mode.BedSleepingSpot || mode == Mode.BedFine)
+            {
+                var b = spawned.GetComponent<BedEntity>();
+                if (b != null) b.SetQuality(mode switch
+                {
+                    Mode.BedSleepingSpot => BedQuality.SleepingSpot,
+                    Mode.BedFine         => BedQuality.Fine,
+                    _                    => BedQuality.Wood,
+                });
+            }
+            var tag = spawned.GetComponent<StructureTag>();
+            if (tag == null) tag = spawned.AddComponent<StructureTag>();
+            tag.modeInt = (int)mode;
+            return spawned;
+        }
+
         private GameObject PrefabFor(Mode m) => m switch
         {
             Mode.Wall            => wallPrefab,

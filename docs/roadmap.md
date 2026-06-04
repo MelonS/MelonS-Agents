@@ -198,6 +198,14 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-04** PawnSim 🔴 CRITICAL #2 구조물 재시작 persist+reconstruct (운영자 "지금 바로 구현").
+  로드 시 플레이어 건축물(벽/침대/문/화덕/램프/울타리/바리케이드/바닥)·작물·스톡파일이 재시작 후
+  전부 소실되던 것 해결.  설계: StructureTag(빌드 Mode 스탬프) + BuildManager.SpawnFinished(빌드
+  완료·로드 재구성 단일 경로, DRY) → BlueprintEntity 리팩터 → SaveData.structures(mode,pos) 직렬화
+  → OnLoad 가 기존 player-built 파괴 후 SpawnFinished/Crop/Stockpile 재구성 → ApplyLoadedSubStates
+  로 작물성장/우선순위 복원.  회귀가드 I47 + I35(build 경로 무손상 확인).  ISO 83/83 · INT 47/47 ·
+  LongPlay survived=true.  (잔여: 스톡파일 allowed-kinds 필터 + 재시작 시 마커 스프라이트 — 기능은
+  동작, 시각/필터 폴리시는 차후.)
 - **2026-06-04** PawnSim 멀티에이전트 버그헌트 2사이클 — 신규 7차원, 확정10/기각12, 수정 8건:
   징집 자동공격 정지·출혈사망 corpse 회색조·부상폰 로드 Hp동기화·Hunter.HasTask·길들인동물
   자동사냥 제외·연구 mul 제곱 fix·징집 자율취침 금지·연구 진행도 save/load(I46).  회귀가드 V83/I46.

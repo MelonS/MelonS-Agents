@@ -125,6 +125,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I44-tree-leftclick-menu-opens", TestI44_TreeLeftClickMenu);
             yield return RunOne("I45-designation-save-load", TestI45_DesignationSaveLoad);
             yield return RunOne("I46-research-save-load", TestI46_ResearchSaveLoad);
+            yield return RunOne("I47-structure-save-reconstruct", TestI47_StructureSaveReconstruct);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -817,6 +818,33 @@ namespace MelonS.GameProto.Tests
             tech.currentPoints = origPts; tech.completed = origDone;   // 원복
             Assert(serialized,
                 $"research save: tech {tech.id} currentPoints=55 직렬화={serialized} (research count={(data != null && data.research != null ? data.research.Count : -1)})");
+        }
+
+        /// <summary>I47: #버그헌트2 — 완성 구조물 save+재구성.  SpawnFinished 가 StructureTag 단
+        ///   WallEntity 를 만들고(빌드=로드 단일 경로), Save 가 data.structures 에 직렬화하는지.
+        ///   (OnLoad 재구성 루프는 이 structures 를 그대로 SpawnFinished 로 복원 → 재시작 소실 fix.)</summary>
+        private IEnumerator TestI47_StructureSaveReconstruct()
+        {
+            yield return null;
+            var bm = BuildManager.Instance;
+            if (bm == null) { Assert(false, "BuildManager null"); yield break; }
+            var pos = new Vector3(40.5f, 40.5f, 0f);   // 격리된 빈 셀(맵 안쪽, 타 테스트 간섭 최소)
+            var go = bm.SpawnFinished(BuildManager.Mode.Wall, pos);
+            yield return null;
+            bool spawned = go != null
+                && go.GetComponent<WallEntity>() != null
+                && go.GetComponent<StructureTag>() != null
+                && go.GetComponent<StructureTag>().modeInt == (int)BuildManager.Mode.Wall;
+            SaveLoadManager.Save();
+            var data = SaveLoadManager.Load();
+            bool serialized = false;
+            if (data != null && data.structures != null)
+                foreach (var s in data.structures)
+                    if (s.mode == (int)BuildManager.Mode.Wall
+                        && ((Vector2)pos - s.position).sqrMagnitude < 0.1f) serialized = true;
+            if (go != null) Object.Destroy(go);
+            Assert(spawned && serialized,
+                $"structure save+재구성: SpawnFinished(tag)={spawned}, structures 직렬화={serialized}");
         }
 
         /// <summary>I23: 60초 시뮬 stress - AI/wolf/crop growth/event 동시 작동.

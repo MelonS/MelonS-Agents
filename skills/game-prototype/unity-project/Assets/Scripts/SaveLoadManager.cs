@@ -83,6 +83,16 @@ namespace MelonS.GameProto
         public bool completed;
     }
 
+    // #버그헌트2(2026-06-04) — 플레이어가 지은 모든 완성 구조물(벽/침대/문/화덕/램프/울타리/
+    //  바리케이드/바닥 등).  StructureTag 가 빌드 Mode 를 스탬프 → (mode, position) 만으로
+    //  BuildManager.SpawnFinished 로 재구성.  이전엔 재구성 코드가 없어 재시작 후 로드 시 소실.
+    [Serializable]
+    public class StructureSave
+    {
+        public int mode;          // (int)BuildManager.Mode
+        public Vector2 position;
+    }
+
     [Serializable]
     public class SaveData
     {
@@ -103,6 +113,8 @@ namespace MelonS.GameProto
         // #버그헌트2(2026-06-04) — 연구 진행도(구 세이브엔 없어 빈 리스트 → 복원 스킵).
         public List<ResearchSave>  research   = new List<ResearchSave>();
         public string              activeTechId;
+        // #버그헌트2(2026-06-04) — 플레이어 완성 구조물 전체(재시작 후 로드 재구성용).
+        public List<StructureSave> structures = new List<StructureSave>();
         public float gameSeconds;   // #276 게임 시계 — 로드 시 시계 리셋(레이드 스케줄 파손) 방지
         public string version = "0.2.0";
         public string savedAtIso;
@@ -239,6 +251,14 @@ namespace MelonS.GameProto
                 data.chopMarks = TreeChopDesignation.Instance.GetMarkedTreePositions();
             if (MineDesignation.Instance != null)
                 data.mineMarks = MineDesignation.Instance.GetMarkedVeinPositions();
+
+            // #버그헌트2(2026-06-04): serialize 모든 플레이어 완성 구조물(StructureTag) — 재시작 후
+            //  로드 시 재구성용.  (mode, position) 만 저장하면 SpawnFinished 가 재질/품질까지 복원.
+            foreach (var tag in UnityEngine.Object.FindObjectsByType<StructureTag>(FindObjectsSortMode.None))
+            {
+                if (tag == null || tag.modeInt < 0) continue;
+                data.structures.Add(new StructureSave { mode = tag.modeInt, position = tag.transform.position });
+            }
 
             // #버그헌트2(2026-06-04): serialize 연구 진행도 + active tech (재시작 시 unlock 소실 방지).
             if (ResearchManager.Instance != null && ResearchManager.Instance.techs != null)

@@ -61,6 +61,25 @@ namespace MelonS.GameProto
                 Destroy(p.gameObject);
             foreach (var t in FindObjectsByType<TreeEntity>(FindObjectsSortMode.None))
                 Destroy(t.gameObject);
+            // #버그헌트2(2026-06-04): 플레이어 완성 구조물/작물/스톡파일도 파괴 후 1:1 재구성.
+            //  이전엔 이들을 파괴/재생성하지 않아, 같은 세션 F9 는 우연히 동작(엔티티 잔존)했지만
+            //  게임 재시작(새 씬) 후 로드 시 재구성 코드가 없어 전부 소실됐다(CRITICAL).
+            foreach (var s in FindObjectsByType<StructureTag>(FindObjectsSortMode.None))
+                Destroy(s.gameObject);
+            foreach (var c in FindObjectsByType<CropEntity>(FindObjectsSortMode.None))
+                Destroy(c.gameObject);
+            // 스톡파일 zone 파괴 전에 마커 스프라이트를 캡처(재구성 시 시각 유지; 같은 세션 F9).
+            //  재시작(씬에 zone 없음)이면 null → 기능은 동작하나 마커 미표시(차후 폴리시).
+            Sprite stockMarker = null;
+            foreach (var z in FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None))
+            {
+                if (stockMarker == null)
+                {
+                    var zsr = z.GetComponent<SpriteRenderer>();
+                    if (zsr != null) stockMarker = zsr.sprite;
+                }
+                Destroy(z.gameObject);
+            }
 
             // Restore resources
             if (ResourceManager.Instance != null)
@@ -138,9 +157,40 @@ namespace MelonS.GameProto
                 }
             }
 
+            // #버그헌트2(2026-06-04): 플레이어 완성 구조물 재구성 — 모든 벽/침대/문/화덕/램프/
+            //  울타리/바리케이드/바닥을 BuildManager.SpawnFinished(mode,pos)로 복원(빌드 완료와 동일
+            //  경로 → 재질/품질/등록/footprint 일관).  재시작 후 로드 시 구조물 소실(CRITICAL) fix.
+            if (data.structures != null && BuildManager.Instance != null)
+            {
+                foreach (var s in data.structures)
+                    BuildManager.Instance.SpawnFinished((BuildManager.Mode)s.mode, s.position);
+            }
+
+            // #버그헌트2(2026-06-04): 작물 재구성(성장도는 아래 ApplyLoadedSubStates 가 위치매칭 복원).
+            //  CropEntity.Awake 가 stage 스프라이트/콜라이더를 세팅한다.
+            if (data.crops != null)
+            {
+                foreach (var cs in data.crops)
+                {
+                    var cgo = new GameObject("Crop");
+                    cgo.transform.position = cs.position;
+                    cgo.AddComponent<SpriteRenderer>();
+                    cgo.AddComponent<CropEntity>();
+                }
+            }
+
+            // #버그헌트2(2026-06-04): 스톡파일 zone 재구성(우선순위는 ApplyLoadedSubStates 가 복원).
+            if (data.stockpiles != null)
+            {
+                foreach (var ss in data.stockpiles)
+                    StockpileZoneEntity.Spawn(ss.position, stockMarker, (StockpilePriority)ss.priority);
+            }
+
             // #276 서브상태 복원 — 침대 품질/스톡파일 우선순위/벽 재질/트리 종.  Save()는
             //  이미 직렬화하나 OnLoad 가 이 호출을 빠뜨려 매 로드마다 default 로 리셋됐다
             //  (V13SubStateRoundTripTest 가 FLAG 한 미배선).  엔티티 spawn 이후 호출.
+            //  #버그헌트2: 위 재구성으로 엔티티가 존재하므로 위치매칭 서브상태(작물 성장/스톡파일
+            //  우선순위/트리 종)가 정상 적용된다.
             SaveLoadManager.ApplyLoadedSubStates(data);
 
             // #버그헌트2(2026-06-04): 연구 진행도 복원 — 재시작/씬 재로드 시 BuildTree 가 모든 tech 를

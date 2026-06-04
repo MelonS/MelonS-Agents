@@ -12,7 +12,13 @@
   자동사냥 제외 · 연구 mul manipulation² → manipulation · 징집 중 자율취침 금지 · **연구 진행도
   save/load**(재시작 unlock 소실 fix, I46)
 
-**보류 1 — 🔴 CRITICAL #2 구조물 재시작 persist+reconstruct (대형, 운영자 결정/플레이테스트 필요)**:
+**✅ 해결 — 🔴 CRITICAL #2 구조물 재시작 persist+reconstruct (운영자 "지금 바로 구현" 지시로 착수)**:
+StructureTag(빌드 Mode 스탬프) + BuildManager.SpawnFinished(빌드완료·로드재구성 단일 경로) +
+SaveData.structures + OnLoad 재구성(구조물/작물/스톡파일 파괴 후 재생성).  ISO83/INT47(I47/I35)·
+LongPlay survived.  잔여 폴리시: 스톡파일 allowed-kinds 필터 + 재시작 마커 스프라이트(기능은 동작).
+아래는 착수 전 분석 기록(참고):
+
+**(원본 분석) #2 구조물 재시작 persist+reconstruct**:
 GameSaveButtons.OnLoad 가 pawn+tree 만 Instantiate 하고 벽/침대/스톡파일/작물은 재생성 안 함
 (ApplyLoadedSubStates 는 기존 엔티티 서브상태만 위치매칭 덮기).  → 게임 **재시작 후** 로드 시
 플레이어 건축물 전부 소실(같은 세션 F9 는 엔티티 안 파괴라 우연히 동작 → 버그 은폐).  진짜 fix 는

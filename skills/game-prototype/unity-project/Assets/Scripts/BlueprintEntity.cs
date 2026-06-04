@@ -181,47 +181,22 @@ namespace MelonS.GameProto
             }
             if (finishedPrefab != null)
             {
-                var spawned = Object.Instantiate(finishedPrefab, transform.position, Quaternion.identity);
-                // #248 자가-audit ROOT FIX — Lamp/Barricade/Fence/FenceGate/TableChair/FloorStone 은
-                //  런타임 prefab 템플릿(BuildManager.Ensure*Prefab)이 SetActive(false) 로 숨겨져 있어
-                //  Instantiate clone 도 비활성 → 완성 시 '사라짐'(invisible).  asset prefab(Wall/Door/
-                //  Stove/Bed/Floor)은 활성이라 무영향.  spawn 직후 강제 활성화로 6종 동시 해결.
-                spawned.SetActive(true);
-                spawned.hideFlags = HideFlags.None;  // #248 런타임 템플릿의 HideAndDontSave 상속 제거
-                                                     //  (저장/쿼리/관리 정상화 — 클론은 일반 엔티티).
-                // #193 - 완성 prefab 도 footprint 의 scale 적용.  Bed 의 Start() 에서 ApplyVisualSize 가 다시 적용되므로 OK 지만 spawn 직후 1 frame 시각 일관성 위해 여기서도.
-                var spawnedSr = spawned.GetComponent<SpriteRenderer>();
-                if (spawnedSr != null && spawnedSr.sprite != null)
+                // #버그헌트2(2026-06-04): 완성 구조물 스폰을 BuildManager.SpawnFinished 단일 경로로
+                //  통일(DRY).  prefab 활성화/footprint scale/벽 재질/침대 품질 + StructureTag(mode)
+                //  스탬프를 모두 그 함수가 처리 → save/load 재구성과 '동일한 결과'가 보장된다.
+                //  (이전엔 이 블록에 인라인으로 중복돼 있어 재구성 경로와 드리프트 위험이 있었다.)
+                GameObject spawned = (BuildManager.Instance != null)
+                    ? BuildManager.Instance.SpawnFinished(mode, transform.position)
+                    : null;
+                if (spawned == null)
                 {
-                    Vector2 sw = spawnedSr.sprite.bounds.size;
-                    if (sw.x > 0.01f && sw.y > 0.01f)
-                        spawned.transform.localScale = new Vector3(footprint.x / sw.x, footprint.y / sw.y, 1f);
-                }
-                // #150 - WallStone mode = stone wall, else wood
-                if (mode == BuildManager.Mode.Wall || mode == BuildManager.Mode.WallStone)
-                {
-                    var w = spawned.GetComponent<WallEntity>();
-                    if (w != null)
-                    {
-                        w.SetMaterial(mode == BuildManager.Mode.WallStone ? WallMaterial.Stone : WallMaterial.Wood);
-                    }
-                }
-                // #154 - Bed quality 별 spawn (SleepingSpot 0.8x / Wood 1.0x / Fine 1.4x).
-                if (mode == BuildManager.Mode.Bed
-                    || mode == BuildManager.Mode.BedSleepingSpot
-                    || mode == BuildManager.Mode.BedFine)
-                {
-                    var b = spawned.GetComponent<BedEntity>();
-                    if (b != null)
-                    {
-                        var q = mode switch
-                        {
-                            BuildManager.Mode.BedSleepingSpot => BedQuality.SleepingSpot,
-                            BuildManager.Mode.BedFine         => BedQuality.Fine,
-                            _                                  => BedQuality.Wood,
-                        };
-                        b.SetQuality(q);
-                    }
+                    // 안전 폴백(이론상 도달 안 함 — BuildManager 가 이 청사진을 만들었으므로 Instance 존재).
+                    spawned = Object.Instantiate(finishedPrefab, transform.position, Quaternion.identity);
+                    spawned.SetActive(true);
+                    spawned.hideFlags = HideFlags.None;
+                    var tag = spawned.GetComponent<StructureTag>();
+                    if (tag == null) tag = spawned.AddComponent<StructureTag>();
+                    tag.modeInt = (int)mode;
                 }
             }
             // W-M2-01 Lane C / wiki Dim2 #1: 벽 등 구조물 완성 시 건설 사운드 1회 재생 (throttled).
