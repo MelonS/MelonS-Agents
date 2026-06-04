@@ -1203,11 +1203,19 @@ namespace MelonS.GameProto.Tests
             bool ok = trader.TryTrade();
             yield return null;
             int endWood = rm.wood, endFood = rm.food;
+            // #자원모델 단일화(2026-06-04): 판매(give)는 카운터 −5(SpendStockpiledWood), 구매(receive
+            //  식량 8, socMul=1)는 카운터가 아니라 trader 위치에 물리 MeatPile 로 드롭(미적립 — 림이
+            //  운반해야 stockpile 적립).  과거 'food 카운터 +8' 가정 폐기.
+            var meats = Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None);
+            int droppedFood = 0;
+            foreach (var m in meats)
+                if (m != null && Vector2.Distance(m.transform.position, go.transform.position) < 2f)
+                { droppedFood += m.Food; Object.Destroy(m.gameObject); }   // 검증 후 정리(타 테스트 격리)
+            bool physFood = droppedFood >= 8;
             Object.Destroy(pgo);
-            // #178 - 테스트 pawn 에 PawnAbilities 없음 → socMul=1.0 → +8 (정확).
-            //  scene pawn 가 PawnAbilities 가지면 +6~+10 분포지만 본 test 는 격리.
-            Assert(ok && endWood == startWood - 5 && endFood == startFood + 8,
-                $"trade: wood {startWood}→{endWood} (-5), food {startFood}→{endFood} (+8 expected, no abilities)");
+            Object.Destroy(go);
+            Assert(ok && endWood == startWood - 5 && endFood == startFood && physFood,
+                $"trade(물리): wood {startWood}→{endWood}(-5), food카운터 {startFood}→{endFood}(불변), 물리식량드롭={droppedFood}(>=8)");
         }
 
         private IEnumerator TestV26_NeedsDecay()

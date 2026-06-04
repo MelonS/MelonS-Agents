@@ -198,6 +198,12 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-04** PawnSim 자원모델 단일화 Stage 2c (완료) — trader 물리화.  판매(give)는
+  SpendStockpiledWood/Stone/Food(카운터+물리 동시 소비), 구매(receive)는 trader 위치에 물리
+  더미 드롭(카운터 아님 — 림이 운반해야 적립).  V32 테스트 물리 동작으로 갱신.
+  ISO 82/82 · INT 45/45 · LongPlay survived=true.  **자원모델 단일화 종료**: build haul-required
+  + pickup/build/refund/consume/trade 전부 물리 더미 기준 → '카운터 = Σ InStockpile 더미' 불변식
+  성립.  (meals/fineMeals 는 조리식 물리 entity 부재로 추상 카운터 유지 — 별도 피처 시 물리화 가능.)
 - **2026-06-04** PawnSim 자원모델 단일화 Stage 2b — 환불·소비 물리화.  (1) 해체 환불(#5 포함
   청사진 취소)을 카운터(+) 대신 물리 더미 드롭으로(RimWorld: 해체/취소 시 자재 바닥에).
   (2) cook 재료·저장고 직접섭취를 ResourceManager.SpendStockpiledFood 로 — 카운터 −amount +

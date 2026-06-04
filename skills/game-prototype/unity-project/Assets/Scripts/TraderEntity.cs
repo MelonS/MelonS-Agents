@@ -93,16 +93,21 @@ namespace MelonS.GameProto
                 Debug.Log($"[Trader] 자원 부족 - {label}");
                 return false;
             }
-            if (gW > 0) rm.AddWood(-gW);
-            if (gS > 0) rm.AddStone(-gS);
-            if (gF > 0) rm.AddFood(-gF);
+            // #자원모델 단일화(2026-06-04): 판매(give)는 카운터 + 물리 InStockpile 더미 함께 소비.
+            if (gW > 0) rm.SpendStockpiledWood(gW);
+            if (gS > 0) rm.SpendStockpiledStone(gS);
+            if (gF > 0) rm.SpendStockpiledFood(gF);
             int rWa = Mathf.Max(0, Mathf.RoundToInt(rW * socMul));
             int rSa = Mathf.Max(0, Mathf.RoundToInt(rS * socMul));
             int rFa = Mathf.Max(0, Mathf.RoundToInt(rF * socMul));
             int rMa = Mathf.Max(0, Mathf.RoundToInt(rM * socMul));
-            if (rWa > 0) rm.AddWood(rWa);
-            if (rSa > 0) rm.AddStone(rSa);
-            if (rFa > 0) rm.AddFood(rFa);
+            // #자원모델 단일화(2026-06-04): 구매(receive)는 카운터(+) 대신 trader 위치에 물리 더미로
+            //  드롭(RimWorld: 거래 물품이 거래 지점에 떨어져 림이 운반).  살짝 오프셋해 더미 겹침 완화.
+            //  조리식(meals)은 물리 entity 가 없어 추상 카운터 유지.
+            Vector3 at = transform.position;
+            if (rWa > 0) WoodPileEntity.Spawn(at + new Vector3(0.3f, 0f, 0f), rWa, PawnHauler.WoodPileSpriteRef);
+            if (rSa > 0) StoneChunkEntity.Spawn(at + new Vector3(-0.3f, 0f, 0f), rSa, PawnHauler.StoneChunkSpriteRef);
+            if (rFa > 0) MeatPileEntity.Spawn(at + new Vector3(0f, 0.3f, 0f), rFa, PawnHauler.MeatPileSpriteRef);
             if (rMa > 0) rm.AddMeals(rMa);
             Debug.Log($"[Trader] 거래 성공: {label} (social {socMul:F2}x → {rWa}/{rSa}/{rFa}/{rMa})");
             return true;

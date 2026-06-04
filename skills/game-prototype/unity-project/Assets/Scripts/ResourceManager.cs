@@ -82,5 +82,41 @@ namespace MelonS.GameProto
                 else m.SetFood(left);
             }
         }
+
+        // #자원모델 단일화(2026-06-04): stockpile 보관 목재/석재 소비 — 카운터 −amount + 물리
+        //  InStockpile 더미 decrement/destroy (trader 판매 등).  food 와 동일 패턴.
+        public void SpendStockpiledWood(int amount)
+        {
+            if (amount <= 0) return;
+            AddWood(-amount);
+            int remain = amount;
+            foreach (var p in UnityEngine.Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
+            {
+                if (remain <= 0) break;
+                if (p == null || !p.InStockpile) continue;
+                int take = Mathf.Min(remain, p.Wood);
+                remain -= take;
+                int left = p.Wood - take;
+                if (left <= 0) UnityEngine.Object.Destroy(p.gameObject);
+                else p.SetWood(left);
+            }
+        }
+
+        public void SpendStockpiledStone(int amount)
+        {
+            if (amount <= 0) return;
+            AddStone(-amount);
+            int remain = amount;
+            foreach (var c in UnityEngine.Object.FindObjectsByType<StoneChunkEntity>(FindObjectsSortMode.None))
+            {
+                if (remain <= 0) break;
+                if (c == null || !c.InStockpile) continue;
+                int take = Mathf.Min(remain, c.Stone);
+                remain -= take;
+                int left = c.Stone - take;
+                if (left <= 0) UnityEngine.Object.Destroy(c.gameObject);
+                else c.SetStone(left);
+            }
+        }
     }
 }
