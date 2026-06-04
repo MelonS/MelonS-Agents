@@ -198,6 +198,12 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-05** 🔴 CRITICAL 림 전체 작업마비 fix (운영자 "운반물·저장공간 있는데 떠돈다" 실재현).
+  근본: HuntAnimalAction food gate 가 '저장된' 식량(ResourceManager.food+meals)만 검사 → 자원모델
+  haul-required 로 저장량 0 이라 gate 영구 true → Hunt 이 매 Decide 선점 → 운반/건축/요리/수확 전부
+  굶음.  fix: 물리 MeatPile.Food 합산.  재현+가드 I49.  ISO84/INT49/LongPlay.  ★교훈: 운영자
+  실증상을 실빌드로 재현해 고쳐야 함(감사 통과 ≠ 실경험 수정, verify-real-path).
+
 - **2026-06-05** PawnSim 멀티에이전트 버그헌트 4사이클 (mood회귀+신규6차원, 확정12/기각4) — 12건 전부
   수정: mood-델타 회귀 3(clamp 비대칭 영구드리프트·save/load thought 이중가산·트레잇 baseline
   이중가산) + dead trait/장비 효과(Cheerful 이동+20%·Bloodthirsty 전투XP+50%·원거리 무기 게이트)
