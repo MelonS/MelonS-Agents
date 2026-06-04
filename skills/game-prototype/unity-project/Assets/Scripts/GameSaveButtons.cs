@@ -89,6 +89,9 @@ namespace MelonS.GameProto
                 //  트레잇 maxHp 를 먼저 확정한 뒤, 실제 부상 상태(hp/출혈/붕대 + 사망/다운)를
                 //  덮어쓴다.  구 세이브(배열 없음)는 RestorePartState 가 길이 가드로 스킵.
                 p.GetComponent<PawnHealth>()?.RestorePartState(ps.partHp, ps.partBleed, ps.partBandaged);
+                // #버그헌트2(2026-06-04): 부위 HP 복원 후 PawnEntity.Hp 를 PawnHealth 와 동기화.
+                //  Awake 가 풀피로 깔아둬, 죽지 않은 부상 폰은 다음 피격 전까지 HP바가 풀피로 표시됐다.
+                entity?.SyncHpFromHealth();
                 PawnNeeds needs = p.GetComponent<PawnNeeds>();
                 if (needs != null)
                 {

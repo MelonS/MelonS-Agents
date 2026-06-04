@@ -154,6 +154,9 @@ namespace MelonS.GameProto.AI
             foreach (var a in arr)
             {
                 if (a == null || a.IsDead) continue;
+                // #버그헌트2(2026-06-04): 길들인 동물은 자동 사냥 제외.  이전엔 IsTamed 필터가 없어
+                //  식량 부족 시 콜로니스트가 자기 가축을 죽여 고기로 만들었다(도축은 별도 지정으로만).
+                if (a.IsTamed) continue;
                 if (ReservationManager.IsReservedByOther(a, claimant)) continue;
                 Vector3 ap = a.transform.position;
                 if (Mathf.Abs(ap.x) > 43.5f || Mathf.Abs(ap.y) > 43.5f) continue;

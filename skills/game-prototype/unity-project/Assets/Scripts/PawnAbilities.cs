@@ -65,7 +65,10 @@ namespace MelonS.GameProto
                 WorkKind.Gather   => plantsMul,
                 WorkKind.Hunt     => shootingAccuracy * 0.5f + meleeMul * 0.5f,
                 WorkKind.Cook     => cookingMul,
-                WorkKind.Research => manipulation,
+                // #버그헌트2(2026-06-04): Research base 를 1f 로.  이전 manipulation 은 아래 return 의
+                //  *manipulation 과 곱해져 manipulation²(주석 'manipulation 합' 의도와 불일치)가 됐다.
+                //  이제 Research = 1*manipulation = manipulation (다른 work 와 동일 규약).
+                WorkKind.Research => 1f,
                 _ => 1f,
             };
             return baseMul * manipulation;

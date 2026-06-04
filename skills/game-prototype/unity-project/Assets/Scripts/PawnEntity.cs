@@ -52,7 +52,27 @@ namespace MelonS.GameProto
         //  Hp 가 >0 그대로 남아 IsDead(=Hp<=0)가 false → BanditEnemy/WolfEnemy 가 시체를 살아있는
         //  타겟으로 보고 영원히 헛공격(멀쩡한 다른 폰 무시)했다.  PawnHealth.CheckDeath 가 사망
         //  확정 시 호출(컴포넌트가 곧 disable 돼도 메서드 호출/프로퍼티는 동작).
-        public void ForceSyncDead() { Hp = 0; }
+        public void ForceSyncDead()
+        {
+            Hp = 0;
+            // #버그헌트2(2026-06-04): 출혈/부위HP=0 사망 시 시신을 회색조(deadTint)로.  ForceSyncDead
+            //  가 Hp 만 0 으로 두고 ApplyVisual 을 안 불러, 출혈 사망 corpse 가 살아있을 때 색(선택
+            //  노랑/징집 시안/기본)으로 굳었다(즉사는 TakeDamage 경로라 정상).  CheckDeath 가 곧
+            //  PawnEntity 를 disable 해도 같은 컴포넌트 메서드 호출은 동작 → 여기서 색 확정.
+            if (healthRef != null) lastSeenHealthVersion = healthRef.StateVersion;
+            ApplyVisual();
+        }
+
+        // #버그헌트2(2026-06-04): 부상-but-생존 폰 로드 복원 시 PawnEntity.Hp 를 PawnHealth 와 동기화.
+        //  Awake 가 Hp=maxHp(풀피)로 깔고, RestorePartState 는 죽지 않으면 ForceSyncDead 미호출 →
+        //  빈사로 저장→로드한 폰이 다음 피격 전까지 풀피로 표시됐다.  GameSaveButtons.OnLoad 가
+        //  RestorePartState 직후 호출.
+        public void SyncHpFromHealth()
+        {
+            if (healthRef == null || stats == null) return;
+            if (healthRef.IsDead) { Hp = 0; return; }
+            Hp = Mathf.Max(1, Mathf.RoundToInt(healthRef.TotalHpRatio * stats.maxHp));
+        }
 
         // ─── Melee-hit signal for CombatLungeDriver (운영자 fb 2026-05-31) ───────
         //  B10 FLAG-B10-3 fulfilled: a public, frame-accurate "an attack just landed"
@@ -181,6 +201,10 @@ namespace MelonS.GameProto
             // #버그헌트(2026-06-04): 다운(의식불명)이면 자동공격 정지.  PawnUtilityAI 가 이동/작업을
             //  멈춰도 이 자동공격 루프는 별도 경로라, 게이트 없으면 다운된 폰이 계속 적을 때렸다.
             if (healthRef != null && healthRef.IsDowned) return;
+            // #버그헌트2(2026-06-04): 징집/수동제어 중에는 자동공격 정지.  전투는 HandleDraftedCombat
+            //  단일 경로여야 하는데, 게이트가 없어 징집 폰이 (a) 후퇴/이동 명령 무시하고 사거리 적
+            //  자동타격, (b) 지정 타겟 외 더 가까운 적도 동시 타격했다('징집=완전 수동' 설계 위반).
+            if (IsDrafted || IsUnderManualControl) return;
             // Day 13: defensive auto-attack on nearby bandit (throttled, NOT
             // per-frame — lesson #4 firewall).  We use distance polling rather
             // than collider Enter/Stay because pawns and bandits both move on

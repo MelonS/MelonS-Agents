@@ -29,7 +29,11 @@ namespace MelonS.GameProto
         private float huntStartTime = -999f;
         private const float MaxHuntSec = 45f;
 
-        public bool HasTask => targetAnimal != null && !targetAnimal.IsDead;
+        // #버그헌트2(2026-06-04): 다른 워커처럼 순수 target-null 체크로.  이전엔 !IsDead 까지 봐서
+        //  동물이 죽는 즉시 HasTask=false 가 되는데 예약/movement 는 다음 Update 의 ClearTask 까지
+        //  유지 → 그 사이 idle 오보고(새 작업 배정) + 다음 프레임 ClearTask 의 movement.ClearTarget
+        //  가 그 작업 이동을 stomp(킬 직후 hitch).  죽은 동물 처리는 Update 의 IsDead 분기가 담당.
+        public bool HasTask => targetAnimal != null;
         public AnimalEntity Target => targetAnimal;
 
         private void Awake()

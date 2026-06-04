@@ -338,7 +338,14 @@ namespace MelonS.GameProto
             // #269 주의: ScheduledSleepNow 를 여기(제자리 취침)에 넣으면 침대로 가기 전에
             //  그 자리서 자버린다.  스케줄 수면은 WantsAutoSleep → GoSleepAction(침대 이동)
             //  으로 처리하고, 여긴 기존 조건(졸림/밤/탈진)만 — 침대 도달 실패 시의 fallback.
-            if (sleep < ExhaustedSleepLevel || (sleep < autoSleepThreshold && night))
+            // #버그헌트2(2026-06-04): 징집(수동제어) 중에는 자율/제자리 취침 금지.  이전엔 drafted
+            //  게이트가 없어 밤·저수면 시 징집 폰이 군사통제 중 제자리에서 잠들어(IsSleeping=true),
+            //  HandleDraftedCombat 의 전투 이동과 충돌하는 모순 상태가 됐다(섭취는 이미 drafted 게이트).
+            if (pawnEntity != null && pawnEntity.IsDrafted)
+            {
+                if (IsSleeping) IsSleeping = false;
+            }
+            else if (sleep < ExhaustedSleepLevel || (sleep < autoSleepThreshold && night))
             {
                 IsSleeping = true;
                 var bed = GetBedUnderPawn();

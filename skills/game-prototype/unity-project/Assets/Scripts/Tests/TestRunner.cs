@@ -130,6 +130,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V80-new-wound-clears-bandage", TestV80_NewWoundClearsBandage);
             yield return RunOne("V81-force-sync-dead", TestV81_ForceSyncDead);
             yield return RunOne("V82-deconstruct-bed-refund-by-quality", TestV82_DeconstructBedRefundByQuality);
+            yield return RunOne("V83-research-mul-not-squared", TestV83_ResearchMulNotSquared);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -899,6 +900,20 @@ namespace MelonS.GameProto.Tests
             Assert(spot == 0 && wood == 4 && fine == 15,
                 $"침대 해체 환불: SleepingSpot={spot}(0 기대), Wood={wood}(4), Fine={fine}(15)");
             yield break;
+        }
+
+        // #버그헌트2(2026-06-04) 회귀 가드: 연구 속도 multiplier 가 manipulation² 가 아니라
+        //  manipulation(1배)이어야 한다(이전엔 base=manipulation × return ×manipulation = 제곱).
+        private IEnumerator TestV83_ResearchMulNotSquared()
+        {
+            var go = new GameObject("TestAbilV83");
+            var abil = go.AddComponent<PawnAbilities>();
+            yield return null;
+            abil.manipulation = 1.2f;
+            float r = abil.EffectiveWorkMul(WorkKind.Research);
+            Object.Destroy(go);
+            Assert(Mathf.Abs(r - 1.2f) < 0.001f,
+                $"Research mul={r:F3} (1.2 기대 = manipulation 1배; 제곱 1.44 아님)");
         }
 
         private IEnumerator TestV45_ClampStatic()
