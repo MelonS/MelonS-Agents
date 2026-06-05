@@ -17,6 +17,27 @@ namespace MelonS.GameProto
         [SerializeField] private GameObject treePrefabRef;  // optional: a fallback tree prefab
         [SerializeField] private Sprite treeSprite;
 
+        // #44(2026-06-05): GameSaveButtons 가 Game.unity 씬에 사전 배치돼 있지 않아(grep 0개)
+        //  F5/F9 핫키와 설정메뉴 '저장/불러오기' 행이 모두 무효였다 → 인게임 save/load 전체가
+        //  접근 불가(완성해 둔 save/load 로직이 사용 자체가 안 됨).  GameManager 가 다른 UI 처럼
+        //  EnsureInScene 으로 런타임 생성 + pawnPrefab/treeSprite 배선한다(코드베이스 EnsureInScene 패턴).
+        public static void EnsureInScene(GameObject pawnPrefab, Sprite treeSprite)
+        {
+            var existing = UnityEngine.Object.FindFirstObjectByType<GameSaveButtons>(FindObjectsInactive.Include);
+            if (existing != null) { existing.ConfigureRefs(pawnPrefab, treeSprite); return; }
+            var go = new GameObject("GameSaveButtons");
+            var gsb = go.AddComponent<GameSaveButtons>();
+            gsb.ConfigureRefs(pawnPrefab, treeSprite);
+            Debug.Log("[GameSaveButtons] 런타임 생성 — F5/F9 + 설정메뉴 저장행 활성화");
+        }
+
+        /// <summary>로드 시 pawn/tree 재생성에 쓸 ref 배선(런타임 생성 경로).</summary>
+        public void ConfigureRefs(GameObject pawn, Sprite tree)
+        {
+            if (pawn != null) pawnPrefab = pawn;
+            if (tree != null) treeSprite = tree;
+        }
+
         private void Awake()
         {
             if (saveButton != null)

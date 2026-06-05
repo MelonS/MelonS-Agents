@@ -161,6 +161,18 @@ namespace MelonS.GameProto
             // → #190 운영자 "청사진 설치 안 됨" 진단 토스트 (build click 결과 화면 표시)
             BuildClickToast.EnsureInScene();
 
+            // #44(2026-06-05): GameSaveButtons 가 Game.unity 에 사전 배치돼 있지 않아 F5/F9 +
+            //  설정메뉴 저장/불러오기 행이 모두 무효였다(인게임 save/load 전체 접근 불가).  pawn
+            //  프리팹 + (있으면) 기존 트리 스프라이트를 배선해 런타임 생성 → save/load 활성화.
+            Sprite treeSprForSave = null;
+            var anyTree = FindFirstObjectByType<TreeEntity>();
+            if (anyTree != null)
+            {
+                var tsr = anyTree.GetComponent<SpriteRenderer>();
+                if (tsr != null) treeSprForSave = tsr.sprite;
+            }
+            GameSaveButtons.EnsureInScene(pawnPrefab, treeSprForSave);
+
             // #116 - wood pile sprite 를 TreeEntity static field 에 박음.
             //  fallback: SerializeField 못 받았으면 Resources 등 안 거치고 즉시 inventory 추가 (legacy).
             if (woodPileSpriteRuntime != null)

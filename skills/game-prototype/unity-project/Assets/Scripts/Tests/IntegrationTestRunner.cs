@@ -129,6 +129,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I48-raid-state-save-load", TestI48_RaidStateSaveLoad);
             yield return RunOne("I49-haul-loose-pile-to-stockpile", TestI49_HaulLoosePileToStockpile);
             yield return RunOne("I50-designate-tree-autonomous-chop", TestI50_DesignateTreeAutonomousChop);
+            yield return RunOne("I51-savebuttons-in-scene", TestI51_SaveButtonsInScene);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1252,6 +1253,16 @@ namespace MelonS.GameProto.Tests
             if (TimeController.Instance != null) TimeController.Instance.SetScale(origScale);
             if (zone != null) Object.Destroy(zone.gameObject);
             Assert(chopped, $"지정 나무 자율 벌목: chopped={chopped} (40s 내 림이 가서 베야 함 — Hunt-선점 fix 검증)");
+        }
+
+        /// <summary>I51: #44 — Game 씬에 GameSaveButtons 가 존재해야 인게임 save/load(F5/F9 + 설정메뉴
+        ///   저장행)가 동작.  이전엔 씬에 없고 코드 생성도 없어 save/load 전체가 접근 불가였다.
+        ///   GameManager.Start 의 GameSaveButtons.EnsureInScene 로 런타임 생성됨을 검증.</summary>
+        private IEnumerator TestI51_SaveButtonsInScene()
+        {
+            yield return null;
+            var gsb = Object.FindFirstObjectByType<GameSaveButtons>(FindObjectsInactive.Include);
+            Assert(gsb != null, $"GameSaveButtons 씬 존재(인게임 save/load 접근 가능): {(gsb != null)}");
         }
 
         /// <summary>I34: #129 - 동물 죽음 시 즉시 +food 대신 MeatPileEntity drop</summary>
