@@ -128,6 +128,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("I47-structure-save-reconstruct", TestI47_StructureSaveReconstruct);
             yield return RunOne("I48-raid-state-save-load", TestI48_RaidStateSaveLoad);
             yield return RunOne("I49-haul-loose-pile-to-stockpile", TestI49_HaulLoosePileToStockpile);
+            yield return RunOne("I50-designate-tree-autonomous-chop", TestI50_DesignateTreeAutonomousChop);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -1221,6 +1222,36 @@ namespace MelonS.GameProto.Tests
             // 근본 원인(2026-06-05): HuntAnimal gate 가 저장된 식량만 봐서(haul-required 라 0) 영구
             //  사냥-선점 → 운반/건축/요리/수확 굶음.  물리 식량 합산으로 fix → 자율 운반 복구.
             Assert(hauled, $"자율 운반 복구: 도달가능 더미+stockpile+유휴림 → 20s 내 운반 (hauled={hauled})");
+        }
+
+        /// <summary>I50: end-to-end — 운영자 핵심 흐름 "지정 나무 → 유휴 림 자율 벌목".
+        ///   살아있는 나무를 TreeChopDesignation 으로 지정하고, ~40s 내 어떤 림이 가서 베는지
+        ///   (나무 IsDestroyed/사라짐).  Hunt-선점 fix 후 자율 작업 루프가 실제로 도는지 검증.</summary>
+        private IEnumerator TestI50_DesignateTreeAutonomousChop()
+        {
+            yield return null;
+            if (TreeChopDesignation.Instance == null) { Assert(false, "TreeChopDesignation 없음"); yield break; }
+            var trees = Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
+            TreeEntity target = null;
+            foreach (var tr in trees) if (tr != null && !tr.IsDestroyed) { target = tr; break; }
+            if (target == null) { Assert(false, "살아있는 나무 없음"); yield break; }
+            // 지정 + 받을 stockpile(목재).
+            TreeChopDesignation.Instance.TryMark(target.gameObject);
+            var zone = StockpileZoneEntity.Spawn(target.transform.position + new Vector3(2f, 0f, 0f), null,
+                StockpilePriority.Normal, StockItemKind.All);
+            yield return null;
+
+            float origScale = Time.timeScale;
+            if (TimeController.Instance != null) TimeController.Instance.SetScale(4f);
+            float t = 0f; bool chopped = false;
+            while (t < 40f)
+            {
+                yield return new WaitForSeconds(0.5f); t += 0.5f;
+                if (target == null || target.gameObject == null || target.IsDestroyed) { chopped = true; break; }
+            }
+            if (TimeController.Instance != null) TimeController.Instance.SetScale(origScale);
+            if (zone != null) Object.Destroy(zone.gameObject);
+            Assert(chopped, $"지정 나무 자율 벌목: chopped={chopped} (40s 내 림이 가서 베야 함 — Hunt-선점 fix 검증)");
         }
 
         /// <summary>I34: #129 - 동물 죽음 시 즉시 +food 대신 MeatPileEntity drop</summary>

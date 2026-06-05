@@ -26,6 +26,7 @@ namespace MelonS.GameProto
         private const float DurabilityPerDay = 10f;   // 100/10 = 10 game-day ≈ 240s
 
         public int Wood => wood;
+        public float Durability => durability;   // #37 검증용(옥외 더미 내구도 fade 확인)
         public GameObject ReservedBy { get; set; }   // PawnHauler 가 set/clear
         public bool IsReserved => ReservedBy != null;
 
