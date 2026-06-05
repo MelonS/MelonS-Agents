@@ -198,6 +198,19 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-05** 문서-코드 model 드리프트 fix (5사이클 미해결 [high] 감사 finding,
+  `2026-05-25-all.md`).  planner/resourcer 가 `model: opus`(commit `2778316`,
+  2026-05-22)인데 for-analysts/architecture/cost-model 문서는 여전히 `sonnet` 표기 →
+  3개 문서를 opus 로 정정(코드가 정본).  ⚠ 남은 감사 드리프트(goal.md/roadmap "Now" 가
+  music-video/job-hunt 기술 — 실제 focus 는 PawnSim/Skill #3)는 operator-owned 라 미수정.
+
+- **2026-06-05** 자원 더미 양→크기 시각 스케일 (`8632ff6`) + 테스트 러너 runInBackground
+  방화벽 (`a0a1004`).  더미가 수량 무관 동일크기로 렌더되던 폴리싱 결함을 `PileScale`(sqrt
+  클램프 0.8~1.4)로 Wood/Stone/Meat 세터에 일원화.  검증 중 IntegrationTestRunner/TestRunner
+  가 runInBackground 미설정 → CLI 포커스 상실 시 무한 행하는 잠복버그(bug-pattern #9)
+  발견·수정.  회귀가드 INT 51/51 · ISO 85/85.  교훈: 테스트는 -integration/-testmode +
+  **-autostart 필수**(메뉴씬 부팅) — memory `pawnsim-test-invocation`.
+
 - **2026-06-05** 🔴 CRITICAL 림 전체 작업마비 fix (운영자 "운반물·저장공간 있는데 떠돈다" 실재현).
   근본: HuntAnimalAction food gate 가 '저장된' 식량(ResourceManager.food+meals)만 검사 → 자원모델
   haul-required 로 저장량 0 이라 gate 영구 true → Hunt 이 매 Decide 선점 → 운반/건축/요리/수확 전부

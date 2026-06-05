@@ -23,11 +23,11 @@
                               │ sequential delegation
                               ▼
                   ┌───────────────────────┐
-                  │   planner (sonnet)    │ → plan.md
+                  │    planner (opus)     │ → plan.md
                   └───────────┬───────────┘
                               ▼
                   ┌───────────────────────┐
-                  │  resourcer (sonnet)   │ → resources/ + MANIFEST.md
+                  │   resourcer (opus)    │ → resources/ + MANIFEST.md
                   └───────────┬───────────┘
                               ▼
                   ┌───────────────────────┐

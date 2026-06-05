@@ -20,7 +20,8 @@ and where they are not.  Read this before recommending any
 │    code review, debugging                                      │
 │  • Subagent invocations via Agent tool:                        │
 │      orchestrator (opus)                                       │
-│      planner / resourcer / editor / qa (sonnet)                │
+│      planner / resourcer (opus)                                │
+│      editor / qa (sonnet)                                      │
 │  • Hand-off between subagents: file-based                      │
 │    (plan.md, MANIFEST.md), not message-based                   │
 └────────────────────────────────────────────────────────────────┘

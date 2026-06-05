@@ -97,14 +97,17 @@ was `8570a9c`):
 | Agent          | Model     | Role                                              |
 | -------------- | --------- | ------------------------------------------------- |
 | `orchestrator` | **opus**  | Top-level mission decomposition + coordination    |
-| `planner`      | sonnet    | Mission brief → `plan.md` + acceptance criteria   |
-| `resourcer`    | sonnet    | Fetch / probe / prepare assets → `resources/`     |
+| `planner`      | **opus**  | Mission brief → `plan.md` + acceptance criteria   |
+| `resourcer`    | **opus**  | Fetch / probe / prepare assets → `resources/`     |
 | `editor`       | sonnet    | Apply changes → `outputs/`                        |
 | `qa`           | sonnet    | Validate outputs against plan.md → `qa-report.md` |
 | `auditor`      | sonnet    | Out-of-band read-only audit (three trigger layers: L1 post-commit hook on drift-risk paths, L2 15-min mission-anomaly poll, L3 daily 03:00 baseline via launchd) → `docs/audit/<date>-<focus>.md` + `CURRENT-ALERT.md` when non-CLEAN |
 
 A common analyst suggestion is "downgrade subagents from opus to
-sonnet."  This is already done.
+sonnet."  This is already done for `editor` / `qa` / `auditor`.
+`planner` / `resourcer` were moved back to opus (commit `2778316`,
+2026-05-22) because plan/resource quality gates the entire mission;
+`orchestrator` stays opus for the same reason.
 
 A *valid* future move is downgrading `resourcer` to **haiku** —
 file fetching needs little reasoning depth.  Not done because the
