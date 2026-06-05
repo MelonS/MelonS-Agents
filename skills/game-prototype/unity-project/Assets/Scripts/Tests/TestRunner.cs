@@ -132,6 +132,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V82-deconstruct-bed-refund-by-quality", TestV82_DeconstructBedRefundByQuality);
             yield return RunOne("V83-research-mul-not-squared", TestV83_ResearchMulNotSquared);
             yield return RunOne("V84-mood-thought-delta", TestV84_MoodThoughtDelta);
+            yield return RunOne("V85-woodpile-durability-decays", TestV85_WoodpileDurabilityDecays);
 
             FinalizeReport();
             yield return new WaitForSeconds(0.5f);
@@ -941,6 +942,32 @@ namespace MelonS.GameProto.Tests
             // 델타: ~before-15(>50).  구 override: 50+(-15)=35.  >50 이면 델타 모델 확인.
             bool deltaModel = after > 50f && after < before;
             Assert(deltaModel, $"mood 델타: before={before:F1}→after={after:F1} (델타 ~{before-15:F0} 기대, override 35 아님)");
+        }
+
+        // #37 운영자 "통나무 더미 내구도 안 됐다" 재현: 옥외(InStockpile=false) 더미는 시간에 따라
+        //  durability 가 감소해야 한다(0 에서 소멸).  InStockpile 더미는 보존(감소 정지).
+        private IEnumerator TestV85_WoodpileDurabilityDecays()
+        {
+            var go = new GameObject("TestWoodPileDur");
+            go.transform.position = new Vector3(88, 0, 0);
+            go.AddComponent<SpriteRenderer>();
+            var pile = go.AddComponent<WoodPileEntity>();
+            pile.SetWood(5);
+            pile.InStockpile = false;   // 옥외 → decay
+            yield return null;
+            float start = pile.Durability;
+            yield return new WaitForSeconds(3.0f);   // 옥외 decay 누적
+            float outside = pile.Durability;
+            // InStockpile 이면 보존 확인
+            pile.InStockpile = true;
+            float instockStart = pile.Durability;
+            yield return new WaitForSeconds(2.0f);
+            float instockEnd = pile.Durability;
+            Object.Destroy(go);
+            bool decayed = outside < start;                       // 옥외에서 줄어듦
+            bool preserved = Mathf.Abs(instockEnd - instockStart) < 0.01f;  // 저장 시 보존
+            Assert(decayed && preserved,
+                $"통나무 내구도: 옥외 {start:F1}→{outside:F1}(감소={decayed}), 저장 {instockStart:F1}→{instockEnd:F1}(보존={preserved})");
         }
 
         private IEnumerator TestV45_ClampStatic()
