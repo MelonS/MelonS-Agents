@@ -45,8 +45,13 @@ namespace MelonS.GameProto.Tests
 
         private IEnumerator Start()
         {
+            // bug-pattern #9 firewall (AutoScreenshotter 와 동일): CLI/백그라운드로 띄우면
+            //  창이 포커스를 잃어 Unity 가 Update/coroutine 을 멈춘다(ProjectSettings
+            //  runInBackground=0).  그러면 이 러너의 WaitForSeconds 가 영원히 안 깨어
+            //  리포트가 안 써지고 프로세스가 무한 행(hang)한다.  강제로 ON.
+            Application.runInBackground = true;
             Directory.CreateDirectory(screenshotDir);
-            Debug.Log("[IntegrationTest] start");
+            Debug.Log("[IntegrationTest] start (runInBackground=ON)");
             yield return new WaitForSeconds(1.0f);  // 모든 spawn / Awake 완료 대기
 
             yield return RunOne("I1-pawns-spawned", TestI1_PawnsSpawned);

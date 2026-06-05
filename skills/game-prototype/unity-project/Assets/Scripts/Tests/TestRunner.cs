@@ -45,7 +45,11 @@ namespace MelonS.GameProto.Tests
 
         private IEnumerator Start()
         {
-            Debug.Log("[TestRunner] start - 5 scenarios");
+            // bug-pattern #9 firewall (AutoScreenshotter/IntegrationTestRunner 와 동일):
+            //  CLI/백그라운드로 띄우면 창이 포커스를 잃어 Update/coroutine 이 멈추고
+            //  (runInBackground=0) WaitForSeconds 가 안 깨어 리포트 미작성·무한 행.  강제 ON.
+            Application.runInBackground = true;
+            Debug.Log("[TestRunner] start - 5 scenarios (runInBackground=ON)");
             yield return new WaitForSeconds(0.2f);
 
             yield return RunOne("V1-drafted", TestV1_Drafted);
