@@ -32,7 +32,22 @@ namespace MelonS.GameProto
 
         private SpriteRenderer _sr;
 
-        public void SetWood(int amount) { wood = amount; }
+        // 폴리싱(#61): 양 변경 시 시각 스케일도 갱신(spawn·shrink·merge 모두 동기).
+        public void SetWood(int amount)
+        {
+            wood = amount;
+            transform.localScale = Vector3.one * PileScale(amount);
+        }
+
+        // 폴리싱(#61): 더미 양 → 시각 스케일 (모든 더미 종류 공용 — Stone/Meat 도 호출).
+        //  운영자: 더미가 양과 무관하게 같은 크기로 보였음(5개=50개).  콜로니 심 관례대로
+        //  쌓인 양이 많을수록 더미가 더 커 보이게.  1개=0.89, 5개≈0.99, 25개≈1.22,
+        //  50개+=1.4 로 클램프.  sqrt 로 증가 둔화해 큰 더미도 타일을 크게 안 벗어남.
+        public static float PileScale(int amount)
+        {
+            float t = Mathf.Clamp01(Mathf.Sqrt(Mathf.Max(1, amount)) / Mathf.Sqrt(50f));
+            return Mathf.Lerp(0.8f, 1.4f, t);
+        }
 
         private void Awake()
         {
@@ -132,7 +147,7 @@ namespace MelonS.GameProto
             col.size = new Vector2(0.9f, 0.6f);
             col.isTrigger = true;  // 충돌 안 막음 - pawn 통과 가능
             var pile = go.AddComponent<WoodPileEntity>();
-            pile.SetWood(amount);
+            pile.SetWood(amount);   // 양에 비례한 시각 스케일 포함(#61)
             return pile;
         }
     }

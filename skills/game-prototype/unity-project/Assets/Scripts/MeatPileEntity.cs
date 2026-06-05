@@ -29,7 +29,12 @@ namespace MelonS.GameProto
         public GameObject ReservedBy { get; set; }
         public bool IsReserved => ReservedBy != null;
 
-        public void SetFood(int v) { food = v; }
+        // 폴리싱(#61): 양에 비례해 더미가 커 보이도록(WoodPile 공용 스케일). spawn·shrink 동기.
+        public void SetFood(int v)
+        {
+            food = v;
+            transform.localScale = Vector3.one * WoodPileEntity.PileScale(v);
+        }
         // 부패 속도 외부 설정(작물/베리는 느리게).  CropEntity 수확 등에서 호출 가능.
         public void SetDecayPerDay(float v) { decayPerDay = Mathf.Max(0f, v); }
         private void Awake() { _sr = GetComponent<SpriteRenderer>(); }
@@ -119,7 +124,7 @@ namespace MelonS.GameProto
             //  총 fade 시간 ≈ 기존 lifetime 이 되도록 decayPerDay = 100 / (lifetime/24).
             //  작물/베리(긴 lifetime)=느린 부패, 고기(짧은 lifetime)=빠른 부패 보존.
             m.SetDecayPerDay(lifetime > 0f ? 2400f / lifetime : 20f);
-            return m;
+            return m;   // 양에 비례한 시각 스케일은 SetFood 에서 적용됨(#61)
         }
     }
 }

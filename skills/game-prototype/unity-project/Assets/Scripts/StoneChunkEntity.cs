@@ -16,7 +16,12 @@ namespace MelonS.GameProto
         public GameObject ReservedBy { get; set; }
         public bool IsReserved => ReservedBy != null;
 
-        public void SetStone(int v) { stone = v; }
+        // 폴리싱(#61): 양에 비례해 더미가 커 보이도록(WoodPile 공용 스케일). spawn·shrink 동기.
+        public void SetStone(int v)
+        {
+            stone = v;
+            transform.localScale = Vector3.one * WoodPileEntity.PileScale(v);
+        }
 
         // 운영자 2026-06-02: "돌덩이가 너무 빨리 사라짐".  돌은 부패하지 않는 자원이므로
         //  lifetimeSec 통째 Destroy(180s)를 제거 — 운반될 때까지 바닥에 영구히 남는다.
@@ -77,7 +82,7 @@ namespace MelonS.GameProto
             col.size = new Vector2(0.8f, 0.6f);
             col.isTrigger = true;
             var chunk = go.AddComponent<StoneChunkEntity>();
-            chunk.SetStone(amount);
+            chunk.SetStone(amount);   // 양에 비례한 시각 스케일 포함(#61)
             return chunk;
         }
     }

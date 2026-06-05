@@ -21,6 +21,7 @@ namespace MelonS.GameProto
         private bool testSave = false;      // 진단용: 캡처 직전 저장을 트리거 (-testsave, #44 검증)
         private bool inspectPawn = false;   // 진단용: 첫 림 선택해 인스펙트 패널 표시 (-inspectpawn)
         private bool openArchitect = false; // 진단용: Architect 건축 메뉴 열기 (-openarchitect)
+        private bool pileScale = false;     // 진단용: 1/5/25/50 더미를 나란히 스폰해 양→크기 확인 (-pilescale)
 
         private void Start()
         {
@@ -46,6 +47,7 @@ namespace MelonS.GameProto
                 if (args[i] == "-testsave") testSave = true;
                 if (args[i] == "-inspectpawn") inspectPawn = true;
                 if (args[i] == "-openarchitect") openArchitect = true;
+                if (args[i] == "-pilescale") pileScale = true;
             }
             if (!requested || delaySeconds <= 0f || string.IsNullOrEmpty(outputPath))
             {
@@ -97,6 +99,30 @@ namespace MelonS.GameProto
                 if (gsb != null) { gsb.OnSave(); Debug.Log("[AutoScreenshotter] -testsave: GameSaveButtons.OnSave() 호출"); }
                 else Debug.LogError("[AutoScreenshotter] -testsave: GameSaveButtons 호스트 없음!");
                 yield return new WaitForSeconds(0.5f);
+            }
+
+            // 진단(-pilescale, #61): 양→크기 폴리싱 검증.  1/5/25/50 통나무 더미를 카메라
+            //  중앙에 나란히 스폰 → 양이 많을수록 더미가 커 보이는지 캡처로 확인.  실제
+            //  Spawn/SetWood 경로를 그대로 구동(실픽셀 렌더).  InStockpile=true 로 캡처 동안 보존.
+            if (pileScale)
+            {
+                // 비교를 깨끗하게: 기존 더미(시작 시 흩뿌려진 50짜리들)를 모두 제거.
+                foreach (var old in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
+                    if (old != null) Destroy(old.gameObject);
+                foreach (var old in Object.FindObjectsByType<StoneChunkEntity>(FindObjectsSortMode.None))
+                    if (old != null) Destroy(old.gameObject);
+                foreach (var old in Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None))
+                    if (old != null) Destroy(old.gameObject);
+                yield return null;  // Destroy 반영 한 프레임 대기
+                var cam = Camera.main;
+                Vector3 c = cam != null ? cam.transform.position : Vector3.zero;
+                int[] amts = { 1, 5, 25, 50 };
+                for (int k = 0; k < amts.Length; k++)
+                {
+                    var p = WoodPileEntity.Spawn(new Vector3(c.x - 3f + k * 2f, c.y, 0f), amts[k], null);
+                    if (p != null) p.InStockpile = true;  // 부패 정지(캡처 보존)
+                }
+                yield return new WaitForSeconds(0.4f);
             }
 
             string dir = Path.GetDirectoryName(outputPath);
