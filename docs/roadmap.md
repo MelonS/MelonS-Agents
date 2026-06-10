@@ -198,6 +198,13 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-10** UI 전면 재검토 배치 1 (`a685582`, 운영자 지시).  8도메인 병렬 감사
+  (코드+ui-tour 스크린샷+rimworldwiki 교차) → 백로그 82건(`ui-backlog-2026-06-10.md`).
+  P0 5건 적용: 날짜 클리핑·폰이름 타이틀 가림·SkillUI 죽은 UI 부활·연구 스트립 가림·
+  우상단 5중 알림 겹침(밴드 좌표 계약).  정리 5건(ThreatAlert 이중표시 등) + ui-audit
+  SSOT 현행화 + ui-tour 캡처/회귀가드 시나리오 신설.  진행 중: 우클릭 무동작 간헐(#38
+  계열) 재현 추적 — RClickSim 진단 로깅 + 반복 실행.
+
 - **2026-06-10** 🔴 폭풍 전원 정신붕괴 + stand-cell 모서리 동결 fix (`d29e49b`, qa 독립
   재실행 VERIFIED).  20분 longplay 가 발굴: ① 폭풍 직접 드레인 -3/초×60초=-180 (#234 시계
   재정합 누락 + '야외 폭풍' thought 미배선) → 드레인 제거·thought 일원화.  ② 림이 작업칸
