@@ -455,6 +455,37 @@ namespace MelonS.GameProto
                     }
                     break;
                 }
+                case "selectedOnlyActivity":
+                {
+                    // #38 "선택 림만 벌목" 회귀가드 — withinSec 전 구간 감시: 선택 림은 s.contains
+                    //  활동을 보여야 하고(언젠가), 다른 림이 그 활동을 보이면 즉시 FAIL
+                    //  (우클릭 명령 = 선택 림 전용 배타 예약, f29b10f).  조기 PASS 없음 — 윈도
+                    //  전체를 봐야 "타 림이 늦게 합류"하는 회귀도 잡는다.
+                    var selector = Object.FindFirstObjectByType<ClickSelector>();
+                    var selPawn = selector != null ? selector.CurrentSelection : null;
+                    if (selPawn == null) { r.passed = false; r.detail = "선택 림 없음"; break; }
+                    string selName = selPawn.PawnName;
+                    bool selDid = false; string offender = "";
+                    float t = 0;
+                    while (t < s.withinSec && offender == "")
+                    {
+                        foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                        {
+                            var lbl = p.GetComponentInChildren<PawnNameLabel>();
+                            if (lbl == null || lbl.CurrentActivity == null
+                                || !lbl.CurrentActivity.Contains(s.contains)) continue;
+                            if (p.PawnName == selName) selDid = true;
+                            else offender = p.PawnName;
+                        }
+                        yield return new WaitForSeconds(0.25f); t += 0.25f;
+                    }
+                    r.passed = selDid && offender == "";
+                    r.detail = offender != ""
+                        ? $"위반: 비선택 림 '{offender}' 도 '{s.contains}' (선택={selName}, {t:F1}s)"
+                        : selDid ? $"선택 림 '{selName}' 만 '{s.contains}' ({t:F1}s 전구간 감시)"
+                                 : $"선택 림 '{selName}' 의 '{s.contains}' 미관측 in {t:F1}s";
+                    break;
+                }
                 case "needDropsAtMost":
                 {
                     // 상한 가드 — withinSec(스케일초) 동안 s.name 하락폭이 s.min "미만"이어야 PASS.

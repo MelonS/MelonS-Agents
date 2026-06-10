@@ -1,0 +1,14 @@
+{
+  "name": "P0 벌목 메뉴 (변형: 게임 진행 후) — 4배속 ~200게임초 경과 + 림들 활동 중 상태에서 나무 좌클릭 → 메뉴가 떠야 한다 (운영자 2026-06-03 '여전히 없음' — 새 게임 직후 조건에선 미재현이라 진행-후 조건 탐색)",
+  "timeoutSec": 120,
+  "steps": [
+    { "op": "wait", "sec": 1.5 },
+    { "op": "speed", "x": 4 },
+    { "op": "wait", "sec": 200 },
+    { "op": "speed", "x": 1 },
+    { "op": "shot", "name": "00_progressed" },
+    { "op": "worldclick", "target": "tree" },
+    { "op": "shot", "name": "01_after_click" },
+    { "op": "assert", "probe": "contextMenuOpen", "expect": "true" }
+  ]
+}

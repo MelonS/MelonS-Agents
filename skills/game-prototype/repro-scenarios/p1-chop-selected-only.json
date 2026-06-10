@@ -1,0 +1,14 @@
+{
+  "name": "P1 #38 벌목 선택 림만 — 림 하나 선택해 나무 우클릭하면 그 림만 벌목해야 한다 (운영자 '다 같이 감'. f29b10f 배타 예약 회귀가드 — 윈도 전구간에서 타 림 '벌목' 등장 시 FAIL)",
+  "timeoutSec": 90,
+  "steps": [
+    { "op": "wait", "sec": 1.5 },
+    { "op": "shot", "name": "00_start" },
+    { "op": "worldclick", "target": "pawn" },
+    { "op": "assert", "probe": "selection", "expect": "any" },
+    { "op": "worldright", "target": "tree" },
+    { "op": "assert", "probe": "chopDesignations", "min": 1 },
+    { "op": "assert", "probe": "selectedOnlyActivity", "contains": "벌목", "withinSec": 12 },
+    { "op": "shot", "name": "01_only_selected" }
+  ]
+}
