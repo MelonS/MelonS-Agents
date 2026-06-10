@@ -92,14 +92,15 @@ namespace MelonS.GameProto
         private void Update()
         {
             // UI 위 클릭 무시 (운영자 피드백 - UI 가 가로채던 문제)
-            bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+            // WORKFLOW-V2: 입력은 SimInput 경유 — 평시 Input 패스스루, -repro 시뮬 주입.
+            bool overUI = SimInput.IsPointerOverUI();
             // 빌드 모드 활성이면 mouse click 은 BuildManager 가 처리 (place / cancel)
             bool buildActive = BuildManager.Instance != null && BuildManager.Instance.BuildModeActive;
 
             // Left click = select
-            if (Input.GetMouseButtonDown(0) && !overUI && !buildActive)
+            if (SimInput.GetMouseButtonDown(0) && !overUI && !buildActive)
             {
-                Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(SimInput.mousePosition);
                 mouseWorld.z = 0f;
                 Collider2D hit = PickEntityAt(mouseWorld);
                 PawnEntity pawn = (hit != null) ? hit.GetComponent<PawnEntity>() : null;
@@ -122,7 +123,7 @@ namespace MelonS.GameProto
                     {
                         var litems = BuildLeftClickMenu(hit, mouseWorld);
                         if (litems != null && litems.Count > 0)
-                            ContextMenuUI.Instance.Open(Input.mousePosition, litems);
+                            ContextMenuUI.Instance.Open(SimInput.mousePosition, litems);
                         else if (ContextMenuUI.Instance.IsOpen)
                             ContextMenuUI.Instance.Close();
                     }
@@ -135,7 +136,7 @@ namespace MelonS.GameProto
                     var litems = (ContextMenuUI.Instance != null)
                         ? BuildLeftClickMenu(null, mouseWorld) : null;
                     if (litems != null && litems.Count > 0)
-                        ContextMenuUI.Instance.Open(Input.mousePosition, litems);
+                        ContextMenuUI.Instance.Open(SimInput.mousePosition, litems);
                     else {
                         ClearSelection(); currentInspect = null;
                         if (ContextMenuUI.Instance != null && ContextMenuUI.Instance.IsOpen)
@@ -149,7 +150,7 @@ namespace MelonS.GameProto
             //  MarqueeSelector 로 다중 선택돼 있으면 R 키 징집을 *선택된 전원*에게 적용한다.
             //  단일 선택(currentSelection) 은 기존대로.  GizmoBar 의 OnDraftClicked 와 동일하게
             //  첫 림 상태 기준으로 토글 target 을 정해 전원 일괄 적용(혼재 상태 → 일괄 ON).
-            if (Input.GetKeyDown(KeyCode.R))
+            if (SimInput.GetKeyDown(KeyCode.R))
             {
                 ToggleDraftOnSelection();
             }
@@ -158,9 +159,9 @@ namespace MelonS.GameProto
             //  게이트에 막혀 림이 선택 안 돼 있으면 안 됐다.  the reference sim 에선 벌목/채광 *지정*은
             //  림 선택이 불필요(Architect>Orders 처럼).  → 선택 무관하게 우클릭 나무/광맥 = 바로
             //  지정(🪓/⛏ 마커 + idle 림 dispatch).  이 블록을 selection 게이트 밖에 둔다.
-            if (Input.GetMouseButtonDown(1) && !overUI && !buildActive)
+            if (SimInput.GetMouseButtonDown(1) && !overUI && !buildActive)
             {
-                Vector3 dmw = mainCamera.ScreenToWorldPoint(Input.mousePosition); dmw.z = 0f;
+                Vector3 dmw = mainCamera.ScreenToWorldPoint(SimInput.mousePosition); dmw.z = 0f;
                 Collider2D dhit = PickEntityAt(dmw);
                 if (dhit != null)
                 {
@@ -175,10 +176,10 @@ namespace MelonS.GameProto
             // Right click = move OR chop OR attack (drafted) for selected pawn
             //   buildActive 면 BuildManager 가 우클릭 = cancel 처리 (overlap 방지)
             //   #113 - undrafted + entity hit = the reference sim 스타일 "Prioritize" 컨텍스트 메뉴
-            if (Input.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null
+            if (SimInput.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null
                 && !currentSelection.IsDrafted && !MarqueeOwnsCommand())   // #60 다중선택 양보
             {
-                Vector3 mw = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 mw = mainCamera.ScreenToWorldPoint(SimInput.mousePosition);
                 mw.z = 0f;
                 Collider2D ehit = PickEntityAt(mw);
                 // #275 나무/광맥 우클릭 벌목·채광 지정은 위 선택-무관 블록(line 118-131)이 이미
@@ -189,16 +190,16 @@ namespace MelonS.GameProto
                     var items = BuildContextMenu(ehit, mw);
                     if (items != null && items.Count > 0)
                     {
-                        ContextMenuUI.Instance.Open(Input.mousePosition, items);
+                        ContextMenuUI.Instance.Open(SimInput.mousePosition, items);
                         return;  // 메뉴 떴음 - 기존 직접 action skip
                     }
                 }
                 // entity 없거나 메뉴 없으면 기존 동작 (manual move)
             }
-            if (Input.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null
+            if (SimInput.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null
                 && !MarqueeOwnsCommand())   // #60 다중선택 중엔 MarqueeSelector 가 그룹 move 소유
             {
-                Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(SimInput.mousePosition);
                 mouseWorld.z = 0f;
                 // 시각 피드백 - 사용자에게 클릭 위치 보여줌
                 ClickEffect.Spawn(mouseWorld, new Color(1f, 0.9f, 0.3f, 0.95f));

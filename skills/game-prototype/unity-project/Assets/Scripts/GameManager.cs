@@ -143,6 +143,7 @@ namespace MelonS.GameProto
             BuildClickAutoQA.EnsureInScene();       // #180 - -build-click-qa flag (운영자 fb 진짜 click QA)
             ArchitectClickAutoQA.EnsureInScene();   // archfix - -architect-click-qa flag (REAL pointer raycast on architect menu)
             PawnActionAutoQA.EnsureInScene();       // #192 - -pawn-action-qa flag (chop/harvest/tame/trade/mine/attack)
+            ReproHarness.EnsureInScene();           // WORKFLOW-V2 - -repro <json> 운영자 버그 재현 시나리오 (SimInput 경유 진짜 입력 경로)
             // → mouse hover 시 entity 종류 + 가능한 action 표시
             HoverTooltip.EnsureInScene();
             // → wolf/bandit 접근 시 큰 빨강 "⚠ 위협" 우상단 (auto-pause X, 시각 only)

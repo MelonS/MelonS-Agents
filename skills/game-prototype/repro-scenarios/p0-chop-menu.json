@@ -1,0 +1,13 @@
+{
+  "name": "P0 나무 클릭 → 벌목 메뉴 (운영자 2026-06-03 '여전히 없음' 재확인 건)",
+  "steps": [
+    { "op": "wait", "sec": 1.5 },
+    { "op": "shot", "name": "00_start" },
+    { "op": "worldclick", "target": "tree" },
+    { "op": "shot", "name": "01_after_tree_click" },
+    { "op": "assert", "probe": "contextMenuOpen", "expect": "true" },
+    { "op": "clickui", "name": "label:벌목" },
+    { "op": "shot", "name": "02_after_chop_click" },
+    { "op": "assert", "probe": "chopDesignations", "min": 1 }
+  ]
+}

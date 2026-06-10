@@ -56,6 +56,17 @@ PLAYTEST-TODO 의 P0/P1 이 **운영자 인게임 OK** 될 때까지 신규 기�
 5. **suika 로 스킬 검증** — playbook 만 보고 2번째 게임 진행, 막히는 지점이
    곧 playbook 의 구멍.
 
+## 재현 harness 사용법 (2026-06-10 구축)
+
+- **SimInput** (`Tests/SimInput.cs`) — 게임플레이 입력 추상화. 평시 Input 패스스루,
+  `-repro` 시 주입. ClickSelector 가 1호 적용 (MarqueeSelector/BuildManager 는 추후).
+- **ReproHarness** (`Tests/ReproHarness.cs`) — `-repro <scenario.json>` 로 활성화.
+  시나리오 = 클릭 시퀀스 + 화면 기준 assert (형식은 파일 헤더 주석).
+- **러너**: `python skills/game-dev-agent/scripts/repro_run.py <scenario> [--fresh-build]`
+  exit 0 = PASS. FAIL 스텝 출력 + `G:/ai/_repro_shots/` 스크린샷이 곧 재현 증거.
+- **시나리오 보존**: `skills/game-prototype/repro-scenarios/*.json` — PASS 한 시나리오는
+  영구 보존 = 그 버그의 회귀 테스트. 운영자 버그 1건 = 시나리오 파일 1개 원칙.
+
 ## 멀티에이전트 운용 (현실적 최소선)
 
 - 톱레벨 = orchestrator + editor 겸임 (Unity 반복작업은 컨텍스트 공유가 무거움).
