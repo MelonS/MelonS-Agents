@@ -52,7 +52,9 @@ HAIR_DK       = (58,  38,  22, 255)  # #3A2616
 # Cloth tints — three colonist variants.  Keep muted; no neon.
 CLOTH_BLUE    = (74,  96, 132, 255)  # #4A6084  muted denim (colonist default)
 CLOTH_RUST    = (158, 86,  58, 255)  # #9E563A  rust / reddish-brown
-CLOTH_OLIVE   = (108, 112, 70, 255)  # #6C7046  olive / field-green
+# TOP-4 (2026-06-11): 올리브(잔디 hue 90~150° 밴드)는 들판 보호색 — 림이 배경에
+#  매몰됐다.  이름은 유지하고 값만 머스터드로 (의상 금지 휴밴드: 잔디 녹색대).
+CLOTH_OLIVE   = (168, 134, 58, 255)  # #A88638  mustard (구 올리브 슬롯)
 
 # ── Semantic accents — saturated; reserve for story/meaning ─────────
 CROP_GOLD     = (218, 178, 70, 255)  # #DAB246  ripe crop / wheat heads
@@ -74,9 +76,9 @@ UI_MUTED      = (187, 170, 148, 255) # #BBAA94  hints / secondary labels
 # Cloth tint for dark shadow-side detail (50% darkened from each cloth)
 CLOTH_BLUE_DK  = (50, 66, 94, 255)   # dark denim shadow
 CLOTH_RUST_DK  = (110, 58, 36, 255)  # dark rust shadow
-CLOTH_OLIVE_DK = (74, 78, 44, 255)   # dark olive shadow
+CLOTH_OLIVE_DK = (124, 96, 42, 255)  # dark mustard shadow (TOP-4)
 
 # Leg / trouser — slightly darker than cloth so they read separately
 TROUSER_BLUE   = (58, 76, 108, 255)
 TROUSER_RUST   = (130, 68, 44, 255)
-TROUSER_OLIVE  = (86, 90, 52, 255)
+TROUSER_OLIVE  = (104, 84, 48, 255)  # TOP-4 mustard 하의

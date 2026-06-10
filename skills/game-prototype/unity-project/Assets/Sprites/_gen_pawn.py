@@ -153,6 +153,10 @@ def gen_pawn(cloth: tuple, cloth_dk: tuple, trouser: tuple,
     hair_lt    = _scale(hair, 1.45)      # 머리 하이라이트
     trouser_lo = _scale(trouser, 0.82)   # 바지 하단 그림자
     boot_lt    = _scale(WOOD_DK, 1.28)   # 신발 윗면 하이라이트
+    # TOP-4 (visual-polish-backlog 2026-06-11): 16px 톱다운에서 표정은 눈 2px 가
+    #  전부 — SKIN_SH 힌트는 안 보였다.  진짜 눈동자(근흑) + 벨트 1px 절개선.
+    eye        = (44, 34, 30, 255)
+    belt       = (62, 46, 32, 255)
 
     def shade(z: int, y: int) -> tuple:
         """zone+행 위치로 음영 색 결정 (top-down 라이팅)."""
@@ -162,14 +166,15 @@ def gen_pawn(cloth: tuple, cloth_dk: tuple, trouser: tuple,
             return skin_sh if y >= 5 else skin_md    # 턱줄 그림자
         if z == 3:                                   # torso cloth
             if y <= 7:  return cloth_lt              # 어깨/가슴 하이라이트
-            if y >= 11: return cloth_lo              # 배 아래 그림자
+            if y == 11: return belt                  # TOP-4 벨트 절개선
+            if y >= 10: return cloth_lo              # 배 아래 그림자
             return cloth
         if z == 4:  return cloth_dk                  # arm (이미 그림자색)
         if z == 5:                                   # trouser
             return trouser_lo if y >= 14 else trouser
         if z == 6:                                   # boot
             return boot_lt if y == 15 else WOOD_DK
-        if z == 7:  return skin_sh                   # eyes
+        if z == 7:  return eye                       # TOP-4 눈동자 (근흑 2px)
         return skin_md
 
     mask    = _build_mask()
