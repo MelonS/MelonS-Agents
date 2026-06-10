@@ -43,8 +43,8 @@ namespace MelonS.GameProto
                 go.transform.SetParent(transform, false);
                 var sr = go.AddComponent<SpriteRenderer>();
                 sr.sprite = ringSprite;
-                sr.sortingOrder = 6;   // SelectionRing 과 동일 — pawn(10) 아래, ground 위
-                sr.color = new Color(1f, 0.92f, 0.3f, 0f);
+                sr.sortingOrder = 12;  // TOP-6 — SelectionRing 과 동일 (브래킷은 본체 위)
+                sr.color = new Color(0.94f, 0.94f, 0.90f, 0f);
                 pool.Add(sr);
             }
             return pool[i];
@@ -59,9 +59,9 @@ namespace MelonS.GameProto
             IReadOnlyList<PawnEntity> sel = (ms != null && ms.HasMultiSelection) ? ms.CurrentMultiSelection : null;
             int count = sel != null ? sel.Count : 0;
 
-            // 펄스 — SelectionRing 과 동일한 위상/속도로 맞춰 단일·멀티가 함께 깜빡인다.
-            float pulse = 0.75f + 0.20f * Mathf.Sin(Time.time * 5f);
-            float scale = 1.6f + 0.10f * Mathf.Sin(Time.time * 5f);
+            // 펄스 — SelectionRing 과 동일한 위상/속도(1Hz)로 단일·멀티가 함께 숨쉰다.
+            float pulse = 0.78f + 0.18f * Mathf.Sin(Time.time * Mathf.PI * 2f);
+            const float scale = 1.5f;   // TOP-6 — 스케일 펄스 제거
 
             int shown = 0;
             for (int i = 0; i < count; i++)
@@ -70,9 +70,9 @@ namespace MelonS.GameProto
                 if (p == null || p.IsDead) continue;
                 var sr = GetOrCreate(shown);
                 var pos = p.transform.position;
-                sr.transform.position = new Vector3(pos.x, pos.y - 0.35f, pos.z);
+                sr.transform.position = new Vector3(pos.x, pos.y, pos.z);  // TOP-6 몸 중심
                 sr.transform.localScale = new Vector3(scale, scale, 1f);
-                Color c = p.IsDrafted ? new Color(0.4f, 0.85f, 1f) : new Color(1f, 0.92f, 0.3f);
+                Color c = p.IsDrafted ? new Color(0.4f, 0.85f, 1f) : new Color(0.94f, 0.94f, 0.90f);
                 c.a = pulse;
                 sr.color = c;
                 if (!sr.enabled) sr.enabled = true;

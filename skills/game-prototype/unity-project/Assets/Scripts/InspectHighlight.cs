@@ -48,8 +48,9 @@ namespace MelonS.GameProto
         private void Awake()
         {
             sr = gameObject.AddComponent<SpriteRenderer>();
-            sr.sprite = MakeBoxSprite();
-            sr.color = new Color(1f, 0.85f, 0.30f, 0f);
+            // TOP-6 (2026-06-11) — 노란 박스 → SelectionRing 공유 4코너 브래킷 (마커 1종 통일).
+            sr.sprite = SelectionRing.SharedRingSprite();
+            sr.color = new Color(0.94f, 0.94f, 0.90f, 0f);
             sr.sortingOrder = 25;  // 모든 entity 위
             transform.localScale = new Vector3(1.5f, 1.5f, 1f);
         }
@@ -79,9 +80,9 @@ namespace MelonS.GameProto
                 h = c2d.bounds.size.y + 0.4f;
             }
             transform.localScale = new Vector3(w, h, 1f);
-            // 펄스
-            float pulse = 0.65f + 0.30f * Mathf.Sin(Time.time * 4f);
-            sr.color = new Color(1f, 0.85f, 0.30f, pulse);
+            // 펄스 — TOP-6: 화이트 통일, 1Hz 잔잔하게.
+            float pulse = 0.62f + 0.22f * Mathf.Sin(Time.time * Mathf.PI * 2f);
+            sr.color = new Color(0.94f, 0.94f, 0.90f, pulse);
         }
     }
 }

@@ -26,49 +26,45 @@ namespace MelonS.GameProto
         private void Awake()
         {
             sr = gameObject.AddComponent<SpriteRenderer>();
-            sr.sprite = MakeRingSprite();
-            sr.color = new Color(1f, 0.9f, 0.3f, 0.0f);  // 시작 invisible
-            sr.sortingOrder = 6;  // pawn(10) 보다 낮음, ground(0) 보다 높음
+            sr.sprite = MakeBracketSprite();
+            sr.color = new Color(0.94f, 0.94f, 0.90f, 0.0f);  // 시작 invisible — TOP-6 화이트
+            sr.sortingOrder = 12;  // 브래킷은 본체(10)를 '둘러싸는' 표식 — 위에 그린다
             transform.localScale = new Vector3(1.6f, 1.6f, 1f);
             spawnTime = Time.time;
         }
 
         private static Sprite _ringSpriteCache;
-        /// <summary>#audit3 #0/#1 — 멀티선택 링 풀(MultiSelectionRings)이 동일한 링
-        /// 스프라이트를 재사용하도록 공개.  단일/멀티 선택 링이 시각적으로 일관된다.</summary>
-        public static Sprite SharedRingSprite() => MakeRingSprite();
-        private static Sprite MakeRingSprite()
+        /// <summary>#audit3 #0/#1 — 멀티선택(MultiSelectionRings)·인스펙트(InspectHighlight)가
+        /// 같은 스프라이트를 재사용하도록 공개.  TOP-6 (visual-polish-backlog 2026-06-11):
+        /// 타원 링/노란 박스/링 3종 혼재 → 림월드식 4코너 브래킷 1종으로 통일.</summary>
+        public static Sprite SharedRingSprite() => MakeBracketSprite();
+        private static Sprite MakeBracketSprite()
         {
             if (_ringSpriteCache != null) return _ringSpriteCache;
-            int size = 64;
+            const int size = 64;
+            const int arm = 16;    // 코너 팔 길이
+            const int thick = 5;   // 두께
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
+            tex.wrapMode = TextureWrapMode.Clamp;
             var pixels = new Color[size * size];
-            float cx = size * 0.5f, cy = size * 0.5f;
-            float outerR = size * 0.45f;
-            float innerR = size * 0.36f;
             for (int y = 0; y < size; y++)
             {
                 for (int x = 0; x < size; x++)
                 {
-                    float dx = x - cx, dy = y - cy;
-                    float d = Mathf.Sqrt(dx*dx + dy*dy);
-                    if (d <= outerR && d >= innerR)
-                    {
-                        // soft edge
-                        float aOuter = Mathf.SmoothStep(1f, 0f, (d - innerR - 2f) / Mathf.Max(1f, outerR - innerR - 2f));
-                        float aInner = Mathf.SmoothStep(0f, 1f, (d - innerR) / 3f);
-                        pixels[y * size + x] = new Color(1f, 1f, 1f, Mathf.Min(aOuter, aInner));
-                    }
-                    else
-                    {
-                        pixels[y * size + x] = new Color(0, 0, 0, 0);
-                    }
+                    // 각 축의 가장자리까지 거리 (코너 판정용)
+                    int ex = Mathf.Min(x, size - 1 - x);
+                    int ey = Mathf.Min(y, size - 1 - y);
+                    bool inCorner = (ex < arm && ey < thick) || (ey < arm && ex < thick);
+                    pixels[y * size + x] = inCorner
+                        ? new Color(1f, 1f, 1f, 1f)
+                        : new Color(0f, 0f, 0f, 0f);
                 }
             }
             tex.SetPixels(pixels);
             tex.Apply();
             _ringSpriteCache = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+            _ringSpriteCache.name = "SelectionBrackets";
             return _ringSpriteCache;
         }
 
@@ -90,23 +86,22 @@ namespace MelonS.GameProto
                 }
                 return;
             }
-            // 선택된 pawn 발밑 (살짝 아래 - 32x32 pawn 기준 -0.35)
+            // TOP-6 — 브래킷은 몸 중심을 둘러싼다 (발밑 오프셋 제거).
             var pos = cs.CurrentSelection.transform.position;
-            transform.position = new Vector3(pos.x, pos.y - 0.35f, pos.z);
+            transform.position = new Vector3(pos.x, pos.y, pos.z);
 
-            // 색: drafted 면 cyan, 일반은 노랑
+            // 색: drafted 면 시안, 일반은 화이트 (노랑은 공격 타깃 전용 예약).
             Color baseCol = cs.CurrentSelection.IsDrafted
                 ? new Color(0.4f, 0.85f, 1f)
-                : new Color(1f, 0.92f, 0.3f);
+                : new Color(0.94f, 0.94f, 0.90f);
 
-            // 펄스 (0.5초 주기, alpha 0.55 ~ 0.95)
-            float pulse = 0.75f + 0.20f * Mathf.Sin(Time.time * 5f);
+            // 펄스 — 1Hz 잔잔하게 (기존 5rad/s 깜빡임은 산만).
+            float pulse = 0.78f + 0.18f * Mathf.Sin(Time.time * Mathf.PI * 2f);
             baseCol.a = pulse;
             sr.color = baseCol;
 
-            // 스케일 펄스 (subtle - 1.5 ~ 1.7)
-            float scale = 1.6f + 0.10f * Mathf.Sin(Time.time * 5f);
-            transform.localScale = new Vector3(scale, scale, 1f);
+            // 스케일 고정 (스케일 펄스 제거 — 브래킷이 숨쉬면 어지럽다)
+            transform.localScale = new Vector3(1.5f, 1.5f, 1f);
         }
     }
 }
