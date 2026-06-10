@@ -135,7 +135,8 @@ namespace MelonS.GameProto.EditorTools
             // 높이를 자식(칩 4개)에 맞춰 자동 조절.
             var resFitter = resRowGo.AddComponent<ContentSizeFitter>();
             resFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            resFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            // #1.0 — 가로도 자식 폭에 맞춰: 긴 숫자가 패널 밖으로 넘치지 않게.
+            resFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // Chips in screen order (left→right): food → meal → wood → stone.
             // 시각 QA(2026-06-01): 식사(pale-gold)/목재(tan) 가 비슷해 구분 약함 → 식사를
@@ -182,7 +183,9 @@ namespace MelonS.GameProto.EditorTools
             chipGo.transform.SetParent(row.transform, false);
             RectTransform chipRt = chipGo.AddComponent<RectTransform>();
             var chipLe = chipGo.AddComponent<LayoutElement>();
-            chipLe.preferredWidth = chipW;       // equal width for every chip
+            // #ui백로그 1.0 — preferredWidth 고정 제거: '목재: 1,013' 4자리+콤마가 칩
+            //  배경 밖 맵 위로 넘쳤다.  minWidth 만 보장하고 텍스트 preferredWidth 가
+            //  칩 폭을 늘리게 한다 (배경 패널이 숫자와 함께 자란다).
             chipLe.minWidth = chipW;
             // #41 세로 목록(좌상단 RimWorld식)에서도 각 칩이 높이를 가지도록 명시.
             //  가로 바에선 부모의 childForceExpandHeight 가 우선하므로 영향 없음.
@@ -252,7 +255,9 @@ namespace MelonS.GameProto.EditorTools
             t.horizontalOverflow = HorizontalWrapMode.Overflow;  // 2-3 digit values never clip
             t.verticalOverflow = VerticalWrapMode.Overflow;
             var txtLe = txtGo.AddComponent<LayoutElement>();
-            txtLe.flexibleWidth = 1f;   // value cell takes the rest of the fixed chip width
+            // #1.0 — flexibleWidth=1 제거: Text 의 preferredWidth 가 칩 폭을 결정해
+            //  자릿수가 늘면 칩(과 배경)이 함께 넓어진다.  최소폭은 chipLe.minWidth 가 보장.
+            txtLe.flexibleWidth = 0f;
             return t;
         }
     }

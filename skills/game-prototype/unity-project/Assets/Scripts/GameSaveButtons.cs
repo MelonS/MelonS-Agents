@@ -64,12 +64,22 @@ namespace MelonS.GameProto
         public void OnSave()
         {
             SaveLoadManager.Save();
+            // #ui백로그 6.2 — 화면 피드백: 성공/실패가 Debug.Log 뿐이라 운영자가 저장
+            //  여부를 알 수 없었다.  기존 토스트 재사용 (설정행·F5 모두 이 경로).
+            BuildClickToast.EnsureInScene();
+            BuildClickToast.Instance?.ShowSuccess("💾 저장 완료");
         }
 
         public void OnLoad()
         {
             SaveData data = SaveLoadManager.Load();
-            if (data == null) return;
+            if (data == null)
+            {
+                // #6.2 — 세이브 없음/손상: 이전엔 무음 return 이라 '클릭해도 아무 일 없음'.
+                BuildClickToast.EnsureInScene();
+                BuildClickToast.Instance?.ShowFail("✗ 불러올 세이브 없음/손상");
+                return;
+            }
 
             // #audit2 #13 — 로드 직전 전체 예약 초기화.  아래에서 현재 pawn/tree 를 Destroy
             //  하고 새로 spawn 하는데, 파괴되는 엔티티들이 ReservationManager 에 잡아둔 예약이
@@ -246,6 +256,9 @@ namespace MelonS.GameProto
             if (aidir != null) aidir.RestoreRaidState(data.raidLastDay, data.raidCount);
 
             Debug.Log($"[SaveLoad] restored: {data.pawns.Count} pawns, {data.trees.Count} trees + 서브상태 + 시계 {data.gameSeconds:F0}s");
+            // #ui백로그 6.2 — 성공 피드백
+            BuildClickToast.EnsureInScene();
+            BuildClickToast.Instance?.ShowSuccess($"📂 불러오기 완료 (림 {data.pawns.Count})");
         }
     }
 }

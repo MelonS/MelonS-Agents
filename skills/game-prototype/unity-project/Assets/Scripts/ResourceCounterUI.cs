@@ -11,6 +11,11 @@ namespace MelonS.GameProto
         [SerializeField] private Text mealsText;
         [SerializeField] private Text stoneText;  // #119
         private int lastWood = -1, lastFood = -1, lastMeals = -1, lastStone = -1;
+        // #ui백로그 1.1 + #게임필4 — fineMeals 표시(미표시로 '값이 안 늘어' 재발) 와
+        //  식량 ≈N일치(카운터가 카운트다운으로 읽혀야 농사/사냥을 '하고 싶어'짐).
+        private int lastFineMeals = -1;
+        private int cachedPawnCount = 0;
+        private float nextPawnCountPoll = -1f;
 
         public void SetStoneText(Text t) { stoneText = t; }  // SceneSetup binding
 
@@ -48,11 +53,34 @@ namespace MelonS.GameProto
                 if (lastFood >= 0) foodFlashUntil = Time.unscaledTime + FlashDuration;
                 lastFood = rm.food;
             }
-            if (rm.meals != lastMeals)
+            // 림 수 2s 캐시 (lesson #4 — 매 프레임 FindObjects 금지)
+            if (Time.unscaledTime >= nextPawnCountPoll)
             {
-                if (mealsText != null) mealsText.text = $"식사: {rm.meals:N0}";
+                nextPawnCountPoll = Time.unscaledTime + 2f;
+                int n = 0;
+                foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                    if (p != null && !p.IsDead) n++;
+                cachedPawnCount = n;
+            }
+            if (rm.meals != lastMeals || rm.fineMeals != lastFineMeals)
+            {
+                if (mealsText != null)
+                {
+                    // #1.1 — 고급식사 병기 (숙련 요리 산출이 화면에 안 보이던 것).
+                    string fine = rm.fineMeals > 0 ? $" +고급{rm.fineMeals:N0}" : "";
+                    // #게임필4 — ≈N일치: 1림 ≈ 하루 식사환산 1개(meal=3, fine=5 food단위).
+                    string days = "";
+                    if (cachedPawnCount > 0)
+                    {
+                        float foodUnits = rm.food + rm.meals * 3f + rm.fineMeals * 5f;
+                        float d = foodUnits / (cachedPawnCount * 3f);
+                        days = d < 10f ? $" (~{d:F0}일치)" : "";
+                    }
+                    mealsText.text = $"식사: {rm.meals:N0}{fine}{days}";
+                }
                 if (lastMeals >= 0) mealsFlashUntil = Time.unscaledTime + FlashDuration;
                 lastMeals = rm.meals;
+                lastFineMeals = rm.fineMeals;
             }
             if (rm.stone != lastStone)
             {

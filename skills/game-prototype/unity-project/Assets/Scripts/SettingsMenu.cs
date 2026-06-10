@@ -93,9 +93,26 @@ namespace MelonS.GameProto
             if (m != null) m.Toggle();
         }
 
+        // #ui백로그 6.4 — 모달 백드롭: 패널 밖 클릭이 월드로 통과해 폰 명령/청사진
+        //  배치가 일어나던 것 차단.  백드롭 클릭 = 닫기 (표준 모달 UX).
+        private GameObject backdrop;
+
         private void Awake()
         {
             font = UITheme.LoadKoreanFont(18);
+
+            // 백드롭은 같은 캔버스의 형제로 (패널보다 먼저 생성 → 아래 깔림).
+            var bdGo = new GameObject("SettingsBackdrop");
+            bdGo.transform.SetParent(transform.parent, false);
+            var bdRt = bdGo.AddComponent<RectTransform>();
+            bdRt.anchorMin = Vector2.zero; bdRt.anchorMax = Vector2.one;
+            bdRt.offsetMin = Vector2.zero; bdRt.offsetMax = Vector2.zero;
+            var bdImg = bdGo.AddComponent<Image>();
+            bdImg.color = new Color(0f, 0f, 0f, 0.45f);
+            bdImg.raycastTarget = true;
+            bdGo.AddComponent<Button>().onClick.AddListener(Close);
+            backdrop = bdGo;
+            backdrop.SetActive(false);
 
             rt = gameObject.AddComponent<RectTransform>();
             // Screen-centered modal panel.
@@ -180,7 +197,9 @@ namespace MelonS.GameProto
             //  lane) that the integration tests reference by name.  Those originals
             //  stay intact; this panel just invokes their wired onClick (see
             //  InvokeExistingButton).  Name preservation rule satisfied.
-            saveBtn = MakeButton(saveLoadRow.transform, "SettingsSaveBtn", "💾 저장(S)",
+            // #ui백로그 6.1 — (S)/(L) 은 죽은 핫키 힌트 + 실키(카메라 S/램프 L)와 충돌.
+            //  실제 핫키 F5/F9 로 교체.  GO 이름은 테스트 보존 규칙대로 유지.
+            saveBtn = MakeButton(saveLoadRow.transform, "SettingsSaveBtn", "💾 저장(F5)",
                 new Vector2(0f, 0f), new Vector2(0, 0), new Vector2(150, 34), OnSaveClicked);
             var saveRt = saveBtn.GetComponent<RectTransform>();
             saveRt.anchorMin = new Vector2(0f, 0f);
@@ -188,7 +207,7 @@ namespace MelonS.GameProto
             saveRt.pivot = new Vector2(0f, 0f);
             saveRt.anchoredPosition = new Vector2(0, 0);
 
-            loadBtn = MakeButton(saveLoadRow.transform, "SettingsLoadBtn", "📂 불러오기(L)",
+            loadBtn = MakeButton(saveLoadRow.transform, "SettingsLoadBtn", "📂 불러오기(F9)",
                 new Vector2(0f, 0f), new Vector2(0, 0), new Vector2(160, 34), OnLoadClicked);
             var loadRt = loadBtn.GetComponent<RectTransform>();
             loadRt.anchorMin = new Vector2(1f, 0f);
@@ -224,6 +243,8 @@ namespace MelonS.GameProto
             // still exists & functions (F5/F9 hotkeys); we only hide its visual GO.
             SyncSaveLoadAvailability();
             SyncSlidersFromAudio();
+            // #6.4 — 백드롭 먼저 최상단으로, 그 위에 패널 (클릭 차단 + 패널 조작 가능)
+            if (backdrop != null) { backdrop.SetActive(true); backdrop.transform.SetAsLastSibling(); }
             gameObject.SetActive(true);
             transform.SetAsLastSibling();   // ensure on top of late-spawned UI
             isOpen = true;
@@ -231,8 +252,10 @@ namespace MelonS.GameProto
 
         public void Close()
         {
+            if (backdrop != null) backdrop.SetActive(false);
             gameObject.SetActive(false);
             isOpen = false;
+            ResetLoadArm();   // #6.6 — 닫을 때 2-클릭 암 해제
         }
 
         private void Update()
@@ -242,6 +265,9 @@ namespace MelonS.GameProto
             // by BuildManager / GuiControlBar lane) is untouched when settings closed.
             if (isOpen && Input.GetKeyDown(KeyCode.Escape))
                 Close();
+            // #6.6 — 암 시간 만료 시 라벨 원복
+            if (loadArmUntil > 0f && Time.unscaledTime > loadArmUntil)
+                ResetLoadArm();
         }
 
         /// <summary>
@@ -289,14 +315,38 @@ namespace MelonS.GameProto
             else SaveLoadManager.Save();
         }
 
+        // #ui백로그 6.6 — 불러오기 2-클릭 암: 클릭 1회로 진행 중 콜로니가 통째로
+        //  교체되던 것 방지 (저장 버튼 바로 옆이라 오클릭 위험).  3초 내 재클릭만 실행.
+        private float loadArmUntil = -1f;
+
         private void OnLoadClicked()
         {
             PlayClickBlip();
+            if (Time.unscaledTime > loadArmUntil)
+            {
+                loadArmUntil = Time.unscaledTime + 3f;
+                SetLoadBtnLabel("⚠ 재클릭=불러오기");
+                return;
+            }
+            ResetLoadArm();
             // #44 호스트의 OnLoad 직접 호출(pawnPrefab/treeSprite ref 로 월드 복원).  복원 로직은
             //  GameSaveButtons 에만 있으므로 호스트 없으면 load 불가(경고).
             var gsb = Object.FindFirstObjectByType<GameSaveButtons>(FindObjectsInactive.Include);
             if (gsb != null) gsb.OnLoad();
             else Debug.LogWarning("[SettingsMenu] GameSaveButtons 호스트 없음 - load skip");
+        }
+
+        private void ResetLoadArm()
+        {
+            loadArmUntil = -1f;
+            SetLoadBtnLabel("📂 불러오기(F9)");
+        }
+
+        private void SetLoadBtnLabel(string s)
+        {
+            if (loadBtn == null) return;
+            var t = loadBtn.GetComponentInChildren<Text>();
+            if (t != null) t.text = s;
         }
 
         // ----------------------------------------------------------------------
