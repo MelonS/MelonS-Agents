@@ -263,7 +263,9 @@ namespace MelonS.GameProto
             // ESC closes the settings panel when it is open.  We deliberately only
             // consume ESC while open, so the in-game ESC=build-cancel binding (owned
             // by BuildManager / GuiControlBar lane) is untouched when settings closed.
-            if (isOpen && Input.GetKeyDown(KeyCode.Escape))
+            // #raw-Input 감사(2026-06-10) — SimInput 전환: 백로그 관찰 '설정 메뉴가
+            //  harness ESC 주입으로 안 닫힘'의 원인이 이 raw 읽기였다 (WORKFLOW-V2 규칙 2).
+            if (isOpen && SimInput.GetKeyDown(KeyCode.Escape))
                 Close();
             // #6.6 — 암 시간 만료 시 라벨 원복
             if (loadArmUntil > 0f && Time.unscaledTime > loadArmUntil)

@@ -207,8 +207,8 @@ namespace MelonS.GameProto
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.F4)) Toggle();
-            // #ui백로그 5.3 — ESC 닫기
-            if (isOpen && Input.GetKeyDown(KeyCode.Escape)) Close();
+            // #ui백로그 5.3 — ESC 닫기 (SimInput 경유 — 규칙 2)
+            if (isOpen && SimInput.GetKeyDown(KeyCode.Escape)) Close();
         }
     }
 }

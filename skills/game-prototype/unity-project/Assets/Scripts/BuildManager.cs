@@ -204,7 +204,7 @@ namespace MelonS.GameProto
             //  우클릭+ESC 양쪽인데 빌드만 우클릭 전용이라 비대칭이었다 (SettingsMenu 주석이
             //  가정하던 'ESC=build-cancel' 바인딩의 실체화).  SettingsMenu 의 ESC 는 isOpen
             //  일 때만 소비하므로 충돌 없음.
-            if (BuildModeActive && Input.GetKeyDown(KeyCode.Escape)) { SetMode(Mode.Off); return; }
+            if (BuildModeActive && SimInput.GetKeyDown(KeyCode.Escape)) { SetMode(Mode.Off); return; }   // SimInput — 규칙 2
             UpdateGhost();
             // #179/#182 - click 처리.  cooldown 으로 SetMode 직후 race 방지.
             //  EventSystem guard 는 over-blocking 위험 (TopBar/GuiControlBar 가 항상 raycast target).

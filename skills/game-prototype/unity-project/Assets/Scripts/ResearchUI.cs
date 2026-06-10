@@ -51,7 +51,8 @@ namespace MelonS.GameProto
                 if (pickerOpen) { CloseSiblingPanels(); RefreshPicker(); }   // #ui백로그 5.3
             }
             // #ui백로그 5.3 — ESC 닫기: designation 모드 7곳의 'ESC=취소' 관례와 정합.
-            if (pickerOpen && Input.GetKeyDown(KeyCode.Escape)) ClosePicker();
+            //  SimInput 경유 (규칙 2).
+            if (pickerOpen && SimInput.GetKeyDown(KeyCode.Escape)) ClosePicker();
             // Number keys 1-5 in picker mode = start that tech
             if (pickerOpen)
             {

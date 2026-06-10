@@ -318,8 +318,9 @@ namespace MelonS.GameProto
         {
             // F1 레퍼런스 콜로니심 Work tab 단축키
             if (Input.GetKeyDown(KeyCode.F1)) Toggle();
-            // #ui백로그 5.3 — ESC 닫기 (designation 모드 7곳의 'ESC=취소' 관례 정합)
-            if (isOpen && Input.GetKeyDown(KeyCode.Escape)) Close();
+            // #ui백로그 5.3 — ESC 닫기 (designation 모드 7곳의 'ESC=취소' 관례 정합).
+            //  SimInput 경유 — 하네스가 같은 경로를 검증할 수 있게 (규칙 2).
+            if (isOpen && SimInput.GetKeyDown(KeyCode.Escape)) Close();
         }
     }
 
