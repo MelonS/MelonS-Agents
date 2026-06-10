@@ -64,8 +64,15 @@ PLAYTEST-TODO 의 P0/P1 이 **운영자 인게임 OK** 될 때까지 신규 기�
   시나리오 = 클릭 시퀀스 + 화면 기준 assert (형식은 파일 헤더 주석).
 - **러너**: `python skills/game-dev-agent/scripts/repro_run.py <scenario> [--fresh-build]`
   exit 0 = PASS. FAIL 스텝 출력 + `G:/ai/_repro_shots/` 스크린샷이 곧 재현 증거.
+  타임아웃은 시나리오 JSON 의 `timeoutSec` (없으면 240).
+- **스위트(커밋 게이트)**: `python skills/game-dev-agent/scripts/repro_all.py [--fresh-build]`
+  — 전 시나리오 직렬 실행(리포트 파일 전역 공유라 병렬 금지), exit 0 = 전체 PASS → 커밋 가능.
 - **시나리오 보존**: `skills/game-prototype/repro-scenarios/*.json` — PASS 한 시나리오는
   영구 보존 = 그 버그의 회귀 테스트. 운영자 버그 1건 = 시나리오 파일 1개 원칙.
+- **시나리오 작성 함정 5종** (자가조절 바닥값 금지 / 세팅-적용 레이스 / 임계값 기하 도출 /
+  기준값 시점 / Destroy 오탐) — `docs/playbook.md` 사이클 2 참조.
+- **P1 계열 ops/probes** (2026-06-10): `setNeed`/`speed`(스캐폴딩, 검증 대상 아님),
+  `needBelow`/`needDrops`/`hasThought`/`pileDurabilityDrops`(검증). 형식은 ReproHarness.cs 헤더.
 
 ## 멀티에이전트 운용 (현실적 최소선)
 

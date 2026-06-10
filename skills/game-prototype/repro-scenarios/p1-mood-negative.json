@@ -1,0 +1,15 @@
+{
+  "name": "P1 자연 플레이 — needs decay 작동(초반 단조구간 측정) + 식사 환류(배부름) + mood 자연 하강 (운영자 '게이지 안 줄어듦'/'기분 안 나빠짐' 회귀가드. needDrops 를 시작 직후에 두는 이유: food/sleep 80 에선 식사(<40)·수면붕괴가 불가능해 하락이 단조 — sawtooth 바닥(needBelow) 잡기는 식사 타이밍 운에 좌우돼 플래키)",
+  "timeoutSec": 280,
+  "steps": [
+    { "op": "wait", "sec": 1.5 },
+    { "op": "shot", "name": "00_start" },
+    { "op": "speed", "x": 4 },
+    { "op": "assert", "probe": "needDrops", "name": "food", "min": 5, "withinSec": 150 },
+    { "op": "assert", "probe": "needDrops", "name": "sleep", "min": 10, "withinSec": 150 },
+    { "op": "assert", "probe": "hasThought", "contains": "배부름", "withinSec": 800 },
+    { "op": "assert", "probe": "needBelow", "name": "mood", "min": 70, "withinSec": 300 },
+    { "op": "speed", "x": 1 },
+    { "op": "shot", "name": "01_natural_play" }
+  ]
+}

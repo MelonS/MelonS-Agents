@@ -1,0 +1,42 @@
+{
+  "name": "P1 통나무 내구도 — 옥외 더미가 닳아 흐려지다 소멸하는가 (운영자 '그건 안 됐다')",
+  "timeoutSec": 120,
+  "steps": [
+    {
+      "op": "wait",
+      "sec": 1.5
+    },
+    {
+      "op": "shot",
+      "name": "00_start"
+    },
+    {
+      "op": "speed",
+      "x": 8
+    },
+    {
+      "op": "assert",
+      "probe": "pileDurabilityDrops",
+      "min": 10,
+      "withinSec": 60
+    },
+    {
+      "op": "shot",
+      "name": "01_decaying_faded"
+    },
+    {
+      "op": "assert",
+      "probe": "pileDurabilityDrops",
+      "min": 100,
+      "withinSec": 280
+    },
+    {
+      "op": "speed",
+      "x": 1
+    },
+    {
+      "op": "shot",
+      "name": "02_pile_gone"
+    }
+  ]
+}

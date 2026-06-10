@@ -1,0 +1,12 @@
+{
+  "name": "P1 부정 thought 환류 (결정론) — sleep 20 세팅 → '수면 부족' thought + mood 하락. (food 대신 sleep 인 이유: 식량이 있으면 림이 food<40 에서 즉시 먹어 배고픔을 자가 해소하는 레이스가 있음. 침대는 시작 맵에 없어 수면 부족이 유지됨 — 배고픔과 같은 PawnThoughts.Update 환류 경로)",
+  "timeoutSec": 60,
+  "steps": [
+    { "op": "wait", "sec": 1.5 },
+    { "op": "shot", "name": "00_start" },
+    { "op": "setNeed", "name": "sleep", "x": 20 },
+    { "op": "assert", "probe": "needDrops", "name": "mood", "min": 2.5, "withinSec": 15 },
+    { "op": "assert", "probe": "hasThought", "contains": "수면 부족", "withinSec": 5 },
+    { "op": "shot", "name": "01_sleepy_thought" }
+  ]
+}

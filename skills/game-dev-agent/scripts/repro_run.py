@@ -59,13 +59,19 @@ def main() -> int:
     ap.add_argument("scenario")
     ap.add_argument("--fresh-build", action="store_true")
     ap.add_argument("--build")
-    ap.add_argument("--timeout", type=int, default=240)
+    ap.add_argument("--timeout", type=int, default=None)
     args = ap.parse_args()
 
     scenario = Path(args.scenario).resolve()
     if not scenario.exists():
         print(f"[repro] scenario 없음: {scenario}")
         return 2
+    if args.timeout is None:
+        # 시나리오가 자기 실행시간을 안다 — JSON "timeoutSec" (harness 는 무시하는 키)
+        try:
+            args.timeout = json.loads(scenario.read_text(encoding="utf-8")).get("timeoutSec", 240)
+        except Exception:
+            args.timeout = 240
     # 시나리오별 로그/샷 분리 — 연속 실행 시 이전 증거 덮어쓰기 방지
     global RUN_LOG, SHOTS
     RUN_LOG = Path(f"G:/ai/_repro_run_{scenario.stem}.log")

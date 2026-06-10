@@ -188,6 +188,29 @@ namespace MelonS.GameProto
                     r.passed = true; r.detail = p; break;
                 }
 
+                case "setNeed":
+                {
+                    // 테스트 스캐폴딩 (검증 대상 아님) — 림 need 를 직접 세팅해 조건을 빠르게
+                    //  만든다 (레퍼런스 콜로니심 데브모드와 동일).  이후의 thought 발생/mood 반영은
+                    //  게임 시스템(PawnThoughts tick)이 자연 수행 — 검증 체인은 입력경로 그대로.
+                    var pn = FindPawn(s.pawn);
+                    var nds = pn != null ? pn.GetComponent<PawnNeeds>() : null;
+                    if (nds == null) { r.passed = false; r.detail = "no PawnNeeds"; break; }
+                    if (s.name == "food") nds.food = s.x;
+                    else if (s.name == "sleep") nds.sleep = s.x;
+                    else nds.mood = s.x;
+                    r.passed = true; r.detail = $"setNeed {s.name}={s.x} ({pn.PawnName})"; break;
+                }
+
+                case "speed":
+                {
+                    // 테스트 스캐폴딩 (검증 대상 아님) — 장시간 sim 을 견딜 수 있게 배속.
+                    //  주의: 이후 wait/withinSec 는 '게임 초' 단위가 된다 (WaitForSeconds 는 scaled).
+                    if (TimeController.Instance != null) { TimeController.Instance.SetScale(s.x); r.passed = true; }
+                    else { Time.timeScale = s.x; r.passed = true; }
+                    r.detail = $"timeScale={s.x}"; break;
+                }
+
                 case "assert":
                     yield return RunAssert(s, r);
                     break;
@@ -346,10 +369,89 @@ namespace MelonS.GameProto
                         : $"closest-while-'{s.contains}' {bestWhileActive:F2} to rclick (need ≤{s.min}) in {t:F1}s";
                     break;
                 }
+                case "needBelow":
+                {
+                    // s.name = food|sleep|mood, s.min = 임계값.  내려갈 때까지 폴링.
+                    var pawn = FindPawn(s.pawn);
+                    var nd = pawn != null ? pawn.GetComponent<PawnNeeds>() : null;
+                    if (nd == null) { r.passed = false; r.detail = "no PawnNeeds"; break; }
+                    float t = 0, v = GetNeed(nd, s.name);
+                    while (t < s.withinSec && v > s.min)
+                    { yield return new WaitForSeconds(0.25f); t += 0.25f; v = GetNeed(nd, s.name); }
+                    r.passed = v <= s.min;
+                    r.detail = $"{s.name}={v:F1} (need ≤{s.min}) in {t:F0}s(scaled)"; break;
+                }
+                case "needDrops":
+                {
+                    // 시작값 대비 s.min 이상 하락하는가 — '기분이 나빠지긴 하는가' 류 end-to-end.
+                    var pawn = FindPawn(s.pawn);
+                    var nd = pawn != null ? pawn.GetComponent<PawnNeeds>() : null;
+                    if (nd == null) { r.passed = false; r.detail = "no PawnNeeds"; break; }
+                    float start = GetNeed(nd, s.name), t = 0, v = start;
+                    while (t < s.withinSec && start - v < s.min)
+                    { yield return new WaitForSeconds(0.25f); t += 0.25f; v = GetNeed(nd, s.name); }
+                    r.passed = start - v >= s.min;
+                    r.detail = $"{s.name} {start:F1}→{v:F1} (drop {start - v:F1}, need ≥{s.min}) in {t:F0}s(scaled)"; break;
+                }
+                case "hasThought":
+                {
+                    var pawn = FindPawn(s.pawn);
+                    var th = pawn != null ? pawn.GetComponent<PawnThoughts>() : null;
+                    if (th == null) { r.passed = false; r.detail = "no PawnThoughts"; break; }
+                    float t = 0; bool found2 = false; string labels = "";
+                    while (t < s.withinSec && !found2)
+                    {
+                        labels = "";
+                        foreach (var thought in th.active)
+                        {
+                            labels += thought.label + ",";
+                            if (thought.label.Contains(s.contains)) { found2 = true; break; }
+                        }
+                        if (!found2) { yield return new WaitForSeconds(0.25f); t += 0.25f; }
+                    }
+                    r.passed = found2;
+                    r.detail = found2 ? $"thought '{s.contains}' present at {t:F0}s" : $"no '{s.contains}' in {t:F0}s (active: {labels})";
+                    break;
+                }
+                case "pileDurabilityDrops":
+                {
+                    // 운영자 "통나무 내구도만 닳아 사라지게 — 안 됐다" 재현용.
+                    //  옥외(!InStockpile) 더미만 닳는 설계 — 옥외 최다수량 더미(시작 50-더미)를 추적.
+                    //  s.min = 요구 하락폭.  더미 Destroy 는 내구도가 거의 소진된 상태였을 때만
+                    //  '끝까지 닳음' PASS — 높은 내구도에서 소멸하면 운반/병합 의심으로 FAIL.
+                    WoodPileEntity tgt = null;
+                    foreach (var w in FindObjectsOfType<WoodPileEntity>())
+                        if (!w.InStockpile && (tgt == null || w.Wood > tgt.Wood)) tgt = w;
+                    if (tgt == null) { r.passed = false; r.detail = "옥외 WoodPile 없음"; break; }
+                    float start = tgt.Durability, t = 0, lastSeen = start;
+                    while (t < s.withinSec)
+                    {
+                        if (tgt == null) break;
+                        lastSeen = tgt.Durability;
+                        if (start - lastSeen >= s.min) break;
+                        yield return new WaitForSeconds(0.5f); t += 0.5f;
+                    }
+                    if (tgt == null)
+                    {
+                        bool wornOut = lastSeen < 15f;
+                        r.passed = wornOut || start - lastSeen >= s.min;
+                        r.detail = $"pile destroyed at {t:F0}s(scaled), durability {start:F1}→{lastSeen:F1}"
+                                   + (wornOut ? " (소진 소멸)" : " (조기 소멸 — 운반/병합 의심)");
+                    }
+                    else
+                    {
+                        r.passed = start - lastSeen >= s.min;
+                        r.detail = $"durability {start:F1}→{lastSeen:F1} (drop {start - lastSeen:F1}, need ≥{s.min}) in {t:F0}s(scaled)";
+                    }
+                    break;
+                }
                 default:
                     r.passed = false; r.detail = $"unknown probe '{s.probe}'"; break;
             }
         }
+
+        private static float GetNeed(PawnNeeds nd, string name)
+            => name == "food" ? nd.food : name == "sleep" ? nd.sleep : nd.mood;
 
         // ── target 리졸버 — 절차생성 맵이라 고정좌표 대신 엔티티 검색 ────────
         private bool ResolveWorld(Step s, out Vector3 world)
