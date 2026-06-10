@@ -196,6 +196,14 @@ load-bearing, or set a new focus.)_
   `QA_RETRY_GRANULARITY=window` in mission retry loops).  Per §5,
   agent change to `agents/lib/*` requires explicit operator OK.
 
+<!-- suggest (2026-06-11 새벽, 야간 세션 종료 시점 다음 큐 제안):
+  1. check-round-2 운영자 회신 처리 (확인 ①~⑤ + 결정 ⑥ 6건) — 최우선
+  2. UI P2 잔여 ~16건 (구조 변경류: #2.1 ColonistBar 재생성, #4.10 해상도 클램프, #5.10 드래그 페인팅 등)
+  3. 죽은 코드/주석 정리 배치 (#0.6 SelectionGizmoBar 432줄, #7.8, #6.8, #2.8, #3.8/#3.9, #1.6) — 운영자 OK 후
+  4. #4.5 2단계 (ArchitectMenu 라벨을 LiveCostFor 로 합성), 유휴 경보 카드 설계, SFX variant 3종
+  5. raw Input 잔여 97개소 카테고리별 전환 (G:/ai/_raw_input_audit.txt)
+-->
+
 ## Done — most recent first
 
 - **2026-06-10 밤~06-11 새벽** 야간 자율 세션 — UI 배치 2~5(19건) + 게임필 배치 1~5
