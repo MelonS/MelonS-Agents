@@ -138,6 +138,21 @@ namespace MelonS.GameProto.EditorTools
                     StockpileZoneEntity.Spawn(new Vector3(sx, sy, 0f), stockSprite);
                 }
             }
+
+            // #게임필 배치3(2026-06-10 자율) — 스폰 중심 모닥불 1개: 맨땅 시작(#229)이라
+            //  밤 화면에 광원이 0 — NightOverlay 가 어둡기만 하고 '야영지' 라는 정체성이
+            //  없었다.  FlickerLight 는 비-Stove 객체에선 상시 은은 점멸(IsLit 폴백 true).
+            //  콜라이더 없음(통행 무방해), 빌드/세이브 시스템 불간섭(순수 비주얼).
+            Sprite fireSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/glow_fire_pool.png");
+            if (fireSprite != null)
+            {
+                GameObject fireGo = new GameObject("Campfire_Spawn");
+                fireGo.transform.position = new Vector3(0.5f, -1.5f, 0f);
+                var fsr = fireGo.AddComponent<SpriteRenderer>();
+                fsr.sprite = fireSprite;
+                fsr.sortingOrder = 6;
+                fireGo.AddComponent<FlickerLight>();
+            }
         }
     }
 }

@@ -21,7 +21,11 @@ namespace MelonS.GameProto.EditorTools
             //  apparent size 유지/향상 위해 ortho 6 → 3.5.  1-unit pawn / 화면 7 unit = 28.6%
             //  (이전 2-unit pawn @ ortho6 = 16.7% 보다 오히려 큼 — 디테일 가독성 ↑).
             //  zoomMax(CameraController) 32 살아있어 wheel 로 60x60 전체 줌아웃 가능.
-            cam.orthographicSize = 3.5f;
+            // #게임필 배치3(2026-06-10 자율) — 3.5 는 화면 ~13x7 칸: 첫 화면이 '맵'이 아니라
+            //  '확대경'이라 게임 컨텍스트(정착지+숲+림 3명)가 안 보였다 (격차 분석 갈래3).
+            //  5.5 = ~20x11 칸, 림 ~18% — '림 너무 작음'(2026-05-27, ortho10 5%) 과
+            //  '게임 같은 첫 화면' 사이 절충.  체감은 운영자 확인 항목.
+            cam.orthographicSize = 5.5f;
             camGo.tag = "MainCamera";
             // pawn 그룹 (-1.5/0.5/2.5, 0.5) 중심 + 정착지 살짝 위 → (0.5, 1.0)
             camGo.transform.position = new Vector3(0.5f, 1.0f, -10);

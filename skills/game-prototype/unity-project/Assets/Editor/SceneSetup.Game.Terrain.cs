@@ -66,6 +66,10 @@ namespace MelonS.GameProto.EditorTools
             layout.dirtTile  = LoadOrCreateTile("Assets/Sprites/tile_dirt.png",  "Assets/Tiles/Dirt.asset");
             layout.waterTile = LoadOrCreateTile("Assets/Sprites/tile_water.png", "Assets/Tiles/Water.asset");
             layout.rockTile  = LoadOrCreateTile("Assets/Sprites/tile_rock.png",  "Assets/Tiles/Rock.asset");
+            // #게임필 배치3(2026-06-10 자율) — 디스크에 이미 있던 grass 변형 b/c 를 배선.
+            //  rotation/flip(#109)만으론 동일 픽셀 반복이 그대로 보여 들판이 벽지처럼 단조.
+            Tile grassTileB = LoadOrCreateTile("Assets/Sprites/tile_grass_b.png", "Assets/Tiles/GrassB.asset");
+            Tile grassTileC = LoadOrCreateTile("Assets/Sprites/tile_grass_c.png", "Assets/Tiles/GrassC.asset");
 
             // Procedural 결정론적 (seed=12345) + #109 cell 당 random rotation/flip 으로
             //  같은 타일이 반복돼도 시각 변화 (operator: "타일이미지가 너무 구림" + "autotile" 피드백)
@@ -97,6 +101,13 @@ namespace MelonS.GameProto.EditorTools
                     {
                         if ((p - dc).magnitude < layout.dirtRadius + (float)(rng.NextDouble()-0.5)*0.5f)
                         { chosen = layout.dirtTile; break; }
+                    }
+                    // #게임필 배치3 — grass 60/25/15 가중 변형 (결정론: 같은 rng 시드 체인)
+                    if (chosen == layout.grassTile)
+                    {
+                        double gv = rng.NextDouble();
+                        if (gv > 0.85 && grassTileC != null) chosen = grassTileC;
+                        else if (gv > 0.60 && grassTileB != null) chosen = grassTileB;
                     }
                     layout.tilemap.SetTile(cell, chosen);
                     ApplyRandomTileTransform(layout.tilemap, cell, rotRng);

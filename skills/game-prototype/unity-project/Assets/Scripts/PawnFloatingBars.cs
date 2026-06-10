@@ -127,17 +127,30 @@ namespace MelonS.GameProto
             else if (entity != null) hpRatio = Mathf.Clamp01(entity.Hp / 30f);
             else hpRatio = 1f;
             float moodRatio = needs != null ? Mathf.Clamp01(needs.mood / 100f) : 1f;
+            bool bleeding = IsBleeding();
+
+            // #게임필 배치3(2026-06-10 자율) — 풀피 림 위에 24시간 빨간 바 = '디버그 화면'
+            //  인상 + 화면이 상시 위험을 외쳐 진짜 위기 신호가 매몰.  레퍼런스 컨벤션: 평시
+            //  림 위는 조용하고 바는 위기에만.  HP바 = 손상/출혈/징집(전투) 시, 무드바 =
+            //  경고 구간(<50%)만 표시.  바가 '떴다'는 것 자체가 신호가 된다.
+            bool hpVisible = hpRatio < 0.999f || bleeding || (entity != null && entity.IsDrafted);
+            bool moodVisible = moodRatio < 0.5f;
+            if (hpBg != null) hpBg.enabled = hpVisible;
+            if (hpFill != null) hpFill.enabled = hpVisible;
+            if (moodBg != null) moodBg.enabled = moodVisible;
+            if (moodFill != null) moodFill.enabled = moodVisible;
+
             // 감사 rank8: 출혈 중이면 HP fill 을 2Hz 로 어두운빨강↔밝은빨강 깜빡여 월드에서
             //  "피흘리는 중"이 보이게(이전엔 인포패널 밖에선 안 보임).  붕대 감으면 멈춤.
             Color hpColor = ColorForHp(hpRatio);
-            if (IsBleeding())
+            if (bleeding)
             {
                 float p = (Mathf.Sin(Time.time * Mathf.PI * 4f) + 1f) * 0.5f;  // 0..1
                 hpColor = Color.Lerp(new Color(0.35f, 0.04f, 0.04f, 1f),
                                      new Color(1.00f, 0.25f, 0.20f, 1f), p);
             }
-            UpdateFill(hpFill,   hpRatio,   hpColor);
-            UpdateFill(moodFill, moodRatio, ColorForMood(moodRatio));
+            if (hpVisible) UpdateFill(hpFill, hpRatio, hpColor);
+            if (moodVisible) UpdateFill(moodFill, moodRatio, ColorForMood(moodRatio));
         }
 
         // 붕대 안 감은 출혈 부위가 하나라도 있으면 true (PawnHealth.parts 공개 필드).
@@ -164,9 +177,12 @@ namespace MelonS.GameProto
 
         private Color ColorForHp(float r)
         {
-            if (r < 0.30f) return new Color(0.55f, 0.10f, 0.10f, 1f);
-            if (r < 0.70f) return new Color(0.95f, 0.40f, 0.20f, 1f);
-            return new Color(0.95f, 0.30f, 0.25f, 1f);
+            // #게임필 배치3 — ColonistBar 와 같은 색 언어(건강=초록→주황→빨강)로 통일.
+            //  이전엔 풀피도 빨강(0.95,0.30,0.25)이라 같은 수치가 상단바와 머리위에서
+            //  정반대로 읽혔다 (#3.2 색 언어 불일치의 머리위 절반).
+            if (r < 0.30f) return new Color(0.85f, 0.20f, 0.15f, 1f);  // 위험 — 빨강
+            if (r < 0.70f) return new Color(0.95f, 0.55f, 0.20f, 1f);  // 주의 — 주황
+            return new Color(0.35f, 0.78f, 0.35f, 1f);                 // 건강 — 초록
         }
 
         private Color ColorForMood(float r)
