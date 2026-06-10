@@ -181,6 +181,7 @@ namespace MelonS.GameProto
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
+            BlobShadow.Attach(gameObject, 0.8f, -0.42f);  // D1 몰입 — 발밑 접지 그림자
             healthRef = GetComponent<PawnHealth>();
             // R2: SO 없으면 default 인스턴스 — game 멈추지 X
             if (stats == null) stats = PawnStats.CreateDefault();

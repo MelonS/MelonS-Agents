@@ -92,6 +92,7 @@ namespace MelonS.GameProto
             Hp = maxHp;
             sr = GetComponent<SpriteRenderer>();
             if (sr != null) baseColor = sr.color;
+            BlobShadow.Attach(gameObject, 0.8f, -0.42f);  // D1 몰입 — 발밑 접지 그림자
         }
 
         private void Update()
