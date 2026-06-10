@@ -34,8 +34,42 @@ namespace MelonS.GameProto
         // reveal 1(램프 중심)에서 어둠 alpha 를 얼마나 걷을지(0.88 → 거의 다 걷어 바닥 보임).
         private const float MaxReveal = 0.9f;
 
-        private static readonly Color32 NightDark = new Color32(13, 20, 51, 255);   // 0.05,0.08,0.20
         private static readonly Color32 WarmLight = new Color32(255, 156, 66, 255); // 촛불 오렌지
+
+        // D4b 몰입 (design-immersion-2026-06-11) — 어둠 "색" 도 시간대를 탄다.
+        //  (구 NightDark 상수(13,20,51)는 DARK_STOPS 의 한밤 구간으로 흡수.)
+        //  기존엔 황혼/새벽에도 한밤과 같은 청색이라 해질녘 무드가 없었다.
+        //  STOPS(alpha 커브)와 같은 타임라인: 일몰(18:30) 주황 → 황혼(20:00) 보라
+        //  → 밤 청색, 역순으로 새벽 보라 → 일출(06:30) 주황.  alpha 0 구간(낮)의
+        //  색은 무관하나 경계 보간이 자연스럽도록 웜톤을 이어 둔다.
+        private struct CStop { public float t; public Color32 c; public CStop(float t, byte r, byte g, byte b){ this.t=t; this.c=new Color32(r,g,b,255); } }
+        private static readonly CStop[] DARK_STOPS = new CStop[]
+        {
+            new CStop(0.00f, 13, 20, 51),
+            new CStop(0.17f, 13, 20, 51),   // 04:00 한밤 청색
+            new CStop(0.23f, 48, 26, 52),   // 05:30 새벽 보라
+            new CStop(0.27f, 82, 42, 32),   // 06:30 일출 주황
+            new CStop(0.33f, 82, 46, 30),   // 08:00 (alpha 0 — 보간용)
+            new CStop(0.71f, 86, 46, 28),   // 17:00 (alpha 0 — 보간용)
+            new CStop(0.77f, 86, 42, 26),   // 18:30 일몰 주황
+            new CStop(0.83f, 52, 26, 56),   // 20:00 황혼 보라
+            new CStop(0.92f, 16, 20, 52),   // 22:00 밤 청색 복귀
+            new CStop(1.00f, 13, 20, 51),
+        };
+
+        private static Color32 SampleDarkStops(float t)
+        {
+            for (int i = 0; i < DARK_STOPS.Length - 1; i++)
+            {
+                if (t <= DARK_STOPS[i + 1].t)
+                {
+                    float local = Mathf.InverseLerp(DARK_STOPS[i].t, DARK_STOPS[i + 1].t, t);
+                    float s = local * local * (3f - 2f * local);   // STOPS 와 동일 smoothstep
+                    return Color32.Lerp(DARK_STOPS[i].c, DARK_STOPS[i + 1].c, s);
+                }
+            }
+            return DARK_STOPS[DARK_STOPS.Length - 1].c;
+        }
 
         private const float MaxNightAlpha = 0.82f;
         private const float CoverMargin   = 1.25f;
@@ -150,7 +184,7 @@ namespace MelonS.GameProto
                 ScanLamps();
             }
 
-            RepaintLightmap(center, coverW, coverH, baseA);
+            RepaintLightmap(center, coverW, coverH, baseA, SampleDarkStops(t));
         }
 
         private void ScanLamps()
@@ -229,7 +263,7 @@ namespace MelonS.GameProto
         }
 
         // 라이트맵 페인트: 각 텍셀의 월드 위치에서 기본 어둠 - 램프 reveal.
-        private void RepaintLightmap(Vector3 center, float coverW, float coverH, float baseA)
+        private void RepaintLightmap(Vector3 center, float coverW, float coverH, float baseA, Color32 dark)
         {
             float left   = center.x - coverW * 0.5f;
             float bottom = center.y - coverH * 0.5f;
@@ -310,9 +344,9 @@ namespace MelonS.GameProto
                     // 어둠 alpha 를 reveal 만큼 걷어 바닥이 드러나게.  색은 reveal 따라
                     //  밤 어둠색 → 촛불 따뜻색으로 (드러난 곳에 따뜻한 빛이 입혀짐).
                     float a = baseA * (1f - reveal * MaxReveal);
-                    byte cr = (byte)(NightDark.r + (WarmLight.r - NightDark.r) * reveal);
-                    byte cg = (byte)(NightDark.g + (WarmLight.g - NightDark.g) * reveal);
-                    byte cb = (byte)(NightDark.b + (WarmLight.b - NightDark.b) * reveal);
+                    byte cr = (byte)(dark.r + (WarmLight.r - dark.r) * reveal);
+                    byte cg = (byte)(dark.g + (WarmLight.g - dark.g) * reveal);
+                    byte cb = (byte)(dark.b + (WarmLight.b - dark.b) * reveal);
                     _px[row + xx] = new Color32(cr, cg, cb, (byte)(a * 255f));
                 }
             }
