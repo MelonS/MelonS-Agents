@@ -97,6 +97,9 @@ namespace MelonS.GameProto
             {
                 AudioBank.Instance?.PlayChop();
                 lastChopSoundTime = Time.time;
+                // D3 몰입 — 타격 순간 나무칩 파편 (SFX 스로틀과 동기 = 도끼질 리듬).
+                ParticleFx.Burst(transform.position + Vector3.up * 0.25f,
+                                 new Color(0.55f, 0.38f, 0.20f, 1f));
             }
             if (hp <= 0f)
             {
@@ -115,6 +118,11 @@ namespace MelonS.GameProto
                 //  이전엔 나무가 무음으로 사라짐 — FloatingText 는 B6 때 만들어 두고 배선이
                 //  FOLLOW-UP 으로 방치돼 있던 것의 이행 (격차 분석 갈래3/갈래4 합치 항목).
                 AudioBank.Instance?.PlayTreefall();
+                // D3 몰입 — 쓰러짐 순간 큰 버스트: 나무칩 + 잎사귀 (2색 = 2버스트).
+                ParticleFx.Burst(transform.position + Vector3.up * 0.3f,
+                                 new Color(0.55f, 0.38f, 0.20f, 1f), count: 12, speed: 2.4f);
+                ParticleFx.Burst(transform.position + Vector3.up * 0.6f,
+                                 new Color(0.35f, 0.60f, 0.25f, 1f), count: 10, speed: 2.0f);
                 FloatingText.Spawn(transform.position + Vector3.up * 0.4f,
                                    $"+{woodDrop} 목재", new Color(0.45f, 0.85f, 0.35f, 1f));
                 WoodPileEntity.Spawn(transform.position, woodDrop, WoodPileSprite);

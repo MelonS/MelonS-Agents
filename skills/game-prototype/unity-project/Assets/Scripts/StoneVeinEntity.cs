@@ -82,6 +82,9 @@ namespace MelonS.GameProto
                 // Entity-level SfxInterval guard (0.6s) above is kept intact.
                 AudioBank.Instance?.PlayMine();
                 lastSfxTime = Time.time;
+                // D3 몰입 — 곡괭이질 순간 돌파편 (SFX 스로틀과 동기 = 채광 리듬).
+                ParticleFx.Burst(transform.position + Vector3.up * 0.2f,
+                                 new Color(0.62f, 0.64f, 0.68f, 1f));
             }
             if (hp <= 0f)
             {
@@ -89,6 +92,9 @@ namespace MelonS.GameProto
                 int yieldN = Random.Range(stoneYieldMin, stoneYieldMax + 1);
                 // #게임필 배치2 — 보상 순간: 붕괴가 들리고 산출이 보인다 (TreeEntity 와 대칭).
                 AudioBank.Instance?.PlayRockbreak();
+                // D3 몰입 — 붕괴 순간 큰 돌파편 버스트 (TreeEntity 쓰러짐과 대칭).
+                ParticleFx.Burst(transform.position + Vector3.up * 0.25f,
+                                 new Color(0.62f, 0.64f, 0.68f, 1f), count: 14, speed: 2.4f);
                 FloatingText.Spawn(transform.position + Vector3.up * 0.4f,
                                    $"+{yieldN} 석재", new Color(0.75f, 0.78f, 0.85f, 1f));
                 // #215 운영자 fb "캐면 순간이동" — StoneChunkEntity.EnsureSprite 가 sprite
