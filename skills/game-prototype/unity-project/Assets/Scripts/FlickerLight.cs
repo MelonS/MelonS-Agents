@@ -191,6 +191,9 @@ namespace MelonS.GameProto
             float targetAlpha = lit > 0.5f
                 ? alphaBase + noise * alphaAmplitude
                 : emberAlpha + noise * (emberAlpha * 0.4f);
+            // TOP-3 (visual-polish-backlog 2026-06-11) — 한낮에 글로우가 풀강도면 빛이
+            //  "따뜻함" 신호를 잃는다.  어두울수록 강하게 (낮 30% 바닥, 밤 100%).
+            targetAlpha *= Mathf.Lerp(0.3f, 1f, NightOverlay.CurrentDarkness01);
             targetAlpha = Mathf.Clamp01(targetAlpha);
 
             float scale = scaleBase + (lit > 0.5f ? noise * scaleAmplitude : noise * scaleAmplitude * 0.3f);

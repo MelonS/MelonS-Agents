@@ -74,6 +74,10 @@ namespace MelonS.GameProto
         private const float MaxNightAlpha = 0.82f;
         private const float CoverMargin   = 1.25f;
 
+        /// <summary>현재 어둠 강도 [0,1] (한밤 0.72 기준 정규화).  라벨 감광(TOP-2)/
+        ///  글로우 주간 감쇠(TOP-3) 등 다른 표현 레이어가 시간대 무드를 따라가는 단일 출처.</summary>
+        public static float CurrentDarkness01 { get; private set; }
+
         private SpriteRenderer sr;
         private Camera cam;
         private Texture2D _tex;
@@ -184,6 +188,7 @@ namespace MelonS.GameProto
                 ScanLamps();
             }
 
+            CurrentDarkness01 = Mathf.Clamp01(baseA / 0.72f);
             RepaintLightmap(center, coverW, coverH, baseA, SampleDarkStops(t));
         }
 
