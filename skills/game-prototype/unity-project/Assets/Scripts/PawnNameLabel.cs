@@ -24,9 +24,10 @@ namespace MelonS.GameProto
         [SerializeField] private float statusGap = 0.26f;   // name↔status 줄간격 (#3.1)
         [SerializeField] private float fontSize = 64;
         [SerializeField] private float characterSize = 0.05f;
-        // TOP-2 LOD 경계 (ortho size)
-        [SerializeField] private float lodNameOnly = 7f;    // 이상: 활동 줄 숨김
-        [SerializeField] private float lodHideAll = 11f;    // 이상: 라벨 전체 숨김
+        // TOP-2 LOD 경계 (ortho size).  #카메라파리티: 기본줌 5.5→8 에 맞춰 재조정
+        //  (기본 줌에서 이름이 보여야 한다).
+        [SerializeField] private float lodNameOnly = 10f;   // 이상: 활동 줄 숨김
+        [SerializeField] private float lodHideAll = 17f;    // 이상: 라벨 전체 숨김
 
         private TextMesh nameTm;
         private TextMesh statusTm;

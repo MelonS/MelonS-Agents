@@ -11,12 +11,22 @@ namespace MelonS.GameProto
     {
         [SerializeField] private float panSpeed = 8f;
         [SerializeField] private float fastPanMultiplier = 2.5f;
-        [SerializeField] private float zoomStep = 1.2f;
-        // #199 A1: default ortho 6→3.5 (pawn 1x1).  zoomMin 3→1.5 로 낮춰
-        //  단일 1x1 pawn 근접 inspection 가능 (1.5 → pawn 이 화면 33% 차지).
-        [SerializeField] private float zoomMin = 1.5f;
-        // Day 40: 40x40 맵 — zoomMax 14 → 22 (전체 맵 한 화면에 보기 가능)
-        [SerializeField] private float zoomMax = 48f;  // #108 60x60→32.  #235 90x90 전체 보기 → 48
+        [SerializeField] private float zoomStep = 1.18f;
+        // #카메라파리티 (운영자 2026-06-11 "림월드 기본 줌인아웃과 많이 달라"):
+        //  zoomMin 1.5(픽셀 깨지는 초근접) → 3, zoomMax 48(맵보다 큰 void 뷰) → 26.
+        [SerializeField] private float zoomMin = 3f;
+        [SerializeField] private float zoomMax = 26f;
+        // #카메라파리티 — 림월드 무빙 질감: 줌은 목표값으로 지수 수렴(즉시 점프 X),
+        //  팬은 관성(가속 빠르게/release 후 ~0.3s 드리프트 정지), 줌인은 커서 방향.
+        [SerializeField] private float zoomLerpSpeed = 9f;   // 줌 수렴 속도 (1/s)
+        [SerializeField] private float panAccel = 14f;       // 입력 → 목표속도 수렴 (1/s)
+        [SerializeField] private float panDecay = 6f;        // release 후 감속 (1/s)
+
+        private float targetOrtho = -1f;     // <0 = 줌 입력 전 (스무딩 비활성)
+        private bool zoomTowardCursor;       // 줌인일 때만 커서 앵커
+        private Vector2 panVel;              // 관성 팬 속도 (world units/s)
+        private Vector3 dragAnchorWorld;     // 미들마우스 드래그 월드 anchor
+        private bool dragging;
 
         // Soft world bounds so camera can't pan into infinity.
         // #108: map ±30 → ±35.  #235 map ±45 + zoom 여유 → ±50
@@ -102,7 +112,12 @@ namespace MelonS.GameProto
                 }
             }
 
-            // Pan (WASD + Arrow)
+            float dt = Time.unscaledDeltaTime;
+
+            // ── Pan (WASD + Arrow) — #카메라파리티: 관성 모델 ──────────────────
+            //  입력은 '목표 속도'만 정하고 실제 속도(panVel)는 지수 수렴.  키를 떼면
+            //  panDecay 로 ~0.3s 드리프트 후 정지 — 림월드의 부드러운 무빙 질감.
+            //  하네스/배치모드: 키 입력이 없으면 panVel 은 0 유지 → 드리프트 오염 없음.
             float h = 0f, v = 0f;
             if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))  h -= 1;
             if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) h += 1;
@@ -111,33 +126,73 @@ namespace MelonS.GameProto
 
             if (h != 0 || v != 0)
             {
-                // 사용자 pan 입력 - auto-follow 즉시 종료
-                followingPawn = null;
-
-                // #199 A1: 기준 ortho 6 → 3.5 (pawn 1x1).  pan 속도 정규화 divisor 도 맞춤
-                //  (default zoom 에서 pan = panSpeed 유지).
+                followingPawn = null;   // 사용자 pan 입력 - auto-follow 즉시 종료
                 float speed = panSpeed * (cam.orthographicSize / 3.5f);
                 if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                     speed *= fastPanMultiplier;
-
-                Vector3 p = cam.transform.position;
-                // #버그헌트: 줌-인식 경계로 clamp (뷰 사각형이 월드 밖 void 를 안 보이게).
-                cam.transform.position = ClampCamPos(
-                    p.x + h * speed * Time.unscaledDeltaTime,
-                    p.y + v * speed * Time.unscaledDeltaTime, p.z);
+                Vector2 desired = new Vector2(h, v).normalized * speed;
+                panVel = Vector2.Lerp(panVel, desired, 1f - Mathf.Exp(-panAccel * dt));
+            }
+            else
+            {
+                panVel = Vector2.Lerp(panVel, Vector2.zero, 1f - Mathf.Exp(-panDecay * dt));
+                if (panVel.sqrMagnitude < 0.0025f) panVel = Vector2.zero;
             }
 
-            // Zoom (mouse wheel)
+            // ── 미들마우스 드래그 팬 (림월드 동작) — 놓으면 panVel 모멘텀으로 이어짐 ──
+            if (Input.GetMouseButtonDown(2))
+            {
+                dragging = true;
+                followingPawn = null;
+                dragAnchorWorld = cam.ScreenToWorldPoint(Input.mousePosition);
+            }
+            if (dragging && Input.GetMouseButton(2))
+            {
+                Vector3 cur = cam.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 delta = dragAnchorWorld - cur;
+                Vector3 p0 = cam.transform.position;
+                cam.transform.position = ClampCamPos(p0.x + delta.x, p0.y + delta.y, p0.z);
+                if (dt > 0.0001f)   // release 모멘텀용 속도 기록 (스무딩)
+                    panVel = Vector2.Lerp(panVel, new Vector2(delta.x, delta.y) / dt,
+                                          1f - Mathf.Exp(-panAccel * dt));
+            }
+            if (Input.GetMouseButtonUp(2)) dragging = false;
+
+            if (!dragging && panVel.sqrMagnitude > 0.0001f)
+            {
+                Vector3 p = cam.transform.position;
+                cam.transform.position = ClampCamPos(
+                    p.x + panVel.x * dt, p.y + panVel.y * dt, p.z);
+            }
+
+            // ── Zoom (mouse wheel) — #카메라파리티: 스무스 + 줌인 시 커서 방향 ──
             float scroll = Input.GetAxis("Mouse ScrollWheel");
             if (Mathf.Abs(scroll) > 0.001f)
             {
-                if (scroll > 0)
-                    cam.orthographicSize = Mathf.Max(zoomMin, cam.orthographicSize / zoomStep);
+                if (targetOrtho < 0f) targetOrtho = cam.orthographicSize;
+                targetOrtho = scroll > 0
+                    ? Mathf.Max(zoomMin, targetOrtho / zoomStep)
+                    : Mathf.Min(zoomMax, targetOrtho * zoomStep);
+                zoomTowardCursor = scroll > 0;   // 줌인만 커서 앵커 (줌아웃은 중앙 유지)
+            }
+            if (targetOrtho > 0f && Mathf.Abs(cam.orthographicSize - targetOrtho) > 0.005f)
+            {
+                Vector3 before = zoomTowardCursor
+                    ? cam.ScreenToWorldPoint(Input.mousePosition) : Vector3.zero;
+                cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, targetOrtho,
+                                                  1f - Mathf.Exp(-zoomLerpSpeed * dt));
+                if (zoomTowardCursor)
+                {
+                    // 커서 밑 월드 지점이 제자리에 머물게 — 줌인이 커서로 빨려 들어간다.
+                    Vector3 after = cam.ScreenToWorldPoint(Input.mousePosition);
+                    Vector3 p = cam.transform.position + (before - after);
+                    cam.transform.position = ClampCamPos(p.x, p.y, p.z);
+                }
                 else
-                    cam.orthographicSize = Mathf.Min(zoomMax, cam.orthographicSize * zoomStep);
-                // #버그헌트: 줌 변경 후 경계 밖이면 재클램프(엣지에서 줌아웃 시 void 방지).
-                Vector3 zp = cam.transform.position;
-                cam.transform.position = ClampCamPos(zp.x, zp.y, zp.z);
+                {
+                    Vector3 zp = cam.transform.position;
+                    cam.transform.position = ClampCamPos(zp.x, zp.y, zp.z);
+                }
             }
         }
     }

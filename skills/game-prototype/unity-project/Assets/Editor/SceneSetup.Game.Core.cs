@@ -25,7 +25,10 @@ namespace MelonS.GameProto.EditorTools
             //  '확대경'이라 게임 컨텍스트(정착지+숲+림 3명)가 안 보였다 (격차 분석 갈래3).
             //  5.5 = ~20x11 칸, 림 ~18% — '림 너무 작음'(2026-05-27, ortho10 5%) 과
             //  '게임 같은 첫 화면' 사이 절충.  체감은 운영자 확인 항목.
-            cam.orthographicSize = 5.5f;
+            // #카메라파리티 (운영자 2026-06-11 "림월드 기본 줌인아웃과 많이 달라, 훨씬
+            //  확대되어서 보이고"): 5.5 → 8 (~29x16 칸).  ortho10(5/27 "림 너무 작음")
+            //  까지는 안 가는 절충 — 그림자/눈동자/모션이 생겨 작아도 살아 보임.
+            cam.orthographicSize = 8f;
             camGo.tag = "MainCamera";
             // pawn 그룹 (-1.5/0.5/2.5, 0.5) 중심 + 정착지 살짝 위 → (0.5, 1.0)
             camGo.transform.position = new Vector3(0.5f, 1.0f, -10);

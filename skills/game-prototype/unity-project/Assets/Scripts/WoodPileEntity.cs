@@ -46,7 +46,10 @@ namespace MelonS.GameProto
         public static float PileScale(int amount)
         {
             float t = Mathf.Clamp01(Mathf.Sqrt(Mathf.Max(1, amount)) / Mathf.Sqrt(50f));
-            return Mathf.Lerp(0.8f, 1.4f, t);
+            // #아이템스케일 (운영자 2026-06-11 "한칸을 다 차지하는 아이템은 별로 없음"):
+            //  0.8~1.4(만재 시 1.4칸!) → 0.5~0.78.  림월드처럼 아이템은 칸의 ~2/3 —
+            //  '물건이 놓여 있다'로 읽히고 지면/그리드가 숨 쉰다.  양→크기 관례는 유지.
+            return Mathf.Lerp(0.5f, 0.78f, t);
         }
 
         private void Awake()
