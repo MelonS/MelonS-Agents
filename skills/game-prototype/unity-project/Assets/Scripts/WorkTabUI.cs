@@ -266,21 +266,12 @@ namespace MelonS.GameProto
             brt.sizeDelta = new Vector2(ColWidth - 2, RowHeight - 2);
             brt.anchoredPosition = new Vector2(pos.x + 1, pos.y - 1);
             var img = go.AddComponent<Image>();
-            // 색상 by priority - 레퍼런스 콜로니심 Work tab 의 노랑→빨강 그라데이션 모방.
-            //   0 disabled = dark grey
-            //   1 highest   = bright yellow
-            //   2           = lime
-            //   3           = mid green
-            //   4 lowest    = teal/blue
-            img.color = priority switch
-            {
-                0 => new Color(0.15f, 0.15f, 0.15f, 1f),
-                1 => new Color(0.95f, 0.85f, 0.25f, 1f),
-                2 => new Color(0.70f, 0.90f, 0.35f, 1f),
-                3 => new Color(0.40f, 0.75f, 0.45f, 1f),
-                4 => new Color(0.35f, 0.55f, 0.85f, 1f),
-                _ => new Color(0.15f, 0.15f, 0.15f, 1f),
-            };
+            // TOP-9 (visual-polish-backlog 2026-06-11): 전 셀 순색 배경(순노랑 등)이
+            //  화면에서 제일 시끄러웠다 — 배경은 패널톤으로 가라앉히고, 우선순위는
+            //  숫자 색으로 인코딩 (1 밝은초록 > 2 라임카키 > 3 앰버 > 4 그레이).
+            img.color = priority == 0
+                ? new Color(0.10f, 0.085f, 0.07f, 0.55f)
+                : new Color(0.165f, 0.135f, 0.105f, 0.9f);
             var click = go.AddComponent<WorkTabCellClick>();
             click.left = leftClick;
             click.right = rightClick;
@@ -292,9 +283,16 @@ namespace MelonS.GameProto
             t.font = font;
             t.fontSize = 18;
             t.fontStyle = FontStyle.Bold;
-            t.color = priority == 0
-                ? new Color(0.76f, 0.76f, 0.76f, 1f)   // #audit3 #10 대비 ↑ (0.55→0.76, WCAG AA)
-                : new Color(0.10f, 0.10f, 0.10f, 1f);
+            // TOP-9 — 우선순위는 숫자 색으로 (배경은 패널톤).  WCAG AA 대비 유지.
+            t.color = priority switch
+            {
+                0 => new Color(0.50f, 0.47f, 0.43f, 1f),
+                1 => new Color(0.42f, 0.86f, 0.42f, 1f),
+                2 => new Color(0.70f, 0.78f, 0.40f, 1f),
+                3 => new Color(0.80f, 0.66f, 0.38f, 1f),
+                4 => new Color(0.58f, 0.56f, 0.53f, 1f),
+                _ => new Color(0.50f, 0.47f, 0.43f, 1f),
+            };
             t.alignment = TextAnchor.MiddleCenter;
             t.raycastTarget = false;
             var trt = txtGo.GetComponent<RectTransform>();

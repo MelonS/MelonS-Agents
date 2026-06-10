@@ -16,11 +16,14 @@ namespace MelonS.GameProto
         public TimeSlot[] slots = new TimeSlot[24];
 
         public static readonly string[] SlotLabels = { "자유", "수면", "작업", "여가" };
+        // TOP-9 (visual-polish-backlog 2026-06-11): 채도 100% 원색이 월드 웜톤 팔레트와
+        //  충돌 — 같은 의미를 유지한 채 머티드 톤으로 (수면 슬레이트블루/작업 세이지/
+        //  여가 앰버/자유 웜그레이).
         public static readonly Color[] SlotColors = {
-            new Color(0.55f, 0.55f, 0.60f, 1f),  // Anytime grey
-            new Color(0.30f, 0.40f, 0.85f, 1f),  // Sleep blue
-            new Color(0.30f, 0.75f, 0.45f, 1f),  // Work green
-            new Color(0.95f, 0.60f, 0.25f, 1f),  // Joy orange
+            new Color(0.50f, 0.47f, 0.43f, 1f),  // Anytime warm grey
+            new Color(0.24f, 0.35f, 0.55f, 1f),  // Sleep slate blue
+            new Color(0.31f, 0.48f, 0.31f, 1f),  // Work sage green
+            new Color(0.55f, 0.42f, 0.24f, 1f),  // Joy amber
         };
 
         private void Awake()

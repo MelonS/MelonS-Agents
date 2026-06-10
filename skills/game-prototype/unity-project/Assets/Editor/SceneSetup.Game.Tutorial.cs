@@ -20,13 +20,14 @@ namespace MelonS.GameProto.EditorTools
             GameObject tutBgGo = new GameObject("TutorialBg");
             tutBgGo.transform.SetParent(canvasGo.transform, false);
             RectTransform tutBgRt = tutBgGo.AddComponent<RectTransform>();
-            tutBgRt.anchorMin = new Vector2(0.5f, 1f);
-            tutBgRt.anchorMax = new Vector2(0.5f, 1f);
-            tutBgRt.pivot = new Vector2(0.5f, 1f);
-            tutBgRt.sizeDelta = new Vector2(720, 100);
-            // #64 운영자 "12시 메뉴 UI 겹침": 튜토리얼(y-80, 100h)이 ColonistBar(상단 76+8=84 아래
-            //  ~54h, 즉 -84~-138)와 정면 겹쳤음.  콜로니스트 바 아래(-160)로 내려 겹침 제거.
-            tutBgRt.anchoredPosition = new Vector2(0, -160);
+            // TOP-7 (visual-polish-backlog 2026-06-11): 상단 중앙 720x100 상주 박스가
+            //  모든 스크린샷의 초점을 점유 — '미완성 빌드' 인상의 주범.  하단 중앙
+            //  토스트(BuildClickToast y110) 위 1줄짜리 작은 힌트로 강등.
+            tutBgRt.anchorMin = new Vector2(0.5f, 0f);
+            tutBgRt.anchorMax = new Vector2(0.5f, 0f);
+            tutBgRt.pivot = new Vector2(0.5f, 0f);
+            tutBgRt.sizeDelta = new Vector2(640, 64);
+            tutBgRt.anchoredPosition = new Vector2(0, 170);
             // bordered panel (returns padded inner content RT; TutorialText parents here)
             RectTransform tutContent = UITheme.MakeBorderedPanel(
                 tutBgRt, UITheme.BorderPx, UITheme.PanelBg, UITheme.PadOuter);
@@ -39,8 +40,8 @@ namespace MelonS.GameProto.EditorTools
             tutTextGo.transform.SetParent(tutContent, false);
             Text tutText = tutTextGo.AddComponent<Text>();
             tutText.text = "";
-            tutText.font = UITheme.LoadKoreanFont(28);
-            tutText.fontSize = 28;
+            tutText.font = UITheme.LoadKoreanFont(20);
+            tutText.fontSize = 20;   // TOP-7 — 힌트 타이포 (배너→토스트 강등에 맞춤)
             tutText.alignment = TextAnchor.MiddleCenter;
             tutText.color = UITheme.TextPrimary;   // cream body text
             tutText.supportRichText = true;
