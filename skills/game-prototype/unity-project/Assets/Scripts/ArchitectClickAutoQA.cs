@@ -198,33 +198,39 @@ namespace MelonS.GameProto
             return RealClickRect(btn.GetComponent<RectTransform>(), btn.gameObject);
         }
 
+        // #림월드파리티(2026-06-11) — 메뉴가 아코디언(▶/▼ 텍스트 마커)에서 '카테고리
+        //  2열 + 아이콘 셸프'로 바뀜.  헤더 = "Cat_" 버튼(텍스트 마커 없음), 항목 = 셸프
+        //  "Cell_" 버튼(이름이 NameStrip 자식 Text 에 있음 — 글리프 Text 가 먼저 올 수
+        //  있어 전체 Text 를 훑는다).  펼침 상태는 ArchitectMenu.ActiveCategory 로 판정.
         private bool RealClickItemContaining(string labelSub, Transform menuRoot)
         {
-            // an item = a Button whose label contains labelSub but is NOT a category
-            //  header (headers start with ▶/▼).
             var buttons = menuRoot.GetComponentsInChildren<Button>(true);
             foreach (var b in buttons)
             {
                 if (b == null) continue;
-                var txt = b.GetComponentInChildren<Text>(true);
-                if (txt == null) continue;
-                if (txt.text.StartsWith("▶ ") || txt.text.StartsWith("▼ ")) continue; // header
-                if (txt.text.Contains(labelSub))
-                    return RealClickRect(b.GetComponent<RectTransform>(), b.gameObject);
+                if (b.gameObject.name.StartsWith("Cat_")) continue;   // 카테고리 버튼 제외
+                foreach (var txt in b.GetComponentsInChildren<Text>(true))
+                {
+                    if (txt != null && txt.text.Contains(labelSub))
+                        return RealClickRect(b.GetComponent<RectTransform>(), b.gameObject);
+                }
             }
             return false;
         }
 
         private Button FindHeaderButton(string category, Transform menuRoot)
         {
+            // category 인자는 풀 키("Structure (구조)") 또는 한글명 — 괄호 안 한글을 추출해
+            //  카테고리 버튼 텍스트(한글 전용)와 대조.
+            string kr = category;
+            int a = category.IndexOf('('); int z = category.IndexOf(')');
+            if (a >= 0 && z > a) kr = category.Substring(a + 1, z - a - 1).Trim();
             var buttons = menuRoot.GetComponentsInChildren<Button>(true);
             foreach (var b in buttons)
             {
-                if (b == null) continue;
+                if (b == null || !b.gameObject.name.StartsWith("Cat_")) continue;
                 var txt = b.GetComponentInChildren<Text>(true);
-                if (txt == null) continue;
-                if ((txt.text.StartsWith("▶ ") || txt.text.StartsWith("▼ "))
-                    && txt.text.Contains(category))
+                if (txt != null && txt.text.Contains(kr))
                     return b;
             }
             return null;
@@ -232,10 +238,8 @@ namespace MelonS.GameProto
 
         private bool HeaderExpanded(string category, Transform menuRoot)
         {
-            var btn = FindHeaderButton(category, menuRoot);
-            if (btn == null) return false;
-            var txt = btn.GetComponentInChildren<Text>(true);
-            return txt != null && txt.text.StartsWith("▼ ");
+            return ArchitectMenu.Instance != null
+                   && ArchitectMenu.Instance.ActiveCategory == category;
         }
 
         /// <summary>The load-bearing check: do a GENUINE GraphicRaycaster raycast at

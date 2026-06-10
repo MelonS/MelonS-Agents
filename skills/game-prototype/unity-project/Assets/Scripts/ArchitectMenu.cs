@@ -22,7 +22,22 @@ namespace MelonS.GameProto
         private Font font;
         private bool isOpen = false;
         private GameObject contentRoot;
+        private GameObject shelfRoot;          // #림월드파리티 — 우측 아이콘 셸프
         private string activeCategory = "";
+        /// <summary>QA 용 — 현재 펼친 카테고리 키 (림월드파리티 전환으로 ▶/▼ 텍스트
+        ///  마커가 사라져 ArchitectClickAutoQA 가 상태를 직접 읽는다).</summary>
+        public string ActiveCategory => activeCategory;
+
+        // #림월드파리티 — 카테고리 표시 순서: RimWorld Architect 탭 순서(Orders→Zone→
+        //  Structure→Production→Furniture→…→Security→…→Floors)의 부분집합.  2열
+        //  row-major 로 채움 (RimWorld 카테고리 패널과 동일한 채움 방향).
+        private static readonly string[] AllCategoryOrder =
+        {
+            "Orders (지시)",    "Zone (구역)",
+            "Structure (구조)", "Production (생산)",
+            "Furniture (가구)", "Security (방어)",
+            "Floors (바닥)",    "Lighting (조명)",
+        };
 
         // #UI-restyle U7 (Round 5) — share the control bar's exact button palette.
         private static readonly Color InactiveBg = MelonS.GameProto.Core.UITheme.BtnInactiveBg;
@@ -372,18 +387,14 @@ namespace MelonS.GameProto
             // #UI-restyle U9 — route through UITheme (no per-script font fallback drift).
             font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(18);
             rt = gameObject.AddComponent<RectTransform>();
-            // 좌측 stack - TopBar 아래 + GuiControlBar 위.  size 280x440.
-            rt.anchorMin = new Vector2(0f, 0.5f);
-            rt.anchorMax = new Vector2(0f, 0.5f);
-            rt.pivot = new Vector2(0f, 0.5f);
-            // operator fb #1 added 2 categories (Orders+Zone) → taller panel so the
-            //  10 collapsed headers + one expanded category's items fit without clip.
-            // 시각버그 fix (운영자: 항목 텍스트 오른쪽 잘림) — 280→320 으로 폭을 넓혀
-            //  "저장/폐기 영역 제거" / "자동문 (목재 6)" 같은 긴 라벨이 16px 들여쓰기 +
-            //  26px 아이콘 inset 이후에도 우측 여백까지 다 들어가게.  (텍스트 영역은
-            //  MakeBtn 에서 horizontalOverflow=Overflow 로도 잘림 방지.)
-            rt.sizeDelta = new Vector2(320, 560);
-            rt.anchoredPosition = new Vector2(12, 0);
+            // #림월드파리티(운영자 2026-06-11 "건축 UI 거의 똑같이") — 좌하단 모서리 고정:
+            //  RimWorld User_interface 위키 'Architect menu — Bottom left corner'.
+            //  카테고리 2열 패널 + 우측 아이콘 셸프 구조 (RefreshContent/RefreshShelf).
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(0f, 0f);
+            rt.pivot = new Vector2(0f, 0f);
+            rt.sizeDelta = new Vector2(252, 220);   // 높이는 RefreshContent 가 행 수에 맞춤
+            rt.anchoredPosition = new Vector2(8, 8);
 
             // #UI-restyle U7 — same MakeBorderedPanel the control bar / inspector use:
             //   warm-brown fill + Divider border on all 4 edges (was a flat borderless rect).
@@ -450,7 +461,7 @@ namespace MelonS.GameProto
             trt.sizeDelta = Vector2.zero;
             trt.anchoredPosition = Vector2.zero;
 
-            // content 영역 (카테고리 list + 펼친 buildables) — 헤더 strip 아래.
+            // content 영역 (카테고리 2열 버튼) — 헤더 strip 아래.
             contentRoot = new GameObject("Content");
             contentRoot.transform.SetParent(panelContent, false);
             var crt = contentRoot.AddComponent<RectTransform>();
@@ -458,6 +469,20 @@ namespace MelonS.GameProto
             crt.anchorMax = new Vector2(1, 1);
             crt.offsetMin = new Vector2(0, 0);
             crt.offsetMax = new Vector2(0, -44);   // leave room for the 36px header + 8 gap
+
+            // #림월드파리티 — 아이콘 셸프: 패널 오른쪽에 가로로 앉는 75px급 셀 줄
+            //  (RimWorld 는 카테고리 패널 우측, 하단 탭바 위에 designator 셸프가 펼쳐짐).
+            //  마스크가 없으므로 패널 rect 밖이어도 정상 렌더.
+            shelfRoot = new GameObject("Shelf");
+            shelfRoot.transform.SetParent(rt, false);
+            var srt = shelfRoot.AddComponent<RectTransform>();
+            srt.anchorMin = new Vector2(1f, 0f);
+            srt.anchorMax = new Vector2(1f, 0f);
+            srt.pivot = new Vector2(0f, 0f);
+            srt.anchoredPosition = new Vector2(6f, 0f);
+            srt.sizeDelta = new Vector2(10f, 92f);
+            shelfRoot.SetActive(false);
+
             RefreshContent();
         }
 
@@ -467,131 +492,295 @@ namespace MelonS.GameProto
             //   force-clear any lingering tooltip override before rebuilding.
             if (HoverTooltip.Instance != null) HoverTooltip.Instance.ClearUIOverride();
 
-            // 기존 children 정리
             for (int i = contentRoot.transform.childCount - 1; i >= 0; i--)
                 Destroy(contentRoot.transform.GetChild(i).gameObject);
 
-            float y = 0;
-
-            // ── Orders (지시) + Zone (구역) FIRST (the reference sim tab order) ──────────
-            //   operator fb #1: Mine/Deconstruct under Orders, Grow-zone under Zone.
-            foreach (var kv in OrderCategories)
+            // ── #림월드파리티 (운영자 2026-06-11 "건축 UI 거의 똑같이") ────────────
+            //  카테고리 = 좌하단 2열 텍스트 버튼 (RimWorld 카테고리 패널).  클릭하면
+            //  우측 셸프에 해당 카테고리의 아이콘 셀들이 펼쳐진다 (RefreshShelf).
+            //  셀 클릭 = 모드 진입 + 메뉴 유지 (연속 배치 — RimWorld 동일), 해제는
+            //  우클릭/ESC (BuildManager/designation 들이 이미 처리).
+            const float colW = 113f, rowH = 34f, gap = 4f;
+            int idx = 0;
+            foreach (var catName in AllCategoryOrder)
             {
-                string catName = kv.Key;
-                var items = kv.Value;
-                var headerGo = MakeBtn(contentRoot.transform, catName,
-                    new Vector2(0, -y), MelonS.GameProto.Core.UITheme.HeaderBg,
-                    () => { activeCategory = (activeCategory == catName) ? "" : catName; RefreshContent(); });
-                var oht = headerGo.GetComponentInChildren<Text>();
-                oht.text = (activeCategory == catName ? "▼ " : "▶ ") + KrCat(catName);
-                oht.fontStyle = FontStyle.Bold;
-                y += 36;
-                if (activeCategory == catName)
-                {
-                    foreach (var oi in items)
-                    {
-                        var item = oi;  // closure capture
-                        bool on = item.isActive != null && item.isActive();
-                        var itemGo = MakeBtn(contentRoot.transform,
-                            (on ? "▣ " : "") + item.label,
-                            new Vector2(16, -y),
-                            on ? MelonS.GameProto.Core.UITheme.BtnActiveBg
-                               : MelonS.GameProto.Core.UITheme.BtnInactiveBg,
-                            () => {
-                                // Enter the designation mode, then close the menu so
-                                //  the player can immediately drag-select on the map
-                                //  (mirrors how a buildable enters build mode + closes).
-                                item.invoke?.Invoke();
-                                Close();
-                            },
-                            // v3 audit: orders/zone rows cost no material — the
-                            //   tooltip explains the drag-designation action instead.
-                            tooltip: $"{item.label} — 맵에서 드래그하여 지정");
-                        y += 32;
-                    }
-                }
+                if (!OrderCategories.ContainsKey(catName) && !Categories.ContainsKey(catName))
+                    continue;
+                int col = idx % 2, row = idx / 2;
+                string cap = catName;   // closure capture
+                bool isOn = activeCategory == catName;
+                MakeCatBtn(contentRoot.transform, KrCat(catName),
+                    new Vector2(col * (colW + gap), -row * (rowH + gap)), colW, rowH,
+                    isOn ? MelonS.GameProto.Core.UITheme.BtnActiveBg : InactiveBg,
+                    isOn,
+                    () => { activeCategory = (activeCategory == cap) ? "" : cap; RefreshContent(); });
+                idx++;
             }
 
-            // ── then the BUILD categories — #63 명시적 표시 순서로 정렬 ──────────
-            //   방어(Security)는 건축 카테고리(구조/바닥/가구/생산/조명) 뒤로 모아 그룹핑을
-            //   자연스럽게(이전엔 dict 선언 순서라 Security 가 구조 바로 뒤에 끼어 있었음).
-            foreach (var catName in CategoryOrder)
+            // 패널 높이 = 헤더(36+8) + 카테고리 행들 + 하단 여백
+            int rows = (idx + 1) / 2;
+            rt.sizeDelta = new Vector2(252f, rows * (rowH + gap) + 44f + 12f);
+
+            RefreshShelf();
+        }
+
+        /// <summary>#림월드파리티 — 카테고리 버튼 (2열 그리드용 고정폭).</summary>
+        private void MakeCatBtn(Transform parent, string label, Vector2 pos, float w, float h,
+                                Color col, bool active, System.Action onClick)
+        {
+            var go = new GameObject($"Cat_{label}");
+            go.transform.SetParent(parent, false);
+            var brt = go.AddComponent<RectTransform>();
+            brt.anchorMin = new Vector2(0, 1);
+            brt.anchorMax = new Vector2(0, 1);
+            brt.pivot = new Vector2(0, 1);
+            brt.sizeDelta = new Vector2(w, h);
+            brt.anchoredPosition = pos;
+
+            var img = go.AddComponent<Image>();
+            img.color = MelonS.GameProto.Core.UITheme.Divider;
+            var fillRt = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(brt, 2f, col);
+            var fillImg = fillRt.parent.GetComponent<Image>();
+            if (fillImg != null) fillImg.raycastTarget = true;   // 클릭 가능 (MakeBtn 과 동일 fix)
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = fillImg;
+            btn.onClick.AddListener(() => { PlayClickBlip(); onClick?.Invoke(); });
+
+            var txtGo = new GameObject("Label");
+            txtGo.transform.SetParent(go.transform, false);
+            var t = txtGo.AddComponent<Text>();
+            t.text = label;
+            t.font = font;
+            t.fontSize = 16;
+            t.fontStyle = FontStyle.Bold;
+            t.color = active ? MelonS.GameProto.Core.UITheme.AccentGold
+                             : MelonS.GameProto.Core.UITheme.TextPrimary;
+            t.alignment = TextAnchor.MiddleCenter;
+            t.raycastTarget = false;
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            var trt2 = txtGo.GetComponent<RectTransform>();
+            trt2.anchorMin = Vector2.zero;
+            trt2.anchorMax = Vector2.one;
+            trt2.sizeDelta = Vector2.zero;
+        }
+
+        /// <summary>#림월드파리티 — 우측 아이콘 셸프 재구성.  활성 카테고리의 designator
+        ///  들을 68px 셀(아이콘 + 하단 이름 띠 + 핫키 글자)로 가로 나열.  비용은 셀이
+        ///  아니라 호버 툴팁(RimWorld 인포박스 자리) — LiveCostFor 실비용 (#4.5 2단계).</summary>
+        private void RefreshShelf()
+        {
+            if (shelfRoot == null) return;
+            for (int i = shelfRoot.transform.childCount - 1; i >= 0; i--)
+                Destroy(shelfRoot.transform.GetChild(i).gameObject);
+
+            float x = 0f;
+            const float cellW = 68f, cgap = 5f;
+            bool any = false;
+
+            if (OrderCategories.TryGetValue(activeCategory, out var orderItems))
             {
-                if (!Categories.TryGetValue(catName, out var items)) continue;
-                // 카테고리 헤더 (toggle)
-                var headerGo = MakeBtn(contentRoot.transform, catName,
-                    new Vector2(0, -y), MelonS.GameProto.Core.UITheme.HeaderBg,
-                    () => { activeCategory = (activeCategory == catName) ? "" : catName; RefreshContent(); });
-                var ht = headerGo.GetComponentInChildren<Text>();
-                ht.text = (activeCategory == catName ? "▼ " : "▶ ") + KrCat(catName);
-                ht.fontStyle = FontStyle.Bold;
-                y += 36;
-                // 펼친 buildables (active 카테고리만)
-                if (activeCategory == catName)
+                foreach (var oi in orderItems)
                 {
-                    // #241 자재 부족 항목은 the reference sim 처럼 dim 표시 (석재 0 일 때 석재 항목 회색 등).
-                    //  스냅샷(메뉴 열 때 기준) — 클릭은 막지 않음(the reference sim 도 자재 없이 청사진을
-                    //  깔 수 있고 pawn 이 모이면 짓는다; ghost 빨강 + placement 가 별도 처리).
-                    int curWood = ResourceManager.Instance != null ? ResourceManager.Instance.wood : 0;
-                    int curStone = ResourceManager.Instance != null ? ResourceManager.Instance.stone : 0;
-                    foreach (var (mode, label, cost) in items)
-                    {
-                        var bcap = mode;  // closure capture
-                        bool affordable = cost <= 0
-                            || (PaysWithStone(mode) ? curStone : curWood) >= cost;
-                        // v3 audit: icon + 자재/비용 tooltip per buildable row.
-                        //   Authored sprite when present; stone reuses the wall
-                        //   silhouette tinted grey, otherwise white (use as-authored).
-                        // 시각버그 fix: 이제 석재 항목도 실제 회색 stone sprite 를 쓰므로
-                        //  authored sprite 는 그대로(흰색=as-authored) 렌더 — 추가 회색 tint
-                        //  불필요(이중 회색화 방지).  sprite 가 없을 때만 자재색 swatch
-                        //  (목재=갈색 / 석재=회색)로 구분.
-                        // #255 플레이어 빌드에서도 아이콘이 나오게 — BuildManager 런타임 sprite
-                        //  (AssetDatabase 는 에디터 전용이라 플레이어에선 null→회색 swatch 였음).
-                        Sprite icon = BuildManager.Instance != null
-                            ? BuildManager.Instance.SpriteForMode(mode)
-                            : LoadIcon(IconKey(mode));
-                        // 석재 buildable 은 wood sprite 를 회색 tint 해 구분(SpriteForMode 가
-                        //  WallStone 등에 wood sprite 를 줄 수 있음).  목재는 as-authored.
-                        Color tint = icon != null
-                            ? (PaysWithStone(mode) ? new Color(0.72f, 0.72f, 0.78f, 1f) : Color.white)
-                            : MaterialColor(mode);   // null sprite → solid material swatch
-                        // #241 자재 부족 시 row 배경/아이콘/텍스트 dim.
-                        Color rowBg = affordable
-                            ? MelonS.GameProto.Core.UITheme.BtnInactiveBg
-                            : new Color(0.11f, 0.09f, 0.08f, 0.55f);
-                        if (!affordable) tint = new Color(tint.r, tint.g, tint.b, 0.4f);
-                        string tip = affordable ? BuildableTooltip(mode, cost)
-                            : BuildableTooltip(mode, cost) + "  — 자재 부족";
-                        var rowGo = MakeBtn(contentRoot.transform, label,
-                            new Vector2(16, -y), rowBg,
-                            () => {
-                                if (BuildManager.Instance != null)
-                                {
-                                    var newMode = (BuildManager.Instance.CurrentMode == bcap)
-                                        ? BuildManager.Mode.Off : bcap;
-                                    BuildManager.Instance.SetMode(newMode);
-                                    Close();
-                                }
-                            },
-                            icon: icon, iconTint: tint, tooltip: tip);
-                        if (!affordable)
+                    var item = oi;   // closure capture
+                    bool on = item.isActive != null && item.isActive();
+                    string nm = NameOf(item.label);
+                    bool isErase = nm.Contains("제거");
+                    MakeShelfCell(x, nm, HotkeyOf(item.label), null,
+                        isErase ? "✕" : nm.Substring(0, 1), on, true,
+                        nm + " — 맵에서 드래그하여 지정",
+                        () => { item.invoke?.Invoke(); RefreshContent(); });
+                    x += cellW + cgap; any = true;
+                }
+            }
+            else if (Categories.TryGetValue(activeCategory, out var buildItems))
+            {
+                int curWood = ResourceManager.Instance != null ? ResourceManager.Instance.wood : 0;
+                int curStone = ResourceManager.Instance != null ? ResourceManager.Instance.stone : 0;
+                foreach (var (mode, label, cost) in buildItems)
+                {
+                    var bcap = mode;   // closure capture
+                    int liveCost = BuildManager.Instance != null
+                        ? BuildManager.Instance.LiveCostFor(mode) : cost;   // #4.5 — 실비용
+                    bool affordable = liveCost <= 0
+                        || (PaysWithStone(mode) ? curStone : curWood) >= liveCost;
+                    Sprite icon = BuildManager.Instance != null
+                        ? BuildManager.Instance.SpriteForMode(mode)
+                        : LoadIcon(IconKey(mode));
+                    bool on = BuildManager.Instance != null
+                              && BuildManager.Instance.CurrentMode == bcap;
+                    string nm = NameOf(ThingKr(mode));   // "목재 벽"/"석재 벽" — 셀명 충돌 방지
+                    string tip = BuildableTooltip(mode, liveCost)
+                                 + (affordable ? "" : "  — 자재 부족");
+                    MakeShelfCell(x, nm, HotkeyOf(label), icon, "", on, affordable, tip,
+                        () =>
                         {
-                            var rt2 = rowGo.GetComponentInChildren<Text>();
-                            if (rt2 != null) rt2.color = new Color(0.55f, 0.50f, 0.45f, 1f);  // 회색 텍스트
-                        }
-                        y += 32;
-                    }
+                            if (BuildManager.Instance == null) return;
+                            var newMode = (BuildManager.Instance.CurrentMode == bcap)
+                                ? BuildManager.Mode.Off : bcap;
+                            BuildManager.Instance.SetMode(newMode);
+                            RefreshContent();   // 활성 하이라이트 갱신 (메뉴는 유지)
+                        });
+                    x += cellW + cgap; any = true;
                 }
             }
 
-            // #obj-audit #1 — 패널 높이를 콘텐츠(`y`)에 맞춰 동적 조정.  이전엔 560px 고정이라
-            //  Zone(헤더 8 + 항목 8 ≈ 544px) 펼침 시 맨 아래 항목이 패널 밖으로 잘렸다.
-            //  content 영역은 헤더 strip(36) + gap(8) 아래이므로 rt 높이 = y + 44 + 하단여백.
-            //  화면(1080) 안에서 clamp — 극단적으로 길어도 위/아래로 넘치지 않게.
-            float desired = y + 44f + 12f;
-            float maxH = Screen.height > 0 ? Screen.height - 80f : 900f;
-            rt.sizeDelta = new Vector2(rt.sizeDelta.x, Mathf.Clamp(desired, 200f, maxH));
+            var srt2 = shelfRoot.GetComponent<RectTransform>();
+            if (srt2 != null) srt2.sizeDelta = new Vector2(Mathf.Max(10f, x), 92f);
+            shelfRoot.SetActive(any && isOpen);
+        }
+
+        /// <summary>#림월드파리티 — 셸프 셀: 68px 정사각, 아이콘(또는 글리프) + 하단 이름
+        ///  띠 + 좌상단 핫키 글자.  활성 셀은 금색 테두리 (RimWorld 선택 designator).</summary>
+        private void MakeShelfCell(float x, string name, string hotkey, Sprite icon, string glyph,
+                                   bool active, bool affordable, string tooltip, System.Action onClick)
+        {
+            const float Cell = 68f;
+            var go = new GameObject($"Cell_{name}");
+            go.transform.SetParent(shelfRoot.transform, false);
+            var brt = go.AddComponent<RectTransform>();
+            brt.anchorMin = new Vector2(0, 0);
+            brt.anchorMax = new Vector2(0, 0);
+            brt.pivot = new Vector2(0, 0);
+            brt.sizeDelta = new Vector2(Cell, Cell + 22f);   // 셀 + 이름 띠 포함 높이
+            brt.anchoredPosition = new Vector2(x, 0);
+
+            var img = go.AddComponent<Image>();
+            img.color = active ? MelonS.GameProto.Core.UITheme.AccentGold
+                               : MelonS.GameProto.Core.UITheme.Divider;
+            var fillRt = MelonS.GameProto.Core.UITheme.MakeBorderedPanel(
+                brt, 2f, affordable ? InactiveBg : new Color(0.11f, 0.09f, 0.08f, 0.75f));
+            var fillImg = fillRt.parent.GetComponent<Image>();
+            if (fillImg != null) fillImg.raycastTarget = true;
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = fillImg;
+            btn.onClick.AddListener(() => { PlayClickBlip(); onClick?.Invoke(); });
+
+            // 아이콘 (스프라이트) 또는 글리프 (지시/구역 첫 글자, 제거류는 ✕)
+            if (icon != null)
+            {
+                var iGo = new GameObject("Icon");
+                iGo.transform.SetParent(go.transform, false);
+                var ii = iGo.AddComponent<Image>();
+                ii.sprite = icon;
+                ii.preserveAspect = true;
+                ii.raycastTarget = false;
+                ii.color = affordable ? Color.white : new Color(1f, 1f, 1f, 0.35f);
+                var irt = iGo.GetComponent<RectTransform>();
+                irt.anchorMin = new Vector2(0.5f, 1f);
+                irt.anchorMax = new Vector2(0.5f, 1f);
+                irt.pivot = new Vector2(0.5f, 1f);
+                irt.sizeDelta = new Vector2(46f, 46f);
+                irt.anchoredPosition = new Vector2(0f, -10f);
+            }
+            else if (!string.IsNullOrEmpty(glyph))
+            {
+                var gGo = new GameObject("Glyph");
+                gGo.transform.SetParent(go.transform, false);
+                var gt = gGo.AddComponent<Text>();
+                gt.text = glyph;
+                gt.font = font;
+                gt.fontSize = 30;
+                gt.fontStyle = FontStyle.Bold;
+                gt.color = glyph == "✕"
+                    ? new Color(0.92f, 0.40f, 0.35f, 1f)
+                    : MelonS.GameProto.Core.UITheme.AccentOrange;
+                gt.alignment = TextAnchor.MiddleCenter;
+                gt.raycastTarget = false;
+                var grt = gGo.GetComponent<RectTransform>();
+                grt.anchorMin = new Vector2(0f, 0.25f);
+                grt.anchorMax = new Vector2(1f, 1f);
+                grt.sizeDelta = Vector2.zero;
+            }
+
+            // 하단 이름 띠 (RimWorld 셀 하단 검은 띠 + 흰 소형 텍스트)
+            var stripGo = new GameObject("NameStrip");
+            stripGo.transform.SetParent(go.transform, false);
+            var sImg = stripGo.AddComponent<Image>();
+            sImg.color = new Color(0f, 0f, 0f, 0.55f);
+            sImg.raycastTarget = false;
+            var sRt = stripGo.GetComponent<RectTransform>();
+            sRt.anchorMin = new Vector2(0f, 0f);
+            sRt.anchorMax = new Vector2(1f, 0f);
+            sRt.pivot = new Vector2(0.5f, 0f);
+            sRt.sizeDelta = new Vector2(0f, 22f);
+            sRt.anchoredPosition = Vector2.zero;
+            var nGo = new GameObject("Name");
+            nGo.transform.SetParent(stripGo.transform, false);
+            var nt = nGo.AddComponent<Text>();
+            nt.text = name;
+            nt.font = font;
+            nt.fontSize = 12;
+            nt.color = affordable ? Color.white : new Color(0.7f, 0.65f, 0.6f, 1f);
+            nt.alignment = TextAnchor.MiddleCenter;
+            nt.raycastTarget = false;
+            nt.horizontalOverflow = HorizontalWrapMode.Overflow;
+            var nRt = nGo.GetComponent<RectTransform>();
+            nRt.anchorMin = Vector2.zero;
+            nRt.anchorMax = Vector2.one;
+            nRt.sizeDelta = Vector2.zero;
+
+            // 좌상단 핫키 글자 (RimWorld 셀 좌상단 키 표기)
+            if (!string.IsNullOrEmpty(hotkey))
+            {
+                var hGo = new GameObject("Hotkey");
+                hGo.transform.SetParent(go.transform, false);
+                var htx = hGo.AddComponent<Text>();
+                htx.text = hotkey;
+                htx.font = font;
+                htx.fontSize = 11;
+                htx.fontStyle = FontStyle.Bold;
+                htx.color = MelonS.GameProto.Core.UITheme.AccentGold;
+                htx.alignment = TextAnchor.UpperLeft;
+                htx.raycastTarget = false;
+                var hRt = hGo.GetComponent<RectTransform>();
+                hRt.anchorMin = new Vector2(0f, 1f);
+                hRt.anchorMax = new Vector2(0f, 1f);
+                hRt.pivot = new Vector2(0f, 1f);
+                hRt.sizeDelta = new Vector2(20f, 16f);
+                hRt.anchoredPosition = new Vector2(4f, -3f);
+            }
+
+            // 호버 툴팁 (비용/설명) — MakeBtn 과 동일한 HoverTooltip UI override 경로
+            if (!string.IsNullOrEmpty(tooltip))
+            {
+                var trig = go.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+                var tipText = tooltip;
+                var enter = new UnityEngine.EventSystems.EventTrigger.Entry
+                { eventID = UnityEngine.EventSystems.EventTriggerType.PointerEnter };
+                enter.callback.AddListener((data) =>
+                {
+                    if (HoverTooltip.Instance != null)
+                        HoverTooltip.Instance.ShowText(tipText, Input.mousePosition);
+                });
+                trig.triggers.Add(enter);
+                var exit = new UnityEngine.EventSystems.EventTrigger.Entry
+                { eventID = UnityEngine.EventSystems.EventTriggerType.PointerExit };
+                exit.callback.AddListener((data) =>
+                {
+                    if (HoverTooltip.Instance != null)
+                        HoverTooltip.Instance.ClearUIOverride(tipText);
+                });
+                trig.triggers.Add(exit);
+            }
+        }
+
+        /// <summary>"벽 (목재 5)" → "벽" / "벌목 (C)" → "벌목" — 셀 이름은 명사만 (비용은 툴팁).</summary>
+        private static string NameOf(string label)
+        {
+            int p = label.IndexOf(" (");
+            return p > 0 ? label.Substring(0, p) : label;
+        }
+
+        /// <summary>괄호 내용이 영문 1글자면 핫키로 해석 ("벌목 (C)" → "C").</summary>
+        private static string HotkeyOf(string label)
+        {
+            int a = label.IndexOf('('), b = label.IndexOf(')');
+            if (a >= 0 && b == a + 2)
+            {
+                char c = label[a + 1];
+                if (c < (char)128) return c.ToString();
+            }
+            return "";
         }
 
         private GameObject MakeBtn(Transform parent, string label, Vector2 pos, Color col, System.Action onClick,
