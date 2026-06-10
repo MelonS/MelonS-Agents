@@ -198,6 +198,13 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-10** 🔴 폭풍 전원 정신붕괴 + stand-cell 모서리 동결 fix (`d29e49b`, qa 독립
+  재실행 VERIFIED).  20분 longplay 가 발굴: ① 폭풍 직접 드레인 -3/초×60초=-180 (#234 시계
+  재정합 누락 + '야외 폭풍' thought 미배선) → 드레인 제거·thought 일원화.  ② 림이 작업칸
+  경계 밟는 순간 동결돼 나무에서 2.12 거리 허공 벌목 (운영자 "제자리 벌목"의 정체, 간헐)
+  → AtStandCell 중심 근접 0.3 — 워커 게이트 14곳 일괄.  repro_all 7/7 PASS.  확인 라운드 1
+  은 fix 3건(수면게이트 thrash + 폭풍 + stand-cell) — 소량 배치 룰 내.
+
 - **2026-06-10** P1 재현 사이클 2 + repro_all 커밋게이트 첫 green (`081c850`).  운영자
   P1 3건(기분 안 나빠짐/게이지 안 줄어듦/통나무 내구도)을 harness 재현 → **전부 미재현**
   (현 빌드 정상 작동 확인), 시나리오 6건 회귀가드 영구화, repro_all 6/6 PASS + qa 독립
