@@ -305,6 +305,7 @@ MonoBehaviour:
   restArriveTimeout: 15
   forcedWakeSleepLevel: 95
   autoSleepThreshold: 35
+  inPlaceSleepThreshold: 30
   autoWakeSleepLevel: 80
   autoSleepArriveTimeout: 12
   autoSleepRetryCooldown: 20
@@ -538,7 +539,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a29f6dcada78bd4eb000d9516039b03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  offset: {x: 0, y: 0.98, z: 0}
+  offset: {x: 0, y: 1.06, z: 0}
+  statusGap: 0.26
   fontSize: 64
   characterSize: 0.05
 --- !u!114 &6373964312038851044
