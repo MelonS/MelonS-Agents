@@ -198,6 +198,14 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-10 저녁** #38 "다른 림이 와서 캠" 근본수정 (`4f6b1d3` fix + `9495a53` 재현가드,
+  운영자 재보고).  진범: #233 이 우클릭을 지정-only 로 만들어 선택 림 직접명령이 사문화
+  + 마키 move-order 가 선택 림 AI 15s 봉인.  기존 '고침' 주장(f29b10f)은 retire 된 경로의
+  죽은 코드였고, 하네스 PASS 는 3중 가짜(sim≠real / 최근접 선택 우연 / 마키 raw Input
+  사각)였음을 멀티에이전트 감사로 확정.  fix 후 재현가드 3종(마키/적대/인과 probe)
+  FAIL→PASS + repro_all 12/12 + 롱플레이 300s 생존(위반 0, 건축·요리·식사·수면·운반·채광
+  실작동).  운영자 인게임 확인 대기 (PLAYTEST-TODO #38).
+
 - **2026-06-10** UI 전면 재검토 배치 1 (`a685582`, 운영자 지시).  8도메인 병렬 감사
   (코드+ui-tour 스크린샷+rimworldwiki 교차) → 백로그 82건(`ui-backlog-2026-06-10.md`).
   P0 5건 적용: 날짜 클리핑·폰이름 타이틀 가림·SkillUI 죽은 UI 부활·연구 스트립 가림·
