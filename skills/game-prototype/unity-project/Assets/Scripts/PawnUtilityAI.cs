@@ -200,15 +200,19 @@ namespace MelonS.GameProto
             if (needs != null && needs.HasRestOrder && !needs.IsSleeping)
             {
                 // 침대로 가는 중 — 잔여 work task 만 정리 (이동 target 은 ClickSelector 가 박음).
-                chopper.ClearTask();
-                if (gatherer != null) gatherer.ClearTask();
-                if (hunter != null) hunter.ClearTask();
-                if (cook != null) cook.ClearTask();
-                if (hauler != null) hauler.ClearTask();
-                if (builder != null) builder.ClearTask();
-                if (miner != null) miner.ClearTask();
-                if (doctor != null) doctor.ClearTask();
-                if (harvester != null) harvester.ClearTask();  // 감사 rank1: 누락→작물 예약 영구점유 fix
+                // #침대도달불가(2026-06-11, 운영자 보고) — HasTask 게이트 필수: 이 블록은
+                //  매 프레임 도는데 워커 ClearTask 는 task 가 없어도 movement.ClearTarget()
+                //  을 불러 A* 경로를 매 프레임 파괴했다.  경로 인덱스가 0 으로 리셋돼 림이
+                //  자기 칸 중심까지만 표류 후 영구 동결 → 12s timeout → '제자리 취침' 루프.
+                if (chopper.HasTask) chopper.ClearTask();
+                if (gatherer != null && gatherer.HasTask) gatherer.ClearTask();
+                if (hunter != null && hunter.HasTask) hunter.ClearTask();
+                if (cook != null && cook.HasTask) cook.ClearTask();
+                if (hauler != null && hauler.HasTask) hauler.ClearTask();
+                if (builder != null && builder.HasTask) builder.ClearTask();
+                if (miner != null && miner.HasTask) miner.ClearTask();
+                if (doctor != null && doctor.HasTask) doctor.ClearTask();
+                if (harvester != null && harvester.HasTask) harvester.ClearTask();  // 감사 rank1
                 // 침대로 가는 이동 target 이 풀렸으면(도착 못 했는데 멈춤) 다시 박아준다.
                 if (!movement.IsMoving && needs.RestTarget != null)
                     movement.SetTarget(needs.RestTarget.transform.position);
@@ -228,15 +232,17 @@ namespace MelonS.GameProto
                 }
                 else
                 {
-                    chopper.ClearTask();
-                    if (gatherer != null) gatherer.ClearTask();
-                    if (hunter != null) hunter.ClearTask();
-                    if (cook != null) cook.ClearTask();
-                    if (hauler != null) hauler.ClearTask();
-                    if (builder != null) builder.ClearTask();
-                    if (miner != null) miner.ClearTask();
-                    if (doctor != null) doctor.ClearTask();
-                    if (harvester != null) harvester.ClearTask();  // 감사 rank1
+                    // #침대도달불가 — 위 HasRestOrder 블록과 동일한 HasTask 게이트 (매 프레임
+                    //  무조건 ClearTask → ClearTarget 이 A* 경로를 파괴하던 동결 버그의 본체).
+                    if (chopper.HasTask) chopper.ClearTask();
+                    if (gatherer != null && gatherer.HasTask) gatherer.ClearTask();
+                    if (hunter != null && hunter.HasTask) hunter.ClearTask();
+                    if (cook != null && cook.HasTask) cook.ClearTask();
+                    if (hauler != null && hauler.HasTask) hauler.ClearTask();
+                    if (builder != null && builder.HasTask) builder.ClearTask();
+                    if (miner != null && miner.HasTask) miner.ClearTask();
+                    if (doctor != null && doctor.HasTask) doctor.ClearTask();
+                    if (harvester != null && harvester.HasTask) harvester.ClearTask();  // 감사 rank1
                     // 이동이 멈췄는데 아직 침대 위가 아니면 다시 침대 cell 위로 향하게.
                     //  GoSleepAction 과 동일하게 침대 footprint cell (옆이 아니라 위) 을 target.
                     if (!movement.IsMoving)
@@ -391,11 +397,13 @@ namespace MelonS.GameProto
             if (entity != null && (entity.IsDrafted || entity.IsDead || entity.IsUnderManualControl))
                 return true;
             // NOTE: WantsAutoSleep 는 제외 — 침대가 없어 자려 해도 못 가는 림은 실제론
-            //  서성이는 "떠도는중"(라벨도 동일).  침대가 있으면 위쪽 autosleep 블록이 먼저
-            //  return 하므로 여기 도달 안 함 → 침대 가는 림을 배회시키지 않는다.
-            //  HasRestOrder 도 위 rest 블록(146)이 먼저 return → 여기선 무관.
+            //  서성이는 "떠도는중"(라벨도 동일).
+            //  단 HasAutoSleepOrder(침대로 걷는 중)는 포함해야 한다 — MoveSpeedScale 설정은
+            //  Update 최상단(autosleep 블록 return 보다 먼저)에서 매 프레임 일어나므로,
+            //  여기서 빠지면 침대 걷기가 배회 속도(0.5x)로 기어가 12s 도달 timeout 을
+            //  상습 초과한다 (#침대도달불가 2026-06-11 잔존 원인 2/2).
             if (needs != null && (needs.IsSleeping || needs.IsBreaking || needs.IsEating
-                || needs.IsForcedResting))
+                || needs.IsForcedResting || needs.HasAutoSleepOrder))
                 return true;
             if (chopper != null && chopper.HasTask) return true;
             if (gatherer != null && gatherer.HasTask) return true;

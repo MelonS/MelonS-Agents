@@ -119,6 +119,13 @@ namespace MelonS.GameProto
         //  도달 못 하거나 침대 없으면 기존 제자리 취침(아래 sleep<30 && night) fallback.
         private BedEntity autoRestTarget;
         [SerializeField] private float autoSleepThreshold = 35f;  // 졸음 — 침대로 가기 시작
+        // #침대도달불가 race(2026-06-11): 제자리 취침이 걷기와 같은 임계(35)면 PawnNeeds
+        //  (매 프레임)가 sleep<35 교차 프레임에 즉시 IsSleeping=true → PawnUtilityAI 의
+        //  IsSleeping 블록이 Decide(1.5s 주기)보다 항상 먼저 return → GoSleepAction(침대
+        //  걷기)이 영원히 실행 기회를 못 얻는다.  걷기보다 낮은 별도 임계 — 35~30 구간
+        //  (decay 0.12/s ≈ 42 실초)이 AI 가 침대를 잡아 걸어갈 유예 창.  침대로 출발한
+        //  뒤(HasAutoSleepOrder)는 위 전용 블록이 처리하므로 이 게이트와 무관.
+        [SerializeField] private float inPlaceSleepThreshold = 30f;  // 바닥 취침 — 걷기(35)보다 낮게
         [SerializeField] private float autoWakeSleepLevel = 80f;  // 일반 기상 수준
         // ── 도달 timeout (robustness) ─────────────────────────────────────────────
         //  자율 취침으로 침대를 향해 출발한 시각.  이 시간 안에 침대 위에 도착 못 하면
@@ -325,9 +332,10 @@ namespace MelonS.GameProto
                         // 침대 도달 포기 → 예약 해제는 PawnUtilityAI 가 HasAutoSleepOrder
                         //  풀린 걸 보고 다음 frame 처리.  쿨다운을 걸어 같은 침대로 재출발
                         //  → 또 timeout 하는 loop 를 막고, 그 동안 제자리 취침으로 회복한다.
+                        float bedDist = Vector2.Distance(transform.position, autoRestTarget.transform.position);
                         ClearAutoSleepTarget();
                         autoSleepSuppressUntil = Time.time + autoSleepRetryCooldown;
-                        Debug.Log($"[AutoSleep] {name} bed unreachable (timeout {autoSleepArriveTimeout}s) → 제자리 취침 fallback, sleep={sleep:F0}");
+                        Debug.Log($"[AutoSleep] {(pawnEntity != null ? pawnEntity.PawnName : name)} bed unreachable (timeout {autoSleepArriveTimeout}s, 남은거리 {bedDist:F1}) → 제자리 취침 fallback, sleep={sleep:F0}");
                         // (return 하지 않고 아래 sleep<30 && night 제자리 취침 블록으로 진행)
                     }
                     else
@@ -363,7 +371,13 @@ namespace MelonS.GameProto
             {
                 if (IsSleeping) IsSleeping = false;
             }
-            else if (sleep < ExhaustedSleepLevel || (sleep < autoSleepThreshold && night))
+            // #침대도달불가 race fix: 평시 바닥 취침은 inPlaceSleepThreshold(30) — 걷기
+            //  임계(35)와 분리해 35~30 구간을 GoSleepAction 의 침대 걷기 유예 창으로 비운다.
+            //  단 침대 도달 실패 직후(suppress 쿨다운 중)는 기존대로 30~35 에서도 곧장 눕는다
+            //  (9ecfaab robust fallback — 림이 멀뚱히 서서 sleep 만 까먹지 않게).
+            else if (sleep < ExhaustedSleepLevel
+                     || (night && sleep < autoSleepThreshold && Time.time < autoSleepSuppressUntil)
+                     || (night && sleep < inPlaceSleepThreshold))
             {
                 IsSleeping = true;
                 var bed = GetBedUnderPawn();

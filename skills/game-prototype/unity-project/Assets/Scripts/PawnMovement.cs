@@ -454,7 +454,11 @@ namespace MelonS.GameProto
                 }
 
                 _path = path;
-                _pathIndex = 0;
+                // #침대도달불가(2026-06-11) 동종 회귀 방어 — A* 경로 [0]은 폰 자신의 현재
+                //  셀이라 0 에서 시작하면 '자기 칸 중심 도달'에 한 틱을 소모한다.  외부에서
+                //  매 프레임 ClearTarget+SetTarget 을 반복하는 호출자가 있어도(이번 버그)
+                //  시작 셀을 건너뛰면 최소한 전진은 보장된다.
+                _pathIndex = path.Count > 1 ? 1 : 0;
                 _pathGoalCell = goalCell;
                 _pathGridVersion = Grid.Version;
                 target = clamped;
