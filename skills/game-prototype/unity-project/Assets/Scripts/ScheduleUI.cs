@@ -116,7 +116,7 @@ namespace MelonS.GameProto
             for (int r = 0; r < pawns.Length; r++)
             {
                 var p = pawns[r];
-                if (p == null) continue;
+                if (p == null || p.IsDead) continue;   // #ui백로그 5.2 — 시체 행 제거
                 var sch = p.GetComponent<PawnSchedule>();
                 if (sch == null) continue;
                 MakeNameCell(grid.transform, p.name, new Vector2(0, y));
@@ -193,13 +193,22 @@ namespace MelonS.GameProto
         }
 
         public void Toggle() { if (isOpen) Close(); else Open(); }
-        public void Open() { isOpen = true; gameObject.SetActive(true); transform.SetAsLastSibling(); RefreshGrid(); }  // #275 최상단
+        // #275 최상단.  #ui백로그 5.3 — 중앙 팝업 3종 상호배타 (WorkTabUI 와 대칭).
+        public void Open()
+        {
+            if (WorkTabUI.Instance != null && WorkTabUI.Instance.IsOpen) WorkTabUI.Instance.Close();
+            var ru = Object.FindFirstObjectByType<ResearchUI>();
+            if (ru != null && ru.PickerOpen) ru.ClosePicker();
+            isOpen = true; gameObject.SetActive(true); transform.SetAsLastSibling(); RefreshGrid();
+        }
         public void Close() { isOpen = false; gameObject.SetActive(false); }
         public bool IsOpen => isOpen;
 
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.F4)) Toggle();
+            // #ui백로그 5.3 — ESC 닫기
+            if (isOpen && Input.GetKeyDown(KeyCode.Escape)) Close();
         }
     }
 }

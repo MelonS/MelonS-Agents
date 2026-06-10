@@ -354,6 +354,10 @@ namespace MelonS.GameProto
                 var am = e.moodFillRt.anchorMax;
                 am.x = ratio;
                 e.moodFillRt.anchorMax = am;
+                // #ui백로그 2.2 — 정신붕괴 임박(<30%) 빨강 경고: HP 와 동일 규칙으로 대칭화.
+                //  이전엔 mood 0% 도 파랑이라 5px 바의 '길이' 외엔 위기 신호가 없었다.
+                if (e.moodFill != null)
+                    e.moodFill.color = ratio < 0.30f ? HpLowCol : MoodFillCol;
             }
         }
 

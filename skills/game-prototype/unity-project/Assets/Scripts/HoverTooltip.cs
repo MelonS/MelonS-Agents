@@ -196,8 +196,12 @@ namespace MelonS.GameProto
             var animal = hit.GetComponent<AnimalEntity>();
             if (animal != null)
             {
-                if (draftedReady) return "⚔ 사슴  (우클릭=공격/사냥)";
-                return "사슴  (드래프트 후 우클릭=사냥 / 우클릭=길들이기)";
+                // #ui백로그 3.5 — 종 무관 '사슴' 하드코딩 제거: 멧돼지를 hover 하면 '사슴',
+                //  클릭하면 '멧돼지'로 갈리던 표기 불일치.  인스펙터와 같은 SpeciesKr 사용.
+                string sp = animal.SpeciesKr;
+                string tamed = animal.IsTamed ? " ✓길들여짐" : "";
+                if (draftedReady) return $"⚔ {sp}{tamed}  (우클릭=공격/사냥)";
+                return $"{sp}{tamed}  (드래프트 후 우클릭=사냥 / 우클릭=길들이기)";
             }
             var wolf = hit.GetComponent<WolfEnemy>();
             if (wolf != null)

@@ -456,7 +456,9 @@ namespace MelonS.GameProto
             bool tabEquip  = activeTab == InfoTab.Equip;
             SetTabStripVisible(any);
 
-            if (titleText != null) titleText.gameObject.SetActive(any && tabStatus);
+            // #ui백로그 3.6 — 타이틀(이름·활동·특성)을 전 탭 상시 표시: 건강/기분/장비 탭
+            //  전환 시 '누구를 보고 있는지' 컨텍스트가 사라지던 것 해소.
+            if (titleText != null) titleText.gameObject.SetActive(any);
             // foodBar.transform.parent = BarBg image GameObject.
             // BarBg.parent = the Row container that ALSO holds the label.
             // We toggle the row (grandparent) so the label vanishes too —

@@ -139,7 +139,9 @@ namespace MelonS.GameProto
             for (int r = 0; r < pawns.Length; r++)
             {
                 var p = pawns[r];
-                if (p == null) continue;
+                // #ui백로그 5.2 — 시체 행 제거: 죽은 폰이 행으로 남아 우선순위 편집까지
+                //  가능했다(무효 조작 혼란).  SkillUI 의 기존 !IsDead 패턴과 통일.
+                if (p == null || p.IsDead) continue;
                 var settings = p.GetComponent<PawnWorkSettings>();
                 if (settings == null) continue;
 
@@ -300,7 +302,15 @@ namespace MelonS.GameProto
         {
             if (isOpen) Close(); else Open();
         }
-        public void Open() { isOpen = true; gameObject.SetActive(true); transform.SetAsLastSibling(); RefreshGrid(); }  // #275 최상단
+        // #275 최상단.  #ui백로그 5.3 — 중앙 팝업 3종(직업/일정/연구) 상호배타: 같은
+        //  중앙 자리에 겹쳐 쌓이던 것 해소 (레퍼런스 하단 메뉴는 한 번에 하나).
+        public void Open()
+        {
+            if (ScheduleUI.Instance != null && ScheduleUI.Instance.IsOpen) ScheduleUI.Instance.Close();
+            var ru = Object.FindFirstObjectByType<ResearchUI>();
+            if (ru != null && ru.PickerOpen) ru.ClosePicker();
+            isOpen = true; gameObject.SetActive(true); transform.SetAsLastSibling(); RefreshGrid();
+        }
         public void Close() { isOpen = false; gameObject.SetActive(false); }
         public bool IsOpen => isOpen;
 
@@ -308,6 +318,8 @@ namespace MelonS.GameProto
         {
             // F1 레퍼런스 콜로니심 Work tab 단축키
             if (Input.GetKeyDown(KeyCode.F1)) Toggle();
+            // #ui백로그 5.3 — ESC 닫기 (designation 모드 7곳의 'ESC=취소' 관례 정합)
+            if (isOpen && Input.GetKeyDown(KeyCode.Escape)) Close();
         }
     }
 

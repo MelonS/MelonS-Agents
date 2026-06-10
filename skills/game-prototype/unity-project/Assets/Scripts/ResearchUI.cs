@@ -48,8 +48,10 @@ namespace MelonS.GameProto
             {
                 pickerOpen = !pickerOpen;
                 if (pickerPanel != null) pickerPanel.gameObject.SetActive(pickerOpen);
-                if (pickerOpen) RefreshPicker();
+                if (pickerOpen) { CloseSiblingPanels(); RefreshPicker(); }   // #ui백로그 5.3
             }
+            // #ui백로그 5.3 — ESC 닫기: designation 모드 7곳의 'ESC=취소' 관례와 정합.
+            if (pickerOpen && Input.GetKeyDown(KeyCode.Escape)) ClosePicker();
             // Number keys 1-5 in picker mode = start that tech
             if (pickerOpen)
             {
@@ -87,7 +89,11 @@ namespace MelonS.GameProto
                 if (progressBar != null) progressBar.fillAmount = 0f;
                 return;
             }
-            statusText.text = $"연구: {active.nameKr} {active.currentPoints}/{active.requiredPoints}";
+            // #게임필 배치4 — 정지 원인 병기: '0/100' 이 왜 안 오르는지 화면이 말해준다.
+            string stall = rm.StallReason;
+            statusText.text = stall != null
+                ? $"연구: {active.nameKr} {active.currentPoints}/{active.requiredPoints} — {stall}"
+                : $"연구: {active.nameKr} {active.currentPoints}/{active.requiredPoints}";
             if (progressBar != null)
                 progressBar.fillAmount = Mathf.Clamp01((float)active.currentPoints / active.requiredPoints);
         }
@@ -110,6 +116,23 @@ namespace MelonS.GameProto
             pickerText.text = sb.ToString();
         }
 
+        /// <summary>#ui백로그 5.3 — 중앙 팝업 3종 상호배타용 공개 API.</summary>
+        public bool PickerOpen => pickerOpen;
+
+        public void ClosePicker()
+        {
+            if (!pickerOpen) return;
+            pickerOpen = false;
+            if (pickerPanel != null) pickerPanel.gameObject.SetActive(false);
+        }
+
+        /// <summary>#5.3 — picker 가 열릴 때 같은 중앙 자리를 쓰는 직업/일정 탭을 닫는다.</summary>
+        private static void CloseSiblingPanels()
+        {
+            if (WorkTabUI.Instance != null && WorkTabUI.Instance.IsOpen) WorkTabUI.Instance.Close();
+            if (ScheduleUI.Instance != null && ScheduleUI.Instance.IsOpen) ScheduleUI.Instance.Close();
+        }
+
         /// <summary>운영자 피드백 — N 키 대신 GUI 버튼에서 picker 토글</summary>
         public void TogglePicker()
         {
@@ -118,7 +141,7 @@ namespace MelonS.GameProto
             //  research button double-fires PlaySelect in one frame.
             pickerOpen = !pickerOpen;
             if (pickerPanel != null) pickerPanel.gameObject.SetActive(pickerOpen);
-            if (pickerOpen) RefreshPicker();
+            if (pickerOpen) { CloseSiblingPanels(); RefreshPicker(); }   // #ui백로그 5.3
         }
 
         public void SetRefs(Text status, Image progress, RectTransform picker, Text pText)

@@ -8,10 +8,13 @@ namespace MelonS.GameProto
     /// </summary>
     public class PawnNameLabel : MonoBehaviour
     {
-        // #199 A2 ortho 3.5 + 1x1 pawn — 라벨을 HP 바(top 0.68) 바로 위로 내림.
-        //  순서(위→아래): name(0.98) > status(0.80) > HP 바(0.68) > mood 바(0.55) > 머리(0.5).
-        //  카메라 ~1.7x 줌-인 → characterSize 0.08 → 0.05 로 축소해도 동일하게 읽힘 (plan §5).
-        [SerializeField] private Vector3 offset = new Vector3(0, 0.98f, 0);  // bar(0.68) + status(0.80) 위
+        // #199 A2 ortho + 1x1 pawn — 라벨을 HP 바(top 0.68) 바로 위로.
+        //  #ui백로그 3.1(2026-06-10): name(0.98)/status(0.83) 줄간격 0.15 는 글리프 반높이
+        //  합(~0.25)보다 좁아 두 줄이 ~0.10wu 겹쳤다 (스크린샷: '떠도는중' 상단이 이름에
+        //  가려 판독 곤란).  간격 0.26 으로 벌리고 name 을 1.06 으로 동반 상향.
+        //  순서(위→아래): name(1.06) > status(0.80) > HP 바(0.68) > mood 바(0.55) > 머리(0.5).
+        [SerializeField] private Vector3 offset = new Vector3(0, 1.06f, 0);
+        [SerializeField] private float statusGap = 0.26f;   // name↔status 줄간격 (#3.1)
         [SerializeField] private float fontSize = 64;
         [SerializeField] private float characterSize = 0.05f;
 
@@ -67,8 +70,8 @@ namespace MelonS.GameProto
             //   point-filtered sprite; warm-dark UITheme tone; sits BEHIND the text.
             var plateGo = new GameObject("NamePlate");
             plateGo.transform.SetParent(transform, false);
-            // centered between name (offset.y) and status (offset.y - 0.15)
-            plateGo.transform.localPosition = new Vector3(offset.x, offset.y - 0.075f, offset.z);
+            // centered between name (offset.y) and status (offset.y - statusGap)
+            plateGo.transform.localPosition = new Vector3(offset.x, offset.y - statusGap * 0.5f, offset.z);
             plate = plateGo.AddComponent<SpriteRenderer>();
             plate.sprite = PlateSprite;
             // UITheme.PanelBg tone; opaque enough for contrast over bright grass.
@@ -92,8 +95,8 @@ namespace MelonS.GameProto
             // 2번째 라인: status (작은 글씨, 살짝 아래)
             var statusGo = new GameObject("StatusLabel");
             statusGo.transform.SetParent(transform, false);
-            // #199 A2: characterSize 0.08→0.05 로 줄었으니 줄간격도 0.18→0.15 로 (status 0.83).
-            statusGo.transform.localPosition = new Vector3(offset.x, offset.y - 0.15f, offset.z);
+            // #3.1 — 줄간격은 statusGap (글리프 겹침 방지)
+            statusGo.transform.localPosition = new Vector3(offset.x, offset.y - statusGap, offset.z);
             statusTm = statusGo.AddComponent<TextMesh>();
             statusTm.text = "";
             statusTm.fontSize = (int)(fontSize * 0.7f);
@@ -103,7 +106,9 @@ namespace MelonS.GameProto
             // #UI-restyle U3 — muted cream status (matches TextSecondary).
             statusTm.color = MelonS.GameProto.Core.UITheme.TextSecondary;
             var statusMr = statusGo.GetComponent<MeshRenderer>();
-            if (statusMr != null) statusMr.sortingOrder = 30;
+            // #3.1 — name(30)보다 위(31): 잔존 겹침 시에도 '활동'이 항상 읽히게 (행동
+            //  라벨이 이름보다 정보 가치가 높음 — 이름은 색/플레이트로도 식별됨).
+            if (statusMr != null) statusMr.sortingOrder = 31;
 
             ResizePlate();  // initial sizing for the name
         }
@@ -145,8 +150,25 @@ namespace MelonS.GameProto
             float wName = TextWorldWidth(nameTm);
             float wStat = TextWorldWidth(statusTm);
             float w = Mathf.Max(wName, wStat) + characterSize * 1.6f;   // + horizontal padding
-            float h = characterSize * 3.4f + 0.05f;                      // name + status + pad
-            plate.transform.localScale = new Vector3(Mathf.Max(w, 0.30f), h, 1f);
+            // #3.1 — 높이도 폭과 같은 bounds 실측: 매직 공식(3.4*cs+0.05)은 이름 위쪽
+            //  ~0.12wu 를 플레이트 밖에 노출시켰다.  두 줄 union + 패딩으로 정확히 덮는다.
+            float minY = float.MaxValue, maxY = float.MinValue;
+            var nMr = nameTm != null ? nameTm.GetComponent<MeshRenderer>() : null;
+            var sMr = statusTm != null ? statusTm.GetComponent<MeshRenderer>() : null;
+            if (nMr != null && !string.IsNullOrEmpty(nm)) { minY = Mathf.Min(minY, nMr.bounds.min.y); maxY = Mathf.Max(maxY, nMr.bounds.max.y); }
+            if (sMr != null && !string.IsNullOrEmpty(st)) { minY = Mathf.Min(minY, sMr.bounds.min.y); maxY = Mathf.Max(maxY, sMr.bounds.max.y); }
+            if (maxY > minY)
+            {
+                float pad = characterSize * 0.6f;
+                var pt = plate.transform;
+                pt.position = new Vector3(pt.position.x, (maxY + minY) * 0.5f, pt.position.z);
+                pt.localScale = new Vector3(Mathf.Max(w, 0.30f), (maxY - minY) + pad, 1f);
+            }
+            else
+            {
+                plate.transform.localScale = new Vector3(Mathf.Max(w, 0.30f),
+                                                         characterSize * 3.4f + 0.05f, 1f);
+            }
         }
 
         // Exact rendered width of a TextMesh from its MeshRenderer bounds (world units).
