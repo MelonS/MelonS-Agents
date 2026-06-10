@@ -92,6 +92,17 @@ namespace MelonS.GameProto
             var ped = new PointerEventData(EventSystem.current) { position = CurrentSimScreenPos() };
             var results = new List<RaycastResult>();
             EventSystem.current.RaycastAll(ped, results);
+            // 진단(2026-06-10) — 주입 클릭이 overUI 로 무음 무효화될 때 차단자를 식별.
+            //  버튼 주입 프레임에만 로그 (스팸 방지).  배치2 게이트에서 우클릭이 y≈232-250
+            //  밴드에서만 죽는 미스터리의 계측 장치 — 해결 후에도 회귀 진단용으로 유지.
+            if (results.Count > 0 && (simMouseDown[0] || simMouseDown[1]))
+            {
+                var top = results[0].gameObject;
+                string chain = top != null ? top.name : "?";
+                var tr = top != null ? top.transform.parent : null;
+                for (int d = 0; tr != null && d < 3; d++) { chain += "<" + tr.name; tr = tr.parent; }
+                Debug.Log($"[SimInput] overUI 차단: {chain} (+{results.Count - 1}) at {ped.position}");
+            }
             return results.Count > 0;
         }
     }
