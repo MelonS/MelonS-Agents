@@ -40,6 +40,12 @@ def main() -> int:
         return 2
 
     if args.fresh_build:
+        # 2026-06-11 — 씬 재생성을 fresh build 에 선행: 이전엔 build 만 돌아 SceneSetup
+        #  레벨 변경(직렬화 노브/베이크 UI/지형)이 빌드에 조용히 미반영됐다 (스테일 씬으로
+        #  습격 grace 9 가 살아남아 day2 습격이 발화 안 한 사건).  씬+빌드가 한 단위.
+        if rc.step_scenes() != 0:
+            print("[repro_all] FAIL: scenes regen 실패")
+            return 2
         if rc.step_fresh_build() != 0:
             print("[repro_all] FAIL: fresh build 실패")
             return 2
