@@ -71,6 +71,56 @@ namespace MelonS.GameProto
             phaseSeedB = Random.Range(0f, 1000f);
 
             BuildOverlay();
+            BuildEmbers();
+        }
+
+        // D3b 몰입 (design-immersion-2026-06-11) — 불티: 위로 떠올라 사그라드는 작은
+        //  입자.  점등 게이트는 Update 에서 emission rate 로 (IsLit 폴백 true 인
+        //  모닥불은 상시, 화덕은 조리 가능할 때만).
+        private ParticleSystem embers;
+
+        private void BuildEmbers()
+        {
+            var go = new GameObject("Embers");
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = overlayLocalOffset;
+            embers = go.AddComponent<ParticleSystem>();
+            embers.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            var main = embers.main;
+            main.loop = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.7f, 1.2f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.25f, 0.55f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.08f);
+            main.startColor = new ParticleSystem.MinMaxGradient(
+                new Color(1f, 0.78f, 0.30f, 0.9f), new Color(1f, 0.45f, 0.12f, 0.9f));
+            main.gravityModifier = -0.06f;        // 미세 상승 (열기류)
+            main.maxParticles = 24;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+
+            var em = embers.emission;
+            em.enabled = true;
+            em.rateOverTime = 0f;                 // Update 에서 점등 게이트
+
+            var shape = embers.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.12f;
+
+            var col = embers.colorOverLifetime;
+            col.enabled = true;
+            var grad = new Gradient();
+            grad.SetKeys(
+                new[] { new GradientColorKey(Color.white, 0f),
+                        new GradientColorKey(new Color(1f, 0.30f, 0.05f), 1f) },
+                new[] { new GradientAlphaKey(0.9f, 0f), new GradientAlphaKey(0f, 1f) });
+            col.color = grad;
+
+            var psr = go.GetComponent<ParticleSystemRenderer>();
+            psr.material = ParticleFx.SharedMaterial;
+            psr.sortingOrder = (bodyRenderer != null ? bodyRenderer.sortingOrder : 20)
+                               + sortingOrderOffset + 1;
+            embers.Play();
         }
 
         private void BuildOverlay()
@@ -147,6 +197,13 @@ namespace MelonS.GameProto
 
             overlayRenderer.color = WithAlpha(flameColor, targetAlpha);
             overlayTf.localScale = Vector3.one * scale;
+
+            // D3b — 불티는 점등 중에만 방출 (꺼진 화덕에서 불티 안 튀게).
+            if (embers != null)
+            {
+                var em = embers.emission;
+                em.rateOverTime = lit > 0.5f ? 5f : 0f;
+            }
         }
 
         private void OnDisable()

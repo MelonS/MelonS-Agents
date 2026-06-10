@@ -15,9 +15,14 @@ namespace MelonS.GameProto
     {
         private static Material mat;
 
-        /// <summary>pos 에서 color 파편 count 개를 사방으로 튀긴다 (중력 낙하).</summary>
+        /// <summary>FlickerLight 불티 등 외부 상시 ParticleSystem 도 같은 머티리얼 공유.</summary>
+        public static Material SharedMaterial => GetMat();
+
+        /// <summary>pos 에서 color 파편 count 개를 사방으로 튀긴다.
+        ///  gravity 1.4 = 칩 포물선 낙하, 0 근처 = 먼지처럼 떠오름/부유.</summary>
         public static void Burst(Vector3 pos, Color color, int count = 6,
-                                 float speed = 1.8f, float size = 0.09f, float life = 0.5f)
+                                 float speed = 1.8f, float size = 0.09f, float life = 0.5f,
+                                 float gravity = 1.4f, int sortingOrder = 11)
         {
             var go = new GameObject("ParticleFx");
             go.transform.position = pos;
@@ -31,7 +36,7 @@ namespace MelonS.GameProto
             main.startSpeed = new ParticleSystem.MinMaxCurve(speed * 0.5f, speed);
             main.startSize = new ParticleSystem.MinMaxCurve(size * 0.7f, size * 1.3f);
             main.startColor = color;
-            main.gravityModifier = 1.4f;          // 칩이 포물선으로 떨어진다
+            main.gravityModifier = gravity;
             main.maxParticles = count;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.stopAction = ParticleSystemStopAction.Destroy;
@@ -48,7 +53,7 @@ namespace MelonS.GameProto
 
             var psr = go.GetComponent<ParticleSystemRenderer>();
             psr.material = GetMat();
-            psr.sortingOrder = 11;                // 본체(10) 위 — 파편이 몸 앞으로 튄다
+            psr.sortingOrder = sortingOrder;      // 기본 11 = 본체(10) 위로 파편이 튄다
 
             ps.Play();
         }

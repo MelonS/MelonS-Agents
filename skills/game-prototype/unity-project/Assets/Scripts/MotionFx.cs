@@ -25,6 +25,7 @@ namespace MelonS.GameProto
         private Vector3 prevPos;
         private float phase;
         private bool inited;
+        private float lastStepIndex;   // D3b 발걸음 먼지 — 발닿음(half-cycle) 검출용
 
         private void Awake()
         {
@@ -64,10 +65,25 @@ namespace MelonS.GameProto
                     baseScale.x * (1f - squash * 0.6f),      // 늘 때 살짝 좁아지기 (관성)
                     baseScale.y * (1f + squash),
                     baseScale.z);
+
+                // D3b — 발닿음(|sin| 0 교차 = π 단위)마다 작은 먼지 1점.  격보행만
+                //  (느린 배회는 생략) + 그림자(9)와 같은 층이라 본체 뒤로 깔린다.
+                float stepIdx = Mathf.Floor(phase / Mathf.PI);
+                if (stepIdx > lastStepIndex)
+                {
+                    lastStepIndex = stepIdx;
+                    if (speed > 0.9f)
+                        ParticleFx.Burst(
+                            transform.position + Vector3.down * (0.38f * baseScale.y),
+                            new Color(0.52f, 0.47f, 0.38f, 0.5f),
+                            count: 1, speed: 0.25f, size: 0.07f, life: 0.35f,
+                            gravity: 0f, sortingOrder: 9);
+                }
             }
             else
             {
                 phase = 0f;
+                lastStepIndex = 0f;
                 transform.localScale = Vector3.Lerp(transform.localScale, baseScale, 12f * dt);
             }
         }
