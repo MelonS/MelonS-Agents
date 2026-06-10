@@ -52,6 +52,14 @@ namespace MelonS.GameProto.EditorTools
             tutTextRt.sizeDelta = Vector2.zero;
             tutTextRt.anchoredPosition = Vector2.zero;
 
+            // #38 플레이키 진범(2026-06-10) — 안내 배너(720x100, y-160~-260)가 alpha 0 에서도
+            //  월드 클릭을 raycast 차단(첫 ~18초 상단 밴드 클릭 무음 무효).  배너 서브트리는
+            //  어떤 입력도 소비하지 않는다 (TutorialOverlay.Start 의 런타임 sweep 과 이중 방어).
+            tutCg.blocksRaycasts = false;
+            tutCg.interactable = false;
+            foreach (var g in tutBgGo.GetComponentsInChildren<Graphic>(true))
+                g.raycastTarget = false;
+
             GameObject tutHost = new GameObject("TutorialOverlayHost");
             tutHost.transform.SetParent(canvasGo.transform, false);
             tutHost.AddComponent<RectTransform>();

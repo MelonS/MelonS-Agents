@@ -49,6 +49,15 @@ namespace MelonS.GameProto
             // legacy single-image fade fallback (only if no CanvasGroup wired)
             if (group == null && bg != null) { var c = bg.color; c.a = 0f; bg.color = c; }
             if (group == null && tipText != null) { var c = tipText.color; c.a = 0f; tipText.color = c; }
+
+            // #38 게이트 플레이키 진범(2026-06-10) — 튜토리얼 배너가 첫 ~18초 동안 상단
+            //  ~230px 밴드의 월드 클릭을 통째로 먹었다.  CanvasGroup 알파 페이드는 raycast 를
+            //  끄지 않아 'alpha 0 인데도 차단'(보이지 않는 차단자).  안내 배너는 어떤 입력도
+            //  소비할 이유가 없으므로 서브트리 전체를 비차단으로 강제 (씬 베이크와 무관하게
+            //  런타임 1회 sweep — 향후 재베이크에도 안전).
+            if (group != null) { group.blocksRaycasts = false; group.interactable = false; }
+            foreach (var g in GetComponentsInChildren<Graphic>(true))
+                g.raycastTarget = false;
         }
 
         private void Update()
