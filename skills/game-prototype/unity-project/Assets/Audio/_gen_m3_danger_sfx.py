@@ -59,6 +59,19 @@ def normalize(samples, peak=0.85):
     return [s * scale for s in samples]
 
 
+def loop_crossfade(samples, xf_sec=1.0, sr=SR):
+    """#게임필5(2026-06-10 자율) — 꼬리→머리 equal-power 크로스페이드 (루프 절벽 제거)."""
+    xf = int(sr * xf_sec)
+    if len(samples) <= xf * 2:
+        return samples
+    body = samples[:-xf]
+    tail = samples[-xf:]
+    for i in range(xf):
+        t = (i + 1) / xf
+        body[i] = tail[i] * math.cos(t * math.pi / 2) + body[i] * math.sin(t * math.pi / 2)
+    return body
+
+
 def danger_sound():
     random.seed(777)
     dur = 16.0
@@ -136,15 +149,10 @@ def danger_sound():
             out[hit_start + j] += sample
 
     # -----------------------------------------------------------------------
-    # Loop-safe cosine fade — 0.8s at both ends
+    # #게임필5 — 0.8s 양끝 cosine fade 는 루프마다 ~1.6s 무음 절벽(긴장 음악이
+    #  주기적으로 꺼짐).  꼬리→머리 크로스페이드로 교체 — 경계에서도 풀 밀도.
     # -----------------------------------------------------------------------
-    fade_n = int(SR * 0.80)
-    for i in range(fade_n):
-        frac = 0.5 * (1.0 - math.cos(math.pi * i / fade_n))   # cosine fade
-        out[i] *= frac
-        out[n - 1 - i] *= frac
-
-    return normalize(out, peak=0.70)
+    return normalize(loop_crossfade(out, xf_sec=1.0), peak=0.70)
 
 
 # ---------------------------------------------------------------------------

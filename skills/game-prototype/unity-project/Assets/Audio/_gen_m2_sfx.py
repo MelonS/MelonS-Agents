@@ -36,6 +36,19 @@ def normalize(samples, peak=0.85):
     return [s * scale for s in samples]
 
 
+def loop_crossfade(samples, xf_sec=1.5, sr=SR):
+    """#게임필5(2026-06-10 자율) — 꼬리→머리 equal-power 크로스페이드 (루프 절벽 제거)."""
+    xf = int(sr * xf_sec)
+    if len(samples) <= xf * 2:
+        return samples
+    body = samples[:-xf]
+    tail = samples[-xf:]
+    for i in range(xf):
+        t = (i + 1) / xf
+        body[i] = tail[i] * math.cos(t * math.pi / 2) + body[i] * math.sin(t * math.pi / 2)
+    return body
+
+
 # ---------------------------------------------------------------------------
 # build.wav — hammer/clink construction finish
 # Design: two-part: short metallic clink (tool-on-stone/wood, ~0.05s) then
@@ -183,13 +196,8 @@ def ambient_sound():
     for i in range(n):
         t = i / SR
 
-        # Loop envelope: 1.5s fade in/out
-        if t < 1.5:
-            loop_env = t / 1.5
-        elif t > dur - 1.5:
-            loop_env = (dur - t) / 1.5
-        else:
-            loop_env = 1.0
+        # #게임필5 — edge-fade 폐기 (루프마다 ~3s 무음 절벽).  경계는 loop_crossfade 담당.
+        loop_env = 1.0
 
         # Wind: slow LFO-modulated noise band
         lfo = 0.75 + 0.25 * math.sin(2 * math.pi * 0.07 * t)
@@ -205,7 +213,7 @@ def ambient_sound():
         sample = wind + sub + bird
         out.append(sample)
 
-    return normalize(out, peak=0.60)  # kept low — AudioBank vol=0.18 further attenuates
+    return normalize(loop_crossfade(out), peak=0.60)  # 루프 절벽 제거 (#게임필5) — AudioBank vol=0.18
 
 
 # ---------------------------------------------------------------------------

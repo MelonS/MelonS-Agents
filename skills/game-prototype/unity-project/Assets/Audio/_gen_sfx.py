@@ -50,6 +50,21 @@ def normalize(samples, peak=0.88):
     return [s * scale for s in samples]
 
 
+def loop_crossfade(samples, xf_sec=1.5, sr=SR):
+    """#게임필5(2026-06-10 자율) — 꼬리→머리 equal-power 크로스페이드.
+    양끝 edge-fade 는 루프 경계마다 수초 무음 절벽(가장자리 RMS≈0.02 vs 본문 0.15)을
+    만들었다.  꼬리를 머리에 섞고 잘라내면 경계에서도 본문과 같은 밀도가 유지된다."""
+    xf = int(sr * xf_sec)
+    if len(samples) <= xf * 2:
+        return samples
+    body = samples[:-xf]
+    tail = samples[-xf:]
+    for i in range(xf):
+        t = (i + 1) / xf
+        body[i] = tail[i] * math.cos(t * math.pi / 2) + body[i] * math.sin(t * math.pi / 2)
+    return body
+
+
 # ---------------------------------------------------------------------------
 # chop.wav — axe thunk into wood
 # Design: woody percussive thunk. Low-mid body (~120-180Hz) + wood-crack
@@ -300,13 +315,9 @@ def bgm_ambient_sound():
         t = i / SR
         progress = t / dur
 
-        # Loop envelope: fade in first 2s, fade out last 2s
-        if t < 2.0:
-            loop_env = t / 2.0
-        elif t > dur - 2.0:
-            loop_env = (dur - t) / 2.0
-        else:
-            loop_env = 1.0
+        # #게임필5 — edge-fade 폐기(루프마다 ~4s 무음 절벽의 원인).  경계 무클릭은
+        #  반환 직전 loop_crossfade 가 담당하므로 본문은 상시 풀 레벨.
+        loop_env = 1.0
 
         # Slow LFO modulates overall amplitude slightly
         lfo = 0.85 + 0.15 * math.sin(2 * math.pi * lfo_rate * t)
@@ -360,7 +371,7 @@ def bgm_ambient_sound():
                     + 0.12 * math.sin(2 * math.pi * 3 * freq * tt))
             out[idx] += tone * env * vel * 0.30
 
-    return normalize(out, peak=0.60)  # BGM (드론+멜로디) — AudioBank sets vol=0.25
+    return normalize(loop_crossfade(out), peak=0.60)  # BGM — 루프 절벽 제거 (#게임필5)
 
 
 # ---------------------------------------------------------------------------
