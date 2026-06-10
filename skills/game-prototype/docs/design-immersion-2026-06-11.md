@@ -26,8 +26,14 @@ FloatingText 뿐(타격감 0), 밤낮은 단색 틴트 뿐. 레퍼런스 콜로�
 
 ## 진행
 
-- [ ] D1
-- [ ] D2
-- [ ] D3
-- [ ] D4
-- [ ] D5 목업
+- [x] D1 blob 그림자 (`60c883a`) — 림/동물/늑대/적. 함정: Sprite.Create Tight 메시는
+      readable 텍스처 필요 (non-readable → 조용히 빈 스프라이트).
+- [x] D2 걷기 모션 (`d0b9536`) — MotionFx 스쿼시 바운스+방향 flip, 위치 불간섭.
+      함정: baseScale 은 첫 LateUpdate 캡처 (AnimalEntity.Configure 가 Awake 뒤 스케일 세팅).
+- [x] D3a 작업 파편 (`84d2bd4`) — 벌목 나무칩/잎사귀, 채광 돌파편, SFX 스로틀 동기.
+- [x] D3b 불티+먼지 (`9a621d7`) — FlickerLight 불티(점등 게이트), 발걸음 먼지.
+- [x] D4a vignette #9.0 (`55ee78f`) — 절차 폴백 활성 (빌드 Resources 미존재가 원인).
+- [ ] D4b 황혼/새벽 웜틴트 — NightOverlay.NightDark 고정 청색을 시각대별로 워밍
+      (18~20시·5~7시 보라/주황 경유). per-texel 루프의 기준색만 시간 함수화.
+- [ ] D3c 폭풍 빗방울 스플래시 (WeatherController 연동).
+- [ ] D5 스프라이트 비교 목업 (운영자 결정 게이트).
