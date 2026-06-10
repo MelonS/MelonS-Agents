@@ -48,10 +48,13 @@ namespace MelonS.GameProto
         [Header("Day 73: DirectorMode (3 종류)")]
         [SerializeField] public DirectorMode directorMode = DirectorMode.Steady;
 
-        [SerializeField] private float minIntervalSec = 15f;
-        [SerializeField] private float maxIntervalSec = 30f;
+        // #게임필(2026-06-10, 자율) — 이벤트 간격을 실시간(스케일드)에서 게임시간으로 전환.
+        //  이전 15-30 스케일초는 3x 에서 실시간 5-10초당 1발 = 카드 도배 → '약탈자 접근!'도
+        //  배경 소음이 됐다.  게임시간 8-16시간 간격 = 하루 1.5-3회, 드물어야 사건이 사건답다.
+        [SerializeField] private float minIntervalGameHours = 8f;
+        [SerializeField] private float maxIntervalGameHours = 16f;
 
-        private float nextFireTime;
+        private float nextFireGameSec = -1f;   // GameClock.GameSeconds 기준 (-1 = 미스케줄)
         private GameEvent lastEvent;
         private readonly List<GameEvent> pool = new List<GameEvent>();
 
@@ -122,12 +125,17 @@ namespace MelonS.GameProto
         //     the threat still exists and escalates afterward.  Set to 0 to make
         //     the first raid land exactly at RaidGraceDays (old behavior).
         [Header("Day 13 / raid calibration (the reference sim-ish — tunable)")]
-        [SerializeField] private int RaidGraceDays = 9;        // first raid not before ~day 9
-        [SerializeField] private int RaidIntervalDays = 5;     // raids ~5 in-game days apart
+        // #게임필(2026-06-10, 자율) — grace 9+2 는 첫 위협을 day 11(3x 실시간 ~60분)로
+        //  밀어 어떤 세션에서도 위협이 등장하지 않는 '게임 아님' 상태를 만들었다(격차 분석
+        //  4갈래 중 2갈래가 1순위 지목).  1마리 습격(BaseRaidGroupSize=1, cap 2)은 3림이
+        //  감당 가능하므로 첫 접촉을 day 2 아침으로 — 5/31 wipe 의 원인은 '5마리×3일'
+        //  조합이었지 grace 가 아니었다.  체감 난이도는 운영자 피드백으로 재조정.
+        [SerializeField] private int RaidGraceDays = 2;        // first raid not before day 2
+        [SerializeField] private int RaidIntervalDays = 3;     // raids ~3 in-game days apart
         [SerializeField] private int MaxConcurrentGroups = 2;  // escalation ceiling (bandits/raid)
         [SerializeField] private int BaseRaidGroupSize = 1;    // first raid = 1 bandit
         [SerializeField] private int RaidsPerSizeStep = 2;     // +1 bandit every 2 raids
-        [SerializeField] private int FirstRaidExtraGraceDays = 2;  // first raid waits +2 days beyond grace
+        [SerializeField] private int FirstRaidExtraGraceDays = 0;  // 첫 습격 추가 유예 없음
         private int lastRaidDay = -1;
         private int raidCount = 0;     // how many raids have fired this run (drives slow size escalation)
 
@@ -174,10 +182,16 @@ namespace MelonS.GameProto
 
         private void Update()
         {
-            if (Time.timeSinceLevelLoad >= nextFireTime)
+            // #게임필 — 게임시간 스케줄: GameClock 폴링 (lesson #7: 싱글톤 구독 금지).
+            var clock = GameClock.Instance;
+            if (clock != null)
             {
-                FireRandomEvent();
-                ScheduleNext();
+                if (nextFireGameSec < 0f) ScheduleNext();   // 클럭 늦은 부트 대비
+                if (clock.GameSeconds >= nextFireGameSec)
+                {
+                    FireRandomEvent();
+                    ScheduleNext();
+                }
             }
 
             // Day 13: raid check.  Poll GameClock from Update (lesson #7 firewall:
@@ -325,8 +339,8 @@ namespace MelonS.GameProto
 
         private void ScheduleNext()
         {
-            // Day 73: director mode마다 간격 다름
-            float min = minIntervalSec, max = maxIntervalSec;
+            // Day 73: director mode마다 간격 다름 (#게임필 — 단위가 게임시간으로 바뀜)
+            float min = minIntervalGameHours, max = maxIntervalGameHours;
             if (directorMode == DirectorMode.Calm)
             {
                 min *= 2f; max *= 2f;  // 평온한 시간 — 사건 드물게
@@ -340,8 +354,10 @@ namespace MelonS.GameProto
             int tier = CurrentThreatTier;
             float tierMul = 1f - tier * 0.15f;
             min *= tierMul; max *= tierMul;
-            float wait = UnityEngine.Random.Range(min, max);
-            nextFireTime = Time.timeSinceLevelLoad + wait;
+            float waitHours = UnityEngine.Random.Range(min, max);
+            var clock = GameClock.Instance;
+            float baseSec = clock != null ? clock.GameSeconds : 0f;
+            nextFireGameSec = baseSec + waitHours * 3600f;
         }
 
         /// <summary>Trader spawn helper - trader_caravan event 발화 시 호출.</summary>
@@ -399,24 +415,91 @@ namespace MelonS.GameProto
             {
                 next = candidates[UnityEngine.Random.Range(0, candidates.Count)];
                 tries++;
-            } while (next == lastEvent && tries < 5);
+                // #게임필 — quiet_evening 은 저녁(18시+)에만: '조용한 저녁'이 오후 2시에
+                //  뜨던 시간대 불일치 수정.  재추첨 5회 안에 못 피하면 그냥 통과(무한루프 방지).
+            } while ((next == lastEvent
+                      || (next.id == "quiet_evening"
+                          && GameClock.Instance != null && GameClock.Instance.Hour < 18))
+                     && tries < 5);
             lastEvent = next;
             OnEventFired?.Invoke(next);
             Debug.Log($"[AIDirector:{directorMode} T{curTier}] {next.title}: {next.description}");
+            ApplyEventEffect(next);   // #게임필 — 카드가 말하는 일을 실제로 일으킨다
             // Stretch: trader_caravan event → actual Trader entity spawn
             if (next.id == "trader_caravan") SpawnTrader();
             // Wiki Dim2 #3 (sound wiring — 0-callers fix): wolf_pack event plays the
             // existing howl clip.  PlayWolfHowl() exists today; null-guard.
-            if (next.id == "wolf_pack") AudioBank.Instance?.PlayWolfHowl();
-            // Wiki Dim2 #2 (sound wiring): high-threat narrative events sound the
-            // alert siren, tier-scaled via next.threatTier (tier3 events repeat
-            // more than tier1).  PlayAlert(int) lands from Lane A this same wave;
-            // null-guard.  No threat/scheduling/balance change — sound only.
-            if (next.id == "wolf_pack" || next.id == "large_raid"
-                || next.id == "siege_camp" || next.id == "infestation")
+            if (next.id == "wolf_pack")
             {
+                AudioBank.Instance?.PlayWolfHowl();
                 AudioBank.Instance?.PlayAlert(next.threatTier);
             }
+        }
+
+        /// <summary>#게임필(2026-06-10, 자율) — 이벤트 실효 배선.  텍스트가 약속한 일을
+        ///  기존 시스템 호출로 실제로 일으킨다 (신규 시스템 없음 — Pile.Spawn 은 GameManager
+        ///  시작 드롭, mood 는 PawnNeeds 공개 필드).  효과는 로그로 검증 가능.</summary>
+        private void ApplyEventEffect(GameEvent ev)
+        {
+            if (ev == null) return;
+            switch (ev.id)
+            {
+                case "lucky_find":
+                {
+                    Vector3 c = ColonyCenterOrZero();
+                    var p = new Vector3(Mathf.Floor(c.x + UnityEngine.Random.Range(-2f, 3f)) + 0.5f,
+                                        Mathf.Floor(c.y + UnityEngine.Random.Range(-2f, 3f)) + 0.5f, 0f);
+                    WoodPileEntity.Spawn(p, 25, null);   // null sprite → EnsureSprite 기본
+                    Debug.Log($"[AIDirector] lucky_find 실효: 목재 25 더미 드롭 @ ({p.x:F1},{p.y:F1})");
+                    break;
+                }
+                case "morale_dip":
+                {
+                    int n = 0;
+                    foreach (var nd in FindAllNeeds())
+                        if (nd != null) { nd.mood = Mathf.Max(0f, nd.mood - 10f); n++; }
+                    Debug.Log($"[AIDirector] morale_dip 실효: {n}명 기분 -10");
+                    break;
+                }
+                case "minor_disease":
+                {
+                    var all = FindAllNeeds();
+                    if (all.Length > 0)
+                    {
+                        var v = all[UnityEngine.Random.Range(0, all.Length)];
+                        if (v != null)
+                        {
+                            v.mood = Mathf.Max(0f, v.mood - 8f);
+                            v.sleep = Mathf.Max(0f, v.sleep - 10f);
+                            Debug.Log($"[AIDirector] minor_disease 실효: {v.name} 기분 -8 / 수면 -10");
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        private static PawnNeeds[] FindAllNeeds()
+        {
+#if UNITY_2023_1_OR_NEWER
+            return UnityEngine.Object.FindObjectsByType<PawnNeeds>(FindObjectsSortMode.None);
+#else
+            return UnityEngine.Object.FindObjectsOfType<PawnNeeds>();
+#endif
+        }
+
+        private Vector3 ColonyCenterOrZero()
+        {
+            var pawns =
+#if UNITY_2023_1_OR_NEWER
+                UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
+#else
+                UnityEngine.Object.FindObjectsOfType<PawnEntity>();
+#endif
+            Vector3 sum = Vector3.zero; int n = 0;
+            foreach (var p in pawns)
+                if (p != null && !p.IsDead) { sum += p.transform.position; n++; }
+            return n > 0 ? sum / n : Vector3.zero;
         }
 
         private void BuildDefaultPool()
@@ -464,22 +547,25 @@ namespace MelonS.GameProto
                 description = "북쪽에서 짙은 먹구름이 몰려온다. 한 시간 안에 폭풍이 닥칠 것이다.",
                 flavor = "바람에서 벌써 빗냄새가 난다.",
             });
+            // #게임필(2026-06-10, 자율) — 신호 신뢰 회복: 카드(tier≥1)가 말하는 일은 실제로
+            //  일어나야 한다.  morale_dip/minor_disease 는 ApplyEventEffect 로 실효 배선,
+            //  fox_sighting 은 월드 효과가 없으므로 tier 0 분위기 텍스트로 강등.
             pool.Add(new GameEvent {
                 id = "morale_dip", threatTier = 1,
                 title = "사기 저하",
-                description = "오늘 콜로니스트들이 어딘가 무기력해 보인다.",
+                description = "오늘 콜로니스트들이 어딘가 무기력해 보인다. (전원 기분 -10)",
                 flavor = "저녁 식탁의 대화가 짧고 띄엄띄엄했다.",
             });
             pool.Add(new GameEvent {
-                id = "fox_sighting", threatTier = 1,
+                id = "fox_sighting", threatTier = 0,
                 title = "여우 출현",
                 description = "붉은 여우가 숲 가장자리에서 야영지를 지켜본다. 두려워하지 않는다.",
                 flavor = "발견되어도 도망가지 않는다.",
             });
             pool.Add(new GameEvent {
                 id = "minor_disease", threatTier = 1,
-                title = "감기 유행",
-                description = "콜로니스트 한 명이 기침을 시작했다. 며칠 안에 다른 사람들에게도 옮길 수 있다.",
+                title = "감기 기운",
+                description = "콜로니스트 한 명이 기침을 시작했다. 컨디션이 떨어진다.",
                 flavor = "감기인지 더 나쁜 것인지 아직 모른다.",
             });
 
@@ -501,32 +587,12 @@ namespace MelonS.GameProto
                     flavor = "송곳니가 달빛에 번뜩였다.",
                 });
             }
-            pool.Add(new GameEvent {
-                id = "food_blight", threatTier = 2,
-                title = "역병",
-                description = "농작물 일부가 시들어가고 있다. 수확량 감소.",
-                flavor = "잎이 검게 변해간다.",
-            });
-
-            // Day 73: tier 3 (critical) — large raids, sieges
-            pool.Add(new GameEvent {
-                id = "large_raid", threatTier = 3,
-                title = "대규모 약탈단",
-                description = "5명 이상의 무장 약탈자가 야영지를 향한다. 즉시 방어 준비.",
-                flavor = "북소리가 점점 가까워진다.",
-            });
-            pool.Add(new GameEvent {
-                id = "siege_camp", threatTier = 3,
-                title = "포위 작전",
-                description = "적이 외곽에 진을 치고 야영지를 포위했다. 장기전이 될 것이다.",
-                flavor = "그들의 모닥불이 밤마다 더 가까워진다.",
-            });
-            pool.Add(new GameEvent {
-                id = "infestation", threatTier = 3,
-                title = "벌레떼 출몰",
-                description = "거대한 곤충떼가 동굴에서 기어 나왔다. 격렬한 전투가 예상된다.",
-                flavor = "땅이 흔들렸고 — 그게 시작이었다.",
-            });
+            // #게임필(2026-06-10, 자율) — 거짓 경보 제거: food_blight(작물 시들음)·large_raid
+            //  (5명 약탈)·siege_camp(포위)·infestation(벌레떼)은 어떤 시스템도 소비하지 않는
+            //  순수 텍스트였다.  '영구 빨간 카드인데 아무 일도 안 일어남'이 반복되면 진짜
+            //  습격 카드(bandit_raid, SpawnRaid 발)도 무시된다 — 레터는 항상 실제 사건이라는
+            //  레퍼런스 컨벤션 회복.  실제 습격은 TryScheduleRaid 가 전담하므로 랜덤 풀에
+            //  가짜 raid 류는 두지 않는다.  되살릴 땐 반드시 효과 배선과 함께.
         }
     }
 }
