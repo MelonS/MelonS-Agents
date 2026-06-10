@@ -111,7 +111,12 @@ namespace MelonS.GameProto
             }
 
             var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
-            System.Array.Sort(pawns, (a, b) => a.GetInstanceID().CompareTo(b.GetInstanceID()));
+            // #ui백로그 5.12 — 이름 1차 정렬: 콜로니스트 바(#2.6)·직업 탭과 행 순서 일치
+            System.Array.Sort(pawns, (a, b) =>
+            {
+                int byName = string.CompareOrdinal(a.PawnName, b.PawnName);
+                return byName != 0 ? byName : a.GetInstanceID().CompareTo(b.GetInstanceID());
+            });
             float y = -RowHeight;
             for (int r = 0; r < pawns.Length; r++)
             {

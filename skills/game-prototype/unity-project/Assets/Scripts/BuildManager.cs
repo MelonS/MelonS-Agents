@@ -305,6 +305,9 @@ namespace MelonS.GameProto
             Mode.BedSleepingSpot => bedSprite,
             Mode.BedFine => bedSprite,
             Mode.Lamp  => EnsureLampSprite(),
+            // #ui백로그 4.4 — WallStone 케이스 부재로 목재 벽 폴백 → '회색 틴트 목재
+            //  스프라이트' 머디브라운 회귀 (#255 가 경로 바꾸며 재발).  회색 석재로.
+            Mode.WallStone => EnsureFloorStoneSprite(),
             Mode.FloorStone => EnsureFloorStoneSprite(),
             Mode.TableChair => EnsureTableChairSprite(),
             Mode.Fence => EnsureFenceSprite(),
@@ -313,6 +316,10 @@ namespace MelonS.GameProto
             Mode.Autodoor  => EnsureAutodoorSprite(),
             _ => wallSprite,
         };
+
+        /// <summary>#ui백로그 4.5 — 메뉴/툴팁이 실비용을 읽을 수 있게 public (이중 정의
+        ///  드리프트 방지의 1단계.  ArchitectMenu 라벨 합성은 후속).</summary>
+        public int LiveCostFor(Mode m) => CostFor(m);
 
         private int CostFor(Mode m) => m switch
         {
@@ -675,6 +682,7 @@ namespace MelonS.GameProto
             Mode.BedSleepingSpot => bedSprite,
             Mode.BedFine         => bedSprite,
             Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
+            Mode.WallStone => EnsureFloorStoneSprite(),   // #4.4 — 고스트/청사진도 회색
             Mode.FloorStone => EnsureFloorStoneSprite(),  // W-M4-05 #21
             Mode.TableChair => EnsureTableChairSprite(),  // W-M4-06 #20
             Mode.Fence => EnsureFenceSprite(),            // W-M6-02 B3

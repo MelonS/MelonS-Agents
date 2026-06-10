@@ -140,11 +140,14 @@ namespace MelonS.GameProto
             entries.Clear();
 
             var all = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
-            // 결정적 순서 (instanceID 정렬) — 매 rebuild 마다 자리 안 바뀌게.
+            // #ui백로그 2.6 — 이름 1차 정렬(+id 타이브레이크): instanceID 는 세이브/로드 간
+            //  보존되지 않아 로드 후 바 순서가 뒤바뀔 수 있었다.  직업/일정 탭(#5.12)과
+            //  같은 키를 써 상단 바와 탭 행 순서도 일치한다.
             System.Array.Sort(all, (a, b) =>
             {
                 if (a == null || b == null) return 0;
-                return a.GetInstanceID().CompareTo(b.GetInstanceID());
+                int byName = string.CompareOrdinal(a.PawnName, b.PawnName);
+                return byName != 0 ? byName : a.GetInstanceID().CompareTo(b.GetInstanceID());
             });
 
             var alive = new List<PawnEntity>();

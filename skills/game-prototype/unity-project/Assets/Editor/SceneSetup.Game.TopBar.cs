@@ -176,7 +176,6 @@ namespace MelonS.GameProto.EditorTools
             // 시각 QA(2026-06-01): 36px 아이콘이 캡처 해상도에서 ~10px 로 작게 보임 → 48px 로 확대.
             const float kIconPx = 48f;   // distinct pictogram at 1920+ capture res (36→48 가독)
             const float kIconGap = 8f;   // breathing room between icon and first glyph
-            const float kDividerW = 2f;  // thin Divider rule on the chip's leading edge
 
             // Chip cell — a fixed-width container the parent layout treats as one element.
             GameObject chipGo = new GameObject($"ResChip_{iconKey}");
@@ -199,18 +198,9 @@ namespace MelonS.GameProto.EditorTools
             chipLayout.childForceExpandWidth = false;
             chipLayout.childForceExpandHeight = true;
 
-            // Leading Divider rule — separates this chip from the one to its left,
-            //   matching the control bar's group lines (§3 shared style).
-            GameObject divGo = new GameObject($"ResSep_{iconKey}");
-            divGo.transform.SetParent(chipGo.transform, false);
-            divGo.AddComponent<RectTransform>();
-            var divImg = divGo.AddComponent<Image>();
-            divImg.color = UITheme.Divider;
-            divImg.raycastTarget = false;
-            var divLe = divGo.AddComponent<LayoutElement>();
-            divLe.preferredWidth = kDividerW;
-            divLe.minWidth = kDividerW;
-            divLe.preferredHeight = 44f;   // bar 76px 에 맞춰 divider 도 32→44 키움
+            // #ui백로그 1.4 — ResSep 세로 구분선 제거: 가로 바 시절 '왼쪽 이웃 칩과의
+            //  경계선' 설계인데 #41 세로 이전 후엔 왼쪽에 이웃이 없어, 패널 왼쪽 가장자리에
+            //  의미 없는 밝은 틱 마크로만 렌더됐다 (레퍼런스 세로 목록은 구분선 없음).
 
             // ICON SLOT — left-anchored inside the chip, fixed 36px.
             //   Load Assets/Sprites/icon_<key>.png (point-filtered, force-imported by

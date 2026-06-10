@@ -133,8 +133,12 @@ namespace MelonS.GameProto
 
             // pawn rows
             var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
-            // 안정적 순서 - GetInstanceID
-            System.Array.Sort(pawns, (a, b) => a.GetInstanceID().CompareTo(b.GetInstanceID()));
+            // #ui백로그 5.12 — 이름 1차 정렬: 콜로니스트 바(#2.6)와 행 순서 일치 (바닐라 관례)
+            System.Array.Sort(pawns, (a, b) =>
+            {
+                int byName = string.CompareOrdinal(a.PawnName, b.PawnName);
+                return byName != 0 ? byName : a.GetInstanceID().CompareTo(b.GetInstanceID());
+            });
             float y = -RowHeight;
             for (int r = 0; r < pawns.Length; r++)
             {
