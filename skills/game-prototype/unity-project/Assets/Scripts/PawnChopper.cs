@@ -63,7 +63,9 @@ namespace MelonS.GameProto
             loggedChopStart = false;
             if (tree != null)
             {
-                Debug.Log($"[Chopper] {name} 배정 tree={tree.name} dist={Vector2.Distance(transform.position, tree.transform.position):F2}");
+                // #38진단 — GO명은 전 림이 "Pawn(Clone)" 이라 주체 식별 불가 → PawnName 병기.
+                var pe38 = GetComponent<PawnEntity>();
+                Debug.Log($"[Chopper] {(pe38 != null ? pe38.PawnName : name)} 배정 tree={tree.name} dist={Vector2.Distance(transform.position, tree.transform.position):F2}");
                 // The reservation is taken by ChopTreeAction (AI) before SetTreeTarget;
                 //  re-assert here so manual/direct callers also hold it (idempotent).
                 MelonS.GameProto.AI.ReservationManager.TryReserve(tree, gameObject);
@@ -106,7 +108,8 @@ namespace MelonS.GameProto
                 // WORKFLOW-V2 진단 — 외부(AI 인터럽트 등)発 해제 추적.  스택 일부만 기록.
                 var st = new System.Diagnostics.StackTrace(1, false);
                 string caller = st.FrameCount > 0 ? st.GetFrame(0).GetMethod()?.DeclaringType?.Name + "." + st.GetFrame(0).GetMethod()?.Name : "?";
-                Debug.Log($"[Chopper] {name} ClearTask tree={targetTree.name} by={caller}");
+                var peC = GetComponent<PawnEntity>();
+                Debug.Log($"[Chopper] {(peC != null ? peC.PawnName : name)} ClearTask tree={targetTree.name} by={caller}");
                 MelonS.GameProto.AI.ReservationManager.Release(targetTree, gameObject);
             }
             ReleaseStandCell();
@@ -143,7 +146,8 @@ namespace MelonS.GameProto
                 if (!loggedChopStart)
                 {
                     loggedChopStart = true;
-                    Debug.Log($"[Chopper] {name} 벌목 시작 dist={dist:F2} atStand={movement.AtStandCell(standCell)} cell={standCell}");
+                    var peS = GetComponent<PawnEntity>();
+                    Debug.Log($"[Chopper] {(peS != null ? peS.PawnName : name)} 벌목 시작 dist={dist:F2} atStand={movement.AtStandCell(standCell)} cell={standCell}");
                 }
                 movement.ClearTarget();
                 // #120 - PawnAbilities chop multiplier

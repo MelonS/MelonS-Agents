@@ -165,12 +165,26 @@ namespace MelonS.GameProto
                 Collider2D dhit = PickEntityAt(dmw);
                 if (dhit != null)
                 {
+                    // #38 재발(2026-06-10 실플레이 Player.log + marquee 재현): #233 이 이 블록을
+                    //  '지정-only + return' 으로 만들면서 아래 tree/vein 직접명령 분기(L345/L331)가
+                    //  도달 불가 사문화 — 지정만 깔리고 임의 림의 자율 AI 가 집어갔다.  마키 선택
+                    //  시엔 move-order 가 선택 림 AI 를 15s 봉인해 100% 타 림이 가져감.  지정은
+                    //  유지하되(마커/세이브/자율경로 호환) 선택 림이 있으면 즉시 직접 배정한다.
+                    //  선택 없음 = #233 그대로 (지정 → 자율 ChopTreeAction).
                     if (dhit.GetComponent<TreeEntity>() != null && TreeChopDesignation.Instance != null
                         && TreeChopDesignation.Instance.TryMark(dhit.gameObject) != null)
-                    { Debug.Log("[Chop] 우클릭 벌목 지정"); return; }
+                    {
+                        Debug.Log("[Chop] 우클릭 벌목 지정");
+                        TryOrderSelectedChop(dhit.GetComponent<TreeEntity>());
+                        return;
+                    }
                     if (dhit.GetComponent<StoneVeinEntity>() != null && MineDesignation.Instance != null
                         && MineDesignation.Instance.TryMark(dhit.gameObject) != null)
-                    { Debug.Log("[Mine] 우클릭 채광 지정"); return; }
+                    {
+                        Debug.Log("[Mine] 우클릭 채광 지정");
+                        TryOrderSelectedMine(dhit.GetComponent<StoneVeinEntity>());
+                        return;
+                    }
                 }
             }
             // Right click = move OR chop OR attack (drafted) for selected pawn
@@ -394,6 +408,58 @@ namespace MelonS.GameProto
         {
             var m = FindMarquee();
             return m != null && m.HasMultiSelection;
+        }
+
+        /// <summary>#38 — 우클릭 지정 시 명령 받을 선택 림.  마키 다중선택이 있으면 그중
+        ///  대상에서 가장 가까운 비징집·생존 림, 아니면 단일 currentSelection.  없으면 null
+        ///  (지정만 → 자율 경로).</summary>
+        private PawnEntity NearestCommandablePawn(Vector3 targetPos)
+        {
+            var m = FindMarquee();
+            if (m != null && m.HasMultiSelection)
+            {
+                PawnEntity best = null; float bestSq = float.MaxValue;
+                for (int i = 0; i < m.CurrentMultiSelection.Count; i++)
+                {
+                    var p = m.CurrentMultiSelection[i];
+                    if (p == null || p.IsDead || p.IsDrafted) continue;
+                    float sq = (p.transform.position - targetPos).sqrMagnitude;
+                    if (sq < bestSq) { bestSq = sq; best = p; }
+                }
+                return best;
+            }
+            if (currentSelection != null && !currentSelection.IsDead && !currentSelection.IsDrafted)
+                return currentSelection;
+            return null;
+        }
+
+        /// <summary>#38 — 선택 림에게 벌목 직접 배정.  SetTreeTarget 이 예약을 걸어
+        ///  (f29b10f 키 일치) 타 림 자율 합류를 차단한다.  성공 시 true.</summary>
+        private bool TryOrderSelectedChop(TreeEntity tree)
+        {
+            if (tree == null) return false;
+            var p = NearestCommandablePawn(tree.transform.position);
+            var ch = p != null ? p.GetComponent<PawnChopper>() : null;
+            if (ch == null) return false;
+            ClearAllWorkTasks(p);
+            ch.SetTreeTarget(tree);
+            p.ManualMoveUntil = Time.time + 12f;
+            Debug.Log($"[Chop] {p.PawnName} → 벌목 명령 (우클릭 직접 배정)");
+            return true;
+        }
+
+        /// <summary>#38 — 선택 림에게 채광 직접 배정 (벌목과 대칭).</summary>
+        private bool TryOrderSelectedMine(StoneVeinEntity vein)
+        {
+            if (vein == null) return false;
+            var p = NearestCommandablePawn(vein.transform.position);
+            var mn = p != null ? p.GetComponent<PawnMiner>() : null;
+            if (mn == null) return false;
+            ClearAllWorkTasks(p);
+            mn.SetVeinTarget(vein);
+            p.ManualMoveUntil = Time.time + 12f;
+            Debug.Log($"[Mine] {p.PawnName} → 채광 명령 (우클릭 직접 배정)");
+            return true;
         }
 
         private void ToggleDraftOnSelection()
@@ -820,10 +886,17 @@ namespace MelonS.GameProto
 
         public void SimulateRightClick(Vector2 worldPos)
         {
-            if (currentSelection == null) return;
+            // #38진단(2026-06-10) — 우클릭 무동작 간헐 재현: 셀렉션 소실인지 pick 오집인지
+            //  로그로 구분 (real 경로의 [RClick] 과 대칭).  지정 0건/배정 0건 FAIL 의 추적 장치.
+            if (currentSelection == null)
+            {
+                Debug.Log($"[RClickSim] no-op: currentSelection=null at {worldPos}");
+                return;
+            }
             Vector3 mouseWorld = new Vector3(worldPos.x, worldPos.y, 0f);
             ClickEffect.Spawn(mouseWorld, new Color(0.3f, 0.9f, 1f, 0.95f));  // 통합 검증 - 파란 X
             Collider2D rhit = PickEntityAt(mouseWorld);
+            Debug.Log($"[RClickSim] sel={currentSelection.PawnName} drafted={currentSelection.IsDrafted} hit={(rhit != null ? rhit.gameObject.name : "empty")} at {worldPos}");
             if (currentSelection.IsDrafted)
             {
                 // drafted 분기: 적/늑대/동물 우선
@@ -849,18 +922,20 @@ namespace MelonS.GameProto
             //  마킹 모드(Orders→벌목/채광)가 담당하고, 거긴 자율 ChopTreeAction 이 처리한다.
             if (rhit != null)
             {
+                // #38(2026-06-10) — real 경로(Update 지정 블록)와 완전 동일화: 지정 + 선택 림
+                //  직접 배정.  이전 sim 은 직접 배정만 해 real(지정-only 회귀)의 버그를 가렸다.
                 var treeR = rhit.GetComponent<TreeEntity>();
                 if (treeR != null)
                 {
-                    var ch = currentSelection.GetComponent<PawnChopper>();
-                    if (ch != null) { ClearAllWorkTasks(currentSelection); ch.SetTreeTarget(treeR); currentSelection.ManualMoveUntil = Time.time + 12f; }
+                    if (TreeChopDesignation.Instance != null) TreeChopDesignation.Instance.TryMark(rhit.gameObject);
+                    TryOrderSelectedChop(treeR);
                     return;
                 }
                 var veinR = rhit.GetComponent<StoneVeinEntity>();
                 if (veinR != null)
                 {
-                    var mn = currentSelection.GetComponent<PawnMiner>();
-                    if (mn != null) { ClearAllWorkTasks(currentSelection); mn.SetVeinTarget(veinR); currentSelection.ManualMoveUntil = Time.time + 12f; }
+                    if (MineDesignation.Instance != null) MineDesignation.Instance.TryMark(rhit.gameObject);
+                    TryOrderSelectedMine(veinR);
                     return;
                 }
             }

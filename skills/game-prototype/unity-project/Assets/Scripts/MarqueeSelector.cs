@@ -202,9 +202,12 @@ namespace MelonS.GameProto
             //   제대로 안 됨" — 이전엔 우클릭이 이동만 전원 적용했고, '적 우클릭=공격'은 ClickSelector
             //   가 currentSelection(1명)만 처리해 그룹 공격이 안 됐다.  적/늑대/동물을 우클릭하고
             //   선택에 징집된 림이 있으면 **전원**에게 attack/hunt target 을 박는다.  빈 땅이면 전원 이동.
-            if (Input.GetMouseButtonDown(1) && HasMultiSelection && !InputBlocked())
+            // #38(2026-06-10) raw Input → SimInput: WORKFLOW-V2 규칙 2 위반이던 하네스 사각지대.
+            //  이 핸들러가 raw Input 만 읽어 재현 하네스가 '박스선택 후 우클릭'(운영자 실경로)을
+            //  영원히 검증 못 했다 — 그 사각에서 move-order 가 선택 림 AI 를 15s 봉인해 #38 재발.
+            if (SimInput.GetMouseButtonDown(1) && HasMultiSelection && !InputBlocked())
             {
-                Vector3 wt = ScreenToWorld(Input.mousePosition);
+                Vector3 wt = ScreenToWorld(SimInput.mousePosition);
                 var hit = Physics2D.OverlapPoint(new Vector2(wt.x, wt.y));
                 BanditEnemy bandit = hit != null ? hit.GetComponent<BanditEnemy>() : null;
                 WolfEnemy   wolf   = hit != null ? hit.GetComponent<WolfEnemy>()   : null;
@@ -231,7 +234,18 @@ namespace MelonS.GameProto
                 }
                 else
                 {
-                    IssueMoveOrderToAll(wt);
+                    // #38(2026-06-10) — 나무/광맥 우클릭은 ClickSelector 의 지정+직접배정 경로가
+                    //  소유한다.  여기서 그룹 이동을 내리면 (a) 방금 배정된 벌목/채광 task 를
+                    //  ClearTask 로 지우고 (b) ManualMoveUntil 15s 가 선택 림 AI 를 봉인해
+                    //  타 림이 지정을 집어갔다(실플레이 "다른 림이 와서 캠"의 본체).
+                    bool hitDesignable = false;
+                    foreach (var h in Physics2D.OverlapPointAll(new Vector2(wt.x, wt.y)))
+                    {
+                        if (h == null) continue;
+                        if (h.GetComponent<TreeEntity>() != null || h.GetComponent<StoneVeinEntity>() != null)
+                        { hitDesignable = true; break; }
+                    }
+                    if (!hitDesignable) IssueMoveOrderToAll(wt);
                 }
             }
         }
@@ -241,7 +255,19 @@ namespace MelonS.GameProto
         {
             Vector2 min = new Vector2(Mathf.Min(pressWorld.x, curWorld.x), Mathf.Min(pressWorld.y, curWorld.y));
             Vector2 max = new Vector2(Mathf.Max(pressWorld.x, curWorld.x), Mathf.Max(pressWorld.y, curWorld.y));
+            BoxSelect(min, max);
+        }
 
+        /// <summary>QA/test entry — mirror TreeChopDesignation.SimulateClick 패턴.  하네스가
+        ///  운영자의 박스선택 경로(마키 명령 소유권 포함)를 그대로 타게 한다 (#38 재현).</summary>
+        public int SimulateBoxSelect(Vector2 min, Vector2 max)
+        {
+            BoxSelect(min, max);
+            return multiSelection.Count;
+        }
+
+        private void BoxSelect(Vector2 min, Vector2 max)
+        {
             // Clear any prior marquee rings before re-selecting.
             ClearMultiSelection();
 
