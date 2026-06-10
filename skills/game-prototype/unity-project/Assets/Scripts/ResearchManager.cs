@@ -121,6 +121,7 @@ namespace MelonS.GameProto
                 activeTech.currentPoints = activeTech.requiredPoints;
                 activeTech.completed = true;
                 Debug.Log($"[Research] 완료: {activeTech.nameKr}");
+                AudioBank.Instance?.PlayResearch();   // #게임필2 — 유일한 장기 보상 루프가 들린다
                 if (OnTechCompleted != null) OnTechCompleted(activeTech);
                 // #루프 완료 후 다음 연구 자동선택 — 안 하면 activeTech=null 로 연구가 멈춰
                 //  플레이어가 N키로 수동 선택할 때까지 진행 정지(루프 stall).  시작 시 techs[0]

@@ -94,7 +94,8 @@ namespace MelonS.GameProto
                 cb.pressedColor     = MelonS.GameProto.Core.UITheme.AccentOrange;   // press = orange
                 cb.fadeDuration     = 0.08f;
                 btn.colors = cb;
-                btn.onClick.AddListener(() => { action?.Invoke(); Close(); });
+                // #게임필2 — 명령 ACK: 메뉴 항목 실행이 들린다 (클릭→명령 접수 확인)
+                btn.onClick.AddListener(() => { AudioBank.Instance?.PlaySelect(); action?.Invoke(); Close(); });
 
                 var txtGo = new GameObject("Label");
                 txtGo.transform.SetParent(bgo.transform, false);

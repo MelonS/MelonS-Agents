@@ -284,6 +284,7 @@ namespace MelonS.GameProto
                     Debug.Log($"[Pawn:{pawnName}] armor {armor:F2}x → dmg {dmg}→{reduced}");
                 dmg = reduced;
             }
+            AudioBank.Instance?.PlayHit();   // #게임필2 — 림 피격이 들린다 (0.25s 스로틀 내장)
             // Day 45: route damage to PawnHealth body parts if present.
             var health = GetComponent<PawnHealth>();
             if (health != null)

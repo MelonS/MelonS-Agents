@@ -87,6 +87,10 @@ namespace MelonS.GameProto
             {
                 // 운영자 fb v4 - 레퍼런스 콜로니심 정상 흐름: 즉시 +N 안 함. chunk 만 drop.
                 int yieldN = Random.Range(stoneYieldMin, stoneYieldMax + 1);
+                // #게임필 배치2 — 보상 순간: 붕괴가 들리고 산출이 보인다 (TreeEntity 와 대칭).
+                AudioBank.Instance?.PlayRockbreak();
+                FloatingText.Spawn(transform.position + Vector3.up * 0.4f,
+                                   $"+{yieldN} 석재", new Color(0.75f, 0.78f, 0.85f, 1f));
                 // #215 운영자 fb "캐면 순간이동" — StoneChunkEntity.EnsureSprite 가 sprite
                 //  null 이어도 코드 기본 돌덩이를 보장하므로, 즉시 AddStone 폴백(텔레포트)을
                 //  완전히 제거하고 항상 물리 chunk 를 떨어뜨린다(hauler 가 운반해야 적립).

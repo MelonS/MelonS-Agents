@@ -111,6 +111,12 @@ namespace MelonS.GameProto
                 //  보장하므로 pile 은 항상 "나무 쓰러진 자리"(transform.position)에 눈에 보이게
                 //  떨어진다.  hauler 가 줍어 운반(등짐 아이콘 + 부드러운 이동)해야 카운터에
                 //  들어간다 = 운영자 멘탈 모델과 일치 (순간이동 아님).
+                // #게임필 배치2(2026-06-10 자율) — 보상 순간: 쓰러짐이 들리고 산출이 보인다.
+                //  이전엔 나무가 무음으로 사라짐 — FloatingText 는 B6 때 만들어 두고 배선이
+                //  FOLLOW-UP 으로 방치돼 있던 것의 이행 (격차 분석 갈래3/갈래4 합치 항목).
+                AudioBank.Instance?.PlayTreefall();
+                FloatingText.Spawn(transform.position + Vector3.up * 0.4f,
+                                   $"+{woodDrop} 목재", new Color(0.45f, 0.85f, 0.35f, 1f));
                 WoodPileEntity.Spawn(transform.position, woodDrop, WoodPileSprite);
                 // Day 12: enqueue a future sapling at this tree's position
                 // BEFORE Destroy(gameObject) — `transform.position` is read

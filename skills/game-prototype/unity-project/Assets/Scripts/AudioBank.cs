@@ -227,6 +227,13 @@ namespace MelonS.GameProto
         // Without this assignment: graceful null no-op (no crash, just silent bow).
         public AudioClip sfxShoot;     // bow-twang arrow-launch -- ~0.15s
 
+        // -- #게임필 배치2 (2026-06-10 자율) — '보상 순간' 4종: 행동의 결과가 귀에 닿는다.
+        //    SceneSetup.Game.Audio 가 _gen_reward_sfx.py 산출 wav 를 자동 배선.
+        public AudioClip sfxTreefall;  // 나무 쓰러짐 crack→whoosh→쿵 -- ~0.6s
+        public AudioClip sfxRockbreak; // 광맥 붕괴 자갈 흩어짐 -- ~0.45s
+        public AudioClip sfxEat;       // 식사 머치 (잔잔) -- ~0.32s
+        public AudioClip sfxResearch;  // 연구 완료 2음 상승 징글 -- ~0.55s
+
         // -- Audio sources --
         [SerializeField] private AudioSource bgmSource;
         [SerializeField] private AudioSource sfxSource;
@@ -251,6 +258,10 @@ namespace MelonS.GameProto
         private float _lastFootstepTime = -10f;   // wiki B8: footstep bank-side guard
         private float _lastDoorTime     = -10f;   // wiki B9: door pass-through guard
         private float _lastCookTime     = -10f;   // wiki B9: cook tick guard
+        private float _lastTreefallTime  = -10f;  // #게임필2 — 보상 순간 스로틀
+        private float _lastRockbreakTime = -10f;
+        private float _lastEatTime       = -10f;
+        private float _lastResearchTime  = -10f;
 
         // -- Ambient state (wiki B8 day/night swap) --
         // True when ambientSource is playing sfxAmbientNight; false when on sfxAmbient (day).
@@ -463,6 +474,39 @@ namespace MelonS.GameProto
             if (Time.time - _lastBuildTime < BuildInterval) return;
             _lastBuildTime = Time.time;
             sfxSource.PlayOneShot(sfxBuild, 0.80f);
+        }
+
+        // -- #게임필 배치2 — 보상 순간 4종.  PlayBuild 와 동일 패턴(스로틀 + null no-op). --
+        public void PlayTreefall()
+        {
+            if (sfxTreefall == null || sfxSource == null) return;
+            if (Time.time - _lastTreefallTime < 0.3f) return;
+            _lastTreefallTime = Time.time;
+            sfxSource.PlayOneShot(sfxTreefall, 0.9f);
+        }
+
+        public void PlayRockbreak()
+        {
+            if (sfxRockbreak == null || sfxSource == null) return;
+            if (Time.time - _lastRockbreakTime < 0.3f) return;
+            _lastRockbreakTime = Time.time;
+            sfxSource.PlayOneShot(sfxRockbreak, 0.85f);
+        }
+
+        public void PlayEat()
+        {
+            if (sfxEat == null || sfxSource == null) return;
+            if (Time.time - _lastEatTime < 0.5f) return;
+            _lastEatTime = Time.time;
+            sfxSource.PlayOneShot(sfxEat, 0.55f);
+        }
+
+        public void PlayResearch()
+        {
+            if (sfxResearch == null || sfxSource == null) return;
+            if (Time.time - _lastResearchTime < 1.0f) return;
+            _lastResearchTime = Time.time;
+            sfxSource.PlayOneShot(sfxResearch, 0.8f);
         }
 
         /// <summary>

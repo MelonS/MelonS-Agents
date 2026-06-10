@@ -204,6 +204,7 @@ namespace MelonS.GameProto
             if (IsDead) return;
             int eff = Mathf.Max(1, Mathf.RoundToInt(dmg * (1f - baseArmor)));  // #277 적 방어 감면
             Hp = Mathf.Max(0, Hp - eff);
+            AudioBank.Instance?.PlayHit();   // #게임필2 — 백병전 타격이 들린다 (0.25s 스로틀 내장)
             if (sr != null)
             {
                 sr.color = Color.white;

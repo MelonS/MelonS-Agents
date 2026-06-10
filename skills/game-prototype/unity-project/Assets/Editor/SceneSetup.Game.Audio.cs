@@ -90,6 +90,16 @@ namespace MelonS.GameProto.EditorTools
             if (doorClip != null)  abSo.FindProperty("sfxDoor").objectReferenceValue  = doorClip;
             if (cookClip != null)  abSo.FindProperty("sfxCook").objectReferenceValue  = cookClip;
             if (shootClip != null) abSo.FindProperty("sfxShoot").objectReferenceValue = shootClip;
+            // #게임필 배치2 — 보상 순간 4종 (treefall/rockbreak/eat/research, _gen_reward_sfx.py)
+            string[] rewardNames = { "treefall", "rockbreak", "eat", "research" };
+            string[] rewardProps = { "sfxTreefall", "sfxRockbreak", "sfxEat", "sfxResearch" };
+            for (int ri = 0; ri < rewardNames.Length; ri++)
+            {
+                string p = $"Assets/Audio/{rewardNames[ri]}.wav";
+                if (File.Exists(p)) AssetDatabase.ImportAsset(p, ImportAssetOptions.ForceUpdate);
+                var clip = AssetDatabase.LoadAssetAtPath<AudioClip>(p);
+                if (clip != null) abSo.FindProperty(rewardProps[ri]).objectReferenceValue = clip;
+            }
             abSo.ApplyModifiedPropertiesWithoutUndo();
         }
     }

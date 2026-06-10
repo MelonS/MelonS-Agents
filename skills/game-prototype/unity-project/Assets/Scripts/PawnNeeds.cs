@@ -572,6 +572,7 @@ namespace MelonS.GameProto
                 bool counted = eatMeatTarget.InStockpile;
                 Object.Destroy(eatMeatTarget.gameObject);
                 if (counted && rm != null) rm.AddFood(-amount);
+                AudioBank.Instance?.PlayEat();   // #게임필2 — 식사가 들린다 (0.5s 스로틀)
                 food = Mathf.Min(100f, food + eatRestore);
                 var th = GetComponent<PawnThoughts>();
                 if (th != null) th.AddThought("배부름");
@@ -585,7 +586,8 @@ namespace MelonS.GameProto
                 if (rm.fineMeals > 0)
                 {
                     rm.AddFineMeals(-1);
-                    food = Mathf.Min(100f, food + eatRestore);
+                    AudioBank.Instance?.PlayEat();   // #게임필2 — 식사가 들린다 (0.5s 스로틀)
+                food = Mathf.Min(100f, food + eatRestore);
                     mood = Mathf.Min(100f, mood + 20f + traitMealBonus);
                     var th2 = GetComponent<PawnThoughts>();
                     if (th2 != null) th2.AddThought("최고의 식사", +12f, 800f);
@@ -594,7 +596,8 @@ namespace MelonS.GameProto
                 if (rm.meals > 0)
                 {
                     rm.AddMeals(-1);
-                    food = Mathf.Min(100f, food + eatRestore);
+                    AudioBank.Instance?.PlayEat();   // #게임필2 — 식사가 들린다 (0.5s 스로틀)
+                food = Mathf.Min(100f, food + eatRestore);
                     mood = Mathf.Min(100f, mood + 10f + traitMealBonus);
                     var th = GetComponent<PawnThoughts>();
                     if (th != null) th.AddThought("맛있는 식사");
@@ -606,7 +609,8 @@ namespace MelonS.GameProto
                     //  MeatPile 에서 함께 소비(이전엔 카운터만 −1 → 물리 더미 잔존 #2: '카운터 0인데
                     //  화면엔 식량 더미').
                     rm.SpendStockpiledFood(1);
-                    food = Mathf.Min(100f, food + eatRestore);
+                    AudioBank.Instance?.PlayEat();   // #게임필2 — 식사가 들린다 (0.5s 스로틀)
+                food = Mathf.Min(100f, food + eatRestore);
                     var th = GetComponent<PawnThoughts>();
                     if (th != null) th.AddThought("배부름");
                     return;
@@ -621,7 +625,8 @@ namespace MelonS.GameProto
                 int got = eatBushTarget.TakeBerry();
                 if (got > 0)
                 {
-                    food = Mathf.Min(100f, food + eatRestore);
+                    AudioBank.Instance?.PlayEat();   // #게임필2 — 식사가 들린다 (0.5s 스로틀)
+                food = Mathf.Min(100f, food + eatRestore);
                     var th = GetComponent<PawnThoughts>();
                     if (th != null) th.AddThought("배부름");
                 }
