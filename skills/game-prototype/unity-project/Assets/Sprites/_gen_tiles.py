@@ -158,37 +158,40 @@ def gen_grass(size=16):
             in_top = y < half
             in_left = x < half
 
+            # TOP-1 (visual-polish-backlog 2026-06-11): 디테일 픽셀 밀도를 절반 이하로
+            #  — per-pixel 노이즈가 줌아웃에서 "정전기 화면" 으로 읽히던 것을, MD 가
+            #  지배하는 면 + 드문 액센트로 (RimWorld 지면이 조용한 이유).
             if in_left and in_top:
-                # zone A: 밝은 풀 뭉치 (GRASS_LT 중심)
-                if r < 0.45:
+                # zone A: 살짝 밝은 풀 (LT 액센트)
+                if r < 0.22:
                     pixels[x, y] = GRASS_LT
-                elif r < 0.75:
+                elif r < 0.90:
                     pixels[x, y] = GRASS_MD
                 else:
                     pixels[x, y] = GRASS_DK
             elif not in_left and not in_top:
-                # zone D: 그늘진 풀 (GRASS_DK 중심)
-                if r < 0.45:
+                # zone D: 살짝 그늘진 풀 (DK 액센트)
+                if r < 0.22:
                     pixels[x, y] = GRASS_DK
-                elif r < 0.75:
+                elif r < 0.90:
                     pixels[x, y] = GRASS_MD
                 else:
                     pixels[x, y] = GRASS_LT
             elif in_left and not in_top:
                 # zone C: GRASS_MD + 드문 흙점
-                if r < 0.06:
+                if r < 0.03:
                     pixels[x, y] = DIRT_DK    # 흙점: 작은 맨땅
-                elif r < 0.22:
+                elif r < 0.13:
                     pixels[x, y] = GRASS_DK
-                elif r < 0.45:
+                elif r < 0.24:
                     pixels[x, y] = GRASS_LT
                 else:
                     pixels[x, y] = GRASS_MD
             else:
                 # zone B (우상): 중성 baseline
-                if r < 0.12:
+                if r < 0.07:
                     pixels[x, y] = GRASS_DK
-                elif r < 0.22:
+                elif r < 0.13:
                     pixels[x, y] = GRASS_LT
                 else:
                     pixels[x, y] = GRASS_MD
@@ -212,8 +215,10 @@ def gen_grass_b(size=16):
     내부 zone 분할: 좌상 = 가장 밝음(GRASS_LT 뭉치), 우하 = GRASS_MD 로 어두움.
     seamless edge: GRASS_MD.
     """
+    # TOP-1: 변형 간 평균 명도차 압축 — 기존 LT 통짜 베이스는 A/C 와 체커보드를
+    #  만들었다.  베이스를 MD 로 통일하고 밝음은 zone 액센트로만.
     rng = random.Random(7002)
-    img = Image.new("RGBA", (size, size), GRASS_LT)
+    img = Image.new("RGBA", (size, size), GRASS_MD)
     pixels = img.load()
 
     half = size // 2
@@ -223,18 +228,18 @@ def gen_grass_b(size=16):
             in_bright = (x < half + 2) and (y < half + 2)  # 살짝 비대칭
 
             if in_bright:
-                if r < 0.04:
+                if r < 0.02:
                     pixels[x, y] = DIRT_LT    # 건조 흙점 (밝은 색)
-                elif r < 0.20:
-                    pixels[x, y] = GRASS_MD
-                else:
-                    pixels[x, y] = GRASS_LT
-            else:
-                if r < 0.03:
-                    pixels[x, y] = DIRT_MD    # 좀 더 어두운 흙점
-                elif r < 0.12:
-                    pixels[x, y] = GRASS_DK
                 elif r < 0.40:
+                    pixels[x, y] = GRASS_LT
+                else:
+                    pixels[x, y] = GRASS_MD
+            else:
+                if r < 0.02:
+                    pixels[x, y] = DIRT_MD    # 좀 더 어두운 흙점
+                elif r < 0.08:
+                    pixels[x, y] = GRASS_DK
+                elif r < 0.20:
                     pixels[x, y] = GRASS_LT
                 else:
                     pixels[x, y] = GRASS_MD
@@ -258,8 +263,9 @@ def gen_grass_c(size=16):
     우상 quadrant 에 GRASS_MD 하이라이트 cluster — 비대칭 보장.
     seamless edge: GRASS_MD.
     """
+    # TOP-1: 변형 간 평균 명도차 압축 — DK 통짜 베이스 → MD 베이스 + DK zone 액센트.
     rng = random.Random(7003)
-    img = Image.new("RGBA", (size, size), GRASS_DK)
+    img = Image.new("RGBA", (size, size), GRASS_MD)
     pixels = img.load()
 
     half = size // 2
@@ -269,19 +275,19 @@ def gen_grass_c(size=16):
             in_highlight = (x >= half - 1) and (y < half + 1)  # 우상 하이라이트 zone
 
             if in_highlight:
-                if r < 0.35:
-                    pixels[x, y] = GRASS_MD
-                elif r < 0.55:
+                if r < 0.12:
                     pixels[x, y] = GRASS_LT
+                elif r < 0.88:
+                    pixels[x, y] = GRASS_MD
                 else:
                     pixels[x, y] = GRASS_DK
             else:
-                if r < 0.14:
+                if r < 0.05:
                     pixels[x, y] = DIRT_DK    # 젖은 흙 반점 (어두운 갈색)
-                elif r < 0.22:
-                    pixels[x, y] = GRASS_MD
-                else:
+                elif r < 0.40:
                     pixels[x, y] = GRASS_DK
+                else:
+                    pixels[x, y] = GRASS_MD
 
     # seamless edge
     for x in range(size):
@@ -295,10 +301,10 @@ def gen_grass_c(size=16):
 
 
 def gen_dirt(size=16):
-    """Warm muted brown dirt / tilled soil patches."""
+    """Warm muted brown dirt / tilled soil patches.  (TOP-1: 노이즈 밀도 절반)"""
     return _speckle_tile(
         size, DIRT_MD, DIRT_DK, DIRT_LT,
-        dark_prob=0.09, light_prob=0.05, seed=2002,
+        dark_prob=0.05, light_prob=0.03, seed=2002,
     )
 
 
@@ -308,10 +314,10 @@ def gen_water(size=16):
 
 
 def gen_rock(size=16):
-    """Cool grey-blue rock - subtle texture, recedes from pawns."""
+    """Warm grey rock - subtle texture, recedes from pawns.  (TOP-1: 웜그레이 + 밀도 절반)"""
     return _speckle_tile(
         size, ROCK_MD, ROCK_DK, ROCK_LT,
-        dark_prob=0.10, light_prob=0.06, seed=4004,
+        dark_prob=0.05, light_prob=0.03, seed=4004,
     )
 
 

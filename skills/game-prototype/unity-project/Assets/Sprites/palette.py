@@ -27,9 +27,11 @@ DIRT_DK       = (86,  66,  46, 255)  # #56422E
 DIRT_MD       = (112, 88,  62, 255)  # #70583E  tilled soil / paths
 DIRT_LT       = (138, 112, 80, 255)  # #8A7050
 
-ROCK_DK       = (66,  66,  74, 255)  # #42424A  cool grey-blue stone
-ROCK_MD       = (104, 104, 114, 255) # #686872
-ROCK_LT       = (150, 150, 160, 255) # #9696A0
+# TOP-1 (visual-polish-backlog 2026-06-11): 한색 블루그레이가 웜톤 잔디/흙 옆에서
+#  보라색으로 읽혀 "QR코드 지면" 인상의 주범 — 웜그레이로 이동 (hue ~40°, 저채도).
+ROCK_DK       = (76,  72,  64, 255)  # #4C4840  warm dark stone
+ROCK_MD       = (106, 100, 88, 255)  # #6A6458  warm grey
+ROCK_LT       = (140, 132, 118, 255) # #8C8476  warm light
 
 WATER_DK      = (52,  78,  96, 255)  # #344E60
 WATER_MD      = (74, 108, 128, 255)  # #4A6C80

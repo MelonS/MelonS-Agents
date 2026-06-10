@@ -62,6 +62,13 @@ namespace MelonS.GameProto.EditorTools
             if (ti != null)
             {
                 ti.textureType = TextureImporterType.Sprite;
+                // #QR지면 근본원인(2026-06-11): tile_grass_b/c.png.meta 가 spriteMode 2
+                //  (Multiple)로 박혀 있었다 — 슬라이스 0개면 Sprite 서브에셋이 안 생겨
+                //  LoadAssetAtPath<Sprite> 가 null → GrassB/C.asset 의 m_Sprite null →
+                //  잔디 셀 40%(b25+c15)가 "구멍"으로 비어 카메라 배경색이 비쳤다
+                //  (새벽 마우브/정오 세이지 플랫 사각형 — 운영자 "QR코드 지면"의 정체).
+                //  Single 강제로 메타가 어떤 상태든 자가치유.
+                ti.spriteImportMode = SpriteImportMode.Single;
                 ti.spritePixelsPerUnit = 16;
                 ti.filterMode = FilterMode.Point;
                 ti.SaveAndReimport();

@@ -122,14 +122,18 @@ namespace MelonS.GameProto.EditorTools
             return layout;
         }
 
-        // #109: 같은 타일 반복돼도 시각 변화 - 4 가지 rotation/flip 중 1 랜덤 선택.
-        //  TileFlags.LockTransform 으로 SetTransformMatrix 가 영구 유지.
+        // #109: 같은 타일 반복돼도 시각 변화.
+        // TOP-1 (visual-polish-backlog 2026-06-11): 90° 회전 제거 — 타일 내부 음영
+        //  방향이 칸마다 뒤집혀 "QR코드 노이즈" 인상의 절반이었다.  flip-X 만 적용
+        //  (음영 상하 방향 보존).  ⚠ r.Next 호출 횟수는 그대로 1회/셀 — rotRng(67890)
+        //  체인 결정론 보존 (호출 수가 바뀌면 이후 모든 셀의 변형이 바뀐다).
         private static void ApplyRandomTileTransform(Tilemap tm, Vector3Int cell, System.Random r)
         {
             tm.SetTileFlags(cell, TileFlags.None);  // LockColor 해제 같은 효과
-            int variant = r.Next(0, 4);  // 0=identity, 1=90, 2=180, 3=270 deg
-            float angle = variant * 90f;
-            Matrix4x4 m = Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(0, 0, angle), Vector3.one);
+            int variant = r.Next(0, 4);  // 체인 보존 위해 4값 소비, 홀수 = flip-X
+            Matrix4x4 m = (variant % 2 == 1)
+                ? Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(-1f, 1f, 1f))
+                : Matrix4x4.identity;
             tm.SetTransformMatrix(cell, m);
         }
 
