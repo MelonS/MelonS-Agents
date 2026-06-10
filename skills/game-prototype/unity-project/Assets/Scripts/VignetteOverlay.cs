@@ -211,7 +211,11 @@ namespace MelonS.GameProto
         // Disabled by default; set to true if vignette.png is unavailable at
         // runtime and a Resources folder is not in scope.
 
-        private const bool ProcFallbackEnabled = false;
+        // #9.0(ui-backlog 2026-06-10) — 빌드에서 vignette 미표시의 원인이 바로 이
+        //  플래그였다: Assets/Sprites/vignette.png 는 Resources 폴더가 아니라 런타임
+        //  Resources.Load 가 항상 null → 폴백은 꺼져 있어 조용히 no-op.  절차 생성은
+        //  _gen_vignette.py 와 동일 수식이라 시각 결과 동일 — 켠다 (D4, 2026-06-11).
+        private const bool ProcFallbackEnabled = true;
 
         private static Sprite BuildProceduralSprite()
         {
@@ -246,13 +250,16 @@ namespace MelonS.GameProto
             }
 
             tex.SetPixels32(pixels);
-            tex.Apply(updateMipmaps: false, makeNoLongerReadable: true);
+            // BlobShadow 와 동일 함정 주의: makeNoLongerReadable=true 면 Sprite.Create
+            //  의 기본 Tight 메시 생성이 조용히 실패한다 → readable 유지 + FullRect.
+            tex.Apply(updateMipmaps: false, makeNoLongerReadable: false);
 
             return Sprite.Create(
                 tex,
                 new Rect(0, 0, SIZE, SIZE),
                 new Vector2(0.5f, 0.5f),
-                SIZE   // PPU: full size → 1 world unit; irrelevant for UI canvas
+                SIZE,  // PPU: full size → 1 world unit; irrelevant for UI canvas
+                0, SpriteMeshType.FullRect
             );
         }
 
