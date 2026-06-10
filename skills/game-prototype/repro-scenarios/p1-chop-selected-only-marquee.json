@@ -1,6 +1,6 @@
 {
-  "name": "P1 #38 벌목 선택 림만 — 림 하나 선택해 나무 우클릭하면 그 림만 벌목해야 한다 (운영자 '다 같이 감'. f29b10f 배타 예약 회귀가드 — 윈도 전구간에서 타 림 '벌목' 등장 시 FAIL)",
-  "timeoutSec": 90,
+  "name": "P1 #38 마키 재현 — 림 1명 '박스선택' 후 나무 우클릭: 그 림만 벌목해야 한다 (2026-06-10 실플레이 Player.log 정확 재현: 박스선택 민지 → 우클릭 → 지정만 깔리고 마키 move-order 가 선택 림 AI 를 15s 봉인 → 서연 자율 배정. withinSec 12 < grace 15 라 수정 전엔 결정적 FAIL)",
+  "timeoutSec": 120,
   "steps": [
     {
       "op": "wait",
@@ -11,13 +11,8 @@
       "name": "00_start"
     },
     {
-      "op": "worldclick",
-      "target": "pawn"
-    },
-    {
-      "op": "assert",
-      "probe": "selection",
-      "expect": "any"
+      "op": "boxselect",
+      "target": "pawn:far"
     },
     {
       "op": "worldright",
@@ -41,7 +36,7 @@
     },
     {
       "op": "shot",
-      "name": "01_only_selected"
+      "name": "01_marquee_selected_chops"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
-  "name": "P1 #38 벌목 선택 림만 — 림 하나 선택해 나무 우클릭하면 그 림만 벌목해야 한다 (운영자 '다 같이 감'. f29b10f 배타 예약 회귀가드 — 윈도 전구간에서 타 림 '벌목' 등장 시 FAIL)",
-  "timeoutSec": 90,
+  "name": "P1 #38 적대 재현 — 나무에서 '가장 먼' 림 선택 후 우클릭: 그 림만 벌목해야 한다 (2026-06-10 실플레이 Player.log 재발: 민지 선택→서연 배정. 기존 시나리오는 최근접 림 선택 = 디스패처 1순위와 우연 일치로 가짜 PASS)",
+  "timeoutSec": 120,
   "steps": [
     {
       "op": "wait",
@@ -12,7 +12,7 @@
     },
     {
       "op": "worldclick",
-      "target": "pawn"
+      "target": "pawn:far"
     },
     {
       "op": "assert",
@@ -37,11 +37,11 @@
       "op": "assert",
       "probe": "selectedOnlyActivity",
       "contains": "벌목",
-      "withinSec": 12
+      "withinSec": 18
     },
     {
       "op": "shot",
-      "name": "01_only_selected"
+      "name": "01_only_selected_far"
     }
   ]
 }

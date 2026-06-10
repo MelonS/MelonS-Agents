@@ -28,6 +28,8 @@ namespace MelonS.GameProto
         public static bool SimActive { get; private set; }
 
         private static Vector3 simMousePos;
+        private static bool simMouseWorldMode;     // #38 — 월드좌표 주입 모드
+        private static Vector3 simMouseWorld;
         private static readonly bool[] simMouseDown = new bool[3];
         private static readonly HashSet<KeyCode> simKeysDown = new HashSet<KeyCode>();
 
@@ -41,12 +43,33 @@ namespace MelonS.GameProto
             simMousePos = screenPos;
             if (button >= 0 && button < 3) simMouseDown[button] = true;
         }
+
+        /// <summary>#38(2026-06-10) — 월드좌표 주입.  screen 좌표는 '소비 프레임'에
+        ///  Camera 현재 상태로 도출하므로, 주입→소비 사이 카메라 포커스 팬이 끼어도
+        ///  재투영이 절대 어긋나지 않는다 (p1-chop-selected-only designations=0 무음
+        ///  미스의 근본 해결).  게임 코드는 여전히 mousePosition(screen)을 읽고
+        ///  ScreenToWorldPoint 하므로 실경로 보장은 그대로다.</summary>
+        public static void FrameMouseDownWorld(int button, Vector3 worldPos)
+        {
+            simMouseWorldMode = true;
+            simMouseWorld = worldPos;
+            if (button >= 0 && button < 3) simMouseDown[button] = true;
+        }
+
         public static void FrameKeyDown(KeyCode k) { simKeysDown.Add(k); }
         public static void FrameMousePos(Vector3 screenPos) { simMousePos = screenPos; }
         public static void ClearFrame()
         {
             simMouseDown[0] = simMouseDown[1] = simMouseDown[2] = false;
+            simMouseWorldMode = false;
             simKeysDown.Clear();
+        }
+
+        private static Vector3 CurrentSimScreenPos()
+        {
+            if (simMouseWorldMode && Camera.main != null)
+                return Camera.main.WorldToScreenPoint(simMouseWorld);
+            return simMousePos;
         }
 
         // ── 게임플레이 코드가 읽는 표면 (Input 대체) ───────────────────────
@@ -55,7 +78,7 @@ namespace MelonS.GameProto
                          : Input.GetMouseButtonDown(button);
 
         public static Vector3 mousePosition
-            => SimActive ? simMousePos : Input.mousePosition;
+            => SimActive ? CurrentSimScreenPos() : Input.mousePosition;
 
         public static bool GetKeyDown(KeyCode key)
             => SimActive ? simKeysDown.Contains(key) : Input.GetKeyDown(key);
@@ -66,7 +89,7 @@ namespace MelonS.GameProto
         {
             if (EventSystem.current == null) return false;
             if (!SimActive) return EventSystem.current.IsPointerOverGameObject();
-            var ped = new PointerEventData(EventSystem.current) { position = simMousePos };
+            var ped = new PointerEventData(EventSystem.current) { position = CurrentSimScreenPos() };
             var results = new List<RaycastResult>();
             EventSystem.current.RaycastAll(ped, results);
             return results.Count > 0;

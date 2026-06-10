@@ -146,12 +146,35 @@ namespace MelonS.GameProto
                 case "worldclick":
                 case "worldright":
                 {
+                    // #38 하네스 결함(2026-06-10) — 직전 선택의 카메라 포커스 팬 중에 screen
+                    //  좌표를 계산하면, 주입이 소비되는 다음 프레임의 ScreenToWorldPoint 가
+                    //  다른 월드점으로 풀려 클릭이 무음 미스됐다(p1-chop-selected-only
+                    //  designations=0, 18:00/19:43 런).  카메라가 1프레임 정지할 때까지
+                    //  대기(최대 ~2s) 후 리졸브·계산한다.
+                    for (int settle = 0; settle < 120; settle++)
+                    {
+                        Vector3 c0 = Camera.main.transform.position;
+                        yield return null;
+                        if ((Camera.main.transform.position - c0).sqrMagnitude < 0.0001f) break;
+                    }
                     Vector3 world;
                     if (!ResolveWorld(s, out world)) { r.passed = false; r.detail = $"target '{s.target}' not found"; break; }
-                    Vector3 screen = Camera.main.WorldToScreenPoint(world);
+                    // #38 — 타깃이 화면 가장자리/UI 점유 밴드(하단바 등)에 있으면 overUI 게이트에
+                    //  막혀 클릭이 무음 무효화된다(-far designations=0, screen y=77 사례).  실제
+                    //  유저처럼 카메라를 타깃으로 즉시 점프(FocusOn) 후 클릭한다.
+                    Vector3 pre = Camera.main.WorldToScreenPoint(world);
+                    if (pre.x < Screen.width * 0.05f || pre.x > Screen.width * 0.95f
+                        || pre.y < Screen.height * 0.16f || pre.y > Screen.height * 0.92f)
+                    {
+                        var cc = Object.FindFirstObjectByType<CameraController>();
+                        if (cc != null) { cc.FocusOn(new Vector2(world.x, world.y)); yield return null; }
+                    }
+                    Vector3 screen = Camera.main.WorldToScreenPoint(world);   // detail 표기용
                     int btn = s.op == "worldclick" ? 0 : 1;
                     if (btn == 0) lastLeftClickWorld = world; else lastRightClickWorld = world;
-                    SimInput.FrameMouseDown(btn, screen);
+                    // #38 — 월드좌표 주입: screen 도출을 소비 프레임으로 미뤄 settle 후에도
+                    //  남는 잔여 팬(포커스 이징 시작 지연)에 의한 재투영 미스를 원천 차단.
+                    SimInput.FrameMouseDownWorld(btn, world);
                     yield return null;                 // 다음 프레임 Update 들이 이 입력을 본다
                     SimInput.ClearFrame();
                     yield return null;
@@ -161,6 +184,23 @@ namespace MelonS.GameProto
                         : string.Join("+", System.Array.ConvertAll(hitsAt, h => h.name));
                     r.passed = true;
                     r.detail = $"{(btn == 0 ? "L" : "R")}click world({world.x:F1},{world.y:F1}) screen({screen.x:F0},{screen.y:F0}) at={atWhat}";
+                    break;
+                }
+
+                case "boxselect":
+                {
+                    // #38 마키 재현 — 운영자의 박스선택 경로.  단일 클릭 선택(ClickSelector.
+                    //  currentSelection)과 명령 소유권이 다르다(MarqueeOwnsCommand) — 그 차이가
+                    //  실플레이에서만 #38 을 재발시켰으므로 하네스도 이 경로를 타야 한다.
+                    Vector3 world;
+                    if (!ResolveWorld(s, out world)) { r.passed = false; r.detail = $"target '{s.target}' not found"; break; }
+                    var mq = Object.FindFirstObjectByType<MarqueeSelector>();
+                    if (mq == null) { r.passed = false; r.detail = "no MarqueeSelector"; break; }
+                    int nSel = mq.SimulateBoxSelect(new Vector2(world.x - 0.6f, world.y - 0.6f),
+                                                    new Vector2(world.x + 0.6f, world.y + 0.6f));
+                    yield return null;
+                    r.passed = nSel >= 1;
+                    r.detail = $"box-selected {nSel} pawn(s) around ({world.x:F1},{world.y:F1})";
                     break;
                 }
 
@@ -461,8 +501,7 @@ namespace MelonS.GameProto
                     //  활동을 보여야 하고(언젠가), 다른 림이 그 활동을 보이면 즉시 FAIL
                     //  (우클릭 명령 = 선택 림 전용 배타 예약, f29b10f).  조기 PASS 없음 — 윈도
                     //  전체를 봐야 "타 림이 늦게 합류"하는 회귀도 잡는다.
-                    var selector = Object.FindFirstObjectByType<ClickSelector>();
-                    var selPawn = selector != null ? selector.CurrentSelection : null;
+                    var selPawn = ResolveSelectedPawn();
                     if (selPawn == null) { r.passed = false; r.detail = "선택 림 없음"; break; }
                     string selName = selPawn.PawnName;
                     bool selDid = false; string offender = "";
@@ -486,6 +525,29 @@ namespace MelonS.GameProto
                                  : $"선택 림 '{selName}' 의 '{s.contains}' 미관측 in {t:F1}s";
                     break;
                 }
+                case "selectedChopAssigned":
+                {
+                    // #38 즉시-인과 probe — 우클릭 직접명령은 클릭 프레임에 동기 배정되고,
+                    //  자율 race 는 최소 다음 Decide 틱(1.5s, PawnUtilityAI)이다.  1s 내
+                    //  '선택 림이 벌목 task 를 쥐었는가'로 명령 발행 주체를 결정적으로 구분 —
+                    //  결과 라벨만 보던 selectedOnlyActivity 의 race-운 가짜 PASS 를 인과로 차단.
+                    var selC = ResolveSelectedPawn();
+                    if (selC == null) { r.passed = false; r.detail = "선택 림 없음"; break; }
+                    var chp = selC.GetComponent<PawnChopper>();
+                    float win = s.withinSec > 0 ? s.withinSec : 1.0f;
+                    float tc = 0; bool got = false;
+                    while (tc < win)
+                    {
+                        if (chp != null && chp.HasTask) { got = true; break; }
+                        yield return new WaitForSeconds(0.1f); tc += 0.1f;
+                    }
+                    r.passed = got;
+                    r.detail = got
+                        ? $"선택 림 '{selC.PawnName}' 벌목 task 보유 ({tc:F1}s — 직접명령 인과 확인)"
+                        : $"선택 림 '{selC.PawnName}' 벌목 task 미보유 in {win:F1}s — 직접명령 미발행";
+                    break;
+                }
+
                 case "needDropsAtMost":
                 {
                     // 상한 가드 — withinSec(스케일초) 동안 s.name 하락폭이 s.min "미만"이어야 PASS.
@@ -508,6 +570,20 @@ namespace MelonS.GameProto
         private static float GetNeed(PawnNeeds nd, string name)
             => name == "food" ? nd.food : name == "sleep" ? nd.sleep : nd.mood;
 
+        /// <summary>#38 — 단일(ClickSelector)/마키(MarqueeSelector) 선택을 동일 의미로 해석.
+        ///  박스선택 시 ClickSelector.CurrentSelection 은 비어 있고 마키가 선택을 소유한다.</summary>
+        private PawnEntity ResolveSelectedPawn()
+        {
+            var selector = Object.FindFirstObjectByType<ClickSelector>();
+            var sp = selector != null ? selector.CurrentSelection : null;
+            if (sp == null)
+            {
+                var mq = Object.FindFirstObjectByType<MarqueeSelector>();
+                if (mq != null && mq.HasMultiSelection) sp = mq.CurrentMultiSelection[0];
+            }
+            return sp;
+        }
+
         // ── target 리졸버 — 절차생성 맵이라 고정좌표 대신 엔티티 검색 ────────
         private bool ResolveWorld(Step s, out Vector3 world)
         {
@@ -520,6 +596,23 @@ namespace MelonS.GameProto
             else if (s.target == "vein") found = Nearest<StoneVeinEntity>(camC);
             else if (s.target == "berry") found = Nearest<BerryBushEntity>(camC);
             else if (s.target == "pawn") found = Nearest<PawnEntity>(camC);
+            else if (s.target == "pawn:far")
+            {
+                // #38 적대 조건(2026-06-10) — '나무에서 가장 먼 림'을 선택.  기존 "pawn"(화면중심
+                //  최근접)은 자율 디스패치의 최근접 선택과 우연히 일치해 가짜 PASS 를 만들었다
+                //  (운영자 실플레이: 민지 선택→서연 배정 FAIL, 하네스: 최근접 선택→PASS).
+                //  worldright 가 잡을 나무(화면중심 최근접 tree) 기준 최원거리 림으로 그 우연을 제거.
+                var refTree = Nearest<TreeEntity>(camC);
+                Vector3 rp = refTree != null ? refTree.transform.position : camC;
+                PawnEntity farP = null; float farSq = -1f;
+                foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                {
+                    if (p == null || p.IsDead) continue;
+                    float d = (p.transform.position - rp).sqrMagnitude;
+                    if (d > farSq) { farSq = d; farP = p; }
+                }
+                found = farP;
+            }
             else if (s.target == "@selected")
                 found = Object.FindFirstObjectByType<ClickSelector>()?.CurrentSelection;
             else if (s.target == "empty@selected")
