@@ -462,7 +462,9 @@ namespace MelonS.GameProto
             return true;
         }
 
-        private void ToggleDraftOnSelection()
+        /// <summary>#ui백로그 0.0 — 하단바 [징집] 버튼이 재사용할 수 있게 public.
+        ///  R 핫키와 GUI 버튼이 같은 경로(다중선택 전원 일괄)를 타야 동작 불일치가 없다.</summary>
+        public void ToggleDraftOnSelection()
         {
             var marquee = FindMarquee();
             if (marquee != null && marquee.HasMultiSelection)

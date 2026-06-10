@@ -200,6 +200,11 @@ namespace MelonS.GameProto
             //   key space while still being one-click buildable.
             if (Input.GetKeyDown(KeyCode.E)) SetMode(CurrentMode == Mode.Fence ? Mode.Off : Mode.Fence);
             if (BuildModeActive && Input.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }
+            // #ui백로그 4.6 — ESC 빌드 취소: 지정 모드 7종(벌목/채광/해체 등)은 전부
+            //  우클릭+ESC 양쪽인데 빌드만 우클릭 전용이라 비대칭이었다 (SettingsMenu 주석이
+            //  가정하던 'ESC=build-cancel' 바인딩의 실체화).  SettingsMenu 의 ESC 는 isOpen
+            //  일 때만 소비하므로 충돌 없음.
+            if (BuildModeActive && Input.GetKeyDown(KeyCode.Escape)) { SetMode(Mode.Off); return; }
             UpdateGhost();
             // #179/#182 - click 처리.  cooldown 으로 SetMode 직후 race 방지.
             //  EventSystem guard 는 over-blocking 위험 (TopBar/GuiControlBar 가 항상 raycast target).
@@ -215,6 +220,29 @@ namespace MelonS.GameProto
         ///   Update 의 raw input → cooldown → overUI → TryPlace 시퀀스 그대로 재현.
         ///   BuildClickAutoQA v2 가 ExecuteEvents 로 button click 시뮬 후 이 메서드로 map click 시뮬.
         /// </summary>
+        // #ui백로그 4.7 — 클릭 지점의 UI 가 '상호작용 요소(Selectable 부모 체인)'인지 판정.
+        //  버튼/토글 위 클릭 = 의도적 조작이므로 실패 토스트를 띄우지 않는다.
+        private static readonly System.Collections.Generic.List<RaycastResult> _uiHits =
+            new System.Collections.Generic.List<RaycastResult>(8);
+        private static bool PointerOverSelectable(Vector2 screenPos)
+        {
+            if (EventSystem.current == null) return false;
+            var ped = new PointerEventData(EventSystem.current) { position = screenPos };
+            _uiHits.Clear();
+            EventSystem.current.RaycastAll(ped, _uiHits);
+            for (int i = 0; i < _uiHits.Count; i++)
+            {
+                var t = _uiHits[i].gameObject != null ? _uiHits[i].gameObject.transform : null;
+                int depth = 0;
+                while (t != null && depth++ < 6)
+                {
+                    if (t.GetComponent<UnityEngine.UI.Selectable>() != null) return true;
+                    t = t.parent;
+                }
+            }
+            return false;
+        }
+
         public BuildClickResult HandleLeftClickAt(Vector2 screenPos, bool checkOverUI)
         {
             if (!BuildModeActive) return BuildClickResult.ModeOff;
@@ -231,7 +259,12 @@ namespace MelonS.GameProto
                 {
                     Vector3 mwLog = (cam != null) ? cam.ScreenToWorldPoint(screenPos) : Vector3.zero;
                     Debug.Log($"[Build] CLICK skip: overUI=true at screen={screenPos} world=({mwLog.x:F1},{mwLog.y:F1})");
-                    if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail("✗ UI 위 클릭 - 맵에 직접 클릭하세요");
+                    // #ui백로그 4.7 — 의도적 UI 조작(버튼 등 Selectable)엔 실패 토스트 생략:
+                    //  #190 의 목적은 '보이지 않는 차단자' 진단이었는데 속도/탭/메뉴 버튼
+                    //  클릭마다 빨간 스팸이 됐다.  Selectable 아닌 순수 그래픽에 막혔을 때만
+                    //  토스트 — 진단 가치(투명 차단자 탐지)는 보존.
+                    if (BuildClickToast.Instance != null && !PointerOverSelectable(screenPos))
+                        BuildClickToast.Instance.ShowFail("✗ UI 위 클릭 - 맵에 직접 클릭하세요");
                     return BuildClickResult.OverUI;
                 }
             }

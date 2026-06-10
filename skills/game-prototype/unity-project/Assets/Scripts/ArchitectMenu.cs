@@ -722,7 +722,9 @@ namespace MelonS.GameProto
         }
 
         public void Toggle() { if (isOpen) Close(); else Open(); }
-        public void Open() { isOpen = true; gameObject.SetActive(true); transform.SetAsLastSibling(); }  // #275 최상단
+        // #275 최상단.  #ui백로그 4.2 — 재오픈 시 ▣ 활성표시/자재 dim stale 해소:
+        //  RefreshContent 는 idempotent(전체 재구성)이고 열 때 1회라 비용 무시 가능.
+        public void Open() { isOpen = true; gameObject.SetActive(true); transform.SetAsLastSibling(); RefreshContent(); }
         public void Close()
         {
             isOpen = false;

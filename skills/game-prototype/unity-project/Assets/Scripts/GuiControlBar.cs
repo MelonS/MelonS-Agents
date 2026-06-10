@@ -37,6 +37,7 @@ namespace MelonS.GameProto
         private Font font;
         // Lesson #4 - FindFirstObjectByType per-Update 비쌈.
         private ClickSelector cachedCs;
+        private MarqueeSelector cachedMarquee;   // #0.0 — 다중선택 징집 하이라이트용
 
         // wiki Dim2 acceptance #5: clicking any UI button plays the blip.
         //  Route every button onClick through the EXISTING AudioBank.PlaySelect()
@@ -293,14 +294,12 @@ namespace MelonS.GameProto
 
         private void ToggleDraft()
         {
-            var cs = Object.FindFirstObjectByType<ClickSelector>();
-            if (cs == null || cs.CurrentSelection == null)
-            {
-                Debug.Log("[Gui] 징집 - 선택된 콜로니스트 없음");
-                return;
-            }
-            cs.CurrentSelection.SetDrafted(!cs.CurrentSelection.IsDrafted);
-            Debug.Log($"[Gui] {cs.CurrentSelection.PawnName} 징집 → {cs.CurrentSelection.IsDrafted}");
+            // #ui백로그 0.0 — 단일 선택만 읽던 자체 로직 제거: 마키 박스선택 시
+            //  ClickSelector 단일 선택이 비워져 버튼이 무동작이었다(R 핫키와 불일치).
+            //  R 키와 동일하게 ToggleDraftOnSelection(다중선택 전원 일괄)을 재사용.
+            if (cachedCs == null) cachedCs = Object.FindFirstObjectByType<ClickSelector>();
+            if (cachedCs == null) { Debug.Log("[Gui] 징집 - ClickSelector 없음"); return; }
+            cachedCs.ToggleDraftOnSelection();
         }
 
         private void SetBuildMode(BuildManager.Mode m)
@@ -322,8 +321,18 @@ namespace MelonS.GameProto
             // 매 프레임 active build mode 따라 button 색 갱신 (가벼움 - 5개 비교)
             if (BuildManager.Instance != null)
             {
-                // Architect 버튼 active highlight: 어떤 build mode 든 활성 시 노란.
-                RefreshBuildHighlight(architectBtn, BuildManager.Instance.BuildModeActive);
+                // Architect 버튼 active highlight.  #ui백로그 0.1 — '보이지 않는 모드' 해소:
+                //  빌드뿐 아니라 지정 모드 6종(벌목/채광/해체/경작/저장/지붕) 활성 중에도
+                //  [건축] 버튼이 노랗게 유지돼 '지금 모드 안'임이 화면에 보인다.  전부 기존
+                //  public ModeActive read-only 폴링.
+                bool anyMode = BuildManager.Instance.BuildModeActive
+                    || (TreeChopDesignation.Instance != null && TreeChopDesignation.Instance.ModeActive)
+                    || (MineDesignation.Instance != null && MineDesignation.Instance.ModeActive)
+                    || (DeconstructDesignation.Instance != null && DeconstructDesignation.Instance.ModeActive)
+                    || (GrowZoneDesignation.Instance != null && GrowZoneDesignation.Instance.ModeActive)
+                    || (StockpileDesignation.Instance != null && StockpileDesignation.Instance.ModeActive)
+                    || (RoofDesignation.Instance != null && RoofDesignation.Instance.ModeActive);
+                RefreshBuildHighlight(architectBtn, anyMode);
             }
             // Speed highlight
             if (TimeController.Instance != null)
@@ -339,6 +348,17 @@ namespace MelonS.GameProto
             {
                 if (cachedCs == null) cachedCs = Object.FindFirstObjectByType<ClickSelector>();
                 bool drafted = cachedCs != null && cachedCs.CurrentSelection != null && cachedCs.CurrentSelection.IsDrafted;
+                // #ui백로그 0.0 — 마키 다중선택 시 단일 선택이 비므로 첫 생존 림 기준으로 표시
+                if (!drafted)
+                {
+                    if (cachedMarquee == null) cachedMarquee = Object.FindFirstObjectByType<MarqueeSelector>();
+                    if (cachedMarquee != null && cachedMarquee.HasMultiSelection)
+                    {
+                        var sel = cachedMarquee.CurrentMultiSelection;
+                        for (int i = 0; i < sel.Count; i++)
+                            if (sel[i] != null && !sel[i].IsDead) { drafted = sel[i].IsDrafted; break; }
+                    }
+                }
                 RefreshBuildHighlight(draftBtn, drafted);
             }
         }
