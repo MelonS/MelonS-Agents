@@ -86,6 +86,25 @@ namespace MelonS.GameProto
             //      설계라 금지(follow-spec).  배선 가능한 진짜 효과가 생기는 날 재도입.
         }
 
+        /// <summary>#게임필 배치4(2026-06-10 자율) — 연구 정지 원인 (HUD 티커 표시용).
+        ///  null = 정상 진행.  '영구 0/100' 죽은 숫자가 HUD 의 유일한 목표 표시였는데
+        ///  왜 안 오르는지(작업대 없음/연구자 없음)를 화면이 말해주지 않던 것 해소.</summary>
+        public string StallReason
+        {
+            get
+            {
+                if (activeTech == null || activeTech.completed) return null;
+                if (cachedBenches == null)
+                    cachedBenches = GameObject.FindObjectsByType<ResearchBench>(FindObjectsSortMode.None);
+                if (cachedBenches == null || cachedBenches.Length == 0)
+                    return "작업대 필요 (건축 F8)";
+                float sum = 0f;
+                foreach (var b in cachedBenches)
+                    if (b != null) sum += b.ResearcherSpeedSum();
+                return sum <= 0.001f ? "연구자 없음 (작업대 근처 림)" : null;
+            }
+        }
+
         private void Update()
         {
             if (activeTech == null || activeTech.completed) return;

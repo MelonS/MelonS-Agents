@@ -48,23 +48,33 @@ namespace MelonS.GameProto
         // matching AlertStackUI.cs which resolves AIDirector the same way.
         private AIDirector _director;
 
+        // #게임필 배치4(2026-06-10 자율) — 위험 음악을 '날짜'가 아니라 실제 위협에 연동.
+        //  이전엔 CurrentThreatTier(순수 날짜 함수) 폴링이라 7일차부터 아무 일 없어도
+        //  긴장 트랙 영구 재생 — 음악이 상황 신호이길 멈췄다.  살아있는 산적/늑대 존재를
+        //  0.5s 폴링(ThreatAlertUI.CheckThreats 패턴)으로 전환.
+        private float _lastThreatPoll = -10f;
+        private bool _dangerOn;
+
         private void Update()
         {
-            // Re-poll until the director is live (handles late-spawned scenes).
-            if (_director == null)
-                _director = FindAIDirector();
-            var director = _director;
-            if (director == null) return;
+            if (Time.unscaledTime - _lastThreatPoll < 0.5f) return;
+            _lastThreatPoll = Time.unscaledTime;
 
-            int tier = director.CurrentThreatTier;
-
-            if (tier == _lastTier) return;  // no transition -- skip
-            _lastTier = tier;
+            bool threatAlive;
+#if UNITY_2023_1_OR_NEWER
+            threatAlive = Object.FindFirstObjectByType<BanditEnemy>() != null
+                       || Object.FindFirstObjectByType<WolfEnemy>() != null;
+#else
+            threatAlive = Object.FindObjectOfType<BanditEnemy>() != null
+                       || Object.FindObjectOfType<WolfEnemy>() != null;
+#endif
+            if (threatAlive == _dangerOn) return;  // no transition -- skip
+            _dangerOn = threatAlive;
 
             var bank = AudioBank.Instance;
             if (bank == null) return;
 
-            if (tier >= 2)
+            if (threatAlive)
                 bank.PlayDangerMusic();
             else
                 bank.StopDangerMusic();
