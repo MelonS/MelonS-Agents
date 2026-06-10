@@ -163,8 +163,12 @@ namespace MelonS.GameProto
                     //  막혀 클릭이 무음 무효화된다(-far designations=0, screen y=77 사례).  실제
                     //  유저처럼 카메라를 타깃으로 즉시 점프(FocusOn) 후 클릭한다.
                     Vector3 pre = Camera.main.WorldToScreenPoint(world);
+                    // 기하 밴드(하단바)에 더해 실제 UI 레이캐스트로 차단 검사 — 콜로니스트
+                    //  초상화/알림 카드 등 동적 UI 뒤에 타깃이 깔린 케이스(110px-from-top
+                    //  무음 미스)는 밴드 추정으로 못 잡는다.  막혀 있으면 화면 중앙으로 점프.
                     if (pre.x < Screen.width * 0.05f || pre.x > Screen.width * 0.95f
-                        || pre.y < Screen.height * 0.16f || pre.y > Screen.height * 0.92f)
+                        || pre.y < Screen.height * 0.16f || pre.y > Screen.height * 0.92f
+                        || UiBlockedAt(pre))
                     {
                         var cc = Object.FindFirstObjectByType<CameraController>();
                         if (cc != null) { cc.FocusOn(new Vector2(world.x, world.y)); yield return null; }
@@ -569,6 +573,18 @@ namespace MelonS.GameProto
 
         private static float GetNeed(PawnNeeds nd, string name)
             => name == "food" ? nd.food : name == "sleep" ? nd.sleep : nd.mood;
+
+        /// <summary>주입 클릭 좌표가 UI 그래픽에 막혀 있는지 — SimInput.IsPointerOverUI 와
+        ///  동일 의미의 사전 검사 (클릭 전에 가림 여부를 알아야 FocusOn 으로 회피 가능).</summary>
+        private static bool UiBlockedAt(Vector2 screen)
+        {
+            if (UnityEngine.EventSystems.EventSystem.current == null) return false;
+            var ped = new UnityEngine.EventSystems.PointerEventData(
+                UnityEngine.EventSystems.EventSystem.current) { position = screen };
+            var res = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+            UnityEngine.EventSystems.EventSystem.current.RaycastAll(ped, res);
+            return res.Count > 0;
+        }
 
         /// <summary>#38 — 단일(ClickSelector)/마키(MarqueeSelector) 선택을 동일 의미로 해석.
         ///  박스선택 시 ClickSelector.CurrentSelection 은 비어 있고 마키가 선택을 소유한다.</summary>
