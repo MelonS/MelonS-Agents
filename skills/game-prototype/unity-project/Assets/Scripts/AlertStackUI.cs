@@ -187,7 +187,7 @@ namespace MelonS.GameProto
 
             string title = string.IsNullOrEmpty(ev.title) ? "위협" : ev.title;
             Color tierColor = TierColor(ev.threatTier);
-            PushCard(title, tierColor);
+            PushCard(title, tierColor, ev.threatTier);
         }
 
         /// <summary>tier1 amber (UI_ORANGE), tier3 DANGER_RED; tier2 between.</summary>
@@ -198,7 +198,7 @@ namespace MelonS.GameProto
             return UITheme.AccentOrange;                              // tier1 amber/orange
         }
 
-        private void PushCard(string title, Color accent)
+        private void PushCard(string title, Color accent, int tier)
         {
             // Evict oldest if over the cap so the corner never overflows.
             while (cards.Count >= maxCards)
@@ -211,6 +211,7 @@ namespace MelonS.GameProto
             var card = AlertCard.Build(stackRoot, title, accent, font, fontSize,
                                        cardWidth, cardHeight);
             card.spawnTime = Time.unscaledTime;
+            card.tier = tier;
             card.onClick = () => OnCardClicked(card);
             cards.Add(card);
             RelayoutCards();
@@ -237,6 +238,11 @@ namespace MelonS.GameProto
             {
                 var c = cards[i];
                 if (c == null || c.root == null) { cards.RemoveAt(i); continue; }
+                // #ui백로그 7.4 — tier2+ (습격/대형 위협) 카드는 시간 만료 제외: 클래스 doc
+                //  수용 기준 'persistent card' 대로 클릭 dismiss 만 허용.  진행 중인 레이드
+                //  알림이 30초 만에 사라져 미대응 위협을 다시 놓치던 회귀 차단.  tier1 잡사건
+                //  은 30s 유지, maxCards eviction 은 그대로라 오버플로 안전.
+                if (c.tier >= 2) continue;
                 if (now - c.spawnTime >= cardLifetimeSec)
                 {
                     cards.RemoveAt(i);
@@ -281,21 +287,32 @@ namespace MelonS.GameProto
             Vector3 colony;
             bool haveColony = TryColonyCentroid(out colony);
 
-            // 1) nearest live BanditEnemy to the colony — the literal "bandits".
-            BanditEnemy[] bandits = FindBandits();
-            if (bandits != null && bandits.Length > 0)
+            // 1) 콜로니 최근접 적 (산적 ∪ 늑대).  #ui백로그 7.3 — 이전엔 BanditEnemy 만
+            //  검색해 wolf_pack 카드 클릭이 엉뚱한 곳(산적 또는 콜로니 중심)으로 팬했다.
+            //  ThreatAlertUI.CheckThreats 와 동일하게 WolfEnemy 도 위협 후보에 포함.
             {
                 Vector3 anchor = haveColony ? colony : Vector3.zero;
-                BanditEnemy nearest = null;
+                Transform nearest = null;
                 float best = float.MaxValue;
-                for (int i = 0; i < bandits.Length; i++)
-                {
-                    var b = bandits[i];
-                    if (b == null) continue;
-                    float d = (b.transform.position - anchor).sqrMagnitude;
-                    if (d < best) { best = d; nearest = b; }
-                }
-                if (nearest != null) return nearest.transform.position;
+                BanditEnemy[] bandits = FindBandits();
+                if (bandits != null)
+                    for (int i = 0; i < bandits.Length; i++)
+                    {
+                        var b = bandits[i];
+                        if (b == null) continue;
+                        float d = (b.transform.position - anchor).sqrMagnitude;
+                        if (d < best) { best = d; nearest = b.transform; }
+                    }
+                WolfEnemy[] wolves = FindWolves();
+                if (wolves != null)
+                    for (int i = 0; i < wolves.Length; i++)
+                    {
+                        var w = wolves[i];
+                        if (w == null) continue;
+                        float d = (w.transform.position - anchor).sqrMagnitude;
+                        if (d < best) { best = d; nearest = w.transform; }
+                    }
+                if (nearest != null) return nearest.position;
             }
 
             // 2) colony centroid.
@@ -337,6 +354,15 @@ namespace MelonS.GameProto
 #endif
         }
 
+        private static WolfEnemy[] FindWolves()
+        {
+#if UNITY_2023_1_OR_NEWER
+            return Object.FindObjectsByType<WolfEnemy>(FindObjectsSortMode.None);
+#else
+            return Object.FindObjectsOfType<WolfEnemy>();
+#endif
+        }
+
         private static PawnMovement[] FindPawns()
         {
 #if UNITY_2023_1_OR_NEWER
@@ -375,6 +401,7 @@ namespace MelonS.GameProto
         {
             public RectTransform root;
             public float spawnTime;
+            public int tier;           // #7.4 — tier2+ 는 시간 만료 제외(영속)
             public System.Action onClick;
 
             public static AlertCard Build(RectTransform parent, string title, Color accent,

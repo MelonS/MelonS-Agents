@@ -39,13 +39,14 @@ namespace MelonS.GameProto
         private void Awake()
         {
             rt = gameObject.AddComponent<RectTransform>();
-            // #275→#ui백로그 7.0 우상단 밴드 계약: TopBar > AlertStack(-88~-232) > EventLog(-244~-404)
-            //  > Toast(-416).  이전 -148 은 카드 2장부터 겹쳤다.
-            rt.anchorMin = new Vector2(1, 1);
-            rt.anchorMax = new Vector2(1, 1);
-            rt.pivot = new Vector2(1, 1);
+            // #ui백로그 4.1 — 빌드 클릭 피드백은 알림 구역(우상단)이 아니라 클릭 지점과
+            //  시선이 가까운 하단 중앙 탭바(GuiControlBar 밴드 상단 96) 위로.  우상단
+            //  -416 은 화면 구석이라 피드백 인지 불가 + 알림 밴드 한 칸을 점유했다.
+            rt.anchorMin = new Vector2(0.5f, 0f);
+            rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 0f);
             rt.sizeDelta = new Vector2(360, 38);
-            rt.anchoredPosition = new Vector2(-12, -416);
+            rt.anchoredPosition = new Vector2(0, 110);
             bg = gameObject.AddComponent<Image>();
             bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
             bg.raycastTarget = false;
@@ -54,7 +55,7 @@ namespace MelonS.GameProto
             lblGo.transform.SetParent(transform, false);
             label = lblGo.AddComponent<Text>();
             label.text = "";
-            label.font = LoadKoreanFont();
+            label.font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(15);   // #7.7 사본 제거
             label.fontSize = 15;
             label.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             label.alignment = TextAnchor.MiddleCenter;
@@ -66,17 +67,6 @@ namespace MelonS.GameProto
             lrt.anchoredPosition = Vector2.zero;
 
             gameObject.SetActive(false);
-        }
-
-        private Font LoadKoreanFont()
-        {
-            string[] cands = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
-            foreach (var n in cands)
-            {
-                var f = Font.CreateDynamicFontFromOSFont(n, 15);
-                if (f != null) return f;
-            }
-            return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         }
 
         public void ShowSuccess(string msg) { Show(msg, MelonS.GameProto.Core.UITheme.AccentGold, 2.0f); }
