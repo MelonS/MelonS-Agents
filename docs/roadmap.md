@@ -206,6 +206,15 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-11 오전** 운영자 아침 피드백 2건 처리 — ① 새 버그 "침대 도달 불가" 진범
+  3중첩 해체 (매 프레임 ClearTask→A* 경로 파괴 동결 / 제자리취침이 침대걷기와 같은
+  임계 35 공유 → 매 프레임 PawnNeeds 가 1.5s Decide 선점, 걷기 영영 불발 → 임계 분리
+  35/30 / HasRealActivity 에 HasAutoSleepOrder 누락 → 배회속도 0.5x 로 12s timeout
+  상습 초과, `5c27e6e`) + 재현 p0-autosleep-bed-reach·하네스 ops 3종(`e32ab3c`).
+  ② 건축 UI 림월드 파리티 재구축 — 좌하단 2열 카테고리 + 아이콘 셸프 + 연속배치
+  (`36d5928`).  게이트 repro_all 13/13 PASS.  다음: 몰입 디자인 트랙 D1~D5
+  (`skills/game-prototype/docs/design-immersion-2026-06-11.md`).  suggest: 침대
+  소유권(밤마다 전 림이 ScheduledSleepNow 로 빈 침대 경합 — 림월드는 림당 침대 지정).
 - **2026-06-10 밤~06-11 새벽** 야간 자율 세션 — UI 배치 2~5(19건) + 게임필 배치 1~5
   (운영자 위임: "기능 최소화 상태로 게임이 되어야 함").  멀티에이전트 격차 분석 평결
   "압박→대응→보상 루프가 화면에 닿지 않음 + 거짓 위험 신호로 신뢰 붕괴" 에 따라:
