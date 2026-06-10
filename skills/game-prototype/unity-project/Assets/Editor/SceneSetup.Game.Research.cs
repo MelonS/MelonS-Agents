@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using MelonS.GameProto;
+using MelonS.GameProto.Core;
 
 namespace MelonS.GameProto.EditorTools
 {
@@ -76,7 +77,8 @@ namespace MelonS.GameProto.EditorTools
             GameObject pickerGo = new GameObject("ResearchPicker");
             pickerGo.transform.SetParent(canvasGo.transform, false);
             Image pickerBg = pickerGo.AddComponent<Image>();
-            pickerBg.color = new Color(0.08f, 0.10f, 0.13f, 0.95f);
+            // UI가독성 (운영자 2026-06-11) — 유일하게 테마를 이탈한 차가운 남색 플랫
+            //  박스('디버그 콘솔 룩') → 전 패널 공통 UITheme 크롬 (보더+웜 PanelBg).
             pickerBg.sprite = resProg.sprite;
             RectTransform pickerRt = pickerGo.GetComponent<RectTransform>();
             pickerRt.anchorMin = new Vector2(0.5f, 0.5f);
@@ -84,9 +86,11 @@ namespace MelonS.GameProto.EditorTools
             pickerRt.pivot = new Vector2(0.5f, 0.5f);
             pickerRt.sizeDelta = new Vector2(680, 280);
             pickerRt.anchoredPosition = Vector2.zero;
+            RectTransform pickerContent = UITheme.MakeBorderedPanel(
+                pickerRt, UITheme.BorderPx, UITheme.PanelBg, UITheme.PadOuter);
 
             GameObject pickerTextGo = new GameObject("PickerText");
-            pickerTextGo.transform.SetParent(pickerGo.transform, false);
+            pickerTextGo.transform.SetParent(pickerContent, false);
             Text pickerText = pickerTextGo.AddComponent<Text>();
             pickerText.text = "";
             pickerText.font = uiFont;
@@ -98,7 +102,7 @@ namespace MelonS.GameProto.EditorTools
             RectTransform pickerTextRt = pickerTextGo.GetComponent<RectTransform>();
             pickerTextRt.anchorMin = Vector2.zero;
             pickerTextRt.anchorMax = Vector2.one;
-            pickerTextRt.sizeDelta = new Vector2(-24, -16);
+            pickerTextRt.sizeDelta = new Vector2(-32, -24);  // UI가독성 — 패딩 확대
             pickerTextRt.anchoredPosition = Vector2.zero;
             pickerGo.SetActive(false);
 

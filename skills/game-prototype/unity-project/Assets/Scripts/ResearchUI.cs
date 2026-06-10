@@ -105,7 +105,10 @@ namespace MelonS.GameProto
             var rm = ResearchManager.Instance;
             if (rm == null) return;  // #버그헌트: Instance null deref 방어
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("== 연구 선택 (숫자키, N으로 닫기) ==");
+            // UI가독성 (운영자 2026-06-11) — '==' 디버그 콘솔 헤더 → 골드 타이틀 +
+            //  보조 힌트 (richText 는 bake 의 Text 기본 supportRichText=true).
+            sb.AppendLine("<color=#F4D78A><b>연구 선택</b></color>  <color=#BBAA94><size=17>숫자키로 시작 · N 닫기</size></color>");
+            sb.AppendLine();
             for (int i = 0; i < rm.techs.Count; i++)
             {
                 var t = rm.techs[i];

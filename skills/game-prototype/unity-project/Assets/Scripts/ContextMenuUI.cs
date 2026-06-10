@@ -63,6 +63,7 @@ namespace MelonS.GameProto
 
             // 항목 생성 (위에서 아래로)
             float itemHeight = 28f;
+            var itemLabels = new System.Collections.Generic.List<Text>(items.Count);
             for (int i = 0; i < items.Count; i++)
             {
                 int idx = i;
@@ -105,9 +106,17 @@ namespace MelonS.GameProto
                 trt.anchorMax = Vector2.one;
                 trt.sizeDelta = new Vector2(-16, 0);
                 trt.anchoredPosition = new Vector2(8, 0);
+                itemLabels.Add(t);
                 currentItems.Add(bgo);
             }
-            panelRt.sizeDelta = new Vector2(200, itemHeight * items.Count + 4);
+            // UI가독성 (운영자 2026-06-11 "글자가 ui밖을 벗어남") — 고정 200px 가
+            //  긴 라벨('울타리 문 건설' 등)을 잘랐다.  라벨 preferredWidth 실측으로
+            //  content-fit (200~340 클램프).  item rect 는 stretch 라 폭을 따라온다.
+            float maxLabelW = 0f;
+            foreach (var lbl in itemLabels)
+                if (lbl != null) maxLabelW = Mathf.Max(maxLabelW, lbl.preferredWidth);
+            float fitW = Mathf.Clamp(maxLabelW + 32f, 200f, 340f);
+            panelRt.sizeDelta = new Vector2(fitW, itemHeight * items.Count + 4);
 
             // 위치 (mouse 옆) — #275 화면 가장자리 클램프: pivot(0,1)이라 우/하로 확장하므로
             //  메뉴 우측·하단이 캔버스 밖으로 잘리지 않게 보정.
