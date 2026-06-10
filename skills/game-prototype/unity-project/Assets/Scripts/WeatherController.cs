@@ -69,6 +69,19 @@ namespace MelonS.GameProto
             }
         }
 
+        /// <summary>테스트 스캐폴딩 (ReproHarness setWeather) — AIDirector 이벤트를 기다리지
+        ///  않고 즉시 폭풍 시작/종료.  상태 전이는 HandleEvent/Update 와 동일 경로.</summary>
+        public void ForceStorm()
+        {
+            Current = WeatherKind.Storm;
+            StormUntil = NowGameSec() + StormDurationGameSec;
+        }
+        public void ForceClear()
+        {
+            Current = WeatherKind.Clear;
+            StormUntil = -1f;
+        }
+
         /// <summary>Multiplier applied to camera bg color (0..1).
         /// Storm = 0.55 (darken).  Clear = 1.0.</summary>
         public float ColorMultiplier()

@@ -389,18 +389,15 @@ namespace MelonS.GameProto
                 return;
             }
 
-            // Day 22: weather mood penalty when outdoor + storm
-            float weatherPenalty = 0f;
-            if (WeatherController.Instance != null
-                && WeatherController.Instance.Current == WeatherKind.Storm
-                && !IsOnFloor())
-            {
-                weatherPenalty = 3f * dt;
-            }
+            // Day 22→#폭풍fix(2026-06-10): 폭풍 직접 드레인(3f*dt) 제거.  -3/스케일초 × 폭풍
+            //  60스케일초 = -180 으로 바닥타일 없는 림 전원이 폭풍 1회에 무조건 정신붕괴였다
+            //  (longplay-2026-06-10-cycle2 3일차 자정 전원 동시 mood 0, 재현 p1-storm-mood).
+            //  운영자 승인 mood 모델(decay+thought 델타 합산)대로 '야외 폭풍' thought(-6)로
+            //  일원화 — 배선은 PawnThoughts.Update (배고픔/수면부족과 동일 패턴).
 
             food = Mathf.Max(0f, food - foodDecay * dt);
             sleep = Mathf.Max(0f, sleep - sleepDecay * dt);
-            mood = Mathf.Max(0f, mood - moodDecay * dt - weatherPenalty);
+            mood = Mathf.Max(0f, mood - moodDecay * dt);
 
             // Day 20: mood break — when mood drops below threshold, pawn
             // enters a "break" for moodBreakDuration.  Recovery only when
@@ -642,7 +639,8 @@ namespace MelonS.GameProto
             if (movement != null) movement.ClearTarget();
         }
 
-        private bool IsOnFloor()
+        // #폭풍fix(2026-06-10) public — PawnThoughts 가 '야외 폭풍' 노출 판정에 사용.
+        public bool IsOnFloor()
         {
             var hits = Physics2D.OverlapBoxAll(transform.position, Vector2.one * 0.3f, 0f);
             foreach (var h in hits)

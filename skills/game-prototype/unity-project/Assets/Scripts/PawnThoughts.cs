@@ -115,6 +115,13 @@ namespace MelonS.GameProto
             {
                 if (needs.food  < 25f) AddThought("배고픔");    else RemoveThought("배고픔");
                 if (needs.sleep < 25f) AddThought("수면 부족"); else RemoveThought("수면 부족");
+                // #폭풍fix(2026-06-10): '야외 폭풍'(-6)이 catalog 에만 있고 미배선이던 것을
+                //  배고픔/수면부족과 동일 패턴으로 환류.  PawnNeeds 의 직접 드레인(-3/s)은 제거 —
+                //  mood 변화는 전부 decay+thought 모델 경유 (운영자 승인 2026-06-05 모델).
+                bool stormExposed = WeatherController.Instance != null
+                    && WeatherController.Instance.Current == WeatherKind.Storm
+                    && !needs.IsOnFloor();
+                if (stormExposed) AddThought("야외 폭풍"); else RemoveThought("야외 폭풍");
                 var health = GetComponent<PawnHealth>();
                 if (health != null && health.TotalHpRatio < 0.6f) AddThought("부상");
                 else RemoveThought("부상");

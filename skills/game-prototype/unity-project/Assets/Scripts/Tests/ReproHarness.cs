@@ -211,6 +211,16 @@ namespace MelonS.GameProto
                     r.detail = $"timeScale={s.x}"; break;
                 }
 
+                case "setWeather":
+                {
+                    // 테스트 스캐폴딩 (검증 대상 아님) — 폭풍을 즉시 시작/종료 (AIDirector
+                    //  storm_warning 이벤트와 동일 상태 전이).  이후 mood 반응은 게임 시스템이 수행.
+                    var wc = WeatherController.Instance;
+                    if (wc == null) { r.passed = false; r.detail = "no WeatherController"; break; }
+                    if (s.name == "storm") wc.ForceStorm(); else wc.ForceClear();
+                    r.passed = true; r.detail = $"weather={s.name}"; break;
+                }
+
                 case "assert":
                     yield return RunAssert(s, r);
                     break;
@@ -444,6 +454,20 @@ namespace MelonS.GameProto
                         r.detail = $"durability {start:F1}→{lastSeen:F1} (drop {start - lastSeen:F1}, need ≥{s.min}) in {t:F0}s(scaled)";
                     }
                     break;
+                }
+                case "needDropsAtMost":
+                {
+                    // 상한 가드 — withinSec(스케일초) 동안 s.name 하락폭이 s.min "미만"이어야 PASS.
+                    //  (폭풍 직접드레인 같은 폭주 페널티의 회귀가드.  하락폭이 min 에 도달하면
+                    //  남은 시간을 기다릴 필요 없이 즉시 FAIL 확정.)
+                    var pawn = FindPawn(s.pawn);
+                    var nd = pawn != null ? pawn.GetComponent<PawnNeeds>() : null;
+                    if (nd == null) { r.passed = false; r.detail = "no PawnNeeds"; break; }
+                    float start = GetNeed(nd, s.name), t = 0, v = start;
+                    while (t < s.withinSec && start - v < s.min)
+                    { yield return new WaitForSeconds(0.25f); t += 0.25f; v = GetNeed(nd, s.name); }
+                    r.passed = start - v < s.min;
+                    r.detail = $"{s.name} {start:F1}→{v:F1} (drop {start - v:F1}, 허용 <{s.min}) in {t:F0}s(scaled)"; break;
                 }
                 default:
                     r.passed = false; r.detail = $"unknown probe '{s.probe}'"; break;

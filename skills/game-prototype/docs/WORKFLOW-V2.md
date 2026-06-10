@@ -71,8 +71,9 @@ PLAYTEST-TODO 의 P0/P1 이 **운영자 인게임 OK** 될 때까지 신규 기�
   영구 보존 = 그 버그의 회귀 테스트. 운영자 버그 1건 = 시나리오 파일 1개 원칙.
 - **시나리오 작성 함정 5종** (자가조절 바닥값 금지 / 세팅-적용 레이스 / 임계값 기하 도출 /
   기준값 시점 / Destroy 오탐) — `docs/playbook.md` 사이클 2 참조.
-- **P1 계열 ops/probes** (2026-06-10): `setNeed`/`speed`(스캐폴딩, 검증 대상 아님),
-  `needBelow`/`needDrops`/`hasThought`/`pileDurabilityDrops`(검증). 형식은 ReproHarness.cs 헤더.
+- **P1 계열 ops/probes** (2026-06-10): `setNeed`/`speed`/`setWeather`(스캐폴딩, 검증 대상 아님),
+  `needBelow`/`needDrops`/`needDropsAtMost`(폭주 페널티 상한 가드)/`hasThought`/
+  `pileDurabilityDrops`(검증). 형식은 ReproHarness.cs 헤더.
 
 ## 멀티에이전트 운용 (현실적 최소선)
 

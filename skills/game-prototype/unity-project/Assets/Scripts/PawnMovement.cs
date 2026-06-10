@@ -165,7 +165,14 @@ namespace MelonS.GameProto
         public bool AtStandCell(Vector2Int standCell)
         {
             if (standCell.x == INVALID_CELL.x) return false;
-            return PathGrid.WorldToCell(transform.position) == standCell;
+            if (PathGrid.WorldToCell(transform.position) != standCell) return false;
+            // #199 C2 보강(2026-06-10): 셀 일치만 보면 림이 '셀에 들어선 순간'(모서리 = 중심에서
+            //  ~0.71) 워커 게이트가 true → ClearTarget 으로 이동이 끊겨 셀 가장자리에 얼어붙는다
+            //  — 나무에서 최대 2.12 거리 '제자리 벌목' (재현 p0-remote-chop closest 2.12, 운영자
+            //  "도달하지 않고 제자리에서 벌목").  원래 의도(도착 후 arriveDistance 만큼 중심에
+            //  모자란 경우 허용)대로 중심 근접까지 요구 — 림은 중심까지 마저 걷고 작업한다.
+            //  0.3 = arriveDistance(0.05) 여유 + 대각 인접 최대 작업거리 1.414+0.3=1.71 (<2셀).
+            return Vector2.Distance(transform.position, PathGrid.CellToWorld(standCell)) <= 0.3f;
         }
 
         public static bool TryReserveWorkStandPos(

@@ -1,0 +1,12 @@
+{
+  "name": "P1 폭풍 mood — 폭풍 전체 노출에도 mood 폭주 하락이 없어야 한다 (longplay 2026-06-10 발굴: 직접드레인 -3/초×60초=-180 → 3일차 자정 전원 동시 정신붕괴. 기대 동작: '야외 폭풍' thought -6 + 자연 decay 만 = 60스케일초 하락 <20. hasThought 를 앞에 둬 -6 일회분이 drop 측정에 안 섞이게 함)",
+  "timeoutSec": 120,
+  "steps": [
+    { "op": "wait", "sec": 1.5 },
+    { "op": "shot", "name": "00_start" },
+    { "op": "setWeather", "name": "storm" },
+    { "op": "assert", "probe": "hasThought", "contains": "야외 폭풍", "withinSec": 5 },
+    { "op": "assert", "probe": "needDropsAtMost", "name": "mood", "min": 20, "withinSec": 60 },
+    { "op": "shot", "name": "01_storm_mood" }
+  ]
+}
