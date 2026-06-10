@@ -48,6 +48,9 @@ namespace MelonS.GameProto
         private GameObject saveLoadRow;
         private Slider sfxSlider;
         private Slider musicSlider;
+        private Text sfxValueText;     // #6.9 — 현재값 % 표시
+        private Text musicValueText;
+        private float lastSfxPreview = -10f;   // #6.9 — 드래그 중 청각 프리뷰 스로틀
 
         private AudioBank cachedAudio;
         private bool audioResolved;
@@ -219,6 +222,9 @@ namespace MelonS.GameProto
             float sfxY = -54;
             MakeLabel(panelContent, "SFX (사운드)", new Vector2(0f, 1f), new Vector2(0, sfxY),
                 TextAnchor.MiddleLeft, 16, UITheme.TextPrimary, anchorTopLeft: true, height: 22);
+            // #ui백로그 6.9 — 현재값 % 표시 (두 슬라이더 비교/현재 상태 가시화)
+            sfxValueText = MakeLabel(panelContent, "100%", new Vector2(0f, 1f), new Vector2(0, sfxY),
+                TextAnchor.MiddleRight, 14, UITheme.TextSecondary, anchorTopLeft: true, height: 22);
             sfxSlider = MakeSlider(panelContent, "SfxSlider", new Vector2(0, sfxY - 26),
                 OnSfxChanged);
 
@@ -226,6 +232,8 @@ namespace MelonS.GameProto
             float musicY = -116;
             MakeLabel(panelContent, "MUSIC (음악)", new Vector2(0f, 1f), new Vector2(0, musicY),
                 TextAnchor.MiddleLeft, 16, UITheme.TextPrimary, anchorTopLeft: true, height: 22);
+            musicValueText = MakeLabel(panelContent, "100%", new Vector2(0f, 1f), new Vector2(0, musicY),
+                TextAnchor.MiddleRight, 14, UITheme.TextSecondary, anchorTopLeft: true, height: 22);
             musicSlider = MakeSlider(panelContent, "MusicSlider", new Vector2(0, musicY - 26),
                 OnMusicChanged);
         }
@@ -301,6 +309,9 @@ namespace MelonS.GameProto
             }
             if (sfxSlider != null)   sfxSlider.SetValueWithoutNotify(bank.SfxVolume);
             if (musicSlider != null) musicSlider.SetValueWithoutNotify(bank.MusicVolume);
+            // #6.9 — 열 때 % 표시 동기화
+            if (sfxValueText != null)   sfxValueText.text = $"{Mathf.RoundToInt(bank.SfxVolume * 100)}%";
+            if (musicValueText != null) musicValueText.text = $"{Mathf.RoundToInt(bank.MusicVolume * 100)}%";
         }
 
         // ----------------------------------------------------------------------
@@ -360,6 +371,13 @@ namespace MelonS.GameProto
             var bank = ResolveAudio();
             if (bank != null) bank.SetSfxVolume(v);
             else { PlayerPrefs.SetFloat(AudioBank.PrefSfxVolume, Mathf.Clamp01(v)); PlayerPrefs.Save(); }
+            if (sfxValueText != null) sfxValueText.text = $"{Mathf.RoundToInt(v * 100)}%";
+            // #6.9 — 드래그 중 즉각 청각 프리뷰 (다음 효과음까지 변경 체감 불가하던 것)
+            if (bank != null && Time.unscaledTime - lastSfxPreview > 0.15f)
+            {
+                lastSfxPreview = Time.unscaledTime;
+                bank.PlaySelect();
+            }
         }
 
         private void OnMusicChanged(float v)
@@ -367,6 +385,7 @@ namespace MelonS.GameProto
             var bank = ResolveAudio();
             if (bank != null) bank.SetMusicVolume(v);
             else { PlayerPrefs.SetFloat(AudioBank.PrefMusicVolume, Mathf.Clamp01(v)); PlayerPrefs.Save(); }
+            if (musicValueText != null) musicValueText.text = $"{Mathf.RoundToInt(v * 100)}%";
         }
 
         private AudioBank ResolveAudio()

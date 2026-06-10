@@ -38,7 +38,7 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            font = LoadKoreanFont();
+            font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(16);   // #7.7 — 사본 제거
             panelRt = gameObject.AddComponent<RectTransform>();
             panelRt.anchorMin = new Vector2(0, 0);
             panelRt.anchorMax = new Vector2(0, 0);
@@ -46,18 +46,12 @@ namespace MelonS.GameProto
             panelRt.sizeDelta = new Vector2(200, 0);  // height grows by items
             bg = gameObject.AddComponent<Image>();
             bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
+            // #ui백로그 7.5 — bordered-panel 계약: 무테두리 raw 패널은 어두운 지형에서
+            //  경계가 흐릿했다.  자식 재배치 없는 최소 준수 = Divider 색 2px Outline.
+            var outline = gameObject.AddComponent<UnityEngine.UI.Outline>();
+            outline.effectColor = MelonS.GameProto.Core.UITheme.Divider;
+            outline.effectDistance = new Vector2(2f, -2f);
             gameObject.SetActive(false);
-        }
-
-        private Font LoadKoreanFont()
-        {
-            string[] candidates = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
-            foreach (var name in candidates)
-            {
-                var f = Font.CreateDynamicFontFromOSFont(name, 16);
-                if (f != null) return f;
-            }
-            return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         }
 
         public void Open(Vector2 screenPos, List<(string label, System.Action action)> items)
@@ -103,7 +97,7 @@ namespace MelonS.GameProto
                 t.text = label;
                 t.font = font;
                 t.fontSize = 16;
-                t.color = new Color(0.95f, 0.92f, 0.85f, 1f);
+                t.color = MelonS.GameProto.Core.UITheme.TextPrimary;   // #7.5 — 하드코딩 제거
                 t.alignment = TextAnchor.MiddleLeft;
                 t.raycastTarget = false;
                 var trt = txtGo.GetComponent<RectTransform>();

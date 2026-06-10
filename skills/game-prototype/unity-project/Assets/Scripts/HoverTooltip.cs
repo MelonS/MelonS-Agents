@@ -19,6 +19,7 @@ namespace MelonS.GameProto
         private RectTransform rt;
         private Image bg;
         private Text label;
+        private ClickSelector cachedCs;   // #3.10 — hover 프레임 Find 제거용 캐시
         private Camera mainCam;
         private Canvas canvas;
 
@@ -167,8 +168,10 @@ namespace MelonS.GameProto
         {
             if (hit == null) return "";
             // 운영자 피드백 #106 - drafted pawn 으로 적 hover 시 ⚔ 공격 아이콘 prefix
+            // #ui백로그 3.10 — hover 매 프레임 씬 전수 스캔 제거: lazy-cache (null 시만 재탐색)
             bool draftedReady = false;
-            var cs = Object.FindFirstObjectByType<ClickSelector>();
+            if (cachedCs == null) cachedCs = Object.FindFirstObjectByType<ClickSelector>();
+            var cs = cachedCs;
             if (cs != null && cs.CurrentSelection != null && cs.CurrentSelection.IsDrafted)
                 draftedReady = true;
 

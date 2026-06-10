@@ -79,7 +79,18 @@ namespace MelonS.GameProto
             var legendGo = new GameObject("Legend");
             legendGo.transform.SetParent(transform, false);
             var lt = legendGo.AddComponent<Text>();
-            lt.text = "  자유  |  <color=#4d66d9>수면</color>  |  <color=#4cc070>작업</color>  |  <color=#f29940>여가</color>";
+            // #ui백로그 5.9 — 범례를 정본(PawnSchedule.SlotColors/Labels)에서 파생: hex
+            //  하드코딩이 이미 1색 drift('작업' #4cc070 vs 정본 #4DC073) + '자유' 색 견본
+            //  누락이었다.  루프 생성으로 desync 원천 차단 (자유 포함 4종 전부 색 표시).
+            var legendSb = new System.Text.StringBuilder("  ");
+            for (int li = 0; li < PawnSchedule.SlotLabels.Length; li++)
+            {
+                if (li > 0) legendSb.Append("  |  ");
+                legendSb.Append("<color=#")
+                        .Append(ColorUtility.ToHtmlStringRGB(PawnSchedule.SlotColors[li]))
+                        .Append(">").Append(PawnSchedule.SlotLabels[li]).Append("</color>");
+            }
+            lt.text = legendSb.ToString();
             lt.font = font; lt.fontSize = 14;
             lt.color = MelonS.GameProto.Core.UITheme.TextSecondary;
             lt.alignment = TextAnchor.LowerCenter;
