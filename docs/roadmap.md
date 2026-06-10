@@ -198,6 +198,17 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-10** P1 재현 사이클 2 + repro_all 커밋게이트 첫 green (`081c850`).  운영자
+  P1 3건(기분 안 나빠짐/게이지 안 줄어듦/통나무 내구도)을 harness 재현 → **전부 미재현**
+  (현 빌드 정상 작동 확인), 시나리오 6건 회귀가드 영구화, repro_all 6/6 PASS + qa 독립
+  검수 VERIFIED.  시나리오 작성 함정 5종 playbook.md 환류.  발견: 통나무 수명 41x 가속
+  ("24초=1게임일" 낡은 가정, 실측 ~1,000게임초) — 기능동결로 미수정, check-round-1 ③
+  속도 결정 대기.  확인 라운드 1 패키지(docs/check-round-1.md, 5건) 산출.
+
+- **2026-06-10** (전세션) WORKFLOW-V2 재현-우선 작업방식 수립 (`4d313ff`) + 재현 harness
+  SimInput/ReproHarness/repro_run (`2a0ddb8`) + 🔴 P0 림 작업마비/벌목 번갈이 근본수정 —
+  수면게이트 thrash (`bb588fa`, qa VERIFIED).
+
 - **2026-06-05** 문서-코드 model 드리프트 fix (5사이클 미해결 [high] 감사 finding,
   `2026-05-25-all.md`).  planner/resourcer 가 `model: opus`(commit `2778316`,
   2026-05-22)인데 for-analysts/architecture/cost-model 문서는 여전히 `sonnet` 표기 →
