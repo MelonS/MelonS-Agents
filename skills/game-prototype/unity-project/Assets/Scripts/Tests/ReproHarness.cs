@@ -191,6 +191,33 @@ namespace MelonS.GameProto
                     break;
                 }
 
+                case "spawnBed":
+                {
+                    // #침대도달불가 회귀가드 — 침대를 직접 스폰 (건설 경로 우회, BuildManager
+                    //  prefab 재사용).  s.x/s.y = 월드 좌표.
+                    if (BuildManager.Instance == null || BuildManager.Instance.BedPrefabRef == null)
+                    { r.passed = false; r.detail = "no BuildManager/bedPrefab"; break; }
+                    var bedGo = Object.Instantiate(BuildManager.Instance.BedPrefabRef,
+                        new Vector3(Mathf.Floor(s.x) + 0.5f, Mathf.Floor(s.y) + 0.5f, 0f), Quaternion.identity);
+                    bedGo.SetActive(true);
+                    yield return null;
+                    r.passed = bedGo.GetComponent<BedEntity>() != null
+                               || bedGo.GetComponentInChildren<BedEntity>() != null;
+                    r.detail = $"bed spawned @ ({s.x:F1},{s.y:F1})";
+                    break;
+                }
+
+                case "setHour":
+                {
+                    // 게임 시각 강제 (테스트 스캐폴딩) — 자율취침 밤 게이트(h>=22) 등 시간
+                    //  조건을 결정적으로 만든다.  s.x = 시(0-23).  일수는 보존.
+                    var clk = GameClock.Instance;
+                    if (clk == null) { r.passed = false; r.detail = "no GameClock"; break; }
+                    float daysBase = Mathf.Floor(clk.GameSeconds / 86400f) * 86400f;
+                    clk.SetGameSeconds(daysBase + Mathf.Clamp(s.x, 0f, 23.99f) * 3600f);
+                    r.passed = true; r.detail = $"hour={clk.Hour}"; break;
+                }
+
                 case "boxselect":
                 {
                     // #38 마키 재현 — 운영자의 박스선택 경로.  단일 클릭 선택(ClickSelector.
@@ -324,6 +351,29 @@ namespace MelonS.GameProto
                     }
                     r.passed = best <= s.min;
                     r.detail = $"closest {best:F2} (need ≤{s.min}) in {t:F1}s"; break;
+                }
+                case "pawnOnBed":
+                {
+                    // #침대도달불가(2026-06-11) — '림이 어떤 침대 위에서 자고 있는가' 게임 진실 단언.
+                    //  pawnNear+target:"bed" 는 카메라중심 최근접 침대 1개 고정이라, 침대 여러 개
+                    //  스폰 시 림이 다른 침대를 잡으면 가짜 FAIL → 림 기준 최근접 침대를 매 샘플
+                    //  재계산하고 IsSleeping(실제 수면 진입)까지 함께 단언한다.
+                    var pawn = FindPawn(s.pawn);
+                    if (pawn == null) { r.passed = false; r.detail = $"pawn '{s.pawn}' not found"; break; }
+                    var needsC = pawn.GetComponent<PawnNeeds>();
+                    float t = 0, best = float.MaxValue; bool sleeping = false;
+                    while (t < s.withinSec)
+                    {
+                        yield return new WaitForSeconds(0.25f); t += 0.25f;
+                        float d = float.MaxValue;
+                        foreach (var b in Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None))
+                            if (b != null) d = Mathf.Min(d, Vector3.Distance(b.transform.position, pawn.transform.position));
+                        best = Mathf.Min(best, d);
+                        sleeping = needsC != null && needsC.IsSleeping;
+                        if (d <= s.min && sleeping) break;
+                    }
+                    r.passed = best <= s.min && sleeping;
+                    r.detail = $"nearestBed {best:F2} (need ≤{s.min}) sleeping={sleeping} in {t:F1}s"; break;
                 }
                 case "pawnActivity":
                 {
@@ -611,6 +661,7 @@ namespace MelonS.GameProto
             if (s.target == "tree") found = Nearest<TreeEntity>(camC);
             else if (s.target == "vein") found = Nearest<StoneVeinEntity>(camC);
             else if (s.target == "berry") found = Nearest<BerryBushEntity>(camC);
+            else if (s.target == "bed") found = Nearest<BedEntity>(camC);   // #침대도달불가 가드용
             else if (s.target == "pawn") found = Nearest<PawnEntity>(camC);
             else if (s.target == "pawn:far")
             {
