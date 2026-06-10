@@ -34,6 +34,8 @@ namespace MelonS.GameProto
         //   하드코딩해, 한쪽만 바꾸면 본문이 탭과 겹칠 brittleness 가 있었다(감사 #2).
         private const float TabStripH = 22f;
         private const float TabStripGap = 6f;
+        // #ui백로그 3.0 — 타이틀(폰 이름) 전용 밴드 높이.  탭 스트립 바로 아래 22px.
+        private const float TitleBandH = 22f;
 
         // single-inspector 통합 — 비-pawn entity 선택 시 설명 본문을 보여주는
         //   lazily-built Text (탭 위에 겹치지 않게 panel 본문 영역을 채움).  pawn
@@ -165,6 +167,7 @@ namespace MelonS.GameProto
         private Text moodDetailText;   // 기분 tab body
         private Text equipText;        // 장비 tab body
         private bool healthRectNormalized;   // #obj-audit 탭 본문 정렬 1회 보정 가드
+        private bool titleRectNormalized;    // #ui백로그 3.0 타이틀 밴드 1회 보정 가드
 
         private Font ResolveFont()
         {
@@ -529,6 +532,27 @@ namespace MelonS.GameProto
             //  (에디터 배치)라 MakeBodyText 로 만든 moodDetail/equip 본문과 rect 가 달라 건강
             //  탭만 위치가 어긋났다.  런타임에 동일한 본문 영역(탭 strip 아래 채움 + PadOuter)
             //  으로 1회 정규화 → 건강/기분/장비 탭 본문이 모두 같은 위치에 정렬된다.
+            // #ui백로그 3.0 — titleText(에디터 배치 top -8..-34)가 런타임 탭 스트립(-12..-34)과
+            //  같은 밴드를 공유, 늦은 sibling 인 불투명 탭 버튼이 폰 이름을 완전히 가렸다.
+            //  본문 정규화(healthRectNormalized)와 같은 패턴으로 1회, 스트립 '아래' 밴드로 이동.
+            //  타이틀은 상태 탭에서만 표시되고 상태 탭 본문(need 바)은 bottom-anchor 라 무충돌.
+            if (!titleRectNormalized && titleText != null)
+            {
+                var trt = titleText.GetComponent<RectTransform>();
+                if (trt != null)
+                {
+                    float tpad = MelonS.GameProto.Core.UITheme.PadOuter;
+                    trt.anchorMin = new Vector2(0f, 1f);
+                    trt.anchorMax = new Vector2(1f, 1f);
+                    trt.pivot = new Vector2(0f, 1f);
+                    trt.anchoredPosition = new Vector2(tpad, -(tpad + TabStripH + TabStripGap));
+                    trt.sizeDelta = new Vector2(-2f * tpad, TitleBandH);
+                    titleText.fontSize = 16;
+                    titleText.verticalOverflow = VerticalWrapMode.Truncate;
+                }
+                titleRectNormalized = true;
+            }
+
             if (!healthRectNormalized && healthText != null)
             {
                 var hrt = healthText.GetComponent<RectTransform>();

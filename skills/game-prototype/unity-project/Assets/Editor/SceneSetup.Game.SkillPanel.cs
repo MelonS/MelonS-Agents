@@ -24,7 +24,8 @@ namespace MelonS.GameProto.EditorTools
             skRt.anchorMax = new Vector2(0f, 0f);
             skRt.pivot = new Vector2(0f, 0f);
             skRt.sizeDelta = new Vector2(180, 180);
-            skRt.anchoredPosition = new Vector2(260, 60);
+            // #ui백로그 5.0 — PawnInfoPanel(x12..392) 우측 8px 갭으로 이동 (이전 260,60 겹침).
+            skRt.anchoredPosition = new Vector2(400, 58);
 
             Text MkSkillRow(string label, float yOffset, Color accent)
             {
@@ -49,7 +50,13 @@ namespace MelonS.GameProto.EditorTools
             Text buildT  = MkSkillRow("건축", 70, colTextPrimary);
             Text combatT = MkSkillRow("전투", 98, colAccentWarn);
 
-            SkillUI skUI = skillPanelGo.AddComponent<SkillUI>();
+            // #ui백로그 5.0 — SkillUI 를 skillPanelGo 자신에 붙이면 SetActive(false) 와 함께
+            //  Update 가 영원히 죽어 패널이 절대 안 켜졌다(죽은 UI).  ResearchUIHost 패턴대로
+            //  상시-활성 호스트 GO 에 컴포넌트를 두고 container 만 패널로 배선한다.
+            GameObject skHost = new GameObject("SkillUIHost");
+            skHost.transform.SetParent(canvasGo.transform, false);
+            skHost.AddComponent<RectTransform>();
+            SkillUI skUI = skHost.AddComponent<SkillUI>();
             SerializedObject skSo = new SerializedObject(skUI);
             skSo.FindProperty("selector").objectReferenceValue = cs;
             skSo.FindProperty("gatherText").objectReferenceValue = gatherT;

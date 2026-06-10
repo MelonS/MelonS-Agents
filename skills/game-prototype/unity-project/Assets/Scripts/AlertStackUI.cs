@@ -57,7 +57,7 @@ namespace MelonS.GameProto
         // ---- tunables (SerializeField so designer can tweak without code) ----
         [Header("Stack feel")]
         [SerializeField] private float cardLifetimeSec = 30f;   // auto-expire window
-        [SerializeField] private int maxCards = 6;              // hard cap (oldest evicted)
+        [SerializeField] private int maxCards = 3;              // hard cap (oldest evicted) — #ui백로그 7.0: 카드 밴드 -88~-232 예약(아래 EventLog 와 좌표 계약)
         [SerializeField] private float cardWidth = 230f;
         [SerializeField] private float cardHeight = 44f;
         [SerializeField] private float cardGap = 6f;

@@ -39,12 +39,13 @@ namespace MelonS.GameProto
         private void Awake()
         {
             rt = gameObject.AddComponent<RectTransform>();
-            // #275 우상단 계층화 — TopBar(76) + AlertStack 카드군(-88~) 아래에 둬 겹침 제거.
+            // #275→#ui백로그 7.0 우상단 밴드 계약: TopBar > AlertStack(-88~-232) > EventLog(-244~-404)
+            //  > Toast(-416).  이전 -148 은 카드 2장부터 겹쳤다.
             rt.anchorMin = new Vector2(1, 1);
             rt.anchorMax = new Vector2(1, 1);
             rt.pivot = new Vector2(1, 1);
             rt.sizeDelta = new Vector2(360, 38);
-            rt.anchoredPosition = new Vector2(-16, -148);
+            rt.anchoredPosition = new Vector2(-12, -416);
             bg = gameObject.AddComponent<Image>();
             bg.color = MelonS.GameProto.Core.UITheme.PanelBg;
             bg.raycastTarget = false;

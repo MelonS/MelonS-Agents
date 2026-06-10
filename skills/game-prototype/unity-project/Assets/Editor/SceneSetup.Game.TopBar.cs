@@ -54,11 +54,15 @@ namespace MelonS.GameProto.EditorTools
             clockText.fontStyle = FontStyle.Bold;
             clockText.color = UITheme.AccentGold;   // clock is the "title" of the bar → gold
             clockText.alignment = TextAnchor.MiddleLeft;
+            // #ui백로그 2.0 — 32px Bold 한글 "봄 1일, 5500년" 이 220px 를 넘어 래핑→연도가
+            //  바 높이 밖으로 수직 잘림("봄 1일," 로 끊겨 보임).  자원 칩 Text 와 동일하게
+            //  Overflow + 폭 380 으로 한 줄 보장.
+            clockText.horizontalOverflow = HorizontalWrapMode.Overflow;
             RectTransform clockRt = clockGo.GetComponent<RectTransform>();
             clockRt.anchorMin = new Vector2(0f, 0f);
             clockRt.anchorMax = new Vector2(0f, 1f);
             clockRt.pivot = new Vector2(0f, 0.5f);
-            clockRt.sizeDelta = new Vector2(220, 0);
+            clockRt.sizeDelta = new Vector2(380, 0);
             clockRt.anchoredPosition = new Vector2(16, 0);
             clockGo.AddComponent<ClockUI>();
 

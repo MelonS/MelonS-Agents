@@ -147,7 +147,9 @@ namespace MelonS.GameProto
             // → mouse hover 시 entity 종류 + 가능한 action 표시
             HoverTooltip.EnsureInScene();
             // → wolf/bandit 접근 시 큰 빨강 "⚠ 위협" 우상단 (auto-pause X, 시각 only)
-            ThreatAlertUI.EnsureInScene();
+            // #ui백로그 7.2 — ThreatAlertUI 비활성: AlertStackUI(threatTier>=1 영속 카드)와
+            //  동일 위협을 이중 표시하던 구식 스톱갭.  파일은 보존(#232 선례), 부트만 끊는다.
+            // ThreatAlertUI.EnsureInScene();
             // → 비-pawn entity 좌클릭 시 인포 패널 (#105)
             EntityInspectorPanel.EnsureInScene();
             FeatureAuditQA.EnsureInScene();   // #248 -feature-audit 자가-발견 QA

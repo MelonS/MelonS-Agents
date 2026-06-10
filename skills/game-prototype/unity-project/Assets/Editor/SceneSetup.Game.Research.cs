@@ -17,11 +17,14 @@ namespace MelonS.GameProto.EditorTools
             Image resStripBg = resStripGo.AddComponent<Image>();
             resStripBg.color = colPanel;
             RectTransform resStripRt = resStripGo.GetComponent<RectTransform>();
-            resStripRt.anchorMin = new Vector2(0.5f, 0f);
-            resStripRt.anchorMax = new Vector2(0.5f, 0f);
-            resStripRt.pivot = new Vector2(0.5f, 0f);
+            // #ui백로그 5.1 — 하단중앙 y40 은 GuiControlBar 탭바(y24~96)에 완전히 가려져
+            //  연구 진행을 볼 수단이 없었다.  우하단 속도/시계 클러스터(y24~96) 위로 이동.
+            resStripRt.anchorMin = new Vector2(1f, 0f);
+            resStripRt.anchorMax = new Vector2(1f, 0f);
+            resStripRt.pivot = new Vector2(1f, 0f);
             resStripRt.sizeDelta = new Vector2(420, 36);
-            resStripRt.anchoredPosition = new Vector2(0, 40);
+            //  주의: 우하단 시계(ClockCluster: x-16, y120, 170x52)와 같은 밴드 — 시계 왼쪽에 나란히.
+            resStripRt.anchoredPosition = new Vector2(-198, 120);
 
             GameObject resStatusGo = new GameObject("ResearchStatusText");
             resStatusGo.transform.SetParent(resStripGo.transform, false);

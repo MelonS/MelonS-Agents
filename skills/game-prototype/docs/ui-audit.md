@@ -3,6 +3,11 @@
 Date: 2026-05-30. Author: Game Director (read-only pass over all UI code + `_ui_check.png` + `genre-comparison.md` Dim 6).
 Operator trigger: "UI쪽 이상해, 전체적으로 다시 체크" — autonomous waves each self-positioned a UI system with NO unified layout owner → clutter / overlap / inconsistency.
 
+> **2026-06-10 현행화**: §2 의 P1(멈춤 슬롯)·P3(지정 토글)·P4(기즈모바)는 해결 확인 — 각 항목에
+> RESOLVED 표기.  §3.1/§3.2/§3.3/§3.5 는 이후 랜딩된 변경(자원 좌상단 이동 4af6ae4, 속도 우하단
+> 분리, 지정 토글의 ArchitectMenu 흡수, #232 기즈모바 비활성, 우상단 밴드 계약 #ui백로그 7.0)으로
+> 재기술됨.  전수 재검토 결과는 `ui-backlog-2026-06-10.md` (82건) 참조.
+
 This document is the SINGLE SOURCE OF TRUTH for PawnSim screen layout. Every UI fix subtask must read it and conform. It does two things:
 1. **Audit** — every concrete problem found, with file + line evidence.
 2. **Layout spec** — the one canonical the reference sim-convention layout all panels must obey, with exact anchors / offsets / a shared bottom-bar geometry contract that ends the position guessing.
@@ -34,7 +39,7 @@ This is the "끊임없이 파이프라인 최적화" failure mode for UI: each w
 
 ## 2. Concrete problems (the audit)
 
-### P1 — Bottom-bar leftmost reads "없음(0)" instead of a clean pause control  **[HIGH]**
+### P1 — Bottom-bar leftmost reads "없음(0)" instead of a clean pause control  **[HIGH]**  ✅ RESOLVED (속도 클러스터 최좌측=멈춤(Space) 복구, mode-readout 코드 제거 확인 2026-06-10)
 `_ui_check.png` bottom bar reads: `없음(0) | 1x | 2x | 4x | 징집 | 작업 | 일정 | 건축 | 연구`.
 
 - `GuiControlBar.cs` builds the leftmost slot as `MakeBtn("멈춤", "(Space)", …)` (line 123) and the tab as `"직업"` (line 134). The screenshot shows `없음(0)` and `작업` instead.
@@ -49,7 +54,7 @@ This is the "끊임없이 파이프라인 최적화" failure mode for UI: each w
 - The four readouts use four DIFFERENT hand-picked colors (olive, gold-ish, tan, grey) but no shared "resource chip" container — each is naked right-aligned text with a separate icon Image floating to its left. There is no per-resource grouped cell, so spacing reads random.
 - FIX OWNER: `SceneSetup.Game.TopBar.cs`. Replace the magic-offset chain with a right-anchored **HorizontalLayoutGroup** (or evenly-pitched cells) of identical "icon + value" chips, one per resource, equal width, equal gap, so adding a digit can't desync the icon. Keep the bordered HeaderBg panel. Keep the `ResourceCounterUI` SerializedObject wiring (it binds by reference, not name) and keep the Text object names (`WoodText/FoodText/MealsText/StoneText`) and icon names (`ResIcon_<key>`).
 
-### P3 — Designation toggles (해체/채광/경작) float at conflicting anchors, no shared panel  **[HIGH]**
+### P3 — Designation toggles (해체/채광/경작) float at conflicting anchors, no shared panel  **[HIGH]**  ✅ RESOLVED (2026-05-31 운영자 fb — standalone 토글 제거, ArchitectMenu 지시/구역 카테고리로 흡수. 핫키 M/X/P 보존)
 Three buttons, three files, three magic X offsets (−360 / +360 / +462) all at y=104, none measuring the actual control-bar width.
 
 - They are conceptually part of the **command/architect bar** (the reference sim: designation tools live in the architect/command cluster, not floating mid-air).
@@ -57,7 +62,7 @@ Three buttons, three files, three magic X offsets (−360 / +360 / +462) all at 
 - Each builds its toggle independently (`EnsureToggleButton` in all three) with copy-pasted geometry.
 - FIX OWNER: the **designation cluster** — `MineDesignation.cs` / `GrowZoneDesignation.cs` / `DeconstructDesignation.cs`. They must STOP using personal magic offsets and instead place themselves into ONE shared designation row defined by the layout contract in §3 (a left-anchored or bar-adjacent group), so the three sit in a single bordered strip with consistent gaps. They keep their `Btn_해체`/`Btn_채광`/`Btn_경작` names.
 
-### P4 — SelectionGizmoBar overlaps the main control bar  **[HIGH]**
+### P4 — SelectionGizmoBar overlaps the main control bar  **[HIGH]**  ✅ RESOLVED (#232 운영자 fb — SelectionGizmoBar 통째 비활성. 파일은 보존)
 `SelectionGizmoBar.cs:287` anchors bottom-center y=16; `GuiControlBar` is bottom-center y=40. The gizmo (징집/취소, ~216px wide) renders on top of / immediately under the speed buttons whenever a pawn is selected. Two bottom-center bars stacked 24px apart = visual collision.
 
 - the reference sim convention: the contextual gizmo row sits ABOVE the persistent command bar, clearly separated, and only appears on selection.
@@ -86,21 +91,27 @@ AlertStackUI canvas sortingOrder=200, SelectionGizmoBar=200, HotkeyCheatSheet=25
 
 All screen UI uses the 1920×1080 reference (CanvasScaler ScaleWithScreenSize, match 0.5 — already standard across the self-boot canvases). All panels use `UITheme.MakeBorderedPanel` (Divider border + PanelBg/HeaderBg fill), `UITheme.LoadKoreanFont`, `PadOuter=12`, `RowGap=6`, `BorderPx=2`. No script invents its own colors/fonts/padding.
 
-### 3.1 TOP — resources + clock + speed (full-width header)
-- Anchor: top, full-width. `HeaderBg` bordered panel, height 60. (`SceneSetup.Game.TopBar.cs` — already correct frame.)
-- LEFT: ClockUI (gold, "Day N - HH:MM").
-- CENTER: TimeUI ("▶ 1x").
-- RIGHT: resource chips, RIGHT-anchored, laid out as a `HorizontalLayoutGroup` (or fixed even pitch) of N identical cells `[icon][value]`, order food → meal → wood → stone, equal cell width (≥150), equal gap, thin Divider between cells. Icon size 36, gap-to-text 6, vertically centered. NO per-resource magic X chain.
+### 3.1 TOP — date + speed readout (full-width header)  *(2026-06-10 재기술)*
+- Anchor: top, full-width. `HeaderBg` bordered panel, **height 76**.
+- LEFT: ClockUI 날짜 ("봄 N일, YYYY년" — gold, fontSize 32, **horizontalOverflow=Overflow, 폭 380** — #ui백로그 2.0).
+- RIGHT: TimeUI ("▶ 1x") — 우하단 속도 버튼과 중복 표시 문제는 백로그 2.3 참조.
+- 자원 readout 은 상단바가 아니라 **좌상단 세로 칩 리스트** (`ResourceCounterUI`, RimWorld ResourceReadout 모사, 4af6ae4). 식량→식사→목재→석재, 칩 = [아이콘][값].
 
 ### 3.2 BOTTOM — the command stack (three clearly separated bands)
 This is the contract that ends the bottom-center collision. Define ONE shared geometry so every bottom system places relative to it, not relative to guesses.
 
 Reference bottom-up bands (y = anchored px above screen bottom, anchor (0.5,0) unless noted):
-- **Band A — main command bar** (`GuiControlBar`): y=24, centered. Pause / 1x / 2x / 4x | 징집 | 직업 | 일정 | 건축 | 연구. This is the persistent bar. Leftmost = 멈춤 (P1). Its bordered panel is the visual "floor" of the bottom UI.
-- **Band B — designation row** (해체 / 채광 / 경작): sits as a LEFT-anchored group, anchor (0,0), bottom-left, ABOVE the architect button area — OR as a single bordered strip immediately LEFT of and at the same baseline as Band A. Chosen layout: a left-anchored bordered strip at anchor (0,0), x=16, y=24 (same baseline as Band A, hugging the left edge) holding the three toggles in a row with `Gap=4`, so they read as one "designation tools" group and never overlap the centered command bar. Each toggle 96×40. The three designation files share this strip's origin (see §3.3 ownership).
-- **Band C — contextual gizmo row** (`SelectionGizmoBar`, only on selection): anchor (0.5,0), y = Band A top + gap. Band A panel height ≈ `56 + 2*8 + border` ≈ 76, sitting at y=24 → its top ≈ y=100. Place gizmo bar at **y=112** centered, so 징집/취소 float clearly ABOVE the command bar with a ~12px gap, never overlapping it.
+- **Band A — 탭 바** (`GuiControlBar`): anchor (0.5,0) y=24, 중앙. [징집|직업|일정|건축|연구|⚙설정]
+  6버튼, 폭 = 6*76 + **5***16 갭 (#ui백로그 0.3).  **속도/시계 클러스터는 분리** — 우하단
+  anchor (1,0) x=-16 y=24 에 [⏸멈춤|1x|2x|4x] + 시계 (RimWorld 'Time speed control — Bottom
+  right corner' 컨벤션 일치).  *(2026-06-10 재기술 — 종전 '한 바에 속도+탭' 기술은 폐기)*
+- **Band B — 지정 토글**: ~~standalone strip~~ → **ArchitectMenu 지시/구역 카테고리 소속**
+  (2026-05-31).  하단에 standalone 지정 버튼을 만들지 말 것.
+- **Band C — 기즈모바**: **disabled (#232)** — 재활성 시 y=112 / sort 150 준수.
+- **우하단 위 밴드**: ResearchStrip (1,0) x=-16 **y=112** 420×36 (#ui백로그 5.1 — 속도 패널
+  y24~96 위 16px 갭).
 
-### 3.3 Designation-row shared origin (kills the −360/+360/+462 guesses)
+### 3.3 Designation-row shared origin — **OBSOLETE** (토글이 ArchitectMenu 로 흡수됨. 아래 수식은 역사 기록)
 The three designation managers MUST NOT each pick a personal X. Define the row in the designation lane: place a left-anchored container (or compute each button's X from a shared base):
 - base anchor (0,0), x0 = 16 (left edge inset), y = 24.
 - 해체 at x0, 채광 at x0 + (96+4), 경작 at x0 + 2*(96+4). All anchor (0,0), pivot (0,0).
@@ -111,8 +122,18 @@ The three designation managers MUST NOT each pick a personal X. Define the row i
 - Rule: **pawns → left panel only; non-pawn entities → right panel only.** `EntityInspectorPanel.Describe()` must STOP returning pawn descriptions (remove the `PawnEntity` branch at lines 137-160 so it no longer double-shows pawn data the left panel owns). Right panel hint when nothing selected: keep one consistent empty string.
 - Both panels: bordered (`MakeBorderedPanel` / border edges), gold bold header, cream body, PadOuter padding. Unify empty-state copy to exactly **"선택된 오브젝트 없음"** (pick one; this one matches EntityInspectorPanel's existing title) across both panels.
 
-### 3.5 TOP-RIGHT — alert stack
-- `AlertStackUI` — already correct: anchor (1,1), pivot (1,1), edgeMargin 12, cards grow downward, bordered. NO change needed except confirming it does not overlap the top resource bar: the top bar is 60px tall; alert cards start at y = −12 from the top, card height 44 → first card bottom ≈ −56, which is inside the 60px top-bar band on the RIGHT side where the resource chips live. **Add a top inset** so the first alert card starts BELOW the 60px top bar (anchoredPosition.y = −(60+12) = −72 instead of −12), preventing alert-vs-resource overlap on the right edge.
+### 3.5 TOP-RIGHT — 우상단 컬럼 밴드 계약  *(2026-06-10 #ui백로그 7.0 — 5개 시스템 좌표 계약)*
+
+| 밴드 | 시스템 | y (anchored, anchor(1,1)) | 비고 |
+|---|---|---|---|
+| TopBar | (헤더) | 0 ~ -76 | height 76 |
+| 알림 카드 | `AlertStackUI` | **-88 ~ -232** | maxCards **3** (44px + 6 gap), 밴드 예약 |
+| 이벤트 로그 | `EventLogPanel` | **-244 ~ -404** | 240×160 |
+| 빌드 토스트 | `BuildClickToast` | **-416 ~ -454** | 38px |
+| 자원 부족 경고 | `ResourceLowAlert` | **-462 ~ -526** | 64px |
+
+- `ThreatAlertUI` 는 비활성 (#ui백로그 7.2 — AlertStack 카드와 이중 표시였음. 파일 보존, 부트 제거).
+- 새 우상단 요소는 이 테이블에 행을 추가하고 아래 밴드부터 쌓을 것 — 개인 y 오프셋 발명 금지.
 
 ### 3.6 Z-stack (canvas sort order) — canonical, do not invent new numbers
 - World sprites/pawns: 0–11. Floating bars: 29–31. FloatingText: 50. (world space, untouched)

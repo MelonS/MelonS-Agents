@@ -22,9 +22,10 @@ namespace MelonS.GameProto.EditorTools
             logRt.anchorMax = new Vector2(1f, 1f);
             logRt.pivot = new Vector2(1f, 1f);
             logRt.sizeDelta = new Vector2(240, 160);
-            // 운영자 피드백 - EventLog 가 TopBar (height 60) 와 16px 겹쳐 보임 (이전 -44 = 32 가정).
-            //  -72 = 60 topbar + 12 gap 으로 수정.
-            logRt.anchoredPosition = new Vector2(-12, -72);
+            // #ui백로그 7.0 우상단 컬럼 밴드 계약: TopBar(0~-76) > AlertStack 카드 3장
+            //  예약(-88~-232) > EventLog(-244~-404) > BuildClickToast(-416~) > ResourceLowAlert(-462~).
+            //  이전 -72 는 AlertStack 카드와 같은 사각형을 공유해 카드가 로그 위에 포개졌다.
+            logRt.anchoredPosition = new Vector2(-12, -244);
 
             GameObject logTextGo = new GameObject("LogText");
             logTextGo.transform.SetParent(logPanelGo.transform, false);

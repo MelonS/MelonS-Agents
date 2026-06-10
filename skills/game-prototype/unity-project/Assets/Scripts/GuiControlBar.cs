@@ -87,12 +87,11 @@ namespace MelonS.GameProto
         {
             // SceneSetup 의 ControlHint 텍스트가 키보드 의존 안내라서, 버튼 바가 있으면 가림.
             // (사용자가 옛 hint 와 새 bar 중복 보면 혼란)
+            // #ui백로그 0.2 — 텍스트 교체만 하던 종전 구현은 y14 의 hint 가 탭바(y24~96)
+            //  뒤로 아랫부분만 비져나와 '잘린 글자 띠'로 보였다.  같은 안내는 TutorialOverlay
+            //  가 담당하므로 이름값대로 실제로 숨긴다.
             var hint = GameObject.Find("ControlHint");
-            if (hint != null)
-            {
-                var t = hint.GetComponent<Text>();
-                if (t != null) t.text = "🖱 좌클릭=선택 · 우클릭=이동/작업 · ESC=빌드취소";
-            }
+            if (hint != null) hint.SetActive(false);
         }
 
         private RectTransform contentRt;  // bordered-panel inner content (buttons + dividers live here)
@@ -125,7 +124,7 @@ namespace MelonS.GameProto
             float padY = PadY;
 
             // 6 tab buttons: [징집] | [직업][일정] | [건축] | [연구] | [설정]
-            float totalW = 6 * BtnW + 4 * GroupGap;
+            float totalW = 6 * BtnW + 5 * GroupGap;  // #ui백로그 0.3 — 버튼 사이 갭은 5개 (4개로 계산해 ⚙설정이 패널 테두리를 4px 침범했었음)
 
             // === 하단 중앙 탭 바 컨테이너 (징집/직업/일정/건축/연구/설정) ===
             //   root 가 full-screen stretch 이므로, 중앙 바는 자체 컨테이너로 anchor (0.5,0) 고정.
@@ -192,7 +191,8 @@ namespace MelonS.GameProto
             MelonS.GameProto.Core.UITheme.MakeVDivider(contentRt, x + GroupGap * 0.5f, dividerH); x += GroupGap;
 
             // Settings group: [설정] — opens the unified SettingsMenu panel.
-            settingsBtn = MakeBtn("설정", "(ESC)", x, () => SettingsMenu.ToggleStatic(), displayLabel:"⚙ 설정");
+            // #ui백로그 0.4 — "(ESC)" 는 거짓 힌트(ESC 는 닫기/빌드취소에만 소비, 열기 바인딩 없음).
+            settingsBtn = MakeBtn("설정", "", x, () => SettingsMenu.ToggleStatic(), displayLabel:"⚙ 설정");
         }
 
         private Button MakeBtn(string label, string hint, float x, System.Action onClick, string displayLabel = null, bool anchorBottomRight = false)
