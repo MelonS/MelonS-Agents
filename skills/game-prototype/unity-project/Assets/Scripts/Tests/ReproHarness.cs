@@ -59,6 +59,7 @@ namespace MelonS.GameProto
             public string pawn;
             public string contains;
             public float x; public float y;
+            public float dx; public float dy;   // 타깃 리졸브 후 월드 오프셋
             public float sec;
             public float min;
             public float withinSec;
@@ -74,6 +75,8 @@ namespace MelonS.GameProto
 
         private readonly Report report = new Report();
         private Scenario scenario;
+        // 직전 시뮬 클릭의 월드 좌표 — selectedNearClick/activityNearClick 프로브가 참조
+        private Vector3 lastLeftClickWorld, lastRightClickWorld;
 
         public static void EnsureInScene()
         {
@@ -147,12 +150,17 @@ namespace MelonS.GameProto
                     if (!ResolveWorld(s, out world)) { r.passed = false; r.detail = $"target '{s.target}' not found"; break; }
                     Vector3 screen = Camera.main.WorldToScreenPoint(world);
                     int btn = s.op == "worldclick" ? 0 : 1;
+                    if (btn == 0) lastLeftClickWorld = world; else lastRightClickWorld = world;
                     SimInput.FrameMouseDown(btn, screen);
                     yield return null;                 // 다음 프레임 Update 들이 이 입력을 본다
                     SimInput.ClearFrame();
                     yield return null;
+                    // 진단 — 클릭 지점에 뭐가 있었는지 기록 (이동인 줄 알았는데 엔티티 클릭이었던 케이스 가시화)
+                    var hitsAt = Physics2D.OverlapPointAll(world);
+                    string atWhat = hitsAt.Length == 0 ? "empty"
+                        : string.Join("+", System.Array.ConvertAll(hitsAt, h => h.name));
                     r.passed = true;
-                    r.detail = $"{(btn == 0 ? "L" : "R")}click world({world.x:F1},{world.y:F1}) screen({screen.x:F0},{screen.y:F0})";
+                    r.detail = $"{(btn == 0 ? "L" : "R")}click world({world.x:F1},{world.y:F1}) screen({screen.x:F0},{screen.y:F0}) at={atWhat}";
                     break;
                 }
 
@@ -276,6 +284,68 @@ namespace MelonS.GameProto
                     r.passed = start - now >= s.min;
                     r.detail = $"trees {start}→{now} (need -{(int)s.min}) in {t:F1}s"; break;
                 }
+                case "selectedNearClick":
+                {
+                    // 운영자 P0 "림 기본 이동" — 선택 림이 직전 우클릭 지점에 도달하는가.
+                    var sel = Object.FindFirstObjectByType<ClickSelector>()?.CurrentSelection;
+                    if (sel == null) { r.passed = false; r.detail = "no selection"; break; }
+                    float t = 0, best = float.MaxValue;
+                    while (t < s.withinSec)
+                    {
+                        yield return new WaitForSeconds(0.25f); t += 0.25f;
+                        best = Mathf.Min(best, Vector3.Distance(lastRightClickWorld, sel.transform.position));
+                        if (best <= s.min) break;
+                    }
+                    r.passed = best <= s.min;
+                    r.detail = $"selected '{sel.PawnName}' closest {best:F2} to rclick({lastRightClickWorld.x:F1},{lastRightClickWorld.y:F1}) (need ≤{s.min}) in {t:F1}s";
+                    break;
+                }
+                case "anyPawnActivity":
+                {
+                    // 아무 림이나 머리위 라벨에 contains 가 뜨는가 (배정 자체의 확인).
+                    float t = 0; string who = "", last = "";
+                    while (t < s.withinSec)
+                    {
+                        foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                        {
+                            var lbl = p.GetComponentInChildren<PawnNameLabel>();
+                            if (lbl == null) continue;
+                            last = lbl.CurrentActivity;
+                            if (last.Contains(s.contains)) { who = p.PawnName; break; }
+                        }
+                        if (who != "") break;
+                        yield return new WaitForSeconds(0.25f); t += 0.25f;
+                    }
+                    r.passed = who != "";
+                    r.detail = who != "" ? $"'{who}' activity contains '{s.contains}' at {t:F1}s"
+                                         : $"no pawn activity contains '{s.contains}' in {t:F1}s";
+                    break;
+                }
+                case "activityNearClick":
+                {
+                    // 운영자 P0 "원거리 벌목" — 라벨이 contains(예: 벌목)인 림이 그 순간
+                    //  직전 우클릭 지점(나무)에서 s.min 이내에 있는가.  작업 라벨이 떠 있는데
+                    //  내내 멀리 있으면 FAIL = 제자리 벌목 재현.
+                    float t = 0, bestWhileActive = float.MaxValue; bool seenActive = false;
+                    while (t < s.withinSec)
+                    {
+                        foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                        {
+                            var lbl = p.GetComponentInChildren<PawnNameLabel>();
+                            if (lbl == null || !lbl.CurrentActivity.Contains(s.contains)) continue;
+                            seenActive = true;
+                            float d = Vector3.Distance(lastRightClickWorld, p.transform.position);
+                            bestWhileActive = Mathf.Min(bestWhileActive, d);
+                        }
+                        if (bestWhileActive <= s.min) break;
+                        yield return new WaitForSeconds(0.25f); t += 0.25f;
+                    }
+                    r.passed = seenActive && bestWhileActive <= s.min;
+                    r.detail = !seenActive
+                        ? $"no pawn ever showed '{s.contains}' in {t:F1}s"
+                        : $"closest-while-'{s.contains}' {bestWhileActive:F2} to rclick (need ≤{s.min}) in {t:F1}s";
+                    break;
+                }
                 default:
                     r.passed = false; r.detail = $"unknown probe '{s.probe}'"; break;
             }
@@ -293,9 +363,28 @@ namespace MelonS.GameProto
             else if (s.target == "vein") found = Nearest<StoneVeinEntity>(camC);
             else if (s.target == "berry") found = Nearest<BerryBushEntity>(camC);
             else if (s.target == "pawn") found = Nearest<PawnEntity>(camC);
+            else if (s.target == "@selected")
+                found = Object.FindFirstObjectByType<ClickSelector>()?.CurrentSelection;
+            else if (s.target == "empty@selected")
+            {
+                // 선택 림 주변에서 콜라이더 없는 빈 칸 탐색 (dx/dy 무시) — 순수 이동 테스트용.
+                var sel2 = Object.FindFirstObjectByType<ClickSelector>()?.CurrentSelection;
+                if (sel2 == null) return false;
+                Vector3 from = sel2.transform.position;
+                for (float rr = 2f; rr <= 4f; rr += 1f)
+                    foreach (var dir in new[] { Vector3.right, Vector3.left, Vector3.up, Vector3.down,
+                                                new Vector3(1,1,0)*0.707f, new Vector3(-1,1,0)*0.707f,
+                                                new Vector3(1,-1,0)*0.707f, new Vector3(-1,-1,0)*0.707f })
+                    {
+                        Vector3 cand = from + dir * rr; cand.z = 0;
+                        if (Physics2D.OverlapPointAll(cand).Length == 0) { world = cand; return true; }
+                    }
+                return false;
+            }
             else if (s.target.StartsWith("pawn:")) found = FindPawn(s.target.Substring(5));
             if (found == null) return false;
             world = found.transform.position; world.z = 0;
+            world += new Vector3(s.dx, s.dy, 0f);   // 오프셋 (예: 선택 림 기준 3칸 오른쪽)
             return true;
         }
 

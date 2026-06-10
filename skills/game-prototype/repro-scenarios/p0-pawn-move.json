@@ -1,0 +1,13 @@
+{
+  "name": "P0 림 기본 이동 — 선택 후 우클릭 지점 도달 (운영자 '조작 안 되고 제자리 엉뚱한 짓')",
+  "steps": [
+    { "op": "wait", "sec": 1.5 },
+    { "op": "shot", "name": "00_start" },
+    { "op": "worldclick", "target": "pawn" },
+    { "op": "assert", "probe": "selection", "expect": "any" },
+    { "op": "shot", "name": "01_selected" },
+    { "op": "worldright", "target": "empty@selected" },
+    { "op": "assert", "probe": "selectedNearClick", "min": 0.8, "withinSec": 12 },
+    { "op": "shot", "name": "02_after_move" }
+  ]
+}

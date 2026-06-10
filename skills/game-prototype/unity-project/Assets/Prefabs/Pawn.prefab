@@ -293,8 +293,8 @@ MonoBehaviour:
   food: 80
   sleep: 80
   mood: 80
-  foodDecay: 0.21
-  sleepDecay: 0.29
+  foodDecay: 0.13
+  sleepDecay: 0.12
   moodDecay: 0.048
   sleepRegenAtNight: 8
   eatThreshold: 50

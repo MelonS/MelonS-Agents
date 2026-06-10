@@ -1,0 +1,14 @@
+{
+  "name": "P0 원거리 벌목 — 림이 나무에 도달해서 베는가 (운영자 '도달 안 하고 제자리 벌목')",
+  "steps": [
+    { "op": "wait", "sec": 1.5 },
+    { "op": "shot", "name": "00_start" },
+    { "op": "worldright", "target": "tree" },
+    { "op": "assert", "probe": "chopDesignations", "min": 1 },
+    { "op": "assert", "probe": "anyPawnActivity", "contains": "벌목", "withinSec": 30 },
+    { "op": "shot", "name": "01_chopping" },
+    { "op": "assert", "probe": "activityNearClick", "contains": "벌목", "min": 1.7, "withinSec": 30 },
+    { "op": "assert", "probe": "treeCountBelow", "min": 1, "withinSec": 45 },
+    { "op": "shot", "name": "02_final" }
+  ]
+}

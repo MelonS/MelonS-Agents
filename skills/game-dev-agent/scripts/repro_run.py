@@ -32,7 +32,7 @@ import refactor_check as rc
 REPO = rc.REPO
 REPORT = Path("G:/ai/_repro_report.json")
 SHOTS = Path("G:/ai/_repro_shots")
-RUN_LOG = Path("G:/ai/_repro_run.log")
+RUN_LOG = Path("G:/ai/_repro_run.log")   # main() 에서 시나리오별 경로로 재설정
 
 
 def resolve_build(args) -> Path | None:
@@ -66,6 +66,10 @@ def main() -> int:
     if not scenario.exists():
         print(f"[repro] scenario 없음: {scenario}")
         return 2
+    # 시나리오별 로그/샷 분리 — 연속 실행 시 이전 증거 덮어쓰기 방지
+    global RUN_LOG, SHOTS
+    RUN_LOG = Path(f"G:/ai/_repro_run_{scenario.stem}.log")
+    SHOTS = Path(f"G:/ai/_repro_shots/{scenario.stem}")
 
     exe = resolve_build(args)
     if exe is None or not exe.exists():

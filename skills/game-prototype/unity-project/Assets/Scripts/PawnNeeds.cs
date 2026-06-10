@@ -33,8 +33,14 @@ namespace MelonS.GameProto
         //  sleep 0.096→0.18(~180/일 → 밤마다 + 부족시 졸림).  생존은 meals/berry/사냥+밤잠으로 유지.
         // 운영자 2026-06-02 "수면/식량 게이지가 왜 안 줄어드냐" — decay 는 돌고 있었으나 너무
         //  느려 체감이 안 됐다.  눈에 보이게 ~1.6x 상향(perceptible).  여전히 game-day 단위 생존.
-        [SerializeField] private float foodDecay = 0.21f;
-        [SerializeField] private float sleepDecay = 0.29f;
+        // #thrash-fix(2026-06-10) sleep 0.29 는 기상 3.7실분(게임 오전11시) 만에 탈진(<15) →
+        //  WantsAutoSleep 영구 발화 → (침대 없으면) PawnUtilityAI 수면게이트 1.5s 마다 전 작업
+        //  해제 = 운영자 "림 작업마비/벌목-떠도는중 번갈이"의 공범 (재현 p0-remote-chop).
+        //  0.12 = 탈진 ~19시 도착(레퍼런스 콜로니심 리듬: 저녁 졸림→밤잠), #247 의 '체감 가능'
+        //  의도(0.18 1차 조정)는 유지하되 마지막 1.6x 과조정만 되돌림.  food 0.13 = #247 1차
+        //  값 복원(하루 2~3회 식사).  ※ 운영자 속도 체감 보고 받기 (확인 라운드 항목).
+        [SerializeField] private float foodDecay = 0.13f;
+        [SerializeField] private float sleepDecay = 0.12f;
         [SerializeField] private float moodDecay = 0.048f;  // #234 the reference sim 시계 비례 축소
 
         [Header("Day 9+: sleep regen when sleeping at night")]

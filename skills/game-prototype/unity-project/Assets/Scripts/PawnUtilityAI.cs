@@ -303,9 +303,16 @@ namespace MelonS.GameProto
             // 자율 취침은 생존 우선 — 진행 중인 work 가 있어도 졸리고 밤이면 중단하고
             //  침대로.  busy-gate 보다 먼저: 현재 task 정리 후 Decide 로 GoSleep 시도.
             //  (work 가 없으면 어차피 아래 gate 를 통과해 Decide 가 GoSleep 을 잡는다.)
+            // #thrash-fix(2026-06-10) 운영자 P0 "벌목-떠도는중 번갈이/림 작업마비" 근본원인:
+            //  탈진 림이 이 게이트에서 1.5s 마다 전 작업 해제 → Decide → GoSleepAction 이
+            //  침대 없음으로 실패 → 다시 작업 배정 → 무한 thrash (재현 p0-remote-chop:
+            //  '벌목 시작 → ClearTask by=PawnUtilityAI.Update' 루프, 나무 44→44).
+            //  → 침대를 실제로 얻을 수 있을 때만 작업을 중단한다.  침대가 없으면 하던 일
+            //  계속 (탈진 제자리취침 fallback 은 PawnNeeds 가 밤에 처리).
             if (needs != null && reservedSleepBed == null
                 && needs.WantsAutoSleep && !needs.HasRestOrder
-                && ctx != null && ctx.HasActiveTask())
+                && ctx != null && ctx.HasActiveTask()
+                && ctx.FindNearestFreeBed() != null)
             {
                 chopper.ClearTask();
                 if (gatherer != null) gatherer.ClearTask();

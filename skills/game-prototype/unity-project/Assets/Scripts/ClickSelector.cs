@@ -190,6 +190,8 @@ namespace MelonS.GameProto
                     var items = BuildContextMenu(ehit, mw);
                     if (items != null && items.Count > 0)
                     {
+                        // WORKFLOW-V2 진단 — 우클릭이 이동 대신 메뉴로 빠진 케이스 가시화
+                        Debug.Log($"[RClick] {currentSelection.PawnName} 우클릭({mw.x:F1},{mw.y:F1}) hit={ehit.name} → 컨텍스트메뉴 ({items.Count}항목, 이동 아님)");
                         ContextMenuUI.Instance.Open(SimInput.mousePosition, items);
                         return;  // 메뉴 떴음 - 기존 직접 action skip
                     }
@@ -361,6 +363,8 @@ namespace MelonS.GameProto
                     if (mv != null) mv.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
                     // 수동 이동 명령 → AI 5초 skip (즉시 override 방지)
                     currentSelection.ManualMoveUntil = Time.time + 15f;
+                    // WORKFLOW-V2 진단 — P0 '림 이동 안 됨': 명령 등록 여부를 로그로 확정
+                    Debug.Log($"[Move] {currentSelection.PawnName} 수동이동 명령 ({mouseWorld.x:F1},{mouseWorld.y:F1}) mv={(mv != null)}");
                 }
             }
         }

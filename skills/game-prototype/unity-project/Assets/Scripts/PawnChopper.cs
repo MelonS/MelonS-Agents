@@ -44,6 +44,8 @@ namespace MelonS.GameProto
 
         public bool HasTask => targetTree != null;
         public TreeEntity Target => targetTree;
+        // WORKFLOW-V2 재현 진단 — 벌목이 "라벨만 뜨고 안 베어짐" 추적용 1회성 로그 플래그
+        private bool loggedChopStart;
 
         private void Awake()
         {
@@ -58,8 +60,10 @@ namespace MelonS.GameProto
                 MelonS.GameProto.AI.ReservationManager.Release(targetTree, gameObject);
             ReleaseStandCell();
             targetTree = tree;
+            loggedChopStart = false;
             if (tree != null)
             {
+                Debug.Log($"[Chopper] {name} 배정 tree={tree.name} dist={Vector2.Distance(transform.position, tree.transform.position):F2}");
                 // The reservation is taken by ChopTreeAction (AI) before SetTreeTarget;
                 //  re-assert here so manual/direct callers also hold it (idempotent).
                 MelonS.GameProto.AI.ReservationManager.TryReserve(tree, gameObject);
@@ -98,7 +102,13 @@ namespace MelonS.GameProto
         {
             // #199 C2 — release the tree + stand cell so other pawns can claim them.
             if (targetTree != null)
+            {
+                // WORKFLOW-V2 진단 — 외부(AI 인터럽트 등)発 해제 추적.  스택 일부만 기록.
+                var st = new System.Diagnostics.StackTrace(1, false);
+                string caller = st.FrameCount > 0 ? st.GetFrame(0).GetMethod()?.DeclaringType?.Name + "." + st.GetFrame(0).GetMethod()?.Name : "?";
+                Debug.Log($"[Chopper] {name} ClearTask tree={targetTree.name} by={caller}");
                 MelonS.GameProto.AI.ReservationManager.Release(targetTree, gameObject);
+            }
             ReleaseStandCell();
             targetTree = null;
             movement.ClearTarget();
@@ -130,6 +140,11 @@ namespace MelonS.GameProto
             if (dist <= chopRange || movement.AtStandCell(standCell))
             {
                 // In range — stop walking, chop
+                if (!loggedChopStart)
+                {
+                    loggedChopStart = true;
+                    Debug.Log($"[Chopper] {name} 벌목 시작 dist={dist:F2} atStand={movement.AtStandCell(standCell)} cell={standCell}");
+                }
                 movement.ClearTarget();
                 // #120 - PawnAbilities chop multiplier
                 var abil = GetComponent<PawnAbilities>();
