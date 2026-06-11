@@ -126,6 +126,19 @@ namespace MelonS.GameProto
                 FloatingText.Spawn(transform.position + Vector3.up * 0.4f,
                                    $"+{woodDrop} 목재", new Color(0.45f, 0.85f, 0.35f, 1f));
                 WoodPileEntity.Spawn(transform.position, woodDrop, WoodPileSprite);
+                // 아트 v2 후속 (2026-06-12) — 그루터기: 벌목 자리에 흔적이 남는다
+                //  (장소의 역사 — '여기서 일했다'가 지형에 쓰인다).  ~1.5게임일 후 소멸,
+                //  콜라이더 없음(통행/클릭 무영향).  에셋 없으면 조용히 생략.
+                var stumpSpr = Resources.Load<Sprite>("flora32/flora32_stump");
+                if (stumpSpr != null)
+                {
+                    var stump = new GameObject("Stump");
+                    stump.transform.position = transform.position;
+                    var ssr = stump.AddComponent<SpriteRenderer>();
+                    ssr.sprite = stumpSpr;
+                    ssr.sortingOrder = 2;   // 꽃/데칼 층 — 폰(10)/더미(7) 아래
+                    Destroy(stump, 1500f);  // ≈1.5게임일 (스케일 시계)
+                }
                 // Day 12: enqueue a future sapling at this tree's position
                 // BEFORE Destroy(gameObject) — `transform.position` is read
                 // synchronously, the scheduler stashes a Vector3, so once
