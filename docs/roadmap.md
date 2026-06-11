@@ -206,6 +206,15 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-12 새벽 (자율 10h 2부 — 마감)** 휴먼라이크 QA 1라운드 + 차순위 마감:
+  방치 소크 E2E '3일차 전멸' 사슬 발화 증명(`soak-neglect` 문서) / 첫10분 플레이테스트
+  F1~F5 발굴(`first10min` 문서) → F1 BuildManager SimInput 패리티(`bc43bd3`),
+  F3 침대부족 바닥취침(스트릭6 게이트 — 회귀가드 2회 적발 후 안정화, `c5828c5`),
+  F2 패널 겹침 시프트+팔부상→작업속도 5워커(`8a0e8dd`), 강도 60s 퇴각(`0fb583d`),
+  도구 오버레이 — 작업 중 도끼/곡괭이 가시화(`c4bb60b`).  운영자 확인:
+  `check-round-3.md` (결정 대기 D1~D4).  미해결 추적: F4 목재 카운터 UX, F5 침대
+  탐색 초기 transient.
+
 - **2026-06-11 밤 (자율 10h 1부)** 게임루프 부활 — 운영자 "림월드 4축(생존/이벤트/발전/
   RPG)이 돌아가지 않는다" → 4축 멀티에이전트 감사(wf_0e04d4e2, `gameloop-backlog-
   2026-06-11.md`) → **TOP 10 완주**: 아사+전멸 오버레이(`3bce00e`, TakeTrueDamage·
