@@ -43,7 +43,12 @@ namespace MelonS.GameProto
 
         public List<Tech> techs = new List<Tech>();
         public Tech activeTech;
-        public float pointsPerSecondPerBench = 2f;
+        // 연구 디스패치 보정 (2026-06-12) — 디스패치 전 2f 는 '림이 벤치 옆을 우연히
+        //  지나갈 때만' 전제의 수치였다.  DoResearchAction 으로 유휴 림이 상주하게 되자
+        //  2게임일 만에 테크 사다리 전체(640pt+)가 소진(검증 소크 실측).  전담 1명 기준
+        //  원시 활(100pt) ≈ 1게임일(1000스케일초 × 0.15 × manipulation~1) → 사다리
+        //  전체 ≈ 1주+ 로 레퍼런스 페이싱 회복.
+        public float pointsPerSecondPerBench = 0.15f;
         private float pointsFraction = 0f;  // Day 75 fractional accumulator
 
         // Lesson #4 firewall - FindObjectsByType per-Update 비쌈.  cache + 1s 재검색.

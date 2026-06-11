@@ -456,8 +456,12 @@ namespace MelonS.GameProto
             return sharedZoneSprite;
         }
 
-        /// <summary>Drop a designated cell that already has a crop (planted by us OR
-        /// already present), whose marker died, or whose cell turned non-plantable.</summary>
+        /// <summary>기본기 수리 (운영자 2026-06-12 "농사 제대로") — 경작 구역을 영구화.
+        /// 이전: 작물이 심긴 셀을 구역에서 '제거'해 경작 구역이 일회용이었다 — 수확하면
+        /// 그 칸은 영영 빈 땅(재파종 루프 자체가 없음).  레퍼런스 콜로니심처럼 구역은
+        /// 남고, 작물이 자라는 동안 마커만 숨긴다.  수확/파괴로 작물이 사라지면 마커가
+        /// 돌아오고 DispatchToIdlePlanters 가 다시 파종한다 → 지정 1회 = 영구 농장.
+        /// 진짜 제거는 마커 사망/비경작지 전환뿐.</summary>
         private void PruneZone()
         {
             if (zone.Count == 0) return;
@@ -465,8 +469,15 @@ namespace MelonS.GameProto
             foreach (var kv in zone)
             {
                 var gc = kv.Value;
-                if (gc == null || gc.Marker == null || CellHasCrop(kv.Key))
+                if (gc == null || gc.Marker == null)
+                {
                     (dead ??= new List<Vector2Int>()).Add(kv.Key);
+                    continue;
+                }
+                // 작물 있는 동안 마커 숨김(시각만) — 레코드는 유지해 수확 후 재파종.
+                bool hasCrop = CellHasCrop(kv.Key);
+                if (gc.Marker.gameObject.activeSelf == hasCrop)
+                    gc.Marker.gameObject.SetActive(!hasCrop);
             }
             if (dead != null)
                 foreach (var k in dead)
@@ -504,6 +515,9 @@ namespace MelonS.GameProto
             foreach (var kv in zone)
             {
                 var key = kv.Value.Cell;
+                // 영구 구역 전환(2026-06-12) 후 '작물 있는 셀'이 zone 에 남으므로
+                //  이중 파종 차단 게이트가 디스패치 쪽에 필요해졌다.
+                if (CellHasCrop(key)) continue;
                 if (CellClaimed(key)) continue;
                 if (ReservationManager.IsCellReservedByOther(key, gameObject)) continue;
 

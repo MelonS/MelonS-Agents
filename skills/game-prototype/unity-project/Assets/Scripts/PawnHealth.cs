@@ -100,6 +100,12 @@ namespace MelonS.GameProto
         //  maxHp 는 트레잇 결정성으로 재구성되고, 여기서 실제 hp/출혈/붕대를 덮어쓴 뒤
         //  RecomputeAggregates+CheckDeath 로 사망/다운 상태까지 정확히 되살린다.
         //  구(舊) 세이브 호환: 배열 null/길이 불일치면 복원 스킵(신규 full-HP 림 유지).
+        // #세이브감사 #5 (2026-06-12) — 시체 재로드 시 새 인스턴스는 IsDead=false 라
+        //  CheckDeath 최초사망 분기가 재실행돼 사망 카드 + '동료 사망'(-15) 전체
+        //  브로드캐스트가 매 로드마다 중복 발화했다 (저장 mood 에 이미 -15 반영됐는데
+        //  또 얹힘).  복원 경로는 상태만 되살리고 신호는 침묵.
+        private bool restoringQuiet;
+
         public void RestorePartState(int[] hp, float[] bleed, bool[] bandaged)
         {
             if (parts == null || hp == null || hp.Length != parts.Length) return;
@@ -111,7 +117,9 @@ namespace MelonS.GameProto
                 if (bandaged != null && bandaged.Length == parts.Length) parts[i].bandaged = bandaged[i];
             }
             RecomputeAggregates();
+            restoringQuiet = true;
             CheckDeath();
+            restoringQuiet = false;
         }
 
         private void Awake()
@@ -275,8 +283,10 @@ namespace MelonS.GameProto
                     //  PawnEntity 가 disable 되기 전에).  안 하면 PawnEntity.IsDead 가 false 로 남아
                     //  적이 시체를 계속 타겟·헛공격한다.  메서드 호출은 enabled 와 무관하게 동작.
                     GetComponent<PawnEntity>()?.ForceSyncDead();
-                    Debug.Log($"[PawnHealth] {gameObject.name} 사망 — 머리={head.hp} 몸통={torso.hp}");
+                    Debug.Log($"[PawnHealth] {gameObject.name} 사망 — 머리={head.hp} 몸통={torso.hp}" +
+                              (restoringQuiet ? " (복원)" : ""));
                     // r2 #4 — 화면 밖 사망을 모르던 것: tier3 영속 카드 (이름은 PawnEntity).
+                    if (!restoringQuiet)
                     {
                         var pe = GetComponent<PawnEntity>();
                         AlertStackUI.Notify($"{(pe != null ? pe.PawnName : gameObject.name)} 사망", 3);
@@ -303,11 +313,12 @@ namespace MelonS.GameProto
                     // #버그헌트3(2026-06-04): 주변 살아있는 콜로니스트에게 '동료 사망'(-15) thought 부여.
                     //  catalog 에 정의됐으나 어디서도 AddThought 안 되던 dead feature 배선(사회/유대 반응).
                     //  본인·죽은 림 제외(소규모 프로토타입이라 반경 제한 없이 콜로니 전체).
-                    foreach (var ph in FindObjectsByType<PawnHealth>(FindObjectsSortMode.None))
-                    {
-                        if (ph == null || ph == this || ph.IsDead) continue;
-                        ph.GetComponent<PawnThoughts>()?.AddThought("동료 사망");
-                    }
+                    if (!restoringQuiet)
+                        foreach (var ph in FindObjectsByType<PawnHealth>(FindObjectsSortMode.None))
+                        {
+                            if (ph == null || ph == this || ph.IsDead) continue;
+                            ph.GetComponent<PawnThoughts>()?.AddThought("동료 사망");
+                        }
                 }
                 if (State != prev) StateVersion++;
                 return;
@@ -316,7 +327,7 @@ namespace MelonS.GameProto
             //  (FloorToInt) — enemy IsDowned(30%)와 동일 경계로 정합(rank3, 승인).
             bool wasDowned = IsDowned;
             IsDowned = (head.hp <= Mathf.FloorToInt(head.maxHp * 0.3f));
-            if (!wasDowned && IsDowned)
+            if (!wasDowned && IsDowned && !restoringQuiet)
             {
                 // r2 #4 — 의식불명 전환 무음이던 것: 개입(치료) 요구 신호.
                 var pe = GetComponent<PawnEntity>();

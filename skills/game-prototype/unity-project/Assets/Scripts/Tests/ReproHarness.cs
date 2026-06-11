@@ -791,8 +791,13 @@ namespace MelonS.GameProto
                 if (b == null) continue;
                 if (byLabel)
                 {
-                    var txt = b.GetComponentInChildren<Text>(true);
-                    if (txt != null && txt.text.Contains(key)) { targetBtn = b; break; }
+                    // 기본기 진단 (2026-06-12) — GetComponentInChildren(첫 Text)만 보던
+                    //  것이 하네스 사각지대였다: 지시/구역 셀은 아이콘이 없어 첫 Text 가
+                    //  한 글자 글리프("벌")라 'label:벌목'이 영영 미매칭 → 모든 자율
+                    //  소크에서 벌목/채광/경작/지붕 지정이 조용히 빠졌다.  전체 Text 순회.
+                    foreach (var txt in b.GetComponentsInChildren<Text>(true))
+                        if (txt != null && txt.text.Contains(key)) { targetBtn = b; break; }
+                    if (targetBtn != null) break;
                 }
                 else if (b.gameObject.name == key) { targetBtn = b; break; }
             }

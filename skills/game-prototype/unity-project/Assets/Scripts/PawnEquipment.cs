@@ -92,6 +92,27 @@ namespace MelonS.GameProto
             return equipped.TryGetValue(Slot.Weapon, out var w) && w.rangedEnabled;
         }
 
+        // #세이브감사 #4 (2026-06-12) — 장비 미직렬화로 로드마다 Awake 가 랜덤 재롤
+        //  (연구 보상 활 포함 소실 → '연구 완료했는데 원거리 불능').  Catalog 는 static
+        //  고정 배열이라 인덱스가 안정적 — 슬롯 4칸 인덱스(-1 = 미장착)로 캡처/복원.
+        //  복원은 Awake(랜덤) 이후 + SyncThoughtBaseline 이전에 호출된다 — thought 스택
+        //  조작 없음(저장 mood 에 이미 장비 보너스 반영, baseline 패턴이 재가산 차단).
+        public int[] CaptureCatalogIndices()
+        {
+            var idx = new int[4] { -1, -1, -1, -1 };
+            foreach (var kv in equipped)
+                idx[(int)kv.Key] = System.Array.IndexOf(Catalog, kv.Value);
+            return idx;
+        }
+
+        public void RestoreFromIndices(int[] idx)
+        {
+            if (idx == null || idx.Length != 4) return;   // 구 세이브 — 랜덤 유지
+            equipped.Clear();
+            for (int s = 0; s < 4; s++)
+                if (idx[s] >= 0 && idx[s] < Catalog.Length) Equip(Catalog[idx[s]]);
+        }
+
         private void Awake()
         {
             // 시작 의류 - 셔츠 + 바지는 모두 가짐, 모자/무기는 50%.

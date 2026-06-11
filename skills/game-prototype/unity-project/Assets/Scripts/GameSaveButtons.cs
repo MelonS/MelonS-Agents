@@ -90,15 +90,31 @@ namespace MelonS.GameProto
             // Destroy current pawns + trees
             foreach (var p in FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
                 Destroy(p.gameObject);
+            // #세이브감사 #1 (2026-06-12) — 같은 프레임 Destroy→위치매칭 레이스: Destroy 는
+            //  프레임 끝에 실행되므로 같은 호출스택의 ApplyLoadedSubStates 위치매칭(FindNearest,
+            //  거리 0 동률 시 열거 순서 첫 후보 승리)이 '곧 파괴될' 옛 엔티티에 종/성장도/지정을
+            //  적용하고 함께 소멸시켰다(매 F9 순서운 따라 증발).  SetActive(false) 가
+            //  FindObjectsByType 기본 호출에서 즉시 제외시켜 새 엔티티만 매칭되게 한다.
+            //  (폰 루프는 위치매칭을 안 하므로 불필요.)
             foreach (var t in FindObjectsByType<TreeEntity>(FindObjectsSortMode.None))
-                Destroy(t.gameObject);
+            { t.gameObject.SetActive(false); Destroy(t.gameObject); }
             // #버그헌트2(2026-06-04): 플레이어 완성 구조물/작물/스톡파일도 파괴 후 1:1 재구성.
             //  이전엔 이들을 파괴/재생성하지 않아, 같은 세션 F9 는 우연히 동작(엔티티 잔존)했지만
             //  게임 재시작(새 씬) 후 로드 시 재구성 코드가 없어 전부 소실됐다(CRITICAL).
             foreach (var s in FindObjectsByType<StructureTag>(FindObjectsSortMode.None))
-                Destroy(s.gameObject);
+            { s.gameObject.SetActive(false); Destroy(s.gameObject); }
             foreach (var c in FindObjectsByType<CropEntity>(FindObjectsSortMode.None))
-                Destroy(c.gameObject);
+            { c.gameObject.SetActive(false); Destroy(c.gameObject); }
+            // #세이브감사 #7/#8 최소수선 (2026-06-12) — 밴딧/화살/진행 중 청사진은 저장 안
+            //  되는데 파괴 목록에도 없어 같은 세션 F9 시 '저장 시점 + 현재'가 뒤섞였다
+            //  (미래의 밴딧이 복원 직후 폰을 공격, 잔존 청사진 + 카운터 롤백 = 자재 복제).
+            //  완전 직렬화(레이드/공사 재개)는 운영자 결정 — 우선 시간 역설만 제거.
+            foreach (var b in FindObjectsByType<BanditEnemy>(FindObjectsSortMode.None))
+                Destroy(b.gameObject);
+            foreach (var ar in FindObjectsByType<ArrowProjectile>(FindObjectsSortMode.None))
+                Destroy(ar.gameObject);
+            foreach (var bp in FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
+            { bp.gameObject.SetActive(false); Destroy(bp.gameObject); }
             // 스톡파일 zone 파괴 전에 마커 스프라이트를 캡처(재구성 시 시각 유지; 같은 세션 F9).
             //  재시작(씬에 zone 없음)이면 null → 기능은 동작하나 마커 미표시(차후 폴리시).
             Sprite stockMarker = null;
@@ -109,6 +125,7 @@ namespace MelonS.GameProto
                     var zsr = z.GetComponent<SpriteRenderer>();
                     if (zsr != null) stockMarker = zsr.sprite;
                 }
+                z.gameObject.SetActive(false);
                 Destroy(z.gameObject);
             }
 
@@ -117,6 +134,9 @@ namespace MelonS.GameProto
             {
                 ResourceManager.Instance.wood = data.wood;
                 ResourceManager.Instance.food = data.food;
+                ResourceManager.Instance.stone = data.stone;          // #세이브감사 #2
+                ResourceManager.Instance.meals = data.meals;
+                ResourceManager.Instance.fineMeals = data.fineMeals;
             }
 
             // Re-spawn pawns
@@ -142,6 +162,10 @@ namespace MelonS.GameProto
                 // #버그헌트2(2026-06-04): 부위 HP 복원 후 PawnEntity.Hp 를 PawnHealth 와 동기화.
                 //  Awake 가 풀피로 깔아둬, 죽지 않은 부상 폰은 다음 피격 전까지 HP바가 풀피로 표시됐다.
                 entity?.SyncHpFromHealth();
+                // #세이브감사 #4 — 장비 복원: Awake 의 랜덤 재롤을 저장본으로 덮어쓴다
+                //  (연구 보상 활 소실 해소).  SyncThoughtBaseline(아래) 이전 — thought
+                //  스택은 건드리지 않으므로 mood 재가산 차단 패턴 위에 그대로 얹힌다.
+                p.GetComponent<PawnEquipment>()?.RestoreFromIndices(ps.equipIdx);
                 PawnNeeds needs = p.GetComponent<PawnNeeds>();
                 if (needs != null)
                 {

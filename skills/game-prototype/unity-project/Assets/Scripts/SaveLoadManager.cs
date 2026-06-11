@@ -31,6 +31,9 @@ namespace MelonS.GameProto
         //  구 세이브는 빈 배열 → 길이 가드 스킵 (skillLevels 패턴).
         public int[] workPriorities;
         public int[] scheduleSlots;
+        // #세이브감사 #4 (2026-06-12) — 장비 슬롯 4칸 Catalog 인덱스(-1=미장착).
+        //  구 세이브는 빈 배열 → RestoreFromIndices 길이 가드 스킵(랜덤 유지).
+        public int[] equipIdx;
     }
 
     [Serializable]
@@ -103,6 +106,12 @@ namespace MelonS.GameProto
     {
         public int wood;
         public int food;
+        // #세이브감사 #2 (2026-06-12) — stone/meals/fineMeals 미저장으로 재시작 로드 시
+        //  0 리셋(석재 건축 불능 + 비축 식사 전멸), F9 시 롤백 안 됨.  구 세이브는
+        //  JsonUtility 기본값 0 이라 가드 불필요.
+        public int stone;
+        public int meals;
+        public int fineMeals;
         public List<PawnSave>      pawns      = new List<PawnSave>();
         public List<TreeSave>      trees      = new List<TreeSave>();
         // M5 serialization fix (#29): added beds/stockpiles/walls lists.
@@ -155,6 +164,9 @@ namespace MelonS.GameProto
             {
                 data.wood = ResourceManager.Instance.wood;
                 data.food = ResourceManager.Instance.food;
+                data.stone = ResourceManager.Instance.stone;          // #세이브감사 #2
+                data.meals = ResourceManager.Instance.meals;
+                data.fineMeals = ResourceManager.Instance.fineMeals;
             }
             if (GameClock.Instance != null)
                 data.gameSeconds = GameClock.Instance.GameSeconds;   // #276
@@ -217,6 +229,9 @@ namespace MelonS.GameProto
                     for (int i = 0; i < sch.slots.Length; i++)
                         ps.scheduleSlots[i] = (int)sch.slots[i];
                 }
+                // #세이브감사 #4 — 장비 캡처 (Catalog 인덱스 4칸)
+                var eq = pawn.GetComponent<PawnEquipment>();
+                if (eq != null) ps.equipIdx = eq.CaptureCatalogIndices();
                 data.pawns.Add(ps);
             }
 
