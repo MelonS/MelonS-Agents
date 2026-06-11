@@ -329,8 +329,18 @@ namespace MelonS.GameProto
                 UpdateEntryFill(e);
                 if (e.border != null)
                 {
-                    Color want = (selected != null && e.pawn == selected)
-                        ? MelonS.GameProto.Core.UITheme.AccentGold : BorderCol;
+                    // r2-J (2026-06-12) — 위기 시각화: 의식불명 = 빨강 테두리(개입 필요),
+                    //  정신붕괴 = 보라.  선택 골드가 최우선 (식별 > 상태).
+                    Color want;
+                    var hlt = e.pawn.GetComponent<PawnHealth>();
+                    var nds = e.needs;
+                    if (selected != null && e.pawn == selected)
+                        want = MelonS.GameProto.Core.UITheme.AccentGold;
+                    else if (hlt != null && hlt.IsDowned)
+                        want = new Color(0.90f, 0.30f, 0.25f, 1f);
+                    else if (nds != null && nds.IsBreaking)
+                        want = new Color(0.75f, 0.40f, 0.80f, 1f);
+                    else want = BorderCol;
                     if (e.border.color != want) e.border.color = want;
                 }
             }
