@@ -22,6 +22,7 @@ namespace MelonS.GameProto
         // #130 - 자원 변화 시 텍스트 일시적 노란 flash (운영자가 "값이 안 늘어" 느낌 해소)
         private float woodFlashUntil = -10f;
         private float _nextGroundPoll;    // F4 — 바닥 더미 합계 폴링
+        private int lastFoodForDays = -1, lastPawnForDays = -1;   // r2 #6 stale 가드
         private int _groundWood;
         private float foodFlashUntil = -10f;
         private float mealsFlashUntil = -10f;
@@ -77,19 +78,26 @@ namespace MelonS.GameProto
                     if (p != null && !p.IsDead) n++;
                 cachedPawnCount = n;
             }
-            if (rm.meals != lastMeals || rm.fineMeals != lastFineMeals)
+            // r2 #6 (2026-06-12) — '~N일치' 진실 보정: (a) rm.food/림 수 변화에도 재계산
+            //  (이전엔 meals 변화 게이트 안이라 stale), (b) 소비율 — 림 1명 게임일당 need
+            //  ~130 ÷ 영양위계(raw20/meal40) ≈ 식량단위 9/일.  '3일치'로 읽히던 재고가
+            //  실제 1일치이던 3배 과대평가 해소.
+            if (rm.meals != lastMeals || rm.fineMeals != lastFineMeals
+                || rm.food != lastFoodForDays || cachedPawnCount != lastPawnForDays)
             {
+                lastFoodForDays = rm.food;
+                lastPawnForDays = cachedPawnCount;
                 if (mealsText != null)
                 {
                     // #1.1 — 고급식사 병기 (숙련 요리 산출이 화면에 안 보이던 것).
                     string fine = rm.fineMeals > 0 ? $" +고급{rm.fineMeals:N0}" : "";
-                    // #게임필4 — ≈N일치: 1림 ≈ 하루 식사환산 1개(meal=3, fine=5 food단위).
+                    const float FoodUnitsPerPawnDay = 9f;
                     string days = "";
                     if (cachedPawnCount > 0)
                     {
                         float foodUnits = rm.food + rm.meals * 3f + rm.fineMeals * 5f;
-                        float d = foodUnits / (cachedPawnCount * 3f);
-                        days = d < 10f ? $" (~{d:F0}일치)" : "";
+                        float d = foodUnits / (cachedPawnCount * FoodUnitsPerPawnDay);
+                        days = d < 10f ? $" (~{d:F1}일치)" : "";
                     }
                     mealsText.text = $"식사: {rm.meals:N0}{fine}{days}";
                 }

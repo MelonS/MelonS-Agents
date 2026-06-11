@@ -489,6 +489,7 @@ namespace MelonS.GameProto
                     wgo.AddComponent<PawnHealth>();
                     wgo.AddComponent<PawnWorkSettings>();
                     wgo.AddComponent<PawnUtilityAI>();
+                    PawnEntity.AttachColonistKit(wgo);   // r2 #8 — 시작 림과 동일 세트
                     FloatingText.Spawn(wgo.transform.position + Vector3.up * 0.7f,
                         "방랑자 합류!", new Color(0.6f, 0.9f, 0.6f, 1f));
                     Debug.Log("[AIDirector] wanderer_arrival 실효: 콜로니스트 1명 합류 (북쪽 외곽)");

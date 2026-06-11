@@ -62,6 +62,7 @@ namespace MelonS.GameProto
                     go.AddComponent<PawnHealth>();
                     go.AddComponent<PawnWorkSettings>();
                     go.AddComponent<PawnUtilityAI>();
+                    PawnEntity.AttachColonistKit(go);   // r2 #8 — 시작 림과 동일 세트
                     Debug.Log($"[Capture] 강도 포섭 성공!");
                 }
                 Destroy(gameObject);

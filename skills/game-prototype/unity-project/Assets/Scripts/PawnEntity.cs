@@ -178,6 +178,18 @@ namespace MelonS.GameProto
         private float nextBanditSearchTime = -1f;
         private const float BanditSearchInterval = 0.25f;
 
+        /// <summary>r2 #8 (2026-06-12) — 런타임 합류 림(방랑자/포로)의 콜로니스트 키트.
+        ///  조립 누락으로 건축·채광·수확·치료 영구 불가 + 특성/장비/무드 무사고이던 것 —
+        ///  시작 림과 동일 세트 보장 (있으면 no-op).</summary>
+        public static void AttachColonistKit(GameObject go)
+        {
+            void Ensure<T>() where T : Component { if (go.GetComponent<T>() == null) go.AddComponent<T>(); }
+            Ensure<PawnBuilder>(); Ensure<PawnMiner>(); Ensure<PawnHarvester>();
+            Ensure<PawnDoctor>(); Ensure<PawnSchedule>(); Ensure<PawnTraits>();
+            Ensure<PawnThoughts>(); Ensure<PawnAbilities>(); Ensure<PawnEquipment>();
+            Ensure<PawnNameLabel>(); Ensure<PawnFloatingBars>();
+        }
+
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
