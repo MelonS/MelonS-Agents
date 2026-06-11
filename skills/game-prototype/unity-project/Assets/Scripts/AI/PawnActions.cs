@@ -50,7 +50,7 @@ namespace MelonS.GameProto.AI
             {
                 // #QA플레이 F3 — 빈 침대 없음 힌트: 스케줄 밤잠 림이 바닥에서 자게.
                 ctx.needs.MarkNoBedTonight();
-                Debug.Log($"[GoSleep] {ctx.entity?.PawnName}: 빈 침대 없음 → 바닥 취침 힌트");
+                Debug.Log($"[GoSleep] {ctx.entity?.PawnName}: 빈 침대 없음 → 바닥 취침 힌트 t={Time.time:F1} hour={(GameClock.Instance != null ? GameClock.Instance.Hour : -1)}");
                 return false;  // 침대 없음 → 제자리 취침 fallback
             }
             // 중앙 예약 — 같은 침대로 두 림이 몰리지 않게.

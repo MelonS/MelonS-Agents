@@ -156,18 +156,22 @@ namespace MelonS.GameProto
         //  decision tick(1.5s)마다 찍어줌.  스케줄 밤잠인데 침대가 없으면 림월드처럼
         //  바닥에서 잔다 (이전엔 밤새 배회 — thrash-fix 가 '침대 없으면 계속 일'로만
         //  굴려 침대 1개 콜로니의 나머지 림이 영원히 안 잤다).
-        //  ⚠ 단발 null 에 잠그면 안 된다 — 침대 탐색은 스폰/예약 레이스로 일시 null 이
-        //  날 수 있고(차등 실험: 첫 틱 9회 null 후 정상 발견), 한 번에 바닥취침으로
-        //  잠그면 wake 가드(ScheduledSleepNow)와 맞물려 밤새 침대를 무시한다.
-        //  연속 3틱(≈4.5s) 실패 스트릭일 때만 '진짜 침대 없음'으로 인정.
+        //  ⚠ 단발 null 에 잠그면 안 된다.  F5 클로즈(2026-06-12, 타임스탬프 재현):
+        //  '일시 null'의 정체는 시작 직후 잔여 Sleep 슬롯(아침 hour=6 틱)의 마크가
+        //  밤 스트릭으로 새던 것 — 침대 스폰 전 아침 마크 3개가 23h 진입 즉시 바닥취침을
+        //  잠갔다.  밤/슬롯이 아니면 스트릭을 리셋(세션 단위)하므로 임계 3틱으로 충분.
         private float lastNoBedMark = -999f;
         private int noBedStreak;
-        public void MarkNoBedTonight() { noBedStreak++; lastNoBedMark = Time.time; }
+        //  마크는 실제 밤(IsNightTime)에서만 적립 — 아침 잔여 Sleep 슬롯(hour 6 에지)
+        //  마크가 밤으로 새던 누수의 최종 차단 (시각 재현 t=0.5/2.0/3.5 hour=6).
+        public void MarkNoBedTonight()
+        {
+            if (!IsNightTime()) return;
+            noBedStreak++;
+            lastNoBedMark = Time.time;
+        }
         public void ClearNoBedHint() { noBedStreak = 0; }
-        //  스트릭 6틱(≈9s): 23h 진입 직후 침대 탐색이 ~3틱 일시 실패하는 미지의
-        //  transient 가 있어(차등 실험 — 원인 별도 추적: suggest '침대 탐색 초기 null')
-        //  3틱 임계는 그 transient 에 정확히 걸렸다.
-        public bool NoBedSustained => noBedStreak >= 6 && Time.time - lastNoBedMark < 6f;
+        public bool NoBedSustained => noBedStreak >= 3 && Time.time - lastNoBedMark < 6f;
         private float starvNextTickGs = -1f;
         private float lastStarvText = -99f;
         [SerializeField] private float autoSleepRetryCooldown = 20f;
@@ -254,6 +258,10 @@ namespace MelonS.GameProto
         {
             float dt = Time.deltaTime;
             bool night = IsNightTime();
+
+            // F5 — 바닥취침 스트릭은 '밤 세션' 단위: 밤/Sleep 슬롯이 아니면 리셋
+            //  (아침 마크가 밤으로 새는 누수 차단).
+            if (!(night || ScheduledSleepNow)) noBedStreak = 0;
 
             // 백로그 #5 (2026-06-11) — 수면 자연 치유: 1게임시간(≈41.7스케일초)마다
             //  침대 2 / 바닥 1.  부상 회복이 의사 tend 뿐이라 '다리 5/20 림 영구 불구'
