@@ -46,9 +46,21 @@ namespace MelonS.GameProto.AI
             if (ctx.needs.HasRestOrder) return false;
 
             BedEntity bed = ctx.FindNearestFreeBed();
-            if (bed == null) return false;  // 침대 없음 → 제자리 취침 fallback
+            if (bed == null)
+            {
+                // #QA플레이 F3 — 빈 침대 없음 힌트: 스케줄 밤잠 림이 바닥에서 자게.
+                ctx.needs.MarkNoBedTonight();
+                Debug.Log($"[GoSleep] {ctx.entity?.PawnName}: 빈 침대 없음 → 바닥 취침 힌트");
+                return false;  // 침대 없음 → 제자리 취침 fallback
+            }
             // 중앙 예약 — 같은 침대로 두 림이 몰리지 않게.
-            if (!ReservationManager.TryReserve(bed, ctx.transform.gameObject)) return false;
+            if (!ReservationManager.TryReserve(bed, ctx.transform.gameObject))
+            {
+                Debug.Log($"[GoSleep] {ctx.entity?.PawnName}: 예약 실패 bed@{bed.transform.position}");
+                return false;
+            }
+            ctx.needs.ClearNoBedHint();   // F3 — 침대 확보 = 바닥취침 스트릭 리셋
+            Debug.Log($"[GoSleep] {ctx.entity?.PawnName}: 침대로 출발 @{bed.transform.position}");
 
             ctx.needs.SetAutoSleepTarget(bed);
             // 수면은 침대 "위" 에서 일어난다 (PawnNeeds.GetBedUnderPawn 이 발밑 OverlapBox).

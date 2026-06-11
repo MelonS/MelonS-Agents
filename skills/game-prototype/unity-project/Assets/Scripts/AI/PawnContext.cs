@@ -38,6 +38,7 @@ namespace MelonS.GameProto.AI
             BedEntity best = null;
             float bestSq = float.MaxValue;
             Vector2 me = transform.position;
+
             foreach (var b in arr)
             {
                 if (b == null) continue;

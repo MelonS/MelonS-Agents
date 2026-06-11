@@ -152,6 +152,22 @@ namespace MelonS.GameProto
         //  공복→사망 ~0.22게임일, 만복부터 총 ~1게임일.
         private const float StarvTickGameSec = 4.5f;
         private float nextSleepHealT = -1f;   // 백로그 #5 수면 치유 틱
+        // #QA플레이 F3 (2026-06-11): '빈 침대 없음' 힌트 — GoSleepAction 실패가 매
+        //  decision tick(1.5s)마다 찍어줌.  스케줄 밤잠인데 침대가 없으면 림월드처럼
+        //  바닥에서 잔다 (이전엔 밤새 배회 — thrash-fix 가 '침대 없으면 계속 일'로만
+        //  굴려 침대 1개 콜로니의 나머지 림이 영원히 안 잤다).
+        //  ⚠ 단발 null 에 잠그면 안 된다 — 침대 탐색은 스폰/예약 레이스로 일시 null 이
+        //  날 수 있고(차등 실험: 첫 틱 9회 null 후 정상 발견), 한 번에 바닥취침으로
+        //  잠그면 wake 가드(ScheduledSleepNow)와 맞물려 밤새 침대를 무시한다.
+        //  연속 3틱(≈4.5s) 실패 스트릭일 때만 '진짜 침대 없음'으로 인정.
+        private float lastNoBedMark = -999f;
+        private int noBedStreak;
+        public void MarkNoBedTonight() { noBedStreak++; lastNoBedMark = Time.time; }
+        public void ClearNoBedHint() { noBedStreak = 0; }
+        //  스트릭 6틱(≈9s): 23h 진입 직후 침대 탐색이 ~3틱 일시 실패하는 미지의
+        //  transient 가 있어(차등 실험 — 원인 별도 추적: suggest '침대 탐색 초기 null')
+        //  3틱 임계는 그 transient 에 정확히 걸렸다.
+        public bool NoBedSustained => noBedStreak >= 6 && Time.time - lastNoBedMark < 6f;
         private float starvNextTickGs = -1f;
         private float lastStarvText = -99f;
         [SerializeField] private float autoSleepRetryCooldown = 20f;
@@ -416,7 +432,8 @@ namespace MelonS.GameProto
             //  (9ecfaab robust fallback — 림이 멀뚱히 서서 sleep 만 까먹지 않게).
             else if (sleep < ExhaustedSleepLevel
                      || (night && sleep < autoSleepThreshold && Time.time < autoSleepSuppressUntil)
-                     || (night && sleep < inPlaceSleepThreshold))
+                     || (night && sleep < inPlaceSleepThreshold)
+                     || (night && ScheduledSleepNow && NoBedSustained))
             {
                 IsSleeping = true;
                 var bed = GetBedUnderPawn();
