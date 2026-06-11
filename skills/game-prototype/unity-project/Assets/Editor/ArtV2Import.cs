@@ -19,7 +19,8 @@ namespace MelonS.GameProto.EditorTools
             //  ((srcW>=64)?32:16)이 32px 단일 타일에 PPU 16 을 주는 것을 폴더/접두로 차단.
             bool v2 = p.Contains("/Sprites/tile32_") || p.Contains("/Sprites/flora32_")
                    || p.Contains("/Sprites/struct32_") || p.Contains("/Resources/struct32/")
-                   || p.Contains("/Resources/items32/") || p.Contains("/Resources/animals32/");
+                   || p.Contains("/Resources/items32/") || p.Contains("/Resources/animals32/")
+                   || p.Contains("/Resources/pawn32tool/");
             if (!pawn && !v2) return;
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;

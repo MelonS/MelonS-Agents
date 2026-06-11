@@ -39,6 +39,9 @@ namespace MelonS.GameProto
         private PawnHarvester harvester;
 
         private Sprite[,] frames;
+        // 도구 합성 작업 프레임 캐시 — key: "{face}_{frame}_{tool}" (없으면 null=폴백)
+        private static readonly Dictionary<string, Sprite> toolCache = new Dictionary<string, Sprite>();
+        private int variantIdx;
         private int row = ROW_S;
         private bool flip;                    // W = E 프레임 flip (E 원화는 좌향)
         private float walkClock;
@@ -70,6 +73,7 @@ namespace MelonS.GameProto
                 variant = Mathf.Abs(entity.PawnName.GetHashCode()) % 8;
 
             frames = LoadSheet(variant);
+            variantIdx = variant;
             if (frames == null) { enabled = false; return; }   // v2 자산 없음 → 기존 외형
 
             // 가시 자식 + facing 인계.
@@ -109,6 +113,16 @@ namespace MelonS.GameProto
             return grid;
         }
 
+        private static Sprite LoadToolFrame(int variant, int rowIdx, int workNo, string tool)
+        {
+            string face = rowIdx == ROW_S ? "S" : rowIdx == ROW_E ? "E" : "N";
+            string key = $"pawn32_v{variant}_{face}_work{workNo}_{tool}";
+            if (toolCache.TryGetValue(key, out var hit)) return hit;
+            var spr = Resources.Load<Sprite>($"pawn32tool/{key}");
+            toolCache[key] = spr;   // null 도 캐시 (반복 Load 방지)
+            return spr;
+        }
+
         private void LateUpdate()
         {
             if (frames == null || rootSr == null) return;
@@ -146,6 +160,20 @@ namespace MelonS.GameProto
             {
                 // 작업 스윙 2프레임 @ 2.5Hz — 도끼질/곡괭이질 리듬.
                 col = COL_WORK0 + ((int)(Time.time * 2.5f) & 1);
+                // 아트 v2 후속 (2026-06-12) — 손에 도구가 보인다: 벌목=도끼, 채광=곡괭이.
+                //  합성 프레임(Resources/pawn32tool)이 있으면 그걸로 교체, 없으면 맨손 폴백.
+                string tool = (chopper != null && chopper.HasTask) ? "axe"
+                            : (miner != null && miner.HasTask) ? "pick" : null;
+                if (tool != null)
+                {
+                    var ts = LoadToolFrame(variantIdx, row, col - COL_WORK0 + 1, tool);
+                    if (ts != null)
+                    {
+                        rootSr.sprite = ts;
+                        if (childSr != null) childSr.flipX = row == ROW_E && flip;
+                        return;
+                    }
+                }
             }
             else
             {
