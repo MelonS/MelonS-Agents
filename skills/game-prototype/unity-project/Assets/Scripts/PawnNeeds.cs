@@ -44,7 +44,11 @@ namespace MelonS.GameProto
         [SerializeField] private float moodDecay = 0.048f;  // #234 the reference sim 시계 비례 축소
 
         [Header("Day 9+: sleep regen when sleeping at night")]
-        [SerializeField] private float sleepRegenAtNight = 8f;
+        // 백로그 #8 (2026-06-11): 회복 8/s = 밤잠이 하루의 ~10초 → 수면이 시간 비용이
+        //  아니었다.  3/s 로 — 침대 RestMul(0.8/1.0/1.4)이 처음으로 노동시간 경제에
+        //  닿는다.  씬에 8 이 직렬화 → Awake clamp (#QR지면 교훈).
+        [SerializeField] private float sleepRegenAtNight = 3f;
+        private const float MaxSleepRegen = 3f;
 
         [Header("Day 11: eat-from-stockpile")]
         // #202 SURVIVAL-LOOP FIX — eat at 50 (was 40).  With the harvest loop now
@@ -147,6 +151,7 @@ namespace MelonS.GameProto
         //  4.5스케일초/3dmg: 부위 랜덤 분산 + TotalHpRatio(부위 평균) 둔감성 기준
         //  공복→사망 ~0.22게임일, 만복부터 총 ~1게임일.
         private const float StarvTickGameSec = 4.5f;
+        private float nextSleepHealT = -1f;   // 백로그 #5 수면 치유 틱
         private float starvNextTickGs = -1f;
         private float lastStarvText = -99f;
         [SerializeField] private float autoSleepRetryCooldown = 20f;
@@ -219,6 +224,7 @@ namespace MelonS.GameProto
         {
             movement = GetComponent<PawnMovement>();
             pawnEntity = GetComponent<PawnEntity>();
+            if (sleepRegenAtNight > MaxSleepRegen) sleepRegenAtNight = MaxSleepRegen;  // 백로그 #8 직렬화 무력화
             schedule = GetComponent<PawnSchedule>();
         }
 
@@ -232,6 +238,21 @@ namespace MelonS.GameProto
         {
             float dt = Time.deltaTime;
             bool night = IsNightTime();
+
+            // 백로그 #5 (2026-06-11) — 수면 자연 치유: 1게임시간(≈41.7스케일초)마다
+            //  침대 2 / 바닥 1.  부상 회복이 의사 tend 뿐이라 '다리 5/20 림 영구 불구'
+            //  였던 것 — 침대의 회복 가치가 처음으로 생긴다 (HealAll 재사용).
+            if (IsSleeping)
+            {
+                if (nextSleepHealT < 0f) nextSleepHealT = Time.time + 41.7f;
+                else if (Time.time >= nextSleepHealT)
+                {
+                    nextSleepHealT = Time.time + 41.7f;
+                    var hh = GetComponent<PawnHealth>();
+                    if (hh != null) hh.HealAll(GetBedUnderPawn() != null ? 2 : 1);
+                }
+            }
+            else nextSleepHealT = -1f;
 
             // #164 - PawnTraits.moodBaselineBonus 시작 시 mood 에 1회 가산.
             //  Awake 가 traits 보다 먼저 fire 될 수 있어 Update 첫 frame 에서 적용.

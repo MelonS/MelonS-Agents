@@ -66,6 +66,9 @@ namespace MelonS.GameProto
                 e.xp -= XPToLevel(e.level + 1);
                 e.level++;
                 OnLevelUp?.Invoke(k, e.level);
+                // 백로그 #7 — 레벨업이 보인다 (OnLevelUp 구독자 0 이던 것의 최소 배선).
+                FloatingText.Spawn(transform.position + UnityEngine.Vector3.up * 0.7f,
+                    $"{KindKr(k)} Lv{e.level}!", new UnityEngine.Color(0.55f, 0.85f, 1f, 1f));
             }
         }
 
@@ -75,7 +78,18 @@ namespace MelonS.GameProto
             //  Was 100*L^1.5 → L0→1 = 100 XP (~10x too cheap, pawns blew through
             //  low levels in seconds).  Base 100→1000 keeps the curve shape but
             //  makes early progression earned.  L0→1 = 1000, L1→2 = 2828, L4→5 = 11180.
-            return 1000f * Mathf.Pow(level, 1.5f);
+            // 게임루프 백로그 #7 (2026-06-11): 1000 커브는 L8→9 건축 90분 연속 = 한
+            //  세션 레벨업 0회 — 성장이 결정에 닿지 않았다.  200 = 1세션 1~2렙 목표.
+            return 200f * Mathf.Pow(level, 1.5f);
         }
+
+        private static string KindKr(SkillKind k) => k switch
+        {
+            SkillKind.Gather => "채집",
+            SkillKind.Chop   => "벌목",
+            SkillKind.Build  => "건축",
+            SkillKind.Combat => "전투",
+            _ => k.ToString(),
+        };
     }
 }

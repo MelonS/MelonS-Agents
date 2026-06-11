@@ -181,7 +181,10 @@ namespace MelonS.GameProto
 
             // MoveSpeedScale 단일 출처: 작업/필요 활동 중 = 1.0, 떠도는중(idle) = 0.5.
             //  매 프레임 계산해 decision 윈도우 밖에서도 작업 이동이 0.5 로 끼이지 않게 한다.
-            if (movement != null) movement.MoveSpeedScale = HasRealActivity() ? 1f : 0.5f;
+            // 백로그 #8 (2026-06-11): 저수면(<25)이면 휘청거린다 — 수면이 처음으로
+            //  '실패 가능한' 수치가 된다 (페널티 훅 0개였음).
+            float drowsy = (needs != null && needs.sleep < 25f) ? 0.5f : 1f;
+            if (movement != null) movement.MoveSpeedScale = (HasRealActivity() ? 1f : 0.5f) * drowsy;
 
             // 자율 취침 예약 해제: 기상/취소(PawnNeeds 가 autoRestTarget 을 비움)나
             //  사용자 우클릭 휴식 명령이 끼어든 경우, 잡고 있던 침대 예약을 푼다.
