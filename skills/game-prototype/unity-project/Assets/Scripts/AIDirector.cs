@@ -235,7 +235,7 @@ namespace MelonS.GameProto
             //  위협 불변 = 발전이 취향이 되던 평탄화 해소.  상한을 '생존 림 수 - 1' 과
             //  기존 cap 중 큰 쪽으로 — 3림 기본은 현행 동일(5/31 wipe 재발 없음).
             int aliveColonists = 0;
-            foreach (var pp in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+            foreach (var pp in UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
                 if (pp != null && !pp.IsDead) aliveColonists++;
             int dynamicCap = Mathf.Max(Mathf.Max(1, MaxConcurrentGroups), aliveColonists - 1);
             int banditCount = Mathf.Clamp(
