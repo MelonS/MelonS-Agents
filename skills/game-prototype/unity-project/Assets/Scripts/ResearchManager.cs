@@ -78,6 +78,10 @@ namespace MelonS.GameProto
             //  이미 meal +10 / fine +20 으로 별도 동작) 거짓 표기였음 → #200 활 설명 정정과
             //  동일하게, 실제 효과(조리 2배)만 적도록 설명을 진실에 맞춘다.
             techs.Add(new Tech("better_stove",   "개선된 화덕",   "조리 속도 2배.",                     120));
+            // 게임루프 발전 아크 (2026-06-12) — 220pt 에서 끝나던 연구 사다리 연장.
+            //  실효 배선: masonry → PawnMiner 채광 1.3x, irrigation → CropEntity 성장 1.4x.
+            techs.Add(new Tech("masonry",        "석공술",        "채광 속도 +30%.",                    180));
+            techs.Add(new Tech("irrigation",     "관개",          "작물 성장 +40%.",                    240));
             // #범위정합 / #spec-faithful: 전기·태양광에 이어 stone_walls(석재 벽) tech 도 제거.
             //  (1) dead tech — IsUnlocked("stone_walls") 를 소비하는 코드가 전혀 없어 연구해도
             //      아무 변화가 없었고, 설명("HP 200")조차 실제 석재 벽(HP 280)과 불일치한 거짓.

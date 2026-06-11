@@ -103,7 +103,10 @@ namespace MelonS.GameProto
                 bool daylight = (t > 0.25f && t < 0.83f);
                 if (!daylight) return;
             }
-            growth = Mathf.Clamp01(growth + growthPerSecond * Time.deltaTime);
+            // 발전 아크 — 관개 연구 시 성장 +40%.
+            float gmul = (ResearchManager.Instance != null
+                          && ResearchManager.Instance.IsUnlocked("irrigation")) ? 1.4f : 1f;
+            growth = Mathf.Clamp01(growth + growthPerSecond * gmul * Time.deltaTime);
             RefreshVisual();
         }
 

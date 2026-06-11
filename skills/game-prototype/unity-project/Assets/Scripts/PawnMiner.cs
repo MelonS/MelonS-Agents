@@ -110,6 +110,9 @@ namespace MelonS.GameProto
                 // #177 - Chop skill level 재활용 (Mining 별도 skill 없음, +4%/lvl)
                 var skills = GetComponent<PawnSkills>();
                 if (skills != null) mul *= 1f + skills.GetLevel(SkillKind.Chop) * 0.04f;
+                // 발전 아크 — 석공술 연구 시 채광 +30% (IsUnlocked 소비 = 산 테크).
+                if (ResearchManager.Instance != null && ResearchManager.Instance.IsUnlocked("masonry"))
+                    mul *= 1.3f;
                 bool done = targetVein.TakeMineDamage(mineDamagePerSec * Time.deltaTime * mul);
                 if (skills != null) skills.AddXP(SkillKind.Chop, mineDamagePerSec * Time.deltaTime * 0.5f);
                 if (done) ClearTask();

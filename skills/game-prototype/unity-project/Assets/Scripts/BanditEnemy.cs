@@ -270,6 +270,15 @@ namespace MelonS.GameProto
             if (Hp <= 0)
             {
                 Debug.Log($"[BanditEnemy] killed by {(source != null ? source.name : "?")}");
+                // RPG 차순위 (2026-06-12) — 호전적 특성: 적 처치 시 무드 +5 (카탈로그
+                //  주석의 'kill mood +5' 실배선).  특성 없으면 무효과.
+                if (source != null)
+                {
+                    var tr = source.GetComponent<PawnTraits>();
+                    var th = source.GetComponent<PawnThoughts>();
+                    if (tr != null && th != null && tr.ActiveTraits.Contains(PawnTraits.Trait.Bloodthirsty))
+                        th.AddThought("전투의 희열", +5f, 600f);
+                }
                 Destroy(gameObject);
             }
         }
