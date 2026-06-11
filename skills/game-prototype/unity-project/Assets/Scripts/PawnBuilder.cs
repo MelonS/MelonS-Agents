@@ -209,6 +209,9 @@ namespace MelonS.GameProto
                 // #164 - PawnTraits workSpeedMul (Industrious 1.30x / Lazy 0.75x)
                 var traits = GetComponent<PawnTraits>();
                 if (traits != null) mul *= traits.workSpeedMul;
+                // 게임루프 차순위 (2026-06-12) — 팔 부상 → 작업속도 (죽은 프로퍼티 배선).
+                var hlt = GetComponent<PawnHealth>();
+                if (hlt != null) mul *= hlt.WorkSpeedMultiplier();
                 // #177 - Build skill level (+4%/lvl, lvl 10 = +40%)
                 var skills = GetComponent<PawnSkills>();
                 if (skills != null) mul *= 1f + skills.GetLevel(SkillKind.Build) * 0.04f;
@@ -270,6 +273,9 @@ namespace MelonS.GameProto
                 float mul = abil != null ? abil.constructionMul * abil.manipulation : 1f;
                 var traits = GetComponent<PawnTraits>();
                 if (traits != null) mul *= traits.workSpeedMul;
+                // 게임루프 차순위 (2026-06-12) — 팔 부상 → 작업속도 (죽은 프로퍼티 배선).
+                var hlt = GetComponent<PawnHealth>();
+                if (hlt != null) mul *= hlt.WorkSpeedMultiplier();
                 var skills = GetComponent<PawnSkills>();
                 if (skills != null) mul *= 1f + skills.GetLevel(SkillKind.Build) * 0.04f;
 

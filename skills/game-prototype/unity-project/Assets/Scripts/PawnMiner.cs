@@ -104,6 +104,9 @@ namespace MelonS.GameProto
                 // #164 - PawnTraits workSpeedMul 적용
                 var traits = GetComponent<PawnTraits>();
                 if (traits != null) mul *= traits.workSpeedMul;
+                // 게임루프 차순위 (2026-06-12) — 팔 부상 → 작업속도 (죽은 프로퍼티 배선).
+                var hlt = GetComponent<PawnHealth>();
+                if (hlt != null) mul *= hlt.WorkSpeedMultiplier();
                 // #177 - Chop skill level 재활용 (Mining 별도 skill 없음, +4%/lvl)
                 var skills = GetComponent<PawnSkills>();
                 if (skills != null) mul *= 1f + skills.GetLevel(SkillKind.Chop) * 0.04f;

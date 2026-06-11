@@ -105,6 +105,8 @@ namespace MelonS.GameProto
                 var abil = GetComponent<PawnAbilities>();
                 var skills = GetComponent<PawnSkills>();
                 float traitMul = traits != null ? traits.workSpeedMul : 1f;
+                var hlt = GetComponent<PawnHealth>();                       // 팔 부상 → 작업속도
+                if (hlt != null) traitMul *= hlt.WorkSpeedMultiplier();
                 float abilMul = abil != null ? abil.plantsMul * abil.manipulation : 1f;
                 float skillMul = skills != null ? 1f + skills.GetLevel(SkillKind.Gather) * 0.04f : 1f;
                 float effectiveInterval = gatherInterval / Mathf.Max(0.1f, traitMul * abilMul * skillMul);

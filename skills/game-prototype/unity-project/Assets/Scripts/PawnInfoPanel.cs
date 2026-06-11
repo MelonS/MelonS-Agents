@@ -363,6 +363,19 @@ namespace MelonS.GameProto
             EnsureEmptyState();
             EnsureTabs();
             EnsureEntityBody();
+            // #QA플레이 F2 (2026-06-12) — 건축 패널(좌하단 252px)과 같은 코너 겹침:
+            //  건축 메뉴가 열려 있으면 인포패널을 그 오른쪽으로 시프트.
+            if (panelBg != null)
+            {
+                var prt0 = panelBg.GetComponent<RectTransform>();
+                var am = ArchitectMenu.Instance;
+                if (prt0 != null)
+                {
+                    float wantX = (am != null && am.IsOpen) ? 272f : 12f;
+                    if (!Mathf.Approximately(prt0.anchoredPosition.x, wantX))
+                        prt0.anchoredPosition = new Vector2(wantX, prt0.anchoredPosition.y);
+                }
+            }
             if (selector == null)
             {
                 Debug.LogWarning("[PawnInfoPanel] no selector");

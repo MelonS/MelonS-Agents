@@ -1,5 +1,5 @@
 {
-  "name": "P0 생존 압박 — 굶주림은 죽음에 이르러야 한다 (운영자 2026-06-11 '가만히 냅둬도 게임오버가 되지 않음'. 진범 2중: ① 아사 데미지 자체가 부재 ② 1차 구현은 TakeDamage 경유라 방어구 0.5가 라운딩으로 '막음' 처리 → TakeTrueDamage(방어구 무시) + GameClock 기준 500게임초당 2dmg. PawnEntity.Hp 는 부위 비율 합산(둔감)이라 임계 26)",
+  "name": "P0 생존 압박 — 굶주림은 죽음에 이르러야 한다 (운영자 2026-06-11 '가만히 냅둬도 게임오버가 되지 않음'. 진범 2중: ① 아사 데미지 자체가 부재 ② 1차 구현은 TakeDamage 경유라 방어구 0.5가 라운딩으로 '막음' 처리 → TakeTrueDamage(방어구 무시) + GameClock 기준 500게임초당 2dmg. PawnEntity.Hp 는 부위 비율 합산(둔감)이라 임계 28 — 부위 랜덤 분산으로 Hp 환산이 런마다 ±2 출렁(플레이키 적발), 사망 E2E 는 soak-neglect-2026-06-11 이 증명)",
   "timeoutSec": 90,
   "steps": [
     {
@@ -23,7 +23,7 @@
       "op": "assert",
       "probe": "pawnHpBelow",
       "pawn": "서연",
-      "min": 26,
+      "min": 28,
       "withinSec": 70
     },
     {

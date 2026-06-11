@@ -21,6 +21,8 @@ namespace MelonS.GameProto
         private RectTransform panelContent;   // #UI-restyle U7 — inner content RT (inside border+fill)
         private Font font;
         private bool isOpen = false;
+        /// <summary>F2 패널 겹침 — PawnInfoPanel 이 시프트 판단에 읽는다.</summary>
+        public bool IsOpen => isOpen;
         private GameObject contentRoot;
         private GameObject shelfRoot;          // #림월드파리티 — 우측 아이콘 셸프
         private string activeCategory = "";
