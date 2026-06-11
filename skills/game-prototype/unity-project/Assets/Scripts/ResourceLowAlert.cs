@@ -69,8 +69,14 @@ namespace MelonS.GameProto
                 {
                     string msg = null;
                     int totalFood = rm.food + rm.meals * 3 + rm.fineMeals * 5;
+                    // r2-J (2026-06-12) — 식량 임계 인구 연동: 고정 5 는 3림 기준 반나절치도
+                    //  안 돼 경보가 너무 늦었다 (소비 ~9유닛/림·일).  림 수 x 4.5 = 반일치.
+                    int alive = 0;
+                    foreach (var pe in UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                        if (pe != null && !pe.IsDead) alive++;
+                    int foodFloor = Mathf.Max(5, Mathf.RoundToInt(alive * 4.5f));
                     if (rm.wood < 5) msg = "⚠ 목재 부족 (벌목 필요)";
-                    else if (totalFood < 5) msg = "⚠ 식량 부족 (사냥/채집 필요)";
+                    else if (totalFood < foodFloor) msg = $"⚠ 식량 부족 — 반나절치 미만 (사냥/채집/요리)";
 
                     if (msg != null)
                     {
