@@ -28,10 +28,13 @@ namespace MelonS.GameProto
         // 종별 spec (HP, woodDrop, scale, tint)
         // 운영자 2026-06-02: 종별 스프라이트 추가(소나무만 → 자작·참나무).  sprite 가 색을
         //  가지므로 tint 는 흰색(런타임 HP-darken 의 base).  scale 로 크기 다양성 유지.
+        // 운영자 피드백 #3 (2026-06-12 AM): 채집량 레퍼런스 동일 — 나무 1그루 ~25
+        //  (Pine 20 / Birch 25 / Oak 30).  비용도 같은 라운드에서 파리티(문 25/침대 45
+        //  /고급 100/화덕 80/연구대 75) — '나무 1그루 = 벽 4~6개' 비율이 핵심.
         public static readonly (float hp, int yield, float scale, Color tint)[] SpeciesStats = {
-            (80f,  4, 0.95f, new Color(1f, 1f, 1f, 1f)),   // Pine  - 빠름 작음
-            (100f, 5, 1.00f, new Color(1f, 1f, 1f, 1f)),   // Birch - 중간
-            (150f, 7, 1.10f, new Color(1f, 1f, 1f, 1f)),   // Oak   - 단단 큼
+            (80f,  20, 0.95f, new Color(1f, 1f, 1f, 1f)),   // Pine  - 빠름 작음
+            (100f, 25, 1.00f, new Color(1f, 1f, 1f, 1f)),   // Birch - 중간
+            (150f, 30, 1.10f, new Color(1f, 1f, 1f, 1f)),   // Oak   - 단단 큼
         };
 
         // 종별 스프라이트 [Pine,Birch,Oak] — SceneSetup(SpawnTrees)이 로딩 후 주입.

@@ -164,7 +164,7 @@ namespace MelonS.GameProto
             ["Structure (구조)"] = new[] {
                 (BuildManager.Mode.Wall,      "벽 (목재 5)",   5),
                 (BuildManager.Mode.WallStone, "벽 (석재 5)",   5),  // #127
-                (BuildManager.Mode.Door,      "문 (목재 3)",   3),
+                (BuildManager.Mode.Door,      "문 (목재 25)",  25),
                 // W-M6-04 (B5) — autodoor, the Door-tab variety row (vanilla
                 //   the reference sim Door tab has plain door + autodoor).  An autodoor is
                 //   the SAME DoorEntity built with a HIGHER passMul (≈0.95 vs the
@@ -225,18 +225,18 @@ namespace MelonS.GameProto
             ["Furniture (가구)"] = new[] {
                 // #154 - wiki: sleeping spot 0.8x / wood bed 1.0x / fine 1.4x
                 (BuildManager.Mode.BedSleepingSpot, "수면 자리 (자재 X)",     0),
-                (BuildManager.Mode.Bed,             "목재 침대 (목재 8)",     8),
-                (BuildManager.Mode.BedFine,         "고급 침대 (목재 30)",   30),
+                (BuildManager.Mode.Bed,             "목재 침대 (목재 45)",   45),
+                (BuildManager.Mode.BedFine,         "고급 침대 (목재 100)", 100),
                 // W-M4-06 (#20) — table+chair eat/rec spot (hotkey J, 목재 6).
                 //   Flagged by Lane A for QA wiring: Mode.TableChair routes through
                 //   the existing SetMode/Close onClick plumbing with ZERO further change.
-                (BuildManager.Mode.TableChair,      "탁자+의자 (목재 6)",     6),
+                (BuildManager.Mode.TableChair,      "탁자+의자 (목재 40)",   40),
             },
             ["Production (생산)"] = new[] {
-                (BuildManager.Mode.Stove, "화덕 (목재 10)", 10),
+                (BuildManager.Mode.Stove, "화덕 (목재 80)", 80),
                 // #229 회귀 수리 — 맨땅 시작 전환 때 스타터 연구대만 제거되고 빌드
                 //  경로가 없어 연구 축(테크 트리 전체)이 신규 게임에서 죽어 있었다.
-                (BuildManager.Mode.ResearchBench, "연구대 (목재 15)", 15),
+                (BuildManager.Mode.ResearchBench, "연구대 (목재 75)", 75),
             },
             // W-M4-05 (#42) — surface the W-M4-04 Lamp buildable in the Architect
             //   catalogue (was L-hotkey-only, per qa.json flags_for_next_wave #42).

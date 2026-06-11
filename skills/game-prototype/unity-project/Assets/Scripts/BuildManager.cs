@@ -67,7 +67,9 @@ namespace MelonS.GameProto
         public Sprite BedSpriteRef => bedSprite;
         public GameObject WallPrefabRef => wallPrefab;
         public GameObject BedPrefabRef => bedPrefab;
-        [SerializeField] private int wallCost = 5, floorCost = 1, doorCost = 3, stoveCost = 10, bedCost = 8;
+        // 운영자 피드백 #3 (2026-06-12 AM): 목재 소모량 레퍼런스 동일 — 문 25/침대 45/
+        //  화덕 80 (벽 5·바닥 1 은 기존 동일).  채집량(나무 ~25/그루)과 같은 라운드 파리티.
+        [SerializeField] private int wallCost = 5, floorCost = 1, doorCost = 25, stoveCost = 80, bedCost = 45;
         [SerializeField] private int wallStoneCost = 5;  // #127 - 석재 5
         // W-M4-04 (#19) - Lamp cost.  the reference sim torch ≈ 1 wood, standing lamp needs
         //   power; this prototype lamp is a cheap always-on light at 목재 4.
@@ -77,7 +79,7 @@ namespace MelonS.GameProto
         //  힌트 "작업대 필요 (건축 F8)"가 거짓말 — 건축 메뉴에 연구대 없음).  Lamp 의
         //  Ensure* 런타임 템플릿 패턴 복제: SetRefs/씬 재생성 없이 buildable 추가.
         //  비용 15 = 화덕(10)과 고급침대(30) 사이, 테크 트리 관문이라 접근 가능하게.
-        [SerializeField] private int benchCost = 15;
+        [SerializeField] private int benchCost = 75;   // #3 파리티 — 연구대
         // W-M4-04 (#19) - Lamp prefab + sprite.  Normally wired via SetRefs from
         //   SceneSetup like the others; but the Lane A contract forbids a
         //   SceneSetup edit, so these stay null and BuildManager builds them
@@ -102,7 +104,7 @@ namespace MelonS.GameProto
         // W-M4-06 (#20) - Table+chair cost.  A simple wood dining spot; the reference sim
         //   table ≈ 25 wood + stool ≈ small — 목재 6 keeps it cheap/reachable in
         //   the prototype while clearly costing more than a lamp (4).
-        [SerializeField] private int tableChairCost = 6;
+        [SerializeField] private int tableChairCost = 40;   // #3 파리티 — 식탁+의자
         // W-M4-06 (#20) - Table+chair prefab + sprite, built LAZILY + PROCEDURALLY
         //   exactly like the Lamp / StoneFloor entries (the Lane A contract forbids
         //   a SceneSetup edit, so these stay null and BuildManager self-builds them
@@ -161,7 +163,7 @@ namespace MelonS.GameProto
         // #154 - bed quality 별 cost (wiki: sleeping spot 0 / wood bed 8 / fine 30).
         //  Fine 은 wiki 가 비싸지만 (60+) 프로토타입에선 30 으로 낮춰 reachable.
         [SerializeField] private int bedSleepingSpotCost = 0;
-        [SerializeField] private int bedFineCost = 30;
+        [SerializeField] private int bedFineCost = 100;   // #3 파리티 — 로얄급
         [SerializeField] private SpriteRenderer ghostRenderer;
         [SerializeField] private Sprite wallSprite, floorSprite, doorSprite, stoveSprite, bedSprite;
 
@@ -311,8 +313,8 @@ namespace MelonS.GameProto
             Mode.Door  => doorSprite,
             Mode.Stove => stoveSprite,
             Mode.Bed   => bedSprite,
-            Mode.BedSleepingSpot => bedSprite,
-            Mode.BedFine => bedSprite,
+            Mode.BedSleepingSpot => EnsureBedVariantSprite(Mode.BedSleepingSpot),   // #6
+            Mode.BedFine => EnsureBedVariantSprite(Mode.BedFine),                   // #6
             Mode.Lamp  => EnsureLampSprite(),
             // #ui백로그 4.4 — WallStone 케이스 부재로 목재 벽 폴백 → '회색 틴트 목재
             //  스프라이트' 머디브라운 회귀 (#255 가 경로 바꾸며 재발).  회색 석재로.
@@ -385,6 +387,17 @@ namespace MelonS.GameProto
                     Mode.BedFine         => BedQuality.Fine,
                     _                    => BedQuality.Wood,
                 });
+                // 운영자 피드백 #6 — 완성품도 등급별 전용 시트 (한 시트 공유라 혼동되던 것).
+                var bsr = spawned.GetComponent<SpriteRenderer>();
+                var vSpr = EnsureBedVariantSprite(mode);
+                if (bsr != null && vSpr != null)
+                {
+                    bsr.sprite = vSpr;
+                    Vector2 sw2 = vSpr.bounds.size;
+                    Vector2Int fp2 = SizeFor(mode);
+                    if (sw2.x > 0.01f && sw2.y > 0.01f)
+                        spawned.transform.localScale = new Vector3(fp2.x / sw2.x, fp2.y / sw2.y, 1f);
+                }
             }
             var tag = spawned.GetComponent<StructureTag>();
             if (tag == null) tag = spawned.AddComponent<StructureTag>();
@@ -693,8 +706,8 @@ namespace MelonS.GameProto
             Mode.Door  => doorSprite,
             Mode.Stove => stoveSprite,
             Mode.Bed   => bedSprite,
-            Mode.BedSleepingSpot => bedSprite,
-            Mode.BedFine         => bedSprite,
+            Mode.BedSleepingSpot => EnsureBedVariantSprite(Mode.BedSleepingSpot),   // #6
+            Mode.BedFine         => EnsureBedVariantSprite(Mode.BedFine),           // #6
             Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
             Mode.WallStone => EnsureFloorStoneSprite(),   // #4.4 — 고스트/청사진도 회색
             Mode.FloorStone => EnsureFloorStoneSprite(),  // W-M4-05 #21
@@ -744,6 +757,36 @@ namespace MelonS.GameProto
         //  실시트(struct32_research_bench.png), 플레이어 빌드에선 Resources/struct32
         //  사본 폴백.  ResearchManager 가 1s 캐시로 신규 벤치를 자동 인지하므로
         //  배치 즉시 "연구자 없음 (작업대 근처 림)" → 림 접근 시 연구 진행.
+        // 운영자 피드백 #6 (2026-06-12 AM) — 수면자리/목재/고급 침대가 한 스프라이트
+        //  공유라 헷갈림.  모드별 전용 시트 (에디터 AssetDatabase / 플레이어 Resources 폴백).
+        private Sprite _bedSpotSprite, _bedFineSprite;
+        private Sprite EnsureBedVariantSprite(Mode m)
+        {
+            if (m == Mode.BedSleepingSpot)
+            {
+                if (_bedSpotSprite == null)
+                {
+#if UNITY_EDITOR
+                    _bedSpotSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_bed_spot.png");
+#endif
+                    if (_bedSpotSprite == null) _bedSpotSprite = Resources.Load<Sprite>("struct32/struct32_bed_spot");
+                }
+                return _bedSpotSprite != null ? _bedSpotSprite : bedSprite;
+            }
+            if (m == Mode.BedFine)
+            {
+                if (_bedFineSprite == null)
+                {
+#if UNITY_EDITOR
+                    _bedFineSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_bed_fine.png");
+#endif
+                    if (_bedFineSprite == null) _bedFineSprite = Resources.Load<Sprite>("struct32/struct32_bed_fine");
+                }
+                return _bedFineSprite != null ? _bedFineSprite : bedSprite;
+            }
+            return bedSprite;
+        }
+
         private GameObject _benchPrefabRuntime;
         private Sprite _benchSpriteRuntime;
 
