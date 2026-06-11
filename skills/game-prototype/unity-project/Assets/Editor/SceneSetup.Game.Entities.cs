@@ -182,7 +182,10 @@ namespace MelonS.GameProto.EditorTools
         /// <summary>#119 - 광맥 (StoneVeinEntity) cluster 배치.  rock terrain 근처 우선.</summary>
         private static void SpawnStoneVeins(TerrainLayout layout, System.Collections.Generic.List<Vector2> treePositions)
         {
-            Sprite veinSpr = LoadOrSetupSprite("Assets/Sprites/stone_vein.png");
+            // 아트 v2 (운영자 2026-06-12 "바위도 이상해") — 16px '검은 액자' 광맥 →
+            //  32px 신작 (struct32_ 프리픽스라 ArtV2Import 가 PPU32 자동 강제).
+            Sprite veinSpr = LoadOrSetupSprite("Assets/Sprites/struct32_stone_vein.png");
+            if (veinSpr == null) veinSpr = LoadOrSetupSprite("Assets/Sprites/stone_vein.png");  // 폴백
             if (veinSpr == null) { Debug.LogWarning("[StoneVein] sprite null"); return; }
 
             int half = TerrainLayout.MAP_HALF;
