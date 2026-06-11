@@ -675,6 +675,9 @@ namespace MelonS.GameProto
             return true;
         }
 
+        /// <summary>ModeBanner 용 — 현재 건설 모드 한글명.</summary>
+        public string CurrentModeKr() => ModeKr(CurrentMode);
+
         private static string ModeKr(Mode m) => m switch
         {
             Mode.Wall            => "벽(목재)",
