@@ -538,9 +538,19 @@ namespace MelonS.GameProto
                 FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
                                    "정신붕괴!", new Color(0.85f, 0.45f, 0.85f, 1f));
             }
-            else if (isBreaking && Time.time > breakUntil && mood > moodBreakRecoverAt)
+            else if (isBreaking && Time.time > breakUntil)
             {
+                // 카타르시스 복귀 (2026-06-12, grader 4차 W-1) — 이전 조건은 '시간 만료
+                //  AND mood>35'라 침대 없는 콜로니는 mood 가 35 를 영영 못 넘어 영구
+                //  붕괴(마지막 1게임일 콜로니 전체 노동 정지)였다.  레퍼런스 멘탈
+                //  브레이크는 시간 만료로 끝나고 카타르시스 무드 보너스가 붙는다 —
+                //  복귀 시 mood 를 recoverAt+10 까지 회복시켜 즉시 재붕괴 루프를 차단.
+                //  붕괴 자체의 비용(지속 시간 동안 노동 정지·배회)은 그대로다.
                 isBreaking = false;
+                mood = Mathf.Max(mood, moodBreakRecoverAt + 10f);
+                var thCat = GetComponent<PawnThoughts>();
+                if (thCat != null) thCat.AddThought("후련함", +8f, 600f);
+                Debug.Log($"[Mood] {(pawnEntity != null ? pawnEntity.PawnName : name)} 붕괴 복귀(카타르시스) mood={mood:F0} t={Time.time:F1}");
                 FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
                                    "진정함", new Color(0.55f, 0.8f, 0.55f, 1f));
             }
