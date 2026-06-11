@@ -150,6 +150,13 @@ namespace MelonS.GameProto
         //  X-only / Y-only axis-slide, 둘 다 막히면 정지(false).  PawnMovement.IsBlockedAt
         //  = 물/바위, PawnMovement.Grid.IsWalkable = 벽 구조물.  Grid==null(headless
         //  V-scene) 이면 벽 체크 skip — 기존 직선 이동 유지(회귀 없음).
+        // 게임루프 백로그 #10 (2026-06-11) — 막힌 강도의 벽 공격 상태.
+        //  벽 한 겹 = 습격 영구 무효(WallEntity.TakeDamage 게임플레이 호출자 0)였다.
+        //  1.5s 이상 3-슬라이드 전부 막히면 진행 방향 벽을 공격 — 벽이 '면제'에서
+        //  '시간 벌기'가 되고, 목벽 100 vs 석벽 280 자재 선택이 처음으로 결정이 된다.
+        private float blockedSince = -1f;
+        private float nextStructHit = -1f;
+
         private bool TryStep(Vector2 step)
         {
             Vector3 cur = transform.position;
@@ -157,21 +164,47 @@ namespace MelonS.GameProto
             if (!IsCellBlocked(want))
             {
                 transform.position = new Vector3(want.x, want.y, cur.z);
+                blockedSince = -1f;
                 return true;
             }
             Vector2 slideX = PawnMovement.ClampToWorld(new Vector2(cur.x + step.x, cur.y));
             if (!Mathf.Approximately(slideX.x, cur.x) && !IsCellBlocked(slideX))
             {
                 transform.position = new Vector3(slideX.x, slideX.y, cur.z);
+                blockedSince = -1f;
                 return true;
             }
             Vector2 slideY = PawnMovement.ClampToWorld(new Vector2(cur.x, cur.y + step.y));
             if (!Mathf.Approximately(slideY.y, cur.y) && !IsCellBlocked(slideY))
             {
                 transform.position = new Vector3(slideY.x, slideY.y, cur.z);
+                blockedSince = -1f;
                 return true;
             }
+            TryAttackBlockingWall(step);
             return false;
+        }
+
+        // 진행 방향 ~1칸 앞의 WallEntity 를 damageInterval 스로틀로 타격.
+        //  (Door/Barricade 는 TakeDamage API 가 없어 후속 — 문은 의도된 진입로.)
+        private void TryAttackBlockingWall(Vector2 step)
+        {
+            if (blockedSince < 0f) { blockedSince = Time.time; return; }
+            if (Time.time - blockedSince < 1.5f) return;
+            if (Time.time < nextStructHit) return;
+            nextStructHit = Time.time + damageInterval;
+            Vector2 cur = transform.position;
+            Vector2 dir = step.sqrMagnitude > 1e-6f ? step.normalized : Vector2.right;
+            foreach (var col in Physics2D.OverlapCircleAll(cur + dir * 0.9f, 0.55f))
+            {
+                var wall = col != null ? col.GetComponent<WallEntity>() : null;
+                if (wall != null)
+                {
+                    wall.TakeDamage(contactDamage * 2f);   // HP tint 피드백은 WallEntity 내장
+                    Debug.Log($"[Bandit] 벽 공격 -{contactDamage * 2f}");
+                    break;
+                }
+            }
         }
 
         private static bool IsCellBlocked(Vector2 worldPos)
