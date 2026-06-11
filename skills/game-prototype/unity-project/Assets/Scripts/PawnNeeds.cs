@@ -643,6 +643,7 @@ namespace MelonS.GameProto
                 }
                 FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
                                    "먹을 것 없음!", new Color(0.95f, 0.65f, 0.3f, 1f));
+                Debug.Log($"[Eat] {name} 음식원 전무 food={food:F0}");   // 관측성 (아사 진단)
                 return;  // 물리 음식원 전무 → 순간이동 금지, 굶주림 유지
             }
 
@@ -668,6 +669,9 @@ namespace MelonS.GameProto
             eatState = EatState.Walking;
             eatStartTime = Time.time;
             movement.SetTarget(eatDestWorld);
+            // 관측성 (2026-06-12 아사 진단) — '식량 632 두고 전원 아사'에서 섭취 선택이
+            //  무로그라 어느 단계가 멈췄는지 특정 불가했다.  선택 1줄.
+            Debug.Log($"[Eat] {name} 출발 → {(eatMeatTarget != null ? "더미" : eatStockTarget != null ? "저장고" : "덤불")} d={Vector2.Distance(transform.position, eatDestWorld):F1} food={food:F0}");
             // AI override 는 PawnUtilityAI 의 busy-gate(movement.IsMoving) 가 막아준다 —
             //  이동 중엔 Decide 가 돌지 않아 work target 으로 가로채지 못한다.  ManualMoveUntil
             //  은 쓰지 않는다(그걸 쓰면 IsUnderManualControl 이 켜져 다음 frame 에 내 자신의
@@ -687,7 +691,9 @@ namespace MelonS.GameProto
             float dist = Vector2.Distance(transform.position, eatDestWorld);
             if (dist <= eatReachRange)
             {
+                float before = food;
                 ConsumeAtSource();
+                Debug.Log($"[Eat] {name} 도착·섭취 food {before:F0}→{food:F0}");   // 관측성
                 ClearEatTask();
                 return;
             }
