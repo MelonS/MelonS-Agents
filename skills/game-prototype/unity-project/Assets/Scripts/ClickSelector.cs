@@ -96,6 +96,18 @@ namespace MelonS.GameProto
             bool overUI = SimInput.IsPointerOverUI();
             // 빌드 모드 활성이면 mouse click 은 BuildManager 가 처리 (place / cancel)
             bool buildActive = BuildManager.Instance != null && BuildManager.Instance.BuildModeActive;
+            // r2 #2 (2026-06-12) — 지정 모드 7종 중 활성이 있으면 월드 클릭은 그 매니저
+            //  소유 (해제 우클릭이 같은 프레임 이동/공격 명령으로 새던 레이스 차단).
+            bool designationActive =
+                (TreeChopDesignation.Instance != null && TreeChopDesignation.Instance.ModeActive)
+                || (MineDesignation.Instance != null && MineDesignation.Instance.ModeActive)
+                || (DeconstructDesignation.Instance != null && DeconstructDesignation.Instance.ModeActive)
+                || (GrowZoneDesignation.Instance != null && GrowZoneDesignation.Instance.ModeActive)
+                || (StockpileDesignation.Instance != null && StockpileDesignation.Instance.ModeActive)
+                || (RoofDesignation.Instance != null && RoofDesignation.Instance.ModeActive);
+            buildActive = buildActive || designationActive;
+            // 우클릭은 컨텍스트 메뉴 열림 중에도 월드로 새지 않게 (메뉴가 소비).
+            bool ctxOpen = ContextMenuUI.Instance != null && ContextMenuUI.Instance.IsOpen;
 
             // Left click = select
             if (SimInput.GetMouseButtonDown(0) && !overUI && !buildActive)
@@ -104,6 +116,9 @@ namespace MelonS.GameProto
                 mouseWorld.z = 0f;
                 Collider2D hit = PickEntityAt(mouseWorld);
                 PawnEntity pawn = (hit != null) ? hit.GetComponent<PawnEntity>() : null;
+                // r2 #7 — 시체는 선택 대상이 아니라 inspect 대상 (죽은 림이 클릭 1순위로
+                //  생존 림/아이템을 가로채던 것).
+                if (pawn != null && pawn.IsDead) pawn = null;
                 if (pawn != null) {
                     Select(pawn);
                     currentInspect = pawn.gameObject;  // #128 - pawn 도 inspect 패널 표시
@@ -159,7 +174,7 @@ namespace MelonS.GameProto
             //  게이트에 막혀 림이 선택 안 돼 있으면 안 됐다.  the reference sim 에선 벌목/채광 *지정*은
             //  림 선택이 불필요(Architect>Orders 처럼).  → 선택 무관하게 우클릭 나무/광맥 = 바로
             //  지정(🪓/⛏ 마커 + idle 림 dispatch).  이 블록을 selection 게이트 밖에 둔다.
-            if (SimInput.GetMouseButtonDown(1) && !overUI && !buildActive)
+            if (SimInput.GetMouseButtonDown(1) && !overUI && !buildActive && !ctxOpen)
             {
                 Vector3 dmw = mainCamera.ScreenToWorldPoint(SimInput.mousePosition); dmw.z = 0f;
                 Collider2D dhit = PickEntityAt(dmw);
@@ -190,7 +205,7 @@ namespace MelonS.GameProto
             // Right click = move OR chop OR attack (drafted) for selected pawn
             //   buildActive 면 BuildManager 가 우클릭 = cancel 처리 (overlap 방지)
             //   #113 - undrafted + entity hit = the reference sim 스타일 "Prioritize" 컨텍스트 메뉴
-            if (SimInput.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null
+            if (SimInput.GetMouseButtonDown(1) && !overUI && !buildActive && !ctxOpen && currentSelection != null
                 && !currentSelection.IsDrafted && !MarqueeOwnsCommand())   // #60 다중선택 양보
             {
                 Vector3 mw = mainCamera.ScreenToWorldPoint(SimInput.mousePosition);
@@ -212,7 +227,7 @@ namespace MelonS.GameProto
                 }
                 // entity 없거나 메뉴 없으면 기존 동작 (manual move)
             }
-            if (SimInput.GetMouseButtonDown(1) && !overUI && !buildActive && currentSelection != null
+            if (SimInput.GetMouseButtonDown(1) && !overUI && !buildActive && !ctxOpen && currentSelection != null
                 && !MarqueeOwnsCommand())   // #60 다중선택 중엔 MarqueeSelector 가 그룹 move 소유
             {
                 Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(SimInput.mousePosition);
@@ -307,7 +322,7 @@ namespace MelonS.GameProto
                     Debug.Log($"[Trade] success={ok}");
                     return;
                 }
-                if (animalC != null)  // 비-drafted 시 동물 우클릭 = 길들이기 시도
+                if (animalC != null && !animalC.IsDead)  // r2 #7 — 시체 길들이기 차단
                 {
                     bool ok = animalC.TryTame();
                     Debug.Log($"[Tame] success={ok}");
