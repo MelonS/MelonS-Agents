@@ -14,8 +14,11 @@ namespace MelonS.GameProto
         [SerializeField] private float zoomStep = 1.18f;
         // #카메라파리티 (운영자 2026-06-11 "림월드 기본 줌인아웃과 많이 달라"):
         //  zoomMin 1.5(픽셀 깨지는 초근접) → 3, zoomMax 48(맵보다 큰 void 뷰) → 26.
-        [SerializeField] private float zoomMin = 3f;
-        [SerializeField] private float zoomMax = 26f;
+        // #카메라파리티2 (2026-06-12 레퍼런스 스샷 2장 실측) — 기본 줌 15(보통 뷰
+        //  세로 30칸) + 줌인 하한 5.5(레퍼런스 최대 줌인 = 세로 ~11칸; 3 은 레퍼런스보다
+        //  2배 깊은 픽셀 깨짐 구간) + 줌아웃 상한 32(콜로니+주변 전경).
+        [SerializeField] private float zoomMin = 5.5f;
+        [SerializeField] private float zoomMax = 32f;
         // #카메라파리티 — 림월드 무빙 질감: 줌은 목표값으로 지수 수렴(즉시 점프 X),
         //  팬은 관성(가속 빠르게/release 후 ~0.3s 드리프트 정지), 줌인은 커서 방향.
         [SerializeField] private float zoomLerpSpeed = 9f;   // 줌 수렴 속도 (1/s)
