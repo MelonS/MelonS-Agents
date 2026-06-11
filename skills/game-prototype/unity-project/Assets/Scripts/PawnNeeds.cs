@@ -175,6 +175,7 @@ namespace MelonS.GameProto
         private float starvNextTickGs = -1f;
         private float lastStarvText = -99f;
         private static float _lastNoFoodAlert = -99f;   // r2 #5 — 콜로니 단위 스로틀
+        private bool starveWarned;                       // r2-E — 임박 경고 1회 게이트
         [SerializeField] private float autoSleepRetryCooldown = 20f;
         public bool HasAutoSleepOrder => autoRestTarget != null;
         public BedEntity AutoRestTarget => autoRestTarget;
@@ -488,6 +489,16 @@ namespace MelonS.GameProto
             //  1·2차 구현은 측정 시계와 어긋나 틱이 6~12배 느리게 보였다).
             //  6스케일초/틱 ≈ 518게임초 — PawnHealth 부위 풀(~137) 기준 공복 후 사망까지
             //  ~0.25게임일, 만복부터 총 ~1.25게임일.
+            // r2-E (감사 자동승격) — 아사 임박 개인 경고: food 15 하향 교차 1회.
+            if (food < 15f && !starveWarned && pawnEntity != null && !pawnEntity.IsDead)
+            {
+                starveWarned = true;
+                AlertStackUI.Notify($"{pawnEntity.PawnName} 굶주림 위험", 2);
+                FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
+                                   "아사 임박!", new Color(0.95f, 0.55f, 0.25f, 1f));
+            }
+            else if (food > 25f) starveWarned = false;
+
             if (food <= 0f && pawnEntity != null && !pawnEntity.IsDead)
             {
                 float gs = Time.time;

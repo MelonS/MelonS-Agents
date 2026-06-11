@@ -588,9 +588,11 @@ namespace MelonS.GameProto
                     //  활동을 보여야 하고(언젠가), 다른 림이 그 활동을 보이면 즉시 FAIL
                     //  (우클릭 명령 = 선택 림 전용 배타 예약, f29b10f).  조기 PASS 없음 — 윈도
                     //  전체를 봐야 "타 림이 늦게 합류"하는 회귀도 잡는다.
-                    var selPawn = ResolveSelectedPawn();
-                    if (selPawn == null) { r.passed = false; r.detail = "선택 림 없음"; break; }
-                    string selName = selPawn.PawnName;
+                    var selSet2 = ResolveSelectedSet();
+                    if (selSet2.Count == 0) { r.passed = false; r.detail = "선택 림 없음"; break; }
+                    var selNames = new System.Collections.Generic.HashSet<string>();
+                    foreach (var sm in selSet2) selNames.Add(sm.PawnName);
+                    string selName = string.Join(",", selNames);
                     bool selDid = false; string offender = "";
                     float t = 0;
                     while (t < s.withinSec && offender == "")
@@ -600,7 +602,7 @@ namespace MelonS.GameProto
                             var lbl = p.GetComponentInChildren<PawnNameLabel>();
                             if (lbl == null || lbl.CurrentActivity == null
                                 || !lbl.CurrentActivity.Contains(s.contains)) continue;
-                            if (p.PawnName == selName) selDid = true;
+                            if (selNames.Contains(p.PawnName)) selDid = true;
                             else offender = p.PawnName;
                         }
                         yield return new WaitForSeconds(0.25f); t += 0.25f;
@@ -618,20 +620,25 @@ namespace MelonS.GameProto
                     //  자율 race 는 최소 다음 Decide 틱(1.5s, PawnUtilityAI)이다.  1s 내
                     //  '선택 림이 벌목 task 를 쥐었는가'로 명령 발행 주체를 결정적으로 구분 —
                     //  결과 라벨만 보던 selectedOnlyActivity 의 race-운 가짜 PASS 를 인과로 차단.
-                    var selC = ResolveSelectedPawn();
-                    if (selC == null) { r.passed = false; r.detail = "선택 림 없음"; break; }
-                    var chp = selC.GetComponent<PawnChopper>();
+                    var selSet = ResolveSelectedSet();
+                    if (selSet.Count == 0) { r.passed = false; r.detail = "선택 림 없음"; break; }
                     float win = s.withinSec > 0 ? s.withinSec : 1.0f;
                     float tc = 0; bool got = false;
                     while (tc < win)
                     {
-                        if (chp != null && chp.HasTask) { got = true; break; }
+                        foreach (var sm in selSet)
+                        {
+                            var c2 = sm != null ? sm.GetComponent<PawnChopper>() : null;
+                            if (c2 != null && c2.HasTask) { got = true; break; }
+                        }
+                        if (got) break;
                         yield return new WaitForSeconds(0.1f); tc += 0.1f;
                     }
                     r.passed = got;
+                    string setNamesC = string.Join(",", selSet.ConvertAll(x => x.PawnName));
                     r.detail = got
-                        ? $"선택 림 '{selC.PawnName}' 벌목 task 보유 ({tc:F1}s — 직접명령 인과 확인)"
-                        : $"선택 림 '{selC.PawnName}' 벌목 task 미보유 in {win:F1}s — 직접명령 미발행";
+                        ? $"선택 집합 [{setNamesC}] 중 벌목 task 보유 ({tc:F1}s — 직접명령 인과 확인)"
+                        : $"선택 집합 [{setNamesC}] 벌목 task 미보유 in {win:F1}s — 직접명령 미발행";
                     break;
                 }
 
@@ -671,6 +678,21 @@ namespace MelonS.GameProto
 
         /// <summary>#38 — 단일(ClickSelector)/마키(MarqueeSelector) 선택을 동일 의미로 해석.
         ///  박스선택 시 ClickSelector.CurrentSelection 은 비어 있고 마키가 선택을 소유한다.</summary>
+        // #마퀴플레이크(2026-06-12) — 선택 '집합' 진실: 마퀴 박스가 배회 위치에 따라
+        //  2명이 아니라 3명을 잡으면 디스패치는 그 집합 내 최근접에게 가는 게 정당하다.
+        //  프로브가 '집합의 첫 림' 고정 가정이라 정당 배정을 FAIL 로 읽던 플레이크 해소.
+        private System.Collections.Generic.List<PawnEntity> ResolveSelectedSet()
+        {
+            var set = new System.Collections.Generic.List<PawnEntity>();
+            var mq = Object.FindFirstObjectByType<MarqueeSelector>();
+            if (mq != null && mq.HasMultiSelection)
+                foreach (var m in mq.CurrentMultiSelection) if (m != null) set.Add(m);
+            var selector = Object.FindFirstObjectByType<ClickSelector>();
+            var sp = selector != null ? selector.CurrentSelection : null;
+            if (sp != null && !set.Contains(sp)) set.Add(sp);
+            return set;
+        }
+
         private PawnEntity ResolveSelectedPawn()
         {
             var selector = Object.FindFirstObjectByType<ClickSelector>();
