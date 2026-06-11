@@ -20,7 +20,7 @@ namespace MelonS.GameProto.EditorTools
             bool v2 = p.Contains("/Sprites/tile32_") || p.Contains("/Sprites/flora32_")
                    || p.Contains("/Sprites/struct32_") || p.Contains("/Resources/struct32/")
                    || p.Contains("/Resources/items32/") || p.Contains("/Resources/animals32/")
-                   || p.Contains("/Resources/pawn32tool/");
+                   || p.Contains("/Resources/pawn32tool/") || p.Contains("/Resources/flora32/");
             if (!pawn && !v2) return;
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;

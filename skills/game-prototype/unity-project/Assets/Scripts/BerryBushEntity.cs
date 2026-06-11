@@ -94,12 +94,31 @@ namespace MelonS.GameProto
             UpdateVisual();
         }
 
+        // 아트 v2 후속 (2026-06-12) — 수확후 전용 스프라이트 (빨간 점 없는 덤불).
+        //  기존 '어둡게 틴트'는 줌아웃에서 그냥 그늘진 덤불로 읽혀 '딸 수 있나?' 가
+        //  화면에서 판별이 안 됐다.  에셋 없으면 기존 틴트 폴백.
+        private static Sprite _fullSpr, _pickedSpr;
+        private static bool _sprLoaded;
+
         private void UpdateVisual()
         {
             if (spriteRenderer == null) return;
+            if (!_sprLoaded)
+            {
+                _sprLoaded = true;
+                _fullSpr = Resources.Load<Sprite>("flora32/flora32_bush_berry");
+                _pickedSpr = Resources.Load<Sprite>("flora32/flora32_bush_picked");
+            }
+            if (_fullSpr != null && _pickedSpr != null)
+            {
+                spriteRenderer.sprite = IsDepleted ? _pickedSpr : _fullSpr;
+                // 잔량은 가벼운 밝기만 (full 1.0 → 마지막 알 0.75)
+                float tt = IsDepleted ? 0.9f
+                    : Mathf.Lerp(0.75f, 1f, (float)berries / Mathf.Max(1, initialBerries));
+                TintHelper.ApplyBrightness(spriteRenderer, baseColor, tt);
+                return;
+            }
             // #161 - base 녹색을 brightness 곱으로 조절 (회색 덮어쓰기 X).
-            //  Depleted=0.35 (어두운 녹) / Full=1.0 (밝은 녹).
-            //  #167 - TintHelper 로 통합.
             float t = IsDepleted
                 ? 0.35f
                 : Mathf.Lerp(0.4f, 1f, (float)berries / Mathf.Max(1, initialBerries));
