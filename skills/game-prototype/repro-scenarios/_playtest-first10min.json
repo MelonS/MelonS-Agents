@@ -1,0 +1,49 @@
+{
+  "name": "휴먼라이크 QA — 신규 플레이어 첫 10분 (운영자 2026-06-11 '정말 사람이 플레이 하는것처럼'. 실제 동선: 림 선택→벌목 지정→건축(벽4+문+침대+화덕)→배속→밤 관찰. 게이트 비포함(_접두) — 마찰 발굴용, 판정은 사후 샷/로그 리뷰)",
+  "timeoutSec": 600,
+  "steps": [
+    { "op": "wait", "sec": 2 },
+    { "op": "shot", "name": "p00_start" },
+
+    { "op": "worldclick", "target": "pawn" },
+    { "op": "shot", "name": "p01_selected" },
+    { "op": "worldright", "target": "tree" },
+    { "op": "wait", "sec": 1 },
+    { "op": "shot", "name": "p02_chop_ordered" },
+    { "op": "assert", "probe": "chopDesignations", "min": 1 },
+
+    { "op": "clickui", "name": "label:건축" },
+    { "op": "clickui", "name": "label:구조" },
+    { "op": "wait", "sec": 0.4 },
+    { "op": "shot", "name": "p03_shelf_open" },
+    { "op": "clickui", "name": "label:목재 벽" },
+    { "op": "worldclick", "x": 3, "y": 4 },
+    { "op": "worldclick", "x": 4, "y": 4 },
+    { "op": "worldclick", "x": 5, "y": 4 },
+    { "op": "worldclick", "x": 6, "y": 4 },
+    { "op": "shot", "name": "p04_walls_placed" },
+    { "op": "clickui", "name": "label:문" },
+    { "op": "worldclick", "x": 7, "y": 4 },
+    { "op": "shot", "name": "p05_door_placed" },
+
+    { "op": "clickui", "name": "label:가구" },
+    { "op": "wait", "sec": 0.4 },
+    { "op": "clickui", "name": "label:침대" },
+    { "op": "worldclick", "x": 4, "y": 6 },
+    { "op": "clickui", "name": "label:생산" },
+    { "op": "wait", "sec": 0.4 },
+    { "op": "clickui", "name": "label:화덕" },
+    { "op": "worldclick", "x": 6, "y": 6 },
+    { "op": "key", "name": "Escape" },
+    { "op": "shot", "name": "p06_bed_stove_placed" },
+
+    { "op": "speed", "x": 4 },
+    { "op": "wait", "sec": 120 },
+    { "op": "shot", "name": "p07_construction_progress" },
+    { "op": "wait", "sec": 240 },
+    { "op": "shot", "name": "p08_evening" },
+    { "op": "setHour", "x": 23 },
+    { "op": "wait", "sec": 30 },
+    { "op": "shot", "name": "p09_night_sleep" }
+  ]
+}

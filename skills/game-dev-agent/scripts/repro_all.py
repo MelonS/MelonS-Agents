@@ -34,7 +34,10 @@ def main() -> int:
     ap.add_argument("--build")
     args = ap.parse_args()
 
-    scenarios = sorted(p for p in SCEN_DIR.glob("*.json") if args.filter in p.name)
+    # '_' 접두 = 게이트 비포함 (휴먼라이크 플레이테스트/실험 시나리오 — 길고 판정이
+    #  사후 리뷰형이라 커밋 게이트에 안 넣는다.  실행은 repro_run 직접 호출).
+    scenarios = sorted(p for p in SCEN_DIR.glob("*.json")
+                       if args.filter in p.name and not p.name.startswith("_"))
     if not scenarios:
         print(f"[repro_all] 시나리오 없음: {SCEN_DIR} (filter='{args.filter}')")
         return 2
