@@ -276,6 +276,11 @@ namespace MelonS.GameProto
                     //  적이 시체를 계속 타겟·헛공격한다.  메서드 호출은 enabled 와 무관하게 동작.
                     GetComponent<PawnEntity>()?.ForceSyncDead();
                     Debug.Log($"[PawnHealth] {gameObject.name} 사망 — 머리={head.hp} 몸통={torso.hp}");
+                    // r2 #4 — 화면 밖 사망을 모르던 것: tier3 영속 카드 (이름은 PawnEntity).
+                    {
+                        var pe = GetComponent<PawnEntity>();
+                        AlertStackUI.Notify($"{(pe != null ? pe.PawnName : gameObject.name)} 사망", 3);
+                    }
                     // Disable AI/work components on death.  GetComponents on the ROOT
                     //  catches PawnMovement/AI/worker scripts (all root-attached).
                     //  SpriteRenderer 는 MonoBehaviour 아니라 자동 제외됨.
@@ -309,7 +314,16 @@ namespace MelonS.GameProto
             }
             // Downed: head ≤30% triggers unconsciousness (alive).  #277 정수 hp 보정
             //  (FloorToInt) — enemy IsDowned(30%)와 동일 경계로 정합(rank3, 승인).
+            bool wasDowned = IsDowned;
             IsDowned = (head.hp <= Mathf.FloorToInt(head.maxHp * 0.3f));
+            if (!wasDowned && IsDowned)
+            {
+                // r2 #4 — 의식불명 전환 무음이던 것: 개입(치료) 요구 신호.
+                var pe = GetComponent<PawnEntity>();
+                AlertStackUI.Notify($"{(pe != null ? pe.PawnName : gameObject.name)} 의식불명 — 치료 필요", 2);
+                FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
+                                   "의식불명!", new Color(0.95f, 0.5f, 0.4f, 1f));
+            }
             if (State != prev) StateVersion++;
         }
 

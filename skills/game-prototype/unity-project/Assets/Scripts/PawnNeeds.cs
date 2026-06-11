@@ -174,6 +174,7 @@ namespace MelonS.GameProto
         public bool NoBedSustained => noBedStreak >= 3 && Time.time - lastNoBedMark < 6f;
         private float starvNextTickGs = -1f;
         private float lastStarvText = -99f;
+        private static float _lastNoFoodAlert = -99f;   // r2 #5 — 콜로니 단위 스로틀
         [SerializeField] private float autoSleepRetryCooldown = 20f;
         public bool HasAutoSleepOrder => autoRestTarget != null;
         public BedEntity AutoRestTarget => autoRestTarget;
@@ -519,10 +520,16 @@ namespace MelonS.GameProto
             {
                 isBreaking = true;
                 breakUntil = Time.time + moodBreakDuration;
+                // r2 #3 — 붕괴는 (섭취 금지와 결합해) 아사 나선의 입구인데 무음이었다.
+                AlertStackUI.Notify($"{(pawnEntity != null ? pawnEntity.PawnName : name)} 정신붕괴!", 1);
+                FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
+                                   "정신붕괴!", new Color(0.85f, 0.45f, 0.85f, 1f));
             }
             else if (isBreaking && Time.time > breakUntil && mood > moodBreakRecoverAt)
             {
                 isBreaking = false;
+                FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
+                                   "진정함", new Color(0.55f, 0.8f, 0.55f, 1f));
             }
 
             // #214 - 물리 섭취: 배고프면 음식원으로 걸어가서 도착 후에만 먹는다.
@@ -615,7 +622,18 @@ namespace MelonS.GameProto
             float bushD = bestBush != null ? bushSq : float.MaxValue;
 
             if (meatD == float.MaxValue && stockD == float.MaxValue && bushD == float.MaxValue)
+            {
+                // r2 #5 — '배고픈데 먹을 게 없다'는 아사 ~1게임일 전 마지막 개입 시점인데
+                //  무음이었다.  콜로니 단위 30실초 스로틀로 경보 + 본인 플로팅.
+                if (Time.unscaledTime - _lastNoFoodAlert > 30f)
+                {
+                    _lastNoFoodAlert = Time.unscaledTime;
+                    AlertStackUI.Notify("식량 전무 — 굶는 림 발생", 2);
+                }
+                FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
+                                   "먹을 것 없음!", new Color(0.95f, 0.65f, 0.3f, 1f));
                 return;  // 물리 음식원 전무 → 순간이동 금지, 굶주림 유지
+            }
 
             eatMeatTarget = null; eatStockTarget = null; eatBushTarget = null;
             if (meatD <= stockD && meatD <= bushD)

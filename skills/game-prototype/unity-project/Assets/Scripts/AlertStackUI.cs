@@ -198,6 +198,15 @@ namespace MelonS.GameProto
             return UITheme.AccentOrange;                              // tier1 amber/orange
         }
 
+        /// <summary>r2 #3 (2026-06-12) — 디렉터 외 발신자(니즈/헬스)용 단일 진입점.
+        ///  인스턴스 없으면 무음 no-op (헤드리스/V-scene 안전).</summary>
+        public static void Notify(string title, int tier)
+        {
+            var inst = Object.FindFirstObjectByType<AlertStackUI>();
+            if (inst == null) return;
+            inst.PushCard(title, TierColor(tier), tier);
+        }
+
         private void PushCard(string title, Color accent, int tier)
         {
             // Evict oldest if over the cap so the corner never overflows.
