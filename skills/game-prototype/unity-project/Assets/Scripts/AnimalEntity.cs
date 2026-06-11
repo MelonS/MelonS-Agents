@@ -33,11 +33,14 @@ namespace MelonS.GameProto
         };
 
         // 종류별 stats (HP, food drop, speed, tame rate, scale, color tint)
+        // 아트 v2 (2026-06-11): scale 은 구판(사슴 실루엣 공유)에서 종 크기를 내던
+        //  보정값 — 32px 원화는 크기가 그림에 내장(닭 14px/사슴 28px)이라 과축소된다.
+        //  닭/토끼만 살짝(0.85), 나머지 1.0 으로 정규화.
         public static readonly (int hp, int food, float spd, float tame, float scale, Color tint)[] SpeciesStats = {
             (12, 5, 0.6f, 0.30f, 1.0f, new Color(1f, 1f, 1f, 1f)),               // Deer
-            (25, 8, 0.5f, 0.15f, 1.1f, new Color(0.55f, 0.45f, 0.40f, 1f)),     // Boar 갈회색
-            (4,  2, 0.4f, 0.60f, 0.7f, new Color(1.0f, 0.95f, 0.85f, 1f)),      // Chicken 흰
-            (3,  1, 0.9f, 0.50f, 0.6f, new Color(0.80f, 0.75f, 0.72f, 1f)),     // Rabbit 옅은 회색
+            (25, 8, 0.5f, 0.15f, 1.0f, new Color(0.55f, 0.45f, 0.40f, 1f)),     // Boar 갈회색
+            (4,  2, 0.4f, 0.60f, 0.85f, new Color(1.0f, 0.95f, 0.85f, 1f)),     // Chicken 흰
+            (3,  1, 0.9f, 0.50f, 0.85f, new Color(0.80f, 0.75f, 0.72f, 1f)),    // Rabbit 옅은 회색
         };
 
         // 운영자 2026-06-02: 멧돼지·닭·토끼가 사슴 실루엣 공유 → 종별 스프라이트.
@@ -121,6 +124,7 @@ namespace MelonS.GameProto
             if (sr != null) baseColor = sr.color;
             BlobShadow.Attach(gameObject, 0.7f, -0.34f);  // D1 몰입 — 발밑 접지 그림자
             if (GetComponent<MotionFx>() == null) gameObject.AddComponent<MotionFx>();  // D2 걷기 모션
+            if (GetComponent<AnimalAnim32>() == null) gameObject.AddComponent<AnimalAnim32>();  // 아트 v2
             PickNewTarget();
         }
 

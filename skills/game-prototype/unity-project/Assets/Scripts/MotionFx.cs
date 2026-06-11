@@ -19,6 +19,8 @@ namespace MelonS.GameProto
         /// <summary>아트 v2: PawnSpriteAnimator(실제 보행 프레임) 장착 림은 스쿼시를
         ///  끈다 — 프레임 애니와 이중이면 과장된다.  발걸음 먼지/flip 은 그대로.</summary>
         public bool squashEnabled = true;
+        /// <summary>아트 v2: 좌향 원화 동물(AnimalAnim32)은 flip 관례가 반대라 인계.</summary>
+        public bool flipEnabled = true;
 
         [SerializeField] private float bounceAmp = 0.05f;   // y 스트레치 최대 비율
         [SerializeField] private float bounceHz = 3.2f;     // 보행 1배속 기준 step 주기
@@ -56,7 +58,7 @@ namespace MelonS.GameProto
             float speed = delta.magnitude / dt;
 
             // 진행방향 flip — 수평 성분이 실재할 때만 (수직 이동 중 떨림 방지).
-            if (sr != null && Mathf.Abs(delta.x) > 0.0005f)
+            if (flipEnabled && sr != null && Mathf.Abs(delta.x) > 0.0005f)
                 sr.flipX = delta.x < 0f;
 
             if (speed > MinSpeed)

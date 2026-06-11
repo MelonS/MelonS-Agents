@@ -18,7 +18,7 @@ namespace MelonS.GameProto.EditorTools
             // A단계: 32px 지형/식생/아이템 — LoadOrSetupSprite 의 크기 규칙
             //  ((srcW>=64)?32:16)이 32px 단일 타일에 PPU 16 을 주는 것을 폴더/접두로 차단.
             bool v2 = p.Contains("/Sprites/tile32_") || p.Contains("/Sprites/flora32_")
-                   || p.Contains("/Resources/items32/");
+                   || p.Contains("/Resources/items32/") || p.Contains("/Resources/animals32/");
             if (!pawn && !v2) return;
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;
@@ -28,7 +28,8 @@ namespace MelonS.GameProto.EditorTools
             ti.textureCompression = TextureImporterCompression.Uncompressed;
             ti.mipmapEnabled = false;
             // 시트 슬라이스(pawn32/items32)는 readable 필요, 타일/식생은 불필요.
-            ti.isReadable = pawn || p.Contains("/Resources/items32/");
+            ti.isReadable = pawn || p.Contains("/Resources/items32/")
+                          || p.Contains("/Resources/animals32/");
         }
     }
 }
