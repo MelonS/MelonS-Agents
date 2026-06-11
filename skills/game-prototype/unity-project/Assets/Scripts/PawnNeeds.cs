@@ -726,6 +726,7 @@ namespace MelonS.GameProto
                 food = Mathf.Min(100f, food + eatRestoreRaw);
                 var th = GetComponent<PawnThoughts>();
                 if (th != null) th.AddThought("배부름");
+                ApplyDiningBonus();
                 return;
             }
 
@@ -741,6 +742,7 @@ namespace MelonS.GameProto
                     mood = Mathf.Min(100f, mood + 20f + traitMealBonus);
                     var th2 = GetComponent<PawnThoughts>();
                     if (th2 != null) th2.AddThought("최고의 식사", +12f, 800f);
+                    ApplyDiningBonus();
                     return;
                 }
                 if (rm.meals > 0)
@@ -751,6 +753,7 @@ namespace MelonS.GameProto
                     mood = Mathf.Min(100f, mood + 10f + traitMealBonus);
                     var th = GetComponent<PawnThoughts>();
                     if (th != null) th.AddThought("맛있는 식사");
+                    ApplyDiningBonus();
                     return;
                 }
                 if (rm.food > 0)
@@ -763,6 +766,7 @@ namespace MelonS.GameProto
                 food = Mathf.Min(100f, food + eatRestoreRaw);
                     var th = GetComponent<PawnThoughts>();
                     if (th != null) th.AddThought("배부름");
+                    ApplyDiningBonus();
                     return;
                 }
                 // 도착했는데 보관 식량이 0 (다른 림이 먼저 먹음) → 그냥 종료, 다음 tick 재탐색.
@@ -779,8 +783,26 @@ namespace MelonS.GameProto
                 food = Mathf.Min(100f, food + eatRestoreRaw);
                     var th = GetComponent<PawnThoughts>();
                     if (th != null) th.AddThought("배부름");
+                    ApplyDiningBonus();
                 }
             }
+        }
+
+        // 게임루프 차순위 (2026-06-12) — 식탁 배선.  TableEntity.EatSpotAt/ChairEntity.ChairAt
+        //  프로브가 게임플레이 호출자 0 인 채 식탁 툴팁만 보너스를 약속하던 거짓 UI 교정.
+        //  새 디스패치/경로탐색 없음: 림이 '먹는 칸'에 식탁이 있으면 보너스 — 침대
+        //  GetBedUnderPawn 과 같은 모양.  양성만 배선('식탁 없이 식사' 페널티는 밸런스
+        //  결정이라 운영자 유보).  직접 mood + AddThought 병행은 '최고의 식사' 기존 패턴.
+        private void ApplyDiningBonus()
+        {
+            var table = TableEntity.EatSpotAt(transform.position);
+            if (table == null) return;
+            mood = Mathf.Min(100f, mood + table.AteAtTableMoodBonus);
+            var th = GetComponent<PawnThoughts>();
+            if (th != null) th.AddThought("식탁에서 식사", +table.AteAtTableMoodBonus,
+                                          table.AteAtTableThoughtDur);
+            var chair = ChairEntity.ChairAt(transform.position);
+            if (chair != null) mood = Mathf.Min(100f, mood + chair.ChairComfortMoodBonus);
         }
 
         private void ClearEatTask()
