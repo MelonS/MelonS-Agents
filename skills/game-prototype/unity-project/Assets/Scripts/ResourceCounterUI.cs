@@ -21,6 +21,8 @@ namespace MelonS.GameProto
 
         // #130 - 자원 변화 시 텍스트 일시적 노란 flash (운영자가 "값이 안 늘어" 느낌 해소)
         private float woodFlashUntil = -10f;
+        private float _nextGroundPoll;    // F4 — 바닥 더미 합계 폴링
+        private int _groundWood;
         private float foodFlashUntil = -10f;
         private float mealsFlashUntil = -10f;
         private float stoneFlashUntil = -10f;
@@ -41,9 +43,22 @@ namespace MelonS.GameProto
                 if (stoneText != null) stoneOriginalColor = stoneText.color;
                 colorsCaptured = true;
             }
+            // #QA플레이 F4 (2026-06-12) — 시작 자원이 '바닥 더미'(물리)라 적립 카운터가
+            //  0 이면 '자원 없음'처럼 읽혔다.  바닥 더미 합계를 2s 폴링해 병기:
+            //  "목재: 0 (+300 바닥)" — 건축은 바닥분으로도 펀딩되므로 진실 표시.
+            if (Time.unscaledTime >= _nextGroundPoll)
+            {
+                _nextGroundPoll = Time.unscaledTime + 2f;
+                int g = 0;
+                foreach (var wpile in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
+                    if (wpile != null && !wpile.InStockpile) g += wpile.Wood;
+                if (g != _groundWood) { _groundWood = g; lastWood = -1; }   // 갱신 강제
+            }
             if (rm.wood != lastWood)
             {
-                if (woodText != null) woodText.text = $"목재: {rm.wood:N0}";  // #audit3 #17 천단위 구분
+                if (woodText != null) woodText.text = _groundWood > 0
+                    ? $"목재: {rm.wood:N0} (+{_groundWood:N0} 바닥)"
+                    : $"목재: {rm.wood:N0}";  // #audit3 #17 천단위 구분
                 if (lastWood >= 0) woodFlashUntil = Time.unscaledTime + FlashDuration;
                 lastWood = rm.wood;
             }
