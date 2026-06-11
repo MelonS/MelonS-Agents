@@ -26,9 +26,10 @@ namespace MelonS.GameProto
 
         private void Update()
         {
+            // 운영자 피드백 #13 (2026-06-12 AM): 배속 1/2/4 → 레퍼런스 파리티 1/3/6.
             if (Input.GetKeyDown(KeyCode.Alpha1)) SetScale(1f);
-            else if (Input.GetKeyDown(KeyCode.Alpha2)) SetScale(2f);
-            else if (Input.GetKeyDown(KeyCode.Alpha3)) SetScale(4f);
+            else if (Input.GetKeyDown(KeyCode.Alpha2)) SetScale(3f);
+            else if (Input.GetKeyDown(KeyCode.Alpha3)) SetScale(6f);
             else if (Input.GetKeyDown(KeyCode.Space)) TogglePause();
         }
 

@@ -175,6 +175,8 @@ namespace MelonS.GameProto
         private float starvNextTickGs = -1f;
         private float lastStarvText = -99f;
         private static float _lastNoFoodAlert = -99f;   // r2 #5 — 콜로니 단위 스로틀
+        // 운영자 피드백 #14 (2026-06-12 AM): 자는지 식별 불가 — 수면 중 주기 zZZ.
+        private float _nextSleepFx = -1f;
         private bool starveWarned;                       // r2-E — 임박 경고 1회 게이트
         [SerializeField] private float autoSleepRetryCooldown = 20f;
         public bool HasAutoSleepOrder => autoRestTarget != null;
@@ -446,6 +448,7 @@ namespace MelonS.GameProto
                      || (night && ScheduledSleepNow && NoBedSustained))
             {
                 IsSleeping = true;
+                EmitSleepFx();
                 var bed = GetBedUnderPawn();
                 float restMul = bed != null ? bed.RestMul : 0.6f;
                 float moodPerSec = bed != null ? bed.MoodBonus : 0f;
@@ -459,6 +462,7 @@ namespace MelonS.GameProto
             if (IsSleeping && sleep >= 80f && !ScheduledSleepNow) IsSleeping = false;
             if (IsSleeping)
             {
+                EmitSleepFx();
                 sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * dt);
                 // #audit2 #18 — 회복/스케줄 수면 분기에도 food/mood 0.5x decay.  이전엔 sleep 만
                 //  채우고 return 해서, sleep 이 회복 임계(~35)를 넘긴 뒤 80 까지 자는 동안(그리고
@@ -565,6 +569,15 @@ namespace MelonS.GameProto
         //  배고프면(food < eatThreshold) 음식원을 물색해 그쪽으로 이동시키고, 인접 도달
         //  시에만 1회 섭취.  drafted/manual/sleep/rest 중에는 발동하지 않는다(상위 생존/
         //  사용자 명령 우선 — 이 메서드는 그 블록들을 지난 awake 상태에서만 호출됨).
+        // 운영자 피드백 #14 — 수면 중 4실초마다 zZ 플로팅 (FloatingText 재사용, 스로틀).
+        private void EmitSleepFx()
+        {
+            if (Time.unscaledTime < _nextSleepFx) return;
+            _nextSleepFx = Time.unscaledTime + 4f;
+            FloatingText.Spawn(transform.position + new Vector3(0.35f, 0.75f, 0f),
+                               "zZ", new Color(0.75f, 0.85f, 0.95f, 0.9f));
+        }
+
         private void TryPhysicalEatTick()
         {
             // 사용자 수동 제어/징집 중에는 자율 섭취 보류 (명령 우선).

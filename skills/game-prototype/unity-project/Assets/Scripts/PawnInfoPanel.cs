@@ -266,7 +266,9 @@ namespace MelonS.GameProto
             txt.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             txt.supportRichText = true;
             txt.horizontalOverflow = HorizontalWrapMode.Wrap;
-            txt.verticalOverflow = VerticalWrapMode.Overflow;
+            // 운영자 피드백 #5 (2026-06-12 AM): Overflow 라 장비 탭 긴 내용이 패널 밖으로
+            //  흘러나갔다 — 영역 밖 렌더 금지(Truncate) + 장비 탭 내용은 2열 압축.
+            txt.verticalOverflow = VerticalWrapMode.Truncate;
             txt.raycastTarget = false;
             return txt;
         }
@@ -701,12 +703,16 @@ namespace MelonS.GameProto
                 {
                     sb.AppendLine();
                     sb.AppendLine("<color=#ddc28a>능력치:</color>");
+                    // #5 — 한 줄 2항목 압축 (세로 공간 절반).
+                    int colCount = 0;
                     foreach (var (key, label) in PawnAbilities.DisplayMap)
                     {
                         float v = abil.GetByKey(key);
                         string col = v >= 1.10f ? "#9adb86" : (v >= 0.95f ? "#dddddd" : "#e88c54");
-                        sb.AppendLine($"  <color={col}>{label}: {v:F2}</color>");
+                        sb.Append($"  <color={col}>{label} {v:F2}</color>");
+                        if (++colCount % 2 == 0) sb.AppendLine();
                     }
+                    if (colCount % 2 != 0) sb.AppendLine();
                 }
                 equipText.text = sb.ToString();
                 equipText.color = MelonS.GameProto.Core.UITheme.TextPrimary;

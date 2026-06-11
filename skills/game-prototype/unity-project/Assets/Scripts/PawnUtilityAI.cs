@@ -19,7 +19,9 @@ namespace MelonS.GameProto
         // 떠도는중 hop 간격 — 운영자 2026-06-02 "2초에 1칸은 움직여야": 1.5s 마다 1칸+
         //  (2초 이내 최소 1칸 보장).  work-decision(1.5s)과 별개로 idle 림을 또박또박 이동.
         //  non-serialized: 프리팹 직렬화 override 방지(0.8 잔존값 → source 1.5 항상 적용).
-        private float idleStepInterval = 1.5f;
+        // 운영자 피드백 #1 (2026-06-12 AM): '떠도는중이 지금보다 느리게' — 유휴 배회가
+        //  작업 이동과 비슷한 존재감이라 부산스러움.  홉 빈도 1.5→2.5s.
+        private float idleStepInterval = 2.5f;
         private float lastIdleStep = -999f;
         // 왕복(왔다갔다) 기준점 — idle 시작 시 고정, 그 주변 근처 타일을 오간다.
         //  실제 작업/필요 상태가 되면 해제 → 다음 idle 때 새 위치에 다시 잡음.
@@ -187,7 +189,8 @@ namespace MelonS.GameProto
             // 백로그 #8 (2026-06-11): 저수면(<25)이면 휘청거린다 — 수면이 처음으로
             //  '실패 가능한' 수치가 된다 (페널티 훅 0개였음).
             float drowsy = (needs != null && needs.sleep < 25f) ? 0.5f : 1f;
-            if (movement != null) movement.MoveSpeedScale = (HasRealActivity() ? 1f : 0.5f) * drowsy;
+            // 운영자 피드백 #1 (2026-06-12 AM): idle 0.5 → 0.35 — 어슬렁은 어슬렁답게.
+            if (movement != null) movement.MoveSpeedScale = (HasRealActivity() ? 1f : 0.35f) * drowsy;
 
             // 자율 취침 예약 해제: 기상/취소(PawnNeeds 가 autoRestTarget 을 비움)나
             //  사용자 우클릭 휴식 명령이 끼어든 경우, 잡고 있던 침대 예약을 푼다.

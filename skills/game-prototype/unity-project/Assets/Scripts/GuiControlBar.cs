@@ -166,8 +166,9 @@ namespace MelonS.GameProto
             //   anchor (1,0): 화면 우하단 모서리 기준, x 는 버튼 left edge (음수, left 로 갈수록 더 음수).
             //   speedPanelRt 내부 패딩(padX)만큼 안쪽에서 시작 → 패널 배경과 버튼 정렬.
             float sx = -SpRight - padX - BtnW;  // 가장 오른쪽 버튼(4x)의 left edge
-            speed4Btn = MakeBtn("4x",  "(3)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(4f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
-            speed2Btn = MakeBtn("2x",  "(2)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(2f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
+            // 운영자 피드백 #13 (2026-06-12 AM): 배속 레퍼런스 파리티 — 2x/4x → 3x/6x.
+            speed4Btn = MakeBtn("6x",  "(3)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(6f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
+            speed2Btn = MakeBtn("3x",  "(2)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(3f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
             speed1Btn = MakeBtn("1x",  "(1)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(1f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
             pauseBtn  = MakeBtn("멈춤", "(Space)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.TogglePause(); }, displayLabel:"⏸ 멈춤", anchorBottomRight:true);
 
