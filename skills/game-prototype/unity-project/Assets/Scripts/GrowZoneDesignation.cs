@@ -114,6 +114,10 @@ namespace MelonS.GameProto
         /// <summary>True while the player is in grow designation mode.</summary>
         public bool ModeActive { get; private set; }
 
+        /// <summary>효과 어서션용 (WORKFLOW-V2 규칙 7) — 지정된 경작 셀 수 (영구 구역:
+        /// 작물이 자라는 셀 포함).</summary>
+        public int ZoneCellCount => zone.Count;
+
         /// <summary>운영자 fb (2026-06-01) "다른 영역도 제거하는 기능 필요" — true 면 같은
         /// drag-rect 가 경작 영역을 '지우는' ERASE 모드.  add 경로와 대칭: 같은 입력/드래그
         /// 로직을 타되 MarkCellAt 대신 EraseCellAt 을 호출해 designated 셀의 마커를

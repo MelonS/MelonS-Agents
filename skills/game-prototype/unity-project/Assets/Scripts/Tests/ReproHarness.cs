@@ -656,6 +656,112 @@ namespace MelonS.GameProto
                     r.passed = start - v < s.min;
                     r.detail = $"{s.name} {start:F1}→{v:F1} (drop {start - v:F1}, 허용 <{s.min}) in {t:F0}s(scaled)"; break;
                 }
+                // ── 효과 어서션 7종 (WORKFLOW-V2 규칙 7, 2026-06-12) ──────────────
+                //  '클릭 PASS = 입력 전달까지'의 사각을 메우는 probe — 셋업 클릭 뒤엔
+                //  반드시 이들 중 하나로 '효과 발생'을 어서트한다 (이중 사각지대 사건의
+                //  증류: 지시 클릭이 수십 소크에서 무음 무효였는데 아무도 못 잡았다).
+                case "growZoneCells":
+                {
+                    yield return null;
+                    int n = GrowZoneDesignation.Instance != null
+                        ? GrowZoneDesignation.Instance.ZoneCellCount : 0;
+                    r.passed = n >= (int)s.min;
+                    r.detail = $"grow zone cells={n} (need ≥{(int)s.min})"; break;
+                }
+                case "mineMarks":
+                {
+                    yield return null;
+                    int n = MineDesignation.Instance != null
+                        ? MineDesignation.Instance.GetMarkedVeinPositions().Count : 0;
+                    r.passed = n >= (int)s.min;
+                    r.detail = $"mine marks={n} (need ≥{(int)s.min})"; break;
+                }
+                case "roofCells":
+                {
+                    yield return null;
+                    int built = 0, pending = 0;
+                    if (RoofDesignation.Instance != null)
+                    {
+                        built = RoofDesignation.Instance.RoofedCount
+                              - RoofDesignation.Instance.PendingCount;
+                        pending = RoofDesignation.Instance.PendingCount;
+                    }
+                    // min = 총 지정 수 (BUILT+pending) — 건설 완료 검증은 withinSec 로
+                    //  BUILT 승급을 기다린다 (s.withinSec 0 이면 즉시 판정).
+                    float t = 0;
+                    while (t < s.withinSec && built < (int)s.min)
+                    {
+                        yield return new WaitForSeconds(0.5f); t += 0.5f;
+                        if (RoofDesignation.Instance == null) break;
+                        built = RoofDesignation.Instance.RoofedCount
+                              - RoofDesignation.Instance.PendingCount;
+                        pending = RoofDesignation.Instance.PendingCount;
+                    }
+                    int total = built + pending;
+                    r.passed = (s.withinSec > 0f ? built : total) >= (int)s.min;
+                    r.detail = $"roof built={built} pending={pending} (need ≥{(int)s.min}{(s.withinSec > 0 ? " BUILT" : "")})"; break;
+                }
+                case "blueprintCount":
+                {
+                    yield return null;
+                    int n = Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None).Length;
+                    r.passed = n >= (int)s.min;
+                    r.detail = $"blueprints={n} (need ≥{(int)s.min})"; break;
+                }
+                case "structureCount":
+                {
+                    // s.name = wall|door|stove|bench|bed, withinSec 동안 도달 대기 (건설 완료 검증).
+                    float t = 0; int n = 0;
+                    while (true)
+                    {
+                        n = s.name switch
+                        {
+                            "wall"  => Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None).Length,
+                            "door"  => Object.FindObjectsByType<DoorEntity>(FindObjectsSortMode.None).Length,
+                            "stove" => Object.FindObjectsByType<StoveEntity>(FindObjectsSortMode.None).Length,
+                            "bench" => Object.FindObjectsByType<ResearchBench>(FindObjectsSortMode.None).Length,
+                            "bed"   => Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None).Length,
+                            _ => -1,
+                        };
+                        if (n < 0) { r.passed = false; r.detail = $"unknown kind '{s.name}'"; yield break; }
+                        if (n >= (int)s.min || t >= s.withinSec) break;
+                        yield return new WaitForSeconds(0.5f); t += 0.5f;
+                    }
+                    r.passed = n >= (int)s.min;
+                    r.detail = $"{s.name} count={n} (need ≥{(int)s.min}) in {t:F0}s"; break;
+                }
+                case "cropCount":
+                {
+                    float t = 0; int n = 0;
+                    while (true)
+                    {
+                        n = Object.FindObjectsByType<CropEntity>(FindObjectsSortMode.None).Length;
+                        if (n >= (int)s.min || t >= s.withinSec) break;
+                        yield return new WaitForSeconds(0.5f); t += 0.5f;
+                    }
+                    r.passed = n >= (int)s.min;
+                    r.detail = $"crops={n} (need ≥{(int)s.min}) in {t:F0}s"; break;
+                }
+                case "resourceAtLeast":
+                {
+                    // s.name = wood|stone|food|meals, withinSec 동안 도달 대기 (적립 검증).
+                    var rm = ResourceManager.Instance;
+                    if (rm == null) { r.passed = false; r.detail = "no ResourceManager"; break; }
+                    float t = 0; int v = 0;
+                    while (true)
+                    {
+                        v = s.name switch
+                        {
+                            "wood" => rm.wood, "stone" => rm.stone,
+                            "food" => rm.food, "meals" => rm.meals, _ => -999,
+                        };
+                        if (v == -999) { r.passed = false; r.detail = $"unknown res '{s.name}'"; yield break; }
+                        if (v >= (int)s.min || t >= s.withinSec) break;
+                        yield return new WaitForSeconds(0.5f); t += 0.5f;
+                    }
+                    r.passed = v >= (int)s.min;
+                    r.detail = $"{s.name}={v} (need ≥{(int)s.min}) in {t:F0}s"; break;
+                }
                 default:
                     r.passed = false; r.detail = $"unknown probe '{s.probe}'"; break;
             }
@@ -786,18 +892,28 @@ namespace MelonS.GameProto
             Button targetBtn = null;
             bool byLabel = spec.StartsWith("label:");
             string key = byLabel ? spec.Substring(6) : spec;
+            // 기본기 진단 (2026-06-12) — 두 단계 수리:
+            //  ① GetComponentInChildren(첫 Text)만 보던 사각: 지시/구역 셀은 아이콘이
+            //    없어 첫 Text 가 한 글자 글리프("벌")라 'label:벌목'이 영영 미매칭.
+            //  ② Contains 첫-매칭 모호성: 'label:문'→"울타리 문"(FenceGate 오발),
+            //    'label:경작'→"경작 영역 제거"(EraseMode no-op) — 격리 채점이 적발.
+            //  → 전 버튼 순회 + 정확도 순위: 완전일치(0) > 시작일치(1) > 포함(2),
+            //    동순위면 최단 텍스트(가장 특정적인 버튼)가 이긴다.
+            int bestRank = int.MaxValue, bestLen = int.MaxValue;
             foreach (var b in Object.FindObjectsByType<Button>(FindObjectsSortMode.None))
             {
                 if (b == null) continue;
                 if (byLabel)
                 {
-                    // 기본기 진단 (2026-06-12) — GetComponentInChildren(첫 Text)만 보던
-                    //  것이 하네스 사각지대였다: 지시/구역 셀은 아이콘이 없어 첫 Text 가
-                    //  한 글자 글리프("벌")라 'label:벌목'이 영영 미매칭 → 모든 자율
-                    //  소크에서 벌목/채광/경작/지붕 지정이 조용히 빠졌다.  전체 Text 순회.
                     foreach (var txt in b.GetComponentsInChildren<Text>(true))
-                        if (txt != null && txt.text.Contains(key)) { targetBtn = b; break; }
-                    if (targetBtn != null) break;
+                    {
+                        if (txt == null || string.IsNullOrEmpty(txt.text)) continue;
+                        string t = txt.text.Trim();
+                        int rank = t == key ? 0 : t.StartsWith(key) ? 1 : t.Contains(key) ? 2 : -1;
+                        if (rank < 0) continue;
+                        if (rank < bestRank || (rank == bestRank && t.Length < bestLen))
+                        { bestRank = rank; bestLen = t.Length; targetBtn = b; }
+                    }
                 }
                 else if (b.gameObject.name == key) { targetBtn = b; break; }
             }

@@ -193,8 +193,20 @@ namespace MelonS.GameProto
         /// seam 의 localScale·localPos 는 부모 lossyScale·sprite bounds 로 보정해
         /// '월드에서 원하는 크기·위치'가 나오게 한다 (부모 비균일 scale 도 정확히 보정).
         /// Start(생성)·이웃 변경 시에만 호출 — per-frame 아님.</summary>
+        // 아트 v2 벽 신작 (2026-06-12) — 신작 struct32_wall_* 는 cap/전면/이음열이
+        //  스프라이트에 내장돼 seam 이 불필요해졌고, seam 이 부모 sprite(cap+전면)를
+        //  옆으로 늘려 그리면서 '벽면 위 미니 벽 부유 무늬'(격리 채점 H-6 회귀)를
+        //  만들었다.  #260 로직은 보존하되 비활성 — 구세대 아트로 롤백 시 true 로.
+        private const bool SeamsEnabled = false;
+
         private void RefreshSeams()
         {
+            if (!SeamsEnabled)
+            {
+                if (_seams != null)
+                    foreach (var s in _seams) if (s != null) s.enabled = false;
+                return;
+            }
             EnsureSeams();
             if (_seams == null) return;
 
