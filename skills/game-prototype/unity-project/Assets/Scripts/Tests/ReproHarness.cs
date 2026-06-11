@@ -207,6 +207,28 @@ namespace MelonS.GameProto
                     break;
                 }
 
+                case "clearFood":
+                {
+                    // #생존압박(2026-06-11) — 아사 검증용: 물리 음식원 전부 제거 (고기/간편식
+                    //  더미 + 베리 덤불).  섭취 레이스 차단으로 굶주림→사망 경로를 결정화.
+                    int removed = 0;
+                    foreach (var m in Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None))
+                    { if (m != null) { Object.Destroy(m.gameObject); removed++; } }
+                    foreach (var b in Object.FindObjectsByType<BerryBushEntity>(FindObjectsSortMode.None))
+                    { if (b != null) { Object.Destroy(b.gameObject); removed++; } }
+                    // 작물도 — 수확이 고기더미를 새로 만들어 아사 검증을 오염시킨다.
+                    foreach (var c in Object.FindObjectsByType<CropEntity>(FindObjectsSortMode.None))
+                    { if (c != null) { Object.Destroy(c.gameObject); removed++; } }
+                    // 야생동물도 — 식량<5 자동 사냥이 고기를 공급해 림을 구출한다
+                    //  (게임 루프는 정상 — 격리 검증에서만 제거).
+                    foreach (var a in Object.FindObjectsByType<AnimalEntity>(FindObjectsSortMode.None))
+                    { if (a != null) { Object.Destroy(a.gameObject); removed++; } }
+                    yield return null;
+                    r.passed = true;
+                    r.detail = $"food sources removed: {removed}";
+                    break;
+                }
+
                 case "setHour":
                 {
                     // 게임 시각 강제 (테스트 스캐폴딩) — 자율취침 밤 게이트(h>=22) 등 시간
@@ -374,6 +396,17 @@ namespace MelonS.GameProto
                     }
                     r.passed = best <= s.min && sleeping;
                     r.detail = $"nearestBed {best:F2} (need ≤{s.min}) sleeping={sleeping} in {t:F1}s"; break;
+                }
+                case "pawnHpBelow":
+                {
+                    // #생존압박(2026-06-11) — 굶주림이 HP 를 깎는가 (아사 경로 게임 진실).
+                    var pawn = FindPawn(s.pawn);
+                    if (pawn == null) { r.passed = false; r.detail = $"pawn '{s.pawn}' not found"; break; }
+                    float t = 0; int hp = pawn.Hp;
+                    while (t < s.withinSec && hp > (int)s.min)
+                    { yield return new WaitForSeconds(0.25f); t += 0.25f; hp = pawn.Hp; }
+                    r.passed = hp <= (int)s.min;
+                    r.detail = $"hp={hp} (need ≤{(int)s.min}) in {t:F0}s(scaled)"; break;
                 }
                 case "pawnActivity":
                 {

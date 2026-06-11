@@ -289,6 +289,20 @@ namespace MelonS.GameProto
                 dmg = reduced;
             }
             AudioBank.Instance?.PlayHit();   // #게임필2 — 림 피격이 들린다 (0.25s 스로틀 내장)
+            ApplyDamage(dmg);
+        }
+
+        /// <summary>방어구를 무시하는 직격 데미지 — 아사/내부 출혈 등 '장비로 못 막는'
+        ///  피해 경로 (#생존압박 2026-06-11: TakeDamage(1)이 armor 0.5 라운딩으로 0 이
+        ///  되어 굶주림이 '막음' 처리되던 버그).  전투 사운드 없이 본체 적용만.</summary>
+        public void TakeTrueDamage(int dmg)
+        {
+            if (IsDead) return;
+            ApplyDamage(dmg);
+        }
+
+        private void ApplyDamage(int dmg)
+        {
             // Day 45: route damage to PawnHealth body parts if present.
             var health = GetComponent<PawnHealth>();
             if (health != null)

@@ -138,6 +138,12 @@ namespace MelonS.GameProto
         //  re-path loop (이것도 stuck 처럼 보임) 방지.  이 동안엔 WantsAutoSleep=false 라
         //  GoSleepAction 이 발동 안 하고 제자리 취침(sleep<30 && night)으로 안정 회복.
         private float autoSleepSuppressUntil = -999f;
+        // 아사 틱 시각 (Time.time 스케일초) + 표시 스로틀 (실초)
+        //  4.5스케일초/3dmg: 부위 랜덤 분산 + TotalHpRatio(부위 평균) 둔감성 기준
+        //  공복→사망 ~0.22게임일, 만복부터 총 ~1게임일.
+        private const float StarvTickGameSec = 4.5f;
+        private float starvNextTickGs = -1f;
+        private float lastStarvText = -99f;
         [SerializeField] private float autoSleepRetryCooldown = 20f;
         public bool HasAutoSleepOrder => autoRestTarget != null;
         public BedEntity AutoRestTarget => autoRestTarget;
@@ -412,6 +418,40 @@ namespace MelonS.GameProto
             food = Mathf.Max(0f, food - foodDecay * dt);
             sleep = Mathf.Max(0f, sleep - sleepDecay * dt);
             mood = Mathf.Max(0f, mood - moodDecay * dt);
+
+            // ── 아사 (운영자 2026-06-11 '가만히 냅둬도 게임오버가 되지 않음') ──
+            //  감쇠율은 림월드 패리티(#234)였으나 food 0 의 '결과'가 없었다 — 굶주림이
+            //  죽음에 이르지 않으면 생존게임 축이 통째로 장식이 된다.
+            //  food 0 지속: 12 게임초당 1 HP (만복→공복 ~1게임일 + 공복→사망 ~0.4게임일
+            //  ≈ 총 1.4게임일 — 림월드 영양실조보다 압축, 프로토 페이싱).
+            //  시간 기준은 Time.time(스케일 시계) — 니즈 decay·WaitForSeconds 와 동일
+            //  기반이라 배속/프레임 케이스에서 표류하지 않는다 (dt 누적·GameClock 기반
+            //  1·2차 구현은 측정 시계와 어긋나 틱이 6~12배 느리게 보였다).
+            //  6스케일초/틱 ≈ 518게임초 — PawnHealth 부위 풀(~137) 기준 공복 후 사망까지
+            //  ~0.25게임일, 만복부터 총 ~1.25게임일.
+            if (food <= 0f && pawnEntity != null && !pawnEntity.IsDead)
+            {
+                float gs = Time.time;
+                if (starvNextTickGs < 0f) starvNextTickGs = gs + StarvTickGameSec;
+                if (gs >= starvNextTickGs)
+                {
+                    starvNextTickGs = gs + StarvTickGameSec;
+                    pawnEntity.TakeTrueDamage(3);   // 방어구 무시 — 굶주림은 못 막는다
+                    Debug.Log($"[Starv] {(pawnEntity != null ? pawnEntity.PawnName : name)} 아사 틱 t={Time.time:F1}");
+                    if (Time.unscaledTime - lastStarvText > 3f)   // 표시는 실초 스로틀
+                    {
+                        lastStarvText = Time.unscaledTime;
+                        FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
+                                           "굶주림!", new Color(0.92f, 0.35f, 0.25f, 1f));
+                    }
+                }
+            }
+            else
+            {
+                if (starvNextTickGs >= 0f)
+                    Debug.Log($"[Starv] {(pawnEntity != null ? pawnEntity.PawnName : name)} 아사 중단 — food={food:F1} t={Time.time:F1}");
+                starvNextTickGs = -1f;
+            }
 
             // Day 20: mood break — when mood drops below threshold, pawn
             // enters a "break" for moodBreakDuration.  Recovery only when
