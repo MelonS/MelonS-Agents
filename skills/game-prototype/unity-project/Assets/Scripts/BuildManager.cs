@@ -53,7 +53,7 @@ namespace MelonS.GameProto
         //   Lamp/FloorStone/TableChair/Fence so the build never produces a
         //   null/magenta entity even without an asset import + ZERO SceneSetup edit.
         //   NO cover-math (gated/over-scope) — visual + pathing only.
-        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair, Fence, FenceGate, Barricade, Autodoor }
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair, Fence, FenceGate, Barricade, Autodoor, ResearchBench }
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
         // #182 - placement cooldown: SetMode 후 0.15s 동안 TryPlace skip.
@@ -72,6 +72,12 @@ namespace MelonS.GameProto
         // W-M4-04 (#19) - Lamp cost.  the reference sim torch ≈ 1 wood, standing lamp needs
         //   power; this prototype lamp is a cheap always-on light at 목재 4.
         [SerializeField] private int lampCost = 4;
+        // #229 회귀 수리 (2026-06-12) — 맨땅 시작 전환 때 스타터 연구대만 제거되고
+        //  빌드 경로가 없어 연구 축이 신규 게임에서 구조적으로 죽어 있었다 (StallReason
+        //  힌트 "작업대 필요 (건축 F8)"가 거짓말 — 건축 메뉴에 연구대 없음).  Lamp 의
+        //  Ensure* 런타임 템플릿 패턴 복제: SetRefs/씬 재생성 없이 buildable 추가.
+        //  비용 15 = 화덕(10)과 고급침대(30) 사이, 테크 트리 관문이라 접근 가능하게.
+        [SerializeField] private int benchCost = 15;
         // W-M4-04 (#19) - Lamp prefab + sprite.  Normally wired via SetRefs from
         //   SceneSetup like the others; but the Lane A contract forbids a
         //   SceneSetup edit, so these stay null and BuildManager builds them
@@ -317,6 +323,7 @@ namespace MelonS.GameProto
             Mode.FenceGate => EnsureFenceGateSprite(),
             Mode.Barricade => EnsureBarricadeSprite(),
             Mode.Autodoor  => EnsureAutodoorSprite(),
+            Mode.ResearchBench => EnsureBenchSprite(),
             _ => wallSprite,
         };
 
@@ -331,6 +338,7 @@ namespace MelonS.GameProto
             Mode.Floor           => floorCost,
             Mode.Door            => doorCost,
             Mode.Stove           => stoveCost,
+            Mode.ResearchBench   => benchCost,            // #229 회귀 수리 - 목재 15
             Mode.Bed             => bedCost,
             Mode.BedSleepingSpot => bedSleepingSpotCost,  // #154 - 0
             Mode.BedFine         => bedFineCost,          // #154 - 30
@@ -391,6 +399,7 @@ namespace MelonS.GameProto
             Mode.Floor           => floorPrefab,
             Mode.Door            => doorPrefab,
             Mode.Stove           => stovePrefab,
+            Mode.ResearchBench   => EnsureBenchPrefab(),  // #229 회귀 수리
             Mode.Bed             => bedPrefab,
             Mode.BedSleepingSpot => bedPrefab,  // #154 - 같은 prefab, quality 다름
             Mode.BedFine         => bedPrefab,  // #154
@@ -466,6 +475,7 @@ namespace MelonS.GameProto
                 //  de-fragiles Build Click QA (settlement cells often have pawns).
                 if (h.GetComponent<BerryBushEntity>() != null) return true;
                 if (h.GetComponent<StoveEntity>() != null) return true;
+                if (h.GetComponent<ResearchBench>() != null) return true;  // #229 회귀 수리
                 if (h.GetComponent<LampEntity>() != null) return true;   // W-M4-04 #19
                 if (h.GetComponent<TableEntity>() != null) return true;  // W-M4-06 #20
                 if (h.GetComponent<BarricadeEntity>() != null) return true;  // W-M6-03 B4 - impassable, can't stack
@@ -659,6 +669,7 @@ namespace MelonS.GameProto
             Mode.Floor           => "바닥",
             Mode.Door            => "문",
             Mode.Stove           => "화덕",
+            Mode.ResearchBench   => "연구대",
             Mode.Bed             => "목재 침대",
             Mode.BedSleepingSpot => "수면 자리",
             Mode.BedFine         => "고급 침대",
@@ -692,6 +703,7 @@ namespace MelonS.GameProto
             Mode.FenceGate => EnsureFenceGateSprite(),    // W-M6-02 B3
             Mode.Barricade => EnsureBarricadeSprite(),    // W-M6-03 B4
             Mode.Autodoor  => EnsureAutodoorSprite(),     // W-M6-04 B5
+            Mode.ResearchBench => EnsureBenchSprite(),    // #229 회귀 수리
             _ => wallSprite,
         };
 
@@ -726,6 +738,41 @@ namespace MelonS.GameProto
             if (_lampSpriteRuntime != null) return _lampSpriteRuntime;
             _lampSpriteRuntime = LoadOrBuildLampSprite();
             return _lampSpriteRuntime;
+        }
+
+        // #229 회귀 수리 — 연구대 buildable.  Lamp 의 Ensure* 패턴 복제: 에디터에선
+        //  실시트(struct32_research_bench.png), 플레이어 빌드에선 Resources/struct32
+        //  사본 폴백.  ResearchManager 가 1s 캐시로 신규 벤치를 자동 인지하므로
+        //  배치 즉시 "연구자 없음 (작업대 근처 림)" → 림 접근 시 연구 진행.
+        private GameObject _benchPrefabRuntime;
+        private Sprite _benchSpriteRuntime;
+
+        private Sprite EnsureBenchSprite()
+        {
+            if (_benchSpriteRuntime != null) return _benchSpriteRuntime;
+#if UNITY_EDITOR
+            _benchSpriteRuntime = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(
+                "Assets/Sprites/struct32_research_bench.png");
+#endif
+            if (_benchSpriteRuntime == null)
+                _benchSpriteRuntime = Resources.Load<Sprite>("struct32/struct32_research_bench");
+            return _benchSpriteRuntime;
+        }
+
+        private GameObject EnsureBenchPrefab()
+        {
+            if (_benchPrefabRuntime != null) return _benchPrefabRuntime;
+            var bgo = new GameObject("ResearchBenchTemplate");
+            bgo.hideFlags = HideFlags.HideAndDontSave;
+            bgo.SetActive(false);
+            var bsr = bgo.AddComponent<SpriteRenderer>();
+            bsr.sprite       = EnsureBenchSprite();
+            bsr.sortingOrder = 5;                              // Stove/Lamp 본체와 동일
+            var bbox = bgo.AddComponent<BoxCollider2D>();
+            bbox.size = Vector2.one;
+            bgo.AddComponent<ResearchBench>();
+            _benchPrefabRuntime = bgo;
+            return _benchPrefabRuntime;
         }
 
         private GameObject EnsureLampPrefab()

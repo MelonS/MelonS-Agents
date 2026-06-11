@@ -234,6 +234,9 @@ namespace MelonS.GameProto
             },
             ["Production (생산)"] = new[] {
                 (BuildManager.Mode.Stove, "화덕 (목재 10)", 10),
+                // #229 회귀 수리 — 맨땅 시작 전환 때 스타터 연구대만 제거되고 빌드
+                //  경로가 없어 연구 축(테크 트리 전체)이 신규 게임에서 죽어 있었다.
+                (BuildManager.Mode.ResearchBench, "연구대 (목재 15)", 15),
             },
             // W-M4-05 (#42) — surface the W-M4-04 Lamp buildable in the Architect
             //   catalogue (was L-hotkey-only, per qa.json flags_for_next_wave #42).
@@ -297,6 +300,7 @@ namespace MelonS.GameProto
             BuildManager.Mode.BedFine         => "bed_fine",
             BuildManager.Mode.BedSleepingSpot => "bed_wood",
             BuildManager.Mode.Stove           => "stove",
+            BuildManager.Mode.ResearchBench   => "struct32_research_bench",
             BuildManager.Mode.Lamp            => "lamp",
             _ => "",
         };
@@ -318,6 +322,7 @@ namespace MelonS.GameProto
             BuildManager.Mode.BedFine         => "고급 침대 (수면 1.4x)",
             BuildManager.Mode.BedSleepingSpot => "수면 자리 (자재 불필요)",
             BuildManager.Mode.Stove           => "화덕 (요리)",
+            BuildManager.Mode.ResearchBench   => "연구대 (림이 근처에 있으면 연구 진행)",
             BuildManager.Mode.Lamp            => "램프 (조명)",
             _ => "건축물",
         };
