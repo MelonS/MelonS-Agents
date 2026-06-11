@@ -13,7 +13,13 @@ namespace MelonS.GameProto.EditorTools
     {
         private void OnPreprocessTexture()
         {
-            if (!assetPath.Replace('\\', '/').Contains("/Resources/pawn32/")) return;
+            string p = assetPath.Replace('\\', '/');
+            bool pawn = p.Contains("/Resources/pawn32/");
+            // A단계: 32px 지형/식생/아이템 — LoadOrSetupSprite 의 크기 규칙
+            //  ((srcW>=64)?32:16)이 32px 단일 타일에 PPU 16 을 주는 것을 폴더/접두로 차단.
+            bool v2 = p.Contains("/Sprites/tile32_") || p.Contains("/Sprites/flora32_")
+                   || p.Contains("/Resources/items32/");
+            if (!pawn && !v2) return;
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;
             ti.spriteImportMode = SpriteImportMode.Single;
@@ -21,7 +27,7 @@ namespace MelonS.GameProto.EditorTools
             ti.filterMode = UnityEngine.FilterMode.Point;
             ti.textureCompression = TextureImporterCompression.Uncompressed;
             ti.mipmapEnabled = false;
-            ti.isReadable = true;
+            ti.isReadable = pawn;   // 시트 슬라이스용 (타일/식생은 불필요)
         }
     }
 }

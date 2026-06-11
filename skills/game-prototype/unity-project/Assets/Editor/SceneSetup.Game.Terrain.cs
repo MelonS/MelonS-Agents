@@ -62,14 +62,16 @@ namespace MelonS.GameProto.EditorTools
 
             // 4 tile asset (Day 39+40)
             Directory.CreateDirectory("Assets/Tiles");
-            layout.grassTile = LoadOrCreateTile("Assets/Sprites/tile_grass.png", "Assets/Tiles/Grass.asset");
-            layout.dirtTile  = LoadOrCreateTile("Assets/Sprites/tile_dirt.png",  "Assets/Tiles/Dirt.asset");
-            layout.waterTile = LoadOrCreateTile("Assets/Sprites/tile_water.png", "Assets/Tiles/Water.asset");
-            layout.rockTile  = LoadOrCreateTile("Assets/Sprites/tile_rock.png",  "Assets/Tiles/Rock.asset");
-            // #게임필 배치3(2026-06-10 자율) — 디스크에 이미 있던 grass 변형 b/c 를 배선.
-            //  rotation/flip(#109)만으론 동일 픽셀 반복이 그대로 보여 들판이 벽지처럼 단조.
-            Tile grassTileB = LoadOrCreateTile("Assets/Sprites/tile_grass_b.png", "Assets/Tiles/GrassB.asset");
-            Tile grassTileC = LoadOrCreateTile("Assets/Sprites/tile_grass_c.png", "Assets/Tiles/GrassC.asset");
+            // 아트 v2 A단계 (2026-06-11): 16px → 32px 타일 세대 교체.  잔디 4변형,
+            //  dirt/rock 2변형(셀 좌표 해시 선택 — rng 12345 체인 무접촉).
+            layout.grassTile = LoadOrCreateTile("Assets/Sprites/tile32_grass_a.png", "Assets/Tiles/Grass.asset", 32f);
+            layout.dirtTile  = LoadOrCreateTile("Assets/Sprites/tile32_dirt_a.png",  "Assets/Tiles/Dirt.asset", 32f);
+            layout.waterTile = LoadOrCreateTile("Assets/Sprites/tile32_water_a.png", "Assets/Tiles/Water.asset", 32f);
+            layout.rockTile  = LoadOrCreateTile("Assets/Sprites/tile32_rock_a.png",  "Assets/Tiles/Rock.asset", 32f);
+            Tile dirtTileB = LoadOrCreateTile("Assets/Sprites/tile32_dirt_b.png", "Assets/Tiles/DirtB.asset", 32f);
+            Tile grassTileB = LoadOrCreateTile("Assets/Sprites/tile32_grass_b.png", "Assets/Tiles/GrassB.asset", 32f);
+            Tile grassTileC = LoadOrCreateTile("Assets/Sprites/tile32_grass_c.png", "Assets/Tiles/GrassC.asset", 32f);
+            Tile grassTileD = LoadOrCreateTile("Assets/Sprites/tile32_grass_d.png", "Assets/Tiles/GrassD.asset", 32f);
 
             // Procedural 결정론적 (seed=12345) + #109 cell 당 random rotation/flip 으로
             //  같은 타일이 반복돼도 시각 변화 (operator: "타일이미지가 너무 구림" + "autotile" 피드백)
@@ -89,6 +91,12 @@ namespace MelonS.GameProto.EditorTools
                         { isRock = true; break; }
                     }
                     Vector3Int cell = new Vector3Int(x, y, 0);
+                    // 셀 해시 변형 선택 — 추가 rng 호출 없이 결정론 (12345 체인 보존).
+                    //  ⚠ rock 은 단일 변형만: PathGrid/PawnMovement 가 't == _rock' 레퍼런스
+                    //  비교로 통행 차단을 판정하므로 rockTileB 셀은 통행 가능해져 버린다
+                    //  (게임플레이 변경 금지).  rock b 변형은 PathGrid 가 타일 '집합'을
+                    //  받도록 운영자 OK 후에만.  dirt 는 양쪽 다 통행이라 무해.
+                    bool altVar = (((x * 73856093) ^ (y * 19349663)) & 2) == 0;
                     if (isRock) { layout.tilemap.SetTile(cell, layout.rockTile); ApplyRandomTileTransform(layout.tilemap, cell, rotRng); continue; }
                     bool isLake = false;
                     for (int li = 0; li < layout.lakeCenters.Length; li++)
@@ -100,14 +108,16 @@ namespace MelonS.GameProto.EditorTools
                     foreach (var dc in layout.dirtCenters)
                     {
                         if ((p - dc).magnitude < layout.dirtRadius + (float)(rng.NextDouble()-0.5)*0.5f)
-                        { chosen = layout.dirtTile; break; }
+                        { chosen = altVar ? dirtTileB : layout.dirtTile; break; }
                     }
-                    // #게임필 배치3 — grass 60/25/15 가중 변형 (결정론: 같은 rng 시드 체인)
+                    // #게임필 배치3 — grass 가중 변형 (결정론: 같은 rng 시드 체인).
+                    //  아트 v2: 4변형 58/20/12/10 — gv 호출은 그대로 1회 (체인 보존).
                     if (chosen == layout.grassTile)
                     {
                         double gv = rng.NextDouble();
-                        if (gv > 0.85 && grassTileC != null) chosen = grassTileC;
-                        else if (gv > 0.60 && grassTileB != null) chosen = grassTileB;
+                        if (gv > 0.90 && grassTileD != null) chosen = grassTileD;
+                        else if (gv > 0.78 && grassTileC != null) chosen = grassTileC;
+                        else if (gv > 0.58 && grassTileB != null) chosen = grassTileB;
                     }
                     layout.tilemap.SetTile(cell, chosen);
                     ApplyRandomTileTransform(layout.tilemap, cell, rotRng);

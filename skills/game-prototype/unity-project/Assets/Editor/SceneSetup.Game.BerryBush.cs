@@ -16,7 +16,8 @@ namespace MelonS.GameProto.EditorTools
             //   캐시한 뒤 stock 별 brightness 곱(0.35~1.0)을 적용하므로, base 를
             //   Color.white 로 두면 새 스프라이트가 본래 색으로 시작하고 stock
             //   상태는 밝기 변화로 계속 표현된다 (treeSprite fallback only if 미import).
-            Sprite bushSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/berry_bush.png");
+            // 아트 v2 A단계: 32px 덤불 (수확후 프레임 flora32_bush_picked 은 후속 배선).
+            Sprite bushSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora32_bush_berry.png");
             if (bushSprite == null)
             {
                 Debug.LogWarning("[SceneSetup] berry_bush.png missing → falling back to tree sprite");

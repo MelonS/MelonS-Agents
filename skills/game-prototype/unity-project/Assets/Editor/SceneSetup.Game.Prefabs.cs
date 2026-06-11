@@ -55,10 +55,12 @@ namespace MelonS.GameProto.EditorTools
 
             // Trees (Day 3+12): build a Tree prefab asset once.  RegrowthScheduler
             //  uses this prefab too — unified path for initial + regen.
-            ps.treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree.png");
+            // 아트 v2 A단계 (2026-06-11): 16px tree.png → 32x48 flora32_tree_a.png
+            //  (PPU32 = 1x1.5 유닛 — ArtV2Import 가 임포트 설정 강제).
+            ps.treeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora32_tree_a.png");
             if (ps.treeSprite == null)
             {
-                string p = "Assets/Sprites/tree.png";
+                string p = "Assets/Sprites/flora32_tree_a.png";
                 TextureImporter ti = AssetImporter.GetAtPath(p) as TextureImporter;
                 if (ti != null)
                 {
@@ -85,7 +87,8 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/shadow_tree.png");
             GameObject treeShadowGo = new GameObject("TreeShadow");
             treeShadowGo.transform.SetParent(treeTemplate.transform, false);
-            treeShadowGo.transform.localPosition = new Vector3(0f, -0.56f, 0f);
+            // 아트 v2: 나무가 1.5h(베이스 -0.75) — 그림자를 둥치 밑으로.
+            treeShadowGo.transform.localPosition = new Vector3(0f, -0.70f, 0f);
             treeShadowGo.transform.localScale = Vector3.one;
             var treeShadowSr = treeShadowGo.AddComponent<SpriteRenderer>();
             treeShadowSr.sprite = treeShadowSprite;

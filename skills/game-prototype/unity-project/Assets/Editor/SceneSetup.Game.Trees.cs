@@ -30,10 +30,12 @@ namespace MelonS.GameProto.EditorTools
                     ti.SaveAndReimport();
                 }
             }
+            // 아트 v2 A단계 (2026-06-11): 수종 3종을 32x48 캐노피 변형으로 교체
+            //  (구 tree/birch/oak 16px — 자작나무가 '흰 막대+초록 사각'으로 읽히던 것).
             MelonS.GameProto.TreeEntity.SpeciesSprites = new[] {
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree.png"),
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree_birch.png"),
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tree_oak.png"),
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora32_tree_a.png"),
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora32_tree_b.png"),
+                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora32_tree_c.png"),
             };
 
             // #108: 60x60 맵 = 9x 면적.  20 → 45 그루 비례.

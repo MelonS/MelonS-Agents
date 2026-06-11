@@ -51,7 +51,8 @@ namespace MelonS.GameProto.EditorTools
             return s;
         }
 
-        private static Tile LoadOrCreateTile(string spritePath, string tileAssetPath)
+        private static Tile LoadOrCreateTile(string spritePath, string tileAssetPath,
+                                             float ppu = 16f)
         {
             // Day 39 lesson: Unity 6에서 신규 PNG → Sprite import이 SaveAndReimport
             //  호출 후에도 LoadAssetAtPath가 즉시 null 반환할 때가 있음.
@@ -69,7 +70,7 @@ namespace MelonS.GameProto.EditorTools
                 //  (새벽 마우브/정오 세이지 플랫 사각형 — 운영자 "QR코드 지면"의 정체).
                 //  Single 강제로 메타가 어떤 상태든 자가치유.
                 ti.spriteImportMode = SpriteImportMode.Single;
-                ti.spritePixelsPerUnit = 16;
+                ti.spritePixelsPerUnit = ppu;   // 아트 v2: 32px 타일은 PPU 32
                 ti.filterMode = FilterMode.Point;
                 ti.SaveAndReimport();
             }

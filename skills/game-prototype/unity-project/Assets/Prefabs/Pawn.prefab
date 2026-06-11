@@ -543,6 +543,8 @@ MonoBehaviour:
   statusGap: 0.26
   fontSize: 64
   characterSize: 0.05
+  lodNameOnly: 10
+  lodHideAll: 17
 --- !u!114 &6373964312038851044
 MonoBehaviour:
   m_ObjectHideFlags: 0
