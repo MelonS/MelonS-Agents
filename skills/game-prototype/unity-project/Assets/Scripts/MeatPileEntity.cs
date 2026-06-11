@@ -56,7 +56,12 @@ namespace MelonS.GameProto
         {
             if (!InStockpile)
             {
-                durability -= decayPerDay * (Time.deltaTime / 24f);  // 24s = 1 game day
+                // 게임루프 차순위 (2026-06-12) — 폭풍 물리 비용: 야외 방치 식량은 폭풍
+                //  동안 4배로 상한다.  '텍스트+무드'뿐이던 폭풍의 첫 물리 결과 — 수확물을
+                //  저장고로 들이는 운반(InStockpile=보호)이 폭풍 대비 행동이 된다.
+                float stormMul = WeatherController.Instance != null
+                    && WeatherController.Instance.Current == WeatherKind.Storm ? 4f : 1f;
+                durability -= decayPerDay * stormMul * (Time.deltaTime / 24f);  // 24s = 1 game day
                 if (durability <= 0f) { Destroy(gameObject); return; }
             }
             if (_sr != null)

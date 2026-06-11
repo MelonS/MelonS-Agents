@@ -128,6 +128,9 @@ namespace MelonS.GameProto
                 //  나무/광맥만 — IsMarked 게이트 덕에 '아무거나 자동 채집' 회귀는 없음).
                 new ChopTreeAction(),     // 지정(마킹)된 나무만 자율 벌목 (IsMarked 게이트)
                 new MineStoneAction(),    // 지정(마킹)된 광맥만 자율 채광 (IsMarked 게이트)
+                // 연구 디스패치 (2026-06-12) — 최하단: 다른 일감이 없을 때만 벤치 옆에
+                //  머물며 연구.  직업 탭 '연구' 우선순위가 처음으로 실효를 가진다.
+                new DoResearchAction(),
                 //  운반·요리·수확·사냥(생존)·경작 zone 은 the reference sim 처럼 자동 유지.
                 // 운영자 2026-06-02: idle 배회는 리스트의 WanderAction(1.5s 간격, 긴 정지)
                 //  대신 Update 의 anchored pacing(idleStepInterval 0.8s, 근처 타일 왕복)이

@@ -580,6 +580,44 @@ namespace MelonS.GameProto.AI
         }
     }
 
+    /// <summary>
+    /// 연구 디스패치 (2026-06-12) — 직업 탭 '연구' 컬럼이 우선순위 저장/로드까지 되면서
+    /// WorkKind.Research 소비처가 0 이던 거짓 UI 교정.  번영 소크 실증: 연구대를 지어도
+    /// 림이 옆에 머물 이유가 없어 8게임일에 2pt (사실상 정체).
+    ///
+    /// 연구대는 ResearcherSpeedSum(radius 1.5)이 반경 내 폰을 자동 감지하므로 워커
+    /// 컴포넌트 없이 '벤치 옆에 서 있기'가 곧 연구다: 반경 밖이면 벤치 앞 칸으로 이동,
+    /// 반경 안이면 true 만 반환(머무름 = 작업).  PawnUtilityAI 리스트 최하단 등록 —
+    /// 같은 우선순위에선 다른 일감이 전부 소진된 뒤에만 잡고, 직업 탭에서 연구 1/
+    /// 나머지 2+ 로 두면 전담 연구자가 된다.
+    /// </summary>
+    public class DoResearchAction : IPawnAction
+    {
+        public string DisplayName => "연구";
+        public WorkKind Kind => WorkKind.Research;
+        public bool TryStart(PawnContext ctx)
+        {
+            var rm = ResearchManager.Instance;
+            if (rm == null || rm.activeTech == null || rm.activeTech.completed) return false;
+            var benches = Object.FindObjectsByType<ResearchBench>(FindObjectsSortMode.None);
+            ResearchBench best = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = ctx.transform.position;
+            foreach (var b in benches)
+            {
+                if (b == null) continue;
+                float sq = ((Vector2)b.transform.position - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = b; }
+            }
+            if (best == null) return false;
+            if (bestSq <= 1.5f * 1.5f) return true;   // 반경 안 — 머무는 것이 작업
+            if (ctx.movement == null) return false;
+            // 벤치 앞 칸(남쪽) — 벤치 본체 콜라이더 위로 끼지 않게.
+            ctx.movement.SetTarget((Vector2)best.transform.position + Vector2.down);
+            return true;
+        }
+    }
+
     public class WanderAction : IPawnAction
     {
         public string DisplayName => "어슬렁";

@@ -109,6 +109,8 @@ namespace MelonS.GameProto
                     // #트레잇 결정성(2026-06-03): 이름 설정 직후 트레잇을 그 이름으로 재시드 →
                     //  콜로니스트마다 다른 트레잇(이전엔 전원 "Pawn(Clone)" 시드로 동일).
                     p.GetComponent<PawnTraits>()?.ReRollFromName(name);
+                    // 시작 스킬 개인차 (2026-06-12) — 트레잇과 같은 이름-시드 결정론.
+                    p.GetComponent<PawnSkills>()?.ReRollFromName(name);
                     // #199 A2 — unselectedColor=white 로 강제: idle(미선택/미징집) 시
                     //  PawnEntity.ApplyVisual 이 sr.color=unselectedColor 로 덮어쓰는데,
                     //  여기서 white 가 아니면 변형 sprite 의 옷색이 tint 로 더럽혀짐.

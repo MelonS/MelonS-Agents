@@ -497,6 +497,7 @@ namespace MelonS.GameProto
                     string wname = PawnEntity.NextJoinerName();
                     wgo.GetComponent<PawnEntity>()?.SetPawnName(wname);
                     wgo.GetComponent<PawnTraits>()?.ReRollFromName(wname);
+                    wgo.GetComponent<PawnSkills>()?.ReRollFromName(wname);
                     FloatingText.Spawn(wgo.transform.position + Vector3.up * 0.7f,
                         $"방랑자 {wname} 합류!", new Color(0.6f, 0.9f, 0.6f, 1f));
                     Debug.Log($"[AIDirector] wanderer_arrival 실효: {wname} 합류 (북쪽 외곽)");
@@ -593,7 +594,7 @@ namespace MelonS.GameProto
             pool.Add(new GameEvent {
                 id = "storm_warning", threatTier = 1,
                 title = "폭풍 경보",
-                description = "북쪽에서 짙은 먹구름이 몰려온다. 한 시간 안에 폭풍이 닥칠 것이다.",
+                description = "북쪽에서 짙은 먹구름이 몰려온다. 한 시간 안에 폭풍이 닥칠 것이다. (야외 방치 식량 부패 4배)",
                 flavor = "바람에서 벌써 빗냄새가 난다.",
             });
             // #게임필(2026-06-10, 자율) — 신호 신뢰 회복: 카드(tier≥1)가 말하는 일은 실제로

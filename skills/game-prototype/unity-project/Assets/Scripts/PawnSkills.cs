@@ -36,6 +36,22 @@ namespace MelonS.GameProto
             entries[3] = new SkillEntry { kind = SkillKind.Combat, level = 0, xp = 0f };
         }
 
+        /// <summary>시작 스킬 개인차 (게임루프 차순위 2026-06-12) — 전 림이 4/4/8/0
+        ///  동일 시작이라 '누가 뭘 잘하나'가 없던 것.  PawnTraits.ReRollFromName 과
+        ///  같은 이름-시드 결정론(같은 이름 = 같은 시작 스킬).  스폰/합류 지점에서
+        ///  호출 — 로드 경로는 호출하지 않으며 skillLevels 복원이 항상 우선한다.</summary>
+        public void ReRollFromName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return;
+            int h = name.GetHashCode();
+            for (int i = 0; i < entries.Length; i++)
+            {
+                int delta = ((h >> (i * 5)) & 7) - 2;   // 스킬별 결정론 변동 -2..+5
+                entries[i].level = Mathf.Clamp(entries[i].level + delta, 0, 12);
+                entries[i].xp = 0f;
+            }
+        }
+
         /// <summary>#196 - 외부에서 skill level 강제 설정 (테스트/시작값).</summary>
         public void SetLevel(SkillKind k, int level)
         {
