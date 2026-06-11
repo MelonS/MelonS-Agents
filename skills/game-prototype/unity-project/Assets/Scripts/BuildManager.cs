@@ -199,7 +199,7 @@ namespace MelonS.GameProto
             //   Architect menu ONLY (no hotkey) to keep the gate off the contended
             //   key space while still being one-click buildable.
             if (Input.GetKeyDown(KeyCode.E)) SetMode(CurrentMode == Mode.Fence ? Mode.Off : Mode.Fence);
-            if (BuildModeActive && Input.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }
+            if (BuildModeActive && SimInput.GetMouseButtonDown(1)) { SetMode(Mode.Off); return; }   // SimInput — 규칙 2
             // #ui백로그 4.6 — ESC 빌드 취소: 지정 모드 7종(벌목/채광/해체 등)은 전부
             //  우클릭+ESC 양쪽인데 빌드만 우클릭 전용이라 비대칭이었다 (SettingsMenu 주석이
             //  가정하던 'ESC=build-cancel' 바인딩의 실체화).  SettingsMenu 의 ESC 는 isOpen
@@ -209,9 +209,12 @@ namespace MelonS.GameProto
             // #179/#182 - click 처리.  cooldown 으로 SetMode 직후 race 방지.
             //  EventSystem guard 는 over-blocking 위험 (TopBar/GuiControlBar 가 항상 raycast target).
             //  대신 PlaceCooldownSec (0.15s) 으로 메뉴 버튼 click → SetMode → 즉시 TryPlace race 차단.
-            if (BuildModeActive && Input.GetMouseButtonDown(0))
+            // #QA플레이 (2026-06-11): 배치 클릭이 raw Input 이라 하네스 worldclick 이
+            //  무시됐다 (휴먼라이크 플레이테스트가 건축 불가 — _playtest-first10min 발굴).
+            //  ClickSelector 와 동일하게 SimInput 패스스루 — 규칙 2 (같은 레이어 검증).
+            if (BuildModeActive && SimInput.GetMouseButtonDown(0))
             {
-                HandleLeftClickAt(Input.mousePosition, checkOverUI: true);
+                HandleLeftClickAt(SimInput.mousePosition, checkOverUI: true);
             }
         }
 
