@@ -328,6 +328,8 @@ namespace MelonS.GameProto
                 BoxCollider2D col = go.AddComponent<BoxCollider2D>();
                 col.size = new Vector2(2f, 2f);
                 go.AddComponent<BanditEnemy>();
+                // 아트 v2 hostile — 전용 32px 시트가 있으면 틴트 외형을 대체 (없으면 no-op).
+                go.AddComponent<BanditAnim32>();
 
                 // #버그헌트: 레이드 이벤트(OnEventFired)는 SpawnRaid 에서 레이드당 1회만 발생.
                 //  여기(per-bandit)서 발생시키던 중복 호출 제거.  per-bandit 은 조용한 로그만.

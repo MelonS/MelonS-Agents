@@ -81,6 +81,17 @@ namespace MelonS.GameProto
         private float flashUntil = -1f;
         private float nextHitTime = -1f;
 
+        // 아트 v2 hostile (2026-06-12) — BanditAnim32 가 공격 스윙 프레임 타이밍에 소비.
+        public float LastAttackTime { get; private set; } = -999f;
+
+        /// <summary>BanditAnim32 가 스폰 틴트(빨강)를 인계할 때 호출 — 전용 원화가
+        /// 적대 신호를 담당하므로 히트플래시 복원색도 함께 갱신해야 한다.</summary>
+        public void OverrideBaseColor(Color c)
+        {
+            baseColor = c;
+            if (sr != null && flashUntil < 0f) sr.color = c;
+        }
+
         // Target cache — refresh at most every 0.25s instead of every frame.
         // Lesson #4: FindObjectsOfType is O(n) and hammering it per-Update on
         // every BanditEnemy was the suspected cause of the Day 3 06:00 stall.
@@ -160,6 +171,7 @@ namespace MelonS.GameProto
                     nextHitTime = Time.time + damageInterval;
                     target.TakeDamage(contactDamage, gameObject);
                     lastCombatTime = Time.time;   // 퇴각 타이머 리셋
+                    LastAttackTime = Time.time;
                 }
             }
         }
@@ -224,6 +236,7 @@ namespace MelonS.GameProto
                 {
                     wall.TakeDamage(contactDamage * 2f);
                     lastCombatTime = Time.time;   // 벽 공격도 전투 — 퇴각 타이머 리셋   // HP tint 피드백은 WallEntity 내장
+                    LastAttackTime = Time.time;
                     Debug.Log($"[Bandit] 벽 공격 -{contactDamage * 2f}");
                     break;
                 }
