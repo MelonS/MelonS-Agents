@@ -63,7 +63,11 @@ namespace MelonS.GameProto
                     go.AddComponent<PawnWorkSettings>();
                     go.AddComponent<PawnUtilityAI>();
                     PawnEntity.AttachColonistKit(go);   // r2 #8 — 시작 림과 동일 세트
-                    Debug.Log($"[Capture] 강도 포섭 성공!");
+                    // 소크 발견 (2026-06-12) — 포로 합류자도 한글 이름 + 이름 시드 트레잇.
+                    string cname = PawnEntity.NextJoinerName();
+                    go.GetComponent<PawnEntity>()?.SetPawnName(cname);
+                    go.GetComponent<PawnTraits>()?.ReRollFromName(cname);
+                    Debug.Log($"[Capture] 강도 포섭 성공! → {cname} 합류");
                 }
                 Destroy(gameObject);
                 return true;

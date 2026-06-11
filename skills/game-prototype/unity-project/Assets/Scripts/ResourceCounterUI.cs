@@ -96,7 +96,9 @@ namespace MelonS.GameProto
                     if (cachedPawnCount > 0)
                     {
                         float foodUnits = rm.food + rm.meals * 3f + rm.fineMeals * 5f;
-                        float d = foodUnits / (cachedPawnCount * FoodUnitsPerPawnDay);
+                        // 소크 발견 (2026-06-12): rm.food 가 소수점 음수로 떨어지면
+                        //  '~-0.0일치' 표기 — 잔여일은 0 미만이 없다.
+                        float d = Mathf.Max(0f, foodUnits / (cachedPawnCount * FoodUnitsPerPawnDay));
                         days = d < 10f ? $" (~{d:F1}일치)" : "";
                     }
                     mealsText.text = $"식사: {rm.meals:N0}{fine}{days}";

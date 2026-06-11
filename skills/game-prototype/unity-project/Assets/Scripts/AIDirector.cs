@@ -492,9 +492,14 @@ namespace MelonS.GameProto
                     wgo.AddComponent<PawnWorkSettings>();
                     wgo.AddComponent<PawnUtilityAI>();
                     PawnEntity.AttachColonistKit(wgo);   // r2 #8 — 시작 림과 동일 세트
+                    // 소크 발견 (2026-06-12) — 합류자도 한글 이름 + 이름 시드 트레잇
+                    //  (GameSaveButtons 로드 경로와 동일 패턴: 이름이 개성의 시드).
+                    string wname = PawnEntity.NextJoinerName();
+                    wgo.GetComponent<PawnEntity>()?.SetPawnName(wname);
+                    wgo.GetComponent<PawnTraits>()?.ReRollFromName(wname);
                     FloatingText.Spawn(wgo.transform.position + Vector3.up * 0.7f,
-                        "방랑자 합류!", new Color(0.6f, 0.9f, 0.6f, 1f));
-                    Debug.Log("[AIDirector] wanderer_arrival 실효: 콜로니스트 1명 합류 (북쪽 외곽)");
+                        $"방랑자 {wname} 합류!", new Color(0.6f, 0.9f, 0.6f, 1f));
+                    Debug.Log($"[AIDirector] wanderer_arrival 실효: {wname} 합류 (북쪽 외곽)");
                     break;
                 }
                 case "morale_dip":

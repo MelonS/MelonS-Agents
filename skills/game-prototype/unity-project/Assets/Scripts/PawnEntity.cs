@@ -190,6 +190,24 @@ namespace MelonS.GameProto
             Ensure<PawnNameLabel>(); Ensure<PawnFloatingBars>();
         }
 
+        // 합류 림 한글 이름 풀 (운영 소크 발견 2026-06-12: 합류자가 전부 기본값
+        //  "Colonist"로 남아 사망 카드까지 영문 노출).  시작 림(씬 직렬화 민지/서연/지훈)과
+        //  겹치지 않는 풀에서 현재 폰 수 기반 결정론 선택 — UnityEngine.Random 비소비
+        //  (재현 rng 체인 불변).
+        private static readonly string[] JoinerNames =
+            { "하준", "도윤", "은우", "시우", "수아", "하린", "지아", "예준", "윤서", "채원" };
+
+        public static string NextJoinerName()
+        {
+            int n = UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None).Length;
+            return JoinerNames[n % JoinerNames.Length];
+        }
+
+        public void SetPawnName(string n)
+        {
+            if (!string.IsNullOrEmpty(n)) pawnName = n;
+        }
+
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
