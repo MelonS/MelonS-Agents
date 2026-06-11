@@ -532,6 +532,8 @@ namespace MelonS.GameProto
                 isBreaking = true;
                 breakUntil = Time.time + moodBreakDuration;
                 // r2 #3 — 붕괴는 (섭취 금지와 결합해) 아사 나선의 입구인데 무음이었다.
+                //  +관측성 (2026-06-12): 화면 신호뿐이라 로그 grep 으로 붕괴를 못 찾던 것.
+                Debug.Log($"[Mood] {(pawnEntity != null ? pawnEntity.PawnName : name)} 정신붕괴 진입 mood={mood:F0} t={Time.time:F1}");
                 AlertStackUI.Notify($"{(pawnEntity != null ? pawnEntity.PawnName : name)} 정신붕괴!", 1);
                 FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
                                    "정신붕괴!", new Color(0.85f, 0.45f, 0.85f, 1f));
@@ -567,8 +569,17 @@ namespace MelonS.GameProto
             //  보존: 침대 MoodBonus/양성 thought 로 mood 가 recoverAt 을 넘으면 정상화.
             if (isBreaking)
             {
-                if (eatState == EatState.Walking) ClearEatTask();
-                return;
+                // 생존 본능 보정 (2026-06-12, 재현 _diag 6차) — 붕괴-섭취금지가 '식량
+                //  688 비축에 원년 전원 아사'를 만들었다: 침대 없는 콜로니는 mood 가
+                //  recoverAt(35)을 영영 못 넘어 회복 경로가 닫힌 트랩 (방랑자만 생존,
+                //  원년 림 [Eat] 0건으로 확정).  레퍼런스도 대부분의 멘탈 브레이크에서
+                //  섭취는 유지한다.  아사 임계(25) 미만이면 붕괴 중에도 먹는다 — mood
+                //  나선(작업 정지·배회)은 유지, '식량 고갈' 전멸 경로는 불변.
+                if (food >= 25f)
+                {
+                    if (eatState == EatState.Walking) ClearEatTask();
+                    return;
+                }
             }
 
             // 진행 중인 섭취 이동이 있으면 그걸 우선 처리.
