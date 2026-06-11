@@ -142,6 +142,25 @@ namespace MelonS.GameProto
                 Debug.Log($"[Research] 완료: {activeTech.nameKr}");
                 AudioBank.Instance?.PlayResearch();   // #게임필2 — 유일한 장기 보상 루프가 들린다
                 if (OnTechCompleted != null) OnTechCompleted(activeTech);
+                // 게임루프 백로그 #6 (2026-06-11): simple_bow 가 '죽은 테크'였다 — 발사는
+                //  활 장착이 필수인데 획득 경로가 스폰 랜덤(~20%)뿐.  완료 시 원거리
+                //  무기 없는 전 콜로니스트에게 활 지급 (Catalog/Equip 재사용).
+                if (activeTech.id == "simple_bow")
+                {
+                    var bow = System.Array.Find(PawnEquipment.Catalog,
+                        c => c.slot == PawnEquipment.Slot.Weapon && c.rangedEnabled);
+                    foreach (var pe in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                    {
+                        if (pe == null || pe.IsDead) continue;
+                        var eq = pe.GetComponent<PawnEquipment>();
+                        if (eq == null) continue;
+                        var cur = eq.GetEquipped(PawnEquipment.Slot.Weapon);
+                        if (cur != null && cur.rangedEnabled) continue;
+                        eq.Equip(bow);
+                        FloatingText.Spawn(pe.transform.position + Vector3.up * 0.7f,
+                            "활 지급!", new Color(0.8f, 0.9f, 0.5f, 1f));
+                    }
+                }
                 // #루프 완료 후 다음 연구 자동선택 — 안 하면 activeTech=null 로 연구가 멈춰
                 //  플레이어가 N키로 수동 선택할 때까지 진행 정지(루프 stall).  시작 시 techs[0]
                 //  자동선택(L61)과 동일하게, 시작 가능한(prereq 충족) 첫 미완료 tech 를 잇는다.

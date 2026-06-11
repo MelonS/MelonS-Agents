@@ -231,9 +231,16 @@ namespace MelonS.GameProto
             //   group = BaseRaidGroupSize + (raidCount / RaidsPerSizeStep), clamped
             //   to MaxConcurrentGroups.  e.g. with defaults (base 1, step 2, cap 2):
             //   raid#0=1, raid#1=1, raid#2=2, raid#3=2, ... (never exceeds 2).
+            // 게임루프 백로그 #9 (2026-06-11): cap 2 영구 고정 → 콜로니는 강해지는데
+            //  위협 불변 = 발전이 취향이 되던 평탄화 해소.  상한을 '생존 림 수 - 1' 과
+            //  기존 cap 중 큰 쪽으로 — 3림 기본은 현행 동일(5/31 wipe 재발 없음).
+            int aliveColonists = 0;
+            foreach (var pp in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                if (pp != null && !pp.IsDead) aliveColonists++;
+            int dynamicCap = Mathf.Max(Mathf.Max(1, MaxConcurrentGroups), aliveColonists - 1);
             int banditCount = Mathf.Clamp(
                 BaseRaidGroupSize + (raidCount / Mathf.Max(1, RaidsPerSizeStep)),
-                1, Mathf.Max(1, MaxConcurrentGroups));
+                1, dynamicCap);
             raidCount++;
 
             // Wiki Dim2 #2 (sound wiring only — no threat/balance change): every raid
