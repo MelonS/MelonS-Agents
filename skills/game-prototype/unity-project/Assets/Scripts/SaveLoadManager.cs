@@ -26,6 +26,11 @@ namespace MelonS.GameProto
         public int[] partHp;
         public float[] partBleed;
         public bool[] partBandaged;
+        // r2 #1 (2026-06-12) — 직업 우선순위/일정 슬롯: 플레이어 결정 2대 표면이
+        //  로드마다 리셋되던 것.  순서 = PawnWorkSettings.AllKinds / 시간 0~23.
+        //  구 세이브는 빈 배열 → 길이 가드 스킵 (skillLevels 패턴).
+        public int[] workPriorities;
+        public int[] scheduleSlots;
     }
 
     [Serializable]
@@ -195,6 +200,22 @@ namespace MelonS.GameProto
                         ps.partBleed[i] = ph.parts[i].bleedRate;
                         ps.partBandaged[i] = ph.parts[i].bandaged;
                     }
+                }
+                // r2 #1 — 우선순위/일정 캡처
+                var ws = pawn.GetComponent<PawnWorkSettings>();
+                if (ws != null)
+                {
+                    var kinds = PawnWorkSettings.AllKinds;
+                    ps.workPriorities = new int[kinds.Length];
+                    for (int i = 0; i < kinds.Length; i++)
+                        ps.workPriorities[i] = ws.GetPriority(kinds[i]);
+                }
+                var sch = pawn.GetComponent<PawnSchedule>();
+                if (sch != null && sch.slots != null)
+                {
+                    ps.scheduleSlots = new int[sch.slots.Length];
+                    for (int i = 0; i < sch.slots.Length; i++)
+                        ps.scheduleSlots[i] = (int)sch.slots[i];
                 }
                 data.pawns.Add(ps);
             }

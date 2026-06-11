@@ -169,6 +169,22 @@ namespace MelonS.GameProto
                         sk.entries[i].xp = ps.skillXp[i];
                     }
                 }
+                // r2 #1 — 우선순위/일정 복원 (구 세이브 길이 가드).
+                var ws2 = p.GetComponent<PawnWorkSettings>();
+                if (ws2 != null && ps.workPriorities != null
+                    && ps.workPriorities.Length == PawnWorkSettings.AllKinds.Length)
+                {
+                    var kinds = PawnWorkSettings.AllKinds;
+                    for (int i = 0; i < kinds.Length; i++)
+                        ws2.SetPriority(kinds[i], ps.workPriorities[i]);
+                }
+                var sch2 = p.GetComponent<PawnSchedule>();
+                if (sch2 != null && sch2.slots != null && ps.scheduleSlots != null
+                    && ps.scheduleSlots.Length == sch2.slots.Length)
+                {
+                    for (int i = 0; i < sch2.slots.Length; i++)
+                        sch2.slots[i] = (TimeSlot)ps.scheduleSlots[i];
+                }
                 // #audit2 #15 — 징집 상태 복원.
                 if (entity != null && ps.drafted) entity.SetDrafted(true);
             }
