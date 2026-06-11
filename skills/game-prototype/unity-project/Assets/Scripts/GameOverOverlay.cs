@@ -53,7 +53,10 @@ namespace MelonS.GameProto
             int days = GameClock.Instance != null ? GameClock.Instance.Day : 0;
             Debug.Log($"[GameOver] 정착지 전멸 — {days}일 생존");
             BuildOverlay(days);
-            Time.timeScale = 0f;
+            // 하네스(-repro) 중엔 일시정지 생략 — timeScale=0 이 scaled WaitForSeconds 를
+            //  동결시켜 소크 시나리오의 후속 샷(전멸 화면·경보 카드 증거)이 전부 멈췄다.
+            //  실플레이는 기존대로 정지.
+            if (!ReproHarness.Enabled) Time.timeScale = 0f;
         }
 
         private void BuildOverlay(int days)
