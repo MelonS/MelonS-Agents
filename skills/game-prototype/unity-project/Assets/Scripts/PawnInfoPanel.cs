@@ -356,6 +356,37 @@ namespace MelonS.GameProto
             entityBodyText.gameObject.SetActive(false);
         }
 
+        // UI-B — 게이지 % 라벨 (bar fill 의 row 에 lazy 부착)
+        private Text foodPct, sleepPct, moodPct;
+        private static void UpdatePct(Image bar, ref Text cache, float value)
+        {
+            if (bar == null) return;
+            if (cache == null)
+            {
+                // fill → Bg → Row 구조 (SceneSetup.UI CreateNeedBar)
+                var row = bar.transform.parent != null ? bar.transform.parent.parent : null;
+                if (row == null) return;
+                var go = new GameObject("Pct");
+                go.transform.SetParent(row, false);
+                cache = go.AddComponent<Text>();
+                cache.font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(12);
+                cache.fontSize = 12;
+                cache.alignment = TextAnchor.MiddleRight;
+                cache.raycastTarget = false;
+                var rt = go.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(1f, 0f);
+                rt.anchorMax = new Vector2(1f, 1f);
+                rt.pivot = new Vector2(1f, 0.5f);
+                rt.sizeDelta = new Vector2(38, 0);
+                rt.anchoredPosition = new Vector2(-4, 0);
+            }
+            int v = Mathf.RoundToInt(value);
+            cache.text = $"{v}%";
+            cache.color = v < 25
+                ? new Color(0.92f, 0.40f, 0.30f, 1f)
+                : MelonS.GameProto.Core.UITheme.TextSecondary;
+        }
+
         private void Update()
         {
             EnsurePlacement();
@@ -534,6 +565,11 @@ namespace MelonS.GameProto
             if (foodBar  != null) foodBar.fillAmount  = needs.GetNormalized(NeedType.Food);
             if (sleepBar != null) sleepBar.fillAmount = needs.GetNormalized(NeedType.Sleep);
             if (moodBar  != null) moodBar.fillAmount  = needs.GetNormalized(NeedType.Mood);
+            // UI-B (2026-06-12) — 게이지 우측 % 라벨: 바만으론 '얼마나 위험한가' 판독이
+            //  안 됐다 (TOP-8.3 잔여).  바 row 에 lazy 생성, 25 미만은 경고색.
+            UpdatePct(foodBar,  ref foodPct,  needs.food);
+            UpdatePct(sleepBar, ref sleepPct, needs.sleep);
+            UpdatePct(moodBar,  ref moodPct,  needs.mood);
 
             // #23 — populate per-tab bodies.  All three are lazily created the
             //   first time a pawn is shown so we never depend on SceneSetup
