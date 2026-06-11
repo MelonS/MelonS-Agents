@@ -33,7 +33,15 @@ namespace MelonS.GameProto
         public void SetFood(int v)
         {
             food = v;
-            transform.localScale = Vector3.one * WoodPileEntity.PileScale(v);
+            // 아트 v2: DisplayName(고기/간편식/베리) → kind 매핑해 스프라이트 3단계.
+            var v2 = ItemArt32.Stage(ItemArt32.KindFromFoodName(DisplayName), v);
+            if (v2 != null)
+            {
+                var sr = GetComponent<SpriteRenderer>();
+                if (sr != null) sr.sprite = v2;
+                transform.localScale = Vector3.one;
+            }
+            else transform.localScale = Vector3.one * WoodPileEntity.PileScale(v);
         }
         // 부패 속도 외부 설정(작물/베리는 느리게).  CropEntity 수확 등에서 호출 가능.
         public void SetDecayPerDay(float v) { decayPerDay = Mathf.Max(0f, v); }
@@ -118,8 +126,9 @@ namespace MelonS.GameProto
             col.size = new Vector2(0.8f, 0.6f);
             col.isTrigger = true;
             var m = go.AddComponent<MeatPileEntity>();
-            m.SetFood(amount);
+            // 아트 v2: SetFood 가 DisplayName 으로 kind(고기/간편식/베리)를 고르므로 먼저 지정.
             m.DisplayName = displayName;
+            m.SetFood(amount);
             // 기존 lifetime(통째 소멸까지 초) → durability decayPerDay 로 환산:
             //  총 fade 시간 ≈ 기존 lifetime 이 되도록 decayPerDay = 100 / (lifetime/24).
             //  작물/베리(긴 lifetime)=느린 부패, 고기(짧은 lifetime)=빠른 부패 보존.

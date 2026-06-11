@@ -36,7 +36,15 @@ namespace MelonS.GameProto
         public void SetWood(int amount)
         {
             wood = amount;
-            transform.localScale = Vector3.one * PileScale(amount);
+            // 아트 v2: 스택양은 스프라이트 3단계로 (스케일 1 고정).  시트 없으면 폴백.
+            var v2 = ItemArt32.Stage("wood", amount);
+            if (v2 != null)
+            {
+                if (_sr == null) _sr = GetComponent<SpriteRenderer>();
+                if (_sr != null) _sr.sprite = v2;
+                transform.localScale = Vector3.one;
+            }
+            else transform.localScale = Vector3.one * PileScale(amount);
         }
 
         // 폴리싱(#61): 더미 양 → 시각 스케일 (모든 더미 종류 공용 — Stone/Meat 도 호출).

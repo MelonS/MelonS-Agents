@@ -27,7 +27,8 @@ namespace MelonS.GameProto.EditorTools
             ti.filterMode = UnityEngine.FilterMode.Point;
             ti.textureCompression = TextureImporterCompression.Uncompressed;
             ti.mipmapEnabled = false;
-            ti.isReadable = pawn;   // 시트 슬라이스용 (타일/식생은 불필요)
+            // 시트 슬라이스(pawn32/items32)는 readable 필요, 타일/식생은 불필요.
+            ti.isReadable = pawn || p.Contains("/Resources/items32/");
         }
     }
 }

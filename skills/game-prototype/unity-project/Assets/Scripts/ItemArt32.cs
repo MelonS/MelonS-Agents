@@ -1,0 +1,56 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace MelonS.GameProto
+{
+    /// <summary>
+    /// 아트 v2 — 드롭 아이템 32px 스테이지 스프라이트 (운영자 2026-06-11 "한칸을 다
+    /// 차지하는 아이템은 별로 없음" + visual-polish TOP-12 '고유 실루엣').
+    /// Resources/items32/item_{kind}_v2.png (96x32 = 소/중/만재 3단계, ~20px 풋프린트)
+    /// 를 런타임 슬라이스해 양에 맞는 단계를 돌려준다.  스택 표현은 스프라이트
+    /// 단계로 — 스케일 늘리기(구 PileScale)는 v2 에선 1 고정.
+    /// 시트가 없으면 null → 호출측이 기존 16px+PileScale 폴백 유지.
+    /// </summary>
+    public static class ItemArt32
+    {
+        private static readonly Dictionary<string, Sprite[]> cache = new Dictionary<string, Sprite[]>();
+
+        /// <summary>kind: wood/stone/meat/meal/berry.  amount 로 3단계 중 선택.</summary>
+        public static Sprite Stage(string kind, int amount)
+        {
+            var arr = Load(kind);
+            if (arr == null) return null;
+            int s = amount >= 20 ? 2 : (amount >= 5 ? 1 : 0);
+            return arr[s];
+        }
+
+        /// <summary>FoodPile displayName(고기/간편식/베리류) → kind 매핑.</summary>
+        public static string KindFromFoodName(string displayName)
+        {
+            if (string.IsNullOrEmpty(displayName)) return "meat";
+            if (displayName.Contains("간편식")) return "meal";
+            if (displayName.Contains("베리")) return "berry";
+            return "meat";
+        }
+
+        private static Sprite[] Load(string kind)
+        {
+            if (cache.TryGetValue(kind, out var hit)) return hit;
+            var tex = Resources.Load<Texture2D>($"items32/item_{kind}_v2");
+            Sprite[] arr = null;
+            if (tex != null && tex.width >= 96)
+            {
+                arr = new Sprite[3];
+                for (int i = 0; i < 3; i++)
+                {
+                    arr[i] = Sprite.Create(tex, new Rect(i * 32, 0, 32, 32),
+                                           new Vector2(0.5f, 0.5f), 32f, 0,
+                                           SpriteMeshType.FullRect);
+                    arr[i].name = $"item32_{kind}_s{i + 1}";
+                }
+            }
+            cache[kind] = arr;
+            return arr;
+        }
+    }
+}

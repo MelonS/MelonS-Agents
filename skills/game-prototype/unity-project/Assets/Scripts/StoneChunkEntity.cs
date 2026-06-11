@@ -20,7 +20,15 @@ namespace MelonS.GameProto
         public void SetStone(int v)
         {
             stone = v;
-            transform.localScale = Vector3.one * WoodPileEntity.PileScale(v);
+            // 아트 v2: 스택양은 스프라이트 3단계로 (스케일 1 고정).  시트 없으면 폴백.
+            var v2 = ItemArt32.Stage("stone", v);
+            if (v2 != null)
+            {
+                var sr = GetComponent<SpriteRenderer>();
+                if (sr != null) sr.sprite = v2;
+                transform.localScale = Vector3.one;
+            }
+            else transform.localScale = Vector3.one * WoodPileEntity.PileScale(v);
         }
 
         // 운영자 2026-06-02: "돌덩이가 너무 빨리 사라짐".  돌은 부패하지 않는 자원이므로
