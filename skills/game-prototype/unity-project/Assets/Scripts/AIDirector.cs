@@ -464,6 +464,36 @@ namespace MelonS.GameProto
                     Debug.Log($"[AIDirector] lucky_find 실효: 목재 25 더미 드롭 @ ({p.x:F1},{p.y:F1})");
                     break;
                 }
+                case "wanderer_arrival":
+                {
+                    // 게임루프 차순위 (2026-06-12) — '방랑자 도착'이 카드만 띄우고 아무도
+                    //  안 오던 죽은 이벤트.  포로 포섭(TryCapture)과 동일한 조립으로 실제
+                    //  콜로니스트 1명 합류 — 인구 = 가장 강한 보상이 이벤트 루프에 생긴다.
+                    var template = UnityEngine.Object.FindFirstObjectByType<PawnEntity>();
+                    if (template == null) break;
+                    var wgo = new GameObject($"방랑자_{System.DateTime.Now.Ticks % 1000}");
+                    wgo.transform.position = new Vector3(0f, 24f, 0f);   // 북쪽 외곽 진입
+                    var wsr = wgo.AddComponent<SpriteRenderer>();
+                    var tsr = template.GetComponent<SpriteRenderer>();
+                    if (tsr != null) { wsr.sprite = tsr.sprite; wsr.sortingOrder = 10; }
+                    wgo.AddComponent<BoxCollider2D>().size = new Vector2(2f, 2f);
+                    wgo.AddComponent<PawnEntity>();
+                    wgo.AddComponent<PawnMovement>();
+                    wgo.AddComponent<PawnNeeds>();
+                    wgo.AddComponent<PawnChopper>();
+                    wgo.AddComponent<PawnGatherer>();
+                    wgo.AddComponent<PawnHunter>();
+                    wgo.AddComponent<PawnCook>();
+                    wgo.AddComponent<PawnHauler>();
+                    wgo.AddComponent<PawnSkills>();
+                    wgo.AddComponent<PawnHealth>();
+                    wgo.AddComponent<PawnWorkSettings>();
+                    wgo.AddComponent<PawnUtilityAI>();
+                    FloatingText.Spawn(wgo.transform.position + Vector3.up * 0.7f,
+                        "방랑자 합류!", new Color(0.6f, 0.9f, 0.6f, 1f));
+                    Debug.Log("[AIDirector] wanderer_arrival 실효: 콜로니스트 1명 합류 (북쪽 외곽)");
+                    break;
+                }
                 case "morale_dip":
                 {
                     int n = 0;
