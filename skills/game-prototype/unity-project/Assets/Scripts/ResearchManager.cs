@@ -50,6 +50,7 @@ namespace MelonS.GameProto
         //  전체 ≈ 1주+ 로 레퍼런스 페이싱 회복.
         public float pointsPerSecondPerBench = 0.15f;
         private float pointsFraction = 0f;  // Day 75 fractional accumulator
+        private float lastGainTime = -999f; // 최근 포인트 적립 시각 (StallReason 용)
 
         // Lesson #4 firewall - FindObjectsByType per-Update 비쌈.  cache + 1s 재검색.
         private ResearchBench[] cachedBenches;
@@ -110,7 +111,11 @@ namespace MelonS.GameProto
                 float sum = 0f;
                 foreach (var b in cachedBenches)
                     if (b != null) sum += b.ResearcherSpeedSum();
-                return sum <= 0.001f ? "연구자 없음 (작업대 근처 림)" : null;
+                // grader 좌표 (2026-06-12) — 연구는 유휴 필러라 순간 스냅샷의 ~90%는
+                //  실제로 벤치가 비어 있다.  진행 중인데 '연구자 없음'이 상시 표기되는
+                //  혼란 → '최근 30 스케일초간 적립 0'일 때만 정지 사유로 인정.
+                if (sum > 0.001f) return null;
+                return (Time.time - lastGainTime > 30f) ? "연구자 없음 (작업대 근처 림)" : null;
             }
         }
 
@@ -138,6 +143,7 @@ namespace MelonS.GameProto
             if (speedMul <= 0.001f) return;
             float gain = pointsPerSecondPerBench * speedMul * Time.deltaTime;
             pointsFraction += gain;
+            lastGainTime = Time.time;   // StallReason 의 '최근 진행' 추적
             int whole = Mathf.FloorToInt(pointsFraction);
             if (whole > 0)
             {

@@ -424,7 +424,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6ef7afd80a873544aefbff0901a7180, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mineRange: 1.5
+  mineRange: 1.85
   mineDamagePerSec: 20
   giveUpAfterSec: 12
 --- !u!114 &591835251418990162
