@@ -253,6 +253,10 @@ namespace MelonS.GameProto
                 title = "약탈자 접근!",
                 description = "무장한 약탈자가 지도 외곽에 나타났다.",
                 flavor = "칼날에 새벽빛이 비친다.",
+                // 게임루프 백로그 #1 (2026-06-11): tier 기본 0 이라 AlertStackUI 의
+                //  threatTier<1 필터가 '습격만' 걸러냈다 — 영구 경보 카드 + 클릭 카메라
+                //  팬 사슬이 통째로 죽어 있던 버그.  상인(2)과 동급 이상이 마땅하다.
+                threatTier = 2,
             };
             lastEvent = raidEv;
             OnEventFired?.Invoke(raidEv);

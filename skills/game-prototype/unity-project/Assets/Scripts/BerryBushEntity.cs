@@ -29,6 +29,11 @@ namespace MelonS.GameProto
 
         [Header("Regen (Day 12)")]
         [SerializeField] private float bushRegenSec = 60f;
+        // 게임루프 백로그 #2 (2026-06-11): 60실초/재생 = 덤불 1개가 림 16명분 무한 공급
+        //  — 식량 희소성 0 으로 농사·사냥·요리가 전부 불필요했다 (생존축 붕괴의 a).
+        //  ~1.2게임일(1200실초@1x)로 희소화 → 덤불 1개 ≈ 림 0.7일치.  씬에 60 이
+        //  직렬화돼 있어 코드 기본값 변경만으론 안 먹힌다(#QR지면 교훈) → Awake clamp.
+        private const float MinRegenSec = 1200f;
 
         [Header("Spawn grace (template:spawned-entity)")]
         [SerializeField] private float spawnGraceSeconds = 0.2f;
@@ -50,6 +55,7 @@ namespace MelonS.GameProto
         private void Awake()
         {
             spawnTime = Time.time;
+            if (bushRegenSec < MinRegenSec) bushRegenSec = MinRegenSec;   // 백로그 #2 — 직렬화 60 무력화
             berries = initialBerries;
             spriteRenderer = GetComponent<SpriteRenderer>();
             // #161 - sprite color 가 setup 단계에서 이미 박혀있음 (녹색).  base 로 캐시.
