@@ -758,10 +758,14 @@ namespace MelonS.GameProto
             //  바닥에 흩어진(아직 미적립) 더미는 카운터를 건드리지 않는다(이중 차감 방지).
             if (eatMeatTarget != null && eatMeatTarget.gameObject != null)
             {
-                int amount = eatMeatTarget.Food;
+                // 첫사이클 T3 (2026-06-12) — 간식 1회가 더미 '전량' 증발 + 카운터 전액
+                //  차감이던 것 (회복은 +20뿐): 모아둔 식량이 식사마다 녹아 비축 루프
+                //  불신의 직접 원인.  레퍼런스처럼 1단위만 차감, 잔량 보존.
                 bool counted = eatMeatTarget.InStockpile;
-                Object.Destroy(eatMeatTarget.gameObject);
-                if (counted && rm != null) rm.AddFood(-amount);
+                int left = eatMeatTarget.Food - 1;
+                if (left <= 0) Object.Destroy(eatMeatTarget.gameObject);
+                else eatMeatTarget.SetFood(left);
+                if (counted && rm != null) rm.AddFood(-1);
                 AudioBank.Instance?.PlayEat();   // #게임필2 — 식사가 들린다 (0.5s 스로틀)
                 food = Mathf.Min(100f, food + eatRestoreRaw);
                 var th = GetComponent<PawnThoughts>();

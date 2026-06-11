@@ -29,6 +29,10 @@ namespace MelonS.GameProto
                       text = "나무·작물 우클릭 = 작업.\n적/늑대는 [징집] 후 우클릭 = 공격." },
             new Tip { startTime = 13f, duration = 5f,
                       text = "화면 하단 버튼으로 시간/빌드/연구 제어.\nSpace 로 팁 건너뛰기." },
+            // 첫사이클 T1 (2026-06-12) — 저장구역 온보딩 0: 안 만들면 운반 3종이
+            //  무음으로 죽고 바닥 더미가 썩는데 게임이 어디서도 말해주지 않았다.
+            new Tip { startTime = 19f, duration = 6f,
+                      text = "건축(F8) → 구역 → 저장:\n자원을 모아둘 저장 구역부터 지정하세요!" },
         };
 
         [SerializeField] private Image bg;

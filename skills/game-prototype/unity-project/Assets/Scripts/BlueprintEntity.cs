@@ -44,6 +44,8 @@ namespace MelonS.GameProto
 
         public void SetSize(Vector2Int sz)
         {
+            var c2 = GetComponent<BoxCollider2D>();
+            if (c2 != null) c2.size = new Vector2(sz.x * 0.9f, sz.y * 0.9f);   // T2 footprint 반영
             footprint = sz;
             // sprite 가 1:1 비율 + footprint 가 1x2 면 transform.localScale 로 확장.
             //  sprite 가 이미 1x2 비율 (16x32 등) 이면 그대로.
@@ -72,6 +74,13 @@ namespace MelonS.GameProto
             if (sr == null) sr = gameObject.AddComponent<SpriteRenderer>();
             sr.sprite = ghostSprite;
             sr.sortingOrder = 15;
+            // 첫사이클 T2 (2026-06-12) — 청사진 무콜라이더로 물리쿼리 소비처 5경로
+            //  (중복가드/우클릭 취소·우선건설/영역취소/툴팁)가 전부 죽어 있었고,
+            //  드래그마다 앵커 셀에 2장씩 적치됐다.  isTrigger 라 통행/전투 무영향.
+            var bpCol = GetComponent<BoxCollider2D>();
+            if (bpCol == null) bpCol = gameObject.AddComponent<BoxCollider2D>();
+            bpCol.isTrigger = true;
+            bpCol.size = Vector2.one * 0.9f;
             EnsureStatusLabel();
             UpdateVisual();
         }
