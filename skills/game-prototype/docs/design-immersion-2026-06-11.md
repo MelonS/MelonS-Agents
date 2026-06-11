@@ -48,6 +48,8 @@ FloatingText 뿐(타격감 0), 밤낮은 단색 틴트 뿐. 레퍼런스 콜로�
 - [x] A단계 지형/식생 (`11471d1`) — 타일 32px(잔디4/흙2/락1/물), 수종 3종 32x48,
       베리덤불.  ⚠ 락 b 변형은 PathGrid 레퍼런스 비교 때문에 보류 (통행성 불변).
 - [x] A단계 아이템 — items32 3단계 스테이지 (wood/stone/meat/meal/berry).
-- [ ] 후속: 도구 오버레이(도끼/곡괭이 — frames_tool 96장 스테이징에 있음),
-      물 2프레임 애니(AnimatedTile), 수확후 덤불 프레임 배선, 동물/적 32px
-      (쿼드러페드 템플릿 — TOP-11), 그루터기/묘목 배선, 락 b(PathGrid 집합화 OK 후).
+- [x] 후속 1차 (2026-06-12): 도구 오버레이(`c4bb60b`), 수확후 덤불(`61feb85`),
+      동물 6종 32px(`6cf8b6c`), 구조물 13종(`5b00a98`).
+- [ ] 잔여: 물 2프레임 애니 — **com.unity.2d.tilemap.extras 패키지 필요**(AnimatedTile,
+      네트워크 설치라 운영자 OK 대기.  시트 tile32_water_a/b 준비 완료), 그루터기/묘목
+      배선, 락 b(PathGrid 집합화 — 로직 OK 대기), 적대 인간형 전용 32px(hostile 분기).
