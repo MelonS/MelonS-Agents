@@ -16,6 +16,10 @@ namespace MelonS.GameProto
     /// </summary>
     public class MotionFx : MonoBehaviour
     {
+        /// <summary>아트 v2: PawnSpriteAnimator(실제 보행 프레임) 장착 림은 스쿼시를
+        ///  끈다 — 프레임 애니와 이중이면 과장된다.  발걸음 먼지/flip 은 그대로.</summary>
+        public bool squashEnabled = true;
+
         [SerializeField] private float bounceAmp = 0.05f;   // y 스트레치 최대 비율
         [SerializeField] private float bounceHz = 3.2f;     // 보행 1배속 기준 step 주기
         private const float MinSpeed = 0.15f;               // 이하 = 정지로 간주 (떨림 방지)
@@ -60,11 +64,14 @@ namespace MelonS.GameProto
                 // 빠를수록 발걸음도 빨라진다 (게임 배속 4x 에서도 자연스럽게).
                 phase += dt * bounceHz * Mathf.Clamp(speed, 0.6f, 2.2f) * Mathf.PI * 2f;
                 float s = Mathf.Abs(Mathf.Sin(phase));       // 0~1 step 펄스
-                float squash = s * bounceAmp;
-                transform.localScale = new Vector3(
-                    baseScale.x * (1f - squash * 0.6f),      // 늘 때 살짝 좁아지기 (관성)
-                    baseScale.y * (1f + squash),
-                    baseScale.z);
+                if (squashEnabled)
+                {
+                    float squash = s * bounceAmp;
+                    transform.localScale = new Vector3(
+                        baseScale.x * (1f - squash * 0.6f),  // 늘 때 살짝 좁아지기 (관성)
+                        baseScale.y * (1f + squash),
+                        baseScale.z);
+                }
 
                 // D3b — 발닿음(|sin| 0 교차 = π 단위)마다 작은 먼지 1점.  격보행만
                 //  (느린 배회는 생략) + 그림자(9)와 같은 층이라 본체 뒤로 깔린다.
