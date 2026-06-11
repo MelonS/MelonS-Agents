@@ -180,6 +180,17 @@ namespace MelonS.GameProto
                 Collider2D dhit = PickEntityAt(dmw);
                 if (dhit != null)
                 {
+                    // r2-J (2026-06-12) — 거래 개통: 상인 우클릭이 'currentSelection != null'
+                    //  게이트(아래 직접명령 블록) 안에만 있어 림 미선택이면 거래 불가였다.
+                    //  거래는 림이 필요 없는 콜로니 단위 행위 — 선택 무관 즉시 처리 (#233 과
+                    //  같은 정신).
+                    var trader0 = dhit.GetComponent<TraderEntity>();
+                    if (trader0 != null)
+                    {
+                        bool tok = trader0.TryTrade();
+                        Debug.Log($"[Trade] (선택무관) success={tok}");
+                        return;
+                    }
                     // #38 재발(2026-06-10 실플레이 Player.log + marquee 재현): #233 이 이 블록을
                     //  '지정-only + return' 으로 만들면서 아래 tree/vein 직접명령 분기(L345/L331)가
                     //  도달 불가 사문화 — 지정만 깔리고 임의 림의 자율 AI 가 집어갔다.  마키 선택
