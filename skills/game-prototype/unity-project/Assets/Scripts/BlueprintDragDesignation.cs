@@ -144,7 +144,7 @@ namespace MelonS.GameProto
             //  other designation managers).  BuildManager itself also turns build mode
             //  off on right-click, which the guard above catches next frame — but we
             //  cancel HERE first so no stray cell is placed on the same input.
-            if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
+            if (SimInput.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
             {
                 CancelDrag();
                 return;
@@ -158,7 +158,7 @@ namespace MelonS.GameProto
 
         private void HandleDragInput(BuildManager bm)
         {
-            if (Input.GetMouseButtonDown(0))
+            if (SimInput.GetMouseButtonDown(0))
             {
                 // Don't begin a drag if the press started over a UI element (the same
                 //  guard BuildManager.HandleLeftClickAt uses for its single click).
@@ -169,18 +169,18 @@ namespace MelonS.GameProto
                 }
                 pressing = true;
                 dragging = false;
-                pressStartWorld = cam.ScreenToWorldPoint(Input.mousePosition);
+                pressStartWorld = cam.ScreenToWorldPoint(SimInput.mousePosition);
             }
-            else if (pressing && Input.GetMouseButton(0))
+            else if (pressing && SimInput.GetMouseButton(0))
             {
                 // Promote a press to a drag once it has moved past the threshold.
-                Vector3 now = cam.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 now = cam.ScreenToWorldPoint(SimInput.mousePosition);
                 if (!dragging && Vector3.Distance(now, pressStartWorld) >= dragThreshold)
                     dragging = true;
             }
-            else if (pressing && Input.GetMouseButtonUp(0))
+            else if (pressing && SimInput.GetMouseButtonUp(0))
             {
-                Vector3 endWorld = cam.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 endWorld = cam.ScreenToWorldPoint(SimInput.mousePosition);
                 if (dragging)
                     CommitRect(bm, pressStartWorld, endWorld);
                 // else: a plain tap → BuildManager's single-cell path already placed it.
@@ -282,7 +282,7 @@ namespace MelonS.GameProto
                 return;
             }
 
-            Vector3 now = cam.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 now = cam.ScreenToWorldPoint(SimInput.mousePosition);
             int x0 = Mathf.FloorToInt(Mathf.Min(pressStartWorld.x, now.x));
             int x1 = Mathf.FloorToInt(Mathf.Max(pressStartWorld.x, now.x));
             int y0 = Mathf.FloorToInt(Mathf.Min(pressStartWorld.y, now.y));

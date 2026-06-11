@@ -186,7 +186,7 @@ namespace MelonS.GameProto
             if (ModeActive)
             {
                 // Right-click / ESC cancels the mode (same convention as build).
-                if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
+                if (SimInput.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
                 {
                     CancelDrag();
                     SetMode(false);
@@ -268,27 +268,27 @@ namespace MelonS.GameProto
             if (cam == null) return;
 
             // DOWN — begin a drag (skip if pressing over a UI button like the toggle).
-            if (Input.GetMouseButtonDown(0))
+            if (SimInput.GetMouseButtonDown(0))
             {
                 if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
                     return;
                 dragging = true;
-                dragStartWorld = ScreenToWorldFlat(Input.mousePosition);
+                dragStartWorld = ScreenToWorldFlat(SimInput.mousePosition);
                 UpdateDragOverlay(dragStartWorld, dragStartWorld);
             }
 
             // HELD — grow the selection overlay.
-            if (dragging && Input.GetMouseButton(0))
+            if (dragging && SimInput.GetMouseButton(0))
             {
-                Vector3 cur = ScreenToWorldFlat(Input.mousePosition);
+                Vector3 cur = ScreenToWorldFlat(SimInput.mousePosition);
                 UpdateDragOverlay(dragStartWorld, cur);
             }
 
             // UP — resolve.  Tiny drag → single click (preserve existing behavior);
             //  otherwise sweep every cell in the box.
-            if (dragging && Input.GetMouseButtonUp(0))
+            if (dragging && SimInput.GetMouseButtonUp(0))
             {
-                Vector3 end = ScreenToWorldFlat(Input.mousePosition);
+                Vector3 end = ScreenToWorldFlat(SimInput.mousePosition);
                 dragging = false;
                 HideDragOverlay();
 
@@ -296,7 +296,7 @@ namespace MelonS.GameProto
                 if (delta.magnitude < dragClickThreshold)
                 {
                     // No meaningful drag → exactly the prior single-click path.
-                    HandleClick(Input.mousePosition, checkOverUI: false);
+                    HandleClick(SimInput.mousePosition, checkOverUI: false);
                 }
                 else
                 {

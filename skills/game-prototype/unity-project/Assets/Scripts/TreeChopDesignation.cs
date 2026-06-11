@@ -92,7 +92,7 @@ namespace MelonS.GameProto
 
             if (ModeActive)
             {
-                if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape)) SetMode(false);
+                if (SimInput.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape)) SetMode(false);
                 else HandleDragInput();
             }
 
@@ -135,16 +135,16 @@ namespace MelonS.GameProto
         private void HandleDragInput()
         {
             if (cam == null) return;
-            if (Input.GetMouseButtonDown(0))
+            if (SimInput.GetMouseButtonDown(0))
             {
                 if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
                 dragging = true;
-                dragStartWorld = cam.ScreenToWorldPoint(Input.mousePosition);
+                dragStartWorld = cam.ScreenToWorldPoint(SimInput.mousePosition);
             }
-            else if (Input.GetMouseButtonUp(0) && dragging)
+            else if (SimInput.GetMouseButtonUp(0) && dragging)
             {
                 dragging = false;
-                Vector3 endWorld = cam.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 endWorld = cam.ScreenToWorldPoint(SimInput.mousePosition);
                 if (Vector3.Distance(endWorld, dragStartWorld) < dragThreshold) MarkCell(endWorld);
                 else MarkRect(dragStartWorld, endWorld);
             }

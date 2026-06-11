@@ -31,6 +31,10 @@ namespace MelonS.GameProto
         private static bool simMouseWorldMode;     // #38 — 월드좌표 주입 모드
         private static Vector3 simMouseWorld;
         private static readonly bool[] simMouseDown = new bool[3];
+        // 기본기 진단 (2026-06-12) — designation 7종 SimInput 전환에 필요한 release 시뮬.
+        //  주입 클릭의 자연 수명: down(프레임 N+1) → up(프레임 N+2, ClearFrame 이 스탬프).
+        //  upFrame 비교 방식이라 그 프레임이 지나면 자동 소멸 — 매 프레임 release 스팸 없음.
+        private static readonly int[] simMouseUpFrame = { -1, -1, -1 };
         private static readonly HashSet<KeyCode> simKeysDown = new HashSet<KeyCode>();
 
         // ── ReproHarness 전용 주입 API ─────────────────────────────────────
@@ -60,8 +64,17 @@ namespace MelonS.GameProto
         public static void FrameMousePos(Vector3 screenPos) { simMousePos = screenPos; }
         public static void ClearFrame()
         {
-            simMouseDown[0] = simMouseDown[1] = simMouseDown[2] = false;
-            simMouseWorldMode = false;
+            for (int i = 0; i < 3; i++)
+            {
+                // 직전 프레임에 down 이었던 버튼은 다음 프레임 1회 release —
+                //  designation 의 GetMouseButtonUp(클릭 확정/드래그 종료) 분기가
+                //  실플레이와 같은 순서(press→release)로 소비된다.
+                if (simMouseDown[i]) simMouseUpFrame[i] = Time.frameCount + 1;
+                simMouseDown[i] = false;
+            }
+            // simMouseWorldMode 는 유지 — release 프레임의 mousePosition(드래그 end
+            //  좌표)이 press 와 같은 월드점으로 풀려야 '거리 0 = 클릭' 판정이 성립.
+            //  다음 FrameMouseDown*/EndSim 이 자연 덮어쓴다.
             simKeysDown.Clear();
         }
 
@@ -76,6 +89,16 @@ namespace MelonS.GameProto
         public static bool GetMouseButtonDown(int button)
             => SimActive ? (button >= 0 && button < 3 && simMouseDown[button])
                          : Input.GetMouseButtonDown(button);
+
+        /// <summary>시뮬 모드의 held 는 down 프레임과 동일(1프레임 클릭) — 드래그
+        /// 승격 없이 release 분기의 '거리 0 = 단일 클릭' 경로로 떨어진다.</summary>
+        public static bool GetMouseButton(int button)
+            => SimActive ? (button >= 0 && button < 3 && simMouseDown[button])
+                         : Input.GetMouseButton(button);
+
+        public static bool GetMouseButtonUp(int button)
+            => SimActive ? (button >= 0 && button < 3 && Time.frameCount == simMouseUpFrame[button])
+                         : Input.GetMouseButtonUp(button);
 
         public static Vector3 mousePosition
             => SimActive ? CurrentSimScreenPos() : Input.mousePosition;

@@ -237,7 +237,7 @@ namespace MelonS.GameProto
             if (ModeActive)
             {
                 // Right-click / ESC cancels the mode (same convention as build).
-                if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
+                if (SimInput.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Escape))
                 {
                     SetMode(false);
                 }
@@ -258,18 +258,18 @@ namespace MelonS.GameProto
         {
             if (cam == null) return;
 
-            if (Input.GetMouseButtonDown(0))
+            if (SimInput.GetMouseButtonDown(0))
             {
                 // Don't start a drag if the press began over a UI element.
                 if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
                     return;
                 dragging = true;
-                dragStartWorld = cam.ScreenToWorldPoint(Input.mousePosition);
+                dragStartWorld = cam.ScreenToWorldPoint(SimInput.mousePosition);
             }
-            else if (Input.GetMouseButtonUp(0) && dragging)
+            else if (SimInput.GetMouseButtonUp(0) && dragging)
             {
                 dragging = false;
-                Vector3 endWorld = cam.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 endWorld = cam.ScreenToWorldPoint(SimInput.mousePosition);
                 if (Vector3.Distance(endWorld, dragStartWorld) < dragThreshold)
                     MarkCell(endWorld);                 // a tap → single cell
                 else
