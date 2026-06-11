@@ -102,9 +102,9 @@ namespace MelonS.GameProto.EditorTools
             Debug.Log($"[SceneSetup] Tree prefab -> {TreePrefabPath}");
 
             // Day 17-18: Build mode - Wall + Floor + Door prefabs.
-            ps.wallSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/wall_wood.png");
-            ps.floorSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/floor_wood.png");
-            ps.doorSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/door_wood.png");
+            ps.wallSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_wall_wood.png");
+            ps.floorSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_floor_wood.png");
+            ps.doorSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_door_wood.png");
 
             GameObject wallTemplate = new GameObject("Wall");
             var wsr = wallTemplate.AddComponent<SpriteRenderer>();
@@ -130,7 +130,7 @@ namespace MelonS.GameProto.EditorTools
             Object.DestroyImmediate(doorTemplate);
 
             // Day 25: Stove prefab
-            ps.stoveSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stove.png");
+            ps.stoveSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_stove.png");
             GameObject stoveTemplate = new GameObject("Stove");
             var ssr = stoveTemplate.AddComponent<SpriteRenderer>();
             ssr.sprite = ps.stoveSprite; ssr.sortingOrder = 5;
@@ -141,7 +141,7 @@ namespace MelonS.GameProto.EditorTools
             Object.DestroyImmediate(stoveTemplate);
 
             // Day 52: Research bench prefab + ResearchManager singleton
-            Sprite benchSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/research_bench.png");
+            Sprite benchSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_research_bench.png");
             GameObject benchTemplate = new GameObject("ResearchBench");
             var rbsr = benchTemplate.AddComponent<SpriteRenderer>();
             rbsr.sprite = benchSprite; rbsr.sortingOrder = 5;
@@ -153,9 +153,9 @@ namespace MelonS.GameProto.EditorTools
             Object.DestroyImmediate(benchTemplate);
 
             // 운영자 피드백 #107: 침대 prefab
-            ps.bedSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/bed_wood.png");
+            ps.bedSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_bed_wood.png");
             // #198 D4-1: Fine quality 전용 sprite (royal-blue/gold).  BedEntity.SetQuality 가 swap.
-            ps.bedFineSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/bed_fine.png");
+            ps.bedFineSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_bed_fine.png");
             GameObject bedTemplate = new GameObject("Bed");
             var bedsr = bedTemplate.AddComponent<SpriteRenderer>();
             bedsr.sprite = ps.bedSprite; bedsr.sortingOrder = 4;

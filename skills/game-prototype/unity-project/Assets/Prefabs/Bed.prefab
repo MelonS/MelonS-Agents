@@ -79,7 +79,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 4
-  m_Sprite: {fileID: 21300000, guid: b51335d6986300a47a0b80b4c5cf9a74, type: 3}
+  m_Sprite: {fileID: 21300000, guid: f6cb3baa72cb2254aacdea3306c8b735, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -149,8 +149,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   quality: 1
-  woodSprite: {fileID: 21300000, guid: b51335d6986300a47a0b80b4c5cf9a74, type: 3}
-  fineSprite: {fileID: 21300000, guid: c72a4e1f3d9b50e8ab1c77f5d2e80a63, type: 3}
+  woodSprite: {fileID: 21300000, guid: f6cb3baa72cb2254aacdea3306c8b735, type: 3}
+  fineSprite: {fileID: 21300000, guid: 2f25c6f78cff2fe4aa5c8ab84b676191, type: 3}
 --- !u!1 &7768342380841641853
 GameObject:
   m_ObjectHideFlags: 0

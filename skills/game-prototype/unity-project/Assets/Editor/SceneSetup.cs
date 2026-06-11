@@ -64,20 +64,20 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Sprites/tile_rock.png",
                 "Assets/Sprites/decor_flower.png",
                 "Assets/Sprites/tree.png",
-                "Assets/Sprites/wall_wood.png",
-                "Assets/Sprites/floor_wood.png",
-                "Assets/Sprites/door_wood.png",
+                "Assets/Sprites/struct32_wall_wood.png",
+                "Assets/Sprites/struct32_floor_wood.png",
+                "Assets/Sprites/struct32_door_wood.png",
                 "Assets/Sprites/deer.png",
-                "Assets/Sprites/stove.png",
-                "Assets/Sprites/research_bench.png",  // Day 52
+                "Assets/Sprites/struct32_stove.png",
+                "Assets/Sprites/struct32_research_bench.png",  // Day 52
                 "Assets/Sprites/crop_rice.png",       // Day 57
                 "Assets/Sprites/stockpile_marker.png",// Day 57
                 "Assets/Sprites/wolf.png",            // Day 64
                 "Assets/Sprites/arrow.png",           // Day 50
                 "Assets/Sprites/trader.png",          // Stretch — Trader
-                "Assets/Sprites/lamp.png",            // Stretch — Lamp
-                "Assets/Sprites/bed_wood.png",        // #107 — Wood bed
-                "Assets/Sprites/bed_fine.png",        // #198 D4-1 — Fine bed (royal-blue/gold)
+                "Assets/Sprites/struct32_lamp.png",            // Stretch — Lamp
+                "Assets/Sprites/struct32_bed_wood.png",        // #107 — Wood bed
+                "Assets/Sprites/struct32_bed_fine.png",        // #198 D4-1 — Fine bed (royal-blue/gold)
                 "Assets/Sprites/berry_bush.png",      // Round 6/7 — dedicated berry-bush art (was tree reuse + neon tint)
                 "Assets/Sprites/shadow_small.png",    // Polish v2 — pawn grounding shadow (16x8, alpha baked)
                 "Assets/Sprites/shadow_tree.png",     // Polish v2 — tree trunk grounding shadow (20x6, alpha baked)
@@ -93,8 +93,8 @@ namespace MelonS.GameProto.EditorTools
                 "Assets/Resources/scatter/pebble_scatter.png",      // W-M4-03 Lane B — scatter variety: pebble group (10x6); moved to Resources/scatter/; QA-FLAG W-M4-06 Lane B
                 "Assets/Sprites/stone_floor.png",         // W-M4-05 Lane B — stone/paved floor tile (16x16, PPU 16)
                 "Assets/Sprites/table_chair.png",         // W-M4-06 Lane A — table+chair furniture (16x16, PPU 16); procedural fallback exists but import ensures real sprite resolves
-                "Assets/Sprites/fence.png",               // W-M6-02 Lane B3 — fence low-barrier (16x16, PPU 16); procedural fallback exists
-                "Assets/Sprites/fence_gate.png",          // W-M6-02 Lane B3 — fence-gate variant (16x16, PPU 16); procedural fallback exists
+                "Assets/Sprites/struct32_fence.png",               // W-M6-02 Lane B3 — fence low-barrier (16x16, PPU 16); procedural fallback exists
+                "Assets/Sprites/struct32_fence_gate.png",          // W-M6-02 Lane B3 — fence-gate variant (16x16, PPU 16); procedural fallback exists
                 "Assets/Sprites/carry_bundle.png",        // W-M6-02 Lane B10 — carry-bundle overlay sprite (8x8, PPU 16); also copied to Resources/Sprites/ for Resources.Load path
                 "Assets/Sprites/stone_vein.png",          // #119 — minable stone vein (16x16, PPU 16); ForceImport ensures Sprite type before SpawnStoneVeins LoadAssetAtPath
             };
@@ -357,7 +357,7 @@ namespace MelonS.GameProto.EditorTools
             // Day 21: import + add stove sprite (no scene-time placement;
             // future Day 22 will allow building Stove via BuildManager).
             // For now, just ensure sprite is imported.
-            string stovePath = "Assets/Sprites/stove.png";
+            string stovePath = "Assets/Sprites/struct32_stove.png";
             if (File.Exists(stovePath))
             {
                 AssetDatabase.ImportAsset(stovePath, ImportAssetOptions.ForceUpdate);

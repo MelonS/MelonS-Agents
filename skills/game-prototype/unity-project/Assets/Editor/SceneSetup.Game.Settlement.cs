@@ -112,7 +112,7 @@ namespace MelonS.GameProto.EditorTools
             }
 
             // Stretch: 가로등 2개 - 시작 정착지 북쪽 벽 위 (tile center 정렬)
-            Sprite lampSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/lamp.png");
+            Sprite lampSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_lamp.png");
             //  tile (x, y) 시각 center = (x+0.5, y+0.5).  벽 위쪽 (y=2) 행에 배치.
             Vector2Int[] lampSpots = { new Vector2Int(-7, 2), new Vector2Int(-3, 2) };
             foreach (var lp in lampSpots)

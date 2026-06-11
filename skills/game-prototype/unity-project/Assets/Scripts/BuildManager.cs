@@ -755,7 +755,7 @@ namespace MelonS.GameProto
         private static Sprite LoadOrBuildLampSprite()
         {
 #if UNITY_EDITOR
-            var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/lamp.png");
+            var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_lamp.png");
             if (sp != null) return sp;
 #endif
             return BuildProceduralLampSprite();
@@ -916,6 +916,10 @@ namespace MelonS.GameProto
         /// </summary>
         private static Sprite LoadOrBuildFloorStoneSprite()
         {
+            // 아트 v2 (2026-06-11): 32px 석재 바닥 — Resources 라 플레이어 빌드에서도
+            //  로드된다 (기존 에디터-only AssetDatabase 경로는 빌드에서 절차 회색 폴백).
+            var v2 = Resources.Load<Sprite>("struct32/struct32_floor_stone");
+            if (v2 != null) return v2;
 #if UNITY_EDITOR
             var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stone_floor.png");
             if (sp != null) return sp;
@@ -1190,7 +1194,7 @@ namespace MelonS.GameProto
         {
             if (fenceSprite != null) return fenceSprite;          // wired via SetRefs (future)
             if (_fenceSpriteRuntime != null) return _fenceSpriteRuntime;
-            _fenceSpriteRuntime = LoadOrBuildFenceSprite("Assets/Sprites/fence.png", isGate: false);
+            _fenceSpriteRuntime = LoadOrBuildFenceSprite("Assets/Sprites/struct32_fence.png", isGate: false);
             return _fenceSpriteRuntime;
         }
 
@@ -1198,7 +1202,7 @@ namespace MelonS.GameProto
         {
             if (fenceGateSprite != null) return fenceGateSprite;  // wired via SetRefs (future)
             if (_fenceGateSpriteRuntime != null) return _fenceGateSpriteRuntime;
-            _fenceGateSpriteRuntime = LoadOrBuildFenceSprite("Assets/Sprites/fence_gate.png", isGate: true);
+            _fenceGateSpriteRuntime = LoadOrBuildFenceSprite("Assets/Sprites/struct32_fence_gate.png", isGate: true);
             return _fenceGateSpriteRuntime;
         }
 
@@ -1557,7 +1561,7 @@ namespace MelonS.GameProto
         private static Sprite LoadOrBuildBarricadeSprite()
         {
 #if UNITY_EDITOR
-            var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/barricade.png");
+            var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_barricade.png");
             if (sp != null) return sp;
 #endif
             return BuildProceduralBarricadeSprite();

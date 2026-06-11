@@ -44,7 +44,15 @@ namespace MelonS.GameProto
             maxHp = h;
             hp = h;
             var sr = GetComponent<SpriteRenderer>();
-            if (sr != null) sr.color = tint;
+            if (sr == null) return;
+            // 아트 v2 (2026-06-11): 석재 벽 전용 스프라이트 — 기존 '회색 틴트 목재 벽'
+            //  대신 석축 원화.  Resources 라 플레이어 빌드에서도 로드.  없으면 틴트 폴백.
+            if (m == WallMaterial.Stone)
+            {
+                var stone = Resources.Load<Sprite>("struct32/struct32_wall_stone");
+                if (stone != null) { sr.sprite = stone; sr.color = Color.white; return; }
+            }
+            sr.color = tint;
         }
 
         private void Awake()

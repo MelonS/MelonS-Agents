@@ -115,11 +115,11 @@ namespace MelonS.GameProto.EditorTools
             rs.SetTreePrefab(prefabs.treePrefab);
 
             // Build prefabs (Day 17-18): wall/floor/door/stove/bench
-            Sprite wallSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/wall_wood.png");
-            Sprite floorSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/floor_wood.png");
-            Sprite doorSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/door_wood.png");
-            Sprite stoveSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stove.png");
-            Sprite benchSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/research_bench.png");
+            Sprite wallSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_wall_wood.png");
+            Sprite floorSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_floor_wood.png");
+            Sprite doorSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_door_wood.png");
+            Sprite stoveSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_stove.png");
+            Sprite benchSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_research_bench.png");
 
             prefabs.wallPrefab  = MakeStaticPrefab("Wall",  wallSprite,  7, true,  false, "Assets/Prefabs/Wall.prefab",  go => go.AddComponent<WallEntity>());
             prefabs.floorPrefab = MakeStaticPrefab("Floor", floorSprite, 1, false, false, "Assets/Prefabs/Floor.prefab", go => go.AddComponent<FloorEntity>());
