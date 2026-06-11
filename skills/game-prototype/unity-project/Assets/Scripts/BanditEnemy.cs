@@ -100,6 +100,22 @@ namespace MelonS.GameProto
         {
             if (IsDead) return;
 
+            if (lastCombatTime < 0f) lastCombatTime = Time.time;
+            if (retreating)
+            {
+                // 퇴각: 가까운 좌/우 맵 끝으로 직진(벽 무시 — 이탈 보장), 경계 밖 소멸.
+                float dirX = transform.position.x >= 0f ? 1f : -1f;
+                transform.position += new Vector3(dirX * moveSpeed * Time.deltaTime, 0f, 0f);
+                if (Mathf.Abs(transform.position.x) > 46f) Destroy(gameObject);
+                return;
+            }
+            if (Time.time - lastCombatTime > 60f)
+            {
+                retreating = true;
+                Debug.Log("[Bandit] 전과 없음 60s → 퇴각");
+                return;
+            }
+
             // Hit-flash decay
             if (sr != null && flashUntil > 0 && Time.time > flashUntil)
             {
@@ -142,6 +158,7 @@ namespace MelonS.GameProto
                 {
                     nextHitTime = Time.time + damageInterval;
                     target.TakeDamage(contactDamage, gameObject);
+                    lastCombatTime = Time.time;   // 퇴각 타이머 리셋
                 }
             }
         }
@@ -156,6 +173,10 @@ namespace MelonS.GameProto
         //  '시간 벌기'가 되고, 목벽 100 vs 석벽 280 자재 선택이 처음으로 결정이 된다.
         private float blockedSince = -1f;
         private float nextStructHit = -1f;
+        // 게임루프 차순위 (2026-06-12) — 60s 무전투 퇴각 타이머: 벽 밖에서 영원히
+        //  서성이는 강도가 '영구 위협 잔재'로 남던 것.  습격에 시작과 끝이 생긴다.
+        private float lastCombatTime = -1f;
+        private bool retreating;
 
         private bool TryStep(Vector2 step)
         {
@@ -200,7 +221,8 @@ namespace MelonS.GameProto
                 var wall = col != null ? col.GetComponent<WallEntity>() : null;
                 if (wall != null)
                 {
-                    wall.TakeDamage(contactDamage * 2f);   // HP tint 피드백은 WallEntity 내장
+                    wall.TakeDamage(contactDamage * 2f);
+                    lastCombatTime = Time.time;   // 벽 공격도 전투 — 퇴각 타이머 리셋   // HP tint 피드백은 WallEntity 내장
                     Debug.Log($"[Bandit] 벽 공격 -{contactDamage * 2f}");
                     break;
                 }
