@@ -122,6 +122,10 @@ namespace MelonS.GameProto
                     && WeatherController.Instance.Current == WeatherKind.Storm
                     && !needs.IsOnFloor();
                 if (stormExposed) AddThought("야외 폭풍"); else RemoveThought("야외 폭풍");
+                // 백로그 #4b (2026-06-11) — '따뜻한 실내'(+2) 배선: 바닥 깐 실내가 처음으로
+                //  기분 경제에 닿는다 (카탈로그엔 있었으나 호출처 0).  죽음 나선(#4a 붕괴
+                //  섭취 금지)의 회복 반대축 — 압력만 있고 공급이 없으면 일방 난이도.
+                if (needs.IsOnFloor()) AddThought("따뜻한 실내"); else RemoveThought("따뜻한 실내");
                 var health = GetComponent<PawnHealth>();
                 if (health != null && health.TotalHpRatio < 0.6f) AddThought("부상");
                 else RemoveThought("부상");
