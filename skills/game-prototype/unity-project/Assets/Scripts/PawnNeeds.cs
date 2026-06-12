@@ -288,6 +288,7 @@ namespace MelonS.GameProto
         [SerializeField] private float moodBreakThreshold = 20f;
         [SerializeField] private float moodBreakRecoverAt = 35f;
         [SerializeField] private float moodBreakDuration = 30f;
+        private TimeSlot lastSeenSlot = TimeSlot.Anytime;   // #12 에지 트리거 캐시
         private bool isBreaking = false;
         private float breakUntil = -10f;
         public bool IsBreaking => isBreaking;
@@ -424,14 +425,16 @@ namespace MelonS.GameProto
                         mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
                         // 충분히 잤으면(80) 자율 취침 종료.  단 #269 스케줄 Sleep 슬롯 중엔
                         //  풀충전돼도 계속 잔다(슬롯 끝날 때까지) — the reference sim Sleep 동작.
-                        // 갭 TOP-12 #12 — Work 슬롯 전이 = 기상 조건: 슬롯이 작업으로 바뀌면
-                        //  sleep 40 이상일 때 즉시 일어난다(작업 시간에 80까지 늦잠 금지).
-                        //  재취침 thrash 없음: Work 슬롯이면 ScheduledSleepNow=false 이고
-                        //  40 > 탈진(20)이라 자율 취침 조건에 다시 안 걸린다.
-                        bool workSlotNow = schedule != null
-                            && schedule.GetCurrentSlot() == TimeSlot.Work;
+                        // 갭 TOP-12 #12 — Work 슬롯 '전이' = 기상 조건 (에지 트리거).
+                        //  수면곡선 실측(2026-06-13): 레벨 트리거(Work 슬롯 내내 sleep≥40
+                        //  이면 기상)는 저녁 일찍 잠든 림을 21시 Work 슬롯이 계속 깨워
+                        //  40 경계 진동(잠듦↔기상, 3시간 회복 정체)을 만들었다.  백로그
+                        //  정의대로 '슬롯이 작업으로 바뀌는 순간' 1회만 발동한다.
+                        var slotNow = schedule != null ? schedule.GetCurrentSlot() : TimeSlot.Anytime;
+                        bool workSlotEdge = slotNow == TimeSlot.Work && lastSeenSlot != TimeSlot.Work;
+                        lastSeenSlot = slotNow;
                         if ((sleep >= autoWakeSleepLevel && !ScheduledSleepNow)
-                            || (workSlotNow && sleep >= 40f))
+                            || (workSlotEdge && sleep >= 40f))
                         {
                             IsSleeping = false;
                             // 백로그 #4b + T5 — 품질별 1회 thought 로 통일.

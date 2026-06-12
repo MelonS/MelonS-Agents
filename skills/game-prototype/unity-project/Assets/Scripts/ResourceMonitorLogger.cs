@@ -39,7 +39,7 @@ namespace MelonS.GameProto
             {
                 if (pn == null) continue;
                 var pe = pn.GetComponent<PawnEntity>();
-                sb.Append($" {(pe != null ? pe.PawnName : pn.name)}={pn.sleep:F0}{(pn.IsSleeping ? "z" : "")}");
+                sb.Append($" {(pe != null ? pe.PawnName : pn.name)}={pn.sleep:F0}{(pn.IsSleeping ? "z" : "")}/m{pn.mood:F0}{(pn.IsBreaking ? "B" : "")}");
             }
             Debug.Log(sb.ToString());
         }
