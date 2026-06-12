@@ -177,6 +177,18 @@ namespace MelonS.GameProto
         private static float _lastNoFoodAlert = -99f;   // r2 #5 — 콜로니 단위 스로틀
         // 운영자 피드백 #14 (2026-06-12 AM): 자는지 식별 불가 — 수면 중 주기 zZZ.
         private float _nextSleepFx = -1f;
+        // 첫사이클 T5 — 침대 무드 '초당' 가산 제거의 짝: 기상 시 품질별 1회 thought.
+        private BedEntity lastSleepBed;
+        private void GrantWakeMood(BedEntity b)
+        {
+            lastSleepBed = null;
+            if (b == null) return;
+            var th = GetComponent<PawnThoughts>();
+            if (th == null) return;
+            if (b.RestMul >= 1.3f)      th.AddThought("고급 침대에서 잠", +6f, 600f);
+            else if (b.RestMul >= 0.95f) th.AddThought("침대에서 잠", +3f, 600f);
+            else                          th.AddThought("잠자리에서 잠", +1f, 600f);
+        }
         private bool starveWarned;                       // r2-E — 임박 경고 1회 게이트
         [SerializeField] private float autoSleepRetryCooldown = 20f;
         public bool HasAutoSleepOrder => autoRestTarget != null;
@@ -187,8 +199,12 @@ namespace MelonS.GameProto
         //  자러 간다 — 과거엔 밤 게이트 때문에 낮에 sleep 이 20까지 떨어져도 안 자고 게이지가
         //  바닥에 정체돼 "수면 게이지가 정상동작 안 함"처럼 보였다.
         private const float ExhaustedSleepLevel = 15f;
+        // 첫사이클 T4 (2026-06-12) — 걷기/실신 임계가 동일(15)이라 같은 프레임 발화 →
+        //  1일차 저녁 전 림이 빈 침대 옆에서도 길바닥 동시 실신.  걷기 트리거를 20으로
+        //  올려 15~20 을 '침대로 걸어갈 유예 창'으로 (실신은 15 유지).
+        private const float ExhaustedWalkLevel = 20f;
         public bool WantsAutoSleep =>
-            (sleep < ExhaustedSleepLevel || (sleep < autoSleepThreshold && IsNightTime()) || ScheduledSleepNow)
+            (sleep < ExhaustedWalkLevel || (sleep < autoSleepThreshold && IsNightTime()) || ScheduledSleepNow)
             && Time.time >= autoSleepSuppressUntil;
 
         /// <summary>GoSleepAction 이 빈 침대를 예약한 뒤 호출 — 이 침대로 가서 자라.</summary>
@@ -320,15 +336,16 @@ namespace MelonS.GameProto
                         forcedResting = true;
                         IsSleeping = true;
                         float restMul = restTarget.RestMul;
-                        float moodPerSec = restTarget.MoodBonus;
+                        // T5 — 무드는 기상 시 1회 thought (초당 가산은 하룻밤 +999~ 로
+                        //  thought 경제를 매일 리셋시키던 운영자 승인 모델 위반 잔재).
                         sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * restMul * dt);
                         food = Mathf.Max(0f, food - foodDecay * 0.5f * dt);
                         mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
-                        if (moodPerSec > 0f) mood = Mathf.Min(100f, mood + moodPerSec * dt);
                         // 충분히 쉬었으면 명령 종료 (자동 기상).
                         if (sleep >= forcedWakeSleepLevel)
                         {
                             IsSleeping = false;
+                            GrantWakeMood(restTarget);
                             ClearRestTarget();
                         }
                         return;
@@ -366,24 +383,19 @@ namespace MelonS.GameProto
                     {
                         IsSleeping = true;
                         float restMul = autoRestTarget.RestMul;
-                        float moodPerSec = autoRestTarget.MoodBonus;
                         sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * restMul * dt);
                         food = Mathf.Max(0f, food - foodDecay * 0.5f * dt);
                         mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
-                        if (moodPerSec > 0f) mood = Mathf.Min(100f, mood + moodPerSec * dt);
                         // 충분히 잤으면(80) 자율 취침 종료.  단 #269 스케줄 Sleep 슬롯 중엔
                         //  풀충전돼도 계속 잔다(슬롯 끝날 때까지) — the reference sim Sleep 동작.
                         if (sleep >= autoWakeSleepLevel && !ScheduledSleepNow)
                         {
                             IsSleeping = false;
-                            ClearAutoSleepTarget();
-                            // 백로그 #4b — 양성 thought 배선 (카탈로그엔 있었으나 호출처 0).
+                            // 백로그 #4b + T5 — 품질별 1회 thought 로 통일.
+                            GrantWakeMood(autoRestTarget);
                             var thw = GetComponent<PawnThoughts>();
-                            if (thw != null)
-                            {
-                                thw.AddThought("침대에서 잠");
-                                if (sleep >= 95f) thw.AddThought("푹 잠");
-                            }
+                            if (thw != null && sleep >= 95f) thw.AddThought("푹 잠");
+                            ClearAutoSleepTarget();
                         }
                         return;
                     }
@@ -451,19 +463,26 @@ namespace MelonS.GameProto
                 EmitSleepFx();
                 var bed = GetBedUnderPawn();
                 float restMul = bed != null ? bed.RestMul : 0.6f;
-                float moodPerSec = bed != null ? bed.MoodBonus : 0f;
+                if (bed != null) lastSleepBed = bed;   // T5 — 기상 1회 thought 용
                 sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * restMul * dt);
                 food  = Mathf.Max(0f, food  - foodDecay * 0.5f * dt);
                 mood  = Mathf.Max(0f, mood  - moodDecay * 0.5f * dt);
-                if (moodPerSec > 0f) mood = Mathf.Min(100f, mood + moodPerSec * dt);
                 return;
             }
             // Wake up when sleep refilled past 80 — 단 #269 스케줄 Sleep 슬롯 중엔 계속 잔다.
-            if (IsSleeping && sleep >= 80f && !ScheduledSleepNow) IsSleeping = false;
+            if (IsSleeping && sleep >= 80f && !ScheduledSleepNow)
+            {
+                IsSleeping = false;
+                GrantWakeMood(lastSleepBed);   // T5 — 바닥이면 no-op
+            }
             if (IsSleeping)
             {
                 EmitSleepFx();
-                sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * dt);
+                // 첫사이클 T6 — 이 분기만 RestMul 풀레이트라 '바닥 취침(3.0/s)이
+                //  수면자리(2.4/s)보다 빨리 회복'하는 경제 역전이 있었다.
+                var contBed = GetBedUnderPawn();
+                if (contBed != null) lastSleepBed = contBed;
+                sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * (contBed != null ? contBed.RestMul : 0.6f) * dt);
                 // #audit2 #18 — 회복/스케줄 수면 분기에도 food/mood 0.5x decay.  이전엔 sleep 만
                 //  채우고 return 해서, sleep 이 회복 임계(~35)를 넘긴 뒤 80 까지 자는 동안(그리고
                 //  스케줄 수면 내내) 허기·기분이 전혀 줄지 않는 '무한 무허기' 버그였다.  정상
