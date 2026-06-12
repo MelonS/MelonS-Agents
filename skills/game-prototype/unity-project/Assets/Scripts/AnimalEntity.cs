@@ -134,10 +134,38 @@ namespace MelonS.GameProto
         private GameObject revengeTarget;
         private float revengeUntil = -1f;
         private float nextRevengeHit = -1f;
+        // 갭 TOP-11 (2026-06-13) — 광기(manhunter): 반격 AI 의 '선공 모드' 변종.
+        //  지속 시간 동안 대상이 죽거나 사라지면 가장 가까운 림을 재타겟.
+        private float manhunterUntil = -1f;
+        public bool IsManhunter => manhunterUntil > 0f && Time.time < manhunterUntil && !IsDead;
+
+        public void ForceManhunter(float durationSec)
+        {
+            manhunterUntil = Time.time + durationSec;
+            RetargetNearestPawn();
+        }
+
+        private void RetargetNearestPawn()
+        {
+            PawnEntity best = null; float bestSq = float.MaxValue;
+            foreach (var pe in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+            {
+                if (pe == null || pe.IsDead) continue;
+                float sq = ((Vector2)pe.transform.position - (Vector2)transform.position).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = pe; }
+            }
+            if (best != null)
+            {
+                revengeTarget = best.gameObject;
+                revengeUntil = manhunterUntil;   // 광기 지속 내내 추격
+            }
+        }
 
         private void Update()
         {
             if (IsDead) return;
+            // TOP-11 광기 — 대상을 잃으면(사망/소멸) 다음 림으로 재타겟.
+            if (IsManhunter && revengeTarget == null) RetargetNearestPawn();
             // #12 멧돼지 반격 — 공격자에게 돌진, 접촉 시 피해.  대상 사망/시간 만료 시 해제.
             if (revengeTarget != null)
             {

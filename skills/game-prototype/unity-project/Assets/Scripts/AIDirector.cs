@@ -69,6 +69,9 @@ namespace MelonS.GameProto
         private float nextFireGameSec = -1f;   // GameClock.GameSeconds 기준 (-1 = 미스케줄)
         private bool raidCardActive;            // 소크 r3 #8 — 습격 카드 해소 추적
         private float nextRaidClearCheck;
+        private bool manhunterCardActive;       // TOP-11 — 광기 카드 해소 추적
+        private readonly System.Collections.Generic.List<AnimalEntity> madPack
+            = new System.Collections.Generic.List<AnimalEntity>(4);
         private GameEvent lastEvent;
         private readonly List<GameEvent> pool = new List<GameEvent>();
 
@@ -236,6 +239,21 @@ namespace MelonS.GameProto
                     Debug.Log("[AIDirector] raid cleared — 카드 해소 + 격퇴 알림");
                 }
             }
+            // TOP-11 — 광기 떼 전멸/광기 해제 감지 → 카드 해소.
+            if (manhunterCardActive && Time.unscaledTime >= nextRaidClearCheck - 0.5f)
+            {
+                bool anyMad = false;
+                foreach (var a in madPack)
+                    if (a != null && a.IsManhunter) { anyMad = true; break; }
+                if (!anyMad)
+                {
+                    manhunterCardActive = false;
+                    madPack.Clear();
+                    AlertStackUI.Resolve("광기");
+                    AlertStackUI.NotifyGood("광기 진정 — 위협 해소");
+                    Debug.Log("[AIDirector] manhunter cleared — 카드 해소");
+                }
+            }
         }
 
         private void TryScheduleRaid()
@@ -324,6 +342,23 @@ namespace MelonS.GameProto
                 threatTier = 3,            // TOP-4 — 습격은 최상위 빨강
                 kind = EventKind.Threat,
             };
+            // 갭 TOP-11 — 위협 가중 추첨: 인간 습격 70% / 미친 동물 30%.
+            //  레퍼런스의 '위협마다 다른 대응'(엄폐 사격 vs 근접 차단)의 최소형.
+            if (UnityEngine.Random.value < 0.30f && TrySpawnManhunterPack(banditCount + 1))
+            {
+                var madEv = new GameEvent
+                {
+                    id = "manhunter_pack", title = "광기 — 미친 멧돼지 떼!",
+                    description = $"멧돼지 {banditCount + 1}마리가 광기에 휩싸여 콜로니로 돌진한다.",
+                    flavor = "눈에 핏발이 서 있다.",
+                    threatTier = 3, kind = EventKind.Threat,
+                };
+                lastEvent = madEv;
+                OnEventFired?.Invoke(madEv);
+                manhunterCardActive = true;
+                Debug.Log($"[AIDirector] MANHUNTER day={clockDayForLog()} boars={banditCount + 1}");
+                return;
+            }
             lastEvent = raidEv;
             OnEventFired?.Invoke(raidEv);
             for (int i = 0; i < banditCount; i++) SpawnSingleBandit(i);
@@ -456,6 +491,30 @@ namespace MelonS.GameProto
             var next = cands[UnityEngine.Random.Range(0, cands.Count)];
             OnEventFired?.Invoke(next);
             Debug.Log($"[AIDirector:Ambient] {next.title}: {next.description}");
+        }
+
+        /// <summary>TOP-11 — 외곽에 미친 멧돼지 N 스폰.  씬의 기존 AnimalEntity 를
+        /// 템플릿으로 복제(스프라이트/스탯 경로 재사용), Boar 로 종 전환 후 광기 발동.
+        /// 템플릿이 없으면 false → 호출측이 인간 습격으로 폴백.</summary>
+        private bool TrySpawnManhunterPack(int count)
+        {
+            AnimalEntity template = null;
+            foreach (var a in UnityEngine.Object.FindObjectsByType<AnimalEntity>(FindObjectsSortMode.None))
+                if (a != null && !a.IsDead) { template = a; if (a.Species == AnimalSpecies.Boar) break; }
+            if (template == null) return false;
+            madPack.Clear();
+            for (int i = 0; i < count; i++)
+            {
+                var go = UnityEngine.Object.Instantiate(template.gameObject,
+                    new Vector3(-20f + i * 2.5f, 26f, 0f), Quaternion.identity);
+                go.name = $"MadBoar_{i}";
+                var ae = go.GetComponent<AnimalEntity>();
+                if (ae == null) { UnityEngine.Object.Destroy(go); continue; }
+                ae.SetSpecies(AnimalSpecies.Boar);
+                ae.ForceManhunter(180f);   // 실시간 3분 ≈ 4.3게임시간 광기
+                madPack.Add(ae);
+            }
+            return madPack.Count > 0;
         }
 
         /// <summary>Trader spawn helper - trader_caravan event 발화 시 호출.</summary>
