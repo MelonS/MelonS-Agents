@@ -112,6 +112,7 @@ namespace MelonS.GameProto
                 //  cook→eat chain.  WorkKind.Gather so it shares the gather priority slot.
                 new HarvestCropAction(),
                 new BuildBlueprintAction(),  // #118 - 청사진 건설 (chop 보다 우선)
+                new BuildRoofAction(),       // 소크 r2 #1 - 지붕 노동 시공 (골조 다음)
                 // ── HAUL loose ground piles FIRST (above raw extraction) ──
                 //  운영자 fb #I4-regress: 떨어진 더미가 적립 전에 부패(옥외 30s/-1)하지
                 //  않도록, 줍을 더미가 있으면 새 채집/벌목보다 운반을 먼저 한다.  세 종류를

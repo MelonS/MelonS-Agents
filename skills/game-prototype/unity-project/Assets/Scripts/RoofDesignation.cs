@@ -87,10 +87,12 @@ namespace MelonS.GameProto
         //  기반의 가벼운 진행만 둔다: 지정 → buildSeconds 동안 '짓는 중'(pending) → 자동으로
         //  '지어진 지붕'(built) 확정.  RoofOverlayRenderer 가 두 상태를 시각적으로 다르게 그려
         //  "지정 즉시 변화가 보이고 → 잠시 후 진짜 지붕이 된다"가 눈에 보이게 한다.
-        // 0.8s: 실플레이에선 '짓는 중→지어짐' 진행이 분명히 보이면서도, QA 시나리오의 step
-        //  pacing + 스크린샷 타이밍 안에서 BUILT(진한 지붕)로 확정돼 PNG 에 '진짜 지붕'이 잡히도록
-        //  짧게 둔다(운영자: 지정 즉시 변화가 보이고 곧 진짜 지붕이 되어야 함).  0 이면 즉시 완성.
-        [SerializeField] private float buildSeconds = 0.8f;       // pending → built 까지 걸리는 시간(0 이면 즉시)
+        // 소크 r2 채점(2026-06-12) 관찰 #1 — 지붕이 자재·노동 없이 벽보다 먼저 ~1초에
+        //  일괄 완공.  타이머 자동 승격을 폐기하고 '빌더 노동'으로 전환: 지정 셀은
+        //  무기한 pending 으로 남고, PawnBuilder 가 셀에 도달해 buildSeconds 만큼
+        //  노동해야 BUILT 로 승격된다 (BuildRoofAction → SetRoofTarget → TickRoofWork).
+        //  자재는 레퍼런스 패리티대로 무료(지붕은 노동만 소모).
+        [SerializeField] private float buildSeconds = 2.5f;       // 셀당 필요 노동초 (빌더 작업속도 배율 적용)
 
         // ---- runtime state ---------------------------------------------------
         public static RoofDesignation Instance { get; private set; }
@@ -358,6 +360,49 @@ namespace MelonS.GameProto
         /// Update; early-outs to (near) free once nothing is building.  When a cell
         /// finishes we DON'T bump Version (membership unchanged) — the renderer watches
         /// PendingCount to refresh on a pending→built transition.</summary>
+        // ---- 지붕 노동 시공 API (소크 r2 관찰 #1) -----------------------------
+        //  cell → 누적 노동초 / cell → 점유 빌더.  완료 시 roofCells[cell]=now 로
+        //  바꿔 두면 기존 TickBuildProgress 가 다음 프레임에 BUILT 로 승격 +
+        //  PendingCount 동기화 + 배치 로그까지 기존 경로 그대로 처리한다.
+        private readonly Dictionary<Vector2Int, float> roofWork = new Dictionary<Vector2Int, float>(32);
+        private readonly Dictionary<Vector2Int, GameObject> roofClaims = new Dictionary<Vector2Int, GameObject>(8);
+
+        /// <summary>점유되지 않은 가장 가까운 pending 지붕 셀을 점유. 없으면 false.</summary>
+        public bool TryClaimNearestPending(Vector3 from, GameObject claimant, out Vector2Int best)
+        {
+            best = default; float bestSq = float.MaxValue; bool found = false;
+            foreach (var kv in roofCells)
+            {
+                if (!float.IsPositiveInfinity(kv.Value)) continue;   // BUILT(또는 승격 직전)
+                if (roofClaims.TryGetValue(kv.Key, out var by) && by != null && by != claimant) continue;
+                Vector2 c = new Vector2(kv.Key.x + 0.5f, kv.Key.y + 0.5f);
+                float sq = (c - (Vector2)from).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = kv.Key; found = true; }
+            }
+            if (found) roofClaims[best] = claimant;
+            return found;
+        }
+
+        public void ReleaseClaim(Vector2Int cell, GameObject claimant)
+        {
+            if (roofClaims.TryGetValue(cell, out var by) && by == claimant) roofClaims.Remove(cell);
+        }
+
+        public bool IsPendingCell(Vector2Int cell)
+            => roofCells.TryGetValue(cell, out float v) && float.IsPositiveInfinity(v);
+
+        /// <summary>빌더의 프레임당 노동 적립.  완료(또는 셀 소멸) 시 true.</summary>
+        public bool TickRoofWork(Vector2Int cell, float workSec, string builderName)
+        {
+            if (!IsPendingCell(cell)) { roofClaims.Remove(cell); roofWork.Remove(cell); return true; }
+            float w = (roofWork.TryGetValue(cell, out float cur) ? cur : 0f) + workSec;
+            if (w < Mathf.Max(0.1f, buildSeconds)) { roofWork[cell] = w; return false; }
+            roofCells[cell] = Time.time - 0.001f;   // BUILT — TickBuildProgress 가 승격 처리
+            roofWork.Remove(cell); roofClaims.Remove(cell);
+            Debug.Log($"[Roof] built ({cell.x},{cell.y}) by {builderName}");
+            return true;
+        }
+
         private void TickBuildProgress()
         {
             if (PendingCount == 0) return;   // nothing building — effectively free
@@ -386,9 +431,9 @@ namespace MelonS.GameProto
         private bool AddRoof(Vector2Int cell, bool playBlip, bool fx)
         {
             if (roofCells.ContainsKey(cell)) return false;   // idempotent re-roof (silent)
-            float doneTime = Time.time + Mathf.Max(0f, buildSeconds);
-            roofCells.Add(cell, doneTime);
-            if (buildSeconds > 0f) PendingCount++;           // starts building
+            // 노동 시공: 빌더가 TickRoofWork 로 완료할 때까지 무기한 pending.
+            roofCells.Add(cell, float.PositiveInfinity);
+            PendingCount++;                                   // starts building (노동 대기)
             Version++;
             if (playBlip) AudioBank.Instance?.PlaySelect();
             if (fx)
@@ -408,6 +453,7 @@ namespace MelonS.GameProto
         {
             if (!roofCells.TryGetValue(cell, out float done)) return false;   // wasn't designated — silent no-op
             roofCells.Remove(cell);
+            roofWork.Remove(cell); roofClaims.Remove(cell);
             if (Time.time < done && PendingCount > 0) PendingCount--;   // it was still building
             Version++;
             if (playBlip) AudioBank.Instance?.PlaySelect();

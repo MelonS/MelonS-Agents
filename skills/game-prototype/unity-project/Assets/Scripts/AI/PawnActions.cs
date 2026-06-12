@@ -190,6 +190,25 @@ namespace MelonS.GameProto.AI
         }
     }
 
+    /// <summary>소크 r2 관찰 #1 (2026-06-12) — 지붕은 이제 빌더 노동으로 시공된다.
+    /// 청사진 건설보다 후순위(액션 리스트 등록 위치가 우선순위): 구조물 골조가 먼저,
+    /// 지붕은 그 다음 — 레퍼런스의 시공 순서 감각과 일치.</summary>
+    public class BuildRoofAction : IPawnAction
+    {
+        public string DisplayName => "지붕 시공";
+        public WorkKind Kind => WorkKind.Build;
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.builder == null) return false;
+            var rd = RoofDesignation.Instance;
+            if (rd == null) return false;
+            if (!rd.TryClaimNearestPending(ctx.transform.position, ctx.transform.gameObject, out var cell))
+                return false;
+            ctx.builder.SetRoofTarget(cell);
+            return true;
+        }
+    }
+
     public class CookMealAction : IPawnAction
     {
         public string DisplayName => "요리";

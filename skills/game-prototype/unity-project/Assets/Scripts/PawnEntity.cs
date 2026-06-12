@@ -155,6 +155,8 @@ namespace MelonS.GameProto
             GetComponent<PawnCook>()?.ClearTask();
             GetComponent<PawnHauler>()?.ClearTask();
             GetComponent<PawnBuilder>()?.ClearTask();
+            GetComponent<PawnBuilder>()?.ClearDeconstructTask();   // 철거도 워커 일종 — 누락 보강
+            GetComponent<PawnBuilder>()?.ClearRoofTask();          // 소크 r2 #1 - 지붕 시공
             GetComponent<PawnMiner>()?.ClearTask();
             GetComponent<PawnDoctor>()?.ClearTask();
         }

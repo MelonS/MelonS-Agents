@@ -42,12 +42,77 @@ namespace MelonS.GameProto
         private Vector2Int deStandCell = PawnMovement.INVALID_CELL;
         private WorkGiveUp deGiveUp;
 
-        public bool HasTask => targetBp != null || targetDe != null;
+        public bool HasTask => targetBp != null || targetDe != null || hasRoofTask;
         public BlueprintEntity Target => targetBp;
         public DeconstructTarget DeconstructTarget => targetDe;
         public bool HasDeconstructTask => targetDe != null;
 
         private void Awake() { movement = GetComponent<PawnMovement>(); }
+
+        // ---- 지붕 노동 시공 (소크 r2 관찰 #1) ---------------------------------
+        private Vector2Int roofCell = PawnMovement.INVALID_CELL;
+        private bool hasRoofTask;
+        public bool HasRoofTask => hasRoofTask;
+
+        public void SetRoofTarget(Vector2Int cell)
+        {
+            ClearTask(); ClearDeconstructTask(); ClearRoofTask();   // 작업 전환 시 예약 정리
+            hasRoofTask = true; roofCell = cell;
+            giveUp.Reset(Time.time, Vector2.Distance(transform.position,
+                new Vector2(cell.x + 0.5f, cell.y + 0.5f)));
+            WalkToRoof();
+        }
+
+        private void WalkToRoof()
+        {
+            if (!hasRoofTask) return;
+            Vector3 c = new Vector3(roofCell.x + 0.5f, roofCell.y + 0.5f, 0f);
+            if (PawnMovement.TryReserveWorkStandPos(c, new Vector2Int(1, 1),
+                    transform.position, gameObject, ref standCell, out Vector2 stand))
+                movement.SetTarget(stand);
+            else
+                ClearRoofTask();   // 도달 불가 — 점유 해제하고 포기
+        }
+
+        public void ClearRoofTask()
+        {
+            if (hasRoofTask && RoofDesignation.Instance != null)
+                RoofDesignation.Instance.ReleaseClaim(roofCell, gameObject);
+            hasRoofTask = false;
+            roofCell = PawnMovement.INVALID_CELL;
+            ReleaseStandCell();
+        }
+
+        private void UpdateRoof()
+        {
+            var rd = RoofDesignation.Instance;
+            if (rd == null || !rd.IsPendingCell(roofCell)) { ClearRoofTask(); return; }
+            Vector2 c = new Vector2(roofCell.x + 0.5f, roofCell.y + 0.5f);
+            float dist = Vector2.Distance(transform.position, c);
+            if (dist > buildRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
+            {
+                Debug.Log($"[Builder] {name} give up roof ({roofCell.x},{roofCell.y}) (dist={dist:F2})");
+                ClearRoofTask();
+                return;
+            }
+            if (dist <= buildRange || movement.AtStandCell(standCell))
+            {
+                movement.ClearTarget();
+                var abil = GetComponent<PawnAbilities>();
+                float mul = abil != null ? abil.constructionMul * abil.manipulation : 1f;
+                var traits = GetComponent<PawnTraits>();
+                if (traits != null) mul *= traits.workSpeedMul;
+                var hlt = GetComponent<PawnHealth>();
+                if (hlt != null) mul *= hlt.WorkSpeedMultiplier();
+                var skills = GetComponent<PawnSkills>();
+                if (skills != null) mul *= 1f + skills.GetLevel(SkillKind.Build) * 0.04f;
+                bool done = rd.TickRoofWork(roofCell, Time.deltaTime * mul, name);
+                if (skills != null) skills.AddXP(SkillKind.Build, 5f * Time.deltaTime);
+                if (done) ClearRoofTask();   // 다음 셀은 utility AI 가 재배정
+            }
+            else
+                WalkToRoof();
+        }
 
         public void SetBlueprintTarget(BlueprintEntity bp)
         {
@@ -178,6 +243,7 @@ namespace MelonS.GameProto
             // Deconstruct work takes the dedicated branch (it never coexists with a
             //  blueprint — SetDeconstructTarget drops any build task first).
             if (targetDe != null) { UpdateDeconstruct(); return; }
+            if (hasRoofTask) { UpdateRoof(); return; }
             // #버그헌트4(2026-06-05): 외부에서 청사진 파괴(컨텍스트/철거박스 취소) → fake-null 이면
             //  이전엔 그냥 return 해 WalkToWork 가 잡은 stand-cell 예약이 누수됐다.  ReleaseStandCell 로
             //  해제.  주의: targetBp==null 은 '건설중 아님'(거의 매 프레임)에도 true 이므로 movement 를
