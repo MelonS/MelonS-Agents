@@ -118,7 +118,11 @@ namespace MelonS.GameProto
         private IEnumerator Run()
         {
             Debug.Log($"[ReproHarness] ===== START '{scenario.name}' ({scenario.steps.Length} steps) =====");
-            yield return new WaitForSeconds(2.0f);   // 씬 부트스트랩 대기
+            // 퀵픽 '일시정지 시작'(2026-06-13) 가드 — 씬이 정지로 시작해도 하네스는
+            //  동결되지 않는다: 부트스트랩 대기는 realtime, 시작 직전 1x 강제.
+            yield return new WaitForSecondsRealtime(2.0f);
+            if (TimeController.Instance != null) TimeController.Instance.SetScale(1f);
+            else Time.timeScale = 1f;
             SimInput.BeginSim();
 
             for (int i = 0; i < scenario.steps.Length; i++)

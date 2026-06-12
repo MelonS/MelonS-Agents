@@ -34,8 +34,24 @@ namespace MelonS.GameProto
             "지훈", "민지", "서연", "준호", "예린", "도현", "수아", "현우",
         };
 
+        private System.Collections.IEnumerator PauseAtStart()
+        {
+            yield return null;   // TimeController/AlertStackUI 부트 대기 (1프레임)
+            if (TimeController.Instance != null && ReproHarness.Enabled == false)
+            {
+                TimeController.Instance.SetScale(0f);
+                AlertStackUI.Notify("일시정지 — 둘러보고 1배속으로 시작하세요", 1);
+                Debug.Log("[GameManager] 일시정지 시작 (둘러보기)");
+            }
+        }
+
         private void Start()
         {
+            // 퀵픽 '일시정지 시작' (사람-리듬 #1 합치) — 레퍼런스처럼 정지 상태로
+            //  시작해 플레이어가 맵을 둘러보고 계획한 뒤 직접 시작한다.
+            //  하네스/배치 실행은 제외 (ReproHarness 가 BeginSim 에서 1x 강제).
+            if (!ReproHarness.Enabled) StartCoroutine(PauseAtStart());
+
             // R7: -testmode → isolated unit test 55개 (normal spawn skip)
             // 통합 검증: -integration → normal spawn + IntegrationTestRunner 둘 다 (진짜 game state 위에서)
             bool isolatedTest = false;
