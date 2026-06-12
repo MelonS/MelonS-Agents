@@ -286,6 +286,21 @@ namespace MelonS.GameProto
             var z = ExistingStockpileAt(center);
             if (z == null) return false;   // nothing here — silent no-op
 
+            // 첫사이클 T8 (2026-06-12) — 존만 지우면 그 위 더미가 InStockpile=true 로
+            //  영구 좌초(재운반 불가·부패 정지·창고 이사 불가).  '미저장'으로 되돌리고
+            //  카운터도 차감('카운터 = Σ InStockpile 더미' 불변식 — 픽업 차감과 대칭).
+            //  기존 운반 AI 가 남은 구역으로 자동 이사한다.
+            var rmRef = ResourceManager.Instance;
+            foreach (var hit in Physics2D.OverlapBoxAll(center, Vector2.one * 0.9f, 0f))
+            {
+                if (hit == null) continue;
+                var wp = hit.GetComponent<WoodPileEntity>();
+                if (wp != null && wp.InStockpile) { wp.InStockpile = false; rmRef?.AddWood(-wp.Wood); continue; }
+                var sc = hit.GetComponent<StoneChunkEntity>();
+                if (sc != null && sc.InStockpile) { sc.InStockpile = false; rmRef?.AddStone(-sc.Stone); continue; }
+                var mp = hit.GetComponent<MeatPileEntity>();
+                if (mp != null && mp.InStockpile) { mp.InStockpile = false; rmRef?.AddFood(-mp.Food); }
+            }
             Destroy(z.gameObject);
 
             AudioBank.Instance?.PlaySelect();

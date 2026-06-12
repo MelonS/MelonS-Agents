@@ -179,28 +179,22 @@ namespace MelonS.GameProto
             // the palette-correct art shows without color multiplication.
             // Falls back to color-tinting when sprites are not wired (editor /
             // unit-test scenes that predate this wave).
+            // 첫사이클 T11 (2026-06-12) — 시각 익음(0.66)과 IsRipe(1.0) 불일치:
+            //  황금색인데 ~30초간 수확 불가(우클릭 이동으로 새고 AI 도 skip).
+            //  익은 모습은 정확히 IsRipe 일 때만 — 단계 경계 0.4/0.8 재배분.
             if (spriteSeedling != null && spriteGrowing != null && spriteRipe != null)
             {
-                if (growth < 0.33f)
-                {
-                    sr.sprite = spriteSeedling;
-                }
-                else if (growth < 0.66f)
-                {
-                    sr.sprite = spriteGrowing;
-                }
-                else
-                {
-                    sr.sprite = spriteRipe;
-                }
+                if (IsRipe)              sr.sprite = spriteRipe;
+                else if (growth < 0.4f)  sr.sprite = spriteSeedling;
+                else                     sr.sprite = spriteGrowing;
                 sr.color = Color.white;
             }
             else
             {
                 // Legacy color-tint path (no stage sprites wired).
-                if (growth < 0.33f)      sr.color = SPROUT_COLOR;
-                else if (growth < 0.66f) sr.color = GROWN_COLOR;
-                else                     sr.color = RIPE_COLOR;
+                if (IsRipe)              sr.color = RIPE_COLOR;
+                else if (growth < 0.4f)  sr.color = SPROUT_COLOR;
+                else                     sr.color = GROWN_COLOR;
             }
         }
     }

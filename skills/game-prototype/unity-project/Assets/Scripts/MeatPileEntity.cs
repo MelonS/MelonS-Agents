@@ -45,6 +45,9 @@ namespace MelonS.GameProto
         }
         // 부패 속도 외부 설정(작물/베리는 느리게).  CropEntity 수확 등에서 호출 가능.
         public void SetDecayPerDay(float v) { decayPerDay = Mathf.Max(0f, v); }
+        // 첫사이클 T10 — hauler 가 픽업 시 정체성 캡처용: decayPerDay → lifetime 역산
+        //  (Spawn(lifetime)의 2400/lifetime 변환과 대칭).
+        public float LifetimeForHaul => decayPerDay > 0.01f ? 2400f / decayPerDay : 600f;
         private void Awake() { _sr = GetComponent<SpriteRenderer>(); }
 
         // #214 운영자 fb: "아이템이 먹거나 하면 뿅 이동" — 즉시-credit/teleport 제거.

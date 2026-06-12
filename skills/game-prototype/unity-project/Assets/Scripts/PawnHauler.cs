@@ -43,6 +43,11 @@ namespace MelonS.GameProto
         private int carryingWood = 0;
         private int carryingStone = 0;
         private int carryingFood = 0;          // #129
+        // 첫사이클 T10 (2026-06-12) — 수확물이 운반 순간 '고기'(기본명·90s 부패)로
+        //  변신하던 것: 픽업 시 정체성(표시명/스프라이트/수명) 캡처 → 적치/드롭에 전달.
+        private string carryingFoodName = "고기";
+        private Sprite carryingFoodSprite;
+        private float carryingFoodLifetime = 90f;
         private StockpileZoneEntity dropTarget;
         private BlueprintEntity bpDropTarget;  // #142
 
@@ -161,7 +166,7 @@ namespace MelonS.GameProto
             }
             if (carryingFood > 0)
             {
-                var m = MeatPileEntity.Spawn(at, carryingFood, MeatPileSpriteRef);
+                var m = MeatPileEntity.Spawn(at, carryingFood, carryingFoodSprite != null ? carryingFoodSprite : MeatPileSpriteRef, carryingFoodName, carryingFoodLifetime);   // T10
                 if (m != null) m.InStockpile = false;
                 carryingFood = 0;
             }
@@ -390,7 +395,7 @@ namespace MelonS.GameProto
                     }
                     if (carryingFood > 0)
                     {
-                        var m = MeatPileEntity.Spawn(dropPos, carryingFood, MeatPileSpriteRef);
+                        var m = MeatPileEntity.Spawn(dropPos, carryingFood, carryingFoodSprite != null ? carryingFoodSprite : MeatPileSpriteRef, carryingFoodName, carryingFoodLifetime);   // T10
                         if (m != null) m.InStockpile = true;
                         ResourceManager.Instance?.AddFood(carryingFood);
                         carryingFood = 0;
@@ -483,6 +488,11 @@ namespace MelonS.GameProto
                 {
                     movement.ClearTarget();
                     int amount = targetMeat.Food;
+                    // T10 — 정체성 캡처 (적치/드롭 Spawn 에 전달).
+                    carryingFoodName = targetMeat.DisplayName;
+                    var tmSr = targetMeat.GetComponent<SpriteRenderer>();
+                    carryingFoodSprite = tmSr != null ? tmSr.sprite : null;
+                    carryingFoodLifetime = targetMeat.LifetimeForHaul;
                     // #자원모델 단일화(2026-06-04): InStockpile 식량을 집으면 카운터 −amount (deposit 대칭).
                     if (targetMeat.InStockpile) ResourceManager.Instance?.AddFood(-amount);
                     UnityEngine.Object.Destroy(targetMeat.gameObject);
