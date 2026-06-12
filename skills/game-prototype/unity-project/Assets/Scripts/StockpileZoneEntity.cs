@@ -110,6 +110,33 @@ namespace MelonS.GameProto
             if (sr != null) sr.color = PriorityTints[(int)priority];
         }
 
+        /// <summary>해당 월드 위치 셀의 존 (없으면 null).  존은 1×1 셀 단위 인스턴스.</summary>
+        public static StockpileZoneEntity ZoneAtCell(Vector2 worldPos)
+        {
+            var cell = new Vector2Int(Mathf.FloorToInt(worldPos.x), Mathf.FloorToInt(worldPos.y));
+            foreach (var z in Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None))
+            {
+                if (z == null) continue;
+                if (Mathf.FloorToInt(z.transform.position.x) == cell.x
+                    && Mathf.FloorToInt(z.transform.position.y) == cell.y) return z;
+            }
+            return null;
+        }
+
+        /// <summary>림월드 갭 TOP-3 (2026-06-12) — 저장 더미 상향 이주.  더미가 놓인 셀
+        /// 존보다 높은 우선순위로 같은 종류를 받는 존이 있으면 true(재운반 허용).
+        /// FindBest 가 priority-first 라 목적지는 자연히 상위 존 — 같은 우선순위로는
+        /// 절대 재운반하지 않으므로 왕복 루프 없음.  workshop-feeder 표준 동작.</summary>
+        public static bool UpgradeHaulWanted(Vector2 pileWorld, StockItemKind kind)
+        {
+            var cur = ZoneAtCell(pileWorld);
+            if (cur == null) return false;   // 존 밖 더미는 기존 일반 운반 경로가 담당
+            foreach (var z in Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None))
+                if (z != null && z != cur && z.Accepts(kind) && (int)z.Priority > (int)cur.Priority)
+                    return true;
+            return false;
+        }
+
         /// <summary>거리만 본다 (back-compat).  #155 - hauler 는 FindBest 권장.</summary>
         public static StockpileZoneEntity FindNearest(Vector2 from)
         {

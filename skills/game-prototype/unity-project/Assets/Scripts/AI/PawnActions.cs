@@ -499,7 +499,9 @@ namespace MelonS.GameProto.AI
             {
                 if (m == null) continue;
                 if (m.IsReserved && m.ReservedBy != ctx.hauler.gameObject) continue;
-                if (m.InStockpile) continue;  // 림 - stockpile 안 meat 재운반 X
+                if (m.InStockpile
+                    && !StockpileZoneEntity.UpgradeHaulWanted(m.transform.position, StockItemKind.Food))
+                    continue;  // 저장 meat 재운반은 상향 이주(TOP-3)일 때만
                 Vector3 mp = m.transform.position;
                 if (Mathf.Abs(mp.x) > 43.5f || Mathf.Abs(mp.y) > 43.5f) continue;
                 float sq = ((Vector2)mp - me).sqrMagnitude;
@@ -544,7 +546,9 @@ namespace MelonS.GameProto.AI
             {
                 if (c == null) continue;
                 if (c.IsReserved && c.ReservedBy != ctx.hauler.gameObject) continue;
-                if (c.InStockpile && !anyBpNeedsStone) continue;
+                if (c.InStockpile && !anyBpNeedsStone
+                    && !StockpileZoneEntity.UpgradeHaulWanted(c.transform.position, StockItemKind.Stone))
+                    continue;  // 저장 chunk: 청사진 수요 또는 상향 이주(TOP-3)만
                 Vector3 cp = c.transform.position;
                 if (Mathf.Abs(cp.x) > 43.5f || Mathf.Abs(cp.y) > 43.5f) continue;
                 float sq = ((Vector2)cp - me).sqrMagnitude;
@@ -596,7 +600,9 @@ namespace MelonS.GameProto.AI
                 // 다른 hauler 가 이미 reserve 했으면 skip
                 if (p.IsReserved && p.ReservedBy != ctx.hauler.gameObject) continue;
                 // #196 - InStockpile pile 은 청사진 자재 필요 시에만 pickup (stockpile→stockpile loop 차단).
-                if (p.InStockpile && !anyBpNeedsWood) continue;
+                if (p.InStockpile && !anyBpNeedsWood
+                    && !StockpileZoneEntity.UpgradeHaulWanted(p.transform.position, StockItemKind.Wood))
+                    continue;  // 저장 pile: 청사진 수요 또는 상향 이주(TOP-3)만
                 Vector3 pp = p.transform.position;
                 if (Mathf.Abs(pp.x) > 43.5f || Mathf.Abs(pp.y) > 43.5f) continue;
                 float sq = ((Vector2)pp - me).sqrMagnitude;
