@@ -7,7 +7,10 @@ namespace MelonS.GameProto
     /// 운영자 피드백 - wolf/bandit 등장 시 EventLog 텍스트만 보임.  운영자 놓치기 쉬움.
     /// 화면 우상단에 큰 빨강 "⚠ 위협" 텍스트 + 2초 fade-in/out.
     ///
-    /// auto-pause X, gameplay 변경 X, 시각 알림 only - "보수적 추가" 정책 부합.
+    /// 사람-리듬 #7 (human-play-gap-2026-06-12.md): 레퍼런스는 위협 이벤트 시
+    /// 엔진이 강제 감속 + 레터 클릭 = 현장 점프가 표준 리듬.  알림 발화 시
+    /// 배속>1 이면 1x 로 강제(일시정지는 건드리지 않음) + 카메라를 위협
+    /// 위치로 포커스.
     ///
     /// Self-bootstrap (GameManager.EnsureInScene 호출).
     /// 매 프레임 wolf/bandit 거리 폴링 (5 unit 이내 처음 detect 면 알림).
@@ -110,7 +113,7 @@ namespace MelonS.GameProto
                         if (currentAlertSubject != key)
                         {
                             currentAlertSubject = key;
-                            ShowAlert("⚠ 늑대 위협!");
+                            ShowAlert("⚠ 늑대 위협!", w.transform.position, true);
                         }
                         return;
                     }
@@ -130,7 +133,7 @@ namespace MelonS.GameProto
                         if (currentAlertSubject != key)
                         {
                             currentAlertSubject = key;
-                            ShowAlert("⚠ 강도 침입!");
+                            ShowAlert("⚠ 강도 침입!", b.transform.position, true);
                         }
                         return;
                     }
@@ -138,12 +141,31 @@ namespace MelonS.GameProto
             }
         }
 
-        private void ShowAlert(string text)
+        private void ShowAlert(string text) => ShowAlert(text, Vector3.zero, false);
+
+        private void ShowAlert(string text, Vector3 focusPos, bool hasFocus)
         {
             if (alertText == null) return;
             alertText.text = text;
             alertShownTime = Time.time;
             Debug.Log($"[ThreatAlert] {text}");
+
+            // 사람-리듬 #7: 위협 레터 = 강제 1x + 현장 점프.
+            var tc = TimeController.Instance;
+            if (tc != null && !tc.IsPaused && tc.CurrentScale > 1f)
+            {
+                tc.SetScale(1f);
+                Debug.Log("[ThreatAlert] forced-slowdown to 1x");
+            }
+            if (hasFocus)
+            {
+                var camCtl = Object.FindFirstObjectByType<CameraController>();
+                if (camCtl != null)
+                {
+                    camCtl.FocusOn(new Vector2(focusPos.x, focusPos.y));
+                    Debug.Log($"[ThreatAlert] camera-focus ({focusPos.x:F1},{focusPos.y:F1})");
+                }
+            }
         }
     }
 }
