@@ -56,8 +56,15 @@ namespace MelonS.GameProto
         // #게임필(2026-06-10, 자율) — 이벤트 간격을 실시간(스케일드)에서 게임시간으로 전환.
         //  이전 15-30 스케일초는 3x 에서 실시간 5-10초당 1발 = 카드 도배 → '약탈자 접근!'도
         //  배경 소음이 됐다.  게임시간 8-16시간 간격 = 하루 1.5-3회, 드물어야 사건이 사건답다.
-        [SerializeField] private float minIntervalGameHours = 8f;
-        [SerializeField] private float maxIntervalGameHours = 16f;
+        // 퀵픽 '이벤트 빈도 정상화'(2026-06-12) — 하루 1.5~3회는 여전히 과밀(8게임일
+        //  소크에서 카드 17건).  레퍼런스 페이싱: 실효 사건은 1.5~3일에 1건, 무효과
+        //  분위기 텍스트(bird_omen 등)는 별도 짧은 채널로 분리(EventLog 만 채움).
+        [SerializeField] private float minIntervalGameHours = 36f;
+        [SerializeField] private float maxIntervalGameHours = 72f;
+        [SerializeField] private float ambientMinGameHours = 8f;
+        [SerializeField] private float ambientMaxGameHours = 16f;
+        private float nextAmbientGameSec = -1f;
+        private static readonly string[] AmbientIds = { "bird_omen", "fox_sighting", "quiet_evening" };
 
         private float nextFireGameSec = -1f;   // GameClock.GameSeconds 기준 (-1 = 미스케줄)
         private GameEvent lastEvent;
@@ -198,6 +205,12 @@ namespace MelonS.GameProto
                 {
                     FireRandomEvent();
                     ScheduleNext();
+                }
+                if (nextAmbientGameSec < 0f) ScheduleNextAmbient();
+                if (clock.GameSeconds >= nextAmbientGameSec)
+                {
+                    FireAmbientEvent();
+                    ScheduleNextAmbient();
                 }
             }
 
@@ -392,6 +405,31 @@ namespace MelonS.GameProto
             nextFireGameSec = baseSec + waitHours * 3600f;
         }
 
+        private void ScheduleNextAmbient()
+        {
+            float waitHours = UnityEngine.Random.Range(ambientMinGameHours, ambientMaxGameHours);
+            var clock = GameClock.Instance;
+            nextAmbientGameSec = (clock != null ? clock.GameSeconds : 0f) + waitHours * 3600f;
+        }
+
+        /// <summary>분위기 전용 채널 — 무효과 Neutral 텍스트만.  카드 없음(EventLog 만),
+        ///  quiet_evening 은 18시+ 규칙 유지.</summary>
+        private void FireAmbientEvent()
+        {
+            var cands = new List<GameEvent>();
+            foreach (var ev in pool)
+                if (System.Array.IndexOf(AmbientIds, ev.id) >= 0)
+                {
+                    if (ev.id == "quiet_evening"
+                        && GameClock.Instance != null && GameClock.Instance.Hour < 18) continue;
+                    cands.Add(ev);
+                }
+            if (cands.Count == 0) return;
+            var next = cands[UnityEngine.Random.Range(0, cands.Count)];
+            OnEventFired?.Invoke(next);
+            Debug.Log($"[AIDirector:Ambient] {next.title}: {next.description}");
+        }
+
         /// <summary>Trader spawn helper - trader_caravan event 발화 시 호출.</summary>
         private void SpawnTrader()
         {
@@ -436,6 +474,7 @@ namespace MelonS.GameProto
             List<GameEvent> candidates = new List<GameEvent>();
             foreach (var ev in pool)
             {
+                if (System.Array.IndexOf(AmbientIds, ev.id) >= 0) continue;  // 분위기는 전용 채널
                 if (directorMode == DirectorMode.Chaos || ev.threatTier <= curTier)
                     candidates.Add(ev);
             }
