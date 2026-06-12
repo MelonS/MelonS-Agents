@@ -380,7 +380,12 @@ namespace MelonS.GameProto
                 float sq = (c - (Vector2)from).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = kv.Key; found = true; }
             }
-            if (found) roofClaims[best] = claimant;
+            if (found)
+            {
+                roofClaims[best] = claimant;
+                // r5 차분채점 D-1 판정불가 해소 — 클레임 시점의 지지 존재를 로그로 증빙.
+                Debug.Log($"[Roof] claim ({best.x},{best.y}) by {claimant.GetComponent<PawnEntity>()?.PawnName ?? claimant.name} (support ok)");
+            }
             return found;
         }
 

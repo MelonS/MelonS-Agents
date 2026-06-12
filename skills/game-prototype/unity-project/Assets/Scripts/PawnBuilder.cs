@@ -289,7 +289,7 @@ namespace MelonS.GameProto
                 if (skills != null) skills.AddXP(SkillKind.Build, 5f * Time.deltaTime);
                 if (done)
                 {
-                    Debug.Log($"[Builder] {LogName} 건설 완료 ({targetBp.Mode})");
+                    Debug.Log($"[Builder] {LogName} 건설 완료 ({targetBp.Mode}) @ ({targetBp.transform.position.x:F1},{targetBp.transform.position.y:F1})");
                     // #199 C2 — release target + stand cell on completion (the
                     //  blueprint is destroyed by AddWork→Complete; ClearTask's
                     //  fake-null guards handle that and free the stand cell).
