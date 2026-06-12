@@ -494,6 +494,10 @@ namespace MelonS.GameProto
                 if (h.GetComponent<BarricadeEntity>() != null) return true;  // W-M6-03 B4 - impassable, can't stack
                 if (h.GetComponent<BedEntity>() != null) return true;
                 if (h.GetComponent<BlueprintEntity>() != null) return true;  // #118
+                // 운영자 (2026-06-12 오후) "돌이랑 침대가 겹쳐" — 광맥이 점유 검사에
+                //  빠져 광맥 셀 위에 침대/구조물을 지을 수 있었다.  채광으로 제거해야
+                //  건설 가능 (레퍼런스 동일).
+                if (h.GetComponent<StoneVeinEntity>() != null) return true;
             }
             return false;
         }

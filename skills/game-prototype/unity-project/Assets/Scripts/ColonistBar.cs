@@ -157,19 +157,31 @@ namespace MelonS.GameProto
             lastColonistCount = alive.Count;
 
             int n = alive.Count;
-            float totalW = n > 0 ? (n * EntryW + (n - 1) * Gap) : 0f;
-            rootRt.sizeDelta = new Vector2(totalW, EntryH);
+            // UI겹침 P2-3 — 무제한 가로 성장이 n≥10 에서 좌상 자원 HUD 를 침범 + 오클릭
+            //  유발이던 것: 9개/행 줄바꿈.  Rows 는 ModeBanner 위치 연동(커플링 C)에 공개.
+            const int PerRow = 9;
+            int rows = n > 0 ? (n + PerRow - 1) / PerRow : 1;
+            Rows = rows;
+            int rowMax = Mathf.Min(n, PerRow);
+            float totalW = rowMax > 0 ? (rowMax * EntryW + (rowMax - 1) * Gap) : 0f;
+            rootRt.sizeDelta = new Vector2(totalW, EntryH * rows + 4f * (rows - 1));
 
-            float x = -totalW * 0.5f;  // 첫 entry 의 왼쪽 가장자리 (pivot center 기준)
             for (int i = 0; i < n; i++)
             {
-                var e = BuildEntry(alive[i], x);
+                int row = i / PerRow, colI = i % PerRow;
+                int inRow = Mathf.Min(n - row * PerRow, PerRow);
+                float rowW = inRow * EntryW + (inRow - 1) * Gap;
+                float x = -rowW * 0.5f + colI * (EntryW + Gap);
+                float y = -row * (EntryH + 4f);
+                var e = BuildEntry(alive[i], x, y);
                 if (e != null) entries.Add(e);
-                x += EntryW + Gap;
             }
         }
 
-        private Entry BuildEntry(PawnEntity pawn, float x)
+        /// <summary>UI겹침 P2-3/커플링 C — 현재 행 수 (ModeBanner 위치 연동).</summary>
+        public int Rows { get; private set; } = 1;
+
+        private Entry BuildEntry(PawnEntity pawn, float x, float y = 0f)
         {
             var needs = pawn.GetComponent<PawnNeeds>();
 
@@ -181,7 +193,7 @@ namespace MelonS.GameProto
             rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0f, 0.5f);
             rt.sizeDelta = new Vector2(EntryW, EntryH);
-            rt.anchoredPosition = new Vector2(x, 0);
+            rt.anchoredPosition = new Vector2(x, y);
 
             var border = go.AddComponent<Image>();
             border.color = BorderCol;

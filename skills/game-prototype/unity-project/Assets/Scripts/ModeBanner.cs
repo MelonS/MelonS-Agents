@@ -48,6 +48,12 @@ namespace MelonS.GameProto
             if (root == null) return;
             if (!root.activeSelf) root.SetActive(true);
             label.text = $"{mode} — 우클릭/ESC 해제";
+            // 커플링 C — 콜로니스트 바가 2행이면 그 아래로 (P2-3 줄바꿈 연동).
+            var bar = Object.FindFirstObjectByType<ColonistBar>();
+            float wantBy = -146f - ((bar != null ? bar.Rows : 1) - 1) * 58f;
+            var rrt = root.GetComponent<RectTransform>();
+            if (rrt != null && !Mathf.Approximately(rrt.anchoredPosition.y, wantBy))
+                rrt.anchoredPosition = new Vector2(0, wantBy);
         }
 
         private static string ActiveModeLabel()
