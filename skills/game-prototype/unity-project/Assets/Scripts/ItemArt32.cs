@@ -29,7 +29,10 @@ namespace MelonS.GameProto
         {
             if (string.IsNullOrEmpty(displayName)) return "meat";
             if (displayName.Contains("간편식")) return "meal";
-            if (displayName.Contains("베리")) return "berry";
+            // 첫사이클 T10 (2026-06-12) — '농작물' 분기 부재 + '산딸기'≠'베리' 불일치로
+            //  수확물·베리가 드롭 시점부터 고기 스프라이트였다.
+            if (displayName.Contains("베리") || displayName.Contains("산딸기")) return "berry";
+            if (displayName.Contains("농작물")) return "crop";
             return "meat";
         }
 

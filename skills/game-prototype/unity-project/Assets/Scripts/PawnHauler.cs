@@ -34,6 +34,11 @@ namespace MelonS.GameProto
         // #199 B2 (R-1) - path-aware give-up for the GoToItem approach phase
         //  (pile/meat/stone — only one active at a time).  See WorkGiveUp.
         private WorkGiveUp giveUp;
+        // 첫사이클 T9 (2026-06-12) — 운반(저장/청사진) phase 는 give-up 이 없어 경로
+        //  실패 시 매 프레임 제자리 재시도로 영구 동결(HasTask 가 busy 게이트를 잠가
+        //  취침 인터럽트까지 전 작업 차단).  단순 stuck 타이머: dropPhaseStart 후
+        //  giveUpAfterSec*2 안에 도착 못 하면 발밑 드롭 + 태스크 해제.
+        private float dropPhaseStart = -1f;
         // #199 C2 — reserved stand cell for the current approach target.  Released
         //  on phase change (SetPhase) and ClearTask so a hauler never leaks a cell.
         private Vector2Int standCell = PawnMovement.INVALID_CELL;
@@ -188,6 +193,7 @@ namespace MelonS.GameProto
         //  새 cell 재예약).  cell 을 안 쓰는 GoToItem 으로 갈 땐 그냥 해제.
         private void SetPhase(Phase p)
         {
+            dropPhaseStart = Time.time;   // T9 — 운반 phase stuck 타이머 기준
             if (p != phase) ReleaseStandCell();
             phase = p;
         }
@@ -290,6 +296,15 @@ namespace MelonS.GameProto
             // #142 - blueprint 운반 phase
             if (phase == Phase.GoToBlueprint)
             {
+                // T9 — 운반 동결 가드: 제한시간 내 미도착이면 발밑 드롭 후 손 뗌.
+                if (dropPhaseStart > 0f && Time.time - dropPhaseStart > giveUpAfterSec * 2f)
+                {
+                    Debug.Log($"[Hauler] {name} 운반(청사진) 도달 실패 → 발밑 드롭");
+                    DropCarriedAtFeet();
+                    UpdateCarryVisual();
+                    ClearTask();
+                    return;
+                }
                 if (bpDropTarget == null || bpDropTarget.gameObject == null)
                 {
                     // blueprint 사라짐 - stockpile fallback (#155 priority 우선)
@@ -355,6 +370,15 @@ namespace MelonS.GameProto
             // #121 - 줍은 후 stockpile 으로 이동 phase 우선
             if (phase == Phase.GoToStockpile)
             {
+                // T9 — 운반 동결 가드 (위와 동일).
+                if (dropPhaseStart > 0f && Time.time - dropPhaseStart > giveUpAfterSec * 2f)
+                {
+                    Debug.Log($"[Hauler] {name} 운반(저장고) 도달 실패 → 발밑 드롭");
+                    DropCarriedAtFeet();
+                    UpdateCarryVisual();
+                    ClearTask();
+                    return;
+                }
                 if (dropTarget == null || dropTarget.gameObject == null)
                 {
                     // #214 — stockpile 이 운반 도중 사라짐.  즉시-credit(순간이동) 대신
