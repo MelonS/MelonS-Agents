@@ -359,6 +359,20 @@ namespace MelonS.GameProto
         //  실제 작업 이동은 1.0.  모든 이동 속도 계산에 곱해진다.
         public float MoveSpeedScale = 1f;
 
+        // 갭 ※ '어둠 이속'(2026-06-12, 갈림길 아님) — 야간(20~06시) + 지붕 없는 곳 = 0.8x.
+        //  레퍼런스의 darkness move 80%.  실내(지붕 아래)는 불빛 가정으로 면제.
+        private static float DarknessMul(Vector2 pos)
+        {
+            var gc = GameClock.Instance;
+            if (gc == null) return 1f;
+            int h = gc.Hour;
+            if (h >= 6 && h < 20) return 1f;
+            var rd = RoofDesignation.Instance;
+            if (rd != null && rd.IsRoofed(new Vector2Int(Mathf.FloorToInt(pos.x), Mathf.FloorToInt(pos.y))))
+                return 1f;
+            return 0.8f;
+        }
+
         // 운영자 요청 (우클릭 이동 경로 표시) — READ-ONLY exposure of the live A*
         //  path for PathLineRenderer.  Returns the REMAINING cell-centre world
         //  points the pawn still has to walk (from the pawn's current position up to
@@ -542,6 +556,7 @@ namespace MelonS.GameProto
                         var ab = _abilities;   // #audit4 #0 캐시
                         if (ab != null) speed *= ab.moveSpeedMul;
                         if (_traitsMv != null) speed *= _traitsMv.moveSpeedMul;   // #버그헌트4 — Cheerful 등
+                        speed *= DarknessMul(transform.position);
                         Vector2 step = Vector2.MoveTowards(transform.position, dest, speed * Time.deltaTime);
                         transform.position = new Vector3(step.x, step.y, transform.position.z);
                     }
@@ -572,6 +587,7 @@ namespace MelonS.GameProto
                 var abilP = _abilities;   // #audit4 #0 캐시
                 if (abilP != null) speedMulP *= abilP.moveSpeedMul;
                 if (_traitsMv != null) speedMulP *= _traitsMv.moveSpeedMul;   // #버그헌트4 — Cheerful 등
+                speedMulP *= DarknessMul(curP);   // 갭 ※ 어둠 이속 0.8x
                 // #157 / W-M4-05 #21 - 바닥 위 이동 보너스.  BonusAt 가 해당 cell 의
                 //  가장 높은 FloorEntity.MoveBonus 를 돌려줌 (wood 1.30x, stone 1.50x).
                 //  바닥 없으면 1.0 → 보너스 없음.  IsOnFloor 와 동일한 tiny OverlapBox.

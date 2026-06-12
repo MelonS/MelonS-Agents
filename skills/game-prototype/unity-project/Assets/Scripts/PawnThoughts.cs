@@ -35,6 +35,7 @@ namespace MelonS.GameProto
             ("배고픔",        -4f, 120f),
             ("수면 부족",     -3f, 180f),
             ("야외 폭풍",     -6f, 120f),
+            ("어둠 속 활동",  -4f, 120f),
             ("어두운 밤 작업",-2f,  60f),
             ("부상",          -5f, 600f),
             ("동료 사망",     -15f, 1800f),
@@ -133,6 +134,11 @@ namespace MelonS.GameProto
                     && WeatherController.Instance.Current == WeatherKind.Storm
                     && !indoors;
                 if (stormExposed) AddThought("야외 폭풍"); else RemoveThought("야외 폭풍");
+                // 갭 ※ '어둠 thought' — 야간 실외에서 깨어 활동하면 -4 (수면 중 면제).
+                bool darkActive = !indoors && needs != null && !needs.IsSleeping
+                    && GameClock.Instance != null
+                    && (GameClock.Instance.Hour >= 20 || GameClock.Instance.Hour < 6);
+                if (darkActive) AddThought("어둠 속 활동"); else RemoveThought("어둠 속 활동");
                 // 첫사이클 T7 (2026-06-12) — '실내'의 정의를 바닥 1장(허허벌판 면역
                 //  이질)에서 '지붕 아래(IsRoofed)'로: 벽+지붕으로 지은 집이 처음으로
                 //  폭풍 차단·쾌적 무드를 보상한다.  (바닥은 이동 보너스 전담)

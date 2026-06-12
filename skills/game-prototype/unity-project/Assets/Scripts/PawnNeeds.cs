@@ -187,12 +187,18 @@ namespace MelonS.GameProto
         private void GrantWakeMood(BedEntity b)
         {
             lastSleepBed = null;
-            if (b == null) return;
             var th = GetComponent<PawnThoughts>();
             if (th == null) return;
-            if (b.RestMul >= 1.3f)      th.AddThought("고급 침대에서 잠", +6f, 600f);
+            // 갭 TOP-6 (2026-06-12, ※갈림길 아님) — 레퍼런스의 '노숙 -4×2'가 첫 침대/첫
+            //  지붕의 동기를 만든다.  바닥 취침 -4, 지붕 없는 곳 취침 추가 -4 (중첩 가능).
+            if (b == null)              th.AddThought("바닥에서 잠", -4f, 600f);
+            else if (b.RestMul >= 1.3f)  th.AddThought("고급 침대에서 잠", +6f, 600f);
             else if (b.RestMul >= 0.95f) th.AddThought("침대에서 잠", +3f, 600f);
             else                          th.AddThought("잠자리에서 잠", +1f, 600f);
+            var rd = RoofDesignation.Instance;
+            if (rd != null && !rd.IsRoofed(new Vector2Int(
+                    Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y))))
+                th.AddThought("한데서 잠", -4f, 600f);
         }
         private bool starveWarned;                       // r2-E — 임박 경고 1회 게이트
         [SerializeField] private float autoSleepRetryCooldown = 20f;
