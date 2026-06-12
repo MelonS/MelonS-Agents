@@ -573,6 +573,10 @@
    "x": 3
   },
   {
+   "op": "camdirector",
+   "x": 1
+  },
+  {
    "op": "wait",
    "sec": 480
   },
@@ -591,6 +595,10 @@
   {
    "op": "shot",
    "name": "h04_d2_dawn"
+  },
+  {
+   "op": "camdirector",
+   "x": 0
   },
   {
    "op": "speed",
@@ -754,6 +762,10 @@
    "x": 3
   },
   {
+   "op": "camdirector",
+   "x": 1
+  },
+  {
    "op": "wait",
    "sec": 540
   },
@@ -772,6 +784,10 @@
   {
    "op": "shot",
    "name": "h07_d3_dawn"
+  },
+  {
+   "op": "camdirector",
+   "x": 0
   },
   {
    "op": "speed",
@@ -858,6 +874,10 @@
    "x": 3
   },
   {
+   "op": "camdirector",
+   "x": 1
+  },
+  {
    "op": "wait",
    "sec": 540
   },
@@ -876,6 +896,10 @@
   {
    "op": "speed",
    "x": 1
+  },
+  {
+   "op": "camdirector",
+   "x": 0
   },
   {
    "op": "wait",

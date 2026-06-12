@@ -317,6 +317,15 @@ namespace MelonS.GameProto
                     r.detail = $"timeScale={s.x}"; break;
                 }
 
+                case "camdirector":
+                {
+                    // 테스트 스캐폴딩 — 무인 런 카메라 디렉터 토글 (x=1 켜기 / 0 끄기).
+                    //  명령 구간에선 꺼 둘 것: worldclick 재투영이 팔로우 팬 중 흔들린다.
+                    var cd = CameraDirector.EnsureInScene();
+                    cd.SetActive(s.x > 0.5f);
+                    r.passed = true; r.detail = $"camdirector={(s.x > 0.5f)}"; break;
+                }
+
                 case "setWeather":
                 {
                     // 테스트 스캐폴딩 (검증 대상 아님) — 폭풍을 즉시 시작/종료 (AIDirector

@@ -106,7 +106,8 @@ namespace MelonS.GameProto
                 if (hlt != null) mul *= hlt.WorkSpeedMultiplier();
                 var skills = GetComponent<PawnSkills>();
                 if (skills != null) mul *= 1f + skills.GetLevel(SkillKind.Build) * 0.04f;
-                bool done = rd.TickRoofWork(roofCell, Time.deltaTime * mul, name);
+                bool done = rd.TickRoofWork(roofCell, Time.deltaTime * mul,
+                    GetComponent<PawnEntity>()?.PawnName ?? name);
                 if (skills != null) skills.AddXP(SkillKind.Build, 5f * Time.deltaTime);
                 if (done) ClearRoofTask();   // 다음 셀은 utility AI 가 재배정
             }
