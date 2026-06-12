@@ -595,13 +595,36 @@ namespace MelonS.GameProto
         //  배고프면(food < eatThreshold) 음식원을 물색해 그쪽으로 이동시키고, 인접 도달
         //  시에만 1회 섭취.  drafted/manual/sleep/rest 중에는 발동하지 않는다(상위 생존/
         //  사용자 명령 우선 — 이 메서드는 그 블록들을 지난 awake 상태에서만 호출됨).
-        // 운영자 피드백 #14 — 수면 중 4실초마다 zZ 플로팅 (FloatingText 재사용, 스로틀).
+        // 운영자 피드백 #14 + grader 7차 — 순간 플로팅(수명~1s/주기 4s)은 임의 샷에
+        //  안 잡힌다(야간 3샷 전부 미스).  레퍼런스처럼 수면 내내 떠 있는 '상시 zZ
+        //  마커'(자식 TextMesh, MineMark 패턴)로 교체.  ASCII 라 폰트 글리프 무관.
+        private GameObject _sleepMarker;
         private void EmitSleepFx()
         {
-            if (Time.unscaledTime < _nextSleepFx) return;
-            _nextSleepFx = Time.unscaledTime + 4f;
-            FloatingText.Spawn(transform.position + new Vector3(0.35f, 0.75f, 0f),
-                               "zZ", new Color(0.75f, 0.85f, 0.95f, 0.9f));
+            if (_sleepMarker == null)
+            {
+                _sleepMarker = new GameObject("SleepZz");
+                _sleepMarker.transform.SetParent(transform, false);
+                _sleepMarker.transform.localPosition = new Vector3(0.35f, 0.8f, 0f);
+                var tm = _sleepMarker.AddComponent<TextMesh>();
+                tm.text = "zZ";
+                tm.fontSize = 40;
+                tm.characterSize = 0.07f;
+                tm.anchor = TextAnchor.LowerCenter;
+                tm.color = new Color(0.78f, 0.88f, 1f, 0.95f);
+                var mrz = _sleepMarker.GetComponent<MeshRenderer>();
+                if (mrz != null) mrz.sortingOrder = 31;   // NightOverlay(25)·바(30) 위
+            }
+            if (!_sleepMarker.activeSelf) _sleepMarker.SetActive(true);
+            _sleepFxSeen = Time.time;
+        }
+        private float _sleepFxSeen = -1f;
+        private void LateUpdate()
+        {
+            // 수면 분기가 이번 프레임 EmitSleepFx 를 안 불렀으면(기상/이동) 마커 끔.
+            if (_sleepMarker != null && _sleepMarker.activeSelf
+                && (!IsSleeping || Time.time - _sleepFxSeen > 0.5f))
+                _sleepMarker.SetActive(false);
         }
 
         private void TryPhysicalEatTick()
@@ -644,7 +667,7 @@ namespace MelonS.GameProto
                 {
                     float before = food;
                     ConsumeAtSource();
-                    Debug.Log($"[Eat] {name} 도착·섭취 food {before:F0}→{food:F0}");   // 관측성
+                    Debug.Log($"[Eat] {name} 도착·섭취 food {before:F0}→{food:F0} t={Time.time:F1}");   // 관측성
                     ClearEatTask();
                 }
                 return;
@@ -756,7 +779,7 @@ namespace MelonS.GameProto
             movement.SetTarget(eatDestWorld);
             // 관측성 (2026-06-12 아사 진단) — '식량 632 두고 전원 아사'에서 섭취 선택이
             //  무로그라 어느 단계가 멈췄는지 특정 불가했다.  선택 1줄.
-            Debug.Log($"[Eat] {name} 출발 → {(eatMeatTarget != null ? "더미" : eatStockTarget != null ? "저장고" : "덤불")} d={Vector2.Distance(transform.position, eatDestWorld):F1} food={food:F0}");
+            Debug.Log($"[Eat] {name} 출발 → {(eatMeatTarget != null ? "더미" : eatStockTarget != null ? "저장고" : "덤불")} d={Vector2.Distance(transform.position, eatDestWorld):F1} food={food:F0} t={Time.time:F1}");
             // AI override 는 PawnUtilityAI 의 busy-gate(movement.IsMoving) 가 막아준다 —
             //  이동 중엔 Decide 가 돌지 않아 work target 으로 가로채지 못한다.  ManualMoveUntil
             //  은 쓰지 않는다(그걸 쓰면 IsUnderManualControl 이 켜져 다음 frame 에 내 자신의
@@ -779,6 +802,7 @@ namespace MelonS.GameProto
                 // T15 — 도착 즉시 소비('뿅') 대신 3스케일초 식사 단계.
                 eatState = EatState.Eating;
                 eatingUntil = Time.time + 3f;
+                Debug.Log($"[Eat] {name} 식사 시작 t={Time.time:F1}");
                 if (movement != null) movement.ClearTarget();
                 return;
             }
