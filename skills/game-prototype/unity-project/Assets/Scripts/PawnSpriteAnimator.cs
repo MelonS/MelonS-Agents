@@ -158,6 +158,21 @@ namespace MelonS.GameProto
             }
             else if (working)
             {
+                // 운영자 피드백 #11/C3 (2026-06-12) — 작업 스윙이 마지막 '이동 방향'을
+                //  따라가 나무/광맥을 등진 채 도끼질하던 것: 작업 대상 방향으로 facing
+                //  (레퍼런스 문법 — 일하는 림은 작업물을 본다).
+                Vector2 workPos = default;
+                bool hasWorkPos = false;
+                if (chopper != null && chopper.HasTask && chopper.Target != null)
+                { workPos = chopper.Target.transform.position; hasWorkPos = true; }
+                else if (miner != null && miner.HasTask && miner.Target != null)
+                { workPos = miner.Target.transform.position; hasWorkPos = true; }
+                if (hasWorkPos)
+                {
+                    Vector2 wd = workPos - (Vector2)pos;
+                    if (Mathf.Abs(wd.x) >= Mathf.Abs(wd.y)) { row = ROW_E; flip = wd.x > 0f; }
+                    else row = wd.y > 0f ? ROW_N : ROW_S;
+                }
                 // 작업 스윙 2프레임 @ 2.5Hz — 도끼질/곡괭이질 리듬.
                 col = COL_WORK0 + ((int)(Time.time * 2.5f) & 1);
                 // 아트 v2 후속 (2026-06-12) — 손에 도구가 보인다: 벌목=도끼, 채광=곡괭이.
