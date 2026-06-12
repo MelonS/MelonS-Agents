@@ -78,7 +78,9 @@ namespace MelonS.GameProto
         //  도착 전에는 카운터/덤불을 절대 건드리지 않는다 = 순간이동 제거.
         //  이동은 PawnMovement(읽기 전용 lane) 의 SetTarget 으로 박고, AI override 를
         //  막기 위해 PawnEntity.ManualMoveUntil 을 매 frame 밀어준다(auto-sleep 과 동일 정신).
-        private enum EatState { None, Walking }
+        // 첫사이클 T15 (2026-06-12) — 식사가 1프레임('뿅')이라 '먹는 중'이 화면에
+        //  없던 것: Eating 단계(3스케일초 + 주기 '냠' FX) 신설.
+        private enum EatState { None, Walking, Eating }
         private EatState eatState = EatState.None;
         private MeatPileEntity eatMeatTarget;       // 1) 물리 고기 더미
         private StockpileZoneEntity eatStockTarget; // 2) meal/food 카운터의 보관 장소
@@ -91,7 +93,7 @@ namespace MelonS.GameProto
         private float eatSuppressUntil = -999f;
         private PawnMovement movement;
         private PawnEntity pawnEntity;
-        public bool IsEating => eatState == EatState.Walking;
+        public bool IsEating => eatState != EatState.None;
 
         public bool IsSleeping { get; private set; }
 
@@ -177,6 +179,9 @@ namespace MelonS.GameProto
         private static float _lastNoFoodAlert = -99f;   // r2 #5 — 콜로니 단위 스로틀
         // 운영자 피드백 #14 (2026-06-12 AM): 자는지 식별 불가 — 수면 중 주기 zZZ.
         private float _nextSleepFx = -1f;
+        // T15 — 식사 점유 시간 / FX 스로틀
+        private float eatingUntil = -1f;
+        private float _nextEatFx = -1f;
         // 첫사이클 T5 — 침대 무드 '초당' 가산 제거의 짝: 기상 시 품질별 1회 thought.
         private BedEntity lastSleepBed;
         private void GrantWakeMood(BedEntity b)
@@ -626,6 +631,25 @@ namespace MelonS.GameProto
                 }
             }
 
+            // T15 — 식사 중: 주기 '냠' FX, 시간 차면 실제 소비.
+            if (eatState == EatState.Eating)
+            {
+                if (Time.unscaledTime >= _nextEatFx)
+                {
+                    _nextEatFx = Time.unscaledTime + 1.1f;
+                    FloatingText.Spawn(transform.position + new Vector3(0.3f, 0.6f, 0f),
+                                       "냠", new Color(0.95f, 0.85f, 0.6f, 0.95f));
+                }
+                if (Time.time >= eatingUntil)
+                {
+                    float before = food;
+                    ConsumeAtSource();
+                    Debug.Log($"[Eat] {name} 도착·섭취 food {before:F0}→{food:F0}");   // 관측성
+                    ClearEatTask();
+                }
+                return;
+            }
+
             // 진행 중인 섭취 이동이 있으면 그걸 우선 처리.
             if (eatState == EatState.Walking)
             {
@@ -752,10 +776,10 @@ namespace MelonS.GameProto
             float dist = Vector2.Distance(transform.position, eatDestWorld);
             if (dist <= eatReachRange)
             {
-                float before = food;
-                ConsumeAtSource();
-                Debug.Log($"[Eat] {name} 도착·섭취 food {before:F0}→{food:F0}");   // 관측성
-                ClearEatTask();
+                // T15 — 도착 즉시 소비('뿅') 대신 3스케일초 식사 단계.
+                eatState = EatState.Eating;
+                eatingUntil = Time.time + 3f;
+                if (movement != null) movement.ClearTarget();
                 return;
             }
 
