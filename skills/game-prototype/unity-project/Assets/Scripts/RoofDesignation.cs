@@ -384,25 +384,25 @@ namespace MelonS.GameProto
             return found;
         }
 
-        /// <summary>소크 r3 이상 관찰 #3 — 지붕이 벽 골조와 무관하게 시공되던 문제.
-        /// 레퍼런스처럼 지지 구조물(벽/문)이 근처(체비셰프 2셀)에 완공돼 있어야 시공
-        /// 가능.  지지가 없으면 영구 pending — 벽이 완공되는 순간 자연히 시공 시작
-        /// = 골조→지붕 순서가 시스템으로 강제된다.</summary>
+        /// <summary>소크 r3 관찰 #3 / r4 V-1 — 지붕은 지지 구조물(완공 벽/문)이
+        /// **8방 인접(체비셰프 1셀)**에 있어야 시공 가능.  r4 채점: 2셀 반경은 방이
+        /// 작아 벽 1칸 완공만으로 지붕 전체가 지지돼 '골조 전 지붕'이 잔존(V-1 F)
+        /// → 1셀로 좁혀 각 지붕 셀이 자기 옆 벽 라인 완공을 기다린다.</summary>
         private static bool HasSupport(Vector2Int cell)
         {
             foreach (var w in UnityEngine.Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None))
             {
                 if (w == null) continue;
                 Vector3 p = w.transform.position;
-                if (Mathf.Abs(Mathf.FloorToInt(p.x) - cell.x) <= 2
-                    && Mathf.Abs(Mathf.FloorToInt(p.y) - cell.y) <= 2) return true;
+                if (Mathf.Abs(Mathf.FloorToInt(p.x) - cell.x) <= 1
+                    && Mathf.Abs(Mathf.FloorToInt(p.y) - cell.y) <= 1) return true;
             }
             foreach (var d in UnityEngine.Object.FindObjectsByType<DoorEntity>(FindObjectsSortMode.None))
             {
                 if (d == null) continue;
                 Vector3 p = d.transform.position;
-                if (Mathf.Abs(Mathf.FloorToInt(p.x) - cell.x) <= 2
-                    && Mathf.Abs(Mathf.FloorToInt(p.y) - cell.y) <= 2) return true;
+                if (Mathf.Abs(Mathf.FloorToInt(p.x) - cell.x) <= 1
+                    && Mathf.Abs(Mathf.FloorToInt(p.y) - cell.y) <= 1) return true;
             }
             return false;
         }

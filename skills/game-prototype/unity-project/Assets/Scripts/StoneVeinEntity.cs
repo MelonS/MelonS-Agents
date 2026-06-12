@@ -104,6 +104,7 @@ namespace MelonS.GameProto
                 {
                     Vector3 off = new Vector3(Random.Range(-0.3f, 0.3f), Random.Range(-0.3f, 0.3f), 0);
                     StoneChunkEntity.Spawn(transform.position + off, 1, StoneChunkSprite);
+                Debug.Log($"[Mine] mined {name} @ ({transform.position.x:F1},{transform.position.y:F1})");
                 }
                 Destroy(gameObject);
                 return true;
