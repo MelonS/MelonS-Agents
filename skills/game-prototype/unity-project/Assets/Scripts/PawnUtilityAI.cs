@@ -327,9 +327,16 @@ namespace MelonS.GameProto
             //  '벌목 시작 → ClearTask by=PawnUtilityAI.Update' 루프, 나무 44→44).
             //  → 침대를 실제로 얻을 수 있을 때만 작업을 중단한다.  침대가 없으면 하던 일
             //  계속 (탈진 제자리취침 fallback 은 PawnNeeds 가 밤에 처리).
+            // 갭 TOP-7 ※ — 수동 task 소진 시 보호 해제 (완료가 보호 단위).
+            if (entity != null && entity.HasManualTask
+                && (ctx == null || !ctx.HasActiveTask()))
+                entity.HasManualTask = false;
             if (needs != null && reservedSleepBed == null
                 && needs.WantsAutoSleep && !needs.HasRestOrder
                 && ctx != null && ctx.HasActiveTask()
+                // TOP-7 — 수동 배정 task 는 탈진(<20) 전까지 취침이 끊지 않는다
+                //  ('시킨 일 하다 말고 잔다' 수정).  탈진이면 생존 우선 그대로.
+                && !(entity != null && entity.HasManualTask && needs.sleep >= 20f)
                 && ctx.FindNearestFreeBed() != null)
             {
                 chopper.ClearTask();

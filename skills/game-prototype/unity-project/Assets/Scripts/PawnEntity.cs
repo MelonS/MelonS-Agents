@@ -109,6 +109,10 @@ namespace MelonS.GameProto
         //  ClickSelector 가 우클릭 시 이 값을 Time.time + 5 로 set.
         //  PawnUtilityAI.Update 가 Time.time < ManualMoveUntil 이면 AI Decide skip.
         public float ManualMoveUntil { get; set; } = -10f;
+        // 갭 TOP-7 ※ (2026-06-13) — 수동(우클릭) 배정 task 는 시한이 아니라 '완료'가
+        //  보호 단위: 자율 취침이 탈진 전까지 이 task 를 끊지 않는다.  static
+        //  ClearAllWork(우클릭 경로 전용)에서 set, task 소진 시 PawnUtilityAI 가 해제.
+        public bool HasManualTask { get; set; }
         public bool IsUnderManualControl => Time.time < ManualMoveUntil;
 
         // Day 48: drafted (manual control) state.  When drafted:
@@ -205,6 +209,8 @@ namespace MelonS.GameProto
         public static void ClearAllWork(GameObject go)
         {
             if (go == null) return;
+            var pe = go.GetComponent<PawnEntity>();
+            if (pe != null) pe.HasManualTask = true;   // TOP-7 — 곧 배정될 수동 task 보호
             go.GetComponent<PawnChopper>()?.ClearTask();
             go.GetComponent<PawnGatherer>()?.ClearTask();
             go.GetComponent<PawnHunter>()?.ClearTask();
