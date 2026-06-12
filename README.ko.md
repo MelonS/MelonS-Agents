@@ -4,7 +4,7 @@
 
 **한국어** | [English](./README.md) · [**라이브 사이트 →**](https://melons.github.io/MelonS-Agents/)
 
-**두 개의 production skill:** music-video 쇼츠 + 한국 잡보드 digest. 둘 다 [agentskills.io](https://agentskills.io) spec 준수 — Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot 호환 cross-runtime.
+**자기 게임을 직접 만들고, 플레이하고, *검증*하는 에이전트** — 입력 레벨 재현 게이트와 격리 채점(grader) 루브릭 평결로 검증되는 콜로니심 수직 슬라이스 — 그리고 production 미디어 스킬 2종(music-video 쇼츠, 한국 잡보드 digest).  전부 [agentskills.io](https://agentskills.io) spec 준수, Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot 호환.
 
 **기계적인 단계는 로컬, 창작 단계는 Claude.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조와 동기화.  job-hunt 는 짧은 키워드를 role-synonym map 통해 자동 확장.  세 가지 감사 트리거 — 커밋·이상·스케줄 — 으로 시스템이 자신의 드리프트를 스스로 잡습니다.  영어 + 한국어 듀얼 트랙.
 
@@ -24,7 +24,9 @@
 ![License](https://img.shields.io/github/license/MelonS/MelonS-Agents?style=for-the-badge)
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 
-![2026-05-22 noir-detective 렌더의 5초 애니메이션 프리뷰 — 9:16 세로 쇼츠, 스모키 바 인테리어, 파이프를 문 수염 남자, rnb_low_key grade profile 의 pink-magenta 그레이드. phrase-aware 쉐이더 + 장르별 컬러 그레이드 (2026-05-22 출시 grade_profile 기능) 가 일반 Pexels B-roll 을 효과 레이어 *전에* 장르-코드된 룩으로 변환](docs/demo/music-video-noir-detective-2026-05-24-preview.gif)
+![PawnSim 16게임일 콜로니 타임랩스 (2026-06-12 빌드) — 콜로니스트 3명이 맨땅에서 저장 구역과 농장을 지정하고, 벽·침대·화덕·연구대를 갖춘 방을 지으며, 습격을 막아내며 성장한다.  전 프레임이 무인 소크 런이며, 보이는 루프(저장→집→농사→벌목→채광)는 효과 어서션 + 격리 채점 루브릭 평결로 기계 검증됨](docs/demo/pawnsim-2026-06-12-colony-timelapse.gif)
+
+*무인 16일 콜로니 소크 — 에이전트가 만들고, 에이전트가 검증.*
 
 </div>
 

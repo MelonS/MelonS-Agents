@@ -4,11 +4,11 @@
 
 [한국어](./README.ko.md) | **English** · [**Live site →**](https://melons.github.io/MelonS-Agents/)
 
-**Two production skills:** music-video shorts + Korean job-board digest.  Both [agentskills.io](https://agentskills.io)-spec compliant — portable across Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot.
+**An agent that builds, plays, and *verifies* its own game** — a colony-sim vertical slice gated by input-level repro tests and isolated-grader rubric verdicts — plus two production media skills (music-video shorts, Korean job-board digest), all [agentskills.io](https://agentskills.io)-spec compliant and portable across Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot.
 
 **Local for the mechanical, Claude for the creative.**  Phrase-aware ffmpeg shaders sync vintage visuals to music structure.  Short-keyword job-hunt expansion via role-synonym map.  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
 
-`100+ mission outputs · 5 mission types · 2 portable skills + 1 meta-skill · 23 ffmpeg shaders · 6 grade profiles · 0 runtime API tokens · 3 audit layers · MIT`
+`100+ mission outputs · 5 mission types · 2 portable skills + 1 meta-skill + 2 game prototypes · 23 ffmpeg shaders · 15-scenario input-level commit gate · isolated-grader verification loop · 0 runtime API tokens · 3 audit layers · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -24,7 +24,9 @@
 ![License](https://img.shields.io/github/license/MelonS/MelonS-Agents?style=for-the-badge)
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 
-![5-second animated preview from the 2026-05-22 noir-detective render — 9:16 vertical short, smoky bar interior, bearded man with pipe in pink-magenta rnb_low_key grade profile, phrase-aware shaders + per-genre color grade (the grade_profile feature shipped 2026-05-22) transforming generic Pexels B-roll into a genre-coded look before the effect layer](docs/demo/music-video-noir-detective-2026-05-24-preview.gif)
+![PawnSim 16-in-game-day colony timelapse (2026-06-12 build) — three colonists found a camp on open grass, designate a stockpile and farm plots, build a walled bedroom with beds/stove/research bench, and grow the colony while raids are repelled.  Every frame is from an unattended soak run; the loop shown (stockpile → housing → farming → logging → mining) is machine-verified by effect assertions + isolated-grader rubric verdicts](docs/demo/pawnsim-2026-06-12-colony-timelapse.gif)
+
+*Unattended 16-day colony soak, agent-built and agent-verified — see [PawnSim](#pawnsim--the-prototype-the-agent-is-actively-iterating-on-2026-06-focus).*
 
 </div>
 
@@ -160,17 +162,32 @@ The most active validation surface right now is **PawnSim** (Skill #3-A) — the
 agent builds *and* play-tests it in a tight loop, with the operator filing
 in-game feedback that turns straight into the next batch of fixes.
 
-![PawnSim — a top-down colony-sim vertical slice. Top-left vertical resource readout (food/meals/wood/stone), three named colonists on grass and dirt-soil terrain, trees, a bottom-center command bar (draft / work / schedule / build / research / settings), agent-generated flat-outline sprites](docs/demo/pawnsim-2026-06-03.png)
+![PawnSim 2026-06-12 — the basic loop verified end-to-end: a walled room with door and roof shading (top-down block walls from the 32px art generation), farm plots with growth-stage crops, a stockpile filling with logs and produce, named colonists, and live resource counters](docs/demo/pawnsim-2026-06-12-built-house.png)
+
+![PawnSim night — colonists asleep in three visually distinct bed tiers (sleeping spot / wood bed / fine bed) with persistent zZ markers, under the night tint](docs/demo/pawnsim-2026-06-12-night-sleep.png)
 
 Colonists autonomously chop / mine / gather / farm / cook / haul / build /
-research / fight under a utility AI; an AI Director spawns threats; the player
-drafts pawns and paints build + designation orders. Every sprite, scene, and
-C# system is CLI-scaffolded by [`game-dev-agent`](skills/game-dev-agent/) with
-no manual Unity Editor work, and every commit passes a 6-stage
-`refactor_check` gate. The shot above is a live build: genre-standard top-left
-resource readout, varied soil/rock terrain, clustered ore veins, named
-colonists with per-pawn motion. Full feature breakdown + **honest** verification
-status (including known gaps) in
+research / fight under a utility AI; an AI Director schedules threats on a
+jittered clock; the player drafts pawns and paints build + designation
+orders.  Every sprite (a full **32px art generation**: 3-direction walk/work
+pawn sheets, animals, terrain, furniture — all procedurally generated),
+every scene, and every C# system is CLI-scaffolded by
+[`game-dev-agent`](skills/game-dev-agent/) with no manual Unity Editor work.
+
+**Verification is the headline feature (2026-06-12).**  Every commit passes a
+15-scenario input-level repro gate (real synthesized clicks through the same
+UI path a player uses, with *effect assertions* — "the click placed a
+designation" — not just "the click landed").  Long-running soaks are graded
+by an **isolated grader sub-agent** against a written rubric (Ralph-loop
+pattern): the grader sees only evidence (screenshots + raw logs), never the
+author's intent, and its verdicts repeatedly caught what self-review missed —
+a silent harness blind spot that had voided every designation in earlier
+soaks, a "food-rich colony starving to death" mood-gate trap, and a
+permanent-mental-break colony freeze.  The basic colony loop (stockpile →
+housing with real indoor effects → permanent farm plots → logging → mining →
+deconstruct) is now **machine-verified end-to-end**, with the rubric verdicts
+committed alongside the fixes.  Full feature breakdown + **honest**
+verification status (including known gaps) in
 [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
 
 > **Engineering decisions, one page.**
@@ -305,6 +322,8 @@ per-day data at [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.j
 
 ## Sample output
 
+![5-second animated preview from the 2026-05-22 noir-detective render — 9:16 vertical short, smoky bar interior, bearded man with pipe in pink-magenta rnb_low_key grade profile, phrase-aware shaders + per-genre color grade transforming generic Pexels B-roll into a genre-coded look](docs/demo/music-video-noir-detective-2026-05-24-preview.gif)
+
 100+ mission outputs across **five** mission types.  The current
 production format is the `music-video` mission — music-as-primary-audio
 shorts (no narration, no captions, beat-aligned cuts, onset-aligned
@@ -314,6 +333,18 @@ on 2026-05-17
 
 ### Recently shipped (rolling)
 
+- **2026-06-12 PawnSim verification-loop adoption + basics overhaul**
+  (Skill #3-A) — adopted a rubric + isolated-grader verification loop
+  (grader sub-agents judging soak evidence with zero author context) and
+  used it to drive ~40 gated commits in 36 hours: a 32px art generation
+  swap (pawn walk/work sheets, animals, terrain, walls/doors/ore with
+  top-down block grammar), camera range calibrated against reference
+  screenshots, wood-economy parity, permanent farm plots
+  (sow → harvest → re-sow), real indoor effects (roofed rooms block
+  storms), randomized raid scheduling, manual-order priority, and a
+  16-pair UI-overlap audit fixed to zero.  The graders' verdicts — not
+  the author's claims — are the acceptance record, committed per round
+  in [`skills/game-prototype/docs/`](skills/game-prototype/docs/).
 - **2026-06-03 PawnSim playtest-fix batch** (Skill #3-A) — an operator
   play-test loop drove a 12-commit batch on
   [`skills/game-prototype/`](skills/game-prototype/): fixed a pawn-movement
