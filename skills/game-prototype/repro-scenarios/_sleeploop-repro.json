@@ -1,0 +1,142 @@
+{
+ "name": "sleep-loop-repro (케이스A 탈진유예 17:30 / 케이스B 졸림 21:00)",
+ "timeoutSec": 700,
+ "steps": [
+  {
+   "op": "wait",
+   "sec": 2
+  },
+  {
+   "op": "clickui",
+   "name": "label:건축"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:가구"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:목재 침대"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": -0.5,
+   "y": 2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.3
+  },
+  {
+   "op": "key",
+   "name": "Escape"
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "assert",
+   "probe": "structureCount",
+   "name": "bed",
+   "min": 1,
+   "withinSec": 180
+  },
+  {
+   "op": "speed",
+   "x": 4
+  },
+  {
+   "op": "wait",
+   "sec": 479
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "shot",
+   "name": "sl00_1730_before"
+  },
+  {
+   "op": "setNeed",
+   "pawn": "민지",
+   "name": "sleep",
+   "x": 18
+  },
+  {
+   "op": "assert",
+   "probe": "pawnActivity",
+   "pawn": "민지",
+   "contains": "취침",
+   "withinSec": 45
+  },
+  {
+   "op": "shot",
+   "name": "sl01_caseA_result"
+  },
+  {
+   "op": "setNeed",
+   "pawn": "민지",
+   "name": "sleep",
+   "x": 90
+  },
+  {
+   "op": "wait",
+   "sec": 2
+  },
+  {
+   "op": "speed",
+   "x": 4
+  },
+  {
+   "op": "wait",
+   "sec": 146
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "shot",
+   "name": "sl02_2100_before"
+  },
+  {
+   "op": "setNeed",
+   "pawn": "서연",
+   "name": "sleep",
+   "x": 32
+  },
+  {
+   "op": "assert",
+   "probe": "pawnActivity",
+   "pawn": "서연",
+   "contains": "취침",
+   "withinSec": 45
+  },
+  {
+   "op": "shot",
+   "name": "sl03_caseB_result"
+  }
+ ]
+}

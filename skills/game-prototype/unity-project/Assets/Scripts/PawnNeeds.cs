@@ -47,8 +47,12 @@ namespace MelonS.GameProto
         // 백로그 #8 (2026-06-11): 회복 8/s = 밤잠이 하루의 ~10초 → 수면이 시간 비용이
         //  아니었다.  3/s 로 — 침대 RestMul(0.8/1.0/1.4)이 처음으로 노동시간 경제에
         //  닿는다.  씬에 8 이 직렬화 → Awake clamp (#QR지면 교훈).
-        [SerializeField] private float sleepRegenAtNight = 3f;
-        private const float MaxSleepRegen = 3f;
+        // 수면루프 재현(2026-06-13, _sleeploop.json) — regen 3/s 는 25실초(0.6게임시간)
+        //  만충 → 같은 밤 재탈진 → 22시+ inPlace 경합 쓰러짐(-8)의 몸통.  레퍼런스
+        //  패리티: 수면은 밤에 6~8게임시간 1회.  0.35/s = 만충 ~230s ≈ 5.5게임시간
+        //  (침대 RestMul 1.3 → 4.2h, 바닥 0.6 → 9h — 침대 가치가 시간으로 체감된다).
+        [SerializeField] private float sleepRegenAtNight = 0.35f;
+        private const float MaxSleepRegen = 0.5f;   // 직렬화 스테일(구 3f) 무력화 가드
 
         [Header("Day 11: eat-from-stockpile")]
         // #202 SURVIVAL-LOOP FIX — eat at 50 (was 40).  With the harvest loop now
