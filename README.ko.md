@@ -4,11 +4,11 @@
 
 **한국어** | [English](./README.md) · [**라이브 사이트 →**](https://melons.github.io/MelonS-Agents/)
 
-**자기 게임을 직접 만들고, 플레이하고, *검증*하는 에이전트** — 입력 레벨 재현 게이트와 격리 채점(grader) 루브릭 평결로 검증되는 콜로니심 수직 슬라이스 — 그리고 production 미디어 스킬 2종(music-video 쇼츠, 한국 잡보드 digest).  전부 [agentskills.io](https://agentskills.io) spec 준수, Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot 호환.
+**자기가 만든 게임을 직접 플레이하고 검증까지 하는 에이전트.**  콜로니심 프로토타입을 플레이어와 같은 입력 경로의 자동 재현 테스트로 매 커밋 검증하고, 장시간 플레이는 작업자와 분리된 채점 에이전트가 루브릭으로 평가합니다.  여기에 프로덕션 미디어 스킬 2종(뮤직비디오 쇼츠, 한국 채용공고 다이제스트)까지 — 전부 [agentskills.io](https://agentskills.io) 스펙 준수로 Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot 에서 그대로 동작합니다.
 
 **기계적인 단계는 로컬, 창작 단계는 Claude.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조와 동기화.  job-hunt 는 짧은 키워드를 role-synonym map 통해 자동 확장.  세 가지 감사 트리거 — 커밋·이상·스케줄 — 으로 시스템이 자신의 드리프트를 스스로 잡습니다.  영어 + 한국어 듀얼 트랙.
 
-`미션 출력 100+ · 미션 타입 5종 · 포터블 스킬 2개 + 메타 스킬 1개 · ffmpeg 쉐이더 23개 · 컬러 그레이드 6종 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
+`미션 출력 100+ · 포터블 스킬 2개 + 메타 스킬 1개 + 게임 프로토타입 2종 · ffmpeg 쉐이더 23개 · 커밋 게이트 15시나리오(입력 레벨) · 격리 채점 검증 루프 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -24,9 +24,9 @@
 ![License](https://img.shields.io/github/license/MelonS/MelonS-Agents?style=for-the-badge)
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 
-![PawnSim 16게임일 콜로니 타임랩스 (2026-06-12 빌드) — 콜로니스트 3명이 맨땅에서 저장 구역과 농장을 지정하고, 벽·침대·화덕·연구대를 갖춘 방을 지으며, 습격을 막아내며 성장한다.  전 프레임이 무인 소크 런이며, 보이는 루프(저장→집→농사→벌목→채광)는 효과 어서션 + 격리 채점 루브릭 평결로 기계 검증됨](docs/demo/pawnsim-2026-06-12-colony-timelapse.gif)
+![PawnSim 콜로니 타임랩스 (2026-06-12 빌드, 게임 내 16일) — 콜로니스트 셋이 맨땅에서 시작해 저장 구역과 농장을 지정하고, 벽·침대·화덕·연구대를 갖춘 집을 지으며, 습격을 막아내고 성장하는 과정.  모든 프레임은 사람 개입 없는 자동 플레이 기록이며, 화면에 보이는 기본 루프(저장→집짓기→농사→벌목→채광)는 전부 기계 검증을 통과한 상태](docs/demo/pawnsim-2026-06-12-colony-timelapse.gif)
 
-*무인 16일 콜로니 소크 — 에이전트가 만들고, 에이전트가 검증.*
+*사람 개입 없는 16일 자동 플레이 — 에이전트가 만들고, 에이전트가 검증합니다.*
 
 </div>
 
@@ -144,16 +144,29 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 만들면서 *동시에* 플레이테스트하는 타이트한 루프로 돌아가고, 운영자가 올린
 인게임 피드백이 곧바로 다음 수정 배치로 이어집니다.
 
-![PawnSim — 탑다운 콜로니-심 vertical slice. 좌상단 세로 자원 readout(식량/식사/목재/석재), 잔디·흙 지형 위의 이름표 달린 콜로니스트 3명, 나무, 하단 중앙 명령바(징집/직업/일정/건축/연구/설정), 에이전트 생성 flat-outline 스프라이트](docs/demo/pawnsim-2026-06-03.png)
+![PawnSim 2026-06-12 — 기본 루프가 끝까지 검증된 모습: 문과 지붕 음영이 있는 벽 둘린 방(32px 신작 톱다운 벽), 성장 단계가 보이는 농장, 통나무·수확물이 쌓이는 저장 구역, 이름표 달린 콜로니스트들과 실시간 자원 카운터](docs/demo/pawnsim-2026-06-12-built-house.png)
 
-콜로니스트는 utility AI 로 벌목/채광/채집/농사/요리/운반/건축/연구/전투를
-자율 수행하고, AI 디렉터가 위협을 스폰하며, 플레이어는 림을 징집하고 건축·지정
-명령을 칠합니다. 모든 스프라이트·씬·C# 시스템은
-[`game-dev-agent`](skills/game-dev-agent/) 가 CLI 로 스캐폴딩하며 (수동 Unity
-에디터 작업 0), 모든 커밋이 6단계 `refactor_check` 게이트를 통과합니다. 위
-스크린샷은 실제 빌드 — 장르 표준 좌상단 자원 readout, 다양해진 흙/돌 지형,
-조밀한 광맥 군집, 이름표+개별 모션 콜로니스트. 전체 기능 + **정직한** 검증
-상태(알려진 결함 포함)는
+![PawnSim 야간 — 등급별로 한눈에 구분되는 침대 3종(맨바닥 자리/목재 침대/고급 침대)에서 잠든 콜로니스트들, 수면 중 상시 zZ 표시](docs/demo/pawnsim-2026-06-12-night-sleep.png)
+
+콜로니스트는 유틸리티 AI 로 벌목·채광·채집·농사·요리·운반·건축·연구·전투를
+알아서 수행하고, AI 디렉터가 예측 불가능한 시점에 위협을 보내며, 플레이어는
+림을 징집하고 건축·지정 명령을 내립니다.  스프라이트 전부(3방향 걷기·작업
+시트, 동물, 지형, 가구까지 — **32px 절차 생성 아트**)와 씬, C# 시스템이
+[`game-dev-agent`](skills/game-dev-agent/) CLI 로 만들어집니다 (Unity 에디터
+수작업 0).
+
+**이 프로토타입의 간판은 검증 방식입니다 (2026-06-12).**  모든 커밋은
+15개 시나리오의 입력 레벨 재현 게이트를 통과해야 합니다 — 플레이어와 같은
+경로로 실제 클릭을 합성하고, "클릭이 눌렸다"가 아니라 **"클릭이 지정을
+만들었다"는 효과까지 어서트**합니다.  장시간 자동 플레이는 **격리된 채점
+에이전트**가 작성된 루브릭으로 평가합니다(작업자의 의도는 일절 모른 채
+스크린샷과 원본 로그만 보고 판정).  이 채점이 자기 검토로는 못 본 결함을
+반복해서 잡아냈습니다 — 모든 지정 명령을 무효화하던 테스트 사각지대,
+식량이 쌓여 있는데 콜로니가 굶어 죽던 무드 게이트 함정, 콜로니 전체가
+영구 멈추던 멘탈 브레이크 동결.  기본 콜로니 루프(저장 구역 → 실내 효과가
+실재하는 집 → 영구 농장 → 벌목 → 채광 → 철거)는 현재 **끝에서 끝까지 기계
+검증**된 상태이고, 채점 평결은 수정 커밋과 함께 저장소에 남습니다.  전체
+기능과 **정직한** 검증 상태(알려진 결함 포함)는
 [`skills/game-prototype/README.md`](skills/game-prototype/README.md) 에 있습니다.
 
 > **엔지니어링 결정, 한 페이지로.**
@@ -286,6 +299,16 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
 
 ### 최근 ship (롤링)
 
+- **2026-06-12 PawnSim 검증 루프 도입 + 기본기 총정비** (Skill #3-A) —
+  루브릭 + 격리 채점 검증 루프를 정식 도입하고(채점 에이전트가 작업 맥락
+  없이 증거만으로 평가), 36시간 동안 게이트 통과 커밋 ~40건: 32px 아트
+  세대 교체(림 걷기·작업 시트, 동물, 지형, 톱다운 블록 벽·문·광맥),
+  레퍼런스 스크린샷 실측 기반 카메라 보정, 목재 경제 수치 정합, 영구
+  농장(파종→수확→재파종), 실내 효과 실재화(지붕 있는 방은 폭풍 차단),
+  습격 시점 무작위화, 수동 명령 우선권, UI 겹침 16쌍 전수 수정.
+  인수 기준은 작업자의 주장이 아니라 **채점 평결**이며, 라운드별로
+  [`skills/game-prototype/docs/`](skills/game-prototype/docs/) 에 커밋돼
+  있습니다.
 - **2026-06-03 PawnSim 플레이테스트-수정 배치** (Skill #3-A) — 운영자
   플레이테스트 루프가 [`skills/game-prototype/`](skills/game-prototype/) 에
   12커밋 배치를 끌어냄: 림 이동 속도 회귀 + 벌목 접근 지터 수정(P0), needs→부정
