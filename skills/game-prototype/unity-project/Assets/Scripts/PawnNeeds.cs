@@ -170,11 +170,13 @@ namespace MelonS.GameProto
         private int noBedStreak;
         //  마크는 실제 밤(IsNightTime)에서만 적립 — 아침 잔여 Sleep 슬롯(hour 6 에지)
         //  마크가 밤으로 새던 누수의 최종 차단 (시각 재현 t=0.5/2.0/3.5 hour=6).
-        public void MarkNoBedTonight()
+        public void MarkNoBedTonight(string logName = null)
         {
             if (!IsNightTime()) return;
             noBedStreak++;
             lastNoBedMark = Time.time;
+            if (logName != null)
+                Debug.Log($"[GoSleep] {logName}: 빈 침대 없음 → 바닥 취침 힌트 t={Time.time:F1} hour={(GameClock.Instance != null ? GameClock.Instance.Hour : -1)}");
         }
         public void ClearNoBedHint() { noBedStreak = 0; }
         public bool NoBedSustained => noBedStreak >= 3 && Time.time - lastNoBedMark < 6f;

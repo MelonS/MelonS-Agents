@@ -125,7 +125,7 @@ namespace MelonS.GameProto
                 if (ai != null && arrowSpriteRuntime != null) ai.SetArrowSprite(arrowSpriteRuntime);
                 i++;
             }
-            Debug.Log($"[GameManager] Day 4: spawned {spawnPositions.Length} colonists");
+            Debug.Log($"[GameManager] 콜로니 시작: spawned {spawnPositions.Length} colonists");   // r8 관찰 — 'Day 4' 하드코딩 라벨이 HUD '봄 1일'과 혼선
 
             // 운영자 피드백 (2026-05-27): "키보드 의존도 너무 높음, gui 가 전혀 안됨"
             // → GUI 버튼 바 자동 부착 (Speed/Draft/Build/Research 10 버튼)

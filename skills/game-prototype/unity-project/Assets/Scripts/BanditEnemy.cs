@@ -193,6 +193,7 @@ namespace MelonS.GameProto
         private float nextStructHit = -1f;
         // 게임루프 차순위 (2026-06-12) — 60s 무전투 퇴각 타이머: 벽 밖에서 영원히
         //  서성이는 강도가 '영구 위협 잔재'로 남던 것.  습격에 시작과 끝이 생긴다.
+        private float lastWallLogTime = -10f;
         private float lastCombatTime = -1f;
         private bool retreating;
 
@@ -242,7 +243,12 @@ namespace MelonS.GameProto
                     wall.TakeDamage(contactDamage * 2f);
                     lastCombatTime = Time.time;   // 벽 공격도 전투 — 퇴각 타이머 리셋   // HP tint 피드백은 WallEntity 내장
                     LastAttackTime = Time.time;
-                    Debug.Log($"[Bandit] 벽 공격 -{contactDamage * 2f}");
+                    // r7 관찰 — 결과 없는 -4 ×75 스팸: 잔여 HP 포함 + 4초 스로틀.
+                    if (Time.time - lastWallLogTime > 4f)
+                    {
+                        lastWallLogTime = Time.time;
+                        Debug.Log($"[Bandit] 벽 공격 -{contactDamage * 2f} (잔여 HP {wall.Hp:F0}) @ ({wall.transform.position.x:F1},{wall.transform.position.y:F1})");
+                    }
                     break;
                 }
             }
