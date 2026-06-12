@@ -62,6 +62,7 @@ namespace MelonS.GameProto
         private List<IPawnAction> actions;
         // 자율 취침: 생존 행동이라 work-priority loop 보다 먼저 시도 (work settings 무관).
         private GoSleepAction goSleep;
+        private RestWhenBleedingAction restWhenBleeding;
         // 자율 취침으로 예약한 침대 — 기상/취소 시 ReservationManager 에서 해제하기 위해 추적.
         private BedEntity reservedSleepBed;
 
@@ -97,6 +98,7 @@ namespace MelonS.GameProto
                 idleWanderRadius = idleWanderRadius,
             };
             goSleep = new GoSleepAction();
+            restWhenBleeding = new RestWhenBleedingAction();   // TOP-10 환자 행동
             actions = new List<IPawnAction>
             {
                 new TendPatientAction(),       // #125 - 부상 동료 치료 최우선
@@ -365,6 +367,10 @@ namespace MelonS.GameProto
 
         private void Decide()
         {
+            // 생존 pre-pass(2) — TOP-10 환자 행동: 출혈이면 침대로 가 치료 대기.
+            //  취침보다 먼저 (출혈이 졸림보다 긴급).
+            if (restWhenBleeding != null && needs != null && !needs.HasRestOrder
+                && restWhenBleeding.TryStart(ctx)) return;
             // 생존 pre-pass — 자율 취침은 work-priority loop 보다 먼저, work settings 와
             //  무관하게 시도 (졸리고 밤이면 일을 멈추고 침대로).  TryStart 가 true 면
             //  needs.SetAutoSleepTarget + 침대 예약이 끝난 상태 → 예약 침대 추적.

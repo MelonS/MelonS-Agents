@@ -94,6 +94,35 @@ namespace MelonS.GameProto.AI
         }
     }
 
+    /// <summary>갭 TOP-10 환자 행동 (2026-06-12, ※갈림길 아님) — 출혈 중인 림은
+    /// 벌목을 계속하는 대신 스스로 침대로 가 치료를 기다린다 (우클릭 휴식과 동일
+    /// 경로 SetRestTarget → 라벨 '휴식이동'/'휴식').  침대에 누우면 정지하므로
+    /// '의사가 동속 표적을 추격하는 들판 치료'도 자연 해소된다.  의식불명(IsDowned)
+    /// 은 이동 불가라 제외(기존 TendPatient 가 현장 처치).</summary>
+    public class RestWhenBleedingAction : IPawnAction
+    {
+        public string DisplayName => "치료 대기";
+        public WorkKind Kind => WorkKind.Gather;   // 생존 pre-pass 전용 — 매핑 미사용
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.needs == null || ctx.movement == null) return false;
+            if (ctx.needs.HasRestOrder) return false;
+            var h = ctx.transform.GetComponent<PawnHealth>();
+            if (h == null || h.IsDead || h.IsDowned || h.parts == null) return false;
+            bool bleeding = false;
+            foreach (var part in h.parts)
+                if (part != null && part.bleedRate > 0.1f && !part.bandaged) { bleeding = true; break; }
+            if (!bleeding) return false;
+            BedEntity bed = ctx.FindNearestFreeBed();
+            if (bed == null) return false;
+            if (!ReservationManager.TryReserve(bed, ctx.transform.gameObject)) return false;
+            ctx.needs.SetRestTarget(bed);
+            ctx.movement.SetTarget(GoSleepAction.BedStandPos(bed, ctx.transform.position));
+            Debug.Log($"[Patient] {ctx.entity?.PawnName} 출혈 → 침대 치료 대기 @ ({bed.transform.position.x:F1},{bed.transform.position.y:F1})");
+            return true;
+        }
+    }
+
     public class EatBerryAction : IPawnAction
     {
         public string DisplayName => "베리채집";
@@ -426,6 +455,10 @@ namespace MelonS.GameProto.AI
                 Vector3 hp = h.transform.position;
                 if (Mathf.Abs(hp.x) > 43.5f || Mathf.Abs(hp.y) > 43.5f) continue;
                 float sq = ((Vector2)hp - me).sqrMagnitude;
+                // TOP-10 — 침대 대기(휴식 명령/취침) 환자 우선: 정지 표적부터 치료.
+                var pn = h.GetComponent<PawnNeeds>();
+                bool stationary = h.IsDowned || (pn != null && (pn.HasRestOrder || pn.IsSleeping));
+                if (!stationary) sq += 1_000_000f;   // 이동 중 환자는 사실상 후순위
                 if (sq < bestSq) { bestSq = sq; best = h; }
             }
             return best;
