@@ -296,10 +296,7 @@ namespace MelonS.GameProto
         // #157 - 바닥 위 (FloorEntity) 면 이동 속도 보너스.
         private static bool IsOnFloor(Vector2 pos)
         {
-            var hits = Physics2D.OverlapBoxAll(pos, Vector2.one * 0.3f, 0f);
-            foreach (var h in hits)
-                if (h != null && h.GetComponent<FloorEntity>() != null) return true;
-            return false;
+            return FloorEntity.HasFloorAt(pos);   // T7 — 셀 레지스트리
         }
 
         private Vector2? target;

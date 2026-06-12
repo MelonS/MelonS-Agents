@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MelonS.GameProto
@@ -20,6 +21,31 @@ namespace MelonS.GameProto
     public class FloorEntity : MonoBehaviour
     {
         public bool IsIndoor => true;
+
+        // 첫사이클 T7 (2026-06-12) — 바닥 판정 3곳(이동 보너스/IsOnFloor/폭풍 차단)이
+        //  전부 Physics2D 인데 바닥 프리팹·런타임 석재 모두 무콜라이더라 효과가 영구
+        //  미발동이었다 (V59b 는 손수 콜라이더를 달아 거짓 PASS).  물리 대신 정적 셀
+        //  레지스트리 — Start/OnDestroy 등록·해제, 프리팹/런타임 양 경로 커버.
+        private static readonly Dictionary<Vector2Int, float> floorCells = new Dictionary<Vector2Int, float>();
+        private Vector2Int regCell;
+        private bool registered;
+
+        private void Start()
+        {
+            regCell = new Vector2Int(Mathf.FloorToInt(transform.position.x),
+                                     Mathf.FloorToInt(transform.position.y));
+            if (!floorCells.TryGetValue(regCell, out float cur) || MoveBonus > cur)
+                floorCells[regCell] = MoveBonus;
+            registered = true;
+        }
+
+        private void OnDestroy()
+        {
+            if (registered) floorCells.Remove(regCell);
+        }
+
+        public static bool HasFloorAt(Vector2 pos)
+            => floorCells.ContainsKey(new Vector2Int(Mathf.FloorToInt(pos.x), Mathf.FloorToInt(pos.y)));
 
         /// <summary>
         /// 이동 속도 보너스 - wiki: paved 50%.  wood 보드는 30%.
@@ -48,15 +74,9 @@ namespace MelonS.GameProto
         /// </summary>
         public static float BonusAt(Vector2 pos)
         {
-            float best = 1f;
-            var hits = Physics2D.OverlapBoxAll(pos, Vector2.one * 0.3f, 0f);
-            foreach (var h in hits)
-            {
-                if (h == null) continue;
-                var f = h.GetComponent<FloorEntity>();
-                if (f != null && f.MoveBonus > best) best = f.MoveBonus;
-            }
-            return best;
+            // T7 — 물리 쿼리 → 셀 레지스트리 (콜라이더 부재로 영구 1.0 이던 것).
+            return floorCells.TryGetValue(new Vector2Int(Mathf.FloorToInt(pos.x), Mathf.FloorToInt(pos.y)),
+                                          out float b) ? b : 1f;
         }
     }
 }

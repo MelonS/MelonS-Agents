@@ -882,10 +882,8 @@ namespace MelonS.GameProto
         // #폭풍fix(2026-06-10) public — PawnThoughts 가 '야외 폭풍' 노출 판정에 사용.
         public bool IsOnFloor()
         {
-            var hits = Physics2D.OverlapBoxAll(transform.position, Vector2.one * 0.3f, 0f);
-            foreach (var h in hits)
-                if (h != null && h.GetComponent<FloorEntity>() != null) return true;
-            return false;
+            // T7 — 물리 쿼리(콜라이더 부재로 영구 false) → 셀 레지스트리.
+            return FloorEntity.HasFloorAt(transform.position);
         }
 
         // 운영자 #107 - 침대 위에서 자면 보너스
