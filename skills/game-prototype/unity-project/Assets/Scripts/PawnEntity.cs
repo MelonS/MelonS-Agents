@@ -197,6 +197,23 @@ namespace MelonS.GameProto
         private static readonly string[] JoinerNames =
             { "하준", "도윤", "은우", "시우", "수아", "하린", "지아", "예준", "윤서", "채원" };
 
+        /// <summary>림월드갭 TOP-2 (2026-06-12) — 우클릭 '우선' 명령이 기존 작업을
+        /// 안 끊고 task 만 추가해 이동 줄다리기로 씹히던 것: 수동 배정 직전 전 워커
+        /// task 해제 (레퍼런스: 수동 명령 = 현재 작업 즉시 취소).</summary>
+        public static void ClearAllWork(GameObject go)
+        {
+            if (go == null) return;
+            go.GetComponent<PawnChopper>()?.ClearTask();
+            go.GetComponent<PawnGatherer>()?.ClearTask();
+            go.GetComponent<PawnHunter>()?.ClearTask();
+            go.GetComponent<PawnCook>()?.ClearTask();
+            go.GetComponent<PawnHauler>()?.ClearTask();
+            go.GetComponent<PawnBuilder>()?.ClearTask();
+            go.GetComponent<PawnMiner>()?.ClearTask();
+            go.GetComponent<PawnHarvester>()?.ClearTask();
+            go.GetComponent<PawnDoctor>()?.ClearTask();
+        }
+
         public static string NextJoinerName()
         {
             int n = UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None).Length;

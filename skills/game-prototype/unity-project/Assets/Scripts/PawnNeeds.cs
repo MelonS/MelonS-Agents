@@ -557,10 +557,14 @@ namespace MelonS.GameProto
             // enters a "break" for moodBreakDuration.  Recovery only when
             // mood climbs back to recoverAt.  PawnUtilityAI checks IsBreaking
             // and skips picking new work tasks (pawn wanders aimlessly).
-            if (!isBreaking && mood < moodBreakThreshold)
+            // 림월드갭 퀵픽 (2026-06-12) — 임계 교차 프레임에 전 림 100% 동시
+            //  발동·동시 복귀가 '감정이 기계장치'로 읽히던 것: 임계 밑에서 스케일초당
+            //  확률 롤(평균 ~12초 내, 림마다 다른 시점) + 지속 20~45s 랜덤.
+            if (!isBreaking && mood < moodBreakThreshold
+                && UnityEngine.Random.value < 0.08f * dt)
             {
                 isBreaking = true;
-                breakUntil = Time.time + moodBreakDuration;
+                breakUntil = Time.time + UnityEngine.Random.Range(20f, 45f);
                 // r2 #3 — 붕괴는 (섭취 금지와 결합해) 아사 나선의 입구인데 무음이었다.
                 //  +관측성 (2026-06-12): 화면 신호뿐이라 로그 grep 으로 붕괴를 못 찾던 것.
                 Debug.Log($"[Mood] {(pawnEntity != null ? pawnEntity.PawnName : name)} 정신붕괴 진입 mood={mood:F0} t={Time.time:F1}");

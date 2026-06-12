@@ -137,6 +137,8 @@ namespace MelonS.GameProto
         [SerializeField] private int RaidsPerSizeStep = 2;     // +1 bandit every 2 raids
         [SerializeField] private int FirstRaidExtraGraceDays = 0;  // 첫 습격 추가 유예 없음
         private int lastRaidDay = -1;
+        // TOP-1 — 다음 습격 발화 시각 (게임초).  -1 = 미스케줄.
+        private float nextRaidGameSec = -1f;
         private int raidCount = 0;     // how many raids have fired this run (drives slow size escalation)
 
         // #버그헌트3(2026-06-04): 레이드 스케줄러 상태 save/load.  시계(GameSeconds)만 복원되고
@@ -212,12 +214,23 @@ namespace MelonS.GameProto
             // cadence (the spacing check below), so escalation is unchanged.
             int graceDays = RaidGraceDays + (raidCount == 0 ? Mathf.Max(0, FirstRaidExtraGraceDays) : 0);
             if (day < graceDays) return;
-            // Fire at the morning window (hour 6) so the colony has daylight to
-            // respond — same window as before.
-            if (hour != 6) return;
-            // Spacing: at least RaidIntervalDays must have elapsed since the last
-            // raid.  lastRaidDay starts at -1 so the first eligible morning fires.
-            if (lastRaidDay >= 0 && day - lastRaidDay < RaidIntervalDays) return;
+            // 림월드갭 TOP-1 (2026-06-12) — '정확히 3일째 06:00' 시계태엽 습격은
+            //  2번째 습격에서 패턴이 학습돼 긴장이 0 이 된다.  레퍼런스처럼 다음 습격
+            //  시각을 스케줄로: 간격 ±1일 지터 + 발화 시각 6~22시 랜덤 (하한 1.9일).
+            //  nextRaidGameSec 미설정(-1) 이면 지금 잡는다 (로드 복원은 lastRaidDay 기반
+            //  근사 재스케줄).
+            float nowSec = GameClock.Instance != null ? GameClock.Instance.GameSeconds : 0f;
+            const float DaySec = 86400f;   // GameClock 하루 (setHour op 와 동일 기준)
+            if (nextRaidGameSec < 0f)
+            {
+                // 간격 ±1일 지터 (하한 1.9일) + 발화 시각 6~22시 랜덤.
+                float waitDays = Mathf.Max(1.9f, RaidIntervalDays + UnityEngine.Random.Range(-1f, 1f));
+                float fireHourOffset = UnityEngine.Random.Range(6f, 22f) / 24f;   // 일 분율
+                nextRaidGameSec = Mathf.Floor(nowSec / DaySec) * DaySec + (waitDays + fireHourOffset) * DaySec;
+                return;
+            }
+            if (nowSec < nextRaidGameSec) return;
+            nextRaidGameSec = -1f;   // 다음 습격은 발화 후 재스케줄
             lastRaidDay = day;
             SpawnRaid();
         }

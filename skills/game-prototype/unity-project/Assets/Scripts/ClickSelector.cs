@@ -306,6 +306,7 @@ namespace MelonS.GameProto
                     {
                         var nr = currentSelection.GetComponent<PawnNeeds>();
                         if (nr != null) nr.ClearRestTarget();  // 휴식 명령 취소
+                        PawnEntity.ClearAllWork(b.gameObject);   // TOP-2 수동 우선
                         b.SetBlueprintTarget(bp);
                         currentSelection.ManualMoveUntil = Time.time + 12f;
                         Debug.Log($"[Build] {currentSelection.PawnName} → 건설 ({bp.Mode})");
@@ -348,6 +349,7 @@ namespace MelonS.GameProto
                     if (hv != null)
                     {
                         ClearAllWorkTasks(currentSelection);
+                        PawnEntity.ClearAllWork(hv.gameObject);   // TOP-2 수동 우선
                         hv.SetCropTarget(crop);
                         currentSelection.ManualMoveUntil = Time.time + 10f;
                         Debug.Log($"[Harvest] {currentSelection.PawnName} → 수확 명령");
@@ -376,6 +378,7 @@ namespace MelonS.GameProto
                     if (mn != null)
                     {
                         ClearAllWorkTasks(currentSelection);
+                        PawnEntity.ClearAllWork(mn.gameObject);   // TOP-2 수동 우선
                         mn.SetVeinTarget(veinC);
                         currentSelection.ManualMoveUntil = Time.time + 12f;
                         Debug.Log($"[Mine] {currentSelection.PawnName} → 채광 명령");
@@ -390,6 +393,7 @@ namespace MelonS.GameProto
                     if (chopper != null)
                     {
                         ClearAllWorkTasks(currentSelection);
+                        PawnEntity.ClearAllWork(chopper.gameObject);   // TOP-2 수동 우선
                         chopper.SetTreeTarget(tree);
                         currentSelection.ManualMoveUntil = Time.time + 12f;
                         Debug.Log($"[Chop] {currentSelection.PawnName} → 벌목 명령");
@@ -468,6 +472,7 @@ namespace MelonS.GameProto
             var ch = p != null ? p.GetComponent<PawnChopper>() : null;
             if (ch == null) return false;
             ClearAllWorkTasks(p);
+            PawnEntity.ClearAllWork(ch != null ? ch.gameObject : null);   // TOP-2
             ch.SetTreeTarget(tree);
             p.ManualMoveUntil = Time.time + 12f;
             Debug.Log($"[Chop] {p.PawnName} → 벌목 명령 (우클릭 직접 배정)");
@@ -482,6 +487,7 @@ namespace MelonS.GameProto
             var mn = p != null ? p.GetComponent<PawnMiner>() : null;
             if (mn == null) return false;
             ClearAllWorkTasks(p);
+            PawnEntity.ClearAllWork(mn.gameObject);   // TOP-2
             mn.SetVeinTarget(vein);
             p.ManualMoveUntil = Time.time + 12f;
             Debug.Log($"[Mine] {p.PawnName} → 채광 명령 (우클릭 직접 배정)");
