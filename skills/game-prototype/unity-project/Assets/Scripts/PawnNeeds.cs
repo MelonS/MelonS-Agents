@@ -678,7 +678,7 @@ namespace MelonS.GameProto
                 {
                     float before = food;
                     ConsumeAtSource();
-                    Debug.Log($"[Eat] {name} 도착·섭취 food {before:F0}→{food:F0} t={Time.time:F1}");   // 관측성
+                    Debug.Log($"[Eat] {GetComponent<PawnEntity>()?.PawnName ?? name} 도착·섭취 food {before:F0}→{food:F0} t={Time.time:F1}");   // 관측성
                     ClearEatTask();
                 }
                 return;
@@ -762,7 +762,7 @@ namespace MelonS.GameProto
                 }
                 FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
                                    "먹을 것 없음!", new Color(0.95f, 0.65f, 0.3f, 1f));
-                Debug.Log($"[Eat] {name} 음식원 전무 food={food:F0}");   // 관측성 (아사 진단)
+                Debug.Log($"[Eat] {GetComponent<PawnEntity>()?.PawnName ?? name} 음식원 전무 food={food:F0}");   // 관측성 (아사 진단)
                 return;  // 물리 음식원 전무 → 순간이동 금지, 굶주림 유지
             }
 

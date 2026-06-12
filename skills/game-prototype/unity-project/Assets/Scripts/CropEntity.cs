@@ -126,7 +126,7 @@ namespace MelonS.GameProto
             AudioBank.Instance?.PlayHarvest();  // Day 80
             // grader 좌표 (2026-06-12) — 수확 완료가 무로그라 격리 채점이 '수확 0'과
             //  '드롭 후 소비/부패'를 구분 못 했다.  관측성 1줄 (효과 어서션/채점용).
-            Debug.Log($"[Harvest] 농작물 +{harvestFood} drop @ ({transform.position.x:F1},{transform.position.y:F1})");
+            Debug.Log($"[Harvest] 농작물 +{harvestFood} drop @ ({transform.position.x:F1},{transform.position.y:F1}) day={(GameClock.Instance != null ? GameClock.Instance.Day : -1)} hour={(GameClock.Instance != null ? GameClock.Instance.Hour : -1)}");
             return harvestFood;
         }
 

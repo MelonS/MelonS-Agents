@@ -43,6 +43,9 @@ namespace MelonS.GameProto
         private WorkGiveUp deGiveUp;
 
         public bool HasTask => targetBp != null || targetDe != null || hasRoofTask;
+
+        // 소크 r2 관찰 #5 — 로그 주체 'Pawn(Clone)' 익명성: 로그엔 림 이름을 쓴다.
+        private string LogName => GetComponent<PawnEntity>()?.PawnName ?? name;
         public BlueprintEntity Target => targetBp;
         public DeconstructTarget DeconstructTarget => targetDe;
         public bool HasDeconstructTask => targetDe != null;
@@ -91,7 +94,7 @@ namespace MelonS.GameProto
             float dist = Vector2.Distance(transform.position, c);
             if (dist > buildRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
             {
-                Debug.Log($"[Builder] {name} give up roof ({roofCell.x},{roofCell.y}) (dist={dist:F2})");
+                Debug.Log($"[Builder] {LogName} give up roof ({roofCell.x},{roofCell.y}) (dist={dist:F2})");
                 ClearRoofTask();
                 return;
             }
@@ -106,8 +109,7 @@ namespace MelonS.GameProto
                 if (hlt != null) mul *= hlt.WorkSpeedMultiplier();
                 var skills = GetComponent<PawnSkills>();
                 if (skills != null) mul *= 1f + skills.GetLevel(SkillKind.Build) * 0.04f;
-                bool done = rd.TickRoofWork(roofCell, Time.deltaTime * mul,
-                    GetComponent<PawnEntity>()?.PawnName ?? name);
+                bool done = rd.TickRoofWork(roofCell, Time.deltaTime * mul, LogName);
                 if (skills != null) skills.AddXP(SkillKind.Build, 5f * Time.deltaTime);
                 if (done) ClearRoofTask();   // 다음 셀은 utility AI 가 재배정
             }
@@ -147,7 +149,7 @@ namespace MelonS.GameProto
                 movement.SetTarget(stand);
             else
             {
-                Debug.Log($"[Builder] {name} give up blueprint (no free adjacent stand cell — unreachable/occupied)");
+                Debug.Log($"[Builder] {LogName} give up blueprint (no free adjacent stand cell — unreachable/occupied)");
                 ClearTask();
             }
         }
@@ -217,7 +219,7 @@ namespace MelonS.GameProto
                 movement.SetTarget(stand);
             else
             {
-                Debug.Log($"[Builder] {name} give up deconstruct (no free adjacent stand cell)");
+                Debug.Log($"[Builder] {LogName} give up deconstruct (no free adjacent stand cell)");
                 ClearDeconstructTask();
             }
         }
@@ -264,7 +266,7 @@ namespace MelonS.GameProto
             // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
             if (dist > buildRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
             {
-                Debug.Log($"[Builder] {name} give up blueprint (dist={dist:F2}, pathFailed={movement.LastPathFailed})");
+                Debug.Log($"[Builder] {LogName} give up blueprint (dist={dist:F2}, pathFailed={movement.LastPathFailed})");
                 ClearTask();
                 return;
             }
@@ -287,7 +289,7 @@ namespace MelonS.GameProto
                 if (skills != null) skills.AddXP(SkillKind.Build, 5f * Time.deltaTime);
                 if (done)
                 {
-                    Debug.Log($"[Builder] {name} 건설 완료 ({targetBp.Mode})");
+                    Debug.Log($"[Builder] {LogName} 건설 완료 ({targetBp.Mode})");
                     // #199 C2 — release target + stand cell on completion (the
                     //  blueprint is destroyed by AddWork→Complete; ClearTask's
                     //  fake-null guards handle that and free the stand cell).
@@ -325,7 +327,7 @@ namespace MelonS.GameProto
 
             if (dist > buildRange && deGiveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, giveUpAfterSec))
             {
-                Debug.Log($"[Builder] {name} give up deconstruct (dist={dist:F2}, pathFailed={movement.LastPathFailed})");
+                Debug.Log($"[Builder] {LogName} give up deconstruct (dist={dist:F2}, pathFailed={movement.LastPathFailed})");
                 ClearDeconstructTask();
                 movement.ClearTarget();
                 return;
@@ -350,7 +352,7 @@ namespace MelonS.GameProto
                 if (skills != null) skills.AddXP(SkillKind.Build, 5f * Time.deltaTime);
                 if (done)
                 {
-                    Debug.Log($"[Builder] {name} 해체 완료 ({targetDe.name})");
+                    Debug.Log($"[Builder] {LogName} 해체 완료 ({targetDe.name})");
                     // CompleteRemoval refunds material + destroys the structure
                     //  (which clears the PathGrid cell via WallEntity.OnDestroy).
                     targetDe.CompleteRemoval();
