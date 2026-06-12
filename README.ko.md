@@ -278,12 +278,14 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 ![투-패널 개입 추세 — Panel A (일별 커밋 분류) 는 일별 커밋 수를 initiator 별로 스택 (에이전트 자율 파랑 / 운영자 주도 빨강) + 운영자 주도 비율선 + 일별 % 라벨; Panel B (운영자 참여도) 는 로컬 Claude Code 세션 JSONL 에서 추출한 일별 운영자 프롬프트 수와 활성 세션 분.  영문 mirror: docs/metrics/intervention-en.png](docs/metrics/intervention-ko.png)
 
 목표: 에이전트 시스템이 더 많은 결정을 흡수할수록 두 패널 모두
-하향 추세.  `com.melons.agents.intervention-chart` launchd 잡
-([`scripts/intervention-chart-collect.sh`](scripts/intervention-chart-collect.sh))
-이 매일 02:00 KST 에 갱신.  이 잡은
+하향 추세.
 [`scripts/generate-intervention-chart.py`](scripts/generate-intervention-chart.py)
-를 호출하여 `git log` + `~/.claude/projects/-Users-melons-ai/*.jsonl`
-에서 두 패널을 재구성합니다.  분류 휴리스틱 + 감소 분석은
+가 `git log` + 로컬 Claude Code 세션 JSONL 에서 두 패널을 재구성 —
+macOS 워크스테이션에선 launchd 가 매일 02:00 KST 에 자동 실행하고,
+지금처럼 Windows 에서 게임 스프린트 중일 땐 수동으로 재생성합니다
+(스크립트는 2026-06-12 부터 크로스플랫폼).  참여도 패널은 재생성을
+실행한 머신에 저장된 세션만 집계하므로, 다른 머신에서 작업한 날은
+0 이 아니라 공백으로 읽어야 합니다.  분류 휴리스틱 + 감소 분석은
 [`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md)
 에 정리; 일별 raw 데이터는
 [`docs/metrics/intervention.json`](docs/metrics/intervention.json).

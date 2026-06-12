@@ -1,30 +1,34 @@
 {
-  "generated_at": "2026-05-25T02:00:46",
+  "generated_at": "2026-06-12T15:20:41",
   "marker_convention_started": "2026-05-17",
   "session_cap_minutes": 60,
   "rationale": "Two-source intervention tracker. Panel A: per-day commit count classified by initiator (user vs agent). Panel B: per-day operator prompts and active session minutes mined from local Claude Code session JSONLs. Goal: both signals trend down as the agent system absorbs more decisions.",
   "trend_7d": {
     "user_ratio_pct": {
-      "last7_avg": 32.14,
-      "prev7_avg": null,
-      "delta": null
+      "last7_avg": 2.24,
+      "prev7_avg": 19.34,
+      "delta": -17.1
     },
     "leverage_ratio": {
-      "last7_avg": 4.37,
-      "prev7_avg": null,
-      "delta": null
+      "last7_avg": 17.43,
+      "prev7_avg": 11.17,
+      "delta": 6.26
     },
     "operator_prompts": {
-      "last7_avg": 115.57,
-      "prev7_avg": null,
-      "delta": null
+      "last7_avg": 36.57,
+      "prev7_avg": 0.0,
+      "delta": 36.57
     },
     "active_session_minutes": {
-      "last7_avg": 180.89,
-      "prev7_avg": null,
-      "delta": null
+      "last7_avg": 26.86,
+      "prev7_avg": 0.0,
+      "delta": 26.86
     },
-    "direction": []
+    "direction": [
+      "user-ratio↓",
+      "leverage↑",
+      "prompts↑"
+    ]
   },
   "days": [
     {
@@ -34,9 +38,9 @@
       "user_ratio_pct": 0.0,
       "longest_autonomous_gap_h": 0,
       "leverage_ratio": 30.0,
-      "operator_prompts": 52,
-      "active_session_minutes": 120.2,
-      "session_count": 4
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
     },
     {
       "date": "2026-05-15",
@@ -45,9 +49,9 @@
       "user_ratio_pct": 26.1,
       "longest_autonomous_gap_h": 0.9,
       "leverage_ratio": 2.8,
-      "operator_prompts": 110,
-      "active_session_minutes": 180.0,
-      "session_count": 3
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
     },
     {
       "date": "2026-05-16",
@@ -56,9 +60,9 @@
       "user_ratio_pct": 19.2,
       "longest_autonomous_gap_h": 10.2,
       "leverage_ratio": 4.2,
-      "operator_prompts": 4,
-      "active_session_minutes": 30.1,
-      "session_count": 4
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
     },
     {
       "date": "2026-05-17",
@@ -67,9 +71,9 @@
       "user_ratio_pct": 69.0,
       "longest_autonomous_gap_h": 3.3,
       "leverage_ratio": 0.5,
-      "operator_prompts": 317,
-      "active_session_minutes": 236.2,
-      "session_count": 36
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
     },
     {
       "date": "2026-05-18",
@@ -78,9 +82,9 @@
       "user_ratio_pct": 50.0,
       "longest_autonomous_gap_h": 4.8,
       "leverage_ratio": 1.0,
-      "operator_prompts": 7,
-      "active_session_minutes": 57.2,
-      "session_count": 7
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
     },
     {
       "date": "2026-05-19",
@@ -89,9 +93,9 @@
       "user_ratio_pct": 20.6,
       "longest_autonomous_gap_h": 14.6,
       "leverage_ratio": 3.9,
-      "operator_prompts": 86,
-      "active_session_minutes": 280.3,
-      "session_count": 19
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
     },
     {
       "date": "2026-05-20",
@@ -100,9 +104,9 @@
       "user_ratio_pct": 11.5,
       "longest_autonomous_gap_h": 12.2,
       "leverage_ratio": 7.7,
-      "operator_prompts": 488,
-      "active_session_minutes": 339.3,
-      "session_count": 14
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
     },
     {
       "date": "2026-05-21",
@@ -111,9 +115,9 @@
       "user_ratio_pct": 35.7,
       "longest_autonomous_gap_h": 14.5,
       "leverage_ratio": 1.8,
-      "operator_prompts": 148,
-      "active_session_minutes": 168.4,
-      "session_count": 8
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
     },
     {
       "date": "2026-05-22",
@@ -122,9 +126,9 @@
       "user_ratio_pct": 7.2,
       "longest_autonomous_gap_h": 3.9,
       "leverage_ratio": 12.9,
-      "operator_prompts": 73,
-      "active_session_minutes": 390.8,
-      "session_count": 25
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
     },
     {
       "date": "2026-05-23",
@@ -133,9 +137,9 @@
       "user_ratio_pct": 25.0,
       "longest_autonomous_gap_h": 4.6,
       "leverage_ratio": 3.0,
-      "operator_prompts": 2,
-      "active_session_minutes": 17.9,
-      "session_count": 2
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
     },
     {
       "date": "2026-05-24",
@@ -144,12 +148,4535 @@
       "user_ratio_pct": 75.0,
       "longest_autonomous_gap_h": 0.7,
       "leverage_ratio": 0.3,
-      "operator_prompts": 5,
-      "active_session_minutes": 12.3,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-05-25",
+      "user_initiated": 1,
+      "agent_autonomous": 13,
+      "user_ratio_pct": 7.1,
+      "longest_autonomous_gap_h": 0,
+      "leverage_ratio": 13.0,
+      "operator_prompts": 318,
+      "active_session_minutes": 66.7,
       "session_count": 2
+    },
+    {
+      "date": "2026-05-26",
+      "user_initiated": 5,
+      "agent_autonomous": 14,
+      "user_ratio_pct": 26.3,
+      "longest_autonomous_gap_h": 16.2,
+      "leverage_ratio": 2.8,
+      "operator_prompts": 8,
+      "active_session_minutes": 60.0,
+      "session_count": 1
+    },
+    {
+      "date": "2026-05-27",
+      "user_initiated": 58,
+      "agent_autonomous": 128,
+      "user_ratio_pct": 31.2,
+      "longest_autonomous_gap_h": 6.2,
+      "leverage_ratio": 2.2,
+      "operator_prompts": 20,
+      "active_session_minutes": 42.0,
+      "session_count": 1
+    },
+    {
+      "date": "2026-05-28",
+      "user_initiated": 24,
+      "agent_autonomous": 33,
+      "user_ratio_pct": 42.1,
+      "longest_autonomous_gap_h": 8.0,
+      "leverage_ratio": 1.4,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-05-29",
+      "user_initiated": 6,
+      "agent_autonomous": 13,
+      "user_ratio_pct": 31.6,
+      "longest_autonomous_gap_h": 14.5,
+      "leverage_ratio": 2.2,
+      "operator_prompts": 338,
+      "active_session_minutes": 60.0,
+      "session_count": 1
+    },
+    {
+      "date": "2026-05-30",
+      "user_initiated": 1,
+      "agent_autonomous": 52,
+      "user_ratio_pct": 1.9,
+      "longest_autonomous_gap_h": 0,
+      "leverage_ratio": 52.0,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-05-31",
+      "user_initiated": 6,
+      "agent_autonomous": 41,
+      "user_ratio_pct": 12.8,
+      "longest_autonomous_gap_h": 1.6,
+      "leverage_ratio": 6.8,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-06-01",
+      "user_initiated": 6,
+      "agent_autonomous": 28,
+      "user_ratio_pct": 17.6,
+      "longest_autonomous_gap_h": 4.3,
+      "leverage_ratio": 4.7,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-06-02",
+      "user_initiated": 16,
+      "agent_autonomous": 17,
+      "user_ratio_pct": 48.5,
+      "longest_autonomous_gap_h": 8.3,
+      "leverage_ratio": 1.1,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-06-03",
+      "user_initiated": 14,
+      "agent_autonomous": 64,
+      "user_ratio_pct": 17.9,
+      "longest_autonomous_gap_h": 8.9,
+      "leverage_ratio": 4.6,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-06-04",
+      "user_initiated": 3,
+      "agent_autonomous": 12,
+      "user_ratio_pct": 20.0,
+      "longest_autonomous_gap_h": 0.5,
+      "leverage_ratio": 4.0,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-06-05",
+      "user_initiated": 2,
+      "agent_autonomous": 10,
+      "user_ratio_pct": 16.7,
+      "longest_autonomous_gap_h": 7.5,
+      "leverage_ratio": 5.0,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-06-06",
+      "user_initiated": 0,
+      "agent_autonomous": 0,
+      "user_ratio_pct": 0,
+      "longest_autonomous_gap_h": 0,
+      "leverage_ratio": 0,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-06-07",
+      "user_initiated": 0,
+      "agent_autonomous": 0,
+      "user_ratio_pct": 0,
+      "longest_autonomous_gap_h": 0,
+      "leverage_ratio": 0,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-06-08",
+      "user_initiated": 0,
+      "agent_autonomous": 0,
+      "user_ratio_pct": 0,
+      "longest_autonomous_gap_h": 0,
+      "leverage_ratio": 0,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-06-09",
+      "user_initiated": 0,
+      "agent_autonomous": 0,
+      "user_ratio_pct": 0,
+      "longest_autonomous_gap_h": 0,
+      "leverage_ratio": 0,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-06-10",
+      "user_initiated": 5,
+      "agent_autonomous": 30,
+      "user_ratio_pct": 14.3,
+      "longest_autonomous_gap_h": 2.5,
+      "leverage_ratio": 6.0,
+      "operator_prompts": 256,
+      "active_session_minutes": 188.0,
+      "session_count": 5
+    },
+    {
+      "date": "2026-06-11",
+      "user_initiated": 1,
+      "agent_autonomous": 69,
+      "user_ratio_pct": 1.4,
+      "longest_autonomous_gap_h": 0,
+      "leverage_ratio": 69.0,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
+    },
+    {
+      "date": "2026-06-12",
+      "user_initiated": 0,
+      "agent_autonomous": 47,
+      "user_ratio_pct": 0.0,
+      "longest_autonomous_gap_h": 0,
+      "leverage_ratio": 47.0,
+      "operator_prompts": 0,
+      "active_session_minutes": 0.0,
+      "session_count": 0
     }
   ],
   "commits": [
+    {
+      "sha": "bf0e244",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(readme): 전체 내용 검토 — 양어판 낡은 주장·깨진 참조·번역 품질 일괄 수정"
+    },
+    {
+      "sha": "b950365",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 림월드 갭 라운드 1 — 습격 무작위화 + 수동 명령 절대화 + 멘붕 확률화"
+    },
+    {
+      "sha": "a60d1e4",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(readme.ko): 한국어 자연화 + 영문판 동기화 — 헤더/히어로/PawnSim/최근 ship"
+    },
+    {
+      "sha": "22584cb",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(readme): 세미나 정리 — PawnSim 타임랩스 히어로 + 검증 루프 전면"
+    },
+    {
+      "sha": "63c0943",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(ui+world): UI 겹침 16/16 완료 + 광맥 위 건축 차단"
+    },
+    {
+      "sha": "487d0c7",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs: 림월드 갭 백로그 — '뭔가 다르다' 5축 평결 + TOP-12 + 퀵픽 10 (확정 33건)"
+    },
+    {
+      "sha": "f4decec",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs: 피드백 현황판 14/14 완료"
+    },
+    {
+      "sha": "08eec28",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(feedback): B2 나무 선택 시 '벌목 지정' 버튼 — 피드백 14건 전량 처리"
+    },
+    {
+      "sha": "3cc3a11",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(anim): 작업 스윙이 작업물을 향한다 — 벌목 애니 '이상함'의 유력 원인 (#11)"
+    },
+    {
+      "sha": "42fd628",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(first-cycle): T12 구역 드래그 라이브 프리뷰 — 깜깜이 드래그 해소"
+    },
+    {
+      "sha": "c2cff82",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs: 오후 라운드 종합 — grader 8차 전 항목 그린, 잔여 큐 정리"
+    },
+    {
+      "sha": "2b0cd5b",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(ui): 겹침 배치 ③+⑤ — 모달 상호배타 + 튜토 폭"
+    },
+    {
+      "sha": "7c2e2d2",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(ui): 겹침 배치 ② 좌하단 패키지 — 셸프 줄바꿈·인포 y시프트·스킬 이동"
+    },
+    {
+      "sha": "cdaed14",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(ui): 겹침 배치 ①+④ — 독립 4건 + 월드 라벨 수직 사다리"
+    },
+    {
+      "sha": "5b6ce1f",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(visual): zZ 상시 마커 + 식사 타임스탬프 — grader 7차 증거 채널 보강"
+    },
+    {
+      "sha": "2f71fe7",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs: 첫 사이클 백로그 집행 현황 — T1~T17 출하 (T12 잔여)"
+    },
+    {
+      "sha": "685bcbf",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(first-cycle): T15 식사 점유 시간 — '뿅' 소비 → 3스케일초 식사 + '냠' FX"
+    },
+    {
+      "sha": "4f6bf02",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(first-cycle): 갭 5군 T13/T14/T17 — 철거 가능화·조리식 우선·취침 라벨"
+    },
+    {
+      "sha": "1f5a054",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(visual): 침대 수면 분기에 zZ 누락 — grader 6차 유일 F 해소"
+    },
+    {
+      "sha": "62e2a80",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(visual): 벌목 지정 마커 가시화 — 이모지 글리프 부재가 '마커 부재'의 정체"
+    },
+    {
+      "sha": "b48e949",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(feedback): C4 동물 피격 반응 — 초식 도주 / 멧돼지 반격 (#12)"
+    },
+    {
+      "sha": "2b65a1a",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs: 피드백 14건 현황판 — 10건 출하, 잔여 4건"
+    },
+    {
+      "sha": "7895b2f",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(first-cycle): T7 '실내' 개념 신설 — 집이 처음으로 보상한다"
+    },
+    {
+      "sha": "1fad804",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(first-cycle): 갭 4군 T9/T10b — 운반 동결 가드 + 품목 스프라이트 매핑"
+    },
+    {
+      "sha": "4b608df",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(first-cycle): 갭 3군 T8/T10/T11 — 저장·농사 사슬"
+    },
+    {
+      "sha": "d775b3f",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(first-cycle): 갭 2군 T4~T6 — 수면 사슬 (동시 실신/무드 포화/회복 역전)"
+    },
+    {
+      "sha": "f033cae",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(first-cycle): 갭 1군 T1~T3 — 저장구역 온보딩 / 청사진 콜라이더 / 1단위 섭취"
+    },
+    {
+      "sha": "79df692",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(feedback): 모드 활성 배너 — '메뉴가 나왔다 안 나왔다'의 근본 처방 (#7/#9)"
+    },
+    {
+      "sha": "03c4a2b",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs: 첫 사이클 백로그 r3 — 5사슬 갭 감사 확정 34건 (활성 목표 작업 큐)"
+    },
+    {
+      "sha": "1ac4642",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(feedback): 라운드 B-1 — 목재 경제 레퍼런스 파리티 + 바위/침대 아트 재작업"
+    },
+    {
+      "sha": "fd9d5f3",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(feedback): 라운드 A — 운영자 아침 피드백 즉효 5건"
+    },
+    {
+      "sha": "f99e4c0",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(goal): 활성 목표 재설정 — '유저가 재미를 느낄 수준'의 프로토타입 (운영자 2026-06-12)"
+    },
+    {
+      "sha": "27ff84e",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs: 아침 소크 판정 — 사망 0 전원 생존 (밤샘 라운드 종결)"
+    },
+    {
+      "sha": "0d8a803",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs: 밤샘 라운드 최종 브리핑 — 4축 PASS, 트랩 2건 해소, 아침 확인 동선"
+    },
+    {
+      "sha": "603c829",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(gameloop): 붕괴 카타르시스 복귀 — 영구 붕괴(콜로니 정지) 트랩 해소"
+    },
+    {
+      "sha": "5be68d8",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(gameloop): 붕괴 중 생존 본능 — '식량 688 비축에 전원 아사' 트랩 해소"
+    },
+    {
+      "sha": "03644c5",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "chore(observability): 섭취 경로 로그 3점 — '식량 632 두고 전원 아사' 진단 장치"
+    },
+    {
+      "sha": "1ac2724",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(harness): worldclick 셀 중심화 + 수확 관측성 로그 — grader 2차 좌표"
+    },
+    {
+      "sha": "831f38e",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(gameloop): 채광 범위 1.85 + 연구 HUD 정지사유 진행 인지 — grader 좌표 2건"
+    },
+    {
+      "sha": "442f0d7",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(camera): 줌 레인지 레퍼런스 실측 보정 — 5.5/15/32"
+    },
+    {
+      "sha": "0f77921",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs: 기본기 라운드 Done + check-round-4 진행 갱신"
+    },
+    {
+      "sha": "25b61f2",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(loop): 검증 루프 정식 도입 + 기본 4축 영구 가드 — 15/15 그린"
+    },
+    {
+      "sha": "14dd52e",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(art-v2): 벽/문/광맥 톱다운 신작 — '마루 바닥' 오독 해소"
+    },
+    {
+      "sha": "239026b",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(harness): designation 7종 SimInput 전환 + 주입 클릭 release 수명"
+    },
+    {
+      "sha": "4456738",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(basics): 하네스 지시클릭 사각지대 + 경작 구역 영구화 — '떠돌기'의 뿌리"
+    },
+    {
+      "sha": "5751948",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(roadmap): 연구 축 부활 3연타 + 게임루프 차순위 Done 기재"
+    },
+    {
+      "sha": "e05843c",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(gameloop): 연구 디스패치 + 폭풍 물리 비용 + 시작 스킬 개인차"
+    },
+    {
+      "sha": "4ca8f70",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix(progression): 연구대 buildable — #229 회귀로 죽어 있던 연구 축 부활"
+    },
+    {
+      "sha": "344ea0c",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat(gameloop): 식탁 배선 — 식탁 툴팁이 처음으로 진실이 된다"
+    },
+    {
+      "sha": "d8b5b47",
+      "date": "2026-06-11",
+      "class": "user",
+      "subject": "fix: 합류 림 한글 이름 + HUD 식량 잔여일 음수 표기 (운영 소크 발견 2건)"
+    },
+    {
+      "sha": "753b1a0",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs(roadmap): 자율 연장 3부 Done 기재 — 운영 소크 판정 + hostile 32px"
+    },
+    {
+      "sha": "d77b63c",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat(art-v2): 적대 인간형 전용 32px — 강도가 강도처럼 보인다"
+    },
+    {
+      "sha": "04f7676",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: 운영 소크 대조 — 방치 3일 전멸 vs 최소 개입 9일+ 생존 (D1 데이터 완성)"
+    },
+    {
+      "sha": "6b08c10",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: 소크 재검증 — 전멸 오버레이+위기 카드 사슬 시각 증거 확보"
+    },
+    {
+      "sha": "4c08542",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix: 게임오버 일시정지 하네스 친화 — 소크가 전멸 화면·카드 증거를 찍을 수 있게"
+    },
+    {
+      "sha": "e0a90e7",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: r2 백로그 집행 현황 헤더 (TOP8+E+J 완주, 잔여=운영자 결정)"
+    },
+    {
+      "sha": "6e9a886",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: r2-J — 콜로니스트 바 위기 테두리 (의식불명 빨강 / 정신붕괴 보라)"
+    },
+    {
+      "sha": "96501a0",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix: r2-J — 림 미선택 거래 개통 (상인 우클릭 = 콜로니 단위 행위)"
+    },
+    {
+      "sha": "9cf8ae6",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: 자율 연장 2부(r2 감사 완주) 로드맵 기록"
+    },
+    {
+      "sha": "7f7ba81",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: r2-J — 식량 부족 경보 인구 연동 (고정 5 → 림 수 x 4.5 반일치)"
+    },
+    {
+      "sha": "f89809b",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix+feat: 마퀴 프로브 '선택 집합' 진실 + 아사 임박 개인 경고 (r2-E 자동승격)"
+    },
+    {
+      "sha": "e5bbf10",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: r2 #6#8 — 식량 잔여일 진실 + 합류 림 콜로니스트 키트 (r2 TOP8 완주)"
+    },
+    {
+      "sha": "1243c51",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix: r2 #2#7 — 지정모드 클릭 소유권 + 시체 클릭 강등"
+    },
+    {
+      "sha": "8866f72",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: r2 #1 — 직업 우선순위·일정 슬롯 save/load ('결정해도 사라진다' 해소)"
+    },
+    {
+      "sha": "f634662",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: r2 #3#4#5 — 위기 신호 3종: 죽음이 '예고된 죽음'이 된다"
+    },
+    {
+      "sha": "b66f4b8",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: UI-B — 인포패널 게이지 % 라벨 (25% 미만 경고색)"
+    },
+    {
+      "sha": "b3cfba1",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: check-round-3 — 자율 4h 연장분 반영 (F1~F5 클로즈, D5 패키지 결정 추가)"
+    },
+    {
+      "sha": "a315173",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 아트 v2 후속 — 벌목 그루터기 ('여기서 일했다'가 지형에 남는다)"
+    },
+    {
+      "sha": "343a73f",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: 물 애니는 tilemap.extras 패키지 필요 — 운영자 OK 대기로 큐 정리"
+    },
+    {
+      "sha": "5bd5d59",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 게임루프 차순위 — wanderer_arrival 실합류 (인구 보상)"
+    },
+    {
+      "sha": "cea3552",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: 자율 4h 연장 세션 로드맵 기록"
+    },
+    {
+      "sha": "5df1af7",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: QA플레이 F4 — HUD 목재에 바닥 더미 병기 ('목재: 0 (+300 바닥)')"
+    },
+    {
+      "sha": "d0d91f0",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 발전 테크 아크 연장 + 호전적 처치 무드 (게임루프 차순위)"
+    },
+    {
+      "sha": "fde2f96",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: UI-B — 스킬 패널 UITheme 크롬 + '스킬' 헤더 (떠 있는 디버그 박스 해소)"
+    },
+    {
+      "sha": "00b97c4",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix: F5 클로즈 — '침대 탐색 일시 null'의 정체는 아침 슬롯 에지 마크 누수"
+    },
+    {
+      "sha": "61feb85",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 아트 v2 후속 — 수확후 덤불 전용 스프라이트 (채집 가능 여부 가시화)"
+    },
+    {
+      "sha": "c8f660b",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: 자율 10h 세션 마감 로드맵 기록"
+    },
+    {
+      "sha": "c4bb60b",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 아트 v2 후속 — 작업 중 손에 도구가 보인다 (도끼/곡괭이 합성 프레임)"
+    },
+    {
+      "sha": "0fb583d",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 게임루프 차순위 — 강도 60s 무전투 퇴각 (습격에 '끝'이 생긴다)"
+    },
+    {
+      "sha": "8a0e8dd",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: F2 패널 겹침 시프트 + 팔 부상→작업속도 5워커 배선 + 플레이키 완화"
+    },
+    {
+      "sha": "e3eb65a",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: 첫10분 플레이테스트 판정(F1~F5) + 확인 라운드 3 (운영자 복귀용)"
+    },
+    {
+      "sha": "c5828c5",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: QA플레이 F3 — 침대 없는 밤은 림월드처럼 바닥 취침 (스트릭 게이트)"
+    },
+    {
+      "sha": "bc43bd3",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix: 건축 배치 클릭 SimInput 패리티 — 휴먼라이크 QA 가 건축할 수 있게"
+    },
+    {
+      "sha": "d8d3777",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: 방치 소크 E2E 판정 — '냅두면 3일차 전멸' 성립 (운영자 1번 문제 해소)"
+    },
+    {
+      "sha": "4b0e443",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs+tool: 게임루프 TOP10 로드맵 기록 + '_' 접두 시나리오 게이트 제외 + 첫10분 플레이테스트"
+    },
+    {
+      "sha": "9b83346",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 게임루프 백로그 ⑩ — 막힌 강도의 벽 공격 ('벽 = 영구 무적' 제거)"
+    },
+    {
+      "sha": "10f991a",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix: ⑥⑨ 핫픽스 — AIDirector 'Object' 모호성 컴파일 에러 (CS0104)"
+    },
+    {
+      "sha": "3f191c7",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 게임루프 백로그 ⑥⑨ — 활 연구 실효 + 습격 상한 림 수 연동"
+    },
+    {
+      "sha": "1a2dfd8",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 게임루프 백로그 ⑤⑦⑧ — 수면 치유 + XP 체감 + 수면의 시간 비용"
+    },
+    {
+      "sha": "071df42",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 게임루프 백로그 ③④ — 영양 위계 + 정신붕괴 죽음 나선/양성 thought"
+    },
+    {
+      "sha": "39d8135",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix+feat: 게임루프 백로그 ①② — 습격 경보 사슬 복구 + 베리 희소화"
+    },
+    {
+      "sha": "3bce00e",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 🔴 생존축 부활 1탄 — 아사·전멸 (운영자 '냅둬도 게임오버가 안 됨')"
+    },
+    {
+      "sha": "5b00a98",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 아트 v2 — 건축 구조물 13종 32px (운영자 '건축메뉴 것들도 32px')"
+    },
+    {
+      "sha": "6cf8b6c",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 아트 v2 — 동물 6종 32px + 2프레임 보행 (운영자 '동물도 32px로')"
+    },
+    {
+      "sha": "ee4907c",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 아트 v2 — 드롭 아이템 32px 고유 실루엣 + 3단계 스택 스테이지"
+    },
+    {
+      "sha": "11471d1",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 아트 v2 A단계 — 지형/식생 32px 세대 교체"
+    },
+    {
+      "sha": "811345a",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 아트 v2 B단계 — 림 32px 3방향 + 프레임 애니메이션 시스템"
+    },
+    {
+      "sha": "341a476",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: TOP-6 — 선택 마커 1종 통일: 림월드식 4코너 브래킷"
+    },
+    {
+      "sha": "70e80e9",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: UI 가독성 A — 연구창 테마 크롬 + 우클릭 메뉴 content-fit 폭"
+    },
+    {
+      "sha": "9d1374b",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 카메라 림월드 파리티 + 아이템 스케일 — 운영자 2026-06-11 3건"
+    },
+    {
+      "sha": "0d197a0",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: TOP-7/9 — 튜토리얼 배너 토스트 강등 + 직업/일정 원색 톤다운"
+    },
+    {
+      "sha": "33d84d0",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: TOP-4 — 폰 스프라이트 v2: 눈동자 + 벨트 + 올리브→머스터드"
+    },
+    {
+      "sha": "1cdfa0e",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: TOP-2/3 — 네임라벨 디클러터(박스 제거+선택시만 활동+줌LOD+야간감광) + 글로우 주간 감쇠"
+    },
+    {
+      "sha": "04889b3",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix+feat: 🔴 'QR코드 지면' 근본수정 — 잔디 40% 타일맵 구멍 + TOP-1 지형 톤 정리"
+    },
+    {
+      "sha": "c858563",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: D4b 몰입 — 황혼/새벽 웜틴트 (어둠 색도 시간을 탄다) + 비주얼 백로그"
+    },
+    {
+      "sha": "ea8322d",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: 몰입 트랙 D1~D4a 진행표/로드맵 갱신 (남은 큐 D4b/D3c/D5)"
+    },
+    {
+      "sha": "55ee78f",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix: D4a — vignette 빌드 미표시(#9.0) 근본수정: 절차 폴백 활성화"
+    },
+    {
+      "sha": "9a621d7",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: D3b 몰입 — 모닥불/화덕 불티 + 발걸음 먼지"
+    },
+    {
+      "sha": "84d2bd4",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: D3a 몰입 — 벌목 나무칩/잎사귀 + 채광 돌파편 파티클"
+    },
+    {
+      "sha": "d0b9536",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: D2 몰입 — 걷기 모션 (스쿼시 바운스 + 진행방향 flip, 전 이동 엔티티)"
+    },
+    {
+      "sha": "60c883a",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: D1 몰입 — 움직이는 엔티티(림/동물/늑대/적) 발밑 blob 그림자"
+    },
+    {
+      "sha": "a35a217",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: 로드맵 Done(침대픽스+건축파리티) + 몰입 디자인 트랙 D1~D5 계획"
+    },
+    {
+      "sha": "5acb241",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "chore: 씬/프리팹 재생성 — 침대픽스 신규 필드 + 건축 UI 베이크 반영"
+    },
+    {
+      "sha": "e32ab3c",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "test: 침대 도달 재현 시나리오 + 하네스 ops 3종 (spawnBed/setHour/pawnOnBed)"
+    },
+    {
+      "sha": "36d5928",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "feat: 건축 UI 림월드 파리티 재구축 — 좌하단 카테고리 패널 + 아이콘 셸프"
+    },
+    {
+      "sha": "5c27e6e",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "fix: 🔴 자율취침 침대 도달 불가 — 진범 3개 동시 해체"
+    },
+    {
+      "sha": "e981bf2",
+      "date": "2026-06-11",
+      "class": "agent",
+      "subject": "docs: 야간 종료 — 20분 밸런스 소크(4.5일 생존·위반0·습격1처치) + 다음 큐 제안"
+    },
+    {
+      "sha": "9e5b159",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "test: repro_all --fresh-build 에 씬 재생성 선행 — 스테일 씬 클래스 차단"
+    },
+    {
+      "sha": "6452976",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "chore: 씬 재생성 — 야간 베이크 변경 일괄 반영 (노브/줌/지형변형/모닥불/TopBar/튜토리얼)"
+    },
+    {
+      "sha": "72f4f27",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "docs: 야간 소크 2종 — 스테일 씬 증거(soak-day3 습격 0회) + 수정 후 검증(soak2 RAID day2 처치·생존)"
+    },
+    {
+      "sha": "4104daa",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "docs: ui-backlog 배치 6·7 ✅ (UI 누적 40/82)"
+    },
+    {
+      "sha": "a1b69f9",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "ui: 배치7 — P2 폴리시 5건 (백로그 #7.5 #7.7잔여 #6.9 #3.10 #5.9)"
+    },
+    {
+      "sha": "7184a6f",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "docs: check-round-2 배치6 반영 (UI 누적 35/82)"
+    },
+    {
+      "sha": "9fdd462",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "test: 클릭 전 UI 차단 레이캐스트 검사 — 동적 UI 뒤 타깃 무음 미스 해소"
+    },
+    {
+      "sha": "3fe78b6",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "ui: 배치6 — P2 빠른 승리 6건 (백로그 #4.4 #4.5(1단계) #2.7 #1.4 #2.6 #5.12)"
+    },
+    {
+      "sha": "0371f35",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "docs: 야간 세션 종합 — roadmap Done + check-round-2 + 백로그 배치4·5 + 결정기록"
+    },
+    {
+      "sha": "a58c83a",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "feel: 배치5 — 루프 베드 3종 무음 절벽 제거 (꼬리→머리 크로스페이드, 자율)"
+    },
+    {
+      "sha": "fea3cce",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "test: ESC 입력 5곳 raw Input → SimInput (WORKFLOW-V2 규칙 2)"
+    },
+    {
+      "sha": "552e1cb",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "ui: 배치5 — 자원표시/시스템메뉴 6건 + 식량 ≈N일치 (백로그 #1.0 #1.1 #6.1 #6.2 #6.4 #6.6)"
+    },
+    {
+      "sha": "f2813d3",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "ui: 배치4 — inspect/tabs 6건 (백로그 #3.1 #3.6 #5.2 #5.3 #2.2 #3.5)"
+    },
+    {
+      "sha": "1f96478",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "feel: 배치4(부분) — 위험음악 실위협 연동 + 연구 정지 원인 표시 (자율)"
+    },
+    {
+      "sha": "1a4c5a5",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "feel: 배치3 — 첫 화면 인상: 조건부 머리위 바 + 줌 5.5 + 잔디 변형 + 모닥불 (자율)"
+    },
+    {
+      "sha": "2811dd1",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "feel: 배치2 — 행동→보상 피드백: 보상 SFX 4종 + 플로팅 텍스트 + 타격음 (자율)"
+    },
+    {
+      "sha": "2625e6a",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "feel: 배치1 — 이벤트 신뢰 회복 (자율, 격차 분석 4갈래 중 2갈래 1순위)"
+    },
+    {
+      "sha": "4829fd6",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "test: SimInput overUI 차단자 식별 로그 + 클릭 전 카메라 settle/FocusOn"
+    },
+    {
+      "sha": "ecc3c18",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "ui: 배치3 — 명령 피드백/하단바 5건 (백로그 #0.0 #0.1 #4.2 #4.6 #4.7)"
+    },
+    {
+      "sha": "809edaf",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "ui: 배치2 — 알림/피드백 5건 (백로그 #7.1 #7.3 #7.4 #7.6/#1.3 #4.1 +#7.7 일부)"
+    },
+    {
+      "sha": "37bf170",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "fix: 🔴 튜토리얼 배너가 첫 18초 상단 클릭을 투명 차단 — raycast 비차단화"
+    },
+    {
+      "sha": "5ad1093",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "docs: roadmap Done + #38 추적기록 갱신 + 게임성 검증 롱플레이 (4f6b1d3)"
+    },
+    {
+      "sha": "4a53c99",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "chore: 씬 재생성 churn (UI 배치1 SceneSetup 재생성 — 빌드 산출 동기화)"
+    },
+    {
+      "sha": "9495a53",
+      "date": "2026-06-10",
+      "class": "user",
+      "subject": "test: #38 결정적 재현 3종 + 하네스 가짜PASS/가짜FAIL 원천 차단 4건"
+    },
+    {
+      "sha": "4f6b1d3",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "fix: 🔴 #38 우클릭 벌목 — 선택 림 직접 배정 복원 (지정-only 회귀 + 마키 가로채기)"
+    },
+    {
+      "sha": "5b16b35",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "docs: roadmap Done + autonomous-decisions — UI 배치 1 (a685582)"
+    },
+    {
+      "sha": "a685582",
+      "date": "2026-06-10",
+      "class": "user",
+      "subject": "ui: 배치1 — P0 5건(가림/겹침/죽은UI/클리핑) + 빠른 정리 5건 (백로그 82건 중)"
+    },
+    {
+      "sha": "30d25dc",
+      "date": "2026-06-10",
+      "class": "user",
+      "subject": "test: #38 선택림만 + 메뉴 진행후 변형 재현 — 둘 다 미재현, 회귀가드化"
+    },
+    {
+      "sha": "6ce3f3e",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "docs: roadmap Done + autonomous-decisions — 재현 사이클 3 (d29e49b)"
+    },
+    {
+      "sha": "d29e49b",
+      "date": "2026-06-10",
+      "class": "user",
+      "subject": "fix: 🔴 폭풍 전원 정신붕괴 + stand-cell 모서리 동결 (longplay 발굴)"
+    },
+    {
+      "sha": "cc23a2c",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "docs: roadmap Done + autonomous-decisions — 재현 사이클 2 (081c850)"
+    },
+    {
+      "sha": "081c850",
+      "date": "2026-06-10",
+      "class": "user",
+      "subject": "test: P1 재현 3건 + repro_all 커밋게이트 — mood/decay/내구도 미재현"
+    },
+    {
+      "sha": "bb588fa",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "fix: 🔴 림 작업마비/벌목-떠도는중 번갈이 근본원인 — 수면게이트 thrash (P0)"
+    },
+    {
+      "sha": "2a0ddb8",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "feat: WORKFLOW-V2 재현 harness — SimInput + ReproHarness + repro_run.py"
+    },
+    {
+      "sha": "4d313ff",
+      "date": "2026-06-10",
+      "class": "agent",
+      "subject": "docs: 작업방식 v2 — 재현-우선 6규칙 (운영자 승인 2026-06-10)"
+    },
+    {
+      "sha": "df2f844",
+      "date": "2026-06-05",
+      "class": "user",
+      "subject": "docs: planner/resourcer model 드리프트 정정 (감사 [high] 5사이클 finding)"
+    },
+    {
+      "sha": "a0a1004",
+      "date": "2026-06-05",
+      "class": "agent",
+      "subject": "테스트 러너 runInBackground 방화벽 추가 (CLI 행 방지)"
+    },
+    {
+      "sha": "8632ff6",
+      "date": "2026-06-05",
+      "class": "agent",
+      "subject": "#61 자원 더미 양→크기 시각 스케일 (1/5/25/50 구분)"
+    },
+    {
+      "sha": "4136c49",
+      "date": "2026-06-05",
+      "class": "agent",
+      "subject": "fix: #44 인게임 save/load 접근 복구 — GameSaveButtons 씬 생성"
+    },
+    {
+      "sha": "b7fa42d",
+      "date": "2026-06-05",
+      "class": "agent",
+      "subject": "test: #37 통나무 내구도 decay 확인 회귀가드 V85"
+    },
+    {
+      "sha": "5718f1c",
+      "date": "2026-06-05",
+      "class": "agent",
+      "subject": "test: end-to-end 자율 작업 루프 회귀가드 I50 (Hunt-fix 검증)"
+    },
+    {
+      "sha": "25672d0",
+      "date": "2026-06-05",
+      "class": "agent",
+      "subject": "docs(roadmap): CRITICAL Hunt-선점 작업마비 fix 기록 (운영자 떠돔 재현)"
+    },
+    {
+      "sha": "7ef6f52",
+      "date": "2026-06-05",
+      "class": "user",
+      "subject": "fix: 🔴 CRITICAL 림 전체 작업마비 — Hunt이 모든 작업 선점(운영자 '떠돈다' 진짜 원인)"
+    },
+    {
+      "sha": "d89de4e",
+      "date": "2026-06-05",
+      "class": "agent",
+      "subject": "docs(roadmap): 버그헌트 4사이클 완료 기록 (확정12 전부수정 + 자가회귀 I2/I4 교정)"
+    },
+    {
+      "sha": "54dadba",
+      "date": "2026-06-05",
+      "class": "agent",
+      "subject": "fix: 버그헌트4 trait/장비/건설/조리/UI 9건 (#3~#10,#12)"
+    },
+    {
+      "sha": "330a1ec",
+      "date": "2026-06-05",
+      "class": "agent",
+      "subject": "fix: 버그헌트4 mood 델타 회귀 3건 (#1/#2/#11)"
+    },
+    {
+      "sha": "7e127e1",
+      "date": "2026-06-05",
+      "class": "agent",
+      "subject": "feat: mood 모델 decay+thought 합산 전환 (#10/#11/#12, 운영자 결정)"
+    },
+    {
+      "sha": "8fee94c",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "fix: 버그헌트3 오디오/건축/사회 4건 (#7/#8/#9/#13)"
+    },
+    {
+      "sha": "a21f1e2",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "fix: 버그헌트3 입력/카메라 3건 (#4/#5/#6)"
+    },
+    {
+      "sha": "5c7513b",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "fix: 버그헌트3 자원회귀2 + 레이드 save/load (#1/#2/#3)"
+    },
+    {
+      "sha": "d86e579",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "feat: 🔴 CRITICAL 구조물 재시작 persist+reconstruct (#2, 운영자 지시)"
+    },
+    {
+      "sha": "2df31ab",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "chore: 구조물 재시작 소실(#2) 진단 경고 + 버그헌트2 보류항목 문서화"
+    },
+    {
+      "sha": "3c0b938",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "feat: 연구 진행도 save/load — 재시작 시 unlock 소실 fix (버그헌트2)"
+    },
+    {
+      "sha": "51ec643",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "fix: 버그헌트2 batch1 — 전투/수면/렌더/사냥/연구/save 7건"
+    },
+    {
+      "sha": "170b0b2",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "feat: 자원모델 단일화 Stage2c(완료) — trader 물리화"
+    },
+    {
+      "sha": "348083c",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "feat: 자원모델 단일화 Stage2b — 환불·소비 물리화 (#2/#5)"
+    },
+    {
+      "sha": "1d376b3",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "feat: 자원모델 단일화 Stage2a — build haul-required (순수 RimWorld)"
+    },
+    {
+      "sha": "4062a0a",
+      "date": "2026-06-04",
+      "class": "user",
+      "subject": "fix: 자원모델 단일화 Stage1 — InStockpile 더미 pickup 시 카운터 대칭 차감"
+    },
+    {
+      "sha": "cf975fe",
+      "date": "2026-06-04",
+      "class": "user",
+      "subject": "fix: 멀티에이전트 버그헌트 확정 7건 — 폭풍/해체/전투/운반 correctness"
+    },
+    {
+      "sha": "7c50575",
+      "date": "2026-06-04",
+      "class": "user",
+      "subject": "feat: save/load 벌목·채광 지정 복원 — 로드 시 지정 소실 fix (save-load 완성 #3)"
+    },
+    {
+      "sha": "7bf3399",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "feat: save/load 작물 성장도 복원 — 로드 시 0 리셋 fix (save-load 완성 #2)"
+    },
+    {
+      "sha": "0696824",
+      "date": "2026-06-04",
+      "class": "agent",
+      "subject": "feat: save/load 부위별 HP/출혈/붕대 복원 — 부상 상태 로드 시 소실 fix (save-load 완성 #1)"
+    },
+    {
+      "sha": "82fced7",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(autonomous): 트레잇 결정성 보류→완료 기록 (d47b688, 검증 완료)"
+    },
+    {
+      "sha": "d47b688",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: 콜로니스트 트레잇 결정성 — 전원 동일 트레잇 버그 (다 림월드식, 변종성 복원)"
+    },
+    {
+      "sha": "c4c72c7",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(roadmap): 자율 버그 스윕 세션 종합 기록 (11회 감사, 코드베이스 정리 수렴)"
+    },
+    {
+      "sha": "5cfd868",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: 마퀴 드래그 시작 시 비-pawn inspect 패널 잔존 해소 (최종스윕 헌트)"
+    },
+    {
+      "sha": "ae78eaf",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: PawnHauler stand-cell 예약 leak — phase 전환/타겟 파괴 시 미해제 (버그헌트)"
+    },
+    {
+      "sha": "00843b4",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(autonomous): 신선-시스템 헌트 결과 + I16 flake 노트"
+    },
+    {
+      "sha": "c63de9c",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: 신선시스템 버그헌트 — 레이드 이벤트 중복·카메라 줌경계·날씨 시계·연구UI null"
+    },
+    {
+      "sha": "764b6da",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(autonomous): 4h 세션 누적 결과 + 보류 항목(트레잇 결정성 등) 기록"
+    },
+    {
+      "sha": "98cfa43",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: save/load 서브상태 1:1 매칭 — dense 그리드 중복 적용 데이터손상 (버그헌트)"
+    },
+    {
+      "sha": "2aa378a",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(roadmap): 4h+ 자율 세션 Done 기록 (RimWorld 정합 + CRITICAL 회귀 자가수정 + LongPlay 검증)"
+    },
+    {
+      "sha": "15daa1c",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: cook task 수면/정신붕괴 중 미정리 + AttackDamage fallback 5 동기화 (회귀헌트)"
+    },
+    {
+      "sha": "d2cebf6",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "test: I43 에 ChopTree/MineStone Decide 리스트 등록 회귀 가드 추가"
+    },
+    {
+      "sha": "f5969ff",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix(CRITICAL): 지정 나무/광맥 자율 벌목·채광 복구 (오늘 단일화 회귀)"
+    },
+    {
+      "sha": "547f46a",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "test+fix: #34 나무 좌클릭 벌목 메뉴 회귀 가드 (I44) — 무테스트가 반복 회귀 근본"
+    },
+    {
+      "sha": "e8657b2",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "feat: 작업 종류 RimWorld식 분리 — 건축/채광/운반/의료 별도 work type (#1, 다 림월드식)"
+    },
+    {
+      "sha": "e5d8435",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "feat: 콜로니스트 hover 시 현재 작업 표시 (RimWorld 정합, #15 audit)"
+    },
+    {
+      "sha": "e7b86d9",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "balance: 기본 근접 데미지 1→5 — 전투 지루함 해소 (#8, 다 림월드식)"
+    },
+    {
+      "sha": "0a3dbed",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(autonomous): 2026-06-03 4h+ 자율 세션 기록 (운영자 '묻지말고 일해', RimWorld 정합)"
+    },
+    {
+      "sha": "d351614",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "balance: 팔=다리 HP 통일 (18→20) — RimWorld 팔=다리 동일 비율 정합 (#7 audit)"
+    },
+    {
+      "sha": "873a0a7",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs: 식사50→물리 식량 fix 기록 + roadmap Done (림 RimWorld 정합 대개편)"
+    },
+    {
+      "sha": "fee2325",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "feat: 시작 식량 RimWorld식 물리 드롭 (추상 식사50 카운터 폐기) — 운영자 '다 림월드식으로'"
+    },
+    {
+      "sha": "38a51a9",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(playtest): 통나무 sprite·info탭 fix 기록 + 식사50 결정요청 (e7d229f)"
+    },
+    {
+      "sha": "e7d229f",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: 통나무더미 sprite 일관화 + 림 info 탭 본문 정렬 (운영자 플레이테스트 2건)"
+    },
+    {
+      "sha": "c388572",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(playtest): 림 작업배정 단일화 기록 (chop-subsystem 버그 공통 해소, dc030f5 확인 대기)"
+    },
+    {
+      "sha": "dc030f5",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "refactor: 림 작업배정 지정-구동 단일화 (운영자 설계 재검토 승인)"
+    },
+    {
+      "sha": "6d2c7c7",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(playtest): 2026-06-03 운영자 플레이테스트 5건 기록 (확인 전 삭제 금지)"
+    },
+    {
+      "sha": "0ecc0cc",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "perf: 4차 감사 per-frame GetComponent/Find 캐싱 3건 (#audit4)"
+    },
+    {
+      "sha": "3437865",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "polish: 단축키 시트 지정 모드에 '우클릭·ESC 취소' 힌트 (#audit3 #22)"
+    },
+    {
+      "sha": "3e25dcf",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: 세이브/로드에 스킬 진행도 + 징집 상태 직렬화 (#audit2 #15/#17)"
+    },
+    {
+      "sha": "61e2308",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(roadmap): Done 기록 — 3차 감사 (6ca5b45, fc6de4f)"
+    },
+    {
+      "sha": "fc6de4f",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "feat: 마퀴 다중선택 pawn 발밑 펄스 링 (#audit3 #0/#1, 선택 피드백 일관성)"
+    },
+    {
+      "sha": "6ca5b45",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "polish: 3차 감사 가독성+월드아트 4건 (false-fix 2건 거름)"
+    },
+    {
+      "sha": "55c0cc1",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: 로드 시 ReservationManager.Clear() — orphaned 예약 reset (#audit2 #13)"
+    },
+    {
+      "sha": "8d8561e",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: 2차 감사 안전항목 — 예약 desync + 수면 무한무허기 + alert 클램프"
+    },
+    {
+      "sha": "aba8326",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(roadmap): Done 기록 — 멀티에이전트 폴리싱 감사 15건 (aeb9c2e)"
+    },
+    {
+      "sha": "aeb9c2e",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "polish: 멀티에이전트 감사 15건 일괄 적용 (상호작용/정렬/레이아웃/dead-feature)"
+    },
+    {
+      "sha": "70196aa",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(roadmap): Done 기록 — 연구 트리 정직화 (9d02e19, def151a)"
+    },
+    {
+      "sha": "def151a",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: 연구 트리 정직화 — dead/비바닐라 stone_walls 제거 + better_stove 설명 정정"
+    },
+    {
+      "sha": "9d02e19",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "feat: 연구 better_stove 배선 — 해금 시 조리 2배 (그동안 미배선 dead tech 실효화)"
+    },
+    {
+      "sha": "7eed013",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix(범위정합): dead tech 제거 — 전기/태양광 (Power=Out-of-scope, 해금 대상 없음)"
+    },
+    {
+      "sha": "8a83e14",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "fix(루프): 연구 완료 후 다음 tech 자동선택 — 진행 루프 stall 제거"
+    },
+    {
+      "sha": "85d503a",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix(p2_2): 호버 툴팁 화면 가장자리 clamp — 우/상단서 화면밖 잘림 방지"
+    },
+    {
+      "sha": "9daecb1",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix: 멀티에이전트 감사 확정 4건 — 렌더순서/예약누수 (검증 후 적용)"
+    },
+    {
+      "sha": "f16197b",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix(#65): 설정 버튼 라벨/아이콘 잘림 — 하단바 라벨 best-fit 자동축소"
+    },
+    {
+      "sha": "30c92af",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix(#64): 12시 UI 겹침 — 튜토리얼 힌트를 콜로니스트 바 아래로 이동"
+    },
+    {
+      "sha": "3808e2a",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "chore: pawn 기본 스프라이트 재생성 반영 (#54 hair_lt 1.55→1.45 조정 결과)"
+    },
+    {
+      "sha": "dc6cae0",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "test(#60): -pawndiag Phase G — 바닥 자원 직접 건축 end-to-end 검증"
+    },
+    {
+      "sha": "44048fe",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "fix(#60 RimWorld식): 건축 고스트 affordability 에 바닥 자재 합산 — 시작부터 건축 가능 신호"
+    },
+    {
+      "sha": "c1e0b53",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "test(#60): -pawndiag 선택-림 4시나리오 계측 완비 (작업중-override/선택지속/원거리경로)"
+    },
+    {
+      "sha": "e123751",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "fix(#60): 다중선택 우클릭 명령 충돌 — ClickSelector 단일경로가 Marquee 그룹명령과 이중발화"
+    },
+    {
+      "sha": "0810282",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "test(#60/#55): 림 행동 계측 진단(-pawndiag) — 선택-림 이동/벌목 확실히 검증"
+    },
+    {
+      "sha": "7bcc159",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "test(#55): V55-multi-trader flaky 강건화 — 종점 스냅샷→윈도우 최대변위 폴링"
+    },
+    {
+      "sha": "8565dcf",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(#59): genre-comparison v2.1 — 06-03 배치 반영 + stale 정정 + 갭 현행화"
+    },
+    {
+      "sha": "ea9914b",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "ui(#63): 건축 메뉴 카테고리 정렬 — 방어(Security)를 건축류 뒤로"
+    },
+    {
+      "sha": "e7f96f7",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "#54 콜로니스트 외형 다양화 — 머리색/피부톤/옷색 per-pawn + 변형 sprite mirror 버그 수정"
+    },
+    {
+      "sha": "a5379c3",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "ui(B): 인스펙트 패널 제목에 현재 행동 표시 (머리위 라벨과 동일 정보)"
+    },
+    {
+      "sha": "e500ef9",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "ui(D): 늑대 등 top-light 하이라이트 (deer/boar 와 일관)"
+    },
+    {
+      "sha": "1e2fc16",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "ui(D): 사슴/멧돼지 등 top-light 하이라이트 — 납작한 몸통 입체화"
+    },
+    {
+      "sha": "109f7ae",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "test: -openarchitect 진단 플래그 (Architect 건축 메뉴 스크린샷 검증)"
+    },
+    {
+      "sha": "e9cf50d",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "ui(B): 인스펙트 패널 탭 라벨 가독성 (13→15 bold)"
+    },
+    {
+      "sha": "ce42531",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "ui(D): 소나무 수관을 잔디와 구분되는 foliage 톤으로 — 나무가 묻히지 않게"
+    },
+    {
+      "sha": "59c3aea",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "ui(A): 림 스프라이트 top-down 음영 추가 — 입체감 (flat-outline 유지)"
+    },
+    {
+      "sha": "a8553b8",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "test: -inspectpawn 진단 플래그 (첫 림 선택→인스펙트 패널 스크린샷 검증)"
+    },
+    {
+      "sha": "e552c0c",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "ui: 상단바 속도표시기 우측 이동 — #41 자원 좌상단 이전 후 빈 우측 채움 (운영자 \"기존 UI 개선\")"
+    },
+    {
+      "sha": "258a1a0",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "docs(readme): 검증 수치 실측 교정 76/76·43/43·9/9 + 2026-06-03 full-suite green (회귀 0)"
+    },
+    {
+      "sha": "3321093",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs: #44 저장/불러오기 복구 반영 — README known-gap 제거 + PLAYTEST-TODO 갱신"
+    },
+    {
+      "sha": "6b76aa3",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "fix(#44): 저장/불러오기 회귀 복구 — GameSaveButtons 호스트 부활 + end-to-end 검증"
+    },
+    {
+      "sha": "8d2ceb2",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "docs(readme): 루트 Architecture 에 게임 프로토타입(PawnSim) 아키텍처 추가 — EN+KO (운영자 fb)"
+    },
+    {
+      "sha": "cfb4a81",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "fix(prefab): Pawn.prefab 직렬화 값 동기화 — #35 decay 픽스 실효화 (serialization 트랩)"
+    },
+    {
+      "sha": "f01325f",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs(readme): 게임 프로토타입(PawnSim)을 루트 README 전면에 — EN+KO 동시 (운영자 fb)"
+    },
+    {
+      "sha": "722357f",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "docs(readme): 게임프로토 README 전체 통독 현행화 + 루트 검증수치 정합 (운영자 fb)"
+    },
+    {
+      "sha": "c9e5f4a",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs: PLAYTEST-TODO #37/#41/#42/#43 fix 적용 상태 갱신 (확인 대기)"
+    },
+    {
+      "sha": "771a5c6",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "P2 #43 — 흙바닥/돌바닥 terrain 다양성 확대 (운영자 \"흙/돌 바닥은?\"), 실측 검증"
+    },
+    {
+      "sha": "4af6ae4",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "P2 #41 — 자원 표시 좌상단 세로 목록 (RimWorld ResourceReadout 정합), 실측 검증"
+    },
+    {
+      "sha": "48dd6a7",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "P2 #42 — 광맥 군집 조밀화 (운영자 \"여전히 너무 띄엄띄엄\"), 정량 검증"
+    },
+    {
+      "sha": "76b7e3b",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "P1 #37 — 통나무 더미 내구도 페이드 정직화 (닳는 과정 가시화)"
+    },
+    {
+      "sha": "eb92e70",
+      "date": "2026-06-03",
+      "class": "agent",
+      "subject": "docs: PLAYTEST-TODO 진행상태 갱신 (#32~40 fix 적용·확인대기) + 저장행 미표시 신규기록"
+    },
+    {
+      "sha": "57a508c",
+      "date": "2026-06-03",
+      "class": "user",
+      "subject": "P1 #39 fix — 설정 메뉴 레이아웃 깨짐 (죽은 공백 + 저대비 슬라이더), 실측 검증"
+    },
+    {
+      "sha": "dea0875",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "P0 #34 fix — 나무 벌목 서브메뉴 안 뜸 (z-order occlusion + pick miss 보강)"
+    },
+    {
+      "sha": "f29b10f",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "P1 #38 fix — \"왜 다같이 가는거야?\" dispatch 예약 키 불일치 (벌목/채광)"
+    },
+    {
+      "sha": "99a286a",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "P1 sim fix — 기분 나빠짐(부정 thought) + needs decay 체감↑ + 건강탭 분리 (멀티에이전트 근본원인)"
+    },
+    {
+      "sha": "4791cf9",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "P0 이동 회귀 fix — MoveSpeedScale 끼임(절반속도) + 벌목 접근 지터 (멀티에이전트 근본원인)"
+    },
+    {
+      "sha": "e1ddf6c",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "운영자 피드백 영구 TODO 기록 (PLAYTEST-TODO.md)"
+    },
+    {
+      "sha": "b536f0c",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "떠도는중 절반 속도 + 토끼 스프라이트 개선 (운영자 fb)"
+    },
+    {
+      "sha": "c85f72a",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "UI 폴리싱 — 탑바 좌측 빈 슬롯 fix: 날짜 readout 으로 채움 (시각감사 rank21)"
+    },
+    {
+      "sha": "0db7e02",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "UI 폴리싱 — 위협알림 외곽선(가독성) + 자원경고 펄스 강화 (시각감사 rank17·7)"
+    },
+    {
+      "sha": "1240d43",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "UI V2 — 직업/일정 패널 차가운 톤 → warm 디자인토큰 (시각감사 rank5)"
+    },
+    {
+      "sha": "9f67260",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "나무 다양성 — 소나무만 → 자작나무·참나무 추가 (멀티에이전트 조사 #7)"
+    },
+    {
+      "sha": "995ebff",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "동물 종별 스프라이트 — 멧돼지·닭·토끼가 사슴 모양이던 것 fix (멀티에이전트 조사 #5/6)"
+    },
+    {
+      "sha": "7ecf8bc",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "플레이테스트 fix Batch A — 컨텍스트메뉴 깜빡/채집버튼 + 아이템 내구도 (멀티에이전트 조사)"
+    },
+    {
+      "sha": "7998e64",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "운반 무한루프 fix — 저장처/청사진 없으면 운반 시작 안 함 (운영자 관찰)"
+    },
+    {
+      "sha": "90d4f44",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "UI 개선 V1 — 컨텍스트메뉴 hover·탑바 색토큰·마퀴 gold·시계 계절중복 (시각감사 rank1·2·4·8)"
+    },
+    {
+      "sha": "901cc7d",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "BGM 멜로디 추가 — 드론 앰비언트 → 음악적 프런티어 테마 (운영자 \"BGM 슬슬 넣어보자\")"
+    },
+    {
+      "sha": "8f0e830",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "림 전투/체력 피드백 + 콜로니바 선택표시 (파이프라인 감사 rank4·5·7·8)"
+    },
+    {
+      "sha": "bb428ab",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "림 AI 버그 fix — harvester task 정리·busy-gate 누락 (파이프라인 감사 rank1·2)"
+    },
+    {
+      "sha": "110d04c",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "림 애니메이션 — 걷기 스쿼시·스트레치 + 방향전환 팝 + 작업스윙 효과적 위치로 이동"
+    },
+    {
+      "sha": "af2c600",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "림 작업 연출 — 작업 대상 바라보기 + 작업 스윙(망치질 모션) (림 폴리시)"
+    },
+    {
+      "sha": "a1eb1aa",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "림 머리위 행동 라벨 항상 표시 + 떠도는중 근처타일 왕복 (운영자 fb 4건)"
+    },
+    {
+      "sha": "27e12d2",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "저작권 2차 스크럽 — RimWorld 고유명사/전문용어 제거 (운영자 '더할건 없어?')"
+    },
+    {
+      "sha": "2cfee41",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "가구 접지 그림자 — 스토브/연구대/침대 grounding shadow (시각 폴리시 rank7)"
+    },
+    {
+      "sha": "4a5ec2f",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "저작권 민감 단어 제거 — 트레이드마크/캐릭터명/제작자명 스크럽 (운영자 요청)"
+    },
+    {
+      "sha": "eb0cafc",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "#277 전투 기능 수정 5건 (2차 감사 rank3/8/10/11/12, 운영자 승인)"
+    },
+    {
+      "sha": "ff49405",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "#276 폴리싱 2차-B — 세이브 게임시계 저장/복원 (2차 감사 rank2a)"
+    },
+    {
+      "sha": "c7f21d5",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "#276 폴리싱 2차-A — 세이브 서브상태 복원 + 견고성 + melee 시각 (2차 감사 rank1/5/6)"
+    },
+    {
+      "sha": "46bf106",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "docs(readme): 루트 README 검증 수치 현행화 (integration 43, BuildClickQA 8/8, +pawn-action/feature-audit)"
+    },
+    {
+      "sha": "8315c68",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "docs(readme): game-prototype README 현행화 (조명/빌드/검증/맵/수면)"
+    },
+    {
+      "sha": "26e7323",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "docs(game-prototype): SNS 포스팅용 히스토리 요약본 추가 (HISTORY_SNS.md, ~30줄)"
+    },
+    {
+      "sha": "85754a3",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "docs(game-prototype): 전체 개발 히스토리 문서 추가 (HISTORY.md)"
+    },
+    {
+      "sha": "e0332bb",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "#275 폴리싱 1차 — UI 겹침/UX/AI 7건 수정 (파이프라인 감사 rank1~7)"
+    },
+    {
+      "sha": "341ba53",
+      "date": "2026-06-02",
+      "class": "user",
+      "subject": "#274 영상 최종 — 전원 농사(3명) + 피날레 사냥 전환 (운영자 확정)"
+    },
+    {
+      "sha": "ab2da4b",
+      "date": "2026-06-02",
+      "class": "agent",
+      "subject": "#273 농사: 유저처럼 영역 생성 + 림이 직접 파종 + 작물 가시화 (운영자 fb)"
+    },
+    {
+      "sha": "9c0f377",
+      "date": "2026-06-01",
+      "class": "user",
+      "subject": "#271 아침 활동 강화 — 큰 농사 + 벌목 + 사슴 사냥으로 마무리 (운영자 fb)"
+    },
+    {
+      "sha": "2a5f327",
+      "date": "2026-06-01",
+      "class": "user",
+      "subject": "#270 영상 밤→아침 사이클 + 자연 취침 (운영자 fb 4건)"
+    },
+    {
+      "sha": "51ee943",
+      "date": "2026-06-01",
+      "class": "user",
+      "subject": "#267~269 영상 조명/건축UI/수면 대수정 (운영자 fb 다수)"
+    },
+    {
+      "sha": "d89ccd6",
+      "date": "2026-06-01",
+      "class": "user",
+      "subject": "#266 영상: 청사진→림이 직접 건축 + 원거리벌목 제거 (운영자 fb 2건)"
+    },
+    {
+      "sha": "f1f257d",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#265 ShowcaseDirector — 사람이 플레이하는 듯한 녹화 연출"
+    },
+    {
+      "sha": "c979a11",
+      "date": "2026-06-01",
+      "class": "user",
+      "subject": "#264 분대 이동 시 림 겹침 수정 — formation fan-out"
+    },
+    {
+      "sha": "7cbfbaf",
+      "date": "2026-06-01",
+      "class": "user",
+      "subject": "#198 build-click-qa 자가발견 harness false-fail 2건 수정"
+    },
+    {
+      "sha": "617be8c",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#262 징집 다중선택 그룹 공격 (운영자 fb '여러 마리 선택하면 제대로 안 됨')"
+    },
+    {
+      "sha": "b2d6309",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#261 build-click-qa 한글메뉴(#260) 대응 — 실클릭 QA 복원"
+    },
+    {
+      "sha": "1da34c1",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#260 건축 메뉴 카테고리 한글 전용 표시 (현지화 일관성)"
+    },
+    {
+      "sha": "27f11df",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#259 폴리싱 웨이브6 — 지형 다양성/나무 디테일/벽 연결감 (멀티 에이전트)"
+    },
+    {
+      "sha": "2256be1",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#polish tree sprite: blob -> 3-tone leaf-cluster canopy (V6)"
+    },
+    {
+      "sha": "9e89c33",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#198 잔디 타일 variant 3종 — 반복 벽지 느낌 개선"
+    },
+    {
+      "sha": "4f03c60",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#258 폴리싱 웨이브5 — pawn sprite 사람답게/밤조명+램프주야/메뉴클립/날짜계절 (멀티 에이전트)"
+    },
+    {
+      "sha": "599ec37",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#257 feature-audit 타이밍 — ClickEffect 사라진 뒤 캡처 (파란 십자 가짜양성 제거)"
+    },
+    {
+      "sha": "b69f3bf",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#256 시각 폴리싱 웨이브4 — 절차 sprite 구분/HUD 가독성/콜로니스트바 겹침#21 (멀티 에이전트)"
+    },
+    {
+      "sha": "98c1ee1",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#255 건축 메뉴 아이콘 플레이어 빌드에서 표시 (시각 verify FAIL 후속)"
+    },
+    {
+      "sha": "84fad16",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#254 속도/멈춤 버튼 우하단 실제 적용 (시각 verify PASS)"
+    },
+    {
+      "sha": "566c552",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#253 feature-audit 건물별 카메라 클로즈업 (sprite 품질 검사 가능하게)"
+    },
+    {
+      "sha": "236401c",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#252 폴리싱 웨이브2 — 저장존 3버튼 제거/지붕 시각건설/문 디자인/영역제거 UI (멀티 에이전트)"
+    },
+    {
+      "sha": "7b081d8",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#251 폴리싱 웨이브 — 멀티 에이전트 병렬 (운영자 fb 다수, '멀티 에이전트로')"
+    },
+    {
+      "sha": "841bdf6",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#250 광맥 그룹 클러스터 배치 (운영자 fb '광맥은 그룹을 이루며 모여있어야')"
+    },
+    {
+      "sha": "6ef9e85",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#249 나무 위 건축 허용 (운영자 fb '나무 위에 건축 안됨')"
+    },
+    {
+      "sha": "51d74ec",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#248 자가-발견 feature-audit 하네스 + 건축 완성 ROOT FIX (운영자 '스스로 찾는 방법 마련')"
+    },
+    {
+      "sha": "02834c6",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#243-247 셋업 배치 — 목재 물리드롭/멈춤사운드/S·L제거/창고미세팅/needs상향 (운영자 fb 6건)"
+    },
+    {
+      "sha": "9770ba9",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#242 건설 루프 ROOT FIX — '건설 안됨' 핵심 2원인 해결 (운영자 '건설 위주' 코어)"
+    },
+    {
+      "sha": "0fbb1cf",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#241b 건축 메뉴 자재부족 dim 을 live 갱신 (자원 변화 시 RefreshContent)"
+    },
+    {
+      "sha": "061af94",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#241 건축 메뉴 완성도 — 자재 부족 항목 dim 표시 (RimWorld식) + QA용 -open-architect 플래그"
+    },
+    {
+      "sha": "b7a296b",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#240 콜로니스트 바 초상화 추가 — pawn body sprite (RimWorld 시그니처)"
+    },
+    {
+      "sha": "c1e4317",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#239b 씬 regen 반영 (Game/MainMenu.unity) — #235~239 SceneSetup 출력 동기화"
+    },
+    {
+      "sha": "0bd8d22",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#239 RimWorld식 우하단 날짜/계절/시간 클러스터 (ClockUI 재배치)"
+    },
+    {
+      "sha": "e77e94f",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#238b 콜로니스트 바 가독성 ↑ — entry 76x44→104x54, 이름 폰트 13→15"
+    },
+    {
+      "sha": "e188ea9",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#238 RimWorld 콜로니스트 바(상단 HUD) + #235 경계 테스트 ±44 수정"
+    },
+    {
+      "sha": "f80d3ff",
+      "date": "2026-06-01",
+      "class": "agent",
+      "subject": "#235 맵 60x60→90x90 (운영자 '기본맵부터 상당히 큼') + #236/#237 work-dispatch 강건화"
+    },
+    {
+      "sha": "ca10da0",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#234 시간 RimWorld 정합 — 1x = 하루 16.7분(위키) + 니즈 비례 (운영자 '위키 찾아봐')"
+    },
+    {
+      "sha": "c2df41e",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#233 우클릭 벌목/채광 지정을 선택-게이트 밖으로 (RimWorld: 지정은 림 선택 불요)"
+    },
+    {
+      "sha": "03f8956",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#232 우클릭 벌목 직접 지정(마커+dispatch) + 중앙 징집UI 제거 (운영자 fb)"
+    },
+    {
+      "sha": "891c51e",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#231 STEP2b: RimWorld 벌목 drag 지정 도구 (운영자 '우클릭 벌목 안됨')"
+    },
+    {
+      "sha": "09ee537",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#230 STEP2: 벌목/채광 지정제 — 자동 채집 제거 (RimWorld 경제)"
+    },
+    {
+      "sha": "323f5aa",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#229 STEP1: RimWorld Crashlanded 맨땅 시작 (운영자 '림월드처럼')"
+    },
+    {
+      "sha": "d454c6c",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#228 배고픔/수면 게이지 일일 리듬 재튜닝 + 탈진 시 낮 수면 (운영자 fb)"
+    },
+    {
+      "sha": "e155ccb",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#227 조작 견고화 — 우클릭 엔티티 선택 nearest-center + 테스트/실제 경로 정합 (운영자 fb '조작 제대로 안됨')"
+    },
+    {
+      "sha": "c3f5fb4",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#226 우클릭 컨텍스트 메뉴 항목 전혀 실행 안 되던 race fix (운영자 fb)"
+    },
+    {
+      "sha": "35881c9",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "docs: 자율 세션 최종 결정 로그 (#224/#225 + 식량 변동성 결정거리)"
+    },
+    {
+      "sha": "1f35390",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#224 장기 식량 고갈 fix(수확 8→14) + #225 사냥 stuck timeout (QA 발견)"
+    },
+    {
+      "sha": "fd21db5",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "docs: 자율 세션 결정 로그 갱신 (#221b/#223 + QA 발견 + 결정거리)"
+    },
+    {
+      "sha": "5b9332e",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#223 식량 더미 종류별 수명 + 베리 라벨 — 작물/베리 빨리 안 상함 (QA)"
+    },
+    {
+      "sha": "c2d5625",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#221b 채광 포기 쿨다운 20→60s — 도달불가 광맥 재시도 churn 감소"
+    },
+    {
+      "sha": "df35c42",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "docs: 자율 세션 결정 로그 (#216~#222)"
+    },
+    {
+      "sha": "8f1c553",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#222 휴식 도달 stuck fix — restTarget 경로에 timeout (QA 로그 발견)"
+    },
+    {
+      "sha": "92f9966",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#221 채광 무한 포기 루프 fix — 도달불가 광맥 쿨다운 (QA 로그 발견)"
+    },
+    {
+      "sha": "fbda0d5",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#220 석재 광맥 12→20 (운영자 fb '맵에 석재 없음')"
+    },
+    {
+      "sha": "65d507f",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#219 시간속도/작물고기/우클릭강제지정 fix (운영자 fb 3건)"
+    },
+    {
+      "sha": "d8ecffa",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#218 목재 순간이동 진짜 fix — stand-cell fast-path가 타깃변경 시 옛 cell 재사용 (운영자 fb)"
+    },
+    {
+      "sha": "3284eb7",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#217 새게임 씬 2중 로드 fix — 시간멈춤/목재0 근본원인 (운영자 fb)"
+    },
+    {
+      "sha": "145b6fa",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#216 창 설정 수정 — 제품명 PawnSim + 1280x720 윈도우 + 리사이즈 가능 + runInBackground (운영자 fb: 창 너무 작음)"
+    },
+    {
+      "sha": "a6417c0",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#215 채광/수확/채집 순간이동 제거 — 전부 물리 더미 드롭 (운영자 fb)"
+    },
+    {
+      "sha": "0ab3e8b",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "docs(session): 2026-05-30~31 라이브 피드백 세션 종합 — 75commit, honest 상태+gated 결정거리"
+    },
+    {
+      "sha": "f6c07ae",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "fix(integration): restore 42/42 — I2/I4/I6 regressions (intfix)"
+    },
+    {
+      "sha": "627ae25",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "polish: 지붕 시각 확인/fix + 건축메뉴 툴팁·아이콘 + 첫raid 완화 (운영자 fb)"
+    },
+    {
+      "sha": "b2a73a4",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "WIP pf (pre-verify)"
+    },
+    {
+      "sha": "66eadac",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "feat: 지붕 기능+지붕영역 메뉴 / 아이템 물리운반(순간이동 제거) (운영자 fb)"
+    },
+    {
+      "sha": "09403a3",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "WIP rh (pre-verify)"
+    },
+    {
+      "sha": "27f285d",
+      "date": "2026-05-31",
+      "class": "user",
+      "subject": "#201 GameplayRecorderTool: 3x3 shell → 5x5 furnished house (beds+stove)"
+    },
+    {
+      "sha": "36472e7",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "#200 gameplay recorder v2: true 1x speed + zoom-out + active construction"
+    },
+    {
+      "sha": "7c9393e",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "add Unity Recorder gameplay video capture tool (verified working)"
+    },
+    {
+      "sha": "151580a",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "qp: 큐 5작업 — 설정메뉴/영역지정/전투모션/적벽통과/장식제거 (운영자 fb)"
+    },
+    {
+      "sha": "5dfe62e",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "WIP qp (pre-verify)"
+    },
+    {
+      "sha": "95d2963",
+      "date": "2026-05-31",
+      "class": "user",
+      "subject": "fix(survival): 림 침대 자율취침 stuck 회귀 수정 (LongPlay PAWN-STUCK 0)"
+    },
+    {
+      "sha": "9ecfaab",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "fix(survival): 림 침대 자율취침 + 강도 맵edge 진입 (운영자 fb)"
+    },
+    {
+      "sha": "7453d5d",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "WIP qfx (pre-verify)"
+    },
+    {
+      "sha": "0d52fce",
+      "date": "2026-05-31",
+      "class": "user",
+      "subject": "fix(survival): raid 난이도 calibration — 콜로니 생존 가능 (LongPlay survived=YES)"
+    },
+    {
+      "sha": "958d60f",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "fix(survival): 식량 생산 루프 복구 — HarvestCropAction 추가 (LongPlay로 발견·검증)"
+    },
+    {
+      "sha": "b8cd738",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "test(qa): LongPlay 생존 플레이테스트 러너 + 플레이로그 (운영자 fb)"
+    },
+    {
+      "sha": "bcfa7d6",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "mf: QA C-019 results — 8-fix wave PASS"
+    },
+    {
+      "sha": "2305893",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "mf: 8 운영자 버그 수정 — 우클릭컨텍스트/목재드롭/문모션/이동경로/시간/광맥/사망비주얼/늑대제거"
+    },
+    {
+      "sha": "a38e80e",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "WIP mf multifix (pre-verify)"
+    },
+    {
+      "sha": "a9c4405",
+      "date": "2026-05-31",
+      "class": "user",
+      "subject": "fix(ui): RimWorld식 Architect 메뉴 구조 + 클릭 작동 + 정보창 선택-구동 (운영자 fb)"
+    },
+    {
+      "sha": "1a35ae3",
+      "date": "2026-05-31",
+      "class": "user",
+      "subject": "fix(ui): 인스펙터 중복 통합 + 하단바 멈춤 라벨 + 패널 겹침 (운영자 fb \"UI 이상해\")"
+    },
+    {
+      "sha": "dca83c5",
+      "date": "2026-05-31",
+      "class": "user",
+      "subject": "docs(readme): PawnSim README 현행화 (운영자 fb \"전혀 갱신 안됨\")"
+    },
+    {
+      "sha": "9adf66c",
+      "date": "2026-05-31",
+      "class": "agent",
+      "subject": "ui wave 1: UI 레이아웃 통합 + 시나리오 QA 러너 — 5-lane fix"
+    },
+    {
+      "sha": "184dd45",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP ui wave 1 (pre-verify)"
+    },
+    {
+      "sha": "7384b2e",
+      "date": "2026-05-30",
+      "class": "user",
+      "subject": "fix(ux): 메뉴 씬 게임UI 누출 + scatter 돌 클러터 (운영자 fb)"
+    },
+    {
+      "sha": "45d205d",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "docs(session): 2026-05-30 야간 자율 오케스트레이션 종합 — 3라운드 48commit, 위키 근접도 +개선, gated 결정거리"
+    },
+    {
+      "sha": "b7315c1",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "qa: update qa.json for cz-w4 PASS@f1e52de"
+    },
+    {
+      "sha": "f1e52de",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cz wave 4: autodoor B5 + area-cancel B7 + V16 verify (W-M6-04)"
+    },
+    {
+      "sha": "de1ac1b",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cz wave 4 (pre-verify)"
+    },
+    {
+      "sha": "f842a58",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "qa.json: W-M6-03 cz-w3 PASS record (C-017)"
+    },
+    {
+      "sha": "0bbfd74",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cz wave 3: B2 gizmo-bar + B4 barricade + B9 door/cook/shoot SFX + B11 rock-variety + W-M3-03 danger-music + W-M3-03 rain-particles + V7 raid-threat test + PawnInfoPanel tabs"
+    },
+    {
+      "sha": "270bc71",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cz wave 3 (pre-verify)"
+    },
+    {
+      "sha": "d5a8463",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "qa.json: W-M6-02 cz-w2 PASS@4cf239d"
+    },
+    {
+      "sha": "4cf239d",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cz wave 2: fence+gate B3 / carry-pose+lunge B10 / saveload-substate B13 / hotkey-overlay B14 + W-M6-01 (FloatingText/MarqueeSelect/FootstepDriver/V10-V11-V13 tests)"
+    },
+    {
+      "sha": "e692fab",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cz wave 2 (pre-verify)"
+    },
+    {
+      "sha": "50c0256",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cz wave 1: M6-ui tabs+floating-text+marquee + M2-sound footstep+night-ambient + M5-verify V59b+V10+V11 + M4-building table+chair+stone-floor-architect + scatter-ForceImport cleanup"
+    },
+    {
+      "sha": "63360ed",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cz wave 1 (pre-verify)"
+    },
+    {
+      "sha": "444ed36",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "docs(wiki): RimWorld 비교 v2 재대조 — 마지막 non-gated 층 14항목 (라운드3 구동)"
+    },
+    {
+      "sha": "2263243",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cy wave 4: qa.json PASS record (W-M4-06, commit 0368026)"
+    },
+    {
+      "sha": "0368026",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cy wave 4: #20 table+chair + scatter ForceImport cleanup #41 + stone-floor->Architect + V59b verify"
+    },
+    {
+      "sha": "95cb705",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cy wave 4 (pre-verify)"
+    },
+    {
+      "sha": "bee92a6",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "qa.json W-M4-05 PASS cy-w3 @8a61c91"
+    },
+    {
+      "sha": "8a61c91",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cy wave 3: drag-rect placement (#18) + stone floor (#21) + lamp Architect menu (#42) + V15 deconstruct-refund verify (#15)"
+    },
+    {
+      "sha": "1b60a16",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cy wave 3 (pre-verify)"
+    },
+    {
+      "sha": "450b2b9",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "qa.json: cy-w2 PASS @c0ce5bf"
+    },
+    {
+      "sha": "c0ce5bf",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cy wave 2: lamp buildable (#19) + scatter fix + V1/V3 verify + inspector tabs"
+    },
+    {
+      "sha": "8caef39",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cy wave 2 (pre-verify)"
+    },
+    {
+      "sha": "8c0ae48",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "qa: publish W-M4-03 PASS report (cy-w1)"
+    },
+    {
+      "sha": "adad6a7",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cy wave 1: M4#17 grow-zone + M1 scatter-variety + V6/V2 verify tests"
+    },
+    {
+      "sha": "28bc02f",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cy wave 1 (pre-verify)"
+    },
+    {
+      "sha": "6652ce5",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cx wave 6: mine designation #16 + save-load fix #29 + inspector tabs #23 + tree sway V5 + V8 pathfind test + V9 round-trip assertions"
+    },
+    {
+      "sha": "9bb4446",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cx wave 6 (pre-verify)"
+    },
+    {
+      "sha": "c5cd821",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cx wave 5: update qa.json with PASS verdict + flags for next wave"
+    },
+    {
+      "sha": "e250b43",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cx wave 5: deconstruct #15 + moveSpeed-verify #28 + saveload-gaps-verify #29 + night-light-pools Dim1"
+    },
+    {
+      "sha": "3311ef6",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cx wave 5 (pre-verify)"
+    },
+    {
+      "sha": "cdff2b8",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "qa: cx wave 4 PASS verdict + qa.json"
+    },
+    {
+      "sha": "996e224",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cx wave 4: dynamic-music #8 + inspector-tabs #23 + raid-threat-verify #27 + weather-particles #14"
+    },
+    {
+      "sha": "ec0840a",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cx wave 4 (pre-verify)"
+    },
+    {
+      "sha": "6788447",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cx wave 3: sleep-pose dim + UI click sfx + V5 food chain test + rain loop"
+    },
+    {
+      "sha": "1145708",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cx wave 3 (pre-verify)"
+    },
+    {
+      "sha": "54a5279",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "qa.json: record W-M3-01 wave 2 PASS (cx-w2, a769648)"
+    },
+    {
+      "sha": "a769648",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cx wave 2: pawn-facing-flipx + alert-letter-stack + v4-combat-chain-verify + sfxMine-wire"
+    },
+    {
+      "sha": "f210ab3",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cx wave 2 (pre-verify)"
+    },
+    {
+      "sha": "89acd58",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "cx wave 1: M2 sound coverage (wiki Dim2 #1/#2/#3/#4/#6)"
+    },
+    {
+      "sha": "016eadb",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP cx wave 1 (pre-verify)"
+    },
+    {
+      "sha": "6d2b1e8",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "docs(wiki): RimWorld 위키 전면 비교분석 + M1~M6 백로그 (확대 체인 구동용)"
+    },
+    {
+      "sha": "333c515",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "C-001 wave 3: walk-bob + scatter + flicker + crop-stage + inspector + vignette"
+    },
+    {
+      "sha": "89482a1",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP C-001 wave 3 (pre-verify)"
+    },
+    {
+      "sha": "852d95f",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "C-001 wave 2: walk-bob root-fix + crop stage sprites + inspector V7 + scatter art + fire flicker"
+    },
+    {
+      "sha": "57c8847",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP C-001 wave 2 (pre-verify)"
+    },
+    {
+      "sha": "58bb1b7",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "C-001 wave 1: pawn walk-bob, stove fire flicker, world scatter decor"
+    },
+    {
+      "sha": "fd144dc",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP C-001 wave 1 (pre-verify)"
+    },
+    {
+      "sha": "d99e0c6",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "chore: Unity scene regen + sprite meta from fresh build (c1-integrate verify)"
+    },
+    {
+      "sha": "286c318",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "WIP C-001 in-flight (pre-verify safety)"
+    },
+    {
+      "sha": "d3adf83",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "#210 Build Click QA Floor 케이스 fixture fix (물 타일 타겟 → 잔디) + 하니스 맹점 발견"
+    },
+    {
+      "sha": "b1c9ac5",
+      "date": "2026-05-30",
+      "class": "agent",
+      "subject": "docs(design): 폴리시 웨이브 v3 백로그 추가 (걷기 애니메이션/월드 scatter/그림자 확장)"
+    },
+    {
+      "sha": "0da29e0",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "#209 디자인 폴리시 v2 - 접지 그림자 + 작물 tilled soil (자율 디자인 트랙)"
+    },
+    {
+      "sha": "698ec49",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "docs(session): #201-208 야간 2부 요약 - 림 갇힘 fix + 디자인/UI 전면 개편"
+    },
+    {
+      "sha": "46ed505",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "#208 디자인 - 상단 자원 아이콘 가독성 fix (최종 QA gap)"
+    },
+    {
+      "sha": "558585f",
+      "date": "2026-05-29",
+      "class": "user",
+      "subject": "#207 디자인 A4/A8/A9 - 목재 구조물/작물/아이템 드롭 정합 (디자인 백로그 완료)"
+    },
+    {
+      "sha": "b2ad22b",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "#206 디자인 A5/A6 - 자원 아이콘 + 스프라이트 정리 (lamp/berry/marker) (자율 디자인 트랙)"
+    },
+    {
+      "sha": "3d06c4f",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "#205 디자인 U4/U7/U8 - 전체 UI 통일 완성 (자율 디자인 트랙)"
+    },
+    {
+      "sha": "2c1467c",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "#204 디자인 U1-U3 - UI 패널 시스템 통일 (debug→game UI) (자율 디자인 트랙)"
+    },
+    {
+      "sha": "2c84294",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "#203 디자인 A3 - 지형 타일 muted 통일 + door 팔레트 정합 (자율 디자인 트랙)"
+    },
+    {
+      "sha": "e558ef3",
+      "date": "2026-05-29",
+      "class": "user",
+      "subject": "#202 디자인 A1+A2 - 팔레트 통일 + 콜로니스트 재디자인 (자율 디자인 트랙)"
+    },
+    {
+      "sha": "c5e9e22",
+      "date": "2026-05-29",
+      "class": "user",
+      "subject": "#201 벽 완성 시 림 갇힘 버그 fix - eject + 상시 안전망 (운영자 fb)"
+    },
+    {
+      "sha": "0ead383",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "docs(session): #199+#200 야간 세션 요약 - 풀 그리드 정합 + 충실도 감사/튜닝"
+    },
+    {
+      "sha": "ad6326f",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "#200 RimWorld 값 정합 - 밸런스 튜닝 5건 (위키 충실도 감사 Top-5)"
+    },
+    {
+      "sha": "7271079",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "#199-C 인접 작업칸 + 예약 시스템 + 건축 배치 검증 (RimWorld 그리드 정합 완성)"
+    },
+    {
+      "sha": "c8aa5ca",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "#199-B3 벽 경로 차단 + 문 통과 + 라이브 그리드 재계산 (RimWorld 정합)"
+    },
+    {
+      "sha": "3b2c373",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "#199-B core (B0-B2) 라이브 A* 그리드 경로탐색 컷오버 (RimWorld 방식)"
+    },
+    {
+      "sha": "61dd2e7",
+      "date": "2026-05-29",
+      "class": "user",
+      "subject": "#199-A 림 1x1 정합 + 카메라 줌인 + 플로팅 UI 재배치 (RimWorld 그리드 정합 Phase A)"
+    },
+    {
+      "sha": "39a06bf",
+      "date": "2026-05-29",
+      "class": "agent",
+      "subject": "#198 멀티-에이전트 파이프라인 강제 - 건축 QA fix + bed_fine 디자인 (운영자 directive 4건)"
+    },
+    {
+      "sha": "6fd712b",
+      "date": "2026-05-29",
+      "class": "user",
+      "subject": "#197 림 이동 제어 + 목재 부패 + 두 번째 벽 fix (운영자 fb 4건)"
+    },
+    {
+      "sha": "7182908",
+      "date": "2026-05-29",
+      "class": "user",
+      "subject": "#196 건축 실제 작동 fix (운영자 fb 5 step)"
+    },
+    {
+      "sha": "a2ecb55",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#195 ResearchBench 2x1 wiki 정합 - sprite 32x16 + footprint scale"
+    },
+    {
+      "sha": "25f0847",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#194 sprite audit + 11종 PIL Kenney-style 재생성 (운영자 fb)"
+    },
+    {
+      "sha": "1bd2736",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#193 침대 1x2 multi-cell + sprite 16x32 (운영자 fb + RimWorld wiki)"
+    },
+    {
+      "sha": "f8ef7b8",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#192 전체 entity user-flow QA - 건축 8 + pawn action 7 = 15/15 PASS"
+    },
+    {
+      "sha": "f487be5",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#191 진짜 user flow QA - real button click + SimulateMapClick (운영자 fb)"
+    },
+    {
+      "sha": "6b0f744",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#190 청사진 가시성 + on-screen 토스트 (운영자 fb \"침대/벽 청사진 설치 안됨\")"
+    },
+    {
+      "sha": "e829671",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#189 건축 진짜 원인 fix - ResourceManager null check 제거 (운영자 fb)"
+    },
+    {
+      "sha": "e169068",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#188 UITheme 4 panel 더 통일 + Click QA pipeline 통합 검증"
+    },
+    {
+      "sha": "f31f639",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#187 BuildClickAutoQA → refactor_check 통합 (자동 회귀 보호)"
+    },
+    {
+      "sha": "72b33c6",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#186 UITheme - ArchitectMenu + EntityInspectorPanel 적용"
+    },
+    {
+      "sha": "d24777e",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#185 UITheme 통일 (Kenney warm tone) - GuiControlBar 우선"
+    },
+    {
+      "sha": "fe81917",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#184 Kenney 풀 매핑 - 13 entity 추가 교체 (총 20 entity Kenney 통일)"
+    },
+    {
+      "sha": "d25d558",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#183 디자인: Kenney Tiny Town 7개 sprite 교체 (운영자 fb \"구려\" 응답)"
+    },
+    {
+      "sha": "6739f02",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#182 청사진 click 진단 - placement cooldown + log 강화"
+    },
+    {
+      "sha": "5adbc27",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#181 BuildClickAutoQA 6-mode 검증 + 진짜 mode×prefab 매핑 확인"
+    },
+    {
+      "sha": "4ed6a3f",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#180 BuildClickAutoQA - 진짜 graphics-mode click QA (운영자 fb)"
+    },
+    {
+      "sha": "1fffac9",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#179 청사진 click-to-place fix + I37 회귀 보호 (운영자 fb)"
+    },
+    {
+      "sha": "f356207",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "docs: /loop 12h wave 2 세션 요약 (#160~#178 19 commit)"
+    },
+    {
+      "sha": "b99029e",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#178 TraderEntity socialMul → 거래 가격 보정 (SET-only → 실제 효과)"
+    },
+    {
+      "sha": "f626d0b",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#177 PawnSkills 레벨 → 작업 속도 (XP grind 실제 효과화)"
+    },
+    {
+      "sha": "4bf46cf",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#176 ArrowProjectile shootingAccuracy 적용 (이전 100% 명중)"
+    },
+    {
+      "sha": "19153dd",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#175 AIDirector threat tier → event 빈도 영향 (이전 constant 15-30s)"
+    },
+    {
+      "sha": "7de2769",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#174 PawnAbilities SET-only fields wiring (plantsMul + meleeMul + Combat skill)"
+    },
+    {
+      "sha": "485199e",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#173 PawnEquipment armor + meleeDamageAdd 실제 효과 (cosmetic → 게임 영향)"
+    },
+    {
+      "sha": "d8c0e61",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#172 Fine meal 조건 Build skill → cookingMul (wiki Cooking 정합)"
+    },
+    {
+      "sha": "a6e06d5",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#171 DoorEntity pass-through 감속 + 시각 피드백 (wiki: 통과 delay)"
+    },
+    {
+      "sha": "6504660",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#170 CropEntity 성장 속도 wiki 정합 (40s→90s, harvest 5→8)"
+    },
+    {
+      "sha": "06c566e",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#169 Research 속도 = sum(pawn.manipulation × traits) (wiki: Intellectual skill 영향)"
+    },
+    {
+      "sha": "a75b09a",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#168 Trader 거래 proximity check (wiki: 콜로니스트 옆에 있어야)"
+    },
+    {
+      "sha": "ae483fd",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#167 TintHelper 추출 (#156 lesson 통합) + stone_vein.png.meta 정상화"
+    },
+    {
+      "sha": "0dc6758",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#166 I36 BedFine blueprint quality regression test (in-process)"
+    },
+    {
+      "sha": "e41c1cd",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#165 bed_wood.png 메타 수정 (Default texture → Sprite) - Phase 2 검증 완전 작동"
+    },
+    {
+      "sha": "009f541",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#164 PawnTraits effects 실제 wiring (cosmetic → 실제 게임 영향)"
+    },
+    {
+      "sha": "f20f654",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#163 WolfEnemy hit-flash 시각 피드백 추가"
+    },
+    {
+      "sha": "35ece21",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#162 AnimalEntity hit-flash 후 species tint 복원 (#156 lesson - 5th)"
+    },
+    {
+      "sha": "b0a9e45",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#161 BerryBush 시각 tint 보존 (#156 lesson - 4번째 entity)"
+    },
+    {
+      "sha": "609d596",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#160 광맥 채광 tint 보존 (#156 lesson 적용)"
+    },
+    {
+      "sha": "9e3ba47",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "docs: 후속 세션 2026-05-28 (#153~#159) 요약 추가"
+    },
+    {
+      "sha": "79f3018",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#159 BuildAutoQA Phase 2 - bed quality 검증 (Phase 1 wall 안정)"
+    },
+    {
+      "sha": "aa0e0a9",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#158 벽 피해 시각 피드백 (HP 비례 brightness + tint 유지)"
+    },
+    {
+      "sha": "38ad114",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#157 바닥 위 pawn 이동 속도 보너스 (wiki paved tile 근사)"
+    },
+    {
+      "sha": "66632ff",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#156 나무 종 tint 보존 (chop 시 hue 유지)"
+    },
+    {
+      "sha": "1783e2c",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#155 Stockpile priority 5-tier (림 vanilla) + hauler 우선순위"
+    },
+    {
+      "sha": "d419272",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#154 침대 quality 3종 건설 노출 (SleepingSpot / Wood / Fine)"
+    },
+    {
+      "sha": "8f8fa30",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#153 BedEntity.RestMul / MoodBonus → PawnNeeds 수면 logic 와이어링"
+    },
+    {
+      "sha": "ab7e6ee",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#149-#152 기존 시스템 wiki 정합 개선 batch"
+    },
+    {
+      "sha": "c04239a",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#146 #147 wiki audit + 건축 graphics QA 자동화"
+    },
+    {
+      "sha": "4b53dc6",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#145 I35 운영자 시나리오 end-to-end 검증 - 자재 운반 → 건설 완료"
+    },
+    {
+      "sha": "9d3200a",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "HOTFIX v6 (운영자 fb v5 + wiki 참조): wood pile stockpile 에 stack 보존"
+    },
+    {
+      "sha": "b5731a2",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#134 #135 #136 자율 갭 batch - raid wave / prisoner / 자원 부족 alert"
+    },
+    {
+      "sha": "a715b85",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "HOTFIX v5 (운영자 fb v4) - 림 vanilla 정상 흐름 복원"
+    },
+    {
+      "sha": "75b5b31",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "HOTFIX v4: MainMenu autostart flag + QA mtime sort (운영자 fb \"QA 가 click 해야지\")"
+    },
+    {
+      "sha": "08099f0",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "HOTFIX v3: day-N build scene 0 = Game.unity (운영자 fb \"또 안 나옴\")"
+    },
+    {
+      "sha": "0fdc97f",
+      "date": "2026-05-28",
+      "class": "agent",
+      "subject": "#141 pawn sprite 64x64 - 얼굴 + 외투 + 단추 + 손/발 정밀화"
+    },
+    {
+      "sha": "70608d1",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#141 tree sprite 64x64 (2x 해상도) - PPU 32 auto"
+    },
+    {
+      "sha": "e7e5c71",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "#140 QA 강화 - graphics 30s 실제 시뮬 + 자원 변화 자동 검증"
+    },
+    {
+      "sha": "ab90991",
+      "date": "2026-05-28",
+      "class": "user",
+      "subject": "HOTFIX v2: chop/mine/hunt 즉시 inventory += N (운영자 fb \"여전히 안 됨\")"
+    },
+    {
+      "sha": "67ad41a",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "#139 (운영자 fb) sprite polish - tree 5색조, wall_wood 4 plank, grain"
+    },
+    {
+      "sha": "d0f5cf5",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "HOTFIX #137: 목재 채집 실제 안 됨 (운영자 fb) + #138 선택 highlight"
+    },
+    {
+      "sha": "d8c020e",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "#133 (자율 갭) 무기/방어구 17종 확장 + Trader 6 거래 옵션"
+    },
+    {
+      "sha": "76dc617",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "#132 (자율 갭) 동물 종류 4종 - 사슴/멧돼지/닭/토끼"
+    },
+    {
+      "sha": "62aae84",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "HOTFIX: #126 schedule Sleep slot 이 chop/build 영구 block (운영자 fb \"안 캐짐\")"
+    },
+    {
+      "sha": "26fe1db",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "#131 (자율 갭) fine meal (고급 식사) - 요리 skill 보상"
+    },
+    {
+      "sha": "7653fea",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "#126 #127 (자율 갭) Schedule + 광물 종류"
+    },
+    {
+      "sha": "fd79ccc",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "#128 #129 #130 (운영자 fb 3건) 정보패널/고기drop/자원flash"
+    },
+    {
+      "sha": "af785eb",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "#125 (자율 갭) 의료 시스템 - PawnDoctor tend wounds"
+    },
+    {
+      "sha": "1f07aca",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "#123 (자율 갭) 의류/무기 equip 시스템 (림 vanilla)"
+    },
+    {
+      "sha": "9c621df",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "#122 (자율 갭) Mood thoughts 시스템 (림 vanilla breakdown)"
+    },
+    {
+      "sha": "5a35f56",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "#121 (자율 갭) Stockpile zone - 자원 운반 → 영역 drop"
+    },
+    {
+      "sha": "5f4618f",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "#120 (운영자 fb) PawnStats 능력치 시스템 (per-pawn)"
+    },
+    {
+      "sha": "b2e98fa",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "#119 (운영자 fb) 석재 + 채광 + 돌 아이템 + hauler stone"
+    },
+    {
+      "sha": "674ad40",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "#118 RimWorld 청사진 + pawn 건설 시스템"
+    },
+    {
+      "sha": "39df377",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "#116 #117 wood pile drop + hauler + entity inspector 강조"
+    },
+    {
+      "sha": "f0d28db",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "#115 sprite 디테일 향상 - tree/wall/pawn/deer/trader"
+    },
+    {
+      "sha": "0d581ee",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "#114 RimWorld Work tab priority system (F1)"
+    },
+    {
+      "sha": "1185362",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(#110): 림월드 Architect 좌측 메뉴 + GuiControlBar 11→7 버튼"
+    },
+    {
+      "sha": "83bd15e",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(#113): 림월드 우클릭 prioritize 컨텍스트 메뉴 (undrafted 만)"
+    },
+    {
+      "sha": "4909faf",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(#1+#6): wall 정렬 tile center + 사슴 즉시 추격 fix (위키 리서치 기반)"
+    },
+    {
+      "sha": "3070764",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(ai): 림들 겹쳐서 이동 - target reservation + 분산 spawn"
+    },
+    {
+      "sha": "cb9ba75",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(#105): EntityInspectorPanel - 비-pawn 오브젝트 좌클릭 시 정보 표시"
+    },
+    {
+      "sha": "bf94140",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(visual): #7+#8 - 타일 sprite 재작업 + cell 당 random rotation 0/90/180/270"
+    },
+    {
+      "sha": "289abbf",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(map): #108 40x40 → 60x60 (림월드 small-medium 비례) + 자원/생물 비례 증가"
+    },
+    {
+      "sha": "2cb0f26",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(#106): drafted pawn 으로 적 hover 시 ⚔ 공격 아이콘 prefix"
+    },
+    {
+      "sha": "d89e06c",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(bed): 침대 (#107) - 림월드 스타일 수면 회복 1.6x + mood +5/s"
+    },
+    {
+      "sha": "2cd3bc9",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs: 49 commit + perf cache 4건 + audit 누적 표"
+    },
+    {
+      "sha": "01e1fe9",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "perf: SelectionRing + GuiControlBar FindFirstObjectByType 매 프레임 호출 캐시"
+    },
+    {
+      "sha": "9b37bf2",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "perf(research): ResearchBench static pawn 캐시 - 모든 bench 공유 1s 만 fetch"
+    },
+    {
+      "sha": "16287dc",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "perf(research): ResearchBench list 1s 캐시 - FindObjects per-Update 비용 제거"
+    },
+    {
+      "sha": "a7b8060",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "chore: 12 sprite .meta 추적 + MainMenu.unity 재생성 - housekeeping"
+    },
+    {
+      "sha": "db206e4",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs: I23 stress + AI safety + threat alert + API modernize 누적 표"
+    },
+    {
+      "sha": "39dfde5",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "cleanup: obsolete FindObjectsOfType → FindObjectsByType + dead code 제거"
+    },
+    {
+      "sha": "706350e",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(V55): trader 시나리오 flakiness fix - 3s 대기 + 0.05 threshold"
+    },
+    {
+      "sha": "884ceb3",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "cleanup(threat): BanditEnemy.IsDead 직접 접근 (reflection 제거)"
+    },
+    {
+      "sha": "86cc4d9",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(ai): PawnCook give-up safety (10s) - I19 patch 마무리"
+    },
+    {
+      "sha": "de7360a",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(ai): PawnHunter / PawnGatherer give-up safety (15s / 10s) - I19 patch"
+    },
+    {
+      "sha": "02cf1a1",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(ai): AI 가 unreachable target (±18.5 밖) pick 안 하도록 모든 FindNearestX filter"
+    },
+    {
+      "sha": "bec88ce",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(alert): wolf/bandit 8u 이내 접근 시 빨강 ⚠ 위협 알림 (보수적 - 시각 only)"
+    },
+    {
+      "sha": "5505a68",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(integration): I23 60초 stress (4x speed = 4분 game-time) NRE 0회 검증"
+    },
+    {
+      "sha": "a1e3e8d",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs: R10*-m extraction (14 partial file) 누적 표 갱신"
+    },
+    {
+      "sha": "cfa8546",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10m): BerryBush spawn extract → SceneSetup.Game.BerryBush.cs"
+    },
+    {
+      "sha": "16014f0",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10l): Tree spawn (20 trees deterministic) extract → SceneSetup.Game.Trees.cs"
+    },
+    {
+      "sha": "9aeb36e",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10k): AudioBank wiring extract → SceneSetup.Game.Audio.cs"
+    },
+    {
+      "sha": "7c9890c",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10j): TopBar (clock+speed+resources) extract → SceneSetup.Game.TopBar.cs"
+    },
+    {
+      "sha": "8613ae4",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs: R10*-i extraction (10 partial file) 누적 표 갱신"
+    },
+    {
+      "sha": "60a3107",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10i): SkillPanel (Day 21) extract → SceneSetup.Game.SkillPanel.cs"
+    },
+    {
+      "sha": "2ea7bf5",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10h): PawnInfoPanel (Day 55) extract → SceneSetup.Game.PawnInfo.cs"
+    },
+    {
+      "sha": "779e5d8",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10g): Research strip + popup picker extract → SceneSetup.Game.Research.cs"
+    },
+    {
+      "sha": "d11d419",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10f): SaveLoad buttons + ControlHint extract → SceneSetup.Game.SaveHint.cs"
+    },
+    {
+      "sha": "e2d619a",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10e): Tutorial overlay extract → SceneSetup.Game.Tutorial.cs"
+    },
+    {
+      "sha": "273e3bb",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10d): EventLog panel extract → SceneSetup.Game.EventLog.cs"
+    },
+    {
+      "sha": "ac2444d",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(ui): EventLog 와 TopBar 16px 겹침 - y -44→-72 (60 height + 12 gap)"
+    },
+    {
+      "sha": "e379678",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs: R10 SceneSetup 분할 + I22 SaveLoad 통합 + 24 commit 요약"
+    },
+    {
+      "sha": "d916a00",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10c): prefab 생성 (Tree/Wall/Floor/Door/Stove/Bench) extract"
+    },
+    {
+      "sha": "4d9b9ec",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10b): Wildlife (wolf+deer spawn) extract → SceneSetup.Game.Wildlife.cs"
+    },
+    {
+      "sha": "76737a9",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R10): Settlement (Day 57) block extract → SceneSetup.Game.Settlement.cs"
+    },
+    {
+      "sha": "d4836fe",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "chore(scene): scene regen after full-cycle-verify (no logic change)"
+    },
+    {
+      "sha": "de85438",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(integration): I22 SaveLoad round-trip (Game.unity 실제 spawn)"
+    },
+    {
+      "sha": "66c0c55",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs: I19 발견된 진짜 movement 버그 문서화 (운영자 '이동 안됨' 진짜 원인)"
+    },
+    {
+      "sha": "0242436",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(movement): pawn 영원히 stuck 버그 + unreachable target 포기"
+    },
+    {
+      "sha": "2d6ce46",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs: 후속 세션 요약 14 commit + 18 integration tests 반영"
+    },
+    {
+      "sha": "47eb2fe",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(camera): batchmode 에서 Lerp 안 수렴 → MoveTowards 고정 거리/초"
+    },
+    {
+      "sha": "f059417",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(qol): pawn 선택 시 camera 부드럽게 focus (0.6s lerp)"
+    },
+    {
+      "sha": "53c3e41",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(integration+harness): I17 GUI 벽 버튼 + console 인코딩 fix"
+    },
+    {
+      "sha": "576e5b2",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(harness): refactor_check 에 integration 시나리오 자동 실행 추가"
+    },
+    {
+      "sha": "d2c7873",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs: 후속 자율 세션 요약 추가 (운영자 자는 동안 폴리시 6 commit)"
+    },
+    {
+      "sha": "ec6db96",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "polish(visibility): pawn 이름/상태/HP bar zoom 6 에서 보이게"
+    },
+    {
+      "sha": "a52cb01",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(integration): I14-I16 추가 - hover tooltip + build conflict + chop flow"
+    },
+    {
+      "sha": "e6dd403",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(ux): 빌드 모드 활성 시 ClickSelector 좌/우클릭 차단"
+    },
+    {
+      "sha": "b74a6f5",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "polish(ux): HoverTooltip - mouse hover 시 entity 설명 + action 안내"
+    },
+    {
+      "sha": "585090f",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "polish(camera): ortho 10 → 6 + 위치 (0,0) → (0.5, 1.0)"
+    },
+    {
+      "sha": "220f443",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "test(integration): I11-I13 추가 - screen→world / ring / starter resources"
+    },
+    {
+      "sha": "fb4fee1",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "polish(design): 선택 ring + 시작 자원 + 튜토리얼 압축"
+    },
+    {
+      "sha": "7765749",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(gui): GuiControlBar 10 버튼 - 키보드 의존 제거"
+    },
+    {
+      "sha": "ef75182",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(click): UI 클릭 가로채기 차단 + 우클릭 위치 시각 피드백 (X 마커)"
+    },
+    {
+      "sha": "cc39ba6",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "fix(integration): 우클릭 이동이 정확히 도착 안 했던 진짜 버그"
+    },
+    {
+      "sha": "306dbd8",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "test(integration): 진짜 통합 검증 - I1-I5 PASS (운영자 피드백 - isolated 한계 인정)"
+    },
+    {
+      "sha": "f816866",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "polish(art): tree/wall/floor sprite redesign (운영자 디자인 피드백)"
+    },
+    {
+      "sha": "60c3bd2",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "polish(UI): font size 일괄 키움 (운영자 피드백 - 4K 에서 텍스트 작음)"
+    },
+    {
+      "sha": "e1b5b50",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(playability): 운영자 피드백 - 우클릭 이동 + tile 정렬"
+    },
+    {
+      "sha": "8894bda",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(V51-V55): 55/55 PASS - 5 시나리오 추가"
+    },
+    {
+      "sha": "9cbd178",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "test(V49-V50): 🏆 50/50 자동검증 마일스톤 달성"
+    },
+    {
+      "sha": "1626e81",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(V43-V48): 48/48 PASS - 6 시나리오 추가"
+    },
+    {
+      "sha": "16c3355",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(V39-V42): 42/42 PASS - Strategy pattern actions 검증"
+    },
+    {
+      "sha": "ff30681",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "test(V35-V38): 38/38 PASS - 4 시나리오 추가"
+    },
+    {
+      "sha": "bf797de",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs: SESSION_SUMMARY 갱신 - 34 시나리오 + 3 stretch + 야간 시연 screenshot 안내"
+    },
+    {
+      "sha": "74b40cb",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(decor): 가로등 2개 시작 정착지 입구 (visible 콘텐츠 다양화)"
+    },
+    {
+      "sha": "4cfc32d",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat: PawnNameLabel 재활성 - 머리 위 한글 이름 floating"
+    },
+    {
+      "sha": "d5fee5c",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(V34): SaveLoad roundtrip - 34/34 PASS"
+    },
+    {
+      "sha": "7f5ce62",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(Stretch+V33): Animal taming MVP - deer 우클릭 + food → 30% tame"
+    },
+    {
+      "sha": "2b69b19",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "docs(skill-3): AUTONOMOUS_SESSION_SUMMARY.md - 운영자 깨어났을 때 한 눈에"
+    },
+    {
+      "sha": "8448ee4",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(V31-V32): Trader 검증 2 시나리오 - 32/32 PASS"
+    },
+    {
+      "sha": "88f33f7",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(Stretch): Trader caravan event + 실제 entity + 거래 (RimWorld 핵심 갭)"
+    },
+    {
+      "sha": "0e67c84",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(P7): 3 pawn 다른 셔츠 tint - 즉시 visible 다양성"
+    },
+    {
+      "sha": "02fa62e",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(P6): GameClock CLI -starthour N → 야간 시연 가능"
+    },
+    {
+      "sha": "b45a43e",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(P5): 32x32 detailed pawn sprite (얼굴/머리/셔츠/바지/부츠)"
+    },
+    {
+      "sha": "be691c4",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(V26-V30): 30/30 PASS - 30 자동검증 시나리오 누적"
+    },
+    {
+      "sha": "3592879",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "test(V20-V25): 25/25 자동검증 PASS + R8 entities partial 파일 추가 (deferred)"
+    },
+    {
+      "sha": "eb26e15",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "test(V15-V19): 5 시나리오 추가 - 19/19 자동검증 PASS"
+    },
+    {
+      "sha": "b520d58",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "test(V10-V14): 5 시나리오 추가 - 14/14 PASS"
+    },
+    {
+      "sha": "cec8317",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R8b): SetupTilemap + SetupFlowerDecor + TerrainLayout 추출"
+    },
+    {
+      "sha": "5eafdcf",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R8a): GenerateGame 1056L 시작 - SetupCamera + SetupCoreSingletons 추출"
+    },
+    {
+      "sha": "2dcd3aa",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(R7+): V6-V9 시나리오 추가 - 9/9 PASS"
+    },
+    {
+      "sha": "9b21f1f",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(R7): PlayMode 자동검증 5 시나리오 모두 PASS"
+    },
+    {
+      "sha": "7fd78b6",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R6): 5 Singleton -> ServiceLocator (testability)"
+    },
+    {
+      "sha": "2e0364e",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R5): PawnUtilityAI Decision tree -> Strategy pattern (IPawnAction)"
+    },
+    {
+      "sha": "b33475a",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "docs(skill-3): goal.md - PawnSim outcome layer + Done when criteria"
+    },
+    {
+      "sha": "8fa3deb",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R4): SceneSetup 1,484L -> 1,171L + 4 partial files"
+    },
+    {
+      "sha": "742816a",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R3): HealthPartsConfig ScriptableObject - 6 body parts 외부화"
+    },
+    {
+      "sha": "31df47d",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "refactor(R2): PawnStats ScriptableObject - combat/move stats 외부화"
+    },
+    {
+      "sha": "428d59d",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "test(refactor R1): refactor_check.py - 5단계 자동 검증 harness"
+    },
+    {
+      "sha": "6a5adee",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "fix(skill-3 step-81): 운영자 피드백 4건 — 사슴 디자인/맵 경계/타일 obstacle/용어"
+    },
+    {
+      "sha": "d95c1ee",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-80): SFX 추가 (hit / harvest / wolf_howl) — procedural"
+    },
+    {
+      "sha": "b3de23b",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "polish(skill-3 day-79): crops 시작 growth 0.4-0.85 — 시각 다양성"
+    },
+    {
+      "sha": "3fce635",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs(skill-3 day-78): ROADMAP_40H.md 완성 — 림 바닐라 커버리지 64%→85%"
+    },
+    {
+      "sha": "74da0ad",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "fix(skill-3 day-75): ResearchManager 자동 활성화 + fractional accumulator 수정"
+    },
+    {
+      "sha": "35588f3",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-50): Bow + Arrow ranged combat (research-gated)"
+    },
+    {
+      "sha": "3f7dd56",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3 day-74): Tutorial overlay — 첫 90초 한글 팁 9개"
+    },
+    {
+      "sha": "1bdb879",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-64): Wolf predator — 사냥꾼 mob + drafted 우클릭 공격"
+    },
+    {
+      "sha": "05031d7",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-73): Storyteller arcs (3 종류) + threat tier 0-3 + 15 이벤트"
+    },
+    {
+      "sha": "9dd7dcb",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-67+68): 농경 시스템 — crop 성장 + 우클릭 수확"
+    },
+    {
+      "sha": "a479c2a",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3 day-57): 시작 정착지 미리 배치 + 농장 + stockpile 마커 (RimWorld 시작 느낌)"
+    },
+    {
+      "sha": "fac56ce",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3 day-56): PawnTraits — 8 성격 (림 바닐라 personality)"
+    },
+    {
+      "sha": "03dcce4",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-55): PawnInfoPanel 에 부위별 health 표시 (림 바닐라 vibe)"
+    },
+    {
+      "sha": "be2891a",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3 day-52+53+54): Research 시스템 — bench + tree + UI"
+    },
+    {
+      "sha": "85f083b",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-48): Drafted state — R 키 수동 제어 + 우클릭 공격/이동"
+    },
+    {
+      "sha": "f5714db",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-45): PawnHealth body parts (림 바닐라 핵심 시스템)"
+    },
+    {
+      "sha": "0c35813",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-43): NightOverlay — 야간 시 화면 어두워짐 (alpha curve)"
+    },
+    {
+      "sha": "35ff921",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-42): pawn 머리 위 floating HP/mood bar (림 바닐라 vibe)"
+    },
+    {
+      "sha": "8f95aff",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-40+41): 40x40 맵 + 20트리 + 8사슴 + 6베리 + 24꽃 + 카메라 ortho 10"
+    },
+    {
+      "sha": "4b7989d",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-39): terrain variety — dirt/water/rock tile + 꽃 데코"
+    },
+    {
+      "sha": "0e11643",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-38 + 40h-sprint): TopBar 리소스 영역 overlap 수정 + 40시간 로드맵 박음"
+    },
+    {
+      "sha": "fe8fcf7",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(skill-3 day-37): pawn invisibility 해결 — 진짜 원인은 sprite 크기 + 카메라 줌"
+    },
+    {
+      "sha": "658fdb3",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(skill-3 day-36): GameManager pawn spawn runtime sprite check + fallback"
+    },
+    {
+      "sha": "c1ea18c",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(skill-3 day-35): pawn 안 보이는 문제 — NameLabel 제거 + null sprite 색상 fallback"
+    },
+    {
+      "sha": "3741a5f",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(skill-3 day-34): deer sprite — tan circle (pawn outline character와 시각 구분)"
+    },
+    {
+      "sha": "0e35813",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-33): BGM ambient pad — 30s procedural loop (자체 작성, 저작권 안전)"
+    },
+    {
+      "sha": "1769583",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-32): pawn 한국 이름 (지훈/민지/서연) + label 위치 조정"
+    },
+    {
+      "sha": "b30b033",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(skill-3 day-31): TopBar resource layout 안 겹치게 (목재 · 식사 · 식량)"
+    },
+    {
+      "sha": "fee1822",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(skill-3 day-30): PawnNameLabel actually on pawn prefab (prev Edit failed)"
+    },
+    {
+      "sha": "bb56537",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-30): pawn 이름 label 위에 떠있음"
+    },
+    {
+      "sha": "531daa1",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-29): TopBar meals counter — 목재 · 식량 · 식사 (amber)"
+    },
+    {
+      "sha": "e782d07",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-28): font fallback chain — Malgun → Nanum → Gulim → Dotum → Arial UM"
+    },
+    {
+      "sha": "15bdcfa",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(skill-3 day-27): PawnNeeds.TryEatTick actually applies meal-first logic"
+    },
+    {
+      "sha": "8f400f2",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-27): meal eating — pawn이 meal 우선 (mood +10 bonus)"
+    },
+    {
+      "sha": "5153b75",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs(daily): RimWorld vanilla expansion Day 14-26 — 13 day cumulative"
+    },
+    {
+      "sha": "d6d8c37",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(skill-3 day-26): PawnCook actually added to pawn prefab (prev SceneSetup Edit was last in chain + failed)"
+    },
+    {
+      "sha": "409d613",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-26): PawnCook auto-cook — 식량>5 + 화덕 존재 시 자동 가공"
+    },
+    {
+      "sha": "126c99c",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-25): build mode + Stove (T키, 목재 10) — cooking 기반 마련"
+    },
+    {
+      "sha": "14b6443",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(skill-3 day-24): PawnUtilityAI actually calls PawnHunter (prev commit landed only the prefab wire)"
+    },
+    {
+      "sha": "5058af0",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-24): auto-hunting (food<10 시 pawn이 deer 추적+공격)"
+    },
+    {
+      "sha": "9c748dd",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "fix(skill-3 day-23): SceneSetup actually wires WeatherController + 5 deer"
+    },
+    {
+      "sha": "91ece3e",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-23): animals — 5 deer wandering, kill = 식량 5 drop"
+    },
+    {
+      "sha": "95a41a2",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-22): weather system — storm 발화 시 화면 어둠 + outdoor mood -3/s"
+    },
+    {
+      "sha": "43b4777",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-21): SkillUI panel (4종 채집/벌목/건축/전투) + Stove entity 준비"
+    },
+    {
+      "sha": "e922456",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-20): combat/build XP hooks + mood break system"
+    },
+    {
+      "sha": "4f1511c",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-19): PawnSkills 4종 (채집/벌목/건축/전투) + XP/레벨 hook"
+    },
+    {
+      "sha": "2f44c2f",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-18): build mode 확장 — 벽(B,목재5) + 바닥(F,목재1) + 문(G,목재3)"
+    },
+    {
+      "sha": "937e395",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3 day-17): build mode — 벽 클릭 배치 (목재 5 소비)"
+    },
+    {
+      "sha": "5f03b29",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3 day-16): 한글화 — UI/이벤트 텍스트 + UTF-8 BOM + 한글 폰트"
+    },
+    {
+      "sha": "802539d",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "fix(skill-3 day-15): UI polish second pass — panel hide-when-empty + separator"
+    },
+    {
+      "sha": "7ca5a35",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3 day-14): RimWorld UI polish — first pass"
+    },
+    {
+      "sha": "2b44b47",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "docs(agents): evolve game-programmer + game-qa with lesson #9 (runInBackground)"
+    },
+    {
+      "sha": "acf6043",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "docs(daily): 20h autonomous block summary — 4 prototypes + 32x speedup proven"
+    },
+    {
+      "sha": "d1172da",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3): 2048-lite Day 1 — 4th framework prototype (3.8 min)"
+    },
+    {
+      "sha": "b7ae84a",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3): Vampire Survivors lite Day 1 — 3rd framework prototype (4.6 min)"
+    },
+    {
+      "sha": "901f4a6",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-13): first raid event + lesson #9 absorbed (runInBackground)"
+    },
+    {
+      "sha": "97c4e25",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs(readme.ko): mirror Skill #3 (game-dev-agent, in-development) paragraph"
+    },
+    {
+      "sha": "939fc29",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs(readme): add Skill #3 (game-dev-agent, in-development) to Overview"
+    },
+    {
+      "sha": "c1feaa4",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3 day-12): regen system + qa.py timeout auto-extend"
+    },
+    {
+      "sha": "8f0844c",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3 day-11): food system + first multi-agent invoke cycle"
+    },
+    {
+      "sha": "41f92f4",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3 day-10): pawns sleep at night (RimWorld polish)"
+    },
+    {
+      "sha": "7cb5d66",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3 day-9): day/night cycle + game clock — RimWorld polish"
+    },
+    {
+      "sha": "e11129c",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3 day-8): camera + time controls (RimWorld polish)"
+    },
+    {
+      "sha": "32ec30f",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3): game-dev role agent definitions — 13 game-* subagents"
+    },
+    {
+      "sha": "76fc346",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "docs(daily): Phase 1 cumulative summary — 7 commits, 15 templates, 4 genres"
+    },
+    {
+      "sha": "b740690",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "docs(operator-queue): OPQ-007 — game-dev role agent definitions (OK needed)"
+    },
+    {
+      "sha": "5469c9b",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3): finish Phase 1.5 primitives — movement / wave-spawner / audio-bank"
+    },
+    {
+      "sha": "accc3d5",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3): game system primitives — 5 reusable templates"
+    },
+    {
+      "sha": "4837ad2",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3): generalize sprite + sfx generation — Artist + Sound agents"
+    },
+    {
+      "sha": "c9afe95",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3): bug-pattern templates — 7 prototypes-worth of lessons in code"
+    },
+    {
+      "sha": "ddc45cc",
+      "date": "2026-05-27",
+      "class": "agent",
+      "subject": "feat(skill-3): editor scaffold generator — agent.py gen-editor-scaffold"
+    },
+    {
+      "sha": "2056814",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "feat(skill-3): genre YAML externalization — adding a new game = 1 YAML file"
+    },
+    {
+      "sha": "e28c81f",
+      "date": "2026-05-27",
+      "class": "user",
+      "subject": "fix(skill-3): PawnSim 5s auto-quit + chop SFX buzz (operator feedback)"
+    },
+    {
+      "sha": "1db7c5b",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "docs(daily): 2026-05-26 — Suika lite framework-validation summary"
+    },
+    {
+      "sha": "57be865",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "feat(skill-3): Suika lite Day 2 — preview UI + cursor + SFX + 4 merge bugs fixed"
+    },
+    {
+      "sha": "2d3b68e",
+      "date": "2026-05-26",
+      "class": "user",
+      "subject": "feat(skill-3): Suika lite Day 1 — multi-agent framework empirical validation"
+    },
+    {
+      "sha": "b73d8de",
+      "date": "2026-05-26",
+      "class": "user",
+      "subject": "feat(skill-3): multi-agent architecture refactor for game-dev-agent"
+    },
+    {
+      "sha": "172c2aa",
+      "date": "2026-05-26",
+      "class": "user",
+      "subject": "fix(skill-3): sprite import race + Kenney CC0 asset pivot + self-verify"
+    },
+    {
+      "sha": "b3626ce",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "fix(skill-3): main menu Start button — bake persistent onClick listener"
+    },
+    {
+      "sha": "6ac7e8d",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "feat(skill-3 day-7): AudioBank wired + portfolio docs + 7-day sprint complete"
+    },
+    {
+      "sha": "35af91c",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "feat(skill-3 day-6): save/load + procedural SFX + audio bank"
+    },
+    {
+      "sha": "f7892d6",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "feat(skill-3 day-5): AI Director runtime events + event log UI"
+    },
+    {
+      "sha": "400c71f",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "feat(skill-3 day-4): 3 pawns + utility AI auto-chop"
+    },
+    {
+      "sha": "1efd4ea",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "feat(skill-3 day-3): trees + chop action + wood counter"
+    },
+    {
+      "sha": "83fa3ee",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "feat(skill-3 day-2): pawn movement + needs UI"
+    },
+    {
+      "sha": "229f4a6",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "feat(skill-3 day-1): Unity scenes + scripts + .exe builds successfully"
+    },
+    {
+      "sha": "9d23575",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "feat(skill-3): scaffold game-dev-agent + game-prototype (Unity 6 LTS)"
+    },
+    {
+      "sha": "ac286cb",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "feat(mix-3): v2 hero prompts — continuous frame-wide motion (operator ref: The Japanese Town)"
+    },
+    {
+      "sha": "bbbf7bb",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "chore(gitignore): exclude transient ffmpeg _concat.txt files"
+    },
+    {
+      "sha": "b0f49dd",
+      "date": "2026-05-26",
+      "class": "user",
+      "subject": "docs(daily+decisions): Mix #2 uploaded + Mix #3 hero-loop shipped overnight"
+    },
+    {
+      "sha": "0de95be",
+      "date": "2026-05-26",
+      "class": "user",
+      "subject": "feat(mix-3): hero-loop architecture + design pivot from operator feedback"
+    },
+    {
+      "sha": "c18235c",
+      "date": "2026-05-26",
+      "class": "agent",
+      "subject": "docs(daily): Mix #2 full render COMPLETED — 44m 37s @ 1920x1080 NVENC"
+    },
+    {
+      "sha": "a5619b6",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "docs(daily): Path B validated + FULL Mix #2 render KICKED OFF"
+    },
+    {
+      "sha": "ed58e2f",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "feat(mix-2): add local SDXL-Turbo backend for stills (--image-backend comfyui-sdxl)"
+    },
+    {
+      "sha": "31c3e6c",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "docs(daily): mini POC validated + Mix #2 pipeline bottleneck plan"
+    },
+    {
+      "sha": "38aa20f",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "docs(daily): 2026-05-26 Windows overnight handoff"
+    },
+    {
+      "sha": "02eabd2",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "docs(decisions): append 2026-05-25 Windows session unilateral decisions"
+    },
+    {
+      "sha": "efae7b3",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "feat(yt): channel settings automation + Mix #2 upload metadata template"
+    },
+    {
+      "sha": "84800b9",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "feat(mix-2): pipeline scripts — LTX-Video img2vid + segment matrix + orchestrator"
+    },
+    {
+      "sha": "7b2a1a5",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "feat(windows): add Windows 11 as best-effort tier — env setup + docs"
+    },
+    {
+      "sha": "ae6f788",
+      "date": "2026-05-25",
+      "class": "user",
+      "subject": "docs(mix-2): design doc for Windows + LTX-Video + NVENC longform pipeline"
+    },
+    {
+      "sha": "b0755c9",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "docs(handoff): 2026-05-25 Windows pivot session record"
+    },
+    {
+      "sha": "eef6e70",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "chore(metrics): refresh intervention chart + drop obsolete demo README"
+    },
+    {
+      "sha": "ad39b6c",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "fix(music-video): pix_fmt yuv420p + tpad clone for duration mismatch"
+    },
+    {
+      "sha": "8d5df9c",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "feat(scripts): batch utilities + Pollinations + Kling clients"
+    },
+    {
+      "sha": "75cb477",
+      "date": "2026-05-25",
+      "class": "agent",
+      "subject": "feat(lyrics): 4 original tracks + Suno prompt catalog"
+    },
     {
       "sha": "f78e283",
       "date": "2026-05-24",

@@ -296,12 +296,14 @@ count and active session minutes.
 ![Two-panel intervention trend — Panel A (Daily commit attribution) stacks daily commit counts by initiator (agent-autonomous blue vs user-initiated red) with a user-initiated percentage line and per-day percentage labels; Panel B (Operator engagement) charts daily operator prompts and active session minutes mined from local Claude Code session JSONLs.  Korean mirror at docs/metrics/intervention-ko.png.](docs/metrics/intervention-en.png)
 
 Goal: both panels trend down as the agent system absorbs more
-decisions.  Updated daily at 02:00 KST by the
-`com.melons.agents.intervention-chart` launchd job
-([`scripts/intervention-chart-collect.sh`](scripts/intervention-chart-collect.sh)),
-which calls
+decisions.  Rebuilt by
 [`scripts/generate-intervention-chart.py`](scripts/generate-intervention-chart.py)
-to rebuild both panels from `git log` + `~/.claude/projects/-Users-melons-ai/*.jsonl`.
+from `git log` + the local Claude Code session JSONLs — daily at
+02:00 KST via launchd on the macOS workstation, manually during the
+current Windows-based game sprint (the script went cross-platform
+2026-06-12).  The engagement panel only counts sessions stored on
+the machine that ran the regeneration, so days worked on another
+machine show as gaps, not zero engagement.
 Classification heuristics + reduction analysis at
 [`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md).
 Raw per-day data at [`docs/metrics/intervention.json`](docs/metrics/intervention.json).

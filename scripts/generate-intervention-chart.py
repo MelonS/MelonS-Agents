@@ -120,6 +120,7 @@ def select_font(lang: str):
         "AppleGothic",
         "Nanum Gothic",
         "Noto Sans CJK KR",
+        "Malgun Gothic",
     ]
     available = {f.name for f in _fm.fontManager.ttflist}
     for name in candidates:
@@ -131,12 +132,21 @@ def select_font(lang: str):
     print(f"[warn] no CJK font found for lang=ko; trying default", file=sys.stderr)
 
 # Claude Code session JSONLs.  Claude Code encodes the working
-# directory into the JSONL parent dir name by replacing `/` with `-`,
-# so a repo at /Users/melons/ai becomes "-Users-melons-ai".  Derive
-# from ROOT instead of hardcoding so a fresh clone in any path picks
-# up the right folder on its own machine.
-_cc_key = str(ROOT).replace("/", "-")
-CC_PROJECT_DIR = pathlib.Path.home() / ".claude" / "projects" / _cc_key
+# directory into the JSONL parent dir name by replacing path
+# separators (and the Windows drive colon) with `-`, so a repo at
+# /Users/melons/ai becomes "-Users-melons-ai" and G:\ai becomes
+# "G--ai".  Derive from ROOT instead of hardcoding so a fresh clone
+# in any path picks up the right folder on its own machine.
+# CC_PROJECT_DIRS env var (comma-separated dir names under
+# ~/.claude/projects) overrides the derivation — needed when the
+# operator launches sessions from a parent dir of the repo, which
+# lands them in that dir's key instead of the repo's.
+_cc_key = str(ROOT).replace("/", "-").replace("\\", "-").replace(":", "-")
+_cc_base = pathlib.Path.home() / ".claude" / "projects"
+import os as _os
+CC_PROJECT_DIRS = [
+    _cc_base / k for k in _os.environ.get("CC_PROJECT_DIRS", _cc_key).split(",") if k
+]
 
 MARKER_DATE = date(2026, 5, 17)
 
@@ -166,7 +176,7 @@ def collect_commits():
     fmt = "%H%x1f%aI%x1f%s%x1f%b%x1e"
     raw = subprocess.check_output(
         ["git", "log", "--format=" + fmt, "--no-merges"],
-        cwd=ROOT, text=True,
+        cwd=ROOT, text=True, encoding="utf-8", errors="replace",
     )
     records = [r for r in raw.split("\x1e") if r.strip()]
     out = []
@@ -227,18 +237,18 @@ def collect_sessions():
 
     Returns dict keyed by date with: prompts, active_minutes.
     """
-    if not CC_PROJECT_DIR.exists():
+    if not any(d.exists() for d in CC_PROJECT_DIRS):
         return {}, []
     by_day = defaultdict(lambda: {"prompts": 0, "active_minutes": 0.0,
                                    "sessions": 0})
     seen_days = set()
-    for jsonl_path in sorted(CC_PROJECT_DIR.glob("*.jsonl")):
+    for jsonl_path in sorted(p for d in CC_PROJECT_DIRS if d.exists() for p in d.glob("*.jsonl")):
         first_ts = None
         last_ts = None
         prompts = 0
         session_day = None
         try:
-            with jsonl_path.open("r") as fh:
+            with jsonl_path.open("r", encoding="utf-8", errors="replace") as fh:
                 for line in fh:
                     try:
                         obj = json.loads(line)
@@ -508,7 +518,7 @@ def main() -> int:
              "class": c["class"], "subject": c["subject"]}
             for c in reversed(commits)
         ],
-    }, ensure_ascii=False, indent=2))
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # Render chart per requested language.  Default `both` emits two
     # PNGs (intervention-en.png, intervention-ko.png) plus a copy at
