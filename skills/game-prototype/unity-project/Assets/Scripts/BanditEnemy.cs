@@ -161,11 +161,16 @@ namespace MelonS.GameProto
 
             if (dist > contactRange)
             {
-                // #202: 벽/물/바위 존중.  pawn 은 #199 A* 그리드로 막힌 셀을 돌아가지만
-                //  강도는 직선 MoveTowards 라 벽을 통과했음.  TryStep 가 다음 셀이
-                //  막혔으면 axis-slide(한 축만)→그래도 막히면 정지.
-                Vector2 want = Vector2.MoveTowards(myPos, tgtPos, moveSpeed * Time.deltaTime);
-                TryStep(want - (Vector2)myPos);
+                // 갭 TOP-8 (2026-06-13) — 레퍼런스: 경로가 있으면 절대 벽을 안 부순다.
+                //  콜로니스트 PathGrid A* 재사용(2s 리패스 캐시) — 열린 문/통로를 돌아
+                //  들어간다.  경로 전무(완전 봉쇄)일 때만 기존 직선+벽 공격 폴백(=sapper).
+                //  r8 '습격 무교전 퇴각'(잠든 림에게 직선상 벽이라 도달 실패)의 수정.
+                if (!TryFollowAStar(tgtPos))
+                {
+                    // #202: 벽/물/바위 존중.  axis-slide → 막히면 벽 공격(TryStep 내).
+                    Vector2 want = Vector2.MoveTowards(myPos, tgtPos, moveSpeed * Time.deltaTime);
+                    TryStep(want - (Vector2)myPos);
+                }
             }
             else
             {
@@ -196,6 +201,45 @@ namespace MelonS.GameProto
         private float lastWallLogTime = -10f;
         private float lastCombatTime = -1f;
         private bool retreating;
+
+        // ── TOP-8 A* 경로 추적 ─────────────────────────────────────────────
+        private System.Collections.Generic.List<Vector2Int> aPath;
+        private int aPathIdx;
+        private float nextRepathTime = -1f;
+        private Vector2 aPathGoal;
+
+        /// <summary>타깃까지 A* 경로를 따라 한 step.  경로 전무(봉쇄)면 false → 폴백.</summary>
+        private bool TryFollowAStar(Vector2 tgtPos)
+        {
+            var grid = PawnMovement.Grid;
+            if (grid == null) return false;   // headless V-scene — 기존 직선 유지
+            Vector2 myPos = transform.position;
+            // 리패스: 2s 주기 / 경로 없음 / 타깃 1.5셀 이상 이동
+            if (aPath == null || Time.time >= nextRepathTime
+                || (aPathGoal - tgtPos).sqrMagnitude > 2.25f)
+            {
+                var startCell = new Vector2Int(Mathf.FloorToInt(myPos.x), Mathf.FloorToInt(myPos.y));
+                var goalCell = new Vector2Int(Mathf.FloorToInt(tgtPos.x), Mathf.FloorToInt(tgtPos.y));
+                aPath = MelonS.GameProto.AI.AStar.FindPath(grid, startCell, goalCell);
+                aPathIdx = 0;
+                aPathGoal = tgtPos;
+                nextRepathTime = Time.time + 2f;
+            }
+            if (aPath == null || aPath.Count == 0) return false;   // 완전 봉쇄 → sapper 폴백
+            // 현재 웨이포인트(셀 중심)로 이동.  도달 시 다음으로.
+            while (aPathIdx < aPath.Count)
+            {
+                Vector2 wp = new Vector2(aPath[aPathIdx].x + 0.5f, aPath[aPathIdx].y + 0.5f);
+                if ((wp - myPos).sqrMagnitude < 0.04f) { aPathIdx++; continue; }
+                // 경로 중 벽 신설 등으로 막혔으면 무효화 → 다음 틱 리패스
+                if (IsCellBlocked(wp)) { aPath = null; return true; }   // 이번 틱은 소비(정지)
+                Vector2 want = Vector2.MoveTowards(myPos, wp, moveSpeed * Time.deltaTime);
+                transform.position = new Vector3(want.x, want.y, transform.position.z);
+                blockedSince = -1f;   // A* 진행 중엔 '막힘' 아님
+                return true;
+            }
+            return true;   // 경로 소진(타깃 셀 도달) — 다음 틱 contactRange 판정
+        }
 
         private bool TryStep(Vector2 step)
         {
