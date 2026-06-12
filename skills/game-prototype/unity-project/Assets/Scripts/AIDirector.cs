@@ -157,6 +157,7 @@ namespace MelonS.GameProto
         // TOP-1 — 다음 습격 발화 시각 (게임초).  -1 = 미스케줄.
         private float nextRaidGameSec = -1f;
         private bool firstRaidWarned;           // 퀵픽 '첫 습격 경고' — 1회만
+        private int lastRaidColonists = -1;     // 퀵픽 '적응 계수' — 직전 습격 시점 림 수
         private int raidCount = 0;     // how many raids have fired this run (drives slow size escalation)
 
         // #버그헌트3(2026-06-04): 레이드 스케줄러 상태 save/load.  시계(GameSeconds)만 복원되고
@@ -282,6 +283,19 @@ namespace MelonS.GameProto
                 // 간격 ±1일 지터 (하한 1.9일) + 발화 시각 6~22시 랜덤.
                 float waitDays = Mathf.Max(1.9f, RaidIntervalDays + UnityEngine.Random.Range(-1f, 1f));
                 float fireHourOffset = UnityEngine.Random.Range(6f, 22f) / 24f;   // 일 분율
+                // 퀵픽 '적응 계수' (2026-06-13) — 직전 습격 이후 림이 줄었으면(사망)
+                //  다음 습격을 완화: 규모 산식 후퇴(raidCount-2) + 유예 +2일.
+                //  레퍼런스 적응 스토리텔링(패배 후 연타 방지)의 최소형.
+                int aliveNow = 0;
+                foreach (var pp in UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                    if (pp != null && !pp.IsDead) aliveNow++;
+                if (lastRaidColonists > 0 && aliveNow < lastRaidColonists)
+                {
+                    raidCount = Mathf.Max(0, raidCount - 2);
+                    waitDays += 2f;
+                    Debug.Log($"[AIDirector] 적응 계수 — 림 {lastRaidColonists}→{aliveNow}, 규모 후퇴 + 유예 +2일");
+                }
+                lastRaidColonists = aliveNow;
                 nextRaidGameSec = Mathf.Floor(nowSec / DaySec) * DaySec + (waitDays + fireHourOffset) * DaySec;
                 // 퀵픽 '첫 습격 경고' (2026-06-13) — 신규 플레이어가 첫 위협을 무방비로
                 //  맞던 것: 첫 습격 ~1게임일 전 1회 경고 카드 (시점은 알려주되 정확한
