@@ -245,6 +245,11 @@ namespace MelonS.GameProto
         /// <summary>사용자가 다른 명령을 내리거나 휴식이 끝나면 호출 — 강제 휴식 취소.</summary>
         public void ClearRestTarget()
         {
+            // r9 채점 T-2 사례 B — RestWhenBleedingAction 이 TryReserve 한 침대 예약이
+            //  여기서 해제되지 않아 영구 누수 → 멀쩡히 빈 침대가 '없음' 판정(지훈 d8 밤
+            //  바닥 취침).  claimant 일치 시에만 풀리므로 무예약 경로(우클릭 휴식)에 무해.
+            if (restTarget != null)
+                MelonS.GameProto.AI.ReservationManager.Release(restTarget, gameObject);
             restTarget = null;
             forcedResting = false;
         }

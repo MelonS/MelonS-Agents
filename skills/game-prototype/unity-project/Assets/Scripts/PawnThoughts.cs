@@ -46,6 +46,8 @@ namespace MelonS.GameProto
         /// label 의 thought 를 추가하거나 expireTime 갱신.  catalog 에 정의된 label 만 허용.
         /// </summary>
         // T7 — 실내 = 지붕 아래 (RoofDesignation BUILT 셀).
+        private bool hadDarkThought;   // [Dark] 진입 1회 로그용 에지 검출
+
         private bool IsIndoors()
         {
             var rd = RoofDesignation.Instance;
@@ -138,6 +140,9 @@ namespace MelonS.GameProto
                 bool darkActive = !indoors && needs != null && !needs.IsSleeping
                     && GameClock.Instance != null
                     && (GameClock.Instance.Hour >= 20 || GameClock.Instance.Hour < 6);
+                if (darkActive && !hadDarkThought)
+                    Debug.Log($"[Dark] {GetComponent<PawnEntity>()?.PawnName ?? name} 어둠 속 활동 -4 진입 hour={(GameClock.Instance != null ? GameClock.Instance.Hour : -1)}");
+                hadDarkThought = darkActive;
                 if (darkActive) AddThought("어둠 속 활동"); else RemoveThought("어둠 속 활동");
                 // 첫사이클 T7 (2026-06-12) — '실내'의 정의를 바닥 1장(허허벌판 면역
                 //  이질)에서 '지붕 아래(IsRoofed)'로: 벽+지붕으로 지은 집이 처음으로
