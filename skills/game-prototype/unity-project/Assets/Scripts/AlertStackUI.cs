@@ -218,6 +218,28 @@ namespace MelonS.GameProto
             inst.PushCard(title, TierColor(tier), tier);
         }
 
+        /// <summary>TOP-4 — 좋은 소식 파랑 카드 (시간 만료 tier 1).</summary>
+        public static void NotifyGood(string title)
+        {
+            var inst = Object.FindFirstObjectByType<AlertStackUI>();
+            if (inst == null) return;
+            inst.PushCard(title, GoodBlue, 1);
+        }
+
+        /// <summary>소크 r3 #8 — 위협 종료 시 영속 카드 해소.  제목 부분일치 카드 전부 제거.
+        ///  (레퍼런스: 위협이 끝나면 레터가 의미를 잃는다 — 8게임일 스택 방지.)</summary>
+        public static void Resolve(string titleContains)
+        {
+            var inst = Object.FindFirstObjectByType<AlertStackUI>();
+            if (inst == null) return;
+            for (int i = inst.cards.Count - 1; i >= 0; i--)
+            {
+                var c = inst.cards[i];
+                if (c != null && c.title != null && c.title.Contains(titleContains))
+                    inst.DismissCard(c);
+            }
+        }
+
         private void PushCard(string title, Color accent, int tier)
         {
             // Evict oldest if over the cap so the corner never overflows.
@@ -422,12 +444,14 @@ namespace MelonS.GameProto
             public RectTransform root;
             public float spawnTime;
             public int tier;           // #7.4 — tier2+ 는 시간 만료 제외(영속)
+            public string title;       // 소크 r3 #8 — 위협 해소 시 매칭 제거용
             public System.Action onClick;
 
             public static AlertCard Build(RectTransform parent, string title, Color accent,
                                           Font font, int fontSize, float w, float h)
             {
                 var card = new AlertCard();
+                card.title = title;
 
                 var go = new GameObject("AlertCard");
                 go.transform.SetParent(parent, false);

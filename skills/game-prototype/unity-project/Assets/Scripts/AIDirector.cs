@@ -67,6 +67,8 @@ namespace MelonS.GameProto
         private static readonly string[] AmbientIds = { "bird_omen", "fox_sighting", "quiet_evening" };
 
         private float nextFireGameSec = -1f;   // GameClock.GameSeconds 기준 (-1 = 미스케줄)
+        private bool raidCardActive;            // 소크 r3 #8 — 습격 카드 해소 추적
+        private float nextRaidClearCheck;
         private GameEvent lastEvent;
         private readonly List<GameEvent> pool = new List<GameEvent>();
 
@@ -217,6 +219,23 @@ namespace MelonS.GameProto
             // Day 13: raid check.  Poll GameClock from Update (lesson #7 firewall:
             // never subscribe singleton in OnEnable — bind order isn't guaranteed).
             TryScheduleRaid();
+
+            // 소크 r3 #8 — 습격 레터가 위협 종료 후에도 영속 스택(8게임일 잔존).
+            //  밴딧 전멸 감지 시 카드 해소 + '습격 격퇴' 파랑 카드 1회 (1s 폴 스로틀).
+            if (raidCardActive && Time.unscaledTime >= nextRaidClearCheck)
+            {
+                nextRaidClearCheck = Time.unscaledTime + 1f;
+                bool anyAlive = false;
+                foreach (var b in UnityEngine.Object.FindObjectsByType<BanditEnemy>(FindObjectsSortMode.None))
+                    if (b != null && !b.IsDead) { anyAlive = true; break; }
+                if (!anyAlive)
+                {
+                    raidCardActive = false;
+                    AlertStackUI.Resolve("약탈자");
+                    AlertStackUI.NotifyGood("습격 격퇴!");
+                    Debug.Log("[AIDirector] raid cleared — 카드 해소 + 격퇴 알림");
+                }
+            }
         }
 
         private void TryScheduleRaid()
@@ -300,6 +319,7 @@ namespace MelonS.GameProto
             lastEvent = raidEv;
             OnEventFired?.Invoke(raidEv);
             for (int i = 0; i < banditCount; i++) SpawnSingleBandit(i);
+            raidCardActive = true;   // 소크 r3 #8 — 전멸 감지 → 카드 해소
         }
 
         private void SpawnSingleBandit(int waveIndex)
