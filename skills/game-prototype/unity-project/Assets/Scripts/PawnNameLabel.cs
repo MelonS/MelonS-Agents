@@ -20,8 +20,8 @@ namespace MelonS.GameProto
     {
         // #199 A2 ortho + 1x1 pawn — 라벨을 HP 바(top 0.68) 바로 위로.
         //  순서(위→아래): name(1.06) > status(0.80) > HP 바(0.68) > mood 바(0.55) > 머리(0.5).
-        [SerializeField] private Vector3 offset = new Vector3(0, 1.06f, 0);
-        [SerializeField] private float statusGap = 0.26f;   // name↔status 줄간격 (#3.1)
+        [SerializeField] private Vector3 offset = new Vector3(0, 1.12f, 0);
+        [SerializeField] private float statusGap = 0.27f;   // name↔status 줄간격 (#3.1)
         [SerializeField] private float fontSize = 64;
         [SerializeField] private float characterSize = 0.05f;
         // TOP-2 LOD 경계 (ortho size).  #카메라파리티: 기본줌 5.5→8 에 맞춰 재조정
@@ -65,6 +65,9 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
+            // UI겹침 P2-7 — 동일 셀 수렴 시 이름끼리 100% 합동(order 30==30).
+            //  결정적 스태거 (GetInstanceID 홀짝 금지 — 전부 짝수 가능).
+            _labelStagger = (s_labelTier++ & 1) * 0.18f;
             entity = GetComponent<PawnEntity>();
             needs = GetComponent<PawnNeeds>();
             chopper = GetComponent<PawnChopper>();
@@ -82,7 +85,7 @@ namespace MelonS.GameProto
 
             nameGo = new GameObject("NameLabel");
             nameGo.transform.SetParent(transform, false);
-            nameGo.transform.localPosition = offset;
+            nameGo.transform.localPosition = offset + new Vector3(0f, _labelStagger, 0f);   // P2-7 스태거
             nameTm = MakeText(nameGo, name, (int)fontSize, characterSize,
                               MelonS.GameProto.Core.UITheme.AccentGold, 30);
             nameShadowTm = MakeShadow(nameGo, nameTm, 29);
@@ -90,7 +93,7 @@ namespace MelonS.GameProto
             // 2번째 라인: status — TOP-2: 선택 림만 표시 (계산은 항상).
             statusGo = new GameObject("StatusLabel");
             statusGo.transform.SetParent(transform, false);
-            statusGo.transform.localPosition = new Vector3(offset.x, offset.y - statusGap, offset.z);
+            statusGo.transform.localPosition = new Vector3(offset.x, (offset.y + _labelStagger) - statusGap, offset.z);
             statusTm = MakeText(statusGo, "", (int)(fontSize * 0.7f), characterSize * 0.85f,
                                 MelonS.GameProto.Core.UITheme.TextSecondary, 31);
             statusShadowTm = MakeShadow(statusGo, statusTm, 29);
@@ -186,6 +189,9 @@ namespace MelonS.GameProto
 
         // 운영자 2026-06-02: 림이 "머하는지" 머리위에 항상 표시.  우선순위(위→아래):
         //  사망 > 징집 > 정신붕괴 > 수면 > 식사 > 휴식 > (작업 9종) > 이동 > 연구 > 유휴.
+        private static int s_labelTier;
+        private float _labelStagger;
+
         private string ComputeStatusLabel()
         {
             if (entity == null) return "";

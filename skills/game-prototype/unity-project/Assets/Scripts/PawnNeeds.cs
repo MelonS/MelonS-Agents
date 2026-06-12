@@ -605,7 +605,7 @@ namespace MelonS.GameProto
             {
                 _sleepMarker = new GameObject("SleepZz");
                 _sleepMarker.transform.SetParent(transform, false);
-                _sleepMarker.transform.localPosition = new Vector3(0.35f, 0.8f, 0f);
+                _sleepMarker.transform.localPosition = new Vector3(0.35f, 1.32f, 0f);   // UI겹침 P1-6+D 사다리
                 var tm = _sleepMarker.AddComponent<TextMesh>();
                 tm.text = "zZ";
                 tm.fontSize = 40;
@@ -660,7 +660,7 @@ namespace MelonS.GameProto
                 if (Time.unscaledTime >= _nextEatFx)
                 {
                     _nextEatFx = Time.unscaledTime + 1.1f;
-                    FloatingText.Spawn(transform.position + new Vector3(0.3f, 0.6f, 0f),
+                    FloatingText.Spawn(transform.position + new Vector3(0.55f, 1.0f, 0f),
                                        "냠", new Color(0.95f, 0.85f, 0.6f, 0.95f));
                 }
                 if (Time.time >= eatingUntil)

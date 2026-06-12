@@ -341,8 +341,8 @@ namespace MelonS.GameProto
                 float s = TimeController.Instance.CurrentScale;
                 RefreshBuildHighlight(pauseBtn,  s == 0f);
                 RefreshBuildHighlight(speed1Btn, Mathf.Approximately(s, 1f));
-                RefreshBuildHighlight(speed2Btn, Mathf.Approximately(s, 2f));
-                RefreshBuildHighlight(speed4Btn, Mathf.Approximately(s, 4f));
+                RefreshBuildHighlight(speed2Btn, Mathf.Approximately(s, 3f));
+                RefreshBuildHighlight(speed4Btn, Mathf.Approximately(s, 6f));
             }
             // Draft highlight (selection 의 IsDrafted) - cachedCs lesson #4
             if (draftBtn != null)

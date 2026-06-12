@@ -79,7 +79,7 @@ namespace MelonS.GameProto
             rt.anchorMax = new Vector2(0.5f, 1f);
             rt.pivot = new Vector2(0.5f, 1f);
             rt.sizeDelta = new Vector2(360, 30);
-            rt.anchoredPosition = new Vector2(0, -56);   // 콜로니스트 바 아래
+            rt.anchoredPosition = new Vector2(0, -146);  // UI겹침 P1-1 — TopBar(76)+ColonistBar(84+54)+8 아래
 
             var bg = root.AddComponent<Image>();
             bg.color = new Color(0.08f, 0.07f, 0.06f, 0.82f);
