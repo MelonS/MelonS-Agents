@@ -258,6 +258,17 @@ namespace MelonS.GameProto
 
         // ---- left-press / drag / release → designate dirt cell(s) ------------
 
+        // 첫사이클 T12 — 드래그 중 라이브 사각형 미리보기 (release 일괄 Mark 라
+        //  깜깜이 드래그이던 것).  순수 시각, 하네스 1프레임 클릭에는 무표시(무해).
+        private void OnRenderObject()
+        {
+            if (!dragging || !ModeActive || cam == null || Camera.current != cam) return;
+            Vector3 curW = cam.ScreenToWorldPoint(SimInput.mousePosition);
+            var fillC = EraseMode ? new Color(0.62f, 0.42f, 0.28f, 0.13f) : new Color(0.42f, 0.78f, 0.32f, 0.13f);
+            var borderC = EraseMode ? new Color(0.70f, 0.46f, 0.30f, 0.9f) : new Color(0.45f, 0.85f, 0.35f, 0.9f);
+            DragRectGL.Draw(cam, dragStartWorld, curW, fillC, borderC);
+        }
+
         private void HandleDragInput()
         {
             if (cam == null) return;

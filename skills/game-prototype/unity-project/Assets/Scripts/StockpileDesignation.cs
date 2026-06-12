@@ -200,6 +200,18 @@ namespace MelonS.GameProto
 
         // ---- left-press / drag / release → lay stockpile cell(s) -------------
 
+        // 첫사이클 T12 — 드래그 중 라이브 사각형 미리보기 (release 일괄 Mark 라
+        //  깜깜이 드래그이던 것).  순수 시각, 하네스 1프레임 클릭에는 무표시(무해).
+        private void OnRenderObject()
+        {
+            if (!dragging || !ModeActive || cam == null || Camera.current != cam) return;
+            Vector3 curW = cam.ScreenToWorldPoint(SimInput.mousePosition);
+            bool destr = EraseMode || DumpingMode;
+            var fillC = destr ? new Color(0.85f, 0.30f, 0.25f, 0.13f) : new Color(0.95f, 0.85f, 0.40f, 0.13f);
+            var borderC = destr ? new Color(0.90f, 0.35f, 0.30f, 0.9f) : new Color(0.95f, 0.85f, 0.45f, 0.9f);
+            DragRectGL.Draw(cam, dragStartWorld, curW, fillC, borderC);
+        }
+
         private void HandleDragInput()
         {
             if (cam == null) return;
