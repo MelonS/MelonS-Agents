@@ -247,3 +247,10 @@ docs/review-digest.md
 
 # Playwright MCP runtime logs (per-session artifacts)
 .playwright-mcp/
+
+# game-prototype-suika — machine-local Unity dirs (same policy as the other prototypes)
+skills/game-prototype-suika/unity-project/Library/
+skills/game-prototype-suika/unity-project/Temp/
+skills/game-prototype-suika/unity-project/Logs/
+skills/game-prototype-suika/unity-project/UserSettings/
+skills/game-prototype-suika/builds/

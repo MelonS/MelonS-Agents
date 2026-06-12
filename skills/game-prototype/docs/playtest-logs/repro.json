@@ -1,0 +1,17 @@
+{
+  "tag": "repro",
+  "durationSec": 40,
+  "timeSpeed": 3,
+  "survived": true,
+  "daysReached": 6,
+  "foodTrend": "FALLING (-15) — sustainability risk",
+  "totalViolations": 0,
+  "issues": [],
+  "phase1": ["Topped up bank for build: wood=440 stone=200", "Wall ring: 14/14 segments built around (4,3)..(8,7)", "Door @ (6,3): built", "Beds: 2/2 built inside the house", "Stove @ (5,6): built", "Stockpile zone: 3 cells around (5..7, 5)"],
+  "timeline": [
+    {"t": 0.0, "day": 1, "hour": 12, "minute": 26, "wood": 455, "food": 10, "meals": 2, "fineMeals": 0, "stone": 200, "pawns": [{"name": "서연", "food": 79.1, "sleep": 78.1, "mood": 55.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "벌목"}, {"name": "민지", "food": 79.1, "sleep": 78.1, "mood": 51.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "유휴"}, {"name": "지훈", "food": 79.1, "sleep": 78.1, "mood": 54.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "벌목"}], "violations": []},
+    {"t": 12.0, "day": 3, "hour": 0, "minute": 26, "wood": 498, "food": 2, "meals": 10, "fineMeals": 0, "stone": 203, "pawns": [{"name": "서연", "food": 74.1, "sleep": 67.3, "mood": 55.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "사냥"}, {"name": "민지", "food": 74.1, "sleep": 67.3, "mood": 51.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "사냥"}, {"name": "지훈", "food": 74.1, "sleep": 67.3, "mood": 54.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "사냥"}], "violations": []},
+    {"t": 24.0, "day": 4, "hour": 12, "minute": 26, "wood": 498, "food": 2, "meals": 10, "fineMeals": 0, "stone": 203, "pawns": [{"name": "서연", "food": 69.0, "sleep": 56.5, "mood": 55.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "사냥"}, {"name": "민지", "food": 69.0, "sleep": 56.5, "mood": 51.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "유휴"}, {"name": "지훈", "food": 69.0, "sleep": 56.5, "mood": 54.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "유휴"}], "violations": []},
+    {"t": 36.0, "day": 6, "hour": 0, "minute": 26, "wood": 502, "food": 19, "meals": 31, "fineMeals": 0, "stone": 207, "pawns": [{"name": "서연", "food": 64.0, "sleep": 45.7, "mood": 55.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "운반"}, {"name": "민지", "food": 64.0, "sleep": 45.7, "mood": 51.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "요리"}, {"name": "지훈", "food": 64.0, "sleep": 45.7, "mood": 54.9, "hp": 30, "dead": false, "downed": false, "sleeping": false, "inWall": false, "stuck": false, "task": "요리"}], "violations": []}
+  ]
+}
