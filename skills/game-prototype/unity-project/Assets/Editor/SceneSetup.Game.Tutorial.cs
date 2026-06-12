@@ -26,7 +26,7 @@ namespace MelonS.GameProto.EditorTools
             tutBgRt.anchorMin = new Vector2(0.5f, 0f);
             tutBgRt.anchorMax = new Vector2(0.5f, 0f);
             tutBgRt.pivot = new Vector2(0.5f, 0f);
-            tutBgRt.sizeDelta = new Vector2(640, 64);
+            tutBgRt.sizeDelta = new Vector2(560, 64);   // UI겹침 P2-2 — 시프트 인포패널과 슬리버
             tutBgRt.anchoredPosition = new Vector2(0, 170);
             // bordered panel (returns padded inner content RT; TutorialText parents here)
             RectTransform tutContent = UITheme.MakeBorderedPanel(

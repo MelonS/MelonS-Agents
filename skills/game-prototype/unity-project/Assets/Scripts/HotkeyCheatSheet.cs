@@ -59,6 +59,13 @@ namespace MelonS.GameProto
     /// </summary>
     public class HotkeyCheatSheet : MonoBehaviour
     {
+        // UI겹침 P2-4 — 상호배타용 정적 닫기 (SetVisible 이 private 라 외부 닫기 수단 부재).
+        private static HotkeyCheatSheet _hcsInstance;
+        public static void CloseStatic()
+        {
+            if (_hcsInstance != null && _hcsInstance.visible) _hcsInstance.SetVisible(false);
+        }
+
         // ---- tunables (SerializeField so designer can tweak without code) ----
         [Header("Toggle")]
         [SerializeField] private KeyCode toggleKey = KeyCode.H;
@@ -161,6 +168,7 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
+            _hcsInstance = this;   // P2-4
             titleFont = UITheme.LoadKoreanFont(titleFontSize);
             bodyFont = UITheme.LoadKoreanFont(rowFontSize);
             BuildCanvas();

@@ -42,8 +42,11 @@ namespace MelonS.GameProto
 
         private void Update()
         {
+            if (_ruInstance == null) _ruInstance = this;   // P1-5 lazy
             if (ResearchManager.Instance == null) return;
             // N 키 = picker 토글
+            // P1-5 — 설정 모달 열림 중 N/숫자키가 backdrop 을 관통하던 것 가드.
+            if (SettingsMenu.AnyOpen) return;
             if (Input.GetKeyDown(KeyCode.N))
             {
                 pickerOpen = !pickerOpen;
@@ -131,8 +134,16 @@ namespace MelonS.GameProto
         }
 
         /// <summary>#5.3 — picker 가 열릴 때 같은 중앙 자리를 쓰는 직업/일정 탭을 닫는다.</summary>
+        /// <summary>P1-5 — SettingsMenu 가 호출하는 정적 픽커 닫기 (인스턴스 경유).</summary>
+        private static ResearchUI _ruInstance;
+        public static void ClosePickerStatic()
+        {
+            if (_ruInstance != null && _ruInstance.pickerOpen) _ruInstance.ClosePicker();
+        }
+
         private static void CloseSiblingPanels()
         {
+            HotkeyCheatSheet.CloseStatic();   // P2-4 상호배타
             if (WorkTabUI.Instance != null && WorkTabUI.Instance.IsOpen) WorkTabUI.Instance.Close();
             if (ScheduleUI.Instance != null && ScheduleUI.Instance.IsOpen) ScheduleUI.Instance.Close();
         }

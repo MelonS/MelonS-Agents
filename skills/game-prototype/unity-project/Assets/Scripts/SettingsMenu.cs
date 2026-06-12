@@ -42,6 +42,9 @@ namespace MelonS.GameProto
         private RectTransform panelContent;
         private Font font;
         private bool isOpen;
+        // UI겹침 P1-5 — ResearchUI 의 모달 상호배타/핫키 가드용 공개 표면.
+        private static SettingsMenu _smInstance;
+        public static bool AnyOpen => _smInstance != null && _smInstance.isOpen;
 
         private Button saveBtn;
         private Button loadBtn;
@@ -102,6 +105,7 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
+            _smInstance = this;   // P1-5
             font = UITheme.LoadKoreanFont(18);
 
             // 백드롭은 같은 캔버스의 형제로 (패널보다 먼저 생성 → 아래 깔림).
@@ -255,6 +259,9 @@ namespace MelonS.GameProto
             if (backdrop != null) { backdrop.SetActive(true); backdrop.transform.SetAsLastSibling(); }
             gameObject.SetActive(true);
             transform.SetAsLastSibling();   // ensure on top of late-spawned UI
+            // P1-5 — 이중 모달 방지: 설정을 열면 연구 픽커/치트시트 닫는다.
+            ResearchUI.ClosePickerStatic();
+            HotkeyCheatSheet.CloseStatic();
             isOpen = true;
         }
 
