@@ -51,6 +51,18 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(SpriteRenderer))]
     public class FenceEntity : MonoBehaviour
     {
+        // 첫사이클 T13 (2026-06-12) — 무콜라이더라 철거 클릭 자체가 불가능하던 이중
+        //  영구물.  isTrigger 라 통행/물리 무영향 (IsPassable 유지).
+        private void Awake()
+        {
+            if (GetComponent<Collider2D>() == null)
+            {
+                var fc = gameObject.AddComponent<BoxCollider2D>();
+                fc.isTrigger = true;
+                fc.size = Vector2.one * 0.9f;
+            }
+        }
+
         /// <summary>
         /// True for the fence-GATE variant, false for a plain fence rail.
         /// Set by BuildManager when it instantiates the prefab template.  Used

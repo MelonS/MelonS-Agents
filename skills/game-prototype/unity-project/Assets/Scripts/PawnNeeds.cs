@@ -686,6 +686,12 @@ namespace MelonS.GameProto
             float stockD = bestStock != null
                 ? ((Vector2)bestStock.transform.position - me).sqrMagnitude : float.MaxValue;
             float bushD = bestBush != null ? bushSq : float.MaxValue;
+            // 첫사이클 T14 — 순수 거리 + '<=' 라 동률(저장 셀 위 더미)이면 생고기가
+            //  이겨 조리 동기가 붕괴했다.  조리식(meal/fine)이 있으면 저장고 우선
+            //  (레퍼런스: 조리식 우선, 생식은 마지못해).  생식 부정 thought 는 결정 D6.
+            var rmPick = ResourceManager.Instance;
+            if (bestStock != null && rmPick != null && (rmPick.meals > 0 || rmPick.fineMeals > 0))
+                stockD = 0f;
 
             if (meatD == float.MaxValue && stockD == float.MaxValue && bushD == float.MaxValue)
             {

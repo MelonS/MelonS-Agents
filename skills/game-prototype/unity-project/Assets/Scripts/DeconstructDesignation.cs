@@ -578,7 +578,14 @@ namespace MelonS.GameProto
                 // #버그헌트(2026-06-04): 바리케이드는 통행 차단(RegisterWallCell)인데 해체 대상에서
                 //  빠져 한 번 놓으면 영구 봉쇄였다(출구 막으면 pawn 영영 갇힘).  OnDestroy 가
                 //  SetStructureBlocked(false)로 셀을 풀므로 해체하면 실제로 통행이 복구된다.
-                || go.GetComponent<BarricadeEntity>() != null;
+                || go.GetComponent<BarricadeEntity>() != null
+                // 첫사이클 T13 (2026-06-12) — 7종 철거 불가(램프/탁자/연구대는 셀 점유라
+                //  잘못 놓으면 영구 봉인, 울타리류·바닥류 포함).  레퍼런스: 전부 철거 가능.
+                || go.GetComponent<LampEntity>() != null
+                || go.GetComponent<TableEntity>() != null
+                || go.GetComponent<ResearchBench>() != null
+                || go.GetComponent<FenceEntity>() != null   // IsGate 포함 (단일 클래스)
+                || go.GetComponent<FloorEntity>() != null;
         }
 
         /// <summary>Compute the refund + footprint from the structure type, then draw

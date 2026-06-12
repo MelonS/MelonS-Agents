@@ -193,6 +193,9 @@ namespace MelonS.GameProto
             if (entity.IsDrafted) return "[징집]";
             if (needs != null && needs.IsBreaking) return "정신붕괴";
             if (needs != null && needs.IsSleeping) return "수면";
+            // 첫사이클 T17 — 취침 이동이 '떠도는중'으로 낙하해 '밤마다 림이 떠돈다'
+            //  인식을 코드가 생산하던 것 (IsSleeping 케이스 '아래' — 수면 중 역회귀 방지).
+            if (needs != null && (needs.HasAutoSleepOrder || needs.HasRestOrder)) return "취침 이동";
             if (needs != null && needs.IsEating) return "식사";
             if (needs != null && needs.IsForcedResting) return "휴식";
             // 작업 9종 — HasTask(이동 포함, 의도 단계부터 표시).
