@@ -183,12 +183,23 @@ namespace MelonS.GameProto
             // Only threats deserve a persistent letter (raid / wolf_pack /
             // mental-break / siege / infestation / large_raid).  Tier 0 ambient
             // flavor stays in the scrolling EventLog only.
+            // 갭 TOP-4 — 좋은 일(합류/발견/상인)도 파랑 카드를 받는다 (레퍼런스:
+            //  파랑=좋음, 빨강=위협 — 색만 보고 판단).  Neutral 분위기는 EventLog 만.
+            if (ev.kind == EventKind.Good)
+            {
+                string gt = string.IsNullOrEmpty(ev.title) ? "소식" : ev.title;
+                PushCard(gt, GoodBlue, 1);
+                return;
+            }
             if (ev.threatTier < 1) return;
 
             string title = string.IsNullOrEmpty(ev.title) ? "위협" : ev.title;
             Color tierColor = TierColor(ev.threatTier);
             PushCard(title, tierColor, ev.threatTier);
         }
+
+        // TOP-4 — 좋은 소식 파랑 (레퍼런스 'positive letter' 의미축, 테마 톤에 맞춘 청회색-블루)
+        private static readonly Color GoodBlue = new Color(0.45f, 0.65f, 0.95f, 1f);
 
         /// <summary>tier1 amber (UI_ORANGE), tier3 DANGER_RED; tier2 between.</summary>
         private static Color TierColor(int tier)

@@ -5,6 +5,10 @@ using UnityEngine;
 namespace MelonS.GameProto
 {
     [Serializable]
+    /// <summary>갭 TOP-4 (2026-06-12) — 레터 색상 의미론.  레퍼런스: 파랑=좋은 일,
+    /// 빨강=위협 — 색만 보고 판단 가능해야 한다.</summary>
+    public enum EventKind { Neutral = 0, Good = 1, Threat = 2 }
+
     public class GameEvent
     {
         public string id;
@@ -12,6 +16,7 @@ namespace MelonS.GameProto
         public string description;
         public string flavor;  // optional LLM-generated 1-line atmosphere
         public int threatTier = 0;  // Day 73: 0=safe, 1=mild, 2=severe, 3=critical
+        public EventKind kind = EventKind.Neutral;  // TOP-4 — 카드 색/노출의 의미축
 
         public string Formatted =>
             string.IsNullOrEmpty(flavor)
@@ -276,7 +281,8 @@ namespace MelonS.GameProto
                 // 게임루프 백로그 #1 (2026-06-11): tier 기본 0 이라 AlertStackUI 의
                 //  threatTier<1 필터가 '습격만' 걸러냈다 — 영구 경보 카드 + 클릭 카메라
                 //  팬 사슬이 통째로 죽어 있던 버그.  상인(2)과 동급 이상이 마땅하다.
-                threatTier = 2,
+                threatTier = 3,            // TOP-4 — 습격은 최상위 빨강
+                kind = EventKind.Threat,
             };
             lastEvent = raidEv;
             OnEventFired?.Invoke(raidEv);
@@ -603,13 +609,13 @@ namespace MelonS.GameProto
             // variants stored in Resources/events.json).
             // Day 73: tier 0 (safe events)
             pool.Add(new GameEvent {
-                id = "wanderer_arrival", threatTier = 0,
+                id = "wanderer_arrival", threatTier = 0, kind = EventKind.Good,
                 title = "방랑자 도착",
                 description = "한 여행자가 야영지 외곽에 나타나 머물 곳을 찾고 있다.",
                 flavor = "장화에 묻은 진흙이 그가 걸어온 길의 길이를 말해준다.",
             });
             pool.Add(new GameEvent {
-                id = "lucky_find", threatTier = 0,
+                id = "lucky_find", threatTier = 0, kind = EventKind.Good,
                 title = "행운의 발견",
                 description = "콜로니스트 한 명이 숲에서 작은 보급품 더미를 발견했다.",
                 flavor = "기름천에 잘 싸인 도구들.",
@@ -635,7 +641,7 @@ namespace MelonS.GameProto
 
             // Day 73: tier 1 (mild) — storms, morale, predators
             pool.Add(new GameEvent {
-                id = "storm_warning", threatTier = 1,
+                id = "storm_warning", threatTier = 1, kind = EventKind.Threat,
                 title = "폭풍 경보",
                 description = "북쪽에서 짙은 먹구름이 몰려온다. 한 시간 안에 폭풍이 닥칠 것이다. (야외 방치 식량 부패 4배)",
                 flavor = "바람에서 벌써 빗냄새가 난다.",
@@ -644,7 +650,7 @@ namespace MelonS.GameProto
             //  일어나야 한다.  morale_dip/minor_disease 는 ApplyEventEffect 로 실효 배선,
             //  fox_sighting 은 월드 효과가 없으므로 tier 0 분위기 텍스트로 강등.
             pool.Add(new GameEvent {
-                id = "morale_dip", threatTier = 1,
+                id = "morale_dip", threatTier = 1, kind = EventKind.Threat,
                 title = "사기 저하",
                 description = "오늘 콜로니스트들이 어딘가 무기력해 보인다. (전원 기분 -10)",
                 flavor = "저녁 식탁의 대화가 짧고 띄엄띄엄했다.",
@@ -656,7 +662,7 @@ namespace MelonS.GameProto
                 flavor = "발견되어도 도망가지 않는다.",
             });
             pool.Add(new GameEvent {
-                id = "minor_disease", threatTier = 1,
+                id = "minor_disease", threatTier = 1, kind = EventKind.Threat,
                 title = "감기 기운",
                 description = "콜로니스트 한 명이 기침을 시작했다. 컨디션이 떨어진다.",
                 flavor = "감기인지 더 나쁜 것인지 아직 모른다.",
@@ -664,7 +670,7 @@ namespace MelonS.GameProto
 
             // Day 73: tier 2 (severe)
             pool.Add(new GameEvent {
-                id = "trader_caravan", threatTier = 2,
+                id = "trader_caravan", threatTier = 0, kind = EventKind.Good,
                 title = "상인 도착",
                 description = "상인 일행이 방문하여 거래를 제안한다. (실제 거래 시스템: 향후 Day)",
                 flavor = "그들의 마차에서 새로운 냄새가 난다.",
