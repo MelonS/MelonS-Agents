@@ -33,6 +33,15 @@ namespace MelonS.GameProto
             if (rm == null) return;
             float elapsed = Time.time - startTime;
             Debug.Log($"[ResMon] t={elapsed:F1}s wood={rm.wood} food={rm.food} stone={rm.stone} meals={rm.meals} fineMeals={rm.fineMeals}");
+            // 수면루프 진단(2026-06-13) — 수면 곡선 실측: 림별 sleep 값 (5s 주기 동승).
+            var sb = new System.Text.StringBuilder("[SleepMon]");
+            foreach (var pn in UnityEngine.Object.FindObjectsByType<PawnNeeds>(FindObjectsSortMode.None))
+            {
+                if (pn == null) continue;
+                var pe = pn.GetComponent<PawnEntity>();
+                sb.Append($" {(pe != null ? pe.PawnName : pn.name)}={pn.sleep:F0}{(pn.IsSleeping ? "z" : "")}");
+            }
+            Debug.Log(sb.ToString());
         }
     }
 }

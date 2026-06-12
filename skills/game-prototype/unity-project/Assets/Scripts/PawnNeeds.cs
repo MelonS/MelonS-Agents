@@ -221,8 +221,19 @@ namespace MelonS.GameProto
         //  1일차 저녁 전 림이 빈 침대 옆에서도 길바닥 동시 실신.  걷기 트리거를 20으로
         //  올려 15~20 을 '침대로 걸어갈 유예 창'으로 (실신은 15 유지).
         private const float ExhaustedWalkLevel = 20f;
+        // 수면곡선 실측(2026-06-13, _sleepcurve) — 22:00 정각에 침대행(1.5s 주기 Decide)과
+        //  제자리 쓰러짐(<30, 매 프레임)이 동시에 열려 쓰러짐이 무조건 선승 → 빈 침대를
+        //  두고 매일 바닥 취침.  취침 시작을 20시(IsBedtime)로 당겨 두 창을 분리한다
+        //  (레퍼런스 림도 21~22시 취침, 어둠 페널티 20시와 일관).  쓰러짐은 기존 22시 유지.
+        private bool IsBedtime()
+        {
+            if (GameClock.Instance == null) return false;
+            int h = GameClock.Instance.Hour;
+            return h >= 20 || h < 6;
+        }
+
         public bool WantsAutoSleep =>
-            (sleep < ExhaustedWalkLevel || (sleep < autoSleepThreshold && IsNightTime()) || ScheduledSleepNow)
+            (sleep < ExhaustedWalkLevel || (sleep < autoSleepThreshold && IsBedtime()) || ScheduledSleepNow)
             && Time.time >= autoSleepSuppressUntil;
 
         /// <summary>GoSleepAction 이 빈 침대를 예약한 뒤 호출 — 이 침대로 가서 자라.</summary>
