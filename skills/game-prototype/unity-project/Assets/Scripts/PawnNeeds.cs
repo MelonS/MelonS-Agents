@@ -395,7 +395,14 @@ namespace MelonS.GameProto
                         mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
                         // 충분히 잤으면(80) 자율 취침 종료.  단 #269 스케줄 Sleep 슬롯 중엔
                         //  풀충전돼도 계속 잔다(슬롯 끝날 때까지) — the reference sim Sleep 동작.
-                        if (sleep >= autoWakeSleepLevel && !ScheduledSleepNow)
+                        // 갭 TOP-12 #12 — Work 슬롯 전이 = 기상 조건: 슬롯이 작업으로 바뀌면
+                        //  sleep 40 이상일 때 즉시 일어난다(작업 시간에 80까지 늦잠 금지).
+                        //  재취침 thrash 없음: Work 슬롯이면 ScheduledSleepNow=false 이고
+                        //  40 > 탈진(20)이라 자율 취침 조건에 다시 안 걸린다.
+                        bool workSlotNow = schedule != null
+                            && schedule.GetCurrentSlot() == TimeSlot.Work;
+                        if ((sleep >= autoWakeSleepLevel && !ScheduledSleepNow)
+                            || (workSlotNow && sleep >= 40f))
                         {
                             IsSleeping = false;
                             // 백로그 #4b + T5 — 품질별 1회 thought 로 통일.
