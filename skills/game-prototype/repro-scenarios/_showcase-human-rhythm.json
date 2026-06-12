@@ -1,0 +1,951 @@
+{
+ "name": "human-rhythm-showcase",
+ "steps": [
+  {
+   "op": "wait",
+   "sec": 2
+  },
+  {
+   "op": "speed",
+   "x": 0
+  },
+  {
+   "op": "shot",
+   "name": "h00_landing_pause"
+  },
+  {
+   "op": "wait",
+   "sec": 1.5
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "clickui",
+   "name": "label:건축"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:지시"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:벌목"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": -4.5,
+   "y": -0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": -2.5,
+   "y": -5.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": -0.5,
+   "y": -4.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "key",
+   "name": "Escape"
+  },
+  {
+   "op": "assert",
+   "probe": "chopDesignations",
+   "min": 1
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "clickui",
+   "name": "label:구역"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:저장"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": 2.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 3.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 2.5,
+   "y": -2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 3.5,
+   "y": -2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "key",
+   "name": "Escape"
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "speed",
+   "x": 0
+  },
+  {
+   "op": "shot",
+   "name": "h01_d1_morning_plan"
+  },
+  {
+   "op": "wait",
+   "sec": 1.5
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "clickui",
+   "name": "label:구조"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:목재 벽"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": 12.5,
+   "y": 2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 13.5,
+   "y": 2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 14.5,
+   "y": 2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 15.5,
+   "y": 2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 16.5,
+   "y": 2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 12.5,
+   "y": 1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 12.5,
+   "y": 0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 16.5,
+   "y": 1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 16.5,
+   "y": 0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 12.5,
+   "y": -0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 13.5,
+   "y": -0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 15.5,
+   "y": -0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 16.5,
+   "y": -0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "clickui",
+   "name": "label:문"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": 14.5,
+   "y": -0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "key",
+   "name": "Escape"
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "clickui",
+   "name": "label:지시"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:구역"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:지붕 영역"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": 13.5,
+   "y": 0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 14.5,
+   "y": 0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 15.5,
+   "y": 0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 13.5,
+   "y": 1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 14.5,
+   "y": 1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 15.5,
+   "y": 1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "key",
+   "name": "Escape"
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "clickui",
+   "name": "label:가구"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:목재 침대"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": -5.5,
+   "y": 4.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": -3.5,
+   "y": 4.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": -1.5,
+   "y": 4.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "key",
+   "name": "Escape"
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "clickui",
+   "name": "label:구역"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:경작"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": -1.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": -0.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 0.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": -1.5,
+   "y": -2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": -0.5,
+   "y": -2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 0.5,
+   "y": -2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "key",
+   "name": "Escape"
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "assert",
+   "probe": "growZoneCells",
+   "min": 6
+  },
+  {
+   "op": "assert",
+   "probe": "blueprintCount",
+   "min": 13
+  },
+  {
+   "op": "speed",
+   "x": 0
+  },
+  {
+   "op": "shot",
+   "name": "h02_d1_orders_done"
+  },
+  {
+   "op": "wait",
+   "sec": 1.5
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "speed",
+   "x": 3
+  },
+  {
+   "op": "wait",
+   "sec": 480
+  },
+  {
+   "op": "shot",
+   "name": "h03_d1_dusk"
+  },
+  {
+   "op": "speed",
+   "x": 6
+  },
+  {
+   "op": "wait",
+   "sec": 500
+  },
+  {
+   "op": "shot",
+   "name": "h04_d2_dawn"
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "clickui",
+   "name": "label:지시"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:벌목"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": -6.5,
+   "y": 3.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": -8.5,
+   "y": 2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": -4.5,
+   "y": -5.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": -0.5,
+   "y": -7.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 9.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": 11.5,
+   "y": 0.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "key",
+   "name": "Escape"
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "assert",
+   "probe": "chopDesignations",
+   "min": 3
+  },
+  {
+   "op": "clickui",
+   "name": "label:생산"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:화덕"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": 2.5,
+   "y": 2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "clickui",
+   "name": "label:연구대"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": 0.5,
+   "y": 3.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "key",
+   "name": "Escape"
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "speed",
+   "x": 0
+  },
+  {
+   "op": "shot",
+   "name": "h05_d2_plan"
+  },
+  {
+   "op": "wait",
+   "sec": 1.5
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "speed",
+   "x": 3
+  },
+  {
+   "op": "wait",
+   "sec": 540
+  },
+  {
+   "op": "shot",
+   "name": "h06_d2_dusk"
+  },
+  {
+   "op": "speed",
+   "x": 6
+  },
+  {
+   "op": "wait",
+   "sec": 500
+  },
+  {
+   "op": "shot",
+   "name": "h07_d3_dawn"
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "clickui",
+   "name": "label:지시"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "clickui",
+   "name": "label:채광"
+  },
+  {
+   "op": "wait",
+   "sec": 0.4
+  },
+  {
+   "op": "worldclick",
+   "x": -0.5,
+   "y": 28.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "worldclick",
+   "x": -2.5,
+   "y": 28.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.25
+  },
+  {
+   "op": "key",
+   "name": "Escape"
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "assert",
+   "probe": "mineMarks",
+   "min": 1
+  },
+  {
+   "op": "worldclick",
+   "x": 5.5,
+   "y": 1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "speed",
+   "x": 0
+  },
+  {
+   "op": "shot",
+   "name": "h08_d3_plan"
+  },
+  {
+   "op": "wait",
+   "sec": 1.5
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "speed",
+   "x": 3
+  },
+  {
+   "op": "wait",
+   "sec": 540
+  },
+  {
+   "op": "shot",
+   "name": "h09_d3_dusk"
+  },
+  {
+   "op": "speed",
+   "x": 6
+  },
+  {
+   "op": "wait",
+   "sec": 500
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 60
+  },
+  {
+   "op": "worldclick",
+   "x": 5.5,
+   "y": 1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "shot",
+   "name": "h10_d4_final"
+  },
+  {
+   "op": "assert",
+   "probe": "structureCount",
+   "min": 13,
+   "name": "wall",
+   "withinSec": 60
+  },
+  {
+   "op": "assert",
+   "probe": "structureCount",
+   "min": 1,
+   "name": "door",
+   "withinSec": 30
+  },
+  {
+   "op": "assert",
+   "probe": "structureCount",
+   "min": 3,
+   "name": "bed",
+   "withinSec": 60
+  },
+  {
+   "op": "assert",
+   "probe": "structureCount",
+   "min": 1,
+   "name": "stove",
+   "withinSec": 60
+  },
+  {
+   "op": "assert",
+   "probe": "structureCount",
+   "min": 1,
+   "name": "bench",
+   "withinSec": 60
+  },
+  {
+   "op": "assert",
+   "probe": "growZoneCells",
+   "min": 6
+  },
+  {
+   "op": "assert",
+   "probe": "cropCount",
+   "min": 1,
+   "withinSec": 60
+  },
+  {
+   "op": "assert",
+   "probe": "roofCells",
+   "min": 6,
+   "withinSec": 120
+  }
+ ],
+ "timeoutSec": 1500
+}
