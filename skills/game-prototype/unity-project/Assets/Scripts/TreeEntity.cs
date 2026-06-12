@@ -129,6 +129,8 @@ namespace MelonS.GameProto
                 FloatingText.Spawn(transform.position + Vector3.up * 0.4f,
                                    $"+{woodDrop} 목재", new Color(0.45f, 0.85f, 0.35f, 1f));
                 WoodPileEntity.Spawn(transform.position, woodDrop, WoodPileSprite);
+                // 소크 r3 채점 관측성 갭 #4 — ClearTask 만으론 완료/중단 구분 불가.
+                Debug.Log($"[Chop] felled {name} +{woodDrop} wood @ ({transform.position.x:F1},{transform.position.y:F1})");
                 // 아트 v2 후속 (2026-06-12) — 그루터기: 벌목 자리에 흔적이 남는다
                 //  (장소의 역사 — '여기서 일했다'가 지형에 쓰인다).  ~1.5게임일 후 소멸,
                 //  콜라이더 없음(통행/클릭 무영향).  에셋 없으면 조용히 생략.

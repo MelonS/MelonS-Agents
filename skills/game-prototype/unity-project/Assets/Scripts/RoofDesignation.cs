@@ -375,12 +375,36 @@ namespace MelonS.GameProto
             {
                 if (!float.IsPositiveInfinity(kv.Value)) continue;   // BUILT(또는 승격 직전)
                 if (roofClaims.TryGetValue(kv.Key, out var by) && by != null && by != claimant) continue;
+                if (!HasSupport(kv.Key)) continue;   // 소크 r3 #3 — 벽 골조 먼저, 지붕은 그 다음
                 Vector2 c = new Vector2(kv.Key.x + 0.5f, kv.Key.y + 0.5f);
                 float sq = (c - (Vector2)from).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = kv.Key; found = true; }
             }
             if (found) roofClaims[best] = claimant;
             return found;
+        }
+
+        /// <summary>소크 r3 이상 관찰 #3 — 지붕이 벽 골조와 무관하게 시공되던 문제.
+        /// 레퍼런스처럼 지지 구조물(벽/문)이 근처(체비셰프 2셀)에 완공돼 있어야 시공
+        /// 가능.  지지가 없으면 영구 pending — 벽이 완공되는 순간 자연히 시공 시작
+        /// = 골조→지붕 순서가 시스템으로 강제된다.</summary>
+        private static bool HasSupport(Vector2Int cell)
+        {
+            foreach (var w in UnityEngine.Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None))
+            {
+                if (w == null) continue;
+                Vector3 p = w.transform.position;
+                if (Mathf.Abs(Mathf.FloorToInt(p.x) - cell.x) <= 2
+                    && Mathf.Abs(Mathf.FloorToInt(p.y) - cell.y) <= 2) return true;
+            }
+            foreach (var d in UnityEngine.Object.FindObjectsByType<DoorEntity>(FindObjectsSortMode.None))
+            {
+                if (d == null) continue;
+                Vector3 p = d.transform.position;
+                if (Mathf.Abs(Mathf.FloorToInt(p.x) - cell.x) <= 2
+                    && Mathf.Abs(Mathf.FloorToInt(p.y) - cell.y) <= 2) return true;
+            }
+            return false;
         }
 
         public void ReleaseClaim(Vector2Int cell, GameObject claimant)
