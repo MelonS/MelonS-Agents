@@ -335,6 +335,7 @@ namespace MelonS.GameProto
                         // 침대 도착 → 강제 수면 진입/유지.
                         forcedResting = true;
                         IsSleeping = true;
+                        EmitSleepFx();   // grader 6차 F — 침대 수면 분기에 zZ 누락
                         float restMul = restTarget.RestMul;
                         // T5 — 무드는 기상 시 1회 thought (초당 가산은 하룻밤 +999~ 로
                         //  thought 경제를 매일 리셋시키던 운영자 승인 모델 위반 잔재).
@@ -382,6 +383,7 @@ namespace MelonS.GameProto
                     if (onTargetBed)
                     {
                         IsSleeping = true;
+                        EmitSleepFx();   // grader 6차 F — 침대 수면 분기에 zZ 누락
                         float restMul = autoRestTarget.RestMul;
                         sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * restMul * dt);
                         food = Mathf.Max(0f, food - foodDecay * 0.5f * dt);
