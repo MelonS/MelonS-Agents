@@ -174,6 +174,26 @@ namespace MelonS.GameProto
             for (int cx = x0; cx <= x1; cx++)
                 for (int cy = y0; cy <= y1; cy++)
                     if (MarkTreeAtCell(cx, cy) != null) n++;
+            // 소크 r2 채점(2026-06-12) — 단일 클릭 빈 칸(at=empty)이 벌목 축 전체를
+            //  무효화(클릭 3 중 2 빗나감 → 목재 경제 미검증).  레퍼런스도 나무 클릭은
+            //  스프라이트 단위로 관대하다.  단일 셀 클릭이 빗나가면 1.5셀 내 가장
+            //  가까운 나무로 스냅 — 드래그 사각형에는 미적용(영역 밖 오지정 방지).
+            if (n == 0 && x0 == x1 && y0 == y1)
+            {
+                Vector2 c = new Vector2(x0 + 0.5f, y0 + 0.5f);
+                TreeEntity nearest = null; float bestSq = 1.5f * 1.5f;
+                foreach (var t in Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None))
+                {
+                    if (t == null) continue;
+                    float sq = ((Vector2)t.transform.position - c).sqrMagnitude;
+                    if (sq < bestSq) { bestSq = sq; nearest = t; }
+                }
+                if (nearest != null && TryMark(nearest.gameObject) != null)
+                {
+                    Debug.Log($"[Chop] click snap → {nearest.name} @ ({nearest.transform.position.x:F1},{nearest.transform.position.y:F1})");
+                    n = 1;
+                }
+            }
             return n;
         }
 

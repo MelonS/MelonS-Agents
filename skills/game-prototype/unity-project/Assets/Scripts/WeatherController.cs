@@ -35,24 +35,38 @@ namespace MelonS.GameProto
             Services.Register<WeatherController>(this);
         }
 
-        private void OnEnable()
-        {
-            if (director != null) director.OnEventFired += HandleEvent;
-        }
+        // 소크 r2 채점(2026-06-12) — '폭풍 경보 2회, 폭풍 흔적 0'.  OnEnable 시점에
+        //  director 가 null 이면 구독이 영구 누락되는데 기존 'Late-bind' 주석은 코드가
+        //  없는 거짓 주석이었다.  실제 지연-바인드로 교체.
+        private bool subscribed;
+
+        private void OnEnable() => TrySubscribe();
         private void OnDisable()
         {
-            if (director != null) director.OnEventFired -= HandleEvent;
+            if (subscribed && director != null) director.OnEventFired -= HandleEvent;
+            subscribed = false;
+        }
+
+        private void TrySubscribe()
+        {
+            if (subscribed) return;
+            if (director == null)
+                director = UnityEngine.Object.FindFirstObjectByType<AIDirector>();
+            if (director == null) return;
+            director.OnEventFired += HandleEvent;
+            subscribed = true;
         }
 
         private void Update()
         {
-            // Late-bind in case OnEnable ran before director got assigned.
+            TrySubscribe();
             if (director == null) return;
             // #버그헌트(2026-06-03): 폭풍 지속을 실시간(Time.time) 대신 게임 시계(GameSeconds)로
-            //  측정 — 일시정지/배속을 존중(RimWorld 날씨는 게임 시간 기준).  set/check 모두 동일 출처.
+            //  측정 — 일시정지/배속을 존중(레퍼런스 날씨는 게임 시간 기준).  set/check 모두 동일 출처.
             if (Current == WeatherKind.Storm && NowGameSec() > StormUntil)
             {
                 Current = WeatherKind.Clear;
+                Debug.Log("[Weather] storm ends → clear");
             }
         }
 
@@ -66,6 +80,7 @@ namespace MelonS.GameProto
             {
                 Current = WeatherKind.Storm;
                 StormUntil = NowGameSec() + StormDurationGameSec;  // 게임시계 환산(≈60 실초 @1x)
+                Debug.Log($"[Weather] storm begins (until gameSec={StormUntil:F0})");
             }
         }
 

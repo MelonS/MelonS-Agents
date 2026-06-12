@@ -83,6 +83,15 @@ namespace MelonS.GameProto
                 ClearTask();
                 return;
             }
+            // 소크 r2 채점 — 조리 상한(CookMealAction 과 동일 기준): 작업 중에도 상한
+            //  도달 시 즉시 종료해 과잉 적체를 막는다.
+            int colonistCount = UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None).Length;
+            if (ResourceManager.Instance.meals + ResourceManager.Instance.fineMeals
+                >= colonistCount * MelonS.GameProto.AI.CookMealAction.MealsPerColonistCap)
+            {
+                ClearTask();
+                return;
+            }
             float dist = Vector2.Distance(transform.position, targetStove.transform.position);
             // #199 B2 (R-1) - give up only on real unreachability/stall, not detour.
             if (dist > cookRange && giveUp.ShouldGiveUp(Time.time, dist, movement.LastPathFailed, GiveUpAfterSec))

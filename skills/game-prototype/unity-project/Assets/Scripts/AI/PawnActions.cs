@@ -195,11 +195,18 @@ namespace MelonS.GameProto.AI
         public string DisplayName => "요리";
         public WorkKind Kind => WorkKind.Cook;
         public float foodSurplus = 5f;
+        // 소크 r2 채점(2026-06-12) — 화덕이 raw food 전량을 meals 로 전환해 8게임일에
+        //  1,547인분 적체 + food=0 고착.  레퍼런스의 '수량 X까지 제작' 빌과 같은 상한:
+        //  1인당 5끼 비축이면 충분(여유분 포함), 그 이상은 다른 일을 하러 간다.
+        public const int MealsPerColonistCap = 5;
         public bool TryStart(PawnContext ctx)
         {
             if (ctx.cook == null) return false;
             if (ResourceManager.Instance == null) return false;
             if (ResourceManager.Instance.food <= foodSurplus) return false;
+            int colonists = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None).Length;
+            if (ResourceManager.Instance.meals + ResourceManager.Instance.fineMeals
+                >= colonists * MealsPerColonistCap) return false;
             StoveEntity stove = FindNearestStove(ctx);
             if (stove == null) return false;
             // #199 C2 — reserve the stove (only one cook per stove, the reference sim).
