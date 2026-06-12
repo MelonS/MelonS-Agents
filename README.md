@@ -58,6 +58,11 @@ no Suno round-trip, no `.env` edit.  See
   search.**  Pass `--seed "Problem Solver"`; the skill expands to the
   24 equivalent titles companies use (FDE / Applied AI Engineer /
   Generalist / Founding Engineer / …) before fetching from 11 sources.
+- **You want to see an agent verify the game it builds — not just
+  build it.**  PawnSim ships with a 15-scenario input-level repro
+  gate on every commit and an isolated-grader rubric loop for long
+  soaks; the graders' verdicts (not the author's claims) are the
+  acceptance record, committed alongside the fixes.
 - **You want an agentskills.io-compliant Skill you can drop into other
   runtimes.**  Both skills work in Claude Code, Cursor, Goose, Gemini
   CLI, OpenAI Codex, and the other ~38 listed compatible runtimes.
@@ -68,8 +73,10 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 
 ## Overview
 
-> A macOS multi-agent system driven by
-> [Claude Code](https://docs.anthropic.com/claude-code).  Latest tag
+> A multi-agent system driven by
+> [Claude Code](https://docs.anthropic.com/claude-code) — media
+> pipeline primary on macOS, game-prototype track primary on
+> Windows (Unity), Linux best-effort.  Latest tag
 > is [**v0.4.0**](https://github.com/MelonS/MelonS-Agents/releases/tag/v0.4.0).
 > Two production skills ship today; both are
 > [agentskills.io](https://agentskills.io)-spec compliant so they
@@ -81,9 +88,9 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > generic Pexels B-roll into a genre-coded look; 23 ffmpeg shaders
 > + phrase-aware structure (cuts on `aubiotrack` beats, glitch
 > micro-edits on `aubioonset` drum hits, restraint gated per
-> preset) compose on top.  The demo above is a noir-detective
-> render; the grid further down shows six genre profiles side by
-> side.  Implementation under
+> preset) compose on top.  The Sample-output section
+> below shows a noir-detective render; the genre grid further down
+> shows six grade profiles side by side.  Implementation under
 > [`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh) —
 > the skill routes through the 5-agent mission pipeline (orchestrator
 > + planner / resourcer / editor / qa) so re-rendering tuning flows
@@ -116,15 +123,13 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > across many autonomous multi-agent sessions into a deep slice —
 > grid A* pathfinding, pawns with needs/health/skills/traits,
 > drafted + ranged combat, research, build/deconstruct/designations,
-> farming, hauling, director modes, sound, day/night, save/load — at
-> ~85% vanilla colony-sim core coverage, gated on every commit by a
-> 6-stage `refactor_check` harness (isolated 76/76 · integration
-> 43/43 · Build Click QA 9/9 · pawn-action 7/7 · feature-audit 13/13,
-> full suite re-run green 2026-06-03), with per-dimension
-> wiki-fidelity tracked in
-> [`skills/game-prototype/docs/genre-comparison-v2.md`](skills/game-prototype/docs/genre-comparison-v2.md)
-> (design 80% · sound 80% · movement 82% · building 80% · loop 85% ·
-> UI 82%).  The second prototype is a 2D physics-merge puzzle
+> farming, hauling, director modes, sound, day/night, save/load.
+> Every commit passes two gates: the 6-stage `refactor_check` build
+> harness and, since 2026-06-12, a **15-scenario input-level repro
+> gate** (synthesized clicks through the player's own UI path, with
+> effect assertions), with long soaks graded by an isolated grader
+> sub-agent against a written rubric — see the PawnSim section
+> below for what that loop has caught.  The second prototype is a 2D physics-merge puzzle
 > ([`skills/game-prototype-suika/`](skills/game-prototype-suika/),
 > Day 2 shipped at ~15× wall-clock speedup vs the no-framework
 > baseline).  Graduates into the production-skill count once both
@@ -731,6 +736,7 @@ project itself).
        agent.py integrate --method scenes       Unity batchmode → SceneSetup.GenerateAll
        agent.py integrate --method build        Unity batchmode → BuildScript.BuildWindows
        refactor_check.py (6-stage gate)         scenes→build→QA shot→log scan→visual diff→PlayMode
+       repro_all.py (15-scenario commit gate)   input-level repro: synthesized clicks + effect assertions
 
    ── Generated: skills/game-prototype/unity-project/Assets/ ──────────
        Editor/    SceneSetup.cs (+14 partials) — programmatic scene/prefab gen
@@ -787,7 +793,9 @@ What appears on GitHub is the system's own evolution, not its products.
 | Schedulers (nightly auto-run, daily audit) | ✓ `launchd` | replace with systemd timers or cron | replace with Task Scheduler (manual; TODO `scripts/windows/install-scheduler.ps1`) |
 | Windows setup guide | n/a | n/a | [`docs/platform-windows.md`](docs/platform-windows.md) |
 
-macOS is the **primary, end-to-end tested** platform.  Linux works for
+macOS is the **primary, end-to-end tested** platform for the media
+pipeline; the game-prototype track (PawnSim build chain, Unity
+batchmode) is **Windows-primary**.  Linux works for
 mission execution but the schedulers and synthetic-fixture generation
 need OS-specific adaptation.  Cross-platform CI is not yet in place;
 the clone-and-go flow is verified on Darwin only.

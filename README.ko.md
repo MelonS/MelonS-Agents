@@ -6,9 +6,9 @@
 
 **자기가 만든 게임을 직접 플레이하고 검증까지 하는 에이전트.**  콜로니심 프로토타입을 플레이어와 같은 입력 경로의 자동 재현 테스트로 매 커밋 검증하고, 장시간 플레이는 작업자와 분리된 채점 에이전트가 루브릭으로 평가합니다.  여기에 프로덕션 미디어 스킬 2종(뮤직비디오 쇼츠, 한국 채용공고 다이제스트)까지 — 전부 [agentskills.io](https://agentskills.io) 스펙 준수로 Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot 에서 그대로 동작합니다.
 
-**기계적인 단계는 로컬, 창작 단계는 Claude.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조와 동기화.  job-hunt 는 짧은 키워드를 role-synonym map 통해 자동 확장.  세 가지 감사 트리거 — 커밋·이상·스케줄 — 으로 시스템이 자신의 드리프트를 스스로 잡습니다.  영어 + 한국어 듀얼 트랙.
+**기계적인 단계는 로컬에서, 창작 단계는 Claude 가.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조에 동기화하고, job-hunt 는 짧은 키워드 하나를 역할 동의어 맵으로 자동 확장합니다.  커밋·이상 감지·스케줄 세 갈래의 감사 트리거로 시스템이 자기 드리프트를 스스로 잡습니다.  첫날부터 영어 + 한국어 듀얼 트랙.
 
-`미션 출력 100+ · 포터블 스킬 2개 + 메타 스킬 1개 + 게임 프로토타입 2종 · ffmpeg 쉐이더 23개 · 커밋 게이트 15시나리오(입력 레벨) · 격리 채점 검증 루프 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
+`미션 출력 100+ · 미션 타입 5종 · 포터블 스킬 2개 + 메타 스킬 1개 + 게임 프로토타입 2종 · ffmpeg 쉐이더 23개 · 커밋 게이트 15시나리오(입력 레벨) · 격리 채점 검증 루프 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -41,7 +41,7 @@ cd MelonS-Agents
 마법사가 사전 도구 체크, 데모 캐시 fetch (~30초), 번들된 CC-BY
 Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 후 결과물을 엽니다. Pexels 가입, Suno 라운드트립, `.env` 편집 모두
-필요 없음. 수동 + 고급 경로는 [Quick start](#quick-start) 참조.
+필요 없음. 수동·고급 경로는 [빠른 시작](#빠른-시작) 참조.
 
 ## 이 프로젝트는 누구를 위한 것인가
 
@@ -57,6 +57,11 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
   `--seed "Problem Solver"` 한 줄이면, 회사마다 다르게 부르는 24개
   동의어 타이틀 (FDE / Applied AI Engineer / Generalist / Founding
   Engineer / …) 로 자동 확장 후 11개 소스에서 fetch.
+- **에이전트가 게임을 만들기만 하는 게 아니라 직접 검증까지 하는
+  모습을 보고 싶은 분.**  PawnSim 은 매 커밋마다 15개 시나리오의
+  입력 레벨 재현 게이트를 통과하고, 장시간 자동 플레이는 격리된
+  채점 에이전트가 루브릭으로 평가합니다 — 인수 기준은 작업자의
+  주장이 아니라 채점 평결이고, 수정 커밋과 함께 저장소에 남습니다.
 - **다른 런타임에 drop-in 가능한 agentskills.io 호환 Skill 이 필요한 분.**
   두 스킬 모두 Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex
   외 ~38 개 호환 런타임에서 작동.
@@ -68,8 +73,10 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 ## 개요
 
 > [Claude Code](https://docs.anthropic.com/claude-code) 로 돌리는
-> macOS 멀티에이전트 시스템.  최신 태그는 [**v0.4.0**](https://github.com/MelonS/MelonS-Agents/releases/tag/v0.4.0).
-> 지금까지 두 개의 production 스킬이 올라가 있고, 둘 다
+> 멀티에이전트 시스템 — 미디어 파이프라인은 macOS, 게임 프로토타입
+> 트랙은 Windows(Unity) 가 1차 플랫폼, Linux 는 best-effort.
+> 최신 태그는 [**v0.4.0**](https://github.com/MelonS/MelonS-Agents/releases/tag/v0.4.0).
+> 지금까지 프로덕션 스킬 두 개가 올라가 있고, 둘 다
 > [agentskills.io](https://agentskills.io) 스펙을 따라서 Claude Code,
 > Cursor, Goose, Gemini CLI 등 호환 런타임에 그대로 떨어집니다.
 >
@@ -78,8 +85,9 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 > 스톡 footage 를 장르 톤으로 먼저 깔고, 그 위에 ffmpeg 쉐이더
 > 23개와 phrase-aware 구조(`aubiotrack` 비트로 컷, `aubioonset`
 > 드럼 hit 으로 글리치 마이크로 에디트, preset 별 게이팅 적용)가
-> 얹힙니다.  맨 위 데모는 noir-detective 렌더, 아래쪽 그리드에서
-> 6개 장르를 옆으로 비교할 수 있습니다.  구현은
+> 얹힙니다.  noir-detective 렌더는 아래 샘플 출력
+> 섹션에 있고, 그 아래 장르 그리드에서 6개 그레이드 프로필을
+> 나란히 비교할 수 있습니다.  구현은
 > [`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh) —
 > 스킬이 5-에이전트 미션 파이프라인(orchestrator + planner /
 > resourcer / editor / qa)을 그대로 타기 때문에 미션 튜닝이 곧
@@ -106,15 +114,26 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 > 카운트에 포함되지 않음).**  Unity 기반 게임 개발용 AI 에이전트
 > — 스프라이트 생성, C# 스캐폴딩, 밸런스 튜닝, 오디오 생성,
 > 인게임 AI 디렉터를 오케스트레이션하는 메타 스킬입니다.  이
-> 프레임워크로 만들어지는 두 개의 프로토타입 스킬이 함께 붙어
-> 있어 경험적 검증 표면 역할을 합니다 — 탑다운 콜로니-심 vertical
-> slice ([`skills/game-prototype/`](skills/game-prototype/)) 와 2D
-> physics-merge 퍼즐
+> 프레임워크로 만들어지는 두 개의 프로토타입이 경험적 검증 표면
+> 역할을 합니다.  대표는 **PawnSim** — 탑다운 콜로니심 프로토타입
+> ([`skills/game-prototype/`](skills/game-prototype/)) 으로, 수많은
+> 자율 멀티에이전트 세션을 거치며 깊은 슬라이스로 성장했습니다:
+> 그리드 A* 길찾기, 니즈·건강·스킬·특성을 가진 림, 징집 + 원거리
+> 전투, 연구, 건설·철거·지정, 농사, 운반, 디렉터 모드, 사운드,
+> 낮·밤, 저장/불러오기.  모든 커밋은 게이트 두 개를 통과합니다 —
+> 6단계 `refactor_check` 빌드 하네스, 그리고 2026-06-12 부터는
+> **15개 시나리오의 입력 레벨 재현 게이트**(플레이어와 같은 UI
+> 경로로 클릭을 합성하고 효과까지 어서트).  장시간 소크는 격리된
+> 채점 에이전트가 루브릭으로 평가합니다 — 이 루프가 무엇을
+> 잡아냈는지는 아래 PawnSim 섹션에.  두 번째 프로토타입은 2D
+> 피직스-머지 퍼즐
 > ([`skills/game-prototype-suika/`](skills/game-prototype-suika/),
-> Day 2 까지 출하 · 프레임워크 미사용 베이스라인 대비 wall-clock
-> 약 15× 가속).  두 프로토타입이 각자 end-of-day 산출물 일정을
-> 모두 만족하는 시점에 프로덕션 카운트로 졸업합니다.  스킬 정의:
-> [`skills/game-dev-agent/`](skills/game-dev-agent/).
+> Day 2 까지 출하 · 프레임워크 없는 베이스라인 대비 약 15배 가속).
+> 두 프로토타입이 각자 산출물 일정을 만족하는 시점에 프로덕션
+> 카운트로 졸업합니다.  스킬 정의:
+> [`skills/game-dev-agent/`](skills/game-dev-agent/); PawnSim 자체
+> README + PM 마일스톤:
+> [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
 >
 > **이 레포를 돌리는 두 가지 방법.**
 > - *에이전트 주도* (메인) — Claude Code 깔고, 클론된 레포를
@@ -291,7 +310,7 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
 ## 샘플 출력
 
 지금까지 **5가지** 미션 타입에 걸쳐 100+건의 출력이 나왔습니다.
-현재 production 포맷은 `music-video` 미션 — 음악이 메인 오디오인
+현재 프로덕션 포맷은 `music-video` 미션 — 음악이 메인 오디오인
 쇼츠 (내레이션·캡션 없음, 비트에 맞춘 컷, 드럼 onset 에 맞춘 글리치
 마이크로 에디트).  2026-05-17 에 이전의 내레이션 기반 포맷을 밀어내고
 운영자 파일럿 픽으로 채택됐습니다
@@ -318,7 +337,7 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
   각 수정은 build + 스크린샷/좌표 검증;
   [`docs/PLAYTEST-TODO.md`](skills/game-prototype/docs/PLAYTEST-TODO.md) 에
   항목별 상태 (운영자 인게임 확인 전까지 미삭제).
-- **2026-05-23 production batch** — 6개 mp4 (`monday-v1/v2`,
+- **2026-05-23 프로덕션 배치** — 6개 mp4 (`monday-v1/v2`,
   `convenience-v1/v2`, `smallhand-folk-v1/v2`) 가
   [`outputs/publish/shorts-2026-05-23-batch/`](outputs/publish/) 에
   생성됨.  [`scripts/music-video-batch.sh`](scripts/music-video-batch.sh)
@@ -326,8 +345,8 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
 - **키네틱 가사 오버레이** — `scripts/music-video-lyrics.sh` +
   whisper 기반 LRC 추출 (`scripts/music-video-lyric-align.sh`).
   아래 장르 그리드의 `smallhand-folk` 프레임에서 실제로 보입니다
-  ("가난이 너를 만든 게 / 아니라").  alignment confidence 가 낮은
-  라인은 자동으로 보정 표시, 위치는 크로스 플랫폼 safe-band 안.
+  ("가난이 너를 만든 게 / 아니라").  정렬 신뢰도가 기준 미달인
+  라인은 자동 채움으로 표시되고, 위치는 크로스플랫폼 safe-band 안.
 - **publish 전 게이트 + 썸네일 자동 추출** —
   `scripts/music-video-validate.sh` (길이 / 해상도 / 라우드니스 /
   쉐이더-앵커 커버리지 / 가사 sync drift 통합 검증, exit 0/1/2)
@@ -398,7 +417,7 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
 유지되며, v1 파이프라인 출력 (단일-클립 highlight + shorts-batch) 은
 기준점 참고용으로 그 아래에 유지됩니다.
 
-### Music-video 파일럿 (니치 피벗 후, 2026-05-17)
+### Music-video 파일럿 (포맷 피벗 후, 2026-05-17)
 
 `music-video` 미션은 60초 9:16 쇼츠를 만드는데, **음악이 메시지**입니다 —
 운영자가 공급한 음악 파일이 유일한 오디오 트랙, 컷은 `aubiotrack` 으로
@@ -428,7 +447,7 @@ v5 = 운영자 검증 완료 → 정식
 — "비디오에서 사용 가능 라이선스" 와 "파일 재배포 가능 라이선스" 가
 다른 문제라 레포는 절대 오디오 자산을 들고 다니지 않음.
 
-#### 장르 카탈로그 한눈에 보기 (2026-05-20 → 2026-05-23 production batch 의 중반 정지 프레임)
+#### 장르 카탈로그 한눈에 보기 (2026-05-20 → 2026-05-23 프로덕션 배치의 중반 정지 프레임)
 
 최근 렌더에서 뽑은 6개 중반 정지 프레임.  각 row 는 동일한 generic
 Pexels 스톡 footage 가 장르별 `grade_profile` (2026-05-22 출시) 을
@@ -504,7 +523,7 @@ shading 은 GLSL 쉐이더 (mpv + libplacebo, 200~500 줄), EbSynth (1
 키프레임 페인팅 후 모션 따라 전파), 또는 AI 스타일라이즈 (Stable
 Diffusion + AnimateDiff, ComfyUI, RunwayML / Kaiber) 중 하나가
 필요.  ffmpeg 파이프라인 안에선 자연스러운 구현 불가 → 별도 R&D
-분기로 보류, 어설프게 production 에 박지 않음.
+분기로 보류, 어설프게 프로덕션에 박지 않음.
 
 재현:
 
@@ -637,8 +656,7 @@ v5 → v6 상승폭 (Hittites EN +12점, Hydrogen EN +15점) 은 스크립트 �
        결과: docs/audit/<date>-<focus>.md + CURRENT-ALERT.md
 ```
 
-Shape A 의 서브에이전트 (planner / resourcer / editor / qa) 는
-Shape A 의 서브에이전트는 현재: **planner=opus**, **resourcer=opus**,
+Shape A 의 서브에이전트는 현재 **planner=opus**, **resourcer=opus**,
 **editor=sonnet**, **qa=sonnet**.  Planner + resourcer 는 2026-05-22
 ~17:40 KST 에 `opus` 로 업그레이드 — Hittites faceless-short brief
 로 1회 A/B 돌린 결과 ([`docs/research/2026-05-22-abtest-planner-opus.md`](docs/research/2026-05-22-abtest-planner-opus.md))
@@ -674,6 +692,7 @@ sonnet 으로 revert.  Editor + qa 는 sonnet 유지 — 이 두 stage 는
        agent.py integrate --method scenes       Unity batchmode → SceneSetup.GenerateAll
        agent.py integrate --method build        Unity batchmode → BuildScript.BuildWindows
        refactor_check.py (6단계 게이트)         scenes→build→QA샷→로그스캔→비주얼diff→PlayMode
+       repro_all.py (15시나리오 커밋 게이트)    입력 레벨 재현: 클릭 합성 + 효과 어서션
 
    ── 생성물: skills/game-prototype/unity-project/Assets/ ─────────────
        Editor/    SceneSetup.cs (+14 partial) — 프로그래매틱 씬/프리팹 생성
@@ -728,7 +747,9 @@ ScriptableObject 로). `SceneSetup.cs` 는 1057L → ~310L 로 14개 partial 분
 | 스케줄러 (야간 자동 실행, 일일 감사) | ✓ `launchd` | systemd timers / cron 으로 대체 | Task Scheduler 로 대체 (수동 셋업, TODO `scripts/windows/install-scheduler.ps1`) |
 | Windows 셋업 가이드 | n/a | n/a | [`docs/platform-windows.md`](docs/platform-windows.md) |
 
-macOS가 **주 검증 플랫폼** (엔드투엔드 테스트 완료). Linux는 미션
+미디어 파이프라인은 macOS 가 **주 검증 플랫폼** (엔드투엔드 테스트
+완료)이고, 게임 프로토타입 트랙(PawnSim 빌드 체인, Unity batchmode)은
+**Windows 1차**입니다. Linux는 미션
 실행에는 동작하지만 스케줄러와 합성 fixture 생성은 OS별 적응이
 필요합니다. 크로스 플랫폼 CI는 아직 없고, clone-and-go 흐름은
 Darwin에서만 검증되어 있음.
