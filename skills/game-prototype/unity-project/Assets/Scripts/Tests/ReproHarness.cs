@@ -140,7 +140,15 @@ namespace MelonS.GameProto
             switch (s.op)
             {
                 case "wait":
-                    yield return new WaitForSeconds(s.sec);
+                    // 일시정지(timeScale=0) 중 scaled wait 는 영원히 안 끝난다 — realtime
+                    //  폴백으로 함정 제거 (정지 상태를 N초 '보여주는' 쇼케이스 비트도 가능해짐).
+                    if (Time.timeScale == 0f)
+                    {
+                        Debug.Log($"[ReproHarness] wait {s.sec}s under pause → realtime fallback");
+                        yield return new WaitForSecondsRealtime(s.sec);
+                    }
+                    else
+                        yield return new WaitForSeconds(s.sec);
                     r.passed = true; r.detail = $"waited {s.sec}s"; break;
 
                 case "worldclick":
@@ -270,14 +278,19 @@ namespace MelonS.GameProto
                 case "clickui":
                     r.passed = RealClickUI(s.name, out var uiDetail);
                     r.detail = uiDetail;
-                    yield return null; yield return new WaitForSeconds(0.3f);
+                    // UI 정착 대기 — UI 는 timeScale 무관하게 프레임 단위로 돌므로 realtime.
+                    //  (일시정지 중 메뉴 클릭도 하네스가 동결되지 않게.)
+                    yield return null; yield return new WaitForSecondsRealtime(0.3f);
                     break;
 
                 case "shot":
                 {
                     string p = Path.Combine(shotDir, s.name + ".png");
                     ScreenCapture.CaptureScreenshot(p);
-                    yield return new WaitForSeconds(0.4f);   // 캡처 flush
+                    // 사람-리듬 쇼케이스(2026-06-12) — 일시정지(timeScale=0) 중 샷에서
+                    //  scaled flush 가 영원히 안 끝나 하네스가 동결됐다.  캡처 flush 는
+                    //  실시간 I/O 이므로 realtime 이 맞다.
+                    yield return new WaitForSecondsRealtime(0.4f);
                     r.passed = true; r.detail = p; break;
                 }
 
