@@ -404,9 +404,14 @@ namespace MelonS.GameProto
                 var am = ArchitectMenu.Instance;
                 if (prt0 != null)
                 {
-                    float wantX = (am != null && am.IsOpen) ? 272f : 12f;
-                    if (!Mathf.Approximately(prt0.anchoredPosition.x, wantX))
-                        prt0.anchoredPosition = new Vector2(wantX, prt0.anchoredPosition.y);
+                    bool amOpen = am != null && am.IsOpen;
+                    float wantX = amOpen ? 272f : 12f;
+                    // UI겹침 P1-3/커플링 B — 셸프(상단 y58~)와의 하단 40px 띠 겹침: 건축
+                    //  열림 시 y 도 셸프 실상단+10 으로 (1행=108, 2행=203).
+                    float wantY = amOpen ? 108f + 95f * (am.ShelfRows - 1) : 58f;
+                    if (!Mathf.Approximately(prt0.anchoredPosition.x, wantX)
+                        || !Mathf.Approximately(prt0.anchoredPosition.y, wantY))
+                        prt0.anchoredPosition = new Vector2(wantX, wantY);
                 }
             }
             if (selector == null)

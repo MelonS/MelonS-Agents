@@ -586,21 +586,26 @@ namespace MelonS.GameProto
 
             if (OrderCategories.TryGetValue(activeCategory, out var orderItems))
             {
+                int ci = 0;   // UI겹침 P1-2 — 5셀 줄바꿈 (1행 우단이 징집 버튼(x680~)을 안 덮게)
                 foreach (var oi in orderItems)
                 {
                     var item = oi;   // closure capture
                     bool on = item.isActive != null && item.isActive();
                     string nm = NameOf(item.label);
                     bool isErase = nm.Contains("제거");
-                    MakeShelfCell(x, nm, HotkeyOf(item.label), null,
+                    float cx2 = (ci % 5) * (cellW + cgap);
+                    float cy2 = (ci / 5) * 95f;
+                    MakeShelfCell(cx2, cy2, nm, HotkeyOf(item.label), null,
                         isErase ? "✕" : nm.Substring(0, 1), on, true,
                         nm + " — 맵에서 드래그하여 지정",
                         () => { item.invoke?.Invoke(); RefreshContent(); });
-                    x += cellW + cgap; any = true;
+                    ci++; x = Mathf.Max(x, cx2 + cellW + cgap); any = true;
                 }
+                ShelfRows = (ci + 4) / 5;
             }
             else if (Categories.TryGetValue(activeCategory, out var buildItems))
             {
+                int bi = 0;   // UI겹침 P1-2 — 5셀 줄바꿈
                 int curWood = ResourceManager.Instance != null ? ResourceManager.Instance.wood : 0;
                 int curStone = ResourceManager.Instance != null ? ResourceManager.Instance.stone : 0;
                 foreach (var (mode, label, cost) in buildItems)
@@ -618,7 +623,9 @@ namespace MelonS.GameProto
                     string nm = NameOf(ThingKr(mode));   // "목재 벽"/"석재 벽" — 셀명 충돌 방지
                     string tip = BuildableTooltip(mode, liveCost)
                                  + (affordable ? "" : "  — 자재 부족");
-                    MakeShelfCell(x, nm, HotkeyOf(label), icon, "", on, affordable, tip,
+                    float cx2 = (bi % 5) * (cellW + cgap);
+                    float cy2 = (bi / 5) * 95f;
+                    MakeShelfCell(cx2, cy2, nm, HotkeyOf(label), icon, "", on, affordable, tip,
                         () =>
                         {
                             if (BuildManager.Instance == null) return;
@@ -627,18 +634,22 @@ namespace MelonS.GameProto
                             BuildManager.Instance.SetMode(newMode);
                             RefreshContent();   // 활성 하이라이트 갱신 (메뉴는 유지)
                         });
-                    x += cellW + cgap; any = true;
+                    bi++; x = Mathf.Max(x, cx2 + cellW + cgap); any = true;
                 }
+                ShelfRows = (bi + 4) / 5;
             }
 
             var srt2 = shelfRoot.GetComponent<RectTransform>();
-            if (srt2 != null) srt2.sizeDelta = new Vector2(Mathf.Max(10f, x), 92f);
+            if (srt2 != null) srt2.sizeDelta = new Vector2(Mathf.Max(10f, x), 92f + (ShelfRows - 1) * 95f);
             shelfRoot.SetActive(any && isOpen);
         }
 
         /// <summary>#림월드파리티 — 셸프 셀: 68px 정사각, 아이콘(또는 글리프) + 하단 이름
         ///  띠 + 좌상단 핫키 글자.  활성 셀은 금색 테두리 (RimWorld 선택 designator).</summary>
-        private void MakeShelfCell(float x, string name, string hotkey, Sprite icon, string glyph,
+        /// <summary>UI겹침 P1-2/커플링 B — 현재 셸프 행 수 (PawnInfoPanel y 시프트 연동).</summary>
+        public int ShelfRows { get; private set; } = 1;
+
+        private void MakeShelfCell(float x, float yRow, string name, string hotkey, Sprite icon, string glyph,
                                    bool active, bool affordable, string tooltip, System.Action onClick)
         {
             const float Cell = 68f;
@@ -649,7 +660,7 @@ namespace MelonS.GameProto
             brt.anchorMax = new Vector2(0, 0);
             brt.pivot = new Vector2(0, 0);
             brt.sizeDelta = new Vector2(Cell, Cell + 22f);   // 셀 + 이름 띠 포함 높이
-            brt.anchoredPosition = new Vector2(x, 0);
+            brt.anchoredPosition = new Vector2(x, yRow);
 
             var img = go.AddComponent<Image>();
             img.color = active ? MelonS.GameProto.Core.UITheme.AccentGold
