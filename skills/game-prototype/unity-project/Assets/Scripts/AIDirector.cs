@@ -445,7 +445,11 @@ namespace MelonS.GameProto
                 //  뜨던 시간대 불일치 수정.  재추첨 5회 안에 못 피하면 그냥 통과(무한루프 방지).
             } while ((next == lastEvent
                       || (next.id == "quiet_evening"
-                          && GameClock.Instance != null && GameClock.Instance.Hour < 18))
+                          && GameClock.Instance != null && GameClock.Instance.Hour < 18)
+                      // 채점 관찰 #10 — 침대 여유가 전혀 없으면 방랑자 합류를 피추첨
+                      //  (레퍼런스 스토리텔러의 인구 압박 감각: 수용력 없는 콜로니에
+                      //  인구 이벤트를 들이밀지 않는다).  5회 안에 못 피하면 통과.
+                      || (next.id == "wanderer_arrival" && FreeBedCount() <= 0))
                      && tries < 5);
             lastEvent = next;
             OnEventFired?.Invoke(next);
@@ -514,6 +518,12 @@ namespace MelonS.GameProto
                     FloatingText.Spawn(wgo.transform.position + Vector3.up * 0.7f,
                         $"방랑자 {wname} 합류!", new Color(0.6f, 0.9f, 0.6f, 1f));
                     Debug.Log($"[AIDirector] wanderer_arrival 실효: {wname} 합류 (북쪽 외곽)");
+                    int shortage = BedShortage();
+                    if (shortage > 0)
+                    {
+                        AlertStackUI.Notify($"침대 부족 — {shortage}명 바닥 취침 예정", 1);
+                        Debug.Log($"[AIDirector] bed shortage after join: {shortage}");
+                    }
                     break;
                 }
                 case "morale_dip":
@@ -549,6 +559,26 @@ namespace MelonS.GameProto
 #else
             return UnityEngine.Object.FindObjectsOfType<PawnNeeds>();
 #endif
+        }
+
+        /// <summary>빈 침대 수 (전체 침대 - 살아있는 림 수, 음수면 0).</summary>
+        private static int FreeBedCount()
+        {
+            int beds = UnityEngine.Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None).Length;
+            int pawns = 0;
+            foreach (var p in UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                if (p != null && !p.IsDead) pawns++;
+            return Mathf.Max(0, beds - pawns);
+        }
+
+        /// <summary>침대 부족 인원 (림 수 - 침대 수, 음수면 0).</summary>
+        private static int BedShortage()
+        {
+            int beds = UnityEngine.Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None).Length;
+            int pawns = 0;
+            foreach (var p in UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                if (p != null && !p.IsDead) pawns++;
+            return Mathf.Max(0, pawns - beds);
         }
 
         private Vector3 ColonyCenterOrZero()
