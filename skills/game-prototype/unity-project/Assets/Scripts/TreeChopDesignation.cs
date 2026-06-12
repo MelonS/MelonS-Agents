@@ -300,12 +300,21 @@ namespace MelonS.GameProto
             marker.transform.SetParent(transform, false);
             marker.transform.localPosition = new Vector3(0f, 0.35f, 0f);
             var tm = marker.AddComponent<TextMesh>();
-            tm.text = "🪓";
-            tm.fontSize = 36;
-            tm.characterSize = 0.06f;
+            // grader 5차 C-3 (2026-06-12) — "🪓"(U+1FA93)는 OS 폰트에 글리프가 없어
+            //  빈 렌더 = '마커 부재'로 보였다 (채광 "⛏"는 BMP 라 보임).  한국어 폰트
+            //  로드(BlueprintStatus 패턴) + '벌목' 라벨로 항상 가시.
+            tm.text = "벌목";
+            tm.fontSize = 28;
+            tm.characterSize = 0.055f;
             tm.anchor = TextAnchor.LowerCenter;
             tm.alignment = TextAlignment.Center;
             tm.color = new Color(0.95f, 0.85f, 0.55f, 1f);
+            string[] fonts = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
+            foreach (var fn in fonts)
+            {
+                var f = Font.CreateDynamicFontFromOSFont(fn, 28);
+                if (f != null) { tm.font = f; var fr = marker.GetComponent<MeshRenderer>(); if (fr != null) fr.material = f.material; break; }
+            }
             var mr = marker.GetComponent<MeshRenderer>();
             if (mr != null) mr.sortingOrder = 30;
         }
