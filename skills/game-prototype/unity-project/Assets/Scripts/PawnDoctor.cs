@@ -84,7 +84,7 @@ namespace MelonS.GameProto
                     // mood thought
                     var th = targetPatient.GetComponent<PawnThoughts>();
                     if (th != null) th.AddThought("치료 받음", +3f, 300f);
-                    Debug.Log($"[Doctor] {GetComponent<PawnEntity>()?.PawnName ?? name} 치료 완료 → {targetPatient.GetComponent<PawnEntity>()?.PawnName ?? targetPatient.name}");
+                    Debug.Log($"[Doctor] {GetComponent<PawnEntity>()?.PawnName ?? name} 치료 완료 → {targetPatient.GetComponent<PawnEntity>()?.PawnName ?? targetPatient.name} @ ({targetPatient.transform.position.x:F1},{targetPatient.transform.position.y:F1})");
                     // 감사 rank7: 치료 완료 시각 피드백(피격 -N / 수확 +N 과 대칭).
                     FloatingText.Spawn(targetPatient.transform.position + Vector3.up * 0.6f,
                         "+치료", new Color(0.60f, 0.80f, 1.00f));

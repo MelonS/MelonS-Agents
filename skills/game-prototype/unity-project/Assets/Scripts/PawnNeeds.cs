@@ -191,14 +191,17 @@ namespace MelonS.GameProto
             if (th == null) return;
             // 갭 TOP-6 (2026-06-12, ※갈림길 아님) — 레퍼런스의 '노숙 -4×2'가 첫 침대/첫
             //  지붕의 동기를 만든다.  바닥 취침 -4, 지붕 없는 곳 취침 추가 -4 (중첩 가능).
-            if (b == null)              th.AddThought("바닥에서 잠", -4f, 600f);
-            else if (b.RestMul >= 1.3f)  th.AddThought("고급 침대에서 잠", +6f, 600f);
-            else if (b.RestMul >= 0.95f) th.AddThought("침대에서 잠", +3f, 600f);
-            else                          th.AddThought("잠자리에서 잠", +1f, 600f);
+            string wakeThought;
+            if (b == null)              { th.AddThought("바닥에서 잠", -4f, 600f); wakeThought = "바닥에서 잠 -4"; }
+            else if (b.RestMul >= 1.3f)  { th.AddThought("고급 침대에서 잠", +6f, 600f); wakeThought = "고급 침대 +6"; }
+            else if (b.RestMul >= 0.95f) { th.AddThought("침대에서 잠", +3f, 600f); wakeThought = "침대 +3"; }
+            else                          { th.AddThought("잠자리에서 잠", +1f, 600f); wakeThought = "잠자리 +1"; }
             var rd = RoofDesignation.Instance;
-            if (rd != null && !rd.IsRoofed(new Vector2Int(
-                    Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y))))
-                th.AddThought("한데서 잠", -4f, 600f);
+            bool unroofed = rd != null && !rd.IsRoofed(new Vector2Int(
+                    Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y)));
+            if (unroofed) th.AddThought("한데서 잠", -4f, 600f);
+            // r7 채점 N-3 판정불가 해소 — 기상 시 1회 로그(매초 환류 아님 = 노이즈 없음).
+            Debug.Log($"[Sleep] wake {GetComponent<PawnEntity>()?.PawnName ?? name}: {wakeThought}{(unroofed ? " +한데 -4" : "")}");
         }
         private bool starveWarned;                       // r2-E — 임박 경고 1회 게이트
         [SerializeField] private float autoSleepRetryCooldown = 20f;

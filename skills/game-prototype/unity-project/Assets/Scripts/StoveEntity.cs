@@ -28,6 +28,8 @@ namespace MelonS.GameProto
             if (fineMeal) ResourceManager.Instance.AddFineMeals(+1);
             else ResourceManager.Instance.AddMeals(+1);
             MealsAvailable++;
+            // r7 채점 관찰 #4 — 식사 원장: meals 보충 출처를 추적 가능하게.
+            Debug.Log($"[Cook] +1 {(fineMeal ? "fine" : "meal")} (재료 food -3) @ ({transform.position.x:F1},{transform.position.y:F1})");
             AudioBank.Instance?.PlayCook();  // wiki B9: cook tick/complete SFX
             return true;
         }
