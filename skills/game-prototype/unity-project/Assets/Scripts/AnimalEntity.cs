@@ -128,9 +128,40 @@ namespace MelonS.GameProto
             PickNewTarget();
         }
 
+        // 운영자 피드백 #12 (2026-06-12 AM) — 피격 무반응이던 동물에 레퍼런스 반응:
+        //  초식(사슴/토끼/닭)은 공격자 반대편으로 도주 가속, 멧돼지는 반격 돌진.
+        private float fleeUntil = -1f;
+        private GameObject revengeTarget;
+        private float revengeUntil = -1f;
+        private float nextRevengeHit = -1f;
+
         private void Update()
         {
             if (IsDead) return;
+            // #12 멧돼지 반격 — 공격자에게 돌진, 접촉 시 피해.  대상 사망/시간 만료 시 해제.
+            if (revengeTarget != null)
+            {
+                var rpe = revengeTarget.GetComponent<PawnEntity>();
+                if (rpe == null || rpe.IsDead || Time.time >= revengeUntil) revengeTarget = null;
+                else
+                {
+                    Vector2 meR = rb.position;
+                    Vector2 tpR = revengeTarget.transform.position;
+                    if (Vector2.Distance(meR, tpR) > 0.9f)
+                    {
+                        Vector2 stepR = (tpR - meR).normalized * wanderSpeed * 2.2f * Time.deltaTime;
+                        if (!TryStep(meR, stepR)) { revengeTarget = null; }
+                    }
+                    else if (Time.time >= nextRevengeHit)
+                    {
+                        nextRevengeHit = Time.time + 1.2f;
+                        rpe.TakeDamage(3, gameObject);
+                    }
+                    if (sr != null && flashUntil > 0 && Time.time > flashUntil)
+                    { sr.color = IsTamed ? new Color(0.75f, 0.85f, 1.0f, 1f) : baseColor; flashUntil = -1f; }
+                    return;   // 반격 중엔 wander 스킵
+                }
+            }
             if (sr != null && flashUntil > 0 && Time.time > flashUntil)
             {
                 // #162 - tamed 면 푸른빛 유지, 아니면 species baseColor 로 복원.
@@ -150,7 +181,9 @@ namespace MelonS.GameProto
                 // #202: 벽/물/바위 존중.  pawn 은 #199 A* 그리드로 막힌 셀을 돌아가지만
                 //  동물은 직선 wander 라 벽을 통과했음.  TryStep 가 다음 셀이 막혔으면
                 //  axis-slide(한 축만)→둘 다 막히면 정지 + 새 목표 재선택(끼임 방지).
-                Vector2 step = dir.normalized * wanderSpeed * Time.deltaTime;
+                // #12 도주 중엔 2.5배 가속 (사냥이 '서서 맞아주기'가 아니게).
+                float spdMul = Time.time < fleeUntil ? 2.5f : 1f;
+                Vector2 step = dir.normalized * wanderSpeed * spdMul * Time.deltaTime;
                 if (!TryStep(me, step)) PickNewTarget();
             }
             else
@@ -200,6 +233,23 @@ namespace MelonS.GameProto
             Hp = Mathf.Max(0, Hp - dmg);
             if (sr != null) { sr.color = Color.white; flashUntil = Time.time + 0.06f; }
             if (AudioBank.Instance != null) AudioBank.Instance.PlayHit();
+            // #12 피격 반응 — 멧돼지: 반격 / 그 외: 공격자 반대편 도주 가속.
+            if (source != null && Hp > 0 && !IsTamed)
+            {
+                if (species == AnimalSpecies.Boar)
+                {
+                    revengeTarget = source;
+                    revengeUntil = Time.time + 8f;
+                }
+                else
+                {
+                    Vector2 away = ((Vector2)transform.position - (Vector2)source.transform.position);
+                    if (away.sqrMagnitude < 0.01f) away = Random.insideUnitCircle;
+                    target = PawnMovement.ClampToWorld((Vector2)transform.position + away.normalized * 9f);
+                    walking = true;
+                    fleeUntil = Time.time + 6f;
+                }
+            }
             if (Hp <= 0)
             {
                 // 운영자 fb v4 - 레퍼런스 콜로니심 정상 흐름: 즉시 +N 안 함. meat pile 만 drop.
