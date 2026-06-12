@@ -33,6 +33,7 @@ namespace MelonS.GameProto
             ("침대에서 잠",   +2f, 600f),
             ("따뜻한 실내",   +2f, 300f),
             ("배고픔",        -4f, 120f),
+            ("출출함",        -2f, 120f),   // 퀵픽 허기 2티어 — 굶주림 전 단계 신호
             ("수면 부족",     -3f, 180f),
             ("야외 폭풍",     -6f, 120f),
             ("어둠 속 활동",  -4f, 120f),
@@ -127,6 +128,9 @@ namespace MelonS.GameProto
             if (needs != null)
             {
                 if (needs.food  < 25f) AddThought("배고픔");    else RemoveThought("배고픔");
+                // 퀵픽 허기 2티어 — 레퍼런스의 '약한 허기→굶주림' 단계감.  25~45 구간.
+                if (needs.food >= 25f && needs.food < 45f) AddThought("출출함");
+                else RemoveThought("출출함");
                 if (needs.sleep < 25f) AddThought("수면 부족"); else RemoveThought("수면 부족");
                 // #폭풍fix(2026-06-10): '야외 폭풍'(-6)이 catalog 에만 있고 미배선이던 것을
                 //  배고픔/수면부족과 동일 패턴으로 환류.  PawnNeeds 의 직접 드레인(-3/s)은 제거 —

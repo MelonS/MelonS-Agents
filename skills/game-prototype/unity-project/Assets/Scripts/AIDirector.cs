@@ -156,6 +156,7 @@ namespace MelonS.GameProto
         private int lastRaidDay = -1;
         // TOP-1 — 다음 습격 발화 시각 (게임초).  -1 = 미스케줄.
         private float nextRaidGameSec = -1f;
+        private bool firstRaidWarned;           // 퀵픽 '첫 습격 경고' — 1회만
         private int raidCount = 0;     // how many raids have fired this run (drives slow size escalation)
 
         // #버그헌트3(2026-06-04): 레이드 스케줄러 상태 save/load.  시계(GameSeconds)만 복원되고
@@ -282,6 +283,15 @@ namespace MelonS.GameProto
                 float waitDays = Mathf.Max(1.9f, RaidIntervalDays + UnityEngine.Random.Range(-1f, 1f));
                 float fireHourOffset = UnityEngine.Random.Range(6f, 22f) / 24f;   // 일 분율
                 nextRaidGameSec = Mathf.Floor(nowSec / DaySec) * DaySec + (waitDays + fireHourOffset) * DaySec;
+                // 퀵픽 '첫 습격 경고' (2026-06-13) — 신규 플레이어가 첫 위협을 무방비로
+                //  맞던 것: 첫 습격 ~1게임일 전 1회 경고 카드 (시점은 알려주되 정확한
+                //  시각은 비공개 — 긴장 유지).
+                if (!firstRaidWarned)
+                {
+                    firstRaidWarned = true;
+                    float warnDelaySec = Mathf.Max(0f, nextRaidGameSec - nowSec - DaySec);
+                    StartCoroutine(WarnFirstRaid(warnDelaySec));
+                }
                 return;
             }
             if (nowSec < nextRaidGameSec) return;
@@ -491,6 +501,16 @@ namespace MelonS.GameProto
             var next = cands[UnityEngine.Random.Range(0, cands.Count)];
             OnEventFired?.Invoke(next);
             Debug.Log($"[AIDirector:Ambient] {next.title}: {next.description}");
+        }
+
+        private System.Collections.IEnumerator WarnFirstRaid(float gameSecDelay)
+        {
+            // 게임초 → 대기: GameClock 폴링 (배속/일시정지 존중).
+            float targetSec = (GameClock.Instance != null ? GameClock.Instance.GameSeconds : 0f) + gameSecDelay;
+            while (GameClock.Instance != null && GameClock.Instance.GameSeconds < targetSec)
+                yield return new WaitForSecondsRealtime(2f);
+            AlertStackUI.Notify("정찰 보고 — 하루 안에 약탈자가 올 수 있습니다", 2);
+            Debug.Log("[AIDirector] first-raid warning (~1일 전)");
         }
 
         /// <summary>TOP-11 — 외곽에 미친 멧돼지 N 스폰.  씬의 기존 AnimalEntity 를
