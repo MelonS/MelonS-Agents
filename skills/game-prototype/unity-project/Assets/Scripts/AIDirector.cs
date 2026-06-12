@@ -288,9 +288,17 @@ namespace MelonS.GameProto
             foreach (var pp in UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
                 if (pp != null && !pp.IsDead) aliveColonists++;
             int dynamicCap = Mathf.Max(Mathf.Max(1, MaxConcurrentGroups), aliveColonists - 1);
+            // 갭 TOP-9 ※ (2026-06-12) — 레이드 포인트: 부 프록시(자원+구조물+인구)가
+            //  습격 규모에 가산 = '발전이 곧 리스크'.  초반(8일 미만) 0.7 완충.
+            //  food 는 인플레가 심해 0.1 가중(비축 4천이 부 전체를 지배하지 않게).
+            float wealth = ColonyWealthProxy(aliveColonists);
+            float earlyMul = (GameClock.Instance != null && GameClock.Instance.Day < 8) ? 0.7f : 1f;
+            int wealthBonus = Mathf.FloorToInt(wealth * earlyMul / 500f);
             int banditCount = Mathf.Clamp(
-                BaseRaidGroupSize + (raidCount / Mathf.Max(1, RaidsPerSizeStep)),
+                BaseRaidGroupSize + (raidCount / Mathf.Max(1, RaidsPerSizeStep)) + wealthBonus,
                 1, dynamicCap);
+            if (wealthBonus > 0)
+                Debug.Log($"[AIDirector] raid wealth proxy={wealth:F0} → +{wealthBonus} bandits (early x{earlyMul})");
             raidCount++;
 
             // Wiki Dim2 #2 (sound wiring only — no threat/balance change): every raid
@@ -644,6 +652,23 @@ namespace MelonS.GameProto
             foreach (var p in UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
                 if (p != null && !p.IsDead) pawns++;
             return Mathf.Max(0, pawns - beds);
+        }
+
+        /// <summary>갭 TOP-9 — 콜로니 부 프록시.  자원(식량은 0.1 가중) + 구조물 가중 +
+        /// 림×30.  정밀 시장가치가 아니라 '발전 정도'의 단조 신호면 충분하다.</summary>
+        private static float ColonyWealthProxy(int aliveColonists)
+        {
+            float w = 0f;
+            var rm = ResourceManager.Instance;
+            if (rm != null)
+                w += rm.wood + rm.stone + rm.food * 0.1f + (rm.meals + rm.fineMeals) * 2f;
+            w += UnityEngine.Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None).Length * 5f;
+            w += UnityEngine.Object.FindObjectsByType<DoorEntity>(FindObjectsSortMode.None).Length * 10f;
+            w += UnityEngine.Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None).Length * 15f;
+            w += UnityEngine.Object.FindObjectsByType<StoveEntity>(FindObjectsSortMode.None).Length * 20f;
+            w += UnityEngine.Object.FindObjectsByType<ResearchBench>(FindObjectsSortMode.None).Length * 20f;
+            w += aliveColonists * 30f;
+            return w;
         }
 
         private Vector3 ColonyCenterOrZero()
