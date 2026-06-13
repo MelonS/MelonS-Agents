@@ -159,6 +159,19 @@ namespace MelonS.GameProto
                     var kind = PawnWorkSettings.AllKinds[c];
                     int pr = settings.GetPriority(kind);
                     var sCap = settings; var kCap = kind;
+                    // 직업↔스킬 매핑 (스킬 4종만 존재 — 매핑 없는 직업은 -1 = 비표기)
+                    int lv = -1;
+                    var psk = p.GetComponent<PawnSkills>();
+                    if (psk != null)
+                    {
+                        switch (kind)
+                        {
+                            case WorkKind.Chop:   lv = psk.GetLevel(SkillKind.Chop); break;
+                            case WorkKind.Build:  lv = psk.GetLevel(SkillKind.Build); break;
+                            case WorkKind.Gather: lv = psk.GetLevel(SkillKind.Gather); break;
+                            case WorkKind.Hunt:   lv = psk.GetLevel(SkillKind.Combat); break;
+                        }
+                    }
                     MakePriorityCell(grid.transform, pr, new Vector2(xCursor, y),
                         leftClick: () => {
                             int cur = sCap.GetPriority(kCap);
@@ -169,7 +182,8 @@ namespace MelonS.GameProto
                         rightClick: () => {
                             sCap.SetPriority(kCap, 0);
                             RefreshGrid();
-                        });
+                        },
+                        skillLevel: lv);
                     xCursor += ColWidth;
                 }
                 y -= RowHeight;
@@ -255,7 +269,7 @@ namespace MelonS.GameProto
         }
 
         private void MakePriorityCell(Transform parent, int priority, Vector2 pos,
-            System.Action leftClick, System.Action rightClick)
+            System.Action leftClick, System.Action rightClick, int skillLevel = -1)
         {
             var go = new GameObject($"P_{priority}");
             go.transform.SetParent(parent, false);
@@ -275,6 +289,23 @@ namespace MelonS.GameProto
             var click = go.AddComponent<WorkTabCellClick>();
             click.left = leftClick;
             click.right = rightClick;
+
+            // 퀵픽 '직업탭 스킬 신호' (2026-06-13) — 매핑 스킬이 있는 직업 셀에 레벨
+            //  보조 표기 (우상단 소형, 패널톤).  '누구를 어디에 둘지'가 정보 기반이 된다.
+            if (skillLevel >= 0)
+            {
+                var lvGo = new GameObject("Lv");
+                lvGo.transform.SetParent(go.transform, false);
+                var lt = lvGo.AddComponent<Text>();
+                lt.text = skillLevel.ToString();
+                lt.font = font;
+                lt.fontSize = 10;
+                lt.color = new Color(0.72f, 0.65f, 0.55f, 0.95f);
+                lt.alignment = TextAnchor.UpperRight;
+                var lrt = lvGo.GetComponent<RectTransform>();
+                lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
+                lrt.sizeDelta = new Vector2(-3f, -1f); lrt.anchoredPosition = Vector2.zero;
+            }
 
             var txtGo = new GameObject("Label");
             txtGo.transform.SetParent(go.transform, false);
