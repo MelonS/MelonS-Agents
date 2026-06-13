@@ -239,6 +239,25 @@ Three verification layers feed the gate:
   to a log-prefix mismatch — fixed in #198, a "the verifier must be verified
   too" lesson).
 
+Two newer layers (2026-06-12~13) sit on top and are now the project's
+headline verification story:
+
+- **Input-level repro gate** — `python skills/game-dev-agent/scripts/repro_all.py
+  --fresh-build`: **15 scenarios** that synthesize real clicks through the same
+  UI path a player uses, with *effect assertions* ("the click placed a
+  designation / built the wall / grew the crop"), run on every commit.
+  `_`-prefixed scenarios (showcase / diagnostics) are excluded from the gate.
+- **Isolated-grader soak loop** — 8-game-day unattended soaks graded by an
+  isolated sub-agent against a written rubric
+  ([`docs/rubric-basics-2026-06-12.md`](docs/rubric-basics-2026-06-12.md));
+  the grader sees only evidence (screenshots + raw logs), never the author's
+  intent.  Verdicts are committed per round
+  ([`docs/`](docs/) `grader-soak-r2`…`r9` + `check-round-5/6` ledgers).
+  This loop drove, among others: mental-break rate 30→0 per 8 days, floor-
+  sleeping 30→0, wood ledger closing to the unit, cooking overrun 1,547 meals
+  → capped at colonists×5, raids with full lifecycle (warning → assault →
+  cleared letter) and a 30% manhunter-pack variant.
+
 A failing gate = **no advance**: fix-in-place or roll back to the last-good
 build. The chain-reaction workflow automates the RED → `main` rollback.
 
