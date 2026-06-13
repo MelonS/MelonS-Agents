@@ -72,7 +72,17 @@ namespace MelonS.GameProto
                         spriteGrowing  = DefGrowing != null ? DefGrowing : DefSeedling;
                         spriteRipe     = DefRipe    != null ? DefRipe    : DefSeedling;
                     }
-                    sr.sprite = spriteSeedling != null ? spriteSeedling : ProcCropSprite;
+                    // 작물 v2 (2026-06-13) — 빌드 런타임 파종은 Def* static 이 비어
+                    //  절차 blob 으로 떨어졌다 (운영자 '작물 퀄리티 낮음'의 실체).
+                    //  Resources/crops32 에서 인스턴스 필드를 직접 채워 단계 전환·
+                    //  수확 드롭까지 전 경로가 실제 아트를 쓰게 한다.
+                    if (spriteSeedling == null)
+                    {
+                        spriteSeedling = ResStage(0);
+                        spriteGrowing  = ResStage(1) ?? spriteSeedling;
+                        spriteRipe     = ResStage(2) ?? spriteSeedling;
+                    }
+                    sr.sprite = spriteSeedling != null ? spriteSeedling : (ResStage(0) ?? ProcCropSprite);
                 }
                 // #272 항상 확실히 보이게 — zone 마커/바닥 위 + 한 칸보다 크게.
                 sr.sortingOrder = 12;
@@ -132,6 +142,23 @@ namespace MelonS.GameProto
 
         // #272 절차적 새싹 스프라이트 (흰색 식물 모양 → color-tint 로 단계별 초록/노랑).
         private static Sprite _procCrop;
+        // 작물·바위 v2 (2026-06-13) — 런타임 파종 작물이 static 주입 부재 시
+        //  절차 blob 으로 떨어지던 것(운영자 '작물 퀄리티 낮음'의 실체).
+        //  Resources/crops32 폴백 체인: static → Resources → 절차.
+        private static readonly Sprite[] resStageCache = new Sprite[3];
+        private static readonly bool[] resStageTried = new bool[3];
+        private static readonly string[] ResStageNames =
+            { "crops32/crop_rice_seedling", "crops32/crop_rice_growing", "crops32/crop_rice" };
+        private static Sprite ResStage(int i)
+        {
+            if (!resStageTried[i])
+            {
+                resStageTried[i] = true;
+                resStageCache[i] = Resources.Load<Sprite>(ResStageNames[i]);
+            }
+            return resStageCache[i];
+        }
+
         private static Sprite ProcCropSprite
         {
             get
