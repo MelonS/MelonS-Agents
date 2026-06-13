@@ -593,9 +593,15 @@ namespace MelonS.GameProto
                     bool on = item.isActive != null && item.isActive();
                     string nm = NameOf(item.label);
                     bool isErase = nm.Contains("제거");
+                    // 디자인폴리시(2026-06-14): 제거 항목 셀명 축약 — "저장/폐기 영역 제거"
+                    //  (9자)는 68px 셀폭을 넘쳐 라벨이 잔디(월드) 위로 흘러나왔다.
+                    //  셀엔 축약명("저장 제거"), 툴팁엔 전체 설명 유지.
+                    string cellNm = isErase
+                        ? nm.Replace("/폐기", "").Replace(" 영역 제거", " 제거").Replace("영역 제거", "제거")
+                        : nm;
                     float cx2 = (ci % 5) * (cellW + cgap);
                     float cy2 = (ci / 5) * 95f;
-                    MakeShelfCell(cx2, cy2, nm, HotkeyOf(item.label), null,
+                    MakeShelfCell(cx2, cy2, cellNm, HotkeyOf(item.label), null,
                         isErase ? "✕" : nm.Substring(0, 1), on, true,
                         nm + " — 맵에서 드래그하여 지정",
                         () => { item.invoke?.Invoke(); RefreshContent(); });
@@ -699,8 +705,10 @@ namespace MelonS.GameProto
                 gt.font = font;
                 gt.fontSize = 30;
                 gt.fontStyle = FontStyle.Bold;
+                // 디자인폴리시(2026-06-14): 제거 도구 글리프 — 살몬레드(0.92,0.40,0.35)는
+                //  "오류/삭제실패"로 읽혔다.  차분한 테라코타로 톤다운 = 경고가 아닌 도구.
                 gt.color = glyph == "✕"
-                    ? new Color(0.92f, 0.40f, 0.35f, 1f)
+                    ? new Color(0.78f, 0.52f, 0.46f, 1f)
                     : MelonS.GameProto.Core.UITheme.AccentOrange;
                 gt.alignment = TextAnchor.MiddleCenter;
                 gt.raycastTarget = false;
@@ -731,7 +739,11 @@ namespace MelonS.GameProto
             nt.color = affordable ? Color.white : new Color(0.7f, 0.65f, 0.6f, 1f);
             nt.alignment = TextAnchor.MiddleCenter;
             nt.raycastTarget = false;
-            nt.horizontalOverflow = HorizontalWrapMode.Overflow;
+            // 디자인폴리시(2026-06-14): 긴 셀명이 옆으로 흘러 월드(잔디) 위에 떠버리던 것
+            //  차단 — 가로 Wrap + 세로 Overflow(아래로 줄바꿈).  셀폭(68px) 밖으로 절대
+            //  안 넘친다.  (대부분 명사는 1줄로 맞으므로 시각 변화 없음.)
+            nt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            nt.verticalOverflow = VerticalWrapMode.Overflow;
             var nRt = nGo.GetComponent<RectTransform>();
             nRt.anchorMin = Vector2.zero;
             nRt.anchorMax = Vector2.one;
