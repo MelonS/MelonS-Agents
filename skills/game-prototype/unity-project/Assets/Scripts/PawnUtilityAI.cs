@@ -63,6 +63,7 @@ namespace MelonS.GameProto
         // 자율 취침: 생존 행동이라 work-priority loop 보다 먼저 시도 (work settings 무관).
         private GoSleepAction goSleep;
         private RestWhenBleedingAction restWhenBleeding;
+        private EatBerryAction eatSurvival;
         // 자율 취침으로 예약한 침대 — 기상/취소 시 ReservationManager 에서 해제하기 위해 추적.
         private BedEntity reservedSleepBed;
 
@@ -99,6 +100,7 @@ namespace MelonS.GameProto
             };
             goSleep = new GoSleepAction();
             restWhenBleeding = new RestWhenBleedingAction();   // TOP-10 환자 행동
+            eatSurvival = new EatBerryAction { foodThreshold = 25f };   // 퀵픽 기아 게이트 해제
             actions = new List<IPawnAction>
             {
                 new TendPatientAction(),       // #125 - 부상 동료 치료 최우선
@@ -374,6 +376,11 @@ namespace MelonS.GameProto
 
         private void Decide()
         {
+            // 생존 pre-pass(0) — 퀵픽 '기아 채집 게이트 해제' (2026-06-13): 채집
+            //  priority 0 인 림도 굶으면(food<25) 직업 설정 무관하게 먹는다 —
+            //  생존 > 직업 설정 (spec §6 위반 잔재 청산).
+            if (needs != null && needs.food < 25f && eatSurvival != null
+                && eatSurvival.TryStart(ctx)) return;
             // 생존 pre-pass(2) — TOP-10 환자 행동: 출혈이면 침대로 가 치료 대기.
             //  취침보다 먼저 (출혈이 졸림보다 긴급).
             if (restWhenBleeding != null && needs != null && !needs.HasRestOrder
