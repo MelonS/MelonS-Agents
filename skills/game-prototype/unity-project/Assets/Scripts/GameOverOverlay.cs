@@ -106,6 +106,59 @@ namespace MelonS.GameProto
             });
             MakeText(btnGo.GetComponent<RectTransform>(), "다시 시작", font, 20,
                      UITheme.TextPrimary, Vector2.zero, new Vector2(200, 48));
+
+            // 퀵픽 '게임오버 관전' (2026-06-13) — 레퍼런스: 전멸 후에도 세계는 계속
+            //  돌고 플레이어는 지켜볼 수 있다.  관전 = 차단막·패널 숨김 + 시간 재개,
+            //  우상단 미니 배너(재시작 버튼 포함)만 남긴다.
+            var specGo = new GameObject("SpectateBtn");
+            specGo.transform.SetParent(content, false);
+            var specImg = specGo.AddComponent<Image>();
+            specImg.color = UITheme.PanelBgLight;
+            var srt = specGo.GetComponent<RectTransform>();
+            srt.sizeDelta = new Vector2(200, 36);
+            srt.anchoredPosition = new Vector2(0, -106);
+            var specBtn = specGo.AddComponent<Button>();
+            var dimRef = dim; var panelRef = panelGo;
+            specBtn.onClick.AddListener(() =>
+            {
+                Time.timeScale = 1f;
+                dimRef.SetActive(false);
+                panelRef.SetActive(false);
+                BuildSpectateBanner(canvasGo.transform, font);
+                Debug.Log("[GameOver] 관전 모드 진입");
+            });
+            MakeText(specGo.GetComponent<RectTransform>(), "관전", font, 17,
+                     UITheme.TextSecondary, Vector2.zero, new Vector2(200, 36));
+        }
+
+        private void BuildSpectateBanner(Transform canvasRoot, Font font)
+        {
+            var bGo = new GameObject("SpectateBanner");
+            bGo.transform.SetParent(canvasRoot, false);
+            var img = bGo.AddComponent<Image>();
+            img.color = new Color(0.10f, 0.085f, 0.07f, 0.85f);
+            var rt = bGo.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 1f); rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 1f);
+            rt.sizeDelta = new Vector2(360, 34);
+            rt.anchoredPosition = new Vector2(0, -6);
+            MakeText(rt, "정착지 전멸 — 관전 중", font, 15, UITheme.TextDanger,
+                     new Vector2(-50, 0), new Vector2(240, 30));
+            var rGo = new GameObject("MiniRestart");
+            rGo.transform.SetParent(bGo.transform, false);
+            var rImg = rGo.AddComponent<Image>();
+            rImg.color = UITheme.BtnHover;
+            var rrt = rGo.GetComponent<RectTransform>();
+            rrt.sizeDelta = new Vector2(90, 26);
+            rrt.anchoredPosition = new Vector2(125, 0);
+            var rBtn = rGo.AddComponent<Button>();
+            rBtn.onClick.AddListener(() =>
+            {
+                Time.timeScale = 1f;
+                var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+                UnityEngine.SceneManagement.SceneManager.LoadScene(scene.name);
+            });
+            MakeText(rrt, "다시 시작", font, 13, UITheme.TextPrimary, Vector2.zero, new Vector2(90, 26));
         }
 
         private static void MakeText(RectTransform parent, string text, Font font, int size,
