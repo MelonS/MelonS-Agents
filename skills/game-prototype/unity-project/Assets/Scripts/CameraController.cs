@@ -11,15 +11,14 @@ namespace MelonS.GameProto
     {
         [SerializeField] private float panSpeed = 8f;
         [SerializeField] private float fastPanMultiplier = 2.5f;
-        // #매직마우스(운영자 2026-06-14): zoomStep 은 이제 '스크롤 0.1(노치 휠 1칸)당 줌
-        //  배율'의 보정 기준값.  실제 줌은 스크롤 '크기'에 비례(지수)하므로 작은 스크롤은
-        //  작은 줌이 된다 — 노치 휠 감각은 그대로(0.1 → ×1.18) 보존하면서 매직마우스/
-        //  트랙패드의 미세·관성 입력이 한 틱(×1.18)으로 과대 적용되던 문제를 없앤다.
-        [SerializeField] private float zoomStep = 1.18f;
-        // 매직마우스/트랙패드 관성 스크롤은 한 번의 플릭이 여러 프레임에 큰 이벤트를
-        //  쏟아낸다.  프레임당 스크롤을 이 값으로 클램프해 한 플릭이 줌 한계까지 슬램하는
-        //  ("휙휙 넘어감") 것을 방지.  노치 휠 1칸(~0.1)보다 살짝 커서 휠은 미클램프.
-        [SerializeField] private float maxScrollPerFrame = 0.12f;
+        // #매직마우스(운영자 2026-06-14): 실측 진단 — 매직마우스 한 플릭 = 60Hz 로 28~165
+        //  개의 스크롤 이벤트(raw 0.005~0.86)를 쏟아낸다.  이전 모델들이 '휙휙' 슬램한 건
+        //  이벤트마다 줌을 곱했기 때문.  최종 모델: 스크롤을 pendingZoom(누적 목표 변화,
+        //  log 공간)에 비례 적립 후 매 프레임 maxZoomRate×dt 만큼만 소비 → (a) 부드러운
+        //  스크롤=부드러운 줌(비례), (b) 빠른/관성 버스트도 초당 maxZoomRate 를 넘지 못함
+        //  (슬램 불가), (c) pending 적립이라 60Hz 희소 입력이 1000fps 에서 안 버려진다.
+        [SerializeField] private float zoomSensitivity = 0.33f;  // raw 스크롤 1당 ln(ortho) 변화 (강도). 값↑=빠름
+        [SerializeField] private float maxZoomRate = 2.5f;       // 줌 속도 상한 ln(ortho)/초 (슬램 방지). 값↓=느림
         // #카메라파리티 (운영자 2026-06-11 "림월드 기본 줌인아웃과 많이 달라"):
         //  zoomMin 1.5(픽셀 깨지는 초근접) → 3, zoomMax 48(맵보다 큰 void 뷰) → 26.
         // #카메라파리티2 (2026-06-12 레퍼런스 스샷 2장 실측) — 기본 줌 15(보통 뷰
@@ -34,6 +33,7 @@ namespace MelonS.GameProto
         [SerializeField] private float panDecay = 6f;        // release 후 감속 (1/s)
 
         private float targetOrtho = -1f;     // <0 = 줌 입력 전 (스무딩 비활성)
+        private float pendingZoom;           // 미소비 줌(log 공간) — maxZoomRate 로 소비
         private bool zoomTowardCursor;       // 줌인일 때만 커서 앵커
         private Vector2 panVel;              // 관성 팬 속도 (world units/s)
         private Vector3 dragAnchorWorld;     // 미들마우스 드래그 월드 anchor
@@ -177,25 +177,25 @@ namespace MelonS.GameProto
             }
 
             // ── Zoom (mouse wheel / 매직마우스 / 트랙패드) — #카메라파리티: 스무스 + 줌인 시 커서 방향 ──
-            // #매직마우스(운영자 2026-06-14 "줌인/줌아웃이 너무 휙휙 넘어간다"):
-            //  이전엔 scroll>0.001 이면 매 '이벤트'마다 고정 ×zoomStep 한 단계를 적용했다.
-            //  notched 휠은 1노치=1이벤트라 OK였지만, 매직마우스/트랙패드는 한 번의 플릭이
-            //  관성 스크롤로 여러 프레임에 (대부분 작은) 이벤트를 쏟아낸다 → 각 이벤트가
-            //  ×zoomStep 풀 틱으로 적용돼 한 플릭에 줌 한계까지 슬램했다.
-            //  수정: (1) 줌을 스크롤 '크기'에 비례시키는 지수 모델(이벤트 개수 X) → 작은
-            //  스크롤=작은 줌, 관성 꼬리는 미미한 변화로 누적 슬램 제거; (2) 프레임당 스크롤을
-            //  maxScrollPerFrame 로 클램프해 초기 관성 스파이크 상한.  노치 휠 감각은 보존 —
-            //  스크롤 0.1 당 정확히 ×zoomStep (이전 이산 모델과 수치 동일).
-            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            // #매직마우스(운영자 2026-06-14 "휙휙 넘어가는 버그"): 실측 — 한 플릭이 60Hz 로
+            //  28~165개 이벤트.  스크롤을 pendingZoom 에 비례 적립 → 매 프레임 maxZoomRate×dt
+            //  만큼만 소비.  슬램 불가 + 1000fps 에서도 희소 입력 보존(round-3 dt 캡 버그 수정).
+            float scroll = Input.GetAxisRaw("Mouse ScrollWheel");
             if (Mathf.Abs(scroll) > 0.0001f)
             {
                 if (targetOrtho < 0f) targetOrtho = cam.orthographicSize;
-                float s = Mathf.Clamp(scroll, -maxScrollPerFrame, maxScrollPerFrame);
-                // k: 스크롤 0.1 당 ×zoomStep 이 되도록 환산한 민감도 (zoomStep=1.18 → k≈1.66).
-                float k = Mathf.Log(zoomStep) / 0.1f;
-                // s>0(줌인) → exp(-)<1 로 ortho 감소, s<0(줌아웃) → ortho 증가.  지수라 비례·대칭.
-                targetOrtho = Mathf.Clamp(targetOrtho * Mathf.Exp(-s * k), zoomMin, zoomMax);
-                zoomTowardCursor = scroll > 0;   // 줌인만 커서 앵커 (줌아웃은 중앙 유지)
+                pendingZoom += -scroll * zoomSensitivity;   // 비례 적립 (scroll>0=줌인=음수)
+                zoomTowardCursor = scroll > 0;              // 줌인만 커서 앵커 (줌아웃은 중앙 유지)
+            }
+            if (Mathf.Abs(pendingZoom) > 0.0001f)
+            {
+                if (targetOrtho < 0f) targetOrtho = cam.orthographicSize;
+                float step = Mathf.Clamp(pendingZoom, -maxZoomRate * dt, maxZoomRate * dt);
+                targetOrtho = Mathf.Clamp(targetOrtho * Mathf.Exp(step), zoomMin, zoomMax);
+                pendingZoom -= step;
+                // 줌 한계 도달 시 같은 방향 잔여 pending 폐기 — 불필요한 관성 꼬리 제거.
+                if (targetOrtho <= zoomMin + 1e-4f && pendingZoom < 0f) pendingZoom = 0f;
+                if (targetOrtho >= zoomMax - 1e-4f && pendingZoom > 0f) pendingZoom = 0f;
             }
             if (targetOrtho > 0f && Mathf.Abs(cam.orthographicSize - targetOrtho) > 0.005f)
             {
