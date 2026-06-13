@@ -11,28 +11,34 @@ namespace MelonS.GameProto
     /// </summary>
     public class TutorialOverlay : MonoBehaviour
     {
+        // 행동 기반 온보딩(2026-06-13) — 시간 대신 게임 상태로 단계 전진.
+        //  일시정지 시작과 정합(시간 기반은 둘러보는 동안 만료됨) + 첫 사이클
+        //  전체(저장→집→농장) 안내.  각 단계는 플레이어가 실제로 해야 넘어간다.
+        public enum Gate { Unpause, Stockpile, House, Farm, Done }
+
         [System.Serializable]
         public struct Tip
         {
-            public float startTime;   // real seconds
-            public float duration;    // hold seconds
+            public float startTime;   // (레거시 — 미사용, 직렬화 호환 유지)
+            public float duration;    // (레거시)
             public string text;
+            public Gate gate;
         }
 
         // 운영자 피드백 2026-05-27: tip 9개 × 7초 = 72초 동안 화면 가림.  3개로 압축.
         // 키보드 안내는 GuiControlBar 의 버튼 hint 가 cover.
         public Tip[] tips = new Tip[]
         {
-            new Tip { startTime = 1f,  duration = 5f,
-                      text = "콜로니스트를 좌클릭하면 선택,\n빈 곳을 우클릭하면 이동합니다." },
-            new Tip { startTime = 7f,  duration = 5f,
-                      text = "나무·작물 우클릭 = 작업.\n적/늑대는 [징집] 후 우클릭 = 공격." },
-            new Tip { startTime = 13f, duration = 5f,
-                      text = "화면 하단 버튼으로 시간/빌드/연구 제어.\nSpace 로 팁 건너뛰기." },
-            // 첫사이클 T1 (2026-06-12) — 저장구역 온보딩 0: 안 만들면 운반 3종이
-            //  무음으로 죽고 바닥 더미가 썩는데 게임이 어디서도 말해주지 않았다.
-            new Tip { startTime = 19f, duration = 6f,
-                      text = "건축(F8) → 구역 → 저장:\n자원을 모아둘 저장 구역부터 지정하세요!" },
+            new Tip { gate = Gate.Unpause,
+                      text = "일시정지 상태입니다.  맵을 둘러본 뒤 \nSpace(또는 ▶)로 시작하세요." },
+            new Tip { gate = Gate.Stockpile,
+                      text = "① 저장공간:  건축(F8) → 구역 → 저장 \n자원을 모아둘 구역을 드래그로 지정하세요." },
+            new Tip { gate = Gate.House,
+                      text = "② 집:  건축 → 구조 → 목재 벽으로 방을 짓고 \n문·가구(침대)를 놓으세요." },
+            new Tip { gate = Gate.Farm,
+                      text = "③ 농장:  건축 → 구역 → 경작 \n농사 지을 땅을 지정하세요." },
+            new Tip { gate = Gate.Done,
+                      text = "좋습니다!  이제 콜로니스트가 알아서 일합니다. \n밤엔 침대에서 자고, 며칠 뒤 습격이 옵니다." },
         };
 
         [SerializeField] private Image bg;
@@ -66,41 +72,27 @@ namespace MelonS.GameProto
 
         private void Update()
         {
+            if (Time.timeScale <= 0.01f) sawPause = true;   // 정지 시작 감지(Unpause gate 용)
             // Skip current tip
-            if ((Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Escape)) && currentVisible)
+            // 행동 기반 진행: 현재 단계의 gate 가 충족되면 다음 단계로.  완료(stepIdx
+            //  == tips.Length)면 영구 종료.  Space/ESC = 현재 단계 건너뛰기(수동 전진).
+            if (stepIdx >= tips.Length) { FadeOut(); ApplyFade(); return; }
+            bool manualSkip = (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Escape)) && currentVisible;
+            bool gateMet = GateSatisfied(tips[stepIdx].gate);
+            // Done 단계는 표시 후 6초 뒤 자동 종료.
+            if (tips[stepIdx].gate == Gate.Done && currentVisible
+                && Time.realtimeSinceStartup - currentTipFadeTime > 6f) gateMet = true;
+            if (manualSkip || gateMet)
             {
-                skipUntil = Time.realtimeSinceStartup;
-                if (currentTipIdx >= 0 && currentTipIdx < tips.Length)
-                {
-                    // jump to end of current tip
-                    skipUntil = tips[currentTipIdx].startTime + tips[currentTipIdx].duration;
-                    var t = tips[currentTipIdx];
-                    t.startTime = Time.realtimeSinceStartup - tips[currentTipIdx].duration;
-                    tips[currentTipIdx] = t;
-                }
-                FadeOut();
-                return;
+                stepIdx++;
+                if (stepIdx >= tips.Length) { FadeOut(); ApplyFade(); return; }
             }
-
-            float t_now = Time.realtimeSinceStartup;
-            int newIdx = -1;
-            for (int i = 0; i < tips.Length; i++)
+            if (stepIdx != currentTipIdx)
             {
-                if (t_now >= tips[i].startTime && t_now <= tips[i].startTime + tips[i].duration)
-                {
-                    newIdx = i; break;
-                }
-            }
-            if (newIdx != currentTipIdx)
-            {
-                currentTipIdx = newIdx;
-                if (currentTipIdx >= 0)
-                {
-                    if (tipText != null) tipText.text = tips[currentTipIdx].text;
-                    currentTipFadeTime = t_now;
-                    FadeIn();
-                }
-                else FadeOut();
+                currentTipIdx = stepIdx;
+                if (tipText != null) tipText.text = tips[currentTipIdx].text;
+                currentTipFadeTime = Time.realtimeSinceStartup;
+                FadeIn();
             }
             // Smooth fade
             if (group != null)
@@ -131,6 +123,38 @@ namespace MelonS.GameProto
 
         private void FadeIn()  { currentVisible = true; }
         private void FadeOut() { currentVisible = false; }
+
+        private int stepIdx = 0;   // 행동 기반 현재 단계
+
+        private bool GateSatisfied(Gate g)
+        {
+            switch (g)
+            {
+                case Gate.Unpause:
+                    // 정지 시작(SetScale 0) 이후 1배속 이상으로 올렸는가.
+                    return Time.timeScale > 0.01f && sawPause;
+                case Gate.Stockpile:
+                    return Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None).Length > 0;
+                case Gate.House:
+                    // 벽 청사진/완공 또는 가구 청사진 중 하나라도 = 집짓기 시작.
+                    return Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None).Length > 0
+                        || Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None).Length > 0;
+                case Gate.Farm:
+                    return GrowZoneDesignation.Instance != null
+                        && GrowZoneDesignation.Instance.ZoneCellCount > 0;
+                case Gate.Done:
+                    return false;   // 시간 경과로만(위에서 처리)
+            }
+            return false;
+        }
+
+        private bool sawPause;
+
+        private void ApplyFade()
+        {
+            if (group != null)
+                group.alpha = Mathf.MoveTowards(group.alpha, currentVisible ? 0.92f : 0f, Time.unscaledDeltaTime * 2f);
+        }
 
         public void SetRefs(Image bgImg, Text txt)
         {
