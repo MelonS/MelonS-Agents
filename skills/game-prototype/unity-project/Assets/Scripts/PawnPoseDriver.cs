@@ -124,6 +124,7 @@ namespace MelonS.GameProto
         [SerializeField] private float downedRollDeg = 55f;
         // 회전이 목표각으로 ease 되는 속도(deg/sec 비례).  쓰러짐이 톡 튀지 않게.
         [SerializeField] private float rollEaseSpeed = 8f;
+        [SerializeField] private float sleepRollDeg = 78f;   // grader r8/r9 수면 누움 각
 
         // ─────────────── Runtime state ───────────────────────────────────────
         // Names from SceneSetup.Pawn (shared with PawnFacing / SleepPoseDriver).
@@ -143,6 +144,7 @@ namespace MelonS.GameProto
         private PawnHauler hauler;
         private PawnEntity pawnEntity;
         private PawnHealth health;            // 상태 source (poll, 구독 X — bug #7)
+        private PawnNeeds needs;              // grader r8/r9 — 수면 누움 포즈 source
         // 사망 시 숨길 머리위 바(HpBg/HpFill/MoodBg/MoodFill) 와 이름/상태 라벨은
         //  자식 GameObject 이름으로 직접 토글(아래 SetBarsAndLabelVisible).
         // 이름/상태 라벨 자식 렌더러(PawnNameLabel 가 만든 child GO).
@@ -170,6 +172,7 @@ namespace MelonS.GameProto
             hauler     = GetComponent<PawnHauler>();
             pawnEntity = GetComponent<PawnEntity>();
             health     = GetComponent<PawnHealth>();
+            needs      = GetComponent<PawnNeeds>();
             bodyChild  = ResolveBodyChild();
             // #audit4 #3 — 자식 SpriteRenderer 캐시.  UpdateAttackLunge 가 매 프레임
             //  bodyChild.GetComponent<SpriteRenderer>() 를 호출하던 것 1회 캐시로 대체.
@@ -261,7 +264,18 @@ namespace MelonS.GameProto
                 return; // 죽은/의식불명 림은 짐 들기/공격 lunge 안 함
             }
 
-            // 살아있으면 corpse 회전을 0 으로 되돌리고(회복/부활 대비) 바/이름 복구.
+            // grader r8/r9 수면 누움 — 살아있고 자는 중이면 sleepRollDeg 로 눕힌다.
+            //  (자식 회전 단독 소유자가 여기라 애니메이터와 충돌 없음.)  바/이름 유지.
+            if (needs != null && needs.IsSleeping)
+            {
+                currentRoll = Mathf.MoveTowards(
+                    currentRoll, sleepRollDeg, rollEaseSpeed * 60f * Time.unscaledDeltaTime);
+                if (bodyChild != null)
+                    bodyChild.localRotation = Quaternion.Euler(0f, 0f, currentRoll);
+                if (barsHidden) SetBarsAndLabelVisible(true);
+                return;   // 자는 동안 짐 들기/공격 lunge 정지
+            }
+            // 살아있으면 corpse/수면 회전을 0 으로 되돌리고(회복/기상 대비) 바/이름 복구.
             if (currentRoll != 0f || barsHidden) RestoreFromCorpse();
 
             UpdateCarryBundle();

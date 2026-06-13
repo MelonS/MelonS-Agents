@@ -136,6 +136,11 @@ namespace MelonS.GameProto
 
             int col;
             bool sleeping = needs != null && needs.IsSleeping;
+            // grader r8/r9 갭 — 수면 시 침대 위에 '서 있는' 정면 포즈.  SleepPose 가
+            //  연출한다던 주석만 있고 코드는 없었다(전원 직립+zZ).  가시 자식을
+            //  78° 눕혀 '누워 잔다'를 만든다(전환 시점에만 set — 프레임 churn 없음).
+            // grader r8/r9 수면 누움 포즈는 PawnPoseDriver(자식 회전 단독 소유자)가
+            //  처리한다 — 여기서 localRotation 을 건드리면 PoseDriver 와 충돌(되돌림).
             bool working = !sleeping && speed <= 0.15f
                 && ((chopper != null && chopper.HasTask)
                  || (miner != null && miner.HasTask)
