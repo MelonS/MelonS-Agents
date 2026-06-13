@@ -1,0 +1,189 @@
+{
+ "name": "crop-art-verify-v2",
+ "timeoutSec": 900,
+ "steps": [
+  {
+   "op": "wait",
+   "sec": 2
+  },
+  {
+   "op": "clickui",
+   "name": "label:건축"
+  },
+  {
+   "op": "clickui",
+   "name": "label:구역"
+  },
+  {
+   "op": "wait",
+   "sec": 0.3
+  },
+  {
+   "op": "clickui",
+   "name": "label:경작"
+  },
+  {
+   "op": "wait",
+   "sec": 0.3
+  },
+  {
+   "op": "worldclick",
+   "x": -1.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.3
+  },
+  {
+   "op": "worldclick",
+   "x": -0.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.3
+  },
+  {
+   "op": "worldclick",
+   "x": 0.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.3
+  },
+  {
+   "op": "worldclick",
+   "x": -1.5,
+   "y": -2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.3
+  },
+  {
+   "op": "worldclick",
+   "x": -0.5,
+   "y": -2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.3
+  },
+  {
+   "op": "worldclick",
+   "x": 0.5,
+   "y": -2.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.3
+  },
+  {
+   "op": "key",
+   "name": "Escape"
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "assert",
+   "probe": "growZoneCells",
+   "min": 6
+  },
+  {
+   "op": "speed",
+   "x": 4
+  },
+  {
+   "op": "wait",
+   "sec": 120
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "worldclick",
+   "x": -0.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "shot",
+   "name": "cv_seedling"
+  },
+  {
+   "op": "speed",
+   "x": 4
+  },
+  {
+   "op": "wait",
+   "sec": 260
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "worldclick",
+   "x": -0.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "shot",
+   "name": "cv_growing"
+  },
+  {
+   "op": "speed",
+   "x": 4
+  },
+  {
+   "op": "wait",
+   "sec": 260
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "worldclick",
+   "x": -0.5,
+   "y": -1.5
+  },
+  {
+   "op": "wait",
+   "sec": 0.5
+  },
+  {
+   "op": "shot",
+   "name": "cv_ripe"
+  },
+  {
+   "op": "assert",
+   "probe": "cropCount",
+   "min": 1
+  }
+ ]
+}
