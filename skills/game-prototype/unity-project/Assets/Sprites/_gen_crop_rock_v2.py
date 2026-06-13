@@ -109,27 +109,54 @@ def stone_vein():
     return im
 
 def rock_tile(variant):
+    # 디그리딩 (2026-06-14): 잔디/흙(_gen_tiles32)과 동일 규율로 재작성.
+    #  ⚠ 바위는 PathGrid 가 단일 타일 레퍼런스로 통행 차단을 판정 → 변형 추가 불가
+    #    (게임플레이 변경 금지).  rock_a 한 장이 전 바위 셀에 반복(+flip-X)되므로
+    #    타일 자체가 최대한 균일·저대비·이음매 없어야 격자가 안 생긴다.
+    #  이전 버전은 큰 고대비 LT/DK 패치 4개가 셀마다 같은 자리(±2px)에 박혀
+    #    명/암 덩어리가 행으로 정렬 = "QR 지면" 격자(오버뷰 최대 눈엣가시)의 원인.
+    #  교체: 1px MD 테두리 유지(이음매), 큰 패치·긴 균열 제거, 작은 저대비
+    #    2~3px 클러스터를 전면 균일 산란.  밝은 LT 는 반복 시 가장 눈에 띄어
+    #    격자를 만들므로 1px 반짝으로 최소화.
     im = Image.new("RGBA", (32, 32), ROCK_MD)
     r = random.Random(777 + variant)
-    # 큰 페이셋 패치 — LT 2개(좌상광), DK 2개(우하), 플랫 채움
-    def patch(cx, cy, w, h, c):
-        for y in range(cy, cy+h):
-            for x in range(cx, cx+w):
-                if 0 <= x < 32 and 0 <= y < 32 and r.random() > 0.18: px(im, x, y, c)
-    patch(r.randint(2,6), r.randint(2,5), 9, 6, ROCK_LT)
-    patch(r.randint(16,20), r.randint(14,18), 8, 7, ROCK_DK)
-    patch(r.randint(3,7), r.randint(18,21), 7, 5, ROCK_DK)
-    patch(r.randint(18,21), r.randint(3,6), 6, 4, ROCK_LT)
-    # 균열 — 연결된 사선 폴리라인 2개
-    for _ in range(2):
-        x, y = r.randint(4, 26), r.randint(3, 8)
-        for _ in range(r.randint(10, 16)):
-            px(im, x, y, ROCK_DK)
-            x += r.choice((0, 1, 1)); y += r.choice((1, 1, 0))
-            if x > 30 or y > 30: break
-    # 자갈 점 소량 (LT 1px — 기존 노이즈의 1/4 밀도)
-    for _ in range(7):
-        px(im, r.randint(1, 30), r.randint(1, 30), ROCK_LT)
+    LO, HI = 1, 30   # 0/31 테두리 = 순수 MD (이음매 없음)
+    MID = tuple(int(ROCK_MD[i] * 0.60 + ROCK_DK[i] * 0.40) for i in range(3)) + (255,)  # 은은한 그늘 (MD→DK 40%)
+    placed = set()
+
+    def free(cells, gap=2):
+        for (x, y) in cells:
+            if not (LO <= x <= HI and LO <= y <= HI):
+                return False
+        for (x, y) in cells:
+            for dy in range(-gap, gap + 1):
+                for dx in range(-gap, gap + 1):
+                    if (x + dx, y + dy) in placed:
+                        return False
+        return True
+
+    def put(cells, c):
+        for (x, y) in cells:
+            px(im, x, y, c); placed.add((x, y))
+
+    shapes = [[(0, 0), (1, 0)], [(0, 0), (1, 0), (1, 1)],
+              [(0, 0), (0, 1), (1, 0)], [(0, 0), (1, 0), (2, 0)]]
+    # 디테일 예산 ~76px(~8%) — 74% 은은한 그늘, 21% DK, 5% LT(1px 반짝만)
+    attempts = 0
+    while len(placed) < 76 and attempts < 5000:
+        attempts += 1
+        ax, ay = r.randint(LO, HI), r.randint(LO, HI)
+        cells = [(ax + dx, ay + dy) for (dx, dy) in r.choice(shapes)]
+        if not free(cells):
+            continue
+        roll = r.random()
+        if roll < 0.74:
+            c = MID
+        elif roll < 0.95:
+            c = ROCK_DK
+        else:
+            c = ROCK_LT; cells = cells[:1]   # 밝은 점은 1px만 (반복 격자 방지)
+        put(cells, c)
     return im
 
 os.makedirs(OUT, exist_ok=True)
