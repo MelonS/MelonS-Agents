@@ -124,6 +124,35 @@ namespace MelonS.GameProto.AI
         }
     }
 
+    /// <summary>G-스케줄 최소형 (2026-06-13) — Joy(여가) 슬롯: 모닥불가로 모여 쉰다.
+    /// '조용한 저녁' 카드의 모닥불이 처음으로 행동이 된다.  PawnThoughts 가
+    /// 모닥불 2.5셀 내 체류에 '모닥불 곁' +2 를 환류.</summary>
+    public class JoyAction : IPawnAction
+    {
+        public string DisplayName => "휴식(여가)";
+        public WorkKind Kind => WorkKind.Gather;   // fallback 직전 전용 — 매핑 미사용
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.movement == null) return false;
+            var sched = ctx.transform.GetComponent<PawnSchedule>();
+            if (sched == null || sched.GetCurrentSlot() != TimeSlot.Joy) return false;
+            var fire = FindCampfire();
+            if (fire == null) return false;
+            Vector2 c = fire.transform.position;
+            if (((Vector2)ctx.transform.position - c).sqrMagnitude < 6.25f) return true;  // 이미 곁 — 머문다
+            var off = Random.insideUnitCircle.normalized * Random.Range(1.0f, 2.0f);
+            ctx.movement.SetTarget(PawnMovement.ClampToWorld(c + off));
+            return true;
+        }
+
+        public static GameObject FindCampfire()
+        {
+            foreach (var fl in Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None))
+                if (fl != null && fl.name.Contains("Campfire")) return fl.gameObject;
+            return null;
+        }
+    }
+
     public class EatBerryAction : IPawnAction
     {
         public string DisplayName => "베리채집";
