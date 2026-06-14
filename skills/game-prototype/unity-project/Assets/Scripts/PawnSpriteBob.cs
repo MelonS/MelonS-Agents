@@ -189,6 +189,14 @@ namespace MelonS.GameProto
             //  here would read THIS child's own renderer (the RED bug), not the
             //  root anchor that GameManager + PawnEntity actually write tint to.
             if (rootTintRenderer == null) return;
+            // [수면포즈 회귀 fix 2026-06-14] 루트 렌더러는 tint 앵커 전용 = 그리기 금지.
+            //  SceneSetup.Pawn 이 빌드시 sr.enabled=false 로 두지만, art-v2 파이프라인
+            //  도입 후 런타임엔 루트가 enabled=true 로 남아(프리팹/씬 미지속) 자식과
+            //  이중 렌더됐다.  깨어있을 땐 직립 루트가 직립 자식과 겹쳐 안 보이지만,
+            //  수면 시 자식이 78° 회전(PawnPoseDriver)하며 어긋나 '직립 루트'가 드러나
+            //  '침대 위 직립' 회귀의 진범이었다(PoseEnum 진단: Pawn(Clone) en=1,z=0 /
+            //  PawnSpriteBob en=1,z=78).  매 프레임 draw-disable 강제 — 자식이 유일 가시체.
+            if (rootTintRenderer.enabled) rootTintRenderer.enabled = false;
             // #54 콜로니스트 외형 다양화: 과거엔 color 만 mirror 해서, GameManager 가 root
             //  tint-anchor 에 배정한 per-pawn 변형 sprite 가 가시 자식엔 안 나타났다(전원 동일).
             //  sprite 도 mirror(참조 비교로 변경 시에만) → 변형 sprite 가 실제로 보인다.

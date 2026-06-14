@@ -79,3 +79,30 @@ WIKI-L(#5·#7 → #4) → WIKI-M(#1·#3 full soak 검증) → 폴리싱 §3 → 
 - 위키 TIER-L 종결 현황: #3 적용·검증·푸시(225cde0). #1(섭취임계)은 #3와 무드 상호작용
   (eat35 시 배고픔밴드 상주 → 회귀 위험)으로 **무인 보류**. #5(setSkill 부재)·#2(붕괴임계)
   ·#8(난이도 장기관측) 보류. → 위키 무인 적용분 종료, 운영자 OK 대기 목록 정리됨.
+
+### ⚠ 정정 — stale 로그 오독 (2026-06-14)
+앞선 "소크 체크포인트" 항목의 정신붕괴/exception 수치는 **틀렸다**.  LocalLow
+Player.log(00:20 stale, 게임 Debug.Log 0건)를 읽었다.  실제 런타임 로그는 repro
+하네스의 `-logFile` = `G:/ai/_repro_run__<scenario>.log`.  올바른 로그
+(`_repro_run__showcase-human-rhythm.log`) 재확인 결과:
+- **정신붕괴 = 1 이벤트** (지훈 진입 mood=18 → 카타르시스 복귀 mood=45), 바닥기상 0,
+  **exception 0**.  (이전 오보: 정신붕괴 0 / exception 7 — 둘 다 stale 로그값.)
+- 판정: 붕괴 1건은 임계 20 미만(mood 18)으로 떨어진 **기존 D-A 무드 적자(수면)** 로,
+  소크 중 폰은 급식되어 #3(허기) 무관.  역대 범위(r11=2·r15=1) 내 → 위키 #3 회귀 아님.
+- TMP exception 7건 주장도 철회 — 실제 소크 로그 exception 0.  (stale 로그 잔재였음.)
+**함정**: 런타임 로그는 LocalLow Player.log 가 아니라 하네스 `-logFile`
+(`_repro_run__<scenario>.log`) 을 읽어라.  playbook 에 증류.
+
+### ✅ 수면포즈 회귀 진범 규명·수정 (2026-06-14) — QA 소크 발견 → 런타임 진단
+소크 grader 가 "침대 위 직립"을 적발(커밋 41eaaea 의 78° 누움이 회귀).  정적 코드는
+전부 정상이라 런타임 진단 사다리로 추적:
+- PoseTop: PawnPoseDriver 부착·sleeping=True·bodyChild OK 확인.
+- PoseSleep/PoseLate: roll=78·setZ=78·lateZ=78 → 회전은 정확히 적용·유지(클로버 아님).
+- **PoseEnum(전 렌더러 열거)**: `Pawn(Clone) en=1,z=0` + `PawnSpriteBob en=1,z=78`
+  → **루트 렌더러가 enabled=true 로 직립 몸통을 덧그림**(진범).  SceneSetup 이 빌드시
+  sr.enabled=false 로 두지만 art-v2 파이프라인 이후 런타임에 유실.  깨어있을 땐 직립끼리
+  겹쳐 안 보이다 수면 78° 회전 시 직립 루트가 노출.
+- **수정**: PawnSpriteBob.MirrorRootTint 가 매 프레임 rootTintRenderer.enabled=false 강제
+  (소유 컴포넌트가 "앵커는 두되 안 그린다"를 보증).  깨어있을 때 잠재 이중그림도 제거 = 순개선.
+- 검증: 강제수면 프로브 — 격리 grader R1 PASS(단일 깔끔 누움)·R2(before 이중결함 확인).
+  repro_all 게이트 진행.  진단 로그는 전량 제거(클린).
