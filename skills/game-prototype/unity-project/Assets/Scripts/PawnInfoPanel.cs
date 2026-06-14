@@ -526,8 +526,11 @@ namespace MelonS.GameProto
                     entityBodyText.gameObject.SetActive(true);
                     entityBodyText.text = entBody;
                 }
-                // B2(#4) — 나무 선택이면 '벌목 지정' 버튼 노출.
-                UpdateEntityAction(inspect);
+                // QA F3(2026-06-14): 인스펙터 '벌목 지정' 버튼 제거 — ClickSelector 좌클릭
+                //  플로트 메뉴(🪓 벌목 지정, fb#1-3)가 나무/광맥/베리/철거/철거를 포괄
+                //  제공하므로 같은 '벌목 지정'이 인스펙터에도 떠 버튼 2개가 보였다(깨진
+                //  인상, QA 적발).  포괄 플로트 메뉴만 정본으로 남기고 중복 버튼 비표시.
+                if (entityActionBtn != null) entityActionBtn.gameObject.SetActive(false);
                 if (panelBg != null) panelBg.enabled = true;
                 SetBorderVisible(true);
                 return;
