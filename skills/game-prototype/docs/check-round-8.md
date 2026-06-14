@@ -1,0 +1,50 @@
+# check-round-8 — 야간 자율 세션 브리핑 (2026-06-14)
+
+운영자 지시: "QA·퀄리티업·폴리싱·사운드·ui/ux + 위키 RAG 비교·적용, 혼자서 계속."
+부재 10~30h 가정.  자가 게이트(격리 grader + repro_all 15/15)로 빨간 게이트는
+절대 커밋 안 함.  아래 전부 푸시 완료(origin/main).
+
+## 출하 (검증·푸시 완료)
+
+| # | 종류 | 내용 | 검증 |
+|---|------|------|------|
+| 1 | feat(art) | 바위 타일 "QR 격자" 해체 (휘도 stdev 14.2→5.1) | grader·gate |
+| 2 | fix(ui) | 건축 제거버튼 라벨 오버플로우 + ✕ 톤다운 | grader·gate |
+| 3 | fix(ui) | 탭 행이름 "Pawn(Clone)"→실명 + 이모지 tofu 제거 + 라벨 정렬 | grader·gate |
+| 4 | fix(ui) | 나무 인스펙터 제목겹침 + 영문 수종/dmg 한글화 | grader·gate |
+| 5 | fix(ui) | 인스펙터 중복 "벌목 지정" 버튼 제거(플로트 메뉴 정본) | grader·gate |
+| 6 | feat(sim) | 위키 #3 허기 thought 3티어(극심한 배고픔 추가) | 효과probe·gate |
+| 7 | **fix(art)** | **수면포즈 직립 회귀 진범 — tint앵커 루트 렌더러 이중그림 제거** | grader·gate |
+| 8 | fix(ui) | 연구창 위계 폴리싱(상태색·골드비용·들여쓴 설명) | grader·gate |
+
+**#7이 핵심**: QA 소크가 "침대 위 직립"을 적발 → 정적 코드는 정상이라 런타임
+진단(전 렌더러 열거)으로 진범 규명: 루트 SR 이 enabled 로 직립 몸통을 자식 위에
+덧그려, 수면 시 자식만 78° 회전하며 직립 루트가 노출.  PawnSpriteBob 가 매 프레임
+루트 draw-disable 강제 → 전 폰 이중그림 제거(순개선).  깨어있는 폰도 더 선명.
+
+## 위키 RAG (운영자 요청 "rag로 연결·비교·적용")
+- `docs/wiki-ref/*.md` 7종 정본 노트(growing/needs/mood/work-skills/mining/raids/
+  temperature) + `docs/wiki-gap-analysis-2026-06-14.md` 우선순위 갭표.
+  ※ 위키 직접 fetch 403 → WebSearch 스니펫으로 정본 추출.
+- TIER-L #3 적용·검증.  나머지는 **무인 보류**(사유 명시): #1 섭취임계(#3와 무드
+  상호작용으로 회귀 위험)·#2 붕괴임계(소크 회귀)·#5(setSkill op 부재로 효과 검증
+  불가)·#8(난이도 장기관측 필요).  운영자 OK 시 적용 대기.
+
+## ⚠ 정정 (정직 보고)
+- 초기 소크 검증에서 **stale LocalLow Player.log** 를 읽어 "정신붕괴 0·exception 7"로
+  오보.  실제(하네스 -logFile): **정신붕괴 1**(지훈 mood18→복귀, 기존 D-A 무드 적자·
+  #3 무관) · **exception 0**.  함정 playbook 증류: 런타임 로그는 `-logFile`
+  (`_repro_run__<scenario>.log`), LocalLow Player.log 아님.
+
+## 운영자 판단/보류 영역 (무인 미진입)
+- 사운드: AudioBank 15종 SFX + 28스크립트 호출로 이미 광범위 → 무인 신규추가는
+  청취검증 불가라 보류(감사만).  특정 SFX 추가 원하시면 지시 주세요.
+- 시각 §3 신규시스템(구름그림자·물애니): muddy/성능 위험으로 무인 보류.
+- 야간 팔레트: NightOverlay 24h 그라데이션 이미 정교(딥블루 한밤) — 황혼 "muddy"
+  인상은 흙타일 비침(주관), 결함 아님.
+- 위키 밸런스 적용분(#1/#2/#8) — 운영자 OK 대기.
+
+## 스킬 환류 (playbook.md)
+전 패널 ui-tour+격리grader QA 스윕 / GameObject 이름 UI 누수 버그클래스 / 이중렌더
+"앵커는 두되 안 그린다 매프레임 강제" / 런타임 진단 사다리 / -logFile 함정 / 밸런스
+임계 작동구간 선분석 / 효과-판별 어서션 — 다음 게임(suika) 적용 일반 규칙으로 증류.
