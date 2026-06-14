@@ -411,32 +411,34 @@ namespace MelonS.GameProto
             Debug.Log($"[Pawn:{pawnName}] selected={selected}");
         }
 
+        private SpriteRenderer bodyChildRenderer;   // 가시 자식 "PawnSpriteBob" — tint 직접 보장용
+
         private void ApplyVisual()
         {
             if (spriteRenderer == null) return;
             // 우선순위: Dead > Downed > Drafted > Selected > Unselected.
-            //  health-state tint 는 root 에 쓰고 PawnSpriteBob 가 자식으로 mirror 한다.
-            //  Dead 의 90° 쓰러짐 회전은 PawnPoseDriver(자식 transform lane)가 담당.
-            if (healthRef != null)
-            {
-                var st = healthRef.State;
-                if (st == PawnHealth.PoseState.Dead)
-                {
-                    spriteRenderer.color = deadTint;     // 회색조 corpse
-                    return;
-                }
-                if (st == PawnHealth.PoseState.Downed)
-                {
-                    spriteRenderer.color = downedTint;   // 의식불명 누움
-                    return;
-                }
-            }
-            // Day 1: tint to indicate selection. Real outline shader = later.
-            // Day 48: drafted pawn tinted cyan (manual-control mode).
-            if (IsDrafted)
-                spriteRenderer.color = new Color(0.55f, 0.85f, 1.0f, 1f);  // cyan
+            Color c;
+            if (healthRef != null && healthRef.State == PawnHealth.PoseState.Dead)
+                c = deadTint;                                         // 회색조 corpse
+            else if (healthRef != null && healthRef.State == PawnHealth.PoseState.Downed)
+                c = downedTint;                                       // 의식불명 누움
+            else if (IsDrafted)
+                c = new Color(0.55f, 0.85f, 1.0f, 1f);               // cyan (수동 제어)
             else
-                spriteRenderer.color = selected ? selectedOutlineColor : unselectedColor;
+                c = selected ? selectedOutlineColor : unselectedColor;
+
+            // 루트(틴트 앵커) — 살아있을 땐 PawnSpriteBob 가 자식으로 mirror 한다.
+            spriteRenderer.color = c;
+            // [수면포즈 fix(a72077f) 후속 가드 2026-06-14] 사망/의식불명 시 StopBodyBob 으로
+            //  PawnSpriteBob(mirror)이 꺼지고 루트는 draw-disable 이라, root 에만 쓰면 회색조
+            //  corpse 가 안 보일 수 있다(미러 중단 + 루트 미표시).  가시 자식 렌더러에 직접
+            //  같은 색을 써 미러/bob/루트상태와 무관하게 보장(살아있을 땐 무해한 동일값).
+            if (bodyChildRenderer == null)
+            {
+                var b = transform.Find("PawnSpriteBob");
+                if (b != null) bodyChildRenderer = b.GetComponent<SpriteRenderer>();
+            }
+            if (bodyChildRenderer != null) bodyChildRenderer.color = c;
         }
     }
 }

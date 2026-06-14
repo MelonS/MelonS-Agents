@@ -1,0 +1,14 @@
+{
+  "_doc": "시체 렌더 회귀 가드 (2026-06-14). clearFood+food=0 기아사 → 시체 스샷.",
+  "_expected": "시체는 옆으로 회전(PawnPoseDriver dead-roll) + 회색조 deadTint(어두운 desat) 단일 스프라이트. 살아있는 밝은 색이거나 직립+회전 이중이면 회귀(루트 렌더러 draw-disable + ApplyVisual 가시자식 직접 틴트가 진실 — a72077f/후속). _접두=게이트 비포함, grader 사후 리뷰.",
+  "name": "corpse-render-repro",
+  "timeoutSec": 220,
+  "steps": [
+    {"op": "wait", "sec": 1.5},
+    {"op": "clearFood"},
+    {"op": "setNeed", "name": "food", "x": 0},
+    {"op": "speed", "x": 6},
+    {"op": "wait", "sec": 170},
+    {"op": "shot", "name": "00_corpse"}
+  ]
+}
