@@ -44,21 +44,20 @@ RES="$MDIR/resources"; SEG="$MDIR/segments"
 mkdir -p "$RES" "$SEG" "$MDIR/outputs"
 log(){ printf '[pcf] %s\n' "$*" >&2; }
 
-# ── 1. hero clip + 3 push-in sub-beats ──────────────────────────────
-log "1/5  hero clip (product cutout + 2.5D + label sweep)"
-HERO="$RES/hero.mp4"
-if [[ "${PCF_REUSE_HERO:-0}" == "1" && -f "$HERO" ]]; then
-  log "  reuse cached hero ($HERO)"
-else
-  HERO_ZOOM="${HERO_ZOOM:-1.16}" skills/product-cf/scripts/product-hero.sh "$PRODUCT_IMG" "$HERO" 6
-fi
-# three progressively-zoomed slices → the product "grows" across reveals
+# ── 1. hero clips — distinct camera moves (NOT all zoom-in) ──────────
+# Render one hero clip per motion so a sequence of reveals varies: push-in,
+# pull-back, lateral pan.  Each is ~3s, used whole as a hero sub-beat.
+log "1/5  hero clips (cutout + 2.5D + label sweep; push/pull/pan)"
+HERO_MOTIONS="${PCF_HERO_MOTIONS:-push pull panlr}"
 HERO_SUB=(); i=0
-for ss in 0.0 2.0 3.8; do
-  out="$SEG/hero-sub-$i.mp4"
-  "$FFMPEG_BIN" -y -loglevel error -ss "$ss" -i "$HERO" -t 2.2 \
-    -vf "scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},fps=${FPS},format=yuv420p" \
-    -an -c:v libx264 -crf 18 "$out"
+for m in $HERO_MOTIONS; do
+  out="$SEG/hero-$m.mp4"
+  if [[ "${PCF_REUSE_HERO:-0}" == "1" && -f "$out" ]]; then
+    log "  reuse cached hero ($out)"
+  else
+    HERO_ZOOM="${HERO_ZOOM:-1.16}" HERO_MOTION="$m" \
+      skills/product-cf/scripts/product-hero.sh "$PRODUCT_IMG" "$out" 3
+  fi
   HERO_SUB+=("$out"); i=$((i+1))
 done
 

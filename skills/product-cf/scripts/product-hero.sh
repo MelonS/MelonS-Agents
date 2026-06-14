@@ -36,6 +36,7 @@ VENV="${PRODUCT_CF_VENV:-$HOME/.cache/melons-ai/venvs/product-cf}"
 PRODUCT_W="${HERO_PRODUCT_W:-0.66}"
 ZOOM="${HERO_ZOOM:-1.12}"
 SWEEP="${HERO_SWEEP:-1}"
+MOTION="${HERO_MOTION:-push}"   # push | pull | panlr | panrl
 
 W=1080; H=1920; FPS=30
 FRAMES=$(awk -v d="$DUR" -v f="$FPS" 'BEGIN{printf "%d", d*f}')
@@ -93,9 +94,9 @@ if [[ -n "$BG_IMG" && -f "$BG_IMG" ]]; then
   "$FFMPEG_BIN" -y -loglevel error -i "$BG_IMG" \
     -vf "scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H}" -frames:v 1 "$BGSTILL"
 else
-  # soft studio backdrop: dark vertical gradient
+  # soft studio backdrop: medium-gray vertical gradient (a lit set, not a void)
   "$FFMPEG_BIN" -y -loglevel error -f lavfi \
-    -i "gradients=s=${W}x${H}:c0=0x0c1014:c1=0x1c242c:x0=540:y0=420:x1=540:y1=1920:nb_colors=2" \
+    -i "gradients=s=${W}x${H}:c0=0x3a4250:c1=0x161a22:x0=540:y0=300:x1=540:y1=1920:nb_colors=2" \
     -frames:v 1 "$BGSTILL"
 fi
 # Feed exactly ONE still frame; zoompan's d= generates all output frames.
@@ -116,23 +117,34 @@ if [[ "$SWEEP" == "1" ]]; then
     -pix_fmt yuv420p "$SWEEP_CLIP"
 fi
 
-# ── E. product motion: push-in (alpha-preserved) + sweep screen ─────
-log "E/F  product push-in + sweep"
+# ── E. product motion (alpha-preserved) + sweep screen ──────────────
+# HERO_MOTION picks the camera move so a sequence of hero shots isn't all
+# "zoom-in".  zoompan exprs use `on` (output frame), `zoom`, `iw/ih`.  The
+# SAME zoompan string is applied to the rgb and alpha branches so they stay
+# aligned when remerged.
+log "E/F  product motion (${MOTION}) + sweep"
 PRODZ="$TMP/prodz.mov"
-ZSTEP=$(awk -v z="$ZOOM" -v fr="$FRAMES" 'BEGIN{printf "%.6f", (z-1)/fr}')
+F="$FRAMES"
+case "$MOTION" in
+  pull)  ZE="${ZOOM}-(${ZOOM}-1)*on/${F}"; XE="iw/2-(iw/zoom/2)"; YE="ih/2-(ih/zoom/2)";;
+  panlr) ZE="1.10"; XE="(iw-iw/zoom)*on/${F}";     YE="ih/2-(ih/zoom/2)";;
+  panrl) ZE="1.10"; XE="(iw-iw/zoom)*(1-on/${F})"; YE="ih/2-(ih/zoom/2)";;
+  push|*) ZE="1+(${ZOOM}-1)*on/${F}"; XE="iw/2-(iw/zoom/2)"; YE="ih/2-(ih/zoom/2)";;
+esac
+ZPAN="zoompan=z='${ZE}':x='${XE}':y='${YE}':d=${F}:s=${W}x${H}:fps=${FPS}"
 if [[ "$SWEEP" == "1" ]]; then
   "$FFMPEG_BIN" -y -loglevel error -i "$CANVAS" -i "$SWEEP_CLIP" -filter_complex "
     [0:v]format=rgba,split=2[c1][c2];
-    [c1]alphaextract,zoompan=z='min(zoom+${ZSTEP},${ZOOM})':d=${FRAMES}:s=${W}x${H}:fps=${FPS}[ma];
-    [c2]zoompan=z='min(zoom+${ZSTEP},${ZOOM})':d=${FRAMES}:s=${W}x${H}:fps=${FPS}[mc];
+    [c1]alphaextract,${ZPAN}[ma];
+    [c2]${ZPAN}[mc];
     [mc][1:v]blend=all_mode=screen:all_opacity=0.30[ml];
     [ml][ma]alphamerge[pz]
   " -map "[pz]" -c:v qtrle -an "$PRODZ"
 else
   "$FFMPEG_BIN" -y -loglevel error -i "$CANVAS" -filter_complex "
     [0:v]format=rgba,split=2[c1][c2];
-    [c1]alphaextract,zoompan=z='min(zoom+${ZSTEP},${ZOOM})':d=${FRAMES}:s=${W}x${H}:fps=${FPS}[ma];
-    [c2]zoompan=z='min(zoom+${ZSTEP},${ZOOM})':d=${FRAMES}:s=${W}x${H}:fps=${FPS}[mc];
+    [c1]alphaextract,${ZPAN}[ma];
+    [c2]${ZPAN}[mc];
     [mc][ma]alphamerge[pz]
   " -map "[pz]" -c:v qtrle -an "$PRODZ"
 fi
@@ -142,7 +154,7 @@ log "F/F  composite + grain/vignette"
 mkdir -p "$(dirname "$OUT")"
 "$FFMPEG_BIN" -y -loglevel error -i "$BG" -i "$PRODZ" -filter_complex "
   [0:v][1:v]overlay=0:0:format=auto[c];
-  [c]vignette=PI/5,noise=alls=6:allf=t+u[v]
+  [c]vignette=PI/4,noise=alls=4:allf=t+u[v]
 " -map "[v]" -t "$DUR" -r "$FPS" -pix_fmt yuv420p -c:v libx264 -crf 18 "$OUT"
 
 log "done → $OUT"
