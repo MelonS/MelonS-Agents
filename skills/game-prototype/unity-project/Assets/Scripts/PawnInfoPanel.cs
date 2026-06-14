@@ -41,10 +41,6 @@ namespace MelonS.GameProto
         //   lazily-built Text (탭 위에 겹치지 않게 panel 본문 영역을 채움).  pawn
         //   탭 UI 와 상호 배타적으로 토글된다.
         private Text entityBodyText;
-        // 운영자 피드백 B2(#4) — 나무 '선택' 시 벌목 명령 버튼 (레퍼런스 선택 거터).
-        private UnityEngine.UI.Button entityActionBtn;
-        private Text entityActionLabel;
-        private GameObject entityActionTarget;
         private EntityInspectorPanel cachedEntityDesc;
 
         // #UI-restyle U5 — runtime border frame so this panel matches the global
@@ -138,61 +134,6 @@ namespace MelonS.GameProto
             dim.a = 0.5f;  // dimmed (alpha only — no new inline panel color)
             emptyGlyph.color = dim;
             emptyGlyph.raycastTarget = false;
-        }
-
-        // B2(#4) — 엔티티 액션 버튼 (현재: 나무 → 벌목 지정.  확장 지점).
-        private void UpdateEntityAction(GameObject inspect)
-        {
-            var tree = inspect != null ? inspect.GetComponent<TreeEntity>() : null;
-            bool show = tree != null && !tree.IsDestroyed;
-            if (!show)
-            {
-                if (entityActionBtn != null) entityActionBtn.gameObject.SetActive(false);
-                return;
-            }
-            EnsureEntityActionBtn();
-            if (entityActionBtn == null) return;
-            entityActionTarget = inspect;
-            bool marked = TreeChopDesignation.Instance != null
-                          && TreeChopDesignation.Instance.IsMarked(tree);
-            entityActionLabel.text = marked ? "벌목 지정됨" : "벌목 지정";
-            entityActionBtn.interactable = !marked;
-            entityActionBtn.gameObject.SetActive(true);
-        }
-
-        private void EnsureEntityActionBtn()
-        {
-            if (entityActionBtn != null || panelBg == null) return;
-            var prt = panelBg.GetComponent<RectTransform>();
-            if (prt == null) return;
-            var go = new GameObject("EntityActionBtn");
-            go.transform.SetParent(prt, false);
-            var rt = go.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(1f, 0f);
-            rt.anchorMax = new Vector2(1f, 0f);
-            rt.pivot = new Vector2(1f, 0f);
-            rt.sizeDelta = new Vector2(110, 32);
-            rt.anchoredPosition = new Vector2(-10, 10);
-            var img = go.AddComponent<UnityEngine.UI.Image>();
-            img.color = MelonS.GameProto.Core.UITheme.BtnHover;
-            entityActionBtn = go.AddComponent<UnityEngine.UI.Button>();
-            entityActionBtn.targetGraphic = img;
-            entityActionBtn.onClick.AddListener(() =>
-            {
-                if (entityActionTarget == null || TreeChopDesignation.Instance == null) return;
-                TreeChopDesignation.Instance.TryMark(entityActionTarget);
-                UpdateEntityAction(entityActionTarget);
-            });
-            var tgo = new GameObject("Label");
-            tgo.transform.SetParent(go.transform, false);
-            entityActionLabel = tgo.AddComponent<Text>();
-            entityActionLabel.font = ResolveFont();
-            entityActionLabel.fontSize = 14;
-            entityActionLabel.alignment = TextAnchor.MiddleCenter;
-            entityActionLabel.color = MelonS.GameProto.Core.UITheme.TextPrimary;
-            var trt = tgo.GetComponent<RectTransform>();
-            trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-            trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
         }
 
         private void SetEmptyStateVisible(bool v)
@@ -526,18 +467,15 @@ namespace MelonS.GameProto
                     entityBodyText.gameObject.SetActive(true);
                     entityBodyText.text = entBody;
                 }
-                // QA F3(2026-06-14): 인스펙터 '벌목 지정' 버튼 제거 — ClickSelector 좌클릭
-                //  플로트 메뉴(🪓 벌목 지정, fb#1-3)가 나무/광맥/베리/철거/철거를 포괄
-                //  제공하므로 같은 '벌목 지정'이 인스펙터에도 떠 버튼 2개가 보였다(깨진
-                //  인상, QA 적발).  포괄 플로트 메뉴만 정본으로 남기고 중복 버튼 비표시.
-                if (entityActionBtn != null) entityActionBtn.gameObject.SetActive(false);
+                // QA F3(2026-06-14): 인스펙터 전용 '벌목 지정' 버튼은 제거됨 — ClickSelector
+                //  좌클릭 플로트 메뉴(🪓 벌목 지정, fb#1-3)가 나무/광맥/베리/철거를 포괄
+                //  제공하므로 인스펙터 중복 버튼은 만들지 않는다(관련 dead code 정리됨).
                 if (panelBg != null) panelBg.enabled = true;
                 SetBorderVisible(true);
                 return;
             }
             // not an entity selection → hide the entity body for the pawn/empty paths.
             if (entityBodyText != null) entityBodyText.gameObject.SetActive(false);
-            if (entityActionBtn != null) entityActionBtn.gameObject.SetActive(false);
 
             // ── operator fb #3 (2026-05-31): "선택되면 나왔다 선택 안 되면 없어져야" ──
             //   When NOTHING is selected (no pawn AND no inspected entity), HIDE the
