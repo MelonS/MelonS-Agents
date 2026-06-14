@@ -402,9 +402,11 @@ namespace MelonS.GameProto
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(1f, 1f);
             rt.offsetMin = new Vector2(pad, pad);
-            // leave the top title band clear (Editor title strip ≈ 34px tall) so the
-            //   entity title (set on titleText) doesn't overlap the description body.
-            rt.offsetMax = new Vector2(-pad, -(pad + 34f));
+            // QA F1(2026-06-14): 엔티티 선택 시 탭 스트립은 숨지만 titleText 는 폰
+            //   레이아웃 기준 '스트립 아래'(y -(pad+TabStripH+gap))에 1회 정규화돼 있다.
+            //   본문이 상단 34px 만 비우면(-46) 제목(-40~-62)과 겹쳐 첫 줄이 깨진다
+            //   ("위치:" + "나무(참나무)" 중첩).  제목의 실제 하단(-62) 아래부터 본문 시작.
+            rt.offsetMax = new Vector2(-pad, -(pad + TabStripH + TabStripGap + TitleBandH));
             entityBodyText = go.AddComponent<Text>();
             entityBodyText.font = ResolveFont();
             entityBodyText.fontSize = 14;

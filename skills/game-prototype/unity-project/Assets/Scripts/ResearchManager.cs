@@ -78,7 +78,7 @@ namespace MelonS.GameProto
             //  pools (deer 12 / rabbit 3 / wolf 18).  Raising arrow dmg to 12 would
             //  one-shot most animals — an unrealistic combat rewrite the operator
             //  forbade.  So the honest fix is the description, not the damage.
-            techs.Add(new Tech("simple_bow",     "원시 활",       "원거리 사냥/방어 가능. 3~5 dmg 화살.", 100));
+            techs.Add(new Tech("simple_bow",     "원시 활",       "원거리 사냥/방어 가능. 3~5 피해 화살.", 100));   // QA F8 — 한글 UI 속 영문 dmg 제거
             // #truth-in-UI: better_stove 는 IsUnlocked 로 PawnCook 의 조리 속도 2배만
             //  배선돼 있다.  이전 설명의 "식사 mood +5" 는 어디에도 배선이 없어(식사 mood 는
             //  이미 meal +10 / fine +20 으로 별도 동작) 거짓 표기였음 → #200 활 설명 정정과

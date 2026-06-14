@@ -91,7 +91,7 @@ namespace MelonS.GameProto
                 $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\n" +
                 $"종류: {tree.SpeciesKr}\n" +
                 "선택 후 우클릭 = 벌목 → 목재 떨어짐\n" +
-                "(Oak 단단 7목재, Pine 빠름 4, Birch 5)");
+                "(참나무 단단 7목재, 소나무 빠름 4, 자작나무 5)");   // QA F2(2026-06-14) — 한글 UI 속 영문 수종명 제거
             var bush = go.GetComponent<BerryBushEntity>();
             if (bush != null) return ("베리덤불", $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\nfood<40 pawn 이 자동 채집\n베리 재생 ~30s");
             var crop = go.GetComponent<CropEntity>();
