@@ -1,0 +1,12 @@
+{
+  "_doc": "수면 누움 포즈 회귀 가드 (2026-06-14). 강제수면(setNeed sleep=3 탈진) 후 스샷.",
+  "_expected": "수면 림은 옆으로 78° 누움(PawnPoseDriver) — 단일 깔끔 스프라이트. 직립이거나 직립+기울임 이중이면 회귀(진범: tint-anchor 루트 렌더러가 draw-disable 안 돼 자식 위에 직립 덧그림 — fix는 PawnSpriteBob.MirrorRootTint 매프레임 rootTintRenderer.enabled=false). 판정은 grader 사후 리뷰(_접두=게이트 비포함).",
+  "name": "sleeppose-repro",
+  "timeoutSec": 60,
+  "steps": [
+    {"op": "wait", "sec": 1.5},
+    {"op": "setNeed", "name": "sleep", "x": 3},
+    {"op": "wait", "sec": 6},
+    {"op": "shot", "name": "00_sleeping_pose"}
+  ]
+}
