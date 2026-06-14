@@ -135,3 +135,15 @@ Player.log(00:20 stale, 게임 Debug.Log 0건)를 읽었다.  실제 런타임 �
 4. **사운드 신규**: 현 15 SFX 포괄 — 특정 추가 원하는 이벤트 있으면 지시(청취검증 불가라 무인 보류).
 5. **시각 신규시스템**: 구름그림자·물 2프레임 애니(muddy/성능 위험 — 가부).
 6. **하네스 setSkill op** 추가 가부(추가 시 위키 #4 passion·#5 채광수율 효과 무인검증 가능해짐).
+
+### 격리 코드리뷰 (세션 전체 변경, 2026-06-14) — 정확성 버그 0건
+신선한 적대적 리뷰어가 이번 세션 13개 코드 파일(c880979..HEAD, CameraController=타세션 제외)을
+검토 + Python rock_tile 실행 검증.  **정확성 버그/엣지케이스/회귀 0건 확정.**
+- PawnSpriteBob 루트-비활성: GameManager 만 spawn 시 1회 root 활성 → 1프레임 내 재비활성,
+  무해.  null 가드 순서 방어적(가시 자식 없으면 root 폴백).  death/disable 경로 안전.
+- PawnEntity.ApplyVisual: Find 1회 캐시, child==root 불가, dead/downed 우선순위 보존.
+- PawnThoughts 허기 3티어: 밴드 상호배타·완전피복, 카탈로그 일치.
+- rock_tile/ArchitectMenu/Research/sort/PawnName 전부 정확.
+- cleanup 후보(무해): PawnInfoPanel.UpdateEntityAction/EnsureEntityActionBtn 는 F3
+  제거로 고아 dead code(버그 아님, 차기 정리).
+판정: 세션 출하물이 독립 검증으로 클린.  자율 안전-고가치 작업 포화 + 검증 완료.
