@@ -104,7 +104,9 @@ namespace MelonS.GameProto
                 var f = Font.CreateDynamicFontFromOSFont(n, 24);
                 if (f != null) { statusLabel.font = f; statusLabel.GetComponent<MeshRenderer>().material = f.material; break; }
             }
-            statusLabel.GetComponent<MeshRenderer>().sortingOrder = 25;
+            // UI겹침 P1-8 (2026-06-14): 25 → 26. NightOverlay(25)와의 타이를 풀어
+            //  밤에 미완 청사진의 '자재 n/m·건설 %' 텍스트가 어둠에 감광돼 판독 불가하던 것 해소.
+            statusLabel.GetComponent<MeshRenderer>().sortingOrder = 26;
         }
 
         private void UpdateVisual()

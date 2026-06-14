@@ -66,7 +66,7 @@ namespace MelonS.GameProto
             var titleGo = new GameObject("Title");
             titleGo.transform.SetParent(transform, false);
             var t = titleGo.AddComponent<Text>();
-            t.text = "📅 일정 (F4) - 클릭하여 시간대별 행동 변경";
+            t.text = "일정 (F4) - 클릭하여 시간대별 행동 변경";   // UI백로그 #5.11 — 이모지 제거(tofu 위험)
             t.font = font; t.fontSize = 20; t.fontStyle = FontStyle.Bold;
             t.color = MelonS.GameProto.Core.UITheme.AccentGold;   // 감사 rank5: 제목 골드
             t.alignment = TextAnchor.UpperCenter;
@@ -135,7 +135,9 @@ namespace MelonS.GameProto
                 if (p == null || p.IsDead) continue;   // #ui백로그 5.2 — 시체 행 제거
                 var sch = p.GetComponent<PawnSchedule>();
                 if (sch == null) continue;
-                MakeNameCell(grid.transform, p.name, new Vector2(0, y));
+                // QA(2026-06-14): p.name("Pawn(Clone)") → PawnName(표시명). WorkTabUI 와 동일 수정.
+                string nmS = string.IsNullOrEmpty(p.PawnName) ? p.name.Replace("(Clone)", "") : p.PawnName;
+                MakeNameCell(grid.transform, nmS, new Vector2(0, y));
                 xCursor = NameColWidth;
                 for (int h = 0; h < 24; h++)
                 {

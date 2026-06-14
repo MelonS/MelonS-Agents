@@ -463,7 +463,10 @@ namespace MelonS.GameProto
             var f = Font.CreateDynamicFontFromOSFont("Arial", 48);
             if (f != null) { tm.font = f; tm.GetComponent<MeshRenderer>().material = f.material; }
             var mr = marker.GetComponent<MeshRenderer>();
-            mr.sortingOrder = 30;   // above vein sprites (matches deconstruct marker)
+            // UI겹침 P1-7 (2026-06-14): 30 → 28. 광맥 스프라이트(≤20) 위는 유지하되
+            //  이름 라벨(shadow 29/name 30)과의 30==30 타이를 풀어, 마킹 광맥 남쪽 림의
+            //  골드 이름 위로 흰 ⛏ 가 겹쳐 판독 불가하던 것 해소(이름 아래로 정렬).
+            mr.sortingOrder = 28;
         }
     }
 }

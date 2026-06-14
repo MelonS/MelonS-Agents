@@ -77,7 +77,7 @@ namespace MelonS.GameProto
             var titleGo = new GameObject("Title");
             titleGo.transform.SetParent(transform, false);
             var t = titleGo.AddComponent<Text>();
-            t.text = "📋 직업 우선순위 (F1)";
+            t.text = "직업 우선순위 (F1)";   // UI백로그 #5.11 — 이모지 제거(legacy Text+한글폰트 tofu 위험), 제목은 AccentGold+Bold 라 시각 손실 없음
             t.font = font;
             t.fontSize = 22;
             t.fontStyle = FontStyle.Bold;
@@ -149,8 +149,11 @@ namespace MelonS.GameProto
                 var settings = p.GetComponent<PawnWorkSettings>();
                 if (settings == null) continue;
 
-                // name cell
-                MakeNameCell(grid.transform, p.name, new Vector2(0, y));
+                // name cell — QA(2026-06-14): p.name 은 GameObject 이름("Pawn(Clone)")이라
+                //  행 레이블이 전부 "Pawn(Clone)" 으로 보이던 버그. 콜로니스트 바·정렬과
+                //  동일하게 PawnName(표시명) 사용, 빈 값만 Clone 접미 제거 폴백.
+                string nmW = string.IsNullOrEmpty(p.PawnName) ? p.name.Replace("(Clone)", "") : p.PawnName;
+                MakeNameCell(grid.transform, nmW, new Vector2(0, y));
 
                 // priority cells
                 xCursor = NameColWidth;
