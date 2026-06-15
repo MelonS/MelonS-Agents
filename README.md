@@ -8,7 +8,7 @@
 
 **Local for the mechanical, Claude for the creative.**  Phrase-aware ffmpeg shaders sync vintage visuals to music structure.  Short-keyword job-hunt expansion via role-synonym map.  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
 
-`100+ mission outputs · 5 mission types · 2 portable skills + 1 meta-skill + 2 game prototypes · 23 ffmpeg shaders · 15-scenario input-level commit gate · isolated-grader verification loop · 0 runtime API tokens · 3 audit layers · MIT`
+`100+ mission outputs · 6 mission types · 2 production skills (music-video, job-hunt) + 1 meta-skill (game-dev-agent) + 4 game prototypes · 23 ffmpeg shaders · 15-scenario input-level commit gate · isolated-grader verification loop · 0 runtime API tokens · 3 audit layers · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -26,7 +26,7 @@
 
 ![PawnSim 16-in-game-day colony timelapse (2026-06-12 build) — three colonists found a camp on open grass, designate a stockpile and farm plots, build a walled bedroom with beds/stove/research bench, and grow the colony while raids are repelled.  Every frame is from an unattended soak run; the loop shown (stockpile → housing → farming → logging → mining) is machine-verified by effect assertions + isolated-grader rubric verdicts](docs/demo/pawnsim-2026-06-12-colony-timelapse.gif)
 
-*Unattended 16-day colony soak, agent-built and agent-verified — see [PawnSim](#pawnsim--the-prototype-the-agent-is-actively-iterating-on-2026-06-focus).*
+*Unattended 16 in-game-day colony soak, agent-built and agent-verified — see [PawnSim](#pawnsim--the-prototype-the-agent-is-actively-iterating-on-2026-06-focus).*
 
 </div>
 
@@ -56,7 +56,7 @@ no Suno round-trip, no `.env` edit.  See
   whether the autonomy and quality claims are honest over time.
 - **You want a Korean job-board digest that respects how you actually
   search.**  Pass `--seed "Problem Solver"`; the skill expands to the
-  24 equivalent titles companies use (FDE / Applied AI Engineer /
+  26 equivalent titles companies use (FDE / Applied AI Engineer /
   Generalist / Founding Engineer / …) before fetching from 11 sources.
 - **You want to see an agent verify the game it builds — not just
   build it.**  PawnSim ships with a 15-scenario input-level repro
@@ -84,13 +84,13 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > the compatible-runtime set unmodified.
 >
 > **Skill #1 — `music-video`.**  Music file in, 60-second 9:16
-> vertical short out.  Per-genre color grade (six profiles) shapes
+> vertical short out.  Per-genre color grade (seven profiles) shapes
 > generic Pexels B-roll into a genre-coded look; 23 ffmpeg shaders
 > + phrase-aware structure (cuts on `aubiotrack` beats, glitch
 > micro-edits on `aubioonset` drum hits, restraint gated per
 > preset) compose on top.  The Sample-output section
 > below shows a noir-detective render; the genre grid further down
-> shows six grade profiles side by side.  Implementation under
+> shows six of them side by side.  Implementation under
 > [`agents/missions/music-video/run.sh`](agents/missions/music-video/run.sh) —
 > the skill routes through the 5-agent mission pipeline (orchestrator
 > + planner / resourcer / editor / qa) so re-rendering tuning flows
@@ -98,7 +98,7 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 >
 > **Skill #2 — `job-hunt`.**  Single seed keyword in, deduplicated
 > markdown digest out.  `--seed "Problem Solver"` expands to the
-> 24-synonym role family companies actually use (FDE / Applied AI
+> 26-synonym role family companies actually use (FDE / Applied AI
 > Engineer / Generalist / Founding Engineer / Forward Deployed / …)
 > before fetching from 11 source plugins.  Five are live-ready
 > without an API key — `global-ats` (Greenhouse + Ashby + Lever
@@ -116,7 +116,7 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > production count above).**  Unity-focused AI agent that
 > orchestrates sprite generation, C# scaffolding, balance tuning,
 > audio generation, and an in-game AI director — the meta-skill
-> that drives the game prototypes built alongside it.  Two
+> that drives the game prototypes built alongside it.  Four
 > prototype skills serve as its empirical validation surface.  The
 > flagship is **PawnSim**, a lightweight colony-sim vertical slice
 > ([`skills/game-prototype/`](skills/game-prototype/)) that has grown
@@ -129,14 +129,34 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > gate** (synthesized clicks through the player's own UI path, with
 > effect assertions), with long soaks graded by an isolated grader
 > sub-agent against a written rubric — see the PawnSim section
-> below for what that loop has caught.  The second prototype is a 2D physics-merge puzzle
+> below for what that loop has caught.  The other three are smaller
+> arcade / puzzle prototypes that double as a *speedup* benchmark —
+> a 2D physics-merge puzzle
 > ([`skills/game-prototype-suika/`](skills/game-prototype-suika/),
-> Day 2 shipped at ~15× wall-clock speedup vs the no-framework
-> baseline).  Graduates into the production-skill count once both
-> prototypes hit their deliverable schedules.  Skill definitions live
+> Day 2 at ~15× wall-clock speedup vs the no-framework baseline), a
+> Vampire-Survivors-lite
+> ([`skills/game-prototype-vs-lite/`](skills/game-prototype-vs-lite/)),
+> and a 2048-lite
+> ([`skills/game-prototype-2048/`](skills/game-prototype-2048/)) —
+> each built faster than the last to test the compounding-speedup
+> hypothesis.  Graduates into the production-skill count once they
+> hit their deliverable schedules.  Skill definitions live
 > in [`skills/game-dev-agent/`](skills/game-dev-agent/); PawnSim's own
 > README + PM milestones at
 > [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
+>
+> **A fourth media skill — `product-cf` (experimental, parked).**
+> One product photo → a CF-style 9:16 vertical short, building on the
+> music-video skill so the product stays a pixel-perfect real cutout
+> while the world moves around it.  Shipped as v0.1.0, then **parked
+> on an honest negative finding**: the free / local "make it genuinely
+> 3D" approaches (depth-parallax, cylinder-wrap turntable, local
+> LTX image-to-video) didn't clear a real-CF quality bar on a 16 GB
+> machine — a convincing result needs paid cloud image-to-video or a
+> larger GPU.  Kept in the tree, gated off, decision pending; the full
+> write-up is
+> [`docs/research/2026-06-15-product-cf-3d.md`](docs/research/2026-06-15-product-cf-3d.md).
+> It is **not** counted in the two-production-skill total above.
 >
 > **Two ways to drive this repo.**
 > - *Agent-driven* (primary) — install Claude Code, point it at the
@@ -331,7 +351,7 @@ per-day data at [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.j
 
 ![5-second animated preview from the 2026-05-22 noir-detective render — 9:16 vertical short, smoky bar interior, bearded man with pipe in pink-magenta rnb_low_key grade profile, phrase-aware shaders + per-genre color grade transforming generic Pexels B-roll into a genre-coded look](docs/demo/music-video-noir-detective-2026-05-24-preview.gif)
 
-100+ mission outputs across **five** mission types.  The current
+100+ mission outputs across **six** mission types.  The current
 production format is the `music-video` mission — music-as-primary-audio
 shorts (no narration, no captions, beat-aligned cuts, onset-aligned
 glitch micro-edits), picked over the earlier narration-driven format
@@ -389,7 +409,7 @@ on 2026-05-17
   pass) + paper_grain / dust_speck / posterize / trail_echo /
   soft_bloom (Stage-2 + Stage-3).  Cartoon / cel-shading deliberately
   deferred — see [case study 5](docs/engineering-case-studies.md#5-shader-effects-in-ffmpeg--knowing-where-the-wall-is).
-- **Genre-aware preset routing** — 14-genre table in
+- **Genre-aware preset routing** — 19-genre table in
   [`skills/music-video/data/genre-presets.yaml`](skills/music-video/data/genre-presets.yaml)
   resolves a genre → preset → env overrides → post-shader chain (case
   study 7).  Ambient / classical / dreamcore route to a separate
@@ -494,9 +514,10 @@ profile in effect.
 | ![coastline-summer: golden-hour beach water reflections, hollywood teal-orange grade](docs/demo/2026-05-24-genre-grid/coastline-summer.jpg) | ![linen-minimal: bedroom bookstack + coffee mug, kr warm pastel grade](docs/demo/2026-05-24-genre-grid/linen-minimal.jpg) | ![smallhand-folk: cafe through window with Korean lyric overlay '가난이 너를 만든 게 / 아니라' visible](docs/demo/2026-05-24-genre-grid/smallhand-folk.jpg) |
 | **`coastline-summer`** · hollywood_teal_orange | **`linen-minimal`** · kr_warm_pastel | **`smallhand-folk`** · with kinetic lyric overlay |
 
-The 14 genre presets resolved per-render via
+The 19 genre presets resolved per-render via
 [`skills/music-video/data/genre-presets.yaml`](skills/music-video/data/genre-presets.yaml);
-6 grade profiles compiled into ffmpeg filter graphs via
+7 grade profiles (six of them shown above) compiled into ffmpeg
+filter graphs via
 [`scripts/music-video-grade.sh`](scripts/music-video-grade.sh).  None
 of these frames received any cherry-picked B-roll — every clip came
 from the same generic Pexels mood-keyword fetch the pipeline runs
@@ -767,6 +788,31 @@ scene generation stays reviewable. One sharp edge worth flagging here:
 change only takes effect once the regenerated prefab/scene is committed too —
 several "fix didn't apply" incidents trace back to this.
 
+The game track also runs its **own 13-agent roster** — separate from the
+6-agent media pipeline above, all scaffolded and invoked through
+`game-dev-agent` (so [`.claude/agents/`](.claude/agents/) holds **19**
+definitions in total, not 6):
+
+| Game subagent | Role | Model |
+|---|---|---|
+| 🎬 **game-director** | Vision, tone, core feel | opus |
+| 📋 **game-pm** | Schedule, milestones, scope, dependencies | opus |
+| 🎲 **game-designer** | Systems, mechanics, controls, balance | opus |
+| 👾 **game-programmer** | C# implementation from the template catalog | opus |
+| 🧠 **game-ai-designer** | Decision trees, utility AI, NPC routines | opus |
+| ⚙️ **game-systems-designer** | Resource economies, needs decay, progression | opus |
+| 🎨 **game-artist** | Sprites, UI visuals, animation states | sonnet |
+| 🔧 **game-build-engineer** | Unity batchmode pipeline, asset import | sonnet |
+| ✅ **game-qa** | Build → launch → screenshot → verdict loop | sonnet |
+| ⚔️ **game-combat-designer** | Weapon stats, damage math, hit feel | sonnet |
+| 🌊 **game-level-designer** | Spawn patterns, waves, boss patterns | sonnet |
+| 📖 **game-narrative-designer** | Story beats, dialogue, lore (KR / EN) | sonnet |
+| 🔊 **game-sound-designer** | BGM + SFX, procedural-first | sonnet |
+
+opus drives the direction / design / programming roles; sonnet drives the
+execution / production roles.  Not every prototype activates all 13 — the
+roster is the available cast, selected per genre.
+
 Full structure, controls, feature coverage, and the honest verification status:
 [`skills/game-prototype/README.md`](skills/game-prototype/README.md). The
 meta-skill that drives it: [`skills/game-dev-agent/`](skills/game-dev-agent/).
@@ -955,7 +1001,7 @@ operator-profile.md required).
 skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
 # Output: digest.md path printed on stdout; open it to see the
 # mock postings spanning multiple sources, all matched against the
-# 24 synonym keywords in the "problem-solver" family.
+# 26 synonym keywords in the "problem-solver" family.
 
 # Try other seeds in the same family — all produce identical results:
 skills/job-hunt/scripts/run.sh --seed "FDE" --dry-run
@@ -973,7 +1019,7 @@ JH_WORKNET_LIVE=1 \
 skills/job-hunt/scripts/run.sh --seed "Problem Solver"
 # Pulls Greenhouse + Ashby + Lever ATS boards (27 companies),
 # RemoteOK / Remotive / HN monthly thread / 워크넷; ~5k raw
-# postings filtered to the 24-keyword Problem Solver family.
+# postings filtered to the 26-keyword Problem Solver family.
 # See docs/research/job-sources-survey-2026-05-21.md for the
 # legal-and-technical audit behind which sources are live-ready.
 ```

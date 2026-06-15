@@ -1,28 +1,28 @@
 {
-  "generated_at": "2026-06-12T15:20:41",
+  "generated_at": "2026-06-15T02:14:50",
   "marker_convention_started": "2026-05-17",
   "session_cap_minutes": 60,
   "rationale": "Two-source intervention tracker. Panel A: per-day commit count classified by initiator (user vs agent). Panel B: per-day operator prompts and active session minutes mined from local Claude Code session JSONLs. Goal: both signals trend down as the agent system absorbs more decisions.",
   "trend_7d": {
     "user_ratio_pct": {
-      "last7_avg": 2.24,
-      "prev7_avg": 19.34,
-      "delta": -17.1
+      "last7_avg": 6.64,
+      "prev7_avg": 17.24,
+      "delta": -10.6
     },
     "leverage_ratio": {
-      "last7_avg": 17.43,
-      "prev7_avg": 11.17,
-      "delta": 6.26
+      "last7_avg": 27.03,
+      "prev7_avg": 2.77,
+      "delta": 24.26
     },
     "operator_prompts": {
-      "last7_avg": 36.57,
-      "prev7_avg": 0.0,
-      "delta": 36.57
+      "last7_avg": 11.71,
+      "prev7_avg": 1.0,
+      "delta": 10.71
     },
     "active_session_minutes": {
-      "last7_avg": 26.86,
-      "prev7_avg": 0.0,
-      "delta": 26.86
+      "last7_avg": 60.6,
+      "prev7_avg": 7.29,
+      "delta": 53.31
     },
     "direction": [
       "user-ratio↓",
@@ -49,9 +49,9 @@
       "user_ratio_pct": 26.1,
       "longest_autonomous_gap_h": 0.9,
       "leverage_ratio": 2.8,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 105,
+      "active_session_minutes": 60.0,
+      "session_count": 1
     },
     {
       "date": "2026-05-16",
@@ -60,9 +60,9 @@
       "user_ratio_pct": 19.2,
       "longest_autonomous_gap_h": 10.2,
       "leverage_ratio": 4.2,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 4,
+      "active_session_minutes": 30.1,
+      "session_count": 4
     },
     {
       "date": "2026-05-17",
@@ -71,9 +71,9 @@
       "user_ratio_pct": 69.0,
       "longest_autonomous_gap_h": 3.3,
       "leverage_ratio": 0.5,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 317,
+      "active_session_minutes": 236.2,
+      "session_count": 36
     },
     {
       "date": "2026-05-18",
@@ -82,9 +82,9 @@
       "user_ratio_pct": 50.0,
       "longest_autonomous_gap_h": 4.8,
       "leverage_ratio": 1.0,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 7,
+      "active_session_minutes": 57.2,
+      "session_count": 7
     },
     {
       "date": "2026-05-19",
@@ -93,9 +93,9 @@
       "user_ratio_pct": 20.6,
       "longest_autonomous_gap_h": 14.6,
       "leverage_ratio": 3.9,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 86,
+      "active_session_minutes": 280.3,
+      "session_count": 19
     },
     {
       "date": "2026-05-20",
@@ -104,9 +104,9 @@
       "user_ratio_pct": 11.5,
       "longest_autonomous_gap_h": 12.2,
       "leverage_ratio": 7.7,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 532,
+      "active_session_minutes": 339.3,
+      "session_count": 14
     },
     {
       "date": "2026-05-21",
@@ -115,9 +115,9 @@
       "user_ratio_pct": 35.7,
       "longest_autonomous_gap_h": 14.5,
       "leverage_ratio": 1.8,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 154,
+      "active_session_minutes": 168.4,
+      "session_count": 8
     },
     {
       "date": "2026-05-22",
@@ -126,9 +126,9 @@
       "user_ratio_pct": 7.2,
       "longest_autonomous_gap_h": 3.9,
       "leverage_ratio": 12.9,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 76,
+      "active_session_minutes": 390.8,
+      "session_count": 25
     },
     {
       "date": "2026-05-23",
@@ -137,9 +137,9 @@
       "user_ratio_pct": 25.0,
       "longest_autonomous_gap_h": 4.6,
       "leverage_ratio": 3.0,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 2,
+      "active_session_minutes": 17.9,
+      "session_count": 2
     },
     {
       "date": "2026-05-24",
@@ -148,9 +148,9 @@
       "user_ratio_pct": 75.0,
       "longest_autonomous_gap_h": 0.7,
       "leverage_ratio": 0.3,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 5,
+      "active_session_minutes": 12.3,
+      "session_count": 2
     },
     {
       "date": "2026-05-25",
@@ -159,8 +159,8 @@
       "user_ratio_pct": 7.1,
       "longest_autonomous_gap_h": 0,
       "leverage_ratio": 13.0,
-      "operator_prompts": 318,
-      "active_session_minutes": 66.7,
+      "operator_prompts": 2,
+      "active_session_minutes": 13.9,
       "session_count": 2
     },
     {
@@ -170,8 +170,8 @@
       "user_ratio_pct": 26.3,
       "longest_autonomous_gap_h": 16.2,
       "leverage_ratio": 2.8,
-      "operator_prompts": 8,
-      "active_session_minutes": 60.0,
+      "operator_prompts": 1,
+      "active_session_minutes": 10.0,
       "session_count": 1
     },
     {
@@ -181,8 +181,8 @@
       "user_ratio_pct": 31.2,
       "longest_autonomous_gap_h": 6.2,
       "leverage_ratio": 2.2,
-      "operator_prompts": 20,
-      "active_session_minutes": 42.0,
+      "operator_prompts": 1,
+      "active_session_minutes": 7.2,
       "session_count": 1
     },
     {
@@ -192,9 +192,9 @@
       "user_ratio_pct": 42.1,
       "longest_autonomous_gap_h": 8.0,
       "leverage_ratio": 1.4,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 8.2,
+      "session_count": 1
     },
     {
       "date": "2026-05-29",
@@ -203,8 +203,8 @@
       "user_ratio_pct": 31.6,
       "longest_autonomous_gap_h": 14.5,
       "leverage_ratio": 2.2,
-      "operator_prompts": 338,
-      "active_session_minutes": 60.0,
+      "operator_prompts": 1,
+      "active_session_minutes": 16.9,
       "session_count": 1
     },
     {
@@ -214,9 +214,9 @@
       "user_ratio_pct": 1.9,
       "longest_autonomous_gap_h": 0,
       "leverage_ratio": 52.0,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 5.9,
+      "session_count": 1
     },
     {
       "date": "2026-05-31",
@@ -225,9 +225,9 @@
       "user_ratio_pct": 12.8,
       "longest_autonomous_gap_h": 1.6,
       "leverage_ratio": 6.8,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 5.2,
+      "session_count": 1
     },
     {
       "date": "2026-06-01",
@@ -236,9 +236,9 @@
       "user_ratio_pct": 17.6,
       "longest_autonomous_gap_h": 4.3,
       "leverage_ratio": 4.7,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 7.3,
+      "session_count": 1
     },
     {
       "date": "2026-06-02",
@@ -247,9 +247,9 @@
       "user_ratio_pct": 48.5,
       "longest_autonomous_gap_h": 8.3,
       "leverage_ratio": 1.1,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 5.9,
+      "session_count": 1
     },
     {
       "date": "2026-06-03",
@@ -258,9 +258,9 @@
       "user_ratio_pct": 17.9,
       "longest_autonomous_gap_h": 8.9,
       "leverage_ratio": 4.6,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 8.5,
+      "session_count": 1
     },
     {
       "date": "2026-06-04",
@@ -269,9 +269,9 @@
       "user_ratio_pct": 20.0,
       "longest_autonomous_gap_h": 0.5,
       "leverage_ratio": 4.0,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 4.9,
+      "session_count": 1
     },
     {
       "date": "2026-06-05",
@@ -280,9 +280,9 @@
       "user_ratio_pct": 16.7,
       "longest_autonomous_gap_h": 7.5,
       "leverage_ratio": 5.0,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 6.3,
+      "session_count": 1
     },
     {
       "date": "2026-06-06",
@@ -291,9 +291,9 @@
       "user_ratio_pct": 0,
       "longest_autonomous_gap_h": 0,
       "leverage_ratio": 0,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 4.3,
+      "session_count": 1
     },
     {
       "date": "2026-06-07",
@@ -302,9 +302,9 @@
       "user_ratio_pct": 0,
       "longest_autonomous_gap_h": 0,
       "leverage_ratio": 0,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 13.8,
+      "session_count": 1
     },
     {
       "date": "2026-06-08",
@@ -313,9 +313,9 @@
       "user_ratio_pct": 0,
       "longest_autonomous_gap_h": 0,
       "leverage_ratio": 0,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 9.7,
+      "session_count": 1
     },
     {
       "date": "2026-06-09",
@@ -324,9 +324,9 @@
       "user_ratio_pct": 0,
       "longest_autonomous_gap_h": 0,
       "leverage_ratio": 0,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 5.4,
+      "session_count": 1
     },
     {
       "date": "2026-06-10",
@@ -335,9 +335,9 @@
       "user_ratio_pct": 14.3,
       "longest_autonomous_gap_h": 2.5,
       "leverage_ratio": 6.0,
-      "operator_prompts": 256,
-      "active_session_minutes": 188.0,
-      "session_count": 5
+      "operator_prompts": 1,
+      "active_session_minutes": 5.3,
+      "session_count": 1
     },
     {
       "date": "2026-06-11",
@@ -346,23 +346,591 @@
       "user_ratio_pct": 1.4,
       "longest_autonomous_gap_h": 0,
       "leverage_ratio": 69.0,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "operator_prompts": 1,
+      "active_session_minutes": 5.9,
+      "session_count": 1
     },
     {
       "date": "2026-06-12",
       "user_initiated": 0,
-      "agent_autonomous": 47,
+      "agent_autonomous": 76,
       "user_ratio_pct": 0.0,
       "longest_autonomous_gap_h": 0,
-      "leverage_ratio": 47.0,
-      "operator_prompts": 0,
-      "active_session_minutes": 0.0,
-      "session_count": 0
+      "leverage_ratio": 76.0,
+      "operator_prompts": 26,
+      "active_session_minutes": 87.2,
+      "session_count": 3
+    },
+    {
+      "date": "2026-06-13",
+      "user_initiated": 0,
+      "agent_autonomous": 36,
+      "user_ratio_pct": 0.0,
+      "longest_autonomous_gap_h": 0,
+      "leverage_ratio": 36.0,
+      "operator_prompts": 1,
+      "active_session_minutes": 60.0,
+      "session_count": 1
+    },
+    {
+      "date": "2026-06-14",
+      "user_initiated": 8,
+      "agent_autonomous": 18,
+      "user_ratio_pct": 30.8,
+      "longest_autonomous_gap_h": 8.7,
+      "leverage_ratio": 2.2,
+      "operator_prompts": 51,
+      "active_session_minutes": 250.7,
+      "session_count": 6
     }
   ],
   "commits": [
+    {
+      "sha": "63e445c",
+      "date": "2026-06-14",
+      "class": "user",
+      "subject": "fix(product-cf): motion variety + lighter staging"
+    },
+    {
+      "sha": "e5c9f3f",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "feat(product-cf): mission runner — beat-synced product-CF assembly"
+    },
+    {
+      "sha": "04a685e",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "feat(product-cf): product-CF skill — 1 photo → CF-feel hero clip"
+    },
+    {
+      "sha": "0ac98bd",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "docs(pawnsim): 무드 적자 2번째 소크 표본 — 붕괴 3건/4일 구조적 재현 확인"
+    },
+    {
+      "sha": "8f4ac25",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "docs(pawnsim): 무드 적자 정량 특성화 — D-A 결정 근거 (소크 634샘플 분석)"
+    },
+    {
+      "sha": "af7e932",
+      "date": "2026-06-14",
+      "class": "user",
+      "subject": "docs(pawnsim): 위키 RAG 확장 phase2 — 전투/여가/동물/의료/건설·전력 5종 + 갭분석"
+    },
+    {
+      "sha": "bc81b3c",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "refactor(ui): PawnInfoPanel 고아 dead code 제거 (QA F3 후속 정리)"
+    },
+    {
+      "sha": "53ef7bb",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "docs(pawnsim): 세션 격리 코드리뷰 결과 — 정확성 버그 0건 (독립 검증)"
+    },
+    {
+      "sha": "2859975",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "docs(pawnsim): check-round-8 현행화 — #9 시체틴트 가드 + 포화 상태/권고"
+    },
+    {
+      "sha": "34c9ff3",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "fix(art): 시체/의식불명 틴트 회귀 가드 — 가시 자식에 직접 적용 (수면포즈 fix 후속)"
+    },
+    {
+      "sha": "e41ef08",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "docs(pawnsim): 소크 재검증 + 운영자 복귀 결정큐 (밸런스 무인보류 확정)"
+    },
+    {
+      "sha": "6fcd495",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "test(scenario): 수면 누움포즈 회귀 가드 보존 (_sleeppose-repro)"
+    },
+    {
+      "sha": "8ad257e",
+      "date": "2026-06-14",
+      "class": "user",
+      "subject": "docs(pawnsim): 첫 사이클 워크스루 \"after\" 시트 재캡처 (9배치 적용 후 현재 빌드)"
+    },
+    {
+      "sha": "9bd9da1",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "feat(ui): 연구창 위계 폴리싱 + check-round-8 야간세션 브리핑"
+    },
+    {
+      "sha": "a72077f",
+      "date": "2026-06-14",
+      "class": "user",
+      "subject": "fix(art): 수면포즈 직립 회귀 진범 — tint-anchor 루트 렌더러 이중그림 제거"
+    },
+    {
+      "sha": "6434288",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "docs(pawnsim): 자율세션 환류 — playbook QA방법론 + 소크 체크포인트"
+    },
+    {
+      "sha": "225cde0",
+      "date": "2026-06-14",
+      "class": "user",
+      "subject": "feat(sim): 위키 #3 — 허기 thought 3티어 정렬 (극심한 배고픔 추가)"
+    },
+    {
+      "sha": "5898bdc",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "fix(ui): QA F3 — 인스펙터 중복 '벌목 지정' 버튼 제거 (플로트 메뉴 정본화)"
+    },
+    {
+      "sha": "4910612",
+      "date": "2026-06-14",
+      "class": "user",
+      "subject": "fix(ui): QA 패스 결함 3건 — 인스펙터 제목겹침 + 영문 수종/dmg 한글화"
+    },
+    {
+      "sha": "8a539cb",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "docs(pawnsim): rimworld 위키 RAG 노트 + 갭 분석 + 자율세션 결정로그"
+    },
+    {
+      "sha": "27b072f",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "fix(ui): 탭/라벨 가독성 배치 — 행 이름버그 + 이모지 tofu + 라벨 정렬 6건"
+    },
+    {
+      "sha": "4610144",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "docs(pawnsim): check-round-7 디자인 폴리싱 라운드 원장 + 스킬 환류"
+    },
+    {
+      "sha": "22b103f",
+      "date": "2026-06-14",
+      "class": "user",
+      "subject": "fix(ui): 건축 구역 제거버튼 라벨 월드 오버플로우 + 살몬레드 ✕ 톤다운"
+    },
+    {
+      "sha": "d2fae4d",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "feat(art): 바위 타일 디그리딩 — 단일반복 타일 저대비·이음매化 (QR 지면 잔재 해체)"
+    },
+    {
+      "sha": "a09c978",
+      "date": "2026-06-14",
+      "class": "agent",
+      "subject": "fix(game-prototype): rework Magic Mouse zoom — pending-accumulator rate limit"
+    },
+    {
+      "sha": "5631603",
+      "date": "2026-06-14",
+      "class": "user",
+      "subject": "fix(game-prototype): tame Magic Mouse zoom — proportional + per-frame clamp"
+    },
+    {
+      "sha": "c880979",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(sim): 온보딩 행동 기반 전환 — 첫 사이클 전체 단계 안내 (재미·기본기 직결)"
+    },
+    {
+      "sha": "9bb5655",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): 워크스루 컨택트 시트를 추적 경로(docs/demo)로 이전 + 참조 수정"
+    },
+    {
+      "sha": "0679b5f",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): 첫 사이클 플레이어 UI 워크스루 — 9단계 증빙 (기본 사이클 UI 구현 문서화)"
+    },
+    {
+      "sha": "7a644ca",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): r4 #15 종결 — 벽 좌/우 색차는 HP 피해 darkening(의도), 스프라이트 일관 검증"
+    },
+    {
+      "sha": "41eaaea",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(art): 수면 누움 포즈 — 침대 위 직립 → 78° 누움 (grader r8/r9 갭)"
+    },
+    {
+      "sha": "64c4a77",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(art): 나무 캐노피 v3 — 2톤 납작 덩어리 → 3~4톤 입체 + 잎 덩어리 구분"
+    },
+    {
+      "sha": "82d6cee",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "test(scenario): 작물 아트 검증 시나리오 보존 — 경작 지정→3단계 캡처 (회귀 테스트, _프리픽스)"
+    },
+    {
+      "sha": "764e9cd",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(art): 작물 3단계 + 광맥 + 바위 타일 v2 재디자인 + 런타임 작물 배선 (운영자 피드백)"
+    },
+    {
+      "sha": "6ad04fa",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(sim): Joy 슬롯 모닥불 휴식 — 여가 시간의 첫 행동 (G-스케줄 최소형)"
+    },
+    {
+      "sha": "fa6b2c7",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(game-prototype): 검증 절 현행화 — 15시나리오 repro 게이트 + 격리 채점 루프 (간판 2층 추가)"
+    },
+    {
+      "sha": "2e28da2",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): r15 최종 원장 — 자율 사이클 마감 (위협 풀 그림 한 런 완주)"
+    },
+    {
+      "sha": "92d3beb",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(sim): 게임오버 관전 모드 — 전멸 후에도 세계를 지켜본다 (퀵픽 전량 소진)"
+    },
+    {
+      "sha": "d747299",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(sim): 기아 채집 게이트 해제 — 채집 0 림도 굶으면 먹는다 (퀵픽, spec §6 잔재 청산)"
+    },
+    {
+      "sha": "5e480ea",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(sim): 직업탭 스킬 신호 — 직업 셀에 림 스킬 레벨 보조 표기 (퀵픽)"
+    },
+    {
+      "sha": "9b808e3",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): r14 통합 원장 — 정신붕괴 0, 광기 떼 풀 수명주기 첫 실전 완주"
+    },
+    {
+      "sha": "06b3a49",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): check-round-6 — 밤샘 연장분 브리핑 (수면 축·TOP 11/12·퀵픽 4건)"
+    },
+    {
+      "sha": "fc360d0",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(sim): 적응 계수 — 림이 줄면 다음 습격 규모 후퇴 + 유예 +2일 (퀵픽)"
+    },
+    {
+      "sha": "d4fbe9b",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(sim): 첫 습격 경고 + 허기 2티어 (퀵픽 2건)"
+    },
+    {
+      "sha": "06dcdac",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(sim): 일시정지 시작 — 정지 상태로 둘러보고 직접 시작 (퀵픽, 사람-리듬 #1)"
+    },
+    {
+      "sha": "d7418c4",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): 백로그 원장 — TOP-11 완료 (TOP-12 중 11/12, 잔여 D-A 갈림길뿐)"
+    },
+    {
+      "sha": "81cbd8c",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(sim): 위협 다양화 — 습격 30% 미친 멧돼지 떼 (갭 TOP-11, TOP-12 중 11건째)"
+    },
+    {
+      "sha": "df0f875",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): r12 습격 원장 — TOP-8 입증 (무교전 퇴각 0·벽 공격 0·전원 교전 사살)"
+    },
+    {
+      "sha": "aed37dd",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(sim): 강도 A* 경로 — 경로가 있으면 절대 벽을 안 부순다 (갭 TOP-8)"
+    },
+    {
+      "sha": "5033170",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): 림월드 갭 백로그 처리 원장 — TOP-12 중 9건 출하 반영"
+    },
+    {
+      "sha": "c1b2c03",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "chore(sim): 채점 이관 관측성 3건 — 개막 힌트 스팸·시작 라벨·강도 벽 공격 원장"
+    },
+    {
+      "sha": "074d558",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): check-round-5 최신화 — ※목록 완주(TOP-7)·수면 축 완결 4-b 절 추가"
+    },
+    {
+      "sha": "39dbb53",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "feat(sim): 수동 명령 완료-단위 보호 — '시킨 일 하다 말고 잔다' 수정 (갭 TOP-7 ※, ※목록 진짜 완주)"
+    },
+    {
+      "sha": "0e81a16",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): r11 최종 원장 — 바닥 wake 0건, 정신붕괴 30→2건 (수면 축 입증)"
+    },
+    {
+      "sha": "a053c95",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): 수면 축 완결 선언 — 도착판정 가설 기각, 진범은 #12 레벨 트리거"
+    },
+    {
+      "sha": "cf4e6a8",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "fix(sim): Work 슬롯 기상을 에지 트리거로 — 40 경계 진동(3시간 회복 정체) 종결"
+    },
+    {
+      "sha": "49028e9",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): 수면 아크 인수인계 부록 — 침대 도착판정·예약필터 결함의 정밀 타임스탬프 자료"
+    },
+    {
+      "sha": "c6703e4",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "fix(sim): 취침 창 분리 — 침대행 20시 시작, 쓰러짐 22시 유지 (바닥 취침 루프 종결)"
+    },
+    {
+      "sha": "4c04bd9",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "fix(sim): 수면 회복률 패리티 — 만충 25초 → 5.5게임시간 (매일 밤 쓰러짐 루프의 몸통)"
+    },
+    {
+      "sha": "a2bda3a",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "fix(sim): 침대 예약 누수 수정 + [Dark] 진입 로그 + r9 평결 (심야 프레임 확보 성공)"
+    },
+    {
+      "sha": "676f407",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "docs(pawnsim): r8 차분 채점 — 취침 무드 P 확정, 심야 디페이즈 설계실수 교정(615s), ★수면 루프 조사 1순위 지정"
+    },
+    {
+      "sha": "99aa14b",
+      "date": "2026-06-13",
+      "class": "agent",
+      "subject": "chore(sim): r7 채점 후속 관측성 — [Doctor] 좌표·[Sleep] wake thought·[Cook] 원장"
+    },
+    {
+      "sha": "6b98f5f",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(pawnsim): check-round-5 갱신 — ※ 4건 출하 완료 표기 (갈림길 D-A~G만 잔존)"
+    },
+    {
+      "sha": "85b09ef",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 레이드 부 프록시 — 발전이 곧 리스크 (갭 TOP-9 ※, ※목록 완주)"
+    },
+    {
+      "sha": "0ed2b2a",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 환자 행동 — 출혈 림 침대 치료 대기 + 의사 정지 환자 우선 (갭 TOP-10 ※)"
+    },
+    {
+      "sha": "60f12bd",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 바닥·한데 취침 무드 -4 + 어둠 패널티 — 갭 TOP-6·어둠 (※갈림길 아님)"
+    },
+    {
+      "sha": "2d89274",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(pawnsim): r6 소크로 D-1 종결 — 지붕 지지 셀단위 검증 위반 0/6 (r5 F는 좌표 부재 오판)"
+    },
+    {
+      "sha": "1116219",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "chore(sim): 평결-관측성 로그 — 건설 완공 좌표·지붕 클레임 지지 증빙·[Doctor] 실명화"
+    },
+    {
+      "sha": "941662c",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(sim): 지붕 지지 1셀로 강화 + [Mine] 원장 로그 — 소크 r4 채점 V-1 FAIL 수정"
+    },
+    {
+      "sha": "1a10822",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "chore(sim): 로그 관측성 — 주체 실명화([Builder]×6·[Eat]×2) + [Harvest] 게임시각 스탬프"
+    },
+    {
+      "sha": "f4824ec",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 지붕 지지 조건 + 벌목 완료 로그 + 발광체 미스터리 종결 (소크 r3 관찰 #3·#4·r2 #11)"
+    },
+    {
+      "sha": "774c75c",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 습격 카드 해소 — 밴딧 전멸 시 영속 레터 제거 + '습격 격퇴' 파랑 카드 (소크 r3 #8)"
+    },
+    {
+      "sha": "7ea1482",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(pawnsim): 소크 r3 격리 채점 평결 PASS (F 0) — 회귀 5건 검증 + 이상 관찰 10건 처리표"
+    },
+    {
+      "sha": "b6854b5",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(game-prototype): add macOS build target to headless BuildScript"
+    },
+    {
+      "sha": "f371752",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(pawnsim): check-round-5 — 사람-리듬+갭 라운드 브리핑 (출하 12건, 승인 대기 5건)"
+    },
+    {
+      "sha": "074d7f4",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): Work 슬롯 전이 = 기상 조건 — 작업 시간 늦잠 차단 (갭 TOP-12 #12)"
+    },
+    {
+      "sha": "9baab40",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 이벤트 페이싱 정상화 — 실효 사건 1.5~3일 + 분위기 전용 채널 (퀵픽)"
+    },
+    {
+      "sha": "456cce4",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 레터 색상 의미론 — 파랑=좋은 일 / 빨강=위협 (갭 TOP-4)"
+    },
+    {
+      "sha": "c158928",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 저장 더미 상향 이주 — 우선순위 낮은 존 재고를 상위 존으로 자동 이송 (갭 TOP-3)"
+    },
+    {
+      "sha": "e5c8800",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 침대 여유 연동 합류 — 인구 압박 스토리텔러 + 부족 경고 (채점 관찰 #10)"
+    },
+    {
+      "sha": "b2c363b",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 카메라 디렉터 — 무인 런이 '가장 흥미로운 림'을 따라다닌다 (사람-리듬 #8·9)"
+    },
+    {
+      "sha": "6ab89a3",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 지붕 시공 노동화 — 빌더가 셀에 도달·노동해야 완공 (소크 r2 관찰 #1)"
+    },
+    {
+      "sha": "d18c3d6",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(scenario): 사람-리듬 쇼케이스 시나리오 보존 — _프리픽스(게이트 제외)"
+    },
+    {
+      "sha": "153e851",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(workflow): 시나리오 함정 7~9 증류 — 씬이 좌표 정답·정지 중 scaled 대기·소모형 지정 어서션 시점"
+    },
+    {
+      "sha": "60913fe",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(harness): 일시정지-안전 — shot flush·UI 정착·wait 를 timeScale=0 에서도 동작하게"
+    },
+    {
+      "sha": "7dad7e8",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(rubric): 부재 판정은 한·영 로그 태그 병기 grep 후에만 — 소크 r2 채점 오판 증류"
+    },
+    {
+      "sha": "0e683ba",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "fix(sim): 소크 r2 격리채점 발견 3건 — 폭풍 미발화·조리 과잉·벌목 클릭 빗나감"
+    },
+    {
+      "sha": "1e3f56d",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "feat(sim): 위협 레터 강제 감속 + 카메라 현장 점프 — 사람-리듬 #7"
+    },
+    {
+      "sha": "ed8719b",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "docs(pawnsim): 사람 플레이 vs 자동플레이 갭 리서치 14건 — 4박자 진단 + 반영 우선순위"
+    },
+    {
+      "sha": "81e227a",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "chore(repo): 클론 대비 정리 — 미커밋 검증 증거·자산 일괄 커밋 + suika 머신로컬 폴더 ignore"
+    },
+    {
+      "sha": "472c39d",
+      "date": "2026-06-12",
+      "class": "agent",
+      "subject": "chore(metrics): 개입 추세 차트 18일 만에 갱신 (2026-05-24 → 06-12) + 생성기 크로스플랫폼화"
+    },
     {
       "sha": "bf0e244",
       "date": "2026-06-12",

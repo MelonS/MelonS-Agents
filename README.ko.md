@@ -8,7 +8,7 @@
 
 **기계적인 단계는 로컬에서, 창작 단계는 Claude 가.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조에 동기화하고, job-hunt 는 짧은 키워드 하나를 역할 동의어 맵으로 자동 확장합니다.  커밋·이상 감지·스케줄 세 갈래의 감사 트리거로 시스템이 자기 드리프트를 스스로 잡습니다.  첫날부터 영어 + 한국어 듀얼 트랙.
 
-`미션 출력 100+ · 미션 타입 5종 · 포터블 스킬 2개 + 메타 스킬 1개 + 게임 프로토타입 2종 · ffmpeg 쉐이더 23개 · 커밋 게이트 15시나리오(입력 레벨) · 격리 채점 검증 루프 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
+`미션 출력 100+ · 미션 타입 6종 · 프로덕션 스킬 2개(music-video, job-hunt) + 메타 스킬 1개(game-dev-agent) + 게임 프로토타입 4종 · ffmpeg 쉐이더 23개 · 커밋 게이트 15시나리오(입력 레벨) · 격리 채점 검증 루프 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -26,7 +26,7 @@
 
 ![PawnSim 콜로니 타임랩스 (2026-06-12 빌드, 게임 내 16일) — 콜로니스트 셋이 맨땅에서 시작해 저장 구역과 농장을 지정하고, 벽·침대·화덕·연구대를 갖춘 집을 지으며, 습격을 막아내고 성장하는 과정.  모든 프레임은 사람 개입 없는 자동 플레이 기록이며, 화면에 보이는 기본 루프(저장→집짓기→농사→벌목→채광)는 전부 기계 검증을 통과한 상태](docs/demo/pawnsim-2026-06-12-colony-timelapse.gif)
 
-*사람 개입 없는 16일 자동 플레이 — 에이전트가 만들고, 에이전트가 검증합니다.*
+*사람 개입 없는 16 게임일 자동 플레이 — 에이전트가 만들고, 에이전트가 검증합니다.  [PawnSim 섹션 보기 →](#pawnsim--에이전트가-지금-가장-활발히-반복-개발-중인-프로토타입-2026-06-focus).*
 
 </div>
 
@@ -54,7 +54,7 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
   + `intervention.png` 는 자율성 + 품질 주장이 시간 흐름에 따라
   정직한지 차트화.
 - **실제 검색 방식에 맞춰진 한국 잡보드 다이제스트가 필요한 분.**
-  `--seed "Problem Solver"` 한 줄이면, 회사마다 다르게 부르는 24개
+  `--seed "Problem Solver"` 한 줄이면, 회사마다 다르게 부르는 26개
   동의어 타이틀 (FDE / Applied AI Engineer / Generalist / Founding
   Engineer / …) 로 자동 확장 후 11개 소스에서 fetch.
 - **에이전트가 게임을 만들기만 하는 게 아니라 직접 검증까지 하는
@@ -81,7 +81,7 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 > Cursor, Goose, Gemini CLI 등 호환 런타임에 그대로 떨어집니다.
 >
 > **스킬 1 — `music-video`.**  음악 파일을 넣으면 60초짜리 9:16
-> 세로 쇼츠가 나옵니다.  장르별 컬러 그레이드 6종이 평범한 Pexels
+> 세로 쇼츠가 나옵니다.  장르별 컬러 그레이드 7종이 평범한 Pexels
 > 스톡 footage 를 장르 톤으로 먼저 깔고, 그 위에 ffmpeg 쉐이더
 > 23개와 phrase-aware 구조(`aubiotrack` 비트로 컷, `aubioonset`
 > 드럼 hit 으로 글리치 마이크로 에디트, preset 별 게이팅 적용)가
@@ -95,7 +95,7 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 >
 > **스킬 2 — `job-hunt`.**  키워드 하나로 한국·글로벌 잡보드를
 > 훑고 중복 제거된 마크다운 다이제스트를 만듭니다.
-> `--seed "Problem Solver"` 한 줄이 실제로 회사들이 쓰는 24개
+> `--seed "Problem Solver"` 한 줄이 실제로 회사들이 쓰는 26개
 > 동의어 (FDE / Applied AI Engineer / Generalist / Founding Engineer
 > / Forward Deployed / …) 로 펼쳐진 다음 11개 소스 플러그인을
 > 돕니다.  그 중 5개(`global-ats` — Anthropic / OpenAI / Cursor /
@@ -114,7 +114,7 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 > 카운트에 포함되지 않음).**  Unity 기반 게임 개발용 AI 에이전트
 > — 스프라이트 생성, C# 스캐폴딩, 밸런스 튜닝, 오디오 생성,
 > 인게임 AI 디렉터를 오케스트레이션하는 메타 스킬입니다.  이
-> 프레임워크로 만들어지는 두 개의 프로토타입이 경험적 검증 표면
+> 프레임워크로 만들어지는 네 개의 프로토타입이 경험적 검증 표면
 > 역할을 합니다.  대표는 **PawnSim** — 탑다운 콜로니심 프로토타입
 > ([`skills/game-prototype/`](skills/game-prototype/)) 으로, 수많은
 > 자율 멀티에이전트 세션을 거치며 깊은 슬라이스로 성장했습니다:
@@ -125,15 +125,32 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 > **15개 시나리오의 입력 레벨 재현 게이트**(플레이어와 같은 UI
 > 경로로 클릭을 합성하고 효과까지 어서트).  장시간 소크는 격리된
 > 채점 에이전트가 루브릭으로 평가합니다 — 이 루프가 무엇을
-> 잡아냈는지는 아래 PawnSim 섹션에.  두 번째 프로토타입은 2D
-> 피직스-머지 퍼즐
-> ([`skills/game-prototype-suika/`](skills/game-prototype-suika/),
-> Day 2 까지 출하 · 프레임워크 없는 베이스라인 대비 약 15배 가속).
-> 두 프로토타입이 각자 산출물 일정을 만족하는 시점에 프로덕션
+> 잡아냈는지는 아래 PawnSim 섹션에.  나머지 셋은 더 가벼운 아케이드 /
+> 퍼즐 프로토타입으로, *가속* 벤치마크 역할을 겸합니다 — 2D 피직스-머지
+> 퍼즐 ([`skills/game-prototype-suika/`](skills/game-prototype-suika/),
+> Day 2 까지 프레임워크 없는 베이스라인 대비 약 15배 가속), 뱀파이어-
+> 서바이버 라이트
+> ([`skills/game-prototype-vs-lite/`](skills/game-prototype-vs-lite/)),
+> 2048 라이트
+> ([`skills/game-prototype-2048/`](skills/game-prototype-2048/)) — 각각
+> 직전 프로토타입보다 빠르게 만들어져 '복리 가속' 가설을 검증합니다.
+> 네 프로토타입이 각자 산출물 일정을 만족하는 시점에 프로덕션
 > 카운트로 졸업합니다.  스킬 정의:
 > [`skills/game-dev-agent/`](skills/game-dev-agent/); PawnSim 자체
 > README + PM 마일스톤:
 > [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
+>
+> **네 번째 미디어 스킬 — `product-cf` (실험적, 보류 중).**
+> 제품 사진 한 장 → CF풍 9:16 세로 쇼츠.  music-video 스킬 위에
+> 얹어서, 제품은 픽셀 단위로 정확한 실사 컷아웃으로 고정한 채 주변
+> 세계만 움직입니다.  v0.1.0 으로 출하했으나 **정직한 부정적 결론으로
+> 보류**: 무료 / 로컬 "진짜 3D처럼" 접근(뎁스 패럴랙스, 실린더-랩
+> 턴테이블, 로컬 LTX image-to-video)이 16 GB 머신에서 실제 CF 품질
+> 기준을 못 넘김 — 설득력 있는 결과는 유료 클라우드 image-to-video
+> 또는 더 큰 GPU 가 필요.  트리에 남기되 게이트 오프, 결정 보류; 전체
+> 기록:
+> [`docs/research/2026-06-15-product-cf-3d.md`](docs/research/2026-06-15-product-cf-3d.md).
+> 위 "프로덕션 스킬 2개" 카운트에는 포함하지 않습니다.
 >
 > **이 레포를 돌리는 두 가지 방법.**
 > - *에이전트 주도* (메인) — Claude Code 깔고, 클론된 레포를
@@ -311,7 +328,7 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
 
 ## 샘플 출력
 
-지금까지 **5가지** 미션 타입에 걸쳐 100+건의 출력이 나왔습니다.
+지금까지 **6가지** 미션 타입에 걸쳐 100+건의 출력이 나왔습니다.
 현재 프로덕션 포맷은 `music-video` 미션 — 음악이 메인 오디오인
 쇼츠 (내레이션·캡션 없음, 비트에 맞춘 컷, 드럼 onset 에 맞춘 글리치
 마이크로 에디트).  2026-05-17 에 이전의 내레이션 기반 포맷을 밀어내고
@@ -368,7 +385,7 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
   [case study 5](docs/engineering-case-studies.ko.md#5-ffmpeg-안의-쉐이더-효과--벽이-어디인지-아는-것).
 - **장르-인식 preset 라우팅** —
   [`skills/music-video/data/genre-presets.yaml`](skills/music-video/data/genre-presets.yaml)
-  의 14-장르 테이블이 장르 → preset → env override → post-shader 체인을
+  의 19-장르 테이블이 장르 → preset → env override → post-shader 체인을
   해소 (case study 7).  앰비언트 / 클래시컬 / 드림코어는 ANY 컷이 계약
   위반인 장르라서 별도 `scripts/music-video-stillzoom.sh` (이미지 + 음악 →
   60초 Ken-Burns) 로 라우팅.
@@ -463,9 +480,9 @@ Pexels 스톡 footage 가 장르별 `grade_profile` (2026-05-22 출시) 을
 | ![coastline-summer: golden-hour 해변 수면 반사, hollywood teal-orange 그레이드](docs/demo/2026-05-24-genre-grid/coastline-summer.jpg) | ![linen-minimal: 침실 책더미 + 커피잔, kr warm pastel 그레이드](docs/demo/2026-05-24-genre-grid/linen-minimal.jpg) | ![smallhand-folk: 창문 너머 카페, 한국어 가사 오버레이 '가난이 너를 만든 게 / 아니라' 가 보임](docs/demo/2026-05-24-genre-grid/smallhand-folk.jpg) |
 | **`coastline-summer`** · hollywood_teal_orange | **`linen-minimal`** · kr_warm_pastel | **`smallhand-folk`** · 키네틱 가사 오버레이 |
 
-14개 장르 preset 은 렌더마다
+19개 장르 preset 은 렌더마다
 [`skills/music-video/data/genre-presets.yaml`](skills/music-video/data/genre-presets.yaml)
-로 resolve; 6개 grade profile 은
+로 resolve; 7개 grade profile(그리드엔 6개 표시) 은
 [`scripts/music-video-grade.sh`](scripts/music-video-grade.sh) 에서
 ffmpeg 필터 그래프로 컴파일됨.  이 프레임들 중 어떤 것도 cherry-pick
 B-roll 을 받지 않음 — 모든 클립이 파이프라인 unattended 가 돌리는
@@ -514,8 +531,8 @@ paper_grain / dust_speck / posterize / trail_echo / soft_bloom) —
 - **`combo`** — `pond` + `halation` 의 **phrase-aware 강도 envelope**.
   두 효과 강도가 모두 `T` (시간) 함수: 인트로 (0~15 s) 에 off / 약,
   빌드 (15~22.5 s) 에 ramp-up, 클라이맥스 (22.5~45 s) 에 풀, 윈드다운
-  (45~52.5 s) 에 taper, 아웃트로 (52.5~60 s) 에 settle.  phrase 경계는
-  원본 reference 트랙의 phrase 경계는 95.8 BPM × 12 비트 = 7.5 s
+  (45~52.5 s) 에 taper, 아웃트로 (52.5~60 s) 에 settle.  원본 reference
+  트랙의 phrase 경계는 95.8 BPM × 12 비트 = 7.5 s
   cadence 와 일치 — 다른 트랙은 스크립트에서 envelope 파라미터 수정.
 
 시도했으나 **포기**: **카툰 (cel-shading)** 렌더링.  ffmpeg 가 luma 와
@@ -721,6 +738,31 @@ ScriptableObject 로). `SceneSetup.cs` 는 1057L → ~310L 로 14개 partial 분
 `.prefab`/`.unity` 에 **baked** 되므로, 소스 기본값 변경은 재생성된 prefab/scene
 을 함께 커밋해야 비로소 적용됨 — "픽스가 안 먹는다" 사례 다수가 여기서 옴.
 
+게임 트랙은 위 6-에이전트 미디어 파이프라인과 **별도로 자체 13-에이전트
+로스터**를 돌립니다 — 전부 `game-dev-agent` 가 스캐폴딩·호출하므로
+[`.claude/agents/`](.claude/agents/) 에는 6개가 아니라 **19개** 정의가
+있습니다:
+
+| 게임 서브에이전트 | 역할 | 모델 |
+|---|---|---|
+| 🎬 **game-director** | 비전·톤·코어 필 | opus |
+| 📋 **game-pm** | 일정·마일스톤·스코프 | opus |
+| 🎲 **game-designer** | 시스템·메카닉·조작·밸런스 | opus |
+| 👾 **game-programmer** | 템플릿 카탈로그 기반 C# 구현 | opus |
+| 🧠 **game-ai-designer** | 결정 트리·유틸리티 AI·NPC 루틴 | opus |
+| ⚙️ **game-systems-designer** | 자원 경제·니즈 감쇠·진행 곡선 | opus |
+| 🎨 **game-artist** | 스프라이트·UI·애니메이션 | sonnet |
+| 🔧 **game-build-engineer** | Unity batchmode 파이프라인·에셋 임포트 | sonnet |
+| ✅ **game-qa** | 빌드 → 실행 → 스크린샷 → 판정 루프 | sonnet |
+| ⚔️ **game-combat-designer** | 무기 수치·데미지·타격감 | sonnet |
+| 🌊 **game-level-designer** | 스폰 패턴·웨이브·보스 패턴 | sonnet |
+| 📖 **game-narrative-designer** | 스토리 비트·대사·로어 (KR / EN) | sonnet |
+| 🔊 **game-sound-designer** | BGM + SFX, 절차 생성 우선 | sonnet |
+
+opus 가 방향 / 설계 / 프로그래밍을, sonnet 이 실행 / 프로덕션 역할을
+맡습니다.  프로토타입마다 13개를 다 쓰는 건 아니고 — 로스터는 가용
+캐스트이고 장르별로 선택합니다.
+
 전체 구조·조작·기능·정직한 검증 상태:
 [`skills/game-prototype/README.md`](skills/game-prototype/README.md). 구동
 메타-스킬: [`skills/game-dev-agent/`](skills/game-dev-agent/).
@@ -909,7 +951,7 @@ operator-profile.md 필요 없음).
 # 위 clone + bootstrap 다음에:
 skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
 # 출력: stdout 에 digest.md 경로 — 열어 보면 여러 소스에 걸친
-# mock 채용공고가 problem-solver family 의 24개 동의어 키워드에 매칭됨.
+# mock 채용공고가 problem-solver family 의 26개 동의어 키워드에 매칭됨.
 
 # 같은 family 의 다른 seed — 동일 결과:
 skills/job-hunt/scripts/run.sh --seed "FDE" --dry-run
@@ -927,7 +969,7 @@ JH_WORKNET_LIVE=1 \
 skills/job-hunt/scripts/run.sh --seed "Problem Solver"
 # Greenhouse + Ashby + Lever ATS board (27개 회사), RemoteOK /
 # Remotive / HN 월간 thread / 워크넷 에서 ~5천건 raw → Problem
-# Solver 24-동의어 필터로 200건 매칭.  각 소스의 합법성/기술
+# Solver 26-동의어 필터로 200건 매칭.  각 소스의 합법성/기술
 # 가능성 감사는 docs/research/job-sources-survey-2026-05-21.md
 # 참고.
 ```
