@@ -24,6 +24,7 @@ namespace MelonS.GameProto
         private bool inited;
         private bool flip;
         private float gaitClock;
+        private Vector2 velSmooth;   // 저역통과 속도 — flip 떨림 제거 (폰/강도와 동일 패리티)
         private Vector3 prevPos;
 
         private void Awake()
@@ -74,11 +75,14 @@ namespace MelonS.GameProto
             float dt = Time.deltaTime;
             if (dt <= 0f || sr == null) return;
             Vector3 pos = transform.position;
-            Vector2 delta = pos - prevPos;
+            // 저역통과 속도 — 단일 프레임 delta 부호 떨림으로 인한 flip 플립플롭 제거.
+            Vector2 instVel = (Vector2)(pos - prevPos) / dt;
             prevPos = pos;
-            float speed = delta.magnitude / dt;
+            velSmooth = Vector2.Lerp(velSmooth, instVel, 1f - Mathf.Exp(-12f * dt));
+            float speed = velSmooth.magnitude;
 
-            if (Mathf.Abs(delta.x) > 0.0005f) flip = delta.x > 0f;   // 좌향 원화: 우측 이동 = flip
+            // 좌향 원화: 우측 이동 = flip (동물 아트는 서향이라 부호 정상 — 폰과 반대).
+            if (Mathf.Abs(velSmooth.x) > 0.01f) flip = velSmooth.x > 0f;
 
             if (speed > 0.15f)
             {
@@ -87,7 +91,7 @@ namespace MelonS.GameProto
             }
             else
             {
-                gaitClock = 0f;
+                // gaitClock 리셋 안 함(재시작 스냅 제거), 증가만 멈춤.
                 sr.sprite = frames[0];
             }
             sr.flipX = flip;
