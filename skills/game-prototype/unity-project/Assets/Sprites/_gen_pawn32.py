@@ -14,7 +14,8 @@ import sys, os, colorsys, random
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-PAL_DIR = r"G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Sprites"
+# palette.py lives next to this script — derive cross-platform (was G:/ hardcoded).
+PAL_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, PAL_DIR)
 from palette import (OUTLINE_STORY, OUTLINE_OBJ,
                      GRASS_DK, GRASS_MD, GRASS_LT,
@@ -26,7 +27,10 @@ from palette import (OUTLINE_STORY, OUTLINE_OBJ,
                      TROUSER_BLUE, TROUSER_RUST, TROUSER_OLIVE)
 from PIL import Image
 
-OUT = r"G:/ai/_artv2_staging/out"
+# staging out: env override, else G:/ on Windows, else repo-local (cross-platform).
+OUT = os.environ.get("ARTV2_OUT") or (
+    r"G:/ai/_artv2_staging/out" if os.name == "nt"
+    else os.path.join(os.path.dirname(os.path.abspath(__file__)), "_artv2_out"))
 FRAMES = os.path.join(OUT, "frames")
 FRAMES_TOOL = os.path.join(OUT, "frames_tool")
 for d in (OUT, FRAMES, FRAMES_TOOL):
@@ -132,13 +136,21 @@ def upscale(im, s=SCALE):
 # on pass frames (feet stay grounded).
 
 def _legs_front(im, leg, trouser, b):
-    """S/N legs: left x12-14, right x17-19; trouser then WOOD_DK boots."""
+    """S/N legs: left x12-14, right x17-19; trouser then WOOD_DK boots.
+    Lift levels for a smoother 6-frame cycle: grounded (boot y27-28) ->
+    half (y26-27, 1px up) -> contact (y25-26, 2px up).  The half pose is a
+    geometric in-between so the foot rises/falls 1px/frame instead of
+    teleporting 2px (removes the march-y stutter)."""
     for side, x0, x1 in (('l', 12, 14), ('r', 17, 19)):
-        lifted = (leg == 'r_fwd' and side == 'l') or (leg == 'l_fwd' and side == 'r')
-        if lifted:  # back leg raised 2px
+        lift2 = (leg == 'r_fwd' and side == 'l') or (leg == 'l_fwd' and side == 'r')
+        lift1 = (leg == 'r_half' and side == 'l') or (leg == 'l_half' and side == 'r')
+        if lift2:    # back leg raised 2px (contact)
             rect(im, x0, 23 + b, x1, 24, trouser)
             rect(im, x0, 25, x1, 26, WOOD_DK)
-        else:
+        elif lift1:  # back leg raised 1px (mid-stride transition)
+            rect(im, x0, 23 + b, x1, 25, trouser)
+            rect(im, x0, 26, x1, 27, WOOD_DK)
+        else:        # grounded
             rect(im, x0, 23 + b, x1, 26, trouser)
             rect(im, x0, 27, x1, 28, WOOD_DK)
 
@@ -338,6 +350,14 @@ def draw_E(v, leg, arm, b):
         rect(im, 12, 27, 14, 28, WOOD_DK)
         rect(im, 15, 23 + b, 17, 26, trouser)
         rect(im, 15, 27, 17, 28, WOOD_DK)
+    elif leg in ('r_half', 'l_half'):
+        # half scissor — between neutral and full stride (smoother step-through).
+        back_c, front_c = ((trouser_far, trouser) if leg == 'r_half'
+                           else (trouser, trouser_far))
+        rect(im, 11, 23 + b, 13, 26, back_c)    # back leg slightly back
+        rect(im, 11, 27, 13, 28, WOOD_DK)
+        rect(im, 15, 23 + b, 17, 26, front_c)   # front leg slightly fwd
+        rect(im, 16, 27, 18, 28, WOOD_DK)
     else:
         back_c, front_c = ((trouser_far, trouser) if leg == 'r_fwd'
                            else (trouser, trouser_far))
@@ -370,13 +390,19 @@ def draw_E(v, leg, arm, b):
 
 DRAW = {'S': draw_S, 'E': draw_E, 'N': draw_N}
 
-# col → (name, leg, arm, bounce); col7 reserved transparent
+# col → (name, leg, arm, bounce).  9 cols: idle | walk1..6 | work1..2.
+#  6-frame walk (was 4): contact -> half-lift transition -> passing, per side.
+#  The half frames make the foot rise/fall 1px/frame and the side-view legs
+#  step through a mid scissor — removes the 4-frame march-y stutter.
+#  NOTE: animator must use COLS=9, COL_WORK0=7, walk index = walkClock % 6.
 POSES = [
     ('idle',  'neutral', 'idle',   0),
-    ('walk1', 'r_fwd',   'w1',     0),
-    ('walk2', 'neutral', 'idle',   1),
-    ('walk3', 'l_fwd',   'w3',     0),
-    ('walk4', 'neutral', 'idle',   1),
+    ('walk1', 'r_fwd',   'w1',     0),   # contact R (left leg back/up, left arm fwd)
+    ('walk2', 'r_half',  'idle',   0),   # mid-stride transition
+    ('walk3', 'neutral', 'idle',   1),   # passing (feet together, body high)
+    ('walk4', 'l_fwd',   'w3',     0),   # contact L
+    ('walk5', 'l_half',  'idle',   0),   # mid-stride transition
+    ('walk6', 'neutral', 'idle',   1),   # passing
     ('work1', 'neutral', 'raise',  0),
     ('work2', 'neutral', 'strike', 0),
 ]
@@ -500,7 +526,7 @@ def main():
             'hair_c': shade(HAIR_DK, hair_mul),
             'hair_hi': shade(HAIR_DK, min(hair_mul * HAIR_HI_MUL, 1.12 * 1.12)),
         }
-        sheet = Image.new('RGBA', (256, 96), (0, 0, 0, 0))
+        sheet = Image.new('RGBA', (len(POSES) * 32, 96), (0, 0, 0, 0))
         for ri, dirn in enumerate(('S', 'E', 'N')):
             for ci, (pname, leg, arm, b) in enumerate(POSES):
                 fr = DRAW[dirn](v, leg, arm, b)

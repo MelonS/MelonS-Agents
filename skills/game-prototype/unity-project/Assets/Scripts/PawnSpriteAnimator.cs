@@ -9,7 +9,8 @@ namespace MelonS.GameProto
     /// 런타임 슬라이스해 3방향(S/E/N, W=E flip) × {idle, walk 4프레임, 작업스윙 2프레임}
     /// 을 상태기계로 재생한다.  기존 트랜스폼 트릭(스쿼시)을 실제 보행 사이클로 대체.
     ///
-    /// 시트 레이아웃 (artv2-style-spec): cols = idle|walk1..4|work1..2|예약, rows = S|E|N (위→아래).
+    /// 시트 레이아웃 (2026-06-15): cols = idle|walk1..6|work1..2 (9칼럼, 288x96), rows = S|E|N.
+    ///  보행 6프레임 = 접촉→half-lift 전환→패싱 ×2 (이전 4프레임 march-y 완화).
     ///
     /// 렌더 계약 (PawnSpriteBob 의 ROOT-TRANSFORM RULE 준수):
     ///   - 프레임은 ROOT SpriteRenderer.sprite 에 쓴다 — PawnSpriteBob 이 매 프레임
@@ -21,8 +22,9 @@ namespace MelonS.GameProto
     [DisallowMultipleComponent]
     public class PawnSpriteAnimator : MonoBehaviour
     {
-        private const int COLS = 8, ROWS = 3, CELL = 32;
-        private const int COL_IDLE = 0, COL_WALK0 = 1, COL_WORK0 = 5;
+        private const int COLS = 9, ROWS = 3, CELL = 32;   // 2026-06-15: 8→9 (보행 4→6프레임)
+        private const int COL_IDLE = 0, COL_WALK0 = 1, COL_WORK0 = 7;   // idle | walk1..6 | work1..2
+        private const int WALK_FRAMES = 6;
         private const int ROW_S = 0, ROW_E = 1, ROW_N = 2;   // 시트 위→아래
 
         // variant -> [row, col] 스프라이트 (전 림 공유 캐시)
@@ -168,8 +170,9 @@ namespace MelonS.GameProto
                 else row = dir.y > 0f ? ROW_N : ROW_S;
 
                 // 보행 사이클 — 속도 비례 (4x 배속에서도 발걸음이 따라온다).
+                //  6프레임(접촉→half→패싱 ×2)으로 march-y 스터터 완화.
                 walkClock += dt * Mathf.Clamp(speed, 0.8f, 2.6f) * 5.5f;
-                col = COL_WALK0 + ((int)walkClock & 3);
+                col = COL_WALK0 + ((int)walkClock % WALK_FRAMES);
             }
             else if (working)
             {
