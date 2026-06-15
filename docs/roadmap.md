@@ -206,6 +206,17 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-14~15 (운영자 인터랙티브, Mac)** 매직마우스 줌 "휙휙 넘어감" 근본수정
+  (`5631603` 1차 비례+클램프 → `a09c978` 최종 pending 모델).  임시 진단 로깅으로 실측:
+  Mac 매직마우스 한 플릭 = 60Hz로 스크롤 이벤트 28~165개(raw 0.005~0.86), 게임 ~1000fps.
+  이전 이산 모델이 이벤트마다 ×zoomStep 곱해 즉시 슬램(1.18^28=×103)이 진짜 원인.
+  최종: 스크롤을 pendingZoom(log 공간) 비례 적립 → 매 프레임 maxZoomRate×dt 만큼만 소비
+  ⇒ 비례·슬램불가·프레임레이트 독립.  zoomSensitivity=0.33 / maxZoomRate=2.5(SerializeField),
+  운영자 Mac 감각 승인.  Windows 노치휠은 노치당 raw~0.1 단일이벤트라 더 부드러움 — 분기
+  없이 현 값 유지(운영자 결정).  ★발견: `repro_all` 게이트가 Windows 전용(`G:/`·PawnSim.exe)
+  이라 이 Mac에선 미실행 → macOS 배치빌드 컴파일 검증(rc=0)으로 대체.  raw 마우스 입력은
+  SimInput 사각이라 어차피 행동 게이트 불가, 감각은 운영자 실기 확인.
+
 - **2026-06-12 (밤샘 후반)** 격리 채점 루프 4사이클 완주 — 4축 기능 전부 PASS 도달.
   발견·수리: 식량 비축 전원 아사 트랩(붕괴-섭취금지 → 생존 본능 `5be68d8`), 영구
   붕괴 콜로니 정지(카타르시스 복귀), 채광 범위 갭(`831f38e`), worldclick 셀 중심
