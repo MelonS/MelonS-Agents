@@ -206,6 +206,19 @@ load-bearing, or set a new focus.)_
 
 ## Done — most recent first
 
+- **2026-06-15 (운영자 인터랙티브, Mac)** 캐릭터 애니메이션 개선 (운영자 목표 "방향 정확·동작마다·
+  더 부드럽게").  읽기전용 멀티에이전트 애니 시스템 맵핑 → 3패스: **Pass 1**(`7dc4cc3`) 작업
+  페이싱을 단일 출처 `PawnUtilityAI.TryGetWorkTargetPos`로 통일(이전 chopper/miner만 → 8개 워커
+  전부) + 속도 저역통과(flipX 플립플롭 제거) + walkClock 리셋 스냅 제거 + per-pawn 작업 스윙(전 림
+  동시 도끼질 robotic 해소).  **Pass 2**(`07552f5`) 보행 4→6프레임(접촉→half-lift→패싱) — 생성기
+  `_gen_pawn32.py` Windows 경로 포팅(Mac에서 Pillow로 실행, 재생성 바이트동일 검증 후 프레임 추가)
+  + r_half/l_half 다리 포즈 + 시트 256→288, 콜로니스트 8장 재생성 + 애니메이터 COLS 9/walk%6.
+  **flip 버그**(`b05790d`) 운영자 "나무 등지고 캠" 실증 — E 원화는 동향(눈 x18·작업팔 x20-21)인데
+  코드가 `flip=x>0`(동물 좌향 규약 복붙)이라 작업/이동 대상을 등짐 → `flip=x<0` 반전(walk+work+
+  bandit).  동물은 좌향이라 기존 flip 정상(미변경).  각 패스 macOS 배치빌드 rc=0 컴파일 검증
+  (repro_all 게이트는 Windows 전용·raw입력 사각이라 감각은 운영자 실기 확인).  교훈 메모리:
+  sprite-facing-convention(시트별 향 다름) + harness-windows-only.
+
 - **2026-06-14~15 (운영자 인터랙티브, Mac)** 매직마우스 줌 "휙휙 넘어감" 근본수정
   (`5631603` 1차 비례+클램프 → `a09c978` 최종 pending 모델).  임시 진단 로깅으로 실측:
   Mac 매직마우스 한 플릭 = 60Hz로 스크롤 이벤트 28~165개(raw 0.005~0.86), 게임 ~1000fps.
