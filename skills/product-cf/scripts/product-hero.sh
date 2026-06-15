@@ -36,7 +36,9 @@ VENV="${PRODUCT_CF_VENV:-$HOME/.cache/melons-ai/venvs/product-cf}"
 PRODUCT_W="${HERO_PRODUCT_W:-0.66}"
 ZOOM="${HERO_ZOOM:-1.12}"
 SWEEP="${HERO_SWEEP:-1}"
-MOTION="${HERO_MOTION:-push}"   # push | pull | panlr | panrl
+MOTION="${HERO_MOTION:-push}"            # push | pull | panlr | panrl
+NORMAL_SWEEP="${HERO_NORMAL_SWEEP:-1}"   # 1 = wrapping specular (volume cue), 0 = flat geq sweep
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 W=1080; H=1920; FPS=30
 FRAMES=$(awk -v d="$DUR" -v f="$FPS" 'BEGIN{printf "%d", d*f}')
@@ -106,15 +108,26 @@ fi
   -vf "zoompan=z='min(zoom+0.0005,1.06)':d=${FRAMES}:s=${W}x${H}:fps=${FPS},format=yuv420p" \
   -an "$BG"
 
-# ── D. light-sweep (grayscale moving gaussian band) ─────────────────
-# geq is per-pixel and slow; render at half-res and upscale (a soft glow
-# loses nothing).  W/H below are geq's own builtins (= 540x960 here).
+# ── D. highlight clip → screen-blended onto the product in stage E ──
+# NORMAL_SWEEP=1: alpha-driven wrapping specular (highlight bends over a
+#   pseudo-rounded form = volume cue; label risk is zero, spec*alpha).
+# NORMAL_SWEEP=0: legacy flat geq gaussian band (an abstract sliding sweep).
+# Either way the result is a grayscale yuv420p clip the same size/length as
+# the product, so stage E's blend=screen splice is identical.
 SWEEP_CLIP="$TMP/sweep.mp4"
 if [[ "$SWEEP" == "1" ]]; then
-  log "D/F  label light-sweep"
-  "$FFMPEG_BIN" -y -loglevel error -f lavfi -i "color=c=black:s=540x960:r=${FPS}:d=${DUR}" \
-    -vf "geq=lum='200*exp(-pow((X-(W*(mod(T*0.55,1.7)-0.35)))/(W*0.09)\,2))':cb=128:cr=128,scale=${W}:${H}" \
-    -pix_fmt yuv420p "$SWEEP_CLIP"
+  if [[ "$NORMAL_SWEEP" == "1" ]] && [[ -x "$VENV/bin/python" ]]; then
+    log "D/F  wrapping specular (normal-map from alpha)"
+    SPECDIR="$TMP/spec"
+    "$VENV/bin/python" "$SCRIPT_DIR/shade_normals.py" "$CANVAS" "$SPECDIR" "$FRAMES" 40 1.0
+    "$FFMPEG_BIN" -y -loglevel error -framerate "$FPS" -i "$SPECDIR/spec_%04d.png" \
+      -vf "format=yuv420p" -pix_fmt yuv420p "$SWEEP_CLIP"
+  else
+    log "D/F  label light-sweep (geq fallback)"
+    "$FFMPEG_BIN" -y -loglevel error -f lavfi -i "color=c=black:s=540x960:r=${FPS}:d=${DUR}" \
+      -vf "geq=lum='200*exp(-pow((X-(W*(mod(T*0.55,1.7)-0.35)))/(W*0.09)\,2))':cb=128:cr=128,scale=${W}:${H}" \
+      -pix_fmt yuv420p "$SWEEP_CLIP"
+  fi
 fi
 
 # ── E. product motion (alpha-preserved) + sweep screen ──────────────
