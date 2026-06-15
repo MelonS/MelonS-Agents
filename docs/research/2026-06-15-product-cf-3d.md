@@ -93,6 +93,29 @@ Modes in the runner: `PCF_TURNTABLE=1` (cylinder spin) > `PCF_PARALLAX=1` (DIBR)
 default zoompan. Turntable knobs: `HERO_TURNTABLE_DEG`, `HERO_TURNTABLE_MODE`
 (ping|spin).
 
+## Follow-up 2: operator rejected ALL fake-3D ("다 별로") → pivot to generative I2V
+
+The FFmpeg/numpy compositing ceiling (cutout-on-void, label-warping cylinder)
+was below "good CF". Pivoted to real image-to-video, free+local first.
+
+**Verified local I2V finding (LTX-Video 2B 0.9.5, diffusers, torch 2.12 MPS):**
+- It is the only local I2V whose VAE runs on MPS (SVD's ConvTranspose3d crashes;
+  CogVideoX-5B / Wan2.2-14B don't fit 16GB).
+- Still quality is genuinely good — a clean, correctly-lit, label-intact bottle
+  (validated frame). The I2V *direction* is right.
+- **But impractical on this 16GB box:** a tiny 384×512×49f / 6-step clip took
+  **~66 min wall at ~5% CPU** = constant memory swapping (cpu-offload thrash),
+  and the motion was near-static (mean frame Δ 0.2/255). 16GB is too small for
+  video diffusion; bigger res/frames/steps = worse/OOM. Not viable for iteration
+  or production here.
+- Script kept at `scripts/ltx_i2v.py` (works on a ≥32–64GB / CUDA box; gated, not
+  wired into the runner).
+
+**Conclusion:** good local I2V needs more RAM/GPU than this machine has. The
+realistic paths to an actually-good result are **paid cloud I2V** (Kling /
+Runway / Hailuo / Veo — minutes, no local compute, money-firewall) or **real
+footage** of the physical product. Decision pending with operator.
+
 ## Deferred / next
 
 - Blender depth-mesh orbit (±12° relief) — higher effort, ~3/5; bench only if the
