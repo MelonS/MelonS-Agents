@@ -42,6 +42,9 @@ PARALLAX="${HERO_PARALLAX:-0}"           # 1 = depth DIBR parallax (real 3D moti
 PARALLAX_AMP="${HERO_PARALLAX_AMP:-60}"  # max px shift at depth=1 (parallax strength)
 PARALLAX_FOCUS="${HERO_PARALLAX_FOCUS:-0.15}"  # depth plane held still (pins label/bg)
 PARALLAX_CYL="${HERO_PARALLAX_CYL:-0.75}"      # 1=pure synthesized cylinder depth, 0=pure monocular
+TURNTABLE="${HERO_TURNTABLE:-0}"               # 1 = cylinder-wrap real 3D spin (cans/bottles)
+TURNTABLE_DEG="${HERO_TURNTABLE_DEG:-38}"      # half-angle of the oscillating spin
+TURNTABLE_MODE="${HERO_TURNTABLE_MODE:-ping}"  # ping (oscillate) | spin (full 360, wrap-label only)
 DEPTH_VENV="${PRODUCT_CF_DEPTH_VENV:-/Users/melons/ai/.venv}"  # has torch+transformers
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -141,7 +144,16 @@ fi
 
 # ── E. product motion → PRODZ (alpha-preserved) ─────────────────────
 PRODZ="$TMP/prodz.mov"
-if [[ "$PARALLAX" == "1" ]] && [[ -x "$DEPTH_VENV/bin/python" ]]; then
+if [[ "$TURNTABLE" == "1" ]] && [[ -x "$VENV/bin/python" ]]; then
+  # Cylinder-wrap turntable: genuine 3D spin of a cylindrical product from the
+  # single front photo.  Real label texels are resampled onto a rotating
+  # cylinder — honest foreshortening, never regenerated.
+  log "E/F  cylinder turntable (${TURNTABLE_MODE}, ±${TURNTABLE_DEG}deg)"
+  TTDIR="$TMP/tt"
+  "$VENV/bin/python" "$SCRIPT_DIR/cylinder_turntable.py" "$CANVAS" "$TTDIR" \
+    "$FRAMES" "$TURNTABLE_DEG" "$TURNTABLE_MODE"
+  "$FFMPEG_BIN" -y -loglevel error -framerate "$FPS" -i "$TTDIR/p_%04d.png" -c:v qtrle -an "$PRODZ"
+elif [[ "$PARALLAX" == "1" ]] && [[ -x "$DEPTH_VENV/bin/python" ]]; then
   # Depth-image-based-rendering: near pixels shift more than far → genuine 3D
   # parallax (the thing affine zoompan can't do).  Real photo is only resampled.
   log "E/F  depth parallax (DIBR, motion=${MOTION})"
