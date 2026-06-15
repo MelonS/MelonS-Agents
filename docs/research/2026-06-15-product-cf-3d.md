@@ -63,6 +63,36 @@ fragile deps, MIT-clean.
   and reads as 3D. Main quality lever if needed: a hand-authored cylindrical
   depth map. Knobs: `HERO_PARALLAX_AMP` (shift px), `HERO_PARALLAX_FOCUS` (pinned plane).
 
+## Follow-up: "still looks 2D" → cylinder-wrap turntable (the real win)
+
+DIBR parallax still read as a sliding 2D card because monocular depth on a
+frontal product shot is near-flat. Two findings closed the gap:
+
+1. **Synthesized cylinder depth** (`depth_parallax.py`, `HERO_PARALLAX_CYL`):
+   replace the flat monocular depth with a per-row half-cylinder profile so a
+   lateral move makes the centre travel more than the edges → the bottle turns.
+2. **Cylinder-wrap turntable** (`cylinder_turntable.py`, `HERO_TURNTABLE`) — the
+   strongest result. A beverage is a cylinder and a can's label wraps 360°, so
+   re-projecting the front photo onto a rotating cylinder is *geometrically
+   correct*: each output column samples the real label texel facing the camera
+   at that rotation (per-row centre+radius). Pure numpy, no Blender, label only
+   resampled. On the Coca-Cola bottle the label visibly wraps left/right — a
+   real rotating-bottle look from ONE photo.
+
+### Honest ceiling on "perfect 3D"
+
+A faithful walk-around from one frontal photo is **impossible** — the sides/back
+aren't in the data (information limit, not tooling). For **cylindrical** products
+(the whole beverage use case) the cylinder-wrap is effectively "perfect 3D" for a
+moderate spin, free and label-safe. For **non-cylindrical** products (boxes,
+irregular shapes) the faithful path is **multi-angle capture** → frame-sequence
+turntable (operator shoots ~12–24 photos / a 10s spin). Generation paths
+(TripoSR / paid I2V) trade label fidelity and were not adopted.
+
+Modes in the runner: `PCF_TURNTABLE=1` (cylinder spin) > `PCF_PARALLAX=1` (DIBR) >
+default zoompan. Turntable knobs: `HERO_TURNTABLE_DEG`, `HERO_TURNTABLE_MODE`
+(ping|spin).
+
 ## Deferred / next
 
 - Blender depth-mesh orbit (±12° relief) — higher effort, ~3/5; bench only if the
