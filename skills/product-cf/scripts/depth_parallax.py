@@ -36,11 +36,39 @@ amp = float(sys.argv[6]) if len(sys.argv) > 6 else 42.0     # max px shift at de
 focus = float(sys.argv[7]) if len(sys.argv) > 7 else 0.15   # depth plane held still (0..1)
 spec_dir = sys.argv[8] if len(sys.argv) > 8 and sys.argv[8] not in ("", "-") else None
 zoom_amp = float(sys.argv[9]) if len(sys.argv) > 9 else 0.06
+cyl_blend = float(sys.argv[10]) if len(sys.argv) > 10 else 0.75  # 1=pure cylinder, 0=pure mono depth
 
 canvas = np.asarray(Image.open(canvas_png).convert("RGBA")).astype(np.float32)
 H, W = canvas.shape[:2]
-depth = np.asarray(Image.open(depth_png).convert("L").resize((W, H))).astype(np.float32) / 255.0
-depth = gaussian_filter(depth, 3.0)
+alpha = canvas[..., 3] / 255.0
+mask = alpha > 0.5
+
+# Monocular depth (Depth-Anything): good global ordering, but near-FLAT inside a
+# frontal product shot — on its own the bottle reads as a sliding 2D card.
+mono = np.asarray(Image.open(depth_png).convert("L").resize((W, H))).astype(np.float32) / 255.0
+if mask.any():
+    m = mono[mask]
+    mono = (mono - m.min()) / (m.max() - m.min() + 1e-6)
+mono = mono * mask
+
+# CYLINDER depth: a bottle/can is a cylinder, so its TRUE depth bulges —
+# centre near, left/right edges far.  Synthesised per-row as a half-cylinder
+# cross-section over the silhouette.  THIS is what makes a lateral move read as
+# the product *turning* (centre travels more than edges) instead of sliding.
+cyl = np.zeros((H, W), np.float32)
+xs_full = np.arange(W, dtype=np.float32)
+for y in range(H):
+    cols = np.where(mask[y])[0]
+    if cols.size < 2:
+        continue
+    xL, xR = cols[0], cols[-1]
+    c = 0.5 * (xL + xR)
+    half = max((xR - xL) / 2.0, 1.0)
+    seg = np.clip(1.0 - ((xs_full[xL:xR + 1] - c) / half) ** 2, 0.0, 1.0)
+    cyl[y, xL:xR + 1] = np.sqrt(seg)
+
+depth = (cyl_blend * cyl + (1.0 - cyl_blend) * mono) * mask
+depth = gaussian_filter(depth, 2.0)
 d = depth - focus                     # signed depth relative to the pinned plane
 
 yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)

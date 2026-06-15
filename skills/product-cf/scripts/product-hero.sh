@@ -39,8 +39,9 @@ SWEEP="${HERO_SWEEP:-1}"
 MOTION="${HERO_MOTION:-push}"            # push | pull | panlr | panrl
 NORMAL_SWEEP="${HERO_NORMAL_SWEEP:-1}"   # 1 = wrapping specular (volume cue), 0 = flat geq sweep
 PARALLAX="${HERO_PARALLAX:-0}"           # 1 = depth DIBR parallax (real 3D motion), 0 = affine zoompan
-PARALLAX_AMP="${HERO_PARALLAX_AMP:-42}"  # max px shift at depth=1 (parallax strength)
+PARALLAX_AMP="${HERO_PARALLAX_AMP:-60}"  # max px shift at depth=1 (parallax strength)
 PARALLAX_FOCUS="${HERO_PARALLAX_FOCUS:-0.15}"  # depth plane held still (pins label/bg)
+PARALLAX_CYL="${HERO_PARALLAX_CYL:-0.75}"      # 1=pure synthesized cylinder depth, 0=pure monocular
 DEPTH_VENV="${PRODUCT_CF_DEPTH_VENV:-/Users/melons/ai/.venv}"  # has torch+transformers
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -152,7 +153,7 @@ if [[ "$PARALLAX" == "1" ]] && [[ -x "$DEPTH_VENV/bin/python" ]]; then
   PARDIR="$TMP/par"
   SPEC_ARG="-"; [[ "$HAVE_SPEC" == "1" ]] && SPEC_ARG="$SPECDIR"
   "$VENV/bin/python" "$SCRIPT_DIR/depth_parallax.py" "$CANVAS" "$DEPTHP" "$PARDIR" \
-    "$FRAMES" "$MOTION" "$PARALLAX_AMP" "$PARALLAX_FOCUS" "$SPEC_ARG"
+    "$FRAMES" "$MOTION" "$PARALLAX_AMP" "$PARALLAX_FOCUS" "$SPEC_ARG" 0.06 "$PARALLAX_CYL"
   "$FFMPEG_BIN" -y -loglevel error -framerate "$FPS" -i "$PARDIR/p_%04d.png" -c:v qtrle -an "$PRODZ"
 else
   # Affine zoompan fallback.  HERO_MOTION picks the move so a sequence of hero
