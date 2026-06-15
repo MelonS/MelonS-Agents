@@ -38,6 +38,10 @@ ZOOM="${HERO_ZOOM:-1.12}"
 SWEEP="${HERO_SWEEP:-1}"
 MOTION="${HERO_MOTION:-push}"            # push | pull | panlr | panrl
 NORMAL_SWEEP="${HERO_NORMAL_SWEEP:-1}"   # 1 = wrapping specular (volume cue), 0 = flat geq sweep
+PARALLAX="${HERO_PARALLAX:-0}"           # 1 = depth DIBR parallax (real 3D motion), 0 = affine zoompan
+PARALLAX_AMP="${HERO_PARALLAX_AMP:-42}"  # max px shift at depth=1 (parallax strength)
+PARALLAX_FOCUS="${HERO_PARALLAX_FOCUS:-0.15}"  # depth plane held still (pins label/bg)
+DEPTH_VENV="${PRODUCT_CF_DEPTH_VENV:-/Users/melons/ai/.venv}"  # has torch+transformers
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 W=1080; H=1920; FPS=30
@@ -115,13 +119,17 @@ fi
 # Either way the result is a grayscale yuv420p clip the same size/length as
 # the product, so stage E's blend=screen splice is identical.
 SWEEP_CLIP="$TMP/sweep.mp4"
+SPECDIR="$TMP/spec"; HAVE_SPEC=0
 if [[ "$SWEEP" == "1" ]]; then
   if [[ "$NORMAL_SWEEP" == "1" ]] && [[ -x "$VENV/bin/python" ]]; then
     log "D/F  wrapping specular (normal-map from alpha)"
-    SPECDIR="$TMP/spec"
     "$VENV/bin/python" "$SCRIPT_DIR/shade_normals.py" "$CANVAS" "$SPECDIR" "$FRAMES" 40 1.0
-    "$FFMPEG_BIN" -y -loglevel error -framerate "$FPS" -i "$SPECDIR/spec_%04d.png" \
-      -vf "format=yuv420p" -pix_fmt yuv420p "$SWEEP_CLIP"
+    HAVE_SPEC=1
+    # zoompan path consumes a video clip; parallax path consumes the frames dir
+    if [[ "$PARALLAX" != "1" ]]; then
+      "$FFMPEG_BIN" -y -loglevel error -framerate "$FPS" -i "$SPECDIR/spec_%04d.png" \
+        -vf "format=yuv420p" -pix_fmt yuv420p "$SWEEP_CLIP"
+    fi
   else
     log "D/F  label light-sweep (geq fallback)"
     "$FFMPEG_BIN" -y -loglevel error -f lavfi -i "color=c=black:s=540x960:r=${FPS}:d=${DUR}" \
@@ -130,36 +138,51 @@ if [[ "$SWEEP" == "1" ]]; then
   fi
 fi
 
-# ── E. product motion (alpha-preserved) + sweep screen ──────────────
-# HERO_MOTION picks the camera move so a sequence of hero shots isn't all
-# "zoom-in".  zoompan exprs use `on` (output frame), `zoom`, `iw/ih`.  The
-# SAME zoompan string is applied to the rgb and alpha branches so they stay
-# aligned when remerged.
-log "E/F  product motion (${MOTION}) + sweep"
+# ── E. product motion → PRODZ (alpha-preserved) ─────────────────────
 PRODZ="$TMP/prodz.mov"
-F="$FRAMES"
-case "$MOTION" in
-  pull)  ZE="${ZOOM}-(${ZOOM}-1)*on/${F}"; XE="iw/2-(iw/zoom/2)"; YE="ih/2-(ih/zoom/2)";;
-  panlr) ZE="1.10"; XE="(iw-iw/zoom)*on/${F}";     YE="ih/2-(ih/zoom/2)";;
-  panrl) ZE="1.10"; XE="(iw-iw/zoom)*(1-on/${F})"; YE="ih/2-(ih/zoom/2)";;
-  push|*) ZE="1+(${ZOOM}-1)*on/${F}"; XE="iw/2-(iw/zoom/2)"; YE="ih/2-(ih/zoom/2)";;
-esac
-ZPAN="zoompan=z='${ZE}':x='${XE}':y='${YE}':d=${F}:s=${W}x${H}:fps=${FPS}"
-if [[ "$SWEEP" == "1" ]]; then
-  "$FFMPEG_BIN" -y -loglevel error -i "$CANVAS" -i "$SWEEP_CLIP" -filter_complex "
-    [0:v]format=rgba,split=2[c1][c2];
-    [c1]alphaextract,${ZPAN}[ma];
-    [c2]${ZPAN}[mc];
-    [mc][1:v]blend=all_mode=screen:all_opacity=0.30[ml];
-    [ml][ma]alphamerge[pz]
-  " -map "[pz]" -c:v qtrle -an "$PRODZ"
+if [[ "$PARALLAX" == "1" ]] && [[ -x "$DEPTH_VENV/bin/python" ]]; then
+  # Depth-image-based-rendering: near pixels shift more than far → genuine 3D
+  # parallax (the thing affine zoompan can't do).  Real photo is only resampled.
+  log "E/F  depth parallax (DIBR, motion=${MOTION})"
+  CANVAS_RGB="$TMP/canvas_rgb.png"
+  "$FFMPEG_BIN" -y -loglevel error -f lavfi -i "color=c=0x2c333d:s=${W}x${H}" -i "$CANVAS" \
+    -filter_complex "[0:v][1:v]overlay=0:0:format=auto[o]" -map "[o]" -frames:v 1 "$CANVAS_RGB"
+  DEPTHP="$TMP/depth.png"
+  "$DEPTH_VENV/bin/python" "$SCRIPT_DIR/depth_estimate.py" "$CANVAS_RGB" "$DEPTHP"
+  PARDIR="$TMP/par"
+  SPEC_ARG="-"; [[ "$HAVE_SPEC" == "1" ]] && SPEC_ARG="$SPECDIR"
+  "$VENV/bin/python" "$SCRIPT_DIR/depth_parallax.py" "$CANVAS" "$DEPTHP" "$PARDIR" \
+    "$FRAMES" "$MOTION" "$PARALLAX_AMP" "$PARALLAX_FOCUS" "$SPEC_ARG"
+  "$FFMPEG_BIN" -y -loglevel error -framerate "$FPS" -i "$PARDIR/p_%04d.png" -c:v qtrle -an "$PRODZ"
 else
-  "$FFMPEG_BIN" -y -loglevel error -i "$CANVAS" -filter_complex "
-    [0:v]format=rgba,split=2[c1][c2];
-    [c1]alphaextract,${ZPAN}[ma];
-    [c2]${ZPAN}[mc];
-    [mc][ma]alphamerge[pz]
-  " -map "[pz]" -c:v qtrle -an "$PRODZ"
+  # Affine zoompan fallback.  HERO_MOTION picks the move so a sequence of hero
+  # shots isn't all "zoom-in".  The SAME zoompan string drives the rgb and
+  # alpha branches so they realign when remerged.
+  log "E/F  product motion (${MOTION}) + sweep [zoompan]"
+  F="$FRAMES"
+  case "$MOTION" in
+    pull)  ZE="${ZOOM}-(${ZOOM}-1)*on/${F}"; XE="iw/2-(iw/zoom/2)"; YE="ih/2-(ih/zoom/2)";;
+    panlr) ZE="1.10"; XE="(iw-iw/zoom)*on/${F}";     YE="ih/2-(ih/zoom/2)";;
+    panrl) ZE="1.10"; XE="(iw-iw/zoom)*(1-on/${F})"; YE="ih/2-(ih/zoom/2)";;
+    push|*) ZE="1+(${ZOOM}-1)*on/${F}"; XE="iw/2-(iw/zoom/2)"; YE="ih/2-(ih/zoom/2)";;
+  esac
+  ZPAN="zoompan=z='${ZE}':x='${XE}':y='${YE}':d=${F}:s=${W}x${H}:fps=${FPS}"
+  if [[ "$SWEEP" == "1" ]]; then
+    "$FFMPEG_BIN" -y -loglevel error -i "$CANVAS" -i "$SWEEP_CLIP" -filter_complex "
+      [0:v]format=rgba,split=2[c1][c2];
+      [c1]alphaextract,${ZPAN}[ma];
+      [c2]${ZPAN}[mc];
+      [mc][1:v]blend=all_mode=screen:all_opacity=0.30[ml];
+      [ml][ma]alphamerge[pz]
+    " -map "[pz]" -c:v qtrle -an "$PRODZ"
+  else
+    "$FFMPEG_BIN" -y -loglevel error -i "$CANVAS" -filter_complex "
+      [0:v]format=rgba,split=2[c1][c2];
+      [c1]alphaextract,${ZPAN}[ma];
+      [c2]${ZPAN}[mc];
+      [mc][ma]alphamerge[pz]
+    " -map "[pz]" -c:v qtrle -an "$PRODZ"
+  fi
 fi
 
 # ── F. composite product over bg + match-look grain/vignette ────────
