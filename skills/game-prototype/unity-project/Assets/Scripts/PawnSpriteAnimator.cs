@@ -165,7 +165,10 @@ namespace MelonS.GameProto
                 if (Mathf.Abs(dir.x) >= Mathf.Abs(dir.y))
                 {
                     row = ROW_E;
-                    flip = dir.x > 0.01f ? true : (dir.x < -0.01f ? false : flip);
+                    // E 원화는 동쪽(우향)을 본다(눈 x18, 작업 팔 x20-21).  flipX 는 서향 미러
+                    //  이므로 좌(서)향 이동에서만 flip — 이전 규약(우향=flip)이 반대라 림이
+                    //  이동/작업 대상을 등졌다(운영자 "나무 등지고 캠").
+                    flip = dir.x < -0.01f ? true : (dir.x > 0.01f ? false : flip);
                 }
                 else row = dir.y > 0f ? ROW_N : ROW_S;
 
@@ -179,7 +182,9 @@ namespace MelonS.GameProto
                 // 작업 대상 방향으로 facing (레퍼런스 문법 — 일하는 림은 작업물을 본다).
                 //  단일 출처라 모든 작업 동작이 대상을 바라본다.
                 Vector2 wd = (Vector2)workTargetPos - (Vector2)pos;
-                if (Mathf.Abs(wd.x) >= Mathf.Abs(wd.y)) { row = ROW_E; flip = wd.x > 0f; }
+                // 대상이 좌(서)에 있을 때만 flip(미러) — E 원화가 동쪽을 보므로.  이전 wd.x>0
+                //  은 반대라 동쪽 나무를 등지고 도끼질했다.
+                if (Mathf.Abs(wd.x) >= Mathf.Abs(wd.y)) { row = ROW_E; flip = wd.x < 0f; }
                 else row = wd.y > 0f ? ROW_N : ROW_S;
 
                 // 작업 스윙 2프레임 — per-pawn 클록 + 위상오프셋.  전역 Time.time 을 쓰면

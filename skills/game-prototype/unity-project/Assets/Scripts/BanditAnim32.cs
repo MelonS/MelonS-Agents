@@ -101,7 +101,8 @@ namespace MelonS.GameProto
                 if (Mathf.Abs(dir.x) >= Mathf.Abs(dir.y))
                 {
                     row = ROW_E;
-                    flip = dir.x > 0.01f ? true : (dir.x < -0.01f ? false : flip);
+                    // E 원화는 동쪽을 본다 → 서향 이동에서만 flip (PawnSpriteAnimator 와 동일 교정).
+                    flip = dir.x < -0.01f ? true : (dir.x > 0.01f ? false : flip);
                 }
                 else row = dir.y > 0f ? ROW_N : ROW_S;
 
