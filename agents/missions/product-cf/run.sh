@@ -47,22 +47,40 @@ log(){ printf '[pcf] %s\n' "$*" >&2; }
 # ── 1. hero clips — distinct camera moves (NOT all zoom-in) ──────────
 # Render one hero clip per motion so a sequence of reveals varies: push-in,
 # pull-back, lateral pan.  Each is ~3s, used whole as a hero sub-beat.
-# PCF_PARALLAX=1 -> depth DIBR hero shots (genuine 3D parallax); default 0
-# keeps the fast affine-zoompan path.
+# Hero motion mode:
+#   PCF_TURNTABLE=1 -> cylinder-wrap real 3D spin (best for cans/bottles)
+#   PCF_PARALLAX=1  -> depth DIBR parallax
+#   else            -> fast affine zoompan (push/pull/pan)
 PARALLAX="${PCF_PARALLAX:-0}"
-log "1/5  hero clips (cutout + label sweep; push/pull/pan$([[ "$PARALLAX" == 1 ]] && echo '; depth-parallax'))"
-HERO_MOTIONS="${PCF_HERO_MOTIONS:-push pull panlr}"
+TURNTABLE="${PCF_TURNTABLE:-0}"
 HERO_SUB=(); i=0
-for m in $HERO_MOTIONS; do
-  out="$SEG/hero-$m.mp4"
-  if [[ "${PCF_REUSE_HERO:-0}" == "1" && -f "$out" ]]; then
-    log "  reuse cached hero ($out)"
-  else
-    HERO_ZOOM="${HERO_ZOOM:-1.16}" HERO_MOTION="$m" HERO_PARALLAX="$PARALLAX" \
-      skills/product-cf/scripts/product-hero.sh "$PRODUCT_IMG" "$out" 3
-  fi
-  HERO_SUB+=("$out"); i=$((i+1))
-done
+if [[ "$TURNTABLE" == "1" ]]; then
+  log "1/5  hero clips (cylinder-wrap turntable — real 3D spin)"
+  # three spin amplitudes → each hero beat shows a different turn, for variety
+  for deg in 30 44 56; do
+    out="$SEG/hero-tt-$deg.mp4"
+    if [[ "${PCF_REUSE_HERO:-0}" == "1" && -f "$out" ]]; then
+      log "  reuse cached hero ($out)"
+    else
+      HERO_TURNTABLE=1 HERO_TURNTABLE_DEG="$deg" \
+        skills/product-cf/scripts/product-hero.sh "$PRODUCT_IMG" "$out" 3
+    fi
+    HERO_SUB+=("$out"); i=$((i+1))
+  done
+else
+  log "1/5  hero clips (cutout + label sweep; push/pull/pan$([[ "$PARALLAX" == 1 ]] && echo '; depth-parallax'))"
+  HERO_MOTIONS="${PCF_HERO_MOTIONS:-push pull panlr}"
+  for m in $HERO_MOTIONS; do
+    out="$SEG/hero-$m.mp4"
+    if [[ "${PCF_REUSE_HERO:-0}" == "1" && -f "$out" ]]; then
+      log "  reuse cached hero ($out)"
+    else
+      HERO_ZOOM="${HERO_ZOOM:-1.16}" HERO_MOTION="$m" HERO_PARALLAX="$PARALLAX" \
+        skills/product-cf/scripts/product-hero.sh "$PRODUCT_IMG" "$out" 3
+    fi
+    HERO_SUB+=("$out"); i=$((i+1))
+  done
+fi
 
 # ── 2. liquid B-roll from Pexels (video) ────────────────────────────
 log "2/5  fetch liquid B-roll"
