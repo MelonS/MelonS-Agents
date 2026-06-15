@@ -47,7 +47,10 @@ log(){ printf '[pcf] %s\n' "$*" >&2; }
 # ── 1. hero clips — distinct camera moves (NOT all zoom-in) ──────────
 # Render one hero clip per motion so a sequence of reveals varies: push-in,
 # pull-back, lateral pan.  Each is ~3s, used whole as a hero sub-beat.
-log "1/5  hero clips (cutout + 2.5D + label sweep; push/pull/pan)"
+# PCF_PARALLAX=1 -> depth DIBR hero shots (genuine 3D parallax); default 0
+# keeps the fast affine-zoompan path.
+PARALLAX="${PCF_PARALLAX:-0}"
+log "1/5  hero clips (cutout + label sweep; push/pull/pan$([[ "$PARALLAX" == 1 ]] && echo '; depth-parallax'))"
 HERO_MOTIONS="${PCF_HERO_MOTIONS:-push pull panlr}"
 HERO_SUB=(); i=0
 for m in $HERO_MOTIONS; do
@@ -55,7 +58,7 @@ for m in $HERO_MOTIONS; do
   if [[ "${PCF_REUSE_HERO:-0}" == "1" && -f "$out" ]]; then
     log "  reuse cached hero ($out)"
   else
-    HERO_ZOOM="${HERO_ZOOM:-1.16}" HERO_MOTION="$m" \
+    HERO_ZOOM="${HERO_ZOOM:-1.16}" HERO_MOTION="$m" HERO_PARALLAX="$PARALLAX" \
       skills/product-cf/scripts/product-hero.sh "$PRODUCT_IMG" "$out" 3
   fi
   HERO_SUB+=("$out"); i=$((i+1))
