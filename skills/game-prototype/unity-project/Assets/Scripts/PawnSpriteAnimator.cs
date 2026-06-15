@@ -41,10 +41,14 @@ namespace MelonS.GameProto
         private Sprite[,] frames;
         // 도구 합성 작업 프레임 캐시 — key: "{face}_{frame}_{tool}" (없으면 null=폴백)
         private static readonly Dictionary<string, Sprite> toolCache = new Dictionary<string, Sprite>();
+        private PawnUtilityAI util;           // 작업 타깃 단일 출처 (8개 워커 우선순위 집계)
         private int variantIdx;
         private int row = ROW_S;
         private bool flip;                    // W = E 프레임 flip (E 원화는 좌향)
         private float walkClock;
+        private float workClock;              // per-pawn 작업 스윙 클록 (전역 Time.time 대체)
+        private float swingPhase;             // per-pawn 스윙 위상 오프셋 (전 림 동시 스윙 robotic 방지)
+        private Vector2 velSmooth;            // 저역통과 속도 — facing 플립플롭·임계 깜빡임 제거
         private Vector3 prevPos;
 
         private void Awake()
@@ -57,6 +61,9 @@ namespace MelonS.GameProto
             miner = GetComponent<PawnMiner>();
             builder = GetComponent<PawnBuilder>();
             harvester = GetComponent<PawnHarvester>();
+            util = GetComponent<PawnUtilityAI>();
+            // 인스턴스별 스윙 위상 — 같은 변형이라도 림마다 도끼질 박자가 어긋나 자연스럽게.
+            swingPhase = (Mathf.Abs(GetInstanceID()) % 1000) / 1000f * 0.4f;
             prevPos = transform.position;
         }
 
@@ -130,32 +137,35 @@ namespace MelonS.GameProto
 
             float dt = Time.deltaTime;
             Vector3 pos = transform.position;
-            Vector2 delta = pos - prevPos;
+            // 저역통과 속도: 단일 프레임 delta 는 ~1000fps + 서브픽셀 + A* 경로 보정으로
+            //  부호가 떨려 facing 이 플립플롭한다.  속도 벡터를 ~0.08s 시정수로 평활해
+            //  거기서 speed(임계 깜빡임 방지)와 dir(방향 떨림 방지)을 함께 얻는다.
+            Vector2 instVel = dt > 0.0001f ? (Vector2)(pos - prevPos) / dt : Vector2.zero;
             prevPos = pos;
-            float speed = dt > 0.0001f ? delta.magnitude / dt : 0f;
+            velSmooth = Vector2.Lerp(velSmooth, instVel, 1f - Mathf.Exp(-12f * dt));
+            float speed = velSmooth.magnitude;
+            Vector2 dir = velSmooth;
 
             int col;
             bool sleeping = needs != null && needs.IsSleeping;
-            // grader r8/r9 갭 — 수면 시 침대 위에 '서 있는' 정면 포즈.  SleepPose 가
-            //  연출한다던 주석만 있고 코드는 없었다(전원 직립+zZ).  가시 자식을
-            //  78° 눕혀 '누워 잔다'를 만든다(전환 시점에만 set — 프레임 churn 없음).
-            // grader r8/r9 수면 누움 포즈는 PawnPoseDriver(자식 회전 단독 소유자)가
-            //  처리한다 — 여기서 localRotation 을 건드리면 PoseDriver 와 충돌(되돌림).
-            bool working = !sleeping && speed <= 0.15f
-                && ((chopper != null && chopper.HasTask)
-                 || (miner != null && miner.HasTask)
-                 || (builder != null && builder.HasTask)
-                 || (harvester != null && harvester.HasTask));
+            bool moving = !sleeping && speed > 0.15f;
+            // 작업 판정·페이싱 단일 출처(PawnUtilityAI.TryGetWorkTargetPos) — 8개 워커
+            //  (건설/벌목/채광/수확/채집/사냥/요리/치료) 우선순위 집계.  이전엔 작업 스윙
+            //  facing 이 chopper/miner 만 타깃을 봐 builder/harvester 가 작업물을 등졌다.
+            //  수면 누움 포즈는 PawnPoseDriver(자식 회전 단독 소유자)가 처리.
+            Vector3 workTargetPos = default;
+            bool hasWorkTarget = !sleeping && util != null && util.TryGetWorkTargetPos(out workTargetPos);
+            bool working = !moving && hasWorkTarget;
 
-            if (!sleeping && speed > 0.15f)
+            if (moving)
             {
                 // 방향: 지배 축.  좌우는 E 행 + flip (원화 E 는 좌향 → 우향 이동 = flip).
-                if (Mathf.Abs(delta.x) >= Mathf.Abs(delta.y))
+                if (Mathf.Abs(dir.x) >= Mathf.Abs(dir.y))
                 {
                     row = ROW_E;
-                    flip = delta.x > 0.0005f ? true : (delta.x < -0.0005f ? false : flip);
+                    flip = dir.x > 0.01f ? true : (dir.x < -0.01f ? false : flip);
                 }
-                else row = delta.y > 0f ? ROW_N : ROW_S;
+                else row = dir.y > 0f ? ROW_N : ROW_S;
 
                 // 보행 사이클 — 속도 비례 (4x 배속에서도 발걸음이 따라온다).
                 walkClock += dt * Mathf.Clamp(speed, 0.8f, 2.6f) * 5.5f;
@@ -163,25 +173,17 @@ namespace MelonS.GameProto
             }
             else if (working)
             {
-                // 운영자 피드백 #11/C3 (2026-06-12) — 작업 스윙이 마지막 '이동 방향'을
-                //  따라가 나무/광맥을 등진 채 도끼질하던 것: 작업 대상 방향으로 facing
-                //  (레퍼런스 문법 — 일하는 림은 작업물을 본다).
-                Vector2 workPos = default;
-                bool hasWorkPos = false;
-                if (chopper != null && chopper.HasTask && chopper.Target != null)
-                { workPos = chopper.Target.transform.position; hasWorkPos = true; }
-                else if (miner != null && miner.HasTask && miner.Target != null)
-                { workPos = miner.Target.transform.position; hasWorkPos = true; }
-                if (hasWorkPos)
-                {
-                    Vector2 wd = workPos - (Vector2)pos;
-                    if (Mathf.Abs(wd.x) >= Mathf.Abs(wd.y)) { row = ROW_E; flip = wd.x > 0f; }
-                    else row = wd.y > 0f ? ROW_N : ROW_S;
-                }
-                // 작업 스윙 2프레임 @ 2.5Hz — 도끼질/곡괭이질 리듬.
-                col = COL_WORK0 + ((int)(Time.time * 2.5f) & 1);
-                // 아트 v2 후속 (2026-06-12) — 손에 도구가 보인다: 벌목=도끼, 채광=곡괭이.
-                //  합성 프레임(Resources/pawn32tool)이 있으면 그걸로 교체, 없으면 맨손 폴백.
+                // 작업 대상 방향으로 facing (레퍼런스 문법 — 일하는 림은 작업물을 본다).
+                //  단일 출처라 모든 작업 동작이 대상을 바라본다.
+                Vector2 wd = (Vector2)workTargetPos - (Vector2)pos;
+                if (Mathf.Abs(wd.x) >= Mathf.Abs(wd.y)) { row = ROW_E; flip = wd.x > 0f; }
+                else row = wd.y > 0f ? ROW_N : ROW_S;
+
+                // 작업 스윙 2프레임 — per-pawn 클록 + 위상오프셋.  전역 Time.time 을 쓰면
+                //  정지 시 스윙이 desync 되고 전 림이 동시에 도끼질해 robotic 했다.
+                workClock += dt;
+                col = COL_WORK0 + ((int)((workClock + swingPhase) * 2.5f) & 1);
+                // 손 도구 합성: 벌목=도끼, 채광=곡괭이 (그 외 작업은 맨손).  없으면 폴백.
                 string tool = (chopper != null && chopper.HasTask) ? "axe"
                             : (miner != null && miner.HasTask) ? "pick" : null;
                 if (tool != null)
@@ -197,7 +199,8 @@ namespace MelonS.GameProto
             }
             else
             {
-                walkClock = 0f;
+                // idle — walkClock 을 0 으로 리셋하지 않는다(다음 보행이 0프레임부터
+                //  시작하는 '재시작 스냅' 제거).  증가만 멈추고 위상 유지.
                 col = COL_IDLE;                                 // 마지막 facing 의 idle 유지
                 if (sleeping) row = ROW_S;                      // 수면은 정면 (SleepPose 가 연출)
             }

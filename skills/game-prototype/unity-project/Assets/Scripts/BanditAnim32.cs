@@ -33,6 +33,8 @@ namespace MelonS.GameProto
         private int row = ROW_S;
         private bool flip;
         private float walkClock;
+        private float swingPhase;             // per-instance 스윙 위상 (전 강도 동시 스윙 robotic 방지)
+        private Vector2 velSmooth;            // 저역통과 속도 — facing 플립플롭 제거
         private Vector3 prevPos;
 
         private void Start()
@@ -41,6 +43,7 @@ namespace MelonS.GameProto
             string variant = (Mathf.Abs(gameObject.name.GetHashCode()) & 1) == 0 ? "a" : "b";
             frames = LoadSheet(variant);
             if (frames == null) { enabled = false; return; }
+            swingPhase = (Mathf.Abs(GetInstanceID()) % 1000) / 1000f * 0.4f;
 
             sr = GetComponent<SpriteRenderer>();
             bandit = GetComponent<BanditEnemy>();
@@ -83,32 +86,36 @@ namespace MelonS.GameProto
 
             float dt = Time.deltaTime;
             Vector3 pos = transform.position;
-            Vector2 delta = pos - prevPos;
+            // 저역통과 속도 — 단일 프레임 delta 의 부호 떨림으로 인한 facing 플립플롭 제거.
+            Vector2 instVel = dt > 0.0001f ? (Vector2)(pos - prevPos) / dt : Vector2.zero;
             prevPos = pos;
-            float speed = dt > 0.0001f ? delta.magnitude / dt : 0f;
+            velSmooth = Vector2.Lerp(velSmooth, instVel, 1f - Mathf.Exp(-12f * dt));
+            float speed = velSmooth.magnitude;
+            Vector2 dir = velSmooth;
 
             bool swinging = bandit != null && Time.time - bandit.LastAttackTime < SwingHoldSec;
 
             int col;
             if (speed > 0.15f)
             {
-                if (Mathf.Abs(delta.x) >= Mathf.Abs(delta.y))
+                if (Mathf.Abs(dir.x) >= Mathf.Abs(dir.y))
                 {
                     row = ROW_E;
-                    flip = delta.x > 0.0005f ? true : (delta.x < -0.0005f ? false : flip);
+                    flip = dir.x > 0.01f ? true : (dir.x < -0.01f ? false : flip);
                 }
-                else row = delta.y > 0f ? ROW_N : ROW_S;
+                else row = dir.y > 0f ? ROW_N : ROW_S;
 
                 walkClock += dt * Mathf.Clamp(speed, 0.8f, 2.6f) * 5.5f;
                 col = COL_WALK0 + ((int)walkClock & 3);
             }
             else if (swinging)
             {
-                col = COL_WORK0 + ((int)(Time.time * 2.5f) & 1);   // 클럽 스윙
+                // 클럽 스윙 2프레임 — per-instance 위상(전역 Time.time 동시 스윙 robotic 해소).
+                col = COL_WORK0 + ((int)((Time.time + swingPhase) * 2.5f) & 1);
             }
             else
             {
-                walkClock = 0f;
+                // idle — walkClock 리셋 안 함(재시작 스냅 제거), 증가만 멈춤.
                 col = COL_IDLE;
             }
 
