@@ -8,7 +8,6 @@
 
 **기계적인 단계는 로컬에서, 창작 단계는 Claude 가.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조에 동기화하고, job-hunt 는 짧은 키워드 하나를 역할 동의어 맵으로 자동 확장합니다.  커밋·이상 감지·스케줄 세 갈래의 감사 트리거로 시스템이 자기 드리프트를 스스로 잡습니다.  첫날부터 영어 + 한국어 듀얼 트랙.
 
-`미션 출력 100+ · 미션 타입 6종 · 프로덕션 스킬 2개(music-video, job-hunt) + 메타 스킬 1개(game-dev-agent) + 게임 프로토타입 4종 · ffmpeg 쉐이더 23개 · 커밋 게이트 15시나리오(입력 레벨) · 격리 채점 검증 루프 · 런타임 API 토큰 0개 · 감사 레이어 3개 · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -30,7 +29,7 @@
 
 </div>
 
-![MelonS-Agents — by the numbers: 100+ outputs, 2 production skills, 23 shaders, 0 runtime API tokens, 15-scenario gate, 19 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats-ko.png)
+![MelonS-Agents — 숫자로 보기: 출력 100+, 프로덕션 스킬 2개, 쉐이더 23개, 런타임 API 토큰 0개, 15시나리오 게이트, 서브에이전트 19개, 감사 레이어 3개, MIT](docs/visuals/01-hero-stats-ko.png)
 
 ## 60초 안에 시작 (계정 0개, `.env` 편집 0번)
 
@@ -47,14 +46,14 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 
 ## 이 프로젝트는 누구를 위한 것인가
 
-![Who this is for — five audiences: video creator, system researcher, job-seeker, game-verification watcher, skill integrator](docs/visuals/03-personas-ko.png)
+![이 프로젝트는 누구를 위한 것인가 — 다섯 독자층: 영상 제작자, 시스템 연구자, 구직자, 게임 검증 관찰자, 스킬 통합자](docs/visuals/03-personas-ko.png)
 
 - **파이프라인 코드를 짜지 않고도 숏폼 세로 영상을 만들고 싶은 분.**
   마법사에 음악 파일 하나 넘기면 비트 정렬 컷 + 빈티지 쉐이더 적용된
   9:16 쇼츠가 돌아옴.  프리미어, 애프터이펙트, GUI 다 불필요.
 - **마법처럼 포장하지 않고 정직하게 보여주는 멀티에이전트 시스템을
-  관찰하고 싶은 분.**  레포의 모든 커밋이 시스템 진화의 1단계 관찰
-  포인트; `docs/audit/` 는 감사가 잡은 모든 drift 기록; `docs/metrics/quality-trend.png`
+  관찰하고 싶은 분.**  레포의 모든 커밋이 시스템이 진화하는 과정에서 관찰 가능한
+  한 걸음; `docs/audit/` 는 감사가 잡은 모든 drift 기록; `docs/metrics/quality-trend.png`
   + `intervention.png` 는 자율성 + 품질 주장이 시간 흐름에 따라
   정직한지 차트화.
 - **실제 검색 방식에 맞춰진 한국 잡보드 다이제스트가 필요한 분.**
@@ -76,7 +75,7 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 
 ## 개요
 
-![Skills portfolio — music-video (Production), job-hunt (Production), game-dev-agent (in development), product-cf (parked)](docs/visuals/02-skills-ko.png)
+![스킬 포트폴리오 — music-video (프로덕션), job-hunt (프로덕션), game-dev-agent (개발 중), product-cf (보류)](docs/visuals/02-skills-ko.png)
 
 > [Claude Code](https://docs.anthropic.com/claude-code) 로 돌리는
 > 멀티에이전트 시스템 — 미디어 파이프라인은 macOS, 게임 프로토타입
@@ -179,7 +178,7 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 
 ### PawnSim — 에이전트가 지금 가장 활발히 반복 개발 중인 프로토타입 (2026-06 focus)
 
-![Verification — two gates: 15-scenario input-level repro gate per commit + isolated grader sub-agent on long soaks](docs/visuals/14-verification-loop-ko.png)
+![검증 — 게이트 둘: 커밋마다 15시나리오 입력 레벨 재현 게이트 + 장시간 소크의 격리 채점 서브에이전트](docs/visuals/14-verification-loop-ko.png)
 
 현재 가장 활발한 검증 표면은 **PawnSim** (Skill #3-A) 입니다 — 에이전트가
 만들면서 *동시에* 플레이테스트하는 타이트한 루프로 돌아가고, 운영자가 올린
@@ -219,126 +218,6 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 > 개입-감소 레버, 2026-05-22 music-video QA 패스 후 "quality bar 는
 > 버그가 아니라 시스템이 enforce 못한 6개 계약"). 각 항목은
 > *문제 → 제약 → 결정 → 산출물* 포맷.
-
-## 설계 노트
-
-![Local vs Claude cost firewall — Tier 1 Anthropic API orchestration vs Tier 2 local tools, 0 runtime API tokens](docs/visuals/04-cost-firewall-ko.png)
-
-![Auditor — 3 trigger layers: L1 post-commit hook, L2 15-min anomaly poll, L3 daily 03:00 baseline](docs/visuals/09-auditor-triggers-ko.png)
-
-일반적인 에이전트 데모와 차별화되는 설계 선택들:
-
-<details>
-<summary>▸ 설계 노트 — 일반적인 에이전트 데모와 차별화되는 선택들 — 펼쳐보기</summary>
-
-- **목표 계층과 작업 큐의 분리.** [`docs/goal.md`](docs/goal.md)는
-  활성 목표를 구체적 산출물로 정의; [`docs/roadmap.md`](docs/roadmap.md)는
-  일별 작업 큐. 큐가 비었다고 목표가 달성된 것은 **아님** — 목표의
-  "Done when" 조건만이 달성을 정의함. 분리 이유: 이전 24시간 구간이
-  인프라 커밋 11개를 쌓는 동안 큐는 0건이었고 실제 산출물도 0건이었던
-  사고를 다시 막기 위함.
-- **운영 계약은 커밋된 단일 출처.** 2026-05-22에 portability 이유로
-  두 파일로 분리:
-  [`docs/operator-contract.md`](docs/operator-contract.md)는 이 프로젝트의
-  12개 하드 룰 + 프로젝트 한정 컨벤션(이 레포의 README 구조, README
-  유지보수 cadence).
-  [`config/claude-global.template.md`](config/claude-global.template.md)은
-  프로젝트 간 이동하는 운영자 스타일 선호(이중 스택 리포팅, 터미널
-  포맷, 배치 실행, 글쓰기 톤, idle 시그널, 스크럼-마스터 footer); install
-  스크립트가 BEGIN/END 마커 사이에 idempotent하게 `~/.claude/CLAUDE.md`로
-  렌더링. 에이전트의 로컬 메모리는 각 룰의 canonical 파일을 가리키는
-  빠른 캐시; 두 곳이 어긋나면 canonical이 이기고 메모리가 수정됨.
-- **오케스트레이션과 실행 사이의 비용 방화벽.** Anthropic API 토큰은
-  Tier 1 오케스트레이션에서만 소비. 미션 실행(전사 → 선택 → 렌더
-  → QA)은 `whisper.cpp` + `ollama` + `ffmpeg` 로컬 실행이며
-  토큰 비용 0. [`docs/cost-model.md`](docs/cost-model.md) 참조.
-- **별도 트랙 auditor + 능동 알림 surface.**
-  [`auditor`](.claude/agents/auditor.md) 서브에이전트는 launchd로
-  매일 03:00 발화, 저장소 전체를 읽기 전용 순회, 안정 채널에 기록:
-  [`docs/audit/CURRENT-ALERT.md`](docs/audit/)는 최근 verdict이
-  비-CLEAN일 때만 존재 — 다음 인터랙티브 세션은 목표를 잡기 전
-  이 파일을 의무적으로 읽음.
-- **파일 기반 서브에이전트 핸드오프.** 서브에이전트들은 대화
-  히스토리를 공유하지 않음. 커밋되는 파일(`plan.md` / `MANIFEST.md`
-  / `qa-report.md`)을 통해 통신. 각 서브에이전트의 컨텍스트는 자신의
-  프롬프트 + 자신이 읽는 매니페스트로 한정됨 — 예측 가능한 토큰
-  비용, 예측 가능한 실패 모드.
-- **운영자 도구.** 시스템 상태를 표면에 띄우고 일상적인 상태-확인
-  프롬프트를 흡수해서 운영자가 타이핑할 필요가 없게 만드는 스크립트들.
-  [`scripts/doctor.sh`](scripts/doctor.sh)는 Claude 호출 없는 ~2초
-  헬스 체크 — CLI 도구, env 키, 스케줄러, 감사 알림, git 상태, 디스크,
-  스킬별 활성화, 스킬 매니페스트 drift; `--json` 출력은
-  `actionable_warn` 필드를 포함해서 opt-in env 키 + git-tree 같은
-  노이즈를 카운트에서 제외함.
-  [`scripts/audit-skill-drift.sh`](scripts/audit-skill-drift.sh)는
-  13번째 감사 룰 — 각 스킬의 LIVE 플래그 매니페스트가 실제 스크립트의
-  게이팅과 일치하는지 검증.
-  [`scripts/statusline.sh`](scripts/statusline.sh)는 Claude Code
-  statusline — doctor 의 JSON 캐시 (60초 백그라운드 regen) 와
-  goal-lock 스킬을 읽어서 `doctor:⚠N · goal:N/M · audit⚠` 를
-  상시 표시; "지금 상태가 뭐임?" 이 타이핑 없이 답됨.
-  [`scripts/log-decision.sh`](scripts/log-decision.sh) 는
-  [`docs/autonomous-decisions.md`](docs/autonomous-decisions.md) 에
-  한 줄 entry 를 append — 에이전트가 오버나잇 작업 중 unilateral
-  결정을 내릴 때 기록, 운영자는 아침에 한 페이지를 스캔해서 무엇이
-  결정됐는지 확인.
-  [`outputs/review-queue/`](outputs/review-queue/) + 3 개 스크립트
-  (`review-queue-add.sh` / `-digest.sh` / `-decide.sh`) 는 batched
-  taste-decision 큐 — music-video 렌더가 per-mp4 ping 대신 여기로
-  auto-enqueue.
-  [`scripts/morning-brief.sh`](scripts/morning-brief.sh) — 위 모든
-  것을 한 페이지 overnight digest 로 결합하는 단일 명령: doctor
-  verdict, audit 상태, intervention trend (7-day Δ), 12h 전부터의
-  커밋 + attribution, 오늘 자율 결정, review-queue pending 카운트,
-  blockers.  Read-only.  "밤사이 뭐 됐어?" 의 canonical 답.
-  도구별 what/when/output 표 전체 카탈로그:
-  [`docs/operator-tooling.md`](docs/operator-tooling.md).
-
-</details>
-
-## 자율성 신호 — 운영자 개입 추세
-
-사람이 계속 조타해야 하는 멀티 에이전트 시스템은 사실 자기가
-대체하려던 그 노력을 그대로 다시 들이고 있을 뿐입니다.  이 차트는
-그것을 정직하게 측정합니다 — `main` 의 모든 커밋을 **user-initiated**
-(운영자가 필요를 surface, 옵션을 선택, deliverable 을 승인) 와
-**agent-autonomous** (감사가 drift 포착, 로드맵 pull, 인프라
-유지보수) 로 분류하고, 운영자의 로컬 Claude Code 세션 로그에서
-프롬프트 횟수와 활성 세션 분을 함께 추출합니다.
-
-![투-패널 개입 추세 — Panel A (일별 커밋 분류) 는 일별 커밋 수를 initiator 별로 스택 (에이전트 자율 파랑 / 운영자 주도 빨강) + 운영자 주도 비율선 + 일별 % 라벨; Panel B (운영자 참여도) 는 로컬 Claude Code 세션 JSONL 에서 추출한 일별 운영자 프롬프트 수와 활성 세션 분.  영문 mirror: docs/metrics/intervention-en.png](docs/metrics/intervention-ko.png)
-
-목표: 에이전트 시스템이 더 많은 결정을 흡수할수록 두 패널 모두
-하향 추세.
-[`scripts/generate-intervention-chart.py`](scripts/generate-intervention-chart.py)
-가 `git log` + 로컬 Claude Code 세션 JSONL 에서 두 패널을 재구성 —
-macOS 워크스테이션에선 launchd 가 매일 02:00 KST 에 자동 실행하고,
-지금처럼 Windows 에서 게임 스프린트 중일 땐 수동으로 재생성합니다
-(스크립트는 2026-06-12 부터 크로스플랫폼).  참여도 패널은 재생성을
-실행한 머신에 저장된 세션만 집계하므로, 다른 머신에서 작업한 날은
-0 이 아니라 공백으로 읽어야 합니다.  분류 휴리스틱 + 감소 분석은
-[`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md)
-에 정리; 일별 raw 데이터는
-[`docs/metrics/intervention.json`](docs/metrics/intervention.json).
-
-## 품질 신호 — 미션 결과 추세
-
-자율성 신호의 짝.  *자율성* 은 "운영자 개입이 줄고 있나?" 를 묻고,
-*품질* 은 "파이프라인이 시간이 지날수록 더 안정적인 결과물을
-내고 있나?" 를 묻습니다.  모든
-`records/missions/<date>/<id>/qa-report.md` 의
-`Verdict: PASS|FAIL` + `attempt N of M` 를 파싱하고, qa-report 가
-없는 미션 (music-video 계열 — 미션별 retry 하네스 없음) 은
-"metrics.json only" 로 카운트합니다.
-
-![투-패널 미션 결과 추세 — Panel A (일별 결과 구성) 는 일별 미션 수를 outcome 별로 스택 (1회 시도 PASS 초록 / 재시도 후 PASS 호박색 / FAIL 빨강 / metrics.json 만 있음 옅은 초록) + 1회 시도 PASS 비율선; Panel B (일별 미션 타입 구성) 는 일별 미션 수를 mission_type 별로 스택 (music-video / faceless-short / highlight / summarize / shorts-batch) — highlight 시대 → faceless 파일럿 → 현재 music-video 포커스로의 production pivot 가 한눈에 보임.  영문 mirror: docs/metrics/quality-trend-en.png](docs/metrics/quality-trend-ko.png)
-
-Panel B 가 시스템의 진화를 한눈에 보여줍니다 — 2026-05-17 의 spike
-는 faceless 파일럿 배치 (8 → 33 missions/day); 그 이후 평탄 구간은
-현재 music-video 포맷이 일일 3-8 렌더의 sustainable cadence 에
-정착한 모습.  재생성:
-`.venv/bin/python scripts/generate-quality-trend-chart.py`; 일별
-raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.json).
 
 ## 샘플 출력
 
@@ -462,7 +341,7 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
 
 ### Music-video 파일럿 (포맷 피벗 후, 2026-05-17)
 
-![Music-video evolution v1 to v6 — each version adds one delta; v5 validated and promoted to run.sh](docs/visuals/11-mv-evolution-ko.png)
+![Music-video 진화 v1→v6 — 버전마다 델타 하나씩 추가; v5 검증 후 run.sh 로 승격](docs/visuals/11-mv-evolution-ko.png)
 
 `music-video` 미션은 60초 9:16 쇼츠를 만드는데, **음악이 메시지**입니다 —
 운영자가 공급한 음악 파일이 유일한 오디오 트랙, 컷은 `aubiotrack` 으로
@@ -494,7 +373,7 @@ v5 = 운영자 검증 완료 → 정식
 
 #### 장르 카탈로그 한눈에 보기 (2026-05-20 → 2026-05-23 프로덕션 배치의 중반 정지 프레임)
 
-![Genre catalog — 19 genre presets, 7 grade profiles; 6 genre to grade tiles with color swatches](docs/visuals/13-genre-catalog-ko.png)
+![장르 카탈로그 — 장르 preset 19개, grade profile 7개; 장르→grade 타일 6개 + 컬러 스와치](docs/visuals/13-genre-catalog-ko.png)
 
 최근 렌더에서 뽑은 6개 중반 정지 프레임.  각 row 는 동일한 generic
 Pexels 스톡 footage 가 장르별 `grade_profile` (2026-05-22 출시) 을
@@ -527,7 +406,7 @@ grade + shader 스택 자체임.
 
 #### 포스트프로세싱 쉐이더 — 1차 패스 (2026-05-17 저녁)
 
-![23 ffmpeg shaders across 3 stages, pure filter graphs, genre-routed; cel-shading deferred](docs/visuals/12-shaders-ko.png)
+![ffmpeg 쉐이더 23개, 3스테이지, 순수 필터 그래프, 장르별 라우팅; cel-shading 은 보류](docs/visuals/12-shaders-ko.png)
 
 아래는 2026-05-17 에 ship 된 첫 4개 쉐이더의 narrative 입니다.  이후
 19개가 추가 ship 됨 — 2026-05-21 (장르-인식 확장: scanline /
@@ -586,7 +465,7 @@ Diffusion + AnimateDiff, ComfyUI, RunwayML / Kaiber) 중 하나가
 ```
 
 <details>
-<summary><b>이전 미션 (historical)</b> — <code>faceless-short</code> 내레이션 시대 + v1 <code>highlight</code> / <code>shorts-batch</code> + faceless 점수표</summary>
+<summary><b>이전 미션 (참고용)</b> — <code>faceless-short</code> 내레이션 시대 + v1 <code>highlight</code> / <code>shorts-batch</code> + faceless 점수표</summary>
 
 music-video 피벗 이전에 만들어진 미션들이라 현재 production 포맷은 아니지만, 시스템이 어떻게 진화했는지 보여주는 증거로 트리에 남겨둡니다.  지금 라이브로 굴러가는 작업과 시각적으로 경쟁하지 않도록 접어둡니다.
 
@@ -626,13 +505,57 @@ v5 → v6 상승폭 (Hittites EN +12점, Hydrogen EN +15점) 은 스크립트 �
 
 </details>
 
-## 분석가/리뷰어를 위한 안내
+## 자율성 신호 — 운영자 개입 추세
 
-이 저장소에 대한 읽기 전용 분석을 시작한다면
-[`docs/for-analysts.md`](docs/for-analysts.md)부터 보세요 — 1차
-진단 정확도를 위한 단일 진입점입니다. [`docs/cost-model.md`](docs/cost-model.md)
-(Anthropic 대 로컬 비용 구분)과 [`docs/architecture.md`](docs/architecture.md)
-(전체 데이터 흐름)과 함께 보면 됩니다.
+사람이 계속 조타해야 하는 멀티 에이전트 시스템은 사실 자기가
+대체하려던 그 노력을 그대로 다시 들이고 있을 뿐입니다.  이 차트는
+그것을 정직하게 측정합니다 — `main` 의 모든 커밋을 **user-initiated**
+(운영자가 필요를 surface, 옵션을 선택, deliverable 을 승인) 와
+**agent-autonomous** (감사가 drift 포착, 로드맵 pull, 인프라
+유지보수) 로 분류하고, 운영자의 로컬 Claude Code 세션 로그에서
+프롬프트 횟수와 활성 세션 분을 함께 추출합니다.
+
+![투-패널 개입 추세 — Panel A (일별 커밋 분류) 는 일별 커밋 수를 initiator 별로 스택 (에이전트 자율 파랑 / 운영자 주도 빨강) + 운영자 주도 비율선 + 일별 % 라벨; Panel B (운영자 참여도) 는 로컬 Claude Code 세션 JSONL 에서 추출한 일별 운영자 프롬프트 수와 활성 세션 분.  영문 mirror: docs/metrics/intervention-en.png](docs/metrics/intervention-ko.png)
+
+목표: 에이전트 시스템이 더 많은 결정을 흡수할수록 두 패널 모두
+하향 추세.
+[`scripts/generate-intervention-chart.py`](scripts/generate-intervention-chart.py)
+가 `git log` + 로컬 Claude Code 세션 JSONL 에서 두 패널을 재구성 —
+macOS 워크스테이션에선 launchd 가 매일 02:00 KST 에 자동 실행하고,
+지금처럼 Windows 에서 게임 스프린트 중일 땐 수동으로 재생성합니다
+(스크립트는 2026-06-12 부터 크로스플랫폼).  참여도 패널은 재생성을
+실행한 머신에 저장된 세션만 집계하므로, 다른 머신에서 작업한 날은
+0 이 아니라 공백으로 읽어야 합니다.  분류 휴리스틱 + 감소 분석은
+[`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md)
+에 정리; 일별 raw 데이터는
+[`docs/metrics/intervention.json`](docs/metrics/intervention.json).
+
+## 품질 신호 — 미션 결과 추세 (렌더 시대, 2026-05-22 까지)
+
+> **과거 데이터 — 렌더 시대.**  이 차트는 미디어 출하가 활성
+> 트랙이던 시기, 즉 2026-05-22 까지의 music-video / faceless 렌더
+> 미션을 다룹니다.  2026-06 부터 활성 트랙은 PawnSim 게임
+> 프로토타입([개요](#개요) 참조)이고, 그 품질 신호는 미션별 QA
+> 패스율이 아니라 검증 루프 — 커밋마다 15시나리오 입력 레벨 재현
+> 게이트 + 격리 채점 루브릭 평결 — 입니다.  렌더 파이프라인의
+> 안정성이 어떻게 추세했는지 보여주는 정직한 증거로 남겨둡니다.
+
+자율성 신호의 짝.  *자율성* 은 "운영자 개입이 줄고 있나?" 를 묻고,
+*품질* 은 "파이프라인이 시간이 지날수록 더 안정적인 결과물을
+내고 있나?" 를 묻습니다.  모든
+`records/missions/<date>/<id>/qa-report.md` 의
+`Verdict: PASS|FAIL` + `attempt N of M` 를 파싱하고, qa-report 가
+없는 미션 (music-video 계열 — 미션별 retry 하네스 없음) 은
+"metrics.json only" 로 카운트합니다.
+
+![투-패널 미션 결과 추세 — Panel A (일별 결과 구성) 는 일별 미션 수를 outcome 별로 스택 (1회 시도 PASS 초록 / 재시도 후 PASS 호박색 / FAIL 빨강 / metrics.json 만 있음 옅은 초록) + 1회 시도 PASS 비율선; Panel B (일별 미션 타입 구성) 는 일별 미션 수를 mission_type 별로 스택 (music-video / faceless-short / highlight / summarize / shorts-batch) — highlight 시대 → faceless 파일럿 → 현재 music-video 포커스로의 production pivot 가 한눈에 보임.  영문 mirror: docs/metrics/quality-trend-en.png](docs/metrics/quality-trend-ko.png)
+
+Panel B 가 시스템의 진화를 한눈에 보여줍니다 — 2026-05-17 의 spike
+는 faceless 파일럿 배치 (8 → 33 missions/day); 그 이후 평탄 구간은
+music-video 포맷이 렌더 시대를 일일 3-8 렌더의 sustainable cadence
+로 마무리한 모습.  (로컬 `records/` 기반) 재생성:
+`.venv/bin/python scripts/generate-quality-trend-chart.py`; 일별
+raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.json).
 
 ## 아키텍처
 
@@ -641,7 +564,7 @@ v5 → v6 상승폭 (Hittites EN +12점, Hydrogen EN +15점) 은 스크립트 �
 작업 성격에 맞는 shape 를 고름:
 
 
-![The 3-shape skill model — Shape A missions-routed 5-agent pipeline, Shape B standalone, Shape ? future skills](docs/visuals/05-three-shapes-ko.png)
+![3-shape 스킬 모델 — Shape A 미션 라우팅 5-에이전트 파이프라인, Shape B standalone, Shape ? 미래 스킬](docs/visuals/05-three-shapes-ko.png)
 
 
 Shape A 의 서브에이전트는 현재 **planner=opus**, **resourcer=opus**,
@@ -656,9 +579,13 @@ sonnet 으로 revert.  Editor + qa 는 sonnet 유지 — 이 두 stage 는
 실무에서 가장 bash-scripted 되어 있어서 opus 의 추론 깊이가 bite 할
 여지가 작음.
 
-![Media pipeline — orchestrator + planner/resourcer (opus), editor/qa (sonnet), out-of-band auditor, file-based handoff](docs/visuals/06-media-pipeline-ko.png)
+![미디어 파이프라인 — orchestrator + planner/resourcer (opus), editor/qa (sonnet), 별도 트랙 auditor, 파일 기반 핸드오프](docs/visuals/06-media-pipeline-ko.png)
 
 서브 에이전트 정의: [`.claude/agents/`](.claude/agents/) · 미션 템플릿과 공용 셸 라이브러리: [`agents/`](agents/)
+
+미디어 미션의 엔드투엔드 흐름 — 운영자 프롬프트에서 orchestrator 의 `summary.md` 까지:
+
+![미션 흐름 — 사용자 미션에서 orchestrator summary.md 까지 7단계, planner/resourcer/editor/qa 경유](docs/visuals/10-mission-flow-ko.png)
 
 ### 게임 프로토타입 아키텍처 (Skill #3-A — PawnSim)
 
@@ -667,7 +594,7 @@ sonnet 으로 revert.  Editor + qa 는 sonnet 유지 — 이 두 stage 는
 (에이전트 측 빌드 체인) 와 *생성물* (Unity 프로젝트 자체):
 
 
-![PawnSim generator vs generated — game-dev-agent CLI build chain produces the Unity project, no manual Editor work](docs/visuals/08-unity-arch-ko.png)
+![PawnSim 생성기 vs 생성물 — game-dev-agent CLI 빌드 체인이 Unity 프로젝트를 생성, 에디터 수작업 없음](docs/visuals/08-unity-arch-ko.png)
 
 
 게임 내부 아키텍처를 떠받치는 세 가지 설계: **utility-AI Strategy 패턴** (각
@@ -684,7 +611,7 @@ ScriptableObject 로). `SceneSetup.cs` 는 1057L → ~310L 로 14개 partial 분
 [`.claude/agents/`](.claude/agents/) 에는 6개가 아니라 **19개** 정의가
 있습니다:
 
-![Game roster — 13 game subagents (opus direction/design/programming, sonnet execution/production) + 6 media = 19 total](docs/visuals/07-game-roster-ko.png)
+![게임 로스터 — 게임 서브에이전트 13개 (opus 방향/설계/프로그래밍, sonnet 실행/프로덕션) + 미디어 6개 = 총 19개](docs/visuals/07-game-roster-ko.png)
 
 opus 가 방향 / 설계 / 프로그래밍을, sonnet 이 실행 / 프로덕션 역할을
 맡습니다.  프로토타입마다 13개를 다 쓰는 건 아니고 — 로스터는 가용
@@ -694,22 +621,85 @@ opus 가 방향 / 설계 / 프로그래밍을, sonnet 이 실행 / 프로덕션 
 [`skills/game-prototype/README.md`](skills/game-prototype/README.md). 구동
 메타-스킬: [`skills/game-dev-agent/`](skills/game-dev-agent/).
 
-## 코드 / 데이터 분리
+## 설계 노트
 
-| 계층 | 경로 | 추적 여부 |
-|------|------|-----------|
-| 코드 (로직) | `.claude/agents/`, `agents/`, `config/`, `scripts/` | ✓ |
-| Skills (agentskills.io-spec 패키지) | `skills/<name>/` | ✓ |
-| 데이터 (산출물) | `records/missions/<date>/<id>/` | ✗ (gitignore) |
-| 시크릿 | `.env` | ✗ (gitignore) |
+![로컬 vs Claude 비용 방화벽 — Tier 1 Anthropic API 오케스트레이션 vs Tier 2 로컬 도구, 런타임 API 토큰 0개](docs/visuals/04-cost-firewall-ko.png)
 
-저장소는 에이전트 시스템 자체만 보관합니다. 미션 산출물 — 영상,
-전사, 생성된 자산 — 은 모두 로컬 `records/`에만 남습니다. GitHub에
-드러나는 것은 산출물이 아니라 시스템의 진화 과정입니다.
+![Auditor — 트리거 레이어 3개: L1 post-commit 훅, L2 15분 이상 감지 폴, L3 매일 03:00 베이스라인](docs/visuals/09-auditor-triggers-ko.png)
+
+일반적인 에이전트 데모와 차별화되는 설계 선택들:
+
+<details>
+<summary>▸ 설계 노트 — 일반적인 에이전트 데모와 차별화되는 선택들 — 펼쳐보기</summary>
+
+- **목표 계층과 작업 큐의 분리.** [`docs/goal.md`](docs/goal.md)는
+  활성 목표를 구체적 산출물로 정의; [`docs/roadmap.md`](docs/roadmap.md)는
+  일별 작업 큐. 큐가 비었다고 목표가 달성된 것은 **아님** — 목표의
+  "Done when" 조건만이 달성을 정의함. 분리 이유: 이전 24시간 구간이
+  인프라 커밋 11개를 쌓는 동안 큐는 0건이었고 실제 산출물도 0건이었던
+  사고를 다시 막기 위함.
+- **운영 계약은 커밋된 단일 출처.** 2026-05-22에 portability 이유로
+  두 파일로 분리:
+  [`docs/operator-contract.md`](docs/operator-contract.md)는 이 프로젝트의
+  12개 하드 룰 + 프로젝트 한정 컨벤션(이 레포의 README 구조, README
+  유지보수 cadence).
+  [`config/claude-global.template.md`](config/claude-global.template.md)은
+  프로젝트 간 이동하는 운영자 스타일 선호(이중 스택 리포팅, 터미널
+  포맷, 배치 실행, 글쓰기 톤, idle 시그널, 스크럼-마스터 footer); install
+  스크립트가 BEGIN/END 마커 사이에 idempotent하게 `~/.claude/CLAUDE.md`로
+  렌더링. 에이전트의 로컬 메모리는 각 룰의 canonical 파일을 가리키는
+  빠른 캐시; 두 곳이 어긋나면 canonical이 이기고 메모리가 수정됨.
+- **오케스트레이션과 실행 사이의 비용 방화벽.** Anthropic API 토큰은
+  Tier 1 오케스트레이션에서만 소비. 미션 실행(전사 → 선택 → 렌더
+  → QA)은 `whisper.cpp` + `ollama` + `ffmpeg` 로컬 실행이며
+  토큰 비용 0. [`docs/cost-model.md`](docs/cost-model.md) 참조.
+- **별도 트랙 auditor + 능동 알림 surface.**
+  [`auditor`](.claude/agents/auditor.md) 서브에이전트는 launchd로
+  매일 03:00 발화, 저장소 전체를 읽기 전용 순회, 안정 채널에 기록:
+  [`docs/audit/CURRENT-ALERT.md`](docs/audit/)는 최근 verdict이
+  비-CLEAN일 때만 존재 — 다음 인터랙티브 세션은 목표를 잡기 전
+  이 파일을 의무적으로 읽음.
+- **파일 기반 서브에이전트 핸드오프.** 서브에이전트들은 대화
+  히스토리를 공유하지 않음. 커밋되는 파일(`plan.md` / `MANIFEST.md`
+  / `qa-report.md`)을 통해 통신. 각 서브에이전트의 컨텍스트는 자신의
+  프롬프트 + 자신이 읽는 매니페스트로 한정됨 — 예측 가능한 토큰
+  비용, 예측 가능한 실패 모드.
+- **운영자 도구.** 시스템 상태를 표면에 띄우고 일상적인 상태-확인
+  프롬프트를 흡수해서 운영자가 타이핑할 필요가 없게 만드는 스크립트들.
+  [`scripts/doctor.sh`](scripts/doctor.sh)는 Claude 호출 없는 ~2초
+  헬스 체크 — CLI 도구, env 키, 스케줄러, 감사 알림, git 상태, 디스크,
+  스킬별 활성화, 스킬 매니페스트 drift; `--json` 출력은
+  `actionable_warn` 필드를 포함해서 opt-in env 키 + git-tree 같은
+  노이즈를 카운트에서 제외함.
+  [`scripts/audit-skill-drift.sh`](scripts/audit-skill-drift.sh)는
+  13번째 감사 룰 — 각 스킬의 LIVE 플래그 매니페스트가 실제 스크립트의
+  게이팅과 일치하는지 검증.
+  [`scripts/statusline.sh`](scripts/statusline.sh)는 Claude Code
+  statusline — doctor 의 JSON 캐시 (60초 백그라운드 regen) 와
+  goal-lock 스킬을 읽어서 `doctor:⚠N · goal:N/M · audit⚠` 를
+  상시 표시; "지금 상태가 뭐임?" 이 타이핑 없이 답됨.
+  [`scripts/log-decision.sh`](scripts/log-decision.sh) 는
+  [`docs/autonomous-decisions.md`](docs/autonomous-decisions.md) 에
+  한 줄 entry 를 append — 에이전트가 오버나잇 작업 중 unilateral
+  결정을 내릴 때 기록, 운영자는 아침에 한 페이지를 스캔해서 무엇이
+  결정됐는지 확인.
+  [`outputs/review-queue/`](outputs/review-queue/) + 3 개 스크립트
+  (`review-queue-add.sh` / `-digest.sh` / `-decide.sh`) 는 batched
+  taste-decision 큐 — music-video 렌더가 per-mp4 ping 대신 여기로
+  auto-enqueue.
+  [`scripts/morning-brief.sh`](scripts/morning-brief.sh) — 위 모든
+  것을 한 페이지 overnight digest 로 결합하는 단일 명령: doctor
+  verdict, audit 상태, intervention trend (7-day Δ), 12h 전부터의
+  커밋 + attribution, 오늘 자율 결정, review-queue pending 카운트,
+  blockers.  Read-only.  "밤사이 뭐 됐어?" 의 canonical 답.
+  도구별 what/when/output 표 전체 카탈로그:
+  [`docs/operator-tooling.md`](docs/operator-tooling.md).
+
+</details>
 
 ## 플랫폼 지원
 
-![Platform support matrix — macOS / Linux / Windows 11 capability coverage](docs/visuals/16-platform-matrix-ko.png)
+![플랫폼 지원 매트릭스 — macOS / Linux / Windows 11 기능 커버리지](docs/visuals/16-platform-matrix-ko.png)
 
 미디어 파이프라인은 macOS 가 **주 검증 플랫폼** (엔드투엔드 테스트
 완료)이고, 게임 프로토타입 트랙(PawnSim 빌드 체인, Unity batchmode)은
@@ -722,17 +712,26 @@ Darwin에서만 검증되어 있음.
 `agents/lib/env.sh`가 빈 `*_BIN` 변수를 `command -v`로 자동 해석하므로
 PATH에 도구가 설치되어 있으면 충분. 필요할 때만 `.env`에서 override.
 
-## 자율 모드
+## 사전 요구사항
 
-![Autonomy modes — Interactive (default) vs Autonomous, plus the money firewall](docs/visuals/17-autonomy-modes-ko.png)
+- **macOS 14+** (주 검증) 또는 **Linux** (best-effort) 또는 **Windows 11** (best-effort, NVIDIA + git-bash 경로 — 로컬 AI 비디오 작업에는 주 플랫폼) —
+  위 [플랫폼 지원](#플랫폼-지원) 참조.  윈도우 셋업은 [`docs/platform-windows.md`](docs/platform-windows.md) 참조.
+- **[Claude Code](https://docs.anthropic.com/claude-code)** — **agent-driven 경로** (orchestrator + 서브에이전트가 파이프라인 인계받음) 에만 필요.  script-only 경로는 없이도 작동.  플랜 선택은 아래 [Claude Code 요금제 + 사용량 안내](#claude-code-요금제--사용량-안내) 섹션 참조.
+- macOS는 **Homebrew**, Linux는 `apt` / `pacman` / 동등 패키지 매니저
+- **Apple Silicon 권장** — 렌더 가속에 `h264_videotoolbox` 사용,
+  `-allow_sw 1`로 Intel / Linux에서 libx264 자동 폴백
+- **여유 디스크 ~3 GB** — whisper.cpp `small` 모델 (~150 MB),
+  Pexels B-roll 다운로드 (미션당 ~50 MB, 자동 정리), 출력 mp4
+- **도구**: 전체 미션 툴체인(`ffmpeg`/`ffprobe`, `whisper.cpp`,
+  `ollama`, `yt-dlp`, `aubio`, `jq`)은 아래 **툴체인** 항목에
+  정리되어 있음. `scripts/bootstrap.sh`가 모두 점검하고 누락된
+  도구별로 OS에 맞는 `brew install …` / `apt install …` 명령을 정확히
+  출력 — 도구 누락이 침묵 실패로 끝나지 않음.
+- **API 키**: 무료 [Pexels API 키](https://www.pexels.com/api/)
+  (시간당 200 req — 개인 사용에 충분) — B-roll fetch 에 필요.
+  `bootstrap.sh` 가 `.env` 에 `PEXELS_API_KEY` 안 잡혀 있으면 경고.
 
-[`config/policies.yaml`](config/policies.yaml)에 정의됩니다.
-
-## 미션 흐름
-
-![Mission flow — 7 steps from user mission to orchestrator summary.md via planner/resourcer/editor/qa](docs/visuals/10-mission-flow-ko.png)
-
-## 툴체인
+**툴체인**
 
 **Agent layer**: [Claude Code](https://docs.anthropic.com/claude-code)
 (Anthropic CLI — 멀티 에이전트 orchestration 구동; 서브에이전트 정의는
@@ -746,28 +745,9 @@ ffmpeg-full`, Linux: `apt install ffmpeg`) · `aubio` (비트 / 온셋 감지
 faceless-short 내레이션) · macOS `say` (한국어 + fallback 음성) ·
 Pexels Videos API (무료 티어 — music-video + faceless-short B-roll).
 
-## 사전 요구사항
-
-- **macOS 14+** (주 검증) 또는 **Linux** (best-effort) 또는 **Windows 11** (best-effort, NVIDIA + git-bash 경로 — 로컬 AI 비디오 작업에는 주 플랫폼) —
-  위 [플랫폼 지원](#플랫폼-지원) 참조.  윈도우 셋업은 [`docs/platform-windows.md`](docs/platform-windows.md) 참조.
-- **[Claude Code](https://docs.anthropic.com/claude-code)** — **agent-driven 경로** (orchestrator + 서브에이전트가 파이프라인 인계받음) 에만 필요.  script-only 경로는 없이도 작동.  플랜 선택은 아래 [Claude Code 요금제 + 사용량 안내](#claude-code-요금제--사용량-안내) 섹션 참조.
-- macOS는 **Homebrew**, Linux는 `apt` / `pacman` / 동등 패키지 매니저
-- **Apple Silicon 권장** — 렌더 가속에 `h264_videotoolbox` 사용,
-  `-allow_sw 1`로 Intel / Linux에서 libx264 자동 폴백
-- **여유 디스크 ~3 GB** — whisper.cpp `small` 모델 (~150 MB),
-  Pexels B-roll 다운로드 (미션당 ~50 MB, 자동 정리), 출력 mp4
-- **도구**: `ffmpeg` (libass 포함 빌드), `ffprobe`, `whisper.cpp`,
-  `ollama`, `yt-dlp`, `aubio` (music-video 미션의 비트 / 온셋 감지에
-  필요), `jq`. `scripts/bootstrap.sh`가 모두 점검하고 누락된
-  도구별로 OS에 맞는 `brew install …` / `apt install …` 명령을 정확히
-  출력 — 도구 누락이 침묵 실패로 끝나지 않음.
-- **API 키**: 무료 [Pexels API 키](https://www.pexels.com/api/)
-  (시간당 200 req — 개인 사용에 충분) — B-roll fetch 에 필요.
-  `bootstrap.sh` 가 `.env` 에 `PEXELS_API_KEY` 안 잡혀 있으면 경고.
-
 ## Claude Code 요금제 + 사용량 안내
 
-![Claude Code plan fit ladder and per-mission token estimates](docs/visuals/18-pricing-ko.png)
+![Claude Code 플랜 적합도 사다리 + 미션당 토큰 추정치](docs/visuals/18-pricing-ko.png)
 
 Claude Code 가 멀티 에이전트 레이어 (orchestrator → planner → resourcer
 → editor → QA + 일일 auditor) 를 구동합니다.  미션 스크립트 자체는
@@ -780,18 +760,18 @@ agent-driven 경로에서만 소비됩니다.
 **미션 당 대략 토큰 사용량** (orchestration 만 — 로컬 ffmpeg / ollama
 / whisper.cpp 단계는 무료):
 
-위는 **rough estimate**.  실 수치는 자막 복잡도, 재시도 횟수 (QA
+위 수치는 **어림값**입니다.  실제 수치는 자막 복잡도, 재시도 횟수 (QA
 피드백 루프가 실패 stage 재실행), orchestrator 턴 안의 운영자 대화량에
 따라 변동.  Tier-1 / Tier-2 firewall — 로컬 vs Anthropic 분기 — 은
 [`docs/cost-model.md`](docs/cost-model.md) 에 문서화됨.
 
 **비용 안정성 팁**:
 - 운영자-Claude Code 대화 자체가 미션보다 토큰을 더 많이 쓸 수도
-  있음; 기획 대화는 집중해서.
+  있으니, 기획 대화는 집중해서 짧게 유지할 것.
 - `autonomous` 모드 (`AUTONOMY_MODE=true`) 는 `AUTONOMY_BUDGET_USD`
   강제 — 야간 배치에 유용.
-- 토큰 영수증은 Anthropic 콘솔 → 첫 몇 번 미션 후 본인 사용량 확인 후
-  플랜 조정 권장.
+- 토큰 사용 내역은 Anthropic 콘솔에 기록되니, 첫 몇 번 미션을 돌린
+  뒤 확인해 플랜을 조정하는 것을 권장.
 
 ## 빠른 시작
 
@@ -842,7 +822,7 @@ music-video 환경변수 + 플래그 + 쉐이더 카탈로그 전체 레퍼런�
 
 ### Skill #2 — job-hunt 짧은-키워드 데모 (~5초, 네트워크 없음)
 
-![job-hunt — one seed keyword expands to 26 synonyms, fetches 11 source plugins (5 live / 2 key / 4 mock), 5000+ to ~200](docs/visuals/15-job-hunt-sources-ko.png)
+![job-hunt — seed 키워드 하나가 동의어 26개로 확장, 소스 플러그인 11개 (라이브 5 / 키 2 / mock 4) fetch, 5000+ → ~200](docs/visuals/15-job-hunt-sources-ko.png)
 
 키워드 한 개가 role family 전체로 자동 확장 + mock-fallback
 소스에서 마크다운 digest 생성 (라이브 HTTP 없음, API 키 없음,
@@ -960,6 +940,19 @@ python ../game-dev-agent/scripts/agent.py integrate --project unity-project --me
 (headless 캡처), `-opensettings` (캡처 전 설정 패널 열기). 전체 조작·기능·정직한
 검증 상태는 [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
 
+## 코드 / 데이터 분리
+
+| 계층 | 경로 | 추적 여부 |
+|------|------|-----------|
+| 코드 (로직) | `.claude/agents/`, `agents/`, `config/`, `scripts/` | ✓ |
+| Skills (agentskills.io-spec 패키지) | `skills/<name>/` | ✓ |
+| 데이터 (산출물) | `records/missions/<date>/<id>/` | ✗ (gitignore) |
+| 시크릿 | `.env` | ✗ (gitignore) |
+
+저장소는 에이전트 시스템 자체만 보관합니다. 미션 산출물 — 영상,
+전사, 생성된 자산 — 은 모두 로컬 `records/`에만 남습니다. GitHub에
+드러나는 것은 산출물이 아니라 시스템의 진화 과정입니다.
+
 ## 운영 계약
 
 이 저장소는 전적으로 에이전트가 운영합니다. 일상 규칙:
@@ -969,7 +962,19 @@ python ../game-dev-agent/scripts/agent.py integrate --project unity-project --me
 - **결과 vs 작업 큐, 분리.** [`docs/goal.md`](docs/goal.md) 에 구체 deliverable 로서의 active goal, [`docs/roadmap.md`](docs/roadmap.md) 에 일별 작업 큐 (그 *Now* 섹션이 "다음에 무엇을 할지"의 단일 출처).
 - **결제 방화벽**: 유료 API, SaaS 구독, 클라우드 리소스 생성은 사용자의 명시적 확인이 필요. 로컬 자원(Ollama, FFmpeg, whisper.cpp, brew)은 완전 자율.
 
+**자율 모드** — Interactive (기본) vs Autonomous, 그리고 money firewall:
+
+![자율 모드 — Interactive (기본) vs Autonomous, 그리고 money firewall](docs/visuals/17-autonomy-modes-ko.png)
+
 전체 계약: [`CLAUDE.md`](CLAUDE.md) 및 [`config/policies.yaml`](config/policies.yaml) 자율 모드 규칙 참조.
+
+## 분석가/리뷰어를 위한 안내
+
+이 저장소에 대한 읽기 전용 분석을 시작한다면
+[`docs/for-analysts.md`](docs/for-analysts.md)부터 보세요 — 1차
+진단 정확도를 위한 단일 진입점입니다. [`docs/cost-model.md`](docs/cost-model.md)
+(Anthropic 대 로컬 비용 구분)과 [`docs/architecture.md`](docs/architecture.md)
+(전체 데이터 흐름)과 함께 보면 됩니다.
 
 ## 라이선스
 

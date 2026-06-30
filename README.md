@@ -8,7 +8,6 @@
 
 **Local for the mechanical, Claude for the creative.**  Phrase-aware ffmpeg shaders sync vintage visuals to music structure.  Short-keyword job-hunt expansion via role-synonym map.  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
 
-`100+ mission outputs · 6 mission types · 2 production skills (music-video, job-hunt) + 1 meta-skill (game-dev-agent) + 4 game prototypes · 23 ffmpeg shaders · 15-scenario input-level commit gate · isolated-grader verification loop · 0 runtime API tokens · 3 audit layers · MIT`
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
 ![Self-Evolving](https://img.shields.io/badge/Self--Evolving-8B5CF6?style=for-the-badge&logo=git&logoColor=white)
@@ -229,135 +228,6 @@ verification status (including known gaps) in
 > reduction levers, and the quality-bar-as-6-unenforced-contracts
 > after the 2026-05-22 music-video QA pass).  Each entry follows
 > *problem → constraint → decision → artifact*.
-
-## Design notes
-
-![Local vs Claude cost firewall — Tier 1 Anthropic API orchestration vs Tier 2 local tools, 0 runtime API tokens](docs/visuals/04-cost-firewall.png)
-
-![Auditor — 3 trigger layers: L1 post-commit hook, L2 15-min anomaly poll, L3 daily 03:00 baseline](docs/visuals/09-auditor-triggers.png)
-
-A few choices that distinguish this from a typical agent demo:
-
-<details>
-<summary>▸ Design notes — choices that set this apart from a typical agent demo — click to expand</summary>
-
-- **Outcome layer vs. work queue, kept separate.** [`docs/goal.md`](docs/goal.md)
-  holds the active goal as a concrete deliverable; [`docs/roadmap.md`](docs/roadmap.md)
-  holds the day-level work queue. An empty queue does **not** mean the
-  goal is achieved — only the goal's "Done when" criteria do. The split
-  exists because an earlier 24-hour stretch produced 11 infra commits
-  with the queue reading 0 open items and 0 actual outputs.
-- **Operator contract as canonical, committed source of truth.**
-  Split across two files on 2026-05-22 for portability:
-  [`docs/operator-contract.md`](docs/operator-contract.md) holds this
-  project's 12 hard rules + project-specific conventions (this repo's
-  README structure, README maintenance cadence).
-  [`config/claude-global.template.md`](config/claude-global.template.md)
-  holds the operator-style preferences that travel across projects
-  (dual-stack reporting, terminal format, batch execution, writing
-  tone, idle-state signaling, scrum-master footer); the install
-  script renders it idempotently into `~/.claude/CLAUDE.md` between
-  BEGIN/END markers. The agent's local memory is a fast-access
-  cache that links back to whichever file holds each rule's canonical
-  text; if the two disagree, the file wins and the memory entry is
-  corrected.
-- **Cost firewall between orchestration and execution.** Anthropic API
-  tokens are spent only during orchestration (Tier 1). Mission execution
-  (transcribe → select → render → QA) runs entirely on local tools —
-  `whisper.cpp` + `ollama` + `ffmpeg` — and costs zero tokens. See
-  [`docs/cost-model.md`](docs/cost-model.md).
-- **Out-of-band auditor with an active alert surface.** The
-  [`auditor`](.claude/agents/auditor.md) subagent runs daily at 03:00
-  via `launchd`, walks the whole repo read-only, and writes to a stable
-  channel: [`docs/audit/CURRENT-ALERT.md`](docs/audit/) exists iff the
-  latest verdict is non-CLEAN; the next interactive session is
-  contractually obligated to read it before picking up the goal.
-- **File-based subagent handoff.** Subagents do not share conversation
-  history. They communicate through committed files (`plan.md` /
-  `MANIFEST.md` / `qa-report.md`). Each subagent's context is bounded
-  by its prompt + the manifest it reads — predictable token cost,
-  predictable failure modes.
-- **Operator tooling.** Scripts that surface system state and
-  absorb routine status-check prompts so the operator doesn't have
-  to type them.
-  [`scripts/doctor.sh`](scripts/doctor.sh) is a Claude-free
-  ~2-second health check — CLI tools, env keys, schedulers, audit
-  alerts, git state, disk, per-skill activation, skill manifest
-  drift; `--json` output includes an `actionable_warn` field that
-  excludes opt-in env keys + git-tree so the signal isn't noisy.
-  [`scripts/audit-skill-drift.sh`](scripts/audit-skill-drift.sh) is
-  the 13th audit rule, verifying each skill's declared LIVE-flag
-  manifest matches its scripts' gating.
-  [`scripts/statusline.sh`](scripts/statusline.sh) is the Claude
-  Code statusline — it reads doctor's JSON cache (60s background
-  regen) and the goal-lock skill to render
-  `doctor:⚠N · goal:N/M · audit⚠` continuously, so "what's the
-  state?" gets answered without typing.
-  [`scripts/log-decision.sh`](scripts/log-decision.sh) appends a
-  one-line entry to
-  [`docs/autonomous-decisions.md`](docs/autonomous-decisions.md) —
-  the agent records unilateral decisions during overnight work so
-  the operator scans one page in the morning instead of typing
-  "what happened?" prompts.
-  [`outputs/review-queue/`](outputs/review-queue/) + three scripts
-  (`review-queue-add.sh` / `-digest.sh` / `-decide.sh`) is the
-  batched taste-decision queue — music-video renders auto-enqueue
-  here instead of pinging the operator per-mp4.
-  [`scripts/morning-brief.sh`](scripts/morning-brief.sh) — single
-  command that combines all the above into a one-page overnight
-  digest: doctor verdict, audit status, intervention trend (7-day
-  Δ), commits since 12h ago + attribution, today's autonomous
-  decisions, review-queue pending count, blockers.  Read-only;
-  the canonical answer to "what happened overnight?".
-  Full catalog with what/when/output table:
-  [`docs/operator-tooling.md`](docs/operator-tooling.md).
-
-</details>
-
-## Autonomy signal — operator-intervention trend
-
-A multi-agent system that needs constant human steering hasn't
-actually escaped the same effort it was meant to replace.  This
-chart is the honest measurement of that — every commit on `main`
-is classified as **user-initiated** (operator surfaced the need,
-picked an option, approved a deliverable) or **agent-autonomous**
-(audit caught drift, roadmap pull, infra maintenance), and the
-operator's local Claude Code session logs are mined for prompt
-count and active session minutes.
-
-![Two-panel intervention trend — Panel A (Daily commit attribution) stacks daily commit counts by initiator (agent-autonomous blue vs user-initiated red) with a user-initiated percentage line and per-day percentage labels; Panel B (Operator engagement) charts daily operator prompts and active session minutes mined from local Claude Code session JSONLs.  Korean mirror at docs/metrics/intervention-ko.png.](docs/metrics/intervention-en.png)
-
-Goal: both panels trend down as the agent system absorbs more
-decisions.  Rebuilt by
-[`scripts/generate-intervention-chart.py`](scripts/generate-intervention-chart.py)
-from `git log` + the local Claude Code session JSONLs — daily at
-02:00 KST via launchd on the macOS workstation, manually during the
-current Windows-based game sprint (the script went cross-platform
-2026-06-12).  The engagement panel only counts sessions stored on
-the machine that ran the regeneration, so days worked on another
-machine show as gaps, not zero engagement.
-Classification heuristics + reduction analysis at
-[`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md).
-Raw per-day data at [`docs/metrics/intervention.json`](docs/metrics/intervention.json).
-
-## Quality signal — mission-outcome trend
-
-The companion signal to autonomy.  *Autonomy* asks "is operator
-involvement going down?"; *quality* asks "is the pipeline producing
-more reliable output over time?".  Every
-`records/missions/<date>/<id>/qa-report.md` is parsed for
-`Verdict: PASS|FAIL` and `attempt N of M`; missions without a
-qa-report (the music-video class — no per-mission retry harness) are
-counted under "metrics.json only".
-
-![Two-panel mission-outcome trend — Panel A stacks daily mission counts by outcome (PASS attempt 1 green / PASS after retry amber / FAIL red / metrics.json only pale green) with a PASS-on-first-try percentage line; Panel B stacks daily mission counts by mission type (music-video / faceless-short / highlight / summarize / shorts-batch) showing the production pivot from highlight-era to faceless-pilot to current music-video focus.  Korean mirror at docs/metrics/quality-trend-ko.png.](docs/metrics/quality-trend-en.png)
-
-Panel B reads the system's evolution at a glance — the 2026-05-17
-peak is the faceless-pilot batch (8 → 33 missions/day); the
-post-pivot flat band is the current music-video format running at a
-sustainable 3–8 renders/day cadence.  Regenerate via
-`.venv/bin/python scripts/generate-quality-trend-chart.py`; raw
-per-day data at [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.json).
 
 ## Sample output
 
@@ -665,14 +535,60 @@ The v5 → v6 lift (+12 Hittites EN, +15 Hydrogen EN) came from swapping the scr
 
 </details>
 
-## For analysts / reviewers
+## Autonomy signal — operator-intervention trend
 
-Doing a read-only analysis of this repository? Start at
-[`docs/for-analysts.md`](docs/for-analysts.md) — a single-file entry
-point optimized for first-pass diagnosis. Pairs with
-[`docs/cost-model.md`](docs/cost-model.md) (where Anthropic vs. local
-cost lives) and [`docs/architecture.md`](docs/architecture.md) (full
-data-flow map).
+A multi-agent system that needs constant human steering hasn't
+actually escaped the same effort it was meant to replace.  This
+chart is the honest measurement of that — every commit on `main`
+is classified as **user-initiated** (operator surfaced the need,
+picked an option, approved a deliverable) or **agent-autonomous**
+(audit caught drift, roadmap pull, infra maintenance), and the
+operator's local Claude Code session logs are mined for prompt
+count and active session minutes.
+
+![Two-panel intervention trend — Panel A (Daily commit attribution) stacks daily commit counts by initiator (agent-autonomous blue vs user-initiated red) with a user-initiated percentage line and per-day percentage labels; Panel B (Operator engagement) charts daily operator prompts and active session minutes mined from local Claude Code session JSONLs.  Korean mirror at docs/metrics/intervention-ko.png.](docs/metrics/intervention-en.png)
+
+Goal: both panels trend down as the agent system absorbs more
+decisions.  Rebuilt by
+[`scripts/generate-intervention-chart.py`](scripts/generate-intervention-chart.py)
+from `git log` + the local Claude Code session JSONLs — daily at
+02:00 KST via launchd on the macOS workstation, manually during the
+current Windows-based game sprint (the script went cross-platform
+2026-06-12).  The engagement panel only counts sessions stored on
+the machine that ran the regeneration, so days worked on another
+machine show as gaps, not zero engagement.
+Classification heuristics + reduction analysis at
+[`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md).
+Raw per-day data at [`docs/metrics/intervention.json`](docs/metrics/intervention.json).
+
+## Quality signal — mission-outcome trend (render era, through 2026-05-22)
+
+> **Historical — render era.**  This chart covers the music-video /
+> faceless render missions through 2026-05-22, when shipping media was
+> the active track.  Since 2026-06 the active track is the PawnSim game
+> prototype (see [Overview](#overview)), whose quality signal is the
+> verification loop — a 15-scenario input-level repro gate per commit +
+> isolated-grader rubric verdicts — rather than a per-mission QA pass
+> rate.  Kept as honest evidence of how the render pipeline's
+> reliability trended.
+
+The companion signal to autonomy.  *Autonomy* asks "is operator
+involvement going down?"; *quality* asks "is the pipeline producing
+more reliable output over time?".  Every
+`records/missions/<date>/<id>/qa-report.md` is parsed for
+`Verdict: PASS|FAIL` and `attempt N of M`; missions without a
+qa-report (the music-video class — no per-mission retry harness) are
+counted under "metrics.json only".
+
+![Two-panel mission-outcome trend — Panel A stacks daily mission counts by outcome (PASS attempt 1 green / PASS after retry amber / FAIL red / metrics.json only pale green) with a PASS-on-first-try percentage line; Panel B stacks daily mission counts by mission type (music-video / faceless-short / highlight / summarize / shorts-batch) showing the production pivot from highlight-era to faceless-pilot to current music-video focus.  Korean mirror at docs/metrics/quality-trend-ko.png.](docs/metrics/quality-trend-en.png)
+
+Panel B reads the system's evolution at a glance — the 2026-05-17
+peak is the faceless-pilot batch (8 → 33 missions/day); the
+post-pivot flat band is the music-video format that closed out the
+render era at a sustainable 3–8 renders/day cadence.  Regenerate (from
+local `records/`) via
+`.venv/bin/python scripts/generate-quality-trend-chart.py`; raw
+per-day data at [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.json).
 
 ## Architecture
 
@@ -701,6 +617,10 @@ practice, with little room for opus's reasoning depth to bite.
 ![Media pipeline — orchestrator + planner/resourcer (opus), editor/qa (sonnet), out-of-band auditor, file-based handoff](docs/visuals/06-media-pipeline.png)
 
 Subagent definitions: [`.claude/agents/`](.claude/agents/) · Mission templates and shared shell libs: [`agents/`](agents/)
+
+The end-to-end media-mission flow — from the operator's prompt to the orchestrator's `summary.md`:
+
+![Mission flow — 7 steps from user mission to orchestrator summary.md via planner/resourcer/editor/qa](docs/visuals/10-mission-flow.png)
 
 ### Game prototype architecture (Skill #3-A — PawnSim)
 
@@ -739,18 +659,89 @@ Full structure, controls, feature coverage, and the honest verification status:
 [`skills/game-prototype/README.md`](skills/game-prototype/README.md). The
 meta-skill that drives it: [`skills/game-dev-agent/`](skills/game-dev-agent/).
 
-## Code / Data separation
+## Design notes
 
-| Layer | Path | Tracked |
-|-------|------|---------|
-| Code (logic) | `.claude/agents/`, `agents/`, `config/`, `scripts/` | ✓ |
-| Skills (agentskills.io-spec packages) | `skills/<name>/` | ✓ |
-| Data (outputs) | `records/missions/<date>/<id>/` | ✗ (gitignored) |
-| Secrets | `.env` | ✗ (gitignored) |
+![Local vs Claude cost firewall — Tier 1 Anthropic API orchestration vs Tier 2 local tools, 0 runtime API tokens](docs/visuals/04-cost-firewall.png)
 
-The repository contains only the agent system itself. Mission outputs —
-videos, transcripts, generated assets — stay local under `records/`.
-What appears on GitHub is the system's own evolution, not its products.
+![Auditor — 3 trigger layers: L1 post-commit hook, L2 15-min anomaly poll, L3 daily 03:00 baseline](docs/visuals/09-auditor-triggers.png)
+
+A few choices that distinguish this from a typical agent demo:
+
+<details>
+<summary>▸ Design notes — choices that set this apart from a typical agent demo — click to expand</summary>
+
+- **Outcome layer vs. work queue, kept separate.** [`docs/goal.md`](docs/goal.md)
+  holds the active goal as a concrete deliverable; [`docs/roadmap.md`](docs/roadmap.md)
+  holds the day-level work queue. An empty queue does **not** mean the
+  goal is achieved — only the goal's "Done when" criteria do. The split
+  exists because an earlier 24-hour stretch produced 11 infra commits
+  with the queue reading 0 open items and 0 actual outputs.
+- **Operator contract as canonical, committed source of truth.**
+  Split across two files on 2026-05-22 for portability:
+  [`docs/operator-contract.md`](docs/operator-contract.md) holds this
+  project's 12 hard rules + project-specific conventions (this repo's
+  README structure, README maintenance cadence).
+  [`config/claude-global.template.md`](config/claude-global.template.md)
+  holds the operator-style preferences that travel across projects
+  (dual-stack reporting, terminal format, batch execution, writing
+  tone, idle-state signaling, scrum-master footer); the install
+  script renders it idempotently into `~/.claude/CLAUDE.md` between
+  BEGIN/END markers. The agent's local memory is a fast-access
+  cache that links back to whichever file holds each rule's canonical
+  text; if the two disagree, the file wins and the memory entry is
+  corrected.
+- **Cost firewall between orchestration and execution.** Anthropic API
+  tokens are spent only during orchestration (Tier 1). Mission execution
+  (transcribe → select → render → QA) runs entirely on local tools —
+  `whisper.cpp` + `ollama` + `ffmpeg` — and costs zero tokens. See
+  [`docs/cost-model.md`](docs/cost-model.md).
+- **Out-of-band auditor with an active alert surface.** The
+  [`auditor`](.claude/agents/auditor.md) subagent runs daily at 03:00
+  via `launchd`, walks the whole repo read-only, and writes to a stable
+  channel: [`docs/audit/CURRENT-ALERT.md`](docs/audit/) exists iff the
+  latest verdict is non-CLEAN; the next interactive session is
+  contractually obligated to read it before picking up the goal.
+- **File-based subagent handoff.** Subagents do not share conversation
+  history. They communicate through committed files (`plan.md` /
+  `MANIFEST.md` / `qa-report.md`). Each subagent's context is bounded
+  by its prompt + the manifest it reads — predictable token cost,
+  predictable failure modes.
+- **Operator tooling.** Scripts that surface system state and
+  absorb routine status-check prompts so the operator doesn't have
+  to type them.
+  [`scripts/doctor.sh`](scripts/doctor.sh) is a Claude-free
+  ~2-second health check — CLI tools, env keys, schedulers, audit
+  alerts, git state, disk, per-skill activation, skill manifest
+  drift; `--json` output includes an `actionable_warn` field that
+  excludes opt-in env keys + git-tree so the signal isn't noisy.
+  [`scripts/audit-skill-drift.sh`](scripts/audit-skill-drift.sh) is
+  the 13th audit rule, verifying each skill's declared LIVE-flag
+  manifest matches its scripts' gating.
+  [`scripts/statusline.sh`](scripts/statusline.sh) is the Claude
+  Code statusline — it reads doctor's JSON cache (60s background
+  regen) and the goal-lock skill to render
+  `doctor:⚠N · goal:N/M · audit⚠` continuously, so "what's the
+  state?" gets answered without typing.
+  [`scripts/log-decision.sh`](scripts/log-decision.sh) appends a
+  one-line entry to
+  [`docs/autonomous-decisions.md`](docs/autonomous-decisions.md) —
+  the agent records unilateral decisions during overnight work so
+  the operator scans one page in the morning instead of typing
+  "what happened?" prompts.
+  [`outputs/review-queue/`](outputs/review-queue/) + three scripts
+  (`review-queue-add.sh` / `-digest.sh` / `-decide.sh`) is the
+  batched taste-decision queue — music-video renders auto-enqueue
+  here instead of pinging the operator per-mp4.
+  [`scripts/morning-brief.sh`](scripts/morning-brief.sh) — single
+  command that combines all the above into a one-page overnight
+  digest: doctor verdict, audit status, intervention trend (7-day
+  Δ), commits since 12h ago + attribution, today's autonomous
+  decisions, review-queue pending count, blockers.  Read-only;
+  the canonical answer to "what happened overnight?".
+  Full catalog with what/when/output table:
+  [`docs/operator-tooling.md`](docs/operator-tooling.md).
+
+</details>
 
 ## Platform support
 
@@ -767,32 +758,6 @@ All tool paths and endpoints are env-managed — `agents/lib/env.sh`
 resolves any blank `*_BIN` var via `command -v`, so a working PATH
 install is enough.  Override in `.env` only when needed.
 
-## Autonomy modes
-
-![Autonomy modes — Interactive (default) vs Autonomous, plus the money firewall](docs/visuals/17-autonomy-modes.png)
-
-Defined in [`config/policies.yaml`](config/policies.yaml).
-
-## Mission flow
-
-![Mission flow — 7 steps from user mission to orchestrator summary.md via planner/resourcer/editor/qa](docs/visuals/10-mission-flow.png)
-
-## Toolchain
-
-**Agent layer**: [Claude Code](https://docs.anthropic.com/claude-code)
-(Anthropic CLI — drives the multi-agent orchestration; subagent
-definitions in [`.claude/agents/`](.claude/agents/), per-project
-configuration in [`CLAUDE.md`](CLAUDE.md) +
-[`.claude/settings.json`](.claude/settings.json)).
-
-**Mission tools**: `ffmpeg` (libass-enabled — `brew install ffmpeg-full`
-on macOS, `apt install ffmpeg` on Linux) · `aubio` (beat / onset
-detection — `brew install aubio`) · `jq` · `yt-dlp` · `whisper.cpp`
-(`small`, multilingual) · `ollama` (`llama3.2:3b`) · `Kokoro-ONNX`
-(TTS, Apache 2.0 — faceless-short narration) · macOS `say` (Korean +
-fallback voice) · Pexels Videos API (free tier — B-roll for
-music-video + faceless-short).
-
 ## Prerequisites
 
 - **macOS 14+** (primary, fully tested) or **Linux** (best-effort) or **Windows 11** (best-effort, NVIDIA + git-bash path — primary for local AI video work) —
@@ -807,14 +772,30 @@ music-video + faceless-short).
   falls back to libx264 on Intel / Linux
 - **~3 GB free disk** — whisper.cpp `small` model (~150 MB), Pexels
   B-roll downloads (~50 MB / mission, auto-cleaned), output mp4s
-- **Tools**: `ffmpeg` (built with libass), `ffprobe`, `whisper.cpp`,
-  `ollama`, `yt-dlp`, `aubio` (for the music-video mission's beat /
-  onset detection), `jq`.  `scripts/bootstrap.sh` checks all of them
-  and prints an exact `brew install …` / `apt install …` command for
+- **Tools**: the full mission toolchain (`ffmpeg`/`ffprobe`,
+  `whisper.cpp`, `ollama`, `yt-dlp`, `aubio`, `jq`) is detailed under
+  **Toolchain** below.  `scripts/bootstrap.sh` checks all of them and
+  prints an exact `brew install …` / `apt install …` command for
   anything missing, so a missing tool isn't a silent failure.
 - **API key**: free [Pexels API key](https://www.pexels.com/api/)
   (200 req/hour — plenty for personal use) for B-roll fetch.
   `bootstrap.sh` warns if `PEXELS_API_KEY` isn't set in `.env`.
+
+**Toolchain**
+
+**Agent layer**: [Claude Code](https://docs.anthropic.com/claude-code)
+(Anthropic CLI — drives the multi-agent orchestration; subagent
+definitions in [`.claude/agents/`](.claude/agents/), per-project
+configuration in [`CLAUDE.md`](CLAUDE.md) +
+[`.claude/settings.json`](.claude/settings.json)).
+
+**Mission tools**: `ffmpeg` (libass-enabled — `brew install ffmpeg-full`
+on macOS, `apt install ffmpeg` on Linux) · `aubio` (beat / onset
+detection — `brew install aubio`) · `jq` · `yt-dlp` · `whisper.cpp`
+(`small`, multilingual) · `ollama` (`llama3.2:3b`) · `Kokoro-ONNX`
+(TTS, Apache 2.0 — faceless-short narration) · macOS `say` (Korean +
+fallback voice) · Pexels Videos API (free tier — B-roll for
+music-video + faceless-short).
 
 ## Claude Code pricing + usage guidance
 
@@ -1016,6 +997,19 @@ Useful flags: `-starthour 22` (night demo), `-delay 12 -screenshot <abs-path>`
 Full controls, feature coverage, and the honest verification status live in
 [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
 
+## Code / Data separation
+
+| Layer | Path | Tracked |
+|-------|------|---------|
+| Code (logic) | `.claude/agents/`, `agents/`, `config/`, `scripts/` | ✓ |
+| Skills (agentskills.io-spec packages) | `skills/<name>/` | ✓ |
+| Data (outputs) | `records/missions/<date>/<id>/` | ✗ (gitignored) |
+| Secrets | `.env` | ✗ (gitignored) |
+
+The repository contains only the agent system itself. Mission outputs —
+videos, transcripts, generated assets — stay local under `records/`.
+What appears on GitHub is the system's own evolution, not its products.
+
 ## Operator contract
 
 This repository is fully agent-operated. The day-to-day rules:
@@ -1025,7 +1019,20 @@ This repository is fully agent-operated. The day-to-day rules:
 - **Outcome vs work queue, kept separate.** [`docs/goal.md`](docs/goal.md) holds the active goal as a concrete deliverable; [`docs/roadmap.md`](docs/roadmap.md) holds the day-level work queue (its *Now* section is the source of truth for "what to work on next").
 - **Money firewall**: paid APIs, SaaS subscriptions, and cloud-resource creation require explicit user confirmation. Local resources (Ollama, FFmpeg, whisper.cpp, brew) stay fully autonomous.
 
+**Autonomy modes** — interactive (default) vs autonomous, plus the money firewall:
+
+![Autonomy modes — Interactive (default) vs Autonomous, plus the money firewall](docs/visuals/17-autonomy-modes.png)
+
 Full contract: see [`CLAUDE.md`](CLAUDE.md) and the [`config/policies.yaml`](config/policies.yaml) autonomy rules.
+
+## For analysts / reviewers
+
+Doing a read-only analysis of this repository? Start at
+[`docs/for-analysts.md`](docs/for-analysts.md) — a single-file entry
+point optimized for first-pass diagnosis. Pairs with
+[`docs/cost-model.md`](docs/cost-model.md) (where Anthropic vs. local
+cost lives) and [`docs/architecture.md`](docs/architecture.md) (full
+data-flow map).
 
 ## License
 

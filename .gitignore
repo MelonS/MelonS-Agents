@@ -55,6 +55,8 @@ assets/music/*
 !site/assets/*.png
 # Genre / topic grid subdirectories — committed evidence frames
 !site/assets/genre-grid/*.jpg
+# On-brand README diagram cards embedded inline on the Pages site
+!site/assets/visuals/*.png
 !docs/demo/*.jpg
 !docs/demo/2026-05-24-genre-grid/*.jpg
 *.jpeg

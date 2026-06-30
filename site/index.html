@@ -3,33 +3,53 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
+  <meta name="color-scheme" content="dark">
   <title>MelonS-Agents — an agent that builds and verifies its own colony-sim (PawnSim), plus two media skills</title>
   <meta name="description" content="A multi-agent system that builds AND verifies its own colony-sim game (PawnSim) — every commit gated by a 15-scenario input-level repro test, long soaks judged by an isolated grader sub-agent against a written rubric. Plus two production media skills (music-video shorts, Korean job-board digest). Local-first ($0 runtime), three-layer self-audit, human-in-the-loop ops, EN+KO.">
   <meta property="og:title" content="MelonS-Agents — an agent that builds and verifies its own game (PawnSim)">
   <meta property="og:description" content="Multi-agent system that builds a colony-sim and verifies its own work: 15-scenario input-level repro gate per commit + isolated-grader rubric verdicts. Plus two media skills (music-video, job-hunt). Local-first, $0 runtime, human-in-the-loop ops, EN+KO.">
-  <meta property="og:image" content="https://raw.githubusercontent.com/MelonS/MelonS-Agents/main/site/assets/pawnsim-built-house.png">
+  <meta property="og:image" content="https://raw.githubusercontent.com/MelonS/MelonS-Agents/main/site/assets/visuals/01-hero-stats.png">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://melons.github.io/MelonS-Agents/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0c'/%3E%3Cpath d='M16 5 L27 16 L16 27 L5 16 Z' fill='%23FF6B35'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header class="hero">
-  <nav class="topnav">
-    <a class="brand" href="#top">MelonS-Agents</a>
-    <div class="links">
-      <a href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/MelonS/MelonS-Agents/blob/main/README.ko.md" target="_blank" rel="noopener">한국어</a>
-      <a href="https://github.com/MelonS/MelonS-Agents/stargazers" target="_blank" rel="noopener">Star</a>
-    </div>
-  </nav>
+<nav class="topnav">
+  <a class="brand" href="#top">MelonS-<span class="agents">Agents</span></a>
+  <div class="links">
+    <a href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/MelonS/MelonS-Agents/blob/main/README.ko.md" target="_blank" rel="noopener">한국어</a>
+    <a class="star" href="https://github.com/MelonS/MelonS-Agents/stargazers" target="_blank" rel="noopener">★ Star</a>
+  </div>
+</nav>
 
-  <h1 id="top">An agent that builds — and <em>verifies</em> — its own game.<br><span class="muted">PawnSim colony-sim &middot; two media skills &middot; human-in-the-loop ops &middot; $0 runtime &middot; EN + KO</span></h1>
+<header class="hero">
+  <p class="eyebrow">Multi-agent system · agentskills.io</p>
+
+  <h1 id="top">An agent that builds — and <em>verifies</em> — its own game.
+    <span class="sub">PawnSim colony-sim · two media skills · human-in-the-loop ops · $0 runtime · EN + KO</span>
+  </h1>
+
+  <div class="pill-row" aria-label="System properties">
+    <span class="pill orange">AI-Powered</span>
+    <span class="pill purple">Self-Evolving</span>
+    <span class="pill green">Autonomous</span>
+  </div>
 
   <p class="lede">
-    The active work is <strong>PawnSim</strong> — a colony-sim vertical slice the agent builds <em>and</em> play-tests in a tight loop.  Every commit is gated by a <strong>15-scenario input-level repro test</strong> (synthesized clicks through the player's own UI path, asserting the <em>effect</em> — "the click placed the designation," not just "the click landed").  Long unattended soaks are graded by an <strong>isolated grader sub-agent</strong> against a written rubric: it sees only evidence — screenshots and raw logs — never the author's intent.  The operator files in-game feedback; that feedback becomes the next batch of fixes.  Two production media skills ship alongside — <strong>music-video</strong> (a track becomes a 9:16 short with phrase-aware cuts + 23 vintage shaders) and <strong>job-hunt</strong> (one seed keyword → a deduplicated Korean job-board digest).  Mechanical stages stay local (Unity batchmode, aubio, whisper.cpp, ffmpeg); creative stages opt into Claude, covered by the operator's existing subscription.  The repo also audits itself on every commit.
+    The active work is <strong>PawnSim</strong> — a colony-sim vertical slice the agent builds <em>and</em> play-tests in a tight loop, where the headline isn't features but verification: <strong>code existing ≠ verified working</strong>. Two production media skills ship alongside, every mechanical stage stays local at <strong>$0 runtime cost</strong>, and the repo audits itself on every commit.
   </p>
+  <ul class="lede-points">
+    <li>Every commit is gated by a <strong>15-scenario input-level repro test</strong> — synthesized clicks through the player's own UI path, asserting the <em>effect</em>, not just that the click landed.</li>
+    <li>Long unattended soaks are judged by an <strong>isolated grader sub-agent</strong> against a written rubric — it sees only evidence (screenshots + raw logs), never the author's intent.</li>
+    <li>Two media skills: <strong>music-video</strong> (a track → a 9:16 short with phrase-aware cuts + 23 vintage shaders) and <strong>job-hunt</strong> (one seed keyword → a deduplicated Korean job-board digest).</li>
+    <li>Mechanical stages stay local (Unity batchmode, aubio, whisper.cpp, ffmpeg); creative stages opt into Claude under the operator's existing subscription.</li>
+  </ul>
 
   <div class="cta-row">
     <a class="cta primary" href="#pawnsim">See PawnSim</a>
@@ -40,42 +60,78 @@
   </div>
 
   <figure class="demo">
-    <img src="assets/pawnsim-hero.gif" alt="PawnSim colony timelapse (2026-06-12 build, 16 in-game days) — three colonists start on open grass, designate a stockpile and farm plots, build a walled bedroom with beds, stove, and research bench, and grow the colony while raids are repelled. Every frame is from an unattended soak run; the loop shown (stockpile → housing → farming → logging → mining) is machine-verified by effect assertions and isolated-grader rubric verdicts." loading="lazy">
-    <figcaption>Unattended 16 in-game-day colony soak — agent-built and agent-verified.  The loop shown (stockpile → housing → farming → logging → mining) is gated by the 15-scenario input-level repro test and confirmed by isolated-grader rubric verdicts, not the author's claims.</figcaption>
+    <img src="assets/pawnsim-hero.gif" width="800" height="450" alt="PawnSim colony timelapse (2026-06-12 build, 16 in-game days) — three colonists start on open grass, designate a stockpile and farm plots, build a walled bedroom with beds, stove, and research bench, and grow the colony while raids are repelled. Every frame is from an unattended soak run; the loop shown (stockpile → housing → farming → logging → mining) is machine-verified by effect assertions and isolated-grader rubric verdicts." loading="lazy" decoding="async">
+    <figcaption>Unattended 16 in-game-day colony soak — agent-built and agent-verified. The loop shown (stockpile → housing → farming → logging → mining) is gated by the 15-scenario input-level repro test and confirmed by isolated-grader rubric verdicts, not the author's claims.</figcaption>
   </figure>
 </header>
 
 <section class="stats" aria-label="Project numbers at a glance">
   <ul>
-    <li><strong>15</strong><span>scenario input-level commit gate</span></li>
-    <li><strong>grader</strong><span>isolated rubric verdicts</span></li>
-    <li><strong>4</strong><span>game prototypes</span></li>
-    <li><strong>2 + 1</strong><span>production skills + meta-skill</span></li>
-    <li><strong>6</strong><span>mission types</span></li>
-    <li><strong>23</strong><span>ffmpeg shaders</span></li>
-    <li><strong>0</strong><span>runtime API tokens</span></li>
-    <li><strong>3</strong><span>audit layers (L1+L2+L3)</span></li>
-    <li><strong>EN+KO</strong><span>dual track from day 1</span></li>
-    <li><strong>MIT</strong><span>license</span></li>
+    <li>
+      <span class="num">100<small>+</small></span>
+      <span class="label">mission outputs shipped</span>
+      <span class="sub">across 6 mission types</span>
+    </li>
+    <li>
+      <span class="num">2<small>+1+4</small></span>
+      <span class="label">production skills · meta-skill · prototypes</span>
+      <span class="sub">music-video · job-hunt · game-dev-agent</span>
+    </li>
+    <li>
+      <span class="num fg">23</span>
+      <span class="label">ffmpeg shaders</span>
+      <span class="sub">3 stages · genre-routed</span>
+    </li>
+    <li>
+      <span class="num green">0</span>
+      <span class="label">runtime API tokens</span>
+      <span class="sub">local: ffmpeg · whisper · ollama</span>
+    </li>
+    <li>
+      <span class="num fg">15</span>
+      <span class="label">scenario commit gate</span>
+      <span class="sub">input-level repro + assertions</span>
+    </li>
+    <li>
+      <span class="num purple">19</span>
+      <span class="label">subagent definitions</span>
+      <span class="sub">6 media + 13 game roster</span>
+    </li>
+    <li>
+      <span class="num fg">3</span>
+      <span class="label">audit trigger layers</span>
+      <span class="sub">commit · anomaly · schedule</span>
+    </li>
+    <li>
+      <span class="num fg">MIT</span>
+      <span class="label">license · EN + KO dual-track</span>
+      <span class="sub">v0.4.0 · public</span>
+    </li>
   </ul>
 </section>
 
 <section id="pawnsim" class="block">
+  <p class="eyebrow">PawnSim · build &amp; verify</p>
   <h2>PawnSim — built and verified by the agent</h2>
-  <p>The most active surface right now is <strong>PawnSim</strong>, a top-down colony-sim vertical slice (Unity 6000.0.75f1 LTS).  Every sprite (a full 32px art generation — 3-direction walk/work pawn sheets, animals, terrain, furniture, all procedurally generated), every scene, and every C# system is CLI-scaffolded by the <code>game-dev-agent</code> meta-skill with <strong>no manual Unity Editor work</strong> — the whole <code>.exe</code> is reproducible from the command line.  Colonists chop / mine / farm / cook / haul / build / research / fight under a utility-AI; an AI Director schedules raids on a jittered clock; the player drafts pawns and paints build + designation orders.</p>
+  <p>The most active surface right now is <strong>PawnSim</strong>, a top-down colony-sim vertical slice (Unity 6000.0.75f1 LTS). Every sprite (a full 32px art generation — 3-direction walk/work pawn sheets, animals, terrain, furniture, all procedurally generated), every scene, and every C# system is CLI-scaffolded by the <code>game-dev-agent</code> meta-skill with <strong>no manual Unity Editor work</strong> — the whole <code>.exe</code> is reproducible from the command line. Colonists chop / mine / farm / cook / haul / build / research / fight under a utility-AI; an AI Director schedules raids on a jittered clock; the player drafts pawns and paints build + designation orders.</p>
+
+  <figure class="diagram">
+    <img src="assets/visuals/14-verification-loop.png" width="1800" height="1163" alt="Two verification gates diagram. Gate 1 — Input-level repro gate, fires on every commit, 15 scenarios: synthesized clicks drive the same UI path a player uses, with effect assertions ('the click placed a designation', not just 'the click landed'). Gate 2 — Isolated grader sub-agent, judges long soaks against a written rubric and sees only screenshots and raw logs, never the author's intent. Below: three bugs the grader caught that self-review missed (a silent harness blind spot that voided every designation, a food-rich colony starving to death, a permanent mental-break freeze), and the basic colony loop now machine-verified end-to-end: stockpile → housing → farm plots → logging → mining → deconstruct." loading="lazy" decoding="async">
+    <figcaption>The two verification gates — README · PawnSim verification</figcaption>
+  </figure>
 
   <div class="cards">
-    <article class="card">
+    <article class="card glow-orange">
       <h3>The headline is verification, not features</h3>
-      <p>The north star is <strong>"code existing ≠ verified working."</strong>  Two layers carry it:</p>
+      <p>The north star is <strong>"code existing ≠ verified working."</strong> Two layers carry it:</p>
       <ul>
         <li><b>15-scenario input-level repro gate</b> — on every commit, real synthesized clicks run through the <em>same UI path a player uses</em>, with <em>effect assertions</em>: "the click placed the designation," "the wall got built," "only the selected tree was chopped" — not just "the click landed."</li>
-        <li><b>Isolated-grader soak loop</b> — long unattended soaks are judged by a separate sub-agent against a written rubric.  The grader sees only evidence (screenshots + raw logs), never the author's intent, which blocks author self-grading bias.</li>
+        <li><b>Isolated-grader soak loop</b> — long unattended soaks are judged by a separate sub-agent against a written rubric. The grader sees only evidence (screenshots + raw logs), never the author's intent, which blocks author self-grading bias.</li>
       </ul>
-      <p class="muted">A failing gate means no advance: fix-in-place or roll back.  The basic colony loop (stockpile → housing with real indoor effects → permanent farm plots → logging → mining → deconstruct) is machine-verified end-to-end, with the grader verdicts committed alongside the fixes.</p>
+      <p class="muted">A failing gate means no advance: fix-in-place or roll back. The basic colony loop (stockpile → housing with real indoor effects → permanent farm plots → logging → mining → deconstruct) is machine-verified end-to-end, with the grader verdicts committed alongside the fixes.</p>
     </article>
 
-    <article class="card">
+    <article class="card glow-green">
       <h3>What the grader caught that self-review missed</h3>
       <p>The verdicts repeatedly surfaced defects the author's own review passed over — the honest proof the loop is worth its cost:</p>
       <ul>
@@ -83,108 +139,223 @@
         <li>A "food-rich colony starving to death" mood-gate trap.</li>
         <li>A permanent-mental-break colony freeze.</li>
       </ul>
-      <p class="muted">Honestly tracked open gaps remain — some save/load entity sub-state isn't serialized yet, and the mood economy still runs a slight deficit (the one acknowledged open gameplay problem).  Full honest verification status in <a href="https://github.com/MelonS/MelonS-Agents/blob/main/skills/game-prototype/README.md" target="_blank" rel="noopener">skills/game-prototype/README.md</a>.</p>
+      <p class="muted">Honestly tracked open gaps remain — some save/load entity sub-state isn't serialized yet, and the mood economy still runs a slight deficit (the one acknowledged open gameplay problem). Full honest verification status in <a href="https://github.com/MelonS/MelonS-Agents/blob/main/skills/game-prototype/README.md" target="_blank" rel="noopener">skills/game-prototype/README.md</a>.</p>
     </article>
 
     <article class="card">
       <h3>Human-in-the-loop ops</h3>
-      <p>The agent doesn't run open-loop.  The operator plays the build, files in-game feedback, and that feedback becomes the next batch of gated fixes — an <strong>operator → agent → verify → operator</strong> cycle.  Logic changes (pawn behaviour, balance) are explicitly operator-gated: the agent drafts the spec and waits for an OK before touching them.</p>
+      <p>The agent doesn't run open-loop. The operator plays the build, files in-game feedback, and that feedback becomes the next batch of gated fixes — an <strong>operator → agent → verify → operator</strong> cycle. Logic changes (pawn behaviour, balance) are explicitly operator-gated: the agent drafts the spec and waits for an OK before touching them.</p>
       <p class="muted">This is the same human-in-the-loop pattern the repo applies to its media missions: the agent does all the mechanical work, the human owns taste, money, and logic approval.</p>
     </article>
   </div>
 
-  <div class="gallery">
+  <div class="gallery shots">
     <figure>
-      <img src="assets/pawnsim-built-house.png" alt="PawnSim 2026-06-12 — a walled room with door and roof shading (top-down block walls from the 32px art generation), farm plots with growth-stage crops, a stockpile filling with logs and produce, named colonists, and live resource counters." loading="lazy">
+      <img src="assets/pawnsim-built-house.png" width="1920" height="1080" alt="PawnSim 2026-06-12 — a walled room with door and roof shading (top-down block walls from the 32px art generation), farm plots with growth-stage crops, a stockpile filling with logs and produce, named colonists, and live resource counters." loading="lazy" decoding="async">
       <figcaption><b>Basic loop verified end-to-end</b><br><span class="muted">walls + roof · farm plots · stockpile · named colonists</span></figcaption>
     </figure>
     <figure>
-      <img src="assets/pawnsim-night-sleep.png" alt="PawnSim night — colonists asleep in three visually distinct bed tiers (sleeping spot / wood bed / fine bed) with persistent zZ markers, under the night tint." loading="lazy">
+      <img src="assets/pawnsim-night-sleep.png" width="1920" height="1080" alt="PawnSim night — colonists asleep in three visually distinct bed tiers (sleeping spot / wood bed / fine bed) with persistent zZ markers, under the night tint." loading="lazy" decoding="async">
       <figcaption><b>Night cycle</b><br><span class="muted">three bed tiers · sleep state · night-tint lighting</span></figcaption>
     </figure>
   </div>
-  <p class="muted">The meta-skill that scaffolds it: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/game-dev-agent" target="_blank" rel="noopener">skills/game-dev-agent/</a>.  PawnSim is Unity / Windows-primary (the build chain runs the Editor in batchmode); the rest of the repo is macOS / Linux.</p>
+  <p class="muted">The meta-skill that scaffolds it: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/game-dev-agent" target="_blank" rel="noopener">skills/game-dev-agent/</a>. PawnSim is Unity / Windows-primary (the build chain runs the Editor in batchmode); the rest of the repo is macOS / Linux.</p>
 </section>
 
 <section id="who" class="block">
+  <p class="eyebrow">Audience · who this is for</p>
   <h2>Who this is for</h2>
   <ul>
-    <li><b>You want to see an agent <em>verify</em> the game it builds — not just build it.</b>  PawnSim ships with a 15-scenario input-level repro gate on every commit and an isolated-grader rubric loop for long soaks; the graders' verdicts (not the author's claims) are the acceptance record, committed alongside the fixes.</li>
-    <li><b>You want short-form vertical video output without writing pipeline code.</b>  Give the wizard a music file, get back a 9:16 short with beat-aligned cuts and vintage shaders.  No Premiere, no After Effects, no GUI.</li>
-    <li><b>You want to study a working multi-agent system that doesn't pretend to be magic.</b>  Every commit is one observable step in how the system evolves; <a href="https://github.com/MelonS/MelonS-Agents/tree/main/docs/audit" target="_blank" rel="noopener">docs/audit/</a> records every drift the auditor catches; the quality + autonomy charts below chart whether those claims hold up over time.</li>
-    <li><b>You want a Korean job-board digest that respects how you actually search.</b>  Pass <code>--seed "Problem Solver"</code>; the skill expands to the 26 equivalent titles companies use (FDE / Applied AI Engineer / Generalist / Founding Engineer / …) before fetching from 11 sources.</li>
-    <li><b>You want an agentskills.io-compliant Skill you can drop into other runtimes.</b>  Both skills work in Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, and ~38 other listed compatible runtimes.</li>
+    <li><b>You want to see an agent <em>verify</em> the game it builds — not just build it.</b> PawnSim ships with a 15-scenario input-level repro gate on every commit and an isolated-grader rubric loop for long soaks; the graders' verdicts (not the author's claims) are the acceptance record, committed alongside the fixes.</li>
+    <li><b>You want short-form vertical video output without writing pipeline code.</b> Give the wizard a music file, get back a 9:16 short with beat-aligned cuts and vintage shaders. No Premiere, no After Effects, no GUI.</li>
+    <li><b>You want to study a working multi-agent system that doesn't pretend to be magic.</b> Every commit is one observable step in how the system evolves; <a href="https://github.com/MelonS/MelonS-Agents/tree/main/docs/audit" target="_blank" rel="noopener">docs/audit/</a> records every drift the auditor catches; the quality + autonomy charts below chart whether those claims hold up over time.</li>
+    <li><b>You want a Korean job-board digest that respects how you actually search.</b> Pass <code>--seed "Problem Solver"</code>; the skill expands to the 26 equivalent titles companies use (FDE / Applied AI Engineer / Generalist / Founding Engineer / …) before fetching from 11 sources.</li>
+    <li><b>You want an agentskills.io-compliant Skill you can drop into other runtimes.</b> Both skills work in Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot, and ~38 other listed compatible runtimes.</li>
   </ul>
-  <p class="muted">If you want a SaaS that hides the pipeline, this isn't it.  If you want every step as inspectable bash + open-source local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.</p>
+  <p class="muted">If you want a SaaS that hides the pipeline, this isn't it. If you want every step as inspectable bash + open-source local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.</p>
 </section>
 
 <section id="how" class="block">
+  <p class="eyebrow">Architecture · how it works</p>
   <h2>How it works</h2>
-  <p>The scaffold is general-purpose — it doesn't force every skill through one shape.  Short-form video was the v1 domain (the deliverable is visually verifiable and failure modes are quick to catch); the current development focus is the <strong>game track</strong> (the PawnSim build-and-verify loop above), driven by a <code>game-dev-agent</code> meta-skill.  Two production media skills ship today: the <strong>music-video</strong> mission (music-as-sole-audio, beat-aligned cuts, onset-aligned glitch micro-edits, 23 vintage shaders) and the standalone <strong>job-hunt</strong> skill.  Earlier missions (<strong>faceless-short</strong> narration, v1 <strong>highlight / shorts-batch</strong>) remain in the tree as alternate paths.</p>
+  <p>The scaffold is general-purpose — it doesn't force every skill through one shape. Short-form video was the v1 domain (the deliverable is visually verifiable and failure modes are quick to catch); the current development focus is the <strong>game track</strong> (the PawnSim build-and-verify loop above), driven by a <code>game-dev-agent</code> meta-skill. Two production media skills ship today: the <strong>music-video</strong> mission and the standalone <strong>job-hunt</strong> skill. Earlier missions (<strong>faceless-short</strong> narration, v1 <strong>highlight / shorts-batch</strong>) remain in the tree as alternate paths.</p>
 
+  <figure class="diagram">
+    <img src="assets/visuals/01-hero-stats.png" width="1800" height="965" alt="MelonS-Agents system-at-a-glance poster: an agent that builds, plays, and verifies its own colony-sim game, portable across Claude Code, Cursor, Goose, Gemini CLI, Codex and Copilot. Stat cards: 100+ mission outputs across 6 types, 2 production skills + 1 meta-skill + 4 prototypes, 23 ffmpeg shaders, 0 runtime API tokens, 15-scenario commit gate, 19 subagent definitions (6 media + 13 game roster), 3 audit trigger layers, MIT license / EN + KO dual-track." loading="lazy" decoding="async">
+    <figcaption>The system at a glance — README · Overview</figcaption>
+  </figure>
+
+  <figure class="diagram">
+    <img src="assets/visuals/05-three-shapes.png" width="1800" height="1162" alt="The 3-shape skill model: one skill invocation fans into three pipeline shapes, chosen by where the real work lives. Shape A (Missions-routed, primary) — a 5-agent orchestrator-driven pipeline (Orchestrator/Planner/Resourcer on Opus, Editor/QA on Sonnet) with plan.md / MANIFEST.md / qa-report.md file handoffs; example skills/music-video. Shape B (Standalone) — the skill is the implementation: HTTP → parse → format → render, skipping orchestrator and plan files; example skills/job-hunt is all curl + jq. Shape ? (open) — future skills decide per-skill via SKILL.md metadata.pipeline-source." loading="lazy" decoding="async">
+    <figcaption>One invocation, three pipeline shapes — README · Architecture</figcaption>
+  </figure>
+
+  <p class="subhead eyebrow">— Game track · the current focus</p>
   <div class="cards">
-    <article class="card">
+    <article class="card glow-gold">
       <h3>game-dev-agent (meta-skill, Skill #3)</h3>
-      <p>A Unity-focused agent that CLI-scaffolds a whole game with no manual Editor work: sprite generation (32px procedural art), C# system scaffolding, scene + prefab generation via Unity batchmode, balance tuning, audio generation, and an in-game AI Director.  It drives <strong>four prototype skills</strong> that double as its empirical validation surface — PawnSim (colony-sim flagship), plus a 2D physics-merge puzzle (suika), a Vampire-Survivors-lite, and a 2048-lite — each built faster than the last, testing the "compounding speedup" hypothesis.</p>
+      <p>A Unity-focused agent that CLI-scaffolds a whole game with no manual Editor work: sprite generation (32px procedural art), C# system scaffolding, scene + prefab generation via Unity batchmode, balance tuning, audio generation, and an in-game AI Director. It drives <strong>four prototype skills</strong> that double as its empirical validation surface — PawnSim (colony-sim flagship), plus a 2D physics-merge puzzle, a wave-survival action game, and a sliding-tile number puzzle — each built faster than the last, testing the "compounding speedup" hypothesis.</p>
       <p class="muted">The game track runs a separate roster of 13 game-domain sub-agents (director / designer / programmer / build-engineer / QA / artist / sound / narrative / specialists) on top of the 6 core media-pipeline agents — 19 agent definitions total in <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>.</p>
     </article>
+  </div>
+
+  <p class="subhead eyebrow">— Media pipeline · music-video mission</p>
+  <figure class="diagram">
+    <img src="assets/visuals/06-media-pipeline.png" width="1800" height="1163" alt="Media pipeline: six subagents in a committed-file relay (3 on Opus, 3 on Sonnet). The Orchestrator (Opus) decomposes a mission and delegates down a Planner → Resourcer → Editor → QA line; each agent reads upstream artifacts (plan.md → MANIFEST.md → CHANGELOG.md → qa-report.md), never a shared chat. Resourcer runs ffmpeg / yt-dlp / whisper. A separate out-of-band Auditor (Sonnet) runs a daily 03:00 repo-wide drift / contract / cost / security audit, writing docs/audit/<date>-<focus>.md and CURRENT-ALERT.md." loading="lazy" decoding="async">
+    <figcaption>Six subagents, file-based handoff — README · Architecture</figcaption>
+  </figure>
+  <div class="cards">
     <article class="card">
       <h3>Pipeline (music-video mission)</h3>
       <ol>
-        <li><b>Beat extraction.</b> <code>aubiotrack</code> finds real beats; sub-beat noise rejected.  Cuts land every Nth beat (default 12 — about one cut per 7.5 s at 95 BPM).</li>
-        <li><b>Phrase alignment.</b> <code>aubioonset</code> detects drum hits.  Variable per-clip <code>setpts</code> by mood: slow scenes 0.55×, ambient 0.70×, active 0.80×, natural 1.00× — the music drives the visual pace.</li>
-        <li><b>B-roll.</b> Mood-keyword Pexels Videos API fetch; per-window selection.  Demo mode bundles CC-BY Blender open-movie clips for zero-key first-touch.</li>
+        <li><b>Beat extraction.</b> <code>aubiotrack</code> finds real beats; sub-beat noise rejected. Cuts land every Nth beat (default 12 — about one cut per 7.5 s at 95 BPM).</li>
+        <li><b>Phrase alignment.</b> <code>aubioonset</code> detects drum hits. Variable per-clip <code>setpts</code> by mood: slow scenes 0.55×, ambient 0.70×, active 0.80×, natural 1.00× — the music drives the visual pace.</li>
+        <li><b>B-roll.</b> Mood-keyword Pexels Videos API fetch; per-window selection. Demo mode bundles CC-BY Blender open-movie clips for zero-key first-touch.</li>
         <li><b>Glitch micro-edits.</b> 0.2 s reverse + 0.2 s forward jump-cut on detected drum onsets, but only on clips classified as static-camera so the frame doesn't shake during the glitch.</li>
-        <li><b>Vintage lo-fi shaders.</b> Film grain + vignette + Gaussian zoom-pulse + phrase-aware pond ripple + halation bloom.  All pure ffmpeg filter graphs — no GLSL, no external renderer.</li>
+        <li><b>Vintage lo-fi shaders.</b> Film grain + vignette + Gaussian zoom-pulse + phrase-aware pond ripple + halation bloom. All pure ffmpeg filter graphs — no GLSL, no external renderer.</li>
         <li><b>Render + QA.</b> ffmpeg 9:16 screen-fill, mission-level retry on failure.</li>
       </ol>
     </article>
-
     <article class="card">
+      <h3>Quality bar — 5 contracts the system now enforces</h3>
+      <p>The 2026-05-22 music-video QA pass surfaced six taste directives that the prior pipeline produced quietly broken output against. Five landed as enforced contracts; the sixth is open as a research direction. <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#9-the-quality-bar-wasnt-a-bug--it-was-6-contracts-the-system-didnt-enforce" target="_blank" rel="noopener">Case study #9</a> writes the framing: the bug wasn't the renders, it was that the contracts weren't expressible in code.</p>
+      <ul>
+        <li><b>A.1 — B-roll dedup registry.</b> <code>records/youtube/broll-used.txt</code> (271 ids seeded). Both Pexels callers consult + append.</li>
+        <li><b>A.2 — Lyric vocal-onset alignment.</b> <code>scripts/music-video-lyric-align.sh</code> derives LRC from plain text + audio via whisper (word-level KR, segment-level EN).</li>
+        <li><b>A.3 — Language anchor + QA gate.</b> <code>lang_anchor</code> on every preset; <code>scripts/music-video-qa-anchor.sh</code> scores B-roll keywords — exit 0 PASS / 1 WARN / 2 FAIL.</li>
+        <li><b>B.1 — Shader vocabulary.</b> Expanded from 4 to 23 effects across three stages, genre-aware preset routing.</li>
+        <li><b>C.1 — Shader restraint gating.</b> <code>shader_active_ratio</code> per preset; four gate modes via <code>MUSIC_VIDEO_SHADER_GATE</code>.</li>
+      </ul>
+      <p class="muted">Full changelog: <a href="https://github.com/MelonS/MelonS-Agents/blob/main/skills/music-video/CHANGELOG.md" target="_blank" rel="noopener">skills/music-video/CHANGELOG.md</a>.</p>
+    </article>
+    <article class="card">
+      <h3>23 ffmpeg shaders — at a glance</h3>
+      <p>All pure ffmpeg filter graphs. No GLSL, no external renderer. Catalog in <code>scripts/music-video-shaders.sh</code>; per-genre routing in <code>skills/music-video/data/genre-presets.yaml</code>.</p>
+      <ul style="list-style:none;padding-left:0">
+        <li><b>Stage 1 — first pass (2026-05-17).</b> <code>pond</code>, <code>halation</code>, <code>breathing</code>, <code>combo</code>.</li>
+        <li><b>Stage 2 — genre-aware expansion (2026-05-21).</b> <code>scanline</code>, <code>chromatic_split</code>, <code>neon_edge</code>, <code>vhs</code>, <code>saturation_pulse</code>, <code>kaleidoscope</code>, <code>beat_burst</code>, <code>strobe</code>, <code>shake</code>, <code>color_burst</code>, <code>light_rays</code>.</li>
+        <li><b>Stage 3 — quality-bar batch (2026-05-22).</b> <code>light_leak</code>, <code>duotone</code>, <code>vignette_pulse</code>, <code>paper_grain</code>, <code>dust_speck</code>, <code>posterize</code>, <code>trail_echo</code>, <code>soft_bloom</code>.</li>
+      </ul>
+      <p class="muted">Deliberately deferred — cel-shading / cartoon (needs GLSL / EbSynth / AI stylization). See <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#5-shader-effects-in-ffmpeg--knowing-where-the-wall-is" target="_blank" rel="noopener">case study #5</a>.</p>
+    </article>
+  </div>
+
+  <p class="subhead eyebrow">— Audit &amp; cost · the self-watching repo</p>
+  <figure class="diagram">
+    <img src="assets/visuals/09-auditor-triggers.png" width="1800" height="858" alt="Three auditor trigger layers, all out-of-band and read-only, converging on one output channel. L1 — post-commit hook fires on drift-risk paths only, runs audit-run.sh contract. L2 — mission-anomaly poll every 15 minutes runs a focused audit. L3 — daily baseline at 03:00 scheduled via launchd runs audit-run.sh all. All three write one report per run to docs/audit/<date>-<focus>.md; CURRENT-ALERT.md is written only when the latest verdict is non-CLEAN, and the next interactive session is contractually obligated to read it before picking up the goal." loading="lazy" decoding="async">
+    <figcaption>Three trigger layers, one output sink — README · Architecture / Design notes</figcaption>
+  </figure>
+  <div class="cards">
+    <article class="card glow-purple">
       <h3>Three-layer reactive audit</h3>
       <ul>
-        <li><b>L1 — post-commit hook.</b>  Drift-risk commits (anything under <code>agents/</code>, <code>.claude/agents/</code>, <code>config/</code>, <code>CLAUDE.md</code>, the operator contract) fire <code>audit-run.sh contract</code> within ~30 s.</li>
-        <li><b>L2 — 15-min mission-anomaly poll.</b>  New blocker files or QA-FAIL bursts trigger a focused audit.  No-op (zero tokens) when nothing's wrong.</li>
-        <li><b>L3 — daily 03:00 baseline.</b>  launchd fires the full sweep.  Catches anything L1 + L2 missed.</li>
+        <li><b>L1 — post-commit hook.</b> Drift-risk commits (anything under <code>agents/</code>, <code>.claude/agents/</code>, <code>config/</code>, <code>CLAUDE.md</code>, the operator contract) fire <code>audit-run.sh contract</code> within ~30 s.</li>
+        <li><b>L2 — 15-min mission-anomaly poll.</b> New blocker files or QA-FAIL bursts trigger a focused audit. No-op (zero tokens) when nothing's wrong.</li>
+        <li><b>L3 — daily 03:00 baseline.</b> launchd fires the full sweep. Catches anything L1 + L2 missed.</li>
       </ul>
       <p class="muted">The pattern is Reactor + Hook (files as events), not Observer — subagents in this repo aren't long-running observables.</p>
     </article>
-
     <article class="card">
       <h3>Cost-routing rule</h3>
       <p>The architectural lesson from a real failure: applying "Tier 2 (local) = default" to <em>every</em> pipeline stage produces a quality ceiling.</p>
       <ul>
-        <li><b>Mechanical, high-volume stages</b> (transcribe, render, fetch, beat-detect) — local.  Token cost would be ruinous at scale.</li>
-        <li><b>One-shot creative stages</b> (script hook, factual framing, mood-keyword extraction) — Claude.  ~500 tokens per call, operationally negligible against the existing subscription quota, and quality compounds over the next 60 seconds of viewing.</li>
+        <li><b>Mechanical, high-volume stages</b> (transcribe, render, fetch, beat-detect) — local. Token cost would be ruinous at scale.</li>
+        <li><b>One-shot creative stages</b> (script hook, factual framing, mood-keyword extraction) — Claude. ~500 tokens per call, operationally negligible against the existing subscription quota, and quality compounds over the next 60 seconds of viewing.</li>
       </ul>
       <p class="muted">Full reasoning in <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/cost-model.md" target="_blank" rel="noopener">docs/cost-model.md</a>.</p>
     </article>
+  </div>
 
-    <article class="card">
-      <h3>Skills layer (agentskills.io-compliant)</h3>
-      <p>Pipelines are packaged as portable <strong>Skills</strong> following the open <a href="https://agentskills.io" target="_blank" rel="noopener">agentskills.io</a> standard.  Two production skills ship as of v0.4.0:
-        Skill #1 (<code>music-video</code>, missions-routed) and
-        Skill #2 (<code>job-hunt</code>, standalone).
-        Skill #3 (<code>game-dev-agent</code>, the meta-skill above) is in development and drives the four game prototypes.
-        A fourth media skill, <code>product-cf</code> (one product photo → CF-style 9:16 short), is shipped as an experimental v0.1.0 but <strong>currently parked</strong> on an honest negative finding — realistic product motion needs paid cloud image-to-video or a larger GPU than the free/local path could deliver.
-        A skill written once can target multiple compatible runtimes (Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, etc.) — Skill #1 verified via a 12/12 Hermes drop-in interop test.</p>
-      <p class="muted">Spec: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/music-video" target="_blank" rel="noopener">skills/music-video/</a> &middot; <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/job-hunt" target="_blank" rel="noopener">skills/job-hunt/</a></p>
+  <p class="subhead eyebrow">— Skills &amp; tooling · the portfolio</p>
+  <figure class="diagram">
+    <img src="assets/visuals/02-skills.png" width="1800" height="1135" alt="Skills portfolio: two production media skills, one Unity meta-skill in development, one parked experiment — each card shows what it takes in and ships out. music-video (Production): music file → 60-second 9:16 vertical short; 23 ffmpeg shaders, 7 grade profiles, 19 genre presets, cuts on aubiotrack beats, glitch on aubioonset drum hits, Shape A 5-agent missions pipeline. job-hunt (Production): one seed keyword → deduped markdown digest; seed → 26-synonym role family, 11 source plugins, 5 live no-key / 2 key-gated / 4 mock, 5,000+ raw → ~200 matches, Shape B standalone curl+jq. game-dev-agent (In development): Unity meta-skill — sprite gen, C# scaffolding, balance tuning, audio gen, in-game AI director; validation surface = PawnSim colony-sim, 13-agent game roster, CLI-scaffolded with zero manual Unity Editor work. product-cf (Parked): one product photo → CF-style 9:16 short; parked on an honest negative finding — free/local 3D didn't clear the quality bar on a 16GB machine, needs paid cloud image-to-video or a bigger GPU." loading="lazy" decoding="async">
+    <figcaption>Skills portfolio — what each skill takes in and ships out — README · Overview</figcaption>
+  </figure>
+  <div class="cards">
+    <article class="card skill-card glow-orange">
+      <div class="skill-head">
+        <span class="emoji" aria-hidden="true">🎬</span>
+        <span class="skill-title">music-video</span>
+        <span class="pill green">✓ Production</span>
+      </div>
+      <p class="inout">Music file <span class="arrow">→</span> 60-second 9:16 vertical short</p>
+      <ul class="chips">
+        <li class="chip"><b>23</b> ffmpeg shaders</li>
+        <li class="chip"><b>7</b> grade profiles</li>
+        <li class="chip"><b>19</b> genre presets</li>
+        <li class="chip">cuts on <b>aubiotrack</b> beats</li>
+        <li class="chip">glitch on <b>aubioonset</b> drum hits</li>
+        <li class="chip">Shape A · 5-agent missions pipeline</li>
+      </ul>
+      <p class="muted">Skill #1, missions-routed; verified via a 12/12 Hermes drop-in interop test. Spec: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/music-video" target="_blank" rel="noopener">skills/music-video/</a></p>
     </article>
 
-    <article class="card">
-      <h3>Skill #2 — job-hunt (short-keyword KR job-board digest)</h3>
-      <p>A separate-shape skill: standalone (no missions-routed pipeline), v2 short-keyword UX, agentskills.io-compliant.  Pass <code>--seed "Problem Solver"</code> and the orchestrator expands to a 26-synonym role family (Forward Deployed Engineer / Applied AI Engineer / Generalist / Founding Engineer / …) before fetching from KR job boards (사람인 / 잡코리아 / 원티드 / 프로그래머스).  4 enrichment utilities (fit-score / cover-letter / company-research / interview-prep) ship as scaffolds, each gated behind a single env-flag flip.</p>
-      <ul>
-        <li><b>11 source plugins</b> (5 live-ready without a key, 2 key-gated, 4 mock-fallback) — all mock-fallback by default; live HTTP per-plugin behind <code>JH_<i>SOURCE</i>_LIVE=1</code>.  Catalogued in <code>skills/job-hunt/config/activation.tsv</code> and surfaced via <code>scripts/status.sh</code>.</li>
-        <li><b>5 enrichment utilities</b> — per-posting Claude calls behind <code>JH_<i>TOOL</i>_LIVE=1</code>.</li>
-        <li><b>70 tests</b> — smoke + edge-case + JSON-schema validation.  EN + KO walkthroughs.</li>
+    <article class="card skill-card glow-green">
+      <div class="skill-head">
+        <span class="emoji" aria-hidden="true">🧭</span>
+        <span class="skill-title">job-hunt</span>
+        <span class="pill green">✓ Production</span>
+      </div>
+      <p class="inout">One seed keyword <span class="arrow">→</span> deduped markdown digest</p>
+      <ul class="chips">
+        <li class="chip">seed → <span class="g">26</span>-synonym role family</li>
+        <li class="chip"><span class="g">11</span> source plugins</li>
+        <li class="chip"><span class="g">5</span> live no-key · <span class="g">2</span> key-gated · <span class="g">4</span> mock</li>
+        <li class="chip"><b>5,000+</b> raw → <b>~200</b> matches</li>
+        <li class="chip">Shape B · standalone <code>curl+jq</code></li>
       </ul>
-      <p class="muted">Quickstart: <code>skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run</code>.  Reference digest at <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/samples/job-hunt-digest-mock.md" target="_blank" rel="noopener">docs/samples/job-hunt-digest-mock.md</a>.</p>
+      <p class="muted">Skill #2, standalone, v2 short-keyword UX. 70 tests; 5 enrichment utilities behind <code>JH_*_LIVE</code> flags. Spec: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/job-hunt" target="_blank" rel="noopener">skills/job-hunt/</a></p>
+    </article>
+
+    <article class="card skill-card glow-gold">
+      <div class="skill-head">
+        <span class="emoji" aria-hidden="true">🎮</span>
+        <span class="skill-title">game-dev-agent</span>
+        <span class="pill gold">In development</span>
+      </div>
+      <p class="inout">Unity prompt <span class="arrow">→</span> CLI-scaffolded game</p>
+      <ul class="chips">
+        <li class="chip">validation surface = <b>PawnSim</b> colony-sim</li>
+        <li class="chip">13-agent game roster</li>
+        <li class="chip">zero manual Unity Editor work</li>
+        <li class="chip">not in the 2 production skills</li>
+      </ul>
+      <p class="muted">Skill #3, the meta-skill above — sprite gen, C# scaffolding, balance tuning, audio gen, in-game AI Director.</p>
+    </article>
+
+    <article class="card skill-card">
+      <div class="skill-head">
+        <span class="emoji" aria-hidden="true">📦</span>
+        <span class="skill-title">product-cf</span>
+        <span class="pill gray">Parked</span>
+      </div>
+      <p class="inout">One product photo <span class="arrow">→</span> CF-style 9:16 short</p>
+      <ul class="chips">
+        <li class="chip">parked on an honest negative finding</li>
+        <li class="chip">free/local 3D missed the bar on 16GB</li>
+        <li class="chip">needs paid cloud i2v or bigger GPU</li>
+        <li class="chip">kept in tree, gated off</li>
+      </ul>
+      <p class="muted">Experimental v0.1.0 — realistic product motion needs paid cloud image-to-video the free/local path couldn't deliver.</p>
+    </article>
+  </div>
+  <p class="muted">Pipelines are packaged as portable <strong>Skills</strong> following the open <a href="https://agentskills.io" target="_blank" rel="noopener">agentskills.io</a> standard — a skill written once can target multiple compatible runtimes (Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot, etc.).</p>
+
+  <div class="cards">
+    <article class="card">
+      <h3>Skill #2 — job-hunt, in depth</h3>
+      <p>A separate-shape skill: standalone (no missions-routed pipeline), v2 short-keyword UX, agentskills.io-compliant. Pass <code>--seed "Problem Solver"</code> and the orchestrator expands to a 26-synonym role family (Forward Deployed Engineer / Applied AI Engineer / Generalist / Founding Engineer / …) before fetching from KR job boards (사람인 / 잡코리아 / 원티드 / 프로그래머스). A live run de-dups <strong>5,000+ raw postings down to ~200 matches</strong>.</p>
+      <ul>
+        <li><b>11 source plugins</b> (5 live-ready without a key, 2 key-gated, 4 mock-fallback) — all mock-fallback by default; live HTTP per-plugin behind <code>JH_<i>SOURCE</i>_LIVE=1</code>.</li>
+        <li><b>5 enrichment utilities</b> (fit-score / cover-letter / company-research / interview-prep) — per-posting Claude calls behind <code>JH_<i>TOOL</i>_LIVE=1</code>.</li>
+        <li><b>70 tests</b> — smoke + edge-case + JSON-schema validation. EN + KO walkthroughs.</li>
+      </ul>
+      <p class="muted">Quickstart: <code>skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run</code>. Reference digest at <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/samples/job-hunt-digest-mock.md" target="_blank" rel="noopener">docs/samples/job-hunt-digest-mock.md</a>.</p>
     </article>
 
     <article class="card">
       <h3>Alternate path — faceless-short (narration era)</h3>
-      <p>The earlier <code>faceless-short</code> mission still lives in the tree.  Topic prompt in, narrated 60-second short out: Sonnet drafts the hook + factual framing, Kokoro-ONNX (English) or macOS Yuna (Korean) synthesizes voice, whisper.cpp transcribes for caption timing, Pexels B-roll selected per-window from caption keywords, ffmpeg burns single-line captions.  Preserved for topic-driven content; not the current production format.</p>
+      <p>The earlier <code>faceless-short</code> mission still lives in the tree. Topic prompt in, narrated 60-second short out: Sonnet drafts the hook + factual framing, Kokoro-ONNX (English) or macOS Yuna (Korean) synthesizes voice, whisper.cpp transcribes for caption timing, Pexels B-roll selected per-window from caption keywords, ffmpeg burns single-line captions. Preserved for topic-driven content; not the current production format.</p>
       <p class="muted">Pipeline detail in the <a href="https://github.com/MelonS/MelonS-Agents#sample-output" target="_blank" rel="noopener">README Sample output section</a>.</p>
     </article>
 
@@ -192,91 +363,72 @@
       <h3>Operator tooling</h3>
       <p>Scripts that surface system state and absorb routine status-check prompts, complementing the slow Claude-driven auditor with fast Claude-free checks.</p>
       <ul>
-        <li><b><code>scripts/first-touch.sh</code></b> — zero-account demo wizard.  Single Y/n consent; rest is automatic.  Checks prereqs, fetches demo cache, renders, opens the result.  The conversion path for a stranger cloning the repo cold.</li>
-        <li><b><code>scripts/doctor.sh</code></b> — ~2 s repo health check.  CLI tools, env keys, schedulers, audit alerts, git state, disk, per-skill activation, manifest drift.  Output modes <code>--quiet</code> / <code>--json</code>; the JSON includes an <code>actionable_warn</code> field that excludes opt-in env keys + git-tree from the count so the signal isn't noisy.</li>
-        <li><b><code>scripts/audit-skill-drift.sh</code></b> — the 13th audit rule.  Verifies each skill's declared LIVE-flag manifest at <code>skills/&lt;name&gt;/config/activation.tsv</code> matches the actual gating in its scripts.  Wired into the auditor's daily contract pass.</li>
-        <li><b><code>scripts/statusline.sh</code></b> — Claude Code statusline.  Reads doctor's JSON cache (60 s background regen) and the goal-lock skill to render <code>doctor:⚠N · goal:N/M · audit⚠</code> alongside dir / branch / model / cost.  Operator no longer has to type "what's the state?" prompts.</li>
-        <li><b><code>scripts/log-decision.sh</code></b> — appends a one-line entry to <code>docs/autonomous-decisions.md</code>.  When the agent makes a unilateral decision during overnight work, it logs it; operator scans one page in the morning instead of typing "what happened?" prompts.</li>
-        <li><b><code>outputs/review-queue/</code></b> + 3 scripts (<code>review-queue-add.sh</code> / <code>-digest.sh</code> / <code>-decide.sh</code>) — batched taste-decision queue.  Music-video mission post-render auto-enqueues; operator drains a contact-sheet markdown on their cadence instead of being pinged per-render.  ~10× fewer intervention events, same total decision count.</li>
-        <li><b><code>scripts/morning-brief.sh</code></b> — single-command overnight digest.  Combines doctor + audit + intervention 7-day trend + commit attribution + today's autonomous decisions + review-queue + blockers into ~30 readable lines.  The canonical answer to "what happened overnight?" — operator types one command, knows the state in 30 seconds.</li>
+        <li><b><code>scripts/first-touch.sh</code></b> — zero-account demo wizard. Single Y/n consent; checks prereqs, fetches demo cache, renders, opens the result.</li>
+        <li><b><code>scripts/doctor.sh</code></b> — ~2 s repo health check. CLI tools, env keys, schedulers, audit alerts, git state, disk, per-skill activation. <code>--quiet</code> / <code>--json</code> modes.</li>
+        <li><b><code>scripts/audit-skill-drift.sh</code></b> — the 13th audit rule. Verifies each skill's declared LIVE-flag manifest matches the actual gating in its scripts.</li>
+        <li><b><code>scripts/statusline.sh</code></b> — Claude Code statusline. Renders <code>doctor:⚠N · goal:N/M · audit⚠</code> alongside dir / branch / model / cost.</li>
+        <li><b><code>scripts/morning-brief.sh</code></b> — single-command overnight digest. Combines doctor + audit + 7-day intervention trend + commit attribution + autonomous decisions + review-queue + blockers into ~30 readable lines.</li>
+        <li><b><code>outputs/review-queue/</code></b> + 3 scripts — batched taste-decision queue. Operator drains a contact-sheet markdown on their cadence, ~10× fewer intervention events.</li>
       </ul>
-      <p>A meta-skill, <strong><code>goal-lock</code></strong>, parses <code>docs/goal.md</code> and reports unchecked deliverable subgoals from the active goal so long autonomous sessions can re-anchor.  Discipline helper, not a production pipeline.</p>
-      <p class="muted">Full per-tool table (what / when / output contract): <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/operator-tooling.md" target="_blank" rel="noopener">docs/operator-tooling.md</a>.</p>
-    </article>
-
-    <article class="card">
-      <h3>Quality bar — 5 contracts the system now enforces</h3>
-      <p>The 2026-05-22 music-video QA pass surfaced six taste directives that the prior pipeline produced quietly broken output against.  Five landed as enforced contracts; the sixth is open as a research direction.  <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#9-the-quality-bar-wasnt-a-bug--it-was-6-contracts-the-system-didnt-enforce" target="_blank" rel="noopener">Case study #9</a> writes the framing: the bug wasn't the renders, it was that the contracts weren't expressible in code.</p>
-      <ul>
-        <li><b>A.1 — B-roll dedup registry.</b>  <code>records/youtube/broll-used.txt</code> (271 ids seeded).  Both Pexels callers consult + append; <code>BROLL_HISTORY=off</code> per-render escape.</li>
-        <li><b>A.2 — Lyric vocal-onset alignment.</b>  <code>scripts/music-video-lyric-align.sh</code> derives LRC from plain text + audio via whisper (word-level for KR, segment-level for EN).  Sub-floor lines marked autofilled.</li>
-        <li><b>A.3 — Language anchor + QA gate.</b>  <code>lang_anchor: ko|en|mixed|neutral</code> on every preset, person-anchored keyword injection every 3rd segment.  <code>scripts/music-video-qa-anchor.sh</code> scores B-roll keywords against the anchor — exit 0 PASS / 1 WARN / 2 FAIL.</li>
-        <li><b>B.1 — Shader vocabulary.</b>  Expanded from 4 to 23 effects across three stages.  Genre-aware preset routing picks per-preset.</li>
-        <li><b>C.1 — Shader restraint gating.</b>  <code>shader_active_ratio</code> per preset (1.0 ambient, 0.35 kpop_ballad).  Four gate modes via <code>MUSIC_VIDEO_SHADER_GATE</code>: uniform / phrase_climax / onsets / beats.  Event-count cap at 30 to dodge ffmpeg's expr-length budget.</li>
-      </ul>
-      <p class="muted">Full changelog: <a href="https://github.com/MelonS/MelonS-Agents/blob/main/skills/music-video/CHANGELOG.md" target="_blank" rel="noopener">skills/music-video/CHANGELOG.md</a>.</p>
-    </article>
-
-    <article class="card">
-      <h3>23 ffmpeg shaders — at a glance</h3>
-      <p>All pure ffmpeg filter graphs.  No GLSL, no external renderer.  Catalog in <code>scripts/music-video-shaders.sh</code>; per-genre routing in <code>skills/music-video/data/genre-presets.yaml</code>.</p>
-      <ul style="list-style:none;padding-left:0;font-size:0.92em">
-        <li><b>Stage 1 — first pass (2026-05-17).</b>  <code>pond</code>, <code>halation</code>, <code>breathing</code>, <code>combo</code>.</li>
-        <li><b>Stage 2 — genre-aware expansion (2026-05-21).</b>  <code>scanline</code>, <code>chromatic_split</code>, <code>neon_edge</code>, <code>vhs</code>, <code>saturation_pulse</code>, <code>kaleidoscope</code>, <code>beat_burst</code>, <code>strobe</code>, <code>shake</code>, <code>color_burst</code>, <code>light_rays</code>.</li>
-        <li><b>Stage 3 — quality-bar batch (2026-05-22).</b>  <code>light_leak</code>, <code>duotone</code>, <code>vignette_pulse</code>, <code>paper_grain</code>, <code>dust_speck</code>, <code>posterize</code>, <code>trail_echo</code>, <code>soft_bloom</code>.</li>
-      </ul>
-      <p class="muted">Deliberately deferred — cel-shading / cartoon (chroma posterization breaks hue; real cel-shading needs GLSL / EbSynth / AI stylization).  See <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#5-shader-effects-in-ffmpeg--knowing-where-the-wall-is" target="_blank" rel="noopener">case study #5</a>.</p>
+      <p class="muted">A meta-skill, <strong><code>goal-lock</code></strong>, parses <code>docs/goal.md</code> and reports unchecked deliverable subgoals so long autonomous sessions can re-anchor. Full per-tool table: <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/operator-tooling.md" target="_blank" rel="noopener">docs/operator-tooling.md</a>.</p>
     </article>
   </div>
 </section>
 
 <section id="evidence" class="block">
+  <p class="eyebrow">Evidence · what it produces</p>
   <h2>Evidence — what the pipeline actually produces</h2>
 
-  <p>Frames captured from rendered mp4s.  Full mp4s live under <code>records/missions/</code> (gitignored — each ~ 25–50 MB).</p>
+  <p>Frames captured from rendered mp4s. Full mp4s live under <code>records/missions/</code> (gitignored — each ~ 25–50 MB).</p>
 
   <aside class="callout">
     <strong>Engineering decisions, one page.</strong>
-    Nine production incidents and the minimum mechanism each one produced — Tier-1 routing, semaphore-bounded batch, content-quality feedback loop, three-layer reactive audit, shader-effects-in-ffmpeg / knowing-where-the-wall-is, onboarding-friction-kills-first-touch / zero-account demo path, declarative preset routing (genre-aware shaders), intervention-as-the-unmeasured-axis (two-panel autonomy signal + reduction levers), and the quality-bar-as-6-unenforced-contracts (the 2026-05-22 music-video QA pass).  Each entry follows <em>problem → constraint → decision → artifact</em>.
+    Nine production incidents and the minimum mechanism each one produced — Tier-1 routing, semaphore-bounded batch, content-quality feedback loop, three-layer reactive audit, shader-effects-in-ffmpeg / knowing-where-the-wall-is, onboarding-friction-kills-first-touch / zero-account demo path, declarative preset routing (genre-aware shaders), intervention-as-the-unmeasured-axis (two-panel autonomy signal + reduction levers), and the quality-bar-as-6-unenforced-contracts (the 2026-05-22 music-video QA pass). Each entry follows <em>problem → constraint → decision → artifact</em>.
     <br>→ <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md" target="_blank" rel="noopener">docs/engineering-case-studies.md</a> · <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.ko.md" target="_blank" rel="noopener">한국어 미러</a>
   </aside>
 
   <figure class="hero-shot">
-    <img src="assets/music-video-hero.jpg" alt="Mid-climax frame from the 2026-05-22 noir-detective render — 9:16 vertical, smoky bar interior, bearded man with pipe in pink-magenta rnb_low_key grade profile, demonstrating the per-genre grade_profile stage that runs before the shader layer." loading="lazy">
-    <figcaption><b>music-video <code>noir-detective</code></b> — 2026-05-22 batch, t = 30 s.  Per-genre <code>grade_profile</code> (<code>rnb_low_key</code>) shapes the pink-magenta low-key look; phrase-aware shader stack on top.</figcaption>
+    <img src="assets/music-video-hero.jpg" width="1080" height="1920" alt="Mid-climax frame from the 2026-05-22 noir-detective render — 9:16 vertical, smoky bar interior, bearded man with pipe in pink-magenta rnb_low_key grade profile, demonstrating the per-genre grade_profile stage that runs before the shader layer." loading="lazy" decoding="async">
+    <figcaption><b>music-video <code>noir-detective</code></b> — 2026-05-22 batch, t = 30 s. Per-genre <code>grade_profile</code> (<code>rnb_low_key</code>) shapes the pink-magenta low-key look; phrase-aware shader stack on top.</figcaption>
   </figure>
 
   <h3>Genre catalog at a glance — six of the seven grade profiles</h3>
-  <p>Mid-climax frames from the 2026-05-20 → 2026-05-23 production batch.  No cherry-picked B-roll — every clip came from the same unattended Pexels mood-keyword fetch the pipeline always runs.  The visual identity is the <code>grade_profile</code> + shader stack, not the source footage.  Seven grade profiles compiled to ffmpeg filter graphs via <a href="https://github.com/MelonS/MelonS-Agents/blob/main/scripts/music-video-grade.sh" target="_blank" rel="noopener"><code>scripts/music-video-grade.sh</code></a> (six shown below); 19 genre presets in <a href="https://github.com/MelonS/MelonS-Agents/blob/main/skills/music-video/data/genre-presets.yaml" target="_blank" rel="noopener"><code>skills/music-video/data/genre-presets.yaml</code></a>.</p>
+  <p>Mid-climax frames from the 2026-05-20 → 2026-05-23 production batch. No cherry-picked B-roll — every clip came from the same unattended Pexels mood-keyword fetch the pipeline always runs. The visual identity is the <code>grade_profile</code> + shader stack, not the source footage. Seven grade profiles compiled to ffmpeg filter graphs via <a href="https://github.com/MelonS/MelonS-Agents/blob/main/scripts/music-video-grade.sh" target="_blank" rel="noopener"><code>scripts/music-video-grade.sh</code></a> (six shown below); 19 genre presets in <a href="https://github.com/MelonS/MelonS-Agents/blob/main/skills/music-video/data/genre-presets.yaml" target="_blank" rel="noopener"><code>skills/music-video/data/genre-presets.yaml</code></a>.</p>
+
+  <figure class="diagram">
+    <img src="assets/visuals/13-genre-catalog.png" width="1800" height="1050" alt="Genre catalog: each per-genre grade_profile recolors the same generic Pexels stock into a genre-coded look before the shader layer — no cherry-picked B-roll. Six profiles shown: noir-detective (rnb_low_key, deep magenta low-key), rain-lofi (lofi_warm_grain, soft warm grain), arcade-synthwave (city_pop_neon, purple → cyan neon), coastline-summer (hollywood_teal_orange, teal → orange split), linen-minimal (kr_warm_pastel, warm peach pastel), smallhand-folk (kinetic lyric overlay, Korean lyric overlay). 19 genre presets, 7 grade profiles (the 7th is a neutral ungraded passthrough). Identity is the grade + shader stack." loading="lazy" decoding="async">
+    <figcaption>Same stock in, genre-coded look out — README · Genre catalog</figcaption>
+  </figure>
+
   <div class="gallery">
     <figure>
-      <img src="assets/genre-grid/noir-detective.jpg" alt="noir-detective: smoky bar interior, bearded man with pipe, pink-magenta low-key grade" loading="lazy">
+      <img src="assets/genre-grid/noir-detective.jpg" width="1080" height="1920" alt="noir-detective: smoky bar interior, bearded man with pipe, pink-magenta low-key grade" loading="lazy" decoding="async">
       <figcaption><b>noir-detective</b><br><span class="muted">rnb_low_key</span></figcaption>
     </figure>
     <figure>
-      <img src="assets/genre-grid/rain-lofi.jpg" alt="rain-lofi: barista pouring espresso, soft pink warm grade" loading="lazy">
+      <img src="assets/genre-grid/rain-lofi.jpg" width="1080" height="1920" alt="rain-lofi: barista pouring espresso, soft pink warm grade" loading="lazy" decoding="async">
       <figcaption><b>rain-lofi</b><br><span class="muted">lofi_warm_grain</span></figcaption>
     </figure>
     <figure>
-      <img src="assets/genre-grid/arcade-synthwave.jpg" alt="arcade-synthwave: VHS cassette + retro VCR in purple city-pop neon grade" loading="lazy">
+      <img src="assets/genre-grid/arcade-synthwave.jpg" width="1080" height="1920" alt="arcade-synthwave: VHS cassette + retro VCR in purple city-pop neon grade" loading="lazy" decoding="async">
       <figcaption><b>arcade-synthwave</b><br><span class="muted">city_pop_neon</span></figcaption>
     </figure>
     <figure>
-      <img src="assets/genre-grid/coastline-summer.jpg" alt="coastline-summer: golden-hour beach water reflections, hollywood teal-orange grade" loading="lazy">
+      <img src="assets/genre-grid/coastline-summer.jpg" width="1080" height="1920" alt="coastline-summer: golden-hour beach water reflections, hollywood teal-orange grade" loading="lazy" decoding="async">
       <figcaption><b>coastline-summer</b><br><span class="muted">hollywood_teal_orange</span></figcaption>
     </figure>
     <figure>
-      <img src="assets/genre-grid/linen-minimal.jpg" alt="linen-minimal: bedroom bookstack and coffee mug, kr warm pastel grade" loading="lazy">
+      <img src="assets/genre-grid/linen-minimal.jpg" width="1080" height="1920" alt="linen-minimal: bedroom bookstack and coffee mug, kr warm pastel grade" loading="lazy" decoding="async">
       <figcaption><b>linen-minimal</b><br><span class="muted">kr_warm_pastel</span></figcaption>
     </figure>
     <figure>
-      <img src="assets/genre-grid/smallhand-folk.jpg" alt="smallhand-folk: cafe through window with Korean lyric overlay visible — 가난이 너를 만든 게 / 아니라" loading="lazy">
+      <img src="assets/genre-grid/smallhand-folk.jpg" width="1080" height="1920" alt="smallhand-folk: cafe through window with Korean lyric overlay visible" loading="lazy" decoding="async">
       <figcaption><b>smallhand-folk</b><br><span class="muted">+ kinetic lyric overlay</span></figcaption>
     </figure>
   </div>
 
   <h3>Skill #2 — what a job-hunt digest looks like</h3>
-  <p>Single seed keyword in, deduplicated markdown digest out.  The mock-fallback rendering below comes from <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/samples/job-hunt-digest-mock.md" target="_blank" rel="noopener">docs/samples/job-hunt-digest-mock.md</a> — exercised against all five default sources, 26-synonym <code>problem-solver</code> family expansion, 7/21 raw postings matched.  Real digests land under <code>records/jobs/&lt;date&gt;/digest.md</code> (gitignored).</p>
+  <p>Single seed keyword in, deduplicated markdown digest out. The mock-fallback rendering below comes from <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/samples/job-hunt-digest-mock.md" target="_blank" rel="noopener">docs/samples/job-hunt-digest-mock.md</a> — exercised against all five default sources, 26-synonym <code>problem-solver</code> family expansion, 7/21 raw postings matched.  Real digests land under <code>records/jobs/&lt;date&gt;/digest.md</code> (gitignored).</p>
   <pre><code># Job-hunt digest — 2026-05-20
 
 &gt; <b>Seed</b>: <code>Problem Solver</code> → role family <code>problem-solver</code>
@@ -304,44 +456,45 @@
     <p>Frames from the earlier <code>faceless-short</code> trials, retained as visual evidence of the narration-era pipeline that preceded the music-video pivot.</p>
     <div class="gallery">
       <figure>
-        <img src="assets/gallery-1.jpg" alt="Frame from faceless-hittites-v6: 9:16, historical battle reenactment B-roll, caption 'Turkey and Syria for five centuries,' single-line." loading="lazy">
+        <img src="assets/gallery-1.jpg" width="1080" height="1920" alt="Frame from faceless-hittites-v6: 9:16, historical battle reenactment B-roll, caption 'Turkey and Syria for five centuries,' single-line." loading="lazy" decoding="async">
         <figcaption><b>Hittites EN</b></figcaption>
       </figure>
       <figure>
-        <img src="assets/gallery-2.jpg" alt="Frame from faceless-hydrogen-v6: pasta macro shot, caption 'The human body's reliance' single-line." loading="lazy">
+        <img src="assets/gallery-2.jpg" width="1080" height="1920" alt="Frame from faceless-hydrogen-v6: pasta macro shot, caption 'The human body's reliance' single-line." loading="lazy" decoding="async">
         <figcaption><b>Hydrogen EN</b></figcaption>
       </figure>
       <figure>
-        <img src="assets/gallery-3.jpg" alt="Frame from faceless-autotune music-trial: studio audio waveform display, caption 'like a secret safety net. But in 1998,' single-line." loading="lazy">
+        <img src="assets/gallery-3.jpg" width="1080" height="1920" alt="Frame from faceless-autotune music-trial: studio audio waveform display, caption 'like a secret safety net. But in 1998,' single-line." loading="lazy" decoding="async">
         <figcaption><b>AutoTune EN</b></figcaption>
       </figure>
       <figure>
-        <img src="assets/gallery-4.jpg" alt="Frame from faceless-hittites-ko-v6: aerial Hattusa archaeological site, Korean caption '황무지에서 1만 개가 넘는 설형문자 점토판을 꺼냈다.' single-line." loading="lazy">
+        <img src="assets/gallery-4.jpg" width="1080" height="1920" alt="Frame from faceless-hittites-ko-v6: aerial Hattusa archaeological site, Korean caption single-line." loading="lazy" decoding="async">
         <figcaption><b>Hittites KO</b></figcaption>
       </figure>
     </div>
   </details>
 
-  <h3 id="scorecard">Faceless-era scorecard (historical)</h3>
-  <p>Self-evaluation across five retention-mapping axes (Hook, Visual sync, Readability, Factual coherence, Production polish), assigned by Claude during the faceless-short iteration — preserved as the structured progress signal from the v4 → v5 → v6 sequence that preceded the music-video pivot.  The music-video mission uses platform watch-time data instead of per-dimension scoring; per-video metrics live under <code>docs/pilots/</code>.</p>
-  <p><a href="assets/scorecard.png" target="_blank" rel="noopener"><img class="full" src="assets/scorecard.png" alt="Stacked bar chart: 13 pilot rows from Hittites EN v4 26/50 (lowest) up to AutoTune EN 45/50 (highest), split across the 5 dimensions with colors. Music-trial topics cluster around 40-45." loading="lazy"></a></p>
+  <h3 id="scorecard">Faceless-era scorecard <span class="note-historical">historical</span></h3>
+  <p>Self-evaluation across five retention-mapping axes (Hook, Visual sync, Readability, Factual coherence, Production polish), assigned by Claude during the faceless-short iteration — preserved as the structured progress signal from the v4 → v5 → v6 sequence that preceded the music-video pivot. The music-video mission uses platform watch-time data instead of per-dimension scoring; per-video metrics live under <code>docs/pilots/</code>.</p>
+  <p><a href="assets/scorecard.png" target="_blank" rel="noopener"><img class="full" src="assets/scorecard.png" width="1527" height="1474" alt="Stacked bar chart: 13 pilot rows from Hittites EN v4 26/50 (lowest) up to AutoTune EN 45/50 (highest), split across the 5 dimensions with colors. Music-trial topics cluster around 40-45." loading="lazy" decoding="async"></a></p>
 
   <h3>Operator-intervention trend (autonomy signal)</h3>
-  <p>A multi-agent system that needs constant human steering hasn't actually replaced the work it was meant to.  Two-panel honest signal updated daily 02:00 KST — Panel A from <code>git log</code> (commit attribution + leverage ratio), Panel B from local Claude Code session JSONLs (operator prompt count + active session minutes).  See <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#8-intervention-as-the-unmeasured-axis--autonomy-signal--reduction-levers" target="_blank" rel="noopener">case study #8</a> for the 5 prioritized reduction levers acting on the trend.</p>
-  <p><a href="assets/intervention.png" target="_blank" rel="noopener"><img class="full" src="assets/intervention.png" alt="Two-panel intervention trend: Panel A shows daily commit counts stacked by initiator (agent-autonomous blue vs user-initiated red) with a user-initiated percentage line; Panel B shows daily operator prompt count and active session minutes mined from local Claude Code session JSONLs. Both panels share the same date axis from 2026-05-14 to 2026-06-14." loading="lazy"></a></p>
+  <p>A multi-agent system that needs constant human steering hasn't actually replaced the work it was meant to. Two-panel honest signal updated daily 02:00 KST — Panel A from <code>git log</code> (commit attribution + leverage ratio), Panel B from local Claude Code session JSONLs (operator prompt count + active session minutes). See <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#8-intervention-as-the-unmeasured-axis--autonomy-signal--reduction-levers" target="_blank" rel="noopener">case study #8</a> for the 5 prioritized reduction levers acting on the trend.</p>
+  <p><a href="assets/intervention.png" target="_blank" rel="noopener"><img class="full" src="assets/intervention.png" width="1703" height="1244" alt="Two-panel intervention trend: Panel A shows daily commit counts stacked by initiator (agent-autonomous vs user-initiated) with a user-initiated percentage line; Panel B shows daily operator prompt count and active session minutes mined from local Claude Code session JSONLs. Both panels share the same date axis running through ~2026-06-30." loading="lazy" decoding="async"></a></p>
 
-  <h3>Mission-outcome trend (quality signal)</h3>
-  <p>The companion signal to autonomy.  <em>Autonomy</em> asks "is operator involvement going down?"; <em>quality</em> asks "is the pipeline producing more reliable output over time?".  Every <code>records/missions/&lt;date&gt;/&lt;id&gt;/qa-report.md</code> is parsed for <code>Verdict: PASS|FAIL</code> and <code>attempt N of M</code>; music-video missions (no per-mission retry harness) are counted under "metrics.json only".  Panel B reads the system's evolution at a glance — the 2026-05-17 spike (8 → 33 missions/day) is the faceless-pilot batch; the post-pivot flat band is the music-video format at a sustainable 3–8 renders/day cadence.  (This chart tracks render-style missions; since 2026-06 the active development focus shifted to the PawnSim game track, whose work shows up as verification-gated commits rather than render missions — see the autonomy trend above.)</p>
-  <p><a href="assets/quality-trend.png" target="_blank" rel="noopener"><img class="full" src="assets/quality-trend.png" alt="Two-panel mission-outcome trend: Panel A stacks daily mission counts by outcome (PASS attempt 1 green, PASS after retry amber, FAIL red, metrics.json only pale green) with a PASS-on-first-try percentage line on the right axis; Panel B stacks daily mission counts by mission type (music-video / faceless-short / highlight / summarize / shorts-batch) showing the production pivot from highlight-era through faceless pilot to current music-video focus." loading="lazy"></a></p>
+  <h3>Mission-outcome trend (quality signal) <span class="note-historical">historical · render-era</span></h3>
+  <p><strong>Historical (render-era) chart, last refreshed 2026-05-25.</strong> Since 2026-06 the active development focus shifted to the PawnSim game track, whose work shows up as verification-gated commits (see the autonomy trend above) rather than render missions — so this chart is no longer the current signal and is kept as a record of the render era, the same way the scorecard above is framed. It reads the system's render evolution at a glance: the 2026-05-17 spike (8 → 33 missions/day) is the faceless-pilot batch; the post-pivot flat band is the music-video format at a sustainable 3–8 renders/day cadence. Every <code>records/missions/&lt;date&gt;/&lt;id&gt;/qa-report.md</code> was parsed for <code>Verdict: PASS|FAIL</code> and <code>attempt N of M</code>.</p>
+  <p><a href="assets/quality-trend.png" target="_blank" rel="noopener"><img class="full" src="assets/quality-trend.png" width="1430" height="1040" alt="Historical render-era two-panel mission-outcome trend (last refreshed 2026-05-25): Panel A stacks daily mission counts by outcome (PASS attempt 1, PASS after retry, FAIL, metrics.json only) with a PASS-on-first-try percentage line; Panel B stacks daily mission counts by mission type showing the production pivot from highlight-era through faceless pilot to music-video focus." loading="lazy" decoding="async"></a></p>
 </section>
 
 <section class="block" id="try">
+  <p class="eyebrow">Quickstart · try it</p>
   <h2>Try it in ~60 seconds</h2>
-  <p>Single-command guided wizard.  No Pexels signup, no Suno round-trip, no <code>.env</code> edit:</p>
+  <p>Single-command guided wizard. No Pexels signup, no Suno round-trip, no <code>.env</code> edit:</p>
   <pre><code>git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
 ./scripts/first-touch.sh        # checks prereqs, fetches cache, renders, opens result</code></pre>
-  <p>The wizard checks prerequisites, fetches the demo cache (~30 s), renders a 60-second 9:16 short from bundled CC-BY Blender clips + Kevin MacLeod tracks (~100 s), and opens the result.  Single Y/n; rest is automatic.</p>
+  <p>The wizard checks prerequisites, fetches the demo cache (~30 s), renders a 60-second 9:16 short from bundled CC-BY Blender clips + Kevin MacLeod tracks (~100 s), and opens the result. Single Y/n; rest is automatic.</p>
 
   <h3>Manual demo path (same end state)</h3>
   <pre><code>./scripts/bootstrap.sh                # verifies tools, fetches models
@@ -354,23 +507,23 @@ MUSIC_VIDEO_DEMO_MODE=1 \
 # sources, all matched against the 26-synonym "problem-solver" family.</code></pre>
   <p>Live HTTP per source (5 plugins require no API key): <code>JH_GLOBAL_ATS_LIVE=1 JH_GLOBAL_REMOTEOK_LIVE=1 JH_GLOBAL_REMOTIVE_LIVE=1 JH_GLOBAL_HN_LIVE=1 JH_WORKNET_LIVE=1</code>.</p>
 
-  <p class="muted">Full Pexels + Suno path (mood-keyword catalog, custom tracks) documented as the advanced path in the <a href="https://github.com/MelonS/MelonS-Agents#quick-start" target="_blank" rel="noopener">README Quick start</a>.  macOS first; Linux compatible for the core pipeline (whisper.cpp + ollama + ffmpeg + aubio), macOS-only for launchd schedulers and Yuna TTS.</p>
+  <p class="muted">Full Pexels + Suno path (mood-keyword catalog, custom tracks) documented as the advanced path in the <a href="https://github.com/MelonS/MelonS-Agents#quick-start" target="_blank" rel="noopener">README Quick start</a>. macOS first; Linux compatible for the core pipeline (whisper.cpp + ollama + ffmpeg + aubio), macOS-only for launchd schedulers and Yuna TTS.</p>
 </section>
 
 <footer>
-  <p>
+  <div class="footer-line">
+    <span class="tagline"><span class="diamond" aria-hidden="true">◆</span> MelonS-Agents — local for the mechanical, Claude for the creative</span>
+    <span class="repo">github.com/MelonS/MelonS-Agents</span>
+  </div>
+  <p class="footer-meta">
     Released under the <a href="https://github.com/MelonS/MelonS-Agents/blob/main/LICENSE" target="_blank" rel="noopener">MIT license</a>.
-    Source on <a href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">GitHub</a>.
-    Built with Claude Code.
-  </p>
-  <p>
-    Maintained by
-    <a href="https://github.com/MelonS" target="_blank" rel="noopener">@MelonS</a>
-    ·
+    Source on <a href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">GitHub</a>. Built with Claude Code.
+    <br>
+    Maintained by <a href="https://github.com/MelonS" target="_blank" rel="noopener">@MelonS</a> ·
     <!-- §12 operator-authorized deviation: intentionally public identity surface, per docs/operator-contract.md §12 override clause -->
-    <a href="https://www.linkedin.com/in/eun-hyung-choi" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="https://www.linkedin.com/in/eun-hyung-choi" target="_blank" rel="noopener">LinkedIn</a>.
+    Build log updates draw from <code>docs/social/linkedin-{ko,en}.md</code> in the repo.
   </p>
-  <p class="muted">Build log updates draw from <code>docs/social/linkedin-{ko,en}.md</code> in the repo.</p>
 </footer>
 
 </body>
