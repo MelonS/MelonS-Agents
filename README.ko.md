@@ -86,6 +86,9 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 > [agentskills.io](https://agentskills.io) 스펙을 따라서 Claude Code,
 > Cursor, Goose, Gemini CLI 등 호환 런타임에 그대로 떨어집니다.
 >
+<details>
+<summary>▸ 네 가지 스킬 상세 · 레포 구동 방식 2가지 · 설계 전제 — 펼쳐보기</summary>
+
 > **스킬 1 — `music-video`.**  음악 파일을 넣으면 60초짜리 9:16
 > 세로 쇼츠가 나옵니다.  장르별 컬러 그레이드 7종이 평범한 Pexels
 > 스톡 footage 를 장르 톤으로 먼저 깔고, 그 위에 ffmpeg 쉐이더
@@ -172,6 +175,8 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 > 에이전트 시스템 자체가 자라온 흔적입니다 (산출물은 gitignored
 > `records/` 로컬에 남습니다).
 
+</details>
+
 ### PawnSim — 에이전트가 지금 가장 활발히 반복 개발 중인 프로토타입 (2026-06 focus)
 
 ![Verification — two gates: 15-scenario input-level repro gate per commit + isolated grader sub-agent on long soaks](docs/visuals/14-verification-loop-ko.png)
@@ -222,6 +227,9 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 ![Auditor — 3 trigger layers: L1 post-commit hook, L2 15-min anomaly poll, L3 daily 03:00 baseline](docs/visuals/09-auditor-triggers-ko.png)
 
 일반적인 에이전트 데모와 차별화되는 설계 선택들:
+
+<details>
+<summary>▸ 설계 노트 — 일반적인 에이전트 데모와 차별화되는 선택들 — 펼쳐보기</summary>
 
 - **목표 계층과 작업 큐의 분리.** [`docs/goal.md`](docs/goal.md)는
   활성 목표를 구체적 산출물로 정의; [`docs/roadmap.md`](docs/roadmap.md)는
@@ -286,6 +294,8 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
   도구별 what/when/output 표 전체 카탈로그:
   [`docs/operator-tooling.md`](docs/operator-tooling.md).
 
+</details>
+
 ## 자율성 신호 — 운영자 개입 추세
 
 사람이 계속 조타해야 하는 멀티 에이전트 시스템은 사실 자기가
@@ -341,6 +351,9 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
 
 ### 최근 ship (롤링)
 
+<details>
+<summary>▸ 최근 ship 로그 (롤링) — 펼쳐보기</summary>
+
 - **2026-06-12 PawnSim 검증 루프 도입 + 기본기 총정비** (Skill #3-A) —
   루브릭 + 격리 채점 검증 루프를 정식 도입하고(채점 에이전트가 작업 맥락
   없이 증거만으로 평가), 36시간 동안 게이트 통과 커밋 ~40건: 32px 아트
@@ -376,7 +389,12 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
   + `scripts/music-video-thumbnail.sh` (중반 클라이맥스 JPG).
   `MUSIC_VIDEO_VALIDATE=1` 로 두면 렌더 직후 자동 chain.
 
+</details>
+
 ### v5 프로토타입 이후 누적된 것들
+
+<details>
+<summary>▸ v5 프로토타입 이후 누적된 전체 내역 — 펼쳐보기</summary>
 
 - **ffmpeg 쉐이더 23개** —
   [`scripts/music-video-shaders.sh`](scripts/music-video-shaders.sh) 에
@@ -439,6 +457,8 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
 `faceless-short` 미션 (내레이션 기반 쇼츠) 은 여전히 아래 쇼케이스로
 유지되며, v1 파이프라인 출력 (단일-클립 highlight + shorts-batch) 은
 기준점 참고용으로 그 아래에 유지됩니다.
+
+</details>
 
 ### Music-video 파일럿 (포맷 피벗 후, 2026-05-17)
 

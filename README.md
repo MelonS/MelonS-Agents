@@ -89,6 +89,9 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > drop into Claude Code, Cursor, Goose, Gemini CLI, and the rest of
 > the compatible-runtime set unmodified.
 >
+<details>
+<summary>▸ The four skills in depth · two ways to drive the repo · the design premise — click to expand</summary>
+
 > **Skill #1 — `music-video`.**  Music file in, 60-second 9:16
 > vertical short out.  Per-genre color grade (seven profiles) shapes
 > generic Pexels B-roll into a genre-coded look; 23 ffmpeg shaders
@@ -177,6 +180,8 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > system's own growth, not a record of its outputs (those stay local
 > in gitignored `records/`).
 
+</details>
+
 ### PawnSim — the prototype the agent is actively iterating on (2026-06 focus)
 
 ![Verification — two gates: 15-scenario input-level repro gate per commit + isolated grader sub-agent on long soaks](docs/visuals/14-verification-loop.png)
@@ -232,6 +237,9 @@ verification status (including known gaps) in
 ![Auditor — 3 trigger layers: L1 post-commit hook, L2 15-min anomaly poll, L3 daily 03:00 baseline](docs/visuals/09-auditor-triggers.png)
 
 A few choices that distinguish this from a typical agent demo:
+
+<details>
+<summary>▸ Design notes — choices that set this apart from a typical agent demo — click to expand</summary>
 
 - **Outcome layer vs. work queue, kept separate.** [`docs/goal.md`](docs/goal.md)
   holds the active goal as a concrete deliverable; [`docs/roadmap.md`](docs/roadmap.md)
@@ -304,6 +312,8 @@ A few choices that distinguish this from a typical agent demo:
   Full catalog with what/when/output table:
   [`docs/operator-tooling.md`](docs/operator-tooling.md).
 
+</details>
+
 ## Autonomy signal — operator-intervention trend
 
 A multi-agent system that needs constant human steering hasn't
@@ -362,6 +372,9 @@ on 2026-05-17
 
 ### Recently shipped (rolling)
 
+<details>
+<summary>▸ Recent ship log (rolling) — click to expand</summary>
+
 - **2026-06-12 PawnSim verification-loop adoption + basics overhaul**
   (Skill #3-A) — adopted a rubric + isolated-grader verification loop
   (grader sub-agents judging soak evidence with zero author context) and
@@ -401,7 +414,12 @@ on 2026-05-17
   + `scripts/music-video-thumbnail.sh` (mid-climax JPG).  Both auto-chain
   post-render when `MUSIC_VIDEO_VALIDATE=1`.
 
+</details>
+
 ### What's shipped on top of the v5 prototype
+
+<details>
+<summary>▸ Everything shipped on top of the v5 prototype — click to expand</summary>
 
 - **23 ffmpeg shaders** in [`scripts/music-video-shaders.sh`](scripts/music-video-shaders.sh)
   across three stages — pond / halation / breathing / combo (first
@@ -466,6 +484,8 @@ on 2026-05-17
 The `faceless-short` mission (narration-driven shorts) remains the
 showcase below; the v1 pipeline outputs (single-clip highlight +
 shorts-batch) remain as the baseline reference further down.
+
+</details>
 
 ### Music-video pilots (post-pivot, 2026-05-17)
 
