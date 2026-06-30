@@ -1,0 +1,56 @@
+# =============================================================================
+# Subject profile: EXAMPLE (placeholder template — safe to commit)
+# =============================================================================
+# A fictional placeholder so the `idol` profile + smoke test have a tracked,
+# public-safe default. Copy this to config/subjects/<your-id>.yaml (those are
+# gitignored) and fill in a REAL artist there; select it with `--subject=<id>`.
+#
+# Reminder: a real-subject file names real people + a trademarked group and
+# points a tool at making content about them — keep those LOCAL (see
+# config/subjects/README.md). This example contains no real entity.
+# =============================================================================
+
+subject:
+  id: example
+  display_name: 아티스트
+  display_name_en: Example Artist
+  kind: real-idol-group              # real-idol-group | real-person | brand
+  agency: Example Agency
+  debut: "2024-01-01"
+  name_meaning: "(placeholder)"
+
+  # Members (stage names only; real people → likeness is rights-protected).
+  members:
+    - { stage: MemberA, nationality: KR }
+    - { stage: MemberB, nationality: KR }
+
+  # OFFICIAL channels — the ONLY first-party sources (placeholder).
+  official:
+    youtube: "https://www.youtube.com/@example_official"
+    instagram: "https://www.instagram.com/example_official/"
+
+  # ── Legal posture (drives the idol-content checks) ───────────────────────
+  legal:
+    real_people: true
+    has_minors: false                # set true if any member is a minor → heightened care
+    music_copyright_holder: "KOMCA + agency (master)"
+    media_owner: "the agency (official photos / MV / performance)"
+    default_safe_path: "narration + sourced facts + generic license-clean B-roll + text; no member imagery, no group audio"
+    jurisdiction_note: "Korea: publicity rights (퍼블리시티권) + 사실적시 명예훼손. Stick to officially-announced public info."
+
+  # ── Channel branding (text-based; no member likeness by default) ─────────
+  brand:
+    lower_third_text: "ARTIST NEWS"
+    brand_mark_text: "NEWS"
+    accent_color: "0x7C4DFF"
+    font_hint: ""
+    member_image: ""                 # MUST stay empty unless you hold image rights
+
+  # ── Mandatory disclosures (BLOCKING) ─────────────────────────────────────
+  disclosures:
+    fan_content: "비공식 팬 제작 · 소속사와 무관 / Unofficial fan-made, not affiliated with the agency"
+    ai_narration: "AI 합성 나레이션 / Synthetic AI narration"
+
+  # ── Content defaults ─────────────────────────────────────────────────────
+  content_base: news
+  voice: af_heart

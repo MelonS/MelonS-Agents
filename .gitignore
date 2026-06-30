@@ -230,3 +230,12 @@ docs/review-digest.md
 
 # Playwright MCP runtime logs (per-session artifacts)
 .playwright-mcp/
+
+# Real-subject configs for the `idol` content-short (/idol-short).  A subject
+# file names a real, trademarked group + members and points a tool at making
+# content about them — kept LOCAL (IP / trademark / publicity-rights), same
+# "abstract to genre in public" rule used elsewhere.  config/subjects/README.md
+# (schema) and example.yaml (a fictional placeholder template) ARE tracked; real
+# *.yaml subject files are not.
+config/subjects/*.yaml
+!config/subjects/example.yaml

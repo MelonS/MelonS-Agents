@@ -1,0 +1,116 @@
+# =============================================================================
+# Content-shorts profiles — info (정보) / news (뉴스) / idol (아이돌)
+# =============================================================================
+# Consumed by:
+#   - agents/missions/content-short/run.sh   (render env defaults)
+#   - scripts/legal-gate.sh                  (legal strictness + required disclosure)
+#   - .claude/agents/*-team.md               (team behavior per profile)
+#
+# Every field has a safe default in run.sh, so a missing profile degrades to
+# the `info` baseline rather than failing.  Adding a profile is a deliberate
+# commit (audit trail), same convention as config/copyright-allowlist.yaml.
+#
+# Field reference:
+#   voice                 - TTS voice hint (agents/lib/tts.sh). "subject" =
+#                           resolve the narrator voice from config/subjects/<id>.yaml.
+#   num_broll             - B-roll windows (faceless FACELESS_NUM_BROLL)
+#   script_words          - target narration length [min,max]
+#   tone                  - one-line tone instruction injected into the script prompt
+#   recency_days          - news/freshness gate; 0 = no recency requirement
+#   legal_strictness      - standard | high  (drives legal-gate.sh checklist depth)
+#   subject               - subject file stem under config/subjects/, or "" (none).
+#                           Real-subject (idol) profiles set this; info/news leave "".
+#   disclosures           - lines that MUST appear (burn-in or metadata) before release
+#   required_checks       - legal checks that are BLOCKING for this profile
+# =============================================================================
+
+profiles:
+
+  # ── 정보쇼츠 — evergreen explainer ────────────────────────────────────────
+  - id: info
+    display_name: 정보쇼츠
+    voice: am_michael
+    num_broll: 8
+    script_words: [130, 160]
+    tone: >
+      Neutral, documentary explainer. One striking hook, three concrete
+      developing beats, one memorable close. Factually grounded; avoid
+      sweeping unverifiable claims.
+    recency_days: 0
+    legal_strictness: standard
+    subject: ""
+    disclosures:
+      - "B-roll: Pexels License — pexels.com"
+    required_checks:
+      - media-license
+      - fact-accuracy
+      - unverifiable
+      - required-disclaimer
+
+  # ── 뉴스쇼츠 — current-event recap ────────────────────────────────────────
+  - id: news
+    display_name: 뉴스쇼츠
+    voice: am_michael
+    num_broll: 8
+    script_words: [120, 150]
+    tone: >
+      Tight, neutral wire-service recap. Lead with the single most important
+      development. Attribute every claim ("according to ..."). No speculation,
+      no editorializing, no unverified allegations about named living people.
+    recency_days: 3
+    legal_strictness: high
+    subject: ""
+    disclosures:
+      - "B-roll: Pexels License — pexels.com"
+      - "정보 기준 시점 / As of {AS_OF_DATE}"
+    required_checks:
+      - media-license
+      - fact-accuracy
+      - defamation
+      - unverifiable
+      - required-disclaimer
+
+  # ── idol (아이돌쇼츠) — content about a REAL artist/idol group ────────────
+  # Subject-locked format: shorts ABOUT a real idol group. The subject is REAL
+  # PEOPLE + a trademarked group, so the legal posture inverts vs a synthetic
+  # persona: portrait/publicity rights, music & MV copyright, trademark, and
+  # (Korean) defamation all apply. The DEFAULT-SAFE path is news/info ABOUT the
+  # group using synthetic narration + sourced facts + license-clean generic
+  # B-roll + on-screen text — NO member imagery, NO group audio, NO agency media.
+  # The idol-content legal checks keep it on that path and flag any escalation.
+  #
+  # The skill is genre-abstract (`idol-short`) for public-repo IP-safety; the
+  # concrete subject lives in config/subjects/<id>.yaml (real ones gitignored)
+  # and is selectable per run with --subject=<id>. Default = the `example` stub.
+  - id: idol
+    display_name: 아이돌쇼츠
+    # voice "subject" = resolve the synthetic narrator voice from the subject file
+    voice: subject
+    subject: example
+    # content_base: info (member/group facts) | news (comeback/schedule)
+    content_base: news
+    num_broll: 8
+    script_words: [120, 150]
+    tone: >
+      Neutral fan-news/commentary ABOUT the group, spoken by a synthetic
+      narrator (NOT a member's voice). Attribute every claim to an official or
+      reputable source. No rumors, no dating speculation, no private facts —
+      only officially-announced public information. Never imply official
+      endorsement; this is unofficial fan content.
+    # recency_days is overridden to the news value when content_base=news
+    recency_days: 3
+    legal_strictness: high
+    disclosures:
+      - "B-roll: Pexels License — pexels.com"
+      - "비공식 팬 제작 · 소속사와 무관 / Unofficial fan-made, not affiliated with the agency"
+      - "AI 합성 나레이션 / Synthetic AI narration"
+    required_checks:
+      - media-license
+      - fact-accuracy
+      - defamation
+      - unverifiable
+      - portrait-publicity-rights
+      - media-rights-reuse
+      - fan-content-disclaimer
+      - synthetic-disclosure
+      - required-disclaimer

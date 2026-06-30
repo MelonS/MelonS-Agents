@@ -5,8 +5,8 @@
     "name": "MelonS"
   },
   "metadata": {
-    "description": "Multi-agent system shipping agentskills.io-spec runtime pipelines: music-video shorts production and Korean job-board digest aggregation.  Local-first ($0 runtime), Claude for one creative stage where quality matters, three-layer reactive audit.",
-    "version": "0.3.0",
+    "description": "Multi-agent system shipping agentskills.io-spec runtime pipelines: music-video shorts production, a four-team content-shorts pipeline (research → production ⇄ legal → release) for info / news / real-artist (idol) shorts, and Korean job-board digest aggregation.  Local-first ($0 runtime), Claude for the research/legal judgment stages, three-layer reactive audit.",
+    "version": "0.4.0",
     "license": "MIT",
     "homepage": "https://github.com/MelonS/MelonS-Agents",
     "site": "https://melons.github.io/MelonS-Agents/"
@@ -50,6 +50,63 @@
         "agentskills"
       ],
       "category": "data-aggregation"
+    },
+    {
+      "name": "info-short",
+      "source": "skills/info-short",
+      "description": "정보쇼츠 — a 60-second 9:16 informational/explainer short produced through a four-team pipeline (research → production ⇄ legal → release).  Reuses the faceless-short render core; adds a sourced-research stage and a legal gate (license + accuracy + disclosure) before release.  Local-first ($0 default), manual upload only.",
+      "version": "0.1.0",
+      "author": {
+        "name": "MelonS-Agents"
+      },
+      "keywords": [
+        "shorts",
+        "explainer",
+        "faceless",
+        "research-pipeline",
+        "legal-gate",
+        "9-16-vertical",
+        "agentskills"
+      ],
+      "category": "media-production"
+    },
+    {
+      "name": "news-short",
+      "source": "skills/news-short",
+      "description": "뉴스쇼츠 — a 60-second 9:16 news-recap short through the same four-team pipeline, with a recency gate (newest source within N days), multi-source corroboration, an 'as of <date>' stamp, and a stricter legal gate (defamation / named-living-person / attribution).  Reuses the faceless-short render core.",
+      "version": "0.1.0",
+      "author": {
+        "name": "MelonS-Agents"
+      },
+      "keywords": [
+        "shorts",
+        "news",
+        "recap",
+        "recency-gate",
+        "defamation-screen",
+        "legal-gate",
+        "agentskills"
+      ],
+      "category": "media-production"
+    },
+    {
+      "name": "idol-short",
+      "source": "skills/idol-short",
+      "description": "아이돌/아티스트 콘텐츠 쇼츠 — a 60-second 9:16 short ABOUT a real idol/artist (subject-configurable via config/subjects/<id>.yaml).  Because the subject is real people + a trademarked group, the legal gate is load-bearing: it enforces a default-safe path (synthetic narration + sourced facts + license-clean generic B-roll + on-screen text; no member imagery / group audio / agency media) and adds idol-content checks (portrait-publicity-rights, media-rights-reuse, fan-content-disclaimer, defamation, minors).  Reuses the faceless-short render core.",
+      "version": "0.1.0",
+      "author": {
+        "name": "MelonS-Agents"
+      },
+      "keywords": [
+        "shorts",
+        "idol",
+        "kpop",
+        "fan-content",
+        "publicity-rights",
+        "legal-gate",
+        "agentskills"
+      ],
+      "category": "media-production"
     }
   ]
 }
