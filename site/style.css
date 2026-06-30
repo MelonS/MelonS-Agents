@@ -253,6 +253,7 @@ h1 .sub {
 }
 .demo img {
   width: 100%;
+  height: auto;
   max-width: 760px;
   aspect-ratio: 16 / 9;
   object-fit: cover;
@@ -447,6 +448,7 @@ figure.diagram figcaption {
 .gallery figure { margin: 0; text-align: center; }
 .gallery img {
   width: 100%;
+  height: auto;
   aspect-ratio: 9 / 16;
   object-fit: cover;
   border-radius: 10px;
@@ -464,6 +466,7 @@ figure.diagram figcaption {
 figure.hero-shot { margin: 1.5rem 0; }
 figure.hero-shot img {
   width: 100%;
+  height: auto;
   max-width: 320px;
   aspect-ratio: 9 / 16;
   object-fit: cover;
