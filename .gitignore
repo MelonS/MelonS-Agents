@@ -206,27 +206,6 @@ skills/game-prototype/unity-project/.vs/
 !skills/game-prototype/unity-project/Assets/**/*.wav
 !skills/game-prototype/unity-project/Assets/**/*.mp3
 !skills/game-prototype/unity-project/Assets/**/*.ogg
-# Suika prototype assets — committed game art + audio
-!skills/game-prototype-suika/unity-project/Assets/**/*.png
-!skills/game-prototype-suika/unity-project/Assets/**/*.jpg
-!skills/game-prototype-suika/unity-project/Assets/**/*.tga
-!skills/game-prototype-suika/unity-project/Assets/**/*.wav
-!skills/game-prototype-suika/unity-project/Assets/**/*.mp3
-!skills/game-prototype-suika/unity-project/Assets/**/*.ogg
-# Suika day-N verify screenshots — evidence committed at skill root
-!skills/game-prototype-suika/*.png
-
-# VS-lite prototype assets — committed
-!skills/game-prototype-vs-lite/unity-project/Assets/**/*.png
-!skills/game-prototype-vs-lite/unity-project/Assets/**/*.wav
-!skills/game-prototype-vs-lite/unity-project/Assets/**/*.ogg
-!skills/game-prototype-vs-lite/*.png
-skills/game-prototype-vs-lite/unity-project/Library/
-skills/game-prototype-vs-lite/unity-project/Temp/
-skills/game-prototype-vs-lite/unity-project/Logs/
-skills/game-prototype-vs-lite/unity-project/UserSettings/
-skills/game-prototype-vs-lite/unity-project/obj/
-skills/game-prototype-vs-lite/builds/
 
 # Daily build snapshots — too big for repo, machine-local
 skills/game-prototype/builds/
@@ -247,10 +226,3 @@ docs/review-digest.md
 
 # Playwright MCP runtime logs (per-session artifacts)
 .playwright-mcp/
-
-# game-prototype-suika — machine-local Unity dirs (same policy as the other prototypes)
-skills/game-prototype-suika/unity-project/Library/
-skills/game-prototype-suika/unity-project/Temp/
-skills/game-prototype-suika/unity-project/Logs/
-skills/game-prototype-suika/unity-project/UserSettings/
-skills/game-prototype-suika/builds/

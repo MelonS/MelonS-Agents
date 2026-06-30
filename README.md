@@ -116,9 +116,8 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > production count above).**  Unity-focused AI agent that
 > orchestrates sprite generation, C# scaffolding, balance tuning,
 > audio generation, and an in-game AI director — the meta-skill
-> that drives the game prototypes built alongside it.  Four
-> prototype skills serve as its empirical validation surface.  The
-> flagship is **PawnSim**, a lightweight colony-sim vertical slice
+> that drives the game prototype built alongside it.  Its empirical
+> validation surface is **PawnSim**, a lightweight colony-sim vertical slice
 > ([`skills/game-prototype/`](skills/game-prototype/)) that has grown
 > across many autonomous multi-agent sessions into a deep slice —
 > grid A* pathfinding, pawns with needs/health/skills/traits,
@@ -129,18 +128,9 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 > gate** (synthesized clicks through the player's own UI path, with
 > effect assertions), with long soaks graded by an isolated grader
 > sub-agent against a written rubric — see the PawnSim section
-> below for what that loop has caught.  The other three are smaller
-> arcade / puzzle prototypes that double as a *speedup* benchmark —
-> a 2D physics-merge puzzle
-> ([`skills/game-prototype-suika/`](skills/game-prototype-suika/),
-> Day 2 at ~15× wall-clock speedup vs the no-framework baseline), a
-> Vampire-Survivors-lite
-> ([`skills/game-prototype-vs-lite/`](skills/game-prototype-vs-lite/)),
-> and a 2048-lite
-> ([`skills/game-prototype-2048/`](skills/game-prototype-2048/)) —
-> each built faster than the last to test the compounding-speedup
-> hypothesis.  Graduates into the production-skill count once they
-> hit their deliverable schedules.  Skill definitions live
+> below for what that loop has caught.  Graduates into the
+> production-skill count once the prototype hits its deliverable
+> schedule.  Skill definitions live
 > in [`skills/game-dev-agent/`](skills/game-dev-agent/); PawnSim's own
 > README + PM milestones at
 > [`skills/game-prototype/README.md`](skills/game-prototype/README.md).

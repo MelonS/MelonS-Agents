@@ -50,7 +50,7 @@ def generate_editor_scaffold(
 
     Intended usage: a NEW prototype directory.  Running against an
     existing prototype that already has custom-named editor scripts
-    (e.g. SuikaSceneSetup.cs in skills/game-prototype-suika/) will
+    (e.g. PawnSceneSetup.cs in skills/game-prototype/) will
     create duplicate default-named files alongside — overwrite=False
     only guards against same-name collision, not different-name
     duplicates.  Delete unused defaults manually if so.
