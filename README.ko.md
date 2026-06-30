@@ -6,7 +6,7 @@
 
 **콜로니심 게임을 직접 만들고 — 그걸 플레이해서 자기 작업을 검증하는 AI 에이전트.**  실제 플레이어 클릭을 합성해 각 클릭이 (단지 클릭이 도달한 게 아니라) 실제로 게임 상태를 바꿨는지 어서트하고, 길게 무인으로 돌린 소크는 스크린샷과 로그만 보고 — 작성자의 의도는 절대 보지 않고 — 판정하는 별도 서브에이전트가 채점합니다.
 
-이 자기 검증 루프가 MelonS-Agents 의 척추입니다 — [Claude Code](https://docs.anthropic.com/claude-code) 로 구동되는 멀티 에이전트 시스템.  오늘 세 트랙이 돌아갑니다: 콜로니심 **PawnSim**(Windows + Unity, *개발 중*), 그리고 두 프로덕션 파이프라인 — **music-video** 메이커(음악 → 60초 9:16 쇼츠, Mac/Linux 에서 ~60초)와 **job-hunt** 다이제스트(키워드 하나 → 중복 제거된 한국 채용공고 요약, ~5초).  로컬 오픈소스 도구(ffmpeg / whisper.cpp / ollama / aubio)가 기계적 작업을 하고 Claude 는 오케스트레이션 + 창작 판단을 맡아 — 미션당 **런타임 API 토큰 0개**.  첫날부터 영어 + 한국어.
+이 자기 검증 루프가 MelonS-Agents 의 척추입니다 — [Claude Code](https://docs.anthropic.com/claude-code) 로 구동되는 멀티 에이전트 시스템.  콜로니심 **PawnSim**(Windows + Unity, *개발 중*)이 쇼케이스이고, 두 미디어 파이프라인은 이미 실제 결과물을 출하합니다 — **music-video** 메이커(음악 → 60초 9:16 쇼츠, Mac/Linux 에서 ~60초)와 **job-hunt** 다이제스트(키워드 하나 → 중복 제거된 한국 채용공고 요약, ~5초) — 여기에 세 번째로 저작권 검수를 거치는 **content-shorts** 파이프라인이 초기 개발 중입니다.  로컬 오픈소스 도구(ffmpeg / whisper.cpp / ollama / aubio)가 기계적 작업을 하고 Claude 는 오케스트레이션 + 창작 판단을 맡아 — 미션당 **런타임 API 토큰 0개**.  첫날부터 영어 + 한국어.
 
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=flat-square)
@@ -20,7 +20,7 @@
 
 </div>
 
-![MelonS-Agents — 숫자로 보기: 출력 100+, 프로덕션 스킬 2개, 쉐이더 23개, 런타임 API 토큰 0개, 15시나리오 게이트, 서브에이전트 19개, 감사 레이어 3개, MIT](docs/visuals/01-hero-stats-ko.png)
+![MelonS-Agents — 숫자로 보기: 출력 100+, 프로덕션 스킬 2개, 쉐이더 23개, 런타임 API 토큰 0개, 15시나리오 게이트, 서브에이전트 24개, 감사 레이어 3개, MIT](docs/visuals/01-hero-stats-ko.png)
 
 ## 지금 무엇이 되는가
 
@@ -29,6 +29,7 @@
 | **music-video** | 음악 → 60초 9:16 쇼츠 (비트 정렬 컷, 빈티지 ffmpeg 쉐이더) | 프로덕션\* | ✅ Mac/Linux — `./scripts/first-touch.sh`, ~60초 |
 | **job-hunt** | 시드 키워드 하나 → 중복 제거된 한국 채용공고 다이제스트 (소스 11개) | 프로덕션\* | ✅ ~5초, 네트워크·키 불필요 |
 | **PawnSim** · `game-dev-agent` 가 제작 | 자기 검증형 콜로니심 게임 프로토타입 | 개발 중 | ⚠️ Windows + Unity 6000.0.75f1 |
+| **content-shorts** · 4팀 법률 게이트 파이프라인이 제작 | 주제 → 출처 확보·저작권 검수된 9:16 쇼츠 (정보/뉴스/아이돌 포맷) | 개발 중 | ⚠️ end-to-end 작동(2026-07-01), Pexels 키 필요 |
 | **product-cf** | 제품 사진 → CF 스타일 쇼츠 | 보류 | ❌ 정직한 부정 결론으로 보류 |
 
 <sub>\*"프로덕션" = 정해진 주기로 실제 결과물을 출하 (이 둘이 핵심 카운트).  `game-dev-agent` 는 PawnSim 을 만드는 메타 스킬 — PawnSim 이 출하 주기에 도달하면 프로덕션 카운트로 승격됩니다.</sub>
@@ -68,13 +69,13 @@ Pexels 가입 없음, Suno 왕복 없음, `.env` 편집 없음 — 마법사가 
 
 ![2026-05-22 noir-detective 렌더의 5초 애니메이션 프리뷰 — 9:16 세로 쇼츠, 스모키 바 인테리어, pink-magenta rnb_low_key 그레이드 프로필의 파이프를 문 수염 남자.  phrase-aware 쉐이더 + 장르별 컬러 그레이드가 평범한 Pexels B-roll 을 장르 코드가 입혀진 룩으로 변환](docs/demo/music-video-noir-detective-2026-05-24-preview.gif)
 
-음악 → 음악이 메인 오디오인 9:16 쇼츠: 비트 정렬 컷, onset 정렬 글리치 마이크로 에디트, 그리고 일곱 가지 장르별 컬러 그레이드 중 하나가 평범한 스톡 B-roll 을 장르 코드가 입혀진 룩으로 만듭니다.  2026-05-17 에 이전의 내레이션 기반 포맷을 밀어내고 채택됐습니다.  전체 파이프라인 — 23 쉐이더, 장르 카탈로그, v1→v6 진화: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
+음악 → 음악이 메인 오디오인 9:16 쇼츠: 비트 정렬 컷, onset 정렬 글리치 마이크로 에디트, 그리고 여섯 가지 장르별 컬러 그레이드(+ 중립 패스스루) 중 하나가 평범한 스톡 B-roll 을 장르 코드가 입혀진 룩으로 만듭니다.  2026-05-17 에 이전의 내레이션 기반 포맷을 밀어내고 채택됐습니다.  전체 파이프라인 — 23 쉐이더, 장르 카탈로그, v1→v6 진화: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
 
 ## 아키텍처
 
 ![3-shape 스킬 모델 — Shape A 미션 라우팅 5에이전트 파이프라인, Shape B 독립형, Shape ? 미래 스킬](docs/visuals/05-three-shapes-ko.png)
 
-시스템은 모든 스킬을 하나의 형태로 강제하지 않습니다.  **Shape A** 는 5에이전트 미션 파이프라인(orchestrator + planner / resourcer / editor / qa)으로 라우팅하고, **Shape B** 는 planner/qa 단계가 거의 빌 때 쓰는 독립 스크립트입니다.  서브에이전트는 대화 기록을 공유하지 않고 — 커밋된 파일(`plan.md` / `MANIFEST.md` / `qa-report.md`)로 핸드오프하므로 각자의 컨텍스트와 비용이 제한됩니다.  역할별 모델 라우팅(planner/resourcer = opus, editor/qa = sonnet)과 비용 방화벽이 런타임 API 토큰을 0으로 유지합니다.  `.claude/agents/` 에는 정의 **19개**(미디어 6 + 게임 13)가 있습니다.  전체 데이터 흐름 맵 + 게임 프로토타입 빌드 체인: [`docs/architecture.md`](docs/architecture.md).
+시스템은 모든 스킬을 하나의 형태로 강제하지 않습니다.  **Shape A** 는 5에이전트 미션 파이프라인(orchestrator + planner / resourcer / editor / qa)으로 라우팅하고, **Shape B** 는 planner/qa 단계가 거의 빌 때 쓰는 독립 스크립트입니다.  서브에이전트는 대화 기록을 공유하지 않고 — 커밋된 파일(`plan.md` / `MANIFEST.md` / `qa-report.md`)로 핸드오프하므로 각자의 컨텍스트와 비용이 제한됩니다.  역할별 모델 라우팅(planner/resourcer = opus, editor/qa = sonnet)과 비용 방화벽이 런타임 API 토큰을 0으로 유지합니다.  `.claude/agents/` 에는 정의 **24개**(코어 6 + 게임 로스터 13 + 콘텐츠 파이프라인 팀 5)가 있습니다.  전체 데이터 흐름 맵 + 게임 프로토타입 빌드 체인: [`docs/architecture.md`](docs/architecture.md).
 
 ## 자율성 신호 — 주장이 아니라 측정
 
@@ -89,13 +90,13 @@ Pexels 가입 없음, Suno 왕복 없음, `.env` 편집 없음 — 마법사가 
 - **`product-cf` 는 보류** — 실제 부정 결론 때문입니다.  무료 / 로컬로 "진짜 3D 처럼 만들기"(depth-parallax, 실린더 래핑 턴테이블, 로컬 image-to-video) 접근은 16 GB 머신에서 진짜 CF 품질 기준을 넘지 못했습니다; 설득력 있는 결과엔 유료 클라우드 image-to-video 또는 더 큰 GPU 가 필요합니다.  트리에 게이트 오프 상태로 보존, 결정 보류.
 - **셀 셰이딩은 의도적으로 연기** — ffmpeg 의 한계가 어디인지 아는 것이 결과를 가짜로 만드는 것보다 낫습니다.
 
-더 많은 트레이드오프와 알려진 갭: [`docs/known-limitations.md`](docs/known-limitations.md).
+더 많은 부정 결과와 보류 범위: [`skills/game-prototype/README.md`](skills/game-prototype/README.md)(정직한 검증 상태 + out-of-scope).  해결된 이슈 로그(예: Homebrew ffmpeg/libass 분리): [`docs/known-limitations.md`](docs/known-limitations.md).
 
 <details>
 <summary><b>설계 노트 — 흔한 에이전트 데모와 다른 선택들</b></summary>
 
 - **결과 레이어 vs 작업 큐, 분리해서 유지.**  [`docs/goal.md`](docs/goal.md) 는 활성 목표를 구체적 산출물로 담고, [`docs/roadmap.md`](docs/roadmap.md) 는 일 단위 작업 큐를 담습니다.  큐가 비었다 ≠ 목표 달성 — 이 분리는 과거 24시간 동안 큐가 0인 채 인프라 커밋 11개에 산출물 0개가 나왔던 사고 때문에 존재합니다.
-- **라이브 알림 표면을 가진 비대역(out-of-band) 감사기.**  [`auditor`](.claude/agents/auditor.md) 서브에이전트가 매일 03:00 에 `launchd` 로 돌며 레포 전체를 읽기 전용으로 훑고, 최신 판정이 non-CLEAN 일 때만 [`docs/audit/CURRENT-ALERT.md`](docs/audit/) 를 씁니다; 다음 세션은 목표를 잡기 전에 이를 읽어야 할 계약 의무가 있습니다.
+- **라이브 알림 표면을 가진 비대역(out-of-band) 감사기.**  [`auditor`](.claude/agents/auditor.md) 서브에이전트가 세 가지 트리거 — L1 post-commit 훅, L2 15분 이상감지 폴, L3 매일 03:00 베이스라인(`launchd`/`cron`) — 로 작동하며 레포 전체를 읽기 전용으로 훑고, 최신 판정이 non-CLEAN 일 때만 [`docs/audit/CURRENT-ALERT.md`](docs/audit/) 를 씁니다; 다음 세션은 목표를 잡기 전에 이를 읽어야 할 계약 의무가 있습니다.
 - **오케스트레이션과 실행 사이의 비용 방화벽.**  Anthropic 토큰은 오케스트레이션(Tier 1)에서만 쓰이고, 미션 실행(transcribe → select → render → QA)은 전부 로컬 도구로 돌아 토큰 0개입니다.
 - **상태 점검 프롬프트를 흡수하는 운영자 툴링.**  `scripts/doctor.sh`(Claude 없이 ~2초 헬스 체크), `scripts/statusline.sh`, `scripts/morning-brief.sh` 가 "지금 상태는 / 밤새 무슨 일이?"를 운영자가 타이핑하지 않아도 답합니다.  전체 카탈로그: [`docs/operator-tooling.md`](docs/operator-tooling.md).
 
@@ -150,7 +151,8 @@ python ../game-dev-agent/scripts/agent.py integrate --project unity-project --me
 | 엔지니어링 사례 연구 — 9개 인시던트, *문제 → 제약 → 결정 → 산출물* | [`docs/engineering-case-studies.ko.md`](docs/engineering-case-studies.ko.md) |
 | 아키텍처 + 전체 데이터 흐름 맵 | [`docs/architecture.md`](docs/architecture.md) |
 | music-video 파이프라인 레퍼런스 (쉐이더, 장르, env 변수) | [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md) |
-| 알려진 한계 + 부정 결과 | [`docs/known-limitations.md`](docs/known-limitations.md) |
+| content-shorts 파이프라인 — 4팀 리서치→제작⇄법률→출시 | [`docs/content-shorts-pipeline.md`](docs/content-shorts-pipeline.md) |
+| 해결된 이슈 로그 (ffmpeg/libass 패키징 등) | [`docs/known-limitations.md`](docs/known-limitations.md) |
 | 비용 모델 — Anthropic vs 로컬 | [`docs/cost-model.md`](docs/cost-model.md) |
 | 플랫폼 / Windows 셋업 | [`docs/platform-windows.md`](docs/platform-windows.md) |
 | 운영 계약 — 자율 규칙 | [`docs/operator-contract.md`](docs/operator-contract.md) |

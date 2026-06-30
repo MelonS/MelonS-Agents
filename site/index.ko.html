@@ -103,9 +103,9 @@
       <span class="sub">입력 레벨 재현 + 어서션</span>
     </li>
     <li>
-      <span class="num purple">19</span>
+      <span class="num purple">24</span>
       <span class="label">서브에이전트 정의</span>
-      <span class="sub">미디어 6 + 게임 로스터 13</span>
+      <span class="sub">코어 6 + 게임 13 + 콘텐츠 5</span>
     </li>
     <li>
       <span class="num fg">3</span>
@@ -191,7 +191,7 @@
   <p>스캐폴드는 범용입니다 — 모든 스킬을 한 가지 shape으로 강요하지 않습니다. 숏폼 영상이 v1 도메인이었고(결과물이 눈에 보이고 실패 모드가 빨리 잡힘), 현재 개발 포커스는 <strong>게임 트랙</strong>(위 PawnSim 만들고-검증 루프)으로 <code>game-dev-agent</code> 메타 스킬이 구동합니다. 오늘 프로덕션 미디어 스킬 2종이 올라가 있습니다: <strong>music-video</strong> 미션과 standalone <strong>job-hunt</strong> 스킬. 이전 미션들(<strong>faceless-short</strong> 내레이션, v1 <strong>highlight / shorts-batch</strong>)은 대체 경로로 트리에 남아 있습니다.</p>
 
   <figure class="diagram">
-    <img src="assets/visuals/01-hero-stats-ko.png" width="1800" height="965" alt="MelonS-Agents 한눈에 보기 포스터: 자기 콜로니심 게임을 만들고 플레이하고 검증하는 에이전트, Claude Code·Cursor·Goose·Gemini CLI·Codex·Copilot 간 이식 가능. 스탯 카드: 미션 출력 100+(6타입), 프로덕션 스킬 2 + 메타 스킬 1 + 프로토타입 4, ffmpeg 쉐이더 23, 런타임 API 토큰 0, 15시나리오 커밋 게이트, 서브에이전트 정의 19(미디어 6 + 게임 로스터 13), 감사 트리거 레이어 3, MIT 라이선스 / EN + KO 듀얼 트랙." loading="lazy" decoding="async">
+    <img src="assets/visuals/01-hero-stats-ko.png" width="1800" height="965" alt="MelonS-Agents 한눈에 보기 포스터: 자기 콜로니심 게임을 만들고 플레이하고 검증하는 에이전트, Claude Code·Cursor·Goose·Gemini CLI·Codex·Copilot 간 이식 가능. 스탯 카드: 미션 출력 100+(6타입), 프로덕션 스킬 2 + 메타 스킬 1 + 프로토타입 4, ffmpeg 쉐이더 23, 런타임 API 토큰 0, 15시나리오 커밋 게이트, 서브에이전트 정의 24(코어 6 + 게임 13 + 콘텐츠 5), 감사 트리거 레이어 3, MIT 라이선스 / EN + KO 듀얼 트랙." loading="lazy" decoding="async">
     <figcaption>시스템 한눈에 보기 — README · Overview</figcaption>
   </figure>
 
@@ -205,7 +205,7 @@
     <article class="card glow-gold">
       <h3>game-dev-agent (메타 스킬, Skill #3)</h3>
       <p>에디터 수작업 없이 게임 전체를 CLI 스캐폴딩하는 Unity 전용 에이전트입니다: 스프라이트 생성(32px 절차 아트), C# 시스템 스캐폴딩, Unity batchmode 씬 + 프리팹 생성, 밸런스 튜닝, 오디오 생성, 인게임 AI 디렉터. 이 에이전트가 경험적 검증 표면을 겸하는 <strong>프로토타입 스킬 4종</strong>을 구동합니다 — PawnSim(콜로니심 플래그십), 그리고 2D 물리 병합 퍼즐, 웨이브 생존 액션, 슬라이딩 타일 숫자 퍼즐 — 각각 앞 것보다 빠르게 만들어 "복리 가속" 가설을 테스트합니다.</p>
-      <p class="muted">게임 트랙은 6개 코어 미디어 파이프라인 에이전트 위에 13개 게임 도메인 서브에이전트(디렉터 / 디자이너 / 프로그래머 / 빌드 엔지니어 / QA / 아티스트 / 사운드 / 내러티브 / 스페셜리스트) 로스터를 따로 돌립니다 — <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>에 총 19개 에이전트 정의.</p>
+      <p class="muted">게임 트랙은 6개 코어 미디어 파이프라인 에이전트 위에 13개 게임 도메인 서브에이전트(디렉터 / 디자이너 / 프로그래머 / 빌드 엔지니어 / QA / 아티스트 / 사운드 / 내러티브 / 스페셜리스트) 로스터를, 그리고 content-shorts 파이프라인용 5개를 더 돌립니다 — <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>에 총 24개 에이전트 정의.</p>
     </article>
   </div>
 
@@ -314,7 +314,7 @@
         <li class="chip"><b>5,000+</b> raw → <b>~200</b> 매칭</li>
         <li class="chip">Shape B · standalone <code>curl+jq</code></li>
       </ul>
-      <p class="muted">Skill #2, standalone, v2 짧은 키워드 UX. 70개 테스트; <code>JH_*_LIVE</code> 플래그 뒤의 enrichment 유틸 5종. 스펙: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/job-hunt" target="_blank" rel="noopener">skills/job-hunt/</a></p>
+      <p class="muted">Skill #2, standalone, v2 짧은 키워드 UX. 70개 테스트; <code>JH_*_LIVE</code> 플래그 뒤의 enrichment 유틸 4종. 스펙: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/job-hunt" target="_blank" rel="noopener">skills/job-hunt/</a></p>
     </article>
 
     <article class="card skill-card glow-gold">
@@ -357,7 +357,7 @@
       <p>별도 shape 스킬: standalone(미션 라우팅 없음), v2 짧은 키워드 UX, agentskills.io 호환. <code>--seed "Problem Solver"</code>를 넘기면 오케스트레이터가 26 동의어 role family(Forward Deployed Engineer / Applied AI Engineer / Generalist / Founding Engineer / …)로 확장한 뒤 KR 잡보드(사람인 / 잡코리아 / 원티드 / 프로그래머스)에서 fetch합니다. 라이브 실행은 <strong>5,000+ raw 공고를 ~200 매칭으로</strong> 중복 제거합니다.</p>
       <ul>
         <li><b>소스 플러그인 11개</b>(키 없이 라이브 5, 키 게이팅 2, mock-fallback 4) — 기본은 전부 mock-fallback; 플러그인별 라이브 HTTP는 <code>JH_<i>SOURCE</i>_LIVE=1</code> 뒤.</li>
-        <li><b>enrichment 유틸 5종</b>(fit-score / cover-letter / company-research / interview-prep) — 공고별 Claude 호출은 <code>JH_<i>TOOL</i>_LIVE=1</code> 뒤.</li>
+        <li><b>enrichment 유틸 4종</b>(fit-score / cover-letter / company-research / interview-prep) — 공고별 Claude 호출은 <code>JH_<i>TOOL</i>_LIVE=1</code> 뒤.</li>
         <li><b>테스트 70개</b> — smoke + 엣지케이스 + JSON 스키마 검증. EN + KO 워크스루.</li>
       </ul>
       <p class="muted">퀵스타트: <code>skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run</code>. 레퍼런스 다이제스트: <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/samples/job-hunt-digest-mock.md" target="_blank" rel="noopener">docs/samples/job-hunt-digest-mock.md</a>.</p>

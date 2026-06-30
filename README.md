@@ -6,7 +6,7 @@
 
 **An AI agent that builds a colony-sim game — then plays it to verify its own work.**  It synthesizes real player clicks, asserts each one actually changed the game state (not just that the click landed), and grades long unattended soaks with a separate sub-agent that judges only from screenshots and logs — never the author's intent.
 
-That self-verification loop is the spine of MelonS-Agents, a multi-agent system driven by [Claude Code](https://docs.anthropic.com/claude-code).  Three tracks run today: the colony-sim **PawnSim** (Windows + Unity, *in development*), plus two production pipelines — a **music-video** maker (a song in → a 60-second 9:16 short, ~60 s on Mac/Linux) and a **job-hunt** digest (one keyword → a deduplicated Korean job-board summary, ~5 s).  Local open-source tools (ffmpeg / whisper.cpp / ollama / aubio) do the mechanical work while Claude orchestrates and makes the creative calls — so a mission costs **zero runtime API tokens**.  English + Korean from day one.
+That self-verification loop is the spine of MelonS-Agents, a multi-agent system driven by [Claude Code](https://docs.anthropic.com/claude-code).  The colony-sim **PawnSim** (Windows + Unity, *in development*) is the showcase; two media pipelines already ship real deliverables — a **music-video** maker (a song in → a 60-second 9:16 short, ~60 s on Mac/Linux) and a **job-hunt** digest (one keyword → a deduplicated Korean job-board summary, ~5 s) — with a third, a copyright-reviewed **content-shorts** pipeline, in early development.  Local open-source tools (ffmpeg / whisper.cpp / ollama / aubio) do the mechanical work while Claude orchestrates and makes the creative calls — so a mission costs **zero runtime API tokens**.  English + Korean from day one.
 
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=flat-square)
@@ -20,7 +20,7 @@ That self-verification loop is the spine of MelonS-Agents, a multi-agent system 
 
 </div>
 
-![MelonS-Agents — by the numbers: 100+ outputs, 2 production skills, 23 shaders, 0 runtime API tokens, 15-scenario gate, 19 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
+![MelonS-Agents — by the numbers: 100+ outputs, 2 production skills, 23 shaders, 0 runtime API tokens, 15-scenario gate, 24 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
 
 ## What works today
 
@@ -29,6 +29,7 @@ That self-verification loop is the spine of MelonS-Agents, a multi-agent system 
 | **music-video** | a song in → a 60-second 9:16 short (beat-aligned cuts, vintage ffmpeg shaders) | Production\* | ✅ Mac/Linux — `./scripts/first-touch.sh`, ~60 s |
 | **job-hunt** | one seed keyword → a deduplicated Korean job-board digest (11 sources) | Production\* | ✅ ~5 s, no network or keys |
 | **PawnSim** · built by `game-dev-agent` | a self-tested colony-sim game prototype | In development | ⚠️ Windows + Unity 6000.0.75f1 |
+| **content-shorts** · built by a 4-team legal-gated pipeline | a topic → a sourced, copyright-reviewed 9:16 short (info / news / idol formats) | In development | ⚠️ runs end-to-end (2026-07-01); needs a Pexels key |
 | **product-cf** | a product photo → a CF-style short | Parked | ❌ parked on an honest negative finding |
 
 <sub>\*"Production" = ships a real deliverable on a schedule (these two are the load-bearing count).  `game-dev-agent` is the meta-skill that builds PawnSim; it graduates into the production count once PawnSim hits its deliverable schedule.</sub>
@@ -68,13 +69,13 @@ Colonists chop / mine / farm / cook / haul / build / research / fight under a ut
 
 ![5-second animated preview from the 2026-05-22 noir-detective render — 9:16 vertical short, smoky bar interior, bearded man with pipe in pink-magenta rnb_low_key grade profile, phrase-aware shaders + per-genre color grade transforming generic Pexels B-roll into a genre-coded look](docs/demo/music-video-noir-detective-2026-05-24-preview.gif)
 
-A song in → a music-as-primary-audio 9:16 short out: beat-aligned cuts, onset-aligned glitch micro-edits, and one of seven per-genre color grades shaping generic stock B-roll into a genre-coded look.  Picked over the earlier narration-driven format on 2026-05-17.  Full pipeline — 23 shaders, the genre catalog, the v1→v6 evolution: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
+A song in → a music-as-primary-audio 9:16 short out: beat-aligned cuts, onset-aligned glitch micro-edits, and one of six per-genre color grades (plus a neutral pass-through) shaping generic stock B-roll into a genre-coded look.  Picked over the earlier narration-driven format on 2026-05-17.  Full pipeline — 23 shaders, the genre catalog, the v1→v6 evolution: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
 
 ## Architecture
 
 ![The 3-shape skill model — Shape A missions-routed 5-agent pipeline, Shape B standalone, Shape ? future skills](docs/visuals/05-three-shapes.png)
 
-The system doesn't force every skill through one shape.  **Shape A** routes through a 5-agent mission pipeline (orchestrator + planner / resourcer / editor / qa); **Shape B** is a standalone script when planner/qa stages would be near-empty.  Subagents share no conversation history — they hand off through committed files (`plan.md` / `MANIFEST.md` / `qa-report.md`), so each one's context and cost stay bounded.  Per-role model routing (planner/resourcer = opus, editor/qa = sonnet) plus a cost firewall keep runtime API tokens at zero.  `.claude/agents/` holds **19** definitions (6 media + 13 game).  Full data-flow map + the game-prototype build chain: [`docs/architecture.md`](docs/architecture.md).
+The system doesn't force every skill through one shape.  **Shape A** routes through a 5-agent mission pipeline (orchestrator + planner / resourcer / editor / qa); **Shape B** is a standalone script when planner/qa stages would be near-empty.  Subagents share no conversation history — they hand off through committed files (`plan.md` / `MANIFEST.md` / `qa-report.md`), so each one's context and cost stay bounded.  Per-role model routing (planner/resourcer = opus, editor/qa = sonnet) plus a cost firewall keep runtime API tokens at zero.  `.claude/agents/` holds **24** definitions (6 core + 13 game roster + 5 content-pipeline teams).  Full data-flow map + the game-prototype build chain: [`docs/architecture.md`](docs/architecture.md).
 
 ## Autonomy signal — measured, not claimed
 
@@ -89,13 +90,13 @@ Documented negatives, kept in the open — because honest scoping is the credibi
 - **`product-cf` is parked** on a real negative finding.  The free / local "make it genuinely 3D" approaches (depth-parallax, cylinder-wrap turntable, local image-to-video) didn't clear a real-CF quality bar on a 16 GB machine; a convincing result needs paid cloud image-to-video or a bigger GPU.  Kept gated-off in the tree, decision pending.
 - **Cel-shading was deliberately deferred** — knowing where the ffmpeg wall is beats faking the result.
 
-More tradeoffs and known gaps: [`docs/known-limitations.md`](docs/known-limitations.md).
+More negatives and deferred scope: [`skills/game-prototype/README.md`](skills/game-prototype/README.md) (honest verification status + out-of-scope).  Resolved-issue log (e.g. the Homebrew ffmpeg/libass split): [`docs/known-limitations.md`](docs/known-limitations.md).
 
 <details>
 <summary><b>Design notes — choices that set this apart from a typical agent demo</b></summary>
 
 - **Outcome layer vs work queue, kept separate.**  [`docs/goal.md`](docs/goal.md) holds the active goal as a concrete deliverable; [`docs/roadmap.md`](docs/roadmap.md) holds the day-level queue.  An empty queue ≠ goal achieved — the split exists because an earlier 24-hour stretch produced 11 infra commits with the queue reading 0 open items and 0 actual outputs.
-- **Out-of-band auditor with a live alert surface.**  The [`auditor`](.claude/agents/auditor.md) subagent runs daily at 03:00 via `launchd`, walks the repo read-only, and writes [`docs/audit/CURRENT-ALERT.md`](docs/audit/) iff the latest verdict is non-CLEAN; the next session is contractually obligated to read it before picking up the goal.
+- **Out-of-band auditor with a live alert surface.**  The [`auditor`](.claude/agents/auditor.md) subagent fires on three triggers — an L1 post-commit hook, an L2 15-minute anomaly poll, and an L3 daily 03:00 baseline (via `launchd`/`cron`) — walks the repo read-only, and writes [`docs/audit/CURRENT-ALERT.md`](docs/audit/) iff the latest verdict is non-CLEAN; the next session is contractually obligated to read it before picking up the goal.
 - **Cost firewall between orchestration and execution.**  Anthropic tokens are spent only during orchestration (Tier 1); mission execution (transcribe → select → render → QA) runs entirely on local tools and costs zero tokens.
 - **Operator tooling that absorbs status-check prompts.**  `scripts/doctor.sh` (a Claude-free ~2-second health check), `scripts/statusline.sh`, and `scripts/morning-brief.sh` answer "what's the state / what happened overnight?" without the operator typing.  Full catalog: [`docs/operator-tooling.md`](docs/operator-tooling.md).
 
@@ -150,7 +151,8 @@ Full recipe collection for both media skills: [`EXAMPLES.md`](EXAMPLES.md).
 | Engineering case studies — 9 incidents, *problem → constraint → decision → artifact* | [`docs/engineering-case-studies.md`](docs/engineering-case-studies.md) |
 | Architecture + full data-flow map | [`docs/architecture.md`](docs/architecture.md) |
 | Music-video pipeline reference (shaders, genres, env vars) | [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md) |
-| Known limitations + negative findings | [`docs/known-limitations.md`](docs/known-limitations.md) |
+| Content-shorts pipeline — four-team research→produce⇄legal→release | [`docs/content-shorts-pipeline.md`](docs/content-shorts-pipeline.md) |
+| Resolved-issue log (ffmpeg/libass packaging, etc.) | [`docs/known-limitations.md`](docs/known-limitations.md) |
 | Cost model — Anthropic vs local | [`docs/cost-model.md`](docs/cost-model.md) |
 | Platform / Windows setup | [`docs/platform-windows.md`](docs/platform-windows.md) |
 | Operator contract — autonomy rules | [`docs/operator-contract.md`](docs/operator-contract.md) |

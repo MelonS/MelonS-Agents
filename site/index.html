@@ -96,9 +96,9 @@
       <span class="sub">input-level repro + assertions</span>
     </li>
     <li>
-      <span class="num purple">19</span>
+      <span class="num purple">24</span>
       <span class="label">subagent definitions</span>
-      <span class="sub">6 media + 13 game roster</span>
+      <span class="sub">6 core + 13 game + 5 content</span>
     </li>
     <li>
       <span class="num fg">3</span>
@@ -184,7 +184,7 @@
   <p>The scaffold is general-purpose — it doesn't force every skill through one shape. Short-form video was the v1 domain (the deliverable is visually verifiable and failure modes are quick to catch); the current development focus is the <strong>game track</strong> (the PawnSim build-and-verify loop above), driven by a <code>game-dev-agent</code> meta-skill. Two production media skills ship today: the <strong>music-video</strong> mission and the standalone <strong>job-hunt</strong> skill. Earlier missions (<strong>faceless-short</strong> narration, v1 <strong>highlight / shorts-batch</strong>) remain in the tree as alternate paths.</p>
 
   <figure class="diagram">
-    <img src="assets/visuals/01-hero-stats.png" width="1800" height="965" alt="MelonS-Agents system-at-a-glance poster: an agent that builds, plays, and verifies its own colony-sim game, portable across Claude Code, Cursor, Goose, Gemini CLI, Codex and Copilot. Stat cards: 100+ mission outputs across 6 types, 2 production skills + 1 meta-skill + 4 prototypes, 23 ffmpeg shaders, 0 runtime API tokens, 15-scenario commit gate, 19 subagent definitions (6 media + 13 game roster), 3 audit trigger layers, MIT license / EN + KO dual-track." loading="lazy" decoding="async">
+    <img src="assets/visuals/01-hero-stats.png" width="1800" height="965" alt="MelonS-Agents system-at-a-glance poster: an agent that builds, plays, and verifies its own colony-sim game, portable across Claude Code, Cursor, Goose, Gemini CLI, Codex and Copilot. Stat cards: 100+ mission outputs across 6 types, 2 production skills + 1 meta-skill + 4 prototypes, 23 ffmpeg shaders, 0 runtime API tokens, 15-scenario commit gate, 24 subagent definitions (6 core + 13 game + 5 content), 3 audit trigger layers, MIT license / EN + KO dual-track." loading="lazy" decoding="async">
     <figcaption>The system at a glance — README · Overview</figcaption>
   </figure>
 
@@ -198,7 +198,7 @@
     <article class="card glow-gold">
       <h3>game-dev-agent (meta-skill, Skill #3)</h3>
       <p>A Unity-focused agent that CLI-scaffolds a whole game with no manual Editor work: sprite generation (32px procedural art), C# system scaffolding, scene + prefab generation via Unity batchmode, balance tuning, audio generation, and an in-game AI Director. It drives <strong>four prototype skills</strong> that double as its empirical validation surface — PawnSim (colony-sim flagship), plus a 2D physics-merge puzzle, a wave-survival action game, and a sliding-tile number puzzle — each built faster than the last, testing the "compounding speedup" hypothesis.</p>
-      <p class="muted">The game track runs a separate roster of 13 game-domain sub-agents (director / designer / programmer / build-engineer / QA / artist / sound / narrative / specialists) on top of the 6 core media-pipeline agents — 19 agent definitions total in <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>.</p>
+      <p class="muted">The game track runs a separate roster of 13 game-domain sub-agents (director / designer / programmer / build-engineer / QA / artist / sound / narrative / specialists) on top of the 6 core media-pipeline agents, plus 5 for the content-shorts pipeline — 24 agent definitions total in <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>.</p>
     </article>
   </div>
 
@@ -307,7 +307,7 @@
         <li class="chip"><b>5,000+</b> raw → <b>~200</b> matches</li>
         <li class="chip">Shape B · standalone <code>curl+jq</code></li>
       </ul>
-      <p class="muted">Skill #2, standalone, v2 short-keyword UX. 70 tests; 5 enrichment utilities behind <code>JH_*_LIVE</code> flags. Spec: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/job-hunt" target="_blank" rel="noopener">skills/job-hunt/</a></p>
+      <p class="muted">Skill #2, standalone, v2 short-keyword UX. 70 tests; 4 enrichment utilities behind <code>JH_*_LIVE</code> flags. Spec: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/job-hunt" target="_blank" rel="noopener">skills/job-hunt/</a></p>
     </article>
 
     <article class="card skill-card glow-gold">
@@ -350,7 +350,7 @@
       <p>A separate-shape skill: standalone (no missions-routed pipeline), v2 short-keyword UX, agentskills.io-compliant. Pass <code>--seed "Problem Solver"</code> and the orchestrator expands to a 26-synonym role family (Forward Deployed Engineer / Applied AI Engineer / Generalist / Founding Engineer / …) before fetching from KR job boards (사람인 / 잡코리아 / 원티드 / 프로그래머스). A live run de-dups <strong>5,000+ raw postings down to ~200 matches</strong>.</p>
       <ul>
         <li><b>11 source plugins</b> (5 live-ready without a key, 2 key-gated, 4 mock-fallback) — all mock-fallback by default; live HTTP per-plugin behind <code>JH_<i>SOURCE</i>_LIVE=1</code>.</li>
-        <li><b>5 enrichment utilities</b> (fit-score / cover-letter / company-research / interview-prep) — per-posting Claude calls behind <code>JH_<i>TOOL</i>_LIVE=1</code>.</li>
+        <li><b>4 enrichment utilities</b> (fit-score / cover-letter / company-research / interview-prep) — per-posting Claude calls behind <code>JH_<i>TOOL</i>_LIVE=1</code>.</li>
         <li><b>70 tests</b> — smoke + edge-case + JSON-schema validation. EN + KO walkthroughs.</li>
       </ul>
       <p class="muted">Quickstart: <code>skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run</code>. Reference digest at <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/samples/job-hunt-digest-mock.md" target="_blank" rel="noopener">docs/samples/job-hunt-digest-mock.md</a>.</p>
