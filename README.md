@@ -4,9 +4,9 @@
 
 [한국어](./README.ko.md) | **English** · [**Live site →**](https://melons.github.io/MelonS-Agents/)
 
-**An agent that builds, plays, and *verifies* its own game** — a colony-sim vertical slice gated by input-level repro tests and isolated-grader rubric verdicts — plus two production media skills (music-video shorts, Korean job-board digest), all [agentskills.io](https://agentskills.io)-spec compliant and portable across Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot.
+**MelonS-Agents is a multi-agent system — driven by [Claude Code](https://docs.anthropic.com/claude-code) — that runs real production pipelines and then *verifies its own output* before calling the work done.**
 
-**Local for the mechanical, Claude for the creative.**  Phrase-aware ffmpeg shaders sync vintage visuals to music structure.  Short-keyword job-hunt expansion via role-synonym map.  Three trigger layers — commit, anomaly, schedule — so the system corrects its own drift.  English + Korean dual track from day 1.
+Three tracks ship today: a **music-video** maker (a song in → a 60-second 9:16 short, runnable in ~60 s on Mac/Linux), a **job-hunt** digest (one keyword → a deduplicated Korean job-board summary), and **PawnSim**, a self-tested colony-sim game the agent builds *and* verifies (Windows + Unity).  Local open-source tools (ffmpeg / whisper.cpp / ollama / aubio) do the mechanical work and Claude handles orchestration + the creative calls — so a mission costs **zero runtime API tokens**.  English + Korean from day one.
 
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
@@ -31,7 +31,43 @@
 
 ![MelonS-Agents — by the numbers: 100+ outputs, 2 production skills, 23 shaders, 0 runtime API tokens, 15-scenario gate, 19 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
 
+<details>
+<summary><b>Contents</b></summary>
+
+- [What works today](#what-works-today)
+- [Try it in ~60 seconds](#try-it-in-60-seconds-zero-accounts-zero-env)
+- [Who this is for](#who-this-is-for)
+- [Overview](#overview)
+- [Sample output](#sample-output)
+- [Autonomy signal](#autonomy-signal--operator-intervention-trend)
+- [Architecture](#architecture)
+- [Design notes](#design-notes)
+- [Platform support](#platform-support)
+- [Prerequisites](#prerequisites)
+- [Pricing &amp; usage](#claude-code-pricing--usage-guidance)
+- [Quick start](#quick-start)
+- [Code / Data separation](#code--data-separation)
+- [Operator contract](#operator-contract)
+- [For analysts / reviewers](#for-analysts--reviewers)
+- [License](#license)
+</details>
+
+## What works today
+
+| Track | What it does | Status | Runnable today |
+|-------|--------------|--------|----------------|
+| **music-video** | a song in → a 60-second 9:16 short (beat-aligned cuts, vintage ffmpeg shaders) | Production\* | ✅ Mac/Linux — `./scripts/first-touch.sh`, ~60 s |
+| **job-hunt** | one seed keyword → a deduplicated Korean job-board digest (11 sources) | Production\* | ✅ ~5 s, no network or keys |
+| **PawnSim** · built by `game-dev-agent` | a self-tested colony-sim game prototype | In development | ⚠️ Windows + Unity 6000.0.75f1 |
+| **product-cf** | a product photo → a CF-style short | Parked | ❌ parked on an honest negative finding |
+
+<sub>\*"Production" = ships a real deliverable on a schedule (these two are the load-bearing count). `game-dev-agent` is the meta-skill that builds PawnSim; it graduates into the production count once PawnSim hits its deliverable schedule.</sub>
+
+**Key terms** — *repro gate*: the agent replays real player clicks and asserts each had an effect, not just that the click landed.  *Isolated grader*: a separate sub-agent that judges a run from screenshots + logs only, never the author's intent.  *Soak*: a long, unattended test run.
+
 ## Try it in ~60 seconds (zero accounts, zero `.env`)
+
+> **Prerequisite:** Mac or Linux with `ffmpeg`, `ollama`, and `aubio` on your PATH — the wizard checks first and prints the exact `brew` / `apt` install command for anything missing (clone-and-go is verified on macOS).
 
 ```bash
 git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
@@ -185,7 +221,7 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 
 ![Verification — two gates: 15-scenario input-level repro gate per commit + isolated grader sub-agent on long soaks](docs/visuals/14-verification-loop.png)
 
-The most active validation surface right now is **PawnSim** (Skill #3-A) — the
+The most active validation surface right now is **PawnSim** — the
 agent builds *and* play-tests it in a tight loop, with the operator filing
 in-game feedback that turns straight into the next batch of fixes.
 
@@ -205,8 +241,8 @@ every scene, and every C# system is CLI-scaffolded by
 15-scenario input-level repro gate (real synthesized clicks through the same
 UI path a player uses, with *effect assertions* — "the click placed a
 designation" — not just "the click landed").  Long-running soaks are graded
-by an **isolated grader sub-agent** against a written rubric (Ralph-loop
-pattern): the grader sees only evidence (screenshots + raw logs), never the
+by an **isolated grader sub-agent** against a written rubric: the grader
+sees only evidence (screenshots + raw logs), never the
 author's intent, and its verdicts repeatedly caught what self-review missed —
 a silent harness blind spot that had voided every designation in earlier
 soaks, a "food-rich colony starving to death" mood-gate trap, and a
@@ -246,7 +282,7 @@ on 2026-05-17
 <summary>▸ Recent ship log (rolling) — click to expand</summary>
 
 - **2026-06-12 PawnSim verification-loop adoption + basics overhaul**
-  (Skill #3-A) — adopted a rubric + isolated-grader verification loop
+  — adopted a rubric + isolated-grader verification loop
   (grader sub-agents judging soak evidence with zero author context) and
   used it to drive ~40 gated commits in 36 hours: a 32px art generation
   swap (pawn walk/work sheets, animals, terrain, walls/doors/ore with
@@ -257,7 +293,7 @@ on 2026-05-17
   16-pair UI-overlap audit fixed to zero.  The graders' verdicts — not
   the author's claims — are the acceptance record, committed per round
   in [`skills/game-prototype/docs/`](skills/game-prototype/docs/).
-- **2026-06-03 PawnSim playtest-fix batch** (Skill #3-A) — an operator
+- **2026-06-03 PawnSim playtest-fix batch** — an operator
   play-test loop drove a 12-commit batch on
   [`skills/game-prototype/`](skills/game-prototype/): fixed a pawn-movement
   speed regression + chop-approach jitter (P0), wired needs→negative-thought
@@ -627,7 +663,7 @@ The end-to-end media-mission flow — from the operator's prompt to the orchestr
 
 ![Mission flow — 7 steps from user mission to orchestrator summary.md via planner/resourcer/editor/qa](docs/visuals/10-mission-flow.png)
 
-### Game prototype architecture (Skill #3-A — PawnSim)
+### Game prototype architecture (PawnSim)
 
 The game prototype is a separate Unity codebase that the **`game-dev-agent`**
 meta-skill scaffolds end-to-end from the CLI. Its architecture is two layers:

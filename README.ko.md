@@ -4,9 +4,9 @@
 
 **한국어** | [English](./README.md) · [**라이브 사이트 →**](https://melons.github.io/MelonS-Agents/)
 
-**자기가 만든 게임을 직접 플레이하고 검증까지 하는 에이전트.**  콜로니심 프로토타입을 플레이어와 같은 입력 경로의 자동 재현 테스트로 매 커밋 검증하고, 장시간 플레이는 작업자와 분리된 채점 에이전트가 루브릭으로 평가합니다.  여기에 프로덕션 미디어 스킬 2종(뮤직비디오 쇼츠, 한국 채용공고 다이제스트)까지 — 전부 [agentskills.io](https://agentskills.io) 스펙 준수로 Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot 에서 그대로 동작합니다.
+**MelonS-Agents 는 멀티 에이전트 시스템입니다 — [Claude Code](https://docs.anthropic.com/claude-code) 로 구동되며, 실제 프로덕션 파이프라인을 돌리고 *자기 결과물을 스스로 검증*한 뒤에야 작업을 완료로 칩니다.**
 
-**기계적인 단계는 로컬에서, 창작 단계는 Claude 가.**  phrase-aware ffmpeg 쉐이더가 빈티지 비주얼을 음악 구조에 동기화하고, job-hunt 는 짧은 키워드 하나를 역할 동의어 맵으로 자동 확장합니다.  커밋·이상 감지·스케줄 세 갈래의 감사 트리거로 시스템이 자기 드리프트를 스스로 잡습니다.  첫날부터 영어 + 한국어 듀얼 트랙.
+오늘 세 가지 트랙이 올라가 있습니다: **music-video** 메이커(음악 → 60초 9:16 쇼츠, Mac/Linux 에서 ~60초 만에 실행), **job-hunt** 다이제스트(키워드 하나 → 중복 제거된 한국 채용공고 요약), 그리고 **PawnSim**, 에이전트가 만들고 *동시에* 검증하는 자기 검증형 콜로니심 게임(Windows + Unity).  로컬 오픈소스 도구(ffmpeg / whisper.cpp / ollama / aubio)가 기계적 작업을 하고 Claude 는 오케스트레이션 + 창작 단계를 맡아 — 미션당 **런타임 API 토큰 0개**.  첫날부터 영어 + 한국어.
 
 
 ![AI-Powered](https://img.shields.io/badge/AI--Powered-FF6B35?style=for-the-badge&logo=anthropic&logoColor=white)
@@ -31,7 +31,43 @@
 
 ![MelonS-Agents — 숫자로 보기: 출력 100+, 프로덕션 스킬 2개, 쉐이더 23개, 런타임 API 토큰 0개, 15시나리오 게이트, 서브에이전트 19개, 감사 레이어 3개, MIT](docs/visuals/01-hero-stats-ko.png)
 
+<details>
+<summary><b>목차</b></summary>
+
+- [지금 무엇이 되는가](#지금-무엇이-되는가)
+- [60초 안에 시작](#60초-안에-시작-계정-0개-env-편집-0번)
+- [누구를 위한 것인가](#이-프로젝트는-누구를-위한-것인가)
+- [개요](#개요)
+- [샘플 출력](#샘플-출력)
+- [자율성 신호](#자율성-신호--운영자-개입-추세)
+- [아키텍처](#아키텍처)
+- [설계 노트](#설계-노트)
+- [플랫폼 지원](#플랫폼-지원)
+- [사전 요구사항](#사전-요구사항)
+- [요금제 + 사용량](#claude-code-요금제--사용량-안내)
+- [빠른 시작](#빠른-시작)
+- [코드 / 데이터 분리](#코드--데이터-분리)
+- [운영 계약](#운영-계약)
+- [분석가/리뷰어 안내](#분석가리뷰어를-위한-안내)
+- [라이선스](#라이선스)
+</details>
+
+## 지금 무엇이 되는가
+
+| 트랙 | 하는 일 | 상태 | 지금 실행 가능? |
+|------|---------|------|-----------------|
+| **music-video** | 음악 → 60초 9:16 쇼츠 (비트 정렬 컷, 빈티지 ffmpeg 쉐이더) | 프로덕션\* | ✅ Mac/Linux — `./scripts/first-touch.sh`, ~60초 |
+| **job-hunt** | 시드 키워드 하나 → 중복 제거된 한국 채용공고 다이제스트 (소스 11개) | 프로덕션\* | ✅ ~5초, 네트워크·키 불필요 |
+| **PawnSim** · `game-dev-agent` 가 제작 | 자기 검증형 콜로니심 게임 프로토타입 | 개발 중 | ⚠️ Windows + Unity 6000.0.75f1 |
+| **product-cf** | 제품 사진 → CF 스타일 쇼츠 | 보류 | ❌ 정직한 부정 결론으로 보류 |
+
+<sub>\*"프로덕션" = 정해진 주기로 실제 결과물을 출하 (이 둘이 핵심 카운트).  `game-dev-agent` 는 PawnSim 을 만드는 메타 스킬 — PawnSim 이 출하 주기에 도달하면 프로덕션 카운트로 승격됩니다.</sub>
+
+**핵심 용어** — *재현 게이트(repro gate)*: 에이전트가 실제 플레이어 클릭을 재생하고, 클릭이 도달했는지가 아니라 각 클릭이 효과를 냈는지를 어서트합니다.  *격리 채점(isolated grader)*: 작성자의 의도가 아니라 스크린샷 + 로그만으로 실행을 판정하는 별도 서브에이전트.  *소크(soak)*: 길게 돌리는 무인 테스트 런.
+
 ## 60초 안에 시작 (계정 0개, `.env` 편집 0번)
+
+> **사전 요구:** `ffmpeg`, `ollama`, `aubio` 가 PATH 에 있는 Mac 또는 Linux — 마법사가 먼저 점검하고 빠진 항목에 대해 정확한 `brew` / `apt` 설치 명령을 출력합니다 (clone-and-go 는 macOS 에서 검증됨).
 
 ```bash
 git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
@@ -180,7 +216,7 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 
 ![검증 — 게이트 둘: 커밋마다 15시나리오 입력 레벨 재현 게이트 + 장시간 소크의 격리 채점 서브에이전트](docs/visuals/14-verification-loop-ko.png)
 
-현재 가장 활발한 검증 표면은 **PawnSim** (Skill #3-A) 입니다 — 에이전트가
+현재 가장 활발한 검증 표면은 **PawnSim** 입니다 — 에이전트가
 만들면서 *동시에* 플레이테스트하는 타이트한 루프로 돌아가고, 운영자가 올린
 인게임 피드백이 곧바로 다음 수정 배치로 이어집니다.
 
@@ -221,6 +257,8 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 
 ## 샘플 출력
 
+![2026-05-22 noir-detective 렌더의 5초 애니메이션 프리뷰 — 9:16 세로 쇼츠, 스모키 바 인테리어, pink-magenta rnb_low_key 그레이드 프로필의 파이프를 문 수염 남자.  phrase-aware 쉐이더 + 장르별 컬러 그레이드가 평범한 Pexels B-roll 을 장르 코드가 입혀진 룩으로 변환](docs/demo/music-video-noir-detective-2026-05-24-preview.gif)
+
 지금까지 **6가지** 미션 타입에 걸쳐 100+건의 출력이 나왔습니다.
 현재 프로덕션 포맷은 `music-video` 미션 — 음악이 메인 오디오인
 쇼츠 (내레이션·캡션 없음, 비트에 맞춘 컷, 드럼 onset 에 맞춘 글리치
@@ -233,7 +271,7 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 <details>
 <summary>▸ 최근 ship 로그 (롤링) — 펼쳐보기</summary>
 
-- **2026-06-12 PawnSim 검증 루프 도입 + 기본기 총정비** (Skill #3-A) —
+- **2026-06-12 PawnSim 검증 루프 도입 + 기본기 총정비** —
   루브릭 + 격리 채점 검증 루프를 정식 도입하고(채점 에이전트가 작업 맥락
   없이 증거만으로 평가), 36시간 동안 게이트 통과 커밋 ~40건: 32px 아트
   세대 교체(림 걷기·작업 시트, 동물, 지형, 톱다운 블록 벽·문·광맥),
@@ -243,7 +281,7 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
   인수 기준은 작업자의 주장이 아니라 **채점 평결**이며, 라운드별로
   [`skills/game-prototype/docs/`](skills/game-prototype/docs/) 에 커밋돼
   있습니다.
-- **2026-06-03 PawnSim 플레이테스트-수정 배치** (Skill #3-A) — 운영자
+- **2026-06-03 PawnSim 플레이테스트-수정 배치** — 운영자
   플레이테스트 루프가 [`skills/game-prototype/`](skills/game-prototype/) 에
   12커밋 배치를 끌어냄: 림 이동 속도 회귀 + 벌목 접근 지터 수정(P0), needs→부정
   thought 연동으로 배고프면/못 자면/다치면 기분이 실제로 나빠지게, idle 림 전원이
@@ -592,7 +630,7 @@ sonnet 으로 revert.  Editor + qa 는 sonnet 유지 — 이 두 stage 는
 
 ![미션 흐름 — 사용자 미션에서 orchestrator summary.md 까지 7단계, planner/resourcer/editor/qa 경유](docs/visuals/10-mission-flow-ko.png)
 
-### 게임 프로토타입 아키텍처 (Skill #3-A — PawnSim)
+### 게임 프로토타입 아키텍처 (PawnSim)
 
 게임 프로토타입은 **`game-dev-agent`** 메타-스킬이 CLI 로 처음부터 끝까지
 스캐폴딩하는 별도 Unity 코드베이스입니다. 아키텍처는 두 층 — *생성기*
