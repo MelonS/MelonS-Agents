@@ -184,7 +184,7 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 만들면서 *동시에* 플레이테스트하는 타이트한 루프로 돌아가고, 운영자가 올린
 인게임 피드백이 곧바로 다음 수정 배치로 이어집니다.
 
-![PawnSim 2026-06-12 — 기본 루프가 끝까지 검증된 모습: 문과 지붕 음영이 있는 벽 둘린 방(32px 신작 톱다운 벽), 성장 단계가 보이는 농장, 통나무·수확물이 쌓이는 저장 구역, 이름표 달린 콜로니스트들과 실시간 자원 카운터](docs/demo/pawnsim-2026-06-12-built-house.png)
+![PawnSim 2026-06-12 — 풀밭 위 초기 콜로니: 체력·기분 바를 단 이름표 콜로니스트 셋, 우상단에 올라가는 목재 벽 골조(32px 톱다운 블록 벽), 모은 목재와 흩어진 광맥·돌, 실시간 자원 카운터, 하단에 열린 건축 메뉴](docs/demo/pawnsim-2026-06-12-built-house.png)
 
 ![PawnSim 야간 — 등급별로 한눈에 구분되는 침대 3종(맨바닥 자리/목재 침대/고급 침대)에서 잠든 콜로니스트들, 수면 중 상시 zZ 표시](docs/demo/pawnsim-2026-06-12-night-sleep.png)
 
@@ -339,6 +339,9 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 
 </details>
 
+<details>
+<summary>▸ music-video 파이프라인 작동 방식 — v1→v6 진화, ffmpeg 쉐이더 23개, 장르별 그레이드 — 펼쳐보기</summary>
+
 ### Music-video 파일럿 (포맷 피벗 후, 2026-05-17)
 
 ![Music-video 진화 v1→v6 — 버전마다 델타 하나씩 추가; v5 검증 후 run.sh 로 승격](docs/visuals/11-mv-evolution-ko.png)
@@ -464,6 +467,8 @@ Diffusion + AnimateDiff, ComfyUI, RunwayML / Kaiber) 중 하나가
 ./scripts/music-video-shaders.sh combo    <input.mp4> <output.mp4>
 ```
 
+</details>
+
 <details>
 <summary><b>이전 미션 (참고용)</b> — <code>faceless-short</code> 내레이션 시대 + v1 <code>highlight</code> / <code>shorts-batch</code> + faceless 점수표</summary>
 
@@ -530,15 +535,13 @@ macOS 워크스테이션에선 launchd 가 매일 02:00 KST 에 자동 실행하
 에 정리; 일별 raw 데이터는
 [`docs/metrics/intervention.json`](docs/metrics/intervention.json).
 
-## 품질 신호 — 미션 결과 추세 (렌더 시대, 2026-05-22 까지)
+<details>
+<summary>▸ 품질 신호 — 미션 결과 추세 (렌더 시대, 과거 데이터) — 펼쳐보기</summary>
 
-> **과거 데이터 — 렌더 시대.**  이 차트는 미디어 출하가 활성
-> 트랙이던 시기, 즉 2026-05-22 까지의 music-video / faceless 렌더
-> 미션을 다룹니다.  2026-06 부터 활성 트랙은 PawnSim 게임
-> 프로토타입([개요](#개요) 참조)이고, 그 품질 신호는 미션별 QA
-> 패스율이 아니라 검증 루프 — 커밋마다 15시나리오 입력 레벨 재현
-> 게이트 + 격리 채점 루브릭 평결 — 입니다.  렌더 파이프라인의
-> 안정성이 어떻게 추세했는지 보여주는 정직한 증거로 남겨둡니다.
+> **과거 데이터 — 렌더 시대.**  2026-05-22 까지의 music-video /
+> faceless 렌더 미션을 다룹니다.  2026-06 부터 활성 트랙은 PawnSim
+> 게임 프로토타입([개요](#개요) 참조)이고, 미션별 QA 패스율이 아니라
+> 검증 루프(15시나리오 재현 게이트 + 격리 채점 평결)로 측정합니다.
 
 자율성 신호의 짝.  *자율성* 은 "운영자 개입이 줄고 있나?" 를 묻고,
 *품질* 은 "파이프라인이 시간이 지날수록 더 안정적인 결과물을
@@ -556,6 +559,8 @@ music-video 포맷이 렌더 시대를 일일 3-8 렌더의 sustainable cadence
 로 마무리한 모습.  (로컬 `records/` 기반) 재생성:
 `.venv/bin/python scripts/generate-quality-trend-chart.py`; 일별
 raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.json).
+
+</details>
 
 ## 아키텍처
 
@@ -867,6 +872,9 @@ company-research / interview-prep) 의 라이브 Claude 호출 활성화는
 [`docs/skills/job-hunt.md`](docs/skills/job-hunt.md) (English) /
 [`docs/skills/job-hunt.ko.md`](docs/skills/job-hunt.ko.md) (한국어).
 
+<details>
+<summary>▸ 고급 & 레거시 실행 경로 — 풀 Pexels + 운영자 음악, v1 highlight 플로우 — 펼쳐보기</summary>
+
 ### 풀 경로 — 운영자 음악 + 키워드별 Pexels B-roll
 
 언락된 mood-keyword 카탈로그와 운영자 공급 트랙용:
@@ -914,6 +922,8 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 ./scripts/mission-queue.sh
 ./scripts/install-scheduler.sh install      # 야간 launchd
 ```
+
+</details>
 
 ### Skill #3 — 게임 프로토타입 (PawnSim) 빌드 + 실행
 

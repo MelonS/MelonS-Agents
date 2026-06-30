@@ -189,7 +189,7 @@ The most active validation surface right now is **PawnSim** (Skill #3-A) — the
 agent builds *and* play-tests it in a tight loop, with the operator filing
 in-game feedback that turns straight into the next batch of fixes.
 
-![PawnSim 2026-06-12 — the basic loop verified end-to-end: a walled room with door and roof shading (top-down block walls from the 32px art generation), farm plots with growth-stage crops, a stockpile filling with logs and produce, named colonists, and live resource counters](docs/demo/pawnsim-2026-06-12-built-house.png)
+![PawnSim 2026-06-12 — an early colony on open grass: three named colonists with health and mood bars, a wood-wall room frame going up at top-right (top-down block walls from the 32px art generation), gathered wood plus scattered ore and rock nodes, live resource counters, and the build menu open at bottom](docs/demo/pawnsim-2026-06-12-built-house.png)
 
 ![PawnSim night — colonists asleep in three visually distinct bed tiers (sleeping spot / wood bed / fine bed) with persistent zZ markers, under the night tint](docs/demo/pawnsim-2026-06-12-night-sleep.png)
 
@@ -357,6 +357,9 @@ shorts-batch) remain as the baseline reference further down.
 
 </details>
 
+<details>
+<summary>▸ How the music-video pipeline works — v1→v6 evolution, 23 ffmpeg shaders, per-genre grade — click to expand</summary>
+
 ### Music-video pilots (post-pivot, 2026-05-17)
 
 ![Music-video evolution v1 to v6 — each version adds one delta; v5 validated and promoted to run.sh](docs/visuals/11-mv-evolution.png)
@@ -494,6 +497,8 @@ Reproduction:
 ./scripts/music-video-shaders.sh combo    <input.mp4> <output.mp4>
 ```
 
+</details>
+
 <details>
 <summary><b>Historical missions</b> — <code>faceless-short</code> (narration era) + v1 <code>highlight</code> / <code>shorts-batch</code> + faceless scorecard</summary>
 
@@ -561,16 +566,14 @@ Classification heuristics + reduction analysis at
 [`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md).
 Raw per-day data at [`docs/metrics/intervention.json`](docs/metrics/intervention.json).
 
-## Quality signal — mission-outcome trend (render era, through 2026-05-22)
+<details>
+<summary>▸ Quality signal — mission-outcome trend (render era, historical) — click to expand</summary>
 
-> **Historical — render era.**  This chart covers the music-video /
-> faceless render missions through 2026-05-22, when shipping media was
-> the active track.  Since 2026-06 the active track is the PawnSim game
-> prototype (see [Overview](#overview)), whose quality signal is the
-> verification loop — a 15-scenario input-level repro gate per commit +
-> isolated-grader rubric verdicts — rather than a per-mission QA pass
-> rate.  Kept as honest evidence of how the render pipeline's
-> reliability trended.
+> **Historical — render era.**  Covers music-video / faceless render
+> missions through 2026-05-22.  Since 2026-06 the active track is the
+> PawnSim game prototype (see [Overview](#overview)), measured by the
+> verification loop (15-scenario repro gate + isolated-grader verdicts),
+> not a per-mission QA pass rate.
 
 The companion signal to autonomy.  *Autonomy* asks "is operator
 involvement going down?"; *quality* asks "is the pipeline producing
@@ -589,6 +592,8 @@ render era at a sustainable 3–8 renders/day cadence.  Regenerate (from
 local `records/`) via
 `.venv/bin/python scripts/generate-quality-trend-chart.py`; raw
 per-day data at [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.json).
+
+</details>
 
 ## Architecture
 
@@ -922,6 +927,9 @@ See [`docs/onboarding/demo-mode.md`](docs/onboarding/demo-mode.md)
 for source customization, attribution requirements, and the
 graduation path to the full Pexels + operator-music flow below.
 
+<details>
+<summary>▸ Advanced & legacy run paths — full Pexels + operator music, v1 highlight flow — click to expand</summary>
+
 ### Full path — operator music + per-keyword Pexels B-roll
 
 For the unlocked mood-keyword catalog and operator-supplied tracks:
@@ -970,6 +978,8 @@ echo 'https://example.com/long.mp4' >> records/queue/pending.txt
 ./scripts/mission-queue.sh
 ./scripts/install-scheduler.sh install      # nightly launchd
 ```
+
+</details>
 
 ### Skill #3 — game prototype (PawnSim) build + run
 
