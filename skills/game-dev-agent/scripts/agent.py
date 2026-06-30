@@ -205,7 +205,7 @@ def main():
                               "in a Unity project (one-shot, idempotent)")
     ges.add_argument("assets_dir", help="path to <unity-project>/Assets/")
     ges.add_argument("--project-name", required=True,
-                     help="MenuItem label + namespace prefix (e.g. 'SuikaLite')")
+                     help="MenuItem label + namespace prefix (e.g. 'PawnSim')")
     ges.add_argument("--namespace", default="MelonS.GameProto",
                      help="C# namespace (default MelonS.GameProto for legacy compat)")
     ges.add_argument("--exe-name",
@@ -225,7 +225,7 @@ def main():
 
     # plan
     pl = sub.add_parser("plan", help="produce task list from natural-language game spec")
-    pl.add_argument("spec", help='e.g. "build a vampire survivors lite"')
+    pl.add_argument("spec", help='e.g. "build a colony sim"')
     pl.set_defaults(func=cmd_plan)
 
     # fetch-assets
