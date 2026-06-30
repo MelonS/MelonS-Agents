@@ -53,7 +53,7 @@ verified-vs-stub audit):
   operator "기본맵부터 상당히 큼") with **4 terrain types** — grass / dirt-soil /
   water (impassable lakes) / rock (impassable), the soil & rock patches widened
   map-wide for visible variety (#43), and **clustered ore veins** (sandstone /
-  limestone / granite / marble) placed in dense RimWorld-style blobs rather than
+  limestone / granite / marble) placed in dense colony-sim-style blobs rather than
   scattered (#42). `PathGrid` + A* (8-direction, octile cost
   10/14, no corner-cut, 12000-node cap). Pawn 1×1 collider, multi-cell footprints
   (e.g. bed 1×2, research bench 2×1), wall path-blocking (ref-counted),
