@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>MelonS-Agents — 자기 콜로니심(PawnSim)을 직접 만들고 검증하는 에이전트, + 미디어 스킬 2종</title>
+  <meta name="description" content="자기 콜로니심 게임(PawnSim)을 직접 만들고 스스로 검증하는 멀티 에이전트 시스템 — 모든 커밋이 15시나리오 입력 레벨 재현 테스트로 게이팅되고, 장시간 소크는 작업자와 분리된 격리 채점 서브에이전트가 루브릭으로 판정합니다. 여기에 프로덕션 미디어 스킬 2종(뮤직비디오 쇼츠, 한국 채용공고 다이제스트). 로컬 우선(런타임 $0), 3-레이어 자기 감사, 사람 개입 운영, EN + KO.">
+  <meta property="og:title" content="MelonS-Agents — 자기 게임(PawnSim)을 만들고 검증하는 에이전트">
+  <meta property="og:description" content="콜로니심을 만들고 자기 작업을 스스로 검증하는 멀티 에이전트 시스템: 커밋마다 15시나리오 입력 레벨 재현 게이트 + 격리 채점 루브릭 평결. 미디어 스킬 2종(music-video, job-hunt). 로컬 우선, 런타임 $0, 사람 개입 운영, EN + KO.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/MelonS/MelonS-Agents/main/site/assets/visuals/01-hero-stats-ko.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://melons.github.io/MelonS-Agents/index.ko.html">
+  <link rel="canonical" href="https://melons.github.io/MelonS-Agents/index.ko.html">
+  <link rel="alternate" hreflang="en" href="https://melons.github.io/MelonS-Agents/">
+  <link rel="alternate" hreflang="ko" href="https://melons.github.io/MelonS-Agents/index.ko.html">
+  <link rel="alternate" hreflang="x-default" href="https://melons.github.io/MelonS-Agents/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0c'/%3E%3Cpath d='M16 5 L27 16 L16 27 L5 16 Z' fill='%23FF6B35'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root{
+      --sans: "Inter", "Noto Sans KR", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --mono: "JetBrains Mono", "Noto Sans KR", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="brand" href="#top">MelonS-<span class="agents">Agents</span></a>
+  <div class="links">
+    <a href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">GitHub</a>
+    <a class="lang" href="index.html" hreflang="en">English</a>
+    <a class="star" href="https://github.com/MelonS/MelonS-Agents/stargazers" target="_blank" rel="noopener">★ Star</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <p class="eyebrow">멀티 에이전트 시스템 · agentskills.io</p>
+
+  <h1 id="top">스스로 게임을 만들고 — <em>검증</em>까지 하는 에이전트.
+    <span class="sub">PawnSim 콜로니심 · 미디어 스킬 2종 · 사람 개입 운영 · 런타임 $0 · EN + KO</span>
+  </h1>
+
+  <div class="pill-row" aria-label="시스템 속성">
+    <span class="pill orange">AI-Powered</span>
+    <span class="pill purple">Self-Evolving</span>
+    <span class="pill green">Autonomous</span>
+  </div>
+
+  <p class="lede">
+    지금 가장 활발한 작업은 <strong>PawnSim</strong> — 에이전트가 직접 만들고 <em>동시에</em> 플레이테스트하는 콜로니심 버티컬 슬라이스입니다. 간판은 기능이 아니라 검증입니다: <strong>코드가 있다 ≠ 작동이 검증됐다</strong>. 프로덕션 미디어 스킬 2종이 함께 올라가 있고, 모든 기계적 단계는 <strong>런타임 비용 $0</strong>으로 로컬에서 돌며, 레포는 매 커밋마다 자기 자신을 감사합니다.
+  </p>
+  <ul class="lede-points">
+    <li>모든 커밋은 <strong>15시나리오 입력 레벨 재현 테스트</strong>로 게이팅됩니다 — 플레이어와 같은 UI 경로로 클릭을 합성하고, "클릭이 눌렸다"가 아니라 <em>효과</em>까지 어서트합니다.</li>
+    <li>장시간 무인 소크는 <strong>격리 채점 서브에이전트</strong>가 작성된 루브릭으로 판정합니다 — 작업자의 의도는 일절 모른 채 증거(스크린샷 + 원본 로그)만 봅니다.</li>
+    <li>미디어 스킬 2종: <strong>music-video</strong>(트랙 → phrase-aware 컷 + 빈티지 쉐이더 23종을 입힌 9:16 쇼츠)와 <strong>job-hunt</strong>(seed 키워드 하나 → 중복 제거된 한국 채용공고 다이제스트).</li>
+    <li>기계적 단계는 로컬에 머물고(Unity batchmode, aubio, whisper.cpp, ffmpeg), 창작 단계만 운영자의 기존 구독으로 Claude를 씁니다.</li>
+  </ul>
+
+  <div class="cta-row">
+    <a class="cta primary" href="#pawnsim">PawnSim 보기</a>
+    <a class="cta" href="#how">작동 방식</a>
+    <a class="cta" href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">GitHub에서 보기</a>
+    <a class="cta" href="#evidence">결과물 보기</a>
+    <a class="cta" href="#try">60초 만에 실행</a>
+  </div>
+
+  <figure class="demo">
+    <img src="assets/pawnsim-hero.gif" width="800" height="450" alt="PawnSim 콜로니 타임랩스(2026-06-12 빌드, 게임 내 16일) — 콜로니스트 셋이 맨땅에서 시작해 저장 구역과 농장을 지정하고, 침대·화덕·연구대를 갖춘 벽 둘린 방을 짓고, 습격을 막아내며 콜로니를 키웁니다. 모든 프레임은 무인 소크 기록이며, 보이는 루프(저장 → 집짓기 → 농사 → 벌목 → 채광)는 효과 어서션과 격리 채점 루브릭 평결로 기계 검증됩니다." loading="lazy" decoding="async">
+    <figcaption>무인 16 게임일 콜로니 소크 — 에이전트가 만들고 에이전트가 검증. 보이는 루프(저장 → 집짓기 → 농사 → 벌목 → 채광)는 15시나리오 입력 레벨 재현 테스트로 게이팅되고, 작업자 주장이 아니라 격리 채점 루브릭 평결로 확인됩니다.</figcaption>
+  </figure>
+</header>
+
+<section class="stats" aria-label="한눈에 보는 프로젝트 숫자">
+  <ul>
+    <li>
+      <span class="num">100<small>+</small></span>
+      <span class="label">미션 출력 누적</span>
+      <span class="sub">6가지 미션 타입에 걸쳐</span>
+    </li>
+    <li>
+      <span class="num">2<small>+1+4</small></span>
+      <span class="label">프로덕션 스킬 · 메타 스킬 · 프로토타입</span>
+      <span class="sub">music-video · job-hunt · game-dev-agent</span>
+    </li>
+    <li>
+      <span class="num fg">23</span>
+      <span class="label">ffmpeg 쉐이더</span>
+      <span class="sub">3스테이지 · 장르별 라우팅</span>
+    </li>
+    <li>
+      <span class="num green">0</span>
+      <span class="label">런타임 API 토큰</span>
+      <span class="sub">로컬: ffmpeg · whisper · ollama</span>
+    </li>
+    <li>
+      <span class="num fg">15</span>
+      <span class="label">시나리오 커밋 게이트</span>
+      <span class="sub">입력 레벨 재현 + 어서션</span>
+    </li>
+    <li>
+      <span class="num purple">19</span>
+      <span class="label">서브에이전트 정의</span>
+      <span class="sub">미디어 6 + 게임 로스터 13</span>
+    </li>
+    <li>
+      <span class="num fg">3</span>
+      <span class="label">감사 트리거 레이어</span>
+      <span class="sub">커밋 · 이상 감지 · 스케줄</span>
+    </li>
+    <li>
+      <span class="num fg">MIT</span>
+      <span class="label">라이선스 · EN + KO 듀얼 트랙</span>
+      <span class="sub">v0.4.0 · public</span>
+    </li>
+  </ul>
+</section>
+
+<section id="pawnsim" class="block">
+  <p class="eyebrow">PawnSim · 만들기 &amp; 검증</p>
+  <h2>PawnSim — 에이전트가 만들고 에이전트가 검증한다</h2>
+  <p>지금 가장 활발한 표면은 <strong>PawnSim</strong>, 탑다운 콜로니심 버티컬 슬라이스(Unity 6000.0.75f1 LTS)입니다. 모든 스프라이트(3방향 걷기·작업 시트, 동물, 지형, 가구까지 전부 절차 생성한 32px 아트), 모든 씬, 모든 C# 시스템이 <code>game-dev-agent</code> 메타 스킬로 CLI 스캐폴딩되며 <strong>Unity 에디터 수작업이 전혀 없습니다</strong> — <code>.exe</code> 전체가 커맨드라인에서 재현됩니다. 콜로니스트는 유틸리티 AI로 벌목·채광·농사·요리·운반·건축·연구·전투를 하고, AI 디렉터가 예측 불가능한 시점에 습격을 보내며, 플레이어는 림을 징집하고 건축·지정 명령을 내립니다.</p>
+
+  <figure class="diagram">
+    <img src="assets/visuals/14-verification-loop-ko.png" width="1800" height="1163" alt="검증 게이트 두 개 다이어그램. 게이트 1 — 입력 레벨 재현 게이트, 매 커밋 발화, 15시나리오: 합성 클릭이 플레이어와 같은 UI 경로를 구동하고 효과까지 어서트('클릭이 지정을 만들었다', 단순히 '클릭이 눌렸다'가 아님). 게이트 2 — 격리 채점 서브에이전트, 장시간 소크를 작성된 루브릭으로 판정하며 스크린샷과 원본 로그만 보고 작업자 의도는 보지 않음. 하단: 채점이 자기 검토로는 못 본 결함 3건(모든 지정을 무효화하던 테스트 사각지대, 식량이 쌓여 있는데 굶어 죽던 콜로니, 영구 멘탈 브레이크 동결), 그리고 끝에서 끝까지 기계 검증된 기본 콜로니 루프: 저장 → 집짓기 → 농장 → 벌목 → 채광 → 철거." loading="lazy" decoding="async">
+    <figcaption>검증 게이트 두 개 — README · PawnSim 검증</figcaption>
+  </figure>
+
+  <div class="cards">
+    <article class="card glow-orange">
+      <h3>간판은 기능이 아니라 검증</h3>
+      <p>북극성은 <strong>"코드가 있다 ≠ 작동이 검증됐다"</strong>입니다. 두 레이어가 이를 떠받칩니다:</p>
+      <ul>
+        <li><b>15시나리오 입력 레벨 재현 게이트</b> — 매 커밋마다 실제 합성 클릭이 <em>플레이어와 같은 UI 경로</em>로 돌며 <em>효과 어서션</em>을 검사합니다: "클릭이 지정을 만들었다", "벽이 지어졌다", "선택한 나무만 잘렸다" — 단순히 "클릭이 눌렸다"가 아닙니다.</li>
+        <li><b>격리 채점 소크 루프</b> — 장시간 무인 소크는 별도 서브에이전트가 작성된 루브릭으로 판정합니다. 채점자는 증거(스크린샷 + 원본 로그)만 보고 작업자의 의도는 보지 않아, 작업자 자기 채점 편향을 차단합니다.</li>
+      </ul>
+      <p class="muted">게이트가 실패하면 전진은 없습니다: 즉시 수정하거나 롤백. 기본 콜로니 루프(저장 → 실내 효과가 실재하는 집 → 영구 농장 → 벌목 → 채광 → 철거)는 끝에서 끝까지 기계 검증되고, 채점 평결은 수정 커밋과 함께 저장됩니다.</p>
+    </article>
+
+    <article class="card glow-green">
+      <h3>채점이 자기 검토로는 못 본 것</h3>
+      <p>평결은 작업자 자기 검토가 지나친 결함을 반복해서 들춰냈습니다 — 이 루프가 비용값을 한다는 정직한 증거입니다:</p>
+      <ul>
+        <li>이전 소크들에서 <em>모든</em> 지정을 무효화하던 테스트 사각지대(검증 도구 자체가 망가져 있었음 — "검증 도구도 검증돼야 한다").</li>
+        <li>식량이 쌓여 있는데 굶어 죽던 무드 게이트 함정.</li>
+        <li>콜로니 전체가 영구 멈추던 멘탈 브레이크 동결.</li>
+      </ul>
+      <p class="muted">정직하게 추적 중인 미해결 결함도 남아 있습니다 — 일부 저장/불러오기 엔티티 하위 상태가 아직 직렬화되지 않고, 무드 경제가 여전히 약간 적자입니다(공식 인정된 하나의 미해결 게임플레이 문제). 전체 정직 검증 상태는 <a href="https://github.com/MelonS/MelonS-Agents/blob/main/skills/game-prototype/README.md" target="_blank" rel="noopener">skills/game-prototype/README.md</a>.</p>
+    </article>
+
+    <article class="card">
+      <h3>사람 개입 운영</h3>
+      <p>에이전트는 오픈 루프로 돌지 않습니다. 운영자가 빌드를 플레이하고 인게임 피드백을 올리면, 그 피드백이 다음 게이트 통과 수정 배치가 됩니다 — <strong>운영자 → 에이전트 → 검증 → 운영자</strong> 사이클입니다. 로직 변경(림 행동, 밸런스)은 명시적으로 운영자 게이팅: 에이전트가 스펙 초안을 잡고 OK를 기다린 뒤에야 손댑니다.</p>
+      <p class="muted">레포가 미디어 미션에 적용하는 것과 같은 사람 개입 패턴입니다: 에이전트가 모든 기계 작업을 하고, 사람은 취향·돈·로직 승인을 가집니다.</p>
+    </article>
+  </div>
+
+  <div class="gallery shots">
+    <figure>
+      <img src="assets/pawnsim-built-house.png" width="1920" height="1080" alt="PawnSim 2026-06-12 — 풀밭 위 초기 콜로니: 체력·기분 바를 단 이름표 콜로니스트 셋, 우상단에 올라가는 목재 벽 골조(32px 톱다운 블록 벽), 모은 목재와 흩어진 광맥·돌, 실시간 자원 카운터, 하단에 열린 건축 메뉴." loading="lazy" decoding="async">
+      <figcaption><b>기본 루프 끝까지 검증</b><br><span class="muted">벽 + 지붕 · 농장 · 저장 구역 · 이름표 콜로니스트</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/pawnsim-night-sleep.png" width="1920" height="1080" alt="PawnSim 야간 — 등급별로 한눈에 구분되는 침대 3종(맨바닥 자리 / 목재 침대 / 고급 침대)에서 상시 zZ 표시를 달고 잠든 콜로니스트들, 야간 틴트 아래." loading="lazy" decoding="async">
+      <figcaption><b>야간 사이클</b><br><span class="muted">침대 3등급 · 수면 상태 · 야간 틴트 조명</span></figcaption>
+    </figure>
+  </div>
+  <p class="muted">이를 스캐폴딩하는 메타 스킬: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/game-dev-agent" target="_blank" rel="noopener">skills/game-dev-agent/</a>. PawnSim은 Unity / Windows 1차(빌드 체인이 에디터를 batchmode로 구동); 레포의 나머지는 macOS / Linux입니다.</p>
+</section>
+
+<section id="who" class="block">
+  <p class="eyebrow">독자 · 누구를 위한 것인가</p>
+  <h2>이 프로젝트는 누구를 위한 것인가</h2>
+  <ul>
+    <li><b>에이전트가 게임을 만들기만 하는 게 아니라 직접 <em>검증</em>까지 하는 모습을 보고 싶은 분.</b> PawnSim은 매 커밋마다 15시나리오 입력 레벨 재현 게이트를 통과하고, 장시간 소크는 격리 채점 루브릭 루프를 거칩니다 — 인수 기준은 작업자의 주장이 아니라 채점 평결이고, 수정 커밋과 함께 저장됩니다.</li>
+    <li><b>파이프라인 코드를 짜지 않고도 숏폼 세로 영상을 만들고 싶은 분.</b> 마법사에 음악 파일 하나 넘기면 비트 정렬 컷 + 빈티지 쉐이더가 적용된 9:16 쇼츠가 돌아옵니다. 프리미어·애프터이펙트·GUI 다 필요 없습니다.</li>
+    <li><b>마법처럼 포장하지 않는, 실제로 돌아가는 멀티 에이전트 시스템을 관찰하고 싶은 분.</b> 모든 커밋이 시스템이 진화하는 과정의 관찰 가능한 한 걸음입니다. <a href="https://github.com/MelonS/MelonS-Agents/tree/main/docs/audit" target="_blank" rel="noopener">docs/audit/</a>가 감사가 잡은 모든 드리프트를 기록하고, 아래 품질·자율성 차트가 그 주장이 시간이 지나도 유지되는지 보여줍니다.</li>
+    <li><b>실제 검색 방식에 맞춰진 한국 잡보드 다이제스트가 필요한 분.</b> <code>--seed "Problem Solver"</code> 한 줄이면, 회사마다 다르게 부르는 26개 동의어 타이틀(FDE / Applied AI Engineer / Generalist / Founding Engineer / …)로 확장한 뒤 11개 소스에서 fetch합니다.</li>
+    <li><b>다른 런타임에 drop-in 가능한 agentskills.io 호환 Skill이 필요한 분.</b> 두 스킬 모두 Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot 외 ~38개 호환 런타임에서 동작합니다.</li>
+  </ul>
+  <p class="muted">파이프라인을 가려놓은 SaaS가 필요하다면 이 레포는 아닙니다. 모든 단계를 검사 가능한 bash + 오픈소스 로컬 도구(ffmpeg / whisper.cpp / ollama / aubio)로 보고 싶다면, 맞습니다.</p>
+</section>
+
+<section id="how" class="block">
+  <p class="eyebrow">아키텍처 · 작동 방식</p>
+  <h2>작동 방식</h2>
+  <p>스캐폴드는 범용입니다 — 모든 스킬을 한 가지 shape으로 강요하지 않습니다. 숏폼 영상이 v1 도메인이었고(결과물이 눈에 보이고 실패 모드가 빨리 잡힘), 현재 개발 포커스는 <strong>게임 트랙</strong>(위 PawnSim 만들고-검증 루프)으로 <code>game-dev-agent</code> 메타 스킬이 구동합니다. 오늘 프로덕션 미디어 스킬 2종이 올라가 있습니다: <strong>music-video</strong> 미션과 standalone <strong>job-hunt</strong> 스킬. 이전 미션들(<strong>faceless-short</strong> 내레이션, v1 <strong>highlight / shorts-batch</strong>)은 대체 경로로 트리에 남아 있습니다.</p>
+
+  <figure class="diagram">
+    <img src="assets/visuals/01-hero-stats-ko.png" width="1800" height="965" alt="MelonS-Agents 한눈에 보기 포스터: 자기 콜로니심 게임을 만들고 플레이하고 검증하는 에이전트, Claude Code·Cursor·Goose·Gemini CLI·Codex·Copilot 간 이식 가능. 스탯 카드: 미션 출력 100+(6타입), 프로덕션 스킬 2 + 메타 스킬 1 + 프로토타입 4, ffmpeg 쉐이더 23, 런타임 API 토큰 0, 15시나리오 커밋 게이트, 서브에이전트 정의 19(미디어 6 + 게임 로스터 13), 감사 트리거 레이어 3, MIT 라이선스 / EN + KO 듀얼 트랙." loading="lazy" decoding="async">
+    <figcaption>시스템 한눈에 보기 — README · Overview</figcaption>
+  </figure>
+
+  <figure class="diagram">
+    <img src="assets/visuals/05-three-shapes-ko.png" width="1800" height="1162" alt="3-shape 스킬 모델: 스킬 호출 하나가 작업의 본질이 어디 있는지에 따라 세 가지 파이프라인 shape으로 갈립니다. Shape A(미션 라우팅, 메인) — 5-에이전트 오케스트레이터 파이프라인(Orchestrator/Planner/Resourcer는 Opus, Editor/QA는 Sonnet), plan.md / MANIFEST.md / qa-report.md 파일 핸드오프, 예: skills/music-video. Shape B(standalone) — 스킬이 곧 구현: HTTP → parse → format → render, 오케스트레이터와 plan 파일을 건너뜀, 예: skills/job-hunt는 전부 curl + jq. Shape ?(미정) — 미래 스킬이 SKILL.md metadata.pipeline-source로 스킬별 결정." loading="lazy" decoding="async">
+    <figcaption>호출 하나, 세 가지 파이프라인 shape — README · Architecture</figcaption>
+  </figure>
+
+  <p class="subhead eyebrow">— 게임 트랙 · 현재 포커스</p>
+  <div class="cards">
+    <article class="card glow-gold">
+      <h3>game-dev-agent (메타 스킬, Skill #3)</h3>
+      <p>에디터 수작업 없이 게임 전체를 CLI 스캐폴딩하는 Unity 전용 에이전트입니다: 스프라이트 생성(32px 절차 아트), C# 시스템 스캐폴딩, Unity batchmode 씬 + 프리팹 생성, 밸런스 튜닝, 오디오 생성, 인게임 AI 디렉터. 이 에이전트가 경험적 검증 표면을 겸하는 <strong>프로토타입 스킬 4종</strong>을 구동합니다 — PawnSim(콜로니심 플래그십), 그리고 2D 물리 병합 퍼즐, 웨이브 생존 액션, 슬라이딩 타일 숫자 퍼즐 — 각각 앞 것보다 빠르게 만들어 "복리 가속" 가설을 테스트합니다.</p>
+      <p class="muted">게임 트랙은 6개 코어 미디어 파이프라인 에이전트 위에 13개 게임 도메인 서브에이전트(디렉터 / 디자이너 / 프로그래머 / 빌드 엔지니어 / QA / 아티스트 / 사운드 / 내러티브 / 스페셜리스트) 로스터를 따로 돌립니다 — <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>에 총 19개 에이전트 정의.</p>
+    </article>
+  </div>
+
+  <p class="subhead eyebrow">— 미디어 파이프라인 · music-video 미션</p>
+  <figure class="diagram">
+    <img src="assets/visuals/06-media-pipeline-ko.png" width="1800" height="1163" alt="미디어 파이프라인: 커밋되는 파일로 이어지는 6개 서브에이전트 릴레이(Opus 3, Sonnet 3). Orchestrator(Opus)가 미션을 분해해 Planner → Resourcer → Editor → QA 라인으로 위임하고, 각 에이전트는 공유 채팅이 아니라 상류 산출물(plan.md → MANIFEST.md → CHANGELOG.md → qa-report.md)을 읽습니다. Resourcer가 ffmpeg / yt-dlp / whisper를 돌립니다. 별도 트랙 Auditor(Sonnet)가 매일 03:00 레포 전역 드리프트 / 계약 / 비용 / 보안 감사를 돌려 docs/audit/<date>-<focus>.md와 CURRENT-ALERT.md를 씁니다." loading="lazy" decoding="async">
+    <figcaption>6개 서브에이전트, 파일 기반 핸드오프 — README · Architecture</figcaption>
+  </figure>
+  <div class="cards">
+    <article class="card">
+      <h3>파이프라인 (music-video 미션)</h3>
+      <ol>
+        <li><b>비트 추출.</b> <code>aubiotrack</code>이 실제 비트를 찾고 서브 비트 노이즈는 버립니다. 컷은 N번째 비트마다(기본 12 — 95 BPM에서 약 7.5초당 한 컷).</li>
+        <li><b>Phrase 정렬.</b> <code>aubioonset</code>이 드럼 hit을 감지. 분위기별 가변 클립 <code>setpts</code>: 정적 0.55×, 앰비언트 0.70×, 액티브 0.80×, 자연 1.00× — 음악이 비주얼 속도를 끕니다.</li>
+        <li><b>B-roll.</b> mood-keyword Pexels Videos API fetch + 윈도우별 선택. 데모 모드는 키 없는 첫 실행을 위해 CC-BY Blender 오픈무비 클립을 번들합니다.</li>
+        <li><b>글리치 마이크로 에디트.</b> 검출된 드럼 onset에 0.2초 역재생 + 0.2초 forward jump-cut, 단 정적-카메라로 분류된 클립에만 적용해 글리치 중 프레임이 흔들리지 않게.</li>
+        <li><b>빈티지 lo-fi 쉐이더.</b> 필름 그레인 + 비네팅 + 가우시안 줌-펄스 + phrase-aware pond 잔물결 + halation 블룸. 전부 순수 ffmpeg 필터 그래프 — GLSL도 외부 렌더러도 없음.</li>
+        <li><b>렌더 + QA.</b> ffmpeg 9:16 화면 채움, 실패 시 미션 레벨 재시도.</li>
+      </ol>
+    </article>
+    <article class="card">
+      <h3>품질 바 — 시스템이 enforce하는 5개 계약</h3>
+      <p>2026-05-22 music-video QA 패스가 이전 파이프라인이 조용히 어겨온 6개 취향 디렉티브를 들춰냈습니다. 다섯은 enforce되는 계약으로 안착했고, 여섯 번째는 연구 방향으로 열려 있습니다. <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#9-the-quality-bar-wasnt-a-bug--it-was-6-contracts-the-system-didnt-enforce" target="_blank" rel="noopener">케이스 스터디 #9</a>가 그 프레이밍을 씁니다: 버그는 렌더가 아니라 계약이 코드로 표현되지 못한 것이었다.</p>
+      <ul>
+        <li><b>A.1 — B-roll dedup 레지스트리.</b> <code>records/youtube/broll-used.txt</code>(271개 id seeded). 두 Pexels 호출자가 참조 + append.</li>
+        <li><b>A.2 — 가사 vocal-onset 정렬.</b> <code>scripts/music-video-lyric-align.sh</code>가 일반 텍스트 + 오디오에서 whisper로 LRC를 도출(KR 워드 레벨, EN 세그먼트 레벨).</li>
+        <li><b>A.3 — Language anchor + QA 게이트.</b> 모든 preset에 <code>lang_anchor</code>; <code>scripts/music-video-qa-anchor.sh</code>가 B-roll 키워드를 채점 — exit 0 PASS / 1 WARN / 2 FAIL.</li>
+        <li><b>B.1 — 쉐이더 vocabulary.</b> 4개 → 23개 효과로 3스테이지 확장, 장르 인식 preset 라우팅.</li>
+        <li><b>C.1 — 쉐이더 절제 게이팅.</b> preset별 <code>shader_active_ratio</code>; <code>MUSIC_VIDEO_SHADER_GATE</code>로 4가지 게이트 모드.</li>
+      </ul>
+      <p class="muted">전체 changelog: <a href="https://github.com/MelonS/MelonS-Agents/blob/main/skills/music-video/CHANGELOG.md" target="_blank" rel="noopener">skills/music-video/CHANGELOG.md</a>.</p>
+    </article>
+    <article class="card">
+      <h3>ffmpeg 쉐이더 23종 — 한눈에</h3>
+      <p>전부 순수 ffmpeg 필터 그래프. GLSL도 외부 렌더러도 없음. 카탈로그는 <code>scripts/music-video-shaders.sh</code>, 장르별 라우팅은 <code>skills/music-video/data/genre-presets.yaml</code>.</p>
+      <ul style="list-style:none;padding-left:0">
+        <li><b>Stage 1 — 1차 패스 (2026-05-17).</b> <code>pond</code>, <code>halation</code>, <code>breathing</code>, <code>combo</code>.</li>
+        <li><b>Stage 2 — 장르 인식 확장 (2026-05-21).</b> <code>scanline</code>, <code>chromatic_split</code>, <code>neon_edge</code>, <code>vhs</code>, <code>saturation_pulse</code>, <code>kaleidoscope</code>, <code>beat_burst</code>, <code>strobe</code>, <code>shake</code>, <code>color_burst</code>, <code>light_rays</code>.</li>
+        <li><b>Stage 3 — 품질 바 배치 (2026-05-22).</b> <code>light_leak</code>, <code>duotone</code>, <code>vignette_pulse</code>, <code>paper_grain</code>, <code>dust_speck</code>, <code>posterize</code>, <code>trail_echo</code>, <code>soft_bloom</code>.</li>
+      </ul>
+      <p class="muted">의도적으로 보류 — cel-shading / 카툰(GLSL / EbSynth / AI 스타일라이즈 필요). <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#5-shader-effects-in-ffmpeg--knowing-where-the-wall-is" target="_blank" rel="noopener">케이스 스터디 #5</a> 참조.</p>
+    </article>
+  </div>
+
+  <p class="subhead eyebrow">— 감사 &amp; 비용 · 자기를 감시하는 레포</p>
+  <figure class="diagram">
+    <img src="assets/visuals/09-auditor-triggers-ko.png" width="1800" height="858" alt="감사 트리거 레이어 3개, 전부 별도 트랙·읽기 전용, 하나의 출력 채널로 수렴. L1 — post-commit 훅이 드리프트 위험 경로에만 발화, audit-run.sh contract 실행. L2 — 15분마다 미션 이상 감지 폴이 집중 감사 실행. L3 — 매일 03:00 베이스라인을 launchd로 스케줄, audit-run.sh all 실행. 셋 다 실행마다 docs/audit/<date>-<focus>.md에 리포트 1건을 쓰고, CURRENT-ALERT.md는 최신 verdict이 비-CLEAN일 때만 쓰이며, 다음 인터랙티브 세션은 목표를 잡기 전 이를 의무적으로 읽음." loading="lazy" decoding="async">
+    <figcaption>트리거 레이어 3개, 출력 싱크 1개 — README · Architecture / Design notes</figcaption>
+  </figure>
+  <div class="cards">
+    <article class="card glow-purple">
+      <h3>3-레이어 리액티브 감사</h3>
+      <ul>
+        <li><b>L1 — post-commit 훅.</b> 드리프트 위험 커밋(<code>agents/</code>, <code>.claude/agents/</code>, <code>config/</code>, <code>CLAUDE.md</code>, 운영 계약 하위)이 ~30초 안에 <code>audit-run.sh contract</code>를 발화.</li>
+        <li><b>L2 — 15분 미션 이상 감지 폴.</b> 새 blocker 파일이나 QA-FAIL 폭증이 집중 감사를 트리거. 이상 없으면 no-op(토큰 0).</li>
+        <li><b>L3 — 매일 03:00 베이스라인.</b> launchd가 전체 스윕을 발화. L1 + L2가 놓친 것을 잡음.</li>
+      </ul>
+      <p class="muted">패턴은 Observer가 아니라 Reactor + Hook(파일을 이벤트로) — 이 레포의 서브에이전트는 장기 실행 observable이 아닙니다.</p>
+    </article>
+    <article class="card">
+      <h3>비용 라우팅 규칙</h3>
+      <p>실제 실패에서 얻은 아키텍처 교훈: "Tier 2(로컬) = 기본"을 <em>모든</em> 파이프라인 단계에 적용하면 품질 천장이 생깁니다.</p>
+      <ul>
+        <li><b>기계적·고볼륨 단계</b>(전사, 렌더, fetch, 비트 검출) — 로컬. 규모에서 토큰 비용이 감당 불가.</li>
+        <li><b>일회성 창작 단계</b>(스크립트 후크, 사실 프레이밍, mood-keyword 추출) — Claude. 호출당 ~500 토큰, 기존 구독 쿼터 대비 운영상 무시 가능, 품질은 이후 60초 시청 동안 복리로 작용.</li>
+      </ul>
+      <p class="muted">전체 추론은 <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/cost-model.md" target="_blank" rel="noopener">docs/cost-model.md</a>.</p>
+    </article>
+  </div>
+
+  <p class="subhead eyebrow">— 스킬 &amp; 도구 · 포트폴리오</p>
+  <figure class="diagram">
+    <img src="assets/visuals/02-skills-ko.png" width="1800" height="1135" alt="스킬 포트폴리오: 프로덕션 미디어 스킬 2종, 개발 중 Unity 메타 스킬 1종, 보류 실험 1종 — 각 카드가 입력과 출력을 보여줌. music-video(프로덕션): 음악 파일 → 60초 9:16 세로 쇼츠; ffmpeg 쉐이더 23, 그레이드 프로필 7, 장르 preset 19, aubiotrack 비트로 컷, aubioonset 드럼 hit으로 글리치, Shape A 5-에이전트 미션 파이프라인. job-hunt(프로덕션): seed 키워드 1개 → 중복 제거 마크다운 다이제스트; seed → 26 동의어 role family, 소스 플러그인 11, 라이브 키없음 5 / 키 게이팅 2 / mock 4, 5,000+ raw → ~200 매칭, Shape B standalone curl+jq. game-dev-agent(개발 중): Unity 메타 스킬 — 스프라이트 생성, C# 스캐폴딩, 밸런스 튜닝, 오디오 생성, 인게임 AI 디렉터; 검증 표면 = PawnSim 콜로니심, 게임 로스터 13, Unity 에디터 수작업 0으로 CLI 스캐폴딩. product-cf(보류): 제품 사진 1장 → CF풍 9:16 쇼츠; 정직한 부정적 결론으로 보류 — 무료/로컬 3D가 16GB 머신에서 품질 바를 못 넘김, 유료 클라우드 image-to-video나 더 큰 GPU 필요." loading="lazy" decoding="async">
+    <figcaption>스킬 포트폴리오 — 각 스킬의 입력과 출력 — README · Overview</figcaption>
+  </figure>
+  <div class="cards">
+    <article class="card skill-card glow-orange">
+      <div class="skill-head">
+        <span class="emoji" aria-hidden="true">🎬</span>
+        <span class="skill-title">music-video</span>
+        <span class="pill green">✓ 프로덕션</span>
+      </div>
+      <p class="inout">음악 파일 <span class="arrow">→</span> 60초 9:16 세로 쇼츠</p>
+      <ul class="chips">
+        <li class="chip"><b>23</b> ffmpeg 쉐이더</li>
+        <li class="chip"><b>7</b> 그레이드 프로필</li>
+        <li class="chip"><b>19</b> 장르 preset</li>
+        <li class="chip"><b>aubiotrack</b> 비트로 컷</li>
+        <li class="chip"><b>aubioonset</b> 드럼 hit으로 글리치</li>
+        <li class="chip">Shape A · 5-에이전트 미션 파이프라인</li>
+      </ul>
+      <p class="muted">Skill #1, 미션 라우팅; 12/12 Hermes drop-in 상호운용 테스트로 검증. 스펙: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/music-video" target="_blank" rel="noopener">skills/music-video/</a></p>
+    </article>
+
+    <article class="card skill-card glow-green">
+      <div class="skill-head">
+        <span class="emoji" aria-hidden="true">🧭</span>
+        <span class="skill-title">job-hunt</span>
+        <span class="pill green">✓ 프로덕션</span>
+      </div>
+      <p class="inout">seed 키워드 1개 <span class="arrow">→</span> 중복 제거 마크다운 다이제스트</p>
+      <ul class="chips">
+        <li class="chip">seed → <span class="g">26</span> 동의어 role family</li>
+        <li class="chip"><span class="g">11</span> 소스 플러그인</li>
+        <li class="chip"><span class="g">5</span> 라이브 키없음 · <span class="g">2</span> 키 게이팅 · <span class="g">4</span> mock</li>
+        <li class="chip"><b>5,000+</b> raw → <b>~200</b> 매칭</li>
+        <li class="chip">Shape B · standalone <code>curl+jq</code></li>
+      </ul>
+      <p class="muted">Skill #2, standalone, v2 짧은 키워드 UX. 70개 테스트; <code>JH_*_LIVE</code> 플래그 뒤의 enrichment 유틸 5종. 스펙: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/job-hunt" target="_blank" rel="noopener">skills/job-hunt/</a></p>
+    </article>
+
+    <article class="card skill-card glow-gold">
+      <div class="skill-head">
+        <span class="emoji" aria-hidden="true">🎮</span>
+        <span class="skill-title">game-dev-agent</span>
+        <span class="pill gold">개발 중</span>
+      </div>
+      <p class="inout">Unity 프롬프트 <span class="arrow">→</span> CLI 스캐폴딩된 게임</p>
+      <ul class="chips">
+        <li class="chip">검증 표면 = <b>PawnSim</b> 콜로니심</li>
+        <li class="chip">13-에이전트 게임 로스터</li>
+        <li class="chip">Unity 에디터 수작업 0</li>
+        <li class="chip">프로덕션 스킬 2개에는 미포함</li>
+      </ul>
+      <p class="muted">Skill #3, 위 메타 스킬 — 스프라이트 생성, C# 스캐폴딩, 밸런스 튜닝, 오디오 생성, 인게임 AI 디렉터.</p>
+    </article>
+
+    <article class="card skill-card">
+      <div class="skill-head">
+        <span class="emoji" aria-hidden="true">📦</span>
+        <span class="skill-title">product-cf</span>
+        <span class="pill gray">보류</span>
+      </div>
+      <p class="inout">제품 사진 1장 <span class="arrow">→</span> CF풍 9:16 쇼츠</p>
+      <ul class="chips">
+        <li class="chip">정직한 부정적 결론으로 보류</li>
+        <li class="chip">무료/로컬 3D가 16GB에서 바를 못 넘김</li>
+        <li class="chip">유료 클라우드 i2v나 더 큰 GPU 필요</li>
+        <li class="chip">트리에 남기되 게이트 오프</li>
+      </ul>
+      <p class="muted">실험적 v0.1.0 — 설득력 있는 제품 모션은 무료/로컬 경로가 못 내는 유료 클라우드 image-to-video가 필요.</p>
+    </article>
+  </div>
+  <p class="muted">파이프라인은 오픈 <a href="https://agentskills.io" target="_blank" rel="noopener">agentskills.io</a> 표준을 따르는 이식 가능한 <strong>Skill</strong>로 패키징됩니다 — 한 번 작성한 스킬이 여러 호환 런타임(Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot 등)을 타깃할 수 있습니다.</p>
+
+  <div class="cards">
+    <article class="card">
+      <h3>Skill #2 — job-hunt 상세</h3>
+      <p>별도 shape 스킬: standalone(미션 라우팅 없음), v2 짧은 키워드 UX, agentskills.io 호환. <code>--seed "Problem Solver"</code>를 넘기면 오케스트레이터가 26 동의어 role family(Forward Deployed Engineer / Applied AI Engineer / Generalist / Founding Engineer / …)로 확장한 뒤 KR 잡보드(사람인 / 잡코리아 / 원티드 / 프로그래머스)에서 fetch합니다. 라이브 실행은 <strong>5,000+ raw 공고를 ~200 매칭으로</strong> 중복 제거합니다.</p>
+      <ul>
+        <li><b>소스 플러그인 11개</b>(키 없이 라이브 5, 키 게이팅 2, mock-fallback 4) — 기본은 전부 mock-fallback; 플러그인별 라이브 HTTP는 <code>JH_<i>SOURCE</i>_LIVE=1</code> 뒤.</li>
+        <li><b>enrichment 유틸 5종</b>(fit-score / cover-letter / company-research / interview-prep) — 공고별 Claude 호출은 <code>JH_<i>TOOL</i>_LIVE=1</code> 뒤.</li>
+        <li><b>테스트 70개</b> — smoke + 엣지케이스 + JSON 스키마 검증. EN + KO 워크스루.</li>
+      </ul>
+      <p class="muted">퀵스타트: <code>skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run</code>. 레퍼런스 다이제스트: <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/samples/job-hunt-digest-mock.md" target="_blank" rel="noopener">docs/samples/job-hunt-digest-mock.md</a>.</p>
+    </article>
+
+    <article class="card">
+      <h3>대체 경로 — faceless-short (내레이션 시대)</h3>
+      <p>이전 <code>faceless-short</code> 미션은 여전히 트리에 있습니다. 토픽 프롬프트 → 내레이션 60초 쇼츠: Sonnet이 후크 + 사실 프레이밍 초안, Kokoro-ONNX(영어) 또는 macOS Yuna(한국어)가 음성 합성, whisper.cpp가 자막 타이밍 전사, 캡션 키워드로 윈도우별 Pexels B-roll 선택, ffmpeg가 단일 라인 자막 번인. 토픽 기반 콘텐츠용으로 보존; 현재 프로덕션 포맷은 아님.</p>
+      <p class="muted">파이프라인 상세는 <a href="https://github.com/MelonS/MelonS-Agents/blob/main/README.ko.md#샘플-출력" target="_blank" rel="noopener">README 샘플 출력 섹션</a>.</p>
+    </article>
+
+    <article class="card">
+      <h3>운영자 도구</h3>
+      <p>시스템 상태를 표면에 띄우고 일상 상태-확인 프롬프트를 흡수하는 스크립트들 — 느린 Claude 감사를 빠른 Claude-free 체크로 보완합니다.</p>
+      <ul>
+        <li><b><code>scripts/first-touch.sh</code></b> — 제로 계정 데모 마법사. 단일 Y/n 동의; 사전 체크 → 데모 캐시 fetch → 렌더 → 결과 열기.</li>
+        <li><b><code>scripts/doctor.sh</code></b> — ~2초 레포 헬스 체크. CLI 도구, env 키, 스케줄러, 감사 알림, git 상태, 디스크, 스킬별 활성화. <code>--quiet</code> / <code>--json</code> 모드.</li>
+        <li><b><code>scripts/audit-skill-drift.sh</code></b> — 13번째 감사 룰. 각 스킬의 LIVE 플래그 매니페스트가 실제 스크립트 게이팅과 일치하는지 검증.</li>
+        <li><b><code>scripts/statusline.sh</code></b> — Claude Code statusline. <code>doctor:⚠N · goal:N/M · audit⚠</code>를 dir / branch / model / cost와 함께 렌더.</li>
+        <li><b><code>scripts/morning-brief.sh</code></b> — 단일 명령 overnight 다이제스트. doctor + 감사 + 7일 개입 추세 + 커밋 attribution + 자율 결정 + review-queue + blocker를 ~30줄로 결합.</li>
+        <li><b><code>outputs/review-queue/</code></b> + 스크립트 3개 — batched 취향 결정 큐. 운영자가 contact-sheet 마크다운을 자기 cadence로 드레인, 개입 이벤트 ~10배 감소.</li>
+      </ul>
+      <p class="muted">메타 스킬 <strong><code>goal-lock</code></strong>이 <code>docs/goal.md</code>를 파싱해 미체크 deliverable 하위 목표를 보고, 장시간 자율 세션이 다시 정박할 수 있게 합니다. 전체 도구별 표: <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/operator-tooling.md" target="_blank" rel="noopener">docs/operator-tooling.md</a>.</p>
+    </article>
+  </div>
+</section>
+
+<section id="evidence" class="block">
+  <p class="eyebrow">증거 · 무엇을 만드는가</p>
+  <h2>증거 — 파이프라인이 실제로 만드는 것</h2>
+
+  <p>렌더된 mp4에서 캡처한 프레임입니다. 전체 mp4는 <code>records/missions/</code> 하위에 있습니다(gitignore — 각 ~25–50 MB).</p>
+
+  <aside class="callout">
+    <strong>엔지니어링 결정, 한 페이지로.</strong>
+    프로덕션에서 드러난 9건의 문제와 각각이 만들어낸 최소 메커니즘 — Tier-1 라우팅, 세마포어 배치, 콘텐츠 품질 피드백 루프, 3-레이어 리액티브 감사, ffmpeg 안의 쉐이더 효과 / 벽이 어디인지 아는 것, 온보딩 마찰 → 제로 계정 데모 경로, declarative preset 라우팅(장르 인식 쉐이더), 개입을 미측정 축으로 / 투-패널 자율성 신호 + 감소 레버, 품질 바 = 시스템이 enforce 못한 6개 계약(2026-05-22 music-video QA 패스). 각 항목은 <em>문제 → 제약 → 결정 → 산출물</em> 포맷.
+    <br>→ <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.ko.md" target="_blank" rel="noopener">docs/engineering-case-studies.ko.md</a> · <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md" target="_blank" rel="noopener">English 원문</a>
+  </aside>
+
+  <figure class="hero-shot">
+    <img src="assets/music-video-hero.jpg" width="1080" height="1920" alt="2026-05-22 noir-detective 렌더의 중반 클라이맥스 프레임 — 9:16 세로, 스모키 바 인테리어, pink-magenta rnb_low_key 그레이드 프로필의 파이프 문 수염 남자, 쉐이더 레이어 전에 도는 장르별 grade_profile 단계를 보여줌." loading="lazy" decoding="async">
+    <figcaption><b>music-video <code>noir-detective</code></b> — 2026-05-22 배치, t = 30초. 장르별 <code>grade_profile</code>(<code>rnb_low_key</code>)이 pink-magenta low-key 룩을 잡고, 그 위에 phrase-aware 쉐이더 스택.</figcaption>
+  </figure>
+
+  <h3>장르 카탈로그 한눈에 — 7개 그레이드 프로필 중 6개</h3>
+  <p>2026-05-20 → 2026-05-23 프로덕션 배치의 중반 클라이맥스 프레임들. cherry-pick B-roll 없음 — 모든 클립이 파이프라인이 늘 돌리는 같은 무인 Pexels mood-keyword fetch에서 나왔습니다. 비주얼 정체성은 소스 footage가 아니라 <code>grade_profile</code> + 쉐이더 스택입니다. 7개 그레이드 프로필이 <a href="https://github.com/MelonS/MelonS-Agents/blob/main/scripts/music-video-grade.sh" target="_blank" rel="noopener"><code>scripts/music-video-grade.sh</code></a>로 ffmpeg 필터 그래프로 컴파일됨(아래 6개 표시); 19개 장르 preset은 <a href="https://github.com/MelonS/MelonS-Agents/blob/main/skills/music-video/data/genre-presets.yaml" target="_blank" rel="noopener"><code>skills/music-video/data/genre-presets.yaml</code></a>.</p>
+
+  <figure class="diagram">
+    <img src="assets/visuals/13-genre-catalog-ko.png" width="1800" height="1050" alt="장르 카탈로그: 각 장르별 grade_profile이 쉐이더 레이어 전에 같은 generic Pexels 스톡을 장르 코딩된 룩으로 재채색 — cherry-pick B-roll 없음. 6개 프로필 표시: noir-detective(rnb_low_key, 딥 마젠타 low-key), rain-lofi(lofi_warm_grain, 부드러운 웜 그레인), arcade-synthwave(city_pop_neon, 퍼플 → 시안 네온), coastline-summer(hollywood_teal_orange, teal → orange split), linen-minimal(kr_warm_pastel, 웜 피치 파스텔), smallhand-folk(키네틱 가사 오버레이, 한국어 가사 오버레이). 장르 preset 19, 그레이드 프로필 7(7번째는 중립 무보정 패스스루). 정체성은 grade + 쉐이더 스택." loading="lazy" decoding="async">
+    <figcaption>같은 스톡 입력, 장르 코딩된 룩 출력 — README · Genre catalog</figcaption>
+  </figure>
+
+  <div class="gallery">
+    <figure>
+      <img src="assets/genre-grid/noir-detective.jpg" width="1080" height="1920" alt="noir-detective: 스모키 바 인테리어, 파이프 문 수염 남자, pink-magenta low-key 그레이드" loading="lazy" decoding="async">
+      <figcaption><b>noir-detective</b><br><span class="muted">rnb_low_key</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/genre-grid/rain-lofi.jpg" width="1080" height="1920" alt="rain-lofi: 에스프레소 추출하는 바리스타, soft pink warm 그레이드" loading="lazy" decoding="async">
+      <figcaption><b>rain-lofi</b><br><span class="muted">lofi_warm_grain</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/genre-grid/arcade-synthwave.jpg" width="1080" height="1920" alt="arcade-synthwave: VHS 카세트 + 레트로 VCR, purple city-pop neon 그레이드" loading="lazy" decoding="async">
+      <figcaption><b>arcade-synthwave</b><br><span class="muted">city_pop_neon</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/genre-grid/coastline-summer.jpg" width="1080" height="1920" alt="coastline-summer: golden-hour 해변 수면 반사, hollywood teal-orange 그레이드" loading="lazy" decoding="async">
+      <figcaption><b>coastline-summer</b><br><span class="muted">hollywood_teal_orange</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/genre-grid/linen-minimal.jpg" width="1080" height="1920" alt="linen-minimal: 침실 책더미 + 커피잔, kr warm pastel 그레이드" loading="lazy" decoding="async">
+      <figcaption><b>linen-minimal</b><br><span class="muted">kr_warm_pastel</span></figcaption>
+    </figure>
+    <figure>
+      <img src="assets/genre-grid/smallhand-folk.jpg" width="1080" height="1920" alt="smallhand-folk: 창문 너머 카페, 한국어 가사 오버레이가 보임" loading="lazy" decoding="async">
+      <figcaption><b>smallhand-folk</b><br><span class="muted">+ 키네틱 가사 오버레이</span></figcaption>
+    </figure>
+  </div>
+
+  <h3>Skill #2 — job-hunt 다이제스트는 이렇게 생겼다</h3>
+  <p>seed 키워드 하나 입력, 중복 제거된 마크다운 다이제스트 출력. 아래 mock-fallback 렌더링은 <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/samples/job-hunt-digest-mock.md" target="_blank" rel="noopener">docs/samples/job-hunt-digest-mock.md</a>에서 — 기본 5개 소스 전부 대상, 26 동의어 <code>problem-solver</code> family 확장, 7/21 raw 공고 매칭. 실제 다이제스트는 <code>records/jobs/&lt;date&gt;/digest.md</code> 하위에 생성(gitignore).</p>
+  <pre><code># Job-hunt digest — 2026-05-20
+
+&gt; <b>Seed</b>: <code>Problem Solver</code> → role family <code>problem-solver</code>
+&gt;            (26 synonym keywords expanded)
+&gt; <b>Sources</b>: _mock, kr-wanted, kr-programmers, kr-jobkorea, kr-saramin
+&gt; <b>Total postings</b>: 7 — 0 new since last digest
+
+### _mock (3)
+- <b>Problem Solver (AI Agent)</b> · MockRebeatLike
+  지역: 서울 강남구 · 게시: 2026-05-20
+  요약: 쇼핑 AI Agent 기획+개발+배포까지 직접 담당.  PMF 탐색 사이클 주도.
+- <b>Forward Deployed Engineer</b> · MockFrontierAI
+  지역: 원격 · 게시: 2026-05-20
+  요약: Build AI agent solutions; framing problems → shipping LLM
+        prototypes within weeks.
+- <b>Generalist</b> · MockKRStartup
+  지역: 서울 마포구 · 게시: 2026-05-19
+  요약: PM+Engineer+Data Analyst 하이브리드.  Ship MVPs, iterate to PMF.
+
+### kr-wanted (1) · kr-programmers (1) · kr-jobkorea (1) · kr-saramin (1)
+…</code></pre>
+
+  <details>
+    <summary><b>Faceless-short 갤러리</b> (참고용 — 내레이션 시대 파이프라인)</summary>
+    <p>이전 <code>faceless-short</code> 시도의 프레임들 — music-video 피벗 이전 내레이션 시대 파이프라인의 시각적 증거로 보존.</p>
+    <div class="gallery">
+      <figure>
+        <img src="assets/gallery-1.jpg" width="1080" height="1920" alt="faceless-hittites-v6 프레임: 9:16, 역사 전투 재현 B-roll, 'Turkey and Syria for five centuries' 단일 라인 자막." loading="lazy" decoding="async">
+        <figcaption><b>Hittites EN</b></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/gallery-2.jpg" width="1080" height="1920" alt="faceless-hydrogen-v6 프레임: 파스타 매크로 샷, 'The human body's reliance' 단일 라인 자막." loading="lazy" decoding="async">
+        <figcaption><b>Hydrogen EN</b></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/gallery-3.jpg" width="1080" height="1920" alt="faceless-autotune music-trial 프레임: 스튜디오 오디오 파형 디스플레이, 'like a secret safety net. But in 1998,' 단일 라인 자막." loading="lazy" decoding="async">
+        <figcaption><b>AutoTune EN</b></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/gallery-4.jpg" width="1080" height="1920" alt="faceless-hittites-ko-v6 프레임: 하투샤 고고학 항공 샷, 한국어 단일 라인 자막." loading="lazy" decoding="async">
+        <figcaption><b>Hittites KO</b></figcaption>
+      </figure>
+    </div>
+  </details>
+
+  <h3 id="scorecard">Faceless 시대 점수표 <span class="note-historical">참고용</span></h3>
+  <p>다섯 리텐션 매핑 축(후크, 영상-자막 매칭, 가독성, 사실 일관성, 마감)에 걸친 자기 평가로, faceless-short 반복 중 Claude가 매겼습니다 — music-video 피벗 이전 v4 → v5 → v6 시퀀스의 구조화된 진행 신호로 보존. music-video 미션은 차원별 점수 대신 플랫폼 시청 시간 데이터로 평가; per-video metrics는 <code>docs/pilots/</code> 하위.</p>
+  <p><a href="assets/scorecard.png" target="_blank" rel="noopener"><img class="full" src="assets/scorecard.png" width="1527" height="1474" alt="누적 막대 차트: Hittites EN v4 26/50(최저)부터 AutoTune EN 45/50(최고)까지 13개 파일럿 행, 5개 차원에 색상으로 분할. music-trial 토픽들이 40-45 부근에 군집." loading="lazy" decoding="async"></a></p>
+
+  <h3>운영자 개입 추세 (자율성 신호)</h3>
+  <p>사람이 계속 조타해야 하는 멀티 에이전트 시스템은 사실 대체하려던 일을 대체하지 못한 것입니다. 매일 02:00 KST 갱신되는 투-패널 정직 신호 — Panel A는 <code>git log</code>(커밋 attribution + 레버리지 비율), Panel B는 로컬 Claude Code 세션 JSONL(운영자 프롬프트 수 + 활성 세션 분). 추세에 작용하는 5개 우선순위 감소 레버는 <a href="https://github.com/MelonS/MelonS-Agents/blob/main/docs/engineering-case-studies.md#8-intervention-as-the-unmeasured-axis--autonomy-signal--reduction-levers" target="_blank" rel="noopener">케이스 스터디 #8</a> 참조.</p>
+  <p><a href="assets/intervention-ko.png" target="_blank" rel="noopener"><img class="full" src="assets/intervention-ko.png" width="1703" height="1244" alt="투-패널 개입 추세: Panel A는 일별 커밋 수를 initiator별로 스택(에이전트 자율 vs 운영자 주도) + 운영자 주도 비율선; Panel B는 로컬 Claude Code 세션 JSONL에서 추출한 일별 운영자 프롬프트 수와 활성 세션 분. 두 패널 모두 ~2026-06-30까지의 같은 날짜 축." loading="lazy" decoding="async"></a></p>
+
+  <h3>미션 결과 추세 (품질 신호) <span class="note-historical">참고용 · 렌더 시대</span></h3>
+  <p><strong>과거(렌더 시대) 차트, 마지막 갱신 2026-05-25.</strong> 2026-06부터 개발 포커스가 PawnSim 게임 트랙으로 이동했고, 그 작업은 렌더 미션이 아니라 검증 게이트 통과 커밋(위 자율성 추세 참조)으로 나타납니다 — 따라서 이 차트는 더 이상 현재 신호가 아니며, 위 점수표와 같은 방식으로 렌더 시대의 기록으로 보존합니다. 시스템의 렌더 진화를 한눈에 보여줍니다: 2026-05-17 spike(8 → 33 missions/day)는 faceless 파일럿 배치, 피벗 이후 평탄 구간은 일일 3–8 렌더의 sustainable cadence로 정착한 music-video 포맷. 모든 <code>records/missions/&lt;date&gt;/&lt;id&gt;/qa-report.md</code>의 <code>Verdict: PASS|FAIL</code>과 <code>attempt N of M</code>을 파싱.</p>
+  <p><a href="assets/quality-trend-ko.png" target="_blank" rel="noopener"><img class="full" src="assets/quality-trend-ko.png" width="1430" height="1040" alt="과거 렌더 시대 투-패널 미션 결과 추세(마지막 갱신 2026-05-25): Panel A는 일별 미션 수를 outcome별로 스택(1회 PASS, 재시도 후 PASS, FAIL, metrics.json만) + 1회 시도 PASS 비율선; Panel B는 일별 미션 수를 타입별로 스택, highlight 시대 → faceless 파일럿 → music-video 포커스로의 production pivot를 보여줌." loading="lazy" decoding="async"></a></p>
+</section>
+
+<section class="block" id="try">
+  <p class="eyebrow">퀵스타트 · 실행</p>
+  <h2>60초 만에 실행</h2>
+  <p>단일 명령 가이드 마법사. Pexels 가입 없음, Suno 왕복 없음, <code>.env</code> 편집 없음:</p>
+  <pre><code>git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
+cd MelonS-Agents
+./scripts/first-touch.sh        # 사전 체크 → 캐시 fetch → 렌더 → 결과 열기</code></pre>
+  <p>마법사가 사전 체크, 데모 캐시 fetch(~30초), 번들된 CC-BY Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더(~100초) 후 결과를 엽니다. 단일 Y/n; 나머지는 자동.</p>
+
+  <h3>수동 데모 경로 (같은 결과)</h3>
+  <pre><code>./scripts/bootstrap.sh                # 도구 검증, 모델 fetch
+MUSIC_VIDEO_DEMO_MODE=1 \
+  ./agents/missions/music-video/run.sh demo</code></pre>
+
+  <h3>Skill #2 — job-hunt 짧은 키워드 데모 (~5초, 네트워크 없음)</h3>
+  <pre><code>skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
+# digest.md가 stdout에 출력; 여러 소스에 걸친 mock-fallback 공고가
+# 26 동의어 "problem-solver" family에 모두 매칭됨.</code></pre>
+  <p>소스별 라이브 HTTP(5개 플러그인은 API 키 불필요): <code>JH_GLOBAL_ATS_LIVE=1 JH_GLOBAL_REMOTEOK_LIVE=1 JH_GLOBAL_REMOTIVE_LIVE=1 JH_GLOBAL_HN_LIVE=1 JH_WORKNET_LIVE=1</code>.</p>
+
+  <p class="muted">풀 Pexels + Suno 경로(mood-keyword 카탈로그, 커스텀 트랙)는 <a href="https://github.com/MelonS/MelonS-Agents/blob/main/README.ko.md#빠른-시작" target="_blank" rel="noopener">README 빠른 시작</a>에 고급 경로로 문서화. macOS 우선; 코어 파이프라인(whisper.cpp + ollama + ffmpeg + aubio)은 Linux 호환, launchd 스케줄러와 Yuna TTS는 macOS 전용.</p>
+</section>
+
+<footer>
+  <div class="footer-line">
+    <span class="tagline"><span class="diamond" aria-hidden="true">◆</span> MelonS-Agents — 기계적인 건 로컬에서, 창작은 Claude로</span>
+    <span class="repo">github.com/MelonS/MelonS-Agents</span>
+  </div>
+  <p class="footer-meta">
+    <a href="https://github.com/MelonS/MelonS-Agents/blob/main/LICENSE" target="_blank" rel="noopener">MIT 라이선스</a>로 배포.
+    소스는 <a href="https://github.com/MelonS/MelonS-Agents" target="_blank" rel="noopener">GitHub</a>. Claude Code로 제작.
+    <br>
+    관리: <a href="https://github.com/MelonS" target="_blank" rel="noopener">@MelonS</a> ·
+    <a href="https://www.linkedin.com/in/eun-hyung-choi" target="_blank" rel="noopener">LinkedIn</a>.
+    빌드 로그 업데이트는 레포의 <code>docs/social/linkedin-{ko,en}.md</code>에서 가져옵니다.
+  </p>
+</footer>
+
+</body>
+</html>
