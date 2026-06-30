@@ -30,6 +30,8 @@
 
 </div>
 
+![MelonS-Agents — by the numbers: 100+ outputs, 2 production skills, 23 shaders, 0 runtime API tokens, 15-scenario gate, 19 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
+
 ## Try it in ~60 seconds (zero accounts, zero `.env`)
 
 ```bash
@@ -45,6 +47,8 @@ no Suno round-trip, no `.env` edit.  See
 [Quick start](#quick-start) for the manual + advanced paths.
 
 ## Who this is for
+
+![Who this is for — five audiences: video creator, system researcher, job-seeker, game-verification watcher, skill integrator](docs/visuals/03-personas.png)
 
 - **You want short-form vertical video output without writing pipeline code.**
   Give the wizard a music file, get back a 9:16 short with beat-aligned
@@ -72,6 +76,8 @@ want every step of the pipeline as inspectable bash + open-source
 local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 
 ## Overview
+
+![Skills portfolio — music-video (Production), job-hunt (Production), game-dev-agent (in development), product-cf (parked)](docs/visuals/02-skills.png)
 
 > A multi-agent system driven by
 > [Claude Code](https://docs.anthropic.com/claude-code) — media
@@ -173,6 +179,8 @@ local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.
 
 ### PawnSim — the prototype the agent is actively iterating on (2026-06 focus)
 
+![Verification — two gates: 15-scenario input-level repro gate per commit + isolated grader sub-agent on long soaks](docs/visuals/14-verification-loop.png)
+
 The most active validation surface right now is **PawnSim** (Skill #3-A) — the
 agent builds *and* play-tests it in a tight loop, with the operator filing
 in-game feedback that turns straight into the next batch of fixes.
@@ -218,6 +226,10 @@ verification status (including known gaps) in
 > *problem → constraint → decision → artifact*.
 
 ## Design notes
+
+![Local vs Claude cost firewall — Tier 1 Anthropic API orchestration vs Tier 2 local tools, 0 runtime API tokens](docs/visuals/04-cost-firewall.png)
+
+![Auditor — 3 trigger layers: L1 post-commit hook, L2 15-min anomaly poll, L3 daily 03:00 baseline](docs/visuals/09-auditor-triggers.png)
 
 A few choices that distinguish this from a typical agent demo:
 
@@ -457,6 +469,8 @@ shorts-batch) remain as the baseline reference further down.
 
 ### Music-video pilots (post-pivot, 2026-05-17)
 
+![Music-video evolution v1 to v6 — each version adds one delta; v5 validated and promoted to run.sh](docs/visuals/11-mv-evolution.png)
+
 The `music-video` mission produces a 60-second 9:16 short where the
 music IS the message: operator-supplied music track is the sole
 audio; cuts land on aubiotrack-derived phrase boundaries; per-clip
@@ -491,6 +505,8 @@ the file" license, so the repo never carries audio assets.
 
 #### Genre catalog at a glance (mid-climax frames from the 2026-05-20 → 2026-05-23 production batch)
 
+![Genre catalog — 19 genre presets, 7 grade profiles; 6 genre to grade tiles with color swatches](docs/visuals/13-genre-catalog.png)
+
 Six mid-climax frames pulled from recent renders.  Each row shows
 how the per-genre `grade_profile` (rolled out 2026-05-22) transforms
 the same generic Pexels stock into a genre-coded look *before* the
@@ -522,6 +538,8 @@ Reproduction (any track → 9:16 short):
 ```
 
 #### Post-processing shaders — first pass (2026-05-17 evening)
+
+![23 ffmpeg shaders across 3 stages, pure filter graphs, genre-routed; cel-shading deferred](docs/visuals/12-shaders.png)
 
 The narrative below covers the first four shaders shipped on
 2026-05-17.  Nineteen more landed across 2026-05-21 (genre-aware
@@ -642,73 +660,9 @@ The system does **not** force every skill through a single shape.
 Two shapes ship today, both agentskills.io-compliant; new skills
 pick whichever fits the work:
 
-```
-   Skill invocation (agentskills.io spec)
-                │
-                ▼
-   ┌─ Shape A — Missions-routed (5-agent pipeline) ────────────────────┐
-   │                                                                    │
-   │     ┌─────────────┐                                                │
-   │     │Orchestrator │  opus       Tier 1 — Anthropic API             │
-   │     └──────┬──────┘             (Claude Code CLI runtime)          │
-   │       ┌───┴───┬────────┬────────┐                                  │
-   │       ▼       ▼        ▼        ▼                                  │
-   │   Planner Resourcer  Editor    QA                                  │
-   │    opus     opus    sonnet  sonnet                                 │
-   │       │       │        │        │                                  │
-   │       └───── files (plan.md / MANIFEST.md / qa-report.md) ─────    │
-   │                              │                                     │
-   │   Pick when: each stage carries real work (planner reasoning,      │
-   │   resourcer fetching, editor multi-stage render, qa codec/dur     │
-   │   verification).  Example: skills/music-video/ — its scripts/      │
-   │   run.sh is a symlink to agents/missions/music-video/run.sh so     │
-   │   the skill inherits the mission's tuning + retry loops.           │
-   └────────────────────────────────────────────────────────────────────┘
 
-   ┌─ Shape B — Standalone (skill IS the implementation) ──────────────┐
-   │                                                                    │
-   │     skills/<name>/scripts/run.sh    (no orchestrator / no plan.md  │
-   │              │                       / no qa-report.md, just the   │
-   │              ▼                       skill's own pipeline)         │
-   │     mechanical pipeline (HTTP + parse + format + render)           │
-   │                                                                    │
-   │   Pick when: planner / qa stages would be near-empty (mechanical   │
-   │   work, low creativity).  Skipping them removes 4 file-based       │
-   │   handoffs per invocation.  Example: skills/job-hunt/ —            │
-   │   filter→fetch→dedupe→render is all curl+jq, planner/qa would     │
-   │   be no-ops.                                                       │
-   └────────────────────────────────────────────────────────────────────┘
+![The 3-shape skill model — Shape A missions-routed 5-agent pipeline, Shape B standalone, Shape ? future skills](docs/visuals/05-three-shapes.png)
 
-   ┌─ Shape ? — Future skills (e.g., movie / game / longform analysis)─┐
-   │                                                                    │
-   │   Open question.  Likely candidates by work shape:                 │
-   │     - Multi-asset analysis with per-asset Claude critique →        │
-   │       missions-routed (planner = scene split, editor = critique    │
-   │       composition, qa = factual / spoiler check).                  │
-   │     - URL → metadata → LLM summary → markdown digest →             │
-   │       standalone (same shape as job-hunt).                         │
-   │     - Long-running stateful (e.g., persistent playthrough) →       │
-   │       may need a new Shape C with checkpoint/resume.               │
-   │   Decision lands per-skill in SKILL.md `metadata.pipeline-source`. │
-   │   See docs/architecture.md "Skills layer — two shapes" for the     │
-   │   selection table.                                                 │
-   └────────────────────────────────────────────────────────────────────┘
-
-   ── Local execution layer (both shapes share) ──────────────────────
-       Tier 2: ffmpeg / whisper.cpp / ollama / aubio / curl + jq
-       Writes to records/missions/<date>/<id>/ or records/<skill>/<date>/
-
-   ── Operator surface (Claude-free, ~2s) ────────────────────────────
-       review-queue   doctor.sh   statusline   morning-brief.sh
-       Absorbs status-check prompts so the operator can scan state
-       without typing.
-
-   ── Auditor (out-of-band, read-only, three trigger layers) ─────────
-       L1 post-commit hook (drift-risk paths) → audit-run.sh contract
-       L2 15-min mission-anomaly poll         → focused audit
-       L3 daily 03:00 baseline via launchd    → audit-run.sh all
-       Writes docs/audit/<date>-<focus>.md + CURRENT-ALERT.md.
-```
 
 The Shape A subagents currently run at: **planner=opus**,
 **resourcer=opus**, **editor=sonnet**, **qa=sonnet**.  Planner +
@@ -723,6 +677,8 @@ missions have accumulated under the new setting; if the opus signal
 doesn't compound across a real workload, revert to sonnet.  Editor +
 qa stay on sonnet — those stages are the most bash-scripted in
 practice, with little room for opus's reasoning depth to bite.
+
+![Media pipeline — orchestrator + planner/resourcer (opus), editor/qa (sonnet), out-of-band auditor, file-based handoff](docs/visuals/06-media-pipeline.png)
 
 | Agent | Responsibility | Output |
 |-------|----------------|--------|
@@ -742,30 +698,9 @@ meta-skill scaffolds end-to-end from the CLI. Its architecture is two layers:
 the *generator* (agent-side, the build chain) and the *generated* (the Unity
 project itself).
 
-```
-   ── Generator: game-dev-agent CLI (no manual Unity Editor work) ─────
-       agent.py gen-sprite / gen-sprite-proc   sprites (SDXL / procedural / PIL palette.py)
-       agent.py gen-sfx                         procedural WAV SFX
-       agent.py integrate --method scenes       Unity batchmode → SceneSetup.GenerateAll
-       agent.py integrate --method build        Unity batchmode → BuildScript.BuildWindows
-       refactor_check.py (6-stage gate)         scenes→build→QA shot→log scan→visual diff→PlayMode
-       repro_all.py (15-scenario commit gate)   input-level repro: synthesized clicks + effect assertions
 
-   ── Generated: skills/game-prototype/unity-project/Assets/ ──────────
-       Editor/    SceneSetup.cs (+14 partials) — programmatic scene/prefab gen
-                  BuildScript.cs               — headless build entry points
-       Scripts/
-         Core/    Services.cs (ServiceLocator — 5 singletons → testable lookup)
-         Data/    PawnStats / HealthPartsConfig (SO-externalized tuning)
-         AI/      IPawnAction + PawnActions (utility-AI Strategy pattern)
-         Tests/   V-series PlayMode scenarios
-         (~50+ runtime components: PawnEntity, PathGrid, AStar,
-          ReservationManager, BuildManager, AIDirector, AudioBank, …)
-       Sprites/   palette.py + PIL generators + SDXL/procedural art
-       Audio/     procedural WAV (+ _gen_sfx.py)
-       Prefabs/   Pawn / Wall / Floor / Door / Stove / Bed / …
-       Scenes/    MainMenu.unity · Game.unity (both regenerated, not hand-edited)
-```
+![PawnSim generator vs generated — game-dev-agent CLI build chain produces the Unity project, no manual Editor work](docs/visuals/08-unity-arch.png)
+
 
 Three design choices carry the game's internal architecture: **utility-AI
 Strategy pattern** (each colonist job is an `IPawnAction` scored per tick, so
@@ -782,6 +717,8 @@ The game track also runs its **own 13-agent roster** — separate from the
 6-agent media pipeline above, all scaffolded and invoked through
 `game-dev-agent` (so [`.claude/agents/`](.claude/agents/) holds **19**
 definitions in total, not 6):
+
+![Game roster — 13 game subagents (opus direction/design/programming, sonnet execution/production) + 6 media = 19 total](docs/visuals/07-game-roster.png)
 
 | Game subagent | Role | Model |
 |---|---|---|
@@ -822,6 +759,8 @@ What appears on GitHub is the system's own evolution, not its products.
 
 ## Platform support
 
+![Platform support matrix — macOS / Linux / Windows 11 capability coverage](docs/visuals/16-platform-matrix.png)
+
 | Surface | macOS 14+ | Linux | Windows 11 |
 |---------|-----------|-------|------------|
 | Mission execution (transcribe → select → render → QA) | ✓ primary | ✓ best-effort | ✓ best-effort (bash via git-bash) |
@@ -844,6 +783,8 @@ install is enough.  Override in `.env` only when needed.
 
 ## Autonomy modes
 
+![Autonomy modes — Interactive (default) vs Autonomous, plus the money firewall](docs/visuals/17-autonomy-modes.png)
+
 Defined in [`config/policies.yaml`](config/policies.yaml).
 
 | Mode | Flag | Behavior |
@@ -852,6 +793,8 @@ Defined in [`config/policies.yaml`](config/policies.yaml).
 | 🌙 **Autonomous** | `AUTONOMY_MODE=true` | Runs unattended within `AUTONOMY_BUDGET_USD`. Logic files (`agents/`, `.claude/agents/`) are immutable. |
 
 ## Mission flow
+
+![Mission flow — 7 steps from user mission to orchestrator summary.md via planner/resourcer/editor/qa](docs/visuals/10-mission-flow.png)
 
 1. User states a mission.
 2. `orchestrator` opens `records/missions/<date>/<id>/` + a task list.
@@ -901,6 +844,8 @@ music-video + faceless-short).
   `bootstrap.sh` warns if `PEXELS_API_KEY` isn't set in `.env`.
 
 ## Claude Code pricing + usage guidance
+
+![Claude Code plan fit ladder and per-mission token estimates](docs/visuals/18-pricing.png)
 
 Claude Code is what drives the multi-agent layer (orchestrator → planner
 → resourcer → editor → QA + the daily auditor).  The mission scripts
@@ -981,6 +926,8 @@ Reference for all music-video env vars + flags + shader catalog:
 [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
 
 ### Skill #2 — job-hunt short-keyword demo (~5 seconds, no network)
+
+![job-hunt — one seed keyword expands to 26 synonyms, fetches 11 source plugins (5 live / 2 key / 4 mock), 5000+ to ~200](docs/visuals/15-job-hunt-sources.png)
 
 Single keyword expands to a full role family + emits a markdown
 digest from mock-fallback sources (no live HTTP, no API keys, no

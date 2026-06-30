@@ -48,6 +48,8 @@ assets/music/*
 !docs/metrics/*.png
 # Demo showcase frames (README evidence — e.g. PawnSim build screenshot)
 !docs/demo/*.png
+# README visual cards (Claude Design infographics — committed README evidence)
+!docs/visuals/*.png
 # GitHub Pages assets (site/ is the Pages source — bundle of evidence frames)
 !site/assets/*.jpg
 !site/assets/*.png

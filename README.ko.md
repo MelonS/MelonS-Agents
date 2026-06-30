@@ -30,6 +30,8 @@
 
 </div>
 
+![MelonS-Agents — by the numbers: 100+ outputs, 2 production skills, 23 shaders, 0 runtime API tokens, 15-scenario gate, 19 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
+
 ## 60초 안에 시작 (계정 0개, `.env` 편집 0번)
 
 ```bash
@@ -44,6 +46,8 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 필요 없음. 수동·고급 경로는 [빠른 시작](#빠른-시작) 참조.
 
 ## 이 프로젝트는 누구를 위한 것인가
+
+![Who this is for — five audiences: video creator, system researcher, job-seeker, game-verification watcher, skill integrator](docs/visuals/03-personas.png)
 
 - **파이프라인 코드를 짜지 않고도 숏폼 세로 영상을 만들고 싶은 분.**
   마법사에 음악 파일 하나 넘기면 비트 정렬 컷 + 빈티지 쉐이더 적용된
@@ -71,6 +75,8 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 / ollama / aubio) 로 보고 싶다면, 맞습니다.
 
 ## 개요
+
+![Skills portfolio — music-video (Production), job-hunt (Production), game-dev-agent (in development), product-cf (parked)](docs/visuals/02-skills.png)
 
 > [Claude Code](https://docs.anthropic.com/claude-code) 로 돌리는
 > 멀티에이전트 시스템 — 미디어 파이프라인은 macOS, 게임 프로토타입
@@ -168,6 +174,8 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 
 ### PawnSim — 에이전트가 지금 가장 활발히 반복 개발 중인 프로토타입 (2026-06 focus)
 
+![Verification — two gates: 15-scenario input-level repro gate per commit + isolated grader sub-agent on long soaks](docs/visuals/14-verification-loop.png)
+
 현재 가장 활발한 검증 표면은 **PawnSim** (Skill #3-A) 입니다 — 에이전트가
 만들면서 *동시에* 플레이테스트하는 타이트한 루프로 돌아가고, 운영자가 올린
 인게임 피드백이 곧바로 다음 수정 배치로 이어집니다.
@@ -208,6 +216,10 @@ Blender 클립 + Kevin MacLeod 트랙으로 60초 9:16 쇼츠 렌더 (~100초)
 > *문제 → 제약 → 결정 → 산출물* 포맷.
 
 ## 설계 노트
+
+![Local vs Claude cost firewall — Tier 1 Anthropic API orchestration vs Tier 2 local tools, 0 runtime API tokens](docs/visuals/04-cost-firewall.png)
+
+![Auditor — 3 trigger layers: L1 post-commit hook, L2 15-min anomaly poll, L3 daily 03:00 baseline](docs/visuals/09-auditor-triggers.png)
 
 일반적인 에이전트 데모와 차별화되는 설계 선택들:
 
@@ -430,6 +442,8 @@ raw 데이터는 [`docs/metrics/quality-trend.json`](docs/metrics/quality-trend.
 
 ### Music-video 파일럿 (포맷 피벗 후, 2026-05-17)
 
+![Music-video evolution v1 to v6 — each version adds one delta; v5 validated and promoted to run.sh](docs/visuals/11-mv-evolution.png)
+
 `music-video` 미션은 60초 9:16 쇼츠를 만드는데, **음악이 메시지**입니다 —
 운영자가 공급한 음악 파일이 유일한 오디오 트랙, 컷은 `aubiotrack` 으로
 추출한 phrase 경계에 정렬, 클립별 재생 속도가 분위기에 따라 가변
@@ -459,6 +473,8 @@ v5 = 운영자 검증 완료 → 정식
 다른 문제라 레포는 절대 오디오 자산을 들고 다니지 않음.
 
 #### 장르 카탈로그 한눈에 보기 (2026-05-20 → 2026-05-23 프로덕션 배치의 중반 정지 프레임)
+
+![Genre catalog — 19 genre presets, 7 grade profiles; 6 genre to grade tiles with color swatches](docs/visuals/13-genre-catalog.png)
 
 최근 렌더에서 뽑은 6개 중반 정지 프레임.  각 row 는 동일한 generic
 Pexels 스톡 footage 가 장르별 `grade_profile` (2026-05-22 출시) 을
@@ -490,6 +506,8 @@ grade + shader 스택 자체임.
 ```
 
 #### 포스트프로세싱 쉐이더 — 1차 패스 (2026-05-17 저녁)
+
+![23 ffmpeg shaders across 3 stages, pure filter graphs, genre-routed; cel-shading deferred](docs/visuals/12-shaders.png)
 
 아래는 2026-05-17 에 ship 된 첫 4개 쉐이더의 narrative 입니다.  이후
 19개가 추가 ship 됨 — 2026-05-21 (장르-인식 확장: scanline /
@@ -602,70 +620,9 @@ v5 → v6 상승폭 (Hittites EN +12점, Hydrogen EN +15점) 은 스크립트 �
 오늘 ship 된 shape 2가지 모두 agentskills.io 호환; 새 skill 은
 작업 성격에 맞는 shape 를 고름:
 
-```
-   Skill 호출 (agentskills.io spec)
-                │
-                ▼
-   ┌─ Shape A — Missions-routed (5-agent 파이프라인) ──────────────────┐
-   │                                                                    │
-   │     ┌─────────────┐                                                │
-   │     │Orchestrator │  opus       Tier 1 — Anthropic API             │
-   │     └──────┬──────┘             (Claude Code CLI 런타임)           │
-   │       ┌───┴───┬────────┬────────┐                                  │
-   │       ▼       ▼        ▼        ▼                                  │
-   │   Planner Resourcer  Editor    QA                                  │
-   │    opus     opus    sonnet  sonnet                                 │
-   │       │       │        │        │                                  │
-   │       └───── 파일 (plan.md / MANIFEST.md / qa-report.md) ──────   │
-   │                              │                                     │
-   │   언제 고름: 각 단계가 실질 작업을 캐리할 때 (planner 추론,         │
-   │   resourcer fetch, editor 멀티-스테이지 렌더, qa 코덱/길이 검증).  │
-   │   예: skills/music-video/ — scripts/run.sh 가                      │
-   │   agents/missions/music-video/run.sh 로 symlink 되어 미션의        │
-   │   튜닝 + retry loop 를 상속.                                       │
-   └────────────────────────────────────────────────────────────────────┘
 
-   ┌─ Shape B — Standalone (skill 자체가 구현) ────────────────────────┐
-   │                                                                    │
-   │     skills/<name>/scripts/run.sh    (오케스트레이터 / plan.md /    │
-   │              │                       qa-report.md 없음, skill 자체 │
-   │              ▼                       파이프라인만)                  │
-   │     mechanical 파이프라인 (HTTP + parse + format + render)         │
-   │                                                                    │
-   │   언제 고름: planner / qa 단계가 거의 비어있을 mechanical 작업.    │
-   │   생략하면 호출당 4번의 file 기반 핸드오프 제거.  예:               │
-   │   skills/job-hunt/ — filter→fetch→dedupe→render 전부 curl+jq,      │
-   │   planner / qa 는 no-op 가 됨.                                     │
-   └────────────────────────────────────────────────────────────────────┘
+![The 3-shape skill model — Shape A missions-routed 5-agent pipeline, Shape B standalone, Shape ? future skills](docs/visuals/05-three-shapes.png)
 
-   ┌─ Shape ? — 미래 skill (예: 영화 / 게임 / 롱폼 분석) ──────────────┐
-   │                                                                    │
-   │   미해결 질문.  작업 성격별 가능 매핑:                              │
-   │     - 멀티-에셋 분석 + per-asset Claude 비평 →                      │
-   │       missions-routed (planner=장면 분할, editor=비평 컴포지션,    │
-   │       qa=사실관계 / 스포일러 체크).                                 │
-   │     - URL → 메타데이터 → LLM 요약 → 마크다운 digest →               │
-   │       standalone (job-hunt 와 같은 shape).                         │
-   │     - 롱-러닝 stateful (예: 영구 플레이스루) →                      │
-   │       checkpoint/resume 가 필요한 새 Shape C.                      │
-   │   결정은 skill 별 SKILL.md `metadata.pipeline-source` 에 기록.      │
-   │   선택 표는 docs/architecture.md "Skills layer — two shapes" 참조. │
-   └────────────────────────────────────────────────────────────────────┘
-
-   ── 로컬 실행 레이어 (두 shape 공유) ───────────────────────────────
-       Tier 2: ffmpeg / whisper.cpp / ollama / aubio / curl + jq
-       records/missions/<date>/<id>/ 또는 records/<skill>/<date>/ 에 기록
-
-   ── Operator 표면 (Claude-free, ~2초) ──────────────────────────────
-       review-queue   doctor.sh   statusline   morning-brief.sh
-       상태-확인 프롬프트 흡수, 운영자가 타이핑 없이 상태 스캔.
-
-   ── Auditor (별도 트랙, read-only, 3-layer 트리거) ─────────────────
-       L1 post-commit 훅 (drift-risk 경로) → audit-run.sh contract
-       L2 15-분 미션 이상 폴                → 포커스된 audit
-       L3 매일 03:00 baseline launchd       → audit-run.sh all
-       결과: docs/audit/<date>-<focus>.md + CURRENT-ALERT.md
-```
 
 Shape A 의 서브에이전트는 현재 **planner=opus**, **resourcer=opus**,
 **editor=sonnet**, **qa=sonnet**.  Planner + resourcer 는 2026-05-22
@@ -678,6 +635,8 @@ multi-week production trial 이 합리적이라고 판단.  운영 미션 ~10-20
 sonnet 으로 revert.  Editor + qa 는 sonnet 유지 — 이 두 stage 는
 실무에서 가장 bash-scripted 되어 있어서 opus 의 추론 깊이가 bite 할
 여지가 작음.
+
+![Media pipeline — orchestrator + planner/resourcer (opus), editor/qa (sonnet), out-of-band auditor, file-based handoff](docs/visuals/06-media-pipeline.png)
 
 | 에이전트 | 책임 | 산출물 |
 |----------|------|--------|
@@ -696,30 +655,9 @@ sonnet 으로 revert.  Editor + qa 는 sonnet 유지 — 이 두 stage 는
 스캐폴딩하는 별도 Unity 코드베이스입니다. 아키텍처는 두 층 — *생성기*
 (에이전트 측 빌드 체인) 와 *생성물* (Unity 프로젝트 자체):
 
-```
-   ── 생성기: game-dev-agent CLI (수동 Unity 에디터 작업 없음) ─────────
-       agent.py gen-sprite / gen-sprite-proc   스프라이트 (SDXL / 절차적 / PIL palette.py)
-       agent.py gen-sfx                         절차적 WAV SFX
-       agent.py integrate --method scenes       Unity batchmode → SceneSetup.GenerateAll
-       agent.py integrate --method build        Unity batchmode → BuildScript.BuildWindows
-       refactor_check.py (6단계 게이트)         scenes→build→QA샷→로그스캔→비주얼diff→PlayMode
-       repro_all.py (15시나리오 커밋 게이트)    입력 레벨 재현: 클릭 합성 + 효과 어서션
 
-   ── 생성물: skills/game-prototype/unity-project/Assets/ ─────────────
-       Editor/    SceneSetup.cs (+14 partial) — 프로그래매틱 씬/프리팹 생성
-                  BuildScript.cs               — headless 빌드 엔트리
-       Scripts/
-         Core/    Services.cs (ServiceLocator — 5 싱글톤 → 테스트 가능 lookup)
-         Data/    PawnStats / HealthPartsConfig (SO 외부화 튜닝)
-         AI/      IPawnAction + PawnActions (utility-AI Strategy 패턴)
-         Tests/   V-series PlayMode 시나리오
-         (~50+ 런타임 컴포넌트: PawnEntity, PathGrid, AStar,
-          ReservationManager, BuildManager, AIDirector, AudioBank, …)
-       Sprites/   palette.py + PIL 생성기 + SDXL/절차적 아트
-       Audio/     절차적 WAV (+ _gen_sfx.py)
-       Prefabs/   Pawn / Wall / Floor / Door / Stove / Bed / …
-       Scenes/    MainMenu.unity · Game.unity (둘 다 재생성, 수동 편집 아님)
-```
+![PawnSim generator vs generated — game-dev-agent CLI build chain produces the Unity project, no manual Editor work](docs/visuals/08-unity-arch.png)
+
 
 게임 내부 아키텍처를 떠받치는 세 가지 설계: **utility-AI Strategy 패턴** (각
 콜로니스트 작업이 매 틱 점수화되는 `IPawnAction` 이라 거대 상태머신 없이 행동이
@@ -734,6 +672,8 @@ ScriptableObject 로). `SceneSetup.cs` 는 1057L → ~310L 로 14개 partial 분
 로스터**를 돌립니다 — 전부 `game-dev-agent` 가 스캐폴딩·호출하므로
 [`.claude/agents/`](.claude/agents/) 에는 6개가 아니라 **19개** 정의가
 있습니다:
+
+![Game roster — 13 game subagents (opus direction/design/programming, sonnet execution/production) + 6 media = 19 total](docs/visuals/07-game-roster.png)
 
 | 게임 서브에이전트 | 역할 | 모델 |
 |---|---|---|
@@ -774,6 +714,8 @@ opus 가 방향 / 설계 / 프로그래밍을, sonnet 이 실행 / 프로덕션 
 
 ## 플랫폼 지원
 
+![Platform support matrix — macOS / Linux / Windows 11 capability coverage](docs/visuals/16-platform-matrix.png)
+
 | 영역 | macOS 14+ | Linux | Windows 11 |
 |------|-----------|-------|------------|
 | 미션 실행 (전사 → 선택 → 렌더 → QA) | ✓ 1차 검증 | ✓ best-effort | ✓ best-effort (git-bash 로 bash 스크립트 실행) |
@@ -796,6 +738,8 @@ PATH에 도구가 설치되어 있으면 충분. 필요할 때만 `.env`에서 o
 
 ## 자율 모드
 
+![Autonomy modes — Interactive (default) vs Autonomous, plus the money firewall](docs/visuals/17-autonomy-modes.png)
+
 [`config/policies.yaml`](config/policies.yaml)에 정의됩니다.
 
 | 모드 | 플래그 | 동작 |
@@ -804,6 +748,8 @@ PATH에 도구가 설치되어 있으면 충분. 필요할 때만 `.env`에서 o
 | 🌙 **Autonomous** | `AUTONOMY_MODE=true` | `AUTONOMY_BUDGET_USD` 범위 안에서 무인 실행. 로직 파일(`agents/`, `.claude/agents/`)은 불변입니다. |
 
 ## 미션 흐름
+
+![Mission flow — 7 steps from user mission to orchestrator summary.md via planner/resourcer/editor/qa](docs/visuals/10-mission-flow.png)
 
 1. 사용자가 미션을 지시합니다.
 2. `orchestrator`가 `records/missions/<date>/<id>/`와 태스크 리스트를 생성합니다.
@@ -847,6 +793,8 @@ Pexels Videos API (무료 티어 — music-video + faceless-short B-roll).
   `bootstrap.sh` 가 `.env` 에 `PEXELS_API_KEY` 안 잡혀 있으면 경고.
 
 ## Claude Code 요금제 + 사용량 안내
+
+![Claude Code plan fit ladder and per-mission token estimates](docs/visuals/18-pricing.png)
 
 Claude Code 가 멀티 에이전트 레이어 (orchestrator → planner → resourcer
 → editor → QA + 일일 auditor) 를 구동합니다.  미션 스크립트 자체는
@@ -934,6 +882,8 @@ music-video 환경변수 + 플래그 + 쉐이더 카탈로그 전체 레퍼런�
 참고.
 
 ### Skill #2 — job-hunt 짧은-키워드 데모 (~5초, 네트워크 없음)
+
+![job-hunt — one seed keyword expands to 26 synonyms, fetches 11 source plugins (5 live / 2 key / 4 mock), 5000+ to ~200](docs/visuals/15-job-hunt-sources.png)
 
 키워드 한 개가 role family 전체로 자동 확장 + mock-fallback
 소스에서 마크다운 digest 생성 (라이브 HTTP 없음, API 키 없음,
