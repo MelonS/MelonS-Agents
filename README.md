@@ -680,15 +680,6 @@ practice, with little room for opus's reasoning depth to bite.
 
 ![Media pipeline — orchestrator + planner/resourcer (opus), editor/qa (sonnet), out-of-band auditor, file-based handoff](docs/visuals/06-media-pipeline.png)
 
-| Agent | Responsibility | Output |
-|-------|----------------|--------|
-| 🤖 **Orchestrator** (opus) | Mission decomposition, delegation, final synthesis | task list · `summary.md` |
-| 🧠 **Planner** (opus, since 2026-05-22) | Strategy, work breakdown, acceptance criteria | `plan.md` |
-| 📦 **Resourcer** (opus, since 2026-05-22) | Asset fetching, external tool execution (ffmpeg / yt-dlp / whisper) | `resources/MANIFEST.md` |
-| 🎞️ **Editor** (sonnet) | Output rendering, deliverable assembly | `outputs/CHANGELOG.md` |
-| ✅ **QA** (sonnet) | Validation against plan criteria, regression detection | `qa-report.md` |
-| 🔍 **Auditor** (sonnet) | Repository-wide drift / contract / cost / security audit (out-of-band, daily 03:00) | `docs/audit/<date>-<focus>.md` + `docs/audit/CURRENT-ALERT.md` when non-CLEAN |
-
 Subagent definitions: [`.claude/agents/`](.claude/agents/) · Mission templates and shared shell libs: [`agents/`](agents/)
 
 ### Game prototype architecture (Skill #3-A — PawnSim)
@@ -720,22 +711,6 @@ definitions in total, not 6):
 
 ![Game roster — 13 game subagents (opus direction/design/programming, sonnet execution/production) + 6 media = 19 total](docs/visuals/07-game-roster.png)
 
-| Game subagent | Role | Model |
-|---|---|---|
-| 🎬 **game-director** | Vision, tone, core feel | opus |
-| 📋 **game-pm** | Schedule, milestones, scope, dependencies | opus |
-| 🎲 **game-designer** | Systems, mechanics, controls, balance | opus |
-| 👾 **game-programmer** | C# implementation from the template catalog | opus |
-| 🧠 **game-ai-designer** | Decision trees, utility AI, NPC routines | opus |
-| ⚙️ **game-systems-designer** | Resource economies, needs decay, progression | opus |
-| 🎨 **game-artist** | Sprites, UI visuals, animation states | sonnet |
-| 🔧 **game-build-engineer** | Unity batchmode pipeline, asset import | sonnet |
-| ✅ **game-qa** | Build → launch → screenshot → verdict loop | sonnet |
-| ⚔️ **game-combat-designer** | Weapon stats, damage math, hit feel | sonnet |
-| 🌊 **game-level-designer** | Spawn patterns, waves, boss patterns | sonnet |
-| 📖 **game-narrative-designer** | Story beats, dialogue, lore (KR / EN) | sonnet |
-| 🔊 **game-sound-designer** | BGM + SFX, procedural-first | sonnet |
-
 opus drives the direction / design / programming roles; sonnet drives the
 execution / production roles.  Not every prototype activates all 13 — the
 roster is the available cast, selected per genre.
@@ -761,15 +736,6 @@ What appears on GitHub is the system's own evolution, not its products.
 
 ![Platform support matrix — macOS / Linux / Windows 11 capability coverage](docs/visuals/16-platform-matrix.png)
 
-| Surface | macOS 14+ | Linux | Windows 11 |
-|---------|-----------|-------|------------|
-| Mission execution (transcribe → select → render → QA) | ✓ primary | ✓ best-effort | ✓ best-effort (bash via git-bash) |
-| Hardware-accelerated render | ✓ `h264_videotoolbox` (Apple Silicon) | `h264_nvenc` (NVIDIA) or fallback `libx264` via `-allow_sw 1` | ✓ `h264_nvenc` (NVIDIA — primary) or `h264_qsv` (Intel) / `libx264` fallback |
-| Local AI video gen (LTX-Video / SVD / AnimateDiff) | possible but no NVENC → slower | NVIDIA Linux works | ✓ **primary** (Mix #2 longform = Windows + RTX 4070 Ti SUPER) |
-| `bootstrap.sh` synthetic fixtures (macOS `say`-based TTS) | ✓ | skipped — point at real CC fixtures via `scripts/fetch-fixtures.sh` | skipped — run `scripts/windows/setup-env.ps1` then point at real CC fixtures |
-| Schedulers (nightly auto-run, daily audit) | ✓ `launchd` | replace with systemd timers or cron | replace with Task Scheduler (manual; TODO `scripts/windows/install-scheduler.ps1`) |
-| Windows setup guide | n/a | n/a | [`docs/platform-windows.md`](docs/platform-windows.md) |
-
 macOS is the **primary, end-to-end tested** platform for the media
 pipeline; the game-prototype track (PawnSim build chain, Unity
 batchmode) is **Windows-primary**.  Linux works for
@@ -787,22 +753,9 @@ install is enough.  Override in `.env` only when needed.
 
 Defined in [`config/policies.yaml`](config/policies.yaml).
 
-| Mode | Flag | Behavior |
-|------|------|----------|
-| ⚙️ **Interactive** (default) | `AUTONOMY_MODE=false` | Pauses for user confirmation on logic changes, destructive ops, and external publishes. |
-| 🌙 **Autonomous** | `AUTONOMY_MODE=true` | Runs unattended within `AUTONOMY_BUDGET_USD`. Logic files (`agents/`, `.claude/agents/`) are immutable. |
-
 ## Mission flow
 
 ![Mission flow — 7 steps from user mission to orchestrator summary.md via planner/resourcer/editor/qa](docs/visuals/10-mission-flow.png)
-
-1. User states a mission.
-2. `orchestrator` opens `records/missions/<date>/<id>/` + a task list.
-3. `planner` → `plan.md` with acceptance criteria.
-4. `resourcer` → assets + `resources/MANIFEST.md`.
-5. `editor` → deliverables + `outputs/CHANGELOG.md`.
-6. `qa` → `qa-report.md` with PASS / FAIL per criterion.
-7. On PASS, `orchestrator` writes `summary.md`.
 
 ## Toolchain
 
@@ -856,22 +809,8 @@ agent-driven path consumes tokens.
 [official pricing page](https://www.anthropic.com/pricing) — these
 change):
 
-| Plan | Monthly | Typical fit for this repo |
-|------|---------|---------------------------|
-| **Free** | $0 | Read-only browsing / quick experiments.  Hits limits fast once a real mission runs. |
-| **Pro** | $20 | One or two music-video missions per day.  Single-operator, casual cadence. |
-| **Max — entry tier** | $100 | A few missions per day plus overnight batches.  Daily upload cadence becomes realistic. |
-| **Max — top tier** | $200 | Production cadence (10+ missions / day, multi-track overnight batches, ongoing R&D in parallel).  This is what this repo's operator runs. |
-
 **Rough token usage per mission** (orchestration only — the local
 ffmpeg / ollama / whisper.cpp stages are free):
-
-| Mission | Anthropic tokens (estimate) | Notes |
-|---------|----------------------------|-------|
-| `music-video` (one render + shader) | ~50–150 k | Orchestrator + planner + resourcer = opus; editor + qa = sonnet (since 2026-05-22).  Token spend dominated by planner + editor (filter-graph reasoning).  Music-video is fully bash-scripted so subagents barely trigger — most of this estimate is operator chat, not subagent inference. |
-| `faceless-short` (one render) | ~100–250 k | Higher because the planner also drafts the narration script.  v6 with Sonnet for script generation runs closer to the top of the range. |
-| `audit-run.sh contract` (out-of-band) | ~20–50 k | One audit pass over the repo. |
-| Daily `mission-queue.sh` drain | ~50–150 k × N entries | Same as a single music-video mission per queue entry. |
 
 These are **rough**.  Real numbers vary with caption complexity, retry
 counts (the QA feedback loop re-runs a failing stage), and how much
