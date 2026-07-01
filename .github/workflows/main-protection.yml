@@ -142,6 +142,15 @@ jobs:
           fi
           exit $fail
 
+      - name: README EN <-> KO parity
+        run: |
+          set -uo pipefail
+          # Structural + stat parity between README.md and README.ko.md so the
+          # hand-maintained Korean mirror can't silently drift (stale numbers,
+          # missing section, forgotten link). Translation quality is out of
+          # scope here — see docs/ko-style-guide.md.
+          python3 scripts/readme-parity.py
+
       - name: gitignore covers sensitive paths
         run: |
           set -uo pipefail
