@@ -4,9 +4,9 @@
 
 [한국어](./README.ko.md) · **English** · [**Live site →**](https://melons.github.io/MelonS-Agents/)
 
-**An AI agent that builds a colony-sim game — then plays it to verify its own work.**  It synthesizes real player clicks, asserts each one actually changed the game state (not just that the click landed), and grades long unattended soaks with a separate sub-agent that judges only from screenshots and logs — never the author's intent.
+### A zero-runtime-cost multi-agent system that ships real work — and proves its own rigor by building a game, then playing it to verify itself.
 
-That self-verification loop is the spine of MelonS-Agents, a multi-agent system driven by [Claude Code](https://docs.anthropic.com/claude-code).  The colony-sim **PawnSim** (Windows + Unity, *in development*) is the showcase; two media pipelines already ship real deliverables — a **music-video** maker (a song in → a 60-second 9:16 short, ~60 s on Mac/Linux) and a **job-hunt** digest (one keyword → a deduplicated Korean job-board summary, ~5 s) — with a third, a copyright-reviewed **content-shorts** pipeline, in early development.  Local open-source tools (ffmpeg / whisper.cpp / ollama / aubio) do the mechanical work while Claude orchestrates and makes the creative calls — so a mission costs **zero runtime API tokens**.  English + Korean from day one.
+One operator, a fleet of [Claude Code](https://docs.anthropic.com/claude-code) agents. Two pipelines already ship real deliverables — a **music-video** maker (a song → a 60-second 9:16 short) and a **job-hunt** digest (a keyword → a deduplicated Korean job-board summary) — built entirely from local open-source tools (ffmpeg / whisper.cpp / ollama / aubio), so a mission spends **zero runtime API tokens**. Its showcase track, the colony-sim **PawnSim**, carries the trait that sets this apart: the agent *builds* the game, then *plays* it to verify its own work. **English + Korean from day one.**
 
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=flat-square)
@@ -28,13 +28,24 @@ That self-verification loop is the spine of MelonS-Agents, a multi-agent system 
 |-------|--------------|--------|----------------|
 | **music-video** | a song in → a 60-second 9:16 short (beat-aligned cuts, vintage ffmpeg shaders) | Production\* | ✅ Mac/Linux — `./scripts/first-touch.sh`, ~60 s |
 | **job-hunt** | one seed keyword → a deduplicated Korean job-board digest (11 sources) | Production\* | ✅ ~5 s, no network or keys |
-| **PawnSim** · built by `game-dev-agent` | a self-tested colony-sim game prototype | In development | ⚠️ Windows + Unity 6000.0.75f1 |
+| **PawnSim** · built by `game-dev-agent` | a self-verified colony-sim game prototype | In development | ⚠️ Windows + Unity 6000.0.75f1 |
 | **content-shorts** · built by a 4-team legal-gated pipeline | a topic → a sourced, copyright-reviewed 9:16 short (info / news / idol formats) | In development | ⚠️ runs end-to-end (2026-07-01); needs a Pexels key |
 | **product-cf** | a product photo → a CF-style short | Parked | ❌ parked on an honest negative finding |
 
-<sub>\*"Production" = ships a real deliverable on a schedule (these two are the load-bearing count).  `game-dev-agent` is the meta-skill that builds PawnSim; it graduates into the production count once PawnSim hits its deliverable schedule.</sub>
+<sub>\*"Production" = ships a real deliverable on a schedule (only these two count today).  `game-dev-agent` is the meta-skill that builds PawnSim; it joins the production count once PawnSim ships on a cadence.</sub>
 
-**Key terms** — *repro gate*: the agent replays real player clicks and asserts each had an effect, not just that the click landed.  *Isolated grader*: a separate sub-agent that judges a run from screenshots + logs only, never the author's intent.  *Soak*: a long, unattended test run.
+## The part most agent demos skip: it checks its own work
+
+![Verification — two gates: a 15-scenario input-level repro gate per commit + an isolated grader sub-agent on long soaks](docs/visuals/14-verification-loop.png)
+
+Anyone can make an agent *emit* code. The hard part is proving the result actually works — and that's the spine of this repo. PawnSim passes two gates before anything lands:
+
+- **A 15-scenario repro gate on every commit.** The agent synthesizes real player clicks through the same UI a player uses, and asserts each one had an *effect* ("the click placed a designation") — not just that the click landed.
+- **An isolated grader on long unattended soaks.** A separate sub-agent sees only evidence (screenshots + raw logs), never the author's intent, and grades the run against a written rubric.
+
+That grader repeatedly caught what self-review missed: a silent harness blind spot that had voided *every* designation, a "food-rich colony starving to death" mood-gate trap, and a permanent-mental-break colony freeze. The basic loop (stockpile → housing → farming → logging → mining) is now machine-verified end-to-end, with the rubric verdicts committed alongside the fixes. Nine incidents, each written up *problem → constraint → decision → artifact*: [`docs/engineering-case-studies.md`](docs/engineering-case-studies.md).
+
+**Key terms** — *repro gate*: replay real player clicks, assert each had an effect.  *isolated grader*: a separate sub-agent that judges from screenshots + logs only.  *soak*: a long, unattended test run.
 
 ## Try it in ~60 seconds
 
@@ -46,18 +57,7 @@ cd MelonS-Agents
 ./scripts/first-touch.sh        # guided demo: checks tools, renders a 9:16 short, opens it
 ```
 
-No Pexels signup, no Suno round-trip, no `.env` edit — the wizard fetches a demo cache and renders a 60-second short from bundled CC-BY clips + music.  Manual, advanced, and per-skill paths are folded under **Run paths** below.
-
-## Verification — how the agent checks its own work
-
-![Verification — two gates: a 15-scenario input-level repro gate per commit + an isolated grader sub-agent on long soaks](docs/visuals/14-verification-loop.png)
-
-This is the part most agent demos skip.  PawnSim passes two gates on the way in:
-
-- **A 15-scenario input-level repro gate on every commit.**  The agent synthesizes real clicks through the same UI path a player uses, and asserts each one had an *effect* ("the click placed a designation") — not just that the click landed.
-- **An isolated-grader sub-agent on long soaks.**  It sees only evidence (screenshots + raw logs), never the author's intent, and grades the run against a written rubric.
-
-That grader repeatedly caught what self-review missed: a silent harness blind spot that had voided every designation, a "food-rich colony starving to death" mood-gate trap, and a permanent-mental-break colony freeze.  The basic colony loop (stockpile → housing → farming → logging → mining) is now machine-verified end-to-end, with the rubric verdicts committed alongside the fixes.  Nine production incidents, each written up as *problem → constraint → decision → artifact*: [`docs/engineering-case-studies.md`](docs/engineering-case-studies.md).
+No Pexels signup, no Suno round-trip, no `.env` edit — the wizard fetches a demo cache and renders a 60-second short from bundled CC-BY clips + music.  Manual, advanced, and per-skill paths are under **Run paths** below.
 
 ## PawnSim in motion
 
@@ -71,11 +71,11 @@ Colonists chop / mine / farm / cook / haul / build / research / fight under a ut
 
 A song in → a music-as-primary-audio 9:16 short out: beat-aligned cuts, onset-aligned glitch micro-edits, and one of six per-genre color grades (plus a neutral pass-through) shaping generic stock B-roll into a genre-coded look.  Picked over the earlier narration-driven format on 2026-05-17.  Full pipeline — 23 shaders, the genre catalog, the v1→v6 evolution: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
 
-## Architecture
+## How it stays at zero runtime cost
 
 ![The 3-shape skill model — Shape A missions-routed 5-agent pipeline, Shape B standalone, Shape ? future skills](docs/visuals/05-three-shapes.png)
 
-The system doesn't force every skill through one shape.  **Shape A** routes through a 5-agent mission pipeline (orchestrator + planner / resourcer / editor / qa); **Shape B** is a standalone script when planner/qa stages would be near-empty.  Subagents share no conversation history — they hand off through committed files (`plan.md` / `MANIFEST.md` / `qa-report.md`), so each one's context and cost stay bounded.  Per-role model routing (planner/resourcer = opus, editor/qa = sonnet) plus a cost firewall keep runtime API tokens at zero.  `.claude/agents/` holds **24** definitions (6 core + 13 game roster + 5 content-pipeline teams).  Full data-flow map + the game-prototype build chain: [`docs/architecture.md`](docs/architecture.md).
+The system doesn't force every skill through one shape.  **Shape A** routes through a 5-agent mission pipeline (orchestrator + planner / resourcer / editor / qa); **Shape B** is a standalone script when planner/qa stages would be near-empty.  Subagents share no conversation history — they hand off through committed files (`plan.md` / `MANIFEST.md` / `qa-report.md`), so each one's context and cost stay bounded.  Per-role model routing (planner/resourcer = opus, editor/qa = sonnet) plus a cost firewall keep Anthropic tokens to orchestration only — mission execution runs entirely on local tools, so runtime API tokens stay at **zero**.  `.claude/agents/` holds **24** definitions (6 core + 13 game roster + 5 content-pipeline teams).  Full data-flow map + the game-prototype build chain: [`docs/architecture.md`](docs/architecture.md).
 
 ## Autonomy signal — measured, not claimed
 
@@ -89,6 +89,7 @@ Documented negatives, kept in the open — because honest scoping is the credibi
 
 - **`product-cf` is parked** on a real negative finding.  The free / local "make it genuinely 3D" approaches (depth-parallax, cylinder-wrap turntable, local image-to-video) didn't clear a real-CF quality bar on a 16 GB machine; a convincing result needs paid cloud image-to-video or a bigger GPU.  Kept gated-off in the tree, decision pending.
 - **Cel-shading was deliberately deferred** — knowing where the ffmpeg wall is beats faking the result.
+- **`100+ outputs` is a working estimate, not a ledger** — mission outputs stay local under `records/` (gitignored), so the count isn't independently auditable from the repo.
 
 More negatives and deferred scope: [`skills/game-prototype/README.md`](skills/game-prototype/README.md) (honest verification status + out-of-scope).  Resolved-issue log (e.g. the Homebrew ffmpeg/libass split): [`docs/known-limitations.md`](docs/known-limitations.md).
 

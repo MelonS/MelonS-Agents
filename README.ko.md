@@ -4,9 +4,9 @@
 
 **한국어** | [English](./README.md) · [**라이브 사이트 →**](https://melons.github.io/MelonS-Agents/)
 
-**콜로니심 게임을 직접 만들고 — 그걸 플레이해서 자기 작업을 검증하는 AI 에이전트.**  실제 플레이어 클릭을 합성해 각 클릭이 (단지 클릭이 도달한 게 아니라) 실제로 게임 상태를 바꿨는지 어서트하고, 길게 무인으로 돌린 소크는 스크린샷과 로그만 보고 — 작성자의 의도는 절대 보지 않고 — 판정하는 별도 서브에이전트가 채점합니다.
+### 런타임 비용 0으로 실제 결과물을 출하하고 — 게임을 직접 만든 뒤 플레이해서 자기 작업을 검증하는 멀티 에이전트 시스템.
 
-이 자기 검증 루프가 MelonS-Agents 의 척추입니다 — [Claude Code](https://docs.anthropic.com/claude-code) 로 구동되는 멀티 에이전트 시스템.  콜로니심 **PawnSim**(Windows + Unity, *개발 중*)이 쇼케이스이고, 두 미디어 파이프라인은 이미 실제 결과물을 출하합니다 — **music-video** 메이커(음악 → 60초 9:16 쇼츠, Mac/Linux 에서 ~60초)와 **job-hunt** 다이제스트(키워드 하나 → 중복 제거된 한국 채용공고 요약, ~5초) — 여기에 세 번째로 저작권 검수를 거치는 **content-shorts** 파이프라인이 초기 개발 중입니다.  로컬 오픈소스 도구(ffmpeg / whisper.cpp / ollama / aubio)가 기계적 작업을 하고 Claude 는 오케스트레이션 + 창작 판단을 맡아 — 미션당 **런타임 API 토큰 0개**.  첫날부터 영어 + 한국어.
+운영자 한 명, [Claude Code](https://docs.anthropic.com/claude-code) 에이전트 함대.  두 파이프라인이 이미 실제 결과물을 출하합니다 — **music-video** 메이커(음악 → 60초 9:16 쇼츠)와 **job-hunt** 다이제스트(키워드 → 중복 제거된 한국 채용공고 요약) — 전부 로컬 오픈소스 도구(ffmpeg / whisper.cpp / ollama / aubio)로 만들어 미션당 **런타임 API 토큰 0개**.  쇼케이스 트랙인 콜로니심 **PawnSim** 이 이 저장소를 남다르게 만드는 특성을 품고 있습니다: 에이전트가 게임을 *직접 만들고*, 그걸 *플레이해서* 자기 작업을 검증합니다.  **첫날부터 영어 + 한국어.**
 
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=flat-square)
@@ -32,9 +32,20 @@
 | **content-shorts** · 4팀 법률 게이트 파이프라인이 제작 | 주제 → 출처 확보·저작권 검수된 9:16 쇼츠 (정보/뉴스/아이돌 포맷) | 개발 중 | ⚠️ end-to-end 작동(2026-07-01), Pexels 키 필요 |
 | **product-cf** | 제품 사진 → CF 스타일 쇼츠 | 보류 | ❌ 정직한 부정 결론으로 보류 |
 
-<sub>\*"프로덕션" = 정해진 주기로 실제 결과물을 출하 (이 둘이 핵심 카운트).  `game-dev-agent` 는 PawnSim 을 만드는 메타 스킬 — PawnSim 이 출하 주기에 도달하면 프로덕션 카운트로 승격됩니다.</sub>
+<sub>\*"프로덕션" = 정해진 주기로 실제 결과물을 출하 (오늘 기준 이 둘만 해당).  `game-dev-agent` 는 PawnSim 을 만드는 메타 스킬 — PawnSim 이 출하 주기에 도달하면 프로덕션 카운트로 합류합니다.</sub>
 
-**핵심 용어** — *재현 게이트(repro gate)*: 에이전트가 실제 플레이어 클릭을 재생하고, 클릭이 도달했는지가 아니라 각 클릭이 효과를 냈는지를 어서트합니다.  *격리 채점(isolated grader)*: 작성자의 의도가 아니라 스크린샷 + 로그만으로 실행을 판정하는 별도 서브에이전트.  *소크(soak)*: 길게 돌리는 무인 테스트 런.
+## 대부분의 에이전트 데모가 건너뛰는 부분: 자기 작업을 스스로 검증한다
+
+![검증 — 두 게이트: 커밋마다 15시나리오 입력 레벨 재현 게이트 + 장시간 소크에 격리 채점 서브에이전트](docs/visuals/14-verification-loop-ko.png)
+
+에이전트가 코드를 *뱉게* 만드는 건 누구나 한다. 어려운 건 결과가 실제로 작동함을 *증명*하는 것 — 그게 이 저장소의 척추입니다.  PawnSim 은 들어오는 길에 두 게이트를 통과합니다:
+
+- **커밋마다 15시나리오 재현 게이트.**  에이전트가 플레이어와 똑같은 UI 경로로 실제 클릭을 합성하고, 각 클릭이 (단지 도달한 게 아니라) *효과*를 냈는지 — "그 클릭이 지정(designation)을 놓았는지" — 어서트합니다.
+- **장시간 무인 소크에 격리 채점 서브에이전트.**  증거(스크린샷 + 원시 로그)만 보고 작성자의 의도는 절대 보지 않으며, 작성된 루브릭에 따라 실행을 채점합니다.
+
+이 채점기는 셀프 리뷰가 놓친 것을 반복해서 잡아냈습니다: 모든 지정을 조용히 무효화하던 하네스 사각지대, "식량이 넘치는데 콜로니가 굶어 죽는" 기분 게이트 함정, 영구 정신 붕괴로 인한 콜로니 프리즈.  기본 루프(저장 → 집짓기 → 농사 → 벌목 → 채광)는 이제 엔드투엔드 기계 검증되며, 루브릭 판정이 수정과 함께 커밋됩니다.  *문제 → 제약 → 결정 → 산출물* 형식의 9개 인시던트: [`docs/engineering-case-studies.ko.md`](docs/engineering-case-studies.ko.md).
+
+**핵심 용어** — *재현 게이트*: 실제 플레이어 클릭을 재생하고 각 클릭이 효과를 냈는지 어서트.  *격리 채점*: 스크린샷 + 로그만으로 판정하는 별도 서브에이전트.  *소크*: 길게 돌리는 무인 테스트 런.
 
 ## 60초 안에 시작
 
@@ -48,17 +59,6 @@ cd MelonS-Agents
 
 Pexels 가입 없음, Suno 왕복 없음, `.env` 편집 없음 — 마법사가 데모 캐시를 받아 번들된 CC-BY 클립 + 음악으로 60초 쇼츠를 렌더합니다.  수동·고급·스킬별 경로는 아래 **실행 경로**에 접혀 있습니다.
 
-## 검증 — 에이전트가 자기 작업을 확인하는 방식
-
-![검증 — 두 게이트: 커밋마다 15시나리오 입력 레벨 재현 게이트 + 장시간 소크에 격리 채점 서브에이전트](docs/visuals/14-verification-loop-ko.png)
-
-대부분의 에이전트 데모가 건너뛰는 부분입니다.  PawnSim 은 들어오는 길에 두 게이트를 통과합니다:
-
-- **커밋마다 15시나리오 입력 레벨 재현 게이트.**  에이전트가 플레이어와 똑같은 UI 경로로 실제 클릭을 합성하고, 각 클릭이 (단지 도달한 게 아니라) *효과*를 냈는지 — "그 클릭이 지정(designation)을 놓았는지" — 어서트합니다.
-- **장시간 소크에 격리 채점 서브에이전트.**  증거(스크린샷 + 원시 로그)만 보고 작성자의 의도는 절대 보지 않으며, 작성된 루브릭에 따라 실행을 채점합니다.
-
-이 채점기는 셀프 리뷰가 놓친 것을 반복해서 잡아냈습니다: 모든 지정을 조용히 무효화하던 하네스 사각지대, "식량이 넘치는데 콜로니가 굶어 죽는" 기분 게이트 함정, 영구 정신 붕괴로 인한 콜로니 프리즈.  기본 콜로니 루프(저장 → 집짓기 → 농사 → 벌목 → 채광)는 이제 엔드투엔드 기계 검증되며, 루브릭 판정이 수정과 함께 커밋됩니다.  *문제 → 제약 → 결정 → 산출물* 형식으로 정리한 9개 프로덕션 인시던트: [`docs/engineering-case-studies.ko.md`](docs/engineering-case-studies.ko.md).
-
 ## 움직이는 PawnSim
 
 ![PawnSim 2026-06-12 — 풀밭 위 초기 콜로니: 체력·기분 바를 단 이름표 콜로니스트 셋, 우상단에 올라가는 목재 벽 골조(32px 톱다운 블록 벽), 모은 목재와 흩어진 광맥·돌, 실시간 자원 카운터, 하단에 열린 건축 메뉴](docs/demo/pawnsim-2026-06-12-built-house.png)
@@ -71,15 +71,15 @@ Pexels 가입 없음, Suno 왕복 없음, `.env` 편집 없음 — 마법사가 
 
 음악 → 음악이 메인 오디오인 9:16 쇼츠: 비트 정렬 컷, onset 정렬 글리치 마이크로 에디트, 그리고 여섯 가지 장르별 컬러 그레이드(+ 중립 패스스루) 중 하나가 평범한 스톡 B-roll 을 장르 코드가 입혀진 룩으로 만듭니다.  2026-05-17 에 이전의 내레이션 기반 포맷을 밀어내고 채택됐습니다.  전체 파이프라인 — 23 쉐이더, 장르 카탈로그, v1→v6 진화: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
 
-## 아키텍처
+## 어떻게 런타임 비용 0을 유지하나
 
 ![3-shape 스킬 모델 — Shape A 미션 라우팅 5에이전트 파이프라인, Shape B 독립형, Shape ? 미래 스킬](docs/visuals/05-three-shapes-ko.png)
 
-시스템은 모든 스킬을 하나의 형태로 강제하지 않습니다.  **Shape A** 는 5에이전트 미션 파이프라인(orchestrator + planner / resourcer / editor / qa)으로 라우팅하고, **Shape B** 는 planner/qa 단계가 거의 빌 때 쓰는 독립 스크립트입니다.  서브에이전트는 대화 기록을 공유하지 않고 — 커밋된 파일(`plan.md` / `MANIFEST.md` / `qa-report.md`)로 핸드오프하므로 각자의 컨텍스트와 비용이 제한됩니다.  역할별 모델 라우팅(planner/resourcer = opus, editor/qa = sonnet)과 비용 방화벽이 런타임 API 토큰을 0으로 유지합니다.  `.claude/agents/` 에는 정의 **24개**(코어 6 + 게임 로스터 13 + 콘텐츠 파이프라인 팀 5)가 있습니다.  전체 데이터 흐름 맵 + 게임 프로토타입 빌드 체인: [`docs/architecture.md`](docs/architecture.md).
+시스템은 모든 스킬을 하나의 형태로 강제하지 않습니다.  **Shape A** 는 5에이전트 미션 파이프라인(orchestrator + planner / resourcer / editor / qa)으로 라우팅하고, **Shape B** 는 planner/qa 단계가 거의 빌 때 쓰는 독립 스크립트입니다.  서브에이전트는 대화 기록을 공유하지 않고 — 커밋된 파일(`plan.md` / `MANIFEST.md` / `qa-report.md`)로 핸드오프하므로 각자의 컨텍스트와 비용이 제한됩니다.  역할별 모델 라우팅(planner/resourcer = opus, editor/qa = sonnet)과 비용 방화벽이 Anthropic 토큰을 오케스트레이션에만 한정합니다 — 미션 실행은 전부 로컬 도구로 돌아 런타임 API 토큰이 **0**으로 유지됩니다.  `.claude/agents/` 에는 정의 **24개**(코어 6 + 게임 로스터 13 + 콘텐츠 파이프라인 팀 5)가 있습니다.  전체 데이터 흐름 맵 + 게임 프로토타입 빌드 체인: [`docs/architecture.md`](docs/architecture.md).
 
 ## 자율성 신호 — 주장이 아니라 측정
 
-![2패널 개입 추세 — 패널 A(일별 커밋 귀속)는 일별 커밋 수를 개시자별(에이전트 자율=파랑 vs 사용자 개시=빨강)로 쌓고 사용자 개시 비율선과 일별 비율 라벨을 표시; 패널 B(운영자 관여)는 로컬 Claude Code 세션 JSONL 에서 추출한 일별 운영자 프롬프트와 활성 세션 분을 차트로.  한국어 미러는 docs/metrics/intervention-ko.png.](docs/metrics/intervention-ko.png)
+![2패널 개입 추세 — 패널 A(일별 커밋 귀속)는 일별 커밋 수를 개시자별(에이전트 자율=파랑 vs 사용자 개시=빨강)로 쌓고 사용자 개시 비율선과 일별 비율 라벨을 표시; 패널 B(운영자 관여)는 로컬 Claude Code 세션 JSONL 에서 추출한 일별 운영자 프롬프트와 활성 세션 분을 차트로.](docs/metrics/intervention-ko.png)
 
 끊임없는 조종이 필요한 멀티 에이전트 시스템은 대체하려던 그 수고를 벗어나지 못한 것입니다.  그래서 `main` 의 모든 커밋을 **사용자 개시** vs **에이전트 자율**로 분류하고, 운영자의 Claude Code 세션 로그에서 프롬프트 수 + 활성 분을 추출합니다 — 목표는 시스템이 더 많은 결정을 흡수하면서 두 패널이 모두 하향하는 것.  분류 휴리스틱 + 감축 분석: [`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md).
 
@@ -89,6 +89,7 @@ Pexels 가입 없음, Suno 왕복 없음, `.env` 편집 없음 — 마법사가 
 
 - **`product-cf` 는 보류** — 실제 부정 결론 때문입니다.  무료 / 로컬로 "진짜 3D 처럼 만들기"(depth-parallax, 실린더 래핑 턴테이블, 로컬 image-to-video) 접근은 16 GB 머신에서 진짜 CF 품질 기준을 넘지 못했습니다; 설득력 있는 결과엔 유료 클라우드 image-to-video 또는 더 큰 GPU 가 필요합니다.  트리에 게이트 오프 상태로 보존, 결정 보류.
 - **셀 셰이딩은 의도적으로 연기** — ffmpeg 의 한계가 어디인지 아는 것이 결과를 가짜로 만드는 것보다 낫습니다.
+- **`출력 100+` 는 원장이 아니라 어림값** — 미션 출력은 `records/`(gitignore) 아래 로컬에 남으므로 이 수치는 저장소만으로 독립 감사할 수 없습니다.
 
 더 많은 부정 결과와 보류 범위: [`skills/game-prototype/README.md`](skills/game-prototype/README.md)(정직한 검증 상태 + out-of-scope).  해결된 이슈 로그(예: Homebrew ffmpeg/libass 분리): [`docs/known-limitations.md`](docs/known-limitations.md).
 
