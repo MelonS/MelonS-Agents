@@ -102,7 +102,7 @@ namespace MelonS.GameProto
             int rFa = Mathf.Max(0, Mathf.RoundToInt(rF * socMul));
             int rMa = Mathf.Max(0, Mathf.RoundToInt(rM * socMul));
             // #자원모델 단일화(2026-06-04): 구매(receive)는 카운터(+) 대신 trader 위치에 물리 더미로
-            //  드롭(RimWorld: 거래 물품이 거래 지점에 떨어져 림이 운반).  살짝 오프셋해 더미 겹침 완화.
+            //  드롭(the reference sim: 거래 물품이 거래 지점에 떨어져 림이 운반).  살짝 오프셋해 더미 겹침 완화.
             //  조리식(meals)은 물리 entity 가 없어 추상 카운터 유지.
             Vector3 at = transform.position;
             if (rWa > 0) WoodPileEntity.Spawn(at + new Vector3(0.3f, 0f, 0f), rWa, PawnHauler.WoodPileSpriteRef);

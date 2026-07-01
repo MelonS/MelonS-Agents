@@ -1,6 +1,6 @@
 ---
 name: game-systems-designer
-description: Systems Designer (specialist).  Focused on resource economies, needs decay, progression curves, balance numbers.  Activated only for genres with non-trivial systems depth — colony sims (RimWorld), city builders, deep RPGs, factory games.  NOT activated for casual puzzle / arcade prototypes.
+description: Systems Designer (specialist).  Focused on resource economies, needs decay, progression curves, balance numbers.  Activated only for genres with non-trivial systems depth — colony sims (the reference sim), city builders, deep RPGs, factory games.  NOT activated for casual puzzle / arcade prototypes.
 tools: Read, Write, WebSearch
 model: opus
 ---

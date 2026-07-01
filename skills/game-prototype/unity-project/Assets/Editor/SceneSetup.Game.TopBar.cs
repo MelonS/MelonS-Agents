@@ -109,8 +109,8 @@ namespace MelonS.GameProto.EditorTools
             // 시각 QA: 아이콘 48px + 폰트 32 라벨이 한 칩에 안 겹치게 156→184 로 확장.
             const float kChipW   = 184f;  // equal cell width, holds 48px icon + "식량: NNN"
 
-            // #41 운영자 "자원표시는 좌상단에 RimWorld처럼": 상단바 우측 가로행 → 캔버스
-            //   좌상단(상단바 아래) 세로 목록으로 이전(RimWorld ResourceReadout 정합).
+            // #41 운영자 "자원표시는 좌상단에 the reference sim처럼": 상단바 우측 가로행 → 캔버스
+            //   좌상단(상단바 아래) 세로 목록으로 이전(the reference sim ResourceReadout 정합).
             //   캔버스에 직접 붙여 바 영역 밖(맵 위)에 떠 있게 한다.  반투명 배경 + 세로 스택.
             GameObject resRowGo = new GameObject("ResourceRow");
             resRowGo.transform.SetParent(canvasGo.transform, false);
@@ -186,7 +186,7 @@ namespace MelonS.GameProto.EditorTools
             //  배경 밖 맵 위로 넘쳤다.  minWidth 만 보장하고 텍스트 preferredWidth 가
             //  칩 폭을 늘리게 한다 (배경 패널이 숫자와 함께 자란다).
             chipLe.minWidth = chipW;
-            // #41 세로 목록(좌상단 RimWorld식)에서도 각 칩이 높이를 가지도록 명시.
+            // #41 세로 목록(좌상단 콜로니심식)에서도 각 칩이 높이를 가지도록 명시.
             //  가로 바에선 부모의 childForceExpandHeight 가 우선하므로 영향 없음.
             chipLe.preferredHeight = 42f;
             chipLe.minHeight = 38f;

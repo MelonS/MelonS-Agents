@@ -271,7 +271,7 @@ namespace MelonS.GameProto
             // cadence (the spacing check below), so escalation is unchanged.
             int graceDays = RaidGraceDays + (raidCount == 0 ? Mathf.Max(0, FirstRaidExtraGraceDays) : 0);
             if (day < graceDays) return;
-            // 림월드갭 TOP-1 (2026-06-12) — '정확히 3일째 06:00' 시계태엽 습격은
+            // 레퍼런스 콜로니심갭 TOP-1 (2026-06-12) — '정확히 3일째 06:00' 시계태엽 습격은
             //  2번째 습격에서 패턴이 학습돼 긴장이 0 이 된다.  레퍼런스처럼 다음 습격
             //  시각을 스케줄로: 간격 ±1일 지터 + 발화 시각 6~22시 랜덤 (하한 1.9일).
             //  nextRaidGameSec 미설정(-1) 이면 지금 잡는다 (로드 복원은 lastRaidDay 기반
@@ -613,7 +613,7 @@ namespace MelonS.GameProto
                       || (next.id == "quiet_evening"
                           && GameClock.Instance != null && GameClock.Instance.Hour < 18)
                       // 채점 관찰 #10 — 침대 여유가 전혀 없으면 방랑자 합류를 피추첨
-                      //  (레퍼런스 스토리텔러의 인구 압박 감각: 수용력 없는 콜로니에
+                      //  (레퍼런스 디렉터 모드의 인구 압박 감각: 수용력 없는 콜로니에
                       //  인구 이벤트를 들이밀지 않는다).  5회 안에 못 피하면 통과.
                       || (next.id == "wanderer_arrival" && FreeBedCount() <= 0))
                      && tries < 5);

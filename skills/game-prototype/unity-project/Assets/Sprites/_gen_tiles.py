@@ -160,7 +160,7 @@ def gen_grass(size=16):
 
             # TOP-1 (visual-polish-backlog 2026-06-11): 디테일 픽셀 밀도를 절반 이하로
             #  — per-pixel 노이즈가 줌아웃에서 "정전기 화면" 으로 읽히던 것을, MD 가
-            #  지배하는 면 + 드문 액센트로 (RimWorld 지면이 조용한 이유).
+            #  지배하는 면 + 드문 액센트로 (the reference sim 지면이 조용한 이유).
             if in_left and in_top:
                 # zone A: 살짝 밝은 풀 (LT 액센트)
                 if r < 0.22:

@@ -1,6 +1,6 @@
 # wiki-ref: Construction / Power (canonical facts)
 
-출처: https://rimworldwiki.com/wiki/Construction_Speed , /wiki/Construct_Success_Chance ,
+출처: 콜로니심 장르 위키 , /wiki/Construct_Success_Chance ,
        /wiki/Work_To_Build , /wiki/Wall , /wiki/Power , /wiki/Battery ,
        /wiki/Power_conduit , /wiki/Wood-fired_generator , /wiki/Geothermal_generator
 (직접 fetch 403 → WebSearch 스니펫 추출, 2026-06-14)

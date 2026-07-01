@@ -24,15 +24,15 @@ namespace MelonS.GameProto
         /// <summary>F2 패널 겹침 — PawnInfoPanel 이 시프트 판단에 읽는다.</summary>
         public bool IsOpen => isOpen;
         private GameObject contentRoot;
-        private GameObject shelfRoot;          // #림월드파리티 — 우측 아이콘 셸프
+        private GameObject shelfRoot;          // #콜로니심파리티 — 우측 아이콘 셸프
         private string activeCategory = "";
-        /// <summary>QA 용 — 현재 펼친 카테고리 키 (림월드파리티 전환으로 ▶/▼ 텍스트
+        /// <summary>QA 용 — 현재 펼친 카테고리 키 (레퍼런스 콜로니심파리티 전환으로 ▶/▼ 텍스트
         ///  마커가 사라져 ArchitectClickAutoQA 가 상태를 직접 읽는다).</summary>
         public string ActiveCategory => activeCategory;
 
-        // #림월드파리티 — 카테고리 표시 순서: RimWorld Architect 탭 순서(Orders→Zone→
+        // #콜로니심파리티 — 카테고리 표시 순서: the reference sim Architect 탭 순서(Orders→Zone→
         //  Structure→Production→Furniture→…→Security→…→Floors)의 부분집합.  2열
-        //  row-major 로 채움 (RimWorld 카테고리 패널과 동일한 채움 방향).
+        //  row-major 로 채움 (the reference sim 카테고리 패널과 동일한 채움 방향).
         private static readonly string[] AllCategoryOrder =
         {
             "Orders (지시)",    "Zone (구역)",
@@ -394,8 +394,8 @@ namespace MelonS.GameProto
             // #UI-restyle U9 — route through UITheme (no per-script font fallback drift).
             font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(18);
             rt = gameObject.AddComponent<RectTransform>();
-            // #림월드파리티(운영자 2026-06-11 "건축 UI 거의 똑같이") — 좌하단 모서리 고정:
-            //  RimWorld User_interface 위키 'Architect menu — Bottom left corner'.
+            // #콜로니심파리티(운영자 2026-06-11 "건축 UI 거의 똑같이") — 좌하단 모서리 고정:
+            //  the reference sim User_interface 위키 'Architect menu — Bottom left corner'.
             //  카테고리 2열 패널 + 우측 아이콘 셸프 구조 (RefreshContent/RefreshShelf).
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(0f, 0f);
@@ -477,8 +477,8 @@ namespace MelonS.GameProto
             crt.offsetMin = new Vector2(0, 0);
             crt.offsetMax = new Vector2(0, -44);   // leave room for the 36px header + 8 gap
 
-            // #림월드파리티 — 아이콘 셸프: 패널 오른쪽에 가로로 앉는 75px급 셀 줄
-            //  (RimWorld 는 카테고리 패널 우측, 하단 탭바 위에 designator 셸프가 펼쳐짐).
+            // #콜로니심파리티 — 아이콘 셸프: 패널 오른쪽에 가로로 앉는 75px급 셀 줄
+            //  (the reference sim 는 카테고리 패널 우측, 하단 탭바 위에 designator 셸프가 펼쳐짐).
             //  마스크가 없으므로 패널 rect 밖이어도 정상 렌더.
             shelfRoot = new GameObject("Shelf");
             shelfRoot.transform.SetParent(rt, false);
@@ -502,10 +502,10 @@ namespace MelonS.GameProto
             for (int i = contentRoot.transform.childCount - 1; i >= 0; i--)
                 Destroy(contentRoot.transform.GetChild(i).gameObject);
 
-            // ── #림월드파리티 (운영자 2026-06-11 "건축 UI 거의 똑같이") ────────────
-            //  카테고리 = 좌하단 2열 텍스트 버튼 (RimWorld 카테고리 패널).  클릭하면
+            // ── #콜로니심파리티 (운영자 2026-06-11 "건축 UI 거의 똑같이") ────────────
+            //  카테고리 = 좌하단 2열 텍스트 버튼 (the reference sim 카테고리 패널).  클릭하면
             //  우측 셸프에 해당 카테고리의 아이콘 셀들이 펼쳐진다 (RefreshShelf).
-            //  셀 클릭 = 모드 진입 + 메뉴 유지 (연속 배치 — RimWorld 동일), 해제는
+            //  셀 클릭 = 모드 진입 + 메뉴 유지 (연속 배치 — the reference sim 동일), 해제는
             //  우클릭/ESC (BuildManager/designation 들이 이미 처리).
             const float colW = 113f, rowH = 34f, gap = 4f;
             int idx = 0;
@@ -531,7 +531,7 @@ namespace MelonS.GameProto
             RefreshShelf();
         }
 
-        /// <summary>#림월드파리티 — 카테고리 버튼 (2열 그리드용 고정폭).</summary>
+        /// <summary>#콜로니심파리티 — 카테고리 버튼 (2열 그리드용 고정폭).</summary>
         private void MakeCatBtn(Transform parent, string label, Vector2 pos, float w, float h,
                                 Color col, bool active, System.Action onClick)
         {
@@ -571,9 +571,9 @@ namespace MelonS.GameProto
             trt2.sizeDelta = Vector2.zero;
         }
 
-        /// <summary>#림월드파리티 — 우측 아이콘 셸프 재구성.  활성 카테고리의 designator
+        /// <summary>#콜로니심파리티 — 우측 아이콘 셸프 재구성.  활성 카테고리의 designator
         ///  들을 68px 셀(아이콘 + 하단 이름 띠 + 핫키 글자)로 가로 나열.  비용은 셀이
-        ///  아니라 호버 툴팁(RimWorld 인포박스 자리) — LiveCostFor 실비용 (#4.5 2단계).</summary>
+        ///  아니라 호버 툴팁(the reference sim 인포박스 자리) — LiveCostFor 실비용 (#4.5 2단계).</summary>
         private void RefreshShelf()
         {
             if (shelfRoot == null) return;
@@ -650,8 +650,8 @@ namespace MelonS.GameProto
             shelfRoot.SetActive(any && isOpen);
         }
 
-        /// <summary>#림월드파리티 — 셸프 셀: 68px 정사각, 아이콘(또는 글리프) + 하단 이름
-        ///  띠 + 좌상단 핫키 글자.  활성 셀은 금색 테두리 (RimWorld 선택 designator).</summary>
+        /// <summary>#콜로니심파리티 — 셸프 셀: 68px 정사각, 아이콘(또는 글리프) + 하단 이름
+        ///  띠 + 좌상단 핫키 글자.  활성 셀은 금색 테두리 (the reference sim 선택 designator).</summary>
         /// <summary>UI겹침 P1-2/커플링 B — 현재 셸프 행 수 (PawnInfoPanel y 시프트 연동).</summary>
         public int ShelfRows { get; private set; } = 1;
 
@@ -718,7 +718,7 @@ namespace MelonS.GameProto
                 grt.sizeDelta = Vector2.zero;
             }
 
-            // 하단 이름 띠 (RimWorld 셀 하단 검은 띠 + 흰 소형 텍스트)
+            // 하단 이름 띠 (the reference sim 셀 하단 검은 띠 + 흰 소형 텍스트)
             var stripGo = new GameObject("NameStrip");
             stripGo.transform.SetParent(go.transform, false);
             var sImg = stripGo.AddComponent<Image>();
@@ -749,7 +749,7 @@ namespace MelonS.GameProto
             nRt.anchorMax = Vector2.one;
             nRt.sizeDelta = Vector2.zero;
 
-            // 좌상단 핫키 글자 (RimWorld 셀 좌상단 키 표기)
+            // 좌상단 핫키 글자 (the reference sim 셀 좌상단 키 표기)
             if (!string.IsNullOrEmpty(hotkey))
             {
                 var hGo = new GameObject("Hotkey");

@@ -14,7 +14,7 @@ of preference (fastest + cleanest first):
 
 1. **Procedural** (`agent.py gen-sprite-proc`) — circle, square,
    outline, line.  <1s, 100% predictable, no LLM/GPU.
-   Best for: tiered objects (Suika fruit), wall/floor tiles, UI fills.
+   Best for: tiered objects (stacked resources), wall/floor tiles, UI fills.
 2. **Kenney CC0 fetch** (`agent.py fetch-assets fetch <pack>`) —
    commercial-safe pixel art for top-down 2D characters + tiles.
    Best for: pawn/colonist sprites, dungeon tiles, terrain.
@@ -38,7 +38,7 @@ You can:
 - Pick the production path per sprite.
 - Define palette per genre (within Director's tone).
 - Reject Designer's sprite list if visual coherence breaks (e.g.
-  "watermelon + photorealistic pawn in same scene").
+  "cartoon prop + photorealistic pawn in same scene").
 
 You cannot:
 - Override Director's tone (only refine within it).
@@ -51,7 +51,7 @@ You cannot:
   before SDXL.  PawnSim Day 7 invisible-world bug was downstream
   of SDXL quality pivot — operator's reaction "너무 구림".
 - **Mixing pixel-art with smooth-shaded**: pick ONE style per game.
-  Suika = smooth circles.  PawnSim = pixel-art.  Don't mix.
+  A casual arcade look = smooth circles.  PawnSim = pixel-art.  Don't mix.
 - **Forgetting PPU**: pixel-art games need
   TextureImporter.spritePixelsPerUnit = 16 (or 32).  SceneSetup
   template's ForceImportAllAssets handles this if you list the

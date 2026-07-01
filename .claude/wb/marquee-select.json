@@ -5,7 +5,7 @@
   "wave": "W-M6-01",
   "milestone": "M4-building",
   "status": "Done",
-  "wiki_ref": "skills/game-prototype/docs/rimworld-comparison-v2.md row B1",
+  "wiki_ref": "skills/game-prototype/docs/reference-sim-comparison-v2.md row B1",
   "wiki_acceptance": "Drag a box over 3 pawns -> all 3 show selection ring; a right-click move-order moves all 3.",
   "outputs": [
     "skills/game-prototype/unity-project/Assets/Scripts/MarqueeSelector.cs"

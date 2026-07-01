@@ -4,7 +4,7 @@
   "task": "M6 gizmo command bar on selection (SelectionGizmoBar.cs)",
   "wave": "W-M6-03",
   "milestone": "M6-ui",
-  "wiki_row": "B2 (rimworld-comparison-v2.md) — InspectGizmoGrid: bottom-center contextual command buttons for the selected thing",
+  "wiki_row": "B2 (reference-sim-comparison-v2.md) — InspectGizmoGrid: bottom-center contextual command buttons for the selected thing",
   "status": "Done",
   "outputs": [
     "skills/game-prototype/unity-project/Assets/Scripts/SelectionGizmoBar.cs"

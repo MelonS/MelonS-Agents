@@ -123,7 +123,7 @@ namespace MelonS.GameProto
             return null;
         }
 
-        /// <summary>림월드 갭 TOP-3 (2026-06-12) — 저장 더미 상향 이주.  더미가 놓인 셀
+        /// <summary>레퍼런스 콜로니심 갭 TOP-3 (2026-06-12) — 저장 더미 상향 이주.  더미가 놓인 셀
         /// 존보다 높은 우선순위로 같은 종류를 받는 존이 있으면 true(재운반 허용).
         /// FindBest 가 priority-first 라 목적지는 자연히 상위 존 — 같은 우선순위로는
         /// 절대 재운반하지 않으므로 왕복 루프 없음.  workshop-feeder 표준 동작.</summary>

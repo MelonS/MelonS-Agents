@@ -1,7 +1,7 @@
 # wiki-ref: Raids / Threats — canonical facts
 
-출처: https://rimworldwiki.com/wiki/Raid_points , /wiki/Wealth ,
-       /wiki/AI_Storytellers , /wiki/Raider
+출처: 콜로니심 장르 위키 , /wiki/Wealth ,
+       /wiki/AI_director modes , /wiki/Raider
 (직접 fetch 403 → WebSearch 스니펫, 2026-06-14)
 
 ## Raid points (습격 규모)
@@ -13,7 +13,7 @@
 - threat scale 배율: 200% = raid points 2배(=wealth 영향 2배).
 
 ## Adaptation (적응 계수)
-- 림을 잃거나 고전하면 스토리텔러가 다음 위협을 일시 완화(adaptation factor).
+- 림을 잃거나 고전하면 디렉터 모드가 다음 위협을 일시 완화(adaptation factor).
 
 ## 위협 종류 (가중 추첨)
 - 습격(인간)/맨헌터 팩/광기 동물/기계군체 등 다종. 위협마다 대응이 다름.

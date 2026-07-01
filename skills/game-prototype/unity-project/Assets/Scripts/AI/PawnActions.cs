@@ -375,7 +375,7 @@ namespace MelonS.GameProto.AI
         }
         private static TreeEntity FindNearestTree(PawnContext ctx)
         {
-            // #작업배정-단일화(운영자 승인 2026-06-03) — RimWorld 모델: 림은 '지정된(마킹된)'
+            // #작업배정-단일화(운영자 승인 2026-06-03) — the reference sim 모델: 림은 '지정된(마킹된)'
             //  나무만 자율 벌목한다.  이전엔 지정과 무관하게 맵의 아무 나무나 골라(=#38 "다른
             //  림이 벌목", "다같이 감"), 게다가 TreeChopDesignation 의 별도 dispatch 와 충돌했다.
             //  이제 이 자율 경로가 유일한 배정자이고, 지정된 나무로만 한정한다.  지정 시스템이
@@ -406,7 +406,7 @@ namespace MelonS.GameProto.AI
     public class BuildBlueprintAction : IPawnAction
     {
         public string DisplayName => "건설";
-        // #작업종류확장: RimWorld 처럼 건축(Construction)을 별도 work type 으로.
+        // #작업종류확장: the reference sim 처럼 건축(Construction)을 별도 work type 으로.
         public WorkKind Kind => WorkKind.Build;
         public bool TryStart(PawnContext ctx)
         {

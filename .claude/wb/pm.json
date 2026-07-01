@@ -4,7 +4,7 @@
   "cycle": "C-020",
   "wave": "CHAIN-END",
   "outputs": [".claude/whiteboard.json", ".claude/wb/pm.json"],
-  "decision": "W-M6-04 (the explicitly-final non-gated v2 wave) qa.json Status=PASS @f1e52de build cz-w4 (B5 autodoor / B7 area-cancel-drag / B12-verify V16). NO disk RED -> no FIX subtask. Per PM rule: the entire v2 second-pass non-gated backlog (B1-B14, rimworld-comparison-v2.md) is EXHAUSTED across W-M6-01..04. QA flags_for_next_wave explicitly: 'OP-GATED WALL reached: B5+B7 delivered. remaining_after_this_wave is now empty.' -> done=true, EMPTY subtasks, CHAIN ENDS.",
+  "decision": "W-M6-04 (the explicitly-final non-gated v2 wave) qa.json Status=PASS @f1e52de build cz-w4 (B5 autodoor / B7 area-cancel-drag / B12-verify V16). NO disk RED -> no FIX subtask. Per PM rule: the entire v2 second-pass non-gated backlog (B1-B14, reference-sim-comparison-v2.md) is EXHAUSTED across W-M6-01..04. QA flags_for_next_wave explicitly: 'OP-GATED WALL reached: B5+B7 delivered. remaining_after_this_wave is now empty.' -> done=true, EMPTY subtasks, CHAIN ENDS.",
   "v2_backlog_completion": {
     "W-M6-01": "B6 floating-text / B1 multi-select marquee / B8 footstep+day/night ambient / B12 verify V10+V11",
     "W-M6-02": "B3 fence+gate / B10 carry-pose+attack-lunge / B13 save-load sub-state / B14 hotkey cheat-sheet",
@@ -20,8 +20,8 @@
     "BanditEnemy body-parts / carryCapacity->hauler cap — [OP-OK]",
     "B4 cover-math (barricade currently visual+pathing only) — [OP-OK]"
   ],
-  "over_scope_guardrails_unchanged": ["roofs/collapse", "temperature", "joy/recreation", "hediffs/disease", "cover/accuracy tables", "trading/power/taming/bills", "detailed 32x32 pawn redraw", "14-skill expansion"],
-  "operator_recommendation": "Per rimworld-comparison-v2.md 'Operator recommendation' + MILESTONES.md M3: the next leap from 'looks/sounds like RimWorld' to 'PLAYS like RimWorld' requires the operator to APPROVE the mood thought-sum + 3-tier mental-break spec and the work-priority grid spec (both drafted, behavior-logic [OP-OK]). Without that unlock the autonomous chain would produce diminishing busywork.",
+  "over_scope_guardrails_unchanged": ["roofs/collapse", "temperature", "joy/recreation", "injury systems/disease", "cover/accuracy tables", "trading/power/taming/bills", "detailed 32x32 pawn redraw", "14-skill expansion"],
+  "operator_recommendation": "Per reference-sim-comparison-v2.md 'Operator recommendation' + MILESTONES.md M3: the next leap from 'looks/sounds like the reference sim' to 'PLAYS like the reference sim' requires the operator to APPROVE the mood thought-sum + 3-tier mental-break spec and the work-priority grid spec (both drafted, behavior-logic [OP-OK]). Without that unlock the autonomous chain would produce diminishing busywork.",
   "carried_qa_flags_non_blocking": [
     "V16AutodoorAreaCancelTest.cs not yet registered in TestRunner.cs (isolated count stays 76; add RunOne to reach 77) — whoever owns the test lane next",
     "BlueprintEntity.cs has no public Cancel() method (area-cancel uses Destroy, no material refund) — defer proper Cancel()+refund to a BlueprintEntity-lane wave",

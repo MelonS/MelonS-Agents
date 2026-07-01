@@ -53,10 +53,10 @@ You cannot:
 ## Common pitfalls
 
 - **Genre confusion**: don't conflate "tone" with "genre".  A
-  vampire-survivors-lite can be either "긴장감 있는 액션" or "여유로운
-  관전형 자동전투" — same genre, different tones.  Pin tone first.
-- **Vague core_loop**: "재밌는 액션" is not a core_loop.  "이동 회피
-  → 자동 사격 → 경험치 → 강화 선택 → 더 강한 적" IS.  Concrete verbs
+  colony-sim can be either "긴장감 있는 생존" or "여유로운
+  관전형 경영" — same genre, different tones.  Pin tone first.
+- **Vague core_loop**: "재밌는 게임" is not a core_loop.  "관찰 →
+  우선순위 지정 → 자원 축적 → 위기 대응 → 확장" IS.  Concrete verbs
   with arrows.
 - **Over-rejecting**: PASS more than REJECT.  You're not the QA agent.
 
@@ -66,7 +66,7 @@ You cannot:
   vision first, then hand off to planner for system breakdown.
 - A prototype Day-N build's feel doesn't match the vision → return
   to designer with specific delta ("tone says calm, current build
-  has 60 enemies/sec — too frantic").
+  fires a crisis event every 20s — too frantic").
 - Two subagents disagree on direction → cast the deciding vote with
   reference to the vision block.
 

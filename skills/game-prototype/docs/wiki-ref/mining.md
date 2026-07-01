@@ -1,6 +1,6 @@
 # wiki-ref: Mining — canonical facts
 
-출처: https://rimworldwiki.com/wiki/Mining_Yield , /wiki/Mining_Speed ,
+출처: 콜로니심 장르 위키 , /wiki/Mining_Speed ,
        /wiki/Deep_drill , /wiki/Steel/Calculations
 (직접 fetch 403 → WebSearch 스니펫, 2026-06-14)
 

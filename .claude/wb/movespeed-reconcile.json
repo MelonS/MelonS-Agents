@@ -7,7 +7,7 @@
   "test_meta": "G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Scripts/Tests/V8MoveSpeedTest.cs.meta",
   "doc_edits": [
     {
-      "file": "G:/ai/MelonS-Agents/skills/game-prototype/docs/audit-rimworld-fidelity-2026-05-29.md",
+      "file": "G:/ai/MelonS-Agents/skills/game-prototype/docs/audit-genre fidelity-2026-05-29.md",
       "change": "Discrepancy table row: moveSpeed 3.0 -> marked CLOSED (value is 4.6 per PawnStats.cs:31, confirmed #200/#28). Top-5-fixes item #2: marked DONE."
     }
   ],
@@ -16,8 +16,8 @@
   "value_matches": true,
   "flag": null,
   "notes": [
-    "PawnStats.moveSpeed = 4.6f confirmed at PawnStats.cs:31 with comment citing #200 RimWorld fidelity fix.",
-    "audit-rimworld-fidelity-2026-05-29.md had two stale references to 3.0 — both updated.",
+    "PawnStats.moveSpeed = 4.6f confirmed at PawnStats.cs:31 with comment citing #200 genre fidelity fix.",
+    "audit-genre fidelity-2026-05-29.md had two stale references to 3.0 — both updated.",
     "goal.md has no game-prototype #28 checkbox; the active goal tracks Skill #1/#2 (music/job-hunt), not game-prototype verify items. No goal.md change needed.",
     "FLAG for QA: PawnMovement.stats is [SerializeField] private; Step 2 of test reads it via System.Reflection. If batchmode reflection is restricted, add public GetStatsForTest() to PawnMovement.cs.",
     "FLAG for QA: No scene wiring needed — test bootstraps PawnMovement via AddComponent and reads CreateDefault() directly. SceneSetup is not touched."

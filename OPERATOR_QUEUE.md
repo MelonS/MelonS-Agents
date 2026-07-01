@@ -67,34 +67,6 @@
 
 ---
 
-## OPQ-003 · second prototype target after RimWorld-lite — Suika lite (default in flight, Day 1 SHIPPED)
-
-- **when**: 2026-05-26 ~21:40 KST · Day 1 status update 2026-05-26 ~22:02 KST
-- **context**: Operator's strategic priority = multi-agent framework
-  validated by *multiple* prototypes (not just RimWorld-lite).
-  Need to pick next target after framework refactor.
-- **default executed**: **Suika Game clone** — Day 1 shipped end-to-end
-  in **~8 min wall-clock** using the new game-dev-agent pipeline
-  (`gen_fruits.py` → `agent.py code` × 9 → `agent.py integrate` ×2 →
-  `agent.py qa`).  Build at
-  `skills/game-prototype-suika/builds/day-1-2026-05-26/SuikaLite.exe`
-  (84 MB).  Screenshot in same folder: 3 fruits resting on floor with
-  walls + drop-line + score UI.  Framework speedup ≈ **15×** vs PawnSim
-  Day 1 baseline (~2 h).  Hypothesis "next prototype = faster" =
-  EMPIRICALLY CONFIRMED.
-- **decision needed**: which prototype after Suika Day 2?
-- **options**:
-  - (a) **Suika Game clone** — IN FLIGHT (Day 1 shipped, Day 2 queued)
-  - (b) **Vampire Survivors lite** — 3-4 days, action-driven
-  - (c) **Brotato lite** — 3-4 days, similar genre to (b)
-  - (d) **대항해시대 라이트 prototype** — operator's passion project,
-        2-4 weeks (too big for framework-validation purposes)
-  - (e) **Skip** — focus on improving RimWorld-lite instead
-- **impact**: After Suika Day 2, agent will start whichever option
-  the operator picks (or default = (b) for next genre stress-test).
-
----
-
 ## OPQ-004 · YouTube Mix #2 / Mix #3 disposition
 
 - **when**: 2026-05-26 ~22:00 KST (carried over from earlier session)
@@ -168,9 +140,9 @@
     어떤 agent 활성화) 우선 + agent 정의는 점진적 추가.
   - (d) **운영자 더 큰 단위 재구성 의견**.
 - **추가 직군 (장르마다 동적 활성화)**:
-  - `combat-designer` (VS / Brotato), `level-designer` (액션 / TD),
-    `systems-designer` (시뮬 / RPG), `ai-designer` (콜로니 / RTS),
-    `narrative-designer` (RPG / 어드벤처), `localization` (다국어).
+  - `level-designer` (액션 / TD), `systems-designer` (시뮬 / RPG),
+    `ai-designer` (콜로니 / RTS), `narrative-designer` (RPG / 어드벤처),
+    `localization` (다국어).
 - **impact**: 운영자 OK 받기 전까지는 장르 YAML에 직군 이름만 있고
   실제 SOP는 없음.  자율 작업 중 "기획자 관점에서 이 결정이 맞나?"
   같은 self-check는 못 함.

@@ -198,7 +198,7 @@ namespace MelonS.GameProto
             return RealClickRect(btn.GetComponent<RectTransform>(), btn.gameObject);
         }
 
-        // #림월드파리티(2026-06-11) — 메뉴가 아코디언(▶/▼ 텍스트 마커)에서 '카테고리
+        // #콜로니심파리티(2026-06-11) — 메뉴가 아코디언(▶/▼ 텍스트 마커)에서 '카테고리
         //  2열 + 아이콘 셸프'로 바뀜.  헤더 = "Cat_" 버튼(텍스트 마커 없음), 항목 = 셸프
         //  "Cell_" 버튼(이름이 NameStrip 자식 Text 에 있음 — 글리프 Text 가 먼저 올 수
         //  있어 전체 Text 를 훑는다).  펼침 상태는 ArchitectMenu.ActiveCategory 로 판정.

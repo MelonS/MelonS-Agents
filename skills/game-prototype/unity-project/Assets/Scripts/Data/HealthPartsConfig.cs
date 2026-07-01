@@ -29,10 +29,10 @@ namespace MelonS.GameProto.Data
             //  flagged for operator review).  Was head 10 = decapitation far too easy.
             new PartDef { id = PawnHealth.PartId.Head,     nameKr = "머리",     maxHp = 20, isVital = true  },
             new PartDef { id = PawnHealth.PartId.Torso,    nameKr = "몸통",     maxHp = 40, isVital = true  },
-            // #다림월드식(2026-06-03): RimWorld 는 팔=다리 max HP 동일.  이 프로토타입은 전투를
+            // #다콜로니심식(2026-06-03): the reference sim 는 팔=다리 max HP 동일.  이 프로토타입은 전투를
             //  소(小)스케일로 내부 정합(활 3~5/적 18~20)시켜 절대값은 낮추되 '팔=다리' 비율은 맞춘다.
             //  이전 팔18 vs 다리20 비대칭(#7 audit, 근거 없는 추정)을 팔=다리=20 으로 통일.
-            //  (절대값을 RimWorld full 30 으로 올리는 건 적 HP/무기 데미지와 결합 → 별도 좌표 rescale.)
+            //  (절대값을 the reference sim full 30 으로 올리는 건 적 HP/무기 데미지와 결합 → 별도 좌표 rescale.)
             new PartDef { id = PawnHealth.PartId.LeftArm,  nameKr = "왼팔",     maxHp = 20, isVital = false },
             new PartDef { id = PawnHealth.PartId.RightArm, nameKr = "오른팔",   maxHp = 20, isVital = false },
             new PartDef { id = PawnHealth.PartId.LeftLeg,  nameKr = "왼다리",   maxHp = 20, isVital = false },

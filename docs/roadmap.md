@@ -277,7 +277,7 @@ load-bearing, or set a new focus.)_
   `check-round-3.md` (결정 대기 D1~D4).  미해결 추적: F4 목재 카운터 UX, F5 침대
   탐색 초기 transient.
 
-- **2026-06-11 밤 (자율 10h 1부)** 게임루프 부활 — 운영자 "림월드 4축(생존/이벤트/발전/
+- **2026-06-11 밤 (자율 10h 1부)** 게임루프 부활 — 운영자 "레퍼런스 콜로니심 4축(생존/이벤트/발전/
   RPG)이 돌아가지 않는다" → 4축 멀티에이전트 감사(wf_0e04d4e2, `gameloop-backlog-
   2026-06-11.md`) → **TOP 10 완주**: 아사+전멸 오버레이(`3bce00e`, TakeTrueDamage·
   시계 통일 3차 디버깅) / 습격 경보 threatTier 복구+베리 희소화(`39d8135`) / 영양
@@ -292,7 +292,7 @@ load-bearing, or set a new focus.)_
   ① 🔴 QR지면 근본수정(`04889b3` 잔디 40% 타일맵 구멍=spriteMode 스테일).
   ② 비주얼 백로그 TOP-1/2/3/4/6/7/9 + UI가독성 A (지형 웜팔레트·라벨 디클러터·
   글로우 감쇠·폰 눈동자·브래킷 통일·튜토리얼 강등·원색 톤다운·연구창 크롬).
-  ③ 카메라 림월드 파리티(`9d1374b` 기본줌8/팬관성/커서줌인/미들드래그) +
+  ③ 카메라 레퍼런스 콜로니심 파리티(`9d1374b` 기본줌8/팬관성/커서줌인/미들드래그) +
   아이템 스케일.  ④ **아트 v2 세대 교체**: 멀티에이전트 생성기 4종(wf_ea101a96,
   아트디렉터 리뷰 PASS) → 림 32px 3방향+프레임 애니메이터(`811345a`), 지형/식생
   32px(`11471d1`), 아이템 3단계 스테이지.  전 배치 repro_all 13/13 게이트.
@@ -308,10 +308,10 @@ load-bearing, or set a new focus.)_
   임계 35 공유 → 매 프레임 PawnNeeds 가 1.5s Decide 선점, 걷기 영영 불발 → 임계 분리
   35/30 / HasRealActivity 에 HasAutoSleepOrder 누락 → 배회속도 0.5x 로 12s timeout
   상습 초과, `5c27e6e`) + 재현 p0-autosleep-bed-reach·하네스 ops 3종(`e32ab3c`).
-  ② 건축 UI 림월드 파리티 재구축 — 좌하단 2열 카테고리 + 아이콘 셸프 + 연속배치
+  ② 건축 UI 레퍼런스 콜로니심 파리티 재구축 — 좌하단 2열 카테고리 + 아이콘 셸프 + 연속배치
   (`36d5928`).  게이트 repro_all 13/13 PASS.  다음: 몰입 디자인 트랙 D1~D5
   (`skills/game-prototype/docs/design-immersion-2026-06-11.md`).  suggest: 침대
-  소유권(밤마다 전 림이 ScheduledSleepNow 로 빈 침대 경합 — 림월드는 림당 침대 지정).
+  소유권(밤마다 전 림이 ScheduledSleepNow 로 빈 침대 경합 — 레퍼런스 콜로니심는 림당 침대 지정).
 - **2026-06-10 밤~06-11 새벽** 야간 자율 세션 — UI 배치 2~5(19건) + 게임필 배치 1~5
   (운영자 위임: "기능 최소화 상태로 게임이 되어야 함").  멀티에이전트 격차 분석 평결
   "압박→대응→보상 루프가 화면에 닿지 않음 + 거짓 위험 신호로 신뢰 붕괴" 에 따라:
@@ -332,7 +332,7 @@ load-bearing, or set a new focus.)_
   실작동).  운영자 인게임 확인 대기 (PLAYTEST-TODO #38).
 
 - **2026-06-10** UI 전면 재검토 배치 1 (`a685582`, 운영자 지시).  8도메인 병렬 감사
-  (코드+ui-tour 스크린샷+rimworldwiki 교차) → 백로그 82건(`ui-backlog-2026-06-10.md`).
+  (코드+ui-tour 스크린샷+reference-simwiki 교차) → 백로그 82건(`ui-backlog-2026-06-10.md`).
   P0 5건 적용: 날짜 클리핑·폰이름 타이틀 가림·SkillUI 죽은 UI 부활·연구 스트립 가림·
   우상단 5중 알림 겹침(밴드 좌표 계약).  정리 5건(ThreatAlert 이중표시 등) + ui-audit
   SSOT 현행화 + ui-tour 캡처/회귀가드 시나리오 신설.  진행 중: 우클릭 무동작 간헐(#38
@@ -419,19 +419,19 @@ load-bearing, or set a new focus.)_
   + pickup/build/refund/consume/trade 전부 물리 더미 기준 → '카운터 = Σ InStockpile 더미' 불변식
   성립.  (meals/fineMeals 는 조리식 물리 entity 부재로 추상 카운터 유지 — 별도 피처 시 물리화 가능.)
 - **2026-06-04** PawnSim 자원모델 단일화 Stage 2b — 환불·소비 물리화.  (1) 해체 환불(#5 포함
-  청사진 취소)을 카운터(+) 대신 물리 더미 드롭으로(RimWorld: 해체/취소 시 자재 바닥에).
+  청사진 취소)을 카운터(+) 대신 물리 더미 드롭으로(the reference sim: 해체/취소 시 자재 바닥에).
   (2) cook 재료·저장고 직접섭취를 ResourceManager.SpendStockpiledFood 로 — 카운터 −amount +
   물리 InStockpile MeatPile decrement 함께(#2: '카운터 0인데 화면엔 식량 더미' 해소).
   ISO 82/82 · INT 45/45 · LongPlay survived=true issues=0.  ※ Stage 2c 잔여: trader 구매/판매
   물리화(spawn 위치 결정 필요), meals/fineMeals 는 물리 entity 없어 추상 유지.
 - **2026-06-04** PawnSim 자원모델 단일화 Stage 2a — build haul-required (운영자 선택 "순수
-  RimWorld").  TryPlace 의 카운터 즉시결제(#242) 제거 → 청사진은 빈 상태로 놓이고 림이 물리
+  the reference sim").  TryPlace 의 카운터 즉시결제(#242) 제거 → 청사진은 빈 상태로 놓이고 림이 물리
   목재/석재를 현장으로 운반해야 건설.  #3 이중지불 dupe 근절(카운터로 build 결제 안 함).
   starter wood 50 물리라 haul-funding 정상.  검증: ISO 82/82 · INT 45/45 · I35(청사진→운반→벽
   건설=True) · LongPlay survived=true issues=0 (wood400/stone200 축적).  ※ Stage 2b 잔여
   물리화: trader구매·동물/늑대drop·해체환불·취소환불·eat/cook from stockpile (meals/fineMeals 는
   물리 entity 없어 추상 유지).
-- **2026-06-04** PawnSim 자원모델 단일화 Stage 1 — pickup 대칭 차감.  운영자 "다 림월드식:
+- **2026-06-04** PawnSim 자원모델 단일화 Stage 1 — pickup 대칭 차감.  운영자 "다 콜로니심식:
   물리 더미 단일화" 선택.  hauler 가 InStockpile 더미(목재/식량/석재)를 운반용으로 집을 때
   카운터 −amount (deposit 의 +amount 와 대칭) — 이전엔 차감 없어 카운터 영구 과대(#1).
   불변식 '카운터 = Σ InStockpile 더미'의 한 축 복원.  ISO 82/82 · INT 45/45.
@@ -441,7 +441,7 @@ load-bearing, or set a new focus.)_
   모델-독립 7건 수정: 폭풍지속 회귀(0.7실초→≈60실초), 해체환불 품질정합+복제익스플로잇,
   바리케이드 해체불가(영구봉쇄), 운반사망 자원소실, 다운 행동지속, 출혈사망 시체헛공격,
   의사 영구출혈면역.  회귀가드 V79-82.  ISO 82/82 · INT 45/45.  자원모델(카운터vs물리) 클러스터
-  #1/#2/#3/#5 는 "다 림월드식" 단일화 설계결정 필요로 보류(autonomous-decisions 기록).
+  #1/#2/#3/#5 는 "다 콜로니심식" 단일화 설계결정 필요로 보류(autonomous-decisions 기록).
 - **2026-06-04** PawnSim save/load 완성 #3 — 벌목/채광 지정(designation) 복원.  로드 시
   마킹된 나무·광맥 지정이 소실되던 것 수정.  TreeChopDesignation/MineDesignation 에
   GetMarked...Positions 접근자, SaveData.chopMarks/mineMarks(List<Vector2>), Save 직렬화,
@@ -465,11 +465,11 @@ load-bearing, or set a new focus.)_
   - 적대적 검증이 과확정/거짓/feature/paranoid 다수 기각(verify-real-path).  최종 스윕은
     20건 중 실버그 1건 = 코드베이스 정리 수렴.  매 수정 컴파일+76/76+44/44 게이트.
   - 보류(운영자 인지/플레이테스트): 트레잇 결정성(전원 동일 트레잇), save-load 완성,
-    behavior-medium(자동근접·스케줄 하드게이트), 대형 RimWorld 피처, 전투 절대값 rescale —
+    behavior-medium(자동근접·스케줄 하드게이트), 대형 the reference sim 피처, 전투 절대값 rescale —
     docs/autonomous-decisions.md 에 fix 계획과 함께 기록.
 
-- **2026-06-03** PawnSim 4h+ 자율 세션 — RimWorld 정합 + 회귀 수정 (운영자 부재, '묻지말고 일해')
-  - 멀티에이전트 6회 감사(RimWorld 정합/회귀헌트 등) → 적대적 검증으로 과확정 걸러내며 적용.
+- **2026-06-03** PawnSim 4h+ 자율 세션 — 장르 정합 + 회귀 수정 (운영자 부재, '묻지말고 일해')
+  - 멀티에이전트 6회 감사(장르 정합/회귀헌트 등) → 적대적 검증으로 과확정 걸러내며 적용.
   - 작업종류 분리(건축/채광/운반/의료 별도 work type, e8657b2), hover 작업명(e5d8435),
     근접 데미지 1→5(전투 지루함 #8), 팔=다리 HP 통일.
   - **CRITICAL 회귀 자가발견·수정(f5969ff)**: 단일화 시 ChopTreeAction/MineStoneAction 을
@@ -479,12 +479,12 @@ load-bearing, or set a new focus.)_
   - 검증: 매 변경 컴파일 클린 + isolated 76/76 + integration 44/44; LongPlay 생존
     survived=true·issues=0(물리 식량 경제 하 3림 장기 생존 확인).
 
-- **2026-06-03** PawnSim 림 시스템 RimWorld 정합 대개편 (운영자 실시간 플레이테스트)
+- **2026-06-03** PawnSim 림 시스템 장르 정합 대개편 (운영자 실시간 플레이테스트)
   - `dc030f5` 작업배정 지정-구동 단일화: 벌목/채광 자율 AI를 '지정된 것만'으로 게이트 +
     중복 dispatch 폐기 + 우클릭=선택 림 전용.  반복 버그(다른 림 벌목/번갈이/freeze) 공통
     뿌리(3중 중첩) 제거.  I16/I43/V40 갱신.
   - `e7d229f` 통나무더미 sprite 일관화 + info 탭 본문 정렬.
-  - `fee2325` 시작 식량 RimWorld식 물리 드롭(추상 식사50 카운터 폐기, '다 림월드식으로').
+  - `fee2325` 시작 식량 콜로니심식 물리 드롭(추상 식사50 카운터 폐기, '다 콜로니심식으로').
   - 검증: isolated 76/76 + integration 43/43 PASS, 컴파일·실화면 캡처 확인.
 
 - **2026-06-03** PawnSim 세이브/로드 스킬·징집 직렬화 (`3e25dcf`)

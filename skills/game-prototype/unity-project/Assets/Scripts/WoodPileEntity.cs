@@ -55,7 +55,7 @@ namespace MelonS.GameProto
         {
             float t = Mathf.Clamp01(Mathf.Sqrt(Mathf.Max(1, amount)) / Mathf.Sqrt(50f));
             // #아이템스케일 (운영자 2026-06-11 "한칸을 다 차지하는 아이템은 별로 없음"):
-            //  0.8~1.4(만재 시 1.4칸!) → 0.5~0.78.  림월드처럼 아이템은 칸의 ~2/3 —
+            //  0.8~1.4(만재 시 1.4칸!) → 0.5~0.78.  레퍼런스 콜로니심처럼 아이템은 칸의 ~2/3 —
             //  '물건이 놓여 있다'로 읽히고 지면/그리드가 숨 쉰다.  양→크기 관례는 유지.
             return Mathf.Lerp(0.5f, 0.78f, t);
         }
@@ -85,7 +85,7 @@ namespace MelonS.GameProto
             {
                 // #37 운영자 "내구도 안 됨": 바닥 0.35 라 거의 끝까지 멀쩡해 보이다 갑자기
                 //  소멸 → 닳는 과정이 안 보였음.  바닥 0.12 로 낮춰 옥외 더미가 점점 옅어지다
-                //  사라지는 게 눈에 보이게 한다(속도는 RimWorld 정합 유지).
+                //  사라지는 게 눈에 보이게 한다(속도는 장르 정합 유지).
                 var c = _sr.color;
                 c.a = Mathf.Lerp(0.12f, 1f, Mathf.Clamp01(durability / 100f));
                 _sr.color = c;

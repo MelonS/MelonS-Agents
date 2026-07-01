@@ -36,7 +36,7 @@ namespace MelonS.GameProto
         private static Sprite _ringSpriteCache;
         /// <summary>#audit3 #0/#1 — 멀티선택(MultiSelectionRings)·인스펙트(InspectHighlight)가
         /// 같은 스프라이트를 재사용하도록 공개.  TOP-6 (visual-polish-backlog 2026-06-11):
-        /// 타원 링/노란 박스/링 3종 혼재 → 림월드식 4코너 브래킷 1종으로 통일.</summary>
+        /// 타원 링/노란 박스/링 3종 혼재 → 콜로니심식 4코너 브래킷 1종으로 통일.</summary>
         public static Sprite SharedRingSprite() => MakeBracketSprite();
         private static Sprite MakeBracketSprite()
         {

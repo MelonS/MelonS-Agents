@@ -1067,7 +1067,7 @@ namespace MelonS.GameProto.Tests
         private IEnumerator TestV40_ChopTreeAction()
         {
             // #작업배정-단일화(2026-06-03): ChopTreeAction 은 이제 '지정(마킹)된 나무'만
-            //  자율 벌목한다(RimWorld 모델 — 지정 안 한 나무는 안 벤다).  따라서 이 테스트는
+            //  자율 벌목한다(the reference sim 모델 — 지정 안 한 나무는 안 벤다).  따라서 이 테스트는
             //  TreeChopDesignation 싱글톤 보장 + 나무 마킹 후 TryStart 가 task 를 잡는지 검증.
             //  (월드 경계 ±43.5 안에 둬야 FindNearestTree 가 후보로 본다 → x=20.)
             if (TreeChopDesignation.Instance == null)

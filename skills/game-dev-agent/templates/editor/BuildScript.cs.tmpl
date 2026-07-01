@@ -57,7 +57,7 @@ namespace {{NAMESPACE}}.EditorTools
             string outExe = Path.Combine(outDir, ExeName);
 
             // Include MenuScene only if it actually exists (single-scene
-            // games like Suika don't have a menu).
+            // games don't always have a menu).
             var sceneList = new System.Collections.Generic.List<string> { GameScene };
             if (File.Exists(MenuScene)) sceneList.Insert(0, MenuScene);
 

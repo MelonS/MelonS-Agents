@@ -12,7 +12,7 @@
   },
   "fix": {
     "rename": "realSecondsPerInGameDay -> inGameMinutesPerRealSecond (직관적: 1x 에서 실초당 흘릴 게임 분)",
-    "default": "60f = 게임 1시간 / 실초 (운영자 '1게임시간/초 근사' 타겟, RimWorld-ish, 체감되지만 과하지 않음)",
+    "default": "60f = 게임 1시간 / 실초 (운영자 '1게임시간/초 근사' 타겟, the reference sim-ish, 체감되지만 과하지 않음)",
     "clamp": "Update 에서 Mathf.Clamp(rate, 6, 600) -> 어떤 직렬화 override 도 시계를 동결(너무 느림)시키거나 판독불가(너무 빠름)로 만들 수 없음",
     "scaling": "Time.deltaTime 이 이미 timeScale 배율 포함 -> 1x/2x/4x/pause 자동 처리. 변경 없음."
   },

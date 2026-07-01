@@ -243,7 +243,7 @@ namespace MelonS.GameProto
                     WoodPileEntity.Spawn(new Vector3(Mathf.Floor(wx) + 0.5f, Mathf.Floor(wy) + 0.5f, 0f), 50, woodPileSpriteRuntime);
                     dropped++;
                 }
-                // 시작 식량도 RimWorld식 물리 드롭 (목재처럼) — 운영자 '다 림월드식으로'(2026-06-03).
+                // 시작 식량도 콜로니심식 물리 드롭 (목재처럼) — 운영자 '다 콜로니심식으로'(2026-06-03).
                 //  이전: AddMeals(50) 추상 카운터 → '식사:50' 이 맵 어디에도 없어 혼란("이거 어디 있는
                 //  아이템?").  지금: spawn 근처에 비부패성 '간편식' 물리 더미를 흩뿌려 pawn 이 걸어가
                 //  먹는다(섭취는 PawnNeeds.BeginEatWalk→ConsumeAtSource 가 이미 물리 더미 지원).
@@ -261,7 +261,7 @@ namespace MelonS.GameProto
                         10, MeatPileEntity.SharedSprite, "간편식", 3000f);  // 긴 수명=비부패성(간편식)
                     foodDropped++;
                 }
-                Debug.Log($"[GameManager] starter resources (RimWorld식 물리): 목재 {dropped*50} + 간편식 {foodDropped}더미 바닥 드롭 (추상 카운터 폐기)");
+                Debug.Log($"[GameManager] starter resources (콜로니심식 물리): 목재 {dropped*50} + 간편식 {foodDropped}더미 바닥 드롭 (추상 카운터 폐기)");
             }
 
             if (integrationTest)

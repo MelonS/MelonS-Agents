@@ -1,6 +1,6 @@
 # wiki-ref: Medicine / Health — Injury / Tend / Infection / Bleeding (canonical facts)
 
-출처: https://rimworldwiki.com/wiki/Injury , /wiki/Infection , /wiki/Doctoring ,
+출처: 콜로니심 장르 위키 , /wiki/Infection , /wiki/Doctoring ,
        /wiki/Medical_tend_quality , /wiki/Health , /wiki/Medicine
 (직접 fetch 403 → WebSearch 스니펫 추출, 2026-06-14)
 

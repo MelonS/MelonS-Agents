@@ -106,7 +106,7 @@ namespace MelonS.GameProto
         }
 
         /// <summary>#작업배정-단일화 — ChopTreeAction 이 '지정된 나무만' 자율 벌목하도록
-        /// 마킹 여부를 조회.  RimWorld: 지정 안 한 나무는 림이 베지 않는다.</summary>
+        /// 마킹 여부를 조회.  the reference sim: 지정 안 한 나무는 림이 베지 않는다.</summary>
         public bool IsMarked(TreeEntity t)
         {
             if (t == null) return false;

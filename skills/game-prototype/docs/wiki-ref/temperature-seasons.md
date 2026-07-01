@@ -1,6 +1,6 @@
 # wiki-ref: Temperature / Seasons — canonical facts
 
-출처: https://rimworldwiki.com/wiki/Temperature , /wiki/Comfortable_Temperature ,
+출처: 콜로니심 장르 위키 , /wiki/Comfortable_Temperature ,
        /wiki/Heatstroke , /wiki/Plants
 (직접 fetch 403 → WebSearch 스니펫, 2026-06-14)
 

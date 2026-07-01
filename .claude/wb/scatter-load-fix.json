@@ -6,7 +6,7 @@
   "status": "Done",
   "milestone": "M1-design",
   "qa_flag_actioned": "W-M4-03 QA flag: ScatterVarietyDriver Resources.Load<Sprite>() returned null for sprites outside Resources/ folder, falling back to magenta procedural dot in built game.",
-  "acceptance_criterion": "rimworld-comparison.md Dimension 1 'Environmental richness' row: 'More scatter variety (chunks, dead leaves); cluster scatter near trees/rock.' Binary acceptance: in a fresh built game the 3 scatter decals render as their real chunk/leaf/pebble sprites (NOT magenta dots). QA screenshot shows no magenta scatter.",
+  "acceptance_criterion": "reference-sim-comparison.md Dimension 1 'Environmental richness' row: 'More scatter variety (chunks, dead leaves); cluster scatter near trees/rock.' Binary acceptance: in a fresh built game the 3 scatter decals render as their real chunk/leaf/pebble sprites (NOT magenta dots). QA screenshot shows no magenta scatter.",
   "fix_approach": "Option (a) — move 3 PNGs into Assets/Resources/scatter/ and update Resources.Load path to match. Resources.Load resolves in Editor, batchmode, and player builds because Unity auto-bundles everything under Resources/. No SceneSetup edit required.",
   "changes": [
     {

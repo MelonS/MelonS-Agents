@@ -2,9 +2,9 @@
   "role": "game-programmer",
   "lane": "roof-area",
   "milestone": "M4-building",
-  "task": "지붕 기능 + 지붕영역 지정 메뉴 (운영자: RimWorld처럼 지붕영역 설정 메뉴 따로 있음)",
+  "task": "지붕 기능 + 지붕영역 지정 메뉴 (운영자: the reference sim처럼 지붕영역 설정 메뉴 따로 있음)",
   "status": "Done",
-  "rimworld_concept": "(1) RoofDesignation — Architect Zone(구역) 메뉴 '지붕 영역' 드래그-rect 지정(MineDesignation/Stockpile 드래그 패턴 clone), 지정 셀을 roofed 로 마크. (2) RoofOverlayRenderer(self-bootstrap, GameSceneGate) — roofed 셀 위 반투명 어두운 그늘 오버레이. (3) 벽으로 둘러싸인 방 auto-roof (flood-fill, 열린맵이면 bail → 수동만 OK). 효과 = 시각(그늘) + IsRoofed 플래그(향후 비/온도 hook).",
+  "reference-sim_concept": "(1) RoofDesignation — Architect Zone(구역) 메뉴 '지붕 영역' 드래그-rect 지정(MineDesignation/Stockpile 드래그 패턴 clone), 지정 셀을 roofed 로 마크. (2) RoofOverlayRenderer(self-bootstrap, GameSceneGate) — roofed 셀 위 반투명 어두운 그늘 오버레이. (3) 벽으로 둘러싸인 방 auto-roof (flood-fill, 열린맵이면 bail → 수동만 OK). 효과 = 시각(그늘) + IsRoofed 플래그(향후 비/온도 hook).",
   "files_owned_and_changed": [
     "skills/game-prototype/unity-project/Assets/Scripts/RoofDesignation.cs (NEW)",
     "skills/game-prototype/unity-project/Assets/Scripts/RoofOverlayRenderer.cs (NEW)",

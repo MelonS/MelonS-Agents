@@ -95,7 +95,7 @@ All screen UI uses the 1920×1080 reference (CanvasScaler ScaleWithScreenSize, m
 - Anchor: top, full-width. `HeaderBg` bordered panel, **height 76**.
 - LEFT: ClockUI 날짜 ("봄 N일, YYYY년" — gold, fontSize 32, **horizontalOverflow=Overflow, 폭 380** — #ui백로그 2.0).
 - RIGHT: TimeUI ("▶ 1x") — 우하단 속도 버튼과 중복 표시 문제는 백로그 2.3 참조.
-- 자원 readout 은 상단바가 아니라 **좌상단 세로 칩 리스트** (`ResourceCounterUI`, RimWorld ResourceReadout 모사, 4af6ae4). 식량→식사→목재→석재, 칩 = [아이콘][값].
+- 자원 readout 은 상단바가 아니라 **좌상단 세로 칩 리스트** (`ResourceCounterUI`, the reference sim ResourceReadout 모사, 4af6ae4). 식량→식사→목재→석재, 칩 = [아이콘][값].
 
 ### 3.2 BOTTOM — the command stack (three clearly separated bands)
 This is the contract that ends the bottom-center collision. Define ONE shared geometry so every bottom system places relative to it, not relative to guesses.
@@ -103,7 +103,7 @@ This is the contract that ends the bottom-center collision. Define ONE shared ge
 Reference bottom-up bands (y = anchored px above screen bottom, anchor (0.5,0) unless noted):
 - **Band A — 탭 바** (`GuiControlBar`): anchor (0.5,0) y=24, 중앙. [징집|직업|일정|건축|연구|⚙설정]
   6버튼, 폭 = 6*76 + **5***16 갭 (#ui백로그 0.3).  **속도/시계 클러스터는 분리** — 우하단
-  anchor (1,0) x=-16 y=24 에 [⏸멈춤|1x|2x|4x] + 시계 (RimWorld 'Time speed control — Bottom
+  anchor (1,0) x=-16 y=24 에 [⏸멈춤|1x|2x|4x] + 시계 (the reference sim 'Time speed control — Bottom
   right corner' 컨벤션 일치).  *(2026-06-10 재기술 — 종전 '한 바에 속도+탭' 기술은 폐기)*
 - **Band B — 지정 토글**: ~~standalone strip~~ → **ArchitectMenu 지시/구역 카테고리 소속**
   (2026-05-31).  하단에 standalone 지정 버튼을 만들지 말 것.

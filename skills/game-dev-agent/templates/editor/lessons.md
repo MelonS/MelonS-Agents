@@ -20,7 +20,7 @@ load-asset call, with `AssetDatabase.ImportAsset(path, ForceUpdate)` +
 `TextureImporter.SaveAndReimport()`.  Sprite paths are listed at the
 top of `SceneSetup.cs.tmpl` for explicit enumeration.
 
-## 2. Skybox leak in 2D scenes (Suika Day 1, 2026-05-26)
+## 2. Skybox leak in 2D scenes (2D prototype, 2026-05-26)
 
 **Symptom**: 2D scene shows a gradient sky behind the gameplay.
 
@@ -54,31 +54,31 @@ every frame (60x/sec for 4 seconds = 240 overlapping plays = buzz).
 in `templates/cs/audio-throttled-caller.cs.tmpl` (Phase 1.3 will
 fold this into a reusable game-system primitive).
 
-## 5. Component GetInstanceID() tiebreaker bug (Suika Day 2, 2026-05-26)
+## 5. Component GetInstanceID() tiebreaker bug (2D prototype, 2026-05-26)
 
-**Symptom**: `OnCollisionStay2D` merge logic never fired on
-same-tier fruit collisions.
+**Symptom**: `OnCollisionStay2D` collision logic never fired on
+same-tier entity collisions.
 
-**Root cause**: comparing `GetInstanceID()` (FruitMerger component
-ID, always > any GO ID because Components are created after GameObjects)
+**Root cause**: comparing `GetInstanceID()` (a component's ID,
+always > any GO ID because Components are created after GameObjects)
 against `collision.gameObject.GetInstanceID()` (GO ID, lower) → both
-sides returned, no side ever processed the merge.
+sides returned, no side ever processed the collision.
 
-**Fix in template**: physics-merger pattern documented in
-`templates/cs/physics-merger.cs.tmpl` (Phase 1.3) — must compare
-`gameObject.GetInstanceID()` on both sides.
+**Fix in template**: collision handlers must compare
+`gameObject.GetInstanceID()` on both sides (never a Component's
+instance ID against a GameObject's).
 
-## 6. OnCollisionEnter2D miss after spawn-grace (Suika Day 2)
+## 6. OnCollisionEnter2D miss after spawn-grace (2D prototype)
 
 **Symptom**: pre-spawned entities resting against each other never
-trigger merge.
+trigger the collision handler.
 
 **Root cause**: Enter fires once on first contact (still in grace
 period → guard returns), then Stay would re-fire but only
 `OnCollisionEnter2D` was hooked.
 
-**Fix in template**: physics-merger template uses BOTH
-`OnCollisionEnter2D` AND `OnCollisionStay2D` for the same TryMerge.
+**Fix in template**: collision handlers hook BOTH
+`OnCollisionEnter2D` AND `OnCollisionStay2D` for the same check.
 
 ## 9. runInBackground freezes long QA waits (PawnSim Day 13, 2026-05-27)
 
@@ -107,7 +107,7 @@ preserves the default behavior.
 qa FAIL with no PNG, .exe process appears alive but produces no
 output".
 
-## 7. Singleton subscription race (Suika Day 2)
+## 7. Singleton subscription race (2D prototype)
 
 **Symptom**: UI text never updates from Singleton events.
 

@@ -1,6 +1,6 @@
 # wiki-ref: Animals — Taming / Training / Wildness / Hunting (canonical facts)
 
-출처: https://rimworldwiki.com/wiki/Tame_Animal_Chance , /wiki/Train_Animal_Chance ,
+출처: 콜로니심 장르 위키 , /wiki/Train_Animal_Chance ,
        /wiki/Minimum_Handling_Skill , /wiki/Property:Wildness , /wiki/Animal_husbandry ,
        /wiki/Skills (Animals)
 (직접 fetch 403 → WebSearch 스니펫 추출, 2026-06-14)

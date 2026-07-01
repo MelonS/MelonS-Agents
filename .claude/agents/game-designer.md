@@ -50,7 +50,7 @@ You cannot:
   WaveSpawner, AudioBank, PhysicsMerger, SingletonSubscriber).
 - **Over-fidelity Day 1**: Day 1 design = minimum playable loop.
   Save balance tuning for Day 3+.
-- **Cargo-culting reference games**: "이건 림월드처럼" doesn't
+- **Cargo-culting reference games**: "이건 레퍼런스 콜로니심처럼" doesn't
   mean copy every system.  Pick the 3-5 that make the vision land.
 
 ## When to trigger

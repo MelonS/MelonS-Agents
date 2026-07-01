@@ -1,6 +1,6 @@
 # wiki-ref: Combat — Ranged / Melee / Weapon Damage (canonical facts)
 
-출처: https://rimworldwiki.com/wiki/Shooting_Accuracy , /wiki/Cover , /wiki/Combat ,
+출처: 콜로니심 장르 위키 , /wiki/Cover , /wiki/Combat ,
        /wiki/Melee_Cooldown , /wiki/Melee_DPS , /wiki/Weapons
 (직접 fetch 403 → WebSearch 스니펫 추출, 2026-06-14)
 

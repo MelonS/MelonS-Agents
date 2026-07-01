@@ -23,7 +23,7 @@
 ### A. 첫날 순서/리듬
 1. **시작=일시정지부터.** 사람은 착륙 즉시 정지하고 맵을 둘러본 뒤 첫 명령. 위키가 대문자로
    "PAUSE THE GAME!" / 우리는 0초부터 실시간 일괄 투하.
-   — 출처: rimworldwiki.com/wiki/Quickstart_Guides, bigbossbattle.com/first-days-rimworld
+   — 출처: 콜로니심 장르 위키 bigbossbattle.com/first-days-reference-sim
    → 시나리오 시작 5~10초 "정지+카메라 패닝(맵 서베이)" 페이즈 후 첫 명령.
 2. **첫 행동은 정리: 금지 해제+무기 장착.** 사람은 물자 unforbid→장비 픽업→재정지·계획 /
    우리는 바로 구역 지정. — Quickstart_Guides, Basics, steam 745100743
@@ -74,7 +74,7 @@
 ### F. 관전 포인트
 14. **사람 영상의 재미 = 위기 대응 드라마 + 림 개인 서사.** 본가는 "스토리 제너레이터" 설계 /
     우리 영상은 위기도 캐릭터도 없는 균일 노동 타임랩스 — "다르게 보이는" 근본 원인.
-    — en.wikipedia.org/wiki/RimWorld, GDC 1024232, gamedeveloper.com procedural storytelling
+    — en.wikipedia.org/wiki/the reference sim, GDC 1024232, gamedeveloper.com procedural storytelling
     → 소크에 의도적 위기 1~2개(소형 습격/화재) 스케줄 + 7·8·13번 연결 = "사건→반응" 루프를 영상에.
 
 ## 반영 우선순위 (최소 비용 → 최대 체감)
@@ -82,10 +82,10 @@
 | 순위 | 항목 | 레이어 | 비고 |
 |---|---|---|---|
 | 1 | #10·11 일차별 점진 페이즈 | 소크 시나리오 | 코드 무변경, JSON 재배열 |
-| 2 | #7 레터 강제 감속+카메라 점프 | **게임 엔진** | rimworld-gap TOP-4(레터)와 합치면 1커밋 |
+| 2 | #7 레터 강제 감속+카메라 점프 | **게임 엔진** | reference-sim-gap TOP-4(레터)와 합치면 1커밋 |
 | 3 | #6 야간 배속 리듬 | 소크 시나리오 | 시각 조건 스텝 필요(하네스 op 1개 추가 가능성) |
 | 4 | #5 정지-계획-실행 상태머신 | 소크 시나리오 | 명령 전 pause 스텝 삽입 |
 | 5 | #8·9 카메라 디렉터 | 하네스/엔진 | 데모 영상 품질 — 세대교체급 체감 |
 | 6 | #12·13 반응 룰 | 게임 엔진 | 갭 백로그 TOP-2(수동 우선)는 이미 출하, 잔여분 |
 
-연관: rimworld-gap-backlog-2026-06-12.md (TOP-12·퀵픽), first-cycle-backlog-2026-06-12.md.
+연관: genre-gap-backlog-2026-06-12.md (TOP-12·퀵픽), first-cycle-backlog-2026-06-12.md.

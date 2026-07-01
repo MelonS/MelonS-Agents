@@ -15,7 +15,7 @@ Activated when genre YAML's `team:` includes `level-designer`.
 
 ## Inputs
 
-- Combat Designer's weapon/enemy stats.
+- Designer's weapon/enemy stats.
 - Systems Designer's progression curve.
 - Director's tone (긴장감 = surprise spawns, 차분 = telegraphed).
 
@@ -25,7 +25,7 @@ Activated when genre YAML's `team:` includes `level-designer`.
   med / Wave 10: BOSS).
 - Spawn-pattern definitions (ring radius, sector bias, off-screen
   rule).
-- Subclass overrides for `wave-spawner` template.
+- Subclass override hooks for wave-aware spawning.
 - `level-design.md` document.
 
 ## Decision authority
@@ -36,7 +36,7 @@ You can:
 - Define boss intro choreography.
 
 You cannot:
-- Override Combat Designer's enemy stats.
+- Override the Designer's enemy stats.
 - Change visual look of enemies (Artist).
 
 ## Common pitfalls
@@ -51,7 +51,7 @@ You cannot:
 ## When to trigger
 
 - Genre YAML team includes `level-designer`.
-- Combat Designer hands off enemy stats.
+- Designer hands off enemy stats.
 - Director / QA says "waves feel monotone" → composition shake-up.
 
 ## Workflow
@@ -60,6 +60,6 @@ You cannot:
 2. For each wave: enemy composition + spawn pattern.
 3. Boss waves: at fixed intervals (every 5? every 10?) with
    telegraph + tone shift.
-4. Subclass `wave-spawner` with override `PickPrefab()` for wave-
-   aware composition.
+4. Define wave-aware spawn composition (which prefab per wave) and
+   hand the override hooks to the Programmer.
 5. Hand to Programmer for code-fitting.

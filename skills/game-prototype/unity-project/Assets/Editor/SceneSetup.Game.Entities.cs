@@ -236,7 +236,7 @@ namespace MelonS.GameProto.EditorTools
                     if (Vector2.Distance(tp, sp) < 1.8f) { skip = true; break; }
                 if (skip) continue;
                 // 기존 광맥 회피 — #257 1.4→0.9 (cardinal 인접 거리 1.0 허용 → 서로 맞붙어
-                //  RimWorld 광맥처럼 조밀한 덩어리 형성).  같은 셀 중복만 차단.
+                //  the reference sim 광맥처럼 조밀한 덩어리 형성).  같은 셀 중복만 차단.
                 //  단 HasWalkableNeighbor 로 각 광맥의 채굴 가능성은 여전히 보장.
                 foreach (var ex in positions)
                     if (Vector2.Distance(ex, sp) < 0.9f) { skip = true; break; }

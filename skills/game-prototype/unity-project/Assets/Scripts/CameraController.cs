@@ -19,14 +19,14 @@ namespace MelonS.GameProto
         //  (슬램 불가), (c) pending 적립이라 60Hz 희소 입력이 1000fps 에서 안 버려진다.
         [SerializeField] private float zoomSensitivity = 0.33f;  // raw 스크롤 1당 ln(ortho) 변화 (강도). 값↑=빠름
         [SerializeField] private float maxZoomRate = 2.5f;       // 줌 속도 상한 ln(ortho)/초 (슬램 방지). 값↓=느림
-        // #카메라파리티 (운영자 2026-06-11 "림월드 기본 줌인아웃과 많이 달라"):
+        // #카메라파리티 (운영자 2026-06-11 "레퍼런스 콜로니심 기본 줌인아웃과 많이 달라"):
         //  zoomMin 1.5(픽셀 깨지는 초근접) → 3, zoomMax 48(맵보다 큰 void 뷰) → 26.
         // #카메라파리티2 (2026-06-12 레퍼런스 스샷 2장 실측) — 기본 줌 15(보통 뷰
         //  세로 30칸) + 줌인 하한 5.5(레퍼런스 최대 줌인 = 세로 ~11칸; 3 은 레퍼런스보다
         //  2배 깊은 픽셀 깨짐 구간) + 줌아웃 상한 32(콜로니+주변 전경).
         [SerializeField] private float zoomMin = 5.5f;
         [SerializeField] private float zoomMax = 32f;
-        // #카메라파리티 — 림월드 무빙 질감: 줌은 목표값으로 지수 수렴(즉시 점프 X),
+        // #카메라파리티 — 레퍼런스 콜로니심 무빙 질감: 줌은 목표값으로 지수 수렴(즉시 점프 X),
         //  팬은 관성(가속 빠르게/release 후 ~0.3s 드리프트 정지), 줌인은 커서 방향.
         [SerializeField] private float zoomLerpSpeed = 9f;   // 줌 수렴 속도 (1/s)
         [SerializeField] private float panAccel = 14f;       // 입력 → 목표속도 수렴 (1/s)
@@ -127,7 +127,7 @@ namespace MelonS.GameProto
 
             // ── Pan (WASD + Arrow) — #카메라파리티: 관성 모델 ──────────────────
             //  입력은 '목표 속도'만 정하고 실제 속도(panVel)는 지수 수렴.  키를 떼면
-            //  panDecay 로 ~0.3s 드리프트 후 정지 — 림월드의 부드러운 무빙 질감.
+            //  panDecay 로 ~0.3s 드리프트 후 정지 — 레퍼런스 콜로니심의 부드러운 무빙 질감.
             //  하네스/배치모드: 키 입력이 없으면 panVel 은 0 유지 → 드리프트 오염 없음.
             float h = 0f, v = 0f;
             if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))  h -= 1;
@@ -150,7 +150,7 @@ namespace MelonS.GameProto
                 if (panVel.sqrMagnitude < 0.0025f) panVel = Vector2.zero;
             }
 
-            // ── 미들마우스 드래그 팬 (림월드 동작) — 놓으면 panVel 모멘텀으로 이어짐 ──
+            // ── 미들마우스 드래그 팬 (레퍼런스 콜로니심 동작) — 놓으면 panVel 모멘텀으로 이어짐 ──
             if (Input.GetMouseButtonDown(2))
             {
                 dragging = true;

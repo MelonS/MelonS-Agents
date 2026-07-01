@@ -159,7 +159,7 @@ namespace MelonS.GameProto
         private const float StarvTickGameSec = 4.5f;
         private float nextSleepHealT = -1f;   // 백로그 #5 수면 치유 틱
         // #QA플레이 F3 (2026-06-11): '빈 침대 없음' 힌트 — GoSleepAction 실패가 매
-        //  decision tick(1.5s)마다 찍어줌.  스케줄 밤잠인데 침대가 없으면 림월드처럼
+        //  decision tick(1.5s)마다 찍어줌.  스케줄 밤잠인데 침대가 없으면 레퍼런스 콜로니심처럼
         //  바닥에서 잔다 (이전엔 밤새 배회 — thrash-fix 가 '침대 없으면 계속 일'로만
         //  굴려 침대 1개 콜로니의 나머지 림이 영원히 안 잤다).
         //  ⚠ 단발 null 에 잠그면 안 된다.  F5 클로즈(2026-06-12, 타임스탬프 재현):
@@ -534,7 +534,7 @@ namespace MelonS.GameProto
                 // #audit2 #18 — 회복/스케줄 수면 분기에도 food/mood 0.5x decay.  이전엔 sleep 만
                 //  채우고 return 해서, sleep 이 회복 임계(~35)를 넘긴 뒤 80 까지 자는 동안(그리고
                 //  스케줄 수면 내내) 허기·기분이 전혀 줄지 않는 '무한 무허기' 버그였다.  정상
-                //  취침 분기(위)와 동일한 0.5x 감소로 통일 — RimWorld 도 수면 중 허기 진행.
+                //  취침 분기(위)와 동일한 0.5x 감소로 통일 — the reference sim 도 수면 중 허기 진행.
                 food = Mathf.Max(0f, food - foodDecay * 0.5f * dt);
                 mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
                 return;
@@ -551,10 +551,10 @@ namespace MelonS.GameProto
             mood = Mathf.Max(0f, mood - moodDecay * dt);
 
             // ── 아사 (운영자 2026-06-11 '가만히 냅둬도 게임오버가 되지 않음') ──
-            //  감쇠율은 림월드 패리티(#234)였으나 food 0 의 '결과'가 없었다 — 굶주림이
+            //  감쇠율은 레퍼런스 콜로니심 패리티(#234)였으나 food 0 의 '결과'가 없었다 — 굶주림이
             //  죽음에 이르지 않으면 생존게임 축이 통째로 장식이 된다.
             //  food 0 지속: 12 게임초당 1 HP (만복→공복 ~1게임일 + 공복→사망 ~0.4게임일
-            //  ≈ 총 1.4게임일 — 림월드 영양실조보다 압축, 프로토 페이싱).
+            //  ≈ 총 1.4게임일 — 레퍼런스 콜로니심 영양실조보다 압축, 프로토 페이싱).
             //  시간 기준은 Time.time(스케일 시계) — 니즈 decay·WaitForSeconds 와 동일
             //  기반이라 배속/프레임 케이스에서 표류하지 않는다 (dt 누적·GameClock 기반
             //  1·2차 구현은 측정 시계와 어긋나 틱이 6~12배 느리게 보였다).
@@ -598,7 +598,7 @@ namespace MelonS.GameProto
             // enters a "break" for moodBreakDuration.  Recovery only when
             // mood climbs back to recoverAt.  PawnUtilityAI checks IsBreaking
             // and skips picking new work tasks (pawn wanders aimlessly).
-            // 림월드갭 퀵픽 (2026-06-12) — 임계 교차 프레임에 전 림 100% 동시
+            // 레퍼런스 콜로니심갭 퀵픽 (2026-06-12) — 임계 교차 프레임에 전 림 100% 동시
             //  발동·동시 복귀가 '감정이 기계장치'로 읽히던 것: 임계 밑에서 스케일초당
             //  확률 롤(평균 ~12초 내, 림마다 다른 시점) + 지속 20~45s 랜덤.
             if (!isBreaking && mood < moodBreakThreshold

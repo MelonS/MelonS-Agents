@@ -26,7 +26,7 @@
 
 *One operator's agent system, in the open: the media pipelines are yours to clone and run (Mac/Linux) — the game and the engineering are here to read and learn from.*
 
-![MelonS-Agents — by the numbers: 100+ outputs, 1 production skill, 23 shaders, 0 runtime API tokens, 15-scenario gate, 24 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
+![MelonS-Agents — by the numbers: 100+ outputs, 1 production skill, 23 shaders, 0 runtime API tokens, 15-scenario gate, 23 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
 
 ## What works today
 
@@ -81,7 +81,7 @@ A song in → a music-as-primary-audio 9:16 short out: beat-aligned cuts, onset-
 
 ![The 3-shape skill model — Shape A missions-routed 5-agent pipeline, Shape B standalone, Shape ? future skills](docs/visuals/05-three-shapes.png)
 
-The system doesn't force every skill through one shape.  **Shape A** routes through a 5-agent mission pipeline (orchestrator + planner / resourcer / editor / qa); **Shape B** is a standalone script when planner/qa stages would be near-empty.  Subagents share no conversation history — they hand off through committed files (`plan.md` / `MANIFEST.md` / `qa-report.md`), so each one's context and cost stay bounded.  Per-role model routing (planner/resourcer = opus, editor/qa = sonnet) plus a cost firewall keep Anthropic tokens to orchestration only — mission execution runs entirely on local tools, so runtime API tokens stay at **zero**.  `.claude/agents/` holds **24** definitions (6 core + 13 game roster + 5 content-pipeline teams).  Full data-flow map + the game-prototype build chain: [`docs/architecture.md`](docs/architecture.md).
+The system doesn't force every skill through one shape.  **Shape A** routes through a 5-agent mission pipeline (orchestrator + planner / resourcer / editor / qa); **Shape B** is a standalone script when planner/qa stages would be near-empty.  Subagents share no conversation history — they hand off through committed files (`plan.md` / `MANIFEST.md` / `qa-report.md`), so each one's context and cost stay bounded.  Per-role model routing (planner/resourcer = opus, editor/qa = sonnet) plus a cost firewall keep Anthropic tokens to orchestration only — mission execution runs entirely on local tools, so runtime API tokens stay at **zero**.  `.claude/agents/` holds **23** definitions (6 core + 12 game roster + 5 content-pipeline teams).  Full data-flow map + the game-prototype build chain: [`docs/architecture.md`](docs/architecture.md).
 
 ## Autonomy signal — measured, not claimed
 

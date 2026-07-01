@@ -503,7 +503,7 @@
       "sha": "8a539cb",
       "date": "2026-06-14",
       "class": "agent",
-      "subject": "docs(pawnsim): rimworld 위키 RAG 노트 + 갭 분석 + 자율세션 결정로그"
+      "subject": "docs(pawnsim): reference-sim 위키 RAG 노트 + 갭 분석 + 자율세션 결정로그"
     },
     {
       "sha": "27b072f",
@@ -683,7 +683,7 @@
       "sha": "5033170",
       "date": "2026-06-13",
       "class": "agent",
-      "subject": "docs(pawnsim): 림월드 갭 백로그 처리 원장 — TOP-12 중 9건 출하 반영"
+      "subject": "docs(pawnsim): 레퍼런스 콜로니심 갭 백로그 처리 원장 — TOP-12 중 9건 출하 반영"
     },
     {
       "sha": "c1b2c03",
@@ -863,7 +863,7 @@
       "sha": "e5c8800",
       "date": "2026-06-12",
       "class": "agent",
-      "subject": "feat(sim): 침대 여유 연동 합류 — 인구 압박 스토리텔러 + 부족 경고 (채점 관찰 #10)"
+      "subject": "feat(sim): 침대 여유 연동 합류 — 인구 압박 디렉터 모드 + 부족 경고 (채점 관찰 #10)"
     },
     {
       "sha": "b2c363b",
@@ -923,7 +923,7 @@
       "sha": "81e227a",
       "date": "2026-06-12",
       "class": "agent",
-      "subject": "chore(repo): 클론 대비 정리 — 미커밋 검증 증거·자산 일괄 커밋 + suika 머신로컬 폴더 ignore"
+      "subject": "chore(repo): 클론 대비 정리 — 미커밋 검증 증거·자산 일괄 커밋 + framework prototype 머신로컬 폴더 ignore"
     },
     {
       "sha": "472c39d",
@@ -941,7 +941,7 @@
       "sha": "b950365",
       "date": "2026-06-12",
       "class": "agent",
-      "subject": "feat(sim): 림월드 갭 라운드 1 — 습격 무작위화 + 수동 명령 절대화 + 멘붕 확률화"
+      "subject": "feat(sim): 레퍼런스 콜로니심 갭 라운드 1 — 습격 무작위화 + 수동 명령 절대화 + 멘붕 확률화"
     },
     {
       "sha": "a60d1e4",
@@ -965,7 +965,7 @@
       "sha": "487d0c7",
       "date": "2026-06-12",
       "class": "agent",
-      "subject": "docs: 림월드 갭 백로그 — '뭔가 다르다' 5축 평결 + TOP-12 + 퀵픽 10 (확정 33건)"
+      "subject": "docs: 레퍼런스 콜로니심 갭 백로그 — '뭔가 다르다' 5축 평결 + TOP-12 + 퀵픽 10 (확정 33건)"
     },
     {
       "sha": "f4decec",
@@ -1421,7 +1421,7 @@
       "sha": "c5828c5",
       "date": "2026-06-11",
       "class": "agent",
-      "subject": "feat: QA플레이 F3 — 침대 없는 밤은 림월드처럼 바닥 취침 (스트릭 게이트)"
+      "subject": "feat: QA플레이 F3 — 침대 없는 밤은 레퍼런스 콜로니심처럼 바닥 취침 (스트릭 게이트)"
     },
     {
       "sha": "bc43bd3",
@@ -1517,7 +1517,7 @@
       "sha": "341a476",
       "date": "2026-06-11",
       "class": "agent",
-      "subject": "feat: TOP-6 — 선택 마커 1종 통일: 림월드식 4코너 브래킷"
+      "subject": "feat: TOP-6 — 선택 마커 1종 통일: 콜로니심식 4코너 브래킷"
     },
     {
       "sha": "70e80e9",
@@ -1529,7 +1529,7 @@
       "sha": "9d1374b",
       "date": "2026-06-11",
       "class": "agent",
-      "subject": "feat: 카메라 림월드 파리티 + 아이템 스케일 — 운영자 2026-06-11 3건"
+      "subject": "feat: 카메라 레퍼런스 콜로니심 파리티 + 아이템 스케일 — 운영자 2026-06-11 3건"
     },
     {
       "sha": "0d197a0",
@@ -1619,7 +1619,7 @@
       "sha": "36d5928",
       "date": "2026-06-11",
       "class": "agent",
-      "subject": "feat: 건축 UI 림월드 파리티 재구축 — 좌하단 카테고리 패널 + 아이콘 셸프"
+      "subject": "feat: 건축 UI 레퍼런스 콜로니심 파리티 재구축 — 좌하단 카테고리 패널 + 아이콘 셸프"
     },
     {
       "sha": "5c27e6e",
@@ -1973,7 +1973,7 @@
       "sha": "1d376b3",
       "date": "2026-06-04",
       "class": "agent",
-      "subject": "feat: 자원모델 단일화 Stage2a — build haul-required (순수 RimWorld)"
+      "subject": "feat: 자원모델 단일화 Stage2a — build haul-required (순수 the reference sim)"
     },
     {
       "sha": "4062a0a",
@@ -2015,7 +2015,7 @@
       "sha": "d47b688",
       "date": "2026-06-03",
       "class": "agent",
-      "subject": "fix: 콜로니스트 트레잇 결정성 — 전원 동일 트레잇 버그 (다 림월드식, 변종성 복원)"
+      "subject": "fix: 콜로니스트 트레잇 결정성 — 전원 동일 트레잇 버그 (다 콜로니심식, 변종성 복원)"
     },
     {
       "sha": "c4c72c7",
@@ -2063,7 +2063,7 @@
       "sha": "2aa378a",
       "date": "2026-06-03",
       "class": "agent",
-      "subject": "docs(roadmap): 4h+ 자율 세션 Done 기록 (RimWorld 정합 + CRITICAL 회귀 자가수정 + LongPlay 검증)"
+      "subject": "docs(roadmap): 4h+ 자율 세션 Done 기록 (장르 정합 + CRITICAL 회귀 자가수정 + LongPlay 검증)"
     },
     {
       "sha": "15daa1c",
@@ -2093,43 +2093,43 @@
       "sha": "e8657b2",
       "date": "2026-06-03",
       "class": "agent",
-      "subject": "feat: 작업 종류 RimWorld식 분리 — 건축/채광/운반/의료 별도 work type (#1, 다 림월드식)"
+      "subject": "feat: 작업 종류 콜로니심식 분리 — 건축/채광/운반/의료 별도 work type (#1, 다 콜로니심식)"
     },
     {
       "sha": "e5d8435",
       "date": "2026-06-03",
       "class": "agent",
-      "subject": "feat: 콜로니스트 hover 시 현재 작업 표시 (RimWorld 정합, #15 audit)"
+      "subject": "feat: 콜로니스트 hover 시 현재 작업 표시 (장르 정합, #15 audit)"
     },
     {
       "sha": "e7b86d9",
       "date": "2026-06-03",
       "class": "agent",
-      "subject": "balance: 기본 근접 데미지 1→5 — 전투 지루함 해소 (#8, 다 림월드식)"
+      "subject": "balance: 기본 근접 데미지 1→5 — 전투 지루함 해소 (#8, 다 콜로니심식)"
     },
     {
       "sha": "0a3dbed",
       "date": "2026-06-03",
       "class": "agent",
-      "subject": "docs(autonomous): 2026-06-03 4h+ 자율 세션 기록 (운영자 '묻지말고 일해', RimWorld 정합)"
+      "subject": "docs(autonomous): 2026-06-03 4h+ 자율 세션 기록 (운영자 '묻지말고 일해', 장르 정합)"
     },
     {
       "sha": "d351614",
       "date": "2026-06-03",
       "class": "agent",
-      "subject": "balance: 팔=다리 HP 통일 (18→20) — RimWorld 팔=다리 동일 비율 정합 (#7 audit)"
+      "subject": "balance: 팔=다리 HP 통일 (18→20) — the reference sim 팔=다리 동일 비율 정합 (#7 audit)"
     },
     {
       "sha": "873a0a7",
       "date": "2026-06-03",
       "class": "agent",
-      "subject": "docs: 식사50→물리 식량 fix 기록 + roadmap Done (림 RimWorld 정합 대개편)"
+      "subject": "docs: 식사50→물리 식량 fix 기록 + roadmap Done (림 장르 정합 대개편)"
     },
     {
       "sha": "fee2325",
       "date": "2026-06-03",
       "class": "agent",
-      "subject": "feat: 시작 식량 RimWorld식 물리 드롭 (추상 식사50 카운터 폐기) — 운영자 '다 림월드식으로'"
+      "subject": "feat: 시작 식량 콜로니심식 물리 드롭 (추상 식사50 카운터 폐기) — 운영자 '다 콜로니심식으로'"
     },
     {
       "sha": "38a51a9",
@@ -2291,7 +2291,7 @@
       "sha": "44048fe",
       "date": "2026-06-03",
       "class": "user",
-      "subject": "fix(#60 RimWorld식): 건축 고스트 affordability 에 바닥 자재 합산 — 시작부터 건축 가능 신호"
+      "subject": "fix(#60 콜로니심식): 건축 고스트 affordability 에 바닥 자재 합산 — 시작부터 건축 가능 신호"
     },
     {
       "sha": "c1e0b53",
@@ -2447,7 +2447,7 @@
       "sha": "4af6ae4",
       "date": "2026-06-03",
       "class": "user",
-      "subject": "P2 #41 — 자원 표시 좌상단 세로 목록 (RimWorld ResourceReadout 정합), 실측 검증"
+      "subject": "P2 #41 — 자원 표시 좌상단 세로 목록 (the reference sim ResourceReadout 정합), 실측 검증"
     },
     {
       "sha": "48dd6a7",
@@ -2597,7 +2597,7 @@
       "sha": "27e12d2",
       "date": "2026-06-02",
       "class": "user",
-      "subject": "저작권 2차 스크럽 — RimWorld 고유명사/전문용어 제거 (운영자 '더할건 없어?')"
+      "subject": "저작권 2차 스크럽 — the reference sim 고유명사/전문용어 제거 (운영자 '더할건 없어?')"
     },
     {
       "sha": "2cfee41",
@@ -2837,13 +2837,13 @@
       "sha": "061af94",
       "date": "2026-06-01",
       "class": "agent",
-      "subject": "#241 건축 메뉴 완성도 — 자재 부족 항목 dim 표시 (RimWorld식) + QA용 -open-architect 플래그"
+      "subject": "#241 건축 메뉴 완성도 — 자재 부족 항목 dim 표시 (콜로니심식) + QA용 -open-architect 플래그"
     },
     {
       "sha": "b7a296b",
       "date": "2026-06-01",
       "class": "agent",
-      "subject": "#240 콜로니스트 바 초상화 추가 — pawn body sprite (RimWorld 시그니처)"
+      "subject": "#240 콜로니스트 바 초상화 추가 — pawn body sprite (the reference sim 시그니처)"
     },
     {
       "sha": "c1e4317",
@@ -2855,7 +2855,7 @@
       "sha": "0bd8d22",
       "date": "2026-06-01",
       "class": "agent",
-      "subject": "#239 RimWorld식 우하단 날짜/계절/시간 클러스터 (ClockUI 재배치)"
+      "subject": "#239 콜로니심식 우하단 날짜/계절/시간 클러스터 (ClockUI 재배치)"
     },
     {
       "sha": "e77e94f",
@@ -2867,7 +2867,7 @@
       "sha": "e188ea9",
       "date": "2026-06-01",
       "class": "agent",
-      "subject": "#238 RimWorld 콜로니스트 바(상단 HUD) + #235 경계 테스트 ±44 수정"
+      "subject": "#238 the reference sim 콜로니스트 바(상단 HUD) + #235 경계 테스트 ±44 수정"
     },
     {
       "sha": "f80d3ff",
@@ -2879,13 +2879,13 @@
       "sha": "ca10da0",
       "date": "2026-05-31",
       "class": "agent",
-      "subject": "#234 시간 RimWorld 정합 — 1x = 하루 16.7분(위키) + 니즈 비례 (운영자 '위키 찾아봐')"
+      "subject": "#234 시간 장르 정합 — 1x = 하루 16.7분(위키) + 니즈 비례 (운영자 '위키 찾아봐')"
     },
     {
       "sha": "c2df41e",
       "date": "2026-05-31",
       "class": "agent",
-      "subject": "#233 우클릭 벌목/채광 지정을 선택-게이트 밖으로 (RimWorld: 지정은 림 선택 불요)"
+      "subject": "#233 우클릭 벌목/채광 지정을 선택-게이트 밖으로 (the reference sim: 지정은 림 선택 불요)"
     },
     {
       "sha": "03f8956",
@@ -2897,19 +2897,19 @@
       "sha": "891c51e",
       "date": "2026-05-31",
       "class": "agent",
-      "subject": "#231 STEP2b: RimWorld 벌목 drag 지정 도구 (운영자 '우클릭 벌목 안됨')"
+      "subject": "#231 STEP2b: the reference sim 벌목 drag 지정 도구 (운영자 '우클릭 벌목 안됨')"
     },
     {
       "sha": "09ee537",
       "date": "2026-05-31",
       "class": "agent",
-      "subject": "#230 STEP2: 벌목/채광 지정제 — 자동 채집 제거 (RimWorld 경제)"
+      "subject": "#230 STEP2: 벌목/채광 지정제 — 자동 채집 제거 (the reference sim 경제)"
     },
     {
       "sha": "323f5aa",
       "date": "2026-05-31",
       "class": "agent",
-      "subject": "#229 STEP1: RimWorld Crashlanded 맨땅 시작 (운영자 '림월드처럼')"
+      "subject": "#229 STEP1: the reference sim scratch-start 맨땅 시작 (운영자 '레퍼런스 콜로니심처럼')"
     },
     {
       "sha": "d454c6c",
@@ -3137,7 +3137,7 @@
       "sha": "a9c4405",
       "date": "2026-05-31",
       "class": "user",
-      "subject": "fix(ui): RimWorld식 Architect 메뉴 구조 + 클릭 작동 + 정보창 선택-구동 (운영자 fb)"
+      "subject": "fix(ui): 콜로니심식 Architect 메뉴 구조 + 클릭 작동 + 정보창 선택-구동 (운영자 fb)"
     },
     {
       "sha": "1a35ae3",
@@ -3245,7 +3245,7 @@
       "sha": "444ed36",
       "date": "2026-05-30",
       "class": "agent",
-      "subject": "docs(wiki): RimWorld 비교 v2 재대조 — 마지막 non-gated 층 14항목 (라운드3 구동)"
+      "subject": "docs(wiki): the reference sim 비교 v2 재대조 — 마지막 non-gated 층 14항목 (라운드3 구동)"
     },
     {
       "sha": "2263243",
@@ -3413,7 +3413,7 @@
       "sha": "6d2b1e8",
       "date": "2026-05-30",
       "class": "agent",
-      "subject": "docs(wiki): RimWorld 위키 전면 비교분석 + M1~M6 백로그 (확대 체인 구동용)"
+      "subject": "docs(wiki): the reference sim 위키 전면 비교분석 + M1~M6 백로그 (확대 체인 구동용)"
     },
     {
       "sha": "333c515",
@@ -3545,31 +3545,31 @@
       "sha": "ad6326f",
       "date": "2026-05-29",
       "class": "agent",
-      "subject": "#200 RimWorld 값 정합 - 밸런스 튜닝 5건 (위키 충실도 감사 Top-5)"
+      "subject": "#200 the reference sim 값 정합 - 밸런스 튜닝 5건 (위키 충실도 감사 Top-5)"
     },
     {
       "sha": "7271079",
       "date": "2026-05-29",
       "class": "agent",
-      "subject": "#199-C 인접 작업칸 + 예약 시스템 + 건축 배치 검증 (RimWorld 그리드 정합 완성)"
+      "subject": "#199-C 인접 작업칸 + 예약 시스템 + 건축 배치 검증 (the reference sim 그리드 정합 완성)"
     },
     {
       "sha": "c8aa5ca",
       "date": "2026-05-29",
       "class": "agent",
-      "subject": "#199-B3 벽 경로 차단 + 문 통과 + 라이브 그리드 재계산 (RimWorld 정합)"
+      "subject": "#199-B3 벽 경로 차단 + 문 통과 + 라이브 그리드 재계산 (장르 정합)"
     },
     {
       "sha": "3b2c373",
       "date": "2026-05-29",
       "class": "agent",
-      "subject": "#199-B core (B0-B2) 라이브 A* 그리드 경로탐색 컷오버 (RimWorld 방식)"
+      "subject": "#199-B core (B0-B2) 라이브 A* 그리드 경로탐색 컷오버 (the reference sim 방식)"
     },
     {
       "sha": "61dd2e7",
       "date": "2026-05-29",
       "class": "user",
-      "subject": "#199-A 림 1x1 정합 + 카메라 줌인 + 플로팅 UI 재배치 (RimWorld 그리드 정합 Phase A)"
+      "subject": "#199-A 림 1x1 정합 + 카메라 줌인 + 플로팅 UI 재배치 (the reference sim 그리드 정합 Phase A)"
     },
     {
       "sha": "39a06bf",
@@ -3605,7 +3605,7 @@
       "sha": "1bd2736",
       "date": "2026-05-28",
       "class": "user",
-      "subject": "#193 침대 1x2 multi-cell + sprite 16x32 (운영자 fb + RimWorld wiki)"
+      "subject": "#193 침대 1x2 multi-cell + sprite 16x32 (운영자 fb + the reference sim wiki)"
     },
     {
       "sha": "f8ef7b8",
@@ -4019,7 +4019,7 @@
       "sha": "674ad40",
       "date": "2026-05-27",
       "class": "agent",
-      "subject": "#118 RimWorld 청사진 + pawn 건설 시스템"
+      "subject": "#118 the reference sim 청사진 + pawn 건설 시스템"
     },
     {
       "sha": "39df377",
@@ -4037,19 +4037,19 @@
       "sha": "0d581ee",
       "date": "2026-05-27",
       "class": "user",
-      "subject": "#114 RimWorld Work tab priority system (F1)"
+      "subject": "#114 the reference sim Work tab priority system (F1)"
     },
     {
       "sha": "1185362",
       "date": "2026-05-27",
       "class": "agent",
-      "subject": "feat(#110): 림월드 Architect 좌측 메뉴 + GuiControlBar 11→7 버튼"
+      "subject": "feat(#110): 레퍼런스 콜로니심 Architect 좌측 메뉴 + GuiControlBar 11→7 버튼"
     },
     {
       "sha": "83bd15e",
       "date": "2026-05-27",
       "class": "user",
-      "subject": "feat(#113): 림월드 우클릭 prioritize 컨텍스트 메뉴 (undrafted 만)"
+      "subject": "feat(#113): 레퍼런스 콜로니심 우클릭 prioritize 컨텍스트 메뉴 (undrafted 만)"
     },
     {
       "sha": "4909faf",
@@ -4079,7 +4079,7 @@
       "sha": "289abbf",
       "date": "2026-05-27",
       "class": "agent",
-      "subject": "feat(map): #108 40x40 → 60x60 (림월드 small-medium 비례) + 자원/생물 비례 증가"
+      "subject": "feat(map): #108 40x40 → 60x60 (레퍼런스 콜로니심 small-medium 비례) + 자원/생물 비례 증가"
     },
     {
       "sha": "2cb0f26",
@@ -4091,7 +4091,7 @@
       "sha": "d89e06c",
       "date": "2026-05-27",
       "class": "user",
-      "subject": "feat(bed): 침대 (#107) - 림월드 스타일 수면 회복 1.6x + mood +5/s"
+      "subject": "feat(bed): 침대 (#107) - 레퍼런스 콜로니심 스타일 수면 회복 1.6x + mood +5/s"
     },
     {
       "sha": "2cd3bc9",
@@ -4499,7 +4499,7 @@
       "sha": "88f33f7",
       "date": "2026-05-27",
       "class": "user",
-      "subject": "feat(Stretch): Trader caravan event + 실제 entity + 거래 (RimWorld 핵심 갭)"
+      "subject": "feat(Stretch): Trader caravan event + 실제 entity + 거래 (the reference sim 핵심 갭)"
     },
     {
       "sha": "0e67c84",
@@ -4661,7 +4661,7 @@
       "sha": "05031d7",
       "date": "2026-05-27",
       "class": "agent",
-      "subject": "feat(skill-3 day-73): Storyteller arcs (3 종류) + threat tier 0-3 + 15 이벤트"
+      "subject": "feat(skill-3 day-73): DirectorMode arcs (3 종류) + threat tier 0-3 + 15 이벤트"
     },
     {
       "sha": "9dd7dcb",
@@ -4673,7 +4673,7 @@
       "sha": "a479c2a",
       "date": "2026-05-27",
       "class": "user",
-      "subject": "feat(skill-3 day-57): 시작 정착지 미리 배치 + 농장 + stockpile 마커 (RimWorld 시작 느낌)"
+      "subject": "feat(skill-3 day-57): 시작 정착지 미리 배치 + 농장 + stockpile 마커 (the reference sim 시작 느낌)"
     },
     {
       "sha": "fac56ce",
@@ -4817,7 +4817,7 @@
       "sha": "5153b75",
       "date": "2026-05-27",
       "class": "agent",
-      "subject": "docs(daily): RimWorld vanilla expansion Day 14-26 — 13 day cumulative"
+      "subject": "docs(daily): vanilla colony-sim expansion Day 14-26 — 13 day cumulative"
     },
     {
       "sha": "d6d8c37",
@@ -4913,7 +4913,7 @@
       "sha": "7ca5a35",
       "date": "2026-05-27",
       "class": "user",
-      "subject": "feat(skill-3 day-14): RimWorld UI polish — first pass"
+      "subject": "feat(skill-3 day-14): the reference sim UI polish — first pass"
     },
     {
       "sha": "2b44b47",
@@ -4931,13 +4931,13 @@
       "sha": "d1172da",
       "date": "2026-05-27",
       "class": "user",
-      "subject": "feat(skill-3): 2048-lite Day 1 — 4th framework prototype (3.8 min)"
+      "subject": "feat(skill-3): 4th framework prototype Day 1 (3.8 min)"
     },
     {
       "sha": "b7ae84a",
       "date": "2026-05-27",
       "class": "user",
-      "subject": "feat(skill-3): Vampire Survivors lite Day 1 — 3rd framework prototype (4.6 min)"
+      "subject": "feat(skill-3): 3rd framework prototype Day 1 (4.6 min)"
     },
     {
       "sha": "901f4a6",
@@ -4973,19 +4973,19 @@
       "sha": "41f92f4",
       "date": "2026-05-27",
       "class": "agent",
-      "subject": "feat(skill-3 day-10): pawns sleep at night (RimWorld polish)"
+      "subject": "feat(skill-3 day-10): pawns sleep at night (the reference sim polish)"
     },
     {
       "sha": "7cb5d66",
       "date": "2026-05-27",
       "class": "user",
-      "subject": "feat(skill-3 day-9): day/night cycle + game clock — RimWorld polish"
+      "subject": "feat(skill-3 day-9): day/night cycle + game clock — the reference sim polish"
     },
     {
       "sha": "e11129c",
       "date": "2026-05-27",
       "class": "user",
-      "subject": "feat(skill-3 day-8): camera + time controls (RimWorld polish)"
+      "subject": "feat(skill-3 day-8): camera + time controls (the reference sim polish)"
     },
     {
       "sha": "32ec30f",
@@ -5009,7 +5009,7 @@
       "sha": "5469c9b",
       "date": "2026-05-27",
       "class": "agent",
-      "subject": "feat(skill-3): finish Phase 1.5 primitives — movement / wave-spawner / audio-bank"
+      "subject": "feat(skill-3): finish Phase 1.5 primitives — movement / spawner / audio-bank"
     },
     {
       "sha": "accc3d5",
@@ -5051,19 +5051,19 @@
       "sha": "1db7c5b",
       "date": "2026-05-26",
       "class": "agent",
-      "subject": "docs(daily): 2026-05-26 — Suika lite framework-validation summary"
+      "subject": "docs(daily): 2026-05-26 — framework prototype validation summary"
     },
     {
       "sha": "57be865",
       "date": "2026-05-26",
       "class": "agent",
-      "subject": "feat(skill-3): Suika lite Day 2 — preview UI + cursor + SFX + 4 merge bugs fixed"
+      "subject": "feat(skill-3): framework prototype Day 2 — preview UI + cursor + SFX + 4 bugs fixed"
     },
     {
       "sha": "2d3b68e",
       "date": "2026-05-26",
       "class": "user",
-      "subject": "feat(skill-3): Suika lite Day 1 — multi-agent framework empirical validation"
+      "subject": "feat(skill-3): framework prototype Day 1 — multi-agent framework empirical validation"
     },
     {
       "sha": "b73d8de",

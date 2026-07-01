@@ -1,6 +1,6 @@
 # wiki-ref: Recreation / Joy need (canonical facts)
 
-출처: https://rimworldwiki.com/wiki/Recreation , /wiki/Recreation_Fall_Rate ,
+출처: 콜로니심 장르 위키 , /wiki/Recreation_Fall_Rate ,
        /wiki/Recreation_Power , /wiki/Needs
 (직접 fetch 403 → WebSearch 스니펫 추출, 2026-06-14)
 

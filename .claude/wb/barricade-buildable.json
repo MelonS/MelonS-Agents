@@ -2,7 +2,7 @@
   "role": "game-programmer",
   "wave": "W-M6-03",
   "subtask": "B4",
-  "item": "Barricade/sandbag buildable (wiki rimworld-comparison-v2.md row B4)",
+  "item": "Barricade/sandbag buildable (wiki reference-sim-comparison-v2.md row B4)",
   "status": "Done",
   "milestone": "M4-building",
   "lane": "the SINGLE BuildManager.cs build-catalogue lane this wave",

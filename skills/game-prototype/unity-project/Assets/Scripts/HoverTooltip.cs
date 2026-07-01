@@ -179,7 +179,7 @@ namespace MelonS.GameProto
             if (pawn != null)
             {
                 string draftSuffix = pawn.IsDrafted ? " [징집됨]" : "";
-                // #rimworld-fidelity — RimWorld 는 콜로니스트 hover 시 현재 작업을 보여준다.
+                // #콜로니심-fidelity — the reference sim 는 콜로니스트 hover 시 현재 작업을 보여준다.
                 //  PawnNameLabel.CurrentActivity(머리위 라벨과 동일 정보)를 덧붙인다.
                 var nl = pawn.GetComponent<PawnNameLabel>();
                 string act = (nl != null && !string.IsNullOrEmpty(nl.CurrentActivity))

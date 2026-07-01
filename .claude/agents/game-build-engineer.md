@@ -35,7 +35,7 @@ You can:
 - Choose SceneSetup pre-spawn composition (which entities exist at
   scene-load).
 - Decide whether prototype is menu-first or game-direct (single-
-  scene games like Suika get game-direct).
+  scene games get game-direct).
 - Define MELONS_BUILD_DAY tagging convention.
 
 You cannot:
@@ -55,7 +55,7 @@ a known bug:
 4. **Audio buzz** — Sound Designer handles throttle; you wire it.
 5. **GetInstanceID race** — Programmer handles; you don't introduce
    collision-handler shortcuts that bypass templates.
-6. **OnCollisionEnter-only** — same; physics-merger covers it.
+6. **OnCollisionEnter-only** — same; hook Stay too, not just Enter.
 7. **Singleton race** — Programmer handles; you don't add UI sub
    wiring in scene-time SerializedObject.
 8. **justSpawned default-true** — when pre-spawning entities, call

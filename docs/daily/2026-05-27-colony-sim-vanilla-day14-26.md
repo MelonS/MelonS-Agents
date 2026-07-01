@@ -1,7 +1,7 @@
-# 2026-05-27 — RimWorld vanilla expansion (Day 14-26)
+# 2026-05-27 — vanilla colony-sim expansion (Day 14-26)
 
 Operator directive 2026-05-27 ~02:30 KST: "24시간 자율작업, 절대
-멈추지마".  바닐라 림월드 흉내 + 한글화 + 저작권 안전.
+멈추지마".  바닐라 레퍼런스 콜로니심 흉내 + 한글화 + 저작권 안전.
 
 ## 13 day work-shipped
 
@@ -26,7 +26,7 @@ Operator directive 2026-05-27 ~02:30 KST: "24시간 자율작업, 절대
 | Directive | Status |
 |---|---|
 | 폴리싱 계속 멈추지 마 | ✅ 13 day 연속 push, 멈춤 X |
-| 바닐라 림월드 흉내 (DLC X) | ✅ build/skills/mood-break/weather/animals/hunting/cooking — vanilla 핵심 7개 |
+| 바닐라 레퍼런스 콜로니심 흉내 (DLC X) | ✅ build/skills/mood-break/weather/animals/hunting/cooking — vanilla 핵심 7개 |
 | 저작권 주의 | ✅ generic mechanic만, 자체 작성 한글, procedural assets, 게임명 "PawnSim" |
 | 한글화 | ✅ 전체 UI + 8 AIDirector 이벤트 한글, Malgun Gothic 폰트, BOM 인코딩 |
 
@@ -34,7 +34,7 @@ Operator directive 2026-05-27 ~02:30 KST: "24시간 자율작업, 절대
 
 | # | Feature | Status |
 |---|---|---|
-| 1 | AI Storyteller | 🟡 (8 events + raid) |
+| 1 | AI DirectorMode | 🟡 (8 events + raid) |
 | 2 | Needs (Food/Sleep/Mood + breaks) | ✅ |
 | 3 | Mood breaks | ✅ |
 | 4 | Skills (4종) | ✅ |

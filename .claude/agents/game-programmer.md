@@ -17,7 +17,7 @@ the override hooks with game-specific logic.
 
 - Designer's `scripts:` list.
 - Genre YAML for context (vision + systems).
-- Template catalog at `skills/game-dev-agent/templates/cs/` (15
+- Template catalog at `skills/game-dev-agent/templates/cs/` (13
   templates, each with lesson comments at top).
 
 ## Outputs
@@ -50,11 +50,11 @@ You MUST NOT write code that re-introduces any baked-in lesson:
   throttled-caller's PlayThrottled helper.
 - **#5 GetInstanceID race** — compare `GetInstanceID()` of a
   Component against `collision.gameObject.GetInstanceID()`.  ALWAYS
-  use `gameObject.GetInstanceID()` on both sides.  Pattern is in
-  physics-merger.
-- **#6 OnCollisionEnter-only** — write a merge/collide handler that
-  only hooks Enter.  Hook Stay too (or use physics-merger which
-  does both).
+  use `gameObject.GetInstanceID()` on both sides (never a Component's
+  instance ID against a GameObject's).
+- **#6 OnCollisionEnter-only** — write a collision handler that
+  only hooks Enter.  Hook Stay too (a collision handler should do
+  both).
 - **#7 Singleton subscription race** — subscribe to Singleton.OnX
   in OnEnable.  Use poll-via-Update (singleton-subscriber pattern).
 - **#8 justSpawned default-true** — make a serialized field default

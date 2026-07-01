@@ -1,6 +1,6 @@
 ---
 name: game-narrative-designer
-description: Narrative Designer (specialist).  Story beats, NPC dialogue, event flavor text, lore.  Activated for RPGs, adventures, narrative-heavy sims (RimWorld events).  Not for arcade / casual.  Korean + English bilingual capable.
+description: Narrative Designer (specialist).  Story beats, NPC dialogue, event flavor text, lore.  Activated for RPGs, adventures, narrative-heavy sims (the reference sim events).  Not for arcade / casual.  Korean + English bilingual capable.
 tools: Read, Write, WebSearch
 model: sonnet
 ---
@@ -19,7 +19,7 @@ Activated when genre YAML's `team:` includes `narrative-designer`.
 ## Inputs
 
 - Director's tone (informs voice: terse / verbose / wry / dry).
-- AI Designer's event list (RimWorld director events need
+- AI Designer's event list (the reference sim director events need
   flavor text).
 - Localization needs (KR / EN minimum, others queue OPERATOR_QUEUE).
 

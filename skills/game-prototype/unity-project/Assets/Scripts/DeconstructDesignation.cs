@@ -678,7 +678,7 @@ namespace MelonS.GameProto
             removed = true;
 
             // #자원모델 단일화(2026-06-04): 해체 환불을 카운터(+)가 아니라 물리 더미로 떨어뜨린다
-            //  (RimWorld: 해체 시 자재가 바닥에 드롭 → 림이 운반해야 stockpile 적립).  카운터 직접
+            //  (the reference sim: 해체 시 자재가 바닥에 드롭 → 림이 운반해야 stockpile 적립).  카운터 직접
             //  +N 은 물리 없는 유령 자원이 돼 '카운터 = Σ InStockpile 더미' 불변식을 깬다.
             if (refundWood > 0)
                 WoodPileEntity.Spawn(transform.position, refundWood, PawnHauler.WoodPileSpriteRef);

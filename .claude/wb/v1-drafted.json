@@ -6,7 +6,7 @@
   "milestone": "M5-gameplay-verify",
   "task": "V1 drafted-tint continuous-gate verify test",
   "status": "Done",
-  "acceptance_criterion": "rimworld-comparison.md Dim 5 'V1-V9 verification slate' (V1 = drafted tint) + 'Defend' loop row #114: a gated test asserts drafting a pawn sets drafted state + drafted tint, and undrafting clears it, as ONE PASS line.",
+  "acceptance_criterion": "reference-sim-comparison.md Dim 5 'V1-V9 verification slate' (V1 = drafted tint) + 'Defend' loop row #114: a gated test asserts drafting a pawn sets drafted state + drafted tint, and undrafting clears it, as ONE PASS line.",
   "outputs": [
     "skills/game-prototype/unity-project/Assets/Scripts/Tests/V1DraftedTintTest.cs"
   ],

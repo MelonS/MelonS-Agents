@@ -1,4 +1,4 @@
-# Genre template — RimWorld-style colony simulation (lite).
+# Genre template — colony-sim-style colony simulation (lite).
 #
 # Loaded by skills/game-dev-agent/scripts/modules/planner.py.
 # Adding a new genre = adding a new file in this dir.  NO planner code change.
@@ -20,11 +20,11 @@
 #   audio            : SFX + BGM slugs
 #   days_estimate    : rough day count to a playable Day-1 build
 
-name: rimworld-lite
+name: colony-sim-lite
 description: "Top-down colony simulation.  Pawns auto-chop trees, manage 3 needs, random events fire periodically."
 
 match_keywords:
-  - rimworld
+  - reference-sim
   - colony
   - pawn
   - colonist

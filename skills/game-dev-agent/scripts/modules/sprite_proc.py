@@ -10,7 +10,7 @@ Shapes supported (Day-1):
   circle    : colored disc with outline + soft top-left highlight
   square    : flat color tile (used for walls, floors)
   outline   : tiny pixel-art "character" (head circle + body triangle)
-  line      : thin horizontal warning bar (e.g. drop-line in Suika)
+  line      : thin horizontal warning bar (e.g. a threshold or boundary marker)
 
 Outputs PNG with proper alpha.  Antialiased via 4x supersample +
 LANCZOS downsample.  Pixel-art games can pass --no-aa for crisp edges.

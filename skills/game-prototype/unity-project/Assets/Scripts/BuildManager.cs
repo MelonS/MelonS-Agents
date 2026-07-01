@@ -453,7 +453,7 @@ namespace MelonS.GameProto
             }
             int cost = CostFor(CurrentMode);
             bool stoneMode = PaysWithStone(CurrentMode);
-            // #60 RimWorld식: 청사진은 바닥 자원(WoodPile/StoneChunk)을 hauler 가 운반해 짓는다.
+            // #60 콜로니심식: 청사진은 바닥 자원(WoodPile/StoneChunk)을 hauler 가 운반해 짓는다.
             //  따라서 affordability(고스트 색)는 카운터뿐 아니라 *바닥에 깔린 자재*까지 합산해야
             //  실제 건축 가능성을 반영한다.  과거엔 카운터(stockpile)만 봐서, 시작 시 목재 300이
             //  바닥에 있어도 목재:0 → 고스트 빨강 → "못 짓는다" 오해(실제론 배치+운반 건축 가능).
@@ -660,7 +660,7 @@ namespace MelonS.GameProto
             bp.Init(CurrentMode, prefab, ghostSpr, needWood, needStone, secs);
             bp.SetSize(size);  // #193 - 청사진 sprite 도 1x2 비율 적용
 
-            // #자원모델 단일화(2026-06-04, 운영자 "haul-required 순수 RimWorld" 선택): 청사진은
+            // #자원모델 단일화(2026-06-04, 운영자 "haul-required 순수 the reference sim" 선택): 청사진은
             //  자재 없이 빈 상태로 놓이고, 림이 물리 목재/석재 더미(벌목·채광·stockpile)를 현장으로
             //  운반(PawnHauler→DepositWood)해야 PawnBuilder 가 건설한다.  이전 #242 의 '카운터 즉시
             //  결제 + funding' 블록을 제거 — 그 블록은 시작 자원이 카운터였던 시절의 임시방편으로,

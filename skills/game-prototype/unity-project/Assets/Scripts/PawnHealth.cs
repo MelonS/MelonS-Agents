@@ -174,7 +174,7 @@ namespace MelonS.GameProto
             // #버그헌트(2026-06-04): 새 상처는 붕대를 뜯는다 — bandaged=false 리셋.  이전엔 의사 치료가
             //  모든 부위를 영구 bandaged=true 로 만들고 어디서도 false 로 안 풀려, 한 번 치료받은 폰은
             //  이후 어떤 상처에도 출혈이 발동 안 하는 영구 출혈면역이었다(Update 의 'if(bandaged) continue').
-            //  RimWorld: 새 상처마다 다시 출혈하고 재치료가 필요하다.
+            //  the reference sim: 새 상처마다 다시 출혈하고 재치료가 필요하다.
             target.bandaged = false;
             // Wound bleed: bigger damage on smaller part = relatively worse bleed
             float baseBleed = dmg * 0.25f;

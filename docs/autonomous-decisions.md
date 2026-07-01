@@ -110,7 +110,7 @@ GameSaveButtons.OnLoad 가 pawn+tree 만 Instantiate 하고 벽/침대/스톡파
 가시화 경고로그만 추가([[verify-the-real-path]] — 거짓 "복원됨"보다 가시화가 정직).
 
 **보류 2 — #5 길들이기 walk-to(feature)**: 현재 동물 우클릭 즉시 TryTame(텔레포트, 거리 무시).
-RimWorld 정합하려면 PawnTamer(또는 hunter 재사용)로 걸어가 인접 시 시도 — feature 라 운영자
+장르 정합하려면 PawnTamer(또는 hunter 재사용)로 걸어가 인접 시 시도 — feature 라 운영자
 방향 확인 후.
 
 ## 2026-06-04 멀티에이전트 버그헌트 1사이클 (운영자 "멀티에이전트 버그헌트 한 사이클" 선택)
@@ -135,7 +135,7 @@ RimWorld 정합하려면 PawnTamer(또는 hunter 재사용)로 걸어가 인접 
 동작은 authoritative).  증상: (1) blueprint용 InStockpile 더미 pickup 시 카운터 미차감 →
 카운터 영구 과대, (2) stockpile 식량 소비 시 물리 더미 미파괴, (3) blueprint 카운터결제+물리운반
 이중 funding, (5) blueprint 취소 시 collected 자재 미환불(카운터 환불은 물리-haul 경우 복제 위험).
-**"다 림월드식"** 방향(RimWorld는 추상 카운터 없이 물리 stack 합이 곧 재고)으로 단일화하는 게
+**"다 콜로니심식"** 방향(the reference sim는 추상 카운터 없이 물리 stack 합이 곧 재고)으로 단일화하는 게
 정공법이나, 이는 feel/scope 설계 변경이라 운영자 판단 후 진행.  piecemeal 수정은 회계를 더
 악화시킬 수 있어 의도적으로 미착수([[verify-the-real-path]] / [[no-sloppy-shortcuts]]).
 
@@ -201,19 +201,18 @@ RimWorld 정합하려면 PawnTamer(또는 hunter 재사용)로 걸어가 인접 
 회귀 게이트 통과 후 독립 커밋.
 
 ## 2026-06-03 — 4h+ 자율 세션 (운영자 명시: "묻지 말고 그냥 일해")
-운영자가 4시간+ 부재하며 "묻지 말고 자율로 일하라" + "다 림월드식으로" 지시.  이번 세션은
-이전 보수 원칙보다 적극적: **RimWorld 정합으로 스스로 판단해 진행**(주관적 분기도 RimWorld
-바닐라를 정답으로 채택, 묻지 않음).  단 가드는 유지 — 매 변경 **컴파일 클린 + isolated 76/76
+운영자가 4시간+ 부재하며 "묻지 말고 자율로 일하라" + "다 콜로니심식으로" 지시.  이번 세션은
+이전 보수 원칙보다 적극적: **장르 정합으로 스스로 판단해 진행**(주관적 분기도 바닐라 콜로니심를 정답으로 채택, 묻지 않음).  단 가드는 유지 — 매 변경 **컴파일 클린 + isolated 76/76
 + integration 43/43 회귀 게이트** 통과 후에만 독립 커밋, false-fix/거짓검증 금지(verify-real-path),
 파괴적/머니 작업 없음(해당 없음).  대형/feel 변경은 보류 대신 **좌표화해 일관 적용**하고 운영자
 플레이테스트로 검증받도록 남긴다.
 
 오늘 자율 결정(커밋):
-- 림 작업배정 지정-구동 단일화(dc030f5) — 3중 중첩 제거, RimWorld 모델.
+- 림 작업배정 지정-구동 단일화(dc030f5) — 3중 중첩 제거, the reference sim 모델.
 - 시작 식량 물리 드롭(fee2325) — 추상 식사50 카운터 폐기.
 - 통나무 sprite 일관화 + info 탭 정렬(e7d229f).
 - 팔=다리 HP 통일 20(d351614) + 근접 데미지 1→5(전투 지루함 #8) — 소스케일 내부정합 유지.
-- 진행: 남은 운영자 플레이테스트 항목 + 멀티에이전트 감사로 RimWorld 정합/버그 계속.
+- 진행: 남은 운영자 플레이테스트 항목 + 멀티에이전트 감사로 장르 정합/버그 계속.
 
 ### 4h 자율 세션 — 누적 결과 + 보류 항목 (2026-06-03, 운영자 부재 중)
 **완료(전부 컴파일+isolated 76/76+integration 44/44 게이트 통과, LongPlay 생존 검증):**
@@ -225,7 +224,7 @@ ClearAllWorkTasks miner/harvester·save/load 1:1 매칭(데이터손상).  멀�
 
 **보류(운영자 결정/플레이테스트 필요 — blind 수정 위험):**
 1. **트레잇 결정성 버그(고가치)**: 모든 pawn 이 gameObject.name="Pawn(Clone)" 공유 →
-   PawnTraits 가 동일 시드로 굴려 **전원 같은 트레잇**(RimWorld 변종성 결여).  fix 계획:
+   PawnTraits 가 동일 시드로 굴려 **전원 같은 트레잇**(the reference sim 변종성 결여).  fix 계획:
    PawnHealth 에 baseMaxHp 저장 + PawnTraits.Initialize(name) 추가(reset→name 시드 재roll→
    base 에서 HP 재적용) + GameManager/GameSaveButtons 가 이름 설정 후 호출 + V14/V43 테스트
    timing 갱신.  4~5파일·HP 얽힘·feel 변화라 운영자 OK 후 실행 권장.
@@ -233,9 +232,9 @@ ClearAllWorkTasks miner/harvester·save/load 1:1 매칭(데이터손상).  멀�
    부분 얽힘.  포맷 변경이라 scope 확인 필요.
 3. **behavior-medium**: drafted 자동 근접교전, PawnHauler bpDropTarget 예약, 스케줄 하드게이트
    — 동작 변화라 플레이테스트로 feel 확인 필요.
-4. **대형 RimWorld 피처**: 작업종류 추가(청소/소방), 연구 트리 확장(wireable 효과 필요),
+4. **대형 the reference sim 피처**: 작업종류 추가(청소/소방), 연구 트리 확장(wireable 효과 필요),
    forbidden/allowed zone, 길들이기 progression, 조리 품질 variance, 환경 mood — 큰 scope.
-5. **밸런스 절대값 rescale**: 전투 수치를 RimWorld full 스케일로(현재 소스케일 내부정합) —
+5. **밸런스 절대값 rescale**: 전투 수치를 the reference sim full 스케일로(현재 소스케일 내부정합) —
    pawn/적/무기 좌표화 동시 조정 + feel 플레이테스트 필요.
 
 ### 신선-시스템 버그헌트 결과 (2026-06-03 자율, c63de9c)

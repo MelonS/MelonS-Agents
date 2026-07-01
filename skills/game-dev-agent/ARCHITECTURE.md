@@ -28,15 +28,15 @@ scripts/
 
 **Input**: natural-language game spec  
 **Output**: structured task list (JSON or Markdown checklist)  
-**Pattern**: "Build a Vampire Survivors clone" → enumerated subtasks:
-  1. Generate sprites: player, 3 enemy types, projectile
-  2. Code: PlayerMovement, AutoShooter, EnemySpawner, WaveManager
-  3. Scene: tilemap arena, spawn points, UI overlay
-  4. Balance: enemy HP/spawn rate per wave
-  5. Audio: BGM loop, shoot SFX, hit SFX
+**Pattern**: "Build a colony-sim" → enumerated subtasks:
+  1. Generate sprites: pawn, 3 resource types, tile set
+  2. Code: PawnMovement, WorkScheduler, ResourceSpawner, ColonyManager
+  3. Scene: tilemap map, spawn points, UI overlay
+  4. Balance: work speed / resource yield per tick
+  5. Audio: BGM loop, chop SFX, build SFX
 
 Day 1 implementation: stub returning hard-coded template per known
-genre (VS-clone, RimWorld-lite, Suika-clone, etc.).  Future: invoke
+genre (colony-sim, colony-sim-lite, etc.).  Future: invoke
 Claude API to decompose arbitrary specs.
 
 ### resourcer
@@ -101,9 +101,9 @@ detect text-rendering glitches).
 ## End-to-end flow
 
 ```
-operator: "build a Suika Game clone"
+operator: "build a colony-sim"
   │
-  ├─> agent.py plan "build a Suika Game clone"
+  ├─> agent.py plan "build a colony-sim"
   │     └─> planner.py → task list (5 systems, 8 sprites, 3 audio)
   │
   ├─> agent.py resource --from-plan plan.json
@@ -143,10 +143,9 @@ Tonight's autonomous build:
 - ✓ `asset_fetch` (Kenney downloader, this commit)
 - ✓ `integrator` (Unity batchmode wrapper, this commit)
 - ✓ `qa` (build + screenshot + read PNG, this commit)
-- ◇ `planner` (stub returning hard-coded RimWorld-lite plan for now)
+- ◇ `planner` (stub returning hard-coded colony-sim-lite plan for now)
 - ◇ `coder` (template library for known script types; Claude API
   wrapper gated behind ANTHROPIC_API_KEY env var per [OPQ-002])
 
-After this commit, the next prototype (Day 8+ work — e.g., Suika
-clone) should be measurably faster to scaffold because resourcer +
-integrator + qa are reusable.
+After this commit, the next prototype should be measurably faster to
+scaffold because resourcer + integrator + qa are reusable.

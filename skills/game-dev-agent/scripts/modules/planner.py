@@ -6,7 +6,7 @@ makes the agent capable of building **any** game, not just the 3
 hard-coded ones from earlier iterations.
 
 Schema documented at the top of each YAML file (see
-`genres/rimworld-lite.yaml`).
+`genres/colony-sim-lite.yaml`).
 
 Future [OPQ-002]: when `ANTHROPIC_API_KEY` is set, planner falls back
 to Claude API for arbitrary specs that don't keyword-match any
@@ -119,6 +119,6 @@ def print_plan(p: GenreSpec):
 
 if __name__ == "__main__":
     import sys
-    nl = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else "rimworld lite"
+    nl = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else "colony-sim-lite"
     p = plan(nl)
     print_plan(p)

@@ -454,7 +454,7 @@ namespace MelonS.GameProto.Tests
             int groundWood = 0;
             foreach (var p in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
                 if (p != null) groundWood += p.Wood;
-            // #다림월드식(2026-06-03): 시작 식량도 추상 카운터(meals) 폐기 → 물리 '간편식'
+            // #다콜로니심식(2026-06-03): 시작 식량도 추상 카운터(meals) 폐기 → 물리 '간편식'
             //  MeatPileEntity 더미로 드롭(목재와 동일).  meals/food 카운터는 0(운반 전)이고,
             //  대신 바닥 물리 식량 더미가 존재하는지 검증한다.
             int groundFood = 0;
@@ -462,7 +462,7 @@ namespace MelonS.GameProto.Tests
                 if (m != null) groundFood += m.Food;
             bool hasResources = groundWood >= 100 && groundFood >= 3;
             Assert(hasResources,
-                $"starter(RimWorld식 물리): 바닥목재={groundWood}(>=100), 바닥식량={groundFood}(>=3) [food={rm.food} meals={rm.meals} 카운터는 0 정상]");
+                $"starter(콜로니심식 물리): 바닥목재={groundWood}(>=100), 바닥식량={groundFood}(>=3) [food={rm.food} meals={rm.meals} 카운터는 0 정상]");
         }
 
         /// <summary>I14: HoverTooltip MonoBehaviour 가 씬에 존재 (active 여부 상관 X)</summary>
@@ -2086,7 +2086,7 @@ namespace MelonS.GameProto.Tests
             if (ct == null) { Assert(false, "벌목 지정 실패 (MarkWorld null — 나무 감지 못함)"); yield break; }
             yield return null;
             // #작업배정-단일화(2026-06-03): 지정(드래그 마킹)된 나무는 '자율 ChopTreeAction'
-            //  단일 경로가 idle 림에 배정한다(옛 별도 dispatch 폐기, 우선순위 존중=RimWorld).
+            //  단일 경로가 idle 림에 배정한다(옛 별도 dispatch 폐기, 우선순위 존중=the reference sim).
             //  검증(결정적): 가장 가까운 idle 림의 ChopTreeAction.TryStart 가 '마킹된 그 나무'를
             //  집어 chopper.Target 으로 잡는가.  지정 안 된 나무는 안 집는 것도 함께 보장됨.
             var p0 = pawns[0];

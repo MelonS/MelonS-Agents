@@ -9,7 +9,7 @@
   "inserted_call_line": 211,
   "inserted_call": "AudioBank.Instance?.PlayBuild();",
   "null_guarded": true,
-  "wiki_acceptance_criterion": "rimworld-comparison.md Dim2 backlog row #1 (L154): 'A wall finishing plays a construct sound once (throttled).' Also Dim2 table L56: Construct/build -> add sfxBuild, call from PawnBuilder/BlueprintEntity complete.",
+  "wiki_acceptance_criterion": "reference-sim-comparison.md Dim2 backlog row #1 (L154): 'A wall finishing plays a construct sound once (throttled).' Also Dim2 table L56: Construct/build -> add sfxBuild, call from PawnBuilder/BlueprintEntity complete.",
   "qa_flag": {
     "verify_line": "skills/game-prototype/unity-project/Assets/Scripts/BlueprintEntity.cs L211 inside Complete(): AudioBank.Instance?.PlayBuild();",
     "expected_behavior": "When a blueprint (e.g. wall) finishes (Progress>=1 -> Complete()), the construct sound plays exactly once. PlayBuild() is throttled inside AudioBank, and Complete() runs once per blueprint, so one build = one sound.",
