@@ -4,9 +4,9 @@
 
 **한국어** | [English](./README.md) · [**라이브 사이트 →**](https://melons.github.io/MelonS-Agents/)
 
-### 런타임 비용 0으로 실제 결과물을 출하하고 — 게임을 직접 만든 뒤 플레이해서 자기 작업을 검증하는 멀티 에이전트 시스템.
+### 실제 결과물을 런타임 비용 0으로 출하하고 — 게임을 직접 만든 뒤 플레이해서 자기 작업을 검증하는 멀티 에이전트 시스템.
 
-운영자 한 명, [Claude Code](https://docs.anthropic.com/claude-code) 에이전트 함대.  두 파이프라인이 이미 실제 결과물을 출하합니다 — **music-video** 메이커(음악 → 60초 9:16 쇼츠)와 **job-hunt** 다이제스트(키워드 → 중복 제거된 한국 채용공고 요약) — 전부 로컬 오픈소스 도구(ffmpeg / whisper.cpp / ollama / aubio)로 만들어 미션당 **런타임 API 토큰 0개**.  쇼케이스 트랙인 콜로니심 **PawnSim** 이 이 저장소를 남다르게 만드는 특성을 품고 있습니다: 에이전트가 게임을 *직접 만들고*, 그걸 *플레이해서* 자기 작업을 검증합니다.  **첫날부터 영어 + 한국어.**
+**운영자 한 명이 [Claude Code](https://docs.anthropic.com/claude-code) 로 제작 · 첫날부터 영어 + 한국어.**
 
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=flat-square)
@@ -19,6 +19,10 @@
 *사람 개입 없는 16 게임일 콜로니 소크 — 에이전트가 이 게임을 만들고 **검증까지** 했습니다.*
 
 </div>
+
+- **출하한다.** 두 프로덕션 파이프라인이 정해진 주기로 결과물을 냅니다 — **music-video** 메이커(음악 → 60초 9:16 쇼츠)와 **job-hunt** 다이제스트(키워드 → 중복 제거된 한국 채용공고 요약).
+- **런타임 비용 0.** 로컬 오픈소스 도구(ffmpeg · whisper.cpp · ollama · aubio)가 기계적 작업을 하고 Claude Code 에이전트는 오케스트레이션만 — 미션당 **런타임 API 토큰 0개**.
+- **자기 작업을 검증한다.** 쇼케이스 — 콜로니심 **PawnSim** — 은 에이전트가 *직접 만들고 플레이해 검증*합니다: 실제 플레이어 클릭을 재생하고, 각 클릭이 게임 상태를 실제로 바꿨는지 어서트하고, 장시간 무인 실행을 스크린샷만 보는 서브에이전트가 채점합니다.
 
 ![MelonS-Agents — 숫자로 보기: 출력 100+, 프로덕션 스킬 2개, 쉐이더 23개, 런타임 API 토큰 0개, 15시나리오 게이트, 서브에이전트 24개, 감사 레이어 3개, MIT](docs/visuals/01-hero-stats-ko.png)
 

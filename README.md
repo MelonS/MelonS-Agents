@@ -4,9 +4,9 @@
 
 [한국어](./README.ko.md) · **English** · [**Live site →**](https://melons.github.io/MelonS-Agents/)
 
-### A zero-runtime-cost multi-agent system that ships real work — and proves its own rigor by building a game, then playing it to verify itself.
+### A multi-agent system that ships real work at zero runtime cost — and proves it by building a game, then playing it to verify itself.
 
-One operator, a fleet of [Claude Code](https://docs.anthropic.com/claude-code) agents. Two pipelines already ship real deliverables — a **music-video** maker (a song → a 60-second 9:16 short) and a **job-hunt** digest (a keyword → a deduplicated Korean job-board summary) — built entirely from local open-source tools (ffmpeg / whisper.cpp / ollama / aubio), so a mission spends **zero runtime API tokens**. Its showcase track, the colony-sim **PawnSim**, carries the trait that sets this apart: the agent *builds* the game, then *plays* it to verify its own work. **English + Korean from day one.**
+**Built by one operator with [Claude Code](https://docs.anthropic.com/claude-code) · English + Korean from day one.**
 
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=flat-square)
@@ -19,6 +19,10 @@ One operator, a fleet of [Claude Code](https://docs.anthropic.com/claude-code) a
 *Unattended 16 in-game-day colony soak — the agent built this game **and** verified it.*
 
 </div>
+
+- **It ships.** Two production pipelines deliver on a schedule — a **music-video** maker (a song → a 60-second 9:16 short) and a **job-hunt** digest (a keyword → a deduplicated Korean job-board summary).
+- **Zero runtime cost.** Local open-source tools (ffmpeg · whisper.cpp · ollama · aubio) do the mechanical work; Claude Code agents only orchestrate — so a mission spends **zero runtime API tokens**.
+- **It checks its own work.** The showcase — the colony-sim **PawnSim** — is *built and play-verified* by the agent: real player clicks replayed, each asserted to actually change game state, long unattended runs graded by a screenshots-only sub-agent.
 
 ![MelonS-Agents — by the numbers: 100+ outputs, 2 production skills, 23 shaders, 0 runtime API tokens, 15-scenario gate, 24 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
 
