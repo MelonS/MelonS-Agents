@@ -20,7 +20,7 @@
 
 </div>
 
-- **It ships.** The **music-video** pipeline delivers on a schedule — a song → a 60-second 9:16 short (beat-cut, genre-graded). A second pipeline, **content-shorts**, already runs end-to-end but isn't on a cadence yet.
+- **It ships.** The **music-video** pipeline delivers on a schedule — a song → a 60-second 9:16 short (beat-cut, genre-graded). A second pipeline, **content-shorts**, shipped its first real short to YouTube on 2026-07-01 (idol format) — not on a cadence yet.
 - **Zero runtime cost.** Local open-source tools (ffmpeg · whisper.cpp · ollama · aubio) do the mechanical work; Claude Code agents only orchestrate — so a mission spends **zero runtime API tokens**.
 - **It checks its own work.** The showcase — the colony-sim **PawnSim** — is *built and play-verified* by the agent: real player clicks replayed, each asserted to actually change game state, long unattended runs graded by a screenshots-only sub-agent.
 
@@ -35,7 +35,7 @@
 | **music-video** | a song in → a 60-second 9:16 short (beat-aligned cuts, vintage ffmpeg shaders) | Production\* | ✅ Mac/Linux — `./scripts/first-touch.sh`, ~60 s |
 | **job-hunt** | a keyword → a Korean job-board digest (11 source plugins) | Parked | ❌ KR job boards now block scraping — mock/dry-run only |
 | **PawnSim** · built by `game-dev-agent` | a self-verified colony-sim game prototype | In development | ⚠️ Windows + Unity 6000.0.75f1 |
-| **content-shorts** · built by a 4-team legal-gated pipeline | a topic → a sourced, copyright-reviewed 9:16 short (info / news / idol formats) | In development | ⚠️ runs end-to-end (2026-07-01); needs a Pexels key |
+| **content-shorts** · built by a 4-team legal-gated pipeline | a topic → a sourced, copyright-reviewed 9:16 short (info / news / idol formats) | In development | ⚠️ first real short shipped to YouTube 2026-07-01 (idol); not on a cadence yet · needs a Pexels key |
 | **product-cf** | a product photo → a CF-style short | Parked | ❌ parked on an honest negative finding |
 
 <sub>\*"Production" = ships a real deliverable on a schedule (only **music-video** qualifies today).  `game-dev-agent` is the meta-skill that builds PawnSim; it joins the production count once PawnSim ships on a cadence.</sub>
