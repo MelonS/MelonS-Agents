@@ -4,9 +4,9 @@
 
 **한국어** | [English](./README.md) · [**라이브 사이트 →**](https://melons.github.io/MelonS-Agents/)
 
-### 노래 한 곡이 뮤직비디오로, 키워드 하나가 중복 걸러낸 채용공고 요약으로. 사람이 할 일을 대신 해내는 멀티 에이전트 시스템, 방향은 운영자 한 명이 잡습니다.
+### 혼자서 [Claude Code](https://docs.anthropic.com/claude-code)로 만든 멀티 에이전트 시스템입니다. 음악을 숏폼 영상으로 뽑아내고, 콜로니심 게임을 개발해 직접 플레이하며 스스로 검증합니다.
 
-**운영자 한 명이 [Claude Code](https://docs.anthropic.com/claude-code) 로 만들었습니다 · 첫날부터 한국어 + 영어.**
+**런타임 API 비용 0 · 첫날부터 한국어 + 영어.**
 
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=flat-square)
@@ -20,25 +20,25 @@
 
 </div>
 
-- **실제로 내놓습니다.** 두 프로덕션 파이프라인이 정해진 주기로 결과물을 만듭니다: **music-video**(음악 한 곡 → 60초 9:16 쇼츠)와 **job-hunt**(키워드 하나 → 중복 제거된 한국 채용공고 요약).
+- **실제로 내놓습니다.** **music-video** 파이프라인이 정해진 주기로 결과물을 냅니다: 음악 한 곡 → 60초 9:16 쇼츠(비트 컷·장르 그레이드). 두 번째 파이프라인 **content-shorts** 는 end-to-end 로 돌지만 아직 정기 주기에 오르진 않았습니다.
 - **런타임 비용은 0.** 기계적인 작업은 로컬 오픈소스 도구(ffmpeg · whisper.cpp · ollama · aubio)가 하고, Claude Code 에이전트는 지휘만 맡습니다. 그래서 미션 한 번에 **런타임 API 토큰 0개**.
 - **자기 작업을 스스로 검증합니다.** 대표 사례인 콜로니심 **PawnSim** 은 에이전트가 *직접 만들고 플레이해서 검증*합니다. 실제 플레이어 클릭을 재생해 각 클릭이 게임 상태를 정말로 바꿨는지 확인하고, 오래 돌린 무인 플레이는 스크린샷만 보는 별도 서브에이전트가 채점합니다.
 
 *운영자 한 명이 만든 에이전트 시스템을 그대로 공개한 저장소입니다. 미디어 파이프라인은 클론해서 바로 돌려 볼 수 있고(Mac/Linux), 게임과 그 안의 엔지니어링은 읽고 배우도록 열어 두었습니다.*
 
-![MelonS-Agents — 숫자로 보기: 출력 100+, 프로덕션 스킬 2개, 쉐이더 23개, 런타임 API 토큰 0개, 15시나리오 게이트, 서브에이전트 24개, 감사 레이어 3개, MIT](docs/visuals/01-hero-stats-ko.png)
+![MelonS-Agents — 숫자로 보기: 출력 100+, 프로덕션 스킬 1개, 쉐이더 23개, 런타임 API 토큰 0개, 15시나리오 게이트, 서브에이전트 24개, 감사 레이어 3개, MIT](docs/visuals/01-hero-stats-ko.png)
 
 ## 지금 무엇이 돌아가나
 
 | 트랙 | 하는 일 | 상태 | 지금 실행 가능? |
 |------|---------|------|-----------------|
 | **music-video** | 음악 → 60초 9:16 쇼츠 (비트 정렬 컷, 빈티지 ffmpeg 쉐이더) | 프로덕션\* | ✅ Mac/Linux — `./scripts/first-touch.sh`, ~60초 |
-| **job-hunt** | 시드 키워드 하나 → 중복 제거된 한국 채용공고 다이제스트 (소스 11개) | 프로덕션\* | ✅ ~5초, 네트워크·키 불필요 |
+| **job-hunt** | 키워드 하나 → 한국 채용공고 다이제스트 (소스 플러그인 11개) | 보류 | ❌ 한국 채용사이트가 스크래핑 차단 — mock/드라이런만 동작 |
 | **PawnSim** · `game-dev-agent` 가 제작 | 자기 검증형 콜로니심 게임 프로토타입 | 개발 중 | ⚠️ Windows + Unity 6000.0.75f1 |
 | **content-shorts** · 4팀 법률 검수 파이프라인이 제작 | 주제 → 출처를 갖추고 저작권 검수를 거친 9:16 쇼츠 (정보/뉴스/아이돌 포맷) | 개발 중 | ⚠️ end-to-end 작동(2026-07-01), Pexels 키 필요 |
 | **product-cf** | 제품 사진 → CF 스타일 쇼츠 | 보류 | ❌ 정직한 부정 결론으로 보류 |
 
-<sub>\*"프로덕션" = 정해진 주기로 실제 결과물을 내놓는 트랙 (오늘 기준 이 둘뿐). `game-dev-agent` 는 PawnSim 을 만드는 메타 스킬로, PawnSim 이 정기 출시 궤도에 오르면 프로덕션 카운트에 합류합니다.</sub>
+<sub>\*"프로덕션" = 정해진 주기로 실제 결과물을 내놓는 트랙 (오늘 기준 **music-video** 하나만 해당). `game-dev-agent` 는 PawnSim 을 만드는 메타 스킬로, PawnSim 이 정기 출시 궤도에 오르면 프로덕션 카운트에 합류합니다.</sub>
 
 ## 자기 작업을 스스로 검증한다
 
@@ -94,6 +94,7 @@ Pexels 가입도, Suno 호출도, `.env` 편집도 필요 없습니다 — 마�
 숨기지 않고 공개해 두는, 문서로 남긴 부정적 결과들입니다. 정직하게 그은 범위가 나머지 모든 것이 기대는 신뢰의 근거이기 때문입니다.
 
 - **`product-cf` 는 보류** — 실제로 안 된다는 결론이 나왔기 때문입니다. 무료·로컬 도구로 "진짜 3D 처럼" 만드는 접근(depth-parallax, 실린더 래핑 턴테이블, 로컬 image-to-video)은 16GB 장비에서 실제 CF 수준의 품질 기준을 넘지 못했습니다. 설득력 있는 결과를 내려면 유료 클라우드 image-to-video 나 더 큰 GPU 가 필요합니다. 코드 트리에는 비활성 상태로 남겨 두었고, 방향은 아직 미정입니다.
+- **`job-hunt` 은 보류** — 겨냥했던 한국 채용사이트(사람인·원티드·잡코리아·워크넷…)가 이제 스크래핑을 막아 라이브 다이제스트가 끝내 완성되지 못했습니다. mock/드라이런 데이터로만 돌아갑니다. 5월에 이틀 동안 붙여 만들다 멈췄고, 코드는 트리에 남아 있습니다.
 - **셀 쉐이딩은 의도적으로 미룸** — ffmpeg 의 한계가 어디인지 아는 편이, 결과를 그럴싸하게 위장하는 것보다 낫기 때문입니다.
 - **`출력 100+` 는 정확한 집계가 아니라 어림값** — 미션 출력물은 `records/`(gitignore) 아래 로컬에만 남기 때문에, 저장소만 봐서는 이 수치를 독립적으로 검증할 수 없습니다.
 
@@ -120,11 +121,11 @@ MUSIC_VIDEO_DEMO_MODE=1 ./agents/missions/music-video/run.sh demo
 ```
 출력은 `records/missions/<date>/music-video-demo-<HHMMSS>/outputs/short.mp4` 에 생깁니다. 모든 env 변수, 플래그, 쉐이더 카탈로그, 전체 Pexels + 운영자 음악 경로: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
 
-**job-hunt** (네트워크·키 불필요)
+**job-hunt** (보류 — mock/드라이런만)
 ```bash
 skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
 ```
-`global-*` 플러그인을 라이브 모드(`JH_GLOBAL_ATS_LIVE=1 …`)로 켜면 키 없이 실제 공고를 받습니다. 소스별 활성화 방법과 Claude 보강 유틸리티 4종: [`docs/skills/job-hunt.ko.md`](docs/skills/job-hunt.ko.md) · 샘플 다이제스트: [`docs/samples/job-hunt-digest-mock.md`](docs/samples/job-hunt-digest-mock.md).
+한국 소스(사람인·원티드·잡코리아…)는 이제 스크래핑이 막혔고, `global-*` 플러그인(`JH_GLOBAL_ATS_LIVE=1 …`)은 해외 원격 공고를 라이브로 받을 수도 있습니다. 소스별 활성화 방법과 Claude 보강 유틸리티 4종: [`docs/skills/job-hunt.ko.md`](docs/skills/job-hunt.ko.md) · 샘플 다이제스트: [`docs/samples/job-hunt-digest-mock.md`](docs/samples/job-hunt-digest-mock.md).
 
 **PawnSim** (Windows + Unity 6000.0.75f1 LTS)
 ```bash

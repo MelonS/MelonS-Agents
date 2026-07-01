@@ -4,9 +4,9 @@
 
 [한국어](./README.ko.md) · **English** · [**Live site →**](https://melons.github.io/MelonS-Agents/)
 
-### A multi-agent system that does your production work: a song → a music video, a keyword → a deduplicated job digest. One operator directs.
+### A multi-agent system built solo with [Claude Code](https://docs.anthropic.com/claude-code). It turns music into short-form video, and builds a colony-sim game it plays to verify itself.
 
-**Built by one operator with [Claude Code](https://docs.anthropic.com/claude-code) · English + Korean from day one.**
+**Zero runtime API cost · English + Korean from day one.**
 
 [![main-protection](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml/badge.svg?branch=main)](https://github.com/MelonS/MelonS-Agents/actions/workflows/main-protection.yml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/MelonS/MelonS-Agents?style=flat-square)
@@ -20,25 +20,25 @@
 
 </div>
 
-- **It ships.** Two production pipelines deliver on a schedule — a **music-video** maker (a song → a 60-second 9:16 short) and a **job-hunt** digest (a keyword → a deduplicated Korean job-board summary).
+- **It ships.** The **music-video** pipeline delivers on a schedule — a song → a 60-second 9:16 short (beat-cut, genre-graded). A second pipeline, **content-shorts**, already runs end-to-end but isn't on a cadence yet.
 - **Zero runtime cost.** Local open-source tools (ffmpeg · whisper.cpp · ollama · aubio) do the mechanical work; Claude Code agents only orchestrate — so a mission spends **zero runtime API tokens**.
 - **It checks its own work.** The showcase — the colony-sim **PawnSim** — is *built and play-verified* by the agent: real player clicks replayed, each asserted to actually change game state, long unattended runs graded by a screenshots-only sub-agent.
 
 *One operator's agent system, in the open: the media pipelines are yours to clone and run (Mac/Linux) — the game and the engineering are here to read and learn from.*
 
-![MelonS-Agents — by the numbers: 100+ outputs, 2 production skills, 23 shaders, 0 runtime API tokens, 15-scenario gate, 24 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
+![MelonS-Agents — by the numbers: 100+ outputs, 1 production skill, 23 shaders, 0 runtime API tokens, 15-scenario gate, 24 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
 
 ## What works today
 
 | Track | What it does | Status | Runnable today |
 |-------|--------------|--------|----------------|
 | **music-video** | a song in → a 60-second 9:16 short (beat-aligned cuts, vintage ffmpeg shaders) | Production\* | ✅ Mac/Linux — `./scripts/first-touch.sh`, ~60 s |
-| **job-hunt** | one seed keyword → a deduplicated Korean job-board digest (11 sources) | Production\* | ✅ ~5 s, no network or keys |
+| **job-hunt** | a keyword → a Korean job-board digest (11 source plugins) | Parked | ❌ KR job boards now block scraping — mock/dry-run only |
 | **PawnSim** · built by `game-dev-agent` | a self-verified colony-sim game prototype | In development | ⚠️ Windows + Unity 6000.0.75f1 |
 | **content-shorts** · built by a 4-team legal-gated pipeline | a topic → a sourced, copyright-reviewed 9:16 short (info / news / idol formats) | In development | ⚠️ runs end-to-end (2026-07-01); needs a Pexels key |
 | **product-cf** | a product photo → a CF-style short | Parked | ❌ parked on an honest negative finding |
 
-<sub>\*"Production" = ships a real deliverable on a schedule (only these two count today).  `game-dev-agent` is the meta-skill that builds PawnSim; it joins the production count once PawnSim ships on a cadence.</sub>
+<sub>\*"Production" = ships a real deliverable on a schedule (only **music-video** qualifies today).  `game-dev-agent` is the meta-skill that builds PawnSim; it joins the production count once PawnSim ships on a cadence.</sub>
 
 ## It checks its own work
 
@@ -94,6 +94,7 @@ A multi-agent system that needs constant steering hasn't escaped the effort it w
 Documented negatives, kept in the open — because honest scoping is the credibility the rest of this rests on:
 
 - **`product-cf` is parked** on a real negative finding.  The free / local "make it genuinely 3D" approaches (depth-parallax, cylinder-wrap turntable, local image-to-video) didn't clear a real-CF quality bar on a 16 GB machine; a convincing result needs paid cloud image-to-video or a bigger GPU.  Kept gated-off in the tree, decision pending.
+- **`job-hunt` is parked** — the Korean job boards it targeted (Saramin, Wanted, JobKorea, Worknet…) now block scraping, so the live digest never came together; it runs only on mock / dry-run data.  Built out over two days in May, then stopped — the code stays in the tree.
 - **Cel-shading was deliberately deferred** — knowing where the ffmpeg wall is beats faking the result.
 - **`100+ outputs` is a working estimate, not a ledger** — mission outputs stay local under `records/` (gitignored), so the count isn't independently auditable from the repo.
 
@@ -120,11 +121,11 @@ MUSIC_VIDEO_DEMO_MODE=1 ./agents/missions/music-video/run.sh demo
 ```
 Output at `records/missions/<date>/music-video-demo-<HHMMSS>/outputs/short.mp4`.  All env vars, flags, the shader catalog, and the full Pexels + operator-music path: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
 
-**job-hunt** (no network, no keys)
+**job-hunt** (parked — mock/dry-run only)
 ```bash
 skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
 ```
-Flip the `global-*` plugins to live mode (`JH_GLOBAL_ATS_LIVE=1 …`) for real postings without a key.  Per-source activation + the 4 Claude enrichment utilities: [`docs/skills/job-hunt.md`](docs/skills/job-hunt.md) · sample digest: [`docs/samples/job-hunt-digest-mock.md`](docs/samples/job-hunt-digest-mock.md).
+The KR sources (Saramin, Wanted, JobKorea…) now block scraping; the `global-*` plugins (`JH_GLOBAL_ATS_LIVE=1 …`) may still return live remote postings.  Per-source activation + the 4 Claude enrichment utilities: [`docs/skills/job-hunt.md`](docs/skills/job-hunt.md) · sample digest: [`docs/samples/job-hunt-digest-mock.md`](docs/samples/job-hunt-digest-mock.md).
 
 **PawnSim** (Windows + Unity 6000.0.75f1 LTS)
 ```bash
