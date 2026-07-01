@@ -4,7 +4,7 @@
 
 [한국어](./README.ko.md) · **English** · [**Live site →**](https://melons.github.io/MelonS-Agents/)
 
-### A multi-agent system that ships real work at zero runtime cost — and proves it by building a game, then playing it to verify itself.
+### A multi-agent system that does your production work: a song → a music video, a keyword → a deduplicated job digest. One operator directs.
 
 **Built by one operator with [Claude Code](https://docs.anthropic.com/claude-code) · English + Korean from day one.**
 
