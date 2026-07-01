@@ -24,6 +24,8 @@
 - **Zero runtime cost.** Local open-source tools (ffmpeg · whisper.cpp · ollama · aubio) do the mechanical work; Claude Code agents only orchestrate — so a mission spends **zero runtime API tokens**.
 - **It checks its own work.** The showcase — the colony-sim **PawnSim** — is *built and play-verified* by the agent: real player clicks replayed, each asserted to actually change game state, long unattended runs graded by a screenshots-only sub-agent.
 
+*One operator's agent system, in the open: the media pipelines are yours to clone and run (Mac/Linux) — the game and the engineering are here to read and learn from.*
+
 ![MelonS-Agents — by the numbers: 100+ outputs, 2 production skills, 23 shaders, 0 runtime API tokens, 15-scenario gate, 24 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
 
 ## What works today
@@ -38,7 +40,7 @@
 
 <sub>\*"Production" = ships a real deliverable on a schedule (only these two count today).  `game-dev-agent` is the meta-skill that builds PawnSim; it joins the production count once PawnSim ships on a cadence.</sub>
 
-## The part most agent demos skip: it checks its own work
+## It checks its own work
 
 ![Verification — two gates: a 15-scenario input-level repro gate per commit + an isolated grader sub-agent on long soaks](docs/visuals/14-verification-loop.png)
 
@@ -102,7 +104,6 @@ More negatives and deferred scope: [`skills/game-prototype/README.md`](skills/ga
 
 - **Outcome layer vs work queue, kept separate.**  [`docs/goal.md`](docs/goal.md) holds the active goal as a concrete deliverable; [`docs/roadmap.md`](docs/roadmap.md) holds the day-level queue.  An empty queue ≠ goal achieved — the split exists because an earlier 24-hour stretch produced 11 infra commits with the queue reading 0 open items and 0 actual outputs.
 - **Out-of-band auditor with a live alert surface.**  The [`auditor`](.claude/agents/auditor.md) subagent fires on three triggers — an L1 post-commit hook, an L2 15-minute anomaly poll, and an L3 daily 03:00 baseline (via `launchd`/`cron`) — walks the repo read-only, and writes [`docs/audit/CURRENT-ALERT.md`](docs/audit/) iff the latest verdict is non-CLEAN; the next session is contractually obligated to read it before picking up the goal.
-- **Cost firewall between orchestration and execution.**  Anthropic tokens are spent only during orchestration (Tier 1); mission execution (transcribe → select → render → QA) runs entirely on local tools and costs zero tokens.
 - **Operator tooling that absorbs status-check prompts.**  `scripts/doctor.sh` (a Claude-free ~2-second health check), `scripts/statusline.sh`, and `scripts/morning-brief.sh` answer "what's the state / what happened overnight?" without the operator typing.  Full catalog: [`docs/operator-tooling.md`](docs/operator-tooling.md).
 
 The full operator contract (12 hard rules + autonomy modes) lives in [`docs/operator-contract.md`](docs/operator-contract.md) and [`CLAUDE.md`](CLAUDE.md).

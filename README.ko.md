@@ -24,6 +24,8 @@
 - **런타임 비용 0.** 로컬 오픈소스 도구(ffmpeg · whisper.cpp · ollama · aubio)가 기계적 작업을 하고 Claude Code 에이전트는 오케스트레이션만 — 미션당 **런타임 API 토큰 0개**.
 - **자기 작업을 검증한다.** 쇼케이스 — 콜로니심 **PawnSim** — 은 에이전트가 *직접 만들고 플레이해 검증*합니다: 실제 플레이어 클릭을 재생하고, 각 클릭이 게임 상태를 실제로 바꿨는지 어서트하고, 장시간 무인 실행을 스크린샷만 보는 서브에이전트가 채점합니다.
 
+*운영자 한 명의 에이전트 시스템을 공개한 것 — 미디어 파이프라인은 클론해서 바로 돌릴 수 있고(Mac/Linux), 게임과 그 엔지니어링은 읽고 배우도록 열어 두었습니다.*
+
 ![MelonS-Agents — 숫자로 보기: 출력 100+, 프로덕션 스킬 2개, 쉐이더 23개, 런타임 API 토큰 0개, 15시나리오 게이트, 서브에이전트 24개, 감사 레이어 3개, MIT](docs/visuals/01-hero-stats-ko.png)
 
 ## 지금 무엇이 되는가
@@ -38,7 +40,7 @@
 
 <sub>\*"프로덕션" = 정해진 주기로 실제 결과물을 출하 (오늘 기준 이 둘만 해당).  `game-dev-agent` 는 PawnSim 을 만드는 메타 스킬 — PawnSim 이 출하 주기에 도달하면 프로덕션 카운트로 합류합니다.</sub>
 
-## 대부분의 에이전트 데모가 건너뛰는 부분: 자기 작업을 스스로 검증한다
+## 자기 작업을 스스로 검증한다
 
 ![검증 — 두 게이트: 커밋마다 15시나리오 입력 레벨 재현 게이트 + 장시간 소크에 격리 채점 서브에이전트](docs/visuals/14-verification-loop-ko.png)
 
@@ -102,7 +104,6 @@ Pexels 가입 없음, Suno 왕복 없음, `.env` 편집 없음 — 마법사가 
 
 - **결과 레이어 vs 작업 큐, 분리해서 유지.**  [`docs/goal.md`](docs/goal.md) 는 활성 목표를 구체적 산출물로 담고, [`docs/roadmap.md`](docs/roadmap.md) 는 일 단위 작업 큐를 담습니다.  큐가 비었다 ≠ 목표 달성 — 이 분리는 과거 24시간 동안 큐가 0인 채 인프라 커밋 11개에 산출물 0개가 나왔던 사고 때문에 존재합니다.
 - **라이브 알림 표면을 가진 비대역(out-of-band) 감사기.**  [`auditor`](.claude/agents/auditor.md) 서브에이전트가 세 가지 트리거 — L1 post-commit 훅, L2 15분 이상감지 폴, L3 매일 03:00 베이스라인(`launchd`/`cron`) — 로 작동하며 레포 전체를 읽기 전용으로 훑고, 최신 판정이 non-CLEAN 일 때만 [`docs/audit/CURRENT-ALERT.md`](docs/audit/) 를 씁니다; 다음 세션은 목표를 잡기 전에 이를 읽어야 할 계약 의무가 있습니다.
-- **오케스트레이션과 실행 사이의 비용 방화벽.**  Anthropic 토큰은 오케스트레이션(Tier 1)에서만 쓰이고, 미션 실행(transcribe → select → render → QA)은 전부 로컬 도구로 돌아 토큰 0개입니다.
 - **상태 점검 프롬프트를 흡수하는 운영자 툴링.**  `scripts/doctor.sh`(Claude 없이 ~2초 헬스 체크), `scripts/statusline.sh`, `scripts/morning-brief.sh` 가 "지금 상태는 / 밤새 무슨 일이?"를 운영자가 타이핑하지 않아도 답합니다.  전체 카탈로그: [`docs/operator-tooling.md`](docs/operator-tooling.md).
 
 전체 운영 계약(12개 하드 룰 + 자율 모드)은 [`docs/operator-contract.md`](docs/operator-contract.md) 와 [`CLAUDE.md`](CLAUDE.md) 에 있습니다.
