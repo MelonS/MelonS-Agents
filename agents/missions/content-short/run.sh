@@ -164,7 +164,7 @@ stage_produce() {
   log_step "[제작팀] produce — faceless core + profile=$PROFILE"
 
   # Build the topic/seed for faceless from research.json or --topic.
-  local seed_override="" topic="$TOPIC"
+  local seed_override="" topic="$TOPIC" terms_file=""
   if [[ -n "$RESEARCH" && -f "$RESEARCH" ]]; then
     cp "$RESEARCH" "$MDIR/resources/research.json"
     local r_topic r_angle r_seed
@@ -176,6 +176,18 @@ stage_produce() {
       seed_override="$MDIR/resources/script-seed.txt"
       printf '%s\n' "$r_seed" > "$seed_override"
       log_info "using research script_seed as FACELESS_SCRIPT_OVERRIDE"
+    fi
+    # Curated visual search terms → faceless uses these instead of guessing
+    # per-window terms with the local 3B model (which drifts to off-topic stock
+    # like "sword fight"/"clock tower" on Korean input). One term per line.
+    terms_file="$MDIR/resources/visual-terms.txt"
+    python3 -c 'import json, sys
+d = json.load(open(sys.argv[1], encoding="utf-8"))
+print("\n".join(t for t in d.get("visual_terms", []) if str(t).strip()))' "$RESEARCH" > "$terms_file" 2>/dev/null
+    if [[ -s "$terms_file" ]]; then
+      log_info "curated visual terms: $(grep -c . "$terms_file") line(s) (override model extraction)"
+    else
+      terms_file=""
     fi
     # Screen media sources (defense in depth; research-team should have already)
     if [[ -x "$REPO_ROOT/scripts/research-screen.sh" ]]; then
@@ -199,6 +211,7 @@ stage_produce() {
   # an array + env(1) so the conditional FACELESS_SCRIPT_OVERRIDE is set correctly.
   local -a fl_env=(FACELESS_VOICE="$VOICE" FACELESS_NUM_BROLL="$NUM_BROLL")
   [[ -n "$seed_override" ]] && fl_env+=(FACELESS_SCRIPT_OVERRIDE="$seed_override")
+  [[ -n "$terms_file" ]] && fl_env+=(FACELESS_VISUAL_TERMS="$terms_file")
   env "${fl_env[@]}" \
     bash "$REPO_ROOT/agents/missions/faceless-short/run.sh" "$SHORT_ID" "$topic" >"$fl_log" 2>&1
   local fl_rc=$?

@@ -469,6 +469,156 @@ swap 가능).
 
 ---
 
+## 10. Windows 네이티브 ffmpeg는 셸이 변환 안 한 POSIX 경로를 못 읽음 — 어디서나 basename + cd
+
+**문제.** faceless-short 렌더 체인(concat → 9:16 필 → 캡션 번인 →
+출처 오버레이)이 macOS에선 깨끗이 돌았는데 Windows/Git-Bash에서 세
+가지로 실패 — 근본 원인은 하나. concat이 `Impossible to open
+'trimmed-0.mp4'`, 캡션/오버레이가 drawtext 폰트에서 `rc=127`,
+오버레이 `text='NEWS:LIVE'`가 필터 파서를 깨뜨림.
+
+**제약.** 파이프라인은 Git-Bash에서 호출하는 단일 네이티브
+`ffmpeg.exe`(BtbN 빌드). MSYS는 POSIX 경로(`/g/...` → `G:\...`)를
+자동 변환하지만 **명령 인자(argv)**로 인식한 것만. 변환 안 하는 것:
+(a) 도구가 읽는 **파일 내용** 속 경로(concat 리스트의
+`file '/g/ai/.../trimmed-0.mp4'` 줄), (b) **필터그래프 문자열 내부**
+경로(`drawtext=fontfile=/c/Windows/Fonts/malgun.ttf`,
+`ass=/g/.../captions.ass`). 네이티브 ffmpeg는 `/g/...`를 *상대경로*
+`G:\g\...`로 재해석해 못 엶. 도구 수정 불가, `G:\` 하드코딩은
+macOS를 깸.
+
+**결정.** POSIX 절대경로가 파일 내용·필터 문자열을 통해 ffmpeg에
+도달하지 못하게. 모든 ffmpeg 경계에 기계적 규칙 둘:
+
+1. **concat 리스트 → 상대 basename + `cd`.** `file 'trimmed-0.mp4'`
+   (basename만) 쓰고 resources 디렉토리 안에서 concat 실행
+   (`( cd "$MDIR/resources" && ffmpeg ... -f concat -safe 0 -i
+   "$(basename "$list")" ... )`). 상대명은 변환 불필요, 작업
+   디렉토리가 모든 OS에서 해석.
+2. **필터 문자열 자산 → basename 스테이징, `cd`, basename 참조.**
+   ASS 자막·오버레이 폰트·출처 textfile을 한 디렉토리에 스테이징,
+   렌더가 거기로 `cd` 후 필터는 `ass=captions.ass:fontsdir=.`,
+   `drawtext=fontfile=<font>:textfile=<attr>`. `fontsdir=.`는
+   fontconfig 없는 호스트(Windows)에서 libass가 스테이징된 폰트를
+   패밀리명으로 찾게 함.
+
+세 번째 버그가 딸려옴: `drawtext=text='NEWS:LIVE'` — 콜론이 필터
+옵션 구분자라 ffmpeg가 `SCENE'`을 엉뚱한 옵션으로 파싱. 해결:
+캡션/오버레이 텍스트를 인라인 금지, 파일에 써서 `textfile=`
+(따옴표·쉼표·한글 이스케이프도 회피).
+
+**산출물.**
+- `agents/missions/faceless-short/run.sh` — concat basename+cd
+  (Stage 6); 필터 전 ASS/폰트/attr을 basename으로 스테이징.
+- `scripts/subject-overlay.sh` — 네 텍스트 요소 전부
+  `text=`→`textfile=`; 폰트 `_ov_font.<ext>`로 스테이징; 스테이지
+  디렉토리에서 실행.
+- `docs/platform-windows.md` § "ffmpeg + Git-Bash 경로 변환".
+
+**교훈.** MSYS 경로 변환은 새는 추상화 — argv만 덮고 거기서 끝.
+네이티브 도구에 *두 번째 채널*(읽는 파일, 파싱하는 문자열)로
+도달하는 경로는 무방비. 이식 가능한 형태는 "OS 감지 후 경로
+재작성"이 아니라 "애초에 그 채널에 절대경로를 안 넣기". basename +
+`cd`는 OS 무관 + 분기 불필요.
+
+---
+
+## 11. Mac YouTube 토큰이 죽었고 redirect 포트가 틀렸음 — 무인 업로드 부활
+
+**문제.** 자동 업로드(Mac에서 매 렌더를 올리던 워크플로)가
+Windows에서 즉시 실패: `oauth2: "invalid_grant"`. 새로 동의를 받은
+뒤엔 *두 번째* 실패 — 브라우저 동의는 끝났는데 `youtubeuploader`가
+콜백을 못 받고 영원히 멈춤, 토큰 미기록.
+
+**제약.** 업로드는 `youtubeuploader`(네이티브 바이너리, 업로드 전용
+— auth-only 모드 없음) + Mac에서 가져온 OAuth 토큰. 인터랙티브
+재동의는 대신 눌러줄 수 없는 실제 브라우저 클릭 필요 — 운영자가
+3클릭으로 끝내는 흐름이어야. 크리덴셜은 도구 기본값 `~/.config/`가
+아니라 `/g/config/youtubeuploader/`에 있음.
+
+**결정.** 별개의 근본 원인 둘, 수정 둘:
+
+1. **죽은 refresh 토큰 = 테스트 모드 만료.** 토큰이 36일 지남.
+   구글은 OAuth 앱이 **"테스트(Testing)"** 게시 상태면 refresh
+   토큰을 **7일** 뒤 만료. 즉시 수정: stale `request.token` 제거 후
+   재동의 — 래퍼 `yt-batch-upload.sh`는 설계상 첫-실행 동의를 거부
+   (cache-not-found 가드)하므로 *첫* 동의는 `youtubeuploader`를
+   **직접** 실행해야. 근본 수정: Cloud Console에서 앱을
+   **Production**으로 게시 → 7일 상한 제거. (민감 범위라 "미확인 앱"
+   경고는 남지만 그건 동의 시점 화면이지 토큰 수명 문제 아님.)
+2. **콜백 미도착 = redirect 포트 불일치.** `client_secrets.json`의
+   `redirect_uris: ["http://localhost"]`(포트 80)인데
+   `youtubeuploader`는 루프백 콜백을 **:8080**에서 대기. 구글이
+   동의를 `localhost:80`으로 리다이렉트 → 아무도 안 들음, 도구는
+   :8080에서 영영 대기(netstat로 8080 인바운드 0 확인). 수정: 등록
+   redirect를 서버에 맞춤 —
+   `jq '.installed.redirect_uris = ["http://localhost:8080"]'`(백업
+   보존). Desktop("installed") 클라이언트는 구글이 임의 루프백 포트를
+   허용하므로 정렬 후 바로 동작.
+
+**산출물.**
+- `/g/config/youtubeuploader/client_secrets.json` — `redirect_uris`
+  → `http://localhost:8080`(`.bak` 보존).
+- `docs/platform-windows.md` § "YouTube 업로드 OAuth
+  (youtubeuploader)" — 포트 규칙 + 테스트-vs-Production 만료 +
+  직접-vs-래퍼 첫-동의 노트.
+
+**검증.** 두 수정 후 `youtubeuploader`가 동의 완료 + 업로드
+(`Upload successful!`); 새 토큰으로 `videos.list` 호출해 채널·공개
+상태 확인, 수동 `refresh_token` grant로 동의창 없는 무인 재인증
+작동 확인.
+
+**교훈.** "invalid_grant"가 별개 실패 둘을 숨김: *만료된* 크리덴셜
++ *잘못 설정된* redirect. 두 번째의 단서는 에러 텍스트가 아니라
+구조적 — 서버는 8080에서 듣고, 등록 redirect는 80이라, 콜백이
+엉뚱한 문으로 감. OAuth 루프백이 "승인 후 멈추면" 토큰 의심 전에
+도구의 리스닝 포트와 클라이언트 `redirect_uri`부터 비교.
+
+---
+
+## 12. "단일줄 자막"이 한글에선 두 줄이었음 — 코드포인트 vs 렌더 폭
+
+**문제.** 한글 자막이 겹침: 큐가 두 줄로 wrap되면 줄별 불투명
+박스(libass BorderStyle=3)가 서로 닿아 눈에 띄게 겹침. 파이프라인엔
+*이미* 이걸 막는 가드가 있었음 — `split-long-captions.py`가
+`CHAR_MAX`(28) 초과 큐를 단일줄로 분할 — 그런데도 출고된 한글
+렌더에서 15개 중 14개가 여전히 wrap.
+
+**제약.** 가드가 큐 길이를 `len(text)` — **코드포인트** 수 — 로
+잼. 한글 글리프는 라틴 문자의 ~2배 폭 렌더(~50px vs ~22px, ~880px
+자막 안전영역 대비), 그래서 한글 28 코드포인트 = ~1400px(거의 두
+줄 꽉)인데 `len ≤ 28`은 통과. 스플리터 docstring이 "28자면 어느
+언어든 한 줄"이라 주장했는데 전각 문자엔 산술적으로 거짓. 폰트
+축소나 `WrapStyle` off는 가독성을 해치거나 프레임 밖으로 넘침.
+
+**결정.** 예산을 문자 수가 아니라 **렌더 폭**으로.
+`visual_width(text)`가 East-Asian Wide/Fullwidth 문자
+(`unicodedata.east_asian_width in {W,F}`)를 2로, 나머지를 1로 셈;
+스플리터의 모든 폭 비교(`split_text`, `greedy_word_split`)가 이걸
+사용. `char_max`는 28 유지하되 이제 *반각 폭 단위* 의미: 영문은
+불변(28자=28단위), 한글은 ~14글리프/줄로 정확히 제한. 검증 중 더
+미묘한 두 번째 버그: `merge_short_neighbours`가 blip 방지로 1초
+미만 큐를 재결합 → 방금 분할한 짧은 한글 꼬리 조각을 넓은
+줄로 도로 붙임 — 그래서 merge도 같은 폭 가드를 달아 `char_max`
+초과 결합을 거부(짧은 단일줄 blip이 두 줄 겹침보다 나음).
+
+**산출물.**
+- `scripts/split-long-captions.py` — `visual_width()`; 폭 인식
+  `split_text`/`greedy_word_split`; 폭 가드
+  `merge_short_neighbours`; docstring 교정.
+
+**검증.** 출고된 한글 SRT 기준: 이전 14/15 큐 예산 초과(최대
+57단위), 이후 33/33 큐 단일줄(최대 27단위, 초과 0), 멱등(재실행 시
+추가 분할 0). 영문은 바이트 동일 — 폭-1 문자엔 무영향.
+
+**교훈.** 검증 임계치는 단위가 맞아야만 옳음. `len()`은 "몇 글자"와
+"얼마나 넓은가"를 조용히 뒤섞음 — ASCII에선 괜찮고 전각 문자가
+나타나는 순간 틀림. 라틴 기준 상수가 거짓말하는 단서: 명시된 글리프
+폭이 반박하는 주장("28이면 어느 언어든")으로 정당화돼 있었음.
+"단일줄 강제기"가 여전히 두 줄을 내면 메커니즘 전에 지표를 의심.
+
+---
+
 ## 공통점
 
 - 각각 **구체적 관측된 실패**에서 출발했지, 이론적 우려에서 출발한 게 아님.

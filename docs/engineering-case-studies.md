@@ -729,6 +729,175 @@ authors can read the research doc and skip the trap.
 
 ---
 
+## 10. Native ffmpeg on Windows can't read POSIX paths the shell didn't translate — basename + cd everywhere
+
+**Problem.** The faceless-short render chain (concat demuxer → 9:16
+fill → burn captions → attribution overlay) ran clean on macOS but
+failed on Windows/Git-Bash three different ways, all the same root
+cause.  The concat step died `Impossible to open 'trimmed-0.mp4'`; the
+caption/overlay step died `rc=127` on the drawtext font; and an overlay
+`text='NEWS:LIVE'` broke the filter parser outright.
+
+**Constraint.** The pipeline is a single native `ffmpeg.exe` (BtbN
+build) invoked from Git-Bash.  MSYS auto-translates POSIX paths
+(`/g/...` → `G:\...`) but ONLY for command **arguments** it recognizes
+as paths.  It does NOT translate: (a) paths written *inside a file* the
+tool reads (the concat list's `file '/g/ai/.../trimmed-0.mp4'` lines),
+nor (b) paths embedded *inside a filter-graph string*
+(`drawtext=fontfile=/c/Windows/Fonts/malgun.ttf`,
+`ass=/g/.../captions.ass`).  Native ffmpeg then re-resolves `/g/...` as
+a *relative* path `G:\g\...` and can't open it.  Rewriting the tool
+isn't an option; hard-coding `G:\` breaks macOS.
+
+**Decision.** Never let a POSIX absolute path reach ffmpeg through a
+file body or a filter string.  Two mechanical rules at every ffmpeg
+boundary:
+
+1. **Concat list → relative basenames + `cd`.** Write
+   `file 'trimmed-0.mp4'` (basename only) and run concat from inside the
+   resources dir (`( cd "$MDIR/resources" && ffmpeg ... -f concat -safe 0
+   -i "$(basename "$list")" ... )`).  Relative names need no translation;
+   the working directory resolves them on every OS.
+2. **Filter-string assets → stage as basenames, `cd`, reference by
+   basename.** The ASS subtitle, the overlay font, and the attribution
+   textfile are staged into one dir; the render `cd`s there and the
+   filter uses `ass=captions.ass:fontsdir=.`,
+   `drawtext=fontfile=<font>:textfile=<attr>`.  `fontsdir=.` lets libass
+   find the staged font by family on hosts without fontconfig (Windows)
+   and is harmless where fontconfig works.
+
+A third bug rode along: `drawtext=text='NEWS:LIVE'` — the colon is the
+filter-option separator, so ffmpeg parsed `SCENE'` as a bogus option.
+Fix: never inline caption/overlay text; write it to a file and use
+`textfile=` (also sidesteps escaping quotes, commas, and Korean).
+
+**Artifacts.**
+- `agents/missions/faceless-short/run.sh` — concat basename+cd (Stage 6);
+  ASS/font/attr staged as basenames before the filter graph.
+- `scripts/subject-overlay.sh` — `text=` → `textfile=` for all four text
+  elements; font staged as `_ov_font.<ext>`; runs from the stage dir.
+- `docs/platform-windows.md` § "ffmpeg + Git-Bash path translation".
+
+**Lesson.** MSYS path translation is a leaky abstraction: it covers
+argv and stops there.  Any path that reaches a native tool through a
+*second channel* — a file it reads, a string it parses — is on its own.
+The portable form isn't "detect the OS and rewrite the path"; it's
+"never emit an absolute path into that channel in the first place."
+basename + `cd` is OS-agnostic and needs no branch.
+
+---
+
+## 11. The Mac YouTube token was dead and the redirect port was wrong — reviving unattended upload
+
+**Problem.** Auto-upload (the workflow that used to publish every render
+on the Mac) failed immediately on Windows: `oauth2: "invalid_grant"`.
+After minting a fresh consent, a *second* failure appeared — the browser
+completed consent but `youtubeuploader` hung forever, never receiving
+the callback, token never written.
+
+**Constraint.** Uploading is `youtubeuploader` (a native binary,
+upload-only — no auth-only mode) + an OAuth token copied from the Mac.
+Interactive re-consent needs a real browser click that can't be
+performed for the operator; the flow has to be something they finish in
+three clicks.  Credentials live at `/g/config/youtubeuploader/`, not the
+tool's default `~/.config/`.
+
+**Decision.** Two distinct root causes, two fixes:
+
+1. **Dead refresh token = testing-mode expiry.** The token was 36 days
+   old.  Google expires refresh tokens after **7 days** for OAuth apps
+   still in **"Testing"** publishing status.  Immediate fix: delete the
+   stale `request.token` and re-consent — and note the wrapper
+   `yt-batch-upload.sh` refuses first-run consent by design (its
+   cache-not-found guard), so the *first* consent must run through
+   `youtubeuploader` **directly**.  Durable fix: publish the app to
+   **Production** in Cloud Console, which removes the 7-day cap.
+   (Sensitive YouTube scopes keep the "unverified app" warning, but
+   that's a consent-time screen, not a token-life issue.)
+2. **Callback never arrives = redirect-port mismatch.**
+   `client_secrets.json` listed `redirect_uris: ["http://localhost"]`
+   (port 80) while `youtubeuploader` listens for the loopback callback on
+   **:8080**.  Google redirected the approved consent to `localhost:80`,
+   where nothing listened; the tool waited on :8080 forever (netstat
+   confirmed zero inbound connections on 8080).  Fix: align the
+   registered redirect to the server —
+   `jq '.installed.redirect_uris = ["http://localhost:8080"]'` (backup
+   kept).  A Desktop ("installed") client lets Google accept any loopback
+   port, so it works once aligned.
+
+**Artifacts.**
+- `/g/config/youtubeuploader/client_secrets.json` — `redirect_uris` →
+  `http://localhost:8080` (`.bak` preserved).
+- `docs/platform-windows.md` § "YouTube upload OAuth (youtubeuploader)" —
+  the port rule + Testing-vs-Production expiry + direct-vs-wrapper
+  first-consent note.
+
+**Verification.** After both fixes, `youtubeuploader` completed consent
+and uploaded (`Upload successful!`); a `videos.list` call on the fresh
+token confirmed channel + privacy, and a manual `refresh_token` grant
+confirmed unattended re-auth works with no consent screen.
+
+**Lesson.** "invalid_grant" hid two independent failures: an *expired*
+credential and a *misconfigured* redirect.  The tell for the second was
+structural, not in any error text — the server listened on 8080, the
+registered redirect said 80, and the callback went to the wrong door.
+When an OAuth loopback "hangs after approval," compare the tool's listen
+port to the client's `redirect_uri` before suspecting the token.
+
+---
+
+## 12. "Single-line captions" were two lines in Korean — code points vs rendered width
+
+**Problem.** Korean captions overlapped: when a cue wrapped to two
+lines, the per-line opaque boxes (libass BorderStyle=3) grazed into a
+visible overlap.  The pipeline *already* had a guard against exactly
+this — `split-long-captions.py` splits any cue past `CHAR_MAX` (28) so it
+fits one line — yet 14 of 15 cues in the shipped Korean render still
+wrapped.
+
+**Constraint.** The guard measured cue length with `len(text)` — a
+**code-point** count.  A Hangul glyph renders ~2× the width of a Latin
+char (~50 px vs ~22 px against an ~880 px caption safe-zone), so 28
+Hangul code points is ~1400 px — nearly two full lines — while passing a
+`len ≤ 28` check.  The splitter's own docstring even claimed "28 chars
+fits either language," arithmetically false for full-width scripts.
+Shrinking the font or forcing `WrapStyle` off would either hurt
+legibility or overflow the frame edge.
+
+**Decision.** Make the budget a **rendered width**, not a character
+count.  `visual_width(text)` counts East-Asian Wide/Fullwidth characters
+(`unicodedata.east_asian_width in {W,F}`) as 2 and everything else as 1;
+every width comparison in the splitter (`split_text`,
+`greedy_word_split`) uses it.  `char_max` stays 28 but now means
+*half-glyph width units*: English is unchanged (28 chars = 28 units),
+Korean is correctly capped at ~14 glyphs/line.  A subtler second bug
+surfaced during verification: `merge_short_neighbours` re-concatenated
+sub-second cues to avoid blips, which glued the just-split Korean
+tail fragments straight back into a wide line — so the merge
+now carries the same width guard and refuses any merge that would exceed
+`char_max` (a brief single-line blip beats a two-line overlap).
+
+**Artifacts.**
+- `scripts/split-long-captions.py` — `visual_width()`; width-aware
+  `split_text` / `greedy_word_split`; width-guarded
+  `merge_short_neighbours`; corrected docstring.
+
+**Verification.** On the shipped Korean SRT: before, 14/15 cues over
+budget (max 57 units); after, 33/33 cues single-line (max 27 units, zero
+over budget), and the pass is idempotent (re-running splits nothing
+further).  English renders byte-identically — the change is inert for
+width-1 scripts.
+
+**Lesson.** A validation threshold is only as correct as its unit.
+`len()` silently conflates "how many characters" with "how wide" — fine
+in ASCII, wrong the moment a full-width script appears.  The tell that a
+Latin-calibrated constant is lying: it was justified with a claim ("28
+fits either language") that the stated per-glyph widths contradict.  When
+a "single-line enforcer" still yields two lines, suspect the metric
+before the mechanism.
+
+---
+
 ## What these have in common
 
 - Each started from a **specific observed failure**, not a theoretical

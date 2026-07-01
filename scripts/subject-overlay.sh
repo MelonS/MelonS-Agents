@@ -57,37 +57,67 @@ FONTHINT="$(yget font_hint)"
 
 FONT="${FONTHINT:-${LAYOUT_DRAWTEXT_FONTFILE:-}}"
 FFMPEG_BIN="${FFMPEG_BIN:-ffmpeg}"
-if [[ -z "$FONT" || ! -f "$FONT" ]]; then
-  log_warn "no usable unicode font (LAYOUT_DRAWTEXT_FONTFILE/font_hint) — Hangul may render as boxes"
-  log_warn "  set LAYOUT_DRAWTEXT_FONTFILE in .env to a unicode .ttf to fix"
-  FONTOPT=""
-else
-  FONTOPT="fontfile=${FONT}:"
-fi
 
 log_step "subject overlay: $DISPLAY_NAME ($SUBJECT_ID)"
+
+# Stage font + text as BASENAMES inside the output dir, then cd there to run
+# ffmpeg.  Two cross-platform reasons (both bit us on Windows):
+#  - drawtext text via textfile= (NOT text=) so colons (RE:SCENE), slashes,
+#    spaces and Hangul need zero filter-escaping — the file bytes are taken
+#    literally.  An inline text='RE:SCENE' makes ffmpeg read ':' as an option
+#    separator and the whole filterchain fails to parse.
+#  - a native-Windows ffmpeg can't open an absolute POSIX path (/c/Windows/..)
+#    written INSIDE a filter string; only argv paths get MSYS-translated.  A
+#    basename + cd sidesteps it.  IN/OUT stay absolute (they ARE argv).
+STAGE_DIR="$(cd "$(dirname "$OUT")" && pwd)"
+ABS_IN="$(cd "$(dirname "$IN")" && pwd)/$(basename "$IN")"
+OUT_BASE="$(basename "$OUT")"
+
+FONT_OPT=""
+if [[ -n "$FONT" && -f "$FONT" ]]; then
+  cp -f "$FONT" "$STAGE_DIR/_ov_font.${FONT##*.}"
+  FONT_OPT="fontfile=_ov_font.${FONT##*.}:"
+else
+  log_warn "no usable unicode font (LAYOUT_DRAWTEXT_FONTFILE/font_hint) — Hangul may render as boxes"
+  log_warn "  set LAYOUT_DRAWTEXT_FONTFILE in .env to a unicode .ttf to fix"
+fi
+
+# One textfile per overlay element (basenames; content is literal UTF-8).
+printf '%s' "$LOWER_THIRD" > "$STAGE_DIR/_ov_lt.txt"
+printf '%s' "$BRAND_MARK"  > "$STAGE_DIR/_ov_bm.txt"
+printf '%s' "$FAN_DISC"    > "$STAGE_DIR/_ov_ds1.txt"
+printf '%s' "$AI_DISC"     > "$STAGE_DIR/_ov_ds2.txt"
 
 # 1080x1920 canvas. Lower-third (bottom-left), brand mark (top-right), and a
 # two-line disclaimer block bottom-center (fan-content over AI-narration) —
 # both legally blocking, so they are always burned in.
-LT="drawtext=${FONTOPT}text='${LOWER_THIRD}':fontsize=44:fontcolor=white:box=1:boxcolor=${ACCENT}@0.85:boxborderw=18:x=48:y=h-320"
-BM="drawtext=${FONTOPT}text='${BRAND_MARK}':fontsize=34:fontcolor=white@0.92:box=1:boxcolor=black@0.35:boxborderw=12:x=w-tw-48:y=56"
-DS1="drawtext=${FONTOPT}text='${FAN_DISC}':fontsize=24:fontcolor=white@0.95:box=1:boxcolor=black@0.6:boxborderw=10:x=(w-tw)/2:y=h-128"
-DS2="drawtext=${FONTOPT}text='${AI_DISC}':fontsize=24:fontcolor=white@0.95:box=1:boxcolor=black@0.6:boxborderw=10:x=(w-tw)/2:y=h-90"
+# Lower-third sits ABOVE the caption band.  The burned caption (faceless ASS)
+# is bottom-centred at LAYOUT_SAFE_MARGIN_V≈280px from the bottom; a lower-third
+# at y=h-320 collides with it.  h-490 gives the channel chyron its own band
+# clear of both the caption and the bottom disclaimer strip.
+LT="drawtext=${FONT_OPT}textfile=_ov_lt.txt:fontsize=44:fontcolor=white:box=1:boxcolor=${ACCENT}@0.85:boxborderw=18:x=48:y=h-490"
+BM="drawtext=${FONT_OPT}textfile=_ov_bm.txt:fontsize=34:fontcolor=white@0.92:box=1:boxcolor=black@0.35:boxborderw=12:x=w-tw-48:y=56"
+DS1="drawtext=${FONT_OPT}textfile=_ov_ds1.txt:fontsize=24:fontcolor=white@0.95:box=1:boxcolor=black@0.6:boxborderw=10:x=(w-tw)/2:y=h-128"
+DS2="drawtext=${FONT_OPT}textfile=_ov_ds2.txt:fontsize=24:fontcolor=white@0.95:box=1:boxcolor=black@0.6:boxborderw=10:x=(w-tw)/2:y=h-90"
 VF="${LT},${BM},${DS1},${DS2}"
 
 if [[ -n "$MEMBER_IMG" && -f "$MEMBER_IMG" ]]; then
   log_warn "compositing operator-supplied member image: $MEMBER_IMG"
   log_warn "  → ensure you hold rights to this image (publicity/portrait + copyright)"
-  "$FFMPEG_BIN" -y -loglevel error -i "$IN" -i "$MEMBER_IMG" \
-    -filter_complex "[1:v]scale=-1:360[mi];[0:v][mi]overlay=40:H-360-330[bg];[bg]${VF}[outv]" \
-    -map "[outv]" -map 0:a? -c:v libx264 -preset medium -crf 21 -c:a copy -movflags +faststart "$OUT"
+  ABS_MI="$(cd "$(dirname "$MEMBER_IMG")" && pwd)/$(basename "$MEMBER_IMG")"
+  ( cd "$STAGE_DIR" && "$FFMPEG_BIN" -y -loglevel error -i "$ABS_IN" -i "$ABS_MI" \
+      -filter_complex "[1:v]scale=-1:360[mi];[0:v][mi]overlay=40:H-360-330[bg];[bg]${VF}[outv]" \
+      -map "[outv]" -map 0:a? -c:v libx264 -preset medium -crf 21 -c:a copy -movflags +faststart "$OUT_BASE" )
   RC=$?
 else
-  "$FFMPEG_BIN" -y -loglevel error -i "$IN" -vf "$VF" \
-    -c:v libx264 -preset medium -crf 21 -c:a copy -movflags +faststart "$OUT"
+  ( cd "$STAGE_DIR" && "$FFMPEG_BIN" -y -loglevel error -i "$ABS_IN" -vf "$VF" \
+      -c:v libx264 -preset medium -crf 21 -c:a copy -movflags +faststart "$OUT_BASE" )
   RC=$?
 fi
+
+# Best-effort cleanup of the staged temp files.
+rm -f "$STAGE_DIR"/_ov_font.* "$STAGE_DIR"/_ov_lt.txt "$STAGE_DIR"/_ov_bm.txt \
+      "$STAGE_DIR"/_ov_ds1.txt "$STAGE_DIR"/_ov_ds2.txt 2>/dev/null
 
 if [[ $RC -ne 0 || ! -f "$OUT" ]]; then
   log_err "ffmpeg overlay failed (rc=$RC)"; exit 70

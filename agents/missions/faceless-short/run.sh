@@ -202,6 +202,25 @@ else
   # to the local content.
   TERMS=()
   N_WINDOWS=$(jq 'length' "$WINDOWS_JSON_PATH")
+
+  # Curated-terms path: when FACELESS_VISUAL_TERMS points at a file with one
+  # search term per line (the research-team's curated visual_terms), use those
+  # and SKIP per-window model extraction.  A 3B local model asked for English
+  # stock terms from Korean narration drifts off-topic ("sword fight", "old
+  # clock tower"); curated terms keep the B-roll on subject.
+  if [[ -n "${FACELESS_VISUAL_TERMS:-}" && -s "${FACELESS_VISUAL_TERMS:-}" ]]; then
+    CURATED_TERMS=()
+    while IFS= read -r __t; do [[ -n "$__t" ]] && CURATED_TERMS+=("$__t"); done < "$FACELESS_VISUAL_TERMS"
+    if (( ${#CURATED_TERMS[@]} > 0 )); then
+      log_info "  using ${#CURATED_TERMS[@]} curated visual terms (skipping model extraction)"
+      for w in $(seq 0 $((N_WINDOWS - 1))); do
+        TERMS+=("${CURATED_TERMS[$(( w % ${#CURATED_TERMS[@]} ))]}")
+        log_info "  window $w: ${TERMS[$w]}"
+      done
+    fi
+  fi
+
+  if (( ${#TERMS[@]} == 0 )); then
   for w in $(seq 0 $((N_WINDOWS - 1))); do
     WIN_TEXT=$(jq -r ".[$w].text" "$WINDOWS_JSON_PATH")
     KW_PROMPT="Topic: $TOPIC
@@ -225,6 +244,7 @@ Output JSON: {\"term\": \"two to four words\"}"
     TERMS+=("$TERM")
     log_info "  window $w: $TERM"
   done
+  fi
 
   jq -n --argjson w "$(cat "$WINDOWS_JSON_PATH")" --argjson t "$(printf '%s\n' "${TERMS[@]}" | jq -R . | jq -s .)" \
     '[range(0; $w | length) | { index: $w[.].index, start: $w[.].start, end: $w[.].end, text: $w[.].text, term: $t[.] }]' \
@@ -305,11 +325,18 @@ for i in "${!BROLL_FILES[@]}"; do
     -an \
     -c:v libx264 -preset ultrafast -crf 28 \
     "$TRIMMED"
-  printf "file '%s'\n" "$(cd "$(dirname "$TRIMMED")" && pwd)/$(basename "$TRIMMED")" >> "$CONCAT_LIST"
+  # Relative basename — NOT an absolute POSIX path.  ffmpeg's concat demuxer
+  # resolves `file` entries against the list file's own dir, and a native
+  # Windows ffmpeg mis-reads a leading-slash path (/g/..) inside a list FILE as
+  # drive-root (G:\g\..).  Only argv paths get MSYS-translated, not file bytes.
+  printf "file '%s'\n" "$(basename "$TRIMMED")" >> "$CONCAT_LIST"
 done
 
 CONCAT_NOAUDIO="$MDIR/resources/concat-noaudio.mp4"
-"$FFMPEG_BIN" -y -loglevel error -f concat -safe 0 -i "$CONCAT_LIST" -c copy "$CONCAT_NOAUDIO"
+# Run concat from the resources dir so the relative `file 'trimmed-N.mp4'`
+# entries resolve on every platform (see the basename note above).
+( cd "$MDIR/resources" && "$FFMPEG_BIN" -y -loglevel error -f concat -safe 0 \
+    -i "$(basename "$CONCAT_LIST")" -c copy "$(basename "$CONCAT_NOAUDIO")" )
 
 # Build the ASS sidecar with the project's layout-engine constants.
 ASS_PATH="${SRT_PATH%.srt}.ass"
@@ -317,11 +344,26 @@ ffmpeg_srt_to_ass "$SRT_PATH" "$ASS_PATH"
 ASS_BASE="$(basename "$ASS_PATH")"
 ASS_DIR="$(cd "$(dirname "$ASS_PATH")" && pwd)"
 
+# Stage the overlay font as a basename inside ASS_DIR.  drawtext (fontfile=) and
+# libass (fontsdir=) both run after we `cd "$ASS_DIR"`, so a relative basename is
+# portable: on Windows/Git-Bash an absolute POSIX path (/c/Windows/Fonts/..)
+# inside a filter string is NOT path-translated and the native ffmpeg can't open
+# it.  Copying the font in and referencing it by name works on macOS/Linux/Win.
+OVERLAY_FONT_BASE=""
+if [[ -f "${LAYOUT_DRAWTEXT_FONTFILE:-}" ]]; then
+  OVERLAY_FONT_BASE="_overlay_font.${LAYOUT_DRAWTEXT_FONTFILE##*.}"
+  cp -f "$LAYOUT_DRAWTEXT_FONTFILE" "$ASS_DIR/$OVERLAY_FONT_BASE"
+fi
+
 # Attribution overlay text.
 ATTRIBUTION_TEXT="$MDIR/resources/source-attribution.txt"
 {
-  echo "B-roll: Pexels License — pexels.com"
-  echo "Narration: ${TTS_LABEL:-Kokoro TTS} (synthetic)"
+  # B-roll attribution line is overridable: a Pexels render keeps the default,
+  # an idol render that reuses official footage credits the real source.
+  echo "${FACELESS_BROLL_ATTRIBUTION:-B-roll: Pexels License — pexels.com}"
+  # TTS_LABEL (when set by tts.sh) already includes a "(synthetic ...)" note;
+  # only append one for the default Kokoro case so it isn't doubled.
+  echo "Narration: ${TTS_LABEL:-Kokoro TTS (synthetic)}"
 } > "$ATTRIBUTION_TEXT"
 ATTR_BASE="$(basename "$ATTRIBUTION_TEXT")"
 
@@ -333,9 +375,11 @@ ABS_NARRATION="$(cd "$(dirname "$NARRATION_WAV")" && pwd)/$(basename "$NARRATION
 # Filter graph: concat clips are already 1080×1920 from the trim step,
 # so the final filter only needs to burn captions (and optionally the
 # top-left attribution overlay).  No blurred-background letterbox.
-FILTER="[0:v]ass=${ASS_BASE}"
-if [[ -f "${LAYOUT_DRAWTEXT_FONTFILE:-}" ]]; then
-  FILTER="${FILTER},drawtext=fontfile=${LAYOUT_DRAWTEXT_FONTFILE}:textfile=${ATTR_BASE}:fontsize=22:fontcolor=white@0.75:box=1:boxcolor=black@0.45:boxborderw=10:x=40:y=40"
+# libass: fontsdir=. lets it find the staged font by family name on hosts
+# without fontconfig (e.g. Windows) — harmless where fontconfig already works.
+FILTER="[0:v]ass=${ASS_BASE}:fontsdir=."
+if [[ -n "$OVERLAY_FONT_BASE" ]]; then
+  FILTER="${FILTER},drawtext=fontfile=${OVERLAY_FONT_BASE}:textfile=${ATTR_BASE}:fontsize=22:fontcolor=white@0.75:box=1:boxcolor=black@0.45:boxborderw=10:x=40:y=40"
 else
   log_warn "  LAYOUT_DRAWTEXT_FONTFILE not set or not found — skipping attribution overlay"
 fi

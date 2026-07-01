@@ -136,6 +136,71 @@ Optional but recommended:
 - macOS `Yuna` voice (Korean fallback) is not available on Windows.  Use `edge-tts` with `ko-KR-SunHiNeural` voice instead (TTS_BACKEND=edge-tts).
 - `h264_videotoolbox` is macOS-only.  Existing scripts should branch on `FFMPEG_HWACCEL` env var; until they do, Windows users may need to override the encoder flag manually.
 
+## ffmpeg + Git-Bash path translation
+
+Native `ffmpeg.exe` under Git-Bash sees POSIX paths (`/g/...`,
+`/c/...`) only when MSYS translates them — and MSYS translates **only
+command arguments** it recognizes as paths.  It does NOT translate:
+
+- paths written *inside a file the tool reads* — e.g. the concat
+  demuxer's list file (`file '/g/ai/.../trimmed-0.mp4'`), and
+- paths embedded *inside a `-filter_complex` string* — e.g.
+  `ass=/g/.../captions.ass`,
+  `drawtext=fontfile=/c/Windows/Fonts/malgun.ttf`.
+
+In those two channels the native binary re-resolves `/g/...` as a
+*relative* `G:\g\...` and fails to open it.  Rules that keep scripts
+portable (macOS + Windows, no OS branch):
+
+1. **Concat lists use relative basenames + `cd`.** Write
+   `file 'clip.mp4'` and run ffmpeg from the directory holding the
+   clips (`( cd "$dir" && ffmpeg -f concat -safe 0 -i list.txt ... )`).
+2. **Filter-string assets are staged as basenames, referenced by
+   basename after a `cd`.** Stage the ASS sidecar, caption/overlay
+   font, and any `textfile=` together; `cd` there; use
+   `ass=captions.ass:fontsdir=.` and
+   `drawtext=fontfile=font.ttf:textfile=t.txt`.  `fontsdir=.` also lets
+   libass find the font by family without fontconfig.
+3. **Never inline drawtext `text=`.** A literal colon (`NEWS:LIVE`) is
+   the filter-option separator and breaks the parser; write the string
+   to a file and use `textfile=` (also handles quotes/commas/Korean).
+
+Full write-up:
+[case study #10](engineering-case-studies.md#10-native-ffmpeg-on-windows-cant-read-posix-paths-the-shell-didnt-translate--basename--cd-everywhere).
+
+## YouTube upload OAuth (youtubeuploader)
+
+`scripts/yt-batch-upload.sh` wraps `youtubeuploader` with OAuth creds
+at `$YT_SECRETS` / `$YT_CACHE` (on this machine
+`/g/config/youtubeuploader/`).  Two Windows/OAuth traps, both hit
+2026-07-01:
+
+- **Redirect port must match the tool's loopback server.**
+  `youtubeuploader` listens for the OAuth callback on `-oAuthPort`
+  (default **8080**), but the Mac's `client_secrets.json` had
+  `redirect_uris: ["http://localhost"]` (port **80**).  Google then
+  redirects the approved consent to `localhost:80`, the callback never
+  reaches :8080, and the tool hangs after approval with the token
+  never written.  Fix once —
+  `jq '.installed.redirect_uris = ["http://localhost:8080"]' client_secrets.json`
+  (Desktop clients accept any loopback port).
+- **"Testing"-status apps expire refresh tokens after 7 days.** An
+  `invalid_grant` on a token that worked weeks ago is this, not a code
+  bug.  Re-consent to mint a fresh token; to stop the weekly expiry,
+  **publish the OAuth app to Production** in Cloud Console
+  (`console.cloud.google.com/apis/credentials/consent?project=<id>` →
+  "Publish app").  Sensitive YouTube scopes keep the "unverified app"
+  warning at consent time, but tokens no longer expire on the 7-day
+  clock.
+
+First-run note: the wrapper refuses to run without an existing token
+cache (fail-safe), so the **first** consent must go through
+`youtubeuploader` directly (delete/rename the stale `request.token`
+first so it triggers the browser flow).
+
+Full write-up:
+[case study #11](engineering-case-studies.md#11-the-mac-youtube-token-was-dead-and-the-redirect-port-was-wrong--reviving-unattended-upload).
+
 ## Adding a new Windows-specific script
 
 Scripts that only run on Windows live under `scripts/windows/`.  Reasons
@@ -157,8 +222,9 @@ Scripts in the top-level `scripts/` directory must work on macOS + Linux
 | jq 1.7.1, yt-dlp 2026.03.17, youtubeuploader 1.25.5 | ✓ All on PATH |
 | ComfyUI v0.22.0 (LTX-Video native nodes) | ✓ Booted, served on 127.0.0.1:8188 |
 | LTX-Video 2B v0.9.5 (img2vid) | ✓ 4-sec clip rendered in 27s on 4070 Ti SUPER |
-| YouTube OAuth (`yt-stats-collect.sh`) | ✗ Pending — operator-provided `client_secrets.json` from Mac |
+| YouTube OAuth (`yt-batch-upload.sh` / `yt-stats-collect.sh`) | ✓ Working 2026-07-01 — re-consented, redirect aligned to :8080, app published to Production |
 | `agents/missions/music-video/run.sh` end-to-end via git-bash | ✗ Untested on Windows |
+| `content-short` / `faceless-short` end-to-end via git-bash | ✓ Validated 2026-07-01 (produce → caption → render → legal → upload) |
 | `bootstrap.sh` / `first-touch.sh` | ✗ macOS-specific, Windows skip |
 
 ## See also
