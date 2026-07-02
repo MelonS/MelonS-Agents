@@ -8,7 +8,7 @@ set -uo pipefail
 PUBLISH="${1:-outputs/publish/shorts-2026-05-23-batch}"
 PREFIX="${BATCH_PREFIX:-batch3}"  # match e.g. batch3-monday-v1
 
-cd /Users/melons/ai
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"  # repo root (was hardcoded /Users/melons/ai; §8)
 [[ ! -d "$PUBLISH" ]] && { echo "missing publish dir: $PUBLISH"; exit 1; }
 
 RECOVERED=0

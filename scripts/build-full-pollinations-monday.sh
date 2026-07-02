@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Full Pollinations for 월요일이 또 와요 — KR comedy K-ballad
 set -euo pipefail
-cd /Users/melons/ai
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"  # repo root (was hardcoded /Users/melons/ai; §8)
 source .env 2>/dev/null
 FFMPEG="${FFMPEG_BIN:-/opt/homebrew/bin/ffmpeg}"
 WORK=/tmp/full-pollinations-monday

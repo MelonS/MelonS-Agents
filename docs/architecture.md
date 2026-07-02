@@ -147,6 +147,8 @@ sits outside `$RECORDS_DIR` by design.
 | `shorts-batch` | long video + N | up to N 9:16 captioned shorts | render×N |
 | `faceless-short` | topic prompt + tone | one 60 s 9:16 captioned short (TTS-narrated, B-roll stitched) | TTS + render |
 | `music-video` | operator-supplied music file + mood keywords | one 60 s 9:16 short, music-as-sole-audio, no narration, no captions, beat-aligned cuts + onset-aligned glitches | beat detection + render |
+| `product-cf` | product brief + assets | one 9:16 product CF short (builds on music-video) | render |
+| `content-short` | topic/profile (`info`\|`news`\|`idol`) + research.json | one fact-checked, legal-gated 9:16 short (wraps faceless-short; 리서치→제작⇄법률→출시 — `docs/content-shorts-pipeline.md`) | TTS + render + legal loop |
 
 The first three are *transformation* missions — they start from a long
 source video and reshape it.  `faceless-short` and `music-video` are

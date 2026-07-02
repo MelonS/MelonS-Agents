@@ -2,7 +2,7 @@
 # Build full-length Pollinations music video — replaces ALL B-roll with AI generated.
 # Hard-coded for 작은 손 (folk-small-hand) demo. Other songs would need their own prompt lists.
 set -euo pipefail
-cd /Users/melons/ai
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"  # repo root (was hardcoded /Users/melons/ai; §8)
 source .env 2>/dev/null
 FFMPEG="${FFMPEG_BIN:-/opt/homebrew/bin/ffmpeg}"
 WORK=/tmp/full-pollinations

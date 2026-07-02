@@ -90,9 +90,12 @@ concrete artifact exists that proves the path works.
 
 ## Subagent layout (already verified, do not re-recommend)
 
-`.claude/agents/*.md` frontmatter sets the model.  As of 2026-05-22
-(unchanged since 2026-05-15 — last commit touching `.claude/agents/*.md`
-was `8570a9c`):
+`.claude/agents/*.md` frontmatter sets the model.  As of 2026-07-03
+(22 definitions total — the core six below, plus two skill rosters
+added later: 12 `game-*` role subagents, 2026-05-27 `32ec30f`, listed in
+`skills/game-dev-agent/ARCHITECTURE.md`; and the 5-member content-shorts
+team — `content-director` + `research/production/legal/release-team`,
+2026-07-01 `ff7fa19`, documented in `docs/content-shorts-pipeline.md`):
 
 | Agent          | Model     | Role                                              |
 | -------------- | --------- | ------------------------------------------------- |
@@ -101,7 +104,7 @@ was `8570a9c`):
 | `resourcer`    | **opus**  | Fetch / probe / prepare assets → `resources/`     |
 | `editor`       | sonnet    | Apply changes → `outputs/`                        |
 | `qa`           | sonnet    | Validate outputs against plan.md → `qa-report.md` |
-| `auditor`      | sonnet    | Out-of-band read-only audit (three trigger layers: L1 post-commit hook on drift-risk paths, L2 15-min mission-anomaly poll, L3 daily 03:00 baseline via launchd) → `docs/audit/<date>-<focus>.md` + `CURRENT-ALERT.md` when non-CLEAN |
+| `auditor`      | sonnet    | Out-of-band read-only audit (trigger layers: L1 post-commit hook on drift-risk paths — per-checkout via `scripts/install-hooks.sh`; L3 daily 03:00 baseline — launchd on macOS / Task Scheduler on Windows via `scripts/windows/install-scheduler.ps1`; L2 15-min poll is macOS-only by design) → `docs/audit/<date>-<focus>.md` + `CURRENT-ALERT.md` when non-CLEAN |
 
 A common analyst suggestion is "downgrade subagents from opus to
 sonnet."  This is already done for `editor` / `qa` / `auditor`.
