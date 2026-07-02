@@ -81,7 +81,7 @@ Pexels 가입도, Suno 호출도, `.env` 편집도 필요 없습니다 — 마�
 
 ![3-shape 스킬 모델 — Shape A 미션 라우팅 5에이전트 파이프라인, Shape B 독립형, Shape ? 미래 스킬](docs/visuals/05-three-shapes-ko.png)
 
-이 시스템은 모든 스킬을 하나의 형태로 강제하지 않습니다. **Shape A** 는 5에이전트 미션 파이프라인(orchestrator + planner / resourcer / editor / qa)으로 흐르고, **Shape B** 는 planner/qa 단계가 거의 빌 때 쓰는 독립 스크립트입니다. 서브에이전트끼리는 대화 기록을 공유하지 않고, 커밋된 파일(`plan.md` / `MANIFEST.md` / `qa-report.md`)로만 작업을 넘겨줍니다. 그래서 각자의 컨텍스트와 비용이 일정 범위 안에 묶입니다. 역할별 모델 배정(planner/resourcer = opus, editor/qa = sonnet)과 비용 방화벽 덕분에 Anthropic 토큰은 오케스트레이션 단계에서만 쓰이고, 미션 실행은 전부 로컬 도구로 돌아 런타임 API 토큰이 **0**으로 유지됩니다. `.claude/agents/` 에는 정의가 **23개**(코어 6 + 게임 로스터 12 + 콘텐츠 파이프라인 팀 5) 있습니다. 전체 데이터 흐름도와 게임 프로토타입 빌드 체인: [`docs/architecture.md`](docs/architecture.md).
+이 시스템은 모든 스킬을 하나의 형태로 강제하지 않습니다. **Shape A** 는 5에이전트 미션 파이프라인(orchestrator + planner / resourcer / editor / qa)으로 흐르고, **Shape B** 는 planner/qa 단계가 거의 빌 때 쓰는 독립 스크립트입니다. 서브에이전트끼리는 대화 기록을 공유하지 않고, 커밋된 파일(`plan.md` / `MANIFEST.md` / `qa-report.md`)로만 작업을 넘겨줍니다. 그래서 각자의 컨텍스트와 비용이 일정 범위 안에 묶입니다. 역할별 모델 배정(planner/resourcer = opus, editor/qa = sonnet)과 비용 방화벽 덕분에 Anthropic 토큰은 오케스트레이션 단계에서만 쓰이고, 미션 실행은 전부 로컬 도구로 돌아 런타임 API 토큰이 **0**으로 유지됩니다. `.claude/agents/` 에는 정의가 **23개**(코어 6 + 게임 로스터 12 + 콘텐츠 파이프라인 팀 5) 있습니다. 전체 데이터 흐름도: [`docs/architecture.md`](docs/architecture.md) · 게임 프로토타입 빌드 체인: [`skills/game-dev-agent/ARCHITECTURE.md`](skills/game-dev-agent/ARCHITECTURE.md).
 
 ## 자율성 신호 — 주장이 아니라 측정
 

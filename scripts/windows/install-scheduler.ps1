@@ -11,8 +11,10 @@
 #      is poor vs L1+L3 coverage. Revisit if unattended autonomous runs
 #      return to this machine.)
 #
-# Uses the ScheduledTasks module (not schtasks.exe) — /TR argument quoting
-# for a spaced path + nested bash -lc string is unreliable across locales.
+# install uses schtasks.exe pointed at the spaceless run-audit.cmd wrapper
+# (direct /TR quoting of "Program Files" + nested bash -lc is unreliable
+# across locales, and Register-ScheduledTask CIM binding proved flaky here);
+# status/remove use the ScheduledTasks module cmdlets, which are stable.
 #
 # Usage:
 #   powershell -ExecutionPolicy Bypass -File scripts\windows\install-scheduler.ps1          # install

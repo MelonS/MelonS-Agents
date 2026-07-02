@@ -223,8 +223,11 @@ job-hunt 항목은 Blocked/parked로 이동하는 것을 제안합니다.  다�
   카테고리 티어 + rot-word 결정론 게이트 `scripts/news-screen.sh` + 웹리서치 검증
   10니치 정보쇼츠 주제뱅크(`2ae4282`) · 운영자 지시 **이중·삼중 팩트체크** 4레이어
   강제(`9425a3e` — 첫 실전 뉴스에서 검색요약發 미확인 주장 2건 적발·삭제 후 재렌더)
-  · 프로필 인라인주석 파서 함정 수정(`e18b3c8`) · 검은고딕 자막폰트+OFL 동봉 +
-  faceless 스티치 VIDEO_ENCODER 연결(RTX nvenc 4.1x, `7c97f7f`).  smoke 24/24.
+  · 프로필 인라인주석 파서 함정 수정(`e18b3c8`) · 검은고딕 자막폰트+OFL 동봉
+  (`d881f9b`) + faceless 스티치 VIDEO_ENCODER 연결(RTX nvenc 4.1x, `7c97f7f`)
+  · 감사자동화 Windows 부활 — L1 훅 + Task Scheduler L3, 하드코딩 경로 3건
+  수정(`2a94adf`).  전제 커밋(Mac 세션): edge-tts 백엔드 `ec83bf0`, 크로스플랫폼
+  인코더 선택 `c3c0819`.  smoke 24/24.
   출시(records/, 비커밋): 유튜브 10편 예약 7/3~7/6 — 디아4 4편(주제별 footage
   차별화 재작업)·리센느 2편·니치 A/B 테스트(우주/심리/고양이)·휴머노이드 로봇뉴스,
   전부 legal PASS.

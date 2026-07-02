@@ -5,69 +5,58 @@
 > next CLEAN run.  Do not edit by hand — fix the underlying findings
 > and re-run the auditor.
 
-**Verdict**: CRITICAL
+**Verdict**: DRIFT_DETECTED
 **Full report**: [`docs/audit/2026-07-03-all.md`](2026-07-03-all.md)
-**Generated**: 2026-07-03 05:15:15    
+**Generated**: 2026-07-03 05:34:34    
 
 ## Summary (from audit)
 
 
-All-focus audit against HEAD `46135c5` (2026-07-03), run from a Windows
-checkout at `G:/ai/MelonS-Agents`. All six dimensions were checked:
-architecture-vs-docs drift, roadmap freshness, operator-contract
-compliance, cost-model accuracy, stale TODOs/dead code, and
-security/secrets. Security is clean — no committed secrets, `.env` stays
-untracked, `.env.example` is schema-only, and the `§8 exception:` marker
-registry passes for all originally-registered files. The precomputed
-skill-drift reports one `medium` row was investigated and shown to be a
-false positive caused by a CRLF/blank-line parsing bug in
-`scripts/audit-skill-drift.sh` on this Windows checkout, not an actual
-missing script in `skills/job-hunt`.
+Full-repo, all-dimension audit run against a live HEAD that moved from
+`46135c5` to `592bfc7` over the course of this run (10 commits landed
+mid-audit — cut-judge agent, Wan 2.2 tooling, and the prior audit's own
+fix commit). All findings below are verified against `592bfc7`
+(2026-07-03 05:26:53 +0900). This supersedes the `2026-07-03-all.md`
+report committed at `2a94adf` (05:15:15), which was itself already
+5+ commits stale by the time it landed.
 
-The verdict is CRITICAL for a single, high-impact reason: the
-audit automation itself has been completely dark for 39 days. The most
-recent report before this one is `docs/audit/2026-05-25-all.md`, and
-`docs/audit/CURRENT-ALERT.md` still points at it. Direct verification on
-this machine shows all three documented trigger layers are inactive:
-`.git/hooks/post-commit` does not exist (L1), and
-`scripts/install-scheduler.sh status` reports every launchd plist —
-`queue`, `auditor`, `audit-poll`, `disk-watch`, `yt-stats`,
-`intervention-chart` — as NOT installed (L2/L3). `launchd` is
-macOS-only, and the roadmaps own 2026-05-25 Done entry records the
-operator decision to migrate primary production to a Windows machine
-("Mac becomes secondary monitor / backup"); no Windows equivalent
-(Task Scheduler, cron via WSL, etc.) was ever stood up for the auditor
-or queue jobs. In the roughly 140 commits that landed since 2026-05-25,
-none of the drift documented below (stale subagent tables, undocumented
-cost surfaces, hardcoded machine paths, missing §5 markers, roadmap Done
-gaps) was caught — because nothing was watching. That is exactly the
-failure mode this subagent exists to prevent, and it went unnoticed
-until this on-demand invocation surfaced it.
+The prior report's CRITICAL (audit automation dark 39 days) and
+HIGH (3 scripts hardcoding `/Users/melons/ai`) findings are
+confirmed RESOLVED as of this run: `.git/hooks/post-commit` exists
+with correct drift-risk-path matching logic, a Windows Task Scheduler
+job `MelonS-auditor-daily` is registered (State=Ready,
+NextRunTime=2026-07-04 03:00), and all three legacy scripts
+(`batch-recover.sh`, `build-full-pollinations.sh`,
+`build-full-pollinations-monday.sh`) now self-resolve their repo root
+instead of hardcoding a Mac-only path. Neither scheduler has fired yet
+(no `records/audit/hook-trigger.log`; Task Scheduler LastRunTime is
+still the Windows "never run" sentinel 1999-11-30), so treat this as
+configured-but-unproven rather than fully closed — see finding below.
 
-A second concrete, verifiable break: three committed scripts
-(`scripts/batch-recover.sh`, `scripts/build-full-pollinations.sh`,
-`scripts/build-full-pollinations-monday.sh`) contain a bare
-`cd /Users/melons/ai` with no env-var indirection and no `§8 exception`
-marker. That path does not exist on this machine — running any of the
-three fails immediately under `set -euo pipefail`. This directly
-violates operator-contract §8 principle 4 ("no hardcoded machine-specific
-values... all paths env-resolved") and is demonstrable right now, not
-hypothetical.
-
-Everything else below is real but lower-impact: documentation (subagent
-table, architecture mission map, cost model) has not kept pace with two
-skill launches (game-dev-agents 12 role subagents, 2026-05-27; the
-4-team content-shorts pipeline, 2026-07-01); `docs/roadmap.md` "Now"
-is on its Nth stale cycle (already self-flagged in an unactioned
-suggest block); three landed commits have no Done entry;
-and the §5 audit-trail marker (`Requested-by: user`) is absent from
-every `.claude/agents/*.md` commit since the convention began, though
-the contract itself pre-classifies that as low severity.
+No new critical-severity issue was found. One high finding
+replaces the closed ones: `README.md` explicitly tells readers that
+`docs/architecture.md` documents "the game-prototype build chain," but
+`architecture.md` contains zero mentions of `game-prototype`,
+`game-dev-agent`, or Skill #3 anywhere — the canonical "one-glance map"
+and "Skills layer" sections are silent about an entire shipped skill
+category (Unity/C#, 12-role subagent team) that dominated Junes
+commit history. Several medium findings persist or newly appeared:
+a doc-vs-doc subagent-count contradiction (`for-analysts.md` says 22,
+`README.md` says 23, actual count at audit time is 24 after
+`cut-judge.md` landed mid-run), `cost-model.md` staleness against 3
+newer surfaces (music-video/content-short/product-cf cost shape,
+KlingAI paid API), `roadmap.md` "Now" still frozen at 2026-05-20/22
+against a 2026-06-12 `goal.md` active goal and the last 10+ commits, 3
+uncited Done-section commit hashes, a confirmed false-positive root
+cause for the precomputed skill-drift finding (CRLF line endings plus a
+parser bug, not an actual missing script), and a stale, self-
+contradictory `CURRENT-ALERT.md`. Security is clean: no committed
+secrets, `.env` stays untracked, `.env.example` is schema-only, and the
+section-8 exception-comment registry passes for every file it names.
 
 ## Critical / High findings
 
-- **[critical]** Audit automation has been fully inactive for 39 days — `docs/audit/CURRENT-ALERT.md`, `.git/hooks/post-commit`, `scripts/install-scheduler.sh`
-- **[high]** Hardcoded, currently-broken machine path in 3 committed scripts — `scripts/batch-recover.sh:11`, `scripts/build-full-pollinations.sh:4`, `scripts/build-full-pollinations-monday.sh:4`
+- **[high]** README.md points to docs/architecture.md for content that is not there — `README.md:84`, `docs/architecture.md`
 
 ## How to clear this alert
 
