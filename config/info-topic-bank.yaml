@@ -1,0 +1,183 @@
+# =============================================================================
+# Info-shorts topic bank — vetted niches for the Korean faceless channel
+# =============================================================================
+# Consumed by:
+#   - the director (top-level session) when picking the next info short
+#   - .claude/agents/research-team.md (angle/hook inspiration + footage terms)
+#
+# Source: 2026-07-03 web-grounded niche research. Ranking = viewer appeal ×
+# Pexels footage availability × low legal risk. Korean faceless knowledge
+# channels prove the demand (리뷰엉이 ~100만/우주, 신박과학 56만, 1분과학 80만,
+# 슈카월드 300만/경제). 2026 Shorts algorithm rewards completion ≥60% and
+# penalizes low-nutrition AI mass-production — every beat needs a curiosity gap.
+#
+# HARD CONSTRAINT this bank encodes: the pipeline auto-fetches one Pexels stock
+# clip per caption beat. A niche without clean stock coverage is a TRAP no
+# matter how appealing (see traps: below).
+# =============================================================================
+
+niches:
+  - id: space
+    rank: 1
+    name_ko: 우주/천문
+    appeal: 5; footage: 5; legal: 5
+    evergreen: true
+    pilot: true          # ← best-3-to-pilot
+    why: >
+      Proven #1 Korean faceless knowledge niche (리뷰엉이 "우주 끝까지 갈 수 없는
+      이유" 610만뷰). Scale + existential-dread hooks repeat infinitely. Closest
+      aesthetic adjacency to the existing Diablo audience (dark/epic/awe).
+    pexels_terms: [galaxy, nebula, milky way, earth from space, planet rotation,
+                   solar system, rocket launch, starry night sky timelapse, sun surface]
+    hooks_ko:
+      - "태양이 지금 사라져도 우리는 8분 동안 모릅니다"
+      - "우주에서 비명을 질러도 아무도 못 듣는 진짜 이유"
+      - "지구에서 가장 가까운 블랙홀이 방금 더 가까워졌습니다"
+    risk_notes: "무근거 주장만 금지 (unproven claims as fact)"
+
+  - id: psychology
+    rank: 2
+    name_ko: 심리/인간행동
+    appeal: 5; footage: 4; legal: 4
+    evergreen: true
+    pilot: true
+    why: >
+      "왜 나는/사람들은 ~할까" is the strongest curiosity format — the viewer IS
+      the subject, driving replays/comments (what the completion-rate algorithm
+      rewards). Dense proven KR field (심리툰, 5분심리학).
+    pexels_terms: [person thinking, crowd walking slow motion, face close up,
+                   lonely silhouette, eyes macro, brain, couple talking, city commute]
+    hooks_ko:
+      - "사람들이 당신을 처음 3초 만에 판단하는 이유"
+      - "왜 자꾸 이불킥할 기억만 떠오를까 (과학적 이유)"
+      - "이 습관이 있으면 사실 머리가 좋은 겁니다"
+    risk_notes: "일반론만 — 진단 금지, 실존 인물 라벨링 금지 ('사람들은' O, '저 사람은' X)"
+
+  - id: animals
+    rank: 3
+    name_ko: 동물/야생
+    appeal: 4; footage: 5; legal: 5
+    evergreen: true
+    pilot: true
+    why: >
+      Broadest all-ages appeal; deepest Pexels well (nature 301K+ clips);
+      near-zero legal risk. The VOLUME niche for daily-upload cadence.
+    pexels_terms: [octopus, shark, owl, ant macro, jellyfish, elephant, wolf,
+                   wildlife, underwater, birds flying, insect macro]
+    hooks_ko:
+      - "문어의 심장은 3개, 그런데 헤엄칠 땐 하나가 멈춥니다"
+      - "고양이가 죽은 쥐를 가져다주는 소름 돋는 이유"
+      - "지구에서 사실상 죽지 않는 동물이 있습니다"
+    risk_notes: "방송/다큐(BBC류) 클립 리핑 절대 금지 — Pexels/Pixabay만"
+
+  - id: science-how
+    rank: 4
+    name_ko: 과학/작동원리
+    appeal: 4; footage: 4; legal: 5
+    evergreen: true
+    why: '"99%가 틀리게 알고 있는" 교정본능 후킹. 우주 시청층과 겹침.'
+    pexels_terms: [laboratory, chemistry reaction, electricity spark, microscope,
+                   slow motion water drop, magnet, light prism, gears mechanism]
+    hooks_ko:
+      - "비행기가 뜨는 진짜 이유, 99%가 틀리게 알고 있습니다"
+      - "거울 속 당신은 진짜 당신이 아닙니다"
+
+  - id: tech-ai
+    rank: 5
+    name_ko: 테크/AI
+    appeal: 4; footage: 5; legal: 4
+    evergreen: semi     # 70% evergreen(원리) / 30% 시사(신제품) 믹스
+    why: "2026 최고 성장·최고 CPM faceless 카테고리."
+    pexels_terms: [artificial intelligence, circuit board, data center, code screen,
+                   robot, smartphone night, server room, network abstract]
+    hooks_ko:
+      - "AI가 당신의 목소리를 3초면 복제합니다"
+      - "당신의 스마트폰이 밤새 몰래 하는 일"
+    risk_notes: "특정 기업 비방 금지, 실존 인물 딥페이크 데모 금지"
+
+  - id: body-health
+    rank: 6
+    name_ko: 인체/건강 팩트
+    appeal: 5; footage: 5; legal: 3
+    evergreen: true
+    second_wave: true   # 스크립트 규율 게이트 갖춘 후 진입
+    why: "신체 호기심(움찔, 숨 참기 한계)은 흡인력 최상."
+    pexels_terms: [running, heartbeat, sleeping, human anatomy 3d, dna,
+                   brain neurons, blood cells, stretching]
+    hooks_ko:
+      - "잠들기 직전 몸이 움찔하는 과학적 이유"
+      - "물 하루 2리터? 사실 근거 없는 얘기였습니다"
+    risk_notes: >
+      의료법 §56: 해부학적/과학적 '사실'과 통념 깨기만. 치료법·복용량·"이거
+      먹으면 낫는다" 절대 금지. legal-gate가 not-advice 고지 요구.
+
+  - id: money-basics
+    rank: 7
+    name_ko: 돈/경제 기초
+    appeal: 4; footage: 5; legal: 3
+    evergreen: true
+    second_wave: true
+    why: "슈카월드 300만이 증명한 수요. 개념 설명은 evergreen + 고CPM."
+    pexels_terms: [cash money, stock chart, coins falling, bank, credit card,
+                   city business skyline, calculator]
+    hooks_ko:
+      - "왜 물가는 한번 오르면 절대 안 내려갈까?"
+      - "복리를 몰라서 손해 보는 사람들의 공통점"
+    risk_notes: >
+      정의·메커니즘만. 종목/코인 추천, 수익 약속 절대 금지 (자본시장법).
+      "복리란 무엇인가" O / "이걸로 부자 되세요" X.
+
+  - id: nature-geo
+    rank: 8
+    name_ko: 자연/지리 경이
+    appeal: 4; footage: 5; legal: 5
+    evergreen: true
+    why: "경외감 + 최소 편집으로 고유지율. Pexels nature 301K+."
+    pexels_terms: [aerial mountains, ocean waves drone, volcano, desert dunes,
+                   waterfall, deep sea, glacier, canyon]
+    hooks_ko:
+      - "지구에서 가장 깊은 구멍 아래엔 무엇이 있을까"
+      - "이 나라는 매년 지도에서 사라지고 있습니다"
+
+  - id: food-culture
+    rank: 9
+    name_ko: 음식/문화 팩트
+    appeal: 3; footage: 5; legal: 5
+    evergreen: true
+    why: "음식 footage = 높은 완주율. 안전한 filler 니치."
+    pexels_terms: [cooking closeup, noodles, coffee pour, street food, kitchen,
+                   spices, chocolate melting]
+    hooks_ko:
+      - "매운 걸 먹으면 기분이 좋아지는 진짜 이유"
+      - "커피를 마시면 안 되는 정확한 시간"
+    risk_notes: "음식과학/문화까지만 — 건강효능 주장으로 넘어가면 body-health 규율 적용"
+
+  - id: everyday-why
+    rank: 10
+    name_ko: 일상 속 왜?
+    appeal: 4; footage: 3; legal: 5
+    evergreen: true
+    why: "하품 전염, 닫힘 버튼 등 초소형 미스터리 = 완벽한 1-훅 쇼츠."
+    pexels_terms: [elevator, yawning, clock, traffic light, office, hands typing]
+    hooks_ko:
+      - "하품은 왜 전염될까?"
+      - "엘리베이터 '닫힘' 버튼은 사실 작동하지 않습니다"
+    risk_notes: "소재별 footage 편차 큼 — visual_terms 먼저 Pexels에서 확인"
+
+# ── 함정 니치 — 이대로는 제작 금지 ─────────────────────────────────────────
+traps:
+  - id: history-events
+    name_ko: 역사(사건)
+    why_trap: >
+      수요는 크지만(황현필 등) 애니메이션/지도/진행자로 살아남는 장르.
+      특정 역사 사건엔 스톡 footage가 없다 — generic '낡은 책/유적'만 잡혀
+      모든 비트가 미스매치, 유지율 붕괴. 아카이브 사진은 저작권 지뢰.
+    rescope: "'고대 유물/미스터리' 등 추상 footage로 재스코프하거나 일러스트 파이프라인 확보 후."
+
+  - id: mystery-crime
+    name_ko: 미제사건/실화범죄
+    why_trap: >
+      최악의 리스크 프로필. 사이버렉카 명예훼손·초상권 단속 활발 — 실존 인물
+      이름/이미지 + 평판훼손 프레임 = 사실이어도 형사처벌 가능. 실제 사건
+      자료는 저작권/초상권 잠김 — 클린 스톡이 존재하지 않음.
+    rescope: "비범죄 분기만 안전: 심해/우주/자연 미스터리 → space·animals·nature-geo로 흡수."

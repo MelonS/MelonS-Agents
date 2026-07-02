@@ -1,0 +1,83 @@
+# =============================================================================
+# News-shorts category risk tiers + deterministic screen rules
+# =============================================================================
+# Consumed by:
+#   - scripts/news-screen.sh            (deterministic research.json screen)
+#   - .claude/agents/research-team.md   (judgment: tier tagging at intake)
+#   - .claude/agents/legal-team.md      (judgment: defamation/advice checks)
+#
+# Derived from the 2026-07-03 news-shorts playbook research (Korea-first):
+# 명예훼손 is criminal EVEN IF TRUE (형법 §307①, 정보통신망법 §70), so the
+# tiering keys on "does the story's value depend on a named living person" —
+# if yes, it is not GREEN. Categories are the JUDGMENT layer's vocabulary;
+# rot_words / red risk_flags are the DETERMINISTIC layer's blocklist.
+#
+# Rule of thumb: a fact about a thing/system/discovery = green.
+#                a story that needs a person to look bad = red.
+# =============================================================================
+
+tiers:
+  green:      # default menu — impersonal, official-source, stock-footage-friendly
+    - tech-ai-announcement      # model/product/API releases from official newsrooms
+    - product-launch            # gadgets, platforms, services (official specs)
+    - space-mission             # launches, landings, telescope releases
+    - science-breakthrough      # peer-reviewed / agency-announced results
+    - economy-explainer         # mechanism explainers (NOT tips/predictions)
+    - nature-climate-data       # published datasets, observed records
+    - sports-result             # final scores, records (facts, not blame)
+    - trend-explainer           # "how X works" behind a viral phenomenon
+
+  yellow:     # allowed ONLY with ≥2 sources (or official primary) + as-of date
+    - corporate-news            # names a company; reputation risk
+    - public-figure-statement   # only what they said ON THE RECORD, attributed
+    - government-policy         # neutral summary of announced policy
+    - court-verdict-final       # verdict already handed down, official record only
+    - viral-phenomenon          # involves public accounts; attribute, don't judge
+    - health-study              # mechanism only; NEVER treatment/cure advice
+
+  red:        # BLOCK — never produce
+    - partisan-politics         # electoral framing, candidate advocacy
+    - crime-named-person        # suspect/victim identifiable → criminal defamation
+    - celebrity-gossip          # relationships, scandal, private facts
+    - unverified-rumor          # "reportedly", leaks, 의혹 as content
+    - medical-advice            # cures, diagnoses, dosages (의료법 §56 exposure)
+    - financial-advice          # buy/sell/price targets (자본시장법 exposure)
+    - death-tragedy-speculation # cause-of-death, disaster blame speculation
+    - private-individual        # any story about a non-public person
+
+# Title/script tokens that become FALSE within 48h (kill evergreen tail and
+# turn a true short into a false one). Deterministically blocked in hook,
+# angle, topic, script_seed. Use absolute dates ("7월 3일 발표") instead.
+rot_words:
+  - 속보
+  - 단독
+  - 방금
+  - 실시간
+  - 오늘 새벽   # bare 오늘/어제 alone are too common in safe phrasing ("오늘날");
+  - 오늘 오전   # block the time-pegged compounds that actually rot.
+  - 오늘 오후
+  - 어제 새벽
+  - 어제 오전
+  - 어제 오후
+  - 긴급
+
+# research.json risk_flags[] entries that hard-BLOCK a news short at the
+# deterministic layer (fail-closed; the judgment layer can only add blocks,
+# never remove these).
+red_risk_flags:
+  - named-living-person
+  - medical-claim
+  - medical-advice
+  - financial-advice
+  - crime-named-person
+  - unverified-rumor
+  - private-individual
+  - defamation-risk
+
+# Claims sourcing floor (deterministic proxy for the 2-source rule):
+#   0 fact_source_urls on any claim → BLOCK (unverifiable)
+#   1 fact_source_url  on any claim → WARN  (single-source; judgment layer must
+#                                            confirm it is an official primary)
+sourcing:
+  min_sources_block: 1   # below this → block
+  min_sources_warn: 2    # below this → warn

@@ -149,6 +149,51 @@ bash agents/missions/content-short/run.sh orch --profile=info --stage=release --
 assert_eq "stage=release builds PUBLISH-CHECKLIST" \
   "$([[ -f "$PM/release/PUBLISH-CHECKLIST.md" ]] && echo yes || echo no)" "yes"
 
+echo "== news-screen deterministic gate =="
+# Minimal research.json factory: $1=out $2=category $3=hook $4=urls-per-claim
+# $5=recency_ok(true/false/none) $6=risk_flag(optional)
+mknews() {
+  local urls='"https://apnews.com/a","https://reuters.com/b"'
+  [[ "$4" == "1" ]] && urls='"https://apnews.com/a"'
+  local rec=',"recency":{"required_within_days":3,"newest_source_date":"2026-01-01","ok":'"$5"'}'
+  [[ "$5" == "none" ]] && rec=''
+  local rf='[]'; [[ -n "${6:-}" ]] && rf='["'"$6"'"]'
+  cat > "$1" <<JSON
+{ "profile":"news","topic":"t","angle":"a","hook":"$3","category":"$2",
+  "fact_sources":[{"url":"https://apnews.com/a","title":"T","publisher":"AP","date":"2026-01-01","kind":"news","key_facts":["f"]}],
+  "media_sources":[],
+  "claims":[{"text":"c","fact_source_urls":[$urls],"confidence":"high"}]$rec,
+  "visual_terms":["t"],"risk_flags":$rf }
+JSON
+}
+ns_verdict() { "$PY" -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["news_screen"]["verdict"])' "$1" 2>/dev/null || echo NOFILE; }
+
+mknews "$TMP/ng.json" tech-ai-announcement "AI가 발표됐다" 2 true
+bash scripts/news-screen.sh "$TMP/ng.json" --profile=news --in-place >/dev/null 2>&1
+assert_eq "green + 2-source + fresh -> pass (0)" "$?" "0"
+assert_eq "green verdict stamped" "$(ns_verdict "$TMP/ng.json")" "pass"
+
+mknews "$TMP/nr.json" tech-ai-announcement "속보! AI가 발표됐다" 2 true
+bash scripts/news-screen.sh "$TMP/nr.json" --profile=news --in-place >/dev/null 2>&1
+assert_eq "rot-word in hook -> block (4)" "$?" "4"
+
+mknews "$TMP/nf.json" tech-ai-announcement "AI가 발표됐다" 2 true named-living-person
+bash scripts/news-screen.sh "$TMP/nf.json" --profile=news --in-place >/dev/null 2>&1
+assert_eq "red risk_flag -> block (4)" "$?" "4"
+
+mknews "$TMP/ny.json" corporate-news "회사가 발표했다" 1 true
+bash scripts/news-screen.sh "$TMP/ny.json" --profile=news --in-place >/dev/null 2>&1
+assert_eq "yellow tier + single-source -> warn (3)" "$?" "3"
+assert_eq "yellow verdict stamped" "$(ns_verdict "$TMP/ny.json")" "warn"
+
+mknews "$TMP/ns.json" tech-ai-announcement "AI가 발표됐다" 2 false
+bash scripts/news-screen.sh "$TMP/ns.json" --profile=news --in-place >/dev/null 2>&1
+assert_eq "stale recency -> block (4)" "$?" "4"
+
+mknews "$TMP/ni.json" science-breakthrough "빛은 8분 걸린다" 2 none
+bash scripts/news-screen.sh "$TMP/ni.json" --profile=info --in-place >/dev/null 2>&1
+assert_eq "info profile skips recency -> pass (0)" "$?" "0"
+
 echo
 echo "== content-short smoke: $PASS passed, $FAIL failed =="
 [[ $FAIL -eq 0 ]]

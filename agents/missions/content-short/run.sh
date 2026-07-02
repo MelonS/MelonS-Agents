@@ -194,6 +194,18 @@ print("\n".join(t for t in d.get("visual_terms", []) if str(t).strip()))' "$RESE
       "$REPO_ROOT/scripts/research-screen.sh" "$MDIR/resources/research.json" --in-place || \
         log_warn "research-screen flagged blocked media sources (producer falls back to Pexels search)"
     fi
+    # News-safety screen (deterministic: category tier / rot-words / red
+    # risk_flags / recency / sourcing floor, per config/news-category-tiers.yaml).
+    # BLOCK aborts before any render money is spent; warnings flow to legal-team.
+    if [[ "$PROFILE" == "news" && -x "$REPO_ROOT/scripts/news-screen.sh" ]]; then
+      "$REPO_ROOT/scripts/news-screen.sh" "$MDIR/resources/research.json" --profile=news --in-place
+      local ns_rc=$?
+      if [[ $ns_rc -eq 4 ]]; then
+        log_err "news-screen BLOCK — red tier / rot-word / unsourced claim (see research.json .news_screen)"
+        exit 2
+      fi
+      [[ $ns_rc -eq 3 ]] && log_warn "news-screen warnings — legal-team must clear them before release"
+    fi
   fi
   if [[ -z "$topic" ]]; then
     log_err "produce: no topic — pass --topic or --research with a topic/angle"; exit 64
