@@ -29,7 +29,7 @@ profiles:
   # ── 정보쇼츠 — evergreen explainer ────────────────────────────────────────
   - id: info
     display_name: 정보쇼츠
-    voice: am_michael
+    voice: ko-KR-SunHiNeural
     num_broll: 8
     script_words: [130, 160]
     tone: >
@@ -50,7 +50,7 @@ profiles:
   # ── 뉴스쇼츠 — current-event recap ────────────────────────────────────────
   - id: news
     display_name: 뉴스쇼츠
-    voice: am_michael
+    voice: ko-KR-SunHiNeural
     num_broll: 8
     script_words: [120, 150]
     tone: >

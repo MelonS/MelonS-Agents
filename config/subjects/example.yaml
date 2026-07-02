@@ -53,4 +53,4 @@ subject:
 
   # ── Content defaults ─────────────────────────────────────────────────────
   content_base: news
-  voice: af_heart
+  voice: ko-KR-SunHiNeural

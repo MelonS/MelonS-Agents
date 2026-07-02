@@ -3,8 +3,10 @@
 #
 # Pipeline:
 #   1. ollama writes the 60s narration script for the supplied topic
-#   2. Kokoro TTS (or `say` fallback) synthesizes the narration → WAV
-#   3. whisper.cpp transcribes the synthesized narration → SRT
+#   2. TTS synthesizes the narration → WAV (edge-tts neural for *Neural voices
+#      incl. Korean ko-KR-*; else Kokoro-ONNX, or `say` on macOS)
+#   3. captions → SRT: prefer edge-tts's script-aligned .edge.srt; otherwise
+#      whisper.cpp ASR + script-aware correction
 #   4. ollama extracts visual search terms from the script
 #   5. scripts/pexels-fetch.sh pulls one B-roll per term (Pexels License)
 #   6. ffmpeg trims, concatenates, 9:16-letterbox-blurs, overlays
@@ -113,32 +115,43 @@ tts_synthesize "$SCRIPT_PATH" "$NARRATION_WAV" "$VOICE"
 NARRATION_DUR=$("$FFPROBE_BIN" -v error -show_entries format=duration -of default=nw=1:nk=1 "$NARRATION_WAV" | awk '{printf "%.2f",$1}')
 log_ok "narration: ${NARRATION_DUR}s"
 
-# --- Stage 3: whisper → caption SRT ------------------------------------
-log_step "3/6  whisper → captions"
+# --- Stage 3: caption SRT (prefer edge-tts aligned SRT, else whisper ASR) ---
+log_step "3/6  captions"
 
-TRANSCRIPT_PREFIX="$MDIR/resources/transcript"
-SEGMENTS_JSON="$MDIR/resources/segments.json"
 SRT_PATH="$MDIR/resources/captions.srt"
-
-TRANSCRIPT_JSON=$(WHISPER_LANG="${WHISPER_LANG:-en}" whisper_transcribe "$NARRATION_WAV" "$TRANSCRIPT_PREFIX")
-whisper_segments "$TRANSCRIPT_JSON" > "$SEGMENTS_JSON"
-
-# Whisper gives us TIMING; the script is the ground truth for TEXT.
-# Run script-aware caption correction so proper nouns like "Hattusa"
-# don't leak through as "Hadusa" (small-model whisper drift on names).
-SRT_RAW="${SRT_PATH%.srt}.raw.srt"
 SRT_CORRECTED="${SRT_PATH%.srt}.corrected.srt"
-ffmpeg_segments_to_srt "$SEGMENTS_JSON" 0 "$NARRATION_DUR" "$SRT_RAW"
-if python3 "$REPO_ROOT/scripts/correct-captions.py" \
-      --script "$SCRIPT_PATH" \
-      --srt-in "$SRT_RAW" \
-      --srt-out "$SRT_CORRECTED" \
-      --verbose 2> "$MDIR/resources/caption-corrections.log"; then
-  CORR_COUNT=$(grep -c "→" "$MDIR/resources/caption-corrections.log" || true)
-  log_info "  corrected $CORR_COUNT cues against source script"
+# edge-tts (ko-KR-*Neural etc.) drops a script-aligned SRT beside the WAV.
+EDGE_SRT="${NARRATION_WAV%.wav}.edge.srt"
+
+if [[ -f "$EDGE_SRT" && -z "${FACELESS_FORCE_WHISPER:-}" ]]; then
+  # The edge-tts SRT's text IS the narration input (zero ASR drift) and it's
+  # already timed to the audio. Skip whisper + script-correction and use it
+  # directly — more accurate (no mis-transcription of Korean / proper nouns)
+  # and faster (no ASR pass). Set FACELESS_FORCE_WHISPER=1 to override.
+  log_info "  captions: edge-tts aligned SRT (script-exact, no ASR)"
+  cp -f "$EDGE_SRT" "$SRT_CORRECTED"
 else
-  log_warn "  caption correction failed — using raw whisper output"
-  cp "$SRT_RAW" "$SRT_CORRECTED"
+  # Whisper ASR path (non-edge voices). Whisper gives us TIMING; the script is
+  # the ground truth for TEXT, so run script-aware caption correction so proper
+  # nouns like "Hattusa" don't leak through as "Hadusa" (whisper drift on names).
+  log_info "  captions: whisper ASR + script correction"
+  TRANSCRIPT_PREFIX="$MDIR/resources/transcript"
+  SEGMENTS_JSON="$MDIR/resources/segments.json"
+  SRT_RAW="${SRT_PATH%.srt}.raw.srt"
+  TRANSCRIPT_JSON=$(WHISPER_LANG="${WHISPER_LANG:-en}" whisper_transcribe "$NARRATION_WAV" "$TRANSCRIPT_PREFIX")
+  whisper_segments "$TRANSCRIPT_JSON" > "$SEGMENTS_JSON"
+  ffmpeg_segments_to_srt "$SEGMENTS_JSON" 0 "$NARRATION_DUR" "$SRT_RAW"
+  if python3 "$REPO_ROOT/scripts/correct-captions.py" \
+        --script "$SCRIPT_PATH" \
+        --srt-in "$SRT_RAW" \
+        --srt-out "$SRT_CORRECTED" \
+        --verbose 2> "$MDIR/resources/caption-corrections.log"; then
+    CORR_COUNT=$(grep -c "→" "$MDIR/resources/caption-corrections.log" || true)
+    log_info "  corrected $CORR_COUNT cues against source script"
+  else
+    log_warn "  caption correction failed — using raw whisper output"
+    cp "$SRT_RAW" "$SRT_CORRECTED"
+  fi
 fi
 
 # Enforce single-line caption rendering — split any cue whose text
