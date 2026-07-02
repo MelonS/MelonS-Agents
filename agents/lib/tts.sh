@@ -30,6 +30,28 @@ _is_kokoro_voice() {
   [[ "$1" =~ ^[abjzefhip][fm]_[a-zA-Z]+ ]]
 }
 
+# Edge-TTS (Microsoft Edge online neural TTS) voice names are BCP-47-ish:
+#   <lang>-<REGION>-<Name>Neural   e.g. ko-KR-SunHiNeural, en-US-AriaNeural.
+# A hint with that shape routes to edge-tts.  This is the path for languages
+# Kokoro v1.0 does NOT cover — notably Korean — and the only neural option when
+# macOS `say` is unavailable (Windows / Linux).  Free, no API key.
+_is_edge_voice() {
+  [[ "$1" == *Neural ]] || [[ "$1" =~ ^[a-z]{2}-[A-Z]{2}- ]]
+}
+
+# Resolve the project venv's python across platforms: POSIX puts it at
+# .venv/bin/python, Windows at .venv/Scripts/python.exe.  Echoes the path,
+# returns non-zero if no venv python exists.
+_venv_python() {
+  if [[ -x "$REPO_ROOT/.venv/Scripts/python.exe" ]]; then
+    echo "$REPO_ROOT/.venv/Scripts/python.exe"
+  elif [[ -x "$REPO_ROOT/.venv/bin/python" ]]; then
+    echo "$REPO_ROOT/.venv/bin/python"
+  else
+    return 1
+  fi
+}
+
 tts_synthesize() {
   local text_file="$1" out_wav="$2" voice_hint="${3:-}"
 
@@ -53,14 +75,15 @@ tts_synthesize() {
     local kokoro_py="$REPO_ROOT/scripts/tts-kokoro.py"
     local model_path="$HOME/.local/share/kokoro/kokoro-v1.0.onnx"
     local voices_path="$HOME/.local/share/kokoro/voices-v1.0.bin"
-    if [[ -x "$REPO_ROOT/.venv/bin/python" && -f "$kokoro_py" \
+    local vpy; vpy="$(_venv_python)" || vpy=""
+    if [[ -n "$vpy" && -f "$kokoro_py" \
           && -f "$model_path" && -f "$voices_path" ]]; then
-      if "$REPO_ROOT/.venv/bin/python" -c "from kokoro_onnx import Kokoro" >/dev/null 2>&1; then
+      if "$vpy" -c "from kokoro_onnx import Kokoro" >/dev/null 2>&1; then
         log_info "  tts backend: Kokoro-ONNX (voice=${voice_hint:-am_michael})"
         # Kokoro emits WAV at native sample rate (24 kHz typically).  Transcode
         # to 44.1 kHz stereo so it joins the AAC pipeline cleanly downstream.
         local tmp_wav="${out_wav%.wav}.kokoro.wav"
-        if "$REPO_ROOT/.venv/bin/python" "$kokoro_py" \
+        if "$vpy" "$kokoro_py" \
               --text-file "$text_file" \
               --output "$tmp_wav" \
               ${voice_hint:+--voice "$voice_hint"}; then
@@ -73,7 +96,32 @@ tts_synthesize() {
     fi
   fi
 
-  # Fallback (and primary path for non-Kokoro voices): macOS say.
+  # Edge-TTS backend (Microsoft Edge online neural TTS).  FREE, no API key.
+  # Primary path for languages Kokoro doesn't cover (notably Korean,
+  # ko-KR-*Neural) and the only neural voice off-macOS.  Emits MP3 + an aligned
+  # SRT (word boundaries); transcode the MP3 to 44.1 kHz stereo for the AAC
+  # pipeline.  The .edge.srt is left beside the WAV for callers that prefer
+  # word-accurate captions over ASR.
+  if [[ -n "$voice_hint" ]] && _is_edge_voice "$voice_hint"; then
+    local vpy; vpy="$(_venv_python)" || vpy=""
+    if [[ -n "$vpy" ]] && "$vpy" -c "import edge_tts" >/dev/null 2>&1; then
+      log_info "  tts backend: edge-tts (voice=$voice_hint)"
+      local tmp_mp3="${out_wav%.wav}.edge.mp3"
+      local srt_out="${out_wav%.wav}.edge.srt"
+      if "$vpy" -m edge_tts --voice "$voice_hint" \
+            --file "$text_file" \
+            --write-media "$tmp_mp3" \
+            --write-subtitles "$srt_out"; then
+        "$FFMPEG_BIN" -y -loglevel error -i "$tmp_mp3" -ar 44100 -ac 2 "$out_wav"
+        rm -f "$tmp_mp3"
+        TTS_LABEL="edge-tts neural (synthetic AI narration)"
+        return 0
+      fi
+      log_warn "  edge-tts failed; falling back to say"
+    fi
+  fi
+
+  # Fallback (and primary path for non-Kokoro voices on macOS): macOS say.
   if command -v say >/dev/null 2>&1; then
     local say_voice="${voice_hint:-Daniel}"
     local tmp_aiff="${out_wav%.wav}.tmp.aiff"
