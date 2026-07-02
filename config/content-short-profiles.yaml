@@ -66,6 +66,10 @@ profiles:
     required_checks:
       - media-license
       - fact-accuracy
+      - fact-crosscheck   # operator 2026-07-03: news = 이중·삼중 팩트체크.
+                          # Independent re-verification of EVERY claim against
+                          # its opened sources (not research-team's summary).
+                          # Judgment check → missing = fail-closed REVISE.
       - defamation
       - unverifiable
       - required-disclaimer

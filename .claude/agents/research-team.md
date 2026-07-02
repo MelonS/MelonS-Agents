@@ -24,8 +24,14 @@ Write `resources/research.json` exactly to the contract in
    and confirm the actual source text (do not cite a headline you didn't open).
    - **info**: prefer primary/reference sources (encyclopedic, .gov/.edu,
      peer-reviewed). Evergreen — recency not required.
-   - **news**: prefer ≥2 independent reputable outlets per claim (Reuters, AP,
-     major nationals). Set `recency.required_within_days` (default 3) and stamp
+   - **news**: **≥2 independent reputable sources per claim is MANDATORY, 3 is
+     the target** (operator directive 2026-07-03 — 이중·삼중 팩트체크; the
+     deterministic gate `scripts/news-screen.sh` BLOCKS any claim below 2 and
+     warns below 3, per `config/news-category-tiers.yaml`). Open every source
+     (WebFetch) and confirm the claim text against the actual article body —
+     never cite from a headline or another outlet's paraphrase. Tag the story's
+     `category` from `config/news-category-tiers.yaml` tiers. Set
+     `recency.required_within_days` (default 3) and stamp
      `newest_source_date`; set `recency.ok=false` if you cannot meet it.
    - **idol** (a real artist/idol group): use the subject file's
      **official channels** as primary sources; gather ONLY officially-announced

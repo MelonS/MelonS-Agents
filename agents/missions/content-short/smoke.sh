@@ -155,6 +155,7 @@ echo "== news-screen deterministic gate =="
 mknews() {
   local urls='"https://apnews.com/a","https://reuters.com/b"'
   [[ "$4" == "1" ]] && urls='"https://apnews.com/a"'
+  [[ "$4" == "3" ]] && urls='"https://apnews.com/a","https://reuters.com/b","https://bbc.com/c"'
   local rec=',"recency":{"required_within_days":3,"newest_source_date":"2026-01-01","ok":'"$5"'}'
   [[ "$5" == "none" ]] && rec=''
   local rf='[]'; [[ -n "${6:-}" ]] && rf='["'"$6"'"]'
@@ -168,10 +169,15 @@ JSON
 }
 ns_verdict() { "$PY" -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["news_screen"]["verdict"])' "$1" 2>/dev/null || echo NOFILE; }
 
-mknews "$TMP/ng.json" tech-ai-announcement "AI가 발표됐다" 2 true
+# Operator directive 2026-07-03 (이중·삼중 팩트체크): <2 sources → BLOCK, <3 → WARN.
+mknews "$TMP/ng.json" tech-ai-announcement "AI가 발표됐다" 3 true
 bash scripts/news-screen.sh "$TMP/ng.json" --profile=news --in-place >/dev/null 2>&1
-assert_eq "green + 2-source + fresh -> pass (0)" "$?" "0"
+assert_eq "green + 3-source (삼중) + fresh -> pass (0)" "$?" "0"
 assert_eq "green verdict stamped" "$(ns_verdict "$TMP/ng.json")" "pass"
+
+mknews "$TMP/n2.json" tech-ai-announcement "AI가 발표됐다" 2 true
+bash scripts/news-screen.sh "$TMP/n2.json" --profile=news --in-place >/dev/null 2>&1
+assert_eq "green + 2-source (이중만) -> warn (3)" "$?" "3"
 
 mknews "$TMP/nr.json" tech-ai-announcement "속보! AI가 발표됐다" 2 true
 bash scripts/news-screen.sh "$TMP/nr.json" --profile=news --in-place >/dev/null 2>&1
@@ -183,14 +189,14 @@ assert_eq "red risk_flag -> block (4)" "$?" "4"
 
 mknews "$TMP/ny.json" corporate-news "회사가 발표했다" 1 true
 bash scripts/news-screen.sh "$TMP/ny.json" --profile=news --in-place >/dev/null 2>&1
-assert_eq "yellow tier + single-source -> warn (3)" "$?" "3"
-assert_eq "yellow verdict stamped" "$(ns_verdict "$TMP/ny.json")" "warn"
+assert_eq "single-source -> block (4) (이중 미달)" "$?" "4"
+assert_eq "single-source verdict stamped" "$(ns_verdict "$TMP/ny.json")" "block"
 
-mknews "$TMP/ns.json" tech-ai-announcement "AI가 발표됐다" 2 false
+mknews "$TMP/ns.json" tech-ai-announcement "AI가 발표됐다" 3 false
 bash scripts/news-screen.sh "$TMP/ns.json" --profile=news --in-place >/dev/null 2>&1
 assert_eq "stale recency -> block (4)" "$?" "4"
 
-mknews "$TMP/ni.json" science-breakthrough "빛은 8분 걸린다" 2 none
+mknews "$TMP/ni.json" science-breakthrough "빛은 8분 걸린다" 3 none
 bash scripts/news-screen.sh "$TMP/ni.json" --profile=info --in-place >/dev/null 2>&1
 assert_eq "info profile skips recency -> pass (0)" "$?" "0"
 

@@ -74,10 +74,16 @@ red_risk_flags:
   - private-individual
   - defamation-risk
 
-# Claims sourcing floor (deterministic proxy for the 2-source rule):
-#   0 fact_source_urls on any claim → BLOCK (unverifiable)
-#   1 fact_source_url  on any claim → WARN  (single-source; judgment layer must
-#                                            confirm it is an official primary)
+# Claims sourcing floor — operator directive 2026-07-03: news shorts get
+# DOUBLE/TRIPLE fact-checking ("이중·삼중 팩트체크"). Deterministic half:
+#   <2 fact_source_urls on any claim → BLOCK (이중 = mandatory two sources;
+#                                             an official primary alone is NOT
+#                                             enough for news anymore)
+#   <3 fact_source_urls on any claim → WARN  (삼중 = recommended third source;
+#                                             legal-team must justify clearing)
+# The judgment half is the `fact-crosscheck` required check in
+# config/content-short-profiles.yaml (news): legal-team independently re-opens
+# every source and re-verifies every number before release.
 sourcing:
-  min_sources_block: 1   # below this → block
-  min_sources_warn: 2    # below this → warn
+  min_sources_block: 2   # below this → block
+  min_sources_warn: 3    # below this → warn

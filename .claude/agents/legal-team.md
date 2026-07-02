@@ -42,6 +42,14 @@ spot-check). For every check set `status: pass|warn|fail` + concrete `evidence`.
 - **fact-accuracy** — does every narrated claim trace to a `fact_source`? A claim
   with no source, or that overstates what the source says → `fail` + a `script`
   fix.
+- **fact-crosscheck** (news profile; REQUIRED — operator directive 2026-07-03,
+  이중·삼중 팩트체크) — independently RE-VERIFY every claim: WebFetch each
+  `fact_source_urls` entry yourself and confirm the exact numbers, dates, and
+  attributions in the narration against the opened source bodies. Do NOT trust
+  research-team's `key_facts` summaries. Any claim with <2 independently
+  confirmed sources, any number that differs from its source, or any source
+  that no longer says what is claimed → `fail` + a `script` fix. Evidence must
+  list per-claim which sources you opened and what you matched.
 - **defamation** — any allegation of wrongdoing about a **named, living, private**
   person that isn't directly supported by a cited source → `fail` (BLOCK-tier).
   Public figures + sourced reporting is lower risk but still needs attribution.
