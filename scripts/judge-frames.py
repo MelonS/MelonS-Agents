@@ -65,7 +65,8 @@ def main():
     else:
         dur = duration_of(args.video)
         # near-start .. near-end, avoiding first/last 5% (fade/garbage frames)
-        lo, hi = dur * 0.05, dur * 0.95
+        lo = dur * 0.05
+        hi = max(lo, min(dur * 0.95, dur - 0.15))  # clamp: avoid past-end on very short clips
         n = max(2, args.count)
         times = [lo + (hi - lo) * i / (n - 1) for i in range(n)]
 
