@@ -69,7 +69,7 @@ verdict() { "$PY" -c 'import json,sys;print(json.load(open(sys.argv[1],encoding=
 echo "== profile reads =="
 assert_eq "idol subject narrator voice (example subject)" \
   "$(awk '$0 ~ /^  voice:/ {l=$0;sub(/^[^:]*:[[:space:]]*/,"",l);if(l~/^"/){sub(/^"/,"",l);sub(/".*$/,"",l)}else{sub(/[[:space:]]*#.*$/,"",l);sub(/[[:space:]]+$/,"",l)}print l;exit}' config/subjects/example.yaml)" \
-  "af_heart"
+  "ko-KR-SunHiNeural"
 
 echo "== legal-gate verdicts =="
 mkmission "$TMP/A" pexels-license info
