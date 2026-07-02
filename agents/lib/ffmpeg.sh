@@ -164,6 +164,31 @@ PY
 #     OutlineColour alpha) so they remain readable over any background
 #   - source attribution (if provided): small drawtext box, top-left, low
 #     opacity — survives reposts and credits the original creator
+# Cross-platform H.264 encoder selection.  macOS keeps its hardware encoder
+# (h264_videotoolbox); every other platform defaults to libx264 (always present,
+# deterministic) — matching the rest of this pipeline.  Override with
+# VIDEO_ENCODER=<h264_nvenc|h264_qsv|h264_amf|...> to opt into HW accel.
+# Echoes the full "-c:v <enc> <rate-control args>" token list, word-split at the
+# call site on purpose.
+ffmpeg_h264_encode_args() {
+  local enc="${VIDEO_ENCODER:-}"
+  if [[ -z "$enc" ]]; then
+    if [[ "$(uname -s)" == "Darwin" ]] \
+       && "$FFMPEG_BIN" -hide_banner -encoders 2>/dev/null | grep -q h264_videotoolbox; then
+      enc="h264_videotoolbox"
+    else
+      enc="libx264"
+    fi
+  fi
+  case "$enc" in
+    h264_videotoolbox) echo "-c:v h264_videotoolbox -b:v 2500k -maxrate 3000k -bufsize 4M -realtime 0 -allow_sw 1" ;;
+    h264_nvenc)        echo "-c:v h264_nvenc -preset p5 -rc vbr -cq 23 -b:v 2500k -maxrate 3500k -bufsize 5M" ;;
+    h264_qsv)          echo "-c:v h264_qsv -global_quality 23 -b:v 2500k -maxrate 3500k" ;;
+    h264_amf)          echo "-c:v h264_amf -quality balanced -rc vbr_latency -b:v 2500k -maxrate 3500k" ;;
+    libx264|*)         echo "-c:v libx264 -preset medium -crf 21 -pix_fmt yuv420p" ;;
+  esac
+}
+
 ffmpeg_render_short() {
   local input="$1" start="$2" end="$3" srt="$4" output="$5"
   local source_attribution="${6:-}"
@@ -181,16 +206,21 @@ ffmpeg_render_short() {
   ffmpeg_srt_to_ass "$srt" "$ass_path"
 
   # Stack: blurred-fill bg + centered fg + burned captions via ass= filter.
-  local filter_chain="[0:v]scale=1080:1920:force_original_aspect_ratio=increase,gblur=sigma=15,crop=1080:1920[bg];[0:v]scale=1080:1920:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1,ass=${ass_base}"
+  local filter_chain="[0:v]scale=1080:1920:force_original_aspect_ratio=increase,gblur=sigma=15,crop=1080:1920[bg];[0:v]scale=1080:1920:force_original_aspect_ratio=decrease[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1,ass=${ass_base}:fontsdir=."
 
   # Source attribution overlay — only if caller supplied a string AND a usable
   # font file exists. Drawtext can't render without a fontfile, so we degrade
   # gracefully on hosts without the macOS system font.
   if [[ -n "$source_attribution" ]]; then
     if [[ -f "$LAYOUT_DRAWTEXT_FONTFILE" ]]; then
-      local attr_file="$srt_dir/source-attribution.txt"
-      printf '%s' "$source_attribution" > "$attr_file"
-      filter_chain="${filter_chain},drawtext=fontfile=${LAYOUT_DRAWTEXT_FONTFILE}:textfile=${attr_file}:fontsize=22:fontcolor=white@0.75:box=1:boxcolor=black@0.45:boxborderw=10:x=40:y=40"
+      # Stage font + text as basenames (the encode subshell cd's into srt_dir),
+      # so absolute POSIX paths inside the filter string don't break native
+      # ffmpeg on Windows.  fontsdir=. on the ass filter does the same for libass.
+      local attr_base="source-attribution.txt"
+      local font_base="_overlay_font.${LAYOUT_DRAWTEXT_FONTFILE##*.}"
+      printf '%s' "$source_attribution" > "$srt_dir/$attr_base"
+      cp -f "$LAYOUT_DRAWTEXT_FONTFILE" "$srt_dir/$font_base"
+      filter_chain="${filter_chain},drawtext=fontfile=${font_base}:textfile=${attr_base}:fontsize=22:fontcolor=white@0.75:box=1:boxcolor=black@0.45:boxborderw=10:x=40:y=40"
     else
       echo "⚠ LAYOUT_DRAWTEXT_FONTFILE not found ($LAYOUT_DRAWTEXT_FONTFILE) — skipping source-attribution overlay" >&2
     fi
@@ -200,7 +230,7 @@ ffmpeg_render_short() {
     cd "$srt_dir"
     "$FFMPEG_BIN" -y -loglevel error -ss "$start" -i "$abs_input" -t "$duration" \
       -filter_complex "$filter_chain" \
-      -c:v h264_videotoolbox -b:v 2500k -maxrate 3000k -bufsize 4M -realtime 0 -allow_sw 1 \
+      $(ffmpeg_h264_encode_args) \
       -c:a aac -b:a 128k -movflags +faststart \
       "$abs_output"
   )
