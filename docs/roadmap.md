@@ -204,8 +204,34 @@ load-bearing, or set a new focus.)_
   5. raw Input 잔여 97개소 카테고리별 전환 (G:/ai/_raw_input_audit.txt)
 -->
 
+<!-- suggest 2026-07-03 05:00 KST (Windows session)
+"Now"가 2026-05-22 기준(job-hunt v0.4.0 운영자 활성화 대기)에 멈춰 있으나,
+실상은 (a) job-hunt는 parked(KR 채용보드 스크래핑 차단, mock만 동작 —
+2026-07-01 운영자 확인), (b) 6월 중순 이후 실제 활동 라인은 PawnSim(goal.md
+active) + **content-shorts 운영**(디아4·리센느·니치테스트·뉴스쇼츠, 유튜브
+10편 예약 중)입니다.  Now를 content-shorts 운영(+분석 루프)으로 갱신하고
+job-hunt 항목은 Blocked/parked로 이동하는 것을 제안합니다.  다음 결정 포인트:
+7/5 저녁 니치 A/B(우주/심리/고양이 vs 게임/K팝) 뷰속도 분석 → 니치 확장 or
+지식쇼츠 채널 분리.
+-->
+
 ## Done — most recent first
 
+- **2026-07-03 (운영자 인터랙티브, Windows)** 콘텐츠 쇼츠 라인 확장 6커밋:
+  edge-tts 정렬자막이 whisper ASR 대체(`5b0643f`, 한국어 고유명사 드리프트 원천
+  제거) · smoke 보이스 동기화(`b27044e`) · **뉴스쇼츠 스킬 신설**: GREEN/YELLOW/RED
+  카테고리 티어 + rot-word 결정론 게이트 `scripts/news-screen.sh` + 웹리서치 검증
+  10니치 정보쇼츠 주제뱅크(`2ae4282`) · 운영자 지시 **이중·삼중 팩트체크** 4레이어
+  강제(`9425a3e` — 첫 실전 뉴스에서 검색요약發 미확인 주장 2건 적발·삭제 후 재렌더)
+  · 프로필 인라인주석 파서 함정 수정(`e18b3c8`) · 검은고딕 자막폰트+OFL 동봉 +
+  faceless 스티치 VIDEO_ENCODER 연결(RTX nvenc 4.1x, `7c97f7f`).  smoke 24/24.
+  출시(records/, 비커밋): 유튜브 10편 예약 7/3~7/6 — 디아4 4편(주제별 footage
+  차별화 재작업)·리센느 2편·니치 A/B 테스트(우주/심리/고양이)·휴머노이드 로봇뉴스,
+  전부 legal PASS.
+- **2026-07-01 (운영자 인터랙티브, Windows)** 공개 리포 IP 정리(`9ef5d1f` + 비주얼
+  `ad9825b`): 레퍼런스 게임 IP 실명 제거·장르 추상화, 로스터 24→23, hero/roster
+  재생성.  content-shorts 첫 실출시(RESCENE 컴백뉴스) + 디아블로 S14 한/영 쇼츠
+  예약 — 산출물은 records/ (비커밋).
 - **2026-06-15 (운영자 인터랙티브, Mac)** 캐릭터 애니메이션 개선 (운영자 목표 "방향 정확·동작마다·
   더 부드럽게").  읽기전용 멀티에이전트 애니 시스템 맵핑 → 3패스: **Pass 1**(`7dc4cc3`) 작업
   페이싱을 단일 출처 `PawnUtilityAI.TryGetWorkTargetPos`로 통일(이전 chopper/miner만 → 8개 워커
