@@ -63,13 +63,15 @@ profiles:
     disclosures:
       - "B-roll: Pexels License — pexels.com"
       - "정보 기준 시점 / As of {AS_OF_DATE}"
+    # fact-crosscheck — operator 2026-07-03: news = 이중·삼중 팩트체크.
+    # Independent re-verification of EVERY claim against its opened sources
+    # (not research-team's summary). Judgment check → missing = fail-closed
+    # REVISE. NOTE: the minimal profile parser does not strip inline comments
+    # on list items, so this comment must stay on its own lines.
     required_checks:
       - media-license
       - fact-accuracy
-      - fact-crosscheck   # operator 2026-07-03: news = 이중·삼중 팩트체크.
-                          # Independent re-verification of EVERY claim against
-                          # its opened sources (not research-team's summary).
-                          # Judgment check → missing = fail-closed REVISE.
+      - fact-crosscheck
       - defamation
       - unverifiable
       - required-disclaimer
