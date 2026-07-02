@@ -33,6 +33,9 @@ Requires:
       text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
       vae/wan2.2_vae.safetensors
 
+See docs/wan22-generation-notes.md for field notes (model roles, anchor
+grounding, prompt pitfalls, quality gates).
+
 Note: the heavier Wan 2.2 A14B (GGUF + Lightning LoRA) gives stronger
 human/action motion but ignores negatives (cfg=1) and needs the ComfyUI-GGUF
 custom node — intentionally out of scope here.
