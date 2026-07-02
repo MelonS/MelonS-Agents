@@ -428,7 +428,7 @@ fi
       -stream_loop -1 -i "$ABS_BGM" \
       -filter_complex "${FILTER};[2:a]volume=${BGM_VOLUME}[bgm];[1:a][bgm]amix=inputs=2:duration=first:dropout_transition=0[outa]" \
       -map "[outv]" -map "[outa]" \
-      -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k \
+      $(ffmpeg_h264_encode_args) -c:a aac -b:a 128k \
       -shortest -movflags +faststart \
       "$ABS_OUT"
   else
@@ -437,7 +437,7 @@ fi
       -i "$ABS_NARRATION" \
       -filter_complex "$FILTER" \
       -map "[outv]" -map 1:a \
-      -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k \
+      $(ffmpeg_h264_encode_args) -c:a aac -b:a 128k \
       -shortest -movflags +faststart \
       "$ABS_OUT"
   fi
