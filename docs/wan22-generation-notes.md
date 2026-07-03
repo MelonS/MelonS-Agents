@@ -46,6 +46,17 @@
   형태 유지가 중요하면 "holding its shape, subtle jiggle" + 카메라 무브 위주로.
 - 표정/포즈 문제(예: 눈이 스르르 감겨 졸려 보임)는 프롬프트 스티어링("eyes wide open,
   bright awake expression") + **시드 2~3개 병렬 생성 후 선택**이 가장 싸게 먹힘.
+- **추상 개념 프롬프트는 얼룩으로 붕괴한다** (2026-07-03 블랙홀 쇼츠 8컷 실측):
+  "stretching stream of light", "colossal unseen sphere", "lensing distortion" 같은
+  개념 서술은 3연속 실패(형체 없는 blob) — **모델이 아는 구체적 천체 장면 이름**
+  (tidal disruption event, accretion disk, star field)으로 바꾸자 즉시 통과.
+  T2V는 "무엇처럼 보이는지"가 아니라 "무엇인지"를 말해줘야 한다.
+  같은 이유로 "bright, vivid, high contrast, filling the frame"을 명시하지 않으면
+  우주류 프롬프트는 화면 대부분이 암흑으로 렌더된다 (모바일에서 아무것도 안 보임).
+- **같은 시드라도 해상도/프레임수가 바뀌면 구도가 달라진다** — 시안(512·17f)에서
+  고른 시드를 풀(704·97f)로 올리면 다른 그림이 나올 수 있음(실측: 노랑 나선 →
+  청백 입자 링). 시안 판정은 "프롬프트 방향" 검증으로 취급하고, 풀본을 **반드시
+  재채점**할 것 (이번엔 전 컷이 시안보다 좋아졌지만 반대 방향도 가능).
 
 ## 5. 검증된 파라미터 (5B 기준)
 
