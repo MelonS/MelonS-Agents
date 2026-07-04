@@ -6,57 +6,58 @@
 > and re-run the auditor.
 
 **Verdict**: DRIFT_DETECTED
-**Full report**: [`docs/audit/2026-07-03-all.md`](2026-07-03-all.md)
-**Generated**: 2026-07-03 05:34:34    
+**Full report**: [`docs/audit/2026-07-03-contract.md`](2026-07-03-contract.md)
+**Generated**: 2026-07-03 05:39:02    
 
 ## Summary (from audit)
 
 
-Full-repo, all-dimension audit run against a live HEAD that moved from
-`46135c5` to `592bfc7` over the course of this run (10 commits landed
-mid-audit — cut-judge agent, Wan 2.2 tooling, and the prior audit's own
-fix commit). All findings below are verified against `592bfc7`
-(2026-07-03 05:26:53 +0900). This supersedes the `2026-07-03-all.md`
-report committed at `2a94adf` (05:15:15), which was itself already
-5+ commits stale by the time it landed.
+Contract-focus audit of `docs/operator-contract.md` compliance, run against
+a live HEAD that moved from `9559d1c` to `592bfc7` over the course of this
+session (the repo had active concurrent write pressure throughout — see the
+`[info]` finding below). Findings are verified against `592bfc7` unless
+otherwise noted. No secrets, PII, or credential leaks were found (Section 12
+clean); `.env` stays untracked and `.env.example` is schema-only; the
+autonomy budget in `config/policies.yaml` (`budget_usd_ceiling: 5.00`)
+matches the documentation. The Section 5 audit-trail marker
+(`Requested-by: user`) remains absent from every agent-definition commit
+since the convention began — a persistent, contract-pre-classified low
+finding, now at 9 instances after today's `9559d1c` added it. Section 6
+(`records/` never committed) and Section 8 (no output artifacts under
+`agents/`/`scripts/`) both pass clean checks.
 
-The prior report's CRITICAL (audit automation dark 39 days) and
-HIGH (3 scripts hardcoding `/Users/melons/ai`) findings are
-confirmed RESOLVED as of this run: `.git/hooks/post-commit` exists
-with correct drift-risk-path matching logic, a Windows Task Scheduler
-job `MelonS-auditor-daily` is registered (State=Ready,
-NextRunTime=2026-07-04 03:00), and all three legacy scripts
-(`batch-recover.sh`, `build-full-pollinations.sh`,
-`build-full-pollinations-monday.sh`) now self-resolve their repo root
-instead of hardcoding a Mac-only path. Neither scheduler has fired yet
-(no `records/audit/hook-trigger.log`; Task Scheduler LastRunTime is
-still the Windows "never run" sentinel 1999-11-30), so treat this as
-configured-but-unproven rather than fully closed — see finding below.
+The highest-severity finding is new: the precomputed skill-drift reports
+`job-hunt` "manifest references missing script" row is a real, reproducible
+functional break, not just a doc-drift artifact. Root cause is CRLF line
+endings on `skills/job-hunt/config/activation.tsv` (a `.gitattributes` gap
+— no `*.tsv text eol=lf` rule — combined with `core.autocrlf=true` on this
+Windows checkout) plus a blank-line-detection bug shared by two consumers
+of that manifest. `scripts/audit-skill-drift.sh` produces the bogus
+finding; separately and more seriously, `skills/job-hunt/scripts/status.sh`
+— the operator-facing dashboard the manifests own header comment names as
+its consumer — crashes with exit code 3 (`[status] malformed manifest
+row: ''`) when actually run on this machine, reproduced directly during
+this audit. That is a live operator-contract Section 8 portability
+violation ("the same repo must run identically on any qualified machine")
+on the exact machine currently serving as primary production.
 
-No new critical-severity issue was found. One high finding
-replaces the closed ones: `README.md` explicitly tells readers that
-`docs/architecture.md` documents "the game-prototype build chain," but
-`architecture.md` contains zero mentions of `game-prototype`,
-`game-dev-agent`, or Skill #3 anywhere — the canonical "one-glance map"
-and "Skills layer" sections are silent about an entire shipped skill
-category (Unity/C#, 12-role subagent team) that dominated Junes
-commit history. Several medium findings persist or newly appeared:
-a doc-vs-doc subagent-count contradiction (`for-analysts.md` says 22,
-`README.md` says 23, actual count at audit time is 24 after
-`cut-judge.md` landed mid-run), `cost-model.md` staleness against 3
-newer surfaces (music-video/content-short/product-cf cost shape,
-KlingAI paid API), `roadmap.md` "Now" still frozen at 2026-05-20/22
-against a 2026-06-12 `goal.md` active goal and the last 10+ commits, 3
-uncited Done-section commit hashes, a confirmed false-positive root
-cause for the precomputed skill-drift finding (CRLF line endings plus a
-parser bug, not an actual missing script), and a stale, self-
-contradictory `CURRENT-ALERT.md`. Security is clean: no committed
-secrets, `.env` stays untracked, `.env.example` is schema-only, and the
-section-8 exception-comment registry passes for every file it names.
+Everything else is documentation drift adjacent to contract rules rather
+than a hard-rule violation: `docs/architecture.md`'s "Autonomous flow"
+section still describes the L3 audit trigger and the mission-queue job
+purely via `launchd` (macOS-only) with no mention of the Windows Task
+Scheduler path that a sibling doc (`docs/for-analysts.md`) already
+documents, and the `com.melons.agents.queue` autonomous mission-runner has
+no Windows equivalent at all; the subagent roster count is internally
+contradictory across two docs (22 vs 23) and both are now behind the live
+file count of 24 after today's `cut-judge.md` landed; `docs/roadmap.md`'s
+Done section (Section 9) has a growing citation gap of at least 5 un-cited
+commits; and `docs/audit/CURRENT-ALERT.md` still displays a CRITICAL
+verdict whose underlying findings were already fixed by the commit that
+produced the report it cites.
 
 ## Critical / High findings
 
-- **[high]** README.md points to docs/architecture.md for content that is not there — `README.md:84`, `docs/architecture.md`
+- **[high]** `skills/job-hunt/scripts/status.sh` crashes on this machine — CRLF line endings in the manifest it reads — `skills/job-hunt/scripts/status.sh:55-61`, `skills/job-hunt/config/activation.tsv`
 
 ## How to clear this alert
 
