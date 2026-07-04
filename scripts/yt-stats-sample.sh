@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -uo pipefail
-cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CSV=records/_blackhole/stats-timeline.csv
 [[ -f "$CSV" ]] || echo "ts,videoId,views,likes,comments" > "$CSV"
 CFG=/g/config/youtubeuploader/client_secrets.json; TOK=/g/config/youtubeuploader/request.token
