@@ -27,6 +27,8 @@ def main() -> int:
     p.add_argument("--seed", type=int, default=-1)
     p.add_argument("--server", default="http://127.0.0.1:8188")
     p.add_argument("--ckpt", default="flux1-schnell-fp8.safetensors")
+    p.add_argument("--lora", default=None, help="optional LoRA filename in models/loras")
+    p.add_argument("--lora-strength", type=float, default=1.0)
     a = p.parse_args()
     seed = a.seed if a.seed >= 0 else random.randint(0, 2**31)
 
@@ -44,6 +46,11 @@ def main() -> int:
         "6": {"class_type": "VAEDecode", "inputs": {"samples": ["5", 0], "vae": ["1", 2]}},
         "7": {"class_type": "SaveImage", "inputs": {"images": ["6", 0], "filename_prefix": "flux_still"}},
     }
+    if a.lora:
+        graph["9"] = {"class_type": "LoraLoaderModelOnly",
+                      "inputs": {"model": ["1", 0], "lora_name": a.lora,
+                                 "strength_model": a.lora_strength}}
+        graph["5"]["inputs"]["model"] = ["9", 0]
     req = urllib.request.Request(f"{a.server}/prompt",
         data=json.dumps({"prompt": graph}).encode(),
         headers={"Content-Type": "application/json"})

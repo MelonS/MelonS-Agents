@@ -44,6 +44,8 @@ def main() -> int:
     p.add_argument("--boundary-step", type=int, default=2, help="high->low handoff step")
     p.add_argument("--strength", type=float, default=1.0, help="denoise (<1 = preserve anchor harder)")
     p.add_argument("--timeout", type=int, default=2400)
+    p.add_argument("--lora-high", default="wan22_i2v_high_lightning.safetensors")
+    p.add_argument("--lora-low", default="wan22_i2v_low_lightning.safetensors")
     a = p.parse_args()
     seed = a.seed if a.seed >= 0 else random.randint(0, 2**31)
 
@@ -52,11 +54,11 @@ def main() -> int:
         # experts
         "h1": {"class_type": "UnetLoaderGGUF", "inputs": {"unet_name": "Wan2.2-I2V-A14B-HighNoise-Q4_K_M.gguf"}},
         "h2": {"class_type": "LoraLoaderModelOnly",
-               "inputs": {"model": ["h1", 0], "lora_name": "wan22_i2v_high_lightning.safetensors", "strength_model": 1.0}},
+               "inputs": {"model": ["h1", 0], "lora_name": a.lora_high, "strength_model": 1.0}},
         "h3": {"class_type": "ModelSamplingSD3", "inputs": {"model": ["h2", 0], "shift": 8.0}},
         "l1": {"class_type": "UnetLoaderGGUF", "inputs": {"unet_name": "Wan2.2-I2V-A14B-LowNoise-Q4_K_M.gguf"}},
         "l2": {"class_type": "LoraLoaderModelOnly",
-               "inputs": {"model": ["l1", 0], "lora_name": "wan22_i2v_low_lightning.safetensors", "strength_model": 1.0}},
+               "inputs": {"model": ["l1", 0], "lora_name": a.lora_low, "strength_model": 1.0}},
         "l3": {"class_type": "ModelSamplingSD3", "inputs": {"model": ["l2", 0], "shift": 8.0}},
         # shared
         "c":  {"class_type": "CLIPLoader", "inputs": {"clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors", "type": "wan"}},
