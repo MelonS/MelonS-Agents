@@ -16,7 +16,7 @@
 | **4.5** | **스토리보드 검증** ★ | `still-judge` 에이전트(자동 채점, 75미만 자동 REGEN 루프) + **운영자** | 샷별 점수·타임코드가 붙은 보드 | **전샷 승인 필수** |
 | 5 | I2V 영상화 | `wan-a14b-i2v.py` (A14B+260412) / FLF(`WanFirstLastFrameToVideo`) / 카메라 LoRA 스택 | 샷별 mp4 (704×1280·81f, ~7분/샷) | |
 | 6 | 컷 연결 | ffmpeg | 원속·3~4s/샷·+2.5s 클론패딩·`sort -V` | |
-| 7 | TTS | **Typecast**(감정 지향, `FACELESS_TTS_PLAN`) / 폴백 edge-tts | narration.wav + 문장 SRT(대본 정확) | 무드→보이스·감정 선정([`typecast-tts-notes.md`](typecast-tts-notes.md)) |
+| 7 | TTS | **ElevenLabs v3**(감정태그, `FACELESS_TTS_PLAN`) / 백업 Typecast·edge | narration.wav + 문장 SRT(대본 정확·태그 제거) | 무드→보이스·감정태그 선정([`elevenlabs-tts-notes.md`](elevenlabs-tts-notes.md)) |
 | 8 | BGM/SFX | ffmpeg 합성 | 라이선스-프리 베드 + 타임스탬프 SFX | |
 | 9 | 자막 | 검은고딕(OFL) 번인 | 잠금 원칙: 자막이 아니라 화면을 고침 | |
 | 10 | 렌더 | nvenc | QA 프레임시트 | cut-judge |
