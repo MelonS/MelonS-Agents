@@ -61,6 +61,33 @@ tts_synthesize() {
   fi
   mkdir -p "$(dirname "$out_wav")"
 
+  # Typecast backend (emotion-directed, per-sentence).  Opt-in: set
+  # FACELESS_TTS_PLAN to a voice-plan JSON (voice_id + [{text,emotion}]) — the
+  # plan supersedes text_file/voice_hint because the emotion arc IS the script.
+  # Produces narration.wav + a sentence-level SRT, renamed to .edge.srt so the
+  # caller's script-exact caption path picks it up unchanged.  Falls through to
+  # Kokoro/edge-tts on any failure.  See docs/typecast-tts-notes.md.
+  if [[ -n "${FACELESS_TTS_PLAN:-}" && -f "${FACELESS_TTS_PLAN}" ]]; then
+    local vpy; vpy="$(_venv_python)" || vpy=""
+    local tc_key="${TYPECAST_API_KEY:-}"
+    [[ -z "$tc_key" && -f /g/config/typecast/api.key ]] && tc_key="$(cat /g/config/typecast/api.key)"
+    [[ -z "$tc_key" && -f "G:/config/typecast/api.key" ]] && tc_key="$(cat "G:/config/typecast/api.key")"
+    if [[ -n "$vpy" && -n "$tc_key" ]]; then
+      log_info "  tts backend: Typecast (plan=$(basename "$FACELESS_TTS_PLAN"))"
+      if TYPECAST_API_KEY="$tc_key" PYTHONUTF8=1 \
+           "$vpy" "$REPO_ROOT/scripts/typecast-tts.py" \
+           --plan "$FACELESS_TTS_PLAN" --out "$out_wav"; then
+        local tc_srt="${out_wav%.wav}.srt"
+        [[ -f "$tc_srt" ]] && cp -f "$tc_srt" "${out_wav%.wav}.edge.srt"
+        TTS_LABEL="Typecast ssfm-v30 (synthetic AI narration, emotion-directed)"
+        return 0
+      fi
+      log_warn "  Typecast failed; falling back to Kokoro/edge-tts"
+    else
+      log_warn "  FACELESS_TTS_PLAN set but venv python or API key missing — skipping Typecast"
+    fi
+  fi
+
   # Decide backend by voice_hint shape.  Default (empty hint) = Kokoro
   # am_michael, English documentary tone.  Explicit non-Kokoro hint
   # (e.g., Yuna for Korean) skips Kokoro entirely.
