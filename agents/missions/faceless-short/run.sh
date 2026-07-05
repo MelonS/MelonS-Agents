@@ -393,10 +393,19 @@ ABS_NARRATION="$(cd "$(dirname "$NARRATION_WAV")" && pwd)/$(basename "$NARRATION
 # libass: fontsdir=. lets it find the staged font by family name on hosts
 # without fontconfig (e.g. Windows) — harmless where fontconfig already works.
 FILTER="[0:v]ass=${ASS_BASE}:fontsdir=."
-if [[ -n "$OVERLAY_FONT_BASE" ]]; then
-  FILTER="${FILTER},drawtext=fontfile=${OVERLAY_FONT_BASE}:textfile=${ATTR_BASE}:fontsize=22:fontcolor=white@0.75:box=1:boxcolor=black@0.45:boxborderw=10:x=40:y=40"
-else
-  log_warn "  LAYOUT_DRAWTEXT_FONTFILE not set or not found — skipping attribution overlay"
+# On-screen attribution overlay is OPT-IN (FACELESS_ATTRIBUTION_OVERLAY=1).
+# Default OFF: disclosure/attribution lives in the video DESCRIPTION instead.
+# None of our sources require an on-screen credit (Pexels License waives it;
+# FLUX.1-schnell is Apache-2.0; Wan/edge-tts are permissive), and a burned
+# overlay both clutters the frame and can mis-credit — e.g. a 100%-generative
+# render is not "B-roll: Pexels".  source-attribution.txt is still written to
+# resources/ as a provenance record regardless of this flag.
+if [[ "${FACELESS_ATTRIBUTION_OVERLAY:-0}" == "1" ]]; then
+  if [[ -n "$OVERLAY_FONT_BASE" ]]; then
+    FILTER="${FILTER},drawtext=fontfile=${OVERLAY_FONT_BASE}:textfile=${ATTR_BASE}:fontsize=22:fontcolor=white@0.75:box=1:boxcolor=black@0.45:boxborderw=10:x=40:y=40"
+  else
+    log_warn "  attribution overlay requested but LAYOUT_DRAWTEXT_FONTFILE unset/missing — skipping"
+  fi
 fi
 FILTER="${FILTER}[outv]"
 
