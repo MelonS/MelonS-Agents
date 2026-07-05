@@ -46,6 +46,9 @@ def main() -> int:
     p.add_argument("--timeout", type=int, default=2400)
     p.add_argument("--lora-high", default="wan22_i2v_high_lightning.safetensors")
     p.add_argument("--lora-low", default="wan22_i2v_low_lightning.safetensors")
+    p.add_argument("--lora-high2", default=None, help="second high-noise LoRA (e.g. camera) stacked after distill")
+    p.add_argument("--lora-low2", default=None)
+    p.add_argument("--lora2-strength", type=float, default=1.0)
     a = p.parse_args()
     seed = a.seed if a.seed >= 0 else random.randint(0, 2**31)
 
@@ -88,6 +91,14 @@ def main() -> int:
         "sv": {"class_type": "SaveVideo",
                "inputs": {"video": ["cv", 0], "filename_prefix": "a14b", "format": "mp4", "codec": "h264"}},
     }
+    if a.lora_high2:
+        g["h2b"] = {"class_type": "LoraLoaderModelOnly",
+                    "inputs": {"model": ["h2", 0], "lora_name": a.lora_high2, "strength_model": a.lora2_strength}}
+        g["h3"]["inputs"]["model"] = ["h2b", 0]
+    if a.lora_low2:
+        g["l2b"] = {"class_type": "LoraLoaderModelOnly",
+                    "inputs": {"model": ["l2", 0], "lora_name": a.lora_low2, "strength_model": a.lora2_strength}}
+        g["l3"]["inputs"]["model"] = ["l2b", 0]
     req = urllib.request.Request(f"{a.server}/prompt",
         data=json.dumps({"prompt": g}).encode(), headers={"Content-Type": "application/json"})
     pid = json.loads(urllib.request.urlopen(req).read())["prompt_id"]
