@@ -66,7 +66,7 @@ fi
 ok=0
 fail=0
 for meta in "${metas[@]}"; do
-  mp4=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1])).get('_filename',''))" "$meta")
+  mp4=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1],encoding='utf-8')).get('_filename',''))" "$meta")
   if [[ -z "$mp4" ]]; then
     echo "SKIP: $meta — missing '_filename' field" >&2
     fail=$((fail + 1))
