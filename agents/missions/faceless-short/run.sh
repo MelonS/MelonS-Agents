@@ -198,7 +198,9 @@ if [[ -n "${FACELESS_REUSE_BROLL:-}" && -d "$FACELESS_REUSE_BROLL/resources" ]];
   BROLL_FILES=()
   while IFS= read -r __f; do
     [[ -n "$__f" ]] && BROLL_FILES+=("$__f")
-  done < <(find "$MDIR/resources/broll" -name "*.mp4" -type f 2>/dev/null | sort)
+  # sort -V: win-2 before win-10 — plain sort scrambles windows once NUM_BROLL
+  # goes double-digit (bit us on the first 16-window mission).
+  done < <(find "$MDIR/resources/broll" -name "*.mp4" -type f 2>/dev/null | sort -V)
   log_ok "reused ${#BROLL_FILES[@]} B-roll source clips, re-planned windows for this language"
 else
   log_step "4/6  windowed → per-segment search terms"
