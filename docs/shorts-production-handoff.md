@@ -25,6 +25,22 @@
 >
 > **동시 사용**: 여러 세션이 작업을 *제출*할 수 있으나 GPU 1개라 **큐로 직렬 처리**(진짜 병렬 생성 아님). 스크립트의 실패-시-서버재기동 로직 충돌을 막으려면 **서버 라이프사이클은 한 세션만** 관리한다.
 
+## 1.5 머신 이식성 (★ 경로는 env, 문서의 `G:\...`는 "이 PC 값")
+문서·`CLAUDE.md`에 보이는 `G:\...` 절대경로는 **이 PC의 값일 뿐**이다. 코드는 아래 **env 변수**로 읽으므로, 머신이 바뀌면 **env 값만** 바꾼다(스크립트 수정 X). env는 머신당 **한 곳**에서 정의: `.env` 또는 채널 repo의 `.claude/settings.json` `env` 블록.
+
+| env 변수 | 이 PC 값 | 용도 | 코드가 읽음 |
+|---|---|---|---|
+| `MELONS_HOME` | `G:/ai/MelonS-Agents` | 엔진 repo 위치 (채널이 참조) | (채널 설정) |
+| `COMFYUI_URL` | `http://127.0.0.1:8188` | ComfyUI 서버 | ✅ flux/wan |
+| `RECORDS_DIR` | `./records` | 산출물 | ✅ |
+| `ELEVENLABS_KEY_FILE` | `G:/config/elevenlabs/api.key` | EL 키 | ✅ (env→file 폴백) |
+| `FFMPEG_BIN` / PATH | `G:/tools/bin` | ffmpeg | ✅ |
+
+- **다른 Windows PC**: 위 값(드라이브레터 등)만 교체. ComfyUI·모델(~119GB)은 그 PC에 새로 설치/다운 필요(용량이라 이식 불가).
+- **Mac/Linux**: 코드는 크로스플랫폼 지향(capability 감지·env 패턴)이나 ComfyUI 위치·GPU·경로 스타일 달라 **실검증 필요**.
+- **폰트**: 한글 BlackHanSans=repo 동봉(이식 O). 영어 Arial Black=OS 시스템 폰트(머신마다 다름 → 없으면 대체 폰트 지정).
+> 원칙: **머신 고유 경로는 문서에 박지 말고 env로.** 문서가 값을 보일 땐 "이 PC 예시"로만.
+
 ## 2. 시크릿 (`<드라이브>\config`, git 밖 — 값은 절대 커밋 X)
 - `config\elevenlabs\api.key` — EL 키. **권한 필요: TTS + Music + Sound Effects + Voices**(music 없으면 401).
 - `config\youtubeuploader\{client_secrets.json, request.token}` — YT 업로드 OAuth. **토큰은 계정별** → 새 채널은 별도 OAuth 필요.
