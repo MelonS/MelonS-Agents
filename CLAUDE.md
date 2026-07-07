@@ -48,6 +48,7 @@ The four most-load-bearing project rules summarized inline:
 ## Core rules
 
 - **Code vs Data separation**: agent logic lives under `agents/` and `.claude/agents/` (git-tracked). All outputs go to `$RECORDS_DIR` (default `./records/`, gitignored).
+- **Know-how is committed, not memory-only** (hard rule): any reusable production know-how, pipeline improvement, tool, or hard-won learning MUST be captured in a committed `docs/` file (tooling → `scripts/`), so it travels to every session/repo that clones this repo. Agent memory (`~/.claude/.../memory/`) is a per-project cache/index, **not** the system of record — it does **not** transfer across project folders. The only things that stay uncommitted are secret *values* (API keys/tokens → `config/`, gitignored) and multi-GB local assets (models, ComfyUI). New-session bootstrap entry point: [`docs/shorts-production-handoff.md`](docs/shorts-production-handoff.md).
 - **Env-driven paths**: never hardcode `/opt/homebrew/...` or `~/...`. Read `$FFMPEG_BIN`, `$OLLAMA_HOST`, `$RECORDS_DIR`, etc. from `.env`.
 - **Autonomy policy**: respect `config/policies.yaml`.
   - `AUTONOMY_MODE=false` (default): pause for user confirmation before logic changes, destructive FS ops, external publishes.
