@@ -1,6 +1,7 @@
 # Generative Shorts Pipeline — 생성형 쇼츠 제작 파이프라인 v3
 
 > 2026-07 실전(괴담 3편 + 우주 1편 + 호날두 헌정 1편/글로벌·영어)에서 확립. 로컬·무료 스택 기반(BGM·TTS는 ElevenLabs 유료 옵션).
+> 새 세션 부트스트랩(환경·시크릿위치·툴체인): [`shorts-production-handoff.md`](shorts-production-handoff.md)
 > 필드 노트: [`wan22-generation-notes.md`](wan22-generation-notes.md) · 뉴스/법률 게이트: [`content-shorts-pipeline.md`](content-shorts-pipeline.md)
 
 ## 스테이지
