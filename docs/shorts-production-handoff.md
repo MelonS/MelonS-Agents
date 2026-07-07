@@ -20,6 +20,10 @@
 | 폰트 | 한글 `assets/fonts/BlackHanSans`(OFL, repo) · 영어 `C:\Windows\Fonts\ariblk.ttf`(Arial Black) → gitignore된 로컬 fontsdir로 복사해 사용 |
 | ⚠️ Windows 함정 | 네이티브 파이썬은 `/g/` MSYS 경로 못 읽음 → `G:/` 사용. ffmpeg concat은 상대경로. → `docs/platform-windows.md` |
 
+> **★ ComfyUI·모델은 "PC당 하나" 공유 싱글턴.** 모델 ~119GB(`ComfyUI/models`)는 **한 곳에만** 두고 모든 세션/프로젝트가 **같은 서버(`127.0.0.1:8188`)를 공유**한다 — 생성은 각 폴더가 아니라 그 서버가 하므로 **모델 복사·재다운 불필요**. 프로젝트별 ComfyUI 설치 금지(용량 N배 낭비). 새 세션은 **서버 기동 여부만 확인**하고 접속하면 됨.
+>
+> **동시 사용**: 여러 세션이 작업을 *제출*할 수 있으나 GPU 1개라 **큐로 직렬 처리**(진짜 병렬 생성 아님). 스크립트의 실패-시-서버재기동 로직 충돌을 막으려면 **서버 라이프사이클은 한 세션만** 관리한다.
+
 ## 2. 시크릿 (`<드라이브>\config`, git 밖 — 값은 절대 커밋 X)
 - `config\elevenlabs\api.key` — EL 키. **권한 필요: TTS + Music + Sound Effects + Voices**(music 없으면 401).
 - `config\youtubeuploader\{client_secrets.json, request.token}` — YT 업로드 OAuth. **토큰은 계정별** → 새 채널은 별도 OAuth 필요.
