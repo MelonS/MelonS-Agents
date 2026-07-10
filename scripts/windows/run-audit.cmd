@@ -1,5 +1,5 @@
 @echo off
-rem run-audit.cmd — Task Scheduler entrypoint for the L3 daily audit.
+rem run-audit.cmd - Task Scheduler entrypoint for the L3 daily audit.
 rem Exists so the scheduled task's command is a single spaceless path
 rem (schtasks /TR quoting of "Program Files" + nested bash -lc is fragile).
 rem Resolves the repo from its own location; logs to records/ (gitignored).
