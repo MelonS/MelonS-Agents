@@ -12,7 +12,7 @@
 | 1 | 마스터 노트 | (문서) | `MASTER-NOTE.md` — 로그라인·훅·대본·팔레트·법적 프레임 | |
 | **1.5** | **노트 검증** ★ | `note-judge` 에이전트 | 100점 채점(훅·구조·아크·참여·실현성·법) — 75미만 REVISE | **GO 필수** |
 | 2 | 컷별 프롬프트 | (문서) | `prompts/cutNN.md` — STYLE/CHARACTER LOCK + CULTURE GUARD + IMAGE(START·END)/VIDEO(CAMERA·ACTION) 분리 | |
-| 3 | 스틸 생성 | `scripts/flux-still.py` (FLUX.1-schnell) | 샷별 START 앵커 (768×1344, ~9s/장) | |
+| 3 | 스틸 생성 | **`scripts/zimage-still.py` (Z-Image Turbo, 기본)** / `flux-still.py`(FLUX.1-schnell, 지시준수 폴백) | 샷별 START 앵커 (768×1344). Z-Image=시네마틱 사실감 우세(2026-07 A/B, [`model-eval-2026-07.md`](model-eval-2026-07.md)). ⚠️Z-Image는 cfg1이라 네거티브 무시→긍정서술로 | |
 | 4 | **스토리보드** | 8컬럼×N샷 HTML | SHOT(+**시간**)·START·END·CAMERA·ACTION·DIALOGUE·SFX·MUSIC | |
 | **4.5** | **스토리보드 검증** ★ | `still-judge` 에이전트(자동 채점, 75미만 자동 REGEN 루프) + **운영자** | 샷별 점수·타임코드가 붙은 보드 | **전샷 승인 필수** |
 | 5 | I2V 영상화 | `wan-a14b-i2v.py` (A14B+260412) / FLF(`WanFirstLastFrameToVideo`) / 카메라 LoRA 스택 | 샷별 mp4 (704×1280·81f, ~7분/샷) | |
@@ -61,8 +61,9 @@
 > 수익화 채널 BGM은 `elevenlabs-music.py` 우선. 사이드체인 더킹은 `assemble-short.sh`가 처리.
 
 ## 모델 재고 (로컬)
-FLUX.1-schnell fp8(스틸) · Wan2.2 A14B GGUF+lightx2v 260412(영상 기본) · Wan2.2 5B(경량)
+**Z-Image Turbo bf16(스틸 기본, Apache)** · FLUX.1-schnell fp8(스틸 폴백) · Wan2.2 A14B GGUF+lightx2v **260412 r64**(영상 기본, wan-a14b-i2v.py 기본 LoRA) · Wan2.2 5B(경량)
 · Wan2.1 FLF2V(예비) · RealESRGAN(업스케일) · ai-toolkit(캐릭터 LoRA 훈련)
+> 모델 채택 근거·A/B·셋업 = [`model-eval-2026-07.md`](model-eval-2026-07.md). Z-Image 셋업: qwen_3_4b 인코더+lumina2 CLIPLoader+AuraFlow shift3, int8은 현 ComfyUI 미지원(bf16).
 
 ## 캐릭터 인물도감 편 — 재사용 기법 (EP02 페넬로페 검증, 2026-07-09)
 곧극장 shots-aware 파이프라인(`soon-theater/scripts/gen_ep_*` + `assemble_ep.py`)에서 현준 6라운드 검수로 확정. 캐릭터 소개 쇼츠 공통 적용:

@@ -44,8 +44,9 @@ def main() -> int:
     p.add_argument("--boundary-step", type=int, default=2, help="high->low handoff step")
     p.add_argument("--strength", type=float, default=1.0, help="denoise (<1 = preserve anchor harder)")
     p.add_argument("--timeout", type=int, default=2400)
-    p.add_argument("--lora-high", default="wan22_i2v_high_lightning.safetensors")
-    p.add_argument("--lora-low", default="wan22_i2v_low_lightning.safetensors")
+    # 260412 r64 = A/B에서 구 LoRA 대비 ~21% 빠름 + 품질 동등~우세(docs/model-eval-2026-07.md). 구형=wan22_i2v_{high,low}_lightning.
+    p.add_argument("--lora-high", default="Wan22_I2V_A14B_HIGH_lightx2v_4step_260412_r64.safetensors")
+    p.add_argument("--lora-low", default="Wan22_I2V_A14B_LOW_lightx2v_4step_260412_r64.safetensors")
     p.add_argument("--lora-high2", default=None, help="second high-noise LoRA (e.g. camera) stacked after distill")
     p.add_argument("--lora-low2", default=None)
     p.add_argument("--lora2-strength", type=float, default=1.0)
