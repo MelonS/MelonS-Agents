@@ -101,6 +101,33 @@ def build_srt(alignment, out_srt):
     return len(cues)
 
 
+def build_words(alignment, out_json):
+    """Word-level timings [{w,s,e}] from char alignment — for karaoke captions.
+    Tags stripped; words split on whitespace. Backward-compatible extra output."""
+    chars = alignment["characters"]
+    starts = alignment["character_start_times_seconds"]
+    ends = alignment["character_end_times_seconds"]
+    bad = tag_char_indices(chars)
+    words, cur, cs, ce = [], "", None, None
+    for i, ch in enumerate(chars):
+        if i in bad:
+            continue
+        if ch.isspace() or ch in "\n\r":
+            if cur.strip():
+                words.append({"w": cur, "s": cs, "e": ce})
+            cur, cs = "", None
+            continue
+        if cs is None:
+            cs = starts[i]
+        ce = ends[i]
+        cur += ch
+    if cur.strip():
+        words.append({"w": cur, "s": cs, "e": ce})
+    with open(out_json, "w", encoding="utf-8") as f:
+        json.dump(words, f, ensure_ascii=False)
+    return len(words)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--plan")
@@ -155,8 +182,10 @@ def main():
     # captions from alignment (tags stripped)
     alignment = resp.get("alignment") or resp.get("normalized_alignment")
     n = build_srt(alignment, out_srt) if alignment else 0
+    out_words = os.path.splitext(out_wav)[0] + ".words.json"
+    nw = build_words(alignment, out_words) if alignment else 0
 
-    print(f"OK: {out_wav}  +  {out_srt} ({n} caption lines)")
+    print(f"OK: {out_wav}  +  {out_srt} ({n} caption lines)  +  {out_words} ({nw} words)")
 
 
 if __name__ == "__main__":
