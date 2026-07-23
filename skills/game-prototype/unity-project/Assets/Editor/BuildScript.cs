@@ -32,6 +32,49 @@ namespace MelonS.GameProto.EditorTools
             EditorApplication.Exit(report.summary.result == BuildResult.Succeeded ? 0 : 1);
         }
 
+        /// <summary>WebGL build for static hosting (GitHub Pages). Gzip +
+        /// decompression fallback so no server Content-Encoding config is needed.</summary>
+        [MenuItem("MelonS/Build WebGL (current day)")]
+        public static void BuildWebGL()
+        {
+            string buildDir = "../builds";
+            Directory.CreateDirectory(buildDir);
+            string ts = System.DateTime.Now.ToString("yyyy-MM-dd");
+            string day = System.Environment.GetEnvironmentVariable("MELONS_BUILD_DAY") ?? "X";
+            string outDir = Path.Combine(buildDir, $"day-{day}-{ts}-webgl");
+            Directory.CreateDirectory(outDir);
+
+            PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
+            PlayerSettings.WebGL.decompressionFallback = true;
+            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly;
+            PlayerSettings.runInBackground = true;
+
+            var options = new BuildPlayerOptions
+            {
+                scenes = new[]
+                {
+                    "Assets/Scenes/MainMenu.unity",
+                    "Assets/Scenes/Game.unity",
+                },
+                locationPathName = outDir,
+                target = BuildTarget.WebGL,
+                options = BuildOptions.None,
+            };
+
+            Debug.Log($"[BuildScript] building -> {outDir}");
+            BuildReport report = BuildPipeline.BuildPlayer(options);
+            if (report.summary.result == BuildResult.Succeeded)
+            {
+                Debug.Log($"[BuildScript] OK ({report.summary.totalSize / 1024 / 1024} MB)");
+                EditorApplication.Exit(0);
+            }
+            else
+            {
+                Debug.LogError($"[BuildScript] FAIL: {report.summary.result}");
+                EditorApplication.Exit(1);
+            }
+        }
+
         [MenuItem("MelonS/Build macOS (current day)")]
         public static void BuildMac()
         {

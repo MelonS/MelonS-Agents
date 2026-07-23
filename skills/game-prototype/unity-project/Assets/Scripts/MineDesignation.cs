@@ -460,7 +460,8 @@ namespace MelonS.GameProto
             tm.anchor = TextAnchor.MiddleCenter;
             tm.alignment = TextAlignment.Center;
             tm.color = UITheme.TextPrimary;
-            var f = Font.CreateDynamicFontFromOSFont("Arial", 48);
+            var f = Resources.Load<Font>("Fonts/NotoSansKR");
+            if (f == null) f = Font.CreateDynamicFontFromOSFont("Arial", 48);
             if (f != null) { tm.font = f; tm.GetComponent<MeshRenderer>().material = f.material; }
             var mr = marker.GetComponent<MeshRenderer>();
             // UI겹침 P1-7 (2026-06-14): 30 → 28. 광맥 스프라이트(≤20) 위는 유지하되

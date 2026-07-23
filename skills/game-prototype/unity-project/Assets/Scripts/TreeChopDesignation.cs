@@ -329,11 +329,19 @@ namespace MelonS.GameProto
             tm.anchor = TextAnchor.LowerCenter;
             tm.alignment = TextAlignment.Center;
             tm.color = new Color(0.95f, 0.85f, 0.55f, 1f);
-            string[] fonts = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
-            foreach (var fn in fonts)
+            var bundled = Resources.Load<Font>("Fonts/NotoSansKR");
+            if (bundled != null)
             {
-                var f = Font.CreateDynamicFontFromOSFont(fn, 28);
-                if (f != null) { tm.font = f; var fr = marker.GetComponent<MeshRenderer>(); if (fr != null) fr.material = f.material; break; }
+                tm.font = bundled; var br = marker.GetComponent<MeshRenderer>(); if (br != null) br.material = bundled.material;
+            }
+            else
+            {
+                string[] fonts = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
+                foreach (var fn in fonts)
+                {
+                    var f = Font.CreateDynamicFontFromOSFont(fn, 28);
+                    if (f != null) { tm.font = f; var fr = marker.GetComponent<MeshRenderer>(); if (fr != null) fr.material = f.material; break; }
+                }
             }
             var mr = marker.GetComponent<MeshRenderer>();
             if (mr != null) mr.sortingOrder = 30;

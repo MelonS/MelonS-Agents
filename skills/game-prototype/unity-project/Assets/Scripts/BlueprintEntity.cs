@@ -98,11 +98,19 @@ namespace MelonS.GameProto
             statusLabel.alignment = TextAlignment.Center;
             statusLabel.color = new Color(0.95f, 0.95f, 0.85f, 1f);
             // 한국어 OS font
-            string[] cands = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
-            foreach (var n in cands)
+            var bundled = Resources.Load<Font>("Fonts/NotoSansKR");
+            if (bundled != null)
             {
-                var f = Font.CreateDynamicFontFromOSFont(n, 24);
-                if (f != null) { statusLabel.font = f; statusLabel.GetComponent<MeshRenderer>().material = f.material; break; }
+                statusLabel.font = bundled; statusLabel.GetComponent<MeshRenderer>().material = bundled.material;
+            }
+            else
+            {
+                string[] cands = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
+                foreach (var n in cands)
+                {
+                    var f = Font.CreateDynamicFontFromOSFont(n, 24);
+                    if (f != null) { statusLabel.font = f; statusLabel.GetComponent<MeshRenderer>().material = f.material; break; }
+                }
             }
             // UI겹침 P1-8 (2026-06-14): 25 → 26. NightOverlay(25)와의 타이를 풀어
             //  밤에 미완 청사진의 '자재 n/m·건설 %' 텍스트가 어둠에 감광돼 판독 불가하던 것 해소.

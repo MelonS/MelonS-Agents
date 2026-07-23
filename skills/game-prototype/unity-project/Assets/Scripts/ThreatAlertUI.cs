@@ -58,6 +58,8 @@ namespace MelonS.GameProto
 
         private Font LoadKoreanFont()
         {
+            var bundled = Resources.Load<Font>("Fonts/NotoSansKR");
+            if (bundled != null) return bundled;
             string[] candidates = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
             foreach (var name in candidates)
             {
