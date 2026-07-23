@@ -67,6 +67,7 @@ namespace MelonS.GameProto.EditorTools
                 dimGo.transform.SetParent(canvasGo.transform, false);
                 var dim = dimGo.AddComponent<RawImage>();
                 var gradTex = new Texture2D(1, 64, TextureFormat.RGBA32, false);
+                gradTex.wrapMode = TextureWrapMode.Clamp;   // Repeat 블렌드 가로줄 방지
                 for (int gy = 0; gy < 64; gy++)
                 {
                     float a = Mathf.SmoothStep(0.55f, 0f, gy / 63f);   // 아래(0) 진함 → 위 투명
@@ -89,6 +90,7 @@ namespace MelonS.GameProto.EditorTools
             title.font = menuFont;
             title.fontSize = 84;
             title.fontStyle = FontStyle.Bold;
+            title.verticalOverflow = VerticalWrapMode.Overflow;   // BitBit 라인높이 함정
             title.color = new Color(0.985f, 0.87f, 0.62f, 1f);
             var tShadow = titleGo.AddComponent<Shadow>();
             tShadow.effectColor = new Color(0.10f, 0.06f, 0.03f, 0.85f);
@@ -106,6 +108,7 @@ namespace MelonS.GameProto.EditorTools
             sub.alignment = TextAnchor.MiddleCenter;
             sub.font = menuFont;
             sub.fontSize = 26;
+            sub.verticalOverflow = VerticalWrapMode.Overflow;
             sub.color = new Color(0.96f, 0.93f, 0.86f, 0.92f);
             var sShadow = subGo.AddComponent<Shadow>();
             sShadow.effectColor = new Color(0.10f, 0.06f, 0.03f, 0.8f);

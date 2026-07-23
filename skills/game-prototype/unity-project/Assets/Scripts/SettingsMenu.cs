@@ -62,8 +62,8 @@ namespace MelonS.GameProto
         //  (저장행 유무에 따라).  과거엔 320 고정 + SFX y=-140 라 헤더 아래 죽은 공백이 생겨
         //  '깨진' 인상.  슬라이더를 헤더 바로 아래로 올리고 저장행을 하단에 둔다.
         private const float PanelW = 360f;
-        private const float PanelH = 286f;          // 저장행 포함 높이
-        private const float PanelHNoSave = 210f;    // 저장행 숨김 시 높이
+        private const float PanelH = 348f;          // 저장행+팔레트/복귀 행 포함
+        private const float PanelHNoSave = 272f;    // 저장행 숨김 시 높이
 
         /// <summary>
         /// Create the panel (once) attached to the active scene's Canvas, if not
@@ -171,7 +171,7 @@ namespace MelonS.GameProto
             trt.anchoredPosition = Vector2.zero;
 
             // Close (X) button — top-right of header.
-            var closeBtn = MakeButton(headerGo.transform, "CloseBtn", "✕",
+            var closeBtn = MakeButton(headerGo.transform, "CloseBtn", "×",
                 new Vector2(1f, 0.5f), new Vector2(-22, 0), new Vector2(32, 32), Close);
             // anchor close button to header right edge
             var crt = closeBtn.GetComponent<RectTransform>();
@@ -188,7 +188,7 @@ namespace MelonS.GameProto
             slRt.anchorMax = new Vector2(0.5f, 1f);
             slRt.pivot = new Vector2(0.5f, 1f);
             slRt.sizeDelta = new Vector2(PanelW - UITheme.PadOuter * 2f, 56);
-            slRt.anchoredPosition = new Vector2(0, -176);  // 하단(슬라이더 아래)
+            slRt.anchoredPosition = new Vector2(0, -232);  // 팔레트 행 아래
 
             var slLabel = MakeLabel(saveLoadRow.transform, "저장 / 불러오기",
                 new Vector2(0, 0.5f), new Vector2(0, 18), TextAnchor.MiddleLeft, 16, UITheme.TextSecondary);
@@ -206,7 +206,7 @@ namespace MelonS.GameProto
             //  InvokeExistingButton).  Name preservation rule satisfied.
             // #ui백로그 6.1 — (S)/(L) 은 죽은 핫키 힌트 + 실키(카메라 S/램프 L)와 충돌.
             //  실제 핫키 F5/F9 로 교체.  GO 이름은 테스트 보존 규칙대로 유지.
-            saveBtn = MakeButton(saveLoadRow.transform, "SettingsSaveBtn", "💾 저장(F5)",
+            saveBtn = MakeButton(saveLoadRow.transform, "SettingsSaveBtn", "저장 (F5)",
                 new Vector2(0f, 0f), new Vector2(0, 0), new Vector2(150, 34), OnSaveClicked);
             var saveRt = saveBtn.GetComponent<RectTransform>();
             saveRt.anchorMin = new Vector2(0f, 0f);
@@ -214,7 +214,7 @@ namespace MelonS.GameProto
             saveRt.pivot = new Vector2(0f, 0f);
             saveRt.anchoredPosition = new Vector2(0, 0);
 
-            loadBtn = MakeButton(saveLoadRow.transform, "SettingsLoadBtn", "📂 불러오기(F9)",
+            loadBtn = MakeButton(saveLoadRow.transform, "SettingsLoadBtn", "불러오기 (F9)",
                 new Vector2(0f, 0f), new Vector2(0, 0), new Vector2(160, 34), OnLoadClicked);
             var loadRt = loadBtn.GetComponent<RectTransform>();
             loadRt.anchorMin = new Vector2(1f, 0f);
@@ -240,6 +240,52 @@ namespace MelonS.GameProto
                 TextAnchor.MiddleRight, 14, UITheme.TextSecondary, anchorTopLeft: true, height: 22);
             musicSlider = MakeSlider(panelContent, "MusicSlider", new Vector2(0, musicY - 26),
                 OnMusicChanged);
+
+            // ---- UI 팔레트 (2026-07-25 운영자 "옵션에서 변경") ----
+            float palY = -176;
+            MakeLabel(panelContent, "UI 팔레트", new Vector2(0f, 1f), new Vector2(0, palY),
+                TextAnchor.MiddleLeft, 16, UITheme.TextPrimary, anchorTopLeft: true, height: 22);
+            var palBtn = MakeButton(panelContent, "PaletteBtn",
+                UITheme.PaletteNames[UITheme.CurrentPalette], new Vector2(0f, 1f),
+                new Vector2(0, palY), new Vector2(120, 30), OnPaletteClicked);
+            var palRt = palBtn.GetComponent<RectTransform>();
+            palRt.anchorMin = new Vector2(1f, 1f);
+            palRt.anchorMax = new Vector2(1f, 1f);
+            palRt.pivot = new Vector2(1f, 1f);
+            palRt.anchoredPosition = new Vector2(0, palY + 4);
+            paletteValueText = palBtn.GetComponentInChildren<Text>();
+            MakeLabel(panelContent, "일부 요소는 재입장 시 완전 적용", new Vector2(0f, 1f),
+                new Vector2(0, palY - 24), TextAnchor.MiddleLeft, 12, UITheme.TextSecondary,
+                anchorTopLeft: true, height: 16);
+
+            // ---- 메인 메뉴로 (2026-07-25 운영자 "게임 안에서 초기 메뉴로 갈 방법") ----
+            mainMenuBtn = MakeButton(panelContent, "MainMenuBtn", "메인 메뉴로 나가기",
+                new Vector2(0.5f, 1f), new Vector2(0, -296), new Vector2(PanelW - UITheme.PadOuter * 4f, 36),
+                OnMainMenuClicked);
+            var mmRt = mainMenuBtn.GetComponent<RectTransform>();
+            mmRt.anchorMin = new Vector2(0.5f, 1f);
+            mmRt.anchorMax = new Vector2(0.5f, 1f);
+            mmRt.pivot = new Vector2(0.5f, 1f);
+            mmRt.anchoredPosition = new Vector2(0, -296);
+        }
+
+        private Text paletteValueText;
+        private Button mainMenuBtn;
+
+        private void OnPaletteClicked()
+        {
+            int next = (UITheme.CurrentPalette + 1) % UITheme.PaletteNames.Length;
+            UITheme.SetPalette(next);
+            if (paletteValueText != null) paletteValueText.text = UITheme.PaletteNames[next];
+            AlertStackUI.Notify($"UI 팔레트: {UITheme.PaletteNames[next]} (재입장 시 완전 적용)", 1);
+        }
+
+        private void OnMainMenuClicked()
+        {
+            // 진행 상태는 저장 버튼으로 별도 — 여기선 시간/오디오 복구 후 메뉴로.
+            Time.timeScale = 1f;
+            AudioListener.pause = false;
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
         }
 
         // ----------------------------------------------------------------------
@@ -359,7 +405,7 @@ namespace MelonS.GameProto
         private void ResetLoadArm()
         {
             loadArmUntil = -1f;
-            SetLoadBtnLabel("📂 불러오기(F9)");
+            SetLoadBtnLabel("불러오기 (F9)");
         }
 
         private void SetLoadBtnLabel(string s)

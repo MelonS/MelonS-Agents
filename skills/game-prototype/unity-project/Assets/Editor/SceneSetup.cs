@@ -32,6 +32,9 @@ namespace MelonS.GameProto.EditorTools
         public static void GenerateAll()
         {
             Debug.Log("[SceneSetup] Starting generation...");
+            // 팔레트 시스템 (2026-07-25): 베이크는 항상 디폴트(크림) — 로컬 pref 가
+            //  씬 해시에 새지 않게 (베이크 결정론).
+            MelonS.GameProto.Core.UITheme.ForcePalette(0);
             Directory.CreateDirectory(ScenesDir);
             Directory.CreateDirectory("Assets/Prefabs");
 

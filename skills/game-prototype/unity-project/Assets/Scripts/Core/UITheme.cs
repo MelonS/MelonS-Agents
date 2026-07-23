@@ -14,32 +14,122 @@ namespace MelonS.GameProto.Core
     /// </summary>
     public static class UITheme
     {
-        // Background tones (warm browns)
-        // UI 가림 다이어트 (2026-07-24 운영자 "화면을 너무 가림"): 패널 알파 0.94/0.92
-        //  → 0.86/0.85 — 맵이 패널 뒤로 은은히 비쳐 점유감 완화, 텍스트 대비는 유지.
-        public static readonly Color PanelBg       = new Color(0.165f, 0.122f, 0.094f, 0.86f);  // #2A1F18 - dark warm brown
-        public static readonly Color PanelBgLight  = new Color(0.220f, 0.165f, 0.125f, 0.85f);  // #382A20 - lighter brown
-        public static readonly Color HeaderBg      = new Color(0.286f, 0.196f, 0.137f, 0.95f);  // #493223 alpha 0.95 - header brown
+        // ── UI 팔레트 시스템 (2026-07-25 운영자 "옵션에서 변경 + F 크림 디폴트") ──
+        //  4팔레트: 0=크림(F, 디폴트) 1=웜앰버(A, 구 기본) 2=미드나잇(D) 3=차콜(E).
+        //  기존 readonly 필드를 프로퍼티로 전환 — 호출부 소스 호환.  선택은
+        //  PlayerPrefs("ui_palette"), 씬 베이커는 ForcePalette 로 디폴트 고정
+        //  (베이크 결정론 — 로컬 pref 가 씬 해시에 새지 않게).
+        //  알려진 한계: 베이크 시점 색은 재시작/씬 재입장 시 완전 적용.
+        private class Pal
+        {
+            public Color panelBg, panelBgLight, headerBg, accentGold, accentOrange, accentTan,
+                         textPrimary, textSecondary, textDark, textDanger, btnHover, divider, shadowBg;
+        }
 
-        // Accent tones (gold/orange)
-        public static readonly Color AccentGold    = new Color(0.957f, 0.843f, 0.541f, 1f);     // #F4D78A - 제목 (밝은 골드)
-        public static readonly Color AccentOrange  = new Color(0.910f, 0.710f, 0.376f, 1f);     // #E8B560 - active button (warm orange)
-        public static readonly Color AccentTan     = new Color(0.784f, 0.584f, 0.420f, 1f);     // #C8956B - secondary accent
+        public static readonly string[] PaletteNames = { "크림", "웜 앰버", "미드나잇", "차콜" };
 
-        // Text tones
-        public static readonly Color TextPrimary   = new Color(0.949f, 0.894f, 0.816f, 1f);     // #F2E4D0 - 본문 (cream)
-        public static readonly Color TextSecondary = new Color(0.733f, 0.667f, 0.580f, 1f);     // #BBAA94 - 부제목/hint (muted cream)
-        public static readonly Color TextDark      = new Color(0.118f, 0.086f, 0.063f, 1f);     // #1E1610 - active 버튼 위 검정에 가까운 텍스트
-        public static readonly Color TextDanger    = new Color(0.953f, 0.439f, 0.357f, 1f);     // #F37058 - 빨강 경고
+        private static readonly Pal[] Pals =
+        {
+            new Pal {   // 0 크림 (F — 보드게임 라이트)
+                panelBg = new Color(0.949f, 0.910f, 0.835f, 0.94f),
+                panelBgLight = new Color(0.898f, 0.835f, 0.722f, 0.93f),
+                headerBg = new Color(0.871f, 0.796f, 0.655f, 0.96f),
+                accentGold = new Color(0.620f, 0.443f, 0.129f, 1f),
+                accentOrange = new Color(0.769f, 0.478f, 0.173f, 1f),
+                accentTan = new Color(0.663f, 0.510f, 0.345f, 1f),
+                textPrimary = new Color(0.227f, 0.184f, 0.133f, 1f),
+                textSecondary = new Color(0.541f, 0.463f, 0.345f, 1f),
+                textDark = new Color(0.988f, 0.957f, 0.898f, 1f),   // 액센트 버튼 위 = 밝은 크림
+                textDanger = new Color(0.753f, 0.290f, 0.204f, 1f),
+                btnHover = new Color(0.835f, 0.761f, 0.629f, 0.95f),
+                divider = new Color(0.722f, 0.624f, 0.471f, 1f),
+                shadowBg = new Color(0f, 0f, 0f, 0.25f),
+            },
+            new Pal {   // 1 웜 앰버 (A — 구 기본 브라운)
+                panelBg = new Color(0.165f, 0.122f, 0.094f, 0.86f),
+                panelBgLight = new Color(0.220f, 0.165f, 0.125f, 0.85f),
+                headerBg = new Color(0.286f, 0.196f, 0.137f, 0.95f),
+                accentGold = new Color(0.957f, 0.843f, 0.541f, 1f),
+                accentOrange = new Color(0.910f, 0.710f, 0.376f, 1f),
+                accentTan = new Color(0.784f, 0.584f, 0.420f, 1f),
+                textPrimary = new Color(0.949f, 0.894f, 0.816f, 1f),
+                textSecondary = new Color(0.733f, 0.667f, 0.580f, 1f),
+                textDark = new Color(0.118f, 0.086f, 0.063f, 1f),
+                textDanger = new Color(0.953f, 0.439f, 0.357f, 1f),
+                btnHover = new Color(0.310f, 0.231f, 0.176f, 0.95f),
+                divider = new Color(0.353f, 0.255f, 0.180f, 1f),
+                shadowBg = new Color(0f, 0f, 0f, 0.45f),
+            },
+            new Pal {   // 2 미드나잇 (D — 네이비+골드)
+                panelBg = new Color(0.102f, 0.125f, 0.173f, 0.91f),
+                panelBgLight = new Color(0.149f, 0.180f, 0.243f, 0.90f),
+                headerBg = new Color(0.173f, 0.212f, 0.286f, 0.95f),
+                accentGold = new Color(0.910f, 0.710f, 0.302f, 1f),
+                accentOrange = new Color(0.910f, 0.710f, 0.302f, 1f),
+                accentTan = new Color(0.604f, 0.659f, 0.753f, 1f),
+                textPrimary = new Color(0.910f, 0.925f, 0.957f, 1f),
+                textSecondary = new Color(0.604f, 0.659f, 0.753f, 1f),
+                textDark = new Color(0.071f, 0.086f, 0.118f, 1f),
+                textDanger = new Color(0.953f, 0.439f, 0.357f, 1f),
+                btnHover = new Color(0.216f, 0.259f, 0.349f, 0.95f),
+                divider = new Color(0.290f, 0.353f, 0.455f, 1f),
+                shadowBg = new Color(0f, 0f, 0f, 0.45f),
+            },
+            new Pal {   // 3 차콜 (E — 무채+세이지)
+                panelBg = new Color(0.141f, 0.149f, 0.157f, 0.91f),
+                panelBgLight = new Color(0.192f, 0.204f, 0.216f, 0.90f),
+                headerBg = new Color(0.235f, 0.247f, 0.259f, 0.95f),
+                accentGold = new Color(0.639f, 0.773f, 0.522f, 1f),
+                accentOrange = new Color(0.639f, 0.773f, 0.522f, 1f),
+                accentTan = new Color(0.549f, 0.600f, 0.522f, 1f),
+                textPrimary = new Color(0.925f, 0.925f, 0.918f, 1f),
+                textSecondary = new Color(0.659f, 0.675f, 0.659f, 1f),
+                textDark = new Color(0.098f, 0.110f, 0.098f, 1f),
+                textDanger = new Color(0.953f, 0.439f, 0.357f, 1f),
+                btnHover = new Color(0.271f, 0.290f, 0.302f, 0.95f),
+                divider = new Color(0.322f, 0.337f, 0.353f, 1f),
+                shadowBg = new Color(0f, 0f, 0f, 0.45f),
+            },
+        };
 
-        // Button states
-        public static readonly Color BtnInactiveBg = PanelBgLight;
-        public static readonly Color BtnActiveBg   = AccentOrange;
-        public static readonly Color BtnHover      = new Color(0.310f, 0.231f, 0.176f, 0.95f);  // #4F3B2D
+        private static int _cur = -1;
+        private static Pal P
+        {
+            get
+            {
+                if (_cur < 0) _cur = PlayerPrefs.GetInt("ui_palette", 0);
+                return Pals[Mathf.Clamp(_cur, 0, Pals.Length - 1)];
+            }
+        }
 
-        // Misc UI
-        public static readonly Color Divider       = new Color(0.353f, 0.255f, 0.180f, 1f);     // #5A412E
-        public static readonly Color ShadowBg      = new Color(0.0f, 0.0f, 0.0f, 0.45f);
+        public static int CurrentPalette => _cur < 0 ? PlayerPrefs.GetInt("ui_palette", 0) : _cur;
+
+        /// <summary>설정 메뉴에서 호출 — 저장 + 즉시 전환(런타임 생성 UI 부터 반영).</summary>
+        public static void SetPalette(int id)
+        {
+            _cur = Mathf.Clamp(id, 0, Pals.Length - 1);
+            PlayerPrefs.SetInt("ui_palette", _cur);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>씬 베이커 전용 — pref 무시하고 고정 (베이크 결정론).</summary>
+        public static void ForcePalette(int id) { _cur = Mathf.Clamp(id, 0, Pals.Length - 1); }
+
+        public static Color PanelBg       => P.panelBg;
+        public static Color PanelBgLight  => P.panelBgLight;
+        public static Color HeaderBg      => P.headerBg;
+        public static Color AccentGold    => P.accentGold;
+        public static Color AccentOrange  => P.accentOrange;
+        public static Color AccentTan     => P.accentTan;
+        public static Color TextPrimary   => P.textPrimary;
+        public static Color TextSecondary => P.textSecondary;
+        public static Color TextDark      => P.textDark;
+        public static Color TextDanger    => P.textDanger;
+        public static Color BtnInactiveBg => P.panelBgLight;
+        public static Color BtnActiveBg   => P.accentOrange;
+        public static Color BtnHover      => P.btnHover;
+        public static Color Divider       => P.divider;
+        public static Color ShadowBg      => P.shadowBg;
 
         /// <summary>Korean 폰트 fallback chain.  순서대로 system 에서 사용 가능한 첫 거.</summary>
         public static readonly string[] KoreanFontCandidates = {
