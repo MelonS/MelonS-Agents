@@ -108,7 +108,7 @@ namespace MelonS.GameProto.EditorTools
             txt.text = label;
             txt.font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(18);
             txt.fontSize = 18;
-            txt.fontStyle = FontStyle.Bold;
+            txt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             txt.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             txt.alignment = TextAnchor.MiddleCenter;
             txt.raycastTarget = false;

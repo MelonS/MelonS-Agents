@@ -296,7 +296,7 @@ namespace MelonS.GameProto
             var titleTxt = titleGo.AddComponent<Text>();
             titleTxt.font = titleFont;
             titleTxt.fontSize = titleFontSize;
-            titleTxt.fontStyle = FontStyle.Bold;
+            titleTxt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             titleTxt.alignment = TextAnchor.MiddleCenter;
             titleTxt.color = UITheme.AccentGold;
             titleTxt.raycastTarget = false;
@@ -346,7 +346,7 @@ namespace MelonS.GameProto
             var txt = go.AddComponent<Text>();
             txt.font = titleFont;
             txt.fontSize = sectionFontSize;
-            txt.fontStyle = FontStyle.Bold;
+            txt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             txt.alignment = TextAnchor.LowerLeft;
             txt.color = UITheme.AccentOrange;
             txt.raycastTarget = false;
@@ -389,7 +389,7 @@ namespace MelonS.GameProto
             var keyTxt = keyTextGo.AddComponent<Text>();
             keyTxt.font = bodyFont;
             keyTxt.fontSize = rowFontSize;
-            keyTxt.fontStyle = FontStyle.Bold;
+            keyTxt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             keyTxt.alignment = TextAnchor.MiddleCenter;
             keyTxt.color = UITheme.AccentTan;
             keyTxt.raycastTarget = false;

@@ -51,7 +51,7 @@ namespace MelonS.GameProto.EditorTools
             clockText.text = "Day 1 - 06:00";
             clockText.font = uiFont;
             clockText.fontSize = 32;
-            clockText.fontStyle = FontStyle.Bold;
+            clockText.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             clockText.color = UITheme.AccentGold;   // clock is the "title" of the bar → gold
             clockText.alignment = TextAnchor.MiddleLeft;
             // #ui백로그 2.0 — 32px Bold 한글 "봄 1일, 5500년" 이 220px 를 넘어 래핑→연도가
@@ -75,7 +75,7 @@ namespace MelonS.GameProto.EditorTools
             timeText.text = "▶ 1x";
             timeText.font = uiFont;
             timeText.fontSize = 32;
-            timeText.fontStyle = FontStyle.Bold;
+            timeText.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             timeText.color = colTextPrimary;
             timeText.alignment = TextAnchor.MiddleRight;
             RectTransform timeRt = timeGo.GetComponent<RectTransform>();
@@ -239,7 +239,7 @@ namespace MelonS.GameProto.EditorTools
             t.text = label;
             t.font = uiFont;
             t.fontSize = 32;   // 시각 QA: 라벨 28→32 (가독)
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             t.color = col;
             t.alignment = TextAnchor.MiddleLeft;
             t.horizontalOverflow = HorizontalWrapMode.Overflow;  // 2-3 digit values never clip

@@ -160,7 +160,7 @@ namespace MelonS.GameProto
             title.text = "설정";
             title.font = font;
             title.fontSize = 22;
-            title.fontStyle = FontStyle.Bold;
+            title.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             title.color = UITheme.AccentGold;
             title.alignment = TextAnchor.MiddleCenter;
             title.raycastTarget = false;
@@ -507,7 +507,7 @@ namespace MelonS.GameProto
             txt.text = label;
             txt.font = font;
             txt.fontSize = 16;
-            txt.fontStyle = FontStyle.Bold;
+            txt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             txt.color = UITheme.TextPrimary;
             txt.alignment = TextAnchor.MiddleCenter;
             txt.raycastTarget = false;

@@ -44,7 +44,7 @@ namespace MelonS.GameProto
             var lbl = new GameObject("Label");
             lbl.transform.SetParent(transform, false);
             label = lbl.AddComponent<Text>();
-            label.font = font; label.fontSize = 18; label.fontStyle = FontStyle.Bold;
+            label.font = font; label.fontSize = 18; label.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             label.color = new Color(1f, 0.95f, 0.85f, 1f);
             label.alignment = TextAnchor.MiddleCenter;
             label.raycastTarget = false;

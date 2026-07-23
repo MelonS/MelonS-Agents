@@ -254,7 +254,7 @@ namespace MelonS.GameProto
             nameTxt.text = displayName;
             nameTxt.font = font;
             nameTxt.fontSize = 15;
-            nameTxt.fontStyle = FontStyle.Bold;
+            nameTxt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             nameTxt.color = TextCol;
             nameTxt.alignment = TextAnchor.MiddleCenter;
             nameTxt.horizontalOverflow = HorizontalWrapMode.Overflow;

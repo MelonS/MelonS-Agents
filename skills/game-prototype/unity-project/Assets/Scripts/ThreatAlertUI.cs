@@ -46,7 +46,7 @@ namespace MelonS.GameProto
             alertText.text = "";
             alertText.font = LoadKoreanFont();
             alertText.fontSize = 32;
-            alertText.fontStyle = FontStyle.Bold;
+            alertText.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             alertText.color = new Color(1f, 0.25f, 0.20f, 0f);  // start hidden
             alertText.alignment = TextAnchor.MiddleRight;
             alertText.supportRichText = true;

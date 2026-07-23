@@ -259,7 +259,7 @@ namespace MelonS.GameProto
             lbl.text = displayLabel ?? label;
             lbl.font = font;
             lbl.fontSize = 20;
-            lbl.fontStyle = FontStyle.Bold;
+            lbl.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             lbl.color = TextNormal;
             lbl.alignment = TextAnchor.MiddleCenter;
             // #65 운영자 "설정 버튼 라벨/아이콘 잘림": "설정"·"멈춤"(아이콘+텍스트)이 76px

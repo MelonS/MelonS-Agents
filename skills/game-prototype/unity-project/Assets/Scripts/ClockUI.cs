@@ -96,7 +96,7 @@ namespace MelonS.GameProto
             vlg.childForceExpandHeight = false;
 
             // 우하단은 시각만 (날짜는 좌상단).  단일 라인이라 패널도 컴팩트.
-            timeText   = MakeLine(content, "ClockTime",   font, 28, FontStyle.Bold,   UITheme.AccentGold);
+            timeText   = MakeLine(content, "ClockTime",   font, 28, FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */,   UITheme.AccentGold);
         }
 
         private static Text MakeLine(RectTransform parent, string name, Font font,

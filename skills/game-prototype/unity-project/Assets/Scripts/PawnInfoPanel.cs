@@ -234,7 +234,7 @@ namespace MelonS.GameProto
                 var lbl = lgo.AddComponent<Text>();
                 lbl.font = ResolveFont();
                 lbl.fontSize = 15;   // #UI-B 13→15 탭 라벨 가독성(짧은 라벨이라 overflow 위험 없음)
-                lbl.fontStyle = FontStyle.Bold;
+                lbl.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
                 lbl.alignment = TextAnchor.MiddleCenter;
                 lbl.text = TabLabels[i];
                 lbl.color = MelonS.GameProto.Core.UITheme.TextPrimary;

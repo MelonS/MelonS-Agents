@@ -82,7 +82,7 @@ namespace MelonS.GameProto
             t.text = "직업 우선순위 (F1)";   // UI백로그 #5.11 — 이모지 제거(legacy Text+한글폰트 tofu 위험), 제목은 AccentGold+Bold 라 시각 손실 없음
             t.font = font;
             t.fontSize = 22;
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             t.color = MelonS.GameProto.Core.UITheme.AccentGold;   // 감사 rank5: 제목 골드
             t.alignment = TextAnchor.UpperCenter;
             var trt = titleGo.GetComponent<RectTransform>();
@@ -237,7 +237,7 @@ namespace MelonS.GameProto
             t.text = label;
             t.font = font;
             t.fontSize = 14;
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleCenter;
             t.raycastTarget = false;
@@ -318,7 +318,7 @@ namespace MelonS.GameProto
             t.text = priority == 0 ? "·" : priority.ToString();
             t.font = font;
             t.fontSize = 18;
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             // TOP-9 — 우선순위는 숫자 색으로 (배경은 패널톤).  WCAG AA 대비 유지.
             t.color = priority switch
             {

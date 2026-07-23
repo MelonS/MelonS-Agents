@@ -89,7 +89,7 @@ namespace MelonS.GameProto.EditorTools
             title.alignment = TextAnchor.MiddleCenter;
             title.font = menuFont;
             title.fontSize = 84;
-            title.fontStyle = FontStyle.Bold;
+            title.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             title.verticalOverflow = VerticalWrapMode.Overflow;   // BitBit 라인높이 함정
             title.color = new Color(0.985f, 0.87f, 0.62f, 1f);
             var tShadow = titleGo.AddComponent<Shadow>();
@@ -201,7 +201,7 @@ namespace MelonS.GameProto.EditorTools
             txt.alignment = TextAnchor.MiddleCenter;
             txt.font = font;
             txt.fontSize = 26;
-            txt.fontStyle = FontStyle.Bold;
+            txt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             txt.color = primary
                 ? new Color(0.118f, 0.086f, 0.063f, 1f)       // 앰버 위 다크 텍스트
                 : new Color(0.94f, 0.90f, 0.84f, 1f);

@@ -458,7 +458,7 @@ namespace MelonS.GameProto
             t.text = "🏛 건축 (F8)";
             t.font = font;
             t.fontSize = 20;
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             t.color = MelonS.GameProto.Core.UITheme.AccentGold;
             t.alignment = TextAnchor.MiddleCenter;
             t.raycastTarget = false;
@@ -559,7 +559,7 @@ namespace MelonS.GameProto
             t.text = label;
             t.font = font;
             t.fontSize = 16;
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             t.color = active ? MelonS.GameProto.Core.UITheme.AccentGold
                              : MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleCenter;
@@ -704,7 +704,7 @@ namespace MelonS.GameProto
                 gt.text = glyph;
                 gt.font = font;
                 gt.fontSize = 30;
-                gt.fontStyle = FontStyle.Bold;
+                gt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
                 // 디자인폴리시(2026-06-14): 제거 도구 글리프 — 살몬레드(0.92,0.40,0.35)는
                 //  "오류/삭제실패"로 읽혔다.  차분한 테라코타로 톤다운 = 경고가 아닌 도구.
                 gt.color = glyph == "✕"
@@ -758,7 +758,7 @@ namespace MelonS.GameProto
                 htx.text = hotkey;
                 htx.font = font;
                 htx.fontSize = 11;
-                htx.fontStyle = FontStyle.Bold;
+                htx.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
                 htx.color = MelonS.GameProto.Core.UITheme.AccentGold;
                 htx.alignment = TextAnchor.UpperLeft;
                 htx.raycastTarget = false;
@@ -891,7 +891,7 @@ namespace MelonS.GameProto
             // 시각버그 fix: 행 텍스트 가독성 — 14→16 은 이미 적용돼 있었으나 운영자가
             //  여전히 작다 보고 → 17px 로 한 단계 더 키워 어떤 건물인지 명확히 읽히게.
             t.fontSize = 17;
-            t.fontStyle = FontStyle.Bold;
+            t.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleLeft;
             t.raycastTarget = false;

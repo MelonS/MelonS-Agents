@@ -69,7 +69,7 @@ namespace MelonS.GameProto
             titleGo.transform.SetParent(transform, false);
             var t = titleGo.AddComponent<Text>();
             t.text = "일정 (F4) - 클릭하여 시간대별 행동 변경";   // UI백로그 #5.11 — 이모지 제거(tofu 위험)
-            t.font = font; t.fontSize = 20; t.fontStyle = FontStyle.Bold;
+            t.font = font; t.fontSize = 20; t.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             t.color = MelonS.GameProto.Core.UITheme.AccentGold;   // 감사 rank5: 제목 골드
             t.alignment = TextAnchor.UpperCenter;
             var trt = titleGo.GetComponent<RectTransform>();
@@ -169,7 +169,7 @@ namespace MelonS.GameProto
             var tgo = new GameObject("Lbl");
             tgo.transform.SetParent(go.transform, false);
             var t = tgo.AddComponent<Text>();
-            t.text = label; t.font = font; t.fontSize = 13; t.fontStyle = FontStyle.Bold;  // #audit3 #11 가독성 11→13
+            t.text = label; t.font = font; t.fontSize = 13; t.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;  // #audit3 #11 가독성 11→13
             t.color = MelonS.GameProto.Core.UITheme.TextPrimary;
             t.alignment = TextAnchor.MiddleCenter; t.raycastTarget = false;
             var trt = tgo.GetComponent<RectTransform>();

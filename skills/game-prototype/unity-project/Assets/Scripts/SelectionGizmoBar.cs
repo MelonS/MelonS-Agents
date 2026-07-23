@@ -318,7 +318,7 @@ namespace MelonS.GameProto
             countLabel = go.AddComponent<Text>();
             countLabel.font = bodyFont;
             countLabel.fontSize = countFontSize;
-            countLabel.fontStyle = FontStyle.Bold;
+            countLabel.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             countLabel.alignment = TextAnchor.MiddleCenter;
             countLabel.color = UITheme.AccentGold;
             countLabel.raycastTarget = false;
@@ -391,7 +391,7 @@ namespace MelonS.GameProto
             var txt = txtGo.AddComponent<Text>();
             txt.font = bodyFont;
             txt.fontSize = buttonFontSize;
-            txt.fontStyle = FontStyle.Bold;
+            txt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             txt.alignment = TextAnchor.MiddleCenter;
             txt.color = UITheme.TextPrimary;
             txt.raycastTarget = false;

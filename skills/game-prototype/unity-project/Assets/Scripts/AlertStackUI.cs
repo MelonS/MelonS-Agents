@@ -492,7 +492,7 @@ namespace MelonS.GameProto
                 var txt = txtGo.AddComponent<Text>();
                 txt.font = font;
                 txt.fontSize = fontSize;
-                txt.fontStyle = FontStyle.Bold;
+                txt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
                 txt.alignment = TextAnchor.MiddleLeft;
                 txt.color = Color.Lerp(accent, UITheme.TextPrimary, 0.25f);
                 txt.horizontalOverflow = HorizontalWrapMode.Overflow;
