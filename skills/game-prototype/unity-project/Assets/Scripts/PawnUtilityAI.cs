@@ -281,6 +281,12 @@ namespace MelonS.GameProto
                 {
                     IssueWanderHop();
                     lastIdleStep = Time.timeSinceLevelLoad;
+                    // A1 — 모닥불 2.5셀 내 idle 체류 = '모닥불 곁' +2 환류.  JoyAction 주석에만
+                    //  있고 미배선이던 dead feature 배선.  동일 라벨은 갱신이라 스팸 없음.
+                    var fireNear = JoyAction.FindCampfire();
+                    if (fireNear != null && ((Vector2)transform.position
+                            - (Vector2)fireNear.transform.position).sqrMagnitude <= 6.25f)
+                        GetComponent<PawnThoughts>()?.AddThought("모닥불 곁", +2f, 240f);
                 }
                 return;
             }
@@ -453,7 +459,22 @@ namespace MelonS.GameProto
         private void IssueWanderHop()
         {
             if (movement == null) return;
-            if (!hasIdleAnchor) { idleAnchor = transform.position; hasIdleAnchor = true; }
+            if (!hasIdleAnchor)
+            {
+                idleAnchor = transform.position;
+                // A1 생산적 idle (2026-07-24 운영자 "자동플레이가 멍청함"): 일감 없는 림은
+                //  제자리 배회 대신 모닥불 곁에 모여 쉰다 — Joy 슬롯 밖 idle 에도 적용.
+                //  30셀 밖이면 기존 제자리 배회 유지(맵 반대편까지 강제 귀환은 부자연).
+                var fire = JoyAction.FindCampfire();
+                if (fire != null)
+                {
+                    Vector2 c = fire.transform.position;
+                    if (((Vector2)transform.position - c).sqrMagnitude < 900f)
+                        idleAnchor = PawnMovement.ClampToWorld(
+                            c + Random.insideUnitCircle.normalized * Random.Range(1.2f, 2.2f));
+                }
+                hasIdleAnchor = true;
+            }
             Vector2 cur = transform.position;
             Vector2 curTile = new Vector2(Mathf.Floor(cur.x) + 0.5f, Mathf.Floor(cur.y) + 0.5f);
             Vector2 raw = idleAnchor + Random.insideUnitCircle * idleWanderRadius;

@@ -98,7 +98,10 @@ namespace MelonS.GameProto
             if (group != null)
             {
                 // whole bordered-panel fade (border + fill + text) — warm panel reads as one.
-                float target = currentVisible ? 0.92f : 0f;
+                // UI 가림 다이어트 (2026-07-24): 같은 단계가 25초 지나면 0.35 로 딤 —
+                //  안내는 남되 맵 하단 중앙을 계속 가리지 않는다.  단계 전환 시 원복.
+                bool stale = Time.realtimeSinceStartup - currentTipFadeTime > 25f;
+                float target = currentVisible ? (stale ? 0.35f : 0.92f) : 0f;
                 group.alpha = Mathf.MoveTowards(group.alpha, target, Time.unscaledDeltaTime * 2f);
             }
             else

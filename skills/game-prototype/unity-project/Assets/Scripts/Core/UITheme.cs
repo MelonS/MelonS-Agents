@@ -15,8 +15,10 @@ namespace MelonS.GameProto.Core
     public static class UITheme
     {
         // Background tones (warm browns)
-        public static readonly Color PanelBg       = new Color(0.165f, 0.122f, 0.094f, 0.94f);  // #2A1F18 alpha 0.94 - dark warm brown
-        public static readonly Color PanelBgLight  = new Color(0.220f, 0.165f, 0.125f, 0.92f);  // #382A20 alpha 0.92 - lighter brown
+        // UI 가림 다이어트 (2026-07-24 운영자 "화면을 너무 가림"): 패널 알파 0.94/0.92
+        //  → 0.86/0.85 — 맵이 패널 뒤로 은은히 비쳐 점유감 완화, 텍스트 대비는 유지.
+        public static readonly Color PanelBg       = new Color(0.165f, 0.122f, 0.094f, 0.86f);  // #2A1F18 - dark warm brown
+        public static readonly Color PanelBgLight  = new Color(0.220f, 0.165f, 0.125f, 0.85f);  // #382A20 - lighter brown
         public static readonly Color HeaderBg      = new Color(0.286f, 0.196f, 0.137f, 0.95f);  // #493223 alpha 0.95 - header brown
 
         // Accent tones (gold/orange)

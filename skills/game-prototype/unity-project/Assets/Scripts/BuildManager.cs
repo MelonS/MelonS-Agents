@@ -660,6 +660,16 @@ namespace MelonS.GameProto
             bp.Init(CurrentMode, prefab, ghostSpr, needWood, needStone, secs);
             bp.SetSize(size);  // #193 - 청사진 sprite 도 1x2 비율 적용
 
+            // 실외 침대 경고 (2026-07-24 운영자 "침대를 집 밖에" — 방 개념이 없어 게임이
+            //  아무 안내도 안 주던 것).  배치는 허용하되(콜로니심式 자유) 페널티를 즉시 고지.
+            if ((CurrentMode == Mode.Bed || CurrentMode == Mode.BedFine
+                 || CurrentMode == Mode.BedSleepingSpot) && BuildClickToast.Instance != null)
+            {
+                var rd = RoofDesignation.Instance;
+                if (rd != null && !rd.IsRoofed(new Vector2Int(cx, cy)))
+                    BuildClickToast.Instance.ShowFail("⚠ 실외 침대 — 지붕이 없으면 '한데서 잠 -4' 페널티");
+            }
+
             // #자원모델 단일화(2026-06-04, 운영자 "haul-required 순수 the reference sim" 선택): 청사진은
             //  자재 없이 빈 상태로 놓이고, 림이 물리 목재/석재 더미(벌목·채광·stockpile)를 현장으로
             //  운반(PawnHauler→DepositWood)해야 PawnBuilder 가 건설한다.  이전 #242 의 '카운터 즉시
