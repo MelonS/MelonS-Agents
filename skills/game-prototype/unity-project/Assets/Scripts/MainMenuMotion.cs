@@ -1,0 +1,148 @@
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+namespace MelonS.GameProto
+{
+    /// <summary>
+    /// 초기화면 모션 (2026-07-25 운영자 "초기화면이 좀 움직였으면 — 너무 이미지만").
+    /// 베이크된 키아트 위에 런타임으로:
+    ///  ① 켄 번스 — 배경 슬로우 줌(1.03±0.035, 24s 주기) + 미세 드리프트
+    ///  ② 모닥불 불씨 — 키아트 캠프파이어 위치에서 피어오르는 앰버 파티클 14개
+    ///  ③ 타이틀/부제 페이드인 — 로드 시 1.2s 정착
+    /// 씬 재베이크 불요(기존 드라이버 패턴), 셰이더/에셋 불요 = WebGL 리스크 0.
+    /// </summary>
+    public class MainMenuMotion : MonoBehaviour
+    {
+        private RectTransform backdrop;
+        private Text title, subtitle;
+        private float t0;
+
+        private const int EmberCount = 14;
+        // 키아트의 캠프파이어 화면 좌표 (앵커 비율) — 01_campfire_dusk 기준.
+        private static readonly Vector2 FireAnchor = new Vector2(0.525f, 0.245f);
+        private RectTransform[] embers;
+        private float[] phase, speed, life, sway;
+
+        private void Start()
+        {
+            t0 = Time.unscaledTime;
+            var bgGo = GameObject.Find("Backdrop");
+            if (bgGo != null) backdrop = bgGo.GetComponent<RectTransform>();
+            var tGo = GameObject.Find("Title");
+            if (tGo != null) title = tGo.GetComponent<Text>();
+            var sGo = GameObject.Find("Subtitle");
+            if (sGo != null) subtitle = sGo.GetComponent<Text>();
+
+            if (backdrop != null) SpawnEmbers(backdrop.parent);
+        }
+
+        private void SpawnEmbers(Transform canvas)
+        {
+            var sp = MakeDotSprite();
+            embers = new RectTransform[EmberCount];
+            phase = new float[EmberCount];
+            speed = new float[EmberCount];
+            life = new float[EmberCount];
+            sway = new float[EmberCount];
+            var root = new GameObject("Embers", typeof(RectTransform));
+            var rrt = (RectTransform)root.transform;
+            rrt.SetParent(canvas, false);
+            rrt.anchorMin = Vector2.zero; rrt.anchorMax = Vector2.one;
+            rrt.offsetMin = Vector2.zero; rrt.offsetMax = Vector2.zero;
+            // 딤 위·타이틀 아래 (Backdrop=0, Dim=1 다음)
+            root.transform.SetSiblingIndex(Mathf.Min(2, canvas.childCount - 1));
+            var rng = new System.Random(7411);
+            for (int i = 0; i < EmberCount; i++)
+            {
+                var go = new GameObject("ember", typeof(RectTransform), typeof(Image));
+                var rt = (RectTransform)go.transform;
+                rt.SetParent(root.transform, false);
+                rt.anchorMin = rt.anchorMax = FireAnchor;
+                float s = 4f + (float)rng.NextDouble() * 5f;
+                rt.sizeDelta = new Vector2(s, s);
+                var img = go.GetComponent<Image>();
+                img.sprite = sp;
+                img.raycastTarget = false;
+                embers[i] = rt;
+                phase[i] = (float)rng.NextDouble() * 6f;
+                speed[i] = 55f + (float)rng.NextDouble() * 65f;    // px/s 상승
+                life[i] = 3.2f + (float)rng.NextDouble() * 2.6f;
+                sway[i] = 14f + (float)rng.NextDouble() * 26f;
+            }
+        }
+
+        private void Update()
+        {
+            float t = Time.unscaledTime - t0;
+            // ① 켄 번스
+            if (backdrop != null)
+            {
+                float z = 1.045f + 0.035f * Mathf.Sin(t * (2f * Mathf.PI / 24f));
+                backdrop.localScale = new Vector3(z, z, 1f);
+                backdrop.anchoredPosition = new Vector2(
+                    Mathf.Sin(t * 0.11f) * 9f, Mathf.Cos(t * 0.07f) * 6f);
+            }
+            // ③ 타이틀 페이드인 (+부제 0.35s 지연)
+            if (title != null) SetAlpha(title, Mathf.Clamp01(t / 1.2f));
+            if (subtitle != null) SetAlpha(subtitle, Mathf.Clamp01((t - 0.35f) / 1.2f));
+            // ② 불씨 — 위상 루프: 상승 + 사인 스웨이 + 후반 페이드
+            if (embers != null)
+            {
+                for (int i = 0; i < EmberCount; i++)
+                {
+                    float u = ((t + phase[i]) % life[i]) / life[i];   // 0~1 수명 진행
+                    float rise = u * speed[i] * life[i] * 0.55f;
+                    float sx = Mathf.Sin((t + phase[i]) * 2.1f + i) * sway[i] * u;
+                    embers[i].anchoredPosition = new Vector2(sx, rise);
+                    float a = Mathf.Clamp01(u * 5f) * (1f - Mathf.SmoothStep(0.45f, 1f, u));
+                    var img = embers[i].GetComponent<Image>();
+                    img.color = Color.Lerp(
+                        new Color(1f, 0.72f, 0.30f, 0.85f * a),      // 앰버
+                        new Color(0.95f, 0.35f, 0.15f, 0.85f * a),   // 식어가는 주황
+                        u);
+                    float sc = 1f - 0.45f * u;
+                    embers[i].localScale = new Vector3(sc, sc, 1f);
+                }
+            }
+        }
+
+        private static void SetAlpha(Text txt, float a)
+        {
+            var c = txt.color; c.a = a; txt.color = c;
+            var sh = txt.GetComponent<Shadow>();
+            if (sh != null) { var ec = sh.effectColor; ec.a = 0.85f * a; sh.effectColor = ec; }
+        }
+
+        /// <summary>6x6 라디얼 도트 — 불씨용 코드 생성 스프라이트.</summary>
+        private static Sprite MakeDotSprite()
+        {
+            var tex = new Texture2D(6, 6, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            for (int y = 0; y < 6; y++)
+                for (int x = 0; x < 6; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x, y), new Vector2(2.5f, 2.5f)) / 2.6f;
+                    byte a = (byte)(255f * Mathf.Clamp01(1f - d));
+                    tex.SetPixel(x, y, new Color32(255, 255, 255, a));
+                }
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, 6, 6), new Vector2(0.5f, 0.5f), 6f);
+        }
+
+        // ── self-bootstrap (MainMenu 씬 전용) ────────────────────────────
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void Bootstrap()
+        {
+            SceneManager.sceneLoaded += (sc, _) => Ensure();
+            Ensure();
+        }
+
+        private static void Ensure()
+        {
+            if (SceneManager.GetActiveScene().name != "MainMenu") return;
+            if (Object.FindFirstObjectByType<MainMenuMotion>() == null)
+                new GameObject("__MenuMotion__").AddComponent<MainMenuMotion>();
+        }
+    }
+}
