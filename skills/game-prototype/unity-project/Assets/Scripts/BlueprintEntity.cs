@@ -60,7 +60,6 @@ namespace MelonS.GameProto
 
         private SpriteRenderer sr;
         // #196 - 진행도 표시 (운영자 fb step 3 "자재 들어갔다는 표시", step 4 "건설 진행도 보임")
-        private TextMesh statusLabel;
 
         public void Init(BuildManager.Mode m, GameObject prefab, Sprite ghostSprite,
             int wood, int stone, float secs = 5f)
@@ -85,36 +84,43 @@ namespace MelonS.GameProto
             UpdateVisual();
         }
 
+        // 운영자 2026-07-24 "% 말고 게이지로 + % 하나도 안 보임": TextMesh(%·이모지
+        //  tofu 위험·폰트 의존) → 월드 스프라이트 게이지 바로 전면 교체.  자재 대기
+        //  = 앰버(채움 비율), 건설 중 = 녹색(진행률).  폰트 무의존이라 비가시 원천 해소.
+        private Transform barRoot;
+        private SpriteRenderer barBg, barFill;
+        private static Sprite _barSprite;
+        private static Sprite BarSprite()
+        {
+            if (_barSprite == null)
+                _barSprite = Sprite.Create(Texture2D.whiteTexture,
+                    new Rect(0, 0, 4, 4), new Vector2(0f, 0.5f), 4f);
+            return _barSprite;
+        }
+
         private void EnsureStatusLabel()
         {
-            if (statusLabel != null) return;
-            var labelGo = new GameObject("BlueprintStatus");
-            labelGo.transform.SetParent(transform, false);
-            labelGo.transform.localPosition = new Vector3(0, 0.6f / Mathf.Max(0.01f, transform.localScale.y), 0);
-            statusLabel = labelGo.AddComponent<TextMesh>();
-            statusLabel.fontSize = 24;
-            statusLabel.characterSize = 0.05f;
-            statusLabel.anchor = TextAnchor.MiddleCenter;
-            statusLabel.alignment = TextAlignment.Center;
-            statusLabel.color = new Color(0.95f, 0.95f, 0.85f, 1f);
-            // 한국어 OS font
-            var bundled = Resources.Load<Font>("Fonts/NotoSansKR");
-            if (bundled != null)
-            {
-                statusLabel.font = bundled; statusLabel.GetComponent<MeshRenderer>().material = bundled.material;
-            }
-            else
-            {
-                string[] cands = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
-                foreach (var n in cands)
-                {
-                    var f = Font.CreateDynamicFontFromOSFont(n, 24);
-                    if (f != null) { statusLabel.font = f; statusLabel.GetComponent<MeshRenderer>().material = f.material; break; }
-                }
-            }
-            // UI겹침 P1-8 (2026-06-14): 25 → 26. NightOverlay(25)와의 타이를 풀어
-            //  밤에 미완 청사진의 '자재 n/m·건설 %' 텍스트가 어둠에 감광돼 판독 불가하던 것 해소.
-            statusLabel.GetComponent<MeshRenderer>().sortingOrder = 26;
+            if (barRoot != null) return;
+            var go = new GameObject("BlueprintBar");
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = new Vector3(0, 0.55f / Mathf.Max(0.01f, transform.localScale.y), 0);
+            barRoot = go.transform;
+            var bgGo = new GameObject("Bg");
+            bgGo.transform.SetParent(barRoot, false);
+            bgGo.transform.localPosition = new Vector3(-0.45f, 0f, 0f);
+            bgGo.transform.localScale = new Vector3(0.90f, 0.14f, 1f);
+            barBg = bgGo.AddComponent<SpriteRenderer>();
+            barBg.sprite = BarSprite();
+            barBg.color = new Color(0f, 0f, 0f, 0.55f);
+            // UI겹침 P1-8 계승: NightOverlay(25) 위 26/27 — 밤에도 판독 가능.
+            barBg.sortingOrder = 26;
+            var fillGo = new GameObject("Fill");
+            fillGo.transform.SetParent(barRoot, false);
+            fillGo.transform.localPosition = new Vector3(-0.43f, 0f, 0f);
+            fillGo.transform.localScale = new Vector3(0f, 0.10f, 1f);
+            barFill = fillGo.AddComponent<SpriteRenderer>();
+            barFill.sprite = BarSprite();
+            barFill.sortingOrder = 27;
         }
 
         private void UpdateVisual()
@@ -133,24 +139,22 @@ namespace MelonS.GameProto
                 // 형광 청록 → 흰 진해짐 (건설 중)
                 sr.color = new Color(0.65f + Progress * 0.35f, 1.0f, 1.0f, 0.90f + Progress * 0.10f);
             }
-            // #196 - 운영자 fb step 3/4: 자재 표시 + 건설 진행도 텍스트.
-            if (statusLabel != null)
+            // #196 개정 (운영자 2026-07-24): 자재/진행 = 게이지 바.
+            if (barRoot != null && barFill != null)
             {
-                if (!HasAllMaterials)
+                if (IsComplete)
                 {
-                    string woodLine = needWood > 0 ? $"🪵{collectedWood}/{needWood}" : "";
-                    string stoneLine = needStone > 0 ? $"⛏{collectedStone}/{needStone}" : "";
-                    statusLabel.text = (woodLine + (woodLine.Length > 0 && stoneLine.Length > 0 ? " " : "") + stoneLine).Trim();
-                    statusLabel.color = new Color(1.0f, 0.85f, 0.40f, 1f);  // 노랑 - 자재 대기
-                }
-                else if (!IsComplete)
-                {
-                    statusLabel.text = $"건설 {Progress * 100f:F0}%";
-                    statusLabel.color = new Color(0.55f, 1.0f, 0.65f, 1f);  // 녹색 - 건설 중
+                    barRoot.gameObject.SetActive(false);
                 }
                 else
                 {
-                    statusLabel.text = "";
+                    barRoot.gameObject.SetActive(true);
+                    float ratio = HasAllMaterials ? Progress : matRatio;
+                    barFill.color = HasAllMaterials
+                        ? new Color(0.55f, 1.0f, 0.65f, 0.95f)    // 녹색 - 건설 진행
+                        : new Color(1.0f, 0.78f, 0.35f, 0.95f);   // 앰버 - 자재 채움
+                    barFill.transform.localScale =
+                        new Vector3(0.86f * Mathf.Clamp01(ratio), 0.10f, 1f);
                 }
             }
         }

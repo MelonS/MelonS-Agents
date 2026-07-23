@@ -44,32 +44,80 @@ namespace MelonS.GameProto.EditorTools
             canvasScaler_.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
-            // Title text
+            // 초기화면 개선 (2026-07-24 운영자): FLUX 키아트 배경 + 한글 타이틀/버튼
+            //  + UITheme 웜 톤 + 번들 Noto (LegacyRuntime 은 한글 글리프가 없어 tofu).
+            Font menuFont = AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/NotoSansKR.ttf")
+                            ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+            var bgTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Resources/UI/menu_bg.png");
+            if (bgTex != null)
+            {
+                GameObject bgGo = new GameObject("Backdrop");
+                bgGo.transform.SetParent(canvasGo.transform, false);
+                var raw = bgGo.AddComponent<RawImage>();
+                raw.texture = bgTex;
+                raw.raycastTarget = false;
+                var brt = raw.rectTransform;
+                brt.anchorMin = Vector2.zero; brt.anchorMax = Vector2.one;
+                brt.offsetMin = Vector2.zero; brt.offsetMax = Vector2.zero;
+                // 하단 딤 — 버튼 가독 (키아트 상단 하늘 = 타이틀 자리라 딤 제외)
+                GameObject dimGo = new GameObject("BackdropDim");
+                dimGo.transform.SetParent(canvasGo.transform, false);
+                var dim = dimGo.AddComponent<Image>();
+                dim.color = new Color(0f, 0f, 0f, 0.38f);
+                dim.raycastTarget = false;
+                var drt = dim.rectTransform;
+                drt.anchorMin = Vector2.zero; drt.anchorMax = new Vector2(1f, 0.52f);
+                drt.offsetMin = Vector2.zero; drt.offsetMax = Vector2.zero;
+            }
+
+            // Title — 키아트 상단 하늘 영역, 앰버 + 그림자
             GameObject titleGo = new GameObject("Title");
             titleGo.transform.SetParent(canvasGo.transform, false);
             Text title = titleGo.AddComponent<Text>();
-            title.text = "PAWN SIM\n(colony-sim-lite vertical slice)";
+            title.text = "PAWNSIM";
             title.alignment = TextAnchor.MiddleCenter;
-            title.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            title.fontSize = 36;
-            title.color = new Color(0.95f, 0.95f, 0.9f, 1f);
+            title.font = menuFont;
+            title.fontSize = 84;
+            title.fontStyle = FontStyle.Bold;
+            title.color = new Color(0.985f, 0.87f, 0.62f, 1f);
+            var tShadow = titleGo.AddComponent<Shadow>();
+            tShadow.effectColor = new Color(0.10f, 0.06f, 0.03f, 0.85f);
+            tShadow.effectDistance = new Vector2(3f, -3f);
             RectTransform titleRt = titleGo.GetComponent<RectTransform>();
-            titleRt.anchorMin = new Vector2(0.5f, 0.7f);
-            titleRt.anchorMax = new Vector2(0.5f, 0.7f);
-            titleRt.sizeDelta = new Vector2(800, 200);
+            titleRt.anchorMin = new Vector2(0.5f, 0.80f);
+            titleRt.anchorMax = new Vector2(0.5f, 0.80f);
+            titleRt.sizeDelta = new Vector2(900, 120);
             titleRt.anchoredPosition = Vector2.zero;
 
+            GameObject subGo = new GameObject("Subtitle");
+            subGo.transform.SetParent(canvasGo.transform, false);
+            Text sub = subGo.AddComponent<Text>();
+            sub.text = "작은 정착지의 하루하루 — 콜로니 심 프로토타입";
+            sub.alignment = TextAnchor.MiddleCenter;
+            sub.font = menuFont;
+            sub.fontSize = 26;
+            sub.color = new Color(0.96f, 0.93f, 0.86f, 0.92f);
+            var sShadow = subGo.AddComponent<Shadow>();
+            sShadow.effectColor = new Color(0.10f, 0.06f, 0.03f, 0.8f);
+            sShadow.effectDistance = new Vector2(2f, -2f);
+            RectTransform subRt = subGo.GetComponent<RectTransform>();
+            subRt.anchorMin = new Vector2(0.5f, 0.72f);
+            subRt.anchorMax = new Vector2(0.5f, 0.72f);
+            subRt.sizeDelta = new Vector2(900, 50);
+            subRt.anchoredPosition = Vector2.zero;
+
             // Start button
-            GameObject startGo = CreateMenuButton(canvasGo.transform, "StartButton", "Start Game", new Vector2(0.5f, 0.45f));
+            GameObject startGo = CreateMenuButton(canvasGo.transform, "StartButton", "게임 시작", new Vector2(0.5f, 0.40f), menuFont, true);
             Button startBtn = startGo.GetComponent<Button>();
 
             // Options button (설정 통합) — opens the unified SettingsMenu panel
             //  (audio sliders; no save/load on the menu where there's nothing to save).
-            GameObject optionsGo = CreateMenuButton(canvasGo.transform, "OptionsButton", "Options / 설정", new Vector2(0.5f, 0.30f));
+            GameObject optionsGo = CreateMenuButton(canvasGo.transform, "OptionsButton", "설정", new Vector2(0.5f, 0.28f), menuFont, false);
             Button optionsBtn = optionsGo.GetComponent<Button>();
 
             // Quit button (moved down one slot to make room for Options)
-            GameObject quitGo = CreateMenuButton(canvasGo.transform, "QuitButton", "Quit", new Vector2(0.5f, 0.15f));
+            GameObject quitGo = CreateMenuButton(canvasGo.transform, "QuitButton", "종료", new Vector2(0.5f, 0.16f), menuFont, false);
             Button quitBtn = quitGo.GetComponent<Button>();
 
             // Controller
@@ -102,25 +150,35 @@ namespace MelonS.GameProto.EditorTools
             Debug.Log($"[SceneSetup] MainMenu -> {MainMenuPath}");
         }
 
-        private static GameObject CreateMenuButton(Transform parent, string name, string label, Vector2 anchor)
+        private static GameObject CreateMenuButton(Transform parent, string name, string label, Vector2 anchor, Font font, bool primary)
         {
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
 
+            // UITheme 웜 톤 — 인게임 패널과 같은 계열 (기본 파란 버튼 탈피).
+            Color normal = primary
+                ? new Color(0.968f, 0.698f, 0.353f, 0.96f)    // 주 버튼 = 앰버
+                : new Color(0.165f, 0.122f, 0.094f, 0.88f);   // 보조 = PanelBg 브라운
             Image img = go.AddComponent<Image>();
-            img.color = new Color(0.2f, 0.5f, 0.8f, 1f);
+            img.color = normal;
 
             Button btn = go.AddComponent<Button>();
             ColorBlock colors = btn.colors;
-            colors.normalColor = new Color(0.2f, 0.5f, 0.8f, 1f);
-            colors.highlightedColor = new Color(0.3f, 0.6f, 0.9f, 1f);
-            colors.pressedColor = new Color(0.15f, 0.4f, 0.7f, 1f);
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(1.12f, 1.12f, 1.08f, 1f);
+            colors.pressedColor = new Color(0.82f, 0.82f, 0.80f, 1f);
             btn.colors = colors;
+
+            var outline = go.AddComponent<Outline>();
+            outline.effectColor = primary
+                ? new Color(0.36f, 0.22f, 0.10f, 0.9f)
+                : new Color(0.427f, 0.310f, 0.216f, 0.9f);    // Divider 브라운
+            outline.effectDistance = new Vector2(2f, -2f);
 
             RectTransform rt = go.GetComponent<RectTransform>();
             rt.anchorMin = anchor;
             rt.anchorMax = anchor;
-            rt.sizeDelta = new Vector2(280, 70);
+            rt.sizeDelta = new Vector2(300, 72);
             rt.anchoredPosition = Vector2.zero;
 
             // Label
@@ -129,9 +187,12 @@ namespace MelonS.GameProto.EditorTools
             Text txt = txtGo.AddComponent<Text>();
             txt.text = label;
             txt.alignment = TextAnchor.MiddleCenter;
-            txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            txt.fontSize = 22;
-            txt.color = Color.white;
+            txt.font = font;
+            txt.fontSize = 26;
+            txt.fontStyle = FontStyle.Bold;
+            txt.color = primary
+                ? new Color(0.118f, 0.086f, 0.063f, 1f)       // 앰버 위 다크 텍스트
+                : new Color(0.94f, 0.90f, 0.84f, 1f);
             RectTransform txtRt = txtGo.GetComponent<RectTransform>();
             txtRt.anchorMin = Vector2.zero;
             txtRt.anchorMax = Vector2.one;
