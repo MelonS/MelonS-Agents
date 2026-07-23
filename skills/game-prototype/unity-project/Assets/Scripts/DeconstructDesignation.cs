@@ -651,7 +651,7 @@ namespace MelonS.GameProto
             tm.anchor = TextAnchor.MiddleCenter;
             tm.alignment = TextAlignment.Center;
             tm.color = UITheme.TextDanger;
-            var f = Resources.Load<Font>("Fonts/DNFBitBit") ?? Resources.Load<Font>("Fonts/NotoSansKR");
+            var f = Resources.Load<Font>("Fonts/GowunDodum") ?? Resources.Load<Font>("Fonts/NotoSansKR");
             if (f == null) f = Font.CreateDynamicFontFromOSFont("Arial", 48);
             if (f != null) { tm.font = f; tm.GetComponent<MeshRenderer>().material = f.material; }
             var mr = marker.GetComponent<MeshRenderer>();

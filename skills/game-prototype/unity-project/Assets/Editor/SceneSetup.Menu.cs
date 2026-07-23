@@ -46,7 +46,10 @@ namespace MelonS.GameProto.EditorTools
 
             // 초기화면 개선 (2026-07-24 운영자): FLUX 키아트 배경 + 한글 타이틀/버튼
             //  + UITheme 웜 톤 + 번들 Noto (LegacyRuntime 은 한글 글리프가 없어 tofu).
-            Font menuFont = AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/DNFBitBit.otf")
+            // 2단 폰트: 타이틀=BitBit(디스플레이), 부제·버튼=고운돋움(본문)
+            Font displayFont = AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/DNFBitBit.otf")
+                            ?? AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/GowunDodum.ttf");
+            Font menuFont = AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/GowunDodum.ttf")
                             ?? AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/NotoSansKR.ttf")
                             ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
@@ -87,7 +90,7 @@ namespace MelonS.GameProto.EditorTools
             Text title = titleGo.AddComponent<Text>();
             title.text = "PAWNSIM";
             title.alignment = TextAnchor.MiddleCenter;
-            title.font = menuFont;
+            title.font = displayFont != null ? displayFont : menuFont;
             title.fontSize = 84;
             title.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             title.verticalOverflow = VerticalWrapMode.Overflow;   // BitBit 라인높이 함정

@@ -140,7 +140,10 @@ namespace MelonS.GameProto.Core
         public static Font LoadKoreanFont(int size = 16)
         {
             // WebGL 은 OS 폰트 접근이 없어 번들 폰트(Noto Sans KR, OFL)가 유일한 한글 경로.
-            var bundled = Resources.Load<Font>("Fonts/DNFBitBit")   // 운영자 픽 2026-07-25
+            // 2단 폰트 (운영자 2026-07-25 "너무 두꺼워, 폰트 2개 써야 하나"):
+            //  본문 기본 = 고운돋움(라운드·가벼움), 타이틀·로고 = LoadDisplayFont(BitBit).
+            var bundled = Resources.Load<Font>("Fonts/GowunDodum")
+                          ?? Resources.Load<Font>("Fonts/DNFBitBit")
                           ?? Resources.Load<Font>("Fonts/NotoSansKR");
             if (bundled != null) return bundled;
             foreach (var name in KoreanFontCandidates)
@@ -149,6 +152,12 @@ namespace MelonS.GameProto.Core
                 if (f != null) return f;
             }
             return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        }
+
+        /// <summary>디스플레이(타이틀·로고) 폰트 — BitBit.  본문에 쓰지 말 것 (두께).</summary>
+        public static Font LoadDisplayFont()
+        {
+            return Resources.Load<Font>("Fonts/DNFBitBit") ?? LoadKoreanFont();
         }
 
         // ── Padding rhythm (one scale everywhere) ────────────────────────────

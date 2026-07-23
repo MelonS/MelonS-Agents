@@ -59,3 +59,9 @@ domain by the project author.
   - 한글 완성형 11,172자 전체 수록.  미수록 기호(✗⚙⛏⏸⚠🪓)는 코드에서
     ×/텍스트/!로 대체 완료 (tofu 방지).
   - Noto Sans KR 은 폴백으로 유지.
+
+## Gowun Dodum (SIL OFL 1.1)
+
+- **고운돋움** — 본문 기본 폰트 (2단 폰트 체제 2026-07-25: 본문=고운돋움,
+  타이틀·로고=DNF BitBit).  `Assets/Resources/Fonts/GowunDodum.ttf`
+  - License: SIL OFL 1.1 — https://fonts.google.com/specimen/Gowun+Dodum
