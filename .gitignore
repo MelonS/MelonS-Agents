@@ -241,3 +241,4 @@ docs/review-digest.md
 # *.yaml subject files are not.
 config/subjects/*.yaml
 !config/subjects/example.yaml
+*.safetensors
