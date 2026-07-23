@@ -184,6 +184,28 @@ namespace MelonS.GameProto.EditorTools
         {
             // 아트 v2 (운영자 2026-06-12 "바위도 이상해") — 16px '검은 액자' 광맥 →
             //  32px 신작 (struct32_ 프리픽스라 ArtV2Import 가 PPU32 자동 강제).
+            // 아트 v3 (2026-07-25): 종별 페인털리 광맥 64px — 임포트(PPU64)+주입.
+            var veinTypeSprites = new Sprite[4];
+            string[] veinFiles = { "rock64_vein_sandstone.png", "rock64_vein_limestone.png",
+                                   "rock64_vein_granite.png", "rock64_vein_marble.png" };
+            for (int vi = 0; vi < 4; vi++)
+            {
+                string vp = $"Assets/Sprites/{veinFiles[vi]}";
+                if (!System.IO.File.Exists(vp)) continue;
+                AssetDatabase.ImportAsset(vp, ImportAssetOptions.ForceSynchronousImport);
+                var vti = AssetImporter.GetAtPath(vp) as TextureImporter;
+                if (vti != null)
+                {
+                    vti.textureType = TextureImporterType.Sprite;
+                    vti.spriteImportMode = SpriteImportMode.Single;
+                    vti.spritePixelsPerUnit = 64;
+                    vti.filterMode = FilterMode.Point;
+                    vti.SaveAndReimport();
+                }
+                veinTypeSprites[vi] = AssetDatabase.LoadAssetAtPath<Sprite>(vp);
+            }
+            MelonS.GameProto.StoneVeinEntity.TypeSprites = veinTypeSprites;
+
             Sprite veinSpr = LoadOrSetupSprite("Assets/Sprites/struct32_stone_vein.png");
             if (veinSpr == null) veinSpr = LoadOrSetupSprite("Assets/Sprites/stone_vein.png");  // 폴백
             if (veinSpr == null) { Debug.LogWarning("[StoneVein] sprite null"); return; }

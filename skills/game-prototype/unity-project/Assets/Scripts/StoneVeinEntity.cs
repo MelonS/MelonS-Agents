@@ -27,12 +27,11 @@ namespace MelonS.GameProto
             _ => "돌",
         };
 
-        // 종류별 색 (sprite tint)
+        // 아트 v3 (2026-07-25): 종별 전용 페인털리 스프라이트 (SceneSetup 주입) —
+        //  스프라이트가 재질색을 담으므로 틴트는 흰색 베이스 (HP 어두워짐 곱만 유지).
+        public static Sprite[] TypeSprites;
         public static readonly Color[] TypeColors = {
-            new Color(0.95f, 0.85f, 0.65f, 1f),   // Sandstone 황갈
-            new Color(0.85f, 0.85f, 0.78f, 1f),   // Limestone 회백
-            new Color(0.55f, 0.55f, 0.60f, 1f),   // Granite 진회
-            new Color(0.95f, 0.95f, 0.98f, 1f),   // Marble 흰
+            Color.white, Color.white, Color.white, Color.white,
         };
         public static readonly float[] TypeHpMul = { 0.7f, 0.9f, 1.4f, 1.0f };
 
@@ -47,7 +46,14 @@ namespace MelonS.GameProto
         public void SetType(StoneType t)
         {
             type = t;
-            if (sr != null) sr.color = TypeColors[(int)t];
+            if (sr == null) sr = GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.color = TypeColors[(int)t];
+                // v3 종별 스프라이트 (주입 전/에디트타임엔 기존 스프라이트 유지)
+                if (TypeSprites != null && TypeSprites.Length > (int)t && TypeSprites[(int)t] != null)
+                    sr.sprite = TypeSprites[(int)t];
+            }
             maxHp = 200f * TypeHpMul[(int)t];
             hp = maxHp;
         }
