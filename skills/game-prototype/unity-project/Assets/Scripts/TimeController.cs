@@ -41,6 +41,9 @@ namespace MelonS.GameProto
             //  사운드 멈춤).  재개 시 해제.
             AudioListener.pause = (Time.timeScale == 0f);
             if (s > 0f) lastNonPauseScale = s;
+            // 운영자 2026-07-24 "일시정지 아닌데 안내": 재개 시 시작 시 띄운
+            //  '일시정지 — 둘러보고...' 카드가 수명만큼 잔존하던 것 즉시 해소.
+            if (s > 0f) AlertStackUI.Resolve("일시정지");
             OnScaleChanged?.Invoke(s);
         }
 

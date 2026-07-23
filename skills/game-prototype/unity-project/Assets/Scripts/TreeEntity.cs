@@ -7,7 +7,9 @@ namespace MelonS.GameProto
     /// A choppable tree.  Day 3 = HP + on-chop damage + destroy + wood drop.
     /// </summary>
     /// <summary>#149 - 레퍼런스 콜로니심 wiki tree species (Oak 단단/yield 큼, Pine 빠름, Birch 중간).</summary>
-    public enum TreeSpecies { Pine, Birch, Oak }
+    // L1 (2026-07-24 운영자 "나무 종류도 더"): Maple/Spruce 추가.  기존 3종 순서 불변
+    //  (세이브 int 직렬화 호환 — 뒤에만 append).
+    public enum TreeSpecies { Pine, Birch, Oak, Maple, Spruce }
 
     [RequireComponent(typeof(SpriteRenderer))]
     public class TreeEntity : MonoBehaviour
@@ -22,6 +24,8 @@ namespace MelonS.GameProto
             TreeSpecies.Pine => "소나무",
             TreeSpecies.Birch => "자작나무",
             TreeSpecies.Oak => "참나무",
+            TreeSpecies.Maple => "단풍나무",
+            TreeSpecies.Spruce => "가문비나무",
             _ => "나무",
         };
 
@@ -32,9 +36,12 @@ namespace MelonS.GameProto
         //  (Pine 20 / Birch 25 / Oak 30).  비용도 같은 라운드에서 파리티(문 25/침대 45
         //  /고급 100/화덕 80/연구대 75) — '나무 1그루 = 벽 4~6개' 비율이 핵심.
         public static readonly (float hp, int yield, float scale, Color tint)[] SpeciesStats = {
-            (80f,  20, 0.95f, new Color(1f, 1f, 1f, 1f)),   // Pine  - 빠름 작음
-            (100f, 25, 1.00f, new Color(1f, 1f, 1f, 1f)),   // Birch - 중간
-            (150f, 30, 1.10f, new Color(1f, 1f, 1f, 1f)),   // Oak   - 단단 큼
+            (80f,  20, 0.95f, new Color(1f, 1f, 1f, 1f)),   // Pine  - 빠름 작음 (침엽 실루엣)
+            (100f, 25, 1.00f, new Color(1f, 1f, 1f, 1f)),   // Birch - 중간 (키큰 로브)
+            (150f, 30, 1.10f, new Color(1f, 1f, 1f, 1f)),   // Oak   - 단단 큼 (넓은 로브)
+            // L1 신규 2종 — 실루엣이 정체성, 틴트는 은은한 보조 (원색 금지)
+            (110f, 26, 1.00f, new Color(1.05f, 0.88f, 0.78f, 1f)),  // Maple  - 성긴 로브 + 담적
+            (130f, 28, 1.15f, new Color(0.88f, 0.98f, 0.94f, 1f)),  // Spruce - 키큰 침엽 + 청록기
         };
 
         // 종별 스프라이트 [Pine,Birch,Oak] — SceneSetup(SpawnTrees)이 로딩 후 주입.

@@ -134,8 +134,11 @@ namespace MelonS.GameProto
             switch (g)
             {
                 case Gate.Unpause:
-                    // 정지 시작(SetScale 0) 이후 1배속 이상으로 올렸는가.
-                    return Time.timeScale > 0.01f && sawPause;
+                    // 운영자 2026-07-24 "일시정지 아닌데 안내": sawPause 요구 제거 —
+                    //  정지를 안 거친 세션(하네스 등)에서 sawPause 영원히 false 라
+                    //  1배속 구동 중에도 '일시정지' 팁이 고정되던 버그.  시간이 흐르면
+                    //  이 팁은 무조건 용무 종료.
+                    return Time.timeScale > 0.01f;
                 case Gate.Stockpile:
                     return Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None).Length > 0;
                 case Gate.House:

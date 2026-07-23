@@ -27,10 +27,14 @@ def ellipse(cx,cy,rx,ry):
     return s
 
 # 로브: (cx,cy,rx,ry).  첫 로브 = 메인, 나머지 = 주변 클럼프
+# L1 (2026-07-24 운영자 "나무 모양 여러가지"): d=키큰형 e=넓은형 f=성긴형 추가.
 SHAPES = {
  "a": [(16,15,11,10),(23,11,6,6),(9,18,7,6),(13,8,6,6),(20,19,5,5)],
  "b": [(15,16,11,10),(8,12,6,6),(22,18,7,6),(19,8,6,6),(11,20,5,4)],
  "c": [(16,14,10,11),(22,18,6,6),(11,8,6,6),(10,18,5,5),(21,9,5,5)],
+ "d": [(16,12,8,9),(16,20,9,7),(11,7,5,5),(21,8,5,5),(16,4,4,4)],
+ "e": [(16,17,13,8),(7,15,6,5),(25,15,6,5),(12,10,6,5),(20,10,6,5)],
+ "f": [(16,16,8,8),(24,12,4,4),(8,11,4,4),(12,22,4,4),(22,21,4,4),(16,6,4,4)],
 }
 
 def make_tree(variant):
@@ -82,8 +86,49 @@ def make_tree(variant):
                     px(im,x,y,OUTLINE)
     return im
 
+# L1 침엽 실루엣 (Pine/Spruce 전용) — 틴트만으론 침엽/활엽 구분 불가하던 것 해소.
+def make_conifer(variant):
+    im = Image.new("RGBA",(32,48),T)
+    for y in range(36,46):
+        for x in range(15,18):
+            px(im,x,y, W_LT if x==15 else (W_DK if x==17 else W_MD))
+    tiers = {
+        "a": [(6,4,5),(10,12,7),(16,22,9),(24,32,11)],
+        "b": [(4,3,4),(8,10,6),(14,19,8),(22,30,10),(30,37,12)],
+    }[variant]
+    canopy = set()
+    for (ty,my,half) in tiers:
+        h = my-ty+4
+        for i in range(h):
+            y = ty+i; w = max(1,int(half*(i+1)/h))
+            for x in range(16-w,16+w+1): canopy.add((x,y))
+    for (x,y) in canopy: px(im,x,y,G_SH)
+    for (ty,my,half) in tiers:
+        h = my-ty+4
+        for i in range(h):
+            y = ty+i; w = max(1,int(half*(i+1)/h))
+            for x in range(16-w,16+w+1):
+                if (x,y) not in canopy: continue
+                rel = i/max(1,h-1)
+                if rel > 0.75: c = G_SH
+                elif x < 16-w*0.25 and rel < 0.6: c = G_LT
+                elif x > 16+w*0.35: c = G_DK
+                else: c = G_MD
+                px(im,x,y,c)
+    px(im,16,tiers[0][0]-1,G_MD); px(im,16,tiers[0][0]-2,G_DK)
+    src = im.copy()
+    for y in range(48):
+        for x in range(32):
+            if src.getpixel((x,y))[3]==0:
+                if any(0<=x+dx<32 and 0<=y+dy<48 and src.getpixel((x+dx,y+dy))[3]>0
+                       for dx,dy in ((1,0),(-1,0),(0,1),(0,-1))):
+                    px(im,x,y,OUTLINE)
+    return im
+
 os.makedirs(OUT, exist_ok=True)
-outs = {f"flora32_tree_{v}": make_tree(v) for v in ("a","b","c")}
+outs = {f"flora32_tree_{v}": make_tree(v) for v in ("a","b","c","d","e","f")}
+outs["flora32_conifer_a"] = make_conifer("a")
+outs["flora32_conifer_b"] = make_conifer("b")
 for n,im in outs.items(): im.save(os.path.join(OUT,n+".png"))
 # 프리뷰 (잔디 배경)
 cv = Image.new("RGBA",(32*6*len(outs)+10*len(outs), 48*6+20), G_MD)
