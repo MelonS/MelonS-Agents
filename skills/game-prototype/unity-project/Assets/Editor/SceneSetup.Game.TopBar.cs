@@ -122,7 +122,7 @@ namespace MelonS.GameProto.EditorTools
             resRowRt.anchoredPosition = new Vector2(8f, -(76f + 8f));  // 좌상단, 상단바(76) 아래
             // 반투명 어두운 배경(맵 위에서 가독성).
             var resBg = resRowGo.AddComponent<Image>();
-            resBg.color = new Color(0.07f, 0.07f, 0.09f, 0.62f);
+            resBg.color = MelonS.GameProto.Core.UITheme.PanelBg;   // 팔레트 통일 (2026-07-25)
             resBg.raycastTarget = false;
             var vlg = resRowGo.AddComponent<VerticalLayoutGroup>();
             vlg.childAlignment = TextAnchor.UpperLeft;

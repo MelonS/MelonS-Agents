@@ -305,12 +305,12 @@ namespace MelonS.GameProto.EditorTools
             //   text_primary = #e8dfd0  (0.910, 0.875, 0.816)
             //   text_muted   = #8a8170  (0.541, 0.506, 0.439)
             // ================================================================
-            Color colPanel       = new Color(0.10f, 0.094f, 0.078f, 0.85f);
+            Color colPanel       = MelonS.GameProto.Core.UITheme.PanelBg;        // 팔레트 통일 (2026-07-25)
             Color colAccentWood  = new Color(0.659f, 0.459f, 0.263f, 1f);
             Color colAccentFood  = new Color(0.478f, 0.604f, 0.302f, 1f);
             Color colAccentWarn  = new Color(0.769f, 0.353f, 0.227f, 1f);
-            Color colTextPrimary = new Color(0.910f, 0.875f, 0.816f, 1f);
-            Color colTextMuted   = new Color(0.541f, 0.506f, 0.439f, 1f);
+            Color colTextPrimary = MelonS.GameProto.Core.UITheme.TextPrimary;    // 팔레트 통일 (2026-07-25)
+            Color colTextMuted   = MelonS.GameProto.Core.UITheme.TextSecondary;  // 팔레트 통일 (2026-07-25)
             // Korean font: try multiple OS fonts.  Malgun Gothic on Win10/11
             // is the safe default.  NanumGothic for Win7 installs that
             // grabbed the Nanum package separately.  Gulim is the legacy
