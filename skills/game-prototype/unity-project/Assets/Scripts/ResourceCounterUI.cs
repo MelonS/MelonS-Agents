@@ -22,6 +22,10 @@ namespace MelonS.GameProto
         // #130 - 자원 변화 시 텍스트 일시적 노란 flash (운영자가 "값이 안 늘어" 느낌 해소)
         private float woodFlashUntil = -10f;
         private float _nextGroundPoll;    // F4 — 바닥 더미 합계 폴링
+        // G4 정착지 가치 (2026-07-24) — 습격 스케일 근거 수치를 석재 행에 병기.
+        //  FindObjects 비용이라 5s 폴링, suffix 변화 시 스톤 행 강제 갱신.
+        private float _nextWealthPoll;
+        private string _wealthSuffix = "";
         private int lastFoodForDays = -1, lastPawnForDays = -1;   // r2 #6 stale 가드
         private int _groundWood;
         private float foodFlashUntil = -10f;
@@ -47,6 +51,12 @@ namespace MelonS.GameProto
             // #QA플레이 F4 (2026-06-12) — 시작 자원이 '바닥 더미'(물리)라 적립 카운터가
             //  0 이면 '자원 없음'처럼 읽혔다.  바닥 더미 합계를 2s 폴링해 병기:
             //  "목재: 0 (+300 바닥)" — 건축은 바닥분으로도 펀딩되므로 진실 표시.
+            if (Time.unscaledTime >= _nextWealthPoll)
+            {
+                _nextWealthPoll = Time.unscaledTime + 5f;
+                string ws = $"   가치: {AIDirector.WealthSnapshot():N0}";
+                if (ws != _wealthSuffix) { _wealthSuffix = ws; lastStone = -1; }
+            }
             if (Time.unscaledTime >= _nextGroundPoll)
             {
                 _nextGroundPoll = Time.unscaledTime + 2f;
@@ -109,7 +119,7 @@ namespace MelonS.GameProto
             }
             if (rm.stone != lastStone)
             {
-                if (stoneText != null) stoneText.text = $"석재: {rm.stone:N0}";
+                if (stoneText != null) stoneText.text = $"석재: {rm.stone:N0}{_wealthSuffix}";
                 if (lastStone >= 0) stoneFlashUntil = Time.unscaledTime + FlashDuration;
                 lastStone = rm.stone;
             }

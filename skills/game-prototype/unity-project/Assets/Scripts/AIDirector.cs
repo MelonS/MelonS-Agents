@@ -749,6 +749,17 @@ namespace MelonS.GameProto
 
         /// <summary>갭 TOP-9 — 콜로니 부 프록시.  자원(식량은 0.1 가중) + 구조물 가중 +
         /// 림×30.  정밀 시장가치가 아니라 '발전 정도'의 단조 신호면 충분하다.</summary>
+        /// <summary>G4 (2026-07-24 게임성 감사): 정착지 가치 노출 — 습격 규모가 이 값에
+        ///  비례하는데 비가시라 '왜 점점 세지지'가 불투명했다.  UI 폴링용
+        ///  (FindObjects 비용 — 5s+ 간격으로만 호출할 것).</summary>
+        public static float WealthSnapshot()
+        {
+            int alive = 0;
+            foreach (var p in UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                if (p != null && !p.IsDead) alive++;
+            return ColonyWealthProxy(alive);
+        }
+
         private static float ColonyWealthProxy(int aliveColonists)
         {
             float w = 0f;
