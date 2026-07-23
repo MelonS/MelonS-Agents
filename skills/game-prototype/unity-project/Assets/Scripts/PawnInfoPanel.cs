@@ -563,6 +563,8 @@ namespace MelonS.GameProto
                     if (!string.IsNullOrEmpty(act))
                         title += $"  <size=13><color=#e8b560>· {act}</color></size>";
                 }
+                // G2 배경 한 줄 (2026-07-24 게임성 감사): 클릭한 림에게 최소한의 서사.
+                title += $"\n<size=13><color=#c4a878>{PawnBackstory.GetLine(pawn)}</color></size>";
                 if (traits != null)
                 {
                     string ts = traits.SummaryKr();
