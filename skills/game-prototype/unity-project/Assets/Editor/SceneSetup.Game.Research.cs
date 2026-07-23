@@ -35,6 +35,9 @@ namespace MelonS.GameProto.EditorTools
             resStatus.fontSize = 22;
             resStatus.color = colTextPrimary;
             resStatus.alignment = TextAnchor.MiddleCenter;
+            // BitBit 폰트 (2026-07-25): 라인 높이가 Noto 보다 커서 짧은 rect 에서
+            //  세로 Truncate 로 통째로 안 그려짐 — Overflow 로 안전화.
+            resStatus.verticalOverflow = VerticalWrapMode.Overflow;
             RectTransform resStatusRt = resStatusGo.GetComponent<RectTransform>();
             resStatusRt.anchorMin = Vector2.zero;
             resStatusRt.anchorMax = Vector2.one;

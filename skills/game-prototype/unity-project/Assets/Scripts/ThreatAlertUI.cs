@@ -5,7 +5,7 @@ namespace MelonS.GameProto
 {
     /// <summary>
     /// 운영자 피드백 - wolf/bandit 등장 시 EventLog 텍스트만 보임.  운영자 놓치기 쉬움.
-    /// 화면 우상단에 큰 빨강 "⚠ 위협" 텍스트 + 2초 fade-in/out.
+    /// 화면 우상단에 큰 빨강 "! 위협" 텍스트 + 2초 fade-in/out.
     ///
     /// 사람-리듬 #7 (human-play-gap-2026-06-12.md): 레퍼런스는 위협 이벤트 시
     /// 엔진이 강제 감속 + 레터 클릭 = 현장 점프가 표준 리듬.  알림 발화 시
@@ -58,7 +58,7 @@ namespace MelonS.GameProto
 
         private Font LoadKoreanFont()
         {
-            var bundled = Resources.Load<Font>("Fonts/NotoSansKR");
+            var bundled = Resources.Load<Font>("Fonts/DNFBitBit") ?? Resources.Load<Font>("Fonts/NotoSansKR");
             if (bundled != null) return bundled;
             string[] candidates = { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" };
             foreach (var name in candidates)
@@ -115,7 +115,7 @@ namespace MelonS.GameProto
                         if (currentAlertSubject != key)
                         {
                             currentAlertSubject = key;
-                            ShowAlert("⚠ 늑대 위협!", w.transform.position, true);
+                            ShowAlert("! 늑대 위협!", w.transform.position, true);
                         }
                         return;
                     }
@@ -135,7 +135,7 @@ namespace MelonS.GameProto
                         if (currentAlertSubject != key)
                         {
                             currentAlertSubject = key;
-                            ShowAlert("⚠ 강도 침입!", b.transform.position, true);
+                            ShowAlert("! 강도 침입!", b.transform.position, true);
                         }
                         return;
                     }

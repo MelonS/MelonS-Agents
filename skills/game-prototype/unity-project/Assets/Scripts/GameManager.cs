@@ -164,7 +164,7 @@ namespace MelonS.GameProto
             ReproHarness.EnsureInScene();           // WORKFLOW-V2 - -repro <json> 운영자 버그 재현 시나리오 (SimInput 경유 진짜 입력 경로)
             // → mouse hover 시 entity 종류 + 가능한 action 표시
             HoverTooltip.EnsureInScene();
-            // → wolf/bandit 접근 시 큰 빨강 "⚠ 위협" 우상단 (auto-pause X, 시각 only)
+            // → wolf/bandit 접근 시 큰 빨강 "! 위협" 우상단 (auto-pause X, 시각 only)
             // #ui백로그 7.2 — ThreatAlertUI 비활성: AlertStackUI(threatTier>=1 영속 카드)와
             //  동일 위협을 이중 표시하던 구식 스톱갭.  파일은 보존(#232 선례), 부트만 끊는다.
             // ThreatAlertUI.EnsureInScene();

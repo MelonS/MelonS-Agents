@@ -387,7 +387,7 @@ namespace MelonS.GameProto
                 int nWalls = UnityEngine.Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None).Length;
                 int nCrops = UnityEngine.Object.FindObjectsByType<CropEntity>(FindObjectsSortMode.None).Length;
                 if ((sBeds > 0 && nBeds == 0) || (sWalls > 0 && nWalls == 0) || (sCrops > 0 && nCrops == 0))
-                    Debug.LogWarning($"[SaveLoad] ⚠ 구조물 재생성 미지원: save(beds={sBeds} walls={sWalls} crops={sCrops}) 인데 " +
+                    Debug.LogWarning($"[SaveLoad] ! 구조물 재생성 미지원: save(beds={sBeds} walls={sWalls} crops={sCrops}) 인데 " +
                                      $"씬(beds={nBeds} walls={nWalls} crops={nCrops}) — 재시작 후 로드면 플레이어 건축물이 소실된다(별도 reconstruct 작업 필요).");
             }
 

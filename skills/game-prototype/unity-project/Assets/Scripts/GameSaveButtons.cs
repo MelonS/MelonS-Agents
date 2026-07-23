@@ -77,7 +77,7 @@ namespace MelonS.GameProto
             {
                 // #6.2 — 세이브 없음/손상: 이전엔 무음 return 이라 '클릭해도 아무 일 없음'.
                 BuildClickToast.EnsureInScene();
-                BuildClickToast.Instance?.ShowFail("✗ 불러올 세이브 없음/손상");
+                BuildClickToast.Instance?.ShowFail("× 불러올 세이브 없음/손상");
                 return;
             }
 

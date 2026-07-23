@@ -275,7 +275,7 @@ namespace MelonS.GameProto
                     //  클릭마다 빨간 스팸이 됐다.  Selectable 아닌 순수 그래픽에 막혔을 때만
                     //  토스트 — 진단 가치(투명 차단자 탐지)는 보존.
                     if (BuildClickToast.Instance != null && !PointerOverSelectable(screenPos))
-                        BuildClickToast.Instance.ShowFail("✗ UI 위 클릭 - 맵에 직접 클릭하세요");
+                        BuildClickToast.Instance.ShowFail("× UI 위 클릭 - 맵에 직접 클릭하세요");
                     return BuildClickResult.OverUI;
                 }
             }
@@ -605,7 +605,7 @@ namespace MelonS.GameProto
             if (prefab == null)
             {
                 Debug.LogWarning($"[Build] TryPlace skip: prefab null for mode={CurrentMode}");
-                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"✗ prefab 미설정 ({CurrentMode})");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"× prefab 미설정 ({CurrentMode})");
                 return false;
             }
             int cost = CostFor(CurrentMode);
@@ -617,19 +617,19 @@ namespace MelonS.GameProto
             if (reject == PlaceReject.OutOfBounds)
             {
                 Debug.Log($"[Build] TryPlace skip: out of map bounds ({cx},{cy}) {size.x}x{size.y}");
-                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"✗ 맵 밖엔 못 지음 ({cx},{cy})");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"× 맵 밖엔 못 지음 ({cx},{cy})");
                 return false;
             }
             if (reject == PlaceReject.Terrain)
             {
                 Debug.Log($"[Build] TryPlace skip: terrain (water/rock) at ({cx},{cy}) {size.x}x{size.y} for mode={CurrentMode}");
-                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"✗ 물/바위 위엔 못 지음 ({cx},{cy})");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"× 물/바위 위엔 못 지음 ({cx},{cy})");
                 return false;
             }
             if (reject == PlaceReject.Occupied)
             {
                 Debug.Log($"[Build] TryPlace skip: area ({cx},{cy}) {size.x}x{size.y} occupied for mode={CurrentMode}");
-                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"✗ {size.x}x{size.y} 영역 점유됨 ({cx},{cy}) - 다른 곳 시도");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"× {size.x}x{size.y} 영역 점유됨 ({cx},{cy}) - 다른 곳 시도");
                 return false;
             }
             // #189 - 운영자 fb "건축 여전히 안 됨" root cause:
@@ -667,7 +667,7 @@ namespace MelonS.GameProto
             {
                 var rd = RoofDesignation.Instance;
                 if (rd != null && !rd.IsRoofed(new Vector2Int(cx, cy)))
-                    BuildClickToast.Instance.ShowFail("⚠ 실외 침대 — 지붕이 없으면 '한데서 잠 -4' 페널티");
+                    BuildClickToast.Instance.ShowFail("! 실외 침대 — 지붕이 없으면 '한데서 잠 -4' 페널티");
             }
 
             // #자원모델 단일화(2026-06-04, 운영자 "haul-required 순수 the reference sim" 선택): 청사진은

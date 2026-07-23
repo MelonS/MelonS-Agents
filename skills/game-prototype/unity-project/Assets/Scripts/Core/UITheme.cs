@@ -50,7 +50,8 @@ namespace MelonS.GameProto.Core
         public static Font LoadKoreanFont(int size = 16)
         {
             // WebGL 은 OS 폰트 접근이 없어 번들 폰트(Noto Sans KR, OFL)가 유일한 한글 경로.
-            var bundled = Resources.Load<Font>("Fonts/NotoSansKR");
+            var bundled = Resources.Load<Font>("Fonts/DNFBitBit")   // 운영자 픽 2026-07-25
+                          ?? Resources.Load<Font>("Fonts/NotoSansKR");
             if (bundled != null) return bundled;
             foreach (var name in KoreanFontCandidates)
             {

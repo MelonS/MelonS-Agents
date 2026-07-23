@@ -604,7 +604,7 @@ namespace MelonS.GameProto
             }
             if (tree != null)
             {
-                list.Add(("⛏ 벌목 우선", () => {
+                list.Add(("벌목 우선", () => {
                     var ch = pawn.GetComponent<PawnChopper>();
                     if (ch != null) { ch.SetTreeTarget(tree); pawn.ManualMoveUntil = Time.time + 8f; }
                 }));
@@ -616,7 +616,7 @@ namespace MelonS.GameProto
             }
             if (vein != null && !vein.IsDestroyed)
             {
-                list.Add(("⛏ 채광 우선", () => {
+                list.Add(("채광 우선", () => {
                     var m = pawn.GetComponent<PawnMiner>();
                     if (m != null) { m.SetVeinTarget(vein); pawn.ManualMoveUntil = Time.time + 8f; }
                 }));
@@ -707,7 +707,7 @@ namespace MelonS.GameProto
             if (tree != null && !tree.IsDestroyed && TreeChopDesignation.Instance != null)
             {
                 var go = tree.gameObject;
-                list.Add(("🪓 벌목 지정", () => {
+                list.Add(("벌목 지정", () => {
                     if (TreeChopDesignation.Instance != null) TreeChopDesignation.Instance.TryMark(go);
                 }));
             }

@@ -46,7 +46,8 @@ namespace MelonS.GameProto.EditorTools
 
             // 초기화면 개선 (2026-07-24 운영자): FLUX 키아트 배경 + 한글 타이틀/버튼
             //  + UITheme 웜 톤 + 번들 Noto (LegacyRuntime 은 한글 글리프가 없어 tofu).
-            Font menuFont = AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/NotoSansKR.ttf")
+            Font menuFont = AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/DNFBitBit.otf")
+                            ?? AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/NotoSansKR.ttf")
                             ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             var bgTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Resources/UI/menu_bg.png");

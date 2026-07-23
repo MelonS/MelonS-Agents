@@ -19,8 +19,10 @@ namespace MelonS.GameProto
         private float t0;
 
         private const int EmberCount = 14;
-        // 키아트의 캠프파이어 화면 좌표 (앵커 비율) — 01_campfire_dusk 기준.
-        private static readonly Vector2 FireAnchor = new Vector2(0.525f, 0.245f);
+        // 메뉴2_01 새벽능선 아트 (2026-07-25 운영자 픽): 모닥불이 없으므로
+        //  파티클 컨셉을 '초원 위로 떠오르는 금빛 모트(꽃가루/빛입자)'로 —
+        //  하단 초원 전폭에서 넓게 분산 스폰.
+        private Vector2[] emberAnchor;
         private RectTransform[] embers;
         private float[] phase, speed, life, sway;
 
@@ -53,22 +55,26 @@ namespace MelonS.GameProto
             // 딤 위·타이틀 아래 (Backdrop=0, Dim=1 다음)
             root.transform.SetSiblingIndex(Mathf.Min(2, canvas.childCount - 1));
             var rng = new System.Random(7411);
+            emberAnchor = new Vector2[EmberCount];
             for (int i = 0; i < EmberCount; i++)
             {
                 var go = new GameObject("ember", typeof(RectTransform), typeof(Image));
                 var rt = (RectTransform)go.transform;
                 rt.SetParent(root.transform, false);
-                rt.anchorMin = rt.anchorMax = FireAnchor;
+                emberAnchor[i] = new Vector2(
+                    0.08f + (float)rng.NextDouble() * 0.84f,
+                    0.10f + (float)rng.NextDouble() * 0.22f);
+                rt.anchorMin = rt.anchorMax = emberAnchor[i];
                 float s = 4f + (float)rng.NextDouble() * 5f;
                 rt.sizeDelta = new Vector2(s, s);
                 var img = go.GetComponent<Image>();
                 img.sprite = sp;
                 img.raycastTarget = false;
                 embers[i] = rt;
-                phase[i] = (float)rng.NextDouble() * 6f;
-                speed[i] = 55f + (float)rng.NextDouble() * 65f;    // px/s 상승
-                life[i] = 3.2f + (float)rng.NextDouble() * 2.6f;
-                sway[i] = 14f + (float)rng.NextDouble() * 26f;
+                phase[i] = (float)rng.NextDouble() * 8f;
+                speed[i] = 22f + (float)rng.NextDouble() * 30f;    // 모트 = 불씨보다 느긋하게
+                life[i] = 5f + (float)rng.NextDouble() * 4f;
+                sway[i] = 18f + (float)rng.NextDouble() * 30f;
             }
         }
 
@@ -97,10 +103,8 @@ namespace MelonS.GameProto
                     embers[i].anchoredPosition = new Vector2(sx, rise);
                     float a = Mathf.Clamp01(u * 5f) * (1f - Mathf.SmoothStep(0.45f, 1f, u));
                     var img = embers[i].GetComponent<Image>();
-                    img.color = Color.Lerp(
-                        new Color(1f, 0.72f, 0.30f, 0.85f * a),      // 앰버
-                        new Color(0.95f, 0.35f, 0.15f, 0.85f * a),   // 식어가는 주황
-                        u);
+                    // 금빛 모트 — 새벽 역광 꽃가루 느낌 (식는 색 변화 없음)
+                    img.color = new Color(1f, 0.88f, 0.55f, 0.65f * a);
                     float sc = 1f - 0.45f * u;
                     embers[i].localScale = new Vector3(sc, sc, 1f);
                 }

@@ -316,7 +316,8 @@ namespace MelonS.GameProto.EditorTools
             // WebGL 근본수정 (2026-07-24): OS 폰트를 씬에 구우면 font data 없는 Font
             //  객체가 직렬화돼 WebGL 빌드가 거부된다("Need to include font data") —
             //  번들 Noto(OFL) 에셋 우선, OS 폰트는 에셋 부재 시 폴백.
-            Font  uiFont         = AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/NotoSansKR.ttf")
+            Font  uiFont         = AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/DNFBitBit.otf")
+                            ?? AssetDatabase.LoadAssetAtPath<Font>("Assets/Resources/Fonts/NotoSansKR.ttf")
                                   ?? Font.CreateDynamicFontFromOSFont(
                 new[] { "Malgun Gothic", "NanumGothic", "Gulim", "Dotum", "Arial Unicode MS" }, 22)
                                   ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");

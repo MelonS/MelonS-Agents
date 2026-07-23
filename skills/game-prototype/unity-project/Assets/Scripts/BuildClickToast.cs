@@ -11,10 +11,10 @@ namespace MelonS.GameProto
     ///
     /// 표시 메시지:
     ///   "✓ 청사진 배치 - 벽 @ (5,3)"
-    ///   "✗ 셀 점유됨 @ (5,3)"
-    ///   "✗ 쿨다운 중 (0.07s)"
-    ///   "✗ UI 위 클릭"
-    ///   "✗ 카메라 null"
+    ///   "× 셀 점유됨 @ (5,3)"
+    ///   "× 쿨다운 중 (0.07s)"
+    ///   "× UI 위 클릭"
+    ///   "× 카메라 null"
     /// </summary>
     public class BuildClickToast : MonoBehaviour
     {

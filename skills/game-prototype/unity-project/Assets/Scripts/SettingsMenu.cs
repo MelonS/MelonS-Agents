@@ -157,7 +157,7 @@ namespace MelonS.GameProto
             var titleGo = new GameObject("Title");
             titleGo.transform.SetParent(headerGo.transform, false);
             var title = titleGo.AddComponent<Text>();
-            title.text = "⚙ 설정";
+            title.text = "설정";
             title.font = font;
             title.fontSize = 22;
             title.fontStyle = FontStyle.Bold;
@@ -345,7 +345,7 @@ namespace MelonS.GameProto
             if (Time.unscaledTime > loadArmUntil)
             {
                 loadArmUntil = Time.unscaledTime + 3f;
-                SetLoadBtnLabel("⚠ 재클릭=불러오기");
+                SetLoadBtnLabel("! 재클릭=불러오기");
                 return;
             }
             ResetLoadArm();

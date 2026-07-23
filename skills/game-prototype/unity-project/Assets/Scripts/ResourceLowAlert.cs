@@ -75,8 +75,8 @@ namespace MelonS.GameProto
                     foreach (var pe in UnityEngine.Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
                         if (pe != null && !pe.IsDead) alive++;
                     int foodFloor = Mathf.Max(5, Mathf.RoundToInt(alive * 4.5f));
-                    if (rm.wood < 5) msg = "⚠ 목재 부족 (벌목 필요)";
-                    else if (totalFood < foodFloor) msg = $"⚠ 식량 부족 — 반나절치 미만 (사냥/채집/요리)";
+                    if (rm.wood < 5) msg = "! 목재 부족 (벌목 필요)";
+                    else if (totalFood < foodFloor) msg = $"! 식량 부족 — 반나절치 미만 (사냥/채집/요리)";
 
                     if (msg != null)
                     {

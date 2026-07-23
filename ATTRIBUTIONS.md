@@ -50,3 +50,12 @@ domain by the project author.
   - License: SIL Open Font License 1.1 (free for commercial use,
     redistribution allowed) — https://openfontlicense.org
   - Source: https://fonts.google.com/noto/specimen/Noto+Sans+KR
+
+## DNF BitBit v2 (넥슨/네오플 무료 폰트)
+
+- **DNF BitBit v2** — 게임 전체 UI 폰트 (운영자 픽 2026-07-25).
+  `skills/game-prototype/unity-project/Assets/Resources/Fonts/DNFBitBit.otf`
+  - 던전앤파이터 공식 무료 배포 폰트 — 개인·기업 상업적 사용 허용 (출처 표기).
+  - 한글 완성형 11,172자 전체 수록.  미수록 기호(✗⚙⛏⏸⚠🪓)는 코드에서
+    ×/텍스트/!로 대체 완료 (tofu 방지).
+  - Noto Sans KR 은 폴백으로 유지.

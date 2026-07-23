@@ -170,7 +170,7 @@ namespace MelonS.GameProto
             speed4Btn = MakeBtn("6x",  "(3)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(6f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
             speed2Btn = MakeBtn("3x",  "(2)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(3f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
             speed1Btn = MakeBtn("1x",  "(1)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.SetScale(1f); }, anchorBottomRight:true); sx -= (BtnW + Gap);
-            pauseBtn  = MakeBtn("멈춤", "(Space)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.TogglePause(); }, displayLabel:"⏸ 멈춤", anchorBottomRight:true);
+            pauseBtn  = MakeBtn("멈춤", "(Space)", sx, ()=>{ if (TimeController.Instance!=null) TimeController.Instance.TogglePause(); }, displayLabel:"멈춤", anchorBottomRight:true);
 
             // === 하단 중앙: 탭 버튼들 (tabBarRt 컨테이너 기준 로컬 좌표) ===
             float x = -totalW * 0.5f;
@@ -194,7 +194,7 @@ namespace MelonS.GameProto
 
             // Settings group: [설정] — opens the unified SettingsMenu panel.
             // #ui백로그 0.4 — "(ESC)" 는 거짓 힌트(ESC 는 닫기/빌드취소에만 소비, 열기 바인딩 없음).
-            settingsBtn = MakeBtn("설정", "", x, () => SettingsMenu.ToggleStatic(), displayLabel:"⚙ 설정");
+            settingsBtn = MakeBtn("설정", "", x, () => SettingsMenu.ToggleStatic(), displayLabel:"설정");
         }
 
         private Button MakeBtn(string label, string hint, float x, System.Action onClick, string displayLabel = null, bool anchorBottomRight = false)
@@ -203,7 +203,7 @@ namespace MelonS.GameProto
             //   does bar.transform.Find("Btn_멈춤") (depth-1).  Don't reparent into Content
             //   nor into SpeedPanel.  `label` drives the GameObject name (test-referenced);
             //   `displayLabel`, when given, drives ONLY the visible Text so we can show e.g.
-            //   "⏸ 멈춤" without renaming the GO away from "Btn_멈춤".
+            //   "멈춤" without renaming the GO away from "Btn_멈춤".
             //   anchorBottomRight=true → 우하단 속도 클러스터용 (anchor (1,0), pivot left-bottom).
             //   둘 다 GuiControlBar root(=full-screen stretch)의 DIRECT child 로 유지 (test depth-1 Find).
             var go = new GameObject($"Btn_{label}");
@@ -262,7 +262,7 @@ namespace MelonS.GameProto
             lbl.fontStyle = FontStyle.Bold;
             lbl.color = TextNormal;
             lbl.alignment = TextAnchor.MiddleCenter;
-            // #65 운영자 "설정 버튼 라벨/아이콘 잘림": "⚙ 설정"·"⏸ 멈춤"(아이콘+텍스트)이 76px
+            // #65 운영자 "설정 버튼 라벨/아이콘 잘림": "설정"·"멈춤"(아이콘+텍스트)이 76px
             //  버튼 폭을 넘어 잘렸음.  best-fit 으로 버튼 안에 맞게 자동 축소(2자 라벨은 20 유지,
             //  넓은 라벨만 줄어듦) + 가로 overflow 는 자르지 않게 → 잘림 제거.
             lbl.resizeTextForBestFit = true;
