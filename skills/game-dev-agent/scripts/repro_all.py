@@ -26,11 +26,23 @@ import refactor_check as rc
 SCEN_DIR = rc.REPO / "skills" / "game-prototype" / "repro-scenarios"
 RUNNER = Path(__file__).parent / "repro_run.py"
 
+# 2단 게이트 (2026-07-24) — 풀 게이트 30~60분이 "게이트 생략" 사고를 유발해 도입.
+#  스모크 = 코어 조작 경로 4종(이동/벌목메뉴/선택림전용/4축기본)만 — 매 커밋 최소선.
+#  풀 게이트(무인자)는 세션 말/야간/행동로직 변경 시 의무.
+SMOKE_SET = [
+    "p0-basics-4axis.json",
+    "p0-pawn-move.json",
+    "p0-chop-menu.json",
+    "p1-chop-selected-only.json",
+]
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--fresh-build", action="store_true")
     ap.add_argument("--filter", default="")
+    ap.add_argument("--smoke", action="store_true",
+                    help="스모크 세트만 실행 (매 커밋용 빠른 게이트)")
     ap.add_argument("--build")
     args = ap.parse_args()
 
@@ -38,6 +50,8 @@ def main() -> int:
     #  사후 리뷰형이라 커밋 게이트에 안 넣는다.  실행은 repro_run 직접 호출).
     scenarios = sorted(p for p in SCEN_DIR.glob("*.json")
                        if args.filter in p.name and not p.name.startswith("_"))
+    if args.smoke:
+        scenarios = [p for p in scenarios if p.name in SMOKE_SET]
     if not scenarios:
         print(f"[repro_all] 시나리오 없음: {SCEN_DIR} (filter='{args.filter}')")
         return 2

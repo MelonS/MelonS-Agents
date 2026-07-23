@@ -198,10 +198,13 @@ namespace MelonS.GameProto
             // 갭 TOP-6 (2026-06-12, ※갈림길 아님) — 레퍼런스의 '노숙 -4×2'가 첫 침대/첫
             //  지붕의 동기를 만든다.  바닥 취침 -4, 지붕 없는 곳 취침 추가 -4 (중첩 가능).
             string wakeThought;
+            // D-A(a) 회복 강화 (2026-07-24 운영자 승인): 수면 보상이 하루(실측 ≈1000게임초)를
+            //  못 덮는 600s 지속이 주간 순 적자의 주범 — 지속을 하루 길이로, 크기도 상향.
+            //  음성 thought 는 불변(압력 유지).  검증: human-rhythm 소크 붕괴 3/4일 → 목표 0~1.
             if (b == null)              { th.AddThought("바닥에서 잠", -4f, 600f); wakeThought = "바닥에서 잠 -4"; }
-            else if (b.RestMul >= 1.3f)  { th.AddThought("고급 침대에서 잠", +6f, 600f); wakeThought = "고급 침대 +6"; }
-            else if (b.RestMul >= 0.95f) { th.AddThought("침대에서 잠", +3f, 600f); wakeThought = "침대 +3"; }
-            else                          { th.AddThought("잠자리에서 잠", +1f, 600f); wakeThought = "잠자리 +1"; }
+            else if (b.RestMul >= 1.3f)  { th.AddThought("고급 침대에서 잠", +8f, 1000f); wakeThought = "고급 침대 +8"; }
+            else if (b.RestMul >= 0.95f) { th.AddThought("침대에서 잠", +5f, 1000f); wakeThought = "침대 +5"; }
+            else                          { th.AddThought("잠자리에서 잠", +2f, 1000f); wakeThought = "잠자리 +2"; }
             var rd = RoofDesignation.Instance;
             bool unroofed = rd != null && !rd.IsRoofed(new Vector2Int(
                     Mathf.FloorToInt(transform.position.x), Mathf.FloorToInt(transform.position.y)));

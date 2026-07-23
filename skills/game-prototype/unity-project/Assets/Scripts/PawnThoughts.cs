@@ -26,12 +26,14 @@ namespace MelonS.GameProto
 
         // 일반적인 thought 카탈로그 (label, offset, durationSec)
         public static readonly (string label, float offset, float dur)[] Catalog = new[] {
+            // D-A(a) 회복 강화 (2026-07-24 운영자 승인): 양성 thought 지속을 생활 리듬
+            //  (식사 2~3회/일, 하루 ≈1000게임초)이 이어지게 연장 + 푹잠 상향.  음성 불변.
             ("최고의 식사",   +12f, 800f),  // #131 - fine meal
-            ("맛있는 식사",   +5f, 600f),
-            ("배부름",        +3f, 300f),
-            ("푹 잠",         +4f, 400f),
+            ("맛있는 식사",   +5f, 700f),
+            ("배부름",        +3f, 500f),
+            ("푹 잠",         +5f, 800f),
             ("침대에서 잠",   +2f, 600f),
-            ("따뜻한 실내",   +2f, 300f),
+            ("따뜻한 실내",   +3f, 500f),
             ("극심한 배고픔", -10f, 120f),  // 위키 #3 — 정본 Starving 단계 (3티어 최하)
             ("배고픔",        -4f, 120f),
             ("출출함",        -2f, 120f),   // 퀵픽 허기 2티어 — 굶주림 전 단계 신호
