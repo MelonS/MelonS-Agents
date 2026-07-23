@@ -1,0 +1,12 @@
+{
+  "name": "컬러 그레이딩 시간대 투어 (게이트 비포함 — 룩앤필 배치1 시각 검수용)",
+  "timeoutSec": 150,
+  "steps": [
+    { "op": "wait", "sec": 2 },
+    { "op": "setHour", "x": 12 }, { "op": "wait", "sec": 2 }, { "op": "shot", "name": "g01_noon" },
+    { "op": "setHour", "x": 18 }, { "op": "wait", "sec": 2 }, { "op": "shot", "name": "g02_sunset" },
+    { "op": "setHour", "x": 20 }, { "op": "wait", "sec": 2 }, { "op": "shot", "name": "g03_dusk" },
+    { "op": "setHour", "x": 23 }, { "op": "wait", "sec": 2 }, { "op": "shot", "name": "g04_night" },
+    { "op": "setHour", "x": 6 },  { "op": "wait", "sec": 2 }, { "op": "shot", "name": "g05_dawn" }
+  ]
+}
