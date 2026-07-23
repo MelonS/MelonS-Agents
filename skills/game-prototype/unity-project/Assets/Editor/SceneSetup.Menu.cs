@@ -60,14 +60,22 @@ namespace MelonS.GameProto.EditorTools
                 var brt = raw.rectTransform;
                 brt.anchorMin = Vector2.zero; brt.anchorMax = Vector2.one;
                 brt.offsetMin = Vector2.zero; brt.offsetMax = Vector2.zero;
-                // 하단 딤 — 버튼 가독 (키아트 상단 하늘 = 타이틀 자리라 딤 제외)
+                // 하단 딤 — 버튼 가독.  단색 박스는 상단 경계선이 보여서(1차 빌드 확인)
+                //  세로 그라데이션 텍스처(위 투명 → 아래 0.55)로 굽는다.
                 GameObject dimGo = new GameObject("BackdropDim");
                 dimGo.transform.SetParent(canvasGo.transform, false);
-                var dim = dimGo.AddComponent<Image>();
-                dim.color = new Color(0f, 0f, 0f, 0.38f);
+                var dim = dimGo.AddComponent<RawImage>();
+                var gradTex = new Texture2D(1, 64, TextureFormat.RGBA32, false);
+                for (int gy = 0; gy < 64; gy++)
+                {
+                    float a = Mathf.SmoothStep(0.55f, 0f, gy / 63f);   // 아래(0) 진함 → 위 투명
+                    gradTex.SetPixel(0, gy, new Color(0f, 0f, 0f, a));
+                }
+                gradTex.Apply();
+                dim.texture = gradTex;
                 dim.raycastTarget = false;
                 var drt = dim.rectTransform;
-                drt.anchorMin = Vector2.zero; drt.anchorMax = new Vector2(1f, 0.52f);
+                drt.anchorMin = Vector2.zero; drt.anchorMax = new Vector2(1f, 0.62f);
                 drt.offsetMin = Vector2.zero; drt.offsetMax = Vector2.zero;
             }
 
