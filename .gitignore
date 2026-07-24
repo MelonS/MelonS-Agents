@@ -246,3 +246,5 @@ config/subjects/*.yaml
 # Tiny Swords 추출물 — 팩 라이선스 재배포 금지 (scripts/extract-tinyswords.py 로 재생성)
 skills/game-prototype/unity-project/Assets/Sprites/ts_*.png
 skills/game-prototype/unity-project/Assets/Sprites/ts_*.png.meta
+skills/game-prototype/unity-project/Assets/Resources/Sprites/ts_*.png
+skills/game-prototype/unity-project/Assets/Resources/Sprites/ts_*.png.meta

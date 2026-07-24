@@ -44,4 +44,30 @@ for i in range(1, 19):
     p = os.path.join(PACK, "Deco", f"{i:02d}.png")
     if os.path.exists(p):
         Image.open(p).convert("RGBA").save(os.path.join(OUT, f"ts_deco_{i:02d}.png"))
+
+
+def unit_frame(src, name, canvas=96):
+    """유닛 시트 첫 프레임(192px) → 타이트 크롭 → canvas 캔버스 하단중앙 정착.
+    PPU=canvas 임포트 시 정확히 1×1 유닛, 발이 캔버스 바닥에 닿음."""
+    im = Image.open(os.path.join(PACK, src)).convert("RGBA")
+    fr = im.crop((0, 0, 192, 192))
+    bbox = fr.getbbox()
+    fr = fr.crop(bbox)
+    sc = min((canvas - 8) / fr.width, (canvas - 4) / fr.height)
+    fr = fr.resize((max(1, int(fr.width * sc)), max(1, int(fr.height * sc))), Image.LANCZOS)
+    cv = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
+    cv.paste(fr, ((canvas - fr.width) // 2, canvas - fr.height - 2), fr)
+    cv.save(name)
+    print(os.path.basename(name))
+
+
+# 림 4색 (아트 B2: 유닛 세대교체 — Pawn 시트 idle 첫 프레임)
+for color in ["Blue", "Purple", "Red", "Yellow"]:
+    unit_frame(f"Factions/Knights/Troops/Pawn/{color}/Pawn_{color}.png",
+               os.path.join(OUT, f"ts_pawn_{color.lower()}.png"))
+# 밴딧 = 고블린 횃불병 (런타임 Resources 로드용)
+res_dir = os.path.normpath(os.path.join(OUT, "..", "Resources", "Sprites"))
+os.makedirs(res_dir, exist_ok=True)
+unit_frame("Factions/Goblins/Troops/Torch/Red/Torch_Red.png",
+           os.path.join(res_dir, "ts_bandit.png"))
 print("추출 완료 →", OUT)

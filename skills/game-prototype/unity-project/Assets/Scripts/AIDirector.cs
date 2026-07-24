@@ -420,7 +420,10 @@ namespace MelonS.GameProto
                 // Reuse pawn sprite tinted red — sprite is already imported by
                 // ForceImportAllSprites in SceneSetup; a dedicated bandit sprite
                 // is a future polish item.
-                Sprite s = Resources.Load<Sprite>("pawn_colonist");
+                // 아트 B2: 전용 밴딧(고블린 횃불병) 우선 — 있으면 적색 틴트도 완화.
+                Sprite s = Resources.Load<Sprite>("Sprites/ts_bandit");
+                bool tsBandit = s != null;
+                if (s == null) s = Resources.Load<Sprite>("pawn_colonist");
                 if (s == null)
                 {
                     // Fallback: any PawnEntity in scene shares a sprite asset we
@@ -436,7 +439,9 @@ namespace MelonS.GameProto
                 // sr.sprite = null is allowed by Unity (renders nothing) — no
                 // need to abort the raid just because we lack a sprite asset.
                 sr.sprite = s;
-                sr.color = new Color(0.9f, 0.3f, 0.3f, 1f);
+                // 전용 밴딧 스프라이트면 살짝만 붉게, 폰 재사용이면 기존 강한 적색 틴트.
+                sr.color = tsBandit ? new Color(1f, 0.85f, 0.85f, 1f)
+                                    : new Color(0.9f, 0.3f, 0.3f, 1f);
                 // #sort-audit: pawn 본체 규약은 10 (BanditEnemy 포섭 후도 10).  11 이면
                 //  운반중 콜로니스트(carry bundle=11)와 같은 층이라 본체 위로 떠 보였음 → 10.
                 sr.sortingOrder = 10;

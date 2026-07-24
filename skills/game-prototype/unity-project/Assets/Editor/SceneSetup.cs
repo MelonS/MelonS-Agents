@@ -186,9 +186,13 @@ namespace MelonS.GameProto.EditorTools
                                        ?? LoadOrSetupSprite("Assets/Sprites/meat_pile.png");   // #129
             // #199 A2 — per-colonist 셔츠 변형 sprite 3종 (blue/rust/olive).
             //  ForceImportAllSprites 가 이미 Sprite 타입 + PPU16 으로 import 함.
-            Sprite pawnBlueRef  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/pawn_blue.png");
-            Sprite pawnRustRef  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/pawn_rust.png");
-            Sprite pawnOliveRef = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/pawn_olive.png");
+            // 아트 B2: 시작 3인방도 TS 폰 (blue/red/yellow — rust→red, olive→yellow 매핑)
+            Sprite pawnBlueRef  = ImportSpriteAt("Assets/Sprites/ts_pawn_blue.png", 96f)
+                                  ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/pawn_blue.png");
+            Sprite pawnRustRef  = ImportSpriteAt("Assets/Sprites/ts_pawn_red.png", 96f)
+                                  ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/pawn_rust.png");
+            Sprite pawnOliveRef = ImportSpriteAt("Assets/Sprites/ts_pawn_yellow.png", 96f)
+                                  ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/pawn_olive.png");
             if (pawnBlueRef == null)  Debug.LogWarning("[SceneSetup] pawn_blue.png sprite null");
             if (pawnRustRef == null)  Debug.LogWarning("[SceneSetup] pawn_rust.png sprite null");
             if (pawnOliveRef == null) Debug.LogWarning("[SceneSetup] pawn_olive.png sprite null");
@@ -202,9 +206,13 @@ namespace MelonS.GameProto.EditorTools
             var variantsProp = gmSo.FindProperty("colonistVariantSprites");
             const int NV = 8;
             variantsProp.arraySize = NV;
+            // 아트 B2: TS 폰 4색 우선 (96px 캔버스 = PPU96 로 1×1 유닛, 발 하단 정착).
+            //  8변형 슬롯에 4색 순환 배정 — 없으면 구세대 pawn_v 폴백.
+            string[] tsColors = { "blue", "purple", "red", "yellow" };
             for (int vi = 0; vi < NV; vi++)
             {
-                var vs = LoadOrSetupSprite($"Assets/Sprites/pawn_v{vi}.png");
+                var vs = ImportSpriteAt($"Assets/Sprites/ts_pawn_{tsColors[vi % 4]}.png", 96f)
+                         ?? LoadOrSetupSprite($"Assets/Sprites/pawn_v{vi}.png");
                 if (vs == null) Debug.LogWarning($"[SceneSetup] pawn_v{vi}.png sprite null");
                 variantsProp.GetArrayElementAtIndex(vi).objectReferenceValue = vs;
             }
