@@ -206,11 +206,12 @@ namespace MelonS.GameProto.EditorTools
             }
             MelonS.GameProto.StoneVeinEntity.TypeSprites = veinTypeSprites;
 
-            // GDD G3 (2026-07-24): 무덤 2상태 스프라이트 — Resources 폴더라 플레이어
-            //  빌드에 자동 포함.  임포트 설정만 베이크 시 강제 (Sprite/Single/PPU64 —
-            //  기본 임포트가 Default(Texture2D) 면 Resources.Load<Sprite> 가 null).
+            // GDD G3 + 아트 B2 (2026-07-24): Resources 스프라이트 임포트 강제 —
+            //  기본 임포트가 Default(Texture2D) 면 Resources.Load<Sprite> 가 null.
+            //  절차 가구 세대(gen-ts-furniture.py)는 128px/칸 규격 → PPU128.
             foreach (var gp in new[] { "Assets/Resources/Sprites/grave64_empty.png",
-                                       "Assets/Resources/Sprites/grave64_mound.png" })
+                                       "Assets/Resources/Sprites/grave64_mound.png",
+                                       "Assets/Resources/Sprites/struct64_table_chair.png" })
             {
                 if (!System.IO.File.Exists(gp)) continue;
                 AssetDatabase.ImportAsset(gp, ImportAssetOptions.ForceSynchronousImport);
@@ -219,7 +220,7 @@ namespace MelonS.GameProto.EditorTools
                 {
                     gti.textureType = TextureImporterType.Sprite;
                     gti.spriteImportMode = SpriteImportMode.Single;
-                    gti.spritePixelsPerUnit = 64;
+                    gti.spritePixelsPerUnit = 128;
                     gti.filterMode = FilterMode.Point;
                     gti.SaveAndReimport();
                 }

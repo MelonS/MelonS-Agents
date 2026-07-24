@@ -1155,7 +1155,11 @@ namespace MelonS.GameProto
         {
             if (tableChairSprite != null) return tableChairSprite;        // wired via SetRefs (future)
             if (_tableChairSpriteRuntime != null) return _tableChairSpriteRuntime;
-            _tableChairSpriteRuntime = LoadOrBuildTableChairSprite();
+            // 아트 B2 (2026-07-24): 절차 드로잉 128px 판 우선 (gen-ts-furniture.py,
+            //  Resources 라 플레이어 빌드 포함) — 없으면 기존 절차 폴백.
+            _tableChairSpriteRuntime = Resources.Load<Sprite>("Sprites/struct64_table_chair");
+            if (_tableChairSpriteRuntime == null)
+                _tableChairSpriteRuntime = LoadOrBuildTableChairSprite();
             return _tableChairSpriteRuntime;
         }
 

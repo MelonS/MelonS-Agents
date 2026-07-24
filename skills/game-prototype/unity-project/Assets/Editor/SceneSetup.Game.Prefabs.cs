@@ -153,9 +153,13 @@ namespace MelonS.GameProto.EditorTools
             Object.DestroyImmediate(benchTemplate);
 
             // 운영자 피드백 #107: 침대 prefab
-            ps.bedSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_bed_wood.png");
-            // #198 D4-1: Fine quality 전용 sprite (royal-blue/gold).  BedEntity.SetQuality 가 swap.
-            ps.bedFineSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_bed_fine.png");
+            // 아트 B2 (2026-07-24 PoC 승인): 절차 드로잉 128px 침대 우선 (PPU128 = 1×2칸),
+            //  없으면 구세대 struct32 폴백.  생성기: scripts/gen-ts-furniture.py
+            ps.bedSprite = ImportSpriteAt("Assets/Sprites/struct64_bed_wood.png", 128f)
+                           ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_bed_wood.png");
+            // #198 D4-1: Fine quality 전용 sprite.  BedEntity.SetQuality 가 swap.
+            ps.bedFineSprite = ImportSpriteAt("Assets/Sprites/struct64_bed_fine.png", 128f)
+                               ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_bed_fine.png");
             GameObject bedTemplate = new GameObject("Bed");
             var bedsr = bedTemplate.AddComponent<SpriteRenderer>();
             bedsr.sprite = ps.bedSprite; bedsr.sortingOrder = 4;
