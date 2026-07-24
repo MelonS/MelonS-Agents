@@ -13,6 +13,8 @@ import pathlib
 import time
 from typing import Any
 
+from langgraph.types import interrupt
+
 from . import tools
 from .state import ShortsState, ShotState
 
@@ -496,5 +498,149 @@ def ready_for_assembly(state: ShortsState) -> dict[str, Any]:
     return {"trace": [{"node": "ready_for_assembly", "clips": state.get("shot_count", 0)}]}
 
 
+def enter_video_stage(state: ShortsState) -> dict[str, Any]:
+    """승인 직후 · 영상화 fan-out 직전. 되돌릴 수 없는 지점이라 표시를 남긴다."""
+    n = len(state.get("shots", {}))
+    return {"trace": [{"node": "video_stage", "clips": n, "est_min": round(n * 412 / 60)}]}
+
+
 def after_clip_gate(state: ShortsState) -> str:
     return "ready_for_assembly" if state.get("clip_gate_open") else "blocked"
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 4 — 사람 승인 지점
+#
+# 문 1(자동 채점)을 통과해도 3시간을 태우기 전에 사람이 한 번 본다.
+# `docs/generative-shorts-pipeline.md` §4.5: "전 샷 승인 후에만 5번(영상화) 진입".
+#
+# 운영자 계약 §1: 사용자는 터미널을 만지지 않는다. 그래서 CLI 프롬프트가 아니라
+# **파일**로 오간다 — 그래프가 검수 시트를 쓰고, 운영자는 한 줄로 답한다.
+#
+# 자율 모드에서는 멈춰 기다리지 않는다. policies.yaml on_blocker: log_and_halt.
+# 아침에 같은 run_id로 resume 하면 이어진다 (체크포인트).
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+def build_storyboard(state: ShortsState) -> dict[str, Any]:
+    """검수 시트를 쓴다. 운영자가 여는 유일한 파일."""
+    out_dir = pathlib.Path(state["out_dir"])
+    path = out_dir / "approvals" / "storyboard.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    shots = state.get("shots", {})
+    est_min = round(len(shots) * 412 / 60)      # 실측 412초/컷
+
+    lines = [
+        "# 스토리보드 검수 — %s" % state.get("short_id", state["run_id"]),
+        "",
+        "**전 샷이 자동 채점을 통과했습니다.** 승인하면 영상화에 들어갑니다.",
+        "",
+        "> 영상화는 컷당 약 7분 — 이 회차는 **약 %d분**이 걸리고 되돌릴 수 없습니다." % est_min,
+        "> 지금 되돌리면 샷당 10초입니다. **비용비 1:40.**",
+        "",
+        "| 샷 | 점수 | 비트 | 심사위원이 본 것 | 스틸 |",
+        "|---|---:|---|---|---|",
+    ]
+    for sid in sorted(shots):
+        s = shots[sid]
+        lines.append("| `%s` | %s | %s | %s | `%s` |" % (
+            sid, s.get("score"), s.get("beat", ""),
+            (s.get("saw") or "").replace("|", "·")[:90],
+            pathlib.Path(s.get("still_path") or "").name,
+        ))
+
+    lines += [
+        "",
+        "## 결정",
+        "",
+        "터미널을 열 필요 없습니다. 아래 중 하나를 에이전트에게 말하면 됩니다.",
+        "",
+        "- **승인** — 영상화 진행 (약 %d분)" % est_min,
+        "- **다시: i03, i07** — 그 샷만 스틸부터 재생성 (샷당 10초)",
+        "- **취소** — 여기서 중단",
+        "",
+        "---",
+        "재개 명령: `python -m graph.shorts_graph resume --thread %s --approve`" % state["run_id"],
+    ]
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+    return {
+        "storyboard_path": str(path),
+        "pending_approval": "storyboard",
+        "trace": [{"node": "storyboard", "shots": len(shots), "est_video_min": est_min}],
+    }
+
+
+def request_approval(state: ShortsState) -> dict[str, Any]:
+    """★ 사람이 보는 지점. 자율 모드면 기다리지 않고 halt한다."""
+    shots = state.get("shots", {})
+    payload = {
+        "stage": "storyboard",
+        "run_id": state["run_id"],
+        "sheet": state.get("storyboard_path"),
+        "shots": {sid: s.get("score") for sid, s in shots.items()},
+        "est_video_min": round(len(shots) * 412 / 60),
+    }
+
+    if state.get("autonomy_mode"):
+        # 밤새 돌 때는 사람을 기다리지 않는다 — 기록하고 끊는다.
+        blockers = tools.records_dir() / "blockers" / time.strftime("%Y-%m-%d")
+        blockers.mkdir(parents=True, exist_ok=True)
+        bp = blockers / ("%s-storyboard.md" % state["run_id"])
+        bp.write_text(
+            "# 승인 대기 — %s\n\n"
+            "스토리보드 검수가 필요해 자율 실행을 멈췄습니다.\n\n"
+            "- 검수 시트: `%s`\n- 샷 %d개, 영상화 예상 약 %d분\n\n"
+            "재개: `python -m graph.shorts_graph resume --thread %s --approve`\n"
+            % (state["run_id"], payload["sheet"], len(shots), payload["est_video_min"], state["run_id"]),
+            encoding="utf-8",
+        )
+        return {
+            "human_decision": "halt",
+            "blocker_path": str(bp),
+            "trace": [{"node": "approval", "mode": "autonomous", "halted": True}],
+        }
+
+    decision = interrupt(payload)          # ← 여기서 멈춘다. 체크포인트에 상태가 남는다.
+
+    if isinstance(decision, str):
+        decision = {"decision": decision}
+    verdict = (decision or {}).get("decision", "approve")
+    targets = (decision or {}).get("shots", []) or []
+
+    return {
+        "human_decision": verdict,
+        "regen_targets": list(targets),
+        "pending_approval": None,
+        "approval_history": [{"stage": "storyboard", "decision": verdict, "shots": list(targets)}],
+        "trace": [{"node": "approval", "decision": verdict, "shots": list(targets)}],
+    }
+
+
+def after_approval(state: ShortsState) -> str:
+    d = state.get("human_decision")
+    if d == "approve":
+        return "approved"
+    if d == "regen" and state.get("regen_targets"):
+        return "regen"
+    return "blocked"                        # reject · halt · 알 수 없는 값
+
+
+def mark_regen(state: ShortsState) -> dict[str, Any]:
+    """운영자가 지목한 샷만 회차를 올리고 미통과로 되돌린다."""
+    shots = state.get("shots", {})
+    patch = {}
+    for sid in state.get("regen_targets", []):
+        if sid not in shots:
+            continue
+        s = dict(shots[sid])
+        s["round"] = int(s.get("round", 0)) + 1
+        s["verdict"] = "REGEN"
+        patch[sid] = s
+    return {
+        "shots": patch,
+        "human_decision": None,
+        "regen_targets": [],
+        "trace": [{"node": "mark_regen", "shots": sorted(patch)}],
+    }

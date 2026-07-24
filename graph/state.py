@@ -113,5 +113,15 @@ class ShortsState(TypedDict, total=False):
     clip_gate_open: bool
     clip_gate_reason: str
 
+    # ── 사람 승인 (Phase 4) ──────────────────────────────────
+    # 운영자 계약 §1: 사용자는 터미널을 만지지 않는다. 승인은 파일로 오간다.
+    autonomy_mode: bool            # True면 멈춰 기다리지 않고 블로커 기록 후 종료
+    storyboard_path: str | None
+    pending_approval: str | None   # "storyboard" | None
+    human_decision: str | None     # "approve" | "reject" | "regen"
+    regen_targets: list[str]       # regen일 때 다시 만들 샷 id
+    approval_history: Annotated[list[dict[str, Any]], operator.add]
+    blocker_path: str | None
+
     # ── 관측성 ───────────────────────────────────────────────
     trace: Annotated[list[dict[str, Any]], operator.add]
