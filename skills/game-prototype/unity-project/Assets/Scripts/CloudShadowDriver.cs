@@ -47,6 +47,7 @@ namespace MelonS.GameProto
                 sr.color = new Color(0f, 0f, 0f, 0f);
                 // 진행 방향으로 한 장 뒤에 세워 leapfrog — 랩 시 이음새 없음(타일러블).
                 go.transform.position = (Vector3)(dir * WorldSize * -i);
+                pair[i] = go.transform;   // 누락 시 Start/Update 매 프레임 NRE (2026-07-24 발견)
             }
             return new Layer { pair = pair, dir = dir, speed = speed };
         }

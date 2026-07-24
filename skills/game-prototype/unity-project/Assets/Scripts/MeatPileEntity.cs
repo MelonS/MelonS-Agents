@@ -64,7 +64,8 @@ namespace MelonS.GameProto
                 //  저장고로 들이는 운반(InStockpile=보호)이 폭풍 대비 행동이 된다.
                 float stormMul = WeatherController.Instance != null
                     && WeatherController.Instance.Current == WeatherKind.Storm ? 4f : 1f;
-                durability -= decayPerDay * stormMul * (Time.deltaTime / 24f);  // 24s = 1 game day
+                // 밸런스 A1(2026-07-24): /24f 구 시계 잔재 → /1000f (고기 rot 2게임일 의도 복원).
+                durability -= decayPerDay * stormMul * (Time.deltaTime / 1000f);
                 if (durability <= 0f) { Destroy(gameObject); return; }
             }
             if (_sr != null)

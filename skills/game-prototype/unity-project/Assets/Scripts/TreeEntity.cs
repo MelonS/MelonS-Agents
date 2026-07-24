@@ -35,13 +35,15 @@ namespace MelonS.GameProto
         // 운영자 피드백 #3 (2026-06-12 AM): 채집량 레퍼런스 동일 — 나무 1그루 ~25
         //  (Pine 20 / Birch 25 / Oak 30).  비용도 같은 라운드에서 파리티(문 25/침대 45
         //  /고급 100/화덕 80/연구대 75) — '나무 1그루 = 벽 4~6개' 비율이 핵심.
+        // 밸런스 A5(2026-07-24): 산출 바닐라 비율 근사 (소나무 27/자작 30/참나무 50)
+        //  — 파리티 문서 §5.  벌목 속도 하향(B7)과 세트 예정.
         public static readonly (float hp, int yield, float scale, Color tint)[] SpeciesStats = {
-            (80f,  20, 0.95f, new Color(1f, 1f, 1f, 1f)),   // Pine  - 빠름 작음 (침엽 실루엣)
-            (100f, 25, 1.00f, new Color(1f, 1f, 1f, 1f)),   // Birch - 중간 (키큰 로브)
-            (150f, 30, 1.10f, new Color(1f, 1f, 1f, 1f)),   // Oak   - 단단 큼 (넓은 로브)
+            (80f,  27, 0.95f, new Color(1f, 1f, 1f, 1f)),   // Pine  - 빠름 작음 (침엽 실루엣)
+            (100f, 30, 1.00f, new Color(1f, 1f, 1f, 1f)),   // Birch - 중간 (키큰 로브)
+            (150f, 50, 1.10f, new Color(1f, 1f, 1f, 1f)),   // Oak   - 단단 큼 (넓은 로브)
             // L1 신규 2종 — 실루엣이 정체성, 틴트는 은은한 보조 (원색 금지)
-            (110f, 26, 1.00f, new Color(1.05f, 0.88f, 0.78f, 1f)),  // Maple  - 성긴 로브 + 담적
-            (130f, 28, 1.15f, new Color(0.88f, 0.98f, 0.94f, 1f)),  // Spruce - 키큰 침엽 + 청록기
+            (110f, 33, 1.00f, new Color(1.05f, 0.88f, 0.78f, 1f)),  // Maple  - 성긴 로브 + 담적
+            (130f, 37, 1.15f, new Color(0.88f, 0.98f, 0.94f, 1f)),  // Spruce - 키큰 침엽 + 청록기
         };
 
         // 종별 스프라이트 [Pine,Birch,Oak] — SceneSetup(SpawnTrees)이 로딩 후 주입.

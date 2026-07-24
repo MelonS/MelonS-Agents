@@ -184,8 +184,9 @@ namespace MelonS.GameProto
                 //   (mode,label,cost) tuple through BuildManager.Instance.SetMode,
                 //   so clicking 울타리 / 울타리 문 enters Mode.Fence / Mode.FenceGate
                 //   with ZERO click-plumbing change.  Both pay 목재 1 (fenceCost).
-                (BuildManager.Mode.Fence,     "울타리 (목재 1)",     1),
-                (BuildManager.Mode.FenceGate, "울타리 문 (목재 1)",  1),
+                // R4 정직화(2026-07-24): 장식용 명시 — 통행 차단 기대 배신 방지
+                (BuildManager.Mode.Fence,     "울타리 (장식용, 목재 1)",     1),
+                (BuildManager.Mode.FenceGate, "울타리 문 (장식용, 목재 1)",  1),
             },
             // W-M6-03 (B4) — Security (방어) category, the vanilla Architect
             //   Security tab.  Mirrors EXACTLY how the Fence rows were added under

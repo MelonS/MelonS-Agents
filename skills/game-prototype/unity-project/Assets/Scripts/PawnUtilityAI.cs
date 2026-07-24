@@ -52,8 +52,9 @@ namespace MelonS.GameProto
         private const float DraftAttackInterval = 0.8f;
         // Day 50: bow ranged attack
         [SerializeField] private Sprite arrowSprite;
-        private const float RangedAttackRange = 5.0f;
-        private const float RangedAttackInterval = 1.5f;
+        // 밸런스 A2(2026-07-24): 단궁 파리티 — 사거리 5→10타일, 간격 1.5→3.0s.
+        private const float RangedAttackRange = 10.0f;
+        private const float RangedAttackInterval = 3.0f;
         private float lastRangedAttackTime = -999f;
         public void SetArrowSprite(Sprite s) { arrowSprite = s; }
 

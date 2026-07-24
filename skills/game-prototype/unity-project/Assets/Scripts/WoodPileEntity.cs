@@ -77,7 +77,9 @@ namespace MelonS.GameProto
             //  천천히 닳다가 0 에서 소멸 — 운영자 fb.
             if (!InStockpile)
             {
-                durability -= DurabilityPerDay * (Time.deltaTime / 24f);  // 24s = 1 game day
+                // 밸런스 A1(2026-07-24): 구 시계 잔재 /24f("24초=1일") → /1000f (1게임일=1000초
+                //  정합).  이전엔 목재가 0.24일 만에 증발 — 바닐라 파리티 문서 §4 참조.
+                durability -= DurabilityPerDay * (Time.deltaTime / 1000f);
                 if (durability <= 0f) { Destroy(gameObject); return; }
             }
             // 내구도에 비례해 점점 흐려짐(통째로 뿅 사라지지 않게).

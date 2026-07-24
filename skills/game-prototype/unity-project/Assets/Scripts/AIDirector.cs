@@ -851,16 +851,16 @@ namespace MelonS.GameProto
             });
             pool.Add(new GameEvent {
                 id = "minor_disease", threatTier = 1, kind = EventKind.Threat,
-                title = "감기 기운",
-                description = "콜로니스트 한 명이 기침을 시작했다. 컨디션이 떨어진다.",
-                flavor = "감기인지 더 나쁜 것인지 아직 모른다.",
+                title = "몸살 기운",
+                description = "콜로니스트 한 명이 몸살 기운으로 컨디션이 떨어진다.",
+                flavor = "며칠 푹 쉬면 나아질 것이다.",
             });
 
             // Day 73: tier 2 (severe)
             pool.Add(new GameEvent {
                 id = "trader_caravan", threatTier = 0, kind = EventKind.Good,
                 title = "상인 도착",
-                description = "상인 일행이 방문하여 거래를 제안한다. (실제 거래 시스템: 향후 Day)",
+                description = "상인 일행이 방문했다. 콜로니스트가 가까이 있을 때 상인을 우클릭하면 거래할 수 있다.",
                 flavor = "그들의 마차에서 새로운 냄새가 난다.",
             });
             // 늑대 비활성화 게이트: WolvesEnabled=false 인 동안 wolf_pack 이벤트는

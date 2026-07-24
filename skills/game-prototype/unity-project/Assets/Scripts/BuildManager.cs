@@ -69,11 +69,12 @@ namespace MelonS.GameProto
         public GameObject BedPrefabRef => bedPrefab;
         // 운영자 피드백 #3 (2026-06-12 AM): 목재 소모량 레퍼런스 동일 — 문 25/침대 45/
         //  화덕 80 (벽 5·바닥 1 은 기존 동일).  채집량(나무 ~25/그루)과 같은 라운드 파리티.
-        [SerializeField] private int wallCost = 5, floorCost = 1, doorCost = 25, stoveCost = 80, bedCost = 45;
+        // 밸런스 A6(2026-07-24): 바닥 1→3 (바닐라 파리티).
+        [SerializeField] private int wallCost = 5, floorCost = 3, doorCost = 25, stoveCost = 80, bedCost = 45;
         [SerializeField] private int wallStoneCost = 5;  // #127 - 석재 5
         // W-M4-04 (#19) - Lamp cost.  the reference sim torch ≈ 1 wood, standing lamp needs
         //   power; this prototype lamp is a cheap always-on light at 목재 4.
-        [SerializeField] private int lampCost = 4;
+        [SerializeField] private int lampCost = 20;   // 밸런스 A4(2026-07-24): 4→20 파리티
         // #229 회귀 수리 (2026-06-12) — 맨땅 시작 전환 때 스타터 연구대만 제거되고
         //  빌드 경로가 없어 연구 축이 신규 게임에서 구조적으로 죽어 있었다 (StallReason
         //  힌트 "작업대 필요 (건축 F8)"가 거짓말 — 건축 메뉴에 연구대 없음).  Lamp 의
@@ -92,7 +93,7 @@ namespace MelonS.GameProto
         private Sprite     _lampSpriteRuntime;  // cached lazily-built sprite
         // W-M4-05 (#21) - Stone floor cost.  Wood floor = 목재 1; stone floor is
         //   paid from STONE (like WallStone).  석재 1 keeps it reachable / cheap.
-        [SerializeField] private int floorStoneCost = 1;
+        [SerializeField] private int floorStoneCost = 3;   // 밸런스 A6(2026-07-24): 1→3 파리티
         // W-M4-05 (#21) - Stone-floor prefab + sprite, built LAZILY + PROCEDURALLY
         //   exactly like the Lamp entry (the Lane B contract forbids a SceneSetup
         //   edit, so these stay null and BuildManager self-builds them on first
@@ -104,7 +105,7 @@ namespace MelonS.GameProto
         // W-M4-06 (#20) - Table+chair cost.  A simple wood dining spot; the reference sim
         //   table ≈ 25 wood + stool ≈ small — 목재 6 keeps it cheap/reachable in
         //   the prototype while clearly costing more than a lamp (4).
-        [SerializeField] private int tableChairCost = 40;   // #3 파리티 — 식탁+의자
+        [SerializeField] private int tableChairCost = 65;   // 밸런스 A6(2026-07-24): 40→65 파리티
         // W-M4-06 (#20) - Table+chair prefab + sprite, built LAZILY + PROCEDURALLY
         //   exactly like the Lamp / StoneFloor entries (the Lane A contract forbids
         //   a SceneSetup edit, so these stay null and BuildManager self-builds them
@@ -154,7 +155,7 @@ namespace MelonS.GameProto
         //   sprite are built LAZILY + PROCEDURALLY (same as Lamp / StoneFloor /
         //   TableChair / Fence / Barricade) so the Lane needs NO SceneSetup edit;
         //   a later wave can wire real refs via SetRefs with zero code change.
-        [SerializeField] private int   autodoorCost    = 6;
+        [SerializeField] private int   autodoorCost    = 40;   // 밸런스 A3(2026-07-24): 6→40 (문 25 보다 비싸야 정상)
         [SerializeField] private float autodoorPassMul = 0.95f;
         [SerializeField] private GameObject autodoorPrefab;
         [SerializeField] private Sprite     autodoorSprite;
