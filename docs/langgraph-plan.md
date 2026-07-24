@@ -17,45 +17,66 @@
 
 ## 현재 상태 (2026-07-25)
 
-- **Phase 1 완료** — 커밋 `43d841a`, 브랜치 `langgraph-migration`
-- `graph/` 패키지 9파일. 상세는 [`graph/README.md`](../graph/README.md)
-- mock 검증 4/4: 무인 완주 · 문 차단(exit 2) · 재시도 상한 · 체크포인트 재개
-- **미검증**: 실제 ComfyUI 연결, `--judge cli` 실물 채점
+- **Phase 1·2·3 완료** — 커밋 `54c863e`, 브랜치 `langgraph-migration`
+- `graph/` 패키지. 상세는 [`graph/README.md`](../graph/README.md)
+- **실물 end-to-end 완주 확인** — 스틸 → 심사 → 문1 → 영상화 → 컷심사 → 문2, exit 0
+- 남은 미검증: 조립·법률·출시 단계 연결 (Phase 5)
 
 ```bash
 # 배선 확인 (모델 호출 0)
 .venv/Scripts/python -m graph.shorts_graph run --spec graph/examples/shots.example.json --mock --thread demo
+
+# 실물 (ComfyUI 필요)
+.venv/Scripts/python -m graph.shorts_graph run --spec graph/examples/shots.one.json --judge cli --thread real-01
+.venv/Scripts/python -m graph.shorts_graph run ... --stills-only    # 문 1에서 멈춤
 .venv/Scripts/python -m graph.shorts_graph diagram
 ```
+
+### 실측치 (RTX 4070 Ti SUPER 16GB, 1샷 완주 507초)
+
+| 단계 | 실측 | 비중 |
+|---|---:|---:|
+| 스틸 생성 (Z-Image) | 10.2s | 2% |
+| 스틸 심사 (Sonnet, 이미지 1장) | 22.8s | 4% |
+| **영상화 (Wan A14B)** | **412.3s** | **81%** |
+| 컷 심사 (Sonnet, 프레임 3장) | 61.9s | 12% |
+
+**412초 × 26컷 = 2시간 58분.** 문서의 "3시간"이 추정이 아니라 측정값으로 확인됐다.
+스틸 1장(10초) 대 영상 1컷(412초) = **1:40** — 문을 스틸 뒤에 세운 근거.
 
 ## 작업 순서
 
 | | 할 일 | 시간 | 비고 |
 |---|---|---|---|
-| 1 | **whiteboard 복구** | 10분 | 지금 깨져 있음 (아래 참조) |
-| 2 | **Phase 2 — 실물 한 회차** | 2~3시간 | 이 계획 전체의 분기점 |
+| ✓ | ~~whiteboard 복구~~ | — | `6d8d7e9` |
+| ✓ | ~~Phase 2·3~~ | — | `54c863e`, 실물 완주 확인 |
+| 1 | **Phase 4 — 사람 승인 지점** | 2~3시간 | `interrupt()` 2곳 |
+| 2 | Phase 5 — 법률 루프 | 3~4시간 | `legal-gate.sh` 조건부 엣지 |
 | 3 | 진입 마법사 최소판 | 1~2시간 | 승인 불필요 |
-| 4 | 게임 플러그인 등록 | 제품화 때 | |
-| 5 | 프로필 로더 | 제품화 때 | §5 승인 대상 |
+| 4 | Phase 6 — 게임 라인 | 4~5시간 | 뮤텍스 + 상태 병합 |
+| 5 | 게임 플러그인 등록 · 프로필 로더 | 제품화 때 | 로더는 §5 승인 대상 |
 
 ### Phase 로드맵
 
 | # | 내용 | 상태 | 개발 토큰 |
 |---|---|---|---|
-| 01 | 스틸 게이트 (생성→채점→재시도→문) | **완료** | ~250K |
-| 02 | 실물 연결 — ComfyUI + `claude` CLI 채점 | 다음 | ~60K |
-| 03 | 영상화 fan-out + cut-judge | 대기 | ~90K |
-| 04 | 사람 승인 (`interrupt()`) 2지점 | 대기 | ~70K |
+| 01 | 스틸 게이트 (생성→채점→재시도→문1) | **완료** | ~250K |
+| 02 | 실물 연결 — ComfyUI + `claude` CLI 채점 | **완료** | ~60K |
+| 03 | 영상화 fan-out + cut-judge + 문2 | **완료** | ~90K |
+| 04 | 사람 승인 (`interrupt()`) 2지점 | 다음 | ~70K |
 | 05 | 법률 루프 (`legal-gate.sh` 조건부 엣지) | 대기 | ~90K |
 | 06 | 게임 라인 (뮤텍스 + 상태 병합) | 대기 | ~110K |
 
-**Phase 2 완료 조건:** 실제 스틸이 ComfyUI에서 나오고, 심사위원이 이미지를 실제로 보고
-점수를 매기고, 미달 샷이 처방을 반영해 다시 생성되어 점수가 오른다.
+### Phase 2·3에서 실물로만 잡힌 것 (재발 방지)
 
-```bash
-.venv/Scripts/python -m graph.shorts_graph run \
-    --spec graph/examples/shots.example.json --judge cli --thread real-01
-```
+1. **처방이 완전히 무시되던 문제.** 한국어 처방을 영어 프롬프트 뒤에 덧붙였는데,
+   Z-Image는 cfg=1이라 지시가 희석된다. 실측 i02 `65→71→64` 발산.
+   → 심사위원이 **완성된 영어 프롬프트**를 돌려주고 **교체**하도록 수정. `73→69→88` 수렴.
+2. **인물 없는 샷에서 character_lock 감점.** must에 인물이 없으면 캐릭터 일관성 만점 처리.
+3. **LangGraph: State에 선언 안 한 키는 조용히 버려진다.** `clip_gate_open`을 빠뜨려
+   문 2가 항상 닫혀 있었다. 에러도 경고도 없다. **스키마 선언이 곧 계약.**
+4. **Windows `python3`는 Store 스텁.** `graph/`는 `sys.executable`로 회피.
+5. **심사위원 CLI는 `--allowedTools Read` 필수.** 없으면 그림을 못 보고 추정으로 채점한다.
 
 ## 두 라인은 모양이 다르다
 
@@ -71,18 +92,18 @@
 
 | | 1회 | 30편 |
 |---|---:|---:|
-| 개발 (남은 5단계) | ~420K | ~420K |
-| **실행 (편당)** | **~375K** | **~11M** |
+| 개발 (남은 3단계) | ~270K | ~270K |
+| **실행 (편당)** | **~300K** | **~9M** |
 
 30편 기준 개발은 전체의 3%. **관리 대상은 편당 실행 비용이다.**
 
-실행 내역: still-judge 52회 ~155K · **cut-judge 26회 ~200K** · 법률/기획 ~20K.
-가장 큰 덩어리는 cut-judge (컷당 프레임 5장을 다 봄).
+실행 내역(실측 기반): still-judge 26~52회 · cut-judge 26회(프레임 3장) · 법률/기획 소량.
+`judge-frames.py` 기본값이 3장이라 앞선 추정(5장)보다 싸다.
 
 **절감 레버 3개**
-1. cut-judge 프레임 5장 → 3장 (편당 ~80K)
-2. 심사위원을 Sonnet으로 (창 소모가 가벼움)
-3. mock으로 배선 먼저 (그 회차 모델 호출 0)
+1. **심사위원 Sonnet 라우팅** — 이미 적용됨 (`JUDGE_MODEL`로 변경 가능)
+2. `--frames`로 컷당 프레임 수 조절 — 실행 토큰의 최대 변수
+3. `--mock`으로 배선 먼저 (그 회차 모델 호출 0)
 
 **개발 토큰 절감**
 - **한 세션에 한 Phase.** 대화가 길수록 매 턴 전체를 다시 보낸다.
