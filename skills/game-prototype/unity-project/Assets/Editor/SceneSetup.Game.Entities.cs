@@ -185,9 +185,16 @@ namespace MelonS.GameProto.EditorTools
             // 아트 v2 (운영자 2026-06-12 "바위도 이상해") — 16px '검은 액자' 광맥 →
             //  32px 신작 (struct32_ 프리픽스라 ArtV2Import 가 PPU32 자동 강제).
             // 아트 v3 (2026-07-25): 종별 페인털리 광맥 64px — 임포트(PPU64)+주입.
+            // 아트 B2 (2026-07-24): 절차 광맥(prop64, TS 문법·PPU128) 우선 —
+            //  잉크 세대(rock64)는 TS 세계에서 '오렌지 열매'로 오독되어 교체.
             var veinTypeSprites = new Sprite[4];
-            string[] veinFiles = { "rock64_vein_sandstone.png", "rock64_vein_limestone.png",
-                                   "rock64_vein_granite.png", "rock64_vein_marble.png" };
+            bool propVeins = System.IO.File.Exists("Assets/Sprites/prop64_vein_sandstone.png");
+            string[] veinFiles = propVeins
+                ? new[] { "prop64_vein_sandstone.png", "prop64_vein_limestone.png",
+                          "prop64_vein_granite.png", "prop64_vein_marble.png" }
+                : new[] { "rock64_vein_sandstone.png", "rock64_vein_limestone.png",
+                          "rock64_vein_granite.png", "rock64_vein_marble.png" };
+            float veinPpu = propVeins ? 128f : 64f;
             for (int vi = 0; vi < 4; vi++)
             {
                 string vp = $"Assets/Sprites/{veinFiles[vi]}";
@@ -198,7 +205,7 @@ namespace MelonS.GameProto.EditorTools
                 {
                     vti.textureType = TextureImporterType.Sprite;
                     vti.spriteImportMode = SpriteImportMode.Single;
-                    vti.spritePixelsPerUnit = 64;
+                    vti.spritePixelsPerUnit = veinPpu;
                     vti.filterMode = FilterMode.Point;
                     vti.SaveAndReimport();
                 }
@@ -213,7 +220,12 @@ namespace MelonS.GameProto.EditorTools
                          ("Assets/Resources/Sprites/grave64_empty.png", 128f),
                          ("Assets/Resources/Sprites/grave64_mound.png", 128f),
                          ("Assets/Resources/Sprites/struct64_table_chair.png", 128f),
-                         ("Assets/Resources/Sprites/ts_bandit.png", 96f) })
+                         ("Assets/Resources/Sprites/ts_bandit.png", 96f),
+                         ("Assets/Resources/Sprites/ts_wood_pile.png", 160f),
+                         ("Assets/Resources/Sprites/ts_meat_pile.png", 160f),
+                         ("Assets/Resources/Sprites/prop64_stone_chunk.png", 128f),
+                         ("Assets/Resources/flora32/flora32_bush_berry.png", 128f),
+                         ("Assets/Resources/flora32/flora32_bush_picked.png", 128f) })
             {
                 if (!System.IO.File.Exists(gp)) continue;
                 AssetDatabase.ImportAsset(gp, ImportAssetOptions.ForceSynchronousImport);

@@ -17,7 +17,10 @@ namespace MelonS.GameProto.EditorTools
             //   Color.white 로 두면 새 스프라이트가 본래 색으로 시작하고 stock
             //   상태는 밝기 변화로 계속 표현된다 (treeSprite fallback only if 미import).
             // 아트 v2 A단계: 32px 덤불 (수확후 프레임 flora32_bush_picked 은 후속 배선).
-            Sprite bushSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora32_bush_berry.png");
+            // 아트 B2: 절차 베리덤불(TS 문법, PPU128) 우선 — 런타임 2상태 스왑은
+            //  Resources/flora32 경로가 같은 아트로 교체됨 (gen-ts-props.py).
+            Sprite bushSprite = ImportSpriteAt("Assets/Sprites/prop64_berry_bush.png", 128f)
+                                ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora32_bush_berry.png");
             if (bushSprite == null)
             {
                 Debug.LogWarning("[SceneSetup] berry_bush.png missing → falling back to tree sprite");

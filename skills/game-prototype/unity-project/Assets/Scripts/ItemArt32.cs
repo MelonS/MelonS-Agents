@@ -15,9 +15,28 @@ namespace MelonS.GameProto
     {
         private static readonly Dictionary<string, Sprite[]> cache = new Dictionary<string, Sprite[]>();
 
+        // 아트 B2 (2026-07-24): TS/절차 단일 스프라이트 우선 — 있으면 스테이지 시트
+        //  대신 사용 (스택 표현은 TS 관례대로 단일 외형).  Resources/Sprites/ 에서 로드.
+        private static readonly Dictionary<string, string> TsOverride = new Dictionary<string, string>
+        {
+            { "wood",  "Sprites/ts_wood_pile" },
+            { "meat",  "Sprites/ts_meat_pile" },
+            { "stone", "Sprites/prop64_stone_chunk" },
+        };
+        private static readonly Dictionary<string, Sprite> tsCache = new Dictionary<string, Sprite>();
+
         /// <summary>kind: wood/stone/meat/meal/berry.  amount 로 3단계 중 선택.</summary>
         public static Sprite Stage(string kind, int amount)
         {
+            if (TsOverride.TryGetValue(kind, out var tsPath))
+            {
+                if (!tsCache.TryGetValue(kind, out var ts))
+                {
+                    ts = Resources.Load<Sprite>(tsPath);
+                    tsCache[kind] = ts;   // null 도 캐시 (매 호출 로드 방지)
+                }
+                if (ts != null) return ts;
+            }
             var arr = Load(kind);
             if (arr == null) return null;
             int s = amount >= 20 ? 2 : (amount >= 5 ? 1 : 0);
