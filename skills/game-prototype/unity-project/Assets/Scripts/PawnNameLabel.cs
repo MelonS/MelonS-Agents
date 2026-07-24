@@ -31,8 +31,8 @@ namespace MelonS.GameProto
 
         private TextMesh nameTm;
         private TextMesh statusTm;
-        private TextMesh nameShadowTm;
-        private TextMesh statusShadowTm;
+        private TextMesh[] nameShadowTms;
+        private TextMesh[] statusShadowTms;
         private GameObject nameGo;
         private GameObject statusGo;
 
@@ -88,7 +88,7 @@ namespace MelonS.GameProto
             nameGo.transform.localPosition = offset + new Vector3(0f, _labelStagger, 0f);   // P2-7 스태거
             nameTm = MakeText(nameGo, name, (int)fontSize, characterSize,
                               MelonS.GameProto.Core.UITheme.AccentGold, 30);
-            nameShadowTm = MakeShadow(nameGo, nameTm, 29);
+            nameShadowTms = MakeShadow(nameGo, nameTm, 29);
 
             // 2번째 라인: status — TOP-2: 선택 림만 표시 (계산은 항상).
             statusGo = new GameObject("StatusLabel");
@@ -96,7 +96,7 @@ namespace MelonS.GameProto
             statusGo.transform.localPosition = new Vector3(offset.x, (offset.y + _labelStagger) - statusGap, offset.z);
             statusTm = MakeText(statusGo, "", (int)(fontSize * 0.7f), characterSize * 0.85f,
                                 MelonS.GameProto.Core.UITheme.TextSecondary, 31);
-            statusShadowTm = MakeShadow(statusGo, statusTm, 29);
+            statusShadowTms = MakeShadow(statusGo, statusTm, 29);
         }
 
         private static TextMesh MakeText(GameObject host, string text, int size,
@@ -114,23 +114,42 @@ namespace MelonS.GameProto
             return tm;
         }
 
-        // TOP-2 — 플레이트 박스 대신 1px(0.03wu) 오프셋 그림자.  본문 TextMesh 의
+        // TOP-2 — 플레이트 박스 대신 오프셋 그림자.  본문 TextMesh 의
         //  child 라 SetActive(LOD)/텍스트 동기화가 부모 단위로 같이 묶인다.
-        private static TextMesh MakeShadow(GameObject parent, TextMesh src, int order)
+        // v3.2 가독성 (제미나이 리뷰 #5 동의, 2026-07-24): 1방향 → 4방향 아웃라인.
+        //  잔디 위 금색 텍스트가 얇게 읽히던 문제 — 4방향이면 어느 지형 위에서도
+        //  글자 형태가 닫힌다.  텍스트 갱신은 배열 전체에 (SetShadowText).
+        private static TextMesh[] MakeShadow(GameObject parent, TextMesh src, int order)
         {
-            var go = new GameObject("Shadow");
-            go.transform.SetParent(parent.transform, false);
-            go.transform.localPosition = new Vector3(0.03f, -0.03f, 0f);
-            var tm = go.AddComponent<TextMesh>();
-            tm.text = src.text;
-            tm.fontSize = src.fontSize;
-            tm.characterSize = src.characterSize;
-            tm.anchor = src.anchor;
-            tm.alignment = src.alignment;
-            tm.color = new Color(0.05f, 0.04f, 0.03f, 0.9f);
-            var mr = go.GetComponent<MeshRenderer>();
-            if (mr != null) mr.sortingOrder = order;
-            return tm;
+            var offs = new[] {
+                new Vector3(0.03f, -0.03f, 0f), new Vector3(-0.03f, -0.03f, 0f),
+                new Vector3(0.03f, 0.03f, 0f),  new Vector3(-0.03f, 0.03f, 0f),
+            };
+            var arr = new TextMesh[offs.Length];
+            for (int i = 0; i < offs.Length; i++)
+            {
+                var go = new GameObject("Shadow" + i);
+                go.transform.SetParent(parent.transform, false);
+                go.transform.localPosition = offs[i];
+                var tm = go.AddComponent<TextMesh>();
+                tm.text = src.text;
+                tm.fontSize = src.fontSize;
+                tm.characterSize = src.characterSize;
+                tm.anchor = src.anchor;
+                tm.alignment = src.alignment;
+                tm.color = new Color(0.05f, 0.04f, 0.03f, 0.9f);
+                var mr = go.GetComponent<MeshRenderer>();
+                if (mr != null) mr.sortingOrder = order;
+                arr[i] = tm;
+            }
+            return arr;
+        }
+
+        private static void SetShadowText(TextMesh[] arr, string text)
+        {
+            if (arr == null) return;
+            for (int i = 0; i < arr.Length; i++)
+                if (arr[i] != null && arr[i].text != text) arr[i].text = text;
         }
 
         private void Start()
@@ -139,7 +158,7 @@ namespace MelonS.GameProto
             if (entity != null && nameTm != null && !string.IsNullOrEmpty(entity.PawnName))
             {
                 nameTm.text = entity.PawnName;
-                nameShadowTm.text = entity.PawnName;
+                SetShadowText(nameShadowTms, entity.PawnName);
             }
         }
 
@@ -162,7 +181,7 @@ namespace MelonS.GameProto
             if (statusTm.text != statusShown)
             {
                 statusTm.text = statusShown;
-                statusShadowTm.text = statusShown;
+                SetShadowText(statusShadowTms, statusShown);
             }
 
             // 야간엔 라벨도 살짝 가라앉는다 (풀밝기 라벨이 밤 분위기를 깨던 문제).

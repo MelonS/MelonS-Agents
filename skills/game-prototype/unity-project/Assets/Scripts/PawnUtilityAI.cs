@@ -42,6 +42,7 @@ namespace MelonS.GameProto
         private PawnBuilder builder;  // #118 — blueprint 건설
         private PawnMiner miner;      // #119 — 채광
         private PawnDoctor doctor;    // #125 — 의료
+        private PawnBurier burier;    // GDD G3 — 매장
         private PawnSchedule schedule; // #126 — 시간대별 행동
         private PawnNeeds needs;
         private PawnEntity entity;  // Day 48 — drafted state check
@@ -80,6 +81,7 @@ namespace MelonS.GameProto
             builder = GetComponent<PawnBuilder>();  // #118
             miner = GetComponent<PawnMiner>();      // #119
             doctor = GetComponent<PawnDoctor>();    // #125
+            burier = GetComponent<PawnBurier>();    // GDD G3 — 매장
             schedule = GetComponent<PawnSchedule>();// #126
             needs = GetComponent<PawnNeeds>();
             entity = GetComponent<PawnEntity>();
@@ -95,6 +97,7 @@ namespace MelonS.GameProto
                 builder = builder,
                 miner = miner,
                 doctor = doctor,
+                burier = burier,   // GDD G3
                 needs = needs, skills = GetComponent<PawnSkills>(),
                 transform = transform,
                 idleWanderRadius = idleWanderRadius,
@@ -123,6 +126,7 @@ namespace MelonS.GameProto
                 //  않도록, 줍을 더미가 있으면 새 채집/벌목보다 운반을 먼저 한다.  세 종류를
                 //  나란히 둬서 wood/stone/meat 어느 것이든 바닥에 있으면 즉시 stockpile 로
                 //  운반→카운터 적립(물리 운반 유지, 순간이동 아님).
+                new BuryCorpseAction(),   // GDD G3 - 시신 매장 (Haul 최상단 — 시체 > 더미)
                 new HaulWoodAction(),     // #116 - 벌목 후 떨어진 wood pile 운반
                 new HaulStoneAction(),    // #119 - 채광 후 떨어진 stone chunk 운반
                 new HaulMeatAction(),     // #129 - 사냥 후 떨어진 meat pile 운반

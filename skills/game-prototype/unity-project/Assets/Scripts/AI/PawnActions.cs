@@ -495,6 +495,36 @@ namespace MelonS.GameProto.AI
         }
     }
 
+    /// <summary>GDD G3 — 시신 매장.  빈 무덤 + 미예약 시신이 있으면 수습→운반→안장.
+    /// Haul 카테고리 최상단 (시체 > 일반 더미 — design-social §G3).</summary>
+    public class BuryCorpseAction : IPawnAction
+    {
+        public string DisplayName => "매장";
+        public WorkKind Kind => WorkKind.Haul;
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.burier == null) return false;
+            var claimant = ctx.transform.gameObject;
+            // 시신 탐색 — 죽은 PawnEntity (자기 자신 제외, 타인 예약 제외)
+            PawnEntity corpse = null;
+            float bestSq = float.MaxValue;
+            Vector2 me = ctx.transform.position;
+            foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+            {
+                if (p == null || !p.IsDead) continue;
+                if (!p.gameObject.activeSelf) continue;              // 이미 운구 중
+                if (p.gameObject == claimant) continue;
+                if (ReservationManager.IsReservedByOther(p, claimant)) continue;
+                float sq = ((Vector2)p.transform.position - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; corpse = p; }
+            }
+            if (corpse == null) return false;
+            var grave = GraveEntity.FindNearestEmpty(corpse.transform.position, claimant);
+            if (grave == null) return false;
+            return ctx.burier.SetTask(corpse, grave);
+        }
+    }
+
     public class MineStoneAction : IPawnAction
     {
         public string DisplayName => "채광";

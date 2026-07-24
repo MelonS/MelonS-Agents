@@ -62,16 +62,38 @@ namespace MelonS.GameProto.EditorTools
 
             // 4 tile asset (Day 39+40)
             Directory.CreateDirectory("Assets/Tiles");
-            // 아트 v2 A단계 (2026-06-11): 16px → 32px 타일 세대 교체.  잔디 4변형,
-            //  dirt/rock 2변형(셀 좌표 해시 선택 — rng 12345 체인 무접촉).
-            layout.grassTile = LoadOrCreateTile("Assets/Sprites/tile32_grass_a.png", "Assets/Tiles/Grass.asset", 32f);
-            layout.dirtTile  = LoadOrCreateTile("Assets/Sprites/tile32_dirt_a.png",  "Assets/Tiles/Dirt.asset", 32f);
-            layout.waterTile = LoadOrCreateTile("Assets/Sprites/tile32_water_a.png", "Assets/Tiles/Water.asset", 32f);
-            layout.rockTile  = LoadOrCreateTile("Assets/Sprites/tile32_rock_a.png",  "Assets/Tiles/Rock.asset", 32f);
-            Tile dirtTileB = LoadOrCreateTile("Assets/Sprites/tile32_dirt_b.png", "Assets/Tiles/DirtB.asset", 32f);
-            Tile grassTileB = LoadOrCreateTile("Assets/Sprites/tile32_grass_b.png", "Assets/Tiles/GrassB.asset", 32f);
-            Tile grassTileC = LoadOrCreateTile("Assets/Sprites/tile32_grass_c.png", "Assets/Tiles/GrassC.asset", 32f);
-            Tile grassTileD = LoadOrCreateTile("Assets/Sprites/tile32_grass_d.png", "Assets/Tiles/GrassD.asset", 32f);
+            // 아트 v3 (2026-07-24 운영자 "림월드식·셀당 64"): 32px → 64px 페인털리
+            //  세대 교체.  FLUX 심리스(오프셋+페더 패치 보정) + v3.1 지형 톤 클램프
+            //  (S≤0.45, V×0.90).  잔디 4변형 = 단일 마스터의 wrap-roll 파생이라
+            //  톤 동일 보장.  변형 수·슬롯 구조는 v2 와 동일 (rng 체인 무접촉).
+            // 아트 B2 (2026-07-24 운영자 "Tiny Swords 이걸로 해봐"): 팩 지형 우선.
+            //  TS 타일은 자체 완결 디자인이라 슬라이스·플립 불필요 (tsTerrain=true 면
+            //  단일 타일 + 변형/플립 OFF — rng 소비는 유지해 체인 보존).
+            //  팩 부재 시(신규 클론 등) 절차 원단 16조각으로 폴백 (스웨터 방지 계보).
+            bool tsTerrain = System.IO.File.Exists("Assets/Sprites/ts_tile_grass.png");
+            Tile[] grassSlices = null;
+            if (tsTerrain)
+            {
+                layout.grassTile = LoadOrCreateTile("Assets/Sprites/ts_tile_grass.png", "Assets/Tiles/Grass.asset", 64f);
+                layout.dirtTile  = LoadOrCreateTile("Assets/Sprites/ts_tile_sand.png",  "Assets/Tiles/Dirt.asset", 64f);
+                layout.waterTile = LoadOrCreateTile("Assets/Sprites/ts_tile_water.png", "Assets/Tiles/Water.asset", 64f);
+                layout.rockTile  = LoadOrCreateTile("Assets/Sprites/tile64_rock_a.png", "Assets/Tiles/Rock.asset", 64f);
+            }
+            else
+            {
+                grassSlices = new Tile[16];
+                for (int gy = 0; gy < 4; gy++)
+                    for (int gx = 0; gx < 4; gx++)
+                        grassSlices[gy * 4 + gx] = LoadOrCreateTile(
+                            $"Assets/Sprites/tile64_grass_p{gy}{gx}.png",
+                            $"Assets/Tiles/GrassP{gy}{gx}.asset", 64f);
+                layout.grassTile = grassSlices[0];   // 'grass 선택됨' 센티널 (아래 == 비교용)
+                layout.dirtTile  = LoadOrCreateTile("Assets/Sprites/tile64_dirt_a.png",  "Assets/Tiles/Dirt.asset", 64f);
+                layout.waterTile = LoadOrCreateTile("Assets/Sprites/tile64_water_a.png", "Assets/Tiles/Water.asset", 64f);
+                layout.rockTile  = LoadOrCreateTile("Assets/Sprites/tile64_rock_a.png",  "Assets/Tiles/Rock.asset", 64f);
+            }
+            Tile dirtTileB = tsTerrain ? null
+                : LoadOrCreateTile("Assets/Sprites/tile64_dirt_b.png", "Assets/Tiles/DirtB.asset", 64f);
 
             // Procedural 결정론적 (seed=12345) + #109 cell 당 random rotation/flip 으로
             //  같은 타일이 반복돼도 시각 변화 (operator: "타일이미지가 너무 구림" + "autotile" 피드백)
@@ -97,30 +119,38 @@ namespace MelonS.GameProto.EditorTools
                     //  (게임플레이 변경 금지).  rock b 변형은 PathGrid 가 타일 '집합'을
                     //  받도록 운영자 OK 후에만.  dirt 는 양쪽 다 통행이라 무해.
                     bool altVar = (((x * 73856093) ^ (y * 19349663)) & 2) == 0;
-                    if (isRock) { layout.tilemap.SetTile(cell, layout.rockTile); ApplyRandomTileTransform(layout.tilemap, cell, rotRng); continue; }
+                    // 아트 B2: TS 타일은 방향성 디자인이라 flip 금지 (rng 소비는 유지).
+                    bool allowFlip = !tsTerrain;
+                    if (isRock) { layout.tilemap.SetTile(cell, layout.rockTile); ApplyRandomTileTransform(layout.tilemap, cell, rotRng, allowFlip); continue; }
                     bool isLake = false;
                     for (int li = 0; li < layout.lakeCenters.Length; li++)
                     {
                         if ((p - layout.lakeCenters[li]).magnitude < layout.lakeRadii[li] + (float)(rng.NextDouble()-0.5)*0.7f)
                         { isLake = true; break; }
                     }
-                    if (isLake) { layout.tilemap.SetTile(cell, layout.waterTile); ApplyRandomTileTransform(layout.tilemap, cell, rotRng); continue; }
+                    if (isLake) { layout.tilemap.SetTile(cell, layout.waterTile); ApplyRandomTileTransform(layout.tilemap, cell, rotRng, allowFlip); continue; }
                     foreach (var dc in layout.dirtCenters)
                     {
                         if ((p - dc).magnitude < layout.dirtRadius + (float)(rng.NextDouble()-0.5)*0.5f)
-                        { chosen = altVar ? dirtTileB : layout.dirtTile; break; }
+                        { chosen = (altVar && dirtTileB != null) ? dirtTileB : layout.dirtTile; break; }
                     }
-                    // #게임필 배치3 — grass 가중 변형 (결정론: 같은 rng 시드 체인).
-                    //  아트 v2: 4변형 58/20/12/10 — gv 호출은 그대로 1회 (체인 보존).
-                    if (chosen == layout.grassTile)
+                    // 아트 v3 원단 조각(폴백 전용): grass 좌표 모듈로 4×4 조각 선택.
+                    //  ⚠ gv 호출은 v2 가중변형의 잔재지만 체인 보존 위해 ts 모드에서도
+                    //  그대로 1회 소비 (제거 시 이후 모든 셀의 rng 가 밀린다).
+                    bool isGrass = (chosen == layout.grassTile);
+                    if (isGrass)
                     {
-                        double gv = rng.NextDouble();
-                        if (gv > 0.90 && grassTileD != null) chosen = grassTileD;
-                        else if (gv > 0.78 && grassTileC != null) chosen = grassTileC;
-                        else if (gv > 0.58 && grassTileB != null) chosen = grassTileB;
+                        double gv = rng.NextDouble();   // 체인 보존용 소비 (값 미사용)
+                        if (grassSlices != null)
+                        {
+                            int sx = ((x % 4) + 4) % 4;
+                            int sy = ((y % 4) + 4) % 4;
+                            chosen = grassSlices[sy * 4 + sx];
+                        }
                     }
                     layout.tilemap.SetTile(cell, chosen);
-                    ApplyRandomTileTransform(layout.tilemap, cell, rotRng);
+                    ApplyRandomTileTransform(layout.tilemap, cell, rotRng,
+                        allowFlip && !(isGrass && grassSlices != null));
                 }
             }
 
@@ -137,12 +167,21 @@ namespace MelonS.GameProto.EditorTools
         //  방향이 칸마다 뒤집혀 "QR코드 노이즈" 인상의 절반이었다.  flip-X 만 적용
         //  (음영 상하 방향 보존).  ⚠ r.Next 호출 횟수는 그대로 1회/셀 — rotRng(67890)
         //  체인 결정론 보존 (호출 수가 바뀌면 이후 모든 셀의 변형이 바뀐다).
-        private static void ApplyRandomTileTransform(Tilemap tm, Vector3Int cell, System.Random r)
+        private static void ApplyRandomTileTransform(Tilemap tm, Vector3Int cell, System.Random r,
+                                                     bool apply = true)
         {
             tm.SetTileFlags(cell, TileFlags.None);  // LockColor 해제 같은 효과
-            int variant = r.Next(0, 4);  // 체인 보존 위해 4값 소비, 홀수 = flip-X
-            Matrix4x4 m = (variant % 2 == 1)
-                ? Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(-1f, 1f, 1f))
+            // 아트 v3 TA 지시(2026-07-24): flip-Y 추가 — 무광 저기복 페인털리라
+            //  광원 방향 파괴 없음, 단일 참조 타일(물/바위)의 반복 완화.
+            //  r.Next 호출 횟수 1회/셀 유지 (rotRng 67890 체인 결정론 보존),
+            //  4값을 none/X/Y/XY 로 전부 소비.
+            //  apply=false (잔디 원단 조각): flip 이 인접 조각 연속성을 깨므로
+            //  identity 강제 — 단 r.Next 는 그대로 소비해 체인 보존.
+            int variant = r.Next(0, 4);
+            float sx = (apply && (variant & 1) == 1) ? -1f : 1f;
+            float sy = (apply && (variant & 2) == 2) ? -1f : 1f;
+            Matrix4x4 m = (sx < 0f || sy < 0f)
+                ? Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(sx, sy, 1f))
                 : Matrix4x4.identity;
             tm.SetTransformMatrix(cell, m);
         }

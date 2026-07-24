@@ -9,6 +9,11 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(SpriteRenderer))]
     public class StoneChunkEntity : MonoBehaviour
     {
+        private void Awake()
+        {
+            BlobShadow.Attach(gameObject, 0.55f, -0.20f, 0.25f);   // v3.2 ④ 접지 그림자
+        }
+
         [SerializeField] private int stone = 1;
         public bool InStockpile = false;  // stockpile stack 보존
 

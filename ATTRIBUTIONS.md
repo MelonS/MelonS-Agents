@@ -65,3 +65,10 @@ domain by the project author.
 - **고운돋움** — 본문 기본 폰트 (2단 폰트 체제 2026-07-25: 본문=고운돋움,
   타이틀·로고=DNF BitBit).  `Assets/Resources/Fonts/GowunDodum.ttf`
   - License: SIL OFL 1.1 — https://fonts.google.com/specimen/Gowun+Dodum
+
+## Tiny Swords (아트 팩)
+- 출처: Pixel Frog — https://pixelfrog-assets.itch.io/tiny-swords
+- 라이선스: 무료·상업적 사용 가능·크레딧 불요(표기 권장)·재배포/재판매 금지
+- 사용 범위: 지형 타일(잔디·모래·물)·나무·자원 더미(목재/고기/금)·양·데코 (ts_* 스프라이트)
+- 재배포 금지 준수: 추출물은 git 미추적(.gitignore ts_*), 재현은
+  `skills/game-prototype/scripts/extract-tinyswords.py` (팩은 itch 에서 직접 다운로드)

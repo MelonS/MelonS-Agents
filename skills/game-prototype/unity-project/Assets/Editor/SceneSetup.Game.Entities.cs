@@ -206,6 +206,25 @@ namespace MelonS.GameProto.EditorTools
             }
             MelonS.GameProto.StoneVeinEntity.TypeSprites = veinTypeSprites;
 
+            // GDD G3 (2026-07-24): 무덤 2상태 스프라이트 — Resources 폴더라 플레이어
+            //  빌드에 자동 포함.  임포트 설정만 베이크 시 강제 (Sprite/Single/PPU64 —
+            //  기본 임포트가 Default(Texture2D) 면 Resources.Load<Sprite> 가 null).
+            foreach (var gp in new[] { "Assets/Resources/Sprites/grave64_empty.png",
+                                       "Assets/Resources/Sprites/grave64_mound.png" })
+            {
+                if (!System.IO.File.Exists(gp)) continue;
+                AssetDatabase.ImportAsset(gp, ImportAssetOptions.ForceSynchronousImport);
+                var gti = AssetImporter.GetAtPath(gp) as TextureImporter;
+                if (gti != null)
+                {
+                    gti.textureType = TextureImporterType.Sprite;
+                    gti.spriteImportMode = SpriteImportMode.Single;
+                    gti.spritePixelsPerUnit = 64;
+                    gti.filterMode = FilterMode.Point;
+                    gti.SaveAndReimport();
+                }
+            }
+
             Sprite veinSpr = LoadOrSetupSprite("Assets/Sprites/struct32_stone_vein.png");
             if (veinSpr == null) veinSpr = LoadOrSetupSprite("Assets/Sprites/stone_vein.png");  // 폴백
             if (veinSpr == null) { Debug.LogWarning("[StoneVein] sprite null"); return; }

@@ -53,13 +53,24 @@ namespace MelonS.GameProto.EditorTools
             }
             // 아트 v2 A단계 (2026-06-11): 수종 3종을 32x48 캐노피 변형으로 교체.
             // L1 (2026-07-24): 5종 체계 — 실루엣이 종 정체성 (침엽 vs 로브 3형).
-            MelonS.GameProto.TreeEntity.SpeciesSprites = new[] {
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_pine.png"),
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_birch.png"),
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_oak.png"),
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_maple.png"),
-                AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_spruce.png"),
-            };
+            // 아트 B2 (2026-07-24): Tiny Swords 단일 수종 우선 (팩엔 나무 1종 —
+            //  종 구분은 scale/틴트로 유지, 종별 실루엣은 정합 생성 후속).  192px
+            //  프레임 PPU96 = 2×2칸 시각 footprint (셀 점유는 기존 1칸 불변).
+            var tsTree = ImportSpriteAt("Assets/Sprites/ts_tree.png", 96f);
+            if (tsTree != null)
+            {
+                MelonS.GameProto.TreeEntity.SpeciesSprites = new[] { tsTree, tsTree, tsTree, tsTree, tsTree };
+            }
+            else
+            {
+                MelonS.GameProto.TreeEntity.SpeciesSprites = new[] {
+                    AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_pine.png"),
+                    AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_birch.png"),
+                    AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_oak.png"),
+                    AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_maple.png"),
+                    AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_spruce.png"),
+                };
+            }
 
             // #108: 60x60 맵 = 9x 면적.  20 → 45 그루 비례.
             //  결정론적 (seed=24680).

@@ -176,7 +176,7 @@ namespace MelonS.GameProto
                 //   (mode,label,cost) tuple through BuildManager.Instance.SetMode,
                 //   so clicking 자동문 enters Mode.Autodoor with ZERO click-plumbing
                 //   change.  Cost 6 = wood, matches BuildManager.autodoorCost.
-                (BuildManager.Mode.Autodoor,  "자동문 (목재 6)", 6),
+                (BuildManager.Mode.Autodoor,  "자동문 (목재 40)", 40),   // 밸런스 A3
                 // W-M6-02 (B3) — fence + fence-gate, the cheapest Structure-tab
                 //   staple (목재 1, LOW, PASSABLE).  Fence also has hotkey E;
                 //   the gate is surfaced HERE ONLY (no hotkey).  The existing
@@ -220,8 +220,8 @@ namespace MelonS.GameProto
             //   click-plumbing change.  Cost 1 = stone, matches BuildManager
             //   .floorStoneCost.  Mode.FloorStone is used READ-ONLY (not added/edited).
             ["Floors (바닥)"] = new[] {
-                (BuildManager.Mode.Floor,      "나무 바닥 (목재 1)", 1),
-                (BuildManager.Mode.FloorStone, "석재 바닥 (석재 1)", 1),
+                (BuildManager.Mode.Floor,      "나무 바닥 (목재 3)", 3),   // 밸런스 A6
+                (BuildManager.Mode.FloorStone, "석재 바닥 (석재 3)", 3),   // 밸런스 A6
             },
             ["Furniture (가구)"] = new[] {
                 // #154 - wiki: sleeping spot 0.8x / wood bed 1.0x / fine 1.4x
@@ -231,7 +231,9 @@ namespace MelonS.GameProto
                 // W-M4-06 (#20) — table+chair eat/rec spot (hotkey J, 목재 6).
                 //   Flagged by Lane A for QA wiring: Mode.TableChair routes through
                 //   the existing SetMode/Close onClick plumbing with ZERO further change.
-                (BuildManager.Mode.TableChair,      "탁자+의자 (목재 40)",   40),
+                (BuildManager.Mode.TableChair,      "탁자+의자 (목재 65)",   65),   // 밸런스 A6
+                // GDD G3 (2026-07-24): 무덤 — 자재 0·노동 8초.  시신 안장 → 봉분+각인.
+                (BuildManager.Mode.Grave,           "무덤 (자재 X·노동)",     0),
             },
             ["Production (생산)"] = new[] {
                 (BuildManager.Mode.Stove, "화덕 (목재 80)", 80),
@@ -250,7 +252,7 @@ namespace MelonS.GameProto
             //   "Lighting (조명)" category keeps the lamp out of Production's
             //   crafting-station grouping and leaves room for future light types.
             ["Lighting (조명)"] = new[] {
-                (BuildManager.Mode.Lamp, "램프 (목재 4)", 4),
+                (BuildManager.Mode.Lamp, "램프 (목재 20)", 20),   // 밸런스 A4
             },
         };
 

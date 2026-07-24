@@ -53,7 +53,9 @@ namespace MelonS.GameProto
         //   Lamp/FloorStone/TableChair/Fence so the build never produces a
         //   null/magenta entity even without an asset import + ZERO SceneSetup edit.
         //   NO cover-math (gated/over-scope) — visual + pathing only.
-        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair, Fence, FenceGate, Barricade, Autodoor, ResearchBench }
+        // ⚠ enum 순서 불변 계약: StructureTag.modeInt 가 (int) 로 저장되므로 새 모드는
+        //  반드시 끝에 append (삽입 시 기존 세이브의 구조물이 전부 다른 것으로 재구성됨).
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair, Fence, FenceGate, Barricade, Autodoor, ResearchBench, Grave }
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
         // #182 - placement cooldown: SetMode 후 0.15s 동안 TryPlace skip.
@@ -161,6 +163,8 @@ namespace MelonS.GameProto
         [SerializeField] private Sprite     autodoorSprite;
         private GameObject _autodoorPrefabRuntime;    // cached lazily-built autodoor template
         private Sprite     _autodoorSpriteRuntime;    // cached lazily-built autodoor sprite (tinted door)
+        private GameObject _gravePrefabRuntime;       // GDD G3 — cached lazily-built grave template
+        private Sprite     _graveSpriteRuntime;       // GDD G3 — Resources 로드 or 절차 폴백
         // #154 - bed quality 별 cost (wiki: sleeping spot 0 / wood bed 8 / fine 30).
         //  Fine 은 wiki 가 비싸지만 (60+) 프로토타입에선 30 으로 낮춰 reachable.
         [SerializeField] private int bedSleepingSpotCost = 0;
@@ -327,6 +331,7 @@ namespace MelonS.GameProto
             Mode.Barricade => EnsureBarricadeSprite(),
             Mode.Autodoor  => EnsureAutodoorSprite(),
             Mode.ResearchBench => EnsureBenchSprite(),
+            Mode.Grave => EnsureGraveSprite(),            // GDD G3
             _ => wallSprite,
         };
 
@@ -424,6 +429,7 @@ namespace MelonS.GameProto
             Mode.FenceGate       => EnsureFenceGatePrefab(),   // W-M6-02 B3
             Mode.Barricade       => EnsureBarricadePrefab(),   // W-M6-03 B4
             Mode.Autodoor        => EnsureAutodoorPrefab(),    // W-M6-04 B5
+            Mode.Grave           => EnsureGravePrefab(),       // GDD G3
             _ => null,
         };
 
@@ -433,6 +439,7 @@ namespace MelonS.GameProto
         {
             Mode.Bed             => new Vector2Int(1, 2),
             Mode.BedFine         => new Vector2Int(1, 2),
+            Mode.Grave           => new Vector2Int(1, 2),   // GDD G3 — 침대와 동일 1×2
             _ => new Vector2Int(1, 1),
         };
 
@@ -657,7 +664,9 @@ namespace MelonS.GameProto
             Vector3 center = new Vector3(cx + size.x * 0.5f, cy + size.y * 0.5f, 0);
             bpGo.transform.position = center;
             var bp = bpGo.AddComponent<BlueprintEntity>();
-            float secs = (CurrentMode == Mode.Floor || CurrentMode == Mode.FloorStone) ? 2f : 5f;
+            // GDD G3: 무덤 = 자재 0·노동 8초 (맨땅 파기).  바닥 2초, 나머지 5초.
+            float secs = CurrentMode == Mode.Grave ? 8f
+                       : (CurrentMode == Mode.Floor || CurrentMode == Mode.FloorStone) ? 2f : 5f;
             bp.Init(CurrentMode, prefab, ghostSpr, needWood, needStone, secs);
             bp.SetSize(size);  // #193 - 청사진 sprite 도 1x2 비율 적용
 
@@ -711,6 +720,7 @@ namespace MelonS.GameProto
             Mode.FenceGate       => "울타리 문",  // W-M6-02 B3
             Mode.Barricade       => "바리케이드",  // W-M6-03 B4
             Mode.Autodoor        => "자동문",      // W-M6-04 B5
+            Mode.Grave           => "무덤",        // GDD G3
             _ => m.ToString(),
         };
 
@@ -735,6 +745,7 @@ namespace MelonS.GameProto
             Mode.Barricade => EnsureBarricadeSprite(),    // W-M6-03 B4
             Mode.Autodoor  => EnsureAutodoorSprite(),     // W-M6-04 B5
             Mode.ResearchBench => EnsureBenchSprite(),    // #229 회귀 수리
+            Mode.Grave => EnsureGraveSprite(),            // GDD G3
             _ => wallSprite,
         };
 
@@ -1581,6 +1592,56 @@ namespace MelonS.GameProto
             door.SetPassMul(autodoorPassMul);   // template value; Awake re-asserts on Instantiate
             _autodoorPrefabRuntime = go;
             return _autodoorPrefabRuntime;
+        }
+
+        // ============================ GDD G3 무덤 ===================== //
+        //  잉크 문법 스프라이트는 Resources/Sprites/grave64_empty.png (플레이어 빌드
+        //  포함 보장 — ColorGrade 셰이더와 같은 이유).  없으면 절차 폴백.
+        //  통행 가능(무덤 위 걷기 허용) — collider 는 isTrigger 로 CellOccupied
+        //  no-stack 감지만 담당, PathGrid 등록 없음.
+
+        private Sprite EnsureGraveSprite()
+        {
+            if (_graveSpriteRuntime != null) return _graveSpriteRuntime;
+            _graveSpriteRuntime = Resources.Load<Sprite>("Sprites/grave64_empty");
+            if (_graveSpriteRuntime == null) _graveSpriteRuntime = BuildGraveFallbackSprite();
+            return _graveSpriteRuntime;
+        }
+
+        private static Sprite BuildGraveFallbackSprite()
+        {
+            const int W = 28, H = 56;
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            var px = new Color32[W * H];
+            var soil = new Color32(96, 78, 58, 255);
+            var dark = new Color32(52, 42, 32, 255);
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                    px[y * W + x] = (x == 0 || y == 0 || x == W - 1 || y == H - 1) ? dark : soil;
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            var s = Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 32f,
+                                  0, SpriteMeshType.FullRect);
+            s.name = "GraveFallback";
+            return s;
+        }
+
+        private GameObject EnsureGravePrefab()
+        {
+            if (_gravePrefabRuntime != null) return _gravePrefabRuntime;
+            var go = new GameObject("GraveTemplate");
+            go.hideFlags = HideFlags.HideAndDontSave;
+            go.SetActive(false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = EnsureGraveSprite();
+            sr.sortingOrder = 2;                    // LOW 지면 마커 (바닥 위·가구 아래)
+            var box = go.AddComponent<BoxCollider2D>();
+            box.size = new Vector2(0.9f, 1.9f);     // 1×2 풋프린트
+            box.isTrigger = true;                   // no-stack 감지 전용 (물리 간섭 X)
+            go.AddComponent<GraveEntity>();
+            _gravePrefabRuntime = go;
+            return _gravePrefabRuntime;
         }
 
         /// <summary>

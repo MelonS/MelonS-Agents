@@ -65,6 +65,35 @@ namespace MelonS.GameProto.EditorTools
             var boarSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/boar.png");
             var chickenSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/chicken.png");
             var rabbitSpr = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/rabbit.png");
+            // 아트 v3.2 (2026-07-24): 잉크 문법 fauna64 4종 — PPU64 임포트 후 존재하면
+            //  우선 사용 (없으면 구세대 픽셀 폴백).  flora64 임포트 블록과 동일 패턴.
+            foreach (var fp in new[] { "fauna64_deer.png", "fauna64_boar.png",
+                                       "fauna64_chicken.png", "fauna64_rabbit.png" })
+            {
+                string fpath = $"Assets/Sprites/{fp}";
+                if (!System.IO.File.Exists(fpath)) continue;
+                AssetDatabase.ImportAsset(fpath, ImportAssetOptions.ForceSynchronousImport);
+                var fti = AssetImporter.GetAtPath(fpath) as TextureImporter;
+                if (fti != null)
+                {
+                    fti.textureType = TextureImporterType.Sprite;
+                    fti.spriteImportMode = SpriteImportMode.Single;
+                    fti.spritePixelsPerUnit = 64;   // v3 밀도
+                    fti.filterMode = FilterMode.Point;
+                    fti.SaveAndReimport();
+                }
+            }
+            // 아트 B2: 사슴 슬롯에 TS 양 우선 (팩 유일 동물 — 나머지 3종은 정합 생성 후속).
+            var tsSheep = ImportSpriteAt("Assets/Sprites/ts_sheep.png", 160f);
+            var deer64 = tsSheep != null ? tsSheep
+                : AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/fauna64_deer.png");
+            var boar64 = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/fauna64_boar.png");
+            var chick64 = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/fauna64_chicken.png");
+            var rabbit64 = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/fauna64_rabbit.png");
+            if (deer64 != null) deerSpr = deer64;
+            if (boar64 != null) boarSpr = boar64;
+            if (chick64 != null) chickenSpr = chick64;
+            if (rabbit64 != null) rabbitSpr = rabbit64;
             MelonS.GameProto.AnimalEntity.SpeciesSprites = new[] { deerSpr, boarSpr, chickenSpr, rabbitSpr };
             Vector2[] deerPositions = new[]
             {

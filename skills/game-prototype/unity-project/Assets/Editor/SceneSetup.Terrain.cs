@@ -23,6 +23,24 @@ namespace MelonS.GameProto.EditorTools
             catch { /* size unknown */ }
         }
 
+        /// <summary>아트 B2 (Tiny Swords): 명시 PPU 임포트 — 팩 스프라이트는 파일별
+        /// 밀도가 달라(64/128/192) 자동 PPU 규칙(#141)을 못 쓴다.</summary>
+        private static Sprite ImportSpriteAt(string assetPath, float ppu)
+        {
+            if (!System.IO.File.Exists(assetPath)) return null;
+            AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceSynchronousImport);
+            var ti = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (ti != null)
+            {
+                ti.textureType = TextureImporterType.Sprite;
+                ti.spriteImportMode = SpriteImportMode.Single;
+                ti.spritePixelsPerUnit = ppu;
+                ti.filterMode = FilterMode.Point;
+                ti.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+        }
+
         private static Sprite LoadOrSetupSprite(string assetPath)
         {
             Sprite s = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);

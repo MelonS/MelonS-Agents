@@ -191,7 +191,7 @@ namespace MelonS.GameProto
         {
             void Ensure<T>() where T : Component { if (go.GetComponent<T>() == null) go.AddComponent<T>(); }
             Ensure<PawnBuilder>(); Ensure<PawnMiner>(); Ensure<PawnHarvester>();
-            Ensure<PawnDoctor>(); Ensure<PawnSchedule>(); Ensure<PawnTraits>();
+            Ensure<PawnDoctor>(); Ensure<PawnBurier>(); Ensure<PawnSchedule>(); Ensure<PawnTraits>();
             Ensure<PawnThoughts>(); Ensure<PawnAbilities>(); Ensure<PawnEquipment>();
             Ensure<PawnNameLabel>(); Ensure<PawnFloatingBars>();
         }

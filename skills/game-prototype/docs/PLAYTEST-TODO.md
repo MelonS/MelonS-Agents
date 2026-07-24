@@ -139,3 +139,8 @@ the reference sim 모델로 단일화: 자율 AI는 '지정된 것만', dispatch
 
 ## ✅ 해결됨(운영자 확인 대기/완료) — 기록 보존
 - 운반 무한루프(저장구역 없을 때) 7998e64 · 베리 채집버튼 7ecf8bc · 멧돼지/닭/토끼·나무 다양성 995ebff/9f67260 · 떠도는중 속도 절반 b536f0c · 토끼 모양 b536f0c · 머리위 행동라벨 · BGM 멜로디 901cc7d · UI 직업/일정 톤·위협 외곽선·탑바 날짜 1240d43/0db7e02/c85f72a
+
+- [ ] **p1-chop-selected-only 플레이크** (2026-07-24): step3 selection=none 간헐 FAIL —
+  림 idle 배회가 worldclick 좌표를 벗어나는 타이밍 레이스. 재실행 PASS 확인.
+  강건화 후보: 시나리오 첫 스텝에 일시정지 삽입 또는 클릭 재시도 op. 게이트
+  신뢰성 항목 (WORKFLOW-V2).

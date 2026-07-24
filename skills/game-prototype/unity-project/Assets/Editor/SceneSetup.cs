@@ -177,9 +177,13 @@ namespace MelonS.GameProto.EditorTools
             GameObject pawnPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PawnPrefabPath);
             Sprite arrowSpriteRef = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/arrow.png");
             // #116 - wood pile sprite (벌목 후 바닥에 떨어지는 통나무 더미)
-            Sprite woodPileSpriteRef = LoadOrSetupSprite("Assets/Sprites/wood_pile.png");
+            // 아트 B2: TS 자원 더미 우선 (128px·그림자 베이크 → PPU160 = 0.8칸).
+            //  stone 은 팩에 등가물 없음 — 구세대 유지 (정합 생성 후속).
+            Sprite woodPileSpriteRef = ImportSpriteAt("Assets/Sprites/ts_wood_pile.png", 160f)
+                                       ?? LoadOrSetupSprite("Assets/Sprites/wood_pile.png");
             Sprite stoneChunkSpriteRef = LoadOrSetupSprite("Assets/Sprites/stone_chunk.png");  // #119
-            Sprite meatPileSpriteRef = LoadOrSetupSprite("Assets/Sprites/meat_pile.png");      // #129
+            Sprite meatPileSpriteRef = ImportSpriteAt("Assets/Sprites/ts_meat_pile.png", 160f)
+                                       ?? LoadOrSetupSprite("Assets/Sprites/meat_pile.png");   // #129
             // #199 A2 — per-colonist 셔츠 변형 sprite 3종 (blue/rust/olive).
             //  ForceImportAllSprites 가 이미 Sprite 타입 + PPU16 으로 import 함.
             Sprite pawnBlueRef  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/pawn_blue.png");

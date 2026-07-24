@@ -21,6 +21,7 @@ namespace MelonS.GameProto.AI
         public PawnBuilder builder;  // #118 — blueprint 건설
         public PawnMiner miner;   // #119 — 채광
         public PawnDoctor doctor; // #125 — 의료
+        public PawnBurier burier; // GDD G3 — 매장
         public PawnNeeds needs;
         public PawnSkills skills;
         public Transform transform;
@@ -63,6 +64,7 @@ namespace MelonS.GameProto.AI
             if (builder  != null && builder.HasTask)  return true;
             if (miner    != null && miner.HasTask)    return true;
             if (doctor   != null && doctor.HasTask)   return true;
+            if (burier   != null && burier.HasTask)   return true;   // GDD G3
             return false;
         }
     }

@@ -63,6 +63,8 @@ namespace MelonS.GameProto
         private void Awake()
         {
             _sr = GetComponent<SpriteRenderer>();
+            // 아트 B2: TS 더미 스프라이트는 그림자 베이크 — BlobShadow 중복 부착 안 함.
+            //  (구세대 스프라이트 폴백 시에만 필요해지면 스프라이트명 검사로 복원)
         }
 
         // #214 운영자 fb "아이템이 뿅 이동" — 즉시-credit/teleport 완전 제거.
