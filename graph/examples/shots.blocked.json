@@ -1,0 +1,49 @@
+{
+  "short_id": "example-blocked",
+  "style_lock": "cinematic night, luminous not muddy, cool moonlight key + warm lantern rim, shallow depth, vertical 9:16",
+  "character_lock": "young traveler, dark hanbok-like robe #2B2E4A, long black hair tied low, no visible face in silhouette shots",
+  "shots": [
+    {
+      "id": "i01",
+      "beat": "산길에 밤이 내린다",
+      "must": [
+        "좁은 산길",
+        "안개",
+        "달빛"
+      ],
+      "prompt": "narrow mountain path at night, drifting fog, moonlight through pine branches, empty trail, luminous blue-grey palette, cinematic vertical composition",
+      "seed": 1101
+    },
+    {
+      "id": "i02",
+      "beat": "멀리 등불 하나가 흔들린다",
+      "must": [
+        "등불 1개",
+        "먼 거리감"
+      ],
+      "prompt": "single paper lantern glowing far down the misty path, warm amber against cold blue night, strong depth falloff, tiny in frame",
+      "seed": 1102
+    },
+    {
+      "id": "i03",
+      "beat": "나그네가 걸음을 멈춘다",
+      "must": [
+        "나그네 뒷모습",
+        "3/4 뒤에서"
+      ],
+      "prompt": "traveler seen from behind at three-quarter angle, dark robe, hair tied low, standing still on the path, backlit by distant lantern, no visible face",
+      "seed": 1103,
+      "force_fail": true
+    },
+    {
+      "id": "i04",
+      "beat": "발밑에 젖은 짚신 자국",
+      "must": [
+        "짚신 발자국",
+        "젖은 흙"
+      ],
+      "prompt": "close-up of wet straw-sandal footprints pressed into muddy trail, shallow puddle catching moonlight, texture-forward macro detail",
+      "seed": 1104
+    }
+  ]
+}
