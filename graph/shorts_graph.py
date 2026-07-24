@@ -240,7 +240,26 @@ def build_shorts_graph(checkpointer=None, *, with_video: bool = True):
         nodes.after_clip_gate,
         {"ready_for_assembly": "ready_for_assembly", "blocked": "blocked"},
     )
-    g.add_edge("ready_for_assembly", END)
+
+    # ── Phase 5 — 조립 → 법률 → 출시. 문 2 뒤에 붙는다 ────────────────
+    g.add_node("assemble", nodes.assemble)
+    g.add_node("legal", nodes.legal_check)
+    g.add_node("bump_legal", nodes.bump_legal_round)
+    g.add_node("release", nodes.release)
+
+    g.add_edge("ready_for_assembly", "assemble")
+    g.add_edge("assemble", "legal")
+    g.add_conditional_edges(
+        "legal",
+        nodes.after_legal,
+        {
+            "release": "release",     # ★ 출시로 가는 유일한 엣지 = PASS
+            "revise": "bump_legal",   # 픽스 반영 후 재조립
+            "blocked": "blocked",     # BLOCK 또는 REVISE 상한 소진
+        },
+    )
+    g.add_edge("bump_legal", "assemble")
+    g.add_edge("release", END)
     return g.compile(checkpointer=checkpointer)
 
 
@@ -344,6 +363,11 @@ def cmd_run(args) -> int:
         "judge_backend": args.judge,
         "mock": args.mock,
         "autonomy_mode": args.autonomy or os.environ.get("AUTONOMY_MODE", "").lower() == "true",
+        "profile": args.profile,
+        "platform": args.platform,
+        "legal_backend": args.legal_judge or args.judge,
+        "max_legal_rounds": args.max_legal_rounds,
+        "legal_round": 0,
     }
 
     checkpointer = _open_checkpointer()
@@ -399,13 +423,23 @@ def _report_final(final: dict, out_dir: pathlib.Path, elapsed: float, *, stills_
         print("   (%.1fs, trace: %s)" % (elapsed, out_dir / "trace.json"))
         return 0
 
-    if final.get("clip_gate_open"):
-        print("🚪 문 2 열림 — %s" % final.get("clip_gate_reason"))
+    if not final.get("clip_gate_open"):
+        print("🚪 문 2 닫힘 — %s" % final.get("clip_gate_reason"))
+        print("   (%.1fs) 해당 컷만 다시 돌리면 됩니다" % elapsed)
+        return 2
+
+    print("🚪 문 2 열림 — %s" % final.get("clip_gate_reason"))
+
+    lv = final.get("legal_verdict")
+    if lv == "PASS":
+        print("⚖️  법률 PASS — 출시 패키지: %s" % final.get("release_path"))
         print("   (%.1fs, trace: %s)" % (elapsed, out_dir / "trace.json"))
         return 0
 
-    print("🚪 문 2 닫힘 — %s" % final.get("clip_gate_reason"))
-    print("   (%.1fs) 해당 컷만 다시 돌리면 됩니다" % elapsed)
+    print("⚖️  법률 %s — 출시 차단 (%d회 시도)" % (lv or "미실행", int(final.get("legal_round", 0)) + 1))
+    for f in (final.get("legal_fixes") or [])[:6]:
+        print("     · %s" % f)
+    print("   (%.1fs) 출시로 가는 엣지는 PASS 하나뿐입니다" % elapsed)
     return 2
 
 
@@ -428,6 +462,12 @@ def main(argv=None) -> int:
     r.add_argument("--frames", type=int, default=3, help="컷당 심사 프레임 수 — 실행 토큰의 최대 변수")
     r.add_argument("--autonomy", action="store_true",
                    help="자율 모드 — 승인에서 기다리지 않고 블로커 기록 후 종료 (AUTONOMY_MODE=true 와 동일)")
+    r.add_argument("--profile", default="info", choices=["info", "news", "idol"],
+                   help="법률 게이트의 required_checks 를 고른다")
+    r.add_argument("--platform", default="public", choices=["public", "internal-demo"])
+    r.add_argument("--max-legal-rounds", type=int, default=2, help="REVISE 재시도 상한")
+    r.add_argument("--legal-judge", choices=["mock", "cli"],
+                   help="법률 판단 심사만 따로 지정 (대본을 보므로 --mock 스틸과도 조합 가능)")
     r.set_defaults(fn=cmd_run)
 
     rs = sub.add_parser("resume", help="승인 결정을 넣고 이어서 진행")

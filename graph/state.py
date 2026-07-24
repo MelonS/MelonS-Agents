@@ -113,6 +113,18 @@ class ShortsState(TypedDict, total=False):
     clip_gate_open: bool
     clip_gate_reason: str
 
+    # ── 조립·법률·출시 (Phase 5) ─────────────────────────────
+    profile: str              # info | news | idol — legal-gate.sh 의 required_checks 선택
+    platform: str             # public | internal-demo
+    disclosures: list[str]
+    final_video: str | None
+    legal_backend: str        # mock | cli — 대본을 보므로 스틸 mock 과 독립
+    legal_verdict: str        # PASS | REVISE | BLOCK | ERROR
+    legal_fixes: list[str]
+    legal_round: int
+    max_legal_rounds: int
+    release_path: str | None
+
     # ── 사람 승인 (Phase 4) ──────────────────────────────────
     # 운영자 계약 §1: 사용자는 터미널을 만지지 않는다. 승인은 파일로 오간다.
     autonomy_mode: bool            # True면 멈춰 기다리지 않고 블로커 기록 후 종료

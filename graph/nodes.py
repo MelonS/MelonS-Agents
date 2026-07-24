@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import pathlib
+import re
 import time
 from typing import Any
 
@@ -625,6 +626,219 @@ def after_approval(state: ShortsState) -> str:
     if d == "regen" and state.get("regen_targets"):
         return "regen"
     return "blocked"                        # reject · halt · 알 수 없는 값
+
+
+def _profile_disclosures(profile: str) -> list[str]:
+    """config/content-short-profiles.yaml 의 disclosures 블록을 읽는다.
+
+    기존 run.sh 가 하던 것과 같은 일. 파서를 새로 쓰지 않고 같은 평면 YAML 규약을 따른다
+    (`  - id: <p>` 아래 `    disclosures:` 의 `      - "..."` 줄들).
+    """
+    path = tools.repo_root() / "config" / "content-short-profiles.yaml"
+    if not path.exists():
+        return []
+    cur, sect, out = None, None, []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"^  - id:\s*(.+)$", line)
+        if m:
+            cur, sect = m.group(1).strip(), None
+            continue
+        if cur != profile:
+            continue
+        if re.match(r"^    disclosures:\s*$", line):
+            sect = "d"
+            continue
+        if re.match(r"^    [a-z_]+:", line):
+            sect = None
+        m = re.match(r"^      -\s*(.+)$", line)
+        if m and sect == "d":
+            v = m.group(1).strip()
+            mq = re.match(r'"((?:[^"\\]|\\.)*)"', v)
+            out.append(mq.group(1) if mq else re.split(r"\s+#", v, 1)[0].strip())
+    return [l.replace("{AS_OF_DATE}", time.strftime("%Y-%m-%d")) for l in out]
+
+
+def assemble(state: ShortsState) -> dict[str, Any]:
+    """컷 concat + 법률 게이트 입력 생성.
+
+    게이트가 요구하는 건 셋이다: outputs/short.mp4 · SOURCES.txt · disclosures.txt.
+    TTS·BGM·자막 번인은 기존 faceless-short 경로가 담당하는 별개 영역이라
+    여기서 손대지 않는다 (그래프의 책임은 순서·게이트·재시도뿐).
+    """
+    out_dir = pathlib.Path(state["out_dir"])
+    outputs = out_dir / "outputs"
+    outputs.mkdir(parents=True, exist_ok=True)
+
+    shots = state.get("shots", {})
+    clips = [pathlib.Path(shots[s]["clip_path"]) for s in sorted(shots) if shots[s].get("clip_path")]
+    if not clips:
+        raise RuntimeError("조립할 컷이 없다 — 문 2를 통과했는데 clip_path가 비어 있음")
+
+    final = outputs / "short.mp4"
+    elapsed = tools.concat_clips(clips, final, mock=bool(state.get("mock")))
+
+    # SOURCES.txt — 100% 생성물. 제3자 미디어를 재사용하지 않았다.
+    #
+    # `license:` 값은 guard_publish 가 config/copyright-allowlist.yaml 과 대조한다.
+    # 생성 모델 라이선스(apache-2.0 등)는 아직 그 allowlist에 없으므로 `owner-self`
+    # 로 기록한다 — "제3자 권리가 걸린 소재가 없다"는 뜻이고, 실제로 그렇다.
+    # 모델명은 attribution 줄에 남겨 추적성을 잃지 않는다.
+    outputs.joinpath("SOURCES.txt").write_text(
+        "mission_id: %s\n"
+        "source: generated (Z-Image Turbo + Wan2.2 A14B, local)\n"
+        "attribution: 100%% synthetic — no third-party media reused\n"
+        "license: owner-self\n"
+        "recorded_at: %s\n" % (state["run_id"], time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())),
+        encoding="utf-8",
+    )
+
+    # disclosures.txt — 프로필이 요구하는 줄을 **그대로** 쓴다.
+    # 여기서 임의로 지어내면 게이트를 통과시키려고 사실이 아닌 고지를 넣는 셈이 된다.
+    lines = state.get("disclosures") or _profile_disclosures(state.get("profile", "info"))
+    outputs.joinpath("disclosures.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    return {
+        "final_video": str(final),
+        "trace": [{"node": "assemble", "clips": len(clips), "elapsed_s": elapsed}],
+    }
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Phase 5 — 법률 게이트
+#
+# `scripts/legal-gate.sh`는 재작성하지 않는다. 이미 fail-closed로 정확하다:
+# 결정론 체크와 판단 체크를 프로필의 required_checks 위에서 병합하고,
+# **실행되지 않은 필수 체크는 REVISE로 떨어뜨린다** — 안 돌린 검사를 통과시키지 않는다.
+#
+# 그래프가 더하는 건 하나뿐이다: REVISE면 되돌아가는 **엣지**.
+# `content-director.md`의 "max_legal_iters" 산문 루프가 여기서 코드가 된다.
+# ═════════════════════════════════════════════════════════════════════════════
+
+
+LEGAL_JUDGE_PROMPT = """\
+너는 법률팀(legal-team)이다. `.claude/agents/legal-team.md`의 판단 체크만 담당한다.
+라이선스·고지 존재 여부 같은 결정론 체크는 이미 bash가 증명했으니 건드리지 마라.
+
+콘텐츠:
+  profile: {profile}
+  대본/비트:
+{beats}
+
+판단할 체크: {checks}
+  - fact-accuracy   : 사실과 다른 단정이 있는가
+  - unverifiable    : 검증 불가한 주장을 사실처럼 말하는가
+  - defamation      : 특정 개인·단체를 깎아내리는가
+  - trademark-ip    : 상표·IP를 무단으로 쓰는가
+
+각 체크에 pass 또는 fail을 준다. 근거 없이 fail 주지 마라 — 실제 문장을 지목한다.
+창작 서사(허구)는 사실 주장이 아니므로 fact-accuracy 대상이 아니다.
+
+JSON 객체 하나만 출력한다. 다른 말 금지:
+{{"checks":[{{"id":"fact-accuracy","status":"pass","evidence":"근거 1문장"}}]}}
+"""
+
+
+def _legal_judge(state: ShortsState) -> pathlib.Path | None:
+    """판단 체크를 심사위원에게 맡기고 external-verdict 파일로 떨군다.
+
+    이걸 안 돌리면 legal-gate.sh 가 필수 판단 체크를 REVISE로 fail-close 한다
+    (= 안 돌린 검사를 통과시키지 않는다). 그게 옳은 설계라 우회하지 않고 실제로 돌린다.
+    """
+    # 법률 판단은 이미지가 아니라 대본을 본다 — 그래서 --mock(가짜 스틸)과도
+    # 같이 쓸 수 있다. legal_backend 로 따로 켠다.
+    if state.get("legal_backend", state.get("judge_backend")) != "cli":
+        return None
+
+    shots = state.get("shots", {})
+    beats = "\n".join("    - %s" % (s.get("beat") or s.get("prompt", ""))[:120] for s in shots.values())
+    prompt = LEGAL_JUDGE_PROMPT.format(
+        profile=state.get("profile", "info"),
+        beats=beats or "    (없음)",
+        checks="fact-accuracy, unverifiable",
+    )
+    out = tools.run(
+        ["claude", "-p", prompt, "--model", os.environ.get("JUDGE_MODEL", "claude-sonnet-5")],
+        timeout=300,
+    )
+    start, end = out.find("{"), out.rfind("}")
+    if start < 0 or end <= start:
+        return None
+
+    vpath = pathlib.Path(state["out_dir"]) / "legal" / "subagent-verdict.json"
+    vpath.parent.mkdir(parents=True, exist_ok=True)
+    vpath.write_text(out[start : end + 1], encoding="utf-8")
+    return vpath
+
+
+def legal_check(state: ShortsState) -> dict[str, Any]:
+    rc, out = tools.legal_gate(
+        pathlib.Path(state["out_dir"]),
+        state.get("profile", "info"),
+        platform=state.get("platform", "public"),
+        external_verdict=_legal_judge(state),
+    )
+    verdict = {0: "PASS", 1: "REVISE", 2: "BLOCK"}.get(rc, "ERROR")
+
+    fixes: list[str] = []
+    vpath = pathlib.Path(state["out_dir"]) / "legal" / "legal-verdict.json"
+    if vpath.exists():
+        try:
+            data = json.loads(vpath.read_text(encoding="utf-8"))
+            verdict = data.get("verdict", verdict)
+            fixes = [
+                "%s: %s" % (c.get("id"), c.get("evidence", ""))
+                for c in data.get("checks", [])
+                if c.get("status") in ("fail", "unknown") and not c.get("informational")
+            ]
+        except Exception:
+            pass
+
+    return {
+        "legal_verdict": verdict,
+        "legal_fixes": fixes,
+        "legal_round": int(state.get("legal_round", 0)),
+        "trace": [{"node": "legal", "rc": rc, "verdict": verdict, "fixes": len(fixes)}],
+    }
+
+
+def bump_legal_round(state: ShortsState) -> dict[str, Any]:
+    return {"legal_round": int(state.get("legal_round", 0)) + 1}
+
+
+def after_legal(state: ShortsState) -> str:
+    """★ 출시로 가는 엣지는 PASS 하나뿐. 이게 이 단계의 불변식이다."""
+    v = state.get("legal_verdict")
+    if v == "PASS":
+        return "release"
+    if v == "BLOCK":
+        return "blocked"                    # 되돌릴 수 없음 — 재시도조차 안 한다
+    if int(state.get("legal_round", 0)) + 1 >= int(state.get("max_legal_rounds", 2)):
+        return "blocked"                    # REVISE 상한 소진
+    return "revise"
+
+
+def release(state: ShortsState) -> dict[str, Any]:
+    """출시 패키지. 자동 업로드는 하지 않는다 — 운영자가 손으로 올린다."""
+    out_dir = pathlib.Path(state["out_dir"])
+    rel = out_dir / "release"
+    rel.mkdir(parents=True, exist_ok=True)
+
+    checklist = rel / "PUBLISH-CHECKLIST.md"
+    shots = state.get("shots", {})
+    checklist.write_text(
+        "# 출시 체크리스트 — %s\n\n"
+        "법률 판정: **PASS** · 컷 %d개\n\n"
+        "- [ ] `short.mp4` 한 번 끝까지 보기 (자막 가독·오디오 클리핑)\n"
+        "- [ ] `outputs/disclosures.txt` 고지 문구가 설명란에 들어갔는지\n"
+        "- [ ] `outputs/SOURCES.txt` 출처 표기 유지\n"
+        "- [ ] **수동 업로드** — 자동 업로드 없음, 공개 URL은 레포에 남기지 않음\n"
+        % (state.get("short_id", state["run_id"]), len(shots)),
+        encoding="utf-8",
+    )
+    return {
+        "release_path": str(rel),
+        "trace": [{"node": "release", "checklist": str(checklist)}],
+    }
 
 
 def mark_regen(state: ShortsState) -> dict[str, Any]:

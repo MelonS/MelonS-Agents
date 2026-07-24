@@ -15,6 +15,7 @@ from __future__ import annotations
 import base64
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 import time
@@ -154,6 +155,83 @@ def gen_clip(
     if not out_path.exists():
         raise ToolError(cmd, 70, "", "스크립트는 성공했는데 %s 가 없다" % out_path)
     return round(time.time() - t0, 2)
+
+
+def ffmpeg_bin() -> str:
+    return os.environ.get("FFMPEG_BIN") or "ffmpeg"
+
+
+def bash_bin() -> str:
+    """POSIX 스크립트를 돌릴 bash.
+
+    Windows 함정 하나 더: `bash`는 **WSL 스텁**이라 WSL이 없으면
+    "Linux용 Windows 하위 시스템에 배포가 없습니다"만 찍고 rc=1로 죽는다.
+    `python3`가 Store 스텁인 것과 같은 종류의 함정. Git Bash를 직접 찾는다.
+    """
+    if os.name != "nt":
+        return "bash"
+    cand = [os.environ.get("BASH_BIN"),
+            r"C:\Program Files\Git\bin\bash.exe",
+            r"C:\Program Files\Git\usr\bin\bash.exe",
+            r"C:\Program Files (x86)\Git\bin\bash.exe"]
+    for c in cand:
+        if c and pathlib.Path(c).exists():
+            return c
+    found = shutil.which("bash")
+    if found and "System32" not in found:      # System32\bash.exe = WSL 스텁
+        return found
+    raise ToolError(["bash"], 66, "", "Git Bash를 못 찾았다 — BASH_BIN 환경변수로 지정")
+
+
+def concat_clips(clips: list[pathlib.Path], out_path: pathlib.Path, *, mock: bool = False) -> float:
+    """컷들을 이어붙인다. 재인코딩 없이 stream copy.
+
+    주의: concat 목록은 clips_dir 기준 **상대 경로**여야 한다 — Windows ffmpeg는
+    MSYS 스타일 /g/... 경로를 못 읽는다 (assemble-short.sh 주석에 있는 함정).
+    """
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    t0 = time.time()
+
+    if mock:
+        out_path.write_bytes(_MOCK_PNG)
+        return round(time.time() - t0, 2)
+
+    listing = out_path.parent / "concat.txt"
+    listing.write_text(
+        "".join("file '%s'\n" % pathlib.Path(c).name for c in clips), encoding="utf-8"
+    )
+    run([ffmpeg_bin(), "-y", "-loglevel", "error", "-f", "concat", "-safe", "0",
+         "-i", listing.name, "-c", "copy", out_path.name],
+        cwd=out_path.parent, timeout=600)
+
+    if not out_path.exists():
+        raise ToolError(["ffmpeg"], 70, "", "concat은 성공했는데 %s 가 없다" % out_path)
+    return round(time.time() - t0, 2)
+
+
+def legal_gate(mission_dir: pathlib.Path, profile: str, *, platform: str = "public",
+               external_verdict: pathlib.Path | None = None) -> tuple[int, str]:
+    """scripts/legal-gate.sh 를 그대로 호출한다. 재작성하지 않는다.
+
+    이 게이트는 이미 fail-closed로 정확하다 — 결정론 체크(bash가 증명 가능한 것)와
+    판단 체크(모델이 판정한 것)를 프로필의 required_checks 위에서 병합하고,
+    **미실행 필수 체크는 REVISE로 떨어뜨린다.** 그래프는 부르고 종료 코드만 읽는다.
+
+    반환: (rc, stdout).  rc = 0 PASS · 1 REVISE · 2 BLOCK · 64/65 사용법·입력 오류
+    """
+    script = repo_root() / "scripts" / "legal-gate.sh"
+    cmd = [bash_bin(), str(script), str(mission_dir),
+           "--profile=%s" % profile, "--platform=%s" % platform]
+    if external_verdict:
+        cmd.append("--external-verdict=%s" % external_verdict)
+
+    proc = subprocess.run(
+        cmd, cwd=str(repo_root()), capture_output=True, text=True,
+        encoding="utf-8", errors="replace", timeout=600,
+        env={**os.environ, "PYTHONUTF8": "1"},
+    )
+    # 0/1/2 는 전부 정상적인 판정 결과다 — 예외로 던지면 안 된다.
+    return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
 
 
 def extract_frames(
