@@ -111,3 +111,79 @@ def gen_still(
     if not out_path.exists():
         raise ToolError(cmd, 70, "", "스크립트는 성공했는데 %s 가 없다" % out_path)
     return round(time.time() - t0, 2)
+
+
+def gen_clip(
+    image: pathlib.Path,
+    prompt: str,
+    out_path: pathlib.Path,
+    *,
+    seed: int = -1,
+    server: str | None = None,
+    mock: bool = False,
+    timeout: int = 2400,
+) -> float:
+    """앵커 스틸 1장 → 모션 클립 1개 (~7분). 반환값은 걸린 초.
+
+    실제 경로는 `scripts/wan-a14b-i2v.py` (Wan2.2 A14B + lightx2v LoRA).
+    A14B는 T2V로 쓰면 무너지므로 앵커 스틸이 필수다 — 그래서 문을 통과한
+    스틸만 여기 들어온다. 이 7분이 파이프라인 전체 비용의 92%다.
+    """
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    t0 = time.time()
+
+    if mock:
+        out_path.write_bytes(_MOCK_PNG)      # 배선 검증용 자리표시자
+        return round(time.time() - t0, 2)
+
+    script = repo_root() / "scripts" / "wan-a14b-i2v.py"
+    if not script.exists():
+        raise ToolError([str(script)], 66, "", "wan-a14b-i2v.py 없음 — --mock 로 배선만 검증")
+
+    cmd = [
+        sys.executable, str(script),
+        "--image", str(image),
+        "--prompt", prompt,
+        "--output", str(out_path),
+        "--seed", str(seed),
+    ]
+    if server or os.environ.get("COMFYUI_URL"):
+        cmd += ["--server", server or os.environ["COMFYUI_URL"]]
+
+    run(cmd, timeout=timeout)
+    if not out_path.exists():
+        raise ToolError(cmd, 70, "", "스크립트는 성공했는데 %s 가 없다" % out_path)
+    return round(time.time() - t0, 2)
+
+
+def extract_frames(
+    video: pathlib.Path,
+    out_dir: pathlib.Path,
+    *,
+    count: int = 3,
+    mock: bool = False,
+) -> list[str]:
+    """컷 심사용 프레임 추출. 심사위원은 이 jpg들을 실제로 열어 채점한다.
+
+    `scripts/judge-frames.py` 기본값이 3장이다. 이게 편당 실행 토큰의 최대
+    덩어리라 늘릴 때는 비용을 같이 봐야 한다 (컷당 1장 ≈ 1.3K 토큰).
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    if mock:
+        paths = []
+        for i in range(count):
+            p = out_dir / ("f%02d.jpg" % i)
+            p.write_bytes(_MOCK_PNG)
+            paths.append(str(p))
+        return paths
+
+    script = repo_root() / "scripts" / "judge-frames.py"
+    out = run([sys.executable, str(script), "--video", str(video),
+               "--out-dir", str(out_dir), "--count", str(count)], timeout=300)
+    paths = [ln.strip() for ln in out.splitlines() if ln.strip().lower().endswith((".jpg", ".jpeg", ".png"))]
+    if not paths:                                   # stdout 형식이 바뀐 경우 대비
+        paths = sorted(str(p) for p in out_dir.glob("*.jpg"))
+    if not paths:
+        raise ToolError(["judge-frames.py"], 70, out, "프레임이 하나도 안 나왔다")
+    return paths

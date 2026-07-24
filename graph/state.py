@@ -24,6 +24,9 @@ def merge_shots(left: dict, right: dict) -> dict:
 
 Verdict = Literal["PASS", "REGEN", "FAILED"]
 
+# 컷 심사는 3단계다 — REVISE는 "수동 보정 후 사용" 등급이라 7분을 더 태우지 않는다.
+CutVerdict = Literal["PASS", "REVISE", "REGEN", "FAILED"]
+
 
 class Shot(TypedDict, total=False):
     """샷 하나의 스펙 + 진행 상태."""
@@ -42,8 +45,19 @@ class Shot(TypedDict, total=False):
     score: int | None
     verdict: Verdict
     saw: str | None           # 심사위원이 "실제로 본 것" 1문장
-    prompt_fix: str | None    # REGEN 판정일 때 다음 회차 프롬프트 처방
+    prompt_fix: str | None    # REGEN 판정일 때 다음 회차 프롬프트 (완성된 영어 프롬프트)
     elapsed_s: float
+
+    # ── Phase 3 · 영상화 ─────────────────────────────────────
+    force_cut_fail: bool      # 테스트용
+    clip_round: int
+    clip_path: str | None
+    cut_score: int | None
+    cut_verdict: CutVerdict
+    cut_saw: str | None
+    cut_issues: list[str]
+    clip_fix: str | None      # "SEED_REROLL" 또는 완성된 영어 모션 프롬프트
+    clip_elapsed_s: float
 
 
 class ShotState(TypedDict, total=False):
@@ -53,6 +67,9 @@ class ShotState(TypedDict, total=False):
     out_dir: str
     threshold: int
     max_rounds: int
+    cut_threshold: int
+    max_clip_rounds: int
+    frame_count: int
     style_lock: str
     character_lock: str
     judge_backend: str
@@ -83,9 +100,18 @@ class ShortsState(TypedDict, total=False):
     judge_backend: str        # mock | cli
     mock: bool                # 스틸 생성도 가짜로 (GPU 없이 배선 검증)
 
-    # ── 문 ───────────────────────────────────────────────────
+    # ── 문 1 · 스틸 ──────────────────────────────────────────
     gate_open: bool           # False면 영상화(3시간)로 못 넘어간다
     gate_reason: str
+
+    # ── 문 2 · 컷 ────────────────────────────────────────────
+    # 주의: 여기 선언하지 않은 키는 LangGraph가 조용히 버린다.
+    #       (실측: clip_gate_open 미선언 → 문 2가 항상 닫힘)
+    cut_threshold: int
+    max_clip_rounds: int
+    frame_count: int
+    clip_gate_open: bool
+    clip_gate_reason: str
 
     # ── 관측성 ───────────────────────────────────────────────
     trace: Annotated[list[dict[str, Any]], operator.add]

@@ -1,0 +1,28 @@
+{
+  "short_id": "smoke-2shot",
+  "style_lock": "cinematic night, luminous not muddy, cool moonlight key + warm lantern rim, shallow depth, vertical 9:16",
+  "character_lock": "young traveler, dark hanbok-like robe #2B2E4A, long black hair tied low, no visible face in silhouette shots",
+  "shots": [
+    {
+      "id": "i01",
+      "beat": "산길에 밤이 내린다",
+      "must": [
+        "좁은 산길",
+        "안개",
+        "달빛"
+      ],
+      "prompt": "narrow mountain path at night, drifting fog, moonlight through pine branches, empty trail, luminous blue-grey palette, cinematic vertical composition",
+      "seed": 1101
+    },
+    {
+      "id": "i02",
+      "beat": "멀리 등불 하나가 흔들린다",
+      "must": [
+        "등불 1개",
+        "먼 거리감"
+      ],
+      "prompt": "single paper lantern glowing far down the misty path, warm amber against cold blue night, strong depth falloff, tiny in frame",
+      "seed": 1102
+    }
+  ]
+}
