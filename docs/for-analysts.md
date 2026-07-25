@@ -90,12 +90,21 @@ concrete artifact exists that proves the path works.
 
 ## Subagent layout (already verified, do not re-recommend)
 
-`.claude/agents/*.md` frontmatter sets the model.  As of 2026-07-03
-(22 definitions total — the core six below, plus two skill rosters
-added later: 12 `game-*` role subagents, 2026-05-27 `32ec30f`, listed in
-`skills/game-dev-agent/ARCHITECTURE.md`; and the 5-member content-shorts
-team — `content-director` + `research/production/legal/release-team`,
-2026-07-01 `ff7fa19`, documented in `docs/content-shorts-pipeline.md`):
+`.claude/agents/*.md` frontmatter sets the model.  **27 definitions total**
+as of 2026-07-26 (counted directly from `.claude/agents/*.md`), in four
+groups:
+
+| Group | Count | Members |
+| ----- | ----- | ------- |
+| core (mission flow) | 6 | the table below — `orchestrator`, `planner`, `resourcer`, `editor`, `qa`, `auditor` |
+| game line | 13 | 12 `game-*` role subagents (2026-05-27 `32ec30f`, listed in `skills/game-dev-agent/ARCHITECTURE.md`) + `ta`, the technical artist / design-QA gate (2026-07-24 `7be3142`) |
+| content-shorts line | 5 | `content-director` + `research`/`production`/`legal`/`release-team` (2026-07-01 `ff7fa19`, see `docs/content-shorts-pipeline.md`) |
+| judges (quality gates) | 3 | `note-judge` (plan), `still-judge` (storyboard still), `cut-judge` (rendered cut) — each scores against a 100-point rubric and can send a stage back |
+
+Earlier revisions of this section said "22 definitions total" with a
+breakdown summing to 23, while the hero image claimed 23 — three numbers
+for one countable fact, flagged by six consecutive audit cycles.  If you
+change the roster, re-count rather than incrementing the prose.
 
 | Agent          | Model     | Role                                              |
 | -------------- | --------- | ------------------------------------------------- |
