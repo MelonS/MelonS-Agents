@@ -25,7 +25,7 @@ Why the split: 2026-05-15 → 2026-05-16 produced 11 commits of infrastructure w
 
 The operating rules live in two files (both auto-loaded by Claude Code):
 
-- [`docs/operator-contract.md`](docs/operator-contract.md) — this project's hard rules (§1-12: agent does all the work, never-pause, money firewall, logic-changes-need-OK, git workflow, code/data separation, goal-and-roadmap, session-resume, shutdown, no-PII) plus project-specific conventions (this repo's README structure, README maintenance cadence).
+- [`docs/operator-contract.md`](docs/operator-contract.md) — this project's hard rules (§1-13: agent does all the work, never-pause, money firewall, logic-changes-need-OK, git workflow, code/data separation, goal-and-roadmap, session-resume, shutdown, no-PII, inbound-message routing check) plus project-specific conventions (this repo's README structure, README maintenance cadence).
 - `~/.claude/CLAUDE.md` — operator-style preferences that travel across projects: dual-stack reporting (Korean briefing + English internals), terminal/shell format, batch execution, writing tone, idle-state signaling, scrum-master footer. Split out from the contract on 2026-05-22 so the same preferences apply unchanged in any future repo.
 
 Both files together replace what used to be a single 750-line contract. Agent memory in `~/.claude/projects/-Users-melons-ai/memory/` is the fast-access cache pointing back to either file.
