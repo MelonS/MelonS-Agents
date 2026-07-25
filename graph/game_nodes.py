@@ -122,9 +122,10 @@ def unity_build(state: GameState) -> dict[str, Any]:
     stamp = time.strftime("%Y-%m-%d_%H%M%S")
 
     if state.get("mock"):
-        d = pathlib.Path(state["project_path"]) / "Build" / ("mock-%s" % stamp)
+        # 실물과 같은 자리에 만든다 — mock 이 다른 곳에 두면 경로 버그를 못 잡는다.
+        d = pathlib.Path(state["project_path"]).parent / "builds" / ("mock-%s" % stamp)
         d.mkdir(parents=True, exist_ok=True)
-        exe = d / "Game.exe"
+        exe = d / "PawnSim.exe"
         exe.write_bytes(b"MZ")                      # 자리표시자
         return {
             "build_ok": True, "build_dir": str(d), "build_stamp": stamp,
@@ -140,8 +141,12 @@ def unity_build(state: GameState) -> dict[str, Any]:
             "trace": [{"node": "unity_build", "rc": rc}],
         }
 
-    # 빌드 스크립트가 만든 폴더 중 **이번 실행 이후에 생긴 것**만 인정한다.
-    build_root = proj / "Build"
+    # BuildScript.cs 는 `../builds` (= 프로젝트의 형제 폴더) 에 쓰고, 폴더명은
+    # `day-<N>-<날짜>` 날짜 스탬프다 — 문서에 적힌 바로 그 함정의 출처.
+    #
+    # ★ 그래서 "가장 최근 폴더" 를 고르지 않는다. **이번 실행 이후에 생긴 것**만
+    #   인정한다. 자정을 넘겨 어제 폴더가 최신으로 보이더라도 걸러진다.
+    build_root = proj.parent / "builds"
     fresh = [
         p for p in build_root.iterdir()
         if p.is_dir() and p.stat().st_mtime >= _t0_of(state)
@@ -149,12 +154,14 @@ def unity_build(state: GameState) -> dict[str, Any]:
     if not fresh:
         return {
             "build_ok": False,
-            "build_log": "빌드는 rc=0 인데 이번 실행에서 생긴 폴더가 없다 — stale 의심",
+            "build_log": "빌드는 rc=0 인데 %s 에 이번 실행에서 생긴 폴더가 없다 — stale 의심"
+                         % build_root,
             "trace": [{"node": "unity_build", "rc": rc, "stale_guard": "tripped"}],
         }
 
     d = max(fresh, key=lambda p: p.stat().st_mtime)
-    exes = list(d.rglob("*.exe"))
+    # UnityCrashHandler64.exe 같은 부속 실행파일을 잡으면 안 된다 — 게임 본체만.
+    exes = [e for e in d.rglob("*.exe") if "crashhandler" not in e.name.lower()]
     return {
         "build_ok": bool(exes),
         "build_dir": str(d),
@@ -217,9 +224,30 @@ def qa_verify(state: GameState) -> dict[str, Any]:
         shot.write_bytes(tools._MOCK_PNG)
         ok, note = True, "[mock] 스크린샷 자리표시자"
     else:
-        rc = tools.run([exe, "-delay", "8", "-screenshot", str(shot)], timeout=300)
-        ok = shot.exists() and shot.stat().st_size > 10_000
-        note = "스크린샷 %s (%d bytes)" % (shot.name, shot.stat().st_size if shot.exists() else 0)
+        # 검증된 계약을 그대로 따른다 (skills/game-dev-agent/scripts/modules/qa.py).
+        # subprocess.run 은 쓰면 안 된다 — 게임이 자동 종료하지 않으면 타임아웃으로
+        # 죽는다(실측). Popen 으로 띄우고 **스크린샷 파일이 생기는지**를 폴링한 뒤
+        # 직접 종료시킨다.
+        #
+        # 플래그 두 개 모두 필수 — 실측으로 확인한 연쇄:
+        #
+        #   -autostart : 빌드가 메뉴씬으로 부팅한다. 없으면 게임 씬에 못 들어간다.
+        #   -repro     : 게임은 시작하자마자 '둘러보기' 일시정지에 들어간다
+        #                (GameManager.PauseAtStart → timeScale=0). 그런데
+        #                AutoScreenshotter 는 WaitForSeconds(= 스케일 시간)를 쓰므로
+        #                코루틴이 영원히 안 깨어나 스크린샷이 안 나온다.
+        #                일시정지를 건너뛰는 조건은 `ReproHarness.Enabled` 하나뿐이고
+        #                (`if (!ReproHarness.Enabled) StartCoroutine(PauseAtStart())`),
+        #                그건 `-repro <scenario.json>` 로만 켜진다.
+        #                -integration 은 IntegrationTestRunner 만 켤 뿐 일시정지를
+        #                풀지 못한다 (실측: 로그에 activated 후에도 일시정지 진입).
+        scenario = state.get("qa_scenario") or str(
+            tools.repo_root() / "skills" / "game-prototype" / "repro-scenarios" / "_grade-tour.json"
+        )
+        ok, note = tools.launch_and_capture(
+            pathlib.Path(exe), shot, delay=float(state.get("qa_delay", 8)),
+            extra_args=["-autostart", "-repro", scenario],
+        )
 
     return {
         "screenshot": str(shot) if ok else None,

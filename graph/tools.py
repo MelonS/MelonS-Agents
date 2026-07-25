@@ -241,6 +241,52 @@ def legal_gate(mission_dir: pathlib.Path, profile: str, *, platform: str = "publ
     return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
 
 
+def launch_and_capture(
+    exe: pathlib.Path,
+    shot: pathlib.Path,
+    *,
+    delay: float = 8.0,
+    extra_args: list[str] | None = None,
+    grace: float = 90.0,
+) -> tuple[bool, str]:
+    """게임 exe 를 띄우고 AutoScreenshotter 가 PNG 를 쓸 때까지 기다린다.
+
+    `skills/game-dev-agent/scripts/modules/qa.py::launch_and_capture` 의 계약을
+    그대로 따른다. **subprocess.run 을 쓰면 안 된다** — 게임이 스스로 종료하지
+    않으면 통째로 타임아웃으로 죽는다(실측 300초). 대신 Popen 으로 띄우고
+    파일이 생기는지 폴링한 뒤 직접 종료시킨다.
+    """
+    if shot.exists():
+        shot.unlink()
+    shot.parent.mkdir(parents=True, exist_ok=True)
+
+    cmd = [str(exe), "-delay", str(delay), "-screenshot", str(shot)] + list(extra_args or [])
+    proc = subprocess.Popen(cmd)
+    deadline = time.time() + delay + grace
+    captured = False
+
+    while time.time() < deadline:
+        if shot.exists() and shot.stat().st_size > 1024:
+            captured = True
+            break
+        if proc.poll() is not None:          # 게임이 먼저 끝남
+            break
+        time.sleep(0.5)
+
+    if proc.poll() is None:                   # 아직 살아 있으면 정리
+        proc.terminate()
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+
+    if captured:
+        return True, "스크린샷 %s (%.0f KB)" % (shot.name, shot.stat().st_size / 1024)
+    if shot.exists():
+        return False, "스크린샷이 너무 작다 (%d bytes) — 화면이 안 떴을 수 있다" % shot.stat().st_size
+    return False, "스크린샷 미생성 — %.0fs 대기, 게임이 화면에 못 뜬 듯" % (delay + grace)
+
+
 def extract_frames(
     video: pathlib.Path,
     out_dir: pathlib.Path,
