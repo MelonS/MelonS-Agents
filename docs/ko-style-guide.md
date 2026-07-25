@@ -53,6 +53,14 @@ python scripts/readme-parity.py     # 섹션·이미지·표·코드블록 수 +
 ```
 `main-protection.yml` CI 에도 물려 있어, 드리프트가 있으면 `main` 이 빨개진다. exit 1 이면 EN 에 맞춰 KO 를 고친다.
 
+**손으로 실행하는 것에 기대지 않는다 — pre-commit 훅이 대신 돌린다.**
+```bash
+scripts/install-hooks.sh install    # pre-commit + post-commit 설치 (한 번만)
+```
+README 둘 중 하나라도 스테이징되면 훅이 **스테이징된 내용**(CI 가 보게 될 그 상태)으로 위 검사를 돌리고, 드리프트가 있으면 커밋을 막는다. 급할 때 우회: `PARITY_HOOK_DISABLED=1 git commit ...` 또는 `git commit --no-verify`.
+
+> 왜 훅까지 두는가: 2026-07-25 `8c67d7e` 가 `README.md` 에만 코드블록을 추가했고(start-here.sh 분기), 패리티 검사가 CI 에만 있어서 다음 푸시부터 `main` 이 5회 연속 빨간불이었다. 사람이 기억해서 돌리는 단계는 한 번 빠지면 계속 빠진다.
+
 **Layer 2 — 번역 품질 (사람/LLM, 판단 필요).**
 자연스러움과 충실도는 스크립트가 못 잡는다. KO 를 크게 손댔으면, 한국어 원어민 관점(개발자/에디터/이중언어 번역가)으로 (1) 번역투·계가 남았는지 (2) EN 대비 의미 왜곡·누락·추가가 없는지 확인한다. 위 용어집을 체크리스트로 쓴다.
 

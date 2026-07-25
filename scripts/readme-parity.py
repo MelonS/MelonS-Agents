@@ -9,6 +9,12 @@ a human or an LLM pass — see docs/ko-style-guide.md); it catches the mechanica
 drift that a script can catch reliably.
 
 Exit 0 = in parity. Exit 1 = drift found (details printed).
+
+Usage:
+    readme-parity.py                 # check the working-tree READMEs
+    readme-parity.py <EN> <KO>       # check two explicit files — used by the
+                                     # pre-commit hook to test the *staged*
+                                     # content rather than the working tree
 """
 import re
 import sys
@@ -17,6 +23,11 @@ import pathlib
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 EN = ROOT / "README.md"
 KO = ROOT / "README.ko.md"
+
+if len(sys.argv) == 3:
+    EN, KO = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
+elif len(sys.argv) != 1:
+    sys.exit("usage: readme-parity.py [EN_README KO_README]")
 
 
 def norm_link(t: str) -> str:

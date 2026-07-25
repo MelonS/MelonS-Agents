@@ -60,6 +60,14 @@
 ```bash
 git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
+./scripts/start-here.sh         # 무엇을 하러 왔는지 묻고, 그 경로로 안내합니다
+```
+
+두 라인 중 어디로 갈지 아직 모르겠다면 `start-here.sh` 가 한 번 묻습니다. **영상 만들기 ·
+게임 만들기 · 파이프라인 보기 · 그냥 구경** 중에서 고르면 그 경로의 명령만 보여 줍니다.
+이미 알고 있다면 건너뛰세요:
+
+```bash
 ./scripts/first-touch.sh        # 가이드 데모: 도구 점검, 9:16 쇼츠 렌더, 결과 열기
 ```
 
