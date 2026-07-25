@@ -53,6 +53,103 @@
 
 **핵심 용어** — *재현 게이트*: 실제 플레이어 클릭을 재생해 각 클릭이 효과를 냈는지 어서트하는 것. *격리 채점*: 스크린샷과 로그만으로 판정하는 별도 서브에이전트. *소크(soak)*: 길게 돌리는 무인 테스트 실행.
 
+## 파이프라인은 그래프다
+
+두 라인 모두 LangGraph 상태 기계로 돕니다. "심사에서 떨어지면 그다음에 어떻게 되는가"가
+누군가 기억해야 하는 관행이 아니라 배선으로 적혀 있다는 뜻입니다. 아래 그림은 모두 실행 중인
+그래프에서 뽑습니다(`python -m graph.shorts_graph diagram --compact`). 그래서 설명하는
+코드와 어긋날 수 없습니다. 노드를 추가하고 배치하지 않으면 생성 자체가 실패합니다.
+
+스틸 한 장은 약 9초, 컷 하나 영상화는 약 7분입니다. 그래서 싼 단계가 자기 심사와 재시도
+루프를 안고 있고, **문 1**은 기준을 넘지 못한 스틸에 영상화 시간을 쓰지 못하게 막습니다.
+그 끝에 사람이 멈춰 서는 지점이 있습니다. 그래프는 종료 코드 3으로 서서 기다리고,
+`resume --approve` 는 처음이 아니라 체크포인트에서 이어갑니다.
+
+<!-- graph:shorts1:begin -->
+```mermaid
+flowchart LR
+  plan["계획"]
+  render_shot["스틸 라운드<br/>9초/장"]
+  gate{{"문 1<br/>스틸"}}
+  storyboard["검수 시트"]
+  approval[/"사람 승인"/]
+  mark_regen("재생성 지정")
+  blocked(["차단"])
+  view1>"② 영상화 → 문 2 → 마감"]
+
+  plan -. 샷별 .-> render_shot
+  render_shot --> gate
+  gate -. PASS .-> storyboard
+  gate -. 미달 .-> blocked
+  storyboard --> approval
+  approval -. 재생성 .-> mark_regen
+  approval -. 취소 .-> blocked
+  mark_regen -. 지정분 .-> render_shot
+  approval -. 승인 .-> view1
+
+  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
+  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
+  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
+  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
+  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
+  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
+  class plan,render_shot,storyboard step
+  class gate gate
+  class approval human
+  class mark_regen retry
+  class blocked stop
+  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
+  class view1 stub
+```
+<!-- graph:shorts1:end -->
+
+사람 승인을 지나면 비싼 절반이 같은 모양을 한 치수 크게 반복합니다. 영상화 → 심사 → 시드
+리롤, 그다음 두 번째 문, 그리고 조립과 법률 심사입니다. 법률 심사는 컷을 되돌려 보내거나
+출시를 아예 막을 수 있습니다.
+
+<!-- graph:shorts2:begin -->
+```mermaid
+flowchart LR
+  render_clip["컷 라운드<br/>7분/컷"]
+  clip_gate{{"문 2<br/>컷"}}
+  assemble["조립"]
+  legal{{"법률 심사"}}
+  bump_legal("수정 회차")
+  release(["출시 패키지"])
+  blocked(["차단"])
+  view0>"① 스틸 → 문 1 → 사람 승인"]
+
+  render_clip --> clip_gate
+  clip_gate -. PASS .-> assemble
+  clip_gate -. 미달 .-> blocked
+  assemble --> legal
+  legal -. 수정 .-> bump_legal
+  legal -. PASS .-> release
+  legal -. BLOCK .-> blocked
+  bump_legal --> assemble
+  view0 -. 승인 .-> render_clip
+
+  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
+  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
+  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
+  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
+  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
+  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
+  class assemble,render_clip step
+  class clip_gate,legal gate
+  class bump_legal retry
+  class release done
+  class blocked stop
+  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
+  class view0 stub
+```
+<!-- graph:shorts2:end -->
+
+게임 라인도 같은 방식으로 갈라지지만 합류가 다릅니다. Unity 는 두 레인이 동시에 몰 수
+없으므로, 병렬 제작 레인은 문이 아니라 뮤텍스에서 만나고 모든 재시도 화살표가 그 배타 구간
+안으로 돌아옵니다. 게임 라인 구조도 두 장과 샷 단위 상세는
+[`graph/README.md`](graph/README.md) 에 있습니다.
+
 ## 60초 안에 시작
 
 > **사전 요구:** `ffmpeg`, `ollama`, `aubio` 가 PATH 에 있는 Mac 또는 Linux — 설치 마법사가 먼저 점검하고, 빠진 항목이 있으면 정확한 `brew` / `apt` 설치 명령을 알려 줍니다 (clone-and-go 는 macOS 에서 검증됨).

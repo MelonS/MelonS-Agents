@@ -27,6 +27,23 @@ _MOCK_PNG = base64.b64decode(
 )
 
 
+def force_utf8_stdout() -> None:
+    """Windows 콘솔의 기본 코드페이지(cp949)에서 죽지 않게 stdout/stderr 를 UTF-8 로.
+
+    이 그래프의 노드 이름·라벨·로그는 전부 한국어이고 구조도에는 `—`/`→` 가 섞인다.
+    cp949 로는 인코딩이 안 돼서 `python -m graph.shorts_graph diagram` 이
+    UnicodeEncodeError 로 죽었다(2026-07-26 실측). PYTHONIOENCODING 을 매번
+    붙이라고 문서에 적는 대신 CLI 진입점에서 한 번 고정한다.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            try:
+                reconfigure(encoding="utf-8")
+            except (ValueError, OSError):
+                pass  # 파이프가 이미 닫혔거나 재설정 불가 — 출력은 그대로 시도한다
+
+
 def repo_root() -> pathlib.Path:
     """graph/ 의 부모 = 레포 루트."""
     return pathlib.Path(__file__).resolve().parent.parent

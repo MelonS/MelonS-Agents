@@ -53,6 +53,105 @@ That grader repeatedly caught what self-review missed: a silent harness blind sp
 
 **Key terms** — *repro gate*: replay real player clicks, assert each had an effect.  *isolated grader*: a separate sub-agent that judges from screenshots + logs only.  *soak*: a long, unattended test run.
 
+## The pipeline is a graph
+
+Both lines run as LangGraph state machines, so "what happens when a judge fails a
+shot" is wiring rather than a convention someone has to remember.  Every diagram here
+is generated from the running graph (`python -m graph.shorts_graph diagram --compact`),
+so it cannot drift from the code it describes: add a node without placing it and
+generation fails.
+
+A still costs ~9 seconds to make; rendering one cut costs ~7 minutes.  So the cheap
+stage carries its own judge and its own retry loop, and **Gate 1** refuses to spend
+video time on stills that never cleared the bar.  One human checkpoint sits at the end
+of it: the graph stops with exit code 3 and waits, and `resume --approve` continues
+from the checkpoint instead of the beginning.
+
+<!-- graph:shorts1:begin -->
+```mermaid
+flowchart LR
+  plan["Plan"]
+  render_shot["Still round<br/>9s each"]
+  gate{{"Gate 1<br/>stills"}}
+  storyboard["Review sheet"]
+  approval[/"Human approval"/]
+  mark_regen("Mark regen")
+  blocked(["Blocked"])
+  view1>"2. Video -> Gate 2 -> finish"]
+
+  plan -. per shot .-> render_shot
+  render_shot --> gate
+  gate -. PASS .-> storyboard
+  gate -. below bar .-> blocked
+  storyboard --> approval
+  approval -. regen .-> mark_regen
+  approval -. reject .-> blocked
+  mark_regen -. marked .-> render_shot
+  approval -. approved .-> view1
+
+  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
+  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
+  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
+  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
+  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
+  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
+  class plan,render_shot,storyboard step
+  class gate gate
+  class approval human
+  class mark_regen retry
+  class blocked stop
+  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
+  class view1 stub
+```
+<!-- graph:shorts1:end -->
+
+Past the human gate, the expensive half runs the same shape one size up — render, judge,
+reroll the seed, then a second gate before assembly and the legal review that can send
+the cut back or block release outright.
+
+<!-- graph:shorts2:begin -->
+```mermaid
+flowchart LR
+  render_clip["Clip round<br/>7min each"]
+  clip_gate{{"Gate 2<br/>cuts"}}
+  assemble["Assemble"]
+  legal{{"Legal review"}}
+  bump_legal("Revise round")
+  release(["Release package"])
+  blocked(["Blocked"])
+  view0>"1. Stills -> Gate 1 -> human approval"]
+
+  render_clip --> clip_gate
+  clip_gate -. PASS .-> assemble
+  clip_gate -. below bar .-> blocked
+  assemble --> legal
+  legal -. revise .-> bump_legal
+  legal -. PASS .-> release
+  legal -. BLOCK .-> blocked
+  bump_legal --> assemble
+  view0 -. approved .-> render_clip
+
+  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
+  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
+  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
+  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
+  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
+  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
+  class assemble,render_clip step
+  class clip_gate,legal gate
+  class bump_legal retry
+  class release done
+  class blocked stop
+  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
+  class view0 stub
+```
+<!-- graph:shorts2:end -->
+
+The game line fans out the same way but joins differently.  Unity cannot be driven by
+two lanes at once, so the parallel work lanes converge on a mutex rather than a gate,
+and every retry edge lands back inside that critical section.  Its two diagrams, plus
+the per-shot detail, are in [`graph/README.md`](graph/README.md).
+
 ## Try it in ~60 seconds
 
 > **Prerequisite:** Mac or Linux with `ffmpeg`, `ollama`, and `aubio` on your PATH — the wizard checks first and prints the exact `brew` / `apt` install command for anything missing (clone-and-go is verified on macOS).

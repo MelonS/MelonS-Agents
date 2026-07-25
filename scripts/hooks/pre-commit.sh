@@ -84,4 +84,20 @@ MSG
   exit 1
 fi
 
+# The embedded execution-graph diagrams are generated from the live LangGraph
+# objects; a hand-edited or stale block is drift.  Unlike the parity check above
+# this reads the WORKING TREE (the generator imports the graph package, which is
+# not addressable through the index), so it is a near-miss rather than an exact
+# preimage of the commit.  Soft-skips when langgraph isn't installed.
+SYNC="$REPO_ROOT/scripts/sync-readme-graph.py"
+if [[ -f "$SYNC" ]] && ! "$PY" "$SYNC" --check; then
+  cat >&2 <<'MSG'
+
+[parity-hook] commit BLOCKED — README graph diagrams are stale.
+              Refresh: python scripts/sync-readme-graph.py
+              One-off override: PARITY_HOOK_DISABLED=1 git commit ...
+MSG
+  exit 1
+fi
+
 exit 0

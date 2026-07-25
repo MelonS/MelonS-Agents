@@ -130,6 +130,11 @@ def cmd_run(args) -> int:
 
 
 def cmd_diagram(args) -> int:
+    if getattr(args, "compact", False):
+        from . import diagram
+
+        print(diagram.game_compact(args.lang))
+        return 0
     print("## 게임 라인 — 제작 병렬 → Unity 뮤텍스 → 검증 → 병합\n")
     print("```mermaid")
     print(build_game_graph().get_graph().draw_mermaid().strip())
@@ -138,6 +143,7 @@ def cmd_diagram(args) -> int:
 
 
 def main(argv=None) -> int:
+    tools.force_utf8_stdout()
     p = argparse.ArgumentParser(prog="graph.game_graph", description="게임 프로토타입 사이클")
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -151,6 +157,9 @@ def main(argv=None) -> int:
     r.set_defaults(fn=cmd_run)
 
     d = sub.add_parser("diagram", help="구조도(mermaid)")
+    d.add_argument("--compact", action="store_true",
+                   help="README용 컴팩트 1장 (가로·단계 묶음·게이트 강조)")
+    d.add_argument("--lang", choices=("ko", "en"), default="ko", help="--compact 라벨 언어")
     d.set_defaults(fn=cmd_diagram)
 
     args = p.parse_args(argv)

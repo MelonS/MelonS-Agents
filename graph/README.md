@@ -35,53 +35,177 @@
 
 ## 구조
 
-아래 그림은 손으로 그린 게 아니라 그래프에서 뽑은 것이다 —
-`python -m graph.shorts_graph diagram` 을 돌리면 언제든 현재 코드 기준으로 다시 나온다.
-**그래서 낡지 않는다.**
+아래 네 장은 손으로 그린 게 아니다. 실행 중인 그래프에서 위상을 그대로 뽑고
+(`graph/diagram.py`) 레이아웃·라벨만 입힌다. 코드에 노드가 하나 늘고 배치되지 않으면
+생성이 `RuntimeError` 로 실패한다. **그래서 낡지 않는다.**
 
-### 메인 — 계획 → 샷 병렬 → 문
-
-```mermaid
-graph TD;
-	__start__([__start__]):::first
-	plan(plan)
-	render_shot(render_shot)
-	gate(gate)
-	ready_for_video(ready_for_video)
-	blocked(blocked)
-	__end__([__end__]):::last
-	__start__ --> plan;
-	plan -.fan-out 샷별.-> render_shot;
-	render_shot --> gate;
-	gate -.전 샷 PASS.-> ready_for_video;
-	gate -.하나라도 미달.-> blocked;
-	ready_for_video --> __end__;
-	blocked --> __end__;
-	classDef default fill:#f2f0ff,line-height:1.2
-	classDef first fill-opacity:0
-	classDef last fill:#bfb6fc
+```bash
+python -m graph.shorts_graph diagram --compact          # 아래 그림 (한국어)
+python -m graph.shorts_graph diagram --compact --lang en
+python -m graph.shorts_graph diagram                    # 원본 자동 출력 3종 (노드 전부)
+python -m graph.game_graph   diagram --compact
+python scripts/sync-readme-graph.py                     # README 3곳에 밀어 넣기
 ```
 
-### 샷 하나 — 생성 → 채점 → 재시도
+### 쇼츠 ① 스틸 → 문 1 → 사람 승인
 
+<!-- graph:shorts1:begin -->
 ```mermaid
-graph TD;
-	__start__([__start__]):::first
-	still(still)
-	judge(judge)
-	bump_round(bump_round)
-	finalize(finalize)
-	__end__([__end__]):::last
-	__start__ --> still;
-	still --> judge;
-	judge -. retry (75 미달, 회차 남음) .-> bump_round;
-	judge -. done / give_up .-> finalize;
-	bump_round --> still;
-	finalize --> __end__;
-	classDef default fill:#f2f0ff,line-height:1.2
-	classDef first fill-opacity:0
-	classDef last fill:#bfb6fc
+flowchart LR
+  plan["계획"]
+  render_shot["스틸 라운드<br/>9초/장"]
+  gate{{"문 1<br/>스틸"}}
+  storyboard["검수 시트"]
+  approval[/"사람 승인"/]
+  mark_regen("재생성 지정")
+  blocked(["차단"])
+  view1>"② 영상화 → 문 2 → 마감"]
+
+  plan -. 샷별 .-> render_shot
+  render_shot --> gate
+  gate -. PASS .-> storyboard
+  gate -. 미달 .-> blocked
+  storyboard --> approval
+  approval -. 재생성 .-> mark_regen
+  approval -. 취소 .-> blocked
+  mark_regen -. 지정분 .-> render_shot
+  approval -. 승인 .-> view1
+
+  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
+  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
+  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
+  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
+  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
+  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
+  class plan,render_shot,storyboard step
+  class gate gate
+  class approval human
+  class mark_regen retry
+  class blocked stop
+  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
+  class view1 stub
 ```
+<!-- graph:shorts1:end -->
+
+### 쇼츠 ② 영상화 → 문 2 → 마감
+
+<!-- graph:shorts2:begin -->
+```mermaid
+flowchart LR
+  render_clip["컷 라운드<br/>7분/컷"]
+  clip_gate{{"문 2<br/>컷"}}
+  assemble["조립"]
+  legal{{"법률 심사"}}
+  bump_legal("수정 회차")
+  release(["출시 패키지"])
+  blocked(["차단"])
+  view0>"① 스틸 → 문 1 → 사람 승인"]
+
+  render_clip --> clip_gate
+  clip_gate -. PASS .-> assemble
+  clip_gate -. 미달 .-> blocked
+  assemble --> legal
+  legal -. 수정 .-> bump_legal
+  legal -. PASS .-> release
+  legal -. BLOCK .-> blocked
+  bump_legal --> assemble
+  view0 -. 승인 .-> render_clip
+
+  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
+  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
+  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
+  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
+  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
+  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
+  class assemble,render_clip step
+  class clip_gate,legal gate
+  class bump_legal retry
+  class release done
+  class blocked stop
+  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
+  class view0 stub
+```
+<!-- graph:shorts2:end -->
+
+### 게임 ① 발행 → 검토 → 제작 병렬
+
+<!-- graph:game1:begin -->
+```mermaid
+flowchart LR
+  pm_publish["PM 작업 발행"]
+  review{{"검토"}}
+  work_lane["제작 레인 병렬<br/>코드·아트·사운드"]
+  pm_merge(["병합"])
+  blocked(["차단"])
+  view1>"② Unity 뮤텍스 → 검증 → 병합"]
+
+  pm_publish --> review
+  review -. 통과 .-> work_lane
+  review -. 반려 .-> blocked
+  work_lane --> view1
+
+  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
+  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
+  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
+  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
+  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
+  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
+  class pm_publish,work_lane step
+  class review gate
+  class pm_merge done
+  class blocked stop
+  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
+  class view1 stub
+```
+<!-- graph:game1:end -->
+
+### 게임 ② Unity 뮤텍스 → 검증 → 병합
+
+Unity 는 두 레인이 동시에 몰 수 없다. 쇼츠가 **문**에서 합류하는 자리에서 게임은
+**뮤텍스**로 합류하고, 재시도 화살표도 그 배타 구간 안으로 돌아온다.
+
+<!-- graph:game2:begin -->
+```mermaid
+flowchart LR
+  unity_scene["씬 생성"]
+  unity_build["빌드"]
+  qa["QA 실물 검증"]
+  ta{{"TA 아트 심사"}}
+  fix("수정 회차")
+  pm_merge(["병합"])
+  blocked(["차단"])
+  view0>"① 발행 → 검토 → 제작 병렬"]
+
+  unity_scene --> unity_build
+  unity_build -. 빌드 OK .-> qa
+  unity_build -. 컴파일 실패 .-> fix
+  unity_build -. 회차 소진 .-> blocked
+  qa --> ta
+  ta -. 수정 지시 .-> fix
+  ta -. PASS .-> pm_merge
+  ta -. 회차 소진 .-> blocked
+  fix --> unity_scene
+  view0 --> unity_scene
+
+  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
+  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
+  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
+  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
+  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
+  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
+  class qa,unity_build,unity_scene step
+  class ta gate
+  class fix retry
+  class pm_merge done
+  class blocked stop
+  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
+  class view0 stub
+```
+<!-- graph:game2:end -->
+
+샷 하나(생성 → 채점 → 재시도)와 컷 하나(영상화 → 컷심사 → 시드 리롤)의 내부는 위 그림에서
+`스틸 라운드` · `컷 라운드` 노드로 접혀 있다. 펼친 그림은 `diagram` (--compact 없이) 이
+그래프에서 직접 출력한다.
 
 ## 쓰는 법
 

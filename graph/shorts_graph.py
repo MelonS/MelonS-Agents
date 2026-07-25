@@ -329,6 +329,11 @@ def cmd_resume(args) -> int:
 
 
 def cmd_diagram(args) -> int:
+    if getattr(args, "compact", False):
+        from . import diagram
+
+        print(diagram.shorts_compact(args.lang))
+        return 0
     for title, g in (
         ("메인 — 계획 → 스틸 병렬 → 문1 → 영상화 병렬 → 문2", build_shorts_graph().get_graph()),
         ("스틸 1개 — 생성(9초) → 채점 → 재시도", build_shot_graph().get_graph()),
@@ -444,6 +449,7 @@ def _report_final(final: dict, out_dir: pathlib.Path, elapsed: float, *, stills_
 
 
 def main(argv=None) -> int:
+    tools.force_utf8_stdout()
     p = argparse.ArgumentParser(prog="graph.shorts_graph", description="쇼츠 스틸 게이트 그래프")
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -478,6 +484,9 @@ def main(argv=None) -> int:
     rs.set_defaults(fn=cmd_resume)
 
     d = sub.add_parser("diagram", help="구조도(mermaid) 출력")
+    d.add_argument("--compact", action="store_true",
+                   help="README용 컴팩트 1장 (가로·단계 묶음·게이트 강조)")
+    d.add_argument("--lang", choices=("ko", "en"), default="ko", help="--compact 라벨 언어")
     d.set_defaults(fn=cmd_diagram)
 
     args = p.parse_args(argv)
