@@ -248,3 +248,6 @@ skills/game-prototype/unity-project/Assets/Sprites/ts_*.png
 skills/game-prototype/unity-project/Assets/Sprites/ts_*.png.meta
 skills/game-prototype/unity-project/Assets/Resources/Sprites/ts_*.png
 skills/game-prototype/unity-project/Assets/Resources/Sprites/ts_*.png.meta
+
+# graph/game_graph.py 가 사이클마다 쓰는 병합 스냅샷 — 산출물이므로 커밋하지 않는다
+whiteboard-*.json
