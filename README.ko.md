@@ -80,17 +80,17 @@ LangGraph 상태 기계로 돌고, 싼 단계에 문이 섭니다. 기준을 넘
 flowchart TD
   plan["plan<br/>샷 스펙 로드"]
   render_shot["render_shot ×N<br/>생성 9초 → 채점 → 재시도"]
-  gate{{"gate · 🚪 문 1<br/>전 샷 75점 이상"}}
+  gate{{"gate — 문 1<br/>전 샷 75점 이상"}}
   ready_for_video["ready_for_video"]
   storyboard["storyboard<br/>검수 시트 작성"]
-  approval[/"approval · 🧑 interrupt<br/>자율 모드면 블로커 기록 후 halt"/]
+  approval[/"approval · interrupt<br/>자율 모드면 halt + 블로커 기록"/]
   mark_regen("mark_regen<br/>지목한 샷만")
   video_stage["video_stage<br/>되돌릴 수 없는 지점"]
   render_clip["render_clip ×N<br/>영상화 412초 → 컷심사 → 시드 리롤"]
-  clip_gate{{"clip_gate · 🚪 문 2<br/>REGEN 컷 없어야"}}
+  clip_gate{{"clip_gate — 문 2<br/>REGEN 컷 없어야"}}
   ready_for_assembly["ready_for_assembly"]
   assemble["assemble<br/>concat + SOURCES + 고지"]
-  legal{{"legal · legal-gate.sh<br/>결정론 + 판단 병합<br/>미실행 = fail-closed"}}
+  legal{{"legal · legal-gate.sh<br/>미실행 = fail-closed"}}
   bump_legal("bump_legal<br/>최대 2회")
   release(["release<br/>출시 패키지"])
   blocked[["blocked<br/>179분 안 씀"]]
@@ -98,7 +98,7 @@ flowchart TD
   plan -. "fan-out 샷별" .-> render_shot
   render_shot --> gate
   gate -. "통과" .-> ready_for_video
-  gate -. "미달 → 3시간 안 씀" .-> blocked
+  gate -. "미달" .-> blocked
   ready_for_video --> storyboard
   storyboard --> approval
   approval -. "재생성 i03,i07" .-> mark_regen
@@ -193,7 +193,7 @@ flowchart TD
 아래 어느 갈래도 API 키가 필요하지 않습니다.
 
 ```mermaid
-flowchart TD
+flowchart LR
   V(["처음 온 사람"]) --> Q{"./scripts/start-here.sh<br/>무엇을 하러 오셨나요?"}
   Q -- "1 · 영상 만들기" --> A1["doctor → first-touch.sh<br/>60초 9:16 쇼츠 1편"]
   Q -- "2 · 게임 만들기" --> A2["Unity 전제 확인<br/>game-dev-agent"]

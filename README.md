@@ -82,17 +82,17 @@ go stale.
 flowchart TD
   plan["plan<br/>load shot spec"]
   render_shot["render_shot ×N<br/>gen 9s → judge → retry"]
-  gate{{"gate · 🚪 Gate 1<br/>every still ≥ 75"}}
+  gate{{"gate — Gate 1<br/>every still ≥ 75"}}
   ready_for_video["ready_for_video"]
   storyboard["storyboard<br/>build review sheet"]
-  approval[/"approval · 🧑 interrupt<br/>autonomous run logs a blocker, halts"/]
+  approval[/"approval · interrupt<br/>autonomous run halts + logs"/]
   mark_regen("mark_regen<br/>only the marked shots")
   video_stage["video_stage<br/>point of no return"]
   render_clip["render_clip ×N<br/>i2v 412s → judge → seed reroll"]
-  clip_gate{{"clip_gate · 🚪 Gate 2<br/>no cut left at REGEN"}}
+  clip_gate{{"clip_gate — Gate 2<br/>no cut left at REGEN"}}
   ready_for_assembly["ready_for_assembly"]
   assemble["assemble<br/>concat + SOURCES + disclosure"]
-  legal{{"legal · legal-gate.sh<br/>deterministic + judgment<br/>not run = fail-closed"}}
+  legal{{"legal · legal-gate.sh<br/>not run = fail-closed"}}
   bump_legal("bump_legal<br/>max 2 rounds")
   release(["release<br/>release package"])
   blocked[["blocked<br/>179 min not spent"]]
@@ -100,7 +100,7 @@ flowchart TD
   plan -. "fan-out per shot" .-> render_shot
   render_shot --> gate
   gate -. "pass" .-> ready_for_video
-  gate -. "below bar → 3h not spent" .-> blocked
+  gate -. "below bar" .-> blocked
   ready_for_video --> storyboard
   storyboard --> approval
   approval -. "regen i03,i07" .-> mark_regen
@@ -149,7 +149,7 @@ flowchart TD
   work_lane["work_lane ×3<br/>Programmer · Art · Sound"]
   unity_scene{{"unity_scene<br/>🔒 Unity critical section"}}
   unity_build["unity_build<br/>pins artifact paths into state<br/>+ stale guard"]
-  qa["qa<br/>launch exe · screenshot<br/>★ reads only the pinned paths"]
+  qa["qa<br/>launch exe · screenshot<br/>★ reads pinned paths only"]
   ta{{"ta<br/>art-quality score"}}
   fix("fix<br/>max 3 rounds")
   pm_merge(["pm_merge<br/>state merge (reducer)"])
@@ -198,7 +198,7 @@ and produced a false "fixed".
 answer.  Nothing below needs an API key.
 
 ```mermaid
-flowchart TD
+flowchart LR
   V(["visitor"]) --> Q{"./scripts/start-here.sh<br/>what did you come for?"}
   Q -- "1 · make a video" --> A1["doctor → first-touch.sh<br/>a 60-second 9:16 short"]
   Q -- "2 · make a game" --> A2["Unity prerequisites<br/>game-dev-agent"]
