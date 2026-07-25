@@ -21,6 +21,10 @@
 *.ini       text eol=lf
 *.cfg       text eol=lf
 *.conf      text eol=lf
+# .tsv is parsed field-by-field (skills/job-hunt/config/activation.tsv); a
+# trailing \r rides along on the last column and silently breaks lookups.
+# Flagged by six consecutive audit cycles as "job-hunt CRLF contamination".
+*.tsv       text eol=lf
 *.env*      text eol=lf
 .gitignore  text eol=lf
 .gitattributes text eol=lf
