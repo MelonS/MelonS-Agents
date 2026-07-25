@@ -17,20 +17,46 @@
 
 ## 현재 상태 (2026-07-25)
 
-- **Phase 1·2·3·4 완료** — 커밋 `aa75e0b`, 브랜치 `langgraph-migration`
-- `graph/` 패키지. 상세는 [`graph/README.md`](../graph/README.md)
-- **실물 end-to-end 완주 확인** — 스틸 → 심사 → 문1 → 영상화 → 컷심사 → 문2, exit 0
-- 남은 미검증: 조립·법률·출시 단계 연결 (Phase 5)
+- **Phase 1~5 완료** — 커밋 `3bdc96c`, 브랜치 `langgraph-migration`
+- **쇼츠 라인이 끝에서 끝까지 코드로 이어졌다:**
+
+```
+스틸 → 🚪문1 → 🧑승인 → 영상화 → 🚪문2 → 조립 → ⚖️법률 → 출시
+```
+
+- `graph/` 패키지 ~1,800줄. 상세는 [`graph/README.md`](../graph/README.md)
+- 남은 것: Phase 6(게임 라인), 진입 마법사
 
 ```bash
 # 배선 확인 (모델 호출 0)
 .venv/Scripts/python -m graph.shorts_graph run --spec graph/examples/shots.example.json --mock --thread demo
 
-# 실물 (ComfyUI 필요)
-.venv/Scripts/python -m graph.shorts_graph run --spec graph/examples/shots.one.json --judge cli --thread real-01
-.venv/Scripts/python -m graph.shorts_graph run ... --stills-only    # 문 1에서 멈춤
-.venv/Scripts/python -m graph.shorts_graph diagram
+# 실물 — 승인 지점에서 멈춘다 (exit 3)
+.venv/Scripts/python -m graph.shorts_graph run \
+    --spec graph/examples/shots.one.json --judge cli --legal-judge cli --thread ep12
+
+# 검수 시트를 보고 결정
+.venv/Scripts/python -m graph.shorts_graph resume --thread ep12 --approve
+.venv/Scripts/python -m graph.shorts_graph resume --thread ep12 --regen i03,i07
+.venv/Scripts/python -m graph.shorts_graph resume --thread ep12 --reject
+
+.venv/Scripts/python -m graph.shorts_graph diagram      # 구조도 3종
 ```
+
+**종료 코드:** `0` 완주 · `2` 게이트 차단 · `3` 사람 승인 대기 · `1` 오류.
+`3`을 따로 둔 이유 — 배치 스크립트가 "막힘"과 "사람 기다리는 중"을 구분해야 한다.
+
+**주요 옵션**
+
+| 옵션 | 뜻 |
+|---|---|
+| `--mock` | ComfyUI 없이 배선만 (모델 호출 0) |
+| `--judge mock\|cli` | 스틸·컷 심사 (이미지를 본다) |
+| `--legal-judge mock\|cli` | 법률 판단 (대본을 본다 — `--mock`과 조합 가능) |
+| `--stills-only` | 문 1에서 멈춤 |
+| `--autonomy` | 승인에서 기다리지 않고 블로커 기록 후 halt |
+| `--frames N` | 컷당 심사 프레임 (기본 3) — 실행 토큰의 최대 변수 |
+| `--profile info\|news\|idol` | 법률 게이트의 `required_checks` 선택 |
 
 ### 실측치 (RTX 4070 Ti SUPER 16GB, 1샷 완주 507초)
 
@@ -49,12 +75,12 @@
 | | 할 일 | 시간 | 비고 |
 |---|---|---|---|
 | ✓ | ~~whiteboard 복구~~ | — | `6d8d7e9` |
-| ✓ | ~~Phase 2·3~~ | — | `54c863e`, 실물 완주 확인 |
-| ✓ | ~~Phase 4 — 사람 승인~~ | — | `aa75e0b`, 경로 4가지 검증 |
-| 1 | **Phase 5 — 법률 루프** | ~30분 | 조립 단계가 미연결이라 조사 약간 |
+| ✓ | ~~Phase 2·3~~ | — | `54c863e`, 실물 완주 |
+| ✓ | ~~Phase 4 — 사람 승인~~ | — | `aa75e0b`, 경로 4가지 |
+| ✓ | ~~Phase 5 — 법률 루프~~ | — | `3bdc96c`, PASS + fail-closed |
+| 1 | Phase 6 — 게임 라인 | ~1시간 | 새 도메인 — **조사 있음** |
 | 2 | 진입 마법사 최소판 | ~20분 | 승인 불필요 |
-| 3 | Phase 6 — 게임 라인 | ~1시간 | 새 도메인 — 조사 있음 |
-| 4 | 게임 플러그인 등록 · 프로필 로더 | 제품화 때 | 로더는 §5 승인 대상 |
+| 3 | 게임 플러그인 등록 · 프로필 로더 | 제품화 때 | 로더는 §5 승인 대상 |
 
 ### Phase 로드맵
 
@@ -64,8 +90,23 @@
 | 02 | 실물 연결 — ComfyUI + `claude` CLI 채점 | **완료** | ~25K |
 | 03 | 영상화 fan-out + cut-judge + 문2 | **완료** | ~35K |
 | 04 | 사람 승인 (`interrupt()`) + 자율 halt | **완료** | ~30K |
-| 05 | 법률 루프 (`legal-gate.sh` 조건부 엣지) | 다음 | ~45K |
-| 06 | 게임 라인 (뮤텍스 + 상태 병합) | 대기 | ~70K |
+| 05 | 조립 → 법률 게이트 → 출시 | **완료** | ~45K |
+| 06 | 게임 라인 (뮤텍스 + 상태 병합) | 다음 | ~70K |
+
+### Phase 5에서 게이트가 막은 것 — 우회하지 않고 고쳤다
+
+돌리는 중 `legal-gate.sh`가 네 번 막았고 전부 정당했다. 통과시키려고 게이트를
+손대는 대신 원인을 고쳤다:
+
+| 막힌 것 | 왜 | 고친 방법 |
+|---|---|---|
+| `fact-accuracy` / `unverifiable` | 판단 심사를 안 돌림 → fail-closed | **실제로 심사위원을 붙였다** (대본 기반) |
+| `required-disclaimer` | `info` 프로필이 Pexels 문구를 요구 | 프로필 YAML에서 **그대로 읽어온다** |
+| `media-license` | `apache-2.0`이 allowlist에 없음 | `owner-self` — 제3자 권리 소재 없음, 실제로 그렇다 |
+
+**"Pexels"라고 적으면 오귀속**이다 — 100% 생성물인데 스톡 라이선스를 표기하는 건
+`generative-shorts-pipeline.md` 2026-07-06 항목에서 고친 바로 그 버그다.
+게이트를 통과시키려고 사실이 아닌 고지를 넣지 않는다.
 
 ### ⚠️ 추정 방법 — 앞선 추정이 5~7배 틀렸다
 
@@ -96,8 +137,17 @@ Unity 배타 자원과 wb 병합을 **조사해야** 하기 때문이고, 그건
 2. **인물 없는 샷에서 character_lock 감점.** must에 인물이 없으면 캐릭터 일관성 만점 처리.
 3. **LangGraph: State에 선언 안 한 키는 조용히 버려진다.** `clip_gate_open`을 빠뜨려
    문 2가 항상 닫혀 있었다. 에러도 경고도 없다. **스키마 선언이 곧 계약.**
-4. **Windows `python3`는 Store 스텁.** `graph/`는 `sys.executable`로 회피.
-5. **심사위원 CLI는 `--allowedTools Read` 필수.** 없으면 그림을 못 보고 추정으로 채점한다.
+4. **심사위원 CLI는 `--allowedTools Read` 필수.** 없으면 그림을 못 보고 추정으로 채점한다.
+5. **Windows에는 스텁이 둘 있다.** 같은 종류의 함정이 두 번 나왔다:
+   - `python3` → Microsoft Store 스텁. 조용히 아무것도 안 함.
+   - `bash` → WSL 스텁. WSL 없으면 rc=1로 죽음.
+
+   `graph/`는 `sys.executable`과 `bash_bin()`(Git Bash 직접 탐색)으로 회피했다.
+   **기존 `run.sh`·`scripts/*.sh`가 Windows에서 조용히 실패 중일 가능성이 크다** —
+   `docs/platform-windows.md`에 이 두 스텁 얘기가 없다.
+6. **`--mock`(가짜 스틸)과 `--judge cli`(진짜 채점)는 모순 조합이다.** 1px 이미지를
+   실제로 채점해 0점이 난다. 그래서 법률 판단만 `--legal-judge`로 분리했다 —
+   법률은 이미지가 아니라 대본을 보므로 mock 스틸과 조합할 수 있어야 한다.
 
 ## 두 라인은 모양이 다르다
 
