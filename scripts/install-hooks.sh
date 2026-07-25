@@ -68,7 +68,10 @@ install_hook() {
   cat > "$dst" <<EOF
 #!/usr/bin/env bash
 # $MARKER -> scripts/hooks/$name.sh  (do not edit; edit the source instead)
-exec "\$(git rev-parse --show-toplevel)/scripts/hooks/$name.sh" "\$@"
+# Invoked through \`bash\` rather than exec'd directly so the hook still works
+# on a clone where the source lost its exec bit (Windows checkouts don't carry
+# one at all).
+exec bash "\$(git rev-parse --show-toplevel)/scripts/hooks/$name.sh" "\$@"
 EOF
   chmod +x "$dst" "$src"
   echo "✓ installed: $dst → $src"
