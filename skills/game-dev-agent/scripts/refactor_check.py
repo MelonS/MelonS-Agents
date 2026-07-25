@@ -5,7 +5,7 @@ Usage:  python refactor_check.py [--tag R2-step1]
 흐름:
   1. unity scenes (regen)
   2. unity verify-build
-  3. PawnSim.exe --delay 3 --screenshot G:/ai/_refactor_current.png
+  3. PawnSim.exe --delay 3 --screenshot $PAWNSIM_SCRATCH_DIR/_refactor_current.png
   4. Player.log 에 error/exception 검사
   5. baseline 과 픽셀 diff (PIL) - 임계 5% 초과 시 FAIL
   6. exit 0 = PASS, 1 = FAIL (compile/build/runtime/visual)
@@ -16,6 +16,7 @@ Usage:  python refactor_check.py [--tag R2-step1]
 """
 from __future__ import annotations
 import argparse
+import os
 import sys
 from pathlib import Path
 from PIL import Image
@@ -24,11 +25,24 @@ import subprocess
 REPO = Path(__file__).resolve().parents[3]  # ...skills/game-dev-agent/scripts/X.py -> MelonS-Agents
 UNITY_PROJ = REPO / "skills" / "game-prototype" / "unity-project"
 BUILD_EXE  = REPO / "skills" / "game-prototype" / "builds" / "verify-game-only" / "PawnSim.exe"
-BASELINE   = Path("G:/ai/_refactor_baseline.png")
-CURRENT    = Path("G:/ai/_refactor_current.png")
-PLAYER_LOG = Path("C:/Users/comdo/AppData/LocalLow/DefaultCompany/unity-project/Player.log")
-SCENE_LOG  = Path("G:/ai/_unity_scene.log")
-BUILD_LOG  = Path("G:/ai/_unity_build.log")
+
+# Scratch dir for baseline/current screenshots + Unity logs.  Deliberately
+# OUTSIDE the repo (these are large, regenerated every cycle, and must not be
+# committed — see CLAUDE.md code/data separation).  Default = the repo's parent,
+# which reproduces the historical `G:/ai/...` layout without hardcoding a drive
+# letter.  Override with PAWNSIM_SCRATCH_DIR.
+SCRATCH    = Path(os.environ.get("PAWNSIM_SCRATCH_DIR", REPO.parent))
+BASELINE   = SCRATCH / "_refactor_baseline.png"
+CURRENT    = SCRATCH / "_refactor_current.png"
+SCENE_LOG  = SCRATCH / "_unity_scene.log"
+BUILD_LOG  = SCRATCH / "_unity_build.log"
+# Unity writes Player.log under the user's LocalLow, i.e. a per-account path.
+# Derived from the running user rather than baked in (it used to embed the
+# operator's Windows account name — contract §12).
+PLAYER_LOG = Path(os.environ.get(
+    "PAWNSIM_PLAYER_LOG",
+    Path.home() / "AppData" / "LocalLow" / "DefaultCompany" / "unity-project" / "Player.log",
+))
 
 
 def step_scenes() -> int:
@@ -179,7 +193,7 @@ def step_real_qa(delay: float = 30.0, allow_stale: bool = False,
     if not target.exists():
         target = BUILD_EXE
     print(f"[refactor] (4.5/7) REAL QA - {target.parent.name} {delay}s 시뮬 ...")
-    REAL_QA_SHOT = Path("G:/ai/_refactor_realqa.png")
+    REAL_QA_SHOT = SCRATCH / "_refactor_realqa.png"
     sys.path.insert(0, str(REPO / "skills" / "game-dev-agent" / "scripts"))
     from modules import qa
     ok, msg = qa.launch_and_capture(target, REAL_QA_SHOT, delay_sec=delay)
@@ -244,7 +258,7 @@ def step_build_click_qa(allow_stale: bool = False,
         print("[refactor] (4.6/7) Build Click QA - 빌드 없음, skip")
         return 0
     print(f"[refactor] (4.6/7) Build Click QA - {target.parent.name} (6 mode chain) ...")
-    QA_LOG = Path("G:/ai/_refactor_clickqa.log")
+    QA_LOG = SCRATCH / "_refactor_clickqa.log"
     import subprocess
     try:
         proc = subprocess.run(
@@ -305,7 +319,7 @@ def step_log_check() -> int:
 def step_playmode_tests() -> int:
     """R7 - PawnSim -testmode 자동 검증 (55 isolated 시나리오)"""
     print("[refactor] (6/7) PlayMode tests (isolated) ...")
-    report_path = Path("G:/ai/_pawnsim_test_report.json")
+    report_path = SCRATCH / "_pawnsim_test_report.json"
     if report_path.exists():
         report_path.unlink()
     proc = subprocess.run(
@@ -340,7 +354,7 @@ def step_playmode_tests() -> int:
 def step_integration_tests() -> int:
     """진짜 Game.unity 위 통합 검증 (I1-I16) - GUI 버튼/Pawn 이동/AI 행위 등 실제 게임 flow"""
     print("[refactor] (7/7) Integration tests (real game state) ...")
-    report_path = Path("G:/ai/_pawnsim_integration_report.json")
+    report_path = SCRATCH / "_pawnsim_integration_report.json"
     if report_path.exists():
         report_path.unlink()
     proc = subprocess.run(

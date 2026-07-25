@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # yt-analytics-query.py — 영상별 상세 지표(리텐션·평균시청·트래픽소스) 조회.
 #   python yt-analytics-query.py <videoId> [videoId ...]
-import json, sys, urllib.request, urllib.parse
+import json, os, sys, urllib.request, urllib.parse
 from pathlib import Path
 
-CONF = Path("G:/config/youtubeuploader")
+# Same env contract as yt-analytics-auth.py — the machine-specific default is
+# only a fallback (see .env.example: YT_CONFIG_DIR).
+CONF = Path(os.environ.get("YT_CONFIG_DIR", "G:/config/youtubeuploader"))
 cs = json.loads((CONF/"client_secrets.json").read_text(encoding="utf-8"))["installed"]
 tok = json.loads((CONF/"analytics.token").read_text(encoding="utf-8"))
 data = urllib.parse.urlencode({

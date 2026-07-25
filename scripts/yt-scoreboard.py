@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # yt-scoreboard.py — 채널 전 영상을 테마별 리텐션·SHORTS%·조회로 스코어보드.
-import csv, json, urllib.request, urllib.parse, statistics as st
+import csv, json, os, urllib.request, urllib.parse, statistics as st
 from pathlib import Path
 
-CONF = Path("G:/config/youtubeuploader")
+# Same env contract as yt-analytics-auth.py — the machine-specific default is
+# only a fallback (see .env.example: YT_CONFIG_DIR).
+CONF = Path(os.environ.get("YT_CONFIG_DIR", "G:/config/youtubeuploader"))
 cs = json.loads((CONF/"client_secrets.json").read_text(encoding="utf-8"))["installed"]
 tk = json.loads((CONF/"analytics.token").read_text(encoding="utf-8"))
 AT = json.loads(urllib.request.urlopen("https://oauth2.googleapis.com/token", data=urllib.parse.urlencode({
