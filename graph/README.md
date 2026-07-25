@@ -89,6 +89,9 @@ flowchart TD
   legal -. "PASS" .-> release
   legal -. "BLOCK · 상한 소진" .-> blocked
   bump_legal --> assemble
+  ctrl_gap[" "]
+  blocked ~~~ ctrl_gap
+  release ~~~ ctrl_gap
 
   classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
   classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
@@ -103,6 +106,8 @@ flowchart TD
   class bump_legal,mark_regen retry
   class release done
   class blocked stop
+  classDef gap fill:none,stroke:none,color:#00000000
+  class ctrl_gap gap
 ```
 <!-- graph:shorts:end -->
 
@@ -135,6 +140,9 @@ flowchart TD
   ta -. "통과" .-> pm_merge
   ta -. "상한 소진" .-> blocked
   fix -- "재빌드" --> unity_scene
+  ctrl_gap[" "]
+  blocked ~~~ ctrl_gap
+  pm_merge ~~~ ctrl_gap
 
   classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
   classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
@@ -149,6 +157,8 @@ flowchart TD
   class fix retry
   class pm_merge done
   class blocked stop
+  classDef gap fill:none,stroke:none,color:#00000000
+  class ctrl_gap gap
 ```
 <!-- graph:game:end -->
 

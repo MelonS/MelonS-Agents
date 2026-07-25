@@ -257,12 +257,24 @@ def render(graph, layout: Layout, lang: str = "ko", *, flow: str = "TD") -> str:
         text = None if label is None else (label[0] if lang == "ko" else label[1])
         out.append(f"  {src} {_arrow(text, conditional)} {dst}")
 
+    # GitHub 은 mermaid 블록 우하단에 확대·축소 컨트롤을 겹쳐 띄운다.  마지막
+    # rank 의 노드가 정확히 그 자리에 놓여 라벨이 가려졌다(2026-07-26 실물 확인).
+    # 종료 노드 아래에 보이지 않는 노드를 한 줄 더 깔아 그 자리를 비워 둔다.
+    terminals = sorted(nid for nid, n in layout.nodes.items() if n.kind in (DONE, STOP))
+    if terminals:
+        out.append('  ctrl_gap[" "]')
+        for nid in terminals:
+            out.append(f"  {nid} ~~~ ctrl_gap")
+
     out.append("")
     out.extend("  " + c for c in _CLASSDEFS)
     for kind in (STEP, GATE, MUTEX, HUMAN, RETRY, DONE, STOP):
         members = sorted(nid for nid, n in layout.nodes.items() if n.kind == kind)
         if members:
             out.append(f"  class {','.join(members)} {kind}")
+    if terminals:
+        out.append("  classDef gap fill:none,stroke:none,color:#00000000")
+        out.append("  class ctrl_gap gap")
     return "\n".join(out)
 
 

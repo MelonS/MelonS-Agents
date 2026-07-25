@@ -115,6 +115,9 @@ flowchart TD
   legal -. "PASS" .-> release
   legal -. "BLOCK · 상한 소진" .-> blocked
   bump_legal --> assemble
+  ctrl_gap[" "]
+  blocked ~~~ ctrl_gap
+  release ~~~ ctrl_gap
 
   classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
   classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
@@ -129,6 +132,8 @@ flowchart TD
   class bump_legal,mark_regen retry
   class release done
   class blocked stop
+  classDef gap fill:none,stroke:none,color:#00000000
+  class ctrl_gap gap
 ```
 <!-- graph:shorts:end -->
 
@@ -165,6 +170,9 @@ flowchart TD
   ta -. "통과" .-> pm_merge
   ta -. "상한 소진" .-> blocked
   fix -- "재빌드" --> unity_scene
+  ctrl_gap[" "]
+  blocked ~~~ ctrl_gap
+  pm_merge ~~~ ctrl_gap
 
   classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
   classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
@@ -179,6 +187,8 @@ flowchart TD
   class fix retry
   class pm_merge done
   class blocked stop
+  classDef gap fill:none,stroke:none,color:#00000000
+  class ctrl_gap gap
 ```
 <!-- graph:game:end -->
 
@@ -199,10 +209,14 @@ flowchart LR
   Q -- "2 · 게임 만들기" --> A2["Unity 전제 확인<br/>game-dev-agent"]
   Q -- "3 · 파이프라인 보기" --> A3["venv → diagram → mock 실행<br/>모델 호출 0"]
   Q -- "4 · 그냥 구경" --> A4["완성본 재생<br/>계정·키 불필요"]
+  ctrl_gap[" "]
+  A4 ~~~ ctrl_gap
   classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
   classDef ask fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
+  classDef gap fill:none,stroke:none,color:#00000000
   class A1,A2,A3,A4,V step
   class Q ask
+  class ctrl_gap gap
 ```
 
 ## 60초 안에 시작
