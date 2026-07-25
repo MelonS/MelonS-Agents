@@ -577,12 +577,12 @@ the agent does not idle on work it owns; an out-of-scope
 instruction is not blocked work, it is someone else's work.
 Bouncing it is the completed action, not a pause.
 
-> Precedent: 2026-07-26, a job-search dispatch (`task_d593a5e961a3`)
-> landed in this session.  The worker preamble's "always finish with
-> `worker_done`" was followed literally, so the task ran without a
-> routing check and produced a commit and push in a separate private
-> repo.  The work itself was correct; it simply was not this
-> session's to do.
+> Precedent: 2026-07-26, an orchestration dispatch belonging to a
+> different workstream landed in this session.  The worker preamble's
+> "always finish with `worker_done`" was followed literally, so the
+> task ran without a routing check and produced a commit and push in a
+> separate private repo.  The work itself was correct; it simply was
+> not this session's to do.
 
 ---
 
