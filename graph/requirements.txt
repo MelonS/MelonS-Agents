@@ -1,0 +1,13 @@
+# graph/ — LangGraph 파이프라인 실행 엔진
+#
+# 설치:
+#   python -m venv .venv
+#   .venv/Scripts/python -m pip install -r graph/requirements.txt   # Windows
+#   .venv/bin/python     -m pip install -r graph/requirements.txt   # macOS/Linux
+#
+# 여기에는 "그래프를 도는 데" 필요한 것만 넣는다.
+# 실제 생성/렌더(ComfyUI·ffmpeg·whisper)는 기존 스크립트가 그대로 담당하고,
+# 그래프는 subprocess로 부르기만 한다 — graph/tools.py 참조.
+
+langgraph>=1.2,<2
+langgraph-checkpoint-sqlite>=3,<4

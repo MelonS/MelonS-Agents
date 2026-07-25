@@ -60,6 +60,14 @@ That grader repeatedly caught what self-review missed: a silent harness blind sp
 ```bash
 git clone --depth 1 https://github.com/MelonS/MelonS-Agents.git
 cd MelonS-Agents
+./scripts/start-here.sh         # asks what you came for, routes you there
+```
+
+Not sure which of the two lines you want?  `start-here.sh` asks once — **make video ·
+build a game · inspect the pipeline · just look** — and prints only the commands for
+that path.  Already know?  Skip it:
+
+```bash
 ./scripts/first-touch.sh        # guided demo: checks tools, renders a 9:16 short, opens it
 ```
 
