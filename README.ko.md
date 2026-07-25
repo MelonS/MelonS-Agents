@@ -53,102 +53,157 @@
 
 **핵심 용어** — *재현 게이트*: 실제 플레이어 클릭을 재생해 각 클릭이 효과를 냈는지 어서트하는 것. *격리 채점*: 스크린샷과 로그만으로 판정하는 별도 서브에이전트. *소크(soak)*: 길게 돌리는 무인 테스트 실행.
 
-## 파이프라인은 그래프다
+## 파이프라인은 그래프다 — 비싼 단계 앞에 문이 서 있다
 
-두 라인 모두 LangGraph 상태 기계로 돕니다. "심사에서 떨어지면 그다음에 어떻게 되는가"가
-누군가 기억해야 하는 관행이 아니라 배선으로 적혀 있다는 뜻입니다. 아래 그림은 모두 실행 중인
-그래프에서 뽑습니다(`python -m graph.shorts_graph diagram --compact`). 그래서 설명하는
-코드와 어긋날 수 없습니다. 노드를 추가하고 배치하지 않으면 생성 자체가 실패합니다.
+쇼츠 한 편에 약 3시간이 걸립니다. 1샷 실물 완주(총 507초, RTX 4070 Ti SUPER)로 재 보니
+**그 중 81%가 한 단계**였습니다.
 
-스틸 한 장은 약 9초, 컷 하나 영상화는 약 7분입니다. 그래서 싼 단계가 자기 심사와 재시도
-루프를 안고 있고, **문 1**은 기준을 넘지 못한 스틸에 영상화 시간을 쓰지 못하게 막습니다.
-그 끝에 사람이 멈춰 서는 지점이 있습니다. 그래프는 종료 코드 3으로 서서 기다리고,
-`resume --approve` 는 처음이 아니라 체크포인트에서 이어갑니다.
+| 단계 | 실측 | 비중 | 26컷 환산 |
+|------|-----:|-----:|----------:|
+| 스틸 생성 (Z-Image) | 10.2초 | 2% | 4분 |
+| 스틸 심사 (이미지 1장) | 22.8초 | 4% | 10분 |
+| **영상화 (Wan A14B)** | **412.3초** | **81%** | **2시간 58분** |
+| 컷 심사 (프레임 3장) | 61.9초 | 12% | 27분 |
 
-<!-- graph:shorts1:begin -->
+스틸 한 장은 10초, 그 스틸로 만드는 컷은 412초입니다. **비용비 1:40.** 그래서 두 라인 모두
+LangGraph 상태 기계로 돌고, 싼 단계에 문이 섭니다. 기준을 넘지 못한 스틸은 영상화
+시간을 쓰지 못하고, 한 번 막을 때마다 179분이 절약됩니다. 이 규칙은 몇 달 동안
+`docs/generative-shorts-pipeline.md` §4.5의 산문이었고, 누가 잊으면 그냥 건너뛰어졌습니다.
+지금은 비싼 단계로 가는 엣지 자체가 열리지 않습니다.
+
+아래 그림은 모두 실행 중인 그래프에서 뽑습니다(`python -m graph.shorts_graph diagram
+--compact`). 라벨이 실제 노드 이름이고, 노드를 추가하고 배치하지 않으면 생성이 실패하므로
+**조용히 낡을 수 없습니다.**
+
+<!-- graph:shorts:begin -->
 ```mermaid
-flowchart LR
-  plan["계획"]
-  render_shot["스틸 라운드<br/>9초/장"]
-  gate{{"문 1<br/>스틸"}}
-  storyboard["검수 시트"]
-  approval[/"사람 승인"/]
-  mark_regen("재생성 지정")
-  blocked(["차단"])
-  view1>"② 영상화 → 문 2 → 마감"]
+flowchart TD
+  plan["plan<br/>샷 스펙 로드"]
+  render_shot["render_shot ×N<br/>생성 9초 → 채점 → 재시도"]
+  gate{{"gate · 🚪 문 1<br/>전 샷 75점 이상"}}
+  ready_for_video["ready_for_video"]
+  storyboard["storyboard<br/>검수 시트 작성"]
+  approval[/"approval · 🧑 interrupt<br/>자율 모드면 블로커 기록 후 halt"/]
+  mark_regen("mark_regen<br/>지목한 샷만")
+  video_stage["video_stage<br/>되돌릴 수 없는 지점"]
+  render_clip["render_clip ×N<br/>영상화 412초 → 컷심사 → 시드 리롤"]
+  clip_gate{{"clip_gate · 🚪 문 2<br/>REGEN 컷 없어야"}}
+  ready_for_assembly["ready_for_assembly"]
+  assemble["assemble<br/>concat + SOURCES + 고지"]
+  legal{{"legal · legal-gate.sh<br/>결정론 + 판단 병합<br/>미실행 = fail-closed"}}
+  bump_legal("bump_legal<br/>최대 2회")
+  release(["release<br/>출시 패키지"])
+  blocked[["blocked<br/>179분 안 씀"]]
 
-  plan -. 샷별 .-> render_shot
+  plan -. "fan-out 샷별" .-> render_shot
   render_shot --> gate
-  gate -. PASS .-> storyboard
-  gate -. 미달 .-> blocked
+  gate -. "통과" .-> ready_for_video
+  gate -. "미달 → 3시간 안 씀" .-> blocked
+  ready_for_video --> storyboard
   storyboard --> approval
-  approval -. 재생성 .-> mark_regen
-  approval -. 취소 .-> blocked
-  mark_regen -. 지정분 .-> render_shot
-  approval -. 승인 .-> view1
-
-  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
-  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
-  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
-  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
-  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
-  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
-  class plan,render_shot,storyboard step
-  class gate gate
-  class approval human
-  class mark_regen retry
-  class blocked stop
-  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
-  class view1 stub
-```
-<!-- graph:shorts1:end -->
-
-사람 승인을 지나면 비싼 절반이 같은 모양을 한 치수 크게 반복합니다. 영상화 → 심사 → 시드
-리롤, 그다음 두 번째 문, 그리고 조립과 법률 심사입니다. 법률 심사는 컷을 되돌려 보내거나
-출시를 아예 막을 수 있습니다.
-
-<!-- graph:shorts2:begin -->
-```mermaid
-flowchart LR
-  render_clip["컷 라운드<br/>7분/컷"]
-  clip_gate{{"문 2<br/>컷"}}
-  assemble["조립"]
-  legal{{"법률 심사"}}
-  bump_legal("수정 회차")
-  release(["출시 패키지"])
-  blocked(["차단"])
-  view0>"① 스틸 → 문 1 → 사람 승인"]
-
+  approval -. "재생성 i03,i07" .-> mark_regen
+  approval -. "승인" .-> video_stage
+  approval -. "취소" .-> blocked
+  mark_regen -. "그 샷만" .-> render_shot
+  video_stage -. "fan-out 컷별" .-> render_clip
   render_clip --> clip_gate
-  clip_gate -. PASS .-> assemble
-  clip_gate -. 미달 .-> blocked
+  clip_gate -. "통과" .-> ready_for_assembly
+  clip_gate -. "미달" .-> blocked
+  ready_for_assembly --> assemble
   assemble --> legal
-  legal -. 수정 .-> bump_legal
-  legal -. PASS .-> release
-  legal -. BLOCK .-> blocked
+  legal -. "REVISE" .-> bump_legal
+  legal -. "PASS" .-> release
+  legal -. "BLOCK · 상한 소진" .-> blocked
   bump_legal --> assemble
-  view0 -. 승인 .-> render_clip
 
-  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
-  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
-  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
-  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
-  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
-  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
-  class assemble,render_clip step
-  class clip_gate,legal gate
-  class bump_legal retry
+  classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
+  classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
+  classDef mutex fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
+  classDef human fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
+  classDef retry fill:#EDF1F5,stroke:#6B7C8D,stroke-width:1px,stroke-dasharray:4 3,color:#3D4C5C
+  classDef done fill:#DFEFE5,stroke:#2E7D53,stroke-width:2px,color:#14532D
+  classDef stop fill:#F6E2E0,stroke:#A93A31,stroke-width:2px,color:#7F1D1D
+  class assemble,plan,ready_for_assembly,ready_for_video,render_clip,render_shot,storyboard,video_stage step
+  class clip_gate,gate,legal gate
+  class approval human
+  class bump_legal,mark_regen retry
   class release done
   class blocked stop
-  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
-  class view0 stub
 ```
-<!-- graph:shorts2:end -->
+<!-- graph:shorts:end -->
 
-게임 라인도 같은 방식으로 갈라지지만 합류가 다릅니다. Unity 는 두 레인이 동시에 몰 수
-없으므로, 병렬 제작 레인은 문이 아니라 뮤텍스에서 만나고 모든 재시도 화살표가 그 배타 구간
-안으로 돌아옵니다. 게임 라인 구조도 두 장과 샷 단위 상세는
-[`graph/README.md`](graph/README.md) 에 있습니다.
+모양: 육각형 = 건너뛸 수 없는 문 · 평행사변형 = 사람이 서는 `interrupt()` · 점선 = 조건부
+엣지 · 이중 박스 = 중단. 저 중 네 개는 **되돌아가는** 엣지입니다(스틸 재시도, 운영자가
+지목한 재생성, 시드 리롤, 법률 REVISE). 어제까지 전부 사람이 기억해야 하는 문단이었습니다.
+`resume --approve` 는 처음이 아니라 체크포인트에서 이어가므로, 26컷 중 19컷에서 죽어도
+남은 7컷만 다시 돕니다.
+
+<!-- graph:game:begin -->
+```mermaid
+flowchart TD
+  pm_publish["pm_publish<br/>task 발행 · 레인 3개 오픈"]
+  review{{"review<br/>Director · Designer · AI Designer"}}
+  work_lane["work_lane ×3<br/>Programmer · Art · Sound"]
+  unity_scene{{"unity_scene<br/>🔒 Unity 배타 구간 시작"}}
+  unity_build["unity_build<br/>산출물 경로를 상태에 확정<br/>+ stale guard"]
+  qa["qa<br/>exe 실행 · 스크린샷<br/>★ 상태의 경로만 읽음"]
+  ta{{"ta<br/>아트 품질 채점"}}
+  fix("fix<br/>최대 3회")
+  pm_merge(["pm_merge<br/>상태 병합 (리듀서)"])
+  blocked[["blocked<br/>블로커 기록"]]
+
+  pm_publish --> review
+  review -. "fan-out 레인별" .-> work_lane
+  review -. "반려" .-> blocked
+  work_lane --> unity_scene
+  unity_scene --> unity_build
+  unity_build -. "빌드 성공" .-> qa
+  unity_build -. "빌드 실패" .-> fix
+  unity_build -. "상한 소진" .-> blocked
+  qa --> ta
+  ta -. "미달" .-> fix
+  ta -. "통과" .-> pm_merge
+  ta -. "상한 소진" .-> blocked
+  fix -- "재빌드" --> unity_scene
+
+  classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
+  classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
+  classDef mutex fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
+  classDef human fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
+  classDef retry fill:#EDF1F5,stroke:#6B7C8D,stroke-width:1px,stroke-dasharray:4 3,color:#3D4C5C
+  classDef done fill:#DFEFE5,stroke:#2E7D53,stroke-width:2px,color:#14532D
+  classDef stop fill:#F6E2E0,stroke:#A93A31,stroke-width:2px,color:#7F1D1D
+  class pm_publish,qa,unity_build,work_lane step
+  class review,ta gate
+  class unity_scene mutex
+  class fix retry
+  class pm_merge done
+  class blocked stop
+```
+<!-- graph:game:end -->
+
+게임 라인도 같은 방식으로 갈라지지만 합류가 다릅니다. Unity 는 두 레인이 동시에 몰 수 없어서,
+병렬 제작 레인이 문이 아니라 **뮤텍스**에서 만납니다. `unity_build` 가 산출물 경로를 상태에
+확정하고 `qa` 는 그 경로만 읽습니다. 날짜 스탬프 폴더가 자정을 넘겨 어제 빌드를 열고 "고쳤다"가
+되는 거짓 검증을, 사람이 알아채는 대신 **구조적으로** 못 읽게 만든 장치입니다.
+
+## 어디서 시작하나
+
+`./scripts/start-here.sh` 가 질문 하나를 던지고, 그 답에 해당하는 명령만 보여 줍니다.
+아래 어느 갈래도 API 키가 필요하지 않습니다.
+
+```mermaid
+flowchart TD
+  V(["처음 온 사람"]) --> Q{"./scripts/start-here.sh<br/>무엇을 하러 오셨나요?"}
+  Q -- "1 · 영상 만들기" --> A1["doctor → first-touch.sh<br/>60초 9:16 쇼츠 1편"]
+  Q -- "2 · 게임 만들기" --> A2["Unity 전제 확인<br/>game-dev-agent"]
+  Q -- "3 · 파이프라인 보기" --> A3["venv → diagram → mock 실행<br/>모델 호출 0"]
+  Q -- "4 · 그냥 구경" --> A4["완성본 재생<br/>계정·키 불필요"]
+  classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
+  classDef ask fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
+  class A1,A2,A3,A4,V step
+  class Q ask
+```
 
 ## 60초 안에 시작
 
@@ -176,11 +231,17 @@ Pexels 가입도, Suno 호출도, `.env` 편집도 필요 없습니다 — 마�
 
 콜로니스트는 유틸리티 AI 에 따라 벌목·채광·농사·요리·운반·건축·연구·전투를 하고, AI 디렉터가 불규칙한 주기로 위협을 배치하며, 플레이어는 폰을 전투에 징집하고 건축·지정 명령을 내립니다. 모든 스프라이트(완전한 **32px 아트 생성**), 모든 씬, 모든 C# 시스템을 [`game-dev-agent`](skills/game-dev-agent/) 가 CLI 로 스캐폴딩하며 **수동 Unity 에디터 작업은 전혀 없습니다**. 전체 기능 목록과 정직한 검증 상태(알려진 한계 포함): [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
 
-## 샘플 결과물 — music-video
+## 샘플 결과물 — 생성형 쇼츠
 
-![2026-05-22 noir-detective 렌더의 5초 애니메이션 프리뷰 — 9:16 세로 쇼츠, 스모키 바 인테리어, pink-magenta rnb_low_key 그레이드 프로필의 파이프를 문 수염 남자. phrase-aware 쉐이더 + 장르별 컬러 그레이드가 평범한 Pexels B-roll 을 장르 코드가 입혀진 룩으로 변환](docs/demo/music-video-noir-detective-2026-05-24-preview.gif)
+<!-- §12 operator-authorized deviation: operator asked for the published short to be featured (2026-07-26) -->
+![현재 정본 룩의 6초 미리보기: 9:16 세로 블랙홀 명상 — 검은 중심을 감싸고 휘도는 마젠타·시안 강착 필라멘트와 새겨 넣은 자막, 스틸을 로컬에서 생성해 모션으로 이어 붙인 결과](docs/demo/constella-ep08b-blackhole.gif)
 
-음악이 주(主) 오디오가 되는 9:16 쇼츠입니다: 비트에 맞춘 컷, onset(음 시작점)에 맞춘 글리치 마이크로 에디트, 그리고 여섯 가지 장르별 컬러 그레이드(+ 중립 패스스루) 중 하나가 평범한 스톡 B-roll 을 장르 색이 입혀진 룩으로 바꿉니다. 2026-05-17 에 기존의 내레이션 기반 포맷을 밀어내고 채택됐습니다. 전체 파이프라인 — 23개 쉐이더, 장르 카탈로그, v1→v6 진화: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
+2026년 7월 기준 정본 룩입니다. 로컬 FLUX 스틸(실사 LoRA, 컷당 다수 후보를 뽑아 큐레이션)을
+라스트프레임 체이닝으로 Wan A14B 모션에 이어 붙이고, 시네마틱 피니시와 생성 음악, 새겨 넣은
+자막까지. 30초 1080×1920, 데스크톱 GPU 한 장으로 렌더했습니다
+([전체 영상 보기](https://www.youtube.com/shorts/yIb00GFHZD8)). 위 구조도의 문이 지키는 게
+바로 이 포맷입니다. 스틸을 반려하는 비용은 10초, 그 스틸로 만든 컷을 반려하는 비용은 412초입니다.
+파이프라인 정본: [`docs/generative-shorts-pipeline.md`](docs/generative-shorts-pipeline.md).
 
 ## 어떻게 런타임 비용 0을 유지하나
 

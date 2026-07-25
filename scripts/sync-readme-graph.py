@@ -4,10 +4,8 @@
 README.md(영어)·README.ko.md(한국어)·graph/README.md 안의 마커 사이 블록만
 갱신한다:
 
-    <!-- graph:shorts1:begin -->  ...  <!-- graph:shorts1:end -->
-    <!-- graph:shorts2:begin -->  ...  <!-- graph:shorts2:end -->
-    <!-- graph:game1:begin -->    ...  <!-- graph:game1:end -->
-    <!-- graph:game2:begin -->    ...  <!-- graph:game2:end -->
+    <!-- graph:shorts:begin -->  ...  <!-- graph:shorts:end -->
+    <!-- graph:game:begin -->    ...  <!-- graph:game:end -->
 
 구조도를 손으로 관리하면 반드시 낡는다(2026-07-26 감사: for-analysts.md 의
 서브에이전트 수가 22/23/27 로 갈라져 있었다).  그래서 README 의 그림도
@@ -33,9 +31,9 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 # (파일, 라벨 언어, 이 파일이 담는 블록들).  README 는 쇼츠 두 장만 싣고,
 # 네 장 전부는 graph/README.md 에 둔다 — 랜딩 페이지가 다시 길어지지 않게.
 TARGETS = (
-    (ROOT / "README.md", "en", ("shorts1", "shorts2")),
-    (ROOT / "README.ko.md", "ko", ("shorts1", "shorts2")),
-    (ROOT / "graph" / "README.md", "ko", ("shorts1", "shorts2", "game1", "game2")),
+    (ROOT / "README.md", "en", ("shorts", "game")),
+    (ROOT / "README.ko.md", "ko", ("shorts", "game")),
+    (ROOT / "graph" / "README.md", "ko", ("shorts", "game")),
 )
 _REEXEC_FLAG = "SYNC_README_GRAPH_REEXEC"
 
@@ -70,10 +68,8 @@ def _blocks(lang: str) -> dict[str, str]:
     from graph import diagram
 
     return {
-        "shorts1": diagram.shorts_compact(lang, 0),
-        "shorts2": diagram.shorts_compact(lang, 1),
-        "game1": diagram.game_compact(lang, 0),
-        "game2": diagram.game_compact(lang, 1),
+        "shorts": diagram.shorts_compact(lang),
+        "game": diagram.game_compact(lang),
     }
 
 

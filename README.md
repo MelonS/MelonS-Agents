@@ -53,104 +53,162 @@ That grader repeatedly caught what self-review missed: a silent harness blind sp
 
 **Key terms** — *repro gate*: replay real player clicks, assert each had an effect.  *isolated grader*: a separate sub-agent that judges from screenshots + logs only.  *soak*: a long, unattended test run.
 
-## The pipeline is a graph
+## The pipeline is a graph — with a gate in front of the expensive part
 
-Both lines run as LangGraph state machines, so "what happens when a judge fails a
-shot" is wiring rather than a convention someone has to remember.  Every diagram here
-is generated from the running graph (`python -m graph.shorts_graph diagram --compact`),
-so it cannot drift from the code it describes: add a node without placing it and
-generation fails.
+One short takes about three hours to make.  Measured on a full single-shot run
+(507 s end to end, RTX 4070 Ti SUPER), **81% of that is one step**:
 
-A still costs ~9 seconds to make; rendering one cut costs ~7 minutes.  So the cheap
-stage carries its own judge and its own retry loop, and **Gate 1** refuses to spend
-video time on stills that never cleared the bar.  One human checkpoint sits at the end
-of it: the graph stops with exit code 3 and waits, and `resume --approve` continues
-from the checkpoint instead of the beginning.
+| Step | Measured | Share | At 26 cuts |
+|------|---------:|------:|-----------:|
+| Still generation (Z-Image) | 10.2 s | 2% | 4 min |
+| Still judging (1 image) | 22.8 s | 4% | 10 min |
+| **Video (Wan A14B)** | **412.3 s** | **81%** | **2 h 58 min** |
+| Cut judging (3 frames) | 61.9 s | 12% | 27 min |
 
-<!-- graph:shorts1:begin -->
+A still costs 10 seconds; the cut rendered from it costs 412 — a **1:40 ratio**.  So
+both lines run as LangGraph state machines and the cheap stage carries the gate: no
+still below the bar gets to spend video time, and blocking once saves 179 minutes.
+That rule existed as prose in `docs/generative-shorts-pipeline.md` §4.5 for months and
+was skipped whenever someone forgot it.  Now the edge to the expensive stage simply
+does not open.
+
+Every diagram below is generated from the running graph
+(`python -m graph.shorts_graph diagram --compact`): the labels are the real node
+names, and adding a node without placing it fails generation — so they cannot quietly
+go stale.
+
+<!-- graph:shorts:begin -->
 ```mermaid
-flowchart LR
-  plan["Plan"]
-  render_shot["Still round<br/>9s each"]
-  gate{{"Gate 1<br/>stills"}}
-  storyboard["Review sheet"]
-  approval[/"Human approval"/]
-  mark_regen("Mark regen")
-  blocked(["Blocked"])
-  view1>"2. Video -> Gate 2 -> finish"]
+flowchart TD
+  plan["plan<br/>load shot spec"]
+  render_shot["render_shot ×N<br/>gen 9s → judge → retry"]
+  gate{{"gate · 🚪 Gate 1<br/>every still ≥ 75"}}
+  ready_for_video["ready_for_video"]
+  storyboard["storyboard<br/>build review sheet"]
+  approval[/"approval · 🧑 interrupt<br/>autonomous run logs a blocker, halts"/]
+  mark_regen("mark_regen<br/>only the marked shots")
+  video_stage["video_stage<br/>point of no return"]
+  render_clip["render_clip ×N<br/>i2v 412s → judge → seed reroll"]
+  clip_gate{{"clip_gate · 🚪 Gate 2<br/>no cut left at REGEN"}}
+  ready_for_assembly["ready_for_assembly"]
+  assemble["assemble<br/>concat + SOURCES + disclosure"]
+  legal{{"legal · legal-gate.sh<br/>deterministic + judgment<br/>not run = fail-closed"}}
+  bump_legal("bump_legal<br/>max 2 rounds")
+  release(["release<br/>release package"])
+  blocked[["blocked<br/>179 min not spent"]]
 
-  plan -. per shot .-> render_shot
+  plan -. "fan-out per shot" .-> render_shot
   render_shot --> gate
-  gate -. PASS .-> storyboard
-  gate -. below bar .-> blocked
+  gate -. "pass" .-> ready_for_video
+  gate -. "below bar → 3h not spent" .-> blocked
+  ready_for_video --> storyboard
   storyboard --> approval
-  approval -. regen .-> mark_regen
-  approval -. reject .-> blocked
-  mark_regen -. marked .-> render_shot
-  approval -. approved .-> view1
-
-  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
-  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
-  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
-  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
-  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
-  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
-  class plan,render_shot,storyboard step
-  class gate gate
-  class approval human
-  class mark_regen retry
-  class blocked stop
-  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
-  class view1 stub
-```
-<!-- graph:shorts1:end -->
-
-Past the human gate, the expensive half runs the same shape one size up — render, judge,
-reroll the seed, then a second gate before assembly and the legal review that can send
-the cut back or block release outright.
-
-<!-- graph:shorts2:begin -->
-```mermaid
-flowchart LR
-  render_clip["Clip round<br/>7min each"]
-  clip_gate{{"Gate 2<br/>cuts"}}
-  assemble["Assemble"]
-  legal{{"Legal review"}}
-  bump_legal("Revise round")
-  release(["Release package"])
-  blocked(["Blocked"])
-  view0>"1. Stills -> Gate 1 -> human approval"]
-
+  approval -. "regen i03,i07" .-> mark_regen
+  approval -. "approved" .-> video_stage
+  approval -. "reject" .-> blocked
+  mark_regen -. "those shots only" .-> render_shot
+  video_stage -. "fan-out per cut" .-> render_clip
   render_clip --> clip_gate
-  clip_gate -. PASS .-> assemble
-  clip_gate -. below bar .-> blocked
+  clip_gate -. "pass" .-> ready_for_assembly
+  clip_gate -. "below bar" .-> blocked
+  ready_for_assembly --> assemble
   assemble --> legal
-  legal -. revise .-> bump_legal
-  legal -. PASS .-> release
-  legal -. BLOCK .-> blocked
+  legal -. "REVISE" .-> bump_legal
+  legal -. "PASS" .-> release
+  legal -. "BLOCK · rounds spent" .-> blocked
   bump_legal --> assemble
-  view0 -. approved .-> render_clip
 
-  classDef step fill:#eff6ff,stroke:#93c5fd,stroke-width:1px,color:#0f172a
-  classDef gate fill:#fde68a,stroke:#b45309,stroke-width:1.5px,color:#1f2937
-  classDef human fill:#ddd6fe,stroke:#6d28d9,stroke-width:1.5px,color:#1f2937
-  classDef retry fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:3 3,color:#1f2937
-  classDef done fill:#bbf7d0,stroke:#15803d,stroke-width:1.5px,color:#14532d
-  classDef stop fill:#fecaca,stroke:#b91c1c,stroke-width:1.5px,color:#7f1d1d
-  class assemble,render_clip step
-  class clip_gate,legal gate
-  class bump_legal retry
+  classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
+  classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
+  classDef mutex fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
+  classDef human fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
+  classDef retry fill:#EDF1F5,stroke:#6B7C8D,stroke-width:1px,stroke-dasharray:4 3,color:#3D4C5C
+  classDef done fill:#DFEFE5,stroke:#2E7D53,stroke-width:2px,color:#14532D
+  classDef stop fill:#F6E2E0,stroke:#A93A31,stroke-width:2px,color:#7F1D1D
+  class assemble,plan,ready_for_assembly,ready_for_video,render_clip,render_shot,storyboard,video_stage step
+  class clip_gate,gate,legal gate
+  class approval human
+  class bump_legal,mark_regen retry
   class release done
   class blocked stop
-  classDef stub fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3,color:#475569
-  class view0 stub
 ```
-<!-- graph:shorts2:end -->
+<!-- graph:shorts:end -->
+
+Shapes: hexagon = gate that cannot be skipped · parallelogram = human `interrupt()` ·
+dashed = conditional edge · double box = halt.  Four of those edges point *backwards*
+— still retry, operator-marked regen, seed reroll, legal revise — and each one used to
+be a paragraph someone had to remember.  `resume --approve` continues from the
+checkpoint rather than the beginning, so dying on cut 19 of 26 costs the remaining
+seven, not all twenty-six.
+
+<!-- graph:game:begin -->
+```mermaid
+flowchart TD
+  pm_publish["pm_publish<br/>publish task · open 3 lanes"]
+  review{{"review<br/>Director · Designer · AI Designer"}}
+  work_lane["work_lane ×3<br/>Programmer · Art · Sound"]
+  unity_scene{{"unity_scene<br/>🔒 Unity critical section"}}
+  unity_build["unity_build<br/>pins artifact paths into state<br/>+ stale guard"]
+  qa["qa<br/>launch exe · screenshot<br/>★ reads only the pinned paths"]
+  ta{{"ta<br/>art-quality score"}}
+  fix("fix<br/>max 3 rounds")
+  pm_merge(["pm_merge<br/>state merge (reducer)"])
+  blocked[["blocked<br/>blocker logged"]]
+
+  pm_publish --> review
+  review -. "fan-out per lane" .-> work_lane
+  review -. "rejected" .-> blocked
+  work_lane --> unity_scene
+  unity_scene --> unity_build
+  unity_build -. "build ok" .-> qa
+  unity_build -. "build failed" .-> fix
+  unity_build -. "rounds spent" .-> blocked
+  qa --> ta
+  ta -. "below bar" .-> fix
+  ta -. "pass" .-> pm_merge
+  ta -. "rounds spent" .-> blocked
+  fix -- "rebuild" --> unity_scene
+
+  classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
+  classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
+  classDef mutex fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
+  classDef human fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
+  classDef retry fill:#EDF1F5,stroke:#6B7C8D,stroke-width:1px,stroke-dasharray:4 3,color:#3D4C5C
+  classDef done fill:#DFEFE5,stroke:#2E7D53,stroke-width:2px,color:#14532D
+  classDef stop fill:#F6E2E0,stroke:#A93A31,stroke-width:2px,color:#7F1D1D
+  class pm_publish,qa,unity_build,work_lane step
+  class review,ta gate
+  class unity_scene mutex
+  class fix retry
+  class pm_merge done
+  class blocked stop
+```
+<!-- graph:game:end -->
 
 The game line fans out the same way but joins differently.  Unity cannot be driven by
-two lanes at once, so the parallel work lanes converge on a mutex rather than a gate,
-and every retry edge lands back inside that critical section.  Its two diagrams, plus
-the per-shot detail, are in [`graph/README.md`](graph/README.md).
+two lanes at once, so the parallel work lanes converge on a **mutex** rather than a
+gate.  `unity_build` pins the artifact paths into state and `qa` reads only those
+pinned paths — which is what makes a stale build *structurally* unreadable, instead of
+relying on the operator noticing that a date-stamped folder rolled over at midnight
+and produced a false "fixed".
+
+## Where to start
+
+`./scripts/start-here.sh` asks one question and prints only the commands for the
+answer.  Nothing below needs an API key.
+
+```mermaid
+flowchart TD
+  V(["visitor"]) --> Q{"./scripts/start-here.sh<br/>what did you come for?"}
+  Q -- "1 · make a video" --> A1["doctor → first-touch.sh<br/>a 60-second 9:16 short"]
+  Q -- "2 · make a game" --> A2["Unity prerequisites<br/>game-dev-agent"]
+  Q -- "3 · inspect the pipeline" --> A3["venv → diagram → mock run<br/>zero model calls"]
+  Q -- "4 · just look" --> A4["play a finished short<br/>no account, no key"]
+  classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
+  classDef ask fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
+  class A1,A2,A3,A4,V step
+  class Q ask
+```
 
 ## Try it in ~60 seconds
 
@@ -178,11 +236,12 @@ No Pexels signup, no Suno round-trip, no `.env` edit — the wizard fetches a de
 
 Colonists chop / mine / farm / cook / haul / build / research / fight under a utility AI; an AI Director schedules threats on a jittered clock; the player drafts pawns and paints build + designation orders.  Every sprite (a full **32px art generation**), every scene, and every C# system is CLI-scaffolded by [`game-dev-agent`](skills/game-dev-agent/) with **no manual Unity Editor work**.  Full feature list + honest verification status (including known gaps): [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
 
-## Sample output — music-video
+## Sample output — a generative short
 
-![5-second animated preview from the 2026-05-22 noir-detective render — 9:16 vertical short, smoky bar interior, bearded man with pipe in pink-magenta rnb_low_key grade profile, phrase-aware shaders + per-genre color grade transforming generic Pexels B-roll into a genre-coded look](docs/demo/music-video-noir-detective-2026-05-24-preview.gif)
+<!-- §12 operator-authorized deviation: operator asked for the published short to be featured (2026-07-26) -->
+![6-second preview of the current house look: a 9:16 vertical black-hole meditation — magenta and cyan accretion filaments churning around a black core with a burned-in subtitle, stills generated locally and chained into motion](docs/demo/constella-ep08b-blackhole.gif)
 
-A song in → a music-as-primary-audio 9:16 short out: beat-aligned cuts, onset-aligned glitch micro-edits, and one of six per-genre color grades (plus a neutral pass-through) shaping generic stock B-roll into a genre-coded look.  Picked over the earlier narration-driven format on 2026-05-17.  Full pipeline — 23 shaders, the genre catalog, the v1→v6 evolution: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
+The reference look as of 2026-07: local FLUX stills (realism LoRA, many candidates per cut, curated) chained last-frame-to-first into Wan A14B motion, cinematic finish, generated music, subtitles burned in.  30 seconds, 1080×1920, rendered on one desktop GPU — [watch the full short](https://www.youtube.com/shorts/yIb00GFHZD8).  This is the format the gates above exist for: rejecting a still costs 10 seconds, rejecting the cut made from it costs 412.  Pipeline reference: [`docs/generative-shorts-pipeline.md`](docs/generative-shorts-pipeline.md).
 
 ## How it stays at zero runtime cost
 
