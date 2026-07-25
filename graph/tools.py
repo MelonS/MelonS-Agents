@@ -196,13 +196,20 @@ def concat_clips(clips: list[pathlib.Path], out_path: pathlib.Path, *, mock: boo
         out_path.write_bytes(_MOCK_PNG)
         return round(time.time() - t0, 2)
 
-    listing = out_path.parent / "concat.txt"
+    # concat 목록은 **목록 파일이 있는 디렉터리 기준 상대 경로**로 해석된다.
+    # 클립은 clips/ 에, 최종본은 outputs/ 에 있으므로 목록도 clips/ 에 둔다.
+    # (파일명만 쓰고 outputs/ 에 두면 "Impossible to open i01_r0.mp4" 로 죽는다.
+    #  mock 은 파일을 읽지 않아 이 버그가 안 잡혔다 — 실물로만 나온다.)
+    clips_dir = pathlib.Path(clips[0]).parent
+    listing = clips_dir / "concat.txt"
     listing.write_text(
         "".join("file '%s'\n" % pathlib.Path(c).name for c in clips), encoding="utf-8"
     )
+    # Windows ffmpeg 는 MSYS 스타일 /g/... 경로를 못 읽는다 → cwd 를 clips_dir 로
+    # 잡고 목록은 파일명, 출력은 절대경로로 준다.
     run([ffmpeg_bin(), "-y", "-loglevel", "error", "-f", "concat", "-safe", "0",
-         "-i", listing.name, "-c", "copy", out_path.name],
-        cwd=out_path.parent, timeout=600)
+         "-i", listing.name, "-c", "copy", str(out_path)],
+        cwd=clips_dir, timeout=600)
 
     if not out_path.exists():
         raise ToolError(["ffmpeg"], 70, "", "concat은 성공했는데 %s 가 없다" % out_path)
