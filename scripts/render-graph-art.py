@@ -27,7 +27,8 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "docs" / "visuals"
-WIDTH = 1840  # CSS px; 2배 스케일로 촬영해 3680px PNG (칼럼 8개가 줄바꿈 없이 들어가는 폭)
+WIDTH = 1240  # CSS px.  README 본문 폭(약 1000px)에서 축소율 ~80%면 카드 안 글씨가 읽힌다.
+              # 1840px 로 넓게 뽑았더니 54%로 줄어 첫눈에 판독이 안 됐다(2026-07-26 실물 확인).
 
 # 하우스 팔레트 — docs/visuals/01-hero-stats.png · 14-verification-loop.png 에서 추출
 CSS = """
@@ -76,13 +77,16 @@ h1 em { font-style: normal; color: #E9825C; }
 .gate-tip b { color: #F4C4B2; }
 
 /* 흐름 */
-.flow { display: flex; align-items: stretch; gap: 0; margin-top: 30px; }
+.flow { display: flex; align-items: stretch; gap: 0; margin-top: 22px; }
+.flow + .flow { margin-top: 12px; }
+.flow .wrapmark { flex: 0 0 34px; display: flex; align-items: center; justify-content: center;
+  color: #E9825C; font-size: 15px; }
 .step { flex: 1 1 0; min-width: 0; padding: 16px 14px 14px; border-radius: 12px;
   background: #111722; border: 1px solid #202936; }
-.step .nid { font-family: ui-monospace, Consolas, monospace; font-size: 11.5px;
+.step .nid { font-family: ui-monospace, Consolas, monospace; font-size: 12px;
   color: #6F7F93; letter-spacing: .04em; }
-.step .nm { margin-top: 6px; font-size: 15.5px; font-weight: 650; letter-spacing: -.01em; }
-.step .sub { margin-top: 5px; font-size: 12.5px; line-height: 1.45; color: #93A2B5; }
+.step .nm { margin-top: 6px; font-size: 16.5px; font-weight: 650; letter-spacing: -.01em; }
+.step .sub { margin-top: 5px; font-size: 13.5px; line-height: 1.45; color: #93A2B5; }
 .step.gate { background: rgba(233,119,92,.10); border-color: #7A4433; }
 .step.gate .nm { color: #F0A385; }
 .step.human { background: rgba(139,124,246,.10); border-color: #493F86; }
@@ -130,6 +134,19 @@ def _step(nid: str, name: str, sub: str, kind: str = "", badge: str = "") -> str
 ARROW = '<div class="arrow">→</div>'
 
 
+def _rows(steps: list[str], per_row: int = 4) -> str:
+    """단계를 per_row 개씩 나눠 여러 .flow 행으로 — 한 줄로 늘이면 카드가 넓어져
+    README 폭에서 축소되고 글씨가 작아진다.  행 끝에는 이어짐 표시를 둔다."""
+    out = []
+    for i in range(0, len(steps), per_row):
+        chunk = steps[i:i + per_row]
+        row = ARROW.join(chunk)
+        if i + per_row < len(steps):
+            row += '<div class="wrapmark">↴</div>'
+        out.append(f'<div class="flow">{row}</div>')
+    return "".join(out)
+
+
 def shorts_html(lang: str) -> str:
     ko = lang == "ko"
     steps = [
@@ -152,7 +169,7 @@ def shorts_html(lang: str) -> str:
         _step("release", "출시 패키지" if ko else "Release package",
               "제목·태그·썸네일·귀속" if ko else "titles · tags · thumbnail", kind="done"),
     ]
-    flow = ARROW.join(steps)
+    flow = _rows(steps, 4)
     if ko:
         eyebrow = "실행 그래프 · 쇼츠 라인 · LANGGRAPH"
         title = 'GPU 3시간 앞에 <em>문</em>을 세운다'
@@ -207,7 +224,7 @@ def shorts_html(lang: str) -> str:
     <div class="bar-legend">{legend_html}</div>
     <div class="gate-tip">{tip}</div>
   </div>
-  <div class="flow">{flow}</div>
+  {flow}
   <div class="rails">{rails_html}</div>
   <footer><span class="ids">{_esc(foot_l)}</span></footer>
   <footer style="border:0;padding-top:6px"><span class="brand"><b>◆</b> MelonS-Agents</span><span>{_esc(foot_r)}</span></footer>
@@ -232,7 +249,7 @@ def game_html(lang: str) -> str:
         _step("pm_merge", "병합" if ko else "Merge",
               "리듀서가 상태를 합친다" if ko else "reducer merges state", kind="done"),
     ]
-    flow = ARROW.join(steps)
+    flow = _rows(steps, 4)
     if ko:
         eyebrow = "실행 그래프 · 게임 라인 · LANGGRAPH"
         title = '같은 fan-out, 문이 아니라 <em>뮤텍스</em>'
@@ -267,7 +284,7 @@ def game_html(lang: str) -> str:
   <div class="eyebrow">{_esc(eyebrow)}</div>
   <h1>{title}</h1>
   <p class="lede">{lede}</p>
-  <div class="flow" style="margin-top:26px">{flow}</div>
+  {flow}
   <div class="rails">{rails_html}</div>
   <footer><span class="ids">{_esc(foot_l)}</span></footer>
   <footer style="border:0;padding-top:6px"><span class="brand"><b>◆</b> MelonS-Agents</span><span>{_esc(foot_r)}</span></footer>
