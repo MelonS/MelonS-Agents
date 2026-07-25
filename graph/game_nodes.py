@@ -177,7 +177,8 @@ def _unity(proj: pathlib.Path, method: str, state: GameState) -> tuple[int, str]
     if not unity or not pathlib.Path(unity).exists():
         raise tools.ToolError(["unity"], 66, "", "UNITY_EXE 를 못 찾았다 — --mock 로 배선만 검증")
 
-    log = pathlib.Path(state["project_path"]) / "unity-%s.log" % method.rsplit(".", 1)[-1]
+    # 괄호 필수: / 가 % 보다 먼저 묶여 Path % str 이 된다 (실물에서만 터짐)
+    log = pathlib.Path(state["project_path"]) / ("unity-%s.log" % method.rsplit(".", 1)[-1])
     p = subprocess.run(
         [unity, "-batchmode", "-nographics", "-quit",
          "-projectPath", str(proj), "-executeMethod", method, "-logFile", str(log)],
