@@ -31,8 +31,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 # (파일, 라벨 언어, 이 파일이 담는 블록들).  README 는 쇼츠 두 장만 싣고,
 # 네 장 전부는 graph/README.md 에 둔다 — 랜딩 페이지가 다시 길어지지 않게.
 TARGETS = (
-    (ROOT / "README.md", "en", ("shorts", "game")),
-    (ROOT / "README.ko.md", "ko", ("shorts", "game")),
+    # README 는 디자인 렌더(docs/visuals/15·16, scripts/render-graph-art.py)를 싣는다.
+    # mermaid 원본은 개발자용 정확도 뷰로 graph/README.md 에만 둔다.
     (ROOT / "graph" / "README.md", "ko", ("shorts", "game")),
 )
 _REEXEC_FLAG = "SYNC_README_GRAPH_REEXEC"

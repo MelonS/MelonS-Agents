@@ -72,128 +72,22 @@ That rule existed as prose in `docs/generative-shorts-pipeline.md` §4.5 for mon
 was skipped whenever someone forgot it.  Now the edge to the expensive stage simply
 does not open.
 
-Every diagram below is generated from the running graph
-(`python -m graph.shorts_graph diagram --compact`): the labels are the real node
-names, and adding a node without placing it fails generation — so they cannot quietly
-go stale.
+Both figures below are rendered from the running graph by
+`scripts/render-graph-art.py` — the small type under each card lists the real node
+names, and adding a node to the graph without placing it fails the render, so a figure
+cannot quietly go stale.  The raw mermaid view (every node, every edge) lives in
+[`graph/README.md`](graph/README.md).
 
-<!-- graph:shorts:begin -->
-```mermaid
-flowchart TD
-  plan["plan<br/>load shot spec"]
-  render_shot["render_shot ×N<br/>gen 9s → judge → retry"]
-  gate{{"gate — Gate 1<br/>every still ≥ 75"}}
-  ready_for_video["ready_for_video"]
-  storyboard["storyboard<br/>build review sheet"]
-  approval[/"approval · interrupt<br/>autonomous run halts + logs"/]
-  mark_regen("mark_regen<br/>only the marked shots")
-  video_stage["video_stage<br/>point of no return"]
-  render_clip["render_clip ×N<br/>i2v 412s → judge → seed reroll"]
-  clip_gate{{"clip_gate — Gate 2<br/>no cut left at REGEN"}}
-  ready_for_assembly["ready_for_assembly"]
-  assemble["assemble<br/>concat + SOURCES + disclosure"]
-  legal{{"legal · legal-gate.sh<br/>not run = fail-closed"}}
-  bump_legal("bump_legal<br/>max 2 rounds")
-  release(["release<br/>release package"])
-  blocked[["blocked<br/>179 min not spent"]]
+![Shorts execution graph — a dark editorial card: a cost bar showing that video rendering is 179 of the 189 minutes in a 26-cut short, with the gate marked right after the stills, then the stage flow plan → still round (9.0s each) → Gate 1 → human approval (interrupt) → clip round (412.3s each) → Gate 2 → assemble and legal → release package, plus the four backward edges and the blocked rail](docs/visuals/15-graph-shorts.png)
 
-  plan -. "fan-out per shot" .-> render_shot
-  render_shot --> gate
-  gate -. "pass" .-> ready_for_video
-  gate -. "below bar" .-> blocked
-  ready_for_video --> storyboard
-  storyboard --> approval
-  approval -. "regen i03,i07" .-> mark_regen
-  approval -. "approved" .-> video_stage
-  approval -. "reject" .-> blocked
-  mark_regen -. "those shots only" .-> render_shot
-  video_stage -. "fan-out per cut" .-> render_clip
-  render_clip --> clip_gate
-  clip_gate -. "pass" .-> ready_for_assembly
-  clip_gate -. "below bar" .-> blocked
-  ready_for_assembly --> assemble
-  assemble --> legal
-  legal -. "REVISE" .-> bump_legal
-  legal -. "PASS" .-> release
-  legal -. "BLOCK · rounds spent" .-> blocked
-  bump_legal --> assemble
-  ctrl_gap[" "]
-  blocked ~~~ ctrl_gap
-  release ~~~ ctrl_gap
-
-  classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
-  classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
-  classDef mutex fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
-  classDef human fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
-  classDef retry fill:#EDF1F5,stroke:#6B7C8D,stroke-width:1px,stroke-dasharray:4 3,color:#3D4C5C
-  classDef done fill:#DFEFE5,stroke:#2E7D53,stroke-width:2px,color:#14532D
-  classDef stop fill:#F6E2E0,stroke:#A93A31,stroke-width:2px,color:#7F1D1D
-  class assemble,plan,ready_for_assembly,ready_for_video,render_clip,render_shot,storyboard,video_stage step
-  class clip_gate,gate,legal gate
-  class approval human
-  class bump_legal,mark_regen retry
-  class release done
-  class blocked stop
-  classDef gap fill:none,stroke:none,color:#00000000
-  class ctrl_gap gap
-```
-<!-- graph:shorts:end -->
-
-Shapes: hexagon = gate that cannot be skipped · parallelogram = human `interrupt()` ·
-dashed = conditional edge · double box = halt.  Four of those edges point *backwards*
-— still retry, operator-marked regen, seed reroll, legal revise — and each one used to
-be a paragraph someone had to remember.  `resume --approve` continues from the
-checkpoint rather than the beginning, so dying on cut 19 of 26 costs the remaining
+Amber marks a gate that cannot be skipped, violet the one place a human stands
+(`interrupt()`), green the successful exit.  Four edges in that graph point
+*backwards* — still retry, operator-marked regen, seed reroll, legal revise — and each
+one used to be a paragraph someone had to remember.  `resume --approve` continues from
+the checkpoint rather than the beginning, so dying on cut 19 of 26 costs the remaining
 seven, not all twenty-six.
 
-<!-- graph:game:begin -->
-```mermaid
-flowchart TD
-  pm_publish["pm_publish<br/>publish task · open 3 lanes"]
-  review{{"review<br/>Director · Designer · AI Designer"}}
-  work_lane["work_lane ×3<br/>Programmer · Art · Sound"]
-  unity_scene{{"unity_scene<br/>🔒 Unity critical section"}}
-  unity_build["unity_build<br/>pins artifact paths into state<br/>+ stale guard"]
-  qa["qa<br/>launch exe · screenshot<br/>★ reads pinned paths only"]
-  ta{{"ta<br/>art-quality score"}}
-  fix("fix<br/>max 3 rounds")
-  pm_merge(["pm_merge<br/>state merge (reducer)"])
-  blocked[["blocked<br/>blocker logged"]]
-
-  pm_publish --> review
-  review -. "fan-out per lane" .-> work_lane
-  review -. "rejected" .-> blocked
-  work_lane --> unity_scene
-  unity_scene --> unity_build
-  unity_build -. "build ok" .-> qa
-  unity_build -. "build failed" .-> fix
-  unity_build -. "rounds spent" .-> blocked
-  qa --> ta
-  ta -. "below bar" .-> fix
-  ta -. "pass" .-> pm_merge
-  ta -. "rounds spent" .-> blocked
-  fix -- "rebuild" --> unity_scene
-  ctrl_gap[" "]
-  blocked ~~~ ctrl_gap
-  pm_merge ~~~ ctrl_gap
-
-  classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
-  classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
-  classDef mutex fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
-  classDef human fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
-  classDef retry fill:#EDF1F5,stroke:#6B7C8D,stroke-width:1px,stroke-dasharray:4 3,color:#3D4C5C
-  classDef done fill:#DFEFE5,stroke:#2E7D53,stroke-width:2px,color:#14532D
-  classDef stop fill:#F6E2E0,stroke:#A93A31,stroke-width:2px,color:#7F1D1D
-  class pm_publish,qa,unity_build,work_lane step
-  class review,ta gate
-  class unity_scene mutex
-  class fix retry
-  class pm_merge done
-  class blocked stop
-  classDef gap fill:none,stroke:none,color:#00000000
-  class ctrl_gap gap
-```
-<!-- graph:game:end -->
+![Game execution graph — the same fan-out joining on a mutex instead of a gate: publish task → review → three parallel lanes (code, art, sound) → Unity critical section that pins artifact paths into state → verification on the real build → TA art review → merge, with the false-verification and retry rails](docs/visuals/16-graph-game.png)
 
 The game line fans out the same way but joins differently.  Unity cannot be driven by
 two lanes at once, so the parallel work lanes converge on a **mutex** rather than a

@@ -71,126 +71,19 @@ LangGraph 상태 기계로 돌고, 싼 단계에 문이 섭니다. 기준을 넘
 `docs/generative-shorts-pipeline.md` §4.5의 산문이었고, 누가 잊으면 그냥 건너뛰어졌습니다.
 지금은 비싼 단계로 가는 엣지 자체가 열리지 않습니다.
 
-아래 그림은 모두 실행 중인 그래프에서 뽑습니다(`python -m graph.shorts_graph diagram
---compact`). 라벨이 실제 노드 이름이고, 노드를 추가하고 배치하지 않으면 생성이 실패하므로
-**조용히 낡을 수 없습니다.**
+아래 두 장은 실행 중인 그래프를 읽어 `scripts/render-graph-art.py` 가 렌더합니다. 카드 아래
+작은 글씨가 실제 노드 이름이고, 그래프에 노드를 추가하고 배치하지 않으면 렌더가 실패하므로
+**그림이 조용히 낡을 수 없습니다.** 노드·엣지를 하나도 빼지 않은 mermaid 원본은
+[`graph/README.md`](graph/README.md) 에 있습니다.
 
-<!-- graph:shorts:begin -->
-```mermaid
-flowchart TD
-  plan["plan<br/>샷 스펙 로드"]
-  render_shot["render_shot ×N<br/>생성 9초 → 채점 → 재시도"]
-  gate{{"gate — 문 1<br/>전 샷 75점 이상"}}
-  ready_for_video["ready_for_video"]
-  storyboard["storyboard<br/>검수 시트 작성"]
-  approval[/"approval · interrupt<br/>자율 모드면 halt + 블로커 기록"/]
-  mark_regen("mark_regen<br/>지목한 샷만")
-  video_stage["video_stage<br/>되돌릴 수 없는 지점"]
-  render_clip["render_clip ×N<br/>영상화 412초 → 컷심사 → 시드 리롤"]
-  clip_gate{{"clip_gate — 문 2<br/>REGEN 컷 없어야"}}
-  ready_for_assembly["ready_for_assembly"]
-  assemble["assemble<br/>concat + SOURCES + 고지"]
-  legal{{"legal · legal-gate.sh<br/>미실행 = fail-closed"}}
-  bump_legal("bump_legal<br/>최대 2회")
-  release(["release<br/>출시 패키지"])
-  blocked[["blocked<br/>179분 안 씀"]]
+![쇼츠 실행 그래프 — 다크 카드: 26컷 한 편에서 영상화가 179분을 차지한다는 비용 막대와 스틸 직후에 선 문 표시, 이어서 샷 스펙 → 스틸 라운드(장당 9.0초) → 문 1 → 사람 승인(interrupt) → 컷 라운드(컷당 412.3초) → 문 2 → 조립·법률 → 출시 패키지 흐름, 그리고 되돌아가는 엣지 4개와 차단 레일](docs/visuals/15-graph-shorts-ko.png)
 
-  plan -. "fan-out 샷별" .-> render_shot
-  render_shot --> gate
-  gate -. "통과" .-> ready_for_video
-  gate -. "미달" .-> blocked
-  ready_for_video --> storyboard
-  storyboard --> approval
-  approval -. "재생성 i03,i07" .-> mark_regen
-  approval -. "승인" .-> video_stage
-  approval -. "취소" .-> blocked
-  mark_regen -. "그 샷만" .-> render_shot
-  video_stage -. "fan-out 컷별" .-> render_clip
-  render_clip --> clip_gate
-  clip_gate -. "통과" .-> ready_for_assembly
-  clip_gate -. "미달" .-> blocked
-  ready_for_assembly --> assemble
-  assemble --> legal
-  legal -. "REVISE" .-> bump_legal
-  legal -. "PASS" .-> release
-  legal -. "BLOCK · 상한 소진" .-> blocked
-  bump_legal --> assemble
-  ctrl_gap[" "]
-  blocked ~~~ ctrl_gap
-  release ~~~ ctrl_gap
+호박색은 건너뛸 수 없는 문, 보라색은 사람이 서는 단 한 곳(`interrupt()`), 초록은 정상 종료입니다.
+이 그래프에서 **되돌아가는** 엣지는 네 개입니다(스틸 재시도, 운영자가 지목한 재생성, 시드 리롤,
+법률 REVISE). 어제까지 전부 사람이 기억해야 하는 문단이었습니다. `resume --approve` 는 처음이
+아니라 체크포인트에서 이어가므로, 26컷 중 19컷에서 죽어도 남은 7컷만 다시 돕니다.
 
-  classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
-  classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
-  classDef mutex fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
-  classDef human fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
-  classDef retry fill:#EDF1F5,stroke:#6B7C8D,stroke-width:1px,stroke-dasharray:4 3,color:#3D4C5C
-  classDef done fill:#DFEFE5,stroke:#2E7D53,stroke-width:2px,color:#14532D
-  classDef stop fill:#F6E2E0,stroke:#A93A31,stroke-width:2px,color:#7F1D1D
-  class assemble,plan,ready_for_assembly,ready_for_video,render_clip,render_shot,storyboard,video_stage step
-  class clip_gate,gate,legal gate
-  class approval human
-  class bump_legal,mark_regen retry
-  class release done
-  class blocked stop
-  classDef gap fill:none,stroke:none,color:#00000000
-  class ctrl_gap gap
-```
-<!-- graph:shorts:end -->
-
-모양: 육각형 = 건너뛸 수 없는 문 · 평행사변형 = 사람이 서는 `interrupt()` · 점선 = 조건부
-엣지 · 이중 박스 = 중단. 저 중 네 개는 **되돌아가는** 엣지입니다(스틸 재시도, 운영자가
-지목한 재생성, 시드 리롤, 법률 REVISE). 어제까지 전부 사람이 기억해야 하는 문단이었습니다.
-`resume --approve` 는 처음이 아니라 체크포인트에서 이어가므로, 26컷 중 19컷에서 죽어도
-남은 7컷만 다시 돕니다.
-
-<!-- graph:game:begin -->
-```mermaid
-flowchart TD
-  pm_publish["pm_publish<br/>task 발행 · 레인 3개 오픈"]
-  review{{"review<br/>Director · Designer · AI Designer"}}
-  work_lane["work_lane ×3<br/>Programmer · Art · Sound"]
-  unity_scene{{"unity_scene<br/>🔒 Unity 배타 구간 시작"}}
-  unity_build["unity_build<br/>산출물 경로를 상태에 확정<br/>+ stale guard"]
-  qa["qa<br/>exe 실행 · 스크린샷<br/>★ 상태의 경로만 읽음"]
-  ta{{"ta<br/>아트 품질 채점"}}
-  fix("fix<br/>최대 3회")
-  pm_merge(["pm_merge<br/>상태 병합 (리듀서)"])
-  blocked[["blocked<br/>블로커 기록"]]
-
-  pm_publish --> review
-  review -. "fan-out 레인별" .-> work_lane
-  review -. "반려" .-> blocked
-  work_lane --> unity_scene
-  unity_scene --> unity_build
-  unity_build -. "빌드 성공" .-> qa
-  unity_build -. "빌드 실패" .-> fix
-  unity_build -. "상한 소진" .-> blocked
-  qa --> ta
-  ta -. "미달" .-> fix
-  ta -. "통과" .-> pm_merge
-  ta -. "상한 소진" .-> blocked
-  fix -- "재빌드" --> unity_scene
-  ctrl_gap[" "]
-  blocked ~~~ ctrl_gap
-  pm_merge ~~~ ctrl_gap
-
-  classDef step fill:#EDF1F5,stroke:#C3CEDA,stroke-width:1px,color:#16202B
-  classDef gate fill:#F6EBD6,stroke:#96671A,stroke-width:2px,color:#5B3F11
-  classDef mutex fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
-  classDef human fill:#E3EBF4,stroke:#2F5F94,stroke-width:2px,color:#16202B
-  classDef retry fill:#EDF1F5,stroke:#6B7C8D,stroke-width:1px,stroke-dasharray:4 3,color:#3D4C5C
-  classDef done fill:#DFEFE5,stroke:#2E7D53,stroke-width:2px,color:#14532D
-  classDef stop fill:#F6E2E0,stroke:#A93A31,stroke-width:2px,color:#7F1D1D
-  class pm_publish,qa,unity_build,work_lane step
-  class review,ta gate
-  class unity_scene mutex
-  class fix retry
-  class pm_merge done
-  class blocked stop
-  classDef gap fill:none,stroke:none,color:#00000000
-  class ctrl_gap gap
-```
-<!-- graph:game:end -->
+![게임 실행 그래프 — 같은 fan-out 이 문이 아니라 뮤텍스에서 합류한다: 작업 발행 → 검토 → 제작 3레인 병렬(코드·아트·사운드) → 산출물 경로를 상태에 확정하는 Unity 배타 구간 → 실물 빌드 검증 → TA 아트 심사 → 병합, 그리고 거짓 검증 차단과 재시도 레일](docs/visuals/16-graph-game-ko.png)
 
 게임 라인도 같은 방식으로 갈라지지만 합류가 다릅니다. Unity 는 두 레인이 동시에 몰 수 없어서,
 병렬 제작 레인이 문이 아니라 **뮤텍스**에서 만납니다. `unity_build` 가 산출물 경로를 상태에
