@@ -227,6 +227,36 @@ Scripts in the top-level `scripts/` directory must work on macOS + Linux
 | `content-short` / `faceless-short` end-to-end via git-bash | ✓ Validated 2026-07-01 (produce → caption → render → legal → upload) |
 | `bootstrap.sh` / `first-touch.sh` | ✗ macOS-specific, Windows skip |
 
+## `bash` 는 WSL 스텁이다 — 셸에 따라 다르게 동작
+
+2026-07-25 감사에서 확인. **PowerShell·파이썬에서 `bash script.sh` 를 부르면
+WSL 스텁이 잡혀 `rc=-1` 로 죽는다** (WSL 미설치 시). 오류 메시지가
+"Linux용 Windows 하위 시스템에 배포가 없습니다" 라서 스크립트 문제로 오인하기 쉽다.
+
+| | PowerShell | Git Bash |
+|---|---|---|
+| `python3` | ✅ 3.10.2 | ✅ 3.10.2 |
+| `bash` | ❌ **WSL 스텁 `rc=-1`** | — |
+
+**`python3` 는 문제없다.** `C:\Users\<user>\AppData\Local\Microsoft\WindowsApps\python3`
+에 있지만 실제 Python 으로 연결돼 있어 양쪽 셸에서 정상 동작한다.
+`python3` 를 부르는 스크립트 35개는 그대로 두면 된다.
+
+**영향 범위**
+
+- Git Bash 안에서 `.sh` 를 돌리는 기존 경로 → **영향 없음**
+- PowerShell / 파이썬 `subprocess` 에서 `.sh` 를 부르는 경로 → **터진다**
+
+**회피** — `graph/tools.py::bash_bin()` 이 Git Bash 를 직접 찾는다.
+같은 일이 필요하면 이 함수를 쓰거나 같은 순서로 탐색할 것:
+
+```
+$BASH_BIN
+C:\Program Files\Git\bin\bash.exe
+C:\Program Files\Git\usr\bin\bash.exe
+shutil.which("bash")   ← System32 경로면 스텁이므로 버린다
+```
+
 ## See also
 
 - [`platform-linux.md`](platform-linux.md) (TODO: mirror this for Linux — current Linux refs are scattered across README)

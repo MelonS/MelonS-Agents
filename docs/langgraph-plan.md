@@ -165,13 +165,20 @@ Unity 배타 자원과 wb 병합을 **조사해야** 하기 때문이고, 그건
      fan-out을 따로 걸었더니 `Send` 페이로드가 깨졌다 (`KeyError: 'lane'`).
      **분기 로직은 노드당 한 함수로.**
 4. **심사위원 CLI는 `--allowedTools Read` 필수.** 없으면 그림을 못 보고 추정으로 채점한다.
-5. **Windows에는 스텁이 둘 있다.** 같은 종류의 함정이 두 번 나왔다:
-   - `python3` → Microsoft Store 스텁. 조용히 아무것도 안 함.
-   - `bash` → WSL 스텁. WSL 없으면 rc=1로 죽음.
+5. **Windows `bash`는 WSL 스텁이다** (감사 후 정정 — 아래 표 참조).
 
-   `graph/`는 `sys.executable`과 `bash_bin()`(Git Bash 직접 탐색)으로 회피했다.
-   **기존 `run.sh`·`scripts/*.sh`가 Windows에서 조용히 실패 중일 가능성이 크다** —
-   `docs/platform-windows.md`에 이 두 스텁 얘기가 없다.
+   | | PowerShell | Git Bash |
+   |---|---|---|
+   | `python3` | ✅ 3.10.2 | ✅ 3.10.2 |
+   | `bash` | ❌ **WSL 스텁 rc=-1** | — |
+
+   처음엔 `python3`도 스텁이라 봤으나 **실측 결과 양쪽 셸에서 정상 동작**한다.
+   WindowsApps에 있지만 실제 Python으로 연결돼 있다.
+   따라서 **`python3`를 부르는 스크립트 35개는 문제없다.**
+
+   진짜 함정은 `bash` 하나뿐이고, **PowerShell/파이썬에서 `bash script.sh`를 부를 때만**
+   터진다. `graph/tools.py`의 `bash_bin()`이 Git Bash를 직접 찾아 회피한다.
+   Git Bash 안에서 `.sh`를 돌리는 기존 경로는 영향 없다.
 6. **`--mock`(가짜 스틸)과 `--judge cli`(진짜 채점)는 모순 조합이다.** 1px 이미지를
    실제로 채점해 0점이 난다. 그래서 법률 판단만 `--legal-judge`로 분리했다 —
    법률은 이미지가 아니라 대본을 보므로 mock 스틸과 조합할 수 있어야 한다.
