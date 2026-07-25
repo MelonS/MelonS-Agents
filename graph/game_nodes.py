@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import time
 from typing import Any
@@ -257,14 +258,80 @@ def qa_verify(state: GameState) -> dict[str, Any]:
     }
 
 
+TA_PROMPT = """\
+너는 TA(테크니컬 아티스트)다. `.claude/agents/ta.md` 의 루브릭을 그대로 적용한다.
+
+아래 인게임 스크린샷을 **Read 로 열어** 실제로 본 것만 채점한다. 추측 금지.
+최종 판정은 항상 인게임 뷰다 — 단품이 예뻐도 인게임에서 죽으면 FAIL.
+
+  스크린샷: {shot}
+  작업     : {task}
+
+루브릭 (각 1~10, 근거 1줄 필수):
+  가독성   게임플레이 요소가 바닥에서 즉시 분리돼 보이는가
+  반복     타일링 아티팩트 — 격자선·체커보드·'직물'로 읽히는 패턴
+  톤       채도·밸류 계급·무광 규정 준수
+  조화     기존 확정 자산과 한 화면에서 같은 게임으로 보이는가
+  장르     콜로니심 문법으로 읽히는가 (바닥 플랫·디테일은 데코·포커스는 캐릭터)
+
+판정: 5항 전부 >=7 이면 PASS, 하나라도 <7 이면 FAIL.
+애매하면 FAIL 쪽으로 기운다 — 한 라운드 더 도는 게 운영자 눈에 먼저 띄는 것보다 싸다.
+
+**이 항목은 특히 확인한다 (실제로 놓친 적 있음):**
+아트 에셋이 통째로 누락돼 폴백(단색 지형·나무 없음)으로 렌더되고 있지 않은지.
+지형이 텍스처 없이 평평한 단색이면 그 자체로 FAIL 이다.
+
+JSON 객체 하나만 출력한다. 다른 말 금지:
+{{"verdict":"PASS|FAIL","scores":{{"readability":0,"repeat":0,"tone":0,"harmony":0,"genre":0}},
+  "saw":"실제 본 것 1-2문장","fix":"FAIL 일 때만 구체적 수정 지시"}}
+"""
+
+
 def ta_review(state: GameState) -> dict[str, Any]:
-    """TA — 아트 품질. 제작자와 분리된 눈으로 본다 (`.claude/agents/ta.md`)."""
+    """TA — 아트 품질. 제작자와 분리된 눈으로 본다 (`.claude/agents/ta.md`).
+
+    ★ 이 노드가 있는 이유: QA 는 '스크린샷 파일이 생겼나' 만 본다. 실제로
+      ts_* 아트가 통째로 빠진 빌드를 QA 가 PASS 시킨 적이 있다(2026-07-25).
+      **무엇이 찍혔는지** 를 보는 건 여기뿐이다.
+    """
     if not state.get("qa_ok"):
-        return {"ta_ok": False, "ta_note": "QA 실패 — TA 심사 생략", "trace": [{"node": "ta", "skipped": True}]}
+        return {"ta_ok": False, "ta_note": "QA 실패 — TA 심사 생략",
+                "trace": [{"node": "ta", "skipped": True}]}
+
+    shot = state.get("screenshot")
+    if state.get("mock") or not shot:
+        return {"ta_ok": True, "ta_note": "[mock] TA 통과 — 실제 채점 아님",
+                "trace": [{"node": "ta", "mock": True}]}
+
+    t0 = time.time()
+    try:
+        out = tools.run(
+            ["claude", "-p", TA_PROMPT.format(shot=shot, task=state.get("task", "")),
+             "--allowedTools", "Read",
+             "--model", os.environ.get("JUDGE_MODEL", "claude-sonnet-5")],
+            timeout=300,
+        )
+        start, end = out.find("{"), out.rfind("}")
+        if start < 0 or end <= start:
+            raise ValueError("TA 응답에서 JSON 을 못 찾음")
+        res = json.loads(out[start : end + 1])
+    except Exception as e:
+        # 심사를 못 돌렸으면 통과시키지 않는다 — legal-gate 와 같은 fail-closed.
+        return {"ta_ok": False, "ta_note": "TA 심사 실패: %s" % e,
+                "trace": [{"node": "ta", "error": str(e)[:120]}]}
+
+    ok = res.get("verdict") == "PASS"
+    sc = res.get("scores", {})
     return {
-        "ta_ok": True,
-        "ta_note": "[mock] TA 통과" if state.get("mock") else "TA 심사 완료",
-        "trace": [{"node": "ta", "ok": True}],
+        "ta_ok": ok,
+        "ta_note": "%s (%s) — %s" % (
+            res.get("verdict"),
+            " ".join("%s%s" % (k[:2], v) for k, v in sc.items()),
+            (res.get("saw") or "")[:70],
+        ),
+        "ta_fix": res.get("fix"),
+        "trace": [{"node": "ta", "verdict": res.get("verdict"), "scores": sc,
+                   "elapsed_s": round(time.time() - t0, 1)}],
     }
 
 

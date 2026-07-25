@@ -72,6 +72,7 @@ class GameState(TypedDict, total=False):
     qa_note: str
     ta_ok: bool
     ta_note: str
+    ta_fix: str | None        # FAIL 일 때 TA 가 준 구체적 수정 지시
 
     # ── 재시도 ───────────────────────────────────────────────
     fix_round: int
