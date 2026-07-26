@@ -42,6 +42,9 @@
 | absorbs prompts | 질문을 흡수한다 | 질문을 대신 받아 준다 |
 | round-trip (Suno) | 왕복 | 호출 · 연동 |
 | routing / orchestration | 라우팅 | 배정 / 지휘·조율 *(오케스트레이션은 통용, 허용)* |
+| env vars | env 변수 | 환경 변수 |
+| just reading / read-only look | 읽기 전용으로 살펴보다 | 코드를 돌리지 않고 둘러보다 |
+| was skipped *(영어 수동태 직역)* | 건너뛰어졌다 | 건너뛰게 됐다 · 그대로 건너뛰었다 |
 
 > 새 계를 발견하면 여기에 한 줄 추가한다 — 이 표가 재발 방지의 실체다.
 
