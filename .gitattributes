@@ -57,3 +57,11 @@ Makefile    text eol=lf
 *.tar.gz    binary
 *.tgz       binary
 *.bin       binary
+
+# Unity WebGL 빌드 산출물 (site/play/) — text=auto 자동판정에 맡기지 않는다.
+# 줄바꿈 정규화가 한 바이트라도 건드리면 wasm/데이터가 조용히 손상돼 브라우저에서
+# 로드가 깨진다.  Gzip 압축본이라 보통 바이너리로 감지되지만 "보통"에 의존하지 않음.
+*.unityweb  binary
+*.wasm      binary
+*.data      binary
+*.symbols.json binary

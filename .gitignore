@@ -204,6 +204,10 @@ skills/game-prototype/unity-project/Builds/
 skills/game-prototype/unity-project/*.csproj
 skills/game-prototype/unity-project/*.sln
 skills/game-prototype/unity-project/.vs/
+# Performance Testing 패키지가 임포트 때마다 Resources/ 에 떨어뜨리는 런 설정 —
+# 프로젝트 자산이 아니라 실행 산출물이다.
+skills/game-prototype/unity-project/Assets/Resources/PerformanceTestRun*.json
+skills/game-prototype/unity-project/Assets/Resources/PerformanceTestRun*.json.meta
 
 # Re-allow game art PNGs (override global *.png ignore)
 !skills/game-prototype/unity-project/Assets/**/*.png
@@ -244,10 +248,13 @@ config/subjects/*.yaml
 *.safetensors
 
 # Tiny Swords 추출물 — 팩 라이선스 재배포 금지 (scripts/extract-tinyswords.py 로 재생성)
+# .png 만 미추적.  .png.meta 는 **커밋한다** — 아트 데이터가 아니라 임포트 설정 +
+# GUID 텍스트이므로 재배포 조항과 무관하고, 미추적 시 GUID 가 체크아웃마다 새로
+# 생성돼 씬·타일의 스프라이트 참조가 조용히 끊긴다 (2026-07-25 a06df81 사고:
+# 병합이 ts_* 참조 11건을 유령 GUID 로 덮어써 지형·나무·폰·양이 전부 사라졌고
+# 빌드 게이트는 통과했다 — 행동 게이트는 렌더 결손을 못 잡는다).
 skills/game-prototype/unity-project/Assets/Sprites/ts_*.png
-skills/game-prototype/unity-project/Assets/Sprites/ts_*.png.meta
 skills/game-prototype/unity-project/Assets/Resources/Sprites/ts_*.png
-skills/game-prototype/unity-project/Assets/Resources/Sprites/ts_*.png.meta
 
 # graph/game_graph.py 가 사이클마다 쓰는 병합 스냅샷 — 산출물이므로 커밋하지 않는다
 whiteboard-*.json
