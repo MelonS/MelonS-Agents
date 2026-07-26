@@ -210,7 +210,48 @@ namespace MelonS.GameProto
             img.color = PawnSchedule.SlotColors[(int)slot];
             var btn = go.AddComponent<Button>();
             btn.onClick.AddListener(() => onClick?.Invoke());
+
+            // 색-전용 정보 제거 (2026-07-27).  이 표는 24시간 × 3인 = 72칸이 **순수 색 블록**
+            //  이었다.  접근성 실측: 녹색맹 시뮬레이션에서 작업(초록)↔여가(갈색) 색차가
+            //  ΔE 38.9 → **20.2**, 적색맹에서는 **12.1** 로 무너져 사실상 같은 색이 된다.
+            //  (남성 8% 가 적록색각이상)  한 글자만 얹으면 색이 무너져도 정보가 남는다.
+            //  셀이 12×13px 이라 1글자가 한계 — 수면/작업/여가/자유의 첫 글자를 쓴다.
+            string glyph = SlotGlyph(slot);
+            if (!string.IsNullOrEmpty(glyph))
+            {
+                var tgo = new GameObject("G");
+                tgo.transform.SetParent(go.transform, false);
+                var t = tgo.AddComponent<Text>();
+                t.text = glyph;
+                t.font = font;
+                t.fontSize = 11;
+                t.alignment = TextAnchor.MiddleCenter;
+                t.raycastTarget = false;
+                // 슬롯 색이 중간 명도라 흰/검 중 대비가 큰 쪽을 고른다.
+                t.color = Luminance(PawnSchedule.SlotColors[(int)slot]) > 0.5f
+                    ? new Color(0.12f, 0.10f, 0.08f, 1f)
+                    : new Color(0.98f, 0.96f, 0.92f, 1f);
+                var trt = tgo.GetComponent<RectTransform>();
+                trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+                trt.sizeDelta = Vector2.zero; trt.anchoredPosition = Vector2.zero;
+            }
         }
+
+        /// <summary>슬롯별 1글자 표기.  TimeSlot 열거 순서는 Anytime→Sleep→Work→Joy
+        ///  (MakeSlotCell 호출부의 (cur+1)%4 순환과 동일).</summary>
+        private static string SlotGlyph(TimeSlot slot)
+        {
+            switch ((int)slot)
+            {
+                case 0: return "자";   // 자유
+                case 1: return "수";   // 수면
+                case 2: return "작";   // 작업
+                case 3: return "여";   // 여가
+            }
+            return "";
+        }
+
+        private static float Luminance(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
 
         public void Toggle() { if (isOpen) Close(); else Open(); }
         // #275 최상단.  #ui백로그 5.3 — 중앙 팝업 3종 상호배타 (WorkTabUI 와 대칭).

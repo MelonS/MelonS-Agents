@@ -407,8 +407,13 @@ namespace MelonS.GameProto
                     ClearAllWorkTasks(currentSelection);
                     PawnMovement mv = currentSelection.GetComponent<PawnMovement>();
                     if (mv != null) mv.SetTarget(new Vector2(mouseWorld.x, mouseWorld.y));
-                    // 수동 이동 명령 → AI 5초 skip (즉시 override 방지)
-                    currentSelection.ManualMoveUntil = Time.time + 15f;
+                    // 수동 이동 보호 시간 (2026-07-27: 15 → 30초).
+                    //  시작 저장구역이 생기면서 콜로니가 첫 순간부터 바빠졌고, 맵 반대편으로
+                    //  보낸 폰이 **도착 전에 가드가 만료돼** AI 가 운반 작업으로 도로 데려갔다.
+                    //  플레이어가 '저기로 가'라고 했는데 폰이 중간에 돌아서는 건 조작이 씹힌
+                    //  것으로 읽힌다.  침대 이동 경로가 이미 30초를 쓰고 있어 그와 맞춘다.
+                    //  (도착하면 PawnUtilityAI 가 task 소진으로 자연 해제 — 30초는 상한이다)
+                    currentSelection.ManualMoveUntil = Time.time + 30f;
                     // WORKFLOW-V2 진단 — P0 '림 이동 안 됨': 명령 등록 여부를 로그로 확정
                     Debug.Log($"[Move] {currentSelection.PawnName} 수동이동 명령 ({mouseWorld.x:F1},{mouseWorld.y:F1}) mv={(mv != null)}");
                 }

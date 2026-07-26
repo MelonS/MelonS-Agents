@@ -157,7 +157,28 @@ namespace MelonS.GameProto
                 sb.AppendLine($"     <color=#A89A86><size=16>{t.descKr}</size></color>");
             }
             pickerText.text = sb.ToString();
+            FitPickerToText();
         }
+
+        /// <summary>연구 패널 높이를 항목 수에 맞춘다.
+        ///
+        /// 계기 (2026-07-27 가상 유저 평가, 3명이 독립적으로 지적): 패널 높이가 280 고정인데
+        /// 연구가 4종이라 **4번 '관개'가 패널 하단 밖으로 잘려** 월드 위에 반쯤 그려졌다.
+        /// 스크롤바도 "더 있음" 표시도 없어서, 플레이어에겐 그냥 깨진 화면으로 보인다.
+        /// 연구를 추가하면 다시 잘리므로 상수를 키우는 대신 **내용 높이를 따라가게** 한다.
+        /// (pickerText 는 패널에 stretch 로 물려 상하 24 만큼 안쪽이다.)</summary>
+        private void FitPickerToText()
+        {
+            if (pickerText == null || pickerPanel == null) return;
+            float needed = pickerText.preferredHeight + 24f;
+            float h = Mathf.Clamp(needed, PickerMinHeight, PickerMaxHeight);
+            if (!Mathf.Approximately(pickerPanel.sizeDelta.y, h))
+                pickerPanel.sizeDelta = new Vector2(pickerPanel.sizeDelta.x, h);
+        }
+
+        private const float PickerMinHeight = 280f;
+        // 캔버스 600 기준 상한 — 이걸 넘길 만큼 항목이 늘면 그때는 스크롤이 필요하다.
+        private const float PickerMaxHeight = 520f;
 
         /// <summary>#ui백로그 5.3 — 중앙 팝업 3종 상호배타용 공개 API.</summary>
         public bool PickerOpen => pickerOpen;

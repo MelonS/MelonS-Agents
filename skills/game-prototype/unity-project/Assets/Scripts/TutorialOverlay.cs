@@ -14,7 +14,7 @@ namespace MelonS.GameProto
         // 행동 기반 온보딩(2026-06-13) — 시간 대신 게임 상태로 단계 전진.
         //  일시정지 시작과 정합(시간 기반은 둘러보는 동안 만료됨) + 첫 사이클
         //  전체(저장→집→농장) 안내.  각 단계는 플레이어가 실제로 해야 넘어간다.
-        public enum Gate { Unpause, Stockpile, House, Farm, Done }
+        public enum Gate { Unpause, Stockpile, Chop, House, Farm, Done }
 
         [System.Serializable]
         public struct Tip
@@ -31,14 +31,26 @@ namespace MelonS.GameProto
         {
             new Tip { gate = Gate.Unpause,
                       text = "일시정지 상태입니다.  맵을 둘러본 뒤 \nSpace(또는 ▶)로 시작하세요." },
-            new Tip { gate = Gate.Stockpile,
-                      text = "① 저장공간:  건축(F8) → 구역 → 저장 \n자원을 모아둘 구역을 드래그로 지정하세요." },
+            // ① 을 '저장구역 만들기' → '벌목 지정'으로 교체 (2026-07-27).
+            //  시작 저장구역이 생기면서 Gate.Stockpile 이 게임 시작 즉시 충족돼, 이 단계가
+            //  화면에 뜨자마자 건너뛰어졌다(평가자: "일시정지 상태인데 이미 ②번이 떠 있음").
+            //  빈 단계를 남기는 대신, **생산이 멈추는 진짜 원인**을 가르치는 단계로 바꾼다:
+            //  초기 목재 300 이 창고로 들어간 뒤에는 새 일감이 없어 콜로니가 정지하는데,
+            //  그걸 푸는 첫 행동이 벌목 지정이다.
+            new Tip { gate = Gate.Chop,
+                      text = "① 일감 지정:  나무를 우클릭 → 벌목 \n지정한 만큼만 일합니다 — 여러 그루를 찍어보세요." },
             new Tip { gate = Gate.House,
                       text = "② 집:  건축 → 구조 → 목재 벽으로 방을 짓고 \n문·가구(침대)를 놓으세요." },
             new Tip { gate = Gate.Farm,
                       text = "③ 농장:  건축 → 구역 → 경작 \n농사 지을 땅을 지정하세요." },
             new Tip { gate = Gate.Done,
-                      text = "좋습니다!  이제 콜로니스트가 알아서 일합니다. \n밤엔 침대에서 자고, 며칠 뒤 습격이 옵니다." },
+                      // 문구 정직화 (2026-07-27).  기존: "이제 콜로니스트가 알아서 일합니다."
+                      //  → 화면에서는 아무도 일하지 않는 상태에서 이 문장이 떴다.  플레이어가
+                      //  일감(벌목/채광/건설)을 지정하지 않으면 폰이 대기하는 건 장르 정상 동작이지만,
+                      //  게임이 "알아서 한다"고 약속해 버리면 **게임이 자기 상태를 오인하는 것**으로
+                      //  읽힌다 (가상 유저 평가에서 반복 지적: "게임이 자기 자신에 대해 거짓말").
+                      //  약속 대신 다음 행동을 지시한다.
+                      text = "이제 일감을 지정해 보세요.  나무를 우클릭 = 벌목.\n밤엔 침대에서 자고, 며칠 뒤 습격이 옵니다." },
         };
 
         [SerializeField] private Image bg;
@@ -98,10 +110,17 @@ namespace MelonS.GameProto
             if (group != null)
             {
                 // whole bordered-panel fade (border + fill + text) — warm panel reads as one.
-                // UI 가림 다이어트 (2026-07-24): 같은 단계가 25초 지나면 0.35 로 딤 —
-                //  안내는 남되 맵 하단 중앙을 계속 가리지 않는다.  단계 전환 시 원복.
-                bool stale = Time.realtimeSinceStartup - currentTipFadeTime > 25f;
-                float target = currentVisible ? (stale ? 0.35f : 0.92f) : 0f;
+                // UI 가림 다이어트 (2026-07-24) → **판독성 우선으로 재조정 (2026-07-27)**.
+                //  기존: 25초 후 알파 0.35.  의도는 "맵을 계속 가리지 않기"였으나, 초보자는
+                //  한 단계에 25초를 쉽게 넘기므로 결과적으로 **안내가 대부분의 시간을 읽을 수
+                //  없는 상태로** 떠 있었다.  가상 유저 평가에서 반복 지적:
+                //   - 11세 페르소나: "글씨가 반투명이라 뒤에 나무가 비쳐요. 읽다가 포기했어요"
+                //   - QA: 10장 중 4장이 판독 불가 상태로 포착 (게임내 약 40분 구간)
+                //   - UX 실측: 불투명 시 대비 6.2:1 → 페이드 시 2.0:1
+                //  튜토리얼은 이 게임의 **유일한 안내 수단**이라 가림보다 판독성이 우선이다.
+                //  딤 자체는 유지하되(장시간 방치 시 시야 확보) 읽을 수 있는 선까지만.
+                bool stale = Time.realtimeSinceStartup - currentTipFadeTime > 40f;
+                float target = currentVisible ? (stale ? 0.80f : 0.96f) : 0f;
                 group.alpha = Mathf.MoveTowards(group.alpha, target, Time.unscaledDeltaTime * 2f);
             }
             else
@@ -141,6 +160,12 @@ namespace MelonS.GameProto
                     return Time.timeScale > 0.01f;
                 case Gate.Stockpile:
                     return Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None).Length > 0;
+                case Gate.Chop:
+                    // 벌목 지정이 하나라도 찍히면 통과.  ReproHarness 의 chopDesignations
+                    //  프로브와 **같은 소스**를 쓴다 — 게이트와 테스트가 다른 걸 세면
+                    //  "테스트는 통과하는데 화면은 안 넘어간다"가 생긴다.
+                    return TreeChopDesignation.Instance != null
+                        && TreeChopDesignation.Instance.GetMarkedTreePositions().Count > 0;
                 case Gate.House:
                     // 벽 청사진/완공 또는 가구 청사진 중 하나라도 = 집짓기 시작.
                     return Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None).Length > 0
@@ -159,7 +184,7 @@ namespace MelonS.GameProto
         private void ApplyFade()
         {
             if (group != null)
-                group.alpha = Mathf.MoveTowards(group.alpha, currentVisible ? 0.92f : 0f, Time.unscaledDeltaTime * 2f);
+                group.alpha = Mathf.MoveTowards(group.alpha, currentVisible ? 0.96f : 0f, Time.unscaledDeltaTime * 2f);
         }
 
         public void SetRefs(Image bgImg, Text txt)

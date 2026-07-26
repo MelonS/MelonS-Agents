@@ -34,11 +34,21 @@ namespace MelonS.GameProto.Core
                 panelBg = new Color(0.949f, 0.910f, 0.835f, 0.94f),
                 panelBgLight = new Color(0.898f, 0.835f, 0.722f, 0.93f),
                 headerBg = new Color(0.871f, 0.796f, 0.655f, 0.96f),
-                accentGold = new Color(0.620f, 0.443f, 0.129f, 1f),
-                accentOrange = new Color(0.769f, 0.478f, 0.173f, 1f),
-                accentTan = new Color(0.663f, 0.510f, 0.345f, 1f),
-                textPrimary = new Color(0.227f, 0.184f, 0.133f, 1f),
-                textSecondary = new Color(0.541f, 0.463f, 0.345f, 1f),
+                // 대비 재조정 (2026-07-27).  접근성 페르소나가 화면 45곳의 WCAG 대비를
+                //  실측한 결과 **AA(4.5:1) 통과가 3곳**이었고, 실패 30여 곳이
+                //  "탄색/크림 패널 위 옅은 글자"라는 **단일 패턴**이었다.
+                //  관측색을 fg = α·잉크 + (1-α)·배경 으로 역산하면 α ≈ 0.29 로 채널 편차가
+                //  거의 없다 — 작은 글리프(7~11px)에서 안티에일리어싱이 획을 먹고 있다는 뜻.
+                //  글자 크기는 레이아웃 파급이 커서 야간에 손대기 위험하므로, **잉크를 진하게**
+                //  해서 AA 를 통과시키는 쪽으로 간다(같은 α 라도 대비가 올라간다).
+                //  아래 값은 페르소나가 크림 배경(242,232,213) 기준으로 계산해 준 4.5:1 통과선.
+                //  색상(hue)은 유지하고 명도만 내렸으므로 팔레트 아이덴티티는 그대로다.
+                accentGold = new Color(0.502f, 0.345f, 0.094f, 1f),    // 헤더/강조 (3.0:1 → 4.6:1)
+                accentOrange = new Color(0.569f, 0.353f, 0.129f, 1f),  // 활성 버튼 배경 — 흰 글자가 얹히므로
+                                                                       //  전경을 밝히는 대신 배경을 낮춘다 (2.7:1 → 4.5:1)
+                accentTan = new Color(0.471f, 0.361f, 0.243f, 1f),
+                textPrimary = new Color(0.227f, 0.184f, 0.133f, 1f),   // 이미 ~9:1 — 유지
+                textSecondary = new Color(0.400f, 0.365f, 0.310f, 1f), // 보조 텍스트 (2.6:1 → 4.6:1)
                 textDark = new Color(0.988f, 0.957f, 0.898f, 1f),   // 액센트 버튼 위 = 밝은 크림
                 textDanger = new Color(0.753f, 0.290f, 0.204f, 1f),
                 btnHover = new Color(0.835f, 0.761f, 0.629f, 0.95f),
