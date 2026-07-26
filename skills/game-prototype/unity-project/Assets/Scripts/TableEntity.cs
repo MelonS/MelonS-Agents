@@ -43,7 +43,7 @@ namespace MelonS.GameProto
         /// </summary>
         [SerializeField] private float ateAtTableMoodBonus = 4f;
 
-        /// <summary>"ate at a table" thought lifetime, seconds (≈ one meal cycle).</summary>
+        /// <summary>"ate at a table" thought lifetime, seconds (~ one meal cycle).</summary>
         [SerializeField] private float ateAtTableThoughtDur = 300f;
 
         public float AteAtTableMoodBonus => ateAtTableMoodBonus;

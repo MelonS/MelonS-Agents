@@ -42,11 +42,20 @@ namespace MelonS.GameProto
         [SerializeField] private Vector2Int footprint = new Vector2Int(1, 1);
         public Vector2Int Footprint => footprint;
 
-        public void SetSize(Vector2Int sz)
+        /// <summary>R 로 90° 돌려 놓은 청사진인가.  완성 시 SpawnFinished 에 그대로 넘겨
+        ///  완성물이 같은 방향으로 서게 한다 (안 넘기면 다 짓는 순간 침대가 홱 돌아간다).</summary>
+        [SerializeField] private bool isRotated = false;
+        public bool IsRotated => isRotated;
+
+        /// <summary>sz 는 **회전 전** footprint.  rotated=true 면 transform 을 90° 돌린다 —
+        ///  로컬 스케일·콜라이더는 그대로 두고 회전이 월드 가로/세로를 교환하게 한다.</summary>
+        public void SetSize(Vector2Int sz, bool rotated = false)
         {
             var c2 = GetComponent<BoxCollider2D>();
             if (c2 != null) c2.size = new Vector2(sz.x * 0.9f, sz.y * 0.9f);   // T2 footprint 반영
             footprint = sz;
+            isRotated = rotated && sz.x != sz.y;
+            transform.rotation = isRotated ? Quaternion.Euler(0, 0, 90f) : Quaternion.identity;
             // sprite 가 1:1 비율 + footprint 가 1x2 면 transform.localScale 로 확장.
             //  sprite 가 이미 1x2 비율 (16x32 등) 이면 그대로.
             if (sr == null) sr = GetComponent<SpriteRenderer>();
@@ -209,7 +218,7 @@ namespace MelonS.GameProto
                 //  스탬프를 모두 그 함수가 처리 → save/load 재구성과 '동일한 결과'가 보장된다.
                 //  (이전엔 이 블록에 인라인으로 중복돼 있어 재구성 경로와 드리프트 위험이 있었다.)
                 GameObject spawned = (BuildManager.Instance != null)
-                    ? BuildManager.Instance.SpawnFinished(mode, transform.position)
+                    ? BuildManager.Instance.SpawnFinished(mode, transform.position, isRotated)
                     : null;
                 if (spawned == null)
                 {

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace MelonS.GameProto
 {
     /// <summary>
-    /// Day 8: top-right speed indicator: "▶ 1x" / "▶▶ 2x" / "▶▶▶ 4x" / "❚❚ PAUSED".
+    /// Day 8: top-right speed indicator: "▶ 1x" / "▶▶ 2x" / "▶▶▶ 4x" / "|| PAUSED".
     /// Polls TimeController via Update (singleton-subscriber pattern).
     /// </summary>
     [RequireComponent(typeof(Text))]
@@ -33,7 +33,7 @@ namespace MelonS.GameProto
         private void Refresh(float s)
         {
             if (txt == null) return;
-            if (s <= 0f)         { txt.text = "❚❚ 멈춤"; txt.color = AccentWarn; }   // #ui백로그 2.7 — 전한글 HUD 톤 통일 (하단 버튼 '멈춤'과 일치)
+            if (s <= 0f)         { txt.text = "|| 멈춤"; txt.color = AccentWarn; }   // #ui백로그 2.7 — 전한글 HUD 톤 통일 (하단 버튼 '멈춤'과 일치)
             else if (s <= 1.01f) { txt.text = "▶ 1x";       txt.color = TextPrimary; }
             else if (s <= 2.01f) { txt.text = "▶▶ 2x";      txt.color = TextPrimary; }
             else                 { txt.text = $"▶▶▶ {s:0}x"; txt.color = TextPrimary; }

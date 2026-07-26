@@ -14,7 +14,7 @@ namespace MelonS.GameProto
     ///       (priority Normal, 모든 종류 허용).  레퍼런스 콜로니심 Architect → Zone → Stockpile.
     ///   Z3 (폐기존): 같은 drag 모드의 'dumping' preset — priority Low + Stone(chunk/refuse)
     ///       만 허용 + 회색 dim tint.  레퍼런스 콜로니심 Dumping stockpile = stockpile preset.
-    ///   (구 Z2b 아이템 필터 toolbar — 저장존 클릭 시 뜨던 🪵목재/🪨석재/🍖식량 toggle 3개 —
+    ///   (구 Z2b 아이템 필터 toolbar — 저장존 클릭 시 뜨던 목재/🪨석재/🍖식량 toggle 3개 —
     ///       는 운영자 fb 2026-06-01 로 제거되었다("정체불명 3버튼").  저장존은 spawn 시
     ///       StockItemKind.All(전부 수용)이 기본이므로 toolbar 없이도 모든 자원을 받고,
     ///       필터 데이터/API 는 StockpileZoneEntity.cs 에 그대로 살아 있어 hauler Z2
@@ -423,7 +423,7 @@ namespace MelonS.GameProto
 
         // ====================================================================
         //  (구 Z2b 필터 토글바 제거 — 운영자 fb 2026-06-01)
-        //  저장존을 클릭하면 뜨던 🪵목재/🪨석재/🍖식량 3버튼 toolbar 와 그 selection/
+        //  저장존을 클릭하면 뜨던 목재/🪨석재/🍖식량 3버튼 toolbar 와 그 selection/
         //  follow/EnsureToolbar 로직 전체를 삭제했다.  저장존은 StockpileZoneEntity.Spawn
         //  시점에 StockItemKind.All(전부 수용)로 초기화되므로 UI 없이도 모든 자원을 받는
         //  것이 기본 동작이고, 필터 데이터/API(AllowedKinds·ToggleKind·Accepts)는

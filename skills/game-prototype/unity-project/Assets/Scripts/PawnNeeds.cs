@@ -19,14 +19,14 @@ namespace MelonS.GameProto
         // #200 genre fidelity: food (0-100) should empty over ~2.5-3 in-game
         //  days like the reference sim (hunger ~1.6 nutrition/day).  1 in-game day = 240
         //  real seconds (GameClock), so a 3-day budget = 100 / (3*240) = 0.139/s.
-        //  Was 0.5/s → emptied in 200s = 0.83 day (~3.5x too fast).  0.14 ≈ 2.97 days.
+        //  Was 0.5/s → emptied in 200s = 0.83 day (~3.5x too fast).  0.14 ~ 2.97 days.
         // #228 운영자 fb "배고픔·수면 게이지가 정상동작 안 하는 느낌" — 시계 fix(rate 6,
         //  하루=240s) 후 needs(실시간 decay)가 하루 주기와 분리돼 게이지가 며칠에 걸쳐 찔끔
         //  움직였다(food~3일/sleep~1.4일).  하루 주기로 재튜닝: 매일 먹고/밤마다 자도록.
-        //  food 0.14→0.2(eat≈1회/일), sleep 0.3→0.4(sleep 100→0 ≈ 1게임일 → 밤마다 졸림).
+        //  food 0.14→0.2(eat~1회/일), sleep 0.3→0.4(sleep 100→0 ~ 1게임일 → 밤마다 졸림).
         //  #234 the reference sim 시계(1x=하루1000초)에 맞춰 decay 를 비례 축소(×0.24)해 게임-하루
         //  리듬은 동일 유지: foodDecay 0.2→0.048, sleepDecay 0.4→0.096, moodDecay 0.2→0.048.
-        //  (game-day 당 food≈48/sleep≈96 으로 rate-6 때와 동일 — 둘 다 timeScale 곱이라 정합.)
+        //  (game-day 당 food~48/sleep~96 으로 rate-6 때와 동일 — 둘 다 timeScale 곱이라 정합.)
         //  #247 운영자 fb "식량·수면 감소가 없어 식사·잠 불필요 (심각). the reference sim는 빨리 내려감"
         //  — #234 의 느린 시계(1x=16.7분/일)로 needs 가 실시간 4× 느려져 체감상 '안 내려감'.
         //  식사·잠이 실제로 필요하도록 상향: food 0.048→0.13(게임일당 ~130 → 하루 2~3회 식사),
@@ -49,7 +49,7 @@ namespace MelonS.GameProto
         //  닿는다.  씬에 8 이 직렬화 → Awake clamp (#QR지면 교훈).
         // 수면루프 재현(2026-06-13, _sleeploop.json) — regen 3/s 는 25실초(0.6게임시간)
         //  만충 → 같은 밤 재탈진 → 22시+ inPlace 경합 쓰러짐(-8)의 몸통.  레퍼런스
-        //  패리티: 수면은 밤에 6~8게임시간 1회.  0.35/s = 만충 ~230s ≈ 5.5게임시간
+        //  패리티: 수면은 밤에 6~8게임시간 1회.  0.35/s = 만충 ~230s ~ 5.5게임시간
         //  (침대 RestMul 1.3 → 4.2h, 바닥 0.6 → 9h — 침대 가치가 시간으로 체감된다).
         [SerializeField] private float sleepRegenAtNight = 0.35f;
         private const float MaxSleepRegen = 0.5f;   // 직렬화 스테일(구 3f) 무력화 가드
@@ -138,7 +138,7 @@ namespace MelonS.GameProto
         //  (매 프레임)가 sleep<35 교차 프레임에 즉시 IsSleeping=true → PawnUtilityAI 의
         //  IsSleeping 블록이 Decide(1.5s 주기)보다 항상 먼저 return → GoSleepAction(침대
         //  걷기)이 영원히 실행 기회를 못 얻는다.  걷기보다 낮은 별도 임계 — 35~30 구간
-        //  (decay 0.12/s ≈ 42 실초)이 AI 가 침대를 잡아 걸어갈 유예 창.  침대로 출발한
+        //  (decay 0.12/s ~ 42 실초)이 AI 가 침대를 잡아 걸어갈 유예 창.  침대로 출발한
         //  뒤(HasAutoSleepOrder)는 위 전용 블록이 처리하므로 이 게이트와 무관.
         [SerializeField] private float inPlaceSleepThreshold = 30f;  // 바닥 취침 — 걷기(35)보다 낮게
         [SerializeField] private float autoWakeSleepLevel = 80f;  // 일반 기상 수준
@@ -198,7 +198,7 @@ namespace MelonS.GameProto
             // 갭 TOP-6 (2026-06-12, ※갈림길 아님) — 레퍼런스의 '노숙 -4×2'가 첫 침대/첫
             //  지붕의 동기를 만든다.  바닥 취침 -4, 지붕 없는 곳 취침 추가 -4 (중첩 가능).
             string wakeThought;
-            // D-A(a) 회복 강화 (2026-07-24 운영자 승인): 수면 보상이 하루(실측 ≈1000게임초)를
+            // D-A(a) 회복 강화 (2026-07-24 운영자 승인): 수면 보상이 하루(실측 ~1000게임초)를
             //  못 덮는 600s 지속이 주간 순 적자의 주범 — 지속을 하루 길이로, 크기도 상향.
             //  음성 thought 는 불변(압력 유지).  검증: human-rhythm 소크 붕괴 3/4일 → 목표 0~1.
             if (b == null)              { th.AddThought("바닥에서 잠", -4f, 600f); wakeThought = "바닥에서 잠 -4"; }
@@ -323,7 +323,7 @@ namespace MelonS.GameProto
             //  (아침 마크가 밤으로 새는 누수 차단).
             if (!(night || ScheduledSleepNow)) noBedStreak = 0;
 
-            // 백로그 #5 (2026-06-11) — 수면 자연 치유: 1게임시간(≈41.7스케일초)마다
+            // 백로그 #5 (2026-06-11) — 수면 자연 치유: 1게임시간(~41.7스케일초)마다
             //  침대 2 / 바닥 1.  부상 회복이 의사 tend 뿐이라 '다리 5/20 림 영구 불구'
             //  였던 것 — 침대의 회복 가치가 처음으로 생긴다 (HealAll 재사용).
             if (IsSleeping)
@@ -488,7 +488,7 @@ namespace MelonS.GameProto
             //    Fine         1.40x rest +8 mood/s
             //  bed 가 없으면 ground (rest 0.6x, mood 패널티 약간).
             // 제자리 취침 gate.  autoSleepThreshold(35) 와 동일하게 묶어, 침대 도달에
-            //  실패해 fallback 으로 내려온 림이 (sleep≈30~35) 곧장 누워 회복하도록 한다.
+            //  실패해 fallback 으로 내려온 림이 (sleep~30~35) 곧장 누워 회복하도록 한다.
             //  발밑이 침대면 자동으로 bed.RestMul 보너스 (위 cell 에 멈췄을 때 포함).
             //  #228 - 탈진(sleep<15)이면 낮에도 그 자리서 쓰러져 잔다(밤 게이트 무시).
             // #269 주의: ScheduledSleepNow 를 여기(제자리 취침)에 넣으면 침대로 가기 전에
@@ -557,11 +557,11 @@ namespace MelonS.GameProto
             //  감쇠율은 레퍼런스 콜로니심 패리티(#234)였으나 food 0 의 '결과'가 없었다 — 굶주림이
             //  죽음에 이르지 않으면 생존게임 축이 통째로 장식이 된다.
             //  food 0 지속: 12 게임초당 1 HP (만복→공복 ~1게임일 + 공복→사망 ~0.4게임일
-            //  ≈ 총 1.4게임일 — 레퍼런스 콜로니심 영양실조보다 압축, 프로토 페이싱).
+            //  ~ 총 1.4게임일 — 레퍼런스 콜로니심 영양실조보다 압축, 프로토 페이싱).
             //  시간 기준은 Time.time(스케일 시계) — 니즈 decay·WaitForSeconds 와 동일
             //  기반이라 배속/프레임 케이스에서 표류하지 않는다 (dt 누적·GameClock 기반
             //  1·2차 구현은 측정 시계와 어긋나 틱이 6~12배 느리게 보였다).
-            //  6스케일초/틱 ≈ 518게임초 — PawnHealth 부위 풀(~137) 기준 공복 후 사망까지
+            //  6스케일초/틱 ~ 518게임초 — PawnHealth 부위 풀(~137) 기준 공복 후 사망까지
             //  ~0.25게임일, 만복부터 총 ~1.25게임일.
             // r2-E (감사 자동승격) — 아사 임박 개인 경고: food 15 하향 교차 1회.
             if (food < 15f && !starveWarned && pawnEntity != null && !pawnEntity.IsDead)

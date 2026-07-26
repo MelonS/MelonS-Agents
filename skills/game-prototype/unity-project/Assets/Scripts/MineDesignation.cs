@@ -62,7 +62,7 @@ namespace MelonS.GameProto
     ///   >>> QA FLAG (scene-wiring): the mine toggle button is created at runtime on
     ///       the first Canvas found (bottom-center, offset right of the centered
     ///       GuiControlBar, opposite side from the Deconstruct button) and the
-    ///       designation marker is a runtime-built pick glyph ("⛏") TextMesh (no
+    ///       designation marker is a runtime-built pick glyph ("") TextMesh (no
     ///       prefab / no imported PNG).  Both are code-generated, never SceneSetup-
     ///       wired — QA should confirm the button appears, toggles mode, the M hotkey
     ///       toggles it, and the pick glyph shows on a marked vein.  No SceneSetup*.cs
@@ -405,7 +405,7 @@ namespace MelonS.GameProto
 
     /// <summary>
     /// wiki #16 — the DESIGNATION MARKER: a runtime component attached to a
-    /// StoneVeinEntity when the player marks it for mining.  It carries a pick "⛏"
+    /// StoneVeinEntity when the player marks it for mining.  It carries a pick ""
     /// glyph overlay so the marked vein reads at a glance, and a back-reference to
     /// its StoneVeinEntity so the dispatch can hand it to a PawnMiner.  The actual
     /// mining work + chunk-drop is entirely the existing StoneVeinEntity.
@@ -436,7 +436,7 @@ namespace MelonS.GameProto
             return v != null && !v.IsDestroyed;
         }
 
-        /// <summary>Cache the vein reference and draw the pick "⛏" designation overlay.</summary>
+        /// <summary>Cache the vein reference and draw the pick "" designation overlay.</summary>
         public void Initialize()
         {
             vein = GetComponent<StoneVeinEntity>();
@@ -450,11 +450,11 @@ namespace MelonS.GameProto
             marker.transform.SetParent(transform, false);
             marker.transform.localPosition = Vector3.zero;
 
-            // A pick "⛏" TextMesh rendered above the vein sprite.  No imported PNG /
+            // A pick "" TextMesh rendered above the vein sprite.  No imported PNG /
             //  prefab — code-generated (flagged for QA), exactly like the deconstruct
-            //  "✕" marker.
+            //  "×" marker.
             var tm = marker.AddComponent<TextMesh>();
-            tm.text = "⛏";
+            tm.text = "";
             tm.fontSize = 48;
             tm.characterSize = 0.06f;
             tm.anchor = TextAnchor.MiddleCenter;
@@ -466,7 +466,7 @@ namespace MelonS.GameProto
             var mr = marker.GetComponent<MeshRenderer>();
             // UI겹침 P1-7 (2026-06-14): 30 → 28. 광맥 스프라이트(≤20) 위는 유지하되
             //  이름 라벨(shadow 29/name 30)과의 30==30 타이를 풀어, 마킹 광맥 남쪽 림의
-            //  골드 이름 위로 흰 ⛏ 가 겹쳐 판독 불가하던 것 해소(이름 아래로 정렬).
+            //  골드 이름 위로 흰 가 겹쳐 판독 불가하던 것 해소(이름 아래로 정렬).
             mr.sortingOrder = 28;
         }
     }

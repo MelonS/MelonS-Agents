@@ -15,7 +15,7 @@ namespace MelonS.GameProto
     /// </summary>
     public class PawnFloatingBars : MonoBehaviour
     {
-        // #199 A2 ortho 3.5 + 1x1 pawn — 머리 ≈ +0.5 (예전 2-unit pawn 은 +1.0).
+        // #199 A2 ortho 3.5 + 1x1 pawn — 머리 ~ +0.5 (예전 2-unit pawn 은 +1.0).
         //  바를 머리 바로 위로 끌어내리고, 카메라가 ~1.7x 더 줌-인 됐으므로 너비/높이를
         //  ~40% 축소해도 화면 상 동일하게 읽힘 (plan-199 §5).
         //  yOffset = HP(상단) 바, mood 바는 그 아래로 (bottom = yOffset - barHeight - gap).

@@ -24,7 +24,7 @@ namespace MelonS.GameProto
     public class PawnHarvester : MonoBehaviour
     {
         // #199 C1 — stand adjacent to the crop (the reference sim).  1.5 covers diagonal
-        //  adjacency (center dist √2≈1.414) yet stays < 2 so a pawn can't harvest
+        //  adjacency (center dist √2~1.414) yet stays < 2 so a pawn can't harvest
         //  from a full cell away.  Matches PawnChopper.chopRange / PawnCook.cookRange.
         [SerializeField] private float harvestRange = 1.5f;
 

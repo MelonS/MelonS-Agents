@@ -125,7 +125,7 @@ namespace MelonS.GameProto
             float padY = PadY;
 
             // 6 tab buttons: [징집] | [직업][일정] | [건축] | [연구] | [설정]
-            float totalW = 6 * BtnW + 5 * GroupGap;  // #ui백로그 0.3 — 버튼 사이 갭은 5개 (4개로 계산해 ⚙설정이 패널 테두리를 4px 침범했었음)
+            float totalW = 6 * BtnW + 5 * GroupGap;  // #ui백로그 0.3 — 버튼 사이 갭은 5개 (4개로 계산해 설정이 패널 테두리를 4px 침범했었음)
 
             // === 하단 중앙 탭 바 컨테이너 (징집/직업/일정/건축/연구/설정) ===
             //   root 가 full-screen stretch 이므로, 중앙 바는 자체 컨테이너로 anchor (0.5,0) 고정.

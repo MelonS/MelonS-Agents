@@ -22,8 +22,8 @@ namespace MelonS.GameProto
             { this.t = t; this.sat = sat; this.con = con; this.tint = tint; this.lift = lift; }
         }
 
-        // 스톱 타임라인 — NightOverlay DARK_STOPS 와 같은 시계 (0.27≈06:30 일출,
-        //  0.5=정오, 0.77≈18:30 일몰, 0.83≈20:00 황혼).  값은 은은하게 — 픽셀아트
+        // 스톱 타임라인 — NightOverlay DARK_STOPS 와 같은 시계 (0.27~06:30 일출,
+        //  0.5=정오, 0.77~18:30 일몰, 0.83~20:00 황혼).  값은 은은하게 — 픽셀아트
         //  팔레트를 존중하고 "필터 낀 화면"이 되지 않게 (리서치 '하지 말 것' 준수).
         private static readonly GStop[] STOPS =
         {

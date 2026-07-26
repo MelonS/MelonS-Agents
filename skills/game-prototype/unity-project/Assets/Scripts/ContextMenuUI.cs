@@ -126,8 +126,18 @@ namespace MelonS.GameProto
                 canvasRt, screenPos, null, out localPos);
             Rect cr = canvasRt.rect;
             float pw = panelRt.sizeDelta.x, ph = panelRt.sizeDelta.y;
-            localPos.x = Mathf.Clamp(localPos.x, cr.xMin, Mathf.Max(cr.xMin, cr.xMax - pw));
-            localPos.y = Mathf.Clamp(localPos.y, Mathf.Min(cr.yMax, cr.yMin + ph), cr.yMax);
+
+            // 좌표계 정합 (2026-07-27 운영자 "취소버튼이 이상한곳에 있음"의 원인):
+            //  ScreenPointToLocalPointInRectangle 은 캔버스 **pivot(중앙) 원점** 좌표를 준다.
+            //  반면 이 패널은 anchorMin=anchorMax=(0,0) 이라 anchoredPosition 이
+            //  **캔버스 좌하단 원점**으로 해석된다.  변환 없이 대입하면 메뉴가 클릭 지점에서
+            //  화면 절반(W/2, H/2)만큼 어긋나 항상 좌하단 근처에 떴다.
+            localPos.x -= cr.xMin;
+            localPos.y -= cr.yMin;
+
+            // pivot(0,1) = 좌상단 기준이라 우측·아래로 펼쳐진다 → 우/하단 잘림 방지 클램프.
+            localPos.x = Mathf.Clamp(localPos.x, 0f, Mathf.Max(0f, cr.width - pw));
+            localPos.y = Mathf.Clamp(localPos.y, Mathf.Min(cr.height, ph), cr.height);
             panelRt.anchoredPosition = localPos;
             // 운영자 #34 "나무 벌목 서브메뉴 안 뜸": 메뉴는 GameManager init 때 캔버스에 일찍
             //  추가돼 이후 생성되는 HUD 패널들(topbar/inspect 등)이 더 높은 sibling index 로

@@ -55,7 +55,7 @@ namespace MelonS.GameProto
         public const float FlameHeightCells = 0.30f;
 
         // 밤 게이트 임계값: NightFactor(0=한낮,1=한밤) 가 이 값 이상이면 점등.
-        //  0.18 ≈ 황혼/일출 어귀 — 살짝 어둑해지면 켜지고 밝아지면 꺼진다.
+        //  0.18 ~ 황혼/일출 어귀 — 살짝 어둑해지면 켜지고 밝아지면 꺼진다.
         private const float LitThreshold = 0.18f;
 
         // ------------------------------------------------------------------ //

@@ -14,7 +14,7 @@ namespace MelonS.GameProto
         // #199 C1 — stand adjacent (the reference sim).  1.2 → 1.5 for diagonal adjacency.
         // grader 좌표 (2026-06-12 소크/4축 양쪽 실측) — 림이 광맥 1.69~1.70 까지
         //  접근하고도 mineRange 1.5 에 0.2 모자라 포기, 채광 경제가 통째로 정지하던
-        //  것.  1.85 = 대각 stand cell(√2≈1.41)+오프셋 흡수.  통행/경로 무변경.
+        //  것.  1.85 = 대각 stand cell(√2~1.41)+오프셋 흡수.  통행/경로 무변경.
         [SerializeField] private float mineRange = 1.85f;
         [SerializeField] private float mineDamagePerSec = 20f;  // 광맥 HP 200 → 10s
         [SerializeField] private float giveUpAfterSec = 12f;

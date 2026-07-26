@@ -26,7 +26,7 @@ namespace MelonS.GameProto
     {
         /// <summary>
         /// Autodoor pass-through multiplier — HIGHER than DoorEntity.DefaultPassMul
-        /// (0.65) so the crossing pawn is slowed LESS (faster cross).  ≈0.95 ≈
+        /// (0.65) so the crossing pawn is slowed LESS (faster cross).  ~0.95 ~
         /// "barely slows".  SerializeField so the designer can tune day-1 feel.
         /// Mirrors BuildManager.autodoorPassMul (kept in sync; both default 0.95).
         /// </summary>

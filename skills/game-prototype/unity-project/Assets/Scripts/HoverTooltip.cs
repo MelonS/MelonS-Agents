@@ -167,7 +167,7 @@ namespace MelonS.GameProto
         private string DescribeHit(Collider2D hit)
         {
             if (hit == null) return "";
-            // 운영자 피드백 #106 - drafted pawn 으로 적 hover 시 ⚔ 공격 아이콘 prefix
+            // 운영자 피드백 #106 - drafted pawn 으로 적 hover 시 △ 공격 아이콘 prefix
             // #ui백로그 3.10 — hover 매 프레임 씬 전수 스캔 제거: lazy-cache (null 시만 재탐색)
             bool draftedReady = false;
             if (cachedCs == null) cachedCs = Object.FindFirstObjectByType<ClickSelector>();
@@ -202,20 +202,20 @@ namespace MelonS.GameProto
                 // #ui백로그 3.5 — 종 무관 '사슴' 하드코딩 제거: 멧돼지를 hover 하면 '사슴',
                 //  클릭하면 '멧돼지'로 갈리던 표기 불일치.  인스펙터와 같은 SpeciesKr 사용.
                 string sp = animal.SpeciesKr;
-                string tamed = animal.IsTamed ? " ✓길들여짐" : "";
-                if (draftedReady) return $"⚔ {sp}{tamed}  (우클릭=공격/사냥)";
+                string tamed = animal.IsTamed ? " ○길들여짐" : "";
+                if (draftedReady) return $"△ {sp}{tamed}  (우클릭=공격/사냥)";
                 return $"{sp}{tamed}  (드래프트 후 우클릭=사냥 / 우클릭=길들이기)";
             }
             var wolf = hit.GetComponent<WolfEnemy>();
             if (wolf != null)
             {
-                if (draftedReady) return "⚔ 늑대 (위협!)  (우클릭=공격)";
+                if (draftedReady) return "△ 늑대 (위협!)  (우클릭=공격)";
                 return "늑대 (위협!)  (드래프트 후 우클릭=공격)";
             }
             var bandit = hit.GetComponent<BanditEnemy>();
             if (bandit != null)
             {
-                if (draftedReady) return "⚔ 강도 (위협!)  (우클릭=공격)";
+                if (draftedReady) return "△ 강도 (위협!)  (우클릭=공격)";
                 return "강도 (위협!)  (드래프트 후 우클릭=공격)";
             }
             var trader = hit.GetComponent<TraderEntity>();

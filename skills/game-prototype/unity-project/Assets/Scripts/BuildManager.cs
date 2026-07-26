@@ -74,7 +74,7 @@ namespace MelonS.GameProto
         // 밸런스 A6(2026-07-24): 바닥 1→3 (바닐라 파리티).
         [SerializeField] private int wallCost = 5, floorCost = 3, doorCost = 25, stoveCost = 80, bedCost = 45;
         [SerializeField] private int wallStoneCost = 5;  // #127 - 석재 5
-        // W-M4-04 (#19) - Lamp cost.  the reference sim torch ≈ 1 wood, standing lamp needs
+        // W-M4-04 (#19) - Lamp cost.  the reference sim torch ~ 1 wood, standing lamp needs
         //   power; this prototype lamp is a cheap always-on light at 목재 4.
         [SerializeField] private int lampCost = 20;   // 밸런스 A4(2026-07-24): 4→20 파리티
         // #229 회귀 수리 (2026-06-12) — 맨땅 시작 전환 때 스타터 연구대만 제거되고
@@ -105,7 +105,7 @@ namespace MelonS.GameProto
         private GameObject _floorStonePrefabRuntime;  // cached lazily-built template
         private Sprite     _floorStoneSpriteRuntime;  // cached lazily-built sprite
         // W-M4-06 (#20) - Table+chair cost.  A simple wood dining spot; the reference sim
-        //   table ≈ 25 wood + stool ≈ small — 목재 6 keeps it cheap/reachable in
+        //   table ~ 25 wood + stool ~ small — 목재 6 keeps it cheap/reachable in
         //   the prototype while clearly costing more than a lamp (4).
         [SerializeField] private int tableChairCost = 65;   // 밸런스 A6(2026-07-24): 40→65 파리티
         // W-M4-06 (#20) - Table+chair prefab + sprite, built LAZILY + PROCEDURALLY
@@ -151,7 +151,7 @@ namespace MelonS.GameProto
         // W-M6-04 (B5) - Autodoor cost + faster-cross multiplier.  Vanilla
         //   the reference sim's autodoor costs more Stuff than a plain door for a faster
         //   open; this prototype keeps a plain door at 목재 3 and the autodoor at
-        //   목재 6 (clearly costlier).  AutodoorPassMul 0.95 ≈ barely slows the
+        //   목재 6 (clearly costlier).  AutodoorPassMul 0.95 ~ barely slows the
         //   crossing pawn, vs the plain door's DoorEntity.DefaultPassMul 0.65 —
         //   so a pawn crosses an autodoor FASTER (wiki B5 acceptance).  Prefab +
         //   sprite are built LAZILY + PROCEDURALLY (same as Lamp / StoneFloor /
@@ -218,6 +218,15 @@ namespace MelonS.GameProto
             //  가정하던 'ESC=build-cancel' 바인딩의 실체화).  SettingsMenu 의 ESC 는 isOpen
             //  일 때만 소비하므로 충돌 없음.
             if (BuildModeActive && SimInput.GetKeyDown(KeyCode.Escape)) { SetMode(Mode.Off); return; }   // SimInput — 규칙 2
+            // 운영자 fb (2026-07-27) "침대같은거 돌리는거 안되는거" — 장르 표준대로 R = 회전.
+            //  R 은 평소 징집 토글(ClickSelector)이지만 건축 모드 중엔 비어 있으므로 그때만 가로챈다
+            //  (ClickSelector 쪽에 !BuildModeActive 가드를 둬서 중복 발화를 막는다).
+            //  1x1 은 회전해도 같으므로 무시 — 침대/고급침대/무덤(1x2)만 의미가 있다.
+            if (BuildModeActive && SimInput.GetKeyDown(KeyCode.R))
+            {
+                Vector2Int baseSz = SizeFor(CurrentMode);
+                if (baseSz.x != baseSz.y) GhostRotated = !GhostRotated;
+            }
             UpdateGhost();
             // #179/#182 - click 처리.  cooldown 으로 SetMode 직후 race 방지.
             //  EventSystem guard 는 over-blocking 위험 (TopBar/GuiControlBar 가 항상 raycast target).
@@ -364,11 +373,16 @@ namespace MelonS.GameProto
         //  재구성(GameSaveButtons.OnLoad)이 공용으로 호출.  prefab Instantiate + 활성화 + footprint
         //  scale + 벽 재질/침대 품질(mode 기준) + StructureTag(mode) 스탬프.  두 경로가 같은 함수를
         //  타므로 '빌드 결과 == 로드 재구성 결과' 가 보장된다(드리프트 없음).
-        public GameObject SpawnFinished(Mode mode, Vector3 pos)
+        public GameObject SpawnFinished(Mode mode, Vector3 pos, bool rotated = false)
         {
             var prefab = PrefabFor(mode);
             if (prefab == null) return null;
-            var spawned = Instantiate(prefab, pos, Quaternion.identity);
+            // 회전 배치(R) = transform 90°.  **스케일 계산은 건드리지 않는다** —
+            //  아래 localScale 은 회전 전 footprint 기준으로 로컬 크기를 맞추고, 90° 회전이
+            //  월드 가로/세로를 알아서 교환한다 (로컬 (1,2) → 월드 (2,1)).
+            //  콜라이더도 같은 transform 을 타므로 함께 돌아간다.
+            bool rot = rotated && SizeFor(mode).x != SizeFor(mode).y;
+            var spawned = Instantiate(prefab, pos, rot ? Quaternion.Euler(0, 0, 90f) : Quaternion.identity);
             spawned.SetActive(true);
             spawned.hideFlags = HideFlags.None;   // #248 런타임 템플릿의 HideAndDontSave 상속 제거
             Vector2Int fp = SizeFor(mode);
@@ -408,6 +422,7 @@ namespace MelonS.GameProto
             var tag = spawned.GetComponent<StructureTag>();
             if (tag == null) tag = spawned.AddComponent<StructureTag>();
             tag.modeInt = (int)mode;
+            tag.rotated = rot;
             return spawned;
         }
 
@@ -443,6 +458,17 @@ namespace MelonS.GameProto
             _ => new Vector2Int(1, 1),
         };
 
+        /// <summary>고스트/배치가 실제로 쓰는 크기 — 회전 상태를 반영한다 (R 키).
+        ///  SizeFor 는 "이 물건의 원래 크기"라는 순수 함수로 남겨두고, 회전은 여기서만 얹는다.
+        ///  이 구분이 없으면 저장/로드·비용 계산 등 SizeFor 를 쓰는 다른 경로가 회전에 오염된다.</summary>
+        public static bool GhostRotated { get; private set; }
+
+        public static Vector2Int EffectiveSizeFor(Mode m)
+        {
+            Vector2Int s = SizeFor(m);
+            return (GhostRotated && s.x != s.y) ? new Vector2Int(s.y, s.x) : s;
+        }
+
         private void UpdateGhost()
         {
             if (!BuildModeActive || ghostRenderer == null || cam == null) return;
@@ -450,14 +476,18 @@ namespace MelonS.GameProto
             int cx = Mathf.FloorToInt(mw.x);
             int cy = Mathf.FloorToInt(mw.y);
             // #193 - multi-cell ghost: center = (cx + w*0.5, cy + h*0.5)
-            Vector2Int size = SizeFor(CurrentMode);
+            //  중심 계산엔 **회전 반영 크기**를 쓴다 — 실제로 점유할 칸 위에 얹혀야 하므로.
+            Vector2Int size = EffectiveSizeFor(CurrentMode);
             ghostRenderer.transform.position = new Vector3(cx + size.x * 0.5f, cy + size.y * 0.5f, 0);
-            // ghost scale 도 size 적용 (sprite world bound 보정)
+            // 회전은 transform 으로, 스케일은 **회전 전 크기**로 (90° 가 월드 가로/세로를 교환한다).
+            Vector2Int baseSize = SizeFor(CurrentMode);
+            bool ghostRot = GhostRotated && baseSize.x != baseSize.y;
+            ghostRenderer.transform.rotation = ghostRot ? Quaternion.Euler(0, 0, 90f) : Quaternion.identity;
             if (ghostRenderer.sprite != null)
             {
                 Vector2 sw = ghostRenderer.sprite.bounds.size;
                 if (sw.x > 0.01f && sw.y > 0.01f)
-                    ghostRenderer.transform.localScale = new Vector3(size.x / sw.x, size.y / sw.y, 1f);
+                    ghostRenderer.transform.localScale = new Vector3(baseSize.x / sw.x, baseSize.y / sw.y, 1f);
             }
             int cost = CostFor(CurrentMode);
             bool stoneMode = PaysWithStone(CurrentMode);
@@ -620,7 +650,9 @@ namespace MelonS.GameProto
             // #193 - multi-cell entity (침대 1x2 등) footprint 검사
             // #199 C3 - the reference sim 배치 규칙: terrain(물/바위) + 구조물/청사진 중복 모두 거부.
             //  pawn 이 서 있는 cell 은 거부 X (pawn 이 비켜남).  multi-cell 은 전 cell 검사.
-            Vector2Int size = SizeFor(CurrentMode);
+            //  점유 검사는 **회전 반영 크기** 기준 (가로 침대는 가로 2칸을 먹는다).
+            Vector2Int size = EffectiveSizeFor(CurrentMode);
+            bool placeRotated = GhostRotated && SizeFor(CurrentMode).x != SizeFor(CurrentMode).y;
             PlaceReject reject = ValidatePlacement(cx, cy, size.x, size.y);
             if (reject == PlaceReject.OutOfBounds)
             {
@@ -668,7 +700,9 @@ namespace MelonS.GameProto
             float secs = CurrentMode == Mode.Grave ? 8f
                        : (CurrentMode == Mode.Floor || CurrentMode == Mode.FloorStone) ? 2f : 5f;
             bp.Init(CurrentMode, prefab, ghostSpr, needWood, needStone, secs);
-            bp.SetSize(size);  // #193 - 청사진 sprite 도 1x2 비율 적용
+            // #193 - 청사진 sprite 도 1x2 비율 적용.  스케일 인자는 **회전 전 크기**여야 한다
+            //  (90° 회전이 월드 가로/세로를 교환하므로) — size 는 이미 회전 반영본이라 쓰면 안 된다.
+            bp.SetSize(SizeFor(CurrentMode), placeRotated);
 
             // 실외 침대 경고 (2026-07-24 운영자 "침대를 집 밖에" — 방 개념이 없어 게임이
             //  아무 안내도 안 주던 것).  배치는 허용하되(콜로니심式 자유) 페널티를 즉시 고지.
@@ -693,7 +727,7 @@ namespace MelonS.GameProto
             {
                 string kr = ModeKr(CurrentMode);
                 string sizeKr = (size.x == 1 && size.y == 1) ? "" : $" {size.x}x{size.y}";
-                BuildClickToast.Instance.ShowSuccess($"✓ 청사진 - {kr}{sizeKr} @ ({cx},{cy})");
+                BuildClickToast.Instance.ShowSuccess($"○ 청사진 - {kr}{sizeKr} @ ({cx},{cy})");
             }
             ClickEffect.Spawn(center, new Color(0.55f, 0.85f, 1.0f, 0.95f));
             return true;
@@ -1574,7 +1608,7 @@ namespace MelonS.GameProto
             //  CellOccupied no-stack guard, and the EntityInspector/HoverTooltip/
             //  Deconstruct read paths that key off GetComponent<DoorEntity>()),
             //  and AutodoorEntity.Awake raises passMul to its higher value
-            //  (≈0.95 vs the plain door's DefaultPassMul 0.65) so a pawn crosses
+            //  (~0.95 vs the plain door's DefaultPassMul 0.65) so a pawn crosses
             //  it FASTER.  Awake runs on every Instantiate'd copy, so the value
             //  needs no per-template SetPassMul here.  We also push BuildManager's
             //  serialized autodoorPassMul onto the template via SetPassMul so a

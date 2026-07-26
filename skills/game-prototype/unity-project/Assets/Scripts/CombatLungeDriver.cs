@@ -74,7 +74,7 @@ namespace MelonS.GameProto
     {
         [Header("Lunge")]
         // Peak forward offset on the body child's local X, world units.  Operator
-        //  asked for "~0.2 sprite 전진".  Body sprite ≈ 1 world unit, so 0.2 = ~20%
+        //  asked for "~0.2 sprite 전진".  Body sprite ~ 1 world unit, so 0.2 = ~20%
         //  of the sprite forward — a clearly readable jab without flinging the pawn.
         [SerializeField] private float lungeDistance = 0.2f;
         // Seconds to ease the lunge from peak back to zero.  Short = snappy jab.

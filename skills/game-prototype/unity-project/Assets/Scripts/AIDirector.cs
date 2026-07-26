@@ -550,7 +550,7 @@ namespace MelonS.GameProto
                 var ae = go.GetComponent<AnimalEntity>();
                 if (ae == null) { UnityEngine.Object.Destroy(go); continue; }
                 ae.SetSpecies(AnimalSpecies.Boar);
-                ae.ForceManhunter(180f);   // 실시간 3분 ≈ 4.3게임시간 광기
+                ae.ForceManhunter(180f);   // 실시간 3분 ~ 4.3게임시간 광기
                 madPack.Add(ae);
             }
             return madPack.Count > 0;

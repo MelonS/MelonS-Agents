@@ -12,7 +12,7 @@ namespace MelonS.GameProto
         [SerializeField] private Text stoneText;  // #119
         private int lastWood = -1, lastFood = -1, lastMeals = -1, lastStone = -1;
         // #ui백로그 1.1 + #게임필4 — fineMeals 표시(미표시로 '값이 안 늘어' 재발) 와
-        //  식량 ≈N일치(카운터가 카운트다운으로 읽혀야 농사/사냥을 '하고 싶어'짐).
+        //  식량 ~N일치(카운터가 카운트다운으로 읽혀야 농사/사냥을 '하고 싶어'짐).
         private int lastFineMeals = -1;
         private int cachedPawnCount = 0;
         private float nextPawnCountPoll = -1f;
@@ -90,7 +90,7 @@ namespace MelonS.GameProto
             }
             // r2 #6 (2026-06-12) — '~N일치' 진실 보정: (a) rm.food/림 수 변화에도 재계산
             //  (이전엔 meals 변화 게이트 안이라 stale), (b) 소비율 — 림 1명 게임일당 need
-            //  ~130 ÷ 영양위계(raw20/meal40) ≈ 식량단위 9/일.  '3일치'로 읽히던 재고가
+            //  ~130 ÷ 영양위계(raw20/meal40) ~ 식량단위 9/일.  '3일치'로 읽히던 재고가
             //  실제 1일치이던 3배 과대평가 해소.
             if (rm.meals != lastMeals || rm.fineMeals != lastFineMeals
                 || rm.food != lastFoodForDays || cachedPawnCount != lastPawnForDays)

@@ -8,7 +8,7 @@ namespace MelonS.GameProto.AI
     ///
     /// genre fidelity RULES (operator: "최대한 레퍼런스 콜로니심와 같은 방식으로"):
     ///  - 8-directional movement.
-    ///  - Integer move cost: 10 cardinal, 14 diagonal (≈ 1.414 scaled ×10).
+    ///  - Integer move cost: 10 cardinal, 14 diagonal (~ 1.414 scaled ×10).
     ///    Integer costs avoid float drift so ties resolve deterministically.
     ///  - Heuristic: octile distance, h = 10*(max-min) + 14*min where
     ///    min=min(dx,dy), max=max(dx,dy).  This matches the move costs exactly,

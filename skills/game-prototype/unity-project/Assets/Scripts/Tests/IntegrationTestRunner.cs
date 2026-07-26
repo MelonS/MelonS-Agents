@@ -313,7 +313,7 @@ namespace MelonS.GameProto.Tests
             if (bar == null) { Assert(false, "GuiControlBar GameObject 없음"); yield break; }
             var buttons = bar.GetComponentsInChildren<UnityEngine.UI.Button>();
             Assert(buttons.Length >= 9,
-                $"GuiControlBar 발견, 버튼 {buttons.Length}개 (>=9 expected — #126 일정 + 설정(⚙) 통합 버튼 추가로 10개)");
+                $"GuiControlBar 발견, 버튼 {buttons.Length}개 (>=9 expected — #126 일정 + 설정() 통합 버튼 추가로 10개)");
         }
 
         /// <summary>I7: 멈춤 버튼 클릭 → Time.timeScale=0</summary>

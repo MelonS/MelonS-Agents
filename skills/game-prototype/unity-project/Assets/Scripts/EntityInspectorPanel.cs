@@ -66,8 +66,8 @@ namespace MelonS.GameProto
                 if (bp.needWood > 0) materials += $"목재: {bp.collectedWood}/{bp.needWood}\n";
                 if (bp.needStone > 0) materials += $"석재: {bp.collectedStone}/{bp.needStone}\n";
                 string status = bp.HasAllMaterials
-                    ? (bp.IsReserved ? "🔨 건설중" : "✓ 자재 완비, pawn 대기")
-                    : "⏳ 자재 부족, hauler 운반 중";
+                    ? (bp.IsReserved ? "건설중" : "○ 자재 완비, pawn 대기")
+                    : "자재 부족, hauler 운반 중";
                 return ($"청사진 ({bp.Mode})",
                     $"{materials}진행도: {bp.Progress * 100f:F0}%\n{status}");
             }
@@ -120,7 +120,7 @@ namespace MelonS.GameProto
             if (bandit != null) return ("강도 [위협]", $"HP {bandit.Hp}/20, contact dmg\n드래프트 후 우클릭 = 공격");
             var animal = go.GetComponent<AnimalEntity>();
             if (animal != null) return (animal.SpeciesKr,
-                $"HP {animal.Hp}\n사냥 시 고기 drop\n길들이기 가능 (식량 1 소모)\n{(animal.IsTamed ? "✓ 길들여짐" : "야생")}");
+                $"HP {animal.Hp}\n사냥 시 고기 drop\n길들이기 가능 (식량 1 소모)\n{(animal.IsTamed ? "○ 길들여짐" : "야생")}");
             var trader = go.GetComponent<TraderEntity>();
             if (trader != null) return ("상인", $"우클릭 = wood 5 → food 8 거래\n60s 머무름");
             var grave = go.GetComponent<GraveEntity>();

@@ -214,7 +214,7 @@ namespace MelonS.GameProto.Tests
 
             float foodAfterEat = pawnNeeds.food;
             // The pawn's food need should have risen by eatRestore (30) minus the
-            // foodDecay (0.14/s × 1s ≈ 0.14) that also ran during the wait.
+            // foodDecay (0.14/s × 1s ~ 0.14) that also ran during the wait.
             // Net rise must be > 0 compared to the starting low value.
             bool step5_foodRose = foodAfterEat > foodBeforeEat;
 

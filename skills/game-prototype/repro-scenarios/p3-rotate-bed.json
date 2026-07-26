@@ -1,0 +1,35 @@
+{
+  "name": "가구 회전 (R) — 침대를 돌려 가로로 배치 (2026-07-27 운영자 '침대같은거 돌리는거 안되는거')",
+  "timeoutSec": 180,
+  "steps": [
+    { "op": "wait", "sec": 2 },
+    { "op": "shot", "name": "r00_start" },
+
+    { "op": "clickui", "name": "label:건축" },
+    { "op": "clickui", "name": "label:가구" },
+    { "op": "wait", "sec": 0.4 },
+    { "op": "clickui", "name": "label:침대" },
+    { "op": "wait", "sec": 0.3 },
+    { "op": "shot", "name": "r01_ghost_vertical" },
+
+    { "op": "key", "name": "R" },
+    { "op": "wait", "sec": 0.4 },
+    { "op": "shot", "name": "r02_ghost_rotated" },
+
+    { "op": "worldclick", "x": 8.5, "y": 8.5 },
+    { "op": "wait", "sec": 0.5 },
+    { "op": "shot", "name": "r03_bed_horizontal" },
+    { "op": "assert", "probe": "blueprintCount", "min": 1 },
+
+    { "op": "key", "name": "Escape" },
+    { "op": "wait", "sec": 0.3 },
+    { "op": "shot", "name": "r04_placed" }
+  ],
+  "_note": [
+    "좌표는 (8.5,8.5) 하나만 쓴다 — 이 맵에서 경험적으로 비어 있는 칸이다.",
+    "다른 칸을 쓰면 광맥/나무에 걸려 배치가 거부되고, 그건 회전 회귀가 아니라",
+    "시나리오 좌표 문제다 (2026-07-27 첫 작성 때 (4.5,8.5)/(3.5,4.5) 가 둘 다",
+    "StoneVein 이라 FAIL 이 났고, 원인은 기능이 아니라 좌표였다).",
+    "회전 자체의 육안 증거는 r02(고스트)·r03(배치본) 캡처."
+  ]
+}

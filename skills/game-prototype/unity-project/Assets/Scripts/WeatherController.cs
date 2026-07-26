@@ -20,9 +20,9 @@ namespace MelonS.GameProto
         //  (Time.time) → 게임시계(GameSeconds)로 바꾸면서 상수 60f 를 그대로 둬, 폭풍이 1x 에서
         //  ~0.7 실초(60 / 86.4)만에 끝나 '폭풍이 깜빡이고 사라지는' 버그가 됐다.  게임시계는 1x
         //  에서 86.4 게임초/실초(GameClock 1.44 게임분/실초 × 60)로 흐르므로, 의도한 '약 60 실초
-        //  폭풍(1x)'을 게임시계로 환산한다: 60 × 86.4 ≈ 5184 게임초.  배속(2x/4x) 시 게임시계가
+        //  폭풍(1x)'을 게임시계로 환산한다: 60 × 86.4 ~ 5184 게임초.  배속(2x/4x) 시 게임시계가
         //  더 빨리 흘러 실시간 지속은 자동 비례 단축(일시정지/배속 존중).
-        public const float StormDurationGameSec = 5184f;  // ≈ 60 real-sec @ 1x
+        public const float StormDurationGameSec = 5184f;  // ~ 60 real-sec @ 1x
 
         [SerializeField] private AIDirector director;
 
@@ -79,7 +79,7 @@ namespace MelonS.GameProto
             if (ev.id == "storm_warning")
             {
                 Current = WeatherKind.Storm;
-                StormUntil = NowGameSec() + StormDurationGameSec;  // 게임시계 환산(≈60 실초 @1x)
+                StormUntil = NowGameSec() + StormDurationGameSec;  // 게임시계 환산(~60 실초 @1x)
                 Debug.Log($"[Weather] storm begins (until gameSec={StormUntil:F0})");
             }
         }

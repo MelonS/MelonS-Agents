@@ -165,7 +165,9 @@ namespace MelonS.GameProto
             //  MarqueeSelector 로 다중 선택돼 있으면 R 키 징집을 *선택된 전원*에게 적용한다.
             //  단일 선택(currentSelection) 은 기존대로.  GizmoBar 의 OnDraftClicked 와 동일하게
             //  첫 림 상태 기준으로 토글 target 을 정해 전원 일괄 적용(혼재 상태 → 일괄 ON).
-            if (SimInput.GetKeyDown(KeyCode.R))
+            //  2026-07-27: 건축 모드 중엔 R 이 '청사진 회전'으로 쓰인다(BuildManager).
+            //   가드가 없으면 침대를 돌릴 때마다 선택된 림이 같이 징집된다.
+            if (SimInput.GetKeyDown(KeyCode.R) && !buildActive)
             {
                 ToggleDraftOnSelection();
             }
@@ -173,7 +175,7 @@ namespace MelonS.GameProto
             // #233 ★진짜 원인(진단 로그 sel=False): 우클릭 벌목/채광이 'currentSelection!=null'
             //  게이트에 막혀 림이 선택 안 돼 있으면 안 됐다.  the reference sim 에선 벌목/채광 *지정*은
             //  림 선택이 불필요(Architect>Orders 처럼).  → 선택 무관하게 우클릭 나무/광맥 = 바로
-            //  지정(🪓/⛏ 마커 + idle 림 dispatch).  이 블록을 selection 게이트 밖에 둔다.
+            //  지정(🪓/마커 + idle 림 dispatch).  이 블록을 selection 게이트 밖에 둔다.
             if (SimInput.GetMouseButtonDown(1) && !overUI && !buildActive && !ctxOpen)
             {
                 Vector3 dmw = mainCamera.ScreenToWorldPoint(SimInput.mousePosition); dmw.z = 0f;
@@ -568,7 +570,7 @@ namespace MelonS.GameProto
             if (bp != null && !bp.IsComplete)
             {
                 var bpCap = bp;
-                list.Add(("🔨 건설 우선", () => {
+                list.Add(("건설 우선", () => {
                     var b = pawn.GetComponent<PawnBuilder>();
                     if (b != null)
                     {
@@ -582,7 +584,7 @@ namespace MelonS.GameProto
             if (bed != null)
             {
                 var bedCap = bed;
-                list.Add(($"🛏 수면 ({bed.QualityKr})", () => {
+                list.Add(($"수면 ({bed.QualityKr})", () => {
                     var nr = pawn.GetComponent<PawnNeeds>();
                     if (nr != null)
                     {
@@ -597,7 +599,7 @@ namespace MelonS.GameProto
             if (pile != null)
             {
                 var pileCap = pile;
-                list.Add(("📦 운반 우선", () => {
+                list.Add(("운반 우선", () => {
                     var h = pawn.GetComponent<PawnHauler>();
                     if (h != null) { h.SetPileTarget(pileCap); pawn.ManualMoveUntil = Time.time + 8f; }
                 }));
@@ -612,7 +614,7 @@ namespace MelonS.GameProto
             if (bandit != null && bandit.IsDowned)
             {
                 var bcap = bandit;
-                list.Add(("🔒 포섭 시도 (50%)", () => bcap.TryCapture()));
+                list.Add(("포섭 시도 (50%)", () => bcap.TryCapture()));
             }
             if (vein != null && !vein.IsDestroyed)
             {
@@ -623,7 +625,7 @@ namespace MelonS.GameProto
             }
             if (bush != null && !bush.IsDepleted)
             {
-                list.Add(("🍇 채집 우선", () => {
+                list.Add(("채집 우선", () => {
                     var g = pawn.GetComponent<PawnGatherer>();
                     if (g != null) { g.SetBushTarget(bush); pawn.ManualMoveUntil = Time.time + 8f; }
                 }));
@@ -631,7 +633,7 @@ namespace MelonS.GameProto
             if (crop != null && crop.IsRipe)
             {
                 var cropCap = crop;
-                list.Add(("🌾 수확 우선", () => {
+                list.Add(("수확 우선", () => {
                     // #226 일관성 — 다른 메뉴 항목처럼 림이 걸어가서 수확 (과거엔 즉시 Harvest).
                     var hv = pawn.GetComponent<PawnHarvester>();
                     if (hv != null) { ClearAllWorkTasks(pawn); hv.SetCropTarget(cropCap); pawn.ManualMoveUntil = Time.time + 10f; }
@@ -639,8 +641,8 @@ namespace MelonS.GameProto
             }
             if (animal != null && !animal.IsDead)
             {
-                list.Add(("🎯 길들이기 시도", () => animal.TryTame()));
-                list.Add(("🏹 사냥 (드래프트 필요)", () => {
+                list.Add(("길들이기 시도", () => animal.TryTame()));
+                list.Add(("사냥 (드래프트 필요)", () => {
                     pawn.SetDrafted(true);
                     pawn.DraftedHuntTarget = animal;
                 }));
@@ -652,20 +654,20 @@ namespace MelonS.GameProto
                 for (int i = 0; i < TraderEntity.TradeOptions.Length; i++)
                 {
                     int idx = i;
-                    list.Add(($"🛒 {TraderEntity.TradeOptions[i].label}",
+                    list.Add(($"{TraderEntity.TradeOptions[i].label}",
                         () => traderCap.TryTrade(idx)));
                 }
             }
             if (stove != null)
             {
-                list.Add(("🍳 요리 우선", () => {
+                list.Add(("요리 우선", () => {
                     var c = pawn.GetComponent<PawnCook>();
                     if (c != null) { c.SetStoveTarget(stove); pawn.ManualMoveUntil = Time.time + 8f; }
                 }));
             }
             if (bench != null)
             {
-                list.Add(("📚 연구 (옆에 가서 대기)", () => {
+                list.Add(("연구 (옆에 가서 대기)", () => {
                     var m = pawn.GetComponent<PawnMovement>();
                     if (m != null) m.SetTarget(bench.transform.position);
                     pawn.ManualMoveUntil = Time.time + 8f;
@@ -675,7 +677,7 @@ namespace MelonS.GameProto
             {
                 // #155 - stockpile priority 순환 (Low → Normal → Preferred → Important → Critical → Low ...)
                 var spCap = stockpile;
-                list.Add(($"📦 우선순위: {spCap.PriorityKr} → 다음 단계",
+                list.Add(($"우선순위: {spCap.PriorityKr} → 다음 단계",
                     () => { if (spCap != null) spCap.CyclePriority(); }));
             }
             return list;
@@ -685,10 +687,10 @@ namespace MelonS.GameProto
         //  BuildContextMenu(우클릭, 선택된 림에게 '우선' 명령)와 달리, 이쪽은 선택된 림이
         //  없어도 동작하는 *지정(designation)* 액션을 노출한다(the reference sim Orders 동등):
         //   - 나무   → 🪓 벌목 지정 (TreeChopDesignation.TryMark)  [fb #1]
-        //   - 베리덤불 → 🍇 채집 지정 (PawnGatherer dispatch; 가까운 idle 림에게)  [fb #2]
-        //   - 광맥   → ⛏ 채광 지정 (MineDesignation.TryMark)  [fb #3]
-        //   - 청사진 → 🔨 건설 / ✕ 청사진 취소  [fb #3]
-        //   - 구조물(벽/문/난로/침대) → ✕ 철거 지정 (DeconstructDesignation.TryMark)  [fb #3]
+        //   - 베리덤불 → 채집 지정 (PawnGatherer dispatch; 가까운 idle 림에게)  [fb #2]
+        //   - 광맥   → 채광 지정 (MineDesignation.TryMark)  [fb #3]
+        //   - 청사진 → 건설 / × 청사진 취소  [fb #3]
+        //   - 구조물(벽/문/난로/침대) → × 철거 지정 (DeconstructDesignation.TryMark)  [fb #3]
         //  저장공간(StockpileZoneEntity) 은 StockpileDesignation 의 전용 토글 toolbar 가
         //  좌클릭을 이미 처리하므로 여기서 메뉴를 만들지 않는다(중복/충돌 방지 — fb #4 참고).
         private System.Collections.Generic.List<(string, System.Action)> BuildLeftClickMenu(
@@ -716,7 +718,7 @@ namespace MelonS.GameProto
             if (vein != null && !vein.IsDestroyed && MineDesignation.Instance != null)
             {
                 var go = vein.gameObject;
-                list.Add(("⛏ 채광 지정", () => {
+                list.Add(("채광 지정", () => {
                     if (MineDesignation.Instance != null) MineDesignation.Instance.TryMark(go);
                 }));
             }
@@ -728,15 +730,15 @@ namespace MelonS.GameProto
             if (bush != null)
             {
                 var bushCap = bush;
-                list.Add(("🍇 채집 지정", () => DispatchGatherToIdle(bushCap)));
+                list.Add(("채집 지정", () => DispatchGatherToIdle(bushCap)));
             }
 
             var bp = FindIn<BlueprintEntity>(cols);
             if (bp != null && !bp.IsComplete)
             {
                 var bpCap = bp;
-                list.Add(("🔨 건설 우선", () => PrioritizeBuild(bpCap)));
-                list.Add(("✕ 청사진 취소", () =>
+                list.Add(("건설 우선", () => PrioritizeBuild(bpCap)));
+                list.Add(("× 청사진 취소", () =>
                 {
                     if (bpCap == null) return;
                     // #버그헌트4(2026-06-05): 환불 경로 통일 — 채워진 자재를 물리 더미로 떨어뜨려 보존.
@@ -759,7 +761,7 @@ namespace MelonS.GameProto
                     var dgo = c.gameObject;
                     if (DeconstructTarget.IsDeconstructable(dgo))
                     {
-                        list.Add(("✕ 철거 지정", () => {
+                        list.Add(("× 철거 지정", () => {
                             if (DeconstructDesignation.Instance != null) DeconstructDesignation.Instance.TryMark(dgo);
                         }));
                         break;

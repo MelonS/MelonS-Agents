@@ -67,7 +67,7 @@ namespace MelonS.GameProto
 
             var font = UITheme.LoadKoreanFont(22);
 
-            // 패널 root — 우하단 앵커.  하단 명령바(GuiControlBar, y=24, 높이≈72) 위에
+            // 패널 root — 우하단 앵커.  하단 명령바(GuiControlBar, y=24, 높이~72) 위에
             //  떠 있도록 bottom margin 을 명령바 위로 잡는다 (the reference sim 우하단 배치).
             const float panelW = 170f;
             const float panelH = 52f;   // 시각 단일 라인 → 컴팩트(날짜는 좌상단)

@@ -116,7 +116,7 @@ namespace MelonS.GameProto
             var results = new List<RaycastResult>();
             EventSystem.current.RaycastAll(ped, results);
             // 진단(2026-06-10) — 주입 클릭이 overUI 로 무음 무효화될 때 차단자를 식별.
-            //  버튼 주입 프레임에만 로그 (스팸 방지).  배치2 게이트에서 우클릭이 y≈232-250
+            //  버튼 주입 프레임에만 로그 (스팸 방지).  배치2 게이트에서 우클릭이 y~232-250
             //  밴드에서만 죽는 미스터리의 계측 장치 — 해결 후에도 회귀 진단용으로 유지.
             if (results.Count > 0 && (simMouseDown[0] || simMouseDown[1]))
             {

@@ -99,6 +99,9 @@ namespace MelonS.GameProto
     {
         public int mode;          // (int)BuildManager.Mode
         public Vector2 position;
+        // R 회전 배치 여부.  구버전 세이브엔 이 필드가 없고 JsonUtility 가 false 로 채우는데,
+        // 그게 곧 "회전 없음" = 구버전의 실제 상태라 마이그레이션이 필요 없다.
+        public bool rotated;
     }
 
     [Serializable]
@@ -296,7 +299,7 @@ namespace MelonS.GameProto
             foreach (var tag in UnityEngine.Object.FindObjectsByType<StructureTag>(FindObjectsSortMode.None))
             {
                 if (tag == null || tag.modeInt < 0) continue;
-                data.structures.Add(new StructureSave { mode = tag.modeInt, position = tag.transform.position });
+                data.structures.Add(new StructureSave { mode = tag.modeInt, position = tag.transform.position, rotated = tag.rotated });
             }
 
             // #버그헌트3(2026-06-04): serialize 레이드 스케줄러 상태(lastRaidDay/raidCount).

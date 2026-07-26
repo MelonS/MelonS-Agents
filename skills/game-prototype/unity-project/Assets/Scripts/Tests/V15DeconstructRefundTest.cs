@@ -245,7 +245,7 @@ namespace MelonS.GameProto.Tests
             bool step3_taskAssigned = builder.HasDeconstructTask;
 
             // Simulate up to 4.5 s — the builder's Update runs per-frame via Unity.
-            // workToRemove defaults to 3f; with Time.deltaTime ≈ 0.01–0.02 s in
+            // workToRemove defaults to 3f; with Time.deltaTime ~ 0.01–0.02 s in
             // batchmode the wall is removed well within this window.
             yield return new WaitForSeconds(4.5f);
 

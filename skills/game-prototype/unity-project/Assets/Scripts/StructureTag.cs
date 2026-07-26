@@ -12,5 +12,9 @@ namespace MelonS.GameProto
     public class StructureTag : MonoBehaviour
     {
         public int modeInt = -1;   // (int)BuildManager.Mode
+
+        /// <summary>R 회전 배치 여부 (1x2 침대/무덤류).  저장/로드에서 이걸 안 남기면
+        ///  가로로 놓은 침대가 로드 후 세로로 돌아와 점유 칸이 어긋난다.</summary>
+        public bool rotated = false;
     }
 }

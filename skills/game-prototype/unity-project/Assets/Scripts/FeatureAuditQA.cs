@@ -138,8 +138,8 @@ namespace MelonS.GameProto
             // 미완성 청사진이 남아있나 (완성 실패)
             foreach (var b in Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None))
                 if (b != null && ((Vector2)b.transform.position - p).sqrMagnitude < 0.81f) names.Add("(미완성 청사진)");
-            if (names.Count == 0) return "❌ 사라짐 — 완성 엔티티 없음 (BUG)";
-            return "✓ " + string.Join(",", names);
+            if (names.Count == 0) return "× 사라짐 — 완성 엔티티 없음 (BUG)";
+            return "○ " + string.Join(",", names);
         }
 
         private static void CheckType<T>(Vector2 p, string label, List<string> outNames) where T : Component

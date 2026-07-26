@@ -19,7 +19,7 @@ namespace MelonS.GameProto
         //  raw 식량은 부패성이므로 wood 보다 빠른 decayPerDay(옥외, !InStockpile).  0 에서 소멸.
         //  기존 lifetimeSec(90s) 통째 Destroy 제거.
         [SerializeField] private float durability = 100f;
-        [SerializeField] private float decayPerDay = 20f;  // 100/20 = 5 game-day ≈ 120s, 점진 fade
+        [SerializeField] private float decayPerDay = 20f;  // 100/20 = 5 game-day ~ 120s, 점진 fade
         private SpriteRenderer _sr;
 
         public int Food => food;
@@ -143,7 +143,7 @@ namespace MelonS.GameProto
             m.DisplayName = displayName;
             m.SetFood(amount);
             // 기존 lifetime(통째 소멸까지 초) → durability decayPerDay 로 환산:
-            //  총 fade 시간 ≈ 기존 lifetime 이 되도록 decayPerDay = 100 / (lifetime/24).
+            //  총 fade 시간 ~ 기존 lifetime 이 되도록 decayPerDay = 100 / (lifetime/24).
             //  작물/베리(긴 lifetime)=느린 부패, 고기(짧은 lifetime)=빠른 부패 보존.
             m.SetDecayPerDay(lifetime > 0f ? 2400f / lifetime : 20f);
             return m;   // 양에 비례한 시각 스케일은 SetFood 에서 적용됨(#61)

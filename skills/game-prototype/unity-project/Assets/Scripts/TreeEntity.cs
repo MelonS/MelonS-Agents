@@ -151,7 +151,7 @@ namespace MelonS.GameProto
                     var ssr = stump.AddComponent<SpriteRenderer>();
                     ssr.sprite = stumpSpr;
                     ssr.sortingOrder = 2;   // 꽃/데칼 층 — 폰(10)/더미(7) 아래
-                    Destroy(stump, 1500f);  // ≈1.5게임일 (스케일 시계)
+                    Destroy(stump, 1500f);  // ~1.5게임일 (스케일 시계)
                 }
                 // Day 12: enqueue a future sapling at this tree's position
                 // BEFORE Destroy(gameObject) — `transform.position` is read

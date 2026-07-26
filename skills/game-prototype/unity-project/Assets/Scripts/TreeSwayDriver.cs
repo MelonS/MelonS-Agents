@@ -77,7 +77,7 @@ namespace MelonS.GameProto
         // ------------------------------------------------------------------ //
 
         // Horizontal sway amplitude in world units.
-        // PPU 16 → 1 world unit = 16 px → 0.04 wu = 0.64 px ≈ 1 px (spec ±1 px).
+        // PPU 16 → 1 world unit = 16 px → 0.04 wu = 0.64 px ~ 1 px (spec ±1 px).
         private const float SwayAmplitude = 0.04f;
 
         // Sway frequency in Hz.  0.3 Hz = gentle breeze per spec.

@@ -167,7 +167,7 @@ namespace MelonS.GameProto
                 (BuildManager.Mode.Door,      "문 (목재 25)",  25),
                 // W-M6-04 (B5) — autodoor, the Door-tab variety row (vanilla
                 //   the reference sim Door tab has plain door + autodoor).  An autodoor is
-                //   the SAME DoorEntity built with a HIGHER passMul (≈0.95 vs the
+                //   the SAME DoorEntity built with a HIGHER passMul (~0.95 vs the
                 //   plain door's 0.65) so a pawn crosses it FASTER, at a HIGHER
                 //   wood cost (목재 6 > 문 3).  Surfaced HERE ONLY (no hotkey — the
                 //   key space B/F/G/T/Y/N/R/X/M/P/K/J/H/L/E + WASD is contended),
@@ -404,7 +404,7 @@ namespace MelonS.GameProto
             rt.anchorMax = new Vector2(0f, 0f);
             rt.pivot = new Vector2(0f, 0f);
             rt.sizeDelta = new Vector2(252, 220);   // 높이는 RefreshContent 가 행 수에 맞춤
-            rt.anchoredPosition = new Vector2(8, 8);
+            rt.anchoredPosition = new Vector2(8, PanelBottomY);
 
             // #UI-restyle U7 — same MakeBorderedPanel the control bar / inspector use:
             //   warm-brown fill + Divider border on all 4 edges (was a flat borderless rect).
@@ -458,7 +458,7 @@ namespace MelonS.GameProto
             var titleGo = new GameObject("Title");
             titleGo.transform.SetParent(headerStripGo.transform, false);
             var t = titleGo.AddComponent<Text>();
-            t.text = "🏛 건축 (F8)";
+            t.text = "건축 (F8)";
             t.font = font;
             t.fontSize = 20;
             t.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
@@ -605,7 +605,7 @@ namespace MelonS.GameProto
                     float cx2 = (ci % 5) * (cellW + cgap);
                     float cy2 = (ci / 5) * 95f;
                     MakeShelfCell(cx2, cy2, cellNm, HotkeyOf(item.label), null,
-                        isErase ? "✕" : nm.Substring(0, 1), on, true,
+                        isErase ? "×" : nm.Substring(0, 1), on, true,
                         nm + " — 맵에서 드래그하여 지정",
                         () => { item.invoke?.Invoke(); RefreshContent(); });
                     ci++; x = Mathf.Max(x, cx2 + cellW + cgap); any = true;
@@ -658,6 +658,22 @@ namespace MelonS.GameProto
         /// <summary>UI겹침 P1-2/커플링 B — 현재 셸프 행 수 (PawnInfoPanel y 시프트 연동).</summary>
         public int ShelfRows { get; private set; } = 1;
 
+        /// <summary>패널·셸프의 화면 바닥 기준 y.
+        ///
+        /// 운영자 피드백(2026-07-27) "건축메뉴 떠 있을때 다른 메뉴 위치 좀 이상해":
+        /// 기존 값 8 은 하단 컨트롤바(바닥 y24~96)와 **같은 높이 띠**여서, 좌측 셸프와
+        /// 중앙 컨트롤바가 가로로 이어진 하나의 띠처럼 읽혔다.  컨트롤바 위(96+8)로
+        /// 올려 층을 분리한다.</summary>
+        public const float PanelBottomY = 104f;
+
+        private const float ShelfCellH = 92f;
+        private const float ShelfRowStep = 95f;
+
+        /// <summary>셸프 실제 상단 y (화면 바닥 기준).  PawnInfoPanel 이 이 값을 읽어
+        /// 자기 위치를 정한다 — 예전처럼 108/95 매직넘버를 양쪽에 복제하면 패널을 옮길 때마다
+        /// 한쪽만 고쳐져 겹친다.</summary>
+        public float ShelfTopY => PanelBottomY + ShelfCellH + (ShelfRows - 1) * ShelfRowStep;
+
         private void MakeShelfCell(float x, float yRow, string name, string hotkey, Sprite icon, string glyph,
                                    bool active, bool affordable, string tooltip, System.Action onClick)
         {
@@ -682,7 +698,7 @@ namespace MelonS.GameProto
             btn.targetGraphic = fillImg;
             btn.onClick.AddListener(() => { PlayClickBlip(); onClick?.Invoke(); });
 
-            // 아이콘 (스프라이트) 또는 글리프 (지시/구역 첫 글자, 제거류는 ✕)
+            // 아이콘 (스프라이트) 또는 글리프 (지시/구역 첫 글자, 제거류는 ×)
             if (icon != null)
             {
                 var iGo = new GameObject("Icon");
@@ -710,7 +726,7 @@ namespace MelonS.GameProto
                 gt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
                 // 디자인폴리시(2026-06-14): 제거 도구 글리프 — 살몬레드(0.92,0.40,0.35)는
                 //  "오류/삭제실패"로 읽혔다.  차분한 테라코타로 톤다운 = 경고가 아닌 도구.
-                gt.color = glyph == "✕"
+                gt.color = glyph == "×"
                     ? new Color(0.78f, 0.52f, 0.46f, 1f)
                     : MelonS.GameProto.Core.UITheme.AccentOrange;
                 gt.alignment = TextAnchor.MiddleCenter;

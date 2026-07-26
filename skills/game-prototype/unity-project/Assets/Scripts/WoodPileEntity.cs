@@ -23,7 +23,7 @@ namespace MelonS.GameProto
         //  InStockpile 이면 감소 정지(보존).  기존 lifetimeSec(120s) 통째 Destroy +
         //  wood 수량 차감식 부패는 제거(수량 wood 는 그대로, 내구도만 닳는다).
         [SerializeField] private float durability = 100f;
-        private const float DurabilityPerDay = 10f;   // 100/10 = 10 game-day ≈ 240s
+        private const float DurabilityPerDay = 10f;   // 100/10 = 10 game-day ~ 240s
 
         public int Wood => wood;
         public float Durability => durability;   // #37 검증용(옥외 더미 내구도 fade 확인)
@@ -49,7 +49,7 @@ namespace MelonS.GameProto
 
         // 폴리싱(#61): 더미 양 → 시각 스케일 (모든 더미 종류 공용 — Stone/Meat 도 호출).
         //  운영자: 더미가 양과 무관하게 같은 크기로 보였음(5개=50개).  콜로니 심 관례대로
-        //  쌓인 양이 많을수록 더미가 더 커 보이게.  1개=0.89, 5개≈0.99, 25개≈1.22,
+        //  쌓인 양이 많을수록 더미가 더 커 보이게.  1개=0.89, 5개~0.99, 25개~1.22,
         //  50개+=1.4 로 클램프.  sqrt 로 증가 둔화해 큰 더미도 타일을 크게 안 벗어남.
         public static float PileScale(int amount)
         {

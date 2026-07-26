@@ -48,9 +48,9 @@ namespace MelonS.GameProto
     ///   >>> QA FLAG (scene-wiring): the deconstruct toggle button is created at
     ///       runtime on the first Canvas found (bottom-center-left of the control
     ///       bar area) and the designation marker is a runtime-built sprite-less
-    ///       quad + "✕" label (no prefab / no imported PNG).  Both are
+    ///       quad + "×" label (no prefab / no imported PNG).  Both are
     ///       code-generated, never SceneSetup-wired — QA should confirm the button
-    ///       appears, toggles mode, and the red ✕ marker shows on a clicked wall.
+    ///       appears, toggles mode, and the red × marker shows on a clicked wall.
     ///       No SceneSetup*.cs file was edited this lane.
     ///
     /// ----------------------------------------------------------------------------
@@ -58,7 +58,7 @@ namespace MelonS.GameProto
     ///   On left-mouse-DOWN in deconstruct mode we record the start world cell and
     ///   show a code-generated rectangular selection quad (a 1×1 white Sprite
     ///   stretched over the box, DANGER_RED translucent — same NO-PREFAB style as
-    ///   the ✕ marker).  On left-mouse-UP we sweep EVERY cell in the box and:
+    ///   the × marker).  On left-mouse-UP we sweep EVERY cell in the box and:
     ///     (1) TryMark each deconstructable structure (reusing the EXACT single-
     ///         click TryMark path per cell — no new pathfinding/dispatch; the
     ///         existing DispatchToIdleBuilders loop already handles N targets), and
@@ -70,7 +70,7 @@ namespace MelonS.GameProto
     ///   >>> QA FLAG (code-gen overlay): the drag selection rectangle is a runtime
     ///       SpriteRenderer quad (1×1 white texture, no prefab / no imported PNG),
     ///       child of this manager, sortingOrder 29.  QA: drag a box over 3 walls →
-    ///       all 3 get a ✕; drag over 3 pending blueprints in cancel mode → all 3
+    ///       all 3 get a ×; drag over 3 pending blueprints in cancel mode → all 3
     ///       vanish (B7 binary acceptance).
     ///
     ///   >>> QA FLAG (missing BlueprintEntity cancel API): BlueprintEntity.cs has
@@ -253,7 +253,7 @@ namespace MelonS.GameProto
             de.Initialize();
             marked.Add(de);
             ClickEffect.Spawn(go.transform.position, new Color(0.95f, 0.44f, 0.36f, 0.95f)); // DANGER_RED ish
-            Debug.Log($"[Deconstruct] marked {go.name} for removal ({de.RefundWood}🪵 / {de.RefundStone}⛏ refund on done)");
+            Debug.Log($"[Deconstruct] marked {go.name} for removal ({de.RefundWood}/ {de.RefundStone}refund on done)");
             return de;
         }
 
@@ -397,7 +397,7 @@ namespace MelonS.GameProto
             if (bp.collectedStone > 0)
                 StoneChunkEntity.Spawn(bp.transform.position, bp.collectedStone, PawnHauler.StoneChunkSpriteRef);
             Debug.Log($"[Deconstruct] cancelled pending blueprint {bp.name} " +
-                      $"(mode {bp.Mode}) — dropped {bp.collectedWood}🪵/{bp.collectedStone}⛏ as physical piles");
+                      $"(mode {bp.Mode}) — dropped {bp.collectedWood}/{bp.collectedStone}as physical piles");
             Destroy(bp.gameObject);
             return true;
         }
@@ -412,7 +412,7 @@ namespace MelonS.GameProto
         }
 
         // ---- code-generated selection overlay (no prefab — QA flag) ----------
-        //  Same no-prefab discipline as the red ✕ DeconstructTarget marker: a 1×1
+        //  Same no-prefab discipline as the red × DeconstructTarget marker: a 1×1
         //  white sprite stretched across the drag box, tinted DANGER_RED translucent.
         private void UpdateDragOverlay(Vector3 a, Vector3 b)
         {
@@ -448,7 +448,7 @@ namespace MelonS.GameProto
             dragOverlaySr = dragOverlay.AddComponent<SpriteRenderer>();
             dragOverlaySr.sprite = dragOverlaySprite;
             dragOverlaySr.color = new Color(0.95f, 0.44f, 0.36f, 0.28f); // DANGER_RED translucent
-            dragOverlaySr.sortingOrder = 29;   // just under the ✕ markers (30)
+            dragOverlaySr.sortingOrder = 29;   // just under the × markers (30)
             dragOverlay.SetActive(false);
         }
 
@@ -531,7 +531,7 @@ namespace MelonS.GameProto
     /// <summary>
     /// wiki #15 — the DESIGNATION MARKER: a runtime component attached to a built
     /// structure when the player marks it for removal.  It carries the work-to-
-    /// remove, the material refund, and a red "✕" overlay so the marked structure
+    /// remove, the material refund, and a red "×" overlay so the marked structure
     /// reads at a glance.  PawnBuilder runs the actual removal work against it
     /// (AddWork), then calls CompleteRemoval() which refunds ~50% material and
     /// destroys the structure — a destroyed WallEntity reopens its PathGrid cell via
@@ -589,7 +589,7 @@ namespace MelonS.GameProto
         }
 
         /// <summary>Compute the refund + footprint from the structure type, then draw
-        /// the red ✕ designation overlay.  ~50% of build cost (wall 5→2).</summary>
+        /// the red × designation overlay.  ~50% of build cost (wall 5→2).</summary>
         public void Initialize()
         {
             var wall = GetComponent<WallEntity>();
@@ -642,10 +642,10 @@ namespace MelonS.GameProto
             marker.transform.SetParent(transform, false);
             marker.transform.localPosition = Vector3.zero;
 
-            // A "✕" TextMesh in DANGER_RED, rendered above the structure sprite.
+            // A "×" TextMesh in DANGER_RED, rendered above the structure sprite.
             //  No imported PNG / prefab — code-generated (flagged for QA).
             var tm = marker.AddComponent<TextMesh>();
-            tm.text = "✕";
+            tm.text = "×";
             tm.fontSize = 48;
             tm.characterSize = 0.06f;
             tm.anchor = TextAnchor.MiddleCenter;
@@ -685,7 +685,7 @@ namespace MelonS.GameProto
                 WoodPileEntity.Spawn(transform.position, refundWood, PawnHauler.WoodPileSpriteRef);
             if (refundStone > 0)
                 StoneChunkEntity.Spawn(transform.position, refundStone, PawnHauler.StoneChunkSpriteRef);
-            Debug.Log($"[Deconstruct] removed {name} → dropped {refundWood}🪵 {refundStone}⛏ as physical piles; cell reopens via structure OnDestroy");
+            Debug.Log($"[Deconstruct] removed {name} → dropped {refundWood}{refundStone}as physical piles; cell reopens via structure OnDestroy");
 
             // Cell-reopen note: a WallEntity decrements its PathGrid wall ref-count
             //  in its OWN OnDestroy (PathGrid.SetStructureBlocked false / the named

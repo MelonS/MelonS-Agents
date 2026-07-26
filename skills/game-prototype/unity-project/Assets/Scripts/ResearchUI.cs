@@ -113,15 +113,15 @@ namespace MelonS.GameProto
             sb.AppendLine("<color=#F4D78A><b>연구 선택</b></color>  <color=#BBAA94><size=17>숫자키로 시작 · N 닫기</size></color>");
             sb.AppendLine();
             // 디자인폴리시(2026-06-14) — 평면 목록에 상태별 위계 부여(레이아웃 불변, richText만):
-            //  완료=차분한 녹·✓ / 진행=오렌지·▶ / 잠김=흐린 회갈·✗ / 가능=크림(숫자키).
+            //  완료=차분한 녹·○ / 진행=오렌지·▶ / 잠김=흐린 회갈·× / 가능=크림(숫자키).
             //  비용은 골드, 설명은 들여쓴 흐린 소형 — 이름>비용>설명 위계.
             for (int i = 0; i < rm.techs.Count; i++)
             {
                 var t = rm.techs[i];
                 string nameCol, mark;
-                if (t.completed)               { mark = " ✓"; nameCol = "#6E8C5A"; }
+                if (t.completed)               { mark = " ○"; nameCol = "#6E8C5A"; }
                 else if (rm.activeTech == t)   { mark = " ▶"; nameCol = "#E8B560"; }
-                else if (!rm.CanStart(t))      { mark = " ✗"; nameCol = "#8A7C6A"; }
+                else if (!rm.CanStart(t))      { mark = " ×"; nameCol = "#8A7C6A"; }
                 else                           { mark = "";   nameCol = "#F2E4D0"; }
                 sb.AppendLine($"<color={nameCol}><b>{i+1}. {t.nameKr}</b>{mark}</color>  <color=#C8963C>{t.requiredPoints}pt</color>");
                 sb.AppendLine($"     <color=#A89A86><size=16>{t.descKr}</size></color>");

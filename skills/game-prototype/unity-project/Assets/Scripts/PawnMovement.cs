@@ -196,7 +196,7 @@ namespace MelonS.GameProto
             if (lockedCell.x != INVALID_CELL.x
                 && Grid.IsWalkable(lockedCell)
                 && !ReservationManager.IsCellReservedByOther(lockedCell, claimant)
-                && DistanceToFootprint(targetWorld, footprint, PathGrid.CellToWorld(lockedCell)) <= 1.5f)  // 대각 인접(√2≈1.414) 포함 — 1.2 면 대각 stand cell 을 매 프레임 무효화해 재선정/재경로 지터(머뭇거림).  2셀(>1.5)은 여전히 차단
+                && DistanceToFootprint(targetWorld, footprint, PathGrid.CellToWorld(lockedCell)) <= 1.5f)  // 대각 인접(√2~1.414) 포함 — 1.2 면 대각 stand cell 을 매 프레임 무효화해 재선정/재경로 지터(머뭇거림).  2셀(>1.5)은 여전히 차단
             {
                 // Re-assert ownership (idempotent) so a sweep can't drop it.
                 ReservationManager.TryReserveCell(lockedCell, claimant);
@@ -235,7 +235,7 @@ namespace MelonS.GameProto
 
         // #199 C1 — "in range to work?" distance for a MULTI-CELL target.  A pawn
         //  standing adjacent to one footprint cell can be far from the footprint's
-        //  transform CENTRE (e.g. a 1×2 bed: adjacent-to-far-cell ≈ 1.8 from
+        //  transform CENTRE (e.g. a 1×2 bed: adjacent-to-far-cell ~ 1.8 from
         //  centre).  Measuring to the NEAREST footprint cell centre instead keeps
         //  the in-range constant honest (~1.5 covers diagonal adjacency to the
         //  nearest cell regardless of footprint size).  For a 1×1 target this is
@@ -595,7 +595,7 @@ namespace MelonS.GameProto
                 if (DoorEntity.IsInsideDoor(curP))
                 {
                     // W-M6-04 (B5) — per-instance pass mul: plain door 0.65,
-                    //  autodoor ≈0.95 (slows less = faster cross).  PassMulAt
+                    //  autodoor ~0.95 (slows less = faster cross).  PassMulAt
                     //  returns 0.65 for a plain door, so this is identical to the
                     //  former `*= DoorEntity.PassMul` const for every plain door.
                     speedMulP *= DoorEntity.PassMulAt(curP);
@@ -642,7 +642,7 @@ namespace MelonS.GameProto
             if (DoorEntity.IsInsideDoor(cur))
             {
                 // W-M6-04 (B5) — per-instance pass mul (see UsePathfinding branch
-                //  above): plain door 0.65, autodoor ≈0.95.  PassMulAt returns
+                //  above): plain door 0.65, autodoor ~0.95.  PassMulAt returns
                 //  0.65 for a plain door = identical to the former const.
                 speedMul *= DoorEntity.PassMulAt(cur);
                 // 가까운 door 에 NotifyPassing - 시각 피드백 (밝아짐)

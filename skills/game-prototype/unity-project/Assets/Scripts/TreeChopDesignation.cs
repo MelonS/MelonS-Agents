@@ -321,7 +321,7 @@ namespace MelonS.GameProto
             marker.transform.localPosition = new Vector3(0f, 0.35f, 0f);
             var tm = marker.AddComponent<TextMesh>();
             // grader 5차 C-3 (2026-06-12) — "🪓"(U+1FA93)는 OS 폰트에 글리프가 없어
-            //  빈 렌더 = '마커 부재'로 보였다 (채광 "⛏"는 BMP 라 보임).  한국어 폰트
+            //  빈 렌더 = '마커 부재'로 보였다 (채광 ""는 BMP 라 보임).  한국어 폰트
             //  로드(BlueprintStatus 패턴) + '벌목' 라벨로 항상 가시.
             tm.text = "벌목";
             tm.fontSize = 28;

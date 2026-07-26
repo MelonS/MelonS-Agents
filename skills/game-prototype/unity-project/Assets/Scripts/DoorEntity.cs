@@ -10,7 +10,7 @@ namespace MelonS.GameProto
     /// W-M6-04 (B5) — autodoor variant: passMul is now a PER-INSTANCE field
     ///   (was a compile-time const).  A plain door keeps the historical 0.65
     ///   (DefaultPassMul); an autodoor prefab is the SAME DoorEntity built with
-    ///   a HIGHER passMul (≈0.95) so it slows the pawn LESS = faster cross.
+    ///   a HIGHER passMul (~0.95) so it slows the pawn LESS = faster cross.
     ///   PawnMovement reads the per-instance value via the static PassMulAt(pos)
     ///   helper (which returns DefaultPassMul when no door is at pos, so a plain
     ///   door behaves EXACTLY as before).  B9's NotifyPassing()→PlayDoor SFX call
@@ -39,7 +39,7 @@ namespace MelonS.GameProto
         /// <summary>
         /// W-M6-04 (B5) — per-instance pass-through multiplier (was the const
         /// PassMul).  Default 0.65 = plain door (identical to historical
-        /// behaviour).  An autodoor prefab sets this HIGHER (≈0.95) so it slows
+        /// behaviour).  An autodoor prefab sets this HIGHER (~0.95) so it slows
         /// the crossing pawn LESS → the pawn crosses an autodoor FASTER than a
         /// plain door (wiki B5 acceptance).  SerializeField so the designer can
         /// tune day-1 feel without a code change.

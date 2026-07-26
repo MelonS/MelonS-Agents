@@ -17,7 +17,7 @@ namespace MelonS.GameProto
     {
         // #199 C1 — hauler stands adjacent to the item/blueprint (the reference sim) for
         //  pickup/deposit.  1.0 was too tight to even reach an orthogonal neighbour
-        //  (center dist 1.0); bumped to 1.5 for diagonal adjacency (√2≈1.414).
+        //  (center dist 1.0); bumped to 1.5 for diagonal adjacency (√2~1.414).
         [SerializeField] private float pickupRange = 1.5f;
         [SerializeField] private float giveUpAfterSec = 8f;
 

@@ -848,12 +848,12 @@ namespace MelonS.GameProto.Tests
                 $"작물 성장 round-trip: get={getOk}, apply={applyOk}, clamp={clampOk}");
         }
 
-        // #버그헌트(2026-06-04) 회귀 가드: 폭풍 지속 상수가 게임시계 60(≈0.7 실초@1x)으로
-        //  되돌아가지 않도록.  의도는 ≈60 실초@1x = 5184 게임초.
+        // #버그헌트(2026-06-04) 회귀 가드: 폭풍 지속 상수가 게임시계 60(~0.7 실초@1x)으로
+        //  되돌아가지 않도록.  의도는 ~60 실초@1x = 5184 게임초.
         private IEnumerator TestV79_StormDurationNotTrivial()
         {
             bool ok = WeatherController.StormDurationGameSec > 1000f;
-            Assert(ok, $"StormDurationGameSec={WeatherController.StormDurationGameSec} (>1000 기대, ≈60실초@1x)");
+            Assert(ok, $"StormDurationGameSec={WeatherController.StormDurationGameSec} (>1000 기대, ~60실초@1x)");
             yield break;
         }
 
@@ -1536,7 +1536,7 @@ namespace MelonS.GameProto.Tests
             if (f != null) f.SetValue(clock, 22f * 3600f);
             yield return null;
             float dayProgress = clock.DayProgress;
-            // NightOverlay 의 SampleStops(0.92) ≈ 0.62 alpha
+            // NightOverlay 의 SampleStops(0.92) ~ 0.62 alpha
             // 직접 검증은 NightOverlay 가 활성 안 됨 (test scene), DayProgress 만 확인
             bool isNightTime = dayProgress > 0.85f;
             Assert(isNightTime, $"22:00 set → dayProgress={dayProgress:F2} (>0.85 expected)");
@@ -1734,7 +1734,7 @@ namespace MelonS.GameProto.Tests
 
         // #199 A1 - the reference sim 와 같이 pawn 은 정확히 1x1 tile 점유.
         //   SceneSetup 가 만드는 pawn 계약을 isolated 로 재현·검증:
-        //   (1) pawn_colonist.png 는 16x16 px, PPU 16 → SpriteRenderer.bounds.size ≈ (1,1).
+        //   (1) pawn_colonist.png 는 16x16 px, PPU 16 → SpriteRenderer.bounds.size ~ (1,1).
         //   (2) selection/click BoxCollider2D.size == (1,1).
         //   build 에선 AssetDatabase 못 쓰므로 import 와 동일한 방식(16px tex @ PPU 16)으로
         //   sprite 를 만들어 world size 계약을 잠근다.  prefab collider 회귀는
@@ -1771,14 +1771,14 @@ namespace MelonS.GameProto.Tests
                 $"bounds=({bsize.x:F3},{bsize.y:F3}) widthOk={widthOk} heightOk={heightOk} collider=({col.size.x:F2},{col.size.y:F2}) colOk={colOk}");
         }
 
-        // #199 A2 — 1x1 pawn (머리 ≈ +0.5) 위로 HP/mood 바 + name/status 라벨이
+        // #199 A2 — 1x1 pawn (머리 ~ +0.5) 위로 HP/mood 바 + name/status 라벨이
         //   머리 바로 위에 앉는지 검증.  실제 Awake 가 만든 child 의 localPosition.y 를 읽음.
         //   기대 순서(위→아래): name > status > HP 바 > mood 바 > 머리(0.5).
         //   plan-199 §A2 accept band: bar yOffset - headY ∈ [0.1, 0.7] → headY=0.5 이므로
         //   HP 바 y ∈ [0.6, 1.2].  바가 머리 위 (mood 바 ≥ 0.5), 라벨이 바 위.
         private IEnumerator TestV67_FloatingBarNameLabelAnchor()
         {
-            const float headY = 0.5f;  // 1x1 pawn pivot center 0, 머리 top ≈ +0.5
+            const float headY = 0.5f;  // 1x1 pawn pivot center 0, 머리 top ~ +0.5
 
             var go = SpawnTestPawn(new Vector3(46, 0, 0), includeAI: false);
             go.AddComponent<PawnFloatingBars>();
@@ -1810,7 +1810,7 @@ namespace MelonS.GameProto.Tests
             Object.Destroy(go);
 
             bool ok = childrenOk && hpBandOk && moodAboveHead && stackOrderOk && nameAboveBar && statusBetween;
-            Debug.Log($"[TestRunner] V67: {(ok ? "OK" : "FAIL")} - headY={headY:F2} HP={hpY:F2}(Δ{hpY-headY:F2}) mood={moodY:F2} name={nameY:F2} status={statusY:F2} (the reference sim 머리 위 바+라벨)");
+            Debug.Log($"[TestRunner] V67: {(ok ? "OK" : "FAIL")} - headY={headY:F2} HP={hpY:F2}(d{hpY-headY:F2}) mood={moodY:F2} name={nameY:F2} status={statusY:F2} (the reference sim 머리 위 바+라벨)");
             Assert(ok,
                 $"children={childrenOk} HP={hpY:F2}(band[0.6,1.2]={hpBandOk}) mood={moodY:F2}(>=head={moodAboveHead},<HP={stackOrderOk}) name={nameY:F2}(>HP={nameAboveBar}) status={statusY:F2}(between={statusBetween})");
         }

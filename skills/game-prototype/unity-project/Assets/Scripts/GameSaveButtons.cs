@@ -67,7 +67,7 @@ namespace MelonS.GameProto
             // #ui백로그 6.2 — 화면 피드백: 성공/실패가 Debug.Log 뿐이라 운영자가 저장
             //  여부를 알 수 없었다.  기존 토스트 재사용 (설정행·F5 모두 이 경로).
             BuildClickToast.EnsureInScene();
-            BuildClickToast.Instance?.ShowSuccess("💾 저장 완료");
+            BuildClickToast.Instance?.ShowSuccess("저장 완료");
         }
 
         public void OnLoad()
@@ -240,7 +240,7 @@ namespace MelonS.GameProto
             if (data.structures != null && BuildManager.Instance != null)
             {
                 foreach (var s in data.structures)
-                    BuildManager.Instance.SpawnFinished((BuildManager.Mode)s.mode, s.position);
+                    BuildManager.Instance.SpawnFinished((BuildManager.Mode)s.mode, s.position, s.rotated);
             }
 
             // #버그헌트2(2026-06-04): 작물 재구성(성장도는 아래 ApplyLoadedSubStates 가 위치매칭 복원).
@@ -298,7 +298,7 @@ namespace MelonS.GameProto
             Debug.Log($"[SaveLoad] restored: {data.pawns.Count} pawns, {data.trees.Count} trees + 서브상태 + 시계 {data.gameSeconds:F0}s");
             // #ui백로그 6.2 — 성공 피드백
             BuildClickToast.EnsureInScene();
-            BuildClickToast.Instance?.ShowSuccess($"📂 불러오기 완료 (림 {data.pawns.Count})");
+            BuildClickToast.Instance?.ShowSuccess($"불러오기 완료 (림 {data.pawns.Count})");
         }
     }
 }

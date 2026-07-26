@@ -42,7 +42,7 @@ namespace MelonS.GameProto.AI
         // Progress is "meaningful" only if distance improves by at least this
         // much; tiny float jitter must not count as progress (would let a truly
         // stuck pawn refresh its clock forever) nor reset it (a slow approach
-        // still counts).  0.15 world unit ≈ a few frames of normal walk.
+        // still counts).  0.15 world unit ~ a few frames of normal walk.
         private const float ProgressEpsilon = 0.15f;
 
         private float _taskStart;

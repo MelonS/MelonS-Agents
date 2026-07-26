@@ -39,7 +39,7 @@ namespace MelonS.GameProto
             (BuildManager.Mode.WallStone,       "Wall(석재5)",       "Structure (구조)", 1, -16, -8),
             // #210 fix — the old Floor cell (-18,-10) and ALL FOUR downward fallback
             //  cells (-18,-11 .. -18,-14) sit INSIDE the lake centred at (-18,-12)
-            //  r≈2.8 (added in #108).  C3 terrain validation correctly rejects water,
+            //  r~2.8 (added in #108).  C3 terrain validation correctly rejects water,
             //  so the floor genuinely could not be placed on ANY of the 5 cells the
             //  test tried → real Build-Click FAIL.  Door/BedFine "passed" only because
             //  their downward fallback reached the grass row y=-15 (off=3); Floor's

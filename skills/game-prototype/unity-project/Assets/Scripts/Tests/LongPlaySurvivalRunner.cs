@@ -677,7 +677,7 @@ namespace MelonS.GameProto.Tests
 
             sb.AppendLine("## PHASE 2 — Survival timeline");
             sb.AppendLine();
-            sb.AppendLine("| t(s) | Day HH:MM | wood(Δ) | food(Δ) | meals(Δ) | stone(Δ) | pawn needs (food/sleep/mood · task) | violations |");
+            sb.AppendLine("| t(s) | Day HH:MM | wood(d) | food(d) | meals(d) | stone(d) | pawn needs (food/sleep/mood · task) | violations |");
             sb.AppendLine("|------|-----------|---------|---------|----------|----------|-------------------------------------|------------|");
             foreach (var s in _timeline)
             {
@@ -685,7 +685,7 @@ namespace MelonS.GameProto.Tests
                 foreach (var ps in s.pawns)
                 {
                     if (pawnCol.Length > 0) pawnCol.Append("<br>");
-                    string flag = ps.dead ? " ☠" : ps.downed ? " ⬇" : ps.inWall ? " ⛔" : ps.stuck ? " ⏳" : "";
+                    string flag = ps.dead ? " " : ps.downed ? " ↓" : ps.inWall ? " " : ps.stuck ? " " : "";
                     pawnCol.Append($"{ps.name}: {ps.food:F0}/{ps.sleep:F0}/{ps.mood:F0} · {ps.task}{flag}");
                 }
                 string vio = s.violations.Count == 0 ? "-" : string.Join("<br>", s.violations);

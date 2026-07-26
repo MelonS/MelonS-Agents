@@ -14,7 +14,7 @@ namespace MelonS.GameProto
     {
         // #199 C1 — pawn now stands in an ADJACENT cell (colony-sim-style) instead
         //  of on top of the tree.  Standing in a diagonal neighbour leaves the pawn
-        //  at center-to-center distance up to √2≈1.414 from the tree, so chopRange
+        //  at center-to-center distance up to √2~1.414 from the tree, so chopRange
         //  must accept that: bumped 1.2 → 1.5 (covers diagonal adjacency, still <2
         //  so the pawn can't work from a cell away).
         [SerializeField] private float chopRange = 1.5f;

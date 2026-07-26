@@ -129,7 +129,7 @@ namespace MelonS.GameProto
                 : MelonS.GameProto.Core.UITheme.LoadKoreanFont(32);
             emptyGlyph.fontSize = 30;
             emptyGlyph.alignment = TextAnchor.MiddleCenter;
-            emptyGlyph.text = "▸";  // ▸ small select/cursor caret glyph
+            emptyGlyph.text = "▶";  // ▶ small select/cursor caret glyph
             var dim = MelonS.GameProto.Core.UITheme.TextSecondary;
             dim.a = 0.5f;  // dimmed (alpha only — no new inline panel color)
             emptyGlyph.color = dim;
@@ -313,7 +313,7 @@ namespace MelonS.GameProto
         //   the Editor builder's offset.  Layout (anchor (0,0), 1920x1080 ref):
         //     S/L buttons:  x=12, y=12, 92x40   → top edge y=52.
         //     ArchitectMenu: anchor (0,0.5), x=12, 280x440 → on a 1080 screen its
-        //                    bottom edge ≈ screenCenter(540) - 220 = y≈320.
+        //                    bottom edge ~ screenCenter(540) - 220 = y~320.
         //   So a panel at x=12, y=58, height ≤ 256 lives in the clear band
         //   y=[58, 314]: above the S/L row (52) with a 6px gap, below the architect
         //   menu bottom (~320) with a small gap.  Width 380 (< architect's left x).
@@ -408,9 +408,11 @@ namespace MelonS.GameProto
                 {
                     bool amOpen = am != null && am.IsOpen;
                     float wantX = amOpen ? 272f : 12f;
-                    // UI겹침 P1-3/커플링 B — 셸프(상단 y58~)와의 하단 40px 띠 겹침: 건축
-                    //  열림 시 y 도 셸프 실상단+10 으로 (1행=108, 2행=203).
-                    float wantY = amOpen ? 108f + 95f * (am.ShelfRows - 1) : 58f;
+                    // UI겹침 P1-3/커플링 B — 셸프와의 하단 띠 겹침 방지: 건축 열림 시
+                    //  y 를 셸프 실상단 +10 으로.  높이 계산은 ArchitectMenu 가 단독 소유한다
+                    //  (2026-07-27: 여기 108/95 를 복제해 두었던 탓에 패널을 올렸을 때
+                    //   한쪽만 따라가 겹치는 구조였다).
+                    float wantY = amOpen ? am.ShelfTopY + 10f : 58f;
                     if (!Mathf.Approximately(prt0.anchoredPosition.x, wantX)
                         || !Mathf.Approximately(prt0.anchoredPosition.y, wantY))
                         prt0.anchoredPosition = new Vector2(wantX, wantY);
