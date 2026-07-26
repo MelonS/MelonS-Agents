@@ -91,6 +91,7 @@ namespace MelonS.GameProto
             {
                 statusText.text = "연구: 없음 (N=선택)";
                 if (progressBar != null) progressBar.fillAmount = 0f;
+                FitStripToText();
                 return;
             }
             // #게임필 배치4 — 정지 원인 병기: '0/100' 이 왜 안 오르는지 화면이 말해준다.
@@ -100,7 +101,30 @@ namespace MelonS.GameProto
                 : $"연구: {active.nameKr} {active.currentPoints}/{active.requiredPoints}";
             if (progressBar != null)
                 progressBar.fillAmount = Mathf.Clamp01((float)active.currentPoints / active.requiredPoints);
+            FitStripToText();
         }
+
+        /// <summary>스트립 배경을 텍스트 높이에 맞춘다.
+        ///
+        /// 운영자 fb (2026-07-27, 스크린샷): "연구: 원시 활 0/100 — 작업대 필요 (건축 F8)" 이
+        /// 두 줄로 감기면서 **두 번째 줄이 배경 밖 잔디 위에 그대로 찍혔다**.
+        /// 스트립 높이가 36 고정인데 statusText 는 verticalOverflow=Overflow 라 넘친 줄이
+        /// 잘리지 않고 패널 바깥에 렌더된 것.  정지 사유(StallReason)가 붙으면 길이가
+        /// 늘어나므로 문구를 줄이는 대신 **배경이 내용을 따라가게** 한다.
+        /// 스트립은 pivot(1,0) 우하단 고정이라 위로 자란다 — 아래 시계 클러스터와 안 겹친다.</summary>
+        private void FitStripToText()
+        {
+            if (statusText == null) return;
+            var stripRt = statusText.rectTransform.parent as RectTransform;
+            if (stripRt == null) return;
+            // statusText 는 스트립에 stretch 로 물려 좌우 12 / 상하 8 만큼 안쪽이다.
+            float needed = statusText.preferredHeight + 8f;
+            float h = Mathf.Max(StripMinHeight, needed);
+            if (!Mathf.Approximately(stripRt.sizeDelta.y, h))
+                stripRt.sizeDelta = new Vector2(stripRt.sizeDelta.x, h);
+        }
+
+        private const float StripMinHeight = 36f;
 
         private void RefreshPicker()
         {

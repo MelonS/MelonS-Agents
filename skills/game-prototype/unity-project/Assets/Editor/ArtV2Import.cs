@@ -22,6 +22,17 @@ namespace MelonS.GameProto.EditorTools
                    || p.Contains("/Resources/items32/") || p.Contains("/Resources/animals32/")
                    || p.Contains("/Resources/pawn32tool/") || p.Contains("/Resources/flora32/");
             if (!pawn && !v2) return;
+            // v2 폴더 안에 살지만 **v2 밀도가 아닌** 재생성 자산은 제외한다.
+            //  베리덤불 2종은 gen-ts-props.py 가 TS 전환(2026-07-24) 때 128px 로 다시 그려
+            //  Resources/flora32/ 에 그대로 얹혔다.  여기서 PPU 32 를 강제하면 128/32 =
+            //  **4×4칸** 이 되어 나무(2칸)보다 커지고, 콜라이더(1×1)와 어긋나 클릭도 안 먹는다
+            //  (2026-07-27 운영자 "베리인거 같은데 왜케 커? 아무런 인터렉션도 안되고").
+            //  .meta 를 고쳐도 이 포스트프로세서가 임포트마다 되돌려서 원인 추적이 어려웠다 —
+            //  SceneSetup.Game.Entities.cs 의 PPU128 등록조차 재임포트로 무력화되고 있었다.
+            //  → 예외로 빼서 .meta/베이크 등록값(128)이 그대로 살아 있게 한다.
+            //  검증: scripts/check-sprite-ppu.py (등록 PPU vs .meta 전수 대조).
+            if (p.EndsWith("/flora32_bush_berry.png") || p.EndsWith("/flora32_bush_picked.png"))
+                return;
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;
             ti.spriteImportMode = SpriteImportMode.Single;

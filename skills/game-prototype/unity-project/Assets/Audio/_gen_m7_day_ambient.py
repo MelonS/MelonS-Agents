@@ -16,7 +16,7 @@ AudioBank.cs 주석은 이 파일을 이미 "wind/birds bed" 로 기술하고 �
      비워서 크로스페이드가 처프를 반토막 내지 않게 한다.
   3. 심리스 루프: 꼬리 0.6s 를 머리와 등파워 크로스페이드.
 
-출력: 44100Hz, 1ch, 16-bit PCM, 12.00s.  피크 0.60 (베드용).
+출력: 44100Hz, 1ch, 16-bit PCM, 12.00s.  **RMS 기준** 정규화(TARGET_RMS) — 피크가 아니다.
 AudioBank vol=0.18 (ambientSource) — 기존과 동일하므로 배선 변경 불필요.
 stdlib 만 사용 (math, random, struct, wave) — 기존 _gen_*.py 관례.
 """
@@ -38,6 +38,13 @@ XFADE = 0.6          # 루프 이음매 크로스페이드 길이
 BIRD_GUARD = 0.8     # 루프 경계에서 새소리를 배제할 여유
 SEED = 20260727
 
+# 목표 RMS — 믹스에서 BGM 아래에 깔리도록 실측으로 잡은 값.
+#   ambientSource vol 0.18 · bgmSource vol 0.25 (AudioBank 상수)
+#   bgm_ambient.wav 파일 RMS 0.0304 → 실효 0.0076
+#   여기 0.024 → 실효 0.0043 = BGM 대비 약 -5 dB (음악이 위, 바람이 뒤)
+# 참고: 사고 전 사인 드론은 파일 RMS 0.0471(실효 0.0085)로 BGM 과 거의 같은 크기였다.
+TARGET_RMS = 0.024
+
 
 def write_wav(path, samples, sr=SR):
     with wave.open(str(path), "wb") as w:
@@ -48,9 +55,23 @@ def write_wav(path, samples, sr=SR):
             struct.pack("<h", max(-32768, min(32767, int(s * 32767)))) for s in samples))
 
 
-def normalize(samples, peak=0.60):
-    m = max(abs(s) for s in samples) or 1.0
-    g = peak / m
+def normalize_rms(samples, target_rms=TARGET_RMS, peak_ceiling=0.85):
+    """**피크가 아니라 RMS 로** 맞춘다.
+
+    2026-07-27 운영자 "bgm 자체가 없어진거야?" 의 원인이 여기였다.
+    1차 버전은 피크 0.60 으로 맞췄는데, 광대역 노이즈는 사인 드론보다 크레스트
+    팩터가 작아서 같은 피크라도 RMS 가 훨씬 크게 나온다.  그 결과 새 앰비언트가
+    기존 대비 +7.6 dB, **BGM 보다 +8.5 dB** 커져 음악을 덮어버렸다.
+
+    지속음 베드의 체감 크기를 결정하는 건 피크가 아니라 RMS 이므로 RMS 를 기준으로
+    잡고, 피크는 클리핑 방지용 상한으로만 쓴다.
+    """
+    n = len(samples) or 1
+    cur = math.sqrt(sum(s * s for s in samples) / n) or 1e-9
+    g = target_rms / cur
+    peak = (max(abs(s) for s in samples) or 1.0) * g
+    if peak > peak_ceiling:                 # 클리핑 방지 (RMS 목표보다 우선)
+        g *= peak_ceiling / peak
     return [s * g for s in samples]
 
 
@@ -119,7 +140,7 @@ def day_ambient():
         a = math.cos(0.5 * math.pi * w)
         b = math.sin(0.5 * math.pi * w)
         out[k] = out[k] * b + out[n + k] * a
-    return normalize(out[:n])
+    return normalize_rms(out[:n])
 
 
 def main():
