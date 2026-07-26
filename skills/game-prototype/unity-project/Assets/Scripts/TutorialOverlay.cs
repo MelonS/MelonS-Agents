@@ -98,6 +98,15 @@ namespace MelonS.GameProto
             // 행동 기반 진행: 현재 단계의 gate 가 충족되면 다음 단계로.  완료(stepIdx
             //  == tips.Length)면 영구 종료.  Space/ESC = 현재 단계 건너뛰기(수동 전진).
             if (stepIdx >= tips.Length) { FadeOut(); ApplyFade(); return; }
+            // Chop 단계 기준선: 이 단계에 **처음 들어온 순간의** 지정 수를 기록해 두고,
+            //  그보다 늘어야 통과로 친다 (시작 지정이 게이트를 대신 충족해 단계가
+            //  건너뛰어지는 것을 막는다 — GateSatisfied 의 Gate.Chop 주석 참조).
+            if (tips[stepIdx].gate == Gate.Chop && chopBaselineStep != stepIdx)
+            {
+                chopBaselineStep = stepIdx;
+                chopBaseline = TreeChopDesignation.Instance != null
+                    ? TreeChopDesignation.Instance.GetMarkedTreePositions().Count : 0;
+            }
             bool manualSkip = (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Escape)) && currentVisible;
             bool gateMet = GateSatisfied(tips[stepIdx].gate);
             // Done 단계는 표시 후 6초 뒤 자동 종료.
@@ -170,11 +179,15 @@ namespace MelonS.GameProto
                 case Gate.Stockpile:
                     return Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None).Length > 0;
                 case Gate.Chop:
-                    // 벌목 지정이 하나라도 찍히면 통과.  ReproHarness 의 chopDesignations
-                    //  프로브와 **같은 소스**를 쓴다 — 게이트와 테스트가 다른 걸 세면
-                    //  "테스트는 통과하는데 화면은 안 넘어간다"가 생긴다.
-                    return TreeChopDesignation.Instance != null
-                        && TreeChopDesignation.Instance.GetMarkedTreePositions().Count > 0;
+                    // **이 단계에 들어온 시점 대비 증가**했을 때만 통과한다.
+                    //  단순히 "지정이 1개 이상"으로 하면, 시작 벌목 지정(GameManager 가 첫 화면
+                    //  생동감을 위해 6그루를 미리 찍는다)이 게이트를 즉시 충족시켜 이 단계가
+                    //  또 건너뛰어진다 — 저장구역 때와 정확히 같은 함정이다.
+                    //  기준선과 비교하면 "플레이어가 직접 하나 더 찍었는가"를 본다.
+                    //  ReproHarness 의 chopDesignations 프로브와 같은 소스를 쓴다(게이트와
+                    //  테스트가 다른 걸 세면 "테스트는 통과하는데 화면은 안 넘어간다"가 생긴다).
+                    if (TreeChopDesignation.Instance == null) return false;
+                    return TreeChopDesignation.Instance.GetMarkedTreePositions().Count > chopBaseline;
                 case Gate.House:
                     // 벽 청사진/완공 또는 가구 청사진 중 하나라도 = 집짓기 시작.
                     return Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None).Length > 0
@@ -189,6 +202,9 @@ namespace MelonS.GameProto
         }
 
         private bool sawPause;
+        // Gate.Chop 기준선 (위 Update 의 진입 감지에서 설정).  -1 = 아직 진입 안 함.
+        private int chopBaseline;
+        private int chopBaselineStep = -1;
 
         private void ApplyFade()
         {

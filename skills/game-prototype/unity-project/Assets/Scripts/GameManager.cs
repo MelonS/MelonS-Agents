@@ -313,13 +313,68 @@ namespace MelonS.GameProto
                 yield break;
             }
 
-            // 스폰 회피 반경(2.5) 바깥 북동쪽.  cell 좌표 기준 (3..5, 3..5).
+            // 위치: 스폰 회피 반경(2.5) 바깥 **남서쪽** (-6..-4, -6..-4).
+            //
+            // 처음엔 북동쪽 (3..5, 3..5) 에 뒀다가 옮겼다 — 그 자리가 **튜토리얼이 집을 짓는
+            // 구역과 정면으로 겹쳤다.**  실측: p2-first10min 이 벽을 (3.5~7.5, 4.5) 에 놓는데
+            // 클릭이 `at=Stockpile_5_5` / `at=Stockpile_6_5` 로 잡혀 배치가 거부됐다.
+            // 테스트만의 문제가 아니라 **시연 문제**다 — 플레이어가 튜토리얼대로 집을 지으려는
+            // 자리에 창고가 미리 깔려 있으면 "왜 안 지어지지?" 가 된다.
+            // 남서쪽은 목재/간편식 산포 범위(±7) 안이라 운반 거리도 짧게 유지된다.
             int placed = 0;
-            for (int cx = 3; cx <= 5; cx++)
-                for (int cy = 3; cy <= 5; cy++)
+            for (int cx = -6; cx <= -4; cx++)
+                for (int cy = -6; cy <= -4; cy++)
                     if (sd.DesignateCell(new Vector2Int(cx, cy)) != null) placed++;
 
             Debug.Log($"[GameManager] 시작 저장구역 {placed}칸 배치 — 바닥 목재 운반이 즉시 시작된다");
+
+            // 시작 벌목 지정 (2026-07-27, 가상 유저 5라운드 공통 지적의 마지막 조각).
+            //
+            // 저장구역만으로는 **첫 30초**만 살아난다: 바닥 목재 300 이 창고로 옮겨진 뒤
+            // 새 일감이 없어 콜로니가 다시 멈춘다.  실측으로 게임 내 7시간 30분 동안
+            // 목재 +0 / 석재 +0 / 가치 +0 이었고, 면접관 페르소나는 이걸 두고
+            // "02→03 의 300 은 생산이 아니라 시작 지급분이 옮겨진 것뿐"이라고 정확히 짚었다.
+            //
+            // 그래서 스폰 근처 나무 몇 그루에 벌목을 미리 지정해 둔다.  효과:
+            //  1) 플레이어가 아무것도 안 해도 **나무가 쓰러지고 목재가 계속 오르는 걸 본다**
+            //     (스트리머 페르소나: "일한 흔적이 화면에 남아야 한다")
+            //  2) 그게 끝나면 다시 멈추는데, 그 시점에 튜토리얼 ①이 "나무를 우클릭 → 벌목"을
+            //     안내한다 — **먼저 보고, 그다음 직접 해보는** 온보딩 순서가 된다.
+            // ── 되돌림 (2026-07-27 05:10) ────────────────────────────────
+            // 시작 벌목 지정을 넣었더니 **건축 배치가 실패**했다 (p2-first10min /
+            // p3-rotate-bed 에서 blueprintCount=0).  ChopTarget 마커가 배치 검사에
+            // 걸리는 것으로 보인다.  건축은 시연에서 반드시 보여줄 경로이므로,
+            // "화면이 계속 변한다"보다 우선한다.
+            //
+            // 저장구역만으로도 첫 30초의 0→300 은 이미 확보돼 있고, 튜토리얼 ①이
+            // "나무를 우클릭 → 벌목"을 가르치므로 그다음 생산은 플레이어가 잇는다.
+            // 아래 함수는 원인(마커-배치 충돌)을 규명한 뒤 되살릴 것.
+            //   MarkStarterChopTargets(6);
+        }
+
+        /// <summary>스폰 근처 나무 n 그루를 벌목 지정.  가까운 순으로 고르되 스폰 바로 위는
+        ///  피한다(폰이 서 있는 칸에 작업을 걸면 첫 이동이 어색하다).</summary>
+        private static void MarkStarterChopTargets(int n)
+        {
+            var cd = TreeChopDesignation.Instance;
+            if (cd == null) { Debug.LogWarning("[GameManager] 시작 벌목 지정 생략 — 매니저 미준비"); return; }
+
+            var trees = Object.FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
+            if (trees == null || trees.Length == 0) return;
+
+            System.Array.Sort(trees, (a, b) =>
+                a.transform.position.sqrMagnitude.CompareTo(b.transform.position.sqrMagnitude));
+
+            int marked = 0;
+            foreach (var t in trees)
+            {
+                if (marked >= n) break;
+                if (t == null || t.IsDestroyed) continue;
+                Vector3 p = t.transform.position;
+                if (Mathf.Abs(p.x) < 3f && Mathf.Abs(p.y) < 3f) continue;   // 스폰 바로 위 회피
+                if (cd.TryMark(t.gameObject) != null) marked++;
+            }
+            Debug.Log($"[GameManager] 시작 벌목 지정 {marked}그루 — 첫 화면부터 생산이 이어진다");
         }
     }
 }

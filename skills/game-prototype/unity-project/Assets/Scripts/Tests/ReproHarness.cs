@@ -224,6 +224,31 @@ namespace MelonS.GameProto
                     break;
                 }
 
+                case "clearChopDesignations":
+                {
+                    // 전제조건 세팅용 (2026-07-27).  GameManager 가 첫 화면 생동감을 위해
+                    //  시작 벌목 6그루를 미리 지정하는데, '선택된 림만 벌목한다'를 보는
+                    //  시나리오에서는 **비선택 림이 그 시작 지정을 처리하는 것**이 위반으로
+                    //  잡힌다(실측: 지훈이 시작 지정 나무를 벌목 → assert 실패).
+                    //  프로덕션 동작을 되돌리는 대신 시나리오가 조건을 만들게 한다 —
+                    //  지정이 없는 상태는 플레이어가 지정을 안 하면 도달하는 정상 상태다.
+                    var marks = Object.FindObjectsByType<ChopTarget>(FindObjectsSortMode.None);
+                    int cleared = 0;
+                    foreach (var m in marks)
+                    {
+                        if (m == null) continue;
+                        Object.Destroy(m.gameObject);
+                        cleared++;
+                    }
+                    // 이미 잡을 들고 있는 림의 task 도 함께 해제 (다음 폴에서 새 잡을 고른다).
+                    foreach (var pw in Object.FindObjectsByType<PawnChopper>(FindObjectsSortMode.None))
+                        if (pw != null) pw.ClearTask();
+                    yield return null;
+                    r.passed = true;
+                    r.detail = $"벌목 지정 {cleared}건 해제";
+                    break;
+                }
+
                 case "spawnBed":
                 {
                     // #침대도달불가 회귀가드 — 침대를 직접 스폰 (건설 경로 우회, BuildManager

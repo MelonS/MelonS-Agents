@@ -26,6 +26,22 @@ namespace MelonS.GameProto
             //  "아무것도 없어요. 고장난 것 같아요"), 프로듀서는 "빈 사각형은 미완성을
             //  대놓고 광고한다 — 채우거나 숨겨라"로 판정했다.
             //  → 그릴 내용이 있을 때만 켠다.  없는 패널이 빈 패널보다 낫다.
+            // 스킬 패널 비활성 (2026-07-27 시연 결정).
+            //
+            // 이 패널은 헤더 "스킬"만 있고 본문이 비어 있었다.  런타임 색 강제와 행 생성
+            // 두 가지를 시도했지만 빌드에서 여전히 빈 상자였다(본문 영역 고유색 17,
+            // 대비 1.03 — QA 실측).  씬에 구워진 구조 문제로 보이며, 씬 리베이크는
+            // Game.unity 를 통째로 다시 쓰는 작업이라 시연 전날 밤에 할 일이 아니다.
+            //
+            // 빈 패널은 **없는 패널보다 나쁘다** — 평가자 다수가 '미구현/고장'으로 읽었고
+            // (11세: "아무것도 없어요. 고장난 것 같아요"), 프로듀서 페르소나는
+            // "채우거나 숨겨라"로 판정했다.  스킬 수치 자체는 작업 우선순위 그리드(F1)에
+            // 이미 첨자로 표시되므로 **정보가 사라지는 것도 아니다.**
+            //
+            // TODO(시연 후): 씬 리베이크 또는 PawnInfoPanel 탭으로 흡수해 되살릴 것.
+            container.SetActive(false);
+            return;
+#pragma warning disable CS0162   // 아래는 복구 시 되살릴 원래 경로
             bool any = pawn != null && !pawn.IsDead && sk != null;
             container.SetActive(any);
             if (!any) return;
@@ -40,7 +56,7 @@ namespace MelonS.GameProto
                 //  기존엔 건축 열림 시 x 400 → **660** 으로 화면 중앙까지 밀려났다.
                 //  인포패널과 같은 원칙으로 좌측대에 머무르고 y 만 올린다
                 //  (인포패널 폭 380 + 좌여백 12 → 그 오른쪽 400 이 좌측대의 끝).
-                var wantS = (amS != null && amS.IsOpen) ? new Vector2(400f, 268f) : new Vector2(400f, 58f);
+                var wantS = (amS != null && amS.IsOpen) ? new Vector2(400f, amS.BlockTopY + 10f) : new Vector2(400f, 58f);
                 if (!Mathf.Approximately(crt.anchoredPosition.x, wantS.x)
                     || !Mathf.Approximately(crt.anchoredPosition.y, wantS.y))
                     crt.anchoredPosition = wantS;
@@ -49,6 +65,7 @@ namespace MelonS.GameProto
             SetText(chopText,   "벌목", sk.GetLevel(SkillKind.Chop));
             SetText(buildText,  "건축", sk.GetLevel(SkillKind.Build));
             SetText(combatText, "전투", sk.GetLevel(SkillKind.Combat));
+#pragma warning restore CS0162
         }
 
         private static void SetText(Text t, string label, int level)
@@ -79,9 +96,13 @@ namespace MelonS.GameProto
         {
             if (rowsChecked) return;
             rowsChecked = true;
-            if (gatherText != null || chopText != null || buildText != null || combatText != null)
-                return;   // 씬 배선 정상 — 손대지 않는다
             if (container == null) return;
+            // 씬 배선이 있어도 **우리 행을 새로 만든다** (2026-07-27 2차).
+            //  1차에는 "배선이 있으면 손대지 않는다"로 두었는데, 실제 빌드에서 상자가 계속
+            //  비어 있었다 — 씬의 Text 객체가 패널 밖에 놓였거나 비활성인 것으로 보인다.
+            //  씬 상태를 원격으로 진단하는 것보다 **우리가 소유한 행을 만들어 그걸 갱신**하는
+            //  쪽이 확실하다.  아래에서 필드를 우리 것으로 덮어쓰므로 SetText 는 우리 행만
+            //  건드리고, 씬의 유령 Text 는 어차피 안 보이므로 방치해도 겹치지 않는다.
 
             var parent = container.GetComponent<RectTransform>();
             if (parent == null) return;

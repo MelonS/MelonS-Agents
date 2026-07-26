@@ -419,7 +419,7 @@ namespace MelonS.GameProto
                     // 건축 열림 시 y 는 셸프 실상단 +10 (높이 계산은 ArchitectMenu 단독 소유 —
                     //  2026-07-27: 여기 108/95 를 복제해 뒀던 탓에 패널을 옮기면 한쪽만
                     //  따라가 겹치는 구조였다).
-                    float wantY = amOpen ? am.ShelfTopY + 10f : 58f;
+                    float wantY = amOpen ? am.BlockTopY + 10f : 58f;
                     if (!Mathf.Approximately(prt0.anchoredPosition.x, wantX)
                         || !Mathf.Approximately(prt0.anchoredPosition.y, wantY))
                         prt0.anchoredPosition = new Vector2(wantX, wantY);

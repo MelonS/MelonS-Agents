@@ -674,6 +674,17 @@ namespace MelonS.GameProto
         /// 한쪽만 고쳐져 겹친다.</summary>
         public float ShelfTopY => PanelBottomY + ShelfCellH + (ShelfRows - 1) * ShelfRowStep;
 
+        /// <summary>카테고리 패널 자체의 상단 y (화면 바닥 기준).
+        ///
+        /// 2026-07-27 회귀: 인포패널을 좌측에 고정하면서 y 기준으로 `ShelfTopY` 를 썼는데,
+        /// **패널이 셸프보다 높다**(셸프는 우측에 붙은 아이콘 줄, 패널은 2열 카테고리 목록).
+        /// 그 결과 인포패널 하단이 건축 패널 상단을 26% 덮어 수면·기분 바가 가려졌다.
+        /// 위로 피할 기준은 둘 중 **더 높은 쪽**이어야 한다 → BlockTopY.</summary>
+        public float PanelTopY => rt != null ? PanelBottomY + rt.sizeDelta.y : PanelBottomY + 220f;
+
+        /// <summary>건축 UI 전체(패널 + 셸프)가 차지하는 최상단 y.  다른 패널이 이 위로 피한다.</summary>
+        public float BlockTopY => Mathf.Max(ShelfTopY, PanelTopY);
+
         private void MakeShelfCell(float x, float yRow, string name, string hotkey, Sprite icon, string glyph,
                                    bool active, bool affordable, string tooltip, System.Action onClick)
         {
