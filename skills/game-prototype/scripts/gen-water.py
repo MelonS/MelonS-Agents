@@ -94,12 +94,15 @@ def foam_band() -> Image.Image:
         for y in range(H):
             # 위쪽이 물, 아래쪽이 뭍 — 가운데에 포말이 몰리게
             band = math.sin(math.pi * (y + 0.5) / H) ** 1.6
-            a = edge * band * (0.35 + 0.45 * crest)
-            if a <= 0.02:
+            # 1차 시도는 알파 210 이라 흰 얼룩으로 번져 보였다(인게임 확인).
+            #  물가 표시는 "있는 줄 알겠는" 정도면 충분하고, 지형이 캐릭터보다 튀면 안 된다.
+            #  → 최대 알파를 1/3 수준으로 낮추고 색도 FOAM 쪽으로 덜 가게.
+            a = edge * band * (0.30 + 0.35 * crest)
+            if a <= 0.03:
                 px[x, y] = (0, 0, 0, 0)
                 continue
-            c = lerp(LIGHT, FOAM, min(1.0, a * 1.3))
-            px[x, y] = (c[0], c[1], c[2], int(min(255, a * 210)))
+            c = lerp(LIGHT, FOAM, min(1.0, a * 0.8))
+            px[x, y] = (c[0], c[1], c[2], int(min(255, a * 90)))
     return im
 
 
