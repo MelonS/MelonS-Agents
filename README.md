@@ -2,7 +2,7 @@
 
 # MelonS-Agents
 
-[한국어](./README.ko.md) · **English** · [**Live site →**](https://melons.github.io/MelonS-Agents/)
+[한국어](./README.ko.md) · **English** · [**Live site →**](https://melons.github.io/MelonS-Agents/) · [**▶ Play PawnSim in your browser →**](https://melons.github.io/MelonS-Agents/play/)
 
 ### A multi-agent system built solo with [Claude Code](https://docs.anthropic.com/claude-code). It turns music into short-form video, and builds a colony-sim game it plays to verify itself.
 
@@ -17,6 +17,8 @@
 ![PawnSim 16-in-game-day colony timelapse (2026-06-12 build) — three colonists found a camp on open grass, designate a stockpile and farm plots, build a walled bedroom with beds/stove/research bench, and grow the colony while raids are repelled.  Every frame is from an unattended soak run; the loop shown (stockpile → housing → farming → logging → mining) is machine-verified by effect assertions + isolated-grader rubric verdicts](docs/demo/pawnsim-2026-06-12-colony-timelapse.gif)
 
 *Unattended 16 in-game-day colony soak — the agent built this game **and** verified it.*
+
+**[▶ Play it in your browser](https://melons.github.io/MelonS-Agents/play/)** — no install, runs on any desktop browser (Chrome recommended).
 
 </div>
 

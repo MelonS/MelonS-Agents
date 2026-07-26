@@ -2,7 +2,7 @@
 
 # MelonS-Agents
 
-**한국어** | [English](./README.md) · [**라이브 사이트 →**](https://melons.github.io/MelonS-Agents/)
+**한국어** | [English](./README.md) · [**라이브 사이트 →**](https://melons.github.io/MelonS-Agents/) · [**▶ 브라우저에서 PawnSim 해보기 →**](https://melons.github.io/MelonS-Agents/play/)
 
 ### 혼자서 [Claude Code](https://docs.anthropic.com/claude-code)로 만든 멀티 에이전트 시스템입니다. 음악을 숏폼 영상으로 뽑아내고, 콜로니심 게임을 개발해 직접 플레이하며 스스로 검증합니다.
 
@@ -17,6 +17,8 @@
 ![PawnSim 콜로니 타임랩스 (2026-06-12 빌드, 게임 내 16일) — 콜로니스트 셋이 맨땅에서 시작해 저장 구역과 농장을 지정하고, 벽·침대·화덕·연구대를 갖춘 집을 지으며, 습격을 막아내고 성장하는 과정. 모든 프레임은 사람 개입 없는 자동 플레이 기록이며, 화면에 보이는 기본 루프(저장→집짓기→농사→벌목→채광)는 전부 효과 어서션 + 격리 채점 루브릭 판정으로 기계 검증된 상태](docs/demo/pawnsim-2026-06-12-colony-timelapse.gif)
 
 *사람 손 하나 대지 않고 게임 내 16일을 돌린 장기 자동 플레이 — 이 게임을 에이전트가 만들고 **검증까지** 했습니다.*
+
+**[▶ 브라우저에서 직접 해보기](https://melons.github.io/MelonS-Agents/play/)** — 설치 없이 데스크톱 브라우저에서 바로 실행됩니다 (크롬 권장).
 
 </div>
 
