@@ -555,7 +555,7 @@ namespace MelonS.GameProto
                 var phDeadTitle = pawn.GetComponent<PawnHealth>();
                 if (phDeadTitle != null && phDeadTitle.IsDead)
                 {
-                    title += "  <size=13><color=#c0392b>· 사망</color></size>";
+                    title += "  <size=13><color=#C0392B>· 사망</color></size>";
                 }
                 else
                 {
@@ -563,15 +563,15 @@ namespace MelonS.GameProto
                     var nameLabel = pawn.GetComponent<PawnNameLabel>();
                     string act = nameLabel != null ? nameLabel.CurrentActivity : "";
                     if (!string.IsNullOrEmpty(act))
-                        title += $"  <size=13><color=#e8b560>· {act}</color></size>";
+                        title += $"  <size=13><color=#B4741E>· {act}</color></size>";
                 }
                 // G2 배경 한 줄 (2026-07-24 게임성 감사): 클릭한 림에게 최소한의 서사.
-                title += $"\n<size=13><color=#c4a878>{PawnBackstory.GetLine(pawn)}</color></size>";
+                title += $"\n<size=13><color=#7A6242>{PawnBackstory.GetLine(pawn)}</color></size>";
                 if (traits != null)
                 {
                     string ts = traits.SummaryKr();
                     if (!string.IsNullOrEmpty(ts))
-                        title += $"  <size=12><color=#c0b090>({ts})</color></size>";
+                        title += $"  <size=12><color=#7A6A4E>({ts})</color></size>";
                 }
                 titleText.text = title;
                 titleText.supportRichText = true;
@@ -644,17 +644,17 @@ namespace MelonS.GameProto
                 if (health != null && health.parts != null)
                 {
                     var sb = new System.Text.StringBuilder();
-                    sb.AppendLine("<color=#ddc28a>상태:</color>");
+                    sb.AppendLine("<color=#8A5A1E>상태:</color>");
                     foreach (var part in health.parts)
                     {
                         float r = (float)part.hp / part.maxHp;
-                        string color = r > 0.7f ? "#9adb86" : (r > 0.3f ? "#e8b454" : "#e85454");
-                        string bleed = part.bleedRate > 0.1f ? " <color=#ff6464>출혈</color>" : "";
-                        string bandage = part.bandaged ? " <color=#a0c8ff>붕대</color>" : "";
+                        string color = r > 0.7f ? "#4A7A38" : (r > 0.3f ? "#e8b454" : "#e85454");
+                        string bleed = part.bleedRate > 0.1f ? " <color=#C0392B>출혈</color>" : "";
+                        string bandage = part.bandaged ? " <color=#2F5C99>붕대</color>" : "";
                         sb.AppendLine($"<color={color}>{part.nameKr}: {part.hp}/{part.maxHp}</color>{bleed}{bandage}");
                     }
-                    if (health.IsDowned) sb.AppendLine("<color=#ff6464>의식불명</color>");
-                    if (health.IsDead)   sb.AppendLine("<color=#ff0000>사망</color>");
+                    if (health.IsDowned) sb.AppendLine("<color=#C0392B>의식불명</color>");
+                    if (health.IsDead)   sb.AppendLine("<color=#B32020>사망</color>");
                     // 운영자 2026-06-02: 건강 탭엔 건강(부위 HP/출혈/붕대)만.  능력치는 장비 탭으로 이전.
                     healthText.text = sb.ToString();
                 }
@@ -671,10 +671,10 @@ namespace MelonS.GameProto
                 if (thoughts != null && thoughts.active.Count > 0)
                 {
                     var sb = new System.Text.StringBuilder();
-                    sb.AppendLine("<color=#ddc28a>기분:</color>");
+                    sb.AppendLine("<color=#8A5A1E>기분:</color>");
                     foreach (var t in thoughts.active)
                     {
-                        string col = t.offset >= 0f ? "#9adb86" : "#e88c54";
+                        string col = t.offset >= 0f ? "#4A7A38" : "#B4501E";
                         string sign = t.offset >= 0f ? "+" : "";
                         sb.AppendLine($"  <color={col}>{t.label} {sign}{t.offset:F0}</color>");
                     }
@@ -696,7 +696,7 @@ namespace MelonS.GameProto
             if (equipText != null)
             {
                 var sb = new System.Text.StringBuilder();
-                sb.AppendLine("<color=#ddc28a>장비:</color>");
+                sb.AppendLine("<color=#8A5A1E>장비:</color>");
                 var eq = pawn.GetComponent<PawnEquipment>();
                 if (eq != null && eq.equipped.Count > 0)
                 {
@@ -706,23 +706,23 @@ namespace MelonS.GameProto
                     {
                         var it = eq.GetEquipped(slots[i]);
                         string val = it != null ? it.nameKr : "(없음)";
-                        string col = it != null ? "#dddddd" : "#888888";
+                        string col = it != null ? "#3A2F22" : "#8A7658";
                         sb.AppendLine($"  <color={col}>{slotLabels[i]}: {val}</color>");
                     }
                 }
-                else sb.AppendLine("  <color=#888888>(장비 없음)</color>");
+                else sb.AppendLine("  <color=#8A7658>(장비 없음)</color>");
                 // #120 능력치 — 건강탭에서 이전(건강엔 건강만, 능력치는 여기).
                 var abil = pawn.GetComponent<PawnAbilities>();
                 if (abil != null)
                 {
                     sb.AppendLine();
-                    sb.AppendLine("<color=#ddc28a>능력치:</color>");
+                    sb.AppendLine("<color=#8A5A1E>능력치:</color>");
                     // #5 — 한 줄 2항목 압축 (세로 공간 절반).
                     int colCount = 0;
                     foreach (var (key, label) in PawnAbilities.DisplayMap)
                     {
                         float v = abil.GetByKey(key);
-                        string col = v >= 1.10f ? "#9adb86" : (v >= 0.95f ? "#dddddd" : "#e88c54");
+                        string col = v >= 1.10f ? "#4A7A38" : (v >= 0.95f ? "#3A2F22" : "#B4501E");
                         sb.Append($"  <color={col}>{label} {v:F2}</color>");
                         if (++colCount % 2 == 0) sb.AppendLine();
                     }

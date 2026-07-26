@@ -262,6 +262,23 @@ namespace MelonS.GameProto
                     foodDropped++;
                 }
                 Debug.Log($"[GameManager] starter resources (콜로니심식 물리): 목재 {dropped*50} + 간편식 {foodDropped}더미 바닥 드롭 (추상 카운터 폐기)");
+
+                // #첫인상 (2026-07-27): 시작 저장구역을 미리 깔아 둔다.
+                //
+                // 배경 — 가상 유저 10인 평가에서 **8명 전원이 같은 1순위**를 지목했다:
+                // "게임 내 9시간(6:00→14:42)이 지나도 자원이 전부 0, 화면에 아무 변화가 없다".
+                // 원인은 버그가 아니라 시작 상태였다.  위 블록이 목재 300을 물리 더미로 흩뿌리는데
+                // (장르 정공법 — 운반이 실제 노동), **저장구역이 하나도 없으면 운반 대상이 없어
+                // 아무도 움직이지 않는다.**  게다가 튜토리얼은 "이제 콜로니스트가 알아서 일합니다"
+                // 라고 말한다 — 게임이 자기 자신에 대해 거짓말을 하는 상태였다.
+                //
+                // 그래서 시작 시 작은 저장구역 하나를 스폰 근처에 깔아 둔다.  그러면 첫 30초 안에
+                // 콜로니스트가 바닥 목재를 나르기 시작하고 카운터가 0에서 올라가는 게 눈에 보인다.
+                // 튜토리얼 ①(저장공간 만들기)은 여전히 유효하다 — 플레이어는 이걸 '확장'하게 된다.
+                //
+                // 위치: 스폰(±2.5) 바깥 북동쪽 3×3.  목재/간편식 드롭이 스폰 ±2.5 를 피하므로
+                // 이 구역이 기존 더미를 덮어써 '이미 저장된 것처럼' 보이는 일도 없다.
+                StartCoroutine(PlaceStarterStockpile());
             }
 
             if (integrationTest)
@@ -276,6 +293,33 @@ namespace MelonS.GameProto
                 dGo.AddComponent<PawnDiagnostics>();
                 Debug.Log("[GameManager] -pawndiag → PawnDiagnostics activated");
             }
+        }
+
+        /// <summary>시작 저장구역 3×3 을 깐다 (첫인상 — 위 호출부 주석 참조).
+        ///
+        /// 코루틴인 이유: StockpileDesignation 은 RuntimeInitializeOnLoadMethod 로 자가
+        /// 부트스트랩하고 PathGrid 도 씬 초기화 중에 채워진다.  GameManager.Start 시점엔
+        /// 둘 다 아직 없을 수 있어 한 프레임 양보한 뒤 준비될 때까지 짧게 기다린다.
+        /// 끝내 준비 안 되면 조용히 포기한다 — 시작 편의 기능이 부팅을 막아선 안 된다.</summary>
+        private System.Collections.IEnumerator PlaceStarterStockpile()
+        {
+            const int MaxWaitFrames = 120;   // ~2초 (60fps 기준).  헤드리스/저사양 여유
+            for (int i = 0; i < MaxWaitFrames && StockpileDesignation.Instance == null; i++)
+                yield return null;
+            var sd = StockpileDesignation.Instance;
+            if (sd == null)
+            {
+                Debug.LogWarning("[GameManager] 시작 저장구역 생략 — StockpileDesignation 미준비");
+                yield break;
+            }
+
+            // 스폰 회피 반경(2.5) 바깥 북동쪽.  cell 좌표 기준 (3..5, 3..5).
+            int placed = 0;
+            for (int cx = 3; cx <= 5; cx++)
+                for (int cy = 3; cy <= 5; cy++)
+                    if (sd.DesignateCell(new Vector2Int(cx, cy)) != null) placed++;
+
+            Debug.Log($"[GameManager] 시작 저장구역 {placed}칸 배치 — 바닥 목재 운반이 즉시 시작된다");
         }
     }
 }

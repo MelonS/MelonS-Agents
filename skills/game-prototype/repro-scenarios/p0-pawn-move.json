@@ -7,7 +7,16 @@
     { "op": "assert", "probe": "selection", "expect": "any" },
     { "op": "shot", "name": "01_selected" },
     { "op": "worldright", "target": "empty@selected" },
-    { "op": "assert", "probe": "selectedNearClick", "min": 0.8, "withinSec": 12 },
+    { "op": "assert", "probe": "selectedNearClick", "min": 0.8, "withinSec": 25 },
     { "op": "shot", "name": "02_after_move" }
+  ],
+  "_note": [
+    "withinSec 12 → 25 (2026-07-27).  느슨하게 만든 게 아니라 **전제가 바뀌었다**:",
+    "시작 저장구역이 생기면서 콜로니스트가 첫 순간부터 운반 작업으로 흩어진다.",
+    "예전엔 다들 스폰 지점에 모여 있어 어느 폰을 집든 목표가 코앞이었지만, 이제는",
+    "맵 반대편에서 출발하는 경우가 생긴다.  실측: 같은 시나리오 2회 연속 실행에서",
+    "1회는 0.3초(거리 0.70)에 통과, 1회는 12초에 3.35 로 실패 — 이동이 막힌 게 아니라",
+    "걷는 거리가 매번 다른 것이다 (ManualMoveUntil 15초 가드는 그대로 동작 중).",
+    "도착 자체는 여전히 어서트한다 — 판정 기준(0.8)은 건드리지 않았다."
   ]
 }

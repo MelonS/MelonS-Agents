@@ -143,10 +143,16 @@ namespace MelonS.GameProto
             {
                 var t = rm.techs[i];
                 string nameCol, mark;
-                if (t.completed)               { mark = " ○"; nameCol = "#6E8C5A"; }
-                else if (rm.activeTech == t)   { mark = " ▶"; nameCol = "#E8B560"; }
-                else if (!rm.CanStart(t))      { mark = " ×"; nameCol = "#8A7C6A"; }
-                else                           { mark = "";   nameCol = "#F2E4D0"; }
+                // 대비 재설정 (2026-07-27).  평가자 다수가 "2·3번 연구는 이름이 아예 없다"고
+                //  읽었고, UX 실측에서 그 제목의 대비가 **1.00:1** — 배경색과 완전 동일로 나왔다.
+                //  범인은 잠김색이 아니라 **선택가능 색 #F2E4D0**(크림)이었다: 패널 배경이
+                //  크림(#ECE1CE)이라 "가능" 상태 항목이 배경에 그대로 녹아 사라졌다.
+                //  즉 가장 눌러야 할 항목이 가장 안 보이는 정반대 위계였다.
+                //  이 패널은 밝은 배경이므로 **어두운 글자**가 기본이어야 한다.
+                if (t.completed)               { mark = " ○"; nameCol = "#4A6B3A"; }
+                else if (rm.activeTech == t)   { mark = " ▶"; nameCol = "#B4741E"; }
+                else if (!rm.CanStart(t))      { mark = " ×"; nameCol = "#6B5A45"; }
+                else                           { mark = "";   nameCol = "#3A2E22"; }
                 sb.AppendLine($"<color={nameCol}><b>{i+1}. {t.nameKr}</b>{mark}</color>  <color=#C8963C>{t.requiredPoints}pt</color>");
                 sb.AppendLine($"     <color=#A89A86><size=16>{t.descKr}</size></color>");
             }

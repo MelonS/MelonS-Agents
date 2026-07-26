@@ -203,6 +203,27 @@ namespace MelonS.GameProto
                     break;
                 }
 
+                case "clearStockpiles":
+                {
+                    // 전제조건 세팅용 (2026-07-27).  시작 저장구역이 생기면서 바닥 자원이
+                    //  3초 안에 전부 운반돼, '옥외 더미가 닳는가'를 보는 시나리오가 측정
+                    //  대상을 잃었다(옥외 WoodPile 없음).  프로덕션 동작을 되돌리는 대신
+                    //  **시나리오가 스스로 조건을 만들게** 한다 — 저장구역이 없는 상태는
+                    //  플레이어가 구역을 지우면 실제로 도달하는 정상 게임 상태다.
+                    var zones = Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None);
+                    int removed = 0;
+                    foreach (var z in zones)
+                    {
+                        if (z == null) continue;
+                        Object.Destroy(z.gameObject);
+                        removed++;
+                    }
+                    yield return null;   // Destroy 반영 대기 (haul 예약 해제는 다음 폴에서)
+                    r.passed = true;
+                    r.detail = $"저장구역 {removed}개 제거";
+                    break;
+                }
+
                 case "spawnBed":
                 {
                     // #침대도달불가 회귀가드 — 침대를 직접 스폰 (건설 경로 우회, BuildManager
