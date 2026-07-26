@@ -19,11 +19,16 @@ namespace MelonS.GameProto
         {
             if (selector == null || container == null) return;
             var pawn = selector.CurrentSelection;
-            bool any = pawn != null && !pawn.IsDead;
+            var sk = pawn != null ? pawn.GetComponent<PawnSkills>() : null;
+            // 빈 상자를 띄우지 않는다 (2026-07-27).  기존엔 폰만 선택되면 컨테이너를 켜고
+            //  스킬 데이터가 없으면 그대로 return 해서, 헤더 "스킬"만 있는 **빈 사각형**이
+            //  남았다.  평가자 다수가 이걸 '미구현/고장'으로 읽었고(11세 페르소나:
+            //  "아무것도 없어요. 고장난 것 같아요"), 프로듀서는 "빈 사각형은 미완성을
+            //  대놓고 광고한다 — 채우거나 숨겨라"로 판정했다.
+            //  → 그릴 내용이 있을 때만 켠다.  없는 패널이 빈 패널보다 낫다.
+            bool any = pawn != null && !pawn.IsDead && sk != null;
             container.SetActive(any);
             if (!any) return;
-            var sk = pawn.GetComponent<PawnSkills>();
-            if (sk == null) return;
             EnsureRows();
             // UI겹침 P1-4 — 건축 열림 시 시프트된 인포패널(272~652) 위에 떠서 본문을
             //  가리던 것: (400,58) → (660,108).  커플링 A — (272,314) 금지.
@@ -31,7 +36,11 @@ namespace MelonS.GameProto
             var crt = container.GetComponent<RectTransform>();
             if (crt != null)
             {
-                var wantS = (amS != null && amS.IsOpen) ? new Vector2(660f, 108f) : new Vector2(400f, 58f);
+                // 운영자 지시 (2026-07-27) "UI 가 항상 최대한 화면 가운데를 가리지 않도록":
+                //  기존엔 건축 열림 시 x 400 → **660** 으로 화면 중앙까지 밀려났다.
+                //  인포패널과 같은 원칙으로 좌측대에 머무르고 y 만 올린다
+                //  (인포패널 폭 380 + 좌여백 12 → 그 오른쪽 400 이 좌측대의 끝).
+                var wantS = (amS != null && amS.IsOpen) ? new Vector2(400f, 268f) : new Vector2(400f, 58f);
                 if (!Mathf.Approximately(crt.anchoredPosition.x, wantS.x)
                     || !Mathf.Approximately(crt.anchoredPosition.y, wantS.y))
                     crt.anchoredPosition = wantS;

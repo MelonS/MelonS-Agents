@@ -27,6 +27,15 @@ namespace MelonS.GameProto
 
         // 운영자 피드백 2026-05-27: tip 9개 × 7초 = 72초 동안 화면 가림.  3개로 압축.
         // 키보드 안내는 GuiControlBar 의 버튼 hint 가 cover.
+        //
+        // [NonSerialized] 인 이유 (2026-07-27, 실측으로 확인한 함정):
+        //  이 필드가 public 이면 Unity 가 **씬에 값을 직렬화**하고, 씬에서 로드될 때
+        //  아래 초기화식을 **덮어쓴다**.  즉 여기 문구/게이트를 고쳐도 빌드에는 반영되지
+        //  않는다 — 실제로 이 함정에 걸려, 문구 수정과 Gate.Chop 신설이 배포본에서
+        //  전혀 적용되지 않은 채 "고쳤다"고 판단할 뻔했다(수정 전/후 스크린샷을 나란히
+        //  비교해서야 발견).  씬 리베이크는 Game.unity 를 통째로 다시 쓰는 위험한 작업이라,
+        //  직렬화를 끊어 **코드가 단일 정본**이 되게 한다.
+        [System.NonSerialized]
         public Tip[] tips = new Tip[]
         {
             new Tip { gate = Gate.Unpause,

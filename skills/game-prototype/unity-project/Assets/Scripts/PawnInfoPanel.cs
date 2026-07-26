@@ -407,11 +407,18 @@ namespace MelonS.GameProto
                 if (prt0 != null)
                 {
                     bool amOpen = am != null && am.IsOpen;
-                    float wantX = amOpen ? 272f : 12f;
-                    // UI겹침 P1-3/커플링 B — 셸프와의 하단 띠 겹침 방지: 건축 열림 시
-                    //  y 를 셸프 실상단 +10 으로.  높이 계산은 ArchitectMenu 가 단독 소유한다
-                    //  (2026-07-27: 여기 108/95 를 복제해 두었던 탓에 패널을 올렸을 때
-                    //   한쪽만 따라가 겹치는 구조였다).
+                    // 운영자 지시 (2026-07-27): "건축메뉴랑 같이 뜨면 그냥 위로 올려라 —
+                    //  지금은 대각선 위로 올라가서 화면을 너무 가린다", "UI 가 항상 최대한
+                    //  화면 가운데를 가리지 않도록".
+                    //  기존: 건축 열림 시 x 12 → 272 로 **오른쪽으로도** 이동해 패널이 맵
+                    //  중앙으로 파고들었다.  이제 x 는 좌측 가장자리에 고정하고 y 만 올린다.
+                    //  콜로니 심에서 맵 중앙은 플레이어가 계속 보는 곳이므로, 패널은 항상
+                    //  가장자리에 붙어 있어야 한다.
+                    const float LeftEdgeX = 12f;
+                    float wantX = LeftEdgeX;
+                    // 건축 열림 시 y 는 셸프 실상단 +10 (높이 계산은 ArchitectMenu 단독 소유 —
+                    //  2026-07-27: 여기 108/95 를 복제해 뒀던 탓에 패널을 옮기면 한쪽만
+                    //  따라가 겹치는 구조였다).
                     float wantY = amOpen ? am.ShelfTopY + 10f : 58f;
                     if (!Mathf.Approximately(prt0.anchoredPosition.x, wantX)
                         || !Mathf.Approximately(prt0.anchoredPosition.y, wantY))
