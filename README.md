@@ -186,7 +186,17 @@ The full operator contract (12 hard rules + autonomy modes) lives in [`docs/oper
 </details>
 
 <details>
-<summary><b>Run paths beyond 60 seconds — manual music-video · job-hunt · PawnSim build</b></summary>
+<summary><b>Run paths beyond 60 seconds — graph runs · manual music-video · job-hunt · PawnSim build</b></summary>
+
+**Graph runs — the shorts line and the game cycle** (the current execution engine)
+```bash
+python -m venv .venv && .venv/bin/python -m pip install -r graph/requirements.txt
+.venv/bin/python -m graph.shorts_graph run --spec graph/examples/shots.example.json --mock --thread demo
+.venv/bin/python -m graph.game_graph run --task "B5 autodoor" --mock
+```
+Both `--mock` runs exercise the wiring with zero model calls and no GPU.  Exit codes on the shorts line: `0` cleared the gate · `2` blocked at a gate · `3` waiting on human approval · `1` error — so a batch script chains on `|| exit`; the game line returns `0` or `2`.  Reusing the same `--thread` resumes from the checkpoint instead of the start.
+
+**Each line's structure diagram is part of that workflow, not commentary on it.**  Changing a graph means regenerating its figure in the same pass — `python -m graph.shorts_graph diagram --compact` (or `graph.game_graph`) for the mermaid view kept in [`graph/README.md`](graph/README.md), `python scripts/render-graph-art.py` for the two cards above.  A node added to a graph without a place in `graph/diagram.py` fails the render outright, and `scripts/sync-readme-graph.py --check` — wired into the pre-commit hook — refuses a commit whose embedded diagram has gone stale.  That enforcement is why the figures read as the current wiring rather than a snapshot of some earlier one.
 
 **Manual music-video** (after the clone)
 ```bash

@@ -9,7 +9,7 @@
 
     python -m graph.shorts_graph run --spec graph/examples/shots.example.json --mock
 
-종료 코드: 0 = 문 통과(영상화 진입 가능) · 2 = 문에서 차단 · 1 = 오류
+종료 코드: 0 = 문 통과(영상화 진입 가능) · 2 = 문에서 차단 · 3 = 사람 승인 대기 · 1 = 오류
 """
 
 from __future__ import annotations

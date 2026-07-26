@@ -20,7 +20,7 @@
 
 </div>
 
-- **실제로 내놓습니다.** **music-video** 파이프라인이 정해진 주기로 결과물을 냅니다: 음악 한 곡 → 60초 9:16 쇼츠(비트 컷·장르 그레이드). 두 번째 파이프라인 **content-shorts** 는 2026-07-01 첫 실제 쇼츠를 유튜브에 올렸고(아이돌 포맷), 아직 정기 주기엔 오르지 않았습니다.
+- **실제로 내놓습니다.** **music-video** 파이프라인이 정해진 주기로 결과물을 냅니다: 음악 한 곡 → 60초 9:16 쇼츠(비트 컷·장르 그레이드). 두 번째 파이프라인 **content-shorts** 는 2026-07-01 첫 실제 쇼츠를 유튜브에 올렸고(아이돌 포맷), 다만 아직 정기적으로 내지는 못합니다.
 - **런타임 비용은 0.** 기계적인 작업은 로컬 오픈소스 도구(ffmpeg · whisper.cpp · ollama · aubio)가 하고, Claude Code 에이전트는 지휘만 맡습니다. 그래서 미션 한 번에 **런타임 API 토큰 0개**.
 - **자기 작업을 스스로 검증합니다.** 대표 사례인 콜로니심 **PawnSim** 은 에이전트가 *직접 만들고 플레이해서 검증*합니다. 실제 플레이어 클릭을 재생해 각 클릭이 게임 상태를 정말로 바꿨는지 확인하고, 오래 돌린 무인 플레이는 스크린샷만 보는 별도 서브에이전트가 채점합니다.
 
@@ -68,7 +68,7 @@
 스틸 한 장은 10초, 그 스틸로 만드는 컷은 412초입니다. **비용비 1:40.** 그래서 두 라인 모두
 LangGraph 상태 기계로 돌고, 싼 단계에 문이 섭니다. 기준을 넘지 못한 스틸은 영상화
 시간을 쓰지 못하고, 한 번 막을 때마다 179분이 절약됩니다. 이 규칙은 몇 달 동안
-`docs/generative-shorts-pipeline.md` §4.5의 산문이었고, 누가 잊으면 그냥 건너뛰어졌습니다.
+`docs/generative-shorts-pipeline.md` §4.5의 산문이었고, 누가 잊으면 그대로 건너뛰게 됐습니다.
 지금은 비싼 단계로 가는 엣지 자체가 열리지 않습니다.
 
 아래 두 장은 실행 중인 그래프를 읽어 `scripts/render-graph-art.py` 가 렌더합니다. 카드 아래
@@ -78,7 +78,7 @@ LangGraph 상태 기계로 돌고, 싼 단계에 문이 섭니다. 기준을 넘
 
 ![쇼츠 실행 그래프 — 다크 카드: 26컷 한 편에서 영상화가 179분을 차지한다는 비용 막대와 스틸 직후에 선 문 표시, 이어서 샷 스펙 → 스틸 라운드(장당 9.0초) → 문 1 → 사람 승인(interrupt) → 컷 라운드(컷당 412.3초) → 문 2 → 조립·법률 → 출시 패키지 흐름, 그리고 되돌아가는 엣지 4개와 차단 레일](docs/visuals/15-graph-shorts-ko.png)
 
-호박색은 건너뛸 수 없는 문, 보라색은 사람이 서는 단 한 곳(`interrupt()`), 초록은 정상 종료입니다.
+호박색은 건너뛸 수 없는 문, 보라색은 사람이 멈춰 서는 단 한 곳(`interrupt()`), 초록은 정상 종료입니다.
 이 그래프에서 **되돌아가는** 엣지는 네 개입니다(스틸 재시도, 운영자가 지목한 재생성, 시드 리롤,
 법률 REVISE). 어제까지 전부 사람이 기억해야 하는 문단이었습니다. `resume --approve` 는 처음이
 아니라 체크포인트에서 이어가므로, 26컷 중 19컷에서 죽어도 남은 7컷만 다시 돕니다.
@@ -152,7 +152,7 @@ Pexels 가입도, Suno 호출도, `.env` 편집도 필요 없습니다 — 마�
 
 ## 어떻게 런타임 비용 0을 유지하나
 
-![3-shape 스킬 모델 — Shape A 미션 라우팅 5에이전트 파이프라인, Shape B 독립형, Shape ? 미래 스킬](docs/visuals/05-three-shapes-ko.png)
+![3-shape 스킬 모델 — Shape A 미션 배정 5에이전트 파이프라인, Shape B 독립형, Shape ? 미래 스킬](docs/visuals/05-three-shapes-ko.png)
 
 이 시스템은 모든 스킬을 하나의 형태로 강제하지 않습니다. **Shape A** 는 5에이전트 미션 파이프라인(orchestrator + planner / resourcer / editor / qa)으로 흐르고, **Shape B** 는 planner/qa 단계가 거의 빌 때 쓰는 독립 스크립트입니다. 서브에이전트끼리는 대화 기록을 공유하지 않고, 커밋된 파일(`plan.md` / `MANIFEST.md` / `qa-report.md`)로만 작업을 넘겨줍니다. 그래서 각자의 컨텍스트와 비용이 일정 범위 안에 묶입니다. 역할별 모델 배정(planner/resourcer = opus, editor/qa = sonnet)과 비용 방화벽 덕분에 Anthropic 토큰은 오케스트레이션 단계에서만 쓰이고, 미션 실행은 전부 로컬 도구로 돌아 런타임 API 토큰이 **0**으로 유지됩니다. `.claude/agents/` 에는 정의가 **23개**(코어 6 + 게임 로스터 12 + 콘텐츠 파이프라인 팀 5) 있습니다. 전체 데이터 흐름도: [`docs/architecture.md`](docs/architecture.md) · 게임 프로토타입 빌드 체인: [`skills/game-dev-agent/ARCHITECTURE.md`](skills/game-dev-agent/ARCHITECTURE.md).
 
@@ -160,11 +160,11 @@ Pexels 가입도, Suno 호출도, `.env` 편집도 필요 없습니다 — 마�
 
 ![2패널 개입 추세 — 패널 A(일별 커밋 귀속)는 일별 커밋 수를 개시자별(에이전트 자율=파랑 vs 사용자 개시=빨강)로 쌓고 사용자 개시 비율선과 일별 비율 라벨을 표시; 패널 B(운영자 관여)는 로컬 Claude Code 세션 JSONL 에서 추출한 일별 운영자 프롬프트 수와 활성 세션 시간(분)을 차트로 보여 줍니다.](docs/metrics/intervention-ko.png)
 
-끊임없이 사람이 붙어 조종해야 하는 멀티 에이전트 시스템은, 애초에 덜어 주려던 그 수고를 결국 벗어나지 못한 셈입니다. 그래서 `main` 의 모든 커밋을 **사용자 개시** 와 **에이전트 자율** 로 분류하고, 운영자의 Claude Code 세션 로그에서 프롬프트 수와 활성 시간을 뽑아냅니다. 목표는 시스템이 더 많은 결정을 스스로 떠안으면서 두 패널이 모두 아래로 내려가는 것입니다. 분류 기준과 감축 분석: [`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md).
+사람이 계속 붙어 조종해야 하는 멀티 에이전트 시스템은, 애초에 덜어 주려던 그 수고를 그대로 남겨 둔 셈입니다. 그래서 `main` 의 모든 커밋을 **사용자 개시** 와 **에이전트 자율** 로 분류하고, 운영자의 Claude Code 세션 로그에서 프롬프트 수와 활성 시간을 뽑아냅니다. 목표는 시스템이 더 많은 결정을 스스로 떠안으면서 두 패널이 모두 아래로 내려가는 것입니다. 분류 기준과 감축 분석: [`docs/research/2026-05-22-intervention-reduction.md`](docs/research/2026-05-22-intervention-reduction.md).
 
 ## 정직함을 설계 원칙으로 (Honest by design)
 
-숨기지 않고 공개해 두는, 문서로 남긴 부정적 결과들입니다. 정직하게 그은 범위가 나머지 모든 것이 기대는 신뢰의 근거이기 때문입니다.
+잘 안 된 일을 숨기지 않고 문서로 남겨 둡니다. 범위를 정직하게 그어 두는 것이 나머지 모든 주장의 신뢰 근거이기 때문입니다.
 
 - **`product-cf` 는 보류** — 실제로 안 된다는 결론이 나왔기 때문입니다. 무료·로컬 도구로 "진짜 3D 처럼" 만드는 접근(depth-parallax, 실린더 래핑 턴테이블, 로컬 image-to-video)은 16GB 장비에서 실제 CF 수준의 품질 기준을 넘지 못했습니다. 설득력 있는 결과를 내려면 유료 클라우드 image-to-video 나 더 큰 GPU 가 필요합니다. 코드 트리에는 비활성 상태로 남겨 두었고, 방향은 아직 미정입니다.
 - **`job-hunt` 은 보류** — 겨냥했던 한국 채용사이트(사람인·원티드·잡코리아·워크넷…)가 이제 스크래핑을 막아 라이브 다이제스트가 끝내 완성되지 못했습니다. mock/드라이런 데이터로만 돌아갑니다. 5월에 이틀 동안 붙여 만들다 멈췄고, 코드는 트리에 남아 있습니다.
@@ -176,8 +176,8 @@ Pexels 가입도, Suno 호출도, `.env` 편집도 필요 없습니다 — 마�
 <details>
 <summary><b>설계 노트 — 흔한 에이전트 데모와 다른 선택들</b></summary>
 
-- **결과 계층과 작업 큐를 따로 둔다.**  [`docs/goal.md`](docs/goal.md) 는 지금 목표를 구체적 산출물로 적어 두고, [`docs/roadmap.md`](docs/roadmap.md) 는 일 단위 작업 큐를 담습니다. 큐가 비었다고 목표가 달성된 건 아닙니다. 이 구분은, 과거 24시간 동안 큐가 0인 채로 인프라 커밋만 11개 쌓이고 정작 산출물은 0개였던 사고 때문에 생겼습니다.
-- **본체와 분리돼(out-of-band) 도는, 실시간 경보창이 달린 감사기.**  [`auditor`](.claude/agents/auditor.md) 서브에이전트는 세 가지 트리거(L1 post-commit 훅, L2 15분 주기 이상 감지 폴링, L3 매일 03:00 기준선 점검 — `launchd`/`cron`)로 돌면서 저장소 전체를 읽기 전용으로 훑고, 최신 판정이 non-CLEAN 일 때만 [`docs/audit/CURRENT-ALERT.md`](docs/audit/) 를 씁니다. 다음 세션은 목표를 잡기 전에 반드시 이 파일부터 읽어야 하는 계약이 걸려 있습니다.
+- **결과 계층과 작업 큐를 따로 둔다.**  [`docs/goal.md`](docs/goal.md) 는 지금 목표를 구체적 산출물로 적어 두고, [`docs/roadmap.md`](docs/roadmap.md) 는 일 단위 작업 큐를 담습니다. 큐가 비었다고 목표가 달성된 건 아닙니다. 이 구분은 과거 24시간 동안 큐가 0인 채로 인프라 커밋만 11개 쌓이고 정작 산출물은 0개였던 사고 때문에 생겼습니다.
+- **본체와 분리돼(out-of-band) 도는, 실시간 경보창이 달린 감사기.**  [`auditor`](.claude/agents/auditor.md) 서브에이전트는 세 가지 트리거(L1 post-commit 훅, L2 15분 주기 이상 감지 폴링, L3 매일 03:00 기준선 점검, `launchd`/`cron`)로 돌면서 저장소 전체를 읽기 전용으로 훑고, 최신 판정이 non-CLEAN 일 때만 [`docs/audit/CURRENT-ALERT.md`](docs/audit/) 를 씁니다. 다음 세션은 목표를 잡기 전에 반드시 이 파일부터 읽어야 하는 계약이 걸려 있습니다.
 - **상태 확인 질문을 운영자 대신 받아 주는 도구.**  `scripts/doctor.sh`(Claude 없이 ~2초 헬스 체크), `scripts/statusline.sh`, `scripts/morning-brief.sh` 가 "지금 상태가 어떤지 / 밤새 무슨 일이 있었는지"를 운영자가 직접 타이핑하지 않아도 답해 줍니다. 전체 목록: [`docs/operator-tooling.md`](docs/operator-tooling.md).
 
 전체 운영 계약(하드 룰 12개 + 자율 모드)은 [`docs/operator-contract.md`](docs/operator-contract.md) 와 [`CLAUDE.md`](CLAUDE.md) 에 있습니다.
@@ -185,14 +185,24 @@ Pexels 가입도, Suno 호출도, `.env` 편집도 필요 없습니다 — 마�
 </details>
 
 <details>
-<summary><b>60초 이후의 실행 경로 — 수동 music-video · job-hunt · PawnSim 빌드</b></summary>
+<summary><b>60초 이후의 실행 경로 — 그래프 실행 · 수동 music-video · job-hunt · PawnSim 빌드</b></summary>
+
+**그래프 실행 — 쇼츠 라인과 게임 사이클** (현재 실행 엔진)
+```bash
+python -m venv .venv && .venv/Scripts/python -m pip install -r graph/requirements.txt
+.venv/Scripts/python -m graph.shorts_graph run --spec graph/examples/shots.example.json --mock --thread demo
+.venv/Scripts/python -m graph.game_graph run --task "B5 autodoor" --mock
+```
+`--mock` 은 모델 호출과 GPU 없이 배선만 돌립니다. 쇼츠 라인의 종료 코드는 `0` 문 통과, `2` 문에서 차단, `3` 사람 승인 대기, `1` 오류입니다. 그래서 배치 스크립트에 `|| exit` 로 바로 물릴 수 있습니다. 게임 라인은 `0` 또는 `2` 를 돌려줍니다. `--thread` 에 같은 값을 주면 처음이 아니라 체크포인트에서 이어갑니다.
+
+**각 라인의 구조도는 그 워크플로의 일부입니다. 워크플로를 설명하는 부록이 아닙니다.** 그래프를 고치면 같은 작업 안에서 그림도 다시 뽑습니다. mermaid 뷰는 `python -m graph.shorts_graph diagram --compact`(게임 라인은 `graph.game_graph`)로 [`graph/README.md`](graph/README.md) 에 넣고, 위 카드 두 장은 `python scripts/render-graph-art.py` 로 만듭니다. 그래프에 노드를 추가하고 `graph/diagram.py` 에 배치하지 않으면 렌더가 곧바로 실패하고, pre-commit 훅에 물린 `scripts/sync-readme-graph.py --check` 는 낡은 구조도가 들어간 커밋을 거부합니다. 위 두 장을 예전 배선의 스냅샷이 아니라 지금 배선으로 읽어도 되는 근거가 이 강제 장치입니다.
 
 **수동 music-video** (클론 이후)
 ```bash
 ./scripts/bootstrap.sh                       # 도구 검증, 빠진 항목에 brew/apt 힌트 출력
 MUSIC_VIDEO_DEMO_MODE=1 ./agents/missions/music-video/run.sh demo
 ```
-출력은 `records/missions/<date>/music-video-demo-<HHMMSS>/outputs/short.mp4` 에 생깁니다. 모든 env 변수, 플래그, 쉐이더 카탈로그, 전체 Pexels + 운영자 음악 경로: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
+출력은 `records/missions/<date>/music-video-demo-<HHMMSS>/outputs/short.mp4` 에 생깁니다. 모든 환경 변수, 플래그, 쉐이더 카탈로그, 전체 Pexels + 운영자 음악 경로: [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md).
 
 **job-hunt** (보류 — mock/드라이런만)
 ```bash
@@ -230,7 +240,7 @@ python ../game-dev-agent/scripts/agent.py integrate --project unity-project --me
 |------|------|
 | 엔지니어링 사례 연구 — 9개 인시던트, *문제 → 제약 → 결정 → 산출물* | [`docs/engineering-case-studies.ko.md`](docs/engineering-case-studies.ko.md) |
 | 아키텍처 + 전체 데이터 흐름도 | [`docs/architecture.md`](docs/architecture.md) |
-| music-video 파이프라인 레퍼런스 (쉐이더, 장르, env 변수) | [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md) |
+| music-video 파이프라인 레퍼런스 (쉐이더, 장르, 환경 변수) | [`docs/music-video-pipeline-reference.md`](docs/music-video-pipeline-reference.md) |
 | content-shorts 파이프라인 — 4팀 리서치→제작⇄법률→출시 | [`docs/content-shorts-pipeline.md`](docs/content-shorts-pipeline.md) |
 | 해결된 이슈 기록 (ffmpeg/libass 패키징 등) | [`docs/known-limitations.md`](docs/known-limitations.md) |
 | 비용 모델 — Anthropic vs 로컬 | [`docs/cost-model.md`](docs/cost-model.md) |
@@ -238,7 +248,7 @@ python ../game-dev-agent/scripts/agent.py integrate --project unity-project --me
 | 운영 계약 — 자율 규칙 | [`docs/operator-contract.md`](docs/operator-contract.md) |
 | 파일럿 결정 로그 | [`docs/pilots/decision-log.md`](docs/pilots/decision-log.md) |
 
-읽기 전용으로 살펴보시나요? [`docs/for-analysts.md`](docs/for-analysts.md) 부터 보세요 — 1차 파악에 맞춘 단일 진입점입니다.
+코드를 돌리지 않고 둘러보는 중이라면 [`docs/for-analysts.md`](docs/for-analysts.md) 부터 보세요. 1차 파악용으로 만든 단일 진입점입니다.
 
 ## 코드 / 데이터 분리
 
@@ -249,7 +259,7 @@ python ../game-dev-agent/scripts/agent.py integrate --project unity-project --me
 | 데이터 (출력) | `records/missions/<date>/<id>/` | ✗ (gitignore) |
 | 시크릿 | `.env` | ✗ (gitignore) |
 
-저장소에는 에이전트 시스템 자체만 들어 있습니다. 미션 출력물(비디오, 트랜스크립트, 생성 에셋)은 `records/` 아래 로컬에 남습니다. GitHub 에 보이는 것은 시스템이 만든 산출물이 아니라, 시스템 자체가 어떻게 진화해 왔는지입니다.
+저장소에는 에이전트 시스템 자체만 들어 있습니다. 미션 출력물(비디오, 트랜스크립트, 생성 에셋)은 `records/` 아래 로컬에 남습니다. GitHub 에 보이는 것은 시스템이 만든 산출물이 아니라 시스템 자체가 변해 온 과정입니다.
 
 ## 라이선스
 
