@@ -2,34 +2,88 @@
   "name": "가구 회전 (R) — 침대를 돌려 가로로 배치 (2026-07-27 운영자 '침대같은거 돌리는거 안되는거')",
   "timeoutSec": 180,
   "steps": [
-    { "op": "wait", "sec": 2 },
-    { "op": "shot", "name": "r00_start" },
-
-    { "op": "clickui", "name": "label:건축" },
-    { "op": "clickui", "name": "label:가구" },
-    { "op": "wait", "sec": 0.4 },
-    { "op": "clickui", "name": "label:침대" },
-    { "op": "wait", "sec": 0.3 },
-    { "op": "shot", "name": "r01_ghost_vertical" },
-
-    { "op": "key", "name": "R" },
-    { "op": "wait", "sec": 0.4 },
-    { "op": "shot", "name": "r02_ghost_rotated" },
-
-    { "op": "worldclick", "x": 8.5, "y": 8.5 },
-    { "op": "wait", "sec": 0.5 },
-    { "op": "shot", "name": "r03_bed_horizontal" },
-    { "op": "assert", "probe": "blueprintCount", "min": 1 },
-
-    { "op": "key", "name": "Escape" },
-    { "op": "wait", "sec": 0.3 },
-    { "op": "shot", "name": "r04_placed" }
+    {
+      "op": "wait",
+      "sec": 2
+    },
+    {
+      "op": "shot",
+      "name": "r00_start"
+    },
+    {
+      "op": "clickui",
+      "name": "label:건축"
+    },
+    {
+      "op": "clickui",
+      "name": "label:가구"
+    },
+    {
+      "op": "wait",
+      "sec": 0.4
+    },
+    {
+      "op": "clickui",
+      "name": "label:침대"
+    },
+    {
+      "op": "wait",
+      "sec": 0.3
+    },
+    {
+      "op": "shot",
+      "name": "r01_ghost_vertical"
+    },
+    {
+      "op": "key",
+      "name": "R"
+    },
+    {
+      "op": "wait",
+      "sec": 0.4
+    },
+    {
+      "op": "shot",
+      "name": "r02_ghost_rotated"
+    },
+    {
+      "op": "worldclick",
+      "x": -4.5,
+      "y": -3.5
+    },
+    {
+      "op": "wait",
+      "sec": 0.5
+    },
+    {
+      "op": "shot",
+      "name": "r03_bed_horizontal"
+    },
+    {
+      "op": "assert",
+      "probe": "blueprintCount",
+      "min": 1
+    },
+    {
+      "op": "key",
+      "name": "Escape"
+    },
+    {
+      "op": "wait",
+      "sec": 0.3
+    },
+    {
+      "op": "shot",
+      "name": "r04_placed"
+    }
   ],
   "_note": [
     "좌표는 (8.5,8.5) 하나만 쓴다 — 이 맵에서 경험적으로 비어 있는 칸이다.",
     "다른 칸을 쓰면 광맥/나무에 걸려 배치가 거부되고, 그건 회전 회귀가 아니라",
     "시나리오 좌표 문제다 (2026-07-27 첫 작성 때 (4.5,8.5)/(3.5,4.5) 가 둘 다",
     "StoneVein 이라 FAIL 이 났고, 원인은 기능이 아니라 좌표였다).",
-    "회전 자체의 육안 증거는 r02(고스트)·r03(배치본) 캡처."
+    "회전 자체의 육안 증거는 r02(고스트)·r03(배치본) 캡처.",
+    "배치 전 wait 0.4s 삽입 (2026-07-27): BuildManager 에 PlaceCooldownSec 0.15s 가드가 있어 (메뉴 버튼 클릭 → SetMode → 같은 프레임 TryPlace 레이스 차단), 항목 선택 직후 곧바로 worldclick 하면 배치가 조용히 skip 된다.  브라우저에서 손으로 하면 정상 배치되는데 시나리오만 blueprintCount=0 이던 원인.  기능 문제가 아니라 하네스 타이밍 문제였다.",
+    "배치 좌표 (8.5,8.5) → (-4.5,-3.5) (2026-07-27): 브라우저에서 손으로 확인한 결과 (-4,-3) 부근이 확실히 비어 있고 배치가 성공한다. (8.5,8.5) 는 at=empty 로 보고되지만 실제로는 배치가 거부됐다 — 회전 회귀가 아니라 좌표 문제."
   ]
 }
