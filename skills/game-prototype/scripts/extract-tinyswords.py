@@ -73,6 +73,37 @@ crop_save("Terrain/Ground/Tilemap_Flat.png", (64, 64, 128, 128), "ts_tile_grass.
           gain=GRADE_GRASS)
 crop_save("Terrain/Ground/Tilemap_Flat.png", (384, 64, 448, 128), "ts_tile_sand.png",
           gain=GRADE_SAND)
+
+# ── 지형 전환 엣지 세트 (2026-07-29) ──────────────────────────────────
+#  잔디↔모래 경계가 직각 계단으로 보이던 것(G-3)의 해결.  팩 Tilemap_Flat 은
+#  이미 **4×4 엣지 세트**를 갖고 있다 — 그리지 않고 꺼내 쓰면 된다.
+#
+#  실측으로 확인한 배치 (알파 분석):
+#    잔디 c0~c3 / 모래 c5~c8, 각각 r0~r3
+#    열: 0=왼쪽잘림 1=가운데 2=오른쪽잘림 3=좌우모두잘림
+#    행: 0=위잘림   1=가운데 2=아래잘림   3=상하모두잘림
+#  즉 (열,행) = (좌우 이웃 유무, 상하 이웃 유무) 의 표준 4×4 매핑.
+#  프린지가 얇아(불투명 85~100%) 큰 여백이 아니라 **너덜너덜한 가장자리**를 만든다 —
+#  직각 계단을 없애는 데 정확히 맞는 형태다.
+#
+#  ⚠ 이 타일들은 가장자리가 투명하므로 **아래에 잔디 베이스가 깔려 있어야** 한다.
+#   SceneSetup 이 베이스 타일맵(잔디) + 오버레이 타일맵(모래 엣지) 2층으로 그린다.
+EDGE_COLS = {"grass": 0, "sand": 5}
+
+
+def edge_set(kind, gain):
+    base = EDGE_COLS[kind]
+    for r in range(4):
+        for c in range(4):
+            x = (base + c) * 64
+            y = r * 64
+            crop_save("Terrain/Ground/Tilemap_Flat.png",
+                      (x, y, x + 64, y + 64),
+                      f"ts_tile_{kind}_e{r}{c}.png", gain=gain)
+
+
+edge_set("sand", GRADE_SAND)
+edge_set("grass", GRADE_GRASS)
 # ts_tile_water.png 는 여기서 만들지 않는다 (2026-07-29).
 #  팩 원본 물은 완전 단색이라 인게임에서 밋밋했고, 2026-07-27 에 gen-water.py 로
 #  일렁임+물가 포말을 절차 생성해 대체했다.  그런데 두 스크립트가 같은 파일을 쓰고

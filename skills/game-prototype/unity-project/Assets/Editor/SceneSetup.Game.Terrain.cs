@@ -17,6 +17,11 @@ namespace MelonS.GameProto.EditorTools
             //  AStar nodeCap 모두 이 값에 동기화돼야 함 (각 파일 #235 주석 참조).
             public const int MAP_HALF = 45;
             public Tilemap tilemap;
+            /// <summary>지형 전환 오버레이 (2026-07-29).  모래를 엣지 타일로 덧그린다.
+            ///  베이스에는 잔디가 깔려 있어야 프린지가 잔디로 비친다.</summary>
+            public Tilemap overlay;
+            /// <summary>모래 엣지 세트 [row, col] — 열:좌/중/우/단독, 행:상/중/하/단독.</summary>
+            public Tile[,] sandEdge;
             public Tile grassTile, dirtTile, waterTile, rockTile;
             // 호수 4개 (이전 2개) + 위치 비례 확장
             public Vector2[] lakeCenters = {
@@ -60,6 +65,18 @@ namespace MelonS.GameProto.EditorTools
             TilemapRenderer tmr = tmGo.AddComponent<TilemapRenderer>();
             tmr.sortingOrder = 0;
 
+            // 지형 전환 오버레이 (2026-07-29) — 잔디↔모래 경계의 직각 계단 해소(G-3).
+            //  팩의 4×4 엣지 타일은 가장자리가 투명하므로 **아래에 잔디가 깔려 있어야**
+            //  너덜너덜한 경계가 된다.  그래서 베이스(Ground)에는 잔디를 깔고, 모래는
+            //  이 오버레이에 이웃 마스크로 고른 엣지 타일로 그린다.
+            //  게임플레이 영향 0 — PathGrid 는 베이스의 water/rock 참조만 보고(흙은
+            //  잔디와 똑같이 통행 가능), TilemapStaticRefInit 에도 베이스만 넘긴다.
+            GameObject ovGo = new GameObject("GroundOverlay");
+            ovGo.transform.SetParent(gridGo.transform);
+            layout.overlay = ovGo.AddComponent<Tilemap>();
+            TilemapRenderer ovr = ovGo.AddComponent<TilemapRenderer>();
+            ovr.sortingOrder = 1;   // 베이스(0) 위, 엔티티/그림자보다 아래
+
             // 4 tile asset (Day 39+40)
             Directory.CreateDirectory("Assets/Tiles");
             // 아트 v3 (2026-07-24 운영자 "림월드식·셀당 64"): 32px → 64px 페인털리
@@ -78,6 +95,20 @@ namespace MelonS.GameProto.EditorTools
                 layout.dirtTile  = LoadOrCreateTile("Assets/Sprites/ts_tile_sand.png",  "Assets/Tiles/Dirt.asset", 64f);
                 layout.waterTile = LoadOrCreateTile("Assets/Sprites/ts_tile_water.png", "Assets/Tiles/Water.asset", 64f);
                 layout.rockTile  = LoadOrCreateTile("Assets/Sprites/tile64_rock_a.png", "Assets/Tiles/Rock.asset", 64f);
+                // 모래 엣지 세트 (2026-07-29) — 열:좌/중/우/단독, 행:상/중/하/단독.
+                //  한 장이라도 없으면 통째로 포기하고 기존 단일 타일 경로를 쓴다
+                //  (부분 적용은 경계가 더 이상해진다).
+                var se = new Tile[4, 4];
+                bool seOk = true;
+                for (int r = 0; r < 4 && seOk; r++)
+                    for (int c = 0; c < 4 && seOk; c++)
+                    {
+                        string sp = $"Assets/Sprites/ts_tile_sand_e{r}{c}.png";
+                        if (!System.IO.File.Exists(sp)) { seOk = false; break; }
+                        se[r, c] = LoadOrCreateTile(sp, $"Assets/Tiles/SandE{r}{c}.asset", 64f);
+                        if (se[r, c] == null) seOk = false;
+                    }
+                layout.sandEdge = seOk ? se : null;
             }
             else
             {
@@ -99,6 +130,9 @@ namespace MelonS.GameProto.EditorTools
             //  같은 타일이 반복돼도 시각 변화 (operator: "타일이미지가 너무 구림" + "autotile" 피드백)
             System.Random rng = new System.Random(12345);
             System.Random rotRng = new System.Random(67890);
+            // 흙 셀을 모아 두었다가 루프 뒤에 오버레이로 다시 그린다.  루프 안에서
+            //  chosen 을 바꾸면 아래 isGrass 분기의 rng 소비가 달라져 **전 지형이 밀린다**.
+            var dirtCells = new System.Collections.Generic.List<Vector2Int>();
             int half = TerrainLayout.MAP_HALF;
             for (int x = -half; x < half; x++)
             {
@@ -151,7 +185,34 @@ namespace MelonS.GameProto.EditorTools
                     layout.tilemap.SetTile(cell, chosen);
                     ApplyRandomTileTransform(layout.tilemap, cell, rotRng,
                         allowFlip && !(isGrass && grassSlices != null));
+                    if (!isGrass && (chosen == layout.dirtTile || chosen == dirtTileB))
+                        dirtCells.Add(new Vector2Int(x, y));
                 }
+            }
+
+            // ── 지형 전환 오버레이 패스 (2026-07-29) ────────────────────────
+            //  베이스의 흙 셀을 **잔디로 되돌리고**, 모래는 오버레이에 이웃 마스크로
+            //  고른 엣지 타일로 그린다.  엣지 타일의 투명 프린지 아래로 잔디가 비쳐
+            //  직각 계단이 너덜너덜한 경계가 된다 (G-3).
+            //  마스크 규약: 열 = (좌,우 이웃), 행 = (상,하 이웃).
+            //    열 0=왼쪽잘림(오른쪽만 이웃) 1=가운데 2=오른쪽잘림 3=좌우 없음
+            //    행 0=위잘림(아래만 이웃)   1=가운데 2=아래잘림   3=상하 없음
+            if (layout.sandEdge != null && dirtCells.Count > 0)
+            {
+                var dirtSet = new System.Collections.Generic.HashSet<Vector2Int>(dirtCells);
+                foreach (var dc in dirtCells)
+                {
+                    var c3 = new Vector3Int(dc.x, dc.y, 0);
+                    layout.tilemap.SetTile(c3, layout.grassTile);   // 베이스 = 잔디
+                    bool nl = dirtSet.Contains(new Vector2Int(dc.x - 1, dc.y));
+                    bool nr = dirtSet.Contains(new Vector2Int(dc.x + 1, dc.y));
+                    bool nt = dirtSet.Contains(new Vector2Int(dc.x, dc.y + 1));
+                    bool nb = dirtSet.Contains(new Vector2Int(dc.x, dc.y - 1));
+                    int col = (!nl && nr) ? 0 : (nl && nr) ? 1 : (nl && !nr) ? 2 : 3;
+                    int row = (!nt && nb) ? 0 : (nt && nb) ? 1 : (nt && !nb) ? 2 : 3;
+                    layout.overlay.SetTile(c3, layout.sandEdge[row, col]);
+                }
+                Debug.Log($"[Terrain] 전환 오버레이: 모래 {dirtCells.Count}칸 엣지 적용");
             }
 
             // Step 81: runtime obstacle ref wire
