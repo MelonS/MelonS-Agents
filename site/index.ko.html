@@ -205,7 +205,7 @@
     <article class="card glow-gold">
       <h3>game-dev-agent (메타 스킬, Skill #3)</h3>
       <p>에디터 수작업 없이 게임 전체를 CLI 스캐폴딩하는 Unity 전용 에이전트입니다: 스프라이트 생성(32px 절차 아트), C# 시스템 스캐폴딩, Unity batchmode 씬 + 프리팹 생성, 밸런스 튜닝, 오디오 생성, 인게임 AI 디렉터. 이 에이전트가 경험적 검증 표면을 겸하는 <strong>프로토타입 스킬 4종</strong>을 구동합니다 — PawnSim(콜로니심 플래그십), 그리고 2D 물리 병합 퍼즐, 웨이브 생존 액션, 슬라이딩 타일 숫자 퍼즐 — 각각 앞 것보다 빠르게 만들어 "복리 가속" 가설을 테스트합니다.</p>
-      <p class="muted">게임 트랙은 6개 코어 미디어 파이프라인 에이전트 위에 13개 게임 도메인 서브에이전트(디렉터 / 디자이너 / 프로그래머 / 빌드 엔지니어 / QA / 아티스트 / 사운드 / 내러티브 / 스페셜리스트) 로스터를, 그리고 content-shorts 파이프라인용 5개를 더 돌립니다 — <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>에 총 24개 에이전트 정의.</p>
+      <p class="muted">게임 트랙은 6개 코어 미디어 파이프라인 에이전트 위에 13개 게임 도메인 서브에이전트(디렉터 / 디자이너 / 프로그래머 / 빌드 엔지니어 / QA / 아티스트 / 사운드 / 내러티브 / 스페셜리스트) 로스터를, 그리고 content-shorts 파이프라인용 5개를 더 돌립니다 — <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>에 총 27개 에이전트 정의.</p>
     </article>
   </div>
 
@@ -213,6 +213,18 @@
   <figure class="diagram">
     <img src="assets/visuals/06-media-pipeline-ko.png" width="1800" height="1163" alt="미디어 파이프라인: 커밋되는 파일로 이어지는 6개 서브에이전트 릴레이(Opus 3, Sonnet 3). Orchestrator(Opus)가 미션을 분해해 Planner → Resourcer → Editor → QA 라인으로 위임하고, 각 에이전트는 공유 채팅이 아니라 상류 산출물(plan.md → MANIFEST.md → CHANGELOG.md → qa-report.md)을 읽습니다. Resourcer가 ffmpeg / yt-dlp / whisper를 돌립니다. 별도 트랙 Auditor(Sonnet)가 매일 03:00 레포 전역 드리프트 / 계약 / 비용 / 보안 감사를 돌려 docs/audit/<date>-<focus>.md와 CURRENT-ALERT.md를 씁니다." loading="lazy" decoding="async">
     <figcaption>6개 서브에이전트, 파일 기반 핸드오프 — README · Architecture</figcaption>
+  </figure>
+
+  <p class="subhead eyebrow">— 실행 그래프 · 쇼츠 제작 (LangGraph)</p>
+  <figure class="diagram">
+    <img src="assets/visuals/15-graph-shorts-ko.png" width="2480" height="1969" alt="쇼츠 제작 구조도: 26컷 한 편에서 영상화가 179분(전체의 81%)을 차지한다는 실측 비용 막대와 스틸 직후에 선 문 표시, 이어서 샷 스펙 → 스틸 라운드(장당 9.0초) → 문 1 → 사람 승인(interrupt) → 컷 라운드(컷당 412.3초) → 문 2 → 조립·법률 → 출시 패키지 흐름, 그리고 되돌아가는 엣지 4개와 차단 레일." loading="lazy" decoding="async">
+    <figcaption>쇼츠 제작 구조도 — 비싼 단계(412초/컷) 앞에 문을 세운다 · 실행 그래프에서 생성</figcaption>
+  </figure>
+
+  <p class="subhead eyebrow">— 실행 그래프 · 게임 제작 (LangGraph)</p>
+  <figure class="diagram">
+    <img src="assets/visuals/16-graph-game-ko.png" width="2480" height="1670" alt="게임 제작 구조도: 같은 fan-out 이 문이 아니라 뮤텍스에서 합류한다. 작업 발행 → 검토 → 제작 3레인 병렬(코드·아트·사운드) → 산출물 경로를 상태에 확정하는 Unity 배타 구간 → 실물 빌드 검증 → TA 아트 심사 → 병합, 그리고 거짓 검증 차단과 재시도 레일." loading="lazy" decoding="async">
+    <figcaption>게임 제작 구조도 — Unity 배타 자원 앞에서 뮤텍스로 합류 · 실행 그래프에서 생성</figcaption>
   </figure>
   <div class="cards">
     <article class="card">

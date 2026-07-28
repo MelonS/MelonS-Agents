@@ -198,7 +198,7 @@
     <article class="card glow-gold">
       <h3>game-dev-agent (meta-skill, Skill #3)</h3>
       <p>A Unity-focused agent that CLI-scaffolds a whole game with no manual Editor work: sprite generation (32px procedural art), C# system scaffolding, scene + prefab generation via Unity batchmode, balance tuning, audio generation, and an in-game AI Director. It drives <strong>four prototype skills</strong> that double as its empirical validation surface — PawnSim (colony-sim flagship), plus a 2D physics-merge puzzle, a wave-survival action game, and a sliding-tile number puzzle — each built faster than the last, testing the "compounding speedup" hypothesis.</p>
-      <p class="muted">The game track runs a separate roster of 13 game-domain sub-agents (director / designer / programmer / build-engineer / QA / artist / sound / narrative / specialists) on top of the 6 core media-pipeline agents, plus 5 for the content-shorts pipeline — 24 agent definitions total in <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>.</p>
+      <p class="muted">The game track runs a separate roster of 13 game-domain sub-agents (director / designer / programmer / build-engineer / QA / artist / sound / narrative / specialists) on top of the 6 core media-pipeline agents, plus 5 for the content-shorts pipeline — 27 agent definitions total in <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>.</p>
     </article>
   </div>
 
@@ -206,6 +206,18 @@
   <figure class="diagram">
     <img src="assets/visuals/06-media-pipeline.png" width="1800" height="1163" alt="Media pipeline: six subagents in a committed-file relay (3 on Opus, 3 on Sonnet). The Orchestrator (Opus) decomposes a mission and delegates down a Planner → Resourcer → Editor → QA line; each agent reads upstream artifacts (plan.md → MANIFEST.md → CHANGELOG.md → qa-report.md), never a shared chat. Resourcer runs ffmpeg / yt-dlp / whisper. A separate out-of-band Auditor (Sonnet) runs a daily 03:00 repo-wide drift / contract / cost / security audit, writing docs/audit/<date>-<focus>.md and CURRENT-ALERT.md." loading="lazy" decoding="async">
     <figcaption>Six subagents, file-based handoff — README · Architecture</figcaption>
+  </figure>
+
+  <p class="subhead eyebrow">— Execution graph · shorts production (LangGraph)</p>
+  <figure class="diagram">
+    <img src="assets/visuals/15-graph-shorts.png" width="2480" height="2010" alt="Shorts production graph: a measured cost bar showing video rendering takes 179 of the 189 minutes in a 26-cut short, with the gate marked right after the stills, then the stage flow plan to still round (9.0s each) to Gate 1 to human approval (interrupt) to clip round (412.3s each) to Gate 2 to assemble and legal to release package, plus the four backward edges and the blocked rail." loading="lazy" decoding="async">
+    <figcaption>Shorts production graph — a gate in front of the expensive stage (412 s per cut) · rendered from the running graph</figcaption>
+  </figure>
+
+  <p class="subhead eyebrow">— Execution graph · game production (LangGraph)</p>
+  <figure class="diagram">
+    <img src="assets/visuals/16-graph-game.png" width="2480" height="1676" alt="Game production graph: the same fan-out joins on a mutex instead of a gate. Publish task to review to three parallel lanes (code, art, sound) to a Unity critical section that pins artifact paths into state, then verification on the real build, TA art review, and merge, plus the false-verification and retry rails." loading="lazy" decoding="async">
+    <figcaption>Game production graph — parallel lanes join on a mutex, not a gate · rendered from the running graph</figcaption>
   </figure>
   <div class="cards">
     <article class="card">

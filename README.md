@@ -80,6 +80,8 @@ names, and adding a node to the graph without placing it fails the render, so a 
 cannot quietly go stale.  The raw mermaid view (every node, every edge) lives in
 [`graph/README.md`](graph/README.md).
 
+### Shorts production — the shorts line
+
 ![Shorts execution graph — a dark editorial card: a cost bar showing that video rendering is 179 of the 189 minutes in a 26-cut short, with the gate marked right after the stills, then the stage flow plan → still round (9.0s each) → Gate 1 → human approval (interrupt) → clip round (412.3s each) → Gate 2 → assemble and legal → release package, plus the four backward edges and the blocked rail](docs/visuals/15-graph-shorts.png)
 
 Amber marks a gate that cannot be skipped, violet the one place a human stands
@@ -88,6 +90,8 @@ Amber marks a gate that cannot be skipped, violet the one place a human stands
 one used to be a paragraph someone had to remember.  `resume --approve` continues from
 the checkpoint rather than the beginning, so dying on cut 19 of 26 costs the remaining
 seven, not all twenty-six.
+
+### Game production — the game line
 
 ![Game execution graph — the same fan-out joining on a mutex instead of a gate: publish task → review → three parallel lanes (code, art, sound) → Unity critical section that pins artifact paths into state → verification on the real build → TA art review → merge, with the false-verification and retry rails](docs/visuals/16-graph-game.png)
 
