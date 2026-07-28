@@ -331,6 +331,38 @@ namespace MelonS.GameProto.EditorTools
                 vein.SetType(chosen);
             }
             Debug.Log($"[StoneVein] spawned {placed} veins");
+
+            // 광맥 아래 암반 바닥 (2026-07-29) — 운영자 "돌들이 기존 레퍼런스와 너무나도 다름".
+            //  레퍼런스에서 광물은 **연속된 암반 덩어리의 일부**인데, 우리 광맥은 잔디 위에
+            //  놓인 바위 스프라이트라 '잔디밭의 돌무더기'로 읽혔다.  광맥 셀과 그 1칸 헤일로에
+            //  암반 바닥을 깔아 하나의 암반 지대로 만든다.
+            //  ⚠ **오버레이에만** 그린다 — 베이스에 rockTile 을 깔면 PathGrid 가 통행 불가로
+            //   판정해 채굴 후에도 영영 막힌 칸이 된다 (게임플레이 파괴).  오버레이는 순수 시각.
+            if (layout.rockEdge != null && layout.overlay != null && positions.Count > 0)
+            {
+                var rockCells = new System.Collections.Generic.HashSet<Vector2Int>();
+                foreach (var vp in positions)
+                    for (int dx = -1; dx <= 1; dx++)
+                        for (int dy = -1; dy <= 1; dy++)
+                            rockCells.Add(new Vector2Int(Mathf.RoundToInt(vp.x) + dx,
+                                                         Mathf.RoundToInt(vp.y) + dy));
+                int painted = 0;
+                foreach (var rc2 in rockCells)
+                {
+                    var c3 = new Vector3Int(rc2.x, rc2.y, 0);
+                    // 물 위에는 깔지 않는다 (호수 가장자리 광맥 대비).
+                    if (layout.tilemap.GetTile(c3) == layout.waterTile) continue;
+                    bool nl = rockCells.Contains(new Vector2Int(rc2.x - 1, rc2.y));
+                    bool nr = rockCells.Contains(new Vector2Int(rc2.x + 1, rc2.y));
+                    bool nt = rockCells.Contains(new Vector2Int(rc2.x, rc2.y + 1));
+                    bool nb = rockCells.Contains(new Vector2Int(rc2.x, rc2.y - 1));
+                    int col = (!nl && nr) ? 0 : (nl && nr) ? 1 : (nl && !nr) ? 2 : 3;
+                    int row = (!nt && nb) ? 0 : (nt && nb) ? 1 : (nt && !nb) ? 2 : 3;
+                    layout.overlay.SetTile(c3, layout.rockEdge[row, col]);
+                    painted++;
+                }
+                Debug.Log($"[StoneVein] 암반 바닥 {painted}칸 (오버레이)");
+            }
         }
 
         /// <summary>R8: 시작 정착지 (벽 5+바닥 6+화덕+연구대+12 crops+9 stockpile 마커).  (Day 57+67+79)</summary>

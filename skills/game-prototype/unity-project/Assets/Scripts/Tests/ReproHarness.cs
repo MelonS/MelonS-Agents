@@ -109,7 +109,15 @@ namespace MelonS.GameProto
             //  p0-pawn-move 의 _note 가 "매 실행 폰 위치·일정이 다르다"로 진단하고
             //  clearStockpiles·타임아웃 완화로 대응했지만, 그건 증상이었다.
             //  ⚠ **재현 모드에서만** 고정한다.  일반 플레이는 매번 달라야 콜로니심답다.
-            UnityEngine.Random.InitState(20260729);
+            //  시드는 CLI 로 바꿀 수 있다 (-repro-seed N).  시드 자체에 의미는 없지만,
+            //  고정하면 특정 시드가 만드는 상황(예: 더미 병합)에 시나리오가 걸릴 수
+            //  있으므로 재빌드 없이 스윕할 수 있어야 한다.
+            int seed = 20260729;
+            var rargv = System.Environment.GetCommandLineArgs();
+            for (int ri = 0; ri < rargv.Length - 1; ri++)
+                if (rargv[ri] == "-repro-seed" && int.TryParse(rargv[ri + 1], out int rs)) seed = rs;
+            UnityEngine.Random.InitState(seed);
+            Debug.Log($"[ReproHarness] Random.InitState({seed})");
             if (!Directory.Exists(shotDir)) Directory.CreateDirectory(shotDir);
             try
             {

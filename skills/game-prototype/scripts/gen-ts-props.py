@@ -86,3 +86,58 @@ berry_bush(True).save(os.path.join(FLO, "flora32_bush_berry.png"))
 berry_bush(False).save(os.path.join(FLO, "flora32_bush_picked.png"))
 print("prop64_berry_bush(.empty).png (+Resources/flora32 2상태)")
 print("완료 →", OUT)
+
+
+# ── 암반 바닥 엣지 세트 (2026-07-29) ──────────────────────────────────
+#  운영자 "돌들이 기존 레퍼런스와 너무나도 다름".
+#  차이의 정체: 레퍼런스에서 광물은 **연속된 암반 덩어리의 일부**인데,
+#  우리 광맥은 잔디 위에 놓인 바위 덩어리 스프라이트라 '잔디밭의 돌무더기'로 읽힌다.
+#  → 광맥 아래·주변에 암반 바닥을 깔아 하나의 암반 지대로 보이게 한다.
+#  통행 판정은 베이스 타일맵만 보므로 이 타일들은 오버레이 전용 = 게임플레이 영향 0.
+#
+#  엣지는 **절차 생성 스텐실**로 만든다 — 팩 타일(ts_*)은 gitignore 라
+#  클린 클론에서 재현이 안 되기 때문.
+def _ragged_mask(size, sides, seed, depth=9):
+    """sides 에 지정된 변만 너덜너덜하게 깎는 알파 마스크."""
+    import random as _r
+    rng = _r.Random(seed)
+    m = Image.new("L", (size, size), 255)
+    px = m.load()
+    for side in sides:
+        # 변을 따라가며 깎는 깊이를 랜덤 워크로 — 직선이 안 생기게.
+        d, cuts = 0, []
+        for i in range(size):
+            d = max(0, min(depth, d + rng.randint(-2, 2)))
+            cuts.append(d)
+        for i in range(size):
+            for k in range(cuts[i]):
+                if side == "T": px[i, k] = 0
+                elif side == "B": px[i, size - 1 - k] = 0
+                elif side == "L": px[k, i] = 0
+                elif side == "R": px[size - 1 - k, i] = 0
+    return m
+
+
+def rock_edge_set():
+    src = os.path.join(OUT, "tile64_rock_a.png")
+    if not os.path.exists(src):
+        print("tile64_rock_a.png 없음 — 암반 엣지 스킵")
+        return
+    base = Image.open(src).convert("RGBA")
+    n = base.size[0]
+    # 열: 0=왼쪽잘림 1=가운데 2=오른쪽잘림 3=좌우 / 행: 0=위 1=가운데 2=아래 3=상하
+    col_sides = {0: ["L"], 1: [], 2: ["R"], 3: ["L", "R"]}
+    row_sides = {0: ["T"], 1: [], 2: ["B"], 3: ["T", "B"]}
+    for r in range(4):
+        for c in range(4):
+            sides = col_sides[c] + row_sides[r]
+            im = base.copy()
+            if sides:
+                mask = _ragged_mask(n, sides, seed=1000 + r * 4 + c)
+                a = im.split()[-1].point(lambda v: v)
+                im.putalpha(Image.composite(a, Image.new("L", (n, n), 0), mask))
+            im.save(os.path.join(OUT, f"tile64_rockedge_e{r}{c}.png"))
+    print("암반 엣지 16장 (tile64_rockedge_e{r}{c}.png)")
+
+
+rock_edge_set()

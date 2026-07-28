@@ -22,6 +22,9 @@ namespace MelonS.GameProto.EditorTools
             public Tilemap overlay;
             /// <summary>모래 엣지 세트 [row, col] — 열:좌/중/우/단독, 행:상/중/하/단독.</summary>
             public Tile[,] sandEdge;
+            /// <summary>암반 바닥 엣지 세트 — 광맥 아래에 깔아 '암반 지대'로 보이게 한다.
+            ///  오버레이 전용이므로 통행 판정(베이스 타일맵)에는 영향이 없다.</summary>
+            public Tile[,] rockEdge;
             public Tile grassTile, dirtTile, waterTile, rockTile;
             // 호수 4개 (이전 2개) + 위치 비례 확장
             public Vector2[] lakeCenters = {
@@ -109,6 +112,19 @@ namespace MelonS.GameProto.EditorTools
                         if (se[r, c] == null) seOk = false;
                     }
                 layout.sandEdge = seOk ? se : null;
+                // 암반 바닥 엣지 (2026-07-29) — 팩 의존 없이 절차 생성한 세트라
+                //  클린 클론에서도 재현된다.
+                var re = new Tile[4, 4];
+                bool reOk = true;
+                for (int r = 0; r < 4 && reOk; r++)
+                    for (int c = 0; c < 4 && reOk; c++)
+                    {
+                        string rp = $"Assets/Sprites/tile64_rockedge_e{r}{c}.png";
+                        if (!System.IO.File.Exists(rp)) { reOk = false; break; }
+                        re[r, c] = LoadOrCreateTile(rp, $"Assets/Tiles/RockE{r}{c}.asset", 64f);
+                        if (re[r, c] == null) reOk = false;
+                    }
+                layout.rockEdge = reOk ? re : null;
             }
             else
             {

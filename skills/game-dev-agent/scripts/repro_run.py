@@ -60,6 +60,8 @@ def main() -> int:
     ap.add_argument("--fresh-build", action="store_true")
     ap.add_argument("--build")
     ap.add_argument("--timeout", type=int, default=None)
+    ap.add_argument("--seed", type=int, default=None,
+                    help="전역 난수 시드 교체 (기본은 ReproHarness 내장값 20260729)")
     args = ap.parse_args()
 
     scenario = Path(args.scenario).resolve()
@@ -90,7 +92,8 @@ def main() -> int:
             [str(exe), "-autostart", "-repro", str(scenario),
              "-repro-report", str(REPORT), "-repro-shotdir", str(SHOTS),
              "-screen-width", "1920", "-screen-height", "1080",
-             "-logFile", str(RUN_LOG)],
+             "-logFile", str(RUN_LOG)]
+            + (["-repro-seed", str(args.seed)] if args.seed is not None else []),
             timeout=args.timeout, capture_output=True,
         )
     except subprocess.TimeoutExpired:
