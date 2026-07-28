@@ -46,13 +46,52 @@ domain by the project author.
   `scripts/elevenlabs-music.py` 로 생성 후 등파워 크로스페이드로 심리스 루프화 +
   RMS 정규화(믹스에서 앰비언트 베드보다 +4.9 dB 위). 운영자 청취 후 A안 채택.
 
-> ⚠️ **라이선스 주의 — 게임 배포 시 추가 라이선스 필요.**
-> ElevenLabs Music API 생성물은 일반 콘텐츠(수익화 유튜브 포함) 상업 이용은
-> 허용되지만, **광고·TV·영화·게임·기업 배포는 별도 라이선스** 대상이다
-> (`elevenlabs.io/eleven-music-v1-terms`).  이 프로젝트는 게임이므로 해당된다.
-> 현재는 프로토타입 시연·심사 제출 용도로 사용 중이며, 배포 범위가 넓어지면
-> (스토어 출시, 상업 배포) 라이선스 확보 또는 자체 제작/CC0 트랙으로 교체할 것.
-> 절차 생성 BGM 백업 경로는 `Assets/Audio/_gen_sfx.py` 의 `bgm_ambient_sound()`.
+**라이선스 — 현 사용 범위는 허용됨.** (2026-07-29 약관 원문 재확인)
+
+계정: ElevenLabs **Starter** 월 구독 (유료 = Paid User).
+
+근거 조항 두 개를 같이 읽어야 결론이 나온다.
+
+1. [Terms of Service](https://elevenlabs.io/terms-of-use) §1(c) Use Restrictions —
+   "(i) if you access or use our Services **free of charge** …, you may only use
+   the Services for **non-commercial purposes**; (ii) if you access or use our
+   Services through a **paid subscription plan** …, you **may use the Services for
+   commercial purposes**".
+2. [Eleven Music Model-Specific Terms](https://elevenlabs.io/eleven-music-model-specific-terms)
+   (Last Updated 2026-05-26) — Music Commercial Rights 표, **Starter** 행
+   Media Rights: "All online and offline commercial use permitted, **except film,
+   TV, radio, & Studio Games**".
+
+핵심은 **"Studio Games" 의 정의**다 (같은 문서 §5(g)):
+
+> **Studio Games** means video games which are **commercialised** (either by sale,
+> advertising or any other forms of monetisation) **and** made available for
+> download or use through **more than one platform**.
+
+**두 조건을 모두** 충족해야 Studio Game 이다(`and`).  PawnSim 은 둘 다 아니다:
+
+| 조건 | PawnSim |
+|---|---|
+| commercialised (판매·광고·기타 수익화) | ❌ 무료 프로토타입, 수익화 없음 |
+| more than one platform | ❌ 웹(GitHub Pages) 단일 |
+
+→ 따라서 Studio Games 예외에 걸리지 않고 "All online and offline commercial use
+permitted" 에 해당한다.  **현 배포(공개 웹 URL) 및 해커톤 제출은 허용 범위.**
+Starter 는 Attribution 도 불요("No Attribution Required") — 이 문서의 기재는
+자발적 표기다.
+
+> ⚠️ **범위가 바뀌면 재검토할 것.**  아래 중 **둘 다** 해당되면 Studio Game 이 되어
+> 상위 플랜/별도 라이선스가 필요하다:
+> (a) 판매·광고·기타 수익화 시작  **그리고**  (b) 2개 이상 플랫폼 배포.
+> 참고로 Free~Scale 플랜이 **전부** 같은 Studio Games 예외를 달고 있으므로,
+> 그 경우 플랜 업그레이드만으로는 해결되지 않고 Business/Enterprise 문의가 필요하다.
+> 교체가 필요해질 경우 절차 생성 BGM 백업 경로: `Assets/Audio/_gen_sfx.py`
+> 의 `bgm_ambient_sound()`.
+>
+> 기록: 2026-07-27 최초 작성 시 "게임은 무조건 별도 라이선스"로 적어 두었으나,
+> 2026-07-29 약관 원문(위 2개 문서)을 직접 확인한 결과 **부정확**했다.  예외는
+> "게임" 이 아니라 정의된 "Studio Games" 이고 우리는 해당하지 않는다.
+> 인용했던 URL `eleven-music-v1-terms` 는 현재 404 이며 위 링크로 대체됐다.
 
 ## Noto Sans KR (SIL Open Font License 1.1)
 
