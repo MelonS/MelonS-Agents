@@ -122,6 +122,31 @@ namespace MelonS.GameProto.EditorTools
                 ImportSprite(p, 24);
             }
 
+            // 구역 셀 아이콘 (2026-07-29) — 64x64, scripts/gen-ui-icons.py 산출.
+            //  등록하지 않으면 텍스처 타입이 Sprite 로 확정되지 않아 ArchitectMenu.LoadIcon
+            //  이 null 을 돌려받고, 셀은 조용히 옛 '첫 글자' 폴백으로 되돌아간다
+            //  (빌드도 게이트도 통과하는 종류의 미반영 — 신규 png 임포트 누락은
+            //   이 레포에서 반복된 함정이라 반드시 목록에 넣는다).
+            foreach (var p in new[]
+            {
+                "Assets/Sprites/icon_zone_farm.png",
+                "Assets/Sprites/icon_zone_stock.png",
+                "Assets/Sprites/icon_zone_dump.png",
+                "Assets/Sprites/icon_zone_roof.png",
+                // Resources 사본도 **반드시** 함께 등록한다.  LoadIcon 은 에디터에선
+                //  Assets/Sprites 를, **런타임 빌드에선 Resources/Sprites** 를 본다.
+                //  1차 배선 때 Assets 쪽만 등록해 Resources 사본이 spriteMode:0 으로
+                //  남았고, 빌드에서 Resources.Load<Sprite> 가 null → 셀이 조용히 옛
+                //  '첫 글자' 폴백으로 돌아갔다 (에디터에선 멀쩡해 보여 더 헷갈린다).
+                "Assets/Resources/Sprites/icon_zone_farm.png",
+                "Assets/Resources/Sprites/icon_zone_stock.png",
+                "Assets/Resources/Sprites/icon_zone_dump.png",
+                "Assets/Resources/Sprites/icon_zone_roof.png",
+            })
+            {
+                ImportSprite(p, 64);
+            }
+
             AssetDatabase.Refresh();
             AssetDatabase.SaveAssets();
         }

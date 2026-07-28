@@ -366,6 +366,18 @@ namespace MelonS.GameProto
         //   에선 AssetDatabase 로 Assets/Sprites/<key>.png 를 직접 로드한다.
         //   (이 스크립트는 Assembly-CSharp 라 #if UNITY_EDITOR 로 UnityEditor 참조
         //    가능; 런타임 빌드에선 swatch fallback 으로 자재색 구분 유지 → 헤드리스 안전.)
+        /// <summary>구역 항목 이름 → 아이콘 키.  이름이 바뀌어도 부분 일치로 버티고,
+        ///  모르는 항목이면 null 을 돌려 호출부가 글자 폴백을 쓰게 한다.</summary>
+        private static string ZoneIconKey(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+            if (name.Contains("경작")) return "icon_zone_farm";
+            if (name.Contains("폐기")) return "icon_zone_dump";   // "저장/폐기" 보다 먼저 검사
+            if (name.Contains("저장")) return "icon_zone_stock";
+            if (name.Contains("지붕")) return "icon_zone_roof";
+            return null;
+        }
+
         private readonly Dictionary<string, Sprite> _iconCache = new();
         private Sprite LoadIcon(string key)
         {
@@ -604,8 +616,17 @@ namespace MelonS.GameProto
                         : nm;
                     float cx2 = (ci % 5) * (cellW + cgap);
                     float cy2 = (ci / 5) * 95f;
-                    MakeShelfCell(cx2, cy2, cellNm, HotkeyOf(item.label), null,
-                        isErase ? "×" : nm.Substring(0, 1), on, true,
+                    // 구역 셀 아이콘 (2026-07-29).  이전엔 아이콘 자리에 이름 **첫 글자**를
+                    //  크게 띄웠다 — "경/저/폐/지".  tofu 사고로 이모지를 걷어낼 때 남은
+                    //  잔재로, 의미가 전달되지 않고 무엇보다 미완성으로 읽힌다.
+                    //  MakeShelfCell 은 원래부터 Sprite 인자를 받고 있었다(자리는 있고
+                    //  그림만 없었다).  scripts/gen-ui-icons.py 가 팩 문법으로 그린다.
+                    //  아이콘이 없으면 기존 글자 폴백을 그대로 쓴다 — 헤드리스/미생성 안전.
+                    Sprite zoneIcon = isErase ? null : LoadIcon(ZoneIconKey(nm));
+                    MakeShelfCell(cx2, cy2, cellNm, HotkeyOf(item.label), zoneIcon,
+                        (isErase || zoneIcon == null)
+                            ? (isErase ? "×" : nm.Substring(0, 1)) : null,
+                        on, true,
                         nm + " — 맵에서 드래그하여 지정",
                         () => { item.invoke?.Invoke(); RefreshContent(); });
                     ci++; x = Mathf.Max(x, cx2 + cellW + cgap); any = true;

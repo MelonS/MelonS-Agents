@@ -17,21 +17,14 @@ RES = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     "..", "unity-project", "Assets", "Resources", "Sprites"))
 
 # TS 관찰 팔레트
-# 아웃라인 색 정정 (2026-07-29) — 팩 실측값으로 교체.
-#  기존 (62,42,34) 은 "팩 관찰로 뽑은 웜브라운"이었는데, 팩 스프라이트 12종의
-#  최암부를 실제로 재보니 최빈값이 쿨 네이비 (22,28,46) 이었다 (ts_tree·ts_deco_07
-#  이 정확히 이 값, ts_sheep 은 (22,23,38)).  웜브라운은 휘도 L 0.0280 으로 팩
-#  대역(0.009~0.012)을 벗어나, 절차 가구가 팩 옆에 놓이면 아웃라인만 옅게 떠 보였다.
-#  check-art-tone.py 로 확인: struct64 침대·테이블이 전부 outline_L 0.028 로 FAIL.
-#  한 상수가 절차 아트 전체의 톤을 결정하므로 여기만 고치면 일괄 정합된다.
-OUT_C = (22, 28, 46)
-WOOD_L, WOOD_M, WOOD_D = (222, 172, 112), (196, 140, 88), (160, 106, 62)
-RED_L, RED_M, RED_D = (232, 106, 94), (204, 76, 66), (166, 56, 50)
-GOLD_L, GOLD_M, GOLD_D = (244, 200, 96), (218, 166, 64), (178, 128, 44)
-CREAM, CREAM_D = (244, 228, 190), (226, 214, 184)
-SOIL_L, SOIL_M, SOIL_D = (206, 160, 104), (178, 130, 80), (140, 98, 58)
-PIT_D, PIT_DD = (92, 66, 44), (70, 50, 34)
-SHADOW = (40, 60, 40, 110)
+# 팔레트는 ts_palette.py 단일 출처에서 가져온다 (2026-07-29).
+#  이전엔 각 생성기가 같은 상수를 따로 들고 있어, 팩 실측과 어긋난 아웃라인색을
+#  고칠 때 두 파일을 각각 고쳐야 했다 — 하나 놓치면 조용히 어긋나는 구조였다.
+import sys, os as _os
+sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from ts_palette import (OUT_C, WOOD_L, WOOD_M, WOOD_D, RED_L, RED_M, RED_D,
+                        GOLD_L, GOLD_M, GOLD_D, CREAM, CREAM_D,
+                        SOIL_L, SOIL_M, SOIL_D, PIT_D, PIT_DD, SHADOW)
 
 
 def rr(d, box, r, fill, outline=None, ow=0):
