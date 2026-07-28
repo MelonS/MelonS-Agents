@@ -30,6 +30,27 @@
 
 ![MelonS-Agents — by the numbers: 100+ outputs, 1 production skill, 23 shaders, 0 runtime API tokens, 15-scenario gate, 23 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
 
+## Production graphs — shorts and game
+
+The two lines this repo runs.  Each card is rendered from the live LangGraph state
+machine that runs it, so it shows the wiring that executed rather than a drawing of it.
+The measurements behind where the gate sits are further down, in *The pipeline is a
+graph*.
+
+### Shorts production — the shorts line
+
+![Shorts execution graph — a dark editorial card: a cost bar showing that video rendering is 179 of the 189 minutes in a 26-cut short, with the gate marked right after the stills, then the stage flow plan → still round (9.0s each) → Gate 1 → human approval (interrupt) → clip round (412.3s each) → Gate 2 → assemble and legal → release package, plus the four backward edges and the blocked rail](docs/visuals/15-graph-shorts.png)
+
+*One short costs about three hours and 81% of that is the video step, so **Gate 1**
+refuses to spend it on stills that never cleared the bar.*
+
+### Game production — the game line
+
+![Game execution graph — the same fan-out joining on a mutex instead of a gate: publish task → review → three parallel lanes (code, art, sound) → Unity critical section that pins artifact paths into state → verification on the real build → TA art review → merge, with the false-verification and retry rails](docs/visuals/16-graph-game.png)
+
+*The same fan-out, but the parallel lanes join on a Unity **mutex** instead of a gate —
+different bottleneck, different shape.*
+
 ## What works today
 
 | Track | What it does | Status | Runnable today |
@@ -74,15 +95,11 @@ That rule existed as prose in `docs/generative-shorts-pipeline.md` §4.5 for mon
 was skipped whenever someone forgot it.  Now the edge to the expensive stage simply
 does not open.
 
-Both figures below are rendered from the running graph by
+Both figures at the top of this README are rendered from the running graph by
 `scripts/render-graph-art.py` — the small type under each card lists the real node
 names, and adding a node to the graph without placing it fails the render, so a figure
 cannot quietly go stale.  The raw mermaid view (every node, every edge) lives in
 [`graph/README.md`](graph/README.md).
-
-### Shorts production — the shorts line
-
-![Shorts execution graph — a dark editorial card: a cost bar showing that video rendering is 179 of the 189 minutes in a 26-cut short, with the gate marked right after the stills, then the stage flow plan → still round (9.0s each) → Gate 1 → human approval (interrupt) → clip round (412.3s each) → Gate 2 → assemble and legal → release package, plus the four backward edges and the blocked rail](docs/visuals/15-graph-shorts.png)
 
 Amber marks a gate that cannot be skipped, violet the one place a human stands
 (`interrupt()`), green the successful exit.  Four edges in that graph point
@@ -90,10 +107,6 @@ Amber marks a gate that cannot be skipped, violet the one place a human stands
 one used to be a paragraph someone had to remember.  `resume --approve` continues from
 the checkpoint rather than the beginning, so dying on cut 19 of 26 costs the remaining
 seven, not all twenty-six.
-
-### Game production — the game line
-
-![Game execution graph — the same fan-out joining on a mutex instead of a gate: publish task → review → three parallel lanes (code, art, sound) → Unity critical section that pins artifact paths into state → verification on the real build → TA art review → merge, with the false-verification and retry rails](docs/visuals/16-graph-game.png)
 
 The game line fans out the same way but joins differently.  Unity cannot be driven by
 two lanes at once, so the parallel work lanes converge on a **mutex** rather than a
