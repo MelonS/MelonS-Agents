@@ -7,7 +7,7 @@ namespace MelonS.GameProto
     /// <summary>
     /// 초기화면 모션 (2026-07-25 운영자 "초기화면이 좀 움직였으면 — 너무 이미지만").
     /// 베이크된 키아트 위에 런타임으로:
-    ///  ① 켄 번스 — 배경 슬로우 줌(1.03±0.035, 24s 주기) + 미세 드리프트
+    ///  ① 켄 번스 — 배경 슬로우 줌(1.07±0.065, 16s 주기) + 드리프트
     ///  ② 모닥불 불씨 — 키아트 캠프파이어 위치에서 피어오르는 앰버 파티클 14개
     ///  ③ 타이틀/부제 페이드인 — 로드 시 1.2s 정착
     /// 씬 재베이크 불요(기존 드라이버 패턴), 셰이더/에셋 불요 = WebGL 리스크 0.
@@ -18,7 +18,11 @@ namespace MelonS.GameProto
         private Text title, subtitle;
         private float t0;
 
-        private const int EmberCount = 14;
+        // 진폭 상향 (2026-07-29, 운영자 "타이틀 좀 움직이는 애니메이션 같은거
+        //  넣어달라고 했던거 같은데").  실은 이미 들어 있었다 — 프레임 diff 로
+        //  6초에 픽셀 7.66% 변화가 측정된다.  문제는 **너무 미세해서 안 보이는 것**
+        //  이었다(평균차 2.7/255).  없는 기능을 만드는 게 아니라 체감되게 올린다.
+        private const int EmberCount = 30;
         // 메뉴2_01 새벽능선 아트 (2026-07-25 운영자 픽): 모닥불이 없으므로
         //  파티클 컨셉을 '초원 위로 떠오르는 금빛 모트(꽃가루/빛입자)'로 —
         //  하단 초원 전폭에서 넓게 분산 스폰.
@@ -84,10 +88,10 @@ namespace MelonS.GameProto
             // ① 켄 번스
             if (backdrop != null)
             {
-                float z = 1.045f + 0.035f * Mathf.Sin(t * (2f * Mathf.PI / 24f));
+                float z = 1.075f + 0.065f * Mathf.Sin(t * (2f * Mathf.PI / 16f));
                 backdrop.localScale = new Vector3(z, z, 1f);
                 backdrop.anchoredPosition = new Vector2(
-                    Mathf.Sin(t * 0.11f) * 9f, Mathf.Cos(t * 0.07f) * 6f);
+                    Mathf.Sin(t * 0.17f) * 22f, Mathf.Cos(t * 0.11f) * 14f);
             }
             // ③ 타이틀 페이드인 (+부제 0.35s 지연)
             if (title != null) SetAlpha(title, Mathf.Clamp01(t / 1.2f));
