@@ -84,6 +84,16 @@ namespace MelonS.GameProto.EditorTools
                 }
             }
             // 아트 B2: 사슴 슬롯에 TS 양 우선 (팩 유일 동물 — 나머지 3종은 정합 생성 후속).
+            //
+            // ⚠ 이 배선은 **화면에 나오지 않는다** (2026-07-29 확인).  AnimalEntity 가
+            //   Awake 에서 AnimalAnim32 를 붙이고, 그 컴포넌트가 LateUpdate 마다
+            //   Resources/animals32/animal32_{종} 으로 스프라이트를 덮어쓴다.  여기서
+            //   구운 스프라이트는 첫 프레임만 보이고 즉시 교체된다.
+            //   실측: ts_sheep 은 PPU160 에 그려진 폭이 43px → 0.27칸으로, 닭(0.37)보다
+            //   작아 "양이 닭보다 작다"는 이상한 상태이기도 했다.  화면에 안 나와서
+            //   아무도 몰랐다.
+            //   되살리려면 양을 AnimalSpecies 에 정식 종으로 추가하고 animals32 시트를
+            //   만들어야 한다(별도 작업).  지금은 배선만 남겨 두고 사실을 기록한다.
             var tsSheep = ImportSpriteAt("Assets/Sprites/ts_sheep.png", 160f);
             var deer64 = tsSheep != null ? tsSheep
                 : AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/fauna64_deer.png");

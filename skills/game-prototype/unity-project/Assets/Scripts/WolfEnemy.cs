@@ -46,6 +46,10 @@ namespace MelonS.GameProto
             BlobShadow.Attach(gameObject, 0.8f, -0.38f);  // D1 몰입 — 발밑 접지 그림자
             if (GetComponent<MotionFx>() == null) gameObject.AddComponent<MotionFx>();  // D2 걷기 모션
             if (GetComponent<AnimalAnim32>() == null) gameObject.AddComponent<AnimalAnim32>();  // 아트 v2
+            // 크기 위계 (2026-07-29) — 늑대는 AnimalEntity.SpeciesStats 를 안 타므로
+            //  스케일이 1.0 으로 남아 멧돼지(0.94)·사슴(0.88)과 폭이 거의 같았다.
+            //  포식자가 사슴보다 살짝 작아야 위계가 읽힌다 → 0.88 (체감 폭 0.80칸).
+            transform.localScale = new Vector3(0.88f, 0.88f, 1f);
             PickNewWanderTarget();
         }
 
