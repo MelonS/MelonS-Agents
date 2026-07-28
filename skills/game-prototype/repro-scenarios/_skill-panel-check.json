@@ -1,0 +1,30 @@
+{
+  "name": "스킬 탭 확인 (2026-07-29) — 독립 패널 폐지 후 PawnInfoPanel '스킬' 탭에 내용이 보이는가",
+  "timeoutSec": 90,
+  "steps": [
+    {
+      "op": "wait",
+      "sec": 2
+    },
+    {
+      "op": "clickui",
+      "name": "label:민지"
+    },
+    {
+      "op": "wait",
+      "sec": 0.8
+    },
+    {
+      "op": "clickui",
+      "name": "label:스킬"
+    },
+    {
+      "op": "wait",
+      "sec": 0.6
+    },
+    {
+      "op": "shot",
+      "name": "s01_skilltab"
+    }
+  ]
+}

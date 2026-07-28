@@ -17,55 +17,17 @@ namespace MelonS.GameProto
 
         private void Update()
         {
-            if (selector == null || container == null) return;
-            var pawn = selector.CurrentSelection;
-            var sk = pawn != null ? pawn.GetComponent<PawnSkills>() : null;
-            // 빈 상자를 띄우지 않는다 (2026-07-27).  기존엔 폰만 선택되면 컨테이너를 켜고
-            //  스킬 데이터가 없으면 그대로 return 해서, 헤더 "스킬"만 있는 **빈 사각형**이
-            //  남았다.  평가자 다수가 이걸 '미구현/고장'으로 읽었고(11세 페르소나:
-            //  "아무것도 없어요. 고장난 것 같아요"), 프로듀서는 "빈 사각형은 미완성을
-            //  대놓고 광고한다 — 채우거나 숨겨라"로 판정했다.
-            //  → 그릴 내용이 있을 때만 켠다.  없는 패널이 빈 패널보다 낫다.
-            // 스킬 패널 비활성 (2026-07-27 시연 결정).
+            // 폐지 (2026-07-29) — 이 패널의 내용은 PawnInfoPanel 의 '스킬' 탭으로 옮겼다.
             //
-            // 이 패널은 헤더 "스킬"만 있고 본문이 비어 있었다.  런타임 색 강제와 행 생성
-            // 두 가지를 시도했지만 빌드에서 여전히 빈 상자였다(본문 영역 고유색 17,
-            // 대비 1.03 — QA 실측).  씬에 구워진 구조 문제로 보이며, 씬 리베이크는
-            // Game.unity 를 통째로 다시 쓰는 작업이라 시연 전날 밤에 할 일이 아니다.
+            // 이유: 씬에 구워진 구조 탓에 빌드에서 계속 **빈 크림 상자**로 나왔다.
+            //  행은 정상 생성됐고(로그 "스킬 행 4개 런타임 생성") 폰트 로더에도 폴백이
+            //  있는데 화면엔 안 보였다.  원격으로 씬 구조를 진단하는 것보다, 렌더가
+            //  확실히 동작하는 PawnInfoPanel 탭 체계를 재사용하는 쪽이 확실하다.
+            //  빈 패널은 없는 패널보다 나쁘다 — 평가자 다수가 '미구현/고장'으로 읽었다.
             //
-            // 빈 패널은 **없는 패널보다 나쁘다** — 평가자 다수가 '미구현/고장'으로 읽었고
-            // (11세: "아무것도 없어요. 고장난 것 같아요"), 프로듀서 페르소나는
-            // "채우거나 숨겨라"로 판정했다.  스킬 수치 자체는 작업 우선순위 그리드(F1)에
-            // 이미 첨자로 표시되므로 **정보가 사라지는 것도 아니다.**
-            //
-            // TODO(시연 후): 씬 리베이크 또는 PawnInfoPanel 탭으로 흡수해 되살릴 것.
-            container.SetActive(false);
-            return;
-#pragma warning disable CS0162   // 아래는 복구 시 되살릴 원래 경로
-            bool any = pawn != null && !pawn.IsDead && sk != null;
-            container.SetActive(any);
-            if (!any) return;
-            EnsureRows();
-            // UI겹침 P1-4 — 건축 열림 시 시프트된 인포패널(272~652) 위에 떠서 본문을
-            //  가리던 것: (400,58) → (660,108).  커플링 A — (272,314) 금지.
-            var amS = ArchitectMenu.Instance;
-            var crt = container.GetComponent<RectTransform>();
-            if (crt != null)
-            {
-                // 운영자 지시 (2026-07-27) "UI 가 항상 최대한 화면 가운데를 가리지 않도록":
-                //  기존엔 건축 열림 시 x 400 → **660** 으로 화면 중앙까지 밀려났다.
-                //  인포패널과 같은 원칙으로 좌측대에 머무르고 y 만 올린다
-                //  (인포패널 폭 380 + 좌여백 12 → 그 오른쪽 400 이 좌측대의 끝).
-                var wantS = (amS != null && amS.IsOpen) ? new Vector2(400f, amS.BlockTopY + 10f) : new Vector2(400f, 58f);
-                if (!Mathf.Approximately(crt.anchoredPosition.x, wantS.x)
-                    || !Mathf.Approximately(crt.anchoredPosition.y, wantS.y))
-                    crt.anchoredPosition = wantS;
-            }
-            SetText(gatherText, "채집", sk.GetLevel(SkillKind.Gather));
-            SetText(chopText,   "벌목", sk.GetLevel(SkillKind.Chop));
-            SetText(buildText,  "건축", sk.GetLevel(SkillKind.Build));
-            SetText(combatText, "전투", sk.GetLevel(SkillKind.Combat));
-#pragma warning restore CS0162
+            // 컴포넌트를 지우지 않고 컨테이너만 끈다: 씬이 이 스크립트를 참조하므로
+            //  삭제하면 씬 리베이크가 필요하고, 그건 제출 직전에 감수할 리스크가 아니다.
+            if (container != null && container.activeSelf) container.SetActive(false);
         }
 
         private static void SetText(Text t, string label, int level)

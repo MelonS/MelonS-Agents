@@ -154,8 +154,15 @@ namespace MelonS.GameProto
         //   All data comes from components the panel ALREADY reads — no new
         //   runtime API is touched.  Where a tab has no data, it shows a styled
         //   muted placeholder consistent with the V7 empty-state above.
-        private enum InfoTab { Status = 0, Health = 1, Mood = 2, Equip = 3 }
-        private static readonly string[] TabLabels = { "상태", "건강", "기분", "장비" };
+        //  스킬 탭 추가 (2026-07-29) — 독립 SkillUI 패널을 여기로 흡수했다.
+        //   그 패널은 씬에 구워진 구조 탓에 빌드에서 계속 **빈 크림 상자**로 나왔고
+        //   (행은 생성되는데 화면에 안 보임 — 로그로 확인), 평가자 다수가 '미구현/고장'
+        //   으로 읽어 2026-07-27 에 임시로 꺼 두었다.  원격으로 씬을 진단하는 대신
+        //   **렌더가 확실히 동작하는 이 패널의 탭 체계**를 재사용한다.
+        //   부수 효과로 떠다니는 패널이 하나 줄어 "UI 가 화면 가운데를 가리지 않도록"
+        //   지시에도 맞는다.  enum 은 append-only 계약 — 끝에만 추가한다.
+        private enum InfoTab { Status = 0, Health = 1, Mood = 2, Equip = 3, Skill = 4 }
+        private static readonly string[] TabLabels = { "상태", "건강", "기분", "장비", "스킬" };
         private InfoTab activeTab = InfoTab.Status;
         private Button[] tabButtons;
         private RectTransform tabStrip;
@@ -166,6 +173,7 @@ namespace MelonS.GameProto
         //   so we never reparent the SceneSetup-wired serialized refs.
         private Text moodDetailText;   // 기분 tab body
         private Text equipText;        // 장비 tab body
+        private Text skillText;        // 스킬 tab body (2026-07-29)
         private bool healthRectNormalized;   // #obj-audit 탭 본문 정렬 1회 보정 가드
         private bool titleRectNormalized;    // #ui백로그 3.0 타이틀 밴드 1회 보정 가드
 
@@ -469,6 +477,7 @@ namespace MelonS.GameProto
                 if (healthText != null) healthText.gameObject.SetActive(false);
                 if (moodDetailText != null) moodDetailText.gameObject.SetActive(false);
                 if (equipText != null) equipText.gameObject.SetActive(false);
+                if (skillText != null) skillText.gameObject.SetActive(false);
                 if (emptyText != null) emptyText.gameObject.SetActive(false);
                 SetEmptyStateVisible(false);
                 if (entityBodyText != null)
@@ -506,6 +515,7 @@ namespace MelonS.GameProto
                 if (healthText != null) healthText.gameObject.SetActive(false);
                 if (moodDetailText != null) moodDetailText.gameObject.SetActive(false);
                 if (equipText != null) equipText.gameObject.SetActive(false);
+                if (skillText != null) skillText.gameObject.SetActive(false);
                 if (emptyText != null) emptyText.gameObject.SetActive(false);
                 SetEmptyStateVisible(false);
                 return;
@@ -519,6 +529,7 @@ namespace MelonS.GameProto
             bool tabHealth = activeTab == InfoTab.Health;
             bool tabMood   = activeTab == InfoTab.Mood;
             bool tabEquip  = activeTab == InfoTab.Equip;
+            bool tabSkill  = activeTab == InfoTab.Skill;
             SetTabStripVisible(any);
 
             // #ui백로그 3.6 — 타이틀(이름·활동·특성)을 전 탭 상시 표시: 건강/기분/장비 탭
@@ -538,6 +549,7 @@ namespace MelonS.GameProto
             if (healthText != null) healthText.gameObject.SetActive(any && tabHealth);
             if (moodDetailText != null) moodDetailText.gameObject.SetActive(any && tabMood);
             if (equipText != null) equipText.gameObject.SetActive(any && tabEquip);
+            if (skillText != null) skillText.gameObject.SetActive(any && tabSkill);
             if (emptyText != null) emptyText.gameObject.SetActive(!any);
             SetEmptyStateVisible(!any);  // #UI-restyle V7 — dimmed glyph only when empty
             // #UI-restyle V7 — keep the bordered/titled frame drawn in the
@@ -601,6 +613,7 @@ namespace MelonS.GameProto
             //   tab is correct the instant it is clicked.
             if (moodDetailText == null) moodDetailText = MakeBodyText("MoodDetailBody");
             if (equipText == null)      equipText      = MakeBodyText("EquipBody");
+            if (skillText == null)      skillText      = MakeBodyText("SkillBody");
 
             // #obj-audit(운영자 '탭 누르면 UI 위치 정렬 안 됨') — healthText 는 SerializeField
             //  (에디터 배치)라 MakeBodyText 로 만든 moodDetail/equip 본문과 rect 가 달라 건강
@@ -738,6 +751,35 @@ namespace MelonS.GameProto
                 equipText.text = sb.ToString();
                 equipText.color = MelonS.GameProto.Core.UITheme.TextPrimary;
                 equipText.alignment = TextAnchor.UpperLeft;
+            }
+
+            // ---- 스킬 tab: 4개 스킬 레벨 + 다음 레벨까지 진행도 ----
+            //  스킬은 이름 시드로 콜로니스트마다 다르다(PawnSkills.ReRollFromName) —
+            //  "누가 뭘 잘하나"가 이 게임의 간접 조작을 지탱하는 정보다.
+            if (skillText != null)
+            {
+                var sb2 = new System.Text.StringBuilder();
+                sb2.AppendLine("<color=#8A5A1E>스킬:</color>");
+                var sk = pawn.GetComponent<PawnSkills>();
+                if (sk != null)
+                {
+                    var kinds = new[] { SkillKind.Gather, SkillKind.Chop,
+                                        SkillKind.Build, SkillKind.Combat };
+                    string[] names = { "채집", "벌목", "건축", "전투" };
+                    for (int i = 0; i < kinds.Length; i++)
+                    {
+                        int lv = sk.GetLevel(kinds[i]);
+                        float xp = sk.GetXP(kinds[i]), need = sk.GetXPToNext(kinds[i]);
+                        int pct = need > 0f ? Mathf.Clamp(Mathf.RoundToInt(xp / need * 100f), 0, 99) : 0;
+                        // 숙련도를 색으로도 — 높을수록 진한 초록 (색맹 대비로 숫자 병기).
+                        string col = lv >= 8 ? "#4A7A38" : (lv >= 5 ? "#3A2F22" : "#8A7658");
+                        sb2.AppendLine($"  <color={col}>{names[i]}  Lv {lv,-2}  ({pct}%)</color>");
+                    }
+                }
+                else sb2.AppendLine("  <color=#8A7658>(스킬 정보 없음)</color>");
+                skillText.text = sb2.ToString();
+                skillText.color = MelonS.GameProto.Core.UITheme.TextPrimary;
+                skillText.alignment = TextAnchor.UpperLeft;
             }
         }
     }
