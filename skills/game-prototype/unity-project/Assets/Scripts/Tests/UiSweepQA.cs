@@ -34,6 +34,9 @@ namespace MelonS.GameProto
         // 변화 판정 임계 — 다운샘플 그리드에서 이 비율 미만이면 "안 변했다".
         //  0.2% 는 커서 깜빡임·시계 초 단위 변화 정도는 무시하고 패널 개폐는 잡는 값.
         private const float ChangeThreshold = 0.002f;
+
+        /// <summary>스윕 중 바뀔 수 있는 영구 설정 키 — 끝에서 원복한다.</summary>
+        private static readonly string[] PersistedIntKeys = { "ui_palette" };
         private const int GridW = 96, GridH = 54;   // 다운샘플 격자 (픽셀 비교 비용 절감)
 
         public static void EnsureInScene()
@@ -171,6 +174,13 @@ namespace MelonS.GameProto
             yield return new WaitForSecondsRealtime(2.5f);
             System.IO.Directory.CreateDirectory(dir);
 
+            // 스윕은 **모든 버튼을 누른다** — 설정의 팔레트 토글도 포함이고, 그건
+            //  PlayerPrefs 에 저장된다.  1차 실행에서 실제로 UI 테마가 크림→어두움으로
+            //  영구히 바뀌어 이후 모든 빌드·캡처가 오염됐다.
+            //  QA 도구가 사용자 설정을 남기면 안 된다 — 스냅샷 후 끝에서 되돌린다.
+            var prefSnapshot = new Dictionary<string, int>();
+            foreach (var k in PersistedIntKeys) prefSnapshot[k] = PlayerPrefs.GetInt(k, 0);
+
             // 스냅샷을 먼저 떠 두고 순회한다 — 클릭이 계층을 바꾸므로 실시간 순회는 위험.
             var buttons = new List<Button>(FindObjectsByType<Button>(FindObjectsSortMode.None));
             buttons.RemoveAll(b => b == null || !b.isActiveAndEnabled || !b.interactable);
@@ -255,7 +265,13 @@ namespace MelonS.GameProto
                 }
             }
 
-            Debug.Log($"[UISWEEP] DONE ok={ok} dead={dead} empty={empty} skipped={skipped}");
+            // 설정 원복 — 스윕이 남긴 흔적을 지운다.
+            foreach (var kv in prefSnapshot) PlayerPrefs.SetInt(kv.Key, kv.Value);
+            PlayerPrefs.Save();
+            MelonS.GameProto.Core.UITheme.SetPalette(prefSnapshot["ui_palette"]);
+
+            Debug.Log($"[UISWEEP] DONE ok={ok} dead={dead} empty={empty} skipped={skipped} "
+                      + $"(설정 원복: ui_palette={prefSnapshot["ui_palette"]})");
             yield return new WaitForSecondsRealtime(0.5f);
             Application.Quit(dead + empty > 0 ? 1 : 0);
         }

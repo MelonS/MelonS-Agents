@@ -28,7 +28,19 @@ namespace MelonS.GameProto.EditorTools
             var rng = new System.Random(55217);
             int tufts = 0, flowers = 0;
             int half = TerrainLayout.MAP_HALF;
-            for (int i = 0; i < 900 && tufts < 140; i++)
+            // 밀도 상향 (2026-07-29) — 140그루/8100칸 = 1.7% 로 사실상 안 보였다.
+            //  운영자 L3 지시 "바닥도 뭔가 좀 더 있어야, 풀이 조금 올라오던지" 가
+            //  미이행 상태였고, 동시에 잔디 타일이 64px 격자로 반복돼 축소하면
+            //  벽지처럼 읽히는 문제의 실질적 해법이기도 하다 — 타일 변형은 이음매를
+            //  만들지만(좌우 엣지차 0.53 인 심리스 타일이라 롤/미러가 경계를 깬다)
+            //  스캐터는 격자와 무관한 주기로 눈을 흩뜨린다.
+            //  나무 배치와 같은 방식으로 **맵 면적에서 유도** — 맵이 커져도 따라온다.
+            //  ※ 장식 '돌·자갈·낙엽' 은 늘리지 않는다: 2026-05-31 운영자 function-first
+            //    판정(광맥과 혼동)으로 0 이며 그 결정은 유효하다.  풀·꽃만 늘린다.
+            int span = 2 * half - 1;
+            int tuftTarget = Mathf.RoundToInt(span * span * 0.055f);   // 약 5.5%
+            int flowerCap  = Mathf.RoundToInt(tuftTarget * 0.17f);
+            for (int i = 0; i < tuftTarget * 7 && tufts < tuftTarget; i++)
             {
                 int cx = rng.Next(-(half - 1), half);
                 int cy = rng.Next(-(half - 1), half);
@@ -36,7 +48,7 @@ namespace MelonS.GameProto.EditorTools
                 // 잔디 전용 (Grass 변형 타일 4종 전부 허용 — 이름 기준)
                 var t = layout.tilemap.GetTile(new Vector3Int(cx, cy, 0));
                 if (t == null || !t.name.StartsWith("Grass")) continue;
-                bool flower = flowers < 24 && rng.Next(100) < 12;
+                bool flower = flowers < flowerCap && rng.Next(100) < 12;
                 var sp = flower ? (rng.Next(2) == 0 ? fl1 : fl2) ?? tuft : tuft;
                 var go = new GameObject(flower ? "wildflower" : "grass_tuft");
                 go.transform.SetParent(root.transform, false);
