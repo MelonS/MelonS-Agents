@@ -80,8 +80,10 @@ SPECIES = {
     #  어둡게 나온다(톤 게이트 FAIL).  눈으로는 "괜찮아 보였는데" 수치가 잡았다.
     "pine":  "a tall pine conifer tree with layered sunlit green needle tiers and "
              "bare lower trunk, narrow triangular silhouette",
-    "birch": "a slender birch tree with white pale bark trunk and golden yellow "
-             "autumn leaves, narrow upright canopy",
+    # 1차(s1001)는 노란 잔가지로 읽혔다 — 인게임에서 실루엣이 성겨 나무로 안 보였다.
+    #  "slender/narrow" 가 원인.  잎을 뭉치게 하고 캐노피를 채우는 쪽으로 바꾼다.
+    "birch": "a birch tree with white bark trunk and a full dense rounded canopy of "
+             "golden yellow autumn leaves, thick clustered foliage, solid silhouette",
     "oak":   "a sturdy oak tree with broad rounded green canopy and thick trunk "
              "with root flare, wide silhouette",
     "maple":  "a maple tree with bright crimson red autumn foliage, medium rounded "

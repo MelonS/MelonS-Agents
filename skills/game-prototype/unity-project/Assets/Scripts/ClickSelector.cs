@@ -525,7 +525,18 @@ namespace MelonS.GameProto
                 return;
             }
             if (currentSelection != null)
+            {
                 currentSelection.SetDrafted(!currentSelection.IsDrafted);
+                return;
+            }
+            // 아무도 선택 안 했을 때 **조용히 아무 일도 안 하던 것**을 고침 (2026-07-29).
+            //  UI 전수 스윕(-ui-sweep)이 유일한 DEAD 로 잡아낸 버튼이다 — 눌러도 UI·선택·
+            //  카메라 어느 것도 안 변해, 심사자가 누르면 고장난 버튼으로 읽힌다.
+            //  기능은 정상이고 전제(선택)가 빠졌을 뿐이므로 무엇이 필요한지 알려 준다.
+            if (BuildClickToast.Instance != null)
+                BuildClickToast.Instance.ShowFail("징집할 콜로니스트를 먼저 선택하세요");
+            else
+                Debug.Log("[Draft] 선택된 콜로니스트 없음");
         }
 
         // rcfix - 모든 작업/휴식 task 취소 (사용자 명령이 잔여 AI task 에 override 되는 것 방지).
