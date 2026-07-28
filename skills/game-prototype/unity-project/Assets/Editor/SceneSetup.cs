@@ -257,13 +257,17 @@ namespace MelonS.GameProto.EditorTools
             Sprite treeSprite = prefabs.treeSprite;
 
             // R10l: Tree spawn (20 tree) extract -> SceneSetup.Game.Trees.cs
-            SpawnTrees(treePrefab, TerrainLayout.MAP_HALF, lakeCenters, lakeRadii,
-                       rockClusterCenters, rockRadius);
+            var treePositions = SpawnTrees(treePrefab, TerrainLayout.MAP_HALF,
+                       lakeCenters, lakeRadii, rockClusterCenters, rockRadius);
 
             // #119 fix: StoneVeinEntity 8-14개 deterministic 배치 (rock cluster 근처 우선).
             //   R10 refactor 시 SetupWorldEntities 가 제거되면서 SpawnStoneVeins 호출이
             //   GenerateGame() 에서 누락됐던 것을 복구.
-            SpawnStoneVeins(layout);
+            //  ⚠ 복구 당시 **나무 목록 없는 오버로드**를 썼다.  광맥 배치에는 나무 회피
+            //   로직(거리 1.8)이 이미 있는데 빈 목록을 받아 무력화됐고, 그래서 돌이 나무와
+            //   겹쳐 스폰됐다 (운영자 2026-07-29 "돌이랑 나무 겹치는 문제").
+            //   MAP_HALF 사고와 같은 계열 — 호출부가 정보를 잃어버린 것.
+            SpawnStoneVeins(layout, treePositions);
 
             // Day 12: RegrowthScheduler — drives bush regen + tree-to-sapling
             // chains.  Created AFTER treePrefab exists so we can wire it.

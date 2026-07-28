@@ -8,7 +8,11 @@ namespace MelonS.GameProto.EditorTools
     //   원본 SceneSetup.cs L157-191 (35 LOC).
     public static partial class SceneSetup
     {
-        private static void SpawnTrees(GameObject treePrefab, int mapHalf,
+        /// <summary>배치한 나무 좌표를 **반환한다** (2026-07-29).  이전엔 void 라
+        ///  호출부가 좌표를 알 수 없었고, 그 결과 뒤이어 도는 광맥 배치가 나무 회피를
+        ///  못 해 돌과 나무가 겹쳤다 (운영자 "돌이랑 나무 겹치는 문제").</summary>
+        private static System.Collections.Generic.List<Vector2> SpawnTrees(
+                                       GameObject treePrefab, int mapHalf,
                                        Vector2[] lakeCenters, float[] lakeRadii,
                                        Vector2[] rockClusterCenters, float rockRadius)
         {
@@ -124,6 +128,7 @@ namespace MelonS.GameProto.EditorTools
                 var te = t.GetComponent<TreeEntity>();
                 if (te != null) te.SetSpecies(sp);
             }
+            return treePositionsList;
         }
     }
 }

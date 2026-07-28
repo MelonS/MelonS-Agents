@@ -686,6 +686,7 @@ namespace MelonS.GameProto
                     wgo.GetComponent<PawnEntity>()?.SetPawnName(wname);
                     wgo.GetComponent<PawnTraits>()?.ReRollFromName(wname);
                     wgo.GetComponent<PawnSkills>()?.ReRollFromName(wname);
+                    wgo.GetComponent<PawnWorkSettings>()?.ApplyDefaultsFromSkills();
                     FloatingText.Spawn(wgo.transform.position + Vector3.up * 0.7f,
                         $"방랑자 {wname} 합류!", new Color(0.6f, 0.9f, 0.6f, 1f));
                     Debug.Log($"[AIDirector] wanderer_arrival 실효: {wname} 합류 (북쪽 외곽)");

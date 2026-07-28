@@ -11,7 +11,14 @@ from PIL import Image, ImageDraw
 
 OUT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     "..", "unity-project", "Assets", "Sprites"))
-OUT_C = (62, 42, 34)
+# 아웃라인 색 정정 (2026-07-29) — 팩 실측값으로 교체.
+#  기존 (62,42,34) 은 "팩 관찰로 뽑은 웜브라운"이었는데, 팩 스프라이트 12종의
+#  최암부를 실제로 재보니 최빈값이 쿨 네이비 (22,28,46) 이었다 (ts_tree·ts_deco_07
+#  이 정확히 이 값, ts_sheep 은 (22,23,38)).  웜브라운은 휘도 L 0.0280 으로 팩
+#  대역(0.009~0.012)을 벗어나, 절차 가구가 팩 옆에 놓이면 아웃라인만 옅게 떠 보였다.
+#  check-art-tone.py 로 확인: struct64 침대·테이블이 전부 outline_L 0.028 로 FAIL.
+#  한 상수가 절차 아트 전체의 톤을 결정하므로 여기만 고치면 일괄 정합된다.
+OUT_C = (22, 28, 46)
 SHADOW = (40, 60, 40, 110)
 
 

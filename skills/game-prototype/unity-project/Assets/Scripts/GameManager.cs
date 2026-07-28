@@ -127,6 +127,10 @@ namespace MelonS.GameProto
                     p.GetComponent<PawnTraits>()?.ReRollFromName(name);
                     // 시작 스킬 개인차 (2026-06-12) — 트레잇과 같은 이름-시드 결정론.
                     p.GetComponent<PawnSkills>()?.ReRollFromName(name);
+                    // 스킬이 정해진 **직후** 작업 우선순위 기본값을 그 스킬에서 유도
+                    //  (2026-07-29) — 순서 중요: ReRollFromName 보다 먼저 부르면 전 림이
+                    //  같은 기본 스킬을 보고 같은 우선순위가 나온다.
+                    p.GetComponent<PawnWorkSettings>()?.ApplyDefaultsFromSkills();
                     // #199 A2 — unselectedColor=white 로 강제: idle(미선택/미징집) 시
                     //  PawnEntity.ApplyVisual 이 sr.color=unselectedColor 로 덮어쓰는데,
                     //  여기서 white 가 아니면 변형 sprite 의 옷색이 tint 로 더럽혀짐.

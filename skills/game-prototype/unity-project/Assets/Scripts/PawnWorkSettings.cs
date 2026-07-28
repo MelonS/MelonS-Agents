@@ -27,7 +27,59 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            foreach (var k in AllKinds) priorities[k] = 1;
+            foreach (var k in AllKinds) priorities[k] = DefaultBase;
+        }
+
+        // ── 기본 우선순위 (2026-07-29) ──────────────────────────────────────
+        //  이전엔 전 칸이 1 이었다.  동작은 됐지만 **화면에서 죽어 있었다** — 작업 탭을
+        //  열면 3인 × 9직종 27칸이 전부 같은 숫자라, 이 게임의 핵심인 "플레이어는
+        //  정책만 정하고 판단은 콜로니스트가 한다"가 아무것도 보여주지 못했다.
+        //
+        //  임의로 숫자를 흩뿌리지 않는다.  스킬은 이미 이름 시드로 개인차가 있으므로
+        //  (PawnSkills.ReRollFromName) **그 데이터를 그대로 반영**한다 — "잘하는 사람이
+        //  먼저 맡는다"는 장르 관례이자, 우리가 내세우는 간접 조작의 근거이기도 하다.
+        //
+        //  동작 안전성: PawnUtilityAI 는 우선순위 순으로 시도하고 없으면 다음으로
+        //  내려간다.  0(비활성)은 만들지 않으므로 **모든 일은 여전히 처리된다** —
+        //  바뀌는 것은 순서뿐이다.
+        private const int DefaultBase = 3;
+
+        /// <summary>WorkKind → 이 일을 대표하는 스킬.  대응 스킬이 없는 일(운반·요리
+        ///  ·연구·의료)은 null 로 두고 아래에서 별도 규칙을 쓴다.</summary>
+        private static SkillKind? SkillFor(WorkKind k)
+        {
+            switch (k)
+            {
+                case WorkKind.Chop:   return SkillKind.Chop;
+                case WorkKind.Gather: return SkillKind.Gather;
+                case WorkKind.Build:  return SkillKind.Build;
+                case WorkKind.Mine:   return SkillKind.Build;   // 채광도 건축 계열 숙련
+                case WorkKind.Hunt:   return SkillKind.Combat;
+                default:              return null;
+            }
+        }
+
+        /// <summary>스킬 기반 기본 우선순위 배정.  스폰 직후 1회 호출 (세이브 로드
+        ///  경로는 저장된 값이 항상 우선하므로 호출하지 않는다).</summary>
+        public void ApplyDefaultsFromSkills()
+        {
+            var skills = GetComponent<PawnSkills>();
+            foreach (var k in AllKinds)
+            {
+                int p;
+                var sk = SkillFor(k);
+                if (sk.HasValue && skills != null)
+                {
+                    int lv = skills.GetLevel(sk.Value);
+                    // 숙련 → 먼저 맡는다.  1 이 가장 높다.
+                    p = lv >= 8 ? 1 : lv >= 5 ? 2 : lv >= 3 ? 3 : 4;
+                }
+                else if (k == WorkKind.Doctor) p = 1;   // 치료는 항상 최우선 (응급)
+                else if (k == WorkKind.Cook)   p = 2;   // 식량은 콜로니 생존선
+                else if (k == WorkKind.Haul)   p = 3;   // 무숙련 상시 작업
+                else                           p = 4;   // 연구 — 급하지 않다
+                priorities[k] = p;
+            }
         }
 
         public int GetPriority(WorkKind k) => priorities.TryGetValue(k, out int p) ? p : 1;

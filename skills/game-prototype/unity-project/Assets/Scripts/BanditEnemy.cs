@@ -68,6 +68,7 @@ namespace MelonS.GameProto
                     go.GetComponent<PawnEntity>()?.SetPawnName(cname);
                     go.GetComponent<PawnTraits>()?.ReRollFromName(cname);
                     go.GetComponent<PawnSkills>()?.ReRollFromName(cname);
+                    go.GetComponent<PawnWorkSettings>()?.ApplyDefaultsFromSkills();
                     Debug.Log($"[Capture] 강도 포섭 성공! → {cname} 합류");
                 }
                 Destroy(gameObject);
