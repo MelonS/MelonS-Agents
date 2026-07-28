@@ -9,6 +9,7 @@
 출처 표기는 ATTRIBUTIONS.md 참조 (해커톤 규정 ④ 외부 에셋 출처 명시).
 """
 import os
+import numpy as np
 from PIL import Image
 
 PACK = os.environ.get("TS_PACK_DIR", r"G:/ai/_artpacks/TinySwords")
@@ -16,9 +17,49 @@ OUT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     "..", "unity-project", "Assets", "Sprites"))
 
 
-def crop_save(src, box, name):
-    im = Image.open(os.path.join(PACK, src)).convert("RGBA")
-    im.crop(box).save(os.path.join(OUT, name))
+# ── 지형 밸류 그레이드 (2026-07-29) ────────────────────────────────────
+# 팩 원본 지형은 콜로니심에 쓰기엔 너무 밝다.  실측(상대휘도 L):
+#   모래 0.737 · 잔디 0.400  vs  콜로니스트 0.095~0.220 · 나무 0.108~0.167
+# = 화면에서 제일 밝은 게 게임플레이상 의미 없는 지면이고, 캐릭터가 제일
+# 어둡다.  폰(L 0.105)과 나무(L 0.108)가 같은 밴드라 "내 캐릭터를 못 찾는"
+# 상태였다 (페르소나 QA 다수가 독립적으로 같은 지적).
+#
+# 잔디 L=0.400 위에서 캐릭터가 3:1 로 뜨려면 L>=1.30 이 필요 — 물리적으로
+# 불가능하다.  그러므로 "폰을 밝게"가 아니라 **지면을 낮춰** 캐릭터가 올라설
+# 밸류 헤드룸을 만드는 것이 유일한 해법.  목표: 잔디 0.28 / 모래 0.38.
+#
+# 선형광에서 gain 을 곱하고(감마 보존) 채도만 살짝 죽인다 — 색상각(hue)은
+# 건드리지 않아 팩의 아이덴티티는 유지된다.  ts_*.png 는 gitignore 라
+# 파일을 직접 고치면 다음 추출에 덮인다 → 반드시 여기(추출 시점)에서 적용.
+def _srgb2lin(x):
+    return np.where(x <= 0.04045, x / 12.92, ((x + 0.055) / 1.055) ** 2.4)
+
+
+def _lin2srgb(x):
+    return np.where(x <= 0.0031308, x * 12.92,
+                    1.055 * np.clip(x, 0, 1) ** (1 / 2.4) - 0.055)
+
+
+def grade(im, gain, sat=0.92):
+    """선형광 gain + 채도 조정.  알파는 불변."""
+    a = np.array(im.convert("RGBA")).astype(float)
+    rgb = _srgb2lin(a[:, :, :3] / 255.0) * gain
+    lum = (rgb * [0.2126, 0.7152, 0.0722]).sum(-1, keepdims=True)
+    rgb = lum + (rgb - lum) * sat
+    a[:, :, :3] = _lin2srgb(np.clip(rgb, 0, 1)) * 255.0
+    return Image.fromarray(a.astype("uint8"))
+
+
+# 실측 캘리브레이션값 (이 두 크롭 전용 — 다른 타일에 그대로 쓰면 안 됨)
+GRADE_GRASS = 0.7023   # L 0.400 -> 0.279
+GRADE_SAND = 0.5199    # L 0.737 -> 0.380
+
+
+def crop_save(src, box, name, gain=None):
+    im = Image.open(os.path.join(PACK, src)).convert("RGBA").crop(box)
+    if gain is not None:
+        im = grade(im, gain)
+    im.save(os.path.join(OUT, name))
     print(name)
 
 
@@ -28,9 +69,16 @@ def save(src, name):
 
 
 # 지형 (Tilemap_Flat: 10x4 @64px — (1,1)=잔디 중심, (6,1)=모래 중심)
-crop_save("Terrain/Ground/Tilemap_Flat.png", (64, 64, 128, 128), "ts_tile_grass.png")
-crop_save("Terrain/Ground/Tilemap_Flat.png", (384, 64, 448, 128), "ts_tile_sand.png")
-save("Terrain/Water/Water.png", "ts_tile_water.png")
+crop_save("Terrain/Ground/Tilemap_Flat.png", (64, 64, 128, 128), "ts_tile_grass.png",
+          gain=GRADE_GRASS)
+crop_save("Terrain/Ground/Tilemap_Flat.png", (384, 64, 448, 128), "ts_tile_sand.png",
+          gain=GRADE_SAND)
+# ts_tile_water.png 는 여기서 만들지 않는다 (2026-07-29).
+#  팩 원본 물은 완전 단색이라 인게임에서 밋밋했고, 2026-07-27 에 gen-water.py 로
+#  일렁임+물가 포말을 절차 생성해 대체했다.  그런데 두 스크립트가 같은 파일을 쓰고
+#  있어서, extract 를 나중에 돌리면 그 재작성이 **조용히** 되돌려졌다(빌드도 게이트도
+#  통과하므로 아무도 모른다 — 7/25 GUID 사고와 같은 계열).  소유권을 gen-water.py
+#  단독으로 확정한다.  팩 원본이 필요하면 gen-water.py 안에서 참조할 것.
 # 나무 (애니 시트 첫 프레임 192px)
 crop_save("Resources/Trees/Tree.png", (0, 0, 192, 192), "ts_tree.png")
 # 자원 더미 (128px, 그림자 베이크판) — 런타임 ItemArt32 가 Resources 에서 로드

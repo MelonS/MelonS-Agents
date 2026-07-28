@@ -117,8 +117,8 @@ def main() -> int:
     print(f"✔ {BAND_OUT.name}  (64x16 포말)")
     print()
     print("주의: ts_tile_water.png 는 gitignore 대상(팩 재배포 금지)이라 커밋되지 않는다.")
-    print("      extract-tinyswords.py 를 다시 돌리면 단색 원본으로 덮이므로,")
-    print("      추출 후에는 이 스크립트를 이어서 실행할 것.")
+    print("      새 환경에서는 extract-tinyswords.py 다음에 이 스크립트를 실행할 것.")
+    print("      (2026-07-29 부터 extract 는 이 파일을 건드리지 않는다 — 소유권 단독.)")
     return 0
 
 

@@ -18,13 +18,17 @@ import sys, os, colorsys, random
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-PAL_DIR = r"G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Sprites"
+# palette.py lives next to this script — derive cross-platform.
+#  (2026-07-29: 하드코딩된 G:/ai/MelonS-Agents/... 는 이 워크스페이스가 아닌 다른
+#   경로를 가리켜, 여기서 실행하면 엉뚱한 palette 를 임포트했다.  _gen_pawn32 와
+#   같은 방식으로 스크립트 자기 위치 기준으로 교정.)
+PAL_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, PAL_DIR)
 from palette import (OUTLINE_STORY,
                      GRASS_DK, GRASS_MD, GRASS_LT,
                      DIRT_DK, DIRT_MD, DIRT_LT,
                      ROCK_DK, ROCK_MD, ROCK_LT,
-                     CLOTH_RUST, CLOTH_RUST_DK,
+                     FOX_MD, FOX_DK,
                      WOOD_LT, CROP_GOLD, MEAT_RED,
                      DANGER_RED, UI_CREAM)
 from PIL import Image
@@ -50,7 +54,7 @@ SPECIES_COLORS = {
     'wolf':   (ROCK_MD,                ROCK_DK,                ROCK_LT),
     'boar':   (shade(DIRT_DK, 1.12),   shade(DIRT_DK, 0.90),   DIRT_MD),
     'rabbit': (DIRT_LT,                DIRT_MD,                shade(DIRT_LT, 1.12)),
-    'fox':    (CLOTH_RUST,             CLOTH_RUST_DK,          shade(CLOTH_RUST, 1.12)),
+    'fox':    (FOX_MD,                 FOX_DK,                 shade(FOX_MD, 1.12)),
     'deer':   (WOOD_LT,                DIRT_LT,                shade(WOOD_LT, 1.12)),
     'chicken': (shade(UI_CREAM, 0.96), shade(UI_CREAM, 0.88),  UI_CREAM),
 }

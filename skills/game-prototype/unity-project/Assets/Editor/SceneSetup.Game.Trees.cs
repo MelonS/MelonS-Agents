@@ -56,21 +56,23 @@ namespace MelonS.GameProto.EditorTools
             // 아트 B2 (2026-07-24): Tiny Swords 단일 수종 우선 (팩엔 나무 1종 —
             //  종 구분은 scale/틴트로 유지, 종별 실루엣은 정합 생성 후속).  192px
             //  프레임 PPU96 = 2×2칸 시각 footprint (셀 점유는 기존 1칸 불변).
+            // 혼합 캐노피 (2026-07-29) — B2 가 후속으로 미룬 "종별 실루엣"을 이행.
+            //  B2 는 5종 슬롯에 ts_tree 를 **다섯 번** 넣어 두었다.  게임 로직은 5종
+            //  분포(Pine30/Birch20/Oak20/Maple15/Spruce15)를 이미 굴리고 있었는데
+            //  화면에는 전부 같은 나무가 나와, 45그루가 깔린 맵이 단일 수종 모노컬처로
+            //  읽혔다(인게임 캡처로 확인 — 캐릭터보다 나무가 화면을 지배).
+            //  자체 제작 flora64 5종이 이미 커밋돼 있고(.meta 포함, GUID 안정) 실루엣과
+            //  색이 뚜렷이 다르므로, 침엽 상층은 ts_tree(PPU96=2×2칸)로 무게를 주고
+            //  나머지는 flora64(PPU64≈1×1.5칸)로 하층을 채운다 — 합성 비교에서
+            //  ts단일/flora64단독/혼합 중 혼합이 가장 숲답게 읽혔다.
+            //  셀 점유는 여전히 1칸 (시각 footprint 만 다름).
             var tsTree = ImportSpriteAt("Assets/Sprites/ts_tree.png", 96f);
-            if (tsTree != null)
-            {
-                MelonS.GameProto.TreeEntity.SpeciesSprites = new[] { tsTree, tsTree, tsTree, tsTree, tsTree };
-            }
-            else
-            {
-                MelonS.GameProto.TreeEntity.SpeciesSprites = new[] {
-                    AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_pine.png"),
-                    AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_birch.png"),
-                    AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_oak.png"),
-                    AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_maple.png"),
-                    AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/flora64_spruce.png"),
-                };
-            }
+            Sprite F64(string n) => ImportSpriteAt($"Assets/Sprites/flora64_{n}.png", 64f);
+            // 슬롯 순서 = TreeSpecies enum 순서 (Pine, Birch, Oak, Maple, Spruce)
+            var pine = tsTree != null ? tsTree : F64("pine");
+            MelonS.GameProto.TreeEntity.SpeciesSprites = new[] {
+                pine, F64("birch"), F64("oak"), F64("maple"), F64("spruce"),
+            };
 
             // #108: 60x60 맵 = 9x 면적.  20 → 45 그루 비례.
             //  결정론적 (seed=24680).

@@ -30,8 +30,8 @@ from palette import (
     HAIR_DK,
     CLOTH_BLUE, CLOTH_BLUE_DK,
     CLOTH_RUST, CLOTH_RUST_DK,
-    CLOTH_OLIVE, CLOTH_OLIVE_DK,
-    TROUSER_BLUE, TROUSER_RUST, TROUSER_OLIVE,
+    CLOTH_LINEN, CLOTH_LINEN_DK,
+    TROUSER_BLUE, TROUSER_RUST, TROUSER_LINEN,
     WOOD_DK,
 )
 
@@ -225,7 +225,7 @@ def main():
         ("pawn_colonist", CLOTH_BLUE,  CLOTH_BLUE_DK,  TROUSER_BLUE),
         ("pawn_blue",     CLOTH_BLUE,  CLOTH_BLUE_DK,  TROUSER_BLUE),
         ("pawn_rust",     CLOTH_RUST,  CLOTH_RUST_DK,  TROUSER_RUST),
-        ("pawn_olive",    CLOTH_OLIVE, CLOTH_OLIVE_DK, TROUSER_OLIVE),
+        ("pawn_olive",    CLOTH_LINEN, CLOTH_LINEN_DK, TROUSER_LINEN),
     ]
 
     sprites = []
@@ -241,7 +241,7 @@ def main():
     cloths = [
         (CLOTH_BLUE,  CLOTH_BLUE_DK,  TROUSER_BLUE),
         (CLOTH_RUST,  CLOTH_RUST_DK,  TROUSER_RUST),
-        (CLOTH_OLIVE, CLOTH_OLIVE_DK, TROUSER_OLIVE),
+        (CLOTH_LINEN, CLOTH_LINEN_DK, TROUSER_LINEN),
     ]
     combos = [
         (0, HAIR_BROWN,  SKIN_MED),

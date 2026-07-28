@@ -22,9 +22,9 @@ from palette import (OUTLINE_STORY, OUTLINE_OBJ,
                      ROCK_MD, ROCK_LT,
                      WOOD_DK, WOOD_MD, WOOD_LT,
                      SKIN_MD, SKIN_SH, HAIR_DK,
-                     CLOTH_BLUE, CLOTH_RUST, CLOTH_OLIVE,
-                     CLOTH_BLUE_DK, CLOTH_RUST_DK, CLOTH_OLIVE_DK,
-                     TROUSER_BLUE, TROUSER_RUST, TROUSER_OLIVE)
+                     CLOTH_BLUE, CLOTH_RUST, CLOTH_LINEN,
+                     CLOTH_BLUE_DK, CLOTH_RUST_DK, CLOTH_LINEN_DK,
+                     TROUSER_BLUE, TROUSER_RUST, TROUSER_LINEN)
 from PIL import Image
 
 # staging out: env override, else G:/ on Windows, else repo-local (cross-platform).
@@ -54,7 +54,7 @@ HAIR_HI_MUL = 1.12  # top-left shine on hair cap
 CLOTH_SETS = {
     'blue':  (CLOTH_BLUE,  CLOTH_BLUE_DK,  TROUSER_BLUE),
     'rust':  (CLOTH_RUST,  CLOTH_RUST_DK,  TROUSER_RUST),
-    'olive': (CLOTH_OLIVE, CLOTH_OLIVE_DK, TROUSER_OLIVE),
+    'linen': (CLOTH_LINEN, CLOTH_LINEN_DK, TROUSER_LINEN),
 }
 
 # 8 representative combos: every cloth, every hair style, every skin tone covered
@@ -64,8 +64,8 @@ VARIANTS = [
     ('blue',  'short', 0, 1.12),   # v1
     ('rust',  'pony',  2, 0.94),   # v2
     ('rust',  'bun',   3, 1.00),   # v3
-    ('olive', 'bald',  1, 1.00),   # v4
-    ('olive', 'short', 2, 0.88),   # v5
+    ('linen', 'bald',  1, 1.00),   # v4
+    ('linen', 'short', 2, 0.88),   # v5
     ('blue',  'pony',  3, 1.06),   # v6
     ('rust',  'bang',  0, 0.94),   # v7
 ]

@@ -17,9 +17,11 @@ New sprites:
 
 DESIGN RULES (same north-star as V2 spec):
   - Colors STRICTLY from palette.py — no ad-hoc values.
-  - Every sprite must RECEDE: saturation below ALL pawn cloth and skin.
-      ROCK_DK sat 0.058, ROCK_MD sat 0.084, DIRT_DK sat 0.304 — all well below
-      CLOTH_BLUE sat 0.440, SKIN_MD sat 0.411, CLOTH_OLIVE sat 0.375.
+  - Every sprite must RECEDE.  기준은 채도 단독이 아니라 **채도·명도 두 축**
+    (2026-07-29 정정 — _gen_scatter.py 헤더 참조):
+      ROCK_DK sat 0.058, ROCK_MD sat 0.084, DIRT_DK sat 0.304
+      vs CLOTH_BLUE sat 0.440 / CLOTH_RUST sat 0.632 (채도축)
+      vs CLOTH_LINEN L 0.600 (명도축 — 리넨은 채도가 0.163 로 낮으므로 명도로 이긴다)
   - Outline: OUTLINE_PLANT for stone_chunk_small (1px, rock convention);
     no outline for dead_leaves or pebble_scatter (recede further).
   - Transparent background (RGBA), point-filter intent.

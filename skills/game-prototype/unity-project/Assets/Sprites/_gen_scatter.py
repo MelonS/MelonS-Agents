@@ -13,8 +13,14 @@ DESIGN RULES (V2 spec):
   - Colours STRICTLY from palette.py — no ad-hoc values anywhere.
   - All sprites must RECEDE: nothing brighter than SKIN_MD (224,176,132).
     Rock uses ROCK_* (grey-blue, sat 0.06-0.09).  Tufts use GRASS_DK/MD/LT
-    (muted khaki, sat 0.37-0.40).  Flowers use ROCK_* head (sat <0.10),
-    clearly below ALL pawn cloth (CLOTH_OLIVE min sat 0.375).
+    (muted khaki, sat 0.37-0.40).  Flowers use ROCK_* head (sat <0.10).
+    불변식 정정 (2026-07-29): "스캐터 채도 < 모든 폰 의상" 은 성립하지 않는다 —
+    실측 dead_leaves S0.447 > 구 최저 의상 S0.375 로 이미 위반이었고, 3번 슬롯이
+    리넨(S0.163)이 되며 채도 단독 기준은 무의미해졌다.  실제로 지켜야 하는 규칙은
+    **폰은 채도 또는 명도 중 최소 하나에서 확실히 이긴다**:
+      리넨 L0.600 vs 스캐터 최대 L0.418(water_edge_band) — 명도로 압승
+      파랑 S0.437 / 주황 S0.632 — 채도로 압승
+    스캐터를 추가할 땐 이 두 축 중 어느 쪽으로도 폰을 넘지 않는지 실측할 것.
   - 1px OUTLINE_PLANT edge (rock only) or no outline (grass, flowers).
   - 8x8 canvas, transparent background.
   - No sprite should be mistaken for a pawn or a building.
@@ -144,7 +150,7 @@ def gen_grass_tuft() -> Image.Image:
 # wildflower1.png  8x8
 # Straight-stem flower.  Stem: DIRT_MD (warm brown, sat 0.45 — darker than SKIN).
 # Head: 4-petal cross; petals ROCK_MD (sat 0.09), centre ROCK_LT (sat 0.06).
-# Both head colours are far below CLOTH_OLIVE (min cloth sat 0.375).
+# Both head colours recede on BOTH axes (sat <0.10, L <0.12) — 위 불변식 참조.
 # Leaf stub at mid-stem breaks the straight line.
 # ─────────────────────────────────────────────────────────────────────────────
 def gen_wildflower1() -> Image.Image:
