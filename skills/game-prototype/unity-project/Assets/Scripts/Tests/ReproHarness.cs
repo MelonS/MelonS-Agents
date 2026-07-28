@@ -100,6 +100,16 @@ namespace MelonS.GameProto
         {
             // bug-pattern #9 firewall — CLI 실행 시 포커스 잃어도 coroutine 정지 금지.
             Application.runInBackground = true;
+
+            // 전역 난수 시드 고정 (2026-07-29) — **게이트 플레이크의 근본 원인**.
+            //  게임플레이 코드가 UnityEngine.Random 을 57곳에서 쓰는데 Random.InitState
+            //  호출은 0곳이었다.  유니티는 전역 RNG 를 시스템 엔트로피로 시드하므로
+            //  같은 빌드·같은 시나리오를 두 번 돌려도 결과가 달랐다 (실측: 시작 식량이
+            //  10 / 0 으로 갈림, p0-pawn-move 가 절반쯤 실패).
+            //  p0-pawn-move 의 _note 가 "매 실행 폰 위치·일정이 다르다"로 진단하고
+            //  clearStockpiles·타임아웃 완화로 대응했지만, 그건 증상이었다.
+            //  ⚠ **재현 모드에서만** 고정한다.  일반 플레이는 매번 달라야 콜로니심답다.
+            UnityEngine.Random.InitState(20260729);
             if (!Directory.Exists(shotDir)) Directory.CreateDirectory(shotDir);
             try
             {
