@@ -166,7 +166,14 @@ namespace MelonS.GameProto.EditorTools
             float rockRadius = layout.rockRadius;
             Vector2[] dirtCenters = layout.dirtCenters;
             float dirtRadius = layout.dirtRadius;
-            const int MAP_HALF = 20;
+            // ⚠️ 여기 있던 `const int MAP_HALF = 20;` 를 제거했다 (2026-07-29).
+            //  TerrainLayout.MAP_HALF 를 **가리는 지역 상수**였다.  맵이 40x40 →
+            //  60x60(#108) → 90x90(#235) 으로 두 번 커지는 동안 지형 쪽 상수만
+            //  45 로 갱신되고 이 값은 20 에 남아, SpawnTrees 만 옛 40x40 범위에
+            //  나무를 뿌리고 있었다.  실측: 나무 x -16~18 / y -18~18, 맵은 -45~45
+            //  → 중심거리 30~45 구간(전체 면적의 56%)에 **0그루**.
+            //  운영자 2026-07-29 "화면을 축소해서 맵 전체를 보면 나무가 없어".
+            //  같은 이름의 지역 상수를 두지 않는다 — 아래는 전부 정본을 참조한다.
             SetupFlowerDecor(layout);
             // Polish v3 C — scatter rock/grass/wildflower decor
             SpawnScatterDecor(layout);
@@ -250,7 +257,8 @@ namespace MelonS.GameProto.EditorTools
             Sprite treeSprite = prefabs.treeSprite;
 
             // R10l: Tree spawn (20 tree) extract -> SceneSetup.Game.Trees.cs
-            SpawnTrees(treePrefab, MAP_HALF, lakeCenters, lakeRadii, rockClusterCenters, rockRadius);
+            SpawnTrees(treePrefab, TerrainLayout.MAP_HALF, lakeCenters, lakeRadii,
+                       rockClusterCenters, rockRadius);
 
             // #119 fix: StoneVeinEntity 8-14개 deterministic 배치 (rock cluster 근처 우선).
             //   R10 refactor 시 SetupWorldEntities 가 제거되면서 SpawnStoneVeins 호출이

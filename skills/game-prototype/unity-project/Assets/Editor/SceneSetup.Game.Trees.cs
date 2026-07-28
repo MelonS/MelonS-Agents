@@ -74,12 +74,20 @@ namespace MelonS.GameProto.EditorTools
                 pine, F64("birch"), F64("oak"), F64("maple"), F64("spruce"),
             };
 
-            // #108: 60x60 맵 = 9x 면적.  20 → 45 그루 비례.
+            // #108: 40x40 → 60x60 → 90x90 (#235).  그루 수는 아래에서 면적 유도.
             //  결정론적 (seed=24680).
             var treePositionsList = new System.Collections.Generic.List<Vector2>();
             System.Random tr = new System.Random(24680);
             int tries = 0;
-            while (treePositionsList.Count < 45 && tries < 900)
+            // 그루 수를 **맵 면적에서 유도**한다 (2026-07-29).  이전엔 45 로 하드코딩돼
+            //  있어서, 맵이 40x40 → 60x60 → 90x90 으로 커질 때마다 밀도가 조용히
+            //  묽어졌다(주석은 "60x60 맵 = 45그루"인 채로 90x90 이 됐다).
+            //  기준 밀도 = 옛 40x40 배치가 화면에서 읽히던 값 = 45그루 / 37² 칸.
+            //  이렇게 두면 다음에 맵이 또 커져도 밀도가 따라온다 — 같은 버그 재발 방지.
+            int span = 2 * mapHalf - 3;                       // 실제 추첨 범위 폭
+            int treeCount = Mathf.RoundToInt(45f * (span * span) / (37f * 37f));
+            int tryCap = treeCount * 26;                      // 옛 900/45 비율 유지
+            while (treePositionsList.Count < treeCount && tries < tryCap)
             {
                 tries++;
                 int tx = tr.Next(-(mapHalf-2), mapHalf-1);
