@@ -1,15 +1,56 @@
 {
-  "name": "P1 자연 플레이 — needs decay 작동(초반 단조구간 측정) + 식사 환류(배부름) + mood 자연 하강 (운영자 '게이지 안 줄어듦'/'기분 안 나빠짐' 회귀가드. needDrops 를 시작 직후에 두는 이유: food/sleep 80 에선 식사(<40)·수면붕괴가 불가능해 하락이 단조 — sawtooth 바닥(needBelow) 잡기는 식사 타이밍 운에 좌우돼 플래키)",
-  "timeoutSec": 280,
-  "steps": [
-    { "op": "wait", "sec": 1.5 },
-    { "op": "shot", "name": "00_start" },
-    { "op": "speed", "x": 4 },
-    { "op": "assert", "probe": "needDrops", "name": "food", "min": 5, "withinSec": 150 },
-    { "op": "assert", "probe": "needDrops", "name": "sleep", "min": 10, "withinSec": 150 },
-    { "op": "assert", "probe": "hasThought", "contains": "배부름", "withinSec": 800 },
-    { "op": "assert", "probe": "needBelow", "name": "mood", "min": 70, "withinSec": 300 },
-    { "op": "speed", "x": 1 },
-    { "op": "shot", "name": "01_natural_play" }
-  ]
+ "name": "P1 자연 플레이 — needs decay 작동(초반 단조구간 측정) + 식사 환류(배부름) + mood 자연 하강 (운영자 '게이지 안 줄어듦'/'기분 안 나빠짐' 회귀가드. needDrops 를 시작 직후에 두는 이유: food/sleep 80 에선 식사(<40)·수면붕괴가 불가능해 하락이 단조 — sawtooth 바닥(needBelow) 잡기는 식사 타이밍 운에 좌우돼 플래키)",
+ "timeoutSec": 280,
+ "steps": [
+  {
+   "op": "wait",
+   "sec": 1.5
+  },
+  {
+   "op": "shot",
+   "name": "00_start"
+  },
+  {
+   "op": "speed",
+   "x": 4
+  },
+  {
+   "op": "assert",
+   "probe": "needDrops",
+   "name": "food",
+   "min": 5,
+   "withinSec": 150
+  },
+  {
+   "op": "assert",
+   "probe": "needDrops",
+   "name": "sleep",
+   "min": 10,
+   "withinSec": 150
+  },
+  {
+   "op": "assert",
+   "probe": "hasThought",
+   "contains": "배부름|맛있는 식사|최고의 식사",
+   "withinSec": 800
+  },
+  {
+   "op": "assert",
+   "probe": "needBelow",
+   "name": "mood",
+   "min": 70,
+   "withinSec": 300
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "shot",
+   "name": "01_natural_play"
+  }
+ ],
+ "_why": [
+  "2026-07-30: hasThought 를 '배부름' 단일에서 '배부름|맛있는 식사|최고의 식사' 로 넓혔다. 시작 캠프에 화덕이 생겨 콜로니스트가 날것 대신 요리한 음식을 먹게 되면서 thought 라벨이 바뀌었고, 어서션이 '게임이 좋아진 것'을 실패로 보고했다. 검사 의도는 '먹었는가'이지 '어떤 경로로 먹었는가'가 아니다."
+ ]
 }

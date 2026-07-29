@@ -442,6 +442,13 @@ namespace MelonS.GameProto.EditorTools
                 }
             }
 
+            // 2026-07-30 — 집터 정리를 **맨 마지막**에 한 번 더 돌린다.
+            //  GenerateStarterSettlement 안에서만 치웠더니 덤불 하나가 집 안에 남았다.
+            //  원인: 스캐터·소품 생성이 시작 캠프보다 **뒤에** 실행돼, 치운 자리에 다시
+            //  놓였다.  "치운 시점 이후에 누가 또 놓는다"는 순서 의존이라, 정리는
+            //  생성 파이프라인의 끝에 있어야 한다.
+            ClearStarterHouseSite();
+
             EditorSceneManager.SaveScene(scene, GamePath);
             Debug.Log($"[SceneSetup] Game -> {GamePath}");
         }

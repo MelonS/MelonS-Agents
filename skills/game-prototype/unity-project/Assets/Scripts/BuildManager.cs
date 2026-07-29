@@ -503,6 +503,59 @@ namespace MelonS.GameProto
                 : new Color(1f, 0.4f, 0.4f, 0.55f);
         }
 
+        /// <summary>
+        /// 청사진이 덮는 칸의 **제거 가능한 장애물**(나무·광맥)에 자동으로 작업을 건다.
+        ///
+        /// 2026-07-30 운영자: "건물을 지을때 바위나 나무가 있으면 그걸 자동제거하거나
+        /// 절차상 제거하는 기능이 있어야 하는데 그게 없음."
+        ///
+        /// 이전 동작의 두 문제:
+        ///   · 광맥 → 배치 자체를 거부.  플레이어가 채광 지정 → 대기 → 다시 건축을
+        ///     손으로 해야 했다.  사람의 플레이 흐름이 아니다.
+        ///   · 나무 → 배치는 되지만 완성 순간 **자재 없이 조용히 사라졌다**.
+        ///     사람이라면 베어서 목재를 얻는다.
+        ///
+        /// 이제 둘 다 그 자리에서 벌목/채광으로 지정된다 — 콜로니스트가 치우고,
+        /// 자재는 정상적으로 들어오며, 건설은 그 뒤에 이어진다.
+        /// </summary>
+        private void AutoClearObstacles(int cx, int cy, int w, int h)
+        {
+            int trees = 0, veins = 0;
+            for (int dx = 0; dx < w; dx++)
+            {
+                for (int dy = 0; dy < h; dy++)
+                {
+                    var center = new Vector2(cx + dx + 0.5f, cy + dy + 0.5f);
+                    var hits = Physics2D.OverlapBoxAll(center, Vector2.one * 0.4f, 0f);
+                    foreach (var hit in hits)
+                    {
+                        if (hit == null) continue;
+                        if (hit.GetComponent<TreeEntity>() != null
+                            && TreeChopDesignation.Instance != null)
+                        {
+                            if (TreeChopDesignation.Instance.MarkWorld(center) != null) trees++;
+                        }
+                        else if (hit.GetComponent<StoneVeinEntity>() != null
+                                 && MineDesignation.Instance != null)
+                        {
+                            // MarkCell 은 private — 1칸짜리 드래그 사각형이 공개 진입점이다.
+                            if (MineDesignation.Instance.SimulateDragRect(center, center) > 0) veins++;
+                        }
+                    }
+                }
+            }
+            if (trees > 0 || veins > 0)
+            {
+                Debug.Log($"[Build] 자동 정리 지정: 나무 {trees} · 광맥 {veins} @ ({cx},{cy}) {w}x{h}");
+                if (BuildClickToast.Instance != null)
+                {
+                    string what = trees > 0 && veins > 0 ? $"나무 {trees}·바위 {veins}"
+                                : trees > 0 ? $"나무 {trees}그루" : $"바위 {veins}개";
+                    BuildClickToast.Instance.ShowSuccess($"{what} 먼저 치웁니다");
+                }
+            }
+        }
+
         private bool CellOccupied(int cx, int cy)
         {
             // tile center 기준 검사 (+0.5)
@@ -524,6 +577,19 @@ namespace MelonS.GameProto
                 //  PawnEntity (and animals, which carry no structural footprint) are
                 //  intentionally NOT treated as occupancy here.  Removing this also
                 //  de-fragiles Build Click QA (settlement cells often have pawns).
+                // 2026-07-30 운영자 — "건물을 지을때 바위나 나무가 있으면 그걸 자동제거하거나
+                //  절차상 제거하는 기능이 있어야 하는데 그게 없음."  맞는 지적이다.
+                //  레퍼런스 콜로니심은 **제거 가능한 것 위에는 청사진을 놓을 수 있고**, 놓는
+                //  순간 그 대상에 제거 작업(벌목/채광)이 자동으로 걸린다.  건설은 치워진 뒤
+                //  진행된다.  플레이어가 "먼저 채광 지정 → 기다림 → 다시 건축"을 손으로
+                //  하게 만드는 것은 사람의 플레이 흐름이 아니다.
+                //
+                //  그래서 **제거 가능한 장애물은 점유물에서 뺀다** (아래 AutoClearObstacles 가
+                //  배치 직후 작업을 건다).  치울 수 없는 것(벽·문·완성 가구·다른 청사진)만
+                //  점유로 남는다.
+                //  이번 회차 범위는 운영자가 지목한 **나무와 바위(광맥)** 로 한정한다.
+                //  열매덤불은 작고 피하기 쉬워 점유로 남겨 둔다 (범위를 넓힐수록 회귀 위험).
+                //  (was: StoneVeinEntity → return true)
                 if (h.GetComponent<BerryBushEntity>() != null) return true;
                 if (h.GetComponent<StoveEntity>() != null) return true;
                 if (h.GetComponent<ResearchBench>() != null) return true;  // #229 회귀 수리
@@ -533,9 +599,11 @@ namespace MelonS.GameProto
                 if (h.GetComponent<BedEntity>() != null) return true;
                 if (h.GetComponent<BlueprintEntity>() != null) return true;  // #118
                 // 운영자 (2026-06-12 오후) "돌이랑 침대가 겹쳐" — 광맥이 점유 검사에
-                //  빠져 광맥 셀 위에 침대/구조물을 지을 수 있었다.  채광으로 제거해야
-                //  건설 가능 (레퍼런스 동일).
-                if (h.GetComponent<StoneVeinEntity>() != null) return true;
+                //  빠져 광맥 셀 위에 침대/구조물을 지을 수 있었다.
+                //  2026-07-30 정정: 그때의 문제는 "겹쳐 보인다"였지 "놓을 수 있다"가 아니다.
+                //  이제 광맥 위 배치를 허용하되 AutoClearObstacles 가 **채광을 자동 지정**하고,
+                //  BlueprintEntity 는 광맥이 남아 있는 동안 완성되지 않는다 → 겹쳐 보이는
+                //  일이 없으면서 플레이어는 손으로 채광을 먼저 시킬 필요가 없다.
             }
             return false;
         }
@@ -689,6 +757,12 @@ namespace MelonS.GameProto
             int needWood = stoneMode ? 0 : cost;
             int needStone = stoneMode ? cost : 0;
             Debug.Log($"[Build] TryPlace OK: mode={CurrentMode} → blueprint at ({cx+0.5f}, {cy+0.5f}), need wood={needWood} stone={needStone}");
+
+            // 2026-07-30 — 청사진이 덮는 칸의 제거 가능한 장애물(나무·광맥·덤불)에
+            //  자동으로 작업을 건다.  이게 없으면 플레이어가 "채광 지정 → 대기 → 다시 건축"을
+            //  손으로 반복해야 하고, 나무는 완성 순간 **자재 없이 조용히 사라졌다**
+            //  (사람이라면 베어서 목재를 얻는다).
+            AutoClearObstacles(cx, cy, size.x, size.y);
 
             Sprite ghostSpr = SpriteForCurrentMode();
             var bpGo = new GameObject($"Blueprint_{CurrentMode}");

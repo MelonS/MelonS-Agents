@@ -43,6 +43,58 @@ namespace MelonS.GameProto
         [SerializeField] private float sleepDecay = 0.12f;
         [SerializeField] private float moodDecay = 0.048f;  // #234 the reference sim 시계 비례 축소
 
+        // ── 기분 수렴 모델 (2026-07-30) ───────────────────────────────────────
+        //  이전 모델은 mood 를 **0 을 향해** 상시 감소시키고, PawnThoughts 는 감정 합의
+        //  '델타'만 일회성으로 얹었다.  즉 기분이 구멍 난 양동이였다 — 배수는 상시,
+        //  유입은 이벤트뿐.
+        //
+        //  실측(2026-07-30 심사자 3분 시뮬레이션):
+        //    감소 0.048/게임초 × 하루 ~1000초 = **하루 −48**
+        //    맨땅 시작에서 가능한 유입 = 식사 +20 × 2~3회 = +20~30
+        //    → 순 −20~28/일.  80 에서 시작해 **2일차에 임계 20 아래 → 정신붕괴**.
+        //  관측과 일치했다 (봄 2일 저녁 "민지 정신붕괴", 그 뒤 콜로니 전 노동 정지).
+        //  코드 주석에도 이미 "침대 없는 콜로니는 mood 가 35 를 영영 못 넘어 영구 붕괴"가
+        //  남아 있었다 — 증상만 '카타르시스 복귀'로 막아 두고 원인은 그대로였다.
+        //
+        //  레퍼런스 콜로니심은 기분이 `기본 + Σ감정` 으로 **수렴**한다.  그래서 목표를
+        //  0 이 아니라 그 값으로 바꾼다.  감소율·일회성 보너스·붕괴 임계 등 기존 튜닝은
+        //  전부 그대로 살아 있고, 의미만 "붕괴"에서 "수렴"으로 바뀐다:
+        //    · 목표보다 높으면 (식사 직후 등) 목표까지 서서히 내려온다 = 기존 감소와 동일
+        //    · 목표보다 낮으면 (붕괴 직후 등) 목표까지 서서히 올라온다 = 회복이 가능해진다
+        //    · 목표 자체가 낮으면 (굶주림·부상·야외) 그 낮은 값에 머문다 = 붕괴가 발생한다
+        //  즉 "왜 기분이 나쁜가"가 감정 목록으로 설명되고, 화면의 기분 내역과 실제 수치가
+        //  처음으로 같은 것을 가리킨다 (이전엔 50+7+2+3=62 인데 표시가 82% 였다).
+        private PawnThoughts _thoughtsCache;
+
+        /// <summary>기분이 수렴할 목표 = 기본(50) + Σ감정.  감정 컴포넌트가 없으면 현재값 유지.</summary>
+        private float MoodTarget
+        {
+            get
+            {
+                if (_thoughtsCache == null) _thoughtsCache = GetComponent<PawnThoughts>();
+                return _thoughtsCache != null ? _thoughtsCache.CurrentMood : mood;
+            }
+        }
+
+        //  ⚠ 접근 속도는 **간극 비례(지수)** 여야 한다.  1차 구현은 기존 감소율
+        //  (0.048/스케일초)을 그대로 이동 속도로 썼는데, 그러면 3점짜리 감정 하나가
+        //  반영되는 데 60초 넘게 걸린다 — `p1-mood-negative-direct`(수면 20 세팅 →
+        //  15초 안에 mood 2.5 이상 하락)가 0.7 하락으로 FAIL 하며 이걸 잡아냈다.
+        //  감정이 붙었는데 기분이 안 변하면 플레이어에겐 고장으로 읽힌다.
+        //  시상수 ~4 스케일초 = 한 감정이 몇 초 안에 체감되고, 여전히 계단이 아니라 곡선.
+        private const float MoodDecayDefault = 0.048f;   // 특성 배율 역산용 기준값
+        [SerializeField] private float moodResponsePerSec = 0.25f;  // τ ≈ 4 스케일초
+
+        /// <summary>기존 `mood -= moodDecay * mul * dt` 를 대체.  목표를 향해 지수 접근한다.</summary>
+        private void MoodTowardTarget(float rateMul, float dt)
+        {
+            // 특성(Stoic 등)은 moodDecay 에만 배율을 걸어 왔다.  기준값으로 나눠 그 배율을
+            //  그대로 되살려, '기분 기복이 작은 성격'이 수렴 속도에도 계속 반영되게 한다.
+            float swing = moodDecay / MoodDecayDefault;
+            float k = 1f - Mathf.Exp(-dt * rateMul * moodResponsePerSec * swing);
+            mood = Mathf.Clamp(mood + (MoodTarget - mood) * k, 0f, 100f);
+        }
+
         [Header("Day 9+: sleep regen when sleeping at night")]
         // 백로그 #8 (2026-06-11): 회복 8/s = 밤잠이 하루의 ~10초 → 수면이 시간 비용이
         //  아니었다.  3/s 로 — 침대 RestMul(0.8/1.0/1.4)이 처음으로 노동시간 경제에
@@ -381,7 +433,7 @@ namespace MelonS.GameProto
                         //  thought 경제를 매일 리셋시키던 운영자 승인 모델 위반 잔재).
                         sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * restMul * dt);
                         food = Mathf.Max(0f, food - foodDecay * 0.5f * dt);
-                        mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
+                        MoodTowardTarget(0.5f, dt);
                         // 충분히 쉬었으면 명령 종료 (자동 기상).
                         if (sleep >= forcedWakeSleepLevel)
                         {
@@ -427,7 +479,7 @@ namespace MelonS.GameProto
                         float restMul = autoRestTarget.RestMul;
                         sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * restMul * dt);
                         food = Mathf.Max(0f, food - foodDecay * 0.5f * dt);
-                        mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
+                        MoodTowardTarget(0.5f, dt);
                         // 충분히 잤으면(80) 자율 취침 종료.  단 #269 스케줄 Sleep 슬롯 중엔
                         //  풀충전돼도 계속 잔다(슬롯 끝날 때까지) — the reference sim Sleep 동작.
                         // 갭 TOP-12 #12 — Work 슬롯 '전이' = 기상 조건 (에지 트리거).
@@ -473,7 +525,7 @@ namespace MelonS.GameProto
                         // 아직 이동 제한시간 내 — 일반 decay 만 진행 (도착 시 위에서 수면 진입).
                         food = Mathf.Max(0f, food - foodDecay * dt);
                         sleep = Mathf.Max(0f, sleep - sleepDecay * dt);
-                        mood = Mathf.Max(0f, mood - moodDecay * dt);
+                        MoodTowardTarget(1f, dt);
                         return;
                     }
                 }
@@ -517,7 +569,7 @@ namespace MelonS.GameProto
                 if (bed != null) lastSleepBed = bed;   // T5 — 기상 1회 thought 용
                 sleep = Mathf.Min(100f, sleep + sleepRegenAtNight * restMul * dt);
                 food  = Mathf.Max(0f, food  - foodDecay * 0.5f * dt);
-                mood  = Mathf.Max(0f, mood  - moodDecay * 0.5f * dt);
+                MoodTowardTarget(0.5f, dt);
                 return;
             }
             // Wake up when sleep refilled past 80 — 단 #269 스케줄 Sleep 슬롯 중엔 계속 잔다.
@@ -539,7 +591,7 @@ namespace MelonS.GameProto
                 //  스케줄 수면 내내) 허기·기분이 전혀 줄지 않는 '무한 무허기' 버그였다.  정상
                 //  취침 분기(위)와 동일한 0.5x 감소로 통일 — the reference sim 도 수면 중 허기 진행.
                 food = Mathf.Max(0f, food - foodDecay * 0.5f * dt);
-                mood = Mathf.Max(0f, mood - moodDecay * 0.5f * dt);
+                MoodTowardTarget(0.5f, dt);
                 return;
             }
 
@@ -551,7 +603,7 @@ namespace MelonS.GameProto
 
             food = Mathf.Max(0f, food - foodDecay * dt);
             sleep = Mathf.Max(0f, sleep - sleepDecay * dt);
-            mood = Mathf.Max(0f, mood - moodDecay * dt);
+            MoodTowardTarget(1f, dt);
 
             // ── 아사 (운영자 2026-06-11 '가만히 냅둬도 게임오버가 되지 않음') ──
             //  감쇠율은 레퍼런스 콜로니심 패리티(#234)였으나 food 0 의 '결과'가 없었다 — 굶주림이

@@ -1,0 +1,27 @@
+{
+  "name": "진단: 하루 만에 왜 무너지는가 (2026-07-30)",
+  "_why": [
+    "심사자 3분 시뮬레이션에서 1.5 게임일 만에 콜로니스트 3명 중 2명이 정신붕괴하고",
+    "아무도 일을 안 했다.  원인을 추측하지 않고 기분 내역을 직접 본다.",
+    "시작 정착지(prebuiltBase)가 꺼져 있어 침대·화덕·연구대·방이 전부 없는 상태다."
+  ],
+  "timeoutSec": 240,
+  "steps": [
+    { "op": "wait", "sec": 1.5 },
+    { "op": "speed", "x": 6 },
+    { "op": "wait", "sec": 240, "_real": "~40s" },
+
+    { "op": "speed", "x": 0 },
+    { "op": "worldclick", "target": "pawn" },
+    { "op": "wait", "sec": 1 },
+    { "op": "shot", "name": "m00_status" },
+
+    { "op": "clickui", "name": "label:기분" },
+    { "op": "wait", "sec": 1 },
+    { "op": "shot", "name": "m01_mood" },
+
+    { "op": "clickui", "name": "label:상태" },
+    { "op": "wait", "sec": 1 },
+    { "op": "shot", "name": "m02_needs" }
+  ]
+}

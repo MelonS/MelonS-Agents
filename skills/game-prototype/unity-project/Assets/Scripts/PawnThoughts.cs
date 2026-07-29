@@ -167,18 +167,22 @@ namespace MelonS.GameProto
                 //  시 그 음·양수만큼만 mood 가 변하고, 사이의 자연 decay/회복/즉시보너스는 그대로 누적
                 //  → mood = baseline-decay + Σthought 합산.  굶주림·부상·동료사망 누적 시 실제로 20 밑
                 //  으로 떨어져 정신붕괴 발동.
-                float sum = ThoughtSum;
-                float delta = sum - lastAppliedThoughtSum;
-                if (Mathf.Abs(delta) > 0.0001f)
-                {
-                    // #버그헌트4(2026-06-05): clamp 로 잘린 양은 lastApplied 에 누적하지 않는다.  경계
-                    //  (0/100)에서 delta 일부가 clamp 로 삼켜질 때 lastApplied 에 전체 sum 을 기록하면
-                    //  thought 만료 시 역델타가 '전체' 적용돼 비대칭 영구 드리프트(식사 후 오히려 mood
-                    //  하락, 동료사망 회복 후 과대상승)였다.  실제 적용량(clamp 후-전)만 반영해 대칭 유지.
-                    float before = needs.mood;
-                    needs.mood = Mathf.Clamp(before + delta, 0f, 100f);
-                    lastAppliedThoughtSum += (needs.mood - before);
-                }
+                // ── 델타 가산 폐지 (2026-07-30) ──────────────────────────────
+                //  위 문단은 "decay + 델타" 모델의 설명이다.  그 모델의 결함이
+                //  2026-07-30 실측으로 확정됐다: PawnNeeds 의 감소는 **0 을 향했고**
+                //  감정은 델타로 한 번씩만 얹혔다.  즉 배수는 상시, 유입은 이벤트뿐이라
+                //  기분이 구멍 난 양동이였다 — 무엇을 지어도 하루 −48 을 못 이겨
+                //  2일차에 콜로니 전원이 정신붕괴하고 노동이 멈췄다.
+                //
+                //  이제 PawnNeeds.MoodTowardTarget 이 mood 를 `기본 + Σ감정` 으로
+                //  **수렴**시킨다(레퍼런스 콜로니심 모델).  따라서 여기서 델타를 또
+                //  더하면 이중 계산이다 — 감정이 추가될 때 목표가 오르는 동시에 현재값도
+                //  튀어 올라 순간 과반응하고, 만료 시 같은 크기로 과하락한다.
+                //
+                //  일회성 즉시 보너스(식사 +20 등)는 그대로 살아 있다.  그건 목표 위로
+                //  잠깐 솟았다가 목표로 되돌아오는 '기쁨의 피크'로 동작한다 —
+                //  이전에는 그 피크가 유일한 유입이었고, 지금은 보너스일 뿐이다.
+                lastAppliedThoughtSum = ThoughtSum;
             }
         }
 

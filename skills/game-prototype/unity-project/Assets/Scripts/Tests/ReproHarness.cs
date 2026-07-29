@@ -629,10 +629,22 @@ namespace MelonS.GameProto
                     while (t < s.withinSec && !found2)
                     {
                         labels = "";
+                        // 2026-07-30 — `contains` 에 '|' 로 **대안**을 쓸 수 있게 확장.
+                        //  계기: 시작 캠프에 화덕이 생기면서 콜로니스트가 날것 대신 요리한
+                        //  음식을 먹게 됐고, thought 이 '배부름' → '최고의 식사' 로 바뀌었다.
+                        //  `p1-mood-negative` 는 '배부름' 을 박아 두고 있어서 **게임이
+                        //  좋아진 것을 실패로 보고**했다.  어서션의 의도는 "먹었는가"이지
+                        //  "어떤 경로로 먹었는가"가 아니므로 의도를 그대로 표현할 수단을 준다.
+                        //  '|' 가 없으면 기존과 완전히 동일하게 동작한다(상위 호환).
+                        string[] alts = s.contains != null ? s.contains.Split('|') : new string[0];
                         foreach (var thought in th.active)
                         {
                             labels += thought.label + ",";
-                            if (thought.label.Contains(s.contains)) { found2 = true; break; }
+                            foreach (var alt in alts)
+                            {
+                                if (alt.Length > 0 && thought.label.Contains(alt)) { found2 = true; break; }
+                            }
+                            if (found2) break;
                         }
                         if (!found2) { yield return new WaitForSeconds(0.25f); t += 0.25f; }
                     }
@@ -684,24 +696,31 @@ namespace MelonS.GameProto
                     foreach (var sm in selSet2) selNames.Add(sm.PawnName);
                     string selName = string.Join(",", selNames);
                     bool selDid = false; string offender = "";
+                    // 2026-07-30 — 실패 메시지가 "미관측"만 말해서 **무엇이 관측됐는지**를
+                    //  알 수 없었다.  선택 림이 실제로 무슨 활동을 했는지 모으면 실패가
+                    //  스스로를 설명한다 (기대와 실제의 차이가 곧 원인이다).
+                    var seen = new System.Collections.Generic.HashSet<string>();
                     float t = 0;
                     while (t < s.withinSec && offender == "")
                     {
                         foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
                         {
                             var lbl = p.GetComponentInChildren<PawnNameLabel>();
-                            if (lbl == null || lbl.CurrentActivity == null
-                                || !lbl.CurrentActivity.Contains(s.contains)) continue;
+                            if (lbl == null || lbl.CurrentActivity == null) continue;
+                            if (selNames.Contains(p.PawnName))
+                                seen.Add(lbl.CurrentActivity);
+                            if (!lbl.CurrentActivity.Contains(s.contains)) continue;
                             if (selNames.Contains(p.PawnName)) selDid = true;
                             else offender = p.PawnName;
                         }
                         yield return new WaitForSeconds(0.25f); t += 0.25f;
                     }
+                    string seenStr = seen.Count > 0 ? string.Join("/", seen) : "(없음)";
                     r.passed = selDid && offender == "";
                     r.detail = offender != ""
                         ? $"위반: 비선택 림 '{offender}' 도 '{s.contains}' (선택={selName}, {t:F1}s)"
                         : selDid ? $"선택 림 '{selName}' 만 '{s.contains}' ({t:F1}s 전구간 감시)"
-                                 : $"선택 림 '{selName}' 의 '{s.contains}' 미관측 in {t:F1}s";
+                                 : $"선택 림 '{selName}' 의 '{s.contains}' 미관측 in {t:F1}s — 실제 관측 활동: {seenStr}";
                     break;
                 }
                 case "selectedChopAssigned":

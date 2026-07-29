@@ -209,6 +209,12 @@ namespace MelonS.GameProto
                     if (h == null) continue;
                     var tree = h.GetComponent<TreeEntity>();
                     if (tree != null) Object.Destroy(tree.gameObject);
+                    // 2026-07-30 — 광맥도 같은 폴백을 준다.  배치 시 BuildManager.AutoClearObstacles
+                    //  가 채광을 지정하므로 보통은 광부가 먼저 캐서 석재가 들어온다.  다만
+                    //  건설이 채광보다 먼저 끝나는 경우가 있고, 그때 구조물이 광맥 위에 겹쳐
+                    //  남으면 운영자가 2026-06-12 에 지적한 "돌이랑 침대가 겹쳐"가 재발한다.
+                    var vein = h.GetComponent<StoneVeinEntity>();
+                    if (vein != null) Object.Destroy(vein.gameObject);
                 }
             }
             if (finishedPrefab != null)

@@ -30,7 +30,13 @@ namespace MelonS.GameProto
         {
             for (int h = 0; h < 24; h++)
             {
-                if (h <= 6 || h >= 23) slots[h] = TimeSlot.Sleep;
+                // 2026-07-30 — `h <= 6` 이었다.  그런데 **게임은 6:00 AM 에 시작한다**.
+                //  즉 시작하자마자 전원이 '일정상 취침' 이었다.  침대가 없던 동안에는
+                //  GoSleepAction 이 실패해 증상이 안 보였는데, 시작 캠프에 침대를 넣자
+                //  전원이 개시 직후 침대로 걸어가고 **플레이어의 직접 명령(우클릭 벌목)까지
+                //  밀려났다** — `p1-chop-selected-only` 가 "지훈의 실제 활동: 취침 이동"으로
+                //  잡아냈다.  기상 시각을 게임 시작 시각과 맞춘다: 23:00~05:59 수면, 6시 기상.
+                if (h < 6 || h >= 23) slots[h] = TimeSlot.Sleep;
                 else if (h == 22) slots[h] = TimeSlot.Joy;
                 else slots[h] = TimeSlot.Work;
             }

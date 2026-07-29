@@ -24,6 +24,8 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 import refactor_check as rc
 
 SCEN_DIR = rc.REPO / "skills" / "game-prototype" / "repro-scenarios"
+#  실패 사유 보존용 — 게이트 요약만으로는 원인을 못 찾는다 (2026-07-30).
+LOG_DIR = rc.REPO / "skills" / "game-prototype" / "art-out" / "repro-logs"
 RUNNER = Path(__file__).parent / "repro_run.py"
 
 # 2단 게이트 (2026-07-24) — 풀 게이트 30~60분이 "게이트 생략" 사고를 유발해 도입.
@@ -73,6 +75,7 @@ def main() -> int:
     #  이것 때문에 "4건 회귀"라는 잘못된 결론을 냈다 — 원인은 스위트가 도는 중에
     #  .cs 를 편집해 뒤늦게 시작한 시나리오들이 stale 판정을 받은 것뿐이었다.
     results: list[tuple[str, int]] = []
+    fail_lines: dict[str, list[str]] = {}
     for scen in scenarios:
         try:
             timeout = json.loads(scen.read_text(encoding="utf-8")).get("timeoutSec", 240)
@@ -82,7 +85,22 @@ def main() -> int:
         if args.build:
             cmd += ["--build", args.build]
         print(f"\n[repro_all] ── {scen.name} (timeout {timeout}s) " + "─" * 20)
-        rcode = subprocess.run(cmd, cwd=str(RUNNER.parent)).returncode
+        # 2026-07-30 — 시나리오별 출력을 파일로도 남긴다.
+        #  게이트가 FAIL 을 내도 요약만 남고 **어느 단계에서 왜 실패했는지가 사라졌다**
+        #  (콘솔 버퍼가 앞부분을 잃는다).  그래서 매번 개별 재실행으로 사유를 다시
+        #  찾아야 했고, 개별로는 PASS 가 나오는 경우엔 원인 추적이 막혔다.
+        #  실패는 스스로를 설명해야 한다 — 로그를 남기고, 요약에 실패 줄을 붙인다.
+        proc = subprocess.run(cmd, cwd=str(RUNNER.parent),
+                              capture_output=True, text=True,
+                              encoding="utf-8", errors="replace")
+        rcode = proc.returncode
+        out = (proc.stdout or "") + (proc.stderr or "")
+        print(out, end="")
+        LOG_DIR.mkdir(parents=True, exist_ok=True)
+        (LOG_DIR / f"{scen.stem}.log").write_text(out, encoding="utf-8")
+        if rcode != 0:
+            fail_lines[scen.name] = [ln.strip() for ln in out.splitlines()
+                                     if "FAIL" in ln or "STALE" in ln][:6]
         results.append((scen.name, rcode))
 
     def label(code: int) -> str:
@@ -93,6 +111,8 @@ def main() -> int:
     print("\n[repro_all] ━━━ 요약 ━━━")
     for name, code in results:
         print(f"  {label(code):5s} {name}")
+        for ln in fail_lines.get(name, []):
+            print(f"        {ln}")
     if n_stale:
         # STALE 은 "검증을 못 했다"이지 "검증에 실패했다"가 아니다.  그래서 실패
         #  건수와 분리해 찍고, 원인(스위트 중 소스 편집)을 그 자리에서 말해 준다.
