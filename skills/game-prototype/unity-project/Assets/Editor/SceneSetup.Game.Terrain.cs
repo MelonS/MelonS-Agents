@@ -149,6 +149,8 @@ namespace MelonS.GameProto.EditorTools
             // 흙 셀을 모아 두었다가 루프 뒤에 오버레이로 다시 그린다.  루프 안에서
             //  chosen 을 바꾸면 아래 isGrass 분기의 rng 소비가 달라져 **전 지형이 밀린다**.
             var dirtCells = new System.Collections.Generic.List<Vector2Int>();
+            // 호숫가 모래톱용 (2026-07-29) — 물 셀을 모아 둔다.  베이스는 건드리지 않는다.
+            var waterCells = new System.Collections.Generic.List<Vector2Int>();
             int half = TerrainLayout.MAP_HALF;
             for (int x = -half; x < half; x++)
             {
@@ -178,7 +180,7 @@ namespace MelonS.GameProto.EditorTools
                         if ((p - layout.lakeCenters[li]).magnitude < layout.lakeRadii[li] + (float)(rng.NextDouble()-0.5)*0.7f)
                         { isLake = true; break; }
                     }
-                    if (isLake) { layout.tilemap.SetTile(cell, layout.waterTile); ApplyRandomTileTransform(layout.tilemap, cell, rotRng, allowFlip); continue; }
+                    if (isLake) { layout.tilemap.SetTile(cell, layout.waterTile); ApplyRandomTileTransform(layout.tilemap, cell, rotRng, allowFlip); waterCells.Add(new Vector2Int(x, y)); continue; }
                     foreach (var dc in layout.dirtCenters)
                     {
                         if ((p - dc).magnitude < layout.dirtRadius + (float)(rng.NextDouble()-0.5)*0.5f)
@@ -229,6 +231,59 @@ namespace MelonS.GameProto.EditorTools
                     layout.overlay.SetTile(c3, layout.sandEdge[row, col]);
                 }
                 Debug.Log($"[Terrain] 전환 오버레이: 모래 {dirtCells.Count}칸 엣지 적용");
+            }
+
+            // ── 호숫가 모래톱 (2026-07-29) ─────────────────────────────────
+            //  라이브 WebGL 캡처에서 호수가 "텍스처 없는 파란 직사각형"으로 읽혔다.
+            //  잔디·모래·암반은 오늘 전부 너덜 경계를 얻었는데 물만 각진 계단이라
+            //  혼자 미완성으로 보인 것 — 개별 퀄리티가 아니라 **경계 규약의 불일치**다.
+            //
+            //  물 셀에 접한 **육지** 셀에 모래 엣지를 깔아 1칸 폭 모래톱 링을 만든다.
+            //  링 셀의 이웃 판정은 링 자신을 기준으로 하므로, 잔디 쪽과 물 쪽 양변이
+            //  모두 "이웃 없음"으로 잡혀 양쪽이 너덜해진다 — 모래가 잔디로 스미고
+            //  물로도 잠기는 실제 물가의 모양이다.
+            //
+            //  ⚠ 베이스 타일맵은 손대지 않는다.  PathGrid 가 타일 레퍼런스 비교로
+            //  통행을 판정하므로(t == _water), 물/육지 판정은 그대로 유지된다.
+            //  오버레이는 순수 시각 레이어라 통행에 영향이 없다.
+            //  ⚠ rng 를 쓰지 않는다 — 결정론 체인 보존.
+            if (layout.sandEdge != null && waterCells.Count > 0)
+            {
+                var waterSet = new System.Collections.Generic.HashSet<Vector2Int>(waterCells);
+                var shoreSet = new System.Collections.Generic.HashSet<Vector2Int>();
+                // 8-이웃으로 모은다.  4-이웃만 쓰면 호수 **모서리가 비어** 링이 끊기고
+                //  액자 테두리처럼 보인다 (1차 시도의 실패).
+                foreach (var w in waterCells)
+                {
+                    for (int dx = -1; dx <= 1; dx++)
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        if (dx == 0 && dy == 0) continue;
+                        int nx = w.x + dx, ny = w.y + dy;
+                        if (nx < -half || nx >= half || ny < -half || ny >= half) continue;
+                        var n = new Vector2Int(nx, ny);
+                        if (waterSet.Contains(n)) continue;
+                        // 암반은 절벽이라 모래톱을 두르지 않는다.
+                        if (layout.tilemap.GetTile(new Vector3Int(nx, ny, 0)) == layout.rockTile) continue;
+                        shoreSet.Add(n);
+                    }
+                }
+                foreach (var s in shoreSet)
+                {
+                    // ⚠ 이웃 판정에 **물도 포함**한다.  링 자신만으로 판정하면 물 쪽 변까지
+                    //  "이웃 없음"이 되어 팩 엣지 타일의 어두운 외곽선이 물가에 그려지고,
+                    //  모래톱이 해변이 아니라 **액자 테두리**로 읽힌다 (1차 시도의 실패).
+                    //  물을 이웃으로 치면 물 쪽은 잘리지 않아 모래가 수면까지 맞닿고,
+                    //  잔디 쪽 변만 너덜해진다 — 실제 물가의 모양이다.
+                    bool nl = shoreSet.Contains(new Vector2Int(s.x - 1, s.y)) || waterSet.Contains(new Vector2Int(s.x - 1, s.y));
+                    bool nr = shoreSet.Contains(new Vector2Int(s.x + 1, s.y)) || waterSet.Contains(new Vector2Int(s.x + 1, s.y));
+                    bool nt = shoreSet.Contains(new Vector2Int(s.x, s.y + 1)) || waterSet.Contains(new Vector2Int(s.x, s.y + 1));
+                    bool nb = shoreSet.Contains(new Vector2Int(s.x, s.y - 1)) || waterSet.Contains(new Vector2Int(s.x, s.y - 1));
+                    int col = (!nl && nr) ? 0 : (nl && nr) ? 1 : (nl && !nr) ? 2 : 3;
+                    int row = (!nt && nb) ? 0 : (nt && nb) ? 1 : (nt && !nb) ? 2 : 3;
+                    layout.overlay.SetTile(new Vector3Int(s.x, s.y, 0), layout.sandEdge[row, col]);
+                }
+                Debug.Log($"[Terrain] 호숫가 모래톱: 물 {waterCells.Count}칸 → 모래톱 {shoreSet.Count}칸");
             }
 
             // Step 81: runtime obstacle ref wire

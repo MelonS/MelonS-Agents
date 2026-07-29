@@ -197,8 +197,10 @@ namespace MelonS.GameProto
         private const int SpawnAvoidY = 3;
 
         // B11: Cell scan range for water-edge detection.
-        // PathGrid uses MIN=-30/MAX=29; we scan -MapHalf..MapHalf-1 to stay
-        // within the terrain area used by SceneSetup (MAP_HALF=25 → ±25 cells).
+        // 2026-07-29 주석 정정: 값(45)은 맞는데 주석이 낡아 -30/29·25 를 말하고 있었다.
+        //   현재 정본은 PathGrid.MIN=-45 / MAX=44, SceneSetup 의 TerrainLayout.MAP_HALF=45.
+        //   Scripts 는 Editor 어셈블리를 참조할 수 없어 이 상수 중복은 구조적이다 —
+        //   그래서 값이 아니라 **주석이 먼저 썩는다**.  셋이 함께 움직여야 한다.
         private const int WaterEdgeScanMin = -MapHalf;
         private const int WaterEdgeScanMax =  MapHalf - 1;
 

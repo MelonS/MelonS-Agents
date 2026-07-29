@@ -21,10 +21,17 @@ def launch_and_capture(
     screenshot_path: Path,
     delay_sec: float = 4.0,
     overall_timeout_sec: float = None,
+    extra_args: list = None,
 ) -> tuple[bool, str]:
     """Launch .exe, wait for AutoScreenshotter to write PNG + auto-quit.
 
     Returns (success, status_text).
+
+    `extra_args` are appended after the screenshot flags.  2026-07-29: the
+    build boots into the MENU scene, so a plain launch captures the title
+    screen (or nothing, when AutoScreenshotter lives in the Game scene) —
+    pass ``extra_args=["-autostart"]`` for any in-game capture.  Without it
+    this helper fails silently in a way that reads like a broken build.
 
     `overall_timeout_sec` defaults to `delay_sec + 20`, so long-delay
     QA runs (e.g. 90s for Day 12 regen) don't get killed mid-wait.
@@ -43,9 +50,10 @@ def launch_and_capture(
     screenshot_path.parent.mkdir(parents=True, exist_ok=True)
 
     print(f"[qa] launching {exe_path.name} (delay {delay_sec}s, timeout {overall_timeout_sec}s)")
-    proc = subprocess.Popen(
-        [str(exe_path), "-delay", str(delay_sec), "-screenshot", str(screenshot_path)]
-    )
+    cmd = [str(exe_path), "-delay", str(delay_sec), "-screenshot", str(screenshot_path)]
+    if extra_args:
+        cmd += [str(a) for a in extra_args]
+    proc = subprocess.Popen(cmd)
 
     deadline = time.time() + overall_timeout_sec
     captured = False

@@ -541,10 +541,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a29f6dcada78bd4eb000d9516039b03, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  offset: {x: 0, y: 1.12, z: 0}
-  statusGap: 0.27
+  offset: {x: 0, y: 1.16, z: 0}
+  statusGap: 0.34
   fontSize: 64
-  characterSize: 0.05
+  characterSize: 0.09
   lodNameOnly: 10
   lodHideAll: 17
 --- !u!114 &6373964312038851044

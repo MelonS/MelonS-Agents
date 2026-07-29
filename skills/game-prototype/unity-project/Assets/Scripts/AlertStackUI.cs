@@ -302,7 +302,9 @@ namespace MelonS.GameProto
                 var c = cards[i];
                 if (c == null || c.root == null) continue;
                 c.root.anchoredPosition = new Vector2(0f, y);
-                y -= (cardHeight + cardGap);
+                // 카드마다 높이가 다르다(줄바꿈) — 상수 cardHeight 로 밀면 2줄 카드가
+                //  아래 카드와 겹친다.  실측 높이를 쓰되 0 이면 상수로 폴백.
+                y -= ((c.height > 0f ? c.height : cardHeight) + cardGap);
             }
         }
 
@@ -442,6 +444,7 @@ namespace MelonS.GameProto
         private sealed class AlertCard
         {
             public RectTransform root;
+            public float height;       // 줄바꿈 실측 높이 — 스택 간격의 정본
             public float spawnTime;
             public int tier;           // #7.4 — tier2+ 는 시간 만료 제외(영속)
             public string title;       // 소크 r3 #8 — 위협 해소 시 매칭 제거용
@@ -495,10 +498,24 @@ namespace MelonS.GameProto
                 txt.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
                 txt.alignment = TextAnchor.MiddleLeft;
                 txt.color = Color.Lerp(accent, UITheme.TextPrimary, 0.25f);
-                txt.horizontalOverflow = HorizontalWrapMode.Overflow;
-                txt.verticalOverflow = VerticalWrapMode.Truncate;
+                // 라이브 WebGL 캡처(2026-07-29): Overflow 였던 탓에 카드보다 긴 제목이
+                //  카드 밖 → 화면 오른쪽 밖으로 새어나가 잘렸다 ("…1배속으로 시작" 에서 절단).
+                //  카드는 우측 앵커라 넘친 글자가 갈 곳이 없다.  줄바꿈으로 바꾸고 카드
+                //  높이를 실제 줄 수에 맞춰 늘린다 (Truncate 로 두면 둘째 줄이 잘린다).
+                txt.horizontalOverflow = HorizontalWrapMode.Wrap;
+                txt.verticalOverflow = VerticalWrapMode.Overflow;
                 txt.raycastTarget = false;
                 txt.text = title;
+
+                // 줄바꿈된 높이 실측 → 카드 높이 확장.  offsetMin/Max(10,4) 과 패널
+                //  패딩만큼을 뺀 폭이 실제 줄바꿈 폭이다.
+                float pad = UITheme.PadOuter * 0.4f;
+                float innerW = w - pad * 2f - 10f - 4f;
+                var gs = txt.GetGenerationSettings(new Vector2(innerW, 0f));
+                float textH = txt.cachedTextGeneratorForLayout.GetPreferredHeight(title, gs)
+                              / Mathf.Max(1f, txt.pixelsPerUnit);
+                card.height = Mathf.Max(h, textH + pad * 2f + 8f);
+                rt.sizeDelta = new Vector2(w, card.height);
 
                 // Transparent full-card click catcher (raycast target ON) so the
                 // whole card is clickable, not just the text.

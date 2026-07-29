@@ -67,7 +67,12 @@ def main() -> int:
             print("[repro_all] FAIL: fresh build 실패")
             return 2
 
-    results: list[tuple[str, bool]] = []
+    # rcode 를 그대로 보관한다.  repro_run 은 이미 2=빌드 문제(주로 STALE)와
+    #  1=시나리오 실패를 구분해 돌려주는데, 예전엔 여기서 `rcode == 0` 으로 뭉개
+    #  **stale 거부가 진짜 실패와 똑같이 FAIL 로 찍혔다**.  2026-07-29 에 실제로
+    #  이것 때문에 "4건 회귀"라는 잘못된 결론을 냈다 — 원인은 스위트가 도는 중에
+    #  .cs 를 편집해 뒤늦게 시작한 시나리오들이 stale 판정을 받은 것뿐이었다.
+    results: list[tuple[str, int]] = []
     for scen in scenarios:
         try:
             timeout = json.loads(scen.read_text(encoding="utf-8")).get("timeoutSec", 240)
@@ -78,14 +83,30 @@ def main() -> int:
             cmd += ["--build", args.build]
         print(f"\n[repro_all] ── {scen.name} (timeout {timeout}s) " + "─" * 20)
         rcode = subprocess.run(cmd, cwd=str(RUNNER.parent)).returncode
-        results.append((scen.name, rcode == 0))
+        results.append((scen.name, rcode))
 
-    n_fail = sum(1 for _, ok in results if not ok)
+    def label(code: int) -> str:
+        return {0: "PASS", 2: "STALE"}.get(code, "FAIL")
+
+    n_fail = sum(1 for _, c in results if c == 1)
+    n_stale = sum(1 for _, c in results if c == 2)
     print("\n[repro_all] ━━━ 요약 ━━━")
-    for name, ok in results:
-        print(f"  {'PASS' if ok else 'FAIL'}  {name}")
-    print(f"[repro_all] OVERALL: {'PASS' if n_fail == 0 else f'FAIL ({n_fail}/{len(results)})'}")
-    return 0 if n_fail == 0 else 1
+    for name, code in results:
+        print(f"  {label(code):5s} {name}")
+    if n_stale:
+        # STALE 은 "검증을 못 했다"이지 "검증에 실패했다"가 아니다.  그래서 실패
+        #  건수와 분리해 찍고, 원인(스위트 중 소스 편집)을 그 자리에서 말해 준다.
+        print(f"[repro_all] ⚠ STALE {n_stale}건 — 이 시나리오들은 **실행되지 않았다**.")
+        print("[repro_all]   원인: 스위트 실행 중 .cs 가 편집되어 빌드가 소스보다 오래됨.")
+        print("[repro_all]   조치: 스위트가 도는 동안 소스를 건드리지 말 것. --fresh-build 로 재실행.")
+    if n_fail == 0 and n_stale == 0:
+        overall = "PASS"
+    elif n_fail == 0:
+        overall = f"INCOMPLETE (stale {n_stale}/{len(results)})"
+    else:
+        overall = f"FAIL ({n_fail}/{len(results)})" + (f", stale {n_stale}" if n_stale else "")
+    print(f"[repro_all] OVERALL: {overall}")
+    return 0 if (n_fail == 0 and n_stale == 0) else 1
 
 
 if __name__ == "__main__":

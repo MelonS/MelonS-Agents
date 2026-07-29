@@ -238,14 +238,27 @@ namespace MelonS.GameProto.EditorTools
             var variantsProp = gmSo.FindProperty("colonistVariantSprites");
             const int NV = 8;
             variantsProp.arraySize = NV;
-            // 아트 B2: TS 폰 4색 우선 (96px 캔버스 = PPU96 로 1×1 유닛, 발 하단 정착).
-            //  8변형 슬롯에 4색 순환 배정 — 없으면 구세대 pawn_v 폴백.
-            string[] tsColors = { "blue", "purple", "red", "yellow" };
+            // 2026-07-29 — ts_pawn_* 우선 배정을 되돌린다.  두 가지 이유:
+            //
+            //  (1) 실제로 화면에 안 나왔다.  가시 스프라이트의 주인은 PawnSpriteAnimator
+            //      이고, 그건 루트 스프라이트 **이름**에서 `_v{digit}` 를 파싱해
+            //      `Resources/pawn32/pawn32_v{n}` 시트를 고른다.  `ts_pawn_blue` 는
+            //      파싱에 실패해 **이름 해시 폴백**으로 떨어졌고, 시작 콜로니스트 3인의
+            //      이름이 공교롭게 전부 파랑 계열(v0/v1/v6)로 사상돼 셋이 똑같이 보였다.
+            //      (라이브 캡처에서 발견 — 로그엔 경고가 없다. 폴백이 '성공'이라서.)
+            //  (2) ts_pawn_* 은 팩의 탑다운 유닛이라 몸통 대비 머리가 압도적인 실루엣이다.
+            //      우리 콜로니스트(인간형 16px)와 종이 다르게 읽힌다.
+            //
+            //  대신 pawn_v{i} 를 **옷색이 최대로 갈리는 순서**로 넣는다.  시작 3인이
+            //  슬롯 0·1·2 를 가져가므로 그 셋이 파랑/러스트/리넨 — 팔레트가 정의한
+            //  세 옷색과 정확히 일치한다.  '각자 다른 개인'이 이 게임의 주장이므로
+            //  세 명이 한눈에 구분되는 것은 장식이 아니라 주장의 증거다.
+            int[] variantOrder = { 0, 2, 4, 6, 1, 3, 5, 7 };
             for (int vi = 0; vi < NV; vi++)
             {
-                var vs = ImportSpriteAt($"Assets/Sprites/ts_pawn_{tsColors[vi % 4]}.png", 96f)
-                         ?? LoadOrSetupSprite($"Assets/Sprites/pawn_v{vi}.png");
-                if (vs == null) Debug.LogWarning($"[SceneSetup] pawn_v{vi}.png sprite null");
+                int src = variantOrder[vi];
+                var vs = LoadOrSetupSprite($"Assets/Sprites/pawn_v{src}.png");
+                if (vs == null) Debug.LogWarning($"[SceneSetup] pawn_v{src}.png sprite null");
                 variantsProp.GetArrayElementAtIndex(vi).objectReferenceValue = vs;
             }
             gmSo.FindProperty("arrowSpriteRuntime").objectReferenceValue = arrowSpriteRef;

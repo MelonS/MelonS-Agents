@@ -67,13 +67,18 @@ namespace MelonS.GameProto
 
         private IEnumerator CaptureAndQuit()
         {
-            yield return new WaitForSeconds(delaySeconds);
+            // 2026-07-29: WaitForSeconds 는 **스케일 시간**이다.  게임은 의도적으로
+            //  일시정지(timeScale=0)로 부팅하므로 이 타이머는 영원히 안 흘렀고,
+            //  -autostart 인게임 캡처가 로그상 "will capture in Ns" 만 남기고 조용히
+            //  아무 것도 쓰지 않았다.  '-delay N' 은 벽시계 N 초라는 뜻이므로 realtime 이
+            //  정본이다.  runInBackground=ON 과도 의도가 맞는다.
+            yield return new WaitForSecondsRealtime(delaySeconds);
 
             // 진단(-opensettings): 캡처 직전 설정 메뉴를 열어 레이아웃을 확인.
             if (openSettings)
             {
                 MelonS.GameProto.SettingsMenu.Open();
-                yield return new WaitForSeconds(0.4f);
+                yield return new WaitForSecondsRealtime(0.4f);
             }
 
             // 진단(-inspectpawn): 첫 림을 선택해 인스펙트 패널을 띄운다(UI 검증).
@@ -81,7 +86,7 @@ namespace MelonS.GameProto
             {
                 var sel = Object.FindFirstObjectByType<MelonS.GameProto.ClickSelector>();
                 if (sel != null) sel.DiagnosticInspectFirstPawn();
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSecondsRealtime(0.5f);
             }
 
             // 진단(-openarchitect): Architect 건축 메뉴를 연다(UI 검증).
@@ -89,7 +94,7 @@ namespace MelonS.GameProto
             {
                 if (MelonS.GameProto.ArchitectMenu.Instance != null)
                     MelonS.GameProto.ArchitectMenu.Instance.Open();
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSecondsRealtime(0.5f);
             }
 
             // 진단(-testsave, #44): GameSaveButtons 호스트를 찾아 저장을 트리거 → save.json 작성 검증.
@@ -98,7 +103,7 @@ namespace MelonS.GameProto
                 var gsb = Object.FindFirstObjectByType<MelonS.GameProto.GameSaveButtons>(FindObjectsInactive.Include);
                 if (gsb != null) { gsb.OnSave(); Debug.Log("[AutoScreenshotter] -testsave: GameSaveButtons.OnSave() 호출"); }
                 else Debug.LogError("[AutoScreenshotter] -testsave: GameSaveButtons 호스트 없음!");
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSecondsRealtime(0.5f);
             }
 
             // 진단(-pilescale, #61): 양→크기 폴리싱 검증.  1/5/25/50 통나무 더미를 카메라
@@ -122,7 +127,7 @@ namespace MelonS.GameProto
                     var p = WoodPileEntity.Spawn(new Vector3(c.x - 3f + k * 2f, c.y, 0f), amts[k], null);
                     if (p != null) p.InStockpile = true;  // 부패 정지(캡처 보존)
                 }
-                yield return new WaitForSeconds(0.4f);
+                yield return new WaitForSecondsRealtime(0.4f);
             }
 
             string dir = Path.GetDirectoryName(outputPath);
@@ -133,7 +138,7 @@ namespace MelonS.GameProto
             Debug.Log($"[AutoScreenshotter] captured -> {outputPath}");
 
             // Wait a few frames for the screenshot file to flush
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSecondsRealtime(1.5f);
 
             Debug.Log("[AutoScreenshotter] quitting...");
             Application.Quit();

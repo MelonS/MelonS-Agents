@@ -20,10 +20,16 @@ namespace MelonS.GameProto
     {
         // #199 A2 ortho + 1x1 pawn — 라벨을 HP 바(top 0.68) 바로 위로.
         //  순서(위→아래): name(1.06) > status(0.80) > HP 바(0.68) > mood 바(0.55) > 머리(0.5).
-        [SerializeField] private Vector3 offset = new Vector3(0, 1.12f, 0);
-        [SerializeField] private float statusGap = 0.27f;   // name↔status 줄간격 (#3.1)
+        [SerializeField] private Vector3 offset = new Vector3(0, 1.16f, 0);
+        [SerializeField] private float statusGap = 0.34f;   // name↔status 줄간격 (#3.1)
         [SerializeField] private float fontSize = 64;
-        [SerializeField] private float characterSize = 0.05f;
+        // 2026-07-29 라이브 캡처 — 이름표가 **판독 불가**였다 ("지훈"이 뭉개진 얼룩).
+        //  characterSize 0.05 × fontSize 64 는 월드 높이 ~0.32 유닛이고, 기본 줌
+        //  (ortho 15, 1080p)에서 1 유닛 ≈ 36px 이므로 **화면상 ~11px**.  한글은 그
+        //  크기에서 구조가 무너진다(획 사이가 1px 미만).  0.09 로 올려 ~20px 확보.
+        //  offset/statusGap 도 커진 글자에 맞춰 함께 벌린다 — 하나만 바꾸면 이름줄과
+        //  활동줄이 겹친다.
+        [SerializeField] private float characterSize = 0.09f;
         // TOP-2 LOD 경계 (ortho size).  #카메라파리티: 기본줌 5.5→8 에 맞춰 재조정
         //  (기본 줌에서 이름이 보여야 한다).
         [SerializeField] private float lodNameOnly = 10f;   // 이상: 활동 줄 숨김
@@ -121,9 +127,14 @@ namespace MelonS.GameProto
         //  글자 형태가 닫힌다.  텍스트 갱신은 배열 전체에 (SetShadowText).
         private static TextMesh[] MakeShadow(GameObject parent, TextMesh src, int order)
         {
+            // 2026-07-29: 오프셋이 글자 크기에 비해 과했다.  대각 4방향 ±0.03 은 획
+            //  두께의 절반을 넘어 한글 **속공간(ㅇ·ㅎ의 구멍, ㅁ의 안쪽)을 메웠고**,
+            //  그래서 이름이 얼룩으로 읽혔다.  외곽선은 글자를 닫아주되 속을 채우면
+            //  안 된다 — 상하좌우 축 정렬 4방향으로 바꾸고 폭을 절반으로 줄인다.
+            //  (대각선은 같은 폭에서 모서리를 더 뭉친다.)
             var offs = new[] {
-                new Vector3(0.03f, -0.03f, 0f), new Vector3(-0.03f, -0.03f, 0f),
-                new Vector3(0.03f, 0.03f, 0f),  new Vector3(-0.03f, 0.03f, 0f),
+                new Vector3(0.016f, 0f, 0f), new Vector3(-0.016f, 0f, 0f),
+                new Vector3(0f, 0.016f, 0f), new Vector3(0f, -0.016f, 0f),
             };
             var arr = new TextMesh[offs.Length];
             for (int i = 0; i < offs.Length; i++)
