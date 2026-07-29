@@ -279,7 +279,17 @@ namespace MelonS.GameProto
             }
             if (checkOverUI)
             {
-                bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+                // 2026-07-30 — `EventSystem.IsPointerOverGameObject()` (인자 없음)은
+                //  **실제 OS 마우스 위치**를 본다.  주입 입력(-repro)에서는 그 위치가
+                //  클릭 지점과 무관하므로, 창 위 아무 UI에나 커서가 얹혀 있으면 모든 배치가
+                //  조용히 무시된다.  `p2-first10min` 이 청사진 0개였고 로그에는 화면 정중앙
+                //  (960,540) 클릭조차 `overUI=true` 로 찍혔다 — 커서가 다른 곳에 있었던 것이다.
+                //  "개별 실행은 PASS, 게이트는 FAIL" 이 재현되던 이유이기도 하다(커서 위치에
+                //  따라 결과가 갈렸다).
+                //  프로젝트 규약(WORKFLOW-V2: 입력은 SimInput 경유)대로 SimInput 을 쓴다 —
+                //  평시엔 동일하게 실제 포인터를, 주입 시엔 **주입된 좌표**를 검사한다.
+                //  ClickSelector 등 다른 입력 경로는 이미 이 규약을 따르고 있었고 여기만 빠져 있었다.
+                bool overUI = SimInput.IsPointerOverUI();
                 if (overUI)
                 {
                     Vector3 mwLog = (cam != null) ? cam.ScreenToWorldPoint(screenPos) : Vector3.zero;

@@ -196,12 +196,51 @@ namespace MelonS.GameProto
                     // 기하 밴드(하단바)에 더해 실제 UI 레이캐스트로 차단 검사 — 콜로니스트
                     //  초상화/알림 카드 등 동적 UI 뒤에 타깃이 깔린 케이스(110px-from-top
                     //  무음 미스)는 밴드 추정으로 못 잡는다.  막혀 있으면 화면 중앙으로 점프.
-                    if (pre.x < Screen.width * 0.05f || pre.x > Screen.width * 0.95f
-                        || pre.y < Screen.height * 0.16f || pre.y > Screen.height * 0.92f
-                        || UiBlockedAt(pre))
+                    //  2026-07-30 — 조건부 FocusOn 을 **무조건**으로 바꾼다.
+                    //  기존은 "가장자리이거나 UI 에 막혔으면" 카메라를 옮겼는데, 판정 시점과
+                    //  클릭 소비 시점 사이에 **알림 토스트가 새로 떠서** 그 자리를 덮으면
+                    //  검사는 통과하고 클릭만 먹혔다 — `p2-first10min` 이 청사진 0개로 잡혔고
+                    //  게임 로그에 `[Build] CLICK skip: overUI=true` 가 7줄 찍혀 있었다.
+                    //  (오늘 토스트를 2줄로 키우면서 우상단 차단 영역이 넓어진 것이 계기다.)
+                    //  타깃을 화면 중앙으로 가져오면 UI 위일 수가 없다 — 실제 플레이어도
+                    //  뭔가를 클릭하려면 그쪽으로 화면을 옮긴다.  이 한 줄이 "UI 가 클릭을
+                    //  먹었다" 계열 플레이크 전체를 없앤다.
+                    _ = pre;   // (진단용 좌표 — 판정에는 더 이상 쓰지 않는다)
                     {
                         var cc = Object.FindFirstObjectByType<CameraController>();
-                        if (cc != null) { cc.FocusOn(new Vector2(world.x, world.y)); yield return null; }
+                        if (cc != null)
+                        {
+                            cc.FocusOn(new Vector2(world.x, world.y));
+                            yield return null;
+                            for (int settle2 = 0; settle2 < 60; settle2++)
+                            {
+                                Vector3 c1 = Camera.main.transform.position;
+                                yield return null;
+                                if ((Camera.main.transform.position - c1).sqrMagnitude < 0.0001f) break;
+                            }
+                        }
+                    }
+                    // 2026-07-30 — **움직이는 대상은 클릭 직전에 다시 잡는다.**
+                    //  `target:"pawn"` 은 정지물이 아니다.  예전에는 콜로니스트가 할 일이 없어
+                    //  가만히 서 있었기 때문에 한 번 잡은 좌표가 계속 유효했는데, 시작 캠프가
+                    //  생겨 실제로 일하러 걸어다니게 되자 리졸브~클릭 사이(카메라 정착·포커스
+                    //  점프로 여러 프레임)에 그 자리를 떠나 **빈 땅을 클릭**하게 됐다
+                    //  (`p0-pawn-move` 가 selection=none 으로 잡아냈다).
+                    //  게임이 살아난 결과지 회귀가 아니므로, 테스트를 늦추는 게 아니라
+                    //  하네스가 사람처럼 "지금 있는 곳"을 다시 보게 한다.
+                    //  재리졸브만으론 부족했다 — 주입이 **소비되는 다음 프레임**에도 계속
+                    //  움직여 3회 중 2회 실패했다.  그래서 클릭이 소비되는 그 몇 프레임 동안만
+                    //  시간을 멈춘다 (`speed` 와 같은 테스트 스캐폴딩).  timeScale=0 에서도
+                    //  Update 와 `yield return null` 은 정상 동작하므로 입력은 그대로 흐른다.
+                    float savedScale = -1f;
+                    bool movingTarget = !string.IsNullOrEmpty(s.target) && s.target.StartsWith("pawn");
+                    if (movingTarget)
+                    {
+                        savedScale = Time.timeScale;
+                        Time.timeScale = 0f;
+                        yield return null;              // 정지가 반영된 프레임에서 다시 잡는다
+                        Vector3 fresh;
+                        if (ResolveWorld(s, out fresh)) world = fresh;
                     }
                     Vector3 screen = Camera.main.WorldToScreenPoint(world);   // detail 표기용
                     int btn = s.op == "worldclick" ? 0 : 1;
@@ -212,6 +251,7 @@ namespace MelonS.GameProto
                     yield return null;                 // 다음 프레임 Update 들이 이 입력을 본다
                     SimInput.ClearFrame();
                     yield return null;
+                    if (savedScale >= 0f) Time.timeScale = savedScale;   // 정지 해제 (움직이는 대상 클릭)
                     // 진단 — 클릭 지점에 뭐가 있었는지 기록 (이동인 줄 알았는데 엔티티 클릭이었던 케이스 가시화)
                     var hitsAt = Physics2D.OverlapPointAll(world);
                     string atWhat = hitsAt.Length == 0 ? "empty"

@@ -362,7 +362,23 @@ namespace MelonS.GameProto.EditorTools
                         ci++;
                     }
                 }
-                Debug.Log($"[StarterCamp] 침대 {bedSpots.Length} · 화덕 1 · 연구대 1 · 경작지 {ci}칸");
+                // 광장 — 문(−14,−2) 앞 3×3 을 흙바닥으로 깐다.
+                //  1차 배치에서 광장이 그냥 잔디라 "여기가 마당"이라는 신호가 전혀 없었다.
+                //  주변과 같은 지면이면 사람은 그것을 공간으로 인식하지 못한다 —
+                //  바닥이 바뀌어야 '다져진 마당'으로 읽히고, 그게 곧 가상의 길이 된다.
+                //  집 안(흙) ↔ 문간 ↔ 광장(흙) 이 한 색으로 이어져 동선이 눈에 보인다.
+                int plaza = 0;
+                for (int px = -17; px <= -15; px++)
+                {
+                    for (int py = -3; py <= -1; py++)
+                    {
+                        tm.SetTile(new Vector3Int(px, py, 0), dirtTile);
+                        plaza++;
+                    }
+                }
+                // 문 앞 한 칸(−15,−2)은 위 루프에 포함 — 문에서 광장까지 흙이 끊기지 않는다.
+
+                Debug.Log($"[StarterCamp] 침대 {bedSpots.Length} · 화덕 1 · 연구대 1 · 경작지 {ci}칸 · 광장 {plaza}칸");
             }
 
             // #246 운영자 fb "게임 시작 시 창고영역 세팅 안 되어 있고 유저가 정하게" —
@@ -392,6 +408,9 @@ namespace MelonS.GameProto.EditorTools
                 var fsr = fireGo.AddComponent<SpriteRenderer>();
                 fsr.sprite = fireSprite;
                 fsr.sortingOrder = 6;
+                // 광장의 초점이 되려면 보여야 한다 — 1차 배치에선 희미한 주황 점이라
+                //  '마당 한가운데 모닥불'로 안 읽혔다.  2.2배로 키워 3×3 광장을 채운다.
+                fireGo.transform.localScale = new Vector3(2.2f, 2.2f, 1f);
                 fireGo.AddComponent<FlickerLight>();
             }
         }

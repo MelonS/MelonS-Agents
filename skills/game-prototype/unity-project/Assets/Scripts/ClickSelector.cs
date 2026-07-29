@@ -65,6 +65,22 @@ namespace MelonS.GameProto
                 if (c.GetComponent(t) != null) return true;
             return false;
         }
+        /// <summary>클릭 지점의 **살아 있는** 콜로니스트 중 가장 가까운 하나.
+        /// 좌클릭 선택 전용 폴백 — 바닥 아이템이 고르기에서 이기던 것을 막는다 (2026-07-30).</summary>
+        private PawnEntity PickLivePawnAt(Vector2 world)
+        {
+            PawnEntity best = null; float bestSq = float.MaxValue;
+            foreach (var h in Physics2D.OverlapPointAll(world))
+            {
+                if (h == null) continue;
+                var p = h.GetComponent<PawnEntity>();
+                if (p == null || p.IsDead) continue;
+                float sq = ((Vector2)p.transform.position - world).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = p; }
+            }
+            return best;
+        }
+
         private Collider2D PickEntityAt(Vector2 world)
         {
             var hits = Physics2D.OverlapPointAll(world);
@@ -119,6 +135,16 @@ namespace MelonS.GameProto
                 // r2 #7 — 시체는 선택 대상이 아니라 inspect 대상 (죽은 림이 클릭 1순위로
                 //  생존 림/아이템을 가로채던 것).
                 if (pawn != null && pawn.IsDead) pawn = null;
+                // 2026-07-30 — **아이템 위에 서 있는 콜로니스트가 선택되지 않던 것.**
+                //  PickEntityAt 은 actionable 중 '클릭 지점에 중심이 가장 가까운 것'을 고른다.
+                //  목재 더미와 콜로니스트가 같은 칸에 있으면 더미 중심이 더 가까울 수 있고,
+                //  그러면 hit 이 더미라 선택이 통째로 무효가 된다(선택 없음 → 아무 일도 안 일어남).
+                //  실측: `p0-pawn-move` 가 3회 중 2회 실패했고 진단에 `at=WoodPile_50+Pawn(Clone)`
+                //  이 찍혀 있었다 — 클릭은 맞았는데 고르기가 틀린 것이다.
+                //  콜로니스트는 이 게임의 유일한 조작 대상이므로 **좌클릭 선택에서는 최우선**이다.
+                //  (우클릭 컨텍스트 메뉴는 기존 거리 규칙 그대로 — 바닥 아이템에 대한 작업도
+                //   여전히 지시할 수 있어야 한다.)
+                if (pawn == null) pawn = PickLivePawnAt(mouseWorld);
                 if (pawn != null) {
                     Select(pawn);
                     currentInspect = pawn.gameObject;  // #128 - pawn 도 inspect 패널 표시
