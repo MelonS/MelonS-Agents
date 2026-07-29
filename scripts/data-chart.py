@@ -31,6 +31,10 @@ from PIL import Image, ImageDraw, ImageFont
 # ── canvas ────────────────────────────────────────────────────────────────────
 W, H = 1080, 1920
 FPS_DEFAULT = 30
+# 9:16 band plan. Anything below ~1650 is covered by the Shorts player UI
+# (title / channel / description), so the legal band must sit above it.
+CAPTION_Y = 1400        # burned narration captions
+DISCLOSURE_Y = 1508     # mandatory fan-content + AI lines
 
 # ── palette (dataviz skill, dark mode, validated vs surface #0d0d0d) ─────────
 SURFACE = (13, 13, 13)
@@ -42,6 +46,7 @@ AXIS = (56, 56, 53)
 SERIES_1 = (57, 135, 229)    # blue   — slot 1 (Seoul / primary accent)
 SERIES_2 = (217, 89, 38)     # orange — slot 2 (Los Angeles)
 # sequential blue ramp, dark-surface direction (near-zero recedes to surface)
+ACCENT = (255, 92, 141)      # headline type accent (not a data encoding)
 BLUE_DIM = (16, 66, 129)
 BLUE_MID = (37, 106, 191)
 
@@ -123,6 +128,22 @@ def rounded_line(d, x0, y0, x1, y1, width, fill):
     r = width / 2
     for (cx, cy) in ((x0, y0), (x1, y1)):
         d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=fill)
+
+
+def fit(d, s, kind, size, max_w):
+    """Shrink a string until it fits `max_w`.
+
+    The display face is far wider than the text face at the same nominal size,
+    so a size that fit before the type restyle can run off the frame. Measuring
+    beats guessing — every headline goes through here.
+    """
+    lines = s.splitlines() or [s]
+    while size > 16:
+        f = font(kind, size)
+        if max(text_w(d, ln, f) for ln in lines) <= max_w:
+            return f
+        size -= 2
+    return font(kind, size)
 
 
 def count_up(target, t, decimals=0):
@@ -395,69 +416,359 @@ def scene_timezone(d, t, S):
 
 
 def scene_summary(d, t, S):
-    """Stat tiles — the number is the chart."""
+    """Stat tiles as a 2x2 grid in the UPPER band.
+
+    A four-row list runs the full height and lands squarely on the footage;
+    a 2x2 grid fits entirely above the video band, so the subject stays visible
+    while the numbers are read. The number is still the chart — no bars.
+    """
     a = fade(t)
-    text(d, (W // 2, 470), "정리하면", font("text", 54), dim(MUTED, a))
-    tiles = S["summary_tiles"]
+    text(d, (W // 2, 344), S.get("summary_title", "정리하면"),
+         fit(d, S.get("summary_title", "정리하면"), "display", 60, 900), dim(ACCENT, a))
+
+    tiles = S["summary_tiles"][:4]
+    col_x = (300, 782)
+    row_y = (430, 560)
     for i, tile in enumerate(tiles):
-        b = min(a, ease_out((t - 0.08 - i * 0.10) / 0.28))
+        b = min(a, ease_out((t - 0.06 - i * 0.11) / 0.26))
         if b <= 0:
             continue
-        y = 640 + i * 200
-        d.line([(120, y + 118), (W - 120, y + 118)], fill=dim(GRID, b), width=1)
-        text(d, (120, y + 34), tile["label"], font("text", 42), dim(MUTED, b), anchor="lm")
-        text(d, (W - 120, y + 30), tile["value"], font("display", 82), dim(INK, b), anchor="rm")
+        cx = col_x[i % 2]
+        ry = row_y[i // 2]
+        text(d, (cx, ry), tile["label"],
+             fit(d, tile["label"], "display", 34, 430), dim(INK_2, b))
+        text(d, (cx, ry + 62), tile["value"],
+             fit(d, tile["value"], "display", 70, 430), dim(INK, b))
+    d.line([(W // 2, 396), (W // 2, 628)], fill=dim(GRID, a), width=1)
 
 
 def scene_outro(d, t, S):
     a = fade(t, 0.06, 0.16)   # the one place a slow fade is wanted — the ending
-    text(d, (W // 2, 820), S["closing"], font("display", 84), dim(INK, a))
+    text(d, (W // 2, 800), S["closing"], fit(d, S["closing"], "display", 132, 940), dim(INK, a), spacing=18)
     if t > 0.35:
         b = min(a, ease_out((t - 0.35) / 0.3))
-        text(d, (W // 2, 1080), S["question"], font("text", 56), dim(SERIES_1, b))
+        text(d, (W // 2, 1090), S["question"], fit(d, S["question"], "display", 64, 940), dim(ACCENT, b))
+
+
+def scene_hero(d, t, S):
+    """Generic opening stat tile — the number is the chart."""
+    a = fade(t)
+    h = S["hero"]
+    target = h["value"]
+    shown = int(round(target * ease_out(t / 0.5))) if t < 0.5 else target
+    text(d, (W // 2, 840), f"{shown:,}", font("display", 300), dim(INK, a))
+    text(d, (W // 2, 1030), h["unit"], font("display", 116), dim(ACCENT, a))
+    if t > 0.42:
+        b = min(a, ease_out((t - 0.42) / 0.25))
+        text(d, (W // 2, 1216), h["sub"], fit(d, h["sub"], "display", 60, 940), dim(INK, b), spacing=18)
+
+
+def scene_chart(d, t, S):
+    """Chart-position journey. Rank 1 is BEST, so the axis is inverted and the
+    scale is logarithmic — a linear axis would flatten 100→98 into nothing and
+    make the whole story look like a single instant spike."""
+    a = fade(t)
+    c = S["chart"]
+    pts = c["points"]
+    text(d, (W // 2, 402), c["title"], fit(d, c["title"], "display", 58, 940), dim(ACCENT, a))
+
+    x0, x1 = 150, W - 150
+    ytop, ybot = 700, 1240
+
+    def px(i):
+        return x0 + (x1 - x0) * (i / max(len(pts) - 1, 1))
+
+    def py(rank):
+        f = math.log10(max(rank, 1)) / math.log10(c.get("axis_max", 100))
+        return ytop + (ybot - ytop) * clamp(f)
+
+    for rank in c.get("gridlines", [1, 10, 100]):
+        gy = py(rank)
+        d.line([(x0, gy), (x1, gy)], fill=dim(GRID, a), width=1)
+        text(d, (x0 - 20, gy), f"#{rank}", font("display", 34), dim(MUTED, a), anchor="rm")
+
+    prog = ease_in_out(clamp(t / 0.62)) * (len(pts) - 1)
+    poly = []
+    for i, p in enumerate(pts):
+        if i > prog:
+            break
+        poly.append((px(i), py(p["rank"])))
+    if prog > len(poly) - 1 and len(poly) >= 1 and len(poly) < len(pts):
+        i = len(poly) - 1
+        f = prog - i
+        nx, ny = px(i + 1), py(pts[i + 1]["rank"])
+        poly.append((poly[i][0] + (nx - poly[i][0]) * f,
+                     poly[i][1] + (ny - poly[i][1]) * f))
+    if len(poly) > 1:
+        d.line(poly, fill=dim(SERIES_1, a), width=6, joint="curve")
+
+    for i, p in enumerate(pts):
+        if i > prog:
+            continue
+        cx, cy = px(i), py(p["rank"])
+        d.ellipse([cx - 13, cy - 13, cx + 13, cy + 13], fill=dim(SERIES_1, a))
+        d.ellipse([cx - 13, cy - 13, cx + 13, cy + 13], outline=dim(SURFACE, a), width=3)
+        mid = 0 < i < len(pts) - 1
+        anch = "lm" if i == 0 else ("rm" if i == len(pts) - 1 else "mm")
+        dx = 30 if i == 0 else (-30 if i == len(pts) - 1 else 0)
+        # middle markers sit on a gridline, so lift their labels clear of it
+        text(d, (cx + dx, cy - (104 if mid else 54)), p["label"],
+             font("display", 44), dim(INK, a), anchor=anch)
+        text(d, (cx + dx, cy - (64 if mid else 16)), p["when"],
+             font("display", 30), dim(ACCENT, a), anchor=anch)
+
+    if t > 0.7:
+        b = min(a, ease_out((t - 0.7) / 0.24))
+        text(d, (W // 2, 1432), c["caption"], fit(d, c["caption"], "display", 78, 940), dim(INK, b), spacing=16)
+
+
+def scene_chain(d, t, S):
+    """The causal chain, dated. Each step reveals in order — the order IS the claim."""
+    a = fade(t)
+    ch = S["chain"]
+    text(d, (W // 2, 372), ch["title"], fit(d, ch["title"], "display", 68, 900), dim(ACCENT, a))
+    steps = ch["steps"]
+    top, gap = 556, 166
+    for i, s in enumerate(steps):
+        b = min(a, ease_out((t - 0.08 - i * 0.15) / 0.24))
+        if b <= 0:
+            continue
+        y = top + i * gap
+        if i > 0:
+            d.line([(160, y - gap + 30), (160, y - 30)], fill=dim(SERIES_1, b * 0.6), width=4)
+        d.ellipse([146, y - 14, 174, y + 14], fill=dim(SERIES_1, b))
+        text(d, (216, y - 30), s["when"], fit(d, s["when"], "display", 38, 760), dim(ACCENT, b), anchor="lm")
+        text(d, (216, y + 24), s["what"], fit(d, s["what"], "display", 52, 800), dim(INK, b), anchor="lm")
+
+
+def scene_slot(d, t, S):
+    """Placeholder for cleared subject footage.
+
+    Rendered as an explicit, labelled empty frame — never a fake. If the clip is
+    never cleared this beat is cut, not shipped as-is.
+    """
+    a = fade(t)
+    sl = S["slot"]
+    x0, y0, x1, y1 = 90, 620, W - 90, 1360
+    for i in range(0, (x1 - x0), 28):
+        d.line([(x0 + i, y0), (x0 + i, y1)], fill=dim((24, 24, 23), a), width=1)
+    d.rectangle([x0, y0, x1, y1], outline=dim(AXIS, a), width=3)
+    text(d, (W // 2, (y0 + y1) / 2 - 40), sl["label"], font("text", 46), dim(INK_2, a))
+    text(d, (W // 2, (y0 + y1) / 2 + 40), sl["note"], font("text", 34), dim(MUTED, a))
+
+
+def scene_calendar(d, t, S):
+    """A month as a real weekday grid — the core form of schedule analysis.
+
+    A day either had a publicly-known engagement or it didn't; that is a binary,
+    so it gets emphasis (one hue on/off), NOT a value ramp. Cells that carry a
+    second fact (a multi-city day) get a marker, never a second hue.
+    """
+    a = fade(t)
+    c = S["calendar"]
+    text(d, (W // 2, 400), c["title"], font("text", 52), dim(MUTED, a))
+
+    active = set(c["active_days"])
+    starred = set(c.get("star_days", []))
+    n_days, first_col = c["days_in_month"], c["first_weekday_col"]
+
+    cols, cw, gap = 7, 112, 10
+    grid_w = cols * cw + (cols - 1) * gap
+    x0, y0 = (W - grid_w) // 2, 640
+    for i, lab in enumerate(["월", "화", "수", "목", "금", "토", "일"]):
+        text(d, (x0 + i * (cw + gap) + cw / 2, y0 - 42), lab, font("text", 30), dim(MUTED, a))
+
+    shown = 0
+    for day in range(1, n_days + 1):
+        idx = first_col + day - 1
+        cx = x0 + (idx % cols) * (cw + gap)
+        cy = y0 + (idx // cols) * (cw + gap)
+        b = min(a, ease_out((t - 0.10 - (day / n_days) * 0.38) / 0.20))
+        if b <= 0:
+            continue
+        on = day in active
+        if on:
+            shown += 1
+        d.rounded_rectangle([cx, cy, cx + cw, cy + cw], radius=10,
+                            fill=dim(SERIES_1, b) if on else dim((26, 26, 25), b))
+        text(d, (cx + cw / 2, cy + cw / 2), str(day), font("text", 34),
+             dim(INK if on else MUTED, b))
+        if day in starred:
+            d.ellipse([cx + cw - 24, cy + 9, cx + cw - 9, cy + 24], fill=dim(INK, b))
+
+    hb = min(a, ease_out((t - 0.52) / 0.22))
+    if hb > 0:
+        text(d, (W // 2, 1352), f"{len(active)}일", font("display", 126), dim(INK, hb))
+        text(d, (W // 2, 1444), c["hero_sub"], font("text", 38), dim(MUTED, hb))
+
+
+def scene_streak(d, t, S):
+    """Two schedule statistics that only exist once you have the calendar."""
+    a = fade(t)
+    st = S["streak"]
+    x0, y = 100, 760
+    strip_w = W - 200
+    n = st["days_in_month"]
+    cell = strip_w / n
+    active = set(st["active_days"])
+    lo, hi = st["run_from"], st["run_to"]
+
+    text(d, (W // 2, 470), st["title"], font("text", 52), dim(MUTED, a))
+    for i in range(n):
+        day = i + 1
+        x = x0 + i * cell
+        inrun = lo <= day <= hi
+        b = min(a, ease_out((t - 0.08 - (i / n) * 0.24) / 0.2))
+        if b <= 0:
+            continue
+        col = SERIES_1 if day in active else (26, 26, 25)
+        h = 96 if inrun else (60 if day in active else 30)
+        alpha = b if (inrun or day not in active) else b * 0.42
+        d.rectangle([x + 1, y + (96 - h), x + cell - 2, y + 96], fill=dim(col, alpha))
+
+    rb = min(a, ease_out((t - 0.32) / 0.22))
+    if rb > 0:
+        rx0, rx1 = x0 + (lo - 1) * cell, x0 + hi * cell - 2
+        d.line([(rx0, y + 124), (rx1, y + 124)], fill=dim(INK, rb), width=3)
+        for rx in (rx0, rx1):
+            d.line([(rx, y + 112), (rx, y + 136)], fill=dim(INK, rb), width=3)
+        text(d, ((rx0 + rx1) / 2, y + 178), st["run_label"], font("text", 38), dim(INK, rb))
+
+    for i, row in enumerate(st["stats"]):
+        b = min(a, ease_out((t - 0.50 - i * 0.14) / 0.24))
+        if b <= 0:
+            continue
+        ry = 1180 + i * 132
+        d.line([(120, ry + 74), (W - 120, ry + 74)], fill=dim(GRID, b), width=1)
+        text(d, (120, ry), row["label"], font("text", 42), dim(MUTED, b), anchor="lm")
+        text(d, (W - 120, ry - 4), row["value"], font("display", 76), dim(INK, b), anchor="rm")
+
+
+def scene_route(d, t, S):
+    """One day's stops as a route diagram — straight-line km between waypoints.
+
+    Not a map: a map would imply a road path we did not measure. The diagram
+    states exactly what it computes — great-circle distance between two places.
+    """
+    a = fade(t)
+    r = S["route"]
+    text(d, (W // 2, 430), r["title"], font("display", 108), dim(INK, a))
+    text(d, (W // 2, 540), r["subtitle"], font("text", 42), dim(MUTED, a))
+
+    stops = r["stops"]
+    total = 0.0
+    legs = []
+    for i in range(len(stops) - 1):
+        km = haversine_km(stops[i]["lat"], stops[i]["lon"],
+                          stops[i + 1]["lat"], stops[i + 1]["lon"])
+        legs.append(km)
+        total += km
+
+    top, bottom = 700, 1180
+    step = (bottom - top) / max(len(stops) - 1, 1)
+    cx = 260
+    for i, s in enumerate(stops):
+        y = top + i * step
+        b = min(a, ease_out((t - 0.12 - i * 0.16) / 0.22))
+        if b <= 0:
+            continue
+        if i > 0:
+            py = top + (i - 1) * step
+            seg = min(1.0, max(0.0, (t - 0.12 - (i - 1) * 0.16) / 0.16))
+            d.line([(cx, py), (cx, py + (y - py) * ease_out(seg))],
+                   fill=dim(SERIES_1, b), width=6)
+            text(d, (cx + 46, (py + y) / 2), f"{legs[i - 1]:,.0f} km",
+                 font("text", 36), dim(SERIES_1, b), anchor="lm")
+        d.ellipse([cx - 16, y - 16, cx + 16, y + 16], fill=dim(SERIES_1, b))
+        d.ellipse([cx - 16, y - 16, cx + 16, y + 16], outline=dim(SURFACE, b), width=3)
+        text(d, (cx + 46, y - 22), s["place"], font("text", 46), dim(INK, b), anchor="lm")
+        text(d, (cx + 46, y + 22), s["what"], font("text", 34), dim(MUTED, b), anchor="lm")
+
+    fb = min(a, ease_out((t - 0.66) / 0.24))
+    if fb > 0:
+        label = r.get("total_label", "합계 {km} km").replace("{km}", f"{total:,.0f}")
+        text(d, (W // 2, 1290), label, font("display", 80), dim(INK, fb))
+        text(d, (W // 2, 1366), "정류지 간 직선거리 합", font("text", 30), dim(MUTED, fb))
+    nb = min(a, ease_out((t - 0.80) / 0.20))
+    if nb > 0 and r.get("note"):
+        text(d, (W // 2, 1452), r["note"], font("text", 38), dim(INK_2, nb), spacing=10)
 
 
 SCENES = {
     "hook": scene_hook, "days": scene_days, "month": scene_month, "globe": scene_globe,
     "scale": scene_scale, "timezone": scene_timezone, "summary": scene_summary,
-    "outro": scene_outro,
+    "outro": scene_outro, "calendar": scene_calendar, "streak": scene_streak,
+    "route": scene_route, "hero": scene_hero, "chart": scene_chart,
+    "chain": scene_chain, "slot": scene_slot,
 }
 
 
 # ── chrome (persistent) ───────────────────────────────────────────────────────
+def draw_captions(d, S, t_sec):
+    """Burned captions in the lower band.
+
+    Timings come from the TTS engine's own character alignment (see
+    beat-narration.py), not from ASR — so they cannot drift out of sync.
+    """
+    caps = S.get("_captions") or []
+    for c in caps:
+        if c["start"] - 0.05 <= t_sec <= c["end"] + 0.22:
+            f = fit(d, c["text"], "display", 60, 930)
+            bb = d.textbbox((W // 2, CAPTION_Y), c["text"], font=f, anchor="mm")
+            d.rounded_rectangle([bb[0] - 28, bb[1] - 18, bb[2] + 28, bb[3] + 18],
+                                radius=18, fill=(0, 0, 0))
+            text(d, (W // 2, CAPTION_Y), c["text"], f, INK)
+            return
+
+
 def draw_chrome(d, S, t_global, total):
-    text(d, (60, 150), S["brand"], font("text", 34), MUTED, anchor="lm")
+    text(d, (60, 118), S["brand"], font("text", 26), dim(MUTED, 0.85), anchor="lm")
+    if S.get("fixed_title"):
+        ft = fit(d, S["fixed_title"], "display", 62, 940)
+        text(d, (W // 2, 218), S["fixed_title"], ft, INK, spacing=10)
     # progress hairline — recessive, one shade off the surface
     d.line([(0, 2), (W * (t_global / total), 2)], fill=GRID, width=4)
-    y = 1560
+    y = DISCLOSURE_Y
     for i, line in enumerate(S["disclosures"]):
-        text(d, (W // 2, y + i * 44), line, font("text", 28), MUTED)
-    text(d, (W // 2, 1700), S["source_note"], font("text", 26), (70, 70, 68))
+        text(d, (W // 2, y + i * 36), line, font("text", 28), dim(INK_2, 0.92))
+    text(d, (W // 2, DISCLOSURE_Y + 84), S["source_note"], font("text", 23), dim(MUTED, 0.9))
 
 
 # ── render ────────────────────────────────────────────────────────────────────
 def render(spec_path, out_path, fps=FPS_DEFAULT, preview_only=False):
     S = json.loads(Path(spec_path).read_text(encoding="utf-8"))
 
-    # derive geo values so the spec can't drift from the math
-    A, B = S["origin"], S["dest"]
-    S["distance_km"] = int(round(haversine_km(A["lat"], A["lon"], B["lat"], B["lon"])))
-    S["round_trip_km"] = S["distance_km"] * 2
+    # derive geo values so the spec can't drift from the math (skip when this
+    # episode has no origin/dest pair — not every episode is about a journey)
+    A, B = S.get("origin"), S.get("dest")
+    if A and B:
+        S["distance_km"] = int(round(haversine_km(A["lat"], A["lon"], B["lat"], B["lon"])))
+        S["round_trip_km"] = S["distance_km"] * 2
     S.setdefault("earth_circumference_km", 40075)
+    # A graphics layer destined to be screen-blended over footage must sit on
+    # PURE black — any lift in the surface colour lightens the whole frame.
+    if S.get("surface"):
+        global SURFACE
+        SURFACE = tuple(S["surface"])
     # Tiles quote the derived distance via a token so a hand-typed number in the
     # spec can never drift from the geometry actually drawn on screen.
     for tile in S.get("summary_tiles", []):
-        tile["value"] = (tile["value"]
-                         .replace("{distance_km}", f"{S['distance_km']:,}")
-                         .replace("{round_trip_km}", f"{S['round_trip_km']:,}"))
+        for token in ("distance_km", "round_trip_km"):
+            if token in S:
+                tile["value"] = tile["value"].replace("{%s}" % token, f"{S[token]:,}")
 
+    cap = Path(spec_path).parent / S.get("captions_file", "")
+    if S.get("captions_file") and cap.is_file():
+        S["_captions"] = json.loads(cap.read_text(encoding="utf-8"))
+        print(f"[data-chart] captions: {len(S['_captions'])} cues from {cap.name}")
     beats = S["beats"]
     total_f = sum(b["frames"] for b in beats)
     total_s = total_f / fps
     print(f"[data-chart] {len(beats)} beats · {total_f} frames · {total_s:.1f}s @ {fps}fps")
-    print(f"[data-chart] great-circle {A['label']}→{B['label']}: {S['distance_km']:,} km "
-          f"(round trip {S['round_trip_km']:,} km = "
-          f"{S['round_trip_km'] / S['earth_circumference_km'] * 100:.1f}% of Earth)")
+    if A and B:
+        print(f"[data-chart] great-circle {A['label']}→{B['label']}: {S['distance_km']:,} km "
+              f"(round trip {S['round_trip_km']:,} km = "
+              f"{S['round_trip_km'] / S['earth_circumference_km'] * 100:.1f}% of Earth)")
 
     if preview_only:
         outdir = Path(out_path).parent / "preview"
@@ -468,6 +779,7 @@ def render(spec_path, out_path, fps=FPS_DEFAULT, preview_only=False):
             d = ImageDraw.Draw(img)
             SCENES[b["scene"]](d, 0.82, S)
             draw_chrome(d, S, f0 + b["frames"] * 0.82, total_f)
+            draw_captions(d, S, (f0 + b["frames"] * 0.82) / fps)
             img.save(outdir / f"{b['scene']}.png")
             f0 += b["frames"]
         print(f"[data-chart] preview stills → {outdir}")
@@ -490,6 +802,7 @@ def render(spec_path, out_path, fps=FPS_DEFAULT, preview_only=False):
             d = ImageDraw.Draw(img)
             SCENES[b["scene"]](d, i / max(n - 1, 1), S)
             draw_chrome(d, S, f_global, total_f)
+            draw_captions(d, S, f_global / fps)
             proc.stdin.write(img.tobytes())
             f_global += 1
         print(f"  · {b['scene']:9s} {n:4d}f  ({f_global}/{total_f})")
