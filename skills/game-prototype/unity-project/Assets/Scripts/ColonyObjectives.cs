@@ -65,6 +65,11 @@ namespace MelonS.GameProto
         //  요구한다 — 벽·문·지붕·가구가 한 번씩 다 등장한다.  시작 3/6.
         private const int BedGoal = 6;
 
+        // 패널 타이포 (2026-07-31) — 헤더와 행이 같은 크기다.  강조는 색(AccentGold)과
+        //  위치로 준다(1차 구현이 헤더만 크게 만들었다가 아예 안 그려진 전례가 있다).
+        private const int RowFontSize = 18;
+        private const float RowStep = 27f;   // 글자 18 + 여백.  좁히면 받침이 윗줄에 닿는다.
+
         // ⚠ `AfterSceneLoad` 는 **첫 씬이 로드된 직후 한 번만** 실행된다.  이 빌드의 첫 씬은
         //  MainMenu 라, 여기서 `scene.name != "Game"` 으로 걸러 버리면 나중에 Game 씬이
         //  열려도 다시 불리지 않는다 — 1차 구현이 정확히 그래서 패널이 화면에 없었고
@@ -199,8 +204,12 @@ namespace MelonS.GameProto
             prt.SetParent(canvasGo.transform, false);
             prt.anchorMin = prt.anchorMax = new Vector2(0f, 1f);
             prt.pivot = new Vector2(0f, 1f);
+            // 2026-07-31 — 패널을 키운다.  실측 스크린샷(1600x900 브라우저)에서 이 패널이
+            //  **화면에서 가장 작은 글씨**였다.  바로 위 자원 표시(식량/목재)의 절반 크기인데,
+            //  자원은 "지금 얼마나 있나"이고 목표는 "무엇을 해야 하나"다 — 위계가 뒤집혀 있었다.
+            //  글자 15→18 에 맞춰 행 간격·패널 폭/높이를 함께 올린다(하나만 바꾸면 겹치거나 잘린다).
             prt.anchoredPosition = new Vector2(8f, -(76f + 8f + 200f));
-            prt.sizeDelta = new Vector2(232f, 30f + objectives.Count * 24f + 10f);
+            prt.sizeDelta = new Vector2(272f, 34f + objectives.Count * RowStep + 12f);
             var pimg = panel.GetComponent<Image>();
             pimg.color = MelonS.GameProto.Core.UITheme.PanelBg;
             pimg.raycastTarget = false;
@@ -208,9 +217,9 @@ namespace MelonS.GameProto
             // 헤더도 **행과 완전히 같은 방식**으로 만든다.  1차 구현은 크기 17 · AccentGold 로
             //  따로 만들었는데 화면에 아무것도 안 나왔다(픽셀 샘플링으로 확인 — 패널 배경색만
             //  균일).  행과 다른 점을 없애 변수를 제거한다.  강조는 색이 아니라 위치로 준다.
-            headerText = MakeRow(prt, font, 6f, "정착 목표", MelonS.GameProto.Core.UITheme.AccentGold, 15);
+            headerText = MakeRow(prt, font, 6f, "정착 목표", MelonS.GameProto.Core.UITheme.AccentGold, RowFontSize);
             for (int i = 0; i < objectives.Count; i++)
-                objectives[i].row = MakeRow(prt, font, 30f + i * 24f, "", MelonS.GameProto.Core.UITheme.TextPrimary, 15);
+                objectives[i].row = MakeRow(prt, font, 34f + i * RowStep, "", MelonS.GameProto.Core.UITheme.TextPrimary, RowFontSize);
 
             Refresh(force: true);
         }
@@ -224,7 +233,7 @@ namespace MelonS.GameProto
             rt.pivot = new Vector2(0f, 1f);
             rt.offsetMin = new Vector2(8f, 0f); rt.offsetMax = new Vector2(-8f, 0f);
             rt.anchoredPosition = new Vector2(8f, -top);
-            rt.sizeDelta = new Vector2(0f, 22f);
+            rt.sizeDelta = new Vector2(0f, 26f);   // 글자 18 이 세로로 잘리지 않는 최소치
             var t = go.GetComponent<Text>();
             t.font = font; t.fontSize = size; t.color = col;
             t.alignment = TextAnchor.MiddleLeft;

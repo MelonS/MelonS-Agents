@@ -80,6 +80,7 @@ namespace MelonS.GameProto
 
         private void Start()
         {
+            bootTime = Time.realtimeSinceStartup;   // Gate.Unpause 정착 창 기준점
             if (group != null) group.alpha = 0f;
             // legacy single-image fade fallback (only if no CanvasGroup wired)
             if (group == null && bg != null) { var c = bg.color; c.a = 0f; bg.color = c; }
@@ -196,10 +197,25 @@ namespace MelonS.GameProto
             switch (g)
             {
                 case Gate.Unpause:
-                    // 운영자 2026-07-24 "일시정지 아닌데 안내": sawPause 요구 제거 —
-                    //  정지를 안 거친 세션(하네스 등)에서 sawPause 영원히 false 라
-                    //  1배속 구동 중에도 '일시정지' 팁이 고정되던 버그.  시간이 흐르면
-                    //  이 팁은 무조건 용무 종료.
+                    // 운영자 2026-07-24 "일시정지 아닌데 안내": sawPause 요구를 없앴다 —
+                    //  정지를 안 거친 세션(하네스 등)에서 sawPause 가 영원히 false 라
+                    //  1배속 구동 중에도 '일시정지' 팁이 고정되던 버그 때문이었다.
+                    //
+                    // 2026-07-31 — 그 수정이 반대쪽 구멍을 냈다.  `GameManager.PauseAtStart`
+                    //  는 **1프레임 기다린 뒤** timeScale 을 0 으로 만든다(TimeController
+                    //  부트 대기).  그런데 이 Update 는 그 전 프레임에 이미 돌면서 기본값
+                    //  timeScale=1 을 보고 "시작했다"고 판정한다 → 이 단계가 **매번 100%
+                    //  건너뛰어졌다**.
+                    //  공개 URL 실측: 게임이 멈춰 있는 화면에서 하단 배너가 "① 나무를
+                    //  우클릭 → 벌목"을 지시하고 있었다.  지시대로 찍어도 아무도 움직이지
+                    //  않으니, 첫 30초에 "고장난 게임"으로 읽힌다.
+                    //
+                    //  양쪽을 다 만족시키려면 **정지가 걸릴 기회를 준 뒤에** 판정해야 한다:
+                    //   · 부팅 직후 짧은 창 동안은 아직 판단하지 않는다(정지가 오는 중일 수 있다)
+                    //   · 그 창 안에 정지를 봤다면(sawPause) 진짜 재개될 때까지 기다린다
+                    //   · 창이 지나도록 정지가 없었다면 = 정지를 안 쓰는 세션 → 용무 종료
+                    if (!sawPause && Time.realtimeSinceStartup - bootTime < BootSettleSec)
+                        return false;
                     return Time.timeScale > 0.01f;
                 case Gate.Stockpile:
                     return Object.FindObjectsByType<StockpileZoneEntity>(FindObjectsSortMode.None).Length > 0;
@@ -227,6 +243,11 @@ namespace MelonS.GameProto
         }
 
         private bool sawPause;
+        // 부팅 정착 창 — Gate.Unpause 주석 참조.  PauseAtStart 는 1프레임 뒤에 정지를
+        //  걸지만, 저사양/WebGL 첫 프레임이 길어질 수 있어 넉넉히 잡는다.  이 창 동안
+        //  안내는 '일시정지' 문구를 유지하므로 사용자 입장에서 손해가 없다.
+        private const float BootSettleSec = 1.5f;
+        private float bootTime;
         // Gate.Chop 기준선 (위 Update 의 진입 감지에서 설정).  -1 = 아직 진입 안 함.
         private int chopBaseline;
         private int chopBaselineStep = -1;
