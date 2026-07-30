@@ -65,6 +65,17 @@ namespace MelonS.GameProto
                 if (c.GetComponent(t) != null) return true;
             return false;
         }
+        /// <summary>바닥에 떨어진 아이템류인가 — 콜로니스트가 그 위에 서 있으면
+        /// 클릭 우선권을 콜로니스트에게 준다.  나무·광맥·침대·작업대 같은 **세계의 대상**은
+        /// 여기 포함하지 않는다: 그것들은 각자 컨텍스트 메뉴/작업이 있어 가려지면 안 된다.</summary>
+        private static bool IsGroundItem(Collider2D c)
+        {
+            return c.GetComponent<WoodPileEntity>() != null
+                || c.GetComponent<StoneChunkEntity>() != null
+                || c.GetComponent<MeatPileEntity>() != null
+                || c.GetComponent<StockpileZoneEntity>() != null;
+        }
+
         /// <summary>클릭 지점의 **살아 있는** 콜로니스트 중 가장 가까운 하나.
         /// 좌클릭 선택 전용 폴백 — 바닥 아이템이 고르기에서 이기던 것을 막는다 (2026-07-30).</summary>
         private PawnEntity PickLivePawnAt(Vector2 world)
@@ -144,7 +155,15 @@ namespace MelonS.GameProto
                 //  콜로니스트는 이 게임의 유일한 조작 대상이므로 **좌클릭 선택에서는 최우선**이다.
                 //  (우클릭 컨텍스트 메뉴는 기존 거리 규칙 그대로 — 바닥 아이템에 대한 작업도
                 //   여전히 지시할 수 있어야 한다.)
-                if (pawn == null) pawn = PickLivePawnAt(mouseWorld);
+                //  ⚠ 단, **다른 액션 대상이 같이 잡혔으면 폴백하지 않는다.**
+                //  1차 구현은 무조건 폴백했는데, 그러면 나무 위에 콜로니스트가 서 있을 때
+                //  나무를 클릭해도 콜로니스트가 선택돼 **나무 컨텍스트 메뉴가 영영 안 열린다**
+                //  (`p0-chop-menu` 가 `at=Pawn(Clone)+Tree_Oak` 로 잡아냈다).
+                //  폴백의 목적은 "바닥 아이템이 콜로니스트를 가리는 것"을 막는 것이지
+                //  "콜로니스트가 세계를 가리게" 하는 것이 아니다.
+                //  → 같이 잡힌 것이 **아이템류**일 때만 콜로니스트를 우선한다.
+                if (pawn == null && hit != null && IsGroundItem(hit))
+                    pawn = PickLivePawnAt(mouseWorld);
                 if (pawn != null) {
                     Select(pawn);
                     currentInspect = pawn.gameObject;  // #128 - pawn 도 inspect 패널 표시

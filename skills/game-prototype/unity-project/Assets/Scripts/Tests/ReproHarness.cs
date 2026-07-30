@@ -576,6 +576,26 @@ namespace MelonS.GameProto
                                       : $"화면에 '{s.contains}' 없음 in {t2:F1}s";
                     break;
                 }
+                //  ⑤ 호감도 최대값 — 잡담이 실제로 일어났는지의 증거 (G1 사회).
+                //     thought 만 검사하면 부족하다: 감정은 붙었는데 관계가 안 쌓이면
+                //     '살아있음의 증거'가 아니라 일회성 연출이다.
+                case "socialOpinion":
+                {
+                    float t5 = 0; int best3 = 0;
+                    while (t5 < Mathf.Max(1f, s.withinSec))
+                    {
+                        foreach (var so in Object.FindObjectsByType<PawnSocial>(FindObjectsSortMode.None))
+                        {
+                            if (so == null) continue;
+                            if (so.TryGetBestFriend(out _, out int v) && v > best3) best3 = v;
+                        }
+                        if (best3 >= (int)s.min) break;
+                        yield return new WaitForSecondsRealtime(0.5f); t5 += 0.5f;
+                    }
+                    r.passed = best3 >= (int)s.min;
+                    r.detail = $"최대 호감도 {best3} (need ≥{(int)s.min}) in {t5:F1}s";
+                    break;
+                }
                 //  ④ 무장한 콜로니스트 수 — '무기 제작' 루프가 실제로 도는지의 유일한 증거.
                 //     맨손("주먹")은 무장으로 세지 않는다.  이름이 아니라 **효과**로 판정한다
                 //     (카탈로그 이름이 바뀌어도 검사가 조용히 통과하지 않게).

@@ -79,6 +79,11 @@ namespace MelonS.GameProto
             cook = GetComponent<PawnCook>();
             // 2026-07-30 — 무기 제작 워커.  프리팹에 없어도 붙게 한다(씬 재베이크 불필요).
             smith = GetComponent<PawnWeaponsmith>() ?? gameObject.AddComponent<PawnWeaponsmith>();
+            // G1 사회 — 잡담/호감도.  `PawnEntity.AttachColonistKit` 에도 넣어 뒀지만
+            //  그건 **런타임 합류 림 전용**이라 씬에 직렬화된 시작 3인에게는 안 불린다.
+            //  실제로 그것 때문에 잡담이 0건이었고 부착 로그조차 안 찍혔다 — 조용한 미부착.
+            //  무기 워커와 같은 방식으로 여기서도 보장한다(씬 재베이크 불필요).
+            if (GetComponent<PawnSocial>() == null) gameObject.AddComponent<PawnSocial>();
             hauler = GetComponent<PawnHauler>();  // #116
             harvester = GetComponent<PawnHarvester>();  // #202
             builder = GetComponent<PawnBuilder>();  // #118

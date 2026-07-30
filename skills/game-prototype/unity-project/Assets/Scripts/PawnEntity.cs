@@ -193,6 +193,7 @@ namespace MelonS.GameProto
             Ensure<PawnBuilder>(); Ensure<PawnMiner>(); Ensure<PawnHarvester>();
             Ensure<PawnDoctor>(); Ensure<PawnBurier>(); Ensure<PawnSchedule>(); Ensure<PawnTraits>();
             Ensure<PawnThoughts>(); Ensure<PawnAbilities>(); Ensure<PawnEquipment>();
+            Ensure<PawnSocial>();   // G1 사회 — 잡담/호감도 (2026-07-30)
             Ensure<PawnNameLabel>(); Ensure<PawnFloatingBars>();
         }
 

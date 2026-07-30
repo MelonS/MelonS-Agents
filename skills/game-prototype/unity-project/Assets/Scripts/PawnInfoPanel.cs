@@ -777,6 +777,23 @@ namespace MelonS.GameProto
                     }
                 }
                 else sb2.AppendLine("  <color=#8A7658>(스킬 정보 없음)</color>");
+
+                // G1 사회 (2026-07-30) — 스펙(design-social §G1 4번)대로 "가장 친한 동료" 한 줄.
+                //  전용 탭을 만들지 않는다: 탭이 6개가 되면 라벨이 좁아지고, 지금 보여줄
+                //  정보는 한 줄이라 탭 하나를 쓸 만큼이 아니다.  관계망 UI 는 2단계.
+                var soc = pawn.GetComponent<PawnSocial>();
+                if (soc != null)
+                {
+                    sb2.AppendLine();
+                    sb2.AppendLine("<color=#8A5A1E>사회:</color>");
+                    if (soc.TryGetBestFriend(out string fname, out int fscore) && fscore != 0)
+                    {
+                        string col = fscore >= 20 ? "#4A7A38" : "#3A2F22";
+                        sb2.AppendLine($"  <color={col}>가장 친한 동료: {fname} ({fscore:+#;-#;0})</color>");
+                    }
+                    else sb2.AppendLine("  <color=#8A7658>아직 친해진 동료가 없다</color>");
+                }
+
                 skillText.text = sb2.ToString();
                 skillText.color = MelonS.GameProto.Core.UITheme.TextPrimary;
                 skillText.alignment = TextAnchor.UpperLeft;
