@@ -34,7 +34,7 @@ FPS_DEFAULT = 30
 # 9:16 band plan. Anything below ~1650 is covered by the Shorts player UI
 # (title / channel / description), so the legal band must sit above it.
 CAPTION_Y = 1400        # burned narration captions
-DISCLOSURE_Y = 1486     # mandatory fan-content + AI lines
+DISCLOSURE_Y = 1524     # mandatory fan-content + AI lines
 
 # ── palette (dataviz skill, dark mode, validated vs surface #0d0d0d) ─────────
 SURFACE = (13, 13, 13)
@@ -728,10 +728,16 @@ def draw_chrome(d, S, t_global, total):
         text(d, (W // 2, 218), S["fixed_title"], ft, INK, spacing=10)
     # progress hairline — recessive, one shade off the surface
     d.line([(0, 2), (W * (t_global / total), 2)], fill=GRID, width=4)
+    # Legibility at Shorts scale is won by WEIGHT and CONTRAST, not point size:
+    # 26px of a 1080-wide frame is ~10px on a phone. Heavy face + near-white +
+    # short lines reads small and stays out of the way. A dark plate is not an
+    # option — the layer is screen-blended, so black is transparent.
     y = DISCLOSURE_Y
     for i, line in enumerate(S["disclosures"]):
-        text(d, (W // 2, y + i * 34), line, font("text", 26), dim(INK_2, 0.92))
-    text(d, (W // 2, DISCLOSURE_Y + 112), S["source_note"], font("text", 22), dim(MUTED, 0.88))
+        f = fit(d, line, "display", 30 - i * 2, 950)
+        text(d, (W // 2, y + i * 44), line, f, dim(INK, 0.94 - i * 0.06))
+    text(d, (W // 2, y + 44 * len(S["disclosures"]) + 12),
+         S["source_note"], font("text", 20), dim(MUTED, 0.85))
 
 
 # ── render ────────────────────────────────────────────────────────────────────
