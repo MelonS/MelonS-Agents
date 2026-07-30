@@ -5,55 +5,70 @@
 > next CLEAN run.  Do not edit by hand — fix the underlying findings
 > and re-run the auditor.
 
-**Verdict**: CRITICAL
-**Full report**: [`docs/audit/2026-07-26-contract.md`](2026-07-26-contract.md)
-**Generated**: 2026-07-26 06:30:46    
+**Verdict**: DRIFT_DETECTED
+**Full report**: [`docs/audit/2026-07-31-contract.md`](2026-07-31-contract.md)
+**Generated**: 2026-07-31 03:39:04    
 
 ## Summary (from audit)
 
 
-Focused pass over `docs/operator-contract.md` compliance, cross-checked against
-`docs/for-analysts.md`, `docs/architecture.md`, `docs/roadmap.md`, every
-`.claude/agents/*.md` frontmatter, `.gitignore`, and recent `git log` at HEAD
-`b260b76` (2026-07-26, section 13 inbound-message-routing rule just added). The
-precomputed skill-drift report is clean (0 findings) and is not repeated here.
-Hard rule 6 (git workflow / gitignore) and hard rule 8 (the section-8
-hardcoded-path exception registry) both check out: `records/`, `.env`, and all
-eight listed section-8 exception files carry the required grep-anchor comment,
-and no output artifacts (mp4/wav/jpg/etc.) are committed under `agents/` or
-`scripts/`. `.env.example` contains only placeholder values, and a targeted
-secret-pattern grep outside `docs/`, `*.example`, and `*.md` turned up only
-code identifiers (token, access_token) and no literal credentials. The core
-6-agent model table in `for-analysts.md` matches `.claude/agents/orchestrator.md`,
-`planner.md`, `resourcer.md`, `editor.md`, `qa.md`, and `auditor.md` frontmatter
-exactly, and the 27-definition roster count (6 core plus 13 game-line plus 5
-content-shorts plus 3 judges) is verified by direct file-count, matching the
-prose.
+Focused pass over `docs/operator-contract.md` compliance at HEAD `45a23d2`
+(2026-07-31 03:30 KST), cross-checked against `docs/for-analysts.md`,
+`docs/architecture.md`, `docs/roadmap.md`, `docs/goal.md`, every
+`.claude/agents/*.md` frontmatter, `.gitignore`, `.github/workflows/`, and
+`git log`. The pre-computed skill-drift report is clean (0 findings) and is
+not repeated below. `main` is green (`gh run list` shows 5/5 recent
+`main-protection` runs `success`). Secret scan outside `docs/`, `*.example`,
+`*.md` returned nothing. `.env` remains gitignored and untracked. No output
+artifacts (mp4/wav/jpg/etc.) are committed under `agents/` or `scripts/`.
+The section-8 hardcoded-path exception registry's 11 listed files all still
+carry the required grep-anchor; several additional Users-shaped path strings
+found under `scripts/` are all inert comments (illustrative paths, an
+already-fixed-and-annotated historical reference, a stale test-fixture
+comment shadowed by a REPO_ROOT-relative path in the actual code) and are
+not new registry gaps.
 
-Two significant problems remain live, and both are continuations of
-previously-flagged findings rather than new discoveries: first,
-`docs/audit/CURRENT-ALERT.md` is still the 2026-07-10 CRITICAL alert with no
-audit report landing in `docs/audit/` in the 16 days since, despite the
-architecture doc describing a three-trigger-layer automation design (L1
-post-commit, L2 15-min poll, L3 daily 03:00 baseline) that should have
-produced one; and second, `docs/roadmap.md` "Now" section (last touched
-2026-05-20) still describes job-hunt v0.4.0 activation under a
-multi-skill-framework active goal, while `docs/goal.md` actual Active goal has
-been PawnSim since 2026-06-12 (44 days), and the most recent five commits are
-about README/CI parity, LangGraph graph generation, and inbound-message
-routing, none of which touch either goal. Three accumulated suggest-comment
-blocks (2026-05-25, 2026-06-11, 2026-07-03) propose a Now rewrite that was
-never applied. Additionally, one frontmatter inconsistency was found
-(`ta.md` has no `model:` field, unlike all 26 other subagent definitions), six
-section-5-scope commits since 2026-06-01 lack the required audit-trail marker
-(none qualify for the pre-2026-05-17 carry-forward exemption), and
-`.claude/wb/` (94 tracked JSON files) remains an undocumented, unignored
-tracked directory outside the Layers table in `docs/architecture.md`.
+One genuinely good-news item: the CRITICAL "audit reports generated but
+never committed" finding that has now reproduced across six consecutive
+audit cycles was fixed at the code level today, in-session, immediately
+before this run — commit `45a23d2` adds `commit_audit_trail()` to
+`scripts/audit-run.sh`, which now runs `git commit --only` scoped exactly
+to `docs/audit/` (report + `CURRENT-ALERT.md`) and best-effort pushes, with
+merge/rebase/lock guards and an `AUDIT_NO_COMMIT=1` escape hatch. The commit
+message documents a temp-clone self-test (no-op path, new-report path,
+unrelated-staged-changes preserved, idempotent re-run). This is a
+`scripts/` change, not an `agents/*.md` or `.claude/agents/*.md` change, so
+it is outside hard rule 5's scope and needs no Requested-by marker; it is
+downgraded from the standing CRITICAL to informational below pending one
+live, unattended trigger cycle (L1/L2/L3) actually exercising the new
+commit path, since every test cited in the commit message was run
+interactively in a temp clone rather than through the real
+hook/launchd/Task-Scheduler path.
+
+Two problems remain live from the 2026-07-26 report, both still unresolved
+five days later: `docs/roadmap.md` "Now" (own last-updated stamp:
+2026-05-20) still frames the active work as multi-skill-framework /
+job-hunt-v0.4.0-activation, while `docs/goal.md`'s actual Active goal has
+been PawnSim since 2026-06-12 (49 days) and the most recent five commits are
+about a duplicate-upload incident fix, a shorts scene-layout mode, and the
+audit-trail self-commit fix — none of which touch either the stated Now or
+the actual goal; and `.claude/wb/` (94 tracked JSON files, last touched
+2026-07-01) remains outside `docs/architecture.md`'s Layers table with no
+gitignore rule and no section-8 deviation marker. `ta.md` also still has no
+`model:` field, unlike the other 26 subagent definitions, and the same six
+section-5-scope commits from 2026-06-01 through 2026-07-24 still lack the
+Requested-by marker (no new section-5-scope commits landed since the last
+audit, so the set is unchanged, not growing). One new finding this cycle:
+`README.md`/`README.ko.md` are now self-inconsistent — the hero-stats image
+plus alt text (line 31, both files) still claims 23 subagents while the
+prose two paragraphs down (line 177 EN) correctly says 27 — and
+`for-analysts.md` undercounts the CI gate by one (it says "six static
+checks"; the workflow has had seven since `06dd751` on 2026-07-01, when the
+README EN-KO parity check was added).
 
 ## Critical / High findings
 
-- **[critical]** Audit-trail durability gap reproduces — `docs/audit/CURRENT-ALERT.md:9-10`
-- **[high]** `docs/roadmap.md` Now section stale against `docs/goal.md` Active goal and the last 5 commits — `docs/roadmap.md:16-79`, `docs/goal.md:19`
+- **[high]** `docs/roadmap.md` "Now" section stale against `docs/goal.md` Active goal and the last 5 commits, unresolved 2nd consecutive audit cycle — `docs/roadmap.md:16-50`, `docs/goal.md:19`
 
 ## How to clear this alert
 
