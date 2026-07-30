@@ -129,9 +129,6 @@ namespace MelonS.GameProto
                 //  cook→eat chain.  WorkKind.Gather so it shares the gather priority slot.
                 new HarvestCropAction(),
                 new BuildBlueprintAction(),  // #118 - 청사진 건설 (chop 보다 우선)
-                // 2026-07-30 — 무기 제작.  청사진 건설 **아래**: 집이 없는데 무기를
-                //  먼저 만들면 곤란하고, 습격은 4~6일차라 급하지 않다.
-                new CraftWeaponAction(),
                 new BuildRoofAction(),       // 소크 r2 #1 - 지붕 노동 시공 (골조 다음)
                 // ── HAUL loose ground piles FIRST (above raw extraction) ──
                 //  운영자 fb #I4-regress: 떨어진 더미가 적립 전에 부패(옥외 30s/-1)하지
@@ -152,6 +149,13 @@ namespace MelonS.GameProto
                 //  나무/광맥만 — IsMarked 게이트 덕에 '아무거나 자동 채집' 회귀는 없음).
                 new ChopTreeAction(),     // 지정(마킹)된 나무만 자율 벌목 (IsMarked 게이트)
                 new MineStoneAction(),    // 지정(마킹)된 광맥만 자율 채광 (IsMarked 게이트)
+                // 2026-07-31 — 무기 제작은 **플레이어 지정 작업(벌목/채광) 아래**.
+                //  처음엔 청사진 건설 바로 아래 뒀는데, 그러면 시작 시 3인이 전부
+                //  무장 안 된 상태 + 목재 200 이라 **전원이 제작하러 가고 지정한 나무를
+                //  아무도 안 벴다** (`p0-remote-chop` 이 30초 안에 '벌목' 미관측으로 잡음).
+                //  원칙: 플레이어가 손으로 찍은 일이 자율 제작보다 먼저다.  무기는
+                //  급하지 않다(습격 4~6일차) — 할 일이 없을 때 만들면 된다.
+                new CraftWeaponAction(),
                 // 연구 디스패치 (2026-06-12) — 최하단: 다른 일감이 없을 때만 벤치 옆에
                 //  머물며 연구.  직업 탭 '연구' 우선순위가 처음으로 실효를 가진다.
                 new DoResearchAction(),

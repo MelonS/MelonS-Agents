@@ -18,9 +18,18 @@ namespace MelonS.GameProto
         [SerializeField] private int maxHp = 12;
         [SerializeField] private int foodDrop = 5;
         [SerializeField] private float wanderSpeed = 0.6f;
-        [SerializeField] private float wanderMin = 2f;
-        [SerializeField] private float wanderMax = 5f;
-        [SerializeField] private float wanderRadius = 4f;
+        // 2026-07-31 운영자 "동물들 왜 그냥 서있기만해?" — 실측으로 확인했다:
+        //  1배속 5초 동안 13마리 중 6마리만 0.5칸 이상 움직였고 **최대 이동이 0.76칸**이었다.
+        //  즉 wander 는 돌고 있는데 **대기 2~5초 + 반경 4칸**이라 한 번의 이동이 짧고
+        //  대부분의 시간을 서 있는다.  기본 줌(세로 30칸)에서는 그 정도 드리프트가
+        //  '정지'로 읽힌다 — 콜로니스트가 맵을 가로지르는 것과 대비되면 더 그렇다.
+        //  종별 속도(spd 0.4~0.9)는 **밸런스라 건드리지 않고**, 리듬만 고친다:
+        //  대기를 절반으로, 반경을 1.75배로 → 한 번에 더 멀리, 더 자주 움직인다.
+        [SerializeField] private float wanderMin = 1.0f;
+        [SerializeField] private float wanderMax = 2.5f;
+        [SerializeField] private float wanderRadius = 7f;
+        private Vector2 stuckAnchor;   // 정체 감지 기준점 (2026-07-31)
+        private float stuckSince;
         [SerializeField] private AnimalSpecies species = AnimalSpecies.Deer;
 
         public AnimalSpecies Species => species;
@@ -223,6 +232,25 @@ namespace MelonS.GameProto
                 float spdMul = Time.time < fleeUntil ? 2.5f : 1f;
                 Vector2 step = dir.normalized * wanderSpeed * spdMul * Time.deltaTime;
                 if (!TryStep(me, step)) PickNewTarget();
+
+                // 2026-07-31 — **정체 감지.**  TryStep 이 성공(=목적 셀이 walkable)해도
+                //  Rigidbody2D 가 나무·바위 콜라이더에 물리적으로 막히면 실제 위치는
+                //  안 움직인다.  그러면 목표에 영원히 못 닿아 `dir.sqrMagnitude < 0.05`
+                //  가 성립하지 않고, 동물은 장애물을 밀며 **그 자리에 서 있는다.**
+                //  이것이 운영자가 본 "그냥 서있기만해"의 실체다 — wander 가 안 도는 게
+                //  아니라 돌다가 걸려서 멈춰 있는 것.
+                //  1.2초 동안 0.05칸도 못 나아갔으면 목표를 포기하고 다시 뽑는다.
+                if ((rb.position - stuckAnchor).sqrMagnitude > 0.0025f)
+                {
+                    stuckAnchor = rb.position;
+                    stuckSince = Time.time;
+                }
+                else if (Time.time - stuckSince > 1.2f)
+                {
+                    stuckAnchor = rb.position;
+                    stuckSince = Time.time;
+                    PickNewTarget();
+                }
             }
             else
             {
@@ -260,8 +288,26 @@ namespace MelonS.GameProto
         private void PickNewTarget()
         {
             // Step 81: 맵 안쪽으로 clamp — 외곽으로 wander 못 나감
-            target = PawnMovement.ClampToWorld(
-                (Vector2)transform.position + Random.insideUnitCircle * wanderRadius);
+            //
+            // 2026-07-31 — **목표가 갈 수 있는 곳인지 확인한다.**
+            //  이전에는 반경 안의 아무 점이나 잡았다.  이 맵은 바위 지대와 호수가 넓어서
+            //  상당수가 도달 불가였고, 그러면 몇 걸음 가다 TryStep 이 막혀 곧바로 새 목표를
+            //  다시 뽑는다 → 제자리에서 흔들리기만 한다.
+            //  실측(15초 고정 창): 13마리 중 10마리가 움직이긴 하는데 **최대 이동이 1.68칸**
+            //  이었다.  콜로니스트가 맵을 가로지르는 것과 나란히 놓이면 '서 있는 것'으로 읽힌다.
+            //  → 갈 수 있는 칸이 나올 때까지 최대 8번 다시 뽑는다.  전부 실패하면 예전처럼
+            //    그냥 잡는다(막힌 곳에 갇혀도 영원히 얼어붙지는 않게).
+            Vector2 me = transform.position;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 cand = PawnMovement.ClampToWorld(me + Random.insideUnitCircle * wanderRadius);
+                if (PawnMovement.IsBlockedAt(cand)) continue;
+                if (PawnMovement.Grid != null
+                    && !PawnMovement.Grid.IsWalkable(MelonS.GameProto.AI.PathGrid.WorldToCell(cand)))
+                    continue;
+                target = cand; walking = true; return;
+            }
+            target = PawnMovement.ClampToWorld(me + Random.insideUnitCircle * wanderRadius);
             walking = true;
         }
 

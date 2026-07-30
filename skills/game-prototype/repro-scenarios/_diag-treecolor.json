@@ -1,0 +1,46 @@
+{
+ "name": "진단: 벌목 중 나무 색 (2026-07-31)",
+ "_why": [
+  "운영자: 나무 캘때 나무색이 이상해지는건 머야?",
+  "minBright=0 이라 HP 가 줄면 나무가 새까매졌다. 0.72 로 올린 뒤 실제 화면 확인."
+ ],
+ "timeoutSec": 180,
+ "steps": [
+  {
+   "op": "wait",
+   "sec": 1.5
+  },
+  {
+   "op": "ortho",
+   "x": 7
+  },
+  {
+   "op": "boxselect",
+   "target": "pawn"
+  },
+  {
+   "op": "worldright",
+   "target": "tree"
+  },
+  {
+   "op": "speed",
+   "x": 3
+  },
+  {
+   "op": "wait",
+   "sec": 12
+  },
+  {
+   "op": "shot",
+   "name": "t01_mid"
+  },
+  {
+   "op": "wait",
+   "sec": 12
+  },
+  {
+   "op": "shot",
+   "name": "t02_late"
+  }
+ ]
+}

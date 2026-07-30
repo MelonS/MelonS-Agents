@@ -425,6 +425,20 @@ namespace MelonS.GameProto
                     r.detail = $"timeScale={s.x}"; break;
                 }
 
+                // 2026-07-31 — 카메라 줌 (테스트 스캐폴딩, `speed` 와 같은 성격).
+                //  계기: 제출 영상에서 콜로니스트가 너무 작아 "무엇을 하는지" 가 안 읽혔다.
+                //  게임의 기본 줌(ortho 15)은 운영자가 레퍼런스와 대조해 정한 값이라
+                //  건드리지 않는다 — **영상의 화면 구성만** 시나리오가 정한다.
+                //  플레이어도 보고 싶은 것이 있으면 휠로 당긴다.
+                case "ortho":
+                {
+                    var cam = Camera.main;
+                    if (cam == null) { r.passed = false; r.detail = "no camera"; break; }
+                    cam.orthographicSize = Mathf.Clamp(s.x, 4f, 32f);
+                    yield return null;
+                    r.passed = true; r.detail = $"ortho={cam.orthographicSize:F1}";
+                    break;
+                }
                 case "camdirector":
                 {
                     // 테스트 스캐폴딩 — 무인 런 카메라 디렉터 토글 (x=1 켜기 / 0 끄기).
@@ -574,6 +588,35 @@ namespace MelonS.GameProto
                     r.passed = found3;
                     r.detail = found3 ? $"화면에서 '{s.contains}' 발견 — \"{sample}\""
                                       : $"화면에 '{s.contains}' 없음 in {t2:F1}s";
+                    break;
+                }
+                //  ⑥ 동물이 실제로 이동하는가 (2026-07-31 운영자 "동물들 왜 그냥 서있기만해?").
+                //     추측하지 않고 **위치를 두 번 재서 차분**으로 판정한다.  코드에 wander
+                //     루프가 있다는 것과 화면에서 움직인다는 것은 다른 주장이다.
+                case "animalsMoved":
+                {
+                    var first = new System.Collections.Generic.Dictionary<int, Vector2>();
+                    foreach (var a in Object.FindObjectsByType<AnimalEntity>(FindObjectsSortMode.None))
+                        if (a != null && !a.IsDead) first[a.GetInstanceID()] = a.transform.position;
+                    float t6 = 0, window = Mathf.Max(1f, s.withinSec);
+                    float moved = 0f; int movedCount = 0;
+                    while (t6 < window)
+                    {
+                        yield return new WaitForSecondsRealtime(0.5f); t6 += 0.5f;
+                        moved = 0f; movedCount = 0;
+                        foreach (var a in Object.FindObjectsByType<AnimalEntity>(FindObjectsSortMode.None))
+                        {
+                            if (a == null || a.IsDead) continue;
+                            if (!first.TryGetValue(a.GetInstanceID(), out var p0)) continue;
+                            float d = Vector2.Distance(p0, a.transform.position);
+                            if (d > moved) moved = d;
+                            if (d > 0.5f) movedCount++;
+                        }
+                        if (movedCount >= (int)s.min) break;
+                    }
+                    r.passed = movedCount >= (int)s.min;
+                    r.detail = $"0.5칸 이상 이동한 동물 {movedCount}마리 (최대 이동 {moved:F2}칸, "
+                             + $"관측 {first.Count}마리, need ≥{(int)s.min}) in {t6:F1}s";
                     break;
                 }
                 //  ⑤ 호감도 최대값 — 잡담이 실제로 일어났는지의 증거 (G1 사회).
@@ -1100,7 +1143,16 @@ namespace MelonS.GameProto
                                                 new Vector3(1,1,0)*0.707f, new Vector3(-1,1,0)*0.707f,
                                                 new Vector3(1,-1,0)*0.707f, new Vector3(-1,-1,0)*0.707f })
                     {
-                        Vector3 cand = from + dir * rr; cand.z = 0;
+                        // 2026-07-31 — **셀 중심으로 스냅**한다.
+                        //  이전에는 연속 좌표(from + dir*rr)를 그대로 클릭 지점으로 썼다.
+                        //  그런데 폰은 셀 중심으로 이동하므로, 클릭 지점이 셀 안쪽 아무 데나면
+                        //  도착점과 클릭점이 최대 반대각선(0.707칸)만큼 어긋난다.
+                        //  `p0-pawn-move` 의 `selectedNearClick ≤0.8` 이 0.85 로 아슬하게
+                        //  실패하는 플레이크가 여기서 나왔다 — 게임 버그가 아니라 **검사와
+                        //  게임이 서로 다른 격자를 쓴 것**이다.  임계를 늘려 덮는 대신
+                        //  두 좌표계를 맞춘다.
+                        Vector3 cand = from + dir * rr;
+                        cand = new Vector3(Mathf.Floor(cand.x) + 0.5f, Mathf.Floor(cand.y) + 0.5f, 0f);
                         if (Physics2D.OverlapPointAll(cand).Length == 0) { world = cand; return true; }
                     }
                 return false;

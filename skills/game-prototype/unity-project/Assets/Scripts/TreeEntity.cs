@@ -98,11 +98,20 @@ namespace MelonS.GameProto
             if (IsDestroyed) return false;
             hp -= dmg;
             // #156 - Visual feedback (darken) 가 #149 species tint 를 덮어쓰면 종 구분 사라짐.
-            //  #167 - TintHelper 로 통합 (minBright=0 으로 100% tree 가 까매질 수 있음).
+            //  #167 - TintHelper 로 통합.
+            //
+            // 2026-07-31 운영자 "나무 캘때 나무색이 이상해지는건 머야?" — minBright 이 **0** 이었다.
+            //  밝기 = 0 + 1.0 × hp비율 이므로 HP 가 반이면 밝기 50%, 10% 면 거의 **새까만
+            //  덩어리**가 된다.  위 주석이 이미 "100% tree 가 까매질 수 있음"이라고 인정하고
+            //  있었는데 값은 그대로였다.
+            //  같은 헬퍼를 쓰는 광맥·벽은 둘 다 0.4 다 — 나무만 0 이었다.
+            //  게다가 그 사이 수종 5종(단풍 적색·가문비 청록 등)을 톤 맞춰 새로 만들었으므로,
+            //  깎을수록 그 색이 사라지는 것은 애써 만든 아트를 지우는 셈이다.
+            //  0.72 로 올린다 — "패이고 있다"는 신호는 남되 종의 색은 끝까지 읽힌다.
             if (spriteRenderer != null)
             {
                 var (_, _, _, baseTint) = SpeciesStats[(int)species];
-                TintHelper.ApplyHpBrightness(spriteRenderer, baseTint, hp / maxHp, minBright: 0f);
+                TintHelper.ApplyHpBrightness(spriteRenderer, baseTint, hp / maxHp, minBright: 0.72f);
             }
             // Chop SFX — throttled so it sounds rhythmic, not buzzy
             if (Time.time - lastChopSoundTime >= ChopSoundInterval)
