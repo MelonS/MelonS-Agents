@@ -217,6 +217,26 @@ job-hunt 항목은 Blocked/parked로 이동하는 것을 제안합니다.  다�
 
 ## Done — most recent first
 
+- **2026-07-30 (운영자 인터랙티브, Windows)** 리센느 해외 소개 EN 쇼츠 출시
+  (ToddStudio `6KuSWCMpNHM`, 7/31 08:30 KST 예약).  KCON LA 2주 전 창을 노린
+  "왜 지금 한국에서 대세인가" 설명물.  **아이디어 3회 선회**: 스케줄 데이터
+  분석(v1 마일스톤판 폐기 → v2 스케줄분석판) → 해외 소개 → 영어 설명물.
+  v1 이 "기사 헤드라인 숫자에 차트만 입힌 빈껍데기"라는 운영자 지적이 전환점.
+  * 데이터: 멜론 #100(2025.3) → #98(5/28) → #1(7/8), 스트리밍 +2,019%,
+    검색 +6,550%, 2년간 1,500편.  JoongAng/Korea Times/MyDaily 교차검증
+    (`resources/sources-v2.md`).  **채널 정합**: 기존 쇼츠가 834일이라 835→834 통일.
+  * 소재: 원이 개인 채널 밈 영상(3/20) — 오디오 미수신, 미나미 "거제 야호"
+    2.0초만 발췌.  자막 타일링으로 초 단위 특정(648.4s 그래픽 등장 = 발화 시작).
+    첫 컷은 원이 목소리를 잘못 넣어 운영자 지적 후 재특정.
+  * 신설 도구(`0cedbc1`·`1df4a68`·`dad467a`): `scripts/data-chart.py`
+    (자체 렌더 데이터 그래픽 11씬 + screen 합성 오버레이),
+    `scripts/beat-narration.py` (ElevenLabs + /with-timestamps 실타이밍 자막
+    + 실음성 파트 삽입).
+  * 법적 자세(운영자 결정): 승인 요청 대신 **비수익 + 요청 시 즉시 삭제**.
+    채널 20구독자로 YPP 미달이라 비수익이 구조적으로 성립.  출처 번인 + 설명란
+    명시.  `release/PUBLISH-CHECKLIST.md`.  ⚠ legal-gate 는 미통과
+    (`license: standard-youtube-license` → BLOCK) — 의식적 우회, SOURCES.txt 기록.
+
 - **2026-07-26 (운영자 인터랙티브, Windows)** `main` 5연속 빨간불 해소:
   8c67d7e 가 `README.md` 에만 코드블록을 추가해 EN↔KO 패리티가 깨진 것이
   단일 원인이었다(`code blocks: EN=5 KO=4`). KO "60초 안에 시작"을 EN 구조에
