@@ -22,6 +22,7 @@ namespace MelonS.GameProto.AI
         public PawnMiner miner;   // #119 — 채광
         public PawnDoctor doctor; // #125 — 의료
         public PawnBurier burier; // GDD G3 — 매장
+        public PawnWeaponsmith smith; // 2026-07-30 — 작업대 무기 제작
         public PawnNeeds needs;
         public PawnSkills skills;
         public Transform transform;
@@ -59,6 +60,7 @@ namespace MelonS.GameProto.AI
             if (gatherer != null && gatherer.HasTask) return true;
             if (hunter   != null && hunter.HasTask)   return true;
             if (cook     != null && cook.HasTask)     return true;
+            if (smith    != null && smith.HasTask)    return true;
             if (hauler   != null && hauler.HasTask)   return true;
             if (harvester != null && harvester.HasTask) return true;  // #202
             if (builder  != null && builder.HasTask)  return true;

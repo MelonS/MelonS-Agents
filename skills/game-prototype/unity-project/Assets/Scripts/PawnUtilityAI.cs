@@ -37,6 +37,7 @@ namespace MelonS.GameProto
         private PawnGatherer gatherer;
         private PawnHunter hunter;
         private PawnCook cook;
+        private PawnWeaponsmith smith;   // 2026-07-30 무기 제작
         private PawnHauler hauler;  // #116 — wood pile pickup
         private PawnHarvester harvester;  // #202 — ripe crop harvest
         private PawnBuilder builder;  // #118 — blueprint 건설
@@ -76,6 +77,8 @@ namespace MelonS.GameProto
             gatherer = GetComponent<PawnGatherer>();
             hunter = GetComponent<PawnHunter>();
             cook = GetComponent<PawnCook>();
+            // 2026-07-30 — 무기 제작 워커.  프리팹에 없어도 붙게 한다(씬 재베이크 불필요).
+            smith = GetComponent<PawnWeaponsmith>() ?? gameObject.AddComponent<PawnWeaponsmith>();
             hauler = GetComponent<PawnHauler>();  // #116
             harvester = GetComponent<PawnHarvester>();  // #202
             builder = GetComponent<PawnBuilder>();  // #118
@@ -92,6 +95,7 @@ namespace MelonS.GameProto
             {
                 entity = entity, movement = movement, chopper = chopper,
                 gatherer = gatherer, hunter = hunter, cook = cook,
+                smith = smith,
                 hauler = hauler,
                 harvester = harvester,  // #202
                 builder = builder,
@@ -120,6 +124,9 @@ namespace MelonS.GameProto
                 //  cook→eat chain.  WorkKind.Gather so it shares the gather priority slot.
                 new HarvestCropAction(),
                 new BuildBlueprintAction(),  // #118 - 청사진 건설 (chop 보다 우선)
+                // 2026-07-30 — 무기 제작.  청사진 건설 **아래**: 집이 없는데 무기를
+                //  먼저 만들면 곤란하고, 습격은 4~6일차라 급하지 않다.
+                new CraftWeaponAction(),
                 new BuildRoofAction(),       // 소크 r2 #1 - 지붕 노동 시공 (골조 다음)
                 // ── HAUL loose ground piles FIRST (above raw extraction) ──
                 //  운영자 fb #I4-regress: 떨어진 더미가 적립 전에 부패(옥외 30s/-1)하지

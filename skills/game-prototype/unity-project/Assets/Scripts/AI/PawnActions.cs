@@ -716,6 +716,42 @@ namespace MelonS.GameProto.AI
     /// 같은 우선순위에선 다른 일감이 전부 소진된 뒤에만 잡고, 직업 탭에서 연구 1/
     /// 나머지 2+ 로 두면 전담 연구자가 된다.
     /// </summary>
+    /// <summary>
+    /// 작업대에서 무기를 만든다 (2026-07-30 운영자 "습격을 처리하려면 무기가 있어야함").
+    ///
+    /// 이전에는 무기 획득 경로가 **연구 `simple_bow` 완료 시 자동 지급** 하나뿐이었다.
+    /// 즉 플레이어가 무기를 만드는 행위가 게임에 없었다.
+    ///
+    /// `WorkKind.Build`(만들기)로 묶는다 — 9직종 그리드는 이 게임의 차별점 화면이라
+    /// 열을 늘리면 그 화면이 바뀐다.  건설과 제작은 같은 손일이므로 무리한 배정도 아니다.
+    /// 우선순위는 **청사진 건설보다 아래** 에 둔다: 집이 없는데 무기를 먼저 만들면 곤란하고,
+    /// 습격은 유예 2일 + 간격 지터로 4~6일차에 오므로 급하지 않다.
+    /// </summary>
+    public class CraftWeaponAction : IPawnAction
+    {
+        public string DisplayName => "무기 제작";
+        public WorkKind Kind => WorkKind.Build;
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.smith == null) return false;
+            // 만들 사람이 필요하고(무장 안 된 콜로니스트) 자재가 있어야 한다.
+            if (PawnWeaponsmith.FindUnarmed() == null) return false;
+            if (!PawnWeaponsmith.TryPickRecipe(out _)) return false;
+            ResearchBench best = null; float bestSq = float.MaxValue;
+            Vector2 me = ctx.transform.position;
+            foreach (var b in Object.FindObjectsByType<ResearchBench>(FindObjectsSortMode.None))
+            {
+                if (b == null) continue;
+                if (ReservationManager.IsReservedByOther(b, ctx.transform.gameObject)) continue;
+                float sq = ((Vector2)b.transform.position - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = b; }
+            }
+            if (best == null) return false;
+            ctx.smith.SetBenchTarget(best);
+            return true;
+        }
+    }
+
     public class DoResearchAction : IPawnAction
     {
         public string DisplayName => "연구";

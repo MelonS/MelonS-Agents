@@ -576,6 +576,44 @@ namespace MelonS.GameProto
                                       : $"화면에 '{s.contains}' 없음 in {t2:F1}s";
                     break;
                 }
+                //  ④ 무장한 콜로니스트 수 — '무기 제작' 루프가 실제로 도는지의 유일한 증거.
+                //     맨손("주먹")은 무장으로 세지 않는다.  이름이 아니라 **효과**로 판정한다
+                //     (카탈로그 이름이 바뀌어도 검사가 조용히 통과하지 않게).
+                case "armedPawns":
+                {
+                    float t4 = 0; int best2 = 0;
+                    while (t4 < Mathf.Max(1f, s.withinSec))
+                    {
+                        int armed = 0;
+                        foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                        {
+                            if (p == null || p.IsDead) continue;
+                            var eq = p.GetComponent<PawnEquipment>();
+                            var w = eq != null ? eq.GetEquipped(PawnEquipment.Slot.Weapon) : null;
+                            if (w != null && (w.rangedEnabled || w.meleeDamageAdd > 0f)) armed++;
+                        }
+                        if (armed > best2) best2 = armed;
+                        if (best2 >= (int)s.min) break;
+                        yield return new WaitForSecondsRealtime(0.5f); t4 += 0.5f;
+                    }
+                    r.passed = best2 >= (int)s.min;
+                    r.detail = $"무장 {best2}명 (need ≥{(int)s.min}) in {t4:F1}s";
+                    break;
+                }
+                //  ③ 콜로니가 살아 있는가 — 전멸하면 승리 경로 자체가 사라진다.
+                case "pawnsAlive":
+                {
+                    int alive = 0, total = 0;
+                    foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                    {
+                        if (p == null) continue;
+                        total++;
+                        if (!p.IsDead) alive++;
+                    }
+                    r.passed = alive >= (int)s.min;
+                    r.detail = $"생존 {alive}/{total} (need ≥{(int)s.min})";
+                    break;
+                }
                 case "objectivesDone":
                 {
                     float t3 = 0; int best = -1;
