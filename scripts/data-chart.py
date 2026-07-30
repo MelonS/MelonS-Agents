@@ -34,7 +34,7 @@ FPS_DEFAULT = 30
 # 9:16 band plan. Anything below ~1650 is covered by the Shorts player UI
 # (title / channel / description), so the legal band must sit above it.
 CAPTION_Y = 1400        # burned narration captions
-DISCLOSURE_Y = 1508     # mandatory fan-content + AI lines
+DISCLOSURE_Y = 1486     # mandatory fan-content + AI lines
 
 # ── palette (dataviz skill, dark mode, validated vs surface #0d0d0d) ─────────
 SURFACE = (13, 13, 13)
@@ -730,8 +730,8 @@ def draw_chrome(d, S, t_global, total):
     d.line([(0, 2), (W * (t_global / total), 2)], fill=GRID, width=4)
     y = DISCLOSURE_Y
     for i, line in enumerate(S["disclosures"]):
-        text(d, (W // 2, y + i * 36), line, font("text", 28), dim(INK_2, 0.92))
-    text(d, (W // 2, DISCLOSURE_Y + 84), S["source_note"], font("text", 23), dim(MUTED, 0.9))
+        text(d, (W // 2, y + i * 34), line, font("text", 26), dim(INK_2, 0.92))
+    text(d, (W // 2, DISCLOSURE_Y + 112), S["source_note"], font("text", 22), dim(MUTED, 0.88))
 
 
 # ── render ────────────────────────────────────────────────────────────────────

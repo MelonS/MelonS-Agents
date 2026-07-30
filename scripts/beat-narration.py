@@ -145,21 +145,30 @@ def as_parts(vo):
 def group_captions(words, max_chars=30):
     """Group word timings into short readable phrases — a caption is a phrase,
     never a single word flashing, never a paragraph."""
-    out, buf, t0 = [], [], None
-    for s, e, w in words:
-        if t0 is None:
-            t0 = s
-        cand = (" ".join(buf + [w]))
-        if buf and len(cand) > max_chars:
+    out, buf, t0, prev_e = [], [], None, 0.0
+
+    def flush():
+        nonlocal buf, t0
+        if buf:
             out.append({"start": round(t0, 3), "end": round(prev_e, 3),
                         "text": " ".join(buf)})
+        buf, t0 = [], None
+
+    for s, e, w, solo in words:
+        if solo:
+            flush()
+            out.append({"start": round(s, 3), "end": round(e, 3), "text": w})
+            prev_e = e
+            continue
+        if t0 is None:
+            t0 = s
+        if buf and len(" ".join(buf + [w])) > max_chars:
+            flush()
             buf, t0 = [w], s
         else:
             buf.append(w)
         prev_e = e
-    if buf:
-        out.append({"start": round(t0, 3), "end": round(prev_e, 3),
-                    "text": " ".join(buf)})
+    flush()
     return out
 
 
@@ -196,7 +205,7 @@ def main():
                     sys.exit(f"[beat-narration] audio part not found: {clip}")
                 dur = duration_s(clip)
                 if part.get("caption"):
-                    captions.append((cursor, cursor + dur, part["caption"]))
+                    captions.append((cursor, cursor + dur, part["caption"], True))
                 clips.append((clip, cursor))
                 cursor += dur + PART_GAP_S
                 spoken += dur + PART_GAP_S
@@ -214,7 +223,7 @@ def main():
                 if spoken + dur <= budget or len(parts) > 1:
                     break
             for (ws, we, w) in words:
-                captions.append((cursor + ws, cursor + we, w))
+                captions.append((cursor + ws, cursor + we, w, False))
             clips.append((clip, cursor))
             cursor += dur + PART_GAP_S
             spoken += dur + PART_GAP_S
