@@ -6,57 +6,54 @@
 > and re-run the auditor.
 
 **Verdict**: CRITICAL
-**Full report**: [`docs/audit/2026-07-10-all.md`](2026-07-10-all.md)
-**Generated**: 2026-07-10 03:06:50    
+**Full report**: [`docs/audit/2026-07-26-contract.md`](2026-07-26-contract.md)
+**Generated**: 2026-07-26 06:30:46    
 
 ## Summary (from audit)
 
 
-Full-scope audit at HEAD `8b5268d` (2026-07-09 12:23:31 +0900). All six
-dimensions were walked (architecture/doc drift, roadmap freshness,
-operator-contract compliance, cost-model accuracy, stale TODOs/dead code,
-secrets/security), cross-checked against the prior five cycles
-(2026-07-05-contract through 2026-07-09-all) to distinguish reproduced
-findings from new ones. The precomputed skill-drift report (1 medium
-finding, job-hunt) was re-derived to the same root cause identified in
-every prior cycle: CRLF contamination in `skills/job-hunt/config/activation.tsv`
-(confirmed directly this cycle -- `file` reports "CRLF line terminators",
-`.gitattributes` has no `.tsv` rule), not a genuinely missing script.
+Focused pass over `docs/operator-contract.md` compliance, cross-checked against
+`docs/for-analysts.md`, `docs/architecture.md`, `docs/roadmap.md`, every
+`.claude/agents/*.md` frontmatter, `.gitignore`, and recent `git log` at HEAD
+`b260b76` (2026-07-26, section 13 inbound-message-routing rule just added). The
+precomputed skill-drift report is clean (0 findings) and is not repeated here.
+Hard rule 6 (git workflow / gitignore) and hard rule 8 (the section-8
+hardcoded-path exception registry) both check out: `records/`, `.env`, and all
+eight listed section-8 exception files carry the required grep-anchor comment,
+and no output artifacts (mp4/wav/jpg/etc.) are committed under `agents/` or
+`scripts/`. `.env.example` contains only placeholder values, and a targeted
+secret-pattern grep outside `docs/`, `*.example`, and `*.md` turned up only
+code identifiers (token, access_token) and no literal credentials. The core
+6-agent model table in `for-analysts.md` matches `.claude/agents/orchestrator.md`,
+`planner.md`, `resourcer.md`, `editor.md`, `qa.md`, and `auditor.md` frontmatter
+exactly, and the 27-definition roster count (6 core plus 13 game-line plus 5
+content-shorts plus 3 judges) is verified by direct file-count, matching the
+prose.
 
-Headline result: the audit-trail-durability finding carried critical for
-five-plus consecutive cycles reproduces live for a sixth. At session start
-`git status --porcelain` shows `M docs/audit/CURRENT-ALERT.md` plus three
-untracked reports -- `docs/audit/2026-07-08-all.md`,
-`docs/audit/2026-07-08-contract.md`, and, new to this cycle,
-`docs/audit/2026-07-09-all.md` itself (confirmed via `git log -- <path>`
-returning zero commits for all three, and `CURRENT-ALERT.md`'s last commit
-still `52fda03`, 2026-07-06). `scripts/audit-run.sh:120` is still exactly
-the advisory string `log_info "review then git-add-and-commit to preserve"`
--- never executed. Every finding from the 2026-07-09 report was
-independently re-verified this cycle and reproduces unchanged (subagent-
-roster count, `refactor_check.py` and three YT-analytics scripts' hardcoded
-paths, the roadmap Done-gap -- now 31 commits and still widening -- the
-`cost-model.md` self-contradiction, the job-hunt CRLF gap, Section-5
-marker non-adoption, the `goal.md` orphaned-goal silence, `for-analysts.md`'s
-stale line citation, `.env.example`'s missing ElevenLabs/Typecast/
-YT_CONFIG_DIR entries, the untracked-`.claude/wb/` gap, and the "0 mission
-cost" claim omitting ElevenLabs/Typecast). One commit landed since the
-07-09 report (`8b5268d`, docs-only, `docs/generative-shorts-pipeline.md`
-+10 lines) and introduces no new findings and no Section-5-scope change.
-No `docs/daily/` report has landed since 2026-05-27 (44 days). Given the
-finding set is now stable and fully reproduced for a sixth cycle with zero
-remediation despite four-plus identical prior suggestions, this report
-keeps the findings compact and focuses evidence on what changed (or
-conspicuously did not) since 07-09.
+Two significant problems remain live, and both are continuations of
+previously-flagged findings rather than new discoveries: first,
+`docs/audit/CURRENT-ALERT.md` is still the 2026-07-10 CRITICAL alert with no
+audit report landing in `docs/audit/` in the 16 days since, despite the
+architecture doc describing a three-trigger-layer automation design (L1
+post-commit, L2 15-min poll, L3 daily 03:00 baseline) that should have
+produced one; and second, `docs/roadmap.md` "Now" section (last touched
+2026-05-20) still describes job-hunt v0.4.0 activation under a
+multi-skill-framework active goal, while `docs/goal.md` actual Active goal has
+been PawnSim since 2026-06-12 (44 days), and the most recent five commits are
+about README/CI parity, LangGraph graph generation, and inbound-message
+routing, none of which touch either goal. Three accumulated suggest-comment
+blocks (2026-05-25, 2026-06-11, 2026-07-03) propose a Now rewrite that was
+never applied. Additionally, one frontmatter inconsistency was found
+(`ta.md` has no `model:` field, unlike all 26 other subagent definitions), six
+section-5-scope commits since 2026-06-01 lack the required audit-trail marker
+(none qualify for the pre-2026-05-17 carry-forward exemption), and
+`.claude/wb/` (94 tracked JSON files) remains an undocumented, unignored
+tracked directory outside the Layers table in `docs/architecture.md`.
 
 ## Critical / High findings
 
-- **[critical]** Audit-trail durability gap reproduces live for a sixth
-- **[high]** `docs/roadmap.md` Done-section citation gap continues to
-- **[high]** `docs/goal.md` active goal remains silently orphaned, now 28
-- **[high]** Subagent roster count is wrong in two independent docs,
-- **[high]** `skills/game-dev-agent/scripts/refactor_check.py` still
-- **[high]** Three YouTube-analytics scripts hardcode Windows-drive-letter
+- **[critical]** Audit-trail durability gap reproduces — `docs/audit/CURRENT-ALERT.md:9-10`
+- **[high]** `docs/roadmap.md` Now section stale against `docs/goal.md` Active goal and the last 5 commits — `docs/roadmap.md:16-79`, `docs/goal.md:19`
 
 ## How to clear this alert
 
