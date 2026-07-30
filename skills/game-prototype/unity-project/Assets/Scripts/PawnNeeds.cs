@@ -714,6 +714,10 @@ namespace MelonS.GameProto
                 tm.color = new Color(0.78f, 0.88f, 1f, 0.95f);
                 var mrz = _sleepMarker.GetComponent<MeshRenderer>();
                 if (mrz != null) mrz.sortingOrder = 31;   // NightOverlay(25)·바(30) 위
+                // "zZ" 는 ASCII 라 지금은 기본 폰트로도 그려지지만, 다른 월드 라벨과
+                //  같은 경로를 쓴다 — 문구가 한글로 바뀌는 순간 WebGL 에서만 사라지는
+                //  함정을 미리 닫는다 (UITheme.ApplyKoreanFont 주석 참조).
+                MelonS.GameProto.Core.UITheme.ApplyKoreanFont(tm);
             }
             if (!_sleepMarker.activeSelf) _sleepMarker.SetActive(true);
             _sleepFxSeen = Time.time;

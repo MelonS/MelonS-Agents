@@ -69,6 +69,33 @@ def main() -> int:
             print("[repro_all] FAIL: fresh build 실패")
             return 2
 
+    # ── 사전 정적 검사 (2026-07-31 신설) ──────────────────────────────────────
+    #  계기: 정착 목표의 체크박스 `☐/☑` 가 번들 폰트 3종 어디에도 없어 **WebGL 에서
+    #  빈칸**이었고, 콜로니스트 이름·활동 라벨은 TextMesh 가 번들 폰트를 안 써서
+    #  **WebGL 에서 통째로 렌더되지 않았다**.  그 사이 이 시나리오 게이트는 22/22
+    #  초록이었다 — 게이트는 Windows 실행 파일을 보고, 제출물은 WebGL URL 이다.
+    #
+    #  더 뼈아픈 것은 tofu 검사(`check-font-coverage.py`)가 **이미 존재했다**는
+    #  점이다.  ✕ U+2715 사고 뒤에 만들어 놓고 실행 경로에 넣지 않아, 같은 유형이
+    #  다시 들어왔다.  **존재하는 검사와 도는 검사는 다르다.**
+    #
+    #  몇 초면 끝나고 빌드도 필요 없으므로 시나리오보다 앞에 둔다.  실패해도 여기서
+    #  중단하지 않는다 — 시나리오 결과까지 한 번에 보는 편이 왕복이 적다.  대신
+    #  최종 판정에는 반영한다(요약에 STATIC 행으로 남는다).
+    static_rc = 0
+    font_check = (rc.REPO / "skills" / "game-prototype" / "scripts"
+                  / "check-font-coverage.py")
+    if font_check.exists():
+        print("\n[repro_all] ── 사전 정적 검사: 폰트 커버리지 + 월드 TextMesh 폰트 ──")
+        proc = subprocess.run([sys.executable, str(font_check)],
+                              capture_output=True, text=True,
+                              encoding="utf-8", errors="replace")
+        for ln in (proc.stdout or "").splitlines():
+            print(f"  {ln}")
+        if proc.returncode != 0:
+            static_rc = 1
+            print("  ✗ 정적 검사 FAIL — 위 지적을 고칠 것 (WebGL 에서만 빈칸/미렌더가 된다)")
+
     # rcode 를 그대로 보관한다.  repro_run 은 이미 2=빌드 문제(주로 STALE)와
     #  1=시나리오 실패를 구분해 돌려주는데, 예전엔 여기서 `rcode == 0` 으로 뭉개
     #  **stale 거부가 진짜 실패와 똑같이 FAIL 로 찍혔다**.  2026-07-29 에 실제로
@@ -116,6 +143,7 @@ def main() -> int:
     n_fail = sum(1 for _, c in results if c == 1)
     n_stale = sum(1 for _, c in results if c == 2)
     print("\n[repro_all] ━━━ 요약 ━━━")
+    print(f"  {'PASS' if static_rc == 0 else 'FAIL':5s} (정적) 폰트 커버리지 + 월드 TextMesh 폰트")
     for name, code in results:
         print(f"  {label(code):5s} {name}")
         for ln in fail_lines.get(name, []):
@@ -126,14 +154,16 @@ def main() -> int:
         print(f"[repro_all] ⚠ STALE {n_stale}건 — 이 시나리오들은 **실행되지 않았다**.")
         print("[repro_all]   원인: 스위트 실행 중 .cs 가 편집되어 빌드가 소스보다 오래됨.")
         print("[repro_all]   조치: 스위트가 도는 동안 소스를 건드리지 말 것. --fresh-build 로 재실행.")
-    if n_fail == 0 and n_stale == 0:
+    if n_fail == 0 and n_stale == 0 and static_rc == 0:
         overall = "PASS"
+    elif n_fail == 0 and n_stale == 0:
+        overall = "FAIL (정적 검사)"
     elif n_fail == 0:
         overall = f"INCOMPLETE (stale {n_stale}/{len(results)})"
     else:
         overall = f"FAIL ({n_fail}/{len(results)})" + (f", stale {n_stale}" if n_stale else "")
     print(f"[repro_all] OVERALL: {overall}")
-    return 0 if (n_fail == 0 and n_stale == 0) else 1
+    return 0 if (n_fail == 0 and n_stale == 0 and static_rc == 0) else 1
 
 
 if __name__ == "__main__":

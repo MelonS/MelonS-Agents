@@ -163,8 +163,12 @@ namespace MelonS.GameProto
             _mesh.alignment = TextAlignment.Center;
             _mesh.color     = color;
 
-            // Built-in Arial — always present in Unity, no external asset needed.
-            _mesh.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            // 2026-07-31 — 내장 Arial 을 쓰면 **WebGL 에서 한글이 통째로 빈다**.
+            //  이 텍스트는 "+27 목재" 처럼 한글을 담는다.  Windows 는 Arial 에 없는
+            //  글리프를 OS 폰트로 대체해 주지만 WebGL 에는 OS 폰트가 없다 — 그래서
+            //  공개 URL 에서는 벌목 보상 피드백이 **보이지 않았다**(실측).
+            //  번들 한글 폰트 + 머티리얼로 교체 (UITheme.ApplyKoreanFont 주석 참조).
+            MelonS.GameProto.Core.UITheme.ApplyKoreanFont(_mesh);
 
             // Set sortingOrder on the MeshRenderer that TextMesh drives.
             _renderer = GetComponent<Renderer>();

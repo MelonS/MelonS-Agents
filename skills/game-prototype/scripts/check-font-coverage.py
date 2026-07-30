@@ -86,9 +86,15 @@ def main() -> int:
                         bad.append((str(cs.relative_to(UP)), i, ch,
                                     "전체" if missing_all else "일부:" + ",".join(missing_some)))
 
+    # ⚠ 2번째 검사를 **조기 반환보다 먼저** 돌린다.  처음엔 아래 tofu 리포트 뒤에
+    #  두었는데, tofu 가 없으면 여기서 return 0 해 버려 TextMesh 검사가 아예 실행되지
+    #  않았다 — 오늘 하루 종일 잡아 온 '조용한 미실행'을 검사 스크립트가 그대로 재현할
+    #  뻔했다.  검사는 서로의 실행을 가로막으면 안 된다.
+    rc_textmesh = check_worldspace_textmesh_fonts()
+
     if not bad:
         print("PASS — UI 문자열에 미지원 문자 없음.")
-        return 0
+        return rc_textmesh
 
     # 같은 문자는 한 번만 요약해서 보여준다 (파일 수백 줄 쏟아내지 않게)
     by_char: dict[str, list[tuple[str, int, str]]] = {}
@@ -119,7 +125,58 @@ def main() -> int:
         print("       (예: ✕ U+2715 → × U+00D7).")
         return 1
     print("\n경고만 — 모든 폰트에 없는 문자는 없음.")
-    return 0
+    return rc_textmesh
+
+
+# ── 2번째 검사: 월드 TextMesh 가 번들 폰트를 쓰는가 ────────────────────────────
+#
+# 계기 (2026-07-31, 공개 URL 실측): Windows 빌드에서는 콜로니스트 이름·활동 라벨이
+# 선명한데 **WebGL 에서는 하나도 렌더되지 않았다**.  UI(Canvas) 텍스트는 멀쩡했다.
+#
+# 원인: `PawnNameLabel`/`FloatingText` 가 `TextMesh` 에 **폰트를 지정하지 않고**
+# Unity 기본 폰트(Arial/LegacyRuntime)를 썼다.  Windows 는 그 폰트에 없는 글리프를
+# **OS 폰트로 대체**해 주므로 한글이 나온다.  WebGL 에는 OS 폰트가 없다 — 그래서
+# 한글만 통째로 빈다.  즉 **제출 플랫폼에서만** 기능이 사라지는데, Windows 기준
+# 재현 게이트는 22/22 초록이었다.
+#
+# 위 1번 검사(tofu)와 다른 실패다: 1번은 "폰트에 글자가 없다", 이건 "그 폰트를
+# 애초에 안 쓴다".  둘 다 조용히 빈칸으로 끝나므로 같은 파일에서 함께 막는다.
+TEXTMESH_RE = re.compile(r"AddComponent<TextMesh>\s*\(")
+FONT_OK_RE = re.compile(r"ApplyKoreanFont|LoadKoreanFont|Resources\.Load<Font>")
+
+
+def check_worldspace_textmesh_fonts() -> int:
+    """`AddComponent<TextMesh>()` 를 하는 메서드가 번들 폰트를 지정하는지 본다.
+
+    판정 범위는 **그 호출이 있는 메서드 본문 근처**(±40줄)로 잡는다.  C# 파서를
+    붙이지 않는 대신 창을 넉넉히 둬서, '같은 메서드 안에서 폰트를 지정했는데
+    못 봤다'는 거짓 양성이 나지 않게 한다.  놓치는 쪽(거짓 음성)이 시끄러운
+    쪽보다 낫다 — 이 검사는 게이트를 막는 것이 목적이 아니라 눈에 띄게 하는 것이다.
+    """
+    offenders: list[tuple[str, int]] = []
+    for cs in sorted(SCRIPTS.rglob("*.cs")):
+        try:
+            lines = cs.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        for i, line in enumerate(lines):
+            if not TEXTMESH_RE.search(line):
+                continue
+            lo, hi = max(0, i - 40), min(len(lines), i + 41)
+            if not FONT_OK_RE.search("\n".join(lines[lo:hi])):
+                offenders.append((str(cs.relative_to(UP)), i + 1))
+
+    print("\n── 월드 TextMesh 폰트 검사")
+    if not offenders:
+        print("  PASS — 모든 TextMesh 생성부가 번들 폰트를 지정한다.")
+        return 0
+    print("  FAIL — 폰트를 지정하지 않는 TextMesh 생성부:")
+    for path, ln in offenders:
+        print(f"      {path}:{ln}")
+    print("  Unity 기본 폰트는 Windows 에서만 OS 폰트로 한글을 대체한다 —")
+    print("  WebGL(제출 타깃)에서는 그 텍스트가 통째로 비어 렌더된다.")
+    print("  고치기: UITheme.ApplyKoreanFont(tm) 호출 (폰트 + 머티리얼 함께).")
+    return 1
 
 
 if __name__ == "__main__":

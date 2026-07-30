@@ -164,6 +164,37 @@ namespace MelonS.GameProto.Core
             return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         }
 
+        /// <summary>월드 공간 `TextMesh` 에 한글 폰트를 입힌다 — **머티리얼까지**.
+        ///
+        /// 계기 (2026-07-31, 공개 URL 실측): Windows 빌드에서는 콜로니스트 이름·활동
+        /// 라벨이 선명한데 **WebGL 에서는 하나도 렌더되지 않았다**.  UI(Canvas) 텍스트는
+        /// 멀쩡했으므로 폰트가 빌드에 없는 것은 아니었다.
+        ///
+        /// 원인: `TextMesh` 를 만드는 곳들이 **폰트를 아예 지정하지 않고** Unity 기본
+        /// 폰트(Arial/LegacyRuntime)를 쓰고 있었다.  Windows 는 그 폰트에 없는 글리프를
+        /// **OS 폰트로 대체**해 주므로 한글이 나온다.  WebGL 에는 OS 폰트가 없다 —
+        /// 그래서 한글만 통째로 빈다.  바로 위 `LoadKoreanFont` 주석이 이미
+        /// "WebGL 은 OS 폰트 접근이 없어 번들 폰트가 유일한 한글 경로"라고 적고 있었는데,
+        /// 정작 월드 라벨들이 그 경로를 쓰지 않았다.
+        ///
+        /// 이 결함으로 **제출 플랫폼에서만** 사라져 있던 것들:
+        ///   · 콜로니스트 이름 + 활동 라벨(벌목/목재 운반/연구/여가)
+        ///   · 나무에 붙는 '벌목' 지정 표시  · 산출 플로팅 텍스트('+27 목재')
+        ///
+        /// ⚠ `tm.font` 만 바꾸면 안 된다.  TextMesh 는 폰트를 바꿔도 렌더러 머티리얼을
+        /// 따라 바꾸지 않아서, 글리프 아틀라스가 다른 텍스처를 가리키며 깨진다.
+        /// `sharedMaterial` 로 넣는다 — `material` 은 라벨마다 사본을 만들어 드로우콜이
+        /// 콜로니스트 수만큼 늘어난다.</summary>
+        public static void ApplyKoreanFont(TextMesh tm)
+        {
+            if (tm == null) return;
+            var f = LoadKoreanFont(tm.fontSize);
+            if (f == null) return;
+            tm.font = f;
+            var mr = tm.GetComponent<MeshRenderer>();
+            if (mr != null) mr.sharedMaterial = f.material;
+        }
+
         /// <summary>디스플레이(타이틀·로고) 폰트 — BitBit.  본문에 쓰지 말 것 (두께).</summary>
         public static Font LoadDisplayFont()
         {

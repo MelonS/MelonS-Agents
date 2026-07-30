@@ -138,6 +138,9 @@ namespace MelonS.GameProto
             tm.color = color;
             var mr = host.GetComponent<MeshRenderer>();
             if (mr != null) mr.sortingOrder = order;
+            // 한글 폰트 + 머티리얼.  없으면 **WebGL 에서 라벨이 통째로 비어 렌더된다**
+            //  (UITheme.ApplyKoreanFont 주석 참조 — 공개 URL 실측으로 잡은 결함).
+            MelonS.GameProto.Core.UITheme.ApplyKoreanFont(tm);
             return tm;
         }
 
@@ -172,6 +175,9 @@ namespace MelonS.GameProto
                 tm.color = new Color(0.05f, 0.04f, 0.03f, 0.9f);
                 var mr = go.GetComponent<MeshRenderer>();
                 if (mr != null) mr.sortingOrder = order;
+                // 그림자도 독립 TextMesh 다 — 본문과 같은 폰트를 줘야 WebGL 에서
+                //  외곽선만 사라지는(본문은 있는데 테두리가 없는) 어긋남이 안 난다.
+                MelonS.GameProto.Core.UITheme.ApplyKoreanFont(tm);
                 arr[i] = tm;
             }
             return arr;

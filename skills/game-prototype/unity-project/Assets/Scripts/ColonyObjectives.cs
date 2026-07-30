@@ -268,7 +268,15 @@ namespace MelonS.GameProto
                 if (o.row != null)
                 {
                     string prog = o.progress != null ? o.progress() : "";
-                    o.row.text = (o.completed ? "☑ " : "☐ ") + o.label
+                    // ☑/☐ (U+2611/U+2610) 은 **번들 폰트 3종 어디에도 없다** —
+                    //  WebGL 에서 빈칸(tofu)으로 나온다.  Windows 에서만 OS 폰트가
+                    //  대신 그려 줘서 개발 중엔 멀쩡해 보였다.
+                    //  (2026-07-31 `check-font-coverage.py` 가 잡았다.  이 검사는
+                    //   ✕ U+2715 사고 뒤에 만들어졌는데, 목표 패널을 추가할 때
+                    //   아무도 돌리지 않아 같은 유형이 다시 들어왔다.)
+                    //  ■/□ (U+25A0/U+25A1) 은 3종 모두에 있다.  달성 행은 녹색이므로
+                    //  '채워진 사각 + 녹색'이 체크 표시 역할을 한다.
+                    o.row.text = (o.completed ? "■ " : "□ ") + o.label
                                  + (o.completed || string.IsNullOrEmpty(prog) ? "" : $"   {prog}");
                     o.row.color = o.completed
                         ? new Color(0.55f, 0.78f, 0.45f, 1f)          // 달성 = 녹색
