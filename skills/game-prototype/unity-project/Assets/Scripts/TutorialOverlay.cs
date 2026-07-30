@@ -230,9 +230,22 @@ namespace MelonS.GameProto
                     if (TreeChopDesignation.Instance == null) return false;
                     return TreeChopDesignation.Instance.GetMarkedTreePositions().Count > chopBaseline;
                 case Gate.House:
-                    // 벽 청사진/완공 또는 가구 청사진 중 하나라도 = 집짓기 시작.
-                    return Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None).Length > 0
-                        || Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None).Length > 0;
+                    // **이 단계에 들어온 시점 대비 늘었을 때만** 통과한다.
+                    //  2026-07-31 실측(심사자 흐름 재현): 기존 조건은 "벽이 하나라도
+                    //  있으면"이었는데 **시작 정착지의 집에 이미 벽이 있다** → 이 단계가
+                    //  화면에 뜨자마자 충족돼, 안내가 ①에서 곧장 ③으로 넘어갔다.
+                    //  즉 튜토리얼이 **건축을 한 번도 가르치지 않았다**.
+                    //  저장구역(2026-07-27)·벌목(같은 날)에 이어 세 번째 같은 함정이다 —
+                    //  시작 정착지가 생기면서 "존재하면 통과" 류 게이트가 전부 무력화됐는데
+                    //  하나씩 발견되고 있다.  기준선 비교로 "플레이어가 새로 지었는가"를 본다.
+                    //  청사진은 완공되면 사라지므로 **벽 수 + 청사진 수**의 합을 센다
+                    //  (짓는 중 → 완공 사이에 합계가 줄지 않게).
+                    if (houseBaselineStep != stepIdx)
+                    {
+                        houseBaselineStep = stepIdx;
+                        houseBaseline = HouseProgressCount();
+                    }
+                    return HouseProgressCount() > houseBaseline;
                 case Gate.Farm:
                     return GrowZoneDesignation.Instance != null
                         && GrowZoneDesignation.Instance.ZoneCellCount > 0;
@@ -251,6 +264,16 @@ namespace MelonS.GameProto
         // Gate.Chop 기준선 (위 Update 의 진입 감지에서 설정).  -1 = 아직 진입 안 함.
         private int chopBaseline;
         private int chopBaselineStep = -1;
+        // Gate.House 기준선 — 같은 이유(시작 정착지가 조건을 미리 충족).
+        private int houseBaseline;
+        private int houseBaselineStep = -1;
+
+        /// <summary>'집짓기 진척' 지표 = 완공된 벽 + 진행 중 청사진.
+        ///  청사진은 완공되면 사라지고 벽이 늘어나므로, 둘을 합쳐야 짓는 도중에
+        ///  합계가 줄어 게이트가 도로 닫히는 일이 없다.</summary>
+        private static int HouseProgressCount()
+            => Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None).Length
+             + Object.FindObjectsByType<BlueprintEntity>(FindObjectsSortMode.None).Length;
 
         private void ApplyFade()
         {
