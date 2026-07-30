@@ -9,9 +9,11 @@
 #   ./scripts/audit-run.sh contract    # focus on operator-contract compliance
 #   ./scripts/audit-run.sh security    # focus on secret leakage + .gitignore
 #
-# Designed to be cron-friendly: writes only to docs/audit/<date>-<focus>.md,
-# never modifies anything else.  Commit is left to the human in the loop —
-# audit reports go to git history so a future machine sees the trail.
+# Designed to be cron-friendly: writes only to docs/audit/<date>-<focus>.md
+# and docs/audit/CURRENT-ALERT.md, and commits exactly those paths itself so
+# the trail survives a machine swap.  Nothing else in the tree is touched —
+# `git commit --only` leaves whatever the operator has staged untouched.
+# Set AUDIT_NO_COMMIT=1 to leave the report uncommitted.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -117,7 +119,7 @@ if [[ ! -s "$OUT_FILE" ]]; then
 fi
 
 log_ok "audit report ready: $OUT_FILE"
-log_info "review then 'git add docs/audit/ && git commit' to preserve"
+log_info "감사 트레일은 이 스크립트가 직접 커밋한다 (생략: AUDIT_NO_COMMIT=1)"
 
 # -----------------------------------------------------------------------------
 # Active surface: extract verdict and maintain docs/audit/CURRENT-ALERT.md
@@ -200,3 +202,67 @@ write_alert_file() {
 
 # Non-fatal: parsing failures must never break the audit run itself.
 parse_verdict_and_alert || log_warn "verdict parser failed — alert file may be stale"
+
+# ── Audit-trail durability ───────────────────────────────────────────────
+# The runner commits its own output.  Six consecutive cycles flagged
+# "reports are generated but never committed" as CRITICAL, and every time
+# the fix was a human noticing stray files in `git status` and committing
+# them in a batch (27495cb, 52fda03, b8f7d26).  A step someone has to
+# remember is a step that gets skipped, so it stopped being a step.
+#
+# Scope is deliberately narrow: only docs/audit/ paths are committed, via
+# `git commit --only`, so whatever else the operator has staged is left
+# exactly as it was.  Everything here is non-fatal — an audit must never
+# fail because of git.
+commit_audit_trail() {
+  [[ "${AUDIT_NO_COMMIT:-0}" == "1" ]] && { log_info "AUDIT_NO_COMMIT=1 — 트레일 커밋 생략"; return 0; }
+  command -v git >/dev/null 2>&1 || return 0
+  git -C "$REPO_ROOT" rev-parse --git-dir >/dev/null 2>&1 || return 0
+
+  # Never interfere with an in-progress merge/rebase/bisect.
+  local gitdir; gitdir="$(git -C "$REPO_ROOT" rev-parse --git-dir)"
+  for marker in MERGE_HEAD rebase-merge rebase-apply BISECT_LOG CHERRY_PICK_HEAD; do
+    if [[ -e "$REPO_ROOT/$gitdir/$marker" ]]; then
+      log_warn "git $marker 진행 중 — 감사 트레일 커밋 보류(다음 실행에서 함께 커밋된다)"
+      return 0
+    fi
+  done
+
+  # Anything to preserve?  (modified, or untracked-but-not-ignored)
+  local pending
+  pending="$(git -C "$REPO_ROOT" status --porcelain -- docs/audit 2>/dev/null)"
+  [[ -z "$pending" ]] && { log_info "감사 트레일: 커밋할 변경 없음"; return 0; }
+
+  # The post-commit hook can fire while another git process holds the lock.
+  local try
+  for try in 1 2 3; do
+    [[ -e "$REPO_ROOT/$gitdir/index.lock" ]] || break
+    log_info "index.lock 대기 ($try/3)"; sleep 3
+  done
+
+  git -C "$REPO_ROOT" add -- docs/audit >/dev/null 2>&1 || { log_warn "감사 트레일 add 실패"; return 0; }
+  # `-m` must come BEFORE `--`; anything after the separator is a pathspec,
+  # so the message would silently be treated as a file to commit.
+  if git -C "$REPO_ROOT" commit --only -q \
+       -m "chore(audit): $DATE $FOCUS 감사 산출물 보존 (자동)" \
+       -m "audit-run.sh 가 자기 리포트와 CURRENT-ALERT 를 직접 커밋한다. 사람이 git status 에서 발견해 치우는 단계를 없앤 것 — 그 단계가 여섯 사이클 연속 빠졌다." \
+       -- docs/audit >/dev/null 2>&1; then
+    log_info "감사 트레일 커밋: $(git -C "$REPO_ROOT" rev-parse --short HEAD)"
+  else
+    log_warn "감사 트레일 커밋 실패 — 워킹트리에 남는다(다음 실행에서 재시도)"
+    return 0
+  fi
+
+  # Push is best-effort: offsite durability is the point, but a network
+  # blip must not turn into a failed audit or a half-done state.
+  if [[ "$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)" == "main" ]] \
+     && git -C "$REPO_ROOT" remote get-url origin >/dev/null 2>&1; then
+    if git -C "$REPO_ROOT" push -q origin HEAD:main >/dev/null 2>&1; then
+      log_info "감사 트레일 푸시 완료"
+    else
+      log_warn "푸시 실패 — 커밋은 로컬에 남아 있다(다음 푸시에 함께 올라간다)"
+    fi
+  fi
+}
+
+commit_audit_trail || true
