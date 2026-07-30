@@ -553,6 +553,45 @@ namespace MelonS.GameProto
                     r.passed = last.Contains(s.contains);
                     r.detail = $"activity='{last}' (want contains '{s.contains}') in {t:F1}s"; break;
                 }
+                // 2026-07-30 — 정착 목표(ColonyObjectives) 검증용 프로브 2종.
+                //  ① 화면에 그 문구가 실제로 있는가 (패널이 조용히 안 붙는 사고 방지 —
+                //     1차 구현이 RuntimeInitializeOnLoadMethod 를 첫 씬에서만 실행해
+                //     로그도 예외도 없이 미부착이었다)
+                //  ② 달성 판정이 실제로 도는가 (굳어 있으면 목표는 장식이다)
+                case "uiTextContains":
+                {
+                    float t2 = 0; bool found3 = false; string sample = "";
+                    while (t2 < Mathf.Max(1f, s.withinSec) && !found3)
+                    {
+                        foreach (var txt in Object.FindObjectsByType<UnityEngine.UI.Text>(FindObjectsSortMode.None))
+                        {
+                            if (txt == null || string.IsNullOrEmpty(txt.text)) continue;
+                            if (!txt.gameObject.activeInHierarchy) continue;
+                            if (txt.text.Contains(s.contains)) { found3 = true; sample = txt.text; break; }
+                        }
+                        if (!found3) { yield return new WaitForSecondsRealtime(0.25f); t2 += 0.25f; }
+                    }
+                    r.passed = found3;
+                    r.detail = found3 ? $"화면에서 '{s.contains}' 발견 — \"{sample}\""
+                                      : $"화면에 '{s.contains}' 없음 in {t2:F1}s";
+                    break;
+                }
+                case "objectivesDone":
+                {
+                    float t3 = 0; int best = -1;
+                    while (t3 < Mathf.Max(1f, s.withinSec))
+                    {
+                        var co = ColonyObjectives.Instance;
+                        int n = co != null ? co.CompletedCount : -1;
+                        if (n > best) best = n;
+                        if (n >= (int)s.min) break;
+                        yield return new WaitForSecondsRealtime(0.25f); t3 += 0.25f;
+                    }
+                    r.passed = best >= (int)s.min;
+                    r.detail = best < 0 ? "ColonyObjectives 없음"
+                                        : $"목표 달성 {best} (need ≥{(int)s.min}) in {t3:F1}s";
+                    break;
+                }
                 case "chopDesignations":
                 {
                     yield return null;

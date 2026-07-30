@@ -1,0 +1,276 @@
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace MelonS.GameProto
+{
+    /// <summary>
+    /// 정착 목표 — 화면에 상시 표시되는 4단계 체크리스트와 **승리 조건**.
+    ///
+    /// 계기 (2026-07-30 운영자): "이게 머하는 게임인지 전혀 파악이 안됨",
+    /// "게임인지 아닌지도 모르겠어".
+    ///
+    /// 진단해 보니 세 가지가 동시에 비어 있었다:
+    ///   ① 세계가 스스로 돌지 않았다      → 시작 캠프·기분 모델로 해결
+    ///   ② 사람처럼 짓지 못했다            → 자동 정리·동선 배치로 해결
+    ///   ③ **무엇을 목표로 하는지 없었다**  ← 이 파일
+    ///
+    /// 콜로니 심은 열린 장르지만, **처음 3분의 플레이어에게는 방향이 필요하다.**
+    /// 그리고 제출 요강이 "종료 조건"을 명시적으로 요구한다 — 지금까지는 패배(전멸)만
+    /// 있고 승리가 없어서 "무한 운영형"이라고 적을 수밖에 없었다.
+    ///
+    /// 목표는 **튜토리얼이 가르치는 순서와 같은 축**으로 잡는다.  따로 놀면 두 개의
+    /// 지시가 서로 경쟁한다:
+    ///   1. 목재 200 비축      — 벌목을 지정해야 는다 (튜토리얼 ①)
+    ///   2. 지붕 아래 잠자리 3 — 방을 만들고 지붕을 지정해야 한다 (튜토리얼 ②)
+    ///   3. 연구 1개 완료      — 연구대에 사람을 붙여야 한다
+    ///   4. 첫 습격 격퇴       — **승리**
+    ///
+    /// 1~3 은 시작 캠프 덕에 '가능하지만 저절로는 안 되는' 지점에 걸려 있다:
+    /// 목재는 초기 300 중 창고 적립분만 세므로 벌목이 필요하고, 침대는 있지만 지붕이
+    /// 없으며, 연구대는 있지만 우선순위를 올려야 진행된다.
+    ///
+    /// 배선은 자가 부팅([RuntimeInitializeOnLoadMethod]) — 씬 재베이크 없이 붙는다.
+    /// </summary>
+    public class ColonyObjectives : MonoBehaviour
+    {
+        public static ColonyObjectives Instance { get; private set; }
+
+        private sealed class Objective
+        {
+            public string label;
+            public System.Func<bool> done;
+            public System.Func<string> progress;   // null 이면 진행도 표기 없음
+            public bool completed;
+            public Text row;
+        }
+
+        private readonly List<Objective> objectives = new List<Objective>();
+        private Text headerText;
+        private bool victoryFired;
+        private float nextEval;
+
+        private const int WoodGoal = 200;
+
+        // ⚠ `AfterSceneLoad` 는 **첫 씬이 로드된 직후 한 번만** 실행된다.  이 빌드의 첫 씬은
+        //  MainMenu 라, 여기서 `scene.name != "Game"` 으로 걸러 버리면 나중에 Game 씬이
+        //  열려도 다시 불리지 않는다 — 1차 구현이 정확히 그래서 패널이 화면에 없었고
+        //  로그도 예외도 남지 않았다(조용한 미실행).
+        //  그래서 부팅 시 **sceneLoaded 를 구독**해 Game 이 열릴 때마다 붙인다.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void Bootstrap()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+            // 이미 Game 씬에서 시작한 경우(에디터 재생·게임 단독 씬 빌드)도 즉시 처리.
+            TrySpawn(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+        }
+
+        private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene s,
+                                          UnityEngine.SceneManagement.LoadSceneMode m)
+            => TrySpawn(s.name);
+
+        private static void TrySpawn(string sceneName)
+        {
+            if (sceneName != "Game") return;
+            if (FindFirstObjectByType<ColonyObjectives>() != null) return;
+            var go = new GameObject("ColonyObjectives");
+            go.AddComponent<ColonyObjectives>();
+            Debug.Log("[Objectives] 정착 목표 패널 부착");
+        }
+
+        private void Awake()
+        {
+            Instance = this;
+            BuildObjectives();
+            BuildUI();
+        }
+
+        private void BuildObjectives()
+        {
+            objectives.Add(new Objective {
+                label = $"목재 {WoodGoal} 비축",
+                done = () => ResourceManager.Instance != null && ResourceManager.Instance.wood >= WoodGoal,
+                progress = () => ResourceManager.Instance != null
+                                 ? $"{Mathf.Min(ResourceManager.Instance.wood, WoodGoal)}/{WoodGoal}" : "",
+            });
+            objectives.Add(new Objective {
+                label = "지붕 아래 잠자리 3",
+                done = () => RoofedBedCount() >= 3,
+                progress = () => $"{Mathf.Min(RoofedBedCount(), 3)}/3",
+            });
+            objectives.Add(new Objective {
+                label = "연구 1개 완료",
+                done = () => CompletedResearchCount() >= 1,
+                progress = () => $"{Mathf.Min(CompletedResearchCount(), 1)}/1",
+            });
+            objectives.Add(new Objective {
+                label = "첫 습격 격퇴",
+                done = () => RaidRepelled(),
+                progress = () => RaidHappened() ? (LiveBandits() == 0 ? "1/1" : "교전 중") : "0/1",
+            });
+        }
+
+        // ── 판정 ────────────────────────────────────────────────────────────
+        private static int RoofedBedCount()
+        {
+            var rd = RoofDesignation.Instance;
+            if (rd == null) return 0;
+            int n = 0;
+            foreach (var b in Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None))
+            {
+                if (b == null) continue;
+                var c = new Vector2Int(Mathf.FloorToInt(b.transform.position.x),
+                                       Mathf.FloorToInt(b.transform.position.y));
+                if (rd.IsRoofed(c)) n++;
+            }
+            return n;
+        }
+
+        private static int CompletedResearchCount()
+        {
+            var rm = ResearchManager.Instance;
+            if (rm == null) return 0;
+            // 완료 판정은 ResearchManager 가 이미 노출하는 IsUnlocked 로만 한다 —
+            //  내부 목록 형태에 의존하면 연구 목록이 바뀔 때 조용히 틀린다.
+            string[] techs = { "simple_bow", "irrigation", "better_stove", "stone_walls" };
+            int n = 0;
+            foreach (var t in techs) if (rm.IsUnlocked(t)) n++;
+            return n;
+        }
+
+        private static int LiveBandits()
+        {
+            int n = 0;
+            foreach (var b in Object.FindObjectsByType<BanditEnemy>(FindObjectsSortMode.None))
+                if (b != null && b.isActiveAndEnabled) n++;
+            return n;
+        }
+
+        //  AIDirector 는 싱글턴 프로퍼티가 없다 — AlertStackUI 와 같은 방식으로 찾는다.
+        //  0.5s 폴링 안에서만 호출되므로 매 프레임 FindObjects 금지 규약에 걸리지 않는다.
+        private static bool RaidHappened()
+        {
+            var d = Object.FindFirstObjectByType<AIDirector>();
+            return d != null && d.RaidCount > 0;
+        }
+
+        private static bool RaidRepelled()
+        {
+            if (!RaidHappened()) return false;
+            // 습격이 한 번 이상 왔고, 지금 살아 있는 밴딧이 없으며, 콜로니스트가 남아 있다.
+            if (LiveBandits() > 0) return false;
+            foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                if (p != null && !p.IsDead) return true;
+            return false;
+        }
+
+        // ── UI ──────────────────────────────────────────────────────────────
+        private void BuildUI()
+        {
+            var canvasGo = new GameObject("ObjectivesCanvas");
+            canvasGo.transform.SetParent(transform, false);
+            var canvas = canvasGo.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 150;           // 알림(200) 아래, 월드 UI 위
+            var scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+
+            var font = MelonS.GameProto.Core.UITheme.LoadKoreanFont(16);
+
+            // 좌상단 자원 패널 아래.  자원(4행 × ~42px + 패딩) ≈ 190px 를 피한다.
+            var panel = new GameObject("ObjectivesPanel", typeof(RectTransform), typeof(Image));
+            var prt = (RectTransform)panel.transform;
+            prt.SetParent(canvasGo.transform, false);
+            prt.anchorMin = prt.anchorMax = new Vector2(0f, 1f);
+            prt.pivot = new Vector2(0f, 1f);
+            prt.anchoredPosition = new Vector2(8f, -(76f + 8f + 200f));
+            prt.sizeDelta = new Vector2(232f, 30f + objectives.Count * 24f + 10f);
+            var pimg = panel.GetComponent<Image>();
+            pimg.color = MelonS.GameProto.Core.UITheme.PanelBg;
+            pimg.raycastTarget = false;
+
+            // 헤더도 **행과 완전히 같은 방식**으로 만든다.  1차 구현은 크기 17 · AccentGold 로
+            //  따로 만들었는데 화면에 아무것도 안 나왔다(픽셀 샘플링으로 확인 — 패널 배경색만
+            //  균일).  행과 다른 점을 없애 변수를 제거한다.  강조는 색이 아니라 위치로 준다.
+            headerText = MakeRow(prt, font, 6f, "정착 목표", MelonS.GameProto.Core.UITheme.AccentGold, 15);
+            for (int i = 0; i < objectives.Count; i++)
+                objectives[i].row = MakeRow(prt, font, 30f + i * 24f, "", MelonS.GameProto.Core.UITheme.TextPrimary, 15);
+
+            Refresh(force: true);
+        }
+
+        private static Text MakeRow(RectTransform parent, Font font, float top, string txt, Color col, int size)
+        {
+            var go = new GameObject("row", typeof(RectTransform), typeof(Text));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(parent, false);
+            rt.anchorMin = new Vector2(0f, 1f); rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
+            rt.offsetMin = new Vector2(8f, 0f); rt.offsetMax = new Vector2(-8f, 0f);
+            rt.anchoredPosition = new Vector2(8f, -top);
+            rt.sizeDelta = new Vector2(0f, 22f);
+            var t = go.GetComponent<Text>();
+            t.font = font; t.fontSize = size; t.color = col;
+            t.alignment = TextAnchor.MiddleLeft;
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.raycastTarget = false;
+            t.text = txt;
+            return t;
+        }
+
+        private void Update()
+        {
+            // 매 프레임 FindObjects 금지 (프로젝트 규약) — 0.5s 폴링.
+            if (Time.unscaledTime < nextEval) return;
+            nextEval = Time.unscaledTime + 0.5f;
+            Refresh(force: false);
+        }
+
+        private void Refresh(bool force)
+        {
+            int doneCount = 0;
+            for (int i = 0; i < objectives.Count; i++)
+            {
+                var o = objectives[i];
+                bool now = false;
+                try { now = o.done(); } catch { now = o.completed; }
+                if (now && !o.completed)
+                {
+                    o.completed = true;
+                    AlertStackUI.Notify($"목표 달성 — {o.label}", 1);
+                }
+                if (o.completed) doneCount++;
+                if (o.row != null)
+                {
+                    string prog = o.progress != null ? o.progress() : "";
+                    o.row.text = (o.completed ? "☑ " : "☐ ") + o.label
+                                 + (o.completed || string.IsNullOrEmpty(prog) ? "" : $"   {prog}");
+                    o.row.color = o.completed
+                        ? new Color(0.55f, 0.78f, 0.45f, 1f)          // 달성 = 녹색
+                        : MelonS.GameProto.Core.UITheme.TextPrimary;
+                }
+            }
+            if (headerText != null) headerText.text = $"정착 목표  {doneCount}/{objectives.Count}";
+
+            if (!victoryFired && doneCount >= objectives.Count)
+            {
+                victoryFired = true;
+                int days = GameClock.Instance != null ? GameClock.Instance.Day : 0;
+                Debug.Log($"[Victory] 정착 성공 — {days}일차, 목표 {objectives.Count}/{objectives.Count}");
+                AlertStackUI.Notify("정착 성공! 모든 목표를 달성했습니다", 2);
+            }
+        }
+
+        /// <summary>QA / 하네스용 — 달성 개수.</summary>
+        public int CompletedCount
+        {
+            get { int n = 0; foreach (var o in objectives) if (o.completed) n++; return n; }
+        }
+
+        /// <summary>QA / 하네스용 — 승리 발생 여부.</summary>
+        public bool VictoryReached => victoryFired;
+    }
+}

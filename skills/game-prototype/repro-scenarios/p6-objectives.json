@@ -1,0 +1,71 @@
+{
+ "name": "정착 목표 패널 — 표시되고 실제로 달성 판정되는가 (2026-07-30)",
+ "_why": [
+  "운영자: '이게 머하는 게임인지 전혀 파악이 안됨'.  진단 결과 셋 중 마지막이",
+  "'무엇을 목표로 하는지 없다' 였고, ColonyObjectives 로 정착 목표 4단계 + 승리를 넣었다.",
+  "",
+  "이 시나리오는 두 가지를 본다:",
+  "  ① 패널이 실제로 화면에 붙는가 — 1차 구현은 RuntimeInitializeOnLoadMethod 가",
+  "     첫 씬(MainMenu)에서만 실행돼 **조용히 안 붙었다**(로그도 예외도 없었다).",
+  "  ② 달성 판정이 도는가 — 벌목을 지정해 목재를 모으면 1번 목표가 체크돼야 한다.",
+  "     판정이 굳어 있으면 목표는 장식일 뿐이다.",
+  "",
+  "⚠ wait 은 스케일 시간 — sec 값은 '원하는 실제 초 x 배속'."
+ ],
+ "timeoutSec": 240,
+ "steps": [
+  {
+   "op": "wait",
+   "sec": 1.5
+  },
+  {
+   "op": "shot",
+   "name": "o00_panel"
+  },
+  {
+   "op": "assert",
+   "probe": "uiTextContains",
+   "contains": "정착 목표",
+   "withinSec": 5
+  },
+  {
+   "op": "boxselect",
+   "target": "pawn"
+  },
+  {
+   "op": "worldright",
+   "target": "tree"
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "worldright",
+   "target": "tree"
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "speed",
+   "x": 6
+  },
+  {
+   "op": "wait",
+   "sec": 420,
+   "_real": "~70s"
+  },
+  {
+   "op": "shot",
+   "name": "o01_progress"
+  },
+  {
+   "op": "assert",
+   "probe": "objectivesDone",
+   "min": 1,
+   "withinSec": 60
+  }
+ ]
+}
