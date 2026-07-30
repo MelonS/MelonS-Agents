@@ -36,8 +36,16 @@ namespace MelonS.GameProto.EditorTools
             //  작아도 식별된다.  체감은 운영자 확인 항목.
             cam.orthographicSize = 15f;
             camGo.tag = "MainCamera";
-            // pawn 그룹 (-1.5/0.5/2.5, 0.5) 중심 + 정착지 살짝 위 → (0.5, 1.0)
-            camGo.transform.position = new Vector3(0.5f, 1.0f, -10);
+            // 2026-07-30 — 시작 시점을 **스폰과 캠프의 중간**으로 옮긴다.
+            //  ortho 는 운영자가 레퍼런스 스샷과 대조해 정한 값이라 건드리지 않는다.
+            //  대신 '무엇을 보고 시작하는가'를 고친다 — 이전엔 카메라가 원점(0.5,1.0)을
+            //  보는데 정착지(집·밭·광장)는 x −18..−9 에 있어서, **첫 화면의 절반이 빈
+            //  잔디**였다.  운영자 지적 "화면이 비어 보인다"의 큰 부분이 줌이 아니라
+            //  이것이었다.
+            //  ortho 15 · 16:9 → 가로 반폭 ≈ 26.7 칸.  x = −7 로 두면 왼쪽 −33 ~ 오른쪽 +19
+            //  가 보여 **캠프 전체와 콜로니스트 스폰(0,0)이 한 화면에 들어온다.**
+            //  y 는 집(−4..0)과 밭(2..3)을 함께 담게 살짝 위(−0.5).
+            camGo.transform.position = new Vector3(-7f, -0.5f, -10);
             camGo.AddComponent<AudioListener>();
             camGo.AddComponent<CameraController>();   // Day 8: WASD pan + 휠 zoom + Shift fast-pan
             camGo.AddComponent<DayNightCycle>();      // Day 9: time-of-day tint
