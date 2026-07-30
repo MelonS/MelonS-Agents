@@ -557,6 +557,78 @@ def scene_slot(d, t, S):
     text(d, (W // 2, (y0 + y1) / 2 + 40), sl["note"], font("text", 34), dim(MUTED, a))
 
 
+def scene_statement(d, t, S):
+    """A single line, held. Some beats are a sentence, not a chart."""
+    a = fade(t)
+    st = S["statement"]
+    text(d, (W // 2, 380), st["kicker"],
+         fit(d, st["kicker"], "display", 44, 900), dim(ACCENT, a))
+    b = min(a, ease_out((t - 0.14) / 0.28))
+    if b > 0:
+        text(d, (W // 2, 512), st["line"],
+             fit(d, st["line"], "display", 78, 940), dim(INK, b), spacing=16)
+
+
+def scene_bars(d, t, S):
+    """Ranked comparison bars. One series, one colour; the subject is the only
+    highlighted mark — emphasis, not eight hues (dataviz: the story is one row)."""
+    a = fade(t)
+    b_ = S["bars"]
+    text(d, (W // 2, 356), b_["title"], fit(d, b_["title"], "display", 56, 920), dim(ACCENT, a))
+
+    rows = b_["rows"]
+    top, pitch = 420, 74
+    x0, x1 = 120, W - 200
+    vmax = max(r["value"] for r in rows) * 1.02
+    for i, r in enumerate(rows):
+        rb = min(a, ease_out((t - 0.10 - i * 0.13) / 0.30))
+        if rb <= 0:
+            continue
+        y = top + i * pitch
+        w = (x1 - x0) * (r["value"] / vmax) * ease_out(clamp((t - 0.10 - i * 0.13) / 0.45))
+        on = r.get("highlight")
+        col = SERIES_1 if on else (86, 86, 84)
+        d.rounded_rectangle([x0, y, x0 + max(w, 8), y + 34], radius=6, fill=dim(col, rb))
+        text(d, (x0 + 8, y - 20), r["label"],
+             fit(d, r["label"], "display", 30, 620), dim(INK if on else INK_2, rb), anchor="lm")
+        text(d, (W - 120, y + 16), f"{r['value']:,}",
+             fit(d, f"{r['value']:,}", "display", 40, 200),
+             dim(INK if on else MUTED, rb), anchor="rm")
+    if b_.get("note") and t > 0.62:
+        nb = min(a, ease_out((t - 0.62) / 0.26))
+        text(d, (W // 2, top + len(rows) * pitch + 32), b_["note"],
+             fit(d, b_["note"], "display", 44, 920), dim(INK, nb))
+
+
+def scene_stack(d, t, S):
+    """One bar, split by where the total came from. Part-to-whole at a glance,
+    <= 4 segments, 2px surface gaps — never a pie."""
+    a = fade(t)
+    st = S["stack"]
+    text(d, (W // 2, 350), st["title"], fit(d, st["title"], "display", 54, 920), dim(ACCENT, a))
+
+    segs = st["segments"]
+    total = sum(x["value"] for x in segs)
+    x0, x1, y, h = 100, W - 100, 424, 56
+    p = ease_out(clamp(t / 0.42))
+    cx = x0
+    ramp = (SERIES_1, (37, 106, 191), (26, 80, 148), (16, 60, 116))
+    for i, sg in enumerate(segs):
+        w = (x1 - x0) * (sg["value"] / total) * p
+        d.rectangle([cx, y, cx + max(w - 2, 1), y + h], fill=dim(ramp[i % 4], a))
+        cx += w
+    for i, sg in enumerate(segs):
+        b = min(a, ease_out((t - 0.30 - i * 0.11) / 0.26))
+        if b <= 0:
+            continue
+        ry = 540 + i * 60
+        d.rectangle([120, ry - 13, 146, ry + 13], fill=dim(ramp[i % 4], b))
+        text(d, (168, ry), sg["label"],
+             fit(d, sg["label"], "display", 34, 560), dim(INK_2, b), anchor="lm")
+        text(d, (W - 120, ry), f"{sg['value']:,}",
+             fit(d, f"{sg['value']:,}", "display", 38, 220), dim(INK, b), anchor="rm")
+
+
 def scene_calendar(d, t, S):
     """A month as a real weekday grid — the core form of schedule analysis.
 
@@ -652,8 +724,12 @@ def scene_route(d, t, S):
     """
     a = fade(t)
     r = S["route"]
-    text(d, (W // 2, 430), r["title"], font("display", 108), dim(INK, a))
-    text(d, (W // 2, 540), r["subtitle"], font("text", 42), dim(MUTED, a))
+    compact = bool(r.get("compact"))
+    ty, sy = (330, 384) if compact else (430, 540)
+    text(d, (W // 2, ty), r["title"],
+         fit(d, r["title"], "display", 62 if compact else 108, 900), dim(INK, a))
+    text(d, (W // 2, sy), r["subtitle"],
+         fit(d, r["subtitle"], "display", 32 if compact else 42, 900), dim(MUTED, a))
 
     stops = r["stops"]
     total = 0.0
@@ -664,7 +740,11 @@ def scene_route(d, t, S):
         legs.append(km)
         total += km
 
-    top, bottom = 700, 1180
+    if compact:
+        # the footage band owns 645-1275; a route drawn there is unreadable
+        top, bottom = 448, 448 + 92 * max(len(stops) - 1, 1)
+    else:
+        top, bottom = 700, 1180
     step = (bottom - top) / max(len(stops) - 1, 1)
     cx = 260
     for i, s in enumerate(stops):
@@ -678,19 +758,27 @@ def scene_route(d, t, S):
             d.line([(cx, py), (cx, py + (y - py) * ease_out(seg))],
                    fill=dim(SERIES_1, b), width=6)
             text(d, (cx + 46, (py + y) / 2), f"{legs[i - 1]:,.0f} km",
-                 font("text", 36), dim(SERIES_1, b), anchor="lm")
+                 font("text", 28 if compact else 36), dim(SERIES_1, b), anchor="lm")
         d.ellipse([cx - 16, y - 16, cx + 16, y + 16], fill=dim(SERIES_1, b))
         d.ellipse([cx - 16, y - 16, cx + 16, y + 16], outline=dim(SURFACE, b), width=3)
-        text(d, (cx + 46, y - 22), s["place"], font("text", 46), dim(INK, b), anchor="lm")
-        text(d, (cx + 46, y + 22), s["what"], font("text", 34), dim(MUTED, b), anchor="lm")
+        pf, wf = (40, 26) if compact else (46, 34)
+        text(d, (cx + 46, y - (18 if compact else 22)), s["place"],
+             fit(d, s["place"], "display" if compact else "text", pf, 700),
+             dim(INK, b), anchor="lm")
+        text(d, (cx + 46, y + (18 if compact else 22)), s["what"],
+             fit(d, s["what"], "text", wf, 700), dim(MUTED, b), anchor="lm")
 
     fb = min(a, ease_out((t - 0.66) / 0.24))
-    if fb > 0:
-        label = r.get("total_label", "합계 {km} km").replace("{km}", f"{total:,.0f}")
+    label = r.get("total_label", "합계 {km} km").replace("{km}", f"{total:,.0f}")
+    if fb > 0 and not compact:
         text(d, (W // 2, 1290), label, font("display", 80), dim(INK, fb))
         text(d, (W // 2, 1366), "정류지 간 직선거리 합", font("text", 30), dim(MUTED, fb))
     nb = min(a, ease_out((t - 0.80) / 0.20))
-    if nb > 0 and r.get("note"):
+    if compact:
+        if fb > 0:
+            text(d, (W // 2, bottom + 66), label,
+                 fit(d, label, "display", 46, 900), dim(INK, fb))
+    elif nb > 0 and r.get("note"):
         text(d, (W // 2, 1452), r["note"], font("text", 38), dim(INK_2, nb), spacing=10)
 
 
@@ -699,6 +787,7 @@ SCENES = {
     "scale": scene_scale, "timezone": scene_timezone, "summary": scene_summary,
     "outro": scene_outro, "calendar": scene_calendar, "streak": scene_streak,
     "route": scene_route, "hero": scene_hero, "chart": scene_chart,
+    "bars": scene_bars, "stack": scene_stack, "statement": scene_statement,
     "chain": scene_chain, "slot": scene_slot,
 }
 
