@@ -122,6 +122,16 @@ namespace MelonS.GameProto
                 // #137 운영자 fb fix: foodSurplus 5 → 15.  starter food=10 일 때
                 //  모든 pawn 이 cook 만 → food 떨어지면 hunt → 다시 cook 무한 loop,
                 //  ChopTree 영영 안 됨 = "목재 안 캐짐" 진짜 원인.
+                // ── 연구는 **요리보다 위** (2026-07-31) ────────────────────────────
+                //  실측: 연구 판정을 '벤치 반경의 아무나'에서 '실제로 연구를 잡은 폰'으로
+                //  좁히자 7게임시간 동안 5/100 이 나왔다.  담당(서연)이 벤치에 머문 시간이
+                //  전체의 ~11% 뿐이었기 때문이다 — 요리도 우선순위 2 인데 목록에서 연구보다
+                //  위에 있어서, 요리거리가 있으면 매번 그쪽으로 끌려갔다.
+                //  순서를 뒤집으면 **연구 우선순위가 2 인 폰만** 영향을 받는다(나머지는 4라
+                //  4밴드에서나 시도된다) = 지명된 담당자만 책상에 붙는다.  나머지 두 명이
+                //  요리를 맡으므로 식탁이 비지 않는다.  플레이어가 직업 탭에서 이 배치를
+                //  바꾸면 즉시 다르게 굴러간다 — 그리드가 실효를 갖는 지점이다.
+                new DoResearchAction(),
                 new CookMealAction   { foodSurplus = 15f },
                 // #202 SURVIVAL-LOOP FIX — harvest ripe crops into the food stockpile.
                 //  Placed here (above build/haul/chop generic labor) so idle pawns
@@ -158,7 +168,18 @@ namespace MelonS.GameProto
                 new CraftWeaponAction(),
                 // 연구 디스패치 (2026-06-12) — 최하단: 다른 일감이 없을 때만 벤치 옆에
                 //  머물며 연구.  직업 탭 '연구' 우선순위가 처음으로 실효를 가진다.
-                new DoResearchAction(),
+                // ── 2026-07-31: '할 일 없음' 구멍 메우기 ────────────────────────────
+                //  운영자가 영상에서 "뭐 하는지 모르겠다"고 한 화면의 실체는, 라벨을 켜고
+                //  보니 오후 1시에 **전원 '떠도는중'** 이었다.  위 작업들은 전부 전제가
+                //  있어서(지정·청사진·바닥더미·익은작물) 플레이어가 찍어 준 일이 끝나면
+                //  콜로니가 통째로 멈춘다.  아래 둘이 그 바닥을 받친다 — 둘 다 목록 최하단
+                //  이라 플레이어 지정 작업을 절대 가로채지 않는다.
+                new GatherBerryAction(),   // 식량이 목표선 아래면 채집 (항상 있는 노동)
+                //  JoyAction 은 파일에 **작성돼 있었지만 이 목록에 없었다** — 즉 여가
+                //  시간대가 와도 아무 일도 일어나지 않았다(조용한 미배선, 오늘 다섯 번째
+                //  같은 유형).  일정표(PawnSchedule)의 여가 슬롯이 처음으로 실효를 가진다:
+                //  저녁이면 모닥불가로 모인다 = 배회가 아니라 장면이 된다.
+                new JoyAction(),
                 //  운반·요리·수확·사냥(생존)·경작 zone 은 the reference sim 처럼 자동 유지.
                 // 운영자 2026-06-02: idle 배회는 리스트의 WanderAction(1.5s 간격, 긴 정지)
                 //  대신 Update 의 anchored pacing(idleStepInterval 0.8s, 근처 타일 왕복)이
@@ -471,8 +492,22 @@ namespace MelonS.GameProto
             if (builder != null && builder.HasTask) return true;
             if (miner != null && miner.HasTask) return true;
             if (doctor != null && doctor.HasTask) return true;
+            // 연구 (2026-07-31) — 연구는 **워커 컴포넌트가 없는 유일한 작업**이라 여기서
+            //  빠져 있었고, 그래서 연구 중인 림이 '유휴'로 분류됐다.  유휴로 분류되면
+            //  아래 idle pacing 이 0.8초마다 근처 타일로 hop 시키는데, 그게 연구자를
+            //  **연구대 반경 밖으로 끌어낸다**.  진행도는 반경 안에 있을 때만 쌓이므로
+            //  연구자는 책상에 앉았다 나갔다를 반복했다.
+            //  실측: 연구 속도를 0.15→0.25 로 올렸는데 하루 산출이 24pt → 11pt 로 **줄었다**.
+            //  (이전 24pt 는 '반경 안 아무나' 계산이라 배회하던 다른 림들이 채워 준 값이었고,
+            //   판정을 실제 담당자로 좁히자 배회 문제가 그대로 드러났다.)
+            if (researchWork == null) researchWork = GetComponent<PawnResearchWork>();
+            if (researchWork != null && researchWork.IsResearching) return true;
             return false;
         }
+
+        // 연구 작업 도장 — DoResearchAction 이 처음 연구를 잡을 때 폰에 붙으므로
+        //  Awake 시점엔 없을 수 있다.  HasRealActivity 에서 늦게 잡는다.
+        private PawnResearchWork researchWork;
 
         // idleAnchor 주변 근처 타일(반경 idleWanderRadius) 하나로 hop.  tile-center 스냅
         //  → 격자 위를 또박또박 오가는 "왔다갔다" 느낌.  anchor 를 기준으로 픽하므로

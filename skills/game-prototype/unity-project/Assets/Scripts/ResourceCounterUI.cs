@@ -54,7 +54,12 @@ namespace MelonS.GameProto
             if (Time.unscaledTime >= _nextWealthPoll)
             {
                 _nextWealthPoll = Time.unscaledTime + 5f;
-                string ws = $"   가치: {AIDirector.WealthSnapshot():N0}";
+                // 2026-07-31 — 라벨에 **왜 이 숫자가 있는지**를 붙인다.
+                //  기존 "석재: 0   가치: 644" 는 자원 옆에 정체불명의 수치가 붙어 있어
+                //  디버그 값처럼 읽혔다(플레이어는 점수로 오해하거나 그냥 무시한다).
+                //  실제로는 습격 규모를 정하는 입력값이다 — 그 한 마디가 있으면
+                //  "재산이 늘면 더 큰 습격이 온다"는 이 장르의 긴장이 화면에서 읽힌다.
+                string ws = $"   가치: {AIDirector.WealthSnapshot():N0} (습격 규모)";
                 if (ws != _wealthSuffix) { _wealthSuffix = ws; lastStone = -1; }
             }
             if (Time.unscaledTime >= _nextGroundPoll)

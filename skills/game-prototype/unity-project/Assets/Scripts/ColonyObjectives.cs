@@ -50,7 +50,20 @@ namespace MelonS.GameProto
         private bool victoryFired;
         private float nextEval;
 
-        private const int WoodGoal = 200;
+        // 2026-07-31 재조정 — 데모 스틸 6장을 시간순으로 보고 잡은 결함.
+        //  기존 200 은 **시작 저장구역 적립분만으로 첫 프레임에 충족**됐다(d00 에 이미 ☑).
+        //  그 결과 4분짜리 영상 내내 패널이 1/4 로 굳어 있었다 — 하나는 공짜로 켜져 있고
+        //  나머지 셋은 아래 사유로 도달 불가라, "목표가 있는데 아무것도 안 움직인다"는
+        //  최악의 조합이었다.  400 은 벌목 지정 → 운반 → 적립 루프를 한 바퀴 이상 돌려야
+        //  닿는다(시작 200 + 나무 한 그루 27~50).  시작 화면은 200/400 = 절반 찬 상태로
+        //  열리므로, 카운터가 살아 있다는 것도 첫 프레임부터 읽힌다.
+        private const int WoodGoal = 400;
+
+        // 잠자리 목표도 같은 이유로 3 → 6.  오늘 시작 집에 자동 지붕이 붙으면서(레퍼런스
+        //  동작 정합 — RoofDesignation.NotifyWallBuilt 주석 참조) 3 은 시작과 동시에
+        //  충족돼 버린다.  6 은 방을 하나 더 닫고 침대를 놓아야 하므로 **건축 루프 전체**를
+        //  요구한다 — 벽·문·지붕·가구가 한 번씩 다 등장한다.  시작 3/6.
+        private const int BedGoal = 6;
 
         // ⚠ `AfterSceneLoad` 는 **첫 씬이 로드된 직후 한 번만** 실행된다.  이 빌드의 첫 씬은
         //  MainMenu 라, 여기서 `scene.name != "Game"` 으로 걸러 버리면 나중에 Game 씬이
@@ -95,9 +108,9 @@ namespace MelonS.GameProto
                                  ? $"{Mathf.Min(ResourceManager.Instance.wood, WoodGoal)}/{WoodGoal}" : "",
             });
             objectives.Add(new Objective {
-                label = "지붕 아래 잠자리 3",
-                done = () => RoofedBedCount() >= 3,
-                progress = () => $"{Mathf.Min(RoofedBedCount(), 3)}/3",
+                label = $"지붕 아래 잠자리 {BedGoal}",
+                done = () => RoofedBedCount() >= BedGoal,
+                progress = () => $"{Mathf.Min(RoofedBedCount(), BedGoal)}/{BedGoal}",
             });
             objectives.Add(new Objective {
                 label = "연구 1개 완료",

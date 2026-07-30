@@ -288,6 +288,23 @@ namespace MelonS.GameProto.EditorTools
                             wGo.transform.position = new Vector3(x + 0.5f, y + 0.5f, 0f);
                         }
                     }
+                    // 2026-07-31 — 문간에 **실제 문**을 놓는다.
+                    //  여기는 여태 벽을 건너뛰기만 하고(위 continue) 아무것도 놓지 않아서,
+                    //  시작 집은 벽에 구멍이 뚫린 채였다.  두 가지가 동시에 잘못됐다:
+                    //    · 보이는 것: 사람이 사는 집에 문이 없다
+                    //    · 안 보이는 것: 방이 밀폐가 아니라 자동 지붕이 안 붙는다 →
+                    //      정착 목표가 "지붕 아래 잠자리 0/6" 으로 굳는다.  실측 로그:
+                    //      `[Roof] 밀폐 아님 (-12,-3) — 벽셀=False 불통과=False`.
+                    //  문은 벽처럼 방을 닫으면서 사람은 통과시킨다(RoofDesignation.IsWallCell
+                    //  이 DoorEntity 를 경계로 세는 이유).  침대 프리팹과 같은 로드 방식.
+                    var doorPrefabAsset = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Door.prefab");
+                    if (doorPrefabAsset != null)
+                    {
+                        var dGo = (GameObject)PrefabUtility.InstantiatePrefab(doorPrefabAsset);
+                        dGo.name = $"StarterDoor_{doorGap.x}_{doorGap.y}";
+                        dGo.transform.position = new Vector3(doorGap.x + 0.5f, doorGap.y + 0.5f, 0f);
+                    }
+                    else Debug.LogWarning("[StarterCamp] Door.prefab 없음 — 문간이 뚫린 채로 남는다(지붕 미형성)");
                 }
                 if (floorPrefab != null)
                 {

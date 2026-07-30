@@ -237,6 +237,9 @@ namespace MelonS.GameProto
             //  PendingCount hits 0 the early-out makes this effectively free.
             TickBuildProgress();
 
+            // 벽 완공으로 방이 닫혔는지 확인 (아래 ProcessEnclosureQueue 주석 참조).
+            ProcessEnclosureQueue();
+
             // Hotkey U (roof "Up") — free key (build B/F/G/T/Y, N/R, deconstruct X,
             //  mine M, plant P, stockpile O, floor-stone K, table J, lamp L, fence E,
             //  H, and WASD camera are all taken).  Shift+U toggles the ERASE submode
@@ -508,11 +511,89 @@ namespace MelonS.GameProto
         //  Read-only: uses PawnMovement.IsBlockedAt + the existing wall/door physics
         //  probes; edits no other file.
 
-        private void TryAutoRoofEnclosedFrom(Vector2Int seed)
+        // ---- 밀폐 감지: 벽이 완공되는 순간 지붕이 생긴다 ----------------------
+        //
+        // 2026-07-31 관측 (데모 스틸): 시작 집에 벽·문·침대 3개가 다 있는데 정착 목표는
+        //  "지붕 아래 잠자리 3 → **0/3**" 이었다.  집처럼 보이는 건물 옆에 0/3 이 떠 있으니
+        //  화면이 자기모순이다.
+        //
+        //  원인: 자동 지붕(TryAutoRoofEnclosedFrom)은 **플레이어가 지붕을 칠할 때만**
+        //  불렸다(MarkCell).  즉 "방을 다 지었는데 지붕이 안 생긴다" — 레퍼런스 콜로니 심의
+        //  동작(벽으로 닫힌 방은 자동으로 지붕이 덮인다)과 어긋난다.  플레이어는 U 키
+        //  지붕 도구를 스스로 발견해야만 이 목표를 벗어날 수 있었고, 튜토리얼은 지붕을
+        //  언급조차 하지 않는다.
+        //
+        //  이제 벽/문이 완공될 때마다(BuildManager.SpawnFinished) 그 셀을 큐에 넣고,
+        //  0.4초에 한 번 큐를 비우며 네 이웃 중 실내 후보에서 밀폐 판정을 돌린다.
+        //  코얼레싱하는 이유: 세이브 로드는 벽 수십 개를 한 프레임에 复원하는데, 그때마다
+        //  플러드필을 돌리면 O(벽수 × 방넓이)가 된다.  큐로 모아 한 번만 돈다
+        //  (중복 seed 는 AddRoof 가 멱등이라 무해하지만, 애초에 안 도는 게 낫다).
+        private readonly List<Vector2Int> enclosureQueue = new List<Vector2Int>(16);
+        private float nextEnclosureCheck;
+
+        /// <summary>벽·문이 완공됐음을 알린다.  그 방이 닫혔으면 다음 검사 때 지붕이 덮인다.
+        ///  건축 완료와 세이브 로드 재구성이 **같은 함수**(SpawnFinished)를 타므로 두 경로가
+        ///  자동으로 일치한다.</summary>
+        public void NotifyWallBuilt(Vector2Int wallCell)
         {
-            // The seed itself sits on a roofable interior cell.  If the seed is a wall
-            //  cell there is no interior to fill.
-            if (IsWallCell(seed)) return;
+            if (!autoRoofEnclosed) return;
+            if (!enclosureQueue.Contains(wallCell)) enclosureQueue.Add(wallCell);
+        }
+
+        /// <summary>지붕을 **노동 없이 즉시 완성** 상태로 덮는다 (시작 정착지 전용).
+        ///  일반 경로(AddRoof)는 무기한 pending 으로 두고 빌더가 TickRoofWork 로 시공하는데,
+        ///  게임 시작 시점의 기성 건물까지 "짓는 중"으로 두면 첫 화면이 공사판이 된다.
+        ///  done 시각을 과거(0)로 박아 IsRoofed 가 즉시 true 가 되게 한다.
+        ///  반환: 새로 덮은 셀 수.</summary>
+        public int RoofEnclosedInstant(Vector2Int seed)
+        {
+            var region = FloodEnclosedRegion(seed);
+            if (region == null)
+            {
+                // 실패를 조용히 넘기지 않는다 — "0/6 인데 왜인지 모름"이 오늘 실제로 났다.
+                Debug.Log($"[Roof] 밀폐 아님 ({seed.x},{seed.y}) — 벽셀={IsWallCell(seed)} "
+                          + $"불통과={IsImpassableTerrain(seed)} : 지붕 생략");
+                return 0;
+            }
+            int added = 0;
+            foreach (var c in region)
+            {
+                if (roofCells.ContainsKey(c)) continue;
+                roofCells.Add(c, 0f);   // done 시각 과거 = 이미 지어진 지붕 (pending 아님)
+                Version++;
+                added++;
+            }
+            if (added > 0) Debug.Log($"[Roof] 기성 지붕 {added}칸 (밀폐 방, 노동 없이 완성)");
+            return added;
+        }
+
+        private void ProcessEnclosureQueue()
+        {
+            if (enclosureQueue.Count == 0) return;
+            if (Time.unscaledTime < nextEnclosureCheck) return;
+            nextEnclosureCheck = Time.unscaledTime + 0.4f;
+
+            // 벽 자신은 실내가 아니다 — 네 이웃 각각을 실내 후보로 보고 판정한다.
+            //  (문 바깥쪽에서 시작하면 플러드가 맵 전체로 새 나가 cap 에서 안전하게 포기한다.)
+            for (int i = 0; i < enclosureQueue.Count; i++)
+            {
+                var w = enclosureQueue[i];
+                TryAutoRoofEnclosedFrom(new Vector2Int(w.x + 1, w.y));
+                TryAutoRoofEnclosedFrom(new Vector2Int(w.x - 1, w.y));
+                TryAutoRoofEnclosedFrom(new Vector2Int(w.x, w.y + 1));
+                TryAutoRoofEnclosedFrom(new Vector2Int(w.x, w.y - 1));
+            }
+            enclosureQueue.Clear();
+        }
+
+        /// <summary>seed 에서 벽/문/불통과 지형에 막힐 때까지 플러드필.  cap 을 넘기면
+        ///  (= 바깥으로 새 나감) null 을 돌려 "밀폐 아님"을 알린다.
+        ///  TryAutoRoofEnclosedFrom 과 RoofEnclosedInstant 가 **같은 판정**을 쓰도록
+        ///  분리한 것 — 둘이 갈라지면 "자동은 되는데 시작 집은 안 되는" 류의 불일치가 난다.</summary>
+        private HashSet<Vector2Int> FloodEnclosedRegion(Vector2Int seed)
+        {
+            if (IsWallCell(seed)) return null;
+            if (IsImpassableTerrain(seed)) return null;
 
             var region = new HashSet<Vector2Int>();
             var stack = new Stack<Vector2Int>();
@@ -521,7 +602,7 @@ namespace MelonS.GameProto
 
             while (stack.Count > 0)
             {
-                if (region.Count > autoRoofMaxCells) return;   // open / too big → bail (manual only)
+                if (region.Count > autoRoofMaxCells) return null;   // 열린 공간 → 밀폐 아님
                 var c = stack.Pop();
 
                 Span<Vector2Int> neighbours = stackalloc Vector2Int[4];
@@ -534,18 +615,23 @@ namespace MelonS.GameProto
                 {
                     var n = neighbours[i];
                     if (region.Contains(n)) continue;
-                    // A wall/door cell is the enclosure boundary — don't cross it,
-                    //  don't add it to the interior region.
-                    if (IsWallCell(n)) continue;
-                    // An impassable terrain cell (water/rock) also bounds the room.
-                    if (IsImpassableTerrain(n)) continue;
+                    if (IsWallCell(n)) continue;              // 벽/문 = 경계
+                    if (IsImpassableTerrain(n)) continue;     // 물/바위 = 경계
                     region.Add(n);
                     stack.Push(n);
                 }
             }
+            return region;
+        }
+
+        private void TryAutoRoofEnclosedFrom(Vector2Int seed)
+        {
+            var region = FloodEnclosedRegion(seed);
+            if (region == null) return;   // open / too big → bail (manual only)
 
             // The flood stayed bounded (≤ cap) without escaping → enclosed room.
-            //  Roof every interior cell.
+            //  Roof every interior cell.  건축 경로이므로 pending(노동 대기)으로 둔다 —
+            //  빌더가 실제로 올려야 완성된다.
             int added = 0;
             foreach (var c in region)
                 if (AddRoof(c, playBlip: false, fx: false)) added++;

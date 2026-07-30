@@ -48,7 +48,14 @@ namespace MelonS.GameProto
         //  2게임일 만에 테크 사다리 전체(640pt+)가 소진(검증 소크 실측).  전담 1명 기준
         //  원시 활(100pt) ~ 1게임일(1000스케일초 × 0.15 × manipulation~1) → 사다리
         //  전체 ~ 1주+ 로 레퍼런스 페이싱 회복.
-        public float pointsPerSecondPerBench = 0.15f;
+        // 0.15 → 0.25 (2026-07-31 실측 보정).  위 계산은 "전담 1명이 **하루 종일** 벤치에
+        //  있다"를 전제로 100pt≈1게임일을 잡았는데, 실제로는 그 전제가 성립하지 않는다:
+        //  담당도 잠을 자고(하루의 1/3), 치료 같은 1순위 호출에 끌려가고, 식사도 한다.
+        //  실측은 하루 24pt — 전제의 1/4 이다.  전제를 현실에 맞추면 원시 활은 4일이 걸리고,
+        //  '연구 1개 완료' 목표는 사실상 도달 불가 표시로 남는다(오늘 고친 것과 같은 유형).
+        //  0.25 로 올려 관측 기준 하루 ~40pt = 첫 테크 1.5게임일.  뒤쪽 테크(120~240)는
+        //  여전히 며칠씩 걸리므로 "2게임일에 사다리 전체 소진"(위 주석의 경계) 은 재발하지 않는다.
+        public float pointsPerSecondPerBench = 0.25f;
         private float pointsFraction = 0f;  // Day 75 fractional accumulator
         private float lastGainTime = -999f; // 최근 포인트 적립 시각 (StallReason 용)
 
@@ -78,7 +85,10 @@ namespace MelonS.GameProto
             //  pools (deer 12 / rabbit 3 / wolf 18).  Raising arrow dmg to 12 would
             //  one-shot most animals — an unrealistic combat rewrite the operator
             //  forbade.  So the honest fix is the description, not the damage.
-            techs.Add(new Tech("simple_bow",     "원시 활",       "원거리 사냥/방어 가능. 3~5 피해 화살.", 100));   // QA F8 — 한글 UI 속 영문 dmg 제거
+            // 100 → 60 (2026-07-31): **첫 해금은 빨라야 온보딩이 된다**.  플레이어가
+            //  연구라는 장치가 실재한다는 걸 첫 게임일 안에 한 번은 봐야, 이후의 며칠짜리
+            //  테크를 기다릴 이유가 생긴다.  뒤 테크들의 비용은 그대로 두어 사다리 경사는 유지.
+            techs.Add(new Tech("simple_bow",     "원시 활",       "원거리 사냥/방어 가능. 3~5 피해 화살.", 60));   // QA F8 — 한글 UI 속 영문 dmg 제거
             // #truth-in-UI: better_stove 는 IsUnlocked 로 PawnCook 의 조리 속도 2배만
             //  배선돼 있다.  이전 설명의 "식사 mood +5" 는 어디에도 배선이 없어(식사 mood 는
             //  이미 meal +10 / fine +20 으로 별도 동작) 거짓 표기였음 → #200 활 설명 정정과

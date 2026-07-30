@@ -61,6 +61,24 @@ namespace MelonS.GameProto
         public WoodPileEntity Target => targetPile;
         public StoneChunkEntity TargetStone => targetStone;
 
+        /// <summary>지금 나르는(또는 나르러 가는) 물건의 한글 이름.  없으면 null.
+        ///
+        /// 2026-07-31 운영자: "동작 하나하나에 의미가 있어야 하는데 뭐 하고 있는건지
+        /// 모르겠음."  머리 위 라벨이 그냥 "운반"이면 **무엇을** 어디로 옮기는지가 빠져
+        /// 여전히 '왔다갔다'로 읽힌다.  이 속성으로 "목재 운반"까지 읽히게 한다.
+        /// 픽업 전(목표만 잡은 상태)과 픽업 후(적재 중)를 모두 같은 이름으로 답한다 —
+        /// 걸어가는 내내 라벨이 흔들리지 않아야 의도가 읽힌다.</summary>
+        public string HaulKindKr
+        {
+            get
+            {
+                if (targetPile != null || carryingWood > 0) return "목재";
+                if (targetStone != null || carryingStone > 0) return "석재";
+                if (targetMeat != null || carryingFood > 0) return carryingFoodName;
+                return null;
+            }
+        }
+
         // #213 운영자 fb — "목재가 순간이동".  root cause (c): pile 은 나무에서 Destroy
         //  되고 stockpile 에서 새로 Spawn 되는데 그 사이 운반물의 시각 표현이 전혀 없다 →
         //  운영자 눈엔 "나무에서 사라졌다가 stockpile 에 뿅" = 순간이동.  pawn 이동 자체는

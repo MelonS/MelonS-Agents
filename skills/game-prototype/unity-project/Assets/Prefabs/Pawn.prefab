@@ -546,7 +546,6 @@ MonoBehaviour:
   statusGap: 0.34
   fontSize: 64
   characterSize: 0.09
-  lodNameOnly: 10
   lodHideAll: 17
 --- !u!114 &6373964312038851044
 MonoBehaviour:

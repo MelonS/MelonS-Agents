@@ -123,7 +123,19 @@ def _find_day_build_target(harness_latest: Path | None = None) -> tuple[Path, bo
         candidate = day_builds[-1] / "PawnSim.exe"
         if candidate.exists():
             # Staleness guard: compare build mtime vs newest .cs source file.
-            build_mtime = day_builds[-1].stat().st_mtime
+            #
+            # ⚠ 무엇의 mtime 을 보느냐가 핵심이다 (2026-07-31 실측으로 교정).
+            #  이전엔 **빌드 디렉터리**의 mtime 을 봤는데, 디렉터리 mtime 은 항목이
+            #  추가/삭제될 때만 갱신된다.  Unity 재빌드는 기존 파일을 **제자리에서
+            #  덮어쓰므로** 디렉터리 시각은 최초 생성 시각에 머문다.  그 결과 같은
+            #  day 폴더로 두 번째 빌드를 한 순간부터 게이트가 **영구 STALE** 이 됐다
+            #  (실측: dll 04:09 / 디렉터리 00:08 → 22/22 STALE).
+            #  `PawnSim.exe` 도 안 된다 — 런처 스텁이라 코드가 바뀌어도 내용이 같으면
+            #  Unity 가 다시 쓰지 않는다.
+            #  실제로 "이 빌드가 담고 있는 C# 코드"를 대표하는 것은 Assembly-CSharp.dll
+            #  하나뿐이다.  그것과 Assets/Scripts 를 비교한다.
+            asm = day_builds[-1] / "PawnSim_Data" / "Managed" / "Assembly-CSharp.dll"
+            build_mtime = (asm if asm.exists() else candidate).stat().st_mtime
             scripts_dir = UNITY_PROJ / "Assets" / "Scripts"
             newest_src_mtime = 0.0
             if scripts_dir.exists():

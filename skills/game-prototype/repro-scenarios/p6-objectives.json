@@ -33,29 +33,42 @@
    "target": "pawn"
   },
   {
-   "op": "worldright",
-   "target": "tree"
-  },
-  {
-   "op": "wait",
-   "sec": 1
-  },
-  {
-   "op": "worldright",
-   "target": "tree"
-  },
-  {
-   "op": "wait",
-   "sec": 1
-  },
-  {
    "op": "speed",
    "x": 6
   },
   {
+   "op": "worldright",
+   "target": "tree"
+  },
+  {
    "op": "wait",
-   "sec": 420,
-   "_real": "~70s"
+   "sec": 120,
+   "_real": "~20s — 이 나무가 쓰러지고 운반될 때까지",
+   "_why": [
+    "2026-07-31 — 연속 우클릭 사이에 대기를 넣는다.  `target:\"tree\"` 는",
+    "`Nearest<TreeEntity>(카메라)` 로 풀리는데, worldright 는 클릭 전에 카메라를 그",
+    "나무로 FocusOn 한다.  그래서 **연달아 찍으면 계속 같은 나무**가 잡히고 지정이",
+    "토글로 상쇄된다 — 실측: 두 번 찍었는데 목재 335 가 전부 시작 더미 운반분이었고",
+    "벌목은 한 그루도 일어나지 않았다.  한 그루가 쓰러진 뒤에 찍어야 다음 나무가 잡힌다."
+   ]
+  },
+  {
+   "op": "worldright",
+   "target": "tree"
+  },
+  {
+   "op": "wait",
+   "sec": 120,
+   "_real": "~20s"
+  },
+  {
+   "op": "worldright",
+   "target": "tree"
+  },
+  {
+   "op": "wait",
+   "sec": 300,
+   "_real": "~50s — 벌목·운반이 목재 400 을 넘길 시간"
   },
   {
    "op": "shot",

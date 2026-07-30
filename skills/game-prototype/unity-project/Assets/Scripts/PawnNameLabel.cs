@@ -21,7 +21,9 @@ namespace MelonS.GameProto
         // #199 A2 ortho + 1x1 pawn — 라벨을 HP 바(top 0.68) 바로 위로.
         //  순서(위→아래): name(1.06) > status(0.80) > HP 바(0.68) > mood 바(0.55) > 머리(0.5).
         [SerializeField] private Vector3 offset = new Vector3(0, 1.16f, 0);
-        [SerializeField] private float statusGap = 0.34f;   // name↔status 줄간격 (#3.1)
+        // 0.34 → 0.40 (2026-07-31): 활동 줄을 0.60배 → 0.85배로 키웠으므로 줄간격도 함께
+        //  벌린다.  하나만 바꾸면 이름줄 아래쪽과 활동줄 윗쪽이 서로 파고든다.
+        [SerializeField] private float statusGap = 0.40f;   // name↔status 줄간격 (#3.1)
         [SerializeField] private float fontSize = 64;
         // 2026-07-29 라이브 캡처 — 이름표가 **판독 불가**였다 ("지훈"이 뭉개진 얼룩).
         //  characterSize 0.05 × fontSize 64 는 월드 높이 ~0.32 유닛이고, 기본 줌
@@ -32,7 +34,9 @@ namespace MelonS.GameProto
         [SerializeField] private float characterSize = 0.09f;
         // TOP-2 LOD 경계 (ortho size).  #카메라파리티: 기본줌 5.5→8 에 맞춰 재조정
         //  (기본 줌에서 이름이 보여야 한다).
-        [SerializeField] private float lodNameOnly = 10f;   // 이상: 활동 줄 숨김
+        // (lodNameOnly 은 2026-07-31 제거 — 활동 줄이 전원 상시가 되면서 쓰이지 않는다.
+        //  이유는 Update 의 showStatus 주석 참조.  죽은 설정값을 남겨 두면 다음 사람이
+        //  "이 값을 바꾸면 뭔가 달라지겠지"라고 오해한다.)
         [SerializeField] private float lodHideAll = 17f;    // 이상: 라벨 전체 숨김
 
         private TextMesh nameTm;
@@ -60,20 +64,24 @@ namespace MelonS.GameProto
         private PawnDoctor doctor;
         private PawnHarvester harvester;
         private PawnMiner miner;
-
-        // "연구" 판정용 bench 캐시(모든 라벨 공유, 2s 갱신).
-        private static ResearchBench[] _benchCache;
-        private static float _nextBenchScan = -10f;
+        // 연구 작업 도장.  DoResearchAction 이 처음 연구를 잡을 때 폰에 붙으므로,
+        //  Awake 시점엔 없을 수 있다 — ComputeStatusLabel 진입 때 한 번 더 잡는다.
+        private PawnResearchWork researchWork;
+        private PawnSchedule schedule;   // '여가' 슬롯 판정
 
         private float lastStatusUpdate;
-        private static ClickSelector _selector;          // 선택 림 판정 (전 라벨 공유)
-        private static MarqueeSelector _marquee;
 
         private void Awake()
         {
             // UI겹침 P2-7 — 동일 셀 수렴 시 이름끼리 100% 합동(order 30==30).
             //  결정적 스태거 (GetInstanceID 홀짝 금지 — 전부 짝수 가능).
-            _labelStagger = (s_labelTier++ & 1) * 0.18f;
+            // 스태거 2단(0.18) → 3단(0.42) (2026-07-31).
+            //  활동 줄이 전원 상시가 되면서 라벨이 1줄에서 2줄이 됐다.  라벨 한 덩이의
+            //  높이는 이름줄 + statusGap(0.34) 이므로, 단 간격이 0.18 이면 옆 사람 라벨이
+            //  자기 라벨 **한가운데를** 지나간다 — 실측 스크린샷에서 집 안에 모인 세 명의
+            //  이름·활동 4줄이 서로 겹쳐 판독 불가한 덩어리가 됐다.
+            //  간격을 한 덩이보다 크게 벌리고, 콜로니스트가 3명이므로 단도 3개로 둔다.
+            _labelStagger = (s_labelTier++ % 3) * 0.50f;   // 한 덩이 높이(이름+statusGap 0.40)보다 크게
             entity = GetComponent<PawnEntity>();
             needs = GetComponent<PawnNeeds>();
             chopper = GetComponent<PawnChopper>();
@@ -86,6 +94,8 @@ namespace MelonS.GameProto
             doctor = GetComponent<PawnDoctor>();
             harvester = GetComponent<PawnHarvester>();
             miner = GetComponent<PawnMiner>();
+            // DoResearchAction 이 없으면 아직 안 붙어 있다 — Update 에서 늦게 잡는다.
+            researchWork = GetComponent<PawnResearchWork>();
 
             string name = entity != null ? entity.PawnName : "Pawn";
 
@@ -100,7 +110,18 @@ namespace MelonS.GameProto
             statusGo = new GameObject("StatusLabel");
             statusGo.transform.SetParent(transform, false);
             statusGo.transform.localPosition = new Vector3(offset.x, (offset.y + _labelStagger) - statusGap, offset.z);
-            statusTm = MakeText(statusGo, "", (int)(fontSize * 0.7f), characterSize * 0.85f,
+            // 활동 줄 크기 0.7×0.85 → 0.85×1.0 (2026-07-31).
+            //  TextMesh 의 체감 크기는 대략 fontSize × characterSize 에 비례한다.
+            //   이전: 64×0.7 × 0.09×0.85 → 이름의 **0.60배**
+            //  이름이 기본 줌(ortho 15, 1080p)에서 ~20px 이므로 활동 줄은 **~12px** 이었고,
+            //  그 크기에서 한글은 획 사이가 1px 미만이라 구조가 무너진다.  실측 스크린샷에서
+            //  "서연/떠도는중"이 판독 불가한 얼룩으로 찍혔다 — 읽을 수 없는 라벨은 정보가
+            //  아니라 잡음이라, 상시 표시로 바꾼 의미가 통째로 사라진다.
+            //   지금: 64×0.85 × 0.09 → 이름의 0.85배 ≈ 17px.  이름보다는 작아 위계는 남고,
+            //   기본 줌에서 읽힌다.
+            //  ⚠ 카메라(ortho 15)를 당기는 쪽으로 풀지 않는다 — SceneSetup.Game.Core 주석대로
+            //   운영자가 레퍼런스 스샷과 대조해 두 차례 조정한 값이다.  글자를 키우는 게 맞다.
+            statusTm = MakeText(statusGo, "", (int)(fontSize * 0.85f), characterSize,
                                 MelonS.GameProto.Core.UITheme.TextSecondary, 31);
             statusShadowTms = MakeShadow(statusGo, statusTm, 29);
         }
@@ -185,10 +206,37 @@ namespace MelonS.GameProto
             float ortho = Camera.main != null && Camera.main.orthographic
                 ? Camera.main.orthographicSize : 5.5f;
             bool showName = ortho < lodHideAll;
-            bool showStatus = showName && ortho < lodNameOnly && IsSelectedPawn();
+            // ── 활동 줄을 **전원 상시** 표시로 (2026-07-31) ──────────────────────
+            //  운영자: "플레이 영상을 보고 있으면 동작 하나하나에 의미가 있어야 하는데
+            //  뭐 하고 있는건지 모르겠음."
+            //
+            //  실제로 화면에는 이름만 떠 있었다.  세 사람이 각자 다른 곳으로 걸어가는데,
+            //  나무를 나르는 중인지 연구하러 가는 중인지 밥 먹으러 가는 중인지 구분할
+            //  단서가 없다 — 그러면 자율 행동은 '의미 있는 노동'이 아니라 '랜덤 배회'로
+            //  읽힌다.  간접 조작이 이 게임의 핵심 주장인데, 그 근거가 화면에 없었다.
+            //
+            //  정보는 이미 매 0.25초 계산되고 있었다(lastComputedStatus).  막고 있던 건
+            //  두 개의 게이트뿐이다:
+            //    · IsSelectedPawn()  — 선택해야만 보임.  영상·첫인상에서는 아무도 선택돼
+            //      있지 않으므로 사실상 항상 숨김이었다.
+            //    · ortho < lodNameOnly(10) — 기본 줌은 15 라 어차피 숨김이었다.
+            //  이 파일 상단 주석의 `운영자 2026-06-02: "림이 머하는지 머리위에 항상"` 이
+            //  원래 요구였고, 구현이 그 뒤 선택 전용으로 좁혀져 있었다.  요구대로 되돌린다.
+            //
+            //  클러터 우려는 낮다: 콜로니스트 3명이고, 라벨은 이미 불투명 플레이트가 아니라
+            //  1px 그림자 TextMesh 다(TOP-2 디클러터 때 교체됨).  이름이 보이는 줌이면
+            //  활동도 보인다 — 두 줄이 함께 나타나고 함께 사라진다.
+            bool showStatus = showName;
 
             if (nameGo.activeSelf != showName) nameGo.SetActive(showName);
             string statusShown = showStatus ? lastComputedStatus : "";
+            // 유휴는 적지 않는다 (2026-07-31).  운영자 요구는 "동작 하나하나에 의미가
+            //  읽히게" 였는데, '떠도는중'은 의미가 없는 유일한 상태다.  게다가 셋이 한
+            //  방에 모이면 이 문구들이 서로 겹쳐 판독 불가한 덩어리가 된다 — 정보가 없는
+            //  글자가 정보가 있는 글자를 가리는 최악의 조합이다.
+            //  비워 두면 **떠 있는 라벨은 전부 실제 노동**이 되어 화면이 스스로 설명한다.
+            //  (유휴 여부는 선택 시 인포 패널에서 여전히 확인된다.)
+            if (statusShown == "떠도는중") statusShown = "";
             if (statusTm.text != statusShown)
             {
                 statusTm.text = statusShown;
@@ -202,20 +250,9 @@ namespace MelonS.GameProto
             var sc = statusTm.color; sc.a = a; statusTm.color = sc;
         }
 
-        private bool IsSelectedPawn()
-        {
-            if (entity == null) return false;
-            if (_selector == null) _selector = Object.FindFirstObjectByType<ClickSelector>();
-            if (_selector != null && _selector.CurrentSelection == entity) return true;
-            if (_marquee == null) _marquee = Object.FindFirstObjectByType<MarqueeSelector>();
-            if (_marquee != null)
-            {
-                var multi = _marquee.CurrentMultiSelection;
-                for (int i = 0; i < multi.Count; i++)
-                    if (multi[i] == entity) return true;
-            }
-            return false;
-        }
+        // (IsSelectedPawn + _selector/_marquee 캐시는 2026-07-31 제거 — 활동 줄이 전원
+        //  상시가 되면서 '선택 여부'가 표시 조건에서 빠졌다.  선택 표현은 SelectionRing /
+        //  MultiSelectionRings / InspectHighlight 가 이미 담당한다.)
 
         // 운영자 2026-06-02: 림이 "머하는지" 머리위에 항상 표시.  우선순위(위→아래):
         //  사망 > 징집 > 정신붕괴 > 수면 > 식사 > 휴식 > (작업 9종) > 이동 > 연구 > 유휴.
@@ -225,6 +262,8 @@ namespace MelonS.GameProto
         private string ComputeStatusLabel()
         {
             if (entity == null) return "";
+            // 늦게 붙는 컴포넌트 — 한 번 잡히면 그대로 유지 (0.25s 주기라 비용 무시 가능).
+            if (researchWork == null) researchWork = GetComponent<PawnResearchWork>();
             if (entity.IsDead) return "사망";
             if (entity.IsDrafted) return "[징집]";
             if (needs != null && needs.IsBreaking) return "정신붕괴";
@@ -243,32 +282,28 @@ namespace MelonS.GameProto
             if (gatherer != null && gatherer.HasTask) return "채집";
             if (hunter != null && hunter.HasTask) return "사냥";
             if (cook != null && cook.HasTask) return "요리";
-            if (hauler != null && hauler.HasTask) return "운반";
+            // "운반"만으로는 무엇을 옮기는지 안 읽힌다 → "목재 운반" (HaulKindKr 주석 참조).
+            if (hauler != null && hauler.HasTask)
+            {
+                string kind = hauler.HaulKindKr;
+                return string.IsNullOrEmpty(kind) ? "운반" : $"{kind} 운반";
+            }
             if (doctor != null && doctor.HasTask) return "치료";
-            // 연구: per-pawn 태스크가 없으므로 정지 상태에서 활성 연구 + bench 근접으로 감지.
-            bool moving = movement != null && movement.IsMoving;
-            if (!moving && IsResearchingHere()) return "연구";
+            // 연구 — 위치 추정이 아니라 **작업 배정**을 읽는다 (PawnResearchWork 주석 참조).
+            //  이전엔 "정지 + 벤치 반경"이라, 벤치 옆에서 한 발짝만 움직여도 '떠도는중'으로
+            //  떨어졌다.  진행도는 오르는데 라벨은 떠돈다고 하는 화면이 실제로 찍혔다.
+            if (researchWork != null && researchWork.IsResearching) return "연구";
+            // 여가 시간대 (2026-07-31) — 일정표가 '여가'인 동안 모닥불가로 모이는 것은
+            //  배회가 아니라 **일정에 따른 행동**이다.  이걸 '떠도는중'으로 적으면(그리고
+            //  그건 아래에서 숨겨지므로 아무것도 안 적으면) 화면은 "왜 다들 노나"로 읽힌다.
+            //  일정 때문이라는 걸 밝히면 그 장면에 이유가 생긴다 — 플레이어는 F4 로 바꿀 수 있다.
+            if (schedule == null) schedule = GetComponent<PawnSchedule>();
+            if (schedule != null && schedule.GetCurrentSlot() == TimeSlot.Joy) return "여가";
             return "떠도는중";
         }
 
-        // 정지한 림이 활성 연구 bench 반경 안이면 "연구".
-        private bool IsResearchingHere()
-        {
-            var rm = ResearchManager.Instance;
-            if (rm == null || rm.activeTech == null || rm.activeTech.completed) return false;
-            if (Time.time >= _nextBenchScan || _benchCache == null)
-            {
-                _benchCache = Object.FindObjectsByType<ResearchBench>(FindObjectsSortMode.None);
-                _nextBenchScan = Time.time + 2f;
-            }
-            if (_benchCache == null) return false;
-            Vector2 me = transform.position;
-            foreach (var b in _benchCache)
-            {
-                if (b == null) continue;
-                if (Vector2.Distance(me, b.transform.position) <= b.Radius) return true;
-            }
-            return false;
-        }
+        // (IsResearchingHere + bench 캐시는 2026-07-31 제거 — 위치 기반 추정을 버리고
+        //  PawnResearchWork 도장을 읽는다.  죽은 코드를 남기면 다음 사람이 두 판정 중
+        //  어느 쪽이 진짜인지 다시 헷갈린다.)
     }
 }

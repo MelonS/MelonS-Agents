@@ -408,6 +408,16 @@ namespace MelonS.GameProto
                 var w = spawned.GetComponent<WallEntity>();
                 if (w != null) w.SetMaterial(mode == Mode.WallStone ? WallMaterial.Stone : WallMaterial.Wood);
             }
+            // 벽·문이 서면 방이 닫혔을 수 있다 → 밀폐 판정을 예약한다 (레퍼런스 자동 지붕).
+            //  SpawnFinished 는 건축 완료와 세이브 로드 재구성이 **함께** 타는 단일 통로라,
+            //  여기 한 곳만 걸면 두 경로가 자동으로 같은 결과를 낸다.
+            //  판정 자체는 RoofDesignation 이 0.4초 코얼레싱해서 돌린다(로드 시 벽 폭주 방지).
+            if (mode == Mode.Wall || mode == Mode.WallStone
+                || mode == Mode.Door || mode == Mode.Autodoor)
+            {
+                RoofDesignation.Instance?.NotifyWallBuilt(
+                    new Vector2Int(Mathf.FloorToInt(pos.x), Mathf.FloorToInt(pos.y)));
+            }
             if (mode == Mode.Bed || mode == Mode.BedSleepingSpot || mode == Mode.BedFine)
             {
                 var b = spawned.GetComponent<BedEntity>();

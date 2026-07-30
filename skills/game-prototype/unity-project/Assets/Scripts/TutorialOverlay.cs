@@ -50,8 +50,12 @@ namespace MelonS.GameProto
                       text = "① 일감 지정:  나무를 우클릭 → 벌목 \n지정한 만큼만 일합니다 — 여러 그루를 찍어보세요." },
             new Tip { gate = Gate.House,
                       text = "② 집:  건축 → 구조 → 목재 벽으로 방을 짓고 \n문·가구(침대)를 놓으세요." },
+            // 문구 모순 제거 (2026-07-31).  시작 정착지에는 이미 밭이 깔려 있는데
+            //  "농사 지을 땅을 지정하세요"가 떠 있었다 — 화면에 밭이 보이는 채로 밭을
+            //  만들라고 하니 플레이어는 자기가 뭘 놓쳤는지 찾게 된다.  지금 있는 밭을
+            //  인정하고 '넓히는' 행동으로 바꾼다 (게이트는 그대로 ZoneCellCount>0).
             new Tip { gate = Gate.Farm,
-                      text = "③ 농장:  건축 → 구역 → 경작 \n농사 지을 땅을 지정하세요." },
+                      text = "③ 농장:  건축 → 구역 → 경작 \n밭을 더 넓히면 식량이 늘어납니다." },
             new Tip { gate = Gate.Done,
                       // 문구 정직화 (2026-07-27).  기존: "이제 콜로니스트가 알아서 일합니다."
                       //  → 화면에서는 아무도 일하지 않는 상태에서 이 문장이 떴다.  플레이어가
@@ -112,7 +116,22 @@ namespace MelonS.GameProto
             // Done 단계는 표시 후 6초 뒤 자동 종료.
             if (tips[stepIdx].gate == Gate.Done && currentVisible
                 && Time.realtimeSinceStartup - currentTipFadeTime > 6f) gateMet = true;
-            if (manualSkip || gateMet)
+
+            // ── 게이트 타임아웃 (2026-07-31) ──────────────────────────────────
+            //  행동 기반 진행에는 "플레이어가 그 행동을 영영 안 하면?"이라는 출구가 없었다.
+            //  실측: 데모 4분 내내 ③ 농장 배너가 화면 하단 중앙에 떠 있었다.  Gate.Farm 은
+            //  GrowZoneDesignation.ZoneCellCount>0 을 요구하는데 시작 밭은 CropEntity 로
+            //  직접 깔려서 이 카운트에 안 잡힌다 — 즉 **아무리 기다려도 안 넘어가는 단계**가
+            //  월드를 계속 가리고 있었다.  심사자 눈에는 고장난 튜토리얼로 읽힌다.
+            //
+            //  안내는 권유지 관문이 아니다.  일정 시간이 지나면 다음으로 넘긴다.
+            //  진행 시간은 **게임이 실제로 돌 때만** 센다 — 플레이어가 일시정지하고 맵을
+            //  둘러보는 동안 팁이 소진되면 안 되기 때문이다(게임 시작이 일시정지 상태다).
+            if (currentVisible && Time.timeScale > 0.01f)
+                tipLiveTime += Time.unscaledDeltaTime;
+            bool timedOut = tipLiveTime > GateTimeoutSec;
+
+            if (manualSkip || gateMet || timedOut)
             {
                 stepIdx++;
                 if (stepIdx >= tips.Length) { FadeOut(); ApplyFade(); return; }
@@ -122,6 +141,7 @@ namespace MelonS.GameProto
                 currentTipIdx = stepIdx;
                 if (tipText != null) tipText.text = tips[currentTipIdx].text;
                 currentTipFadeTime = Time.realtimeSinceStartup;
+                tipLiveTime = 0f;   // 새 단계 = 타임아웃 시계 리셋
                 FadeIn();
             }
             // Smooth fade
@@ -165,6 +185,11 @@ namespace MelonS.GameProto
         private void FadeOut() { currentVisible = false; }
 
         private int stepIdx = 0;   // 행동 기반 현재 단계
+
+        // 현재 단계가 **게임이 도는 동안** 화면에 떠 있던 누적 시간(초).  게이트 타임아웃용.
+        private float tipLiveTime;
+        // 45초 — 한 단계를 이해하고 시도하기엔 넉넉하고, 안 할 사람을 붙잡아 두기엔 충분히 짧다.
+        private const float GateTimeoutSec = 45f;
 
         private bool GateSatisfied(Gate g)
         {

@@ -169,6 +169,10 @@ namespace MelonS.GameProto.AI
             ctx.gatherer.SetBushTarget(bush);
             return true;
         }
+        /// <summary>다른 폰이 예약하지 않은 가장 가까운 성숙 수풀.  GatherBerryAction 이
+        ///  같은 탐색을 재사용한다 — 두 벌로 갈라지면 예약/월드경계 규칙이 조용히 어긋난다.</summary>
+        internal static BerryBushEntity FindNearestFreeBush(PawnContext ctx) => FindNearestBush(ctx);
+
         private static BerryBushEntity FindNearestBush(PawnContext ctx)
         {
             var arr = Object.FindObjectsByType<BerryBushEntity>(FindObjectsSortMode.None);
@@ -373,6 +377,11 @@ namespace MelonS.GameProto.AI
             ctx.chopper.SetTreeTarget(tree);
             return true;
         }
+        /// <summary>이 폰이 지금 맡을 수 있는(지정됐고 아무도 예약하지 않은) 대상.
+        ///  GatherBerryAction 이 "플레이어 지시가 아직 남았는가"를 판단할 때
+        ///  **같은 탐색**을 재사용한다 — 규칙이 두 벌로 갈라지면 조용히 어긋난다.</summary>
+        internal static TreeEntity FindFreeMarkedTree(PawnContext ctx) => FindNearestTree(ctx);
+
         private static TreeEntity FindNearestTree(PawnContext ctx)
         {
             // #작업배정-단일화(운영자 승인 2026-06-03) — the reference sim 모델: 림은 '지정된(마킹된)'
@@ -419,6 +428,11 @@ namespace MelonS.GameProto.AI
             ctx.builder.SetBlueprintTarget(bp);
             return true;
         }
+        /// <summary>이 폰이 지금 맡을 수 있는(지정됐고 아무도 예약하지 않은) 대상.
+        ///  GatherBerryAction 이 "플레이어 지시가 아직 남았는가"를 판단할 때
+        ///  **같은 탐색**을 재사용한다 — 규칙이 두 벌로 갈라지면 조용히 어긋난다.</summary>
+        internal static BlueprintEntity FindFreeBlueprint(PawnContext ctx) => FindNearestBlueprint(ctx);
+
         private static BlueprintEntity FindNearestBlueprint(PawnContext ctx)
         {
             // #197 운영자 fb "두 번째 벽 건축 안 됨" root cause:
@@ -539,6 +553,11 @@ namespace MelonS.GameProto.AI
             ctx.miner.SetVeinTarget(vein);
             return true;
         }
+        /// <summary>이 폰이 지금 맡을 수 있는(지정됐고 아무도 예약하지 않은) 대상.
+        ///  GatherBerryAction 이 "플레이어 지시가 아직 남았는가"를 판단할 때
+        ///  **같은 탐색**을 재사용한다 — 규칙이 두 벌로 갈라지면 조용히 어긋난다.</summary>
+        internal static StoneVeinEntity FindFreeMarkedVein(PawnContext ctx) => FindNearestVein(ctx);
+
         private static StoneVeinEntity FindNearestVein(PawnContext ctx)
         {
             // #작업배정-단일화 — 벌목과 동일: 림은 '지정된(마킹된)' 광맥만 자율 채광한다.
@@ -582,6 +601,10 @@ namespace MelonS.GameProto.AI
             ctx.hauler.SetMeatTarget(meat);
             return true;
         }
+        /// <summary>이 폰이 지금 나를 수 있는(예약되지 않은) 바닥 더미.
+        ///  GatherBerryAction 이 "운반이 먼저다" 원칙을 밴드 너머로 강제할 때 재사용한다.</summary>
+        internal static MeatPileEntity FindFreeMeatPile(PawnContext ctx) => FindNearestMeat(ctx);
+
         private static MeatPileEntity FindNearestMeat(PawnContext ctx)
         {
             var arr = Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None);
@@ -627,6 +650,10 @@ namespace MelonS.GameProto.AI
                 if (bp != null && bp.RemainingStone > 0) return true;
             return false;
         }
+        /// <summary>이 폰이 지금 나를 수 있는(예약되지 않은) 바닥 더미.
+        ///  GatherBerryAction 이 "운반이 먼저다" 원칙을 밴드 너머로 강제할 때 재사용한다.</summary>
+        internal static StoneChunkEntity FindFreeStoneChunk(PawnContext ctx) => FindNearestChunk(ctx);
+
         private static StoneChunkEntity FindNearestChunk(PawnContext ctx)
         {
             // #196 - stone 도 같은 패턴.  blueprint 가 석재 필요 시 stockpile chunk 도 pickup 허용.
@@ -675,6 +702,10 @@ namespace MelonS.GameProto.AI
                 if (bp != null && bp.RemainingWood > 0) return true;
             return false;
         }
+        /// <summary>이 폰이 지금 나를 수 있는(예약되지 않은) 바닥 더미.
+        ///  GatherBerryAction 이 "운반이 먼저다" 원칙을 밴드 너머로 강제할 때 재사용한다.</summary>
+        internal static WoodPileEntity FindFreeWoodPile(PawnContext ctx) => FindNearestPile(ctx);
+
         private static WoodPileEntity FindNearestPile(PawnContext ctx)
         {
             // #196 - 운영자 fb "건축 실제 안 됨" 핵심 원인:
@@ -771,11 +802,107 @@ namespace MelonS.GameProto.AI
                 if (sq < bestSq) { bestSq = sq; best = b; }
             }
             if (best == null) return false;
+            // 연구를 작업으로 잡았다는 도장.  진행도 적립(ResearchBench.ResearcherSpeedSum)과
+            //  머리위 라벨이 **둘 다 이 도장만** 본다 — 세 곳이 같은 사실을 말하도록.
+            //  (PawnResearchWork 주석에 왜 위치 기반 추정을 버렸는지 적어 뒀다.)
+            //  이동 중에도 찍는다: 벤치로 걸어가는 것도 연구 작업의 일부이고, 라벨이
+            //  "연구"로 유지돼야 그 걸음의 의미가 읽힌다.
+            var rw = ctx.transform.GetComponent<PawnResearchWork>();
+            if (rw == null) rw = ctx.transform.gameObject.AddComponent<PawnResearchWork>();
+            rw.Mark();
             if (bestSq <= 1.5f * 1.5f) return true;   // 반경 안 — 머무는 것이 작업
             if (ctx.movement == null) return false;
             // 벤치 앞 칸(남쪽) — 벤치 본체 콜라이더 위로 끼지 않게.
             ctx.movement.SetTarget((Vector2)best.transform.position + Vector2.down);
             return true;
+        }
+    }
+
+    /// <summary>콜로니 식량이 목표선 아래면 베리를 채집해 온다 — **항상 존재하는 자율 노동**.
+    ///
+    /// 계기 (2026-07-31 운영자): "플레이 영상을 보고 있으면 동작 하나하나에 의미가 있어야
+    /// 하는데 뭐 하고 있는건지 모르겠음."  머리 위 활동 라벨을 켜고 나서야 실제 상태가
+    /// 보였다 — 오후 1시에 세 명 전원이 "떠도는중"이었다.
+    ///
+    /// 원인은 라벨이 아니라 **행동 목록의 구멍**이다.  자율 작업은 전부 전제가 있다:
+    ///   벌목·채광 = 플레이어가 지정해야, 건설 = 청사진이 있어야, 운반 = 바닥에 더미가
+    ///   있어야, 요리 = 식량 여유가 있어야, 수확 = 작물이 익어야, 연구 = 담당자만.
+    /// 그래서 플레이어가 찍어 준 나무를 다 베고 나면 콜로니는 **말 그대로 할 일이 없다**.
+    /// 콜로니 심에서 사람이 멍하니 서 있는 화면은 "AI 가 죽었다"로 읽힌다.
+    ///
+    /// 베리 채집은 그 구멍을 메우기에 맞는 일이다 — 맵에 항상 있고, 식량은 항상 줄고,
+    /// 결과가 눈에 보인다(수풀로 걸어가 → 채집 → 더미를 창고로 운반).  개인 허기로
+    /// 발동하는 EatBerryAction 과 달리 **콜로니 비축**을 기준으로 삼는다.
+    ///
+    /// 목록에서의 위치는 맨 아래다.  플레이어가 손으로 찍은 일(벌목·채광)과 무기 제작이
+    /// 먼저다 — 무기 제작을 위로 올렸다가 지정한 나무를 아무도 안 베는 회귀를 이미 한 번
+    /// 냈다(p0-remote-chop).  같은 실수를 반복하지 않는다.</summary>
+    public class GatherBerryAction : IPawnAction
+    {
+        public string DisplayName => "채집";
+        public WorkKind Kind => WorkKind.Gather;
+
+        // 이 아래면 채집하러 간다.  요리(CookMealAction)가 식량을 식사로 바꿔 쓰므로
+        //  원재료는 넉넉히 유지해야 '요리할 게 없어 굶는' 구간이 안 생긴다.
+        //  60 → 120 (2026-07-31 실측): 60 에서 멈추니 목표선에 닿자마자 다시 전원 '떠도는중'
+        //  이 됐다.  3인 콜로니가 하루에 식사 여러 번 + 겨울 대비까지 하려면 원재료 버퍼는
+        //  이보다 두텁다.  수풀은 맵에 흔하고 재생하므로 고갈 걱정도 없다.
+        public float colonyFoodTarget = 120f;
+
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.gatherer == null) return false;
+            var rm = ResourceManager.Instance;
+            if (rm != null && rm.food >= colonyFoodTarget) return false;
+            // ⚠ 플레이어가 찍어 둔 일이 남아 있으면 자율 채집은 하지 않는다.
+            //  이 게이트가 없으면 목록 최하단에 둔 것만으로는 부족하다 — Decide 는
+            //  **우선순위 밴드를 먼저** 돌고 그 안에서 목록 순서를 보기 때문이다.
+            //  이 액션의 Kind 는 Gather 이므로, 채집 숙련이 높아 Gather=1~2 인 림은
+            //  벌목(Chop=3~4)보다 **앞선 밴드에서** 채집을 집어 간다.
+            //  실측 회귀(`p0-remote-chop`): 나무를 지정했는데 30초 동안 아무도 '벌목'을
+            //  시작하지 않았다(나무는 나중에 베이긴 했다 — 246→245).  무기 제작을 위로
+            //  올렸다가 낸 회귀와 **같은 원인**이다.  그때는 목록 순서를 내려서 막았는데,
+            //  밴드가 순서를 앞지르는 경우엔 그것만으로 안 된다.
+            //  그래서 규칙을 '목록에서의 위치'가 아니라 **미처리 지정의 유무**로 표현한다.
+            if (HasWorkThatComesFirst(ctx)) return false;
+            var bush = EatBerryAction.FindNearestFreeBush(ctx);
+            if (bush == null) return false;
+            if (!ReservationManager.TryReserve(bush, ctx.transform.gameObject)) return false;
+            ctx.gatherer.SetBushTarget(bush);
+            return true;
+        }
+
+        /// <summary>**내가 지금 맡을 수 있는, 자율 채집보다 먼저인 일**이 남아 있는가.
+        ///  두 갈래다 — ① 플레이어가 낸 지시(벌목·채광·건설) ② 바닥에 남은 운반.
+        ///
+        ///  1차 구현은 "지정이 하나라도 있으면" 이었는데 너무 뭉툭했다 — 실측 화면에서
+        ///  나무 한 그루를 찍자 한 명이 그것을 맡고 **나머지 두 명이 채집도 않고 서 있었다**.
+        ///  이미 남이 맡은 일까지 기다린 셈이다.
+        ///
+        ///  그래서 각 작업 액션의 **자기 탐색기를 그대로 재사용한다**.  그 탐색기는 이미
+        ///  '지정됐고 + 다른 폰이 예약하지 않은' 대상만 돌려주므로, 여기서 non-null 이면
+        ///  "내가 지금 착수할 수 있는 지시가 실재한다"는 뜻이다.  판정을 복제하지 않으니
+        ///  예약 규칙이 바뀌어도 두 곳이 갈라지지 않는다.
+        ///
+        ///  개인 허기로 발동하는 EatBerryAction 은 이 게이트를 쓰지 않는다 — 굶는 것은
+        ///  지시 이행보다 먼저다.  여기서 미루는 것은 **여유 있을 때의 비축 노동**뿐이다.</summary>
+        private static bool HasWorkThatComesFirst(PawnContext ctx)
+        {
+            if (ChopTreeAction.FindFreeMarkedTree(ctx) != null) return true;
+            if (MineStoneAction.FindFreeMarkedVein(ctx) != null) return true;
+            if (BuildBlueprintAction.FindFreeBlueprint(ctx) != null) return true;
+            // 바닥에 굴러다니는 더미도 먼저다.  이 원칙은 이미 PawnUtilityAI 의 액션 목록
+            //  주석에 적혀 있었다 — "줍을 더미가 있으면 새 채집/벌목보다 운반을 먼저 한다"
+            //  (야외 더미는 부패하고, 창고에 들어가야 카운터에 적립된다).  그런데 그 원칙도
+            //  **목록 순서로만** 지켜져 있어서 밴드를 넘지 못했다: 채집(Gather)은 숙련이
+            //  높으면 1~2 인데 운반(Haul)은 3 이라, 목록에서 운반이 위에 있어도 채집이
+            //  앞선 밴드에서 먼저 집힌다.
+            //  실측(`p6-objectives`): 나무를 베어 놓고 아무도 나르지 않아 목재 카운터가
+            //  400 에 닿지 못했다 — 바닥엔 목재가 널려 있는데 셋 다 베리를 따고 있었다.
+            //  §회귀와 같은 교훈: **Kind 가 다르면 목록 순서는 보호 장치가 아니다.**
+            if (HaulWoodAction.FindFreeWoodPile(ctx) != null) return true;
+            if (HaulStoneAction.FindFreeStoneChunk(ctx) != null) return true;
+            return HaulMeatAction.FindFreeMeatPile(ctx) != null;
         }
     }
 

@@ -83,7 +83,14 @@ def main() -> int:
             timeout = 240
         cmd = [sys.executable, str(RUNNER), str(scen), "--timeout", str(timeout)]
         if args.build:
-            cmd += ["--build", args.build]
+            # ⚠ 절대 경로로 바꿔서 넘긴다 (2026-07-31).  아래 subprocess 는
+            #  `cwd=RUNNER.parent`(= scripts/) 에서 도는데, 운영자가 레포 루트에서
+            #  상대 경로로 `--build skills/game-prototype/builds/.../PawnSim.exe` 를
+            #  주면 자식 프로세스에선 그 경로가 존재하지 않는다 → repro_run 이
+            #  "사용 가능한 빌드 없음"으로 즉시 종료하고, 게이트는 그것을 STALE 로
+            #  집계한다.  실측: 22/22 STALE 로 게이트 전체가 한 번도 실행되지 않았는데
+            #  같은 빌드로 repro_run 을 직접 부르면 정상 실행됐다.
+            cmd += ["--build", str(Path(args.build).resolve())]
         print(f"\n[repro_all] ── {scen.name} (timeout {timeout}s) " + "─" * 20)
         # 2026-07-30 — 시나리오별 출력을 파일로도 남긴다.
         #  게이트가 FAIL 을 내도 요약만 남고 **어느 단계에서 왜 실패했는지가 사라졌다**

@@ -147,6 +147,9 @@ namespace MelonS.GameProto
             }
             Debug.Log($"[GameManager] 콜로니 시작: spawned {spawnPositions.Length} colonists");   // r8 관찰 — 'Day 4' 하드코딩 라벨이 HUD '봄 1일'과 혼선
 
+            AssignStartingResearcher();
+            StartCoroutine(RoofStarterBuildings());
+
             // 운영자 피드백 (2026-05-27): "키보드 의존도 너무 높음, gui 가 전혀 안됨"
             // → GUI 버튼 바 자동 부착 (Speed/Draft/Build/Research 10 버튼)
             GuiControlBar.EnsureInScene();
@@ -297,6 +300,98 @@ namespace MelonS.GameProto
                 dGo.AddComponent<PawnDiagnostics>();
                 Debug.Log("[GameManager] -pawndiag → PawnDiagnostics activated");
             }
+        }
+
+        /// <summary>시작 정착지의 **기성 건물에 지붕을 덮는다**.
+        ///
+        /// 시작 집의 벽은 SceneSetup 이 씬에 구워 넣은 것이라 BuildManager.SpawnFinished 를
+        /// 타지 않는다 — 즉 밀폐 알림(NotifyWallBuilt)이 한 번도 울리지 않는다.  그래서
+        /// 지붕·침대·문이 다 갖춰진 집 옆에 "지붕 아래 잠자리 3 → 0/3" 이 떠 있었다.
+        ///
+        /// 좌표를 여기 박지 않고 **침대에서 역으로 찾는다**: 침대가 놓인 칸을 실내 후보로
+        /// 보고 밀폐 판정을 돌린다.  집이 어디로 옮겨지든, 세이브에서 복원되든 따라온다.
+        /// 야외에 놓인 침대는 플러드가 바깥으로 새 나가 판정이 실패하므로 조용히 넘어간다
+        /// (= 노숙은 여전히 노숙이다).</summary>
+        private System.Collections.IEnumerator RoofStarterBuildings()
+        {
+            const int MaxWaitFrames = 120;   // ~2초 — RoofDesignation 은 자가 부트스트랩이라 늦을 수 있다
+            for (int i = 0; i < MaxWaitFrames && RoofDesignation.Instance == null; i++)
+                yield return null;
+            var rd = RoofDesignation.Instance;
+            if (rd == null)
+            {
+                // 조용히 포기하지 않는다 — 이 기능이 안 붙은 걸 로그 없이 넘기면
+                //  "고쳤는데 화면은 그대로"를 또 반복하게 된다.
+                Debug.LogWarning("[GameManager] RoofDesignation 미준비 — 시작 건물 지붕 생략");
+                yield break;
+            }
+
+            // 물리 콜라이더(벽/문)가 자리를 잡은 뒤에 판정해야 한다 — IsWallCell 이
+            //  OverlapBox 로 벽을 찾으므로, 트랜스폼이 물리에 동기화되기 전이면 벽을
+            //  못 보고 "밀폐 아님"으로 잘못 판정한다.
+            //
+            // ⚠ 여기서 `WaitForFixedUpdate` 를 쓰면 안 된다 (2026-07-31 실측으로 확인).
+            //  이 게임은 **일시정지 상태(timeScale 0)로 부팅**하는데, timeScale 0 이면
+            //  FixedUpdate 가 아예 돌지 않아 코루틴이 영원히 그 자리에 선다.  1차 구현이
+            //  정확히 그랬고, 증상은 "지붕 로그가 한 줄도 안 찍히고 목표는 0/6" 이었다.
+            //  `yield return null` 은 Update 기반이라 정지 중에도 진행한다.
+            yield return null;
+            Physics2D.SyncTransforms();
+
+            int total = 0;
+            var seeded = new System.Collections.Generic.HashSet<Vector2Int>();
+            foreach (var b in Object.FindObjectsByType<BedEntity>(FindObjectsSortMode.None))
+            {
+                if (b == null) continue;
+                var cell = new Vector2Int(Mathf.FloorToInt(b.transform.position.x),
+                                          Mathf.FloorToInt(b.transform.position.y));
+                if (!seeded.Add(cell)) continue;   // 같은 방의 침대 3개 → 판정 1회면 충분
+                total += rd.RoofEnclosedInstant(cell);
+            }
+            if (total > 0) Debug.Log($"[GameManager] 시작 건물 지붕 {total}칸 덮음");
+        }
+
+        /// <summary>창립 콜로니의 **연구 담당 1명**을 정한다.
+        ///
+        /// 2026-07-31 관측: 데모 영상 전 구간에서 연구가 0/100 → 7/100 이었고 HUD 에는
+        /// "연구자 없음"이 떠 있었다.  원인은 속도가 아니라 배정이다 —
+        /// `ApplyDefaultsFromSkills` 의 마지막 else 가 **전원에게 연구 4(최하)** 를 주는데,
+        /// 운반이 3 이라 항상 위에 있고 바닥의 더미는 마르지 않는다.  그래서 우선순위 4 인
+        /// 연구는 차례가 영영 오지 않았고, "연구 1개 완료" 목표는 도달 불가였다.
+        ///
+        /// 기본값 규칙 자체는 건드리지 않는다(모든 림에게 연구 2를 주면 이번엔 아무도
+        /// 운반을 안 한다).  대신 **창립 시 한 명을 지명**한다 — 정착지가 역할을 나누는 건
+        /// 장르 관례이고, 부수효과로 직업 탭 3열이 서로 달라진다(간접 조작의 근거 화면).
+        ///
+        /// 지명 규칙: 육체 숙련(채집·벌목·건축·전투) 합이 가장 낮은 림.  손재주로 먹고살기
+        /// 어려운 사람이 책상에 앉는다 — 콜로니 입장에서 기회비용이 가장 작은 배치다.
+        /// 동점이면 이름 순으로 끊어 결정성을 보장한다(트레잇·스킬과 같은 이름-시드 원칙).</summary>
+        private static void AssignStartingResearcher()
+        {
+            PawnWorkSettings best = null;
+            string bestName = null;
+            int bestScore = int.MaxValue;
+            foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+            {
+                if (p == null || p.IsDead) continue;
+                var ws = p.GetComponent<PawnWorkSettings>();
+                if (ws == null) continue;
+                var sk = p.GetComponent<PawnSkills>();
+                int score = sk == null ? 0
+                    : sk.GetLevel(SkillKind.Gather) + sk.GetLevel(SkillKind.Chop)
+                    + sk.GetLevel(SkillKind.Build)  + sk.GetLevel(SkillKind.Combat);
+                string nm = p.PawnName ?? p.name;
+                if (score < bestScore
+                    || (score == bestScore && string.CompareOrdinal(nm, bestName) < 0))
+                {
+                    bestScore = score; best = ws; bestName = nm;
+                }
+            }
+            if (best == null) return;
+            // 2 = 요리와 같은 밴드.  운반(3)·벌목보다 위라 실제로 벤치에 앉지만, 치료(1)
+            //  같은 응급보다는 아래다.  플레이어는 직업 탭에서 언제든 바꿀 수 있다.
+            best.SetPriority(WorkKind.Research, 2);
+            Debug.Log($"[GameManager] 연구 담당 지명: {bestName} (육체 숙련 합 {bestScore}) — 연구 우선순위 2");
         }
 
         /// <summary>시작 저장구역 3×3 을 깐다 (첫인상 — 위 호출부 주석 참조).
