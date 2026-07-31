@@ -332,7 +332,17 @@ namespace MelonS.GameProto.EditorTools
                     if (bedPrefab == null) break;
                     var bGo = (GameObject)PrefabUtility.InstantiatePrefab(bedPrefab);
                     bGo.name = $"StarterBed_{b.x}_{b.y}";
-                    bGo.transform.position = new Vector3(b.x + 0.5f, b.y + 0.5f, 0f);
+                    // 침대는 **1×2** 다.  칸 중심(+0.5)에 놓으면 2칸짜리 스프라이트가
+                    //  위아래로 반 칸씩 삐져나가, 아래쪽 벽 칸을 시각적으로 침범한다
+                    //  (2026-08-01 운영자 "침대끝이 벽보다 위에 있는거").
+                    //  실측: 스프라이트 y∈[-3.50,-1.50] vs 논리 발자국 y∈[-3.00,-1.00].
+                    //  Y 정렬을 넣어도 안 고쳐지는 이유가 이것이다 — 정렬이 아니라
+                    //  **배치**가 틀렸다.  BuildManager 가 쓰는 규약과 같게 맞춘다:
+                    //  중심 = 좌하단 칸 + 크기/2 (짝수 변은 칸 경계에 놓인다).
+                    var bedSize = MelonS.GameProto.BuildManager.SizeFor(
+                        MelonS.GameProto.BuildManager.Mode.Bed);
+                    bGo.transform.position = new Vector3(
+                        b.x + bedSize.x * 0.5f, b.y + bedSize.y * 0.5f, 0f);
                 }
 
                 if (stovePrefab != null)

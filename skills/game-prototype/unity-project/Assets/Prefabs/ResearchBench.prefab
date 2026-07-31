@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6654316794314667837}
   - component: {fileID: 8332030804815165592}
   - component: {fileID: 2437564520348586076}
+  - component: {fileID: 7185645655674018448}
   m_Layer: 0
   m_Name: ResearchBench
   m_TagString: Untagged
@@ -149,6 +150,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   researchRadius: 1.5
+--- !u!114 &7185645655674018448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3128947083843581927}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80e0e600c86f9a846b8489da071915b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  yOffset: -0.3
+  width: 1.15
+  alpha: 0.55
 --- !u!1 &8774632535822624868
 GameObject:
   m_ObjectHideFlags: 0

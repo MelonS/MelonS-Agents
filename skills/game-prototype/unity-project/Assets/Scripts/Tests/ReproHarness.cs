@@ -332,8 +332,13 @@ namespace MelonS.GameProto
                     //  prefab 재사용).  s.x/s.y = 월드 좌표.
                     if (BuildManager.Instance == null || BuildManager.Instance.BedPrefabRef == null)
                     { r.passed = false; r.detail = "no BuildManager/bedPrefab"; break; }
+                    // 침대는 1×2 — 칸 중심이 아니라 발자국 중심에 놓는다
+                    //  (BuildManager 규약.  칸 중심에 두면 스프라이트가 반 칸 처져
+                    //   아래 칸을 침범한다 — 2026-08-01 배치 버그와 동일 원인).
+                    var bedSz = BuildManager.SizeFor(BuildManager.Mode.Bed);
                     var bedGo = Object.Instantiate(BuildManager.Instance.BedPrefabRef,
-                        new Vector3(Mathf.Floor(s.x) + 0.5f, Mathf.Floor(s.y) + 0.5f, 0f), Quaternion.identity);
+                        new Vector3(Mathf.Floor(s.x) + bedSz.x * 0.5f,
+                                    Mathf.Floor(s.y) + bedSz.y * 0.5f, 0f), Quaternion.identity);
                     bedGo.SetActive(true);
                     yield return null;
                     r.passed = bedGo.GetComponent<BedEntity>() != null

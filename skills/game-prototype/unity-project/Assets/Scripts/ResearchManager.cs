@@ -150,7 +150,10 @@ namespace MelonS.GameProto
             if (benches == null || benches.Length == 0) return;
             // #169 - 이전: bench 별 0/1 active 카운트.  지금: pawn.manipulation 합계로
             //  wiki: Intellectual skill 영향 (lvl 0 = 0.13x, lvl 20 = 1.83x) 의 단순화.
-            //  여러 bench/pawn 동시 연구 시 sum 으로 가산.
+            // 2026-08-01 — **책상당 한 명**으로 바뀌었다 (운영자 "연구대를 여러명이
+            //  같이 쓰는것도 이상해").  따라서 이 합은 이제 '여러 pawn' 이 아니라
+            //  **여러 책상**에 대한 합이다 — 책상을 더 지어야 연구가 빨라진다.
+            //  (ResearchBench.ResearcherSpeedSum 이 예약자만 세도록 게이트한다.)
             float speedMul = 0f;
             foreach (var b in benches)
             {

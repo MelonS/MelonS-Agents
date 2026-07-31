@@ -71,6 +71,13 @@ namespace MelonS.GameProto
                 //  (판정 정본은 PawnResearchWork — 머리위 라벨도 같은 값을 읽는다).
                 var work = p.GetComponent<PawnResearchWork>();
                 if (work == null || !work.IsResearching) continue;
+                // **이 책상을 예약한 사람만** 센다 (2026-08-01).  예약 이전에는 반경
+                //  안에서 연구 중인 폰의 속도를 전부 더했다 — 책상 한 대에 세 명이
+                //  붙으면 3배가 나오고, 화면에는 세 명이 한 자리에 겹쳐 서 있었다.
+                //  작업대를 더 짓는 선택이 의미를 가지려면 대당 한 명이어야 한다.
+                //  선택(DoResearchAction)과 적립(여기)이 같은 근거를 써야 어긋나지 않는다.
+                if (MelonS.GameProto.AI.ReservationManager.IsReservedByOther(this, p.gameObject))
+                    continue;
                 var abil = p.GetComponent<PawnAbilities>();
                 float mul = abil != null ? abil.EffectiveWorkMul(WorkKind.Research) : 1f;
                 // PawnTraits.workSpeedMul (Industrious/Lazy) 도 적용

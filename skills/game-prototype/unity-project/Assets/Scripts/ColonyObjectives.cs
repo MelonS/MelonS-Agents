@@ -164,6 +164,8 @@ namespace MelonS.GameProto
         private const int WoodDelta = 250;
         /// <summary>잠자리 목표 = 시작 잠자리 + 이만큼 더.  방 하나 증축 분량.</summary>
         private const int BedDelta = 3;
+        /// <summary>정착지 스폰을 기다리는 최대 시간.  이 뒤엔 보이는 대로 얼린다.</summary>
+        private const float BaselineMaxWaitSec = 5f;
 
         private int WoodTarget => startWood + WoodDelta;
         private int BedTarget => startBeds + BedDelta;
@@ -196,6 +198,16 @@ namespace MelonS.GameProto
                 objectives[0].label = $"목재 {WoodTarget} 비축";
                 objectives[1].label = $"지붕 아래 잠자리 {BedTarget}";
             }
+            // 시간이 흐르기 시작했더라도 **정착지가 아직 스폰되기 전이면 얼리지 않는다**
+            //  (2026-08-01 실측).  첫 판에서 기준선이 `목재 0 / 잠자리 0` 으로 찍혀
+            //  목표가 250·3 이 됐고, 시작 목재 300 을 창고에 옮기고 시작 침대 6개가
+            //  지붕에 들어가는 것만으로 두 목표가 게임 1일차에 달성됐다 — 기준선을
+            //  도입한 이유였던 그 증상이 그대로 재발한 것.  ColonyObjectives 는
+            //  자가 부팅이라 GameManager 의 스폰·자동 지붕보다 먼저 첫 틱을 돈다.
+            //  '월드가 준비됐다' 의 판정: 시작 정착지가 보장하는 두 가지가 보일 때.
+            bool worldReady = CurrentWood() > 0 && RoofedBedCount() > 0;
+            // 안전판 — 빈 맵/특수 시나리오에서 영원히 안 얼지 않도록.
+            if (!worldReady && Time.timeSinceLevelLoad < BaselineMaxWaitSec) return;
             if (Time.timeScale > 0f)
             {
                 baselineFrozen = true;

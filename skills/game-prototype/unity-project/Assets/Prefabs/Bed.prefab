@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 7249650158410966597}
   - component: {fileID: 3671646003897077595}
   - component: {fileID: 6924217312865522236}
+  - component: {fileID: 571720313289156518}
   m_Layer: 0
   m_Name: Bed
   m_TagString: Untagged
@@ -151,6 +152,21 @@ MonoBehaviour:
   quality: 1
   woodSprite: {fileID: 21300000, guid: b9bf29857da28ef40b450ace21277f0d, type: 3}
   fineSprite: {fileID: 21300000, guid: 36ffdb0432531de488ba06a59923c3dc, type: 3}
+--- !u!114 &571720313289156518
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5680455988333276752}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80e0e600c86f9a846b8489da071915b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  yOffset: -0.92
+  width: 0.95
+  alpha: 0.55
 --- !u!1 &7768342380841641853
 GameObject:
   m_ObjectHideFlags: 0

@@ -29,6 +29,17 @@ namespace MelonS.GameProto.EditorTools
         //  floors / doors are tile-structural and need no drop shadow.  Shadow sits
         //  one sortingOrder under the body, on the same layer, nudged down so it
         //  pools at the object's base.
+        /// <summary>가구용 접지 그림자.
+        ///
+        /// ⚠ 2026-08-01 운영자 "모든 그림자의 방향이 적당한지 확인해봤어?" — 확인해 보니
+        ///  **가구만 태양을 따라가지 않았다.**  이 함수가 만드는 그림자는 고정 오프셋의
+        ///  정지 웅덩이라, 나무(전단 셰이더)와 주민/동물(BlobShadow 등록분)이 아침엔
+        ///  서쪽으로, 저녁엔 동쪽으로 길게 눕는 동안 화덕·연구대·침대의 그림자만
+        ///  제자리에 있었다.  한 화면에서 어떤 그림자는 움직이고 어떤 것은 안 움직이면
+        ///  '조명이 하나가 아니다' 로 읽혀 즉시 어색하다.
+        ///  → 아래에서 `MelonS.GameProto.BlobShadow.Register` 로 태양 구동에 편입한다.
+        ///    (BlobShadow.Attach 를 그대로 쓰지 않는 이유: 가구는 프리팹 시점에 크기·
+        ///     오프셋이 정해져 있고, 런타임 Attach 는 이미 만든 자식과 중복된다.)
         private static void AttachGroundShadow(GameObject parent, SpriteRenderer bodySr,
                                                float yOffset, float scale)
         {
@@ -47,6 +58,13 @@ namespace MelonS.GameProto.EditorTools
             sr.color = new Color(1f, 1f, 1f, 0.7f);   // slightly lighter than tree-base
             sr.sortingLayerID = bodySr.sortingLayerID;
             sr.sortingOrder = bodySr.sortingOrder - 1;
+            // 태양 구동 편입 (위 주석) — 런타임에 BlobShadow 레지스트리로 들어간다.
+            //  같은 수치를 컴포넌트에도 넘긴다: 씬에서 이 자식이 지워져 있으면
+            //  런타임에 **같은 모양으로 다시 만들기 위해서**다 (실제로 씬 인스턴스
+            //  8개가 전부 지워진 상태였다 — SunLitGroundShadow 주석 참조).
+            var sun = parent.GetComponent<MelonS.GameProto.SunLitGroundShadow>()
+                      ?? parent.AddComponent<MelonS.GameProto.SunLitGroundShadow>();
+            sun.Configure(yOffset, scale, 0.55f);
         }
 
         private static BuildPrefabSet GenerateBuildPrefabs()

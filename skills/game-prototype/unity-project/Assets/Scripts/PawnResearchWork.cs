@@ -32,11 +32,35 @@ namespace MelonS.GameProto
         private const float FreshSec = 3f;
 
         private float lastMarked = -999f;
+        private ResearchBench reserved;
 
         /// <summary>이번 결정에서 연구를 작업으로 잡았다 (DoResearchAction 이 호출).</summary>
         public void Mark() => lastMarked = Time.time;
 
+        /// <summary>예약한 연구대를 기억한다 — 연구를 그만두면 놓아 줘야 하기 때문.
+        ///
+        /// 2026-08-01: 연구대를 1인 전용으로 바꾸면서, **놓는 경로가 없으면 책상이
+        /// 영구 점유**된다.  한 명이 밥 먹으러 가면 그 책상은 아무도 못 쓰는
+        /// 상태로 남고, 증상은 '연구가 멈췄는데 이유를 알 수 없음' 으로 나타난다.
+        /// 예약을 도입할 때 해제 경로를 같이 만들지 않으면 반드시 이 형태로 터진다.</summary>
+        public void SetReserved(ResearchBench b) => reserved = b;
+
         /// <summary>지금 연구 중인가 — 진행도 적립과 머리위 라벨이 **함께** 보는 값.</summary>
         public bool IsResearching => Time.time - lastMarked <= FreshSec;
+
+        private void Update()
+        {
+            // 도장이 만료되면(= 다른 일을 잡았거나 죽었거나) 책상을 놓는다.
+            if (reserved == null || IsResearching) return;
+            MelonS.GameProto.AI.ReservationManager.Release(reserved, gameObject);
+            reserved = null;
+        }
+
+        private void OnDestroy()
+        {
+            if (reserved == null) return;
+            MelonS.GameProto.AI.ReservationManager.Release(reserved, gameObject);
+            reserved = null;
+        }
     }
 }

@@ -104,6 +104,70 @@ namespace MelonS.GameProto
         private void Start()
         {
             ApplyVisualSize();
+            EnsureQuiltOverlay();
+        }
+
+        // ── 이불 오버레이 ────────────────────────────────────────────────────
+        //
+        // 운영자 2026-08-01: "침대에서 잘 때는 모션이 달라야하고 침대의 이불에서
+        //  자야하는데 머리에서 자고 있음."
+        //
+        // 위치는 PawnActions.BedStandPos 가 담요 칸으로 고정해 해결했지만, 그것만으로는
+        //  주민 스프라이트가 침대 전체를 덮어 **침대 위에 서 있는** 그림이 됐다.
+        //  레퍼런스 콜로니심의 문법은 '이불이 하반신을 덮는다' 이다 — 그러려면 담요가
+        //  주민보다 **위에** 그려져야 한다.  침대 본체(주민 아래) 위에 담요만 뽑은
+        //  층을 하나 더 얹는다.  담요 픽셀은 본체와 동일한 생성 함수에서 잘라낸
+        //  것이라(`_gen_struct32.sprite_bed_quilt`) 이음매가 생기지 않고, 침대가
+        //  비어 있을 때의 그림은 이전과 완전히 같다.
+        private const int QuiltSortingOrder = 11;   // pawn 본체 규약 10 (#sort-audit) 바로 위
+        private const string QuiltChildName = "BedQuilt";
+        /// <summary>침대 스프라이트 중 주민 위로 덮을 하단 비율.
+        ///
+        /// 1.0 (담요 전체)로 하면 주민이 거의 다 가려 '이불 밑에 사람이 있다'가 아니라
+        /// '빈 침대'로 보인다(실측).  가슴 높이까지만 덮어 상반신과 얼굴을 남긴다 —
+        /// 레퍼런스 콜로니심에서도 자는 주민의 머리·어깨는 이불 위로 나와 있다.</summary>
+        private const float QuiltHeightFrac = 0.45f;
+
+        private void EnsureQuiltOverlay()
+        {
+            // 1×1 잠자리는 담요가 없다 (맨바닥에 눕는 자리).
+            if (Size.y <= Size.x) return;
+            if (transform.Find(QuiltChildName) != null) return;
+
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) return;
+
+            // 이불 층은 **이 침대가 실제로 쓰는 스프라이트에서 잘라 쓴다.**
+            //  1차 구현은 별도 PNG 를 만들어 Resources 에서 읽었는데, 씬의 침대가
+            //  그 PNG 와 다른 스프라이트(붉은 담요)를 쓰고 있어서 파란 이불이
+            //  붉은 침대 위에 덮이는 색 불일치가 났다.  스프라이트 자산이 여러
+            //  경로로 배정되는 구조에서는 '같은 그림을 두 번 만드는' 방식이
+            //  언젠가 반드시 갈라진다.  같은 텍스처의 하단 영역을 참조하면
+            //  어떤 스프라이트가 배정되든 색·주름이 자동으로 일치한다.
+            //  (Sprite.Create 는 텍스처 rect 참조라 Read/Write 설정이 필요 없다.)
+            var baseSp = sr.sprite;
+            var r = baseSp.rect;
+            float h = r.height * QuiltHeightFrac;
+            var quiltSprite = Sprite.Create(
+                baseSp.texture,
+                new Rect(r.x, r.y, r.width, h),          // 텍스처 좌표는 아래가 0 — 하단부가 이불
+                new Vector2(0.5f, 0.5f),
+                baseSp.pixelsPerUnit);
+            quiltSprite.name = baseSp.name + "_quilt";
+
+            var go = new GameObject(QuiltChildName);
+            go.transform.SetParent(transform, false);
+            // 잘라낸 조각은 원본보다 짧다.  둘 다 중앙 피벗이므로 그대로 두면
+            //  이불이 침대 한가운데로 떠오른다 — 아래 끝을 맞춰 내린다.
+            //  로컬 단위는 부모 스케일(ApplyVisualSize) 적용 전 스프라이트 단위다.
+            float baseH = baseSp.bounds.size.y;
+            go.transform.localPosition = new Vector3(0f, -(baseH * (1f - QuiltHeightFrac)) * 0.5f, 0f);
+            go.transform.localScale = Vector3.one;   // 부모 스케일 상속 (ApplyVisualSize)
+            var qsr = go.AddComponent<SpriteRenderer>();
+            qsr.sprite = quiltSprite;
+            qsr.sortingOrder = QuiltSortingOrder;
+            qsr.color = sr.color;                    // 품질 tint 동기 (wood 계열)
+            qsr.sortingLayerID = sr.sortingLayerID;
         }
     }
 }

@@ -61,6 +61,25 @@ namespace MelonS.GameProto
         private static void Register(Transform t, Vector3 pos, float scale, float alpha)
             => _entries.Add(new Entry { t = t, baseLocalPos = pos, baseScale = scale, baseAlpha = alpha });
 
+        /// <summary>**이미 만들어져 있는** 그림자 자식을 태양 구동에 편입한다.
+        ///
+        /// 프리팹 시점(Editor)에 크기·오프셋이 정해진 가구 그림자(화덕·연구대·침대)를
+        /// 위한 진입점.  `Attach` 는 자식을 새로 만들기 때문에 그런 경우 중복이 된다.
+        /// 이 경로가 없어서 가구 그림자만 태양을 따라가지 않았다 (2026-08-01).</summary>
+        public static void RegisterExisting(Transform shadowChild, float alpha = 0.35f)
+        {
+            if (shadowChild == null) return;
+            for (int i = 0; i < _entries.Count; i++)
+                if (_entries[i].t == shadowChild) return;      // 중복 방지
+            _entries.Add(new Entry
+            {
+                t = shadowChild,
+                baseLocalPos = shadowChild.localPosition,
+                baseScale = shadowChild.localScale.x,
+                baseAlpha = alpha,
+            });
+        }
+
         /// <summary>등록된 그림자 목록 (파괴된 것은 호출 시 정리).  드라이버 전용.</summary>
         public static System.Collections.Generic.List<Entry> Entries
         {

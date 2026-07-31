@@ -76,22 +76,27 @@ namespace MelonS.GameProto.AI
             return true;
         }
 
-        /// <summary>침대 footprint 의 cell 중 from 에 가장 가까운 cell 의 world 중심.
-        ///  림이 그 위로 올라가 GetBedUnderPawn 이 침대를 인식하도록.</summary>
+        /// <summary>침대에서 **실제로 눕는 칸**의 world 중심.
+        ///
+        /// 운영자 2026-08-01: "침대의 이불에서 자야하는데 머리에서 자고 있음."
+        ///  이전 구현은 footprint 칸 중 **폰에게 가까운 칸**을 골랐다.  1×2 침대는
+        ///  스프라이트 위 1/3 이 베개, 아래 2/3 가 담요인데(`Sprites/_gen_bed.py`),
+        ///  위쪽에서 걸어온 폰은 베개 칸이 더 가까우니 **베개를 베고 눕는 게 아니라
+        ///  베개 위에 눕는** 그림이 됐다.  접근 방향이 자는 자세를 바꾸면 안 된다.
+        ///
+        /// 누울 칸은 침대의 고유 속성이다 — 항상 **담요 쪽(아래 칸)**.
+        ///  (1×1 잠자리는 칸이 하나뿐이라 그대로.)  머리는 그 위 베개 칸을 향한다.</summary>
         internal static Vector2 BedStandPos(BedEntity bed, Vector2 from)
         {
             var covered = new System.Collections.Generic.HashSet<Vector2Int>();
             PathGrid.CoveredCells(bed.transform.position, bed.Size, covered);
-            Vector2 best = bed.transform.position;
-            float bestSq = float.MaxValue;
             bool any = false;
+            Vector2Int lowest = default;
             foreach (var c in covered)
             {
-                Vector2 w = PathGrid.CellToWorld(c);
-                float sq = (w - from).sqrMagnitude;
-                if (sq < bestSq) { bestSq = sq; best = w; any = true; }
+                if (!any || c.y < lowest.y) { lowest = c; any = true; }
             }
-            return any ? best : (Vector2)bed.transform.position;
+            return any ? PathGrid.CellToWorld(lowest) : (Vector2)bed.transform.position;
         }
     }
 
@@ -791,17 +796,25 @@ namespace MelonS.GameProto.AI
         {
             var rm = ResearchManager.Instance;
             if (rm == null || rm.activeTech == null || rm.activeTech.completed) return false;
+            // 연구대는 **한 번에 한 명**이 쓴다 (2026-08-01 운영자 "연구대를 여러명이
+            //  같이 쓰는것도 이상해").  이전엔 예약이 없어서 여러 주민이 같은 책상에
+            //  겹쳐 서고, 진행도는 그들의 속도를 **합산**했다 — 작업대 한 대에 세 명이
+            //  붙으면 3배로 빨라지는 셈이라 작업대를 더 짓는 선택이 의미를 잃는다.
+            //  침대·자원 더미가 쓰는 것과 같은 예약 장치를 쓴다.
             var benches = Object.FindObjectsByType<ResearchBench>(FindObjectsSortMode.None);
             ResearchBench best = null;
             float bestSq = float.MaxValue;
             Vector2 me = ctx.transform.position;
+            var claimant = ctx.transform.gameObject;
             foreach (var b in benches)
             {
                 if (b == null) continue;
+                if (ReservationManager.IsReservedByOther(b, claimant)) continue;
                 float sq = ((Vector2)b.transform.position - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = b; }
             }
             if (best == null) return false;
+            if (!ReservationManager.TryReserve(best, claimant)) return false;
             // 연구를 작업으로 잡았다는 도장.  진행도 적립(ResearchBench.ResearcherSpeedSum)과
             //  머리위 라벨이 **둘 다 이 도장만** 본다 — 세 곳이 같은 사실을 말하도록.
             //  (PawnResearchWork 주석에 왜 위치 기반 추정을 버렸는지 적어 뒀다.)
@@ -810,6 +823,7 @@ namespace MelonS.GameProto.AI
             var rw = ctx.transform.GetComponent<PawnResearchWork>();
             if (rw == null) rw = ctx.transform.gameObject.AddComponent<PawnResearchWork>();
             rw.Mark();
+            rw.SetReserved(best);   // 연구를 그만두면 이 책상을 놓는다 (해제 경로)
             if (bestSq <= 1.5f * 1.5f) return true;   // 반경 안 — 머무는 것이 작업
             if (ctx.movement == null) return false;
             // 벤치 앞 칸(남쪽) — 벤치 본체 콜라이더 위로 끼지 않게.

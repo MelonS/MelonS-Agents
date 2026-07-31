@@ -154,6 +154,11 @@ namespace MelonS.GameProto
 
         // Corpse-pose runtime state.
         private float currentRoll;               // eased Z roll currently applied
+        // 수면 시 자식 스프라이트를 베개 쪽으로 올리는 오프셋 (루트 불변 — 상단 방화벽).
+        //  PawnSpriteBob 이 소유한 localPosition.y 와 싸우지 않도록 **더한 값**만
+        //  기억했다가, 매 프레임 이전 오프셋을 빼고 새 오프셋을 더한다.
+        private float sleepLift;
+        private float appliedSleepLift;
         private bool barsHidden;                 // 바/이름 숨김 1회만 적용
 
         // Lunge state — current eased X offset applied on top of bodyChild.localPosition.
@@ -178,6 +183,11 @@ namespace MelonS.GameProto
             //  bodyChild.GetComponent<SpriteRenderer>() 를 호출하던 것 1회 캐시로 대체.
             cachedChildSr = bodyChild != null ? bodyChild.GetComponent<SpriteRenderer>() : null;
             bundleRenderer = EnsureBundleChild();
+            // 부착·해석 관측 (2026-08-01).  이 컴포넌트가 붙었는지, 회전을 적용할
+            //  자식을 찾았는지 로그가 없어서 "수면 자세가 왜 안 보이나"를 코드만
+            //  읽고는 판단할 수 없었다.  이 레포에서 반복된 '조용한 미배선' 유형이라
+            //  부착 자체를 증거로 남긴다.
+            Debug.Log($"[Boot] PawnPoseDriver 부착 {name} bodyChild={(bodyChild != null ? bodyChild.name : "없음")}");
         }
 
         /// <summary>
@@ -268,12 +278,47 @@ namespace MelonS.GameProto
             //  (자식 회전 단독 소유자가 여기라 애니메이터와 충돌 없음.)  바/이름 유지.
             if (needs != null && needs.IsSleeping)
             {
+                // 눕는 방향은 **침대 축을 따른다** (2026-08-01 운영자: "침대에서 잘 때는
+                //  모션이 달라야하고 침대의 이불에서 자야하는데 머리에서 자고 있음").
+                //  기존엔 침대 위든 맨바닥이든 무조건 78° 로 눕혔는데, 이 게임의 침대는
+                //  세로 1×2 다.  그래서 주민이 침대를 **가로질러** 누운 그림이 됐다 —
+                //  이불을 덮은 게 아니라 침대 위에 쓰러져 있는 모양.
+                //   · 세로 침대 → 회전 0.  머리가 베개(위)를 향하고 몸이 이불에 들어간다.
+                //   · 가로 침대 → 90°.  같은 원리를 축만 바꿔 적용.
+                //   · 맨바닥 취침 → 기존 78° 유지 (침대가 없으니 축도 없다.  바닥에
+                //     쓰러져 자는 것이 오히려 '잠자리가 없다'를 읽히게 한다).
+                var bedNow = needs.CurrentBed();
+                float targetRoll = sleepRollDeg;
+                float targetLift = 0f;
+                if (bedNow != null)
+                {
+                    var sz = bedNow.Size;
+                    bool vertical = sz.y >= sz.x;
+                    targetRoll = vertical ? 0f : 90f;
+                    // 발밑 칸은 이불 쪽이라, 스프라이트를 반 칸 올려야 머리가 베개에
+                    //  닿는다.  루트는 절대 안 건드린다(이 파일 상단 방화벽 주석) —
+                    //  자식의 로컬 오프셋으로만 처리한다.
+                    //  0.5 → 0.35: 이불 오버레이(BedEntity.EnsureQuiltOverlay)가 하반신을
+                    //  덮으므로, 너무 올리면 머리가 머리판 위로 튀어나온다.  머리가
+                    //  베개에 얹히고 몸통이 이불 밑으로 들어가는 지점.
+                    if (sz.x != sz.y) targetLift = vertical ? 0.35f : 0f;
+                }
                 currentRoll = Mathf.MoveTowards(
-                    currentRoll, sleepRollDeg, rollEaseSpeed * 60f * Time.unscaledDeltaTime);
+                    currentRoll, targetRoll, rollEaseSpeed * 60f * Time.unscaledDeltaTime);
+                sleepLift = Mathf.MoveTowards(
+                    sleepLift, targetLift, 2f * Time.unscaledDeltaTime);
                 if (bodyChild != null)
+                {
                     bodyChild.localRotation = Quaternion.Euler(0f, 0f, currentRoll);
+                    ApplySleepLift();
+                }
                 if (barsHidden) SetBarsAndLabelVisible(true);
                 return;   // 자는 동안 짐 들기/공격 lunge 정지
+            }
+            if (sleepLift != 0f)
+            {
+                sleepLift = Mathf.MoveTowards(sleepLift, 0f, 2f * Time.unscaledDeltaTime);
+                if (bodyChild != null) ApplySleepLift();
             }
             // 살아있으면 corpse/수면 회전을 0 으로 되돌리고(회복/기상 대비) 바/이름 복구.
             if (currentRoll != 0f || barsHidden) RestoreFromCorpse();
@@ -393,6 +438,22 @@ namespace MelonS.GameProto
             bool shouldShow = hauler != null && hauler.HasTask;
             if (bundleRenderer.enabled != shouldShow)
                 bundleRenderer.enabled = shouldShow;
+        }
+
+        /// <summary>수면 리프트를 자식 로컬 Y 에 반영한다.
+        ///
+        /// PawnSpriteBob 이 같은 필드를 매 프레임 쓰므로, 절대값을 넣으면 서로
+        /// 덮어쓰며 떨린다.  lunge 가 X 에 대해 쓰는 것과 같은 규약 — 이전에 더한
+        /// 양을 빼고 새 양을 더한다.</summary>
+        private void ApplySleepLift()
+        {
+            if (bodyChild == null) return;
+            float delta = sleepLift - appliedSleepLift;
+            if (Mathf.Abs(delta) < 0.0001f) return;
+            var lp = bodyChild.localPosition;
+            lp.y += delta;
+            bodyChild.localPosition = lp;
+            appliedSleepLift = sleepLift;
         }
 
         // ─────────────── Attack lunge ────────────────────────────────────────

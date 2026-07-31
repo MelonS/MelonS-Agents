@@ -369,7 +369,10 @@ namespace MelonS.GameProto
                         ClearAllWorkTasks(currentSelection);  // 잔여 작업 override 방지
                         nr.SetRestTarget(bed);
                         var mv2 = currentSelection.GetComponent<PawnMovement>();
-                        if (mv2 != null) mv2.SetTarget(bed.transform.position);
+                        // 침대 중심이 아니라 **담요 칸** — 1x2 침대에서 중심은 두 칸
+                        //  경계라 폰이 베개 쪽에 서기도 했다.  자율 취침과 같은 함수를
+                        //  쓴다 (2026-08-01 운영자 "이불에서 자야하는데 머리에서 자고 있음").
+                        if (mv2 != null) mv2.SetTarget(AI.GoSleepAction.BedStandPos(bed, currentSelection.transform.position));
                         currentSelection.ManualMoveUntil = Time.time + 30f;  // 침대 도착까지 AI skip
                         Debug.Log($"[Rest] {currentSelection.PawnName} → 수면 ({bed.QualityKr})");
                     }
@@ -652,7 +655,7 @@ namespace MelonS.GameProto
                         ClearAllWorkTasks(pawn);
                         nr.SetRestTarget(bedCap);
                         var mv = pawn.GetComponent<PawnMovement>();
-                        if (mv != null) mv.SetTarget(bedCap.transform.position);
+                        if (mv != null) mv.SetTarget(AI.GoSleepAction.BedStandPos(bedCap, pawn.transform.position));
                         pawn.ManualMoveUntil = Time.time + 30f;
                     }
                 }));
