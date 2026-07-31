@@ -38,7 +38,18 @@ RUN_LOG = Path("G:/ai/_repro_run.log")   # main() 에서 시나리오별 경로�
 def resolve_build(args) -> Path | None:
     if args.build:
         p = Path(args.build)
-        return p if p.exists() else None
+        # --build 는 exe 경로를 기대하지만 **빌드 폴더를 넘기는 실수가 잦다**
+        #  (2026-08-01: 22개 시나리오가 전부 `PermissionError: [WinError 5]` 로
+        #   죽었다 — 디렉터리도 exists() 는 참이라 그대로 통과한 뒤 subprocess 가
+        #   디렉터리를 실행하려 했다.  '실행 거부' 라는 메시지만 보면 권한 문제로
+        #   오진하게 되는, 게이트를 통째로 무력화하는 종류의 실패다).
+        #  폴더면 exe 를 붙여 준다 — 둘 다 받는 편이 옳고, 안 되면 이유를 말한다.
+        if p.is_dir():
+            p = p / "PawnSim.exe"
+        if not p.is_file():
+            print(f"[repro] --build 가 실행 파일이 아님: {p}")
+            return None
+        return p
     harness = REPO / "skills" / "game-prototype" / "builds" / "_harness-latest" / "PawnSim.exe"
     if args.fresh_build:
         if rc.step_fresh_build() != 0:
