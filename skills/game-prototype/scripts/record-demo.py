@@ -121,6 +121,50 @@ def ffmpeg_bin() -> str:
     return exe
 
 
+# ── 오디오 ────────────────────────────────────────────────────────────────
+#
+# 운영자 2026-07-31: "영상에서 사운드, BGM 안 나옴" (10/100).
+# 원인은 게임이 아니라 **이 스크립트**였다 — 최종 인코딩에 `-an`(오디오 비활성)이
+# 박혀 있어 처음부터 무음으로 만들어졌다.  게임에는 음원 35종(BGM 포함)이 있고
+# SceneSetup 이 정상 배선한다.
+#
+# 시스템 소리를 그대로 담으려면 **루프백 캡처 장치**가 필요하다(스테레오 믹스,
+# virtual-audio-capturer 등).  이 머신에는 DirectShow 로 마이크만 노출된다 —
+# 마이크를 잡으면 게임 소리가 아니라 방 안 소음이 들어가므로 절대 쓰지 않는다.
+#
+# 그래서 2단이다:
+#   ① 루프백 장치가 있으면 그것으로 **실제 게임 소리**(BGM+SFX)를 캡처
+#   ② 없으면 게임 자체의 BGM 음원(Assets/Audio/bgm_ambient.wav)을 길이에 맞춰
+#      깔아 준다.  게임의 음원이므로 출처는 정직하지만 **SFX 는 빠진다** —
+#      그 사실을 로그와 리포트에 남겨 "소리가 있다"와 "실제 캡처다"를 혼동하지 않게.
+LOOPBACK_HINTS = ("stereo mix", "스테레오 믹스", "virtual-audio-capturer",
+                  "what u hear", "wave out mix", "loopback")
+
+
+def find_loopback_device() -> str | None:
+    """dshow 오디오 장치 중 시스템 출력을 되받는 것.  없으면 None."""
+    try:
+        p = subprocess.run([ffmpeg_bin(), "-hide_banner", "-list_devices", "true",
+                            "-f", "dshow", "-i", "dummy"],
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=30)
+    except Exception:
+        return None
+    for line in (p.stderr or "").splitlines():
+        if "(audio)" not in line:
+            continue
+        name = line.split('"')[1] if '"' in line else ""
+        if any(h in name.lower() for h in LOOPBACK_HINTS):
+            return name
+    return None
+
+
+def bgm_asset() -> Path | None:
+    p = (Path(__file__).resolve().parents[1]
+         / "unity-project" / "Assets" / "Audio" / "bgm_ambient.wav")
+    return p if p.exists() else None
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--scenario", default="_demo-submission")
@@ -187,16 +231,24 @@ def main() -> int:
     #  정상 변했으므로 게임이 아니라 캡처가 틀린 것이 확정).
     #  데스크톱 DC 는 합성 결과를 담으므로 GPU 창도 제대로 읽힌다.  창을 전경·최상위로
     #  올려 둔 상태에서 창 사각형만 잘라 찍는다.
-    rec = subprocess.Popen([
+    loopback = find_loopback_device()
+    cap = [
         ffmpeg_bin(), "-hide_banner", "-loglevel", "error", "-y",
         "-f", "gdigrab", "-framerate", str(args.fps),
         "-offset_x", str(rect[0]), "-offset_y", str(rect[1]),
         "-video_size", f"{rect[2]}x{rect[3]}",
         "-i", "desktop",
-        "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
-        "-pix_fmt", "yuv420p",
-        str(raw),
-    ], stdin=subprocess.PIPE)
+    ]
+    if loopback:
+        # 실제 게임 소리(BGM + SFX)를 그대로 담는다.
+        cap += ["-f", "dshow", "-i", f"audio={loopback}",
+                "-c:a", "aac", "-b:a", "160k"]
+        print(f"[record-demo] 오디오 : 루프백 캡처 '{loopback}'")
+    else:
+        print("[record-demo] 오디오 : 루프백 장치 없음 — 인코딩 단계에서 게임 BGM 을 입힌다")
+    cap += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+            "-pix_fmt", "yuv420p", str(raw)]
+    rec = subprocess.Popen(cap, stdin=subprocess.PIPE)
     print(f"[record-demo] 캡처 시작 → {raw.name}")
 
     # ── 3. 시나리오가 끝날 때까지 (게임이 스스로 종료한다) ────────────────
@@ -219,13 +271,26 @@ def main() -> int:
         return 1
 
     # ── 4. 마무리 인코딩 (웹 재생 대비 faststart) ─────────────────────────
-    subprocess.run([
-        ffmpeg_bin(), "-hide_banner", "-loglevel", "error", "-y",
-        "-i", str(raw),
-        "-c:v", "libx264", "-preset", "slow", "-crf", "19",
-        "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-        "-an", str(out),
-    ], check=True)
+    enc = [ffmpeg_bin(), "-hide_banner", "-loglevel", "error", "-y", "-i", str(raw)]
+    bgm = None if loopback else bgm_asset()
+    if bgm is not None:
+        # BGM 을 영상 길이에 맞춰 반복하고, 끝에서 1.5초 페이드아웃.
+        #  `-shortest` 로 영상 길이에 맞춘다(음악이 영상보다 길어도 잘린다).
+        # ⚠ 단순 volume 배수를 쓰면 안 된다.  BGM 원음이 앰비언트 베드라 매우 조용해서,
+        #  0.55 를 곱했더니 완성본 평균 **-35.9 dB**(최대 -21 dB) 로 사실상 안 들렸다
+        #  — "오디오 트랙이 있다"와 "소리가 들린다"는 다르다(실측으로 확인).
+        #  loudnorm(EBU R128)으로 웹 영상 표준선(-16 LUFS)에 맞춘다.  원음 레벨이
+        #  어떻든 같은 결과가 나오므로 음원을 바꿔도 다시 튜닝할 필요가 없다.
+        enc += ["-stream_loop", "-1", "-i", str(bgm), "-shortest",
+                "-filter_complex",
+                "[1:a]loudnorm=I=-16:TP=-1.5:LRA=11,afade=t=out:st=%.1f:d=1.5[a]"
+                % max(0.0, probe_duration(raw) - 1.5),
+                "-map", "0:v", "-map", "[a]", "-c:a", "aac", "-b:a", "160k"]
+    elif loopback:
+        enc += ["-c:a", "copy"]
+    enc += ["-c:v", "libx264", "-preset", "slow", "-crf", "19",
+            "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out)]
+    subprocess.run(enc, check=True)
 
     # ── 5. 무엇을 찍었는지 검사 ────────────────────────────────────────
     #  1차 녹화는 게임이 아니라 뒤에 있던 다른 창을 51초간 찍고도 "✓" 를 냈다.

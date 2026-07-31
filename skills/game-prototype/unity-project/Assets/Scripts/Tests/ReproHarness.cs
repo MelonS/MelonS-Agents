@@ -439,6 +439,31 @@ namespace MelonS.GameProto
                     r.passed = true; r.detail = $"ortho={cam.orthographicSize:F1}";
                     break;
                 }
+                // 카메라를 특정 좌표(또는 대상)로 옮긴다 — **촬영 대본이 화면 구성을
+                //  통제할 수 있게** (2026-07-31).
+                //  계기: `worldright` 는 클릭 전에 카메라를 대상으로 FocusOn 하는데,
+                //  지정을 연달아 하면 카메라가 그때마다 따라가 **누적으로 밀린다**.
+                //  실측 영상 26초 지점에서 정착지가 화면 왼쪽 밖으로 나가 있었다.
+                //  되돌릴 수단이 없어서 대본이 카메라를 포기하고 있었다.
+                //  x/y 절대좌표 또는 target(tree/pawn/...)을 받는다.
+                case "focus":
+                {
+                    var cc2 = Object.FindFirstObjectByType<CameraController>();
+                    if (cc2 == null) { r.passed = false; r.detail = "CameraController 없음"; break; }
+                    Vector3 fw;
+                    if (!ResolveWorld(s, out fw))
+                    { r.passed = false; r.detail = $"target '{s.target}' not found"; break; }
+                    cc2.FocusOn(new Vector2(fw.x, fw.y));
+                    // 팬이 멎을 때까지 (최대 ~2s) — 다음 스텝이 흔들리는 화면에서 시작하지 않게.
+                    for (int i = 0; i < 120; i++)
+                    {
+                        Vector3 c0 = Camera.main.transform.position;
+                        yield return null;
+                        if ((Camera.main.transform.position - c0).sqrMagnitude < 0.0001f) break;
+                    }
+                    r.passed = true; r.detail = $"focus ({fw.x:F1},{fw.y:F1})";
+                    break;
+                }
                 case "camdirector":
                 {
                     // 테스트 스캐폴딩 — 무인 런 카메라 디렉터 토글 (x=1 켜기 / 0 끄기).
