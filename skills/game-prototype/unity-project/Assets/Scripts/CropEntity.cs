@@ -46,6 +46,21 @@ namespace MelonS.GameProto
         //  crop_rice_* 에셋으로 세팅 → 절차적 모양 대신 진짜 스프라이트가 보인다).
         public static Sprite DefSeedling, DefGrowing, DefRipe;
 
+        // 수확물 아이콘 (묶은 곡식 다발).  3프레임 시트라 Resources.LoadAll 로 첫 조각을
+        //  집는다 — 단일 Load 는 시트 전체를 Texture 로 돌려줘 Sprite 캐스팅이 실패한다.
+        private static Sprite _harvestSprite;
+        private static bool _harvestTried;
+
+        private static Sprite HarvestSprite()
+        {
+            if (_harvestTried) return _harvestSprite;
+            _harvestTried = true;
+            var all = Resources.LoadAll<Sprite>("items32/item_crop_v2");
+            if (all != null && all.Length > 0) _harvestSprite = all[all.Length - 1];  // 가장 큰 더미
+            else _harvestSprite = Resources.Load<Sprite>("items32/item_crop_v2");
+            return _harvestSprite;
+        }
+
         // Fallback colors used when stage sprites are not assigned (legacy path).
         // #272 zone(연두) 위에서도 또렷하도록 대비 강한 톤 (어두운 외곽선 sprite 와 함께).
         private static readonly Color SPROUT_COLOR = new Color(0.40f, 0.90f, 0.25f, 1f);  // 밝은 새싹
@@ -140,8 +155,14 @@ namespace MelonS.GameProto
             //  배고픈 림은 그 자리서 직접 집어먹는다(PawnNeeds 물리 섭취 경로 1).
             // #219 운영자 fb "작물 채집하면 고기?" — 작물은 고기가 아니라 농작물 식량 더미를
             //  떨어뜨린다.  익은 작물 sprite(spriteRipe) + 표시명 "농작물" 로 구분.
+            // 2026-07-31 운영자 "농작물 아이템이 오브젝트 이미지가 이상한데?" — 맞다.
+            //  위 #219 수정이 고기 스프라이트 대신 **익은 작물 스프라이트를 재사용**했다.
+            //  그래서 바닥의 수확물이 '논에 서 있던 벼가 땅에 누워 있는' 모양이었다 —
+            //  거둬서 묶어 놓은 것으로 보이지 않는다.  수확물 전용 아이콘(묶은 곡식 다발,
+            //  scripts/gen-crops.py)을 쓴다.  없으면 기존 경로로 폴백(조용히 깨지지 않게).
             MeatPileEntity.Spawn(transform.position, harvestFood,
-                spriteRipe != null ? spriteRipe : MeatPileEntity.SharedSprite, "농작물", 600f);  // #223 쌀은 오래 감
+                HarvestSprite() ?? (spriteRipe != null ? spriteRipe : MeatPileEntity.SharedSprite),
+                "농작물", 600f);  // #223 쌀은 오래 감
             AudioBank.Instance?.PlayHarvest();  // Day 80
             // grader 좌표 (2026-06-12) — 수확 완료가 무로그라 격리 채점이 '수확 0'과
             //  '드롭 후 소비/부패'를 구분 못 했다.  관측성 1줄 (효과 어서션/채점용).
