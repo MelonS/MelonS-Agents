@@ -564,6 +564,35 @@ namespace MelonS.GameProto
                     }
                 }
             }
+            // ── 구역 겹침 해소 (2026-07-31 운영자: "오브젝트나 지역이나 건물이 안 겹치게,
+            //    어쩔 수 없이 겹치면 이사가는 방식도 구현해야함") ──────────────────
+            //  실측: 데모 영상에서 새 벽 3칸이 **시작 저장구역 위에** 그대로 세워졌다.
+            //  구역(저장·경작)은 콜라이더가 없어 위 OverlapBox 에 안 걸리고, CellOccupied
+            //  도 보지 않으므로 건물과 구역이 같은 칸에 태연히 공존했다 — 화면에서는
+            //  노란 구역 위에 벽이 얹힌 모양이라 "겹쳐 지었다"로 읽힌다.
+            //
+            //  처리 방식은 **구역이 비켜난다**.  건물이 우선이고 구역은 면적이 줄어드는
+            //  것으로 물러난다 — 사람이 창고 자리에 헛간을 지으면 창고를 옮기지, 헛간을
+            //  포기하지 않는다.  칸 단위로 빼므로 구역 전체가 사라지지 않고 모양만 바뀐다.
+            //  (나무·바위와 같은 자리에서 처리한다 — '지을 자리를 먼저 치운다'는 한 규칙.)
+            int zoneCells = 0;
+            for (int dx = 0; dx < w; dx++)
+            {
+                for (int dy = 0; dy < h; dy++)
+                {
+                    var cell = new Vector2Int(cx + dx, cy + dy);
+                    if (StockpileDesignation.Instance != null
+                        && StockpileDesignation.Instance.EraseCell(cell)) zoneCells++;
+                    if (GrowZoneDesignation.Instance != null
+                        && GrowZoneDesignation.Instance.EraseCell(cell)) zoneCells++;
+                }
+            }
+            if (zoneCells > 0)
+            {
+                Debug.Log($"[Build] 구역 {zoneCells}칸 비켜남 @ ({cx},{cy}) {w}x{h}");
+                BuildClickToast.Instance?.ShowSuccess($"구역 {zoneCells}칸을 비켜 놓았습니다");
+            }
+
             if (trees > 0 || veins > 0)
             {
                 Debug.Log($"[Build] 자동 정리 지정: 나무 {trees} · 광맥 {veins} @ ({cx},{cy}) {w}x{h}");
