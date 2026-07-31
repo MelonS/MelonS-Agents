@@ -18,7 +18,11 @@ namespace MelonS.GameProto.EditorTools
         //  `p3-rotate-bed` 는 침대를 집의 벽 모서리 (−5,−4) 에 놓으려다 0개가 됐다.
         //  두 시나리오가 쓰는 셀의 **최소 x 가 −8** 이므로, 집을 그 왼쪽 밖으로 뺀다.
         //  스폰(0,0)에서 9~14칸 서쪽 — 기본 줌(ortho 15, 가로 반폭 ≈26)에서 충분히 보인다.
-        private static int _houseX0 = -14, _houseX1 = -9, _houseY0 = -4, _houseY1 = 0;
+        // 2026-08-01 — 콜로니스트를 3 → 6 인으로 늘리면서 집도 6인 규모로.
+        //  이전 x −14..−9 는 내부가 4칸이라 침대 3개가 한계였다.  절반이 바닥에서
+        //  자면 기분이 깎이고, '지붕 아래 잠자리 6' 목표도 시작부터 불가능해진다.
+        //  x −17..−9 로 넓혀 내부 7칸 — 침대 6개가 한 줄로 들어간다.
+        private static int _houseX0 = -17, _houseX1 = -9, _houseY0 = -4, _houseY1 = 0;
 
         /// <summary>
         /// 집터 안의 잔재(나무·덤불·광맥·풀 스캐터)를 제거한다.  **생성 파이프라인의 끝**에서
@@ -318,7 +322,11 @@ namespace MelonS.GameProto.EditorTools
                 }
 
                 // 가구는 **방 안에**.  침대는 안쪽 벽에 붙여 한 줄로, 도구는 반대편에.
-                Vector2Int[] bedSpots = { new Vector2Int(-13, -3), new Vector2Int(-12, -3), new Vector2Int(-11, -3) };
+                // 침대 6개 — 콜로니스트 수와 같게 (내부 x −16..−10 중 6칸 사용).
+                Vector2Int[] bedSpots = {
+                    new Vector2Int(-16, -3), new Vector2Int(-15, -3), new Vector2Int(-14, -3),
+                    new Vector2Int(-13, -3), new Vector2Int(-12, -3), new Vector2Int(-11, -3),
+                };
                 foreach (var b in bedSpots)
                 {
                     if (bedPrefab == null) break;
@@ -421,7 +429,9 @@ namespace MelonS.GameProto.EditorTools
                 GameObject fireGo = new GameObject("Campfire_Spawn");
                 //  광장 = 문(−14,−2) 바로 서쪽 두 칸을 비우고 그 끝에 모닥불.
                 //  스폰(0,0)에 홀로 있던 것을 캠프의 중심으로 옮긴다 (2026-07-30 동선 정리).
-                fireGo.transform.position = new Vector3(-16f + 0.5f, -2f + 0.5f, 0f);
+                // 2026-08-01 — 집을 x −17 까지 넓히면서 이 자리(−16,−2)가 **집 안**이 됐다.
+                //  모닥불은 야외 광장 장치다(여가 시간에 모이는 자리).  광장 남쪽으로 옮긴다.
+                fireGo.transform.position = new Vector3(-15f + 0.5f, -7f + 0.5f, 0f);
                 var fsr = fireGo.AddComponent<SpriteRenderer>();
                 fsr.sprite = fireSprite;
                 fsr.sortingOrder = 6;

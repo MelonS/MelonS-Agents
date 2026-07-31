@@ -543,7 +543,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   offset: {x: 0, y: 1.16, z: 0}
-  statusGap: 0.34
+  statusGap: 0.52
   fontSize: 64
   characterSize: 0.09
   lodHideAll: 17
