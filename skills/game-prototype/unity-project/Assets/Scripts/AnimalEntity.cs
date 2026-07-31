@@ -142,10 +142,11 @@ namespace MelonS.GameProto
             sr = GetComponent<SpriteRenderer>();
             if (sr != null) baseColor = sr.color;
             BlobShadow.Attach(gameObject, 0.7f, -0.34f);  // D1 몰입 — 발밑 접지 그림자
-            // 태양 그림자도 함께 — 발밑 타원만 있으면 나무 그림자와 **축이 달라**
-            //  보인다(운영자 지적).  같은 드라이버가 같은 각도로 눕히고, 길이는
-            //  height 에 비례한다: 동물 — 나무(1.4)의 약 1/3 키.
-            SunShadowCaster.Attach(gameObject, 0.45f, 0.26f);
+            // (실루엣 캐스터는 2026-07-31 철회 — 사람·동물은 스프라이트가 작아
+            //  눕혀도 본체에 가린 검은 얼룩이 되고 발밑 타원과 두 겹이 된다.
+            //  레퍼런스도 사람에겐 단순 접지 그림자를 쓰고 긴 투영 그림자는
+            //  큰 구조물에만 쓴다.  발밑 타원은 SunShadowDriver 가 태양을 따라
+            //  방향·길이·농도를 이미 움직인다.)
             if (GetComponent<MotionFx>() == null) gameObject.AddComponent<MotionFx>();  // D2 걷기 모션
             if (GetComponent<AnimalAnim32>() == null) gameObject.AddComponent<AnimalAnim32>();  // 아트 v2
             PickNewTarget();
