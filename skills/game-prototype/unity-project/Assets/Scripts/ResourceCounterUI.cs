@@ -33,6 +33,15 @@ namespace MelonS.GameProto
         private float mealsFlashUntil = -10f;
         private float stoneFlashUntil = -10f;
         private const float FlashDuration = 1.2f;
+
+        // 플래시 최소 변화폭 (2026-08-01).
+        //  운영자 영상 실측: 좌상단 식량·식사 줄이 **뭉개져 읽을 수 없었다**.  원인은
+        //  폰트가 아니라 **노란 플래시가 거의 항상 켜져 있던 것** — 값이 1 만 바뀌어도
+        //  1.2초 켜지는데, 주민이 3 → 6 인이 되면서 식량·식사가 끊임없이 오르내려
+        //  플래시가 겹쳐 끊기지 않았다.  정상 색인 목재·석재 줄과 나란히 놓고 보면 명확하다.
+        //  '값이 늘었다'를 알리는 장치가 '글자를 못 읽게' 만들면 순손실이다.
+        //  ±3 이상 — 한 번의 운반·요리 단위 변화에만 반응한다.
+        private const int FlashMinDelta = 3;
         private Color woodOriginalColor, foodOriginalColor, mealsOriginalColor, stoneOriginalColor;
         private bool colorsCaptured = false;
 
@@ -80,7 +89,8 @@ namespace MelonS.GameProto
                 if (woodText != null) woodText.text = _groundWood > 0
                     ? $"목재: {rm.wood:N0} (+{_groundWood:N0} 바닥)"
                     : $"목재: {rm.wood:N0}";  // #audit3 #17 천단위 구분
-                if (lastWood >= 0) woodFlashUntil = Time.unscaledTime + FlashDuration;
+                if (lastWood >= 0 && Mathf.Abs(rm.wood - lastWood) >= FlashMinDelta)
+                    woodFlashUntil = Time.unscaledTime + FlashDuration;
                 lastWood = rm.wood;
             }
             if (rm.food != lastFood)
@@ -94,7 +104,8 @@ namespace MelonS.GameProto
                 if (foodText != null) foodText.text = _groundFood > 0
                     ? $"식량: {rm.food:N0} (+{_groundFood:N0} 바닥)"
                     : $"식량: {rm.food:N0}";
-                if (lastFood >= 0) foodFlashUntil = Time.unscaledTime + FlashDuration;
+                if (lastFood >= 0 && Mathf.Abs(rm.food - lastFood) >= FlashMinDelta)
+                    foodFlashUntil = Time.unscaledTime + FlashDuration;
                 lastFood = rm.food;
             }
             // 림 수 2s 캐시 (lesson #4 — 매 프레임 FindObjects 금지)
@@ -131,14 +142,16 @@ namespace MelonS.GameProto
                     }
                     mealsText.text = $"식사: {rm.meals:N0}{fine}{days}";
                 }
-                if (lastMeals >= 0) mealsFlashUntil = Time.unscaledTime + FlashDuration;
+                if (lastMeals >= 0 && Mathf.Abs(rm.meals - lastMeals) >= FlashMinDelta)
+                    mealsFlashUntil = Time.unscaledTime + FlashDuration;
                 lastMeals = rm.meals;
                 lastFineMeals = rm.fineMeals;
             }
             if (rm.stone != lastStone)
             {
                 if (stoneText != null) stoneText.text = $"석재: {rm.stone:N0}{_wealthSuffix}";
-                if (lastStone >= 0) stoneFlashUntil = Time.unscaledTime + FlashDuration;
+                if (lastStone >= 0 && Mathf.Abs(rm.stone - lastStone) >= FlashMinDelta)
+                    stoneFlashUntil = Time.unscaledTime + FlashDuration;
                 lastStone = rm.stone;
             }
             // flash 색 적용
