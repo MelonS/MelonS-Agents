@@ -48,14 +48,34 @@ namespace MelonS.GameProto
             if (body == null || body.sprite == null) return;
             if (host.transform.Find("SunShadow") != null) return;   // 멱등
 
+            // ── 피벗 정렬 (2026-07-31 3차) ──────────────────────────────────
+            //  운영자: "그림자가 옆으로 평행이동된 느낌.  줄기 중심과 그림자 중심이
+            //  이어지지 않는다.  축이 틀리면 바로 어색함을 느낀다."  정확한 진단이다.
+            //
+            //  원인: 스프라이트 피벗이 중앙(0.5,0.5)이라 `localPosition = v` 로 옮기면
+            //  **그림자 한가운데**가 그 지점으로 간다.  그래서 줄기 바닥과 그림자
+            //  시작점이 끊기고, 회전도 중앙 기준이라 오브젝트마다 축이 미세하게 어긋난다.
+            //
+            //  해결: 그림자를 **피벗 노드의 자식**으로 둔다.
+            //    pivotGo : 오브젝트의 밑변(발/줄기 바닥)에 고정 — 여기서 회전한다
+            //    go      : 그 안에서 위로 half 만큼 올려 둔다 (스프라이트 아래 끝이 축)
+            //  이러면 회전·신축이 모두 **밑변 한 점**을 기준으로 일어나므로,
+            //  모든 그림자가 같은 각도로 같은 점에서 출발한다.
+            float halfH = body.sprite.bounds.extents.y;
+            var pivotGo = new GameObject("SunShadowPivot");
+            pivotGo.transform.SetParent(host.transform, false);
+            pivotGo.transform.localPosition = new Vector3(0f, -halfH, 0f);   // 밑변
+
             var go = new GameObject("SunShadow");
-            go.transform.SetParent(host.transform, false);
+            go.transform.SetParent(pivotGo.transform, false);
+            go.transform.localPosition = new Vector3(0f, halfH, 0f);         // 스프라이트 복원
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = body.sprite;
             sr.color = new Color(0f, 0f, 0f, alpha);
             sr.sortingLayerID = body.sortingLayerID;
             sr.sortingOrder = body.sortingOrder - 2;   // 본체와 접지 타원 아래
-            _list.Add(new Entry { t = go.transform, sr = sr, host = host.transform,
+            //  드라이버는 **피벗 노드**를 돌린다 (그림자 노드가 아니라).
+            _list.Add(new Entry { t = pivotGo.transform, sr = sr, host = host.transform,
                                   height = height, baseAlpha = alpha });
         }
 

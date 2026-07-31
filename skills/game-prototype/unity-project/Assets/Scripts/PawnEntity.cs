@@ -238,6 +238,10 @@ namespace MelonS.GameProto
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             BlobShadow.Attach(gameObject, 0.8f, -0.42f);  // D1 몰입 — 발밑 접지 그림자
+            // 태양 그림자도 함께 — 발밑 타원만 있으면 나무 그림자와 **축이 달라**
+            //  보인다(운영자 지적).  같은 드라이버가 같은 각도로 눕히고, 길이는
+            //  height 에 비례한다: 사람 — 동물보다 조금 큼.
+            SunShadowCaster.Attach(gameObject, 0.55f, 0.26f);
             if (GetComponent<MotionFx>() == null) gameObject.AddComponent<MotionFx>();  // D2 걷기 모션
             if (GetComponent<PawnSpriteAnimator>() == null)
                 gameObject.AddComponent<PawnSpriteAnimator>();  // 아트 v2 — 프레임 애니메이터

@@ -149,22 +149,30 @@ namespace MelonS.GameProto
                 if (e.t.gameObject.activeSelf != show) e.t.gameObject.SetActive(show);
                 if (!show) continue;
 
-                // 높이가 클수록 멀리·길게 눕는다 (project to varying heights).
-                // 그림자 벡터 = 단위 방향 x 길이 x 오브젝트 높이.
-                //  y 성분이 항상 ≥0 이라 화면에서 '오브젝트 뒤(북)로 눕는다' 가 성립한다 —
-                //  1차 구현은 y 를 0 으로 두어 옆으로 미끄러지는 모양이었다(운영자 지적).
-                float reach = lenF * e.height * 1.15f;
-                Vector3 v = new Vector3(dirX * reach, dirY * reach * 0.55f, 0f);
-                //  y 를 0.55 로 누르는 이유: 탑다운은 지면을 비스듬히 내려다보는 투영이라
-                //  같은 거리라도 화면상 세로가 짧게 보인다(짧아지기 foreshortening).
-                e.t.localPosition = v + new Vector3(0f, -0.10f, 0f);
-                // 밑변은 제자리에 두고 몸통만 눕는다: 세로를 늘리고 가로는 살짝만.
-                float len = Mathf.Lerp(e.height * 1.25f, e.height * 0.30f, alt);
-                e.t.localScale = new Vector3(1f + Mathf.Abs(v.x) * 0.20f, len, 1f);
-                // 기울기 = 그림자가 향하는 방향각.  atan2(x, y) 라 정오(북)엔 0°,
-                //  아침(서)엔 −90° 쪽으로 기운다.  과회전은 스프라이트를 찢으므로 0.35 로 감쇠.
-                float angDeg = Mathf.Atan2(v.x, Mathf.Max(0.01f, v.y)) * Mathf.Rad2Deg;
-                e.t.localRotation = Quaternion.Euler(0f, 0f, -angDeg * 0.35f);
+                // ── 밑변 회전 (2026-07-31 3차 — 운영자 '축이 안 맞는다') ──────
+                //  이전엔 그림자를 통째로 평행이동(localPosition = v)했다.  스프라이트
+                //  피벗이 중앙이라 **그림자 한가운데**가 그 지점으로 갔고, 그래서
+                //  줄기 바닥과 그림자 시작점이 끊겨 '옆으로 밀린' 느낌이 났다.
+                //  이제 t 는 밑변에 고정된 피벗 노드다 — 위치는 건드리지 않고
+                //  **각도와 길이만** 준다.  모든 그림자가 같은 점에서 같은 각도로 출발한다.
+                //
+                //  각도: 그림자가 향하는 방위를 화면 각으로.  atan2(dirX, dirY) 는
+                //   정오(북) 0°, 아침(서) −90°, 저녁(동) +90°.  스프라이트는 위로
+                //   서 있으므로 그대로 이 각만큼 눕히면 된다(감쇠 없이 — 감쇠를 주면
+                //   오브젝트마다 축이 어긋나 보인다).
+                float angDeg = Mathf.Atan2(dirX, Mathf.Max(0.0001f, dirY)) * Mathf.Rad2Deg;
+                //  탑다운 투영 보정: 화면 세로는 실제 거리보다 짧게 보이므로 각을 조금 벌린다.
+                angDeg = Mathf.Clamp(angDeg * 1.15f, -82f, 82f);
+                e.t.localPosition = Vector3.zero;
+                e.t.localRotation = Quaternion.Euler(0f, 0f, -angDeg);
+
+                //  길이 ∝ 물체 높이 (운영자: 사슴 그림자가 나무만큼 길면 안 된다).
+                //   height 는 오브젝트 높이 배수 — 나무 1.4 / 동물 0.45 / 사람 0.5.
+                //   lenF 는 태양 고도에 따른 공통 배수라 **모든 그림자가 같은 비율로**
+                //   길어지고 짧아진다.  세로는 탑다운 투영이라 0.62 로 눌러 둔다.
+                float len = e.height * Mathf.Lerp(0.35f, 1.55f, lenF) * 0.62f;
+                e.t.localScale = new Vector3(1f, len, 1f);
+
                 var c2 = tint; c2.a = e.baseAlpha * alphaMul;
                 e.sr.color = c2;
             }
