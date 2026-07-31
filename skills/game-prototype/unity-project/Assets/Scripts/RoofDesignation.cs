@@ -58,7 +58,7 @@ namespace MelonS.GameProto
     ///
     /// MODE-TOGGLE ROUTING (lane hot-file budget):
     ///   Like the other designations, this manager spends ZERO SceneSetup budget.
-    ///   Roof is entered from ArchitectMenu's Zone (구역) category (operator:
+    ///   Roof is entered from ArchitectMenu's 구역 (Zone) category (operator:
     ///   "지붕영역 지정 메뉴 따로 있음") or the FREE hotkey L… (L is taken by Lamp) —
     ///   we bind the FREE key 'U' (roof "Up"; B/F/G/T/Y build, N/R, X deconstruct,
     ///   M mine, P plant, O stockpile, K floor-stone, J table, H, L lamp, E fence,

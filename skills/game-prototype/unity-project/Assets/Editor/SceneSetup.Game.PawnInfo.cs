@@ -51,7 +51,7 @@ namespace MelonS.GameProto.EditorTools
             GameObject emptyGo = new GameObject("EmptyText");
             emptyGo.transform.SetParent(panelGo.transform, false);
             Text empty = emptyGo.AddComponent<Text>();
-            empty.text = "콜로니스트를 클릭하세요";
+            empty.text = "주민을 클릭하세요";
             empty.alignment = TextAnchor.MiddleCenter;
             empty.font = uiFont;
             empty.fontSize = 12;

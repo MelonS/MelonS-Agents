@@ -760,7 +760,7 @@ namespace MelonS.GameProto
             if (prefab == null)
             {
                 Debug.LogWarning($"[Build] TryPlace skip: prefab null for mode={CurrentMode}");
-                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"× prefab 미설정 ({CurrentMode})");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail("아직 지을 수 없는 건물입니다");
                 return false;
             }
             int cost = CostFor(CurrentMode);
@@ -774,19 +774,19 @@ namespace MelonS.GameProto
             if (reject == PlaceReject.OutOfBounds)
             {
                 Debug.Log($"[Build] TryPlace skip: out of map bounds ({cx},{cy}) {size.x}x{size.y}");
-                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"× 맵 밖엔 못 지음 ({cx},{cy})");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail("지도 밖에는 지을 수 없습니다");
                 return false;
             }
             if (reject == PlaceReject.Terrain)
             {
                 Debug.Log($"[Build] TryPlace skip: terrain (water/rock) at ({cx},{cy}) {size.x}x{size.y} for mode={CurrentMode}");
-                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"× 물/바위 위엔 못 지음 ({cx},{cy})");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail("물이나 바위 위에는 지을 수 없습니다");
                 return false;
             }
             if (reject == PlaceReject.Occupied)
             {
                 Debug.Log($"[Build] TryPlace skip: area ({cx},{cy}) {size.x}x{size.y} occupied for mode={CurrentMode}");
-                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail($"× {size.x}x{size.y} 영역 점유됨 ({cx},{cy}) - 다른 곳 시도");
+                if (BuildClickToast.Instance != null) BuildClickToast.Instance.ShowFail("자리가 이미 차 있습니다 — 빈 곳에 지어 보세요");
                 return false;
             }
             // #189 - 운영자 fb "건축 여전히 안 됨" root cause:

@@ -91,7 +91,7 @@ namespace MelonS.GameProto
 
         // ── operator fb #1 (2026-05-31): the standalone "해체 (X)" toggle button
         //   was REMOVED.  In the reference sim, Deconstruct lives inside the Architect menu's
-        //   Orders (지시) category, not as a standalone screen button.  The
+        //   지시 (Orders) category, not as a standalone screen button.  The
         //   deconstruct DESIGNATION logic below is unchanged and is now invoked from
         //   ArchitectMenu (Orders → 해체 → DeconstructDesignation.Instance.SetMode(true)).
         //   The X HOTKEY is preserved.  All toggle-button UI fields / builders /
@@ -524,7 +524,7 @@ namespace MelonS.GameProto
 
         // operator fb #1: the standalone "Btn_해체" toggle button + its
         //  EnsureToggleButton / RefreshToggleVisual / FindCanvas helpers were
-        //  removed.  Deconstruct is now entered from ArchitectMenu's Orders (지시)
+        //  removed.  Deconstruct is now entered from ArchitectMenu's 지시 (Orders)
         //  category (or the X hotkey).  The designation logic above is unchanged.
     }
 

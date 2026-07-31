@@ -96,7 +96,10 @@ namespace MelonS.GameProto
             var hintGo = new GameObject("Hint");
             hintGo.transform.SetParent(transform, false);
             var ht = hintGo.AddComponent<Text>();
-            ht.text = "좌클릭: 우선순위 변경 (0→1→2→3→4)   우클릭: 끔(0)";
+            // 2026-08-01 UX 리뷰 — 숫자의 **방향**이 어디에도 적혀 있지 않았다.
+            //  "0→1→2→3→4" 만 보면 4 가 가장 중요해 보이는데 실제로는 1 이 최우선이다.
+            //  이 표는 게임의 핵심 조작인데, 규칙을 모르면 정반대로 설정하게 된다.
+            ht.text = "좌클릭: 숫자 바꾸기 · 우클릭: 끔   |   1이 가장 먼저, 4가 마지막, 0은 안 함";
             ht.font = font;
             ht.fontSize = 13;
             ht.color = MelonS.GameProto.Core.UITheme.TextSecondary;

@@ -80,7 +80,7 @@ namespace MelonS.GameProto
 
         // ── operator fb #1 (2026-05-31): the standalone "채광 (M)" toggle button
         //   was REMOVED.  In the reference sim, Mine lives inside the Architect menu's
-        //   Orders (지시) category, not as a standalone screen button.  The mine
+        //   지시 (Orders) category, not as a standalone screen button.  The mine
         //   DESIGNATION logic below is unchanged and is now invoked from
         //   ArchitectMenu (Orders → 채광 → MineDesignation.Instance.SetMode(true)).
         //   The M HOTKEY is preserved.  All toggle-button UI fields / builders /
@@ -399,7 +399,7 @@ namespace MelonS.GameProto
 
         // operator fb #1: the standalone "Btn_채광" toggle button + its
         //  EnsureToggleButton / RefreshToggleVisual / FindCanvas helpers were
-        //  removed.  Mine is now entered from ArchitectMenu's Orders (지시) category
+        //  removed.  Mine is now entered from ArchitectMenu's 지시 (Orders) category
         //  (or the M hotkey).  The designation logic above is unchanged.
     }
 

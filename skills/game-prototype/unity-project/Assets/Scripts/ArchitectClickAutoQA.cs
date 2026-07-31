@@ -19,7 +19,7 @@ namespace MelonS.GameProto
     ///   2. ExecuteEvents.Execute<IPointerClickHandler>(hitGO, ...) → fire the real
     ///      click handler chain.
     /// Then asserts the observable state the operator cares about:
-    ///   - clicking "Orders (지시)" header EXPANDS it (header glyph ▶ → ▼),
+    ///   - clicking "지시 (Orders)" header EXPANDS it (header glyph ▶ → ▼),
     ///   - clicking the 채광 item ENTERS MineDesignation mode (ModeActive==true),
     ///   - NO standalone 채광/경작/해체 buttons remain on any canvas,
     ///   - info panel HIDDEN when nothing is selected.
@@ -111,22 +111,22 @@ namespace MelonS.GameProto
             Assert(menu.gameObject.activeSelf, "ArchitectMenu opened after real 건축 click");
             Shot("02_menu_open");
 
-            // ── REAL click on "Orders (지시)" header → expand ──
+            // ── REAL click on "지시 (Orders)" header → expand ──
             // Ensure starting collapsed: header glyph should be ▶.
-            bool ordersOpenBefore = HeaderExpanded("Orders (지시)", menu.transform);
+            bool ordersOpenBefore = HeaderExpanded("지시 (Orders)", menu.transform);
             if (ordersOpenBefore)
             {
                 // collapse first so the test proves an EXPAND transition
-                RealClickHeader("Orders (지시)", menu.transform);
+                RealClickHeader("지시 (Orders)", menu.transform);
                 yield return null; yield return new WaitForSeconds(0.3f); yield return null;
             }
-            bool ordersHit = RealClickHeader("Orders (지시)", menu.transform);
-            Assert(ordersHit, "REAL click HIT 'Orders (지시)' category header");
+            bool ordersHit = RealClickHeader("지시 (Orders)", menu.transform);
+            Assert(ordersHit, "REAL click HIT '지시 (Orders)' category header");
             yield return null;
             yield return new WaitForSeconds(0.3f);
             yield return null; // RefreshContent rebuilt children
-            bool ordersExpanded = HeaderExpanded("Orders (지시)", menu.transform);
-            Assert(ordersExpanded, "'Orders (지시)' EXPANDED after real header click (▶ → ▼)");
+            bool ordersExpanded = HeaderExpanded("지시 (Orders)", menu.transform);
+            Assert(ordersExpanded, "'지시 (Orders)' EXPANDED after real header click (▶ → ▼)");
             Shot("03_orders_expanded");
 
             // ── REAL click on the 채광 item → MineDesignation mode active ──
@@ -220,7 +220,7 @@ namespace MelonS.GameProto
 
         private Button FindHeaderButton(string category, Transform menuRoot)
         {
-            // category 인자는 풀 키("Structure (구조)") 또는 한글명 — 괄호 안 한글을 추출해
+            // category 인자는 풀 키("구조 (Structure)") 또는 한글명 — 괄호 안 한글을 추출해
             //  카테고리 버튼 텍스트(한글 전용)와 대조.
             string kr = category;
             int a = category.IndexOf('('); int z = category.IndexOf(')');

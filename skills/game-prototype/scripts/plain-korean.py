@@ -24,7 +24,13 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-SCRIPTS = Path(__file__).resolve().parents[1] / "unity-project" / "Assets" / "Scripts"
+ASSETS = Path(__file__).resolve().parents[1] / "unity-project" / "Assets"
+# Scripts/ 만 훑으면 **씬에 구워지는 문구를 놓친다** (2026-08-01).
+#  Editor/SceneSetup*.cs 가 만든 Text 는 Game.unity/MainMenu.unity 에 그대로
+#  들어가므로 화면에 나오는 것은 똑같다.  실제로 "콜로니스트를 클릭하세요" 가
+#  이 사각지대에 남아, 나머지를 전부 '주민' 으로 통일한 뒤에도 정보 패널만
+#  옛 용어를 쓰고 있었다 — 한 화면에 두 이름이 다시 생긴 셈.
+SCAN_DIRS = [ASSETS / "Scripts", ASSETS / "Editor"]
 
 # 순서 중요 — 긴 것부터 (조사 결합형이 먼저 잡혀야 한다).
 SUBS = [
@@ -93,7 +99,8 @@ def sub_text_only(lit: str) -> str:
 def main() -> int:
     dry = "--dry" in sys.argv
     changed: dict[str, int] = {}
-    for f in sorted(SCRIPTS.rglob("*.cs")):
+    files = sorted(p for d in SCAN_DIRS for p in d.rglob("*.cs"))
+    for f in files:
         # Tests/ 는 화면이 아니라 **개발자 진단 출력**이다.  실패 메시지에
         #  식별자와 내부 상태명이 그대로 박혀 있어야 원인을 읽을 수 있다.
         if "Tests" in f.parts:
@@ -116,7 +123,7 @@ def main() -> int:
             else:
                 out.append(STR_RE.sub(rep, line))
         if cnt[0]:
-            changed[str(f.relative_to(SCRIPTS))] = cnt[0]
+            changed[str(f.relative_to(ASSETS))] = cnt[0]
             if not dry:
                 io.open(f, "w", encoding="utf-8").write("\n".join(out))
 

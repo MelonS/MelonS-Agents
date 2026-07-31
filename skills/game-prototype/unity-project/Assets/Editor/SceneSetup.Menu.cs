@@ -107,7 +107,13 @@ namespace MelonS.GameProto.EditorTools
             GameObject subGo = new GameObject("Subtitle");
             subGo.transform.SetParent(canvasGo.transform, false);
             Text sub = subGo.AddComponent<Text>();
-            sub.text = "작은 정착지의 하루하루 — 콜로니 심 프로토타입";
+            // 2026-08-01 UX 리뷰 — 이전 문구 "작은 정착지의 하루하루 — 콜로니 심
+            //  프로토타입" 은 두 가지를 동시에 잘못했다.  (1) '콜로니 심' 은 장르를
+            //  이미 아는 사람에게만 통하는 이름이고, (2) '프로토타입' 은 첫 화면에서
+            //  스스로 미완성이라고 선언한다.  둘 다 **무엇을 하는 게임인지**는 끝내
+            //  말해 주지 않는다 — 운영자가 반복해서 지적한 바로 그 결함이다.
+            //  플레이어가 하는 일(일감을 지정 → 주민이 알아서 판단)을 한 줄로 적는다.
+            sub.text = "일을 지시하면, 여섯 주민이 알아서 살아갑니다";
             sub.alignment = TextAnchor.MiddleCenter;
             sub.font = menuFont;
             sub.fontSize = 26;

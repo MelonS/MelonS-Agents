@@ -35,8 +35,8 @@ namespace MelonS.GameProto
         // (mode, label, ArchitectMenu 카테고리, ArchitectMenu buildable index, place cell)
         //  #192 - WallStone + Bed-Wood 추가 = 8 modes 완전체 (Architect 메뉴 모든 entry).
         private static readonly (BuildManager.Mode mode, string label, string category, int buildableIdx, int cx, int cy)[] TestCases = {
-            (BuildManager.Mode.Wall,            "Wall(목재5)",       "Structure (구조)", 0, -18, -8),
-            (BuildManager.Mode.WallStone,       "Wall(석재5)",       "Structure (구조)", 1, -16, -8),
+            (BuildManager.Mode.Wall,            "Wall(목재5)",       "구조 (Structure)", 0, -18, -8),
+            (BuildManager.Mode.WallStone,       "Wall(석재5)",       "구조 (Structure)", 1, -16, -8),
             // #210 fix — the old Floor cell (-18,-10) and ALL FOUR downward fallback
             //  cells (-18,-11 .. -18,-14) sit INSIDE the lake centred at (-18,-12)
             //  r~2.8 (added in #108).  C3 terrain validation correctly rejects water,
@@ -48,12 +48,12 @@ namespace MelonS.GameProto
             //  Floor case to the dedicated grass column x=-22 (y=-8 and all downward
             //  fallbacks -9..-12 are grass, well clear of every lake/rock and every
             //  other test case's cells) so the floor lands on open ground first-try.
-            (BuildManager.Mode.Floor,           "Floor(목재1)",      "Floors (바닥)",    0, -22, -8),
-            (BuildManager.Mode.Door,            "Door(목재3)",       "Structure (구조)", 2, -18, -12),
-            (BuildManager.Mode.Stove,           "Stove(목재10)",     "Production (생산)",0, -20, -8),
-            (BuildManager.Mode.BedSleepingSpot, "수면자리(자재0)",   "Furniture (가구)", 0, -20, -10),
-            (BuildManager.Mode.Bed,             "목재침대(목재8)",   "Furniture (가구)", 1, -16, -10),
-            (BuildManager.Mode.BedFine,         "고급침대(목재30)",  "Furniture (가구)", 2, -20, -12),
+            (BuildManager.Mode.Floor,           "Floor(목재1)",      "바닥 (Floors)",    0, -22, -8),
+            (BuildManager.Mode.Door,            "Door(목재3)",       "구조 (Structure)", 2, -18, -12),
+            (BuildManager.Mode.Stove,           "Stove(목재10)",     "생산 (Production)",0, -20, -8),
+            (BuildManager.Mode.BedSleepingSpot, "수면자리(자재0)",   "가구 (Furniture)", 0, -20, -10),
+            (BuildManager.Mode.Bed,             "목재침대(목재8)",   "가구 (Furniture)", 1, -16, -10),
+            (BuildManager.Mode.BedFine,         "고급침대(목재30)",  "가구 (Furniture)", 2, -20, -12),
         };
 
         private void Start() => StartCoroutine(RunQA());
@@ -287,7 +287,7 @@ namespace MelonS.GameProto
             return false;
         }
 
-        // #261 카테고리 헤더가 #260 부터 한글 전용("구조")으로 표시됨 — 영한키("Structure (구조)")
+        // #261 카테고리 헤더가 #260 부터 한글 전용("구조")으로 표시됨 — 영한키("구조 (Structure)")
         //  에서 괄호 안 한글을 뽑아 텍스트 매칭(괄호 없으면 원문).
         private static string KoreanOf(string s)
         {
