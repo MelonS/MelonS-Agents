@@ -66,8 +66,8 @@ namespace MelonS.GameProto
                 if (bp.needWood > 0) materials += $"목재: {bp.collectedWood}/{bp.needWood}\n";
                 if (bp.needStone > 0) materials += $"석재: {bp.collectedStone}/{bp.needStone}\n";
                 string status = bp.HasAllMaterials
-                    ? (bp.IsReserved ? "건설중" : "○ 자재 완비, pawn 대기")
-                    : "자재 부족, hauler 운반 중";
+                    ? (bp.IsReserved ? "건설중" : "○ 자재 완비, 주민 대기")
+                    : "자재 부족, 운반 중";
                 return ($"청사진 ({bp.Mode})",
                     $"{materials}진행도: {bp.Progress * 100f:F0}%\n{status}");
             }
@@ -85,7 +85,7 @@ namespace MelonS.GameProto
                 $"식량 {meat.Food}개\n예약: {(meat.IsReserved ? "운반중" : "대기")}\n1.5분 후 상함");
             var sp = go.GetComponent<StockpileZoneEntity>();
             if (sp != null) return ($"창고 영역 [{sp.PriorityKr}]",
-                $"우선순위: {sp.PriorityKr}\nhauler 는 높은 우선순위 zone 우선 운반\n우클릭 → 우선순위 순환\n(긴급 > 중요 > 우선 > 보통 > 낮음)");
+                $"우선순위: {sp.PriorityKr}\n운반하는 주민은 높은 우선순위 zone 우선 운반\n우클릭 → 우선순위 순환\n(긴급 > 중요 > 우선 > 보통 > 낮음)");
             var tree = go.GetComponent<TreeEntity>();
             if (tree != null) return ($"나무 ({tree.SpeciesKr})",
                 $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\n" +
@@ -93,31 +93,31 @@ namespace MelonS.GameProto
                 "선택 후 우클릭 = 벌목 → 목재 떨어짐\n" +
                 "(참나무 단단 7목재, 소나무 빠름 4, 자작나무 5)");   // QA F2(2026-06-14) — 한글 UI 속 영문 수종명 제거
             var bush = go.GetComponent<BerryBushEntity>();
-            if (bush != null) return ("베리덤불", $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\nfood<40 pawn 이 자동 채집\n베리 재생 ~30s");
+            if (bush != null) return ("베리덤불", $"위치: ({go.transform.position.x:F0}, {go.transform.position.y:F0})\nfood<40 주민이 자동 채집\n베리 재생 ~30s");
             var crop = go.GetComponent<CropEntity>();
             if (crop != null)
             {
                 string stage = crop.IsRipe ? "익음 (수확 가능)" : "성장 중";
-                return ("작물 (벼)", $"상태: {stage}\n익으면 우클릭 = +5 식량\n3 stage 시각 변화");
+                return ("작물 (벼)", $"상태: {stage}\n익으면 우클릭 = +5 식량\n3 단계 성장");
             }
             var wall = go.GetComponent<WallEntity>();
             if (wall != null) return ($"{wall.MaterialKr}",
-                $"HP: {wall.Hp:F0}/{wall.MaxHp:F0}\n자재: {wall.MaterialKr}\n충돌 collider (pawn 통과 X)\n(wood 100 / stone 280 / steel 300)");
+                $"HP: {wall.Hp:F0}/{wall.MaxHp:F0}\n자재: {wall.MaterialKr}\n충돌 충돌 범위 (주민 통과 X)\n(wood 100 / stone 280 / steel 300)");
             var door = go.GetComponent<DoorEntity>();
-            if (door != null) return ("문", $"목재 3, trigger collider\npawn 통과 가능");
+            if (door != null) return ("문", $"목재 3, trigger 충돌 범위\n주민 통과 가능");
             var floor = go.GetComponent<FloorEntity>();
             if (floor != null) return ("바닥", $"목재 1, 실내 marker\n날씨 보호 효과");
             var stove = go.GetComponent<StoveEntity>();
-            if (stove != null) return ("화덕", $"목재 10\npawn 자동 cook (food 5 → meal 1)");
+            if (stove != null) return ("화덕", $"목재 10\n주민 자동 cook (food 5 → meal 1)");
             var bed = go.GetComponent<BedEntity>();
             if (bed != null) return ($"{bed.QualityKr}",
                 $"품질: {bed.QualityKr}\n수면 회복: {bed.RestMul:F2}x\n기분: +{bed.MoodBonus:F0}/s\n(sleeping spot 0.8x / wood 1.0x / fine 1.4x)");
             var bench = go.GetComponent<ResearchBench>();
-            if (bench != null) return ("연구대", $"radius 1.5 안 pawn 시 연구 진행\n2 pt/sec/pawn");
+            if (bench != null) return ("연구대", $"반경 1.5 안 주민이 있으면 연구 진행\n2 pt/초");
             var wolf = go.GetComponent<WolfEnemy>();
-            if (wolf != null) return ("늑대 [위협]", $"HP {wolf.Hp}/18, dmg 4\ndetect 5u, chase speed 2.5\n드래프트 후 우클릭 = 공격");
+            if (wolf != null) return ("늑대 [위협]", $"HP {wolf.Hp}/18, dmg 4\ndetect 5u, chase speed 2.5\n징집 후 우클릭 = 공격");
             var bandit = go.GetComponent<BanditEnemy>();
-            if (bandit != null) return ("강도 [위협]", $"HP {bandit.Hp}/20, contact dmg\n드래프트 후 우클릭 = 공격");
+            if (bandit != null) return ("약탈자 [위협]", $"HP {bandit.Hp}/20, contact dmg\n징집 후 우클릭 = 공격");
             var animal = go.GetComponent<AnimalEntity>();
             if (animal != null) return (animal.SpeciesKr,
                 $"HP {animal.Hp}\n사냥 시 고기 drop\n길들이기 가능 (식량 1 소모)\n{(animal.IsTamed ? "○ 길들여짐" : "야생")}");

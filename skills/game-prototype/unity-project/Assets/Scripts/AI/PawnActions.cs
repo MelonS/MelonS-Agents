@@ -186,7 +186,7 @@ namespace MelonS.GameProto.AI
                 if (b == null || b.IsDepleted) continue;
                 if (ReservationManager.IsReservedByOther(b, claimant)) continue;
                 Vector3 bp = b.transform.position;
-                if (Mathf.Abs(bp.x) > 43.5f || Mathf.Abs(bp.y) > 43.5f) continue;
+                if (!PathGrid.WorldInBounds(bp)) continue;
                 float sq = ((Vector2)bp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = b; }
             }
@@ -245,7 +245,7 @@ namespace MelonS.GameProto.AI
                 if (a.IsTamed) continue;
                 if (ReservationManager.IsReservedByOther(a, claimant)) continue;
                 Vector3 ap = a.transform.position;
-                if (Mathf.Abs(ap.x) > 43.5f || Mathf.Abs(ap.y) > 43.5f) continue;
+                if (!PathGrid.WorldInBounds(ap)) continue;
                 float sq = ((Vector2)ap - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = a; }
             }
@@ -350,7 +350,7 @@ namespace MelonS.GameProto.AI
                 if (c == null || !c.IsRipe) continue;  // only RIPE crops are harvestable
                 if (ReservationManager.IsReservedByOther(c, claimant)) continue;
                 Vector3 cp = c.transform.position;
-                if (Mathf.Abs(cp.x) > 43.5f || Mathf.Abs(cp.y) > 43.5f) continue;
+                if (!PathGrid.WorldInBounds(cp)) continue;
                 float sq = ((Vector2)cp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = c; }
             }
@@ -404,7 +404,7 @@ namespace MelonS.GameProto.AI
                 if (!design.IsMarked(t)) continue;   // #단일화 — 지정된 나무만 자율 벌목
                 if (ReservationManager.IsReservedByOther(t, claimant)) continue;  // 다른 pawn 의 target
                 Vector3 tp = t.transform.position;
-                if (Mathf.Abs(tp.x) > 43.5f || Mathf.Abs(tp.y) > 43.5f) continue;
+                if (!PathGrid.WorldInBounds(tp)) continue;
                 float sq = ((Vector2)tp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = t; }
             }
@@ -454,7 +454,7 @@ namespace MelonS.GameProto.AI
                 //  IsReservedByOther(죽은 owner 자동 해제 포함)로 통일.
                 if (ReservationManager.IsReservedByOther(bp, ctx.builder.gameObject)) continue;
                 Vector3 bpp = bp.transform.position;
-                if (Mathf.Abs(bpp.x) > 43.5f || Mathf.Abs(bpp.y) > 43.5f) continue;
+                if (!PathGrid.WorldInBounds(bpp)) continue;
                 float sq = ((Vector2)bpp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = bp; }
             }
@@ -497,7 +497,7 @@ namespace MelonS.GameProto.AI
                 }
                 if (!h.IsDowned && !bleeding) continue;
                 Vector3 hp = h.transform.position;
-                if (Mathf.Abs(hp.x) > 43.5f || Mathf.Abs(hp.y) > 43.5f) continue;
+                if (!PathGrid.WorldInBounds(hp)) continue;
                 float sq = ((Vector2)hp - me).sqrMagnitude;
                 // TOP-10 — 침대 대기(휴식 명령/취침) 환자 우선: 정지 표적부터 치료.
                 var pn = h.GetComponent<PawnNeeds>();
@@ -577,7 +577,7 @@ namespace MelonS.GameProto.AI
                 if (ReservationManager.IsReservedByOther(v, claimant)) continue;
                 if (ctx.miner != null && ctx.miner.IsRecentlyGivenUp(v)) continue;  // #221 도달불가 광맥 쿨다운 스킵
                 Vector3 vp = v.transform.position;
-                if (Mathf.Abs(vp.x) > 43.5f || Mathf.Abs(vp.y) > 43.5f) continue;
+                if (!PathGrid.WorldInBounds(vp)) continue;
                 float sq = ((Vector2)vp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = v; }
             }
@@ -619,7 +619,7 @@ namespace MelonS.GameProto.AI
                     && !StockpileZoneEntity.UpgradeHaulWanted(m.transform.position, StockItemKind.Food))
                     continue;  // 저장 meat 재운반은 상향 이주(TOP-3)일 때만
                 Vector3 mp = m.transform.position;
-                if (Mathf.Abs(mp.x) > 43.5f || Mathf.Abs(mp.y) > 43.5f) continue;
+                if (!PathGrid.WorldInBounds(mp)) continue;
                 float sq = ((Vector2)mp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = m; }
             }
@@ -670,7 +670,7 @@ namespace MelonS.GameProto.AI
                     && !StockpileZoneEntity.UpgradeHaulWanted(c.transform.position, StockItemKind.Stone))
                     continue;  // 저장 chunk: 청사진 수요 또는 상향 이주(TOP-3)만
                 Vector3 cp = c.transform.position;
-                if (Mathf.Abs(cp.x) > 43.5f || Mathf.Abs(cp.y) > 43.5f) continue;
+                if (!PathGrid.WorldInBounds(cp)) continue;
                 float sq = ((Vector2)cp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = c; }
             }
@@ -728,7 +728,7 @@ namespace MelonS.GameProto.AI
                     && !StockpileZoneEntity.UpgradeHaulWanted(p.transform.position, StockItemKind.Wood))
                     continue;  // 저장 pile: 청사진 수요 또는 상향 이주(TOP-3)만
                 Vector3 pp = p.transform.position;
-                if (Mathf.Abs(pp.x) > 43.5f || Mathf.Abs(pp.y) > 43.5f) continue;
+                if (!PathGrid.WorldInBounds(pp)) continue;
                 float sq = ((Vector2)pp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = p; }
             }

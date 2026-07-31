@@ -184,6 +184,23 @@ namespace MelonS.GameProto.AI
         public bool InBounds(Vector2Int cell)
             => cell.x >= MIN && cell.x <= MAX && cell.y >= MIN && cell.y <= MAX;
 
+        /// <summary>월드 좌표가 맵 안인가.  **AI 탐색의 후보 필터 정본**.
+        ///
+        /// 계기 (2026-08-01 정합성 리뷰 #4): 탐색 코드가 `Mathf.Abs(p.x) > 43.5f` 처럼
+        ///  경계를 **리터럴로 복붙**하고 있었다 — 같은 패턴이 11곳.  맵이 60×60 에서
+        ///  90×90 으로 커질 때 10곳은 43.5 로 고쳤는데 `PawnContext.FindNearestFreeBed`
+        ///  한 곳만 28.5 로 남았다.  그 결과 바깥 링에 지은 침대는 침대 탐색에만
+        ///  안 보였고, 폰은 바닥에서 자며 mood 불이익이 고착됐다.  같은 함수가
+        ///  출혈 휴식·자동 수면도 게이팅해서 피 흘리는 폰도 침대에 못 갔다.
+        ///  숫자를 고치는 게 아니라 **숫자를 지운다** — 경계는 MIN/MAX 한 쌍뿐이다.</summary>
+        public static bool WorldInBounds(Vector2 world)
+        {
+            // 셀 중심 기준 반 칸 여유 — 리터럴 43.5f 가 표현하던 것과 같은 경계.
+            const float Pad = 0.5f;
+            return world.x >= MIN - Pad && world.x <= MAX + Pad
+                && world.y >= MIN - Pad && world.y <= MAX + Pad;
+        }
+
         /// <summary>True if the cell is in-bounds and not blocked.
         /// Out-of-bounds is treated as NOT walkable (the map edge is a wall).</summary>
         public bool IsWalkable(Vector2Int cell)

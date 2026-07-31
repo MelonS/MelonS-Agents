@@ -46,7 +46,7 @@ namespace MelonS.GameProto.AI
                 if (b == null) continue;
                 if (ReservationManager.IsReservedByOther(b, claimant)) continue;
                 Vector3 bp = b.transform.position;
-                if (Mathf.Abs(bp.x) > 28.5f || Mathf.Abs(bp.y) > 28.5f) continue;
+                if (!PathGrid.WorldInBounds(bp)) continue;
                 float sq = ((Vector2)bp - me).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; best = b; }
             }

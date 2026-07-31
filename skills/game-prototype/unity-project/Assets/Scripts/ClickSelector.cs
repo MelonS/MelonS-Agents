@@ -703,7 +703,7 @@ namespace MelonS.GameProto
             if (animal != null && !animal.IsDead)
             {
                 list.Add(("길들이기 시도", () => animal.TryTame()));
-                list.Add(("사냥 (드래프트 필요)", () => {
+                list.Add(("사냥 (징집 필요)", () => {
                     pawn.SetDrafted(true);
                     pawn.DraftedHuntTarget = animal;
                 }));

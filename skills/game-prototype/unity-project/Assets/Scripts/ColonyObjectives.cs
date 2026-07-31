@@ -57,7 +57,10 @@ namespace MelonS.GameProto
         //  최악의 조합이었다.  400 은 벌목 지정 → 운반 → 적립 루프를 한 바퀴 이상 돌려야
         //  닿는다(시작 200 + 나무 한 그루 27~50).  시작 화면은 200/400 = 절반 찬 상태로
         //  열리므로, 카운터가 살아 있다는 것도 첫 프레임부터 읽힌다.
-        private const int WoodGoal = 400;
+        // WoodGoal / BedGoal 상수는 제거됐다 (2026-08-01).  위 주석이 기록한 대로
+        //  이 두 수치는 시작 정착지가 바뀔 때마다 조용히 공짜가 되어 세 번 뒤쫓아
+        //  올려야 했다.  이제 목표는 시작 기준선 + Delta 로 파생된다 —
+        //  아래 `UpdateBaseline` / `WoodTarget` / `BedTarget` 참조.
 
         // 잠자리 목표도 같은 이유로 3 → 6.  오늘 시작 집에 자동 지붕이 붙으면서(레퍼런스
         //  동작 정합 — RoofDesignation.NotifyWallBuilt 주석 참조) 3 은 시작과 동시에
@@ -69,7 +72,6 @@ namespace MelonS.GameProto
         //        게임 1일차에 '목표 달성 — 지붕 아래 잠자리 6' 알림이 뜬다(실측).
         //  교훈: 시작 정착지를 바꿀 때마다 목표 수치를 함께 봐야 한다 — 목표는 시작
         //        상태 대비 **증분**이어야 의미가 있다.  9 = 시작 6 + 방 하나 증축(3).
-        private const int BedGoal = 9;
 
         // 패널 타이포 (2026-07-31) — 헤더와 행이 같은 크기다.  강조는 색(AccentGold)과
         //  위치로 준다(1차 구현이 헤더만 크게 만들었다가 아예 안 그려진 전례가 있다).
@@ -115,15 +117,14 @@ namespace MelonS.GameProto
         private void BuildObjectives()
         {
             objectives.Add(new Objective {
-                label = $"목재 {WoodGoal} 비축",
-                done = () => ResourceManager.Instance != null && ResourceManager.Instance.wood >= WoodGoal,
-                progress = () => ResourceManager.Instance != null
-                                 ? $"{Mathf.Min(ResourceManager.Instance.wood, WoodGoal)}/{WoodGoal}" : "",
+                label = $"목재 {WoodTarget} 비축",
+                done = () => CurrentWood() >= WoodTarget,
+                progress = () => $"{Mathf.Min(CurrentWood(), WoodTarget)}/{WoodTarget}",
             });
             objectives.Add(new Objective {
-                label = $"지붕 아래 잠자리 {BedGoal}",
-                done = () => RoofedBedCount() >= BedGoal,
-                progress = () => $"{Mathf.Min(RoofedBedCount(), BedGoal)}/{BedGoal}",
+                label = $"지붕 아래 잠자리 {BedTarget}",
+                done = () => RoofedBedCount() >= BedTarget,
+                progress = () => $"{Mathf.Min(RoofedBedCount(), BedTarget)}/{BedTarget}",
             });
             objectives.Add(new Objective {
                 label = "연구 1개 완료",
@@ -135,6 +136,68 @@ namespace MelonS.GameProto
                 done = () => RaidRepelled(),
                 progress = () => RaidHappened() ? (LiveBandits() == 0 ? "1/1" : "교전 중") : "0/1",
             });
+        }
+
+        // ── 시작 상태 기준선 ────────────────────────────────────────────────
+        //
+        // 왜 상수가 아니라 기준선인가 (2026-08-01, 정합성 리뷰 #2):
+        //  위 주석들이 "목표는 시작 상태 대비 **증분**이어야 의미가 있다"는 교훈을
+        //  이미 두 번 적어 놨는데, 코드는 계속 절대값이었다.  그래서 시작 정착지를
+        //  건드릴 때마다 목표가 조용히 공짜가 됐다 — 잠자리는 3→6→9 로 두 번,
+        //  목재는 200→400 으로 한 번 뒤늦게 올렸다.  세 번째를 막으려면 수치가
+        //  아니라 **구조**를 바꿔야 한다.  목표는 "받아 든 상태에서 얼마나 더" 로 잰다.
+        //
+        // 언제 찍나:
+        //  게임은 일시정지 상태로 부팅한다(사람이 맵을 둘러본 뒤 직접 시작).  그 동안은
+        //  아직 스폰·자동 지붕이 진행 중일 수 있으므로 기준선을 **계속 다시 찍고**,
+        //  플레이어가 시간을 흘리기 시작하는 순간 얼린다.  즉 기준선은 정확히
+        //  "조작을 넘겨받은 시점의 정착지" 다.  하네스 실행은 일시정지가 없으므로
+        //  첫 평가 틱에 바로 얼린다 — 어느 경로든 '시작 상태' 라는 의미는 같다.
+        private int startWood, startBeds;
+        private bool baselineFrozen;
+
+        /// <summary>목재 목표 = 시작 보유분 + 이만큼 더.  시작 더미 운반만으로는 못 채운다.</summary>
+        private const int WoodDelta = 250;
+        /// <summary>잠자리 목표 = 시작 잠자리 + 이만큼 더.  방 하나 증축 분량.</summary>
+        private const int BedDelta = 3;
+
+        private int WoodTarget => startWood + WoodDelta;
+        private int BedTarget => startBeds + BedDelta;
+
+        /// <summary>비축 목재 — **바닥 더미를 포함**한다.
+        ///
+        /// 카운터만 보면 시작값이 0 이라 '아직 아무것도 없다' 로 읽히지만, 실제로는
+        /// 바닥에 300 이 널려 있고 운반만 하면 그대로 적립된다.  기준선을 카운터로만
+        /// 잡으면 '운반 = 목표 달성' 이 되어 목표가 다시 공짜가 된다.</summary>
+        private static int CurrentWood()
+        {
+            var rm = ResourceManager.Instance;
+            int n = rm != null ? rm.wood : 0;
+            foreach (var p in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
+                if (p != null && !p.InStockpile) n += p.Wood;
+            return n;
+        }
+
+        /// <summary>일시정지가 풀리기 전까지 기준선을 최신 상태로 따라가게 하고,
+        /// 시간이 흐르기 시작하면 그대로 얼린다.  평가 틱에서 호출.</summary>
+        private void UpdateBaseline()
+        {
+            if (baselineFrozen) return;
+            startWood = CurrentWood();
+            startBeds = RoofedBedCount();
+            // 라벨의 숫자도 기준선에서 파생시킨다 — 상수를 그대로 쓰면 화면에 적힌
+            //  목표와 실제 판정 수치가 어긋난다(플레이어가 볼 수 있는 종류의 거짓말).
+            if (objectives.Count >= 2)
+            {
+                objectives[0].label = $"목재 {WoodTarget} 비축";
+                objectives[1].label = $"지붕 아래 잠자리 {BedTarget}";
+            }
+            if (Time.timeScale > 0f)
+            {
+                baselineFrozen = true;
+                Debug.Log($"[Objectives] 시작 기준선 확정 — 목재 {startWood} (목표 {WoodTarget}), "
+                          + $"잠자리 {startBeds} (목표 {BedTarget})");
+            }
         }
 
         // ── 판정 ────────────────────────────────────────────────────────────
@@ -157,11 +220,15 @@ namespace MelonS.GameProto
         {
             var rm = ResearchManager.Instance;
             if (rm == null) return 0;
-            // 완료 판정은 ResearchManager 가 이미 노출하는 IsUnlocked 로만 한다 —
-            //  내부 목록 형태에 의존하면 연구 목록이 바뀔 때 조용히 틀린다.
-            string[] techs = { "simple_bow", "irrigation", "better_stove", "stone_walls" };
+            // 바로 위 주석이 "연구 목록이 바뀌면 조용히 틀린다"고 경고해 놓고, 정작
+            //  아래에 tech id 를 하드코딩하고 있었다 (2026-08-01 정합성 리뷰 #11).
+            //  그 사이 `stone_walls` 는 트리에서 삭제됐고(ResearchManager 주석 참조)
+            //  `masonry` 가 추가됐다.  결과: 삭제된 tech 는 **영원히 false**, 석공술을
+            //  연구해도 목표에 크레딧이 없어 4개 중 3개가 상한이었다.
+            //  경고를 주석이 아니라 **구조**로 지킨다 — 트리 자체에 물어본다.
             int n = 0;
-            foreach (var t in techs) if (rm.IsUnlocked(t)) n++;
+            foreach (var t in rm.techs)
+                if (t != null && rm.IsUnlocked(t.id)) n++;
             return n;
         }
 
@@ -280,6 +347,7 @@ namespace MelonS.GameProto
 
         private void Refresh(bool force)
         {
+            UpdateBaseline();   // 일시정지 중엔 따라가고, 시간이 흐르면 얼린다 (위 주석)
             int doneCount = 0;
             for (int i = 0; i < objectives.Count; i++)
             {
@@ -317,7 +385,11 @@ namespace MelonS.GameProto
                 victoryFired = true;
                 int days = GameClock.Instance != null ? GameClock.Instance.Day : 0;
                 Debug.Log($"[Victory] 정착 성공 — {days}일차, 목표 {objectives.Count}/{objectives.Count}");
-                AlertStackUI.Notify("정착 성공! 모든 목표를 달성했습니다", 2);
+                // 토스트가 아니라 **전용 화면**으로 (2026-08-01 UX 리뷰).
+                //  기존 tier 2 알림은 약탈자 경보와 같은 주황·같은 자리라 위험 신호로
+                //  읽혔고, 카드 3장 제한에 밀려 사라질 수도 있었다.  제출 요강이 요구하는
+                //  '종료 조건' 이 화면에서 가장 안 보이는 역설이었다.
+                GameOverOverlay.ShowVictory(days);
             }
         }
 

@@ -41,22 +41,69 @@ SUBS = [
     ("세이브", "저장 파일"), ("UI 팔레트", "화면 색상"),
     ("페널티", "불이익"), ("× UI 위 클릭", "화면 UI 위를 눌렀습니다"),
     ("전무", "없음"),
+    # 2026-08-01 UX 리뷰 — **한 대상을 네 이름으로** 부르고 있었다.
+    #  주민 / 림 / pawn / 콜로니스트 가 같은 화면에 동시에 뜬다.
+    ("pawn 없음", "주민 없음"), ("pawn 이", "주민이"), ("pawn 을", "주민을"),
+    ("pawn 대기", "주민 대기"), ("pawn 통과", "주민 통과"), ("pawn 자동", "주민 자동"),
+    ("pawn 시", "주민이 있으면"), ("/sec/pawn", "/초"), ("림이", "주민이"),
+    ("림 ", "주민 "), ("림에게", "주민에게"), ("림은", "주민은"),
+    # 징집 / 드래프트 — 버튼은 '징집' 인데 툴팁은 '드래프트' 라 같은 것인 줄 모른다.
+    ("드래프트 후", "징집 후"), ("드래프트 필요", "징집 필요"), ("드래프트", "징집"),
+    # ("Undraft", "징집 해제") 는 **의도적으로 없다** (2026-08-01).
+    #  버튼은 `"징집\nDraft"` 처럼 한글 밑에 영문을 병기하는 규칙이라, Undraft 를
+    #  치환하면 병기 줄까지 한글이 되어 규칙이 깨진다.  게다가 이 항목이 실제로
+    #  `colorAfterUndraft` 식별자를 `colorAfter징집 해제` 로 만들어 빌드를 깼다.
+    #  ASCII 단독 단어는 코드 식별자와 구분이 안 되므로 사전에 넣지 않는다.
+    # 적 이름도 세 가지 — 약탈자로 통일 (알림 카드가 쓰는 말).
+    ("강도", "약탈자"),
+    # 개발 용어가 플레이어 화면에 나온다.
+    ("hauler 는", "운반하는 주민은"), ("hauler 운반 중", "운반 중"),
+    ("hauler", "운반 담당"), ("collider", "충돌 범위"), ("radius", "반경"),
+    ("stage 시각 변화", "단계 성장"),
 ]
 
 STR_RE = re.compile(r'"([^"\\]*(?:\\.[^"\\]*)*)"')
+
+# 보간 홀 `{...}` — **문자열 안이지만 코드다** (2026-08-01 사고).
+#  `$"...(col={Fmt(colorAfterUndraft)})"` 의 중괄호 안은 식별자·메서드 호출이지
+#  화면 문구가 아니다.  이걸 구분하지 않은 첫 판이 식별자를 한글로 바꿔
+#  `CS1003 Syntax error` 로 빌드를 깼다.  `{{` 는 이스케이프된 리터럴 중괄호라 홀이 아니다.
+HOLE_RE = re.compile(r"\{\{|\}\}|\{[^{}]*\}")
+
+
+def sub_text_only(lit: str) -> str:
+    """리터럴에서 **표시 텍스트 구간에만** 치환을 적용한다.
+
+    보간 홀은 원문 그대로 통과시킨다."""
+    out, last = [], 0
+    for m in HOLE_RE.finditer(lit):
+        seg = lit[last:m.start()]
+        for a, b in SUBS:
+            seg = seg.replace(a, b)
+        out.append(seg)
+        out.append(m.group(0))      # 홀은 손대지 않는다
+        last = m.end()
+    seg = lit[last:]
+    for a, b in SUBS:
+        seg = seg.replace(a, b)
+    out.append(seg)
+    return "".join(out)
 
 
 def main() -> int:
     dry = "--dry" in sys.argv
     changed: dict[str, int] = {}
     for f in sorted(SCRIPTS.rglob("*.cs")):
+        # Tests/ 는 화면이 아니라 **개발자 진단 출력**이다.  실패 메시지에
+        #  식별자와 내부 상태명이 그대로 박혀 있어야 원인을 읽을 수 있다.
+        if "Tests" in f.parts:
+            continue
         src = io.open(f, encoding="utf-8").read()
         cnt = [0]
 
         def rep(m: re.Match) -> str:
-            t = o = m.group(1)
-            for a, b in SUBS:
-                t = t.replace(a, b)
+            o = m.group(1)
+            t = sub_text_only(o)
             if t != o:
                 cnt[0] += 1
             return '"' + t + '"'

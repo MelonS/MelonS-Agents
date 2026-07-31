@@ -116,9 +116,11 @@ namespace MelonS.GameProto
             }),
             new Section("속도 / Speed", new[]
             {
+                // 2026-08-01 — 실제 버튼은 1x / 3x / 6x 인데 안내문만 2배속·4배속으로
+                //  남아 있었다.  화면 우하단 버튼과 나란히 놓이는 표라 바로 들통난다.
                 new Row("1", "1배속 / Normal"),
-                new Row("2", "2배속 / Fast"),
-                new Row("3", "4배속 / Fastest"),
+                new Row("2", "3배속 / Fast"),
+                new Row("3", "6배속 / Fastest"),
                 new Row("Space", "일시정지 / Pause"),
             }),
             new Section("패널 / Panels", new[]

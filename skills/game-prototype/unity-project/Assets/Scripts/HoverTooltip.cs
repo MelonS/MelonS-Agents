@@ -204,19 +204,19 @@ namespace MelonS.GameProto
                 string sp = animal.SpeciesKr;
                 string tamed = animal.IsTamed ? " ○길들여짐" : "";
                 if (draftedReady) return $"△ {sp}{tamed}  (우클릭=공격/사냥)";
-                return $"{sp}{tamed}  (드래프트 후 우클릭=사냥 / 우클릭=길들이기)";
+                return $"{sp}{tamed}  (징집 후 우클릭=사냥 / 우클릭=길들이기)";
             }
             var wolf = hit.GetComponent<WolfEnemy>();
             if (wolf != null)
             {
                 if (draftedReady) return "△ 늑대 (위협!)  (우클릭=공격)";
-                return "늑대 (위협!)  (드래프트 후 우클릭=공격)";
+                return "늑대 (위협!)  (징집 후 우클릭=공격)";
             }
             var bandit = hit.GetComponent<BanditEnemy>();
             if (bandit != null)
             {
-                if (draftedReady) return "△ 강도 (위협!)  (우클릭=공격)";
-                return "강도 (위협!)  (드래프트 후 우클릭=공격)";
+                if (draftedReady) return "△ 약탈자 (위협!)  (우클릭=공격)";
+                return "약탈자 (위협!)  (징집 후 우클릭=공격)";
             }
             var trader = hit.GetComponent<TraderEntity>();
             if (trader != null) return "상인  (우클릭=교역)";

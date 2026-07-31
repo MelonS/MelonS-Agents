@@ -59,6 +59,25 @@ namespace MelonS.GameProto
             if (!ReproHarness.Enabled) Time.timeScale = 0f;
         }
 
+        /// <summary>**승리 화면** — 정착 성공.  외부(ColonyObjectives)에서 호출.
+        ///
+        /// 2026-08-01 UX 리뷰가 잡은 비대칭: 패배는 34pt 전체 화면 오버레이인데
+        /// 승리는 **15pt 주황 토스트** 하나였다.  그것도 약탈자 경보와 같은 색·같은 자리라
+        /// 위험 신호로 읽히고, 카드 3장 제한에 밀려 사라질 수도 있었다.
+        /// 제출 요강이 요구하는 '종료 조건'이 정작 화면에서 가장 안 보이는 상태였다.
+        /// 패배와 **같은 무게**로 보여준다 — 같은 오버레이, 다른 문구.</summary>
+        public static void ShowVictory(int days)
+        {
+            if (Object.FindFirstObjectByType<GameOverOverlay>() != null) return;   // 멱등
+            var go = new GameObject("~VictoryOverlay");
+            var ov = go.AddComponent<GameOverOverlay>();
+            ov.isVictory = true;
+            ov.BuildOverlay(days);
+            Debug.Log($"[Victory] 승리 화면 표시 — {days}일차");
+        }
+
+        private bool isVictory;
+
         private void BuildOverlay(int days)
         {
             var canvasGo = new GameObject("GameOverCanvas");
@@ -85,10 +104,13 @@ namespace MelonS.GameProto
             var content = UITheme.MakeBorderedPanel(prt, UITheme.BorderPx, UITheme.PanelBg, UITheme.PadOuter);
 
             var font = UITheme.LoadKoreanFont(30);
-            MakeText(content, "정착지 전멸", font, 34, UITheme.AccentGold,
-                     new Vector2(0, 55), new Vector2(480, 50));
-            MakeText(content, $"{days}일 생존 — 모든 주민이 사망했습니다.", font, 18,
-                     UITheme.TextPrimary, new Vector2(0, 8), new Vector2(480, 32));
+            MakeText(content, isVictory ? "정착 성공" : "정착지 전멸", font, 34,
+                     UITheme.AccentGold, new Vector2(0, 55), new Vector2(480, 50));
+            MakeText(content,
+                     isVictory
+                       ? $"{days}일 만에 네 가지 목표를 모두 이뤘습니다."
+                       : $"{days}일 생존 — 모든 주민이 사망했습니다.",
+                     font, 18, UITheme.TextPrimary, new Vector2(0, 8), new Vector2(480, 32));
 
             var btnGo = new GameObject("RestartBtn");
             btnGo.transform.SetParent(content, false);

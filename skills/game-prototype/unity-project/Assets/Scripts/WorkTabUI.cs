@@ -199,7 +199,7 @@ namespace MelonS.GameProto
                 var empty = new GameObject("Empty");
                 empty.transform.SetParent(grid.transform, false);
                 var t = empty.AddComponent<Text>();
-                t.text = "(pawn 없음)";
+                t.text = "(주민 없음)";
                 t.font = font;
                 t.fontSize = 16;
                 t.color = new Color(0.7f, 0.7f, 0.7f, 1f);

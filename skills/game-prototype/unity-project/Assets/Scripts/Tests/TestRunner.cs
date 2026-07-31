@@ -117,7 +117,7 @@ namespace MelonS.GameProto.Tests
             yield return RunOne("V63-research-bench-speed-sum", TestV63_ResearchBenchSpeedSum);
             yield return RunOne("V64-door-pass-slowdown", TestV64_DoorPassSlowdown);
             yield return RunOne("V65-bed-sprite-runtime-binding", TestV65_BedSpriteRuntimeBinding);
-            yield return RunOne("V66-pawn-1x1-render-collider", TestV66_Pawn1x1RenderCollider);
+            yield return RunOne("V66-pawn-1x1-render-충돌 범위", TestV66_Pawn1x1RenderCollider);
             yield return RunOne("V67-floatingbar-namelabel-anchor", TestV67_FloatingBarNameLabelAnchor);
             yield return RunOne("V68-astar-straight-path", TestV68_AStarStraightPath);
             yield return RunOne("V69-astar-around-obstacle", TestV69_AStarAroundObstacle);
@@ -1344,7 +1344,7 @@ namespace MelonS.GameProto.Tests
             yield return new WaitForSeconds(0.8f);  // #200 moveSpeed 4.6 → 3 unit 도착 (<0.7s)
             Vector3 end = go.transform.position;
             bool moved = (end - start).magnitude > 1.0f;
-            Assert(moved, $"pawn 이동: ({start.x:F1},{start.y:F1})→({end.x:F1},{end.y:F1}) dist={(end-start).magnitude:F2}");
+            Assert(moved, $"주민이동: ({start.x:F1},{start.y:F1})→({end.x:F1},{end.y:F1}) dist={(end-start).magnitude:F2}");
         }
 
         private IEnumerator TestV29_WolfAttacksPawn()
@@ -1768,7 +1768,7 @@ namespace MelonS.GameProto.Tests
             bool ok = widthOk && heightOk && colOk;
             Debug.Log($"[TestRunner] V66: {(ok ? "OK" : "FAIL")} - bounds.size=({bsize.x:F3},{bsize.y:F3}) collider=({col.size.x:F2},{col.size.y:F2}) (the reference sim 1x1 tile)");
             Assert(ok,
-                $"bounds=({bsize.x:F3},{bsize.y:F3}) widthOk={widthOk} heightOk={heightOk} collider=({col.size.x:F2},{col.size.y:F2}) colOk={colOk}");
+                $"bounds=({bsize.x:F3},{bsize.y:F3}) widthOk={widthOk} heightOk={heightOk} 충돌 범위=({col.size.x:F2},{col.size.y:F2}) colOk={colOk}");
         }
 
         // #199 A2 — 1x1 pawn (머리 ~ +0.5) 위로 HP/mood 바 + name/status 라벨이

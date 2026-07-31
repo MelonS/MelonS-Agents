@@ -135,7 +135,7 @@ namespace MelonS.GameProto
                         if (currentAlertSubject != key)
                         {
                             currentAlertSubject = key;
-                            ShowAlert("! 강도 침입!", b.transform.position, true);
+                            ShowAlert("! 약탈자 침입!", b.transform.position, true);
                         }
                         return;
                     }

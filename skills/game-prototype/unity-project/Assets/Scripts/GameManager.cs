@@ -71,8 +71,13 @@ namespace MelonS.GameProto
             spawnPositions = StartSpawns;   // 직렬화 덮어쓰기 방어 (위 주석)
             // 퀵픽 '일시정지 시작' (사람-리듬 #1 합치) — 레퍼런스처럼 정지 상태로
             //  시작해 플레이어가 맵을 둘러보고 계획한 뒤 직접 시작한다.
-            //  하네스/배치 실행은 제외 (ReproHarness 가 BeginSim 에서 1x 강제).
-            if (!ReproHarness.Enabled) StartCoroutine(PauseAtStart());
+            //  하네스/배치 실행은 제외.
+            // 2026-08-01 — 면제 조건이 `!ReproHarness.Enabled` 였다.  즉 **repro 만**
+            //  깨어 있었고 -testmode/-integration/-longplay/오토QA 10종은 부팅하자마자
+            //  timeScale 0 에 걸려 첫 `WaitForSeconds` 에서 영원히 잠들어 있었다.
+            //  리포트 JSON 이 생성되지 않는 형태의 무음 실패라 7주간 아무도 몰랐다.
+            //  판정을 Core.AutomatedRun 으로 옮긴다 — 하네스 목록이 한 곳에 모인다.
+            if (!Core.AutomatedRun.Active) StartCoroutine(PauseAtStart());
 
             // R7: -testmode → isolated unit test 55개 (normal spawn skip)
             // 통합 검증: -integration → normal spawn + IntegrationTestRunner 둘 다 (진짜 game state 위에서)

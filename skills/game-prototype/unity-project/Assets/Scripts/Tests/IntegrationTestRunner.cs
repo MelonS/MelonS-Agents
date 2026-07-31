@@ -333,21 +333,39 @@ namespace MelonS.GameProto.Tests
                 $"멈춤 버튼: {beforeScale}→{afterScale} (0 expected when paused)");
         }
 
-        /// <summary>I8: 4x 버튼 클릭 → Time.timeScale=4</summary>
+        /// <summary>I8: 최고 배속 버튼 클릭 → Time.timeScale 이 그 배속이 된다.
+        ///
+        /// 2026-08-01 — 이 테스트는 `Btn_4x` 를 찾고 있었다.  실제 배속은 1x/3x/6x 로
+        ///  바뀐 지 오래라 항상 '버튼 없음' 으로 실패했는데, 부팅 일시정지 때문에
+        ///  통합 스위트 자체가 안 돌아 그 실패가 7주간 보이지 않았다.
+        ///  버튼 이름을 다시 하드코딩하면 다음 배속 조정 때 같은 일이 반복되므로,
+        ///  라벨이 아니라 **클릭 결과(timeScale)** 로 검증한다.</summary>
         private IEnumerator TestI8_GuiSpeedButton()
         {
             yield return null;
             var bar = GameObject.Find("GuiControlBar");
-            var btn4x = bar.transform.Find("Btn_4x")?.GetComponent<UnityEngine.UI.Button>();
-            if (btn4x == null) { Assert(false, "Btn_4x 없음"); yield break; }
-            btn4x.onClick.Invoke();
+            UnityEngine.UI.Button fastest = null;
+            float fastestScale = 0f;
+            foreach (Transform ch in bar.transform)
+            {
+                if (!ch.name.StartsWith("Btn_")) continue;
+                string tail = ch.name.Substring(4);
+                if (!tail.EndsWith("x")) continue;
+                if (!float.TryParse(tail.Substring(0, tail.Length - 1), out float v)) continue;
+                if (v <= fastestScale) continue;
+                var b = ch.GetComponent<UnityEngine.UI.Button>();
+                if (b == null) continue;
+                fastestScale = v; fastest = b;
+            }
+            if (fastest == null) { Assert(false, "배속 버튼(Btn_<n>x)을 찾지 못함"); yield break; }
+            fastest.onClick.Invoke();
             yield return null;
             float scale = Time.timeScale;
             // restore 1x
             var btn1x = bar.transform.Find("Btn_1x")?.GetComponent<UnityEngine.UI.Button>();
             if (btn1x != null) btn1x.onClick.Invoke();
-            Assert(Mathf.Approximately(scale, 4f),
-                $"4x 버튼: scale={scale} (4 expected)");
+            Assert(Mathf.Approximately(scale, fastestScale),
+                $"{fastestScale}x 버튼: scale={scale} ({fastestScale} expected)");
         }
 
         /// <summary>I9: 건축 버튼 클릭 → ArchitectMenu 열림 + BuildManager 모드 toggle</summary>
@@ -636,7 +654,9 @@ namespace MelonS.GameProto.Tests
             {
                 if (t == null) continue;
                 Vector3 tp = t.transform.position;
-                if (Mathf.Abs(tp.x) > 28.5f || Mathf.Abs(tp.y) > 28.5f) continue;
+                // 여기도 옛 60×60 경계가 남아 있었다 (2026-08-01 리뷰 #4).
+                //  테스트가 맵 바깥 링의 나무를 못 보면 '가까운 나무 없음'으로 오판한다.
+                if (!MelonS.GameProto.AI.PathGrid.WorldInBounds(tp)) continue;
                 float sq = (tp - testPawnGo.transform.position).sqrMagnitude;
                 if (sq < bestSq) { bestSq = sq; bestTree = t; }
             }
@@ -914,7 +934,7 @@ namespace MelonS.GameProto.Tests
         {
             yield return null;
             var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
-            if (pawns.Length == 0) { Assert(false, "pawn 없음"); yield break; }
+            if (pawns.Length == 0) { Assert(false, "주민 없음"); yield break; }
             // 모든 pawn 이 PawnWorkSettings 가지고 있나
             int withSettings = 0;
             foreach (var p in pawns)
@@ -1030,7 +1050,7 @@ namespace MelonS.GameProto.Tests
                 $"wood pile spawn: piles {pilesBefore}->{pilesAfter}");
             // 운영자 fb v4 (림 vanilla 복원): chop 즉시 inventory X.  hauler 가 운반해야 +N.
             Assert(woodAfter == woodBefore,
-                $"inventory wood 즉시 X: {woodBefore}->{woodAfter} (hauler 운반 후에만 +)");
+                $"inventory wood 즉시 X: {woodBefore}->{woodAfter} (운반 담당 운반 후에만 +)");
 
             // 클린업 - 새로 spawn 한 pile 들 destroy
             var piles = Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None);
@@ -1195,7 +1215,7 @@ namespace MelonS.GameProto.Tests
         {
             yield return null;
             var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
-            if (pawns.Length == 0) { Assert(false, "pawn 없음"); yield break; }
+            if (pawns.Length == 0) { Assert(false, "주민 없음"); yield break; }
             // pawn 군집(원점 근처) 가까운 빈 곳에 stockpile + loose 목재더미.
             // 통제된 재현: 기존 loose 더미/존 전부 제거 → 깨끗한 상태에서 도달가능 더미 1개만.
             foreach (var wp in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
@@ -1357,7 +1377,7 @@ namespace MelonS.GameProto.Tests
         {
             yield return null;
             var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
-            if (pawns.Length == 0) { Assert(false, "pawn 없음"); yield break; }
+            if (pawns.Length == 0) { Assert(false, "주민 없음"); yield break; }
             int hasShirt = 0, hasPants = 0;
             foreach (var p in pawns)
             {
@@ -1384,7 +1404,7 @@ namespace MelonS.GameProto.Tests
         {
             yield return null;
             var pawn = Object.FindFirstObjectByType<PawnEntity>();
-            if (pawn == null) { Assert(false, "pawn 없음"); yield break; }
+            if (pawn == null) { Assert(false, "주민 없음"); yield break; }
             var th = pawn.GetComponent<PawnThoughts>();
             if (th == null) { Assert(false, "PawnThoughts 컴포넌트 없음"); yield break; }
 
@@ -1444,7 +1464,7 @@ namespace MelonS.GameProto.Tests
             yield return null;
 
             // 자재 충분 X 확인
-            Assert(!bp.HasAllMaterials, $"청사진 spawn 시 자재 부족 (collected wood={bp.collectedWood}/{bp.needWood})");
+            Assert(!bp.HasAllMaterials, $"청사진 s주민이 있으면 자재 부족 (collected wood={bp.collectedWood}/{bp.needWood})");
 
             // wood pile 가까이 spawn (이미 chop 된 상태)
             if (TreeEntity.WoodPileSprite == null)
@@ -1469,7 +1489,7 @@ namespace MelonS.GameProto.Tests
 
             bool depositedWood = bp.collectedWood >= bp.needWood;
             Assert(depositedWood,
-                $"hauler 운반 후 자재 완비: collected {bp.collectedWood}/{bp.needWood} (HasAllMaterials={bp.HasAllMaterials})");
+                $"운반 담당 운반 후 자재 완비: collected {bp.collectedWood}/{bp.needWood} (HasAllMaterials={bp.HasAllMaterials})");
 
             // builder 가 건설 작업 → wall 완성
             if (bp != null && bp.gameObject != null)
@@ -2073,7 +2093,7 @@ namespace MelonS.GameProto.Tests
         {
             yield return null;
             var pawns = Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None);
-            if (pawns.Length == 0) { Assert(false, "pawn 없음"); yield break; }
+            if (pawns.Length == 0) { Assert(false, "주민 없음"); yield break; }
             if (TreeChopDesignation.Instance == null) { Assert(false, "TreeChopDesignation.Instance null"); yield break; }
             // 나무 force-spawn (pawn 근처 빈 칸)
             var tGo = new GameObject("QA_ChopTree");

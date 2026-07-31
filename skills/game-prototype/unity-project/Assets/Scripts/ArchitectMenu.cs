@@ -325,7 +325,7 @@ namespace MelonS.GameProto
             BuildManager.Mode.BedFine         => "고급 침대 (수면 1.4x)",
             BuildManager.Mode.BedSleepingSpot => "수면 자리 (자재 불필요)",
             BuildManager.Mode.Stove           => "화덕 (요리)",
-            BuildManager.Mode.ResearchBench   => "연구대 (림이 근처에 있으면 연구 진행)",
+            BuildManager.Mode.ResearchBench   => "연구대 (주민이 근처에 있으면 연구 진행)",
             BuildManager.Mode.Lamp            => "램프 (조명)",
             _ => "건축물",
         };
