@@ -56,7 +56,10 @@ namespace MelonS.GameProto
             if (clock == null) return;
 
             // 0 = 일출, 1 = 일몰.  범위 밖이면 밤.
-            float h = clock.Hour + (Time.time % 60f) / 60f * 0f;   // 시 단위로 충분(분 보간 불필요)
+            // **연속 시각**을 쓴다 (2026-07-31).  clock.Hour 는 정수라 그림자가 1시간
+            //  단위로 계단식으로 튄다 — 6배속에서는 눈에 띈다.  GameSeconds 로 분·초까지
+            //  받아 태양이 부드럽게 움직이게 한다.
+            float h = (clock.GameSeconds % 86400f) / 3600f;
             float t = Mathf.InverseLerp(SunriseH, SunsetH, h);
             bool day = h >= SunriseH && h <= SunsetH;
 
