@@ -314,6 +314,25 @@ namespace MelonS.GameProto
             SpawnRaid();
         }
 
+        /// <summary>습격을 지금 즉시 발생시킨다 (하네스·데모 전용 공개 통로).
+        ///
+        /// 계기 (2026-07-31): 시연 영상이 12/100 에 머물렀다.  세 회차 연속으로 지적받은
+        /// 것을 정확히 고쳤는데 점수가 안 움직였다 — 고치는 대상이 점수의 이유가 아니라는
+        /// 뜻이다.  다시 보니 **영상에 긴장이 없다**.  58초 동안 나무 베고 나르고 벽 세우고
+        /// 숫자가 오르는 잡일뿐이다.  콜로니 심이 팔리는 이유는 위기인데 한 장면도 없었다.
+        ///
+        /// 게임에는 습격·무기·전투·정신붕괴가 이미 있다.  영상이 그걸 안 쓰고 있을 뿐이다.
+        /// 습격은 기본 4~6일차라 60초 영상에는 절대 안 나온다 — 그래서 부를 수단을 연다.
+        ///
+        /// 실제 플레이 경로와 **같은 함수**(SpawnRaid)를 부른다.  데모용 가짜 연출을 따로
+        /// 만들면 "영상에서 본 것이 게임에 없다"가 되므로, 시점만 앞당기고 내용은 동일하다.</summary>
+        public void TriggerRaidNow()
+        {
+            lastRaidDay = GameClock.Instance != null ? GameClock.Instance.Day : 1;
+            nextRaidGameSec = -1f;
+            SpawnRaid();
+        }
+
         private void SpawnRaid()
         {
             // Raid size is now driven by raidCount (how many raids have fired this

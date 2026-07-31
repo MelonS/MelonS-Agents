@@ -173,11 +173,21 @@ namespace MelonS.GameProto
             return d != null && d.RaidCount > 0;
         }
 
+        // 이번 습격에서 **실제로 밴딧을 본 적이 있는가**.  아래 주석 참조.
+        private static bool sawBandit;
+
         private static bool RaidRepelled()
         {
             if (!RaidHappened()) return false;
-            // 습격이 한 번 이상 왔고, 지금 살아 있는 밴딧이 없으며, 콜로니스트가 남아 있다.
-            if (LiveBandits() > 0) return false;
+            // 2026-07-31 실측 버그: 교전이 한 번도 없었는데 '첫 습격 격퇴' 가 달성됐다.
+            //  원인은 이 판정이 '밴딧을 물리쳤는가' 가 아니라 **'지금 살아 있는 밴딧이
+            //  0인가'** 였다는 것.  습격 직후 밴딧이 맵 외곽에서 접근하는 동안
+            //  isActiveAndEnabled 가 아직 false 인 프레임이 있으면 그 순간 곧바로
+            //  '격퇴'로 판정됐다.  화면에는 밴딧이 오는 중인데 우상단엔 '습격 격퇴!' 가
+            //  떴다 — 목표가 거짓말을 한다.
+            //  이제 **밴딧을 실제로 본 뒤에** 0이 되어야 격퇴로 친다.
+            if (LiveBandits() > 0) { sawBandit = true; return false; }
+            if (!sawBandit) return false;
             foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
                 if (p != null && !p.IsDead) return true;
             return false;

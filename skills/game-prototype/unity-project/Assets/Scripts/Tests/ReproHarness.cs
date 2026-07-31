@@ -464,6 +464,18 @@ namespace MelonS.GameProto
                     r.passed = true; r.detail = $"focus ({fw.x:F1},{fw.y:F1})";
                     break;
                 }
+                // 습격을 즉시 발생시킨다 — 시연 영상에 위기 장면을 넣기 위한 통로.
+                //  실제 플레이와 같은 AIDirector.SpawnRaid 를 탄다(연출 위조 아님).
+                case "raid":
+                {
+                    var dir = Object.FindFirstObjectByType<AIDirector>();
+                    if (dir == null) { r.passed = false; r.detail = "AIDirector 없음"; break; }
+                    dir.TriggerRaidNow();
+                    yield return null;
+                    int n = Object.FindObjectsByType<BanditEnemy>(FindObjectsSortMode.None).Length;
+                    r.passed = n > 0; r.detail = $"습격 발생 — 밴딧 {n}";
+                    break;
+                }
                 case "camdirector":
                 {
                     // 테스트 스캐폴딩 — 무인 런 카메라 디렉터 토글 (x=1 켜기 / 0 끄기).

@@ -159,6 +159,52 @@ def find_loopback_device() -> str | None:
     return None
 
 
+# ── 자막 (2026-07-31) ────────────────────────────────────────────────────
+#
+# 운영자, 세 회차째 같은 말: **"머하는 게임인지 모르겠음"** (2 → 10 → 12점).
+# 그동안 고친 것들(그림자·아이템 크기·라벨 겹침)은 **이미 게임을 이해한 사람에게만**
+# 의미가 있는 개선이었다.  처음 보는 심사자는 여전히 장르도 목적도 모른 채
+# 작은 사람들이 왔다갔다하는 58초를 본다.
+#
+# 60초 안에 게임을 이해시키는 가장 확실한 수단은 **말로 설명하는 것**이다.
+# 내레이션은 못 넣으니(TTS 는 '실제 플레이 화면' 요건과 충돌 소지) 자막으로 한다.
+# 화면 아래 1/5 지점에 반투명 띠 + 흰 글자 — 게임 UI 를 가리지 않는 자리.
+#
+# 각 줄은 그 순간 화면에서 실제로 벌어지는 일을 설명한다.  장식 카피가 아니라
+# **읽으면 화면이 이해되는** 문장이어야 한다.
+SUBTITLES = [
+    (0.0,  5.5,  "황무지에 도착한 3인 — 겨울이 오기 전에 정착지를 세운다"),
+    (5.8, 11.5,  "직접 조종하지 않는다.  나무를 우클릭해 '할 일'을 지정하면"),
+    (11.8, 17.0, "콜로니스트가 스스로 판단해 베고, 나르고, 창고에 쌓는다"),
+    (17.3, 22.0, "각자 성격과 숙련이 달라 맡는 일이 다르다"),
+    (22.3, 27.5, "그리고 약탈자가 온다"),
+    (27.8, 36.0, "싸울 사람도, 도망칠 사람도 스스로 정한다"),
+    (36.3, 44.0, "누가 다치고 누가 버티는지가 매 판 달라진다"),
+    (44.3, 52.0, "살아남아 정착에 성공하면 승리 — 콜로니 시뮬레이션"),
+]
+
+
+def _esc(t: str) -> str:
+    """drawtext 용 이스케이프 (콜론·작은따옴표·역슬래시)."""
+    return t.replace("\\", "\\\\").replace(":", r"\:").replace("'", r"'")
+
+
+def subtitle_filter(font: Path) -> str:
+    """자막 + 반투명 띠를 하나의 filter 체인으로."""
+    fp = str(font).replace("\\", "/").replace(":", r"\:")
+    parts = []
+    for st, en, text in SUBTITLES:
+        between = f"between(t\,{st}\,{en})"
+        # 띠 — 글자 뒤 가독성 확보 (잔디 위 흰 글자는 얇게 읽힌다)
+        parts.append(f"drawbox=y=ih-260:w=iw:h=80:color=black@0.55:t=fill:enable='{between}'")
+        parts.append(
+            f"drawtext=fontfile='{fp}':text='{_esc(text)}':"
+            f"fontcolor=white:fontsize=34:x=(w-text_w)/2:y=h-240:"
+            f"shadowcolor=black@0.9:shadowx=2:shadowy=2:enable='{between}'"
+        )
+    return ",".join(parts)
+
+
 def bgm_asset() -> Path | None:
     p = (Path(__file__).resolve().parents[1]
          / "unity-project" / "Assets" / "Audio" / "bgm_ambient.wav")
@@ -288,6 +334,35 @@ def main() -> int:
                 "-map", "0:v", "-map", "[a]", "-c:a", "aac", "-b:a", "160k"]
     elif loopback:
         enc += ["-c:a", "copy"]
+
+    # 자막 — SUBTITLES 주석 참조.  "머하는 게임인지 모르겠음"에 대한 직접 답이다.
+    #  filter_complex 를 이미 쓰는 경우(BGM 경로)에는 -vf 를 함께 못 쓰므로,
+    #  비디오도 같은 체인 안에서 처리해 [v] 로 내보낸다.
+    # ⚠ 폰트 경로에 **한글이 들어가면 drawtext 가 폰트를 못 읽고** 기본 폰트로
+    #  폴백한다 — 그러면 한글 자막이 전부 두부(□□□)로 나온다(실측).  이 레포 경로에는
+    #  'NHN해커톤준비' 가 들어 있다.  ASCII 임시 경로로 복사해서 넘긴다.
+    src_font = (ROOT / "unity-project" / "Assets" / "Resources" / "Fonts" / "NotoSansKR.ttf")
+    font = Path("C:/Windows/Temp/_pawnsim_subtitle.ttf")
+    if src_font.exists():
+        try:
+            shutil.copyfile(src_font, font)
+        except Exception as e:                                  # noqa: BLE001
+            print(f"[record-demo] 폰트 복사 실패({e}) — 원본 경로 사용")
+            font = src_font
+    if font.exists():
+        sub = subtitle_filter(font)
+        if bgm is not None:
+            # 위에서 넣은 filter_complex 문자열에 비디오 체인을 덧붙인다.
+            fi = enc.index("-filter_complex")
+            enc[fi + 1] = f"[0:v]{sub}[v];" + enc[fi + 1]
+            vi = enc.index("0:v")
+            enc[vi] = "[v]"
+        else:
+            enc += ["-vf", sub]
+        print(f"[record-demo] 자막 : {len(SUBTITLES)}줄")
+    else:
+        print(f"[record-demo] ⚠ 자막 폰트 없음 — 자막 생략 ({font})")
+
     enc += ["-c:v", "libx264", "-preset", "slow", "-crf", "19",
             "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out)]
     subprocess.run(enc, check=True)
