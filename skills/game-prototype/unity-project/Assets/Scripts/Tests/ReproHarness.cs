@@ -261,6 +261,22 @@ namespace MelonS.GameProto
                     break;
                 }
 
+                // 관측용 목재 더미를 **주민에게서 멀리** 떨어뜨린다 (2026-08-01).
+                //  계기: 주민을 3 → 6 인으로 늘리자 `p1-wood-durability` 가 깨졌다 —
+                //  바닥 더미를 1초 만에 주워 가서 내구도 감소를 관측할 대상이 사라졌다.
+                //  clearStockpiles 만으로는 부족하다(청사진 건설 운반이 여전히 가져간다).
+                //  시나리오가 **자기 관측 대상을 스스로 만들게** 한다 — 맵 구석에 놓으면
+                //  운반 대상 선택(최근접)에서 한참 밀려 관측 시간이 확보된다.
+                //  프로덕션 동작은 건드리지 않는다.
+                case "spawnWoodPile":
+                {
+                    var pos = new Vector3(s.x, s.y, 0f);
+                    var wp = WoodPileEntity.Spawn(pos, 20, WoodPileEntity.EnsureSprite(null));
+                    yield return null;
+                    r.passed = wp != null;
+                    r.detail = wp != null ? $"목재 더미 20 @ ({s.x:F1},{s.y:F1})" : "생성 실패";
+                    break;
+                }
                 case "clearStockpiles":
                 {
                     // 전제조건 세팅용 (2026-07-27).  시작 저장구역이 생기면서 바닥 자원이

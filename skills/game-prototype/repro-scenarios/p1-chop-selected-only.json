@@ -1,53 +1,62 @@
 {
-  "name": "P1 #38 벌목 선택 림만 — 림 하나 선택해 나무 우클릭하면 그 림만 벌목해야 한다 (운영자 '다 같이 감'. f29b10f 배타 예약 회귀가드 — 윈도 전구간에서 타 림 '벌목' 등장 시 FAIL)",
-  "timeoutSec": 90,
-  "steps": [
-    {
-      "op": "wait",
-      "sec": 1.5
-    },
-    {
-      "op": "clearChopDesignations"
-    },
-    {
-      "op": "shot",
-      "name": "00_start"
-    },
-    {
-      "op": "worldclick",
-      "target": "pawn"
-    },
-    {
-      "op": "assert",
-      "probe": "selection",
-      "expect": "any"
-    },
-    {
-      "op": "worldright",
-      "target": "tree"
-    },
-    {
-      "op": "assert",
-      "probe": "selectedChopAssigned",
-      "withinSec": 1.0
-    },
-    {
-      "op": "assert",
-      "probe": "chopDesignations",
-      "min": 1
-    },
-    {
-      "op": "assert",
-      "probe": "selectedOnlyActivity",
-      "contains": "벌목",
-      "withinSec": 12
-    },
-    {
-      "op": "shot",
-      "name": "01_only_selected"
-    }
-  ],
-  "_note": [
-    "clearChopDesignations 전제 (2026-07-27): GameManager 가 첫 화면 생동감을 위해 시작 벌목 6그루를 미리 지정한다.  이 시나리오는 '선택된 림만 벌목하는가'를 보는데, **비선택 림이 그 시작 지정을 처리하는 것**이 위반으로 잡혀 실패했다(실측: 지훈). 테스트가 보려는 건 배타 예약 로직이지 시작 상태가 아니므로, 무관한 변수를 전제조건에서 제거한다."
-  ]
+ "name": "P1 #38 벌목 선택 림만 — 림 하나 선택해 나무 우클릭하면 그 림만 벌목해야 한다 (운영자 '다 같이 감'. f29b10f 배타 예약 회귀가드 — 윈도 전구간에서 타 림 '벌목' 등장 시 FAIL)",
+ "timeoutSec": 90,
+ "steps": [
+  {
+   "op": "wait",
+   "sec": 1.5
+  },
+  {
+   "op": "clearChopDesignations"
+  },
+  {
+   "op": "shot",
+   "name": "00_start"
+  },
+  {
+   "op": "worldclick",
+   "target": "pawn"
+  },
+  {
+   "op": "assert",
+   "probe": "selection",
+   "expect": "any"
+  },
+  {
+   "op": "wait",
+   "sec": 2.0,
+   "_why": [
+    "2026-08-01 6인 확장 — 나무 위에 사람이 겹쳐 서 있으면 worldright 가",
+    "폰을 눌러 지정이 안 된다(실측: at=Pawn(Clone)+Tree_Oak).  주민이",
+    "지나갈 시간을 준다."
+   ]
+  },
+  {
+   "op": "worldright",
+   "target": "tree"
+  },
+  {
+   "op": "assert",
+   "probe": "selectedChopAssigned",
+   "withinSec": 1.0
+  },
+  {
+   "op": "assert",
+   "probe": "chopDesignations",
+   "min": 1
+  },
+  {
+   "op": "assert",
+   "probe": "selectedOnlyActivity",
+   "contains": "벌목",
+   "withinSec": 12
+  },
+  {
+   "op": "shot",
+   "name": "01_only_selected"
+  }
+ ],
+ "_note": [
+  "clearChopDesignations 전제 (2026-07-27): GameManager 가 첫 화면 생동감을 위해 시작 벌목 6그루를 미리 지정한다.  이 시나리오는 '선택된 림만 벌목하는가'를 보는데, **비선택 림이 그 시작 지정을 처리하는 것**이 위반으로 잡혀 실패했다(실측: 지훈). 테스트가 보려는 건 배타 예약 로직이지 시작 상태가 아니므로, 무관한 변수를 전제조건에서 제거한다."
+ ]
 }
