@@ -32,6 +32,9 @@ namespace MelonS.GameProto
         private static readonly Color InactiveBg = MelonS.GameProto.Core.UITheme.BtnInactiveBg;
         private static readonly Color ActiveBg   = MelonS.GameProto.Core.UITheme.BtnActiveBg;
         private static readonly Color TextNormal = MelonS.GameProto.Core.UITheme.TextPrimary;
+        // 단축키 힌트 색 — 밝은 버튼 위에서 읽히도록 **어둡게**.  기존 밝은 회색(0.75)은
+        //  베이지 배경과 대비가 없어 사실상 안 보였다(2026-08-01 확대 실측).
+        private static readonly Color HintCol = new Color(0.38f, 0.32f, 0.24f, 0.95f);
         private static readonly Color TextActive = MelonS.GameProto.Core.UITheme.TextDark;
 
         private Font font;
@@ -281,8 +284,11 @@ namespace MelonS.GameProto
             var ht = hintGo.AddComponent<Text>();
             ht.text = hint;
             ht.font = font;
-            ht.fontSize = 11;
-            ht.color = new Color(0.75f, 0.75f, 0.7f, 0.85f);
+            // 11 → 13 (2026-08-01).  확대 실측에서 단축키 힌트가 **거의 안 보였다** —
+            //  밝은 베이지 버튼 위에 밝은 회색 11pt 라 대비가 사실상 없었다.
+            //  힌트는 '있는데 못 읽는' 상태면 없느니만 못하다.
+            ht.fontSize = 13;
+            ht.color = HintCol;
             ht.alignment = TextAnchor.MiddleCenter;
             var hrt = ht.GetComponent<RectTransform>();
             hrt.anchorMin = new Vector2(0, 0);
@@ -377,7 +383,7 @@ namespace MelonS.GameProto
             // 텍스트 색 (label/hint 둘 다)
             foreach (var t in btn.GetComponentsInChildren<Text>())
             {
-                t.color = active ? TextActive : (t.fontSize >= 18 ? TextNormal : new Color(0.75f, 0.75f, 0.7f, 0.85f));
+                t.color = active ? TextActive : (t.fontSize >= 18 ? TextNormal : HintCol);
             }
         }
     }

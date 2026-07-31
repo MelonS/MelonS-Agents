@@ -98,7 +98,11 @@ namespace MelonS.GameProto
             string stall = rm.StallReason;
             statusText.text = stall != null
                 ? $"연구: {active.nameKr} {active.currentPoints}/{active.requiredPoints} — {stall}"
-                : $"연구: {active.nameKr} {active.currentPoints}/{active.requiredPoints}";
+                // 2026-08-01 — 기술 이름만으로는 **왜 하는지** 안 보인다.
+                //  '연구: 원시 활 0/60' 은 처음 보는 사람에게 아무 의미가 없다.
+                //  효과 설명을 붙이면 연구가 '해야 할 이유가 있는 것'이 된다.
+                : $"연구: {active.nameKr} {active.currentPoints}/{active.requiredPoints}"
+                  ;   // 효과 설명은 붙이지 않는다 — ShortDesc 주석 참조.
             if (progressBar != null)
                 progressBar.fillAmount = Mathf.Clamp01((float)active.currentPoints / active.requiredPoints);
             FitStripToText();
@@ -106,6 +110,20 @@ namespace MelonS.GameProto
 
         /// <summary>스트립 배경을 텍스트 높이에 맞춘다.
         ///
+        /// (2026-08-01 시도 후 철회) 진행바에 효과 설명을 붙이려 했으나 **이 자리는
+        ///  폭이 한정돼 있다** — 전체 문장은 앞부분이 잘리고('가능. 3~5 피해 화살.' 만
+        ///  보임), 18자로 줄여도 여전히 '가능' 만 남았다(둘 다 실측).
+        ///  좁은 자리에 정보를 더 밀어 넣는 대신 **연구 화면(N)** 에서 설명을 보게 두고,
+        ///  진행바는 '무엇을 얼마나' 만 말한다.  헬퍼는 그 화면에서 재사용할 수 있게 남긴다.
+        private static string ShortDesc(string d)
+        {
+            if (string.IsNullOrEmpty(d)) return "";
+            int dot = d.IndexOf('.');
+            string first = dot > 0 ? d.Substring(0, dot) : d;
+            if (first.Length > 18) first = first.Substring(0, 18) + "…";
+            return $"  —  {first}";
+        }
+
         /// 운영자 fb (2026-07-27, 스크린샷): "연구: 원시 활 0/100 — 작업대 필요 (건축 F8)" 이
         /// 두 줄로 감기면서 **두 번째 줄이 배경 밖 잔디 위에 그대로 찍혔다**.
         /// 스트립 높이가 36 고정인데 statusText 는 verticalOverflow=Overflow 라 넘친 줄이
