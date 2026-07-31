@@ -60,14 +60,44 @@ namespace MelonS.GameProto
             float t = Mathf.InverseLerp(SunriseH, SunsetH, h);
             bool day = h >= SunriseH && h <= SunsetH;
 
-            // 태양 고도 sin(0..π): 일출/일몰 0, 정오 1.
-            float alt = day ? Mathf.Sin(t * Mathf.PI) : 0f;
-            // 그림자 방향: 아침(t≈0) 서쪽(−1) → 정오 0 → 저녁(t≈1) 동쪽(+1).
-            float dirX = day ? Mathf.Lerp(-1f, 1f, t) : 0f;
+            // ── 태양 위치와 그림자 축 (2026-07-31 2차 — 물리적으로 다시 세움) ──
+            //
+            //  운영자: "그림자가 축이 안 맞는데?  물리학적으로 말이 안 되게 그리고 있어."
+            //  맞다.  1차 구현은 해가 동↔서로만 움직인다고 두고 그림자를 **가로로만**
+            //  눕혔다(y 성분 0).  그러면 그림자가 지면에 누운 게 아니라 옆으로 미끄러지는
+            //  모양이 된다 — 정오에도 그림자가 발밑이 아니라 좌우 어딘가에 있다.
+            //
+            //  실제 기하:
+            //   · 해는 하늘을 반원으로 지난다.  방위각은 동(일출) → 남(정오) → 서(일몰),
+            //     고도는 0 → 최대 → 0.
+            //   · 그림자는 **해의 정반대 방향**으로, 길이는 1/tan(고도) 에 비례한다.
+            //   · 북반구 탑다운 화면에서 해가 남쪽에 있으므로 그림자는 항상 **북(+y)
+            //     성분**을 갖는다.  정오에는 짧게 북쪽, 아침엔 북서, 저녁엔 북동.
+            //
+            //  그래서 방위각 az 를 -90°(동) → 0°(남) → +90°(서) 로 두고,
+            //  그림자 방향 = (-sin az, +cos az) · 길이.  y 성분이 늘 양수라 화면에서
+            //  '오브젝트 뒤로 눕는다'가 성립한다.
+            //  화면 좌표: +x = 동, +y = 북.  φ = t·π 로 하루를 반원으로 돈다.
+            //   해의 수평 방향  sunDir = ( cos φ, −sin φ )
+            //     φ=0   (일출) → (+1,  0)  동
+            //     φ=π/2 (정오) → ( 0, −1)  남
+            //     φ=π   (일몰) → (−1,  0)  서
+            //   그림자는 그 정반대  dir = ( −cos φ, +sin φ )
+            //     일출 → (−1, 0) 서쪽으로 길게
+            //     정오 → ( 0,+1) 북쪽으로 짧게   ← y 성분이 항상 ≥0 이라 '뒤로 눕는다'
+            //     일몰 → (+1, 0) 동쪽으로 길게
+            //  고도는 sin φ (일출·일몰 0, 정오 1).  길이는 1/tan(고도) 성격이라
+            //  지평선 근처에서 급격히 길어진다 → 아래에서 Lerp 로 유계 근사한다.
+            float phi = t * Mathf.PI;
+            float alt = day ? Mathf.Sin(phi) : 0f;
+            float dirX = day ? -Mathf.Cos(phi) : 0f;
+            float dirY = day ?  Mathf.Sin(phi) : 0f;
 
             // 고도가 낮을수록 길고 옅다.  Mathf.Max 로 0 나눗셈 회피.
+            // 길이 계수 — 고도가 낮을수록 길다(1/tan 의 유계 근사).  방향과 분리해 둔다.
+            float lenF = day ? Mathf.Lerp(1f, 0.18f, alt) : 0f;
             float stretch = day ? Mathf.Lerp(MaxStretch, 1f, alt) : 1f;
-            float offset = day ? dirX * MaxOffset * (1f - alt) : 0f;
+            Vector3 blobOff = new Vector3(dirX, dirY, 0f) * (MaxOffset * lenF);
             // 농도: 기본 알파(0.35)를 그대로 쓰면 잔디 위에서 **스틸로 확인이 안 된다**
             //  (2026-07-31 실측 — 7/12/18시를 정지 상태로 찍어 대조했는데 차이를 눈으로
             //   구분할 수 없었다).  스틸에서 안 보이면 심사자에게도 안 보인다.
@@ -87,7 +117,7 @@ namespace MelonS.GameProto
             {
                 var e = list[i];
                 if (e.t == null) continue;
-                e.t.localPosition = e.baseLocalPos + new Vector3(offset, 0f, 0f);
+                e.t.localPosition = e.baseLocalPos + blobOff;
                 // 가로만 늘린다 — 세로까지 늘리면 발밑에서 떠 보인다.
                 e.t.localScale = new Vector3(e.baseScale * stretch, e.baseScale, 1f);
                 var sr = e.t.GetComponent<SpriteRenderer>();
@@ -120,13 +150,21 @@ namespace MelonS.GameProto
                 if (!show) continue;
 
                 // 높이가 클수록 멀리·길게 눕는다 (project to varying heights).
-                float lean = dirX * (1f - alt) * e.height * 1.1f;
+                // 그림자 벡터 = 단위 방향 x 길이 x 오브젝트 높이.
+                //  y 성분이 항상 ≥0 이라 화면에서 '오브젝트 뒤(북)로 눕는다' 가 성립한다 —
+                //  1차 구현은 y 를 0 으로 두어 옆으로 미끄러지는 모양이었다(운영자 지적).
+                float reach = lenF * e.height * 1.15f;
+                Vector3 v = new Vector3(dirX * reach, dirY * reach * 0.55f, 0f);
+                //  y 를 0.55 로 누르는 이유: 탑다운은 지면을 비스듬히 내려다보는 투영이라
+                //  같은 거리라도 화면상 세로가 짧게 보인다(짧아지기 foreshortening).
+                e.t.localPosition = v + new Vector3(0f, -0.10f, 0f);
+                // 밑변은 제자리에 두고 몸통만 눕는다: 세로를 늘리고 가로는 살짝만.
                 float len = Mathf.Lerp(e.height * 1.25f, e.height * 0.30f, alt);
-                e.t.localPosition = new Vector3(lean, -0.10f, 0f);
-                // 세로를 눌러 '땅에 누운' 형태로.  가로는 기울기만큼만 늘린다.
-                e.t.localScale = new Vector3(1f + Mathf.Abs(lean) * 0.25f, len, 1f);
-                // 기울기 — 밑변을 축으로 눕는 느낌.  각도는 완만하게(과하면 스프라이트가 찢긴다).
-                e.t.localRotation = Quaternion.Euler(0f, 0f, -dirX * (1f - alt) * 22f);
+                e.t.localScale = new Vector3(1f + Mathf.Abs(v.x) * 0.20f, len, 1f);
+                // 기울기 = 그림자가 향하는 방향각.  atan2(x, y) 라 정오(북)엔 0°,
+                //  아침(서)엔 −90° 쪽으로 기운다.  과회전은 스프라이트를 찢으므로 0.35 로 감쇠.
+                float angDeg = Mathf.Atan2(v.x, Mathf.Max(0.01f, v.y)) * Mathf.Rad2Deg;
+                e.t.localRotation = Quaternion.Euler(0f, 0f, -angDeg * 0.35f);
                 var c2 = tint; c2.a = e.baseAlpha * alphaMul;
                 e.sr.color = c2;
             }
