@@ -302,13 +302,15 @@ namespace MelonS.GameProto
         private static readonly System.Collections.Generic.List<PawnNameLabel> s_labels =
             new System.Collections.Generic.List<PawnNameLabel>(16);
 
-        private const float OverlapDx = 1.35f;   // 라벨 폭 ≈ 한 칸 반
-        private const float OverlapDy = 0.70f;   // 라벨 한 덩이 높이
+        // 6인 기준 재조정 (2026-08-01) — 콜로니스트가 3 → 6 으로 늘면서 같은 넓이에
+        //  라벨 밀도가 두 배가 됐다.  겹침 판정 폭을 넓히고 올림 간격을 키운다.
+        private const float OverlapDx = 1.9f;    // 라벨 폭 ≈ 두 칸 (활동 줄이 길다: '농작물 운반')
+        private const float OverlapDy = 1.10f;   // 라벨 한 덩이 높이
         // 한 칸 올림 = **라벨 한 덩이 전체 높이**여야 한다.
         //  0.46 으로 뒀더니 statusGap(0.52)보다 작아서, 올라간 라벨의 활동줄이
         //  아래 라벨의 이름줄 자리에 그대로 떨어졌다(실측) — 비켰는데 여전히 겹친다.
         //  한 덩이 = statusGap(0.52) + 글자 높이(≈0.3).
-        private const float LiftStep = 0.85f;
+        private const float LiftStep = 0.80f;
 
         // 이름줄↔활동줄 간격의 **코드 정본**.  글자 높이(≈0.5 월드유닛)보다 커야
         //  두 줄이 파고들지 않는다.  [SerializeField] 값은 Awake 에서 이 값으로 덮는다.
