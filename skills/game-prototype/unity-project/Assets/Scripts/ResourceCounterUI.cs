@@ -28,6 +28,7 @@ namespace MelonS.GameProto
         private string _wealthSuffix = "";
         private int lastFoodForDays = -1, lastPawnForDays = -1;   // r2 #6 stale 가드
         private int _groundWood;
+        private int _groundFood;   // 바닥에 있는 식량 더미 합계 (식량 줄에 병기)
         private float foodFlashUntil = -10f;
         private float mealsFlashUntil = -10f;
         private float stoneFlashUntil = -10f;
@@ -69,6 +70,10 @@ namespace MelonS.GameProto
                 foreach (var wpile in Object.FindObjectsByType<WoodPileEntity>(FindObjectsSortMode.None))
                     if (wpile != null && !wpile.InStockpile) g += wpile.Wood;
                 if (g != _groundWood) { _groundWood = g; lastWood = -1; }   // 갱신 강제
+                int gf = 0;
+                foreach (var mp in Object.FindObjectsByType<MeatPileEntity>(FindObjectsSortMode.None))
+                    if (mp != null && !mp.InStockpile) gf += mp.Food;
+                if (gf != _groundFood) { _groundFood = gf; lastFood = -1; }   // 식량 줄 갱신 강제
             }
             if (rm.wood != lastWood)
             {
@@ -80,7 +85,15 @@ namespace MelonS.GameProto
             }
             if (rm.food != lastFood)
             {
-                if (foodText != null) foodText.text = $"식량: {rm.food:N0}";
+                // 2026-07-31 — 식량도 **바닥분을 병기**한다 (목재와 같은 어법).
+                //  시작 시 간편식 6더미(60)가 실제로 바닥에 뿌려지는데 HUD 는 `식량: 0`
+                //  만 보여줬다.  영상 내내 '식량 0 / 식사 0' 이라 굶는 콜로니로 읽혔는데,
+                //  사실은 60이 널려 있고 아직 창고에 안 들어갔을 뿐이다.
+                //  목재는 이미 `(+140 바닥)` 을 붙이고 있었다 — 같은 상태를 한쪽만
+                //  숨기고 있었던 셈이다.
+                if (foodText != null) foodText.text = _groundFood > 0
+                    ? $"식량: {rm.food:N0} (+{_groundFood:N0} 바닥)"
+                    : $"식량: {rm.food:N0}";
                 if (lastFood >= 0) foodFlashUntil = Time.unscaledTime + FlashDuration;
                 lastFood = rm.food;
             }

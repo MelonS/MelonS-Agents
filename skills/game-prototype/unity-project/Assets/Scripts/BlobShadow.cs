@@ -38,6 +38,38 @@ namespace MelonS.GameProto
             sr.color = new Color(0f, 0f, 0f, alpha);
             sr.sortingLayerID = bodySr.sortingLayerID;
             sr.sortingOrder = bodySr.sortingOrder - 1;
+
+            // 태양 그림자 (2026-07-31 운영자 "태양의 움직임에 따른 그림자 효과를 구현해야
+            //  하지 않을까?") — 그림자를 등록해 두면 SunShadowDriver 가 시각에 따라
+            //  방향·길이·농도를 함께 움직인다.  등록해 두는 이유는 비용이다:
+            //  매 프레임 FindObjectsByType 로 그림자를 찾으면 개체 수만큼 비싸진다.
+            Register(go.transform, new Vector3(0f, yOffset, 0f), s, alpha);
+        }
+
+        // ── 태양 추적용 등록부 ────────────────────────────────────────────────
+        public struct Entry
+        {
+            public Transform t;
+            public Vector3 baseLocalPos;   // 정오(사람 발밑) 기준 위치
+            public float baseScale;        // 정오 기준 크기
+            public float baseAlpha;
+        }
+
+        private static readonly System.Collections.Generic.List<Entry> _entries =
+            new System.Collections.Generic.List<Entry>(128);
+
+        private static void Register(Transform t, Vector3 pos, float scale, float alpha)
+            => _entries.Add(new Entry { t = t, baseLocalPos = pos, baseScale = scale, baseAlpha = alpha });
+
+        /// <summary>등록된 그림자 목록 (파괴된 것은 호출 시 정리).  드라이버 전용.</summary>
+        public static System.Collections.Generic.List<Entry> Entries
+        {
+            get
+            {
+                for (int i = _entries.Count - 1; i >= 0; i--)
+                    if (_entries[i].t == null) _entries.RemoveAt(i);
+                return _entries;
+            }
         }
 
         private static Sprite GetSprite()

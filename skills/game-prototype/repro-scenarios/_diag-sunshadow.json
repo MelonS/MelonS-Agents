@@ -1,0 +1,76 @@
+{
+ "name": "진단 — 태양 그림자 (정지 상태에서 시각만 변경)",
+ "_why": [
+  "폰이 움직이면 세 시각의 화면을 비교할 수 없다.  timeScale=0 으로 세워 두고",
+  "시각만 바꿔 **같은 자리의 같은 폰**에서 그림자 방향·길이가 달라지는지 본다.",
+  "SunShadowDriver 는 unscaledTime 으로 돌므로 정지 중에도 갱신된다."
+ ],
+ "timeoutSec": 180,
+ "steps": [
+  {
+   "op": "wait",
+   "sec": 1.5
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 6,
+   "_real": "폰들이 집 밖으로 흩어질 시간"
+  },
+  {
+   "op": "ortho",
+   "x": 6.0
+  },
+  {
+   "op": "worldright",
+   "target": "tree"
+  },
+  {
+   "op": "wait",
+   "sec": 4
+  },
+  {
+   "op": "speed",
+   "x": 0
+  },
+  {
+   "op": "setHour",
+   "x": 7
+  },
+  {
+   "op": "wait",
+   "sec": 0.1
+  },
+  {
+   "op": "shot",
+   "name": "s07_morning"
+  },
+  {
+   "op": "setHour",
+   "x": 12
+  },
+  {
+   "op": "wait",
+   "sec": 0.1
+  },
+  {
+   "op": "shot",
+   "name": "s12_noon"
+  },
+  {
+   "op": "setHour",
+   "x": 18
+  },
+  {
+   "op": "wait",
+   "sec": 0.1
+  },
+  {
+   "op": "shot",
+   "name": "s18_evening"
+  }
+ ]
+}
