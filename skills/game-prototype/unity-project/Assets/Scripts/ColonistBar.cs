@@ -110,12 +110,16 @@ namespace MelonS.GameProto
 
         private void Update()
         {
-            // 콜로니스트 수가 바뀌었거나(죽음/스폰) 0.5s 경과 시에만 전체 재구축 (cheap).
-            int count = CountColonists();
-            if (count != lastColonistCount || Time.unscaledTime >= nextRebuildTime)
+            // 0.5s 마다만 전체 재구축.
+            // 2026-08-01 정합성 리뷰 #6 — `CountColonists()` 가 스로틀 **바깥**에 있었다.
+            //  재구축 자체는 0.5초로 막아 놨지만, 그 판정을 하려고 매 프레임
+            //  `FindObjectsByType<PawnEntity>()` 로 씬 전체를 훑고 배열을 할당했다.
+            //  주석이 "(cheap)" 이라고 적혀 있어서 더 오래 살아남은 종류의 비용이다.
+            //  주민 수 변화는 0.5초 늦게 반영돼도 눈에 띄지 않는다 — 스캔을 안으로 옮긴다.
+            if (Time.unscaledTime >= nextRebuildTime)
             {
-                RebuildEntries();
                 nextRebuildTime = Time.unscaledTime + RebuildInterval;
+                RebuildEntries();   // 내부에서 CountColonists 를 한 번만 쓴다
             }
 
             // HP/mood fill 은 매 frame 캐시 ref 로 값만 갱신 (재구축 X, alloc X).

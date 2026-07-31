@@ -57,6 +57,21 @@ namespace MelonS.GameProto
             return SceneManager.GetActiveScene().name == GameSceneName;
         }
 
+        /// <summary>방금 로드된 씬 안에 GameManager 마커가 있는가.
+        ///
+        /// `IsGameScene()` 은 **활성 씬**을 보는데, `sceneLoaded` 시점엔 아직 활성
+        /// 전환 전일 수 있어 그대로 쓸 수 없다.  그래서 로드된 씬의 루트만 훑는다
+        /// (씬 전체 FindObjectsByType 보다 싸고, 다른 씬의 GameManager 를 오인하지도
+        /// 않는다).</summary>
+        private static bool SceneHasGameManager(Scene scene)
+        {
+            if (!scene.IsValid() || !scene.isLoaded) return false;
+            foreach (var root in scene.GetRootGameObjects())
+                if (root != null && root.GetComponentInChildren<GameManager>(true) != null)
+                    return true;
+            return false;
+        }
+
         /// <summary>
         /// Runs <paramref name="spawn"/> when (and only when) the Game scene is
         /// active.  If the Game scene is already active, runs immediately.
@@ -86,10 +101,17 @@ namespace MelonS.GameProto
             {
                 if (fired) return;
 
-                // Only fire for the Game scene.  Use the same robust check:
-                // the just-loaded scene's name, since the active scene may not
-                // be switched to it yet at the moment sceneLoaded fires.
-                bool isGame = scene.name == GameSceneName;
+                // Only fire for the Game scene.
+                //
+                // 2026-08-01 (정합성 리뷰 #10) — 위 클래스 주석과 이 자리의 주석이
+                //  둘 다 "robust to scene-name drift" 라고 약속하는데, 정작 여기서는
+                //  **이름만** 비교하고 있었다.  IsGameScene() 이 가진 GameManager
+                //  마커 폴백이 이 경로엔 없었다.  씬 이름이 바뀌면 이 게이트에 매달린
+                //  40여 개 호출처가 전부 조용히 스폰되지 않는다 — 로그도 예외도 없이.
+                //  이 레포에서 반복되는 '주석은 알고 있었는데 코드가 안 지킨' 유형이다.
+                //  이름 우선(스폰 직후엔 GameManager 가 아직 없을 수 있다),
+                //  실패하면 마커로 확인한다.
+                bool isGame = scene.name == GameSceneName || SceneHasGameManager(scene);
                 if (!isGame)
                 {
                     // Could also be a reload of MainMenu or a test scene — ignore.

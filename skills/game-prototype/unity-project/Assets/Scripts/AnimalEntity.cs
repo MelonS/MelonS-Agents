@@ -135,6 +135,14 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
+            // 씬에 구워진 스탯 대신 **코드 표를 정본으로 되박는다** (2026-08-01 리뷰 #8).
+            //  이전에는 Awake 가 직렬화된 maxHp 를 그대로 읽고 SetSpecies 를 부르지
+            //  않아서, 씬에 배치된 동물들의 스탯이 베이크 시점에 동결돼 있었다.
+            //  즉 SpeciesStats 를 고쳐도 실제 게임에는 반영되지 않고, 런타임 스폰과
+            //  테스트만 새 값을 봤다 — 테스트는 SetSpecies 를 직접 부르기 때문에
+            //  **테스트는 통과하는데 게임은 안 바뀌는** 거짓 확신 조합이 된다.
+            //  GameManager 가 spawnPositions 에 쓰는 것과 같은 직렬화 방어 패턴.
+            SetSpecies(species);
             Hp = maxHp;
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 0f;

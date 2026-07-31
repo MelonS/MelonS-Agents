@@ -60,9 +60,12 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
-            hp = maxHp;
             sr = GetComponent<SpriteRenderer>();
-            if (sr != null) sr.color = TypeColors[(int)type];
+            // 씬에 구워진 값 대신 코드 표를 정본으로 (2026-08-01 리뷰 #8).
+            //  AnimalEntity 와 같은 함정이었다 — Awake 가 직렬화된 maxHp 를 읽고
+            //  SetType 을 부르지 않아, 씬의 광맥 45개가 베이크 시점 스탯에 동결돼
+            //  TypeHpMul 을 고쳐도 실제 게임엔 반영되지 않았다.
+            SetType(type);
         }
 
         private float lastSfxTime = -10f;

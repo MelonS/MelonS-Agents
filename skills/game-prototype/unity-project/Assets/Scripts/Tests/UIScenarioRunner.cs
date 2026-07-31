@@ -186,7 +186,7 @@ namespace MelonS.GameProto.Tests
                 bool clicked = false;
                 if (menu != null && menu.gameObject.activeSelf)
                 {
-                    ClickUIButtonContaining("구조 (Structure)", menu.transform);  // expand category
+                    ClickUIButtonContaining("Structure (구조)", menu.transform);  // expand category
                     clicked = ClickUIButtonContaining("벽 (목재 5)", menu.transform); // pick wall buildable
                 }
                 if (!clicked && bm.CurrentMode != BuildManager.Mode.Wall)

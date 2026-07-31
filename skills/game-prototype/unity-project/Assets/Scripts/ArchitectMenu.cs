@@ -35,10 +35,10 @@ namespace MelonS.GameProto
         //  row-major 로 채움 (the reference sim 카테고리 패널과 동일한 채움 방향).
         private static readonly string[] AllCategoryOrder =
         {
-            "지시 (Orders)",    "구역 (Zone)",
-            "구조 (Structure)", "생산 (Production)",
-            "가구 (Furniture)", "방어 (Security)",
-            "바닥 (Floors)",    "조명 (Lighting)",
+            "Orders (지시)",    "Zone (구역)",
+            "Structure (구조)", "Production (생산)",
+            "Furniture (가구)", "Security (방어)",
+            "Floors (바닥)",    "Lighting (조명)",
         };
 
         // #UI-restyle U7 (Round 5) — share the control bar's exact button palette.
@@ -64,7 +64,7 @@ namespace MelonS.GameProto
             if (cachedAudio != null) cachedAudio.PlaySelect();
         }
 
-        // ── operator fb #1+A: the reference sim "지시 (Orders)" + "구역 (Zone)" categories ──
+        // ── operator fb #1+A: the reference sim "Orders (지시)" + "Zone (구역)" categories ──
         //   In vanilla the reference sim, Mine + Deconstruct live under an ORDERS tab and
         //   Grow-zone lives under a ZONE tab — NOT as standalone screen buttons.
         //   We removed the 3 standalone toggles (Btn_채광/Btn_경작/해체) and fold
@@ -87,8 +87,8 @@ namespace MelonS.GameProto
 
         private static readonly Dictionary<string, OrderItem[]> OrderCategories = new()
         {
-            // 지시 (Orders) — the reference sim Orders tab: Chop + Mine + Deconstruct.
-            ["지시 (Orders)"] = new[]
+            // Orders (지시) — the reference sim Orders tab: Chop + Mine + Deconstruct.
+            ["Orders (지시)"] = new[]
             {
                 // #231 장르 정합 — 벌목 drag 지정(채광과 대칭).  STEP2 로 자동벌목을 끊은
                 //  뒤 벌목 수단이 우클릭뿐이라 불편했던 것 해결: drag 로 나무 여러 그루 지정.
@@ -102,12 +102,12 @@ namespace MelonS.GameProto
                     () => { if (DeconstructDesignation.Instance != null) DeconstructDesignation.Instance.SetMode(true); },
                     () => DeconstructDesignation.Instance != null && DeconstructDesignation.Instance.ModeActive),
             },
-            // 구역 (Zone) — the reference sim Zone tab: Grow zone + Stockpile + Dumping.
+            // Zone (구역) — the reference sim Zone tab: Grow zone + Stockpile + Dumping.
             //   ZONE wave (운영자 "영역지정 필수"): 저장존(Z1)/폐기존(Z3) 추가.  둘 다
             //   StockpileDesignation 의 drag 모드를 켠다 — 저장=일반 preset, 폐기=Low+
             //   Stone-only preset.  buildable 과 동일한 MakeBtn onClick 플러밍(저장은
             //   ▣ active 반영) — Zone 카테고리에 항목 추가만, 다른 카테고리/구조 미변경.
-            ["구역 (Zone)"] = new[]
+            ["Zone (구역)"] = new[]
             {
                 new OrderItem("경작 (P)",
                     () => { if (GrowZoneDesignation.Instance != null) GrowZoneDesignation.Instance.SetMode(true); },
@@ -161,7 +161,7 @@ namespace MelonS.GameProto
         // 레퍼런스 콜로니심 vanilla 패턴 — 카테고리별 buildable 목록
         private static readonly Dictionary<string, (BuildManager.Mode mode, string label, int cost)[]> Categories = new()
         {
-            ["구조 (Structure)"] = new[] {
+            ["Structure (구조)"] = new[] {
                 (BuildManager.Mode.Wall,      "벽 (목재 5)",   5),
                 (BuildManager.Mode.WallStone, "벽 (석재 5)",   5),  // #127
                 (BuildManager.Mode.Door,      "문 (목재 25)",  25),
@@ -188,7 +188,7 @@ namespace MelonS.GameProto
                 (BuildManager.Mode.Fence,     "울타리 (장식용, 목재 1)",     1),
                 (BuildManager.Mode.FenceGate, "울타리 문 (장식용, 목재 1)",  1),
             },
-            // W-M6-03 (B4) — 방어 (Security) category, the vanilla Architect
+            // W-M6-03 (B4) — Security (방어) category, the vanilla Architect
             //   Security tab.  Mirrors EXACTLY how the Fence rows were added under
             //   Structure: a (mode,label,cost) tuple whose onClick is routed by the
             //   EXISTING buildable wiring in RefreshContent through
@@ -202,7 +202,7 @@ namespace MelonS.GameProto
             //   Architect Security category").  NO cover-math (gated).  The barricade
             //   has NO hotkey (surfaced HERE ONLY, like the fence-gate) to avoid the
             //   contended key space (B/F/G/T/Y/N/R/X/M/P/K/J/H/L/E + WASD camera).
-            ["방어 (Security)"] = new[] {
+            ["Security (방어)"] = new[] {
                 (BuildManager.Mode.Barricade, "바리케이드 (목재 5)", 5),
             },
             // W-M4-06 (#21 / W-M4-05 QA flag) — surface the stone/paved floor in the
@@ -210,7 +210,7 @@ namespace MelonS.GameProto
             //   hotkey K, paid 석재 1, V59b move-bonus 1.50x > wood 1.30x) already
             //   EXISTS and is fully functional via the K hotkey; it was only missing
             //   from this menu (qa.json flags_for_next_wave).  It sits as a SECOND
-            //   buildable inside the EXISTING "바닥 (Floors)" flooring category —
+            //   buildable inside the EXISTING "Floors (바닥)" flooring category —
             //   mirroring how WallStone sits alongside Wall under Structure — so both
             //   floor variants are grouped and NO new category is introduced (no
             //   collision with Lane A's Furniture entries).  The existing buildable
@@ -219,11 +219,11 @@ namespace MelonS.GameProto
             //   Mode.FloorStone (CurrentMode == Mode.FloorStone) with ZERO
             //   click-plumbing change.  Cost 1 = stone, matches BuildManager
             //   .floorStoneCost.  Mode.FloorStone is used READ-ONLY (not added/edited).
-            ["바닥 (Floors)"] = new[] {
+            ["Floors (바닥)"] = new[] {
                 (BuildManager.Mode.Floor,      "나무 바닥 (목재 3)", 3),   // 밸런스 A6
                 (BuildManager.Mode.FloorStone, "석재 바닥 (석재 3)", 3),   // 밸런스 A6
             },
-            ["가구 (Furniture)"] = new[] {
+            ["Furniture (가구)"] = new[] {
                 // #154 - wiki: sleeping spot 0.8x / wood bed 1.0x / fine 1.4x
                 (BuildManager.Mode.BedSleepingSpot, "수면 자리 (자재 X)",     0),
                 (BuildManager.Mode.Bed,             "목재 침대 (목재 45)",   45),
@@ -235,7 +235,7 @@ namespace MelonS.GameProto
                 // GDD G3 (2026-07-24): 무덤 — 자재 0·노동 8초.  시신 안장 → 봉분+각인.
                 (BuildManager.Mode.Grave,           "무덤 (자재 X·노동)",     0),
             },
-            ["생산 (Production)"] = new[] {
+            ["Production (생산)"] = new[] {
                 (BuildManager.Mode.Stove, "화덕 (목재 80)", 80),
                 // #229 회귀 수리 — 맨땅 시작 전환 때 스타터 연구대만 제거되고 빌드
                 //  경로가 없어 연구 축(테크 트리 전체)이 신규 게임에서 죽어 있었다.
@@ -249,9 +249,9 @@ namespace MelonS.GameProto
             //   mode (CurrentMode == Mode.Lamp) with ZERO click-plumbing change.
             //   Cost 4 = wood, matches BuildManager.lampCost.  Mode.Lamp already
             //   exists in BuildManager (not added/edited here).  A dedicated
-            //   "조명 (Lighting)" category keeps the lamp out of Production's
+            //   "Lighting (조명)" category keeps the lamp out of Production's
             //   crafting-station grouping and leaves room for future light types.
-            ["조명 (Lighting)"] = new[] {
+            ["Lighting (조명)"] = new[] {
                 (BuildManager.Mode.Lamp, "램프 (목재 20)", 20),   // 밸런스 A4
             },
         };
@@ -260,12 +260,12 @@ namespace MelonS.GameProto
         //   dict 선언 순서와 분리해 표시 순서만 여기서 제어(항목/구조 미변경).
         private static readonly string[] CategoryOrder =
         {
-            "구조 (Structure)",
-            "바닥 (Floors)",
-            "가구 (Furniture)",
-            "생산 (Production)",
-            "조명 (Lighting)",
-            "방어 (Security)",
+            "Structure (구조)",
+            "Floors (바닥)",
+            "Furniture (가구)",
+            "Production (생산)",
+            "Lighting (조명)",
+            "Security (방어)",
         };
 
         // ── v3 audit: per-buildable tooltip (자재/비용) + icon ────────────────
@@ -341,6 +341,13 @@ namespace MelonS.GameProto
         // #260 카테고리 헤더를 한글 전용으로 표시(운영자 fb '완성도/일관성' — UI 가 한글인데
         //  카테고리만 "English (한글)" 혼용이라 미완성 현지화처럼 보임).  키는 영한 혼용 그대로
         //  두되(로직 안정), 표시만 괄호 안 한글 추출.  괄호 없으면 원문 그대로.
+        //
+        // ⚠ 키를 "지시 (Orders)" 처럼 **한글 우선으로 뒤집지 말 것** (2026-08-01).
+        //  화면에는 이미 한글만 나온다 — 영문은 딕셔너리 키 안에만 있다.  소스의
+        //  리터럴만 보고 "탭이 영문 우선"이라 판단해 순서를 뒤집었더니, 이 함수가
+        //  괄호 안(=이제 영문)을 뽑아 **탭이 전부 영문으로 바뀌고** 라벨로 버튼을
+        //  찾는 시나리오가 통째로 깨졌다 (p0-basics-4axis, 17 step FAIL).
+        //  교훈: 렌더된 화면을 안 보고 리터럴만 보고 고치면 멀쩡한 걸 고장 낸다.
         private static string KrCat(string cat)
         {
             int a = cat.IndexOf('('), b = cat.IndexOf(')');
@@ -432,7 +439,7 @@ namespace MelonS.GameProto
             //   Awake 에서 직접 처리).  게임 동작엔 영향 없음 — 평소엔 SetActive(false).
             var args = System.Environment.GetCommandLineArgs();
             bool autoOpen = false;
-            string cat = "구조 (Structure)";
+            string cat = "Structure (구조)";
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "-open-architect") autoOpen = true;

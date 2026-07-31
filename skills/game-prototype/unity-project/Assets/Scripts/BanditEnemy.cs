@@ -30,6 +30,15 @@ namespace MelonS.GameProto
 
         public int Hp { get; private set; }
         public bool IsDead => Hp <= 0;
+
+        /// <summary>이 세션에서 주민이 실제로 쓰러뜨린 밴딧 수.  '격퇴' 판정의 근거.
+        ///  씬 재진입 시 리셋된다 (아래 ResetRunState).</summary>
+        public static int KilledCount { get; private set; }
+
+        /// <summary>씬이 새로 열릴 때 누적값을 지운다 — 안 지우면 이전 판의 전과가
+        ///  새 판의 목표를 공짜로 채워 준다.</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRunState() { KilledCount = 0; }
         // #135 - downed 면 capture 시도 가능.  #277 임계 25%→30% 로 PawnHealth(머리 30%)와
         //  정합(rank3, 운영자 승인).  정수 hp 보정 FloorToInt.
         public bool IsDowned => Hp > 0 && Hp <= Mathf.FloorToInt(maxHp * 0.3f);
@@ -339,7 +348,13 @@ namespace MelonS.GameProto
             }
             if (Hp <= 0)
             {
-                Debug.Log($"[BanditEnemy] killed by {(source != null ? source.name : "?")}");
+                // 실제로 쓰러뜨린 밴딧을 센다 (2026-08-01 정합성 리뷰 #3).
+                //  '첫 습격 격퇴' 목표가 `살아있는 밴딧 == 0` 으로만 판정하고 있었는데,
+                //  밴딧은 60초 무교전이면 스스로 퇴각해 맵 밖에서 소멸한다.  즉
+                //  **습격을 통째로 무시해도 승리**였다.  승리 조건이 무대응으로
+                //  달성되면 그건 조건이 아니다.
+                KilledCount++;
+                Debug.Log($"[BanditEnemy] killed by {(source != null ? source.name : "?")} (누적 {KilledCount})");
                 // RPG 차순위 (2026-06-12) — 호전적 특성: 적 처치 시 무드 +5 (카탈로그
                 //  주석의 'kill mood +5' 실배선).  특성 없으면 무효과.
                 if (source != null)

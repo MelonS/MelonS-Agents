@@ -79,6 +79,13 @@ namespace MelonS.GameProto
 
         private void BuildTree()
         {
+            // `techs` 는 public List 라 **직렬화된다** — 씬에 한 번이라도 구워지면
+            //  여기서 Add 만 하던 코드가 목록을 두 배로 불린다 (2026-08-01 리뷰 #8).
+            //  지금은 씬에 비어 있어 증상이 없지만, 누군가 인스펙터에서 한 번
+            //  건드리는 순간 연구 목록이 중복되고 목표 판정까지 어긋난다.
+            //  한 줄로 막을 수 있는 일을 조건에 맡기지 않는다.
+            techs.Clear();
+
             // Tier 1 (no prerequisites)
             // #200 truth-in-UI fix: description said "12 dmg 화살" but pawns actually
             //  shoot 3-5 dmg arrows (PawnUtilityAI rDmg), tuned to the small enemy HP

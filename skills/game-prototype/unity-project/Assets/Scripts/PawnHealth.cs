@@ -152,7 +152,25 @@ namespace MelonS.GameProto
                     // Spread bleed damage across vital parts proportionally —
                     //  bleed drains the source part itself first then random
                     //  redistribution to torso/head if part is below 30%.
-                    p.hp = Mathf.Max(0, p.hp - Mathf.CeilToInt(p.bleedRate));
+                    //
+                    // 2026-08-01 (정합성 리뷰 #5) — **위 주석이 설명하는 재분배가
+                    //  코드에 없었다.**  출혈은 부위 자체만 깎았고, CheckDeath 는
+                    //  머리/몸통만 본다.  그래서 팔다리 네 곳이 전부 0 이 된 폰이
+                    //  죽지도 쓰러지지도 않고 계속 일했고, 머리·몸통 직격(40%)이
+                    //  아니면 **과다출혈사가 원천적으로 불가능**했다.
+                    //  레퍼런스 콜로니심에서 출혈은 부위가 아니라 전신의 문제다.
+                    //  이 구조에서 가장 가까운 근사: 부위가 더 못 받으면 남은 양이
+                    //  몸통으로 넘어간다.  초반 전투 밸런스는 그대로 두고(부위가
+                    //  버티는 동안은 종전과 동일), 방치된 출혈만 치명적이 된다.
+                    int tick = Mathf.CeilToInt(p.bleedRate);
+                    int absorbed = Mathf.Min(p.hp, tick);
+                    p.hp -= absorbed;
+                    int spill = tick - absorbed;
+                    if (spill > 0 && p.id != PartId.Torso && p.id != PartId.Head)
+                    {
+                        var torsoPart = parts[(int)PartId.Torso];
+                        torsoPart.hp = Mathf.Max(0, torsoPart.hp - spill);
+                    }
                     // #277 출혈 감쇠 0.05→0.15: 2.5 출혈이 50초→~17초에 멈춰 the reference sim
                     //  '출혈 후 안정화' 정합 + 초기 death-spiral 완화 (rank11, 승인).
                     p.bleedRate = Mathf.Max(0f, p.bleedRate - 0.15f);

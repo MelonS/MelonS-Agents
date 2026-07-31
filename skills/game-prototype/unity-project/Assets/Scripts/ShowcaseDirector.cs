@@ -140,13 +140,13 @@ namespace MelonS.GameProto
 
             return new List<Group>
             {
-                new Group { mode = BuildManager.Mode.Floor,      cat = "바닥 (Floors)",    idx = 0, cells = floors },
-                new Group { mode = BuildManager.Mode.Wall,       cat = "구조 (Structure)", idx = 0, cells = walls },
-                new Group { mode = BuildManager.Mode.Door,       cat = "구조 (Structure)", idx = 2, cells = new List<Vector2Int>{ Door } },
-                new Group { mode = BuildManager.Mode.Bed,        cat = "가구 (Furniture)", idx = 1, cells = new List<Vector2Int>(Beds) },
-                new Group { mode = BuildManager.Mode.Stove,      cat = "생산 (Production)",idx = 0, cells = new List<Vector2Int>{ Stove } },
-                new Group { mode = BuildManager.Mode.TableChair, cat = "가구 (Furniture)", idx = 3, cells = new List<Vector2Int>{ Table } },
-                new Group { mode = BuildManager.Mode.Lamp,       cat = "조명 (Lighting)",  idx = 0, cells = new List<Vector2Int>(Lamps) },
+                new Group { mode = BuildManager.Mode.Floor,      cat = "Floors (바닥)",    idx = 0, cells = floors },
+                new Group { mode = BuildManager.Mode.Wall,       cat = "Structure (구조)", idx = 0, cells = walls },
+                new Group { mode = BuildManager.Mode.Door,       cat = "Structure (구조)", idx = 2, cells = new List<Vector2Int>{ Door } },
+                new Group { mode = BuildManager.Mode.Bed,        cat = "Furniture (가구)", idx = 1, cells = new List<Vector2Int>(Beds) },
+                new Group { mode = BuildManager.Mode.Stove,      cat = "Production (생산)",idx = 0, cells = new List<Vector2Int>{ Stove } },
+                new Group { mode = BuildManager.Mode.TableChair, cat = "Furniture (가구)", idx = 3, cells = new List<Vector2Int>{ Table } },
+                new Group { mode = BuildManager.Mode.Lamp,       cat = "Lighting (조명)",  idx = 0, cells = new List<Vector2Int>(Lamps) },
             };
         }
 
@@ -304,9 +304,9 @@ namespace MelonS.GameProto
                     if (ab != null) yield return ClickButton(ab); else menu.Toggle();
                     yield return Wait(0.35f);
                 }
-                if (!IsCategoryOpen("구역 (Zone)", menu.transform))
+                if (!IsCategoryOpen("Zone (구역)", menu.transform))
                 {
-                    var cb = FindCategoryButton("구역 (Zone)", menu.transform);
+                    var cb = FindCategoryButton("Zone (구역)", menu.transform);
                     if (cb != null) yield return ClickButton(cb);
                     yield return Wait(0.3f);
                 }

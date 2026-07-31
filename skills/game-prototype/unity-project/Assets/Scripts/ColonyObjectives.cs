@@ -134,7 +134,11 @@ namespace MelonS.GameProto
             objectives.Add(new Objective {
                 label = "첫 습격 격퇴",
                 done = () => RaidRepelled(),
-                progress = () => RaidHappened() ? (LiveBandits() == 0 ? "1/1" : "교전 중") : "0/1",
+                // 진행도는 판정과 같은 근거를 써야 한다 — 아니면 "1/1 인데 미달성"
+                //  같은 자기모순이 화면에 뜬다.
+                progress = () => !RaidHappened() ? "0/1"
+                                 : LiveBandits() > 0 ? "교전 중"
+                                 : BanditEnemy.KilledCount > 0 ? "1/1" : "0/1",
             });
         }
 
@@ -249,7 +253,12 @@ namespace MelonS.GameProto
         }
 
         // 이번 습격에서 **실제로 밴딧을 본 적이 있는가**.  아래 주석 참조.
+        //  static 이라 씬을 다시 열어도 남는다 — 새 판이 이전 판의 래치를 물려받으면
+        //  "본 적 없는 밴딧을 격퇴" 가 성립한다.  씬 로드 때 지운다 (리뷰 #3).
         private static bool sawBandit;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRunState() { sawBandit = false; }
 
         private static bool RaidRepelled()
         {
@@ -261,8 +270,15 @@ namespace MelonS.GameProto
             //  '격퇴'로 판정됐다.  화면에는 밴딧이 오는 중인데 우상단엔 '습격 격퇴!' 가
             //  떴다 — 목표가 거짓말을 한다.
             //  이제 **밴딧을 실제로 본 뒤에** 0이 되어야 격퇴로 친다.
+            // 2026-08-01 (정합성 리뷰 #3) — 그 래치로도 부족했다.  `sawBandit` 은
+            //  "봤다" 만 증명한다.  밴딧은 60초 동안 교전이 없으면 스스로 퇴각해
+            //  맵 밖에서 소멸하므로(BanditEnemy 퇴각 로직), 습격을 **통째로 무시하고
+            //  숨어만 있어도** 잠시 뒤 살아있는 밴딧이 0이 되어 '격퇴' 가 떴다.
+            //  이 목표는 승리 조건이다 — 무대응으로 달성되면 조건이 아니다.
+            //  이제 실제로 **한 명이라도 쓰러뜨렸을 것**을 요구한다.
             if (LiveBandits() > 0) { sawBandit = true; return false; }
             if (!sawBandit) return false;
+            if (BanditEnemy.KilledCount <= 0) return false;
             foreach (var p in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
                 if (p != null && !p.IsDead) return true;
             return false;

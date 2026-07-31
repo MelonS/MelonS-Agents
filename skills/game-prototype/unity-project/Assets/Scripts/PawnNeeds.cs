@@ -853,9 +853,22 @@ namespace MelonS.GameProto
                     _lastNoFoodAlert = Time.unscaledTime;
                     AlertStackUI.Notify("식량 없음 — 굶는 주민 발생", 2);
                 }
-                FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
-                                   "먹을 것 없음!", new Color(0.95f, 0.65f, 0.3f, 1f));
-                Debug.Log($"[Eat] {GetComponent<PawnEntity>()?.PawnName ?? name} 음식원 전무 food={food:F0}");   // 관측성 (아사 진단)
+                // 재시도 쿨다운을 여기서도 건다 (2026-08-01 정합성 리뷰 #7).
+                //  이 분기는 `eatSuppressUntil` 을 설정하지 않고 return 해서, 먹을 게
+                //  하나도 없는 동안 **배고픈 주민마다 매 프레임** 전체 씬 스캔 2회 +
+                //  FloatingText GameObject 생성 + 로그가 돌았다.  경보만 30초 스로틀이
+                //  걸려 있어 조용해 보였을 뿐이다.  콜로니가 가장 취약한 순간에 전
+                //  주민이 동시에 발동하는 death-spiral 증폭기였다.
+                //  아래 walk-timeout 경로는 이미 같은 방식으로 쿨다운을 건다 —
+                //  두 경로가 달랐던 것 자체가 버그의 형태다.
+                bool firstNotice = Time.time >= eatSuppressUntil;
+                eatSuppressUntil = Time.time + eatRetryCooldown;
+                if (firstNotice)
+                {
+                    FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
+                                       "먹을 것 없음!", new Color(0.95f, 0.65f, 0.3f, 1f));
+                    Debug.Log($"[Eat] {GetComponent<PawnEntity>()?.PawnName ?? name} 음식원 전무 food={food:F0}");   // 관측성 (아사 진단)
+                }
                 return;  // 물리 음식원 전무 → 순간이동 금지, 굶주림 유지
             }
 

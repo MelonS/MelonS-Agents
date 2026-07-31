@@ -223,10 +223,8 @@ namespace MelonS.GameProto
             //  회복(치료로 머리 HP>30%)되면 IsDowned=false 가 돼 자동 재개.
             if (health != null && health.IsDowned)
             {
-                chopper?.ClearTask();
-                gatherer?.ClearTask(); hunter?.ClearTask(); cook?.ClearTask();
-                hauler?.ClearTask(); builder?.ClearTask(); miner?.ClearTask();
-                doctor?.ClearTask(); harvester?.ClearTask();
+                ClearAllWorkerTasks();   // 나열 → 순회 (smith/burier 누락으로 다운된
+                                         //  폰이 계속 매장 작업을 들고 있었다)
                 movement?.ClearTarget();
                 return;
             }
@@ -403,15 +401,9 @@ namespace MelonS.GameProto
                 return;
             }
 
-            if (movement.IsMoving || chopper.HasTask) return;
-            if (gatherer != null && gatherer.HasTask) return;
-            if (hunter != null && hunter.HasTask) return;
-            if (cook != null && cook.HasTask) return;
-            if (hauler != null && hauler.HasTask) return;
-            if (builder != null && builder.HasTask) return;
-            if (miner != null && miner.HasTask) return;
-            if (doctor != null && doctor.HasTask) return;
-            if (harvester != null && harvester.HasTask) return;  // 감사 rank2: 누락→수확 중 우왕좌왕 fix
+            // 나열 → 순회 (2026-08-01).  이 자리에도 smith/burier 가 빠져 있어
+            //  제작·매장 중인 폰이 매 결정 틱마다 새 작업을 잡아 갔다.
+            if (movement.IsMoving || AnyWorkerHasTask()) return;
 
             // #126 → 운영자 fb fix: Schedule slot 이 work 를 hard-block 하면
             //  startHour=6 (Sleep) 일 때 nothing 하는 회귀 발생.
@@ -468,6 +460,67 @@ namespace MelonS.GameProto
             }
         }
 
+
+        // ── 워커 목록 정본 ──────────────────────────────────────────────
+        //
+        // 이 배열이 **유일한 목록**이다.  워커를 추가하면 여기 한 줄만 늘리면 되고,
+        //  '어느 판정에서 빠뜨렸나' 를 다시 세어 볼 필요가 없다.
+        //  나열을 세 곳에 복붙하던 시절, 세 곳 모두 smith 와 burier 를 빠뜨렸고
+        //  그 탓에 무기 제작이 구조적으로 완료 불가능했다 (리뷰 #9).
+        //
+        // IWorkerTask 같은 인터페이스를 새로 도입하지 않는 이유: 워커 11종이 이미
+        //  각자 `HasTask` / `ClearTask()` 를 같은 이름으로 갖고 있어서, 배열 하나로
+        //  충분하고 기존 코드를 건드리지 않는다.  (연구는 워커 컴포넌트가 없는
+        //  진짜 예외라 HasRealActivity 에서 따로 본다 — 그 주석 참조.)
+        private System.Func<bool>[] workerHasTask;
+        private System.Action[] workerClear;
+
+        private void EnsureWorkerTable()
+        {
+            if (workerHasTask != null) return;
+            if (smith == null) smith = GetComponent<PawnWeaponsmith>();
+            if (burier == null) burier = GetComponent<PawnBurier>();
+            workerHasTask = new System.Func<bool>[]
+            {
+                () => chopper   != null && chopper.HasTask,
+                () => gatherer  != null && gatherer.HasTask,
+                () => hunter    != null && hunter.HasTask,
+                () => cook      != null && cook.HasTask,
+                () => hauler    != null && hauler.HasTask,
+                () => harvester != null && harvester.HasTask,
+                () => builder   != null && builder.HasTask,
+                () => miner     != null && miner.HasTask,
+                () => doctor    != null && doctor.HasTask,
+                () => smith     != null && smith.HasTask,
+                () => burier    != null && burier.HasTask,
+            };
+            workerClear = new System.Action[]
+            {
+                () => chopper?.ClearTask(),   () => gatherer?.ClearTask(),
+                () => hunter?.ClearTask(),    () => cook?.ClearTask(),
+                () => hauler?.ClearTask(),    () => harvester?.ClearTask(),
+                () => builder?.ClearTask(),   () => miner?.ClearTask(),
+                () => doctor?.ClearTask(),    () => smith?.ClearTask(),
+                () => burier?.ClearTask(),
+            };
+        }
+
+        /// <summary>워커 11종 중 하나라도 작업을 들고 있는가.</summary>
+        private bool AnyWorkerHasTask()
+        {
+            EnsureWorkerTable();
+            for (int i = 0; i < workerHasTask.Length; i++)
+                if (workerHasTask[i]()) return true;
+            return false;
+        }
+
+        /// <summary>워커 11종의 작업을 전부 놓는다 (다운·사망 시).</summary>
+        private void ClearAllWorkerTasks()
+        {
+            EnsureWorkerTable();
+            for (int i = 0; i < workerClear.Length; i++) workerClear[i]();
+        }
+
         // 떠도는중 판정: 실제 작업 task / 생존 필요 / 징집·수동조작 중이면 "활동 중"
         //  → pacing 안 함 + anchor 해제.  하나도 없으면 idle → 근처 타일 왕복 대상.
         private bool HasRealActivity()
@@ -483,15 +536,7 @@ namespace MelonS.GameProto
             if (needs != null && (needs.IsSleeping || needs.IsBreaking || needs.IsEating
                 || needs.IsForcedResting || needs.HasAutoSleepOrder))
                 return true;
-            if (chopper != null && chopper.HasTask) return true;
-            if (gatherer != null && gatherer.HasTask) return true;
-            if (hunter != null && hunter.HasTask) return true;
-            if (cook != null && cook.HasTask) return true;
-            if (hauler != null && hauler.HasTask) return true;
-            if (harvester != null && harvester.HasTask) return true;
-            if (builder != null && builder.HasTask) return true;
-            if (miner != null && miner.HasTask) return true;
-            if (doctor != null && doctor.HasTask) return true;
+            if (AnyWorkerHasTask()) return true;
             // 연구 (2026-07-31) — 연구는 **워커 컴포넌트가 없는 유일한 작업**이라 여기서
             //  빠져 있었고, 그래서 연구 중인 림이 '유휴'로 분류됐다.  유휴로 분류되면
             //  아래 idle pacing 이 0.8초마다 근처 타일로 hop 시키는데, 그게 연구자를

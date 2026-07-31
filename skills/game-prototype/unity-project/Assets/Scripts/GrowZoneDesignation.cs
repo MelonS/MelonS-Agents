@@ -102,7 +102,7 @@ namespace MelonS.GameProto
 
         // ── operator fb #1 (2026-05-31): the standalone "경작 (P)" toggle button
         //   was REMOVED.  In the reference sim, Grow zone lives inside the Architect menu's
-        //   구역 (Zone) category, not as a standalone screen button.  The grow-zone
+        //   Zone (구역) category, not as a standalone screen button.  The grow-zone
         //   DESIGNATION logic below is unchanged and is now invoked from
         //   ArchitectMenu (Zone → 경작 → GrowZoneDesignation.Instance.SetMode(true)).
         //   The P HOTKEY is preserved.  All toggle-button UI fields / builders /
@@ -763,7 +763,7 @@ namespace MelonS.GameProto
 
         // operator fb #1: the standalone "Btn_경작" toggle button + its
         //  EnsureToggleButton / RefreshToggleVisual / FindCanvas helpers were
-        //  removed.  Grow zone is now entered from ArchitectMenu's 구역 (Zone)
+        //  removed.  Grow zone is now entered from ArchitectMenu's Zone (구역)
         //  category (or the P hotkey).  The designation logic above is unchanged.
 
         // ---- nested records --------------------------------------------------
