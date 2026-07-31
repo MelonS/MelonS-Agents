@@ -100,4 +100,20 @@ MSG
   exit 1
 fi
 
+# Third-party trademarks used to describe OUR output.  The rule lived in the
+# operator contract and in agent memory, but nothing enforced it, so it leaked
+# into two code comments and two art docs (found 2026-08-01).  This reads the
+# staged blobs, so it sees exactly what the commit would publish.
+SCRUB="$REPO_ROOT/scripts/ip-scrub.py"
+if [[ -f "$SCRUB" ]] && ! "$PY" "$SCRUB" --staged --check; then
+  cat >&2 <<'MSG'
+
+[parity-hook] commit BLOCKED — 타사 상표가 우리 산출물 설명에 남아 있다 (위 목록).
+              장르 표현으로 바꾸거나, 명목적 사용이면 scripts/ip-scrub.py 의 ALLOW 에
+              경로와 사유를 등록하라.
+              One-off override: PARITY_HOOK_DISABLED=1 git commit ...
+MSG
+  exit 1
+fi
+
 exit 0

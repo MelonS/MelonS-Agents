@@ -36,7 +36,7 @@ namespace MelonS.GameProto.EditorTools
             }
             // L1 (2026-07-24): 신규 스프라이트(로브 d/e/f + 침엽 a/b) 임포트 보정 —
             //  신규 png 기본 임포트가 Multiple 이면 로드 null (기존 교훈 동일).
-            // 아트 v3 (2026-07-25 운영자 "림월드식·셀당 64"): 페인털리 64×96 수종
+            // 아트 v3 (2026-07-25 운영자 방향: 정통 콜로니 심 룩·셀당 64): 페인털리 64×96 수종
             //  스프라이트 — FLUX 생성+큐레이션.  PPU 64 = 1×1.5칸 유지.
             foreach (var np in new[] { "flora64_oak.png", "flora64_birch.png",
                                        "flora64_maple.png", "flora64_pine.png",

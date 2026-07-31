@@ -82,7 +82,7 @@ namespace MelonS.GameProto.EditorTools
 
             // 4 tile asset (Day 39+40)
             Directory.CreateDirectory("Assets/Tiles");
-            // 아트 v3 (2026-07-24 운영자 "림월드식·셀당 64"): 32px → 64px 페인털리
+            // 아트 v3 (2026-07-24 운영자 방향: 정통 콜로니 심 룩·셀당 64): 32px → 64px 페인털리
             //  세대 교체.  FLUX 심리스(오프셋+페더 패치 보정) + v3.1 지형 톤 클램프
             //  (S≤0.45, V×0.90).  잔디 4변형 = 단일 마스터의 wrap-roll 파생이라
             //  톤 동일 보장.  변형 수·슬롯 구조는 v2 와 동일 (rng 체인 무접촉).
