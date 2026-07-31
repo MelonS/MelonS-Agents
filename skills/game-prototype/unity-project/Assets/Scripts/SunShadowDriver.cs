@@ -145,33 +145,34 @@ namespace MelonS.GameProto
                     indoors = rd.IsRoofed(Mathf.FloorToInt(e.host.position.x),
                                           Mathf.FloorToInt(e.host.position.y));
                 }
+                // 스프라이트 동기화 — 나무는 Awake **이후** SetSpecies 로 종별
+                //  스프라이트가 교체된다(소나무/자작/참나무/단풍/가문비).  그림자가 옛
+                //  스프라이트를 들고 있으면 실루엣도 밑변 위치도 어긋난다.
+                if (e.hostSr != null && e.sr != null && e.sr.sprite != e.hostSr.sprite)
+                {
+                    e.sr.sprite = e.hostSr.sprite;
+                    if (e.hostSr.sprite != null && e.sr.material != null)
+                    {
+                        e.sr.material.SetFloat("_PivotY", -e.hostSr.sprite.bounds.extents.y);
+                        e.sr.material.SetFloat("_Height", e.hostSr.sprite.bounds.size.y);
+                    }
+                }
+
                 bool show = day && !indoors;
                 if (e.t.gameObject.activeSelf != show) e.t.gameObject.SetActive(show);
                 if (!show) continue;
 
-                // ── 밑변 회전 (2026-07-31 3차 — 운영자 '축이 안 맞는다') ──────
-                //  이전엔 그림자를 통째로 평행이동(localPosition = v)했다.  스프라이트
-                //  피벗이 중앙이라 **그림자 한가운데**가 그 지점으로 갔고, 그래서
-                //  줄기 바닥과 그림자 시작점이 끊겨 '옆으로 밀린' 느낌이 났다.
-                //  이제 t 는 밑변에 고정된 피벗 노드다 — 위치는 건드리지 않고
-                //  **각도와 길이만** 준다.  모든 그림자가 같은 점에서 같은 각도로 출발한다.
-                //
-                //  각도: 그림자가 향하는 방위를 화면 각으로.  atan2(dirX, dirY) 는
-                //   정오(북) 0°, 아침(서) −90°, 저녁(동) +90°.  스프라이트는 위로
-                //   서 있으므로 그대로 이 각만큼 눕히면 된다(감쇠 없이 — 감쇠를 주면
-                //   오브젝트마다 축이 어긋나 보인다).
-                float angDeg = Mathf.Atan2(dirX, Mathf.Max(0.0001f, dirY)) * Mathf.Rad2Deg;
-                //  탑다운 투영 보정: 화면 세로는 실제 거리보다 짧게 보이므로 각을 조금 벌린다.
-                angDeg = Mathf.Clamp(angDeg * 1.15f, -82f, 82f);
+                // ── 전단량 (밑변 고정, 윗변만 민다) ──────────────────────────
+                //  회전이 아니다 — 밑변은 셰이더가 붙들고 있으므로 여기서는 **윗변을
+                //  얼마나 밀지**만 정한다.  그래서 접지점이 절대 발밑에서 떨어지지 않는다.
+                //   길이 ∝ 물체 높이 x 태양 고도 계수.  세로는 탑다운 투영이라 눌러 둔다.
+                float reach = e.height * Mathf.Lerp(0.30f, 1.60f, lenF);
+                e.sr.material.SetFloat("_ShearX", dirX * reach);
+                e.sr.material.SetFloat("_ShearY", dirY * reach * 0.55f);
+                //  스케일·회전은 건드리지 않는다 (전단이 형태를 만든다).
                 e.t.localPosition = Vector3.zero;
-                e.t.localRotation = Quaternion.Euler(0f, 0f, -angDeg);
-
-                //  길이 ∝ 물체 높이 (운영자: 사슴 그림자가 나무만큼 길면 안 된다).
-                //   height 는 오브젝트 높이 배수 — 나무 1.4 / 동물 0.45 / 사람 0.5.
-                //   lenF 는 태양 고도에 따른 공통 배수라 **모든 그림자가 같은 비율로**
-                //   길어지고 짧아진다.  세로는 탑다운 투영이라 0.62 로 눌러 둔다.
-                float len = e.height * Mathf.Lerp(0.35f, 1.55f, lenF) * 0.62f;
-                e.t.localScale = new Vector3(1f, len, 1f);
+                e.t.localRotation = Quaternion.identity;
+                e.t.localScale = Vector3.one;
 
                 var c2 = tint; c2.a = e.baseAlpha * alphaMul;
                 e.sr.color = c2;

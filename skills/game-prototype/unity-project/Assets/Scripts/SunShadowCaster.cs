@@ -33,6 +33,8 @@ namespace MelonS.GameProto
             public Transform t;          // 그림자 트랜스폼
             public SpriteRenderer sr;
             public Transform host;       // 원본 (지붕 판정용 좌표)
+            public SpriteRenderer hostSr;   // 원본 렌더러 — 스프라이트가 바뀌면 따라간다
+            public Transform sprite;        // 그림자 스프라이트 노드 (피벗의 자식)
             public float height;         // 오브젝트 '높이' — 투영 길이 배수
             public float baseAlpha;
         }
@@ -48,34 +50,32 @@ namespace MelonS.GameProto
             if (body == null || body.sprite == null) return;
             if (host.transform.Find("SunShadow") != null) return;   // 멱등
 
-            // ── 피벗 정렬 (2026-07-31 3차) ──────────────────────────────────
-            //  운영자: "그림자가 옆으로 평행이동된 느낌.  줄기 중심과 그림자 중심이
-            //  이어지지 않는다.  축이 틀리면 바로 어색함을 느낀다."  정확한 진단이다.
-            //
-            //  원인: 스프라이트 피벗이 중앙(0.5,0.5)이라 `localPosition = v` 로 옮기면
-            //  **그림자 한가운데**가 그 지점으로 간다.  그래서 줄기 바닥과 그림자
-            //  시작점이 끊기고, 회전도 중앙 기준이라 오브젝트마다 축이 미세하게 어긋난다.
-            //
-            //  해결: 그림자를 **피벗 노드의 자식**으로 둔다.
-            //    pivotGo : 오브젝트의 밑변(발/줄기 바닥)에 고정 — 여기서 회전한다
-            //    go      : 그 안에서 위로 half 만큼 올려 둔다 (스프라이트 아래 끝이 축)
-            //  이러면 회전·신축이 모두 **밑변 한 점**을 기준으로 일어나므로,
-            //  모든 그림자가 같은 각도로 같은 점에서 출발한다.
-            float halfH = body.sprite.bounds.extents.y;
-            var pivotGo = new GameObject("SunShadowPivot");
-            pivotGo.transform.SetParent(host.transform, false);
-            pivotGo.transform.localPosition = new Vector3(0f, -halfH, 0f);   // 밑변
-
+            // ── 전단(shear) 방식 (2026-07-31 4차, 리서치 반영) ────────────────
+            //  회전으로 눕히던 것을 버린다.  2D 탑다운 그림자의 표준은 **전단**이다:
+            //   · 밑변은 고정 — 발/밑동에 붙어 있어야 한다
+            //   · 윗변만 광원 반대쪽으로 밀어낸다
+            //  회전은 밑변까지 돌려 물체가 '쓰러진' 모양이 되고 접지점이 떨어진다.
+            //  그래서 운영자가 세 번 "축이 안 맞는다"고 지적했다.
+            //  Unity Transform 은 전단을 지원하지 않으므로 버텍스 셰이더로 한다.
             var go = new GameObject("SunShadow");
-            go.transform.SetParent(pivotGo.transform, false);
-            go.transform.localPosition = new Vector3(0f, halfH, 0f);         // 스프라이트 복원
+            go.transform.SetParent(host.transform, false);
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = body.sprite;
-            sr.color = new Color(0f, 0f, 0f, alpha);
             sr.sortingLayerID = body.sortingLayerID;
-            sr.sortingOrder = body.sortingOrder - 2;   // 본체와 접지 타원 아래
-            //  드라이버는 **피벗 노드**를 돌린다 (그림자 노드가 아니라).
-            _list.Add(new Entry { t = pivotGo.transform, sr = sr, host = host.transform,
+            sr.sortingOrder = body.sortingOrder - 2;
+
+            var sh = Shader.Find("MelonS/SpriteShadowShear");
+            if (sh != null)
+            {
+                // 인스턴스 머티리얼 — 오브젝트마다 전단량이 달라 공유할 수 없다.
+                sr.material = new Material(sh);
+                sr.material.SetFloat("_PivotY", -body.sprite.bounds.extents.y);
+                sr.material.SetFloat("_Height", body.sprite.bounds.size.y);
+            }
+            sr.color = new Color(0f, 0f, 0f, alpha);
+
+            _list.Add(new Entry { t = go.transform, sr = sr, host = host.transform,
+                                  hostSr = body, sprite = go.transform,
                                   height = height, baseAlpha = alpha });
         }
 
