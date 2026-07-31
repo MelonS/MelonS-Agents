@@ -124,6 +124,7 @@ namespace MelonS.GameProto
             if (SceneManager.GetActiveScene().name != "Game") return;
             if (Object.FindFirstObjectByType<CloudShadowDriver>() == null)
                 new GameObject("__CloudShadows__").AddComponent<CloudShadowDriver>();
+                Debug.Log("[Boot] CloudShadowDriver 부착");
         }
     }
 }

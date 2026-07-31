@@ -86,6 +86,7 @@ namespace MelonS.GameProto
             var cam = Camera.main;
             if (cam != null && cam.GetComponent<ColorGradeDriver>() == null)
                 cam.gameObject.AddComponent<ColorGradeDriver>();
+                Debug.Log("[Boot] ColorGradeDriver 부착");
         }
     }
 }

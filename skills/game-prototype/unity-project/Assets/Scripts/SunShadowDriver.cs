@@ -44,6 +44,7 @@ namespace MelonS.GameProto
                 var go = new GameObject("~SunShadowDriver");
                 DontDestroyOnLoad(go);
                 go.AddComponent<SunShadowDriver>();
+                Debug.Log("[Boot] SunShadowDriver 부착");
             });
         }
 
