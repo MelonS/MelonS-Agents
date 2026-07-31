@@ -23,7 +23,7 @@ namespace MelonS.GameProto
         [SerializeField] private Vector3 offset = new Vector3(0, 1.16f, 0);
         // 0.34 → 0.40 (2026-07-31): 활동 줄을 0.60배 → 0.85배로 키웠으므로 줄간격도 함께
         //  벌린다.  하나만 바꾸면 이름줄 아래쪽과 활동줄 윗쪽이 서로 파고든다.
-        [SerializeField] private float statusGap = 0.40f;   // name↔status 줄간격 (#3.1)
+        [SerializeField] private float statusGap = 0.52f;   // name↔status 줄간격 (#3.1)
         [SerializeField] private float fontSize = 64;
         // 2026-07-29 라이브 캡처 — 이름표가 **판독 불가**였다 ("지훈"이 뭉개진 얼룩).
         //  characterSize 0.05 × fontSize 64 는 월드 높이 ~0.32 유닛이고, 기본 줌
@@ -81,7 +81,20 @@ namespace MelonS.GameProto
             //  자기 라벨 **한가운데를** 지나간다 — 실측 스크린샷에서 집 안에 모인 세 명의
             //  이름·활동 4줄이 서로 겹쳐 판독 불가한 덩어리가 됐다.
             //  간격을 한 덩이보다 크게 벌리고, 콜로니스트가 3명이므로 단도 3개로 둔다.
-            _labelStagger = (s_labelTier++ % 3) * 0.50f;   // 한 덩이 높이(이름+statusGap 0.40)보다 크게
+            // (고정 스태거는 2026-07-31 폐기 — 아래 ResolveOverlap 이 대신한다.
+            //  고정 단은 멀리 떨어져 있어도 라벨이 공중에 떠 있고, 정작 같은 자리에
+            //  모였을 때는 단이 같으면 그대로 겹쳤다.  '항상 조금 어긋나고 필요할 때는
+            //  안 비키는' 최악의 조합이었다.)
+            _labelStagger = 0f;
+            s_labels.Add(this);
+            // ⚠ 직렬화 덮어쓰기 방어 (2026-07-31 실측).  statusGap/offset 은
+            //  [SerializeField] 라 **Pawn 프리팹에 저장된 옛 값이 코드 기본값을
+            //  덮어쓴다** — 0.34 → 0.52 로 고쳐도 빌드에서는 그대로 0.34 였고,
+            //  그래서 이름줄과 활동줄이 계속 겹쳤다.  TutorialOverlay 가 같은
+            //  함정을 [NonSerialized] 로 끊어 둔 선례가 있다(그 파일 주석 참조).
+            //  여기서는 프리팹 재베이크 없이 **코드가 단일 정본**이 되도록 값을
+            //  런타임에 되박는다.
+            statusGap = StatusGapConst;
             entity = GetComponent<PawnEntity>();
             needs = GetComponent<PawnNeeds>();
             chopper = GetComponent<PawnChopper>();
@@ -208,6 +221,19 @@ namespace MelonS.GameProto
 
             lastComputedStatus = ComputeStatusLabel();
 
+            // 겹치면 위로 비킨다 (ResolveOverlap 주석 참조).  상태 갱신과 같은 0.25s
+            //  주기라 추가 비용이 없고, 그 정도면 사람 눈에 즉각적으로 보인다.
+            float lift = ResolveOverlap();
+            if (!Mathf.Approximately(lift, _labelStagger))
+            {
+                _labelStagger = lift;
+                if (nameGo != null)
+                    nameGo.transform.localPosition = offset + new Vector3(0f, lift, 0f);
+                if (statusGo != null)
+                    statusGo.transform.localPosition =
+                        new Vector3(offset.x, (offset.y + lift) - statusGap, offset.z);
+            }
+
             // ── TOP-2 LOD + 선택 게이트 + 야간 감광 ──
             float ortho = Camera.main != null && Camera.main.orthographic
                 ? Camera.main.orthographicSize : 5.5f;
@@ -264,6 +290,51 @@ namespace MelonS.GameProto
         //  사망 > 징집 > 정신붕괴 > 수면 > 식사 > 휴식 > (작업 9종) > 이동 > 연구 > 유휴.
         private static int s_labelTier;
         private float _labelStagger;
+
+        // ── 겹침 회피 (2026-07-31) ────────────────────────────────────────────
+        //  운영자 지적: 집 안에 셋이 모이면 이름·활동 4줄이 서로 겹쳐 판독 불가.
+        //  고정 스태거(단 3개)로는 안 됐다 — 같은 단끼리는 그대로 겹치고, 떨어져
+        //  있을 때도 공중에 떠 있었다.
+        //  대신 **겹칠 때만** 위로 비킨다: 자기보다 '앞선' 라벨(같은 화면 자리에 있고
+        //  정렬 키가 작은 것)의 개수만큼 한 칸씩 올라간다.  결정적이라 깜빡이지 않고,
+        //  떨어지면 자연히 0으로 돌아온다.
+        //  n = 콜로니스트 수(3~6)라 O(n²) 는 무시할 만하다.
+        private static readonly System.Collections.Generic.List<PawnNameLabel> s_labels =
+            new System.Collections.Generic.List<PawnNameLabel>(16);
+
+        private const float OverlapDx = 1.35f;   // 라벨 폭 ≈ 한 칸 반
+        private const float OverlapDy = 0.70f;   // 라벨 한 덩이 높이
+        // 한 칸 올림 = **라벨 한 덩이 전체 높이**여야 한다.
+        //  0.46 으로 뒀더니 statusGap(0.52)보다 작아서, 올라간 라벨의 활동줄이
+        //  아래 라벨의 이름줄 자리에 그대로 떨어졌다(실측) — 비켰는데 여전히 겹친다.
+        //  한 덩이 = statusGap(0.52) + 글자 높이(≈0.3).
+        private const float LiftStep = 0.85f;
+
+        // 이름줄↔활동줄 간격의 **코드 정본**.  글자 높이(≈0.5 월드유닛)보다 커야
+        //  두 줄이 파고들지 않는다.  [SerializeField] 값은 Awake 에서 이 값으로 덮는다.
+        private const float StatusGapConst = 0.62f;
+
+        private void OnDestroy() { s_labels.Remove(this); }
+
+        /// <summary>내 라벨이 몇 칸 올라가야 하는가.</summary>
+        private float ResolveOverlap()
+        {
+            Vector3 me = transform.position;
+            int lift = 0;
+            for (int i = 0; i < s_labels.Count; i++)
+            {
+                var o = s_labels[i];
+                if (o == null || o == this) continue;
+                Vector3 p = o.transform.position;
+                if (Mathf.Abs(p.x - me.x) > OverlapDx) continue;
+                if (Mathf.Abs(p.y - me.y) > OverlapDy) continue;
+                // 정렬 키: x 가 작은 쪽이 아래.  동률이면 인스턴스 ID 로 끊어
+                //  두 라벨이 서로 '내가 위'라고 판단해 함께 올라가는 것을 막는다.
+                if (p.x < me.x || (p.x == me.x && o.GetInstanceID() < GetInstanceID()))
+                    lift++;
+            }
+            return lift * LiftStep;
+        }
 
         private string ComputeStatusLabel()
         {
