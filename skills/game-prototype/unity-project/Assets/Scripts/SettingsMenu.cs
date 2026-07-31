@@ -243,7 +243,7 @@ namespace MelonS.GameProto
 
             // ---- UI 팔레트 (2026-07-25 운영자 "옵션에서 변경") ----
             float palY = -176;
-            MakeLabel(panelContent, "UI 팔레트", new Vector2(0f, 1f), new Vector2(0, palY),
+            MakeLabel(panelContent, "화면 색상", new Vector2(0f, 1f), new Vector2(0, palY),
                 TextAnchor.MiddleLeft, 16, UITheme.TextPrimary, anchorTopLeft: true, height: 22);
             var palBtn = MakeButton(panelContent, "PaletteBtn",
                 UITheme.PaletteNames[UITheme.CurrentPalette], new Vector2(0f, 1f),
@@ -277,7 +277,7 @@ namespace MelonS.GameProto
             int next = (UITheme.CurrentPalette + 1) % UITheme.PaletteNames.Length;
             UITheme.SetPalette(next);
             if (paletteValueText != null) paletteValueText.text = UITheme.PaletteNames[next];
-            AlertStackUI.Notify($"UI 팔레트: {UITheme.PaletteNames[next]} (재입장 시 완전 적용)", 1);
+            AlertStackUI.Notify($"화면 색상: {UITheme.PaletteNames[next]} (재입장 시 완전 적용)", 1);
         }
 
         private void OnMainMenuClicked()

@@ -184,7 +184,7 @@ namespace MelonS.GameProto
                 var nl = pawn.GetComponent<PawnNameLabel>();
                 string act = (nl != null && !string.IsNullOrEmpty(nl.CurrentActivity))
                     ? $" · {nl.CurrentActivity}" : "";
-                return $"콜로니스트 {pawn.PawnName}{draftSuffix}{act}  (좌클릭=선택)";
+                return $"주민 {pawn.PawnName}{draftSuffix}{act}  (좌클릭=선택)";
             }
             var tree = hit.GetComponent<TreeEntity>();
             if (tree != null) return "나무  (선택 후 우클릭=벌목)";
@@ -221,9 +221,9 @@ namespace MelonS.GameProto
             var trader = hit.GetComponent<TraderEntity>();
             if (trader != null) return "상인  (우클릭=교역)";
             var bench = hit.GetComponent<ResearchBench>();
-            if (bench != null) return "연구대  (콜로니스트 옆에 있으면 자동 연구)";
+            if (bench != null) return "연구대  (주민 옆에 있으면 자동 연구)";
             var stove = hit.GetComponent<StoveEntity>();
-            if (stove != null) return "화덕  (콜로니스트가 자동 요리)";
+            if (stove != null) return "화덕  (주민이 자동 요리)";
             var bed = hit.GetComponent<BedEntity>();
             if (bed != null) return $"{bed.QualityKr}  (수면 {bed.RestMul:F2}x · 기분 +{bed.MoodBonus:F0}/s)";
             var wall = hit.GetComponent<WallEntity>();
@@ -231,9 +231,9 @@ namespace MelonS.GameProto
             // #obj-audit: AutodoorEntity 는 DoorEntity 를 상속 → 반드시 Door 체크보다 먼저
             //  검사해야 일반 문 설명에 가려지지 않는다(빠른 통과 특성 별도 안내).
             var adoor = hit.GetComponent<AutodoorEntity>();
-            if (adoor != null) return "자동문 (콜로니스트 통과 빠름)";
+            if (adoor != null) return "자동문 (주민 통과 빠름)";
             var door = hit.GetComponent<DoorEntity>();
-            if (door != null) return "문 (콜로니스트 통과 가능)";
+            if (door != null) return "문 (주민 통과 가능)";
             var floor = hit.GetComponent<FloorEntity>();
             if (floor != null) return "바닥";
             // ── #obj-audit (멀티에이전트 감사 #6~11): 상호작용·운반 대상인데 hover 설명이

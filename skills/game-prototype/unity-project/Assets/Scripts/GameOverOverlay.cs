@@ -87,7 +87,7 @@ namespace MelonS.GameProto
             var font = UITheme.LoadKoreanFont(30);
             MakeText(content, "정착지 전멸", font, 34, UITheme.AccentGold,
                      new Vector2(0, 55), new Vector2(480, 50));
-            MakeText(content, $"{days}일 생존 — 모든 콜로니스트가 사망했습니다.", font, 18,
+            MakeText(content, $"{days}일 생존 — 모든 주민이 사망했습니다.", font, 18,
                      UITheme.TextPrimary, new Vector2(0, 8), new Vector2(480, 32));
 
             var btnGo = new GameObject("RestartBtn");

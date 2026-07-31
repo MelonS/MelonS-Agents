@@ -462,7 +462,7 @@ namespace MelonS.GameProto.Tests
                 if (m != null) groundFood += m.Food;
             bool hasResources = groundWood >= 100 && groundFood >= 3;
             Assert(hasResources,
-                $"starter(콜로니심식 물리): 바닥목재={groundWood}(>=100), 바닥식량={groundFood}(>=3) [food={rm.food} meals={rm.meals} 카운터는 0 정상]");
+                $"starter(마을심식 물리): 바닥목재={groundWood}(>=100), 바닥식량={groundFood}(>=3) [food={rm.food} meals={rm.meals} 카운터는 0 정상]");
         }
 
         /// <summary>I14: HoverTooltip MonoBehaviour 가 씬에 존재 (active 여부 상관 X)</summary>
@@ -539,7 +539,7 @@ namespace MelonS.GameProto.Tests
             }
             Destroy(tGo);  // cleanup
             Assert(targeted && onlySelected,
-                $"우클릭 벌목: 선택 림 타깃={targeted}, 선택 림 전용(타 림 미관여)={onlySelected}");
+                $"우클릭 벌목: 선택 주민 타깃={targeted}, 선택 주민 전용(타 주민 미관여)={onlySelected}");
         }
 
         /// <summary>I17: GUI 벽 버튼 → 빌드모드 → reflection 으로 BuildManager.TryPlace 호출
@@ -1227,7 +1227,7 @@ namespace MelonS.GameProto.Tests
             if (pile != null && pile.gameObject != null) Object.Destroy(pile.gameObject);
             // 근본 원인(2026-06-05): HuntAnimal gate 가 저장된 식량만 봐서(haul-required 라 0) 영구
             //  사냥-선점 → 운반/건축/요리/수확 굶음.  물리 식량 합산으로 fix → 자율 운반 복구.
-            Assert(hauled, $"자율 운반 복구: 도달가능 더미+stockpile+유휴림 → 20s 내 운반 (hauled={hauled})");
+            Assert(hauled, $"자율 운반 복구: 도달가능 더미+stockpile+유휴주민 → 20s 내 운반 (hauled={hauled})");
         }
 
         /// <summary>I50: end-to-end — 운영자 핵심 흐름 "지정 나무 → 유휴 림 자율 벌목".
@@ -1257,7 +1257,7 @@ namespace MelonS.GameProto.Tests
             }
             if (TimeController.Instance != null) TimeController.Instance.SetScale(origScale);
             if (zone != null) Object.Destroy(zone.gameObject);
-            Assert(chopped, $"지정 나무 자율 벌목: chopped={chopped} (40s 내 림이 가서 베야 함 — Hunt-선점 fix 검증)");
+            Assert(chopped, $"지정 나무 자율 벌목: chopped={chopped} (40s 내 주민이 가서 베야 함 — Hunt-선점 fix 검증)");
         }
 
         /// <summary>I51: #44 — Game 씬에 GameSaveButtons 가 존재해야 인게임 save/load(F5/F9 + 설정메뉴
@@ -2063,7 +2063,7 @@ namespace MelonS.GameProto.Tests
             Assert(onTargetCellBefore && cellNowBlocked && offWallCell && landedWalkable && canMove,
                 $"I42 eject: beforeOnCell={onTargetCellBefore} cellBlocked={cellNowBlocked} "
                 + $"offWallCell={offWallCell}(after={afterCell}) landedWalkable={landedWalkable} "
-                + $"pathAccepted={pathAccepted} canMove={canMove}(moved={moved:F2}) (벽 완성 시 림 밀려남 + 이동 가능)");
+                + $"pathAccepted={pathAccepted} canMove={canMove}(moved={moved:F2}) (벽 완성 시 주민 밀려남 + 이동 가능)");
             Debug.Log($"[Int] I42 detail: before={beforeCell} after={afterCell} cellBlocked={cellNowBlocked} offWall={offWallCell} canMove={canMove} moved={moved:F2}");
         }
 

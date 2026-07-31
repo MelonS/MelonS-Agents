@@ -619,7 +619,7 @@ namespace MelonS.GameProto
             if (food < 15f && !starveWarned && pawnEntity != null && !pawnEntity.IsDead)
             {
                 starveWarned = true;
-                AlertStackUI.Notify($"{pawnEntity.PawnName} 굶주림 위험", 2);
+                AlertStackUI.Notify($"{pawnEntity.PawnName} 굶주주민 위험", 2);
                 FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
                                    "아사 임박!", new Color(0.95f, 0.55f, 0.25f, 1f));
             }
@@ -851,7 +851,7 @@ namespace MelonS.GameProto
                 if (Time.unscaledTime - _lastNoFoodAlert > 30f)
                 {
                     _lastNoFoodAlert = Time.unscaledTime;
-                    AlertStackUI.Notify("식량 전무 — 굶는 림 발생", 2);
+                    AlertStackUI.Notify("식량 없음 — 굶는 주민 발생", 2);
                 }
                 FloatingText.Spawn(transform.position + Vector3.up * 0.6f,
                                    "먹을 것 없음!", new Color(0.95f, 0.65f, 0.3f, 1f));

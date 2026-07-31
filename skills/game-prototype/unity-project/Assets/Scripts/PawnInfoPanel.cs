@@ -334,6 +334,34 @@ namespace MelonS.GameProto
             rt.pivot     = new Vector2(0f, 0f);
             rt.sizeDelta = new Vector2(380f, 248f);          // ≤256 → top edge ≤ 314
             rt.anchoredPosition = new Vector2(12f, 58f);     // above S/L (y=52) + gap
+
+            // ── 제목(이름)을 탭 아래로 (2026-08-01) ─────────────────────────
+            //  운영자: "무슨 UI 인지 모르겠는데 오브젝트 정보창일거야.  완전 개판임."
+            //  실측 스크린샷을 보니 탭 5개(상태/건강/기분/장비/스킬)가 패널 맨 위를
+            //  차지하고 **제목이 그 뒤에 깔려 안 보인다** — 누구의 정보인지 알 수 없는
+            //  창이 게이지 3개만 띄우고 있으니 '무슨 UI 인지 모르겠다' 가 나온다.
+            //  씬에서 제목은 상단(anchoredPosition y=-8)에 박혀 있고 탭도 같은 자리다.
+            //  탭 높이(22)+여백만큼 제목을 내려 둘이 겹치지 않게 한다.
+            //  씬 재베이크 없이 코드가 정본이 되도록 여기서 되박는다(오늘 네 번째 같은 패턴).
+            if (titleText != null)
+            {
+                //  제목 영역을 **명시적으로** 잡는다.  씬 값은 높이 26px 한 줄짜리인데
+                //  실제 내용은 이름 + 활동 + 배경 한 줄 + 성격까지 3줄이라 잘려 안 보였다
+                //  (실측: 탭 아래가 통째로 비고 게이지만 떠 있었다 — '무슨 UI 인지
+                //   모르겠다' 의 직접 원인).
+                var trt = titleText.rectTransform;
+                float drop = TabStripH + MelonS.GameProto.Core.UITheme.PadOuter + 6f;
+                trt.anchorMin = new Vector2(0f, 1f);
+                trt.anchorMax = new Vector2(1f, 1f);
+                trt.pivot     = new Vector2(0f, 1f);
+                trt.offsetMin = new Vector2(12f, 0f);
+                trt.offsetMax = new Vector2(-12f, 0f);
+                trt.sizeDelta = new Vector2(trt.sizeDelta.x, 62f);   // 3줄
+                trt.anchoredPosition = new Vector2(12f, -drop);
+                titleText.alignment = TextAnchor.UpperLeft;
+                titleText.horizontalOverflow = HorizontalWrapMode.Wrap;
+                titleText.verticalOverflow = VerticalWrapMode.Overflow;
+            }
         }
 
         // single-inspector — body text for a non-pawn ENTITY selection.  Built

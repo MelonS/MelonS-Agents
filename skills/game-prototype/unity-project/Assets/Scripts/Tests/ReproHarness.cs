@@ -908,7 +908,7 @@ namespace MelonS.GameProto
                     //  (우클릭 명령 = 선택 림 전용 배타 예약, f29b10f).  조기 PASS 없음 — 윈도
                     //  전체를 봐야 "타 림이 늦게 합류"하는 회귀도 잡는다.
                     var selSet2 = ResolveSelectedSet();
-                    if (selSet2.Count == 0) { r.passed = false; r.detail = "선택 림 없음"; break; }
+                    if (selSet2.Count == 0) { r.passed = false; r.detail = "선택 주민 없음"; break; }
                     var selNames = new System.Collections.Generic.HashSet<string>();
                     foreach (var sm in selSet2) selNames.Add(sm.PawnName);
                     string selName = string.Join(",", selNames);
@@ -935,9 +935,9 @@ namespace MelonS.GameProto
                     string seenStr = seen.Count > 0 ? string.Join("/", seen) : "(없음)";
                     r.passed = selDid && offender == "";
                     r.detail = offender != ""
-                        ? $"위반: 비선택 림 '{offender}' 도 '{s.contains}' (선택={selName}, {t:F1}s)"
-                        : selDid ? $"선택 림 '{selName}' 만 '{s.contains}' ({t:F1}s 전구간 감시)"
-                                 : $"선택 림 '{selName}' 의 '{s.contains}' 미관측 in {t:F1}s — 실제 관측 활동: {seenStr}";
+                        ? $"위반: 비선택 주민 '{offender}' 도 '{s.contains}' (선택={selName}, {t:F1}s)"
+                        : selDid ? $"선택 주민 '{selName}' 만 '{s.contains}' ({t:F1}s 전구간 감시)"
+                                 : $"선택 주민 '{selName}' 의 '{s.contains}' 미관측 in {t:F1}s — 실제 관측 활동: {seenStr}";
                     break;
                 }
                 case "selectedChopAssigned":
@@ -947,7 +947,7 @@ namespace MelonS.GameProto
                     //  '선택 림이 벌목 task 를 쥐었는가'로 명령 발행 주체를 결정적으로 구분 —
                     //  결과 라벨만 보던 selectedOnlyActivity 의 race-운 가짜 PASS 를 인과로 차단.
                     var selSet = ResolveSelectedSet();
-                    if (selSet.Count == 0) { r.passed = false; r.detail = "선택 림 없음"; break; }
+                    if (selSet.Count == 0) { r.passed = false; r.detail = "선택 주민 없음"; break; }
                     float win = s.withinSec > 0 ? s.withinSec : 1.0f;
                     float tc = 0; bool got = false;
                     while (tc < win)

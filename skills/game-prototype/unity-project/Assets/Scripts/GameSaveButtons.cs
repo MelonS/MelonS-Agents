@@ -77,7 +77,7 @@ namespace MelonS.GameProto
             {
                 // #6.2 — 세이브 없음/손상: 이전엔 무음 return 이라 '클릭해도 아무 일 없음'.
                 BuildClickToast.EnsureInScene();
-                BuildClickToast.Instance?.ShowFail("× 불러올 세이브 없음/손상");
+                BuildClickToast.Instance?.ShowFail("× 불러올 저장 파일 없음/손상");
                 return;
             }
 
@@ -298,7 +298,7 @@ namespace MelonS.GameProto
             Debug.Log($"[SaveLoad] restored: {data.pawns.Count} pawns, {data.trees.Count} trees + 서브상태 + 시계 {data.gameSeconds:F0}s");
             // #ui백로그 6.2 — 성공 피드백
             BuildClickToast.EnsureInScene();
-            BuildClickToast.Instance?.ShowSuccess($"불러오기 완료 (림 {data.pawns.Count})");
+            BuildClickToast.Instance?.ShowSuccess($"불러오기 완료 (주민 {data.pawns.Count})");
         }
     }
 }

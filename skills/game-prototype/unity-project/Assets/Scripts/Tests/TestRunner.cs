@@ -818,7 +818,7 @@ namespace MelonS.GameProto.Tests
             bool legacyOk = hD.GetPart(PawnHealth.PartId.Torso).hp == dFull;
 
             Assert(hpOk && bleedOk && bandOk && deathOk && legacyOk,
-                $"부위 round-trip: hp={hpOk}, 출혈={bleedOk}, 붕대={bandOk}, 사망복원={deathOk}, 구세이브가드={legacyOk}");
+                $"부위 round-trip: hp={hpOk}, 출혈={bleedOk}, 붕대={bandOk}, 사망복원={deathOk}, 구저장 파일가드={legacyOk}");
         }
 
         // #save-load 완성(2026-06-04) — 작물 성장도가 ApplyLoadedSubStates(실 복원 경로)로

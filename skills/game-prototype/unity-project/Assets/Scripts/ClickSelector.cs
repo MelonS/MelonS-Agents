@@ -579,7 +579,7 @@ namespace MelonS.GameProto
             //  카메라 어느 것도 안 변해, 심사자가 누르면 고장난 버튼으로 읽힌다.
             //  기능은 정상이고 전제(선택)가 빠졌을 뿐이므로 무엇이 필요한지 알려 준다.
             if (BuildClickToast.Instance != null)
-                BuildClickToast.Instance.ShowFail("징집할 콜로니스트를 먼저 선택하세요");
+                BuildClickToast.Instance.ShowFail("징집할 주민을 먼저 선택하세요");
             else
                 Debug.Log("[Draft] 선택된 콜로니스트 없음");
         }

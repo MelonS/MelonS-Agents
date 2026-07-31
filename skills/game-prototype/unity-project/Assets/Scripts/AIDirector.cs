@@ -392,7 +392,7 @@ namespace MelonS.GameProto
                 var madEv = new GameEvent
                 {
                     id = "manhunter_pack", title = "광기 — 미친 멧돼지 떼!",
-                    description = $"멧돼지 {banditCount + 1}마리가 광기에 휩싸여 콜로니로 돌진한다.",
+                    description = $"멧돼지 {banditCount + 1}마리가 광기에 휩싸여 마을로 돌진한다.",
                     flavor = "눈에 핏발이 서 있다.",
                     threatTier = 3, kind = EventKind.Threat,
                 };
@@ -830,7 +830,7 @@ namespace MelonS.GameProto
             pool.Add(new GameEvent {
                 id = "lucky_find", threatTier = 0, kind = EventKind.Good,
                 title = "행운의 발견",
-                description = "콜로니스트 한 명이 숲에서 작은 보급품 더미를 발견했다.",
+                description = "주민 한 명이 숲에서 작은 보급품 더미를 발견했다.",
                 flavor = "기름천에 잘 싸인 도구들.",
             });
             pool.Add(new GameEvent {
@@ -865,7 +865,7 @@ namespace MelonS.GameProto
             pool.Add(new GameEvent {
                 id = "morale_dip", threatTier = 1, kind = EventKind.Threat,
                 title = "사기 저하",
-                description = "오늘 콜로니스트들이 어딘가 무기력해 보인다. (전원 기분 -10)",
+                description = "오늘 주민들이 어딘가 무기력해 보인다. (전원 기분 -10)",
                 flavor = "저녁 식탁의 대화가 짧고 띄엄띄엄했다.",
             });
             pool.Add(new GameEvent {
@@ -877,7 +877,7 @@ namespace MelonS.GameProto
             pool.Add(new GameEvent {
                 id = "minor_disease", threatTier = 1, kind = EventKind.Threat,
                 title = "몸살 기운",
-                description = "콜로니스트 한 명이 몸살 기운으로 컨디션이 떨어진다.",
+                description = "주민 한 명이 몸살 기운으로 컨디션이 떨어진다.",
                 flavor = "며칠 푹 쉬면 나아질 것이다.",
             });
 
@@ -885,7 +885,7 @@ namespace MelonS.GameProto
             pool.Add(new GameEvent {
                 id = "trader_caravan", threatTier = 0, kind = EventKind.Good,
                 title = "상인 도착",
-                description = "상인 일행이 방문했다. 콜로니스트가 가까이 있을 때 상인을 우클릭하면 거래할 수 있다.",
+                description = "상인 일행이 방문했다. 주민이 가까이 있을 때 상인을 우클릭하면 거래할 수 있다.",
                 flavor = "그들의 마차에서 새로운 냄새가 난다.",
             });
             // 늑대 비활성화 게이트: WolvesEnabled=false 인 동안 wolf_pack 이벤트는

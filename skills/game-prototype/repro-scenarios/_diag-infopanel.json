@@ -1,0 +1,62 @@
+{
+ "name": "진단 — 오브젝트 정보창 / 상태 게이지 (2026-08-01)",
+ "_why": [
+  "운영자: 상태 게이지 동작 안 함 / 무슨 UI인지 모르겠는 오브젝트 정보창이 개판.",
+  "실제로 열어서 눈으로 본다."
+ ],
+ "timeoutSec": 180,
+ "steps": [
+  {
+   "op": "wait",
+   "sec": 2
+  },
+  {
+   "op": "speed",
+   "x": 1
+  },
+  {
+   "op": "wait",
+   "sec": 4
+  },
+  {
+   "op": "ortho",
+   "x": 9.0
+  },
+  {
+   "op": "worldclick",
+   "target": "pawn"
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "shot",
+   "name": "i0_pawn"
+  },
+  {
+   "op": "worldclick",
+   "target": "tree"
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "shot",
+   "name": "i1_tree"
+  },
+  {
+   "op": "worldclick",
+   "target": "bed"
+  },
+  {
+   "op": "wait",
+   "sec": 1
+  },
+  {
+   "op": "shot",
+   "name": "i2_bed"
+  }
+ ]
+}
