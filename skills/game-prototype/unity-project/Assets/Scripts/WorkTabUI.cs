@@ -347,9 +347,48 @@ namespace MelonS.GameProto
             if (ScheduleUI.Instance != null && ScheduleUI.Instance.IsOpen) ScheduleUI.Instance.Close();
             var ru = Object.FindFirstObjectByType<ResearchUI>();
             if (ru != null && ru.PickerOpen) ru.ClosePicker();
-            isOpen = true; gameObject.SetActive(true); transform.SetAsLastSibling(); RefreshGrid();
+            isOpen = true;
+            EnsureDim();
+            if (dim != null) { dim.SetActive(true); dim.transform.SetAsLastSibling(); }
+            gameObject.SetActive(true); transform.SetAsLastSibling(); RefreshGrid();
         }
-        public void Close() { isOpen = false; gameObject.SetActive(false); }
+        public void Close()
+        {
+            isOpen = false; gameObject.SetActive(false);
+            if (dim != null) dim.SetActive(false);
+        }
+
+        // ── 배경 딤 (2026-07-31) ───────────────────────────────────────────────
+        //  이 표는 이 게임이 내세우는 **간접 조작의 근거 화면**이다 — 화면의 행동이
+        //  이 3×9 숫자에서 나온다는 것을 보여주는 자리.  그런데 배경이 그대로라
+        //  지형·나무·콜로니스트와 시각적으로 경쟁하며 '떠 있는 작은 표'로 읽혔다
+        //  (심사자 흐름 스크린샷에서 확인).
+        //  전체 화면 딤을 깔면 같은 표가 '지금 이걸 보라'는 모달이 된다.  덤으로
+        //  raycastTarget 이 켜져 있어 표 바깥 클릭이 월드로 새지 않는다 — 표를 열어 둔
+        //  채 실수로 나무를 지정하는 일이 없어진다.
+        private GameObject dim;
+
+        private void EnsureDim()
+        {
+            if (dim != null) return;
+            var canvas = transform.parent;
+            if (canvas == null) return;
+            dim = new GameObject("WorkTabDim", typeof(RectTransform), typeof(Image));
+            dim.transform.SetParent(canvas, false);
+            var drt = (RectTransform)dim.transform;
+            drt.anchorMin = Vector2.zero; drt.anchorMax = Vector2.one;
+            drt.offsetMin = Vector2.zero; drt.offsetMax = Vector2.zero;
+            var img = dim.GetComponent<Image>();
+            img.color = new Color(0.04f, 0.03f, 0.02f, 0.55f);
+            img.raycastTarget = true;   // 표 바깥 클릭이 월드로 새지 않게
+            // 바깥을 누르면 닫힌다.  딤이 화면 전체를 덮으므로 하단 '직업' 버튼도
+            //  가려지는데, 닫는 길이 F1 하나뿐이면 **연 사람이 갇힌다**.  모달 관례대로
+            //  바깥 클릭 = 닫기로 두면 그 버튼을 다시 누르는 동작도 자연히 닫기가 된다.
+            var btn = dim.AddComponent<UnityEngine.UI.Button>();
+            btn.transition = UnityEngine.UI.Selectable.Transition.None;
+            btn.onClick.AddListener(Close);
+            dim.SetActive(false);
+        }
         public bool IsOpen => isOpen;
 
         private void Update()
