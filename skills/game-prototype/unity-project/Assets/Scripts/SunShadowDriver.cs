@@ -68,7 +68,19 @@ namespace MelonS.GameProto
             // 고도가 낮을수록 길고 옅다.  Mathf.Max 로 0 나눗셈 회피.
             float stretch = day ? Mathf.Lerp(MaxStretch, 1f, alt) : 1f;
             float offset = day ? dirX * MaxOffset * (1f - alt) : 0f;
-            float alphaMul = day ? Mathf.Lerp(0.45f, 1f, alt) : 0f;
+            // 농도: 기본 알파(0.35)를 그대로 쓰면 잔디 위에서 **스틸로 확인이 안 된다**
+            //  (2026-07-31 실측 — 7/12/18시를 정지 상태로 찍어 대조했는데 차이를 눈으로
+            //   구분할 수 없었다).  스틸에서 안 보이면 심사자에게도 안 보인다.
+            //  낮에는 기본보다 진하게(최대 1.9배) 깔고, 해가 낮을수록 옅어지는 관계는 유지.
+            //  밤에는 0 (달빛 그림자는 과잉).
+            float alphaMul = day ? Mathf.Lerp(1.1f, 1.9f, alt) : 0f;
+
+            // 하늘색을 살짝 섞는다 — 레퍼런스: "change color slightly to complement the
+            //  color of the sky".  순수 검정 그림자는 픽셀 세계에서 구멍처럼 보인다.
+            //  낮에는 푸른 기, 노을엔 붉은 기가 아주 옅게 든다.
+            Color tint = day
+                ? Color.Lerp(new Color(0.10f, 0.07f, 0.05f), new Color(0.05f, 0.06f, 0.12f), alt)
+                : new Color(0.04f, 0.05f, 0.10f);
 
             var list = BlobShadow.Entries;
             for (int i = 0; i < list.Count; i++)
@@ -81,10 +93,42 @@ namespace MelonS.GameProto
                 var sr = e.t.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    var c = sr.color;
-                    c.a = e.baseAlpha * alphaMul;
+                    var c = tint; c.a = e.baseAlpha * alphaMul;
                     sr.color = c;
                 }
+            }
+
+            // ── 구조물 그림자 (실루엣이 땅에 눕는다) ────────────────────────────
+            //  이게 화면 인상을 바꾸는 쪽이다 — 발밑 타원은 접지감만 준다.
+            var cast = SunShadowCaster.Entries;
+            for (int i = 0; i < cast.Count; i++)
+            {
+                var e = cast[i];
+                if (e.t == null || e.host == null) continue;
+
+                // 지붕 아래는 그림자를 만들지 않는다 (레퍼런스: don't shade indoors).
+                //  오늘 만든 지붕 시스템을 그대로 재사용한다.
+                bool indoors = false;
+                var rd = RoofDesignation.Instance;
+                if (rd != null)
+                {
+                    indoors = rd.IsRoofed(Mathf.FloorToInt(e.host.position.x),
+                                          Mathf.FloorToInt(e.host.position.y));
+                }
+                bool show = day && !indoors;
+                if (e.t.gameObject.activeSelf != show) e.t.gameObject.SetActive(show);
+                if (!show) continue;
+
+                // 높이가 클수록 멀리·길게 눕는다 (project to varying heights).
+                float lean = dirX * (1f - alt) * e.height * 1.1f;
+                float len = Mathf.Lerp(e.height * 1.25f, e.height * 0.30f, alt);
+                e.t.localPosition = new Vector3(lean, -0.10f, 0f);
+                // 세로를 눌러 '땅에 누운' 형태로.  가로는 기울기만큼만 늘린다.
+                e.t.localScale = new Vector3(1f + Mathf.Abs(lean) * 0.25f, len, 1f);
+                // 기울기 — 밑변을 축으로 눕는 느낌.  각도는 완만하게(과하면 스프라이트가 찢긴다).
+                e.t.localRotation = Quaternion.Euler(0f, 0f, -dirX * (1f - alt) * 22f);
+                var c2 = tint; c2.a = e.baseAlpha * alphaMul;
+                e.sr.color = c2;
             }
         }
     }

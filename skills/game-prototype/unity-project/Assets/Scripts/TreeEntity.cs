@@ -83,6 +83,7 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
+            SunShadowCaster.Attach(gameObject, 1.4f);   // 나무 — 가장 길게 눕는다
             hp = maxHp;
             spriteRenderer = GetComponent<SpriteRenderer>();
         }

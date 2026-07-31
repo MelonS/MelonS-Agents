@@ -57,6 +57,7 @@ namespace MelonS.GameProto
 
         private void Awake()
         {
+            SunShadowCaster.Attach(gameObject, 1.0f);   // 벽 — 구조물 그림자
             if (hp <= 0f) hp = maxHp;
         }
 
