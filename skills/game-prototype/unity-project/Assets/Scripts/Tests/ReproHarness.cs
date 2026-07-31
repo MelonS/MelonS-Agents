@@ -63,6 +63,8 @@ namespace MelonS.GameProto
             public float sec;
             public float min;
             public float withinSec;
+            public int amount;   // spawnWoodPile 수량 (0 = 기본 20)
+            public string kind;  // setWorkPriority 대상 WorkKind
         }
         [System.Serializable] public class Scenario { public string name; public Step[] steps; }
         [System.Serializable] public class StepResult
@@ -271,10 +273,11 @@ namespace MelonS.GameProto
                 case "spawnWoodPile":
                 {
                     var pos = new Vector3(s.x, s.y, 0f);
-                    var wp = WoodPileEntity.Spawn(pos, 20, WoodPileEntity.EnsureSprite(null));
+                    int amt = s.amount > 0 ? s.amount : 20;
+                    var wp = WoodPileEntity.Spawn(pos, amt, WoodPileEntity.EnsureSprite(null));
                     yield return null;
                     r.passed = wp != null;
-                    r.detail = wp != null ? $"목재 더미 20 @ ({s.x:F1},{s.y:F1})" : "생성 실패";
+                    r.detail = wp != null ? $"목재 더미 {amt} @ ({s.x:F1},{s.y:F1})" : "생성 실패";
                     break;
                 }
                 case "clearStockpiles":
@@ -339,6 +342,23 @@ namespace MelonS.GameProto
                     break;
                 }
 
+                // 전 주민의 특정 작업 우선순위를 일괄 설정 (격리 검증용, 2026-08-01).
+                //  s.kind = WorkKind 이름, s.x = 0(비활성)~4.
+                //  왜 필요한가: 주민이 6인이 되면서 **다른 주민의 정상 행동이 검증 대상을
+                //  구출**하는 일이 생겼다 — 의사가 굶주리는 주민을 치료해 HP 가 오히려
+                //  올라갔다.  게임 로직은 정상이므로 프로덕션을 바꾸지 않고,
+                //  시나리오가 격리 조건을 만든다.
+                case "setWorkPriority":
+                {
+                    if (!System.Enum.TryParse<WorkKind>(s.kind, out var wk))
+                    { r.passed = false; r.detail = $"WorkKind '{s.kind}' 없음"; break; }
+                    int n = 0;
+                    foreach (var ws in Object.FindObjectsByType<PawnWorkSettings>(FindObjectsSortMode.None))
+                    { if (ws != null) { ws.SetPriority(wk, Mathf.Clamp((int)s.x, 0, 4)); n++; } }
+                    yield return null;
+                    r.passed = n > 0; r.detail = $"{s.kind} 우선순위 {(int)s.x} → {n}명";
+                    break;
+                }
                 case "clearFood":
                 {
                     // #생존압박(2026-06-11) — 아사 검증용: 물리 음식원 전부 제거 (고기/간편식
@@ -355,9 +375,16 @@ namespace MelonS.GameProto
                     //  (게임 루프는 정상 — 격리 검증에서만 제거).
                     foreach (var a in Object.FindObjectsByType<AnimalEntity>(FindObjectsSortMode.None))
                     { if (a != null) { Object.Destroy(a.gameObject); removed++; } }
+                    // 저장 카운터도 비운다 (2026-08-01).  물리 음식원만 지우면 창고에
+                    //  적립된 식량/식사가 남아 **요리 → 섭취**로 아사를 막는다.
+                    //  주민이 3 → 6 인이 되면서 요리가 훨씬 자주 돌아 이 경로가 드러났다:
+                    //  HP 가 30 에서 멈추고 더 안 떨어졌다(임계 28).  게이트에서만 실패하는
+                    //  flaky 의 진짜 원인이었다 — 개별 실행은 요리 타이밍이 우연히 안 맞았을 뿐.
+                    var rm = ResourceManager.Instance;
+                    if (rm != null) { rm.food = 0; rm.meals = 0; rm.fineMeals = 0; }
                     yield return null;
                     r.passed = true;
-                    r.detail = $"food sources removed: {removed}";
+                    r.detail = $"food sources removed: {removed} (+저장 카운터 0)";
                     break;
                 }
 
