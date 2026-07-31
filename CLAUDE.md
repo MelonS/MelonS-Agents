@@ -94,3 +94,15 @@ When a new session starts on this repo, Claude Code reads all three. The default
 
 Re-establishing this contract should never require re-asking the user. If a prompt fires for something this contract already covers, that's a configuration drift; the fix is to update the allow list, not to ask.
 
+
+## 작업 방식
+
+- 작업 중간에 확인 질문으로 멈추지 말 것. 판단이 갈리는 지점은 합리적인 기본값을 스스로 정하고 계속 진행한 뒤, 어떤 가정을 했는지 최종 보고에 정리해서 알려줄 것.
+- 계획만 세우고 멈추지 말 것. 계획을 세웠으면 승인을 기다리지 말고 바로 실행할 것.
+- 여러 단계로 된 작업은 전체가 끝날 때까지 한 번에 진행할 것. 단계마다 보고하고 멈추지 말 것.
+- 다음 경우에만 멈추고 물어볼 것:
+  - 되돌릴 수 없는 파괴적 작업 (데이터 삭제, 프로덕션 배포, force push)
+  - 요청 범위를 명백히 벗어나는 판단이 필요할 때
+  - 필요한 정보가 없어서 진행 자체가 불가능할 때
+- 오류가 나면 보고하고 멈추지 말고, 원인을 찾아 수정한 뒤 계속 진행할 것.
+- 작업이 끝나면 테스트나 빌드로 스스로 검증한 뒤 결과를 보고할 것.
