@@ -136,7 +136,8 @@ namespace MelonS.GameProto
 
             // 2/3) the reference sim 달력 파생 (Day 1-based → 0-based d0).
             int d0 = d - 1;
-            int year = StartYear + d0 / DaysPerYear;
+            //  (연도는 2026-08-01 표기에서 제거 — 아래 topBarDate 주석 참조.
+            //   StartYear/DaysPerYear 상수는 세이브 호환을 위해 남겨 둔다.)
             int quadrumIndex = (d0 / DaysPerQuadrum) % QuadrumsPerYear; // 0..3
             int dayInQuadrum = (d0 % DaysPerQuadrum) + 1;               // 1..15
             string season = SeasonNames[quadrumIndex];                  // 봄/여름/가을/겨울
@@ -146,7 +147,11 @@ namespace MelonS.GameProto
             //  감성과 맞춘다.  연도는 뒤에 붙여 보조 정보로.
             // 좌상단 = 날짜(달력) readout.  우하단 = 시각 전담 → 중복 없이 정보 분리
             //  (운영자: 탑바 좌측 빈 슬롯 채움).
-            if (topBarDate != null) topBarDate.text = $"{season} {dayInQuadrum}일, {year}년";
+            // 2026-08-01 — 연도 표기 제거.  '봄 1일, 5500년' 의 5500 은 근거 없는 숫자이고,
+            //  처음 보는 사람에게 아무 정보도 주지 않으면서 상단 제일 눈에 띄는 자리를
+            //  차지했다.  대신 **정착 며칠째**를 보여준다 — 이 게임에서 실제로 의미 있는
+            //  수치이고(습격 시점·작물 성장의 기준), 플레이어가 '얼마나 버텼나' 로 읽는다.
+            if (topBarDate != null) topBarDate.text = $"{season} {dayInQuadrum}일  ·  정착 {d}일째";
         }
 
         /// <summary>24시간 Hour/Minute → "6:08 AM" / "12:00 PM" 형식.</summary>

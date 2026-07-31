@@ -67,8 +67,10 @@ namespace MelonS.GameProto
 
         // 패널 타이포 (2026-07-31) — 헤더와 행이 같은 크기다.  강조는 색(AccentGold)과
         //  위치로 준다(1차 구현이 헤더만 크게 만들었다가 아예 안 그려진 전례가 있다).
-        private const int RowFontSize = 18;
-        private const float RowStep = 27f;   // 글자 18 + 여백.  좁히면 받침이 윗줄에 닿는다.
+        // 18 → 20 (2026-08-01).  자원 패널을 32 → 24 로 낮추면서 함께 올려 단차를 만든다.
+        //  목표는 '무엇을 해야 하나' 라 자원보다 작을 이유가 없다.
+        private const int RowFontSize = 20;
+        private const float RowStep = 29f;   // 글자 18 + 여백.  좁히면 받침이 윗줄에 닿는다.
 
         // ⚠ `AfterSceneLoad` 는 **첫 씬이 로드된 직후 한 번만** 실행된다.  이 빌드의 첫 씬은
         //  MainMenu 라, 여기서 `scene.name != "Game"` 으로 걸러 버리면 나중에 Game 씬이
@@ -218,7 +220,12 @@ namespace MelonS.GameProto
             //  **화면에서 가장 작은 글씨**였다.  바로 위 자원 표시(식량/목재)의 절반 크기인데,
             //  자원은 "지금 얼마나 있나"이고 목표는 "무엇을 해야 하나"다 — 위계가 뒤집혀 있었다.
             //  글자 15→18 에 맞춰 행 간격·패널 폭/높이를 함께 올린다(하나만 바꾸면 겹치거나 잘린다).
-            prt.anchoredPosition = new Vector2(8f, -(76f + 8f + 200f));
+            // 2026-08-01 — 자원 패널 아래로 내리는 오프셋을 실측에 맞춰 재조정.
+            //  자원 줄이 4행 → 5행('마을 가치' 를 별도 줄로 분리)이 되면서 자원 패널이
+            //  아래로 자라 **목표 패널을 덮었다** — 확대 실측에서 목표 패널이 흰 상자로만
+            //  보였다(글자는 자원 패널 뒤에 깔림).
+            //  자원 패널 실측 높이(상단 여백 76 + 5행) 를 반영해 250 으로 내린다.
+            prt.anchoredPosition = new Vector2(8f, -(76f + 8f + 250f));
             prt.sizeDelta = new Vector2(272f, 34f + objectives.Count * RowStep + 12f);
             var pimg = panel.GetComponent<Image>();
             pimg.color = MelonS.GameProto.Core.UITheme.PanelBg;
@@ -243,7 +250,11 @@ namespace MelonS.GameProto
             rt.pivot = new Vector2(0f, 1f);
             rt.offsetMin = new Vector2(8f, 0f); rt.offsetMax = new Vector2(-8f, 0f);
             rt.anchoredPosition = new Vector2(8f, -top);
-            rt.sizeDelta = new Vector2(0f, 26f);   // 글자 18 이 세로로 잘리지 않는 최소치
+            // 행 높이는 **글자 크기에서 유도**한다 (2026-08-01).
+            //  26px 고정이었는데 글자를 18 → 20 으로 올리자 한글이 세로로 잘려
+            //  **패널이 통째로 비어 보였다**(흰 상자만 남음).  숫자를 하드코딩하면
+            //  다음에 크기를 바꿀 때 같은 사고가 반복된다.
+            rt.sizeDelta = new Vector2(0f, size * 1.6f);
             var t = go.GetComponent<Text>();
             t.font = font; t.fontSize = size; t.color = col;
             t.alignment = TextAnchor.MiddleLeft;

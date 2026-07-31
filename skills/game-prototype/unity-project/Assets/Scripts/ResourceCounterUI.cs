@@ -69,7 +69,15 @@ namespace MelonS.GameProto
                 //  디버그 값처럼 읽혔다(플레이어는 점수로 오해하거나 그냥 무시한다).
                 //  실제로는 습격 규모를 정하는 입력값이다 — 그 한 마디가 있으면
                 //  "재산이 늘면 더 큰 습격이 온다"는 이 장르의 긴장이 화면에서 읽힌다.
-                string ws = $"   가치: {AIDirector.WealthSnapshot():N0} (습격 규모)";
+                // 2026-08-01 — 한 줄에 두 값이 붙어 있으면 둘 다 안 읽힌다(확대 실측:
+                //  '석재: 0   가치: 844 (습격 규모)').  줄바꿈으로 분리하고 괄호 설명을
+                //  짧게 줄인다.  석재는 자원, 가치는 위협 지표라 성격이 다르다.
+                // 줄바꿈은 쓰지 않는다 (2026-08-01 실측).  이 패널은 ContentSizeFitter +
+                //  VerticalLayoutGroup 으로 **행 단위** 높이를 계산하는데, 한 Text 안에
+                //  개행을 넣으면 레이아웃은 여전히 한 행으로 보고 둘째 줄이 패널 밖으로
+                //  삐져나온다.  진짜 해법은 별도 행 추가지만 씬 재베이크가 필요하므로,
+                //  같은 줄에 두되 **간격을 벌리고 라벨을 짧게** 해 읽히게 한다.
+                string ws = $"    가치 {AIDirector.WealthSnapshot():N0}";
                 if (ws != _wealthSuffix) { _wealthSuffix = ws; lastStone = -1; }
             }
             if (Time.unscaledTime >= _nextGroundPoll)

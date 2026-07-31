@@ -238,7 +238,11 @@ namespace MelonS.GameProto.EditorTools
             Text t = txtGo.AddComponent<Text>();
             t.text = label;
             t.font = uiFont;
-            t.fontSize = 32;   // 시각 QA: 라벨 28→32 (가독)
+            // 2026-08-01 32 → 24.  자원 패널이 정착 목표 패널(18pt)의 거의 두 배라
+            //  **위계가 뒤집혀 있었다** — '지금 얼마나 있나'가 '무엇을 해야 하나'보다
+            //  두 배 크게 외치고 있었다.  확대 실측에서 한눈에 보였다.
+            //  24 면 여전히 잘 읽히면서 목표 패널(20 으로 상향)과 자연스러운 단차가 된다.
+            t.fontSize = 24;
             t.fontStyle = FontStyle.Normal /* BitBit 자체 볼드 — 중첩 금지 (2026-07-25) */;
             t.color = col;
             t.alignment = TextAnchor.MiddleLeft;
