@@ -28,6 +28,8 @@ usage:
 from __future__ import annotations
 import sys
 import os
+import math          # campfire() 가 쓴다 — 없어서 마지막 3종(모닥불·장독대·당산나무)이
+                     #  생성 중 NameError 로 끊기고 있었다 (2026-08-02 발견)
 import colorsys
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -275,6 +277,56 @@ def lamp():
     d.ellipse((9, 10, 22, 16), fill=shade(P.ROCK_LT, -0.05), outline=P.OUTLINE_OBJ)
     d.ellipse((12, 4, 19, 13), fill=P.FIRE_OR)
     d.ellipse((14, 6, 17, 12), fill=P.FIRE_LT)
+    return img
+
+
+def stone_lantern():
+    """석등(장명등) — 절·능·마을 어귀에 서던 **돌 조명**.
+
+    2026-08-02 운영자 "조명관련 오브젝트들 개선 및 추가해줘" 에 대한 '추가'.
+    등잔(목재 20, 반경 5.5)과 겹치지 않게 성격을 갈랐다:
+      · 재료가 **석재** — 지금까지 석재로 짓는 건 벽·바닥뿐이라 쓸 곳이 적었다
+      · 가장 넓게 밝힌다 (반경 7.5) — 마당 전체를 맡는 큰 조명
+      · 돌이라 불에 타지 않는다는 인상 — 야외 상설 조명
+
+    형태는 실물 구조 그대로 쌓는다 (아래→위):
+      지대석(넓은 받침) → 간주석(가는 기둥) → 화사석(불집, 창이 뚫려 빛이 샌다)
+      → 옥개석(추녀가 들린 지붕돌) → 상륜(꼭대기 보주)
+    이 5단 실루엣이 석등을 석등으로 만든다 — 기둥 위에 등만 올리면 서양 가로등이다."""
+    img = tile()
+    d = ImageDraw.Draw(img)
+    G_LT = shade(P.ROCK_LT, +0.30, s=0.08)      # 화강암 — 잔디 위로 뜨는 밝기
+    G_MD = shade(P.ROCK_LT, +0.10, s=0.08)
+    G_DK = shade(P.ROCK_MD, -0.18, s=0.10)
+
+    # ① 지대석 — 넓은 받침.  없으면 기둥이 땅에 꽂힌 막대로 보인다.
+    d.polygon([(7, 30), (25, 30), (23, 26), (9, 26)], fill=G_MD, outline=P.OUTLINE_OBJ)
+    hline(d, 9, 23, 26, G_LT)
+
+    # ② 간주석 — 가는 기둥.  좌측에 미광, 우측에 그늘 (광원 좌상단).
+    d.rectangle((14, 18, 18, 26), fill=G_MD, outline=P.OUTLINE_OBJ)
+    vline(d, 15, 19, 25, G_LT)
+    vline(d, 17, 19, 25, G_DK)
+
+    # ③ 화사석 — 불집.  창이 뚫려 있고 그 안에서 빛이 샌다.
+    d.rectangle((11, 11, 21, 18), fill=G_MD, outline=P.OUTLINE_OBJ)
+    d.rectangle((13, 13, 19, 17), fill=shade(P.FIRE_OR, -0.30))     # 창 안쪽 그늘
+    d.rectangle((14, 14, 18, 16), fill=P.FIRE_OR)                   # 불빛
+    d.rectangle((15, 14, 17, 15), fill=P.FIRE_LT)                   # 심지
+    vline(d, 12, 12, 17, G_LT)
+
+    # ④ 옥개석 — 지붕돌.  **추녀가 들린다**(양 끝이 위로).  한옥 지붕과 같은 신호.
+    #  추녀는 선으로 그으면 지붕에서 뻗은 **더듬이**로 보인다 (1차 검수).  지붕
+    #  다각형에 붙은 삼각 귀퉁이로 그려야 '들린 처마' 가 된다.
+    d.polygon([(4, 10), (28, 10), (26, 11), (6, 11)], fill=G_MD)    # 추녀 아랫단
+    d.polygon([(6, 11), (26, 11), (22, 6), (10, 6)], fill=G_MD, outline=P.OUTLINE_OBJ)
+    d.polygon([(4, 10), (8, 11), (7, 8)], fill=G_MD, outline=P.OUTLINE_OBJ)   # 좌 추녀
+    d.polygon([(28, 10), (24, 11), (25, 8)], fill=G_MD, outline=P.OUTLINE_OBJ)  # 우 추녀
+    hline(d, 10, 22, 6, G_LT)
+    hline(d, 7, 25, 10, G_DK)
+
+    # ⑤ 상륜 — 꼭대기 보주.  작지만 실루엣의 마침표다.
+    d.ellipse((14, 2, 18, 6), fill=G_LT, outline=P.OUTLINE_OBJ)
     return img
 
 
@@ -548,6 +600,7 @@ SPRITES = [
     ("struct32_stove", stove),
     ("struct32_research_bench", research_bench),
     ("struct32_lamp", lamp),
+    ("struct32_stone_lantern", stone_lantern),   # 2026-08-02 신규 조명
     ("struct32_fence", fence),
     ("struct32_fence_gate", fence_gate),
     ("struct32_barricade", barricade),
@@ -564,27 +617,28 @@ SPRITES = [
 ]
 
 
-# 일부 에셋은 Resources/ 아래에 있다 (런타임 Resources.Load 로 읽는 것들).
-#  같은 이름의 파일이 두 곳에 생기면 어느 쪽이 쓰이는지 알 수 없게 되므로
-#  **원래 있던 자리에 그대로** 덮어쓴다.
-RESOURCES_SPRITES = os.path.normpath(os.path.join(HERE, "..", "Resources", "Sprites"))
-DEST_OVERRIDE = {
-    "grave64_empty": RESOURCES_SPRITES,
-    "grave64_mound": RESOURCES_SPRITES,
-}
+# 목적지는 **적지 않는다. 찾는다.**  (_assetpaths.mirrors)
+#
+# 2026-08-02 실측: 한국풍으로 새로 그린 4종(수면자리·전돌 바닥·서안·돌담)이
+#  `Sprites/` 에만 반영되고 `Resources/struct32/` 에는 7/26 자 옛 그림이 남아 있었다.
+#  에디터에서는 새 그림, **운영자가 실제로 플레이하는 exe·WebGL 에서는 옛 그림**.
+#  목적지를 손으로 적는 표(DEST_OVERRIDE)를 쓰는 한 빠뜨림은 반복된다 — 그래서
+#  같은 이름의 png 를 Assets/ 전체에서 찾아 전부 덮는 방식으로 바꿨다.
+from _assetpaths import save_everywhere, rel  # noqa: E402
 
 
 def main() -> int:
     stage = "--stage" in sys.argv
     for name, fn in SPRITES:
+        img = fn()
         if stage:
             out = r"G:/ai/_hanok_stage"
-        else:
-            out = DEST_OVERRIDE.get(name, HERE)
-        os.makedirs(out, exist_ok=True)
-        img = fn()
-        img.save(os.path.join(out, f"{name}.png"))
-        print(f"[ok] {name}.png ({img.width}x{img.height}) → {os.path.basename(out)}")
+            os.makedirs(out, exist_ok=True)
+            img.save(os.path.join(out, f"{name}.png"))
+            print(f"[ok] {name}.png ({img.width}x{img.height}) → _hanok_stage")
+            continue
+        paths = save_everywhere(img, name, create_in=HERE)
+        print(f"[ok] {name}.png ({img.width}x{img.height}) → {rel(paths)}")
     print(f"{'(검수용) ' if stage else ''}{len(SPRITES)}종 반영")
     return 0
 

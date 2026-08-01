@@ -70,7 +70,13 @@ namespace MelonS.GameProto.EditorTools
             //  나머지는 flora64(PPU64≈1×1.5칸)로 하층을 채운다 — 합성 비교에서
             //  ts단일/flora64단독/혼합 중 혼합이 가장 숲답게 읽혔다.
             //  셀 점유는 여전히 1칸 (시각 footprint 만 다름).
-            var tsTree = ImportSpriteAt("Assets/Sprites/ts_tree.png", 96f);
+            // 2026-08-02 운영자: "방금 들어간 나무 좀 이상하게 생겼고 너무 큰데?"
+            //  실측: PPU 96 → 192px/96 = **2.0칸**.  나머지 수종은 1.48~1.62칸이라
+            //  소나무(분포 30%, 가장 흔한 나무)만 혼자 1.8배 면적으로 화면을 눌렀다.
+            //  크기는 `_gen_hanok_flora.py` 의 월드 폭 표가 정한다 (내용 1.23칸 —
+            //  참나무 1.22 와 같은 급).  여기서 PPU 를 강제하면 그 표와 갈라지므로
+            //  **0 을 넘겨 .meta 값을 그대로 쓴다.**
+            var tsTree = ImportSpriteAt("Assets/Sprites/ts_tree.png", 0f);
             Sprite F64(string n) => ImportSpriteAt($"Assets/Sprites/flora64_{n}.png", 64f);
             // 슬롯 순서 = TreeSpecies enum 순서 (Pine, Birch, Oak, Maple, Spruce)
             var pine = tsTree != null ? tsTree : F64("pine");

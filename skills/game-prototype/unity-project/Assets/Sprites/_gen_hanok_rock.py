@@ -64,6 +64,24 @@ SPECK = {                                            # 결정 알갱이 색
 }
 
 
+def outline(im, px, col=None):
+    """실루엣 **바깥으로** px 만큼 외곽선을 두른다.
+
+    레퍼런스 콜로니심 아트 가이드의 intensity hierarchy 규칙:
+      · 플레이어가 손댈 수 있는 것(아이템·건물·광맥) = 2~3px 검은 외곽선으로 눈에 띈다
+      · 식물·지형 = 외곽선 없음.  일부러 배경으로 물러난다
+    출처: https://spdskatr.github.io/RWModdingResources/artstyle.html
+
+    알파를 MaxFilter 로 부풀린 뒤 **원본이 없는 곳만** 칠하므로 안쪽 디테일이 살고
+    실루엣이 정확히 px 만큼만 두꺼워진다.  (지형 타일에는 쓰지 않는다.)"""
+    if px <= 0:
+        return im
+    from PIL import ImageFilter
+    ring = Image.new("RGBA", im.size, col or P.OUTLINE_OBJ)
+    ring.putalpha(im.split()[3].filter(ImageFilter.MaxFilter(px * 2 + 1)))
+    return Image.alpha_composite(ring, im)
+
+
 def _facets(rnd, cx, cy, r, n):
     """각진 덩어리 하나의 꼭짓점 — 원을 불규칙하게 찌그러뜨린 다각형.
 
@@ -76,29 +94,67 @@ def _facets(rnd, cx, cy, r, n):
     return pts
 
 
-def _chunk(d, rnd, cx, cy, r, base, speck, seed_i):
-    """돌덩이 하나 — 몸통 + 윗면(밝은 면) + 균열 + 알갱이."""
-    body = _facets(rnd, cx, cy, r, rnd.choice((6, 7)))
-    d.polygon(body, fill=base, outline=shade(base, -0.42))
+# 광원 방향 — 좌상단.  이 레포의 절차 아트 전부가 쓰는 방향(돌만 다른 쪽에서 빛을
+#  받으면 그 물체 하나가 붙여넣은 것처럼 뜬다).
+LIGHT = (-0.46, -0.89)
 
-    # 윗면 — 하늘을 보는 면.  몸통 위쪽을 잘라 낸 다각형이라 각으로 만난다.
-    top = []
-    for (x, y) in body:
-        if y <= cy + r * 0.10:
-            top.append((x, y))
-    if len(top) >= 3:
-        top.append((cx + r * 0.10, cy + r * 0.16))
-        d.polygon(top, fill=shade(base, +0.13))
 
-    # 좌상 하이라이트 면 — 더 작게 한 겹 더 (2단 램프)
-    hi = [(x * 0.72 + cx * 0.28, y * 0.72 + cy * 0.28) for (x, y) in top[:-1]]
-    if len(hi) >= 3:
-        d.polygon(hi, fill=shade(base, +0.26))
+def _clip(poly, nx, ny, d0):
+    """반평면 nx*x + ny*y + d0 >= 0 으로 다각형을 자른다 (Sutherland–Hodgman).
 
-    # 우/하단 그늘 면
-    dark = [(x, y) for (x, y) in body if y >= cy - r * 0.05 and x >= cx - r * 0.30]
+    면을 '밝은 쪽 / 어두운 쪽' 으로 **실제로 갈라야** 각이 선다.  이전 구현은 꼭짓점을
+    y 좌표로 걸러 부분집합을 칠했는데, 잘린 면이 얇은 조각이 되거나 비어 버려 결국
+    밝은 색 하나로 덮인 각설탕처럼 읽혔다."""
+    if not poly:
+        return []
+    out = []
+    n = len(poly)
+    for i in range(n):
+        ax, ay = poly[i]
+        bx, by = poly[(i + 1) % n]
+        da = nx * ax + ny * ay + d0
+        db = nx * bx + ny * by + d0
+        if da >= 0:
+            out.append((ax, ay))
+        if (da >= 0) != (db >= 0):
+            t = da / (da - db)
+            out.append((ax + (bx - ax) * t, ay + (by - ay) * t))
+    return out
+
+
+def _chunk(d, rnd, cx, cy, r, base, speck, seed_i=0, tilt=0.0):
+    """돌덩이 하나 — **명면과 암면을 각으로 맞대어** 깎인 돌을 만든다.
+
+    광맥(_gen_hanok_rock)과 석재 아이템(_gen_hanok_stone_item)이 **같은 이 함수**를
+    쓴다.  돌 문법을 두 곳에 두면 반드시 갈라진다 — 실제로 갈라져서, 아이템 쪽만
+    면 대비가 살고 광맥은 창백한 종이 조각처럼 남아 있었다."""
+    body = _facets(rnd, cx, cy, r, rnd.choice((5, 6, 7)))
+    if tilt:
+        body = [(cx + (x - cx) * math.cos(tilt) - (y - cy) * math.sin(tilt) * 0.6,
+                 cy + (x - cx) * math.sin(tilt) * 0.6 + (y - cy) * math.cos(tilt))
+                for (x, y) in body]
+
+    # 능선(稜線) — 명면과 암면이 만나는 선.  광원에 수직이고 파편마다 조금씩 꺾인다.
+    #  이 선 하나가 '깎였다' 를 만든다.
+    nx, ny = LIGHT
+    a = rnd.uniform(-0.34, 0.34)
+    nx, ny = (nx * math.cos(a) - ny * math.sin(a), nx * math.sin(a) + ny * math.cos(a))
+    d0 = -(nx * cx + ny * cy) - rnd.uniform(-0.16, 0.14) * r
+
+    d.polygon(body, fill=shade(base, -0.10))            # 바탕(퇴화 방지)
+    dark = _clip(body, -nx, -ny, -d0)
     if len(dark) >= 3:
-        d.polygon(dark, fill=shade(base, -0.20))
+        d.polygon(dark, fill=shade(base, -0.34))        # 암면
+    lit = _clip(body, nx, ny, d0)
+    if len(lit) >= 3:
+        d.polygon(lit, fill=base)                       # 명면
+        top = _clip(lit, nx, ny, d0 - r * 0.42)
+        if len(top) >= 3:
+            d.polygon(top, fill=shade(base, +0.11))     # 꼭대기 면 (3단 램프)
+
+    # 파편끼리 겹칠 때 서로 안 녹도록 몸통 테두리를 한 톤 어둡게 (검은 인라인 대신
+    #  가이드가 권하는 '음영 차이' 로 경계를 만든다).
+    d.polygon(body, outline=shade(base, -0.52))
 
     # 균열 — **짧게**.  1차에서 덩어리 중심까지 긋는 긴 선을 썼더니 돌을 가로지르는
     #  막대기(나뭇가지)처럼 보였다.  실제 균열은 모서리에서 시작해 조금 들어가다 만다.
@@ -120,20 +176,36 @@ def _chunk(d, rnd, cx, cy, r, base, speck, seed_i):
         d.point((px_, py_), fill=speck)
 
 
+def _at_value(c, v_target):
+    """색상은 두고 **명도만** 목표값으로 맞춘다.
+
+    2026-08-02 실측: ROCK 램프(밝기 0.28/0.39/0.52)가 GRASS 램프(0.32/0.41/0.49)
+    위에 그대로 포개져 있었다.  밝기 차이가 2%면 색이 달라도 형태가 분리되지 않는다
+    — 운영자가 "돌이 안 보인다" 고 한 것의 측정된 원인.  광맥은 캐는 대상이므로
+    잔디 위로 확실히 떠올라야 한다 (지형 타일은 반대로 물러나야 하므로 안 올린다)."""
+    r, g, b, a = c
+    h, s, _ = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+    r2, g2, b2 = colorsys.hsv_to_rgb(h, s, v_target)
+    return (round(r2 * 255), round(g2 * 255), round(b2 * 255), a)
+
+
 def vein(kind: str, size=128, seed=5):
-    """광맥 — 돌덩이 3~4개가 뭉친 노두(露頭)."""
+    """광맥 — 돌덩이 3~4개가 뭉친 노두(露頭).  **캐는 대상 = 눈에 띄어야 한다.**"""
     rnd = random.Random(seed + hash(kind) % 1000)
     im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
-    base, speck = STONES[kind], SPECK[kind]
+    base, speck = _at_value(STONES[kind], 0.74), SPECK[kind]
     u = size / 128.0
     # 뒤(위)에 있는 덩이부터 그려 앞 덩이가 덮게 한다
     chunks = [(64, 58, 30), (38, 78, 26), (90, 80, 25), (64, 92, 22)]
     for i, (cx, cy, r) in enumerate(chunks):
         _chunk(d, rnd, cx * u, cy * u, r * u, base, speck, i)
-    # 접지 그늘 — 땅에 놓인 느낌
-    d.ellipse((18 * u, 100 * u, 110 * u, 118 * u), fill=(0, 0, 0, 46))
-    return im
+    # 외곽선 — 타일 64px 당 2px (가이드 규칙).  접지 그늘보다 **먼저** 둘러야
+    #  그늘이 외곽선 밖으로 새지 않는다.
+    im = outline(im, max(1, round(size / 64.0 * 2)))
+    sh = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    ImageDraw.Draw(sh).ellipse((18 * u, 100 * u, 110 * u, 118 * u), fill=(20, 16, 14, 62))
+    return Image.alpha_composite(sh, im)
 
 
 def rock_tile(size=64, seed=9):

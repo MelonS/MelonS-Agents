@@ -76,6 +76,26 @@ namespace MelonS.GameProto
         //  Sway tunables                                                       //
         // ------------------------------------------------------------------ //
 
+        // ── 흔들림 값 공개 ─────────────────────────────────────────────
+        //
+        // 2026-08-01 운영자: "나무는 바람에 흔들리는데 그림자는 그대로라 흠".
+        //  이 파일 상단 주석은 "shadows correctly stay static while the canopy
+        //  sways" 라고 적어 놨는데, 그건 **틀린 전제**다.  방향광 아래에서 물체가
+        //  가로로 움직이면 그 그림자도 같은 만큼 움직인다.  수관만 흔들리고
+        //  그림자가 붙박이면 '그림자가 나무에 안 붙어 있는' 것으로 보인다.
+        //
+        //  결합은 최소로 — 흔들림 값만 내주고, 그림자 쪽(SunShadowDriver)이
+        //  자기 계산에 더한다.  이 드라이버는 그림자의 존재를 몰라도 된다.
+        private static readonly System.Collections.Generic.Dictionary<Transform, float>
+            _swayByHost = new System.Collections.Generic.Dictionary<Transform, float>();
+
+        /// <summary>이 나무의 현재 가로 흔들림(월드 단위).  그림자가 같이 움직이려고 읽는다.</summary>
+        public static float SwayOffsetFor(Transform host)
+        {
+            if (host == null) return 0f;
+            return _swayByHost.TryGetValue(host, out float v) ? v : 0f;
+        }
+
         // Horizontal sway amplitude in world units.
         // PPU 16 → 1 world unit = 16 px → 0.04 wu = 0.64 px ~ 1 px (spec ±1 px).
         private const float SwayAmplitude = 0.04f;
@@ -307,6 +327,10 @@ namespace MelonS.GameProto
 
                 // SPRITE CHILD local position X only.  Root transform untouched.
                 _childTf.localPosition = new Vector3(xOffset, 0f, 0f);
+
+                // 그림자가 따라오도록 현재 흔들림을 공개한다 (위 주석 참조).
+                var rootTf = _childTf.parent;
+                if (rootTf != null) _swayByHost[rootTf] = xOffset;
 
                 // Mirror root tint to child each frame.
                 // TreeEntity.TakeChopDamage / TintHelper / SetSpecies write to

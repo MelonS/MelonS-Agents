@@ -148,6 +148,7 @@ namespace MelonS.GameProto
             BuildManager.Mode.BedFine         => "고급 침대",
             BuildManager.Mode.BedSleepingSpot => "잠자리",
             BuildManager.Mode.Lamp            => "등불",
+            BuildManager.Mode.StoneLantern    => "석등",
             BuildManager.Mode.TableChair       => "식탁",
             BuildManager.Mode.Fence           => "울타리",
             BuildManager.Mode.FenceGate       => "울타리 문",

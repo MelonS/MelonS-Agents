@@ -25,6 +25,15 @@ namespace MelonS.GameProto.EditorTools
 
         /// <summary>아트 B2 (Tiny Swords): 명시 PPU 임포트 — 팩 스프라이트는 파일별
         /// 밀도가 달라(64/128/192) 자동 PPU 규칙(#141)을 못 쓴다.</summary>
+        /// <param name="ppu">픽셀/유닛.  **0 이면 .meta 에 이미 있는 값을 그대로 둔다.**
+        ///
+        /// 2026-08-02: 여기서 PPU 를 강제하는 것이 조용한 크기 드리프트의 원인이었다.
+        ///  `ts_wood_pile.png` 는 이 함수가 70 으로 강제하는데 런타임이 읽는
+        ///  `Resources/Sprites/` 사본은 160 이라, 같은 그림이 에디터에서는 0.70칸,
+        ///  **게임에서는 0.31칸**으로 나왔다 (운영자 "목재는 왜케 작게 표현되는거지").
+        ///  크기는 생성기의 월드 크기 표(`_assetpaths.set_ppu`)가 정하는 것이 맞고,
+        ///  씬 생성기는 그것을 덮어쓰지 말아야 한다 — 같은 사실을 두 곳이 말하면
+        ///  반드시 갈라진다.</param>
         private static Sprite ImportSpriteAt(string assetPath, float ppu)
         {
             if (!System.IO.File.Exists(assetPath)) return null;
@@ -34,7 +43,7 @@ namespace MelonS.GameProto.EditorTools
             {
                 ti.textureType = TextureImporterType.Sprite;
                 ti.spriteImportMode = SpriteImportMode.Single;
-                ti.spritePixelsPerUnit = ppu;
+                if (ppu > 0f) ti.spritePixelsPerUnit = ppu;
                 ti.filterMode = FilterMode.Point;
                 ti.SaveAndReimport();
             }

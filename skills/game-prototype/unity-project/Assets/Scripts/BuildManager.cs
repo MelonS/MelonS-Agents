@@ -55,7 +55,7 @@ namespace MelonS.GameProto
         //   NO cover-math (gated/over-scope) — visual + pathing only.
         // ⚠ enum 순서 불변 계약: StructureTag.modeInt 가 (int) 로 저장되므로 새 모드는
         //  반드시 끝에 append (삽입 시 기존 세이브의 구조물이 전부 다른 것으로 재구성됨).
-        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair, Fence, FenceGate, Barricade, Autodoor, ResearchBench, Grave }
+        public enum Mode { Off, Wall, Floor, Door, Stove, Bed, WallStone, BedSleepingSpot, BedFine, Lamp, FloorStone, TableChair, Fence, FenceGate, Barricade, Autodoor, ResearchBench, Grave, StoneLantern }
         public Mode CurrentMode { get; private set; } = Mode.Off;
         public bool BuildModeActive => CurrentMode != Mode.Off;
         // #182 - placement cooldown: SetMode 후 0.15s 동안 TryPlace skip.
@@ -95,6 +95,12 @@ namespace MelonS.GameProto
         private Sprite     _lampSpriteRuntime;  // cached lazily-built sprite
         // W-M4-05 (#21) - Stone floor cost.  Wood floor = 목재 1; stone floor is
         //   paid from STONE (like WallStone).  석재 1 keeps it reachable / cheap.
+        // 석등(장명등) — 2026-08-02 운영자 "조명관련 오브젝트들 개선 및 추가해줘".
+        //  석재로 짓는 유일한 **가구**다 (지금까지 석재는 벽·바닥뿐이라 캐 놓고 쓸 곳이
+        //  적었다).  등잔(목재 20, 반경 5.5)보다 비싸고 넓게 밝힌다 — 마당 상설 조명.
+        [SerializeField] private int stoneLanternCost = 25;   // 석재
+        private GameObject _stoneLanternPrefabRuntime;
+        private Sprite     _stoneLanternSpriteRuntime;
         [SerializeField] private int floorStoneCost = 3;   // 밸런스 A6(2026-07-24): 1→3 파리티
         // W-M4-05 (#21) - Stone-floor prefab + sprite, built LAZILY + PROCEDURALLY
         //   exactly like the Lamp entry (the Lane B contract forbids a SceneSetup
@@ -340,6 +346,7 @@ namespace MelonS.GameProto
             Mode.BedSleepingSpot => EnsureBedVariantSprite(Mode.BedSleepingSpot),   // #6
             Mode.BedFine => EnsureBedVariantSprite(Mode.BedFine),                   // #6
             Mode.Lamp  => EnsureLampSprite(),
+            Mode.StoneLantern => EnsureStoneLanternSprite(),
             // #ui백로그 4.4 — WallStone 케이스 부재로 목재 벽 폴백 → '회색 틴트 목재
             //  스프라이트' 머디브라운 회귀 (#255 가 경로 바꾸며 재발).  회색 석재로.
             Mode.WallStone => EnsureFloorStoneSprite(),
@@ -370,6 +377,7 @@ namespace MelonS.GameProto
             Mode.BedSleepingSpot => bedSleepingSpotCost,  // #154 - 0
             Mode.BedFine         => bedFineCost,          // #154 - 30
             Mode.Lamp            => lampCost,             // W-M4-04 #19 - 목재 4
+            Mode.StoneLantern    => stoneLanternCost,     // 석재 25 — 마당 조명
             Mode.FloorStone      => floorStoneCost,       // W-M4-05 #21 - 석재 1
             Mode.TableChair      => tableChairCost,       // W-M4-06 #20 - 목재 6
             Mode.Fence           => fenceCost,            // W-M6-02 B3 - 목재 1
@@ -458,6 +466,7 @@ namespace MelonS.GameProto
             Mode.BedSleepingSpot => bedPrefab,  // #154 - 같은 prefab, quality 다름
             Mode.BedFine         => bedPrefab,  // #154
             Mode.Lamp            => EnsureLampPrefab(),  // W-M4-04 #19
+            Mode.StoneLantern    => EnsureStoneLanternPrefab(),
             Mode.FloorStone      => EnsureFloorStonePrefab(),  // W-M4-05 #21
             Mode.TableChair      => EnsureTableChairPrefab(),  // W-M4-06 #20
             Mode.Fence           => EnsureFencePrefab(),       // W-M6-02 B3
@@ -871,6 +880,7 @@ namespace MelonS.GameProto
             Mode.BedSleepingSpot => "수면 자리",
             Mode.BedFine         => "고급 침대",
             Mode.Lamp            => "램프",   // W-M4-04 #19
+            Mode.StoneLantern    => "석등",
             Mode.FloorStone      => "석재 바닥",  // W-M4-05 #21
             Mode.TableChair      => "탁자+의자",  // W-M4-06 #20
             Mode.Fence           => "울타리",     // W-M6-02 B3
@@ -882,7 +892,8 @@ namespace MelonS.GameProto
         };
 
         // W-M4-05 (#21) - 석재로 결제하는 모드 (석재 벽 / 석재 바닥).  나머지는 목재.
-        private static bool PaysWithStone(Mode m) => m == Mode.WallStone || m == Mode.FloorStone;
+        private static bool PaysWithStone(Mode m) =>
+            m == Mode.WallStone || m == Mode.FloorStone || m == Mode.StoneLantern;
 
         private Sprite SpriteForCurrentMode() => CurrentMode switch
         {
@@ -894,6 +905,7 @@ namespace MelonS.GameProto
             Mode.BedSleepingSpot => EnsureBedVariantSprite(Mode.BedSleepingSpot),   // #6
             Mode.BedFine         => EnsureBedVariantSprite(Mode.BedFine),           // #6
             Mode.Lamp  => EnsureLampSprite(),   // W-M4-04 #19
+            Mode.StoneLantern => EnsureStoneLanternSprite(),
             Mode.WallStone => EnsureFloorStoneSprite(),   // #4.4 — 고스트/청사진도 회색
             Mode.FloorStone => EnsureFloorStoneSprite(),  // W-M4-05 #21
             Mode.TableChair => EnsureTableChairSprite(),  // W-M4-06 #20
@@ -1004,6 +1016,48 @@ namespace MelonS.GameProto
             return _benchPrefabRuntime;
         }
 
+        // ── 석등(장명등) — 램프의 지연 생성 경로를 그대로 복제 ──────────────
+        //  램프와 다른 점은 셋뿐이다: 스프라이트, 빛 반경(7.5), 석재 결제.
+        //  LampEntity 를 재사용한다 — 밤 게이트·소화 오버레이·LightSource 등록이
+        //  이미 거기 있고, 조명이 하나 늘 때마다 그걸 다시 쓰면 반드시 갈라진다.
+        private Sprite EnsureStoneLanternSprite()
+        {
+            if (_stoneLanternSpriteRuntime != null) return _stoneLanternSpriteRuntime;
+#if UNITY_EDITOR
+            _stoneLanternSpriteRuntime = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(
+                "Assets/Sprites/struct32_stone_lantern.png");
+#endif
+            if (_stoneLanternSpriteRuntime == null)
+                _stoneLanternSpriteRuntime = Resources.Load<Sprite>("struct32/struct32_stone_lantern");
+            // 스프라이트가 없어도 **보이기는 해야 한다** — 자홍색 null 스프라이트는
+            //  플레이어에게 '고장' 으로 읽힌다 (#215 와 같은 이유).
+            if (_stoneLanternSpriteRuntime == null)
+                _stoneLanternSpriteRuntime = EnsureLampSprite();
+            return _stoneLanternSpriteRuntime;
+        }
+
+        private GameObject EnsureStoneLanternPrefab()
+        {
+            if (_stoneLanternPrefabRuntime != null) return _stoneLanternPrefabRuntime;
+            var go = new GameObject("StoneLanternTemplate");
+            go.hideFlags = HideFlags.HideAndDontSave;
+            go.SetActive(false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite       = EnsureStoneLanternSprite();
+            sr.sortingOrder = 5;                               // Stove/Lamp 본체와 동일
+            var box = go.AddComponent<BoxCollider2D>();
+            box.size = Vector2.one;
+            // 템플릿은 비활성이라 Awake 가 아직 안 돌았다 — 여기서 반경을 넣어 두면
+            //  Instantiate 되어 활성화될 때 그 값으로 LightSource 가 만들어진다.
+            var lanternLamp = go.AddComponent<LampEntity>();
+            lanternLamp.SetLightRadius(7.5f);
+            // 석등의 불은 화사석(불집) 안 = 스프라이트 한가운데다.  등잔 기본값(+0.30칸,
+            //  0.42배)을 그대로 쓰면 낮에 **지붕돌**이 검게 덮인다.
+            lanternLamp.SetFlameCover(0.02f, 0.22f);
+            _stoneLanternPrefabRuntime = go;
+            return _stoneLanternPrefabRuntime;
+        }
+
         private GameObject EnsureLampPrefab()
         {
             if (lampPrefab != null) return lampPrefab;         // wired via SetRefs (future)
@@ -1037,6 +1091,13 @@ namespace MelonS.GameProto
             var sp = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/struct32_lamp.png");
             if (sp != null) return sp;
 #endif
+            // 2026-08-02 — Resources 폴백이 **없었다.**  AssetDatabase 는 에디터에만
+            //  있으므로 플레이어 빌드(운영자가 실제로 플레이하는 exe·WebGL)에서는
+            //  항상 절차 생성 램프가 나왔다.  한국풍으로 새로 그린 등잔
+            //  (struct32_lamp.png) 이 게임에는 **한 번도 들어간 적이 없다**는 뜻.
+            //  침대·연구대는 이미 이 폴백을 갖고 있었는데 램프만 빠져 있었다.
+            var res = Resources.Load<Sprite>("struct32/struct32_lamp");
+            if (res != null) return res;
             return BuildProceduralLampSprite();
         }
 

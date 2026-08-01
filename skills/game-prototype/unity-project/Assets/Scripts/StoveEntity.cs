@@ -11,6 +11,15 @@ namespace MelonS.GameProto
     {
         public int MealsAvailable { get; private set; } = 0;
 
+        // 부뚜막 불빛 (2026-08-01 "조명관련 오브젝트들 개선 및 추가해줘").
+        //  아궁이에 불이 그려져 있는데 밤에 주변이 캄캄했다 — 광원 목록에 없었다.
+        //  등잔보다 좁게, 그러나 상시(요리는 밤낮 없다) 켜 둔다.
+        private void Awake()
+        {
+            var ls = GetComponent<LightSource>() ?? gameObject.AddComponent<LightSource>();
+            ls.Configure(4.0f, 0.20f);
+        }
+
         public bool CanCookOne()
         {
             return ResourceManager.Instance != null && ResourceManager.Instance.food >= 3;

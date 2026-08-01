@@ -253,6 +253,9 @@ namespace MelonS.GameProto
             //   crafting-station grouping and leaves room for future light types.
             ["Lighting (조명)"] = new[] {
                 (BuildManager.Mode.Lamp, "램프 (목재 20)", 20),   // 밸런스 A4
+                // 2026-08-02 — 조명이 하나뿐이라 카테고리가 비어 보였고, 석재는
+                //  벽·바닥 말고 쓸 곳이 없었다.  석등이 둘 다 해결한다.
+                (BuildManager.Mode.StoneLantern, "석등 (석재 25)", 25),
             },
         };
 
@@ -305,6 +308,7 @@ namespace MelonS.GameProto
             BuildManager.Mode.Stove           => "stove",
             BuildManager.Mode.ResearchBench   => "struct32_research_bench",
             BuildManager.Mode.Lamp            => "lamp",
+            BuildManager.Mode.StoneLantern    => "struct32_stone_lantern",
             _ => "",
         };
 
@@ -327,6 +331,7 @@ namespace MelonS.GameProto
             BuildManager.Mode.Stove           => "화덕 (요리)",
             BuildManager.Mode.ResearchBench   => "연구대 (주민이 근처에 있으면 연구 진행)",
             BuildManager.Mode.Lamp            => "램프 (조명)",
+            BuildManager.Mode.StoneLantern    => "석등 (넓은 조명, 밤에 켜짐)",
             _ => "건축물",
         };
 

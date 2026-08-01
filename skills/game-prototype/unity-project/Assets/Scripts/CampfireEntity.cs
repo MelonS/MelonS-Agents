@@ -18,6 +18,14 @@ namespace MelonS.GameProto
     [DisallowMultipleComponent]
     public class CampfireEntity : MonoBehaviour
     {
+        private void Awake()
+        {
+            // 마당 모닥불은 마을에서 가장 큰 불이다 — 등잔(5.5)보다 넓게 밝힌다.
+            //  이전에는 광원 목록에 아예 없어서, 불이 타는데 주변은 캄캄했다.
+            var ls = GetComponent<LightSource>() ?? gameObject.AddComponent<LightSource>();
+            ls.Configure(8.0f, 0.25f);
+        }
+
         /// <summary>정보창 제목.</summary>
         public string DisplayName => "모닥불";
 

@@ -123,8 +123,48 @@ namespace MelonS.GameProto
             }
         }
 
+        /// <summary>묘목이 설 자리 — 벤 자리가 비어 있으면 거기, 아니면 가장 가까운 빈 칸.
+        ///
+        /// 2026-08-01 운영자 "목재 캔곳에서 새로운 나무 나오는처리 이상함".
+        ///  나무를 베면 **같은 칸에** 목재 더미가 떨어지는데 묘목도 같은 칸에 심겼다.
+        ///  둘이 정확히 포개져서 목재 위로 나무가 자라는 것처럼 보였다.
+        ///  숲에서도 그루터기 바로 위가 아니라 곁에서 새싹이 오르므로, 비켜 심는 것이
+        ///  자연스럽기도 하다.</summary>
+        private static Vector3 FreeSpotNear(Vector3 pos)
+        {
+            if (!Occupied(pos)) return pos;
+            // 8방향을 가까운 순으로 — 대각선보다 상하좌우를 먼저 본다.
+            var ring = new[]
+            {
+                new Vector2(1f, 0f), new Vector2(-1f, 0f), new Vector2(0f, 1f), new Vector2(0f, -1f),
+                new Vector2(1f, 1f), new Vector2(-1f, 1f), new Vector2(1f, -1f), new Vector2(-1f, -1f),
+            };
+            for (int i = 0; i < ring.Length; i++)
+            {
+                var cand = pos + new Vector3(ring[i].x, ring[i].y, 0f);
+                if (!Occupied(cand) && !PawnMovement.IsBlockedAt(cand)) return cand;
+            }
+            return pos;   // 사방이 막혔으면 원래 자리 (사라지는 것보다 겹치는 게 낫다)
+        }
+
+        private static bool Occupied(Vector3 p)
+        {
+            // 반 칸 반경 — 같은 칸에 있는 것만 잡는다.  자원 더미·다른 묘목·나무.
+            var hits = Physics2D.OverlapCircleAll(p, 0.45f);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                // 콜라이더가 자식에 붙는 경우가 있어 부모까지 훑는다.
+                if (hits[i].GetComponentInParent<WoodPileEntity>() != null) return true;
+                if (hits[i].GetComponentInParent<StoneChunkEntity>() != null) return true;
+                if (hits[i].GetComponentInParent<TreeSapling>() != null) return true;
+                if (hits[i].GetComponentInParent<TreeEntity>() != null) return true;
+            }
+            return false;
+        }
+
         private void SpawnSapling(Vector3 pos)
         {
+            pos = FreeSpotNear(pos);
             var go = new GameObject("TreeSapling");
             go.transform.position = pos;
             go.transform.localScale = Vector3.one * saplingScale;

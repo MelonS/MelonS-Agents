@@ -54,6 +54,16 @@ namespace MelonS.GameProto
         // sitting on the foot.  LampGlowDriver reads this to centre the pool.
         public const float FlameHeightCells = 0.30f;
 
+        /// <summary>이 조명이 밝히는 반경 (칸).  등잔 5.5 = 방 하나.
+        ///
+        /// 2026-08-02 석등 추가로 값이 하나가 아니게 됐다 — 석등은 마당 전체를 맡는
+        ///  큰 조명(7.5)이라 등잔과 같은 컴포넌트를 쓰되 반경만 다르다.  하드코딩된
+        ///  5.5 를 필드로 빼서, 새 조명이 생길 때마다 컴포넌트를 늘리지 않게 한다.</summary>
+        [SerializeField] private float lightRadiusTiles = 5.5f;
+
+        /// <summary>프리팹 조립 시 반경을 지정한다 (Awake 전에 호출돼야 반영된다).</summary>
+        public void SetLightRadius(float tiles) => lightRadiusTiles = tiles;
+
         // 밤 게이트 임계값: NightFactor(0=한낮,1=한밤) 가 이 값 이상이면 점등.
         //  0.18 ~ 황혼/일출 어귀 — 살짝 어둑해지면 켜지고 밝아지면 꺼진다.
         private const float LitThreshold = 0.18f;
@@ -64,8 +74,16 @@ namespace MelonS.GameProto
 
         // 불꽃 머리 영역(본체 상단 ~1/4)을 덮을 오버레이의 본체 대비 크기/위치.
         //  불꽃 픽셀은 본체 top quarter(FlameHeightCells 부근)에 모여 있다.
-        private const float CoverScale  = 0.42f;            // 본체 한 칸(1.0) 대비
-        private const float CoverYCells = FlameHeightCells; // 불꽃 머리 높이
+        //  2026-08-02 석등 추가로 값이 하나가 아니게 됐다.  등잔은 불꽃이 기둥 **위**
+        //   (+0.30칸)에 있지만, 석등은 불꽃이 화사석(불집) 안 = 스프라이트 중앙에 있다.
+        //   상수로 두면 석등에서는 오버레이가 불꽃이 아니라 **지붕돌**을 덮어, 낮에
+        //   지붕에 검은 얼룩이 생기고 불꽃은 그대로 타는 그림이 된다.
+        [SerializeField] private float coverScale  = 0.42f;            // 본체 한 칸(1.0) 대비
+        [SerializeField] private float coverYCells = FlameHeightCells; // 불꽃 머리 높이
+
+        /// <summary>불 끄기 오버레이의 위치·크기 (프리팹 조립 시, Awake 전).</summary>
+        public void SetFlameCover(float yCells, float scale)
+        { coverYCells = yCells; coverScale = scale; }
         private const int   CoverSortingOffset = 1;         // 본체 바로 위
         // 소화 색: 본체 목재 어두운 톤(나무 그림자색)에 맞춰 "불 꺼진 심지"처럼.
         private static readonly Color OffTone = new Color(0.30f, 0.22f, 0.14f, 1f);
@@ -90,6 +108,14 @@ namespace MelonS.GameProto
         {
             _body = GetComponent<SpriteRenderer>();
             BuildDouseOverlay();
+
+            // 밤 라이트맵에 스스로 등록한다 (2026-08-01).  NightOverlay 가 타입을
+            //  나열하는 대신 LightSource 목록만 읽도록 바뀌었으므로, 등잔도 그 목록에
+            //  들어가야 한다.  씬 재베이크 없이 코드가 붙인다.
+            var ls = GetComponent<LightSource>() ?? gameObject.AddComponent<LightSource>();
+            //  빛의 중심도 불꽃 자리다 — 소화 오버레이와 **같은 좌표**를 쓴다.
+            //  상수를 따로 넘기면 석등에서 빛만 지붕돌 높이에서 나온다.
+            ls.Configure(lightRadiusTiles, coverYCells);
         }
 
         // 불꽃 머리 위에 얹는 소화 오버레이 1회 생성(절차).  알파 0 으로 시작.
@@ -99,8 +125,8 @@ namespace MelonS.GameProto
 
             var go = new GameObject("LampDouseOverlay");
             go.transform.SetParent(transform, worldPositionStays: false);
-            go.transform.localPosition = new Vector3(0f, CoverYCells, -0.001f);
-            go.transform.localScale = Vector3.one * CoverScale;
+            go.transform.localPosition = new Vector3(0f, coverYCells, -0.001f);
+            go.transform.localScale = Vector3.one * coverScale;
 
             _douse = go.AddComponent<SpriteRenderer>();
             _douse.sprite = _douseSprite;

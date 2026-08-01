@@ -280,6 +280,24 @@ namespace MelonS.GameProto
                     r.detail = wp != null ? $"목재 더미 {amt} @ ({s.x:F1},{s.y:F1})" : "생성 실패";
                     break;
                 }
+                case "spawnStoneChunk":
+                {
+                    // 석재 더미 생성 (테스트 스캐폴딩) — s.amount 로 스택 단계가 바뀐다
+                    //  (1개 / 5개 / 20개 = 파편 1 → 3 → 5).
+                    //
+                    // 왜 필요한가: 바닥에 떨어진 석재는 **광맥을 캐야만** 생기므로 시작
+                    //  상태에 하나도 없고, 22개 시나리오 중 채광까지 가는 것이 없다.
+                    //  2026-08-02 운영자 "석재 … 우리껀 너무 안보여" 로 아트를 전부 다시
+                    //  그렸는데 실물로 확인할 경로가 없었다 — 그 공백을 메운다.
+                    var spos = new Vector3(s.x, s.y, 0f);
+                    int samt = s.amount > 0 ? s.amount : 20;
+                    var sc = StoneChunkEntity.Spawn(spos, samt, StoneChunkEntity.EnsureSprite(null));
+                    yield return null;
+                    r.passed = sc != null;
+                    r.detail = sc != null ? $"석재 더미 {samt} @ ({s.x:F1},{s.y:F1})" : "생성 실패";
+                    break;
+                }
+
                 case "clearStockpiles":
                 {
                     // 전제조건 세팅용 (2026-07-27).  시작 저장구역이 생기면서 바닥 자원이
@@ -390,6 +408,34 @@ namespace MelonS.GameProto
                     yield return null;
                     r.passed = true;
                     r.detail = $"food sources removed: {removed} (+저장 카운터 0)";
+                    break;
+                }
+
+                case "roofrect":
+                {
+                    // 지붕 즉시 시공 (테스트 스캐폴딩) — s.x,s.y = 좌하단 셀,
+                    //  s.dx,s.dy = 폭/높이(칸).  지정 후 노동을 한 번에 적립해 완공시킨다.
+                    //
+                    // 왜 필요한가: 지붕은 **플레이어가 지정해야만** 생기므로 시작 상태에는
+                    //  단 한 칸도 없다.  그래서 지붕에 딸린 것들(실내 그늘 오버레이,
+                    //  2026-08-02 추가한 건물 그림자, 비/온도 훅)이 자동 검증 대상에서
+                    //  통째로 빠져 있었다 — 22개 시나리오 중 지붕을 만드는 것이 하나도 없다.
+                    var rdz = RoofDesignation.Instance;
+                    if (rdz == null) { r.passed = false; r.detail = "no RoofDesignation"; break; }
+                    int w = Mathf.Max(1, Mathf.RoundToInt(s.dx));
+                    int h = Mathf.Max(1, Mathf.RoundToInt(s.dy));
+                    int x0 = Mathf.RoundToInt(s.x), y0 = Mathf.RoundToInt(s.y);
+                    int made = 0;
+                    for (int cy2 = y0; cy2 < y0 + h; cy2++)
+                        for (int cx2 = x0; cx2 < x0 + w; cx2++)
+                        {
+                            var c = new Vector2Int(cx2, cy2);
+                            rdz.DesignateCell(c);
+                            rdz.TickRoofWork(c, 9999f, "harness");   // 노동 한 번에 적립 = 완공
+                            if (rdz.IsRoofed(c)) made++;
+                        }
+                    r.passed = made == w * h;
+                    r.detail = $"roofed {made}/{w * h}";
                     break;
                 }
 

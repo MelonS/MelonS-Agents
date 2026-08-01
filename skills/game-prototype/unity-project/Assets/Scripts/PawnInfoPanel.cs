@@ -71,6 +71,45 @@ namespace MelonS.GameProto
         //   lazily-built Text (탭 위에 겹치지 않게 panel 본문 영역을 채움).  pawn
         //   탭 UI 와 상호 배타적으로 토글된다.
         private Text entityBodyText;
+
+        // ── 패널 높이를 내용에 맞춘다 ────────────────────────────────────
+        //
+        // 2026-08-01 운영자: "이 ui 왜 이렇게 구려 남는 공간 너무 많고 정리 하나도
+        //  안되어 있고".  실측: 패널이 **380x200 고정**이라, 산딸기처럼 네 줄짜리
+        //  내용을 띄우면 아래 2/3 가 통째로 빈다.  빈 공간은 '아직 안 만든 화면' 으로
+        //  읽힌다 — 실제로는 다 만들어져 있는데도.
+        //  주민 탭은 게이지·목록이 있어 전체 높이가 필요하지만, 오브젝트 정보는
+        //  글 몇 줄이므로 **그만큼만** 차지해야 한다.
+        private const float PanelFullH = 200f;   // 씬 기본값 (주민 탭용)
+        private const float PanelMinH = 96f;
+        private float _panelDefaultH = -1f;
+
+        /// <summary>오브젝트 정보 모드에서 본문 길이에 맞춰 패널을 줄인다.</summary>
+        private void FitPanelToEntityBody()
+        {
+            if (panelBg == null || entityBodyText == null) return;
+            var prt = panelBg.GetComponent<RectTransform>();
+            if (prt == null) return;
+            if (_panelDefaultH < 0f) _panelDefaultH = prt.sizeDelta.y > 0f ? prt.sizeDelta.y : PanelFullH;
+
+            float pad = MelonS.GameProto.Core.UITheme.PadOuter;
+            // preferredHeight 는 현재 폭 기준 줄바꿈까지 반영한 실제 높이다.
+            float need = entityBodyText.preferredHeight
+                         + TitleBandH + TabStripGap + pad * 2f + 8f;
+            float h = Mathf.Clamp(need, PanelMinH, _panelDefaultH);
+            if (!Mathf.Approximately(prt.sizeDelta.y, h))
+                prt.sizeDelta = new Vector2(prt.sizeDelta.x, h);
+        }
+
+        /// <summary>주민 탭으로 돌아갈 때 원래 높이를 되돌린다.</summary>
+        private void RestorePanelHeight()
+        {
+            if (panelBg == null) return;
+            var prt = panelBg.GetComponent<RectTransform>();
+            if (prt == null || _panelDefaultH < 0f) return;
+            if (!Mathf.Approximately(prt.sizeDelta.y, _panelDefaultH))
+                prt.sizeDelta = new Vector2(prt.sizeDelta.x, _panelDefaultH);
+        }
         private EntityInspectorPanel cachedEntityDesc;
 
         // #UI-restyle U5 — runtime border frame so this panel matches the global
@@ -529,6 +568,7 @@ namespace MelonS.GameProto
                 {
                     entityBodyText.gameObject.SetActive(true);
                     entityBodyText.text = entBody;
+                    FitPanelToEntityBody();      // 내용만큼만 차지하게 (위 주석)
                 }
                 // QA F3(2026-06-14): 인스펙터 전용 '벌목 지정' 버튼은 제거됨 — ClickSelector
                 //  좌클릭 플로트 메뉴(🪓 벌목 지정, fb#1-3)가 나무/광맥/베리/철거를 포괄
@@ -539,6 +579,7 @@ namespace MelonS.GameProto
             }
             // not an entity selection → hide the entity body for the pawn/empty paths.
             if (entityBodyText != null) entityBodyText.gameObject.SetActive(false);
+            RestorePanelHeight();          // 주민 탭은 게이지·목록이 있어 전체 높이가 필요
 
             // ── operator fb #3 (2026-05-31): "선택되면 나왔다 선택 안 되면 없어져야" ──
             //   When NOTHING is selected (no pawn AND no inspected entity), HIDE the

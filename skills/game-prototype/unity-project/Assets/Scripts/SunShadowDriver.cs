@@ -48,6 +48,28 @@ namespace MelonS.GameProto
             });
         }
 
+        // ── 태양 상태 공개 ──────────────────────────────────────────────
+        //
+        // 2026-08-01 운영자 "지붕이 있는집은 그림자가 생겨야 하고".
+        //  건물 그림자(RoofShadowRenderer)는 나무·주민 그림자와 **같은 시각에 같은
+        //  쪽으로** 누워야 한다.  태양 계산을 복제하면 언젠가 갈라지므로
+        //  (이 레포에서 반복된 '같은 사실을 두 곳이 다르게 말함' 함정),
+        //  여기서 계산한 값을 그대로 내준다.
+        private static bool _sunDay;
+        private static float _sunT;
+
+        /// <summary>지금 해가 떠 있으면 true 와 함께 그림자 방향·길이계수를 준다.</summary>
+        public static bool TryGetSun(out Vector2 dir, out float lenF)
+        {
+            dir = Vector2.zero; lenF = 0f;
+            if (!_sunDay) return false;
+            float phi = _sunT * Mathf.PI;
+            dir = new Vector2(-Mathf.Cos(phi), Mathf.Sin(phi));
+            float alt = Mathf.Sin(phi);
+            lenF = Mathf.Lerp(1f, 0.18f, alt);
+            return true;
+        }
+
         private void Update()
         {
             if (Time.unscaledTime < nextTick) return;
@@ -93,6 +115,7 @@ namespace MelonS.GameProto
             //  고도는 sin φ (일출·일몰 0, 정오 1).  길이는 1/tan(고도) 성격이라
             //  지평선 근처에서 급격히 길어진다 → 아래에서 Lerp 로 유계 근사한다.
             float phi = t * Mathf.PI;
+            _sunDay = day; _sunT = t;          // 건물 그림자가 같은 계산을 쓰도록 공개
             float alt = day ? Mathf.Sin(phi) : 0f;
             float dirX = day ? -Mathf.Cos(phi) : 0f;
             float dirY = day ?  Mathf.Sin(phi) : 0f;
@@ -171,7 +194,14 @@ namespace MelonS.GameProto
                 //  얼마나 밀지**만 정한다.  그래서 접지점이 절대 발밑에서 떨어지지 않는다.
                 //   길이 ∝ 물체 높이 x 태양 고도 계수.  세로는 탑다운 투영이라 눌러 둔다.
                 float reach = e.height * Mathf.Lerp(0.30f, 1.60f, lenF);
-                e.sr.material.SetFloat("_ShearX", dirX * reach);
+                // 바람에 흔들리는 수관을 그림자도 따라간다 (2026-08-01 운영자
+                //  "나무는 바람에 흔들리는데 그림자는 그대로라 흠").
+                //  방향광 아래에서는 물체가 가로로 x 만큼 움직이면 그림자도 x 만큼
+                //  움직인다 — 배율 1.0 이 물리적으로 맞다.  전단은 **윗변**을 미는
+                //  값이고 흔들리는 것도 윗부분(수관)이라, 여기 더하면 접지점은
+                //  그대로 두고 그림자 끝만 함께 흔들린다.
+                float sway = TreeSwayDriver.SwayOffsetFor(e.host);
+                e.sr.material.SetFloat("_ShearX", dirX * reach + sway);
                 e.sr.material.SetFloat("_ShearY", dirY * reach * 0.55f);
                 //  스케일·회전은 건드리지 않는다 (전단이 형태를 만든다).
                 e.t.localPosition = Vector3.zero;

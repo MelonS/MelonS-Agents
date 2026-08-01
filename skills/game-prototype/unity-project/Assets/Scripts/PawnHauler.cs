@@ -54,6 +54,30 @@ namespace MelonS.GameProto
         private Sprite carryingFoodSprite;
         private float carryingFoodLifetime = 90f;
         private StockpileZoneEntity dropTarget;
+
+        // ── 저장 시 병합 ────────────────────────────────────────────────
+        //
+        // 2026-08-01 운영자: "저장공간에 물건 막 겹치는거 별로임."
+        //  실측: 내려놓는 좌표가 `dropTarget.transform.position` — **저장 구역 표식의
+        //  중심 한 점**이다.  그러니 같은 구역에 두 번 나르면 더미가 정확히 같은
+        //  자리에 하나 더 생기고, 화면에는 겹쳐 그려진다(개수만 늘고 자리는 그대로).
+        //  콜로니 심의 관례는 '한 칸에 한 더미' 이고, 같은 칸에 같은 종류를 놓으면
+        //  **기존 더미에 합친다**.  합치면 더미의 시각 스케일도 양에 맞게 커진다
+        //  (SetWood/SetStone/SetFood 가 이미 그렇게 동작한다).
+        private const float MergeRadius = 0.45f;   // 같은 칸으로 볼 거리
+
+        /// <summary>드롭 지점 근처의 같은 종류 더미를 찾는다 (없으면 null).</summary>
+        private static T FindMergeTarget<T>(Vector3 pos) where T : Component
+        {
+            var hits = Physics2D.OverlapCircleAll(pos, MergeRadius);
+            foreach (var h in hits)
+            {
+                if (h == null) continue;
+                var t = h.GetComponent<T>();
+                if (t != null) return t;
+            }
+            return null;
+        }
         private BlueprintEntity bpDropTarget;  // #142
 
         public bool HasTask => targetPile != null || targetStone != null || targetMeat != null
@@ -419,7 +443,15 @@ namespace MelonS.GameProto
                     //  목재가 "어디론가 사라진" 것처럼 보임).  InStockpile=true 로 재운반 loop 방지.
                     if (carryingWood > 0)
                     {
-                        var p = WoodPileEntity.Spawn(dropPos, carryingWood, WoodPileSpriteRef);
+                        // 같은 칸에 이미 목재 더미가 있으면 **합친다** (겹쳐 쌓지 않는다).
+                        var exist = FindMergeTarget<WoodPileEntity>(dropPos);
+                        WoodPileEntity p;
+                        if (exist != null)
+                        {
+                            exist.SetWood(exist.Wood + carryingWood);
+                            p = exist;
+                        }
+                        else p = WoodPileEntity.Spawn(dropPos, carryingWood, WoodPileSpriteRef);
                         if (p != null) p.InStockpile = true;
                         ResourceManager.Instance?.AddWood(carryingWood);
                         carryingWood = 0;
@@ -430,14 +462,30 @@ namespace MelonS.GameProto
                     //  카운터(=물리 더미 합)와 화면이 항상 일치하게 한다.
                     if (carryingStone > 0)
                     {
-                        var c = StoneChunkEntity.Spawn(dropPos, carryingStone, StoneChunkSpriteRef);
+                        var existS = FindMergeTarget<StoneChunkEntity>(dropPos);
+                        StoneChunkEntity c;
+                        if (existS != null)
+                        {
+                            existS.SetStone(existS.Stone + carryingStone);
+                            c = existS;
+                        }
+                        else c = StoneChunkEntity.Spawn(dropPos, carryingStone, StoneChunkSpriteRef);
                         if (c != null) c.InStockpile = true;
                         ResourceManager.Instance?.AddStone(carryingStone);
                         carryingStone = 0;
                     }
                     if (carryingFood > 0)
                     {
-                        var m = MeatPileEntity.Spawn(dropPos, carryingFood, carryingFoodSprite != null ? carryingFoodSprite : MeatPileSpriteRef, carryingFoodName, carryingFoodLifetime);   // T10
+                        // 식량은 종류(표시명)가 다르면 합치지 않는다 — 고기와 베리가
+                        //  한 더미가 되면 정보창이 거짓말을 한다.
+                        var existM = FindMergeTarget<MeatPileEntity>(dropPos);
+                        MeatPileEntity m;
+                        if (existM != null && existM.DisplayName == carryingFoodName)
+                        {
+                            existM.SetFood(existM.Food + carryingFood);
+                            m = existM;
+                        }
+                        else m = MeatPileEntity.Spawn(dropPos, carryingFood, carryingFoodSprite != null ? carryingFoodSprite : MeatPileSpriteRef, carryingFoodName, carryingFoodLifetime);   // T10
                         if (m != null) m.InStockpile = true;
                         ResourceManager.Instance?.AddFood(carryingFood);
                         carryingFood = 0;

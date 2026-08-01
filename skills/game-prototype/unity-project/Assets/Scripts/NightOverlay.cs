@@ -84,7 +84,8 @@ namespace MelonS.GameProto
         private Color32[] _px;
 
         // 램프 캐시 (1.5s 마다 재스캔)
-        private LampEntity[] _lamps = System.Array.Empty<LampEntity>();
+        private System.Collections.Generic.List<LightSource> _sources =
+            new System.Collections.Generic.List<LightSource>();
         private float _nextLampScan;
 
         // #268b 벽 가림(occlusion): 빛이 벽을 통과 못 하게.  벽 셀 집합 + 램프별 타일
@@ -194,11 +195,15 @@ namespace MelonS.GameProto
 
         private void ScanLamps()
         {
+            // 광원 목록은 **LightSource** 가 소유한다 (2026-08-01).
+            //  이전엔 여기서 LampEntity 만 찾았다 — 그래서 마당 모닥불도 불 때는
+            //  부뚜막도 밤에 빛을 내지 못했다.  주황 글로우만 떠 있고 주변은 어둡다.
+            //  타입을 나열하면 새 조명을 추가할 때마다 이 파일을 고쳐야 하고,
+            //  한 번 빠뜨리면 '빛나 보이는데 안 밝은' 물체가 조용히 생긴다.
+            _sources = LightSource.All;
 #if UNITY_2023_1_OR_NEWER
-            _lamps = Object.FindObjectsByType<LampEntity>(FindObjectsSortMode.None);
             var walls = Object.FindObjectsByType<WallEntity>(FindObjectsSortMode.None);
 #else
-            _lamps = Object.FindObjectsOfType<LampEntity>();
             var walls = Object.FindObjectsOfType<WallEntity>();
 #endif
             // 벽 셀 집합 갱신 (건축 중 벽이 늘어나므로 매 스캔 재구성).
@@ -274,19 +279,20 @@ namespace MelonS.GameProto
             float bottom = center.y - coverH * 0.5f;
             float stepX  = coverW / TEX;
             float stepY  = coverH / TEX;
-            float R = LightRadiusTiles;
-            float flameY = LampEntity.FlameHeightCells;
+            float Rmax = LightRadiusTiles;      // 가시성 그리드 크기 산정용 상한
 
             // 켜진 램프만 추려 (위치, y보정, 셀좌표) + 램프별 타일 가시성 그리드 선계산.
             int n = 0;
             System.Span<float> lx  = stackalloc float[32];
             System.Span<float> ly  = stackalloc float[32];
-            for (int i = 0; i < _lamps.Length && n < 32; i++)
+            System.Span<float> lr  = stackalloc float[32];   // 광원별 반경
+            for (int i = 0; i < _sources.Count && n < 32; i++)
             {
-                var lamp = _lamps[i];
+                var lamp = _sources[i];
                 if (lamp == null || !lamp.IsLit) continue;
+                lr[n] = Mathf.Min(lamp.RadiusTiles, Rmax);
                 float px = lamp.transform.position.x;
-                float py = lamp.transform.position.y + flameY;
+                float py = lamp.transform.position.y + lamp.FlameHeightTiles;
                 lx[n] = px; ly[n] = py;
                 int cx0 = Mathf.FloorToInt(px), cy0 = Mathf.FloorToInt(py);
                 lcxCache[n] = cx0; lcyCache[n] = cy0;
@@ -311,7 +317,7 @@ namespace MelonS.GameProto
                 return;
             }
 
-            float R2 = R * R;
+            // 반경이 광원마다 다르므로 제곱도 루프 안에서 구한다.
             for (int yy = 0; yy < TEX; yy++)
             {
                 float wy = bottom + (yy + 0.5f) * stepY;
@@ -330,14 +336,15 @@ namespace MelonS.GameProto
                         if (dxc < -VR || dxc > VR || dyc < -VR || dyc > VR) continue;
                         float dx = wx - lx[k];
                         float dy = wy - ly[k];
+                        float Rk = lr[k];
                         float sq = dx * dx + dy * dy;
-                        if (sq >= R2) continue;
+                        if (sq >= Rk * Rk) continue;
                         // 벽/문 가림을 bilinear 로 부드럽게 (딱딱한 타일 경계 완화).
                         float occ = SampleVis(k, wx, wy);
                         if (occ <= 0f) continue;
                         float dist = Mathf.Sqrt(sq);
                         float d  = dist + 1f;
-                        float aL = 1f - d / R;
+                        float aL = 1f - d / Rk;
                         float bq = 1f / (d * d);
                         float f  = aL + (bq - aL) * 0.4f;
                         float g  = (f / FCenter) * occ;

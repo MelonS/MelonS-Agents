@@ -32,7 +32,8 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import palette as P  # noqa: E402
-from PIL import Image, ImageDraw  # noqa: E402
+from PIL import Image, ImageDraw
+from _assetpaths import save_everywhere, rel  # noqa: E402  (경로 규칙 단일 출처)  # noqa: E402
 
 ASSETS = os.path.normpath(os.path.join(HERE, ".."))
 
@@ -81,8 +82,42 @@ def blank(w, h):
     return Image.new("RGBA", (w, h), (0, 0, 0, 0))
 
 
-def outline(im, color=P.OUTLINE_PLANT):
-    """불투명 픽셀 바깥 1px 외곽선 (스타일가이드 §1)."""
+def fit_inside(im, margin=1):
+    """캔버스 밖으로 삐져나간 그림을 **가로로** 밀어 넣는다.  아래는 건드리지 않는다.
+
+    2026-08-02 실측: ts_tree 오른쪽 가장자리에 불투명 픽셀 25개 — 수관이 잘려
+    나가고 있었다.  줄기가 오른쪽으로 휘는 만큼 층 중심도 밀리는데 캔버스는
+    그대로여서, 폭을 조절할 때마다 조용히 잘렸다 (화면에서는 '한쪽이 각지게 잘린
+    나무' 로 보인다).  파라미터를 손으로 맞추는 대신 **결과를 재서** 밀어 넣는다.
+
+    세로는 그대로 둔다 — 바닥이 접지선이라 위아래로 움직이면 나무가 땅에서 뜬다."""
+    bb = im.getbbox()
+    if bb is None:
+        return im
+    x0, _y0, x1, _y1 = bb
+    w = im.size[0]
+    dx = 0
+    if x1 > w - margin:
+        dx = (w - margin) - x1
+    if x0 + dx < margin:
+        dx = margin - x0
+    if dx == 0:
+        return im
+    out = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    out.alpha_composite(im, (dx, 0))
+    return out
+
+
+def outline(im, color=P.OUTLINE_PLANT, thickness=2):
+    """불투명 픽셀 바깥 외곽선.
+
+    2026-08-01 운영자 "한국풍 나무가 퀄리티가 좀 떨어짐. 외곽선이 없어서 그런가?"
+    실측으로 답을 냈다 — **외곽선은 있었다**(소나무 292px).  색 수도 팩 나무와
+    같다(8 vs 8~9).  진짜 차이는 두 가지였다:
+      · **부피**: 소나무 불투명 1,598px(채움률 29%) vs 단풍 6,189px(63%)
+      · **외곽선 두께**: 팩 나무는 가장 많은 색이 외곽선이다(상수리 912px) —
+        1px 이 아니라 2~3px 라 무게가 실린다.
+    그래서 기본 두께를 2px 로 올리고, 수관 부피를 함께 키운다."""
     w, h = im.size
     px = im.load()
     edge = []
@@ -96,6 +131,9 @@ def outline(im, color=P.OUTLINE_PLANT):
                     edge.append((nx, ny))
     for x, y in edge:
         px[x, y] = color
+    if thickness > 1:
+        # 한 겹 더 — 재귀 대신 같은 절차를 반복해 두께를 만든다.
+        return outline(im, color, thickness - 1)
     return im
 
 
@@ -142,11 +180,22 @@ def _pine(w, h, seed=7):
         y = base_y - (base_y - top_y) * f
         return cx + math.sin(f * math.pi * 0.75) * (w * 0.16), y
 
+    # 2026-08-02 운영자: "방금 들어간 나무 좀 이상하게 생겼고 너무 큰데?
+    #  그전 나무 모양이 더 좋긴했어."  → 수관을 **이전 모양(층진 우산)으로 되돌린다.**
+    #
+    #  경위: 8/01 "퀄리티가 좀 떨어짐" 지적에 부피와 질감으로 답했다 — 층을 넓히고
+    #  덩이(blob) 여러 개로 잎을 쌓았다.  채움률은 29%→목표치로 올랐지만 실루엣이
+    #  뭉개져 브로콜리가 됐다.  **부피가 문제가 아니라 층이 정체성이었다** — 적송은
+    #  가지가 층층이 갈라져 우산처럼 퍼지는 게 신호고, 덩이로 채우면 그 층이 사라진다.
+    #  두께 2px 외곽선은 그 라운드의 다른 절반이었고 옳았으므로 **유지**한다.
     # ③ 수관 — 위 40% 에만, 3층, 좌우로 넓게 (원뿔이 아니라 우산)
     # 층 수는 **캔버스 크기에 따라** 정한다.  작은 캔버스(54px)에 3층을 넣으면
     #  층당 높이가 3px 밖에 안 돼 서로 붙어 다시 덩어리가 된다 — 1차 실패의 재발.
     #  작을수록 적고 넓게: 큰 나무 3층 / 작은 나무 2층.
-    layers = ([(0.60, 0.46, 1), (0.75, 0.38, -1), (0.90, 0.24, 1)] if h >= 120
+    # 층 폭 (2026-08-02 "너무 큰데") — 큰 캔버스(ts_tree 192px)에서 fw 0.46 이면
+    #  수관이 좌우로 2.4칸 퍼져 참나무(1.5칸)를 압도했다.  월드 크기를 줄이는 것과
+    #  **함께** 폭도 좁혀야 한다 — PPU 만 올리면 나무 전체가 작아져 잔가지가 뭉갠다.
+    layers = ([(0.60, 0.36, 1), (0.75, 0.30, -1), (0.90, 0.19, 1)] if h >= 120
               else [(0.66, 0.52, 1), (0.88, 0.34, -1)])
     for li, (f, fw, side) in enumerate(layers):
         tx, ty = trunk_at(f)
@@ -162,8 +211,7 @@ def _pine(w, h, seed=7):
             px_ = rnd.uniform(tx - rw + xo, tx + rw + xo)
             py_ = rnd.uniform(ty - rh * 1.6, ty + rh * 0.7)
             d.line((px_, py_, px_ + rnd.choice((-2, 2)), py_ + 2), fill=NEEDLE_DK)
-    return outline(im)
-
+    return fit_inside(outline(im))
 
 def _bamboo(w, h, seed=11):
     """대나무 — 마디 있는 곧은 대 여러 대 + 성긴 잎.
@@ -193,7 +241,7 @@ def _bamboo(w, h, seed=11):
                 ey = ly - 3 - j * 3
                 d.line((cx, ly, ex, ey), fill=LEAF_DK, width=2)
                 d.line((cx + side * 2, ly, ex, ey), fill=BAMBOO_DK)
-    return outline(im)
+    return fit_inside(outline(im))
 
 
 def _azalea(w, h, flowering=True, seed=5):
@@ -219,7 +267,7 @@ def _azalea(w, h, flowering=True, seed=5):
             d.ellipse((fx - rr, fy - rr, fx + rr, fy + rr), fill=AZALEA)
             d.ellipse((fx - rr * 0.5, fy - rr, fx + rr * 0.3, fy - rr * 0.1), fill=AZALEA_LT)
             d.point((fx, fy + rr * 0.4), fill=AZALEA_DK)
-    return outline(im)
+    return fit_inside(outline(im))
 
 
 def _sapling(w, h, seed=21):
@@ -240,7 +288,7 @@ def _sapling(w, h, seed=21):
         rw = w * r
         d.ellipse((cx - rw, y - rw * 0.55, cx + rw, y + rw * 0.45), fill=NEEDLE_MD)
         d.ellipse((cx - rw * 0.6, y - rw * 0.6, cx + rw * 0.2, y - rw * 0.05), fill=NEEDLE_LT)
-    return outline(im)
+    return fit_inside(outline(im))
 
 
 # ── 출력 표: (경로, 크기, 그리기) ─────────────────────────────────────
@@ -248,28 +296,41 @@ def targets():
     S = os.path.join(ASSETS, "Sprites")
     R = os.path.join(ASSETS, "Resources", "flora32")
     return [
-        (os.path.join(S, "flora64_pine.png"), (54, 103), lambda: _pine(54, 103, 7)),
-        (os.path.join(S, "ts_tree.png"), (192, 192), lambda: _pine(192, 192, 13)),
-        (os.path.join(S, "flora64_spruce.png"), (42, 104), lambda: _bamboo(42, 104)),
+        # (경로, 픽셀 크기, 생성함수, **월드 폭[칸]**)
+        #  월드 폭을 여기 적어야 '그림만 바꿨는데 크기가 변했다' 가 안 생긴다.
+        #  2026-08-02 실측으로 잡은 두 건: ts_tree 가 2.0칸(다른 수종 1.5)이라
+        #  소나무만 화면을 눌렀고, 진달래는 Sprites=PPU32 / Resources=PPU128 로
+        #  갈라져 있었다.
+        (os.path.join(S, "flora64_pine.png"), (54, 103), lambda: _pine(54, 103, 7), 0.72),
+        (os.path.join(S, "ts_tree.png"), (192, 192), lambda: _pine(192, 192, 13), 1.23),
+        (os.path.join(S, "flora64_spruce.png"), (42, 104), lambda: _bamboo(42, 104), 0.64),
         (os.path.join(R, "flora32_bush_berry.png"), (128, 128),
-         lambda: _azalea(128, 128, True)),
+         lambda: _azalea(128, 128, True), 0.90),
         (os.path.join(R, "flora32_bush_picked.png"), (128, 128),
-         lambda: _azalea(128, 128, False)),
-        (os.path.join(S, "flora32_sapling.png"), (32, 48), lambda: _sapling(32, 48)),
+         lambda: _azalea(128, 128, False), 0.90),
+        (os.path.join(S, "flora32_sapling.png"), (32, 48), lambda: _sapling(32, 48), 0.62),
     ]
 
 
 def main() -> int:
     stage = "--stage" in sys.argv
-    for path, size, fn in targets():
+    for path, size, fn, world in targets():
         img = fn()
         if img.size != size:
             img = img.resize(size, Image.NEAREST)
-        out = (os.path.join(r"G:/ai/_hanok_flora", os.path.basename(path))
-               if stage else path)
-        os.makedirs(os.path.dirname(out), exist_ok=True)
-        img.save(out)
-        print(f"[ok] {os.path.basename(path)} ({img.width}x{img.height})")
+        name = os.path.splitext(os.path.basename(path))[0]
+        if stage:
+            out = os.path.join(r"G:/ai/_hanok_flora", name + ".png")
+            os.makedirs(os.path.dirname(out), exist_ok=True)
+            img.save(out)
+            print(f"[ok] {name}.png ({img.width}x{img.height}) → _hanok_flora")
+            continue
+        # 목적지는 적지 않고 **찾는다** — 2026-08-02 검사에서 묘목이
+        #  `Sprites/` 에만 갱신되고 `Resources/flora32/`(런타임이 읽는 곳)에는
+        #  하루 전 그림이 남아 있는 것이 잡혔다.  targets() 의 경로는 '어디에
+        #  하나는 있어야 한다' 는 뜻이지 '거기에만 있다' 는 뜻이 아니다.
+        paths = save_everywhere(img, name, world, create_in=os.path.dirname(path))
+        print(f"[ok] {name}.png ({img.width}x{img.height}) → {rel(paths)}")
     print(f"{'(검수용) ' if stage else ''}{len(targets())}종")
     return 0
 

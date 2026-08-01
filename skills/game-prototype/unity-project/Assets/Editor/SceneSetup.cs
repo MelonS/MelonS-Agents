@@ -219,7 +219,9 @@ namespace MelonS.GameProto.EditorTools
             //  주민 옆에서 '주울 만한 물건' 으로 읽히는 크기다.
             //  (운영자가 같은 지적을 두 번째 하는 항목 — 그때는 스프라이트를 다시
             //   그렸지만 정작 **반입 배율**이 원인이었다.)
-            const float GroundItemPPU = 70f;
+            // 0 = .meta 값을 그대로 (크기는 _gen_*/_assetpaths 가 정한다).
+            //  70 을 강제하던 탓에 Resources 사본(160)과 갈라져 게임에서만 작았다.
+            const float GroundItemPPU = 0f;
             Sprite woodPileSpriteRef = ImportSpriteAt("Assets/Sprites/ts_wood_pile.png", GroundItemPPU)
                                        ?? LoadOrSetupSprite("Assets/Sprites/wood_pile.png");
             Sprite stoneChunkSpriteRef = LoadOrSetupSprite("Assets/Sprites/stone_chunk.png");  // #119

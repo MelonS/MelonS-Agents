@@ -21,7 +21,10 @@ namespace MelonS.GameProto
         {
             { "wood",  "Sprites/ts_wood_pile" },
             { "meat",  "Sprites/ts_meat_pile" },
-            { "stone", "Sprites/prop64_stone_chunk" },
+            // 2026-08-02 운영자 "석재 … 우리껀 너무 안보여" — stone 을 이 표에서 뺀다.
+            //  단일 스프라이트로 고정돼 있어 1개를 캐든 40개를 캐든 그림이 똑같았다.
+            //  아래 3단계 시트(items32/item_stone_v2)로 돌아가면 **양이 실루엣으로**
+            //  읽힌다 (파편 1개 → 3개 → 5개).
         };
         private static readonly Dictionary<string, Sprite> tsCache = new Dictionary<string, Sprite>();
 
