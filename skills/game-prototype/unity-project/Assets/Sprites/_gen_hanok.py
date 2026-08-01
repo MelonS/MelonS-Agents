@@ -87,58 +87,92 @@ def tile(w=CELL, h=CELL):
 
 # ══ 벽 ═══════════════════════════════════════════════════════════════
 def wall_wood():
-    """심벽 — 기둥 사이에 황토를 채운 벽 + 기와 처마.
+    """한옥 흙벽 — **위에서 본 벽**.  기와 코핑(마감) + 황토 면.
 
-    타일링 규약: 기둥 주기 16, 기왓골 주기 4 → 인접 타일과 무늬가 이어진다.
-    외곽선은 상하만 (좌우는 벽체색으로 연속)."""
+    설계 근거 (2026-08-01, 운영자 두 차례 지적으로 다시 잡음):
+
+    1차: 타일마다 기둥 2개.  → 여러 장을 이으면 기둥이 규칙적으로 반복돼 **울타리**.
+    2차: 타일 대부분을 기와 지붕으로.  → 운영자 "벽이 보통 한옥에서 외벽아니야?"
+         맞는 지적이다.  이 게임의 지붕은 `RoofOverlayRenderer` 가 그리는 **반투명
+         그늘 오버레이**이고 방 내부가 그대로 보인다.  벽 타일에 지붕을 그리면
+         지붕이 두 번 생기고, 지붕 아래 바닥이 보이는 모순이 된다.
+    3차(현재): 벽은 **벽으로** 그린다 — 위에서 내려다본 담장.
+         · 위 1/3: 기와 코핑.  한국 담장·토담은 비를 막으려 위에 기와를 얹는다.
+           좁은 마감이지 지붕이 아니다.  이게 한국 벽의 가장 빠른 식별 신호다.
+         · 아래 2/3: 황토 면 + 지푸라기 결.  아래로 갈수록 어두워져 접지가 생긴다.
+
+    **세로 요소는 넣지 않는다.**  타일 하나가 반복되므로 세로 무늬는 반드시
+    일정 간격의 줄이 되고, 그게 1차에서 울타리로 읽힌 이유다.  가로 띠만 쓰면
+    몇 장을 이어도 하나의 담으로 이어진다.
+    """
     img = tile()
     d = ImageDraw.Draw(img)
-    d.rectangle((0, 1, 31, 4), fill=TILE_MD)                 # 기와 처마
-    for x in range(0, 32, 4):
-        d.rectangle((x, 1, x + 1, 4), fill=TILE_DK)          # 골
-        vline(d, x + 2, 1, 3, TILE_LT)                       # 기왓마루 미광
-        d.point((x + 2, 4), fill=TILE_MD)
-    hline(d, 0, 31, 5, shade(TILE_DK, -0.35))                # 처마 밑 그늘
-    d.rectangle((0, 6, 31, 30), fill=LOAM_MD)                # 황토 면
-    d.rectangle((0, 29, 31, 30), fill=LOAM_DK)               # 접지 그늘
-    for sx, sy, ln in ((9, 10, 4), (14, 18, 3), (25, 13, 3), (11, 24, 3), (22, 26, 4)):
-        hline(d, sx, sx + ln, sy, STRAW)                     # 지푸라기 결
-    for px in (2, 18):                                       # 기둥
-        d.rectangle((px, 6, px + 3, 30), fill=POST_MD)
-        vline(d, px, 6, 30, POST_LT)
-        vline(d, px + 3, 6, 30, shade(POST_MD, -0.30))
-        for ky in (11, 20, 27):
-            d.point((px + 1, ky), fill=shade(POST_LT, -0.10))
-    hline(d, 0, 31, 0, P.OUTLINE_OBJ)
+    # ── 기와 코핑 (위 10px) ──
+    d.rectangle((0, 1, 31, 3), fill=TILE_MD)                  # 기와면
+    for x in range(0, 32, 4):                                  # 기왓골 (주기 4 = 연속)
+        vline(d, x, 1, 3, TILE_DK)
+        d.point((x + 2, 1), fill=TILE_LT)
+    hline(d, 0, 31, 0, shade(TILE_LT, +0.10))                  # 마루선 (위쪽 미광)
+    d.rectangle((0, 4, 31, 5), fill=shade(TILE_DK, -0.15))     # 코핑 아랫단
+    for x in range(2, 32, 4):
+        d.point((x, 5), fill=TILE_MD)                          # 막새 끝 리듬
+    hline(d, 0, 31, 6, shade(LOAM_DK, -0.30))                  # 코핑 그림자
+    # ── 황토 벽면 (아래) ──
+    d.rectangle((0, 7, 31, 30), fill=LOAM_MD)
+    hline(d, 0, 31, 7, LOAM_LT)                                # 코핑 바로 아래 반사광
+    for gy in range(24, 31):                                   # 아래로 갈수록 어둡게
+        f = (gy - 23) / 8.0
+        hline(d, 0, 31, gy, shade(LOAM_MD, -0.10 - 0.22 * f))
+    for sx, sy, ln in ((5, 12, 4), (18, 10, 3), (26, 15, 3),
+                       (9, 19, 4), (21, 22, 3), (2, 26, 3)):
+        hline(d, sx, sx + ln, sy, STRAW)                       # 지푸라기 결 (불규칙)
     hline(d, 0, 31, 31, P.OUTLINE_OBJ)
     return img
 
 
-def wall_stone():
-    """돌담 — 막돌을 **황토로 물린** 담장 + 기와 처마.
+def wall_wood_vertical():
+    """세로로 뻗는 담 — **위에서 본 담의 윗면(코핑)이 거의 전부**.
 
-    검수 1차 문제: 줄눈을 회색으로 두었더니 현대식 조적벽으로 읽혔고
-    기와 처마가 회색 바탕에 묻혔다.  한국 돌담의 식별 신호는 ‘둥글고
-    제각각인 막돌 + 누런 황토 줄눈’ 이다 — 줄눈을 흥색으로 바꾸면
-    나무벽과 같은 마을의 건축으로 묶이면서 재질만 구분된다."""
+    가로 담과 세로 담은 위에서 볼 때 보이는 면이 다르다:
+      · 가로(동서) 담 → 윗면 + **남쪽 면**이 보인다 (카메라가 기울어 있으므로)
+      · 세로(남북) 담 → 윗면만 보이고 옆면은 아주 얇게
+    가로용 스프라이트 하나로 세로 벽까지 쓰면 코핑 띠가 32px 마다 끊겨
+    **줄무늬**가 된다(실측).  방향별 스프라이트를 나누는 것이 정공법이고,
+    이 프로젝트는 WallEntity 가 이미 4방향 이웃을 알고 있어 배선 비용이 낮다.
+
+    기왓골은 담을 **따라** 흐르므로 세로 담에서는 골도 세로가 아니라 **가로**로
+    누워야 한다 (기와는 물매 방향으로 골이 난다).
+    """
     img = tile()
     d = ImageDraw.Draw(img)
-    d.rectangle((0, 1, 31, 4), fill=TILE_MD)
-    for x in range(0, 32, 4):
-        d.rectangle((x, 1, x + 1, 4), fill=TILE_DK)
-        vline(d, x + 2, 1, 3, TILE_LT)
-        d.point((x + 2, 4), fill=TILE_MD)
-    hline(d, 0, 31, 5, shade(TILE_DK, -0.35))
-    d.rectangle((0, 6, 31, 30), fill=LOAM_DK)                # 황토 줄눈 (회색 → 흥색)
-    # 막돌 — 크기·위치 불규칙, 주기 16 으로 타일링 연속
-    stones = [(4, 10, 6, 4), (14, 9, 5, 4), (24, 11, 6, 4),
-              (7, 18, 6, 4), (18, 17, 6, 5), (28, 19, 4, 4),
-              (3, 26, 5, 3), (13, 25, 6, 4), (24, 26, 6, 3)]
+    d.rectangle((0, 0, 31, 31), fill=TILE_MD)                  # 윗면 전체가 기와
+    for y in range(0, 32, 4):                                  # 기왓골 — 가로로 흐른다
+        hline(d, 0, 31, y, TILE_DK)
+        hline(d, 0, 31, y + 2, TILE_LT)
+    # 용마루 — 담 한가운데를 세로로 지나간다
+    d.rectangle((14, 0, 17, 31), fill=shade(TILE_LT, +0.06))
+    vline(d, 14, 0, 31, shade(TILE_DK, -0.10))
+    vline(d, 17, 0, 31, shade(TILE_DK, -0.10))
+    # 좌우 처마 끝 — 얇게 보이는 벽면
+    d.rectangle((0, 0, 1, 31), fill=shade(LOAM_DK, -0.10))
+    d.rectangle((30, 0, 31, 31), fill=shade(LOAM_DK, -0.30))   # 우측이 그늘 (좌상 광원)
+    return img
+
+
+def wall_stone():
+    """돌담 — 같은 기와 코핑 + 막돌을 황토로 물린 면.
+
+    나무벽과 코핑을 공유해 한 마을의 담으로 묶이고, 면의 재질만 다르다."""
+    img = wall_wood()
+    d = ImageDraw.Draw(img)
+    d.rectangle((0, 7, 31, 30), fill=LOAM_DK)                  # 황토 줄눈
+    stones = [(5, 12, 6, 4), (17, 11, 6, 4), (28, 13, 5, 4),
+              (2, 20, 5, 4), (13, 20, 6, 4), (24, 21, 6, 4),
+              (7, 27, 6, 3), (19, 28, 6, 3), (29, 27, 4, 3)]
     for cx, cy, rw, rh in stones:
         d.ellipse((cx - rw, cy - rh, cx + rw, cy + rh), fill=P.ROCK_MD)
         d.arc((cx - rw + 1, cy - rh + 1, cx + rw - 1, cy + rh - 1), 170, 300, fill=P.ROCK_LT)
         d.arc((cx - rw, cy - rh, cx + rw, cy + rh), 20, 150, fill=P.ROCK_DK)
-    hline(d, 0, 31, 0, P.OUTLINE_OBJ)
     hline(d, 0, 31, 31, P.OUTLINE_OBJ)
     return img
 
@@ -392,6 +426,35 @@ def bed_fine():
     return _bed_hi(True)
 
 
+def campfire():
+    """모닥불 — 돌로 두른 자리 + 장작 + 불꽃.
+
+    2026-08-01 운영자 "이 빛은 먼데? 눌러도 정보도 없고".
+    실측하니 광장의 모닥불은 **광원 스프라이트(glow_fire_pool)뿐**이고 실체가
+    없었다 — 잔디 위에 주황 빛만 떠 있으니 무엇인지 알 수 없고, 콜라이더도
+    없어 클릭해도 정보창이 안 뜬다.  빛은 '무엇이 빛나는지' 가 있어야 읽힌다.
+    """
+    img = tile()
+    d = ImageDraw.Draw(img)
+    # 두른 돌 (8개)
+    for a in range(8):
+        ang = a * math.pi / 4
+        cx = 16 + math.cos(ang) * 11
+        cy = 20 + math.sin(ang) * 7
+        d.ellipse((cx - 4, cy - 3, cx + 4, cy + 3), fill=P.ROCK_MD, outline=P.OUTLINE_OBJ)
+        d.arc((cx - 3, cy - 2, cx + 3, cy + 2), 170, 320, fill=P.ROCK_LT)
+    # 재
+    d.ellipse((9, 16, 23, 24), fill=shade(P.ROCK_DK, -0.30))
+    # 장작 두 개 (X 자)
+    d.line((10, 22, 22, 15), fill=P.WOOD_DK, width=3)
+    d.line((11, 15, 22, 22), fill=P.WOOD_MD, width=3)
+    d.point((12, 16), fill=P.WOOD_LT)
+    # 불꽃
+    d.polygon([(16, 6), (20, 15), (16, 19), (12, 15)], fill=P.FIRE_OR)
+    d.polygon([(16, 10), (18, 16), (16, 19), (14, 16)], fill=P.FIRE_LT)
+    return img
+
+
 # ══ 신규: 장독대 / 당산나무 ═══════════════════════════════════════════
 def jangdokdae():
     """장독대 — 돌단 위 옹기 항아리.  저장 구역 데코."""
@@ -478,6 +541,7 @@ def grave_mound():
 SPRITES = [
     ("struct32_wall_wood", wall_wood),
     ("struct32_wall_stone", wall_stone),
+    ("struct32_wall_wood_v", wall_wood_vertical),
     ("struct32_floor_wood", floor_wood),
     ("struct32_floor_stone", floor_stone),
     ("struct32_door_wood", door_wood),
@@ -494,6 +558,7 @@ SPRITES = [
     ("table_chair", table_chair_16),
     ("grave64_empty", grave_empty),
     ("grave64_mound", grave_mound),
+    ("hanok_campfire", campfire),
     ("hanok_jangdokdae", jangdokdae),
     ("hanok_dangsan_tree", dangsan_tree),
 ]

@@ -41,19 +41,39 @@ namespace MelonS.GameProto.Core
         public const int BandMin = 110;
         public const int BandMax = 1600;
 
-        /// <summary>발밑 월드 y → sortingOrder.</summary>
+        /// <summary>발밑 월드 y → sortingOrder (입체 오브젝트 밴드).</summary>
         public static int OrderFor(float bottomY)
             => Mathf.Clamp(BaseOrder - Mathf.RoundToInt(bottomY * StepsPerUnit), BandMin, BandMax);
 
+        /// <summary>평면 가구용 — 입체 밴드(110~1600) **아래**의 독립 밴드(4~99).
+        ///
+        /// 같은 규칙으로 자기들끼리는 Y 정렬되므로 침대끼리의 앞뒤는 유지되고,
+        /// 사람·벽·나무보다는 무조건 아래에 그려진다.
+        /// (지면 0~3 보다는 위 — 바닥·구역 위에 놓여야 한다.)</summary>
+        public static int OrderForFlat(float bottomY)
+            => Mathf.Clamp(50 - Mathf.RoundToInt(bottomY * 0.5f), 4, 99);
+
         // ── 기존 값의 해석 규약 ────────────────────────────────────────────
         //  0..3   지면 (바닥·구역·풀·꽃).  항상 맨 아래 — 건드리지 않는다.
-        //  4..15  월드 오브젝트.  Y 정렬 대상.  bias = 원래값 - 4.
+        //  4      **평면 가구** (침대·잠자리).  Y 정렬하되 서 있는 것들보다 항상 아래.
+        //  5..15  **입체 오브젝트** (화덕·나무·문·벽·주민…).  자기들끼리 Y 정렬.
+        //
+        // 왜 둘로 나누나 (2026-08-01 운영자 "사람이 걸어갈때 침대 밑으로 들어감"):
+        //  침대는 1×2 라 발밑이 아래 칸 바닥이다.  주민이 **위쪽 칸(베개 자리)**을
+        //  지나가면 주민 발밑이 침대 발밑보다 높아 침대가 앞에 그려졌다.
+        //  Y 정렬 자체는 맞게 동작한 것이고, 전제가 틀렸다 — 바닥에 깔린 가구는
+        //  '뒤에 설 수 있는 물건' 이 아니다.  벽·나무 뒤에는 설 수 있어도
+        //  요·이불 뒤에는 못 선다.  그러니 평면 가구는 사람과 **경쟁시키지 않는다.**
         //  16..109 화면 오버레이 (선택 링 위 UI·화살·구름그림자·체력바·플로팅텍스트).
         //         월드 밴드(110~1600)보다 위로 올려야 하므로 +2000 한 번.
         //  110+   이미 관리 중 (월드 밴드 결과·오버레이 상향분·부모 파생) — 건드리지 않는다.
         public const int GroundMax = 3;
         public const int WorldMin = 4;
         public const int WorldMax = 15;
+        /// <summary>이 값 이하는 평면 가구 — 별도 하위 밴드로 내린다.</summary>
+        public const int FlatMax = 4;
+        /// <summary>평면 밴드 폭.  입체 밴드와 겹치지 않게 아래에 붙인다.</summary>
+        public const int FlatBandMin = 2000;   // 실제 출력은 아래 OrderForFlat 참조
         public const int OverlayLift = 2000;   // 월드 밴드 최대(1600)보다 확실히 위
 
         /// <summary>이 렌더러를 Y 정렬 대상으로 볼 것인가.</summary>
@@ -72,6 +92,7 @@ namespace MelonS.GameProto.Core
         private readonly List<SpriteRenderer> tracked = new List<SpriteRenderer>(256);
         private readonly List<int> bias = new List<int>(256);
         private readonly List<float> lastY = new List<float>(256);
+        private readonly List<bool> flat = new List<bool>(256);
         // 1초 스윕마다 전량 갱신 — 위치는 그대로인데 스프라이트가 바뀐 경우 보정.
         private bool fullPass = true;
         private readonly HashSet<SpriteRenderer> known = new HashSet<SpriteRenderer>();
@@ -105,6 +126,7 @@ namespace MelonS.GameProto.Core
                     known.Add(sr);
                     tracked.Add(sr);
                     bias.Add(o - YSort.WorldMin);
+                    flat.Add(o <= YSort.FlatMax);        // 평면 가구인가
                     lastY.Add(float.NaN);   // 첫 프레임에 반드시 계산되도록
                     added++;
                     continue;
@@ -160,6 +182,7 @@ namespace MelonS.GameProto.Core
                     tracked.RemoveAt(i);
                     bias.RemoveAt(i);
                     lastY.RemoveAt(i);
+                    flat.RemoveAt(i);
                     continue;
                 }
                 float y = sr.transform.position.y;
@@ -167,7 +190,9 @@ namespace MelonS.GameProto.Core
                 lastY[i] = y;
                 // 발밑 = 월드 AABB 하단.  스프라이트 높이가 달라도(1×2 침대, 나무)
                 //  '땅에 닿는 지점' 이 자동으로 잡힌다.
-                sr.sortingOrder = YSort.OrderFor(sr.bounds.min.y) + bias[i];
+                sr.sortingOrder = flat[i]
+                    ? YSort.OrderForFlat(sr.bounds.min.y)
+                    : YSort.OrderFor(sr.bounds.min.y) + bias[i];
             }
             fullPass = false;
         }

@@ -399,11 +399,20 @@ namespace MelonS.GameProto.EditorTools
             starterBench.transform.position = new Vector3(-6f, 0f, 0f);
 
             // 12 crops (3 stage 시각 다양성)
-            Sprite cropSprSeedling = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice_seedling.png");
+            // 작물 배율 (2026-08-01 운영자 "작물 저거 먼데.. 개판이네 너무 크자나").
+            //  `Assets/Sprites/crop_rice*.png` 의 메타가 **PPU 16** 이었다 —
+            //  32px 스프라이트가 **2칸**이 된다는 뜻이다.  같은 그림의 다른 사본
+            //  (Resources/crops32/) 은 PPU 32 였다.  같은 자산을 두 곳이 다른 크기로
+            //  말하고 있었고, 옛 그림은 캔버스 가운데 작게 그려져 있어 그 오류가
+            //  가려져 있었다.  새 그림이 캔버스를 제대로 채우자 바로 드러났다
+            //  — 벼 한 포기가 주민 키의 세 배가 됐다.
+            //  PPU 를 명시해 한 칸에 맞춘다: 32px / PPU 32 = 1칸, 내용은 그 안의 0.7칸.
+            const float CropPPU = 32f;
+            Sprite cropSprSeedling = ImportSpriteAt("Assets/Sprites/crop_rice_seedling.png", CropPPU);
             if (cropSprSeedling == null) Debug.LogWarning("[SetupStarterSettlement] crop_rice_seedling.png NULL — stage sprite missing");
-            Sprite cropSprGrowing = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice_growing.png");
+            Sprite cropSprGrowing = ImportSpriteAt("Assets/Sprites/crop_rice_growing.png", CropPPU);
             if (cropSprGrowing == null) Debug.LogWarning("[SetupStarterSettlement] crop_rice_growing.png NULL — stage sprite missing");
-            Sprite cropSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice.png");
+            Sprite cropSprite = ImportSpriteAt("Assets/Sprites/crop_rice.png", CropPPU);
             if (cropSprite == null) Debug.LogWarning("[SetupStarterSettlement] crop_rice.png NULL — stage sprite missing");
             var growthField = typeof(CropEntity).GetField("growth",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

@@ -699,28 +699,79 @@ namespace MelonS.GameProto
         //  안 잡힌다(야간 3샷 전부 미스).  레퍼런스처럼 수면 내내 떠 있는 '상시 zZ
         //  마커'(자식 TextMesh, MineMark 패턴)로 교체.  ASCII 라 폰트 글리프 무관.
         private GameObject _sleepMarker;
+        // ── 수면 표시 zZ ────────────────────────────────────────────────
+        //
+        // 2026-08-01 운영자: "잘때 나오는 zZ 이거 애니메이션 좀 넣어줘".
+        // 기존은 정지한 TextMesh 하나가 켜졌다 꺼지기만 했다 — 자고 있다는 **상태**는
+        // 알려주지만 '숨을 쉬고 있다' 는 느낌이 없어 화면이 멎어 보인다.
+        //
+        // 관습적인 수면 z 연출 네 가지를 모두 쓴다:
+        //   ① 위로 떠오른다        ② 떠오르며 흐려진다
+        //   ③ 좌우로 살짝 흔들린다  ④ 커지면서 멀어진다
+        // z 를 3개 두고 위상을 1/3 씩 어긋내면 끊기지 않고 이어진다.
+        //
+        // 시간은 **unscaledTime** 을 쓴다.  게임 배속(1x/3x/6x)에 따라 z 가 같이
+        // 빨라지면 6배속에서 깜빡임처럼 보인다 — 이건 상태 표시지 시뮬레이션이 아니다.
+        private const int ZzCount = 3;
+        private const float ZzPeriod = 2.4f;      // 한 z 가 떠올라 사라지기까지
+        private TextMesh[] _zzText;
+
         private void EmitSleepFx()
         {
             if (_sleepMarker == null)
             {
                 _sleepMarker = new GameObject("SleepZz");
                 _sleepMarker.transform.SetParent(transform, false);
-                _sleepMarker.transform.localPosition = new Vector3(0.35f, 1.32f, 0f);   // UI겹침 P1-6+D 사다리
-                var tm = _sleepMarker.AddComponent<TextMesh>();
-                tm.text = "zZ";
-                tm.fontSize = 40;
-                tm.characterSize = 0.07f;
-                tm.anchor = TextAnchor.LowerCenter;
-                tm.color = new Color(0.78f, 0.88f, 1f, 0.95f);
-                var mrz = _sleepMarker.GetComponent<MeshRenderer>();
-                if (mrz != null) mrz.sortingOrder = 31;   // NightOverlay(25)·바(30) 위
-                // "zZ" 는 ASCII 라 지금은 기본 폰트로도 그려지지만, 다른 월드 라벨과
-                //  같은 경로를 쓴다 — 문구가 한글로 바뀌는 순간 WebGL 에서만 사라지는
-                //  함정을 미리 닫는다 (UITheme.ApplyKoreanFont 주석 참조).
-                MelonS.GameProto.Core.UITheme.ApplyKoreanFont(tm);
+                _sleepMarker.transform.localPosition = Vector3.zero;
+                _zzText = new TextMesh[ZzCount];
+                for (int i = 0; i < ZzCount; i++)
+                {
+                    var go = new GameObject("Zz" + i);
+                    go.transform.SetParent(_sleepMarker.transform, false);
+                    var tm = go.AddComponent<TextMesh>();
+                    tm.text = (i % 2 == 0) ? "z" : "Z";     // 크기 리듬 (z-Z-z)
+                    tm.fontSize = 40;
+                    tm.characterSize = 0.07f;
+                    tm.anchor = TextAnchor.LowerCenter;
+                    tm.color = new Color(0.78f, 0.88f, 1f, 0.95f);
+                    var mrz = go.GetComponent<MeshRenderer>();
+                    if (mrz != null) mrz.sortingOrder = 31;   // NightOverlay(25)·바(30) 위
+                    // "z" 는 ASCII 라 지금은 기본 폰트로도 그려지지만, 다른 월드 라벨과
+                    //  같은 경로를 쓴다 — 문구가 바뀌는 순간 WebGL 에서만 사라지는
+                    //  함정을 미리 닫는다 (UITheme.ApplyKoreanFont 주석 참조).
+                    MelonS.GameProto.Core.UITheme.ApplyKoreanFont(tm);
+                    _zzText[i] = tm;
+                }
             }
             if (!_sleepMarker.activeSelf) _sleepMarker.SetActive(true);
             _sleepFxSeen = Time.time;
+            AnimateZz();
+        }
+
+        /// <summary>z 세 개를 위상만 어긋내 같은 궤적으로 돌린다.</summary>
+        private void AnimateZz()
+        {
+            if (_zzText == null) return;
+            for (int i = 0; i < _zzText.Length; i++)
+            {
+                var tm = _zzText[i];
+                if (tm == null) continue;
+                // 0..1 진행도.  i 마다 1/N 씩 앞서 출발한다.
+                float t = Mathf.Repeat(Time.unscaledTime / ZzPeriod + (float)i / _zzText.Length, 1f);
+                // ① 위로 — 머리 위(1.15)에서 시작해 0.62 만큼 떠오른다
+                float y = 1.15f + t * 0.62f;
+                // ③ 좌우 흔들림 — 한 주기에 한 번 왕복
+                float x = 0.30f + Mathf.Sin(t * Mathf.PI * 2f) * 0.11f;
+                tm.transform.localPosition = new Vector3(x, y, 0f);
+                // ④ 떠오를수록 조금 커진다 (멀어지는 게 아니라 흩어지는 느낌)
+                tm.characterSize = Mathf.Lerp(0.052f, 0.086f, t);
+                // ② 페이드 — 처음 20% 에 나타나고 마지막 40% 에 사라진다
+                float a = t < 0.20f ? t / 0.20f
+                        : t > 0.60f ? 1f - (t - 0.60f) / 0.40f
+                        : 1f;
+                var c = tm.color;
+                tm.color = new Color(c.r, c.g, c.b, Mathf.Clamp01(a) * 0.95f);
+            }
         }
         private float _sleepFxSeen = -1f;
         private void LateUpdate()

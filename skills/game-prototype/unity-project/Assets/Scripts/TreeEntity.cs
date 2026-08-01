@@ -86,6 +86,15 @@ namespace MelonS.GameProto
             SunShadowCaster.Attach(gameObject, 1.4f);   // 나무 — 가장 길게 눕는다
             hp = maxHp;
             spriteRenderer = GetComponent<SpriteRenderer>();
+            // 수종 스프라이트를 **코드에서 되박는다** (2026-08-01 운영자
+            //  "왜 옛날 나무가 태어남?").  Awake 가 SetSpecies 를 부르지 않아서,
+            //  재성장으로 새로 심긴 나무는 프리팹에 구워진 기본 스프라이트
+            //  (flora32_tree_a — 아트 v2 이전 세대의 동그란 덩어리)로 나왔다.
+            //  씬에 처음부터 있던 나무만 SceneSetup 이 SetSpecies 를 불러 줬으므로
+            //  '처음엔 멀쩡한데 시간이 지나면 옛날 나무가 섞인다' 로 나타났다.
+            //  동물(AnimalEntity)·광맥(StoneVeinEntity)에서 이미 두 번 고친 것과
+            //  **같은 함정**이다 — 직렬화가 코드를 이기는 유형.
+            SetSpecies(species);
         }
 
         // Throttle chop SFX — without this it fires every frame (60x/sec

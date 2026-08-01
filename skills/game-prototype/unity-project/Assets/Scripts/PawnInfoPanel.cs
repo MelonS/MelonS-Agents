@@ -35,7 +35,37 @@ namespace MelonS.GameProto
         private const float TabStripH = 22f;
         private const float TabStripGap = 6f;
         // #ui백로그 3.0 — 타이틀(폰 이름) 전용 밴드 높이.  탭 스트립 바로 아래 22px.
-        private const float TitleBandH = 22f;
+        /// <summary>제목 블록이 차지하는 높이 — **탭 내용은 이만큼 아래에서 시작해야 한다.**
+        ///
+        /// 2026-08-01 운영자 "건강 ui에서 글자 겹침 발생".  실측하니 제목(이름·활동·
+        /// 배경·성격 3줄)과 부위별 체력 목록이 **같은 Y 에서 그려지고 있었다.**
+        /// 원인은 값 두 개가 갈라진 것: 제목 RectTransform 은 62px(3줄)로 잡아 놓고
+        /// 이 상수는 22 인 채였다.  '제목 높이' 라는 하나의 사실을 두 곳이 다르게
+        /// 말하면 반드시 겹친다 — 이 레포에서 반복된 유형이라 **한 값으로 묶는다.**</summary>
+        private const float TitleBandH = 62f;   // = 아래 titleText.sizeDelta 높이와 동일
+
+        /// <summary>제목 RectTransform 을 규약대로 놓는다 — **유일한 배치 지점.**
+        ///
+        /// 2026-08-01: 제목 좌표를 잡는 코드가 **두 곳**에 있었고 공식이 서로 달랐다
+        /// (`-(TabStripH + PadOuter + 6)` vs `-(PadOuter + TabStripH + TabStripGap)`).
+        /// 어느 쪽이 나중에 실행되느냐에 따라 제목 위치가 달라지고, 탭 내용은 한쪽
+        /// 값만 알고 있으니 겹친다.  같은 사실을 두 곳이 다르게 말하면 반드시 어긋난다.</summary>
+        private static void PlaceTitleRect(Text title)
+        {
+            if (title == null) return;
+            var trt = title.rectTransform;
+            float pad = MelonS.GameProto.Core.UITheme.PadOuter;
+            trt.anchorMin = new Vector2(0f, 1f);
+            trt.anchorMax = new Vector2(1f, 1f);
+            trt.pivot     = new Vector2(0f, 1f);
+            trt.offsetMin = new Vector2(12f, 0f);
+            trt.offsetMax = new Vector2(-12f, 0f);
+            trt.sizeDelta = new Vector2(trt.sizeDelta.x, TitleBandH);
+            trt.anchoredPosition = new Vector2(12f, -(pad + TabStripH + TabStripGap));
+            title.alignment = TextAnchor.UpperLeft;
+            title.horizontalOverflow = HorizontalWrapMode.Wrap;
+            title.verticalOverflow = VerticalWrapMode.Truncate;   // 밴드 밖으로 새지 않게
+        }
 
         // single-inspector 통합 — 비-pawn entity 선택 시 설명 본문을 보여주는
         //   lazily-built Text (탭 위에 겹치지 않게 panel 본문 영역을 채움).  pawn
@@ -266,7 +296,11 @@ namespace MelonS.GameProto
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(1f, 1f);
             rt.offsetMin = new Vector2(pad, pad);
-            rt.offsetMax = new Vector2(-pad, -(pad + stripH + TabStripGap));
+            // 제목 밴드만큼 더 내린다.  기분·장비·스킬 본문이 전부 이 함수로 만들어지는데
+            //  여기만 TitleBandH 를 빼지 않아, 세 탭 모두 제목 위에 겹쳐 그려졌다
+            //  (2026-08-01 운영자 "건강 ui에서 글자 겹침... 다른 ui 마찬가지").
+            //  탭 본문의 시작 y 는 이제 세 경로(공용 rect·건강·본문생성) 모두 같은 식이다.
+            rt.offsetMax = new Vector2(-pad, -(pad + stripH + TabStripGap + TitleBandH));
             var txt = go.AddComponent<Text>();
             txt.font = ResolveFont();
             txt.fontSize = 13;
@@ -343,25 +377,8 @@ namespace MelonS.GameProto
             //  씬에서 제목은 상단(anchoredPosition y=-8)에 박혀 있고 탭도 같은 자리다.
             //  탭 높이(22)+여백만큼 제목을 내려 둘이 겹치지 않게 한다.
             //  씬 재베이크 없이 코드가 정본이 되도록 여기서 되박는다(오늘 네 번째 같은 패턴).
-            if (titleText != null)
-            {
-                //  제목 영역을 **명시적으로** 잡는다.  씬 값은 높이 26px 한 줄짜리인데
-                //  실제 내용은 이름 + 활동 + 배경 한 줄 + 성격까지 3줄이라 잘려 안 보였다
-                //  (실측: 탭 아래가 통째로 비고 게이지만 떠 있었다 — '무슨 UI 인지
-                //   모르겠다' 의 직접 원인).
-                var trt = titleText.rectTransform;
-                float drop = TabStripH + MelonS.GameProto.Core.UITheme.PadOuter + 6f;
-                trt.anchorMin = new Vector2(0f, 1f);
-                trt.anchorMax = new Vector2(1f, 1f);
-                trt.pivot     = new Vector2(0f, 1f);
-                trt.offsetMin = new Vector2(12f, 0f);
-                trt.offsetMax = new Vector2(-12f, 0f);
-                trt.sizeDelta = new Vector2(trt.sizeDelta.x, 62f);   // 3줄
-                trt.anchoredPosition = new Vector2(12f, -drop);
-                titleText.alignment = TextAnchor.UpperLeft;
-                titleText.horizontalOverflow = HorizontalWrapMode.Wrap;
-                titleText.verticalOverflow = VerticalWrapMode.Overflow;
-            }
+            // 제목 배치는 PlaceTitleRect 한 곳이 소유한다 (위 주석 참조).
+            PlaceTitleRect(titleText);
         }
 
         // single-inspector — body text for a non-pawn ENTITY selection.  Built
@@ -653,18 +670,8 @@ namespace MelonS.GameProto
             //  타이틀은 상태 탭에서만 표시되고 상태 탭 본문(need 바)은 bottom-anchor 라 무충돌.
             if (!titleRectNormalized && titleText != null)
             {
-                var trt = titleText.GetComponent<RectTransform>();
-                if (trt != null)
-                {
-                    float tpad = MelonS.GameProto.Core.UITheme.PadOuter;
-                    trt.anchorMin = new Vector2(0f, 1f);
-                    trt.anchorMax = new Vector2(1f, 1f);
-                    trt.pivot = new Vector2(0f, 1f);
-                    trt.anchoredPosition = new Vector2(tpad, -(tpad + TabStripH + TabStripGap));
-                    trt.sizeDelta = new Vector2(-2f * tpad, TitleBandH);
-                    titleText.fontSize = 16;
-                    titleText.verticalOverflow = VerticalWrapMode.Truncate;
-                }
+                PlaceTitleRect(titleText);       // 공식 하나로 통일 (위 헬퍼)
+                titleText.fontSize = 16;
                 titleRectNormalized = true;
             }
 
@@ -677,7 +684,9 @@ namespace MelonS.GameProto
                     hrt.anchorMin = new Vector2(0f, 0f);
                     hrt.anchorMax = new Vector2(1f, 1f);
                     hrt.offsetMin = new Vector2(pad, pad);
-                    hrt.offsetMax = new Vector2(-pad, -(pad + TabStripH + TabStripGap));
+                    // 제목 자리를 비운다.  다른 탭(위 offsetMax)은 TitleBandH 를 빼는데
+                    //  **건강 탭만 빠져 있어서** 부위 목록이 제목 위에 겹쳐 그려졌다.
+                    hrt.offsetMax = new Vector2(-pad, -(pad + TabStripH + TabStripGap + TitleBandH));
                     healthText.alignment = TextAnchor.UpperLeft;
                     healthText.horizontalOverflow = HorizontalWrapMode.Wrap;
                     healthText.verticalOverflow = VerticalWrapMode.Overflow;

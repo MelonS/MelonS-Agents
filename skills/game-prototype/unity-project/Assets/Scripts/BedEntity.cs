@@ -101,10 +101,46 @@ namespace MelonS.GameProto
             transform.localScale = new Vector3(Size.x / worldSize.x, Size.y / worldSize.y, 1f);
         }
 
+        private SpriteRenderer quiltSr;
+        private float nextQuiltPoll;
+
         private void Start()
         {
             ApplyVisualSize();
             EnsureQuiltOverlay();
+        }
+
+        private void Update()
+        {
+            if (quiltSr == null) return;
+            // 0.4s 폴링 — 매 프레임 겹침 검사는 낭비다 (침대는 몇 개 안 되지만
+            //  이 규약은 이 레포 전반의 '매 프레임 FindObjects 금지' 와 같다).
+            if (Time.unscaledTime < nextQuiltPoll) return;
+            nextQuiltPoll = Time.unscaledTime + 0.4f;
+
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr == null) return;
+            float footY = sr.bounds.min.y;
+            quiltSr.sortingOrder = SleeperOnThisBed()
+                ? Core.YSort.OrderFor(footY) + 8          // 자는 사람 위
+                : Core.YSort.OrderForFlat(footY) + 1;     // 침대 바로 위 (사람 아래)
+        }
+
+        /// <summary>이 침대 위에서 실제로 **자고 있는** 주민이 있는가.
+        ///  단순히 서 있는 것과 구분해야 한다 — 지나가는 사람을 덮으면 안 된다.</summary>
+        private bool SleeperOnThisBed()
+        {
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr == null) return false;
+            var b = sr.bounds;
+            var hits = Physics2D.OverlapBoxAll(b.center, b.size * 0.9f, 0f);
+            foreach (var h in hits)
+            {
+                if (h == null) continue;
+                var needs = h.GetComponent<PawnNeeds>();
+                if (needs != null && needs.IsSleeping) return true;
+            }
+            return false;
         }
 
         // ── 이불 오버레이 ────────────────────────────────────────────────────
@@ -119,7 +155,14 @@ namespace MelonS.GameProto
         //  층을 하나 더 얹는다.  담요 픽셀은 본체와 동일한 생성 함수에서 잘라낸
         //  것이라(`_gen_struct32.sprite_bed_quilt`) 이음매가 생기지 않고, 침대가
         //  비어 있을 때의 그림은 이전과 완전히 같다.
-        private const int QuiltSortingOrder = 11;   // pawn 본체 규약 10 (#sort-audit) 바로 위
+        // 이불의 정렬은 **BedEntity 가 직접 소유**한다 (2026-08-01 2차).
+        //  운영자 "사람이 걸어갈때 침대 밑으로 들어감" 을 고치며 침대를 평면 밴드로
+        //  내렸는데, 이불만 그대로 두면 이번엔 **지나가는 사람을 이불이 덮는다.**
+        //  이불은 '자는 사람을 덮는' 층이지 '모든 사람 위' 가 아니다.
+        //  · 아무도 안 자면 → 침대 바로 위 (평면 밴드.  지나가는 사람이 위로 지난다)
+        //  · 누가 자면     → 그 사람 위 (입체 밴드.  하반신이 이불에 들어간다)
+        //  YSortManager 가 건드리지 않도록 초기값을 관리 대역(110+)으로 준다.
+        private const int QuiltSortingOrder = 900;
         private const string QuiltChildName = "BedQuilt";
         /// <summary>침대 스프라이트 중 주민 위로 덮을 하단 비율.
         ///
@@ -166,6 +209,7 @@ namespace MelonS.GameProto
             var qsr = go.AddComponent<SpriteRenderer>();
             qsr.sprite = quiltSprite;
             qsr.sortingOrder = QuiltSortingOrder;
+            quiltSr = qsr;
             qsr.color = sr.color;                    // 품질 tint 동기 (wood 계열)
             qsr.sortingLayerID = sr.sortingLayerID;
         }

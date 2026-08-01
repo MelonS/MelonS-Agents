@@ -222,6 +222,27 @@ def _azalea(w, h, flowering=True, seed=5):
     return outline(im)
 
 
+def _sapling(w, h, seed=21):
+    """소나무 묘목 — **작은 소나무**로 그린다.
+
+    2026-08-01 운영자 이미지: 정체불명의 짙은 초록 덩어리.  실측하니
+    `RegrowthScheduler.SpawnSapling` 이 **옛 나무 프리팹의 스프라이트를 빌려**
+    작게 줄이고 초록으로 물들이고 있었다.  그 프리팹 스프라이트가 아트 v2 이전
+    세대의 동그란 덩어리라, 축소되면 그냥 초록 얼룩이 된다.
+    묘목은 '작은 나무' 로 읽혀야 심은 것임을 알 수 있다 — 가는 줄기 + 어린 솔가지."""
+    im = blank(w, h)
+    d = ImageDraw.Draw(im)
+    cx, base = w // 2, h - 2
+    top = int(h * 0.30)
+    d.line((cx, base, cx + w * 0.06, top), fill=BARK_MD, width=max(2, w // 12))
+    for f, r in ((0.42, 0.30), (0.62, 0.24), (0.82, 0.15)):
+        y = base - (base - top) * f
+        rw = w * r
+        d.ellipse((cx - rw, y - rw * 0.55, cx + rw, y + rw * 0.45), fill=NEEDLE_MD)
+        d.ellipse((cx - rw * 0.6, y - rw * 0.6, cx + rw * 0.2, y - rw * 0.05), fill=NEEDLE_LT)
+    return outline(im)
+
+
 # ── 출력 표: (경로, 크기, 그리기) ─────────────────────────────────────
 def targets():
     S = os.path.join(ASSETS, "Sprites")
@@ -234,6 +255,7 @@ def targets():
          lambda: _azalea(128, 128, True)),
         (os.path.join(R, "flora32_bush_picked.png"), (128, 128),
          lambda: _azalea(128, 128, False)),
+        (os.path.join(S, "flora32_sapling.png"), (32, 48), lambda: _sapling(32, 48)),
     ]
 
 

@@ -205,6 +205,40 @@ namespace MelonS.GameProto
         //  만들었다.  #260 로직은 보존하되 비활성 — 구세대 아트로 롤백 시 true 로.
         private const bool SeamsEnabled = false;
 
+        // ── 담의 방향별 스프라이트 ──────────────────────────────────────
+        //
+        // 2026-08-01 운영자 "벽이 여러개 붙어있을때 먼가 별로임 / 벽이 보통 한옥에서
+        //  외벽아니야?" — 위에서 본 담은 **뻗는 방향에 따라 보이는 면이 다르다**:
+        //   · 가로(동서)로 뻗는 담 → 윗면(기와 코핑) + 남쪽 벽면이 함께 보인다
+        //   · 세로(남북)로 뻗는 담 → 윗면만 보이고 옆면은 얇게
+        //  가로용 한 장으로 세로 벽까지 쓰면 코핑 띠가 한 칸마다 끊겨 **줄무늬**가
+        //  되고, 그게 '집이 아니라 울타리' 로 읽힌 원인이었다.
+        //  이 클래스는 이미 4방향 이웃을 알고 있으므로(이음새 계산), 그 정보를
+        //  스프라이트 선택에도 쓴다 — 새 인프라 없이 방향 타일이 된다.
+        private static Sprite _vertSprite;
+        private static bool _vertLookedUp;
+        private Sprite _horizSprite;
+
+        private void ApplyRunOrientation(SpriteRenderer sr)
+        {
+            if (sr == null || sr.sprite == null) return;
+            if (!_vertLookedUp)
+            {
+                _vertLookedUp = true;
+                _vertSprite = Resources.Load<Sprite>("struct32/struct32_wall_wood_v");
+            }
+            if (_vertSprite == null) return;              // 자산 없으면 조용히 기존 유지
+            if (_horizSprite == null && sr.sprite != _vertSprite) _horizSprite = sr.sprite;
+
+            bool up = HasWallNeighbour(Vector2.up), down = HasWallNeighbour(Vector2.down);
+            bool left = HasWallNeighbour(Vector2.left), right = HasWallNeighbour(Vector2.right);
+            // 세로로만 이어질 때가 '세로 담' 이다.  모서리(양방향)는 가로용을 쓴다 —
+            //  모서리에서는 남쪽 면이 보이는 편이 자연스럽다.
+            bool vertical = (up || down) && !(left || right);
+            var want = vertical ? _vertSprite : _horizSprite;
+            if (want != null && sr.sprite != want) sr.sprite = want;
+        }
+
         private void RefreshSeams()
         {
             if (!SeamsEnabled)
@@ -217,6 +251,8 @@ namespace MelonS.GameProto
             if (_seams == null) return;
 
             var sr = GetComponent<SpriteRenderer>();
+            ApplyRunOrientation(sr);   // 담이 뻗는 방향에 맞는 스프라이트 선택
+
             Vector3 ps = transform.lossyScale;
             // 0 division 방지 (헤드리스/축소 0 케이스).
             float sx = Mathf.Approximately(ps.x, 0f) ? 1f : ps.x;

@@ -129,19 +129,28 @@ namespace MelonS.GameProto
             go.transform.position = pos;
             go.transform.localScale = Vector3.one * saplingScale;
             var sr = go.AddComponent<SpriteRenderer>();
-            // Borrow sprite from the tree prefab if available; otherwise
-            // TreeSapling will leave the renderer empty (still functional).
-            if (treePrefab != null)
+            // 전용 묘목 스프라이트 (2026-08-01).  이전에는 **나무 프리팹의 스프라이트를
+            //  빌려** 작게 줄이고 초록으로 물들였는데, 그 프리팹이 아트 v2 이전 세대의
+            //  동그란 덩어리라 축소하면 정체불명의 초록 얼룩이 됐다(운영자 "이건먼데").
+            //  묘목은 '작은 나무' 로 보여야 심긴 것임을 알 수 있다.
+            var sap = Resources.Load<Sprite>("flora32/flora32_sapling");
+            if (sap == null) sap = UnityEngine.Resources.Load<Sprite>("flora32_sapling");
+            if (sap != null)
+            {
+                sr.sprite = sap;
+                sr.sortingOrder = 5;
+                sr.color = Color.white;          // 스프라이트가 이미 어린 색이다
+            }
+            else if (treePrefab != null)
             {
                 var protoSr = treePrefab.GetComponentInChildren<SpriteRenderer>();
                 if (protoSr != null)
                 {
                     sr.sprite = protoSr.sprite;
                     sr.sortingOrder = protoSr.sortingOrder;
+                    sr.color = new Color(0.55f, 0.95f, 0.55f, 1f);
                 }
             }
-            // Lighter / more saturated green tint to read as "young growth".
-            sr.color = new Color(0.55f, 0.95f, 0.55f, 1f);
 
             var sapling = go.AddComponent<TreeSapling>();
             sapling.Configure(saplingToTreeSec, treePrefab);

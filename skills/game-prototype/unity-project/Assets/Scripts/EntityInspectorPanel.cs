@@ -127,6 +127,8 @@ namespace MelonS.GameProto
                 $"체력 {animal.Hp}\n사냥하면 고기를 남긴다\n길들이기 가능 (식량 1 소모)\n{(animal.IsTamed ? "길들여짐" : "야생")}");
             var trader = go.GetComponent<TraderEntity>();
             if (trader != null) return ("상인", $"우클릭하면 목재 5 를 식량 8 로 바꿔 준다\n60초 뒤 떠난다");
+            var fire = go.GetComponent<CampfireEntity>();
+            if (fire != null) return (fire.DisplayName, fire.Description);
             var grave = go.GetComponent<GraveEntity>();
             if (grave != null) return (grave.Occupied ? "무덤" : "빈 무덤", grave.Description);
             return ("오브젝트", go.name);

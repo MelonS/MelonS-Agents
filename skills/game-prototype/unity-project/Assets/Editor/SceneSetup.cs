@@ -211,10 +211,19 @@ namespace MelonS.GameProto.EditorTools
             // #116 - wood pile sprite (벌목 후 바닥에 떨어지는 통나무 더미)
             // 아트 B2: TS 자원 더미 우선 (128px·그림자 베이크 → PPU160 = 0.8칸).
             //  stone 은 팩에 등가물 없음 — 구세대 유지 (정합 생성 후속).
-            Sprite woodPileSpriteRef = ImportSpriteAt("Assets/Sprites/ts_wood_pile.png", 160f)
+            // 바닥 아이템 크기 (2026-08-01 운영자 "목재는 왜케 작게 표현되는거지 너무 작음").
+            //  실측: ts_wood_pile 의 실제 내용은 49x30px 인데 PPU 160 으로 들어가
+            //  **0.31 x 0.19 칸** 이었다 — 주민 키(0.9칸) 의 1/5 이라 바닥의 티끌로 보인다.
+            //  레퍼런스 콜로니심에서 자원 더미는 한 칸을 거의 채운다.
+            //  PPU 70 → 목재 0.70x0.43 / 고기 0.73x0.59 칸.  한 칸 안에 들어가면서
+            //  주민 옆에서 '주울 만한 물건' 으로 읽히는 크기다.
+            //  (운영자가 같은 지적을 두 번째 하는 항목 — 그때는 스프라이트를 다시
+            //   그렸지만 정작 **반입 배율**이 원인이었다.)
+            const float GroundItemPPU = 70f;
+            Sprite woodPileSpriteRef = ImportSpriteAt("Assets/Sprites/ts_wood_pile.png", GroundItemPPU)
                                        ?? LoadOrSetupSprite("Assets/Sprites/wood_pile.png");
             Sprite stoneChunkSpriteRef = LoadOrSetupSprite("Assets/Sprites/stone_chunk.png");  // #119
-            Sprite meatPileSpriteRef = ImportSpriteAt("Assets/Sprites/ts_meat_pile.png", 160f)
+            Sprite meatPileSpriteRef = ImportSpriteAt("Assets/Sprites/ts_meat_pile.png", GroundItemPPU)
                                        ?? LoadOrSetupSprite("Assets/Sprites/meat_pile.png");   // #129
             // #199 A2 — per-colonist 셔츠 변형 sprite 3종 (blue/rust/olive).
             //  ForceImportAllSprites 가 이미 Sprite 타입 + PPU16 으로 import 함.

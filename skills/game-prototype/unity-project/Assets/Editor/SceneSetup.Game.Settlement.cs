@@ -70,9 +70,13 @@ namespace MelonS.GameProto.EditorTools
             //   X . . . X   <- 좌우 벽 + 가운데 floor
             //
             // 벽 5개: (-7, 1)..(-3, 1) 위쪽 가로벽 + 좌우 양끝 (-7, 0) (-3, 0)
-            Sprite cropSprite         = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice.png");
-            Sprite cropSeedlingSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice_seedling.png");
-            Sprite cropGrowingSprite  = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/crop_rice_growing.png");
+            // 작물 배율은 여기서도 명시한다 — 로드 지점이 두 곳(Entities/Settlement)이라
+            //  한쪽만 고치면 **밭에 따라 벼 크기가 달라진다** (같은 사실을 두 곳이
+            //  다르게 말하는 이 레포의 반복 함정).  32px / PPU 32 = 1칸.
+            const float CropPPU = 32f;
+            Sprite cropSprite         = ImportSpriteAt("Assets/Sprites/crop_rice.png", CropPPU);
+            Sprite cropSeedlingSprite = ImportSpriteAt("Assets/Sprites/crop_rice_seedling.png", CropPPU);
+            Sprite cropGrowingSprite  = ImportSpriteAt("Assets/Sprites/crop_rice_growing.png", CropPPU);
             if (cropSeedlingSprite == null) Debug.LogWarning("[SceneSetup] crop_rice_seedling.png null — stage-sprite wiring skipped");
             if (cropGrowingSprite  == null) Debug.LogWarning("[SceneSetup] crop_rice_growing.png null — stage-sprite wiring skipped");
             Sprite stockSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/stockpile_marker.png");
@@ -433,7 +437,12 @@ namespace MelonS.GameProto.EditorTools
             //  밤 화면에 광원이 0 — NightOverlay 가 어둡기만 하고 '야영지' 라는 정체성이
             //  없었다.  FlickerLight 는 비-Stove 객체에선 상시 은은 점멸(IsLit 폴백 true).
             //  콜라이더 없음(통행 무방해), 빌드/세이브 시스템 불간섭(순수 비주얼).
-            Sprite fireSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/glow_fire_pool.png");
+            // 모닥불 실물 — 광원만 있고 실체가 없던 것을 고친다 (2026-08-01,
+            //  운영자 "이 빛은 먼데? 눌러도 정보도 없고").  돌 두른 장작불 스프라이트를
+            //  본체로 쓰고, 기존 글로우는 그 위에 자식으로 얹는다.
+            Sprite fireSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/hanok_campfire.png")
+                                ?? AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/glow_fire_pool.png");
+            Sprite fireGlow = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/glow_fire_pool.png");
             if (fireSprite != null)
             {
                 GameObject fireGo = new GameObject("Campfire_Spawn");
@@ -447,7 +456,24 @@ namespace MelonS.GameProto.EditorTools
                 fsr.sortingOrder = 6;
                 // 광장의 초점이 되려면 보여야 한다 — 1차 배치에선 희미한 주황 점이라
                 //  '마당 한가운데 모닥불'로 안 읽혔다.  2.2배로 키워 3×3 광장을 채운다.
-                fireGo.transform.localScale = new Vector3(2.2f, 2.2f, 1f);
+                fireGo.transform.localScale = new Vector3(1.6f, 1.6f, 1f);
+                // 클릭해서 물어볼 수 있는 물체로 만든다 (콜라이더 + 식별 컴포넌트).
+                //  isTrigger 라 통행은 그대로 무방해 — 순수 비주얼이라는 기존 전제 유지.
+                var fcol = fireGo.AddComponent<BoxCollider2D>();
+                fcol.size = new Vector2(0.9f, 0.9f);
+                fcol.isTrigger = true;
+                fireGo.AddComponent<MelonS.GameProto.CampfireEntity>();
+                // 글로우는 자식으로 — 본체보다 위, 넓게 퍼진다.
+                if (fireGlow != null)
+                {
+                    var glowGo = new GameObject("CampfireGlow");
+                    glowGo.transform.SetParent(fireGo.transform, false);
+                    glowGo.transform.localScale = new Vector3(2.0f, 2.0f, 1f);
+                    var gsr = glowGo.AddComponent<SpriteRenderer>();
+                    gsr.sprite = fireGlow;
+                    gsr.sortingOrder = 7;
+                    gsr.color = new Color(1f, 1f, 1f, 0.75f);
+                }
                 fireGo.AddComponent<FlickerLight>();
             }
         }
