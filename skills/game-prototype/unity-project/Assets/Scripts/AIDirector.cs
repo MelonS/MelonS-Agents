@@ -147,7 +147,11 @@ namespace MelonS.GameProto
         //  4갈래 중 2갈래가 1순위 지목).  1마리 습격(BaseRaidGroupSize=1, cap 2)은 3림이
         //  감당 가능하므로 첫 접촉을 day 2 아침으로 — 5/31 wipe 의 원인은 '5마리×3일'
         //  조합이었지 grace 가 아니었다.  체감 난이도는 운영자 피드백으로 재조정.
-        [SerializeField] private int RaidGraceDays = 2;        // first raid not before day 2
+        // 2026-08-02: 2 → 1.  기본 배속 3x 에서 게임 하루 = 실제 5.6분이므로
+        //  2일차 습격은 실제 11분 — 심사자 창(5~15분)의 끝자락이라 대개 못 본다.
+        //  1일차면 ~5.6분, 창 한가운데다.  규모는 그대로(첫 습격 = 산적 1명)라
+        //  난이도가 아니라 **등장 시점**만 앞당기는 변경이다.
+        [SerializeField] private int RaidGraceDays = 1;        // first raid not before day 1
         [SerializeField] private int RaidIntervalDays = 3;     // raids ~3 in-game days apart
         [SerializeField] private int MaxConcurrentGroups = 2;  // escalation ceiling (bandits/raid)
         [SerializeField] private int BaseRaidGroupSize = 1;    // first raid = 1 bandit

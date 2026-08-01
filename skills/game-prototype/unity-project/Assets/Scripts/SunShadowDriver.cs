@@ -55,6 +55,11 @@ namespace MelonS.GameProto
         //  쪽으로** 누워야 한다.  태양 계산을 복제하면 언젠가 갈라지므로
         //  (이 레포에서 반복된 '같은 사실을 두 곳이 다르게 말함' 함정),
         //  여기서 계산한 값을 그대로 내준다.
+        /// <summary>지금 그림자 색 (하늘색이 옅게 섞인 값).  건물 그림자가 공유한다.</summary>
+        public static Color ShadowTint { get; private set; } = new Color(0.08f, 0.07f, 0.09f);
+        /// <summary>지금 그림자 농도 배수 (밤이면 0).</summary>
+        public static float ShadowAlphaMul { get; private set; }
+
         private static bool _sunDay;
         private static float _sunT;
 
@@ -138,6 +143,11 @@ namespace MelonS.GameProto
             Color tint = day
                 ? Color.Lerp(new Color(0.10f, 0.07f, 0.05f), new Color(0.05f, 0.06f, 0.12f), alt)
                 : new Color(0.04f, 0.05f, 0.10f);
+            // 건물 외곽선 그림자(BuildingShadowRenderer)가 **같은 색·같은 농도**를 쓰도록
+            //  내준다.  두 벌로 두면 나무 그림자와 집 그림자의 색이 갈려 광원이 두 개로
+            //  보인다 — 이 레포에서 반복된 '같은 사실이 두 곳에'.
+            ShadowTint = tint;
+            ShadowAlphaMul = alphaMul;
 
             var list = BlobShadow.Entries;
             for (int i = 0; i < list.Count; i++)

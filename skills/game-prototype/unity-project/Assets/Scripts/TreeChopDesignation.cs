@@ -225,6 +225,11 @@ namespace MelonS.GameProto
             return ct;
         }
 
+        /// <summary>지금 벌목 지정돼 있고 아직 안 베인 나무 수.
+        ///  `ColonyAutoWork` 가 "플레이어 지시가 남아 있는가"를 판단할 때 쓴다 —
+        ///  남아 있으면 자동 지정은 손대지 않는다(플레이어 의도가 항상 먼저다).</summary>
+        public int MarkedCount { get { PruneMarked(); return marked.Count; } }
+
         private void PruneMarked()
         {
             for (int i = marked.Count - 1; i >= 0; i--)

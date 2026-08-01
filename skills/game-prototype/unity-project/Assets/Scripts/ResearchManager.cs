@@ -67,6 +67,12 @@ namespace MelonS.GameProto
         public delegate void TechCompletedHandler(Tech t);
         public event TechCompletedHandler OnTechCompleted;
 
+        /// <summary>완료된 연구 수 (FunTelemetry / 목표 판정 공용).</summary>
+        public int CompletedCount
+        {
+            get { int n = 0; for (int i = 0; i < techs.Count; i++) if (techs[i].completed) n++; return n; }
+        }
+
         private void Awake()
         {
             if (Services.Has<ResearchManager>() && Services.Get<ResearchManager>() != this)

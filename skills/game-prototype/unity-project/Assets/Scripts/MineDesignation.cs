@@ -321,6 +321,11 @@ namespace MelonS.GameProto
             return mt;
         }
 
+        /// <summary>지금 채광 지정돼 있고 아직 안 캔 광맥 수 (TreeChopDesignation 미러).</summary>
+
+        public int MarkedCount { get { PruneMarked(); return marked.Count; } }
+
+
         private void PruneMarked()
         {
             for (int i = marked.Count - 1; i >= 0; i--)

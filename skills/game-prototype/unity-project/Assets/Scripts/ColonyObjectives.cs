@@ -36,6 +36,20 @@ namespace MelonS.GameProto
     {
         public static ColonyObjectives Instance { get; private set; }
 
+        /// <summary>지금 달성한 목표 수 / 전체.  `FunTelemetry` 가 진행감을 재는 데 쓴다
+        ///  — 패널이 화면에 그리는 값과 **같은 판정**을 써야 계측과 화면이 안 갈라진다.</summary>
+        public int DoneCount
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < objectives.Count; i++)
+                    if (objectives[i].done != null && objectives[i].done()) n++;
+                return n;
+            }
+        }
+        public int TotalCount => objectives.Count;
+
         private sealed class Objective
         {
             public string label;
@@ -168,6 +182,18 @@ namespace MelonS.GameProto
         private const float BaselineMaxWaitSec = 5f;
 
         private int WoodTarget => startWood + WoodDelta;
+
+        // ── 자동 일감이 참조하는 목표선 (2026-08-02) ────────────────────────
+        //  `ColonyAutoWork` 가 "언제까지 스스로 베는가"를 여기서 읽는다.  자동 일감이
+        //  자기 임계값을 따로 들면 목표 패널과 갈라져, 목표를 채웠는데도 계속 베거나
+        //  못 채웠는데 멈추는 화면이 된다 — 이 레포에서 반복된 '같은 사실이 두 곳에'.
+        public static int WoodTarget_Public
+            => Instance != null ? Instance.WoodTarget : 400;
+
+        /// <summary>석재 목표선.  정착 목표에는 석재 항목이 없지만(4개 중 없음)
+        ///  석등·돌담을 지으려면 필요하므로 자동 채광은 이 선까지만 판다.
+        ///  맵을 밀어버리지 않도록 낮게 잡는다.</summary>
+        public const int StoneSoftTarget = 60;
         private int BedTarget => startBeds + BedDelta;
 
         /// <summary>비축 목재 — **바닥 더미를 포함**한다.

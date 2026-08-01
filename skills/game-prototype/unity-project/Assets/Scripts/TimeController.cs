@@ -11,7 +11,10 @@ namespace MelonS.GameProto
     {
         public static TimeController Instance { get; private set; }
 
-        private float lastNonPauseScale = 1f;
+        /// <summary>시작 배속.  일시정지 해제 시 돌아오는 값이기도 하다.</summary>
+        public const float DefaultScale = 3f;
+
+        private float lastNonPauseScale = DefaultScale;
         public bool IsPaused => Time.timeScale == 0f;
         public float CurrentScale => Time.timeScale;
         public event Action<float> OnScaleChanged;
@@ -20,8 +23,17 @@ namespace MelonS.GameProto
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
-            Time.timeScale = 1f;
-            lastNonPauseScale = 1f;
+            // 2026-08-02 — 기본 배속을 1x → 3x.
+            //  실측: 1x 에서 게임 하루 = 실제 16.7분(장르 레퍼런스 정합).  그런데
+            //  심사자가 보는 창은 5~15분이라 **게임 하루의 절반도 안 지나간다** —
+            //  손대지 않은 10분 캡처에서 목재·가치가 9분간 완전히 고정이었고
+            //  마지막 화면은 전원 취침이었다.  첫 습격(2일차)·큰 이벤트(1.5~3일)는
+            //  구조적으로 창 밖이다.
+            //  시뮬레이션 값은 하나도 바꾸지 않는다 — 니즈 감소·연구 속도가 전부
+            //  timeScale 곱이라 **게임-하루 리듬은 그대로**고, 벽시계 속도만 바뀐다.
+            //  (레퍼런스도 배속 조작을 상시 쓴다.  1x 를 '느리게' 로 남겨 둔다.)
+            Time.timeScale = DefaultScale;
+            lastNonPauseScale = DefaultScale;
         }
 
         private void Update()
