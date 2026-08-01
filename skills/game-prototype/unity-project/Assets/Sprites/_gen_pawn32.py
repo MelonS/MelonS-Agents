@@ -70,6 +70,50 @@ VARIANTS = [
     ('rust',  'bang',  0, 0.94),   # v7
 ]
 
+# ── 한복 (2026-08-01) ──────────────────────────────────────────────────
+# 운영자 "특색을 주고 싶은데" → 한국풍 정착지.  건축을 한옥으로 바꾼 뒤 주민만
+# 서양 복식이면 '한옥에 사는 다른 나라 사람' 이 된다.
+#
+# 32px 에서 무엇이 읽히는지 실측으로 확인하고 설계했다:
+#   · 색만 바꾸면(흰 저고리 + 색 바지) → '흰 셔츠 + 색 바지' 로 읽힌다.  약함.
+#   · **갓**을 얹으면 → 넓은 챙 + 대우 실루엣이 즉시 한국인으로 읽힌다.  강함.
+# 그래서 색(저고리·바지)과 실루엣(갓)을 함께 쓴다.
+#
+# 주민 구분은 유지해야 한다 — 저고리를 전부 미색으로 만들면 누가 누군지 모른다.
+# 고유색을 **깃과 고름**(가슴 한복판, 가장 잘 보이는 자리)과 바지로 옮긴다.
+JEOGORI = shade(CLOTH_LINEN, 1.06)          # 무명 저고리 (순백 금지 — 미색)
+JEOGORI_DK = shade(JEOGORI, 0.84)
+JIPSIN = shade(WOOD_MD, 0.92)               # 짚신
+GAT = shade(OUTLINE_STORY, 1.75)            # 말총 갓 (완전 검정보다 살짝 밝게)
+GAT_HI = shade(GAT, 1.55)
+# 갓은 남성 복식이다.  머리 모양으로 갈라 일부만 씌우면 마을에 변화도 생긴다.
+GAT_STYLES = {'bun', 'bald', 'short'}
+
+
+def _draw_gat(im, b, back=False):
+    """갓 — 챙(2px) + 대우.  머리(x11-20) 보다 넓어야 실루엣이 산다."""
+    rect(im, 8, 4 + b, 23, 5 + b, GAT)          # 챙
+    rect(im, 9, 3 + b, 22, 3 + b, GAT)
+    rect(im, 13, 0 + b, 18, 3 + b, GAT)         # 대우
+    if not back:
+        rect(im, 13, 0 + b, 13, 3 + b, GAT_HI)  # 좌상 광원
+        pset(im, [(14, 0 + b)], GAT_HI)
+
+
+def _jeogori_detail(im, accent, b, back=False):
+    """깃(옷깃) + 고름(옷고름) — 고유색.  저고리를 '흰 셔츠' 와 가르는 신호."""
+    if back:
+        rect(im, 12, 14 + b, 19, 14 + b, accent)      # 뒷깃
+        return
+    rect(im, 12, 14 + b, 19, 14 + b, accent)          # 깃 (어깨선)
+    pset(im, [(14, 15 + b), (17, 15 + b)], accent)    # 목 아래 V
+    # 고름 — 정중앙 세로선으로 그리면 **넥타이처럼 보인다**(1차 실측).
+    #  실제 옷고름은 가슴 왼쪽에서 매듭을 짓고 띠 하나가 비껴 내려온다.
+    #  매듭(2x2) + 비스듬한 띠로 그 형태를 32px 최소 단위로 옮긴다.
+    rect(im, 14, 16 + b, 15, 17 + b, accent)          # 매듭
+    pset(im, [(16, 18 + b), (16, 19 + b), (17, 20 + b)], accent)   # 흘러내린 띠
+
+
 HAND_ANCHOR = {'S': (22, 20), 'E': (21, 20), 'N': (9, 20)}
 TOOL_GRIP = (3, 10)  # in 12x12 tool sprite
 
@@ -146,13 +190,13 @@ def _legs_front(im, leg, trouser, b):
         lift1 = (leg == 'r_half' and side == 'l') or (leg == 'l_half' and side == 'r')
         if lift2:    # back leg raised 2px (contact)
             rect(im, x0, 23 + b, x1, 24, trouser)
-            rect(im, x0, 25, x1, 26, WOOD_DK)
+            rect(im, x0, 25, x1, 26, JIPSIN)
         elif lift1:  # back leg raised 1px (mid-stride transition)
             rect(im, x0, 23 + b, x1, 25, trouser)
-            rect(im, x0, 26, x1, 27, WOOD_DK)
+            rect(im, x0, 26, x1, 27, JIPSIN)
         else:        # grounded
             rect(im, x0, 23 + b, x1, 26, trouser)
-            rect(im, x0, 27, x1, 28, WOOD_DK)
+            rect(im, x0, 27, x1, 28, JIPSIN)
 
 
 def _arms_front(im, arm, cloth, cloth_dk, skin, b, work_side):
@@ -245,8 +289,11 @@ def draw_S(v, leg, arm, b):
     rect(im, 18, 10 + b, 18, 11 + b, OUTLINE_STORY)
 
     _torso_front(im, cloth, cloth_dk, b)
+    _jeogori_detail(im, v['accent'], b)              # 깃 + 고름
     _arms_front(im, arm, cloth, cloth_dk, skin, b, work_side='r')
     _legs_front(im, leg, trouser, b)
+    if v.get('gat'):
+        _draw_gat(im, b)
 
     outline(im, OUTLINE_STORY)
     # 1px ground-contact shadow
@@ -287,11 +334,14 @@ def draw_N(v, leg, arm, b):
             rect(im, 15, 17 + b, 16, 17 + b, hair)
 
     _torso_front(im, cloth, cloth_dk, b)
+    _jeogori_detail(im, v['accent'], b, back=True)   # 뒷깃
     _arms_front(im, arm, cloth, cloth_dk, skin, b, work_side='l')
     if style == 'pony':                               # tail over torso top
         rect(im, 14, 14 + b, 17, 16 + b, hair)
         rect(im, 15, 17 + b, 16, 17 + b, hair)
     _legs_front(im, leg, trouser, b)
+    if v.get('gat'):
+        _draw_gat(im, b, back=True)
 
     outline(im, OUTLINE_STORY)
     p = im.load()
@@ -380,6 +430,9 @@ def draw_E(v, leg, arm, b):
         rect(im, 15, 16 + b, 16, 19 + b, cloth_dk)
         rect(im, 17, 19 + b, 19, 20 + b, cloth_dk)
         rect(im, 20, 20 + b, 21, 21 + b, skin)       # hand → anchor (21,21)
+
+    if v.get('gat'):
+        _draw_gat(im, b)                             # 측면도 같은 챙 (톱다운 3/4)
 
     outline(im, OUTLINE_STORY)
     p = im.load()
@@ -519,8 +572,12 @@ def main():
 
     all_frames = {}   # (vi, dirn, pose) -> Image
     for vi, (cloth_key, hair_style, skin_i, hair_mul) in enumerate(VARIANTS):
+        # 한복: 저고리는 전부 미색, 고유색은 깃·고름·바지로 간다.
+        _accent, _accent_dk, _ = CLOTH_SETS[cloth_key]
         v = {
-            'cloth': CLOTH_SETS[cloth_key],
+            'cloth': (JEOGORI, JEOGORI_DK, _accent),   # (저고리, 그늘, 바지=고유색)
+            'accent': _accent,
+            'gat': hair_style in GAT_STYLES,
             'skin': SKIN_TONES[skin_i],
             'hair': hair_style,
             'hair_c': shade(HAIR_DK, hair_mul),
