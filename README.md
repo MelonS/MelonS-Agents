@@ -28,7 +28,7 @@
 
 *One operator's agent system, in the open: the media pipelines are yours to clone and run (Mac/Linux) — the game and the engineering are here to read and learn from.*
 
-![MelonS-Agents — by the numbers: 100+ outputs, 1 production skill, 23 shaders, 0 runtime API tokens, 15-scenario gate, 23 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
+![MelonS-Agents — by the numbers: 100+ outputs across 7 mission types, 1 production skill, 23 shaders, 0 runtime API tokens, 22-scenario commit gate, 27 subagents, 3 audit layers, MIT](docs/visuals/01-hero-stats.png)
 
 ## Production graphs — shorts and game
 
@@ -57,19 +57,19 @@ different bottleneck, different shape.*
 |-------|--------------|--------|----------------|
 | **music-video** | a song in → a 60-second 9:16 short (beat-aligned cuts, vintage ffmpeg shaders) | Production\* | ✅ Mac/Linux — `./scripts/first-touch.sh`, ~60 s |
 | **job-hunt** | a keyword → a Korean job-board digest (11 source plugins) | Parked | ❌ KR job boards now block scraping — mock/dry-run only |
-| **PawnSim** · built by `game-dev-agent` | a self-verified colony-sim game prototype | In development | ⚠️ Windows + Unity 6000.0.75f1 |
-| **content-shorts** · built by a 4-team legal-gated pipeline | a topic → a sourced, copyright-reviewed 9:16 short (info / news / idol formats) | In development | ⚠️ first real short shipped to YouTube 2026-07-01 (idol); not on a cadence yet · needs a Pexels key |
+| **PawnSim** · built by `game-dev-agent` | a self-verified colony-sim game prototype | In development | ✅ [playable in a browser](https://melons.github.io/MelonS-Agents/play/) — building it needs Windows + Unity 6000.0.75f1 |
+| **content-shorts** · built by a 4-team legal-gated pipeline | a topic → a sourced, copyright-reviewed 9:16 short (info / news / idol formats) | In development | ⚠️ first short shipped 2026-07-01 (idol); info / news / idol formats rendered since, still not on a fixed cadence · needs a Pexels key |
 | **product-cf** | a product photo → a CF-style short | Parked | ❌ parked on an honest negative finding |
 
 <sub>\*"Production" = ships a real deliverable on a schedule (only **music-video** qualifies today).  `game-dev-agent` is the meta-skill that builds PawnSim; it joins the production count once PawnSim ships on a cadence.</sub>
 
 ## It checks its own work
 
-![Verification — two gates: a 15-scenario input-level repro gate per commit + an isolated grader sub-agent on long soaks](docs/visuals/14-verification-loop.png)
+![Verification — two gates: a 22-scenario input-level repro gate per commit + an isolated grader sub-agent on long soaks](docs/visuals/14-verification-loop.png)
 
 Anyone can make an agent *emit* code. The hard part is proving the result actually works — and that's the spine of this repo. PawnSim passes two gates before anything lands:
 
-- **A 15-scenario repro gate on every commit.** The agent synthesizes real player clicks through the same UI a player uses, and asserts each one had an *effect* ("the click placed a designation") — not just that the click landed.
+- **A 22-scenario repro gate on every commit.** The agent synthesizes real player clicks through the same UI a player uses, and asserts each one had an *effect* ("the click placed a designation") — not just that the click landed.
 - **An isolated grader on long unattended soaks.** A separate sub-agent sees only evidence (screenshots + raw logs), never the author's intent, and grades the run against a written rubric.
 
 That grader repeatedly caught what self-review missed: a silent harness blind spot that had voided *every* designation, a "food-rich colony starving to death" mood-gate trap, and a permanent-mental-break colony freeze. The basic loop (stockpile → housing → farming → logging → mining) is now machine-verified end-to-end, with the rubric verdicts committed alongside the fixes. Nine incidents, each written up *problem → constraint → decision → artifact*: [`docs/engineering-case-studies.md`](docs/engineering-case-studies.md).
