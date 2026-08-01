@@ -47,7 +47,7 @@ if [[ -f "$DEST/index.html" ]]; then
 import re, sys, pathlib
 p = pathlib.Path(sys.argv[1])
 html = p.read_text(encoding="utf-8", errors="replace")
-html = re.sub(r"<title>.*?</title>", "<title>PawnSim — 콜로니 심 프로토타입</title>",
+html = re.sub(r"<title>.*?</title>", "<title>PawnSim — 어느 산골 마을의 하루하루</title>",
               html, count=1, flags=re.S)
 print("  index.html <title> 교체됨")
 
