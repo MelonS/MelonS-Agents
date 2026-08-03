@@ -150,43 +150,45 @@ def _rows(steps: list[str], per_row: int = 4) -> str:
 def shorts_html(lang: str) -> str:
     ko = lang == "ko"
     steps = [
-        _step("plan", "샷 스펙" if ko else "Shot spec", "기획 → 컷 목록" if ko else "brief → cut list"),
+        _step("plan", "촬영 목록" if ko else "Shot spec", "기획을 컷 단위로 나눕니다" if ko else "brief → cut list"),
         _step("render_shot ×N", "스틸 라운드" if ko else "Still round",
-              "생성 → 심사 → 재생성" if ko else "generate → judge → regen", badge="9.0s / 장" if ko else "9.0s each"),
-        _step("gate", "문 1" if ko else "Gate 1",
-              "전 샷 75점 이상" if ko else "every still ≥ 75", kind="gate",
-              badge="3시간 차단" if ko else "cuts 3 hours"),
-        _step("storyboard · approval", "사람 승인" if ko else "Human approval",
-              "검수 시트 → 승인·재생성·취소" if ko else "sheet → approve / regen / reject",
-              kind="human", badge="interrupt()"),
+              "이미지 생성 → 채점 → 미달이면 다시" if ko else "generate → judge → regen", badge="장당 9초" if ko else "9.0s each"),
+        _step("gate", "1차 검사" if ko else "Gate 1",
+              "모든 스틸이 75점을 넘어야 통과" if ko else "every still ≥ 75", kind="gate",
+              badge="여기서 3시간을 아낍니다" if ko else "cuts 3 hours"),
+        _step("storyboard · approval", "사람 확인" if ko else "Human approval",
+              "검수 시트를 보고 승인·재생성·취소" if ko else "sheet → approve / regen / reject",
+              kind="human", badge="여기서 멈춰 기다립니다" if ko else "interrupt()"),
         _step("render_clip ×N", "컷 라운드" if ko else "Clip round",
-              "영상화 → 심사 → 시드 리롤" if ko else "i2v → judge → reroll",
-              badge="412.3s / 컷" if ko else "412.3s each"),
-        _step("clip_gate", "문 2" if ko else "Gate 2",
-              "REGEN 컷 0" if ko else "no cut at REGEN", kind="gate"),
-        _step("assemble · legal", "조립 · 법률" if ko else "Assemble · legal",
-              "concat + 고지 → 라이선스 게이트" if ko else "concat + disclosure → license gate"),
-        _step("release", "출시 패키지" if ko else "Release package",
-              "제목·태그·썸네일·귀속" if ko else "titles · tags · thumbnail", kind="done"),
+              "스틸을 영상으로 → 채점 → 다시 뽑기" if ko else "i2v → judge → reroll",
+              badge="컷당 412초" if ko else "412.3s each"),
+        _step("clip_gate", "2차 검사" if ko else "Gate 2",
+              "다시 만들어야 할 컷이 없어야 통과" if ko else "no cut at REGEN", kind="gate"),
+        _step("assemble · legal", "합치고 법률 검토" if ko else "Assemble · legal",
+              "이어붙이기·출처 표기 → 저작권 확인" if ko else "concat + disclosure → license gate"),
+        _step("release", "출시 준비 완료" if ko else "Release package",
+              "제목·태그·썸네일·출처 정리" if ko else "titles · tags · thumbnail", kind="done"),
     ]
     flow = _rows(steps, 4)
     if ko:
-        eyebrow = "실행 그래프 · 쇼츠 라인 · LANGGRAPH"
+        eyebrow = "쇼츠 제작 흐름 · LANGGRAPH"
         title = 'GPU 3시간 앞에 <em>문</em>을 세운다'
-        lede = ("한 편 실측 507초 중 <b>영상화가 412.3초(81%)</b>다. 스틸 한 장은 10초. "
-                "그래서 싼 단계가 심사와 재시도를 안고, <b>문 1</b>이 기준 미달 스틸에 영상화 시간을 "
-                "쓰지 못하게 막는다. 한 번 막을 때마다 <b>179분</b>이 남는다.")
-        legend = [("기획·대본", "3분"), ("스틸 26장", "4분"), ("영상화 26컷", "179분"), ("조립·자막", "7분")]
-        tip = ("<b>문의 자리는 스틸 직후.</b> 스틸 1장 10초 대 컷 1개 412초 — 비용비 1:40. "
-               "문서에 적어 두면 잊히지만, 엣지가 열리지 않으면 잊을 수가 없다.")
-        rails = [("retry", "되돌아가는 엣지 4개",
-                  "스틸 재시도(최대 3) · 승인에서 지목한 재생성 · 시드 리롤 · 법률 REVISE(최대 2)"),
-                 ("stop", "차단 = 절약",
-                  "어느 문에서 막히든 <code>exit 2</code>. 영상화 전에 막히면 179분을 아직 안 쓴 상태다"),
-                 ("retry", "이어서 하기",
-                  "<code>resume --approve</code> 는 체크포인트에서 재개 — 26컷 중 19컷에서 죽어도 남은 7컷만")]
+        lede = ("쇼츠 한 편을 만드는 데 약 3시간이 걸리는데, 실제로 재 보니 그중 <b>81%가 영상 생성 "
+                "한 단계</b>였습니다(507초 중 412초). 스틸 이미지 한 장은 10초면 만듭니다. 그래서 값싼 "
+                "스틸 단계에서 먼저 채점하고, 기준을 넘지 못한 스틸은 영상 생성으로 넘기지 않습니다. "
+                "한 번 걸러낼 때마다 <b>179분</b>을 아낍니다.")
+        legend = [("기획·대본", "3분"), ("스틸 26장", "4분"), ("영상 생성 26컷", "179분"), ("조립·자막", "7분")]
+        tip = ("<b>검사 지점은 스틸 직후입니다.</b> 스틸 한 장 10초 대 영상 한 컷 412초, 비용이 40배 "
+               "차이 납니다. 문서에 적어 둔 규칙은 잊히지만, 검사를 통과하지 못하면 다음 단계로 가는 "
+               "길 자체가 열리지 않습니다.")
+        rails = [("retry", "다시 돌아가는 길 4개",
+                  "스틸 다시 만들기(최대 3회) · 사람이 지목한 것만 다시 · 영상 다시 뽑기 · 법률 수정(최대 2회)"),
+                 ("stop", "막히면 그 자리에서 끝납니다",
+                  "어느 검사에서 막히든 실행이 종료됩니다. 영상 생성 전에 막혔다면 179분은 아직 쓰지 않은 상태입니다"),
+                 ("retry", "중간부터 다시",
+                  "진행 상황이 저장돼 있어, 26컷 중 19컷에서 멈춰도 남은 7컷만 다시 만듭니다")]
         foot_l = "plan · render_shot · gate · storyboard · approval · mark_regen · video_stage · render_clip · clip_gate · assemble · legal · bump_legal · release · blocked"
-        foot_r = "graph/shorts_graph.py — 이 그림은 코드에서 생성된다"
+        foot_r = "graph/shorts_graph.py — 이 그림은 코드에서 자동 생성됩니다"
     else:
         eyebrow = "EXECUTION GRAPH · SHORTS LINE · LANGGRAPH"
         title = 'A <em>gate</em> in front of three GPU hours'
@@ -205,7 +207,7 @@ def shorts_html(lang: str) -> str:
         foot_l = "plan · render_shot · gate · storyboard · approval · mark_regen · video_stage · render_clip · clip_gate · assemble · legal · bump_legal · release · blocked"
         foot_r = "graph/shorts_graph.py — this figure is generated from the code"
 
-    gate_label = "문" if ko else "gate"
+    gate_label = "검사" if ko else "gate"
     legend_html = "".join(
         f'<div><b>{_esc(v)}</b> &nbsp;{_esc(k)}</div>' for k, v in legend)
     rails_html = "".join(
@@ -218,7 +220,7 @@ def shorts_html(lang: str) -> str:
   <div class="bar-wrap">
     <div class="bar">
       <div class="s-plan"></div><div class="s-still"></div><div class="s-gate" data-label="{gate_label}"></div>
-      <div class="s-i2v">{'영상화 179분 · 전체의 81%' if ko else 'video 179 min · 81% of the run'}</div>
+      <div class="s-i2v">{'영상 생성 179분 · 전체의 81%' if ko else 'video 179 min · 81% of the run'}</div>
       <div class="s-asm"></div>
     </div>
     <div class="bar-legend">{legend_html}</div>
@@ -234,35 +236,37 @@ def shorts_html(lang: str) -> str:
 def game_html(lang: str) -> str:
     ko = lang == "ko"
     steps = [
-        _step("pm_publish", "작업 발행" if ko else "Publish task", "레인 3개 오픈" if ko else "open three lanes"),
+        _step("pm_publish", "작업 발행" if ko else "Publish task", "할 일을 정하고 세 갈래로 나눕니다" if ko else "open three lanes"),
         _step("review", "검토" if ko else "Review",
-              "Director · Designer · AI Designer", kind="gate"),
-        _step("work_lane ×3", "제작 병렬" if ko else "Parallel lanes",
-              "코드 · 아트 · 사운드" if ko else "code · art · sound", badge="fan-out"),
-        _step("unity_scene · unity_build", "Unity 배타 구간" if ko else "Unity critical section",
-              "씬 생성 → 빌드, 산출물 경로를 상태에 확정" if ko else "scene → build, paths pinned into state",
-              kind="human", badge="🔒 mutex"),
-        _step("qa", "실물 검증" if ko else "Verify on the build",
-              "exe 실행 · 스크린샷 — 상태의 경로만 읽는다" if ko else "launch exe · screenshot — pinned paths only"),
-        _step("ta", "아트 심사" if ko else "Art review",
-              "TA 가 품질을 채점하고 수정 지시" if ko else "TA scores quality, returns a fix list", kind="gate"),
-        _step("pm_merge", "병합" if ko else "Merge",
-              "리듀서가 상태를 합친다" if ko else "reducer merges state", kind="done"),
+              "방향·설계·AI 담당이 함께 확인합니다" if ko else "Director · Designer · AI Designer", kind="gate"),
+        _step("work_lane ×3", "동시 작업" if ko else "Parallel lanes",
+              "코드 · 아트 · 사운드" if ko else "code · art · sound", badge="세 갈래 동시" if ko else "fan-out"),
+        _step("unity_scene · unity_build", "Unity 차례" if ko else "Unity critical section",
+              "씬을 만들고 빌드합니다. 만든 결과물의 위치를 기록해 둡니다" if ko else "scene → build, paths pinned into state",
+              kind="human", badge="🔒 한 번에 하나만" if ko else "🔒 mutex"),
+        _step("qa", "직접 확인" if ko else "Verify on the build",
+              "빌드를 실행해 화면을 찍습니다. 방금 기록해 둔 그 결과물만 봅니다" if ko else "launch exe · screenshot — pinned paths only"),
+        _step("ta", "아트 검사" if ko else "Art review",
+              "그림 품질을 채점하고 고칠 점을 알려 줍니다" if ko else "TA scores quality, returns a fix list", kind="gate"),
+        _step("pm_merge", "반영" if ko else "Merge",
+              "각 갈래의 결과를 하나로 합칩니다" if ko else "reducer merges state", kind="done"),
     ]
     flow = _rows(steps, 4)
     if ko:
-        eyebrow = "실행 그래프 · 게임 라인 · LANGGRAPH"
-        title = '같은 fan-out, 문이 아니라 <em>뮤텍스</em>'
-        lede = ("게임 라인의 병목은 시간이 아니라 <b>배타 자원</b>과 <b>거짓 검증</b>이다. "
-                "Unity 는 두 레인이 동시에 몰 수 없어서, 병렬 제작 레인이 문이 아니라 뮤텍스에서 합류한다.")
-        rails = [("stop", "거짓 검증을 구조로 막는다",
-                  "빌드 폴더가 날짜 스탬프라 자정을 넘기면 어제 빌드를 열고 \"고쳤다\"가 된다. "
-                  "<code>unity_build</code> 가 경로를 상태에 확정하고 <code>qa</code> 는 그 경로만 읽는다"),
-                 ("retry", "되돌아가는 엣지",
-                  "빌드 실패·TA 미달 → <code>fix</code>(최대 3회) → 배타 구간 재진입"),
-                 ("stop", "상한 소진",
-                  "회차를 다 쓰면 <code>blocked</code> 로 끝나고 블로커가 기록된다")]
-        foot_r = "graph/game_graph.py — 이 그림은 코드에서 생성된다"
+        eyebrow = "게임 제작 흐름 · LANGGRAPH"
+        title = '갈라져 일하고, Unity 앞에서 <em>한 줄로</em> 섭니다'
+        lede = ("게임 쪽에서 발목을 잡는 것은 시간이 아니라 <b>Unity</b> 입니다. Unity 는 한 번에 하나의 "
+                "작업만 다룰 수 있어서, 코드·아트·사운드가 동시에 진행되다가 Unity 앞에서는 반드시 "
+                "한 줄로 서야 합니다. 그리고 <b>어제 만든 빌드를 보고 다 고쳤다고 착각하는 일</b>을 막는 "
+                "장치가 그 뒤에 붙습니다.")
+        rails = [("stop", "어제 빌드를 보고 \"고쳤다\"고 하는 일을 막습니다",
+                  "빌드 폴더 이름에 날짜가 붙어 있어 자정을 넘기면 엉뚱한 폴더를 열기 쉽습니다. "
+                  "방금 만든 결과물의 위치를 기록해 두고, 확인은 그 위치만 봅니다"),
+                 ("retry", "다시 돌아가는 길",
+                  "빌드가 실패하거나 아트 검사에서 미달이면 고친 뒤 Unity 차례로 되돌아갑니다(최대 3회)"),
+                 ("stop", "정해진 횟수를 다 쓰면",
+                  "그 자리에서 멈추고 무엇 때문에 막혔는지 기록을 남깁니다")]
+        foot_r = "graph/game_graph.py — 이 그림은 코드에서 자동 생성됩니다"
     else:
         eyebrow = "EXECUTION GRAPH · GAME LINE · LANGGRAPH"
         title = 'Same fan-out, a <em>mutex</em> instead of a gate'
