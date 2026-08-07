@@ -69,6 +69,7 @@ namespace MelonS.GameProto
         private float nextFireGameSec = -1f;   // GameClock.GameSeconds 기준 (-1 = 미스케줄)
         private bool raidCardActive;            // 소크 r3 #8 — 습격 카드 해소 추적
         private float nextRaidClearCheck;
+        private float nextRaidDiag;
         private bool manhunterCardActive;       // TOP-11 — 광기 카드 해소 추적
         private readonly System.Collections.Generic.List<AnimalEntity> madPack
             = new System.Collections.Generic.List<AnimalEntity>(4);
@@ -291,6 +292,14 @@ namespace MelonS.GameProto
             // without a death.  Subsequent raids use the normal RaidIntervalDays
             // cadence (the spacing check below), so escalation is unchanged.
             int graceDays = RaidGraceDays + (raidCount == 0 ? Mathf.Max(0, FirstRaidExtraGraceDays) : 0);
+            // 진입 진단 — 5초마다 한 줄.  "예약 로그가 아예 안 나온다" 를 만났을 때
+            //  어느 관문에서 막혔는지 알 방법이 이것뿐이었다.
+            if (Time.unscaledTime >= nextRaidDiag)
+            {
+                nextRaidDiag = Time.unscaledTime + 5f;
+                Debug.Log($"[AIDirector:diag] day={day} grace={graceDays} raidCount={raidCount} "
+                          + $"nextRaidGameSec={nextRaidGameSec:F0} now={(clock.GameSeconds):F0}");
+            }
             if (day < graceDays) return;
             // 레퍼런스 콜로니심갭 TOP-1 (2026-06-12) — '정확히 3일째 06:00' 시계태엽 습격은
             //  2번째 습격에서 패턴이 학습돼 긴장이 0 이 된다.  레퍼런스처럼 다음 습격
@@ -306,7 +315,12 @@ namespace MelonS.GameProto
                 float waitDays = raidCount == 0
                     ? FirstRaidWaitDays
                     : Mathf.Max(1.9f, RaidIntervalDays + UnityEngine.Random.Range(-1f, 1f));
-                float fireHourOffset = UnityEngine.Random.Range(6f, 22f) / 24f;   // 일 분율
+                // 발화 시각 지터.  **첫 습격에는 거의 걸지 않는다** — 0.8일 대기에
+                //  0.25~0.92일이 더해지면 1.05~1.72일이 되어, 애써 당긴 의미가 사라진다
+                //  (실측: 세 번 측정해도 습격 0건이었던 마지막 원인).
+                float fireHourOffset = raidCount == 0
+                    ? UnityEngine.Random.Range(0.5f, 2.5f) / 24f
+                    : UnityEngine.Random.Range(6f, 22f) / 24f;
                 // 퀵픽 '적응 계수' (2026-06-13) — 직전 습격 이후 림이 줄었으면(사망)
                 //  다음 습격을 완화: 규모 산식 후퇴(raidCount-2) + 유예 +2일.
                 //  레퍼런스 적응 스토리텔링(패배 후 연타 방지)의 최소형.
@@ -321,6 +335,11 @@ namespace MelonS.GameProto
                 }
                 lastRaidColonists = aliveNow;
                 nextRaidGameSec = Mathf.Floor(nowSec / DaySec) * DaySec + (waitDays + fireHourOffset) * DaySec;
+                // 예약을 남긴다 — 습격이 '안 온다' 를 디버깅할 때 유일하게 필요한 값이다.
+                //  이 줄이 없어서 세 번을 헛짚었다(코드 기본값 → 씬 값 → 지터).
+                Debug.Log($"[AIDirector] 습격 예약 #{raidCount + 1}: 대기 {waitDays:F2}일 "
+                          + $"+ 시각지터 {fireHourOffset * 24f:F1}시 → 게임 {nextRaidGameSec / DaySec:F2}일 "
+                          + $"(지금 {nowSec / DaySec:F2}일, 유예 {graceDays}일)");
                 // 퀵픽 '첫 습격 경고' (2026-06-13) — 신규 플레이어가 첫 위협을 무방비로
                 //  맞던 것: 첫 습격 ~1게임일 전 1회 경고 카드 (시점은 알려주되 정확한
                 //  시각은 비공개 — 긴장 유지).

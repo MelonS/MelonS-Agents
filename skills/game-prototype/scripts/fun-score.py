@@ -105,7 +105,12 @@ def score(rows):
     events = p_n * 0.6 + p_s * 0.4
 
     # ── 활력 ──────────────────────────────────────────────────────────────
-    idle_r = sum(r["idle"] / max(1, r["pawns"]) for r in rows) / len(rows)
+    # 자는 주민은 분모에서 뺀다 — 밤에 전원이 자는 것은 정상이고, 그걸 유휴로
+    #  세면 '활력' 이 시간대에 좌우돼 개선 효과를 가린다 (실측: 수면 41%).
+    def awake_idle(r):
+        awake = max(1, r["pawns"] - r.get("asleep", 0))
+        return min(1.0, r["idle"] / awake)
+    idle_r = sum(awake_idle(r) for r in rows) / len(rows)
     kinds = sum(r["actKinds"] for r in rows) / len(rows)
     p_idle = clamp01((1.0 - idle_r) / (1.0 - TARGETS["idle_ratio"]))
     p_kinds = clamp01(kinds / TARGETS["act_kinds_avg"])
@@ -126,7 +131,7 @@ def score(rows):
     detail = {
         "진행감": f"목표 +{obj} / 구조물 +{st} / 가치 x{vg:.2f}",
         "사건": f"{n_ev}건 ({n_ev/max(mins,1e-3):.1f}/분), 최장 침묵 {silence:.0f}초",
-        "활력": f"유휴 {idle_r*100:.0f}%, 동시 활동 {kinds:.1f}종",
+        "활력": f"깨어있는 주민 중 유휴 {idle_r*100:.0f}%, 동시 활동 {kinds:.1f}종",
         "긴장": f"위협 발생 {started} / 해소 {cycles}",
         "다양성": f"활동 {last['actEver']}가지",
     }

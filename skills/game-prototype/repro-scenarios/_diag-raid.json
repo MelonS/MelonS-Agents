@@ -1,0 +1,3 @@
+{ "name":"습격 진단 3분", "steps":[
+  {"op":"wait","sec":2},{"op":"speed","x":6},
+  {"op":"wait","sec":900},{"op":"shot","name":"raid_check"} ] }

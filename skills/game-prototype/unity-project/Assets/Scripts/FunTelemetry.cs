@@ -86,14 +86,20 @@ namespace MelonS.GameProto
             int dirEvents = AIDirector.EventCount;
 
             // 활동 라벨 — 유휴 비율과 종류 수가 '살아 있는가'의 대리 지표다.
-            int pawns = 0, idle = 0;
+            int pawns = 0, idle = 0, asleep = 0;
             var kinds = new HashSet<string>();
             foreach (var lbl in FindObjectsByType<PawnNameLabel>(FindObjectsSortMode.None))
             {
                 if (lbl == null) continue;
                 pawns++;
                 string a = lbl.CurrentActivity ?? "";
-                if (a.Length == 0 || a.Contains("떠도")) idle++;
+                // **수면은 유휴가 아니다.**  10분 세션에 게임 2일이 지나면 밤이 두 번
+                //  오고 그동안 전원이 잔다 — 실측 분포에서 수면이 41%였다.  그걸
+                //  '놀고 있음' 으로 세면 활력 축이 구조적으로 만점을 못 받고,
+                //  "왜 안 오르지" 를 엉뚱한 데서 찾게 된다.  자는 콜로니는 정상이다.
+                bool sleeping = a.Contains("수면") || a.Contains("자는");
+                if (sleeping) { asleep++; kinds.Add(a); everSeenActivities.Add(a); }
+                else if (a.Length == 0 || a.Contains("떠도")) idle++;
                 else { kinds.Add(a); everSeenActivities.Add(a); }
                 // 활동별 표본 수 — '유휴 46%' 가 나왔을 때 **무엇을 하느라 안 하는지**
                 //  를 알려면 비율만으로는 부족하다.  라벨 분포가 있으면 "요리만 돌고
@@ -133,6 +139,7 @@ namespace MelonS.GameProto
             F(sb, "dirEvents", dirEvents); sb.Append(',');
             F(sb, "pawns", pawns); sb.Append(',');
             F(sb, "idle", idle); sb.Append(',');
+            F(sb, "asleep", asleep); sb.Append(',');
             F(sb, "actKinds", kinds.Count); sb.Append(',');
             F(sb, "actEver", everSeenActivities.Count); sb.Append(',');
             sb.Append("\"events\":[");
