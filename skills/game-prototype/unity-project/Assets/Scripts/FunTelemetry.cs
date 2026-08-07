@@ -41,7 +41,10 @@ namespace MelonS.GameProto
 
         // 직전 표본 — 사건을 상태 변화에서 유도하기 위해 들고 있는다.
         private int prevObjectives = -1, prevStructures = -1, prevResearch = -1, prevThreats = -1;
+        private int prevDirectorEvents = -1;
         private readonly HashSet<string> everSeenActivities = new HashSet<string>();
+        /// <summary>활동 라벨별 누적 표본 수.  세션 끝에 한 줄로 남긴다.</summary>
+        private readonly Dictionary<string, int> histogram = new Dictionary<string, int>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
@@ -68,8 +71,8 @@ namespace MelonS.GameProto
             Sample();
         }
 
-        private void OnApplicationQuit() => Flush();
-        private void OnDestroy() => Flush();
+        private void OnApplicationQuit() { WriteHistogram(); Flush(); }
+        private void OnDestroy() { WriteHistogram(); Flush(); }
 
         private void Sample()
         {
@@ -80,6 +83,7 @@ namespace MelonS.GameProto
             int structures = CountStructures();
             int research = DoneResearch();
             int threats = LiveThreats();
+            int dirEvents = AIDirector.EventCount;
 
             // 활동 라벨 — 유휴 비율과 종류 수가 '살아 있는가'의 대리 지표다.
             int pawns = 0, idle = 0;
@@ -91,16 +95,26 @@ namespace MelonS.GameProto
                 string a = lbl.CurrentActivity ?? "";
                 if (a.Length == 0 || a.Contains("떠도")) idle++;
                 else { kinds.Add(a); everSeenActivities.Add(a); }
+                // 활동별 표본 수 — '유휴 46%' 가 나왔을 때 **무엇을 하느라 안 하는지**
+                //  를 알려면 비율만으로는 부족하다.  라벨 분포가 있으면 "요리만 돌고
+                //  건설이 0" 같은 편향이 바로 보인다.
+                string key = a.Length == 0 ? "(없음)" : a;
+                histogram.TryGetValue(key, out int c);
+                histogram[key] = c + 1;
             }
 
             var ev = new List<string>();
             if (prevObjectives >= 0 && objectives > prevObjectives) ev.Add("objective");
             if (prevStructures >= 0 && structures > prevStructures) ev.Add("build");
             if (prevResearch >= 0 && research > prevResearch) ev.Add("research");
+            // 디렉터 사건(습격·잔잔한 이벤트) — 화면에 알림으로 뜨므로 심사자에게는
+            //  '무슨 일이 일어났다' 로 읽힌다.  상태(누적 카운터)로 읽어 훅을 피한다.
+            if (prevDirectorEvents >= 0 && dirEvents > prevDirectorEvents)
+                for (int k = prevDirectorEvents; k < dirEvents; k++) ev.Add("director");
             if (prevThreats >= 0 && threats > prevThreats) ev.Add("threat_start");
             if (prevThreats > 0 && threats == 0) ev.Add("threat_clear");
             prevObjectives = objectives; prevStructures = structures;
-            prevResearch = research; prevThreats = threats;
+            prevResearch = research; prevThreats = threats; prevDirectorEvents = dirEvents;
 
             var sb = new StringBuilder(256);
             sb.Append('{');
@@ -116,6 +130,7 @@ namespace MelonS.GameProto
             F(sb, "structures", structures); sb.Append(',');
             F(sb, "research", research); sb.Append(',');
             F(sb, "threats", threats); sb.Append(',');
+            F(sb, "dirEvents", dirEvents); sb.Append(',');
             F(sb, "pawns", pawns); sb.Append(',');
             F(sb, "idle", idle); sb.Append(',');
             F(sb, "actKinds", kinds.Count); sb.Append(',');
@@ -131,6 +146,25 @@ namespace MelonS.GameProto
 
             // 표본이 쌓이면 흘려 보낸다 — 크래시해도 그때까지는 남는다.
             if (buf.Length > 8192) Flush();
+        }
+
+        /// <summary>세션 끝에 활동 분포를 한 줄 더 남긴다 (`kind`:"histogram").
+        ///  표본 줄과 섞이지 않도록 `kind` 로 구분한다 — 채점기는 이 줄을 건너뛴다.</summary>
+        private void WriteHistogram()
+        {
+            if (histogram.Count == 0) return;
+            var sb = new StringBuilder(256);
+            sb.Append("{\"kind\":\"histogram\",\"activities\":{");
+            bool first = true;
+            foreach (var kv in histogram)
+            {
+                if (!first) sb.Append(',');
+                first = false;
+                sb.Append('"').Append(kv.Key.Replace("\"", "")).Append("\":").Append(kv.Value);
+            }
+            sb.Append("}}");
+            buf.Append(sb).Append('\n');
+            histogram.Clear();
         }
 
         private void Flush()

@@ -121,26 +121,34 @@ namespace MelonS.GameProto
             var sr = GetComponent<SpriteRenderer>();
             if (sr == null) return;
             float footY = sr.bounds.min.y;
-            quiltSr.sortingOrder = SleeperOnThisBed()
-                ? Core.YSort.OrderFor(footY) + 8          // 자는 사람 위
+            var sleeper = SleeperRenderer();
+            // 자는 사람이 있으면 **그 사람보다 딱 1 위**.  침대 y 기준으로 +8 을 주던
+            //  이전 방식은 침대 앞을 지나가는 **다른 주민까지 덮었다** — 그게 운영자가
+            //  세 번 지적한 "캐릭터가 침대 밑으로 들어감" 의 정체다.
+            //  기준을 침대가 아니라 **자는 사람 본인**으로 바꾸면, 더 앞(화면 아래)에
+            //  선 주민은 자기 정렬값이 더 크므로 이불 위로 그대로 지나간다.
+            quiltSr.sortingOrder = sleeper != null
+                ? sleeper.sortingOrder + 1
                 : Core.YSort.OrderForFlat(footY) + 1;     // 침대 바로 위 (사람 아래)
         }
 
         /// <summary>이 침대 위에서 실제로 **자고 있는** 주민이 있는가.
         ///  단순히 서 있는 것과 구분해야 한다 — 지나가는 사람을 덮으면 안 된다.</summary>
-        private bool SleeperOnThisBed()
+        private SpriteRenderer SleeperRenderer()
         {
             var sr = GetComponent<SpriteRenderer>();
-            if (sr == null) return false;
+            if (sr == null) return null;
             var b = sr.bounds;
             var hits = Physics2D.OverlapBoxAll(b.center, b.size * 0.9f, 0f);
             foreach (var h in hits)
             {
                 if (h == null) continue;
                 var needs = h.GetComponent<PawnNeeds>();
-                if (needs != null && needs.IsSleeping) return true;
+                if (needs != null && needs.IsSleeping)
+                    return h.GetComponent<SpriteRenderer>()
+                           ?? h.GetComponentInChildren<SpriteRenderer>();
             }
-            return false;
+            return null;
         }
 
         // ── 이불 오버레이 ────────────────────────────────────────────────────

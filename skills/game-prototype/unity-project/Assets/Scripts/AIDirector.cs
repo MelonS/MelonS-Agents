@@ -76,6 +76,11 @@ namespace MelonS.GameProto
         private readonly List<GameEvent> pool = new List<GameEvent>();
 
         // Day 73: 현재 threat tier — day 진행에 따라 자동 상승
+        /// <summary>이 세션에서 디렉터가 일으킨 사건 누적 수.
+        ///  `FunTelemetry` 가 **상태로** 읽어 '사건 밀도' 축을 채운다 — 콜백을 박지
+        ///  않는다(훅이 늘 때마다 계측이 갈라지는 것을 막는 이 레포의 규약).</summary>
+        public static int EventCount { get; private set; }
+
         public int CurrentThreatTier
         {
             get
@@ -157,6 +162,18 @@ namespace MelonS.GameProto
         [SerializeField] private int BaseRaidGroupSize = 1;    // first raid = 1 bandit
         [SerializeField] private int RaidsPerSizeStep = 2;     // +1 bandit every 2 raids
         [SerializeField] private int FirstRaidExtraGraceDays = 0;  // 첫 습격 추가 유예 없음
+
+        /// <summary>**첫** 습격까지의 대기 (게임일).  두 번째부터는 RaidIntervalDays 관례.
+        ///
+        /// 2026-08-07 실측: 재미 점수의 '긴장' 축이 10분 측정에서 **0/15** 였다.
+        ///  원인은 유예가 아니라 **일정**이었다 — `RaidGraceDays` 는 하한일 뿐이고
+        ///  실제 첫 발화는 `RaidIntervalDays(3) ± 1일` 로 잡혀 2.9~4.9 게임일이 된다.
+        ///  기본 배속 3x 에서 하루가 실제 5.6분이므로 **실제 16~27분** — 심사자가
+        ///  보는 창(5~15분) 밖이다.  즉 심사자는 이 게임의 위기를 한 번도 못 본다.
+        ///  첫 습격만 0.8일(≈4.5분)로 당긴다.  규모는 그대로(산적 1명)라 난이도가
+        ///  아니라 **등장 시점**만 바꾸는 변경이고, 두 번째부터는 관례를 따르므로
+        ///  장기 리듬은 건드리지 않는다.</summary>
+        [SerializeField] private float FirstRaidWaitDays = 0.8f;
         private int lastRaidDay = -1;
         // TOP-1 — 다음 습격 발화 시각 (게임초).  -1 = 미스케줄.
         private float nextRaidGameSec = -1f;
@@ -285,7 +302,10 @@ namespace MelonS.GameProto
             if (nextRaidGameSec < 0f)
             {
                 // 간격 ±1일 지터 (하한 1.9일) + 발화 시각 6~22시 랜덤.
-                float waitDays = Mathf.Max(1.9f, RaidIntervalDays + UnityEngine.Random.Range(-1f, 1f));
+                // 첫 습격만 짧게 (위 FirstRaidWaitDays 주석 참조).  두 번째부터는 관례.
+                float waitDays = raidCount == 0
+                    ? FirstRaidWaitDays
+                    : Mathf.Max(1.9f, RaidIntervalDays + UnityEngine.Random.Range(-1f, 1f));
                 float fireHourOffset = UnityEngine.Random.Range(6f, 22f) / 24f;   // 일 분율
                 // 퀵픽 '적응 계수' (2026-06-13) — 직전 습격 이후 림이 줄었으면(사망)
                 //  다음 습격을 완화: 규모 산식 후퇴(raidCount-2) + 유예 +2일.
@@ -365,6 +385,7 @@ namespace MelonS.GameProto
             if (wealthBonus > 0)
                 Debug.Log($"[AIDirector] raid wealth proxy={wealth:F0} → +{wealthBonus} bandits (early x{earlyMul})");
             raidCount++;
+            EventCount++;   // 계측용 — FunTelemetry 가 상태로 읽는다(훅 없이)
 
             // Wiki Dim2 #2 (sound wiring only — no threat/balance change): every raid
             // sounds the alert siren, scaled by current threat tier for audio flavor
@@ -531,6 +552,7 @@ namespace MelonS.GameProto
         ///  quiet_evening 은 18시+ 규칙 유지.</summary>
         private void FireAmbientEvent()
         {
+            EventCount++;   // 계측용 (위 EventCount 주석)
             var cands = new List<GameEvent>();
             foreach (var ev in pool)
                 if (System.Array.IndexOf(AmbientIds, ev.id) >= 0)

@@ -1,0 +1,61 @@
+{
+  "name": "정보창 겹침 — 주민 탭 전환 + 엔티티 패널 (운영자 '상태→건강 바꾸면 겹침')",
+  "steps": [
+    {
+      "op": "wait",
+      "sec": 2
+    },
+    {
+      "op": "worldclick",
+      "target": "pawn"
+    },
+    {
+      "op": "wait",
+      "sec": 0.8
+    },
+    {
+      "op": "shot",
+      "name": "00_status"
+    },
+    {
+      "op": "clickui",
+      "name": "Tab_건강"
+    },
+    {
+      "op": "wait",
+      "sec": 0.6
+    },
+    {
+      "op": "shot",
+      "name": "01_health"
+    },
+    {
+      "op": "clickui",
+      "name": "Tab_기분"
+    },
+    {
+      "op": "wait",
+      "sec": 0.6
+    },
+    {
+      "op": "shot",
+      "name": "02_mood"
+    },
+    {
+      "op": "clickui",
+      "name": "Tab_스킬"
+    },
+    {
+      "op": "wait",
+      "sec": 0.6
+    },
+    {
+      "op": "shot",
+      "name": "03_skill"
+    }
+  ],
+  "_note": [
+    "같은 겹침이 세 번 돌아왔다.  탭을 실제로 눌러 찍어야 잡힌다 —",
+    "상태 탭만 보면 제목과 본문이 안 겹치므로 통과처럼 보인다."
+  ]
+}

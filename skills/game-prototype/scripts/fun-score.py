@@ -58,7 +58,7 @@ def clamp01(x):
     return max(0.0, min(1.0, x))
 
 
-def load(path):
+def load(path, hist):
     rows = []
     with open(path, "r", encoding="utf-8", errors="replace") as f:
         for line in f:
@@ -66,9 +66,13 @@ def load(path):
             if not line:
                 continue
             try:
-                rows.append(json.loads(line))
+                o = json.loads(line)
             except json.JSONDecodeError:
-                pass          # 마지막 줄이 잘렸을 수 있다 (크래시 시)
+                continue      # 마지막 줄이 잘렸을 수 있다 (크래시 시)
+            if o.get("kind") == "histogram":
+                hist.update(o.get("activities", {}))
+            else:
+                rows.append(o)
     return rows
 
 
@@ -136,7 +140,8 @@ def main() -> int:
         print(__doc__)
         return 2
     path = sys.argv[1]
-    rows = load(path)
+    hist = {}
+    rows = load(path, hist)
     res, err = score(rows)
     if err:
         print(f"[fun] {err}")
@@ -152,6 +157,12 @@ def main() -> int:
         got = res["axes"][k] * w
         bar = "█" * int(round(got / w * 20)) + "·" * (20 - int(round(got / w * 20)))
         print(f"  {k:4s} {got:5.1f}/{w:<3d} {bar}  {res['detail'][k]}")
+    if hist:
+        tot = sum(hist.values()) or 1
+        top = sorted(hist.items(), key=lambda kv: -kv[1])[:8]
+        print("[fun] 활동 분포 — 무엇을 하느라 안 하는지")
+        for k, v in top:
+            print(f"       {k:14s} {v*100.0/tot:5.1f}%")
     worst = min(WEIGHTS, key=lambda k: res["axes"][k])
     lost = (1 - res["axes"][worst]) * WEIGHTS[worst]
     print(f"[fun] 가장 크게 잃는 축: **{worst}** (−{lost:.1f}점)")

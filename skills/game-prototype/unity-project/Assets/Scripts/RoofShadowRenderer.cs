@@ -48,9 +48,13 @@ namespace MelonS.GameProto
         private const int ShadowSortingOrder = 3;
         private const float RebuildInterval = 0.5f;
 
-        /// <summary>벽 높이 (칸).  나무가 1.4 이므로 단층 한옥은 그보다 낮다.
-        ///  투영 길이 = 이 값 x 태양 고도 계수 — 나무와 **같은 공식**을 쓴다.</summary>
-        private const float WallHeight = 1.15f;
+        /// <summary>벽 높이 (칸).  투영 길이 = 이 값 x 태양 고도 계수 — 나무와 **같은 공식**.
+        ///
+        /// 1.15 → 1.7 (2026-08-02).  칸 단위로 찍는 그림자는 길이가 1칸 남짓이면
+        ///  **대각선이 살아남지 못한다** — 세로 오프셋이 0.5 미만이라 전부 0으로
+        ///  반올림돼 수평 띠가 된다(운영자 "대각선으로 생겨야할 상황에 제대로 안되는거
+        ///  같은데").  나무(1.4)보다 조금 크게 두어 계단이 두 칸 이상 생기게 한다.</summary>
+        private const float WallHeight = 1.7f;
 
         private readonly List<SpriteRenderer> pool = new List<SpriteRenderer>();
         private readonly HashSet<Vector2Int> casters = new HashSet<Vector2Int>();
@@ -99,10 +103,16 @@ namespace MelonS.GameProto
 
             // 나무와 **같은 공식** — 길이 ∝ 높이 x 태양 고도 계수.
             Vector2 full = dir * (WallHeight * Mathf.Lerp(0.30f, 1.60f, lenF));
-            // 세로는 탑다운 투영이라 눌러 둔다 (SunShadowDriver 가 _ShearY 에 0.55 를
-            //  쓰는 것과 같은 이유 — 안 누르면 그림자가 위로 솟는다).
-            full.y *= 0.55f;
-            int steps = Mathf.Clamp(Mathf.CeilToInt(full.magnitude * 2.5f), 1, 10);
+            // 세로를 누르지 않는다.  `SunShadowDriver` 가 _ShearY 에 0.55 를 쓰는 것은
+            //  **서 있는 스프라이트의 윗변을 미는 전단**이라 성격이 다르다.  여기서는
+            //  땅에 눕는 투영이므로 태양 벡터를 그대로 따라야 하고, 실제로 나무 그림자를
+            //  확대해 보면 08시 좌상 / 11시 위 / 17시 우상으로 **세로 성분이 살아 있다**.
+            //  0.55 를 곱하던 1차 구현은 그 성분을 0.34칸으로 줄였고, 정수 칸 반올림에서
+            //  전부 0이 되어 어느 시각에도 수평 띠만 나왔다.
+
+            // 광선을 **0.35칸 간격**으로 훑는다.  간격이 성기면 대각선 중간 칸이 비어
+            //  점선처럼 끊긴다 (1차 구현은 3스텝뿐이라 계단이 아예 안 생겼다).
+            int steps = Mathf.Clamp(Mathf.CeilToInt(full.magnitude / 0.35f), 1, 24);
 
             float alpha = 0.30f * Mathf.Clamp01(SunShadowDriver.ShadowAlphaMul);
             Color tint = SunShadowDriver.ShadowTint;

@@ -22,6 +22,14 @@
 
 </div>
 
+> **Reviewing this repo for a submission?**  The game lives in
+> [`skills/game-prototype/`](skills/game-prototype/).  Third-party art packs are
+> **not redistributable**, so they are not committed — the build falls back to
+> procedurally generated art and still runs from a clean clone.  See
+> [`extract-tinyswords.py`](skills/game-prototype/scripts/extract-tinyswords.py)
+> if you want the pack visuals, and [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md) for
+> every external asset and its licence.
+
 - **It ships.** The **music-video** pipeline delivers on a schedule — a song → a 60-second 9:16 short (beat-cut, genre-graded). A second pipeline, **content-shorts**, shipped its first real short to YouTube on 2026-07-01 (idol format) — not on a cadence yet.
 - **Zero runtime cost.** Local open-source tools (ffmpeg · whisper.cpp · ollama · aubio) do the mechanical work; Claude Code agents only orchestrate — so a mission spends **zero runtime API tokens**.
 - **It checks its own work.** The showcase — the colony-sim **PawnSim** — is *built and play-verified* by the agent: real player clicks replayed, each asserted to actually change game state, long unattended runs graded by a screenshots-only sub-agent.
