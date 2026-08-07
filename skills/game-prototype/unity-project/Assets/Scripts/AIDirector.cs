@@ -82,6 +82,19 @@ namespace MelonS.GameProto
         ///  않는다(훅이 늘 때마다 계측이 갈라지는 것을 막는 이 레포의 규약).</summary>
         public static int EventCount { get; private set; }
 
+        /// <summary>이 세션에서 발생한 습격 누적 수.
+        ///
+        /// 2026-08-07: `FunTelemetry` 가 살아있는 적 수를 5초마다 세는 방식이었는데,
+        ///  3배속에서 산적 2명이 주민 6명에게 **폴링 간격보다 빨리** 제압당해
+        ///  `threats>0` 표본이 **한 번도 안 잡혔다** (로그에는 `RAID #1` 이 찍혀
+        ///  있는데 긴장 점수는 0).  순간 상태를 폴링으로 잡으려 한 것이 잘못이다 —
+        ///  **누적 카운터는 놓칠 수 없다.**</summary>
+        public static int RaidsFired { get; private set; }
+
+        /// <summary>격퇴 누적 (습격·광기 떼 공통).  '위협이 왔다' 만큼이나
+        ///  '해소됐다' 가 중요하다 — 해소 없는 위협은 스트레스지 재미가 아니다.</summary>
+        public static int ThreatsCleared { get; private set; }
+
         public int CurrentThreatTier
         {
             get
@@ -258,6 +271,7 @@ namespace MelonS.GameProto
                 if (!anyAlive)
                 {
                     raidCardActive = false;
+                    ThreatsCleared++;
                     AlertStackUI.Resolve("약탈자");
                     AlertStackUI.NotifyGood("습격 격퇴!");
                     Debug.Log("[AIDirector] raid cleared — 카드 해소 + 격퇴 알림");
@@ -272,6 +286,7 @@ namespace MelonS.GameProto
                 if (!anyMad)
                 {
                     manhunterCardActive = false;
+                    ThreatsCleared++;
                     madPack.Clear();
                     AlertStackUI.Resolve("광기");
                     AlertStackUI.NotifyGood("광기 진정 — 위협 해소");
@@ -404,6 +419,7 @@ namespace MelonS.GameProto
             if (wealthBonus > 0)
                 Debug.Log($"[AIDirector] raid wealth proxy={wealth:F0} → +{wealthBonus} bandits (early x{earlyMul})");
             raidCount++;
+            RaidsFired++;
             EventCount++;   // 계측용 — FunTelemetry 가 상태로 읽는다(훅 없이)
 
             // Wiki Dim2 #2 (sound wiring only — no threat/balance change): every raid
@@ -443,6 +459,9 @@ namespace MelonS.GameProto
                 lastEvent = madEv;
                 OnEventFired?.Invoke(madEv);
                 manhunterCardActive = true;
+                // 광기 떼도 **습격의 한 형태**다 (30% 분기).  계측이 이걸 빼고 세면
+                //  "습격 로그는 있는데 긴장 0" 이 된다 — 실제로 그렇게 헤맸다.
+                RaidsFired++;
                 Debug.Log($"[AIDirector] MANHUNTER day={clockDayForLog()} boars={banditCount + 1}");
                 return;
             }

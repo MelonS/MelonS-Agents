@@ -41,7 +41,7 @@ namespace MelonS.GameProto
 
         // 직전 표본 — 사건을 상태 변화에서 유도하기 위해 들고 있는다.
         private int prevObjectives = -1, prevStructures = -1, prevResearch = -1, prevThreats = -1;
-        private int prevDirectorEvents = -1;
+        private int prevDirectorEvents = -1, prevRaids = -1, prevKilled = -1;
         private readonly HashSet<string> everSeenActivities = new HashSet<string>();
         /// <summary>활동 라벨별 누적 표본 수.  세션 끝에 한 줄로 남긴다.</summary>
         private readonly Dictionary<string, int> histogram = new Dictionary<string, int>();
@@ -84,6 +84,11 @@ namespace MelonS.GameProto
             int research = DoneResearch();
             int threats = LiveThreats();
             int dirEvents = AIDirector.EventCount;
+            // 위협은 **누적**으로 읽는다.  살아있는 적 수(순간 상태)를 5초마다 세면
+            //  3배속에서 짧은 교전이 통째로 폴링 사이로 빠진다 — 로그엔 `RAID #1`
+            //  이 찍혀 있는데 긴장 점수가 0 이었던 것이 그 때문이다.
+            int raids = AIDirector.RaidsFired;
+            int killed = AIDirector.ThreatsCleared;   // 습격·광기 떼 공통 격퇴 누적
 
             // 활동 라벨 — 유휴 비율과 종류 수가 '살아 있는가'의 대리 지표다.
             int pawns = 0, idle = 0, asleep = 0;
@@ -117,10 +122,12 @@ namespace MelonS.GameProto
             //  '무슨 일이 일어났다' 로 읽힌다.  상태(누적 카운터)로 읽어 훅을 피한다.
             if (prevDirectorEvents >= 0 && dirEvents > prevDirectorEvents)
                 for (int k = prevDirectorEvents; k < dirEvents; k++) ev.Add("director");
-            if (prevThreats >= 0 && threats > prevThreats) ev.Add("threat_start");
-            if (prevThreats > 0 && threats == 0) ev.Add("threat_clear");
+            if (prevRaids >= 0 && raids > prevRaids) ev.Add("threat_start");
+            // 격퇴 = 산적 처치 누적이 늘고 지금 살아있는 적이 없다.
+            if (prevKilled >= 0 && killed > prevKilled && threats == 0) ev.Add("threat_clear");
             prevObjectives = objectives; prevStructures = structures;
             prevResearch = research; prevThreats = threats; prevDirectorEvents = dirEvents;
+            prevRaids = raids; prevKilled = killed;
 
             var sb = new StringBuilder(256);
             sb.Append('{');
@@ -136,6 +143,8 @@ namespace MelonS.GameProto
             F(sb, "structures", structures); sb.Append(',');
             F(sb, "research", research); sb.Append(',');
             F(sb, "threats", threats); sb.Append(',');
+            F(sb, "raids", raids); sb.Append(',');
+            F(sb, "banditsKilled", killed); sb.Append(',');
             F(sb, "dirEvents", dirEvents); sb.Append(',');
             F(sb, "pawns", pawns); sb.Append(',');
             F(sb, "idle", idle); sb.Append(',');

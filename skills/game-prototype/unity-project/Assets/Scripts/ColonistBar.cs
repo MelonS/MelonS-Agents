@@ -43,9 +43,17 @@ namespace MelonS.GameProto
         private const float PortraitPad = 4f;  // 초상화 ↔ 이름/바 간격
 
         // ── 색 (UITheme 통일) ──────────────────────────────────────────────────────
-        private static readonly Color EntryBg   = MelonS.GameProto.Core.UITheme.PanelBgLight;
-        private static readonly Color BorderCol = MelonS.GameProto.Core.UITheme.Divider;
-        private static readonly Color TextCol   = MelonS.GameProto.Core.UITheme.TextPrimary;
+        // ⚠ `static readonly … = UITheme.X` 로 두지 않는다.  UITheme 의 색은
+        //  `PlayerPrefs.GetInt("ui_palette")` 를 타는데, Unity 는 **필드 초기화
+        //  시점의 PlayerPrefs 접근을 금지**한다:
+        //    UnityException: GetInt is not allowed to be called from a MonoBehaviour
+        //    constructor (or instance field initializer)
+        //  → TypeInitializationException 으로 번져 이 UI 가 통째로 죽는다.
+        //  (2026-08-07 제출 영상 녹화 로그에서 발견 — 화면엔 티가 안 나서
+        //   예외를 읽기 전까지 몰랐다.)  프로퍼티로 두면 **쓰는 시점**에 평가된다.
+        private static Color EntryBg => MelonS.GameProto.Core.UITheme.PanelBgLight;
+        private static Color BorderCol => MelonS.GameProto.Core.UITheme.Divider;
+        private static Color TextCol => MelonS.GameProto.Core.UITheme.TextPrimary;
         private static readonly Color HpTrack   = new Color(0.10f, 0.08f, 0.07f, 0.9f);
         private static readonly Color HpFillCol  = new Color(0.45f, 0.82f, 0.40f, 1f);  // green
         private static readonly Color HpLowCol   = new Color(0.90f, 0.36f, 0.30f, 1f);  // red (저체력)

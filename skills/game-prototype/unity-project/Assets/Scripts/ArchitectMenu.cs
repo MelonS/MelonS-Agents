@@ -42,8 +42,16 @@ namespace MelonS.GameProto
         };
 
         // #UI-restyle U7 (Round 5) — share the control bar's exact button palette.
-        private static readonly Color InactiveBg = MelonS.GameProto.Core.UITheme.BtnInactiveBg;
-        private static readonly Color HeaderBg   = MelonS.GameProto.Core.UITheme.HeaderBg;
+        // ⚠ `static readonly … = UITheme.X` 로 두지 않는다.  UITheme 의 색은
+        //  `PlayerPrefs.GetInt("ui_palette")` 를 타는데, Unity 는 **필드 초기화
+        //  시점의 PlayerPrefs 접근을 금지**한다:
+        //    UnityException: GetInt is not allowed to be called from a MonoBehaviour
+        //    constructor (or instance field initializer)
+        //  → TypeInitializationException 으로 번져 이 UI 가 통째로 죽는다.
+        //  (2026-08-07 제출 영상 녹화 로그에서 발견 — 화면엔 티가 안 나서
+        //   예외를 읽기 전까지 몰랐다.)  프로퍼티로 두면 **쓰는 시점**에 평가된다.
+        private static Color InactiveBg => MelonS.GameProto.Core.UITheme.BtnInactiveBg;
+        private static Color HeaderBg => MelonS.GameProto.Core.UITheme.HeaderBg;
 
         // wiki Dim2 acceptance #5: clicking any UI button plays the blip.
         //  Route category/buildable button onClick through the EXISTING

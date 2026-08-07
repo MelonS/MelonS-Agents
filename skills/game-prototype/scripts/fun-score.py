@@ -117,8 +117,11 @@ def score(rows):
     live = p_idle * 0.6 + p_kinds * 0.4
 
     # ── 긴장 ──────────────────────────────────────────────────────────────
-    cycles = sum(1 for r in rows if "threat_clear" in r.get("events", []))
-    started = sum(1 for r in rows if "threat_start" in r.get("events", []))
+    # 누적값 차이로도 본다 — 사건 태그를 놓쳐도 총량은 남는다 (구버전 데이터 호환).
+    started = max(sum(1 for r in rows if "threat_start" in r.get("events", [])),
+                  last.get("raids", 0) - first.get("raids", 0))
+    cycles = max(sum(1 for r in rows if "threat_clear" in r.get("events", [])),
+                 1 if last.get("banditsKilled", 0) > first.get("banditsKilled", 0) else 0)
     # 발생만 하고 해소가 없으면 절반만 준다 (해소 없는 위협은 스트레스지 재미가 아니다).
     tension = clamp01(cycles / TARGETS["threat_cycles"]) if cycles else \
               (0.5 * clamp01(started / TARGETS["threat_cycles"]))
@@ -132,7 +135,7 @@ def score(rows):
         "진행감": f"목표 +{obj} / 구조물 +{st} / 가치 x{vg:.2f}",
         "사건": f"{n_ev}건 ({n_ev/max(mins,1e-3):.1f}/분), 최장 침묵 {silence:.0f}초",
         "활력": f"깨어있는 주민 중 유휴 {idle_r*100:.0f}%, 동시 활동 {kinds:.1f}종",
-        "긴장": f"위협 발생 {started} / 해소 {cycles}",
+        "긴장": f"습격 {started}회 / 격퇴 {cycles}회",
         "다양성": f"활동 {last['actEver']}가지",
     }
     total = sum(axes[k] * WEIGHTS[k] for k in WEIGHTS)

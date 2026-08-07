@@ -29,13 +29,21 @@ namespace MelonS.GameProto
         private Button settingsBtn;   // 설정 통합 (SettingsMenu 열기 — gear)
 
         // #185 - UITheme 통일 (Kenney warm tone 매치)
-        private static readonly Color InactiveBg = MelonS.GameProto.Core.UITheme.BtnInactiveBg;
-        private static readonly Color ActiveBg   = MelonS.GameProto.Core.UITheme.BtnActiveBg;
-        private static readonly Color TextNormal = MelonS.GameProto.Core.UITheme.TextPrimary;
+        // ⚠ `static readonly … = UITheme.X` 로 두지 않는다.  UITheme 의 색은
+        //  `PlayerPrefs.GetInt("ui_palette")` 를 타는데, Unity 는 **필드 초기화
+        //  시점의 PlayerPrefs 접근을 금지**한다:
+        //    UnityException: GetInt is not allowed to be called from a MonoBehaviour
+        //    constructor (or instance field initializer)
+        //  → TypeInitializationException 으로 번져 이 UI 가 통째로 죽는다.
+        //  (2026-08-07 제출 영상 녹화 로그에서 발견 — 화면엔 티가 안 나서
+        //   예외를 읽기 전까지 몰랐다.)  프로퍼티로 두면 **쓰는 시점**에 평가된다.
+        private static Color InactiveBg => MelonS.GameProto.Core.UITheme.BtnInactiveBg;
+        private static Color ActiveBg => MelonS.GameProto.Core.UITheme.BtnActiveBg;
+        private static Color TextNormal => MelonS.GameProto.Core.UITheme.TextPrimary;
         // 단축키 힌트 색 — 밝은 버튼 위에서 읽히도록 **어둡게**.  기존 밝은 회색(0.75)은
         //  베이지 배경과 대비가 없어 사실상 안 보였다(2026-08-01 확대 실측).
         private static readonly Color HintCol = new Color(0.38f, 0.32f, 0.24f, 0.95f);
-        private static readonly Color TextActive = MelonS.GameProto.Core.UITheme.TextDark;
+        private static Color TextActive => MelonS.GameProto.Core.UITheme.TextDark;
 
         private Font font;
         // Lesson #4 - FindFirstObjectByType per-Update 비쌈.
