@@ -74,6 +74,11 @@ namespace MelonS.GameProto
         private void Update()
         {
             if (Time.timeScale <= 0f) return;               // 일시정지 중엔 결정하지 않는다
+            // 쇼케이스(제출 영상 녹화) 중에는 개입하지 않는다.  영상은 55초인데 이
+            //  유예가 45초라, 하필 마지막 10초에 나무 지정 표식이 우수수 뜬다 —
+            //  연출이 짜 놓은 화면에 설명 없는 마커가 끼어드는 셈이다.
+            //  쇼케이스는 스스로 지정·건축을 연출하므로 자동 일감이 할 일도 없다.
+            if (ShowcaseDirector.Enabled) return;
             // 게임이 실제로 도는 시간만 센다 — 일시정지로 부팅하므로 실시간으로 세면
             //  플레이어가 둘러보는 동안 유예가 소진된다(튜토리얼 게이트에서 같은 실수를 했다).
             if (firstSeen < 0f) firstSeen = Time.unscaledTime;
