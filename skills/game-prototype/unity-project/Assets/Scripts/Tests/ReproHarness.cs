@@ -510,6 +510,22 @@ namespace MelonS.GameProto
                     r.passed = true; r.detail = $"setNeed {s.name}={s.x} ({pn.PawnName})"; break;
                 }
 
+                case "autoworkOff":
+                {
+                    // 테스트 스캐폴딩 — '한가한 콜로니' 를 전제하는 시나리오용.
+                    ColonyAutoWork.Suspended = true;
+                    r.passed = true; r.detail = "자동 일감 정지"; break;
+                }
+
+                case "directorOff":
+                {
+                    // 테스트 스캐폴딩 — 디렉터 사건을 멈춰 **측정 대상만 남긴다.**
+                    //  기분처럼 여러 입력의 합인 값을 볼 때, 무작위 사건이 끼면
+                    //  같은 조건에서 결과가 뒤집힌다(실측 1/3 실패).
+                    AIDirector.EventsSuspended = true;
+                    r.passed = true; r.detail = "디렉터 사건 정지"; break;
+                }
+
                 case "speed":
                 {
                     // 테스트 스캐폴딩 (검증 대상 아님) — 장시간 sim 을 견딜 수 있게 배속.

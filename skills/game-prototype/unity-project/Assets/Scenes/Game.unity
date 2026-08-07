@@ -111646,8 +111646,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   directorMode: 0
-  minIntervalGameHours: 14
-  maxIntervalGameHours: 30
+  minIntervalGameHours: 22
+  maxIntervalGameHours: 44
   ambientMinGameHours: 8
   ambientMaxGameHours: 16
   RaidGraceDays: 1

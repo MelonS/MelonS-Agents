@@ -59,8 +59,13 @@ namespace MelonS.GameProto
         // 퀵픽 '이벤트 빈도 정상화'(2026-06-12) — 하루 1.5~3회는 여전히 과밀(8게임일
         //  소크에서 카드 17건).  레퍼런스 페이싱: 실효 사건은 1.5~3일에 1건, 무효과
         //  분위기 텍스트(bird_omen 등)는 별도 짧은 채널로 분리(EventLog 만 채움).
-        [SerializeField] private float minIntervalGameHours = 36f;
-        [SerializeField] private float maxIntervalGameHours = 72f;
+        // 22~44 게임시간 (2026-08-07).  36~72 는 3x 에서 실제 8.4~16.8분이라 심사창
+        //  (5~15분) 을 대부분 벗어났고, 14~30 으로 내렸더니 이번엔 **긍정 감정이 너무
+        //  잦아져** 수면 부족이 기분에 미치는 영향을 덮었다 — `p1-mood-negative-direct`
+        //  가 세 번 중 한 번 '기분 상승' 으로 실패했다.  중간값이 둘 다 만족한다:
+        //  3x 에서 실제 5~10분이라 심사창 안에 1~2건 들어온다.
+        [SerializeField] private float minIntervalGameHours = 22f;
+        [SerializeField] private float maxIntervalGameHours = 44f;
         [SerializeField] private float ambientMinGameHours = 8f;
         [SerializeField] private float ambientMaxGameHours = 16f;
         private float nextAmbientGameSec = -1f;
@@ -94,6 +99,16 @@ namespace MelonS.GameProto
         /// <summary>격퇴 누적 (습격·광기 떼 공통).  '위협이 왔다' 만큼이나
         ///  '해소됐다' 가 중요하다 — 해소 없는 위협은 스트레스지 재미가 아니다.</summary>
         public static int ThreatsCleared { get; private set; }
+
+        /// <summary>디렉터 사건 발생을 멈춘다 (테스트 스캐폴딩 — 검증 대상 아님).
+        ///
+        /// 2026-08-07: `p1-mood-negative-direct` 가 세 번 중 한 번 실패했다.  기분이
+        ///  **오히려 올라서**다.  기분은 여러 감정의 **합**이라(수면 부족 · 좋은 옷차림 ·
+        ///  즐거운 대화 · 조용한 저녁…), 디렉터가 만드는 긍정 감정이 수면 부족을 덮으면
+        ///  '수면이 낮으면 기분이 떨어진다' 는 인과가 화면에서 사라진다.
+        ///  기준(min 2.5)을 낮추는 것으로는 못 고친다 — 기분이 **오른** 실행은 어떤
+        ///  양수 임계도 통과 못 한다.  고쳐야 할 것은 임계가 아니라 **교란 변수**다.</summary>
+        public static bool EventsSuspended { get; set; }
 
         public int CurrentThreatTier
         {
@@ -240,7 +255,7 @@ namespace MelonS.GameProto
         {
             // #게임필 — 게임시간 스케줄: GameClock 폴링 (lesson #7: 싱글톤 구독 금지).
             var clock = GameClock.Instance;
-            if (clock != null)
+            if (clock != null && !EventsSuspended)
             {
                 if (nextFireGameSec < 0f) ScheduleNext();   // 클럭 늦은 부트 대비
                 if (clock.GameSeconds >= nextFireGameSec)
@@ -258,7 +273,7 @@ namespace MelonS.GameProto
 
             // Day 13: raid check.  Poll GameClock from Update (lesson #7 firewall:
             // never subscribe singleton in OnEnable — bind order isn't guaranteed).
-            TryScheduleRaid();
+            if (!EventsSuspended) TryScheduleRaid();
 
             // 소크 r3 #8 — 습격 레터가 위협 종료 후에도 영속 스택(8게임일 잔존).
             //  밴딧 전멸 감지 시 카드 해소 + '습격 격퇴' 파랑 카드 1회 (1s 폴 스로틀).

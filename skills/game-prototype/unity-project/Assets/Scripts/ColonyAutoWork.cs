@@ -56,6 +56,14 @@ namespace MelonS.GameProto
         ///     검증하게 되고, 그게 이 레포에서 7주간 안전장치가 꺼져 있던 방식이다.)</summary>
         private const float StartGraceSeconds = 45f;
 
+        /// <summary>자동 일감을 멈춘다 (테스트 스캐폴딩 — 검증 대상 아님).
+        ///
+        /// 2026-08-07: `p0-pawn-move` 가 간헐 실패했다.  이 시나리오는 `clearStockpiles`
+        ///  로 **한가한 콜로니**를 전제로 만드는데(그래야 '우클릭 이동' 만 관측된다),
+        ///  자동 일감이 나무를 새로 지정하면 그 전제가 다시 깨진다 — 이동 중인 주민이
+        ///  벌목으로 끌려간다.  전제를 만드는 시나리오는 이것도 함께 꺼야 한다.</summary>
+        public static bool Suspended { get; set; }
+
         private float next;
         private float firstSeen = -1f;
 
@@ -79,6 +87,7 @@ namespace MelonS.GameProto
             //  연출이 짜 놓은 화면에 설명 없는 마커가 끼어드는 셈이다.
             //  쇼케이스는 스스로 지정·건축을 연출하므로 자동 일감이 할 일도 없다.
             if (ShowcaseDirector.Enabled) return;
+            if (Suspended) return;
             // 게임이 실제로 도는 시간만 센다 — 일시정지로 부팅하므로 실시간으로 세면
             //  플레이어가 둘러보는 동안 유예가 소진된다(튜토리얼 게이트에서 같은 실수를 했다).
             if (firstSeen < 0f) firstSeen = Time.unscaledTime;

@@ -1,14 +1,48 @@
 {
   "name": "P9 자원 가시성 — 잔디 위 석재/목재가 눈에 띄는가 (2026-08-02 운영자 '석재 … 우리껀 너무 안보여')",
   "steps": [
-    { "op": "wait", "sec": 1.5 },
-    { "op": "clearStockpiles" },
-    { "op": "spawnStoneChunk", "x": -3, "y": 3, "amount": 1 },
-    { "op": "spawnStoneChunk", "x": -1, "y": 3, "amount": 8 },
-    { "op": "spawnStoneChunk", "x": 1, "y": 3, "amount": 30 },
-    { "op": "spawnWoodPile", "x": 3, "y": 3, "amount": 30 },
-    { "op": "wait", "sec": 1.5 },
-    { "op": "shot", "name": "00_resources_on_grass" }
+    {
+      "op": "wait",
+      "sec": 1.5
+    },
+    {
+      "op": "clearStockpiles"
+    },
+    {
+      "op": "autoworkOff"
+    },
+    {
+      "op": "spawnStoneChunk",
+      "x": -3,
+      "y": 3,
+      "amount": 1
+    },
+    {
+      "op": "spawnStoneChunk",
+      "x": -1,
+      "y": 3,
+      "amount": 8
+    },
+    {
+      "op": "spawnStoneChunk",
+      "x": 1,
+      "y": 3,
+      "amount": 30
+    },
+    {
+      "op": "spawnWoodPile",
+      "x": 3,
+      "y": 3,
+      "amount": 30
+    },
+    {
+      "op": "wait",
+      "sec": 1.5
+    },
+    {
+      "op": "shot",
+      "name": "00_resources_on_grass"
+    }
   ],
   "_note": [
     "clearStockpiles 를 먼저 하는 이유: 시작 저장구역이 있으면 3초 안에 전부",

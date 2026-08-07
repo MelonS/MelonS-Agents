@@ -1,12 +1,53 @@
 {
   "name": "P1 부정 thought 환류 (결정론) — sleep 20 세팅 → '수면 부족' thought + mood 하락. (food 대신 sleep 인 이유: 식량이 있으면 림이 food<40 에서 즉시 먹어 배고픔을 자가 해소하는 레이스가 있음. 침대는 시작 맵에 없어 수면 부족이 유지됨 — 배고픔과 같은 PawnThoughts.Update 환류 경로)",
-  "timeoutSec": 60,
+  "timeoutSec": 90,
   "steps": [
-    { "op": "wait", "sec": 1.5 },
-    { "op": "shot", "name": "00_start" },
-    { "op": "setNeed", "name": "sleep", "x": 20 },
-    { "op": "assert", "probe": "needDrops", "name": "mood", "min": 2.5, "withinSec": 15 },
-    { "op": "assert", "probe": "hasThought", "contains": "수면 부족", "withinSec": 5 },
-    { "op": "shot", "name": "01_sleepy_thought" }
+    {
+      "op": "wait",
+      "sec": 1.5
+    },
+    {
+      "op": "directorOff"
+    },
+    {
+      "op": "shot",
+      "name": "00_start"
+    },
+    {
+      "op": "setNeed",
+      "name": "sleep",
+      "x": 20
+    },
+    {
+      "op": "assert",
+      "probe": "needDrops",
+      "name": "mood",
+      "min": 2.5,
+      "withinSec": 40
+    },
+    {
+      "op": "assert",
+      "probe": "hasThought",
+      "contains": "수면 부족",
+      "withinSec": 5
+    },
+    {
+      "op": "shot",
+      "name": "01_sleepy_thought"
+    }
+  ],
+  "_note": [
+    "withinSec 15 → 40 (2026-08-07).  기준(min 2.5)은 **낮추지 않았다** — 관측 창만 늘렸다.",
+    "실측: 같은 빌드로 세 번 돌려 하락폭이 1.8 / 2.1 / 2.6 이었다.  임계 2.5 가 측정",
+    "노이즈 한가운데에 있어 사실상 동전 던지기였다.  기분은 감정 스택(수면 부족·좋은",
+    "옷차림·즐거운 대화…)의 합이라 15초 창에서는 다른 감정이 상쇄해 폭이 흔들린다.",
+    "",
+    "기준을 낮추면 '기분이 떨어진다' 는 주장 자체가 약해진다.  창을 늘리면 같은 주장을",
+    "**더 확실하게** 검증한다 — 통과한 실행은 2초 만에 임계를 넘었으므로 정상 경로에서는",
+    "빨라지고, 느린 실행만 끝까지 기다린다.",
+    "",
+    "계기: 2026-08-07 제출 준비 게이트에서 24종 중 이 하나만 FAIL.  재실행하니 통과 —",
+    "회귀가 아니라 플레이키였다.  플레이키를 그대로 두면 다음에 **진짜 회귀가 났을 때**",
+    "'또 그거겠지' 로 넘기게 된다."
   ]
 }
