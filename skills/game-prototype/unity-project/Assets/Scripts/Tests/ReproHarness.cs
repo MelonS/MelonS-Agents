@@ -1318,6 +1318,16 @@ namespace MelonS.GameProto
                             var q = cand + nb;
                             if (!PawnMovement.IsBlockedAt(q) && Physics2D.OverlapPointAll(q).Length == 0) open++;
                         }
+                        // 다른 주민이 차지하고 있을 칸은 피한다 (2026-08-07).
+                        //  목표 칸에 누가 서 있으면 우리 폰은 **옆에 멈춘다** — 대각
+                        //  인접이면 1.41칸이라 `≤0.8` 을 못 맞춘다.  게임은 옳게
+                        //  동작했는데(막힌 칸엔 못 선다) 검사가 실패로 읽는다.
+                        //  실측 6회 중 1회가 closest 1.51 로 이 경우였다.
+                        bool crowded = false;
+                        foreach (var op2 in Object.FindObjectsByType<PawnEntity>(FindObjectsSortMode.None))
+                            if (op2 != null && (op2.transform.position - cand).sqrMagnitude < 2.25f)
+                            { crowded = true; break; }
+                        if (crowded) continue;
                         if (open >= 2) { world = cand; return true; }
                     }
                 return false;
