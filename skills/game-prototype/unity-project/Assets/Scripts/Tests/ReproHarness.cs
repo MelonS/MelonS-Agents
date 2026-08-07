@@ -1300,7 +1300,25 @@ namespace MelonS.GameProto
                         //  두 좌표계를 맞춘다.
                         Vector3 cand = from + dir * rr;
                         cand = new Vector3(Mathf.Floor(cand.x) + 0.5f, Mathf.Floor(cand.y) + 0.5f, 0f);
-                        if (Physics2D.OverlapPointAll(cand).Length == 0) { world = cand; return true; }
+                        // **도달 가능한** 빈 칸이어야 한다 (2026-08-07).
+                        //  이전에는 '콜라이더 없음' 만 봤다.  그런데 물·바위 타일은
+                        //  콜라이더가 없어도 통행 불가고, 벽으로 둘러싸인 안뜰도
+                        //  '빈 칸' 으로 잡힌다.  그런 지점을 명령하면 폰이 최선을 다해
+                        //  가까이 가다 2~3칸 앞에서 멈추고, 검사는 '이동이 안 된다' 로
+                        //  읽는다 — 실제로 `p0-pawn-move` 가 그렇게 간헐 실패했다
+                        //  (closest 2.45, need ≤0.8).  게임 결함이 아니라 **테스트가
+                        //  갈 수 없는 곳을 시킨 것**이다.
+                        if (Physics2D.OverlapPointAll(cand).Length != 0) continue;
+                        if (PawnMovement.IsBlockedAt(cand)) continue;
+                        // 목적지 주변 4방향 중 하나라도 통행 가능해야 한다 — 사방이
+                        //  막힌 칸은 도달 경로가 없다.
+                        int open = 0;
+                        foreach (var nb in new[] { Vector3.right, Vector3.left, Vector3.up, Vector3.down })
+                        {
+                            var q = cand + nb;
+                            if (!PawnMovement.IsBlockedAt(q) && Physics2D.OverlapPointAll(q).Length == 0) open++;
+                        }
+                        if (open >= 2) { world = cand; return true; }
                     }
                 return false;
             }
