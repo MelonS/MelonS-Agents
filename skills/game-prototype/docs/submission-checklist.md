@@ -35,13 +35,18 @@ URL 에 대해 아무 말도 하지 않는다.  그래서 공개 URL 을 실제�
 ### ② 시연 영상 — 파일 위치
 
 ```
-skills/game-prototype/art-out/demo/pawnsim_demo_2026-08-07.mp4
-  55초 · 1920x1080 · 30fps · 32.7MB
-  흐름: 빈 터 → 청사진 배치 → 주민이 건축 → 완성된 집 → 밤 조명
+skills/game-prototype/art-out/demo/pawnsim_demo_2026-08-09.mp4   ← 정본
+  59.1초 · 1920x1080 · 30fps
+  마을의 하루: 아침 일 → 밥·벌목 → 오후 증축 → 밤 등불 → 습격 → 다음 아침
 ```
 
 요강 제약 충족: 30~60초 · 실제 플레이 화면 · AI 합성 없음.
 **업로드 후 URL 을 알려주면** ③ 문서에 기입하고 PDF 를 다시 뽑는다.
+
+> 같은 폴더의 `pawnsim_demo_2026-08-07.mp4` / `_2026-08-08.mp4` 는 **쓰지 않는다.**
+> 08-07 은 운영자가 반려한 원거리 1샷이고, 08-08 은 Unity Recorder 로 찍어
+> **uGUI 텍스트가 통째로 빠진** 실패본이다.  제작 방법과 그 이유는
+> [`trailer-production.md`](trailer-production.md).
 
 ### 게임 완성도 — 측정치 (2026-08-07)
 
@@ -108,9 +113,16 @@ bash skills/game-prototype/scripts/verify-deploy.sh    # 실물 URL 확인
 ### ② 시연 영상 (30~60초)
 
 ```bash
-python skills/game-dev-agent/scripts/record-gameplay.py --seconds 55 \
-  --out G:/ai/pawnsim_demo.mp4
+# 빌드가 직접 프레임을 덤프한다 — Unity Recorder 는 **쓰지 않는다**
+# (에디터 경로가 게임을 다른 상태로 돌리고 uGUI 텍스트가 프레임에서 빠진다)
+"$(python skills/game-dev-agent/scripts/latest_build.py)"   -autostart -trailerframes "G:\ai\_frames" -mute   -logFile "G:\ai\_fr.log" -screen-width 1920 -screen-height 1080 -screen-fullscreen 0
+
+ffmpeg -y -framerate 30 -i "G:/ai/_frames/f%05d.png"   -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -movflags +faststart   skills/game-prototype/art-out/demo/pawnsim_demo_<날짜>.mp4
+
+grep '\[Trailer\] t=' G:/ai/_fr.log     # 컷 타임라인 검증
 ```
+
+연출·함정·검증 방법 정본: [`trailer-production.md`](trailer-production.md).
 
 요강 제약:
 - **30~60초**, 실제 플레이 장면 중심

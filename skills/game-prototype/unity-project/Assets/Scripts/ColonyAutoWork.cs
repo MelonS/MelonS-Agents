@@ -64,6 +64,15 @@ namespace MelonS.GameProto
         ///  벌목으로 끌려간다.  전제를 만드는 시나리오는 이것도 함께 꺼야 한다.</summary>
         public static bool Suspended { get; set; }
 
+        /// <summary>유예 시간을 덮어쓴다 (음수면 기본값).
+        ///
+        /// 제출 소개 영상은 **이미 살아 있는 마을**에서 시작해야 한다.  게임 시작
+        ///  직후를 찍으면 자원이 전부 0 이고 벽도 없어서, 첫 화면이 "아무것도 없음"
+        ///  으로 읽힌다(실제로 첫 촬영이 그랬다).  그래서 연출은 촬영 전에 시뮬레이션을
+        ///  고배속으로 하루 돌려 마을을 자리잡게 하는데, 이 유예가 **실시간** 45초라
+        ///  고배속으로 감아도 그대로 45초를 잡아먹는다.  촬영 전용으로만 줄인다.</summary>
+        public static float GraceSecondsOverride = -1f;
+
         private float next;
         private float firstSeen = -1f;
 
@@ -91,7 +100,8 @@ namespace MelonS.GameProto
             // 게임이 실제로 도는 시간만 센다 — 일시정지로 부팅하므로 실시간으로 세면
             //  플레이어가 둘러보는 동안 유예가 소진된다(튜토리얼 게이트에서 같은 실수를 했다).
             if (firstSeen < 0f) firstSeen = Time.unscaledTime;
-            if (Time.unscaledTime - firstSeen < StartGraceSeconds) return;
+            float grace = GraceSecondsOverride >= 0f ? GraceSecondsOverride : StartGraceSeconds;
+            if (Time.unscaledTime - firstSeen < grace) return;
             if (Time.unscaledTime < next) return;
             next = Time.unscaledTime + Interval;
 

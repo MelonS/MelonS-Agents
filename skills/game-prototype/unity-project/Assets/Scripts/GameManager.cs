@@ -37,7 +37,12 @@ namespace MelonS.GameProto
         private System.Collections.IEnumerator PauseAtStart()
         {
             yield return null;   // TimeController/AlertStackUI 부트 대기 (1프레임)
-            if (TimeController.Instance != null && ReproHarness.Enabled == false)
+            // 소개 영상 연출 중에는 멈추지 않는다.  연출은 촬영 전에 게임을 고배속으로
+            //  돌려 마을을 자리잡게 하는데, 이 일시정지가 1프레임 뒤에 배속을 0 으로
+            //  덮어써서 워밍업 190초가 통째로 헛돌았다(게임 시계가 6시에서 6시).
+            //  프레임 순서에 따라 되기도 하고 안 되기도 하는 경합이라 조건으로 끊는다.
+            if (TimeController.Instance != null && ReproHarness.Enabled == false
+                && !TrailerDirector.Enabled)
             {
                 TimeController.Instance.SetScale(0f);
                 AlertStackUI.Notify("일시정지 — 둘러보고 1배속으로 시작하세요", 1);

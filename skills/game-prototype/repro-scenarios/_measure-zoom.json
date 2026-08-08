@@ -1,0 +1,20 @@
+{
+  "name": "배율 검수 — 활동 라벨이 읽히는 줌 레벨 찾기",
+  "steps": [
+    { "op": "wait", "sec": 2 },
+    { "op": "speed", "x": 3 },
+    { "op": "wait", "sec": 120 },
+    { "op": "ortho", "x": 14 },
+    { "op": "wait", "sec": 3 },
+    { "op": "shot", "name": "z14" },
+    { "op": "ortho", "x": 10 },
+    { "op": "wait", "sec": 3 },
+    { "op": "shot", "name": "z10" },
+    { "op": "ortho", "x": 7 },
+    { "op": "wait", "sec": 3 },
+    { "op": "shot", "name": "z07" },
+    { "op": "ortho", "x": 5 },
+    { "op": "wait", "sec": 3 },
+    { "op": "shot", "name": "z05" }
+  ]
+}

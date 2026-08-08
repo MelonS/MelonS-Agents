@@ -45,6 +45,22 @@ namespace MelonS.GameProto
         private Color woodOriginalColor, foodOriginalColor, mealsOriginalColor, stoneOriginalColor;
         private bool colorsCaptured = false;
 
+        /// <summary>크림색 패널 위에서 읽히도록 **명도 상한**을 건다 (색상·채도는 유지).
+        ///
+        /// 석재 칩은 "갈색 계열과 분리"하려고 밝은 청회색(0.70,0.76,0.84)으로 잡혀
+        ///  있었는데, 그 밝기는 패널 배경과 거의 같아 여섯 프레임 내내 안 읽혔다.
+        ///  색으로 구분하는 것과 배경에서 떠오르는 것은 다른 문제다 — 구분은 색상이
+        ///  하고, 가독은 명도가 한다.  씬에 굳은 값을 고치는 대신 런타임에서 눌러
+        ///  `SceneSetup` 을 다시 돌려도 되살아나지 않게 한다.</summary>
+        private static Color Readable(Color c)
+        {
+            float lum = 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+            const float MaxLum = 0.58f;
+            if (lum <= MaxLum) return c;
+            float k = MaxLum / Mathf.Max(lum, 1e-4f);
+            return new Color(c.r * k, c.g * k, c.b * k, c.a);
+        }
+
         private void Update()
         {
             if (ResourceManager.Instance == null) return;
@@ -52,10 +68,14 @@ namespace MelonS.GameProto
             // 첫 frame 에 원래 색 캡쳐
             if (!colorsCaptured)
             {
-                if (woodText != null)  woodOriginalColor  = woodText.color;
-                if (foodText != null)  foodOriginalColor  = foodText.color;
-                if (mealsText != null) mealsOriginalColor = mealsText.color;
-                if (stoneText != null) stoneOriginalColor = stoneText.color;
+                if (woodText != null)  woodOriginalColor  = Readable(woodText.color);
+                if (foodText != null)  foodOriginalColor  = Readable(foodText.color);
+                if (mealsText != null) mealsOriginalColor = Readable(mealsText.color);
+                if (stoneText != null) stoneOriginalColor = Readable(stoneText.color);
+                if (woodText != null)  woodText.color  = woodOriginalColor;
+                if (foodText != null)  foodText.color  = foodOriginalColor;
+                if (mealsText != null) mealsText.color = mealsOriginalColor;
+                if (stoneText != null) stoneText.color = stoneOriginalColor;
                 colorsCaptured = true;
             }
             // #QA플레이 F4 (2026-06-12) — 시작 자원이 '바닥 더미'(물리)라 적립 카운터가
@@ -163,7 +183,12 @@ namespace MelonS.GameProto
                 lastStone = rm.stone;
             }
             // flash 색 적용
-            Color flashCol = new Color(1f, 0.95f, 0.35f, 1f);  // 밝은 노란
+            // #소개영상(2026-08-08) — flash 를 **밝은 노랑**으로 두면 크림색 패널 위에서
+            //  그 줄이 1.2초간 통째로 사라진다.  촬영 프레임 여섯 장 중 다섯 장에서
+            //  한 줄씩 읽히지 않았고, 그때마다 다른 줄이라 UI 버그로 보이지도 않았다.
+            //  "값이 늘었다"를 밝기로 알리려던 장치가 밝은 배경에서 정반대로 작동한 것.
+            //  강조는 **어둡고 진한 호박색**으로 준다 — 배경보다 어두우면 항상 읽힌다.
+            Color flashCol = new Color(0.80f, 0.42f, 0.04f, 1f);
             if (woodText != null)  woodText.color  = Time.unscaledTime < woodFlashUntil  ? flashCol : woodOriginalColor;
             if (foodText != null)  foodText.color  = Time.unscaledTime < foodFlashUntil  ? flashCol : foodOriginalColor;
             if (mealsText != null) mealsText.color = Time.unscaledTime < mealsFlashUntil ? flashCol : mealsOriginalColor;

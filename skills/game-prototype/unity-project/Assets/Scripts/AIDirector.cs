@@ -110,6 +110,30 @@ namespace MelonS.GameProto
         ///  양수 임계도 통과 못 한다.  고쳐야 할 것은 임계가 아니라 **교란 변수**다.</summary>
         public static bool EventsSuspended { get; set; }
 
+        /// <summary>습격 **일정만** 멈춘다 (이벤트·이야기 카드는 계속 뜬다).
+        ///
+        /// 계기 (2026-08-08, 소개 영상 촬영): 연출은 정해진 컷에서 습격을 불러
+        ///  위기와 해소를 보여주려 했는데, 그 전에 **자연 습격이 먼저 터져** 촬영
+        ///  시점엔 이미 격퇴가 끝나 있었다 — 클라이맥스 컷에 적이 한 명도 없었다.
+        ///  `EventsSuspended` 로 통째로 막으면 이야기 카드("새들의 징조", "여우 출현")
+        ///  까지 사라지는데, 그건 이 게임에서 가장 보여주고 싶은 것 중 하나다.
+        ///  그래서 습격 일정만 따로 잠근다.</summary>
+        public static bool RaidsSuspended { get; set; }
+
+        /// <summary>지금 즉시 습격을 발생시킨다 (연출·테스트 스캐폴딩).
+        ///
+        /// 제출 소개 영상은 55초 안에 **위기와 해소**를 보여줘야 하는데, 습격 발생은
+        ///  본래 무작위 일정이라 촬영 때마다 오거나 안 온다.  연출이 시각을 지정할 수
+        ///  있어야 컷 길이가 설계대로 나온다.  게임 규칙은 건드리지 않는다 — 평상시
+        ///  플레이에서는 이 함수를 아무도 부르지 않는다.</summary>
+        public static void ForceRaidNow()
+        {
+            var d = UnityEngine.Object.FindFirstObjectByType<AIDirector>();
+            if (d == null) { Debug.LogWarning("[AIDirector] ForceRaidNow — 디렉터 없음"); return; }
+            d.SpawnRaid(allowManhunter: false);
+            Debug.Log("[AIDirector] ForceRaidNow — 연출 요청으로 습격 발생");
+        }
+
         public int CurrentThreatTier
         {
             get
@@ -273,7 +297,7 @@ namespace MelonS.GameProto
 
             // Day 13: raid check.  Poll GameClock from Update (lesson #7 firewall:
             // never subscribe singleton in OnEnable — bind order isn't guaranteed).
-            if (!EventsSuspended) TryScheduleRaid();
+            if (!EventsSuspended && !RaidsSuspended) TryScheduleRaid();
 
             // 소크 r3 #8 — 습격 레터가 위협 종료 후에도 영속 스택(8게임일 잔존).
             //  밴딧 전멸 감지 시 카드 해소 + '습격 격퇴' 파랑 카드 1회 (1s 폴 스로틀).
@@ -406,7 +430,13 @@ namespace MelonS.GameProto
             SpawnRaid();
         }
 
-        private void SpawnRaid()
+        private void SpawnRaid() => SpawnRaid(true);
+
+        /// <param name="allowManhunter">false 면 30% 미친 동물 분기를 건너뛰고 항상
+        ///  인간 약탈자를 보낸다.  소개 영상 연출이 쓴다 — "미친 멧돼지 떼"는 맥락
+        ///  없이 처음 보는 사람에게 읽히지 않고, 그 컷은 **무장한 사람이 마을을 덮친다**
+        ///  여야 30초 만에 장르가 전달된다.  게임 규칙은 그대로다(평상시 호출은 true).</param>
+        private void SpawnRaid(bool allowManhunter)
         {
             // Raid size is now driven by raidCount (how many raids have fired this
             // run) instead of the day-based CurrentThreatTier.  The old tier path
@@ -462,7 +492,7 @@ namespace MelonS.GameProto
             };
             // 갭 TOP-11 — 위협 가중 추첨: 인간 습격 70% / 미친 동물 30%.
             //  레퍼런스의 '위협마다 다른 대응'(엄폐 사격 vs 근접 차단)의 최소형.
-            if (UnityEngine.Random.value < 0.30f && TrySpawnManhunterPack(banditCount + 1))
+            if (allowManhunter && UnityEngine.Random.value < 0.30f && TrySpawnManhunterPack(banditCount + 1))
             {
                 var madEv = new GameEvent
                 {

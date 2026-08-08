@@ -92,7 +92,7 @@ def stream_log(log_path: Path, proc: subprocess.Popen, poll_interval: float = 2.
                 pass
 
 
-def run(seconds: int, out_path: str) -> int:
+def run(seconds: int, out_path: str, trailer: bool = False) -> int:
     if not Path(UNITY_EXE).exists():
         print(f"ERROR: Unity not found: {UNITY_EXE}", file=sys.stderr)
         print("       Set UNITY_EXE env var to override.", file=sys.stderr)
@@ -107,6 +107,10 @@ def run(seconds: int, out_path: str) -> int:
     env["MELONS_REC_SECONDS"] = str(seconds)
     env["MELONS_REC_OUT"]     = out_path
     env["MELONS_REC_FPS"]     = env.get("MELONS_REC_FPS", "30")
+    if trailer:
+        # TrailerDirector 를 켠다 — 카메라·시계·자막을 연출이 잡는다.
+        #  에디터 배치모드라 게임에 CLI 인자를 넘길 수 없어 환경변수로 간다.
+        env["MELONS_TRAILER"] = "1"
 
     # Ensure output dir exists
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
@@ -200,11 +204,15 @@ def main():
         default=int(os.environ.get("MELONS_REC_SECONDS", "120")),
         help="Recording duration in seconds (default 120; env: MELONS_REC_SECONDS)")
     ap.add_argument(
+        "--trailer", action="store_true",
+        help="TrailerDirector 연출로 녹화 (제출 소개 영상용). 카메라·시계·자막을 "
+             "연출이 잡고 시청자에게 불필요한 UI 를 끈다.")
+    ap.add_argument(
         "--out",
         default=os.environ.get("MELONS_REC_OUT", DEFAULT_OUT),
         help=f"Output mp4 path (default {DEFAULT_OUT}; env: MELONS_REC_OUT)")
     args = ap.parse_args()
-    sys.exit(run(args.seconds, args.out))
+    sys.exit(run(args.seconds, args.out, args.trailer))
 
 
 if __name__ == "__main__":
