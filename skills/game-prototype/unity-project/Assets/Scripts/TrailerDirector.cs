@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Unity.Collections;
 using MelonS.GameProto.Core;
 
 namespace MelonS.GameProto
@@ -641,16 +642,99 @@ namespace MelonS.GameProto
         private static float Dt =>
             Time.captureFramerate > 0 ? 1f / Time.captureFramerate : Time.unscaledDeltaTime;
 
+        private System.IO.FileStream wav;
+        private int wavChannels;
+        private int wavSampleRate;
+        private long wavSampleBytes;
+
         private void StartCapture()
         {
             if (frameDir == null) return;
             System.IO.Directory.CreateDirectory(frameDir);
             // 이 지점 이후로 Unity 는 실시간을 버리고 **프레임당 1/30 초**로 돈다.
-            //  저장이 느려도 연출 타이밍(unscaledDeltaTime 기반)이 흔들리지 않는다.
+            //  저장이 느려도 연출 타이밍(Dt)이 흔들리지 않는다.
             Time.captureFramerate = CaptureFps;
+            StartAudioCapture();
             capturing = true;
             StartCoroutine(CaptureLoop());
             Debug.Log($"[Trailer] 프레임 덤프 시작 — {frameDir} @ {CaptureFps}fps");
+        }
+
+        /// <summary>게임 소리를 **프레임과 같은 시간축으로** 받아 WAV 로 쓴다.
+        ///
+        /// 계기 (2026-08-09 운영자): *"가장 핵심 제출용 영상에 sfx와 bgm이 안나옴."*
+        ///  프레임을 PNG 로 덤프해 ffmpeg 로 합치면 그림만 남는다 — 소리는 어디에도
+        ///  담기지 않는다.
+        ///
+        /// 나중에 BGM 을 얹는 방식은 쓰지 않는다.  이 게임의 소리는 도끼질·망치질·
+        ///  가마솥 같은 **행동에 붙은 SFX** 가 대부분이라, 화면과 어긋나는 순간
+        ///  "영상에 음악을 깐 것"이 되어 오히려 가짜로 보인다.
+        ///
+        /// `AudioRenderer` 는 Unity 의 **오프라인 오디오 렌더** 경로다 —
+        ///  `captureFramerate` 로 가상 시간을 쓰는 동안에도 프레임당 정확한 샘플 수를
+        ///  돌려주므로 그림과 소리가 어긋나지 않는다.  (실시간 마이크/루프백 녹음은
+        ///  PNG 저장이 느린 만큼 소리가 앞서 나가 못 쓴다.)  Start() 를 부르면 스피커
+        ///  출력이 꺼지므로 검증 스윕이 시끄러워지지도 않는다.</summary>
+        private void StartAudioCapture()
+        {
+            wavChannels = AudioSettings.speakerMode == AudioSpeakerMode.Mono ? 1 : 2;
+            wavSampleRate = AudioSettings.outputSampleRate;
+            string path = System.IO.Path.Combine(frameDir, "audio.wav");
+            wav = new System.IO.FileStream(path, System.IO.FileMode.Create);
+            WriteWavHeader(0);                       // 크기는 마지막에 되돌아와 채운다
+            if (!AudioRenderer.Start())
+            {
+                Debug.LogWarning("[Trailer] AudioRenderer.Start 실패 — 무음으로 진행");
+                wav.Dispose(); wav = null;
+                return;
+            }
+            Debug.Log($"[Trailer] 오디오 캡처 시작 — {wavSampleRate}Hz {wavChannels}ch");
+        }
+
+        private void CaptureAudioFrame()
+        {
+            if (wav == null) return;
+            int sc = AudioRenderer.GetSampleCountForCaptureFrame();
+            if (sc <= 0) return;
+            var buf = new NativeArray<float>(sc * wavChannels, Allocator.Temp);
+            AudioRenderer.Render(buf);
+            // float → 16bit PCM.  픽셀아트 게임 사운드에 32bit float 은 과하고,
+            //  파일이 3배가 되며 플레이어 호환성만 나빠진다.
+            var bytes = new byte[buf.Length * 2];
+            for (int i = 0; i < buf.Length; i++)
+            {
+                short v = (short)(Mathf.Clamp(buf[i], -1f, 1f) * 32767f);
+                bytes[i * 2] = (byte)(v & 0xFF);
+                bytes[i * 2 + 1] = (byte)((v >> 8) & 0xFF);
+            }
+            wav.Write(bytes, 0, bytes.Length);
+            wavSampleBytes += bytes.Length;
+            buf.Dispose();
+        }
+
+        private void StopAudioCapture()
+        {
+            if (wav == null) return;
+            AudioRenderer.Stop();
+            wav.Seek(0, System.IO.SeekOrigin.Begin);
+            WriteWavHeader(wavSampleBytes);          // 이제 실제 크기를 안다
+            wav.Flush();
+            wav.Dispose();
+            wav = null;
+            Debug.Log($"[Trailer] 오디오 캡처 종료 — {wavSampleBytes / 1024}KB");
+        }
+
+        private void WriteWavHeader(long dataBytes)
+        {
+            int byteRate = wavSampleRate * wavChannels * 2;
+            void U32(uint v) { wav.Write(System.BitConverter.GetBytes(v), 0, 4); }
+            void U16(ushort v) { wav.Write(System.BitConverter.GetBytes(v), 0, 2); }
+            void Tag(string t) { foreach (char c in t) wav.WriteByte((byte)c); }
+            Tag("RIFF"); U32((uint)(36 + dataBytes)); Tag("WAVE");
+            Tag("fmt "); U32(16); U16(1); U16((ushort)wavChannels);
+            U32((uint)wavSampleRate); U32((uint)byteRate);
+            U16((ushort)(wavChannels * 2)); U16(16);
+            Tag("data"); U32((uint)dataBytes);
         }
 
         /// <summary>렌더가 끝난 뒤 픽셀을 직접 읽어 저장한다.
@@ -665,6 +749,7 @@ namespace MelonS.GameProto
             while (capturing)
             {
                 yield return eof;
+                CaptureAudioFrame();          // 그림과 **같은 프레임**의 소리
                 var tex = ScreenCapture.CaptureScreenshotAsTexture();
                 System.IO.File.WriteAllBytes(
                     System.IO.Path.Combine(frameDir, $"f{frameIndex:D5}.png"),
@@ -672,6 +757,7 @@ namespace MelonS.GameProto
                 Destroy(tex);
                 frameIndex++;
             }
+            StopAudioCapture();
         }
 
         // ── 암전 ────────────────────────────────────────────────────────────

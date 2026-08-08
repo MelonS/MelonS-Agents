@@ -290,7 +290,13 @@ namespace MelonS.GameProto
             {
                 var lamp = _sources[i];
                 if (lamp == null || !lamp.IsLit) continue;
-                lr[n] = Mathf.Min(lamp.RadiusTiles, Rmax);
+                // 불꽃 흔들림 — 촛불·화덕·등잔은 흔들려야 살아 있어 보인다.
+                //  광원마다 위상을 달리해(instanceID 해시) 전체가 한 박자로 깜빡이지
+                //  않게 한다.  진폭 ±4% — 그 이상은 '깜빡이는 버그'로 읽힌다.
+                float ph = (lamp.GetInstanceID() & 1023) * 0.0613f;
+                float flick = 1f + 0.040f * Mathf.Sin(Time.time * 3.7f + ph)
+                                 + 0.018f * Mathf.Sin(Time.time * 9.1f + ph * 1.7f);
+                lr[n] = Mathf.Min(lamp.RadiusTiles * flick, Rmax);
                 float px = lamp.transform.position.x;
                 float py = lamp.transform.position.y + lamp.FlameHeightTiles;
                 lx[n] = px; ly[n] = py;
@@ -348,7 +354,17 @@ namespace MelonS.GameProto
                         float bq = 1f / (d * d);
                         float f  = aL + (bq - aL) * 0.4f;
                         float g  = (f / FCenter) * occ;
-                        if (g > reveal) reveal = g;
+                        // 가장자리를 부드럽게 — 선형 감쇠는 반경에서 값이 0 이 되지만
+                        //  **기울기가 살아 있어** 빛의 테두리가 원으로 보인다.  바깥
+                        //  25% 구간에 smoothstep 을 곱해 기울기까지 0 으로 만든다.
+                        float edge = Mathf.Clamp01((Rk - dist) / (Rk * 0.25f));
+                        g *= edge * edge * (3f - 2f * edge);
+                        // 광원 합성: max 가 아니라 **screen blend**.
+                        //  운영자 2026-08-09 "빛효과가 좀 어색하다".  max 로 합치면
+                        //  등불 두 개가 나란히 있어도 한 개일 때와 똑같이 밝다 —
+                        //  빛이 겹치는데 아무 일도 안 일어나니 조명이 '칠해진 원'
+                        //  처럼 보인다.  screen 은 겹칠수록 밝아지되 1 을 넘지 않는다.
+                        reveal = reveal + g - reveal * g;
                     }
                     if (reveal > 1f) reveal = 1f;
                     else if (reveal < 0f) reveal = 0f;

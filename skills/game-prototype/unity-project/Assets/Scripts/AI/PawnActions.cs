@@ -96,7 +96,16 @@ namespace MelonS.GameProto.AI
             {
                 if (!any || c.y < lowest.y) { lowest = c; any = true; }
             }
-            return any ? PathGrid.CellToWorld(lowest) : (Vector2)bed.transform.position;
+            if (!any) return bed.transform.position;
+
+            Vector2 pos = PathGrid.CellToWorld(lowest);
+            // 운영자 2026-08-09: "침대에서 잘 때 반칸정도만 위로 올려주고".
+            //  담요 칸 **정중앙**에 누우면 몸이 침대 아래쪽으로 쏠려 발치가 프레임
+            //  밖으로 나가는 그림이 된다.  반 칸 올리면 몸통이 이불 한가운데에 오고
+            //  머리가 베개 칸에 닿는다.  1×1 잠자리는 칸이 하나뿐이라 그대로 둔다 —
+            //  올리면 잠자리 밖으로 나간다.
+            if (bed.Size.y >= 2) pos.y += 0.5f;
+            return pos;
         }
     }
 
