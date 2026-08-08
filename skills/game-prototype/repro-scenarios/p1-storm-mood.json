@@ -1,12 +1,17 @@
 {
   "name": "P1 폭풍 mood — 폭풍 전체 노출에도 mood 폭주 하락이 없어야 한다 (longplay 2026-06-10 발굴: 직접드레인 -3/초×60초=-180 → 3일차 자정 전원 동시 정신붕괴. 기대 동작: '야외 폭풍' thought -6 + 자연 decay 만 = 60스케일초 하락 <20. hasThought 를 앞에 둬 -6 일회분이 drop 측정에 안 섞이게 함)",
-  "timeoutSec": 120,
+  "note": "2026-08-09 flake 수정. 게이트에서 간헐 실패했고 실패 로그의 활성 생각이 매번 '따뜻한 실내' 였다 — 관측 대상(hasThought 는 pawn 미지정 시 **첫 림 한 명**만 본다)이 집 안에 있는 상태에서 폭풍을 켠 것이다. 그러면 '야외 폭풍' 이 안 뜨는 게 정상 동작이고 테스트가 틀렸다. 대기만 늘려도 4회 중 2회 실패했다 — 그 림이 밖으로 나갈지는 운이기 때문이다. 이 시나리오의 전제는 이름 그대로 '폭풍 전체 노출' 이므로, 그 림을 **나무로 보내** 야외에 세운 뒤 폭풍을 켠다(나무는 지붕 아래에 있을 수 없다). 판정 기준(mood 하락 허용 20)은 그대로다 — 완화가 아니라 전제 세우기다. 전제 확인은 도착 거리가 아니라 **움직였는가**로 본다: 도착 3칸을 요구했더니 4회 모두 4.5~6.0 에서 멈춰 실패했는데(벌목 지정이라 접근 거리가 다르고 다른 일에 끌려가기도 한다), 정작 목적인 hasThought 는 같은 4회에서 전부 1초에 떴다 — 집을 나서기만 하면 폭풍을 맞기 때문이다. 도착은 이 테스트가 볼 것이 아니다.",
+  "timeoutSec": 160,
   "steps": [
     { "op": "wait", "sec": 1.5 },
     { "op": "shot", "name": "00_start" },
+    { "op": "worldclick", "target": "pawn" },
+    { "op": "worldright", "target": "tree" },
+    { "op": "assert", "probe": "pawnMoved", "min": 2.0, "withinSec": 15 },
+    { "op": "shot", "name": "01_outdoors" },
     { "op": "setWeather", "name": "storm" },
-    { "op": "assert", "probe": "hasThought", "contains": "야외 폭풍", "withinSec": 5 },
+    { "op": "assert", "probe": "hasThought", "contains": "야외 폭풍", "withinSec": 12 },
     { "op": "assert", "probe": "needDropsAtMost", "name": "mood", "min": 20, "withinSec": 60 },
-    { "op": "shot", "name": "01_storm_mood" }
+    { "op": "shot", "name": "02_storm_mood" }
   ]
 }
