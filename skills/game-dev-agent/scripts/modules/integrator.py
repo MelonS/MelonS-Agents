@@ -57,7 +57,12 @@ def run_unity_method(
         cmd += list(extra_args)
 
     print(f"[integrator] {method_name} @ {project_path.name}")
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    # encoding 을 명시한다 — 없으면 Windows 가 **cp949** 로 디코드해서, Unity 로그에
+    #  한글이 한 줄이라도 들어가는 순간 UnicodeDecodeError 로 죽는다.  빌드 자체는
+    #  성공했는데 로그를 읽다 실패해 `FAIL rc=1` 이 뜬다 — 원인이 정반대로 보인다.
+    #  (2026-08-09: 새 Debug.Log 한글 한 줄에 WebGL 배포 경로가 통째로 막혔다.)
+    result = subprocess.run(cmd, capture_output=True, text=True,
+                            encoding="utf-8", errors="replace")
 
     log_tail = ""
     if log_file and Path(log_file).exists():

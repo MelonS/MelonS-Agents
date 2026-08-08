@@ -21,6 +21,10 @@ import sys
 from pathlib import Path
 from PIL import Image
 import subprocess
+# NOTE: 이 파일의 subprocess 호출은 전부 encoding 을 명시한다 — 없으면 Windows 가
+#  **cp949** 로 디코드해서, 하위 프로세스 출력에 한글이 한 줄이라도 들어가면
+#  UnicodeDecodeError 로 죽는다.  검사는 성공했는데 출력을 읽다 실패해 FAIL 로
+#  보이므로 원인이 정반대로 읽힌다 (2026-08-09 WebGL 배포 경로에서 실제로 겪음).
 
 REPO = Path(__file__).resolve().parents[3]  # ...skills/game-dev-agent/scripts/X.py -> MelonS-Agents
 UNITY_PROJ = REPO / "skills" / "game-prototype" / "unity-project"
@@ -50,7 +54,7 @@ def step_scenes() -> int:
     proc = subprocess.run(
         [sys.executable, str(REPO / "skills" / "game-dev-agent" / "scripts" / "agent.py"),
          "integrate", "--project", str(UNITY_PROJ), "--method", "scenes"],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     if proc.returncode != 0:
         print(f"  FAIL rc={proc.returncode}")
@@ -74,7 +78,7 @@ def step_build() -> int:
     proc = subprocess.run(
         [sys.executable, str(REPO / "skills" / "game-dev-agent" / "scripts" / "agent.py"),
          "integrate", "--project", str(UNITY_PROJ), "--method", "verify-build"],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     if proc.returncode != 0:
         print(f"  FAIL rc={proc.returncode}")
@@ -166,7 +170,7 @@ def step_fresh_build(day_tag: str = "_harness-latest") -> int:
     proc = subprocess.run(
         [sys.executable, str(REPO / "skills" / "game-dev-agent" / "scripts" / "agent.py"),
          "integrate", "--project", str(UNITY_PROJ), "--method", "build"],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     if proc.returncode != 0:
         print(f"  FAIL rc={proc.returncode}")
@@ -336,7 +340,7 @@ def step_playmode_tests() -> int:
         report_path.unlink()
     proc = subprocess.run(
         [str(BUILD_EXE), "-testmode", "-batchmode", "-nographics"],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
     )
     if not report_path.exists():
         print("  WARN: no test report produced - skip")
@@ -372,7 +376,7 @@ def step_integration_tests() -> int:
     proc = subprocess.run(
         [str(BUILD_EXE), "-integration", "-batchmode", "-nographics",
          "-screen-width", "1280", "-screen-height", "720"],
-        capture_output=True, text=True, timeout=180,  # I4 15s + I19 15s + I23 60s + 기타 → 180s
+        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=180,  # I4 15s + I19 15s + I23 60s + 기타 → 180s
     )
     if not report_path.exists():
         print("  WARN: no integration report - skip")
