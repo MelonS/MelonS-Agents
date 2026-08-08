@@ -19,15 +19,20 @@
 | ④ | AI 활용 기술 문서 PDF | ✅ **완료** | — |
 | ⑤ | 팀원 롤 기술서 PDF | ❓ 개인/팀 미확인 | **운영자 판단** |
 
-### ① 플레이 빌드 — 검증 완료 (2026-08-07)
+### ① 플레이 빌드 — 검증 완료 (2026-08-09 재배포)
 
 ```
-HEAD        : 최신 커밋
-site/play   : 동일
-Pages run   : completed/success
+HEAD        : f9cb5c35
+site/play   : f9cb5c35
+Pages run   : f9cb5c35  completed/success
 GET https://melons.github.io/MelonS-Agents/play/ → 200
 webgl_smoke : PASS (부팅·렌더·콘솔 오류 0)
+게이트      : 24/24 PASS
 ```
+
+2026-08-09 재배포 이유: 자원 패널 가독성 수정(값 변화 강조색이 크림색 배경에 묻혀
+그 줄이 1.2초간 사라지던 것, 석재 칩이 배경과 명도가 같아 상시 안 읽히던 것)이
+플레이 링크에도 반영되어야 한다.
 
 로컬 게이트 초록만으로는 부족하다 — 제출물의 실체는 **URL** 이고, 로컬 검증은
 URL 에 대해 아무 말도 하지 않는다.  그래서 공개 URL 을 실제로 열어 확인했다.
@@ -96,8 +101,11 @@ Google Forms 가 신청 경로이고 8/10 마감이다.  **미제출이면 다�
 ### ① 플레이 빌드 재배포
 
 ```bash
+# --method 는 **완전한 메서드 이름**이어야 한다.  "webgl" 로 적으면 그 문자열이
+#  그대로 `-executeMethod webgl` 로 넘어가 조용히 실패한다 (2026-08-09 에 겪음).
 python skills/game-dev-agent/scripts/agent.py integrate \
-  --project skills/game-prototype/unity-project --method webgl
+  --project skills/game-prototype/unity-project \
+  --method MelonS.GameProto.EditorTools.BuildScript.BuildWebGL
 bash skills/game-prototype/scripts/deploy-play.sh      # site/play/ 로 복사
 git add site/play && git commit && git push            # Pages 워크플로가 반응
 bash skills/game-prototype/scripts/verify-deploy.sh    # 실물 URL 확인
