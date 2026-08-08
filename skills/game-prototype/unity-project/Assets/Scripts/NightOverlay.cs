@@ -286,17 +286,22 @@ namespace MelonS.GameProto
             System.Span<float> lx  = stackalloc float[32];
             System.Span<float> ly  = stackalloc float[32];
             System.Span<float> lr  = stackalloc float[32];   // 광원별 반경
+            System.Span<float> lf  = stackalloc float[32];   // 광원별 불꽃 밝기(흔들림)
             for (int i = 0; i < _sources.Count && n < 32; i++)
             {
                 var lamp = _sources[i];
                 if (lamp == null || !lamp.IsLit) continue;
-                // 불꽃 흔들림 — 촛불·화덕·등잔은 흔들려야 살아 있어 보인다.
-                //  광원마다 위상을 달리해(instanceID 해시) 전체가 한 박자로 깜빡이지
-                //  않게 한다.  진폭 ±4% — 그 이상은 '깜빡이는 버그'로 읽힌다.
+                lr[n] = Mathf.Min(lamp.RadiusTiles, Rmax);
+                // 불꽃 흔들림 — **밝기**만 흔든다.
+                //
+                //  처음엔 반경을 흔들었는데, 라이트맵은 해상도가 낮은 텍스처라
+                //  반경이 몇 % 만 변해도 **가장자리 픽셀 한 줄이 통째로 켜졌다 꺼진다.**
+                //  화덕 주변이 눈에 띄게 떨렸다 — 운영자 확인 "식사만드는 도구?
+                //  밤되면 왜케 덜덜 떨리는거 멀까".  밝기는 픽셀 경계를 건드리지
+                //  않으므로 같은 진폭에도 흔들림이 부드럽다.  진폭도 ±4% → ±2.5%.
                 float ph = (lamp.GetInstanceID() & 1023) * 0.0613f;
-                float flick = 1f + 0.040f * Mathf.Sin(Time.time * 3.7f + ph)
-                                 + 0.018f * Mathf.Sin(Time.time * 9.1f + ph * 1.7f);
-                lr[n] = Mathf.Min(lamp.RadiusTiles * flick, Rmax);
+                lf[n] = 1f + 0.025f * Mathf.Sin(Time.time * 2.3f + ph)
+                           + 0.012f * Mathf.Sin(Time.time * 5.1f + ph * 1.7f);
                 float px = lamp.transform.position.x;
                 float py = lamp.transform.position.y + lamp.FlameHeightTiles;
                 lx[n] = px; ly[n] = py;
@@ -353,7 +358,7 @@ namespace MelonS.GameProto
                         float aL = 1f - d / Rk;
                         float bq = 1f / (d * d);
                         float f  = aL + (bq - aL) * 0.4f;
-                        float g  = (f / FCenter) * occ;
+                        float g  = (f / FCenter) * occ * lf[k];
                         // 가장자리를 부드럽게 — 선형 감쇠는 반경에서 값이 0 이 되지만
                         //  **기울기가 살아 있어** 빛의 테두리가 원으로 보인다.  바깥
                         //  25% 구간에 smoothstep 을 곱해 기울기까지 0 으로 만든다.
