@@ -156,6 +156,11 @@ namespace MelonS.GameProto
             SnapCam(VillageCenter(), Wide);
 
             yield return Warmup();
+
+            // 첫 컷 상태(아침 8시)를 **촬영 시작 전에** 만든다.  워밍업은 새벽에
+            //  끝나므로, 이 순서가 아니면 영상이 어두운 새벽 화면으로 시작한다.
+            yield return Hour(8.0f, 1.5f, cut: false);
+
             StartCapture();
             yield return FadeIn();
             StartCoroutine(KeepBusy());          // 촬영 내내 일감을 끊기지 않게 공급
@@ -173,9 +178,8 @@ namespace MelonS.GameProto
 
             // ── ① 마을 전경 (0~5초) ────────────────────────────────────
             Beat("전경");
-            yield return Hour(8.0f, 1.5f);
             SnapCam(village, Wide);
-            yield return Say("주민에게 직접 명령하지 않는 마을 시뮬레이션", 2.6f);
+            yield return Say("주민에게 직접 명령하지 않는 마을 시뮬레이션", 2.4f);
 
             // ── ② 플레이어가 하는 일 — 작업 우선순위 (5~14초) ──────────
             //  게임의 핵심 조작면인데 이전 영상에 없었다.  여섯 명의 우선순위가
@@ -203,14 +207,14 @@ namespace MelonS.GameProto
             yield return Hour(11.0f, 2f);
             yield return MoveCam(BusiestPoint(), Work, 2.0f);
             yield return Say("누가 언제 할지는 주민이 정한다", 3.0f);
-            yield return FollowBusiest(2.0f, Work);
+            yield return FollowBusiest(1.5f, Work);
 
             // ── ⑤ 오후 — 마을이 커진다 (31~37초) ───────────────────────
             Beat("오후");
             yield return Hour(16.0f, 2f);
             Vector2 ext = PlaceExtension(village);
             yield return MoveCam(ext, Work, 2.0f);
-            yield return Wait(0.8f);
+            yield return Say("벽으로 방을 닫으면 지붕이 생긴다", 2.4f);
 
             // ── 저녁 — 손님이 온다 (아직 아무도 자지 않는다) ───────────
             //
@@ -226,7 +230,7 @@ namespace MelonS.GameProto
             AIDirector.ForceRaidNow();
             yield return Say("시간이 지나면 마을에 사건이 생긴다", 2.6f);
             Beat("추격시작");
-            yield return FollowThreat(7.0f);
+            yield return FollowThreat(6.5f);
             Beat("추격끝");
 
             // ── 밤 — 불을 켜고 눕는다 ───────────────────────────────────
@@ -483,33 +487,70 @@ namespace MelonS.GameProto
             return n > 0 ? Vector2.Lerp(sum / n, village, 0.35f) : village;
         }
 
-        /// <summary>마을 옆에 증축 청사진을 놓는다 — 주민이 자재를 나르고 벽을 세운다.
-        ///  놓은 자리를 돌려주어 카메라가 그쪽을 잡게 한다.</summary>
+        /// <summary>기존 집 옆에 **닫힌 방 하나**를 증축한다.
+        ///
+        /// 운영자 2026-08-10: *"추가 건축하는 장면에서 추가 지은 벽들이 무쓸모하고
+        ///  지었어. 마을을 제대로 구성해야 하는데"*, *"건축물 하나하나의 배치도
+        ///  신경써서 지어줘"*.  이전 구현은 마을 오른쪽에 **벽 5칸을 한 줄로** 세웠다.
+        ///  게임 규칙상 벽은 방을 닫아야 지붕이 생기고 정착 목표 2번(지붕 아래 잠자리)이
+        ///  진행되는데, 한 줄짜리 벽은 아무것도 닫지 못한다.  화면에는 들판에 담장을
+        ///  세우는 그림만 남았다.
+        ///
+        /// 그래서 실제 방을 짓는다 — 외벽으로 6×5 를 닫고, 기존 집을 향한 쪽에 문을
+        ///  내고, 안에 침대 둘과 등잔 하나를 놓는다.  주민이 자재를 나르고 벽을 세우면
+        ///  지붕이 자동으로 덮이고 잠자리 수가 실제로 늘어난다.
+        ///
+        /// ```
+        ///     ┌──────────┐        · 외벽은 목재 벽
+        ///     │ 침대 침대 │        · 문은 기존 집 쪽(왼쪽 벽 가운데)
+        ///     문    등잔  │        · 침대는 안쪽 위, 사람이 지나갈 통로를 남긴다
+        ///     └──────────┘
+        /// ```
+        /// </summary>
         private static Vector2 PlaceExtension(Vector2 village)
         {
             var bm = BuildManager.Instance;
             if (bm == null) return village;
 
-            // 마을 오른쪽으로 한 칸 띄운 자리부터 훑는다 — 집과 겹치면 거부되므로
-            //  성공한 칸만 남는다(실패는 조용히 넘어간다, 플레이어 클릭과 같은 취급).
-            int placed = 0;
-            Vector2 first = village;
+            // 기존 구조물의 오른쪽 끝을 찾아 두 칸 띄우고 짓는다.
+            //  붙여 지으면 기존 벽과 겹쳐 배치가 거부되고, 너무 멀면 마을이
+            //  아니라 들판에 외딴집이 된다.
+            float maxX = village.x;
+            foreach (var w in FindObjectsByType<WallEntity>(FindObjectsSortMode.None))
+                if (w != null) maxX = Mathf.Max(maxX, w.transform.position.x);
+
+            const int W = 6, H = 5;
+            int x0 = Mathf.FloorToInt(maxX) + 3;
+            int y0 = Mathf.FloorToInt(village.y) - H / 2;
+            int doorY = y0 + H / 2;                    // 왼쪽 벽 가운데 = 기존 집 쪽
+
+            int walls = 0;
             bm.SetMode(BuildManager.Mode.Wall);
-            for (int off = 4; off <= 12 && placed < 9; off++)
-            {
-                int cx = Mathf.FloorToInt(village.x) + off;
-                for (int dy = -2; dy <= 2 && placed < 9; dy++)
+            for (int x = 0; x < W; x++)
+                for (int y = 0; y < H; y++)
                 {
-                    int cy = Mathf.FloorToInt(village.y) + dy;
-                    if (!bm.TryPlaceAt(cx, cy)) continue;
-                    if (placed == 0) first = new Vector2(cx + 0.5f, cy + 0.5f);
-                    placed++;
+                    bool edge = x == 0 || x == W - 1 || y == 0 || y == H - 1;
+                    if (!edge) continue;
+                    if (x == 0 && y0 + y == doorY) continue;     // 문 자리는 비운다
+                    if (bm.TryPlaceAt(x0 + x, y0 + y)) walls++;
                 }
-                if (placed > 0) break;      // 한 줄이면 충분하다 — 벽이 올라가는 게 보이면 된다
-            }
+
+            bm.SetMode(BuildManager.Mode.Door);
+            bool door = bm.TryPlaceAt(x0, doorY);
+
+            // 침대는 1×2 라 안쪽 위에 두 개.  아래 한 줄은 통로로 남긴다 —
+            //  방을 침대로 꽉 채우면 주민이 문에서 침대까지 못 간다.
+            bm.SetMode(BuildManager.Mode.Bed);
+            int beds = 0;
+            if (bm.TryPlaceAt(x0 + 2, y0 + 2)) beds++;
+            if (bm.TryPlaceAt(x0 + 4, y0 + 2)) beds++;
+
+            bm.SetMode(BuildManager.Mode.Lamp);
+            bool lamp = bm.TryPlaceAt(x0 + 3, y0 + 1);
+
             bm.SetMode(BuildManager.Mode.Off);
-            Debug.Log($"[Trailer] 증축 청사진 {placed}칸");
-            return placed > 0 ? first : village;
+            Debug.Log($"[Trailer] 증축 — 벽 {walls} 문 {door} 침대 {beds} 등잔 {lamp} @ ({x0},{y0})");
+            return new Vector2(x0 + W * 0.5f, y0 + H * 0.5f);
         }
 
         // ── 좌표 ────────────────────────────────────────────────────────────
@@ -603,9 +644,13 @@ namespace MelonS.GameProto
         /// (2) **시각과 행동이 어긋난다.**  시계만 점프시키면 05:41 인데 주민 여섯이
         ///     "취침 이동" 라벨을 달고 서 있다.  옮긴 뒤 짧게 돌려 각자 새 일과를
         ///     고르게 한다(배속이 있으니 실시간 0.6초면 게임내 수십 분이다).</summary>
-        private IEnumerator Hour(float hour, float scale)
+        /// <param name="cut">false 면 컷 전환 암전을 생략한다.  **촬영 시작 전에**
+        ///  첫 컷 상태를 만들 때 쓴다 — 그때 암전을 넣으면 영상이 '밝아졌다가 곧바로
+        ///  다시 어두워지는' 1.5초로 시작한다(운영자 확인: "1초에 나오는 장면 ...
+        ///  다 자고 있는 장면 머야?").  그 구간은 워밍업 직후의 새벽 5시였다.</param>
+        private IEnumerator Hour(float hour, float scale, bool cut = true)
         {
-            yield return Dip(0f, 1f, 0.18f);      // 촬영하며 어두워진다 (컷 전환)
+            if (cut) yield return Dip(0f, 1f, 0.18f);   // 촬영하며 어두워진다 (컷 전환)
             recording = false;                    // ── 여기부터 영상에 안 들어감 ──
 
             var c = GameClock.Instance;
@@ -629,7 +674,7 @@ namespace MelonS.GameProto
             yield return Wait(0.4f);               // 배속 전환이 프레임에 안 걸리게
 
             recording = true;                      // ── 다시 촬영 ──
-            yield return Dip(1f, 0f, 0.20f);
+            if (cut) yield return Dip(1f, 0f, 0.20f);
         }
 
         /// <summary>화면 전체를 어둡게/밝게 (컷 전환용 dip-to-black).</summary>
