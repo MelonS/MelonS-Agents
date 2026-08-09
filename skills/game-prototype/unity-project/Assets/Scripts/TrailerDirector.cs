@@ -343,16 +343,18 @@ namespace MelonS.GameProto
                 Vector2 village = VillageCenter();
                 Vector2 threat = ThreatPoint(out bool any);
 
-                // 적 쪽에 무게를 둔다 — 마을 쪽으로 너무 당기면 전투가 화면 가장자리로
-                //  밀려난다.  없으면 마을을 잡고 도착을 기다린다.
-                Vector2 want = any ? Vector2.Lerp(threat, village, 0.35f) : village;
-                // 둘 다 담기는 최소 배율.  1080p 세로 기준 여유 1.6배.
-                float need = any ? Vector2.Distance(threat, village) * 0.70f + 3.5f : 8.5f;
-                float size = Mathf.Clamp(need, 6.5f, 10.0f);   // 15 까지 열어두니 약탈자가 점이 됐다
+                // 적이 **아직 멀면 마을을 잡고 기다린다.**  둘 다 담으려고 배율을
+                //  키우면 화면 대부분이 빈 들판이 되고, 마을도 약탈자도 구석에
+                //  몰린다(실측: 저녁 습격 프레임이 그랬다).  기다리는 동안 화면에는
+                //  주민들이 하던 일을 멈추고 움직이는 모습이 잡히므로 비어 있지 않다.
+                float dist = any ? Vector2.Distance(threat, village) : 999f;
+                bool close = any && dist <= 11f;
+                Vector2 want = close ? Vector2.Lerp(threat, village, 0.35f) : village;
+                float size = close ? Mathf.Clamp(dist * 0.70f + 3.5f, 6.5f, 9.5f) : 8.5f;
 
                 // 적을 처음 발견한 순간엔 **스냅**한다.  부드럽게 따라가면 7초 컷
                 //  안에 도착하지 못해, 전투가 끝날 때까지 화면 밖에 머문다.
-                if (any && !snapped)
+                if (close && !snapped)
                 {
                     snapped = true;
                     cam.transform.position = new Vector3(want.x, want.y, camZ);
