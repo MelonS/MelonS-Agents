@@ -165,33 +165,52 @@ namespace MelonS.GameProto
             //  (3.6 / 3.0 / 4.5 / 2.0 / 6.5 …) — 같은 길이로 자르면 화면이 실제로
             //  바뀌어도 바뀐 것처럼 느껴지지 않는다.
 
-            // ── 아침 07:00 — 이미 살아 있는 마을 ────────────────────────
-            Beat("아침");
-            yield return Hour(7.0f, 1.5f);
+            // 구성 원칙 (2026-08-10 재구성)
+            //  이전 판은 22초 동안 같은 각도의 마을 전경이 이어졌고, 정작
+            //  **플레이어가 무엇을 하는지**는 한 번도 나오지 않았다.  자막은
+            //  "일감만 정해주면"인데 무엇을 정하는지가 화면에 없었다.
+            //  그래서 순서를 `플레이어 조작 → 주민 반응 → 결과` 로 다시 짰다.
+
+            // ── ① 마을 전경 (0~5초) ────────────────────────────────────
+            Beat("전경");
+            yield return Hour(8.0f, 1.5f);
             SnapCam(village, Wide);
-            yield return Say("조선의 어느 산골.  여섯 사람이 자리를 잡았다.", 2.8f);
-            yield return MoveCam(village, Near, 3.0f);
+            yield return Say("주민에게 직접 명령하지 않는 마을 시뮬레이션", 2.6f);
 
-            // ── 오전 — 각자 일하러 흩어진다 ──────────────────────────────
-            Beat("오전");
-            yield return Hour(9.5f, 1.5f);
-            yield return MoveCam(BusiestPoint(), Work, 3.0f);
-            yield return Say("일감만 정해주면, 나머지는 주민들이 알아서 한다.", 2.8f);
-            yield return FollowBusiest(3.5f, Work);
+            // ── ② 플레이어가 하는 일 — 작업 우선순위 (5~14초) ──────────
+            //  게임의 핵심 조작면인데 이전 영상에 없었다.  여섯 명의 우선순위가
+            //  서로 다르다는 것이 이 표 한 장으로 전달된다.
+            Beat("우선순위");
+            yield return MoveCam(village, Work, 1.6f);
+            var work = WorkTabUI.Instance;
+            if (work != null) work.Open();
+            yield return Say("플레이어는 우선순위만 정한다", 3.2f);
+            yield return Wait(0.5f);
+            if (work != null) work.Close();
+            yield return Wait(0.4f);
 
-            // ── 낮 — 가마솥과 밥상 ──────────────────────────────────────
-            Beat("낮");
-            yield return Hour(12.5f, 1.5f);
-            yield return MoveCam(village + new Vector2(0.6f, -0.4f), Near, 2.5f);
-            yield return Say("밥을 짓고, 나무를 베고, 벽을 세운다.", 3.0f);
-            yield return Wait(0.3f);
+            // ── ③ 지정 → 이동 → 작업 (14~24초) ────────────────────────
+            //  인과가 한 컷 안에 들어가야 한다.  나무를 찍고, 주민이 그쪽으로
+            //  걸어가고, 도끼질을 시작하는 것까지.
+            Beat("지정");
+            Vector2 site = MarkChopNearCamera(village);
+            yield return MoveCam(site, 6.6f, 1.8f);
+            yield return Say("벌목할 나무를 지정하면 주민이 움직인다", 3.0f);
+            yield return Wait(2.2f);
 
-            // ── 오후 — 마을이 커진다 ────────────────────────────────────
+            // ── ④ 각자 다른 일 (24~31초) ───────────────────────────────
+            Beat("자율");
+            yield return Hour(11.0f, 2f);
+            yield return MoveCam(BusiestPoint(), Work, 2.0f);
+            yield return Say("누가 언제 할지는 주민이 정한다", 3.0f);
+            yield return FollowBusiest(2.0f, Work);
+
+            // ── ⑤ 오후 — 마을이 커진다 (31~37초) ───────────────────────
             Beat("오후");
-            yield return Hour(16.0f, 1.5f);
-            Vector2 site = PlaceExtension(village);        // 벽이 실제로 올라간다
-            yield return MoveCam(site, Work, 2.5f);
-            yield return Wait(1.0f);
+            yield return Hour(16.0f, 2f);
+            Vector2 ext = PlaceExtension(village);
+            yield return MoveCam(ext, Work, 2.0f);
+            yield return Wait(0.8f);
 
             // ── 저녁 — 손님이 온다 (아직 아무도 자지 않는다) ───────────
             //
@@ -205,9 +224,9 @@ namespace MelonS.GameProto
             yield return Hour(19.0f, 1.5f);
             AIDirector.RaidsSuspended = false;
             AIDirector.ForceRaidNow();
-            yield return Say("그리고 저녁, 약탈자가 들이닥친다.", 2.4f);
+            yield return Say("시간이 지나면 마을에 사건이 생긴다", 2.6f);
             Beat("추격시작");
-            yield return FollowThreat(8.5f);
+            yield return FollowThreat(7.0f);
             Beat("추격끝");
 
             // ── 밤 — 불을 켜고 눕는다 ───────────────────────────────────
@@ -216,15 +235,18 @@ namespace MelonS.GameProto
             yield return Hour(22.0f, 1f);
             SetLabels(false);               // 여섯이 나란히 누우면 이름표가 뭉친다
             yield return MoveCam(VillageCenter(), 4.8f, 3.0f);
-            yield return Say("밤이 오면 등불을 밝힌다.", 2.8f);
-            yield return Wait(1.0f);
+            yield return Say("주민들은 밤에 등불을 켜고 잠자리에 든다", 2.8f);
+            yield return Wait(0.5f);
 
             // ── 다음 날 새벽 — 어제보다 커진 마을 ───────────────────────
             Beat("새벽");
             SetLabels(true);           // 다시 각자의 일과 — 이 컷은 이름과 활동이 보여야 한다
             yield return Hour(6.5f, 1f);
             yield return MoveCam(VillageCenter(), Wide, 2.5f);
-            yield return Say("당신은 방향만 정한다.\n마을은 스스로 살아간다.", 2.6f);
+            // 마지막 자막은 게임의 종료 조건을 알린다.  이전 문구("당신은 방향만
+            //  정한다 / 마을은 스스로 살아간다")는 감상에 가까웠고, 앞의 자막들과
+            //  같은 말을 반복하고 있었다.
+            yield return Say("정착 목표 4단계를 달성하면 승리한다", 2.8f);
             yield return Wait(0.4f);
             // 끝에도 암전을 남긴다 — 시작과 같은 이유다.  녹화는 연출보다 길게 돌리는데
             //  (환경에 따라 워밍업이 48~190초로 달라져 넉넉히 잡아야 한다), 끝 지점을
@@ -348,9 +370,11 @@ namespace MelonS.GameProto
                 //  몰린다(실측: 저녁 습격 프레임이 그랬다).  기다리는 동안 화면에는
                 //  주민들이 하던 일을 멈추고 움직이는 모습이 잡히므로 비어 있지 않다.
                 float dist = any ? Vector2.Distance(threat, village) : 999f;
-                bool close = any && dist <= 11f;
-                Vector2 want = close ? Vector2.Lerp(threat, village, 0.35f) : village;
-                float size = close ? Mathf.Clamp(dist * 0.70f + 3.5f, 6.5f, 9.5f) : 8.5f;
+                bool close = any && dist <= 13f;
+                // 적 쪽에 더 붙는다.  이전 판은 약탈자가 화면에서 점으로 보여
+                //  "약탈자가 들이닥친다" 자막이 화면과 맞지 않았다.
+                Vector2 want = close ? Vector2.Lerp(threat, village, 0.25f) : village;
+                float size = close ? Mathf.Clamp(dist * 0.55f + 3.0f, 6.0f, 8.5f) : 8.0f;
 
                 // 적을 처음 발견한 순간엔 **스냅**한다.  부드럽게 따라가면 7초 컷
                 //  안에 도착하지 못해, 전투가 끝날 때까지 화면 밖에 머문다.
@@ -433,6 +457,30 @@ namespace MelonS.GameProto
                 if ((p - center).sqrMagnitude > 22f * 22f) break;
                 if (mine.SimulateDragRect(p - Vector2.one * 0.35f, p + Vector2.one * 0.35f) > 0) n++;
             }
+        }
+
+        /// <summary>마을 근처 나무를 벌목 지정하고 그 위치를 돌려준다.
+        ///  카메라가 그쪽을 잡으면 `지정 → 주민 이동 → 도끼질` 이 한 컷에 들어간다.</summary>
+        private static Vector2 MarkChopNearCamera(Vector2 village)
+        {
+            var chop = TreeChopDesignation.Instance;
+            if (chop == null) return village;
+            var trees = FindObjectsByType<TreeEntity>(FindObjectsSortMode.None);
+            System.Array.Sort(trees, (x, y) =>
+                ((Vector2)x.transform.position - village).sqrMagnitude
+                .CompareTo(((Vector2)y.transform.position - village).sqrMagnitude));
+            Vector2 sum = Vector2.zero; int n = 0;
+            foreach (var t in trees)
+            {
+                if (n >= 4) break;
+                if (t == null || t.IsDestroyed) continue;
+                Vector2 p = t.transform.position;
+                if ((p - village).sqrMagnitude > 14f * 14f) break;
+                if (chop.MarkWorld(p) != null) { sum += p; n++; }
+            }
+            Debug.Log($"[Trailer] 벌목 지정 {n}그루");
+            // 지정한 나무들과 마을의 중간 — 주민이 걸어오는 경로가 화면에 들어온다
+            return n > 0 ? Vector2.Lerp(sum / n, village, 0.35f) : village;
         }
 
         /// <summary>마을 옆에 증축 청사진을 놓는다 — 주민이 자재를 나르고 벽을 세운다.
