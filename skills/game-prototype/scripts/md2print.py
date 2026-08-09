@@ -70,6 +70,29 @@ hr { border: none; border-top: 1px solid #e7e5e4; margin: 7mm 0; }
 a { color: #1c1917; text-decoration: underline; }
 /* 제출 문서에서 가장 흔한 사고: 표/인용이 페이지 경계에서 두 동강 난다. */
 h1, h2, h3 { break-inside: avoid; }
+
+/* ── 그림 ─────────────────────────────────────────────────────────
+   운영자 2026-08-09: "이해를 도울수 있는 스샷이나 이미지 타이포 등등".
+   글로만 설명한 화면은 심사자가 머릿속에서 다시 그려야 한다 — 한 장이면
+   끝날 것을.  그림은 본문 폭에 맞추고, 캡션으로 **무엇을 보라는지** 짚는다.
+   픽셀아트라 확대·축소 시 뭉개지지 않게 image-rendering 을 고정한다. */
+figure { margin: 4mm 0 5mm; break-inside: avoid; text-align: center; }
+figure img { max-width: 100%; height: auto; display: block; margin: 0 auto;
+             border: 1px solid #d6d3d1; border-radius: 3px;
+             image-rendering: -webkit-optimize-contrast; }
+figure figcaption { font-size: 8.8pt; color: #57534e; margin-top: 1.8mm;
+                    line-height: 1.5; text-align: center; }
+figure figcaption strong { color: #1c1917; }
+p > img { max-width: 100%; height: auto; }
+
+/* ── 타이포 ───────────────────────────────────────────────────── */
+h1 { border-bottom: 2.5px solid #1c1917; padding-bottom: 3mm; }
+h2 { color: #0c0a09; }
+h2::before { content: ""; }
+/* 표 안 숫자는 자리를 맞춰야 비교가 된다 */
+td { font-variant-numeric: tabular-nums; }
+/* 첫 문단(리드)은 조금 크게 — 심사자가 3초 안에 무엇인지 알게 */
+h1 + p { font-size: 11.5pt; color: #292524; }
 """
 
 
@@ -95,12 +118,58 @@ def strip_internal(text: str) -> str:
     return "\n".join(out)
 
 
+def embed_images(html: str, base: Path) -> str:
+    """`<img src="상대경로">` 를 base64 data URI 로 바꾼다.
+
+    PDF 는 Playwright 가 `file://` 로 열어 굽는데, 상대 경로가 한 단계라도
+    어긋나면 **그림 없이 조용히 인쇄된다** — 그림이 빠진 PDF 는 빠졌다는 사실조차
+    눈에 잘 안 띈다.  HTML 안에 실어 두면 경로 문제 자체가 사라진다."""
+    import base64
+    import mimetypes
+    import re as _re
+
+    def sub(m):
+        src = m.group(1)
+        if src.startswith(("data:", "http://", "https://")):
+            return m.group(0)
+        path = (base / src).resolve()
+        if not path.exists():
+            print(f"[md2print] ⚠ 그림 없음: {src}", file=sys.stderr)
+            return m.group(0)
+        mime = mimetypes.guess_type(path.name)[0] or "image/png"
+        b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+        return f'src="data:{mime};base64,{b64}"'
+
+    return _re.sub(r'src="([^"]+)"', sub, html)
+
+
+def figurize(html: str) -> str:
+    """`<p><img alt="캡션" ...></p>` 를 `<figure>` + `<figcaption>` 으로.
+
+    마크다운의 `![캡션](경로)` 는 그냥 문단 속 이미지가 된다.  캡션이 alt 에만
+    들어가 **화면에는 보이지 않는다** — 그림이 무엇을 보여주는지 심사자가 알 수
+    없다.  alt 를 실제 캡션으로 끌어올린다."""
+    import re as _re
+
+    def sub(m):
+        alt, tag = m.group(1), m.group(0)
+        img = _re.search(r"<img[^>]*>", tag).group(0)
+        # alt 는 평문이라 `**강조**` 가 별표째 인쇄된다 — 캡션에서만 최소 변환.
+        cap_txt = _re.sub(r"\*\*(.+?)\*\*", r"<strong></strong>", alt)
+        cap = f"<figcaption>{cap_txt}</figcaption>" if alt.strip() else ""
+        return f"<figure>{img}{cap}</figure>"
+
+    return _re.sub(r'<p><img alt="([^"]*)"[^>]*></p>', sub, html)
+
+
 def convert(md_path: Path, title: str) -> Path:
     text = strip_internal(md_path.read_text(encoding="utf-8"))
     body = markdown.markdown(
         text,
         extensions=["tables", "fenced_code", "toc", "sane_lists", "attr_list"],
     )
+    body = figurize(body)
+    body = embed_images(body, md_path.parent)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     out = OUT_DIR / (md_path.stem + ".html")
     out.write_text(

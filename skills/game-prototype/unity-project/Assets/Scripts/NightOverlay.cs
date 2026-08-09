@@ -26,13 +26,19 @@ namespace MelonS.GameProto
     {
         // 라이트맵 해상도(정사각).  뷰를 덮는 정사각 영역에 매핑; 월드 거리로 reveal 계산
         //  하므로 텍셀이 비정방형으로 늘어나도 빛 원은 월드에서 정원으로 유지된다.
-        private const int TEX = 160;
+        //  160 → 192: 라이트맵 텍셀 하나가 화면 12px 을 덮어, 광원 바로 위에 있는
+        //   32px 스프라이트(가마솥)가 부드러운 그라디언트에 묻혀 윤곽이 흐려 보였다.
+        //   운영자 2026-08-09 "부엌인지 버너인지 이거 왜 이렇게 흐릿하게".
+        private const int TEX = 192;
 
         // 램프 빛 반경(칸) — the reference sim 토치램프(lit ~6.5)를 참고한 값.  중심 또렷, ~6.5칸에서 0.
         private const float LightRadiusTiles = 6.5f;
 
         // reveal 1(램프 중심)에서 어둠 alpha 를 얼마나 걷을지(0.88 → 거의 다 걷어 바닥 보임).
-        private const float MaxReveal = 0.9f;
+        //  0.90 → 0.80: 광원 중심에서 어둠을 거의 다 걷으면 그 지점만 대낮처럼
+        //   밝아 **시선이 거기에 박힌다** (운영자: "이거 엄청 포커싱되어서 신경쓰임").
+        //   밤은 밤답게 두고, 빛은 '보이게 하는' 정도까지만.
+        private const float MaxReveal = 0.80f;
 
         private static readonly Color32 WarmLight = new Color32(255, 156, 66, 255); // 촛불 오렌지
 

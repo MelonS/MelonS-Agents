@@ -28,6 +28,13 @@
 > 클론에서 정상 빌드·실행됩니다.  팩 비주얼이 필요하면
 > [`extract-tinyswords.py`](skills/game-prototype/scripts/extract-tinyswords.py) 를,
 > 외부 에셋 출처·라이선스는 [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md) 를 보세요.
+>
+> **제출물 위치** — 빌드·소스: [`skills/game-prototype/`](skills/game-prototype/)
+> · 플레이 링크: <https://melons.github.io/MelonS-Agents/play/>
+> · 제출 PDF 의 원본 문서:
+> [게임 소개](skills/game-prototype/docs/submission-game-intro-2026.md) ·
+> [AI 기술](skills/game-prototype/docs/submission-ai-tech-2026.md)
+> · 시연 영상 촬영 방법: [`trailer-production.md`](skills/game-prototype/docs/trailer-production.md)
 
 - **실제로 내놓습니다.** **music-video** 파이프라인이 정해진 주기로 결과물을 냅니다: 음악 한 곡 → 60초 9:16 쇼츠(비트 컷·장르 그레이드). 두 번째 파이프라인 **content-shorts** 는 2026-07-01 첫 실제 쇼츠를 유튜브에 올렸고(아이돌 포맷), 다만 아직 정기적으로 내지는 못합니다.
 - **런타임 비용은 0.** 기계적인 작업은 로컬 오픈소스 도구(ffmpeg · whisper.cpp · ollama · aubio)가 하고, Claude Code 에이전트는 지휘만 맡습니다. 그래서 미션 한 번에 **런타임 API 토큰 0개**.

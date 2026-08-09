@@ -364,8 +364,48 @@ namespace MelonS.GameProto
                     if (tr != null && th != null && tr.ActiveTraits.Contains(PawnTraits.Trait.Bloodthirsty))
                         th.AddThought("전투의 희열", +5f, 600f);
                 }
-                Destroy(gameObject);
+                // 운영자 2026-08-09: "와서 몇대 때리는거 같은데 증발함."
+                //  즉시 Destroy 하면 **맞는 순간과 사라지는 순간이 같아** 무슨 일이
+                //  일어났는지 화면이 설명하지 못한다.  쓰러지는 1.6초가 있어야
+                //  "쓰러뜨렸다"가 읽힌다.  전투 결과(HP·처치 수)는 이미 위에서
+                //  확정됐으므로 이 연출은 규칙을 바꾸지 않는다.
+                var col = GetComponent<Collider2D>();
+                if (col != null) col.enabled = false;
+                var anim = GetComponent<BanditAnim32>();
+                if (anim != null) anim.enabled = false;
+                StartCoroutine(DeathFall());
             }
+        }
+
+        /// <summary>쓰러져 눕고 잠시 뒤 사라진다.  `IsDead` 는 이미 true 이므로
+        ///  Update 첫 줄에서 걸러져 더 이상 움직이거나 공격하지 않는다.</summary>
+        private System.Collections.IEnumerator DeathFall()
+        {
+            const float Fall = 0.35f, Hold = 0.7f, Fade = 0.55f;
+            var tr = transform;
+            Quaternion from = tr.rotation;
+            Quaternion to = Quaternion.Euler(0f, 0f, 82f);   // 옆으로 쓰러진다
+            Color c0 = sr != null ? sr.color : Color.white;
+
+            for (float t = 0f; t < Fall; t += Time.deltaTime)
+            {
+                float k = Mathf.SmoothStep(0f, 1f, t / Fall);
+                tr.rotation = Quaternion.Slerp(from, to, k);
+                if (sr != null) sr.color = Color.Lerp(c0, new Color(0.55f, 0.5f, 0.5f, 1f), k);
+                yield return null;
+            }
+            tr.rotation = to;
+            yield return new WaitForSeconds(Hold);
+
+            for (float t = 0f; t < Fade; t += Time.deltaTime)
+            {
+                if (sr != null)
+                {
+                    var c = sr.color; c.a = 1f - (t / Fade); sr.color = c;
+                }
+                yield return null;
+            }
+            Destroy(gameObject);
         }
 
         public int GetContactDamage() => contactDamage;

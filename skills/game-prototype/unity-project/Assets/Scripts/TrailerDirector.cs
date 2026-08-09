@@ -167,28 +167,28 @@ namespace MelonS.GameProto
 
             // ── 아침 07:00 — 이미 살아 있는 마을 ────────────────────────
             Beat("아침");
-            yield return Hour(7.0f, 3f);
+            yield return Hour(7.0f, 1.5f);
             SnapCam(village, Wide);
-            yield return Say("조선 산골. 여섯 사람이 마을을 이뤘다.", 2.8f);
+            yield return Say("조선의 어느 산골.  여섯 사람이 자리를 잡았다.", 2.8f);
             yield return MoveCam(village, Near, 3.0f);
 
             // ── 오전 — 각자 일하러 흩어진다 ──────────────────────────────
             Beat("오전");
-            yield return Hour(9.5f, 3f);
+            yield return Hour(9.5f, 1.5f);
             yield return MoveCam(BusiestPoint(), Work, 3.0f);
-            yield return Say("일감만 정해두면, 누가 무엇을 할지는 주민이 정한다.", 2.8f);
+            yield return Say("일감만 정해주면, 나머지는 주민들이 알아서 한다.", 2.8f);
             yield return FollowBusiest(3.5f, Work);
 
             // ── 낮 — 가마솥과 밥상 ──────────────────────────────────────
             Beat("낮");
-            yield return Hour(12.5f, 3f);
+            yield return Hour(12.5f, 1.5f);
             yield return MoveCam(village + new Vector2(0.6f, -0.4f), Near, 2.5f);
-            yield return Say("밥을 짓고, 나무를 베고, 벽을 올린다.", 3.0f);
+            yield return Say("밥을 짓고, 나무를 베고, 벽을 세운다.", 3.0f);
             yield return Wait(0.3f);
 
             // ── 오후 — 마을이 커진다 ────────────────────────────────────
             Beat("오후");
-            yield return Hour(16.0f, 3f);
+            yield return Hour(16.0f, 1.5f);
             Vector2 site = PlaceExtension(village);        // 벽이 실제로 올라간다
             yield return MoveCam(site, Work, 2.5f);
             yield return Wait(1.0f);
@@ -196,13 +196,13 @@ namespace MelonS.GameProto
             // ── 밤 — 불을 켜고 눕는다 ───────────────────────────────────
             Beat("밤");
             busyPaused = true;              // 일감을 끊어야 잠자리에 든다
-            yield return Hour(22.0f, 3f);
+            yield return Hour(22.0f, 1f);
             // 여섯이 나란히 누우면 이름표가 한 덩어리로 뭉쳐 읽을 수 없다 —
             //  이 컷의 그림은 '이불 덮고 자는 여섯' 이므로 라벨을 잠시 내린다.
             SetLabels(false);
             yield return MoveCam(village, 4.8f, 3.0f);      // 이불·등불이 보이는 거리까지
 
-            yield return Say("밤이 오면 등에 불을 켠다.", 2.8f);
+            yield return Say("밤이 오면 등불을 밝힌다.", 2.8f);
             yield return Wait(1.0f);
             // 라벨은 여기서 켜지 않는다 — 다음 습격 컷에서도 여섯이 자고 있어
             //  이름표가 그대로 뭉친다.  마지막 아침 컷에서 되켠다.
@@ -221,7 +221,7 @@ namespace MelonS.GameProto
             //  전투는 추격 컷 안에서 벌어진다.  접근 자체가 이미 그림이다.
             AIDirector.RaidsSuspended = false;
             AIDirector.ForceRaidNow();
-            yield return Say("그리고, 손님이 온다.", 2.2f);
+            yield return Say("그리고 밤, 약탈자가 들이닥친다.", 2.4f);
             Beat("추격시작");
             yield return FollowThreat(8.5f);
             Beat("추격끝");
@@ -517,7 +517,7 @@ namespace MelonS.GameProto
                 if (d < bestSq) { bestSq = d; best = p; }
             }
             foreach (var b in FindObjectsByType<BanditEnemy>(FindObjectsSortMode.None))
-                if (b != null) Consider(b.transform.position);
+                if (b != null && !b.IsDead) Consider(b.transform.position);   // 쓰러진 적은 제외
             foreach (var w in FindObjectsByType<WolfEnemy>(FindObjectsSortMode.None))
                 if (w != null) Consider(w.transform.position);
             // 광기에 빠진 동물도 습격의 한 형태다 — 이걸 빼고 세면 멧돼지 떼가 왔을 때
@@ -539,7 +539,7 @@ namespace MelonS.GameProto
             int foes = 0;
             ThreatPoint(out bool anyFoe);
             foreach (var b in FindObjectsByType<BanditEnemy>(FindObjectsSortMode.None))
-                if (b != null) foes++;
+                if (b != null && !b.IsDead) foes++;
             var c = GameClock.Instance;
             Debug.Log($"[Trailer] t={Time.unscaledTime - filmT0:F1}s 컷={name} " +
                       $"{(c != null ? c.Day : 0)}일 {(c != null ? c.Hour : 0)}:{(c != null ? c.Minute : 0):00} " +
@@ -562,6 +562,9 @@ namespace MelonS.GameProto
         ///     고르게 한다(배속이 있으니 실시간 0.6초면 게임내 수십 분이다).</summary>
         private IEnumerator Hour(float hour, float scale)
         {
+            yield return Dip(0f, 1f, 0.18f);      // 촬영하며 어두워진다 (컷 전환)
+            recording = false;                    // ── 여기부터 영상에 안 들어감 ──
+
             var c = GameClock.Instance;
             if (c != null)
             {
@@ -571,8 +574,33 @@ namespace MelonS.GameProto
                 c.SetGameSeconds(target);
             }
             var tc = TimeController.Instance;
-            if (tc != null) tc.SetScale(scale);
-            yield return Wait(0.6f);
+
+            // 촬영을 멈춘 동안 **고배속으로 충분히 돌린다.**  시계만 옮기면 주민이
+            //  이전 시각의 행동을 그대로 하고 있어 화면과 시각이 어긋난다(첫 촬영에서
+            //  05:41 인데 여섯이 "취침 이동" 라벨을 달고 서 있었다).  이 구간은
+            //  영상에 안 들어가므로 넉넉히 줄 수 있다.
+            if (tc != null) tc.SetScale(20f);
+            yield return Wait(2.5f);
+
+            if (tc != null) tc.SetScale(scale);    // 컷 본편은 **실제 속도**로
+            yield return Wait(0.4f);               // 배속 전환이 프레임에 안 걸리게
+
+            recording = true;                      // ── 다시 촬영 ──
+            yield return Dip(1f, 0f, 0.20f);
+        }
+
+        /// <summary>화면 전체를 어둡게/밝게 (컷 전환용 dip-to-black).</summary>
+        private IEnumerator Dip(float from, float to, float dur)
+        {
+            if (blackGroup == null) yield break;
+            float t = 0f;
+            while (t < dur)
+            {
+                t += Dt;
+                blackGroup.alpha = Mathf.Lerp(from, to, Mathf.Clamp01(t / dur));
+                yield return null;
+            }
+            blackGroup.alpha = to;
         }
 
         // ── UI ──────────────────────────────────────────────────────────────
@@ -631,6 +659,18 @@ namespace MelonS.GameProto
         // ── 프레임 덤프 ─────────────────────────────────────────────────────
         private int frameIndex;
         private bool capturing;
+
+        /// <summary>지금 프레임을 **영상에 넣을지**.
+        ///
+        /// 운영자 2026-08-09: *"플레이를 빨리 빨리 틀게 아니라 플레이를 길게 잡고
+        ///  영상 자체를 편집을해."*  맞는 지적이다 — 이전 판은 전 구간을 3배속으로
+        ///  돌려 한 번에 찍었고, 그래서 **모든 장면이 빨리감기처럼** 보였다.
+        ///
+        /// 이제 컷 사이에서 촬영을 멈춘다.  멈춘 동안 시계를 옮기고 게임을 고배속으로
+        ///  돌려 주민이 새 일과에 자리잡게 한 뒤, 다시 촬영을 켜고 **실제 속도로**
+        ///  찍는다.  프레임과 오디오 모두 이 플래그를 따르므로, 결과물은 별도 편집
+        ///  없이 이미 잘라 붙인 영상이 된다.</summary>
+        private bool recording = true;
 
         /// <summary>연출이 쓰는 시간 간격.
         ///
@@ -749,6 +789,7 @@ namespace MelonS.GameProto
             while (capturing)
             {
                 yield return eof;
+                if (!recording) continue;     // 컷 사이 — 영상에 넣지 않는다
                 CaptureAudioFrame();          // 그림과 **같은 프레임**의 소리
                 var tex = ScreenCapture.CaptureScreenshotAsTexture();
                 System.IO.File.WriteAllBytes(
@@ -837,7 +878,7 @@ namespace MelonS.GameProto
             scrimGo.transform.SetParent(canvasGo.transform, false);
             var srt = scrimGo.GetComponent<RectTransform>();
             srt.anchorMin = new Vector2(0f, 0f);
-            srt.anchorMax = new Vector2(1f, 0.30f);
+            srt.anchorMax = new Vector2(1f, 0.34f);
             srt.offsetMin = srt.offsetMax = Vector2.zero;
             var raw = scrimGo.GetComponent<RawImage>();
             raw.texture = BottomFadeTexture();
@@ -845,22 +886,36 @@ namespace MelonS.GameProto
             raw.raycastTarget = false;
 
             // 아래쪽 1/5 지점 — 게임 화면을 가리지 않으면서 시선이 자연히 닿는 곳.
-            var go = new GameObject("Caption", typeof(RectTransform), typeof(Text), typeof(Outline));
+            //
+            // 운영자 2026-08-09: "자막인지 구별이 확실히 되게 하고 좀 더 화려하게".
+            //  게임 화면에도 한글이 잔뜩 떠 있다(주민 이름·활동·토스트·목표 패널).
+            //  자막이 그것들과 **같은 크기·같은 무게**면 시청자는 무엇이 설명이고
+            //  무엇이 게임 UI 인지 구분하지 못한다.  그래서 세 가지로 갈라 놓는다 —
+            //   · 크게 (46 → 58, 게임 안 어떤 글자보다 크다)
+            //   · 두껍게 (외곽선 3px + 아래로 떨어지는 그림자)
+            //   · 따뜻한 미색 (게임 UI 의 금빛/흰빛과 다른 톤)
+            var go = new GameObject("Caption",
+                typeof(RectTransform), typeof(Text), typeof(Outline), typeof(Shadow));
             go.transform.SetParent(canvasGo.transform, false);
             var rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.08f, 0.06f);
-            rt.anchorMax = new Vector2(0.92f, 0.24f);
+            rt.anchorMin = new Vector2(0.07f, 0.06f);
+            rt.anchorMax = new Vector2(0.93f, 0.26f);
             rt.offsetMin = rt.offsetMax = Vector2.zero;
             caption = go.GetComponent<Text>();
-            caption.font = UITheme.LoadKoreanFont(44);
-            caption.fontSize = 46;
+            caption.font = UITheme.LoadKoreanFont(58);
+            caption.fontSize = 58;
+            caption.lineSpacing = 1.15f;
             caption.alignment = TextAnchor.LowerCenter;
-            caption.color = new Color(1f, 0.98f, 0.93f, 1f);
+            caption.color = new Color(1f, 0.975f, 0.92f, 1f);
             caption.horizontalOverflow = HorizontalWrapMode.Wrap;
             caption.verticalOverflow = VerticalWrapMode.Overflow;
+
             var ol = go.GetComponent<Outline>();
-            ol.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            ol.effectDistance = new Vector2(2.5f, -2.5f);
+            ol.effectColor = new Color(0.03f, 0.02f, 0.02f, 0.95f);
+            ol.effectDistance = new Vector2(3f, -3f);
+            var sh = go.GetComponent<Shadow>();
+            sh.effectColor = new Color(0f, 0f, 0f, 0.55f);
+            sh.effectDistance = new Vector2(0f, -6f);      // 바닥에 떨어지는 그림자
         }
 
         /// <summary>아래로 갈수록 어두워지는 1px 폭 세로 그라디언트.
@@ -874,7 +929,7 @@ namespace MelonS.GameProto
             for (int y = 0; y < H; y++)
             {
                 float t = 1f - (y / (float)(H - 1));          // y=0 이 아래(가장 어둡다)
-                float a = Mathf.SmoothStep(0f, 1f, t) * 0.62f;
+                float a = Mathf.SmoothStep(0f, 1f, t) * 0.74f;
                 tex.SetPixel(0, y, new Color(0.02f, 0.02f, 0.03f, a));
             }
             tex.Apply();
@@ -887,9 +942,31 @@ namespace MelonS.GameProto
         {
             if (caption == null) { yield return Wait(hold); yield break; }
             caption.text = text;
-            yield return Fade(0f, 1f, 0.35f);
+            yield return Rise(0.42f);       // 아래에서 올라오며 나타난다
             yield return Wait(hold);
             yield return Fade(1f, 0f, 0.45f);
+        }
+
+        /// <summary>자막이 **아래에서 올라오며** 나타난다.
+        ///  제자리 페이드는 배경이 복잡하면 언제 떴는지 모르고 지나간다 —
+        ///  작은 움직임이 붙으면 눈이 먼저 그쪽으로 간다.</summary>
+        private IEnumerator Rise(float dur)
+        {
+            var rt = caption.rectTransform;
+            Vector2 baseMin = rt.offsetMin, baseMax = rt.offsetMax;
+            float t = 0f;
+            while (t < dur)
+            {
+                t += Dt;
+                float k = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / dur));
+                capGroup.alpha = k;
+                float dy = (1f - k) * -26f;
+                rt.offsetMin = baseMin + new Vector2(0f, dy);
+                rt.offsetMax = baseMax + new Vector2(0f, dy);
+                yield return null;
+            }
+            capGroup.alpha = 1f;
+            rt.offsetMin = baseMin; rt.offsetMax = baseMax;
         }
 
         private IEnumerator Fade(float a, float b, float dur)

@@ -29,6 +29,13 @@
 > [`extract-tinyswords.py`](skills/game-prototype/scripts/extract-tinyswords.py)
 > if you want the pack visuals, and [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md) for
 > every external asset and its licence.
+>
+> **Submission map** — build & source: [`skills/game-prototype/`](skills/game-prototype/)
+> · play link: <https://melons.github.io/MelonS-Agents/play/>
+> · design docs (source of the submitted PDFs):
+> [game intro](skills/game-prototype/docs/submission-game-intro-2026.md) ·
+> [AI tech](skills/game-prototype/docs/submission-ai-tech-2026.md)
+> · how the demo video is shot: [`trailer-production.md`](skills/game-prototype/docs/trailer-production.md)
 
 - **It ships.** The **music-video** pipeline delivers on a schedule — a song → a 60-second 9:16 short (beat-cut, genre-graded). A second pipeline, **content-shorts**, shipped its first real short to YouTube on 2026-07-01 (idol format) — not on a cadence yet.
 - **Zero runtime cost.** Local open-source tools (ffmpeg · whisper.cpp · ollama · aubio) do the mechanical work; Claude Code agents only orchestrate — so a mission spends **zero runtime API tokens**.

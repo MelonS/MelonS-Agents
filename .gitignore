@@ -32,6 +32,10 @@ assets/music/*
 # Image outputs (allow doc images via explicit !docs/*.png if needed later)
 *.png
 *.jpg
+# 제출 문서에 실린 게임 화면 — PDF 의 일부이므로 소스와 함께 추적한다
+# (요강: 전체 소스를 동일 저장소에 포함.  문서만 있고 그림이 없으면 재현이 안 된다)
+!skills/game-prototype/docs/figures/*.png
+
 # Caption-verify proof frames are committed evidence
 !docs/caption-verify/*.jpg
 # Shorts-batch demo evidence committed
