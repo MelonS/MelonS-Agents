@@ -64,6 +64,7 @@ namespace MelonS.GameProto
         private PawnContext ctx;
         private List<IPawnAction> actions;
         // 자율 취침: 생존 행동이라 work-priority loop 보다 먼저 시도 (work settings 무관).
+        private DefendColonyAction defend;
         private GoSleepAction goSleep;
         private RestWhenBleedingAction restWhenBleeding;
         private EatBerryAction eatSurvival;
@@ -111,6 +112,7 @@ namespace MelonS.GameProto
                 transform = transform,
                 idleWanderRadius = idleWanderRadius,
             };
+            defend = new DefendColonyAction();      // 습격 대응 — 생존 pre-pass 최상단
             goSleep = new GoSleepAction();
             restWhenBleeding = new RestWhenBleedingAction();   // TOP-10 환자 행동
             eatSurvival = new EatBerryAction { foodThreshold = 25f };   // 퀵픽 기아 게이트 해제
@@ -366,6 +368,35 @@ namespace MelonS.GameProto
                 return;
             }
 
+            // 습격 대응은 **진행 중인 작업보다 우선**한다 (2026-08-10).
+            //
+            //  전투 행동을 Decide() 최상단에 넣었는데도 발동하지 않았다 — 아래
+            //  busy-gate(`AnyWorkerHasTask()`)가 Decide() 자체를 호출하지 않기
+            //  때문이다.  적이 마을에 들어와도 산딸기를 나르던 주민은 계속 날랐다
+            //  (재현 시나리오 `p2-defend-raid` 가 잡았다: activity='산딸기 운반').
+            //
+            //  취침이 같은 이유로 이 게이트 앞에 놓여 있다.  전투도 같은 자리에 둔다.
+            //
+            //  단, 2026-06-10 의 thrash 사고를 반복하지 않도록 **성공할 때만**
+            //  작업을 해제한다.  적이 없으면 TryStart 가 false 를 돌려주므로
+            //  기존 작업은 그대로다 — 1.5초마다 해제·재배정을 반복하지 않는다.
+            if (defend != null && ctx != null && ctx.HasActiveTask() && defend.TryStart(ctx))
+            {
+                Debug.Log($"[Defend] {name} 작업 중단 → 전투 (busy-gate 앞)");
+                if (chopper != null) chopper.ClearTask();
+                if (gatherer != null) gatherer.ClearTask();
+                if (hunter != null) hunter.ClearTask();
+                if (cook != null) cook.ClearTask();
+                if (hauler != null) hauler.ClearTask();
+                if (builder != null) builder.ClearTask();
+                if (miner != null) miner.ClearTask();
+                if (doctor != null) doctor.ClearTask();
+                if (harvester != null) harvester.ClearTask();
+                if (smith != null) smith.ClearTask();
+                lastDecision = Time.timeSinceLevelLoad;
+                return;   // TryStart 가 이미 이동 목표를 박았다 — Decide 를 다시 돌리지 않는다
+            }
+
             // 자율 취침은 생존 우선 — 진행 중인 work 가 있어도 졸리고 밤이면 중단하고
             //  침대로.  busy-gate 보다 먼저: 현재 task 정리 후 Decide 로 GoSleep 시도.
             //  (work 가 없으면 어차피 아래 gate 를 통과해 Decide 가 GoSleep 을 잡는다.)
@@ -416,6 +447,10 @@ namespace MelonS.GameProto
 
         private void Decide()
         {
+            // 생존 pre-pass(-1) — **습격 대응이 가장 먼저**.  적이 마을에 들어왔는데
+            //  밥을 먹거나 자러 가면 안 된다.  이 행동이 없어서 주민이 적을 무시하고
+            //  하던 일을 계속했고, 화면에서는 "도망친다"로 보였다 (2026-08-10).
+            if (defend != null && defend.TryStart(ctx)) return;
             // 생존 pre-pass(0) — 퀵픽 '기아 채집 게이트 해제' (2026-06-13): 채집
             //  priority 0 인 림도 굶으면(food<25) 직업 설정 무관하게 먹는다 —
             //  생존 > 직업 설정 (spec §6 위반 잔재 청산).

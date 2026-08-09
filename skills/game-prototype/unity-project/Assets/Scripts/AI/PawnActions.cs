@@ -118,6 +118,98 @@ namespace MelonS.GameProto.AI
     /// 경로 SetRestTarget → 라벨 '휴식이동'/'휴식').  침대에 누우면 정지하므로
     /// '의사가 동속 표적을 추격하는 들판 치료'도 자연 해소된다.  의식불명(IsDowned)
     /// 은 이동 불가라 제외(기존 TendPatient 가 현장 처치).</summary>
+    /// <summary>습격이 오면 **적에게 다가가 맞선다.**
+    ///
+    /// 운영자 2026-08-10: *"습격온 적이 자기 혼자 픽하고 죽는 이유가 머야? ...
+    ///  주민들은 도망만 치던데 서서 싸우던지"*.
+    ///
+    /// 진단: 도망 로직은 없었다.  **전투 행동 자체가 없었다.**  행동 목록 20종에
+    ///  치료·식사·사냥·연구·요리·건축·벌목·채광·운반·놀이·배회는 있는데 전투가
+    ///  없어서, 적이 마을에 들어와도 주민은 하던 일을 계속했다.  그게 화면에서는
+    ///  "적을 피해 돌아다닌다"로 보였다.
+    ///
+    /// 공격은 `PawnEntity` 의 별도 루프가 처리하는데 조건이 *"적이 내 사거리(1칸)
+    ///  안에 들어오면 때린다"* 뿐이었다.  주민이 적 쪽으로 **이동하지 않으므로**,
+    ///  적이 알아서 걸어와 한 칸 안에 들어와야 타격이 시작된다.  결과적으로 적이
+    ///  혼자 걸어와 혼자 쓰러지는 그림이 됐다.
+    ///
+    /// 참전 범위는 **근처 주민만**(`EngageRadius`)이다.  전원이 달려들면 습격이
+    ///  너무 쉬워지고, 멀리서 일하던 주민까지 몰려와 마을이 텅 빈다.  가까이 있던
+    ///  사람들이 달려나오는 편이 그림으로도 자연스럽다.
+    ///
+    /// 이 행동은 이동만 맡는다 — 실제 타격과 데미지 계산은 기존 `PawnEntity`
+    ///  자동공격 경로 그대로다.  전투 규칙을 새로 만들지 않는다.</summary>
+    public class DefendColonyAction : IPawnAction
+    {
+        public string DisplayName => "전투";
+        public WorkKind Kind => WorkKind.Hunt;   // 생존 pre-pass 전용 — 매핑 미사용
+
+        /// <summary>지금 이 주민이 전투 중인가.  활동 라벨이 읽는다 —
+        ///  전투는 전용 작업 컴포넌트가 없어서(이동만 한다) `HasTask` 계열로는
+        ///  표시할 수 없다.  마지막으로 전투를 시작한 시각을 남겨, 그 뒤 짧은
+        ///  시간 동안 라벨을 '전투'로 보여준다.</summary>
+        public static readonly System.Collections.Generic.Dictionary<int, float> EngagedUntil
+            = new System.Collections.Generic.Dictionary<int, float>();
+
+        public static bool IsEngaged(GameObject go)
+        {
+            if (go == null) return false;
+            return EngagedUntil.TryGetValue(go.GetInstanceID(), out float t) && Time.time < t;
+        }
+
+        /// <summary>이 거리 안의 적에게만 달려간다 (칸).</summary>
+        private const float EngageRadius = 12f;
+        /// <summary>사거리보다 조금 안쪽까지 붙는다 — 딱 사거리에 서면
+        ///  적이 한 발만 물러나도 타격이 끊긴다.</summary>
+        private const float StopGap = 0.75f;
+
+        public bool TryStart(PawnContext ctx)
+        {
+            if (ctx.movement == null || ctx.entity == null) return false;
+            if (ctx.entity.IsDead) return false;
+
+            var health = ctx.transform.GetComponent<PawnHealth>();
+            if (health != null && (health.IsDead || health.IsDowned)) return false;
+            // 징집 중이면 플레이어가 직접 지휘한다 — AI 가 개입하지 않는다.
+            if (ctx.entity.IsDrafted || ctx.entity.IsUnderManualControl) return false;
+
+            Vector2 me = ctx.transform.position;
+            Transform target = null;
+            float bestSq = EngageRadius * EngageRadius;
+
+            foreach (var b in Object.FindObjectsByType<BanditEnemy>(FindObjectsSortMode.None))
+            {
+                if (b == null || b.IsDead) continue;
+                float sq = ((Vector2)b.transform.position - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; target = b.transform; }
+            }
+            foreach (var w in Object.FindObjectsByType<WolfEnemy>(FindObjectsSortMode.None))
+            {
+                if (w == null) continue;
+                float sq = ((Vector2)w.transform.position - me).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; target = w.transform; }
+            }
+            if (target == null) return false;
+
+            // 라벨용 — 다음 결정 틱(1.5초)보다 길게 잡아 깜빡이지 않게 한다.
+            EngagedUntil[ctx.transform.gameObject.GetInstanceID()] = Time.time + 3f;
+
+            float range = ctx.entity.AttackRange;
+            float dist = Mathf.Sqrt(bestSq);
+            // 이미 사거리 안이면 멈춰 서서 때린다 (PawnEntity 자동공격이 처리).
+            if (dist <= range)
+            {
+                ctx.movement.ClearTarget();
+                return true;
+            }
+            // 아니면 적 바로 앞까지 간다.
+            Vector2 tp = target.position;
+            Vector2 dir = ((Vector2)ctx.transform.position - tp).normalized;
+            ctx.movement.SetTarget(tp + dir * Mathf.Max(0.3f, range - StopGap));
+            return true;
+        }
+    }
+
     public class RestWhenBleedingAction : IPawnAction
     {
         public string DisplayName => "치료 대기";

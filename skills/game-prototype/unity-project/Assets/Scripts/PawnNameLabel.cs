@@ -346,6 +346,10 @@ namespace MelonS.GameProto
             if (entity.IsDead) return "사망";
             if (entity.IsDrafted) return "[징집]";
             if (needs != null && needs.IsBreaking) return "정신붕괴";
+            // 전투는 전용 작업 컴포넌트가 없어(이동만 한다) HasTask 로 표시할 수 없다.
+            //  DefendColonyAction 이 남긴 시각을 읽는다.  수면·식사보다 위 —
+            //  적이 눈앞에 있는데 '산딸기 운반' 이 뜨면 화면이 상황을 설명하지 못한다.
+            if (MelonS.GameProto.AI.DefendColonyAction.IsEngaged(gameObject)) return "전투";
             if (needs != null && needs.IsSleeping) return "수면";
             // 첫사이클 T17 — 취침 이동이 '떠도는중'으로 낙하해 '밤마다 림이 떠돈다'
             //  인식을 코드가 생산하던 것 (IsSleeping 케이스 '아래' — 수면 중 역회귀 방지).

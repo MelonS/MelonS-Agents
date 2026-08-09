@@ -517,6 +517,18 @@ namespace MelonS.GameProto
                     r.passed = true; r.detail = "자동 일감 정지"; break;
                 }
 
+                case "forceRaid":
+                {
+                    // 습격은 본래 무작위 일정이라 테스트에서 재현할 수 없다.
+                    //  전투 행동(DefendColonyAction)을 검증하려면 적이 반드시
+                    //  있어야 하므로 시점을 지정한다.  게임 규칙은 그대로 —
+                    //  평상시 플레이는 이 op 를 부르지 않는다.
+                    AIDirector.ForceRaidNow();
+                    r.passed = true;
+                    r.detail = "raid forced";
+                    break;
+                }
+
                 case "directorOff":
                 {
                     // 테스트 스캐폴딩 — 디렉터 사건을 멈춰 **측정 대상만 남긴다.**
@@ -634,6 +646,18 @@ namespace MelonS.GameProto
                     r.passed = s.expect == "any" ? sel != null : got == s.expect;
                     r.detail = $"selection={got} (expect {s.expect})"; break;
                 }
+                case "banditCount":
+                {
+                    // min = 최소 마릿수.  살아있는 적만 센다(쓰러지는 연출 중인
+                    //  적은 IsDead 라 제외).
+                    int alive = 0;
+                    foreach (var b in Object.FindObjectsByType<BanditEnemy>(FindObjectsSortMode.None))
+                        if (b != null && !b.IsDead) alive++;
+                    r.passed = alive >= Mathf.RoundToInt(s.min);
+                    r.detail = $"살아있는 약탈자 {alive} (need ≥{s.min:F0})";
+                    yield break;
+                }
+
                 case "pawnMoved":
                 {
                     var pawn = FindPawn(s.pawn);

@@ -26,7 +26,11 @@ namespace MelonS.GameProto.Data
         //  소스케일과 정합되게 5 로 — ~4 타에 제압(the reference sim 맨손도 몇 대면 제압).  적 공격력은
         //  그대로라 위협 유지(전투가 시시해지지 않음).  무기 장착 시 +무기데미지로 더 강해진다.
         public int   attackDamage = 5;
-        public float attackRange = 1.0f;
+        // 1.0 → 1.4 (2026-08-10): 1칸이면 주민과 적 스프라이트가 거의 겹친 상태에서
+        //  타격이 일어나 `CombatLungeDriver` 의 찌르기 모션이 화면에서 식별되지 않는다.
+        //  운영자: "주민들의 공격모션이 없어서 그렇게 보이는거임?"  모션은 있었고,
+        //  거리가 없어서 안 보였다.  반 칸 더 떨어져 서면 스윙이 보인다.
+        public float attackRange = 1.4f;
         public float attackInterval = 1.0f;
 
         [Header("Movement")]
