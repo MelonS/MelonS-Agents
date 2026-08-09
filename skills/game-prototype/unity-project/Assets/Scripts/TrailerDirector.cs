@@ -193,38 +193,31 @@ namespace MelonS.GameProto
             yield return MoveCam(site, Work, 2.5f);
             yield return Wait(1.0f);
 
+            // ── 저녁 — 손님이 온다 (아직 아무도 자지 않는다) ───────────
+            //
+            // 운영자 2026-08-09: "잘떄 약탈자가 와서는 때리다가 스스로 죽는건
+            //  대체 멀까? / 안잘때 와야 할듯 한데."  맞다 — 전원이 잠든 마을에
+            //  약탈자가 들어오면 **아무도 맞서지 않는다.**  화면에는 자는 사람을
+            //  때리는 장면과, 뒤늦게 깬 누군가에게 쓰러지는 장면만 남는다.
+            //  그래서 습격을 **저녁**으로 당긴다.  다들 깨어 있고 마당에 나와 있어
+            //  달려나가 맞서는 그림이 된다.
+            Beat("습격");
+            yield return Hour(19.0f, 1.5f);
+            AIDirector.RaidsSuspended = false;
+            AIDirector.ForceRaidNow();
+            yield return Say("그리고 저녁, 약탈자가 들이닥친다.", 2.4f);
+            Beat("추격시작");
+            yield return FollowThreat(8.5f);
+            Beat("추격끝");
+
             // ── 밤 — 불을 켜고 눕는다 ───────────────────────────────────
             Beat("밤");
             busyPaused = true;              // 일감을 끊어야 잠자리에 든다
             yield return Hour(22.0f, 1f);
-            // 여섯이 나란히 누우면 이름표가 한 덩어리로 뭉쳐 읽을 수 없다 —
-            //  이 컷의 그림은 '이불 덮고 자는 여섯' 이므로 라벨을 잠시 내린다.
-            SetLabels(false);
-            yield return MoveCam(village, 4.8f, 3.0f);      // 이불·등불이 보이는 거리까지
-
+            SetLabels(false);               // 여섯이 나란히 누우면 이름표가 뭉친다
+            yield return MoveCam(VillageCenter(), 4.8f, 3.0f);
             yield return Say("밤이 오면 등불을 밝힌다.", 2.8f);
             yield return Wait(1.0f);
-            // 라벨은 여기서 켜지 않는다 — 다음 습격 컷에서도 여섯이 자고 있어
-            //  이름표가 그대로 뭉친다.  마지막 아침 컷에서 되켠다.
-
-            // ── 그리고 손님이 온다 ──────────────────────────────────────
-            Beat("습격");
-            // 시계는 **건드리지 않는다.**  밤 컷이 자정을 넘기면 "23시로" 옮기는 순간
-            //  하루가 통째로 점프한다(실측: 3일 0:07 → 3일 23:00).  이미 밤이니 배속만
-            //  바꾼다 — 3배속이면 전투를 눈으로 못 쫓고, 1배속이면 컷 안에 도착 못 한다.
-            var tcRaid = TimeController.Instance;
-            if (tcRaid != null) tcRaid.SetScale(1.5f);
-            yield return Wait(0.6f);
-            // 자막과 **동시에** 부른다.  밤 컷에서 부르면 3배속으로 접근·전투가
-            //  5초 만에 끝나 정작 이 컷엔 아무도 없다(실측: 소환 5.2초 뒤 전멸).
-            //  여기서 부르면 자막 3초 동안 어둠 속에서 다가오는 모습이 잡히고,
-            //  전투는 추격 컷 안에서 벌어진다.  접근 자체가 이미 그림이다.
-            AIDirector.RaidsSuspended = false;
-            AIDirector.ForceRaidNow();
-            yield return Say("그리고 밤, 약탈자가 들이닥친다.", 2.4f);
-            Beat("추격시작");
-            yield return FollowThreat(8.5f);
-            Beat("추격끝");
 
             // ── 다음 날 새벽 — 어제보다 커진 마을 ───────────────────────
             Beat("새벽");
@@ -694,6 +687,7 @@ namespace MelonS.GameProto
             // 이 지점 이후로 Unity 는 실시간을 버리고 **프레임당 1/30 초**로 돈다.
             //  저장이 느려도 연출 타이밍(Dt)이 흔들리지 않는다.
             Time.captureFramerate = CaptureFps;
+            BoostMusicForCapture();
             StartAudioCapture();
             capturing = true;
             StartCoroutine(CaptureLoop());
@@ -715,6 +709,25 @@ namespace MelonS.GameProto
         ///  돌려주므로 그림과 소리가 어긋나지 않는다.  (실시간 마이크/루프백 녹음은
         ///  PNG 저장이 느린 만큼 소리가 앞서 나가 못 쓴다.)  Start() 를 부르면 스피커
         ///  출력이 꺼지므로 검증 스윕이 시끄러워지지도 않는다.</summary>
+        /// <summary>촬영용으로 배경음을 키운다.
+        ///
+        /// 운영자 2026-08-09: *"시연 영상의 BGM 볼륨 너무 작음."*
+        ///  게임 안에서 BGM 은 일부러 낮다 — 오래 켜 두는 소리라 크면 피곤하고,
+        ///  도끼질·망치질 같은 **행동 소리**가 묻히면 안 된다.  그런데 60초짜리
+        ///  영상에서는 반대다: 배경음이 안 들리면 그냥 조용한 영상이 된다.
+        ///  게임 기본값은 그대로 두고 촬영 중에만 올린다.</summary>
+        private static void BoostMusicForCapture()
+        {
+            int n = 0;
+            foreach (var src in FindObjectsByType<AudioSource>(FindObjectsSortMode.None))
+            {
+                if (src == null || !src.loop) continue;   // 루프 = 배경음/앰비언트
+                src.volume = Mathf.Clamp01(src.volume * 2.6f + 0.18f);
+                n++;
+            }
+            Debug.Log($"[Trailer] 배경음 {n}개 볼륨 상향 (촬영용)");
+        }
+
         private void StartAudioCapture()
         {
             wavChannels = AudioSettings.speakerMode == AudioSpeakerMode.Mono ? 1 : 2;
