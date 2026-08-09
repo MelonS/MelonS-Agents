@@ -54,8 +54,8 @@ URL 에 대해 아무 말도 하지 않는다.  그래서 공개 URL 을 실제�
 
 ```
 skills/game-prototype/art-out/demo/pawnsim_demo_2026-08-09.mp4   ← 정본
-  59.1초 · 1920x1080 · 30fps
-  마을의 하루: 아침 일 → 밥·벌목 → 오후 증축 → 밤 등불 → 습격 → 다음 아침
+  58.26초 · 1920x1080 · 30fps · H.264 + AAC (**소리 있음**)
+  마을의 하루: 아침 일 → 밥·벌목 → 오후 증축 → 저녁 습격 → 밤 등불 → 다음 아침
 ```
 
 요강 제약 충족: 30~60초 · 실제 플레이 화면 · AI 합성 없음.
@@ -102,10 +102,11 @@ Google Forms 가 신청 경로이고 8/10 마감이다.  **미제출이면 다�
 > ⚠ 이미 올린 영상을 교체할 때는 **삭제 후 업로드** 순서를 지킬 것.
 > 중복 업로드는 계정에 좋지 않다.
 
-### 4. SFX 녹음 설정 (선택)
+### 4. (해소됨) 사운드 녹음 설정
 
-`소리 → 설정 → 녹음 탭 → "스테레오 믹스" 활성화`.
-영상에 게임 사운드를 넣으려면 필요하다.  없으면 무음 영상으로도 제출은 된다.
+예전에는 윈도우 "스테레오 믹스" 를 켜야 게임 소리를 담을 수 있었다.
+지금은 게임이 `AudioRenderer` 로 **프레임과 같은 시간축에서 직접** 오디오를
+렌더하므로 운영자가 할 일이 없다.
 
 ---
 
@@ -136,9 +137,20 @@ bash skills/game-prototype/scripts/verify-deploy.sh    # 실물 URL 확인
 ```bash
 # 빌드가 직접 프레임을 덤프한다 — Unity Recorder 는 **쓰지 않는다**
 # (에디터 경로가 게임을 다른 상태로 돌리고 uGUI 텍스트가 프레임에서 빠진다)
-"$(python skills/game-dev-agent/scripts/latest_build.py)"   -autostart -trailerframes "G:\ai\_frames" -mute   -logFile "G:\ai\_fr.log" -screen-width 1920 -screen-height 1080 -screen-fullscreen 0
+# -mute 를 주면 안 된다 — 그림만 남고 게임 소리가 통째로 빠진다.
+"$(python skills/game-dev-agent/scripts/latest_build.py)" \
+  -autostart -trailerframes "G:\ai\_frames" \
+  -logFile "G:\ai\_fr.log" -screen-width 1920 -screen-height 1080 -screen-fullscreen 0
 
-ffmpeg -y -framerate 30 -i "G:/ai/_frames/f%05d.png"   -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -movflags +faststart   skills/game-prototype/art-out/demo/pawnsim_demo_<날짜>.mp4
+# 오디오를 먼저 방송 표준으로 정규화한다.
+#  그대로 합치면 피크가 0dB 에 닿아 깨진다(촬영용으로 배경음을 올리기 때문).
+ffmpeg -y -i G:/ai/_frames/audio.wav \
+  -af "loudnorm=I=-15:TP=-1.5:LRA=11" -ar 48000 G:/ai/_audio_norm.wav
+
+ffmpeg -y -framerate 30 -i "G:/ai/_frames/f%05d.png" -i G:/ai/_audio_norm.wav \
+  -map 0:v -map 1:a -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p \
+  -c:a aac -b:a 192k -shortest -movflags +faststart \
+  skills/game-prototype/art-out/demo/pawnsim_demo_<날짜>.mp4
 
 grep '\[Trailer\] t=' G:/ai/_fr.log     # 컷 타임라인 검증
 ```
@@ -153,7 +165,8 @@ grep '\[Trailer\] t=' G:/ai/_fr.log     # 컷 타임라인 검증
 ### ③④ PDF 출력
 
 ```bash
-python skills/game-prototype/scripts/md2print.py --all
+python skills/game-prototype/scripts/md2print.py --all   # md → 인쇄용 HTML
+python skills/game-prototype/scripts/html2pdf.py         # HTML → PDF
 # → art-out/submission/*.pdf
 ```
 
@@ -169,6 +182,8 @@ python skills/game-prototype/scripts/md2print.py --all
 - [ ] PDF 3종(또는 2종)에 `<!--internal-->` 잔여가 없다
 - [ ] 저장소가 공개이고 커밋 기록이 남아 있다
 - [ ] ④ 에 외부 에셋 출처·라이선스가 명시돼 있다 (요강 필수)
+- [ ] ④ 에 **AI 대상 주요 프롬프트 및 지시 사항**이 있다 (요강 필수 — 한 번 빠졌던 항목)
+- [ ] 영상에 **소리가 들린다** (프레임만 합치면 무음이 된다)
 - [ ] 심사 계정 `dl_gameai_reviewer@nhn.com` 접근 가능 (비공개 저장소일 때만)
 - [ ] 제출 링크가 심사 종료까지 살아 있다 — **접수 마감 후 변경 불가**
 
