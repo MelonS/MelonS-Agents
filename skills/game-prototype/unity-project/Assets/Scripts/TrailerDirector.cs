@@ -187,18 +187,17 @@ namespace MelonS.GameProto
             //  서로 다르다는 것이 이 표 한 장으로 전달된다.
             Beat("우선순위");
             yield return MoveCam(village, Work, 1.6f);
-            // 커서가 화면 아래 "직업" 버튼 자리로 가서 누른다 — 실제 플레이 경로.
-            yield return CursorTo(new Vector2(-95f, -452f), 0.7f);
+            // 화면 아래 "직업" 버튼을 **실제로 누른다** — 좌표를 적어 두는 게 아니라
+            //  버튼을 찾아 그 자리로 가서 onClick 을 호출한다.
+            yield return ClickButton("직업", 0.75f);
+            yield return Wait(0.35f);
+            // 표가 열리면 커서가 우선순위 숫자 칸을 짚는다.
+            yield return CursorTo(new Vector2(-40f, 35f), 0.5f);
             yield return Click();
+            yield return Say("누구에게 어떤 일을 맡길지 정하고", 2.6f);
             var work = WorkTabUI.Instance;
-            if (work != null) work.Open();
-            yield return Wait(0.25f);
-            // 표가 열리면 커서가 숫자 칸 하나를 짚는다.
-            yield return CursorTo(new Vector2(-40f, 35f), 0.55f);
-            yield return Click();
-            yield return Say("누구에게 어떤 일을 맡길지 정하고", 2.7f);
             if (work != null) work.Close();
-            yield return Wait(0.25f);
+            yield return Wait(0.2f);
 
             // ── ③ 지정 → 이동 → 작업 (14~24초) ────────────────────────
             //  인과가 한 컷 안에 들어가야 한다.  나무를 찍고, 주민이 그쪽으로
@@ -714,8 +713,12 @@ namespace MelonS.GameProto
         ///  정보라 끈다.</summary>
         private static void HideGameplayUI()
         {
-            string[] hide = { "GuiControlBar", "ColonistBar", "TutorialOverlay",
-                              "TutorialCanvas", "SpeedPanel", "TabBar",
+            // 하단 버튼 바(GuiControlBar)와 상단 초상화 바(ColonistBar)는 **켜 둔다.**
+            //  그 둘이 플레이어의 조작 수단이라, 지우면 화면이 저절로 굴러가는 것처럼
+            //  보인다(운영자 2026-08-10).  튜토리얼 문구만 끈다 — 처음 플레이하는
+            //  사람에게 주는 안내지 조작면이 아니고, 화면 아래에서 자막과 겹친다.
+            string[] hide = { "TutorialOverlay",
+                              "TutorialCanvas",
                               // 건축 팔레트 — 녹화본 좌하단에 그대로 남아 있었다.
                               //  플레이어가 클릭하는 도구지 시청자가 볼 것이 아니다.
                               "ArchitectMenu", "ArchitectPanel", "BuildMenu" };
@@ -728,10 +731,6 @@ namespace MelonS.GameProto
             // 이름이 안 잡히는 것들 — 컴포넌트로 한 번 더.
             foreach (var t in FindObjectsByType<TutorialOverlay>(FindObjectsSortMode.None))
                 if (t != null) { t.gameObject.SetActive(false); n++; }
-            foreach (var g in FindObjectsByType<GuiControlBar>(FindObjectsSortMode.None))
-                if (g != null) { g.gameObject.SetActive(false); n++; }
-            foreach (var c in FindObjectsByType<ColonistBar>(FindObjectsSortMode.None))
-                if (c != null) { c.gameObject.SetActive(false); n++; }
             foreach (var am in FindObjectsByType<ArchitectMenu>(FindObjectsSortMode.None))
                 if (am != null) { am.gameObject.SetActive(false); n++; }
             Debug.Log($"[Trailer] UI {n}개 숨김 (자원·목표 패널은 유지)");
@@ -1069,6 +1068,39 @@ namespace MelonS.GameProto
             return best;
         }
 
+        /// <summary>화면의 버튼을 **라벨로 찾아** 커서를 그 위로 옮기고 실제로 누른다.
+        ///
+        /// 좌표를 손으로 적어 두고 파문만 그리면, 커서가 버튼과 어긋나도 화면은
+        ///  그럴듯해 보이고 "정말 그 버튼을 눌러서 열린 것인가"를 확인할 수 없다.
+        ///  버튼의 RectTransform 에서 화면 좌표를 직접 얻고 같은 버튼의 onClick 을
+        ///  호출하면, 버튼이 옮겨져도 커서가 따라가고 버튼이 없으면 로그가 남는다.</summary>
+        private IEnumerator ClickButton(string label, float moveDur = 0.7f)
+        {
+            Button target = null;
+            foreach (var b in FindObjectsByType<Button>(FindObjectsSortMode.None))
+            {
+                if (b == null || !b.gameObject.activeInHierarchy) continue;
+                var txt = b.GetComponentInChildren<Text>();
+                if (txt != null && txt.text != null && txt.text.Contains(label))
+                { target = b; break; }
+            }
+            if (target == null)
+            {
+                Debug.LogWarning($"[Trailer] 버튼 '{label}' 을 찾지 못했다 — 클릭 생략");
+                yield break;
+            }
+
+            // 버튼의 화면 좌표 → 커서 캔버스 좌표(화면 중심 기준)
+            var rt = target.GetComponent<RectTransform>();
+            Vector3 world = rt.TransformPoint(rt.rect.center);
+            Vector3 sp = RectTransformUtility.WorldToScreenPoint(null, world);
+            yield return CursorTo(new Vector2(sp.x - Screen.width * 0.5f,
+                                              sp.y - Screen.height * 0.5f), moveDur);
+            yield return Click();
+            target.onClick.Invoke();          // 플레이어가 누르는 것과 같은 경로
+            Debug.Log($"[Trailer] 버튼 '{label}' 클릭");
+        }
+
         // ── 암전 ────────────────────────────────────────────────────────────
         /// <summary>워밍업 구간을 검은 화면으로 덮는다.
         ///
@@ -1146,7 +1178,7 @@ namespace MelonS.GameProto
             scrimGo.transform.SetParent(canvasGo.transform, false);
             var srt = scrimGo.GetComponent<RectTransform>();
             srt.anchorMin = new Vector2(0f, 0f);
-            srt.anchorMax = new Vector2(1f, 0.34f);
+            srt.anchorMax = new Vector2(1f, 0.40f);
             srt.offsetMin = srt.offsetMax = Vector2.zero;
             var raw = scrimGo.GetComponent<RawImage>();
             raw.texture = BottomFadeTexture();
@@ -1166,8 +1198,10 @@ namespace MelonS.GameProto
                 typeof(RectTransform), typeof(Text), typeof(Outline), typeof(Shadow));
             go.transform.SetParent(canvasGo.transform, false);
             var rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0.07f, 0.06f);
-            rt.anchorMax = new Vector2(0.93f, 0.26f);
+            // 하단 버튼 바를 켜 두므로 자막을 그 위로 올린다 (0.06 → 0.13).
+            //  자막이 조작 UI 를 가리면 "무엇을 눌러서 한 것인지"가 안 보인다.
+            rt.anchorMin = new Vector2(0.07f, 0.13f);
+            rt.anchorMax = new Vector2(0.93f, 0.33f);
             rt.offsetMin = rt.offsetMax = Vector2.zero;
             caption = go.GetComponent<Text>();
             caption.font = UITheme.LoadKoreanFont(58);
