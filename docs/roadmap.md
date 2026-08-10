@@ -15,69 +15,47 @@ README's Status section is a flat checklist — do not use it for picking work.
 
 ## Now — active focus
 
-_Last updated 2026-05-20 ~19:55 KST after audit
-`2026-05-20-contract.md` flagged the prior "Now" as stale
-(v0.4.0 was complete but the block still said "awaiting FF-merge").
-**As of 2026-05-22 ~15:00 KST**: this "Now" subgoal remains the active
-operator-side step (no agent work queued); 40+ commits since the
-update have all been music-video quality-bar, lyrics, audit, and
-README/site refresh work that does not change the active subgoal.
-The auditor flagged this as "4th consecutive stale cycle" — the
-stale is structural (the subgoal is operator-only, agent can't tick
-it) rather than neglect.  Music-video follow-on options surfaced in
-the `<!-- suggest -->` block below remain available for the agent
-to pick up between operator-driven priorities._
+_**2026-08-10 갱신.**  NAN 2026 사전과제 **제출 완료** — 이 세션의 작업은 여기서
+닫혔다.  운영자 지시: "여기 세션이랑 관련된거 일단 닫을거야"._
 
-**Active goal**: Multi-skill AI assistant framework (`docs/goal.md`
-2026-05-19 entry).  Skill #1 (music-video) shipped v0.2.0 + v0.3.0.
-Skill #2 (`job-hunt`) v0.4.0 **SHIPPED** — see Done entry below.
+**활성 작업 없음.**  `docs/goal.md` 의 활성 목표도 비어 있다(2026-08-06 운영자가
+자동 진행을 껐고 아직 켜지 않았다).  다음 지시가 있을 때까지 새 작업을 시작하지
+않는다 — CLAUDE.md 규약대로 목표를 지어내지 않는다.
 
-**Active subgoal — operator-activation of `job-hunt` v0.4.0**
-(operator-only, no further scaffolding needed):
-- `cp skills/job-hunt/config/operator-profile.example.md → operator-profile.md`
-  and edit (gitignored, per-machine).
-- Flip `JH_FIT_SCORE_LIVE=1` etc. per utility module to activate live
-  Claude calls (Max plan absorbs; no incremental USD).
-- For live KR job-board HTTP, run the per-source operator-validation
-  curl + flip `JH_<source>_LIVE=1` + supply API key where required
-  (`WANTED_API_KEY`, `SARAMIN_KEY`).
+### 제출물은 동결 상태다
 
-**Parallel context**: CRITICAL candidate goal "First-touch success
-rate 10-20% → 60%+" remains filed in `docs/goal.md`.  Build Day
-Seoul (2026-06-16) application landed 2026-05-19 mapping to this
-candidate; if accepted, pre-build of the wizard prototype becomes
-the next active goal.  Until then, multi-skill framework remains
-primary.
+접수 마감 후 제출 링크를 변경할 수 없다.  심사 종료까지 다음 셋을 건드리지 않는다.
 
-<!-- suggest 2026-05-25 22:58 KST
-Production line (music-video skill) parallel work this session:
+```
+site/play/                       제출한 플레이 링크가 서빙하는 실물 — 재배포 금지
+YouTube 영상 (공개 유지)          https://youtu.be/3iAvYyzoQ3w
+저장소 공개 상태                  요강이 소스 공개를 요구한다
+```
 
-- Batch-3 (10 vocal shorts) shipped to outputs/publish/shorts-2026-05-23-batch/.
-  7 of 10 uploaded to YT (scheduled through 2026-06-01). 6 of 13
-  posted to TikTok with mid-tier organic reach (top: 어디쯤이야 v1
-  721 view + 48 like + 6.7% engagement at 72h+).
-- One longform mix experiment shipped (yt-mix-1, id 9SqgNBKk5JE,
-  44min instrumental). Visual quality flagged poor → root cause
-  triple (bitrate 3.8 Mbps under YT's 8-12 Mbps; static stills +
-  zoompan fake motion; no transitions between 12 tracks). Only
-  bitrate fixed by GPU; sources + composition need design redo.
-- Decision: Migrate active production to Windows + RTX 4070 Ti
-  Super. NVENC (7-10x render speed), local SDXL/Flux (Pollinations
-  rate-limit bypass), Stable Video Diffusion (real motion vs
-  zoompan). Mac becomes secondary monitor / backup.
-- Windows session picks up via git pull + memory rsync. Full
-  handoff in docs/daily/2026-05-25-windows-pivot.md.
-- Pending decisions: (1) TT $20 boost on 어디쯤이야 v1 evaluate
-  5/26 ~21:00 KST per thresholds in handoff doc; (2) Windows
-  bootstrap docs to be written on Windows directly.
+**게임 코드를 고쳐도 심사자가 보는 것은 8/9 배포본이다.**  지금부터의 게임 작업은
+전부 본선용이라는 뜻이다.
 
-This does NOT change the Active subgoal above (operator-side
-job-hunt activation remains primary). The music-video production
-line is the agent-side parallel work that has been continuing
-between operator-driven priorities, per "follow-on options"
-clause in the stale-cycle context above.
+### 다음 일정
+
+```
+08-22       참가팀 발표 (10팀)
+09-04~06    본선 48시간 — 판교 플레이뮤지엄 (전일 참여 필수)
+            산출물: 게임 프로토타입 + 에이전트 설계서 + 디렉팅 명세서
+```
+
+### 본선 대비로 남겨 둔 판단 재료
+
+본선은 **주제를 모른 채** 시작하므로 미리 만들 수 있는 것은 게임이 아니라 제작
+구조다.  이번에 드러난 것 — 재현 하네스가 PawnSim 전용 op(`spawnBed`,
+`setWeather`, `forceRaid`)로 차 있고 촬영 연출도 이 게임에 하드코딩돼 있다.
+**장르가 바뀌면 그대로 못 쓴다.**  다듬을지 여부는 운영자 판단.
+
+<!-- suggest
+  본선 대비 후보 (지시 없이 착수하지 않음):
+  1. 하네스의 게임 의존 op 를 분리 — 공통 조작(클릭·대기·단정) vs 게임별 op
+  2. TrailerDirector 를 컷 스크립트(JSON)로 분리 — 연출이 코드에 박혀 있다
+  3. p0-pawn-move 잔여 플레이크(~17%) — known-limitations.md 에 인수인계 메모 있음
 -->
-
 
 ## Next — queued, in priority order
 
