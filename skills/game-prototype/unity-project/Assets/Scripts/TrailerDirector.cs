@@ -152,6 +152,7 @@ namespace MelonS.GameProto
 
             HideGameplayUI();
             BuildCaption();
+            BuildCursor();
             BuildBlackout();
             SnapCam(VillageCenter(), Wide);
 
@@ -179,34 +180,45 @@ namespace MelonS.GameProto
             // ── ① 마을 전경 (0~5초) ────────────────────────────────────
             Beat("전경");
             SnapCam(village, Wide);
-            yield return Say("주민에게 직접 명령하지 않는 마을 시뮬레이션", 2.4f);
+            yield return Say("조선 산골에 마을을 짓고 지켜낸다", 2.4f);
 
             // ── ② 플레이어가 하는 일 — 작업 우선순위 (5~14초) ──────────
             //  게임의 핵심 조작면인데 이전 영상에 없었다.  여섯 명의 우선순위가
             //  서로 다르다는 것이 이 표 한 장으로 전달된다.
             Beat("우선순위");
             yield return MoveCam(village, Work, 1.6f);
+            // 커서가 화면 아래 "직업" 버튼 자리로 가서 누른다 — 실제 플레이 경로.
+            yield return CursorTo(new Vector2(-95f, -452f), 0.7f);
+            yield return Click();
             var work = WorkTabUI.Instance;
             if (work != null) work.Open();
-            yield return Say("플레이어는 우선순위만 정한다", 3.2f);
-            yield return Wait(0.5f);
+            yield return Wait(0.25f);
+            // 표가 열리면 커서가 숫자 칸 하나를 짚는다.
+            yield return CursorTo(new Vector2(-40f, 35f), 0.55f);
+            yield return Click();
+            yield return Say("누구에게 어떤 일을 맡길지 정하고", 2.7f);
             if (work != null) work.Close();
-            yield return Wait(0.4f);
+            yield return Wait(0.25f);
 
             // ── ③ 지정 → 이동 → 작업 (14~24초) ────────────────────────
             //  인과가 한 컷 안에 들어가야 한다.  나무를 찍고, 주민이 그쪽으로
             //  걸어가고, 도끼질을 시작하는 것까지.
             Beat("지정");
-            Vector2 site = MarkChopNearCamera(village);
-            yield return MoveCam(site, 6.6f, 1.8f);
-            yield return Say("벌목할 나무를 지정하면 주민이 움직인다", 3.0f);
-            yield return Wait(2.2f);
+            Vector2 tree = NearestTreeSpot(village);
+            yield return MoveCam(tree, 6.6f, 1.5f);
+            // 커서를 나무로 옮기고 우클릭 — 그 클릭이 실제로 벌목을 지정한다.
+            yield return CursorToWorld(tree, 0.6f);
+            yield return Click();
+            MarkChopNearCamera(village);
+            yield return Say("벨 나무와 캘 광맥을 직접 찍어 준다", 2.9f);
+            HideCursor();
+            yield return Wait(1.2f);
 
             // ── ④ 각자 다른 일 (24~31초) ───────────────────────────────
             Beat("자율");
             yield return Hour(11.0f, 2f);
             yield return MoveCam(BusiestPoint(), Work, 2.0f);
-            yield return Say("누가 언제 할지는 주민이 정한다", 3.0f);
+            yield return Say("그 다음은 주민이 알아서 움직인다", 3.0f);
             yield return FollowBusiest(1.5f, Work);
 
             // ── ⑤ 오후 — 마을이 커진다 (31~37초) ───────────────────────
@@ -214,7 +226,7 @@ namespace MelonS.GameProto
             yield return Hour(16.0f, 2f);
             Vector2 ext = PlaceExtension(village);
             yield return MoveCam(ext, Work, 2.0f);
-            yield return Say("벽으로 방을 닫으면 지붕이 생긴다", 2.4f);
+            yield return Say("벽을 세우면 방이 되고 지붕이 덮인다", 2.4f);
 
             // ── 저녁 — 손님이 온다 (아직 아무도 자지 않는다) ───────────
             //
@@ -228,9 +240,9 @@ namespace MelonS.GameProto
             yield return Hour(19.0f, 1.5f);
             AIDirector.RaidsSuspended = false;
             AIDirector.ForceRaidNow();
-            yield return Say("시간이 지나면 마을에 사건이 생긴다", 2.6f);
+            yield return Say("밤에는 약탈자를 막아내야 한다", 2.6f);
             Beat("추격시작");
-            yield return FollowThreat(6.5f);
+            yield return FollowThreat(6.0f);
             Beat("추격끝");
 
             // ── 밤 — 불을 켜고 눕는다 ───────────────────────────────────
@@ -239,7 +251,7 @@ namespace MelonS.GameProto
             yield return Hour(22.0f, 1f);
             SetLabels(false);               // 여섯이 나란히 누우면 이름표가 뭉친다
             yield return MoveCam(VillageCenter(), 4.8f, 3.0f);
-            yield return Say("주민들은 밤에 등불을 켜고 잠자리에 든다", 2.8f);
+            yield return Say("하루를 넘길 때마다 마을이 자란다", 2.6f);
             yield return Wait(0.5f);
 
             // ── 다음 날 새벽 — 어제보다 커진 마을 ───────────────────────
@@ -907,6 +919,154 @@ namespace MelonS.GameProto
                 frameIndex++;
             }
             StopAudioCapture();
+        }
+
+        // ── 마우스 커서 ─────────────────────────────────────────────────────
+        //
+        // 운영자 2026-08-10: "게임이 완전 자동으로 하는 게임이 아니자나 시연영상만
+        //  보면 자동게임 같음."  맞다 — 영상에 **플레이어의 조작이 한 번도 화면에
+        //  없었다.**  우선순위 표는 그냥 떠 있었고, 벌목은 마커만 생겼다.  누가
+        //  클릭했는지 보이지 않으니 화면이 저절로 굴러가는 것처럼 읽힌다.
+        //
+        // 간접 조작 게임일수록 **플레이어가 손을 대는 순간**이 보여야 한다.
+        //  게임에 없는 것을 지어내는 것이 아니라, 이미 코드가 부르고 있는 조작
+        //  (MarkWorld 는 플레이어 우클릭과 같은 함수)에 커서를 붙이는 것이다.
+        private RectTransform cursorRt;
+        private Image cursorDot;
+        private RectTransform clickRing;
+
+        private void BuildCursor()
+        {
+            var go = new GameObject("TrailerCursor", typeof(Canvas), typeof(CanvasScaler));
+            var cv = go.GetComponent<Canvas>();
+            cv.renderMode = RenderMode.ScreenSpaceOverlay;
+            cv.sortingOrder = 5500;                     // 자막(5000) 위, 암전(6000) 아래
+            var sc = go.GetComponent<CanvasScaler>();
+            sc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            sc.referenceResolution = new Vector2(1920, 1080);
+
+            var ring = new GameObject("ClickRing", typeof(RectTransform), typeof(Image));
+            ring.transform.SetParent(go.transform, false);
+            clickRing = ring.GetComponent<RectTransform>();
+            clickRing.sizeDelta = new Vector2(56, 56);
+            var ri = ring.GetComponent<Image>();
+            ri.sprite = RingSprite();
+            ri.color = new Color(1f, 0.93f, 0.6f, 0f);
+            ri.raycastTarget = false;
+
+            var dot = new GameObject("Cursor", typeof(RectTransform), typeof(Image));
+            dot.transform.SetParent(go.transform, false);
+            cursorRt = dot.GetComponent<RectTransform>();
+            cursorRt.sizeDelta = new Vector2(44, 44);   // 28 은 화면에서 눈에 안 띈다
+            cursorDot = dot.GetComponent<Image>();
+            cursorDot.sprite = CursorSprite();
+            cursorDot.color = new Color(1f, 1f, 1f, 0f);   // 처음엔 숨김
+            cursorDot.raycastTarget = false;
+        }
+
+        /// <summary>화살표 커서 — 코드로 그린다(자산 의존 없음).</summary>
+        private static Sprite CursorSprite()
+        {
+            const int N = 28;
+            var tex = new Texture2D(N, N, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            for (int y = 0; y < N; y++)
+                for (int x = 0; x < N; x++)
+                {
+                    int ix = x, iy = N - 1 - y;              // 좌상단 기준
+                    bool inside = iy >= ix * 0.45f && iy <= ix * 2.8f && ix + iy < N * 1.02f;
+                    bool core = iy >= (ix + 2f) * 0.45f && iy <= (ix - 1.5f) * 2.8f
+                                && ix + iy < N * 0.9f;
+                    tex.SetPixel(x, y,
+                        !inside ? new Color(0, 0, 0, 0)
+                        : core ? new Color(1f, 0.99f, 0.94f, 1f)
+                               : new Color(0.05f, 0.04f, 0.03f, 1f));
+                }
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, N, N), new Vector2(0.08f, 0.92f), N);
+        }
+
+        /// <summary>클릭 파문용 링.</summary>
+        private static Sprite RingSprite()
+        {
+            const int N = 56;
+            var tex = new Texture2D(N, N, TextureFormat.RGBA32, false);
+            float c = (N - 1) * 0.5f;
+            for (int y = 0; y < N; y++)
+                for (int x = 0; x < N; x++)
+                {
+                    float d = Mathf.Sqrt((x - c) * (x - c) + (y - c) * (y - c));
+                    float a = Mathf.Clamp01(1f - Mathf.Abs(d - c * 0.82f) / 3.2f);
+                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+                }
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, N, N), new Vector2(0.5f, 0.5f), N);
+        }
+
+        private Vector2 ScreenOf(Vector2 world)
+        {
+            Vector3 sp = cam.WorldToScreenPoint(world);
+            return new Vector2(sp.x - Screen.width * 0.5f, sp.y - Screen.height * 0.5f);
+        }
+
+        /// <summary>커서를 화면 좌표로 옮긴다.</summary>
+        private IEnumerator CursorTo(Vector2 screenPos, float dur)
+        {
+            if (cursorRt == null) yield break;
+            cursorDot.color = new Color(1f, 1f, 1f, 1f);
+            Vector2 from = cursorRt.anchoredPosition;
+            float t = 0f;
+            while (t < dur)
+            {
+                t += Dt;
+                float k = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / dur));
+                cursorRt.anchoredPosition = Vector2.Lerp(from, screenPos, k);
+                yield return null;
+            }
+            cursorRt.anchoredPosition = screenPos;
+        }
+
+        private IEnumerator CursorToWorld(Vector2 world, float dur)
+        {
+            yield return CursorTo(ScreenOf(world), dur);
+        }
+
+        /// <summary>클릭 표시 — 커서 자리에 파문이 퍼진다.</summary>
+        private IEnumerator Click()
+        {
+            if (clickRing == null) yield break;
+            const float Dur = 0.62f;
+            var img = clickRing.GetComponent<Image>();
+            clickRing.anchoredPosition = cursorRt.anchoredPosition;
+            float t = 0f;
+            while (t < Dur)
+            {
+                t += Dt;
+                float k = Mathf.Clamp01(t / Dur);
+                float sz = Mathf.Lerp(24f, 118f, k);
+                clickRing.sizeDelta = new Vector2(sz, sz);
+                img.color = new Color(1f, 0.9f, 0.45f, (1f - k) * 1f);
+                yield return null;
+            }
+            img.color = new Color(1f, 0.93f, 0.6f, 0f);
+        }
+
+        private void HideCursor()
+        {
+            if (cursorDot != null) cursorDot.color = new Color(1f, 1f, 1f, 0f);
+        }
+
+        /// <summary>마을에서 가장 가까운 나무의 위치 (커서가 갈 목표).</summary>
+        private static Vector2 NearestTreeSpot(Vector2 village)
+        {
+            Vector2 best = village; float bestSq = float.MaxValue;
+            foreach (var t in FindObjectsByType<TreeEntity>(FindObjectsSortMode.None))
+            {
+                if (t == null || t.IsDestroyed) continue;
+                float sq = ((Vector2)t.transform.position - village).sqrMagnitude;
+                if (sq < bestSq) { bestSq = sq; best = t.transform.position; }
+            }
+            return best;
         }
 
         // ── 암전 ────────────────────────────────────────────────────────────

@@ -17,7 +17,15 @@ namespace MelonS.GameProto
     [RequireComponent(typeof(Collider2D))]
     public class BanditEnemy : MonoBehaviour
     {
-        [SerializeField] private int maxHp = 20;
+        // 20 → 48 (2026-08-10).  전투 행동(DefendColonyAction)을 고쳐 주민 여럿이
+        //  달려들게 되자 **한 명이 때리던 시절의 체력이 너무 낮아졌다.**
+        //    주민 1명 → 5초 / 2명 → 2.5초 / 4명 → 1.25초
+        //  운영자: "첫 약탈자가 너무 빨리 죽음 1~2초는 살아있게".  영상만의 문제가
+        //  아니라 게임이 심심해지는 문제다 — 습격이 붙자마자 끝난다.
+        //    변경 후: 1명 → 12초 / 2명 → 6초 / 4명 → 3초
+        //  공격력(contactDamage)은 건드리지 않는다.  이 저장소에 전멸 사고 전례가
+        //  있어(5/31 wipe) 위협의 **지속 시간**만 늘리고 **화력**은 그대로 둔다.
+        [SerializeField] private int maxHp = 48;
         [SerializeField] private int contactDamage = 2;
         // #277 1.2→4.2: pawn(4.6)보다 약간 느리되 추격 가능해야 레이드가 위협이 됨
         //  (1.2 는 영원히 못 따라잡아 레이드 무력화 — 2차 감사 rank8, 운영자 승인).
