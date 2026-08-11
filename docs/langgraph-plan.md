@@ -229,9 +229,9 @@ Unity 배타 자원과 wb 병합을 **조사해야** 하기 때문이고, 그건
 
 ## 열린 이슈
 
-- **`.claude/whiteboard.json` 깨짐** — 161.6KB/161줄, 129번 줄 이스케이프 안 된 따옴표로
-  JSON 파싱 실패. `.claude/wb/*.json` **94개는 전부 정상** — 손으로 병합한 결과물만 손상.
-  "작업 시작 전 whiteboard 읽기" 프로토콜이 현재 동작하지 않음. wb 94개에서 재병합하면 복구.
+- ~~`.claude/whiteboard.json` 깨짐~~ — **2026-08-11 재확인: 복구됨.** 현재 165KB,
+  `python -c "import json; json.load(open(...))"` 로 직접 검증 — 파싱 정상. 언제 복구됐는지는
+  git 이력에 없음(gitignore 대상이라 커밋 추적 불가); 이 항목이 stale이었던 채로 남아 있었다.
 - **Windows `python3` 함정** — Store 스텁이라 조용히 아무것도 안 함. 기존 `run.sh`들이
   Windows에서 실패 중일 가능성. `graph/`는 `sys.executable`로 회피했으나 나머지는 미확인.
 - **게임 플러그인 0개** — `marketplace.json`에 쇼츠 5개만. README는 콜로니심을 앞세우는데

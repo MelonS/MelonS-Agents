@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>MelonS-Agents — an agent that builds and verifies its own colony-sim (PawnSim), plus two media skills</title>
-  <meta name="description" content="A multi-agent system that builds AND verifies its own colony-sim game (PawnSim) — every commit gated by a 15-scenario input-level repro test, long soaks judged by an isolated grader sub-agent against a written rubric. Plus two production media skills (music-video shorts, Korean job-board digest). Local-first ($0 runtime), three-layer self-audit, human-in-the-loop ops, EN+KO.">
+  <meta name="description" content="A multi-agent system that builds AND verifies its own colony-sim game (PawnSim) — every commit gated by a 22-scenario input-level repro test, long soaks judged by an isolated grader sub-agent against a written rubric. Plus a production media skill (music-video shorts) and a parked Korean job-board digest skill. Local-first ($0 runtime), three-layer self-audit, human-in-the-loop ops, EN+KO.">
   <meta property="og:title" content="MelonS-Agents — an agent that builds and verifies its own game (PawnSim)">
-  <meta property="og:description" content="Multi-agent system that builds a colony-sim and verifies its own work: 15-scenario input-level repro gate per commit + isolated-grader rubric verdicts. Plus two media skills (music-video, job-hunt). Local-first, $0 runtime, human-in-the-loop ops, EN+KO.">
+  <meta property="og:description" content="Multi-agent system that builds a colony-sim and verifies its own work: 22-scenario input-level repro gate per commit + isolated-grader rubric verdicts. Plus two media skills (music-video, job-hunt). Local-first, $0 runtime, human-in-the-loop ops, EN+KO.">
   <meta property="og:image" content="https://raw.githubusercontent.com/MelonS/MelonS-Agents/main/site/assets/visuals/01-hero-stats.png">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://melons.github.io/MelonS-Agents/">
@@ -45,12 +45,12 @@
   </div>
 
   <p class="lede">
-    The active work is <strong>PawnSim</strong> — a colony-sim vertical slice the agent builds <em>and</em> play-tests in a tight loop, where the headline isn't features but verification: <strong>code existing ≠ verified working</strong>. Two production media skills ship alongside, every mechanical stage stays local at <strong>$0 runtime cost</strong>, and the repo audits itself on every commit.
+    The active work is <strong>PawnSim</strong> — a colony-sim vertical slice the agent builds <em>and</em> play-tests in a tight loop, where the headline isn't features but verification: <strong>code existing ≠ verified working</strong>. A production media skill (music-video) ships alongside a parked one (job-hunt), every mechanical stage stays local at <strong>$0 runtime cost</strong>, and the repo audits itself on every commit.
   </p>
   <ul class="lede-points">
-    <li>Every commit is gated by a <strong>15-scenario input-level repro test</strong> — synthesized clicks through the player's own UI path, asserting the <em>effect</em>, not just that the click landed.</li>
+    <li>Every commit is gated by a <strong>22-scenario input-level repro test</strong> — synthesized clicks through the player's own UI path, asserting the <em>effect</em>, not just that the click landed.</li>
     <li>Long unattended soaks are judged by an <strong>isolated grader sub-agent</strong> against a written rubric — it sees only evidence (screenshots + raw logs), never the author's intent.</li>
-    <li>Two media skills: <strong>music-video</strong> (a track → a 9:16 short with phrase-aware cuts + 23 vintage shaders) and <strong>job-hunt</strong> (one seed keyword → a deduplicated Korean job-board digest).</li>
+    <li>Two media skills: <strong>music-video</strong> (a track → a 9:16 short with phrase-aware cuts + 23 vintage shaders) and <strong>job-hunt</strong> (one seed keyword → a deduplicated Korean job-board digest — parked, KR boards now block scraping).</li>
     <li>Mechanical stages stay local (Unity batchmode, aubio, whisper.cpp, ffmpeg); creative stages opt into Claude under the operator's existing subscription.</li>
   </ul>
 
@@ -64,7 +64,7 @@
 
   <figure class="demo">
     <img src="assets/pawnsim-hero.gif" width="800" height="450" alt="PawnSim colony timelapse (2026-06-12 build, 16 in-game days) — three colonists start on open grass, designate a stockpile and farm plots, build a walled bedroom with beds, stove, and research bench, and grow the colony while raids are repelled. Every frame is from an unattended soak run; the loop shown (stockpile → housing → farming → logging → mining) is machine-verified by effect assertions and isolated-grader rubric verdicts." loading="lazy" decoding="async">
-    <figcaption>Unattended 16 in-game-day colony soak — agent-built and agent-verified. The loop shown (stockpile → housing → farming → logging → mining) is gated by the 15-scenario input-level repro test and confirmed by isolated-grader rubric verdicts, not the author's claims.</figcaption>
+    <figcaption>Unattended 16 in-game-day colony soak — agent-built and agent-verified. The loop shown (stockpile → housing → farming → logging → mining) is gated by the 22-scenario input-level repro test and confirmed by isolated-grader rubric verdicts, not the author's claims.</figcaption>
   </figure>
 </header>
 
@@ -76,9 +76,9 @@
       <span class="sub">across 6 mission types</span>
     </li>
     <li>
-      <span class="num">2<small>+1+4</small></span>
-      <span class="label">production skills · meta-skill · prototypes</span>
-      <span class="sub">music-video · job-hunt · game-dev-agent</span>
+      <span class="num">1<small>+1+4</small></span>
+      <span class="label">production skill · meta-skill · prototypes</span>
+      <span class="sub">music-video · job-hunt (parked) · game-dev-agent</span>
     </li>
     <li>
       <span class="num fg">23</span>
@@ -91,14 +91,14 @@
       <span class="sub">local: ffmpeg · whisper · ollama</span>
     </li>
     <li>
-      <span class="num fg">15</span>
+      <span class="num fg">22</span>
       <span class="label">scenario commit gate</span>
       <span class="sub">input-level repro + assertions</span>
     </li>
     <li>
-      <span class="num purple">24</span>
+      <span class="num purple">27</span>
       <span class="label">subagent definitions</span>
-      <span class="sub">6 core + 13 game + 5 content</span>
+      <span class="sub">6 core + 13 game + 5 content + 3 judges</span>
     </li>
     <li>
       <span class="num fg">3</span>
@@ -119,7 +119,7 @@
   <p>The most active surface right now is <strong>PawnSim</strong>, a top-down colony-sim vertical slice (Unity 6000.0.75f1 LTS). Every sprite (a full 32px art generation — 3-direction walk/work pawn sheets, animals, terrain, furniture, all procedurally generated), every scene, and every C# system is CLI-scaffolded by the <code>game-dev-agent</code> meta-skill with <strong>no manual Unity Editor work</strong> — the whole <code>.exe</code> is reproducible from the command line. Colonists chop / mine / farm / cook / haul / build / research / fight under a utility-AI; an AI Director schedules raids on a jittered clock; the player drafts pawns and paints build + designation orders.</p>
 
   <figure class="diagram">
-    <img src="assets/visuals/14-verification-loop.png" width="1800" height="1163" alt="Two verification gates diagram. Gate 1 — Input-level repro gate, fires on every commit, 15 scenarios: synthesized clicks drive the same UI path a player uses, with effect assertions ('the click placed a designation', not just 'the click landed'). Gate 2 — Isolated grader sub-agent, judges long soaks against a written rubric and sees only screenshots and raw logs, never the author's intent. Below: three bugs the grader caught that self-review missed (a silent harness blind spot that voided every designation, a food-rich colony starving to death, a permanent mental-break freeze), and the basic colony loop now machine-verified end-to-end: stockpile → housing → farm plots → logging → mining → deconstruct." loading="lazy" decoding="async">
+    <img src="assets/visuals/14-verification-loop.png" width="1800" height="1163" alt="Two verification gates diagram. Gate 1 — Input-level repro gate, fires on every commit, 22 scenarios: synthesized clicks drive the same UI path a player uses, with effect assertions ('the click placed a designation', not just 'the click landed'). Gate 2 — Isolated grader sub-agent, judges long soaks against a written rubric and sees only screenshots and raw logs, never the author's intent. Below: three bugs the grader caught that self-review missed (a silent harness blind spot that voided every designation, a food-rich colony starving to death, a permanent mental-break freeze), and the basic colony loop now machine-verified end-to-end: stockpile → housing → farm plots → logging → mining → deconstruct." loading="lazy" decoding="async">
     <figcaption>The two verification gates — README · PawnSim verification</figcaption>
   </figure>
 
@@ -128,7 +128,7 @@
       <h3>The headline is verification, not features</h3>
       <p>The north star is <strong>"code existing ≠ verified working."</strong> Two layers carry it:</p>
       <ul>
-        <li><b>15-scenario input-level repro gate</b> — on every commit, real synthesized clicks run through the <em>same UI path a player uses</em>, with <em>effect assertions</em>: "the click placed the designation," "the wall got built," "only the selected tree was chopped" — not just "the click landed."</li>
+        <li><b>22-scenario input-level repro gate</b> — on every commit, real synthesized clicks run through the <em>same UI path a player uses</em>, with <em>effect assertions</em>: "the click placed the designation," "the wall got built," "only the selected tree was chopped" — not just "the click landed."</li>
         <li><b>Isolated-grader soak loop</b> — long unattended soaks are judged by a separate sub-agent against a written rubric. The grader sees only evidence (screenshots + raw logs), never the author's intent, which blocks author self-grading bias.</li>
       </ul>
       <p class="muted">A failing gate means no advance: fix-in-place or roll back. The basic colony loop (stockpile → housing with real indoor effects → permanent farm plots → logging → mining → deconstruct) is machine-verified end-to-end, with the grader verdicts committed alongside the fixes.</p>
@@ -169,10 +169,10 @@
   <p class="eyebrow">Audience · who this is for</p>
   <h2>Who this is for</h2>
   <ul>
-    <li><b>You want to see an agent <em>verify</em> the game it builds — not just build it.</b> PawnSim ships with a 15-scenario input-level repro gate on every commit and an isolated-grader rubric loop for long soaks; the graders' verdicts (not the author's claims) are the acceptance record, committed alongside the fixes.</li>
+    <li><b>You want to see an agent <em>verify</em> the game it builds — not just build it.</b> PawnSim ships with a 22-scenario input-level repro gate on every commit and an isolated-grader rubric loop for long soaks; the graders' verdicts (not the author's claims) are the acceptance record, committed alongside the fixes.</li>
     <li><b>You want short-form vertical video output without writing pipeline code.</b> Give the wizard a music file, get back a 9:16 short with beat-aligned cuts and vintage shaders. No Premiere, no After Effects, no GUI.</li>
     <li><b>You want to study a working multi-agent system that doesn't pretend to be magic.</b> Every commit is one observable step in how the system evolves; <a href="https://github.com/MelonS/MelonS-Agents/tree/main/docs/audit" target="_blank" rel="noopener">docs/audit/</a> records every drift the auditor catches; the quality + autonomy charts below chart whether those claims hold up over time.</li>
-    <li><b>You want a Korean job-board digest that respects how you actually search.</b> Pass <code>--seed "Problem Solver"</code>; the skill expands to the 26 equivalent titles companies use (FDE / Applied AI Engineer / Generalist / Founding Engineer / …) before fetching from 11 sources.</li>
+    <li><b>You want to see a Korean job-board digest skill that respects how you actually search — currently parked.</b> Pass <code>--seed "Problem Solver"</code>; the skill expands to the 26 equivalent titles companies use (FDE / Applied AI Engineer / Generalist / Founding Engineer / …) across 11 sources. The KR boards now block scraping, so it runs on mock/dry-run data only; kept in the tree rather than pretending it still ships live.</li>
     <li><b>You want an agentskills.io-compliant Skill you can drop into other runtimes.</b> Both skills work in Claude Code, Cursor, Goose, Gemini CLI, OpenAI Codex, GitHub Copilot, and ~38 other listed compatible runtimes.</li>
   </ul>
   <p class="muted">If you want a SaaS that hides the pipeline, this isn't it. If you want every step as inspectable bash + open-source local tools (ffmpeg / whisper.cpp / ollama / aubio), it is.</p>
@@ -181,10 +181,10 @@
 <section id="how" class="block">
   <p class="eyebrow">Architecture · how it works</p>
   <h2>How it works</h2>
-  <p>The scaffold is general-purpose — it doesn't force every skill through one shape. Short-form video was the v1 domain (the deliverable is visually verifiable and failure modes are quick to catch); the current development focus is the <strong>game track</strong> (the PawnSim build-and-verify loop above), driven by a <code>game-dev-agent</code> meta-skill. Two production media skills ship today: the <strong>music-video</strong> mission and the standalone <strong>job-hunt</strong> skill. Earlier missions (<strong>faceless-short</strong> narration, v1 <strong>highlight / shorts-batch</strong>) remain in the tree as alternate paths.</p>
+  <p>The scaffold is general-purpose — it doesn't force every skill through one shape. Short-form video was the v1 domain (the deliverable is visually verifiable and failure modes are quick to catch); the current development focus is the <strong>game track</strong> (the PawnSim build-and-verify loop above), driven by a <code>game-dev-agent</code> meta-skill. One production media skill ships today, the <strong>music-video</strong> mission; the standalone <strong>job-hunt</strong> skill is parked (KR job boards now block scraping). Earlier missions (<strong>faceless-short</strong> narration, v1 <strong>highlight / shorts-batch</strong>) remain in the tree as alternate paths.</p>
 
   <figure class="diagram">
-    <img src="assets/visuals/01-hero-stats.png" width="1800" height="965" alt="MelonS-Agents system-at-a-glance poster: an agent that builds, plays, and verifies its own colony-sim game, portable across Claude Code, Cursor, Goose, Gemini CLI, Codex and Copilot. Stat cards: 100+ mission outputs across 6 types, 2 production skills + 1 meta-skill + 4 prototypes, 23 ffmpeg shaders, 0 runtime API tokens, 15-scenario commit gate, 24 subagent definitions (6 core + 13 game + 5 content), 3 audit trigger layers, MIT license / EN + KO dual-track." loading="lazy" decoding="async">
+    <img src="assets/visuals/01-hero-stats.png" width="1800" height="965" alt="MelonS-Agents system-at-a-glance poster: an agent that builds, plays, and verifies its own colony-sim game, portable across Claude Code, Cursor, Goose, Gemini CLI, Codex and Copilot. Stat cards: 100+ mission outputs across 6 types, 1 production skill + 1 meta-skill + 4 prototypes, 23 ffmpeg shaders, 0 runtime API tokens, 22-scenario commit gate, 27 subagent definitions (6 core + 13 game + 5 content + 3 judges), 3 audit trigger layers, MIT license / EN + KO dual-track." loading="lazy" decoding="async">
     <figcaption>The system at a glance — README · Overview</figcaption>
   </figure>
 
@@ -198,7 +198,7 @@
     <article class="card glow-gold">
       <h3>game-dev-agent (meta-skill, Skill #3)</h3>
       <p>A Unity-focused agent that CLI-scaffolds a whole game with no manual Editor work: sprite generation (32px procedural art), C# system scaffolding, scene + prefab generation via Unity batchmode, balance tuning, audio generation, and an in-game AI Director. It drives <strong>four prototype skills</strong> that double as its empirical validation surface — PawnSim (colony-sim flagship), plus a 2D physics-merge puzzle, a wave-survival action game, and a sliding-tile number puzzle — each built faster than the last, testing the "compounding speedup" hypothesis.</p>
-      <p class="muted">The game track runs a separate roster of 13 game-domain sub-agents (director / designer / programmer / build-engineer / QA / artist / sound / narrative / specialists) on top of the 6 core media-pipeline agents, plus 5 for the content-shorts pipeline — 27 agent definitions total in <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>.</p>
+      <p class="muted">The game track runs a separate roster of 13 game-domain sub-agents (director / designer / programmer / build-engineer / QA / artist / sound / narrative / specialists) on top of the 6 core media-pipeline agents, 5 for the content-shorts pipeline, and 3 judges that score a plan, a still, and a rendered cut — 27 agent definitions total in <a href="https://github.com/MelonS/MelonS-Agents/tree/main/.claude/agents" target="_blank" rel="noopener">.claude/agents/</a>.</p>
     </article>
   </div>
 
@@ -283,7 +283,7 @@
 
   <p class="subhead eyebrow">— Skills &amp; tooling · the portfolio</p>
   <figure class="diagram">
-    <img src="assets/visuals/02-skills.png" width="1800" height="1135" alt="Skills portfolio: two production media skills, one Unity meta-skill in development, one parked experiment — each card shows what it takes in and ships out. music-video (Production): music file → 60-second 9:16 vertical short; 23 ffmpeg shaders, 7 grade profiles, 19 genre presets, cuts on aubiotrack beats, glitch on aubioonset drum hits, Shape A 5-agent missions pipeline. job-hunt (Production): one seed keyword → deduped markdown digest; seed → 26-synonym role family, 11 source plugins, 5 live no-key / 2 key-gated / 4 mock, 5,000+ raw → ~200 matches, Shape B standalone curl+jq. game-dev-agent (In development): Unity meta-skill — sprite gen, C# scaffolding, balance tuning, audio gen, in-game AI director; validation surface = PawnSim colony-sim, 13-agent game roster, CLI-scaffolded with zero manual Unity Editor work. product-cf (Parked): one product photo → CF-style 9:16 short; parked on an honest negative finding — free/local 3D didn't clear the quality bar on a 16GB machine, needs paid cloud image-to-video or a bigger GPU." loading="lazy" decoding="async">
+    <img src="assets/visuals/02-skills.png" width="1800" height="1135" alt="Skills portfolio: two production media skills, one Unity meta-skill in development, one parked experiment — each card shows what it takes in and ships out. music-video (Production): music file → 60-second 9:16 vertical short; 23 ffmpeg shaders, 7 grade profiles, 19 genre presets, cuts on aubiotrack beats, glitch on aubioonset drum hits, Shape A 5-agent missions pipeline. job-hunt (Parked): one seed keyword → deduped markdown digest; seed → 26-synonym role family, 11 source plugins, 5 live no-key / 2 key-gated / 4 mock, 5,000+ raw → ~200 matches, Shape B standalone curl+jq. game-dev-agent (In development): Unity meta-skill — sprite gen, C# scaffolding, balance tuning, audio gen, in-game AI director; validation surface = PawnSim colony-sim, 13-agent game roster, CLI-scaffolded with zero manual Unity Editor work. product-cf (Parked): one product photo → CF-style 9:16 short; parked on an honest negative finding — free/local 3D didn't clear the quality bar on a 16GB machine, needs paid cloud image-to-video or a bigger GPU." loading="lazy" decoding="async">
     <figcaption>Skills portfolio — what each skill takes in and ships out — README · Overview</figcaption>
   </figure>
   <div class="cards">
@@ -305,21 +305,21 @@
       <p class="muted">Skill #1, missions-routed; verified via a 12/12 Hermes drop-in interop test. Spec: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/music-video" target="_blank" rel="noopener">skills/music-video/</a></p>
     </article>
 
-    <article class="card skill-card glow-green">
+    <article class="card skill-card">
       <div class="skill-head">
         <span class="emoji" aria-hidden="true">🧭</span>
         <span class="skill-title">job-hunt</span>
-        <span class="pill green">✓ Production</span>
+        <span class="pill gray">Parked</span>
       </div>
       <p class="inout">One seed keyword <span class="arrow">→</span> deduped markdown digest</p>
       <ul class="chips">
         <li class="chip">seed → <span class="g">26</span>-synonym role family</li>
         <li class="chip"><span class="g">11</span> source plugins</li>
         <li class="chip"><span class="g">5</span> live no-key · <span class="g">2</span> key-gated · <span class="g">4</span> mock</li>
-        <li class="chip"><b>5,000+</b> raw → <b>~200</b> matches</li>
+        <li class="chip"><b>5,000+</b> raw → <b>~200</b> matches (mock run)</li>
         <li class="chip">Shape B · standalone <code>curl+jq</code></li>
       </ul>
-      <p class="muted">Skill #2, standalone, v2 short-keyword UX. 70 tests; 4 enrichment utilities behind <code>JH_*_LIVE</code> flags. Spec: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/job-hunt" target="_blank" rel="noopener">skills/job-hunt/</a></p>
+      <p class="muted">Skill #2, standalone, v2 short-keyword UX — parked: the KR job boards it targeted (Saramin, Wanted, JobKorea…) now block scraping, so it runs on mock/dry-run data only; the <code>global-*</code> ATS/RemoteOK/Remotive/HN plugins may still return live remote postings. 70 tests; 4 enrichment utilities behind <code>JH_*_LIVE</code> flags. Spec: <a href="https://github.com/MelonS/MelonS-Agents/tree/main/skills/job-hunt" target="_blank" rel="noopener">skills/job-hunt/</a></p>
     </article>
 
     <article class="card skill-card glow-gold">
@@ -359,7 +359,7 @@
   <div class="cards">
     <article class="card">
       <h3>Skill #2 — job-hunt, in depth</h3>
-      <p>A separate-shape skill: standalone (no missions-routed pipeline), v2 short-keyword UX, agentskills.io-compliant. Pass <code>--seed "Problem Solver"</code> and the orchestrator expands to a 26-synonym role family (Forward Deployed Engineer / Applied AI Engineer / Generalist / Founding Engineer / …) before fetching from KR job boards (사람인 / 잡코리아 / 원티드 / 프로그래머스). A live run de-dups <strong>5,000+ raw postings down to ~200 matches</strong>.</p>
+      <p>A separate-shape skill: standalone (no missions-routed pipeline), v2 short-keyword UX, agentskills.io-compliant. <strong>Parked</strong> — the KR job boards it targeted (사람인 / 잡코리아 / 원티드 / 프로그래머스) now block scraping, so the live digest never came together; it runs only on mock/dry-run data. Pass <code>--seed "Problem Solver"</code> and the orchestrator expands to a 26-synonym role family (Forward Deployed Engineer / Applied AI Engineer / Generalist / Founding Engineer / …). A mock run de-dups <strong>5,000+ raw postings down to ~200 matches</strong>; the code stays in the tree.</p>
       <ul>
         <li><b>11 source plugins</b> (5 live-ready without a key, 2 key-gated, 4 mock-fallback) — all mock-fallback by default; live HTTP per-plugin behind <code>JH_<i>SOURCE</i>_LIVE=1</code>.</li>
         <li><b>4 enrichment utilities</b> (fit-score / cover-letter / company-research / interview-prep) — per-posting Claude calls behind <code>JH_<i>TOOL</i>_LIVE=1</code>.</li>
