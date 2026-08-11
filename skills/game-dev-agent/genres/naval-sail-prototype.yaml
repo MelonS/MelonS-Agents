@@ -1,0 +1,64 @@
+# Genre template — 대항해시대(Age-of-Sail) 스타일 항해 게임, 이동 프로토타입 (lite).
+#
+# Loaded by skills/game-dev-agent/scripts/modules/planner.py.
+# Adding a new genre = adding a new file in this dir.  NO planner code change.
+#
+# 이 장르는 3D다 (colony-sim-lite 는 2D 스프라이트 — 다른 렌더링 파이프라인).
+# `sprites` 필드엔 2D 스프라이트가 아니라 3D 모델/셰이더 에셋 슬러그를 담는다.
+#
+# 스코프: "재미있는 게임"이 아니라 "배가 3D 바다 위에서 뜨고 움직이는가"만 검증하는
+# 이동감 프로토타입.  전투/무역/탐험/여러 척은 전부 스코프 밖 (v0 이후).
+#
+# 참고: doc/next-title-naval-prototype-2026-08-12.md — OpenMMO(Julian-adv, water
+# system: Gerstner wave 3파 합성 + 하이트맵 기반 수심 샘플링)에서 파도 셰이더
+# 접근을 참고했다. 부력(buoyancy)은 OpenMMO에도 없어서 직접 설계함.
+
+name: naval-sail-prototype
+description: "대항해시대 스타일 항해 게임 이동 프로토타입. 3D 바다 위 배 1척, 카메라 2.5D/3D 전환."
+
+match_keywords:
+  - naval
+  - sailing
+  - 항해
+  - 대항해
+  - ship
+
+vision:
+  tone: "묵직한 배의 관성감 — 대항해시대 시리즈의 그 느낌"
+  core_loop: "(프로토타입 단계엔 루프 없음) 조작 → 배가 파도에 맞춰 뜨고 기운다 → 이동"
+  feel: "가볍지 않다. 방향 전환·가감속에 관성이 붙는다"
+
+team:
+  - game-director
+  - pm
+  - programmer
+  - artist        # placeholder 배/바다 비주얼만, 최종 아님
+  - qa
+  - build-engineer
+
+sprites:
+  - ship_placeholder_model   # 3D 모델 (박스/저폴리 배 형태로 시작)
+  - ocean_plane_mesh         # 3D 평면 메시 + Gerstner wave 셰이더
+
+scripts:
+  - ShipController          # Rigidbody 이동 + 관성, 조타 입력
+  - OceanWaveSampler         # Gerstner wave 높이를 CPU 코드로도 계산 (셰이더와 공유 파라미터)
+  - ShipBuoyancy             # 배 바닥 4점 높이 샘플 → Y 위치 + 피치/롤
+  - CameraRig2Point5D        # 고정 피치각 추적 카메라 (대항해시대 시점)
+  - CameraRig3D              # 배 뒤 자유 회전 추적 카메라
+  - CameraModeSwitcher       # 두 리그 사이 보간 전환 (급전환 방지)
+  - GameManager
+
+scenes:
+  - MainMenu
+  - OceanPrototype
+
+systems:
+  - Gerstner wave 수면 셰이더 (3파 합성, Y축 변위만 — OpenMMO 파장값 20/14/9m 시작점)
+  - CPU 높이 샘플링 기반 부력 (OpenMMO엔 없음 — 직접 구현)
+  - 배 이동: 스로틀 전후진 + 방향타, 관성 있는 가감속
+  - 카메라 2.5D↔3D 전환 (씬 하나, 카메라 리그 두 개 토글 + 보간)
+
+audio: []   # 프로토타입 단계 — 스코프 밖
+
+days_estimate: 5
