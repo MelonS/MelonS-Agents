@@ -217,6 +217,21 @@ job-hunt 항목은 Blocked/parked로 이동하는 것을 제안합니다.  다�
 
 ## Done — most recent first
 
+- **2026-08-12 (차기작 — 범선 항해 게임)** 박스 → Kenney 배 모델 교체(`8f5e805`)
+  + 별도 Unity 프로젝트로 분리(`5d4c647`). 운영자 "너무 허접한데" → Kenney
+  Pirate Kit(CC0)의 `ship-pirate-medium.fbx`로 교체, 실측 치수를 코드가 읽어
+  부력·카메라 거리 자동 조정. 이어서 "폴더 구조가 이해 안 됨" → 시각 다이어그램
+  ([artifact](https://claude.ai/code/artifact/cfe1deef-6774-4feb-bdcd-253a304b79e7))
+  으로 설명 → 운영자가 분리 방향 확인 + "장르 늘어날 수 있다"는 장기 관점 제시
+  → `games/<이름>/` 패턴으로 합의 → `games/naval-sail/unity-project/`를
+  `-createProject`로 새로 만들고 배게임 파일을 옮긴 뒤, PawnSim 프로젝트에
+  남아있던 배게임 잔여물(Scripts/Naval/ 등)을 제거해 PawnSim을 다시 순수
+  PawnSim 전용으로 되돌렸다. PawnSim(`skills/game-prototype/`)은 9/6 심사
+  종료 후 `games/pawnsim/`으로 옮길 예정 — 지금은 제출물이라 안 건드림.
+  검증: 새 프로젝트에서 씬 재생성+빌드+스크린샷 — 배 모델 실측치(4.80×9.96×10.60)
+  가 분리 전과 동일하게 나옴. PawnSim 쪽은 배게임 파일 제거 후 컴파일 에러 0건
+  확인(batchmode 도메인 리로드).
+
 - **2026-08-12 (차기작 — 범선 항해 게임)** 이동 프로토타입 v0 — `550679b`
   (+ IP 스크럽 `c1d1927`, 기획 `3b61880`). 운영자가 /goal 로 직접 지시(배+바다
   우선, 3D, 카메라만 2.5D/3D 전환). PawnSim(NAN2026 제출물)과 완전히 분리된

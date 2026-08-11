@@ -12,9 +12,16 @@
 # 참고: doc/next-title-naval-prototype-2026-08-12.md — OpenMMO(Julian-adv, water
 # system: Gerstner wave 3파 합성 + 하이트맵 기반 수심 샘플링)에서 파도 셰이더
 # 접근을 참고했다. 부력(buoyancy)은 OpenMMO에도 없어서 직접 설계함.
+#
+# 2026-08-12 — PawnSim(colony-sim-lite)과 같은 Unity 프로젝트 안에서 시작했다가
+# 별도 프로젝트로 분리했다. ProjectSettings(렌더 파이프라인·물리 등)를 공유하면
+# NAN2026 심사 종료(9/6)까지 건드리면 안 되는 PawnSim 제출물에 영향을 줄 위험이
+# 있었기 때문. games/pawnsim/ 은 심사 종료 후에 skills/game-prototype/ 에서
+# 옮겨질 예정 — 그 전까진 이 장르만 games/ 패턴을 쓴다.
 
 name: naval-sail-prototype
 description: "범선 시대 항해 무역 시뮬레이션 이동 프로토타입. 3D 바다 위 배 1척, 카메라 2.5D/3D 전환."
+project_path: games/naval-sail/unity-project
 
 match_keywords:
   - naval
@@ -37,8 +44,8 @@ team:
   - build-engineer
 
 sprites:
-  - ship_placeholder_model   # 3D 모델 (박스/저폴리 배 형태로 시작)
-  - ocean_plane_mesh         # 3D 평면 메시 + Gerstner wave 셰이더
+  - ship-pirate-medium.fbx   # Kenney Pirate Kit(CC0) — 박스 placeholder에서 교체 완료
+  - ocean_plane_mesh         # 3D 평면 메시 + Gerstner wave 셰이더 (코드 생성, 에셋 아님)
 
 scripts:
   - ShipController          # Rigidbody 이동 + 관성, 조타 입력

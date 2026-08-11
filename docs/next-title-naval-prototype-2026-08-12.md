@@ -11,6 +11,13 @@
 장르 정의: `skills/game-dev-agent/genres/naval-sail-prototype.yaml`
 (콜로니심 장르 파일과 같은 스키마, planner.py 코드 변경 없이 로드됨)
 
+> **2026-08-12 갱신 — Unity 프로젝트 위치 변경.** 아래 §2·§6·§9는 처음에
+> `skills/game-prototype/unity-project/`(PawnSim과 같은 프로젝트) 기준으로
+> 썼다. 같은 세션 후반에 별도 프로젝트로 분리했다 — 지금 실제 위치는
+> **`games/naval-sail/unity-project/`**다. 분리 이유: 두 게임이
+> `ProjectSettings/`를 공유하면 NAN2026 심사 종료(9/6)까지 건드리면 안 되는
+> PawnSim 제출물에 영향을 줄 위험이 있었다. 아래 경로 언급은 당시 기록
+> 그대로 남겨둔다 — 왜 이런 구조가 됐는지 이력이 지워지면 안 되기 때문.
 ## 1. OpenMMO에서 참고한 것
 
 [전체 리서치](../skills/game-prototype/docs/external-research-openmmo-2026-08-12.md)의
