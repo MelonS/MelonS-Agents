@@ -238,6 +238,31 @@ skills/game-prototype/unity-project/Assets/Resources/PerformanceTestRun*.json.me
 # Daily build snapshots — too big for repo, machine-local
 skills/game-prototype/builds/
 
+# =============================================================================
+# Unity project — games/naval-sail (범선 항해 프로토타입, PawnSim과 분리된
+# 별도 Unity 프로젝트, 2026-08-12). 같은 패턴 — Library/ 등 머신 로컬,
+# Assets/ 안 PNG는 재허용.
+# =============================================================================
+games/naval-sail/unity-project/Library/
+games/naval-sail/unity-project/Temp/
+games/naval-sail/unity-project/Logs/
+games/naval-sail/unity-project/UserSettings/
+games/naval-sail/unity-project/obj/
+games/naval-sail/unity-project/Build/
+games/naval-sail/unity-project/Builds/
+games/naval-sail/unity-project/*.csproj
+games/naval-sail/unity-project/*.sln
+games/naval-sail/unity-project/.vs/
+
+!games/naval-sail/unity-project/Assets/**/*.png
+!games/naval-sail/unity-project/Assets/**/*.jpg
+!games/naval-sail/unity-project/Assets/**/*.tga
+!games/naval-sail/unity-project/Assets/**/*.wav
+!games/naval-sail/unity-project/Assets/**/*.mp3
+!games/naval-sail/unity-project/Assets/**/*.ogg
+
+games/naval-sail/builds/
+
 # Review-queue — local-only batch taste-decision cache.  Only the
 # README.md + .gitkeep are tracked; the pending/ and decided/ subdirs
 # carry per-machine artifact metadata that fails [[no-pii-in-repo]]
