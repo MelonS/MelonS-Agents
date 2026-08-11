@@ -57,6 +57,19 @@ YouTube 영상 (공개 유지)          https://youtu.be/3iAvYyzoQ3w
   3. p0-pawn-move 잔여 플레이크(~17%) — known-limitations.md 에 인수인계 메모 있음
 -->
 
+<!-- suggest 2026-08-11 — 리마인드 대기 항목 (사용자 요청, /schedule 크론이
+  claude.ai 연결 오류로 두 차례 실패 — CronList 확인상 실제 예약 없음.
+  이 줄이 대체 리마인더 역할):
+  스킬 등급 네이밍 결정 — skill(자기완결형, job-hunt/music-video) vs
+  meta-skill(합성형, game-dev-agent·잠재적으로 content-shorts 파이프라인).
+  리서치 완료(agentskills.io 생태계 "skill-writer meta-Skills" 실사용례,
+  Semantic Kernel의 Skill→Plugin/Function 개명 사례, Skill-MAS/AgentSkillOS
+  논문의 meta-skill 정의) — skill/meta-skill 2단 분류를 추천했으나 사용자가
+  "일단 나중에 정하자"로 보류. 목표일: 이번 주 금요일(2026-08-14) 또는
+  토요일(2026-08-15). 결정되면 이 블록 제거하고 실제 반영(라벨링 + content-shorts
+  skills/ 편입 여부) 진행.
+-->
+
 ## Next — queued, in priority order
 
 1. **Zero-friction onboarding path — first-touch demo without
