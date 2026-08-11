@@ -41,6 +41,7 @@ BANNED: dict[str, str] = {
     r"stardew\s?valley|스타듀\s?밸리": "타 게임 상표",
     r"factorio|팩토리오": "타 게임 상표",
     r"\btynan\b": "타 게임 제작자 실명",
+    r"대항해시대|uncharted\s+waters": "코에이(코에이 테크모) 항해 게임 시리즈명 — '항해 무역 시뮬레이션' 등 장르 표현으로",
 }
 
 # (경로 glob, 패턴 일부, 사유) — 명목적 사용으로 허용한다.

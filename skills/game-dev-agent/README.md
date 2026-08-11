@@ -91,7 +91,7 @@ toward AI agent engineer / game-dev career path:
 - Game industry hiring 1-4 day AI clone challenges actively
 - AI agent engineer roles emerging (rare T-shape niche)
 - Operator background: 10 yr game dev + (now) AI agent builder = exact fit
-- Steam release possible long-term (Uncharted Waters-lite operator passion)
+- Steam release possible long-term (operator's passion: a lite Age-of-Sail naval trade sim)
 
 This skill is the agent half; [`game-prototype`](../game-prototype/) is
 the demonstration that the agent works.
@@ -107,4 +107,5 @@ Priority order:
 4. **`audio_gen`** — Suno API wrapper for BGM.  Day 13.
 
 After these, the agent is portable to **other game projects** (e.g.,
-the operator's eventual Uncharted Waters-lite Steam project).
+the operator's eventual naval-sail Steam project — see
+[`naval-sail-prototype.yaml`](genres/naval-sail-prototype.yaml)).
