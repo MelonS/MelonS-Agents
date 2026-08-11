@@ -69,26 +69,72 @@ URP/HDRP 패키지가 없다. **현재 Built-in Render Pipeline으로 추정.**
 
 ## 5. 마일스톤 (프로토타입, 대략치 — 실측 아님)
 
-| Day | 내용 |
-|---|---|
-| 1 | Gerstner wave 셰이더 + 평면 바다 렌더 |
-| 2 | 배 placeholder 모델 + CPU 높이 샘플링 부력 |
-| 3 | 배 이동 입력 + 관성 |
-| 4 | 카메라 리그 2종 + 전환 로직 |
-| 5 | 폴리시 + repro 시나리오 1개(배가 안정적으로 뜨고 이동하는지) |
+| Day | 내용 | 상태 |
+|---|---|---|
+| 1 | Gerstner wave 셰이더 + 평면 바다 렌더 | **완료** (2026-08-12, 같은 세션) |
+| 2 | 배 placeholder 모델 + CPU 높이 샘플링 부력 | **완료** |
+| 3 | 배 이동 입력 + 관성 | **완료** (자동조종 경로로 물리는 검증, 실키보드는 미검증 — §8) |
+| 4 | 카메라 리그 2종 + 전환 로직 | **완료** (실 Tab 키 입력은 미검증 — §8) |
+| 5 | 폴리시 + repro 시나리오 1개 | 미착수 |
 
-## 6. 이번 턴에서 안 한 것 (명시)
+## 6. v0 실제 구현 — 파일 목록
 
-주간 토큰 예산 제약(운영자 지정 — 31%에서 20%만 추가 사용, 50% 초과 시 중단)
-때문에 이번 턴은 **기획 + 장르 스캐폴드까지만** 했다. 안 한 것:
+`skills/game-prototype/unity-project/Assets/` 아래:
 
-- 실제 Unity 씬/스크립트 구현 (`ShipController`, 셰이더 코드 등) — 다음 세션.
-- `game-director`/`game-designer` 등 서브에이전트 기동 — 토큰 절약 위해 생략,
-  이 문서가 그 역할을 대신함.
-- Built-in RP 확정 — Unity 에디터에서 Graphics 설정 직접 확인 안 됨(추정치).
-- 최종 2.5D vs 3D 결정 — 프로토타입을 만들어서 직접 플레이해본 뒤 판단.
+- `Shaders/OceanGerstner.shader` — §2 Gerstner 셰이더 (Built-in RP surface shader).
+- `Scripts/Naval/OceanWaveSampler.cs` — CPU 쪽 동일 공식. 드리프트 방지를 위해
+  하드코딩 대신 바다 Material에서 파라미터를 직접 읽는다.
+- `Scripts/Naval/ShipBuoyancy.cs`, `ShipController.cs` — §3 부력·이동.
+- `Scripts/Naval/CameraRig2Point5D.cs`, `CameraRig3D.cs`, `CameraModeSwitcher.cs` — §4.
+- `Editor/NavalSceneSetup.cs`, `NavalBuildScript.cs` — PawnSim의 `SceneSetup.cs`/
+  `BuildScript.cs`와 같은 패턴(batchmode `-executeMethod`로 씬을 코드에서
+  재현). 별도 클래스·별도 씬(`Scenes/OceanPrototype.unity`)이라 PawnSim 쪽
+  빌드에는 영향 없다.
 
-## 7. 다음 세션 시작점
+Built-in RP 확정: `Packages/manifest.json`에 URP/HDRP 없음 + `ProjectSettings/
+GraphicsSettings.asset`의 `m_CustomRenderPipeline: {fileID: 0}` 로 직접 확인함
+(전에는 패키지 부재로만 추정했던 것 — 이번에 실측 완료).
 
-이 문서 + `naval-sail-prototype.yaml`을 그대로 `game-dev-agent` planner에
-넘기면 착수 가능하다. 첫 작업은 §5 Day 1(파도 셰이더)부터.
+## 7. 검증 방식과 실제로 확인된 것
+
+Unity batchmode로 씬 생성 → 빌드 → 실행 파일을 `-screenshot`/`-delay` 플래그로
+띄워 `AutoScreenshotter`(PawnSim 기존 하네스, 그대로 재사용)가 스크린샷을
+찍고 종료하게 했다. 코드가 컴파일된다는 것과 실제로 그렇게 동작한다는 것은
+다른 얘기라서, 스크린샷 + `Player.log`를 실제로 읽어 확인했다:
+
+- 바다: 스크린샷에서 파도 형태가 실제로 보임(정적 평면이 아님).
+- 부력: `ShipBuoyancy`에 임시로 찍은 로그로 pitch -6.9~12.4°, roll -26.4~26°가
+  파도 높이차를 따라 변하는 것을 확인(정적 텍스트로 "된다"고 주장하지 않고
+  숫자로 확인 — observe-dont-speculate 원칙).
+- 이동: `-autopilot`(키 입력 없이 스로틀·방향타를 시간에 따라 넣는 테스트
+  훅) 경로로 pos.z 0→19.9, yaw(euler.y) 0→24°를 로그로 확인 — 스로틀 전진과
+  방향타 회전이 실제로 배를 움직인다.
+
+**실제로 발견하고 고친 버그 1건**: 3D 카메라 리그로 전환하면 검은 화면이었다.
+스크린샷만 보고 "회전 계산이 잘못됐다"고 추측할 뻔했으나(비슷한 사례로 처음엔
+2.5D 스크린샷의 배 모양도 버그로 오인했다가, 로그로 camPos/camEuler가 의도한
+값에 정확히 수렴한 걸 확인하고서야 "긴 배를 부감으로 보면 세로로 길어 보이는
+게 정상"이라는 걸 알았다), `CameraRig3D`에도 같은 진단 로그를 찍어서 원인을
+확인했다 — `CameraModeSwitcher.ApplyState()`가 `GameObject.SetActive()`만
+하고 `Camera.enabled`는 그대로 둬서, 씬 생성 시 꺼둔 카메라 컴포넌트가 계속
+꺼진 채였다. 수정 후 재검증 완료.
+
+## 8. 검증 못 한 것 (명시 — 거짓 검증 금지)
+
+- **실제 키보드 입력 경로**: `-autopilot`은 `Input.GetAxis` 대신 코드로 값을
+  주입하는 테스트 전용 우회 경로다. 실제 WASD/화살표 입력이 `ShipController`
+  까지 제대로 연결되는지는 사람이 직접 플레이해야 확인된다.
+- **Tab 키 카메라 전환**: `-forcecam3d`도 마찬가지로 시작 상태를 강제하는
+  CLI 훅이다. 런타임에 Tab을 눌러 전환되는지는 미검증.
+- **3D 배 모델**: 지금은 스케일된 Cube다. 운영자 지시("생성형 AI로 만들도록",
+  "3D 모델링 노하우는 OpenMMO에서 참고")를 받았으나, OpenMMO는 Meshy.ai/Tripo
+  같은 유료 서비스를 쓴다 — money firewall(로컬 자원은 자동 승인, 유료
+  API/SaaS는 명시적 확인 필요) 대상이라 이번 세션에선 착수하지 않았다. 로컬
+  대안(예: ComfyUI 커스텀 노드로 이미지→3D, TripoSR류 오픈소스 모델)이 있는지
+  조사가 먼저 필요 — 별도 판단 필요 항목으로 남긴다.
+
+## 9. 다음 세션 시작점
+
+1. 운영자가 직접 플레이 — WASD 이동감 + Tab 카메라 전환 실검증.
+2. §8의 3D 모델 생성 경로 결정 (로컬 오픈소스 vs 유료 API 승인).
+3. `naval-sail-prototype.yaml`의 §5 Day 5(폴리시 + repro 시나리오)로 이어서.
