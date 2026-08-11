@@ -60,23 +60,61 @@ namespace MelonS.GameProto.EditorTools
             RenderSettings.fog = false;
         }
 
+        private const string ShipModelPath = "Assets/Models/Naval/ship-pirate-medium.fbx";
+
         private static GameObject SetupShip()
         {
-            // 저폴리 3D 모델은 후속 과제(운영자 지시: 생성형 AI로) — v0은 박스
-            // placeholder 로 이동감부터 검증한다.
-            GameObject shipGo = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            shipGo.name = "Ship";
-            shipGo.transform.localScale = new Vector3(2f, 1.2f, 6f);
+            // Kenney Pirate Kit (CC0, kenney.nl/assets/pirate-kit) — 박스
+            // placeholder 를 실제 저폴리 배 모델로 교체 (2026-08-12, 운영자
+            // "너무 허접한데" 피드백). 유료 3D 생성 API(Meshy 등)는 money
+            // firewall 대상이라 안 쓰고, 기존에 PawnSim 도 쓰던 Kenney CC0
+            // 경로를 그대로 따름 — game-artist 에이전트 우선순위(Kenney CC0
+            // 우선, SDXL 은 최후수단)와 일치.
+            GameObject shipGo = new GameObject("Ship");
             shipGo.transform.position = new Vector3(0, 0.6f, 0);
+
+            // 실측 절반-치수 — 모델을 바꿔도 하드코딩 다시 안 하도록 부력 샘플
+            // 지점을 여기서 동적으로 계산한다. 못 찾으면(폴백 박스) 옛 고정값.
+            float halfLength = 3f, halfBeam = 1f;
+
+            GameObject modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>(ShipModelPath);
+            if (modelAsset == null)
+            {
+                Debug.LogError($"[NavalSceneSetup] {ShipModelPath} 못 찾음 — 박스로 폴백");
+                GameObject fallback = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                fallback.transform.SetParent(shipGo.transform, false);
+                fallback.transform.localScale = new Vector3(2f, 1.2f, 6f);
+            }
+            else
+            {
+                GameObject model = Object.Instantiate(modelAsset);
+                model.name = "ShipModel";
+                model.transform.SetParent(shipGo.transform, false);
+
+                Renderer[] renderers = model.GetComponentsInChildren<Renderer>();
+                Bounds bounds = new Bounds(model.transform.position, Vector3.zero);
+                foreach (Renderer r in renderers) bounds.Encapsulate(r.bounds);
+                Debug.Log($"[NavalSceneSetup] ship model bounds size={bounds.size} center={bounds.center}");
+
+                // 여유(0.85배) — 부력 샘플점을 뱃머리/현측 맨 끝보다 살짝 안쪽에
+                // 둬서(전체가 파도 아래로 살짝 잠겨도) 안정된다.
+                halfLength = bounds.extents.z * 0.85f;
+                halfBeam = bounds.extents.x * 0.85f;
+
+                BoxCollider col = shipGo.AddComponent<BoxCollider>();
+                Vector3 localCenter = shipGo.transform.InverseTransformPoint(bounds.center);
+                col.center = localCenter;
+                col.size = bounds.size;
+            }
 
             Rigidbody rb = shipGo.AddComponent<Rigidbody>();
             rb.mass = 800f;
 
             shipGo.AddComponent<ShipController>();
             ShipBuoyancy buoyancy = shipGo.AddComponent<ShipBuoyancy>();
-            buoyancy.bowOffsetZ = 3f;
-            buoyancy.sternOffsetZ = -3f;
-            buoyancy.beamOffsetX = 1f;
+            buoyancy.bowOffsetZ = halfLength;
+            buoyancy.sternOffsetZ = -halfLength;
+            buoyancy.beamOffsetX = halfBeam;
 
             return shipGo;
         }

@@ -7,8 +7,8 @@ namespace MelonS.GameProto.Naval
     public class CameraRig3D : MonoBehaviour
     {
         public Transform target;
-        public float distance = 10f;
-        public float height = 4f;
+        public float distance = 20f; // Kenney ship-pirate-medium 실측(돛대 포함 세로 ~10m) 감안
+        public float height = 8f;
         public float orbitSpeed = 120f;
         public float followDamping = 5f;
 

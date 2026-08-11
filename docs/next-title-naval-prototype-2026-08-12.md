@@ -90,6 +90,8 @@ URP/HDRP 패키지가 없다. **현재 Built-in Render Pipeline으로 추정.**
   `BuildScript.cs`와 같은 패턴(batchmode `-executeMethod`로 씬을 코드에서
   재현). 별도 클래스·별도 씬(`Scenes/OceanPrototype.unity`)이라 PawnSim 쪽
   빌드에는 영향 없다.
+- `Models/Naval/ship-pirate-medium.fbx` + `Textures/colormap.png` — Kenney
+  Pirate Kit(CC0). §8 참고.
 
 Built-in RP 확정: `Packages/manifest.json`에 URP/HDRP 없음 + `ProjectSettings/
 GraphicsSettings.asset`의 `m_CustomRenderPipeline: {fileID: 0}` 로 직접 확인함
@@ -126,12 +128,17 @@ Unity batchmode로 씬 생성 → 빌드 → 실행 파일을 `-screenshot`/`-de
   까지 제대로 연결되는지는 사람이 직접 플레이해야 확인된다.
 - **Tab 키 카메라 전환**: `-forcecam3d`도 마찬가지로 시작 상태를 강제하는
   CLI 훅이다. 런타임에 Tab을 눌러 전환되는지는 미검증.
-- **3D 배 모델**: 지금은 스케일된 Cube다. 운영자 지시("생성형 AI로 만들도록",
-  "3D 모델링 노하우는 OpenMMO에서 참고")를 받았으나, OpenMMO는 Meshy.ai/Tripo
-  같은 유료 서비스를 쓴다 — money firewall(로컬 자원은 자동 승인, 유료
-  API/SaaS는 명시적 확인 필요) 대상이라 이번 세션에선 착수하지 않았다. 로컬
-  대안(예: ComfyUI 커스텀 노드로 이미지→3D, TripoSR류 오픈소스 모델)이 있는지
-  조사가 먼저 필요 — 별도 판단 필요 항목으로 남긴다.
+- ~~**3D 배 모델**: 박스 placeholder~~ → **해결(2026-08-12, 같은 세션 후속)**.
+  운영자 피드백 "너무 허접한데 이건... 배 모양의 모델링부터 해야겠어"를 받고,
+  유료 3D 생성(Meshy.ai/Tripo 등, money firewall 대상)이 아니라 **Kenney
+  Pirate Kit**(CC0, kenney.nl/assets/pirate-kit, 다운로드에 로그인·결제 불필요)
+  의 `ship-pirate-medium.fbx`로 교체했다. PawnSim도 이미 Kenney 팩(2D)을 쓰고
+  있어서 같은 경로 — `game-artist` 에이전트의 "Kenney CC0 우선, SDXL은 최후
+  수단" 우선순위와도 일치한다. 실측 치수(가로 4.8m·세로 9.96m[돛대 포함]·
+  길이 10.6m)를 코드에서 읽어 부력 샘플점·카메라 거리를 동적으로 맞췄다 —
+  하드코딩 대신 `Renderer.bounds`에서 계산(`NavalSceneSetup.SetupShip()`).
+  라이선스: CC0, 상업적 이용 가능, 표기 의무 없음(권장 사항일 뿐).
+  파일: `Assets/Models/Naval/ship-pirate-medium.fbx` + `Textures/colormap.png`.
 
 ## 9. 다음 세션 시작점
 

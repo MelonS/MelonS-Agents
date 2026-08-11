@@ -8,7 +8,7 @@ namespace MelonS.GameProto.Naval
     {
         public Transform target;
         public float pitchDeg = 55f;
-        public float distance = 14f;
+        public float distance = 26f; // Kenney ship-pirate-medium 실측(돛대 포함 세로 ~10m) 감안
         public float followDamping = 4f;
 
         private void LateUpdate()
