@@ -26,7 +26,8 @@
 ```
 
 - **게임 라인도 완료** — `python -m graph.game_graph run --task "..." --mock`
-- `graph/` 패키지 ~2,300줄. 상세는 [`graph/README.md`](../graph/README.md)
+- `graph/` 패키지 ~2,300줄. 상세는 [`graph/README.ko.md`](../graph/README.ko.md)
+  (2026-08-11 이후 영어가 정본, 이 문서는 한국어 세션 인계용이라 ko 미러를 가리킴)
 - **실물 완주 확인** (`final-real`): 스틸 88점 → 승인 → 영상화 → 컷 81점 →
   조립 → 법률 PASS(4체크) → 출시. 최종 `short.mp4` h264 704×1280 무결성 OK.
 - 남은 것: **Phase 6(게임 라인)** 하나
@@ -219,7 +220,7 @@ Unity 배타 자원과 wb 병합을 **조사해야** 하기 때문이고, 그건
 
 **개발 토큰 절감**
 - **한 세션에 한 Phase.** 대화가 길수록 매 턴 전체를 다시 보낸다.
-- 새 세션은 이 파일 + `graph/README.md`만 읽는다. 이전 대화를 되짚지 않는다.
+- 새 세션은 이 파일 + `graph/README.ko.md`만 읽는다. 이전 대화를 되짚지 않는다.
 
 ## 안 건드리는 것
 

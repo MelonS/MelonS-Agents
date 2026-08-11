@@ -65,7 +65,7 @@ case "$choice" in
     cmd "python -m graph.shorts_graph resume --thread ep12 --approve"
     head2 "읽을 것"
     note "docs/generative-shorts-pipeline.md   제작 스테이지 전체"
-    note "graph/README.md                      게이트가 왜 거기 있는지"
+    note "graph/README.ko.md                    게이트가 왜 거기 있는지"
     ;;
 
   2|game|게임)
@@ -94,7 +94,7 @@ case "$choice" in
     head2 "모델 호출 0으로 배선만 확인"
     cmd "python -m graph.shorts_graph run --spec graph/examples/shots.example.json --mock --thread demo"
     head2 "읽을 것"
-    note "graph/README.md          왜 이런 모양인지 (3시간 vs 10초)"
+    note "graph/README.ko.md       왜 이런 모양인지 (3시간 vs 10초)"
     note "docs/langgraph-plan.md   단계별 계획과 실측치"
     ;;
 

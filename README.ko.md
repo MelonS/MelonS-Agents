@@ -110,7 +110,7 @@ LangGraph 상태 기계로 돌고, 싼 단계에 문이 섭니다. 기준을 넘
 맨 위 두 장은 실행 중인 그래프를 읽어 `scripts/render-graph-art.py` 가 렌더합니다. 카드 아래
 작은 글씨가 실제 노드 이름이고, 그래프에 노드를 추가하고 배치하지 않으면 렌더가 실패하므로
 **그림이 조용히 낡을 수 없습니다.** 노드·엣지를 하나도 빼지 않은 mermaid 원본은
-[`graph/README.md`](graph/README.md) 에 있습니다.
+[`graph/README.ko.md`](graph/README.ko.md) 에 있습니다 ([English](graph/README.md)).
 
 호박색은 건너뛸 수 없는 문, 보라색은 사람이 멈춰 서는 단 한 곳(`interrupt()`), 초록은 정상 종료입니다.
 이 그래프에서 **되돌아가는** 엣지는 네 개입니다(스틸 재시도, 운영자가 지목한 재생성, 시드 리롤,
@@ -227,7 +227,7 @@ python -m venv .venv && .venv/Scripts/python -m pip install -r graph/requirement
 ```
 `--mock` 은 모델 호출과 GPU 없이 배선만 돌립니다. 쇼츠 라인의 종료 코드는 `0` 문 통과, `2` 문에서 차단, `3` 사람 승인 대기, `1` 오류입니다. 그래서 배치 스크립트에 `|| exit` 로 바로 물릴 수 있습니다. 게임 라인은 `0` 또는 `2` 를 돌려줍니다. `--thread` 에 같은 값을 주면 처음이 아니라 체크포인트에서 이어갑니다.
 
-**각 라인의 구조도는 그 워크플로의 일부입니다. 워크플로를 설명하는 부록이 아닙니다.** 그래프를 고치면 같은 작업 안에서 그림도 다시 뽑습니다. mermaid 뷰는 `python -m graph.shorts_graph diagram --compact`(게임 라인은 `graph.game_graph`)로 [`graph/README.md`](graph/README.md) 에 넣고, 위 카드 두 장은 `python scripts/render-graph-art.py` 로 만듭니다. 그래프에 노드를 추가하고 `graph/diagram.py` 에 배치하지 않으면 렌더가 곧바로 실패하고, pre-commit 훅에 물린 `scripts/sync-readme-graph.py --check` 는 낡은 구조도가 들어간 커밋을 거부합니다. 위 두 장을 예전 배선의 스냅샷이 아니라 지금 배선으로 읽어도 되는 근거가 이 강제 장치입니다.
+**각 라인의 구조도는 그 워크플로의 일부입니다. 워크플로를 설명하는 부록이 아닙니다.** 그래프를 고치면 같은 작업 안에서 그림도 다시 뽑습니다. mermaid 뷰는 `python -m graph.shorts_graph diagram --compact`(게임 라인은 `graph.game_graph`)로 [`graph/README.ko.md`](graph/README.ko.md) 에 넣고, 위 카드 두 장은 `python scripts/render-graph-art.py` 로 만듭니다. 그래프에 노드를 추가하고 `graph/diagram.py` 에 배치하지 않으면 렌더가 곧바로 실패하고, pre-commit 훅에 물린 `scripts/sync-readme-graph.py --check` 는 낡은 구조도가 들어간 커밋을 거부합니다. 위 두 장을 예전 배선의 스냅샷이 아니라 지금 배선으로 읽어도 되는 근거가 이 강제 장치입니다.
 
 **수동 music-video** (클론 이후)
 ```bash

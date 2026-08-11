@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """sync-readme-graph.py — README 의 실행 그래프 구조도를 코드에서 다시 뽑아 넣는다.
 
-README.md(영어)·README.ko.md(한국어)·graph/README.md 안의 마커 사이 블록만
-갱신한다:
+graph/README.md(영어)·graph/README.ko.md(한국어) 안의 마커 사이 블록만
+갱신한다 (루트 README.md/README.ko.md 는 docs/visuals 의 디자인 렌더를 쓰므로
+대상이 아니다 — scripts/render-graph-art.py 참조):
 
     <!-- graph:shorts:begin -->  ...  <!-- graph:shorts:end -->
     <!-- graph:game:begin -->    ...  <!-- graph:game:end -->
@@ -28,12 +29,12 @@ import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-# (파일, 라벨 언어, 이 파일이 담는 블록들).  README 는 쇼츠 두 장만 싣고,
-# 네 장 전부는 graph/README.md 에 둔다 — 랜딩 페이지가 다시 길어지지 않게.
+# (파일, 라벨 언어, 이 파일이 담는 블록들).  graph/README.md 가 영어 정본,
+# graph/README.ko.md 가 한국어 미러다 (2026-08-11, EN 우선으로 전환 — 루트
+# README.md/README.ko.md 가 링크하는 대상과 언어를 맞추기 위함).
 TARGETS = (
-    # README 는 디자인 렌더(docs/visuals/15·16, scripts/render-graph-art.py)를 싣는다.
-    # mermaid 원본은 개발자용 정확도 뷰로 graph/README.md 에만 둔다.
-    (ROOT / "graph" / "README.md", "ko", ("shorts", "game")),
+    (ROOT / "graph" / "README.md", "en", ("shorts", "game")),
+    (ROOT / "graph" / "README.ko.md", "ko", ("shorts", "game")),
 )
 _REEXEC_FLAG = "SYNC_README_GRAPH_REEXEC"
 
