@@ -23,7 +23,7 @@
 프레임 3개 = 더미 크기 3단계 (양이 많을수록 큰 프레임을 쓴다).
 
 usage:
-  python skills/game-prototype/scripts/gen-ground-items.py
+  python games/pawnsim/scripts/gen-ground-items.py
 """
 from __future__ import annotations
 import sys
@@ -39,7 +39,7 @@ from ts_palette import (                     # noqa: E402
 )
 
 REPO = Path(__file__).resolve().parents[3]
-ITEMS = (REPO / "skills" / "game-prototype" / "unity-project"
+ITEMS = (REPO / "games" / "pawnsim" / "unity-project"
          / "Assets" / "Resources" / "items32")
 S = 32
 

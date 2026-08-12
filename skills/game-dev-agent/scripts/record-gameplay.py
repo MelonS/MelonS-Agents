@@ -46,8 +46,10 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
 UNITY_EXE   = os.environ.get("UNITY_EXE",
               "G:/tools/UnityEditors/6000.0.75f1/Editor/Unity.exe")
 SCRIPT_DIR  = Path(__file__).resolve().parent
-# scripts/ -> game-dev-agent/ (1 ..) -> skills/ (2 ..) -> game-prototype/unity-project
-PROJECT     = (SCRIPT_DIR / ".." / ".." / "game-prototype" / "unity-project").resolve()
+# scripts/ -> game-dev-agent/ (1 ..) -> skills/ (2 ..) -> repo root (3 ..) -> games/pawnsim/unity-project
+# (2026-08-12: PawnSim moved out of skills/ into games/pawnsim/, sibling of skills/ —
+#  one more ".." than before.)
+PROJECT     = (SCRIPT_DIR / ".." / ".." / ".." / "games" / "pawnsim" / "unity-project").resolve()
 METHOD      = "MelonS.GameProto.EditorTools.GameplayRecorderTool.Record"
 LOG_FILE    = Path("G:/ai/_unity_recorder.log")
 DEFAULT_OUT = "G:/ai/pawnsim_gameplay.mp4"

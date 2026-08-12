@@ -1,7 +1,7 @@
-# game-prototype — PawnSim: a lightweight colony-sim vertical slice (Skill #3-A)
+# pawnsim — a lightweight colony-sim vertical slice (Skill #3-A)
 
 A top-down colony-sim **vertical slice** built **with** the
-[`game-dev-agent`](../game-dev-agent/) AI assistant — every sprite, script,
+[`game-dev-agent`](../../skills/game-dev-agent/) AI assistant — every sprite, script,
 scene, and verification harness is agent-scaffolded from the CLI, with no
 manual Unity Editor work in the build chain.
 
@@ -147,7 +147,7 @@ fidelity in [`docs/audit-genre-fidelity-2026-05-29.md`](docs/audit-genre-fidelit
 
 ## How it was built — agent-driven, reproducible from CLI
 
-**Every system is generated or scaffolded by [`game-dev-agent`](../game-dev-agent/)**
+**Every system is generated or scaffolded by [`game-dev-agent`](../../skills/game-dev-agent/)**
 via `python skills/game-dev-agent/scripts/agent.py <cmd>`:
 
 - Sprites — `agent.py gen-sprite` (SDXL-Turbo on local ComfyUI) or
@@ -186,13 +186,13 @@ resolve it dynamically, never a hardcoded date).
 Rebuild from source (idempotent):
 
 ```bash
-cd skills/game-prototype
+cd games/pawnsim
 
 # 1) regenerate scenes + prefabs
-python ../game-dev-agent/scripts/agent.py integrate --project unity-project --method scenes
+python ../../skills/game-dev-agent/scripts/agent.py integrate --project unity-project --method scenes
 
 # 2) build the Windows .exe
-python ../game-dev-agent/scripts/agent.py integrate --project unity-project --method build --day final
+python ../../skills/game-dev-agent/scripts/agent.py integrate --project unity-project --method build --day final
 ```
 
 Both steps invoke Unity 6000.0.75f1 in batchmode under the hood. Output:

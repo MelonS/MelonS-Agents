@@ -1,5 +1,5 @@
 ---
-name: game-prototype
+name: pawnsim
 description: Unity-based mini colony-sim-style game prototype, built using game-dev-agent. Portfolio piece demonstrating AI agent + game dev T-shape skill.
 license: MIT
 compatibility:
@@ -18,10 +18,10 @@ allowed-tools:
   - Bash
 ---
 
-# game-prototype
+# pawnsim
 
 Unity mini colony-sim-style colony sim vertical slice, built in 7 days
-using [`game-dev-agent`](../game-dev-agent/) for asset generation,
+using [`game-dev-agent`](../../skills/game-dev-agent/) for asset generation,
 code scaffolding, balance tuning, and in-game AI Director.
 
 ## Reference game
@@ -60,7 +60,7 @@ Each day = `builds/day-X-2026-MM-DD.exe` snapshot saved.
 ## Directory layout
 
 ```
-skills/game-prototype/
+games/pawnsim/
 ├── SKILL.md (this file)
 ├── unity-project/          # Unity 2022.3.32f1 project root
 │   ├── Assets/

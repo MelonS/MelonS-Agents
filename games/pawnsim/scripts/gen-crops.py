@@ -29,7 +29,7 @@
 아웃라인 OUT_C 는 팩 실측값이라 `check-art-tone.py` 가 이 값으로 판정한다.
 
 usage:
-  python skills/game-prototype/scripts/gen-crops.py
+  python games/pawnsim/scripts/gen-crops.py
 """
 from __future__ import annotations
 import sys
@@ -44,7 +44,7 @@ from ts_palette import (                    # noqa: E402
 )
 
 REPO = Path(__file__).resolve().parents[3]
-RES = REPO / "skills" / "game-prototype" / "unity-project" / "Assets" / "Resources"
+RES = REPO / "games" / "pawnsim" / "unity-project" / "Assets" / "Resources"
 CROPS = RES / "crops32"
 ITEMS = RES / "items32"
 

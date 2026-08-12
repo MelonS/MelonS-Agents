@@ -9,7 +9,7 @@
   flora32_bush_berry.png = 128px, 베이크 등록 PPU 128 (→ 1칸)
   그런데 커밋된 .meta 는 PPU 32 → **4×4칸**.  나무(2칸)의 두 배 크기로 렌더됐다.
 
-usage: python skills/game-prototype/scripts/check-sprite-ppu.py
+usage: python games/pawnsim/scripts/check-sprite-ppu.py
 exit 0 = 불일치 없음.
 """
 from __future__ import annotations
@@ -20,7 +20,7 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 REPO = Path(__file__).resolve().parents[3]
-UP = REPO / "skills" / "game-prototype" / "unity-project"
+UP = REPO / "games" / "pawnsim" / "unity-project"
 EDITOR = UP / "Assets" / "Editor"
 
 # ("Assets/....png", 128f) 형태의 등록을 전부 긁는다.

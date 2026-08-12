@@ -27,8 +27,8 @@ import subprocess
 #  보이므로 원인이 정반대로 읽힌다 (2026-08-09 WebGL 배포 경로에서 실제로 겪음).
 
 REPO = Path(__file__).resolve().parents[3]  # ...skills/game-dev-agent/scripts/X.py -> MelonS-Agents
-UNITY_PROJ = REPO / "skills" / "game-prototype" / "unity-project"
-BUILD_EXE  = REPO / "skills" / "game-prototype" / "builds" / "verify-game-only" / "PawnSim.exe"
+UNITY_PROJ = REPO / "games" / "pawnsim" / "unity-project"
+BUILD_EXE  = REPO / "games" / "pawnsim" / "builds" / "verify-game-only" / "PawnSim.exe"
 
 # Scratch dir for baseline/current screenshots + Unity logs.  Deliberately
 # OUTSIDE the repo (these are large, regenerated every cycle, and must not be
@@ -120,7 +120,7 @@ def _find_day_build_target(harness_latest: Path | None = None) -> tuple[Path, bo
     if harness_latest is not None and harness_latest.exists():
         return harness_latest, True
 
-    builds_dir = REPO / "skills" / "game-prototype" / "builds"
+    builds_dir = REPO / "games" / "pawnsim" / "builds"
     day_builds = sorted(builds_dir.glob("day-*-2026-*"),
                         key=lambda p: p.stat().st_mtime)
     if day_builds:
@@ -162,7 +162,7 @@ def step_fresh_build(day_tag: str = "_harness-latest") -> int:
     operator-facing day-N builds.  Adds ~2-5 min per run.
     """
     import shutil
-    harness_out = REPO / "skills" / "game-prototype" / "builds" / "_harness-latest"
+    harness_out = REPO / "games" / "pawnsim" / "builds" / "_harness-latest"
     print(f"[refactor] (4.4/7) fresh build → {harness_out} ...")
     # Temporarily set env so BuildScript writes to _harness-latest folder.
     import os
@@ -493,7 +493,7 @@ def main():
                 print(f"\n[refactor] FAIL @ fresh build (rc={rc})")
                 return rc
             harness_latest = (
-                REPO / "skills" / "game-prototype" / "builds" / "_harness-latest" / "PawnSim.exe"
+                REPO / "games" / "pawnsim" / "builds" / "_harness-latest" / "PawnSim.exe"
             )
         rc = step_real_qa(delay=args.real_qa_seconds,
                           allow_stale=args.allow_stale,

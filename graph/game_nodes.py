@@ -243,7 +243,7 @@ def qa_verify(state: GameState) -> dict[str, Any]:
         #                -integration 은 IntegrationTestRunner 만 켤 뿐 일시정지를
         #                풀지 못한다 (실측: 로그에 activated 후에도 일시정지 진입).
         scenario = state.get("qa_scenario") or str(
-            tools.repo_root() / "skills" / "game-prototype" / "repro-scenarios" / "_grade-tour.json"
+            tools.repo_root() / "games" / "pawnsim" / "repro-scenarios" / "_grade-tour.json"
         )
         ok, note = tools.launch_and_capture(
             pathlib.Path(exe), shot, delay=float(state.get("qa_delay", 8)),

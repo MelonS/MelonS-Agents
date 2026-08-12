@@ -23,9 +23,9 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 import refactor_check as rc
 
-SCEN_DIR = rc.REPO / "skills" / "game-prototype" / "repro-scenarios"
+SCEN_DIR = rc.REPO / "games" / "pawnsim" / "repro-scenarios"
 #  실패 사유 보존용 — 게이트 요약만으로는 원인을 못 찾는다 (2026-07-30).
-LOG_DIR = rc.REPO / "skills" / "game-prototype" / "art-out" / "repro-logs"
+LOG_DIR = rc.REPO / "games" / "pawnsim" / "art-out" / "repro-logs"
 RUNNER = Path(__file__).parent / "repro_run.py"
 
 # 2단 게이트 (2026-07-24) — 풀 게이트 30~60분이 "게이트 생략" 사고를 유발해 도입.
@@ -83,7 +83,7 @@ def main() -> int:
     #  중단하지 않는다 — 시나리오 결과까지 한 번에 보는 편이 왕복이 적다.  대신
     #  최종 판정에는 반영한다(요약에 STATIC 행으로 남는다).
     static_rc = 0
-    font_check = (rc.REPO / "skills" / "game-prototype" / "scripts"
+    font_check = (rc.REPO / "games" / "pawnsim" / "scripts"
                   / "check-font-coverage.py")
     if font_check.exists():
         print("\n[repro_all] ── 사전 정적 검사: 폰트 커버리지 + 월드 TextMesh 폰트 ──")
@@ -112,7 +112,7 @@ def main() -> int:
         if args.build:
             # ⚠ 절대 경로로 바꿔서 넘긴다 (2026-07-31).  아래 subprocess 는
             #  `cwd=RUNNER.parent`(= scripts/) 에서 도는데, 운영자가 레포 루트에서
-            #  상대 경로로 `--build skills/game-prototype/builds/.../PawnSim.exe` 를
+            #  상대 경로로 `--build games/pawnsim/builds/.../PawnSim.exe` 를
             #  주면 자식 프로세스에선 그 경로가 존재하지 않는다 → repro_run 이
             #  "사용 가능한 빌드 없음"으로 즉시 종료하고, 게이트는 그것을 STALE 로
             #  집계한다.  실측: 22/22 STALE 로 게이트 전체가 한 번도 실행되지 않았는데

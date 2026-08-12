@@ -26,9 +26,9 @@
                      문서에 `이름 = 값` 형태로 적힌 것을 코드와 대조한다.
 
 사용:
-  python skills/game-prototype/scripts/spec-sync.py            # 전체
-  python skills/game-prototype/scripts/spec-sync.py --only ghost
-  python skills/game-prototype/scripts/spec-sync.py --json     # 기계 판독
+  python games/pawnsim/scripts/spec-sync.py            # 전체
+  python games/pawnsim/scripts/spec-sync.py --only ghost
+  python games/pawnsim/scripts/spec-sync.py --json     # 기계 판독
 exit 0 = 드리프트 없음.
 """
 from __future__ import annotations

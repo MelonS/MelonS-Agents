@@ -9,8 +9,8 @@
 # completed/success 로 떠서 "배포됐다"고 착각한다.  headSha 를 HEAD 와 비교해야 한다.
 #
 # usage:
-#   bash skills/game-prototype/scripts/verify-deploy.sh
-#   bash skills/game-prototype/scripts/verify-deploy.sh --wait     # 워크플로 완료까지 대기
+#   bash games/pawnsim/scripts/verify-deploy.sh
+#   bash games/pawnsim/scripts/verify-deploy.sh --wait     # 워크플로 완료까지 대기
 set -euo pipefail
 
 URL="https://melons.github.io/MelonS-Agents/play/"
@@ -33,10 +33,10 @@ if [[ "$LAST_PLAY" != "$HEAD_SHA" ]]; then
     #  둘 다 나쁘다.  둔감해지는 쪽이 특히 위험하다: 진짜로 뒤처졌을 때 못 알아본다.
     #  게임 빌드에 실제로 들어가는 경로만 센다.
     GAME_PATHS=(
-      "skills/game-prototype/unity-project/Assets"
-      "skills/game-prototype/unity-project/ProjectSettings"
-      "skills/game-prototype/unity-project/Packages"
-      "skills/game-prototype/scripts/deploy-play.sh"
+      "games/pawnsim/unity-project/Assets"
+      "games/pawnsim/unity-project/ProjectSettings"
+      "games/pawnsim/unity-project/Packages"
+      "games/pawnsim/scripts/deploy-play.sh"
     )
     CHANGED=$(git diff --name-only "$LAST_PLAY" "$HEAD_SHA" -- "${GAME_PATHS[@]}" | head -20)
     if [[ -n "$CHANGED" ]]; then

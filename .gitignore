@@ -34,7 +34,7 @@ assets/music/*
 *.jpg
 # 제출 문서에 실린 게임 화면 — PDF 의 일부이므로 소스와 함께 추적한다
 # (요강: 전체 소스를 동일 저장소에 포함.  문서만 있고 그림이 없으면 재현이 안 된다)
-!skills/game-prototype/docs/figures/*.png
+!games/pawnsim/docs/figures/*.png
 
 # Caption-verify proof frames are committed evidence
 !docs/caption-verify/*.jpg
@@ -52,7 +52,7 @@ assets/music/*
 !docs/metrics/*.png
 # Demo showcase frames (README evidence — e.g. PawnSim build screenshot)
 # Main-menu key art (FLUX-generated asset — not reproducible from scripts)
-!skills/game-prototype/unity-project/Assets/Resources/UI/*.png
+!games/pawnsim/unity-project/Assets/Resources/UI/*.png
 !docs/demo/*.png
 # README visual cards (Claude Design infographics — committed README evidence)
 !docs/visuals/*.png
@@ -212,31 +212,31 @@ outputs/publish/**/_concat.txt
 # Game asset PNGs ARE tracked (override the global *.png ignore) since they
 # ARE source content for the game prototype Skill #3.
 # =============================================================================
-skills/game-prototype/unity-project/Library/
-skills/game-prototype/unity-project/Temp/
-skills/game-prototype/unity-project/Logs/
-skills/game-prototype/unity-project/UserSettings/
-skills/game-prototype/unity-project/obj/
-skills/game-prototype/unity-project/Build/
-skills/game-prototype/unity-project/Builds/
-skills/game-prototype/unity-project/*.csproj
-skills/game-prototype/unity-project/*.sln
-skills/game-prototype/unity-project/.vs/
+games/pawnsim/unity-project/Library/
+games/pawnsim/unity-project/Temp/
+games/pawnsim/unity-project/Logs/
+games/pawnsim/unity-project/UserSettings/
+games/pawnsim/unity-project/obj/
+games/pawnsim/unity-project/Build/
+games/pawnsim/unity-project/Builds/
+games/pawnsim/unity-project/*.csproj
+games/pawnsim/unity-project/*.sln
+games/pawnsim/unity-project/.vs/
 # Performance Testing 패키지가 임포트 때마다 Resources/ 에 떨어뜨리는 런 설정 —
 # 프로젝트 자산이 아니라 실행 산출물이다.
-skills/game-prototype/unity-project/Assets/Resources/PerformanceTestRun*.json
-skills/game-prototype/unity-project/Assets/Resources/PerformanceTestRun*.json.meta
+games/pawnsim/unity-project/Assets/Resources/PerformanceTestRun*.json
+games/pawnsim/unity-project/Assets/Resources/PerformanceTestRun*.json.meta
 
 # Re-allow game art PNGs (override global *.png ignore)
-!skills/game-prototype/unity-project/Assets/**/*.png
-!skills/game-prototype/unity-project/Assets/**/*.jpg
-!skills/game-prototype/unity-project/Assets/**/*.tga
-!skills/game-prototype/unity-project/Assets/**/*.wav
-!skills/game-prototype/unity-project/Assets/**/*.mp3
-!skills/game-prototype/unity-project/Assets/**/*.ogg
+!games/pawnsim/unity-project/Assets/**/*.png
+!games/pawnsim/unity-project/Assets/**/*.jpg
+!games/pawnsim/unity-project/Assets/**/*.tga
+!games/pawnsim/unity-project/Assets/**/*.wav
+!games/pawnsim/unity-project/Assets/**/*.mp3
+!games/pawnsim/unity-project/Assets/**/*.ogg
 
 # Daily build snapshots — too big for repo, machine-local
-skills/game-prototype/builds/
+games/pawnsim/builds/
 
 # =============================================================================
 # Unity project — games/naval-sail (범선 항해 프로토타입, PawnSim과 분리된
@@ -296,11 +296,11 @@ config/subjects/*.yaml
 # 생성돼 씬·타일의 스프라이트 참조가 조용히 끊긴다 (2026-07-25 a06df81 사고:
 # 병합이 ts_* 참조 11건을 유령 GUID 로 덮어써 지형·나무·폰·양이 전부 사라졌고
 # 빌드 게이트는 통과했다 — 행동 게이트는 렌더 결손을 못 잡는다).
-skills/game-prototype/unity-project/Assets/Sprites/ts_*.png
-skills/game-prototype/unity-project/Assets/Resources/Sprites/ts_*.png
+games/pawnsim/unity-project/Assets/Sprites/ts_*.png
+games/pawnsim/unity-project/Assets/Resources/Sprites/ts_*.png
 
 # graph/game_graph.py 가 사이클마다 쓰는 병합 스냅샷 — 산출물이므로 커밋하지 않는다
 whiteboard-*.json
 
 # 아트 생성 작업본 (시안·원본 512px) — 채택본만 Assets/Sprites 로 반입한다
-skills/game-prototype/art-out/
+games/pawnsim/art-out/

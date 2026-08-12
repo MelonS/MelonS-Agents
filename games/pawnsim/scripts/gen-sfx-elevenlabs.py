@@ -24,10 +24,10 @@
      건드리면 위 1번 사고를 반복한다 — 액션 SFX 만 바꾼다.
 
 사용:
-  python skills/game-prototype/scripts/gen-sfx-elevenlabs.py --dry-run   # 계획만
-  python skills/game-prototype/scripts/gen-sfx-elevenlabs.py             # 생성
-  python skills/game-prototype/scripts/gen-sfx-elevenlabs.py --only chop
-  python skills/game-prototype/scripts/gen-sfx-elevenlabs.py --rollback  # 원복
+  python games/pawnsim/scripts/gen-sfx-elevenlabs.py --dry-run   # 계획만
+  python games/pawnsim/scripts/gen-sfx-elevenlabs.py             # 생성
+  python games/pawnsim/scripts/gen-sfx-elevenlabs.py --only chop
+  python games/pawnsim/scripts/gen-sfx-elevenlabs.py --rollback  # 원복
 """
 from __future__ import annotations
 import argparse

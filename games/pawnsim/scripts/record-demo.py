@@ -20,8 +20,8 @@ NAN 2026 제출물 ②는 "실제 플레이 화면 30~60초"이고, AI 합성 �
 그대로 띄우고 그 창을 찍는 편이 산출물의 진실성에도 맞는다.
 
 usage:
-  python skills/game-prototype/scripts/record-demo.py
-  python skills/game-prototype/scripts/record-demo.py --scenario _demo-submission --fps 30
+  python games/pawnsim/scripts/record-demo.py
+  python games/pawnsim/scripts/record-demo.py --scenario _demo-submission --fps 30
 """
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-ROOT = Path(__file__).resolve().parents[1]          # skills/game-prototype
+ROOT = Path(__file__).resolve().parents[1]          # games/pawnsim
 SCEN_DIR = ROOT / "repro-scenarios"
 BUILDS = ROOT / "builds"
 OUT_DIR = ROOT / "art-out" / "demo"

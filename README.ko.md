@@ -23,18 +23,18 @@
 </div>
 
 > **제출물 심사로 이 저장소를 보고 계신가요?**  게임은
-> [`skills/game-prototype/`](skills/game-prototype/) 에 있습니다.  외부 아트 팩은
+> [`games/pawnsim/`](games/pawnsim/) 에 있습니다.  외부 아트 팩은
 > **재배포가 금지**돼 커밋하지 않았고, 팩이 없어도 **절차 생성 폴백**으로 클린
 > 클론에서 정상 빌드·실행됩니다.  팩 비주얼이 필요하면
-> [`extract-tinyswords.py`](skills/game-prototype/scripts/extract-tinyswords.py) 를,
+> [`extract-tinyswords.py`](games/pawnsim/scripts/extract-tinyswords.py) 를,
 > 외부 에셋 출처·라이선스는 [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md) 를 보세요.
 >
-> **제출물 위치** — 빌드·소스: [`skills/game-prototype/`](skills/game-prototype/)
+> **제출물 위치** — 빌드·소스: [`games/pawnsim/`](games/pawnsim/)
 > · 플레이 링크: <https://melons.github.io/MelonS-Agents/play/>
 > · 제출 PDF 의 원본 문서:
-> [게임 소개](skills/game-prototype/docs/submission-game-intro-2026.md) ·
-> [AI 기술](skills/game-prototype/docs/submission-ai-tech-2026.md)
-> · 시연 영상 촬영 방법: [`trailer-production.md`](skills/game-prototype/docs/trailer-production.md)
+> [게임 소개](games/pawnsim/docs/submission-game-intro-2026.md) ·
+> [AI 기술](games/pawnsim/docs/submission-ai-tech-2026.md)
+> · 시연 영상 촬영 방법: [`trailer-production.md`](games/pawnsim/docs/trailer-production.md)
 
 - **실제로 내놓습니다.** **music-video** 파이프라인이 정해진 주기로 결과물을 냅니다: 음악 한 곡 → 60초 9:16 쇼츠(비트 컷·장르 그레이드). 두 번째 파이프라인 **content-shorts** 는 2026-07-01 첫 실제 쇼츠를 유튜브에 올렸고(아이돌 포맷), 다만 아직 정기적으로 내지는 못합니다.
 - **런타임 비용은 0.** 기계적인 작업은 로컬 오픈소스 도구(ffmpeg · whisper.cpp · ollama · aubio)가 하고, Claude Code 에이전트는 지휘만 맡습니다. 그래서 미션 한 번에 **런타임 API 토큰 0개**.
@@ -168,7 +168,7 @@ Pexels 가입도, Suno 호출도, `.env` 편집도 필요 없습니다 — 마�
 
 ![PawnSim 2026-06-12 — 풀밭 위 초기 콜로니: 체력·기분 바를 단 이름표 콜로니스트 셋, 우상단에 올라가는 목재 벽 골조(32px 톱다운 블록 벽), 모은 목재와 흩어진 광맥·돌, 실시간 자원 카운터, 하단에 열린 건축 메뉴](docs/demo/pawnsim-2026-06-12-built-house.png)
 
-콜로니스트는 유틸리티 AI 에 따라 벌목·채광·농사·요리·운반·건축·연구·전투를 하고, AI 디렉터가 불규칙한 주기로 위협을 배치하며, 플레이어는 폰을 전투에 징집하고 건축·지정 명령을 내립니다. 모든 스프라이트(완전한 **32px 아트 생성**), 모든 씬, 모든 C# 시스템을 [`game-dev-agent`](skills/game-dev-agent/) 가 CLI 로 스캐폴딩하며 **수동 Unity 에디터 작업은 전혀 없습니다**. 전체 기능 목록과 정직한 검증 상태(알려진 한계 포함): [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
+콜로니스트는 유틸리티 AI 에 따라 벌목·채광·농사·요리·운반·건축·연구·전투를 하고, AI 디렉터가 불규칙한 주기로 위협을 배치하며, 플레이어는 폰을 전투에 징집하고 건축·지정 명령을 내립니다. 모든 스프라이트(완전한 **32px 아트 생성**), 모든 씬, 모든 C# 시스템을 [`game-dev-agent`](skills/game-dev-agent/) 가 CLI 로 스캐폴딩하며 **수동 Unity 에디터 작업은 전혀 없습니다**. 전체 기능 목록과 정직한 검증 상태(알려진 한계 포함): [`games/pawnsim/README.md`](games/pawnsim/README.md).
 
 ## 샘플 결과물 — 생성형 쇼츠
 
@@ -203,7 +203,7 @@ Pexels 가입도, Suno 호출도, `.env` 편집도 필요 없습니다 — 마�
 - **셀 쉐이딩은 의도적으로 미룸** — ffmpeg 의 한계가 어디인지 아는 편이, 결과를 그럴싸하게 위장하는 것보다 낫기 때문입니다.
 - **`출력 100+` 는 정확한 집계가 아니라 어림값** — 미션 출력물은 `records/`(gitignore) 아래 로컬에만 남기 때문에, 저장소만 봐서는 이 수치를 독립적으로 검증할 수 없습니다.
 
-더 많은 부정적 결과와 미룬 범위: [`skills/game-prototype/README.md`](skills/game-prototype/README.md) (정직한 검증 상태 + out-of-scope). 해결된 이슈 기록(예: Homebrew ffmpeg/libass 분리): [`docs/known-limitations.md`](docs/known-limitations.md).
+더 많은 부정적 결과와 미룬 범위: [`games/pawnsim/README.md`](games/pawnsim/README.md) (정직한 검증 상태 + out-of-scope). 해결된 이슈 기록(예: Homebrew ffmpeg/libass 분리): [`docs/known-limitations.md`](docs/known-limitations.md).
 
 <details>
 <summary><b>설계 노트 — 흔한 에이전트 데모와 다른 선택들</b></summary>
@@ -244,12 +244,12 @@ skills/job-hunt/scripts/run.sh --seed "Problem Solver" --dry-run
 
 **PawnSim** (Windows + Unity 6000.0.75f1 LTS)
 ```bash
-cd skills/game-prototype
+cd games/pawnsim
 python ../game-dev-agent/scripts/agent.py integrate --project unity-project --method scenes
 python ../game-dev-agent/scripts/agent.py integrate --project unity-project --method build --day PLAY
 "$(ls -dt builds/day-*/ | head -1)PawnSim.exe"   # 항상 최신 빌드를 동적으로 잡음
 ```
-미리 빌드한 `.exe` 는 커밋하지 않습니다 (`builds/` 는 gitignore). 전체 조작법과 플래그: [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
+미리 빌드한 `.exe` 는 커밋하지 않습니다 (`builds/` 는 gitignore). 전체 조작법과 플래그: [`games/pawnsim/README.md`](games/pawnsim/README.md).
 
 두 미디어 스킬의 전체 레시피 모음: [`EXAMPLES.md`](EXAMPLES.md).
 

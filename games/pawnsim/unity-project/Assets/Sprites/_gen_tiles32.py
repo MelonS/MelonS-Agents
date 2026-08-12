@@ -17,7 +17,7 @@ import random
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-PALETTE_DIR = r"G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Sprites"
+PALETTE_DIR = r"G:/ai/MelonS-Agents/games/pawnsim/unity-project/Assets/Sprites"
 sys.path.insert(0, PALETTE_DIR)
 
 from PIL import Image  # noqa: E402

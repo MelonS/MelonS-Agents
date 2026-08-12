@@ -75,7 +75,7 @@ case "$choice" in
     head2 "필요한 것"
     note "Unity 2022.3 이상 · Windows"
     head2 "시작"
-    cmd "cat skills/game-prototype/README.md"
+    cmd "cat games/pawnsim/README.md"
     cmd "python skills/game-dev-agent/scripts/agent.py --help"
     head2 "읽을 것"
     note "skills/game-dev-agent/ARCHITECTURE.md   모듈 = 서브에이전트 구조"

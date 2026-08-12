@@ -3,7 +3,7 @@
 crop_rice 3단계 32px (PPU 32 — meta 갱신 동반) / struct32_stone_vein / tile32_rock_a·b."""
 import sys, os, random
 sys.stdout.reconfigure(encoding="utf-8")
-PAL_DIR = r"G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Sprites"
+PAL_DIR = r"G:/ai/MelonS-Agents/games/pawnsim/unity-project/Assets/Sprites"
 sys.path.insert(0, PAL_DIR)
 import palette as P
 from PIL import Image

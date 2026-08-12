@@ -226,11 +226,17 @@ job-hunt 항목은 Blocked/parked로 이동하는 것을 제안합니다.  다�
   → `games/<이름>/` 패턴으로 합의 → `games/naval-sail/unity-project/`를
   `-createProject`로 새로 만들고 배게임 파일을 옮긴 뒤, PawnSim 프로젝트에
   남아있던 배게임 잔여물(Scripts/Naval/ 등)을 제거해 PawnSim을 다시 순수
-  PawnSim 전용으로 되돌렸다. PawnSim(`skills/game-prototype/`)은 9/6 심사
-  종료 후 `games/pawnsim/`으로 옮길 예정 — 지금은 제출물이라 안 건드림.
+  PawnSim 전용으로 되돌렸다. 원래는 PawnSim(`skills/game-prototype/`) 이동은
+  9/6 심사 종료 후로 미룰 계획이었으나, 운영자가 "PawnSim도 옮겨"라고 직접
+  지시해 같은 날 `games/pawnsim/`으로 이동 — site/play/(배포된 실물)·YouTube
+  영상·저장소 공개 상태는 소스 폴더 위치와 무관해서 심사에 영향 없음. 경로를
+  참조하던 스크립트(graph/game_*.py, skills/game-dev-agent/scripts/*.py,
+  games/pawnsim/scripts/*.py 자체 참조, README.md·ATTRIBUTIONS.md 등)를 전부
+  `games/pawnsim/`로 갱신. `.claude/wb/*.json`(과거 작업 로그)과
+  `docs/metrics/intervention.json`(과거 커밋 subject 기록)은 이력이라 안 건드림.
   검증: 새 프로젝트에서 씬 재생성+빌드+스크린샷 — 배 모델 실측치(4.80×9.96×10.60)
   가 분리 전과 동일하게 나옴. PawnSim 쪽은 배게임 파일 제거 후 컴파일 에러 0건
-  확인(batchmode 도메인 리로드).
+  확인(batchmode 도메인 리로드). 이동 후 재검증은 아래 새 Done 항목 참조.
 
 - **2026-08-12 (차기작 — 범선 항해 게임)** 이동 프로토타입 v0 — `550679b`
   (+ IP 스크럽 `c1d1927`, 기획 `3b61880`). 운영자가 /goal 로 직접 지시(배+바다
@@ -287,7 +293,7 @@ job-hunt 항목은 Blocked/parked로 이동하는 것을 제안합니다.  다�
   · **게임 본체 결함 3건** 동반 수정 — 자원 패널 강조색이 배경에 묻혀 값이 1.2초간
     사라지던 것, 석재 칩이 상시 안 읽히던 것(구분은 색상이, 가독은 명도가 한다),
     부팅 일시정지가 배속 설정과 경합하던 것.
-  · 함정 기록 정본: [`trailer-production.md`](../skills/game-prototype/docs/trailer-production.md).
+  · 함정 기록 정본: [`trailer-production.md`](../games/pawnsim/docs/trailer-production.md).
 
 - **2026-08-07 (PawnSim / NAN 2026, D-3)** 제출 준비 + 재미 점수 46.7 → 78.1.
   운영자 "해커톤 몇일 안남았어. 이제 슬슬 출품 준비를 해야해."
@@ -416,7 +422,7 @@ job-hunt 항목은 Blocked/parked로 이동하는 것을 제안합니다.  다�
   '벽이 하나라도 있으면'인데 시작 집에 이미 벽이 있었다(저장구역·벌목에 이은 같은
   함정 세 번째).  `4420529` 직업 우선순위 표 배경 딤 + 바깥 클릭 닫기.
   `fca272d` 최종 배포.  게이트 22/22 + 정적 검사 PASS, WebGL 스모크 PASS.
-  상세: `skills/game-prototype/docs/legibility-and-progression-2026-07-31.md`
+  상세: `games/pawnsim/docs/legibility-and-progression-2026-07-31.md`
 - **2026-07-31 (운영자 인터랙티브, Windows)** 리센느 EN ep.2 출시
   (ToddStudio `IOEgWU160wg`, 8/1 08:30 KST 예약) + **중복 업로드 사고 재발방지**.
   * ep.2 축: "그들은 자기가 우승한 방송에 없었다" — 7/25 음악중심 첫 지상파
@@ -465,7 +471,7 @@ job-hunt 항목은 Blocked/parked로 이동하는 것을 제안합니다.  다�
   '성공'해서 생긴 버그) + 인게임 캡처 도구 사망(스케일 시간 대기)·게이트의
   stale 오분류 수정 · `34f1480` 제출물 ② 녹화 도구(거짓 성공 2종을 잡는 자동
   검수 포함)와 ③④ PDF 파이프라인 · `f900288` 재배포+검증.
-  기록: `skills/game-prototype/docs/live-verification-2026-07-29.md`.
+  기록: `games/pawnsim/docs/live-verification-2026-07-29.md`.
   제출물 4종 중 남은 것은 **② 영상의 YouTube 업로드(운영자)** 뿐.
 
 - **2026-07-26 (운영자 인터랙티브, Windows)** `main` 5연속 빨간불 해소:
@@ -636,7 +642,7 @@ job-hunt 항목은 Blocked/parked로 이동하는 것을 제안합니다.  다�
   상습 초과, `5c27e6e`) + 재현 p0-autosleep-bed-reach·하네스 ops 3종(`e32ab3c`).
   ② 건축 UI 레퍼런스 콜로니심 파리티 재구축 — 좌하단 2열 카테고리 + 아이콘 셸프 + 연속배치
   (`36d5928`).  게이트 repro_all 13/13 PASS.  다음: 몰입 디자인 트랙 D1~D5
-  (`skills/game-prototype/docs/design-immersion-2026-06-11.md`).  suggest: 침대
+  (`games/pawnsim/docs/design-immersion-2026-06-11.md`).  suggest: 침대
   소유권(밤마다 전 림이 ScheduledSleepNow 로 빈 침대 경합 — 레퍼런스 콜로니심는 림당 침대 지정).
 - **2026-06-10 밤~06-11 새벽** 야간 자율 세션 — UI 배치 2~5(19건) + 게임필 배치 1~5
   (운영자 위임: "기능 최소화 상태로 게임이 되어야 함").  멀티에이전트 격차 분석 평결

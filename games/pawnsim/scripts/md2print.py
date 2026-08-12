@@ -16,8 +16,8 @@ pandoc/wkhtmltopdf 가 없고, 있다 해도 한글 폰트 임베딩이 매번 �
 로컬 폰트로 렌더해도 결과물엔 문제가 없다.
 
 usage:
-  python skills/game-prototype/scripts/md2print.py docs/submission-game-intro-2026.md
-  python skills/game-prototype/scripts/md2print.py --all
+  python games/pawnsim/scripts/md2print.py docs/submission-game-intro-2026.md
+  python games/pawnsim/scripts/md2print.py --all
 """
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ import markdown
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-ROOT = Path(__file__).resolve().parents[1]          # skills/game-prototype
+ROOT = Path(__file__).resolve().parents[1]          # games/pawnsim
 OUT_DIR = ROOT / "art-out" / "submission"
 
 # 제출물 목록 — 요강의 ③/④ 에 대응.

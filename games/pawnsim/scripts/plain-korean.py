@@ -14,7 +14,7 @@
     과거 맥락이 끊긴다.  Debug.Log 는 개발자용이라 화면에 안 나온다.
 
 usage:
-  python skills/game-prototype/scripts/plain-korean.py [--dry]
+  python games/pawnsim/scripts/plain-korean.py [--dry]
 """
 from __future__ import annotations
 import io

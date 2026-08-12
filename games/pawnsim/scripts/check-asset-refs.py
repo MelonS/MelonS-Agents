@@ -7,9 +7,9 @@
 (`docs/incident-2026-07-26-ts-guid-clobber.md`).  이 스크립트가 그 사각지대를 덮는다.
 
 usage:
-  python skills/game-prototype/scripts/check-asset-refs.py            # 작업트리
-  python skills/game-prototype/scripts/check-asset-refs.py --rev HEAD~5
-  python skills/game-prototype/scripts/check-asset-refs.py --all      # 씬·에셋 전수
+  python games/pawnsim/scripts/check-asset-refs.py            # 작업트리
+  python games/pawnsim/scripts/check-asset-refs.py --rev HEAD~5
+  python games/pawnsim/scripts/check-asset-refs.py --all      # 씬·에셋 전수
 
 exit 0 = 미해석 참조 0건.
 """
@@ -23,7 +23,7 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 REPO = Path(__file__).resolve().parents[3]
-UP = REPO / "skills" / "game-prototype" / "unity-project"
+UP = REPO / "games" / "pawnsim" / "unity-project"
 GUID_RE = re.compile(r"guid: ([0-9a-f]{32})")
 
 # Unity 내장 리소스는 .meta 가 없다 — guid 접미사로 식별한다.
@@ -62,7 +62,7 @@ def known_guids() -> dict[str, str]:
 
 
 def read_target(rel: str, rev: str | None) -> str | None:
-    gitpath = f"skills/game-prototype/unity-project/{rel}"
+    gitpath = f"games/pawnsim/unity-project/{rel}"
     if rev:
         r = subprocess.run(["git", "-C", str(REPO), "show", f"{rev}:{gitpath}"],
                            capture_output=True)

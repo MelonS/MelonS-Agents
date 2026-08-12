@@ -40,7 +40,7 @@ def measure() -> dict[str, str]:
     game = len(list((ROOT / ".claude" / "agents").glob("game-*.md"))) + 1  # + ta
     judges = len(list((ROOT / ".claude" / "agents").glob("*-judge.md")))
     content = agents - core - game - judges
-    scen = len([p for p in (ROOT / "skills" / "game-prototype" / "repro-scenarios").glob("*.json")
+    scen = len([p for p in (ROOT / "games" / "pawnsim" / "repro-scenarios").glob("*.json")
                 if not p.name.startswith("_")])
     missions = len([p for p in (ROOT / "agents" / "missions").iterdir() if p.is_dir()])
     ref = (ROOT / "docs" / "music-video-pipeline-reference.md").read_text(encoding="utf-8")

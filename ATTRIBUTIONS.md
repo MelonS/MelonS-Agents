@@ -4,7 +4,7 @@ Public-domain / CC0 assets used in this repo.  Attribution is **not
 required** by CC0 but recorded here as good practice + supporting the
 creators.
 
-## Skill #3 — game-prototype
+## Skill #3 — pawnsim
 
 ### Kenney.nl game asset packs (CC0 1.0)
 
@@ -24,10 +24,10 @@ crediting or donating (voluntary)."
 
 Source packs are NOT committed to this repo — only the specific files
 needed for the Skill #3 prototype are placed under
-`skills/game-prototype/unity-project/Assets/Sprites/`.
+`games/pawnsim/unity-project/Assets/Sprites/`.
 
 Previous SDXL-Turbo-generated sprites are archived under
-`skills/game-prototype/unity-project/Assets/Sprites/_old_sdxl/` for
+`games/pawnsim/unity-project/Assets/Sprites/_old_sdxl/` for
 historical reference (operator feedback 2026-05-26: "구림" — visually
 poor compared to professional pixel-art packs).
 
@@ -96,7 +96,7 @@ Starter 는 Attribution 도 불요("No Attribution Required") — 이 문서의 
 ## Noto Sans KR (SIL Open Font License 1.1)
 
 - **Noto Sans KR** (variable font) — bundled at
-  `skills/game-prototype/unity-project/Assets/Resources/Fonts/NotoSansKR.ttf`
+  `games/pawnsim/unity-project/Assets/Resources/Fonts/NotoSansKR.ttf`
   for the WebGL build: browsers have no OS-font access, so a bundled
   Korean font is the only way to render the game's Korean UI on the web.
   Desktop builds still fall back to OS fonts when the bundle is missing.
@@ -107,7 +107,7 @@ Starter 는 Attribution 도 불요("No Attribution Required") — 이 문서의 
 ## DNF BitBit v2 (넥슨/네오플 무료 폰트)
 
 - **DNF BitBit v2** — 게임 전체 UI 폰트 (운영자 픽 2026-07-25).
-  `skills/game-prototype/unity-project/Assets/Resources/Fonts/DNFBitBit.otf`
+  `games/pawnsim/unity-project/Assets/Resources/Fonts/DNFBitBit.otf`
   - 던전앤파이터 공식 무료 배포 폰트 — 개인·기업 상업적 사용 허용 (출처 표기).
   - 한글 완성형 11,172자 전체 수록.  미수록 기호(✗⚙⛏⏸⚠🪓)는 코드에서
     ×/텍스트/!로 대체 완료 (tofu 방지).
@@ -124,4 +124,4 @@ Starter 는 Attribution 도 불요("No Attribution Required") — 이 문서의 
 - 라이선스: 무료·상업적 사용 가능·크레딧 불요(표기 권장)·재배포/재판매 금지
 - 사용 범위: 지형 타일(잔디·모래·물)·나무·자원 더미(목재/고기/금)·양·데코 (ts_* 스프라이트)
 - 재배포 금지 준수: 추출물은 git 미추적(.gitignore ts_*), 재현은
-  `skills/game-prototype/scripts/extract-tinyswords.py` (팩은 itch 에서 직접 다운로드)
+  `games/pawnsim/scripts/extract-tinyswords.py` (팩은 itch 에서 직접 다운로드)

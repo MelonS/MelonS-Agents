@@ -5,7 +5,7 @@
 않는다(.gitignore `ts_*.png`).  새 환경 셋업:
   1) https://pixelfrog-assets.itch.io/tiny-swords 무료 다운로드
   2) TS_PACK_DIR 환경변수 또는 기본 경로(G:/ai/_artpacks/TinySwords)에 압축 해제
-  3) python skills/game-prototype/scripts/extract-tinyswords.py
+  3) python games/pawnsim/scripts/extract-tinyswords.py
 출처 표기는 ATTRIBUTIONS.md 참조 (해커톤 규정 ④ 외부 에셋 출처 명시).
 """
 import os

@@ -1,7 +1,9 @@
 # game-dev-agent — Unity 게임 개발 AI agent (Skill #3-C)
 
-Companion to [`game-prototype`](../game-prototype/) (the demo game built
-using this agent).  CLI orchestrator that wraps SDXL-Turbo (asset gen),
+Companion to [`pawnsim`](../../games/pawnsim/) (the demo game built
+using this agent; moved out of `skills/` on 2026-08-12 to keep its own
+Unity ProjectSettings separate from other games' — see
+[`genres/naval-sail-prototype.yaml`](genres/naval-sail-prototype.yaml)).  CLI orchestrator that wraps SDXL-Turbo (asset gen),
 Unity C# scaffolding patterns, balance tuning, and audio gen into a
 single agent surface.
 
@@ -14,7 +16,7 @@ single agent surface.
 
 | Module | Day shipped | Status |
 |---|---|---|
-| `asset_gen` (SDXL-Turbo sprite generation) | Day 1 | ✓ live, used by game-prototype |
+| `asset_gen` (SDXL-Turbo sprite generation) | Day 1 | ✓ live, used by pawnsim |
 | `code_assist` (Unity C# scaffolding) | Day 2 | shipped indirectly (scripts written via Claude in-session, codified as templates in `prompts/`) |
 | `balance_tune` (ScriptableObject + JSON config tuning) | Day 3 | placeholder |
 | `runtime_director` (in-game AI events) | Day 5 | partial — static event pool shipped in game; LLM pool gen pending |
@@ -93,7 +95,7 @@ toward AI agent engineer / game-dev career path:
 - Operator background: 10 yr game dev + (now) AI agent builder = exact fit
 - Steam release possible long-term (operator's passion: a lite Age-of-Sail naval trade sim)
 
-This skill is the agent half; [`game-prototype`](../game-prototype/) is
+This skill is the agent half; [`pawnsim`](../../games/pawnsim/) is
 the demonstration that the agent works.
 
 ## Next iterations

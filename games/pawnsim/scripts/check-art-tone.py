@@ -23,9 +23,9 @@
 전부 PASS 하는지로 임계를 검증한다 — `--self-test`.
 
 사용:
-  python skills/game-prototype/scripts/check-art-tone.py               # 게임 반입 아트 전수
-  python skills/game-prototype/scripts/check-art-tone.py PATH...       # 지정 파일만
-  python skills/game-prototype/scripts/check-art-tone.py --self-test   # 팩 기준선 검증
+  python games/pawnsim/scripts/check-art-tone.py               # 게임 반입 아트 전수
+  python games/pawnsim/scripts/check-art-tone.py PATH...       # 지정 파일만
+  python games/pawnsim/scripts/check-art-tone.py --self-test   # 팩 기준선 검증
 exit 0 = 전부 PASS.
 """
 from __future__ import annotations

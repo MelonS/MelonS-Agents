@@ -15,7 +15,7 @@
 이 스크립트는 둘 다 다시 그린다.  타일은 **이음매 없는(seamless)** 것이 필수 —
 가로/세로 모두 wrap 되는 노이즈만 쓴다.
 
-usage: python skills/game-prototype/scripts/gen-water.py
+usage: python games/pawnsim/scripts/gen-water.py
 """
 from __future__ import annotations
 import math

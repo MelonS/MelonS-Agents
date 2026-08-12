@@ -15,9 +15,11 @@
 #
 # 2026-08-12 — PawnSim(colony-sim-lite)과 같은 Unity 프로젝트 안에서 시작했다가
 # 별도 프로젝트로 분리했다. ProjectSettings(렌더 파이프라인·물리 등)를 공유하면
-# NAN2026 심사 종료(9/6)까지 건드리면 안 되는 PawnSim 제출물에 영향을 줄 위험이
-# 있었기 때문. games/pawnsim/ 은 심사 종료 후에 skills/game-prototype/ 에서
-# 옮겨질 예정 — 그 전까진 이 장르만 games/ 패턴을 쓴다.
+# NAN2026 심사 종료(9/6)까지 건드리면 안 되는 PawnSim 제출물(site/play/·YouTube·
+# 저장소 공개)에 영향을 줄 위험이 있었기 때문 — 단, 소스 폴더 위치 자체는 그
+# 배포 산출물과 무관해서, 운영자 지시로 PawnSim도 같은 날 games/pawnsim/ 으로
+# 옮겼다(원래는 심사 종료 후로 미룰 계획이었음). skills/game-prototype/ 는
+# 더 이상 없다.
 
 name: naval-sail-prototype
 description: "범선 시대 항해 무역 시뮬레이션 이동 프로토타입. 3D 바다 위 배 1척, 카메라 2.5D/3D 전환."

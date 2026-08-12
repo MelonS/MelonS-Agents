@@ -23,19 +23,19 @@
 </div>
 
 > **Reviewing this repo for a submission?**  The game lives in
-> [`skills/game-prototype/`](skills/game-prototype/).  Third-party art packs are
+> [`games/pawnsim/`](games/pawnsim/).  Third-party art packs are
 > **not redistributable**, so they are not committed — the build falls back to
 > procedurally generated art and still runs from a clean clone.  See
-> [`extract-tinyswords.py`](skills/game-prototype/scripts/extract-tinyswords.py)
+> [`extract-tinyswords.py`](games/pawnsim/scripts/extract-tinyswords.py)
 > if you want the pack visuals, and [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md) for
 > every external asset and its licence.
 >
-> **Submission map** — build & source: [`skills/game-prototype/`](skills/game-prototype/)
+> **Submission map** — build & source: [`games/pawnsim/`](games/pawnsim/)
 > · play link: <https://melons.github.io/MelonS-Agents/play/>
 > · design docs (source of the submitted PDFs):
-> [game intro](skills/game-prototype/docs/submission-game-intro-2026.md) ·
-> [AI tech](skills/game-prototype/docs/submission-ai-tech-2026.md)
-> · how the demo video is shot: [`trailer-production.md`](skills/game-prototype/docs/trailer-production.md)
+> [game intro](games/pawnsim/docs/submission-game-intro-2026.md) ·
+> [AI tech](games/pawnsim/docs/submission-ai-tech-2026.md)
+> · how the demo video is shot: [`trailer-production.md`](games/pawnsim/docs/trailer-production.md)
 
 - **It ships.** The **music-video** pipeline delivers on a schedule — a song → a 60-second 9:16 short (beat-cut, genre-graded). A second pipeline, **content-shorts**, shipped its first real short to YouTube on 2026-07-01 (idol format) — not on a cadence yet.
 - **Zero runtime cost.** Local open-source tools (ffmpeg · whisper.cpp · ollama · aubio) do the mechanical work; Claude Code agents only orchestrate — so a mission spends **zero runtime API tokens**.
@@ -176,7 +176,7 @@ No Pexels signup, no Suno round-trip, no `.env` edit — the wizard fetches a de
 
 ![PawnSim 2026-06-12 — an early colony on open grass: three named colonists with health and mood bars, a wood-wall room frame going up at top-right (top-down block walls from the 32px art generation), gathered wood plus scattered ore and rock nodes, live resource counters, and the build menu open at bottom](docs/demo/pawnsim-2026-06-12-built-house.png)
 
-Colonists chop / mine / farm / cook / haul / build / research / fight under a utility AI; an AI Director schedules threats on a jittered clock; the player drafts pawns and paints build + designation orders.  Every sprite (a full **32px art generation**), every scene, and every C# system is CLI-scaffolded by [`game-dev-agent`](skills/game-dev-agent/) with **no manual Unity Editor work**.  Full feature list + honest verification status (including known gaps): [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
+Colonists chop / mine / farm / cook / haul / build / research / fight under a utility AI; an AI Director schedules threats on a jittered clock; the player drafts pawns and paints build + designation orders.  Every sprite (a full **32px art generation**), every scene, and every C# system is CLI-scaffolded by [`game-dev-agent`](skills/game-dev-agent/) with **no manual Unity Editor work**.  Full feature list + honest verification status (including known gaps): [`games/pawnsim/README.md`](games/pawnsim/README.md).
 
 ## Sample output — a generative short
 
@@ -206,7 +206,7 @@ Documented negatives, kept in the open — because honest scoping is the credibi
 - **Cel-shading was deliberately deferred** — knowing where the ffmpeg wall is beats faking the result.
 - **`100+ outputs` is a working estimate, not a ledger** — mission outputs stay local under `records/` (gitignored), so the count isn't independently auditable from the repo.
 
-More negatives and deferred scope: [`skills/game-prototype/README.md`](skills/game-prototype/README.md) (honest verification status + out-of-scope).  Resolved-issue log (e.g. the Homebrew ffmpeg/libass split): [`docs/known-limitations.md`](docs/known-limitations.md).
+More negatives and deferred scope: [`games/pawnsim/README.md`](games/pawnsim/README.md) (honest verification status + out-of-scope).  Resolved-issue log (e.g. the Homebrew ffmpeg/libass split): [`docs/known-limitations.md`](docs/known-limitations.md).
 
 <details>
 <summary><b>Design notes — choices that set this apart from a typical agent demo</b></summary>
@@ -247,12 +247,12 @@ The KR sources (Saramin, Wanted, JobKorea…) now block scraping; the `global-*`
 
 **PawnSim** (Windows + Unity 6000.0.75f1 LTS)
 ```bash
-cd skills/game-prototype
+cd games/pawnsim
 python ../game-dev-agent/scripts/agent.py integrate --project unity-project --method scenes
 python ../game-dev-agent/scripts/agent.py integrate --project unity-project --method build --day PLAY
 "$(ls -dt builds/day-*/ | head -1)PawnSim.exe"   # always resolve the newest build
 ```
-No pre-built `.exe` is committed (`builds/` is gitignored).  Full controls + flags: [`skills/game-prototype/README.md`](skills/game-prototype/README.md).
+No pre-built `.exe` is committed (`builds/` is gitignored).  Full controls + flags: [`games/pawnsim/README.md`](games/pawnsim/README.md).
 
 Full recipe collection for both media skills: [`EXAMPLES.md`](EXAMPLES.md).
 

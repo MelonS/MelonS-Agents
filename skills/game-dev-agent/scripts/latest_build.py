@@ -35,8 +35,8 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent.parent
-BUILDS = REPO / "skills" / "game-prototype" / "builds"
-SCRIPTS = REPO / "skills" / "game-prototype" / "unity-project" / "Assets" / "Scripts"
+BUILDS = REPO / "games" / "pawnsim" / "builds"
+SCRIPTS = REPO / "games" / "pawnsim" / "unity-project" / "Assets" / "Scripts"
 
 
 def latest_exe():

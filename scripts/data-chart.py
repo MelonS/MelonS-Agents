@@ -53,8 +53,8 @@ BLUE_MID = (37, 106, 191)
 REPO = Path(__file__).resolve().parents[1]
 FONT_DISPLAY = REPO / "assets/fonts/BlackHanSans-Regular.ttf"
 FONT_TEXT_CANDIDATES = [
-    REPO / "skills/game-prototype/unity-project/Assets/Resources/Fonts/NotoSansKR.ttf",
-    REPO / "skills/game-prototype/unity-project/Assets/Resources/Fonts/GowunDodum.ttf",
+    REPO / "games/pawnsim/unity-project/Assets/Resources/Fonts/NotoSansKR.ttf",
+    REPO / "games/pawnsim/unity-project/Assets/Resources/Fonts/GowunDodum.ttf",
     FONT_DISPLAY,
 ]
 

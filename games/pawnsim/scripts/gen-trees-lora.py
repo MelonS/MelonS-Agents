@@ -28,9 +28,9 @@ Maple/Oak/Birch 는 그대로 LoRA 산출물을 쓴다 — 단풍·상수리·�
 
 사용
 ----
-  python skills/game-prototype/scripts/gen-trees-lora.py            # 4종×3시드
-  python skills/game-prototype/scripts/gen-trees-lora.py --species maple --seeds 5
-  python skills/game-prototype/scripts/gen-trees-lora.py --contact-sheet-only
+  python games/pawnsim/scripts/gen-trees-lora.py            # 4종×3시드
+  python games/pawnsim/scripts/gen-trees-lora.py --species maple --seeds 5
+  python games/pawnsim/scripts/gen-trees-lora.py --contact-sheet-only
 
 산출:  <OUT>/cand/<species>_s<seed>.png  (키잉·크롭 완료, RGBA)
        <OUT>/contact_<species>.png       (시드 비교용 컨택트시트)
@@ -65,7 +65,7 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 REPO = Path(__file__).resolve().parents[3]
 FLUX = REPO / "scripts" / "flux-still.py"
 DEFAULT_OUT = Path(os.environ.get("PAWNSIM_ART_OUT")
-                   or (REPO / "skills" / "game-prototype" / "art-out" / "trees"))
+                   or (REPO / "games" / "pawnsim" / "art-out" / "trees"))
 
 LORA = "tswords_v1.safetensors"
 TRIGGER = "tswords style game sprite"
@@ -261,7 +261,7 @@ def contact_sheet(species: str, out: Path) -> None:
     cands = sorted((out / "cand").glob(f"{species}_s*.png"))
     if not cands:
         return
-    grass = (REPO / "skills" / "game-prototype" / "unity-project" / "Assets"
+    grass = (REPO / "games" / "pawnsim" / "unity-project" / "Assets"
              / "Sprites" / "ts_tile_grass.png")
     cell_w = max(Image.open(c).width for c in cands) + 24
     cell_h = max(Image.open(c).height for c in cands) + 24

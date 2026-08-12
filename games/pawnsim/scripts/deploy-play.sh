@@ -2,10 +2,10 @@
 # deploy-play.sh — 최신 WebGL 빌드를 site/play/ 로 복사해 GitHub Pages 배포 대상에 올린다.
 #
 # 배경: .github/workflows/pages.yml 은 main 브랜치의 site/** 변경에만 반응한다.
-# 빌드 산출물(skills/game-prototype/builds/)은 gitignore 대상이라 그대로는 배포되지 않는다.
+# 빌드 산출물(games/pawnsim/builds/)은 gitignore 대상이라 그대로는 배포되지 않는다.
 # 이 스크립트가 그 사이를 잇는다.
 #
-# 사용:  bash skills/game-prototype/scripts/deploy-play.sh [빌드폴더]
+# 사용:  bash games/pawnsim/scripts/deploy-play.sh [빌드폴더]
 #        빌드폴더 생략 시 builds/day-*-webgl 중 **가장 최근 수정본**을 자동 선택.
 #
 # 주의: 날짜 스탬프 폴더를 하드코딩하지 말 것 — 자정을 넘기면 어제 빌드를 배포해
@@ -13,7 +13,7 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-BUILDS="$REPO/skills/game-prototype/builds"
+BUILDS="$REPO/games/pawnsim/builds"
 DEST="$REPO/site/play"
 
 if [[ $# -ge 1 ]]; then

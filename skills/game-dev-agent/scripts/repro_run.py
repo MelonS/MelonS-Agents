@@ -14,7 +14,7 @@ Usage:
      exit 1 = FAIL (버그 재현됨 — 리포트의 FAIL 스텝이 곧 재현 증거)
 
 시나리오 형식은 ReproHarness.cs 헤더 주석 참조.
-시나리오 파일은 skills/game-prototype/repro-scenarios/ 에 영구 보존 (= 회귀 테스트).
+시나리오 파일은 games/pawnsim/repro-scenarios/ 에 영구 보존 (= 회귀 테스트).
 """
 from __future__ import annotations
 import argparse
@@ -50,7 +50,7 @@ def resolve_build(args) -> Path | None:
             print(f"[repro] --build 가 실행 파일이 아님: {p}")
             return None
         return p
-    harness = REPO / "skills" / "game-prototype" / "builds" / "_harness-latest" / "PawnSim.exe"
+    harness = REPO / "games" / "pawnsim" / "builds" / "_harness-latest" / "PawnSim.exe"
     if args.fresh_build:
         if rc.step_fresh_build() != 0:
             return None

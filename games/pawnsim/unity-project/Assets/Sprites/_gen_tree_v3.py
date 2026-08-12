@@ -4,7 +4,7 @@ artv2 스펙 준수(팔레트 import, 디더링 금지, 좌상 조명).  32x48, 
 flora32_tree_a/b/c 교체.  TreeEntity 가 species baseTint 곱하므로 중립 녹색 유지."""
 import sys, os, random, math
 sys.stdout.reconfigure(encoding="utf-8")
-PAL = r"G:/ai/MelonS-Agents/skills/game-prototype/unity-project/Assets/Sprites"
+PAL = r"G:/ai/MelonS-Agents/games/pawnsim/unity-project/Assets/Sprites"
 sys.path.insert(0, PAL)
 import palette as P
 from PIL import Image

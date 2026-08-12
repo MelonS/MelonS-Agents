@@ -17,7 +17,7 @@
   · Assets/Sprites 와 Resources/Sprites 양쪽에 저장 — ArchitectMenu.LoadIcon 이
     에디터에선 Assets/Sprites, 런타임 빌드에선 Resources/Sprites 를 본다.
 
-사용: python skills/game-prototype/scripts/gen-ui-icons.py
+사용: python games/pawnsim/scripts/gen-ui-icons.py
 """
 import os
 import sys

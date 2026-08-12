@@ -83,7 +83,7 @@ def build_game_graph(checkpointer=None):
 
 def cmd_run(args) -> int:
     run_id = args.thread or ("game-%s" % time.strftime("%Y%m%d-%H%M%S"))
-    proj = pathlib.Path(args.project or (tools.repo_root() / "skills" / "game-prototype" / "unity-project"))
+    proj = pathlib.Path(args.project or (tools.repo_root() / "games" / "pawnsim" / "unity-project"))
 
     initial: GameState = {
         "run_id": run_id,

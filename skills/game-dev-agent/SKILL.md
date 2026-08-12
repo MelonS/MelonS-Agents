@@ -22,7 +22,7 @@ allowed-tools:
 # game-dev-agent
 
 AI agent that orchestrates Unity game development tasks via CLI. Companion
-to [`game-prototype`](../game-prototype/) (the actual game built using this
+to [`pawnsim`](../../games/pawnsim/) (the actual game built using this
 agent).
 
 ## What it does

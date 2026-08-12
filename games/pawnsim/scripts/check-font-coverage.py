@@ -6,7 +6,7 @@
 (U+2715) 였는데 번들 3종 폰트 어디에도 없어 셀이 통째로 빈 상자로 보였다.
 
 usage:
-  python skills/game-prototype/scripts/check-font-coverage.py
+  python games/pawnsim/scripts/check-font-coverage.py
 exit 0 = 미지원 문자 없음.
 
 전제: pip fontTools.  없으면 skip(exit 0) 하되 그 사실을 출력한다.
@@ -20,7 +20,7 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 REPO = Path(__file__).resolve().parents[3]
-UP = REPO / "skills" / "game-prototype" / "unity-project"
+UP = REPO / "games" / "pawnsim" / "unity-project"
 FONTS = UP / "Assets" / "Resources" / "Fonts"
 SCRIPTS = UP / "Assets" / "Scripts"
 

@@ -28,7 +28,7 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 import refactor_check as rc
 
-BUILDS_DIR = rc.REPO / "skills" / "game-prototype" / "builds"
+BUILDS_DIR = rc.REPO / "games" / "pawnsim" / "builds"
 SHOTS_DIR = Path(os.environ.get("REPRO_SHOTS_DIR", "G:/ai/_repro_shots")) / "webgl-smoke"
 
 # 브라우저 폴백 (env 우선 — CLAUDE.md env-driven paths 원칙)
