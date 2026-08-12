@@ -217,6 +217,20 @@ job-hunt 항목은 Blocked/parked로 이동하는 것을 제안합니다.  다�
 
 ## Done — most recent first
 
+- **2026-08-12 (PawnSim)** `skills/game-prototype/` → `games/pawnsim/` 이동 —
+  `d9aeca1`. 운영자 직접 지시("PawnSim도 옮겨") — 원래 9/6 심사 종료 후로
+  미룰 계획이었으나 앞당김. site/play/·YouTube·저장소 공개는 소스 폴더
+  위치와 무관해 심사 영향 없음. 경로 참조 20개 파일 수정(graph/game_*.py,
+  game-dev-agent 스크립트 7개, pawnsim 자체 스크립트/README/SKILL.md,
+  README.md·ATTRIBUTIONS.md 등 공개 문서, `.claude/agents/ta.md` 1줄).
+  검증: 새 경로에서 Unity batchmode 컴파일 에러 0건 +
+  `check-asset-refs.py` 실행해 경로가 실제로 해석되는지 확인 — 그 과정에서
+  진짜 버그 하나 발견함: Game.unity 스프라이트 GUID 10개 미해석, 원인은
+  전부터 로컬에 삭제돼 있던(커밋은 안 된) `ts_tile_grass/sand_e*.png.meta`
+  32개. 8/10 제출 빌드에는 영향 없음(그 커밋엔 아직 존재), 이 머신
+  working tree만 깨진 상태 — 복구하려면 `git checkout -- <32개 경로>`.
+  운영자 판단 필요(이번 세션 스코프 밖이라 직접 고치지 않음).
+
 - **2026-08-12 (차기작 — 범선 항해 게임)** 박스 → Kenney 배 모델 교체(`8f5e805`)
   + 별도 Unity 프로젝트로 분리(`5d4c647`). 운영자 "너무 허접한데" → Kenney
   Pirate Kit(CC0)의 `ship-pirate-medium.fbx`로 교체, 실측 치수를 코드가 읽어
@@ -236,7 +250,7 @@ job-hunt 항목은 Blocked/parked로 이동하는 것을 제안합니다.  다�
   `docs/metrics/intervention.json`(과거 커밋 subject 기록)은 이력이라 안 건드림.
   검증: 새 프로젝트에서 씬 재생성+빌드+스크린샷 — 배 모델 실측치(4.80×9.96×10.60)
   가 분리 전과 동일하게 나옴. PawnSim 쪽은 배게임 파일 제거 후 컴파일 에러 0건
-  확인(batchmode 도메인 리로드). 이동 후 재검증은 아래 새 Done 항목 참조.
+  확인(batchmode 도메인 리로드). PawnSim 실제 이동 + 재검증은 위 항목 참조.
 
 - **2026-08-12 (차기작 — 범선 항해 게임)** 이동 프로토타입 v0 — `550679b`
   (+ IP 스크럽 `c1d1927`, 기획 `3b61880`). 운영자가 /goal 로 직접 지시(배+바다
