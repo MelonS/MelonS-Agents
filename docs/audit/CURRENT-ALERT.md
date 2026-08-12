@@ -6,69 +6,73 @@
 > and re-run the auditor.
 
 **Verdict**: DRIFT_DETECTED
-**Full report**: [`docs/audit/2026-07-31-contract.md`](2026-07-31-contract.md)
-**Generated**: 2026-07-31 03:39:04    
+**Full report**: [`docs/audit/2026-08-12-contract.md`](2026-08-12-contract.md)
+**Generated**: 2026-08-12 09:40:04    
 
 ## Summary (from audit)
 
 
-Focused pass over `docs/operator-contract.md` compliance at HEAD `45a23d2`
-(2026-07-31 03:30 KST), cross-checked against `docs/for-analysts.md`,
+Focused pass over `docs/operator-contract.md` compliance at HEAD `d9aeca1`
+(2026-08-12, ~09:35 KST), cross-checked against `docs/for-analysts.md`,
 `docs/architecture.md`, `docs/roadmap.md`, `docs/goal.md`, every
 `.claude/agents/*.md` frontmatter, `.gitignore`, `.github/workflows/`, and
-`git log`. The pre-computed skill-drift report is clean (0 findings) and is
-not repeated below. `main` is green (`gh run list` shows 5/5 recent
-`main-protection` runs `success`). Secret scan outside `docs/`, `*.example`,
-`*.md` returned nothing. `.env` remains gitignored and untracked. No output
-artifacts (mp4/wav/jpg/etc.) are committed under `agents/` or `scripts/`.
-The section-8 hardcoded-path exception registry's 11 listed files all still
-carry the required grep-anchor; several additional Users-shaped path strings
-found under `scripts/` are all inert comments (illustrative paths, an
-already-fixed-and-annotated historical reference, a stale test-fixture
-comment shadowed by a REPO_ROOT-relative path in the actual code) and are
-not new registry gaps.
+`git log` (1634 commits reachable from `main`). The pre-computed
+skill-drift report (`scripts/audit-skill-drift.sh`) is clean (0 findings)
+and is not repeated below. `main` is green - `gh run list` shows 5/5 recent
+`main-protection` runs `success`. Secret scan outside `docs/` / `*.example`
+returned nothing; `.env` remains gitignored and untracked. The section-8
+hardcoded-path exception registry's 12 listed files all still carry the
+required `section-8 exception` grep-anchor. No output artifacts are committed
+under `agents/` or `scripts/`. Subagent roster: 27 files under
+`.claude/agents/`, matching `for-analysts.md`'s claimed count and group
+breakdown exactly (6 core + 13 game-line + 5 content-shorts + 3 judges);
+the 6 core agents' `model:` frontmatter matches the routing table exactly
+(opus/opus/opus/sonnet/sonnet/sonnet).
 
-One genuinely good-news item: the CRITICAL "audit reports generated but
-never committed" finding that has now reproduced across six consecutive
-audit cycles was fixed at the code level today, in-session, immediately
-before this run — commit `45a23d2` adds `commit_audit_trail()` to
-`scripts/audit-run.sh`, which now runs `git commit --only` scoped exactly
-to `docs/audit/` (report + `CURRENT-ALERT.md`) and best-effort pushes, with
-merge/rebase/lock guards and an `AUDIT_NO_COMMIT=1` escape hatch. The commit
-message documents a temp-clone self-test (no-op path, new-report path,
-unrelated-staged-changes preserved, idempotent re-run). This is a
-`scripts/` change, not an `agents/*.md` or `.claude/agents/*.md` change, so
-it is outside hard rule 5's scope and needs no Requested-by marker; it is
-downgraded from the standing CRITICAL to informational below pending one
-live, unattended trigger cycle (L1/L2/L3) actually exercising the new
-commit path, since every test cited in the commit message was run
-interactively in a temp clone rather than through the real
-hook/launchd/Task-Scheduler path.
+Two items flagged high in the prior report (`2026-07-31-contract.md`)
+are now resolved: the README hero-stats alt text now correctly reads "27
+subagents" (was "23"), and `docs/roadmap.md` "Now" was refreshed
+2026-08-10 to reflect the NAN2026-submission-complete state instead of the
+72-day-stale multi-skill-framework text. Three prior medium findings
+remain open unresolved for a third consecutive contract-focused cycle:
+`.claude/wb/` (94 tracked files, undocumented, gitignore-absent), `ta.md`
+missing a `model:` frontmatter field, and `for-analysts.md` undercounting
+the CI gate ("six" vs the actual seven checks, unchanged since `06dd751`
+on 2026-07-01).
 
-Two problems remain live from the 2026-07-26 report, both still unresolved
-five days later: `docs/roadmap.md` "Now" (own last-updated stamp:
-2026-05-20) still frames the active work as multi-skill-framework /
-job-hunt-v0.4.0-activation, while `docs/goal.md`'s actual Active goal has
-been PawnSim since 2026-06-12 (49 days) and the most recent five commits are
-about a duplicate-upload incident fix, a shorts scene-layout mode, and the
-audit-trail self-commit fix — none of which touch either the stated Now or
-the actual goal; and `.claude/wb/` (94 tracked JSON files, last touched
-2026-07-01) remains outside `docs/architecture.md`'s Layers table with no
-gitignore rule and no section-8 deviation marker. `ta.md` also still has no
-`model:` field, unlike the other 26 subagent definitions, and the same six
-section-5-scope commits from 2026-06-01 through 2026-07-24 still lack the
-Requested-by marker (no new section-5-scope commits landed since the last
-audit, so the set is unchanged, not growing). One new finding this cycle:
-`README.md`/`README.ko.md` are now self-inconsistent — the hero-stats image
-plus alt text (line 31, both files) still claims 23 subagents while the
-prose two paragraphs down (line 177 EN) correctly says 27 — and
-`for-analysts.md` undercounts the CI gate by one (it says "six static
-checks"; the workflow has had seven since `06dd751` on 2026-07-01, when the
-README EN-KO parity check was added).
+Two new findings emerged this cycle that were not visible to the prior
+audit. First: cross-referencing every commit hash cited in
+`docs/roadmap.md`'s Done section against `git cat-file -e` shows 50
+entries (dated 2026-05-14 through 2026-05-19, i.e. the project's first six
+days) reference hashes that do not exist anywhere in the current repo -
+not on `main`, not on any branch, not as a loose object. Root cause is
+documented in the repo's own history: an email-history rewrite via
+`git filter-repo` landed 2026-05-17 (`b46a2ba`), and its rollback safety
+branch (`main-backup-pre-filter-20260517-173615`) was deleted three days
+later (`a90bc9d`, 2026-05-20) after no issues were observed - a reasonable
+operational call at the time, but nobody went back to annotate the
+now-orphaned Done entries or the operator-contract's own citation of the
+same pre-rewrite hash space. That citation is the second half of this
+finding: `docs/operator-contract.md` section 5's pre-marker carry-forward
+clause names `7c6ff4f` as the reference commit, and that hash is also
+unresolvable in the current repo - the contract's own audit-trail
+exemption is unverifiable by the exact mechanism (`git cat-file -e`) this
+audit dimension prescribes. Second: while investigating the L1 post-commit
+hook (`scripts/hooks/post-commit.sh`), a live instance was caught
+mid-failure - the hook correctly fired for today's `d9aeca1` (it touched
+`.claude/agents/ta.md`, a drift-risk path) at 09:27:02, and the spawned
+`audit-run.sh contract` background process (pid 5788) is still alive and
+producing no further log output more than 8 minutes later, well past the
+short startup banner where every other logged hook-run in
+`records/audit/hook-trigger.log` had already produced substantive content
+by this point. That process is targeting the exact same output path this
+report is writing to (`docs/audit/2026-08-12-contract.md`), which is a
+live overwrite/commit-race risk, not a hypothetical one.
 
 ## Critical / High findings
 
-- **[high]** `docs/roadmap.md` "Now" section stale against `docs/goal.md` Active goal and the last 5 commits, unresolved 2nd consecutive audit cycle — `docs/roadmap.md:16-50`, `docs/goal.md:19`
+- **[high]** L1 post-commit-hook audit process appears hung, targeting the same output path as this report - `scripts/hooks/post-commit.sh`, `records/audit/hook-run-20260812-092702-d9aeca1.log`, `records/audit/.hook.inflight`
+- **[high]** `docs/roadmap.md` Done section (50 entries) and `docs/operator-contract.md` section 5's carry-forward citation reference commit hashes invalidated by the 2026-05-17 filter-repo history rewrite - `docs/roadmap.md` Done entries dated 2026-05-14 to 2026-05-19; `docs/operator-contract.md:117` (`7c6ff4f`)
 
 ## How to clear this alert
 
