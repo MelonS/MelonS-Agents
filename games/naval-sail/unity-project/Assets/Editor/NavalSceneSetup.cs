@@ -77,6 +77,7 @@ namespace MelonS.GameProto.EditorTools
             // 실측 절반-치수 — 모델을 바꿔도 하드코딩 다시 안 하도록 부력 샘플
             // 지점을 여기서 동적으로 계산한다. 못 찾으면(폴백 박스) 옛 고정값.
             float halfLength = 3f, halfBeam = 1f;
+            float centerOfMassY = 0.4f;
 
             GameObject modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>(ShipModelPath);
             if (modelAsset == null)
@@ -106,10 +107,16 @@ namespace MelonS.GameProto.EditorTools
                 Vector3 localCenter = shipGo.transform.InverseTransformPoint(bounds.center);
                 col.center = localCenter;
                 col.size = bounds.size;
+
+                // Unity 기본 무게중심은 콜라이더 바운즈 중앙(돛대 포함 — 배 키의
+                // 절반 높이, 뱃머리 위 허공)이라 물리적으로 배가 위쪽이 무거워
+                // 불안정해진다. 선체 하단 근처(흘수선 바로 위)로 낮춰준다.
+                centerOfMassY = localCenter.y - bounds.extents.y + bounds.size.y * 0.15f;
             }
 
             Rigidbody rb = shipGo.AddComponent<Rigidbody>();
             rb.mass = 800f;
+            rb.centerOfMass = new Vector3(0, centerOfMassY, 0);
 
             shipGo.AddComponent<ShipController>();
             ShipBuoyancy buoyancy = shipGo.AddComponent<ShipBuoyancy>();
